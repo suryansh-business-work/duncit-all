@@ -43,12 +43,21 @@ export type { CalendarView, NewSlotInput, VenueSlotRow, VenueSlotStatus, VenueSp
 export { default as VenuePricingModule } from './pricing/VenuePricingModule';
 export { default as PriceBreakdownView } from './pricing/preview/PriceBreakdownView';
 export {
+  FeesSection,
+  RulesSection,
   VenuePricingForm,
   buildVenuePricingSchema,
+  savedPricingInput,
   toFormValues,
   toPricingInput,
   type VenuePricingFormValues,
 } from './pricing/form';
+// The Partner console's own pages for one part of a venue's pricing — its fees,
+// its price rules — and its booking calendar build on these.
+export { usePricingModule } from './pricing/usePricingModule';
+export { default as DayToggles } from './pricing/calendar/DayToggles';
+export { default as MonthNavigator } from './MonthNavigator';
+export { holidaysWith, pricingWithBlocked } from './pricing/calendar/day-edits';
 export { usePriceQuote, bookingOf, wallInstant } from './pricing/preview/usePriceQuote';
 export { BREAKDOWN_FIELDS, UPDATE_VENUE_PRICING, VENUE_BOOKING_CALENDAR, VENUE_PRICE_QUOTE, VENUE_PRICING } from './pricing/queries';
 export { modelLabel, rateLabel, ruleValueLabel, rupees } from './pricing/format';
@@ -65,3 +74,23 @@ export type { EventRequestOfferView, VenueEventRequest } from './event-requests/
 export { default as SlotRequestHistory } from './bookings/SlotRequestHistory';
 export { default as UpcomingBookings } from './bookings/UpcomingBookings';
 export type { SlotRequestHistoryRow, UpcomingBooking } from './bookings/queries';
+// A host's booking offer, as the venue answers it: the inbox (Accept / Counter /
+// Reject), and the pieces the request's own page builds from.
+export { default as VenueOfferInbox } from './offers/VenueOfferInbox';
+export { default as OfferRequestCard } from './offers/OfferRequestCard';
+export { default as OfferTermsPanel } from './offers/OfferTermsPanel';
+export { default as OfferHistory } from './offers/OfferHistory';
+export { default as OfferDecisionActions } from './offers/OfferDecisionActions';
+export { offerTermsLabel } from './offers/format';
+export {
+  ACCEPT_VENUE_OFFER,
+  COUNTER_VENUE_OFFER,
+  REJECT_VENUE_OFFER,
+  VENUE_BOOKING_REQUESTS,
+  VENUE_COUNTER_QUOTE,
+  VENUE_OFFER_FIELDS,
+  type BookingOffer,
+  type BookingRequestRow,
+  type OfferHistoryEntry,
+  type OfferRequestSummary,
+} from './offers/queries';

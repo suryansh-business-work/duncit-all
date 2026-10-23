@@ -30,8 +30,8 @@ import {
   MODERATE_POD_CONTENT,
   POD_SETTLEMENT_PREVIEW,
   POD_SPOT_LIMITS,
+  RESUBMIT_OFFER_CALENDAR,
   RESUBMIT_VENUES,
-  RESUBMIT_VENUE_SLOTS,
 } from '../src/queries';
 import { POD_MEDIA_BOARD } from '../src/pod-media/queries';
 import {
@@ -491,7 +491,7 @@ describe('a resubmission the content check could not run for', () => {
             pod_description: 'Doubles at Court 2, all levels welcome.',
             pod_images_and_videos: [{ url: IMG, type: 'IMAGE' }],
             venue_id: 'v-1',
-            venue_slot_id: 'slot-1',
+            no_of_spots: 12,
           }) as HostPodTarget
         }
         onClose={vi.fn()}
@@ -504,19 +504,23 @@ describe('a resubmission the content check could not run for', () => {
           maxUsageCount: Number.POSITIVE_INFINITY,
         },
         {
-          request: { query: RESUBMIT_VENUE_SLOTS, variables: { venue_id: 'v-1' } },
+          request: { query: RESUBMIT_OFFER_CALENDAR, variables: () => true },
           result: {
             data: {
-              venueAvailableSlots: [
-                {
-                  id: 'slot-1',
-                  start_at: '2026-09-01T10:00:00.000Z',
-                  end_at: '2026-09-01T12:00:00.000Z',
-                  whole_day: false,
-                  price: 500,
-                  space_label: 'Court 2',
-                },
-              ],
+              venueOfferCalendar: {
+                buffer_minutes: 0,
+                min_notice_minutes: 0,
+                days: [
+                  {
+                    date: '2030-06-01',
+                    closed_reason: null,
+                    open: '2030-06-01T10:00:00.000Z',
+                    close: '2030-06-01T12:00:00.000Z',
+                    busy: [],
+                    slots: [],
+                  },
+                ],
+              },
             },
           },
           maxUsageCount: Number.POSITIVE_INFINITY,
@@ -531,14 +535,19 @@ describe('a resubmission the content check could not run for', () => {
     await settle();
     await settle();
 
-    // The venue and slot always open blank, so they have to be picked before
-    // the form will get as far as the content check.
+    // The venue, window and terms always open blank, so they have to be picked
+    // before the form will get as far as the content check.
     fireEvent.mouseDown(screen.getByLabelText(new RegExp(labels.venue)));
     await settle();
     fireEvent.click(screen.getByRole('option', { name: /Indiranagar Court/ }));
     await settle();
     await settle();
-    fireEvent.click(document.body.querySelector('[data-testid="slot-tile-slot-1"]') as HTMLElement);
+    fireEvent.click(document.body.querySelector('[data-testid="slot-tile-2030-06-01T10:00:00.000Z"]') as HTMLElement);
+    await settle();
+    fireEvent.mouseDown(screen.getByLabelText(new RegExp(labels.offerModelLabel)));
+    await settle();
+    fireEvent.click(screen.getByRole('option', { name: labels.offerModelPerGuest }));
+    fireEvent.change(screen.getByTestId('pod-resubmit-offer-rate'), { target: { value: '300' } });
     await settle();
 
     fireEvent.submit(document.querySelector('#pod-resubmit-form') as HTMLFormElement);

@@ -34,6 +34,7 @@ exports:
   - 'StatusChip'
   - 'STATUS_CHIP_COLORS'
   - 'ChipList'
+  - 'VenueChatThreadList'
   - 'InfoRow'
   - 'ImagePreview'
   - 'PageHeader'
@@ -1054,4 +1055,20 @@ import { createChatPingGate } from '@duncit/utils';
 
 const shouldPing = createChatPingGate();
 if (shouldPing(message.id)) playMessagePing();
+```
+
+## `VenueChatThreadList` — the venue chat inbox
+
+One row per pod at a venue, newest activity first, as `myVenueChatThreads` / `adminVenueChatThreads` return it (`@duncit/utils` `MY_VENUE_CHAT_THREADS_SDL`, `ADMIN_VENUE_CHAT_THREADS_SDL`). The Partners console, mWeb and the Venues console draw the same list; the native app draws its own Tamagui twin from the same rows.
+
+It draws no copy and formats no dates itself: the surface passes its `labels` (empty, photo, no messages yet, unread count) and `formatWhen` from its own date formatter. `showVenue` adds the venue name to each row when the list spans several venues. A row calls `onOpen(podId)`; the surface decides where the thread opens.
+
+```tsx
+<VenueChatThreadList
+  rows={data.myVenueChatThreads.rows}
+  onOpen={(podId) => navigate(`/venues/pods/${podId}/chat`)}
+  labels={{ empty: t('mweb.venueChat.inboxEmpty'), photo: t('mweb.venueChat.photo'), noMessagesYet: t('mweb.venueChat.noMessagesYet'), unread: (n) => t('mweb.venueChat.unread', { vars: { n } }) }}
+  formatWhen={fmt.formatDateTime}
+  showVenue
+/>
 ```

@@ -2,22 +2,27 @@ import { useMemo } from 'react';
 import { z } from 'zod';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Alert, Grid, LinearProgress, Stack, Typography } from '@mui/material';
+import { Alert, Grid, LinearProgress, MenuItem, Stack, Typography } from '@mui/material';
 import { useTranslation } from '@duncit/app-settings';
 import { isIsoDay } from '@duncit/datetime';
 import { RhfTextField, TIME_OF_DAY_PATTERN } from '@duncit/forms';
+import { VENUE_OFFER_COUNTER_MODELS } from '@duncit/forms/schemas';
+import { VENUE_OFFER_INBOX_MODEL_KEY, isVenueOfferModel } from '@duncit/utils';
 import { errorText } from '../../pricing/format';
 import { IsoDateField, NumberField, TimeField } from '../../pricing/form/fields';
 import PriceBreakdownView from '../../pricing/preview/PriceBreakdownView';
-import { usePriceQuote } from '../../pricing/preview/usePriceQuote';
 import type { Translate } from '../../pricing/types';
-import type { RespondChoice, RespondEventRequestValues } from './respond-event-request.types';
+import { offerInput, offerTerms, type RespondChoice, type RespondEventRequestValues } from './respond-event-request.types';
+import { useRespondQuote } from './useRespondQuote';
 
 /** The server keeps a request note to 280 characters. */
 const NOTE_MAX = 280;
 
-/** Accept / reject need only an optional note; a counter offer also needs a valid window. */
-export const buildRespondSchema = (t: Translate, choice: RespondChoice) => {
+/**
+ * Accept / reject need only an optional note; a counter offer also needs a valid
+ * window, and — when it is a venue's (`priced`) — a pricing option and an amount.
+ */
+export const buildRespondSchema = (t: Translate, choice: RespondChoice, priced = true) => {
   const base = z.object({
     note: z.string().trim().max(NOTE_MAX, t('venuePricing.respond.noteTooLong')),
     date: z.string(),
@@ -25,6 +30,8 @@ export const buildRespondSchema = (t: Translate, choice: RespondChoice) => {
     end: z.string(),
     // NaN while the guests field is emptied — only a counter offer needs it (checked below).
     pax: z.union([z.number(), z.nan()]),
+    model: z.string(),
+    rate: z.string(),
   });
   if (choice !== 'COUNTER') return base;
   return base.superRefine((v, ctx) => {
@@ -34,6 +41,9 @@ export const buildRespondSchema = (t: Translate, choice: RespondChoice) => {
       ctx.addIssue({ code: 'custom', message: t('venuePricing.validation.endAfterStart'), path: ['end'] });
     }
     if (!Number.isInteger(v.pax) || v.pax < 0) ctx.addIssue({ code: 'custom', message: t('venuePricing.validation.wholeNumber'), path: ['pax'] });
+    if (!priced) return;
+    if (!isVenueOfferModel(v.model)) ctx.addIssue({ code: 'custom', message: t('availability.offers.validation.model'), path: ['model'] });
+    else if (!offerTerms(v)) ctx.addIssue({ code: 'custom', message: t('availability.offers.validation.rate'), path: ['rate'] });
   });
 };
 
@@ -46,20 +56,16 @@ interface Props {
   onSubmit: (values: RespondEventRequestValues) => Promise<void>;
 }
 
-/** The respond dialog's form: a note, and for a counter offer the date, time and guests with the server's quote. */
+/** The respond dialog's form: a note, and for a counter offer the date, time, guests and price terms with the server's quote. */
 export default function RespondEventRequestForm({ formId, choice, venueId, defaultValues, onSubmit }: Readonly<Props>) {
   const { t } = useTranslation();
-  const schema = useMemo(() => buildRespondSchema(t, choice), [t, choice]);
+  const priced = !!venueId;
+  const schema = useMemo(() => buildRespondSchema(t, choice, priced), [t, choice, priced]);
   const { control, handleSubmit, watch } = useForm<RespondEventRequestValues>({ resolver: zodResolver(schema), defaultValues });
   const values = watch();
   const counter = choice === 'COUNTER';
   const valid = schema.safeParse(values).success;
-  const quote = usePriceQuote({
-    venueId: venueId ?? '',
-    sample: { date: values.date, start: values.start, end: values.end, pax: values.pax, pets: false },
-    draft: null,
-    enabled: counter && !!venueId && valid,
-  });
+  const quote = useRespondQuote(venueId, counter && priced && valid ? offerInput(values) : null);
 
   return (
     <form id={formId} noValidate onSubmit={handleSubmit(async (next) => onSubmit(next))}>
@@ -90,6 +96,28 @@ export default function RespondEventRequestForm({ formId, choice, venueId, defau
             <Grid size={6}>
               <TimeField control={control} name="end" label={t('venuePricing.respond.end')} />
             </Grid>
+            {priced && (
+              <>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <RhfTextField control={control} name="model" select label={t('availability.offers.pricingOption')}>
+                {VENUE_OFFER_COUNTER_MODELS.map((option) => (
+                  <MenuItem key={option} value={option}>
+                    {t(VENUE_OFFER_INBOX_MODEL_KEY[option].label)}
+                  </MenuItem>
+                ))}
+              </RhfTextField>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <RhfTextField
+                control={control}
+                name="rate"
+                type="number"
+                label={t('availability.offers.amount')}
+                slotProps={{ htmlInput: { min: 0, step: 'any', inputMode: 'decimal' } }}
+              />
+            </Grid>
+              </>
+            )}
           </>
         )}
         <Grid size={12}>
@@ -110,7 +138,8 @@ export default function RespondEventRequestForm({ formId, choice, venueId, defau
           </Typography>
           {quote.loading && valid && <LinearProgress aria-label={t('venuePricing.preview.pricing')} />}
           {quote.error && <Alert severity="warning">{errorText(quote.error, t('venuePricing.preview.failed'))}</Alert>}
-          {!quote.error && quote.breakdown && valid && <PriceBreakdownView breakdown={quote.breakdown} />}
+          {quote.answer && !quote.answer.ok && <Alert severity="warning">{quote.answer.message}</Alert>}
+          {!quote.error && quote.answer?.quote && valid && <PriceBreakdownView breakdown={quote.answer.quote} />}
         </Stack>
       )}
     </form>

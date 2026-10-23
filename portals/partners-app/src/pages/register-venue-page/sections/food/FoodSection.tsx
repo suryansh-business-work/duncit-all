@@ -19,6 +19,8 @@ interface Props {
   venueName?: string;
   /** The venue has tables saved — its QR stickers can be printed. */
   hasSavedTables?: boolean;
+  /** Draw the dish list (default). Off on Food Settings — Food > Menu edits the dishes. */
+  showMenu?: boolean;
 }
 
 const ID_PREFIX = 'register-venue';
@@ -30,7 +32,16 @@ const ID_PREFIX = 'register-venue';
  * editable after approval. Switching food off keeps the menu for later; the
  * server stops taking orders.
  */
-export default function FoodSection({ form, config, mode, venueId, savedGstin, venueName, hasSavedTables }: Readonly<Props>) {
+export default function FoodSection({
+  form,
+  config,
+  mode,
+  venueId,
+  savedGstin,
+  venueName,
+  hasSavedTables,
+  showMenu = true,
+}: Readonly<Props>) {
   const { t } = useTranslation();
   const account = useMemo(() => partnersFoodAccount(ID_PREFIX), []);
 
@@ -50,6 +61,7 @@ export default function FoodSection({ form, config, mode, venueId, savedGstin, v
         idPrefix={ID_PREFIX}
         venueName={venueName}
         hasSavedTables={hasSavedTables}
+        showMenu={showMenu}
         gstin={<FoodGstinField control={form.control} mode={mode} savedGstin={savedGstin} />}
       />
     </Stack>

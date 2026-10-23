@@ -99,18 +99,32 @@ describe('createPodSchema', () => {
     expect(issues.map((issue) => issue.path.join('.'))).toEqual(
       expect.arrayContaining(['pod_title', 'club_id', 'pod_description', 'venue_id']),
     );
-    // No held slot and no end time → the instant booking's window is missing.
+    // No held slot and no end time → the offer's window is missing.
     expect(issues.find((issue) => issue.path.join('.') === 'pod_date_time_text')?.message).toBe(
       'Pick a date and time the venue is free',
     );
     expect(issues.map((issue) => issue.path.join('.'))).not.toContain('venue_slot_id');
   });
 
-  it('accepts an instant booking: no slot id, the whole window picked', () => {
+  it('accepts an offer: no slot id, the whole window picked, a pricing option and an amount', () => {
+    const offer = {
+      venue_slot_id: '',
+      pod_end_date_time_text: futureEndText,
+      venue_offer_model: 'PER_GUEST',
+      venue_offer_rate: '300',
+    };
+    expect(createPodSchema.safeParse(valid(offer)).success).toBe(true);
+  });
+
+  it('requires the offer to name how the venue is paid, and a positive amount', () => {
+    const offer = { venue_slot_id: '', pod_end_date_time_text: futureEndText };
+    const missing = issuesOf(valid({ ...offer, venue_offer_model: '', venue_offer_rate: '0' }));
+    expect(missing).toEqual(expect.arrayContaining(['venue_offer_model', 'venue_offer_rate']));
     expect(
-      createPodSchema.safeParse(valid({ venue_slot_id: '', pod_end_date_time_text: futureEndText }))
-        .success,
-    ).toBe(true);
+      issuesOf(valid({ ...offer, venue_offer_model: 'PER_PAX', venue_offer_rate: '300' })),
+    ).toContain('venue_offer_model');
+    // A held slot carries no offer, so neither field is asked for.
+    expect(issuesOf(valid())).not.toContain('venue_offer_model');
   });
 
   it("still requires a Pod Request's held slot", () => {
@@ -300,43 +314,62 @@ describe('buildCreatePodInput', () => {
     expect(input.partner_request_id).toBeNull();
   });
 
-  it('books a held slot by id and sends no instant booking beside it', () => {
+  it('books a held slot by id and sends no offer beside it', () => {
     const input = buildCreatePodInput(valid({ pod_end_date_time_text: futureEndText }));
     expect(input.venue_slot_id).toBe('slot-1');
-    expect(input.venue_booking).toBeNull();
+    expect(input.venue_offer).toBeNull();
+    expect(input).not.toHaveProperty('venue_booking');
   });
 
-  // One number: the pod's spots ARE the booking's guests, whatever the model.
-  it('sends the instant booking window, spots as guests, pets and space when no slot is held', () => {
+  // One number: the pod's spots ARE the offer's guests, whatever the terms.
+  it('sends the offer window, spots as guests, pets, space and terms when no slot is held', () => {
     const input = buildCreatePodInput(
       valid({
         venue_slot_id: '',
         pod_end_date_time_text: futureEndText,
         no_of_spots_text: '12',
         venue_booking_pets: true,
+        venue_offer_model: 'PER_HOUR',
+        venue_offer_rate: '800',
       }),
     );
     expect(input.venue_slot_id).toBeNull();
-    expect(input.venue_booking).toEqual({
+    expect(input.venue_offer).toEqual({
       start_at: parseDateTimeText(futureText)?.toISOString(),
       end_at: parseDateTimeText(futureEndText)?.toISOString(),
+      space_label: 'Main Hall',
       pax: 12,
       pets: true,
-      space_label: 'Main Hall',
+      model: 'PER_HOUR',
+      rate: 800,
     });
   });
 
-  it('books the whole venue as an empty space label and leaves pax to the server at 0', () => {
+  it('offers the whole venue as an empty space label', () => {
     const input = buildCreatePodInput(
       valid({
         venue_slot_id: '',
         venue_space_label: 'Whole venue',
         pod_end_date_time_text: futureEndText,
+        venue_offer_model: 'FLAT',
+        venue_offer_rate: '5000',
       }),
     );
-    expect(input.venue_booking).toEqual(
-      expect.objectContaining({ space_label: '', pax: null, pets: false }),
+    expect(input.venue_offer).toEqual(
+      expect.objectContaining({ space_label: '', pets: false, model: 'FLAT', rate: 5000 }),
     );
+  });
+
+  it('sends no offer until a pricing option and an amount are both picked', () => {
+    const base = { venue_slot_id: '', pod_end_date_time_text: futureEndText };
+    expect(
+      buildCreatePodInput(valid({ ...base, venue_offer_model: '', venue_offer_rate: '500' }))
+        .venue_offer,
+    ).toBeNull();
+    expect(
+      buildCreatePodInput(valid({ ...base, venue_offer_model: 'FLAT', venue_offer_rate: '' }))
+        .venue_offer,
+    ).toBeNull();
   });
 
   it('publishes a pod against its Pod Request when it was started from one', () => {
@@ -372,7 +405,7 @@ describe('buildCreatePodInput', () => {
     ).toBe(false);
     expect(input.venue_id).toBeNull();
     expect(input.venue_slot_id).toBeNull();
-    expect(input.venue_booking).toBeNull();
+    expect(input.venue_offer).toBeNull();
     expect(input.meeting_platform).toBeNull();
     expect(input.meeting_notes).toBeNull();
   });

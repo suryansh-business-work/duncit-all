@@ -1,5 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import { toApprovedUpdateInput, toStep1Input, toStep2Input, toStep3Input, venueToValues } from './register-venue.mappers';
+import {
+  toApprovedUpdateInput,
+  toFoodInput,
+  toSetupAmenitiesInput,
+  toSetupFoodInput,
+  toSetupInput,
+  toSetupTypeCapacityInput,
+  toStep1Input,
+  toStep2Input,
+  toStep3Input,
+  venueToValues,
+} from './register-venue.mappers';
 import { blankRegisterVenueValues, type RegisterVenueValues } from './register-venue.types';
 
 const account = { name: 'Asha Rao', email: 'asha@duncit.com' };
@@ -254,9 +265,21 @@ const dish: RegisterVenueValues['food_menu'][number] = {
 };
 
 describe('toStep1Input', () => {
+  it('sends the venue details only: type, capacity, food and amenities are set up from Venue Options', () => {
+    const input = toStep1Input({ ...filled, offers_food: true, amenities: ['AC'] });
+
+    expect(input.location_id).toBeNull();
+    for (const key of ['venue_type', 'capacity', 'capacity_items', 'offers_food', 'food_menu', 'amenities', 'facilities', 'security']) {
+      expect(input).not.toHaveProperty(key);
+    }
+  });
+});
+
+describe('toSetupTypeCapacityInput', () => {
   it('drops blank capacity rows and counts a non-numeric capacity as zero', () => {
-    const input = toStep1Input({
+    const input = toSetupTypeCapacityInput({
       ...filled,
+      venue_type: 'Cafe',
       capacity_items: [
         { label: ' Hall ', capacity: '40' },
         { label: '', capacity: '' },
@@ -264,18 +287,45 @@ describe('toStep1Input', () => {
       ],
     });
 
-    expect(input.capacity_items).toEqual([
-      { label: 'Hall', capacity: 40 },
-      { label: 'Terrace', capacity: 0 },
-    ]);
-    expect(input.capacity).toBe(40);
-    expect(input.location_id).toBeNull();
+    expect(input).toEqual({
+      venue_type: 'Cafe',
+      capacity_items: [
+        { label: 'Hall', capacity: 40 },
+        { label: 'Terrace', capacity: 0 },
+      ],
+    });
   });
 });
 
-describe('toStep1Input — food, which step 1 still stores now it has a section of its own', () => {
+describe('toSetupInput', () => {
+  it('sends only the page’s own fields', () => {
+    const values = { ...filled, venue_type: 'Cafe', amenities: ['AC'], facilities: ['Parking'], security: ['CCTV'] };
+    expect(toSetupInput('amenities', values)).toEqual(toSetupAmenitiesInput(values));
+    expect(toSetupInput('amenities', values)).toEqual({ amenities: ['AC'], facilities: ['Parking'], security: ['CCTV'] });
+    expect(toSetupInput('type-capacity', values)).toEqual(toSetupTypeCapacityInput(values));
+  });
+
+  it('leaves an approved venue’s menu out of a Food Settings save — Food > Menu edits it', () => {
+    const values = { ...filled, offers_food: true, food_menu: [{ ...dish }] };
+    expect(toSetupInput('food', values)).not.toHaveProperty('food_menu');
+    expect(toSetupInput('food', values)).toMatchObject({ offers_food: true });
+    expect(toSetupInput('food', values, { withMenu: true })).toHaveProperty('food_menu');
+  });
+
+  it('sends a typed GST number, upper-cased, and none when nothing was typed', () => {
+    expect(toSetupFoodInput({ ...filled, offers_food: true, food_gstin: ' 22abcde1234f1z5 ' }, { withMenu: false })).toMatchObject({
+      gstin: '22ABCDE1234F1Z5',
+    });
+    expect(toSetupFoodInput({ ...filled, offers_food: false }, { withMenu: false })).toEqual({ offers_food: false });
+  });
+});
+
+/** The shared food mapping every food save sends (Food Settings, and the menu for a venue not yet approved). */
+const foodInput = toFoodInput;
+
+describe('the food mapping, as Food Settings sends it', () => {
   it('sends only the switch while the venue does not offer food', () => {
-    const input = toStep1Input({ ...filled, offers_food: false, food_menu: [{ ...dish }] });
+    const input = foodInput({ ...filled, offers_food: false, food_menu: [{ ...dish }] });
 
     expect(input.offers_food).toBe(false);
     expect('food_menu' in input).toBe(false);
@@ -283,7 +333,7 @@ describe('toStep1Input — food, which step 1 still stores now it has a section 
   });
 
   it('sends the menu and ordering once food is on, a saved dish keeping its id', () => {
-    const input = toStep1Input({
+    const input = foodInput({
       ...filled,
       offers_food: true,
       food_menu: [{ ...dish }, { ...dish, item_id: '', name: 'Filter coffee', price: 'free' }],
@@ -311,13 +361,13 @@ describe('toStep1Input — food, which step 1 still stores now it has a section 
 
   it("sends the venue's own GST only while it overrides Finance's default", () => {
     const ordering = { ...filled.food_ordering, tax_mode: 'EXCLUSIVE', gst_pct: '18' };
-    const following = toStep1Input({ ...filled, offers_food: true, food_ordering: { ...ordering, tax_override: false } });
+    const following = foodInput({ ...filled, offers_food: true, food_ordering: { ...ordering, tax_override: false } });
     // Switched off, the stored GST is left alone — only the switch goes.
     expect(following.food_ordering).toMatchObject({ tax_override: false });
     expect('tax_mode' in (following.food_ordering ?? {})).toBe(false);
     expect('gst_pct' in (following.food_ordering ?? {})).toBe(false);
 
-    const overriding = toStep1Input({ ...filled, offers_food: true, food_ordering: { ...ordering, tax_override: true } });
+    const overriding = foodInput({ ...filled, offers_food: true, food_ordering: { ...ordering, tax_override: true } });
     expect(overriding.food_ordering).toMatchObject({ tax_override: true, tax_mode: 'EXCLUSIVE', gst_pct: 18 });
   });
 });
@@ -382,7 +432,7 @@ describe('food dishes — videos and display pricing', () => {
 
   it('round-trips the dish: what the server answers is what goes back', () => {
     const hydrated = venueToValues({ id: 'v1', offers_food: true, food_menu: [stored] }, [], account);
-    expect(toStep1Input(hydrated).food_menu).toEqual([
+    expect(foodInput(hydrated).food_menu).toEqual([
       {
         id: 'dish-1',
         name: 'Masala dosa',
@@ -401,7 +451,7 @@ describe('food dishes — videos and display pricing', () => {
   });
 
   it('sends a blank or zero MRP as no strikethrough at all', () => {
-    const input = toStep1Input({
+    const input = foodInput({
       ...filled,
       offers_food: true,
       food_menu: [{ ...dish }, { ...dish, item_id: '', original_price: 0 }, { ...dish, item_id: '', original_price: '199' }],
@@ -431,7 +481,7 @@ describe('food licences and QR tables', () => {
   });
 
   it('sends trimmed licence numbers and one label per table, a repeat kept once', () => {
-    const input = toStep1Input({
+    const input = foodInput({
       ...filled,
       offers_food: true,
       food_licences: { ...licences, fssai_number: ' 12345678901234 ', liquor_licence_number: ' KA-BAR-0099 ' },
@@ -454,7 +504,7 @@ describe('food licences and QR tables', () => {
   });
 
   it('sends neither while the venue serves no food, so the server keeps them for later', () => {
-    const input = toStep1Input({ ...filled, offers_food: false, food_licences: licences, food_tables: '1, 2' });
+    const input = foodInput({ ...filled, offers_food: false, food_licences: licences, food_tables: '1, 2' });
     expect(input).not.toHaveProperty('food_licences');
     expect(input).not.toHaveProperty('food_tables');
   });

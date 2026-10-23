@@ -150,16 +150,38 @@ describe('sample bookings', () => {
     expect(defaultSample()).toEqual({ date: '2026-12-02', start: '18:00', end: '20:00', pax: 10, pets: false });
   });
 
-  it('starts a counter offer on tomorrow evening when there is no offer yet, and sends emptied guests as 0', () => {
-    expect(respondDefaults(null)).toEqual({ note: '', date: '2026-12-02', start: '18:00', end: '20:00', pax: 10 });
-    expect(offerInput({ note: '', date: '2026-12-02', start: '18:00', end: '20:00', pax: Number.NaN })?.pax).toBe(0);
+  it('starts a counter offer on tomorrow evening at a flat price still to be named, and sends emptied guests as 0', () => {
+    expect(respondDefaults(null)).toEqual({ note: '', date: '2026-12-02', start: '18:00', end: '20:00', pax: 10, model: 'FLAT', rate: '' });
+    const counter = { note: '', date: '2026-12-02', start: '18:00', end: '20:00', pax: Number.NaN, model: 'FLAT', rate: '2500' };
+    expect(offerInput(counter)).toMatchObject({ pax: 0, model: 'FLAT', rate: 2500 });
+  });
+
+  it("sends a venue's counter only with its terms, and a host's as just the time", () => {
+    const counter = { note: '', date: '2026-12-02', start: '18:00', end: '20:00', pax: 10, model: 'PER_GUEST', rate: '' };
+    expect(offerInput(counter)).toBeNull();
+    expect(offerInput({ ...counter, rate: 'abc' })).toBeNull();
+    expect(offerInput({ ...counter, model: 'BARTER', rate: '300' })).toBeNull();
+    expect(offerInput({ ...counter, rate: '300' })).toMatchObject({ pax: 10, model: 'PER_GUEST', rate: 300 });
+    expect(offerInput(counter, false)).toEqual({ start_at: expect.any(String), end_at: expect.any(String), pax: 10 });
+    expect(offerInput({ ...counter, start: '' }, false)).toBeNull();
   });
 });
 
 describe('counter offer schema', () => {
+  const issues = (result: ReturnType<ReturnType<typeof buildRespondSchema>['safeParse']>) =>
+    result.success ? [] : result.error.issues.map((i) => `${i.path.join('.')}:${i.message}`);
+  const counter = { note: '', date: '2026-12-02', start: '18:00', end: '20:00', pax: 10, model: 'FLAT', rate: '2500' };
+
   it('needs a start time as well as an end after it', () => {
-    const result = buildRespondSchema(t, 'COUNTER').safeParse({ note: '', date: '2026-12-02', start: '', end: '20:00', pax: 10 });
-    expect(result.success ? [] : result.error.issues.map((i) => `${i.path.join('.')}:${i.message}`)).toEqual(['start:Pick a time']);
+    expect(issues(buildRespondSchema(t, 'COUNTER').safeParse({ ...counter, start: '' }))).toEqual(['start:Pick a time']);
+  });
+
+  it("needs a venue's pricing option and an amount above 0, but not a host's", () => {
+    expect(issues(buildRespondSchema(t, 'COUNTER').safeParse({ ...counter, model: 'BARTER' }))).toEqual(['model:Pick a pricing option']);
+    expect(issues(buildRespondSchema(t, 'COUNTER').safeParse({ ...counter, rate: '0' }))).toEqual(['rate:Enter an amount above 0']);
+    expect(issues(buildRespondSchema(t, 'COUNTER', false).safeParse({ ...counter, model: '', rate: '' }))).toEqual([]);
+    // Accept and reject read only the note.
+    expect(issues(buildRespondSchema(t, 'ACCEPT').safeParse({ ...counter, rate: '' }))).toEqual([]);
   });
 });
 

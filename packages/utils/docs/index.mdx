@@ -544,7 +544,16 @@ exports:
   - 'bookingClosedTiles'
   - 'bookingRateText'
   - 'bookingTileCaption'
-  - 'venuePricingTerms'
+  - 'venueOfferInput'
+  - 'currentOfferTerms'
+  - 'venueOfferActions'
+  - 'venueOfferInboxStatus'
+  - 'venueOfferInboxModelKey'
+  - 'VENUE_OFFER_INBOX_MODEL_KEY'
+  - 'venueOfferHistoryKey'
+  - 'offerPickerRules'
+  - 'venueOfferModelKey'
+  - 'venueOfferStatusKey'
   - 'podRowStatusLabel'
   - 'podRowStatusOptions'
   - 'POD_ROW_STATUS_COLORS'
@@ -676,14 +685,16 @@ row would count the cut twice.
 
 The partner studio OPTIONS — one catalogue mWeb, the native app and the Partner console all render. Switching into a studio puts ONE highlighted entry in the sidebar (`studioOptionsEntryFor`); it opens the studio's Options page, which lists `studioOptionsFor(mode, roles, { autoPods })` — each option with a title, a hint, an icon, and its mWeb `path`, native `route` and Partner console `portal` path (an app with no screen for an option opens the console).
 
-The catalogue is ONE flat list, so every Options page lists it in order. An option may name the sub-menu it belongs to with the optional `group` field (today only `'food'`: the venue's food Dashboard, Menu, Food Orders and Food Coupons). `studioOptionGroups(options)` splits any list of options into `{ main, food }`, each in catalogue order — the Partner console sidebar draws the venue studio as a "Venue Options" group and a "Food" group from it. An option without `group` is in `main`.
+The catalogue is ONE flat list, so every Options page lists it in order. An option may name the sub-menu it belongs to with the optional `group` field (today only `'food'`: the venue's food Dashboard, Menu, Food Orders, Food Coupons and Food Settings). `studioOptionGroups(options)` splits any list of options into `{ main, food }`, each in catalogue order — the Partner console sidebar sorts `main` into its own categories and draws `food` as the "Food" group. An option without `group` is in `main`.
+
+`appOnly` marks an app screen the Partner console has no page for (left out with `console: true`); `consoleOnly` marks a Partner console page the apps have no screen for (left out everywhere else) — the venue's Calendar, Type, Capacity & Hours, Amenities & Security, Leaves & Holidays, Fees & Minimum Spend, Price Rules and Food Settings.
 
 ```ts
 import { studioOptionsFor, venuePodPhase } from '@duncit/utils';
 
 studioOptionsFor('VENUE', roles, { autoPods }); // [] in User mode or once the role is revoked
 studioOptionGroups(studioOptionsFor('VENUE', roles, { autoPods }));
-// { main: [dashboard, venues, …], food: [food-dashboard, food-menu, food-orders, food-coupons] }
+// { main: [dashboard, venues, …], food: [food-dashboard, food-menu, food-orders, food-coupons, food-settings] }
 venuePodPhase('ONGOING'); // 'CURRENT' — the Upcoming / Current / Past tabs of Pods at your venue
 ```
 
@@ -3484,48 +3495,74 @@ const problem = reportSubmitError(pickedCategory, details); // a translation key
 | --- | --- |
 | `startOfDayInZone(ymd, timeZone)` | Local midnight of a calendar day in the admin zone, as epoch ms — what the venue booking grid counts from. An unknown zone reads as UTC; NaN for a value that is not a calendar day. |
 
-## Booking a venue instantly — `venue-booking`
+## Venue booking calendars — `venue-booking`
 
-Create Pod books a venue at the venue's own pricing (Venue Pricing Module) — no request, no
-approval. The server owns every rule: `venueBookingCalendar` (at most 62 days a call) says which
-days and times are open, `venuePriceQuote` prices a window, and the publish re-checks both. This
-module only turns those answers into the host's pickers and the price card, identically in mWeb
-and the native app; it never prices a booking. Tiles only show each day's rate at a glance
-(`dayRate`, the server's rule stacking).
+The host books a venue by sending it an offer (`venue-offer`, below). The server owns every rule:
+`venueOfferCalendar` (at most 62 days a call) says which days and times the venue is open and free,
+`venueOfferQuote` prices an offer, and the publish re-checks both. This module only turns those
+answers into the host's pickers and the price card, identically in mWeb and the native app; it
+never prices a booking.
 
 | Export | Meaning |
 | --- | --- |
-| `VENUE_BOOKING_MODEL_KEY` | How each pricing model (`PER_PAX`, `PER_SLOT`, `PER_HOUR`, `FLAT`) is named to the host, as a key. |
 | `bookingCalendarRange(fromYmd, days?)` | `{ from, to }` for one calendar read, capped at `MAX_BOOKING_CALENDAR_DAYS`. |
-| `bookingStepMinutes(rules)` / `bookingMinMinutes(rules)` / `bookingMaxMinutes(rules)` | The grid step (venue increment, else `DEFAULT_BOOKING_STEP_MINUTES`), the shortest window (PER_HOUR: `min_hours`, never under 30 min) and the longest (PER_HOUR `max_hours`, else none). |
-| `bookingStartOptions(day, rules, timeZone, nowMs)` | Start times on the grid (counted from local midnight, as the server checks it), inside opening hours, with room for the shortest window before closing and before any booked window. `rules.buffer_minutes` (from `venueBookingCalendar`) is kept clear around every booked window, and starts earlier than `nowMs` + `rules.min_notice_minutes` are hidden. |
+| `bookingStepMinutes(rules)` / `bookingMinMinutes(rules)` / `bookingMaxMinutes(rules)` | The grid step (venue increment, else `DEFAULT_BOOKING_STEP_MINUTES`), the shortest window (PER_HOUR: `min_hours`, never under 30 min) and the longest (PER_HOUR `max_hours`, else none). An offer's pickers use `offerPickerRules`: 30-minute grid, no length limits. |
+| `bookingStartOptions(day, rules, timeZone, nowMs)` | Start times on the grid (counted from local midnight, as the server checks it), inside opening hours, with room for the shortest window before closing and before any booked window. `rules.buffer_minutes` is kept clear around every booked window, and starts earlier than `nowMs` + `rules.min_notice_minutes` are hidden. |
 | `bookingEndOptions(day, rules, startIso, timeZone)` | End times for that start: on the grid, within min/max length, before closing, stopping short of the next booked window and its buffer. |
-| `bookingTiles(days, rules, timeZone, nowMs)` | What the calendar offers: a PER_SLOT venue's free slots, or every valid start time. Closed days (`closed_reason`) yield none. Each tile carries the day's `price` once `rules` holds the venue's `base_rate` / `price_rules`: the slot price after rules (PER_SLOT), the booking price (FLAT), or the rate per guest / hour with the day's FLAT rule changes apart in `price_extra` (the server adds those once to the booking). Shaped like `@duncit/slots`' `CalendarSlot`. |
+| `bookingTiles(days, rules, timeZone, nowMs)` | What the calendar offers: a PER_SLOT venue's free slots, or every valid start time (an offer's rules have no model, so starts, unpriced). Closed days (`closed_reason`) yield none. Shaped like `@duncit/slots`' `CalendarSlot`. |
 | `bookingClosedTiles(days, timeZone)` | One disabled whole-day tile per HOLIDAY / BLOCKED day, so the calendar labels the day closed instead of hiding it. Pass `wholeDay: t('mweb.createPod.venueTerms.closed')` in the calendar labels. |
 | `bookingRateText(model, rate, t, money)` / `bookingTileCaption(tile, model, t, money)` | A rate with its unit ("₹300 / guest"); a tile's second line — the closed reason, else its price (plus any flat change), else `''`. |
 | `bookingDayOf(days, startIso, timeZone)` / `bookingSlotId(start, end)` | The loaded day holding a start; a slot tile's id. |
-| `clampBookingPax(pax, minPax, maxPax)` | PER_PAX guests held inside the venue's range (`max 0` = no cap). |
 | `WHOLE_VENUE_SPACE` / `bookingSpaceLabel(label)` | The stored "whole venue" space both apps offer when a venue lists no capacity items, and the `space_label` a booking sends for a picked space (`''` for the whole venue). |
-| `bookingCalendarProps({ tiles, loading, error, selectedId, onPick, model, t, money })` | The props both apps hand their `SlotCalendar` for an instant booking (a pick resolves back to its `BookingTile`; a window is required; each tile's price, with its unit, is written into its `caption`, so the calendar's unit-less price line stays off). |
-| `venuePricingTerms(pricing, { t, money, clock, date, weekday, today })` (`venue-booking-terms`) | The read-only summary card shown before a time is picked: sections `booking` (model, rate, guest / hour limits, booking step), `rules` (price changes still to come — weekdays Monday first, upcoming override dates, unexpired ranges), `fees` (minimum spend, cleaning, pet fee, GST, refundable deposit settled at the venue) and `hours` (weekdays sharing a window grouped, then the closed days; none for PER_SLOT). Each row is `{ id, label, value }`, already translated; empty sections are dropped. |
+| `bookingCalendarProps({ tiles, loading, error, selectedId, onPick, model, t, money })` | The props both apps hand their `SlotCalendar` (a pick resolves back to its `BookingTile`; a window is required; a tile's caption carries its closed reason or price, so the calendar's unit-less price line stays off). |
 | `venueSpaces(venue)` | The bookable spaces of a venue: its named capacity items (`slotSpaceLabel` = the item label), else one `WHOLE_VENUE_SPACE` at the venue capacity (`slotSpaceLabel` `''`). Empty for no venue. |
-| `instantBookingInput(source)` | The `venue_booking` input (`start_at`, `end_at`, `pax`, `pets`, `space_label`), or null until a window is picked. |
 | `venueQuoteLines(quote, money)` | The price card: base, each rule applied, min-spend top-up, cleaning / pet fees, taxes and Duncit's fee (on top), as `{ labelKey, label?, vars, amount }` rows, plus `total` (the whole cost to the pod — what the shortfall check compares; the earnings preview sends the quote's `venue_payout` as `venue_amount` and its `platform_fee` as `venue_commission_on_top`) and the refundable `deposit` (paid at the venue, never in the total). |
-| `VENUE_BOOKING_PRICING_SDL` / `VENUE_BOOKING_CALENDAR_SDL` / `VENUE_PRICE_QUOTE_SDL` | The host-side documents, as SDL strings. |
 
 ```ts
-const tiles = bookingTiles(calendar.days, pricing, 'Asia/Kolkata', Date.now());
-const ends = bookingEndOptions(day, pricing, picked.start_at, 'Asia/Kolkata');
-const booking = instantBookingInput({ start, end, pax: 0, pets: false, spaceLabel: '' });
-const { lines, total, deposit } = venueQuoteLines(data.venuePriceQuote, (v) => formatStatementMoney(v, '₹'));
-const sections = venuePricingTerms(pricing, {
-  t,
-  money: (v) => formatStatementMoney(v, '₹'),
-  clock: fmt.formatClock,
-  date: fmt.formatDay,
-  weekday: (d) => weekdayLabels(t).short[d],
-  today: fmt.dayKey(Date.now()),
-});
+const rules = offerPickerRules(calendar);
+const tiles = bookingTiles(calendar.days, rules, 'Asia/Kolkata', Date.now());
+const ends = bookingEndOptions(day, rules, picked.start_at, 'Asia/Kolkata');
+const { lines, total, deposit } = venueQuoteLines(result.quote, (v) => formatStatementMoney(v, '₹'));
+```
+
+## Offering a venue a price — `venue-offer`
+
+A host books a venue by offering how they will pay it — per guest, per hour, for the slot, or a
+flat price — with an amount. The server prices the offer with the venue's own charges (price rules,
+minimum spend, fees, GST) and Duncit's commission on top; the venue then accepts, rejects or
+counters it, and a counter waits for the host.
+
+| Export | Meaning |
+| --- | --- |
+| `VENUE_OFFER_MODELS` / `VENUE_OFFER_MODEL_KEY` | The pricing options (`PER_GUEST`, `PER_HOUR`, `PER_SLOT`, `FLAT`) in picker order, and each one's name and amount-field label keys. |
+| `isVenueOfferModel(model)` / `venueOfferModelKey(model)` | Whether a plain string (either app's enum) is an option; its name key, or `''`. |
+| `offerRateOf(rate)` | A typed amount as rupees (2 decimals), or 0 when it is not a positive number. |
+| `venueOfferInput(source)` | The `venue_offer` input (`start_at`, `end_at`, `space_label` — `''` for the whole venue — `pax`, `pets`, `model`, `rate`), or null until a window, an option and an amount are all there. |
+| `offerPickerRules(calendar)` | The `BookingRules` an offer's pickers use: the 30-minute grid, no length limits, the venue's buffer and notice. |
+| `VENUE_OFFER_STATUS_KEY` / `venueOfferStatusKey(status)` | How `SENT`, `COUNTERED`, `ACCEPTED` and `DECLINED` read to the host; `''` for an unknown status. |
+| `VENUE_OFFER_QUOTE_SDL` / `VENUE_OFFER_CALENDAR_SDL` / `POD_VENUE_OFFER_SDL` / `ACCEPT_VENUE_COUNTER_OFFER_SDL` / `REJECT_VENUE_COUNTER_OFFER_SDL` | The host-side documents, as SDL strings (mWeb wraps them with `gql`; the native app re-declares them for its codegen). |
+
+```ts
+const offer = venueOfferInput({ start, end, pax: spots, pets: false, spaceLabel, model: 'PER_GUEST', rate: '300' });
+// → { start_at, end_at, space_label: '', pax: 20, pets: false, model: 'PER_GUEST', rate: 300 }
+```
+
+## Answering a host's offer — `venue-offer-inbox`
+
+The venue's side of `venue-offer`: where a booking request stands and what the venue may do,
+for the Partners console, mWeb and the native app. Every copy key is a literal (`availability.offers.*`).
+
+| Export | What it is |
+| --- | --- |
+| `currentOfferTerms(offer)` | The terms on the table and whose they are: the venue's counter while there is one (`by: 'VENUE'`), else the host's offer (`by: 'HOST'`). |
+| `venueOfferActions(offer)` | What the venue may do now: `SENT` → accept, reject, counter; `COUNTERED` → reject or change the counter (it cannot accept its own terms); settled → nothing. |
+| `venueOfferInboxStatus(offer)` | How the status reads to the venue, and the chip tone; `''` for an unknown status. |
+| `VENUE_OFFER_INBOX_MODEL_KEY` / `venueOfferInboxModelKey(model)` | Each pricing option's name and amount-line keys (`"{rate} per guest"`); null for an unknown option. |
+| `venueOfferHistoryKey(entry)` | One negotiation step's sentence key by who took it (`HOST:OFFER`, `VENUE:COUNTER`, …); `''` for an unknown one. |
+
+```ts
+const { accept, reject, counter } = venueOfferActions(request.offer);
+const terms = currentOfferTerms(request.offer); // → { by: 'HOST', model: 'PER_GUEST', rate: 300, quote }
 ```
 
 ## Time clash before a booking — `pod-booking-clash`
@@ -3679,6 +3716,9 @@ Partners app share the operations and the merge below.
 | `hasVenueChat(pod)` | Whether a pod has a thread: only one booked at a venue (`venue_id`). The "Chat with venue / host" rows show on that. |
 | `isVenueChatUnavailable(code)` | Whether a failure's code (`FORBIDDEN`) means "this thread is not yours" — the not-available state, not a retry. |
 | `venueChatCounterpart(room)` | The header: a host sees the venue's name and photo plus the pod; the venue sees the pod's title. Both get the pod's time. |
+| `MY_VENUE_CHAT_THREADS_SDL` | The venue owner's inbox: `myVenueChatThreads(venue_id?, limit, offset)` — every thread someone wrote in (newest first), then upcoming pods nobody has written about yet, each with the lead host, the newest line, `last_message_is_photo` and the caller's `unread_count`. Opening a thread's newest page marks it read. |
+| `ADMIN_VENUE_CHAT_THREADS_SDL` / `ADMIN_VENUE_CHAT_MESSAGES_SDL` | Duncit staff (Venues console): one venue's threads and one thread's lines, read-only — no read marks. |
+| `VENUE_CHAT_THREADS_PAGE` / `VenueChatThreadRow` | Rows per inbox page (30), and one row's shape. `@duncit/ui` `VenueChatThreadList` draws it on the web. |
 
 ```ts
 venueChatPath('6650a1')                                    // '/venue-chat/6650a1'

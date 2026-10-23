@@ -1683,11 +1683,6 @@ export { startOfDayInZone } from './zone-day';
 export {
   DEFAULT_BOOKING_STEP_MINUTES,
   MAX_BOOKING_CALENDAR_DAYS,
-  VENUE_BOOKING_CALENDAR_SDL,
-  VENUE_BOOKING_MODEL_KEY,
-  venueBookingModelKey,
-  VENUE_BOOKING_PRICING_SDL,
-  VENUE_PRICE_QUOTE_SDL,
   WHOLE_VENUE_SPACE,
   bookingCalendarProps,
   bookingClosedTiles,
@@ -1703,16 +1698,12 @@ export {
   bookingStartOptions,
   bookingStepMinutes,
   bookingTiles,
-  clampBookingPax,
-  instantBookingInput,
   venueQuoteLines,
   venueSpaces,
   type BookingCalendarDay,
   type BookingRules,
   type BookingTile,
   type BookingTranslate,
-  type InstantBooking,
-  type InstantBookingSource,
   type VenueBookingModel,
   type VenueQuote,
   type VenueQuoteLine,
@@ -1720,13 +1711,30 @@ export {
   type VenueSpaceSource,
 } from './venue-booking';
 export {
-  TERMS_DATES_SHOWN,
-  venuePricingTerms,
-  type VenueTermsFormat,
-  type VenueTermsRow,
-  type VenueTermsSection,
-  type VenueTermsSource,
-} from './venue-booking-terms';
+  ACCEPT_VENUE_COUNTER_OFFER_SDL,
+  POD_VENUE_OFFER_SDL,
+  REJECT_VENUE_COUNTER_OFFER_SDL,
+  VENUE_OFFER_CALENDAR_SDL,
+  VENUE_OFFER_MODELS,
+  VENUE_OFFER_MODEL_KEY,
+  VENUE_OFFER_QUOTE_SDL,
+  VENUE_OFFER_STATUS_KEY,
+  VENUE_OFFER_TERMS_KEY,
+  hostMayAnswerCounter,
+  isVenueOfferModel,
+  offerCalendarPicks,
+  offerPickerRules,
+  offerRateOf,
+  venueOfferInput,
+  venueOfferModelKey,
+  venueOfferStatusKey,
+  venueOfferTermsText,
+  type OfferCalendar,
+  type OfferCalendarLimits,
+  type VenueOfferInput,
+  type VenueOfferModel,
+  type VenueOfferSource,
+} from './venue-offer';
 export { MY_BOOKING_CLASHES_SDL, uniqueClashingPods, type PodBookingClash } from './pod-booking-clash';
 export {
   CHAT_PREVIEW_PAGE,
@@ -1738,11 +1746,15 @@ export {
   type ChatPreviewKind,
 } from './chat-preview';
 export {
+  ADMIN_VENUE_CHAT_MESSAGES_SDL,
+  ADMIN_VENUE_CHAT_THREADS_SDL,
+  MY_VENUE_CHAT_THREADS_SDL,
   SEND_VENUE_CHAT_MESSAGE_SDL,
   VENUE_CHAT_MESSAGES_SDL,
   VENUE_CHAT_PAGE,
   VENUE_CHAT_ROOM_SDL,
   VENUE_CHAT_SOCKET,
+  VENUE_CHAT_THREADS_PAGE,
   hasVenueChat,
   isVenueChatUnavailable,
   mergeVenueChatLines,
@@ -1753,6 +1765,7 @@ export {
   type VenueChatLine,
   type VenueChatRoomInfo,
   type VenueChatSide,
+  type VenueChatThreadRow,
 } from './venue-chat';
 export {
   CHAT_HISTORY_PAGE,
@@ -1977,3 +1990,16 @@ export {
   withoutDateOverride,
   type PriceRuleLike,
 } from './venue-price-rules';
+// The venue's side of a host's booking offer: its inbox status, actions and history lines.
+export {
+  currentOfferTerms,
+  venueOfferActions,
+  venueOfferHistoryKey,
+  venueOfferInboxModelKey,
+  venueOfferInboxStatus,
+  VENUE_OFFER_INBOX_MODEL_KEY,
+  type CurrentOfferTerms,
+  type InboxOffer,
+  type OfferStatusTone,
+  type VenueOfferParty,
+} from './venue-offer-inbox';

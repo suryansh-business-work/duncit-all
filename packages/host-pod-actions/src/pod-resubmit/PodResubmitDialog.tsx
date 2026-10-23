@@ -12,7 +12,8 @@ import {
   TextField,
 } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
-import { SlotField, VenueField } from './VenueSlotFields';
+import OfferTermsFields from './OfferTermsFields';
+import { OfferWindowField, VenueField } from './VenueSlotFields';
 import {
   buildHostResubmitInput,
   buildPodResubmitModerationInput,
@@ -23,8 +24,8 @@ import {
 import ContentCheckAlert from '../ContentCheckAlert';
 import { useContentCheck } from '../useContentCheck';
 import { useHostPodActionsConfig } from '../HostPodActionsProvider';
-import { HOST_RESUBMIT_POD, RESUBMIT_VENUES, RESUBMIT_VENUE_SLOTS } from '../queries';
-import type { HostPodTarget, ResubmitSlotOption, ResubmitVenueOption } from '../types';
+import { HOST_RESUBMIT_POD, RESUBMIT_VENUES } from '../queries';
+import type { HostPodTarget, ResubmitVenueOption } from '../types';
 
 interface Props {
   pod: HostPodTarget | null;
@@ -33,8 +34,8 @@ interface Props {
 }
 
 /** Full edit + resubmission dialog for a venue-rejected pod: pick a different
- * venue or time slot, update the details and send the booking request again —
- * the same pod is reused, no new pod is created. */
+ * venue or time, how the venue is paid, update the details and send the offer
+ * again — the same pod is reused, no new pod is created. */
 export default function PodResubmitDialog({ pod, onClose, onSaved }: Readonly<Props>) {
   const { labels, renderMediaField } = useHostPodActionsConfig();
   const {
@@ -52,11 +53,10 @@ export default function PodResubmitDialog({ pod, onClose, onSaved }: Readonly<Pr
   });
   const venueId = watch('venue_id');
   const venuesQ = useQuery<{ publicVenues: ResubmitVenueOption[] }>(RESUBMIT_VENUES, { skip: !pod });
-  const slotsQ = useQuery<{ venueAvailableSlots: ResubmitSlotOption[] }>(RESUBMIT_VENUE_SLOTS, {
-    variables: { venue_id: venueId },
-    skip: !venueId,
-    fetchPolicy: 'cache-and-network',
-  });
+  const setWindow = (start: string, end: string) => {
+    setValue('offer_start', start, { shouldValidate: true });
+    setValue('offer_end', end, { shouldValidate: true });
+  };
   const [resubmit, resubmitState] = useMutation<any>(HOST_RESUBMIT_POD);
   const check = useContentCheck(setError);
   const busy = resubmitState.loading || check.checking;
@@ -127,25 +127,20 @@ export default function PodResubmitDialog({ pod, onClose, onSaved }: Readonly<Pr
                 error={fieldState.error?.message}
                 onChange={(next) => {
                   field.onChange(next);
-                  setValue('venue_slot_id', '');
+                  setValue('offer_start', '');
+                  setValue('offer_end', '');
                 }}
               />
             )}
           />
-          <Controller
-            control={control}
-            name="venue_slot_id"
-            render={({ field, fieldState }) => (
-              <SlotField
-                slots={slotsQ.data?.venueAvailableSlots ?? []}
-                loading={!!venueId && slotsQ.loading}
-                disabled={!venueId}
-                value={field.value}
-                error={fieldState.error?.message}
-                onChange={field.onChange}
-              />
-            )}
+          <OfferWindowField
+            venueId={venueId}
+            start={watch('offer_start')}
+            end={watch('offer_end')}
+            error={errors.offer_start?.message}
+            onWindow={setWindow}
           />
+          {venueId && <OfferTermsFields control={control} />}
           <Controller
             control={control}
             name="media_text"

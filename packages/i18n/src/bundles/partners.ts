@@ -467,23 +467,12 @@ export const PARTNERS_BUNDLE: NestedCatalogue = {
     },
 
     slotRequestsPage: {
-      approveThisSlotBooking: 'Approve this slot booking?',
-      awaitingDecision: 'Awaiting decision',
-      declineThisSlotBooking: 'Decline this slot booking?',
-      filterRequestsByVenue: 'Filter requests by venue',
       // A free pod's venue charges are settled with the host directly, off the
       // platform — shown instead of the slot price and the earnings breakdown.
       freePodNotice:
         'Please coordinate with the host. The host will contact you about your charges. Please do not confirm the slot until the host has called you to discuss or has transferred the amount.',
       freePodTitle: 'This pod is free',
-      noPendingSlotRequestsRightNow: 'No pending slot requests right now. New requests appear here the moment a host books one of your slots.',
-      reasonOptional: 'Reason (optional)',
-      requested: 'Requested',
-      sharedWithTheHostSoThey: 'Shared with the host so they can follow up',
-      slot: 'Slot',
       slotPrice: 'Slot price',
-      slotRequests: 'Slot Requests',
-      viewRequest: 'View request',
     },
 
     supportPage: {
@@ -505,10 +494,34 @@ export const PARTNERS_BUNDLE: NestedCatalogue = {
       venueNotFoundOrItIsn: "Venue not found, or it isn't yours.",
     },
 
+    // The Venue Options pages that set a venue up (type, capacity, hours,
+    // amenities, food, fees, price rules, calendar), at any status.
+    venueSetup: {
+      save: 'Save',
+      saved: 'Saved.',
+      saveFailed: 'Could not save. Try again.',
+      loadFailed: 'Could not load this venue. Try again.',
+      typeLocked: 'Your venue type is fixed once the venue is approved. Ask Duncit support to change it.',
+      hoursTitle: 'Opening hours',
+      hoursSubtitle: 'When your venue opens and closes every day it is open.',
+      opensAt: 'Opens at',
+      closesAt: 'Closes at',
+      closeAfterOpen: 'Closing time must be after opening time',
+      timeRequired: 'Pick a time',
+      weeklyOff: 'Weekly off days',
+      weeklyOffHint: 'Days your venue is closed every week.',
+      calendarTitle: 'Calendar',
+      calendarHint: 'Tap a date to block it or mark it a holiday. Bookings already made are kept.',
+      blocked: 'Blocked',
+      dayTitle: 'Date',
+      close: 'Close',
+    },
+
     venueDashboardPage: {
       bookedSlots: 'Booked Slots',
       bookedValue: 'Booked Value',
       pendingRequests: 'Pending Requests',
+      pendingRequestsHint: 'Booking requests from hosts waiting for your answer',
       pickOneVenueOrViewAll: 'Pick one venue or view all together',
       potentialEarnings: 'Potential Earnings',
       registerVenue: 'Register venue',

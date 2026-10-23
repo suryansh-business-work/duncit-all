@@ -40,9 +40,8 @@ interface Props {
 }
 
 /**
- * Past slot requests, from before hosts booked instantly. Read-only: nothing
- * creates new ones, and a request still pending keeps its old approve /
- * decline until it expires.
+ * Booking requests the venue has answered — accepted, rejected or expired —
+ * and, unless hidden, any still pending. Read-only: the inbox above answers them.
  */
 export default function SlotRequestHistory({ venueId, renderPendingAction, hidePending = false }: Readonly<Props>) {
   const { t } = useTranslation();

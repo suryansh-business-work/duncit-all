@@ -22,6 +22,9 @@ export interface VenueFoodFieldsProps<T extends FieldValues, TOut = T> extends F
   venueName?: string;
   /** The venue has tables saved — only then can its stickers be printed (the server prints the saved list). */
   hasSavedTables?: boolean;
+  /** Draw the dish list. Off on the Partner console's Food Settings page, which
+   * sets up everything but the menu (Food > Menu edits that). Default on. */
+  showMenu?: boolean;
 }
 
 /**
@@ -40,6 +43,7 @@ export default function VenueFoodFields<T extends FieldValues, TOut = T>({
   gstin,
   venueName,
   hasSavedTables = false,
+  showMenu = true,
 }: Readonly<VenueFoodFieldsProps<T, TOut>>) {
   const offersFood = useWatch({ control, name: offersFoodPath<T>() }) === true;
 
@@ -49,8 +53,12 @@ export default function VenueFoodFields<T extends FieldValues, TOut = T>({
       {offersFood && (
         <>
           <FoodLicenceFields control={control} upload={upload} idPrefix={idPrefix} />
-          <Divider flexItem />
-          <FoodDishList control={control} config={config} upload={upload} idPrefix={idPrefix} />
+          {showMenu && (
+            <>
+              <Divider flexItem />
+              <FoodDishList control={control} config={config} upload={upload} idPrefix={idPrefix} />
+            </>
+          )}
           <Divider flexItem />
           <FoodOrderingFields control={control} config={config} account={account} idPrefix={idPrefix} />
           {gstin}

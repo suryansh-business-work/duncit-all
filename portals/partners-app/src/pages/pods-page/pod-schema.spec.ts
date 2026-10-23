@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { fallbackT, makeNativeParityPodConfig, makePodSchema } from '@duncit/pod-form';
+import { bookingKeyOf, fallbackT, makeNativeParityPodConfig, makePodSchema } from '@duncit/pod-form';
 import { PARTNER_POD_CONFIG } from './partner-pod-config';
 
 // The schema's messages come from the catalogue now, so it is built with the
@@ -64,8 +64,21 @@ describe('makePodSchema (partner config)', () => {
     expect(messages(result)).toMatch(/slot/i);
   });
 
-  it('does not force a slot re-pick when an edit keeps its booked dates', () => {
-    expect(partnerPodSchema.safeParse({ ...validPod, venue_slot_id: '' }).success).toBe(true);
+  it('does not force a new offer when an edit keeps its venue and dates', () => {
+    const edit = { ...validPod, venue_slot_id: '', kept_booking: bookingKeyOf(validPod) };
+    expect(partnerPodSchema.safeParse(edit).success).toBe(true);
+  });
+
+  it('asks a new pod, or an edit that moves its dates, how the venue is paid', () => {
+    const fresh = partnerPodSchema.safeParse({ ...validPod, venue_slot_id: '' });
+    expect(fresh.success).toBe(false);
+    const moved = partnerPodSchema.safeParse({
+      ...validPod,
+      venue_slot_id: '',
+      kept_booking: bookingKeyOf(validPod),
+      pod_date_time: new Date(validPod.pod_date_time.getTime() + 86400000),
+    });
+    expect(moved.success).toBe(false);
   });
 
   it('does not require a host (host is injected server-side)', () => {

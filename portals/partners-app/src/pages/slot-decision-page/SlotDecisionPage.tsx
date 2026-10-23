@@ -12,6 +12,7 @@ import DecisionHeader from './DecisionHeader';
 import DeclineForm from './DeclineForm';
 import EarningsBreakdown from './EarningsBreakdown';
 import SlotSummary from './SlotSummary';
+import OfferDecisionPanel from './OfferDecisionPanel';
 import ChatWithHostButton from '../venue-chat-page/ChatWithHostButton';
 import { useTranslation } from '@duncit/shell';
 
@@ -42,7 +43,9 @@ export default function SlotDecisionPage() {
   const [showDeclineForm, setShowDeclineForm] = useState(false);
 
   const request = data?.venueSlotDecision;
-  const pending = request?.decision === 'NONE';
+  // A host's offer is answered with its own Accept / Counter / Reject; the
+  // email's one-tap approve and decline stay for requests from before offers.
+  const pending = request?.decision === 'NONE' && !request.offer;
 
   // `?action=approve` is an explicit instruction from the email button, so it
   // is honoured on arrival. The ref keeps a re-render (or a refetch) from
@@ -101,7 +104,8 @@ export default function SlotDecisionPage() {
         <Divider sx={{ my: 2 }} />
         {/* A free pod's charges are settled with the host off the platform —
          * every figure would be 0, so the owner reads the notice instead. */}
-        {request.pod_is_free ? <FreePodNotice /> : <EarningsBreakdown request={request} lost={declined} />}
+        {request.offer && <OfferDecisionPanel request={request} offer={request.offer} onDone={refetch} />}
+        {!request.offer && (request.pod_is_free ? <FreePodNotice /> : <EarningsBreakdown request={request} lost={declined} />)}
 
         {declined && request.decline_reason && (
           <Alert severity="info" sx={{ mt: 2 }}>

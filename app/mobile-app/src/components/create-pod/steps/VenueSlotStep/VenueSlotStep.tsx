@@ -16,7 +16,7 @@ import type { CreatePodForm, CreatePodSlot, CreatePodVenue } from '../../create-
 import { FreeVenueNote } from '../../FreeVenueNote';
 import type { FreePodVenueNotice, SpotsBounds } from '@duncit/utils';
 
-import { InstantBookingPicker } from './InstantBookingPicker';
+import { VenueOfferPicker } from './VenueOfferPicker';
 import type { VenueQuoteState } from './VenueQuoteCard';
 import { VenueSpaceCard } from './VenueSpaceCard';
 import { spaceSlots, venueMapQuery, venueSpaces, type VenueSpace } from './venueSpaces';
@@ -39,10 +39,10 @@ interface Props {
   spots: SpotsBounds;
 }
 
-/** Step 3 — pick a venue partner in the pod's city and book it instantly at
- * its own pricing (physical), or meeting details + schedule (virtual). A Pod
- * Request's pod keeps the slot that request holds. The booked window sets the
- * pod's date/time. mWeb twin. */
+/** Step 3 — pick a venue partner in the pod's city and send it an offer for a
+ * window (physical), or meeting details + schedule (virtual). A Pod Request's
+ * pod keeps the slot that request holds. The offered window sets the pod's
+ * date/time. mWeb twin. */
 export function VenueSlotStep({
   form,
   venues,
@@ -73,7 +73,7 @@ export function VenueSlotStep({
   );
   const selectedVenue = venues.find((venue) => venue.id === venueId) ?? null;
   // A Pod Request's pod books the slot that request holds; every other pod —
-  // a club admin's edit too — books instantly (a held slot is kept until a new
+  // a club admin's edit too — sends an offer (a held slot is kept until a new
   // window is picked).
   const bookBySlot = Boolean(watch('partner_request_id'));
   const spaces = venueSpaces(selectedVenue);
@@ -162,7 +162,7 @@ export function VenueSlotStep({
         />
       ) : null}
       {selectedVenue && selectedSpace && !bookBySlot ? (
-        <InstantBookingPicker
+        <VenueOfferPicker
           form={form}
           venueId={selectedVenue.id}
           spaceLabel={selectedSpace.label}

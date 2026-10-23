@@ -3,7 +3,8 @@ import { MockedProvider } from '@apollo/client/testing/react';
 import { MemoryRouter } from 'react-router';
 import { afterEach, describe, expect, it } from 'vitest';
 import VenueSlotRequestsPage from '..';
-import { MY_VENUES, VENUE_SLOT_REQUESTS } from '../queries';
+import { VENUE_BOOKING_REQUESTS } from '@duncit/availability-calendar';
+import { MY_VENUES } from '../queries';
 import { SELECTED_VENUE_KEY } from '../../../hooks/useSelectedVenue';
 
 const venuesMock = {
@@ -30,15 +31,16 @@ const row = (slot_id: string, venue_id: string, pod_title: string) => ({
   requested_at: '2099-07-01T10:00:00.000Z',
   pod_id: `pod-${slot_id}`,
   pod_title,
-  pod_description: '',
   host_name: 'Asha',
   host_email: 'asha@example.com',
   host_phone: '9999999999',
   pod_is_free: false,
+  // A request from before booking offers: accept or reject only.
+  offer: null,
 });
 
 const requestsFor = (venue_id: string | null, rows: object[]) => ({
-  request: { query: VENUE_SLOT_REQUESTS, variables: { venue_id } },
+  request: { query: VENUE_BOOKING_REQUESTS, variables: { venue_id } },
   result: { data: { venueSlotRequests: rows } },
   maxUsageCount: Number.POSITIVE_INFINITY,
 });

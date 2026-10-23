@@ -52,6 +52,7 @@ export const DATE_FORMATTER: PodFormData['dateFormatter'] = {
   formatTime: (input) => toDate(input).toISOString().slice(11, 16),
   formatPattern: (input) => String(input.getUTCDate()),
   clock: { nowMs: () => Date.UTC(2030, 0, 1, 9, 0, 0) },
+  timeZone: 'UTC',
 };
 
 /** Default injected PodFormData — override slices per test. */

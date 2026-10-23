@@ -400,8 +400,9 @@ export const podTypeDefs = /* GraphQL */ `
     location_id: ID
     venue_id: ID
     venue_slot_id: ID
-    "Book the venue instantly at its own pricing (instead of venue_slot_id). The server prices and checks it."
-    venue_booking: InstantBookingInput
+    "Offer to book the venue (instead of venue_slot_id): the host's window, guests and terms. The server prices and checks it; another partner's venue then accepts, rejects or counters."
+    venue_offer: VenueOfferInput
+    venue_booking: InstantBookingInput @deprecated(reason: "Venues are booked with an offer now (venue_offer). Refused with a message to update the app.")
     "The Pod Request whose confirmed slot this pod books (host only; the slot is adopted, no second venue approval)."
     partner_request_id: ID
     club_id: ID!
@@ -446,8 +447,9 @@ export const podTypeDefs = /* GraphQL */ `
     pod's current booking untouched.
     """
     venue_slot_id: ID
-    "Re-route onto an instant booking at the venue's own pricing (portals). Booked before the old slot is released."
-    venue_booking: InstantBookingInput
+    "Re-route onto an offer to a venue (portals). Placed before the old booking is released; another partner's venue must accept it."
+    venue_offer: VenueOfferInput
+    venue_booking: InstantBookingInput @deprecated(reason: "Venues are booked with an offer now (venue_offer). Refused with a message to update the app.")
     club_id: ID
     zone_name: String
     pod_mode: PodMode
@@ -535,8 +537,10 @@ export const podTypeDefs = /* GraphQL */ `
     pod_title: String
     location_id: ID
     venue_id: ID
-    "A fresh slot to request — re-enters the venue's approval queue."
+    "A fresh slot to book."
     venue_slot_id: ID
+    "A fresh offer to a venue: another partner's venue accepts, rejects or counters it."
+    venue_offer: VenueOfferInput
     zone_name: String
     pod_mode: PodMode
     meeting_platform: String

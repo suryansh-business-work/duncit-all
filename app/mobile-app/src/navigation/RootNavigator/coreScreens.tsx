@@ -75,6 +75,7 @@ import {
 } from '@/screens/StudioOptionsScreen';
 import { VenueListScreen } from '@/screens/VenueListScreen';
 import { VenuePodsScreen } from '@/screens/VenuePodsScreen';
+import { VenueChatsScreen } from '@/screens/VenueChatsScreen';
 import {
   VenueFoodCouponsScreen,
   VenueFoodDashboardScreen,
@@ -166,6 +167,7 @@ export function renderCoreScreens() {
       <Stack.Screen name="HostShare" component={HostShareScreen} />
       <Stack.Screen name="HostCategories" component={HostCategoriesScreen} />
       <Stack.Screen name="VenuePods" component={VenuePodsScreen} />
+      <Stack.Screen name="VenueChats" component={VenueChatsScreen} />
       <Stack.Screen name="VenueFoodDashboard" component={VenueFoodDashboardScreen} />
       <Stack.Screen name="VenueFoodMenu" component={VenueFoodMenuScreen} />
       <Stack.Screen name="VenueFoodOrders" component={VenueFoodOrdersScreen} />

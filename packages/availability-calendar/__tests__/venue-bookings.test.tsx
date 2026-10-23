@@ -109,19 +109,19 @@ describe('SlotRequestHistory', () => {
 
   it('shows a skeleton while loading', () => {
     withApollo([mockOf(MY_VENUE_SLOT_REQUEST_HISTORY, historyAnswer([]), [], 60_000)], <SlotRequestHistory venueId="venue-1" />);
-    expect(screen.getByLabelText('Loading past slot requests')).toBeInTheDocument();
+    expect(screen.getByLabelText('Loading answered requests')).toBeInTheDocument();
   });
 
   it('says when the history could not be loaded', async () => {
     withApollo([mockOf(MY_VENUE_SLOT_REQUEST_HISTORY, { errors: [new GraphQLError('boom')] })], <SlotRequestHistory venueId="venue-1" />);
-    expect(await screen.findByRole('alert')).toHaveTextContent("We couldn't load past slot requests.");
+    expect(await screen.findByRole('alert')).toHaveTextContent("We couldn't load the answered requests.");
   });
 
   it('explains instant booking and says when there is no history', async () => {
     withApollo([mockOf(MY_VENUE_SLOT_REQUEST_HISTORY, historyAnswer([]))], <SlotRequestHistory venueId="venue-1" />);
     const history = await screen.findByTestId('slot-request-history');
-    expect(history).toHaveTextContent('Hosts now book instantly at your prices.');
-    expect(history).toHaveTextContent('No past slot requests.');
+    expect(history).toHaveTextContent('Booking requests you have answered.');
+    expect(history).toHaveTextContent('No answered booking requests yet.');
   });
 
   it('shows each outcome, and keeps approve / decline on a request still pending', async () => {
@@ -131,7 +131,7 @@ describe('SlotRequestHistory', () => {
     const items = within(await screen.findByTestId('slot-request-history')).getAllByRole('listitem');
 
     expect(seen[0]).toEqual({ venue_id: 'venue-1', limit: 100 });
-    expect(screen.queryByText('No past slot requests.')).not.toBeInTheDocument();
+    expect(screen.queryByText('No answered booking requests yet.')).not.toBeInTheDocument();
     expect(within(items[0]).getByText('Pending')).toBeInTheDocument();
     expect(within(items[0]).getByRole('button', { name: 'Approve Yoga at dawn' })).toBeInTheDocument();
     expect(renderPendingAction).toHaveBeenCalledWith(expect.objectContaining({ slot_id: 'pending' }));

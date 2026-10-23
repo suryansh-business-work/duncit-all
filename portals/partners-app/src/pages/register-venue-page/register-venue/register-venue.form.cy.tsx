@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { registerVenueSchema, SECTION_FIELDS } from './register-venue.schema';
-import { toApprovedUpdateInput, toStep1Input, venueToValues } from './register-venue.mappers';
+import {
+  toApprovedUpdateInput,
+  toSetupAmenitiesInput,
+  toSetupFoodInput,
+  toSetupTypeCapacityInput,
+  toStep1Input,
+  venueToValues,
+} from './register-venue.mappers';
 import { blankRegisterVenueValues, type RegisterVenueValues } from './register-venue.types';
 import { EMPTY_CATEGORY, type AdminCategoryValue } from '@duncit/category';
 
@@ -108,6 +115,14 @@ const messagesOf = (values: RegisterVenueValues) => {
   return parsed.success ? [] : parsed.error.issues.map((issue) => issue.message);
 };
 
+/** The rules the Venue Options setup pages hold the venue's type, capacity and food to. */
+const setupSchema = (limits?: Parameters<typeof registerVenueSchema>[2]) =>
+  registerVenueSchema(undefined, undefined, limits, undefined, 'setup');
+const setupMessagesOf = (values: RegisterVenueValues) => {
+  const parsed = setupSchema().safeParse(values);
+  return parsed.success ? [] : parsed.error.issues.map((issue) => issue.message);
+};
+
 describe('registerVenueSchema', () => {
   it('accepts a fully filled registration (with stringy capacity numbers)', () => {
     expect(registerVenueSchema().safeParse(validValues).success).toBe(true);
@@ -174,23 +189,27 @@ describe('registerVenueSchema', () => {
     expect(messages).toContain('Locality / area is required');
   });
 
-  it('requires at least one capacity entry with a label and a sane number', () => {
-    expect(messagesOf({ ...validValues, capacity_items: [] })).toContain(
+  it('does not hold registration back for a venue type or capacity — Venue Options sets those up', () => {
+    expect(messagesOf({ ...validValues, venue_type: '', capacity_items: [] })).toEqual([]);
+  });
+
+  it('requires at least one capacity entry with a label and a sane number where it is set up', () => {
+    expect(setupMessagesOf({ ...validValues, capacity_items: [] })).toContain(
       'Add at least one capacity entry for your venue'
     );
-    expect(messagesOf({ ...validValues, capacity_items: [{ label: '', capacity: 10 }] })).toContain(
+    expect(setupMessagesOf({ ...validValues, capacity_items: [{ label: '', capacity: 10 }] })).toContain(
       'Give this capacity a label (e.g. Banquet hall)'
     );
-    expect(messagesOf({ ...validValues, capacity_items: [{ label: 'Hall', capacity: 0 }] })).toContain(
+    expect(setupMessagesOf({ ...validValues, capacity_items: [{ label: 'Hall', capacity: 0 }] })).toContain(
       'Capacity must be at least 1'
     );
-    expect(messagesOf({ ...validValues, capacity_items: [{ label: 'Hall', capacity: 2.5 }] })).toContain(
+    expect(setupMessagesOf({ ...validValues, capacity_items: [{ label: 'Hall', capacity: 2.5 }] })).toContain(
       'Capacity must be a whole number'
     );
   });
 
   it('requires a venue type and at least one uploaded document', () => {
-    expect(messagesOf({ ...validValues, venue_type: '' })).toContain('Select a venue type');
+    expect(setupMessagesOf({ ...validValues, venue_type: '' })).toContain('Select a venue type');
     expect(messagesOf({ ...validValues, documents: [] })).toContain('Upload at least one document');
     expect(messagesOf({ ...validValues, documents: [{ type: 'PAN Card', url: '' }] })).toContain(
       'Upload the document file'
@@ -271,7 +290,7 @@ describe('registerVenueSchema', () => {
     ]);
     expect(SECTION_FIELDS['type-capacity']).toEqual(['venue_type', 'capacity_items']);
 
-    const parsed = registerVenueSchema().safeParse({
+    const parsed = setupSchema().safeParse({
       ...validValues,
       ...withFood,
       food_menu: [{ ...withFood.food_menu[0], name: '' }],
@@ -283,7 +302,7 @@ describe('registerVenueSchema', () => {
       expect(SECTION_FIELDS.food).toContain(root);
       expect(SECTION_FIELDS['type-capacity']).not.toContain(root);
     }
-    expect(messagesOf({ ...validValues, ...withFood, food_ordering: { enabled: true, razorpay_integration_id: '', razorpay_linked: false, discount_pct: 0, tax_override: false, tax_mode: '', gst_pct: '' } })).toEqual([
+    expect(setupMessagesOf({ ...validValues, ...withFood, food_ordering: { enabled: true, razorpay_integration_id: '', razorpay_linked: false, discount_pct: 0, tax_override: false, tax_mode: '', gst_pct: '' } })).toEqual([
       'Pick a Razorpay account before taking food orders',
     ]);
   });
@@ -297,7 +316,7 @@ describe('registerVenueSchema', () => {
       food_video_limit: 2,
       food_table_limit: 2,
     };
-    const parsed = registerVenueSchema(undefined, undefined, limits).safeParse({
+    const parsed = setupSchema(limits).safeParse({
       ...validValues,
       ...withFood,
       food_licences: { ...withFood.food_licences, fssai_number: '1234' },
@@ -338,13 +357,15 @@ describe('registerVenueSchema', () => {
 });
 
 describe('register-venue mappers', () => {
-  it('sums capacity items into the scalar capacity for step 1', () => {
-    const input = toStep1Input(validValues);
-    expect(input.capacity).toBe(42);
-    expect(input.capacity_items).toEqual([
+  it('sends the capacity items as numbers from Type, Capacity & Hours', () => {
+    expect(toSetupTypeCapacityInput(validValues).capacity_items).toEqual([
       { label: 'Main hall', capacity: 30 },
       { label: 'Rooftop tables', capacity: 12 },
     ]);
+  });
+
+  it('sends the categories with step 1', () => {
+    const input = toStep1Input(validValues);
     expect(input.venue_categories).toEqual([
       { super_category_id: 'super-1', category_id: 'cat-1', sub_category_id: 'sub-1' },
     ]);
@@ -382,8 +403,8 @@ describe('register-venue mappers', () => {
     expect(values.security).toEqual(['CCTV Surveillance']);
   });
 
-  it('sends amenities, facilities and security with step 1', () => {
-    const input = toStep1Input({
+  it('sends amenities, facilities and security from Amenities & Security', () => {
+    const input = toSetupAmenitiesInput({
       ...validValues,
       amenities: ['AC', 'Wi-Fi'],
       facilities: ['Parking'],
@@ -477,8 +498,8 @@ describe('toApprovedUpdateInput (approved-venue spot edits)', () => {
     expect('capacity_items' in input).toBe(false);
   });
 
-  it('food → step 1 carries the same licences and tables as an approved save', () => {
-    const input = toStep1Input({ ...validValues, ...withFood });
+  it('food → Food Settings carries the same licences and tables as an approved save', () => {
+    const input = toSetupFoodInput({ ...validValues, ...withFood }, { withMenu: false });
     expect(input.food_licences).toEqual(toApprovedUpdateInput('food', { ...validValues, ...withFood }, 1).food_licences);
     expect(input.food_tables).toEqual(['1', '2', 'Patio']);
   });

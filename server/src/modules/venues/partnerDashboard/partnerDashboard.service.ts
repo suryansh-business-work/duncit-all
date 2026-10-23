@@ -221,14 +221,24 @@ export const partnerDashboardService = {
 
     const byStatus = new Map<string, { count: number; total: number }>();
     if (venueIds.length) {
+      // A pending request the venue has already countered waits on the HOST,
+      // so it is bucketed apart: "pending requests" are the ones the venue answers.
       const rows = await VenueSlotModel.aggregate([
         { $match: { venue_id: { $in: venueIds }, start_at: { $gte: new Date() } } },
-        { $group: { _id: '$status', count: { $sum: 1 }, total: { $sum: '$price' } } },
+        {
+          $group: {
+            _id: {
+              $cond: [{ $and: [{ $eq: ['$status', 'PENDING'] }, { $eq: ['$offer.status', 'COUNTERED'] }] }, 'COUNTERED', '$status'],
+            },
+            count: { $sum: 1 },
+            total: { $sum: '$price' },
+          },
+        },
       ]);
       rows.forEach((r: any) => byStatus.set(String(r._id), { count: r.count ?? 0, total: r.total ?? 0 }));
     }
     const stat = (status: string) => byStatus.get(status) ?? { count: 0, total: 0 };
-    const upcoming = ['AVAILABLE', 'PENDING', 'BOOKED'].map(stat);
+    const upcoming = ['AVAILABLE', 'PENDING', 'COUNTERED', 'BOOKED'].map(stat);
 
     return {
       total_venues: venues.length,

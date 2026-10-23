@@ -245,3 +245,15 @@ export {
   type FreelancerProfileSchemaValues,
   type GigJobSchemaValues,
 } from './gig-job';
+
+export {
+  makeVenueOfferCounterSchema,
+  makeVenueOfferRejectSchema,
+  venueOfferCounterDefaults,
+  venueOfferRejectDefaults,
+  VENUE_OFFER_COUNTER_MODELS,
+  VENUE_OFFER_NOTE_MAX,
+  VENUE_OFFER_RATE_MAX,
+  type VenueOfferCounterValues,
+  type VenueOfferRejectValues,
+} from './venue-offer-counter';

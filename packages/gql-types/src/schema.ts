@@ -6515,9 +6515,11 @@ export type CreatePodInput = {
   /** Offer a multi-ticket discount. Ignored (stored off) on a free or zero-priced pod. */
   ticket_discount_enabled?: InputMaybe<Scalars['Boolean']['input']>;
   ticket_discount_tiers?: InputMaybe<Array<PodTicketDiscountTierInput>>;
-  /** Book the venue instantly at its own pricing (instead of venue_slot_id). The server prices and checks it. */
+  /** @deprecated Venues are booked with an offer now (venue_offer). Refused with a message to update the app. */
   venue_booking?: InputMaybe<InstantBookingInput>;
   venue_id?: InputMaybe<Scalars['ID']['input']>;
+  /** Offer to book the venue (instead of venue_slot_id): the host's window, guests and terms. The server prices and checks it; another partner's venue then accepts, rejects or counters. */
+  venue_offer?: InputMaybe<VenueOfferInput>;
   venue_slot_id?: InputMaybe<Scalars['ID']['input']>;
   what_this_pod_offers?: InputMaybe<Array<Scalars['String']['input']>>;
   zone_name?: InputMaybe<Scalars['String']['input']>;
@@ -9281,7 +9283,10 @@ export type EventRequestOffer = {
 
 export type EventRequestOfferInput = {
   end_at: Scalars['String']['input'];
+  /** A venue's price terms for the window (with rate); without them the offer carries a time only. */
+  model?: InputMaybe<VenueOfferModel>;
   pax?: InputMaybe<Scalars['Int']['input']>;
+  rate?: InputMaybe<Scalars['Float']['input']>;
   start_at: Scalars['String']['input'];
 };
 
@@ -11114,7 +11119,9 @@ export type HostResubmitPodInput = {
   ticket_discount_enabled?: InputMaybe<Scalars['Boolean']['input']>;
   ticket_discount_tiers?: InputMaybe<Array<PodTicketDiscountTierInput>>;
   venue_id?: InputMaybe<Scalars['ID']['input']>;
-  /** A fresh slot to request — re-enters the venue's approval queue. */
+  /** A fresh offer to a venue: another partner's venue accepts, rejects or counters it. */
+  venue_offer?: InputMaybe<VenueOfferInput>;
+  /** A fresh slot to book. */
   venue_slot_id?: InputMaybe<Scalars['ID']['input']>;
   what_this_pod_offers?: InputMaybe<Array<Scalars['String']['input']>>;
   zone_name?: InputMaybe<Scalars['String']['input']>;
@@ -13029,6 +13036,8 @@ export type Mutation = {
    * written in the same breath as the account.
    */
   acceptPolicies: Scalars['Boolean']['output'];
+  /** Host accepts the venue's counter: the booking is confirmed and the pod goes live. */
+  acceptVenueCounterOffer: VenueBookingOffer;
   acknowledgeBouncerSos: BouncerSosAlert;
   acknowledgeHostRequest: HostRequest;
   /**
@@ -13404,6 +13413,8 @@ export type Mutation = {
   controlPodChallengeQuiz: PodChallenge;
   /** Copies the named GoDaddy-only records onto Cloudflare, DNS-only. Never writes GoDaddy. */
   copyDnsToCloudflare: DnsSyncResult;
+  /** Venue owner answers a host's offer with its own terms (accept / reject: approveVenueSlotRequest / declineVenueSlotRequest). */
+  counterVenueOffer: VenueBookingOffer;
   /** Creates an AI prompt. Code prompts come from the catalogue and cannot be created here. */
   createAiPrompt: AiPrompt;
   /** Bind an approved template to a campaign name, which is what a send addresses. */
@@ -14197,6 +14208,8 @@ export type Mutation = {
   rejectHostRequest: HostRequest;
   rejectPodShopReturn: PodShopReturn;
   rejectVenue: Venue;
+  /** Host declines the venue's counter: the hold is released and the pod is venue-declined. */
+  rejectVenueCounterOffer: Scalars['Boolean']['output'];
   /** Rejoin a pod the caller previously backed out of — no payment, until the pod completes. */
   rejoinPod: PodMember;
   /**
@@ -15365,6 +15378,8 @@ export type Mutation = {
   updateVenuePricing: VenuePricing;
   /** Owner (or admin) updates operating hours, weekly-off, holidays + booking rules. */
   updateVenueSettings: Venue;
+  /** Owner sets up their venue's type, capacity, amenities and food settings, at any status. */
+  updateVenueSetup: Venue;
   updateVenueSlot: VenueSlot;
   /** Change the rate card. Applies to sends made from now on — past sends keep the rate they froze. */
   updateWaPricing: WaPricing;
@@ -15470,6 +15485,11 @@ export type MutationAcceptFollowRequestArgs = {
 export type MutationAcceptPoliciesArgs = {
   policy_ids: Array<Scalars['ID']['input']>;
   surface?: InputMaybe<PolicyAcceptanceSurface>;
+};
+
+
+export type MutationAcceptVenueCounterOfferArgs = {
+  pod_id: Scalars['ID']['input'];
 };
 
 
@@ -16202,6 +16222,13 @@ export type MutationControlPodChallengeQuizArgs = {
 
 export type MutationCopyDnsToCloudflareArgs = {
   ids: Array<Scalars['String']['input']>;
+};
+
+
+export type MutationCounterVenueOfferArgs = {
+  note?: InputMaybe<Scalars['String']['input']>;
+  slot_id: Scalars['ID']['input'];
+  terms: VenueOfferTermsInput;
 };
 
 
@@ -18113,6 +18140,12 @@ export type MutationRejectPodShopReturnArgs = {
 export type MutationRejectVenueArgs = {
   notes: Scalars['String']['input'];
   venue_doc_id: Scalars['ID']['input'];
+};
+
+
+export type MutationRejectVenueCounterOfferArgs = {
+  pod_id: Scalars['ID']['input'];
+  reason?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -20995,6 +21028,12 @@ export type MutationUpdateVenueSettingsArgs = {
 };
 
 
+export type MutationUpdateVenueSetupArgs = {
+  input: VenueSetupInput;
+  venue_id: Scalars['ID']['input'];
+};
+
+
 export type MutationUpdateVenueSlotArgs = {
   input: UpdateVenueSlotInput;
   slot_id: Scalars['ID']['input'];
@@ -22873,6 +22912,8 @@ export type Pod = {
   updated_at: Scalars['String']['output'];
   venue_approval_status: PodVenueApproval;
   venue_id?: Maybe<Scalars['ID']['output']>;
+  /** While the pod waits for its venue: SENT (the venue answers) or COUNTERED (the host answers). Null otherwise. */
+  venue_offer_status?: Maybe<VenueOfferStatus>;
   venue_slot_id?: Maybe<Scalars['ID']['output']>;
   what_this_pod_offers: Array<Scalars['String']['output']>;
   zone_name?: Maybe<Scalars['String']['output']>;
@@ -26370,6 +26411,12 @@ export type Query = {
    * Admin roles only.
    */
   adminPotentialPodEarnings: PodEarningsProjection;
+  /** Venues console: a venue's pending and booked holds with their money terms, newest first (at most 100). */
+  adminVenueBookingTerms: Array<VenueBookingTermsRow>;
+  /** Duncit staff: one venue chat's lines, read-only. */
+  adminVenueChatMessages: Array<PodMessage>;
+  /** Duncit staff: one venue's chats (Venues console, read-only). */
+  adminVenueChatThreads: VenueChatThreadPage;
   /** Onboarding/admin: all slots for any venue (role-gated, no owner check). */
   adminVenueSlots: Array<VenueSlot>;
   agentAvailability: AgentAvailability;
@@ -27412,6 +27459,8 @@ export type Query = {
   myUnreadNotificationCount: Scalars['Int']['output'];
   /** Without venue_id: the owner's current application. With venue_id: that venue (must be the owner's). */
   myVenue?: Maybe<Venue>;
+  /** The venue owner's chats with the hosts of pods at their venues (one venue, or all of theirs). */
+  myVenueChatThreads: VenueChatThreadPage;
   myVenueEarningsSummary: EarningsSummary;
   /** Public: the caller's own food orders — placed by the signed-in account, or proven by a key from this device. Newest first. */
   myVenueFoodOrders: VenueFoodOrderTablePage;
@@ -27600,6 +27649,8 @@ export type Query = {
   podSpotFills: Array<PodSpotFill>;
   /** The range this pod may be resized within. Host, the pod's club admin, or an admin. */
   podSpotLimits: PodSpotLimits;
+  /** A pod's venue offer, for its hosts and the venue's owner. Null when the pod has none. */
+  podVenueOffer?: Maybe<VenueBookingOffer>;
   /**
    * Withdrawal Payments, grouped by pod.
    *
@@ -28199,6 +28250,8 @@ export type Query = {
   venueChatMessages: Array<PodMessage>;
   /** A venue booking's chat — only its hosts and the venue's owner may read it. */
   venueChatRoom: VenueChatRoom;
+  /** Venue owner: a counter to a pending offer, priced for that booking's own window before it is sent. */
+  venueCounterQuote: VenueOfferQuoteResult;
   /** Venue owner / venues console: the food coupons of one venue. */
   venueFoodCouponsTable: VenueFoodCouponTablePage;
   /** Public: one order, for whoever holds its access key (or the account that placed it). */
@@ -28216,6 +28269,10 @@ export type Query = {
   venueLead?: Maybe<VenueLead>;
   venueLeads: Array<VenueLead>;
   venueLeadsTable: VenueLeadTablePage;
+  /** Open hours, closed days and busy windows between two dates (YYYY-MM-DD, at most 62 days). */
+  venueOfferCalendar: VenueBookingCalendar;
+  /** Prices an offer at a venue and checks it can be sent (venue open, time free, guests fit). */
+  venueOfferQuote: VenueOfferQuoteResult;
   venueOwnerStats: VenueOwnerStats;
   /** Pods at the caller's venues, all states incl. cancelled. venue_id narrows to one owned venue. */
   venuePods: Array<VenuePod>;
@@ -28388,6 +28445,26 @@ export type QueryAdminPotentialPodEarningsArgs = {
   pod_type?: InputMaybe<PodType>;
   venue_id?: InputMaybe<Scalars['ID']['input']>;
   venue_slot_id?: InputMaybe<Scalars['ID']['input']>;
+};
+
+
+export type QueryAdminVenueBookingTermsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  venue_id: Scalars['ID']['input'];
+};
+
+
+export type QueryAdminVenueChatMessagesArgs = {
+  before?: InputMaybe<Scalars['String']['input']>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  pod_id: Scalars['ID']['input'];
+};
+
+
+export type QueryAdminVenueChatThreadsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  venue_id: Scalars['ID']['input'];
 };
 
 
@@ -30331,6 +30408,13 @@ export type QueryMyVenueArgs = {
 };
 
 
+export type QueryMyVenueChatThreadsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  venue_id?: InputMaybe<Scalars['ID']['input']>;
+};
+
+
 export type QueryMyVenueFoodOrdersArgs = {
   input: MyVenueFoodOrdersInput;
 };
@@ -30799,6 +30883,11 @@ export type QueryPodSpotFillsArgs = {
 
 export type QueryPodSpotLimitsArgs = {
   pod_doc_id: Scalars['ID']['input'];
+};
+
+
+export type QueryPodVenueOfferArgs = {
+  pod_id: Scalars['ID']['input'];
 };
 
 
@@ -31925,6 +32014,12 @@ export type QueryVenueChatRoomArgs = {
 };
 
 
+export type QueryVenueCounterQuoteArgs = {
+  slot_id: Scalars['ID']['input'];
+  terms: VenueOfferTermsInput;
+};
+
+
 export type QueryVenueFoodCouponsTableArgs = {
   query?: InputMaybe<TableQueryInput>;
   venue_id: Scalars['ID']['input'];
@@ -31977,6 +32072,20 @@ export type QueryVenueLeadsArgs = {
 
 export type QueryVenueLeadsTableArgs = {
   query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryVenueOfferCalendarArgs = {
+  from: Scalars['String']['input'];
+  space_label?: InputMaybe<Scalars['String']['input']>;
+  to: Scalars['String']['input'];
+  venue_id: Scalars['ID']['input'];
+};
+
+
+export type QueryVenueOfferQuoteArgs = {
+  offer: VenueOfferInput;
+  venue_id: Scalars['ID']['input'];
 };
 
 
@@ -40232,9 +40341,11 @@ export type UpdatePodInput = {
   /** Offer a multi-ticket discount. Cleared when the pod becomes free or zero-priced. */
   ticket_discount_enabled?: InputMaybe<Scalars['Boolean']['input']>;
   ticket_discount_tiers?: InputMaybe<Array<PodTicketDiscountTierInput>>;
-  /** Re-route onto an instant booking at the venue's own pricing (portals). Booked before the old slot is released. */
+  /** @deprecated Venues are booked with an offer now (venue_offer). Refused with a message to update the app. */
   venue_booking?: InputMaybe<InstantBookingInput>;
   venue_id?: InputMaybe<Scalars['ID']['input']>;
+  /** Re-route onto an offer to a venue (portals). Placed before the old booking is released; another partner's venue must accept it. */
+  venue_offer?: InputMaybe<VenueOfferInput>;
   /**
    * Re-route the pod to a different slot (Admin / Club Admin edit at any stage).
    * The slot is booked instantly at its price (no venue approval any more);
@@ -41048,6 +41159,55 @@ export type VenueBookingDay = {
   slots: Array<VenueDaySlot>;
 };
 
+/** A venue booking negotiated by offer, as the venue's inbox and the host's pod show it. */
+export type VenueBookingOffer = {
+  __typename?: 'VenueBookingOffer';
+  /** Whose move it is; null once closed. */
+  awaiting?: Maybe<VenueOfferParty>;
+  /** The venue's counter, while there is one. */
+  counter?: Maybe<VenueOfferCounter>;
+  end_at: Scalars['String']['output'];
+  history: Array<VenueOfferHistoryEntry>;
+  /** The host's terms. */
+  model: VenueOfferModel;
+  pax: Scalars['Int']['output'];
+  pets: Scalars['Boolean']['output'];
+  pod_id?: Maybe<Scalars['ID']['output']>;
+  /** The host's terms, priced with the venue's charges and Duncit's commission on top. */
+  quote: VenuePriceBreakdown;
+  rate: Scalars['Float']['output'];
+  /** 1 for the host's offer, +1 per counter. */
+  round: Scalars['Int']['output'];
+  slot_id: Scalars['ID']['output'];
+  space_label: Scalars['String']['output'];
+  start_at: Scalars['String']['output'];
+  status: VenueOfferStatus;
+  venue_id: Scalars['ID']['output'];
+};
+
+/** A venue booking's money terms for Duncit staff: agreed once booked, on the table while pending. */
+export type VenueBookingTermsRow = {
+  __typename?: 'VenueBookingTermsRow';
+  end_at: Scalars['String']['output'];
+  /** How the amount is read (VenueOfferModel, or the older booking's VenuePricingModel). */
+  model: Scalars['String']['output'];
+  /** The offer's state; null for a booking made before offers. */
+  offer_status?: Maybe<VenueOfferStatus>;
+  /** Duncit's commission, on top of the venue's amount. */
+  platform_fee: Scalars['Float']['output'];
+  pod_id?: Maybe<Scalars['ID']['output']>;
+  pod_title: Scalars['String']['output'];
+  rate: Scalars['Float']['output'];
+  slot_id: Scalars['ID']['output'];
+  start_at: Scalars['String']['output'];
+  /** PENDING (waiting on an answer) or BOOKED. */
+  status: Scalars['String']['output'];
+  /** What the host pays for the venue. */
+  total: Scalars['Float']['output'];
+  /** Exactly what the venue is paid. */
+  venue_payout: Scalars['Float']['output'];
+};
+
 /** Outcome of a venue owner cancelling a pod booked at their venue. */
 export type VenueCancelPodResult = {
   __typename?: 'VenueCancelPodResult';
@@ -41162,6 +41322,32 @@ export type VenueChatRoom = {
 export type VenueChatSide =
   | 'HOST'
   | 'VENUE';
+
+/** A venue booking's chat in an inbox list, newest activity first. */
+export type VenueChatThread = {
+  __typename?: 'VenueChatThread';
+  /** The pod's lead host. */
+  host_name: Scalars['String']['output'];
+  host_photo?: Maybe<Scalars['String']['output']>;
+  /** The newest line's text; null while nobody has written, empty for a photo. */
+  last_message?: Maybe<Scalars['String']['output']>;
+  last_message_at?: Maybe<Scalars['String']['output']>;
+  last_message_is_photo: Scalars['Boolean']['output'];
+  last_message_side?: Maybe<VenueChatSide>;
+  pod_date_time?: Maybe<Scalars['String']['output']>;
+  pod_id: Scalars['ID']['output'];
+  pod_title: Scalars['String']['output'];
+  /** Lines from the other side since the caller last opened the thread (always 0 for staff). */
+  unread_count: Scalars['Int']['output'];
+  venue_id: Scalars['ID']['output'];
+  venue_name: Scalars['String']['output'];
+};
+
+export type VenueChatThreadPage = {
+  __typename?: 'VenueChatThreadPage';
+  rows: Array<VenueChatThread>;
+  total: Scalars['Int']['output'];
+};
 
 export type VenueClosedReason =
   | 'BLOCKED'
@@ -41684,6 +41870,81 @@ export type VenueLeadTablePage = {
   total: Scalars['Int']['output'];
 };
 
+export type VenueOfferAction =
+  | 'ACCEPT'
+  | 'COUNTER'
+  | 'OFFER'
+  | 'REJECT';
+
+export type VenueOfferCounter = {
+  __typename?: 'VenueOfferCounter';
+  at?: Maybe<Scalars['String']['output']>;
+  model: VenueOfferModel;
+  note: Scalars['String']['output'];
+  quote: VenuePriceBreakdown;
+  rate: Scalars['Float']['output'];
+};
+
+export type VenueOfferHistoryEntry = {
+  __typename?: 'VenueOfferHistoryEntry';
+  action: VenueOfferAction;
+  at?: Maybe<Scalars['String']['output']>;
+  by: VenueOfferParty;
+  model?: Maybe<VenueOfferModel>;
+  note: Scalars['String']['output'];
+  rate?: Maybe<Scalars['Float']['output']>;
+  total?: Maybe<Scalars['Float']['output']>;
+};
+
+/** A host's venue booking: the window, the guests and the terms. The server prices it; a client never sends a total. */
+export type VenueOfferInput = {
+  end_at: Scalars['String']['input'];
+  model: VenueOfferModel;
+  /** Guests; on Create Pod this is always the pod's spots. */
+  pax?: InputMaybe<Scalars['Int']['input']>;
+  pets?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Rupees per guest, per hour, for the slot, or the flat price. */
+  rate: Scalars['Float']['input'];
+  space_label?: InputMaybe<Scalars['String']['input']>;
+  start_at: Scalars['String']['input'];
+};
+
+/** How the host offers to pay the venue. */
+export type VenueOfferModel =
+  /** one price */
+  | 'FLAT'
+  /** rate x guests */
+  | 'PER_GUEST'
+  /** rate x hours booked */
+  | 'PER_HOUR'
+  /** rate for the picked window */
+  | 'PER_SLOT';
+
+export type VenueOfferParty =
+  | 'HOST'
+  | 'VENUE';
+
+/** Create Pod's live price for an offer. ok = false: why it cannot be sent (message). */
+export type VenueOfferQuoteResult = {
+  __typename?: 'VenueOfferQuoteResult';
+  message?: Maybe<Scalars['String']['output']>;
+  ok: Scalars['Boolean']['output'];
+  quote?: Maybe<VenuePriceBreakdown>;
+};
+
+/** SENT: the venue answers. COUNTERED: the host answers. ACCEPTED / DECLINED: closed. */
+export type VenueOfferStatus =
+  | 'ACCEPTED'
+  | 'COUNTERED'
+  | 'DECLINED'
+  | 'SENT';
+
+/** Price terms one side puts forward. */
+export type VenueOfferTermsInput = {
+  model: VenueOfferModel;
+  rate: Scalars['Float']['input'];
+};
+
 export type VenueOperatingHours = {
   __typename?: 'VenueOperatingHours';
   close: Scalars['String']['output'];
@@ -41974,6 +42235,28 @@ export type VenueSettingsInput = {
   weekly_off_days?: InputMaybe<Array<Scalars['Int']['input']>>;
 };
 
+/**
+ * The parts of a venue its owner sets up from Venue Options, at any status
+ * (draft, under review or approved). Omitted fields keep what is stored.
+ */
+export type VenueSetupInput = {
+  amenities?: InputMaybe<Array<Scalars['String']['input']>>;
+  capacity_items?: InputMaybe<Array<VenueCapacityItemInput>>;
+  facilities?: InputMaybe<Array<Scalars['String']['input']>>;
+  food_licences?: InputMaybe<VenueFoodLicencesInput>;
+  /** The whole menu, for a venue not yet approved (an approved one edits it on Food > Menu). Omitted keeps the stored menu. */
+  food_menu?: InputMaybe<Array<VenueFoodItemInput>>;
+  food_ordering?: InputMaybe<VenueFoodOrderingInput>;
+  /** Omitted keeps the stored list. */
+  food_tables?: InputMaybe<Array<Scalars['String']['input']>>;
+  /** The venue's GST number for its food invoices. Accepted only while the venue has none. */
+  gstin?: InputMaybe<Scalars['String']['input']>;
+  offers_food?: InputMaybe<Scalars['Boolean']['input']>;
+  security?: InputMaybe<Array<Scalars['String']['input']>>;
+  /** One of venueRegistrationConfig.venue_types. Locked for the owner once the venue is approved. */
+  venue_type?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type VenueSlot = {
   __typename?: 'VenueSlot';
   booked_by_pod_id?: Maybe<Scalars['ID']['output']>;
@@ -42030,6 +42313,8 @@ export type VenueSlotDecision = {
   host_email: Scalars['String']['output'];
   host_name: Scalars['String']['output'];
   host_phone: Scalars['String']['output'];
+  /** Set when the request is a host's offer. */
+  offer?: Maybe<VenueBookingOffer>;
   overtime_rate: Scalars['Int']['output'];
   pod_description: Scalars['String']['output'];
   pod_id: Scalars['ID']['output'];
@@ -42072,6 +42357,8 @@ export type VenueSlotRequest = {
   host_email: Scalars['String']['output'];
   host_name: Scalars['String']['output'];
   host_phone: Scalars['String']['output'];
+  /** Set when the request is a host's offer: Accept, Reject or Counter it. */
+  offer?: Maybe<VenueBookingOffer>;
   overtime_rate: Scalars['Int']['output'];
   pod_description: Scalars['String']['output'];
   pod_id: Scalars['ID']['output'];
@@ -42130,7 +42417,8 @@ export type VenueStep1Input = {
   address_line1: Scalars['String']['input'];
   address_line2?: InputMaybe<Scalars['String']['input']>;
   amenities?: InputMaybe<Array<Scalars['String']['input']>>;
-  capacity: Scalars['Int']['input'];
+  /** Omitted keeps the stored total; capacity_items wins when sent. */
+  capacity?: InputMaybe<Scalars['Int']['input']>;
   capacity_items?: InputMaybe<Array<VenueCapacityItemInput>>;
   city: Scalars['String']['input'];
   country?: InputMaybe<Scalars['String']['input']>;
@@ -42169,7 +42457,8 @@ export type VenueStep1Input = {
   /** Single-category clients: the primary. Ignored when venue_categories is sent. */
   venue_category?: InputMaybe<VenueCategoryInput>;
   venue_name: Scalars['String']['input'];
-  venue_type: Scalars['String']['input'];
+  /** Omitted keeps the stored type (owners set it from Venue Options > Type, Capacity & Hours). */
+  venue_type?: InputMaybe<Scalars['String']['input']>;
   /** At most venueRegistrationConfig.venue_video_limit YouTube video links or uploaded clips. Omitted keeps the stored list. */
   videos?: InputMaybe<Array<Scalars['String']['input']>>;
 };

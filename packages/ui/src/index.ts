@@ -11,6 +11,8 @@ export { STATUS_CHIP_COLORS, StatusChip } from './StatusChip';
 export type { StatusChipColor, StatusChipProps, StatusColorMap } from './StatusChip';
 export { ChipList } from './ChipList';
 export type { ChipListProps } from './ChipList';
+export { VenueChatThreadList } from './venue-chat/VenueChatThreadList';
+export type { VenueChatThreadListProps, VenueChatThreadListRow } from './venue-chat/VenueChatThreadList';
 export { InfoRow } from './InfoRow';
 export { IntegrationLogo } from './IntegrationLogo';
 export type { IntegrationLogoProps, IntegrationVendor } from './IntegrationLogo';

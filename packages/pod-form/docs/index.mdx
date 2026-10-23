@@ -34,6 +34,8 @@ exports:
   - 'makeNativeParityPodConfig'
   - 'buildPodInput'
   - 'podToFormValues'
+  - 'bookingKeyOf'
+  - 'keepsExistingBooking'
   - 'linesToMedia'
   - 'getProductRequestTotal'
   - 'blankPodFormValues'
@@ -337,9 +339,11 @@ Parsing `{ ...blankPodFormValues, pod_title: 'Su', club_id: '…a3b', pod_descri
 ]
 ```
 
-The slot rule is conditional in a way worth knowing: `venue_slot_id` is only required while
-`pod_date_time` is **also** empty. An edited pod that keeps its already-booked slot dates never
-forces a re-pick, which is why the same values with a date set report no slot error.
+The venue rule is conditional in a way worth knowing. A physical pod (with `showVenueSlot`) offers
+its venue a **window and terms**: it needs `pod_date_time` and `pod_end_date_time` (reported on
+`venue_slot_id`, "Pick an available slot"), a pricing option in `venue_offer_model` (`PER_GUEST`,
+`PER_HOUR`, `PER_SLOT` or `FLAT`) and a positive `venue_offer_rate`. An edited pod that keeps the
+slot it already holds (`venue_slot_id` set) is asked for none of these.
 
 The end date is conditional the other way round: a **VIRTUAL** pod must carry
 `pod_end_date_time` (`End date/time is required for a virtual pod`), because it has no slot
@@ -422,7 +426,9 @@ both surfaces render can be asserted without mounting either.
 | `makeNativeParityPodConfig` | `({ showProducts }: { showProducts: boolean }) => PodFormConfig` | The native-parity flag set. |
 | `makePodSchema` | `(config: PodFormConfig, t: Translate, ticketDiscountMaxPct?: number) => PodSchema` | A Zod object with config-gated `superRefine`s. Every message comes from `podForm.validation.*` (and `podForm.ticketDiscount.*` for the tiers), so the schema is rebuilt when the language changes. `ticketDiscountMaxPct` is the admin's `publicAppSettings.ticket_discount_max_pct`; `PodForm` reads it itself, and the default (`DEFAULT_TICKET_DISCOUNT_MAX_PCT`, 50) only serves a caller outside the React tree. |
 | `buildPodInput` | `(values: PodFormValues, { draft?, config }) => Record<string, unknown>` | The GraphQL create/update input. |
-| `podToFormValues` | `(pod: any) => PodFormValues` | Form values, blank-defaulted. |
+| `podToFormValues` | `(pod: any) => PodFormValues` | Form values, blank-defaulted; `kept_booking` remembers the pod's venue and window. |
+| `bookingKeyOf` | `(values) => string` | The venue + window of a pod as one comparable key. |
+| `keepsExistingBooking` | `(values) => boolean` | True when an edit leaves the venue and window unchanged and types no offer terms — the edit then sends no venue change, so fixing a title never sends the venue a new request. |
 | `isFreePodType` / `normalizePodType` / `LEGACY_POD_TYPES` | `(podType) => boolean` / `(podType) => 'FREE' | 'PAID'` / `readonly string[]` | The server's `PodType` is exactly FREE | PAID. `normalizePodType` collapses the five legacy names (`NATIVE_FREE`, …) onto the value that replaced them — `podToFormValues` and `buildPodInput` both run it, so a legacy value never reaches the server. |
 | `linesToMedia` | `(text: string) => { url: string; type: 'IMAGE' \| 'VIDEO' }[]` | Typed media list. |
 | `getProductRequestTotal` | `(requests: PodProductRequest[], products: any[]) => number` | Sum of `unit_cost × quantity`. |
@@ -460,7 +466,7 @@ them straight to `MediaPickerDialog`.
 | `requireHosts` | `boolean` | `true` | The min-1 host rule (Club Admin sets `false`). |
 | `singleHost` | `boolean` | `false` | One host only: single-select picker + the max-1 rule (Admin sets `true`). |
 | `showLocationZone` | `boolean` | — | Reserved; no editor exists yet. |
-| `showVenueSlot` | `boolean` | — | Slot picker **and** the `venue_slot_id` key in the input. |
+| `showVenueSlot` | `boolean` | — | The venue offer — a window from the venue's `venueOfferCalendar` (`VenueOfferField`), the pricing option and amount with the server's `venueOfferQuote` total (`OfferTermsField`) — **and** the `venue_offer` / `venue_slot_id` keys in the input. |
 | `showPlaceCharges` | `boolean` | — | Per-venue place charges editor. |
 | `showInventory` | `boolean` | — | Feeds the attached products' cost into the earnings projection. |
 | `showFinance` | `boolean` | — | Live earnings projection: the server's `adminPotentialPodEarnings` waterfall (GST, platform fee, club-admin cut, venue slot price, host commission) rendered through `buildEarningsStatement`, plus the venue budget — the highest slot price the pod can still carry. |
@@ -516,9 +522,11 @@ and the flags disabled — virtual pods null `venue_id`/`location_id`, physical 
 fields, `pod_hosts_id` becomes `[]` when `showHosts` is off, products only ride along when the pod
 is physical *and* `showProducts` *and* `values.products_enabled`.
 
-Do not hand-build the mutation input from `PodFormValues`. `venue_slot_id` is only emitted when
-`config.showVenueSlot` because `CreatePodInput` has the field and `UpdatePodInput` does not — a
-hand-rolled input is where that asymmetry gets forgotten.
+Do not hand-build the mutation input from `PodFormValues`. With `config.showVenueSlot` a physical pod
+sends **either** the slot it already holds (`venue_slot_id`, an edit that keeps it) **or** a
+`venue_offer` for its window (`{ start_at, end_at, space_label: '', pax: no_of_spots, pets: false, model, rate }`,
+null until complete) — never a null slot beside an offer, which would read as "release the booking".
+A virtual pod sends `venue_slot_id: null`. A hand-rolled input is where that gets forgotten.
 
 `podToFormValues` is the inverse for edit flows; `linesToMedia` converts the newline-separated
 media textarea into the `{ url, type: 'IMAGE' | 'VIDEO' }` list (extension-driven), and

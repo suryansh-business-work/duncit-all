@@ -14,6 +14,7 @@ import VenueOverviewTab from './VenueOverviewTab';
 import VenueOperationsTab from './VenueOperationsTab';
 import VenueDocumentsCard from './VenueDocumentsCard';
 import VenuePodsTab from './VenuePodsTab';
+import VenueChatsTab from './chats/VenueChatsTab';
 
 type Translate = ReturnType<typeof useTranslation>['t'];
 
@@ -38,6 +39,7 @@ const venueTabs = (t: Translate): DuncitTabItem<string>[] => [
   { value: 'pods', label: t('admin.venueDetails.tabPods') },
   { value: 'operations', label: t('admin.venueDetails.tabOperations') },
   { value: 'documents', label: t('admin.venueDetails.tabDocuments') },
+  { value: 'chats', label: t('admin.venueDetails.tabChats') },
   { value: 'changeLogs', label: t('directory.changeLogs.tab') },
 ];
 
@@ -108,6 +110,7 @@ export default function VenueDetailsPage({ extraTabs }: Readonly<VenueDetailsPag
             {tabs.value === 'pods' && <VenuePodsTab venueId={venue.id} />}
             {tabs.value === 'operations' && <VenueOperationsTab settings={venue.settings} />}
             {tabs.value === 'documents' && <VenueDocumentsCard documents={venue.documents ?? []} />}
+            {tabs.value === 'chats' && <VenueChatsTab venueId={venue.id} />}
             {tabs.value === 'changeLogs' && (
               <ChangeLogsSection
                 entityType="VENUE"

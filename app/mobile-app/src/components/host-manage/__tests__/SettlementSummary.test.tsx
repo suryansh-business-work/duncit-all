@@ -99,7 +99,7 @@ describe('SettlementSummary', () => {
     renderWithProviders(<SettlementSummary settlement={settlement} isLoading={false} />);
     expect(screen.getByTestId('venue-bill-summary')).toBeOnTheScreen();
     expectBillLine('attendees', 'Total attendees', '5 of 6 seats');
-    expectBillLine('slot-price', 'Earlier slot price', '₹300.00');
+    expectBillLine('slot-price', 'Agreed booking amount', '₹300.00');
     expectBillLine('final-bill', 'Final bill uploaded', 'None');
     expectBillLine('venue-total', 'Venue total', '₹300.00');
   });
@@ -115,10 +115,10 @@ describe('SettlementSummary', () => {
         isLoading={false}
       />,
     );
-    expectBillLine('slot-price', 'Earlier slot price', '₹300.00');
+    expectBillLine('slot-price', 'Agreed booking amount', '₹300.00');
     expectBillLine('final-bill', 'Final bill uploaded', '₹450.00');
     expectBillLine('venue-total', 'Venue total', '₹450.00');
-    expect(screen.queryByText('Venue total (slot price + bill)')).toBeNull();
+    expect(screen.queryByText('Venue total (agreed amount + bill)')).toBeNull();
   });
 
   it('labels the venue total when the bill is paid on top of the slot price', () => {
@@ -134,7 +134,7 @@ describe('SettlementSummary', () => {
       />,
     );
     expectBillLine('final-bill', 'Final bill uploaded', '₹450.00');
-    expectBillLine('venue-total', 'Venue total (slot price + bill)', '₹750.00');
+    expectBillLine('venue-total', 'Venue total (agreed amount + bill)', '₹750.00');
     expect(screen.queryByText('Venue total')).toBeNull();
   });
 

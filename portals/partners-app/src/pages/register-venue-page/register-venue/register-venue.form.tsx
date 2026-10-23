@@ -1,13 +1,9 @@
 import { Alert, Box, Card, CardContent, Stack } from '@mui/material';
 import SectionRail from '../sections/SectionRail';
 import VenueDetailsSection from '../sections/VenueDetailsSection';
-import VenueTypeCapacitySection from '../sections/VenueTypeCapacitySection';
-import FoodSection from '../sections/food/FoodSection';
-import AmenitiesSection from '../sections/AmenitiesSection';
 import DocumentsSection from '../sections/DocumentsSection';
 import OwnerSection from '../sections/OwnerSection';
 import PayoutMethodSection from '../sections/PayoutMethodSection';
-import LeavesSection from '../sections/LeavesSection';
 import ReviewSection from '../sections/ReviewSection';
 import { APPROVED_EDIT_SECTIONS, useRegisterVenueForm, type EditableSectionKey } from './useRegisterVenueForm';
 import SaveBar from './register-venue.save-bar';
@@ -52,8 +48,8 @@ export default function RegisterVenueForm({
     });
 
   const viewOnly = mode === 'view';
-  const showRegisterBar = mode === 'register' && active !== 'leaves';
-  // 'leaves' saves itself; amenities and payout are locked post-approval.
+  const showRegisterBar = mode === 'register';
+  // Payout is locked post-approval.
   const showApprovedBar = mode === 'edit-approved' && APPROVED_EDIT_SECTIONS.has(active);
 
   return (
@@ -83,21 +79,6 @@ export default function RegisterVenueForm({
                 videoLimit={config.venue_video_limit}
               />
             )}
-            {active === 'type-capacity' && <VenueTypeCapacitySection form={form} config={config} mode={mode} />}
-            {active === 'food' && (
-              <FoodSection
-                form={form}
-                config={config}
-                mode={mode}
-                venueId={venueId ?? undefined}
-                savedGstin={venue?.gstin ?? ''}
-                venueName={venue?.venue_name}
-                hasSavedTables={(venue?.food_tables?.length ?? 0) > 0}
-              />
-            )}
-            {active === 'amenities' && (
-              <AmenitiesSection form={form} config={config} disabled={mode === 'edit-approved'} />
-            )}
             {active === 'documents' && (
               <DocumentsSection
                 form={form}
@@ -108,14 +89,6 @@ export default function RegisterVenueForm({
             )}
             {active === 'owner' && <OwnerSection form={form} accountEmail={account.email} />}
             {active === 'payout' && <PayoutMethodSection form={form} disabled={mode === 'edit-approved'} />}
-            {active === 'leaves' && (
-              <LeavesSection
-                venueId={venueId}
-                holidays={venue?.settings?.holidays ?? []}
-                disabled={viewOnly}
-                onSaved={onPersisted}
-              />
-            )}
             {active === 'review' && <ReviewSection form={form} />}
           </fieldset>
           {error && (

@@ -1,5 +1,5 @@
 /**
- * Instant venue booking — the host's pickers and price card in Create Pod.
+ * Venue booking calendars — the host's pickers and price card in Create Pod.
  * The booking grid is counted from local midnight in the admin zone (as the
  * server checks `booking_increment_minutes`), so these run in Asia/Kolkata
  * (UTC+5:30), where local and UTC midnights differ by a non-whole hour.
@@ -8,7 +8,6 @@ import { describe, expect, it, vi } from 'vitest';
 
 import {
   MAX_BOOKING_CALENDAR_DAYS,
-  VENUE_BOOKING_MODEL_KEY,
   WHOLE_VENUE_SPACE,
   bookingCalendarProps,
   bookingCalendarRange,
@@ -23,9 +22,6 @@ import {
   bookingStartOptions,
   bookingStepMinutes,
   bookingTiles,
-  clampBookingPax,
-  instantBookingInput,
-  venueBookingModelKey,
   venueQuoteLines,
   type BookingCalendarDay,
   type BookingRules,
@@ -55,17 +51,6 @@ const rules = (over: Partial<BookingRules> = {}): BookingRules => ({
 
 /** Long before the day, so notice never hides a start unless a test asks it to. */
 const EARLY = Date.parse('2026-11-01T00:00:00.000Z');
-
-describe('venueBookingModelKey', () => {
-  it('names each known model and nothing for an unknown one', () => {
-    expect(venueBookingModelKey('PER_HOUR')).toBe(VENUE_BOOKING_MODEL_KEY.PER_HOUR);
-    expect(venueBookingModelKey('PER_PAX')).toBe('mweb.createPod.bookingModel.perPax');
-    expect(venueBookingModelKey('HOURLY')).toBe('');
-    expect(venueBookingModelKey('')).toBe('');
-    expect(venueBookingModelKey(null)).toBe('');
-    expect(venueBookingModelKey(undefined)).toBe('');
-  });
-});
 
 describe('bookingCalendarRange', () => {
   it('asks for the server cap by default, counting the first day', () => {
@@ -289,52 +274,6 @@ describe('bookingDayOf', () => {
     expect(bookingDayOf(days, '2026-11-04T18:29:59.999Z', TZ)).toBeNull();
     expect(bookingDayOf(days, '2026-11-07T00:00:00.000Z', TZ)).toBeNull();
     expect(bookingDayOf(days, 'not a time', TZ)).toBeNull();
-  });
-});
-
-describe('clampBookingPax', () => {
-  it('keeps guests inside the venue range', () => {
-    expect(clampBookingPax(5, 2, 10)).toBe(5);
-    expect(clampBookingPax(1, 2, 10)).toBe(2);
-    expect(clampBookingPax(50, 2, 10)).toBe(10);
-    expect(clampBookingPax(4.9, 1, 4.5)).toBe(4);
-  });
-
-  it('reads max 0 as no cap', () => {
-    expect(clampBookingPax(50, 2, 0)).toBe(50);
-  });
-
-  it('never goes below one guest, even with no minimum or an unreadable count', () => {
-    expect(clampBookingPax(0, 0, 0)).toBe(1);
-    expect(clampBookingPax(-3, -1, 0)).toBe(1);
-    expect(clampBookingPax(Number.NaN, 3, 0)).toBe(3);
-  });
-});
-
-describe('instantBookingInput', () => {
-  const source = { start: '2026-11-05T03:30:00.000Z', end: '2026-11-05T05:30:00.000Z', pax: 0, pets: false, spaceLabel: WHOLE_VENUE_SPACE };
-
-  it('is null until both ends of the window are picked', () => {
-    expect(instantBookingInput({ ...source, start: null })).toBeNull();
-    expect(instantBookingInput({ ...source, end: null })).toBeNull();
-  });
-
-  it('sends the whole venue as an empty space and no pax for a non-per-guest booking', () => {
-    expect(instantBookingInput(source)).toEqual({
-      start_at: '2026-11-05T03:30:00.000Z',
-      end_at: '2026-11-05T05:30:00.000Z',
-      pax: null,
-      pets: false,
-      space_label: '',
-    });
-  });
-
-  it('sends whole guests, pets and a named space as picked', () => {
-    expect(instantBookingInput({ ...source, pax: 3.7, pets: true, spaceLabel: 'Court 1' })).toMatchObject({
-      pax: 3,
-      pets: true,
-      space_label: 'Court 1',
-    });
   });
 });
 

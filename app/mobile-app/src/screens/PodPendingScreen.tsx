@@ -7,18 +7,21 @@ import {
   PendingBanner,
   PodPendingSummaryCard,
   RefreshAction,
+  VenueOfferCard,
   VenuePendingCard,
 } from '@/components/pod-pending';
 import { StackScreen } from '@/components/StackScreen';
 import { usePodPendingView } from '@/hooks/usePodPendingView';
+import { usePublicFinance } from '@/hooks/usePublicFinance';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
 import { toErrorMessage } from '@/utils/errors';
 import { RefreshScrollView } from '@/components/PullToRefresh';
 import { TipsLoader } from '@/components/TipsLoader';
 
-/** Waiting screen a host lands on after creating a pod whose venue slot request
- * is PENDING — banner + pod summary + venue contact + club-admin help cards.
+/** Waiting screen a host lands on after creating a pod whose venue offer is
+ * PENDING — banner + pod summary + the offer (the venue's counter to accept or
+ * reject) + venue contact + club-admin help cards.
  *
  * The venue answers outside the app, so the screen carries both ways to ask
  * again: the back-bar's refresh button and a pull-down over the content. Once
@@ -28,6 +31,7 @@ export function PodPendingScreen() {
   const route = useRoute<RouteProp<RootStackParamList, 'PodPending'>>();
   const podId = route.params?.podId ?? '';
   const { view, isLoading, isRefreshing, error, refetch } = usePodPendingView(podId);
+  const { currency } = usePublicFinance();
   const { t } = useTranslation();
 
   // The screen owns its own errors (they land in `error`), so a rejection here
@@ -53,6 +57,7 @@ export function PodPendingScreen() {
       >
         <PendingBanner status={view.pod.venue_approval_status} />
         <PodPendingSummaryCard view={view} />
+        <VenueOfferCard podId={view.pod.id} currencySymbol={currency} onAnswered={refresh} />
         {view.venue ? (
           <VenuePendingCard venue={view.venue} status={view.pod.venue_approval_status} />
         ) : null}

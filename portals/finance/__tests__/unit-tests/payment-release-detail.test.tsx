@@ -154,9 +154,9 @@ describe('PaymentReleaseDetailPage venue bill', () => {
     await mountDetail();
     expect(screen.getByRole('heading', { level: 2, name: 'Venue bill' })).toBeInTheDocument();
     expect(billLine('attendees')).toBe('Total attendees8 of 10 seats');
-    expect(billLine('slot-price')).toBe('Earlier slot price₹300.00');
+    expect(billLine('slot-price')).toBe('Agreed booking amount₹300.00');
     expect(billLine('final-bill')).toBe('Final bill uploaded₹450.00');
-    expect(billLine('venue-total')).toBe('Venue total (slot price + bill)₹750.00');
+    expect(billLine('venue-total')).toBe('Venue total (agreed amount + bill)₹750.00');
     const bill = screen.getByRole('link', { name: 'View bill' });
     expect(bill).toHaveAttribute('href', BILL_URL);
     expect(bill).toHaveAttribute('target', '_blank');
@@ -244,7 +244,7 @@ describe('PaymentReleaseDetailPage payouts, settlement, media and notes', () => 
     mount([podPaymentReleaseMock(makeReleaseDetail(), { symbol: null }).mock]);
     await screen.findByRole('heading', { level: 1, name: 'Yoga' });
     expect(within(payout('VENUE_BILLING')).getByText('675.00')).toBeInTheDocument();
-    expect(billLine('venue-total')).toBe('Venue total (slot price + bill)750.00');
+    expect(billLine('venue-total')).toBe('Venue total (agreed amount + bill)750.00');
   });
 
   it('draws the settlement the payouts were cut from, host first', async () => {
@@ -416,7 +416,7 @@ describe('PaymentReleaseDetailPage review of one payout', () => {
     const dialog = await openReview();
     expect(within(dialog).getByText('Review Payment Release')).toBeInTheDocument();
     expect(within(dialog).getByText('Settlement breakdown')).toBeInTheDocument();
-    expect(within(dialog).getByText('Venue amount (slot price and/or final bill)')).toBeInTheDocument();
+    expect(within(dialog).getByText('Venue amount (agreed booking amount and/or final bill)')).toBeInTheDocument();
     expect(within(dialog).getByText('Requested Rs 675.00')).toBeInTheDocument();
     fireEvent.click(within(dialog).getByRole('button', { name: /submit review/i }));
 

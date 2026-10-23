@@ -40,7 +40,7 @@ export default function VenueFoodToolPage({ title, hint, noFoodMessage, testId, 
           venue.offers_food ? (
             <Fragment key={venue.id}>{children(venue.id)}</Fragment>
           ) : (
-            <VenueFoodOffAlert venueId={venue.id} message={noFoodMessage} data-testid={`${testId}-no-food`} />
+            <VenueFoodOffAlert message={noFoodMessage} data-testid={`${testId}-no-food`} />
           )
         }
       </VenueStudioBody>

@@ -52,6 +52,14 @@ exports:
   - 'NewSlotInput'
   - 'VenuePricingModule'
   - 'VenuePricingForm'
+  - 'FeesSection'
+  - 'RulesSection'
+  - 'savedPricingInput'
+  - 'usePricingModule'
+  - 'DayToggles'
+  - 'MonthNavigator'
+  - 'holidaysWith'
+  - 'pricingWithBlocked'
   - 'buildVenuePricingSchema'
   - 'toFormValues'
   - 'toPricingInput'
@@ -78,6 +86,18 @@ exports:
   - 'EVENT_REQUEST_OFFER_FIELDS'
   - 'SlotRequestHistory'
   - 'UpcomingBookings'
+  - 'VenueOfferInbox'
+  - 'OfferRequestCard'
+  - 'OfferTermsPanel'
+  - 'OfferHistory'
+  - 'OfferDecisionActions'
+  - 'offerTermsLabel'
+  - 'VENUE_BOOKING_REQUESTS'
+  - 'VENUE_OFFER_FIELDS'
+  - 'VENUE_COUNTER_QUOTE'
+  - 'ACCEPT_VENUE_OFFER'
+  - 'REJECT_VENUE_OFFER'
+  - 'COUNTER_VENUE_OFFER'
 ---
 
 ## Why this exists
@@ -527,14 +547,59 @@ import { VenuePricingModule } from '@duncit/availability-calendar';
   (`pricing.blocked_dates`) or marks a holiday (the venue settings' `holidays`), and still lists
   that day's old slot rows with their block / delete.
 
+### One part at a time (Partners console)
+
+The Partners console no longer mounts the whole module: a venue's **Fees & Minimum Spend** and
+**Price Rules** are pages of their own, and its **Calendar** shows bookings, blocked dates and
+holidays without prices. They are built from the module's own pieces:
+`FeesSection` and `RulesSection` (the form's sections, on a `VenuePricingFormValues` form),
+`usePricingModule` (the saved pricing and its two writes), `savedPricingInput` (the saved
+pricing as a whole input — a page overlays only its own fields on it, so a fees save never
+touches the rules and the other way round), `DayToggles` with `pricingWithBlocked` /
+`holidaysWith` (one date's block and holiday), and `MonthNavigator` (the month header's
+previous / month / next / Today controls, shared with the Pricing calendar).
+
+```tsx
+const { pricing, save } = usePricingModule(venueId);
+await save({ ...savedPricingInput(pricing), price_rules: toPricingInput(values).price_rules });
+```
+
 ## Workshop & Event Requests
 
 `EventRequestRespondActions` answers a request with Accept / Reject / Counter offer
 (`respondToEventRequest`); a counter offer for a venue is priced live by the pricing module and
 frozen on the request. The Partners console passes it to the shell's `EventRequestsPage` through
 `renderActions`; mWeb lists the same requests as cards with `VenueEventRequestList`.
-`SlotRequestHistory` is the read-only history of slot requests from before instant booking, and
+`SlotRequestHistory` is the read-only history of the booking requests the venue has answered, and
 `UpcomingBookings` the venue dashboard's next confirmed bookings with their payout.
+
+## Booking requests — a host's offer, answered by the venue
+
+A host books a venue by offering terms (per guest, per hour, for the slot or a flat price). The
+server prices them with the venue's own charges and Duncit's commission on top, and holds the
+time as a PENDING slot carrying the offer. `VenueOfferInbox` is the venue's inbox for the
+Partners console and mWeb: pass `venueId` (or `null` for every venue) and it lists
+`venueSlotRequests` with each request's `offer`, one `OfferRequestCard` each.
+
+- `OfferTermsPanel` — the terms on the table (the host's offer, or the venue's counter while the
+  host decides), where the request stands, what the venue receives, what the host pays, and the
+  server's quote line by line (`PriceBreakdownView`).
+- `OfferHistory` — every step so far (offered, countered, accepted, declined) with notes.
+- `OfferDecisionActions` — Accept (`approveVenueSlotRequest`, only while the offer waits on the
+  venue), Counter (a RHF form on `makeVenueOfferCounterSchema` from `@duncit/forms/schemas`,
+  priced live by `venueCounterQuote` for the booking's own window, sent with
+  `counterVenueOffer`) and Reject (`declineVenueSlotRequest` with an optional reason). While the
+  venue's counter waits, Counter becomes "Change counter" and Accept is gone. A request from before
+  offers keeps Accept and Reject only.
+
+The Partners request page (`/venues/requests/:slotId`) builds from the same three pieces;
+`VENUE_OFFER_FIELDS` is the selection to add to its own query. Which actions show, and how a
+status or a history step reads, come from `@duncit/utils` `venue-offer-inbox`, so the native
+app (which draws its own Tamagui rows) says the same.
+
+```tsx
+<VenueOfferInbox venueId={selectedVenueId ?? null} onAnswered={refreshCounts} />
+```
 
 ## Localization
 

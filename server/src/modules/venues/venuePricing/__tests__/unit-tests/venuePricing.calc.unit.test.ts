@@ -4,6 +4,7 @@
  */
 import { applicableRules, guestRange, isPricingConfigured, quoteVenuePrice, spotsProblem } from '../../venuePricing.calc';
 import type { QuoteRequest, VenuePricing } from '../../venuePricing.types';
+import { quoteOffer, termsProblem } from '../../../venueOffer/venueOffer.quote';
 
 const TZ = 'Asia/Kolkata';
 // 2027-01-02 is a Saturday, 2027-01-04 a Monday (IST is UTC+05:30).
@@ -228,5 +229,50 @@ describe('guest range as spot bounds', () => {
 
   it('lets any spots through when neither the venue nor the space caps them', () => {
     expect(spotsProblem({ ...base, model: null }, 9999, 0)).toBeNull();
+  });
+});
+
+describe('quoteOffer — the host names the terms, the venue adds its charges', () => {
+  // The venue's own model and rate are ignored: only its charges count.
+  const venue: VenuePricing = { ...base, model: 'PER_HOUR', base_rate: 9999, min_pax: 50, max_hours: 1, cleaning_fee: 500, price_rules: [saturdayPlus20] };
+  const quote = (terms: Parameters<typeof quoteOffer>[1], r: QuoteRequest) => {
+    const result = quoteOffer(venue, terms, r);
+    if (!result.ok) throw new Error(`expected a quote, got ${result.code}: ${result.message}`);
+    return result.breakdown;
+  };
+
+  it('PER_GUEST: 20 guests x Rs300 +20% Saturday + Rs500 cleaning, commission on top', () => {
+    const b = quote({ model: 'PER_GUEST', rate: 300 }, req({ pax: 20 }));
+    expect(b.model).toBe('PER_PAX');
+    expect(b.base).toBe(6000);
+    expect(b.rules_total).toBe(1200);
+    expect(b.cleaning_fee).toBe(500);
+    expect(b.venue_payout).toBe(7700);
+    expect(b.platform_fee).toBe(770);
+    expect(b.total).toBe(8470);
+  });
+
+  it("PER_HOUR prices the hours booked, not bounded by the venue's old hour limits", () => {
+    const b = quote({ model: 'PER_HOUR', rate: 1000 }, req({ start: ist('2027-01-04', '10:00'), end: ist('2027-01-04', '13:30') }));
+    expect(b.hours).toBe(3.5);
+    expect(b.base).toBe(3500);
+    expect(b.venue_price).toBe(4000);
+  });
+
+  it('PER_SLOT is one price for the window, labelled as a slot; FLAT is one price', () => {
+    const slot = quote({ model: 'PER_SLOT', rate: 2500 }, req({ start: ist('2027-01-04', '18:00'), end: ist('2027-01-04', '22:00') }));
+    expect(slot.model).toBe('PER_SLOT');
+    expect(slot.base).toBe(2500);
+    const flat = quote({ model: 'FLAT', rate: 2500 }, req({ start: ist('2027-01-04', '18:00'), end: ist('2027-01-04', '22:00') }));
+    expect(flat.model).toBe('FLAT');
+    expect(flat.total).toBe(slot.total);
+  });
+
+  it('refuses terms with no model or no positive amount, and accepts sound ones', () => {
+    expect(termsProblem(null)).not.toBeNull();
+    expect(termsProblem({ model: 'PER_GUEST' })).not.toBeNull();
+    expect(termsProblem({ model: 'FLAT', rate: 0 })).not.toBeNull();
+    expect(termsProblem({ model: 'FLAT', rate: 20_000_000 })).not.toBeNull();
+    expect(termsProblem({ model: 'PER_HOUR', rate: 800 })).toBeNull();
   });
 });

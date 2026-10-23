@@ -81,6 +81,64 @@ export const SEND_VENUE_CHAT_MESSAGE_SDL = `
   }
 `;
 
+const VENUE_CHAT_THREAD_FIELDS = `
+  rows {
+    pod_id
+    pod_title
+    pod_date_time
+    venue_id
+    venue_name
+    host_name
+    host_photo
+    last_message
+    last_message_is_photo
+    last_message_at
+    last_message_side
+    unread_count
+  }
+  total
+`;
+
+/** The venue owner's chat inbox — one venue, or all of theirs. */
+export const MY_VENUE_CHAT_THREADS_SDL = `
+  query MyVenueChatThreads($venue_id: ID, $limit: Int, $offset: Int) {
+    myVenueChatThreads(venue_id: $venue_id, limit: $limit, offset: $offset) {${VENUE_CHAT_THREAD_FIELDS}}
+  }
+`;
+
+/** Duncit staff: one venue's chats (Venues console, read-only). */
+export const ADMIN_VENUE_CHAT_THREADS_SDL = `
+  query AdminVenueChatThreads($venue_id: ID!, $limit: Int, $offset: Int) {
+    adminVenueChatThreads(venue_id: $venue_id, limit: $limit, offset: $offset) {${VENUE_CHAT_THREAD_FIELDS}}
+  }
+`;
+
+/** Duncit staff: one venue chat's lines, read-only. */
+export const ADMIN_VENUE_CHAT_MESSAGES_SDL = `
+  query AdminVenueChatMessages($pod_id: ID!, $limit: Int, $before: String) {
+    adminVenueChatMessages(pod_id: $pod_id, limit: $limit, before: $before) {${VENUE_CHAT_LINE_FIELDS}}
+  }
+`;
+
+/** How many threads one inbox page reads. */
+export const VENUE_CHAT_THREADS_PAGE = 30;
+
+/** One inbox row, as the thread SDLs above select it. */
+export interface VenueChatThreadRow {
+  pod_id: string;
+  pod_title: string;
+  pod_date_time?: string | null;
+  venue_id: string;
+  venue_name: string;
+  host_name: string;
+  host_photo?: string | null;
+  last_message?: string | null;
+  last_message_is_photo: boolean;
+  last_message_at?: string | null;
+  last_message_side?: VenueChatSide | null;
+  unread_count: number;
+}
+
 /** The two sides of a thread, as `venueChatRoom.my_side` names them. */
 export type VenueChatSide = 'HOST' | 'VENUE';
 

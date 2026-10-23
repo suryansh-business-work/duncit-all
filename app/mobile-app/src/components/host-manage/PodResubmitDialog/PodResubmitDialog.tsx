@@ -1,5 +1,5 @@
 import { formResolver } from '../../../utils/form-resolver';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Modal, ScrollView } from 'react-native';
 import { ModalSafeArea } from '@/components/ModalSafeArea';
 import { SHEET_SAFE_AREA } from '@/components/DuncitDialog/sheet-body';
@@ -10,13 +10,12 @@ import { KeyboardScreen } from '@/components/KeyboardScreen';
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { HostResubmitPodDocument, ResubmitVenuesDocument } from '@/graphql/host-manage';
 import { graphqlRequest } from '@/services/graphql.client';
-import { useVenueSlots } from '@/hooks/useVenueSlots';
 import { fireAndForget } from '@/utils/fire-and-forget';
 import { ResubmitFooter } from '../ResubmitFooter';
 import {
   buildHostResubmitInput,
+  makePodResubmitSchema,
   podResubmitInitialValues,
-  podResubmitSchema,
   type HostPodForResubmit,
   type PodResubmitValues,
   type ResubmitVenueOption,
@@ -33,24 +32,24 @@ interface Props {
 }
 
 /** Full edit + resubmission sheet for a venue-rejected pod: pick a different
- * venue or time slot, update the details and send the booking request again —
- * the same pod is reused, no new pod is created. RN twin of mWeb's
- * PodResubmitForm. */
+ * venue or time, how the venue is paid, update the details and send the offer
+ * again — the same pod is reused, no new pod is created. RN twin of mWeb's
+ * PodResubmitDialog. */
 export function PodResubmitDialog({ pod, onClose, onSaved }: Readonly<Props>) {
   const { t } = useTranslation();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [venues, setVenues] = useState<ResubmitVenueOption[]>([]);
+  const schema = useMemo(() => makePodResubmitSchema(t), [t]);
   const { control, handleSubmit, reset, setValue, watch } = useForm<
     PodResubmitValues,
     any,
     PodResubmitValues
   >({
-    resolver: formResolver<PodResubmitValues>(podResubmitSchema),
+    resolver: formResolver<PodResubmitValues>(schema),
     defaultValues: podResubmitInitialValues(pod),
   });
   const venueId = watch('venue_id');
-  const { slots, isLoading: slotsLoading } = useVenueSlots(venueId);
 
   useEffect(() => {
     reset(podResubmitInitialValues(pod));
@@ -143,8 +142,6 @@ export function PodResubmitDialog({ pod, onClose, onSaved }: Readonly<Props>) {
                       control={control}
                       setValue={setValue}
                       venues={venues}
-                      slots={slots}
-                      slotsLoading={slotsLoading}
                       venueId={venueId}
                     />
                     {error ? (

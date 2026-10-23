@@ -1,30 +1,42 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { ResultOf } from '@graphql-typed-document-node/core';
 
+import type { VenueOfferModel } from '@/generated/graphql/graphql';
 import {
   ApproveVenueSlotRequestDocument,
+  CounterVenueOfferDocument,
   DeclineVenueSlotRequestDocument,
   VenueSlotRequestsDocument,
 } from '@/graphql/venue-slot-requests';
 import { graphqlRequest } from '@/services/graphql.client';
 import { useRefreshRegistration } from '@/components/PullToRefresh';
 import { useSelectedVenue } from '@/hooks/useSelectedVenue';
+import { useTranslation } from '@/hooks/useTranslation';
 
 type Data = ResultOf<typeof VenueSlotRequestsDocument>;
 export type SlotRequestRow = Data['venueSlotRequests'][number];
 export type OwnedVenue = Data['myVenues'][number];
+export type BookingOffer = NonNullable<SlotRequestRow['offer']>;
+
+/** The terms a counter carries — the codegen's enum, from the shared form's string. */
+export interface CounterTerms {
+  model: string;
+  rate: number;
+}
 
 /** Both lists come back in one round trip, so the filter has its options. */
 export const ALL_VENUES = 'ALL';
 
 /**
- * Slot Requests — the RN twin of mWeb's venue-slot-requests-page.
+ * Booking requests — the RN twin of mWeb's venue-slot-requests-page: list,
+ * accept, reject and counter a host's offer.
  *
  * A decision is refetched rather than patched into local state: approving a
  * slot changes the pod's status server-side, and a list that guessed at that
  * would show a stale row the next person to look would not.
  */
 export function useVenueSlotRequests() {
+  const { t } = useTranslation();
   const [venues, setVenues] = useState<OwnedVenue[]>([]);
   // The screen opens on the venue picked on any Venue Studio screen; "All
   // venues" stays one tap away, and picking a venue here moves that shared pick.
@@ -74,21 +86,24 @@ export function useVenueSlotRequests() {
         setFeedback({ ok: true, text: done });
         await load();
       } catch (err) {
-        setFeedback({ ok: false, text: err instanceof Error ? err.message : 'That did not work' });
+        setFeedback({
+          ok: false,
+          text: err instanceof Error ? err.message : t('availability.offers.failed'),
+        });
       } finally {
         setBusy(false);
       }
     },
-    [load],
+    [load, t],
   );
 
   const approve = useCallback(
     (slotId: string) =>
       decide(
         graphqlRequest(ApproveVenueSlotRequestDocument, { slot_id: slotId }, { auth: true }),
-        'Booking approved — the pod is now live.',
+        t('availability.offers.done.accepted'),
       ),
-    [decide],
+    [decide, t],
   );
 
   const decline = useCallback(
@@ -99,9 +114,26 @@ export function useVenueSlotRequests() {
           { slot_id: slotId, reason: reason || null },
           { auth: true },
         ),
-        'Booking declined — the slot is open again.',
+        t('availability.offers.done.rejected'),
       ),
-    [decide],
+    [decide, t],
+  );
+
+  const counter = useCallback(
+    (slotId: string, terms: CounterTerms, note: string) =>
+      decide(
+        graphqlRequest(
+          CounterVenueOfferDocument,
+          {
+            slot_id: slotId,
+            terms: { model: terms.model as VenueOfferModel, rate: terms.rate },
+            note: note || null,
+          },
+          { auth: true },
+        ),
+        t('availability.offers.done.countered'),
+      ),
+    [decide, t],
   );
 
   return {
@@ -115,6 +147,7 @@ export function useVenueSlotRequests() {
     clearFeedback: () => setFeedback(null),
     approve,
     decline,
+    counter,
     refetch: load,
   };
 }

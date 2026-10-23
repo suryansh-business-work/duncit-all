@@ -6,7 +6,7 @@
 import type { ReactElement } from 'react';
 import { useForm, type Resolver, type UseFormReturn } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { registerVenueSchema } from '../../register-venue/register-venue.schema';
+import { registerVenueSchema, type VenueSchemaScope } from '../../register-venue/register-venue.schema';
 import {
   blankRegisterVenueValues,
   type RegisterVenueValues,
@@ -38,13 +38,14 @@ export const sectionConfig: VenueRegistrationConfig = {
 
 interface HarnessProps {
   defaults?: Partial<RegisterVenueValues>;
+  scope: VenueSchemaScope;
   formRef: FormRef;
   render: (form: SectionForm) => ReactElement;
 }
 
-function SectionHarness({ defaults, formRef, render }: Readonly<HarnessProps>) {
+function SectionHarness({ defaults, scope, formRef, render }: Readonly<HarnessProps>) {
   const form = useForm<RegisterVenueValues, any, RegisterVenueValues>({
-    resolver: zodResolver(registerVenueSchema()) as unknown as Resolver<RegisterVenueValues, any, RegisterVenueValues>,
+    resolver: zodResolver(registerVenueSchema(undefined, undefined, undefined, undefined, scope)) as unknown as Resolver<RegisterVenueValues, any, RegisterVenueValues>,
     defaultValues: { ...blankRegisterVenueValues, ...defaults },
     mode: 'onBlur',
   });
@@ -56,10 +57,12 @@ function SectionHarness({ defaults, formRef, render }: Readonly<HarnessProps>) {
 export function mountSection(
   render: (form: SectionForm) => ReactElement,
   defaults: Partial<RegisterVenueValues> = {},
-  options: RenderOptions = {}
+  options: RenderOptions = {},
+  /** 'setup' for a section edited on a Venue Options page, which requires its fields. */
+  scope: VenueSchemaScope = 'registration'
 ) {
   const formRef: FormRef = { current: null };
-  const view = renderWithProviders(<SectionHarness defaults={defaults} formRef={formRef} render={render} />, options);
+  const view = renderWithProviders(<SectionHarness defaults={defaults} scope={scope} formRef={formRef} render={render} />, options);
   const form = () => {
     if (!formRef.current) throw new Error('section form not mounted');
     return formRef.current;

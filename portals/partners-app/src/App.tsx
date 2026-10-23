@@ -3,7 +3,6 @@ import { createAuthed, EventRequestsPage, ProfilePage } from '@duncit/shell';
 import LoginPage from './pages/LoginPage';
 import PartnerLanding from './components/PartnerLanding';
 import RegisterVenuePage from './pages/RegisterVenuePage';
-import VenueAvailabilityPage, { VenueAvailabilityRedirect } from './pages/venue-availability-page/VenueAvailabilityPage';
 import WorkshopEventRequestsPage from './pages/workshop-event-requests-page/WorkshopEventRequestsPage';
 import VenueDashboardPage from './pages/venue-dashboard-page/VenueDashboardPage';
 import PodRequestDetailPage from './pages/pod-requests/detail/PodRequestDetailPage';
@@ -11,6 +10,7 @@ import NearbyHostsPage from './pages/pod-requests/search/NearbyHostsPage';
 import NearbyVenuesPage from './pages/pod-requests/search/NearbyVenuesPage';
 import SlotDecisionPage from './pages/slot-decision-page/SlotDecisionPage';
 import VenueChatPage from './pages/venue-chat-page/VenueChatPage';
+import VenueChatsPage from './pages/venue-chats-page/VenueChatsPage';
 import BecomeHostPage from './pages/become-host-page/BecomeHostPage';
 import HostDashboardPage from './pages/host-dashboard-page/HostDashboardPage';
 import EcommBrandPage from './pages/ecomm-brand-page/EcommBrandPage';
@@ -46,6 +46,7 @@ import VenueFoodMenuPage from './pages/venue-food-menu-page/VenueFoodMenuPage';
 import VenueFoodOrdersPage from './pages/venue-food-orders-page/VenueFoodOrdersPage';
 import VenueFoodCouponsPage from './pages/venue-food-coupons-page/VenueFoodCouponsPage';
 import VenueRentedItemsPage from './pages/venue-rented-items-page/VenueRentedItemsPage';
+import { venueSetupRoutes } from './pages/venue-setup/venueSetupRoutes';
 import HostPublishPage from './pages/publish-page/HostPublishPage';
 import {
   ClubsHub,
@@ -101,18 +102,14 @@ export default function App() {
       {/* What members asked for when nothing was coming up — the shared page, scoped to the partner. */}
       <Route path="/venues/event-requests" element={<Navigate to="/venues/requests" replace />} />
       <Route path="/venues/pods" element={authed(<VenuePodsHub />)} />
+      <Route path="/venues/chats" element={authed(<VenueChatsPage />)} />
       <Route path="/venues/pods/:podId/chat" element={authed(<VenueChatPage />)} />
       {/* Change Requests stays scoped per studio, so a venue owner who also
           hosts is never shown the wrong queue. */}
       <Route path="/venues/change-requests" element={authed(<VenueRequestsHub />)} />
       <Route path="/venues/auto-pods" element={authed(<VenueRequestsHub />)} />
       <Route path="/venues/settings" element={authed(<VenuesHub />)} />
-      {/* The Venue Pricing Module for the selected venue; the :venueId form opens a named one.
-          The old availability URLs land on it. */}
-      <Route path="/venues/pricing" element={authed(<VenueAvailabilityPage />)} />
-      <Route path="/venues/:venueId/pricing" element={authed(<VenueAvailabilityPage />)} />
-      <Route path="/venues/availability" element={<Navigate to="/venues/pricing" replace />} />
-      <Route path="/venues/:venueId/availability" element={<VenueAvailabilityRedirect />} />
+      {venueSetupRoutes(authed)}
       <Route path="/venues/earnings" element={authed(<VenueEarningsPage />)} />
       <Route path="/venues/publish" element={authed(<VenuePublishPage />)} />
       <Route path="/venues/food-dashboard" element={authed(<VenueFoodDashboardPage />)} />

@@ -1,12 +1,19 @@
 import { z } from 'zod';
 import {
-  instantBookingInput,
   isMeetingPlatform,
+  isVenueOfferModel,
   isVideoUrl,
+  offerRateOf,
   ticketDiscountInput,
+  venueOfferInput,
 } from '@duncit/utils';
 
-import { CategoryMediaType, type PodMode, type PodType } from '@/generated/graphql/graphql';
+import {
+  CategoryMediaType,
+  type PodMode,
+  type PodType,
+  type VenueOfferModel,
+} from '@/generated/graphql/graphql';
 import { fallbackT, type Translate } from '@/i18n/fallback';
 import { appFormatter } from '@/utils/app-formatter';
 import { blankCreatePodForm, type CreatePodFormValues } from './create-pod.types';
@@ -49,7 +56,7 @@ export const hasImageLine = (mediaText: string) =>
   splitMediaLines(mediaText).some((url) => !isVideoUrl(url));
 
 /** Physical pods must book a venue, a space (capacity) and a time there: a
- * Pod Request's held slot, or a window at the venue's own pricing. */
+ * Pod Request's held slot, or an offer to the venue for a window. */
 function refineVenue(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Translate) {
   if (values.pod_mode === 'PHYSICAL' && !values.venue_id) {
     ctx.addIssue({
@@ -70,8 +77,26 @@ function refineVenue(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Trans
   if (values.pod_mode === 'PHYSICAL') refineVenueTime(values, ctx, t);
 }
 
+/** The host's offer to the venue: how they pay it and how much. mWeb twin. */
+function refineVenueOffer(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Translate) {
+  if (!isVenueOfferModel(values.venue_offer_model)) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['venue_offer_model'],
+      message: t('mweb.createPod.validation.offerModelRequired'),
+    });
+  }
+  if (offerRateOf(values.venue_offer_rate) <= 0) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['venue_offer_rate'],
+      message: t('mweb.createPod.validation.offerRateRequired'),
+    });
+  }
+}
+
 /** A held slot books as before; a Pod Request must keep its slot; every other
- * physical pod needs its whole booked window. mWeb twin. */
+ * physical pod needs its whole window and its offer to the venue. mWeb twin. */
 function refineVenueTime(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Translate) {
   if (values.venue_slot_id) return;
   if (values.partner_request_id) {
@@ -80,13 +105,16 @@ function refineVenueTime(values: CreatePodFormValues, ctx: z.RefinementCtx, t: T
       path: ['venue_slot_id'],
       message: t('mweb.createPod.validation.slotRequired'),
     });
-  } else if (!parseDateTimeText(values.pod_end_date_time_text)) {
+    return;
+  }
+  if (!parseDateTimeText(values.pod_end_date_time_text)) {
     ctx.addIssue({
       code: 'custom',
       path: ['pod_date_time_text'],
       message: t('mweb.createPod.validation.bookingRequired'),
     });
   }
+  refineVenueOffer(values, ctx, t);
 }
 
 /** Virtual pods must carry a valid meeting link. */
@@ -267,6 +295,8 @@ export function makeCreatePodSchema(t: Translate = fallbackT) {
         .refine(intIn(0, 1999), t('mweb.createPod.validation.amountRange')),
       venue_space_label: z.string(),
       venue_booking_pets: z.boolean().default(false),
+      venue_offer_model: z.string().default(''),
+      venue_offer_rate: z.string().default(''),
       no_of_spots_text: z
         .string()
         .refine(intIn(0, 10000), t('mweb.createPod.validation.spotsRange')),
@@ -350,6 +380,8 @@ export const STEP_FIELDS: (keyof CreatePodFormValues)[][] = [
     'meeting_url',
     'meeting_notes',
     'venue_space_label',
+    'venue_offer_model',
+    'venue_offer_rate',
     'pod_date_time_text',
     'pod_end_date_time_text',
   ],
@@ -412,15 +444,21 @@ export const STEP_TITLES = STEP_TITLE_KEYS.map((key) => fallbackT(key));
 
 export const STEP_SUBTITLES = STEP_SUBTITLE_KEYS.map((key) => fallbackT(key));
 
-/** The instant booking the form holds (window = the pod window). */
-export const venueBookingOf = (values: CreatePodFormValues) =>
-  instantBookingInput({
+/** The venue offer the form holds (window = the pod window, guests = its
+ * spots), or null until it is complete. mWeb twin: venueOfferOf. */
+export function venueOfferOf(values: CreatePodFormValues) {
+  const offer = venueOfferInput({
     start: parseDateTimeText(values.pod_date_time_text)?.toISOString() ?? null,
     end: parseDateTimeText(values.pod_end_date_time_text)?.toISOString() ?? null,
     pax: Number(values.no_of_spots_text) || 0,
     pets: values.venue_booking_pets,
     spaceLabel: values.venue_space_label,
+    model: values.venue_offer_model,
+    rate: values.venue_offer_rate,
   });
+  // The app's generated enum carries the same four values the shared union does.
+  return offer ? { ...offer, model: offer.model as VenueOfferModel } : null;
+}
 
 /** Maps validated form values onto the server's CreatePodInput. */
 export function buildCreatePodInput(values: CreatePodFormValues) {
@@ -432,11 +470,11 @@ export function buildCreatePodInput(values: CreatePodFormValues) {
     club_id: values.club_id,
     pod_mode: values.pod_mode as PodMode,
     venue_id: virtual ? null : values.venue_id,
-    // A held slot (a Pod Request) books by id; every other physical pod books
-    // instantly at the venue's pricing and the server sets the window from it.
-    // Neither waits for the venue's approval. mWeb twin.
+    // A held slot (a Pod Request) books by id; every other physical pod sends
+    // the venue an offer for its window, which the venue accepts, rejects or
+    // counters (the pod waits for it). mWeb twin.
     venue_slot_id: virtual ? null : values.venue_slot_id || null,
-    venue_booking: virtual || values.venue_slot_id ? null : venueBookingOf(values),
+    venue_offer: virtual || values.venue_slot_id ? null : venueOfferOf(values),
     // A Pod Request's confirmed slot is adopted as-is (no second venue approval).
     partner_request_id: values.partner_request_id || null,
     location_id: values.location_id || null,

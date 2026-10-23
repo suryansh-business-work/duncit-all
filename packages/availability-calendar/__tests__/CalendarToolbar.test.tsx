@@ -51,7 +51,7 @@ describe('CalendarToolbar', () => {
 describe('CalendarLegend', () => {
   it('explains every badge the day cells can show', () => {
     render(<CalendarLegend />);
-    for (const label of ['A — Available', 'P — Pending approval', 'B — Booked', '× — Blocked', 'Leave / Holiday']) {
+    for (const label of ['A — Available', 'P — Booking request waiting', 'B — Booked', '× — Blocked', 'Leave / Holiday']) {
       expect(screen.getByText(label)).toBeInTheDocument();
     }
   });

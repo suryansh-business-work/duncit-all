@@ -195,6 +195,8 @@ export const POD_FORM_BUNDLE: NestedCatalogue = {
       reelInvalid: 'Reel video must be a valid http(s) URL',
       singleHost: 'Select only one host',
       slotRequired: 'Pick an available slot',
+      offerModelRequired: 'Pick how you will pay the venue',
+      offerRateRequired: 'Enter the amount you offer the venue',
       spotsNumber: 'Spots must be a number',
       startInPast: 'Start date/time must be after current date/time',
       startRequired: 'Start date/time required',
@@ -316,6 +318,25 @@ export const POD_FORM_BUNDLE: NestedCatalogue = {
       errorPctMin: 'Discount must be a whole number of at least 1%',
       errorPctMax: 'Discount can’t be more than {max}%',
       errorPctNotIncreasing: 'Needs a bigger discount than the row above',
+    },
+    // The offer a physical pod sends its venue: a window the venue is open for
+    // and how the venue is paid. The venue accepts, rejects or counters it.
+    offer: {
+      start: 'Start time',
+      end: 'End time',
+      endHint: 'Times the venue is free after your start',
+      noEnd: 'No end time fits after this start. Pick another start.',
+      modelLabel: 'How you pay the venue',
+      modelHint: 'Per guest, per hour, for the time slot, or one flat price',
+      rateLabel: 'Amount you offer',
+      rateHint: "The venue's price rules, fees and GST are added on top, with Duncit's fee.",
+      total: 'Venue cost with fees and GST: {amount}',
+      model: {
+        perGuest: 'Per guest',
+        perHour: 'Per hour',
+        perSlot: 'Per slot',
+        flat: 'Flat price',
+      },
     },
     whenWhereSection: {
       // Under the slot picker, for a FREE pod on a slot the venue charges for.

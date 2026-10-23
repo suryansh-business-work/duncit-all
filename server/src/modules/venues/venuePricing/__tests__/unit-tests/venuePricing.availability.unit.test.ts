@@ -1,6 +1,8 @@
 /**
- * What a host may pick and what the booking write accepts: opening hours,
- * closed days, notice/advance rules, buffers and existing bookings.
+ * What a host may pick and what the booking write accepts: the venue's
+ * opening hours (its settings), closed days, notice/advance rules, buffers and
+ * existing bookings. The host prices the booking, so the venue's pricing model
+ * no longer shapes availability.
  */
 import { checkBookable, dayAvailability, type AvailabilityContext } from '../../venuePricing.availability';
 import type { VenuePricing } from '../../venuePricing.types';
@@ -29,29 +31,32 @@ const pricing: VenuePricing = {
   blocked_dates: [],
 };
 
-const ctx = (overrides: Partial<AvailabilityContext> = {}): AvailabilityContext => ({
+const ctx = ({ settings, ...overrides }: Partial<AvailabilityContext> = {}): AvailabilityContext => ({
   pricing,
-  settings: { holidays: [], weekly_off_days: [], rules: {} },
   busy: [],
   now: ist('2026-12-30', '09:00'),
   timeZone: TZ,
   ...overrides,
+  settings: { operating_hours: { open: '10:00', close: '22:00' }, holidays: [], weekly_off_days: [], rules: {}, ...settings },
 });
 
 describe('dayAvailability', () => {
-  it('opens a day by its own opening hours', () => {
+  it("opens a day by the venue's opening hours", () => {
     const day = dayAvailability(ctx(), SAT);
     expect(day.closed_reason).toBeNull();
     expect(day.open).toEqual(ist(SAT, '10:00'));
     expect(day.close).toEqual(ist(SAT, '22:00'));
   });
 
-  it('a weekday with no hours row is closed', () => {
-    expect(dayAvailability(ctx(), '2027-01-04').closed_reason).toBe('CLOSED');
+  it('is closed when the venue has no opening hours, or they close before they open', () => {
+    expect(dayAvailability(ctx({ settings: { operating_hours: null } }), SAT).closed_reason).toBe('CLOSED');
+    expect(dayAvailability(ctx({ settings: { operating_hours: { open: '22:00', close: '10:00' } } }), SAT).closed_reason).toBe('CLOSED');
   });
 
-  it('falls back to the venue settings hours when the pricing has none', () => {
-    const c = ctx({ pricing: { ...pricing, operating_hours: [] }, settings: { operating_hours: { open: '08:00', close: '12:00' } } });
+  it("opens every day by the venue settings' one window, ignoring the old per-day pricing hours", () => {
+    const c = ctx({ settings: { operating_hours: { open: '08:00', close: '12:00' } } });
+    // The pricing row says Saturday 10-22 and nothing for Monday; neither counts any more.
+    expect(dayAvailability(c, SAT).open).toEqual(ist(SAT, '08:00'));
     expect(dayAvailability(c, '2027-01-04').open).toEqual(ist('2027-01-04', '08:00'));
   });
 
@@ -65,23 +70,9 @@ describe('dayAvailability', () => {
     expect(dayAvailability(c, SAT).closed_reason).toBe(reason);
   });
 
-  it('lists a PER_SLOT day with each slot free or taken', () => {
-    const c = ctx({
-      pricing: {
-        ...pricing,
-        model: 'PER_SLOT',
-        slots: [
-          { start_time: '18:00', end_time: '20:00', price: 1500, days_of_week: [6] },
-          { start_time: '10:00', end_time: '12:00', price: 900, days_of_week: [6] },
-        ],
-      },
-      busy: [{ start: ist(SAT, '18:30'), end: ist(SAT, '19:30') }],
-    });
-    const day = dayAvailability(c, SAT);
-    expect(day.slots.map((s) => [s.price, s.available])).toEqual([
-      [900, true],
-      [1500, false],
-    ]);
+  it('lists no fixed slots: a host picks any window inside the hours', () => {
+    const c = ctx({ pricing: { ...pricing, model: 'PER_SLOT', slots: [{ start_time: '18:00', end_time: '20:00', price: 1500, days_of_week: [6] }] } });
+    expect(dayAvailability(c, SAT).slots).toEqual([]);
   });
 });
 
@@ -114,13 +105,9 @@ describe('checkBookable', () => {
     expect(checkBookable(ctx({ settings: { holidays: [SAT] } }), ist(SAT, '18:00'), ist(SAT, '19:00')).ok).toBe(false);
   });
 
-  it('PER_SLOT books only an exact free slot', () => {
-    const c = ctx({
-      pricing: { ...pricing, model: 'PER_SLOT', slots: [{ start_time: '18:00', end_time: '20:00', price: 1500, days_of_week: [6] }] },
-    });
-    expect(checkBookable(c, ist(SAT, '18:00'), ist(SAT, '20:00')).ok).toBe(true);
-    expect(checkBookable(c, ist(SAT, '18:00'), ist(SAT, '19:00')).ok).toBe(false);
-    const taken = { ...c, busy: [{ start: ist(SAT, '18:00'), end: ist(SAT, '20:00') }] };
-    expect(checkBookable(taken, ist(SAT, '18:00'), ist(SAT, '20:00')).ok).toBe(false);
+  it("books any free window inside the hours, whatever the venue's old pricing model was", () => {
+    const c = ctx({ pricing: { ...pricing, model: 'PER_SLOT', slots: [{ start_time: '18:00', end_time: '20:00', price: 1500, days_of_week: [6] }] } });
+    expect(checkBookable(c, ist(SAT, '18:00'), ist(SAT, '19:00')).ok).toBe(true);
+    expect(checkBookable(c, ist(SAT, '12:00'), ist(SAT, '15:00')).ok).toBe(true);
   });
 });

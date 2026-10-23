@@ -44,3 +44,26 @@ export const SendVenueChatMessageDocument = gql(`
     }
   }
 `);
+
+/** The owner's chat inbox for one venue (mWeb: MY_VENUE_CHAT_THREADS_SDL). */
+export const MyVenueChatThreadsDocument = gql(`
+  query MobileMyVenueChatThreads($venueId: ID, $limit: Int, $offset: Int) {
+    myVenueChatThreads(venue_id: $venueId, limit: $limit, offset: $offset) {
+      rows {
+        pod_id
+        pod_title
+        pod_date_time
+        venue_id
+        venue_name
+        host_name
+        host_photo
+        last_message
+        last_message_is_photo
+        last_message_at
+        last_message_side
+        unread_count
+      }
+      total
+    }
+  }
+`);

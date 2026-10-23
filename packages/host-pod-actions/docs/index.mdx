@@ -132,7 +132,7 @@ const { menuHandlers, dialogs } = useHostPodActions(() => refetch());
 ```
 
 `menuHandlers` also decides which edit a pod gets: a venue-**DECLINED** pod opens the full
-`PodResubmitDialog` (new venue + slot, same pod reused); every other pod opens the narrow
+`PodResubmitDialog` (a new venue, a window from its `venueOfferCalendar` and an offer — how the venue is paid and how much — sent as `venue_offer`; same pod reused, and the venue accepts, rejects or counters it); every other pod opens the narrow
 `PodEditDialog` — title, description, media, the pod's capacity and its multi-ticket discount.
 
 ### The rows are their own file
@@ -285,7 +285,7 @@ buildHostUpdateInput(values, { includeSpots: true, ticketDiscount: discount });
 | `PodEditFormInput` | type | The form's raw values — what a `Control` over the edit form holds. |
 
 `PodResubmitDialog` does not carry the discount: a venue-rejected resubmission changes the venue,
-the slot and the copy, never the price.
+the window, the venue's terms and the copy, never the ticket price.
 
 ## The pod's media
 

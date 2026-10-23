@@ -1,9 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@apollo/client/react';
 import { Alert, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/app-settings';
 import { slotCoversDay } from '@duncit/slots';
 import { parseIsoDay, toIsoDay } from '@duncit/datetime';
@@ -11,7 +8,8 @@ import { LoadingOverlay } from '@duncit/ui';
 import AvailabilityCalendar from '../../AvailabilityCalendar';
 import { buildCells } from '../../AvailabilityCalendar/helpers';
 import CalendarLegend from '../../CalendarLegend';
-import { periodLabel, shiftAnchor, viewRange } from '../../calendar-period';
+import { viewRange } from '../../calendar-period';
+import MonthNavigator from '../../MonthNavigator';
 import { useVenueSlots } from '../../useVenueSlots';
 import { modelLabel } from '../format';
 import { VENUE_BOOKING_CALENDAR } from '../queries';
@@ -78,20 +76,7 @@ export default function PricingCalendar({ venueId, pricing, holidays, savePricin
               data-testid="pricing-calendar-model"
             />
           </Stack>
-          <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center' }}>
-            <DuncitIconButton onClick={() => setAnchor(shiftAnchor('month', anchor, -1))} aria-label={t('availability.toolbar.previous')}>
-              <ChevronLeftIcon />
-            </DuncitIconButton>
-            <Typography variant="subtitle1" sx={{ fontWeight: 900, minWidth: 140, textAlign: 'center' }}>
-              {periodLabel('month', anchor, range)}
-            </Typography>
-            <DuncitIconButton onClick={() => setAnchor(shiftAnchor('month', anchor, 1))} aria-label={t('availability.toolbar.next')}>
-              <ChevronRightIcon />
-            </DuncitIconButton>
-            <DuncitButton size="small" onClick={() => setAnchor(new Date())}>
-              {t('availability.toolbar.today')}
-            </DuncitButton>
-          </Stack>
+          <MonthNavigator anchor={anchor} range={range} onChange={setAnchor} />
         </Stack>
         {(calendar.error || slots.error) && (
           <Alert severity="error" sx={{ mb: 2 }}>

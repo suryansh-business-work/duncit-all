@@ -24,7 +24,7 @@ const tileCopy = (t: Translate): Record<VenueOwnerStatKey, TileCopy> => ({
   booked_earning: { label: t('partners.venueDashboardPage.bookedValue'), hint: 'Upcoming slots already booked by pods' },
   upcoming_slots: { label: t('partners.venueDashboardPage.upcomingSlots'), hint: 'Published slots from today onwards' },
   booked_slots: { label: t('partners.venueDashboardPage.bookedSlots'), hint: 'Upcoming slots a pod has already taken' },
-  pending_requests: { label: t('partners.venueDashboardPage.pendingRequests'), hint: 'Slot bookings waiting for your approval' },
+  pending_requests: { label: t('partners.venueDashboardPage.pendingRequests'), hint: t('partners.venueDashboardPage.pendingRequestsHint') },
   total_capacity: { label: t('partners.venueDashboardPage.totalCapacity'), hint: 'Sum of all capacity entries' },
 });
 

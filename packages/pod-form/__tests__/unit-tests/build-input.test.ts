@@ -187,12 +187,41 @@ describe('buildPodInput', () => {
     expect(input.pod_hosts_id).toEqual([]);
   });
 
-  it('nulls an empty venue slot for a physical pod when the slot field is shown', () => {
+  it('sends a physical pod with no held slot as an offer for its window, never with a null slot beside it', () => {
+    const start = new Date('2030-06-01T10:00:00.000Z');
+    const end = new Date('2030-06-01T12:00:00.000Z');
     const input = buildPodInput(
-      baseValues({ pod_mode: 'PHYSICAL', venue_id: 'v1', venue_slot_id: '', media_text: '' }),
+      baseValues({
+        pod_mode: 'PHYSICAL',
+        venue_id: 'v1',
+        venue_slot_id: '',
+        media_text: '',
+        pod_date_time: start,
+        pod_end_date_time: end,
+        no_of_spots: 8,
+        venue_offer_model: 'PER_HOUR',
+        venue_offer_rate: '800',
+      }),
       { config: makeConfig({ showVenueSlot: true }) },
     );
-    expect(input.venue_slot_id).toBeNull();
+    expect('venue_slot_id' in input).toBe(false);
+    expect(input.venue_offer).toEqual({
+      start_at: start.toISOString(),
+      end_at: end.toISOString(),
+      space_label: '',
+      pax: 8,
+      pets: false,
+      model: 'PER_HOUR',
+      rate: 800,
+    });
+  });
+
+  it('sends no offer until the window and the terms are all there', () => {
+    const input = buildPodInput(
+      baseValues({ pod_mode: 'PHYSICAL', venue_id: 'v1', venue_slot_id: '', media_text: '', pod_date_time: null, pod_end_date_time: null, no_of_spots: 0 }),
+      { config: makeConfig({ showVenueSlot: true }) },
+    );
+    expect(input.venue_offer).toBeNull();
   });
 
   it('marks the pod inactive for a draft and omits the slot field when hidden', () => {

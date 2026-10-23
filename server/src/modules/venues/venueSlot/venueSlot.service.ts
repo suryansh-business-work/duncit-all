@@ -18,6 +18,8 @@ import { podImageAssets } from '@modules/platform/whatsapp/whatsapp.assets';
 import type { SendAssets } from '@modules/platform/whatsapp/whatsapp.media';
 import { getUrlConfigs } from '@config/url-configs';
 import { appDate, appDateTime, appTime } from '@utils/app-time';
+import { currentTerms, offerView } from '@modules/venues/venueOffer/venueOffer.view';
+import type { VenueOfferAction, VenueOfferParty } from '@modules/venues/venueOffer/venueOffer.types';
 
 function fail(code: string, msg: string): never {
   throw new GraphQLError(msg, { extensions: { code } });
@@ -847,10 +849,17 @@ async function announceLiveBooking(pod: SlotDecisionPod, slot: IVenueSlot, title
  * that pod's first host's contact details and the venue name. */
 /** Who is turning the request down, and what the audit row says when the
  * decline carries no reason of its own. */
-interface DeclineActor {
-  source: 'VENUE_OWNER' | 'SYSTEM';
+export interface DeclineActor {
+  source: 'VENUE_OWNER' | 'HOST' | 'SYSTEM';
   actorUserId: string | null;
   fallbackNote: string;
+}
+
+/** Who confirmed a booking: the venue owner accepting, or the host accepting the venue's counter offer. */
+export interface ApproveActor {
+  source: 'VENUE_OWNER' | 'HOST';
+  actorUserId: string;
+  note: string;
 }
 
 /**
@@ -864,9 +873,10 @@ interface DeclineActor {
  *
  * The caller has already established that the slot is PENDING with a pod on it.
  */
-async function applyDecline(slot: IVenueSlot, reason: string, actor: DeclineActor) {
+export async function applyDecline(slot: IVenueSlot, reason: string, actor: DeclineActor) {
   const podId = slot.booked_by_pod_id;
   const note = reason.trim();
+  if (slot.offer) recordOfferStep(slot, actor.source === 'HOST' ? 'HOST' : 'VENUE', 'REJECT', note);
   slot.status = 'AVAILABLE';
   slot.booked_by_pod_id = null;
   // Keep the decision on the slot: `booked_by_pod_id` is cleared above, so
@@ -875,7 +885,7 @@ async function applyDecline(slot: IVenueSlot, reason: string, actor: DeclineActo
   slot.decided_at = new Date();
   slot.decided_pod_id = podId;
   slot.decline_reason = note;
-  // A slot a (retired) recurring pod asked the venue to open was never the venue's: it goes.
+  // A slot made for a host's offer (or a retired recurring pod) was never the venue's: it goes.
   if (slot.requested_by_host) await VenueSlotModel.deleteOne({ _id: slot._id });
   else await (slot as any).save();
   const beforePod = await PodModel.findById(podId);
@@ -886,7 +896,8 @@ async function applyDecline(slot: IVenueSlot, reason: string, actor: DeclineActo
     { new: true }
   );
   if (!pod) return;
-  await notifySlotDecision(pod, slot, false, note, actor.source === 'VENUE_OWNER');
+  if (actor.source === 'HOST') await tellVenueOwner(slot, 'Offer declined', `The host declined your counter offer for "${pod.pod_title}".`);
+  else await notifySlotDecision(pod, slot, false, note, actor.source === 'VENUE_OWNER');
   await podAuditService.record({
     pod,
     action: 'VENUE_DECLINED',
@@ -895,6 +906,87 @@ async function applyDecline(slot: IVenueSlot, reason: string, actor: DeclineActo
     before,
     note: note || actor.fallbackNote,
   });
+}
+
+/** Appends one move to the offer's history. */
+function recordOfferStep(slot: IVenueSlot, by: VenueOfferParty, action: VenueOfferAction, note = '') {
+  const offer = slot.offer;
+  if (!offer) return;
+  const terms = currentTerms(offer);
+  offer.history.push({ by, action, model: terms.model, rate: terms.rate, total: terms.quote.total, note, at: new Date() });
+  slot.markModified('offer');
+}
+
+/** In-app note to the venue's owner. Best-effort: never fails the decision. */
+async function tellVenueOwner(slot: IVenueSlot, title: string, body: string) {
+  try {
+    const { notificationService } = await import('@modules/engagement/notification/notification.service');
+    await notificationService.create({ title, body, scope: 'USER', target_user_ids: [String(slot.owner_user_id)], silent: false });
+  } catch (error) {
+    logs.server.error('venueSlot', 'tellVenueOwner', { error, slot_id: String(slot._id) });
+  }
+}
+
+/**
+ * The ONE write that confirms a pending booking: the slot books, an offer's
+ * agreed terms are frozen as the booking's price, the pod goes live, the host
+ * is told and the trail records who did it. The venue accepting and the host
+ * accepting the venue's counter are the two ways in.
+ */
+export async function applyApproval(slot: IVenueSlot, actor: ApproveActor) {
+  if (slot.offer) {
+    const terms = currentTerms(slot.offer);
+    recordOfferStep(slot, actor.source === 'HOST' ? 'HOST' : 'VENUE', 'ACCEPT');
+    slot.offer.status = 'ACCEPTED';
+    slot.price_snapshot = { ...terms.quote, confirmed_at: new Date() };
+    slot.price = terms.quote.venue_payout;
+    // Extra hours at completion are priced at the hourly rate the two sides agreed.
+    slot.overtime_rate = terms.model === 'PER_HOUR' ? terms.rate : 0;
+    slot.markModified('offer');
+  }
+  slot.status = 'BOOKED';
+  slot.decision = 'APPROVED';
+  slot.decided_at = new Date();
+  slot.decided_pod_id = slot.booked_by_pod_id;
+  slot.decline_reason = '';
+  await (slot as any).save();
+  const beforePod = await PodModel.findById(slot.booked_by_pod_id);
+  const before = beforePod ? snapshotPod(beforePod) : null;
+  const pod = await PodModel.findByIdAndUpdate(
+    slot.booked_by_pod_id,
+    { $set: { venue_approval_status: 'APPROVED', is_active: true } },
+    { new: true }
+  );
+  if (!pod) return;
+  // The host accepting the venue's own counter: the venue hears it in-app,
+  // never the "you approved" WhatsApp — the owner did not press approve.
+  await notifySlotDecision(pod, slot, true, null, actor.source === 'VENUE_OWNER');
+  if (actor.source === 'HOST') await tellVenueOwner(slot, 'Booking confirmed', `The host accepted your counter offer for "${pod.pod_title}". It is live now.`);
+  await podAuditService.record({
+    pod,
+    action: 'VENUE_APPROVED',
+    source: actor.source,
+    actorUserId: actor.actorUserId,
+    before,
+    note: actor.note,
+  });
+}
+
+/**
+ * What a request pays the venue. An offer's terms are already priced: the
+ * venue receives the full price and Duncit's commission rides on top. A legacy
+ * slot's charge has the commission taken out of it, as it always did.
+ */
+function venueMoneyOf(slot: IVenueSlot, spots: number, commissionPct: number) {
+  if (slot.offer) {
+    const { quote } = currentTerms(slot.offer);
+    return { pct: quote.platform_fee_pct, commission: quote.platform_fee, receives: quote.venue_payout };
+  }
+  // The slot's charge by its mode — per hour of its window, or per person at a
+  // FULL pod (the most the venue can earn; the settlement uses real pax).
+  const charge = slotVenueCharge(slot, { pax: spots });
+  const side = venueSideOf(Math.round(charge.total * 100), commissionPct);
+  return { pct: commissionPct, commission: side.commission_paise / 100, receives: side.receives_paise / 100 };
 }
 
 function toRequestRow(s: IVenueSlot, pod: any, host: any, venueName: string) {
@@ -922,6 +1014,7 @@ function toRequestRow(s: IVenueSlot, pod: any, host: any, venueName: string) {
     host_name: hostName,
     host_email: host?.auth?.email ?? '',
     host_phone: `${host?.auth?.phone?.extension ?? ''}${host?.auth?.phone?.number ?? ''}`,
+    offer: s.offer ? offerView(s) : null,
   };
 }
 
@@ -1222,11 +1315,9 @@ export const venueSlotService = {
 
     // Same rounding rule settlement uses, in paise, then back to rupees. A
     // free pod quotes nothing: the host settles the venue directly.
-    // The slot's charge by its mode — per hour of its window, or per person at
-    // a FULL pod (the most the venue can earn; the settlement uses real pax).
-    const charge = slotVenueCharge(slot, { pax: pod!.no_of_spots ?? 0 });
-    const pricePaise = isFreePod(pod) ? 0 : Math.round(charge.total * 100);
-    const side = venueSideOf(pricePaise, rates.venue_commission_percent);
+    const money = isFreePod(pod)
+      ? { pct: rates.venue_commission_percent, commission: 0, receives: 0 }
+      : venueMoneyOf(slot, pod!.no_of_spots ?? 0, rates.venue_commission_percent);
 
     return {
       ...toRequestRow(slot, pod, host, venue?.venue_name ?? ''),
@@ -1234,9 +1325,9 @@ export const venueSlotService = {
       decided_at: slot.decided_at ? slot.decided_at.toISOString() : null,
       decline_reason: slot.decline_reason ?? '',
       space_label: slot.space_label ?? '',
-      venue_commission_pct: rates.venue_commission_percent,
-      venue_commission_amount: side.commission_paise / 100,
-      venue_receives: side.receives_paise / 100,
+      venue_commission_pct: money.pct,
+      venue_commission_amount: money.commission,
+      venue_receives: money.receives,
     };
   },
 
@@ -1253,30 +1344,15 @@ export const venueSlotService = {
     if (slot.start_at.getTime() <= Date.now()) {
       fail('BAD_REQUEST', 'This slot has already started and can no longer be approved');
     }
-    slot.status = 'BOOKED';
-    slot.decision = 'APPROVED';
-    slot.decided_at = new Date();
-    slot.decided_pod_id = slot.booked_by_pod_id;
-    slot.decline_reason = '';
-    await (slot as any).save();
-    const beforePod = await PodModel.findById(slot.booked_by_pod_id);
-    const before = beforePod ? snapshotPod(beforePod) : null;
-    const pod = await PodModel.findByIdAndUpdate(
-      slot.booked_by_pod_id,
-      { $set: { venue_approval_status: 'APPROVED', is_active: true } },
-      { new: true }
-    );
-    if (pod) {
-      await notifySlotDecision(pod, slot, true);
-      await podAuditService.record({
-        pod,
-        action: 'VENUE_APPROVED',
-        source: 'VENUE_OWNER',
-        actorUserId: userId,
-        before,
-        note: 'Venue owner approved the slot booking request',
-      });
+    // A countered offer waits on the host: the venue cannot accept its own counter.
+    if (slot.offer && slot.offer.status !== 'SENT') {
+      fail('BAD_REQUEST', 'The host is answering your counter offer');
     }
+    await applyApproval(slot, {
+      source: 'VENUE_OWNER',
+      actorUserId: userId,
+      note: slot.offer ? "Venue owner accepted the host's offer" : 'Venue owner approved the slot booking request',
+    });
     return (await withVenueAndPod([slot]))[0];
   },
 
@@ -1413,7 +1489,7 @@ export const venueSlotService = {
 
   // Release any slot tied to a pod (called when the pod is deleted/cancelled).
   async releaseForPod(podId: string): Promise<void> {
-    await VenueSlotModel.deleteMany({ booked_by_pod_id: new Types.ObjectId(podId), ...UNAPPROVED_HOST_REQUEST });
+    await VenueSlotModel.deleteMany({ booked_by_pod_id: new Types.ObjectId(podId), requested_by_host: true });
     await VenueSlotModel.updateMany(
       { booked_by_pod_id: new Types.ObjectId(podId) },
       { $set: { status: 'AVAILABLE', booked_by_pod_id: null } }
@@ -1428,7 +1504,7 @@ export const venueSlotService = {
     await VenueSlotModel.deleteOne({
       _id: new Types.ObjectId(slotId),
       booked_by_pod_id: new Types.ObjectId(podId),
-      ...UNAPPROVED_HOST_REQUEST,
+      requested_by_host: true,
     });
     await VenueSlotModel.updateOne(
       { _id: new Types.ObjectId(slotId), booked_by_pod_id: new Types.ObjectId(podId) },

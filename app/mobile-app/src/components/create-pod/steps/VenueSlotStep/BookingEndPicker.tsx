@@ -13,7 +13,7 @@ interface Props {
 }
 
 /** The end of an hourly / per-guest / flat booking, once its start is picked —
- * or why there is none. mWeb twin: the end chips in InstantBookingPicker. */
+ * or why there is none. mWeb twin: the end select in VenueOfferPicker. */
 export function BookingEndPicker({ ends, endIso, onPick }: Readonly<Props>) {
   const { t } = useTranslation();
   const fmt = useDateFormat();

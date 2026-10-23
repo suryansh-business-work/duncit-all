@@ -50,6 +50,7 @@ import {
   redactVenueFoodForPublic,
   toVenueFoodPub,
   venueFoodConfig,
+  type VenueFoodInput,
 } from './venue.food';
 import {
   VENUE_RENTAL_INPUT_KEYS,
@@ -584,11 +585,55 @@ function normalizeCapacityItems(items: unknown) {
   return list;
 }
 
+/** One of the registration config's chip lists (amenities, facilities,
+ * security): known options only, each once. Null when the field was not sent. */
+function normalizeOptionList(raw: unknown, allowed: readonly string[]): string[] | null {
+  if (!Array.isArray(raw)) return null;
+  const known = new Set(allowed);
+  return [...new Set(raw.map((item) => String(item ?? '').trim()))].filter((item) => known.has(item));
+}
+
+/** What `updateVenueSetup` takes: the venue's type, spaces, amenities and food. */
+export interface VenueSetupInput extends VenueFoodInput {
+  venue_type?: string | null;
+  capacity_items?: unknown[] | null;
+  amenities?: unknown[] | null;
+  facilities?: unknown[] | null;
+  security?: unknown[] | null;
+  gstin?: string | null;
+}
+
+/** The type and capacity of a venue its owner sets up from Venue Options. The
+ * type is fixed once the venue is approved (it decides how Duncit reviewed it). */
+function applySetupTypeAndCapacity(
+  v: Pick<IVenue, 'status' | 'venue_type' | 'capacity' | 'capacity_items'>,
+  input: VenueSetupInput,
+) {
+  if (input.venue_type !== undefined && input.venue_type !== null) {
+    const type = String(input.venue_type).trim();
+    if (!(VENUE_TYPES as readonly string[]).includes(type)) fail('BAD_USER_INPUT', 'Select a venue type');
+    if (v.status === 'APPROVED' && type !== v.venue_type) {
+      fail('FORBIDDEN', 'The venue type cannot be changed after approval — ask Duncit support to change it');
+    }
+    v.venue_type = type;
+  }
+  const capacityItems = normalizeCapacityItems(input.capacity_items);
+  if (capacityItems !== null) {
+    if (capacityItems.length === 0) fail('BAD_USER_INPUT', 'Keep at least one capacity entry');
+    v.capacity_items = capacityItems;
+    v.capacity = capacityItems.reduce((sum, item) => sum + item.capacity, 0);
+  }
+}
+
 /** Normalizes a full step-1 payload (location + capacity list + categories) into
  * a patch shared by owner submit and admin create/update. `current` is the
  * category list of the venue being edited (none on create). */
 async function buildStep1Patch(input: any, current: readonly VenueCategoryRef[] = []) {
   const patch: any = await normalizeStep1Location(input);
+  // Type and capacity are set up from Venue Options now: a registration save
+  // that leaves them out keeps what is stored.
+  if (patch.venue_type === undefined || patch.venue_type === null) delete patch.venue_type;
+  if (patch.capacity === undefined || patch.capacity === null) delete patch.capacity;
   // Food is validated against the venue it lands on (buildVenueFoodPatch), never spread on raw.
   for (const key of VENUE_FOOD_INPUT_KEYS) delete patch[key];
   for (const key of VENUE_RENTAL_INPUT_KEYS) delete patch[key];
@@ -988,6 +1033,30 @@ export const venueService = {
     v.step_completed = 4;
     v.status = 'SUBMITTED';
     v.submitted_at = new Date();
+    await v.save();
+    return toPub(v);
+  },
+  /** The owner sets up the parts of their venue that live in Venue Options —
+   * type, capacity, amenities and food settings — at ANY status, so a venue can
+   * be made ready while it is a draft or under review. The menu itself stays
+   * on Food > Menu (updateApprovedVenue). */
+  async updateSetup(userId: string, venueId: string, input: VenueSetupInput) {
+    if (!Types.ObjectId.isValid(venueId)) fail('BAD_USER_INPUT', 'Invalid venue id');
+    const v = await VenueModel.findById(venueId);
+    if (!v) return fail('NOT_FOUND', 'Venue not found');
+    if (String(v.owner_user_id) !== String(userId)) fail('FORBIDDEN', 'Not your venue');
+    applySetupTypeAndCapacity(v, input);
+    const lists = [
+      ['amenities', VENUE_AMENITIES],
+      ['facilities', VENUE_FACILITIES],
+      ['security', VENUE_SECURITY],
+    ] as const;
+    for (const [field, allowed] of lists) {
+      const list = normalizeOptionList(input[field], allowed);
+      if (list) v.set(field, list);
+    }
+    applyGstin(v, input.gstin, false);
+    Object.assign(v, await buildVenueFoodPatch(input, v));
     await v.save();
     return toPub(v);
   },

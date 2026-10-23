@@ -12,7 +12,7 @@ interface Props {
 /**
  * A Pod Request's pod books the slot that request holds — the only pods that
  * still book a venue slot by id. Its slot is only listed when the request's id
- * is sent. Every other pod books instantly (InstantBookingPicker).
+ * is sent. Every other pod sends the venue an offer (VenueOfferPicker).
  */
 export default function RequestSlotPicker({ form, space }: Readonly<Props>) {
   const { watch, setValue, formState } = form;

@@ -76,7 +76,9 @@ fields — generic over any react-hook-form form that holds the food block under
 Venues console editor's Food Menu section mount it, so there is ONE dish list and ONE set of
 ordering fields; their schemas use the shared `makeVenueFoodRefinement` and their saves the
 shared `toVenueFoodInput`. `FoodGstinField` is the invoice GST number, passed in as `gstin`
-because each form names and locks it its own way.
+because each form names and locks it its own way. `showMenu={false}` leaves the dish list out —
+the Partners console's Food Settings page sets up everything else (licences, ordering, GST
+number, tables) while Food > Menu stays the one place that edits the dishes.
 
 ```tsx
 <VenueFoodFields

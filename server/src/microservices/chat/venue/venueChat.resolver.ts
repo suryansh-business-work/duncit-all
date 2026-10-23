@@ -1,6 +1,12 @@
 import { GraphQLError } from 'graphql';
 import type { GraphQLContext } from '@context';
+import { requireRole } from '@middleware/rbac';
+import { consoleReaders } from '@modules/portals/console-access';
 import { venueChatService } from './venueChat.service';
+import { venueChatThreadsService } from './venueChat.threads';
+
+/** Staff who may read a venue's record in the Venues console may read its chats. */
+const VENUE_READ = consoleReaders('VENUE');
 
 function requireAuth(ctx: GraphQLContext) {
   if (!ctx.user?.id) {
@@ -10,6 +16,7 @@ function requireAuth(ctx: GraphQLContext) {
 }
 
 type SendArgs = { pod_id: string; type?: string | null; text?: string | null; image_url?: string | null };
+type PageArgs = { limit?: number | null; offset?: number | null };
 
 export const venueChatResolvers = {
   Query: {
@@ -30,6 +37,20 @@ export const venueChatResolvers = {
       args: { pod_id: string; limit?: number | null; before?: string | null },
       ctx: GraphQLContext
     ) => venueChatService.messages(args.pod_id, requireAuth(ctx), args.limit ?? 50, args.before),
+    myVenueChatThreads: async (_: unknown, args: PageArgs & { venue_id?: string | null }, ctx: GraphQLContext) =>
+      venueChatThreadsService.forOwner(requireAuth(ctx), args.venue_id, args.limit, args.offset),
+    adminVenueChatThreads: async (_: unknown, args: PageArgs & { venue_id: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, VENUE_READ);
+      return venueChatThreadsService.forStaff(args.venue_id, args.limit, args.offset);
+    },
+    adminVenueChatMessages: async (
+      _: unknown,
+      args: { pod_id: string; limit?: number | null; before?: string | null },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, VENUE_READ);
+      return venueChatService.staffMessages(args.pod_id, args.limit ?? 50, args.before);
+    },
   },
   Mutation: {
     sendVenueChatMessage: async (_: unknown, args: SendArgs, ctx: GraphQLContext) => {

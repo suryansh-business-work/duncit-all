@@ -1,27 +1,5 @@
 import { gql } from '@apollo/client';
 
-export const VENUE_SLOT_REQUESTS = gql`
-  query VenueSlotRequests($venue_id: ID) {
-    venueSlotRequests(venue_id: $venue_id) {
-      slot_id
-      venue_id
-      venue_name
-      start_at
-      end_at
-      whole_day
-      price
-      requested_at
-      pod_id
-      pod_title
-      pod_description
-      host_name
-      host_email
-      host_phone
-      pod_is_free
-    }
-  }
-`;
-
 export const APPROVE_SLOT_REQUEST = gql`
   mutation ApproveVenueSlotRequest($slot_id: ID!) {
     approveVenueSlotRequest(slot_id: $slot_id) {
@@ -39,24 +17,3 @@ export const DECLINE_SLOT_REQUEST = gql`
     }
   }
 `;
-
-export interface SlotRequestRow {
-  slot_id: string;
-  venue_id: string;
-  venue_name: string;
-  start_at: string;
-  end_at: string;
-  /** A whole-day (or whole-date-range) booking. */
-  whole_day: boolean;
-  price: number;
-  requested_at: string;
-  pod_id: string;
-  pod_title: string;
-  pod_description: string;
-  host_name: string;
-  host_email: string;
-  host_phone: string;
-  /** A FREE pod: the host settles the venue directly, so price is 0 and the
-   * card shows the free-pod notice instead of it. */
-  pod_is_free: boolean;
-}

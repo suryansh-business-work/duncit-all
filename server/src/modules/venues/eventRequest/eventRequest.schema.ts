@@ -36,6 +36,9 @@ export const eventRequestTypeDefs = gql`
     start_at: String!
     end_at: String!
     pax: Int
+    "A venue's price terms for the window (with rate); without them the offer carries a time only."
+    model: VenueOfferModel
+    rate: Float
   }
 
   "A member's ask that a host or venue with nothing upcoming runs an event."

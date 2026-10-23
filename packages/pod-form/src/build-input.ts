@@ -1,6 +1,7 @@
-import { mediaTypeForUrl, ticketDiscountInput } from '@duncit/utils';
+import { mediaTypeForUrl, ticketDiscountInput, venueOfferInput } from '@duncit/utils';
 
 import { isFreePodType, normalizePodType } from './pod-type';
+import { bookingKeyOf, keepsExistingBooking } from './kept-booking';
 import { podHasTicketPrice } from './ticket-discount';
 import {
   AUTO_POD_TYPE,
@@ -102,11 +103,32 @@ export function buildPodInput(values: PodFormValues, { draft, config }: BuildPod
     is_active: !draft,
   };
 
-  if (config.showVenueSlot) {
-    input.venue_slot_id = isPhysical ? values.venue_slot_id || null : null;
-  }
+  if (config.showVenueSlot) Object.assign(input, venueBookingOf(values, isPhysical));
 
   return input;
+}
+
+/**
+ * How the pod gets its venue: the slot it already holds (an edit that keeps
+ * it), else an offer for the picked window — never both, and never a null slot
+ * beside an offer (that would read as "release the booking"). Virtual: none.
+ */
+function venueBookingOf(values: PodFormValues, isPhysical: boolean): Record<string, unknown> {
+  if (!isPhysical) return { venue_slot_id: null };
+  if (values.venue_slot_id) return { venue_slot_id: values.venue_slot_id };
+  // An edit that keeps its venue and window sends no venue change at all.
+  if (keepsExistingBooking(values)) return {};
+  return {
+    venue_offer: venueOfferInput({
+      start: values.pod_date_time ? values.pod_date_time.toISOString() : null,
+      end: values.pod_end_date_time ? values.pod_end_date_time.toISOString() : null,
+      pax: Number(values.no_of_spots) || 0,
+      pets: false,
+      spaceLabel: '',
+      model: values.venue_offer_model,
+      rate: values.venue_offer_rate,
+    }),
+  };
 }
 
 /** Hashtags as typed → the array the server stores (leading # dropped). */
@@ -216,6 +238,22 @@ export function autoPodToFormValues(row: AutoPodTemplateRow): PodFormValues {
   };
 }
 
+interface BookedPodFields {
+  venue_id?: string | null;
+  pod_date_time?: string | null;
+  pod_end_date_time?: string | null;
+}
+
+/** The booking an edited physical pod already has (see keepsExistingBooking). */
+function keptBookingOf(pod: BookedPodFields, isVirtual: boolean): string {
+  if (isVirtual || !pod.venue_id || !pod.pod_date_time) return '';
+  return bookingKeyOf({
+    venue_id: pod.venue_id,
+    pod_date_time: new Date(pod.pod_date_time),
+    pod_end_date_time: pod.pod_end_date_time ? new Date(pod.pod_end_date_time) : null,
+  });
+}
+
 /** Build RHF form values from an existing pod so the form can prefill for edit. */
 export function podToFormValues(pod: any): PodFormValues {
   const isVirtual = pod.pod_mode === 'VIRTUAL';
@@ -236,6 +274,7 @@ export function podToFormValues(pod: any): PodFormValues {
     pod_description: pod.pod_description ?? '',
     pod_date_time: pod.pod_date_time ? new Date(pod.pod_date_time) : null,
     pod_end_date_time: pod.pod_end_date_time ? new Date(pod.pod_end_date_time) : null,
+    kept_booking: keptBookingOf(pod, isVirtual),
     // A row still carrying a legacy type opens on the option that replaced it.
     pod_type: normalizePodType(pod.pod_type ?? 'FREE'),
     pod_amount: Number(pod.pod_amount ?? 0),

@@ -16,5 +16,19 @@ export function venueApprovalChip(status?: string | null): VenueApprovalChip | n
   return null;
 }
 
+/** The row's chip once the venue may have answered the host's offer: a pod
+ * still PENDING whose offer the venue COUNTERED reads `counteredLabel` (the
+ * pending screen has Accept / Reject); anything else is `venueApprovalChip`. */
+export function venueOfferChip(
+  status: string | null | undefined,
+  offerStatus: string | null | undefined,
+  counteredLabel: string,
+): VenueApprovalChip | null {
+  if (status === 'PENDING' && offerStatus === 'COUNTERED') {
+    return { label: counteredLabel, tone: 'warning' };
+  }
+  return venueApprovalChip(status);
+}
+
 /** A venue-rejected pod is fully editable + resubmittable by its host. */
 export const isVenueRejected = (status?: string | null): boolean => status === 'DECLINED';

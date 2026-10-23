@@ -40,7 +40,8 @@ export type StudioOptionIcon =
   | 'menu'
   | 'warehouses'
   | 'refunds'
-  | 'categories';
+  | 'categories'
+  | 'chat';
 
 export interface StudioOptionItem {
   key: string;
@@ -59,6 +60,9 @@ export interface StudioOptionItem {
   /** An app screen the Partner console has no page for — its menu leaves it
    * out (`studioOptionsFor` with `console: true`). */
   appOnly?: boolean;
+  /** A Partner console page the apps have no screen for — their Options lists
+   * leave it out (`studioOptionsFor` without `console: true`). */
+  consoleOnly?: boolean;
   /** The sub-menu an option belongs to. The catalogue stays ONE flat list (the
    * Options pages list every option in order); a surface that nests its menu —
    * the Partner console sidebar — splits on this with `studioOptionGroups`.
@@ -143,8 +147,14 @@ export const STUDIO_OPTION_LIST: Readonly<Record<PartnerStudioMode, readonly Stu
     // and, on a second tab, the old slot requests from before instant booking.
     { key: 'slot-requests', labelKey: 'mweb.studioOptions.workshopEventRequests', hintKey: 'mweb.studioOptions.workshopEventRequestsHint', icon: 'requests', path: '/venues/event-requests', route: 'VenueEventRequests', portal: '/venues/requests' },
     { key: 'auto-pods', labelKey: 'mweb.studioOptions.autoPods', hintKey: 'mweb.studioOptions.venueAutoPodsHint', icon: 'autopods', path: '/venues/auto-pods', route: 'VenueAutoPods', portal: '/venues/auto-pods', autoPods: true },
-    // The Venue Pricing Module (it replaced the availability calendar, and keeps a priced one).
-    { key: 'availability', labelKey: 'mweb.studioOptions.venuePricing', hintKey: 'mweb.studioOptions.venuePricingHint', icon: 'availability', path: '/venues/pricing', route: 'VenuePricing', portal: '/venues/pricing' },
+    // How the venue is set up — each its own Partner console page (the
+    // registration form keeps only details, documents, owner and payout).
+    { key: 'calendar', labelKey: 'mweb.studioOptions.venueCalendar', hintKey: 'mweb.studioOptions.venueCalendarHint', icon: 'calendar', portal: '/venues/calendar', consoleOnly: true },
+    { key: 'type-capacity', labelKey: 'mweb.studioOptions.typeCapacity', hintKey: 'mweb.studioOptions.typeCapacityHint', icon: 'venue', portal: '/venues/type-capacity', consoleOnly: true },
+    { key: 'amenities', labelKey: 'mweb.studioOptions.amenities', hintKey: 'mweb.studioOptions.amenitiesHint', icon: 'settings', portal: '/venues/amenities', consoleOnly: true },
+    { key: 'leaves', labelKey: 'mweb.studioOptions.leaves', hintKey: 'mweb.studioOptions.leavesHint', icon: 'calendar', portal: '/venues/leaves', consoleOnly: true },
+    { key: 'fees', labelKey: 'mweb.studioOptions.venueFees', hintKey: 'mweb.studioOptions.venueFeesHint', icon: 'earnings', portal: '/venues/fees', consoleOnly: true },
+    { key: 'price-rules', labelKey: 'mweb.studioOptions.priceRules', hintKey: 'mweb.studioOptions.priceRulesHint', icon: 'availability', portal: '/venues/price-rules', consoleOnly: true },
     { key: 'settings', labelKey: 'mweb.studioOptions.venueSettings', hintKey: 'mweb.studioOptions.venueSettingsHint', icon: 'settings', path: '/venues/settings', route: 'VenueSettings', portal: '/venues/settings' },
     { key: 'earnings', labelKey: 'mweb.studioOptions.venueEarnings', hintKey: 'mweb.studioOptions.venueEarningsHint', icon: 'earnings', path: '/venues/earnings', route: 'VenueEarnings', portal: '/venues/earnings' },
     { key: 'publish', labelKey: 'mweb.studioOptions.publishVenue', hintKey: 'mweb.studioOptions.publishVenueHint', icon: 'publish', path: '/venues/publish', route: 'VenuePublish', portal: '/venues/publish' },
@@ -155,10 +165,13 @@ export const STUDIO_OPTION_LIST: Readonly<Record<PartnerStudioMode, readonly Stu
     { key: 'food-menu', labelKey: 'mweb.studioOptions.foodMenu', hintKey: 'mweb.studioOptions.foodMenuHint', icon: 'menu', path: '/venues/food-menu', route: 'VenueFoodMenu', portal: '/venues/food-menu', group: 'food' },
     { key: 'food-orders', labelKey: 'mweb.studioOptions.foodOrders', hintKey: 'mweb.studioOptions.foodOrdersHint', icon: 'orders', path: '/venues/food-orders', route: 'VenueFoodOrders', portal: '/venues/food-orders', group: 'food' },
     { key: 'food-coupons', labelKey: 'mweb.studioOptions.foodCoupons', hintKey: 'mweb.studioOptions.foodCouponsHint', icon: 'orders', path: '/venues/food-coupons', route: 'VenueFoodCoupons', portal: '/venues/food-coupons', group: 'food' },
+    { key: 'food-settings', labelKey: 'mweb.studioOptions.foodSettings', hintKey: 'mweb.studioOptions.foodSettingsHint', icon: 'settings', portal: '/venues/food-settings', consoleOnly: true, group: 'food' },
     // What the venue rents out with a pod booking, and the bookings to mark back
     // (@duncit/venue-rentals on the web, a Tamagui twin in the app).
     { key: 'rented-items', labelKey: 'mweb.studioOptions.rentedItems', hintKey: 'mweb.studioOptions.rentedItemsHint', icon: 'orders', path: '/venues/rented-items', route: 'VenueRentedItems', portal: '/venues/rented-items' },
     { key: 'pods', labelKey: 'mweb.studioOptions.venuePods', hintKey: 'mweb.studioOptions.venuePodsHint', icon: 'pods', path: '/venues/pods', route: 'VenuePods', portal: '/venues/pods' },
+    // Every host conversation about a pod at the owner's venues, newest first.
+    { key: 'chat', labelKey: 'mweb.studioOptions.venueChat', hintKey: 'mweb.studioOptions.venueChatHint', icon: 'chat', path: '/venues/chats', route: 'VenueChats', portal: '/venues/chats' },
     { key: 'change-requests', labelKey: 'mweb.studioOptions.changeRequests', hintKey: 'mweb.studioOptions.changeRequestsHint', icon: 'change', path: '/change-requests', route: 'ChangeRequests', portal: '/venues/change-requests' },
     { key: 'pod-requests', labelKey: 'mweb.studioOptions.podRequestsFromHosts', hintKey: 'mweb.studioOptions.podRequestsFromHostsHint', icon: 'requests', path: '/venues/pod-requests', route: 'VenuePodRequests', portal: '/venues/pod-requests' },
     { key: 'nearby', labelKey: 'mweb.studioOptions.nearbyHosts', hintKey: 'mweb.studioOptions.nearbyHostsHint', icon: 'nearby', path: '/venues/nearby-hosts', route: 'NearbyHosts', portal: '/venues/nearby-hosts' },
@@ -223,9 +236,10 @@ export function studioOptionsEntryFor(
   return holdsStudio(mode, roles) ? STUDIO_OPTIONS_ENTRY[mode] : null;
 }
 
-/** The studio's options, minus Auto Pods while its flag is off and, for the
- * Partner console (`console: true`), minus the app-only screens; `[]` when the
- * user is not in a studio they hold. */
+/** The studio's options, minus Auto Pods while its flag is off, minus the
+ * app-only screens on the Partner console (`console: true`) and the
+ * console-only pages everywhere else; `[]` when the user is not in a studio
+ * they hold. */
 export function studioOptionsFor(
   mode: StudioMode,
   roles: readonly string[],
@@ -233,7 +247,9 @@ export function studioOptionsFor(
 ): StudioOptionItem[] {
   if (!holdsStudio(mode, roles)) return [];
   return STUDIO_OPTION_LIST[mode].filter(
-    (option) => (options.autoPods || !option.autoPods) && !(options.console && option.appOnly),
+    (option) =>
+      (options.autoPods || !option.autoPods) &&
+      (options.console ? !option.appOnly : !option.consoleOnly),
   );
 }
 

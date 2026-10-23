@@ -70,17 +70,9 @@ export default function VenueDashboardPage() {
           <DuncitButton component={RouterLink} to="/venues/requests" size="small" variant="outlined" startIcon={<EventAvailableIcon />}>
             {t('venuePricing.dashboard.requests')}
           </DuncitButton>
-          {selectedVenue?.status === 'APPROVED' && (
-            <DuncitButton
-              component={RouterLink}
-              to={`/venues/${selectedVenue.id}/pricing`}
-              size="small"
-              variant="contained"
-              startIcon={<CalendarMonthIcon />}
-            >
-              {t('venuePricing.dashboard.pricing')}
-            </DuncitButton>
-          )}
+          <DuncitButton component={RouterLink} to="/venues/calendar" size="small" variant="contained" startIcon={<CalendarMonthIcon />}>
+            {t('mweb.studioOptions.venueCalendar')}
+          </DuncitButton>
         </Stack>
       ),
     },

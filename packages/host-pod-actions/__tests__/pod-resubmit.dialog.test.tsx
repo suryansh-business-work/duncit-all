@@ -2,10 +2,11 @@
  * Resubmitting a venue-rejected pod.
  *
  * The SAME pod is reused — no new one is created — so what the host does here
- * is pick a different venue or slot and send the booking request again. Two
- * rules matter: choosing a venue clears the slot that belonged to the previous
- * one, and the rewritten copy is screened like any other edit (a rejected pod
- * is exactly where a host is most tempted to reword the details).
+ * is pick a different venue, a window it is open for and how it is paid, and
+ * send the offer again. Two rules matter: choosing a venue clears the window
+ * that belonged to the previous one, and the rewritten copy is screened like any
+ * other edit (a rejected pod is exactly where a host is most tempted to reword
+ * the details).
  */
 import { type MockedResponse } from '@apollo/client/testing';
 import { MockedProvider } from '@apollo/client/testing/react';
@@ -18,13 +19,13 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import PodResubmitDialog from '../src/pod-resubmit/PodResubmitDialog';
-import { SlotField, VenueField } from '../src/pod-resubmit/VenueSlotFields';
+import { OfferWindowField, VenueField } from '../src/pod-resubmit/VenueSlotFields';
 import { HostPodActionsProvider } from '../src/HostPodActionsProvider';
 import {
   HOST_RESUBMIT_POD,
   MODERATE_POD_CONTENT,
+  RESUBMIT_OFFER_CALENDAR,
   RESUBMIT_VENUES,
-  RESUBMIT_VENUE_SLOTS,
 } from '../src/queries';
 import { hostActionsConfig, labelsFor } from './host-actions-config';
 import type { HostPodTarget } from '../src/types';
@@ -49,6 +50,7 @@ const pod = (over: Partial<HostPodTarget> = {}): HostPodTarget =>
     pod_description: 'Doubles at Court 2, all levels welcome.',
     pod_images_and_videos: [{ url: IMG, type: 'IMAGE' }],
     venue_approval_status: 'DECLINED',
+    no_of_spots: 12,
     ...over
   }) as HostPodTarget);
 
@@ -65,22 +67,37 @@ const venuesMock: MockedResponse = {
   maxUsageCount: Number.POSITIVE_INFINITY,
 };
 
-const slotsMock = (venueId: string, slots: unknown[]): MockedResponse => ({
-  request: { query: RESUBMIT_VENUE_SLOTS, variables: { venue_id: venueId } },
-  result: { data: { venueAvailableSlots: slots } },
+const START = '2030-06-01T10:00:00.000Z';
+const END = '2030-06-01T12:00:00.000Z';
+/** The venue is open 10:00–12:00 UTC on 1 June 2030 with nothing booked. */
+const calendarMock = (venueId: string): MockedResponse => ({
+  request: {
+    query: RESUBMIT_OFFER_CALENDAR,
+    variables: (v: Record<string, unknown>) => v.venue_id === venueId,
+  },
+  result: {
+    data: {
+      venueOfferCalendar: {
+        __typename: 'VenueBookingCalendar',
+        buffer_minutes: 0,
+        min_notice_minutes: 0,
+        days: [
+          {
+            __typename: 'VenueBookingDay',
+            date: '2030-06-01',
+            closed_reason: null,
+            open: START,
+            close: END,
+            busy: [],
+            slots: [],
+          },
+        ],
+      },
+    },
+  },
   maxUsageCount: Number.POSITIVE_INFINITY,
 });
-
-const slot = (over: Record<string, unknown> = {}) => ({
-  __typename: 'VenueSlot',
-  id: 'slot-1',
-  start_at: '2026-09-01T10:00:00.000Z',
-  end_at: '2026-09-01T12:00:00.000Z',
-  whole_day: false,
-  price: 500,
-  space_label: 'Court 2',
-  ...over,
-});
+const startTile = () => document.body.querySelector(`[data-testid="slot-tile-${START}"]`) as HTMLElement;
 
 const cleanCheck: MockedResponse = {
   request: { query: MODERATE_POD_CONTENT, variables: () => true },
@@ -127,6 +144,14 @@ const pickVenue = async (name: string) => {
   await settle();
 };
 
+const chooseTerms = async () => {
+  fireEvent.mouseDown(screen.getByLabelText(new RegExp(labels.offerModelLabel)));
+  await settle();
+  fireEvent.click(screen.getByRole('option', { name: labels.offerModelPerGuest }));
+  fireEvent.change(screen.getByTestId('pod-resubmit-offer-rate'), { target: { value: '300' } });
+  await settle();
+};
+
 const submit = async () => {
   fireEvent.submit(document.querySelector('#pod-resubmit-form') as HTMLFormElement);
   await settle();
@@ -165,22 +190,24 @@ describe('PodResubmitDialog', () => {
     expect(screen.getByRole('option', { name: 'Koramangala Court' })).toBeInTheDocument();
   });
 
-  it('loads the chosen venue slots in place of the pick-a-venue line', async () => {
-    dialog([venuesMock, slotsMock('v-1', [slot()])]);
+  it("loads the chosen venue's calendar in place of the pick-a-venue line, and asks for terms", async () => {
+    dialog([venuesMock, calendarMock('v-1')]);
     await settle();
 
     await pickVenue('Indiranagar Court');
 
     expect(screen.queryByText(slotLabels.pickVenueFirst)).not.toBeInTheDocument();
+    expect(screen.getByTestId('pod-resubmit-offer-model')).toBeInTheDocument();
+    expect(startTile()).not.toBeNull();
   });
 
-  // The slot belonged to the venue the host just moved away from.
-  it('clears the chosen slot when the host switches venue', async () => {
+  // The window belonged to the venue the host just moved away from.
+  it('clears the chosen window when the host switches venue', async () => {
     const variables: Record<string, unknown>[] = [];
     const { props } = dialog([
       venuesMock,
-      slotsMock('v-1', [slot()]),
-      slotsMock('v-2', [slot({ id: 'slot-9', space_label: 'Court 9' })]),
+      calendarMock('v-1'),
+      calendarMock('v-2'),
       cleanCheck,
       resubmitMock({
         // Apollo 4 carries the matcher inside the request; this one records
@@ -196,37 +223,72 @@ describe('PodResubmitDialog', () => {
     ]);
     await settle();
     await pickVenue('Indiranagar Court');
+    fireEvent.click(startTile());
+    await settle();
+    await chooseTerms();
 
     await pickVenue('Koramangala Court');
     await submit();
 
-    // Nothing was resubmitted: the slot went with the venue that was dropped.
+    // Nothing was resubmitted: the window went with the venue that was dropped.
     expect(props.onSaved).not.toHaveBeenCalled();
     expect(variables).toHaveLength(0);
   });
 
-  it('resubmits once a venue and a slot are both chosen', async () => {
+  it('holds the resubmission until the venue is told how it is paid', async () => {
+    const { props } = dialog([venuesMock, calendarMock('v-1'), cleanCheck, resubmitMock()]);
+    await settle();
+    await pickVenue('Indiranagar Court');
+    fireEvent.click(startTile());
+    await settle();
+
+    await submit();
+
+    expect(props.onSaved).not.toHaveBeenCalled();
+    expect(screen.getByText(labels.offerModelRequired)).toBeInTheDocument();
+    expect(screen.getByText(labels.offerRateRequired)).toBeInTheDocument();
+  });
+
+  it('resubmits an offer for the picked window once a venue and terms are chosen', async () => {
+    const sent: Record<string, any>[] = [];
     const { props } = dialog([
       venuesMock,
-      slotsMock('v-1', [slot()]),
+      calendarMock('v-1'),
       cleanCheck,
-      resubmitMock(),
+      resubmitMock({
+        request: {
+          query: HOST_RESUBMIT_POD,
+          variables: (v: Record<string, any>) => {
+            sent.push(v);
+            return true;
+          },
+        },
+      }),
     ]);
     await settle();
     await pickVenue('Indiranagar Court');
-
-    fireEvent.click(document.body.querySelector('[data-testid="slot-tile-slot-1"]') as HTMLElement);
+    fireEvent.click(startTile());
     await settle();
+    await chooseTerms();
     await submit();
 
     expect(props.onSaved).toHaveBeenCalledTimes(1);
+    expect(sent.at(-1)?.input.venue_offer).toEqual({
+      start_at: START,
+      end_at: '2030-06-01T10:30:00.000Z',
+      space_label: '',
+      pax: 12,
+      pets: false,
+      model: 'PER_GUEST',
+      rate: 300,
+    });
   });
 
   // A rejected pod is exactly where a host is most tempted to reword things.
   it('screens the rewritten copy, and does not resubmit what it refuses', async () => {
     const { props } = dialog([
       venuesMock,
-      slotsMock('v-1', [slot()]),
+      calendarMock('v-1'),
       {
         request: { query: MODERATE_POD_CONTENT, variables: () => true },
         result: {
@@ -252,8 +314,9 @@ describe('PodResubmitDialog', () => {
     ]);
     await settle();
     await pickVenue('Indiranagar Court');
-    fireEvent.click(document.body.querySelector('[data-testid="slot-tile-slot-1"]') as HTMLElement);
+    fireEvent.click(startTile());
     await settle();
+    await chooseTerms();
 
     await submit();
 
@@ -289,32 +352,47 @@ describe('VenueField', () => {
   });
 });
 
-describe('SlotField', () => {
+describe('OfferWindowField', () => {
   it('asks for a venue first rather than drawing an empty calendar', () => {
-    wrap(<SlotField slots={[]} loading={false} disabled value="" onChange={vi.fn()} />);
+    wrap(<OfferWindowField venueId="" start="" end="" onWindow={vi.fn()} />);
 
     expect(screen.getByText(slotLabels.pickVenueFirst)).toBeInTheDocument();
   });
 
-  // A venue can publish two spaces at the same hour; without the space label the
-  // two tiles would be indistinguishable.
-  it('captions each tile with its space, and reports the one that was picked', async () => {
-    const onChange = vi.fn();
-    wrap(
-      <SlotField
-        slots={[slot() as never, slot({ id: 'slot-2', space_label: '' }) as never]}
-        loading={false}
-        disabled={false}
-        value=""
-        onChange={onChange}
-      />,
-    );
+  it('offers a start with its first end, then every end up to closing', async () => {
+    const onWindow = vi.fn();
+    const { rerender } = wrap(<OfferWindowField venueId="v-1" start="" end="" onWindow={onWindow} />, [calendarMock('v-1')]);
+    await settle();
     await settle();
 
-    expect(document.body.querySelector('[data-testid="slot-tile-slot-1"]')).not.toBeNull();
+    fireEvent.click(startTile());
+    expect(onWindow).toHaveBeenCalledWith(START, '2030-06-01T10:30:00.000Z');
 
-    fireEvent.click(document.body.querySelector('[data-testid="slot-tile-slot-1"]') as HTMLElement);
+    rerender(
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[calendarMock('v-1')]}>
+        <ThemeProvider theme={testTheme}>
+          <LocalizationProvider dateAdapter={AdapterDateFns}>
+            <HostPodActionsProvider {...hostActionsConfig()}>
+              <OfferWindowField venueId="v-1" start={START} end="2030-06-01T10:30:00.000Z" onWindow={onWindow} />
+            </HostPodActionsProvider>
+          </LocalizationProvider>
+        </ThemeProvider>
+      </MockedProvider>,
+    );
+    await settle();
+    await settle();
+    expect(screen.getByText(labels.offerEndHint)).toBeInTheDocument();
+    fireEvent.mouseDown(screen.getByLabelText(new RegExp(labels.offerEnd)));
+    await settle();
+    fireEvent.click(screen.getAllByRole('option').at(-1) as HTMLElement);
+    expect(onWindow).toHaveBeenLastCalledWith(START, END);
+  });
 
-    expect(onChange).toHaveBeenCalledWith('slot-1');
+  it('says no end fits a start outside what the venue offers', async () => {
+    wrap(<OfferWindowField venueId="v-1" start="2030-07-01T10:00:00.000Z" end="" onWindow={vi.fn()} />, [calendarMock('v-1')]);
+    await settle();
+    await settle();
+
+    expect(screen.getByText(labels.offerNoEnd)).toBeInTheDocument();
   });
 });

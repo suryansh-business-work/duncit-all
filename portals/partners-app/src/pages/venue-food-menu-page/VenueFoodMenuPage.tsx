@@ -20,7 +20,7 @@ const SURFACE = 'partners-app';
  * @duncit/venue-food's, the same one the Venues console and mWeb mount (and
  * the venue form's Food section is built from its fields); here the owner also
  * picks — or adds — the Razorpay account guests pay. A venue still on its way
- * to approval edits its menu in the venue form, with the rest of the application.
+ * to approval sets its menu up on Food > Food Settings.
  */
 export default function VenueFoodMenuPage() {
   const { t } = useTranslation();
@@ -51,7 +51,7 @@ export default function VenueFoodMenuPage() {
                 size="small"
                 color="inherit"
                 component={RouterLink}
-                to={`/register-venue/${venue.id}?selectedtab=food`}
+                to="/venues/food-settings"
                 data-testid="venue-food-menu-open-form"
               >
                 {t('venueFoodOwner.common.editVenue')}

@@ -33,11 +33,13 @@ ChatMuteSchema.index({ room_kind: 1, room_id: 1 });
 
 export const ChatMuteModel = mongoose.model('ChatMute', ChatMuteSchema);
 
-/** The newest message time a member has seen in a room: unread is what came after. */
+/** The newest message time a member has seen in a room: unread is what came after.
+ * VENUE marks a venue booking chat (room id = pod id); it has no mute, so it is
+ * not one of CHAT_ROOM_KINDS (see venue/venueChat.read.ts). */
 const ChatReadStateSchema = new Schema(
   {
     user_id: { type: String, required: true },
-    room_kind: { type: String, enum: CHAT_ROOM_KINDS, required: true },
+    room_kind: { type: String, enum: [...CHAT_ROOM_KINDS, 'VENUE'], required: true },
     room_id: { type: String, required: true },
     last_read_at: { type: Date, required: true },
   },

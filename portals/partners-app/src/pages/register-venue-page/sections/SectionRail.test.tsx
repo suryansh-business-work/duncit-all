@@ -28,12 +28,15 @@ describe('SectionRail', () => {
     renderWithProviders(<SectionRail active="documents" sectionState={sectionState} onSelect={vi.fn()} mode="register" />);
 
     const items = within(rail()).getAllByRole('button', { hidden: true });
-    expect(items).toHaveLength(9);
-    // Food Menu is its own entry, straight after Type & Capacity.
-    expect(items[1].textContent).toContain('Type & Capacity');
-    expect(items[2].textContent).toContain('Food Menu');
-    expect(items[2].textContent).toContain('Menu, photos & online ordering');
-    expect(items[3].textContent).toContain('Amenities & Security');
+    // Registering asks who and where only: type, capacity, food, amenities and
+    // holidays are set up from Venue Options.
+    expect(items.map((item) => item.textContent)).toEqual([
+      expect.stringContaining('Venue Details'),
+      expect.stringContaining('Venue Documents'),
+      expect.stringContaining('Owner Details'),
+      expect.stringContaining('Payout method'),
+      expect.stringContaining('Review & Submit'),
+    ]);
     const current = items.filter((item) => item.getAttribute('aria-current') === 'true');
     expect(current).toHaveLength(1);
     expect(current[0].textContent).toContain('Venue Documents');
@@ -44,8 +47,8 @@ describe('SectionRail', () => {
   it('names the tick on each section so its state is not colour-only', () => {
     renderWithProviders(<SectionRail active="details" sectionState={sectionState} onSelect={vi.fn()} mode="register" />);
 
-    expect(within(rail()).getAllByTitle('Section complete')).toHaveLength(3);
-    expect(within(rail()).getAllByTitle('Section not complete')).toHaveLength(4);
+    expect(within(rail()).getAllByTitle('Section complete')).toHaveLength(1);
+    expect(within(rail()).getAllByTitle('Section not complete')).toHaveLength(3);
   });
 
   it('opens a section from the side rail', () => {
@@ -61,15 +64,15 @@ describe('SectionRail', () => {
     const onSelect = vi.fn();
     renderWithProviders(<SectionRail active="details" sectionState={sectionState} onSelect={onSelect} mode="register" />);
 
-    fireEvent.click(screen.getByRole('tab', { name: 'Leaves & Holidays' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'Payout method' }));
 
-    expect(onSelect).toHaveBeenCalledWith('leaves');
+    expect(onSelect).toHaveBeenCalledWith('payout');
   });
 
   it('keeps the whole small-screen strip — tabs and their search box — inside the one wrapper md+ hides', () => {
     renderWithProviders(<SectionRail active="details" sectionState={sectionState} onSelect={vi.fn()} mode="register" />);
 
-    // The strip is searchable (nine tabs), and DuncitTabs puts a caller's sx on
+    // The strip is searchable (five tabs), and DuncitTabs puts a caller's sx on
     // the tabs alone: without this wrapper the search box stayed on screen at
     // md+ as an empty column between the rail and the form.
     const strip = screen.getByTestId('register-venue-section-tabs');
@@ -86,7 +89,7 @@ describe('SectionRail', () => {
       <SectionRail active="details" sectionState={sectionState} onSelect={vi.fn()} mode="edit-approved" />
     );
 
-    expect(within(rail()).getAllByRole('button', { hidden: true })).toHaveLength(8);
+    expect(within(rail()).getAllByRole('button', { hidden: true })).toHaveLength(4);
     expect(screen.queryByRole('tab', { name: 'Review & Submit' })).toBeNull();
   });
 });

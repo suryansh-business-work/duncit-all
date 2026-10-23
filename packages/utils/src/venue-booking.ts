@@ -1,13 +1,11 @@
 /**
- * Instant venue booking — the host side of Create Pod, shared by mWeb and the
- * native app (rules 29 + 56).
+ * Venue booking calendars and price cards, shared by mWeb and the native app
+ * (rules 29 + 56).
  *
- * A host books a venue at the venue's OWN pricing (Venue Pricing Module). The
- * server owns every rule: `venueBookingCalendar` says which days and times are
- * open, `venuePriceQuote` prices a window, and the booking write re-checks
- * both. This module only turns those answers into what the pickers offer and
- * what the price card lists — it never prices a booking. The tiles only show
- * each day's rate at a glance (`dayRate`, the server's rule stacking).
+ * The server owns every rule: a venue's calendar says which days and times are
+ * open and free, and its quote prices a booking (a host's offer —
+ * venue-offer.ts). This module only turns those answers into what the pickers
+ * offer and what the price card lists — it never prices a booking.
  *
  * Times are ISO instants. The booking grid is counted from local midnight in
  * the admin time zone, exactly as the server checks `booking_increment_minutes`.
@@ -16,15 +14,6 @@ import { startOfDayInZone } from './zone-day';
 import { dayRate, dayRateParts, priceRuleChange, type PriceRuleLike } from './venue-price-rules';
 
 export type VenueBookingModel = 'PER_PAX' | 'PER_SLOT' | 'PER_HOUR' | 'FLAT';
-
-/** What a pod sends as `venue_booking` (CreatePodInput). */
-export interface InstantBooking {
-  start_at: string;
-  end_at: string;
-  pax?: number | null;
-  pets?: boolean | null;
-  space_label?: string | null;
-}
 
 /** The fields of a `venueBookingCalendar` day the pickers read. */
 export interface BookingCalendarDay {
@@ -35,22 +24,6 @@ export interface BookingCalendarDay {
   busy: readonly { start: string; end: string }[];
   slots: readonly { start: string; end: string; price: number; available: boolean }[];
 }
-
-/** How each pricing model is named to the host. */
-export const VENUE_BOOKING_MODEL_KEY: Readonly<Record<VenueBookingModel, string>> = {
-  PER_PAX: 'mweb.createPod.bookingModel.perPax',
-  PER_SLOT: 'mweb.createPod.bookingModel.perSlot',
-  PER_HOUR: 'mweb.createPod.bookingModel.perHour',
-  FLAT: 'mweb.createPod.bookingModel.flat',
-};
-
-const isBookingModel = (model: string | null | undefined): model is VenueBookingModel =>
-  !!model && model in VENUE_BOOKING_MODEL_KEY;
-
-/** The model's label key, or '' for a model this client does not know. Takes a
- * plain string so either app's generated enum passes straight in. */
-export const venueBookingModelKey = (model: string | null | undefined): string =>
-  isBookingModel(model) ? VENUE_BOOKING_MODEL_KEY[model] : '';
 
 /** The venue's booking limits (from `venuePricing` or `venueBookingCalendar`). */
 export interface BookingRules {
@@ -346,13 +319,6 @@ export function bookingDayOf(
   }) ?? null;
 }
 
-/** PER_PAX guests held inside the venue's min..max (max 0 = no cap). */
-export function clampBookingPax(pax: number, minPax: number, maxPax: number): number {
-  const floor = Math.max(1, Math.floor(minPax) || 0);
-  const value = Math.max(floor, Math.floor(pax) || 0);
-  return maxPax > 0 ? Math.min(value, Math.floor(maxPax)) : value;
-}
-
 /** The stored value of the "whole venue" space both apps offer when a venue
  * lists no capacity items. Kept in English because it identifies the space in
  * drafts; each app translates it where it is shown. */
@@ -388,29 +354,6 @@ export function venueSpaces(venue: Readonly<VenueSpaceSource> | null | undefined
 /** The `space_label` a booking sends for the picked space: '' = the whole venue. */
 export const bookingSpaceLabel = (spaceLabel: string): string =>
   spaceLabel === WHOLE_VENUE_SPACE ? '' : spaceLabel;
-
-/** What the form holds for an instant booking. */
-export interface InstantBookingSource {
-  start: string | null;
-  end: string | null;
-  /** PER_PAX guests; 0 = not a per-guest booking (the server falls back to the spots). */
-  pax: number;
-  pets: boolean;
-  /** The space picked on the form (`WHOLE_VENUE_SPACE` for the whole venue). */
-  spaceLabel: string;
-}
-
-/** The `venue_booking` input, or null until a window is picked. */
-export function instantBookingInput(source: Readonly<InstantBookingSource>): InstantBooking | null {
-  if (!source.start || !source.end) return null;
-  return {
-    start_at: source.start,
-    end_at: source.end,
-    pax: source.pax > 0 ? Math.floor(source.pax) : null,
-    pets: source.pets,
-    space_label: bookingSpaceLabel(source.spaceLabel),
-  };
-}
 
 /** The `venuePriceQuote` fields the price card reads. */
 export interface VenueQuote {
@@ -456,6 +399,9 @@ const RULE_KEY: Record<string, string> = {
   DATE_RANGE: 'mweb.createPod.quote.ruleRange',
 };
 
+const isBookingModel = (model: string | null | undefined): model is VenueBookingModel =>
+  !!model && model in BASE_KEY;
+
 const optionalLine = (id: string, labelKey: string, amount: number, vars?: VenueQuoteLine['vars']) =>
   amount > 0 ? [{ id, labelKey, amount, ...(vars ? { vars } : {}) }] : [];
 
@@ -495,99 +441,3 @@ export function venueQuoteLines(
     deposit: quote.deposit,
   };
 }
-
-/** The `venuePriceQuote` document, as an SDL string — mWeb wraps it with `gql`;
- * the native app re-declares it for its codegen. */
-export const VENUE_PRICE_QUOTE_SDL = `
-  query VenuePriceQuote($venue_id: ID!, $booking: InstantBookingInput!) {
-    venuePriceQuote(venue_id: $venue_id, booking: $booking) {
-      model
-      rate
-      pax
-      hours
-      base
-      rules {
-        type
-        label
-        amount
-      }
-      min_spend_top_up
-      cleaning_fee
-      pet_fee
-      gst_pct
-      taxes
-      platform_fee_pct
-      platform_fee
-      venue_payout
-      total
-      deposit
-    }
-  }
-`;
-
-/** The venue's pricing gate and limits for the host's pickers, and the terms
- * its summary card shows before a time is picked (`venuePricingTerms`). */
-export const VENUE_BOOKING_PRICING_SDL = `
-  query VenueBookingPricing($venue_id: ID!) {
-    venuePricing(venue_id: $venue_id) {
-      model
-      configured
-      base_rate
-      min_pax
-      max_pax
-      min_hours
-      max_hours
-      booking_increment_minutes
-      min_spend
-      slots {
-        price
-        days_of_week
-      }
-      operating_hours {
-        day
-        open
-        close
-      }
-      price_rules {
-        type
-        label
-        days
-        dates
-        from
-        to
-        mode
-        value
-      }
-      deposit
-      cleaning_fee
-      pet_fee
-      gst_enabled
-    }
-  }
-`;
-
-/** Day-by-day availability, at most MAX_BOOKING_CALENDAR_DAYS at a time. */
-export const VENUE_BOOKING_CALENDAR_SDL = `
-  query VenueBookingCalendar($venue_id: ID!, $from: String!, $to: String!, $space_label: String) {
-    venueBookingCalendar(venue_id: $venue_id, from: $from, to: $to, space_label: $space_label) {
-      buffer_minutes
-      min_notice_minutes
-      days {
-        date
-        closed_reason
-        open
-        close
-        busy {
-          start
-          end
-        }
-        slots {
-          start
-          end
-          price
-          available
-        }
-      }
-    }
-  }
-`;

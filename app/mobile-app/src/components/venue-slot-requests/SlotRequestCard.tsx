@@ -1,14 +1,14 @@
-import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 import { slotSpanLabel } from '@duncit/slots';
+import { venueOfferActions } from '@duncit/utils';
 
 import { NoticeCard } from '@/components/attendance/NoticeCard';
-import { DuncitButton } from '@/components/DuncitButton';
 import { SurfaceCard } from '@/components/SurfaceCard';
 import { slotPriceLabel } from '@/components/venue-availability/slot-labels';
+import { OfferSummary } from '@/components/venue-slot-requests/OfferSummary';
+import { SlotRequestActions } from '@/components/venue-slot-requests/SlotRequestActions';
 import { useDateFormat } from '@/hooks/useDateFormat';
 import type { SlotRequestRow } from '@/hooks/useVenueSlotRequests';
-import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 
 function Detail({ label, value }: Readonly<{ label: string; value: string }>) {
@@ -29,15 +29,24 @@ interface Props {
   busy: boolean;
   onApprove: (request: SlotRequestRow) => void;
   onDecline: (slotId: string) => void;
+  onCounter: (request: SlotRequestRow) => void;
 }
 
-/** One pending request: the pod, the slot it wants, who is asking, and the
- * two answers — decline as an outlined danger pill, approve as the green one.
- * The RN twin of mWeb's SlotRequestCard (rule 27). */
-export function SlotRequestCard({ request, busy, onApprove, onDecline }: Readonly<Props>) {
+const LEGACY_ACTIONS = { accept: true, reject: true, counter: false };
+
+/** One booking request: the pod, the window it wants, who is asking, the host's
+ * offer (or, from before offers, the slot price) and the answers — reject,
+ * counter, accept. The RN twin of the web OfferRequestCard (rule 27). */
+export function SlotRequestCard({
+  request,
+  busy,
+  onApprove,
+  onDecline,
+  onCounter,
+}: Readonly<Props>) {
   const { t } = useTranslation();
   const fmt = useDateFormat();
-  const { danger, onPrimary } = useThemeColors();
+  const { offer } = request;
   // The shared when-sentence — whole-day and multi-day aware — that the
   // Partners console prints for the same request (rule 40).
   const slotWindow = slotSpanLabel(
@@ -59,16 +68,19 @@ export function SlotRequestCard({ request, busy, onApprove, onDecline }: Readonl
             {request.pod_description || t('mweb.podDetails.aboutEmpty')}
           </Text>
         </YStack>
-        <XStack
-          paddingHorizontal={10}
-          paddingVertical={4}
-          borderRadius={999}
-          backgroundColor="$warning"
-        >
-          <Text fontSize={11} fontWeight="600" color="$onDanger">
-            {t('mweb.venueSlotRequests.awaitingDecision')}
-          </Text>
-        </XStack>
+        {/* An offer names where it stands itself (OfferSummary); an old request only waits. */}
+        {offer ? null : (
+          <XStack
+            paddingHorizontal={10}
+            paddingVertical={4}
+            borderRadius={999}
+            backgroundColor="$warning"
+          >
+            <Text fontSize={11} fontWeight="600" color="$onDanger">
+              {t('mweb.venueSlotRequests.awaitingDecision')}
+            </Text>
+          </XStack>
+        )}
       </XStack>
 
       <YStack height={1} backgroundColor="$borderColor" />
@@ -88,7 +100,7 @@ export function SlotRequestCard({ request, busy, onApprove, onDecline }: Readonl
       <YStack gap={10}>
         <Detail label={t('mweb.common.venue')} value={request.venue_name} />
         <Detail label={t('mweb.venueSlotRequests.slot')} value={slotWindow} />
-        {request.pod_is_free ? null : (
+        {request.pod_is_free || offer ? null : (
           <Detail
             label={t('mweb.venueSlotRequests.slotPrice')}
             value={slotPriceLabel(request, t)}
@@ -105,28 +117,16 @@ export function SlotRequestCard({ request, busy, onApprove, onDecline }: Readonl
         />
       </YStack>
 
-      <XStack gap={8}>
-        <YStack flex={1}>
-          <DuncitButton
-            label={t('mweb.venueSlotRequests.decline')}
-            onPress={() => onDecline(request.slot_id)}
-            variant="outline"
-            tone="danger"
-            disabled={busy}
-            fullWidth
-            icon={<MaterialIcons name="close" size={18} color={danger} />}
-          />
-        </YStack>
-        <YStack flex={1}>
-          <DuncitButton
-            label={t('mweb.venueSlotRequests.approve')}
-            onPress={() => onApprove(request)}
-            disabled={busy}
-            fullWidth
-            icon={<MaterialIcons name="check" size={18} color={onPrimary} />}
-          />
-        </YStack>
-      </XStack>
+      {offer ? <OfferSummary offer={offer} podIsFree={request.pod_is_free} /> : null}
+
+      <SlotRequestActions
+        slotId={request.slot_id}
+        actions={offer ? venueOfferActions(offer) : LEGACY_ACTIONS}
+        busy={busy}
+        onAccept={() => onApprove(request)}
+        onReject={() => onDecline(request.slot_id)}
+        onCounter={() => onCounter(request)}
+      />
     </SurfaceCard>
   );
 }

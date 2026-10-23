@@ -160,7 +160,7 @@ describe('PodCompleteDialog', () => {
     expect(screen.getByText('Venue bill')).toBeOnTheScreen();
     expect(screen.getByTestId('field-venue_bill_amount')).toBeOnTheScreen();
     expect(
-      screen.getByText('Leave this empty to pay the venue its booked slot price.'),
+      screen.getByText('Leave this empty to pay the venue its agreed booking amount.'),
     ).toBeOnTheScreen();
     // Nothing to upload against, and nothing for the bill to come on top of.
     expect(screen.queryByTestId('media-upload-add')).toBeNull();
@@ -172,7 +172,7 @@ describe('PodCompleteDialog', () => {
     // The upload is labelled as the bill, and marked required once it is asked for.
     expect(screen.getByLabelText('Upload the venue bill, required')).toBeOnTheScreen();
     expect(screen.getByTestId('pod-complete-include-slot')).toBeOnTheScreen();
-    expect(screen.getByText('Also pay the booked slot price with this bill')).toBeOnTheScreen();
+    expect(screen.getByText('Also pay the agreed booking amount with this bill')).toBeOnTheScreen();
     expect(mockPreviewArgs).toHaveBeenLastCalledWith('p1', 1500, false, undefined, undefined);
 
     // The venue's usage re-prices the slot in the preview; an unreadable head count is left out.

@@ -4,26 +4,26 @@ import { EventRequestRespondActions, SlotRequestHistory } from '@duncit/availabi
 import { EventRequestsPage, useTranslation } from '@duncit/shell';
 import { DuncitTabs, tabPanelProps, useTabParam } from '@duncit/tabs';
 import { PageHeader } from '@duncit/ui';
-import SlotRequestsPage from '../slot-requests-page/SlotRequestsPage';
+import BookingRequestsTab from './BookingRequestsTab';
 
 const TABS_ID = 'workshop-event-requests';
 
 /**
- * Workshop & Event Requests — what members asked the venue for, answered with
- * Accept / Reject / Counter offer (a counter is priced by the Venue Pricing
- * Module); and, on its own tab, the slot requests from before hosts booked
- * instantly. A leftover pending one keeps its approve / decline there.
+ * The venue's requests inbox: hosts' booking offers first (Accept / Counter /
+ * Reject — a pod goes live only once the venue agrees), then what members asked
+ * the venue for, then every booking request already answered.
  */
 export default function WorkshopEventRequestsPage() {
   const { t } = useTranslation();
   const items = useMemo(
     () => [
+      { value: 'bookings', label: t('availability.offers.tab'), testId: `${TABS_ID}-tab-bookings` },
       { value: 'requests', label: t('venuePricing.requests.tab'), testId: `${TABS_ID}-tab-requests` },
       { value: 'history', label: t('venuePricing.history.tab'), testId: `${TABS_ID}-tab-history` },
     ],
     [t],
   );
-  const tabs = useTabParam({ items, fallback: 'requests' });
+  const tabs = useTabParam({ items, fallback: 'bookings' });
 
   return (
     <Stack spacing={2.5} sx={{ width: '100%' }} data-testid="workshop-event-requests-page">
@@ -37,7 +37,8 @@ export default function WorkshopEventRequestsPage() {
         searchable={false}
       />
       <Box {...tabPanelProps(TABS_ID, tabs.value)}>
-        {tabs.value === 'requests' ? (
+        {tabs.value === 'bookings' && <BookingRequestsTab />}
+        {tabs.value === 'requests' && (
           <EventRequestsPage
             targetType="VENUE"
             scope="owner"
@@ -46,13 +47,8 @@ export default function WorkshopEventRequestsPage() {
               <EventRequestRespondActions request={row} targetType="VENUE" onDone={refresh} />
             )}
           />
-        ) : (
-          <Stack spacing={2.5}>
-            {/* The pending queue keeps the existing approve / decline (and the email deep links). */}
-            <SlotRequestsPage />
-            <SlotRequestHistory venueId={null} hidePending />
-          </Stack>
         )}
+        {tabs.value === 'history' && <SlotRequestHistory venueId={null} hidePending />}
       </Box>
     </Stack>
   );

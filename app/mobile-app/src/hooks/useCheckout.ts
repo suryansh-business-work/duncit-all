@@ -184,7 +184,7 @@ export function buildCheckoutBilling(
  * invoice download. Pod checkout pays the pod membership (pod_amount) ONLY —
  * products are a separate payment via the standalone product checkout, never
  * mixed in. RN twin of mWeb's CheckoutPage data layer. */
-export function useCheckout(podId: string, seats = 1, dateIds: readonly string[] = []) {
+export function useCheckout(podId: string, seats = 1) {
   const [finance, setFinance] = useState<FinanceSettings | null>(null);
   const [pod, setPod] = useState<CheckoutPod>(null);
   // The buyer's contact and main address are the user info already in the
@@ -246,8 +246,6 @@ export function useCheckout(podId: string, seats = 1, dateIds: readonly string[]
     redeem_coins: redeemCoins,
     // Rented items: ids and quantities only — the server prices them, charged in full.
     selected_rentals: selectedRentals,
-    // A recurring pod's dates, each paid for on its own under one order.
-    ...(dateIds.length > 0 ? { date_pod_ids: [...dateIds] } : {}),
   });
 
   const pay = async (

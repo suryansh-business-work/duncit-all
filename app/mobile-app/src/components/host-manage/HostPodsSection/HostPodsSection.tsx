@@ -11,8 +11,6 @@ interface HostPodsSectionProps {
   /** Fired after a pod completes — the screen refetches the Host Share list,
    * which the completion just added a payout to. */
   onPodCompleted?: () => void;
-  /** A line the screen was opened with (a recurring pod's result). */
-  arrivalNotice?: string | null;
 }
 
 /**
@@ -27,10 +25,7 @@ interface HostPodsSectionProps {
  * One sheets hook for all three: a pod keeps exactly the same actions wherever
  * it currently sits. mWeb twin: HostPodSections (rule 27).
  */
-export function HostPodsSection({
-  onPodCompleted,
-  arrivalNotice = null,
-}: Readonly<HostPodsSectionProps>) {
+export function HostPodsSection({ onPodCompleted }: Readonly<HostPodsSectionProps>) {
   const { t } = useTranslation();
   const { pods, isLoading, refetch } = useHostPods();
   const { openActions, openPod, notice, sheets } = useHostPodSheets({ refetch, onPodCompleted });
@@ -52,7 +47,7 @@ export function HostPodsSection({
       <YourPodsSection
         pods={yours}
         isLoading={isLoading}
-        notice={notice ?? arrivalNotice}
+        notice={notice}
         onOpen={openPod}
         onActions={openActions}
       />

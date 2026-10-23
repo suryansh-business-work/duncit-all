@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { YStack } from 'tamagui';
 import { logs } from '@duncit/logs';
@@ -22,8 +22,6 @@ import { RefreshScrollView } from '@/components/PullToRefresh';
 export function HostManageScreen() {
   const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const arrivalNotice =
-    useRoute<RouteProp<RootStackParamList, 'HostManage'>>().params?.notice ?? null;
   const { drafts, isLoading, remove } = useHostDrafts();
   const [target, setTarget] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -64,7 +62,7 @@ export function HostManageScreen() {
             onPress={() => navigation.navigate('CreatePod')}
           />
 
-          <HostPodsSection arrivalNotice={arrivalNotice} />
+          <HostPodsSection />
 
           <HostDraftsSection
             drafts={drafts}

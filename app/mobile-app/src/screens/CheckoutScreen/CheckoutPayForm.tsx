@@ -7,7 +7,6 @@ import { IssueNotice } from '@/components/issue-notice/IssueNotice';
 import { RefreshScrollView } from '@/components/PullToRefresh';
 import { formatMoney } from '@/utils/checkout-math';
 import { CheckoutForm } from '@/forms/checkout';
-import { RecurringDatesNote } from '@/components/checkout/RecurringDatesNote';
 
 import type { CheckoutActions } from './checkoutActions';
 import type { CheckoutState } from './useCheckoutState';
@@ -31,15 +30,13 @@ export function CheckoutPayForm({ s, actions, breakup }: Readonly<CheckoutPayFor
   const { pod, me } = checkout;
   return (
     <RefreshScrollView contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 32 }}>
-      <RecurringDatesNote dates={s.dates} />
       <OrderSummary
         pod={pod}
         breakup={s.payBreakup ?? breakup}
         grossTotal={breakup.total}
         discounts={s.discounts}
         seats={s.seats}
-        // Over several dates, one seat's price covers every date booked.
-        unitAmount={(Number(pod?.pod_amount) || 0) * s.dates}
+        unitAmount={Number(pod?.pod_amount) || 0}
         coins={s.coinSummary}
         roundOff={s.payBreakup ? coins.roundOff : 0}
       />

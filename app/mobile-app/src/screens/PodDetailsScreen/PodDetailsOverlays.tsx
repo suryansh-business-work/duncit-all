@@ -13,13 +13,11 @@ import { useStudioModeStore } from '@/stores/studio-mode.store';
 import type { RootStackParamList } from '@/navigation/types';
 import { fireAndForget } from '@/utils/fire-and-forget';
 
-import { SeriesBookingSheet } from '@/components/details/series/SeriesBookingSheet';
 import { BookingClashDialog } from '@/components/details/BookingClashDialog';
-import { formatMoney } from '@/utils/checkout-math';
 
 import { PodBackoutDialogs } from './PodBackoutDialogs';
 import type { PodDetailActions } from './usePodDetailActions';
-import type { SeriesBooking } from './useSeriesBooking';
+import { useBookingClashGuard } from './useBookingClashGuard';
 
 type PodDetailsData = ReturnType<typeof usePodDetails>;
 
@@ -27,9 +25,6 @@ interface PodDetailsOverlaysProps {
   pod: PodDetail;
   navigation: NativeStackNavigationProp<RootStackParamList>;
   actions: PodDetailActions;
-  series: SeriesBooking;
-  /** The platform currency symbol, for the date picker's prices. */
-  currency: string;
   isFree: boolean;
   isPodHost: boolean;
   membershipState: PodMembershipState | null;
@@ -47,8 +42,6 @@ export function PodDetailsOverlays({
   pod,
   navigation,
   actions,
-  series,
-  currency,
   isFree,
   isPodHost,
   membershipState,
@@ -63,6 +56,14 @@ export function PodDetailsOverlays({
   // A free pod with items to rent is paid for: the rentals go through checkout.
   const { picks } = usePodRentalPicks(pod.id);
   const freeJoin = isFree && Object.keys(picks).length === 0;
+  const clash = useBookingClashGuard();
+  // Book runs once the member has seen (and accepted) any time clash.
+  const guard = (handler: () => void) => () =>
+    fireAndForget(
+      (async () => {
+        if (await clash.check([pod.id])) handler();
+      })(),
+    );
   return (
     <>
       <PodBookingBar
@@ -73,7 +74,7 @@ export function PodDetailsOverlays({
         membershipState={membershipState}
         seats={actions.seats}
         onSeatsChange={actions.setSeats}
-        onCheckout={series.guard(
+        onCheckout={guard(
           freeJoin
             ? () => fireAndForget(actions.onJoinFree())
             : () => navigation.navigate('Checkout', { podId: pod.id, seats: actions.seats }),
@@ -98,13 +99,8 @@ export function PodDetailsOverlays({
           useExploreStore.getState().bumpComment(pod.id, delta);
         }}
       />
-      <SeriesBookingSheet
-        series={series}
-        isFree={isFree}
-        formatPrice={(amount) => formatMoney(currency, amount)}
-      />
       <BookingClashDialog
-        guard={series.clash}
+        guard={clash}
         onOpenPod={(clubSlug, podSlug) => navigation.push('PodDetails', { clubSlug, podSlug })}
       />
       <LocationMismatchDialog kind="POD" {...locationPrompt} />

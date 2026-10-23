@@ -4,9 +4,6 @@ import { Spinner, Text, XStack, YStack } from 'tamagui';
 import { SelectChip } from '@/components/venue-availability/SelectChip';
 import { SlotRequestCard } from '@/components/venue-slot-requests/SlotRequestCard';
 import { SlotRequestDecisionSheets } from '@/components/venue-slot-requests/SlotRequestDecisionSheets';
-import { SeriesRequestGroup } from '@/components/venue-slot-requests/SeriesRequestGroup';
-import { ConfirmDialog } from '@/components/ConfirmDialog';
-import { groupSlotRequestsBySeries } from '@duncit/utils';
 import {
   useVenueSlotRequests,
   ALL_VENUES,
@@ -34,29 +31,13 @@ export function SlotRequestQueue({ onDecided }: Readonly<Props>) {
   const [approving, setApproving] = useState<SlotRequestRow | null>(null);
   const [declining, setDeclining] = useState<string | null>(null);
   const [reason, setReason] = useState('');
-  // A recurring pod answered as a whole: the series being accepted / declined.
-  const [approvingSeries, setApprovingSeries] = useState<string | null>(null);
-  const [decliningSeries, setDecliningSeries] = useState<string | null>(null);
 
   const dismiss = () => {
     setApproving(null);
     setDeclining(null);
-    setApprovingSeries(null);
-    setDecliningSeries(null);
   };
   const settle = (run: Promise<void>) => {
     run.then(onDecided).catch(() => undefined);
-  };
-  const seriesResult = (approveAll: boolean) => (decided: number, failed: number) => {
-    const text = approveAll
-      ? t('mweb.podSeries.acceptedAll', { vars: { count: decided } })
-      : t('mweb.podSeries.declinedAll', { vars: { count: decided } });
-    return failed ? `${text} ${t('mweb.podSeries.someFailed', { vars: { count: failed } })}` : text;
-  };
-  const approveSeries = () => {
-    const seriesId = approvingSeries;
-    dismiss();
-    if (seriesId) settle(slots.decideSeries(seriesId, true, '', seriesResult(true)));
   };
   const approve = () => {
     const slotId = approving?.slot_id;
@@ -65,10 +46,8 @@ export function SlotRequestQueue({ onDecided }: Readonly<Props>) {
   };
   const decline = () => {
     const slotId = declining;
-    const seriesId = decliningSeries;
     dismiss();
-    if (seriesId) settle(slots.decideSeries(seriesId, false, reason.trim(), seriesResult(false)));
-    else if (slotId) settle(slots.decline(slotId, reason.trim()));
+    if (slotId) settle(slots.decline(slotId, reason.trim()));
   };
   const openDecline = (slotId: string) => {
     setReason('');
@@ -133,41 +112,16 @@ export function SlotRequestQueue({ onDecided }: Readonly<Props>) {
         </Text>
       )}
 
-      {groupSlotRequestsBySeries(slots.requests, (r) => r.slot_id).map((group) =>
-        group.kind === 'SERIES' ? (
-          <SeriesRequestGroup
-            key={group.key}
-            rows={group.rows}
-            busy={slots.busy}
-            onApproveAll={() => setApprovingSeries(group.seriesId)}
-            onDeclineAll={() => {
-              setReason('');
-              setDecliningSeries(group.seriesId);
-            }}
-            renderRow={card}
-          />
-        ) : (
-          card(group.row)
-        ),
-      )}
+      {slots.requests.map(card)}
 
       <SlotRequestDecisionSheets
         approving={approving}
-        declining={!!declining || !!decliningSeries}
+        declining={!!declining}
         reason={reason}
         onReason={setReason}
         onApprove={approve}
         onDecline={decline}
         onDismiss={dismiss}
-      />
-      <ConfirmDialog
-        open={!!approvingSeries}
-        testID="slot-series-approve"
-        title={t('mweb.podSeries.acceptAllTitle')}
-        message={t('mweb.podSeries.acceptAllMessage')}
-        confirmLabel={t('mweb.venueSlotRequests.approve')}
-        onConfirm={approveSeries}
-        onCancel={dismiss}
       />
     </YStack>
   );

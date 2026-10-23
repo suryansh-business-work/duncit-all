@@ -11,7 +11,6 @@ import {
   type RazorpayOrder,
 } from '@/hooks/useCheckout';
 import { usePodCheckoutBill } from '@/hooks/usePodCheckoutBill';
-import { useRecurringCheckoutBill } from '@/hooks/useRecurringCheckoutBill';
 import { coinCheckoutSummary } from '@duncit/utils';
 import { useCoinBalance } from '@/hooks/useCoins';
 import { useServerIssue } from '@/hooks/useServerIssue';
@@ -32,10 +31,7 @@ export function useCheckoutState() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, 'Checkout'>>();
   const podId = route.params?.podId ?? '';
-  // Several dates of a recurring pod booked together: podId is then the recurring pod.
-  const dateIds = (route.params?.dateIds?.length ?? 0) > 1 ? (route.params?.dateIds ?? []) : [];
-  const recurring = dateIds.length > 0;
-  const checkout = useCheckout(podId, Math.max(1, Number(route.params?.seats ?? 1) || 1), dateIds);
+  const checkout = useCheckout(podId, Math.max(1, Number(route.params?.seats ?? 1) || 1));
   const { finance, pod, me, isLoading } = checkout;
   const { download: downloadTicket } = usePodTicket();
   const [submitting, setSubmitting] = useState(false);
@@ -54,21 +50,15 @@ export function useCheckoutState() {
   // re-prices and re-checks capacity, so this is a preview, never the charge.
   // The multi-ticket tier comes off first, then the coupon, coins and GST.
   const seats = Math.max(1, Number(route.params?.seats ?? 1) || 1);
-  const podBill = usePodCheckoutBill(pod, seats, finance, coupon);
-  // Several dates are priced by the server: each date rounds on its own.
-  const recurringBill = useRecurringCheckoutBill({
-    podId: recurring ? podId : '',
-    dateIds,
+  const { ticket, breakup, coins, payBreakup, discounts } = usePodCheckoutBill(
+    pod,
     seats,
     finance,
     coupon,
-  });
-  const { ticket, breakup, coins, payBreakup, discounts } = recurring ? recurringBill : podBill;
-  const dates = recurring ? recurringBill.dates : 1;
+  );
   const amount = ticket.gross;
-  // Rented items picked on Pod Details ride on this payment, charged in full —
-  // but they belong to one date, so a booking of several dates rents none.
-  const rentals = useCheckoutRentals(recurring ? null : pod, payment !== null);
+  // Rented items picked on Pod Details ride on this payment, charged in full.
+  const rentals = useCheckoutRentals(pod, payment !== null);
   // Razorpay takes precedence whenever its Tech-portal keys are set; the dummy
   // gateway is only a local fallback.
   const razorpayEnabled = !!finance?.razorpay_enabled;
@@ -123,8 +113,6 @@ export function useCheckoutState() {
     applyingCoupon,
     setApplyingCoupon,
     seats,
-    dates,
-    recurringError: recurring ? recurringBill.error : null,
     ticket,
     breakup,
     coins,

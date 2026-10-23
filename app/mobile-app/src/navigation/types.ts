@@ -58,8 +58,7 @@ export type RootStackParamList = {
   /** Booking deep link from the receipt email; forwards to the pod detail. */
   Booking: { bookingId: string };
   BecomeHost: undefined;
-  /** `notice`: a line to show on arrival, e.g. how many dates a recurring pod created. */
-  HostManage: { notice?: string } | undefined;
+  HostManage: undefined;
   /** Host Studio > Your Pods > actions > See Marked Attendance. */
   PodAttendance: { podId: string };
   /** Host Studio > Your Pods > actions > Challenges. */
@@ -192,8 +191,7 @@ export type RootStackParamList = {
   PreviousPods: { initialIndex?: number } | undefined;
   HappeningNearby: { initialIndex?: number } | undefined;
   // Pod-membership checkout (pod_amount only — never carries products).
-  /** `dateIds`: several dates of a recurring pod (podId is then the recurring pod). */
-  Checkout: { podId: string; seats?: number; dateIds?: string[] };
+  Checkout: { podId: string; seats?: number };
   /** Where a FREE pod's instant join lands — the checkout confirmation with the
    * ticket and nothing paid (mWeb /pod/:podId/booked). */
   FreeJoinSuccess: { podId: string };

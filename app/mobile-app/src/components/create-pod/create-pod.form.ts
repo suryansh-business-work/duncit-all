@@ -3,7 +3,6 @@ import {
   instantBookingInput,
   isMeetingPlatform,
   isVideoUrl,
-  repeatDiscountFormIssues,
   ticketDiscountInput,
 } from '@duncit/utils';
 
@@ -14,7 +13,6 @@ import { blankCreatePodForm, type CreatePodFormValues } from './create-pod.types
 import {
   hydrateTicketDiscount,
   refineTicketDiscount,
-  ticketDiscountMaxPct,
   ticketDiscountSchemaShape,
 } from './ticket-discount.form';
 
@@ -227,49 +225,6 @@ function refinePublish(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Tra
  * The messages are copy, so they come from the shared catalogue (rule 38): the
  * stepper passes its live `t`, and the export below resolves against the
  * bundled English for callers that parse the schema outside React. */
-/** The multi-date discount's tiers, by the shared tier rules counted in dates.
- * The server holds the real ceiling on dates (Pod Settings). mWeb twin. */
-function refineRepeatDiscount(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Translate) {
-  const input = {
-    enabled: values.repeat_discount_enabled,
-    tiers: values.repeat_discount_tiers,
-    maxPct: ticketDiscountMaxPct(),
-  };
-  for (const issue of repeatDiscountFormIssues(input, t))
-    ctx.addIssue({ code: 'custom', ...issue });
-}
-
-/** A recurring pod needs the day it stops repeating, after its first date. The
- * server checks the span and every date's slot. mWeb twin: refineRepeat. */
-function refineRepeat(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Translate) {
-  if (!values.repeat_enabled) return;
-  refineRepeatDiscount(values, ctx, t);
-  // Hand-picked dates: the first date plus at least one the host tapped.
-  if (values.repeat_frequency === 'CUSTOM' && values.repeat_custom_days.length === 0) {
-    ctx.addIssue({
-      code: 'custom',
-      path: ['repeat_custom_days'],
-      message: t('mweb.podSeries.needTwoDates'),
-    });
-  }
-  if (!values.repeat_ends_on) {
-    ctx.addIssue({
-      code: 'custom',
-      path: ['repeat_ends_on'],
-      message: t('mweb.podSeries.endsOnRequired'),
-    });
-    return;
-  }
-  const first = parseDateTimeText(values.pod_date_time_text);
-  if (first && new Date(`${values.repeat_ends_on}T23:59:59`) <= first) {
-    ctx.addIssue({
-      code: 'custom',
-      path: ['repeat_ends_on'],
-      message: t('mweb.podSeries.endsOnAfterStart'),
-    });
-  }
-}
-
 export function makeCreatePodSchema(t: Translate = fallbackT) {
   return z
     .object({
@@ -349,22 +304,11 @@ export function makeCreatePodSchema(t: Translate = fallbackT) {
       ...ticketDiscountSchemaShape,
       payment_terms: z.string().max(4000),
       agreed_to_terms: z.boolean(),
-      repeat_enabled: z.boolean(),
-      repeat_frequency: z.enum(['DAILY', 'WEEKLY', 'BIWEEKLY', 'MONTHLY', 'CUSTOM']),
-      repeat_ends_on: z.string(),
-      repeat_skip_dates: z.array(z.string()),
-      repeat_custom_days: z.array(z.string()),
-      // Shape only — the tier rules run in refineRepeat.
-      repeat_discount_enabled: z.boolean(),
-      repeat_discount_tiers: z.array(
-        z.object({ min_tickets: z.number(), discount_pct: z.number() }),
-      ),
     })
     .superRefine((values, ctx) => {
       refineVenue(values, ctx, t);
       refineMeeting(values, ctx, t);
       refineSchedule(values, ctx, t);
-      refineRepeat(values, ctx, t);
       refinePodType(values, ctx, t);
       refineTicketPrice(values, ctx, t);
       refineTicketDiscount(
@@ -408,9 +352,6 @@ export const STEP_FIELDS: (keyof CreatePodFormValues)[][] = [
     'venue_space_label',
     'pod_date_time_text',
     'pod_end_date_time_text',
-    'repeat_ends_on',
-    'repeat_custom_days',
-    'repeat_discount_tiers',
   ],
   [
     'pod_type',

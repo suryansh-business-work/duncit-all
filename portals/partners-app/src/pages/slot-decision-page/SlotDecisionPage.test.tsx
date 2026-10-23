@@ -30,6 +30,8 @@ const slot = (over: Record<string, unknown> = {}) => ({
   venue_commission_amount: 100,
   venue_receives: 900,
   pod_is_free: false,
+  // A request from before booking offers: the email's approve / decline answer it.
+  offer: null,
   ...over,
 });
 

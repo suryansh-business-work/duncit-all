@@ -65,7 +65,7 @@ describe('ReleaseBreakdownLines', () => {
       mocks: [publicFinanceSettingsNullMock()],
     });
     // The venue's side is no longer only the slot: a final bill can replace or add to it.
-    expect(screen.getByText('Venue amount (slot price and/or final bill)')).toBeInTheDocument();
+    expect(screen.getByText('Venue amount (agreed booking amount and/or final bill)')).toBeInTheDocument();
     const zeroV1 = makeBreakdownV1({ gst_pct: 0, gst_amount: 0, duncit_pct: 0, duncit_amount: 0, payout_pct: 0, payout_amount: 500 });
     renderWithProviders(<ReleaseBreakdownLines request={{ kind: 'HOST_PAYMENT', breakdown: zeroV1 }} />, {
       mocks: [publicFinanceSettingsNullMock()],

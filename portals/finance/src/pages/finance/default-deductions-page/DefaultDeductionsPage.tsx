@@ -127,9 +127,10 @@ export default function DefaultDeductionsPage() {
       <Stack spacing={2}>
         <Alert severity="info">
           How pod money flows: the customer price is GST-inclusive. GST is extracted first, then the
-          platform fee comes off the net; the venue is paid its fixed booked slot price from the
-          remaining pool and the host keeps the remainder — there are no share percentages. Duncit's
-          commission is then deducted from each party's amount. Per-host, per-venue and per-brand
+          platform fee comes off the net; the venue is paid the booking amount it agreed with the host,
+          in full, from the remaining pool, and the host keeps the remainder — there are no share
+          percentages. Duncit's venue commission is added on top of that agreed amount (out of the
+          host's side); the host commission is deducted from the host's amount. Per-host, per-venue and per-brand
           commission overrides are managed in the Onboarding portal's Onboarded lists.
         </Alert>
 
@@ -145,7 +146,7 @@ export default function DefaultDeductionsPage() {
           <DeductionSlider label={t('finance.defaultDeductions.commissionFromHost')} value={form.default_host_commission_pct} onChange={set('default_host_commission_pct')} />
         </DeductionCard>
 
-        <DeductionCard title={t('finance.common.venue')} subtitle="The commission Duncit takes from the venue's booked slot price.">
+        <DeductionCard title={t('finance.common.venue')} subtitle="Duncit's commission, added on top of the venue's agreed booking amount (a venue's own commission wins when set).">
           <DeductionSlider label={t('finance.defaultDeductions.commissionFromVenue')} value={form.default_venue_commission_pct} onChange={set('default_venue_commission_pct')} />
         </DeductionCard>
 

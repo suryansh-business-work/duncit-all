@@ -119,7 +119,8 @@ export function useCreatePodScope({
     const current = Number(form.getValues('no_of_spots_text')) || 0;
     if (!physical || current <= 0) return;
     const next = clampSpots(current, spots);
-    if (next !== current) form.setValue('no_of_spots_text', String(next), { shouldDirty: true, shouldValidate: true });
+    if (next !== current)
+      form.setValue('no_of_spots_text', String(next), { shouldDirty: true, shouldValidate: true });
   }, [form, physical, spots.min, spots.max]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Step 4's money state lives HERE because it gates the Create Pod button: a

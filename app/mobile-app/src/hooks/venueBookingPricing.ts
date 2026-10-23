@@ -18,12 +18,17 @@ const reads = new Map<string, { at: number; answer: Promise<VenueBookingPricing>
  * dedupe the two. `fresh` (pull-to-refresh) always asks the server again. A
  * failed read is forgotten so the next ask retries.
  */
-export function loadVenueBookingPricing(venueId: string, fresh = false): Promise<VenueBookingPricing> {
+export function loadVenueBookingPricing(
+  venueId: string,
+  fresh = false,
+): Promise<VenueBookingPricing> {
   const cached = reads.get(venueId);
   if (cached && !fresh && Date.now() - cached.at < FRESH_MS) return cached.answer;
-  const answer = graphqlRequest(HostBookingPricingDocument, { venue_id: venueId }, { auth: true }).then(
-    (res) => res.venuePricing,
-  );
+  const answer = graphqlRequest(
+    HostBookingPricingDocument,
+    { venue_id: venueId },
+    { auth: true },
+  ).then((res) => res.venuePricing);
   reads.set(venueId, { at: Date.now(), answer });
   answer.catch(() => reads.delete(venueId));
   return answer;
@@ -38,7 +43,9 @@ export function useVenueGuestRange(venueId: string): { min_pax: number; max_pax:
     let active = true;
     loadVenueBookingPricing(venueId)
       .then((pricing) => active && setRange({ min_pax: pricing.min_pax, max_pax: pricing.max_pax }))
-      .catch((error: unknown) => logs.mobileApp.warn('venueBookingPricing', 'guest range', { error }));
+      .catch((error: unknown) =>
+        logs.mobileApp.warn('venueBookingPricing', 'guest range', { error }),
+      );
     return () => {
       active = false;
     };

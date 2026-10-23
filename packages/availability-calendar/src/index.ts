@@ -74,3 +74,23 @@ export type { EventRequestOfferView, VenueEventRequest } from './event-requests/
 export { default as SlotRequestHistory } from './bookings/SlotRequestHistory';
 export { default as UpcomingBookings } from './bookings/UpcomingBookings';
 export type { SlotRequestHistoryRow, UpcomingBooking } from './bookings/queries';
+// A host's booking offer, as the venue answers it: the inbox (Accept / Counter /
+// Reject), and the pieces the request's own page builds from.
+export { default as VenueOfferInbox } from './offers/VenueOfferInbox';
+export { default as OfferRequestCard } from './offers/OfferRequestCard';
+export { default as OfferTermsPanel } from './offers/OfferTermsPanel';
+export { default as OfferHistory } from './offers/OfferHistory';
+export { default as OfferDecisionActions } from './offers/OfferDecisionActions';
+export { offerTermsLabel } from './offers/format';
+export {
+  ACCEPT_VENUE_OFFER,
+  COUNTER_VENUE_OFFER,
+  REJECT_VENUE_OFFER,
+  VENUE_BOOKING_REQUESTS,
+  VENUE_COUNTER_QUOTE,
+  VENUE_OFFER_FIELDS,
+  type BookingOffer,
+  type BookingRequestRow,
+  type OfferHistoryEntry,
+  type OfferRequestSummary,
+} from './offers/queries';

@@ -91,7 +91,7 @@ describe('SettlementPreview', () => {
     });
     await screen.findByRole('button', { name: 'Host Earning' });
     expect(billLine('attendees')).toBe('Total attendees8 of 10 seats');
-    expect(billLine('slot-price')).toBe('Earlier slot price₹300.00');
+    expect(billLine('slot-price')).toBe('Agreed booking amount₹300.00');
     expect(billLine('final-bill')).toBe('Final bill uploadedNone');
     expect(billLine('venue-total')).toBe('Venue total₹300.00');
   });
@@ -108,7 +108,7 @@ describe('SettlementPreview', () => {
     });
     await screen.findByRole('button', { name: 'Host Earning' });
     expect(billLine('final-bill')).toBe('Final bill uploaded₹1500.00');
-    expect(billLine('venue-total')).toBe('Venue total (slot price + bill)₹1800.00');
+    expect(billLine('venue-total')).toBe('Venue total (agreed amount + bill)₹1800.00');
   });
 
   // A free pod moves no platform money, so not a single figure is drawn.

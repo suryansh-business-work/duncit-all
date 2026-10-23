@@ -94,6 +94,10 @@ exports:
   - 'emptyTier'
   - 'makeVenueCancelPodSchema'
   - 'venueCancelPodDefaults'
+  - 'makeVenueOfferCounterSchema'
+  - 'venueOfferCounterDefaults'
+  - 'makeVenueOfferRejectSchema'
+  - 'venueOfferRejectDefaults'
   - 'makePodRequestNoteSchema'
   - 'makePodRequestOverrideSchema'
   - 'POD_REQUEST_NOTE_MAX'
@@ -593,6 +597,7 @@ directly.
 | `makeWhatsappNumberSchema` | the Google door's number step | the WhatsApp row on its own — see below |
 | `makeCancellationPolicySchema` | a venue's cancellation policy | any number of bands, each a window + a charge — see below |
 | `makeVenueCancelPodSchema` | a venue owner cancelling a pod | the reason that goes into the cancellation email, at least 5 characters — see below |
+| `makeVenueOfferCounterSchema` | a venue owner countering a host's booking offer (Partners, mWeb, native) | a pricing option (per guest / per hour / per slot / flat), an amount above 0 and at most the server ceiling, and an optional note of at most 280 characters; `venueOfferCounterDefaults(terms)` starts from the terms on the table; `makeVenueOfferRejectSchema` is the optional reason (≤ 280) a rejection sends the host |
 | `makePodRequestNoteSchema` | a venue or host sending a Pod Request | an optional note of at most 500 characters — see below |
 | `makePodRequestOverrideSchema` | an admin setting a venue's or host's monthly Pod Request limit | empty (the default of 10) or a whole number 0–1000 — see below |
 | `makeRentalItemsSchema` | a venue's rented items | offers switch, the venue's rental terms (≤ `rental_terms_max`) and each item: name, unit, rate, deposit, stock, most per guest (≤ stock) — the caps are the server's `venueRegistrationConfig`. The MUI desk and the native desk both use it |

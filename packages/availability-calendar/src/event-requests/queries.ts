@@ -1,5 +1,6 @@
 import { gql } from '@apollo/client';
 import type { EventRequestStatus } from '@duncit/gql-types';
+import { BREAKDOWN_FIELDS } from '../pricing/queries';
 import type { PriceBreakdown } from '../pricing/types';
 
 export type { EventRequestStatus };
@@ -65,6 +66,17 @@ export const MY_VENUE_EVENT_REQUESTS = gql`
         created_at
         ${EVENT_REQUEST_OFFER_FIELDS}
       }
+    }
+  }
+`;
+
+/** The server's price for a counter offer's window and terms, before it is sent. */
+export const VENUE_OFFER_QUOTE = gql`
+  query RespondOfferQuote($venue_id: ID!, $offer: VenueOfferInput!) {
+    venueOfferQuote(venue_id: $venue_id, offer: $offer) {
+      ok
+      message
+      quote { ${BREAKDOWN_FIELDS} }
     }
   }
 `;

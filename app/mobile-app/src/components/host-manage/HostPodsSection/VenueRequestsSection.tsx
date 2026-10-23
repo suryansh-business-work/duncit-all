@@ -7,7 +7,8 @@ import { HostSectionHeader } from '@/components/host-manage/HostSectionHeader';
 import { RowGroup } from '@/components/host-manage/RowGroup';
 import { formatDateTime } from '@/utils/date-format';
 import { podTypeLabel } from '@/utils/pod-format';
-import { isVenueRejected, VENUE_REJECTED_NOTE, venueApprovalChip } from '@/utils/venue-approval';
+import { useTranslation } from '@/hooks/useTranslation';
+import { isVenueRejected, VENUE_REJECTED_NOTE, venueOfferChip } from '@/utils/venue-approval';
 import { VenueRequestRow } from './VenueRequestRow';
 
 /** The old two-line empty copy — kept exported for existing importers; the
@@ -51,6 +52,7 @@ export function VenueRequestsSection({
   onOpen,
   onActions,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   // Rejected Pods passes no empty copy: the section does not exist until a
   // venue actually refuses a slot.
   if (pods.length === 0 && !emptyText) return null;
@@ -76,7 +78,11 @@ export function VenueRequestsSection({
         venueName={pod.place_label ?? pod.zone_name ?? '—'}
         requestedOn={formatWhen(pod.created_at)}
         eventDate={formatWhen(pod.pod_date_time)}
-        approval={venueApprovalChip(pod.venue_approval_status)}
+        approval={venueOfferChip(
+          pod.venue_approval_status,
+          pod.venue_offer_status,
+          t('mweb.venueOffer.status.countered'),
+        )}
         rejectedNote={isVenueRejected(pod.venue_approval_status) ? VENUE_REJECTED_NOTE : null}
         onOpen={() => onOpen(pod)}
         onActions={() => onActions(pod)}

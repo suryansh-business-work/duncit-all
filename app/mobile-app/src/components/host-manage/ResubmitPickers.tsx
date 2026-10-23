@@ -1,15 +1,14 @@
 import { useMemo } from 'react';
 import { Text, XStack, YStack } from 'tamagui';
 import { buildSlotLabels } from '@duncit/slots';
+import { WHOLE_VENUE_SPACE } from '@duncit/utils';
 import { SlotCalendar } from '@/components/slots';
 
+import { BookingEndPicker } from '@/components/create-pod/steps/VenueSlotStep/BookingEndPicker';
 import { useDateFormat } from '@/hooks/useDateFormat';
+import { useOfferCalendar } from '@/hooks/useOfferCalendar';
 import { useTranslation } from '@/hooks/useTranslation';
-import {
-  venueOptionLabel,
-  type ResubmitSlotOption,
-  type ResubmitVenueOption,
-} from './pod-resubmit.form';
+import { venueOptionLabel, type ResubmitVenueOption } from './pod-resubmit.form';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface OptionRowProps {
@@ -111,47 +110,34 @@ export function VenuePickerField({
   );
 }
 
-interface SlotPickerFieldProps {
-  slots: ResubmitSlotOption[];
-  loading: boolean;
-  hasVenue: boolean;
-  value: string;
+interface OfferWindowPickerProps {
+  venueId: string;
+  /** The window picked so far (ISO), '' while none is. */
+  start: string;
+  end: string;
   error?: string;
-  onChange: (slotId: string) => void;
+  /** A start is always picked with its first end (a start is only offered with room for one). */
+  onWindow: (start: string, end: string) => void;
 }
 
 /**
- * Available-slot picker for the chosen venue — the same calendar the create-pod
- * flow uses, and the Tamagui twin of mWeb's resubmit picker.
+ * The window to offer the new venue — a start it is open and free for, then
+ * an end up to closing — on the same calendar Create Pod uses. The Tamagui twin
+ * of mWeb's resubmit OfferWindowField.
  */
-export function SlotPickerField({
-  slots,
-  loading,
-  hasVenue,
-  value,
+export function OfferWindowPicker({
+  venueId,
+  start,
+  end,
   error,
-  onChange,
-}: Readonly<SlotPickerFieldProps>) {
+  onWindow,
+}: Readonly<OfferWindowPickerProps>) {
   const fmt = useDateFormat();
   const { t } = useTranslation();
   const labels = useMemo(() => buildSlotLabels(t, 'mweb.slots'), [t]);
+  const calendar = useOfferCalendar(venueId, venueId ? WHOLE_VENUE_SPACE : '');
 
-  const calendarSlots = useMemo(
-    () =>
-      slots.map((slot) => ({
-        id: slot.id,
-        start_at: slot.start_at,
-        end_at: slot.end_at,
-        whole_day: slot.whole_day,
-        price: slot.price,
-        // A venue can publish two spaces at the same hour; without the space the
-        // two tiles would be indistinguishable.
-        caption: slot.space_label || undefined,
-      })),
-    [slots],
-  );
-
-  if (!hasVenue) {
+  if (!venueId) {
     return (
       <Text fontSize={13} color="$muted">
         {labels.pickVenueFirst}
@@ -160,15 +146,25 @@ export function SlotPickerField({
   }
 
   return (
-    <SlotCalendar
-      slots={calendarSlots}
-      loading={loading}
-      error={error}
-      selectedSlotId={value}
-      onPick={(slot) => onChange(slot.id)}
-      fmt={fmt}
-      labels={labels}
-      required
-    />
+    <YStack gap={12}>
+      <SlotCalendar
+        slots={calendar.tiles}
+        loading={calendar.loading}
+        error={error}
+        selectedSlotId={start}
+        onPick={(tile) => onWindow(tile.start_at, calendar.endsFor(tile.start_at)[0] ?? '')}
+        fmt={fmt}
+        labels={labels}
+        showPrice={false}
+        required
+      />
+      {start ? (
+        <BookingEndPicker
+          ends={calendar.endsFor(start)}
+          endIso={end}
+          onPick={(next) => onWindow(start, next)}
+        />
+      ) : null}
+    </YStack>
   );
 }

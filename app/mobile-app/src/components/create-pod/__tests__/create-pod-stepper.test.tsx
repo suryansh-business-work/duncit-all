@@ -84,27 +84,12 @@ const slot = {
   start_at: new Date(slotStartMs).toISOString(),
   end_at: new Date(slotStartMs + 2 * HOUR_MS).toISOString(),
 };
-const slotTile = `slot-tile-${slot.start_at}|${slot.end_at}`;
-const venuePricing = {
-  model: 'PER_SLOT',
-  configured: true,
-  min_pax: 0,
-  max_pax: 0,
-  min_hours: 0,
-  max_hours: 0,
-  booking_increment_minutes: 60,
-  pet_fee: 0,
-  base_rate: 0,
-  min_spend: 0,
-  slots: [{ price: 400, days_of_week: [0, 1, 2, 3, 4, 5, 6] }],
-  operating_hours: [],
-  price_rules: [],
-  deposit: 0,
-  cleaning_fee: 0,
-  gst_enabled: false,
-};
-// What the server quotes for that slot: ₹400 + 18% GST to the venue, plus
-// Duncit's fee on top.
+// The venue is open exactly for that window: its first start tile is the
+// window's start, and the window's end is offered after it.
+const slotTile = `slot-tile-${slot.start_at}`;
+const endChip = `create-pod-booking-end-${slot.end_at}`;
+// What the server quotes for a ₹400 slot offer: ₹400 + 18% GST to the venue,
+// plus Duncit's fee on top.
 const venuePriceQuote = {
   model: 'PER_SLOT',
   rate: 400,
@@ -126,27 +111,27 @@ const venuePriceQuote = {
 
 function routeRequests(doc: { definitions: { name?: { value: string } }[] }) {
   switch (doc.definitions[0]?.name?.value) {
-    case 'MobileHostBookingPricing':
-      return Promise.resolve({ venuePricing });
-    case 'MobileHostBookingCalendar':
+    case 'MobileVenueOfferCalendar':
       return Promise.resolve({
-        venueBookingCalendar: {
+        venueOfferCalendar: {
           buffer_minutes: 0,
           min_notice_minutes: 0,
           days: [
             {
               date: slot.start_at.slice(0, 10),
               closed_reason: null,
-              open: null,
-              close: null,
+              open: slot.start_at,
+              close: slot.end_at,
               busy: [],
-              slots: [{ start: slot.start_at, end: slot.end_at, price: 400, available: true }],
+              slots: [],
             },
           ],
         },
       });
-    case 'MobileHostVenuePriceQuote':
-      return Promise.resolve({ venuePriceQuote });
+    case 'MobileVenueOfferQuote':
+      return Promise.resolve({
+        venueOfferQuote: { ok: true, message: null, quote: venuePriceQuote },
+      });
     default:
       return Promise.resolve({});
   }
@@ -276,8 +261,8 @@ async function fillBasics() {
   await screen.findByTestId('create-pod-offers-chip-Guided trail');
 }
 
-// Step 3 for a physical pod: venue → space (capacity) → a free slot at the
-// venue's own pricing, then the server's quote for it.
+// Step 3 for a physical pod: venue → space (capacity) → a start and an end
+// the venue is open for → how the host pays it, then the server's quote.
 async function bookSlot() {
   await screen.findByTestId('create-pod-venue-v1');
   press('create-pod-venue-v1');
@@ -285,6 +270,10 @@ async function bookSlot() {
   press('create-pod-space-Whole venue');
   await screen.findByTestId(slotTile);
   press(slotTile);
+  await screen.findByTestId(endChip);
+  press(endChip);
+  press('create-pod-offer-model-PER_SLOT');
+  fireEvent.changeText(screen.getByTestId('field-venue_offer_rate'), '400');
   await screen.findByTestId('create-pod-venue-quote');
 }
 
@@ -348,11 +337,10 @@ describe('CreatePodStepper', () => {
     await screen.findByTestId('create-pod-venue-v1');
     expect(screen.queryByTestId('create-pod-venue-v9')).toBeNull();
     await bookSlot();
-    // Booked instantly at the venue's pricing: the model, the server's quote,
-    // the contact card and the window from the slot — no approval step.
-    expect(screen.getByTestId('create-pod-booking-model')).toHaveTextContent('Priced per slot');
+    // An offer to the venue: the server's quote for it, the contact card and
+    // the window picked. The venue answers it once the pod is sent.
+    expect(screen.getByTestId('create-pod-offer-intro')).toBeOnTheScreen();
     expect(screen.getByTestId('create-pod-venue-quote')).toHaveTextContent(/496/);
-    expect(screen.queryByTestId('create-pod-approval-note')).toBeNull();
     // A paid pod pays the venue through Duncit — no settle-it-yourself note.
     expect(screen.queryByTestId('create-pod-free-venue-note')).toBeNull();
     expect(screen.getByTestId('create-pod-venue-contact')).toBeOnTheScreen();
@@ -391,15 +379,19 @@ describe('CreatePodStepper', () => {
     expect(onPublish.mock.calls[0]?.[0]).toBe('draft-1');
     const input = onPublish.mock.calls[0]?.[1];
     expect(input.pod_title).toBe('Sunday community hike');
-    // No slot id: the venue is booked by its window, which is the pod's window.
+    // No slot id: the venue is offered its window, which is the pod's window.
     expect(input.venue_slot_id).toBeNull();
-    expect(input.venue_booking).toEqual({
-      start_at: slot.start_at,
-      end_at: slot.end_at,
-      pax: null,
-      pets: false,
-      space_label: '',
-    });
+    expect(input).not.toHaveProperty('venue_booking');
+    expect(input.venue_offer).toEqual(
+      expect.objectContaining({
+        start_at: slot.start_at,
+        end_at: slot.end_at,
+        pets: false,
+        space_label: '',
+        model: 'PER_SLOT',
+        rate: 400,
+      }),
+    );
     expect(input.location_id).toBe('l1');
     expect(input.pod_type).toBe('PAID');
     expect(new Date(input.pod_date_time).toISOString()).toBe(slot.start_at);
@@ -513,7 +505,7 @@ describe('CreatePodStepper', () => {
       pod_type: 'FREE',
       pod_amount: 0,
       venue_slot_id: null,
-      venue_booking: { start_at: slot.start_at, end_at: slot.end_at },
+      venue_offer: expect.objectContaining({ start_at: slot.start_at, end_at: slot.end_at }),
       ticket_discount_enabled: false,
     });
   });
@@ -817,10 +809,16 @@ describe('CreatePodStepper', () => {
     expect(screen.queryByTestId('create-pod-paid')).toBeNull();
   });
 
-  it('refuses a venue that has not set up its pricing', async () => {
+  it('says why the server will not take an offer, and holds the host until terms are given', async () => {
     mockGraphqlRequest.mockImplementation((doc: Parameters<typeof routeRequests>[0]) =>
-      doc.definitions[0]?.name?.value === 'MobileHostBookingPricing'
-        ? Promise.resolve({ venuePricing: { ...venuePricing, configured: false } })
+      doc.definitions[0]?.name?.value === 'MobileVenueOfferQuote'
+        ? Promise.resolve({
+            venueOfferQuote: {
+              ok: false,
+              message: 'The venue is closed at this time',
+              quote: null,
+            },
+          })
         : routeRequests(doc),
     );
     setup();
@@ -830,13 +828,21 @@ describe('CreatePodStepper', () => {
     await screen.findByTestId('create-pod-venue-v1');
     press('create-pod-venue-v1');
     press('create-pod-space-Whole venue');
-    expect(await screen.findByTestId('create-pod-pricing-not-set')).toBeOnTheScreen();
-    // Nothing can be booked, so validation holds the host on step 3.
+    await screen.findByTestId(slotTile);
+    press(slotTile);
+    await screen.findByTestId(endChip);
+    press(endChip);
+    // No pricing option or amount yet: validation holds the host on step 3.
     await act(async () => {
       press('create-pod-submit');
     });
     expectStep(3);
     expect(screen.queryByTestId('create-pod-paid')).toBeNull();
+    press('create-pod-offer-model-FLAT');
+    fireEvent.changeText(screen.getByTestId('field-venue_offer_rate'), '900');
+    expect(await screen.findByTestId('create-pod-offer-problem')).toHaveTextContent(
+      'The venue is closed at this time',
+    );
   });
 
   it('surfaces a publish error message', async () => {

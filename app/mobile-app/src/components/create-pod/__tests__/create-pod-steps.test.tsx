@@ -146,44 +146,24 @@ function VenueSlotHarness({
   );
 }
 
-/** Routes the instant-booking reads by operation name; anything else (the app
+/** Routes the offer calendar read by operation name; anything else (the app
  * settings the date formatter fetches) answers empty. */
 function routeBookingReads(
-  pricing: Record<string, unknown> | Error,
-  calendar: Record<string, unknown> = { buffer_minutes: 0, min_notice_minutes: 0, days: [] },
+  calendar: Record<string, unknown> | Error = {
+    buffer_minutes: 0,
+    min_notice_minutes: 0,
+    days: [],
+  },
 ) {
   mockGraphqlRequest.mockImplementation((doc: { definitions: { name?: { value: string } }[] }) => {
-    const name = doc.definitions[0]?.name?.value;
-    if (name === 'MobileHostBookingPricing') {
-      return pricing instanceof Error
-        ? Promise.reject(pricing)
-        : Promise.resolve({ venuePricing: pricing });
-    }
-    if (name === 'MobileHostBookingCalendar')
-      return Promise.resolve({ venueBookingCalendar: calendar });
-    return Promise.resolve({});
+    if (doc.definitions[0]?.name?.value !== 'MobileVenueOfferCalendar') return Promise.resolve({});
+    return calendar instanceof Error
+      ? Promise.reject(calendar)
+      : Promise.resolve({ venueOfferCalendar: calendar });
   });
 }
 
 const HOUR_MS = 3_600_000;
-const perHourPricing = {
-  model: 'PER_HOUR',
-  configured: true,
-  min_pax: 0,
-  max_pax: 0,
-  min_hours: 1,
-  max_hours: 0,
-  booking_increment_minutes: 60,
-  pet_fee: 0,
-  base_rate: 500,
-  min_spend: 0,
-  slots: [],
-  operating_hours: [],
-  price_rules: [],
-  deposit: 2000,
-  cleaning_fee: 0,
-  gst_enabled: false,
-};
 /** Two days out, open 10:00–13:00 in the admin zone. */
 function openDay() {
   const fmt = appFormatter();
@@ -392,10 +372,10 @@ describe('VenueSlotStep', () => {
     await screen.findByTestId('slot-tile-s1');
     fireEvent.press(screen.getByTestId('slot-tile-s1'));
     await waitFor(() => expect(screen.getByTestId('readout-slot')).toHaveTextContent('s1'));
-    // Bookings are instant now — no "the venue must approve" line, and no
-    // instant-booking picker for a pod that keeps its request's slot.
+    // No "the venue must approve" line for a held slot, and no offer
+    // picker for a pod that keeps its request's slot.
     expect(screen.queryByTestId('create-pod-approval-note')).toBeNull();
-    expect(screen.queryByTestId('create-pod-instant-booking')).toBeNull();
+    expect(screen.queryByTestId('create-pod-venue-offer')).toBeNull();
     // Free slots read as "Free" — the calendar shows one day's times, so switch
     // to the free slot's day first (day keys follow the admin time zone, and the
     // grid pages by month when the two days straddle a month end).
@@ -408,7 +388,7 @@ describe('VenueSlotStep', () => {
   });
 
   it('changing venue clears the previously booked slot and window', async () => {
-    routeBookingReads({ ...perHourPricing, configured: false });
+    routeBookingReads();
     const second: CreatePodVenue = { ...venue, id: 'v2', venue_name: 'Terrace', locality: null };
     const { at } = openDay();
     renderWithProviders(
@@ -461,106 +441,55 @@ describe('VenueSlotStep', () => {
     expect(await screen.findByTestId('slot-calendar-empty')).toBeOnTheScreen();
   });
 
-  it('refuses to book a venue that has not set up its pricing', async () => {
-    routeBookingReads({ ...perHourPricing, configured: false });
+  it('asks how the host pays the venue, and reads no slot list for an offer', async () => {
+    routeBookingReads();
     renderWithProviders(<VenueSlotHarness initial={instantVenue} />);
-    expect(await screen.findByTestId('create-pod-pricing-not-set')).toHaveTextContent(
-      /has not set up its pricing/,
-    );
-    expect(screen.queryByTestId('slot-calendar')).toBeNull();
-    // No slot list is asked for: instant booking reads the venue's own pricing.
+    expect(await screen.findByTestId('create-pod-offer-intro')).toBeOnTheScreen();
+    expect(screen.getByTestId('create-pod-offer-model-PER_GUEST')).toBeOnTheScreen();
+    expect(screen.getByTestId('create-pod-offer-model-FLAT')).toBeOnTheScreen();
+    expect(screen.getByTestId('field-venue_offer_rate')).toBeOnTheScreen();
     const askedForSlots = mockGraphqlRequest.mock.calls.some(([doc]) =>
       JSON.stringify(doc).includes('venueAvailableSlots'),
     );
     expect(askedForSlots).toBe(false);
   });
 
-  it("says so when the venue's pricing fails to load", async () => {
+  it("says so when the venue's calendar fails to load", async () => {
     routeBookingReads(new Error('down'));
     renderWithProviders(<VenueSlotHarness initial={instantVenue} />);
-    expect(await screen.findByTestId('create-pod-pricing-error')).toHaveTextContent(
-      /Could not load this venue's pricing/,
+    expect(await screen.findByTestId('create-pod-calendar-error')).toHaveTextContent(
+      /Could not load this venue's availability/,
     );
   });
 
-  it('books a PER_HOUR window: a start, then an end on the venue grid', async () => {
+  it('offers every half hour the venue is open, then an end up to closing', async () => {
     const { date, at, open, close } = openDay();
-    routeBookingReads(perHourPricing, {
+    routeBookingReads({
       buffer_minutes: 0,
       min_notice_minutes: 0,
       days: [{ date, closed_reason: null, open, close, busy: [], slots: [] }],
     });
     renderWithProviders(<VenueSlotHarness initial={instantVenue} />);
-    expect(await screen.findByTestId('create-pod-booking-model')).toHaveTextContent(
-      'Priced per hour',
-    );
-    // Before a time is picked, the venue's own terms: its rate per hour, the
-    // shortest booking and the deposit settled at the venue.
-    const terms = screen.getByTestId('create-pod-venue-terms');
-    expect(terms).toHaveTextContent(/₹500\.00 \/ hour/);
-    expect(terms).toHaveTextContent(/At least 1 hours/);
-    expect(terms).toHaveTextContent(/₹2,000\.00, settled at the venue/);
-    // Starts every hour that still leaves one hour before closing: 10, 11, 12,
-    // each tile priced at the venue's rate.
-    expect(await screen.findByTestId(`slot-tile-${at(10)}`)).toHaveTextContent(/₹500\.00 \/ hour/);
-    expect(screen.getByTestId(`slot-tile-${at(12)}`)).toBeOnTheScreen();
+    // Starts every 30 minutes that still leave 30 minutes before closing.
+    expect(await screen.findByTestId(`slot-tile-${at(10)}`)).toBeOnTheScreen();
+    expect(screen.getByTestId(`slot-tile-${at(12.5)}`)).toBeOnTheScreen();
     expect(screen.queryByTestId(`slot-tile-${at(13)}`)).toBeNull();
 
     fireEvent.press(screen.getByTestId(`slot-tile-${at(10)}`));
-    // Once a time is picked the live quote takes over from the terms.
-    await waitFor(() => expect(screen.queryByTestId('create-pod-venue-terms')).toBeNull());
     // The shortest window is filled in at once; the host can stretch it.
     await waitFor(() =>
-      expect(screen.getByTestId('readout-end')).toHaveTextContent(inputText(at(11))),
+      expect(screen.getByTestId('readout-end')).toHaveTextContent(inputText(at(10.5))),
     );
     expect(screen.getByTestId('readout-start')).toHaveTextContent(inputText(at(10)));
-    expect(screen.getByTestId(`create-pod-booking-end-${at(13)}`)).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId(`create-pod-booking-end-${at(13)}`));
     await waitFor(() =>
       expect(screen.getByTestId('readout-end')).toHaveTextContent(inputText(at(13))),
     );
   });
 
-  it('books a PER_SLOT venue by its free slot, which sets both ends of the window', async () => {
-    const { date, at, open, close } = openDay();
-    routeBookingReads(
-      { ...perHourPricing, model: 'PER_SLOT' },
-      {
-        buffer_minutes: 0,
-        min_notice_minutes: 0,
-        days: [
-          {
-            date,
-            closed_reason: null,
-            open,
-            close,
-            busy: [],
-            slots: [
-              { start: at(10), end: at(11), price: 500, available: true },
-              { start: at(11), end: at(12), price: 500, available: false },
-            ],
-          },
-        ],
-      },
-    );
-    renderWithProviders(<VenueSlotHarness initial={instantVenue} />);
-    const free = `${at(10)}|${at(11)}`;
-    await screen.findByTestId(`slot-tile-${free}`);
-    // A taken slot is never offered.
-    expect(screen.queryByTestId(`slot-tile-${at(11)}|${at(12)}`)).toBeNull();
-    fireEvent.press(screen.getByTestId(`slot-tile-${free}`));
-    await waitFor(() =>
-      expect(screen.getByTestId('readout-end')).toHaveTextContent(inputText(at(11))),
-    );
-    expect(screen.getByTestId('readout-start')).toHaveTextContent(inputText(at(10)));
-    expect(screen.getByTestId('readout-slot')).toHaveTextContent(/^$/);
-    // A slot carries its own end, so no end-time picker is shown.
-    expect(screen.queryByTestId('create-pod-booking-end')).toBeNull();
-  });
-
   it('labels a holiday the venue set as closed, and it cannot be picked', async () => {
     const { date, open, close } = openDay();
-    routeBookingReads(perHourPricing, {
+    routeBookingReads({
       buffer_minutes: 0,
       min_notice_minutes: 0,
       days: [{ date, closed_reason: 'HOLIDAY', open, close, busy: [], slots: [] }],
@@ -574,8 +503,8 @@ describe('VenueSlotStep', () => {
     expect(screen.getByTestId('readout-start')).toHaveTextContent(/^$/);
   });
 
-  it("shows the server's quote for the picked window, read-only", async () => {
-    routeBookingReads(perHourPricing);
+  it("shows the server's quote for the offer, read-only", async () => {
+    routeBookingReads();
     const quote: NonNullable<VenueQuoteState['quote']> = {
       model: VenuePricingModel.PerHour,
       rate: 500,
@@ -601,12 +530,31 @@ describe('VenueSlotStep', () => {
       />,
     );
     const card = await screen.findByTestId('create-pod-venue-quote');
-    expect(card).toHaveTextContent(/Venue price/);
+    expect(card).toHaveTextContent(/Your offer, priced/);
     expect(card).toHaveTextContent(/1,239/);
   });
 
+  it('says why an offer cannot be sent instead of a price', async () => {
+    routeBookingReads();
+    renderWithProviders(
+      <VenueSlotHarness
+        initial={instantVenue}
+        venueQuote={{
+          quote: null,
+          message: 'The venue is closed then',
+          loading: false,
+          error: null,
+        }}
+      />,
+    );
+    expect(await screen.findByTestId('create-pod-offer-problem')).toHaveTextContent(
+      'The venue is closed then',
+    );
+    expect(screen.queryByTestId('create-pod-venue-quote')).toBeNull();
+  });
+
   it('surfaces a failed quote instead of a price', async () => {
-    routeBookingReads(perHourPricing);
+    routeBookingReads();
     renderWithProviders(
       <VenueSlotHarness
         initial={instantVenue}

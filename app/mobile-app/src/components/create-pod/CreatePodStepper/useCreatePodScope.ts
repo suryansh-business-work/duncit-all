@@ -1,9 +1,8 @@
 import { useEffect } from 'react';
 import type { CreatePodFormState } from './useCreatePodForm';
 
-import { useVenueQuote } from '@/hooks/useVenueQuote';
+import { useOfferQuote } from '@/hooks/useOfferQuote';
 import { useVenueSlots } from '@/hooks/useVenueSlots';
-import { useVenueGuestRange } from '@/hooks/venueBookingPricing';
 import {
   clampSpots,
   filterProductsForClub,
@@ -11,7 +10,7 @@ import {
   pruneProductRequests,
   spotsBounds,
 } from '@duncit/utils';
-import { filterClubs, venueBookingOf } from '../create-pod.form';
+import { filterClubs, venueOfferOf } from '../create-pod.form';
 import { venueSpaces } from '../steps/VenueSlotStep/venueSpaces';
 import { usePodPricing } from '../price-panel';
 import type { CreatePodStepperProps } from './types';
@@ -76,7 +75,7 @@ export function useCreatePodScope({
   }, [clubId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // What the venue costs the pod feeds the Pricing panel: a held slot's price
-  // (a Pod Request), else the server's quote total for the instant booking
+  // (a Pod Request), else the server's quote total for the host's offer
   // (venue price + GST + Duncit's fee on top) — never a raw slot price.
   const podMode = form.watch('pod_mode');
   const venueId = form.watch('venue_id');
@@ -88,33 +87,25 @@ export function useCreatePodScope({
   );
   const selectedSlot = slots.find((slot) => slot.id === slotId) ?? null;
   const values = form.watch();
-  const venueQuote = useVenueQuote(
+  const venueQuote = useOfferQuote(
     physical ? venueId : '',
-    physical && !slotId ? venueBookingOf(values) : null,
+    physical && !slotId ? venueOfferOf(values) : null,
   );
   const selectedVenue = venues.find((venue) => venue.id === venueId) ?? null;
   const space = venueSpaces(selectedVenue).find((item) => item.label === values.venue_space_label);
   const venueAmount = slotId ? (selectedSlot?.price ?? null) : (venueQuote.quote?.total ?? null);
   const bookedCapacity = slotId ? selectedSlot?.capacity : space?.capacity;
 
-  // An instant booking's guests are the pod's spots, so the venue's own guest
-  // range (Venue Pricing Module) bounds them too. A Pod Request's held slot
-  // keeps its own capacity.
-  const instant = physical && !slotId && !form.watch('partner_request_id');
-  const guestRange = useVenueGuestRange(instant ? venueId : '');
-
   // How big this pod may be: floored by the sub-category's admin-set minimum
-  // (a doubles game needs 4) and the venue's minimum guests, capped by the venue
-  // space the host booked and the venue's maximum guests. The pod's
-  // sub-category is its club's `category_id`. mWeb twin (rule 27).
+  // (a doubles game needs 4), capped by the venue space the host picked (a Pod
+  // Request's held slot keeps its own capacity). The pod's sub-category is its
+  // club's `category_id`. mWeb twin (rule 27).
   const spots = spotsBounds({
     minPax: subCategories.find((sub) => sub.id === selectedClub?.category_id)?.min_pax,
     venueCapacity: physical ? bookedCapacity : null,
-    venueMinPax: guestRange?.min_pax,
-    venueMaxPax: guestRange?.max_pax,
   });
-  // Spots snap into a range that moved (another space, or the venue's guest
-  // range arriving) — anything up to the cap stays as picked. mWeb twin.
+  // Spots snap into a range that moved (another space) — anything up to the
+  // cap stays as picked. mWeb twin.
   useEffect(() => {
     const current = Number(form.getValues('no_of_spots_text')) || 0;
     if (!physical || current <= 0) return;

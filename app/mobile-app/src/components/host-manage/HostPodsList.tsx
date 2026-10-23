@@ -7,7 +7,7 @@ import { RowGroup } from '@/components/host-manage/RowGroup';
 import type { HostPod } from '@/hooks/useHostPods';
 import { useTranslation } from '@/hooks/useTranslation';
 import { podTypeLabel } from '@/utils/pod-format';
-import { isVenueRejected, VENUE_REJECTED_NOTE, venueApprovalChip } from '@/utils/venue-approval';
+import { isVenueRejected, VENUE_REJECTED_NOTE, venueOfferChip } from '@/utils/venue-approval';
 import { formatDateTime } from '@/utils/date-format';
 
 function formatWhen(value?: string | null) {
@@ -66,7 +66,11 @@ export function HostPodsList({ pods, visible, isLoading, onOpen, onActions }: Re
         typeLabel={podTypeLabel(pod.pod_type)}
         free={pod.pod_type === 'FREE'}
         cover={coverImageUrl(pod.pod_images_and_videos)}
-        approval={venueApprovalChip(pod.venue_approval_status)}
+        approval={venueOfferChip(
+          pod.venue_approval_status,
+          pod.venue_offer_status,
+          t('mweb.venueOffer.status.countered'),
+        )}
         rejectedNote={isVenueRejected(pod.venue_approval_status) ? VENUE_REJECTED_NOTE : null}
         onOpen={() => onOpen(pod)}
         onActions={() => onActions(pod)}

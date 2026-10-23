@@ -3,10 +3,12 @@ import { formatStatementMoney, parseApiError, venueQuoteLines } from '@duncit/ut
 
 import { SurfaceCard } from '@/components/SurfaceCard';
 import { useTranslation } from '@/hooks/useTranslation';
-import type { HostVenueQuote } from '@/hooks/useVenueQuote';
+import type { HostVenueQuote } from '@/hooks/useOfferQuote';
 
 export interface VenueQuoteState {
   quote: HostVenueQuote | null;
+  /** Why the offer cannot be sent, as the server put it. */
+  message?: string | null;
   loading: boolean;
   error: unknown;
 }
@@ -38,11 +40,18 @@ function Row({
 }
 
 /**
- * The venue's price for the picked window, exactly as the server quoted it:
- * base, each rule applied, any min-spend top-up, fees, taxes and Duncit's fee
- * on top. Read-only — the host cannot change it. mWeb twin: VenueQuoteCard.
+ * The host's offer, priced exactly as the server quoted it: the offered base,
+ * each of the venue's price rules, any min-spend top-up, its fees, taxes and
+ * Duncit's fee on top — or why the offer cannot be sent. Read-only: the host
+ * changes the offer, not the price. mWeb twin: VenueQuoteCard.
  */
-export function VenueQuoteCard({ quote, loading, error, currencySymbol }: Readonly<Props>) {
+export function VenueQuoteCard({
+  quote,
+  message,
+  loading,
+  error,
+  currencySymbol,
+}: Readonly<Props>) {
   const { t } = useTranslation();
   const money = (value: number) => formatStatementMoney(value, currencySymbol);
 
@@ -50,6 +59,13 @@ export function VenueQuoteCard({ quote, loading, error, currencySymbol }: Readon
     return (
       <Text testID="create-pod-quote-error" role="alert" fontSize={13} color="$danger">
         {parseApiError(error) || t('mweb.createPod.quoteFailed')}
+      </Text>
+    );
+  }
+  if (message) {
+    return (
+      <Text testID="create-pod-offer-problem" role="alert" fontSize={13} color="$warning">
+        {message}
       </Text>
     );
   }

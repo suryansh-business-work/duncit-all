@@ -3,7 +3,7 @@ import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 import { PodResubmitDialog } from '@/components/host-manage/PodResubmitDialog';
 import { HostResubmitPodDocument, ResubmitVenuesDocument } from '@/graphql/host-manage';
 import { graphqlRequest } from '@/services/graphql.client';
-import { useVenueSlots } from '@/hooks/useVenueSlots';
+import { useOfferCalendar } from '@/hooks/useOfferCalendar';
 import { renderWithProviders } from '@/utils/test-utils';
 
 jest.mock('@/services/graphql.client', () => ({ graphqlRequest: jest.fn() }));
@@ -20,10 +20,10 @@ jest.mock('@/hooks/useMediaUpload', () => ({
   }),
 }));
 jest.mock('@/hooks/useUploadSettings', () => ({ useUploadSettings: () => null }));
-jest.mock('@/hooks/useVenueSlots', () => ({ useVenueSlots: jest.fn() }));
+jest.mock('@/hooks/useOfferCalendar', () => ({ useOfferCalendar: jest.fn() }));
 
 const mockRequest = graphqlRequest as jest.Mock;
-const mockUseVenueSlots = useVenueSlots as jest.Mock;
+const mockUseOfferCalendar = useOfferCalendar as jest.Mock;
 
 const pod = {
   id: 'p1',
@@ -31,6 +31,7 @@ const pod = {
   pod_description: 'An evening of poetry and calm conversation',
   pod_images_and_videos: [{ url: 'https://cdn/img.jpg', type: 'IMAGE' }],
   venue_id: 'old-venue',
+  no_of_spots: 12,
 };
 
 const venues = [
@@ -38,12 +39,26 @@ const venues = [
   { id: 'v2', venue_name: 'Studio', city: null },
 ];
 
-const slot = {
-  id: 's1',
-  start_at: '2030-03-05T12:30:00.000Z',
-  end_at: '2030-03-05T14:30:00.000Z',
-  price: 400,
-  space_label: 'Hall A',
+const START = '2030-03-05T12:30:00.000Z';
+const END = '2030-03-05T14:30:00.000Z';
+const TILE = `slot-tile-${START}`;
+
+/** The picked venue's calendar: one start, closing two hours later (none until a venue is picked). */
+const calendar =
+  (over: Partial<{ loading: boolean }> = {}) =>
+  (venueId: string) => ({
+    loading: false,
+    failed: false,
+    tiles: venueId ? [{ id: START, start_at: START, end_at: null, price: null }] : [],
+    endsFor: (start: string | null) => (start ? [END] : []),
+    ...over,
+  });
+
+/** Picks the window and offers ₹300 per guest. */
+const offer = () => {
+  fireEvent.press(screen.getByTestId(TILE));
+  fireEvent.press(screen.getByTestId('create-pod-offer-model-PER_GUEST'));
+  fireEvent.changeText(screen.getByTestId('field-venue_offer_rate'), '300');
 };
 
 /**
@@ -68,7 +83,7 @@ const venueCalls = () => mockRequest.mock.calls.filter(([doc]) => doc === Resubm
 
 beforeEach(() => {
   jest.clearAllMocks();
-  mockUseVenueSlots.mockReturnValue({ slots: [], isLoading: false });
+  mockUseOfferCalendar.mockImplementation(calendar());
   routeRequests();
 });
 
@@ -79,11 +94,7 @@ describe('PodResubmitDialog', () => {
     expect(venueCalls()).toHaveLength(0);
   });
 
-  it('guides through venue → slot and resubmits the same pod', async () => {
-    mockUseVenueSlots.mockImplementation((venueId: string) => ({
-      slots: venueId ? [slot] : [],
-      isLoading: false,
-    }));
+  it('guides through venue → window → terms and resubmits the same pod', async () => {
     const onSaved = jest.fn();
     renderWithProviders(<PodResubmitDialog pod={pod} onClose={jest.fn()} onSaved={onSaved} />);
     expect(screen.getByTestId('pod-resubmit-dialog')).toBeOnTheScreen();
@@ -91,31 +102,41 @@ describe('PodResubmitDialog', () => {
     expect(screen.getByText('Select a venue first to see its available slots.')).toBeOnTheScreen();
     await waitFor(() => expect(screen.getByTestId('resubmit-venue-v1')).toBeOnTheScreen());
     fireEvent.press(screen.getByTestId('resubmit-venue-v1'));
-    fireEvent.press(screen.getByTestId('slot-tile-s1'));
+    offer();
+    // The window's end can be stretched up to closing.
+    expect(screen.getByTestId(`create-pod-booking-end-${END}`)).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId(`create-pod-booking-end-${END}`));
     fireEvent.press(screen.getByTestId('pod-resubmit-save'));
     await waitFor(() => expect(onSaved).toHaveBeenCalled());
     expect(mockRequest).toHaveBeenCalledWith(
       HostResubmitPodDocument,
       {
         pod_doc_id: 'p1',
-        input: expect.objectContaining({ venue_id: 'v1', venue_slot_id: 's1' }),
+        input: expect.objectContaining({
+          venue_id: 'v1',
+          venue_offer: {
+            start_at: START,
+            end_at: END,
+            space_label: '',
+            pax: 12,
+            pets: false,
+            model: 'PER_GUEST',
+            rate: 300,
+          },
+        }),
       },
       { auth: true },
     );
   });
 
-  it('blocks an invalid submit (no venue, then no slot picked)', async () => {
-    mockUseVenueSlots.mockImplementation((venueId: string) => ({
-      slots: venueId ? [slot] : [],
-      isLoading: false,
-    }));
+  it('blocks an invalid submit (no venue, then no window or terms)', async () => {
     renderWithProviders(<PodResubmitDialog pod={pod} onClose={jest.fn()} onSaved={jest.fn()} />);
     await waitFor(() => expect(screen.getByTestId('resubmit-venue-v2')).toBeOnTheScreen());
     fireEvent.press(screen.getByTestId('pod-resubmit-save'));
     // No venue yet: the venue is what is asked for; the slot picker still waits on it.
     await waitFor(() => expect(screen.getByText('Select a venue')).toBeOnTheScreen());
     expect(screen.getByText('Select a venue first to see its available slots.')).toBeOnTheScreen();
-    // A venue but no slot: the calendar now says a slot is missing.
+    // A venue but no window: the calendar now says one is missing, and the terms are asked for.
     fireEvent.press(screen.getByTestId('resubmit-venue-v1'));
     fireEvent.press(screen.getByTestId('pod-resubmit-save'));
     await waitFor(() =>
@@ -123,32 +144,26 @@ describe('PodResubmitDialog', () => {
     );
     expect(screen.queryByText('Select a venue')).toBeNull();
     expect(resubmitCalls()).toHaveLength(0);
+    // Switching venue drops the window picked at the old one.
+    fireEvent.press(screen.getByTestId(TILE));
+    fireEvent.press(screen.getByTestId('resubmit-venue-v2'));
+    expect(screen.queryByTestId(`create-pod-booking-end-${END}`)).toBeNull();
   });
 
-  it('shows slot loading and empty states for a picked venue', async () => {
-    mockUseVenueSlots.mockImplementation((venueId: string) => ({
-      slots: [],
-      isLoading: venueId === 'v1',
-    }));
+  it('shows the calendar loading for a picked venue', async () => {
+    mockUseOfferCalendar.mockImplementation(calendar({ loading: true }));
     renderWithProviders(<PodResubmitDialog pod={pod} onClose={jest.fn()} onSaved={jest.fn()} />);
     await waitFor(() => expect(screen.getByTestId('resubmit-venue-v1')).toBeOnTheScreen());
     fireEvent.press(screen.getByTestId('resubmit-venue-v1'));
-    expect(screen.getByTestId('slot-calendar-loading')).toHaveTextContent(
-      'Loading available slots…',
-    );
-    fireEvent.press(screen.getByTestId('resubmit-venue-v2'));
-    expect(screen.getByTestId('slot-calendar-empty')).toHaveTextContent(
-      'No open slots right now. Try another venue or check back later.',
-    );
+    expect(screen.getByTestId('slot-calendar-loading')).toBeOnTheScreen();
   });
 
   it('surfaces a server failure and a non-Error rejection', async () => {
-    mockUseVenueSlots.mockReturnValue({ slots: [slot], isLoading: false });
     routeRequests({ resubmit: () => Promise.reject(new Error('CONFLICT')) });
     renderWithProviders(<PodResubmitDialog pod={pod} onClose={jest.fn()} onSaved={jest.fn()} />);
     await waitFor(() => expect(screen.getByTestId('resubmit-venue-v1')).toBeOnTheScreen());
     fireEvent.press(screen.getByTestId('resubmit-venue-v1'));
-    fireEvent.press(screen.getByTestId('slot-tile-s1'));
+    offer();
     fireEvent.press(screen.getByTestId('pod-resubmit-save'));
     await waitFor(() =>
       expect(screen.getByTestId('pod-resubmit-error')).toHaveTextContent('CONFLICT'),
@@ -164,7 +179,6 @@ describe('PodResubmitDialog', () => {
   });
 
   it('disables the actions while resubmitting', async () => {
-    mockUseVenueSlots.mockReturnValue({ slots: [slot], isLoading: false });
     let resolveMutation!: (value: unknown) => void;
     routeRequests({
       resubmit: () =>
@@ -177,7 +191,7 @@ describe('PodResubmitDialog', () => {
     renderWithProviders(<PodResubmitDialog pod={pod} onClose={onClose} onSaved={onSaved} />);
     await waitFor(() => expect(screen.getByTestId('resubmit-venue-v1')).toBeOnTheScreen());
     fireEvent.press(screen.getByTestId('resubmit-venue-v1'));
-    fireEvent.press(screen.getByTestId('slot-tile-s1'));
+    offer();
     fireEvent.press(screen.getByTestId('pod-resubmit-save'));
     await waitFor(() => expect(screen.getByText('Resubmitting…')).toBeOnTheScreen());
     // Busy: neither save nor cancel fires while the request is in flight.

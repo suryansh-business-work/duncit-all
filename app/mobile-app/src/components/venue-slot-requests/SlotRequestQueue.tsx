@@ -4,11 +4,14 @@ import { Spinner, Text, XStack, YStack } from 'tamagui';
 import { SelectChip } from '@/components/venue-availability/SelectChip';
 import { SlotRequestCard } from '@/components/venue-slot-requests/SlotRequestCard';
 import { SlotRequestDecisionSheets } from '@/components/venue-slot-requests/SlotRequestDecisionSheets';
+import { VenueOfferCounterForm } from '@/forms/venue-offer-counter';
 import {
   useVenueSlotRequests,
   ALL_VENUES,
+  type CounterTerms,
   type SlotRequestRow,
 } from '@/hooks/useVenueSlotRequests';
+import { currentOfferTerms } from '@duncit/utils';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
@@ -18,10 +21,10 @@ interface Props {
 }
 
 /**
- * The slot requests still PENDING from before instant booking — the queue the
- * old Slot Requests screen held, now inside Workshop & Event Requests' "Past
- * slot requests" tab. Nothing new creates them; these can still be approved
- * or declined with the same mutations, in the same words, until they expire.
+ * Booking requests waiting on the venue — hosts' offers to run a pod there —
+ * on Workshop & Event Requests' first tab: accept, reject, or counter with the
+ * venue's own terms (which the host then accepts or declines). A request from
+ * before offers keeps accept / reject only.
  */
 export function SlotRequestQueue({ onDecided }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -31,6 +34,8 @@ export function SlotRequestQueue({ onDecided }: Readonly<Props>) {
   const [approving, setApproving] = useState<SlotRequestRow | null>(null);
   const [declining, setDeclining] = useState<string | null>(null);
   const [reason, setReason] = useState('');
+  const [countering, setCountering] = useState<SlotRequestRow | null>(null);
+  const counterOffer = countering?.offer ?? null;
 
   const dismiss = () => {
     setApproving(null);
@@ -49,6 +54,11 @@ export function SlotRequestQueue({ onDecided }: Readonly<Props>) {
     dismiss();
     if (slotId) settle(slots.decline(slotId, reason.trim()));
   };
+  const sendCounter = (terms: CounterTerms, note: string) => {
+    const slotId = countering?.slot_id;
+    setCountering(null);
+    if (slotId) settle(slots.counter(slotId, terms, note.trim()));
+  };
   const openDecline = (slotId: string) => {
     setReason('');
     setDeclining(slotId);
@@ -60,6 +70,7 @@ export function SlotRequestQueue({ onDecided }: Readonly<Props>) {
       busy={slots.busy}
       onApprove={setApproving}
       onDecline={openDecline}
+      onCounter={setCountering}
     />
   );
 
@@ -123,6 +134,15 @@ export function SlotRequestQueue({ onDecided }: Readonly<Props>) {
         onDecline={decline}
         onDismiss={dismiss}
       />
+      {countering && counterOffer ? (
+        <VenueOfferCounterForm
+          slotId={countering.slot_id}
+          terms={currentOfferTerms(counterOffer)}
+          busy={slots.busy}
+          onClose={() => setCountering(null)}
+          onSend={sendCounter}
+        />
+      ) : null}
     </YStack>
   );
 }

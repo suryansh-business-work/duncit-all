@@ -1,10 +1,10 @@
 import { z } from 'zod';
 
-import { isVideoUrl } from '@duncit/utils';
+import { isVenueOfferModel, isVideoUrl, offerRateOf, venueOfferInput } from '@duncit/utils';
 
-import { CategoryMediaType } from '@/generated/graphql/graphql';
+import { CategoryMediaType, type VenueOfferModel } from '@/generated/graphql/graphql';
 import { hasImageLine } from '@/components/create-pod/create-pod.form';
-import { formatDate, formatTime } from '@/utils/date-format';
+import type { Translate } from '@/i18n/fallback';
 
 /** Shared logic for the venue-rejected pod's full edit + resubmission flow —
  * mirrors mWeb's pod-resubmit.form (rule 27 parity). */
@@ -14,7 +14,15 @@ export interface PodResubmitValues {
   pod_description: string;
   media_text: string;
   venue_id: string;
-  venue_slot_id: string;
+  /** The window offered to the new venue (ISO), '' until picked. */
+  offer_start: string;
+  offer_end: string;
+  /** How the host pays the venue (a VenueOfferModel), '' until picked. */
+  venue_offer_model: string;
+  /** The amount typed for that option, in rupees. */
+  venue_offer_rate: string;
+  /** The pod's spots — the offer's guests. */
+  pax: number;
 }
 
 export interface HostPodForResubmit {
@@ -23,6 +31,7 @@ export interface HostPodForResubmit {
   pod_description?: string | null;
   pod_images_and_videos?: { url: string; type: string }[] | null;
   venue_id?: string | null;
+  no_of_spots?: number | null;
 }
 
 export interface ResubmitVenueOption {
@@ -31,31 +40,56 @@ export interface ResubmitVenueOption {
   city?: string | null;
 }
 
-export interface ResubmitSlotOption {
-  id: string;
-  start_at: string;
-  end_at: string;
-  /** A whole-day (or whole-date-range) booking. */
-  whole_day: boolean;
-  price: number;
-  space_label: string;
-}
-
 export const blankPodResubmitValues: PodResubmitValues = {
   pod_title: '',
   pod_description: '',
   media_text: '',
   venue_id: '',
-  venue_slot_id: '',
+  offer_start: '',
+  offer_end: '',
+  venue_offer_model: '',
+  venue_offer_rate: '',
+  pax: 0,
 };
 
-export const podResubmitSchema = z.object({
-  pod_title: z.string().trim().min(3, 'Title is too short').max(120, 'Title is too long'),
-  pod_description: z.string().trim().min(10, 'Add a longer description'),
-  media_text: z.string().refine((text) => hasImageLine(text), 'Add at least one image URL'),
-  venue_id: z.string().min(1, 'Select a venue'),
-  venue_slot_id: z.string().min(1, 'Select a time slot'),
-});
+/** The resubmission's rules, worded in the host's language (mWeb's twin reads the same keys). */
+export const makePodResubmitSchema = (t: Translate) =>
+  z.object({
+    pod_title: z
+      .string()
+      .trim()
+      .min(3, t('mweb.hostPodActions.titleTooShort'))
+      .max(120, t('mweb.hostPodActions.titleTooLong')),
+    pod_description: z.string().trim().min(10, t('mweb.hostPodActions.descriptionTooShort')),
+    media_text: z
+      .string()
+      .refine((text) => hasImageLine(text), t('mweb.hostPodActions.imageRequired')),
+    venue_id: z.string().min(1, t('mweb.hostPodActions.venueRequired')),
+    offer_start: z.string().min(1, t('mweb.hostPodActions.slotRequired')),
+    offer_end: z.string().min(1, t('mweb.hostPodActions.slotRequired')),
+    venue_offer_model: z
+      .string()
+      .refine(isVenueOfferModel, t('mweb.hostPodActions.offerModelRequired')),
+    venue_offer_rate: z
+      .string()
+      .refine((rate) => offerRateOf(rate) > 0, t('mweb.hostPodActions.offerRateRequired')),
+    pax: z.number(),
+  });
+
+/** The offer the values hold, or null until it is complete. mWeb twin: resubmitOfferOf. */
+export function resubmitOfferOf(values: PodResubmitValues) {
+  const offer = venueOfferInput({
+    start: values.offer_start || null,
+    end: values.offer_end || null,
+    pax: values.pax,
+    pets: false,
+    spaceLabel: '',
+    model: values.venue_offer_model,
+    rate: values.venue_offer_rate,
+  });
+  // The app's generated enum carries the same four values the shared union does.
+  return offer ? { ...offer, model: offer.model as VenueOfferModel } : null;
+}
 
 const splitLines = (text: string) =>
   text
@@ -73,31 +107,20 @@ export function buildHostResubmitInput(values: PodResubmitValues) {
       type: isVideoUrl(url) ? CategoryMediaType.Video : CategoryMediaType.Image,
     })),
     venue_id: values.venue_id,
-    venue_slot_id: values.venue_slot_id,
+    venue_offer: resubmitOfferOf(values),
   };
 }
 
-/** Prefills the form from the rejected pod (a fresh venue + slot must be picked). */
+/** Prefills the form from the rejected pod (a fresh venue, window and terms must be picked). */
 export function podResubmitInitialValues(pod: HostPodForResubmit | null): PodResubmitValues {
   if (!pod) return blankPodResubmitValues;
   return {
+    ...blankPodResubmitValues,
     pod_title: pod.pod_title,
     pod_description: pod.pod_description ?? '',
     media_text: (pod.pod_images_and_videos ?? []).map((m) => m.url).join('\n'),
-    venue_id: '',
-    venue_slot_id: '',
+    pax: pod.no_of_spots ?? 0,
   };
-}
-
-/** "Wed, 5 Mar, 6:00 pm – 8:00 pm · Hall A · ₹400" — one slot option line. */
-export function slotOptionLabel(slot: ResubmitSlotOption): string {
-  const start = new Date(slot.start_at);
-  const end = new Date(slot.end_at);
-  const day = formatDate(start);
-  const time = `${formatTime(start)} – ${formatTime(end)}`;
-  const space = slot.space_label ? ` · ${slot.space_label}` : '';
-  const price = slot.price > 0 ? ` · ₹${slot.price}` : '';
-  return `${day}, ${time}${space}${price}`;
 }
 
 /** One venue option line — "Hall · Pune". */

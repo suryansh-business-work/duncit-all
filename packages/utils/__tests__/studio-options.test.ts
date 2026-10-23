@@ -34,6 +34,7 @@ describe('STUDIO_OPTION_LIST', () => {
       'food-settings',
       'rented-items',
       'pods',
+      'chat',
       'change-requests',
       'pod-requests',
       'nearby',
@@ -235,6 +236,7 @@ describe('studioOptionGroups', () => {
       'publish',
       'rented-items',
       'pods',
+      'chat',
       'change-requests',
       'pod-requests',
       'nearby',
@@ -251,7 +253,10 @@ describe('studioOptionGroups', () => {
     // The flag-filtered list splits the same way: Auto Pods off stays off.
     const off = studioOptionGroups(studioOptionsFor('VENUE', ['VENUE_OWNER'], { autoPods: false }));
     expect(off.main.map((option) => option.key)).not.toContain('auto-pods');
-    expect(off.food).toHaveLength(5);
+    // Food Settings is console-only: the apps list four food options, the console five.
+    expect(off.food.map((option) => option.key)).toEqual(['food-dashboard', 'food-menu', 'food-orders', 'food-coupons']);
+    const inConsole = studioOptionGroups(studioOptionsFor('VENUE', ['VENUE_OWNER'], { autoPods: false, console: true }));
+    expect(inConsole.food.map((option) => option.key)).toEqual(['food-dashboard', 'food-menu', 'food-orders', 'food-coupons', 'food-settings']);
   });
 });
 

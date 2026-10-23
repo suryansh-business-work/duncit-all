@@ -26378,6 +26378,10 @@ export type Query = {
    * Admin roles only.
    */
   adminPotentialPodEarnings: PodEarningsProjection;
+  /** Duncit staff: one venue chat's lines, read-only. */
+  adminVenueChatMessages: Array<PodMessage>;
+  /** Duncit staff: one venue's chats (Venues console, read-only). */
+  adminVenueChatThreads: VenueChatThreadPage;
   /** Onboarding/admin: all slots for any venue (role-gated, no owner check). */
   adminVenueSlots: Array<VenueSlot>;
   agentAvailability: AgentAvailability;
@@ -27420,6 +27424,8 @@ export type Query = {
   myUnreadNotificationCount: Scalars['Int']['output'];
   /** Without venue_id: the owner's current application. With venue_id: that venue (must be the owner's). */
   myVenue?: Maybe<Venue>;
+  /** The venue owner's chats with the hosts of pods at their venues (one venue, or all of theirs). */
+  myVenueChatThreads: VenueChatThreadPage;
   myVenueEarningsSummary: EarningsSummary;
   /** Public: the caller's own food orders — placed by the signed-in account, or proven by a key from this device. Newest first. */
   myVenueFoodOrders: VenueFoodOrderTablePage;
@@ -28396,6 +28402,20 @@ export type QueryAdminPotentialPodEarningsArgs = {
   pod_type?: InputMaybe<PodType>;
   venue_id?: InputMaybe<Scalars['ID']['input']>;
   venue_slot_id?: InputMaybe<Scalars['ID']['input']>;
+};
+
+
+export type QueryAdminVenueChatMessagesArgs = {
+  before?: InputMaybe<Scalars['String']['input']>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  pod_id: Scalars['ID']['input'];
+};
+
+
+export type QueryAdminVenueChatThreadsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  venue_id: Scalars['ID']['input'];
 };
 
 
@@ -30335,6 +30355,13 @@ export type QueryMySurveyResponseArgs = {
 
 
 export type QueryMyVenueArgs = {
+  venue_id?: InputMaybe<Scalars['ID']['input']>;
+};
+
+
+export type QueryMyVenueChatThreadsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
   venue_id?: InputMaybe<Scalars['ID']['input']>;
 };
 
@@ -41170,6 +41197,32 @@ export type VenueChatRoom = {
 export type VenueChatSide =
   | 'HOST'
   | 'VENUE';
+
+/** A venue booking's chat in an inbox list, newest activity first. */
+export type VenueChatThread = {
+  __typename?: 'VenueChatThread';
+  /** The pod's lead host. */
+  host_name: Scalars['String']['output'];
+  host_photo?: Maybe<Scalars['String']['output']>;
+  /** The newest line's text; null while nobody has written, empty for a photo. */
+  last_message?: Maybe<Scalars['String']['output']>;
+  last_message_at?: Maybe<Scalars['String']['output']>;
+  last_message_is_photo: Scalars['Boolean']['output'];
+  last_message_side?: Maybe<VenueChatSide>;
+  pod_date_time?: Maybe<Scalars['String']['output']>;
+  pod_id: Scalars['ID']['output'];
+  pod_title: Scalars['String']['output'];
+  /** Lines from the other side since the caller last opened the thread (always 0 for staff). */
+  unread_count: Scalars['Int']['output'];
+  venue_id: Scalars['ID']['output'];
+  venue_name: Scalars['String']['output'];
+};
+
+export type VenueChatThreadPage = {
+  __typename?: 'VenueChatThreadPage';
+  rows: Array<VenueChatThread>;
+  total: Scalars['Int']['output'];
+};
 
 export type VenueClosedReason =
   | 'BLOCKED'

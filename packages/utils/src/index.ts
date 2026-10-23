@@ -1738,11 +1738,15 @@ export {
   type ChatPreviewKind,
 } from './chat-preview';
 export {
+  ADMIN_VENUE_CHAT_MESSAGES_SDL,
+  ADMIN_VENUE_CHAT_THREADS_SDL,
+  MY_VENUE_CHAT_THREADS_SDL,
   SEND_VENUE_CHAT_MESSAGE_SDL,
   VENUE_CHAT_MESSAGES_SDL,
   VENUE_CHAT_PAGE,
   VENUE_CHAT_ROOM_SDL,
   VENUE_CHAT_SOCKET,
+  VENUE_CHAT_THREADS_PAGE,
   hasVenueChat,
   isVenueChatUnavailable,
   mergeVenueChatLines,
@@ -1753,6 +1757,7 @@ export {
   type VenueChatLine,
   type VenueChatRoomInfo,
   type VenueChatSide,
+  type VenueChatThreadRow,
 } from './venue-chat';
 export {
   CHAT_HISTORY_PAGE,

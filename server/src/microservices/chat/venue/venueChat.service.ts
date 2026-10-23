@@ -5,8 +5,9 @@ import { shapeMessage } from '../rooms/chat.shape';
 import { assertCleanText } from '../rooms/chat.service';
 import { blockedPeerIds } from '../rooms/chat.access';
 import { VenueChatMessageModel } from './venueChat.model';
-import { assertVenueChatMember, venueChatRoomOf, type VenueChatThread } from './venueChat.access';
+import { assertVenueChatMember, venueChatRoomOf, venueChatThread, type VenueChatThread } from './venueChat.access';
 import { notifyVenueChat } from './venueChat.notify';
+import { markVenueChatRead } from './venueChat.read';
 
 /** A stored line, as `lean()` or `toObject()` hands it back. */
 export interface StoredVenueLine {
@@ -61,12 +62,27 @@ export const venueChatService = {
   },
 
   /** One page, newest `limit` before `before`, oldest first — without anyone
-   * either side has blocked. */
+   * either side has blocked. Opening the newest page marks the thread read for
+   * the caller (every client, installed builds included, reads it on open). */
   async messages(podId: string, userId: string, limit = 50, before?: string | null) {
     const { thread } = await assertVenueChatMember(podId, userId);
     const q: Record<string, unknown> = { pod_id: thread.podId, deleted: false };
     const blocked = await blockedPeerIds(userId);
     if (blocked.size > 0) q.user_id = { $nin: [...blocked] };
+    if (before) q.createdAt = { $lt: new Date(before) };
+    const docs = await VenueChatMessageModel.find(q)
+      .sort({ createdAt: -1 })
+      .limit(Math.min(200, Math.max(1, limit)))
+      .lean<StoredVenueLine[]>();
+    if (!before) await markVenueChatRead(userId, thread.podId);
+    return shapeVenueLines(thread, docs.reverse());
+  },
+
+  /** Duncit staff reading one thread (Venues console): read-only, no read mark. */
+  async staffMessages(podId: string, limit = 50, before?: string | null) {
+    const thread = await venueChatThread(podId);
+    if (!thread) throw new GraphQLError('Chat not found', { extensions: { code: 'NOT_FOUND' } });
+    const q: Record<string, unknown> = { pod_id: thread.podId, deleted: false };
     if (before) q.createdAt = { $lt: new Date(before) };
     const docs = await VenueChatMessageModel.find(q)
       .sort({ createdAt: -1 })

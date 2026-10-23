@@ -40,7 +40,8 @@ export type StudioOptionIcon =
   | 'menu'
   | 'warehouses'
   | 'refunds'
-  | 'categories';
+  | 'categories'
+  | 'chat';
 
 export interface StudioOptionItem {
   key: string;
@@ -169,6 +170,8 @@ export const STUDIO_OPTION_LIST: Readonly<Record<PartnerStudioMode, readonly Stu
     // (@duncit/venue-rentals on the web, a Tamagui twin in the app).
     { key: 'rented-items', labelKey: 'mweb.studioOptions.rentedItems', hintKey: 'mweb.studioOptions.rentedItemsHint', icon: 'orders', path: '/venues/rented-items', route: 'VenueRentedItems', portal: '/venues/rented-items' },
     { key: 'pods', labelKey: 'mweb.studioOptions.venuePods', hintKey: 'mweb.studioOptions.venuePodsHint', icon: 'pods', path: '/venues/pods', route: 'VenuePods', portal: '/venues/pods' },
+    // Every host conversation about a pod at the owner's venues, newest first.
+    { key: 'chat', labelKey: 'mweb.studioOptions.venueChat', hintKey: 'mweb.studioOptions.venueChatHint', icon: 'chat', path: '/venues/chats', route: 'VenueChats', portal: '/venues/chats' },
     { key: 'change-requests', labelKey: 'mweb.studioOptions.changeRequests', hintKey: 'mweb.studioOptions.changeRequestsHint', icon: 'change', path: '/change-requests', route: 'ChangeRequests', portal: '/venues/change-requests' },
     { key: 'pod-requests', labelKey: 'mweb.studioOptions.podRequestsFromHosts', hintKey: 'mweb.studioOptions.podRequestsFromHostsHint', icon: 'requests', path: '/venues/pod-requests', route: 'VenuePodRequests', portal: '/venues/pod-requests' },
     { key: 'nearby', labelKey: 'mweb.studioOptions.nearbyHosts', hintKey: 'mweb.studioOptions.nearbyHostsHint', icon: 'nearby', path: '/venues/nearby-hosts', route: 'NearbyHosts', portal: '/venues/nearby-hosts' },

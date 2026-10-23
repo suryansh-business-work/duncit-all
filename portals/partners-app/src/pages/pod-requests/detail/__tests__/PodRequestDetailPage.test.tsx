@@ -257,7 +257,7 @@ describe('PodRequestDetailPage — the next step', () => {
       sent,
     );
 
-    expect(await screen.findByRole('heading', { name: 'Slot' })).toBeTruthy();
+    expect(await screen.findByRole('heading', { name: 'Proposed booking' })).toBeTruthy();
     expect(screen.getByText('Court 2')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Confirm proposal' }));
 

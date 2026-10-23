@@ -104,7 +104,7 @@ export {
   HOST_UPDATE_POD,
   POD_SETTLEMENT_PREVIEW,
   RESUBMIT_VENUES,
-  RESUBMIT_VENUE_SLOTS,
+  RESUBMIT_OFFER_CALENDAR,
 } from './queries';
 
 export type {
@@ -118,7 +118,6 @@ export type {
   PodSettlement,
   PodSettlementAttendee,
   RenderMediaField,
-  ResubmitSlotOption,
   ResubmitVenueOption,
   ScanTarget,
   ScannedAttendee,

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, act, waitFor } from '@testing-library/react';
+import { render, screen, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { FormProvider, useForm, type UseFormReturn } from 'react-hook-form';
 import WhenWhereSection from '../../src/sections/WhenWhereSection';
@@ -25,17 +25,21 @@ vi.mock('@mui/x-date-pickers/DateTimePicker', () => ({
 }));
 
 // The calendar itself is @duncit/slots' concern (tested there); this fake only
-// shows what VenueSlotField hands it — one tile per slot, captioned — and
-// reports a pick back the way the real one does.
+// shows what VenueOfferField hands it — one tile per pickable start — and
+// reports a pick back the way the real one does (plus a pick of a tile it was
+// never given, which the field must ignore).
 vi.mock('@duncit/slots/mui', () => ({
   SlotCalendar: ({ slots, loading, selectedSlotId, onPick, labels, required }: any) => (
     <div data-testid="slot-calendar" data-selected={selectedSlotId} data-required={String(!!required)}>
       {loading && <span>{labels.loading}</span>}
       {slots.map((slot: any) => (
-        <button key={slot.id} type="button" onClick={() => onPick(slot)} data-end={slot.end_at ?? ''}>
-          {slot.caption}
+        <button key={slot.id} type="button" data-testid={`tile-${slot.id}`} disabled={!!slot.disabled} onClick={() => onPick(slot)}>
+          {slot.start_at}
         </button>
       ))}
+      <button type="button" onClick={() => onPick({ id: 'not-a-tile' })}>
+        stray pick
+      </button>
     </div>
   ),
 }));
@@ -63,6 +67,32 @@ const slotsQuery = (venueAvailableSlots: unknown[], over: Partial<{ loading: boo
   error: undefined,
   ...over,
 });
+
+/** The venue is open 10:00–12:00 UTC on 1 June 2030, and nothing is booked. */
+const OPEN_DAY = {
+  date: '2030-06-01',
+  closed_reason: null,
+  open: '2030-06-01T10:00:00.000Z',
+  close: '2030-06-01T12:00:00.000Z',
+  busy: [],
+  slots: [],
+};
+const calendarQuery = (days: unknown[] = [OPEN_DAY], over: Partial<{ loading: boolean; error: Error; data: unknown }> = {}) => ({
+  data: { venueOfferCalendar: { buffer_minutes: 0, min_notice_minutes: 0, days } },
+  loading: false,
+  error: undefined,
+  ...over,
+});
+const quoteQuery = (venueOfferQuote: unknown) => ({ data: { venueOfferQuote }, loading: false, error: undefined });
+
+/** Routes the form's three reads: the offer quote, the offer calendar, the venue's slots. */
+function routeQueries({ calendar = calendarQuery(), quote = quoteQuery(null), slots = slotsQuery([]) } = {}) {
+  useQueryMock.mockImplementation((_doc: unknown, options: { variables?: Record<string, unknown> }) => {
+    if (options?.variables && 'offer' in options.variables) return quote;
+    if (options?.variables && 'to' in options.variables) return calendar;
+    return slots;
+  });
+}
 
 function renderWW(data: PodFormData, defaults: Partial<PodFormValues> = {}) {
   const methodsRef: { current: UseFormReturn<PodFormValues> | null } = { current: null };
@@ -141,76 +171,98 @@ describe('WhenWhereSection (map + date mode)', () => {
   });
 });
 
-describe('WhenWhereSection (venue-slot mode)', () => {
-  const slotData = makeData({
-    clubs: CLUBS,
-    venues: VENUES,
-    getClubVenueIds: () => ['v1', 'v2'],
-    config: makeConfig({ showVenueSlot: true }),
+describe('WhenWhereSection (venue-offer mode)', () => {
+  const offerData = (over: Partial<PodFormData> = {}) =>
+    makeData({
+      clubs: CLUBS,
+      venues: VENUES,
+      getClubVenueIds: () => ['v1', 'v2'],
+      config: makeConfig({ showVenueSlot: true }),
+      ...over,
+    });
+  const at = (time: string) => `2030-06-01T${time}:00.000Z`;
+
+  it('asks for a venue before offering any time', () => {
+    routeQueries();
+    renderWW(offerData(), { club_id: 'c1', venue_id: '' });
+    expect(screen.getByText(SLOT_LABELS.pickVenueFirst)).toBeInTheDocument();
+    expect(screen.queryByTestId('slot-calendar')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('pod-form-offer-terms')).not.toBeInTheDocument();
   });
 
-  it('asks for a venue before offering any slot', () => {
-    renderWW(slotData, { club_id: 'c1', venue_id: '' });
-    expect(screen.getByText(SLOT_LABELS.pickVenueFirst)).toBeInTheDocument();
+  it('offers each half hour the venue is open, sets the window, and lets the end stretch to closing', async () => {
+    const user = userEvent.setup();
+    routeQueries();
+    const ref = renderWW(offerData(), { club_id: 'c1', venue_id: 'v1' });
+    expect(screen.getByTestId('slot-calendar')).toHaveAttribute('data-required', 'true');
+    // 10:00, 10:30, 11:00 and 11:30 each leave half an hour before closing.
+    expect(screen.getAllByRole('button', { name: /2030-06-01T/ })).toHaveLength(4);
+
+    await user.click(screen.getByTestId(`tile-${at('10:00')}`));
+    expect(ref.current?.getValues('pod_date_time')?.toISOString()).toBe(at('10:00'));
+    // The shortest window is filled in at once.
+    expect(ref.current?.getValues('pod_end_date_time')?.toISOString()).toBe(at('10:30'));
+    expect(screen.getByText('Times the venue is free after your start')).toBeInTheDocument();
+
+    await user.click(screen.getByLabelText('End time'));
+    await user.click(await screen.findByRole('option', { name: '12:00' }));
+    expect(ref.current?.getValues('pod_end_date_time')?.toISOString()).toBe(at('12:00'));
+    expect(screen.getByTestId('slot-calendar')).toHaveAttribute('data-selected', at('10:00'));
+  });
+
+  it('ignores a pick of a time it never offered', async () => {
+    const user = userEvent.setup();
+    routeQueries();
+    const ref = renderWW(offerData(), { club_id: 'c1', venue_id: 'v1' });
+    await user.click(screen.getByRole('button', { name: 'stray pick' }));
+    expect(ref.current?.getValues('pod_date_time')).toBeNull();
+  });
+
+  it('says no end fits when the start is outside what the venue offers', () => {
+    routeQueries();
+    renderWW(offerData(), {
+      club_id: 'c1',
+      venue_id: 'v1',
+      pod_date_time: new Date('2030-07-01T10:00:00.000Z'),
+      pod_end_date_time: new Date('2030-07-01T11:00:00.000Z'),
+    });
+    expect(screen.getByText('No end time fits after this start. Pick another start.')).toBeInTheDocument();
+  });
+
+  it('labels a day the venue closed itself and cannot be picked', () => {
+    routeQueries({ calendar: calendarQuery([{ ...OPEN_DAY, closed_reason: 'HOLIDAY' }]) });
+    renderWW(offerData(), { club_id: 'c1', venue_id: 'v1' });
+    expect(screen.getByTestId('tile-closed|2030-06-01')).toBeDisabled();
+  });
+
+  it('shows the calendar loading only until its first answer', () => {
+    routeQueries({ calendar: calendarQuery([], { loading: true, data: undefined }) });
+    renderWW(offerData(), { club_id: 'c1', venue_id: 'v1' });
+    expect(screen.getByText(SLOT_LABELS.loading)).toBeInTheDocument();
+  });
+
+  it('keeps showing the loaded days while the calendar refreshes', () => {
+    routeQueries({ calendar: calendarQuery([OPEN_DAY], { loading: true }) });
+    renderWW(offerData(), { club_id: 'c1', venue_id: 'v1' });
+    expect(screen.queryByText(SLOT_LABELS.loading)).not.toBeInTheDocument();
+  });
+
+  it('shows the calendar error instead of the calendar', () => {
+    routeQueries({ calendar: calendarQuery([], { error: new Error('Venue offline') }) });
+    renderWW(offerData(), { club_id: 'c1', venue_id: 'v1' });
+    expect(screen.getByText('Venue offline')).toBeInTheDocument();
     expect(screen.queryByTestId('slot-calendar')).not.toBeInTheDocument();
   });
 
-  it('picks a slot and sets the pod dates', async () => {
+  it('clears the dates when the venue changes', async () => {
     const user = userEvent.setup();
-    useQueryMock.mockReturnValue(slotsQuery([HALL_SLOT]));
-    const ref = renderWW(slotData, { club_id: 'c1', venue_id: 'v1' });
-    expect(screen.getByTestId('slot-calendar')).toHaveAttribute('data-required', 'true');
-    // The note takes the caption line; the space only stands in when there is none.
-    await user.click(screen.getByRole('button', { name: 'Hall' }));
-    expect(ref.current?.getValues('venue_slot_id')).toBe('s1');
-    expect(ref.current?.getValues('pod_date_time')?.toISOString()).toBe('2030-06-01T10:00:00.000Z');
-    expect(ref.current?.getValues('pod_end_date_time')?.toISOString()).toBe('2030-06-01T12:00:00.000Z');
-  });
-
-  it('falls back to the slot start as its end when the picked slot carries none', async () => {
-    const user = userEvent.setup();
-    useQueryMock.mockReturnValue(slotsQuery([{ ...HALL_SLOT, end_at: null }]));
-    const ref = renderWW(slotData, { club_id: 'c1', venue_id: 'v1' });
-    await user.click(screen.getByRole('button', { name: 'Hall' }));
-    expect(ref.current?.getValues('pod_end_date_time')?.toISOString()).toBe('2030-06-01T10:00:00.000Z');
-  });
-
-  it('captions a slot by its space, then by the whole venue when it names none', () => {
-    useQueryMock.mockReturnValue(
-      slotsQuery([
-        { ...HALL_SLOT, id: 'court', notes: '' },
-        { ...HALL_SLOT, id: 'whole', notes: '', space_label: '' },
-      ]),
-    );
-    renderWW(slotData, { club_id: 'c1', venue_id: 'v1' });
-    expect(screen.getByRole('button', { name: 'Court 2' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: SLOT_LABELS.wholeVenue })).toBeInTheDocument();
-  });
-
-  it('clears the dates when the picker deselects an unavailable slot', async () => {
-    useQueryMock.mockReturnValue(slotsQuery([HALL_SLOT]));
-    const ref = renderWW(slotData, { club_id: 'c1', venue_id: 'v1', venue_slot_id: 'gone', pod_date_time: null });
-    await waitFor(() => expect(ref.current?.getValues('venue_slot_id')).toBe(''));
-    expect(ref.current?.getValues('pod_date_time')).toBeNull();
-    expect(ref.current?.getValues('pod_end_date_time')).toBeNull();
-  });
-
-  it('keeps a selected slot while the list is still loading', () => {
-    useQueryMock.mockReturnValue(slotsQuery([], { loading: true }));
-    const ref = renderWW(slotData, { club_id: 'c1', venue_id: 'v1', venue_slot_id: 's1' });
-    expect(screen.getByText(SLOT_LABELS.loading)).toBeInTheDocument();
-    expect(ref.current?.getValues('venue_slot_id')).toBe('s1');
-  });
-
-  it('clears the dates when the venue changes in slot mode', async () => {
-    const user = userEvent.setup();
-    const ref = renderWW(slotData, {
+    routeQueries();
+    const ref = renderWW(offerData(), {
       club_id: 'c1',
       venue_id: 'v1',
-      pod_date_time: new Date('2030-06-01T10:00:00.000Z'),
-      pod_end_date_time: new Date('2030-06-01T12:00:00.000Z'),
+      pod_date_time: new Date(at('10:00')),
+      pod_end_date_time: new Date(at('12:00')),
     });
-    expect(screen.getByText(SLOT_LABELS.empty)).toBeInTheDocument();
     await user.click(screen.getByLabelText(/Venue/));
     await user.click(await screen.findByRole('option', { name: 'Beta' }));
     expect(ref.current?.getValues('venue_id')).toBe('v2');
@@ -218,46 +270,92 @@ describe('WhenWhereSection (venue-slot mode)', () => {
     expect(ref.current?.getValues('pod_end_date_time')).toBeNull();
   });
 
-  it('shows the slot query error instead of the calendar', () => {
-    useQueryMock.mockReturnValue(slotsQuery([], { error: new Error('Venue offline') }));
-    renderWW(slotData, { club_id: 'c1', venue_id: 'v1' });
-    expect(screen.getByText('Venue offline')).toBeInTheDocument();
-    expect(screen.queryByTestId('slot-calendar')).not.toBeInTheDocument();
-  });
-
-  it('shows the slot validation error as an alert', () => {
-    const ref = renderWW(slotData, { club_id: 'c1', venue_id: 'v1' });
+  it('shows the window validation error as an alert', () => {
+    routeQueries();
+    const ref = renderWW(offerData(), { club_id: 'c1', venue_id: 'v1' });
     act(() => ref.current?.setError('venue_slot_id', { type: 'custom', message: 'Pick an available slot' }));
     expect(screen.getByText('Pick an available slot')).toBeInTheDocument();
   });
 
-  it('offers the currently-booked slot when editing keeps its venue', () => {
-    const ref = renderWW(slotData, {
+  it('keeps an edited pod on the slot it holds until a new window is picked', async () => {
+    const user = userEvent.setup();
+    routeQueries();
+    const ref = renderWW(offerData(), {
       club_id: 'c1',
       venue_id: 'v1',
       venue_slot_id: 'booked',
-      pod_date_time: new Date('2030-06-01T10:00:00.000Z'),
-      pod_end_date_time: new Date('2030-06-01T12:00:00.000Z'),
+      pod_date_time: new Date(at('10:00')),
+      pod_end_date_time: new Date(at('12:00')),
     });
-    const booked = screen.getByRole('button', { name: SLOT_LABELS.currentlyBooked });
-    expect(booked).toHaveAttribute('data-end', '2030-06-01T12:00:00.000Z');
-    expect(screen.getByTestId('slot-calendar')).toHaveAttribute('data-selected', 'booked');
-    // A booked slot is no longer "available", but it is never auto-cleared.
-    expect(ref.current?.getValues('venue_slot_id')).toBe('booked');
+    expect(screen.getByTestId('pod-form-held-slot')).toHaveTextContent(`${SLOT_LABELS.currentlyBooked}: 2030-06-01 10:00`);
+    // No terms are asked for a booking that already stands.
+    expect(screen.queryByTestId('pod-form-offer-terms')).not.toBeInTheDocument();
+    expect(screen.getByTestId('slot-calendar')).toHaveAttribute('data-selected', '');
+
+    await user.click(screen.getByTestId(`tile-${at('11:00')}`));
+    expect(ref.current?.getValues('venue_slot_id')).toBe('');
+    expect(screen.queryByTestId('pod-form-held-slot')).not.toBeInTheDocument();
+    expect(screen.getByTestId('pod-form-offer-terms')).toBeInTheDocument();
+  });
+});
+
+describe('WhenWhereSection (offer terms)', () => {
+  const termsData = (finance?: PodFormData['finance']) =>
+    makeData({
+      clubs: CLUBS,
+      venues: VENUES,
+      getClubVenueIds: () => ['v1', 'v2'],
+      config: makeConfig({ showVenueSlot: true }),
+      finance,
+    });
+  const WINDOW = {
+    club_id: 'c1',
+    venue_id: 'v1',
+    no_of_spots: 10,
+    pod_date_time: new Date('2030-06-01T10:00:00.000Z'),
+    pod_end_date_time: new Date('2030-06-01T12:00:00.000Z'),
+  };
+  const QUOTE = { model: 'PER_GUEST', rate: 300, pax: 10, hours: 2, base: 3000, rules: [], min_spend_top_up: 0, cleaning_fee: 0, pet_fee: 0, gst_pct: 18, taxes: 540, platform_fee_pct: 10, platform_fee: 354, venue_payout: 3540, total: 3894, deposit: 0 };
+
+  it('asks how the venue is paid and how much, and prices nothing until both are set', async () => {
+    const user = userEvent.setup();
+    routeQueries({ quote: quoteQuery({ ok: true, message: null, quote: QUOTE }) });
+    const ref = renderWW(termsData({ platform_fee_pct: 10, gst_pct: 18, currency_symbol: '₹' }), WINDOW);
+    expect(screen.queryByTestId('pod-form-offer-total')).not.toBeInTheDocument();
+
+    await user.click(screen.getByLabelText(/How you pay the venue/));
+    await user.click(await screen.findByRole('option', { name: 'Per guest' }));
+    await user.type(screen.getByLabelText(/Amount you offer/), '300');
+    expect(ref.current?.getValues('venue_offer_model')).toBe('PER_GUEST');
+    expect(ref.current?.getValues('venue_offer_rate')).toBe('300');
+    expect(screen.getByTestId('pod-form-offer-total')).toHaveTextContent('₹3,894');
+    const quoteCall = useQueryMock.mock.calls.find(([, options]) => options?.variables?.offer && !options.skip);
+    expect(quoteCall?.[1].variables.offer).toMatchObject({ model: 'PER_GUEST', rate: 300, pax: 10, space_label: '' });
   });
 
-  it('falls back to the start time as the current slot end when no end is set', () => {
-    renderWW(slotData, {
-      club_id: 'c1',
-      venue_id: 'v1',
-      venue_slot_id: 'booked',
-      pod_date_time: new Date('2030-06-01T10:00:00.000Z'),
-      pod_end_date_time: null,
+  it('says why the venue cannot take the offer, with no currency set', () => {
+    routeQueries({ quote: quoteQuery({ ok: false, message: 'The venue is closed then', quote: null }) });
+    renderWW(termsData(), { ...WINDOW, venue_offer_model: 'FLAT', venue_offer_rate: '5000' });
+    expect(screen.getByText('The venue is closed then')).toBeInTheDocument();
+    expect(screen.queryByTestId('pod-form-offer-total')).not.toBeInTheDocument();
+  });
+
+  it('shows the terms errors on their fields', () => {
+    routeQueries();
+    const ref = renderWW(termsData(), WINDOW);
+    act(() => {
+      ref.current?.setError('venue_offer_model', { type: 'custom', message: 'Pick how you pay' });
+      ref.current?.setError('venue_offer_rate', { type: 'custom', message: 'Enter an amount' });
     });
-    expect(screen.getByRole('button', { name: SLOT_LABELS.currentlyBooked })).toHaveAttribute(
-      'data-end',
-      '2030-06-01T10:00:00.000Z',
-    );
+    expect(screen.getByText('Pick how you pay')).toBeInTheDocument();
+    expect(screen.getByText('Enter an amount')).toBeInTheDocument();
+  });
+
+  it('asks for no price while the window is not picked yet', () => {
+    routeQueries();
+    renderWW(termsData(), { club_id: 'c1', venue_id: 'v1', venue_offer_model: 'FLAT', venue_offer_rate: '5000' });
+    const asked = useQueryMock.mock.calls.filter(([, options]) => options?.variables && 'offer' in options.variables);
+    expect(asked.every(([, options]) => options.skip)).toBe(true);
   });
 });
 
@@ -273,43 +371,38 @@ describe('WhenWhereSection (free pod on a priced slot)', () => {
       ownVenueIds,
     });
   const NOTE = /Duncit will not pay the venue/;
+  const HELD = { club_id: 'c1', venue_id: 'v1', venue_slot_id: 's1' };
 
-  it('tells the author of a free pod to settle a priced slot with the venue directly', async () => {
-    const user = userEvent.setup();
-    useQueryMock.mockReturnValue(slotsQuery([HALL_SLOT]));
-    renderWW(noteData(), { club_id: 'c1', venue_id: 'v1', pod_type: 'FREE' });
-    expect(screen.queryByTestId('free-pod-venue-note')).not.toBeInTheDocument();
-
-    await user.click(screen.getByRole('button', { name: 'Hall' }));
-
+  it('tells the author of a free pod to settle a priced slot with the venue directly', () => {
+    routeQueries({ slots: slotsQuery([HALL_SLOT]) });
+    renderWW(noteData(), { ...HELD, pod_type: 'FREE' });
     const note = screen.getByTestId('free-pod-venue-note');
     expect(note).toHaveAttribute('role', 'status');
     expect(note).toHaveTextContent(NOTE);
-    // Bookings are instant, so there is no approval line about the venue holding the slot.
     expect(note).not.toHaveTextContent(/not to confirm the slot/);
   });
 
-  it('says nothing for a free pod on a slot priced 0 — it books instantly', () => {
-    useQueryMock.mockReturnValue(slotsQuery([{ ...HALL_SLOT, price: 0 }]));
-    renderWW(noteData(), { club_id: 'c1', venue_id: 'v1', venue_slot_id: 's1', pod_type: 'FREE' });
+  it('says nothing for a free pod on a slot priced 0', () => {
+    routeQueries({ slots: slotsQuery([{ ...HALL_SLOT, price: 0 }]) });
+    renderWW(noteData(), { ...HELD, pod_type: 'FREE' });
     expect(screen.queryByText(NOTE)).not.toBeInTheDocument();
   });
 
   it('says nothing at the host’s own venue, whatever the slot costs', () => {
-    useQueryMock.mockReturnValue(slotsQuery([HALL_SLOT]));
-    renderWW(noteData(['v1']), { club_id: 'c1', venue_id: 'v1', venue_slot_id: 's1', pod_type: 'FREE' });
+    routeQueries({ slots: slotsQuery([HALL_SLOT]) });
+    renderWW(noteData(['v1']), { ...HELD, pod_type: 'FREE' });
     expect(screen.queryByText(NOTE)).not.toBeInTheDocument();
   });
 
   it('says nothing for a paid pod, which pays the venue on the platform', () => {
-    useQueryMock.mockReturnValue(slotsQuery([HALL_SLOT]));
-    renderWW(noteData(), { club_id: 'c1', venue_id: 'v1', venue_slot_id: 's1', pod_type: 'PAID', pod_amount: 500 });
+    routeQueries({ slots: slotsQuery([HALL_SLOT]) });
+    renderWW(noteData(), { ...HELD, pod_type: 'PAID', pod_amount: 500 });
     expect(screen.queryByText(NOTE)).not.toBeInTheDocument();
   });
 
   it('reads a legacy free type as free', () => {
-    useQueryMock.mockReturnValue(slotsQuery([HALL_SLOT]));
-    renderWW(noteData(), { club_id: 'c1', venue_id: 'v1', venue_slot_id: 's1', pod_type: 'NATIVE_FREE' });
+    routeQueries({ slots: slotsQuery([HALL_SLOT]) });
+    renderWW(noteData(), { ...HELD, pod_type: 'NATIVE_FREE' });
     expect(screen.getByText(NOTE)).toBeInTheDocument();
   });
 });

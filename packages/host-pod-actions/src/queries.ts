@@ -179,16 +179,28 @@ export const RESUBMIT_VENUES = gql`
   }
 `;
 
-/** Bookable slots at the venue picked for the resubmission. */
-export const RESUBMIT_VENUE_SLOTS = gql`
-  query HostResubmitVenueSlots($venue_id: ID!) {
-    venueAvailableSlots(venue_id: $venue_id) {
-      id
-      start_at
-      end_at
-      whole_day
-      price
-      space_label
+/** When the venue picked for the resubmission is open and free (≤ 62 days a call). */
+export const RESUBMIT_OFFER_CALENDAR = gql`
+  query HostResubmitOfferCalendar($venue_id: ID!, $from: String!, $to: String!, $space_label: String) {
+    venueOfferCalendar(venue_id: $venue_id, from: $from, to: $to, space_label: $space_label) {
+      buffer_minutes
+      min_notice_minutes
+      days {
+        date
+        closed_reason
+        open
+        close
+        busy {
+          start
+          end
+        }
+        slots {
+          start
+          end
+          price
+          available
+        }
+      }
     }
   }
 `;

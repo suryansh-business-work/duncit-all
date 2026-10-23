@@ -117,18 +117,28 @@ describe('makePodSchema', () => {
     expect(paths).toContain('venue_id');
   });
 
-  it('requires a slot when the slot picker is on and dates are missing', () => {
-    const paths = errorPaths(
-      makeConfig({ showVenueSlot: true }),
-      validValues({ venue_slot_id: '', pod_date_time: null }),
-    );
-    expect(paths).toContain('venue_slot_id');
-    expect(paths).toContain('pod_date_time');
+  it('requires a picked window when the venue offer is on and dates are missing', () => {
+    const terms = { venue_offer_model: 'FLAT', venue_offer_rate: '5000' };
+    const noStart = errorPaths(makeConfig({ showVenueSlot: true }), validValues({ ...terms, pod_date_time: null }));
+    expect(noStart).toContain('venue_slot_id');
+    expect(noStart).toContain('pod_date_time');
+    const noEnd = errorPaths(makeConfig({ showVenueSlot: true }), validValues({ ...terms, pod_end_date_time: null }));
+    expect(noEnd).toContain('venue_slot_id');
   });
 
-  it('does not require a slot when dates are already present (edit keeps booked slot)', () => {
+  it('requires the offer to name how the venue is paid, and a positive amount', () => {
+    const paths = errorPaths(makeConfig({ showVenueSlot: true }), validValues({ venue_offer_model: 'PER_PAX', venue_offer_rate: '0' }));
+    expect(paths).toContain('venue_offer_model');
+    expect(paths).toContain('venue_offer_rate');
+    const ok = makePodSchema(makeConfig({ showVenueSlot: true }), fallbackT).safeParse(
+      validValues({ venue_offer_model: 'PER_GUEST', venue_offer_rate: '300' }),
+    );
+    expect(ok.success).toBe(true);
+  });
+
+  it('asks no offer of an edit that keeps its booked slot', () => {
     const res = makePodSchema(makeConfig({ showVenueSlot: true }), fallbackT).safeParse(
-      validValues({ venue_slot_id: '' }),
+      validValues({ venue_slot_id: 'slot-1' }),
     );
     expect(res.success).toBe(true);
   });

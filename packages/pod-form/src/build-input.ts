@@ -1,4 +1,4 @@
-import { mediaTypeForUrl, ticketDiscountInput } from '@duncit/utils';
+import { mediaTypeForUrl, ticketDiscountInput, venueOfferInput } from '@duncit/utils';
 
 import { isFreePodType, normalizePodType } from './pod-type';
 import { podHasTicketPrice } from './ticket-discount';
@@ -102,11 +102,30 @@ export function buildPodInput(values: PodFormValues, { draft, config }: BuildPod
     is_active: !draft,
   };
 
-  if (config.showVenueSlot) {
-    input.venue_slot_id = isPhysical ? values.venue_slot_id || null : null;
-  }
+  if (config.showVenueSlot) Object.assign(input, venueBookingOf(values, isPhysical));
 
   return input;
+}
+
+/**
+ * How the pod gets its venue: the slot it already holds (an edit that keeps
+ * it), else an offer for the picked window — never both, and never a null slot
+ * beside an offer (that would read as "release the booking"). Virtual: none.
+ */
+function venueBookingOf(values: PodFormValues, isPhysical: boolean): Record<string, unknown> {
+  if (!isPhysical) return { venue_slot_id: null };
+  if (values.venue_slot_id) return { venue_slot_id: values.venue_slot_id };
+  return {
+    venue_offer: venueOfferInput({
+      start: values.pod_date_time ? values.pod_date_time.toISOString() : null,
+      end: values.pod_end_date_time ? values.pod_end_date_time.toISOString() : null,
+      pax: Number(values.no_of_spots) || 0,
+      pets: false,
+      spaceLabel: '',
+      model: values.venue_offer_model,
+      rate: values.venue_offer_rate,
+    }),
+  };
 }
 
 /** Hashtags as typed → the array the server stores (leading # dropped). */

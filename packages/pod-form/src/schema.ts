@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { DEFAULT_TICKET_DISCOUNT_MAX_PCT, isVideoUrl } from '@duncit/utils';
+import { DEFAULT_TICKET_DISCOUNT_MAX_PCT, isVenueOfferModel, isVideoUrl, offerRateOf } from '@duncit/utils';
 import type { PodFormConfig, PodFormValues } from './types';
 import type { Translate } from './i18n/useTranslation';
 import { refineTicketDiscount, ticketDiscountTierSchema } from './ticket-discount';
@@ -74,19 +74,26 @@ function refineVenue(
   if (values.pod_mode === 'PHYSICAL' && !values.venue_id) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['venue_id'], message: t('podForm.validation.venueRequired') });
   }
-  // Dates come from the picked slot when the picker is on, so a missing slot is
-  // only an error while dates are missing too — an edited pod that keeps its
-  // already-booked slot dates never forces a re-pick.
-  if (
-    config.showVenueSlot &&
-    values.pod_mode === 'PHYSICAL' &&
-    values.venue_id &&
-    !values.venue_slot_id &&
-    !values.pod_date_time
-  ) {
+  if (config.showVenueSlot && values.pod_mode === 'PHYSICAL' && values.venue_id) refineVenueOffer(values, ctx, t);
+  refineMeeting(values, ctx, t);
+}
+
+/**
+ * A physical pod offers its venue a window and terms: dates come from the
+ * picked window, and the venue is told how it is paid. An edited pod that keeps
+ * its already-booked slot (and its dates) never forces a new offer.
+ */
+function refineVenueOffer(values: PodFormValues, ctx: z.RefinementCtx, t: Translate) {
+  if (values.venue_slot_id) return;
+  if (!values.pod_date_time || !values.pod_end_date_time) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['venue_slot_id'], message: t('podForm.validation.slotRequired') });
   }
-  refineMeeting(values, ctx, t);
+  if (!isVenueOfferModel(values.venue_offer_model)) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['venue_offer_model'], message: t('podForm.validation.offerModelRequired') });
+  }
+  if (offerRateOf(values.venue_offer_rate) <= 0) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['venue_offer_rate'], message: t('podForm.validation.offerRateRequired') });
+  }
 }
 
 /** Meeting-link rules — only a VIRTUAL pod has one. */
@@ -217,6 +224,8 @@ export function makePodSchema(
       }),
       venue_id: z.string().default(''),
       venue_slot_id: z.string().default(''),
+      venue_offer_model: z.string().default(''),
+      venue_offer_rate: z.string().default(''),
       location_id: z.string().default(''),
       zone_name: z.string().default(''),
       meeting_platform: z

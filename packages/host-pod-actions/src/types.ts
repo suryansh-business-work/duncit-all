@@ -84,16 +84,6 @@ export interface ResubmitVenueOption {
 }
 
 /** One bookable slot at the chosen venue. */
-export interface ResubmitSlotOption {
-  id: string;
-  start_at: string;
-  end_at: string;
-  /** A whole-day (or whole-date-range) booking. */
-  whole_day: boolean;
-  price: number;
-  space_label: string;
-}
-
 /** What deleting a pod means for the people who joined it. */
 export interface PodDeleteImpact {
   other_attendee_count: number;

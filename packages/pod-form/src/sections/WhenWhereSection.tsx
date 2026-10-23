@@ -1,9 +1,10 @@
-import { Alert, MenuItem, Stack, TextField } from '@mui/material';
+import { Alert, MenuItem, Stack, TextField, Typography } from '@mui/material';
 import { useFormContext, useWatch } from 'react-hook-form';
 import DateTimeField from '../components/DateTimeField';
 import GoogleMapPreview from '../components/GoogleMapPreview';
 import FreePodVenueNote from '../slots/FreePodVenueNote';
-import VenueSlotField from '../slots/VenueSlotField';
+import OfferTermsField from '../slots/OfferTermsField';
+import VenueOfferField from '../slots/VenueOfferField';
 import { usePodFormData } from '../context';
 import type { PodFormValues } from '../types';
 import { useTranslation } from '../i18n/useTranslation';
@@ -15,25 +16,13 @@ const venueLabel = (venue: any) => {
 
 export default function WhenWhereSection() {
   const { t } = useTranslation();
-  const { config, clubs, venues, getClubVenueIds } = usePodFormData();
-  const { control, setValue, formState: { errors, defaultValues } } = useFormContext<PodFormValues>();
+  const { config, clubs, venues, getClubVenueIds, dateFormatter, slotLabels } = usePodFormData();
+  const { control, setValue, formState: { errors } } = useFormContext<PodFormValues>();
   const clubId = useWatch({ control, name: 'club_id' });
   const venueId = useWatch({ control, name: 'venue_id' });
   const slotId = useWatch({ control, name: 'venue_slot_id' });
   const startDateTime = useWatch({ control, name: 'pod_date_time' });
-
-  // The pod's already-booked slot (edit): its id + dates come from the loaded
-  // pod, so the picker can keep offering it even though it is no longer free.
-  const initialSlotId = defaultValues?.venue_slot_id ?? '';
-  const initialStart = defaultValues?.pod_date_time ?? null;
-  const currentSlot =
-    initialSlotId && initialStart && defaultValues?.venue_id === venueId
-      ? {
-          id: initialSlotId,
-          start_at: initialStart.toISOString(),
-          end_at: (defaultValues?.pod_end_date_time ?? initialStart).toISOString(),
-        }
-      : null;
+  const endDateTime = useWatch({ control, name: 'pod_end_date_time' });
 
   const linkedVenueIds = new Set(getClubVenueIds(clubs.find((club) => club.id === clubId)));
   const clubVenues = venues.filter((venue) => linkedVenueIds.has(venue.id));
@@ -55,17 +44,17 @@ export default function WhenWhereSection() {
     }
   };
 
-  const handleSlotPick = (slot: { id: string; start_at: string; end_at: string } | null) => {
-    if (!slot) {
-      setValue('venue_slot_id', '');
-      setValue('pod_date_time', null);
-      setValue('pod_end_date_time', null);
-      return;
-    }
-    setValue('venue_slot_id', slot.id, { shouldValidate: true });
-    setValue('pod_date_time', new Date(slot.start_at));
-    setValue('pod_end_date_time', new Date(slot.end_at));
+  // A picked window is an offer to the venue: the slot an edited pod held (if
+  // any) is let go only when the new offer is saved.
+  const handleWindow = (start: string, end: string) => {
+    setValue('venue_slot_id', '');
+    setValue('pod_date_time', new Date(start), { shouldValidate: true });
+    setValue('pod_end_date_time', new Date(end), { shouldValidate: true });
   };
+  const held =
+    slotId && startDateTime
+      ? `${dateFormatter.formatDate(startDateTime)} ${dateFormatter.formatTime(startDateTime)}`
+      : '';
 
   return (
     <Stack spacing={2}>
@@ -89,8 +78,14 @@ export default function WhenWhereSection() {
 
       {config.showVenueSlot ? (
         <>
-          <VenueSlotField venueId={venueId} selectedSlotId={slotId} currentSlot={currentSlot} onSelect={handleSlotPick} />
+          {held && (
+            <Typography variant="body2" data-testid="pod-form-held-slot" sx={{ color: 'text.secondary' }}>
+              {slotLabels.currentlyBooked}: {held}
+            </Typography>
+          )}
+          <VenueOfferField venueId={venueId} start={slotId ? null : startDateTime} end={slotId ? null : endDateTime} onWindow={handleWindow} />
           {errors.venue_slot_id && <Alert severity="error">{String(errors.venue_slot_id.message)}</Alert>}
+          {venueId && !slotId && <OfferTermsField venueId={venueId} />}
           <FreePodVenueNote />
         </>
       ) : (

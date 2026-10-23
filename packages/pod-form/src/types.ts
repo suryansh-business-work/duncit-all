@@ -33,6 +33,10 @@ export interface PodFormValues {
   pod_mode: PodMode;
   venue_id: string;
   venue_slot_id: string;
+  /** Venue offer: how the host pays the venue (a VenueOfferModel), '' until picked. */
+  venue_offer_model: string;
+  /** Venue offer: the amount typed for that option, in rupees ('' until typed). */
+  venue_offer_rate: string;
   location_id: string;
   zone_name: string;
   meeting_platform: string;
@@ -207,7 +211,11 @@ export interface PodFormData {
    * calendar buckets days and renders times through it, so a missing formatter
    * would silently fall back to device-local behaviour (rule 11).
    */
-  dateFormatter: SlotFormatter & { formatPattern: (input: Date, pattern: string) => string };
+  dateFormatter: SlotFormatter & {
+    formatPattern: (input: Date, pattern: string) => string;
+    /** The admin-configured zone the venue calendar's days are counted in. */
+    timeZone: string;
+  };
   /**
    * Slot-picker copy. Required and never defaulted, so no English literal ships
    * inside the shared form (rule 38). Portals pass `shell.slots.*`.
@@ -269,6 +277,8 @@ export const blankPodFormValues: PodFormValues = {
   pod_mode: 'PHYSICAL',
   venue_id: '',
   venue_slot_id: '',
+  venue_offer_model: '',
+  venue_offer_rate: '',
   location_id: '',
   zone_name: '',
   meeting_platform: '',

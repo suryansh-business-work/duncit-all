@@ -156,9 +156,21 @@ export interface HostPodActionLabels {
   resubmitCta: string;
   venue: string;
   venueHint: string;
-  /** A resubmission is a new booking — it does not go without a venue and a slot. */
+  /** A resubmission is a new booking — it does not go without a venue and a window. */
   venueRequired: string;
   slotRequired: string;
+  /** The offer to the new venue: the window's end, and how and what the host pays it. */
+  offerEnd: string;
+  offerEndHint: string;
+  offerNoEnd: string;
+  offerModelLabel: string;
+  offerModelPerGuest: string;
+  offerModelPerHour: string;
+  offerModelPerSlot: string;
+  offerModelFlat: string;
+  offerRateLabel: string;
+  offerModelRequired: string;
+  offerRateRequired: string;
   completeHint: string;
   /** The venue’s final bill in the completion dialog — @duncit/utils’ own words. */
   venueBill: VenueBillLabels;
@@ -337,6 +349,17 @@ export function mwebHostPodLabels(t: HostPodTranslate): HostPodActionLabels {
     venueHint: t('mweb.hostPodActions.venueHint'),
     venueRequired: t('mweb.hostPodActions.venueRequired'),
     slotRequired: t('mweb.hostPodActions.slotRequired'),
+    offerEnd: t('mweb.hostPodActions.offerEnd'),
+    offerEndHint: t('mweb.hostPodActions.offerEndHint'),
+    offerNoEnd: t('mweb.hostPodActions.offerNoEnd'),
+    offerModelLabel: t('mweb.hostPodActions.offerModelLabel'),
+    offerModelPerGuest: t('mweb.hostPodActions.offerModelPerGuest'),
+    offerModelPerHour: t('mweb.hostPodActions.offerModelPerHour'),
+    offerModelPerSlot: t('mweb.hostPodActions.offerModelPerSlot'),
+    offerModelFlat: t('mweb.hostPodActions.offerModelFlat'),
+    offerRateLabel: t('mweb.hostPodActions.offerRateLabel'),
+    offerModelRequired: t('mweb.hostPodActions.offerModelRequired'),
+    offerRateRequired: t('mweb.hostPodActions.offerRateRequired'),
     completeHint: t('mweb.hostPodActions.completeHint'),
     venueBill: mwebVenueBillLabels(t),
     shareTitle: t('mweb.hostShare.title'),
@@ -475,6 +498,17 @@ export function shellHostPodLabels(t: HostPodTranslate): HostPodActionLabels {
     venueHint: t('shell.hostPodActions.venueHint'),
     venueRequired: t('shell.hostPodActions.venueRequired'),
     slotRequired: t('shell.hostPodActions.slotRequired'),
+    offerEnd: t('shell.hostPodActions.offerEnd'),
+    offerEndHint: t('shell.hostPodActions.offerEndHint'),
+    offerNoEnd: t('shell.hostPodActions.offerNoEnd'),
+    offerModelLabel: t('shell.hostPodActions.offerModelLabel'),
+    offerModelPerGuest: t('shell.hostPodActions.offerModelPerGuest'),
+    offerModelPerHour: t('shell.hostPodActions.offerModelPerHour'),
+    offerModelPerSlot: t('shell.hostPodActions.offerModelPerSlot'),
+    offerModelFlat: t('shell.hostPodActions.offerModelFlat'),
+    offerRateLabel: t('shell.hostPodActions.offerRateLabel'),
+    offerModelRequired: t('shell.hostPodActions.offerModelRequired'),
+    offerRateRequired: t('shell.hostPodActions.offerRateRequired'),
     completeHint: t('shell.hostPodActions.completeHint'),
     venueBill: shellVenueBillLabels(t),
     shareTitle: t('shell.hostShare.title'),

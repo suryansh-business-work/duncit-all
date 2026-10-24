@@ -14,6 +14,7 @@ import { MeetingModel } from '@modules/survey/meeting.model';
 import { CategoryModel } from '@modules/pods/category/category.model';
 import type { GraphQLContext } from '@context';
 import { hasRole, requireRole } from '@middleware/rbac';
+import { effectiveOfferSettings, requestOfferDefaults, type IVenueOfferSettings } from './venue.offerSettings';
 import {
   consoleEditors,
   consoleGovernors,
@@ -30,6 +31,9 @@ const VENUE_EDIT = consoleEditors('VENUE');
 const VENUE_GOVERN = consoleGovernors('VENUE');
 // Permanent hard-delete is a developer-only action (mirrors the API-key gate).
 const DEVELOPER_DELETE = ['SUPER_ADMIN', 'DEVELOPERS_MANAGER'];
+
+/** What the offer fields read off a shaped venue (its settings, when it carries them). */
+type VenueOfferParent = { settings?: { offers?: Partial<IVenueOfferSettings> | null } | null };
 
 function uid(ctx: GraphQLContext) {
   if (!ctx.user) throw new GraphQLError('Authentication required', { extensions: { code: 'UNAUTHENTICATED' } });
@@ -58,6 +62,12 @@ export const venueResolvers = {
     gst_pct: async (parent: FoodTaxOverride, _a: unknown, ctx: GraphQLContext) => (await foodTaxFor(parent, ctx)).gst_pct,
   },
   Venue: {
+    // A booking offer's floor and response window: the venue's own setting,
+    // else the platform default — resolved here so no client decides it.
+    offer_min_guests: async (parent: VenueOfferParent, _a: unknown, ctx: GraphQLContext) =>
+      effectiveOfferSettings(parent.settings?.offers, await requestOfferDefaults(ctx)).min_guests,
+    offer_response_hours: async (parent: VenueOfferParent, _a: unknown, ctx: GraphQLContext) =>
+      effectiveOfferSettings(parent.settings?.offers, await requestOfferDefaults(ctx)).response_hours,
     // Live pods hosted at this venue. `.exec()` returns a real Promise so the
     // GraphQL executor never adopts a bare Mongoose Query twice.
     pod_count: (parent: { id?: string }) => {

@@ -2,9 +2,9 @@ import type { GraphQLContext } from '@context';
 import { requireAuth, requireRole } from '@middleware/rbac';
 import { consoleReaders } from '@modules/portals/console-access';
 import { venuePricingService } from '@modules/venues/venuePricing/venuePricing.service';
-import { venueOfferService } from './venueOffer.service';
+import { venueOfferService, type VenueOfferMoveTerms } from './venueOffer.service';
 import { venueOfferStaffService } from './venueOffer.staff';
-import type { VenueOfferRequest, VenueOfferTerms } from './venueOffer.types';
+import type { VenueOfferRequest } from './venueOffer.types';
 
 const iso = (d: Date | null | undefined) => (d ? d.toISOString() : null);
 
@@ -12,6 +12,7 @@ const iso = (d: Date | null | undefined) => (d ? d.toISOString() : null);
 const VENUE_READ = consoleReaders('VENUE');
 
 type CalendarArgs = { venue_id: string; from: string; to: string; space_label?: string | null };
+type MoveArgs = { terms: VenueOfferMoveTerms; note?: string | null; round?: number | null };
 
 export const venueOfferResolvers = {
   Query: {
@@ -19,8 +20,10 @@ export const venueOfferResolvers = {
       requireAuth(ctx);
       return venueOfferService.preview(args.venue_id, args.offer);
     },
-    venueCounterQuote: (_p: unknown, args: { slot_id: string; terms: VenueOfferTerms }, ctx: GraphQLContext) =>
+    venueCounterQuote: (_p: unknown, args: { slot_id: string; terms: VenueOfferMoveTerms }, ctx: GraphQLContext) =>
       venueOfferService.counterPreview(requireAuth(ctx).id, args.slot_id, args.terms),
+    hostCounterQuote: (_p: unknown, args: { pod_id: string; terms: VenueOfferMoveTerms }, ctx: GraphQLContext) =>
+      venueOfferService.hostCounterPreview(requireAuth(ctx).id, args.pod_id, args.terms),
     venueOfferCalendar: async (_p: unknown, args: CalendarArgs, ctx: GraphQLContext) => {
       requireAuth(ctx);
       const cal = await venuePricingService.calendar(args.venue_id, args.from, args.to, args.space_label);
@@ -51,14 +54,16 @@ export const venueOfferResolvers = {
       venueOfferService.forPod(requireAuth(ctx).id, args.pod_id),
   },
   Mutation: {
-    counterVenueOffer: (
+    counterVenueOffer: (_p: unknown, args: MoveArgs & { slot_id: string }, ctx: GraphQLContext) =>
+      venueOfferService.counter(requireAuth(ctx).id, args.slot_id, args.terms, args.note, args.round),
+    acceptVenueCounterOffer: (_p: unknown, args: { pod_id: string; round?: number | null }, ctx: GraphQLContext) =>
+      venueOfferService.hostAccept(requireAuth(ctx).id, args.pod_id, args.round),
+    rejectVenueCounterOffer: (
       _p: unknown,
-      args: { slot_id: string; terms: VenueOfferTerms; note?: string | null },
+      args: { pod_id: string; reason?: string | null; round?: number | null },
       ctx: GraphQLContext
-    ) => venueOfferService.counter(requireAuth(ctx).id, args.slot_id, args.terms, args.note),
-    acceptVenueCounterOffer: (_p: unknown, args: { pod_id: string }, ctx: GraphQLContext) =>
-      venueOfferService.hostAccept(requireAuth(ctx).id, args.pod_id),
-    rejectVenueCounterOffer: (_p: unknown, args: { pod_id: string; reason?: string | null }, ctx: GraphQLContext) =>
-      venueOfferService.hostReject(requireAuth(ctx).id, args.pod_id, args.reason),
+    ) => venueOfferService.hostReject(requireAuth(ctx).id, args.pod_id, args.reason, args.round),
+    counterVenueOfferAsHost: (_p: unknown, args: MoveArgs & { pod_id: string }, ctx: GraphQLContext) =>
+      venueOfferService.hostCounter(requireAuth(ctx).id, args.pod_id, args.terms, args.note, args.round),
   },
 };

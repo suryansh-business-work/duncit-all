@@ -43,6 +43,7 @@ import {
 import { notifyEach } from '@services/notify/notify.service';
 import { alertBankAccountChanged, bankAccountChanged } from '@modules/finance/finance/bankAccount.notify';
 import { getUrlConfigs } from '@config/url-configs';
+import { normalizeOfferSettingsInput, toOfferSettingsPub } from './venue.offerSettings';
 import {
   VENUE_FOOD_INPUT_KEYS,
   buildVenueFoodPatch,
@@ -128,6 +129,7 @@ const toSettingsPub = (s?: IVenueSettings | null) => ({
   rules: toRulesPub(s?.rules),
   auto_extend: toAutoExtendPub(s?.auto_extend),
   cancellation: toCancellationPub(s?.cancellation),
+  offers: toOfferSettingsPub(s?.offers),
 });
 
 function normalizeRulesInput(base: ReturnType<typeof toRulesPub>, input: any) {
@@ -286,6 +288,7 @@ function normalizeSettingsInput(current: IVenueSettings | undefined, input: any)
   if (input.cancellation) {
     next.cancellation = normalizeCancellationInput(base.cancellation, input.cancellation);
   }
+  if (input.offers) next.offers = normalizeOfferSettingsInput(base.offers, input.offers);
   // Auto-extend can never promise further ahead than slots may be scheduled.
   next.auto_extend = {
     ...next.auto_extend,

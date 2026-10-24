@@ -62,17 +62,17 @@ export const venueSlotResolvers = {
       const user = requireAuth(ctx);
       return venueSlotService.bulkUpdate(user.id, args.input);
     },
-    approveVenueSlotRequest: (_p: unknown, args: { slot_id: string }, ctx: GraphQLContext) => {
+    approveVenueSlotRequest: (_p: unknown, args: { slot_id: string; round?: number | null }, ctx: GraphQLContext) => {
       const user = requireAuth(ctx);
-      return venueSlotService.approveRequest(user.id, args.slot_id);
+      return venueSlotService.approveRequest(user.id, args.slot_id, args.round);
     },
     declineVenueSlotRequest: (
       _p: unknown,
-      args: { slot_id: string; reason?: string | null },
+      args: { slot_id: string; reason?: string | null; round?: number | null },
       ctx: GraphQLContext
     ) => {
       const user = requireAuth(ctx);
-      return venueSlotService.declineRequest(user.id, args.slot_id, args.reason);
+      return venueSlotService.declineRequest(user.id, args.slot_id, args.reason, args.round);
     },
     adminCreateVenueSlots: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
       requireRole(ctx, ONBOARDING_RW);

@@ -213,10 +213,10 @@ export const venueSlotTypeDefs = /* GraphQL */ `
     "Bulk-manage a venue's upcoming non-booked slots (owner-scoped)."
     bulkDeleteVenueSlots(input: BulkDeleteVenueSlotsInput!): BulkSlotResult!
     bulkUpdateVenueSlots(input: BulkUpdateVenueSlotsInput!): BulkSlotResult!
-    "Owner approves a pending booking request — the pod goes live."
-    approveVenueSlotRequest(slot_id: ID!): VenueSlot!
-    "Owner declines a pending booking request — the slot frees up again."
-    declineVenueSlotRequest(slot_id: ID!, reason: String): VenueSlot!
+    "Owner approves a pending booking request — the pod goes live. round: the offer round read (refused when the terms changed since)."
+    approveVenueSlotRequest(slot_id: ID!, round: Int): VenueSlot!
+    "Owner declines a pending booking request — the slot frees up again. round: the offer round read."
+    declineVenueSlotRequest(slot_id: ID!, reason: String, round: Int): VenueSlot!
     "Onboarding/admin slot management for any venue (role-gated)."
     adminCreateVenueSlots(input: BulkCreateVenueSlotsInput!): [VenueSlot!]!
     adminUpdateVenueSlot(slot_id: ID!, input: UpdateVenueSlotInput!): VenueSlot!

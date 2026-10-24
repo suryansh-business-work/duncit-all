@@ -195,6 +195,7 @@ export const financeResolvers = {
         include_slot_price?: boolean | null;
         venue_pax?: number | null;
         overtime_hours?: number | null;
+        venue_extra_amount?: number | null;
       },
       ctx: GraphQLContext
     ) => {
@@ -234,6 +235,9 @@ export const financeResolvers = {
         venue_amount?: number | null;
         pod_type?: string | null;
         venue_commission_on_top?: number | null;
+        min_spots?: number | null;
+        venue_amount_at_min?: number | null;
+        venue_commission_on_top_at_min?: number | null;
       },
       ctx: GraphQLContext
     ) => {
@@ -245,7 +249,14 @@ export const financeResolvers = {
         args.venue_id ?? null,
         args.venue_amount ?? null,
         args.pod_type ?? null,
-        args.venue_commission_on_top ?? null
+        args.venue_commission_on_top ?? null,
+        args.min_spots
+          ? {
+              spots: args.min_spots,
+              venueAmount: args.venue_amount_at_min ?? null,
+              commissionOnTop: args.venue_commission_on_top_at_min ?? null,
+            }
+          : null
       );
     },
     adminPotentialPodEarnings: async (

@@ -1,5 +1,7 @@
 import { GraphQLError } from 'graphql';
 import { slotVenueCharge, type SlotPricingMode } from '@modules/venues/venueSlot/slotCharge';
+import { priceForGuests } from '@modules/venues/venueOffer/venueOffer.quote';
+import { getAppTimeZone } from '@utils/app-time';
 import { Types } from 'mongoose';
 import { isFreePod, PodModel } from '@modules/pods/pod/pod.model';
 import { VenueModel } from '@modules/venues/venue/venue.model';
@@ -84,6 +86,14 @@ export interface PodSettlement {
   venue_pax: number;
   venue_overtime_hours: number;
   venue_overtime_amount: number;
+  /** An agreed per-guest booking's minimum (0 = none) and the people the roster counted. */
+  venue_min_guests: number;
+  venue_people_counted: number;
+  /** Extra charges on the bill, paid on top of the agreed amount. */
+  venue_extra_amount: number;
+  /** The agreed offer's model and rate (null for a booking made before offers). */
+  venue_agreed_model: string | null;
+  venue_agreed_rate: number | null;
   gst_pct: number;
   host_commission_pct: number;
   venue_commission_pct: number;
@@ -369,6 +379,13 @@ export interface VenueCharge {
    * commission comes out of the venue's price as before.
    */
   commission_on_top: number | null;
+  /** The fewest guests an agreed per-guest booking pays for (0 = no minimum). */
+  min_guests: number;
+  /** Extra charges on the venue's bill, paid on top of the agreed amount once Finance approves. */
+  extra: number;
+  /** The agreed offer's model and rate, when the booking was agreed by offer. */
+  agreed_model: string | null;
+  agreed_rate: number | null;
 }
 
 /** What venueChargeForPod reads off a pod. The seat fields count its people
@@ -387,6 +404,15 @@ export interface VenueChargePod {
 export interface VenueUsage {
   pax?: number | null;
   overtimeHours?: number | null;
+  /**
+   * The people who came, counted by the server from the roster (the seats a
+   * host scanned in plus the hosts' own) — never taken from a client. An agreed
+   * per-guest booking is priced on this, raised by `pax` when more were there
+   * than were scanned, and never below its minimum.
+   */
+  attended?: number | null;
+  /** Extra charges on the venue's bill beyond the agreed amount, paid on top (0-1,000,000). */
+  extra?: number | null;
 }
 
 /**
@@ -394,8 +420,20 @@ export interface VenueUsage {
  * no overtime. Both move the venue's money, so both are bounded here and frozen
  * on the release for Finance to see beside the slot price.
  */
-export function venueUsageOf(input: { venue_pax?: number | null; overtime_hours?: number | null }): VenueUsage {
+export function venueUsageOf(input: {
+  venue_pax?: number | null;
+  overtime_hours?: number | null;
+  venue_extra_amount?: number | null;
+}): VenueUsage {
   const usage: VenueUsage = {};
+  if (input.venue_extra_amount !== undefined && input.venue_extra_amount !== null) {
+    if (!Number.isFinite(input.venue_extra_amount) || input.venue_extra_amount < 0 || input.venue_extra_amount > 1_000_000) {
+      throw new GraphQLError('Enter the extra charges as an amount from 0 to 1000000', {
+        extensions: { code: 'BAD_USER_INPUT' },
+      });
+    }
+    usage.extra = round2(input.venue_extra_amount);
+  }
   if (input.venue_pax !== undefined && input.venue_pax !== null) {
     if (!Number.isInteger(input.venue_pax) || input.venue_pax < 0 || input.venue_pax > 10_000) {
       throw new GraphQLError('Enter the people at the pod as a whole number from 0 to 10000', {
@@ -411,6 +449,22 @@ export function venueUsageOf(input: { venue_pax?: number | null; overtime_hours?
     usage.overtimeHours = Math.round(input.overtime_hours * 4) / 4;
   }
   return usage;
+}
+
+/**
+ * The people at a pod, as its venue counts them: every seat a host scanned in,
+ * plus the hosts themselves — they sit at the venue too, but scan nobody's
+ * ticket for their own seat. A host who also holds a scanned booking is not
+ * counted twice.
+ */
+export function peopleWhoCame(
+  hostIds: readonly unknown[] | null | undefined,
+  roster: Pick<PodAttendanceRoster, 'attended_seats' | 'rows'>
+): number {
+  const scanned = new Set(roster.rows.filter((row) => row.attended).map((row) => row.user_id));
+  const hosts = new Set((hostIds ?? []).map(String));
+  const unscannedHosts = [...hosts].filter((id) => !scanned.has(id)).length;
+  return roster.attended_seats + unscannedHosts;
 }
 
 /** The people a PER_PAX slot is charged for by default: everyone holding a
@@ -434,6 +488,13 @@ function defaultPaxOf(pod: VenueChargePod): number {
  *
  * A legacy pod with no slot link has no slot price, so its bill is the whole
  * amount either way.
+ *
+ * A booking agreed by offer PER GUEST is priced again here for the people who
+ * came — the roster's count (`usage.attended`), raised by an entered head count,
+ * never below the agreed minimum — on the rate and venue charges frozen when it
+ * was accepted. Every other booking keeps its frozen price. Extra charges on the
+ * venue's bill (`usage.extra`) are paid ON TOP of whatever the venue is owed,
+ * with the same commission on top — Finance approves them against the bill.
  *
  * `includeSlotPrice` left out (null / undefined) is how a caller says it does
  * not know about any of this: app builds from before the bill could move money
@@ -459,46 +520,72 @@ export async function venueChargeForPod(
     slot_included: false,
     amount: 0,
     commission_on_top: null,
+    min_guests: 0,
+    extra: 0,
+    agreed_model: null,
+    agreed_rate: null,
   };
   // A free pod's venue is paid by the host directly, off the platform — the
   // platform owes it nothing, whatever the slot is priced at or a bill says.
   if (!pod.venue_id || isFreePod(pod)) return none;
   const slot = pod.venue_slot_id
-    ? await VenueSlotModel.findById(pod.venue_slot_id).select('price pricing_mode overtime_rate start_at end_at price_snapshot')
+    ? await VenueSlotModel.findById(pod.venue_slot_id).select(
+        'price pricing_mode overtime_rate start_at end_at price_snapshot price_basis offer'
+      )
     : null;
   const pax = usage?.pax ?? defaultPaxOf(pod);
   const overtimeHours = Math.max(0, Number(usage?.overtimeHours) || 0);
   const snapshot = slot?.price_snapshot ?? null;
+  // An agreed per-guest booking is priced again for the people who came — the
+  // roster's count, raised by an entered head count, never below its minimum —
+  // with the rate, the minimum and the venue's charges both sides agreed.
+  const perGuest =
+    slot && snapshot && slot.price_basis?.model === 'PER_GUEST'
+      ? priceForGuests(
+          slot.price_basis,
+          { start: slot.start_at, end: slot.end_at },
+          Math.max(usage?.attended ?? defaultPaxOf(pod), usage?.pax ?? 0),
+          snapshot,
+          getAppTimeZone()
+        )
+      : null;
+  const priced = perGuest ?? snapshot;
   // An instant booking settles on the price frozen when it was confirmed; only
   // overtime (entered at completion) is still priced off the slot.
   let slotCharge: ReturnType<typeof slotVenueCharge> | null = null;
-  if (slot) slotCharge = snapshot ? snapshotCharge(snapshot, slot, overtimeHours) : slotVenueCharge(slot, { pax, overtimeHours });
+  if (slot) slotCharge = priced ? snapshotCharge(priced, slot, overtimeHours) : slotVenueCharge(slot, { pax, overtimeHours });
   const slotPrice = slotCharge ? slotCharge.total : 0;
   const bill = Math.max(0, round2(venueBill));
+  const extra = slot ? Math.max(0, round2(Number(usage?.extra) || 0)) : 0;
+  const agreed = slot?.offer ? (slot.offer.counter ?? slot.offer) : null;
   const base = {
     slot_price: slotPrice,
     pricing_mode: slotCharge?.mode ?? 'FLAT',
-    pax: snapshot?.pax ?? (slotCharge?.mode === 'PER_PAX' ? Math.max(0, Math.floor(pax)) : 0),
+    pax: priced?.pax ?? (slotCharge?.mode === 'PER_PAX' ? Math.max(0, Math.floor(pax)) : 0),
     overtime_hours: slotCharge ? overtimeHours : 0,
     overtime_amount: slotCharge?.overtime ?? 0,
     slot_linked: !!slot,
     bill,
+    min_guests: slot?.price_basis?.min_guests ?? 0,
+    extra,
+    agreed_model: agreed?.model ?? null,
+    agreed_rate: agreed?.rate ?? null,
   };
   const evidenceOnly = includeSlotPrice == null && !!slot;
-  // A snapshot booking's commission rides on top: its frozen fee for the slot,
-  // and the same percent on any bill that is paid.
-  const onTop = (slotPart: number, billPart: number) =>
-    snapshot ? round2(slotPart + (billPart * snapshot.platform_fee_pct) / 100) : null;
-  const slotFee = snapshot?.platform_fee ?? 0;
+  // A snapshot booking's commission rides on top: its fee for the slot, and the
+  // same percent on any bill or extra charges that are paid.
+  const onTop = (slotPart: number, paidPart: number) =>
+    priced ? round2(slotPart + (paidPart * priced.platform_fee_pct) / 100) : null;
+  const slotFee = priced?.platform_fee ?? 0;
   if (bill <= 0 || evidenceOnly) {
-    return { ...base, slot_included: false, amount: slotPrice, commission_on_top: onTop(slotFee, 0) };
+    return { ...base, slot_included: false, amount: round2(slotPrice + extra), commission_on_top: onTop(slotFee, extra) };
   }
   const slotIncluded = !!includeSlotPrice && slotPrice > 0;
   return {
     ...base,
     slot_included: slotIncluded,
-    amount: slotIncluded ? round2(slotPrice + bill) : bill,
-    commission_on_top: onTop(slotIncluded ? slotFee : 0, bill),
+    amount: round2((slotIncluded ? slotPrice + bill : bill) + extra),
+    commission_on_top: onTop(slotIncluded ? slotFee : 0, bill + extra),
   };
 }
 
@@ -659,7 +746,13 @@ export async function computePodSettlement(
     hostUserId: hostUserId ?? pod.pod_hosts_id?.[0] ?? null,
     venueId: hasVenue ? pod.venue_id : null,
   });
-  const charge = await venueChargeForPod(pod, venueBillAmount, includeSlotPrice, usage);
+  // An agreed per-guest venue booking is paid for the people who actually came
+  // (never fewer than its minimum) — counted here, from the roster, never taken
+  // from whoever completes the pod.
+  const charge = await venueChargeForPod(pod, venueBillAmount, includeSlotPrice, {
+    ...usage,
+    attended: peopleWhoCame(pod.pod_hosts_id, roster),
+  });
   const venueBill = charge.bill;
   const venueAmount = charge.amount;
   // The venue is owed its BOOKED slot price whatever the pod took at the door —
@@ -717,6 +810,11 @@ export async function computePodSettlement(
     venue_pax: charge.pax,
     venue_overtime_hours: charge.overtime_hours,
     venue_overtime_amount: charge.overtime_amount,
+    venue_min_guests: charge.min_guests,
+    venue_people_counted: peopleWhoCame(pod.pod_hosts_id, roster),
+    venue_extra_amount: charge.extra,
+    venue_agreed_model: charge.agreed_model,
+    venue_agreed_rate: charge.agreed_rate,
     gst_pct: waterfall.gst_pct,
     host_commission_pct: waterfall.host_commission_pct,
     venue_commission_pct: waterfall.venue_commission_pct,

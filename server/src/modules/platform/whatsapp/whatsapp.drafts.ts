@@ -232,6 +232,30 @@ export const WA_TEMPLATE_DRAFTS: Readonly<Record<string, WaTemplateDraft>> = {
    * `podChangeRequest.notify` sends what each of them needs to decide: the club
    * to a venue and a club admin, the venue to a host.
    */
+  VENUE_OFFER_RECEIVED: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, you have a booking offer for the pod {{2}} on {{3}} at {{4}} from host {{5}}. ' +
+      'Offer: {{6}} for {{7}}, and you receive {{8}}. Needed from the venue: {{9}}. Request: {{10}}. ' +
+      'Please answer by {{11}} — accept, decline or counter in your venue chat: {{12}} — Team Duncit',
+    sample:
+      'Hi Rohit, you have a booking offer for the pod Sunday Badminton Doubles on 24 Aug 2026 at 07:00 AM – 09:00 AM from host Meera Nair. ' +
+      'Offer: ₹500 per guest for 8–20 guests, and you receive ₹4,720–₹11,800. Needed from the venue: Projector; Snacks for 20. Request: Please keep the AC on. ' +
+      'Please answer by 23 Aug 2026, 07:00 PM — accept, decline or counter in your venue chat: https://partners.duncit.com/venues/pods/64f/chat — Team Duncit',
+  },
+  HOST_VENUE_COUNTER_OFFER: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, the venue answered your booking offer for {{2}} on {{3}} at {{4}}. {{5}} offers {{6}} for {{7}}, costing the pod {{8}}. ' +
+      'The venue provides: {{9}}. Note: {{10}}. ' +
+      'Please answer by {{11}} — accept, decline or counter back in your venue chat: {{12}} — Team Duncit',
+    sample:
+      'Hi Meera, the venue answered your booking offer for Sunday Badminton Doubles on 24 Aug 2026 at 07:00 AM – 09:00 AM. Sector 62 Sports Arena offers ₹550 per guest for 10–20 guests, costing the pod ₹6,490–₹12,980. ' +
+      'The venue provides: Projector; Snacks for 20. Note: Snacks are veg only. ' +
+      'Please answer by 23 Aug 2026, 07:00 PM — accept, decline or counter back in your venue chat: https://duncit.com/venue-chat/64f — Team Duncit',
+  },
   VENUE_CHANGE_REQUEST_OFFER: {
     category: 'UTILITY',
     language: 'English',

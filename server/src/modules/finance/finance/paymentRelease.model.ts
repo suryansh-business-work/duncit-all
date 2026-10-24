@@ -68,6 +68,14 @@ export interface IPaymentReleaseBreakdown {
   venue_pax?: number;
   venue_overtime_hours?: number;
   venue_overtime_amount?: number;
+  /** An agreed per-guest booking's minimum and the people the roster counted. 0 on older docs. */
+  venue_min_guests?: number;
+  venue_people_counted?: number;
+  /** Extra charges on the bill paid on top of the agreed amount. 0 on older docs. */
+  venue_extra_amount?: number;
+  /** The agreed offer's model and rate. Absent on older docs and bookings made before offers. */
+  venue_agreed_model?: string | null;
+  venue_agreed_rate?: number | null;
 }
 
 export interface IPaymentRelease extends Document {
@@ -145,6 +153,11 @@ const releaseBreakdownSchema = new Schema<IPaymentReleaseBreakdown>(
     venue_pax: { type: Number, default: 0 },
     venue_overtime_hours: { type: Number, default: 0 },
     venue_overtime_amount: { type: Number, default: 0 },
+    venue_min_guests: { type: Number, default: 0 },
+    venue_people_counted: { type: Number, default: 0 },
+    venue_extra_amount: { type: Number, default: 0 },
+    venue_agreed_model: { type: String, default: null },
+    venue_agreed_rate: { type: Number, default: null },
   },
   { _id: false }
 );

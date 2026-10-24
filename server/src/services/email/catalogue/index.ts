@@ -15,6 +15,7 @@ import { ANALYTICS_EMAILS } from './catalogue.analytics';
 import { AUTOMATION_EMAILS } from './catalogue.automation';
 import { APP_BUILD_EMAILS } from './catalogue.appBuilds';
 import { LIFECYCLE_EMAILS } from './catalogue.lifecycle';
+import { VENUE_OFFER_EMAILS } from './catalogue.offers';
 
 export * from './catalogue.types';
 export * from './mjml';
@@ -34,6 +35,7 @@ export const EMAIL_CATALOGUE: readonly EmailDef[] = [
   ...ONBOARDING_EMAILS,
   ...HOST_EMAILS,
   ...VENUE_EMAILS,
+  ...VENUE_OFFER_EMAILS,
   ...ECOMM_EMAILS,
   ...CLUB_ADMIN_EMAILS,
   ...SUPPORT_EMAILS,

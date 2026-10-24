@@ -3,6 +3,7 @@ import { UserModel } from "@modules/access/user/user.model";
 import { CATALOGUE_FALLBACK } from "./catalogue/catalogue.bundle";
 import { CORE_EMAIL_FALLBACK } from "./catalogue/catalogue.bundle.core";
 import { LIFECYCLE_FALLBACK } from "./catalogue/catalogue.lifecycle.bundle";
+import { VENUE_OFFER_EMAIL_FALLBACK } from "./catalogue/catalogue.offers";
 
 /**
  * Localized copy for MJML emails (CLAUDE.md rule 38).
@@ -29,6 +30,7 @@ export const EMAIL_FALLBACK: Record<string, string> = {
   // which used to be typed into `.mjml` files and so could not be translated.
   ...CORE_EMAIL_FALLBACK,
   ...LIFECYCLE_FALLBACK,
+  ...VENUE_OFFER_EMAIL_FALLBACK,
   "email.common.greeting": "Hi",
   "email.common.regards": "Thanks",
   "email.common.supportNote":

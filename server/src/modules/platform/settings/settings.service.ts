@@ -98,6 +98,10 @@ const DEFAULT_AUTO_POD_VENUE_EXPIRY_HOURS = 24;
 const DEFAULT_AUTO_POD_ASSIGNMENT_EXPIRY_HOURS = 72;
 /** Account Health points a venue or host loses by withdrawing from an Auto Pod. */
 const DEFAULT_AUTO_POD_CANCEL_HEALTH_PENALTY = 5;
+/** The fewest guests a venue booking offer may be for, when the venue set none. */
+const DEFAULT_VENUE_OFFER_MIN_GUESTS = 8;
+/** Hours to answer a venue booking offer or counter, when the venue set none. */
+const DEFAULT_VENUE_OFFER_RESPONSE_HOURS = 24;
 
 const cleanRetentionDays = (value: unknown) =>
   Math.max(1, Math.floor(Number(value)) || DEFAULT_DRAFT_RETENTION_DAYS);
@@ -200,6 +204,14 @@ const cleanAutoPodAssignmentExpiryHours = (value: unknown) =>
     Math.max(1, Math.floor(Number(value)) || DEFAULT_AUTO_POD_ASSIGNMENT_EXPIRY_HOURS),
   );
 
+/** Venue offer minimum guests, clamped to 1 – 1000. */
+const cleanVenueOfferMinGuests = (value: unknown) =>
+  Math.min(1000, Math.max(1, Math.floor(Number(value)) || DEFAULT_VENUE_OFFER_MIN_GUESTS));
+
+/** Venue offer response window, clamped to 1 hour – 30 days. */
+const cleanVenueOfferResponseHours = (value: unknown) =>
+  Math.min(720, Math.max(1, Math.floor(Number(value)) || DEFAULT_VENUE_OFFER_RESPONSE_HOURS));
+
 // 0 is a legal value here (it disables the penalty), so the `|| DEFAULT` idiom
 // would silently turn a saved 0 back into 5.
 const cleanAutoPodCancelHealthPenalty = (value: unknown) => {
@@ -274,6 +286,10 @@ const toAppPub = (d: any) => ({
   ),
   club_admin_change_request_health_penalty: cleanChangeRequestHealthPenalty(
     d?.club_admin_change_request_health_penalty,
+  ),
+  venue_offer_min_guests_default: cleanVenueOfferMinGuests(d?.venue_offer_min_guests_default),
+  venue_offer_response_hours_default: cleanVenueOfferResponseHours(
+    d?.venue_offer_response_hours_default,
   ),
   updated_at: d?.updated_at?.toISOString?.() ?? "",
 });
@@ -669,6 +685,8 @@ type AppSettingsUpdateInput = {
   venue_change_request_health_penalty?: number;
   host_change_request_health_penalty?: number;
   club_admin_change_request_health_penalty?: number;
+  venue_offer_min_guests_default?: number;
+  venue_offer_response_hours_default?: number;
 };
 
 /** Fields copied to the update as-is when the caller supplied them. */
@@ -722,6 +740,8 @@ const APP_SETTING_CLEANED_FIELDS: ReadonlyArray<
   ["venue_change_request_health_penalty", cleanChangeRequestHealthPenalty],
   ["host_change_request_health_penalty", cleanChangeRequestHealthPenalty],
   ["club_admin_change_request_health_penalty", cleanChangeRequestHealthPenalty],
+  ["venue_offer_min_guests_default", cleanVenueOfferMinGuests],
+  ["venue_offer_response_hours_default", cleanVenueOfferResponseHours],
 ];
 
 const buildAppSettingsUpdate = (input: AppSettingsUpdateInput) => {
@@ -778,6 +798,17 @@ export const settingsService = {
    * the attendance board and the WhatsApp sweep would otherwise each make their
    * own round trip for half of it.
    */
+  /** The platform's venue booking offer defaults — what a venue that set none of its own uses. */
+  async getVenueOfferDefaults(): Promise<{ min_guests: number; response_hours: number }> {
+    const doc = await AppSettingsModel.findOne({ singleton_key: "app" })
+      .select("venue_offer_min_guests_default venue_offer_response_hours_default")
+      .lean();
+    return {
+      min_guests: cleanVenueOfferMinGuests(doc?.venue_offer_min_guests_default),
+      response_hours: cleanVenueOfferResponseHours(doc?.venue_offer_response_hours_default),
+    };
+  },
+
   async getPodCompletionSettings(): Promise<{ timeout_hours: number; reminder_hours: number }> {
     const doc = await AppSettingsModel.findOne({ singleton_key: "app" });
     return {

@@ -143,6 +143,12 @@ export interface IAppSettings extends Document {
    * asking Duncit to hand their club's pod to a different club admin. 0
    * disables the deduction. */
   club_admin_change_request_health_penalty: number;
+  /** The fewest guests a host's offer to a venue may be for, when the venue has
+   * set no minimum of its own (Venue settings > Booking offers). */
+  venue_offer_min_guests_default: number;
+  /** Hours the other side has to answer a venue booking offer or counter, when
+   * the venue has set no response time of its own. Past it the offer expires. */
+  venue_offer_response_hours_default: number;
   created_at: Date;
   updated_at: Date;
 }
@@ -199,6 +205,8 @@ const appSettingsSchema = new Schema<IAppSettings>(
     venue_change_request_health_penalty: { type: Number, default: 5, min: 0, max: 10 },
     host_change_request_health_penalty: { type: Number, default: 5, min: 0, max: 10 },
     club_admin_change_request_health_penalty: { type: Number, default: 5, min: 0, max: 10 },
+    venue_offer_min_guests_default: { type: Number, default: 8, min: 1, max: 1000 },
+    venue_offer_response_hours_default: { type: Number, default: 24, min: 1, max: 720 },
     // `coin_earn_pct` used to live here. It moved to CoinSettings — split into a
     // pod-join and a shop rate — where the rest of the coin payout rules are;
     // coinSettingsService.seed() carries the configured value across on the

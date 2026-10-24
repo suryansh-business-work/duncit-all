@@ -14,13 +14,47 @@ const counterQuote = { total: 7080 };
 const offer = { model: 'PER_GUEST', rate: 250, quote, status: 'SENT', awaiting: 'VENUE', counter: null };
 
 describe('currentOfferTerms', () => {
-  it("is the host's offer while the venue has not countered", () => {
-    expect(currentOfferTerms(offer)).toEqual({ by: 'HOST', model: 'PER_GUEST', rate: 250, quote });
+  it("is the host's offer while the venue has not countered — priced the same at both ends when it carries no minimum", () => {
+    expect(currentOfferTerms(offer)).toEqual({
+      by: 'HOST',
+      model: 'PER_GUEST',
+      rate: 250,
+      quote,
+      quoteMin: quote,
+      minGuests: 0,
+      offerings: [],
+      note: '',
+    });
   });
 
-  it("is the venue's counter once there is one", () => {
-    const countered = { ...offer, status: 'COUNTERED', counter: { model: 'FLAT', rate: 6000, quote: counterQuote, note: '' } };
-    expect(currentOfferTerms(countered)).toEqual({ by: 'VENUE', model: 'FLAT', rate: 6000, quote: counterQuote });
+  it("carries the host's minimum, points, note and low-end quote", () => {
+    const quoteMin = { total: 1770 };
+    const asked = { ...offer, min_guests: 6, offerings: ['Projector'], note: 'Quiet corner', quote_min: quoteMin };
+    expect(currentOfferTerms(asked)).toMatchObject({ by: 'HOST', minGuests: 6, offerings: ['Projector'], note: 'Quiet corner', quoteMin });
+  });
+
+  it("is the venue's counter once there is one, with its own note and minimum", () => {
+    const counterMin = { total: 3540 };
+    const countered = {
+      ...offer,
+      status: 'COUNTERED',
+      counter: { model: 'FLAT', rate: 6000, quote: counterQuote, note: 'Includes DJ', min_guests: 10, offerings: ['DJ'], quote_min: counterMin },
+    };
+    expect(currentOfferTerms(countered)).toEqual({
+      by: 'VENUE',
+      model: 'FLAT',
+      rate: 6000,
+      quote: counterQuote,
+      quoteMin: counterMin,
+      minGuests: 10,
+      offerings: ['DJ'],
+      note: 'Includes DJ',
+    });
+  });
+
+  it("reads a counter from an older server, which carries only the money, as the venue's terms", () => {
+    const older = { ...offer, status: 'COUNTERED', counter: { model: 'FLAT', rate: 6000, quote: counterQuote, note: null } };
+    expect(currentOfferTerms(older)).toMatchObject({ by: 'VENUE', quoteMin: counterQuote, minGuests: 0, offerings: [], note: '' });
   });
 });
 

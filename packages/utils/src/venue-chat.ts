@@ -53,6 +53,28 @@ const VENUE_CHAT_LINE_FIELDS = `
   image_url
   deleted
   createdAt
+  offer {
+    slot_id
+    round
+    event
+    by
+    model
+    rate
+    min_guests
+    max_guests
+    offerings
+    note
+    start_at
+    end_at
+    space_label
+    pets
+    venue_receives_min
+    venue_receives_max
+    total_min
+    total_max
+    expires_at
+    reason
+  }
 `;
 
 export const VENUE_CHAT_ROOM_SDL = `
@@ -65,6 +87,9 @@ export const VENUE_CHAT_ROOM_SDL = `
       venue_name
       venue_photo
       my_side
+      counterpart_name
+      counterpart_phone
+      counterpart_email
     }
   }
 `;
@@ -151,6 +176,17 @@ export interface VenueChatRoomInfo {
   venue_name: string;
   venue_photo?: string | null;
   my_side: VenueChatSide;
+  /** The person on the other side: the pod's lead host for the venue, the venue's listed contact for a host. */
+  counterpart_name?: string | null;
+  counterpart_phone?: string | null;
+  counterpart_email?: string | null;
+}
+
+/** How to reach the other side outside the chat — each null when none is on record. */
+export interface VenueChatContact {
+  name: string | null;
+  phone: string | null;
+  email: string | null;
 }
 
 /** Who the reader is talking to, for the thread's header. */
@@ -163,13 +199,52 @@ export interface VenueChatCounterpart {
   podTitle: string | null;
   /** When the pod runs (ISO), for the header's second line. */
   when: string | null;
+  /** Their phone and email, for the header's contact row; null when neither is on record. */
+  contact: VenueChatContact | null;
+}
+
+/** The counterpart's contact, or null when the room carries no way to reach them. */
+function contactOf(room: VenueChatRoomInfo): VenueChatContact | null {
+  const phone = room.counterpart_phone?.trim() || null;
+  const email = room.counterpart_email?.trim() || null;
+  if (!phone && !email) return null;
+  return { name: room.counterpart_name?.trim() || null, phone, email };
 }
 
 /** A host talks to the venue about a pod; the venue talks to that pod's hosts. */
 export function venueChatCounterpart(room: VenueChatRoomInfo): VenueChatCounterpart {
   const when = room.pod_date_time ?? null;
-  if (room.my_side === 'VENUE') return { name: room.pod_title, photo: null, podTitle: null, when };
-  return { name: room.venue_name, photo: room.venue_photo || null, podTitle: room.pod_title || null, when };
+  const contact = contactOf(room);
+  if (room.my_side === 'VENUE') return { name: room.pod_title, photo: null, podTitle: null, when, contact };
+  return { name: room.venue_name, photo: room.venue_photo || null, podTitle: room.pod_title || null, when, contact };
+}
+
+/** What an OFFER line records: who moved, and how (`VenueChatOffer.event`). */
+export type VenueChatOfferEvent = 'OFFER' | 'COUNTER' | 'ACCEPTED' | 'DECLINED' | 'EXPIRED';
+
+/** One move of a booking offer, as an OFFER line carries it (money in rupees). */
+export interface VenueChatOfferMove {
+  slot_id: string;
+  round: number;
+  event: string;
+  /** HOST, VENUE, or SYSTEM for an answer that ran late. */
+  by: string;
+  model: string;
+  rate: number;
+  min_guests: number;
+  max_guests: number;
+  offerings: readonly string[];
+  note: string;
+  start_at: string;
+  end_at: string;
+  space_label: string;
+  pets: boolean;
+  venue_receives_min: number;
+  venue_receives_max: number;
+  total_min: number;
+  total_max: number;
+  expires_at?: string | null;
+  reason: string;
 }
 
 /** A line, as the three operations above select it. */
@@ -184,6 +259,66 @@ export interface VenueChatLine {
   image_url?: string | null;
   deleted: boolean;
   createdAt: string;
+  /** Set on an OFFER line: the move it records. */
+  offer?: VenueChatOfferMove | null;
+}
+
+/** The OFFER line the thread ends on (lines are oldest first), or null — only it may still be answered. */
+export function newestOfferLineId(lines: readonly Pick<VenueChatLine, 'id' | 'type' | 'offer'>[]): string | null {
+  const newest = [...lines].reverse().find((line) => line.type === 'OFFER' && !!line.offer);
+  return newest ? newest.id : null;
+}
+
+/** The live offer an OFFER bubble's buttons answer (`podVenueOffer`); null when the pod has none any more. */
+export interface LiveVenueOffer {
+  round: number;
+  status: string;
+  awaiting?: string | null;
+}
+
+const OPEN_MOVES: ReadonlySet<string> = new Set(['OFFER', 'COUNTER']);
+const CLOSING_MOVES: ReadonlySet<string> = new Set(['DECLINED', 'EXPIRED']);
+
+/**
+ * What an OFFER line's bubble lets the reader do. Accept, Reject or Counter
+ * show only on the move still waiting for THEM: the thread's newest offer line,
+ * the live offer's own round, still open, and their turn. Send a new offer shows
+ * only to a host, on the newest line when it closed the offer (declined or ran
+ * out) — a declined hold is released, so there is no live offer to read then.
+ * Every older line is a record and offers nothing.
+ */
+export function venueChatOfferActions(
+  move: Readonly<Pick<VenueChatOfferMove, 'event' | 'round'>>,
+  context: { side: VenueChatSide; newest: boolean; live: Readonly<LiveVenueOffer> | null }
+): { answer: boolean; sendNew: boolean } {
+  const { side, newest, live } = context;
+  if (!newest) return { answer: false, sendNew: false };
+  if (CLOSING_MOVES.has(move.event)) return { answer: false, sendNew: side === 'HOST' };
+  if (!live || !OPEN_MOVES.has(move.event)) return { answer: false, sendNew: false };
+  const open = live.status === 'SENT' || live.status === 'COUNTERED';
+  return { answer: open && live.round === move.round && live.awaiting === side, sendNew: false };
+}
+
+/** An OFFER bubble's heading by who moved and how: as the mover reads it, and as the other side does. */
+const OFFER_LINE_TITLE: Readonly<Record<string, { mine: string; theirs: string }>> = {
+  'HOST:OFFER': { mine: 'availability.offers.chat.title.youOffered', theirs: 'availability.offers.chat.title.hostOffered' },
+  'HOST:COUNTER': { mine: 'availability.offers.chat.title.youCountered', theirs: 'availability.offers.chat.title.hostCountered' },
+  'VENUE:COUNTER': { mine: 'availability.offers.chat.title.youCountered', theirs: 'availability.offers.chat.title.venueCountered' },
+  'HOST:ACCEPTED': { mine: 'availability.offers.chat.title.youAccepted', theirs: 'availability.offers.chat.title.hostAccepted' },
+  'VENUE:ACCEPTED': { mine: 'availability.offers.chat.title.youAccepted', theirs: 'availability.offers.chat.title.venueAccepted' },
+  'HOST:DECLINED': { mine: 'availability.offers.chat.title.youDeclined', theirs: 'availability.offers.chat.title.hostDeclined' },
+  'VENUE:DECLINED': { mine: 'availability.offers.chat.title.youDeclined', theirs: 'availability.offers.chat.title.venueDeclined' },
+};
+
+/** The key an offer ran out under — the same for both sides, since nobody moved. */
+const OFFER_EXPIRED_TITLE = 'availability.offers.chat.title.expired';
+
+/** An OFFER bubble's heading key for the reader ("You countered", "The venue countered", …), or '' for a move this client does not know. */
+export function venueChatOfferTitleKey(move: Readonly<Pick<VenueChatOfferMove, 'event' | 'by'>>, side: VenueChatSide): string {
+  if (move.event === 'EXPIRED') return OFFER_EXPIRED_TITLE;
+  const title = OFFER_LINE_TITLE[`${move.by}:${move.event}`];
+  if (!title) return '';
+  return move.by === side ? title.mine : title.theirs;
 }
 
 /**

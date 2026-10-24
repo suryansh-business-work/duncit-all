@@ -204,10 +204,13 @@ export {
   buildPodCompleteInput,
   makePodCompleteSchema,
   VENUE_USAGE_LIMITS,
+  addVenueBillIssues,
   addVenueUsageIssues,
+  venueExtraAmountOf,
   venueUsageInput,
   type PodCompleteInput,
   type PodCompleteValues,
+  type VenueBillRuleLabels,
 } from './pod-complete';
 export {
   blankWalletStatementValues,
@@ -247,13 +250,22 @@ export {
 } from './gig-job';
 
 export {
+  makeVenueOfferAskSchema,
   makeVenueOfferCounterSchema,
   makeVenueOfferRejectSchema,
+  offerNoteField,
+  offeringsTextField,
+  venueOfferAskDefaults,
   venueOfferCounterDefaults,
   venueOfferRejectDefaults,
+  venueOfferTermsOf,
   VENUE_OFFER_COUNTER_MODELS,
+  VENUE_OFFER_GUESTS_MAX,
   VENUE_OFFER_NOTE_MAX,
   VENUE_OFFER_RATE_MAX,
+  type VenueOfferAskValues,
+  type VenueOfferCounterSource,
   type VenueOfferCounterValues,
   type VenueOfferRejectValues,
+  type VenueOfferTerms,
 } from './venue-offer-counter';

@@ -13,14 +13,22 @@ import { isVenueOfferModel, type VenueOfferModel } from './venue-offer';
 /** Who moves next on an offer (`VenueOfferParty`). */
 export type VenueOfferParty = 'HOST' | 'VENUE';
 
-/** The pieces of an offer the inbox reads; the quote is whatever each surface's breakdown type is. */
-export interface InboxOffer<Q> {
+/** One side's terms as the inbox reads them. The ask (minimum, points, low-end quote) is absent on offers from older servers. */
+interface InboxTerms<Q> {
   model: string;
   rate: number;
   quote: Q;
+  note?: string | null;
+  min_guests?: number | null;
+  offerings?: readonly string[] | null;
+  quote_min?: Q | null;
+}
+
+/** The pieces of an offer the inbox reads; the quote is whatever each surface's breakdown type is. */
+export interface InboxOffer<Q> extends InboxTerms<Q> {
   status: string;
   awaiting?: string | null;
-  counter?: { model: string; rate: number; quote: Q; note?: string | null } | null;
+  counter?: InboxTerms<Q> | null;
 }
 
 /** The terms on the table, and whose they are. */
@@ -28,14 +36,34 @@ export interface CurrentOfferTerms<Q> {
   by: VenueOfferParty;
   model: string;
   rate: number;
+  /** Priced for the most guests. */
   quote: Q;
+  /** Priced for the fewest guests (the same quote when the booking has no minimum). */
+  quoteMin: Q;
+  /** The fewest guests the venue is paid for; 0 when the booking has no minimum. */
+  minGuests: number;
+  offerings: readonly string[];
+  note: string;
 }
 
-/** The venue's counter while there is one, else the host's offer. */
+const termsOf = <Q>(by: VenueOfferParty, terms: Readonly<InboxTerms<Q>>): CurrentOfferTerms<Q> => ({
+  by,
+  model: terms.model,
+  rate: terms.rate,
+  quote: terms.quote,
+  quoteMin: terms.quote_min ?? terms.quote,
+  minGuests: terms.min_guests ?? 0,
+  offerings: terms.offerings ?? [],
+  note: terms.note ?? '',
+});
+
+/**
+ * The venue's counter while there is one, else the host's terms — their offer
+ * or their latest counter back (a host's counter clears the venue's, so the
+ * offer's own fields are always the host's newest).
+ */
 export function currentOfferTerms<Q>(offer: Readonly<InboxOffer<Q>>): CurrentOfferTerms<Q> {
-  const counter = offer.counter;
-  if (counter) return { by: 'VENUE', model: counter.model, rate: counter.rate, quote: counter.quote };
-  return { by: 'HOST', model: offer.model, rate: offer.rate, quote: offer.quote };
+  return offer.counter ? termsOf('VENUE', offer.counter) : termsOf('HOST', offer);
 }
 
 /** Each pricing option's name, and how its amount reads ("₹{rate} per guest"), in the inbox. */

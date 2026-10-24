@@ -1824,17 +1824,26 @@ export const SHELL_BUNDLE: NestedCatalogue = {
     // reads both, and the server stores one row per key path.
     venueBill: {
       title: 'Venue bill',
-      amount: 'Venue final bill amount (optional)',
-      amountHint: 'Leave this empty to pay the venue its agreed booking amount.',
+      // The bill is proof of the agreed amount (required on a paid venue pod);
+      // anything the venue charged beyond it is entered as extra charges.
+      billTotal: 'Venue final bill total',
+      billTotalHint:
+        "Upload the venue's final bill as proof. The venue is paid the agreed booking amount; add anything it charged beyond that below.",
       amountInvalid: 'Enter a valid bill amount',
+      billRequired: "Enter the total on the venue's final bill",
       upload: 'Upload the venue bill',
-      uploadRequired: 'Upload the venue bill for the amount you entered',
-      includeSlot: 'Also pay the agreed booking amount with this bill',
-      includeSlotHint:
-        'Tick this when the bill covers extras only. Left unticked, the bill replaces the agreed booking amount.',
+      billUploadRequired: "Upload the venue's final bill",
+      extra: 'Extra charges on the bill (optional)',
+      extraHint:
+        "Anything the venue charged beyond the agreed amount. Paid on top, with Duncit's fee, once Finance approves it against the bill.",
+      extraInvalid: 'Enter the extra charges as an amount from 0 to 1000000',
+      extraCharges: 'Extra charges',
       viewBill: 'View bill',
       attendees: 'Total attendees',
       attendeesValue: '{attended} of {booked} seats',
+      // A booking priced per guest is paid for the people who came, never fewer than its minimum.
+      paidGuests: 'Guests the venue is paid for',
+      paidGuestsValue: '{count} (at least {min})',
       slotPrice: 'Agreed booking amount',
       finalBill: 'Final bill uploaded',
       noBill: 'None',

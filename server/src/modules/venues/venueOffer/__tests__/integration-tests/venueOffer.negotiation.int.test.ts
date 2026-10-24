@@ -62,22 +62,30 @@ async function eventually(check: () => Promise<void> | void, ms = 4000) {
   }
 }
 
+/** One account per number: a test that seeds two worlds needs two of everything. */
+let seeded = 0;
+const nextPhone = () => String(9_800_000_000 + (seeded += 1));
+
 interface World {
   ownerId: string;
   hostId: string;
   venueId: string;
   podId: string;
+  /** The host's phone, as the venue is told it. */
+  hostPhone: string;
 }
 
 async function seedWorld(over: { offers?: Record<string, number>; ownerIsHost?: boolean } = {}): Promise<World> {
+  const ownerPhone = nextPhone();
   const owner = await UserModel.create({
-    auth: { email: `owner-${new Types.ObjectId()}@x.com`, phone: { extension: '+91', number: '9812345678' } },
+    auth: { email: `owner-${new Types.ObjectId()}@x.com`, phone: { extension: '+91', number: ownerPhone } },
     profile: { first_name: 'Olu', last_name: 'Owner' },
   });
+  const hostPhone = over.ownerIsHost ? ownerPhone : nextPhone();
   const host = over.ownerIsHost
     ? owner
     : await UserModel.create({
-        auth: { email: `host-${new Types.ObjectId()}@x.com`, phone: { extension: '+91', number: '9876500000' } },
+        auth: { email: `host-${new Types.ObjectId()}@x.com`, phone: { extension: '+91', number: hostPhone } },
         profile: { first_name: 'Meera', last_name: 'Nair' },
       });
   const venue = await VenueModel.create({
@@ -105,7 +113,13 @@ async function seedWorld(over: { offers?: Record<string, number>; ownerIsHost?: 
     is_active: false,
     venue_approval_status: 'PENDING',
   });
-  return { ownerId: String(owner._id), hostId: String(host._id), venueId: String(venue._id), podId: String(pod._id) };
+  return {
+    ownerId: String(owner._id),
+    hostId: String(host._id),
+    venueId: String(venue._id),
+    podId: String(pod._id),
+    hostPhone: `+91${hostPhone}`,
+  };
 }
 
 const request = (over: Partial<VenueOfferRequest> = {}): VenueOfferRequest => ({
@@ -196,7 +210,7 @@ describe('a host’s offer', () => {
       offerings_html: '<ul style="margin:0;padding-left:18px"><li>Projector</li><li>Snacks for 20</li></ul>',
       request_note: 'Keep the AC on &amp; lights &lt;low&gt;',
       request: 'Keep the AC on &amp; lights &lt;low&gt;',
-      contact_phone: '+919876500000',
+      contact_phone: w.hostPhone,
     });
     // The detailed message went out, so the shorter one is not sent as well.
     expect(waSend).not.toHaveBeenCalled();

@@ -126,4 +126,24 @@ describe('offerView', () => {
   it('has no pod once the booking is neither held nor decided for one', () => {
     expect(offerView(slot(offer(), { booked_by_pod_id: null }))?.pod_id).toBeNull();
   });
+
+  it("reads a hydrated quote's fields, which sit behind getters a spread would not copy", () => {
+    // A slot read without .lean() holds each quote as a subdocument: its fields
+    // are not own properties of the object handed to the view.
+    const fields = {
+      model: 'PER_PAX',
+      pax: 20,
+      total: 11_800,
+      venue_payout: 10_000,
+      platform_fee: 1000,
+      rules: [{ type: 'WEEKDAY', label: 'Friday', mode: 'PERCENT', value: 10, amount: 900, extra: 'internal' }],
+      confirmed_at: at,
+    };
+    const hydrated = Object.create(fields) as OfferQuote;
+    expect({ ...hydrated }).toEqual({});
+    const view = offerView(slot(offer({ quote: hydrated, quote_min: hydrated })));
+    expect(view?.quote).toMatchObject({ model: 'PER_PAX', pax: 20, total: 11_800, venue_payout: 10_000, platform_fee: 1000 });
+    expect(view?.quote.rules).toEqual([{ type: 'WEEKDAY', label: 'Friday', mode: 'PERCENT', value: 10, amount: 900 }]);
+    expect(view?.quote_min.confirmed_at).toBe('2027-01-01T10:00:00.000Z');
+  });
 });

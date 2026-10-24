@@ -19,7 +19,33 @@ interface OfferSlot {
 
 const iso = (d: Date | null | undefined) => (d ? new Date(d).toISOString() : null);
 
-const quoteOut = (quote: VenueOffer['quote']) => ({ ...quote, confirmed_at: iso(quote.confirmed_at) });
+/**
+ * A frozen quote as the API shows it, read field by field: a slot read without
+ * `.lean()` holds its quotes as subdocuments, whose fields sit behind getters
+ * that a spread does not copy — the response would carry none of them.
+ */
+const quoteOut = (q: VenueOffer['quote']) => ({
+  model: q.model,
+  rate: q.rate,
+  pax: q.pax,
+  hours: q.hours,
+  date: q.date,
+  base: q.base,
+  rules: (q.rules ?? []).map((r) => ({ type: r.type, label: r.label, mode: r.mode, value: r.value, amount: r.amount })),
+  rules_total: q.rules_total,
+  min_spend_top_up: q.min_spend_top_up,
+  cleaning_fee: q.cleaning_fee,
+  pet_fee: q.pet_fee,
+  venue_price: q.venue_price,
+  gst_pct: q.gst_pct,
+  taxes: q.taxes,
+  venue_payout: q.venue_payout,
+  platform_fee_pct: q.platform_fee_pct,
+  platform_fee: q.platform_fee,
+  total: q.total,
+  deposit: q.deposit,
+  confirmed_at: iso(q.confirmed_at),
+});
 
 /** Whose move it is: the venue answers the host's terms, the host answers the venue's. */
 export function awaitingParty(offer: Pick<VenueOffer, 'status'>): VenueOfferParty | null {

@@ -117,8 +117,7 @@ export const VENUE_OFFER_EMAIL_FALLBACK: Record<string, string> = {
   'email.venueOffer.title': 'New booking offer',
   'email.venueOffer.body': 'sent you a booking offer. Accept it, decline it or counter with your own terms before it expires.',
   'email.hostVenueCounter.title': 'The venue sent a counter offer',
-  'email.hostVenueCounter.body':
-    'answered your booking offer with terms of its own. Accept them, decline them or counter back before they expire.',
+  'email.hostVenueCounter.body': 'answered your booking offer with terms of its own. Accept them, decline them or counter back before they expire.',
   'email.venueOffer.terms': 'Offer',
   'email.venueOffer.guests': 'Guests',
   'email.venueOffer.receives': 'You receive',
@@ -130,8 +129,7 @@ export const VENUE_OFFER_EMAIL_FALLBACK: Record<string, string> = {
   'email.venueOffer.request': 'Request',
   'email.venueOffer.noRequest': 'No special request',
   'email.venueOffer.cta': 'Answer in the chat',
-  'email.venueOffer.help':
-    'Unanswered offers expire at the time above. Per-guest money is settled on the people who come, never fewer than the minimum.',
+  'email.venueOffer.help': 'Unanswered offers expire at the time above. Per-guest money is settled on the people who come, never fewer than the minimum.',
   'email.venueOffer.model.PER_GUEST': 'per guest',
   'email.venueOffer.model.PER_HOUR': 'per hour',
   'email.venueOffer.model.PER_SLOT': 'for the slot',

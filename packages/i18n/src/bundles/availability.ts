@@ -516,6 +516,8 @@ export const AVAILABILITY_BUNDLE: NestedCatalogue = {
         venueAccept: 'You accepted',
         venueReject: 'You rejected the request',
         note: '“{note}”',
+        // Appended to a step's terms when they named the fewest guests paid for.
+        minGuests: 'at least {n} guests',
       },
       accept: 'Accept',
       reject: 'Reject',
@@ -553,9 +555,25 @@ export const AVAILABILITY_BUNDLE: NestedCatalogue = {
         offeringsTooMany: 'List at most {max} points',
         offeringTooLong: 'Keep each point under {max} characters',
       },
+      // The host's ask beside the price, on Create Pod and a new offer (mWeb,
+      // the Partners console and the app): what the venue should provide, a
+      // note, the venue's minimum guests, and the offer priced as a range from
+      // that minimum up to the pod's spots.
+      ask: {
+        offeringsLabel: 'What you need from the venue',
+        offeringsHint: 'One point per line, for example: a projector, 10 chairs, a quiet corner',
+        noteLabel: 'Request from the venue (optional)',
+        noteHint: 'Anything else the venue should know. Up to {max} characters.',
+        venueMinimum: 'This venue takes bookings for at least {min} guests.',
+        venueReceives: 'Venue receives',
+        podCost: 'Costs the pod',
+        range: 'From {min} guests, the fewest the venue is paid for, up to your {max} spots.',
+        breakdownAt: 'Breakdown at {count} guests',
+      },
       // The host's side of the bargain: answering the venue's counter, or
       // countering back. Shared by mWeb, the Partners console and the app.
-      host: {
+      // (Not `host`: availability.offers.host is the "Host" label above.)
+      hostAnswer: {
         acceptTitle: "Accept the venue's terms?",
         acceptMessage: '“{pod}” goes live at {venue} on {when}. The venue receives {amount}.',
         accepted: 'Accepted — your pod is live.',
@@ -567,6 +585,12 @@ export const AVAILABILITY_BUNDLE: NestedCatalogue = {
         note: 'Note to the venue (optional)',
         countered: 'Your counter was sent to the venue.',
         waiting: 'Waiting for the venue to answer',
+        reason: 'Reason for the venue (optional)',
+        // The terms on the table as the host reads them, and where they stand.
+        yourTerms: 'Your offer',
+        venueTerms: "The venue's counter",
+        yourMove: 'The venue countered — your answer',
+        freePod: "Free pod: you settle the venue's charges with it directly, so no amount is quoted here.",
       },
       // A move of the offer as a line in the pod's venue chat.
       chat: {

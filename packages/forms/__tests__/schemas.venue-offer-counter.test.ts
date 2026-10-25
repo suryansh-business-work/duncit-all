@@ -7,11 +7,13 @@ import { describe, expect, it } from 'vitest';
 import type { z } from 'zod';
 
 import {
+  counterAsksMinGuests,
   makeVenueOfferAskSchema,
   makeVenueOfferCounterSchema,
   makeVenueOfferRejectSchema,
   venueOfferAskDefaults,
   venueOfferCounterDefaults,
+  venueOfferCounterTermsOf,
   venueOfferRejectDefaults,
   venueOfferTermsOf,
   VENUE_OFFER_GUESTS_MAX,
@@ -118,6 +120,28 @@ describe('venueOfferTermsOf', () => {
   it('is null until the amount and any minimum are usable', () => {
     for (const rate of ['', 'abc', '0', '-1']) expect(venueOfferTermsOf(counter({ rate }))).toBeNull();
     for (const min of ['0', '2.5', 'six']) expect(venueOfferTermsOf(counter({ min_guests: min }))).toBeNull();
+  });
+});
+
+describe('venueOfferCounterTermsOf', () => {
+  it('asks a minimum only beside a per-guest price', () => {
+    expect(counterAsksMinGuests('PER_GUEST')).toBe(true);
+    for (const model of ['PER_HOUR', 'PER_SLOT', 'FLAT']) expect(counterAsksMinGuests(model)).toBe(false);
+  });
+
+  it('sends the minimum with a per-guest price, and leaves it out (the one on the table stands) otherwise', () => {
+    expect(venueOfferCounterTermsOf(counter({ model: 'PER_GUEST', rate: '600', min_guests: '6' }))).toMatchObject({ min_guests: 6 });
+    expect(venueOfferCounterTermsOf(counter({ model: 'FLAT', rate: '7000', min_guests: '6' }))).toEqual({
+      model: 'FLAT',
+      rate: 7000,
+      offerings: [],
+    });
+  });
+
+  it('is null until the per-guest minimum is usable', () => {
+    expect(venueOfferCounterTermsOf(counter({ model: 'PER_GUEST', rate: '600', min_guests: '0' }))).toBeNull();
+    // A stale minimum left behind by another option does not block it.
+    expect(venueOfferCounterTermsOf(counter({ model: 'FLAT', rate: '7000', min_guests: 'six' }))).not.toBeNull();
   });
 });
 

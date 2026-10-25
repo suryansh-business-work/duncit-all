@@ -20,5 +20,5 @@ export const titleSideOf = (viewer: OfferChatViewer, by: string): VenueChatSide 
   return by === 'HOST' ? 'VENUE' : 'HOST';
 };
 
-/** OFFER and COUNTER wait on an answer; the rest close the offer. */
-export const isOpenMove = (event: string): boolean => event === 'OFFER' || event === 'COUNTER';
+/** OFFER and COUNTER wait on an answer; the rest close the offer (shared with the native app). */
+export { isOpenOfferMove as isOpenMove } from '@duncit/utils';

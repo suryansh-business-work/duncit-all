@@ -282,6 +282,9 @@ export interface LiveVenueOffer {
 const OPEN_MOVES: ReadonlySet<string> = new Set(['OFFER', 'COUNTER']);
 const CLOSING_MOVES: ReadonlySet<string> = new Set(['DECLINED', 'EXPIRED']);
 
+/** OFFER and COUNTER wait on an answer; every other move closed the offer. */
+export const isOpenOfferMove = (event: string): boolean => OPEN_MOVES.has(event);
+
 /**
  * What an OFFER line's bubble lets the reader do. Accept, Reject or Counter
  * show only on the move still waiting for THEM: the thread's newest offer line,

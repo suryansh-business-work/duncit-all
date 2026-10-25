@@ -2725,6 +2725,13 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       // The earnings panel. Every number on it is a server waterfall value —
       // only the words around them are copy.
       potentialEarnings: 'Potential earnings',
+      // A venue offer is paid for at least the venue's minimum guests, so the
+      // host's earnings read as a range: the fewest guests up to all the spots.
+      earningsRange: {
+        title: 'You could earn',
+        hint: "From {min} guests, the fewest the venue is paid for, up to all {max} spots. At the low end the venue's cost at its minimum comes off.",
+        lowWarning: 'With only {min} guests this pod would not cover the venue. You can still create it; fill more spots to earn.',
+      },
       takeHome: 'Your take-home for the full pod',
       hostFreeNote:
         'Your spot is free — that is why the total calculation is based on the remaining available slots.',
@@ -5892,6 +5899,8 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       noMessagesYet: 'No messages yet',
       unread: '{n} unread',
       showMore: 'Show more',
+      // "Send a new offer" on a declined offer line reads the pod first; this is when that read fails.
+      newOfferFailed: 'Could not open a new offer. Please try again.',
     },
     splash: {
       findYourTribeJoinPodsMeet:'Find your tribe. Join pods, meet locals, share moments.',

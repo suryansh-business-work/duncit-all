@@ -1775,6 +1775,7 @@ export {
   VENUE_CHAT_SOCKET,
   VENUE_CHAT_THREADS_PAGE,
   hasVenueChat,
+  isOpenOfferMove,
   isVenueChatUnavailable,
   mergeVenueChatLines,
   newestOfferLineId,

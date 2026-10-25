@@ -135,6 +135,20 @@ export function venueOfferTermsOf(
   return Number.isInteger(min) && min >= 1 ? { ...terms, min_guests: min } : null;
 }
 
+/** Only a per-guest price is paid for a minimum of guests; any other option sends none. */
+export const counterAsksMinGuests = (model: string): boolean => model === 'PER_GUEST';
+
+/**
+ * The terms a counter sends — `venueOfferTermsOf`, with the minimum only beside
+ * a per-guest price (left out, the minimum on the table stands). The Partners
+ * console, mWeb and the native sheet all send this.
+ */
+export function venueOfferCounterTermsOf(
+  values: Readonly<Pick<VenueOfferCounterValues, 'model' | 'rate' | 'min_guests' | 'offerings'>>,
+): VenueOfferTerms | null {
+  return venueOfferTermsOf(counterAsksMinGuests(values.model) ? values : { ...values, min_guests: '' });
+}
+
 /** A venue owner rejecting a host's booking offer: an optional reason the host is told. */
 export function makeVenueOfferRejectSchema(t: Translate) {
   return z.object({

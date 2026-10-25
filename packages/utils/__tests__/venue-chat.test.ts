@@ -3,6 +3,7 @@ import {
   VENUE_CHAT_MESSAGES_SDL,
   VENUE_CHAT_ROOM_SDL,
   hasVenueChat,
+  isOpenOfferMove,
   isVenueChatUnavailable,
   mergeVenueChatLines,
   newestOfferLineId,
@@ -228,6 +229,12 @@ describe('offer lines', () => {
         expect(venueChatOfferActions(move({ event }), { side: 'HOST', newest: false, live: null })).toEqual({ answer: false, sendNew: false });
       }
     });
+  });
+
+  it('reads OFFER and COUNTER as waiting on an answer, and every other move as closing the offer', () => {
+    expect(isOpenOfferMove('OFFER')).toBe(true);
+    expect(isOpenOfferMove('COUNTER')).toBe(true);
+    for (const event of ['ACCEPTED', 'DECLINED', 'EXPIRED', 'WITHDRAWN']) expect(isOpenOfferMove(event)).toBe(false);
   });
 
   describe('venueChatOfferTitleKey', () => {

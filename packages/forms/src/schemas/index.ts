@@ -259,6 +259,7 @@ export {
 } from './venue-offer-settings';
 
 export {
+  counterAsksMinGuests,
   makeVenueOfferAskSchema,
   makeVenueOfferCounterSchema,
   makeVenueOfferRejectSchema,
@@ -267,6 +268,7 @@ export {
   venueOfferAskDefaults,
   venueOfferCounterDefaults,
   venueOfferRejectDefaults,
+  venueOfferCounterTermsOf,
   venueOfferTermsOf,
   VENUE_OFFER_COUNTER_MODELS,
   VENUE_OFFER_GUESTS_MAX,

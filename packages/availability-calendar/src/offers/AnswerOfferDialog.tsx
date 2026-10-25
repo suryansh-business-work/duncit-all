@@ -6,23 +6,46 @@ import { DuncitButton } from '@duncit/buttons';
 import { useDateFormat, useTranslation } from '@duncit/app-settings';
 import { RhfTextField } from '@duncit/forms';
 import { makeVenueOfferRejectSchema, venueOfferRejectDefaults, type VenueOfferRejectValues } from '@duncit/forms/schemas';
-import { rupees } from '../pricing/format';
-import { ACCEPT_VENUE_OFFER, REJECT_VENUE_OFFER, type OfferRequestSummary } from './queries';
+import { answerCopy } from './answer-copy';
+import { ACCEPT_VENUE_COUNTER, REJECT_VENUE_COUNTER } from './host/queries';
+import { roundVariables, type OfferTarget } from './offer-target';
+import { ACCEPT_VENUE_OFFER, REJECT_VENUE_OFFER } from './queries';
 import { useOfferMutation } from './useOfferMutation';
 
 export type AnswerChoice = 'accept' | 'reject';
 
+/** What an accept names: the pod, where, when — and whether it is free (nothing quoted). */
+export interface AnswerSubject {
+  pod_title: string;
+  venue_name: string;
+  start_at: string;
+  end_at: string;
+  pod_is_free: boolean;
+}
+
 interface Props {
-  request: OfferRequestSummary;
+  target: OfferTarget;
+  subject: AnswerSubject;
   choice: AnswerChoice | null;
-  /** What the venue receives if it accepts. */
-  payout: number;
+  /** What the venue receives if it is accepted, as text (a range when the guests are). */
+  amount: string;
+  /** The round being answered; null for a request from before offers. */
+  round: number | null;
   onClose: () => void;
   onDone: () => unknown;
 }
 
-/** Accept (one confirmation naming exactly what goes live) or reject (an optional reason for the host) a booking request. */
-export default function AnswerOfferDialog({ request, choice, payout, onClose, onDone }: Readonly<Props>) {
+const answerDocument = (target: OfferTarget, accept: boolean) => {
+  if (target.side === 'HOST') return accept ? ACCEPT_VENUE_COUNTER : REJECT_VENUE_COUNTER;
+  return accept ? ACCEPT_VENUE_OFFER : REJECT_VENUE_OFFER;
+};
+
+/**
+ * Accept (one confirmation naming exactly what goes live) or reject (an
+ * optional reason for the other side) the terms on the table — the venue
+ * answering a host's offer, or the host answering the venue's counter.
+ */
+export default function AnswerOfferDialog({ target, subject, choice, amount, round, onClose, onDone }: Readonly<Props>) {
   const { t } = useTranslation();
   const fmt = useDateFormat({ timeZoneAware: true });
   const accept = choice === 'accept';
@@ -33,28 +56,28 @@ export default function AnswerOfferDialog({ request, choice, payout, onClose, on
     reset(venueOfferRejectDefaults);
     onClose();
   };
-  const mutation = useOfferMutation(accept ? ACCEPT_VENUE_OFFER : REJECT_VENUE_OFFER, request.slot_id, finish, onDone);
-  const formId = `answer-offer-${request.slot_id}`;
+  const mutation = useOfferMutation(answerDocument(target, accept), target, finish, onDone);
+  const roundId = round ?? 0;
+  const formId = `answer-offer-${target.side}-${roundId}`;
   const vars = {
-    pod: request.pod_title,
-    venue: request.venue_name,
-    when: `${fmt.formatDateTime(request.start_at)} – ${fmt.formatTime(request.end_at)}`,
-    amount: rupees(payout),
+    pod: subject.pod_title,
+    venue: subject.venue_name,
+    when: `${fmt.formatDateTime(subject.start_at)} – ${fmt.formatTime(subject.end_at)}`,
+    amount,
   };
+  const copy = answerCopy(t, target.side, accept, vars, subject.pod_is_free);
   const close = () => {
     mutation.clearError();
     finish();
   };
   const submit = handleSubmit(async ({ reason }) => {
-    if (accept) await mutation.run({}, t('availability.offers.done.accepted'));
-    else await mutation.run({ reason: reason || null }, t('availability.offers.done.rejected'));
+    const answer = accept ? {} : { reason: reason || null };
+    await mutation.run({ ...answer, ...roundVariables(round) }, copy.done);
   });
 
   return (
     <Dialog open={!!choice} onClose={mutation.busy ? undefined : close} fullWidth maxWidth="sm" aria-labelledby={`${formId}-title`}>
-      <DialogTitle id={`${formId}-title`}>
-        {accept ? t('availability.offers.acceptTitle') : t('availability.offers.rejectTitle')}
-      </DialogTitle>
+      <DialogTitle id={`${formId}-title`}>{copy.title}</DialogTitle>
       <DialogContent>
         {mutation.error && (
           <Alert severity="error" sx={{ mb: 2 }}>
@@ -62,20 +85,10 @@ export default function AnswerOfferDialog({ request, choice, payout, onClose, on
           </Alert>
         )}
         <form id={formId} noValidate onSubmit={submit}>
-          {accept ? (
-            <Typography variant="body2">
-              {request.pod_is_free
-                ? t('availability.offers.acceptMessageFree', { vars })
-                : t('availability.offers.acceptMessage', { vars })}
-            </Typography>
-          ) : (
-            <>
-              <Typography variant="body2" sx={{ mb: 2 }}>
-                {t('availability.offers.rejectMessage')}
-              </Typography>
-              <RhfTextField control={control} name="reason" multiline minRows={2} label={t('availability.offers.reason')} />
-            </>
-          )}
+          <Typography variant="body2" sx={{ mb: accept ? 0 : 2 }}>
+            {copy.message}
+          </Typography>
+          {!accept && <RhfTextField control={control} name="reason" multiline minRows={2} label={copy.reasonLabel} />}
         </form>
       </DialogContent>
       <DialogActions>

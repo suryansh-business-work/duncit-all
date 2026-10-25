@@ -31,7 +31,7 @@ export default function OfferQuoteView({ side, quote, quoteMin }: Readonly<Props
           {t('availability.offers.ask.breakdownAt', { vars: { count: quote.pax } })}
         </Typography>
       )}
-      <PriceBreakdownView breakdown={quote} />
+      <PriceBreakdownView breakdown={quote} hostReads={side === 'HOST'} />
     </Stack>
   );
 }

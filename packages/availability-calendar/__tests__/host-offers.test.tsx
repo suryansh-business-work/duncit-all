@@ -47,7 +47,9 @@ describe('OfferTermsPanel, as the host reads it', () => {
     expect(screen.getByTestId('offer-status')).toHaveTextContent('Waiting for the venue to answer');
     expect(screen.getByText(/^Costs the pod/)).toHaveTextContent('₹2,640 – ₹6,600');
     expect(screen.getByText(/^The venue receives/)).toHaveTextContent('₹2,400 – ₹6,000');
+    // The breakdown's payout row is the venue's money, so a host reads it as the venue's.
     expect(screen.queryByText(/^You receive/)).not.toBeInTheDocument();
+    expect(within(screen.getByTestId('price-breakdown')).getByText('Venue receives')).toBeInTheDocument();
   });
 
   it("names the venue's counter as theirs to answer, at one amount", () => {

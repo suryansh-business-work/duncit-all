@@ -553,6 +553,8 @@ describe('a resubmission the content check could not run for', () => {
     await settle();
     fireEvent.click(screen.getByRole('option', { name: labels.offerModelPerGuest }));
     fireEvent.change(screen.getByTestId('pod-resubmit-offer-rate'), { target: { value: '300' } });
+    // A new offer has to say what it needs from the venue before it is screened.
+    fireEvent.change(screen.getByRole('textbox', { name: /What you need from the venue/ }), { target: { value: 'Two courts' } });
     await settle();
 
     fireEvent.submit(document.querySelector('#pod-resubmit-form') as HTMLFormElement);

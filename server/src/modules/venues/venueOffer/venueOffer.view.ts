@@ -68,7 +68,17 @@ export function currentTerms(offer: VenueOffer): VenueOfferProposal {
 export const proposerOf = (offer: Pick<VenueOffer, 'status'>): VenueOfferParty =>
   offer.status === 'COUNTERED' ? 'VENUE' : 'HOST';
 
-const historyOut = (h: VenueOfferHistoryEntry) => ({ ...h, min_guests: h.min_guests ?? null, at: iso(h.at) });
+/** One negotiation step, read field by field for the same reason as `quoteOut`. */
+const historyOut = (h: VenueOfferHistoryEntry) => ({
+  by: h.by,
+  action: h.action,
+  model: h.model,
+  rate: h.rate,
+  total: h.total,
+  min_guests: h.min_guests ?? null,
+  note: h.note,
+  at: iso(h.at),
+});
 
 /** One side's proposal as the API shows it. An offer from before minimums reads its guests as both ends. */
 function proposalOut(p: VenueOfferProposal, pax: number) {

@@ -126,7 +126,8 @@ describe('VenueOfferActions', () => {
   it('changes its own counter while the host decides — it cannot accept then', () => {
     mount(counteredOffer());
     expect(screen.queryByTestId('req-accept')).toBeNull();
-    expect(screen.getByTestId('req-counter')).toHaveTextContent('Change counter');
+    // The button carries its icon beside the label, so the label is matched, not the whole text.
+    expect(screen.getByTestId('req-counter')).toHaveTextContent(/Change counter/);
     expect(screen.getByTestId('req-reject')).toBeOnTheScreen();
   });
 

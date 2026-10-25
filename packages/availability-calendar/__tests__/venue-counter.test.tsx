@@ -86,7 +86,8 @@ describe('countering', () => {
     fireEvent.change(form.getByLabelText('Note to the host (optional)'), { target: { value: ' Weekend rate ' } });
     await waitFor(() => expect(seen).toContainEqual({ slot_id: 'slot-1', terms: { model: 'FLAT', rate: 7000 } }), SETTLED);
     expect(await within(screen.getByTestId('counter-offer-preview')).findByTestId('price-breakdown')).toBeInTheDocument();
-    expect(within(screen.getByTestId('counter-offer-preview')).getByText(/^You receive/)).toHaveTextContent('You receive ₹7,000');
+    const money = within(within(screen.getByTestId('counter-offer-preview')).getByTestId('offer-money'));
+    expect(money.getByText(/^You receive/)).toHaveTextContent('You receive ₹7,000');
 
     fireEvent.click(form.getByTestId('counter-offer-submit'));
     await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1), SETTLED);
@@ -114,7 +115,7 @@ describe('countering', () => {
     fireEvent.change(form.getByLabelText('Fewest guests paid for'), { target: { value: '10' } });
     await waitFor(() => expect(seen).toContainEqual({ slot_id: 'slot-1', terms: { model: 'PER_GUEST', rate: 300, min_guests: 10 } }), SETTLED);
     const preview = within(screen.getByTestId('counter-offer-preview'));
-    expect(await preview.findByText(/^You receive/)).toHaveTextContent('You receive ₹2,400 – ₹6,000');
+    expect(within(await preview.findByTestId('offer-money')).getByText(/^You receive/)).toHaveTextContent('You receive ₹2,400 – ₹6,000');
     expect(preview.getByTestId('offer-breakdown-at')).toHaveTextContent('Breakdown at 20 guests');
   });
 

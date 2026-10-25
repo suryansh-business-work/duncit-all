@@ -1469,6 +1469,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     private: true,
     dependencies: [
       { name: "@duncit/buttons", range: "workspace:*", kind: "dependencies" },
+      { name: "@duncit/forms", range: "workspace:*", kind: "dependencies" },
       { name: "@apollo/client", range: "^4.3.1", kind: "devDependencies" },
       { name: "@duncit/app-settings", range: "workspace:*", kind: "devDependencies" },
       { name: "@duncit/media-picker", range: "workspace:*", kind: "devDependencies" },

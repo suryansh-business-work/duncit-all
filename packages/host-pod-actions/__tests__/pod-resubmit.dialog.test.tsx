@@ -516,6 +516,8 @@ describe('PodResubmitDialog', () => {
     fireEvent.click(startTile());
     await settle();
     await chooseTerms();
+    // A new offer has to say what it needs from the venue before it is screened.
+    await askFor('Two courts');
 
     await submit();
 

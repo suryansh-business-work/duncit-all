@@ -61,7 +61,8 @@ describe('OfferTermsPanel', () => {
     withApollo([], <OfferTermsPanel offer={makeOffer()} podIsFree={false} />);
     expect(screen.getByText('Host offered')).toBeInTheDocument();
     expect(screen.getByTestId('offer-status')).toHaveTextContent('Waiting for your answer');
-    expect(screen.getByText(/^You receive/)).toHaveTextContent('You receive ₹2,400 – ₹6,000');
+    // The money line, not the breakdown's own payout row below it.
+    expect(within(screen.getByTestId('offer-money')).getByText(/^You receive/)).toHaveTextContent('You receive ₹2,400 – ₹6,000');
     expect(screen.getByText(/The host pays/)).toHaveTextContent('₹2,640 – ₹6,600');
     expect(screen.getByTestId('offer-breakdown-at')).toHaveTextContent('Breakdown at 20 guests');
     expect(screen.getByTestId('price-breakdown')).toBeInTheDocument();
@@ -85,7 +86,7 @@ describe('OfferTermsPanel', () => {
     withApollo([], <OfferTermsPanel offer={offer} podIsFree={false} />);
     expect(screen.getByText('Your counter')).toBeInTheDocument();
     expect(screen.getByTestId('offer-status')).toHaveTextContent('You countered — waiting for the host');
-    expect(screen.getByText(/^You receive/)).toHaveTextContent('You receive ₹7,000');
+    expect(within(screen.getByTestId('offer-money')).getByText(/^You receive/)).toHaveTextContent('You receive ₹7,000');
     expect(screen.queryByTestId('offer-breakdown-at')).not.toBeInTheDocument();
     expect(screen.getByText('A stage')).toBeInTheDocument();
     expect(screen.getByText('Note from the venue')).toBeInTheDocument();

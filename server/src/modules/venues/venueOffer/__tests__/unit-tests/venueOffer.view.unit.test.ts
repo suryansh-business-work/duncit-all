@@ -146,4 +146,13 @@ describe('offerView', () => {
     expect(view?.quote.rules).toEqual([{ type: 'WEEKDAY', label: 'Friday', mode: 'PERCENT', value: 10, amount: 900 }]);
     expect(view?.quote_min.confirmed_at).toBe('2027-01-01T10:00:00.000Z');
   });
+
+  it("reads a hydrated history step's fields the same way", () => {
+    const step = Object.create({ by: 'VENUE', action: 'COUNTER', model: 'PER_GUEST', rate: 600, total: 13_200, min_guests: 8, note: 'Snacks are extra', at });
+    expect({ ...step }).toEqual({});
+    const view = offerView(slot(offer({ history: [step] })));
+    expect(view?.history).toEqual([
+      { by: 'VENUE', action: 'COUNTER', model: 'PER_GUEST', rate: 600, total: 13_200, min_guests: 8, note: 'Snacks are extra', at: '2027-01-01T10:00:00.000Z' },
+    ]);
+  });
 });

@@ -21,7 +21,7 @@ function baseLine(t: Translate, b: PriceBreakdown): string {
 }
 
 /** Every line of a quote, in the order the server built it. Amounts are the server's, never recomputed. */
-function linesOf(t: Translate, b: PriceBreakdown): Line[] {
+function linesOf(t: Translate, b: PriceBreakdown, hostReads: boolean): Line[] {
   const lines: Line[] = [{ id: 'base', label: baseLine(t, b), amount: rupees(b.base) }];
   b.rules.forEach((rule, i) => {
     lines.push({
@@ -50,7 +50,8 @@ function linesOf(t: Translate, b: PriceBreakdown): Line[] {
   lines.push(
     {
       id: 'payout',
-      label: t('venuePricing.breakdown.youReceive'),
+      // The venue reads its payout as its own; a host reads what the venue is paid.
+      label: hostReads ? t('availability.offers.venuePayout') : t('venuePricing.breakdown.youReceive'),
       amount: rupees(b.venue_payout),
       strong: true,
       tone: 'success.main',
@@ -69,10 +70,17 @@ function linesOf(t: Translate, b: PriceBreakdown): Line[] {
   return lines;
 }
 
-/** A quote, line by line — the live preview, the day drawer and an event-request offer all draw it. */
-export default function PriceBreakdownView({ breakdown }: Readonly<{ breakdown: PriceBreakdown }>) {
+/**
+ * A quote, line by line — the live preview, the day drawer and an event-request
+ * offer all draw it. `hostReads`: the reader is the host, so the payout line
+ * names the venue rather than "You".
+ */
+export default function PriceBreakdownView({
+  breakdown,
+  hostReads = false,
+}: Readonly<{ breakdown: PriceBreakdown; hostReads?: boolean }>) {
   const { t } = useTranslation();
-  const lines = linesOf(t, breakdown);
+  const lines = linesOf(t, breakdown, hostReads);
   return (
     <Stack spacing={0.75} data-testid="price-breakdown" aria-live="polite">
       {lines.map((line) => (

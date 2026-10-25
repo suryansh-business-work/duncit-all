@@ -4,8 +4,16 @@ import { roundOf, useOfferAnswer } from '@/hooks/useOfferAnswer';
 import { ApiError } from '@/utils/errors';
 
 const mockWarn = jest.fn();
+// The translation hook loads the API config, which logs its origin at info level.
 jest.mock('@duncit/logs', () => ({
-  logs: { mobileApp: { warn: (...args: unknown[]) => mockWarn(...args), error: jest.fn() } },
+  logs: {
+    mobileApp: {
+      warn: (...args: unknown[]) => mockWarn(...args),
+      error: jest.fn(),
+      info: jest.fn(),
+      debug: jest.fn(),
+    },
+  },
 }));
 
 const offerChanged = () =>

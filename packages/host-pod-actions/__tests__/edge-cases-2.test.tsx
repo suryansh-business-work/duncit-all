@@ -269,7 +269,7 @@ describe('PodCompleteDialog scanner', () => {
   const previewMock: MockedResponse = {
     request: {
       query: POD_SETTLEMENT_PREVIEW,
-      variables: { pod_id: 'pod-1', venue_bill_amount: 0, include_slot_price: false },
+      variables: { pod_id: 'pod-1', venue_bill_amount: 0, venue_extra_amount: 0 },
     },
     result: {
       data: {
@@ -280,6 +280,11 @@ describe('PodCompleteDialog scanner', () => {
           venue_bill: 0,
           venue_slot_price: 0,
           include_slot_price: false,
+          venue_extra_amount: 0,
+          venue_min_guests: 0,
+          venue_pax: 0,
+          venue_agreed_model: null,
+          venue_agreed_rate: null,
           has_venue: false,
           paying_attendees: 2,
           attended_seats: 1,
@@ -690,7 +695,7 @@ describe('every dialog the state machine owns closes back to nothing', () => {
       {
         request: {
           query: POD_SETTLEMENT_PREVIEW,
-          variables: { pod_id: 'pod-1', venue_bill_amount: 0, include_slot_price: false },
+          variables: { pod_id: 'pod-1', venue_bill_amount: 0, venue_extra_amount: 0 },
         },
         result: { data: { podSettlementPreview: null } },
         maxUsageCount: Number.POSITIVE_INFINITY,

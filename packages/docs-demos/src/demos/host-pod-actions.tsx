@@ -11,6 +11,7 @@ import {
 } from '@duncit/host-pod-actions';
 import { buildPodMediaLabels, podFeedbackPath, podMediaLink, podMediaPath } from '@duncit/utils';
 import { defineDemo, defineDemos } from '../types';
+import { resubmitDemo } from './host-pod-actions/resubmit-demo';
 
 type PodEditMock = typeof blankPodEditValues & {
   /** `publicAppSettings.ticket_discount_max_pct` — the admin's cap on any tier. */
@@ -83,18 +84,25 @@ export default defineDemos('host-pod-actions', [
     }),
   }),
 
-  defineDemo<{ podId: string; origin: string; venueBill: string }>({
+  defineDemo<{ podId: string; origin: string; venueBill: string; billFile: string; extraCharges: string }>({
     id: 'pod-links-and-completion',
     title: 'A pod’s two links, and what completing it now sends',
     note:
-      'Share and Copy resolve the SAME address per link — one media page per pod, never two. Completing sends no media at all: the release carries the pod’s own photos, which the server reads off the pod, so a pod nobody photographed still pays its host.',
+      'Share and Copy resolve the SAME address per link — one media page per pod, never two. A paid pod at a venue must upload the venue’s final bill (its total AND the file) as proof of the agreed amount: empty either and it refuses. Anything the venue charged beyond that goes in extraCharges (0–1000000) and is paid on top once Finance approves it — the input always carries venue_extra_amount and never include_slot_price. Completing sends no media: the release carries the pod’s own photos, which the server reads off the pod.',
     mock: {
       podId: '665f2c1ab3d4e5f60718293a',
       origin: 'https://duncit.com',
       venueBill: '1500',
+      billFile: 'https://ik.imagekit.io/duncit/pod-completion/venue-bill.pdf',
+      extraCharges: '250',
     },
     compute: (mock) => {
-      const values = { ...blankPodCompleteValues, venue_bill_amount: mock.venueBill };
+      const values = {
+        ...blankPodCompleteValues,
+        venue_bill_amount: mock.venueBill,
+        venue_bill_media: mock.billFile,
+        venue_extra_amount: mock.extraCharges,
+      };
       const parsed = buildPodCompleteSchema(true, buildLabels((key) => key, 'mweb')).safeParse(
         values
       );
@@ -102,9 +110,14 @@ export default defineDemos('host-pod-actions', [
         'Media upload page': podMediaPath(mock.podId),
         'Link a host shares (before the short link)': podMediaLink(mock.podId, mock.origin),
         'Rating form, for comparison': podFeedbackPath(mock.podId),
-        'Venue pod completes': parsed.success,
+        'Paid venue pod completes': parsed.success,
+        Errors: parsed.success
+          ? []
+          : parsed.error.issues.map((issue) => `${issue.path.join('.')} — ${issue.message}`),
         'What the server receives': buildCompleteInput(values, mock.podId),
       };
     },
   }),
+
+  resubmitDemo,
 ]);

@@ -42,6 +42,8 @@ export function VenueField({ venues, value, error, onChange }: Readonly<VenueFie
 
 interface OfferWindowFieldProps {
   venueId: string;
+  /** The space the window is for ('' = the whole venue) — its own bookings decide what is free. */
+  spaceLabel?: string;
   /** The window picked so far (ISO), '' while none is. */
   start: string;
   end: string;
@@ -56,12 +58,12 @@ interface OfferWindowFieldProps {
  * closing — on the same calendar the create-pod flow, the app and the portals
  * use, so resubmitting feels like creating.
  */
-export function OfferWindowField({ venueId, start, end, error, onWindow }: Readonly<OfferWindowFieldProps>) {
+export function OfferWindowField({ venueId, spaceLabel = '', start, end, error, onWindow }: Readonly<OfferWindowFieldProps>) {
   const fmt = useDateFormat();
   const { labels, slotLabels } = useHostPodActionsConfig();
   const range = useMemo(() => bookingCalendarRange(fmt.dayKey(fmt.clock.nowMs())), [fmt]);
   const { data, loading } = useQuery<{ venueOfferCalendar: OfferCalendar }>(RESUBMIT_OFFER_CALENDAR, {
-    variables: { venue_id: venueId, ...range, space_label: '' },
+    variables: { venue_id: venueId, ...range, space_label: spaceLabel },
     skip: !venueId,
     fetchPolicy: 'cache-and-network',
   });

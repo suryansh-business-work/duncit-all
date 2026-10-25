@@ -127,15 +127,16 @@ describe('PodCompleteDialog', () => {
     );
     await settle();
     expect(document.body.textContent).toContain(labels.venueBill.title);
-    expect(document.body.textContent).toContain(labels.venueBill.amount);
-    // Optional, and it says what leaving it empty pays.
-    expect(document.body.textContent).toContain(labels.venueBill.amountHint);
+    expect(document.body.textContent).toContain(labels.venueBill.billTotal);
+    // Required, and it says the bill is the proof of the agreed amount.
+    expect(document.body.textContent).toContain(labels.venueBill.billTotalHint);
+    expect(document.body.textContent).toContain(labels.venueBill.extra);
 
     cleanup();
     wrap(<PodCompleteDialog pod={POD} onClose={vi.fn()} onCompleted={vi.fn()} />);
     await settle();
 
-    expect(document.body.textContent).not.toContain(labels.venueBill.amount);
+    expect(document.body.textContent).not.toContain(labels.venueBill.billTotal);
     expect(document.body.textContent).not.toContain(labels.venueBill.title);
   });
 

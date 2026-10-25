@@ -84,19 +84,24 @@ export const HOST_DELETE_POD = gql`
   }
 `;
 
-/** Live money waterfall for the pod being completed, at the entered bill amount. */
+/**
+ * Live money waterfall for the pod being completed, at the entered bill and
+ * extra charges. The extra charges always go (0 included) and the old
+ * slot-price choice never does: that is how the server knows the venue is paid
+ * the agreed amount, with the bill as its proof.
+ */
 export const POD_SETTLEMENT_PREVIEW = gql`
   query HostPodSettlementPreview(
     $pod_id: ID!
     $venue_bill_amount: Float!
-    $include_slot_price: Boolean
+    $venue_extra_amount: Float
     $venue_pax: Int
     $overtime_hours: Float
   ) {
     podSettlementPreview(
       pod_id: $pod_id
       venue_bill_amount: $venue_bill_amount
-      include_slot_price: $include_slot_price
+      venue_extra_amount: $venue_extra_amount
       venue_pax: $venue_pax
       overtime_hours: $overtime_hours
     ) {
@@ -106,6 +111,11 @@ export const POD_SETTLEMENT_PREVIEW = gql`
       venue_bill
       venue_slot_price
       include_slot_price
+      venue_extra_amount
+      venue_min_guests
+      venue_pax
+      venue_agreed_model
+      venue_agreed_rate
       has_venue
       paying_attendees
       attended_seats

@@ -49,12 +49,30 @@ describe('the two namespaces', () => {
     const mweb = mwebHostPodLabels(t).venueBill;
     const shell = shellHostPodLabels(t).venueBill;
 
-    expect(mweb.amount).toBe('mweb.venueBill.amount');
-    expect(mweb.uploadRequired).toBe('mweb.venueBill.uploadRequired');
+    expect(mweb.billTotal).toBe('mweb.venueBill.billTotal');
+    expect(mweb.billUploadRequired).toBe('mweb.venueBill.billUploadRequired');
+    expect(mweb.extra).toBe('mweb.venueBill.extra');
     expect(mweb.attendeesValue(8, 10)).toBe('mweb.venueBill.attendeesValue({"attended":8,"booked":10})');
-    expect(shell.amount).toBe('shell.venueBill.amount');
+    expect(mweb.paidGuestsValue(9, 8)).toBe('mweb.venueBill.paidGuestsValue({"count":9,"min":8})');
+    expect(shell.billTotal).toBe('shell.venueBill.billTotal');
+    expect(shell.extraCharges).toBe('shell.venueBill.extraCharges');
     expect(shell.sentToFinance).toBe('shell.venueBill.sentToFinance');
     expect(Object.keys(shell).sort()).toEqual(Object.keys(mweb).sort());
+  });
+
+  // The agreed terms are the venue booking's own words, which every surface
+  // ships under availability.* — so both builders read the same keys.
+  it('reads the agreed terms from availability.* on both surfaces', () => {
+    for (const labels of [mwebHostPodLabels(t), shellHostPodLabels(t)]) {
+      expect(labels.agreedTerms.title).toBe('availability.offers.agreedTerms');
+      expect(labels.agreedTerms.value('PER_GUEST', '₹300.00')).toBe(
+        'availability.offers.termsLine({"model":"availability.offers.model.perGuest","rate":"availability.offers.rate.perGuest({\\"rate\\":\\"₹300.00\\"})"})',
+      );
+    }
+  });
+
+  it('states just the amount for a pricing option this client does not know', () => {
+    expect(mwebHostPodLabels(t).agreedTerms.value('PER_MOON', '₹300.00')).toBe('₹300.00');
   });
 
   it('ships no English of its own — every string came from the translator', () => {

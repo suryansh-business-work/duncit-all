@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Controller, useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery } from '@apollo/client/react';
@@ -12,14 +12,16 @@ import {
   TextField,
 } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
-import OfferTermsFields from './OfferTermsFields';
-import { OfferWindowField, VenueField } from './VenueSlotFields';
+import { useAskTranslation } from './ask-translation';
+import ResubmitOfferSection from './ResubmitOfferSection';
+import { VenueField } from './VenueSlotFields';
 import {
   buildHostResubmitInput,
   buildPodResubmitModerationInput,
   buildPodResubmitSchema,
   podResubmitInitialValues,
   type PodResubmitValues,
+  type VenueOfferPrefill,
 } from './pod-resubmit.form';
 import ContentCheckAlert from '../ContentCheckAlert';
 import { useContentCheck } from '../useContentCheck';
@@ -31,42 +33,41 @@ interface Props {
   pod: HostPodTarget | null;
   onClose: () => void;
   onSaved: () => void;
+  /**
+   * The terms of the offer the venue declined (or let expire): the form starts
+   * from them at the pod's venue — window, space, pets, pricing option, amount,
+   * the points and the note — so a new offer is an edit of the last one.
+   */
+  offerPrefill?: VenueOfferPrefill;
 }
 
 /** Full edit + resubmission dialog for a venue-rejected pod: pick a different
- * venue or time, how the venue is paid, update the details and send the offer
- * again — the same pod is reused, no new pod is created. */
-export default function PodResubmitDialog({ pod, onClose, onSaved }: Readonly<Props>) {
+ * venue or time, the spots from the venue's minimum, how the venue is paid and
+ * what the host needs from it, update the details and send the offer again —
+ * the same pod is reused, no new pod is created. */
+export default function PodResubmitDialog({ pod, onClose, onSaved, offerPrefill }: Readonly<Props>) {
   const { labels, renderMediaField } = useHostPodActionsConfig();
-  const {
-    register,
-    control,
-    handleSubmit,
-    reset,
-    setValue,
-    setError,
-    watch,
-    formState: { errors },
-  } = useForm<PodResubmitValues, any, PodResubmitValues>({
-    resolver: zodResolver(buildPodResubmitSchema(labels)) as unknown as Resolver<PodResubmitValues, any, PodResubmitValues>,
-    defaultValues: podResubmitInitialValues(pod),
+  const { t } = useAskTranslation();
+  // The terms as a value, so a parent that rebuilds the object each render
+  // does not reset what the host has typed since.
+  const prefillKey = offerPrefill ? JSON.stringify(offerPrefill) : '';
+  const prefill = useMemo<VenueOfferPrefill | null>(() => (prefillKey ? JSON.parse(prefillKey) : null), [prefillKey]);
+  const form = useForm<PodResubmitValues, unknown, PodResubmitValues>({
+    resolver: zodResolver(buildPodResubmitSchema(labels, t)) as unknown as Resolver<PodResubmitValues, unknown, PodResubmitValues>,
+    defaultValues: podResubmitInitialValues(pod, prefill),
   });
-  const venueId = watch('venue_id');
+  const { register, control, handleSubmit, reset, setValue, setError, formState: { errors } } = form;
   const venuesQ = useQuery<{ publicVenues: ResubmitVenueOption[] }>(RESUBMIT_VENUES, { skip: !pod });
-  const setWindow = (start: string, end: string) => {
-    setValue('offer_start', start, { shouldValidate: true });
-    setValue('offer_end', end, { shouldValidate: true });
-  };
-  const [resubmit, resubmitState] = useMutation<any>(HOST_RESUBMIT_POD);
+  const [resubmit, resubmitState] = useMutation<{ hostResubmitPod: { id: string } }>(HOST_RESUBMIT_POD);
   const check = useContentCheck(setError);
   const busy = resubmitState.loading || check.checking;
 
   useEffect(() => {
-    reset(podResubmitInitialValues(pod));
+    reset(podResubmitInitialValues(pod, prefill));
     check.clear();
-    // `check.clear` is a fresh closure each render; re-seeding is keyed on the pod.
+    // `check.clear` is a fresh closure each render; re-seeding is keyed on the pod and its prefill.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pod, reset]);
+  }, [pod, prefill, reset]);
 
   const submit = handleSubmit(async (values) => {
     // The resubmitted copy is screened like any other edit — a rejected pod is
@@ -127,20 +128,15 @@ export default function PodResubmitDialog({ pod, onClose, onSaved }: Readonly<Pr
                 error={fieldState.error?.message}
                 onChange={(next) => {
                   field.onChange(next);
+                  // The window and the space belonged to the venue the host moved away from.
                   setValue('offer_start', '');
                   setValue('offer_end', '');
+                  setValue('space_label', '');
                 }}
               />
             )}
           />
-          <OfferWindowField
-            venueId={venueId}
-            start={watch('offer_start')}
-            end={watch('offer_end')}
-            error={errors.offer_start?.message}
-            onWindow={setWindow}
-          />
-          {venueId && <OfferTermsFields control={control} />}
+          <ResubmitOfferSection form={form} />
           <Controller
             control={control}
             name="media_text"

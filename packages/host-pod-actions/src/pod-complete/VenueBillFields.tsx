@@ -1,32 +1,24 @@
 import { Controller, type Control } from 'react-hook-form';
-import {
-  Checkbox,
-  FormControlLabel,
-  FormHelperText,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
-import { VenueUsageFields } from '@duncit/forms';
+import { Stack, Typography } from '@mui/material';
+import { RhfTextField, VenueUsageFields } from '@duncit/forms';
+import { VENUE_USAGE_LIMITS } from '@duncit/forms/schemas';
 import { useHostPodActionsConfig } from '../HostPodActionsProvider';
 import type { PodCompleteValues } from './pod-complete.form';
 
 interface Props {
   control: Control<PodCompleteValues, unknown, PodCompleteValues>;
-  /** The amount as typed — the bill itself and the slot-price choice only
-   * matter once there is one. */
-  billAmount: number;
 }
 
 /**
- * The venue's final bill, in the host's completion dialog.
+ * The venue's final bill, in the host's completion dialog — rendered only for a
+ * paid pod at a venue.
  *
- * Optional: left empty, the venue is paid the slot price it was booked at.
- * With an amount, the bill has to be uploaded with it — Finance approves the
- * payout against that document — and the host says whether the bill is the
- * whole charge or comes on top of the slot price.
+ * The venue is paid the amount agreed with it, and its final bill is the PROOF
+ * of that amount: the bill's total and the bill itself are both required.
+ * Anything the venue charged beyond the agreed amount goes in as extra charges,
+ * paid on top (with Duncit's fee) once Finance approves them against the bill.
  */
-export default function VenueBillFields({ control, billAmount }: Readonly<Props>) {
+export default function VenueBillFields({ control }: Readonly<Props>) {
   const { labels, renderMediaField } = useHostPodActionsConfig();
   const copy = labels.venueBill;
   return (
@@ -34,66 +26,48 @@ export default function VenueBillFields({ control, billAmount }: Readonly<Props>
       <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
         {copy.title}
       </Typography>
-      <Controller
+      <RhfTextField
         control={control}
         name="venue_bill_amount"
-        render={({ field, fieldState }) => (
-          <TextField
-            {...field}
-            label={copy.amount}
-            type="number"
-            fullWidth
-            data-testid="pod-complete-venue-bill"
-            error={!!fieldState.error}
-            helperText={fieldState.error?.message ?? copy.amountHint}
-            slotProps={{ htmlInput: { min: 0, step: 'any', inputMode: 'decimal' } }}
-          />
-        )}
+        type="number"
+        required
+        label={copy.billTotal}
+        hint={copy.billTotalHint}
+        data-testid="pod-complete-venue-bill"
+        slotProps={{ htmlInput: { min: 0, step: 'any', inputMode: 'decimal' } }}
       />
-      <VenueUsageFields control={control} paxName="venue_pax" overtimeName="overtime_hours" labels={copy} idPrefix="pod-complete" />
-      {billAmount > 0 && (
-        <>
-          <Controller
-            control={control}
-            name="venue_bill_media"
-            render={({ field, fieldState }) =>
-              renderMediaField({
-                value: field.value,
-                onChange: field.onChange,
-                error: fieldState.error?.message,
-                label: copy.upload,
-                folder: '/pod-completion',
-                deviceOnly: true,
-              })
-            }
-          />
-          <Controller
-            control={control}
-            name="include_slot_price"
-            render={({ field }) => (
-              <Stack>
-                <FormControlLabel
-                  label={copy.includeSlot}
-                  control={
-                    <Checkbox
-                      checked={field.value}
-                      onChange={(event) => field.onChange(event.target.checked)}
-                      onBlur={field.onBlur}
-                      slotProps={{
-                        input: { 'aria-describedby': 'pod-complete-include-slot-hint' },
-                      }}
-                      data-testid="pod-complete-include-slot"
-                    />
-                  }
-                />
-                <FormHelperText id="pod-complete-include-slot-hint" sx={{ mt: 0 }}>
-                  {copy.includeSlotHint}
-                </FormHelperText>
-              </Stack>
-            )}
-          />
-        </>
-      )}
+      <Controller
+        control={control}
+        name="venue_bill_media"
+        render={({ field, fieldState }) =>
+          renderMediaField({
+            value: field.value,
+            onChange: field.onChange,
+            error: fieldState.error?.message,
+            label: copy.upload,
+            folder: '/pod-completion',
+            deviceOnly: true,
+          })
+        }
+      />
+      <RhfTextField
+        control={control}
+        name="venue_extra_amount"
+        type="number"
+        label={copy.extra}
+        hint={copy.extraHint}
+        data-testid="pod-complete-venue-extra"
+        slotProps={{
+          htmlInput: { min: 0, max: VENUE_USAGE_LIMITS.extraMax, step: 'any', inputMode: 'decimal' },
+        }}
+      />
+      <VenueUsageFields
+        control={control}
+        paxName="venue_pax"
+        overtimeName="overtime_hours"
+        labels={copy}
+        idPrefix="pod-complete"
+      />
     </Stack>
   );
 }

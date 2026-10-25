@@ -10,10 +10,12 @@ type OfferInput = VariablesOf<typeof VenueOfferQuoteDocument>['offer'];
 /**
  * The server's price for the host's offer (`venueOfferQuote`): the offered
  * rate with the venue's price rules, fees, minimum spend and GST, and Duncit's
- * commission on top — or, when it cannot be sent, why (`message`). Debounced
- * so typing an amount or stepping guests does not fire a request per tap. The
- * stepper owns it: step 3 shows the breakdown and step 4 feeds it into the
- * earnings preview, from the one answer. mWeb twin: useOfferQuote.
+ * commission on top, at the pod's spots (`quote`) and at the venue's minimum
+ * guests (`quoteMin`) — or, when it cannot be sent, why (`message`). Debounced
+ * so typing an amount or stepping guests does not fire a request per tap; the
+ * caller asks with `venueOfferPriceInput`, so the points and the note never
+ * re-price. The stepper owns it: step 3 shows the breakdown and step 4 feeds it
+ * into the earnings preview, from the one answer. mWeb twin: useOfferQuote.
  */
 export function useOfferQuote(venueId: string, offer: OfferInput | null) {
   const key = venueId && offer ? JSON.stringify([venueId, offer]) : null;

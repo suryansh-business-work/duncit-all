@@ -4,6 +4,7 @@ import {
   CounterVenueOfferDocument,
   VenueSlotRequestsDocument,
 } from '@/graphql/venue-slot-requests';
+import { VenueOfferModel } from '@/generated/graphql/graphql';
 import { ALL_VENUES, useVenueSlotRequests } from '@/hooks/useVenueSlotRequests';
 import { graphqlRequest } from '@/services/graphql.client';
 import { useSelectedVenueStore } from '@/stores/selected-venue.store';
@@ -63,8 +64,9 @@ describe('useVenueSlotRequests', () => {
 });
 
 describe('useVenueSlotRequests answers', () => {
-  it('sends a counter with its terms and note, says so, and re-reads the list', async () => {
-    const { result } = renderHook(() => useVenueSlotRequests());
+  it('sends a counter for the round on screen, re-reads the list and tells the screen', async () => {
+    const onDecided = jest.fn();
+    const { result } = renderHook(() => useVenueSlotRequests(onDecided));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     mockRequest.mockClear();
     mockRequest.mockResolvedValue({
@@ -73,51 +75,47 @@ describe('useVenueSlotRequests answers', () => {
       counterVenueOffer: { slot_id: 's1' },
     });
 
-    await act(() => result.current.counter('s1', { model: 'FLAT', rate: 7000 }, 'Weekend rate'));
+    await act(async () => {
+      await result.current.answers.counter(
+        's1',
+        { model: 'FLAT', rate: 7000, offerings: [] },
+        'Weekend rate',
+        2,
+      );
+    });
 
     expect(mockRequest).toHaveBeenCalledWith(
       CounterVenueOfferDocument,
-      { slot_id: 's1', terms: { model: 'FLAT', rate: 7000 }, note: 'Weekend rate' },
+      {
+        slot_id: 's1',
+        terms: { model: VenueOfferModel.Flat, rate: 7000, offerings: [] },
+        note: 'Weekend rate',
+        round: 2,
+      },
       { auth: true },
     );
-    expect(result.current.feedback).toEqual({
-      ok: true,
+    expect(result.current.answers.notice).toEqual({
+      tone: 'success',
       text: 'Your counter was sent to the host.',
     });
     expect(mockRequest).toHaveBeenCalledWith(VenueSlotRequestsDocument, expect.anything(), {
       auth: true,
     });
+    expect(onDecided).toHaveBeenCalled();
   });
 
-  it('sends no note when none is written', async () => {
+  it('re-reads the list without a screen to tell, and keeps a refusal in the open sheet', async () => {
     const { result } = renderHook(() => useVenueSlotRequests());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
-    await act(() => result.current.counter('s1', { model: 'PER_HOUR', rate: 1500 }, ''));
-    expect(mockRequest).toHaveBeenCalledWith(
-      CounterVenueOfferDocument,
-      { slot_id: 's1', terms: { model: 'PER_HOUR', rate: 1500 }, note: null },
-      { auth: true },
-    );
-  });
-
-  it("shows the server's reason, or a plain failure, when an answer is refused", async () => {
-    const { result } = renderHook(() => useVenueSlotRequests());
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    await act(async () => {
+      await result.current.answers.accept('s1', 1);
+    });
+    expect(result.current.answers.notice?.text).toBe('Booking accepted — the pod is now live.');
 
     mockRequest.mockRejectedValueOnce(new Error('This booking has already started'));
-    await act(() => result.current.approve('s1'));
-    expect(result.current.feedback).toEqual({
-      ok: false,
-      text: 'This booking has already started',
+    await act(async () => {
+      await result.current.answers.reject('s1', '', 1);
     });
-
-    mockRequest.mockRejectedValueOnce('offline');
-    await act(() => result.current.decline('s1', ''));
-    expect(result.current.feedback).toEqual({
-      ok: false,
-      text: 'That did not work. Please try again.',
-    });
-    act(() => result.current.clearFeedback());
-    expect(result.current.feedback).toBeNull();
+    expect(result.current.answers.error).toBe('This booking has already started');
   });
 });

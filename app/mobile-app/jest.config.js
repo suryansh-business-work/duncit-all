@@ -44,6 +44,7 @@ module.exports = {
     '!src/utils/test-utils.tsx',
     '!src/utils/companion-otp-fixture.ts',
     '!src/utils/brand-order-fixture.ts',
+    '!src/utils/venue-offer-fixture.ts',
     // Codegen output — not hand-written, validated by the compiler.
     '!src/generated/**',
     // Pure navigation wiring — exercised at runtime, not in unit tests (typechecked).

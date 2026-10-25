@@ -11,7 +11,8 @@ import { gql } from '@/generated/graphql';
 
 /** Every venue the owner has, with the settings both screens edit: the hours,
  * off days, rules and auto-extend the calendar reads, and the cancellation
- * policy the settings screen writes. */
+ * policy and booking-offer terms the settings screen writes (`settings.offers`
+ * as saved, 0 = the platform default; `offer_*` the values in effect). */
 export const MyVenuesWithSettingsDocument = gql(`
   query MobileMyVenuesWithSettings {
     myVenues {
@@ -24,7 +25,13 @@ export const MyVenuesWithSettingsDocument = gql(`
         label
         capacity
       }
+      offer_min_guests
+      offer_response_hours
       settings {
+        offers {
+          min_guests
+          response_hours
+        }
         operating_hours {
           open
           close

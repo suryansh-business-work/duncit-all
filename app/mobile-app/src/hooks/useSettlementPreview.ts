@@ -7,14 +7,17 @@ import { graphqlRequest } from '@/services/graphql.client';
 export type PodSettlement = ResultOf<typeof PodSettlementPreviewDocument>['podSettlementPreview'];
 
 /** Debounced live preview of the reconciled host/venue split for a pod, given
- * the venue bill the host is typing and whether it comes on top of the booked
- * slot price. Used by the Complete Pod dialog. The
- * server's error message is surfaced — a swallowed error rendered as a silent
- * blank is exactly how "the calculation doesn't appear". */
+ * the venue's final bill the host is typing and the extra charges on it. The
+ * extra charges always go (0 included) and the old slot-price choice never
+ * does: the venue is paid the agreed amount plus them, and the bill is the
+ * proof. Used by the Complete Pod dialog. The server's error message is
+ * surfaced — a swallowed error rendered as a silent blank is exactly how "the
+ * calculation doesn't appear". mWeb twin: @duncit/host-pod-actions SettlementPreview. */
 export function useSettlementPreview(
   podId: string | null,
   venueBillAmount: number,
-  includeSlotPrice: boolean,
+  /** Charges on the bill beyond the agreed amount, as the server takes them (`venueExtraAmountOf`). */
+  venueExtraAmount: number,
   /** The venue's usage typed so far — it prices the slot. Absent = not entered. */
   venuePax?: number,
   overtimeHours?: number,
@@ -33,7 +36,7 @@ export function useSettlementPreview(
         {
           pod_id: podId,
           venue_bill_amount: venueBillAmount,
-          include_slot_price: includeSlotPrice,
+          venue_extra_amount: venueExtraAmount,
           venue_pax: venuePax,
           overtime_hours: overtimeHours,
         },
@@ -59,7 +62,7 @@ export function useSettlementPreview(
       active = false;
       clearTimeout(timer);
     };
-  }, [podId, venueBillAmount, includeSlotPrice, venuePax, overtimeHours]);
+  }, [podId, venueBillAmount, venueExtraAmount, venuePax, overtimeHours]);
 
   return { settlement, isLoading, error };
 }

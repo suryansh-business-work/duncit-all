@@ -74,6 +74,25 @@ export const ResubmitVenuesDocument = gql(`
   }
 `);
 
+/**
+ * The picked venue's bounds on a new offer: what its spaces hold and the fewest
+ * guests it takes (mWeb: RESUBMIT_VENUE_TERMS). The venue list carries neither,
+ * so the one venue being offered to is read on its own.
+ */
+export const ResubmitVenueTermsDocument = gql(`
+  query MobileResubmitVenueTerms($venue_id: ID!) {
+    publicVenue(venue_id: $venue_id) {
+      id
+      capacity
+      capacity_items {
+        label
+        capacity
+      }
+      offer_min_guests
+    }
+  }
+`);
+
 /** Full edit + resubmission of a venue-rejected pod — the same pod is reused. */
 export const HostResubmitPodDocument = gql(`
   mutation MobileHostResubmitPod($pod_doc_id: ID!, $input: HostResubmitPodInput!) {

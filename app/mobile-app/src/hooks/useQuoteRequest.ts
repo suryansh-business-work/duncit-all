@@ -4,9 +4,16 @@ import { logs } from '@duncit/logs';
 
 import type { OfferQuoteResultFragment } from '@/graphql/venue-offer';
 
-/** The answer every offer price query returns (`MobileOfferQuoteResult`). */
-export type OfferQuoteAnswer = ResultOf<typeof OfferQuoteResultFragment>;
-export type HostVenueQuote = NonNullable<OfferQuoteAnswer['quote']>;
+export type HostVenueQuote = NonNullable<ResultOf<typeof OfferQuoteResultFragment>['quote']>;
+
+/**
+ * The answer every offer price query returns (`MobileOfferQuoteResult`) — and,
+ * where the query asks for it (Create Pod), the same terms priced at the
+ * venue's minimum guests (`quote_min`).
+ */
+export type OfferQuoteAnswer = ResultOf<typeof OfferQuoteResultFragment> & {
+  quote_min?: HostVenueQuote | null;
+};
 
 const QUOTE_DEBOUNCE_MS = 300;
 
@@ -17,6 +24,8 @@ const QUOTE_DEBOUNCE_MS = 300;
  * or stepping guests asks once rather than per tap; `key` null asks nothing.
  * `ask` is the surface's own query (Create Pod, a Pod Request, an Auto Pod's
  * accept, a venue taking over a pod); `key` must change whenever its inputs do.
+ * `quoteMin` is the price at the venue's minimum guests, the quote itself when
+ * the answer prices no minimum.
  */
 export function useQuoteRequest(
   key: string | null,
@@ -24,6 +33,7 @@ export function useQuoteRequest(
   logTag: string,
 ) {
   const [quote, setQuote] = useState<HostVenueQuote | null>(null);
+  const [quoteMin, setQuoteMin] = useState<HostVenueQuote | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<unknown>(null);
   const [loading, setLoading] = useState(false);
@@ -34,6 +44,7 @@ export function useQuoteRequest(
 
   useEffect(() => {
     setQuote(null);
+    setQuoteMin(null);
     setMessage(null);
     setError(null);
     if (!key) {
@@ -47,7 +58,9 @@ export function useQuoteRequest(
         .current()
         .then((answer) => {
           if (!active) return;
-          setQuote(answer.ok ? (answer.quote ?? null) : null);
+          const priced = answer.ok ? (answer.quote ?? null) : null;
+          setQuote(priced);
+          setQuoteMin(priced ? (answer.quote_min ?? priced) : null);
           setMessage(answer.ok ? null : (answer.message ?? null));
         })
         .catch((err: unknown) => {
@@ -65,5 +78,5 @@ export function useQuoteRequest(
     };
   }, [key, logTag]);
 
-  return { quote, message, loading, error };
+  return { quote, quoteMin, message, loading, error };
 }

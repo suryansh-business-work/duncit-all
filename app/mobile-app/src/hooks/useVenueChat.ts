@@ -9,7 +9,6 @@ import {
   VenueChatMessagesDocument,
   VenueChatRoomDocument,
 } from '@/graphql/venue-chat';
-import type { ChatMessage } from '@/hooks/useChat';
 import { useChatHistory } from '@/hooks/useChatHistory';
 import { uploadChatImage, type ChatImageAsset } from '@/hooks/useChatRoom';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -17,8 +16,12 @@ import { graphqlRequest } from '@/services/graphql.client';
 import { errorCode, toErrorMessage } from '@/utils/errors';
 
 export type VenueChatRoom = ResultOf<typeof VenueChatRoomDocument>['venueChatRoom'];
+/** A thread's line: the group chat's fields, and on an OFFER line the move it records. */
+export type VenueChatMessage = ResultOf<
+  typeof VenueChatMessagesDocument
+>['venueChatMessages'][number];
 
-const lineTime = (line: ChatMessage) => line.createdAt;
+const lineTime = (line: VenueChatMessage) => line.createdAt;
 
 /** The thread and its newest page, read together. */
 async function loadThread(podId: string) {
@@ -38,7 +41,7 @@ async function loadThread(podId: string) {
 export function useVenueChat(podId: string) {
   const { t } = useTranslation();
   const [room, setRoom] = useState<VenueChatRoom | null>(null);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<VenueChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [unavailable, setUnavailable] = useState(false);
   const [loadFailed, setLoadFailed] = useState(false);
@@ -93,7 +96,7 @@ export function useVenueChat(podId: string) {
   useRefreshRegistration(reload);
 
   const addLines = useCallback(
-    (incoming: readonly ChatMessage[]) =>
+    (incoming: readonly VenueChatMessage[]) =>
       setMessages((shown) => mergeVenueChatLines(shown, incoming)),
     [],
   );

@@ -5,10 +5,10 @@ import { VENUE_CHAT_SOCKET } from '@duncit/utils';
 
 import { config } from '@/constants/config';
 import { getAuthToken } from '@/services/auth-token';
-import type { ChatMessage } from '@/hooks/useChat';
+import type { VenueChatMessage } from '@/hooks/useVenueChat';
 
 interface Handlers {
-  onLine: (line: ChatMessage) => void;
+  onLine: (line: VenueChatMessage) => void;
   /** The join was refused (its code, e.g. FORBIDDEN) or the socket could not connect. */
   onJoinFailed: (code: string) => void;
 }
@@ -33,7 +33,7 @@ function connectVenueChat(token: string, podId: string, handlers: { current: Han
       handlers.current.onJoinFailed(err || 'ERROR');
     });
   });
-  s.on(VENUE_CHAT_SOCKET.message, (line: ChatMessage) => handlers.current.onLine(line));
+  s.on(VENUE_CHAT_SOCKET.message, (line: VenueChatMessage) => handlers.current.onLine(line));
   s.on('connect_error', (error: Error) => {
     logs.mobileApp.warn('venueChat', 'connect', { podId, error });
     handlers.current.onJoinFailed('ERROR');

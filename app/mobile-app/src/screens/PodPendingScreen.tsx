@@ -11,8 +11,8 @@ import {
   VenuePendingCard,
 } from '@/components/pod-pending';
 import { StackScreen } from '@/components/StackScreen';
+import { PodType } from '@/generated/graphql/graphql';
 import { usePodPendingView } from '@/hooks/usePodPendingView';
-import { usePublicFinance } from '@/hooks/usePublicFinance';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
 import { toErrorMessage } from '@/utils/errors';
@@ -21,7 +21,7 @@ import { TipsLoader } from '@/components/TipsLoader';
 
 /** Waiting screen a host lands on after creating a pod whose venue offer is
  * PENDING — banner + pod summary + the offer (the venue's counter to accept or
- * reject) + venue contact + club-admin help cards.
+ * reject, or counter back) + venue contact + club-admin help cards.
  *
  * The venue answers outside the app, so the screen carries both ways to ask
  * again: the back-bar's refresh button and a pull-down over the content. Once
@@ -31,7 +31,6 @@ export function PodPendingScreen() {
   const route = useRoute<RouteProp<RootStackParamList, 'PodPending'>>();
   const podId = route.params?.podId ?? '';
   const { view, isLoading, isRefreshing, error, refetch } = usePodPendingView(podId);
-  const { currency } = usePublicFinance();
   const { t } = useTranslation();
 
   // The screen owns its own errors (they land in `error`), so a rejection here
@@ -57,7 +56,13 @@ export function PodPendingScreen() {
       >
         <PendingBanner status={view.pod.venue_approval_status} />
         <PodPendingSummaryCard view={view} />
-        <VenueOfferCard podId={view.pod.id} currencySymbol={currency} onAnswered={refresh} />
+        <VenueOfferCard
+          podId={view.pod.id}
+          podTitle={view.pod.pod_title}
+          venueName={view.venue?.venue_name ?? view.pod.place_label ?? ''}
+          podIsFree={view.pod.pod_type === PodType.Free}
+          onAnswered={refresh}
+        />
         {view.venue ? (
           <VenuePendingCard venue={view.venue} status={view.pod.venue_approval_status} />
         ) : null}

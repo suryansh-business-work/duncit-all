@@ -6,8 +6,9 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
-  slotId: string;
-  /** What the venue may do now (`venueOfferActions`). */
+  /** Prefixes each button's test id: `${testIDPrefix}-accept` and so on. */
+  testIDPrefix: string;
+  /** What the reader may do now (`venueOfferActions` / `hostOfferActions`). */
   actions: { accept: boolean; reject: boolean; counter: boolean };
   busy: boolean;
   onAccept: () => void;
@@ -16,12 +17,13 @@ interface Props {
 }
 
 /**
- * A booking request's answers: reject as the outlined danger pill, counter
- * (or change the counter, while the host decides) outlined, accept as the
- * solid one. Each opens its own sheet — nothing is decided by one tap.
+ * A booking offer's answers, for either side: reject as the outlined danger
+ * pill, counter outlined — "change counter" while the reader's own counter
+ * waits (they cannot accept then) — and accept as the solid one. Each opens its
+ * own sheet: nothing is decided by one tap.
  */
-export function SlotRequestActions({
-  slotId,
+export function OfferActionButtons({
+  testIDPrefix,
   actions,
   busy,
   onAccept,
@@ -37,7 +39,7 @@ export function SlotRequestActions({
       {actions.reject ? (
         <YStack flex={1} minWidth={96}>
           <DuncitButton
-            testID={`slot-request-reject-${slotId}`}
+            testID={`${testIDPrefix}-reject`}
             label={t('availability.offers.reject')}
             onPress={onReject}
             variant="outline"
@@ -51,7 +53,7 @@ export function SlotRequestActions({
       {actions.counter ? (
         <YStack flex={1} minWidth={96}>
           <DuncitButton
-            testID={`slot-request-counter-${slotId}`}
+            testID={`${testIDPrefix}-counter`}
             label={
               actions.accept
                 ? t('availability.offers.counter')
@@ -68,7 +70,7 @@ export function SlotRequestActions({
       {actions.accept ? (
         <YStack flex={1} minWidth={96}>
           <DuncitButton
-            testID={`slot-request-accept-${slotId}`}
+            testID={`${testIDPrefix}-accept`}
             label={t('availability.offers.accept')}
             onPress={onAccept}
             disabled={busy}

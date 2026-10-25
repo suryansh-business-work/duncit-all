@@ -4,6 +4,7 @@ import { PRESS_STYLE } from '@duncit/buttons-native';
 import type { VenueChatCounterpart } from '@duncit/utils';
 
 import { ChatRoomAvatar } from '@/components/chat/ChatRoomAvatar';
+import { VenueChatContactRow } from '@/components/chat/VenueChatContactRow';
 import { useDateFormat } from '@/hooks/useDateFormat';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -17,7 +18,8 @@ interface Props {
 }
 
 /** The venue thread's top bar: back, then who it is with — the venue for a
- * host, the pod for the venue. mWeb twin: venue-chat-page/VenueChatHeader. */
+ * host, the pod for the venue — and how to reach them outside the chat.
+ * mWeb twin: venue-chat-page/VenueChatHeader. */
 export function VenueChatHeaderBar({ counterpart, venueSide, onBack }: Readonly<Props>) {
   const { t } = useTranslation();
   const { color: ink } = useThemeColors();
@@ -72,6 +74,7 @@ export function VenueChatHeaderBar({ counterpart, venueSide, onBack }: Readonly<
             {about}
           </Text>
         ) : null}
+        <VenueChatContactRow contact={counterpart?.contact ?? null} />
       </YStack>
     </XStack>
   );

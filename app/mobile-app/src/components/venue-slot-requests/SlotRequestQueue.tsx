@@ -1,19 +1,10 @@
-import { useState } from 'react';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { SelectChip } from '@/components/venue-availability/SelectChip';
+import { OfferNoticeText } from '@/components/venue-offer/OfferNoticeText';
 import { SlotRequestCard } from '@/components/venue-slot-requests/SlotRequestCard';
-import { SlotRequestDecisionSheets } from '@/components/venue-slot-requests/SlotRequestDecisionSheets';
-import { VenueOfferCounterForm } from '@/forms/venue-offer-counter';
-import {
-  useVenueSlotRequests,
-  ALL_VENUES,
-  type CounterTerms,
-  type SlotRequestRow,
-} from '@/hooks/useVenueSlotRequests';
-import { currentOfferTerms } from '@duncit/utils';
+import { useVenueSlotRequests, ALL_VENUES } from '@/hooks/useVenueSlotRequests';
 import { useTranslation } from '@/hooks/useTranslation';
-import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   /** Called after any decision, so the answered history below re-reads too. */
@@ -23,56 +14,15 @@ interface Props {
 /**
  * Booking requests waiting on the venue — hosts' offers to run a pod there —
  * on Workshop & Event Requests' first tab: accept, reject, or counter with the
- * venue's own terms (which the host then accepts or declines). A request from
- * before offers keeps accept / reject only.
+ * venue's own terms (which the host then accepts, rejects or counters). A
+ * request from before offers keeps accept / reject only. A pod goes live the
+ * moment the venue says yes, so neither answer is a tap to make by accident:
+ * each card opens its own sheet for it.
  */
 export function SlotRequestQueue({ onDecided }: Readonly<Props>) {
   const { t } = useTranslation();
-  const slots = useVenueSlotRequests();
-  // A pod goes live the moment you say yes, so neither answer is a tap to make
-  // by accident: approving asks once, declining takes a reason.
-  const [approving, setApproving] = useState<SlotRequestRow | null>(null);
-  const [declining, setDeclining] = useState<string | null>(null);
-  const [reason, setReason] = useState('');
-  const [countering, setCountering] = useState<SlotRequestRow | null>(null);
-  const counterOffer = countering?.offer ?? null;
-
-  const dismiss = () => {
-    setApproving(null);
-    setDeclining(null);
-  };
-  const settle = (run: Promise<void>) => {
-    run.then(onDecided).catch(() => undefined);
-  };
-  const approve = () => {
-    const slotId = approving?.slot_id;
-    dismiss();
-    if (slotId) settle(slots.approve(slotId));
-  };
-  const decline = () => {
-    const slotId = declining;
-    dismiss();
-    if (slotId) settle(slots.decline(slotId, reason.trim()));
-  };
-  const sendCounter = (terms: CounterTerms, note: string) => {
-    const slotId = countering?.slot_id;
-    setCountering(null);
-    if (slotId) settle(slots.counter(slotId, terms, note.trim()));
-  };
-  const openDecline = (slotId: string) => {
-    setReason('');
-    setDeclining(slotId);
-  };
-  const card = (request: SlotRequestRow) => (
-    <SlotRequestCard
-      key={request.slot_id}
-      request={request}
-      busy={slots.busy}
-      onApprove={setApproving}
-      onDecline={openDecline}
-      onCounter={setCountering}
-    />
-  );
+  const slots = useVenueSlotRequests(onDecided);
+  const { answers } = slots;
 
   return (
     <YStack gap={16} testID="slot-request-queue">
@@ -98,23 +48,19 @@ export function SlotRequestQueue({ onDecided }: Readonly<Props>) {
         </XStack>
       )}
 
-      {slots.feedback && (
-        <Text
-          role="button"
-          hitSlop={12}
-          pressStyle={PRESS_STYLE.inline}
-          fontSize={13}
-          color={slots.feedback.ok ? '$success' : '$danger'}
-          onPress={slots.clearFeedback}
-          aria-live="polite"
-          testID="slot-request-feedback"
-        >
-          {slots.feedback.text}
-        </Text>
-      )}
+      <OfferNoticeText
+        notice={answers.notice}
+        onDismiss={answers.clearNotice}
+        testID="slot-request-feedback"
+      />
 
       {slots.isLoading && (
-        <Spinner role="progressbar" aria-label={t('mweb.a11y.loading')} color="$primary" />
+        <Spinner
+          testID="slot-request-loading"
+          role="progressbar"
+          aria-label={t('mweb.a11y.loading')}
+          color="$primary"
+        />
       )}
 
       {!slots.isLoading && slots.requests.length === 0 && (
@@ -123,26 +69,9 @@ export function SlotRequestQueue({ onDecided }: Readonly<Props>) {
         </Text>
       )}
 
-      {slots.requests.map(card)}
-
-      <SlotRequestDecisionSheets
-        approving={approving}
-        declining={!!declining}
-        reason={reason}
-        onReason={setReason}
-        onApprove={approve}
-        onDecline={decline}
-        onDismiss={dismiss}
-      />
-      {countering && counterOffer ? (
-        <VenueOfferCounterForm
-          slotId={countering.slot_id}
-          terms={currentOfferTerms(counterOffer)}
-          busy={slots.busy}
-          onClose={() => setCountering(null)}
-          onSend={sendCounter}
-        />
-      ) : null}
+      {slots.requests.map((request) => (
+        <SlotRequestCard key={request.slot_id} request={request} answers={answers} />
+      ))}
     </YStack>
   );
 }

@@ -1,4 +1,4 @@
-import { YStack } from 'tamagui';
+import { Text, YStack } from 'tamagui';
 import type { SpotsBounds } from '@duncit/utils';
 
 import { ToggleRow } from '@/components/ToggleRow';
@@ -10,17 +10,19 @@ interface Props {
   form: CreatePodForm;
   /** The range the pod may be sized within (activity + venue + space). */
   spots: SpotsBounds;
+  /** The fewest guests the venue takes an offer for (0 = none) — said under the spots. */
+  minGuests: number;
 }
 
 const DIRTY = { shouldDirty: true, shouldValidate: true } as const;
 
 /**
  * The pod's spots — which ARE the booking's guests, so there is one number,
- * held inside the activity's minimum, the venue's guest range and the space's
- * capacity, and quoted as it changes — and whether pets come (the quote adds
- * the venue's pet fee, if it has one). mWeb twin: BookingGuestFields.
+ * held inside the activity's minimum, the venue's minimum guests and the
+ * space's capacity, and quoted as it changes — and whether pets come (the quote
+ * adds the venue's pet fee, if it has one). mWeb twin: BookingGuestFields.
  */
-export function BookingGuestFields({ form, spots }: Readonly<Props>) {
+export function BookingGuestFields({ form, spots, minGuests }: Readonly<Props>) {
   const { t } = useTranslation();
   const boundsHint = spots.slidable
     ? t('mweb.createPod.spotsVenueHint', { vars: { min: spots.min, max: spots.max } })
@@ -39,6 +41,11 @@ export function BookingGuestFields({ form, spots }: Readonly<Props>) {
         // Only fixed when the venue and space leave no room to choose.
         readOnly={spots.max <= spots.min}
       />
+      {minGuests > 0 ? (
+        <Text testID="create-pod-venue-minimum" fontSize={12} color="$muted">
+          {t('availability.offers.ask.venueMinimum', { vars: { min: minGuests } })}
+        </Text>
+      ) : null}
       <ToggleRow
         testID="create-pod-booking-pets"
         label={t('mweb.createPod.bookingPets')}

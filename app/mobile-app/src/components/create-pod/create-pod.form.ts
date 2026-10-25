@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { makeVenueOfferAskSchema } from '@duncit/forms/schemas';
 import {
   isMeetingPlatform,
   isVenueOfferModel,
@@ -6,6 +7,8 @@ import {
   offerRateOf,
   ticketDiscountInput,
   venueOfferInput,
+  venueOfferPriceInput,
+  type VenueOfferSource,
 } from '@duncit/utils';
 
 import {
@@ -77,7 +80,22 @@ function refineVenue(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Trans
   if (values.pod_mode === 'PHYSICAL') refineVenueTime(values, ctx, t);
 }
 
-/** The host's offer to the venue: how they pay it and how much. mWeb twin. */
+/** What the host asks of the venue beside the price — the shared rules
+ * (`makeVenueOfferAskSchema`: at least one point, each and the note within the
+ * server's bounds), pinned on this form's own fields. mWeb twin. */
+function refineOfferAsk(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Translate) {
+  const ask = makeVenueOfferAskSchema(t).safeParse({
+    offerings: values.venue_offer_offerings,
+    note: values.venue_offer_note,
+  });
+  for (const issue of ask.error?.issues ?? []) {
+    const path = issue.path[0] === 'note' ? 'venue_offer_note' : 'venue_offer_offerings';
+    ctx.addIssue({ code: 'custom', path: [path], message: issue.message });
+  }
+}
+
+/** The host's offer to the venue: how they pay it, how much, and what they ask
+ * of it. mWeb twin. */
 function refineVenueOffer(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Translate) {
   if (!isVenueOfferModel(values.venue_offer_model)) {
     ctx.addIssue({
@@ -93,6 +111,7 @@ function refineVenueOffer(values: CreatePodFormValues, ctx: z.RefinementCtx, t: 
       message: t('mweb.createPod.validation.offerRateRequired'),
     });
   }
+  refineOfferAsk(values, ctx, t);
 }
 
 /** A held slot books as before; a Pod Request must keep its slot; every other
@@ -297,6 +316,10 @@ export function makeCreatePodSchema(t: Translate = fallbackT) {
       venue_booking_pets: z.boolean().default(false),
       venue_offer_model: z.string().default(''),
       venue_offer_rate: z.string().default(''),
+      // Shape only — an offer's ask is checked in refineVenueOffer (a virtual
+      // pod or a held slot asks the venue nothing).
+      venue_offer_offerings: z.string().default(''),
+      venue_offer_note: z.string().default(''),
       no_of_spots_text: z
         .string()
         .refine(intIn(0, 10000), t('mweb.createPod.validation.spotsRange')),
@@ -382,6 +405,8 @@ export const STEP_FIELDS: (keyof CreatePodFormValues)[][] = [
     'venue_space_label',
     'venue_offer_model',
     'venue_offer_rate',
+    'venue_offer_offerings',
+    'venue_offer_note',
     'pod_date_time_text',
     'pod_end_date_time_text',
   ],
@@ -444,20 +469,37 @@ export const STEP_TITLES = STEP_TITLE_KEYS.map((key) => fallbackT(key));
 
 export const STEP_SUBTITLES = STEP_SUBTITLE_KEYS.map((key) => fallbackT(key));
 
-/** The venue offer the form holds (window = the pod window, guests = its
- * spots), or null until it is complete. mWeb twin: venueOfferOf. */
+/** What the form holds for an offer: window = the pod window, guests = its spots. */
+const offerSourceOf = (values: CreatePodFormValues): VenueOfferSource => ({
+  start: parseDateTimeText(values.pod_date_time_text)?.toISOString() ?? null,
+  end: parseDateTimeText(values.pod_end_date_time_text)?.toISOString() ?? null,
+  pax: Number(values.no_of_spots_text) || 0,
+  pets: values.venue_booking_pets,
+  spaceLabel: values.venue_space_label,
+  model: values.venue_offer_model,
+  rate: values.venue_offer_rate,
+  offerings: values.venue_offer_offerings,
+  note: values.venue_offer_note,
+});
+
+/** The app's generated enum carries the same four values the shared union does. */
+const withAppModel = <T extends { model: string }>(offer: T) => ({
+  ...offer,
+  model: offer.model as VenueOfferModel,
+});
+
+/** The venue offer the form holds, with what the host asks of the venue, or
+ * null until it is complete. mWeb twin: venueOfferOf. */
 export function venueOfferOf(values: CreatePodFormValues) {
-  const offer = venueOfferInput({
-    start: parseDateTimeText(values.pod_date_time_text)?.toISOString() ?? null,
-    end: parseDateTimeText(values.pod_end_date_time_text)?.toISOString() ?? null,
-    pax: Number(values.no_of_spots_text) || 0,
-    pets: values.venue_booking_pets,
-    spaceLabel: values.venue_space_label,
-    model: values.venue_offer_model,
-    rate: values.venue_offer_rate,
-  });
-  // The app's generated enum carries the same four values the shared union does.
-  return offer ? { ...offer, model: offer.model as VenueOfferModel } : null;
+  const offer = venueOfferInput(offerSourceOf(values));
+  return offer ? withAppModel(offer) : null;
+}
+
+/** The same offer as the live quote asks for it — everything that moves the
+ * price, none of the points or the note, so typing those never re-prices. */
+export function venueOfferPriceOf(values: CreatePodFormValues) {
+  const offer = venueOfferInput(offerSourceOf(values));
+  return offer ? withAppModel(venueOfferPriceInput(offer)) : null;
 }
 
 /** Maps validated form values onto the server's CreatePodInput. */

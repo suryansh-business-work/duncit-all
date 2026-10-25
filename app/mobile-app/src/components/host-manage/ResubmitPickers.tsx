@@ -112,6 +112,8 @@ export function VenuePickerField({
 
 interface OfferWindowPickerProps {
   venueId: string;
+  /** The space the window is for ('' = the whole venue) — its own bookings decide what is free. */
+  spaceLabel?: string;
   /** The window picked so far (ISO), '' while none is. */
   start: string;
   end: string;
@@ -122,11 +124,12 @@ interface OfferWindowPickerProps {
 
 /**
  * The window to offer the new venue — a start it is open and free for, then
- * an end up to closing — on the same calendar Create Pod uses. The Tamagui twin
- * of mWeb's resubmit OfferWindowField.
+ * an end up to closing — on the same calendar Create Pod uses, for the space
+ * offered. The Tamagui twin of mWeb's resubmit OfferWindowField.
  */
 export function OfferWindowPicker({
   venueId,
+  spaceLabel = '',
   start,
   end,
   error,
@@ -135,7 +138,8 @@ export function OfferWindowPicker({
   const fmt = useDateFormat();
   const { t } = useTranslation();
   const labels = useMemo(() => buildSlotLabels(t, 'mweb.slots'), [t]);
-  const calendar = useOfferCalendar(venueId, venueId ? WHOLE_VENUE_SPACE : '');
+  // The calendar reads the stored space; '' (the whole venue) is its whole-venue label.
+  const calendar = useOfferCalendar(venueId, venueId ? spaceLabel || WHOLE_VENUE_SPACE : '');
 
   if (!venueId) {
     return (

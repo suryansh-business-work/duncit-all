@@ -1,15 +1,10 @@
 import { Spinner, Text, YStack } from 'tamagui';
-import {
-  buildEarningsSplit,
-  buildVenueBillLines,
-  formatStatementMoney,
-  mwebVenueBillLabels,
-} from '@duncit/utils';
+import { buildEarningsSplit, formatStatementMoney } from '@duncit/utils';
 
 import { EarningsSplitAccordion } from '@/components/create-pod/price-panel/EarningsSplitAccordion';
 import type { PodSettlement } from '@/hooks/useSettlementPreview';
 import { useTranslation } from '@/hooks/useTranslation';
-import { VenueBillSummary } from './VenueBillSummary';
+import { VenueSettlementSummary } from './VenueSettlementSummary';
 
 interface Props {
   settlement: PodSettlement | null;
@@ -36,24 +31,9 @@ function SettlementBreakdown({ settlement }: Readonly<{ settlement: PodSettlemen
         Based on {settlement.paying_attendees} paying{' '}
         {settlement.paying_attendees === 1 ? 'attendee' : 'attendees'} — your own spot is free.
       </Text>
-      {/* What the venue's side comes to: the earlier slot price, the bill
-          entered above and the total the split below takes off the pool. */}
-      {settlement.has_venue ? (
-        <VenueBillSummary
-          lines={buildVenueBillLines(
-            {
-              slot_price: settlement.venue_slot_price,
-              bill: settlement.venue_bill,
-              slot_included: settlement.include_slot_price,
-              venue_amount: settlement.waterfall.venue_amount,
-              attended_seats: settlement.attended_seats,
-              booked_seats: settlement.booked_seats,
-            },
-            mwebVenueBillLabels(t),
-            symbol,
-          )}
-        />
-      ) : null}
+      {/* What the venue's side comes to: the agreed terms, the bill entered
+          above, any extra charges and the total the split below takes off the pool. */}
+      {settlement.has_venue ? <VenueSettlementSummary settlement={settlement} /> : null}
       <EarningsSplitAccordion
         split={split}
         money={(value) => formatStatementMoney(value, symbol)}

@@ -274,6 +274,8 @@ async function bookSlot() {
   press(endChip);
   press('create-pod-offer-model-PER_SLOT');
   fireEvent.changeText(screen.getByTestId('field-venue_offer_rate'), '400');
+  // What the host needs from the venue is required beside the price.
+  fireEvent.changeText(screen.getByTestId('field-venue_offer_offerings'), 'A projector');
   await screen.findByTestId('create-pod-venue-quote');
 }
 
@@ -390,13 +392,18 @@ describe('CreatePodStepper', () => {
         space_label: '',
         model: 'PER_SLOT',
         rate: 400,
+        offerings: ['A projector'],
+        note: '',
       }),
     );
     expect(input.location_id).toBe('l1');
     expect(input.pod_type).toBe('PAID');
     expect(new Date(input.pod_date_time).toISOString()).toBe(slot.start_at);
     // The earnings preview is fed the venue payout and Duncit's fee on top.
-    expect(mockPotentialEarnings).toHaveBeenLastCalledWith(500, expect.any(Number), 'v1', 472, 24);
+    expect(mockPotentialEarnings).toHaveBeenLastCalledWith(500, expect.any(Number), 'v1', {
+      venue_amount: 472,
+      venue_commission_on_top: 24,
+    });
   });
 
   it('publishes a virtual pod (no venue, no slot, no place charges)', async () => {
@@ -936,5 +943,136 @@ describe('CreatePodStepper', () => {
       },
     });
     expect(screen.getByTestId('create-pod-paid')).toBeOnTheScreen();
+  });
+});
+
+// A per-guest offer to a venue that takes bookings for at least 8 guests, in a
+// space that holds 20: the spots start at the venue's minimum, and both the
+// price and the host's earnings read as ranges from 8 guests up to 20 spots.
+describe('CreatePodStepper — a venue minimum', () => {
+  const breakdown = (pax: number, payout: number, fee: number) => ({
+    ...venuePriceQuote,
+    model: 'PER_GUEST',
+    rate: 300,
+    pax,
+    base: payout,
+    taxes: 0,
+    gst_pct: 0,
+    platform_fee: fee,
+    venue_payout: payout,
+    total: payout + fee,
+  });
+  const minimumVenue = {
+    id: 'v1',
+    owner_user_id: 'owner-1',
+    venue_name: 'Hall',
+    location_id: 'l1',
+    city: 'Pune',
+    capacity: 20,
+    offer_min_guests: 8,
+  };
+
+  const quoteCalls = () =>
+    mockGraphqlRequest.mock.calls.filter(
+      ([doc]) => doc.definitions[0]?.name?.value === 'MobileVenueOfferQuote',
+    );
+
+  it('floors the spots at the minimum, prices both ends and sends both to the earnings preview', async () => {
+    mockGraphqlRequest.mockImplementation((doc: { definitions: { name?: { value: string } }[] }) =>
+      doc.definitions[0]?.name?.value === 'MobileVenueOfferQuote'
+        ? Promise.resolve({
+            venueOfferQuote: {
+              ok: true,
+              message: null,
+              quote: breakdown(20, 6000, 300),
+              quote_min: breakdown(8, 2400, 120),
+            },
+          })
+        : routeRequests(doc),
+    );
+    const { onPublish } = setup({ venues: [minimumVenue] });
+    await pickClub();
+    await fillBasics();
+    press('create-pod-submit');
+    await screen.findByTestId('create-pod-venue-v1');
+    press('create-pod-venue-v1');
+    press('create-pod-space-Whole venue');
+    expect(await screen.findByTestId('create-pod-venue-minimum')).toHaveTextContent(
+      'This venue takes bookings for at least 8 guests.',
+    );
+    expect(screen.getByTestId('create-pod-spots-bounds')).toHaveTextContent(/Pick 8 to 20 spots/);
+    await screen.findByTestId(slotTile);
+    press(slotTile);
+    await screen.findByTestId(endChip);
+    press(endChip);
+    press('create-pod-offer-model-PER_GUEST');
+    // Once picked, the option says how it pays the venue.
+    expect(screen.getByText(/A minimum order value per person/)).toBeOnTheScreen();
+    fireEvent.changeText(screen.getByTestId('field-venue_offer_rate'), '300');
+    expect(await screen.findByTestId('create-pod-quote-venue-range')).toHaveTextContent(
+      '₹2,400.00 – ₹6,000.00',
+    );
+    expect(screen.getByTestId('create-pod-quote-total-range')).toHaveTextContent(
+      '₹2,520.00 – ₹6,300.00',
+    );
+    expect(screen.getByText('Breakdown at 20 guests')).toBeOnTheScreen();
+
+    // The points and the note go with the offer, but never ask for a new price.
+    const priced = quoteCalls().length;
+    fireEvent.changeText(screen.getByTestId('field-venue_offer_offerings'), 'Projector\n10 chairs');
+    fireEvent.changeText(screen.getByTestId('field-venue_offer_note'), 'A quiet corner');
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 400));
+    });
+    expect(quoteCalls()).toHaveLength(priced);
+    expect(JSON.stringify(quoteCalls().at(-1)?.[1])).not.toMatch(/offerings|note/);
+
+    press('create-pod-submit');
+    await screen.findByTestId('create-pod-paid');
+    fireEvent.changeText(screen.getByTestId('field-pod_amount_text'), '500');
+    expect(mockPotentialEarnings).toHaveBeenLastCalledWith(500, 20, 'v1', {
+      venue_amount: 6000,
+      venue_commission_on_top: 300,
+      min_spots: 8,
+      venue_amount_at_min: 2400,
+      venue_commission_on_top_at_min: 120,
+    });
+    press('create-pod-terms');
+    press('create-pod-submit');
+    await waitFor(() => expect(onPublish).toHaveBeenCalled());
+    expect(onPublish.mock.calls[0]?.[1].venue_offer).toEqual(
+      expect.objectContaining({
+        pax: 20,
+        model: 'PER_GUEST',
+        rate: 300,
+        offerings: ['Projector', '10 chairs'],
+        note: 'A quiet corner',
+      }),
+    );
+  });
+
+  it('holds the host on step 3 until they say what they need from the venue', async () => {
+    setup();
+    await pickClub();
+    await fillBasics();
+    press('create-pod-submit');
+    await screen.findByTestId('create-pod-venue-v1');
+    press('create-pod-venue-v1');
+    press('create-pod-space-Whole venue');
+    await screen.findByTestId(slotTile);
+    press(slotTile);
+    await screen.findByTestId(endChip);
+    press(endChip);
+    press('create-pod-offer-model-PER_SLOT');
+    fireEvent.changeText(screen.getByTestId('field-venue_offer_rate'), '400');
+    await act(async () => {
+      press('create-pod-submit');
+    });
+    expectStep(3);
+    expect(
+      await screen.findByText('Add at least one thing you need from the venue'),
+    ).toBeOnTheScreen();
+    // No minimum is named for a venue without one.
+    expect(screen.queryByTestId('create-pod-venue-minimum')).toBeNull();
   });
 });

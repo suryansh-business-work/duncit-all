@@ -37,7 +37,11 @@ interface Props {
   forClubAdmin?: boolean;
   /** The range the pod's spots may take — picked here, with the booking. */
   spots: SpotsBounds;
+  /** The fewest guests an offer to the picked venue may be for (0 = none). */
+  offerMinGuests?: number;
 }
+
+const DIRTY = { shouldDirty: true, shouldValidate: true } as const;
 
 /** Step 3 — pick a venue partner in the pod's city and send it an offer for a
  * window (physical), or meeting details + schedule (virtual). A Pod Request's
@@ -53,6 +57,7 @@ export function VenueSlotStep({
   venueNotice,
   forClubAdmin = false,
   spots,
+  offerMinGuests = 0,
 }: Readonly<Props>) {
   const { control, watch, setValue, formState } = form;
   const { errors } = formState;
@@ -87,13 +92,10 @@ export function VenueSlotStep({
 
   // Each chip carries its own space, so picking one fills spots with no lookup.
   const pickSpace = (space: VenueSpace) => {
-    setValue('venue_space_label', space.label, { shouldDirty: true, shouldValidate: true });
+    setValue('venue_space_label', space.label, DIRTY);
     // Changing the space invalidates any time picked under the old space.
     clearTime();
-    setValue('no_of_spots_text', String(space.capacity), {
-      shouldDirty: true,
-      shouldValidate: true,
-    });
+    setValue('no_of_spots_text', String(space.capacity), DIRTY);
   };
 
   function clearTime() {
@@ -113,12 +115,9 @@ export function VenueSlotStep({
   // A slot fills the schedule boxes, so it must be written in the same shape
   // those boxes are typed in — the admin's patterns, not a fixed ISO one.
   const pickSlot = (slot: CreatePodSlot) => {
-    setValue('venue_slot_id', slot.id, { shouldDirty: true, shouldValidate: true });
+    setValue('venue_slot_id', slot.id, DIRTY);
     // The slot window is the pod window — the server enforces the same.
-    setValue('pod_date_time_text', format(new Date(slot.start_at), dateTimeInputFormat), {
-      shouldDirty: true,
-      shouldValidate: true,
-    });
+    setValue('pod_date_time_text', format(new Date(slot.start_at), dateTimeInputFormat), DIRTY);
     setValue('pod_end_date_time_text', format(new Date(slot.end_at), dateTimeInputFormat), {
       shouldDirty: true,
     });
@@ -169,6 +168,7 @@ export function VenueSlotStep({
           quote={venueQuote}
           currencySymbol={currencySymbol}
           spots={spots}
+          minGuests={offerMinGuests}
         />
       ) : null}
       {selectedVenue && selectedSpace && bookBySlot ? (

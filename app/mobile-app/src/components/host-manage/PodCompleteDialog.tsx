@@ -1,5 +1,5 @@
 import { formResolver } from '../../utils/form-resolver';
-import { venueUsageInput } from '@duncit/forms/schemas';
+import { venueExtraAmountOf, venueUsageInput } from '@duncit/forms/schemas';
 import { useCallback, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { Text, YStack } from 'tamagui';
@@ -28,10 +28,13 @@ interface Props {
   onCompleted: () => void;
 }
 
-/** Host completes a pod: optionally enter the venue's final bill. The pod's own
- * media is shown, not asked for — it is uploaded on the Upload Pod Media screen.
- * The split is previewed live; on submit the payout releases are created for
- * Finance to approve — nothing is credited until then. */
+/** Host completes a pod. A paid pod at a venue uploads the venue's final bill
+ * (its total + the file) as proof of the agreed amount, and enters anything the
+ * venue charged beyond it as extra charges. The pod's own media is shown, not
+ * asked for — it is uploaded on the Upload Pod Media screen. The split is
+ * previewed live; on submit the payout releases are created for Finance to
+ * approve — nothing is credited until then. mWeb twin: @duncit/host-pod-actions
+ * PodCompleteDialog. */
 export function PodCompleteDialog({ pod, onClose, onCompleted }: Readonly<Props>) {
   const { t } = useTranslation();
   const { onPrimary } = useThemeColors();
@@ -39,13 +42,14 @@ export function PodCompleteDialog({ pod, onClose, onCompleted }: Readonly<Props>
   const free = isFreePod(pod?.pod_type);
   const hasVenue = !!pod?.venue_id && !free;
   const billLabels = useMemo(() => mwebVenueBillLabels(t), [t]);
-  const { control, handleSubmit, watch } = useForm<PodCompleteValues, any, PodCompleteValues>({
+  const { control, handleSubmit, watch } = useForm<PodCompleteValues, unknown, PodCompleteValues>({
     resolver: formResolver<PodCompleteValues>(buildPodCompleteSchema(hasVenue, billLabels)),
     defaultValues: blankPodCompleteValues,
   });
 
   const billAmount = Math.max(0, Number(watch('venue_bill_amount')) || 0);
-  const includeSlotPrice = billAmount > 0 && watch('include_slot_price');
+  // Paid on top of the agreed amount, so the preview re-prices as they are typed.
+  const venueExtra = venueExtraAmountOf(watch('venue_extra_amount'));
   // The venue's usage prices its slot, so the preview re-prices with it.
   const usage = venueUsageInput({
     venue_pax: watch('venue_pax'),
@@ -58,7 +62,7 @@ export function PodCompleteDialog({ pod, onClose, onCompleted }: Readonly<Props>
   } = useSettlementPreview(
     pod?.id ?? null,
     billAmount,
-    includeSlotPrice,
+    venueExtra,
     usage.venue_pax,
     usage.overtime_hours,
   );
@@ -100,9 +104,7 @@ export function PodCompleteDialog({ pod, onClose, onCompleted }: Readonly<Props>
     />
   );
 
-  const billField = hasVenue ? (
-    <VenueBillFields control={control} labels={billLabels} billAmount={billAmount} />
-  ) : null;
+  const billField = hasVenue ? <VenueBillFields control={control} labels={billLabels} /> : null;
   const mediaSummary = pod ? <PodMediaSummary podId={pod.id} onLeave={onClose} /> : null;
   // The preview error only speaks when there is nothing better to show.
   const previewErrorText =

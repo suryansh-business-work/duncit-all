@@ -106,14 +106,38 @@ describe('createPodSchema', () => {
     expect(issues.map((issue) => issue.path.join('.'))).not.toContain('venue_slot_id');
   });
 
-  it('accepts an offer: no slot id, the whole window picked, a pricing option and an amount', () => {
+  it('accepts an offer: no slot id, the whole window picked, a pricing option, an amount and an ask', () => {
     const offer = {
       venue_slot_id: '',
       pod_end_date_time_text: futureEndText,
       venue_offer_model: 'PER_GUEST',
       venue_offer_rate: '300',
+      venue_offer_offerings: 'A projector',
     };
     expect(createPodSchema.safeParse(valid(offer)).success).toBe(true);
+  });
+
+  it('requires an offer to say what it needs from the venue, within the shared bounds', () => {
+    const offer = {
+      venue_slot_id: '',
+      pod_end_date_time_text: futureEndText,
+      venue_offer_model: 'FLAT',
+      venue_offer_rate: '5000',
+    };
+    const result = createPodSchema.safeParse(valid({ ...offer, venue_offer_offerings: ' \n - ' }));
+    const issues = result.success ? [] : result.error.issues;
+    expect(issues.find((issue) => issue.path[0] === 'venue_offer_offerings')?.message).toBe(
+      'Add at least one thing you need from the venue',
+    );
+    // The note is optional, but bounded like the server bounds it.
+    const long = issuesOf(
+      valid({ ...offer, venue_offer_offerings: 'Chairs', venue_offer_note: 'x'.repeat(1001) }),
+    );
+    expect(long).toContain('venue_offer_note');
+    expect(long).not.toContain('venue_offer_offerings');
+    // A held slot (or a virtual pod) asks the venue nothing.
+    expect(issuesOf(valid())).not.toContain('venue_offer_offerings');
+    expect(issuesOf(valid(virtualPod))).not.toContain('venue_offer_offerings');
   });
 
   it('requires the offer to name how the venue is paid, and a positive amount', () => {
@@ -331,9 +355,12 @@ describe('buildCreatePodInput', () => {
         venue_booking_pets: true,
         venue_offer_model: 'PER_HOUR',
         venue_offer_rate: '800',
+        venue_offer_offerings: '- A projector\n\n10 chairs ',
+        venue_offer_note: '  Quiet corner, please ',
       }),
     );
     expect(input.venue_slot_id).toBeNull();
+    // The points one per line (bullets and blanks dropped), the note trimmed.
     expect(input.venue_offer).toEqual({
       start_at: parseDateTimeText(futureText)?.toISOString(),
       end_at: parseDateTimeText(futureEndText)?.toISOString(),
@@ -342,6 +369,8 @@ describe('buildCreatePodInput', () => {
       pets: true,
       model: 'PER_HOUR',
       rate: 800,
+      offerings: ['A projector', '10 chairs'],
+      note: 'Quiet corner, please',
     });
   });
 
@@ -383,6 +412,10 @@ describe('buildCreatePodInput', () => {
     expect(hydrateDraft(payload).partner_request_id).toBe('req1');
     // A draft saved before the field existed resumes without one.
     expect(hydrateDraft(JSON.stringify({ pod_title: 'Old' })).partner_request_id).toBe('');
+    // …and with an empty ask, from before offers carried one.
+    expect(hydrateDraft(JSON.stringify({ pod_title: 'Old' }))).toEqual(
+      expect.objectContaining({ venue_offer_offerings: '', venue_offer_note: '' }),
+    );
   });
 
   it('derives the shop flag from the product rows and nulls virtual extras', () => {

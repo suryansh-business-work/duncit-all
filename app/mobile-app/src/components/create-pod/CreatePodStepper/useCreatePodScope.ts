@@ -1,19 +1,17 @@
 import { useEffect } from 'react';
 import type { CreatePodFormState } from './useCreatePodForm';
 
-import { useOfferQuote } from '@/hooks/useOfferQuote';
-import { useVenueSlots } from '@/hooks/useVenueSlots';
 import {
-  clampSpots,
   filterProductsForClub,
   freePodVenueNotice,
   pruneProductRequests,
   spotsBounds,
+  spotsSnapTarget,
 } from '@duncit/utils';
-import { filterClubs, venueOfferOf } from '../create-pod.form';
-import { venueSpaces } from '../steps/VenueSlotStep/venueSpaces';
+import { filterClubs } from '../create-pod.form';
 import { usePodPricing } from '../price-panel';
 import type { CreatePodStepperProps } from './types';
+import { useVenueCost } from './useVenueCost';
 
 type CreatePodScopeArgs = Pick<
   CreatePodStepperProps,
@@ -74,43 +72,29 @@ export function useCreatePodScope({
     // availableProducts is derived from club_id, so that is the real trigger.
   }, [clubId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // What the venue costs the pod feeds the Pricing panel: a held slot's price
-  // (a Pod Request), else the server's quote total for the host's offer
-  // (venue price + GST + Duncit's fee on top) — never a raw slot price.
+  // What the venue costs the pod feeds the Pricing panel — a held slot's price
+  // or the offer's quote, and the offer's money at both ends of its guests.
   const podMode = form.watch('pod_mode');
   const venueId = form.watch('venue_id');
-  const slotId = form.watch('venue_slot_id');
   const physical = podMode === 'PHYSICAL';
-  const { slots } = useVenueSlots(
-    physical && slotId ? venueId : '',
-    form.watch('partner_request_id'),
-  );
-  const selectedSlot = slots.find((slot) => slot.id === slotId) ?? null;
-  const values = form.watch();
-  const venueQuote = useOfferQuote(
-    physical ? venueId : '',
-    physical && !slotId ? venueOfferOf(values) : null,
-  );
-  const selectedVenue = venues.find((venue) => venue.id === venueId) ?? null;
-  const space = venueSpaces(selectedVenue).find((item) => item.label === values.venue_space_label);
-  const venueAmount = slotId ? (selectedSlot?.price ?? null) : (venueQuote.quote?.total ?? null);
-  const bookedCapacity = slotId ? selectedSlot?.capacity : space?.capacity;
+  const venue = useVenueCost(form, venues);
+  const { selectedVenue, venueQuote, amount: venueAmount } = venue;
 
   // How big this pod may be: floored by the sub-category's admin-set minimum
-  // (a doubles game needs 4), capped by the venue space the host picked (a Pod
-  // Request's held slot keeps its own capacity). The pod's sub-category is its
-  // club's `category_id`. mWeb twin (rule 27).
+  // (a doubles game needs 4) and an offer's venue minimum, capped by the venue
+  // space the host picked (a Pod Request's held slot keeps its own capacity).
+  // The pod's sub-category is its club's `category_id`. mWeb twin (rule 27).
   const spots = spotsBounds({
     minPax: subCategories.find((sub) => sub.id === selectedClub?.category_id)?.min_pax,
-    venueCapacity: physical ? bookedCapacity : null,
+    venueCapacity: physical ? venue.bookedCapacity : null,
+    venueMinPax: venue.offerMinGuests,
   });
   // Spots snap into a range that moved (another space) — anything up to the
   // cap stays as picked. mWeb twin.
   useEffect(() => {
-    const current = Number(form.getValues('no_of_spots_text')) || 0;
-    if (!physical || current <= 0) return;
-    const next = clampSpots(current, spots);
-    if (next !== current)
+    if (!physical) return;
+    const next = spotsSnapTarget(Number(form.getValues('no_of_spots_text')), spots);
+    if (next !== null)
       form.setValue('no_of_spots_text', String(next), { shouldDirty: true, shouldValidate: true });
   }, [form, physical, spots.min, spots.max]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -123,10 +107,7 @@ export function useCreatePodScope({
     noOfSpots: Number(form.watch('no_of_spots_text')) || 0,
     venueId: venueId || null,
     slotPrice: venueAmount,
-    venueQuote:
-      !slotId && venueQuote.quote
-        ? { payout: venueQuote.quote.venue_payout, commissionOnTop: venueQuote.quote.platform_fee }
-        : null,
+    offerEarnings: venue.offerEarnings,
     isPhysical: podMode === 'PHYSICAL',
     isFree: podType === 'FREE',
   });
@@ -148,6 +129,7 @@ export function useCreatePodScope({
     availableProducts,
     podMode,
     spots,
+    offerMinGuests: venue.offerMinGuests,
     pricing,
     venueQuote,
   };

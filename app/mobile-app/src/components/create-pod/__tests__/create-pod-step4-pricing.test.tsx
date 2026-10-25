@@ -177,26 +177,44 @@ describe('usePodPricing', () => {
 
   it('drops the venue args until a slot is picked', () => {
     renderHook(() => usePodPricing({ ...input, slotPrice: null }));
-    expect(mockedEarnings).toHaveBeenCalledWith(1000, 30, null, null, null);
+    expect(mockedEarnings).toHaveBeenCalledWith(1000, 30, null, null);
   });
 
   it('prices a held slot by its own price, with no commission on top', () => {
     renderHook(() => usePodPricing(input));
-    expect(mockedEarnings).toHaveBeenCalledWith(1000, 30, 'v1', 300, null);
+    expect(mockedEarnings).toHaveBeenCalledWith(1000, 30, 'v1', {
+      venue_amount: 300,
+      venue_commission_on_top: null,
+    });
   });
 
-  it('sends an instant booking’s venue payout and Duncit’s commission on top', () => {
+  it('sends an offer’s venue payout and Duncit’s commission on top', () => {
     // The quote total (₹1,239) gates the shortfall; the earnings preview gets
     // what the venue is paid and the commission that comes off the host side.
+    const offerEarnings = { venue_amount: 1180, venue_commission_on_top: 59 };
     const { result } = renderHook(() =>
-      usePodPricing({
-        ...input,
-        slotPrice: 1239,
-        venueQuote: { payout: 1180, commissionOnTop: 59 },
-      }),
+      usePodPricing({ ...input, slotPrice: 1239, offerEarnings }),
     );
-    expect(mockedEarnings).toHaveBeenCalledWith(1000, 30, 'v1', 1180, 59);
+    expect(mockedEarnings).toHaveBeenCalledWith(1000, 30, 'v1', offerEarnings);
     expect(result.current.venuePicked).toBe(true);
+  });
+
+  it('sends an offer’s money at the venue minimum too, for the earnings range', () => {
+    const offerEarnings = {
+      venue_amount: 6000,
+      venue_commission_on_top: 300,
+      min_spots: 10,
+      venue_amount_at_min: 3000,
+      venue_commission_on_top_at_min: 150,
+    };
+    renderHook(() => usePodPricing({ ...input, slotPrice: 6300, offerEarnings }));
+    expect(mockedEarnings).toHaveBeenCalledWith(1000, 30, 'v1', offerEarnings);
+  });
+
+  it('sends no venue money for a pod with no venue booked, even with a stale offer', () => {
+    const offerEarnings = { venue_amount: 1180, venue_commission_on_top: 59 };
+    renderHook(() => usePodPricing({ ...input, isPhysical: false, offerEarnings }));
+    expect(mockedEarnings).toHaveBeenCalledWith(1000, 30, null, null);
   });
 
   it('marks a 1-spot pod as host-only', () => {
@@ -219,7 +237,10 @@ describe('usePodPricing', () => {
       isLoading: false,
     });
     const { result } = renderHook(() => usePodPricing({ ...input, podAmount: 100, isFree: true }));
-    expect(mockedEarnings).toHaveBeenLastCalledWith(0, 30, 'v1', 300, null);
+    expect(mockedEarnings).toHaveBeenLastCalledWith(0, 30, 'v1', {
+      venue_amount: 300,
+      venue_commission_on_top: null,
+    });
     // No guard can fire on a pod that has no calculation.
     expect(result.current.ready).toBe(false);
     expect(result.current.zeroEarnings).toBe(false);

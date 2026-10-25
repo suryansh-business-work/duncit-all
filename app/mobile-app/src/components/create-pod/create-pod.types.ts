@@ -45,6 +45,10 @@ export interface CreatePodFormValues {
   venue_offer_model: string;
   /** Venue offer: the amount typed for that option, in rupees ('' until typed). */
   venue_offer_rate: string;
+  /** Venue offer: what the host needs from the venue, one point per line (at least one). */
+  venue_offer_offerings: string;
+  /** Venue offer: the request note to the venue (optional). */
+  venue_offer_note: string;
   /** Hidden: the Pod Request whose confirmed slot this pod books ('' = none). */
   partner_request_id: string;
   meeting_platform: string;
@@ -90,6 +94,8 @@ export const blankCreatePodForm: CreatePodFormValues = {
   venue_booking_pets: false,
   venue_offer_model: '',
   venue_offer_rate: '',
+  venue_offer_offerings: '',
+  venue_offer_note: '',
   partner_request_id: '',
   meeting_platform: '',
   meeting_url: '',
@@ -156,6 +162,8 @@ export interface CreatePodVenue {
   venue_type?: string | null;
   capacity?: number | null;
   capacity_items?: { label: string; capacity: number }[] | null;
+  /** The fewest guests an offer may be for: the venue's own setting, else the platform default. */
+  offer_min_guests?: number | null;
   location_id?: string | null;
   city?: string | null;
   locality?: string | null;

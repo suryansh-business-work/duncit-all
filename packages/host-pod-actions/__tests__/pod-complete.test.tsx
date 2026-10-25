@@ -78,6 +78,12 @@ const settlement = (over: Record<string, unknown> = {}) => ({
   venue_bill: 0,
   venue_slot_price: 300,
   include_slot_price: false,
+  // A booking made before offers: no extra charges, no minimum, no agreed terms.
+  venue_extra_amount: 0,
+  venue_min_guests: 0,
+  venue_pax: 0,
+  venue_agreed_model: null,
+  venue_agreed_rate: null,
   has_venue: true,
   paying_attendees: 8,
   attended_seats: 8,
@@ -110,14 +116,15 @@ const FREE_SETTLEMENT = {
   waterfall: { ...zeroWaterfall, version: 1 },
 };
 
+/** The preview at exactly this bill and these extra charges — never with a slot-price choice. */
 const previewMock = (
   over: Record<string, unknown> = {},
   amount = 0,
-  includeSlotPrice = false,
+  extra = 0,
 ): MockedResponse => ({
   request: {
     query: POD_SETTLEMENT_PREVIEW,
-    variables: { pod_id: 'pod-1', venue_bill_amount: amount, include_slot_price: includeSlotPrice },
+    variables: { pod_id: 'pod-1', venue_bill_amount: amount, venue_extra_amount: extra },
   },
   result: { data: { podSettlementPreview: settlement(over) } },
   maxUsageCount: Number.POSITIVE_INFINITY,
@@ -169,7 +176,7 @@ describe('SettlementPreview', () => {
       <SettlementPreview
         podId="pod-1"
         venueBillAmount={0}
-        includeSlotPrice={false}
+        venueExtraAmount={0}
         onScan={vi.fn()}
         refreshToken={0}
         {...(props as never)}
@@ -231,30 +238,65 @@ describe('SettlementPreview', () => {
     expect(billLine('slot-price')).toBe(`${labels.venueBill.slotPrice}₹300.00`);
     expect(billLine('final-bill')).toBe(`${labels.venueBill.finalBill}${labels.venueBill.noBill}`);
     expect(billLine('venue-total')).toBe(`${labels.venueBill.venueTotal}₹300.00`);
+    // A booking from before offers: no extra charges, no minimum, no agreed terms to state.
+    expect(screen.queryByTestId('venue-bill-line-extra')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('venue-bill-line-paid-guests')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('settlement-agreed-terms')).not.toBeInTheDocument();
   });
 
-  // The preview is asked at the bill AND the slot-price choice — the mock only
-  // answers that exact pair, so a dropped variable shows as a failed preview.
-  it('asks for the split with the slot price paid on top of the bill', async () => {
+  // The preview is asked at the bill AND the extra charges — the mock only
+  // answers that exact pair, so a dropped variable (or a slot-price choice
+  // slipping back in) shows as a failed preview.
+  it('prices the agreed amount plus the extra charges, with the bill as its proof', async () => {
     preview(
       [
         previewMock(
           {
             venue_bill: 450.5,
-            include_slot_price: true,
-            waterfall: { ...waterfall, venue_amount: 750.5 },
+            venue_extra_amount: 120,
+            // The server pays the agreed ₹300 plus the ₹120 extra; the bill is evidence.
+            waterfall: { ...waterfall, venue_amount: 420 },
           },
           450.5,
-          true,
+          120,
         ),
       ],
-      { venueBillAmount: 450.5, includeSlotPrice: true },
+      { venueBillAmount: 450.5, venueExtraAmount: 120 },
     );
     await settle();
 
     expect(screen.queryByTestId('settlement-preview-error')).not.toBeInTheDocument();
+    expect(billLine('slot-price')).toBe(`${labels.venueBill.slotPrice}₹300.00`);
     expect(billLine('final-bill')).toBe(`${labels.venueBill.finalBill}₹450.50`);
-    expect(billLine('venue-total')).toBe(`${labels.venueBill.venueTotalWithSlot}₹750.50`);
+    expect(billLine('extra')).toBe(`${labels.venueBill.extraCharges}₹120.00`);
+    expect(billLine('venue-total')).toBe(`${labels.venueBill.venueTotal}₹420.00`);
+  });
+
+  // A per-guest booking is paid for the people who came, never fewer than its
+  // minimum — the count is the server's (venue_pax), not worked out here.
+  it('states the agreed per-guest terms and the guests the venue is paid for', async () => {
+    preview([
+      previewMock({
+        venue_agreed_model: 'PER_GUEST',
+        venue_agreed_rate: 300,
+        venue_min_guests: 8,
+        venue_pax: 9,
+      }),
+    ]);
+    await settle();
+
+    expect(screen.getByTestId('settlement-agreed-terms').textContent).toBe(
+      `${labels.agreedTerms.title}${labels.agreedTerms.value('PER_GUEST', '₹300.00')}`,
+    );
+    expect(billLine('paid-guests')).toBe(`${labels.venueBill.paidGuests}${labels.venueBill.paidGuestsValue(9, 8)}`);
+  });
+
+  it('states no agreed terms when the settlement carries a model but no rate', async () => {
+    preview([previewMock({ venue_agreed_model: 'FLAT', venue_agreed_rate: null })]);
+    await settle();
+
+    expect(screen.getByTestId('venue-bill-summary')).toBeInTheDocument();
+    expect(screen.queryByTestId('settlement-agreed-terms')).not.toBeInTheDocument();
   });
 
   it('has no venue bill to summarise on a pod with no venue behind it', async () => {
@@ -311,7 +353,7 @@ describe('SettlementPreview', () => {
       {
         request: {
           query: POD_SETTLEMENT_PREVIEW,
-          variables: { pod_id: 'pod-1', venue_bill_amount: 0, include_slot_price: false },
+          variables: { pod_id: 'pod-1', venue_bill_amount: 0, venue_extra_amount: 0 },
         },
         error: new Error('This pod has no completed payments yet'),
         maxUsageCount: Number.POSITIVE_INFINITY,
@@ -329,7 +371,7 @@ describe('SettlementPreview', () => {
       {
         request: {
           query: POD_SETTLEMENT_PREVIEW,
-          variables: { pod_id: 'pod-1', venue_bill_amount: 0, include_slot_price: false },
+          variables: { pod_id: 'pod-1', venue_bill_amount: 0, venue_extra_amount: 0 },
         },
         result: { data: { podSettlementPreview: null } },
         maxUsageCount: Number.POSITIVE_INFINITY,
@@ -355,7 +397,7 @@ describe('SettlementPreview', () => {
             <SettlementPreview
               podId="pod-1"
               venueBillAmount={0}
-              includeSlotPrice={false}
+              venueExtraAmount={0}
               onScan={vi.fn()}
               refreshToken={1}
             />
@@ -495,53 +537,58 @@ describe('PodCompleteDialog settlement', () => {
   const BILL = 'https://cdn.duncit.com/pod-completion/bill.pdf';
   const billInput = () =>
     within(screen.getByTestId('pod-complete-venue-bill')).getByRole('spinbutton');
+  const extraInput = () =>
+    within(screen.getByTestId('pod-complete-venue-extra')).getByRole('spinbutton');
   const enterBill = async (amount: string) => {
     fireEvent.change(billInput(), { target: { value: amount } });
     await settle();
   };
+  const uploadBill = () => fireEvent.change(screen.getByLabelText('media'), { target: { value: BILL } });
   const submitForm = async () => {
     fireEvent.submit(document.querySelector('#pod-complete-form') as HTMLFormElement);
     await settle();
     await settle();
   };
+  /** Past the preview's 350 ms settle, so it re-prices at what was typed. */
+  const waitForPreview = async () => {
+    await act(async () => {
+      await new Promise((resolve) => {
+        setTimeout(resolve, 400);
+      });
+    });
+  };
 
-  // The bill is optional: left empty, the venue is paid the slot price it was
-  // booked at, and the completion goes to Finance like any other.
-  it('completes a venue pod with no bill entered, and says the payouts are with Finance', async () => {
+  // The venue's final bill is the proof of the agreed amount: a paid venue pod
+  // cannot complete without its total and the bill itself.
+  it('will not complete a paid venue pod without the venue’s final bill', async () => {
     const { mock, sent } = completeMock();
     const { props, notifySuccess } = dialog(VENUE_POD, [previewMock(), mediaBoardMock(), mock]);
     await settle();
 
-    expect(screen.getByText(labels.venueBill.amountHint)).toBeInTheDocument();
+    expect(screen.getByText(labels.venueBill.billTotalHint)).toBeInTheDocument();
     await submitForm();
 
-    expect(sent).toEqual([{ pod_id: 'pod-1', venue_bill_amount: 0 }]);
-    expect(notifySuccess).toHaveBeenCalledWith(labels.venueBill.sentToFinance);
-    expect(notifySuccess).toHaveBeenCalledTimes(1);
-    expect(props.onCompleted).toHaveBeenCalledTimes(1);
+    expect(screen.getByText(labels.venueBill.billRequired)).toBeInTheDocument();
+    expect(await screen.findByRole('alert')).toHaveTextContent(labels.venueBill.billUploadRequired);
+    expect(sent).toEqual([]);
+    expect(notifySuccess).not.toHaveBeenCalled();
+    expect(props.onCompleted).not.toHaveBeenCalled();
   });
 
-  // The file and the slot-price choice mean nothing without an amount, so
-  // neither is on screen until there is one.
-  it('asks for the bill itself and the slot-price choice only once an amount is entered', async () => {
+  // The bill, its file and the extra charges are all asked up front; the old
+  // "pay the bill on top of the slot price" choice is gone.
+  it('asks for the bill total, the bill itself and the extra charges, with no slot-price choice', async () => {
     dialog(VENUE_POD, [anyPreviewMock(), mediaBoardMock()]);
     await settle();
-    expect(screen.queryByLabelText('media')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('pod-complete-include-slot')).not.toBeInTheDocument();
 
-    await enterBill('450');
+    expect(billInput()).toBeRequired();
     expect(screen.getByLabelText('media')).toBeInTheDocument();
-    const includeSlot = screen.getByRole('checkbox', { name: labels.venueBill.includeSlot });
-    expect(includeSlot).not.toBeChecked();
-    expect(includeSlot).toHaveAccessibleDescription(labels.venueBill.includeSlotHint);
-
-    await enterBill('');
-    expect(screen.queryByLabelText('media')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('pod-complete-include-slot')).not.toBeInTheDocument();
+    expect(extraInput()).not.toBeRequired();
+    expect(screen.getByText(labels.venueBill.extraHint)).toBeInTheDocument();
+    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
   });
 
-  // Finance approves the payout against the document.
-  it('will not complete with a bill amount and no bill uploaded', async () => {
+  it('will not complete with a bill total and no bill uploaded', async () => {
     const { mock, sent } = completeMock();
     const { props, notifySuccess } = dialog(VENUE_POD, [anyPreviewMock(), mediaBoardMock(), mock]);
     await settle();
@@ -549,49 +596,104 @@ describe('PodCompleteDialog settlement', () => {
     await enterBill('450');
     await submitForm();
 
-    expect(await screen.findByRole('alert')).toHaveTextContent(labels.venueBill.uploadRequired);
+    expect(await screen.findByRole('alert')).toHaveTextContent(labels.venueBill.billUploadRequired);
+    expect(screen.queryByText(labels.venueBill.billRequired)).not.toBeInTheDocument();
     expect(sent).toEqual([]);
     expect(notifySuccess).not.toHaveBeenCalled();
     expect(props.onCompleted).not.toHaveBeenCalled();
   });
 
-  it('will not complete with a bill below zero', async () => {
+  it('will not complete with a bill total of zero or below', async () => {
     const { mock, sent } = completeMock();
     const { props } = dialog(VENUE_POD, [anyPreviewMock(), mediaBoardMock(), mock]);
     await settle();
 
     await enterBill('-5');
+    uploadBill();
     await submitForm();
 
     expect(await screen.findByText(labels.venueBill.amountInvalid)).toBeInTheDocument();
     // The reason takes the hint's place under the field.
-    expect(screen.queryByText(labels.venueBill.amountHint)).not.toBeInTheDocument();
+    expect(screen.queryByText(labels.venueBill.billTotalHint)).not.toBeInTheDocument();
     expect(sent).toEqual([]);
     expect(props.onCompleted).not.toHaveBeenCalled();
   });
 
-  it('sends the bill, its file and a bill that replaces the slot price', async () => {
+  // Extra charges of 0 tell the server this build pays the agreed amount with
+  // the bill as proof; the slot-price choice is never sent.
+  it('sends the bill total, its file and extra charges of 0, and never include_slot_price', async () => {
     const { mock, sent } = completeMock();
-    const { props } = dialog(VENUE_POD, [anyPreviewMock(), mediaBoardMock(), mock]);
+    const { props, notifySuccess } = dialog(VENUE_POD, [anyPreviewMock(), mediaBoardMock(), mock]);
     await settle();
 
     await enterBill('450.50');
-    fireEvent.change(screen.getByLabelText('media'), { target: { value: BILL } });
+    uploadBill();
     await submitForm();
 
     expect(sent).toEqual([
-      { pod_id: 'pod-1', venue_bill_amount: 450.5, venue_bill_url: BILL, include_slot_price: false },
+      { pod_id: 'pod-1', venue_bill_amount: 450.5, venue_bill_url: BILL, venue_extra_amount: 0 },
     ]);
+    expect(sent[0]).not.toHaveProperty('include_slot_price');
+    expect(notifySuccess).toHaveBeenCalledWith(labels.venueBill.sentToFinance);
     expect(props.onCompleted).toHaveBeenCalledTimes(1);
   });
 
-  // The venue's usage prices its slot (a per-guest slot, overtime) with or without a bill.
-  it('sends the guests the venue charged for and the overtime hours, without a bill', async () => {
+  it('sends the extra charges entered, and previews the split with them', async () => {
+    const asked: Record<string, unknown>[] = [];
+    const preview: MockedResponse = {
+      request: {
+        query: POD_SETTLEMENT_PREVIEW,
+        variables: (variables: Record<string, unknown>) => {
+          asked.push(variables);
+          return true;
+        },
+      },
+      result: { data: { podSettlementPreview: settlement() } },
+      maxUsageCount: Number.POSITIVE_INFINITY,
+    };
+    const { mock, sent } = completeMock();
+    dialog(VENUE_POD, [preview, mediaBoardMock(), mock]);
+    await settle();
+
+    await enterBill('450');
+    uploadBill();
+    fireEvent.change(extraInput(), { target: { value: '120' } });
+    await waitForPreview();
+    await settle();
+
+    expect(asked[asked.length - 1]).toEqual({ pod_id: 'pod-1', venue_bill_amount: 450, venue_extra_amount: 120 });
+    expect(asked.every((variables) => !('include_slot_price' in variables))).toBe(true);
+
+    await submitForm();
+    expect(sent).toEqual([
+      { pod_id: 'pod-1', venue_bill_amount: 450, venue_bill_url: BILL, venue_extra_amount: 120 },
+    ]);
+  });
+
+  it('will not complete with extra charges outside the server’s bound', async () => {
+    const { mock, sent } = completeMock();
+    dialog(VENUE_POD, [anyPreviewMock(), mediaBoardMock(), mock]);
+    await settle();
+
+    await enterBill('450');
+    uploadBill();
+    fireEvent.change(extraInput(), { target: { value: '-1' } });
+    await submitForm();
+
+    expect(await screen.findByText(labels.venueBill.extraInvalid)).toBeInTheDocument();
+    expect(screen.queryByText(labels.venueBill.extraHint)).not.toBeInTheDocument();
+    expect(sent).toEqual([]);
+  });
+
+  // The venue's usage prices its booking (a per-guest slot, overtime) beside the bill.
+  it('sends the guests the venue charged for and the overtime hours with the bill', async () => {
     const { mock, sent } = completeMock();
     dialog(VENUE_POD, [anyPreviewMock(), mediaBoardMock(), mock]);
     await settle();
 
     expect(screen.getByText(labels.venueBill.paxHint)).toBeInTheDocument();
+    await enterBill('450');
+    uploadBill();
     fireEvent.change(within(screen.getByTestId('pod-complete-venue-pax')).getByRole('spinbutton'), {
       target: { value: '18' },
     });
@@ -601,7 +703,16 @@ describe('PodCompleteDialog settlement', () => {
     await settle();
     await submitForm();
 
-    expect(sent).toEqual([{ pod_id: 'pod-1', venue_bill_amount: 0, venue_pax: 18, overtime_hours: 1.5 }]);
+    expect(sent).toEqual([
+      {
+        pod_id: 'pod-1',
+        venue_bill_amount: 450,
+        venue_bill_url: BILL,
+        venue_extra_amount: 0,
+        venue_pax: 18,
+        overtime_hours: 1.5,
+      },
+    ]);
   });
 
   it('will not complete with a fractional guest count', async () => {
@@ -609,6 +720,8 @@ describe('PodCompleteDialog settlement', () => {
     dialog(VENUE_POD, [anyPreviewMock(), mediaBoardMock(), mock]);
     await settle();
 
+    await enterBill('450');
+    uploadBill();
     fireEvent.change(within(screen.getByTestId('pod-complete-venue-pax')).getByRole('spinbutton'), {
       target: { value: '2.5' },
     });
@@ -616,25 +729,6 @@ describe('PodCompleteDialog settlement', () => {
 
     expect(await screen.findByText(labels.venueBill.paxInvalid)).toBeInTheDocument();
     expect(sent).toEqual([]);
-  });
-
-  it('sends the choice to pay the slot price on top of the bill', async () => {
-    const { mock, sent } = completeMock();
-    const { props, notifySuccess } = dialog(VENUE_POD, [anyPreviewMock(), mediaBoardMock(), mock]);
-    await settle();
-
-    await enterBill('450');
-    fireEvent.change(screen.getByLabelText('media'), { target: { value: BILL } });
-    fireEvent.click(screen.getByRole('checkbox', { name: labels.venueBill.includeSlot }));
-    await settle();
-    expect(screen.getByRole('checkbox', { name: labels.venueBill.includeSlot })).toBeChecked();
-    await submitForm();
-
-    expect(sent).toEqual([
-      { pod_id: 'pod-1', venue_bill_amount: 450, venue_bill_url: BILL, include_slot_price: true },
-    ]);
-    expect(notifySuccess).toHaveBeenCalledWith(labels.venueBill.sentToFinance);
-    expect(props.onCompleted).toHaveBeenCalledTimes(1);
   });
 
   it('completes a pod with no venue behind it, with no bill to ask for', async () => {

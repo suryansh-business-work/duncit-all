@@ -250,6 +250,15 @@ export {
 } from './gig-job';
 
 export {
+  BOOKING_OFFER_LIMITS,
+  makeBookingOffersSchema,
+  toBookingOffersInput,
+  toBookingOffersValues,
+  type BookingOffersValues,
+  type VenueOfferSettings,
+} from './venue-offer-settings';
+
+export {
   makeVenueOfferAskSchema,
   makeVenueOfferCounterSchema,
   makeVenueOfferRejectSchema,

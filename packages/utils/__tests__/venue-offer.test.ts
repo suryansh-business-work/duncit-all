@@ -23,6 +23,8 @@ import {
   moneyRangeText,
   offerCalendarPicks,
   offerEarningsArgs,
+  offerGuestFloor,
+  offerGuestsText,
   offerPickerRules,
   offerQuoteRange,
   offerRateOf,
@@ -30,6 +32,7 @@ import {
   offeringsToText,
   venueOfferInput,
   venueOfferModelKey,
+  venueOfferPrefillValues,
   venueOfferPriceInput,
   venueOfferStatusKey,
   venueOfferTermsText,
@@ -124,6 +127,33 @@ describe('hostOfferActions', () => {
   });
 });
 
+describe('offerGuestsText', () => {
+  const t = (key: string, opts?: { vars?: Record<string, string | number> }) => `${key}${JSON.stringify(opts?.vars ?? {})}`;
+
+  it('reads a range while the venue is paid for fewer than the guests, else the guests alone', () => {
+    expect(offerGuestsText(t, 8, 20)).toBe('availability.offers.guestRange{"min":8,"max":20}');
+    expect(offerGuestsText(t, 0, 20)).toBe('availability.offers.guests{"n":20}');
+    expect(offerGuestsText(t, 20, 20)).toBe('availability.offers.guests{"n":20}');
+  });
+});
+
+describe('offerGuestFloor', () => {
+  it("is the venue's minimum, never more than the space holds", () => {
+    expect(offerGuestFloor(8, 40)).toBe(8);
+    // A space smaller than the venue's minimum: the server asks for the space's capacity.
+    expect(offerGuestFloor(8, 6)).toBe(6);
+    // No capacity known: the minimum stands.
+    expect(offerGuestFloor(8, null)).toBe(8);
+    expect(offerGuestFloor(8.7, 0)).toBe(8);
+  });
+
+  it('is 0 when the venue names no minimum', () => {
+    expect(offerGuestFloor(null, 40)).toBe(0);
+    expect(offerGuestFloor(undefined, undefined)).toBe(0);
+    expect(offerGuestFloor(-3, 10)).toBe(0);
+  });
+});
+
 describe('offeringsFromText / offeringsToText', () => {
   it('reads one point per line, trimmed, without a typed bullet or blank lines', () => {
     expect(offeringsFromText('- Projector\n\n  • Snacks for 20  \n* Parking\nTable 4')).toEqual([
@@ -211,6 +241,36 @@ describe('venueOfferInput', () => {
     expect(venueOfferInput(source({ model: 'PER_PAX' }))).toBeNull();
     expect(venueOfferInput(source({ rate: '' }))).toBeNull();
     expect(venueOfferInput(source({ rate: 0 }))).toBeNull();
+  });
+});
+
+describe('venueOfferPrefillValues', () => {
+  const declined = {
+    model: 'PER_GUEST',
+    rate: 500,
+    offerings: ['Projector', 'Snacks'],
+    note: 'Quiet corner',
+    start_at: '2026-11-07T07:30:00.000Z',
+    end_at: '2026-11-07T09:30:00.000Z',
+    space_label: 'Lawn',
+    pets: true,
+  };
+
+  it('starts a new offer from the declined terms, as the resubmit forms hold them', () => {
+    expect(venueOfferPrefillValues(declined)).toEqual({
+      offer_start: '2026-11-07T07:30:00.000Z',
+      offer_end: '2026-11-07T09:30:00.000Z',
+      space_label: 'Lawn',
+      pets: true,
+      venue_offer_model: 'PER_GUEST',
+      venue_offer_rate: '500',
+      offerings: 'Projector\nSnacks',
+      note: 'Quiet corner',
+    });
+  });
+
+  it('leaves an option this client does not know, and no amount, to be picked again', () => {
+    expect(venueOfferPrefillValues({ ...declined, model: 'PER_DAY', rate: 0 })).toMatchObject({ venue_offer_model: '', venue_offer_rate: '' });
   });
 });
 

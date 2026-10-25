@@ -545,6 +545,13 @@ exports:
   - 'bookingRateText'
   - 'bookingTileCaption'
   - 'venueOfferInput'
+  - 'venueOfferPriceInput'
+  - 'offeringsFromText'
+  - 'offerQuoteRange'
+  - 'offerEarningsArgs'
+  - 'hostOfferActions'
+  - 'venueChatOfferActions'
+  - 'venueChatOfferTitleKey'
   - 'currentOfferTerms'
   - 'venueOfferActions'
   - 'venueOfferInboxStatus'
@@ -3527,24 +3534,36 @@ const { lines, total, deposit } = venueQuoteLines(result.quote, (v) => formatSta
 
 ## Offering a venue a price — `venue-offer`
 
-A host books a venue by offering how they will pay it — per guest, per hour, for the slot, or a
-flat price — with an amount. The server prices the offer with the venue's own charges (price rules,
-minimum spend, fees, GST) and Duncit's commission on top; the venue then accepts, rejects or
-counters it, and a counter waits for the host.
+A host books a venue by offering how they will pay it — per guest (a minimum order value per
+person), per hour, for the slot, or a flat price — with an amount, what they need from the venue
+(one point per line) and an optional note. The server prices the offer with the venue's own charges
+(price rules, minimum spend, fees, GST) and Duncit's commission on top at both ends of the guests:
+the venue's minimum and the pod's spots. The venue then accepts, rejects or counters it; a counter
+waits for the host, who may accept, reject or counter back. Every answer carries the `round` it
+read, so a move the other side made meanwhile is refused (`OFFER_CHANGED`) instead of overwritten.
 
 | Export | Meaning |
 | --- | --- |
-| `VENUE_OFFER_MODELS` / `VENUE_OFFER_MODEL_KEY` | The pricing options (`PER_GUEST`, `PER_HOUR`, `PER_SLOT`, `FLAT`) in picker order, and each one's name and amount-field label keys. |
+| `VENUE_OFFER_MODELS` / `VENUE_OFFER_MODEL_KEY` | The pricing options (`PER_GUEST`, `PER_HOUR`, `PER_SLOT`, `FLAT`) in picker order, and each one's name, amount-field label and one-line `help` keys. |
 | `isVenueOfferModel(model)` / `venueOfferModelKey(model)` | Whether a plain string (either app's enum) is an option; its name key, or `''`. |
 | `offerRateOf(rate)` | A typed amount as rupees (2 decimals), or 0 when it is not a positive number. |
-| `venueOfferInput(source)` | The `venue_offer` input (`start_at`, `end_at`, `space_label` — `''` for the whole venue — `pax`, `pets`, `model`, `rate`), or null until a window, an option and an amount are all there. |
+| `VENUE_OFFER_ASK_LIMITS` / `offeringsFromText(text)` / `offeringsToText(list)` | The server's bounds (20 points, 120 characters each, a 1000-character note); the box's text as points (trimmed, typed bullets and blank lines dropped) and back. |
+| `venueOfferInput(source)` | The `venue_offer` input (`start_at`, `end_at`, `space_label` — `''` for the whole venue — `pax`, `pets`, `model`, `rate`, and `offerings` / `note` when the source has them), or null until a window, an option and an amount are all there. |
+| `venueOfferPriceInput(input)` | The same input without the points and note — what a live quote asks with, so typing them never re-prices. |
+| `offerQuoteRange(quote, quoteMin)` / `moneyRangeText(min, max, money)` | A quote pair as `{ venueMin, venueMax, totalMin, totalMax, ranged }`, and one amount or "min – max" written with the surface's formatter. |
+| `offerEarningsArgs(quote, quoteMin, minGuests, spots)` | The venue arguments `potentialPodEarnings` takes, with `min_spots` and the money at the minimum when it is below the spots. |
+| `offerGuestFloor(venueMinimum, capacity)` / `offerGuestsText(t, min, max)` | The fewest spots an offer may be for (the venue's minimum, never more than the space holds — the server's rule), and "8–20 guests" / "20 guests". |
+| `hostMayAnswerCounter(offer)` / `hostOfferActions(offer)` | Whether the venue's counter waits on the host; what the host may do now (`accept`, `reject`, `counter`, or `sendNew` once declined). |
+| `isOfferChangedError(reason)` | Whether a refused answer's `extensions.reason` means the terms moved while it was being read. |
 | `offerPickerRules(calendar)` | The `BookingRules` an offer's pickers use: the 30-minute grid, no length limits, the venue's buffer and notice. |
 | `VENUE_OFFER_STATUS_KEY` / `venueOfferStatusKey(status)` | How `SENT`, `COUNTERED`, `ACCEPTED` and `DECLINED` read to the host; `''` for an unknown status. |
-| `VENUE_OFFER_QUOTE_SDL` / `VENUE_OFFER_CALENDAR_SDL` / `POD_VENUE_OFFER_SDL` / `ACCEPT_VENUE_COUNTER_OFFER_SDL` / `REJECT_VENUE_COUNTER_OFFER_SDL` | The host-side documents, as SDL strings (mWeb wraps them with `gql`; the native app re-declares them for its codegen). |
+| `VENUE_OFFER_QUOTE_SDL` / `VENUE_OFFER_CALENDAR_SDL` / `POD_VENUE_OFFER_SDL` / `ACCEPT_VENUE_COUNTER_OFFER_SDL` / `REJECT_VENUE_COUNTER_OFFER_SDL` / `COUNTER_VENUE_OFFER_AS_HOST_SDL` / `HOST_COUNTER_QUOTE_SDL` | The host-side documents, as SDL strings (mWeb wraps them with `gql`; the native app re-declares them for its codegen). Quotes select `quote_min` too; answers take `$round`. |
 
 ```ts
-const offer = venueOfferInput({ start, end, pax: spots, pets: false, spaceLabel, model: 'PER_GUEST', rate: '300' });
-// → { start_at, end_at, space_label: '', pax: 20, pets: false, model: 'PER_GUEST', rate: 300 }
+const offer = venueOfferInput({ start, end, pax: spots, pets: false, spaceLabel, model: 'PER_GUEST', rate: '300', offerings: '- Projector\nSnacks', note: '' });
+// → { start_at, end_at, space_label: '', pax: 20, pets: false, model: 'PER_GUEST', rate: 300, offerings: ['Projector', 'Snacks'], note: '' }
+const range = offerQuoteRange(result.quote, result.quote_min);
+moneyRangeText(range.venueMin, range.venueMax, money); // '₹1,800 – ₹6,000'
 ```
 
 ## Answering a host's offer — `venue-offer-inbox`
@@ -3554,15 +3573,16 @@ for the Partners console, mWeb and the native app. Every copy key is a literal (
 
 | Export | What it is |
 | --- | --- |
-| `currentOfferTerms(offer)` | The terms on the table and whose they are: the venue's counter while there is one (`by: 'VENUE'`), else the host's offer (`by: 'HOST'`). |
+| `currentOfferTerms(offer)` | The terms on the table and whose they are: the venue's counter while there is one (`by: 'VENUE'`), else the host's offer or latest counter back (`by: 'HOST'`) — with `quoteMin`, `minGuests`, `offerings` and `note` (empty on offers from older servers). |
 | `venueOfferActions(offer)` | What the venue may do now: `SENT` → accept, reject, counter; `COUNTERED` → reject or change the counter (it cannot accept its own terms); settled → nothing. |
 | `venueOfferInboxStatus(offer)` | How the status reads to the venue, and the chip tone; `''` for an unknown status. |
 | `VENUE_OFFER_INBOX_MODEL_KEY` / `venueOfferInboxModelKey(model)` | Each pricing option's name and amount-line keys (`"{rate} per guest"`); null for an unknown option. |
+| `venueOfferTermsLine(t, model, amount)` | "Per guest · ₹300 per guest" — one side's terms in the booking's words, with the amount already formatted; the inbox, the chat, Complete Pod and Finance all write it this way. |
 | `venueOfferHistoryKey(entry)` | One negotiation step's sentence key by who took it (`HOST:OFFER`, `VENUE:COUNTER`, …); `''` for an unknown one. |
 
 ```ts
 const { accept, reject, counter } = venueOfferActions(request.offer);
-const terms = currentOfferTerms(request.offer); // → { by: 'HOST', model: 'PER_GUEST', rate: 300, quote }
+const terms = currentOfferTerms(request.offer); // → { by: 'HOST', model: 'PER_GUEST', rate: 300, quote, quoteMin, minGuests: 6, offerings, note }
 ```
 
 ## Time clash before a booking — `pod-booking-clash`
@@ -3705,8 +3725,11 @@ Partners app share the operations and the merge below.
 
 | Export | Meaning |
 | --- | --- |
-| `VENUE_CHAT_ROOM_SDL` | `venueChatRoom(pod_id)`: pod title and time, the venue's name and photo, and the caller's side (`HOST` / `VENUE`). |
-| `VENUE_CHAT_MESSAGES_SDL` | One page of lines, oldest first (`limit`, `before`). |
+| `VENUE_CHAT_ROOM_SDL` | `venueChatRoom(pod_id)`: pod title and time, the venue's name and photo, the caller's side (`HOST` / `VENUE`), whether the pod is free (`pod_is_free` — an OFFER card then names no money), and the other side's `counterpart_name` / `_phone` / `_email`. |
+| `VENUE_CHAT_MESSAGES_SDL` | One page of lines, oldest first (`limit`, `before`). An `OFFER` line carries the booking offer's move in `offer` (`VenueChatOfferMove`: event, who moved, round, the terms, the money at both ends, `expires_at`, `reason`). |
+| `newestOfferLineId(lines)` | The OFFER line the thread ends on — the only one that may still be answered. |
+| `venueChatOfferActions(move, { side, newest, live })` | What an OFFER bubble offers the reader: `answer` (Accept / Reject / Counter) only on the newest open move of the live offer's round when it is their turn; `sendNew` only to a host, on the newest line that declined or ran out. |
+| `venueChatOfferTitleKey(move, side)` | The bubble's heading key as the reader sees it ("You countered", "The venue countered", "The offer expired…"); `''` for an unknown move. |
 | `SEND_VENUE_CHAT_MESSAGE_SDL` | Post a `TEXT` line, or an `IMAGE` with an uploaded https URL. |
 | `VENUE_CHAT_SOCKET` | `join_venue_chat` / `leave_venue_chat` with the pod id; lines arrive as `venue_chat_message`. |
 | `venueChatPath(podId)` | The thread's route on mWeb and in the app: `/venue-chat/<pod id>` (also the push link). |
@@ -3715,7 +3738,7 @@ Partners app share the operations and the merge below.
 | `venueChatPodIdFromPath(path)` | The pod id back out of `/venue-chat/<pod id>` (the push link), or null. |
 | `hasVenueChat(pod)` | Whether a pod has a thread: only one booked at a venue (`venue_id`). The "Chat with venue / host" rows show on that. |
 | `isVenueChatUnavailable(code)` | Whether a failure's code (`FORBIDDEN`) means "this thread is not yours" — the not-available state, not a retry. |
-| `venueChatCounterpart(room)` | The header: a host sees the venue's name and photo plus the pod; the venue sees the pod's title. Both get the pod's time. |
+| `venueChatCounterpart(room)` | The header: a host sees the venue's name and photo plus the pod; the venue sees the pod's title. Both get the pod's time and `contact` — the other side's name, phone and email (null when neither is on record). |
 | `MY_VENUE_CHAT_THREADS_SDL` | The venue owner's inbox: `myVenueChatThreads(venue_id?, limit, offset)` — every thread someone wrote in (newest first), then upcoming pods nobody has written about yet, each with the lead host, the newest line, `last_message_is_photo` and the caller's `unread_count`. Opening a thread's newest page marks it read. |
 | `ADMIN_VENUE_CHAT_THREADS_SDL` / `ADMIN_VENUE_CHAT_MESSAGES_SDL` | Duncit staff (Venues console): one venue's threads and one thread's lines, read-only — no read marks. |
 | `VENUE_CHAT_THREADS_PAGE` / `VenueChatThreadRow` | Rows per inbox page (30), and one row's shape. `@duncit/ui` `VenueChatThreadList` draws it on the web. |
@@ -3802,11 +3825,14 @@ socket.on(CHAT_NEW_EVENT, (raw) => {
 
 ## The venue bill at Complete Pod — `venue-bill`
 
-Whoever completes a pod may enter the venue final bill. The server decides the money
-(`venueChargeForPod`): no bill leaves the booked slot price standing, a bill replaces it, and a bill
-with "include slot price" is paid on top of it. This module only holds the words and arranges the
-figures the settlement returned, for the four surfaces that show them: the host dialog on mWeb and
-native, the Admin dialog and the Finance Payment Release page.
+A paid pod at a venue completes against the amount agreed with the venue, and the venue's final
+bill is its proof: its total and the file are required. Anything the venue charged beyond the agreed
+amount is entered as extra charges and paid on top once Finance approves it. A per-guest booking is
+paid for the people who came, never fewer than its minimum. The server decides the money
+(`venueChargeForPod`); releases from older builds keep their old meaning (a bill that replaced the
+slot price, or was paid on top of it). This module only holds the words and arranges the figures the
+settlement returned, for the four surfaces that show them: the host dialog on mWeb and native, the
+Admin dialog and the Finance Payment Release page.
 
 ```ts
 import { buildVenueBillLines, mwebVenueBillLabels, firstMediaUrl } from '@duncit/utils';
@@ -3820,13 +3846,19 @@ const lines = buildVenueBillLines(
     venue_amount: settlement.waterfall.venue_amount,
     attended_seats: settlement.attended_seats,
     booked_seats: settlement.booked_seats,
+    extra: settlement.venue_extra_amount,
+    min_guests: settlement.venue_min_guests,
+    // The guests the server priced (raised to the minimum) — not the raw roster count.
+    people_counted: settlement.venue_pax,
   },
   labels,
   settlement.currency_symbol,
 );
 ```
 
-The slot-price line is left out when there is none to state (a legacy pod with no slot link).
+The slot-price line is left out when there is none to state (a legacy pod with no slot link); the
+"guests the venue is paid for" line only shows for a booking with a minimum, and the extra-charges
+line only when there were any.
 `firstMediaUrl` reads the single bill URL out of a media picker newline-separated value. Web
 renderer: `VenueBillSummary` in `@duncit/ui`.
 

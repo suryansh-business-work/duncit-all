@@ -87,6 +87,7 @@ export const VENUE_CHAT_ROOM_SDL = `
       venue_name
       venue_photo
       my_side
+      pod_is_free
       counterpart_name
       counterpart_phone
       counterpart_email
@@ -176,6 +177,8 @@ export interface VenueChatRoomInfo {
   venue_name: string;
   venue_photo?: string | null;
   my_side: VenueChatSide;
+  /** A free pod: its host settles the venue directly, so offer lines show no money. */
+  pod_is_free?: boolean | null;
   /** The person on the other side: the pod's lead host for the venue, the venue's listed contact for a host. */
   counterpart_name?: string | null;
   counterpart_phone?: string | null;

@@ -76,6 +76,17 @@ export function clampSpots(value: number, bounds: Readonly<SpotsBounds>): number
 }
 
 /**
+ * Where a spots field should move when its bounds change — say a venue's
+ * minimum arrives — or null to leave it: an unset count is the host's to pick,
+ * and one already inside the range stays as typed.
+ */
+export function spotsSnapTarget(current: number, bounds: Readonly<SpotsBounds>): number | null {
+  if (!(current > 0)) return null;
+  const next = clampSpots(current, bounds);
+  return next === current ? null : next;
+}
+
+/**
  * The range a pod that ALREADY EXISTS may be resized within, as the server's
  * `podSpotLimits` answers it.
  *

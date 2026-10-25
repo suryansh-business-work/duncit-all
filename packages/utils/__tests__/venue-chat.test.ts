@@ -173,7 +173,7 @@ describe('offer lines', () => {
     for (const field of ['offer {', 'venue_receives_max', 'offerings', 'expires_at', 'reason']) {
       expect(VENUE_CHAT_MESSAGES_SDL).toContain(field);
     }
-    for (const field of ['counterpart_name', 'counterpart_phone', 'counterpart_email']) expect(VENUE_CHAT_ROOM_SDL).toContain(field);
+    for (const field of ['pod_is_free', 'counterpart_name', 'counterpart_phone', 'counterpart_email']) expect(VENUE_CHAT_ROOM_SDL).toContain(field);
   });
 
   it('finds the newest offer line, skipping text after it and an OFFER line with no move', () => {

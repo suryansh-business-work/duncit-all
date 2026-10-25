@@ -4,6 +4,7 @@ import {
   SPOTS_HARD_MAX,
   attendeeSeatCount,
   clampSpots,
+  spotsSnapTarget,
   payableSpots,
   payingAttendees,
   payingSeats,
@@ -148,6 +149,22 @@ describe('spotsBounds', () => {
 
   it('collapses rather than inverts when the venue maximum is below the floor', () => {
     expect(spotsBounds({ minPax: 10, venueCapacity: 30, venueMaxPax: 6 })).toEqual({ min: 10, max: 10, slidable: false });
+  });
+});
+
+describe('spotsSnapTarget', () => {
+  const bounds = { min: 6, max: 20, slidable: true };
+
+  it('moves a count outside the range to its nearest end', () => {
+    expect(spotsSnapTarget(4, bounds)).toBe(6);
+    expect(spotsSnapTarget(30, bounds)).toBe(20);
+  });
+
+  it('leaves a count already inside, and one not set yet, as it is', () => {
+    expect(spotsSnapTarget(12, bounds)).toBeNull();
+    expect(spotsSnapTarget(6, bounds)).toBeNull();
+    expect(spotsSnapTarget(0, bounds)).toBeNull();
+    expect(spotsSnapTarget(Number.NaN, bounds)).toBeNull();
   });
 });
 

@@ -78,6 +78,21 @@ export const VENUE_OFFER_INBOX_MODEL_KEY: Readonly<Record<VenueOfferModel, { lab
 export const venueOfferInboxModelKey = (model: string | null | undefined) =>
   isVenueOfferModel(model) ? VENUE_OFFER_INBOX_MODEL_KEY[model] : null;
 
+/** The `t` every surface passes in. */
+type InboxTranslate = (key: string, opts?: { vars?: Record<string, string | number> }) => string;
+
+/**
+ * "Per guest · ₹300 per guest" — one side's terms in the booking's own words,
+ * for the inbox, the chat, Complete Pod and Finance alike. `amount` is the rate
+ * already written in the surface's money format; an option this client does not
+ * know reads as just that amount.
+ */
+export function venueOfferTermsLine(t: InboxTranslate, model: string | null | undefined, amount: string): string {
+  const keys = venueOfferInboxModelKey(model);
+  if (!keys) return amount;
+  return t('availability.offers.termsLine', { vars: { model: t(keys.label), rate: t(keys.rate, { vars: { rate: amount } }) } });
+}
+
 export type OfferStatusTone = 'warning' | 'info' | 'success' | 'error';
 
 const INBOX_STATUS: Readonly<Record<string, { key: string; tone: OfferStatusTone }>> = {

@@ -6,6 +6,7 @@ import {
   venueOfferHistoryKey,
   venueOfferInboxModelKey,
   venueOfferInboxStatus,
+  venueOfferTermsLine,
   VENUE_OFFER_INBOX_MODEL_KEY,
 } from '../src/venue-offer-inbox';
 
@@ -55,6 +56,26 @@ describe('currentOfferTerms', () => {
   it("reads a counter from an older server, which carries only the money, as the venue's terms", () => {
     const older = { ...offer, status: 'COUNTERED', counter: { model: 'FLAT', rate: 6000, quote: counterQuote, note: null } };
     expect(currentOfferTerms(older)).toMatchObject({ by: 'VENUE', quoteMin: counterQuote, minGuests: 0, offerings: [], note: '' });
+  });
+});
+
+describe('venueOfferTermsLine', () => {
+  // A translator over the two words a line is made of, filling `{name}` as @duncit/i18n does.
+  const copy: Record<string, string> = {
+    'availability.offers.termsLine': '{model} · {rate}',
+    'availability.offers.model.perGuest': 'Per guest',
+    'availability.offers.rate.perGuest': '{rate} per guest',
+  };
+  const t = (key: string, opts?: { vars?: Record<string, string | number> }) =>
+    (copy[key] ?? key).replaceAll(/\{(\w+)\}/g, (match, name: string) => String(opts?.vars?.[name] ?? match));
+
+  it("writes one side's terms as the option and its amount line, with the amount as the surface wrote it", () => {
+    expect(venueOfferTermsLine(t, 'PER_GUEST', '₹300.00')).toBe('Per guest · ₹300.00 per guest');
+  });
+
+  it('is just the amount for an option this client does not know', () => {
+    expect(venueOfferTermsLine(t, 'PER_DAY', '₹300.00')).toBe('₹300.00');
+    expect(venueOfferTermsLine(t, null, '₹300.00')).toBe('₹300.00');
   });
 });
 

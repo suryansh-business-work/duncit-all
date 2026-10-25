@@ -91,6 +91,15 @@ export function venueOfferTermsText(
   return isVenueOfferModel(model) ? t(VENUE_OFFER_TERMS_KEY[model], { vars: { amount } }) : amount;
 }
 
+/**
+ * "8–20 guests" when the venue is paid for fewer than the booking's guests,
+ * else "20 guests" — `availability.offers.*`, which every surface ships.
+ */
+export function offerGuestsText(t: OfferTranslate, minGuests: number, maxGuests: number): string {
+  if (minGuests > 0 && minGuests < maxGuests) return t('availability.offers.guestRange', { vars: { min: minGuests, max: maxGuests } });
+  return t('availability.offers.guests', { vars: { n: maxGuests } });
+}
+
 /** Whether the host now has the venue's counter to accept or reject. */
 export const hostMayAnswerCounter = (offer: { status?: string | null; awaiting?: string | null } | null | undefined): boolean =>
   offer?.status === 'COUNTERED' && offer.awaiting === 'HOST';
@@ -103,6 +112,18 @@ export const hostMayAnswerCounter = (offer: { status?: string | null; awaiting?:
 export function hostOfferActions(offer: { status?: string | null; awaiting?: string | null } | null | undefined) {
   const answering = hostMayAnswerCounter(offer);
   return { accept: answering, reject: answering, counter: answering, sendNew: offer?.status === 'DECLINED' };
+}
+
+/**
+ * The fewest guests a new offer to a venue may be for: the venue's minimum
+ * (`offer_min_guests` — its setting, else the platform's default), never more
+ * than the space it books holds — the server's `openingMinGuests`, so every
+ * spots picker floors where the server would. 0 when the venue names none.
+ */
+export function offerGuestFloor(venueMinimum: number | null | undefined, capacity: number | null | undefined): number {
+  const minimum = Math.max(0, Math.floor(Number(venueMinimum) || 0));
+  const cap = Math.max(0, Math.floor(Number(capacity) || 0));
+  return cap > 0 ? Math.min(minimum, cap) : minimum;
 }
 
 /** The server's bounds on what a host asks of a venue (venueOffer `OFFER_ASK_LIMITS`). */
@@ -162,6 +183,36 @@ export interface VenueOfferSource {
 export function offerRateOf(rate: string | number | null | undefined): number {
   const value = typeof rate === 'number' ? rate : Number(String(rate ?? '').trim());
   return Number.isFinite(value) && value > 0 ? Math.round(value * 100) / 100 : 0;
+}
+
+/**
+ * The terms of an offer the venue declined (or let expire), as the venue chat's
+ * "Send a new offer" hands them to the resubmit form — a chat line's move
+ * satisfies it — so a new offer is an edit of the last one.
+ */
+export interface VenueOfferPrefill {
+  model: string;
+  rate: number;
+  offerings: readonly string[];
+  note: string;
+  start_at: string;
+  end_at: string;
+  space_label: string;
+  pets: boolean;
+}
+
+/** A declined offer's terms as the resubmit forms (mWeb, Partners, the app) hold them. */
+export function venueOfferPrefillValues(prefill: Readonly<VenueOfferPrefill>) {
+  return {
+    offer_start: prefill.start_at,
+    offer_end: prefill.end_at,
+    space_label: prefill.space_label,
+    pets: prefill.pets,
+    venue_offer_model: isVenueOfferModel(prefill.model) ? prefill.model : '',
+    venue_offer_rate: prefill.rate > 0 ? String(prefill.rate) : '',
+    offerings: offeringsToText(prefill.offerings),
+    note: prefill.note,
+  };
 }
 
 /** The `venue_offer` input, or null until a window, a pricing option and an amount are all there. */

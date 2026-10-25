@@ -32,6 +32,7 @@ export const venueChatResolvers = {
         venue_name: thread.venueName,
         venue_photo: thread.venuePhoto || null,
         my_side: side,
+        pod_is_free: thread.podIsFree,
         counterpart_name: contact.name || null,
         counterpart_phone: contact.phone || null,
         counterpart_email: contact.email || null,

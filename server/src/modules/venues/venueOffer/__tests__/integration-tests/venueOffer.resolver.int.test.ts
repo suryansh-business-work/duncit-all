@@ -31,6 +31,12 @@ const query = (name: string) => (venueOfferResolvers.Query as Record<string, Res
 const mutation = (name: string) => (venueOfferResolvers.Mutation as Record<string, Resolver>)[name];
 
 describe('venue offer resolvers', () => {
+  it("price Create Pod's offer from the venue's own minimum, as the offer it sends will be", async () => {
+    const offer = { start_at: 's', end_at: 'e', pax: 20, model: 'PER_GUEST', rate: 500 };
+    await expect(query('venueOfferQuote')({}, { venue_id: 'venue-1', offer }, ctx)).resolves.toBe('preview');
+    expect(venueOfferService.preview).toHaveBeenCalledWith('venue-1', offer, undefined, true);
+  });
+
   it('price a host’s counter-back for its pod', async () => {
     await expect(query('hostCounterQuote')({}, { pod_id: 'pod-1', terms }, ctx)).resolves.toBe('hostCounterPreview');
     expect(venueOfferService.hostCounterPreview).toHaveBeenCalledWith('user-1', 'pod-1', terms);

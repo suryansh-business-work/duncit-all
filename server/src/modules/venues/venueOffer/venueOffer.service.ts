@@ -32,9 +32,10 @@ import {
   pricingOf,
   spaceCapacity,
   type HoldRef,
+  type SpaceVenue,
 } from '@modules/venues/venuePricing/venuePricing.service';
 import { checkBookable } from '@modules/venues/venuePricing/venuePricing.availability';
-import { cleanMinGuests, cleanOfferNote, cleanOfferings } from './venueOffer.ask';
+import { cleanMinGuests, cleanOfferNote, cleanOfferings, openingMinGuests } from './venueOffer.ask';
 import { asRead, assertRound, nextMove, staleOffer } from './venueOffer.cas';
 import { postOfferLine } from './venueOffer.chat';
 import { answerDeadline, holdWindow, type PricedOffer } from './venueOffer.hold';
@@ -153,6 +154,20 @@ export async function checkAndPrice(
   const note = cleanOfferNote(req.note);
   const priced = await pricedProposal(venue, venueId, req, window, { pax, pets: !!req.pets, min });
   return { ...priced, start: window.start, end: window.end, space, pax, min_guests: min, offerings, note };
+}
+
+/**
+ * The fewest guests a host's opening offer is paid for — the venue's own
+ * minimum, else the platform's, never more than the space holds — or
+ * BELOW_VENUE_MINIMUM when the spots are fewer. Create Pod's live quote and the
+ * offer it then sends read this one number.
+ */
+export async function openingMinimum(
+  venue: SpaceVenue & Parameters<typeof venueOfferSettingsOf>[0],
+  req: Pick<VenueOfferRequest, 'space_label' | 'pax'>
+): Promise<number> {
+  const { min_guests } = await venueOfferSettingsOf(venue);
+  return openingMinGuests(min_guests, guestsOf(req), spaceCapacity(venue, (req.space_label ?? '').trim()));
 }
 
 /** An approved, active venue, or BAD_USER_INPUT. */
@@ -290,17 +305,20 @@ export const venueOfferService = {
    * The offer checked and priced, before anything is written: the venue is
    * approved and open then, the guests fit the space, the terms are sound.
    * `ignorePodId` lets a pod moving its booking ignore the booking it leaves.
+   * `atVenueMinimum` prices the fewest guests at the venue's own minimum, as a
+   * host's opening offer is; the other flows settle as before.
    */
-  async prepare(venueId: string, req: VenueOfferRequest, ignore?: string | HoldRef) {
+  async prepare(venueId: string, req: VenueOfferRequest, ignore?: string | HoldRef, atVenueMinimum = false) {
     const venue = await loadBookableVenue(venueId);
-    const priced = await checkAndPrice(venue, venueId, req, { ignore });
+    const request = atVenueMinimum ? { ...req, min_guests: await openingMinimum(venue, req) } : req;
+    const priced = await checkAndPrice(venue, venueId, request, { ignore });
     return { ...priced, ownerUserId: String(venue.owner_user_id) };
   },
 
   /** Create Pod's live price: the breakdown at both ends of the guests, or why the offer cannot be sent (never throws for that). */
-  async preview(venueId: string, req: VenueOfferRequest, ignore?: string | HoldRef) {
+  async preview(venueId: string, req: VenueOfferRequest, ignore?: string | HoldRef, atVenueMinimum = false) {
     try {
-      const { quote, quote_min } = await this.prepare(venueId, req, ignore);
+      const { quote, quote_min } = await this.prepare(venueId, req, ignore, atVenueMinimum);
       return { ok: true, message: null, quote: { ...quote, confirmed_at: null }, quote_min: { ...quote_min, confirmed_at: null } };
     } catch (error) {
       if (error instanceof GraphQLError) return { ok: false, message: error.message, quote: null, quote_min: null };

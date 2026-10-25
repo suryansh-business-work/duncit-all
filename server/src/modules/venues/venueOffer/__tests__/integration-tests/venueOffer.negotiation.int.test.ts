@@ -238,6 +238,21 @@ describe('a host’s offer', () => {
     expect(ok).toMatchObject({ ok: true, message: null, quote: { pax: 20, confirmed_at: null }, quote_min: { pax: 6, confirmed_at: null } });
   });
 
+  it("prices Create Pod's quote from the venue's own minimum, which the request does not carry", async () => {
+    const w = await seedWorld({ offers: { min_guests: 6, response_hours: 12 } });
+    const opening = request({ min_guests: undefined });
+    const ranged = await venueOfferService.preview(w.venueId, opening, undefined, true);
+    expect(ranged).toMatchObject({ ok: true, quote: { pax: 20, venue_payout: 10_000 }, quote_min: { pax: 6, venue_payout: 3000 } });
+    // Fewer spots than the venue takes: said before the host sends it, not thrown.
+    await expect(venueOfferService.preview(w.venueId, { ...opening, pax: 4 }, undefined, true)).resolves.toMatchObject({
+      ok: false,
+      message: 'This venue takes bookings for at least 6 guests — pick 6 spots or more',
+    });
+    // The other flows (Pod Requests, Auto Pods, change requests) still price both ends at the guests as booked.
+    const flat = await venueOfferService.preview(w.venueId, opening);
+    expect(flat).toMatchObject({ ok: true, quote_min: { pax: 20 } });
+  });
+
   it('confirms at once at the host’s own venue, with the per-guest basis frozen and no clock running', async () => {
     const w = await seedWorld({ ownerIsHost: true });
     const slotId = await placeOffer(w, {}, true);

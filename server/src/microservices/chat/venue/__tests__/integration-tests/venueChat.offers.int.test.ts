@@ -83,6 +83,13 @@ describe('who each side is talking to', () => {
     await expect(room(pod._id, owner._id)).resolves.toMatchObject({ counterpart_phone: null, counterpart_email: 'meera@x.com' });
   });
 
+  it('says whether the pod is free, so its offer lines name no money', async () => {
+    const { host, pod } = await seed();
+    await expect(room(pod._id, host._id)).resolves.toMatchObject({ pod_is_free: false });
+    await PodModel.updateOne({ _id: pod._id }, { $set: { pod_type: 'FREE' } });
+    await expect(room(pod._id, host._id)).resolves.toMatchObject({ pod_is_free: true });
+  });
+
   it('has nobody to show for a pod without hosts', async () => {
     const { owner, pod } = await seed();
     await PodModel.updateOne({ _id: pod._id }, { $set: { pod_hosts_id: [] } });

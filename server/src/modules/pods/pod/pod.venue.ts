@@ -440,15 +440,12 @@ export async function resolveSlotForCreate(
 async function openingAsk(venueId: string, offer: VenueOfferRequest, pax: number) {
   const venue = await VenueModel.findById(venueId).select('capacity capacity_items settings.offers').lean();
   if (!venue) throw new GraphQLError('Select a venue', { extensions: { code: 'BAD_USER_INPUT' } });
-  const [{ venueOfferSettingsOf }, { spaceCapacity }, ask] = await Promise.all([
-    import('@modules/venues/venue/venue.offerSettings'),
-    import('@modules/venues/venuePricing/venuePricing.service'),
+  const [{ openingMinimum }, ask] = await Promise.all([
+    import('@modules/venues/venueOffer/venueOffer.service'),
     import('@modules/venues/venueOffer/venueOffer.ask'),
   ]);
-  const { min_guests } = await venueOfferSettingsOf(venue);
-  const capacity = spaceCapacity(venue, (offer.space_label ?? '').trim());
   return {
-    min_guests: ask.openingMinGuests(min_guests, pax, capacity),
+    min_guests: await openingMinimum(venue, { space_label: offer.space_label, pax }),
     offerings: offer.offerings == null ? [] : ask.cleanOfferings(offer.offerings, true),
     note: ask.cleanOfferNote(offer.note),
   };

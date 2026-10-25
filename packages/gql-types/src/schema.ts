@@ -41520,6 +41520,8 @@ export type VenueChatRoom = {
   pod_date_time?: Maybe<Scalars['String']['output']>;
   /** The pod the thread belongs to. */
   pod_id: Scalars['ID']['output'];
+  /** A free pod: its host settles the venue directly, so offer lines name no money. */
+  pod_is_free: Scalars['Boolean']['output'];
   pod_title: Scalars['String']['output'];
   venue_id: Scalars['ID']['output'];
   venue_name: Scalars['String']['output'];

@@ -16,6 +16,8 @@ export const venueChatTypeDefs = /* GraphQL */ `
     venue_photo: String
     "The caller's side."
     my_side: VenueChatSide!
+    "A free pod: its host settles the venue directly, so offer lines name no money."
+    pod_is_free: Boolean!
     "Who the caller is talking to: the pod's lead host for the venue, the venue's listed contact for a host."
     counterpart_name: String
     "Their phone, with its country code. Null when none is on record."

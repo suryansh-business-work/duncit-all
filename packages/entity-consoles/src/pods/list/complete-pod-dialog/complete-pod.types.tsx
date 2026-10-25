@@ -1,11 +1,11 @@
 export interface CompletePodValues {
   host_user_id: string;
-  /** The venue's final bill. 0 = the booked slot price stands. */
-  venue_bill_amount: number;
+  /** The total on the venue's final bill, as typed — the proof of the agreed amount, required on a paid venue pod. */
+  venue_bill_amount: string;
   /** The uploaded bill — the media picker's newline-separated value. */
   venue_bill_media: string;
-  /** Pay the bill on top of the booked slot price rather than instead of it. */
-  include_slot_price: boolean;
+  /** Charges on the bill beyond the agreed amount, as typed. Empty = none. */
+  venue_extra_amount: string;
   /** Guests the venue charged for (a per-guest slot), as typed. Empty = everyone booked. */
   venue_pax: string;
   /** Hours the pod ran past its slot, as typed. Empty = none. */
@@ -26,9 +26,10 @@ export interface CompletePodDialogProps {
 
 export interface SettlementPreviewProps {
   podId: string;
+  /** The venue's final bill total as typed — the proof of the agreed amount. */
   venueBillAmount: number;
-  /** The bill is paid on top of the booked slot price rather than instead of it. */
-  includeSlotPrice: boolean;
+  /** Charges on the bill beyond the agreed amount, as the server takes them (`venueExtraAmountOf`). */
+  venueExtraAmount: number;
   /** The co-host picked as the payout beneficiary — their commission override
    * prices the settlement, so the preview must quote the same host. */
   hostUserId: string;

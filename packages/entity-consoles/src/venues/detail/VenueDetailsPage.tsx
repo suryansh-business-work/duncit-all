@@ -108,7 +108,7 @@ export default function VenueDetailsPage({ extraTabs }: Readonly<VenueDetailsPag
 
             {tabs.value === 'overview' && <VenueOverviewTab venue={venue} />}
             {tabs.value === 'pods' && <VenuePodsTab venueId={venue.id} />}
-            {tabs.value === 'operations' && <VenueOperationsTab settings={venue.settings} />}
+            {tabs.value === 'operations' && <VenueOperationsTab settings={venue.settings} venue={venue} />}
             {tabs.value === 'documents' && <VenueDocumentsCard documents={venue.documents ?? []} />}
             {tabs.value === 'chats' && <VenueChatsTab venueId={venue.id} />}
             {tabs.value === 'changeLogs' && (

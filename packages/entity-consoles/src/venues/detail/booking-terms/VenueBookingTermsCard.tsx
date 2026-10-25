@@ -5,12 +5,15 @@ import { offerTermsLabel, rupees } from '@duncit/availability-calendar';
 import { useDateFormat } from '@duncit/app-settings';
 import { useTranslation } from '@duncit/shell';
 import SectionCard from '../SectionCard';
+import BookingTermsAsk, { bookingPendingLabel } from './BookingTermsAsk';
 import { ADMIN_VENUE_BOOKING_TERMS } from './queries';
 
 /**
  * What each booking at this venue is worth — agreed once booked, still on the
  * table while the host and the venue negotiate: the venue's amount (paid in
- * full), Duncit's commission on top, and what the host pays. Read-only.
+ * full), Duncit's commission on top, and what the host pays — with the ask
+ * behind it (guests, what the venue provides, the note), the round it is on,
+ * whose move it is and when the answer is due. Read-only.
  */
 export default function VenueBookingTermsCard({ venueId }: Readonly<{ venueId: string }>) {
   const { t } = useTranslation();
@@ -48,8 +51,9 @@ export default function VenueBookingTermsCard({ venueId }: Readonly<{ venueId: s
                     `${t('availability.offers.hostTotal')} ${rupees(row.total)}`,
                   ].join(' · ')}
                 </Typography>
+                <BookingTermsAsk row={row} />
               </Box>
-              {row.status === 'PENDING' && <Chip size="small" color="warning" label={t('availability.offers.termsPending')} />}
+              {row.status === 'PENDING' && <Chip size="small" color="warning" label={bookingPendingLabel(t, row.awaiting)} />}
             </Stack>
           </Box>
         ))}

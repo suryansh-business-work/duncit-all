@@ -37,6 +37,8 @@ const prev = (over: Partial<PodFormValues> = {}): PodFormValues => ({
   venue_slot_id: '',
   venue_offer_model: '',
   venue_offer_rate: '',
+  venue_offer_offerings: '',
+  venue_offer_note: '',
   kept_booking: '',
   location_id: '',
   zone_name: '',

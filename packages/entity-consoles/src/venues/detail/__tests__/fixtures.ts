@@ -26,6 +26,8 @@ export const venueSettings = (over: Partial<VenueSettings> = {}): VenueSettings 
     trigger_hours: 48,
     refund_tiers: [{ hours_before: 24, refund_pct: 50 }],
   },
+  // The venue set its own minimum and left the response time to Duncit.
+  offers: { min_guests: 10, response_hours: 0 },
   ...over,
 });
 
@@ -125,6 +127,8 @@ export const makeVenue = (over: Partial<AdminVenueDetail> = {}): AdminVenueDetai
   venue_share_pct: 70,
   venue_commission_pct: 12,
   host_requests_limit_override: null,
+  offer_min_guests: 10,
+  offer_response_hours: 24,
   settings: venueSettings(),
   documents: [
     { type: 'GST Certificate', url: 'https://ik.imagekit.io/duncit/gst.pdf', uploaded_at: '2026-03-04T10:15:00.000Z' },
@@ -152,6 +156,9 @@ export const venuePayload = (venue: AdminVenueDetail) => {
     venue_category: { ...venue.venue_category, __typename: 'VenueCategory' },
     venue_categories: venue.venue_categories.map((entry) => ({ ...entry, __typename: 'VenueCategory' })),
     bank_account: { ...venue.bank_account, __typename: 'VenueBankAccount' },
+    // A record built before booking offers reads Duncit's defaults (8 guests, 24 hours).
+    offer_min_guests: venue.offer_min_guests ?? 8,
+    offer_response_hours: venue.offer_response_hours ?? 24,
     settings: {
       ...settings,
       __typename: 'VenueSettings',
@@ -164,6 +171,7 @@ export const venuePayload = (venue: AdminVenueDetail) => {
         tiers: settings.cancellation.tiers.map((tier) => ({ ...tier, __typename: 'VenueCancellationTier' })),
         refund_tiers: settings.cancellation.refund_tiers.map((tier) => ({ ...tier, __typename: 'VenueRefundTier' })),
       },
+      offers: { min_guests: 0, response_hours: 0, ...settings.offers, __typename: 'VenueOfferSettings' },
     },
     documents: venue.documents?.map((doc) => ({ ...doc, __typename: 'VenueDocument' })) ?? null,
   };

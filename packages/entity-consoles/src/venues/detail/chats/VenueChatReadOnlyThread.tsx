@@ -1,12 +1,26 @@
 import { useQuery } from '@apollo/client/react';
 import { Alert, Avatar, Box, CircularProgress, Stack, Typography } from '@mui/material';
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
+import { OfferChatCard, isOfferChatLine } from '@duncit/availability-calendar';
 import { useDateFormat, useTranslation } from '@duncit/app-settings';
 import { DuncitButton } from '@duncit/buttons';
-import { VENUE_CHAT_PAGE } from '@duncit/utils';
+import { newestOfferLineId, VENUE_CHAT_PAGE, type VenueChatLine } from '@duncit/utils';
 import { ADMIN_VENUE_CHAT_MESSAGES } from './queries';
 
-/** One venue chat as Duncit staff read it: every line, oldest first, no composer. */
+/** A line's content: an offer move as its card (a record — staff answer nothing), a photo, or the text. */
+function LineBody({ line, newest, photoAlt }: Readonly<{ line: VenueChatLine; newest: boolean; photoAlt: string }>) {
+  if (isOfferChatLine(line)) return <OfferChatCard move={line.offer} viewer="STAFF" newest={newest} />;
+  if (line.type === 'IMAGE' && line.image_url) {
+    return <Box component="img" src={line.image_url} alt={photoAlt} sx={{ maxWidth: 240, borderRadius: 1 }} />;
+  }
+  return (
+    <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+      {line.text}
+    </Typography>
+  );
+}
+
+/** One venue chat as Duncit staff read it: every line, oldest first — offer moves as their cards — no composer, no answers. */
 export default function VenueChatReadOnlyThread({
   podId,
   title,
@@ -19,6 +33,7 @@ export default function VenueChatReadOnlyThread({
     fetchPolicy: 'cache-and-network',
   });
   const lines = data?.adminVenueChatMessages ?? [];
+  const newestId = newestOfferLineId(lines);
 
   const renderLines = () => {
     if (loading && !data) {
@@ -41,22 +56,11 @@ export default function VenueChatReadOnlyThread({
         {lines.map((line) => (
           <Stack key={line.id} component="li" direction="row" spacing={1.25}>
             <Avatar src={line.user_photo ?? undefined} alt={line.user_name ?? ''} sx={{ width: 32, height: 32 }} />
-            <Stack spacing={0.25} sx={{ minWidth: 0 }}>
+            <Stack spacing={0.25} sx={{ minWidth: 0, flex: 1 }}>
               <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                 {line.user_name} · {formatDateTime(line.createdAt)}
               </Typography>
-              {line.type === 'IMAGE' && line.image_url ? (
-                <Box
-                  component="img"
-                  src={line.image_url}
-                  alt={t('admin.venueDetails.chatPhoto')}
-                  sx={{ maxWidth: 240, borderRadius: 1 }}
-                />
-              ) : (
-                <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-                  {line.text}
-                </Typography>
-              )}
+              <LineBody line={line} newest={line.id === newestId} photoAlt={t('admin.venueDetails.chatPhoto')} />
             </Stack>
           </Stack>
         ))}

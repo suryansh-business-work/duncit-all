@@ -179,9 +179,9 @@ vi.mock('../complete-pod-dialog', async (importOriginal) => {
           onClick={() =>
             props.onSubmit({
               host_user_id: 'u1',
-              venue_bill_amount: 1500,
+              venue_bill_amount: '1500',
               venue_bill_media: 'https://cdn.test/bill.pdf',
-              include_slot_price: false,
+              venue_extra_amount: '',
               venue_pax: '',
               overtime_hours: '',
               media_text: 'https://cdn.test/party.jpg',
@@ -602,9 +602,9 @@ describe('PodsPage / complete a pod', () => {
   it('submits the settlement, toasts, shows the release summary and reloads', async () => {
     const values = {
       host_user_id: 'u1',
-      venue_bill_amount: 1500,
+      venue_bill_amount: '1500',
       venue_bill_media: 'https://cdn.test/bill.pdf',
-      include_slot_price: false,
+      venue_extra_amount: '',
       venue_pax: '',
       overtime_hours: '',
       media_text: 'https://cdn.test/party.jpg',

@@ -17,9 +17,9 @@ const BILL = 'https://cdn.test/bill.pdf';
 
 const valid = (over: Partial<CompletePodValues> = {}): CompletePodValues => ({
   host_user_id: 'u1',
-  venue_bill_amount: 1500,
+  venue_bill_amount: '1500',
   venue_bill_media: BILL,
-  include_slot_price: false,
+  venue_extra_amount: '',
   venue_pax: '',
   overtime_hours: '',
   media_text: 'https://cdn.test/party.jpg',
@@ -42,36 +42,32 @@ describe('buildCompleteSchema', () => {
     expect(errorsOf(false, valid({ media_text: '' })).join(' ')).toMatch(/party/i);
   });
 
-  // The bill is optional: without one the venue is paid its booked slot price.
-  it('accepts a venue pod with no bill entered, and a virtual pod likewise', () => {
-    expect(errorsOf(true, valid({ venue_bill_amount: 0, venue_bill_media: '' }))).toEqual([]);
-    // Virtual pod (no venue): no bill amount needed.
-    expect(errorsOf(false, valid({ venue_bill_amount: 0, venue_bill_media: '' }))).toEqual([]);
-  });
-
-  it('refuses a bill below zero or one that is not a number', () => {
-    expect(errorsOf(true, valid({ venue_bill_amount: -1 }))).toEqual(['Enter a valid amount']);
-    expect(errorsOf(true, valid({ venue_bill_amount: 'abc' as never }))).toEqual(['Enter a valid amount']);
-  });
-
-  // Finance approves the payout against the document, so an amount needs it.
-  it('requires the uploaded bill once a venue pod has a bill amount', () => {
-    expect(errorsOf(true, valid({ venue_bill_media: '' }))).toEqual([
-      'Upload the venue bill for the amount you entered',
+  // The venue's final bill is the proof of the agreed amount on a paid venue pod.
+  it('requires the bill total and the bill itself on a paid venue pod', () => {
+    expect(errorsOf(true, valid({ venue_bill_amount: '', venue_bill_media: '' }))).toEqual([
+      "Enter the total on the venue's final bill",
+      "Upload the venue's final bill",
     ]);
-    expect(errorsOf(true, valid({ venue_bill_amount: 0.01, venue_bill_media: ' \n ' }))).toEqual([
-      'Upload the venue bill for the amount you entered',
-    ]);
-    const issues = buildCompleteSchema(true, adminFallbackT).safeParse(valid({ venue_bill_media: '' }));
+    const issues = buildCompleteSchema(true, adminFallbackT).safeParse(valid({ venue_bill_media: ' \n ' }));
     expect(issues.error?.issues.map((issue) => issue.path)).toEqual([['venue_bill_media']]);
   });
 
-  it('asks a pod with no venue for no bill document, whatever amount it carries', () => {
-    expect(errorsOf(false, valid({ venue_bill_media: '' }))).toEqual([]);
+  // A pod with no venue (or a free one, which the dialog passes as no venue) owes no bill.
+  it('asks a pod with no venue bill for no bill at all', () => {
+    expect(errorsOf(false, valid({ venue_bill_amount: '', venue_bill_media: '' }))).toEqual([]);
   });
 
-  it('accepts the bill paid on top of the slot price', () => {
-    expect(errorsOf(true, valid({ include_slot_price: true }))).toEqual([]);
+  it('refuses a bill total of zero, below zero or that is not a number', () => {
+    expect(errorsOf(true, valid({ venue_bill_amount: '0' }))).toEqual(['Enter a valid bill amount']);
+    expect(errorsOf(true, valid({ venue_bill_amount: '-1' }))).toEqual(['Enter a valid bill amount']);
+    expect(errorsOf(true, valid({ venue_bill_amount: 'abc' }))).toEqual(['Enter a valid bill amount']);
+  });
+
+  it('keeps extra charges within the server bound', () => {
+    expect(errorsOf(true, valid({ venue_extra_amount: '250' }))).toEqual([]);
+    expect(errorsOf(true, valid({ venue_extra_amount: '-1' }))).toEqual([
+      'Enter the extra charges as an amount from 0 to 1000000',
+    ]);
   });
 });
 
@@ -86,22 +82,23 @@ describe('buildCompleteInput', () => {
     ]);
   });
 
-  it('sends the bill’s first file and the slot-price choice with an amount', () => {
+  // Extra charges always ride with the bill (0 included); the slot-price choice never does.
+  it('sends the bill’s first file and the extra charges, never include_slot_price', () => {
     const input = buildCompleteInput(
-      valid({ venue_bill_media: `\n${BILL}\nhttps://cdn.test/other.jpg`, include_slot_price: true }),
+      valid({ venue_bill_media: `\n${BILL}\nhttps://cdn.test/other.jpg`, venue_extra_amount: '250' }),
       'pod1',
     );
     expect(input.venue_bill_url).toBe(BILL);
-    expect(input.include_slot_price).toBe(true);
-    expect(buildCompleteInput(valid(), 'pod1').include_slot_price).toBe(false);
+    expect(input.venue_extra_amount).toBe(250);
+    expect(input).not.toHaveProperty('include_slot_price');
+    expect(buildCompleteInput(valid(), 'pod1').venue_extra_amount).toBe(0);
   });
 
-  // A file or a ticked box left behind means nothing without an amount.
-  it('sends neither the file nor the slot-price choice without an amount', () => {
-    const input = buildCompleteInput(valid({ venue_bill_amount: 0, include_slot_price: true }), 'pod1');
+  it('sends neither the file nor the extra charges without a bill total', () => {
+    const input = buildCompleteInput(valid({ venue_bill_amount: '', venue_extra_amount: '250' }), 'pod1');
     expect(input.venue_bill_amount).toBe(0);
-    expect(input.venue_bill_url).toBeUndefined();
-    expect(input.include_slot_price).toBeUndefined();
+    expect(input).not.toHaveProperty('venue_bill_url');
+    expect(input).not.toHaveProperty('venue_extra_amount');
   });
 
   it('leaves the host and the notes out when they are blank', () => {

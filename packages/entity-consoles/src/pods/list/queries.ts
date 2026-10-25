@@ -323,7 +323,7 @@ export const POD_SETTLEMENT_PREVIEW = gql`
     $pod_id: ID!
     $venue_bill_amount: Float!
     $host_user_id: ID
-    $include_slot_price: Boolean
+    $venue_extra_amount: Float
     $venue_pax: Int
     $overtime_hours: Float
   ) {
@@ -331,7 +331,7 @@ export const POD_SETTLEMENT_PREVIEW = gql`
       pod_id: $pod_id
       venue_bill_amount: $venue_bill_amount
       host_user_id: $host_user_id
-      include_slot_price: $include_slot_price
+      venue_extra_amount: $venue_extra_amount
       venue_pax: $venue_pax
       overtime_hours: $overtime_hours
     ) {
@@ -344,6 +344,11 @@ export const POD_SETTLEMENT_PREVIEW = gql`
       venue_bill
       venue_slot_price
       include_slot_price
+      venue_extra_amount
+      venue_min_guests
+      venue_pax
+      venue_agreed_model
+      venue_agreed_rate
       waterfall {
         version
         amount

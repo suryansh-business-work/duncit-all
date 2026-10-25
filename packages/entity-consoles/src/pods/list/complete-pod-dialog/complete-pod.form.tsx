@@ -14,8 +14,14 @@ import {
 } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { RhfTextField } from '@duncit/forms';
-import { addVenueUsageIssues, venueUsageInput } from '@duncit/forms/schemas';
-import { firstMediaUrl, isFreePod } from '@duncit/utils';
+import {
+  addVenueBillIssues,
+  addVenueUsageIssues,
+  buildPodCompleteInput,
+  venueExtraAmountOf,
+  venueUsageInput,
+} from '@duncit/forms/schemas';
+import { isFreePod, shellVenueBillLabels } from '@duncit/utils';
 import { MediaListField } from '@duncit/media-picker';
 import SettlementPreview from './SettlementPreview';
 import VenueBillFields from './VenueBillFields';
@@ -31,50 +37,38 @@ export const mediaTextToInput = (value: string) =>
 
 type Translate = ReturnType<typeof useTranslation>['t'];
 
-/** The venue bill is optional — without one the booked slot price stands. With
- *  one, the bill itself must be uploaded (the server enforces the same rule).
- *  Messages are copy, so the translator comes in with it. */
-export const buildCompleteSchema = (hasVenue: boolean, t: Translate) =>
-  z
+/** The same rules as the host's dialog: on a paid pod at a venue the venue's
+ *  final bill (its total + the file) is required as proof of the agreed amount,
+ *  and extra charges are within the server's bound. `hasVenue` is false for a
+ *  pod with no venue and for a free pod. Messages are copy, so the translator
+ *  comes in with it. */
+export const buildCompleteSchema = (hasVenue: boolean, t: Translate) => {
+  const bill = shellVenueBillLabels(t);
+  return z
     .object({
       host_user_id: z.string().trim().min(1, t('admin.completePod.selectHost')),
-      venue_bill_amount: z.coerce
-        .number({ message: t('admin.completePod.invalidAmount') })
-        .min(0, t('admin.completePod.invalidAmount')),
+      venue_bill_amount: z.string().trim(),
       venue_bill_media: z.string(),
-      include_slot_price: z.boolean(),
-      venue_pax: z.string(),
-      overtime_hours: z.string(),
+      venue_extra_amount: z.string().trim(),
+      venue_pax: z.string().trim(),
+      overtime_hours: z.string().trim(),
       media_text: z.string().trim().min(1, t('admin.completePod.mediaRequired')),
       notes: z.string().trim().max(1000, t('admin.completePod.notesTooLong')),
     })
     .superRefine((values, ctx) => {
-      if (hasVenue) {
-        addVenueUsageIssues(values, ctx, {
-          paxInvalid: t('shell.venueBill.paxInvalid'),
-          overtimeInvalid: t('shell.venueBill.overtimeInvalid'),
-        });
-      }
-      if (hasVenue && values.venue_bill_amount > 0 && !firstMediaUrl(values.venue_bill_media)) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ['venue_bill_media'],
-          message: t('shell.venueBill.uploadRequired'),
-        });
-      }
+      if (!hasVenue) return;
+      addVenueUsageIssues(values, ctx, bill);
+      addVenueBillIssues(values, ctx, bill);
     });
+};
 
-/** Maps validated values onto the server's CompletePodInput. The bill's file
- *  and the slot-price choice ride only with an amount. */
+/** Maps validated values onto the server's CompletePodInput. The venue part is
+ *  the shared `buildPodCompleteInput`: with a bill, its file and the extra
+ *  charges (0 included) always go, and the old slot-price choice never does. */
 export function buildCompleteInput(values: CompletePodValues, podId: string) {
-  const billAmount = Number(values.venue_bill_amount) || 0;
   return {
-    pod_id: podId,
+    ...buildPodCompleteInput(values, podId),
     host_user_id: values.host_user_id || undefined,
-    venue_bill_amount: billAmount,
-    venue_bill_url: billAmount > 0 ? firstMediaUrl(values.venue_bill_media) : undefined,
-    include_slot_price: billAmount > 0 ? values.include_slot_price : undefined,
-    ...venueUsageInput(values),
     evidence_media: mediaTextToInput(values.media_text),
     notes: values.notes.trim() || undefined,
   };
@@ -97,9 +91,9 @@ export default function CompletePodDialog({
   const hostOptions = hostIds.map((id) => users.find((user) => user.user_id === id) ?? { user_id: id, full_name: id });
   const initialValues: CompletePodValues = {
     host_user_id: hostOptions[0]?.user_id ?? '',
-    venue_bill_amount: 0,
+    venue_bill_amount: '',
     venue_bill_media: '',
-    include_slot_price: false,
+    venue_extra_amount: '',
     venue_pax: '',
     overtime_hours: '',
     media_text: '',
@@ -119,7 +113,8 @@ export default function CompletePodDialog({
 
   const submit = handleSubmit((values) => onSubmit(values));
   const venueBillAmount = Math.max(0, Number(watch('venue_bill_amount')) || 0);
-  const includeSlotPrice = venueBillAmount > 0 && watch('include_slot_price');
+  // Paid on top of the agreed amount, so the preview re-prices with them.
+  const venueExtraAmount = venueExtraAmountOf(watch('venue_extra_amount'));
   const selectedHostId = watch('host_user_id') || '';
   const paxTyped = watch('venue_pax');
   const overtimeTyped = watch('overtime_hours');
@@ -145,7 +140,7 @@ export default function CompletePodDialog({
                   </MenuItem>
                 ))}
               </RhfTextField>
-              {hasVenue && <VenueBillFields control={control} billAmount={venueBillAmount} />}
+              {hasVenue && <VenueBillFields control={control} />}
               <Controller
                 control={control}
                 name="media_text"
@@ -164,7 +159,7 @@ export default function CompletePodDialog({
                 <SettlementPreview
                   podId={pod.id}
                   venueBillAmount={venueBillAmount}
-                  includeSlotPrice={includeSlotPrice}
+                  venueExtraAmount={venueExtraAmount}
                   hostUserId={selectedHostId}
                   venueUsage={venueUsage}
                   free={free}

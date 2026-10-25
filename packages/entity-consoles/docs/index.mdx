@@ -461,3 +461,32 @@ const visibility = useVisibility('CLUB', () => refetchRef.current?.());
 
 The action is offered to `useConsoleAccess().canGovern` only; the server gate is
 the same one `updatePod` / `updateClub` sit behind.
+
+## A venue's booking offers, and completing a pod at one
+
+Venue bookings are offers the host and the venue bargain over. The venue record
+reads both sides of that back, read-only:
+
+- **Operations → Booking offers** (`VenueOffersCard`): the fewest guests a host's
+  offer may be for and the hours either side has to answer, each as it is in
+  effect (`Venue.offer_min_guests` / `offer_response_hours`), saying "Duncit's
+  default" when the venue left its own (`settings.offers`) at 0. The owner edits
+  them in Partners (and mWeb) > Venue settings; the defaults live in Admin >
+  Settings > Venue offers. Copy: `venueSettings.offers.*`.
+- **Pods → Agreed terms** (`booking-terms/VenueBookingTermsCard`): each booking's
+  money (venue receives, Duncit's fee on top, host pays) with the ask behind it
+  (`BookingTermsAsk`) — the guests from the venue's minimum to the pod's spots, the
+  round it is on, whose move it is, when the pending answer is due, what the
+  venue was asked to provide and the note on the terms (`adminVenueBookingTerms`).
+
+The Pods console's **Complete Pod** dialog follows the host's own rules
+(`@duncit/forms/schemas`' `addVenueBillIssues` + `addVenueUsageIssues`): on a paid
+pod at a venue the venue's final bill — its total AND the file — is required as
+the proof of the agreed amount, anything the venue charged beyond it goes in as
+extra charges (0–1,000,000, paid on top once Finance approves), and the input is
+the shared `buildPodCompleteInput` — `venue_extra_amount` always, never
+`include_slot_price`. The live preview sends the same, and shows the agreed terms
+(`venue_agreed_model` + `venue_agreed_rate`), the guests a per-guest booking is
+paid for (`venue_pax`, never below `venue_min_guests`) and the extra charges
+above the split — every figure the server's. A free pod, or a pod with no venue,
+asks for no bill.

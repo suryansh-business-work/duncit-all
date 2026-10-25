@@ -4,6 +4,7 @@ import { requireRole } from '@middleware/rbac';
 import { consoleReaders } from '@modules/portals/console-access';
 import { venueChatService } from './venueChat.service';
 import { venueChatThreadsService } from './venueChat.threads';
+import { counterpartContact } from './venueChat.contacts';
 
 /** Staff who may read a venue's record in the Venues console may read its chats. */
 const VENUE_READ = consoleReaders('VENUE');
@@ -22,6 +23,7 @@ export const venueChatResolvers = {
   Query: {
     venueChatRoom: async (_: unknown, { pod_id }: { pod_id: string }, ctx: GraphQLContext) => {
       const { thread, side } = await venueChatService.room(pod_id, requireAuth(ctx));
+      const contact = await counterpartContact(thread, side);
       return {
         pod_id: thread.podId,
         pod_title: thread.podTitle,
@@ -30,6 +32,10 @@ export const venueChatResolvers = {
         venue_name: thread.venueName,
         venue_photo: thread.venuePhoto || null,
         my_side: side,
+        pod_is_free: thread.podIsFree,
+        counterpart_name: contact.name || null,
+        counterpart_phone: contact.phone || null,
+        counterpart_email: contact.email || null,
       };
     },
     venueChatMessages: async (

@@ -41,6 +41,13 @@ const settlement = {
   venue_bill: 0,
   venue_slot_price: 300,
   include_slot_price: false,
+  // No extra charges, no per-guest minimum, and a booking from before offers
+  // (nothing agreed to state) — the newer lines each get their own case below.
+  venue_extra_amount: 0,
+  venue_min_guests: 0,
+  venue_pax: 0,
+  venue_agreed_model: null as string | null,
+  venue_agreed_rate: null as number | null,
   // Inside the completion window, so the host is paid the computed remainder.
   complete_deadline: '2026-08-25T05:30:00.000Z',
   complete_expired: false,
@@ -94,6 +101,63 @@ describe('SettlementSummary', () => {
     expect(line.getByText(label)).toBeOnTheScreen();
     expect(line.getByText(value)).toBeOnTheScreen();
   };
+
+  it('states nothing agreed, no paid guests and no extra charges for a booking from before offers', () => {
+    renderWithProviders(<SettlementSummary settlement={settlement} isLoading={false} />);
+    expect(screen.queryByTestId('settlement-agreed-terms')).toBeNull();
+    expect(screen.queryByTestId('venue-bill-line-paid-guests')).toBeNull();
+    expect(screen.queryByTestId('venue-bill-line-extra')).toBeNull();
+  });
+
+  // An agreed per-guest booking: 9 of its 10 minimum came, so it is paid for 10,
+  // the bill proves the agreed ₹3,000 and ₹250 of extras ride on top.
+  it('states the agreed terms, the guests paid for and the extra charges on top', () => {
+    renderWithProviders(
+      <SettlementSummary
+        settlement={{
+          ...settlement,
+          venue_slot_price: 3000,
+          venue_bill: 3250,
+          venue_extra_amount: 250,
+          venue_min_guests: 10,
+          venue_pax: 10,
+          venue_agreed_model: 'PER_GUEST',
+          venue_agreed_rate: 300,
+          waterfall: { ...waterfall, venue_amount: 3250 },
+        }}
+        isLoading={false}
+      />,
+    );
+    const agreed = within(screen.getByTestId('settlement-agreed-terms'));
+    expect(agreed.getByText('Agreed terms')).toBeOnTheScreen();
+    expect(agreed.getByText('Per guest · ₹300.00 per guest')).toBeOnTheScreen();
+    expectBillLine('paid-guests', 'Guests the venue is paid for', '10 (at least 10)');
+    expectBillLine('slot-price', 'Agreed booking amount', '₹3000.00');
+    expectBillLine('final-bill', 'Final bill uploaded', '₹3250.00');
+    expectBillLine('extra', 'Extra charges', '₹250.00');
+    expectBillLine('venue-total', 'Venue total', '₹3250.00');
+  });
+
+  it('states the agreed amount alone for a pricing option this build does not know', () => {
+    renderWithProviders(
+      <SettlementSummary
+        settlement={{ ...settlement, venue_agreed_model: 'PER_DAY', venue_agreed_rate: 1200 }}
+        isLoading={false}
+      />,
+    );
+    const agreed = within(screen.getByTestId('settlement-agreed-terms'));
+    expect(agreed.getByText('₹1200.00')).toBeOnTheScreen();
+  });
+
+  it('states no agreed terms when the model is known but the rate is not', () => {
+    renderWithProviders(
+      <SettlementSummary
+        settlement={{ ...settlement, venue_agreed_model: 'FLAT', venue_agreed_rate: null }}
+        isLoading={false}
+      />,
+    );
+    expect(screen.queryByTestId('settlement-agreed-terms')).toBeNull();
+  });
 
   it('states the venue side with no final bill: the slot price stands', () => {
     renderWithProviders(<SettlementSummary settlement={settlement} isLoading={false} />);

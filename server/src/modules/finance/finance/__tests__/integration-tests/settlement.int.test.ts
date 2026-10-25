@@ -241,10 +241,20 @@ describe('pod settlement (engine v2: venue slot price off the pool, host keeps t
     const { pod } = await seedSlotPod(300);
     const slotPriceStands = {
       slot_price: 300,
+      pricing_mode: 'FLAT',
+      pax: 0,
+      overtime_hours: 0,
+      overtime_amount: 0,
       slot_linked: true,
       bill: 0,
       slot_included: false,
       amount: 300,
+      // A slot booked before offers: no snapshot (so no commission on top), no minimum, no agreed terms.
+      commission_on_top: null,
+      min_guests: 0,
+      extra: 0,
+      agreed_model: null,
+      agreed_rate: null,
     };
     expect(await venueChargeForPod(pod, 0)).toEqual(slotPriceStands);
     expect(await venueChargeForPod(pod, 0, false)).toEqual(slotPriceStands);
@@ -258,10 +268,19 @@ describe('pod settlement (engine v2: venue slot price off the pool, host keeps t
     const { pod } = await seedSlotPod(300);
     const evidenceOnly = {
       slot_price: 300,
+      pricing_mode: 'FLAT',
+      pax: 0,
+      overtime_hours: 0,
+      overtime_amount: 0,
       slot_linked: true,
       bill: 450,
       slot_included: false,
       amount: 300,
+      commission_on_top: null,
+      min_guests: 0,
+      extra: 0,
+      agreed_model: null,
+      agreed_rate: null,
     };
     expect(await venueChargeForPod(pod, 450)).toEqual(evidenceOnly);
     expect(await venueChargeForPod(pod, 450, null)).toEqual(evidenceOnly);

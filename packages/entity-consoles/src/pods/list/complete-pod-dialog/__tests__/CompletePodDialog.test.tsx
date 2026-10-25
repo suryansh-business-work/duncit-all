@@ -35,12 +35,12 @@ vi.mock('../SettlementPreview', () => ({
   default: (props: {
     podId: string;
     venueBillAmount: number;
-    includeSlotPrice: boolean;
+    venueExtraAmount: number;
     hostUserId: string;
     free?: boolean;
   }) => (
     <div data-testid="preview" data-free={String(props.free)}>
-      {`${props.podId}|${props.venueBillAmount}|${props.includeSlotPrice}|${props.hostUserId}`}
+      {`${props.podId}|${props.venueBillAmount}|${props.venueExtraAmount}|${props.hostUserId}`}
     </div>
   ),
 }));
@@ -59,6 +59,8 @@ const USERS = [
 ];
 
 const renderDialog = (over: Partial<Parameters<typeof CompletePodDialog>[0]> = {}) => {
+  // Kept apart from `props` so its calls stay typed as a mock's.
+  const onSubmit = vi.fn<(values: CompletePodValues) => void>();
   const props = {
     open: true,
     pod: VENUE_POD,
@@ -66,20 +68,23 @@ const renderDialog = (over: Partial<Parameters<typeof CompletePodDialog>[0]> = {
     busy: false,
     errorMessage: null,
     onClose: vi.fn(),
-    onSubmit: vi.fn(),
+    onSubmit,
     ...over,
   };
-  return { ...render(<CompletePodDialog {...props} />), props };
+  return { ...render(<CompletePodDialog {...props} />), props, onSubmit };
 };
 
 const MEDIA = 'https://cdn.test/party.jpg';
+// The shell's real words for the two bill rules (shell.venueBill.*).
+const BILL_REQUIRED = "Enter the total on the venue's final bill";
+const BILL_UPLOAD_REQUIRED = "Upload the venue's final bill";
 
 describe('CompletePodDialog / rendering', () => {
   it('names the pod, preselects the first host and quotes the settlement for them', () => {
     renderDialog();
     expect(screen.getByText('Sunday Brunch')).toBeInTheDocument();
     expect(screen.getByRole('combobox', { name: /host/i })).toHaveTextContent('Jane Doe');
-    expect(screen.getByTestId('preview')).toHaveTextContent('pod-1|0|false|u1');
+    expect(screen.getByTestId('preview')).toHaveTextContent('pod-1|0|0|u1');
   });
 
   it('lists each host by name, falling back to email, then the id, and the id alone for an unknown user', () => {
@@ -141,30 +146,32 @@ describe('CompletePodDialog / rendering', () => {
   });
 });
 
+const billTotal = () => screen.getByRole('spinbutton', { name: /venue final bill total/i });
+const extraCharges = () => screen.getByRole('spinbutton', { name: /extra charges/i });
+
 describe('CompletePodDialog / venue bill', () => {
-  it('asks for the bill document and the slot-price choice only once an amount is typed', () => {
+  // The bill is the proof of the agreed amount: its total, the file and any
+  // extra charges are all asked up front, and the slot-price choice is gone.
+  it('asks for the bill total, the bill itself and the extra charges, with no slot-price choice', () => {
     renderDialog();
+    expect(billTotal()).toBeRequired();
+    expect(screen.getByRole('textbox', { name: 'Upload the venue bill' })).toBeInTheDocument();
+    expect(extraCharges()).not.toBeRequired();
     expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
-
-    fireEvent.change(screen.getByRole('spinbutton', { name: /final bill amount/i }), { target: { value: '1500' } });
-
-    expect(screen.getByRole('checkbox')).not.toBeChecked();
-    fireEvent.click(screen.getByRole('checkbox'));
-    expect(screen.getByTestId('preview')).toHaveTextContent('pod-1|1500|true|u1');
   });
 
-  it('forgets the slot-price choice again when the amount goes back to zero', () => {
+  it('previews the typed bill total and extra charges', () => {
     renderDialog();
-    fireEvent.change(screen.getByRole('spinbutton', { name: /final bill amount/i }), { target: { value: '800' } });
-    fireEvent.click(screen.getByRole('checkbox'));
-    fireEvent.change(screen.getByRole('spinbutton', { name: /final bill amount/i }), { target: { value: '0' } });
-    expect(screen.getByTestId('preview')).toHaveTextContent('pod-1|0|false|u1');
+    fireEvent.change(billTotal(), { target: { value: '1500' } });
+    fireEvent.change(extraCharges(), { target: { value: '250' } });
+    expect(screen.getByTestId('preview')).toHaveTextContent('pod-1|1500|250|u1');
   });
 
-  it('treats a negative or unreadable amount as no bill for the preview', () => {
+  it('previews a negative bill as no bill and out-of-range extras as none', () => {
     renderDialog();
-    fireEvent.change(screen.getByRole('spinbutton', { name: /final bill amount/i }), { target: { value: '-40' } });
-    expect(screen.getByTestId('preview')).toHaveTextContent('pod-1|0|false|u1');
+    fireEvent.change(billTotal(), { target: { value: '-40' } });
+    fireEvent.change(extraCharges(), { target: { value: '-5' } });
+    expect(screen.getByTestId('preview')).toHaveTextContent('pod-1|0|0|u1');
   });
 });
 
@@ -176,21 +183,60 @@ describe('CompletePodDialog / submit', () => {
     expect(props.onSubmit).not.toHaveBeenCalled();
   });
 
-  it('demands the uploaded bill when an amount is entered', async () => {
+  it('demands the bill total and the bill itself on a paid venue pod', async () => {
     const { props } = renderDialog();
-    fireEvent.change(screen.getByRole('spinbutton', { name: /final bill amount/i }), { target: { value: '1500' } });
+    const [, mediaField] = screen.getAllByRole('textbox').filter((el) => el.tagName === 'TEXTAREA');
+    fireEvent.change(mediaField, { target: { value: MEDIA } });
+    fireEvent.click(screen.getByRole('button', { name: 'Complete pod' }));
+
+    expect(await screen.findByText(BILL_REQUIRED)).toBeInTheDocument();
+    expect(screen.getByText(BILL_UPLOAD_REQUIRED)).toBeInTheDocument();
+    expect(props.onSubmit).not.toHaveBeenCalled();
+  });
+
+  // A free pod's host settles the venue directly, and a pod with no venue has none.
+  it.each([
+    ['a free pod at a venue', { ...VENUE_POD, pod_type: 'FREE' }],
+    ['a pod with no venue', { ...VENUE_POD, venue_id: null }],
+  ])('completes %s with no venue bill', async (_name, pod) => {
+    const { props, onSubmit } = renderDialog({ pod });
+    const [mediaField] = screen.getAllByRole('textbox').filter((el) => el.tagName === 'TEXTAREA');
+    fireEvent.change(mediaField, { target: { value: MEDIA } });
+    fireEvent.click(screen.getByRole('button', { name: 'Complete pod' }));
+
+    await waitFor(() => expect(props.onSubmit).toHaveBeenCalledTimes(1));
+    expect(onSubmit.mock.calls[0][0]).toMatchObject({ venue_bill_amount: '', venue_bill_media: '' });
+  });
+
+  it('demands the uploaded bill when its total is entered', async () => {
+    const { props } = renderDialog();
+    fireEvent.change(billTotal(), { target: { value: '1500' } });
     // Bill upload comes first in the form, party media second.
     const [, mediaField] = screen.getAllByRole('textbox').filter((el) => el.tagName === 'TEXTAREA');
     fireEvent.change(mediaField, { target: { value: MEDIA } });
     fireEvent.click(screen.getByRole('button', { name: 'Complete pod' }));
 
-    expect(await screen.findByText('Upload the venue bill for the amount you entered')).toBeInTheDocument();
+    expect(await screen.findByText(BILL_UPLOAD_REQUIRED)).toBeInTheDocument();
+    expect(props.onSubmit).not.toHaveBeenCalled();
+  });
+
+  it('refuses extra charges outside the server bound', async () => {
+    const { props } = renderDialog();
+    fireEvent.change(billTotal(), { target: { value: '1500' } });
+    fireEvent.change(extraCharges(), { target: { value: '1000001' } });
+    const [billField, mediaField] = screen.getAllByRole('textbox').filter((el) => el.tagName === 'TEXTAREA');
+    fireEvent.change(billField, { target: { value: 'https://cdn.test/bill.pdf' } });
+    fireEvent.change(mediaField, { target: { value: MEDIA } });
+    fireEvent.click(screen.getByRole('button', { name: 'Complete pod' }));
+
+    expect(await screen.findByText('Enter the extra charges as an amount from 0 to 1000000')).toBeInTheDocument();
     expect(props.onSubmit).not.toHaveBeenCalled();
   });
 
   it('submits the typed values once the bill and media are present', async () => {
-    const { props } = renderDialog();
-    fireEvent.change(screen.getByRole('spinbutton', { name: /final bill amount/i }), { target: { value: '1500' } });
+    const { props, onSubmit } = renderDialog();
+    fireEvent.change(billTotal(), { target: { value: '1500' } });
+    fireEvent.change(extraCharges(), { target: { value: '250' } });
     const [billField, mediaField] = screen.getAllByRole('textbox').filter((el) => el.tagName === 'TEXTAREA');
     const bill = 'https://cdn.test/bill.pdf';
     fireEvent.change(billField, { target: { value: bill } });
@@ -198,24 +244,25 @@ describe('CompletePodDialog / submit', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Complete pod' }));
 
     await waitFor(() => expect(props.onSubmit).toHaveBeenCalledTimes(1));
-    expect(props.onSubmit.mock.calls[0][0]).toMatchObject({
+    expect(onSubmit.mock.calls[0][0]).toMatchObject({
       host_user_id: 'u1',
-      venue_bill_amount: 1500,
+      venue_bill_amount: '1500',
       venue_bill_media: bill,
-      include_slot_price: false,
+      venue_extra_amount: '250',
       media_text: MEDIA,
     });
+    expect(onSubmit.mock.calls[0][0]).not.toHaveProperty('include_slot_price');
   });
 
   it('starts clean for the next pod rather than keeping what was typed for the last', () => {
     const { rerender, props } = renderDialog();
-    fireEvent.change(screen.getByRole('spinbutton', { name: /final bill amount/i }), { target: { value: '900' } });
-    expect(screen.getByRole('spinbutton', { name: /final bill amount/i })).toHaveValue(900);
+    fireEvent.change(billTotal(), { target: { value: '900' } });
+    expect(billTotal()).toHaveValue(900);
 
     rerender(<CompletePodDialog {...props} pod={{ ...VENUE_POD, id: 'pod-2', pod_hosts_id: ['u2'] }} />);
 
-    expect(screen.getByRole('spinbutton', { name: /final bill amount/i })).toHaveValue(0);
-    expect(screen.getByTestId('preview')).toHaveTextContent('pod-2|0|false|u2');
+    expect(billTotal()).toHaveValue(null);
+    expect(screen.getByTestId('preview')).toHaveTextContent('pod-2|0|0|u2');
   });
 });
 
@@ -223,9 +270,9 @@ describe('buildCompleteSchema / buildCompleteInput / mediaTextToInput', () => {
   const t = (key: string) => key;
   const values = (over: Partial<CompletePodValues> = {}): CompletePodValues => ({
     host_user_id: 'u1',
-    venue_bill_amount: 1500,
+    venue_bill_amount: '1500',
     venue_bill_media: 'https://cdn.test/bill.pdf',
-    include_slot_price: false,
+    venue_extra_amount: '',
     venue_pax: '',
     overtime_hours: '',
     media_text: MEDIA,
@@ -246,17 +293,31 @@ describe('buildCompleteSchema / buildCompleteInput / mediaTextToInput', () => {
     expect(messages(true, values({ notes: 'x'.repeat(1000) }))).toEqual([]);
   });
 
-  it('rejects a negative or non-numeric amount', () => {
-    expect(messages(true, values({ venue_bill_amount: -1 }))).toEqual(['admin.completePod.invalidAmount']);
-    expect(messages(true, values({ venue_bill_amount: 'abc' as unknown as number }))).toEqual([
-      'admin.completePod.invalidAmount',
+  it('requires the bill total and the bill itself on a paid venue pod', () => {
+    expect(messages(true, values({ venue_bill_amount: '', venue_bill_media: '' }))).toEqual([
+      'shell.venueBill.billRequired',
+      'shell.venueBill.billUploadRequired',
     ]);
+    expect(messages(true, values({ venue_bill_media: ' \n ' }))).toEqual(['shell.venueBill.billUploadRequired']);
   });
 
-  it('asks for the bill document only for a venue pod with an amount', () => {
-    expect(messages(true, values({ venue_bill_media: '' }))).toEqual(['shell.venueBill.uploadRequired']);
-    expect(messages(false, values({ venue_bill_media: '' }))).toEqual([]);
-    expect(messages(true, values({ venue_bill_amount: 0, venue_bill_media: '' }))).toEqual([]);
+  it('rejects a bill total of zero, below zero or not a number', () => {
+    for (const venue_bill_amount of ['0', '-1', 'abc']) {
+      expect(messages(true, values({ venue_bill_amount }))).toEqual(['shell.venueBill.amountInvalid']);
+    }
+  });
+
+  it('checks the extra charges against the server bound', () => {
+    expect(messages(true, values({ venue_extra_amount: '1000000' }))).toEqual([]);
+    expect(messages(true, values({ venue_extra_amount: '-1' }))).toEqual(['shell.venueBill.extraInvalid']);
+    expect(messages(true, values({ venue_extra_amount: '1000000.5' }))).toEqual(['shell.venueBill.extraInvalid']);
+  });
+
+  // A pod with no venue, or a free one, owes no venue bill at all.
+  it('asks nothing of the venue fields when there is no bill to ask for', () => {
+    expect(
+      messages(false, values({ venue_bill_amount: '', venue_bill_media: '', venue_extra_amount: '-1', venue_pax: '2.5' })),
+    ).toEqual([]);
   });
 
   it('checks the venue usage on a venue pod and sends what was entered', () => {
@@ -264,8 +325,6 @@ describe('buildCompleteSchema / buildCompleteInput / mediaTextToInput', () => {
       'shell.venueBill.paxInvalid',
       'shell.venueBill.overtimeInvalid',
     ]);
-    // A pod with no venue has no usage to price.
-    expect(messages(false, values({ venue_pax: '2.5' }))).toEqual([]);
     expect(buildCompleteInput(values({ venue_pax: '22', overtime_hours: '2' }), 'pod-9')).toMatchObject({
       venue_pax: 22,
       overtime_hours: 2,
@@ -273,34 +332,35 @@ describe('buildCompleteSchema / buildCompleteInput / mediaTextToInput', () => {
     expect(buildCompleteInput(values(), 'pod-9')).not.toHaveProperty('venue_pax');
   });
 
-  it('maps a bill, its file and the slot-price choice onto the server input', () => {
-    expect(buildCompleteInput(values({ include_slot_price: true, notes: ' Paid ' }), 'pod-9')).toEqual({
+  // Extra charges always go with a bill (0 included) and the slot-price choice never does.
+  it('maps a bill, its file and the extra charges onto the server input', () => {
+    const input = buildCompleteInput(values({ venue_extra_amount: '250', notes: ' Paid ' }), 'pod-9');
+    expect(input).toEqual({
       pod_id: 'pod-9',
       host_user_id: 'u1',
       venue_bill_amount: 1500,
       venue_bill_url: 'https://cdn.test/bill.pdf',
-      include_slot_price: true,
+      venue_extra_amount: 250,
       evidence_media: [{ url: MEDIA, type: 'IMAGE' }],
       notes: 'Paid',
     });
+    expect(buildCompleteInput(values(), 'pod-9')).toMatchObject({ venue_extra_amount: 0 });
+    expect(input).not.toHaveProperty('include_slot_price');
   });
 
-  it('drops the bill file, slot choice, blank host and blank notes when there is nothing behind them', () => {
+  it('drops the bill file, extra charges, blank host and blank notes when there is no bill behind them', () => {
     const input = buildCompleteInput(
-      values({ venue_bill_amount: 0, include_slot_price: true, host_user_id: '', notes: '  ' }),
+      values({ venue_bill_amount: '', venue_extra_amount: '250', host_user_id: '', notes: '  ' }),
       'pod-9',
     );
-    expect(input).toMatchObject({
-      venue_bill_amount: 0,
-      venue_bill_url: undefined,
-      include_slot_price: undefined,
-      host_user_id: undefined,
-      notes: undefined,
-    });
+    expect(input).toMatchObject({ venue_bill_amount: 0, host_user_id: undefined, notes: undefined });
+    expect(input).not.toHaveProperty('venue_bill_url');
+    expect(input).not.toHaveProperty('venue_extra_amount');
+    expect(input).not.toHaveProperty('include_slot_price');
   });
 
   it('reads an unparseable amount as 0 rather than NaN', () => {
-    expect(buildCompleteInput(values({ venue_bill_amount: Number.NaN }), 'pod-9').venue_bill_amount).toBe(0);
+    expect(buildCompleteInput(values({ venue_bill_amount: 'abc' }), 'pod-9').venue_bill_amount).toBe(0);
   });
 
   it('types evidence by extension and skips blank lines', () => {

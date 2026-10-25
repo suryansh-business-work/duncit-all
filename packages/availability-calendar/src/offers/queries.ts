@@ -3,11 +3,13 @@ import { BREAKDOWN_FIELDS } from '../pricing/queries';
 import type { PriceBreakdown } from '../pricing/types';
 
 /**
- * A host's booking offer as the venue reads it: the terms, the server's quote of
- * them (venue receives, Duncit's fee on top, what the host pays), whose move it
- * is, the venue's counter while there is one, and every step so far.
+ * A booking offer's terms as either side reads them: the host's terms (their
+ * offer, or their latest counter back) with the ask beside the price — the
+ * fewest guests the venue is paid for, what it should provide, a note — the
+ * server's quote at the most guests (`quote`) and at the fewest (`quote_min`),
+ * whose move it is and until when, and the venue's counter while there is one.
  */
-export const VENUE_OFFER_FIELDS = `
+export const OFFER_TERMS_FIELDS = `
   slot_id
   status
   round
@@ -15,11 +17,20 @@ export const VENUE_OFFER_FIELDS = `
   model
   rate
   pax
+  min_guests
+  offerings
+  note
   pets
   space_label
+  expires_at
   quote { ${BREAKDOWN_FIELDS} }
-  counter { model rate note at quote { ${BREAKDOWN_FIELDS} } }
-  history { by action model rate total note at }
+  quote_min { ${BREAKDOWN_FIELDS} }
+  counter { model rate min_guests offerings note at quote { ${BREAKDOWN_FIELDS} } quote_min { ${BREAKDOWN_FIELDS} } }
+`;
+
+/** A host's booking offer as the venue reads it: the terms above, and every step so far. */
+export const VENUE_OFFER_FIELDS = `${OFFER_TERMS_FIELDS}
+  history { by action model rate min_guests total note at }
 `;
 
 /** The venue's booking requests — pending holds, each with its host's offer. */
@@ -45,9 +56,10 @@ export const VENUE_BOOKING_REQUESTS = gql`
   }
 `;
 
+/** Every answer carries the round it read; the server refuses it (OFFER_CHANGED) when the other side moved first. */
 export const ACCEPT_VENUE_OFFER = gql`
-  mutation AcceptVenueOffer($slot_id: ID!) {
-    approveVenueSlotRequest(slot_id: $slot_id) {
+  mutation AcceptVenueOffer($slot_id: ID!, $round: Int) {
+    approveVenueSlotRequest(slot_id: $slot_id, round: $round) {
       id
       status
     }
@@ -55,8 +67,8 @@ export const ACCEPT_VENUE_OFFER = gql`
 `;
 
 export const REJECT_VENUE_OFFER = gql`
-  mutation RejectVenueOffer($slot_id: ID!, $reason: String) {
-    declineVenueSlotRequest(slot_id: $slot_id, reason: $reason) {
+  mutation RejectVenueOffer($slot_id: ID!, $reason: String, $round: Int) {
+    declineVenueSlotRequest(slot_id: $slot_id, reason: $reason, round: $round) {
       id
       status
     }
@@ -64,8 +76,8 @@ export const REJECT_VENUE_OFFER = gql`
 `;
 
 export const COUNTER_VENUE_OFFER = gql`
-  mutation CounterVenueOffer($slot_id: ID!, $terms: VenueOfferTermsInput!, $note: String) {
-    counterVenueOffer(slot_id: $slot_id, terms: $terms, note: $note) {
+  mutation CounterVenueOffer($slot_id: ID!, $terms: VenueOfferTermsInput!, $note: String, $round: Int) {
+    counterVenueOffer(slot_id: $slot_id, terms: $terms, note: $note, round: $round) {
       slot_id
       status
       round
@@ -73,13 +85,14 @@ export const COUNTER_VENUE_OFFER = gql`
   }
 `;
 
-/** The venue's counter priced for the booking's own window, before it is sent. */
+/** The venue's counter priced for the booking's own window, at the most and the fewest guests, before it is sent. */
 export const VENUE_COUNTER_QUOTE = gql`
   query VenueCounterQuote($slot_id: ID!, $terms: VenueOfferTermsInput!) {
     venueCounterQuote(slot_id: $slot_id, terms: $terms) {
       ok
       message
       quote { ${BREAKDOWN_FIELDS} }
+      quote_min { ${BREAKDOWN_FIELDS} }
     }
   }
 `;
@@ -89,23 +102,49 @@ export interface OfferHistoryEntry {
   action: string;
   model: string | null;
   rate: number | null;
+  /** The fewest guests the step's terms were paid for; absent or 0 when they named none. */
+  min_guests?: number | null;
   total: number | null;
   note: string;
   at: string | null;
 }
 
-export interface BookingOffer {
+/** The venue's counter, while it is the terms on the table. */
+export interface OfferCounter {
+  model: string;
+  rate: number;
+  min_guests: number;
+  offerings: string[];
+  note: string;
+  at: string | null;
+  quote: PriceBreakdown;
+  quote_min: PriceBreakdown;
+}
+
+/** `OFFER_TERMS_FIELDS`, as both sides' answers read it. */
+export interface OfferTerms {
   slot_id: string;
   status: string;
   round: number;
   awaiting: string | null;
   model: string;
   rate: number;
+  /** The most guests: the pod's spots. */
   pax: number;
+  /** The fewest guests the venue is paid for on the host's terms. */
+  min_guests: number;
+  offerings: string[];
+  note: string;
   pets: boolean;
   space_label: string;
+  /** When the side whose move it is must answer by; null once closed. */
+  expires_at: string | null;
   quote: PriceBreakdown;
-  counter: { model: string; rate: number; note: string; at: string | null; quote: PriceBreakdown } | null;
+  quote_min: PriceBreakdown;
+  counter: OfferCounter | null;
+}
+
+export interface BookingOffer extends OfferTerms {
   history: OfferHistoryEntry[];
 }
 
@@ -135,5 +174,8 @@ export interface BookingRequestRow extends OfferRequestSummary {
 export interface CounterQuoteResult {
   ok: boolean;
   message: string | null;
+  /** Priced for the most guests. */
   quote: PriceBreakdown | null;
+  /** Priced for the fewest guests; absent from the older window quotes. */
+  quote_min?: PriceBreakdown | null;
 }

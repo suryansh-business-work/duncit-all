@@ -3,7 +3,7 @@ import { SLOT_PRICING_MODES, type SlotPricingMode } from './slotCharge';
 import { priceSnapshotSchema } from '@modules/venues/venuePricing/venuePricing.schema.model';
 import type { VenuePriceBreakdown } from '@modules/venues/venuePricing/venuePricing.types';
 import { venueOfferSchema } from '@modules/venues/venueOffer/venueOffer.schema.model';
-import type { VenueOffer } from '@modules/venues/venueOffer/venueOffer.types';
+import type { VenueOffer, VenuePriceBasis } from '@modules/venues/venueOffer/venueOffer.types';
 
 /** PENDING = a hold placed by a host's pod that is waiting for the venue
  * owner's approval; it books into BOOKED or releases back to AVAILABLE. */
@@ -81,6 +81,13 @@ export interface IVenueSlot extends Document {
    * deletes it rather than leaving the venue an "available" time it never opened.
    */
   offer: VenueOffer | null;
+  /**
+   * How an agreed PER_GUEST offer is priced again at completion, for the people
+   * who came (never fewer than its minimum): the agreed rate and minimum and the
+   * venue charges both sides saw. Null for every other booking — they settle on
+   * `price_snapshot` exactly as before.
+   */
+  price_basis: VenuePriceBasis | null;
   created_at: Date;
   updated_at: Date;
 }
@@ -116,11 +123,26 @@ const venueSlotSchema = new Schema<IVenueSlot>(
     requested_by_host: { type: Boolean, default: false },
     price_snapshot: { type: priceSnapshotSchema, default: null },
     offer: { type: venueOfferSchema, default: null },
+    price_basis: {
+      type: new Schema<VenuePriceBasis>(
+        {
+          model: { type: String, required: true },
+          rate: { type: Number, required: true, min: 0 },
+          min_guests: { type: Number, default: 0, min: 0 },
+          pets: { type: Boolean, default: false },
+          charges: { type: Schema.Types.Mixed, default: null },
+        },
+        { _id: false }
+      ),
+      default: null,
+    },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );
 
 venueSlotSchema.index({ venue_id: 1, start_at: 1 });
 venueSlotSchema.index({ venue_id: 1, status: 1, start_at: 1 });
+// The offer-expiry sweep: pending offers whose answer is overdue.
+venueSlotSchema.index({ 'offer.expires_at': 1 }, { partialFilterExpression: { status: 'PENDING' } });
 
 export const VenueSlotModel = model<IVenueSlot>('VenueSlot', venueSlotSchema);

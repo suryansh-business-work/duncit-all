@@ -13,7 +13,7 @@ import {
 } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { isFreePod } from '@duncit/utils';
-import { venueUsageInput } from '@duncit/forms/schemas';
+import { venueExtraAmountOf, venueUsageInput } from '@duncit/forms/schemas';
 import SettlementPreview from './SettlementPreview';
 import PodMediaSummary from './PodMediaSummary';
 import VenueBillFields from './VenueBillFields';
@@ -37,9 +37,11 @@ interface Props {
   onCompleted: () => void;
 }
 
-/** Host completes a pod: optionally enter the venue's final bill. The split is
- * previewed live; on submit the payout releases are created for Finance to
- * approve — nothing is credited until then. */
+/** Host completes a pod. A paid pod at a venue uploads the venue's final bill
+ * (its total + the file) as proof of the agreed amount, and enters anything the
+ * venue charged beyond it as extra charges. The split is previewed live; on
+ * submit the payout releases are created for Finance to approve — nothing is
+ * credited until then. */
 export default function PodCompleteDialog({ pod, onClose, onCompleted }: Readonly<Props>) {
   const { labels, notifySuccess } = useHostPodActionsConfig();
   // A free pod's host settles the venue directly — no bill is asked for here.
@@ -60,7 +62,8 @@ export default function PodCompleteDialog({ pod, onClose, onCompleted }: Readonl
   }, [pod, reset]);
 
   const billAmount = Math.max(0, Number(watch('venue_bill_amount')) || 0);
-  const includeSlotPrice = watch('include_slot_price');
+  // Paid on top of the agreed amount, so the preview re-prices as they are typed.
+  const venueExtra = venueExtraAmountOf(watch('venue_extra_amount'));
   // The venue's usage prices the slot, so the preview re-prices as it is typed.
   const paxTyped = watch('venue_pax');
   const overtimeTyped = watch('overtime_hours');
@@ -95,6 +98,7 @@ export default function PodCompleteDialog({ pod, onClose, onCompleted }: Readonl
         <Stack
           component="form"
           id="pod-complete-form"
+          noValidate
           onSubmit={submit}
           spacing={2}
           sx={{ pt: 0.5 }}
@@ -104,13 +108,13 @@ export default function PodCompleteDialog({ pod, onClose, onCompleted }: Readonl
           }}>
             {free ? labels.completeHintFree : labels.completeHint}
           </Typography>
-          {hasVenue && <VenueBillFields control={control} billAmount={billAmount} />}
+          {hasVenue && <VenueBillFields control={control} />}
           {pod && <PodMediaSummary podId={pod.id} />}
           {pod && (
             <SettlementPreview
               podId={pod.id}
               venueBillAmount={billAmount}
-              includeSlotPrice={billAmount > 0 && includeSlotPrice}
+              venueExtraAmount={venueExtra}
               venueUsage={venueUsage}
               refreshToken={scansDone}
               free={free}

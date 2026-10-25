@@ -3,9 +3,12 @@ import { formatStatementMoney, parseApiError, venueQuoteLines, type VenueQuote }
 import { usePricing } from '../../../../hooks/usePricing';
 import { useTranslation } from '../../../../i18n/useTranslation';
 import { SURFACE_SX } from '../../../../theme';
+import QuoteRangeRows from './QuoteRangeRows';
 
 interface Props {
   quote: VenueQuote | null;
+  /** The same offer priced at the venue's minimum guests (null: none asked). */
+  quoteMin?: VenueQuote | null;
   /** Why the offer cannot be sent, as the server put it. */
   message?: string | null;
   loading: boolean;
@@ -13,12 +16,15 @@ interface Props {
 }
 
 /**
- * The host's offer, priced exactly as the server quoted it: the offered base,
- * each of the venue's price rules, any min-spend top-up, its fees, taxes and
- * Duncit's fee on top — or why the offer cannot be sent. Read-only: the host
- * changes the offer, not the price. Native twin: VenueQuoteCard.
+ * The host's offer, priced exactly as the server quoted it: what the venue
+ * receives and what it costs the pod as a range from the venue's minimum
+ * guests to the pod's spots (when those differ), then the breakdown at the
+ * spots — the offered base, each of the venue's price rules, any min-spend
+ * top-up, its fees, taxes and Duncit's fee on top — or why the offer cannot be
+ * sent. Read-only: the host changes the offer, not the price. Native twin:
+ * VenueQuoteCard.
  */
-export default function VenueQuoteCard({ quote, message, loading, error }: Readonly<Props>) {
+export default function VenueQuoteCard({ quote, quoteMin = null, message, loading, error }: Readonly<Props>) {
   const { t } = useTranslation();
   const { currency } = usePricing();
   const money = (value: number) => formatStatementMoney(value, currency);
@@ -44,6 +50,7 @@ export default function VenueQuoteCard({ quote, message, loading, error }: Reado
   return (
     <Stack spacing={1} sx={{ ...SURFACE_SX, p: 2 }} data-testid="create-pod-venue-quote" aria-live="polite">
       <Typography variant="subtitle2">{t('mweb.createPod.quoteTitle')}</Typography>
+      <QuoteRangeRows quote={quote} quoteMin={quoteMin} money={money} />
       {lines.map((line) => (
         <Stack key={line.id} direction="row" spacing={2} sx={{ justifyContent: 'space-between' }}>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>

@@ -20,6 +20,7 @@ import {
   mwebVenueBillLabels,
   shellTicketDiscountLabels,
   shellVenueBillLabels,
+  venueOfferTermsLine,
   type TicketDiscountLabels,
   type VenueBillLabels,
 } from '@duncit/utils';
@@ -28,6 +29,23 @@ export type HostPodTranslate = (
   key: string,
   options?: { count?: number; vars?: Record<string, string | number> },
 ) => string;
+
+/** The venue booking's agreed terms, above the bill in the completion preview. */
+export interface VenueAgreedTermsLabels {
+  title: string;
+  /** "Per guest · ₹300 per guest" for a known option; just `rate` (already formatted) for one this client does not know. */
+  value: (model: string, rate: string) => string;
+}
+
+/**
+ * The agreed terms in the words the venue's own booking requests use —
+ * `availability.*`, a namespace mWeb, the native app and every portal ship —
+ * so both surfaces read the same keys rather than a third copy of them.
+ */
+const venueAgreedTermsLabels = (t: HostPodTranslate): VenueAgreedTermsLabels => ({
+  title: t('availability.offers.agreedTerms'),
+  value: (model, rate) => venueOfferTermsLine(t, model, rate),
+});
 
 export interface HostPodActionLabels {
   /** "Pod Club Admin" — only rendered when the surface passes `onClubAdmin`. */
@@ -174,6 +192,8 @@ export interface HostPodActionLabels {
   completeHint: string;
   /** The venue’s final bill in the completion dialog — @duncit/utils’ own words. */
   venueBill: VenueBillLabels;
+  /** The agreed offer (model + rate) the venue is paid on — `availability.*` on both surfaces. */
+  agreedTerms: VenueAgreedTermsLabels;
   /**
    * The settlement waterfall in the HOST's voice. `@duncit/ui` writes the same
    * numbers for staff — "Host receives", the venue commission spelled out —
@@ -362,6 +382,7 @@ export function mwebHostPodLabels(t: HostPodTranslate): HostPodActionLabels {
     offerRateRequired: t('mweb.hostPodActions.offerRateRequired'),
     completeHint: t('mweb.hostPodActions.completeHint'),
     venueBill: mwebVenueBillLabels(t),
+    agreedTerms: venueAgreedTermsLabels(t),
     shareTitle: t('mweb.hostShare.title'),
     shareShortfall: t('mweb.hostShare.shortfall'),
     sharePreviewHint: t('mweb.hostShare.previewHint'),
@@ -511,6 +532,7 @@ export function shellHostPodLabels(t: HostPodTranslate): HostPodActionLabels {
     offerRateRequired: t('shell.hostPodActions.offerRateRequired'),
     completeHint: t('shell.hostPodActions.completeHint'),
     venueBill: shellVenueBillLabels(t),
+    agreedTerms: venueAgreedTermsLabels(t),
     shareTitle: t('shell.hostShare.title'),
     shareShortfall: t('shell.hostShare.shortfall'),
     sharePreviewHint: t('shell.hostShare.previewHint'),

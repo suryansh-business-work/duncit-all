@@ -126,7 +126,7 @@ export default function CreatePodStepper({
     setStep(target);
   };
 
-  const { podMode, clubsInCity, clubsForLocation, clubVenueIds, availableProducts, spots, preview, venueNotice } =
+  const { podMode, clubsInCity, clubsForLocation, clubVenueIds, availableProducts, spots, offerMinGuests, preview, venueNotice } =
     useStepperSelections(form, { clubs, hostCategories, products, subCategories, venues, viewerUserId, pinnedVenueId });
 
   const steps = [
@@ -139,7 +139,7 @@ export default function CreatePodStepper({
       locations={locations}
     />,
     <BasicsStep key="basics" form={form} hostCategories={hostCategories} />,
-    <VenueSlotStep key="venue" form={form} venues={venues} clubVenueIds={clubVenueIds} venueNotice={venueNotice} spots={spots} />,
+    <VenueSlotStep key="venue" form={form} venues={venues} clubVenueIds={clubVenueIds} venueNotice={venueNotice} spots={spots} offerMinGuests={offerMinGuests} />,
     <PricingStep key="pricing" form={form} products={availableProducts} showProducts={showProducts} preview={preview} spots={spots} venueNotice={venueNotice} />,
   ];
 

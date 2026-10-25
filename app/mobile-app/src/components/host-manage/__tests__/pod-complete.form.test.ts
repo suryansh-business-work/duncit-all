@@ -11,12 +11,14 @@ import {
 // so a test names the message it expects by key rather than by today's copy.
 const labels = mwebVenueBillLabels((key) => key);
 const AMOUNT_INVALID = 'mweb.venueBill.amountInvalid';
-const UPLOAD_REQUIRED = 'mweb.venueBill.uploadRequired';
+const BILL_REQUIRED = 'mweb.venueBill.billRequired';
+const UPLOAD_REQUIRED = 'mweb.venueBill.billUploadRequired';
+const EXTRA_INVALID = 'mweb.venueBill.extraInvalid';
 
 const valid = (over: Partial<PodCompleteValues> = {}): PodCompleteValues => ({
   venue_bill_amount: '1500',
   venue_bill_media: 'https://cdn/bill.pdf',
-  include_slot_price: false,
+  venue_extra_amount: '',
   venue_pax: '',
   overtime_hours: '',
   ...over,
@@ -30,96 +32,94 @@ const issuesOf = (hasVenue: boolean, values: PodCompleteValues) => {
 };
 
 describe('buildPodCompleteSchema', () => {
-  it('accepts a venue submission with an amount and its uploaded bill', () => {
+  it('accepts a paid venue pod with the bill total, its uploaded bill and any extra charges', () => {
     expect(issuesOf(true, valid())).toEqual([]);
-    expect(issuesOf(true, valid({ include_slot_price: true }))).toEqual([]);
+    expect(issuesOf(true, valid({ venue_extra_amount: '250.5' }))).toEqual([]);
+    expect(issuesOf(true, valid({ venue_extra_amount: '0' }))).toEqual([]);
   });
 
-  // The bill is optional: left empty, the venue is paid its booked slot price.
-  it('accepts a venue submission with no bill at all', () => {
-    expect(issuesOf(true, { ...blankPodCompleteValues })).toEqual([]);
-    expect(issuesOf(true, valid({ venue_bill_amount: '   ', venue_bill_media: '' }))).toEqual([]);
-    // A typed zero is "no bill" too — nothing to upload against it.
-    expect(issuesOf(true, valid({ venue_bill_amount: '0', venue_bill_media: '' }))).toEqual([]);
+  // The bill is the proof of the agreed amount: a paid venue pod cannot complete without it.
+  it('asks for the bill total and the bill itself when neither is there', () => {
+    expect(issuesOf(true, { ...blankPodCompleteValues })).toEqual([
+      { path: 'venue_bill_amount', message: BILL_REQUIRED },
+      { path: 'venue_bill_media', message: UPLOAD_REQUIRED },
+    ]);
+    // Blank space is not a total, and blank lines are not a bill.
+    expect(
+      issuesOf(true, valid({ venue_bill_amount: '   ', venue_bill_media: ' \n  \n' })),
+    ).toEqual([
+      { path: 'venue_bill_amount', message: BILL_REQUIRED },
+      { path: 'venue_bill_media', message: UPLOAD_REQUIRED },
+    ]);
   });
 
-  it('rejects a negative or non-numeric amount on the amount field', () => {
-    const invalid = [{ path: 'venue_bill_amount', message: AMOUNT_INVALID }];
-    expect(issuesOf(true, valid({ venue_bill_amount: '-5' }))).toEqual(invalid);
-    expect(issuesOf(true, valid({ venue_bill_amount: 'abc' }))).toEqual(invalid);
-    // An unreadable amount is the only complaint, even with no bill uploaded.
-    expect(issuesOf(true, valid({ venue_bill_amount: 'abc', venue_bill_media: '' }))).toEqual(
-      invalid,
-    );
+  it.each(['-5', 'abc', '0'])('refuses the bill total "%s" on the amount field', (typed) => {
+    expect(issuesOf(true, valid({ venue_bill_amount: typed }))).toEqual([
+      { path: 'venue_bill_amount', message: AMOUNT_INVALID },
+    ]);
   });
 
-  it('asks for the uploaded bill once there is an amount', () => {
-    const missing = [{ path: 'venue_bill_media', message: UPLOAD_REQUIRED }];
-    expect(issuesOf(true, valid({ venue_bill_media: '' }))).toEqual(missing);
-    // Blank lines are not a bill.
-    expect(issuesOf(true, valid({ venue_bill_media: ' \n  \n' }))).toEqual(missing);
+  it('asks for the uploaded bill even with a total', () => {
+    expect(issuesOf(true, valid({ venue_bill_media: '' }))).toEqual([
+      { path: 'venue_bill_media', message: UPLOAD_REQUIRED },
+    ]);
   });
 
-  it('validates none of it for a pod without a venue', () => {
+  it.each(['abc', '-1', '1000001'])('refuses the extra charges "%s"', (typed) => {
+    expect(issuesOf(true, valid({ venue_extra_amount: typed }))).toEqual([
+      { path: 'venue_extra_amount', message: EXTRA_INVALID },
+    ]);
+  });
+
+  it('validates none of it for a pod without a venue (or a free one)', () => {
     expect(issuesOf(false, { ...blankPodCompleteValues })).toEqual([]);
     expect(issuesOf(false, valid({ venue_bill_amount: 'abc', venue_bill_media: '' }))).toEqual([]);
-    expect(issuesOf(false, valid({ venue_bill_amount: '-5' }))).toEqual([]);
-    expect(issuesOf(false, valid({ venue_bill_media: '' }))).toEqual([]);
+    expect(issuesOf(false, valid({ venue_extra_amount: 'abc' }))).toEqual([]);
   });
 
-  it('trims the amount it hands on', () => {
+  it('trims the amounts it hands on', () => {
     const result = buildPodCompleteSchema(true, labels).safeParse(
-      valid({ venue_bill_amount: ' 1500 ' }),
+      valid({ venue_bill_amount: ' 1500 ', venue_extra_amount: ' 200 ' }),
     );
     expect(result.success && result.data.venue_bill_amount).toBe('1500');
+    expect(result.success && result.data.venue_extra_amount).toBe('200');
   });
 });
 
 describe('buildCompleteInput', () => {
-  it('sends a zero amount and nothing else without a bill', () => {
+  it('sends a zero amount and nothing else without a bill (a pod with no venue)', () => {
     expect(buildCompleteInput({ ...blankPodCompleteValues }, 'pod2')).toEqual({
       pod_id: 'pod2',
       venue_bill_amount: 0,
     });
   });
 
-  // The file and the slot-price choice mean nothing without an amount.
-  it('drops the bill file and the slot-price choice when there is no amount', () => {
-    expect(
-      buildCompleteInput(valid({ venue_bill_amount: '', include_slot_price: true }), 'pod2'),
-    ).toEqual({ pod_id: 'pod2', venue_bill_amount: 0 });
-    expect(buildCompleteInput(valid({ venue_bill_amount: '0' }), 'pod2')).toEqual({
-      pod_id: 'pod2',
-      venue_bill_amount: 0,
-    });
-  });
-
-  it('sends the guests the venue charged for and the overtime hours, even with no bill', () => {
-    expect(
-      buildCompleteInput(
-        valid({ venue_bill_amount: '', venue_pax: '16', overtime_hours: '2' }),
-        'pod1',
-      ),
-    ).toEqual({
-      pod_id: 'pod1',
-      venue_bill_amount: 0,
-      venue_pax: 16,
-      overtime_hours: 2,
-    });
-  });
-
-  it('maps the amount, the uploaded bill and the slot-price choice', () => {
+  // With a bill the extra charges ALWAYS go (0 included) and the old slot-price
+  // choice never does — that is how the server knows the bill is the proof.
+  it('maps the bill total, the uploaded bill and the extra charges, 0 when none', () => {
     expect(buildCompleteInput(valid(), 'pod1')).toEqual({
       pod_id: 'pod1',
       venue_bill_amount: 1500,
       venue_bill_url: 'https://cdn/bill.pdf',
-      include_slot_price: false,
+      venue_extra_amount: 0,
     });
-    expect(buildCompleteInput(valid({ include_slot_price: true }), 'pod1')).toEqual({
+    expect(buildCompleteInput(valid({ venue_extra_amount: '250.5' }), 'pod1')).toEqual({
       pod_id: 'pod1',
       venue_bill_amount: 1500,
       venue_bill_url: 'https://cdn/bill.pdf',
-      include_slot_price: true,
+      venue_extra_amount: 250.5,
+    });
+    expect(buildCompleteInput(valid(), 'pod1')).not.toHaveProperty('include_slot_price');
+  });
+
+  it('sends the guests the venue charged for and the overtime hours beside the bill', () => {
+    expect(buildCompleteInput(valid({ venue_pax: '16', overtime_hours: '2' }), 'pod1')).toEqual({
+      pod_id: 'pod1',
+      venue_bill_amount: 1500,
+      venue_bill_url: 'https://cdn/bill.pdf',
+      venue_extra_amount: 0,
+      venue_pax: 16,
+      overtime_hours: 2,
     });
   });
 

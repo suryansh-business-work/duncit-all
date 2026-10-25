@@ -32,6 +32,8 @@ export interface CreatePodVenue {
   venue_type?: string | null;
   capacity?: number | null;
   capacity_items?: { label: string; capacity: number }[] | null;
+  /** The fewest guests an offer may be for: the venue's own setting, else the platform default. */
+  offer_min_guests?: number | null;
   cover_image_url?: string | null;
   location_id?: string | null;
   city?: string | null;

@@ -16,6 +16,44 @@ export const venueChatTypeDefs = /* GraphQL */ `
     venue_photo: String
     "The caller's side."
     my_side: VenueChatSide!
+    "A free pod: its host settles the venue directly, so offer lines name no money."
+    pod_is_free: Boolean!
+    "Who the caller is talking to: the pod's lead host for the venue, the venue's listed contact for a host."
+    counterpart_name: String
+    "Their phone, with its country code. Null when none is on record."
+    counterpart_phone: String
+    "Their email. Null when none is on record."
+    counterpart_email: String
+  }
+
+  "One move of a booking offer, as a venue chat OFFER line records it (money in rupees)."
+  type VenueChatOffer {
+    slot_id: ID!
+    round: Int!
+    "OFFER, COUNTER, ACCEPTED, DECLINED or EXPIRED."
+    event: String!
+    "HOST, VENUE, or SYSTEM for an answer that ran late."
+    by: String!
+    "The pricing model of the terms on the table (VenueOfferModel)."
+    model: String!
+    rate: Float!
+    min_guests: Int!
+    max_guests: Int!
+    offerings: [String!]!
+    note: String!
+    start_at: String!
+    end_at: String!
+    space_label: String!
+    pets: Boolean!
+    "What the venue is paid at the fewest and the most guests."
+    venue_receives_min: Float!
+    venue_receives_max: Float!
+    "What the booking costs the pod (the venue's amount plus Duncit's commission) at the fewest and the most guests."
+    total_min: Float!
+    total_max: Float!
+    "When the other side must answer by; null once the offer is closed."
+    expires_at: String
+    reason: String!
   }
 
   "A venue booking's chat in an inbox list, newest activity first."

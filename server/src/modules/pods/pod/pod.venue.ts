@@ -432,6 +432,26 @@ export async function resolveSlotForCreate(
 }
 
 /**
+ * What a new offer asks beside its price: the venue's own minimum (never the
+ * client's — it comes from the venue), the points the host needs from it and a
+ * note. A client that sends points must send at least one; a build from before
+ * points sends none and is not refused for it.
+ */
+async function openingAsk(venueId: string, offer: VenueOfferRequest, pax: number) {
+  const venue = await VenueModel.findById(venueId).select('capacity capacity_items settings.offers').lean();
+  if (!venue) throw new GraphQLError('Select a venue', { extensions: { code: 'BAD_USER_INPUT' } });
+  const [{ openingMinimum }, ask] = await Promise.all([
+    import('@modules/venues/venueOffer/venueOffer.service'),
+    import('@modules/venues/venueOffer/venueOffer.ask'),
+  ]);
+  return {
+    min_guests: await openingMinimum(venue, { space_label: offer.space_label, pax }),
+    offerings: offer.offerings == null ? [] : ask.cleanOfferings(offer.offerings, true),
+    note: ask.cleanOfferNote(offer.note),
+  };
+}
+
+/**
  * A host's offer to the venue: the server checks and prices the window — the
  * client's date, time and total are never trusted — and the pod's window
  * becomes the offered window. Nothing is written here; `placeVenueOfferForPod`
@@ -450,10 +470,11 @@ export async function resolveVenueOfferForCreate(
   }
   if (!input.venue_id) throw new GraphQLError('Select a venue', { extensions: { code: 'BAD_USER_INPUT' } });
   const { venueOfferService } = await import('@modules/venues/venueOffer/venueOffer.service');
-  // The pod's spots ARE the booking's guests — one number, so the venue is
+  // The pod's spots ARE the booking's most guests — one number, so the venue is
   // offered exactly the seats the pod sells.
   const spots = Math.floor(Number(input.no_of_spots) || 0);
-  const request: VenueOfferRequest = { ...input.venue_offer, pax: spots > 0 ? spots : (input.venue_offer.pax ?? 0) };
+  const pax = spots > 0 ? spots : Math.floor(Number(input.venue_offer.pax) || 0);
+  const request: VenueOfferRequest = { ...input.venue_offer, pax, ...(await openingAsk(input.venue_id, input.venue_offer, pax)) };
   const prepared = await venueOfferService.prepare(input.venue_id, request, input.reroute_pod_id ?? undefined);
   input.pod_date_time = prepared.start.toISOString();
   input.pod_end_date_time = prepared.end.toISOString();
@@ -482,8 +503,10 @@ export async function placeVenueOfferForPod(
   }
   doc.venue_slot_id = slot._id;
   await doc.save();
-  // The host's own venue hears nothing (the owner is the host); every other venue gets the request.
-  if (!offer.own) announceSlotRequest(doc, slot);
+  // The host's own venue hears nothing (the owner is the host); every other
+  // venue gets the offer in its chat, its app, its inbox and on WhatsApp — with
+  // the whole of it, not just that a slot was asked for.
+  if (!offer.own) venueOfferService.announcePlaced(slot);
   return slot;
 }
 

@@ -127,6 +127,8 @@ function venueBookingOf(values: PodFormValues, isPhysical: boolean): Record<stri
       spaceLabel: '',
       model: values.venue_offer_model,
       rate: values.venue_offer_rate,
+      offerings: values.venue_offer_offerings,
+      note: values.venue_offer_note,
     }),
   };
 }

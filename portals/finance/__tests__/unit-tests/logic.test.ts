@@ -376,7 +376,12 @@ describe('payment-release buildReleaseRequestView', () => {
       venue_amount: 750,
       attended_seats: 8,
       booked_seats: 10,
+      // A booking from before offers: nothing on top, no minimum.
+      extra: 0,
+      min_guests: 0,
+      people_counted: 0,
     });
+    expect(view.agreed).toBeNull();
     expect(view.hasVenue).toBe(true);
     expect(view.billUrl).toBe('https://cdn.test/bill.pdf');
   });
@@ -392,6 +397,9 @@ describe('payment-release buildReleaseRequestView', () => {
       venue_amount: 0,
       attended_seats: 8,
       booked_seats: 10,
+      extra: 0,
+      min_guests: 0,
+      people_counted: 0,
     });
     expect(view.hasVenue).toBe(false);
     expect(view.billUrl).toBe('');
@@ -402,6 +410,32 @@ describe('payment-release buildReleaseRequestView', () => {
     expect(view.hasVenue).toBe(false);
     expect(view.terms?.venue_amount).toBe(0);
     expect(view.terms?.bill).toBe(450);
+  });
+
+  // Frozen at completion: what the venue charged beyond the agreed amount, and
+  // for a per-guest booking its minimum and the guests it was paid for.
+  it('carries the extra charges, the minimum guests and the guests paid for', () => {
+    const breakdown = makeDetailBreakdown({ venue_extra_amount: 250, venue_min_guests: 8, venue_pax: 9 });
+    const view = buildReleaseRequestView([makeDetailRelease({ breakdown })]);
+    expect(view.terms).toMatchObject({ extra: 250, min_guests: 8, people_counted: 9 });
+  });
+
+  it('states the agreed offer only when both its model and its rate were frozen', () => {
+    const agreed = (venue_agreed_model: string | null, venue_agreed_rate: number | null) =>
+      buildReleaseRequestView([
+        makeDetailRelease({ breakdown: makeDetailBreakdown({ venue_agreed_model, venue_agreed_rate }) }),
+      ]).agreed;
+    expect(agreed('PER_GUEST', 300)).toEqual({ model: 'PER_GUEST', rate: 300 });
+    // A rate of 0 is still an agreed rate.
+    expect(agreed('FLAT', 0)).toEqual({ model: 'FLAT', rate: 0 });
+    expect(agreed('PER_HOUR', null)).toBeNull();
+    expect(agreed(null, 300)).toBeNull();
+  });
+
+  it('has no agreed offer without a current snapshot to read it from', () => {
+    const legacy = makeDetailBreakdown({ version: 1, venue_agreed_model: 'FLAT', venue_agreed_rate: 500 });
+    expect(buildReleaseRequestView([makeDetailRelease({ breakdown: legacy })]).agreed).toBeNull();
+    expect(buildReleaseRequestView([]).agreed).toBeNull();
   });
 
   it('has no terms for a legacy v1 snapshot, or for a request with no breakdown at all', () => {

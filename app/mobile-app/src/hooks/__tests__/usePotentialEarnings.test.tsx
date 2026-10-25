@@ -55,7 +55,9 @@ describe('usePotentialEarnings', () => {
 
   it('sends the raw price + spots and exposes the payable count', async () => {
     mockRequest.mockResolvedValue(preview);
-    const { result } = renderHook(() => usePotentialEarnings(1000, 2, 'v1', 300));
+    const { result } = renderHook(() =>
+      usePotentialEarnings(1000, 2, 'v1', { venue_amount: 300, venue_commission_on_top: null }),
+    );
     act(() => jest.advanceTimersByTime(399));
     expect(mockRequest).not.toHaveBeenCalled();
     act(() => jest.advanceTimersByTime(1));
@@ -77,9 +79,11 @@ describe('usePotentialEarnings', () => {
     expect(result.current.isLoading).toBe(false);
   });
 
-  it('sends an instant booking’s venue payout and Duncit’s commission on top', async () => {
+  it('sends an offer’s venue payout and Duncit’s commission on top', async () => {
     mockRequest.mockResolvedValue(preview);
-    const { result } = renderHook(() => usePotentialEarnings(1000, 2, 'v1', 1180, 59));
+    const { result } = renderHook(() =>
+      usePotentialEarnings(1000, 2, 'v1', { venue_amount: 1180, venue_commission_on_top: 59 }),
+    );
     act(() => jest.advanceTimersByTime(400));
     await waitFor(() => expect(result.current.waterfall).not.toBeNull());
     expect(mockRequest).toHaveBeenCalledWith(
@@ -98,7 +102,9 @@ describe('usePotentialEarnings', () => {
   it('asks again when only the commission on top changes', async () => {
     mockRequest.mockResolvedValue(preview);
     const { rerender } = renderHook(
-      ({ fee }: { fee: number | null }) => usePotentialEarnings(1000, 2, 'v1', 1180, fee),
+      ({ fee }: { fee: number | null }) =>
+        // A new object each render: only the values decide a new ask.
+        usePotentialEarnings(1000, 2, 'v1', { venue_amount: 1180, venue_commission_on_top: fee }),
       { initialProps: { fee: 59 } },
     );
     act(() => jest.advanceTimersByTime(400));
@@ -111,6 +117,31 @@ describe('usePotentialEarnings', () => {
       expect.objectContaining({ venue_commission_on_top: 70 }),
       { auth: true },
     );
+  });
+
+  it('asks for the take-home at the venue minimum too, when the offer names one', async () => {
+    mockRequest.mockResolvedValue(preview);
+    const venue = {
+      venue_amount: 6000,
+      venue_commission_on_top: 300,
+      min_spots: 8,
+      venue_amount_at_min: 2400,
+      venue_commission_on_top_at_min: 120,
+    };
+    const { result, rerender } = renderHook(() =>
+      usePotentialEarnings(500, 20, 'v1', { ...venue }),
+    );
+    act(() => jest.advanceTimersByTime(400));
+    await waitFor(() => expect(result.current.waterfall).not.toBeNull());
+    expect(mockRequest).toHaveBeenCalledWith(
+      expect.anything(),
+      { pod_amount: 500, no_of_spots: 20, venue_id: 'v1', ...venue },
+      { auth: true },
+    );
+    // The same terms rebuilt on a re-render ask nothing new.
+    rerender({});
+    act(() => jest.advanceTimersByTime(400));
+    expect(mockRequest).toHaveBeenCalledTimes(1);
   });
 
   it('clears a stale projection when the amount drops to zero', async () => {

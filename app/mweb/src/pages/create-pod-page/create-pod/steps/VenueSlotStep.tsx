@@ -28,13 +28,15 @@ interface Props {
   venueNotice: FreePodVenueNotice;
   /** The range the pod's spots may take — picked here, with the booking. */
   spots: SpotsBounds;
+  /** The fewest guests an offer to the picked venue may be for (0 = none). */
+  offerMinGuests?: number;
 }
 
 /** Step 3 — pick a venue partner in the pod's city (card rail) and send it an
  * offer for a window (physical), or meeting details + schedule (virtual). A Pod
  * Request's pod keeps the slot that request holds. The offered window sets the
  * pod's date/time. */
-export default function VenueSlotStep({ form, venues, clubVenueIds, venueNotice, spots }: Readonly<Props>) {
+export default function VenueSlotStep({ form, venues, clubVenueIds, venueNotice, spots, offerMinGuests = 0 }: Readonly<Props>) {
   const {
     control,
     watch,
@@ -125,7 +127,7 @@ export default function VenueSlotStep({ form, venues, clubVenueIds, venueNotice,
         </Stack>
       )}
       {selectedVenue && selectedSpace && !fromRequest && (
-        <VenueOfferPicker form={form} venueId={selectedVenue.id} spaceLabel={selectedSpace.label} spots={spots} />
+        <VenueOfferPicker form={form} venueId={selectedVenue.id} spaceLabel={selectedSpace.label} spots={spots} minGuests={offerMinGuests} />
       )}
       {selectedVenue && selectedSpace && fromRequest && <RequestSlotPicker form={form} space={selectedSpace} />}
       <FreeVenueNote notice={venueNotice} />

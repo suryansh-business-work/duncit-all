@@ -57,6 +57,10 @@ export interface CreatePodFormValues {
   venue_offer_model: string;
   /** Venue offer: the amount typed for that option, in rupees ('' until typed). */
   venue_offer_rate: string;
+  /** Venue offer: what the host needs from the venue, one point per line (at least one). */
+  venue_offer_offerings: string;
+  /** Venue offer: the request note to the venue (optional). */
+  venue_offer_note: string;
   meeting_platform: string;
   meeting_url: string;
   meeting_notes: string;
@@ -99,6 +103,8 @@ export const blankCreatePodForm: CreatePodFormValues = {
   venue_booking_pets: false,
   venue_offer_model: '',
   venue_offer_rate: '',
+  venue_offer_offerings: '',
+  venue_offer_note: '',
   meeting_platform: '',
   meeting_url: '',
   meeting_notes: '',

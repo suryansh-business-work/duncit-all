@@ -186,6 +186,39 @@ describe('PaymentReleaseDetailPage venue bill', () => {
     expect(screen.getAllByTestId(/^venue-bill-line-/)).toHaveLength(1);
   });
 
+  // A booking from before offers carries no agreed terms and nothing on top.
+  it('states no agreed terms, extra charges or paid guests on a booking from before offers', async () => {
+    await mountDetail();
+    expect(screen.queryByTestId('release-agreed-terms')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('venue-bill-line-extra')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('venue-bill-line-paid-guests')).not.toBeInTheDocument();
+  });
+
+  // The venue is paid the agreed amount; the bill is its proof, and what the
+  // venue charged beyond it is paid on top — every figure the frozen snapshot's.
+  it('shows the agreed per-guest terms, the guests paid for and the extra charges on top', async () => {
+    const breakdown = makeDetailBreakdown({
+      include_slot_price: false,
+      venue_agreed_model: 'PER_GUEST',
+      venue_agreed_rate: 300,
+      venue_min_guests: 8,
+      venue_pax: 9,
+      venue_extra_amount: 250,
+      share_amount: 550,
+    });
+    await mountDetail(makeReleaseDetail([makeDetailRelease({ breakdown }), makeHostDetailRelease({ breakdown })]));
+    expect(screen.getByTestId('release-agreed-terms')).toHaveTextContent('Agreed termsPer guest · ₹300.00 per guest');
+    expect(billLine('paid-guests')).toBe('Guests the venue is paid for9 (at least 8)');
+    expect(billLine('extra')).toBe('Extra charges₹250.00');
+    expect(billLine('venue-total')).toBe('Venue total₹550.00');
+  });
+
+  it('states just the agreed rate for a pricing option this portal does not know', async () => {
+    const breakdown = makeDetailBreakdown({ venue_agreed_model: 'PER_SEASON', venue_agreed_rate: 1200 });
+    await mountDetail(makeReleaseDetail([makeDetailRelease({ breakdown })]));
+    expect(screen.getByTestId('release-agreed-terms')).toHaveTextContent('Agreed terms₹1200.00');
+  });
+
   it('still shows a bill recorded on a request that carries no venue payout', async () => {
     const breakdown = makeDetailBreakdown({ venue_slot_price: 0, include_slot_price: false });
     await mountDetail(makeReleaseDetail([makeHostDetailRelease({ breakdown })]));

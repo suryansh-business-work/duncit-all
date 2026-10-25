@@ -7,9 +7,10 @@ interface Props {
 }
 
 /**
- * The venue-bill summary in the completion dialog: attendees, the earlier slot
- * price, the final bill and the venue total they come to. Web twin:
- * `VenueBillSummary` in @duncit/ui.
+ * The venue-bill summary in the completion dialog: attendees, the guests a
+ * per-guest booking is paid for, the agreed amount, the final bill, any extra
+ * charges and the venue total they come to. Web twin: `VenueBillSummary` in
+ * @duncit/ui.
  */
 export function VenueBillSummary({ lines }: Readonly<Props>) {
   return (

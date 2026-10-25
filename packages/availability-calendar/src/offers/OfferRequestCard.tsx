@@ -1,7 +1,9 @@
 import { Alert, Card, CardContent, Divider, Stack, Typography } from '@mui/material';
 import { useDateFormat, useTranslation } from '@duncit/app-settings';
 import { slotSpanLabel } from '@duncit/slots';
+import { currentOfferTerms } from '@duncit/utils';
 import { rupees } from '../pricing/format';
+import { offerGuestsLabel } from './format';
 import OfferDecisionActions from './OfferDecisionActions';
 import OfferHistory from './OfferHistory';
 import OfferTermsPanel from './OfferTermsPanel';
@@ -18,13 +20,19 @@ function Detail({ label, value }: Readonly<{ label: string; value: string }>) {
   );
 }
 
-/** One booking request: the pod, who asks, when and for how many, the terms on the table, how it went so far, and the answers. */
+/**
+ * One booking request: the pod, who asks, when and for how many (from the
+ * venue's minimum to the pod's spots), the terms on the table with what they
+ * ask of the venue and until when to answer, how it went so far, and the answers.
+ */
 export default function OfferRequestCard({ request, onDone }: Readonly<{ request: BookingRequestRow; onDone: () => unknown }>) {
   const { t } = useTranslation();
   const fmt = useDateFormat({ timeZoneAware: true });
   const { offer } = request;
   const when = slotSpanLabel(request.start_at, request.end_at, request.whole_day, fmt, t('availability.wholeDay'));
-  const guests = offer ? [t('availability.offers.guests', { vars: { n: offer.pax } }), offer.pets ? t('availability.offers.pets') : ''] : [];
+  const guests = offer
+    ? [offerGuestsLabel(t, currentOfferTerms(offer).minGuests, offer.pax), offer.pets ? t('availability.offers.pets') : '']
+    : [];
 
   return (
     <Card variant="outlined" data-testid={`booking-request-${request.slot_id}`}>

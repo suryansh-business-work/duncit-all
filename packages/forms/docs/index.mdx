@@ -22,6 +22,9 @@ consumers:
 exports:
   - 'RhfTextField'
   - 'VenueUsageFields'
+  - 'VenueOfferAskFields'
+  - 'VenueOfferAskFieldsProps'
+  - 'VenueOfferAskLabels'
   - 'PackagingFields'
   - 'PackagingFieldsProps'
   - 'PackagingTranslate'
@@ -69,6 +72,7 @@ exports:
   - 'WITHDRAW_METHODS'
   - 'makeWalletStatementSchema'
   - 'makePodCompleteSchema'
+  - 'addVenueBillIssues'
   - 'buildPodCompleteInput'
   - 'venueUsageInput'
   - 'addVenueUsageIssues'
@@ -95,6 +99,9 @@ exports:
   - 'makeVenueCancelPodSchema'
   - 'venueCancelPodDefaults'
   - 'makeVenueOfferCounterSchema'
+  - 'venueOfferTermsOf'
+  - 'makeVenueOfferAskSchema'
+  - 'makeBookingOffersSchema'
   - 'venueOfferCounterDefaults'
   - 'makeVenueOfferRejectSchema'
   - 'venueOfferRejectDefaults'
@@ -439,8 +446,9 @@ Every control keeps a `data-testid`: `statement-dialog`, `statement-preset` (opt
 ## Complete Pod: the venue's usage
 
 `PodCompleteValues` carries `venue_pax` and `overtime_hours` beside the bill: the guests the venue
-charged for (its slot is priced per guest) and the hours the pod ran past the slot. Both are optional
-— empty, the server counts everyone booked and adds no overtime — and both stand without a bill,
+charged for (its booking is priced per guest) and the hours the pod ran past the slot. Both are optional
+— empty, the server counts for itself (the people who came on a per-guest offer, never fewer than its
+minimum) and adds no overtime — and both stand without a bill,
 because they price the slot, not the bill. `addVenueUsageIssues` checks them against the server's
 bounds (`VENUE_USAGE_LIMITS`: a whole guest count up to 10,000, up to 48 hours) and `venueUsageInput`
 maps them for the completion and its live preview. `VenueUsageFields` (package root, MUI) draws the
@@ -451,6 +459,41 @@ import { VenueUsageFields } from '@duncit/forms';
 
 <VenueUsageFields control={control} paxName="venue_pax" overtimeName="overtime_hours" labels={venueBillLabels} idPrefix="pod-complete" />
 ```
+
+## A venue offer's ask — `VenueOfferAskFields`
+
+Beside the price, a host's offer to a venue says what the venue should provide (one point per
+line, at least one on a new offer) and may add a note. `VenueOfferAskFields` (package root, MUI)
+draws the two multiline fields; Create Pod on mWeb, the Partners pod form (@duncit/pod-form) and
+the resubmit dialog (@duncit/host-pod-actions) all mount it, so the three ask the same way.
+
+The rules are not here — they are `/schemas`' `offeringsTextField(t, required)` and
+`offerNoteField(t)` (bounded as the server bounds them, `VENUE_OFFER_ASK_LIMITS`), embedded in each
+surface's own step schema, or `makeVenueOfferAskSchema(t)` on its own. The note field also stops
+typing at the server's 1000 characters. `venueOfferInput({ ...source, offerings, note })` in
+@duncit/utils turns the typed text into the offer's `offerings` array and trimmed `note`, while
+`venueOfferPriceInput` drops both for a live quote, so typing them never asks for a new price.
+
+```tsx
+import { VenueOfferAskFields } from '@duncit/forms';
+
+<VenueOfferAskFields
+  control={control}
+  offeringsName="venue_offer_offerings"
+  noteName="venue_offer_note"
+  labels={{
+    offerings: t('availability.offers.ask.offeringsLabel'),
+    offeringsHint: t('availability.offers.ask.offeringsHint'),
+    note: t('availability.offers.ask.noteLabel'),
+    noteHint: t('availability.offers.ask.noteHint', { vars: { max: VENUE_OFFER_ASK_LIMITS.note } }),
+  }}
+  idPrefix="create-pod"
+  required
+/>
+```
+
+Labels are nodes, so mWeb passes its own required marker (`requiredLabel`) instead of `required`.
+The test ids are `<idPrefix>-offer-ask`, `<idPrefix>-offer-offerings` and `<idPrefix>-offer-note`.
 
 ## `RhfTextField` vs `FormField`
 
@@ -597,7 +640,8 @@ directly.
 | `makeWhatsappNumberSchema` | the Google door's number step | the WhatsApp row on its own — see below |
 | `makeCancellationPolicySchema` | a venue's cancellation policy | any number of bands, each a window + a charge — see below |
 | `makeVenueCancelPodSchema` | a venue owner cancelling a pod | the reason that goes into the cancellation email, at least 5 characters — see below |
-| `makeVenueOfferCounterSchema` | a venue owner countering a host's booking offer (Partners, mWeb, native) | a pricing option (per guest / per hour / per slot / flat), an amount above 0 and at most the server ceiling, and an optional note of at most 280 characters; `venueOfferCounterDefaults(terms)` starts from the terms on the table; `makeVenueOfferRejectSchema` is the optional reason (≤ 280) a rejection sends the host |
+| `makeVenueOfferCounterSchema` | a venue owner countering a host's booking offer (Partners, mWeb, native) | either side countering the terms on the table: a pricing option (per guest / per hour / per slot / flat), an amount above 0 and at most the server ceiling, the fewest guests paid for (1 up to the booking's guests; empty keeps the one on the table), the points (one per line, at most 20 of 120 characters) and an optional note of at most 1000 characters; `venueOfferCounterDefaults(currentOfferTerms(offer))` starts from the terms on the table and `venueOfferTermsOf(values)` is what the counter sends (null until usable); `makeVenueOfferAskSchema` / `offeringsTextField` / `offerNoteField` are Create Pod's ask (at least one point); `makeVenueOfferRejectSchema` is the optional reason (≤ 280) a rejection sends |
+| `makeBookingOffersSchema` | a venue's own Booking offers settings (Partners, mWeb, native) | the fewest guests (0 to 1000) and the hours to answer (0 to 720), 0 = Duncit's default; `toBookingOffersValues` / `toBookingOffersInput` map them to and from `VenueSettings.offers` |
 | `makePodRequestNoteSchema` | a venue or host sending a Pod Request | an optional note of at most 500 characters — see below |
 | `makePodRequestOverrideSchema` | an admin setting a venue's or host's monthly Pod Request limit | empty (the default of 10) or a whole number 0–1000 — see below |
 | `makeRentalItemsSchema` | a venue's rented items | offers switch, the venue's rental terms (≤ `rental_terms_max`) and each item: name, unit, rate, deposit, stock, most per guest (≤ stock) — the caps are the server's `venueRegistrationConfig`. The MUI desk and the native desk both use it |
@@ -1040,10 +1084,16 @@ not a refactor, and want their own review.
 
 ### Complete Pod — `makePodCompleteSchema`
 
-The host completion form on mWeb, the Partners console and the native app: the venue final bill is
-optional (empty leaves the booked slot price standing), an amount needs its uploaded bill, and
-`buildPodCompleteInput` sends the bill file and an explicit `include_slot_price` only with an
-amount. The messages come from `@duncit/utils` `mwebVenueBillLabels` / `shellVenueBillLabels`.
+The host completion form on mWeb, the Partners console and the native app. A paid pod at a venue
+completes against the amount agreed with the venue, and the venue's final bill is its proof: the
+bill's total and the file are both required (`hasVenue` — pass false for a free pod, whose host
+settles the venue directly). Anything the venue charged beyond the agreed amount goes in
+`venue_extra_amount` (0 to 1,000,000) and is paid on top once Finance approves it.
+`buildPodCompleteInput` sends the bill, its file and the extra charges (0 included) and never the old
+`include_slot_price` — that is how the server knows this build completes against the agreed amount.
+`addVenueBillIssues` is the same rule for the Admin console's own schema, and `venueExtraAmountOf`
+reads the extra charges for a live preview. The messages come from `@duncit/utils`
+`mwebVenueBillLabels` / `shellVenueBillLabels`.
 
 ```ts
 import { makePodCompleteSchema, buildPodCompleteInput } from '@duncit/forms/schemas';

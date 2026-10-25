@@ -714,7 +714,6 @@ changeRequests: {
       title: 'Complete this pod',
       host: 'Host',
       media: 'Party photos & videos',
-      invalidAmount: 'Enter a valid amount',
       selectHost: 'Select host',
       mediaRequired: 'Upload at least one party photo or video',
       notesTooLong: 'Notes must be 1000 characters or fewer',
@@ -723,6 +722,33 @@ changeRequests: {
       payoutNote: 'Payouts are credited to the beneficiary wallets once Finance approves the request.',
       releasedBody: "Each payout below is waiting for Finance. It is credited to its beneficiary's wallet once approved.",
       submitted: 'Pod completion submitted for approval',
+    },
+
+    // The negotiation side of a venue's bookings on the Venues console
+    // (entity-consoles venues/detail/booking-terms). The rest of that card
+    // reads the venue booking's own availability.offers.* words.
+    venueBookingTerms: {
+      awaitingHost: 'Waiting for the host',
+      round: 'Round {round}',
+      note: 'Note on the terms',
+    },
+
+    // Settings > Venue offers: the platform defaults for a venue that has not
+    // set its own minimum guests or response time (AppSettings).
+    venueOfferSettings: {
+      title: 'Venue offers',
+      intro:
+        'The defaults for every venue that has not set its own. A host’s booking offer must be for at least the minimum guests, and each side has the response time to answer an offer or a counter before it expires.',
+      minGuests: 'Minimum guests',
+      minGuestsHint: 'A whole number of guests from {min} to {max}.',
+      minGuestsInvalid: 'Enter a whole number of guests from {min} to {max}',
+      responseHours: 'Response time (hours)',
+      responseHoursHint: 'A whole number of hours from {min} to {max}.',
+      responseHoursInvalid: 'Enter a whole number of hours from {min} to {max}',
+      save: 'Save',
+      saving: 'Saving…',
+      saved: 'Venue offer defaults saved',
+      loadFailed: 'Could not load the venue offer defaults.',
     },
 
     companions: {

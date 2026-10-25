@@ -17,6 +17,7 @@ import { parseDateTimeText } from '../../create-pod.form';
 import type { CreatePodForm } from '../../create-pod.types';
 import { BookingEndPicker } from './BookingEndPicker';
 import { BookingGuestFields } from './BookingGuestFields';
+import { OfferAskFields } from './OfferAskFields';
 import { OfferTermsFields } from './OfferTermsFields';
 import { VenueQuoteCard, type VenueQuoteState } from './VenueQuoteCard';
 
@@ -29,16 +30,19 @@ interface Props {
   currencySymbol: string;
   /** The range the pod's spots (= the offer's guests) may take. */
   spots: SpotsBounds;
+  /** The fewest guests the venue takes an offer for (0 = none). */
+  minGuests: number;
 }
 
 const DIRTY = { shouldDirty: true, shouldValidate: true } as const;
 
 /**
  * Offer the venue a booking: a start and an end inside its opening hours (days
- * it is shut, or times already booked, cannot be picked), the guests, and how
- * the host will pay it with an amount. The window becomes the pod's window, the
- * server prices the offer below, and the venue accepts, rejects or counters it
- * once the pod is sent. mWeb twin: VenueOfferPicker.
+ * it is shut, or times already booked, cannot be picked), the guests from the
+ * venue's minimum, how the host will pay it with an amount, and what they need
+ * from the venue. The window becomes the pod's window, the server prices the
+ * offer below at both ends of the guests, and the venue accepts, rejects or
+ * counters it once the pod is sent. mWeb twin: VenueOfferPicker.
  */
 export function VenueOfferPicker({
   form,
@@ -47,6 +51,7 @@ export function VenueOfferPicker({
   quote,
   currencySymbol,
   spots,
+  minGuests,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const fmt = useDateFormat();
@@ -89,7 +94,7 @@ export function VenueOfferPicker({
       <Text testID="create-pod-offer-intro" fontSize={13} color="$muted">
         {t('mweb.createPod.offer.intro')}
       </Text>
-      <BookingGuestFields form={form} spots={spots} />
+      <BookingGuestFields form={form} spots={spots} minGuests={minGuests} />
       {calendar.failed ? (
         <Text testID="create-pod-calendar-error" role="alert" fontSize={13} color="$danger">
           {t('mweb.createPod.calendarLoadFailed')}
@@ -121,6 +126,11 @@ export function VenueOfferPicker({
         {t('mweb.createPod.offer.title')}
       </Text>
       <OfferTermsFields form={form} />
+      <OfferAskFields
+        control={form.control}
+        offeringsName="venue_offer_offerings"
+        noteName="venue_offer_note"
+      />
       <VenueQuoteCard {...quote} currencySymbol={currencySymbol} />
     </YStack>
   );

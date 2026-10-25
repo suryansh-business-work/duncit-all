@@ -11,6 +11,11 @@ export {
 } from './FoodTaxFields';
 export { default as VenueUsageFields, type VenueUsageFieldsProps } from './VenueUsageFields';
 export {
+  default as VenueOfferAskFields,
+  type VenueOfferAskFieldsProps,
+  type VenueOfferAskLabels,
+} from './VenueOfferAskFields';
+export {
   default as WalletStatementFields,
   type WalletStatementClock,
   type WalletStatementDateFieldProps,

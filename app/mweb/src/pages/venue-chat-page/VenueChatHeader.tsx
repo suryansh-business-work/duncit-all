@@ -2,6 +2,7 @@ import { Avatar, Box, Stack, Typography } from '@mui/material';
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
 import StorefrontRoundedIcon from '@mui/icons-material/StorefrontRounded';
 import EventRoundedIcon from '@mui/icons-material/EventRounded';
+import { VenueChatContactLine } from '@duncit/availability-calendar';
 import { DuncitRoundButton } from '@duncit/buttons';
 import type { VenueChatCounterpart } from '@duncit/utils';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -16,7 +17,10 @@ interface Props {
   onBack: () => void;
 }
 
-/** The thread's top bar: back, then who it is with — the venue for a host, the pod for the venue. */
+/**
+ * The thread's top bar: back, then who it is with — the venue for a host, the
+ * pod for the venue — and how to reach them outside the chat.
+ */
 export default function VenueChatHeader({ counterpart, venueSide, onBack }: Readonly<Props>) {
   const { t } = useTranslation();
   const { formatDateTime } = useDateFormat();
@@ -58,6 +62,7 @@ export default function VenueChatHeader({ counterpart, venueSide, onBack }: Read
             {about}
           </Typography>
         )}
+        <VenueChatContactLine contact={counterpart?.contact ?? null} />
       </Box>
     </Stack>
   );

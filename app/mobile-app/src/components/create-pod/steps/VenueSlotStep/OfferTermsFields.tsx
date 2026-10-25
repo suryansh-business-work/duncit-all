@@ -19,9 +19,10 @@ export interface OfferTermsInputsProps {
 
 /**
  * How the host offers to pay the venue — per guest, per hour, for the slot or
- * a flat price — and the amount. The venue accepts it, rejects it or counters
- * with its own terms. Presentational: Create Pod and the resubmit sheet each
- * bind it to their own form. mWeb twin: OfferTermsFields.
+ * a flat price, with a line on how the picked option pays (per guest is a
+ * minimum order value per person) — and the amount. The venue accepts it,
+ * rejects it or counters with its own terms. Presentational: Create Pod and the
+ * resubmit sheet each bind it to their own form. mWeb twin: OfferTermsFields.
  */
 export function OfferTermsInputs({
   model,
@@ -32,9 +33,10 @@ export function OfferTermsInputs({
   rateError,
 }: Readonly<OfferTermsInputsProps>) {
   const { t } = useTranslation();
-  const rateLabel = isVenueOfferModel(model)
-    ? t(VENUE_OFFER_MODEL_KEY[model].rate)
-    : t('mweb.createPod.offer.rateLabel');
+  const picked = isVenueOfferModel(model) ? VENUE_OFFER_MODEL_KEY[model] : null;
+  const rateLabel = picked ? t(picked.rate) : t('mweb.createPod.offer.rateLabel');
+  // Once an option is picked, the line under it says how that option pays the venue.
+  const modelHelp = picked ? t(picked.help) : t('mweb.createPod.offer.modelHint');
   const options = VENUE_OFFER_MODELS.map((option) => ({
     value: option,
     label: t(VENUE_OFFER_MODEL_KEY[option].label),
@@ -45,7 +47,7 @@ export function OfferTermsInputs({
       <ChipSelectField
         testID="create-pod-offer-model"
         label={t('mweb.createPod.offer.modelLabel')}
-        hint={t('mweb.createPod.offer.modelHint')}
+        hint={modelHelp}
         options={options}
         value={model}
         onChange={onModel}

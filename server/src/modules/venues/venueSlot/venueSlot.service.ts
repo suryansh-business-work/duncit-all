@@ -20,6 +20,8 @@ import { getUrlConfigs } from '@config/url-configs';
 import { appDate, appDateTime, appTime } from '@utils/app-time';
 import { currentTerms, offerView } from '@modules/venues/venueOffer/venueOffer.view';
 import { freezeAgreedTerms } from '@modules/venues/venueOffer/venueOffer.hold';
+import { asRead, assertRound, nextMove, staleOffer } from '@modules/venues/venueOffer/venueOffer.cas';
+import { postOfferLine } from '@modules/venues/venueOffer/venueOffer.chat';
 import type { VenueOfferAction, VenueOfferParty } from '@modules/venues/venueOffer/venueOffer.types';
 
 function fail(code: string, msg: string): never {
@@ -877,7 +879,16 @@ export interface ApproveActor {
 export async function applyDecline(slot: IVenueSlot, reason: string, actor: DeclineActor) {
   const podId = slot.booked_by_pod_id;
   const note = reason.trim();
-  if (slot.offer) recordOfferStep(slot, actor.source === 'HOST' ? 'HOST' : 'VENUE', 'REJECT', note);
+  // Written against the booking exactly as it was read: an answer that landed
+  // in between (a counter, an accept) wins, and this one is refused.
+  const read = asRead(slot);
+  const closing = slot.offer ? { terms: currentTerms(slot.offer), status: slot.offer.status, round: slot.offer.round } : null;
+  if (slot.offer) {
+    recordOfferStep(slot, actor.source === 'HOST' ? 'HOST' : 'VENUE', 'REJECT', note);
+    slot.offer.status = 'DECLINED';
+    slot.offer.expires_at = null;
+    slot.offer.move = nextMove(slot.offer);
+  }
   slot.status = 'AVAILABLE';
   slot.booked_by_pod_id = null;
   // Keep the decision on the slot: `booked_by_pod_id` is cleared above, so
@@ -887,8 +898,10 @@ export async function applyDecline(slot: IVenueSlot, reason: string, actor: Decl
   slot.decided_pod_id = podId;
   slot.decline_reason = note;
   // A slot made for a host's offer (or a retired recurring pod) was never the venue's: it goes.
-  if (slot.requested_by_host) await VenueSlotModel.deleteOne({ _id: slot._id });
-  else await (slot as any).save();
+  const claimed = slot.requested_by_host
+    ? (await VenueSlotModel.deleteOne(read)).deletedCount === 1
+    : (await VenueSlotModel.updateOne(read, { $set: declinedFields(slot) })).matchedCount === 1;
+  if (!claimed) throw staleOffer();
   const beforePod = await PodModel.findById(podId);
   const before = beforePod ? snapshotPod(beforePod) : null;
   const pod = await PodModel.findByIdAndUpdate(
@@ -897,6 +910,21 @@ export async function applyDecline(slot: IVenueSlot, reason: string, actor: Decl
     { new: true }
   );
   if (!pod) return;
+  if (closing) {
+    // The thread keeps the record the deleted hold no longer can — and is where
+    // the host sends a new offer from.
+    const expired = actor.source === 'SYSTEM';
+    const side = closingSide(actor.source, closing.status);
+    await postOfferLine({
+      podId: String(pod._id),
+      slot,
+      terms: closing.terms,
+      side,
+      // A host's own refusal is posted as them; any other host-side line as the lead host.
+      hostId: actor.source === 'HOST' ? String(actor.actorUserId) : String(pod.pod_hosts_id[0]),
+      move: { event: expired ? 'EXPIRED' : 'DECLINED', by: expired ? 'SYSTEM' : side, round: closing.round, expiresAt: null, reason: note },
+    });
+  }
   if (actor.source === 'HOST') await tellVenueOwner(slot, 'Offer declined', `The host declined your counter offer for "${pod.pod_title}".`);
   else await notifySlotDecision(pod, slot, false, note, actor.source === 'VENUE_OWNER');
   await podAuditService.record({
@@ -914,8 +942,61 @@ function recordOfferStep(slot: IVenueSlot, by: VenueOfferParty, action: VenueOff
   const offer = slot.offer;
   if (!offer) return;
   const terms = currentTerms(offer);
-  offer.history.push({ by, action, model: terms.model, rate: terms.rate, total: terms.quote.total, note, at: new Date() });
+  offer.history.push({
+    by,
+    action,
+    model: terms.model,
+    rate: terms.rate,
+    total: terms.quote.total,
+    min_guests: terms.min_guests || null,
+    note,
+    at: new Date(),
+  });
   slot.markModified('offer');
+}
+
+/**
+ * Which side of the chat a closing line is posted on: the side that answered,
+ * or — when nobody answered in time — the side that was meant to (the host for
+ * a counter, else the venue), so the one whose terms ran out finds it unread.
+ */
+function closingSide(source: DeclineActor['source'], status: string): VenueOfferParty {
+  if (source === 'HOST') return 'HOST';
+  if (source === 'VENUE_OWNER') return 'VENUE';
+  return status === 'COUNTERED' ? 'HOST' : 'VENUE';
+}
+
+/**
+ * The fields a decline writes when the slot is the venue's own and stays — a
+ * slot made for a host's offer is deleted instead, so this one never carries an
+ * offer.
+ */
+function declinedFields(slot: IVenueSlot) {
+  return {
+    status: slot.status,
+    booked_by_pod_id: null,
+    decision: slot.decision,
+    decided_at: slot.decided_at,
+    decided_pod_id: slot.decided_pod_id,
+    decline_reason: slot.decline_reason,
+  };
+}
+
+/** The fields an approval writes: the booking, its frozen price and, per guest, the basis it is priced again on. */
+function approvedFields(slot: IVenueSlot) {
+  const plain = slot.toObject() as Record<string, unknown>;
+  return {
+    status: slot.status,
+    decision: slot.decision,
+    decided_at: slot.decided_at,
+    decided_pod_id: slot.decided_pod_id,
+    decline_reason: '',
+    price: slot.price,
+    overtime_rate: slot.overtime_rate,
+    price_snapshot: plain.price_snapshot ?? null,
+    price_basis: plain.price_basis ?? null,
+    offer: plain.offer ?? null,
+  };
 }
 
 /** In-app note to the venue's owner. Best-effort: never fails the decision. */
@@ -935,15 +1016,33 @@ async function tellVenueOwner(slot: IVenueSlot, title: string, body: string) {
  * accepting the venue's counter are the two ways in.
  */
 export async function applyApproval(slot: IVenueSlot, actor: ApproveActor) {
+  // Written against the booking exactly as it was read: a counter that landed
+  // in between means these are no longer the terms on the table.
+  const read = asRead(slot);
+  const agreed = slot.offer ? { terms: currentTerms(slot.offer), round: slot.offer.round } : null;
+  const by: VenueOfferParty = actor.source === 'HOST' ? 'HOST' : 'VENUE';
   // The agreed terms become the booking's price; extra hours at completion are
-  // priced at the hourly rate the two sides agreed.
-  freezeAgreedTerms(slot, actor.source === 'HOST' ? 'HOST' : 'VENUE');
+  // priced at the hourly rate the two sides agreed, and a per-guest booking
+  // keeps the basis it is priced again on for the people who came.
+  freezeAgreedTerms(slot, by);
+  if (slot.offer) slot.offer.move = nextMove(slot.offer);
   slot.status = 'BOOKED';
   slot.decision = 'APPROVED';
   slot.decided_at = new Date();
   slot.decided_pod_id = slot.booked_by_pod_id;
   slot.decline_reason = '';
-  await (slot as any).save();
+  const written = await VenueSlotModel.updateOne(read, { $set: approvedFields(slot) });
+  if (written.matchedCount !== 1) throw staleOffer();
+  if (agreed) {
+    await postOfferLine({
+      podId: String(slot.booked_by_pod_id),
+      slot,
+      terms: agreed.terms,
+      side: by,
+      hostId: actor.source === 'HOST' ? actor.actorUserId : '',
+      move: { event: 'ACCEPTED', by, round: agreed.round, expiresAt: null },
+    });
+  }
   const beforePod = await PodModel.findById(slot.booked_by_pod_id);
   const before = beforePod ? snapshotPod(beforePod) : null;
   const pod = await PodModel.findByIdAndUpdate(
@@ -1326,7 +1425,7 @@ export const venueSlotService = {
   },
 
   /** Owner approves a pending request: slot PENDING → BOOKED, pod goes live. */
-  async approveRequest(userId: string, slotId: string) {
+  async approveRequest(userId: string, slotId: string, round?: number | null) {
     const slot = await loadSlot(slotId);
     if (String(slot.owner_user_id) !== userId) fail('FORBIDDEN', 'Not your slot');
     if (slot.status !== 'PENDING' || !slot.booked_by_pod_id) {
@@ -1342,6 +1441,8 @@ export const venueSlotService = {
     if (slot.offer && slot.offer.status !== 'SENT') {
       fail('BAD_REQUEST', 'The host is answering your counter offer');
     }
+    // The terms the owner read are still the ones on the table.
+    if (slot.offer) assertRound(slot.offer, round);
     await applyApproval(slot, {
       source: 'VENUE_OWNER',
       actorUserId: userId,
@@ -1351,12 +1452,13 @@ export const venueSlotService = {
   },
 
   /** Owner declines: slot frees back up, the pod stays offline as DECLINED. */
-  async declineRequest(userId: string, slotId: string, reason?: string | null) {
+  async declineRequest(userId: string, slotId: string, reason?: string | null, round?: number | null) {
     const slot = await loadSlot(slotId);
     if (String(slot.owner_user_id) !== userId) fail('FORBIDDEN', 'Not your slot');
     if (slot.status !== 'PENDING' || !slot.booked_by_pod_id) {
       fail('BAD_REQUEST', 'This slot has no pending booking request');
     }
+    if (slot.offer) assertRound(slot.offer, round);
     await applyDecline(slot, reason ?? '', {
       source: 'VENUE_OWNER',
       actorUserId: userId,
@@ -1378,11 +1480,17 @@ export const venueSlotService = {
    */
   async expireRequest(slot: IVenueSlot, reason: string): Promise<boolean> {
     if (slot.status !== 'PENDING' || !slot.booked_by_pod_id) return false;
-    await applyDecline(slot, reason, {
-      source: 'SYSTEM',
-      actorUserId: null,
-      fallbackNote: reason,
-    });
+    try {
+      await applyDecline(slot, reason, {
+        source: 'SYSTEM',
+        actorUserId: null,
+        fallbackNote: reason,
+      });
+    } catch (error) {
+      // Somebody answered between the sweep's read and its write: their answer stands.
+      if (error instanceof GraphQLError && error.extensions.reason === 'OFFER_CHANGED') return false;
+      throw error;
+    }
     return true;
   },
 

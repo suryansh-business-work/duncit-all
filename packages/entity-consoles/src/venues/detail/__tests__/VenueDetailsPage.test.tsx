@@ -110,6 +110,10 @@ describe('VenueDetailsPage / tabs', () => {
     expect(screen.getByRole('tab', { name: 'Operations' })).toHaveAttribute('aria-selected', 'true');
     expect(screen.getByText('Operating hours', { selector: 'h6' })).toBeInTheDocument();
     expect(screen.getByText('Within 24h — 50% of the slot price')).toBeInTheDocument();
+    // Its own minimum, Duncit's response time.
+    expect(screen.getByText('Booking offers', { selector: 'h6' })).toBeInTheDocument();
+    expect(screen.getByText('10 guests')).toBeInTheDocument();
+    expect(screen.getByText('24 hours · Duncit’s default')).toBeInTheDocument();
     expect(screen.queryByText('About', { selector: 'h6' })).not.toBeInTheDocument();
   });
 

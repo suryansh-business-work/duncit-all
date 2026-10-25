@@ -1,9 +1,11 @@
 import { useQuery } from '@apollo/client/react';
 import { Controller, useFormContext, useWatch } from 'react-hook-form';
 import { Alert, InputAdornment, MenuItem, Stack, TextField, Typography } from '@mui/material';
+import { VenueOfferAskFields } from '@duncit/forms';
 import {
+  VENUE_OFFER_ASK_LIMITS,
   VENUE_OFFER_MODELS,
-  formatStatementMoney,
+  isVenueOfferModel,
   venueOfferInput,
   type VenueQuote,
 } from '@duncit/utils';
@@ -12,20 +14,25 @@ import { useDebouncedValue } from '@duncit/ui';
 import { usePodFormData } from '../context';
 import { useTranslation } from '../i18n/useTranslation';
 import type { PodFormValues } from '../types';
-import { PODFORM_OFFER_MODEL_KEY, VENUE_OFFER_QUOTE } from './offerQueries';
+import OfferQuoteSummary from './OfferQuoteSummary';
+import { PODFORM_OFFER_HELP_KEY, PODFORM_OFFER_MODEL_KEY, VENUE_OFFER_QUOTE } from './offerQueries';
+import { useVenueOfferTerms } from './useVenueOfferTerms';
 
 /** The amount is priced once typing stops, not once per keystroke. */
 const QUOTE_DEBOUNCE_MS = 300;
 
 interface QuoteAnswer {
-  venueOfferQuote: { ok: boolean; message: string | null; quote: VenueQuote | null };
+  venueOfferQuote: { ok: boolean; message: string | null; quote: VenueQuote | null; quote_min?: VenueQuote | null };
 }
 
 /**
  * How the host offers to pay the venue — per guest, per hour, for the slot or a
- * flat price — and the amount, with the server's price for it (the venue's
- * charges and Duncit's commission on top), or why it cannot be sent. The venue
- * accepts, rejects or counters once the pod is sent. mWeb / native twin:
+ * flat price, with a line on how the picked option pays — the amount, and what
+ * they need from the venue (one point per line) with an optional note. The
+ * server prices the offer (the venue's charges and Duncit's commission on top)
+ * at the pod's spots and at the venue's minimum guests, or says why it cannot
+ * be sent; the points and the note never re-price it. The venue accepts,
+ * rejects or counters once the pod is sent. mWeb / native twin:
  * OfferTermsFields.
  */
 export default function OfferTermsField({ venueId }: Readonly<{ venueId: string }>) {
@@ -37,6 +44,8 @@ export default function OfferTermsField({ venueId }: Readonly<{ venueId: string 
     name: ['pod_date_time', 'pod_end_date_time', 'venue_offer_model', 'venue_offer_rate', 'no_of_spots'],
   });
   const settledRate = useDebouncedValue(rate, QUOTE_DEBOUNCE_MS);
+  const { minGuests } = useVenueOfferTerms(venueId);
+  // The price only: the points and the note are left out, so typing them asks nothing.
   const offer = venueOfferInput({
     start: start ? start.toISOString() : null,
     end: end ? end.toISOString() : null,
@@ -53,6 +62,7 @@ export default function OfferTermsField({ venueId }: Readonly<{ venueId: string 
   });
   const answer = offer ? data?.venueOfferQuote : undefined;
   const currency = finance?.currency_symbol ?? '';
+  const modelHelp = isVenueOfferModel(model) ? t(PODFORM_OFFER_HELP_KEY[model]) : t('podForm.offer.modelHint');
 
   return (
     <Stack spacing={2} data-testid="pod-form-offer-terms">
@@ -68,7 +78,7 @@ export default function OfferTermsField({ venueId }: Readonly<{ venueId: string 
             value={field.value}
             onChange={(event) => field.onChange(event.target.value)}
             error={!!errors.venue_offer_model}
-            helperText={errors.venue_offer_model?.message || t('podForm.offer.modelHint')}
+            helperText={errors.venue_offer_model?.message || modelHelp}
           >
             {VENUE_OFFER_MODELS.map((option) => (
               <MenuItem key={option} value={option}>
@@ -97,10 +107,26 @@ export default function OfferTermsField({ venueId }: Readonly<{ venueId: string 
           />
         )}
       />
-      {answer?.ok && answer.quote && (
-        <Typography variant="body2" data-testid="pod-form-offer-total" sx={{ fontWeight: 700 }}>
-          {t('podForm.offer.total', { vars: { amount: formatStatementMoney(answer.quote.total, currency) } })}
+      {minGuests > 0 && (
+        <Typography variant="caption" data-testid="pod-form-venue-minimum" sx={{ color: 'text.secondary' }}>
+          {t('availability.offers.ask.venueMinimum', { vars: { min: minGuests } })}
         </Typography>
+      )}
+      <VenueOfferAskFields
+        control={control}
+        offeringsName="venue_offer_offerings"
+        noteName="venue_offer_note"
+        idPrefix="pod-form"
+        required
+        labels={{
+          offerings: t('availability.offers.ask.offeringsLabel'),
+          offeringsHint: t('availability.offers.ask.offeringsHint'),
+          note: t('availability.offers.ask.noteLabel'),
+          noteHint: t('availability.offers.ask.noteHint', { vars: { max: VENUE_OFFER_ASK_LIMITS.note } }),
+        }}
+      />
+      {answer?.ok && answer.quote && (
+        <OfferQuoteSummary quote={answer.quote} quoteMin={answer.quote_min ?? null} currency={currency} />
       )}
       {answer && !answer.ok && answer.message && <Alert severity="warning">{answer.message}</Alert>}
     </Stack>

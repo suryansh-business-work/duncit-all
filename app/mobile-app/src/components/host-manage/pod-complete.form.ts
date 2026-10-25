@@ -3,8 +3,9 @@ import { buildPodCompleteInput, type PodCompleteValues } from '@duncit/forms/sch
 import { type CompletePodInput } from '@/generated/graphql/graphql';
 
 /**
- * The host's "Complete Pod" form. The contract — the optional venue bill, the
- * upload it needs, the input it maps to — is `@duncit/forms/schemas`'
+ * The host's "Complete Pod" form. The contract — the venue's final bill a paid
+ * venue pod must carry as proof (its total and the file), the extra charges
+ * paid on top, the input it maps to — is `@duncit/forms/schemas`'
  * `pod-complete`, shared with mWeb (rule 27); this file only names the pod and
  * ties the input to the generated GraphQL type.
  */

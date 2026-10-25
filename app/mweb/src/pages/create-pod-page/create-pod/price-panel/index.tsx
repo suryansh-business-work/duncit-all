@@ -6,6 +6,7 @@ import SectionHeader from '../../../../components/SectionHeader';
 import { usePricing } from '../../../../hooks/usePricing';
 import { useTranslation } from '../../../../i18n/useTranslation';
 import type { EarningsPreview } from './useEarningsPreview';
+import EarningsRange from './EarningsRange';
 
 export { POTENTIAL_POD_EARNINGS, SUGGESTED_TICKET_PRICES } from './queries';
 export { useEarningsPreview, type EarningsPreview } from './useEarningsPreview';
@@ -89,6 +90,7 @@ export default function PricePanel({ preview }: Readonly<Props>) {
             {statement.collection.included_gst_note}
           </Typography>
         </Stack>
+        <EarningsRange projection={projection} money={fmt} />
         <EarningsSplitView
           waterfall={w}
           symbol={currency}

@@ -1,4 +1,5 @@
 import {
+  AVAILABILITY_BUNDLE,
   createBundleTranslation,
   createTranslator,
   EARNINGS_BUNDLE,
@@ -9,9 +10,11 @@ import {
 /**
  * The earnings statement renders inside this form as well as in mWeb and the
  * native app, so its wording is its own namespace rather than a fourth copy —
- * layered in here so a portal mounting the form resolves it too.
+ * layered in here so a portal mounting the form resolves it too. The same goes
+ * for a venue offer's ask and its price range (`availability.offers.ask.*`),
+ * which mWeb, the Partners console and the app all say the same way.
  */
-const FORM_CATALOGUE = { ...POD_FORM_BUNDLE, ...EARNINGS_BUNDLE };
+const FORM_CATALOGUE = { ...POD_FORM_BUNDLE, ...EARNINGS_BUNDLE, ...AVAILABILITY_BUNDLE };
 
 /**
  * This package's LOCAL FALLBACK bundle (CLAUDE.md rule 38).

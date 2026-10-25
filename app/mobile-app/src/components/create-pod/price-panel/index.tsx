@@ -7,6 +7,7 @@ import { SurfaceCard } from '@/components/SurfaceCard';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { CreatePodFinance } from '../create-pod.types';
+import { EarningsRange } from './EarningsRange';
 import { EarningsSplitAccordion } from './EarningsSplitAccordion';
 import type { PodPricingState } from './usePodPricing';
 
@@ -89,6 +90,7 @@ export function PricePanel({ finance, pricing }: Readonly<Props>) {
               {statement.collection.included_gst_note}
             </Text>
           </YStack>
+          <EarningsRange projection={projection} money={money} />
           <EarningsSplitAccordion
             split={buildEarningsSplit(waterfall, { symbol, t, viewer: 'host' })}
             money={money}

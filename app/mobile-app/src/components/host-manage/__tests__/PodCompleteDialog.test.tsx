@@ -14,7 +14,7 @@ jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ navigate: mockNavigate }),
 }));
 const mockPreview = { settlement: null as unknown, isLoading: false, error: null as string | null };
-// What the dialog asked the preview for: (pod id, bill amount, include slot price).
+// What the dialog asked the preview for: (pod id, bill total, extra charges, pax, overtime).
 const mockPreviewArgs = jest.fn();
 jest.mock('@/hooks/useSettlementPreview', () => ({
   useSettlementPreview: (...args: unknown[]) => {
@@ -107,8 +107,8 @@ describe('PodCompleteDialog', () => {
     );
     expect(screen.queryByTestId('pod-complete-venue-bill-fields')).toBeNull();
     expect(screen.queryByTestId('field-venue_bill_amount')).toBeNull();
+    expect(screen.queryByTestId('field-venue_extra_amount')).toBeNull();
     expect(screen.queryByTestId('media-upload-add')).toBeNull();
-    expect(screen.queryByTestId('pod-complete-include-slot')).toBeNull();
     fireEvent.press(screen.getByTestId('pod-complete-submit'));
     await waitFor(() => expect(onCompleted).toHaveBeenCalled());
     expect(mockRequest).toHaveBeenCalledWith(
@@ -152,7 +152,7 @@ describe('PodCompleteDialog', () => {
     expect(screen.queryByTestId('settlement-free')).toBeNull();
   });
 
-  it('asks a venue pod for its bill, and for the upload and the slot choice only with an amount', () => {
+  it('asks a paid venue pod for the bill total, the bill itself and any extra charges — no slot choice', () => {
     renderWithProviders(
       <PodCompleteDialog pod={venuePod} onClose={jest.fn()} onCompleted={jest.fn()} />,
     );
@@ -160,47 +160,52 @@ describe('PodCompleteDialog', () => {
     expect(screen.getByText('Venue bill')).toBeOnTheScreen();
     expect(screen.getByTestId('field-venue_bill_amount')).toBeOnTheScreen();
     expect(
-      screen.getByText('Leave this empty to pay the venue its agreed booking amount.'),
+      screen.getByText(
+        "Upload the venue's final bill as proof. The venue is paid the agreed booking amount; add anything it charged beyond that below.",
+      ),
     ).toBeOnTheScreen();
-    // Nothing to upload against, and nothing for the bill to come on top of.
-    expect(screen.queryByTestId('media-upload-add')).toBeNull();
+    // The bill is the proof, so its upload is asked for from the start — and marked required.
+    expect(screen.getByTestId('media-upload-add')).toBeOnTheScreen();
+    expect(screen.getByLabelText('Upload the venue bill, required')).toBeOnTheScreen();
+    expect(screen.getByTestId('field-venue_extra_amount')).toBeOnTheScreen();
+    expect(screen.getByText('Extra charges on the bill (optional)')).toBeOnTheScreen();
+    // The old "pay the slot price on top" choice is gone.
     expect(screen.queryByTestId('pod-complete-include-slot')).toBeNull();
-    expect(mockPreviewArgs).toHaveBeenLastCalledWith('p1', 0, false, undefined, undefined);
+    expect(mockPreviewArgs).toHaveBeenLastCalledWith('p1', 0, 0, undefined, undefined);
 
     fireEvent.changeText(screen.getByTestId('field-venue_bill_amount'), '1500');
-    expect(screen.getByTestId('media-upload-add')).toBeOnTheScreen();
-    // The upload is labelled as the bill, and marked required once it is asked for.
-    expect(screen.getByLabelText('Upload the venue bill, required')).toBeOnTheScreen();
-    expect(screen.getByTestId('pod-complete-include-slot')).toBeOnTheScreen();
-    expect(screen.getByText('Also pay the agreed booking amount with this bill')).toBeOnTheScreen();
-    expect(mockPreviewArgs).toHaveBeenLastCalledWith('p1', 1500, false, undefined, undefined);
+    expect(mockPreviewArgs).toHaveBeenLastCalledWith('p1', 1500, 0, undefined, undefined);
+    // The extra charges re-price the preview; ones the server would not take count as none.
+    fireEvent.changeText(screen.getByTestId('field-venue_extra_amount'), '250');
+    expect(mockPreviewArgs).toHaveBeenLastCalledWith('p1', 1500, 250, undefined, undefined);
+    fireEvent.changeText(screen.getByTestId('field-venue_extra_amount'), 'abc');
+    expect(mockPreviewArgs).toHaveBeenLastCalledWith('p1', 1500, 0, undefined, undefined);
 
     // The venue's usage re-prices the slot in the preview; an unreadable head count is left out.
     fireEvent.changeText(screen.getByTestId('field-venue_pax'), '12');
     fireEvent.changeText(screen.getByTestId('field-overtime_hours'), '1.5');
-    expect(mockPreviewArgs).toHaveBeenLastCalledWith('p1', 1500, false, 12, 1.5);
+    expect(mockPreviewArgs).toHaveBeenLastCalledWith('p1', 1500, 0, 12, 1.5);
     fireEvent.changeText(screen.getByTestId('field-venue_pax'), 'abc');
     fireEvent.changeText(screen.getByTestId('field-overtime_hours'), '0');
-    expect(mockPreviewArgs).toHaveBeenLastCalledWith('p1', 1500, false, undefined, undefined);
-
-    // Clearing the amount takes both away again.
-    fireEvent.changeText(screen.getByTestId('field-venue_bill_amount'), '');
-    expect(screen.queryByTestId('media-upload-add')).toBeNull();
-    expect(screen.queryByTestId('pod-complete-include-slot')).toBeNull();
+    expect(mockPreviewArgs).toHaveBeenLastCalledWith('p1', 1500, 0, undefined, undefined);
   });
 
-  it('submits a venue pod with no bill: the amount goes as zero, with no file or choice', async () => {
+  it('refuses a paid venue pod with no bill: asks for the total and the file, and sends nothing', async () => {
     const onCompleted = jest.fn();
     renderWithProviders(
       <PodCompleteDialog pod={venuePod} onClose={jest.fn()} onCompleted={onCompleted} />,
     );
     fireEvent.press(screen.getByTestId('pod-complete-submit'));
-    await waitFor(() => expect(onCompleted).toHaveBeenCalledTimes(1));
-    expect(completionInputs()).toEqual([{ pod_id: 'p1', venue_bill_amount: 0 }]);
-    expect(screen.queryByTestId('venue_bill_amount-error')).toBeNull();
+    await waitFor(() => expect(screen.getByTestId('venue_bill_amount-error')).toBeOnTheScreen());
+    expect(screen.getByText("Enter the total on the venue's final bill")).toBeOnTheScreen();
+    expect(screen.getByTestId('media_text-error')).toHaveTextContent(
+      "Upload the venue's final bill",
+    );
+    expect(completionInputs()).toEqual([]);
+    expect(onCompleted).not.toHaveBeenCalled();
   });
 
-  it('refuses an amount with no uploaded bill, and sends nothing', async () => {
+  it('refuses a total with no uploaded bill, and sends nothing', async () => {
     const onCompleted = jest.fn();
     renderWithProviders(
       <PodCompleteDialog pod={venuePod} onClose={jest.fn()} onCompleted={onCompleted} />,
@@ -208,20 +213,21 @@ describe('PodCompleteDialog', () => {
     fireEvent.changeText(screen.getByTestId('field-venue_bill_amount'), '1500');
     fireEvent.press(screen.getByTestId('pod-complete-submit'));
     await waitFor(() => expect(screen.getByTestId('media_text-error')).toBeOnTheScreen());
-    expect(screen.getByText('Upload the venue bill for the amount you entered')).toBeOnTheScreen();
+    expect(screen.getByText("Upload the venue's final bill")).toBeOnTheScreen();
+    expect(screen.queryByTestId('venue_bill_amount-error')).toBeNull();
     expect(completionInputs()).toEqual([]);
     expect(onCompleted).not.toHaveBeenCalled();
   });
 
-  it.each(['abc', '-5'])('refuses the amount "%s", and sends nothing', async (typed) => {
+  it.each(['abc', '-5'])('refuses the total "%s", and sends nothing', async (typed) => {
     const onCompleted = jest.fn();
     renderWithProviders(
       <PodCompleteDialog pod={venuePod} onClose={jest.fn()} onCompleted={onCompleted} />,
     );
     fireEvent.changeText(screen.getByTestId('field-venue_bill_amount'), typed);
-    // Not an amount, so there is nothing to upload a bill against either.
-    expect(screen.queryByTestId('media-upload-add')).toBeNull();
-    expect(mockPreviewArgs).toHaveBeenLastCalledWith('p1', 0, false, undefined, undefined);
+    // Not an amount the preview can read, so it is previewed as no bill.
+    expect(mockPreviewArgs).toHaveBeenLastCalledWith('p1', 0, 0, undefined, undefined);
+    await uploadBill();
     fireEvent.press(screen.getByTestId('pod-complete-submit'));
     await waitFor(() => expect(screen.getByTestId('venue_bill_amount-error')).toBeOnTheScreen());
     expect(screen.getByText('Enter a valid bill amount')).toBeOnTheScreen();
@@ -229,7 +235,24 @@ describe('PodCompleteDialog', () => {
     expect(onCompleted).not.toHaveBeenCalled();
   });
 
-  it('submits a venue pod with the amount and its uploaded bill, replacing the slot price', async () => {
+  it('refuses extra charges the server would not take, and sends nothing', async () => {
+    const onCompleted = jest.fn();
+    renderWithProviders(
+      <PodCompleteDialog pod={venuePod} onClose={jest.fn()} onCompleted={onCompleted} />,
+    );
+    fireEvent.changeText(screen.getByTestId('field-venue_bill_amount'), '1500');
+    await uploadBill();
+    fireEvent.changeText(screen.getByTestId('field-venue_extra_amount'), '-20');
+    fireEvent.press(screen.getByTestId('pod-complete-submit'));
+    await waitFor(() => expect(screen.getByTestId('venue_extra_amount-error')).toBeOnTheScreen());
+    expect(
+      screen.getByText('Enter the extra charges as an amount from 0 to 1000000'),
+    ).toBeOnTheScreen();
+    expect(completionInputs()).toEqual([]);
+    expect(onCompleted).not.toHaveBeenCalled();
+  });
+
+  it('submits the bill total and its uploaded bill, with no extra charges sent as 0', async () => {
     const onCompleted = jest.fn();
     renderWithProviders(
       <PodCompleteDialog pod={venuePod} onClose={jest.fn()} onCompleted={onCompleted} />,
@@ -243,21 +266,21 @@ describe('PodCompleteDialog', () => {
         pod_id: 'p1',
         venue_bill_amount: 1500,
         venue_bill_url: 'https://cdn/p.jpg',
-        include_slot_price: false,
+        venue_extra_amount: 0,
       },
     ]);
     expect(screen.queryByTestId('media_text-error')).toBeNull();
   });
 
-  it('carries the slot-price choice into the preview and the submission', async () => {
+  it('carries the extra charges into the preview and the submission', async () => {
     const onCompleted = jest.fn();
     renderWithProviders(
       <PodCompleteDialog pod={venuePod} onClose={jest.fn()} onCompleted={onCompleted} />,
     );
     fireEvent.changeText(screen.getByTestId('field-venue_bill_amount'), '1500');
     await uploadBill();
-    fireEvent(screen.getByTestId('pod-complete-include-slot-switch'), 'valueChange', true);
-    expect(mockPreviewArgs).toHaveBeenLastCalledWith('p1', 1500, true, undefined, undefined);
+    fireEvent.changeText(screen.getByTestId('field-venue_extra_amount'), '320.5');
+    expect(mockPreviewArgs).toHaveBeenLastCalledWith('p1', 1500, 320.5, undefined, undefined);
     fireEvent.press(screen.getByTestId('pod-complete-submit'));
     await waitFor(() => expect(onCompleted).toHaveBeenCalledTimes(1));
     expect(completionInputs()).toEqual([
@@ -265,7 +288,7 @@ describe('PodCompleteDialog', () => {
         pod_id: 'p1',
         venue_bill_amount: 1500,
         venue_bill_url: 'https://cdn/p.jpg',
-        include_slot_price: true,
+        venue_extra_amount: 320.5,
       },
     ]);
   });

@@ -2,32 +2,44 @@ import { useState } from 'react';
 import { Stack } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/app-settings';
-import { currentOfferTerms, venueOfferActions } from '@duncit/utils';
+import { currentOfferTerms, offerQuoteRange, venueOfferActions } from '@duncit/utils';
+import { rupees } from '../pricing/format';
 import AnswerOfferDialog, { type AnswerChoice } from './AnswerOfferDialog';
 import CounterOfferDialog from './CounterOfferDialog';
-import type { BookingOffer, OfferRequestSummary } from './queries';
+import { rupeesRange } from './format';
+import type { OfferTarget } from './offer-target';
+import type { OfferRequestSummary, OfferTerms } from './queries';
 
 interface Props {
   request: OfferRequestSummary;
   /** The host's offer; null for a request from before offers (accept or reject only). */
-  offer: BookingOffer | null;
+  offer: OfferTerms | null;
   onDone: () => unknown;
 }
 
 const LEGACY_ACTIONS = { accept: true, reject: true, counter: false };
 
+/** What the venue receives if it accepts: the terms on the table, from the fewest guests to the most. */
+function payoutText(request: OfferRequestSummary, offer: OfferTerms | null): string {
+  if (!offer) return rupees(request.price);
+  const terms = currentOfferTerms(offer);
+  const range = offerQuoteRange(terms.quote, terms.quoteMin);
+  return rupeesRange(range.venueMin, range.venueMax);
+}
+
 /**
  * What the venue can do with a booking request right now: Accept, Counter or
  * Reject a fresh offer; change or withdraw its counter while the host decides.
- * Each opens its own dialog — nothing is decided by one tap.
+ * Each opens its own dialog — nothing is decided by one tap — and answers the
+ * round it read.
  */
 export default function OfferDecisionActions({ request, offer, onDone }: Readonly<Props>) {
   const { t } = useTranslation();
   const [answer, setAnswer] = useState<AnswerChoice | null>(null);
   const [countering, setCountering] = useState(false);
   const actions = offer ? venueOfferActions(offer) : LEGACY_ACTIONS;
-  const payout = offer ? currentOfferTerms(offer).quote.venue_payout : request.price;
   if (!actions.accept && !actions.reject && !actions.counter) return null;
+  const target: OfferTarget = { side: 'VENUE', slot_id: request.slot_id };
 
   return (
     <>
@@ -49,8 +61,16 @@ export default function OfferDecisionActions({ request, offer, onDone }: Readonl
           </DuncitButton>
         )}
       </Stack>
-      <AnswerOfferDialog request={request} choice={answer} payout={payout} onClose={() => setAnswer(null)} onDone={onDone} />
-      {offer && <CounterOfferDialog open={countering} offer={offer} onClose={() => setCountering(false)} onDone={onDone} />}
+      <AnswerOfferDialog
+        target={target}
+        subject={request}
+        choice={answer}
+        amount={payoutText(request, offer)}
+        round={offer ? offer.round : null}
+        onClose={() => setAnswer(null)}
+        onDone={onDone}
+      />
+      {offer && <CounterOfferDialog open={countering} offer={offer} target={target} onClose={() => setCountering(false)} onDone={onDone} />}
     </>
   );
 }

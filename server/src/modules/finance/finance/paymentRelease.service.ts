@@ -82,6 +82,11 @@ export function toPub(doc: IPaymentRelease) {
           venue_pax: doc.breakdown.venue_pax ?? 0,
           venue_overtime_hours: doc.breakdown.venue_overtime_hours ?? 0,
           venue_overtime_amount: doc.breakdown.venue_overtime_amount ?? 0,
+          venue_min_guests: doc.breakdown.venue_min_guests ?? 0,
+          venue_people_counted: doc.breakdown.venue_people_counted ?? 0,
+          venue_extra_amount: doc.breakdown.venue_extra_amount ?? 0,
+          venue_agreed_model: doc.breakdown.venue_agreed_model ?? null,
+          venue_agreed_rate: doc.breakdown.venue_agreed_rate ?? null,
         }
       : null,
     created_at: doc.created_at.toISOString(),
@@ -318,6 +323,11 @@ const frozenInputsOf = (s: PodSettlement) => ({
   venue_pax: s.venue_pax,
   venue_overtime_hours: s.venue_overtime_hours,
   venue_overtime_amount: s.venue_overtime_amount,
+  venue_min_guests: s.venue_min_guests,
+  venue_people_counted: s.venue_people_counted,
+  venue_extra_amount: s.venue_extra_amount,
+  venue_agreed_model: s.venue_agreed_model,
+  venue_agreed_rate: s.venue_agreed_rate,
 });
 
 function statementTypeLabel(kind: PaymentReleaseKind): string {
@@ -848,6 +858,7 @@ interface CompleteInput {
   venue_bill_amount?: unknown;
   venue_bill_url?: string | null;
   include_slot_price?: boolean | null;
+  venue_extra_amount?: number | null;
 }
 
 /** Only a host of the pod (or an admin) may complete it. */
@@ -905,6 +916,16 @@ function venueBillFor(pod: CompletingPod, input: CompleteInput) {
   if (input.include_slot_price != null && billAmount > 0 && !billUrl) {
     throw new GraphQLError('Upload the venue bill for the amount you entered', {
       extensions: { code: 'BAD_USER_INPUT' },
+    });
+  }
+  // A client that sends the extra charges (0 included) completes against the
+  // amount agreed with the venue, and the venue's final bill is its proof —
+  // required for every paid pod at a venue. Builds from before this never send
+  // the field, and complete exactly as they always have.
+  const agreedAmountClient = input.venue_extra_amount !== undefined && input.venue_extra_amount !== null;
+  if (agreedAmountClient && pod.venue_id && (billAmount <= 0 || !billUrl)) {
+    throw new GraphQLError("Upload the venue's final bill and enter its total", {
+      extensions: { code: 'BAD_USER_INPUT', reason: 'VENUE_BILL_REQUIRED' },
     });
   }
   return { billAmount, billUrl };

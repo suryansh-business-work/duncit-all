@@ -225,7 +225,7 @@ describe('10 Pod payout', () => {
         expect(releaseOf(detail, 'VENUE_BILLING').bill_url, 'the uploaded bill').to.match(/^https?:\/\//);
         expect(releaseOf(detail, 'HOST_PAYMENT').amount_requested).to.be.greaterThan(0);
         expect(releaseOf(detail, 'CLUB_ADMIN').amount_requested).to.be.greaterThan(0);
-        // "On top of the slot price": the venue is paid on both, less Duncit's commission on a venue.
+        // The agreed slot price plus the extra charges on the bill, less Duncit's commission on a venue.
         venueCommissionPct(world.operatorToken).then((pct) => {
           const charged = SLOT_PRICE + VENUE_BILL;
           expect(releaseOf(detail, 'VENUE_BILLING').amount_requested, 'venue payout').to.eq(

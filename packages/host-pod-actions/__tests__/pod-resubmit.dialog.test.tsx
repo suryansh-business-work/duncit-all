@@ -20,6 +20,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import PodResubmitDialog from '../src/pod-resubmit/PodResubmitDialog';
 import { OfferWindowField, VenueField } from '../src/pod-resubmit/VenueSlotFields';
+import { RESUBMIT_VENUE_TERMS } from '../src/pod-resubmit/useResubmitVenueTerms';
+import type { VenueOfferPrefill } from '../src';
 import { HostPodActionsProvider } from '../src/HostPodActionsProvider';
 import {
   HOST_RESUBMIT_POD,
@@ -99,6 +101,15 @@ const calendarMock = (venueId: string): MockedResponse => ({
 });
 const startTile = () => document.body.querySelector(`[data-testid="slot-tile-${START}"]`) as HTMLElement;
 
+/** The picked venue's bounds on an offer: what it holds and the fewest guests it takes. */
+const termsMock = (venueId: string, terms: { capacity: number; offer_min_guests: number }): MockedResponse => ({
+  request: { query: RESUBMIT_VENUE_TERMS, variables: { venue_id: venueId } },
+  result: {
+    data: { publicVenue: { __typename: 'Venue', id: venueId, capacity_items: [], ...terms } },
+  },
+  maxUsageCount: Number.POSITIVE_INFINITY,
+});
+
 const cleanCheck: MockedResponse = {
   request: { query: MODERATE_POD_CONTENT, variables: () => true },
   result: {
@@ -152,6 +163,13 @@ const chooseTerms = async () => {
   await settle();
 };
 
+const offeringsBox = () => screen.getByRole('textbox', { name: /What you need from the venue/ });
+const noteBox = () => screen.getByRole('textbox', { name: 'Request from the venue (optional)' });
+const askFor = async (offerings: string) => {
+  fireEvent.change(offeringsBox(), { target: { value: offerings } });
+  await settle();
+};
+
 const submit = async () => {
   fireEvent.submit(document.querySelector('#pod-resubmit-form') as HTMLFormElement);
   await settle();
@@ -164,10 +182,25 @@ afterEach(() => {
 });
 
 describe('PodResubmitDialog', () => {
-  const dialog = (mocks: readonly MockedResponse[], target: HostPodTarget | null = pod()) => {
-    const props = { pod: target, onClose: vi.fn(), onSaved: vi.fn() };
+  const dialog = (
+    mocks: readonly MockedResponse[],
+    target: HostPodTarget | null = pod(),
+    offerPrefill?: VenueOfferPrefill,
+  ) => {
+    const props = { pod: target, onClose: vi.fn(), onSaved: vi.fn(), offerPrefill };
     return { props, ...wrap(<PodResubmitDialog {...props} />, mocks) };
   };
+  /** Records what the resubmission was sent. */
+  const recording = (sent: Record<string, any>[]) =>
+    resubmitMock({
+      request: {
+        query: HOST_RESUBMIT_POD,
+        variables: (v: Record<string, any>) => {
+          sent.push(v);
+          return true;
+        },
+      },
+    });
 
   it('opens on the rejected pod, explaining what resubmitting does', async () => {
     dialog([venuesMock]);
@@ -249,30 +282,20 @@ describe('PodResubmitDialog', () => {
     expect(screen.getByText(labels.offerRateRequired)).toBeInTheDocument();
   });
 
-  it('resubmits an offer for the picked window once a venue and terms are chosen', async () => {
+  it('resubmits an offer for the picked window once a venue, terms and what the host needs are chosen', async () => {
     const sent: Record<string, any>[] = [];
-    const { props } = dialog([
-      venuesMock,
-      calendarMock('v-1'),
-      cleanCheck,
-      resubmitMock({
-        request: {
-          query: HOST_RESUBMIT_POD,
-          variables: (v: Record<string, any>) => {
-            sent.push(v);
-            return true;
-          },
-        },
-      }),
-    ]);
+    const { props } = dialog([venuesMock, calendarMock('v-1'), cleanCheck, recording(sent)]);
     await settle();
     await pickVenue('Indiranagar Court');
     fireEvent.click(startTile());
     await settle();
     await chooseTerms();
+    await askFor('- Two courts\n\nShuttles');
+    fireEvent.change(noteBox(), { target: { value: '  Doubles only  ' } });
     await submit();
 
     expect(props.onSaved).toHaveBeenCalledTimes(1);
+    expect(sent.at(-1)?.input.no_of_spots).toBe(12);
     expect(sent.at(-1)?.input.venue_offer).toEqual({
       start_at: START,
       end_at: '2030-06-01T10:30:00.000Z',
@@ -281,7 +304,183 @@ describe('PodResubmitDialog', () => {
       pets: false,
       model: 'PER_GUEST',
       rate: 300,
+      offerings: ['Two courts', 'Shuttles'],
+      note: 'Doubles only',
     });
+  });
+
+  it('holds the resubmission until the host says what they need from the venue', async () => {
+    const sent: Record<string, any>[] = [];
+    const { props } = dialog([venuesMock, calendarMock('v-1'), cleanCheck, recording(sent)]);
+    await settle();
+    await pickVenue('Indiranagar Court');
+    fireEvent.click(startTile());
+    await settle();
+    await chooseTerms();
+    expect(offeringsBox()).toBeRequired();
+
+    await submit();
+
+    expect(props.onSaved).not.toHaveBeenCalled();
+    expect(sent).toHaveLength(0);
+    expect(screen.getByText('Add at least one thing you need from the venue')).toBeInTheDocument();
+  });
+
+  it("raises the spots to the venue's minimum, and sends the offer for that many", async () => {
+    const sent: Record<string, any>[] = [];
+    const { props } = dialog([
+      venuesMock,
+      calendarMock('v-1'),
+      termsMock('v-1', { capacity: 40, offer_min_guests: 16 }),
+      cleanCheck,
+      recording(sent),
+    ]);
+    await settle();
+    await pickVenue('Indiranagar Court');
+    await settle();
+
+    expect(screen.getByTestId('spots-value')).toHaveTextContent('16');
+    expect(screen.getByTestId('spots-bounds-hint')).toHaveTextContent('This venue takes bookings for at least 16 guests.');
+
+    fireEvent.click(startTile());
+    await settle();
+    await chooseTerms();
+    await askFor('Two courts');
+    fireEvent.click(screen.getByRole('switch', { name: 'Pets are coming' }));
+    await submit();
+
+    expect(props.onSaved).toHaveBeenCalledTimes(1);
+    expect(sent.at(-1)?.input.no_of_spots).toBe(16);
+    expect(sent.at(-1)?.input.venue_offer).toMatchObject({ pax: 16, pets: true });
+
+    // Anything up to what the venue holds can still be picked.
+    fireEvent.change(screen.getByRole('slider'), { target: { value: 24 } });
+    await submit();
+    expect(sent.at(-1)?.input.venue_offer).toMatchObject({ pax: 24 });
+  });
+
+  it('leaves spots it does not know for the host, rather than inventing a count', async () => {
+    dialog([venuesMock, calendarMock('v-1'), termsMock('v-1', { capacity: 40, offer_min_guests: 16 })], pod({ no_of_spots: null }));
+    await settle();
+    await pickVenue('Indiranagar Court');
+    await settle();
+
+    expect(screen.getByTestId('spots-value')).toHaveTextContent('0');
+  });
+
+  it('sends a new offer from the declined terms when it is handed them', async () => {
+    const sent: Record<string, any>[] = [];
+    const declined: VenueOfferPrefill = {
+      model: 'FLAT',
+      rate: 4500,
+      offerings: ['Two courts', 'Shuttles'],
+      note: 'Doubles only',
+      start_at: START,
+      end_at: END,
+      space_label: '',
+      pets: true,
+    };
+    const { props } = dialog(
+      [venuesMock, calendarMock('v-1'), termsMock('v-1', { capacity: 40, offer_min_guests: 8 }), cleanCheck, recording(sent)],
+      pod({ venue_id: 'v-1' }),
+      declined,
+    );
+    await settle();
+    await settle();
+
+    // Every term the host offered before is where they left it.
+    expect(screen.getByTestId('pod-resubmit-offer-rate')).toHaveValue('4500');
+    expect(offeringsBox()).toHaveValue('Two courts\nShuttles');
+    expect(noteBox()).toHaveValue('Doubles only');
+    expect(screen.getByRole('switch', { name: 'Pets are coming' })).toBeChecked();
+
+    await submit();
+
+    expect(props.onSaved).toHaveBeenCalledTimes(1);
+    expect(sent.at(-1)?.input).toMatchObject({
+      venue_id: 'v-1',
+      no_of_spots: 12,
+      venue_offer: {
+        start_at: START,
+        end_at: END,
+        space_label: '',
+        pax: 12,
+        pets: true,
+        model: 'FLAT',
+        rate: 4500,
+        offerings: ['Two courts', 'Shuttles'],
+        note: 'Doubles only',
+      },
+    });
+  });
+
+  it('keeps what the host typed when the parent hands the same terms again', async () => {
+    const declined: VenueOfferPrefill = {
+      model: 'FLAT',
+      rate: 4500,
+      offerings: ['Two courts'],
+      note: '',
+      start_at: START,
+      end_at: END,
+      space_label: '',
+      pets: false,
+    };
+    const target = pod({ venue_id: 'v-1' });
+    const { rerender } = dialog([venuesMock, calendarMock('v-1')], target, declined);
+    await settle();
+    fireEvent.change(noteBox(), { target: { value: 'Doubles only' } });
+    await settle();
+
+    rerender(
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[venuesMock, calendarMock('v-1')]}>
+        <ThemeProvider theme={testTheme}>
+          <LocalizationProvider dateAdapter={AdapterDateFns}>
+            <HostPodActionsProvider {...hostActionsConfig()}>
+              <PodResubmitDialog pod={target} onClose={vi.fn()} onSaved={vi.fn()} offerPrefill={{ ...declined }} />
+            </HostPodActionsProvider>
+          </LocalizationProvider>
+        </ThemeProvider>
+      </MockedProvider>,
+    );
+    await settle();
+
+    expect(noteBox()).toHaveValue('Doubles only');
+  });
+
+  it('drops the space with the venue it belonged to', async () => {
+    const sent: Record<string, any>[] = [];
+    const declined: VenueOfferPrefill = {
+      model: 'FLAT',
+      rate: 4500,
+      offerings: ['Two courts'],
+      note: '',
+      start_at: START,
+      end_at: END,
+      space_label: 'Court 2',
+      pets: false,
+    };
+    dialog(
+      [
+        venuesMock,
+        calendarMock('v-1'),
+        calendarMock('v-2'),
+        // Court 2 is not one of this venue's spaces, so the whole venue's capacity bounds the offer.
+        termsMock('v-1', { capacity: 40, offer_min_guests: 8 }),
+        cleanCheck,
+        recording(sent),
+      ],
+      pod({ venue_id: 'v-1' }),
+      declined,
+    );
+    await settle();
+    await settle();
+    expect(screen.getByTestId('spots-value')).toHaveTextContent('12');
+    await pickVenue('Koramangala Court');
+    fireEvent.click(startTile());
+    await settle();
+    await submit();
+
+    expect(sent.at(-1)?.input.venue_offer).toMatchObject({ space_label: '' });
   });
 
   // A rejected pod is exactly where a host is most tempted to reword things.
@@ -317,6 +516,8 @@ describe('PodResubmitDialog', () => {
     fireEvent.click(startTile());
     await settle();
     await chooseTerms();
+    // A new offer has to say what it needs from the venue before it is screened.
+    await askFor('Two courts');
 
     await submit();
 

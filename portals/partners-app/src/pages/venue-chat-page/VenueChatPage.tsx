@@ -2,17 +2,20 @@ import { useNavigate, useParams } from 'react-router';
 import { useQuery } from '@apollo/client/react';
 import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
+import { VenueChatContactLine } from '@duncit/availability-calendar';
 import { DuncitButton } from '@duncit/buttons';
 import { fireAndForget, logs } from '@duncit/logs';
 import { useTranslation } from '@duncit/shell';
+import { venueChatCounterpart } from '@duncit/utils';
 import { fmtDate } from '../venue-pods-page/queries';
 import VenueChatThread from './VenueChatThread';
 import { VENUE_CHAT_ROOM, venueChatErrorKey } from './queries';
 
 /**
  * `/venues/pods/:podId/chat` — the venue owner's private chat with the hosts
- * of one pod booked at their venue. The server decides membership: anyone
- * else gets FORBIDDEN and reads why instead of an empty thread.
+ * of one pod booked at their venue, where the two bargain over the booking
+ * offer; the header says how to reach the host outside it. The server decides
+ * membership: anyone else gets FORBIDDEN and reads why instead of an empty thread.
  */
 export default function VenueChatPage() {
   const { t } = useTranslation();
@@ -53,8 +56,14 @@ export default function VenueChatPage() {
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
             {info.venue_name} · {fmtDate(info.pod_date_time)}
           </Typography>
+          <VenueChatContactLine contact={venueChatCounterpart(info).contact} />
         </Stack>
-        <VenueChatThread podId={info.pod_id} />
+        <VenueChatThread
+          podId={info.pod_id}
+          side={info.my_side}
+          podIsFree={!!info.pod_is_free}
+          subject={{ pod_id: info.pod_id, pod_title: info.pod_title, venue_name: info.venue_name }}
+        />
       </>
     );
   };

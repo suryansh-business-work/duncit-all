@@ -20,6 +20,7 @@ import {
 import { hasVenueCategory, pickVenueCategory, venueCategoryKey } from './venue.categories';
 import { venuePricingSchema } from '@modules/venues/venuePricing/venuePricing.schema.model';
 import type { VenuePricing } from '@modules/venues/venuePricing/venuePricing.types';
+import type { IVenueOfferSettings } from './venue.offerSettings';
 
 export type VenueFoodTaxMode = (typeof VENUE_FOOD_TAX_MODES)[number];
 
@@ -190,6 +191,8 @@ export interface IVenueSettings {
   rules: IVenueRules;
   auto_extend: IVenueAutoExtend;
   cancellation: IVenueCancellationPolicy;
+  /** Booking offers: the fewest guests and the hours to answer (0 = platform default). */
+  offers: IVenueOfferSettings;
 }
 
 export interface IVenue extends Document {
@@ -407,6 +410,15 @@ const venueCancellationSchema = new Schema<IVenueCancellationPolicy>(
   { _id: false }
 );
 
+const venueOfferSettingsSchema = new Schema<IVenueOfferSettings>(
+  {
+    // 0 = the platform default (Admin settings); see venue.offerSettings.
+    min_guests: { type: Number, default: 0, min: 0, max: 1000 },
+    response_hours: { type: Number, default: 0, min: 0, max: 720 },
+  },
+  { _id: false }
+);
+
 const venueSettingsSchema = new Schema<IVenueSettings>(
   {
     operating_hours: {
@@ -424,6 +436,7 @@ const venueSettingsSchema = new Schema<IVenueSettings>(
     rules: { type: venueRulesSchema, default: () => ({}) },
     auto_extend: { type: venueAutoExtendSchema, default: () => ({}) },
     cancellation: { type: venueCancellationSchema, default: () => ({}) },
+    offers: { type: venueOfferSettingsSchema, default: () => ({}) },
   },
   { _id: false }
 );

@@ -82,6 +82,10 @@ export const settingsTypeDefs = gql`
     host_change_request_health_penalty: Int!
     "Account Health points a CLUB ADMIN loses for filing a Request Change on a pod in their club (0-10, 0 disables it)."
     club_admin_change_request_health_penalty: Int!
+    "The fewest guests a venue booking offer may be for, when the venue has set no minimum of its own (1-1000)."
+    venue_offer_min_guests_default: Int!
+    "Hours the other side has to answer a venue booking offer or counter before it expires, when the venue has set no response time of its own (1-720)."
+    venue_offer_response_hours_default: Int!
     updated_at: String
   }
 
@@ -208,6 +212,10 @@ export const settingsTypeDefs = gql`
     host_change_request_health_penalty: Int
     "Account Health points a club admin loses for filing a Request Change (0-10, 0 disables it)."
     club_admin_change_request_health_penalty: Int
+    "The fewest guests a venue booking offer may be for, when the venue set none (1-1000)."
+    venue_offer_min_guests_default: Int
+    "Hours to answer a venue booking offer or counter, when the venue set none (1-720)."
+    venue_offer_response_hours_default: Int
   }
 
   type FeatureFlag {

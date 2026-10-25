@@ -1,73 +1,35 @@
 import { screen } from '@testing-library/react-native';
 
-import { OfferSummary, offerTermsText } from '@/components/venue-slot-requests/OfferSummary';
-import {
-  VenueOfferAction,
-  VenueOfferModel,
-  VenueOfferParty,
-  VenueOfferStatus,
-} from '@/generated/graphql/graphql';
+import { OfferSummary } from '@/components/venue-slot-requests/OfferSummary';
+import { VenueOfferAction, VenueOfferModel, VenueOfferParty } from '@/generated/graphql/graphql';
 import type { BookingOffer } from '@/hooks/useVenueSlotRequests';
 import { renderWithProviders } from '@/utils/test-utils';
-
-const quote = {
-  base: 6000,
-  rules: [],
-  min_spend_top_up: 0,
-  cleaning_fee: 0,
-  pet_fee: 0,
-  taxes: 0,
-  venue_payout: 6000,
-  platform_fee: 600,
-  total: 6600,
-  deposit: 0,
-};
+import { offerTerms } from '@/utils/venue-offer-fixture';
 
 const offer = (over: Partial<BookingOffer> = {}): BookingOffer => ({
-  slot_id: 'slot-1',
-  status: VenueOfferStatus.Sent,
-  awaiting: VenueOfferParty.Venue,
-  model: VenueOfferModel.PerHour,
-  rate: 1500,
-  pax: 12,
-  pets: false,
-  space_label: '',
-  quote,
-  counter: null,
+  ...offerTerms(),
   history: [],
   ...over,
 });
 
-describe('offerTermsText', () => {
-  const t = (key: string, options?: { vars?: Record<string, string | number> }) =>
-    options?.vars ? `${key}${JSON.stringify(options.vars)}` : key;
-
-  it('names the option and its amount', () => {
-    expect(offerTermsText(t, 'PER_HOUR', 1500)).toContain('availability.offers.termsLine');
-  });
-
-  it('is just the amount for an option this build does not know', () => {
-    expect(offerTermsText(t, 'PER_DAY', 1500)).toMatch(/1,500/);
-  });
-});
-
 describe('OfferSummary', () => {
-  it('reads the whole venue when no space was picked, and quotes nothing for a free pod', () => {
-    renderWithProviders(<OfferSummary offer={offer()} podIsFree />);
-    expect(screen.getByText('12 guests · Whole venue')).toBeOnTheScreen();
-    expect(screen.queryByText(/You receive/)).toBeNull();
+  it('reads the guests from the venue minimum to the pod’s spots, pets and the space, then the terms', () => {
+    renderWithProviders(<OfferSummary offer={offer({ pets: true })} podIsFree={false} />);
+    expect(screen.getByText('8–20 guests · Pets are coming · Court 2')).toBeOnTheScreen();
+    expect(screen.getByText('Host offered')).toBeOnTheScreen();
+    expect(screen.getByText('You receive ₹2,400 – ₹6,000')).toBeOnTheScreen();
     expect(screen.queryByTestId('offer-summary-history')).toBeNull();
   });
 
-  it('shows no status for one this build does not know', () => {
+  it('reads the whole venue when no space was picked, and quotes nothing for a free pod', () => {
     renderWithProviders(
-      <OfferSummary offer={offer({ status: 'EXPIRED' as VenueOfferStatus })} podIsFree={false} />,
+      <OfferSummary offer={offer({ space_label: '', min_guests: 0 })} podIsFree />,
     );
-    expect(screen.queryByTestId('offer-summary-status')).toBeNull();
-    expect(screen.getByTestId('offer-summary-slot-1-quote')).toBeOnTheScreen();
+    expect(screen.getByText('20 guests · Whole venue')).toBeOnTheScreen();
+    expect(screen.queryByText(/You receive/)).toBeNull();
   });
 
-  it('lists each negotiation step with its time and note, and skips one it cannot name', () => {
+  it('lists each step with its terms, the fewest guests named, its time and note — and skips one it cannot name', () => {
     renderWithProviders(
       <OfferSummary
         offer={offer({
@@ -77,14 +39,16 @@ describe('OfferSummary', () => {
               action: VenueOfferAction.Offer,
               model: VenueOfferModel.PerHour,
               rate: 1500,
+              min_guests: null,
               note: '',
               at: '2026-08-25T09:00:00.000Z',
             },
             {
               by: VenueOfferParty.Venue,
               action: VenueOfferAction.Counter,
-              model: VenueOfferModel.Flat,
-              rate: 7000,
+              model: VenueOfferModel.PerGuest,
+              rate: 350,
+              min_guests: 12,
               note: 'Weekend rate',
               at: null,
             },
@@ -93,6 +57,7 @@ describe('OfferSummary', () => {
               action: VenueOfferAction.Reject,
               model: null,
               rate: null,
+              min_guests: null,
               note: '',
               at: null,
             },
@@ -101,6 +66,7 @@ describe('OfferSummary', () => {
               action: VenueOfferAction.Offer,
               model: null,
               rate: null,
+              min_guests: null,
               note: '',
               at: null,
             },
@@ -109,8 +75,11 @@ describe('OfferSummary', () => {
         podIsFree={false}
       />,
     );
-    expect(screen.getByText(/The host offered/)).toBeOnTheScreen();
-    expect(screen.getByText(/You countered with/)).toBeOnTheScreen();
+    expect(screen.getByTestId('offer-summary-history')).toBeOnTheScreen();
+    expect(screen.getByText(/^The host offered Per hour · ₹1,500 per hour · /)).toBeOnTheScreen();
+    expect(
+      screen.getByText('You countered with Per guest · ₹350 per guest · at least 12 guests'),
+    ).toBeOnTheScreen();
     expect(screen.getByText('“Weekend rate”')).toBeOnTheScreen();
     expect(screen.getByText('The host declined your counter')).toBeOnTheScreen();
   });

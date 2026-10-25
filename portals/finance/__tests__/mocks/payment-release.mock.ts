@@ -158,6 +158,12 @@ export const makeDetailBreakdown = (over: Partial<DetailBreakdownMock> = {}): De
   attended_total: 2000,
   venue_slot_price: 300,
   include_slot_price: true,
+  // A booking from before offers: no extra charges, no minimum, no agreed terms.
+  venue_extra_amount: 0,
+  venue_min_guests: 0,
+  venue_pax: 0,
+  venue_agreed_model: null,
+  venue_agreed_rate: null,
   ...over,
 });
 

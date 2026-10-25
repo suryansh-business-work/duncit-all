@@ -227,6 +227,14 @@ export const financeTypeDefs = /* GraphQL */ `
     venue_pax: Int!
     venue_overtime_hours: Float!
     venue_overtime_amount: Float!
+    "An agreed per-guest booking's minimum guests (0 = none) and the people the roster counted — frozen at completion."
+    venue_min_guests: Int!
+    venue_people_counted: Int!
+    "Extra charges on the venue's bill paid on top of the agreed amount (0 on older releases)."
+    venue_extra_amount: Float!
+    "The agreed offer's model (VenueOfferModel) and rate; null on older releases and bookings made before offers."
+    venue_agreed_model: String
+    venue_agreed_rate: Float
   }
 
   # The complete GST-inclusive money waterfall for one pod (engine v2):
@@ -281,6 +289,13 @@ export const financeTypeDefs = /* GraphQL */ `
     zeros. False for every paid projection.
     """
     is_free: Boolean!
+    """
+    The same projection at the FEWEST guests the venue booking allows (min_spots
+    asked for): tickets for that many, the venue's cost at its minimum. With this
+    projection (the most guests) it is the range the host can expect. Null when
+    no minimum was asked for.
+    """
+    minimum: PodEarningsProjection
   }
 
   """
@@ -488,6 +503,15 @@ export const financeTypeDefs = /* GraphQL */ `
     "Hours the pod ran past the slot's end, and their charge."
     venue_overtime_hours: Float!
     venue_overtime_amount: Float!
+    "An agreed per-guest booking's minimum guests (0 = no minimum): it is never paid for fewer."
+    venue_min_guests: Int!
+    "The people the roster counted: every seat scanned in plus the hosts."
+    venue_people_counted: Int!
+    "Extra charges on the venue's bill, paid on top of the agreed amount once Finance approves."
+    venue_extra_amount: Float!
+    "The agreed offer's pricing model (VenueOfferModel) and rate; null for a booking made before offers."
+    venue_agreed_model: String
+    venue_agreed_rate: Float
     gst_pct: Float!
     host_commission_pct: Float!
     venue_commission_pct: Float!
@@ -561,10 +585,17 @@ export const financeTypeDefs = /* GraphQL */ `
     stands — what app builds from before the bill could move money rely on.
     """
     include_slot_price: Boolean
-    "A PER_PAX slot: the people actually at the pod, overriding the booked seats (0-10000)."
+    "A PER_PAX slot: the people actually at the pod, overriding the booked seats (0-10000). Per guest by offer: raises the roster's count, never lowers it."
     venue_pax: Int
     "Hours the pod ran past its slot's end, charged at the slot's overtime rate (0-48)."
     overtime_hours: Float
+    """
+    Extra charges on the venue's bill beyond the agreed amount, paid on top
+    (0-1000000). Sending it — 0 included — says the bill is proof of an agreed
+    amount: the bill itself (venue_bill_url and venue_bill_amount) is then
+    required for a paid pod at a venue.
+    """
+    venue_extra_amount: Float
     host_user_id: ID
     evidence_media: [PaymentReleaseMediaInput!]
     notes: String
@@ -690,6 +721,7 @@ export const financeTypeDefs = /* GraphQL */ `
       include_slot_price: Boolean
       venue_pax: Int
       overtime_hours: Float
+      venue_extra_amount: Float
     ): PodSettlement!
     # The signed-in host's own completion payouts (Host Share history).
     myHostPayouts: [PaymentReleaseRequest!]!
@@ -712,6 +744,12 @@ export const financeTypeDefs = /* GraphQL */ `
       pod_type: PodType
       "An instant booking: the quote's platform_fee, charged on top of venue_amount (then the quote's venue_payout) and borne by the host."
       venue_commission_on_top: Float
+      "The fewest guests the venue booking allows (host's seat included): adds the projection at that count as minimum."
+      min_spots: Int
+      "The venue's amount (venue_payout) at min_spots. Omitted = venue_amount."
+      venue_amount_at_min: Float
+      "The commission on top at min_spots. Omitted = venue_commission_on_top."
+      venue_commission_on_top_at_min: Float
     ): PodEarningsProjection!
     """
     The admin consoles' projection for a pod they are writing. Prices at the

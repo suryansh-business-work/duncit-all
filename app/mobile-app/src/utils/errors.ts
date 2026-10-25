@@ -32,3 +32,15 @@ export function errorCode(error: unknown): string | null {
   }
   return null;
 }
+
+/**
+ * The GraphQL `extensions.reason` of a failure, or null when it carries none —
+ * the finer cause beside the code (a booking-offer answer refused with
+ * OFFER_CHANGED because the other side moved first).
+ */
+export function errorReason(error: unknown): string | null {
+  if (error instanceof ApiError && typeof error.extensions?.reason === 'string') {
+    return error.extensions.reason;
+  }
+  return null;
+}

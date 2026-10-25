@@ -288,7 +288,24 @@ export const venueTypeDefs = /* GraphQL */ `
     refund_tiers: [VenueCancellationRefundTier!]!
   }
 
+  "A venue's own terms for hosts' booking offers. 0 = the platform's default (Admin settings)."
+  type VenueOfferSettings {
+    "The fewest guests a host may offer to book for."
+    min_guests: Int!
+    "Hours either side has to answer an offer or a counter before it expires."
+    response_hours: Int!
+  }
+
+  input VenueOfferSettingsInput {
+    "0 = the platform default (0-1000)."
+    min_guests: Int
+    "0 = the platform default (0-720)."
+    response_hours: Int
+  }
+
   type VenueSettings {
+    "Booking offers: minimum guests and response time."
+    offers: VenueOfferSettings!
     operating_hours: VenueOperatingHours!
     weekly_off_days: [Int!]!
     holidays: [String!]!
@@ -339,6 +356,7 @@ export const venueTypeDefs = /* GraphQL */ `
   }
 
   input VenueSettingsInput {
+    offers: VenueOfferSettingsInput
     operating_hours: VenueOperatingHoursInput
     weekly_off_days: [Int!]
     holidays: [String!]
@@ -353,6 +371,10 @@ export const venueTypeDefs = /* GraphQL */ `
     venue_name: String!
     venue_type: String!
     capacity: Int!
+    "The fewest guests a host's booking offer may be for: the venue's own setting, else the platform default."
+    offer_min_guests: Int!
+    "Hours either side has to answer a booking offer or counter: the venue's own setting, else the platform default."
+    offer_response_hours: Int!
     capacity_items: [VenueCapacityItem!]!
     "The venue serves food. On publicVenue the menu is empty unless this is on."
     offers_food: Boolean!

@@ -6,7 +6,7 @@
 import { Types } from 'mongoose';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { VenueSlotModel } from '@modules/venues/venueSlot/venueSlot.model';
-import { currentTerms } from './venueOffer.view';
+import { awaitingParty, currentTerms } from './venueOffer.view';
 import type { VenueOffer } from './venueOffer.types';
 
 const MAX_ROWS = 100;
@@ -32,6 +32,23 @@ function moneyOf(slot: TermsSlot): Money | null {
   const terms = currentTerms(slot.offer);
   // The offer's own option (per guest, per slot) — the quote names the calculator's model.
   return { ...terms.quote, model: terms.model, rate: terms.rate };
+}
+
+/** The negotiation's side of the row: the ask on the agreed (or current) terms and where it stands. */
+function askOf(offer: VenueOffer | null) {
+  if (!offer) {
+    return { min_guests: 0, max_guests: 0, offerings: [], note: '', round: 0, awaiting: null, expires_at: null };
+  }
+  const terms = currentTerms(offer);
+  return {
+    min_guests: terms.min_guests || offer.pax || 0,
+    max_guests: offer.pax || 0,
+    offerings: [...(terms.offerings ?? [])],
+    note: terms.note ?? '',
+    round: offer.round,
+    awaiting: awaitingParty(offer),
+    expires_at: offer.expires_at ? new Date(offer.expires_at).toISOString() : null,
+  };
 }
 
 export const venueOfferStaffService = {
@@ -63,6 +80,7 @@ export const venueOfferStaffService = {
           offer_status: slot.offer?.status ?? null,
           model: money.model,
           rate: money.rate,
+          ...askOf(slot.offer),
           venue_payout: money.venue_payout,
           platform_fee: money.platform_fee,
           total: money.total,

@@ -35,19 +35,21 @@ const catalogue =
     );
 
 const STATIC_PROPS = [
-  'title', 'amount', 'amountHint', 'amountInvalid', 'upload', 'uploadRequired', 'includeSlot',
-  'includeSlotHint', 'viewBill', 'attendees', 'slotPrice', 'finalBill', 'noBill', 'venueTotal',
-  'venueTotalWithSlot', 'sentToFinance', 'pax', 'paxHint', 'paxInvalid', 'overtimeHours', 'overtimeHint',
-  'overtimeInvalid',
+  'title', 'billTotal', 'billTotalHint', 'amountInvalid', 'billRequired', 'upload', 'billUploadRequired',
+  'extra', 'extraHint', 'extraInvalid', 'extraCharges', 'viewBill', 'attendees', 'paidGuests', 'slotPrice',
+  'finalBill', 'noBill', 'venueTotal', 'venueTotalWithSlot', 'sentToFinance', 'pax', 'paxHint', 'paxInvalid',
+  'overtimeHours', 'overtimeHint', 'overtimeInvalid',
 ] as const satisfies readonly (keyof VenueBillLabels)[];
 
 /** Every key suffix the `venueBill` block of each bundle ships. */
-const BUNDLE_KEYS = [...STATIC_PROPS, 'attendeesValue'].toSorted((a, b) => a.localeCompare(b));
+const BUNDLE_KEYS = [...STATIC_PROPS, 'attendeesValue', 'paidGuestsValue'].toSorted((a, b) => a.localeCompare(b));
 
-/** Build with a recorder and invoke the one dynamic label once. */
+/** Build with a recorder and invoke the dynamic labels once each. */
 const renderEverything = (build: Builder): string[] => {
   const { t, calls } = recorder();
-  build(t).attendeesValue(9, 12);
+  const labels = build(t);
+  labels.attendeesValue(9, 12);
+  labels.paidGuestsValue(9, 6);
   return calls.map((c) => c.key);
 };
 
@@ -91,10 +93,24 @@ describe.each(NAMESPACES)('%s namespace', (namespace, build) => {
     expect(calls).toEqual([{ key: `${prefix}attendeesValue`, vars: { attended: 9, booked: 12 } }]);
   });
 
+  it('passes the guests paid for and the minimum through as named vars', () => {
+    const { t, calls } = recorder();
+    const labels = build(t);
+    calls.length = 0;
+    expect(labels.paidGuestsValue(9, 6)).toBe(`t:${prefix}paidGuestsValue`);
+    expect(calls).toEqual([{ key: `${prefix}paidGuestsValue`, vars: { count: 9, min: 6 } }]);
+  });
+
   it('fills the bundle placeholders by the names the bundle uses', () => {
-    const labels = build(catalogue({ [`${prefix}attendeesValue`]: '{attended} of {booked} seats' }));
+    const labels = build(
+      catalogue({
+        [`${prefix}attendeesValue`]: '{attended} of {booked} seats',
+        [`${prefix}paidGuestsValue`]: '{count} (at least {min})',
+      }),
+    );
     expect(labels.attendeesValue(9, 12)).toBe('9 of 12 seats');
     expect(labels.attendeesValue(0, 0)).toBe('0 of 0 seats');
+    expect(labels.paidGuestsValue(6, 6)).toBe('6 (at least 6)');
     expect(labels.title).toBe(`<missing ${prefix}title>`);
   });
 });
@@ -175,6 +191,46 @@ describe('buildVenueBillLines', () => {
       '₹',
     );
     expect(lines.map((line) => line.key)).toEqual(['attendees', 'final-bill', 'venue-total']);
+  });
+
+  it('shows a per-guest booking paid on attendance: the guests paid for and the extra charges on top', () => {
+    const perGuest = mwebVenueBillLabels(
+      catalogue({
+        'mweb.venueBill.attendees': 'Total attendees',
+        'mweb.venueBill.attendeesValue': '{attended} of {booked} seats',
+        'mweb.venueBill.paidGuests': 'Guests the venue is paid for',
+        'mweb.venueBill.paidGuestsValue': '{count} (at least {min})',
+        'mweb.venueBill.slotPrice': 'Agreed booking amount',
+        'mweb.venueBill.finalBill': 'Final bill uploaded',
+        'mweb.venueBill.extraCharges': 'Extra charges',
+        'mweb.venueBill.venueTotal': 'Venue total',
+      }),
+    );
+    // ₹500 a guest, at least 6: 4 came, so 6 are paid for (₹3,000); the bill shows ₹450 of extras.
+    const lines = buildVenueBillLines(
+      { ...terms, slot_price: 3000, bill: 3450, extra: 450, min_guests: 6, people_counted: 6, venue_amount: 3450, attended_seats: 4 },
+      perGuest,
+      '₹',
+    );
+    expect(lines).toEqual([
+      { key: 'attendees', label: 'Total attendees', value: '4 of 12 seats' },
+      { key: 'paid-guests', label: 'Guests the venue is paid for', value: '6 (at least 6)' },
+      { key: 'slot-price', label: 'Agreed booking amount', value: '₹3000.00' },
+      { key: 'final-bill', label: 'Final bill uploaded', value: '₹3450.00' },
+      { key: 'extra', label: 'Extra charges', value: '₹450.00' },
+      { key: 'venue-total', label: 'Venue total', value: '₹3450.00', strong: true },
+    ]);
+  });
+
+  it('counts the minimum as paid for when a snapshot carries no head count', () => {
+    const recorded = recorder();
+    buildVenueBillLines({ ...terms, min_guests: 6 }, mwebVenueBillLabels(recorded.t), '₹');
+    expect(recorded.calls).toContainEqual({ key: 'mweb.venueBill.paidGuestsValue', vars: { count: 6, min: 6 } });
+  });
+
+  it('leaves the guests-paid-for and extra lines out of a booking with no minimum and no extras', () => {
+    const lines = buildVenueBillLines({ ...terms, extra: 0, min_guests: 0 }, labels, '₹');
+    expect(lines.map((line) => line.key)).toEqual(['attendees', 'slot-price', 'final-bill', 'venue-total']);
   });
 
   it('marks only the total as the strong line', () => {

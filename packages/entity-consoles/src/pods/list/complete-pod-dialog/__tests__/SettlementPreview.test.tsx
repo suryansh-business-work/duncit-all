@@ -47,6 +47,12 @@ const previewMock = (over: Record<string, unknown> = {}): MockedResponse => ({
         venue_bill: 0,
         venue_slot_price: 300,
         include_slot_price: false,
+        // A booking made before offers: no extra charges, no minimum, no agreed terms.
+        venue_extra_amount: 0,
+        venue_min_guests: 0,
+        venue_pax: 0,
+        venue_agreed_model: null,
+        venue_agreed_rate: null,
         waterfall,
         ...over,
       },
@@ -61,14 +67,14 @@ afterEach(() => {
 
 describe('SettlementPreview', () => {
   it('shows a spinner before the preview loads', () => {
-    renderWithProviders(<SettlementPreview podId="pod-1" venueBillAmount={1500} includeSlotPrice={false} hostUserId="u1" />, {
+    renderWithProviders(<SettlementPreview podId="pod-1" venueBillAmount={1500} venueExtraAmount={0} hostUserId="u1" />, {
       mocks: [previewMock()],
     });
     expect(screen.getByRole('progressbar')).toBeInTheDocument();
   });
 
   it('renders the four-way split, host first, once the preview resolves', async () => {
-    renderWithProviders(<SettlementPreview podId="pod-1" venueBillAmount={1500} includeSlotPrice={false} hostUserId="u1" />, {
+    renderWithProviders(<SettlementPreview podId="pod-1" venueBillAmount={1500} venueExtraAmount={0} hostUserId="u1" />, {
       mocks: [previewMock()],
     });
     expect(await screen.findByRole('button', { name: 'Host Earning' })).toBeInTheDocument();
@@ -86,7 +92,7 @@ describe('SettlementPreview', () => {
   const billLine = (key: string) => screen.getByTestId(`venue-bill-line-${key}`).textContent;
 
   it('states the slot price and that no bill was entered, on a venue pod', async () => {
-    renderWithProviders(<SettlementPreview podId="pod-1" venueBillAmount={0} includeSlotPrice={false} hostUserId="u1" />, {
+    renderWithProviders(<SettlementPreview podId="pod-1" venueBillAmount={0} venueExtraAmount={0} hostUserId="u1" />, {
       mocks: [previewMock()],
     });
     await screen.findByRole('button', { name: 'Host Earning' });
@@ -96,19 +102,43 @@ describe('SettlementPreview', () => {
     expect(billLine('venue-total')).toBe('Venue total₹300.00');
   });
 
-  it('adds the bill to the slot price when the server says the slot is paid on top', async () => {
-    renderWithProviders(<SettlementPreview podId="pod-1" venueBillAmount={1500} includeSlotPrice hostUserId="u1" />, {
+  // The venue is paid the agreed amount plus the extra charges; the bill is the proof.
+  it('lists the bill uploaded and the extra charges paid on top of the agreed amount', async () => {
+    renderWithProviders(<SettlementPreview podId="pod-1" venueBillAmount={1500} venueExtraAmount={250} hostUserId="u1" />, {
       mocks: [
         previewMock({
           venue_bill: 1500,
-          include_slot_price: true,
-          waterfall: { ...waterfall, venue_amount: 1800 },
+          venue_extra_amount: 250,
+          waterfall: { ...waterfall, venue_amount: 550 },
         }),
       ],
     });
     await screen.findByRole('button', { name: 'Host Earning' });
+    expect(billLine('slot-price')).toBe('Agreed booking amount₹300.00');
     expect(billLine('final-bill')).toBe('Final bill uploaded₹1500.00');
-    expect(billLine('venue-total')).toBe('Venue total (agreed amount + bill)₹1800.00');
+    expect(billLine('extra')).toBe('Extra charges₹250.00');
+    expect(billLine('venue-total')).toBe('Venue total₹550.00');
+    expect(screen.queryByTestId('settlement-agreed-terms')).not.toBeInTheDocument();
+  });
+
+  // A per-guest booking is paid for the guests the server counted, never fewer than its minimum.
+  it('states the agreed per-guest terms and the guests the venue is paid for', async () => {
+    renderWithProviders(<SettlementPreview podId="pod-1" venueBillAmount={0} venueExtraAmount={0} hostUserId="u1" />, {
+      mocks: [
+        previewMock({ venue_agreed_model: 'PER_GUEST', venue_agreed_rate: 300, venue_min_guests: 8, venue_pax: 9 }),
+      ],
+    });
+    await screen.findByRole('button', { name: 'Host Earning' });
+    expect(screen.getByTestId('settlement-agreed-terms').textContent).toBe('Agreed termsPer guest · ₹300 per guest');
+    expect(billLine('paid-guests')).toBe('Guests the venue is paid for9 (at least 8)');
+  });
+
+  it('states no agreed terms when the settlement carries a model but no rate', async () => {
+    renderWithProviders(<SettlementPreview podId="pod-1" venueBillAmount={0} venueExtraAmount={0} hostUserId="u1" />, {
+      mocks: [previewMock({ venue_agreed_model: 'FLAT', venue_agreed_rate: null })],
+    });
+    await screen.findByRole('button', { name: 'Host Earning' });
+    expect(screen.queryByTestId('settlement-agreed-terms')).not.toBeInTheDocument();
   });
 
   // A free pod moves no platform money, so not a single figure is drawn.
@@ -117,7 +147,7 @@ describe('SettlementPreview', () => {
       Object.entries(waterfall).map(([key, value]) => [key, typeof value === 'number' ? 0 : value]),
     );
     const { container } = renderWithProviders(
-      <SettlementPreview podId="pod-1" venueBillAmount={0} includeSlotPrice={false} hostUserId="u1" />,
+      <SettlementPreview podId="pod-1" venueBillAmount={0} venueExtraAmount={0} hostUserId="u1" />,
       {
         mocks: [
           previewMock({ is_free: true, collected_total: 0, has_venue: false, venue_slot_price: 0, waterfall: zeros }),
@@ -133,21 +163,21 @@ describe('SettlementPreview', () => {
 
   it('reads as free before the preview loads when the caller says the pod is free', () => {
     renderWithProviders(
-      <SettlementPreview podId="pod-1" venueBillAmount={0} includeSlotPrice={false} hostUserId="u1" free />,
+      <SettlementPreview podId="pod-1" venueBillAmount={0} venueExtraAmount={0} hostUserId="u1" free />,
       { mocks: [previewMock()] },
     );
     expect(screen.getByTestId('settlement-free')).toHaveTextContent('Free pod');
   });
 
   it('has no venue bill to summarise on a pod with no venue behind it', async () => {
-    renderWithProviders(<SettlementPreview podId="pod-1" venueBillAmount={0} includeSlotPrice={false} hostUserId="u1" />, {
+    renderWithProviders(<SettlementPreview podId="pod-1" venueBillAmount={0} venueExtraAmount={0} hostUserId="u1" />, {
       mocks: [previewMock({ has_venue: false, venue_slot_price: 0 })],
     });
     await screen.findByRole('button', { name: 'Host Earning' });
     expect(screen.queryByTestId('venue-bill-summary')).not.toBeInTheDocument();
   });
 
-  it('asks for the preview with the slot-price choice it was given', async () => {
+  it('asks for the preview with the extra charges, and never with a slot-price choice', async () => {
     const sent: Record<string, unknown>[] = [];
     const mock: MockedResponse = {
       ...previewMock(),
@@ -156,7 +186,7 @@ describe('SettlementPreview', () => {
         return true;
       } },
     };
-    renderWithProviders(<SettlementPreview podId="pod-1" venueBillAmount={1500} includeSlotPrice hostUserId="u1" />, {
+    renderWithProviders(<SettlementPreview podId="pod-1" venueBillAmount={1500} venueExtraAmount={250} hostUserId="u1" />, {
       mocks: [mock],
     });
     await screen.findByRole('button', { name: 'Host Earning' });
@@ -164,7 +194,7 @@ describe('SettlementPreview', () => {
       pod_id: 'pod-1',
       venue_bill_amount: 1500,
       host_user_id: 'u1',
-      include_slot_price: true,
+      venue_extra_amount: 250,
     });
   });
 
@@ -175,9 +205,9 @@ describe('SettlementPreview', () => {
         sentVariables = variables;
         return true;
       } },
-      result: { data: { podSettlementPreview: { __typename: 'PodSettlementPreview', currency_symbol: '₹', collected_total: 1000, has_venue: false, attended_seats: 8, booked_seats: 10, venue_bill: 0, venue_slot_price: 0, include_slot_price: false, waterfall } } },
+      result: { data: { podSettlementPreview: { __typename: 'PodSettlementPreview', currency_symbol: '₹', collected_total: 1000, has_venue: false, attended_seats: 8, booked_seats: 10, venue_bill: 0, venue_slot_price: 0, include_slot_price: false, venue_extra_amount: 0, venue_min_guests: 0, venue_pax: 0, venue_agreed_model: null, venue_agreed_rate: null, waterfall } } },
     };
-    renderWithProviders(<SettlementPreview podId="pod-1" venueBillAmount={1500} includeSlotPrice={false} hostUserId="" />, {
+    renderWithProviders(<SettlementPreview podId="pod-1" venueBillAmount={1500} venueExtraAmount={0} hostUserId="" />, {
       mocks: [mock],
     });
     await screen.findByRole('button', { name: 'Host Earning' });
@@ -191,7 +221,7 @@ describe('SettlementPreview', () => {
         errors: [{ message: 'Pod is not ready for settlement' } as never],
       },
     };
-    renderWithProviders(<SettlementPreview podId="pod-1" venueBillAmount={1500} includeSlotPrice={false} hostUserId="u1" />, {
+    renderWithProviders(<SettlementPreview podId="pod-1" venueBillAmount={1500} venueExtraAmount={0} hostUserId="u1" />, {
       mocks: [mock],
     });
     expect(await screen.findByText('Pod is not ready for settlement')).toBeInTheDocument();
@@ -202,7 +232,7 @@ describe('SettlementPreview', () => {
       request: { query: POD_SETTLEMENT_PREVIEW, variables: () => true },
       error: new Error('offline'),
     };
-    renderWithProviders(<SettlementPreview podId="pod-1" venueBillAmount={1500} includeSlotPrice={false} hostUserId="u1" />, {
+    renderWithProviders(<SettlementPreview podId="pod-1" venueBillAmount={1500} venueExtraAmount={0} hostUserId="u1" />, {
       mocks: [mock],
     });
     expect(await screen.findByText(/offline/)).toBeInTheDocument();
@@ -213,7 +243,7 @@ describe('SettlementPreview', () => {
       request: { query: POD_SETTLEMENT_PREVIEW, variables: () => true },
       result: { data: { podSettlementPreview: null } },
     };
-    renderWithProviders(<SettlementPreview podId="pod-1" venueBillAmount={1500} includeSlotPrice={false} hostUserId="u1" />, {
+    renderWithProviders(<SettlementPreview podId="pod-1" venueBillAmount={1500} venueExtraAmount={0} hostUserId="u1" />, {
       mocks: [mock],
     });
     expect(await screen.findByText('Preview unavailable.')).toBeInTheDocument();
@@ -224,7 +254,7 @@ describe('SettlementPreview', () => {
     const clearSpy = vi.spyOn(globalThis, 'clearTimeout');
     const tree = (amount: number) => (
       <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[previewMock()]}>
-        <SettlementPreview podId="pod-1" venueBillAmount={amount} includeSlotPrice={false} hostUserId="u1" />
+        <SettlementPreview podId="pod-1" venueBillAmount={amount} venueExtraAmount={0} hostUserId="u1" />
       </MockedProvider>
     );
     const { rerender, unmount } = render(tree(1000));
@@ -255,6 +285,11 @@ describe('SettlementPreview', () => {
             venue_bill: 0,
             venue_slot_price: 300,
             include_slot_price: false,
+            venue_extra_amount: 0,
+            venue_min_guests: 0,
+            venue_pax: 0,
+            venue_agreed_model: null,
+            venue_agreed_rate: null,
             waterfall,
           },
         },
@@ -262,7 +297,7 @@ describe('SettlementPreview', () => {
     };
     const tree = (amount: number) => (
       <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[mock]}>
-        <SettlementPreview podId="pod-1" venueBillAmount={amount} includeSlotPrice={false} hostUserId="u1" />
+        <SettlementPreview podId="pod-1" venueBillAmount={amount} venueExtraAmount={0} hostUserId="u1" />
       </MockedProvider>
     );
     const { rerender } = render(tree(1000));

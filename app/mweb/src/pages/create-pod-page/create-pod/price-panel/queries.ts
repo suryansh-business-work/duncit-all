@@ -1,7 +1,9 @@
 import { gql } from '@apollo/client';
 
 /** Server-side potential-earnings waterfall. The server bills payable spots
- * (total − 1, the host's own seat is free) — no money math happens here. */
+ * (total − 1, the host's own seat is free) — no money math happens here. A
+ * venue offer also sends its money at the venue's minimum guests (`min_spots`,
+ * `offerEarningsArgs`), and the answer carries the take-home there too. */
 export const POTENTIAL_POD_EARNINGS = gql`
   query PotentialPodEarnings(
     $pod_amount: Float!
@@ -9,6 +11,9 @@ export const POTENTIAL_POD_EARNINGS = gql`
     $venue_id: ID
     $venue_amount: Float
     $venue_commission_on_top: Float
+    $min_spots: Int
+    $venue_amount_at_min: Float
+    $venue_commission_on_top_at_min: Float
   ) {
     potentialPodEarnings(
       pod_amount: $pod_amount
@@ -16,9 +21,18 @@ export const POTENTIAL_POD_EARNINGS = gql`
       venue_id: $venue_id
       venue_amount: $venue_amount
       venue_commission_on_top: $venue_commission_on_top
+      min_spots: $min_spots
+      venue_amount_at_min: $venue_amount_at_min
+      venue_commission_on_top_at_min: $venue_commission_on_top_at_min
     ) {
       total_spots
       payable_spots
+      minimum {
+        total_spots
+        waterfall {
+          host_receives
+        }
+      }
       waterfall {
         amount
         gst_pct
@@ -62,6 +76,8 @@ export interface EarningsProjection {
   total_spots: number;
   payable_spots: number;
   waterfall: import('@duncit/utils').EarningsWaterfall;
+  /** The take-home at the venue's minimum guests; null when no minimum was asked. */
+  minimum?: { total_spots: number; waterfall: { host_receives: number } } | null;
 }
 
 export interface SuggestedTicketPrice {

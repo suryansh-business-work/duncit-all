@@ -104,6 +104,8 @@ export const VENUE_DETAIL = gql`
       venue_share_pct
       venue_commission_pct
       host_requests_limit_override
+      offer_min_guests
+      offer_response_hours
       settings {
         operating_hours {
           open
@@ -139,6 +141,10 @@ export const VENUE_DETAIL = gql`
             hours_before
             refund_pct
           }
+        }
+        offers {
+          min_guests
+          response_hours
         }
       }
       documents {
@@ -244,6 +250,14 @@ export interface VenueSettings {
     trigger_hours: number;
     refund_tiers: VenueRefundTier[];
   };
+  /** Booking offers as the venue saved them (0 = Duncit's default); absent on an older record. */
+  offers?: VenueOfferSettings | null;
+}
+
+/** The fewest guests a host's offer may be for, and the hours either side has to answer it. */
+export interface VenueOfferSettings {
+  min_guests: number;
+  response_hours: number;
 }
 
 export interface VenueDocument {
@@ -312,6 +326,9 @@ export interface AdminVenueDetail {
   venue_commission_pct: number;
   /** Admin override of the owner's monthly Pod Request cap; null = the owner's own. */
   host_requests_limit_override: number | null;
+  /** The booking-offer terms in effect: the venue's own, or Duncit's default where it set 0. */
+  offer_min_guests?: number;
+  offer_response_hours?: number;
   settings: VenueSettings;
   documents: VenueDocument[];
   reviewer_notes: string;

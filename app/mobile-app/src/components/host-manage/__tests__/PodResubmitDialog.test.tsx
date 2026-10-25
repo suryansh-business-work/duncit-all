@@ -1,7 +1,11 @@
-import { fireEvent, screen, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
 
 import { PodResubmitDialog } from '@/components/host-manage/PodResubmitDialog';
-import { HostResubmitPodDocument, ResubmitVenuesDocument } from '@/graphql/host-manage';
+import {
+  HostResubmitPodDocument,
+  ResubmitVenueTermsDocument,
+  ResubmitVenuesDocument,
+} from '@/graphql/host-manage';
 import { graphqlRequest } from '@/services/graphql.client';
 import { useOfferCalendar } from '@/hooks/useOfferCalendar';
 import { renderWithProviders } from '@/utils/test-utils';
@@ -54,11 +58,12 @@ const calendar =
     ...over,
   });
 
-/** Picks the window and offers ₹300 per guest. */
+/** Picks the window, offers ₹300 per guest and says what the venue should provide. */
 const offer = () => {
   fireEvent.press(screen.getByTestId(TILE));
   fireEvent.press(screen.getByTestId('create-pod-offer-model-PER_GUEST'));
   fireEvent.changeText(screen.getByTestId('field-venue_offer_rate'), '300');
+  fireEvent.changeText(screen.getByTestId('field-offerings'), 'A projector');
 };
 
 /**
@@ -69,10 +74,12 @@ const offer = () => {
 const routeRequests = ({
   venuesResult = Promise.resolve({ publicVenues: venues }) as Promise<unknown>,
   resubmit = () => Promise.resolve({ hostResubmitPod: { id: 'p1' } }) as Promise<unknown>,
+  terms = () => Promise.resolve({ publicVenue: null }) as Promise<unknown>,
 } = {}) => {
   mockRequest.mockImplementation((doc: unknown) => {
     if (doc === ResubmitVenuesDocument) return venuesResult;
     if (doc === HostResubmitPodDocument) return resubmit();
+    if (doc === ResubmitVenueTermsDocument) return terms();
     return Promise.resolve({ aiMonitoringConfig: null });
   });
 };
@@ -122,11 +129,19 @@ describe('PodResubmitDialog', () => {
             pets: false,
             model: 'PER_GUEST',
             rate: 300,
+            offerings: ['A projector'],
+            note: '',
           },
+          no_of_spots: 12,
         }),
       },
       { auth: true },
     );
+    // No venue minimum on record: the spots stay as the pod had them, unhinted.
+    expect(screen.getByTestId('field-no_of_spots_text')).toHaveProp('value', '12');
+    expect(screen.queryByText(/takes bookings for at least/)).toBeNull();
+    // The whole venue is offered when no space was named.
+    expect(mockUseOfferCalendar).toHaveBeenLastCalledWith('v1', 'Whole venue');
   });
 
   it('blocks an invalid submit (no venue, then no window or terms)', async () => {
@@ -231,5 +246,192 @@ describe('PodResubmitDialog', () => {
     unmount();
     resolveVenues({ publicVenues: venues });
     await waitFor(() => expect(venueCalls()).toHaveLength(1));
+  });
+  it("holds the spots inside the venue's minimum and the space, and sends pets and the ask", async () => {
+    routeRequests({
+      terms: () =>
+        Promise.resolve({
+          publicVenue: { id: 'v1', capacity: 10, capacity_items: [], offer_min_guests: 8 },
+        }),
+    });
+    const onSaved = jest.fn();
+    renderWithProviders(<PodResubmitDialog pod={pod} onClose={jest.fn()} onSaved={onSaved} />);
+    await waitFor(() => expect(screen.getByTestId('resubmit-venue-v1')).toBeOnTheScreen());
+    fireEvent.press(screen.getByTestId('resubmit-venue-v1'));
+    // The pod's 12 spots do not fit a venue that holds 10: they move in.
+    await waitFor(() =>
+      expect(screen.getByTestId('create-pod-spots-value')).toHaveTextContent('10'),
+    );
+    expect(screen.getByText('This venue takes bookings for at least 8 guests.')).toBeOnTheScreen();
+    expect(mockRequest).toHaveBeenCalledWith(
+      ResubmitVenueTermsDocument,
+      { venue_id: 'v1' },
+      { auth: true },
+    );
+    offer();
+    fireEvent(screen.getByTestId('pod-resubmit-pets-switch'), 'valueChange', true);
+    fireEvent.changeText(screen.getByTestId('field-note'), 'Quiet corner');
+    fireEvent.press(screen.getByTestId('pod-resubmit-save'));
+    await waitFor(() => expect(onSaved).toHaveBeenCalled());
+    expect(resubmitCalls().at(-1)?.[1].input).toEqual(
+      expect.objectContaining({
+        no_of_spots: 10,
+        venue_offer: expect.objectContaining({
+          pax: 10,
+          pets: true,
+          offerings: ['A projector'],
+          note: 'Quiet corner',
+        }),
+      }),
+    );
+  });
+
+  it('asks for what the venue should provide before resubmitting', async () => {
+    renderWithProviders(<PodResubmitDialog pod={pod} onClose={jest.fn()} onSaved={jest.fn()} />);
+    await waitFor(() => expect(screen.getByTestId('resubmit-venue-v1')).toBeOnTheScreen());
+    fireEvent.press(screen.getByTestId('resubmit-venue-v1'));
+    fireEvent.press(screen.getByTestId(TILE));
+    fireEvent.press(screen.getByTestId('create-pod-offer-model-FLAT'));
+    fireEvent.changeText(screen.getByTestId('field-venue_offer_rate'), '5000');
+    fireEvent.press(screen.getByTestId('pod-resubmit-save'));
+    expect(
+      await screen.findByText('Add at least one thing you need from the venue'),
+    ).toBeOnTheScreen();
+    expect(resubmitCalls()).toHaveLength(0);
+  });
+
+  it('starts a new offer from the declined terms at the pod venue, and keeps what is typed', async () => {
+    const declined = {
+      model: 'PER_GUEST',
+      rate: 300,
+      offerings: ['A projector', '10 chairs'],
+      note: 'Quiet corner',
+      start_at: START,
+      end_at: END,
+      space_label: 'Rooftop',
+      pets: true,
+    };
+    const onSaved = jest.fn();
+    const view = renderWithProviders(
+      <PodResubmitDialog
+        pod={pod}
+        offerPrefill={{ ...declined }}
+        onClose={jest.fn()}
+        onSaved={onSaved}
+      />,
+    );
+    // The calendar is the declined space's at the pod's own venue.
+    expect(mockUseOfferCalendar).toHaveBeenLastCalledWith('old-venue', 'Rooftop');
+    expect(screen.getByTestId('field-offerings')).toHaveProp('value', 'A projector\n10 chairs');
+    expect(screen.getByTestId('field-venue_offer_rate')).toHaveProp('value', '300');
+    fireEvent.changeText(screen.getByTestId('field-note'), 'Quiet corner, please');
+    // A parent rebuilding the same terms each render does not reset the sheet.
+    view.rerender(
+      <PodResubmitDialog
+        pod={pod}
+        offerPrefill={{ ...declined, offerings: [...declined.offerings] }}
+        onClose={jest.fn()}
+        onSaved={onSaved}
+      />,
+    );
+    expect(screen.getByTestId('field-note')).toHaveProp('value', 'Quiet corner, please');
+    fireEvent.press(screen.getByTestId('pod-resubmit-save'));
+    await waitFor(() => expect(onSaved).toHaveBeenCalled());
+    expect(resubmitCalls().at(-1)?.[1].input).toEqual(
+      expect.objectContaining({
+        venue_id: 'old-venue',
+        venue_offer: {
+          start_at: START,
+          end_at: END,
+          space_label: 'Rooftop',
+          pax: 12,
+          pets: true,
+          model: 'PER_GUEST',
+          rate: 300,
+          offerings: ['A projector', '10 chairs'],
+          note: 'Quiet corner, please',
+        },
+      }),
+    );
+  });
+
+  it("drops the declined space with its venue, and ignores another venue's late bounds", async () => {
+    // Each venue's read stays pending until the test answers it, oldest first.
+    const pending: ((value: unknown) => void)[] = [];
+    routeRequests({
+      terms: () =>
+        new Promise((resolve) => {
+          pending.push(resolve);
+        }),
+    });
+    renderWithProviders(
+      <PodResubmitDialog
+        pod={pod}
+        offerPrefill={{
+          model: 'FLAT',
+          rate: 5000,
+          offerings: [],
+          note: '',
+          start_at: START,
+          end_at: END,
+          space_label: 'Rooftop',
+          pets: false,
+        }}
+        onClose={jest.fn()}
+        onSaved={jest.fn()}
+      />,
+    );
+    await waitFor(() => expect(screen.getByTestId('resubmit-venue-v1')).toBeOnTheScreen());
+    fireEvent.press(screen.getByTestId('resubmit-venue-v1'));
+    expect(mockUseOfferCalendar).toHaveBeenLastCalledWith('v1', 'Whole venue');
+    // The old venue's bounds arrive after the host moved on: they never apply.
+    await act(async () => {
+      pending[0]?.({
+        publicVenue: { id: 'old-venue', capacity: 4, capacity_items: [], offer_min_guests: 4 },
+      });
+    });
+    expect(screen.getByTestId('field-no_of_spots_text')).toHaveProp('value', '12');
+  });
+
+  it('leaves the spots unbounded when the venue bounds cannot be read', async () => {
+    routeRequests({ terms: () => Promise.reject(new Error('down')) });
+    renderWithProviders(<PodResubmitDialog pod={pod} onClose={jest.fn()} onSaved={jest.fn()} />);
+    await waitFor(() => expect(screen.getByTestId('resubmit-venue-v1')).toBeOnTheScreen());
+    fireEvent.press(screen.getByTestId('resubmit-venue-v1'));
+    await waitFor(() =>
+      expect(mockRequest).toHaveBeenCalledWith(
+        ResubmitVenueTermsDocument,
+        { venue_id: 'v1' },
+        { auth: true },
+      ),
+    );
+    fireEvent.press(screen.getByTestId('spots-inc'));
+    expect(screen.getByTestId('field-no_of_spots_text')).toHaveProp('value', '13');
+    // A cleared box is no spots, not a broken number.
+    fireEvent.changeText(screen.getByTestId('field-no_of_spots_text'), '');
+    expect(screen.getByTestId('field-no_of_spots_text')).toHaveProp('value', '0');
+  });
+
+  it('leaves a pod with no spots on record for the host to size', async () => {
+    routeRequests({
+      terms: () =>
+        Promise.resolve({
+          publicVenue: { id: 'v1', capacity: 10, capacity_items: [], offer_min_guests: 8 },
+        }),
+    });
+    renderWithProviders(
+      <PodResubmitDialog
+        pod={{ ...pod, no_of_spots: null }}
+        onClose={jest.fn()}
+        onSaved={jest.fn()}
+      />,
+    );
+    await waitFor(() => expect(screen.getByTestId('resubmit-venue-v1')).toBeOnTheScreen());
+    fireEvent.press(screen.getByTestId('resubmit-venue-v1'));
+    expect(
+      await screen.findByText('This venue takes bookings for at least 8 guests.'),
+    ).toBeOnTheScreen();
+    // An unknown count is not snapped to the venue's range on the host's behalf.
+    expect(screen.getByTestId('create-pod-spots-value')).toHaveTextContent('0');
   });
 });

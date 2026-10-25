@@ -54,6 +54,7 @@ export const CreatePodOptionsDocument = gql(`
         label
         capacity
       }
+      offer_min_guests
       cover_image_url
       city
       locality
@@ -113,7 +114,9 @@ export const CreatePodOptionsDocument = gql(`
 `);
 
 /** Server-computed potential-earnings waterfall for the pricing panel —
- * amount is the GST-inclusive ticket price, venue_amount the picked slot's price. */
+ * amount is the GST-inclusive ticket price, venue_amount the picked slot's price.
+ * A venue offer also sends its money at the venue's minimum guests (`min_spots`,
+ * `offerEarningsArgs`), and the answer carries the take-home there (`minimum`). */
 export const PotentialPodEarningsDocument = gql(`
   query MobilePotentialPodEarnings(
     $pod_amount: Float!
@@ -121,6 +124,9 @@ export const PotentialPodEarningsDocument = gql(`
     $venue_id: ID
     $venue_amount: Float
     $venue_commission_on_top: Float
+    $min_spots: Int
+    $venue_amount_at_min: Float
+    $venue_commission_on_top_at_min: Float
   ) {
     potentialPodEarnings(
       pod_amount: $pod_amount
@@ -128,9 +134,18 @@ export const PotentialPodEarningsDocument = gql(`
       venue_id: $venue_id
       venue_amount: $venue_amount
       venue_commission_on_top: $venue_commission_on_top
+      min_spots: $min_spots
+      venue_amount_at_min: $venue_amount_at_min
+      venue_commission_on_top_at_min: $venue_commission_on_top_at_min
     ) {
       total_spots
       payable_spots
+      minimum {
+        total_spots
+        waterfall {
+          host_receives
+        }
+      }
       waterfall {
         amount
         gst_pct

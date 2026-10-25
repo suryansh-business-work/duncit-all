@@ -95,12 +95,27 @@ export {
 export {
   ACCEPT_VENUE_OFFER,
   COUNTER_VENUE_OFFER,
+  OFFER_TERMS_FIELDS,
   REJECT_VENUE_OFFER,
   VENUE_BOOKING_REQUESTS,
   VENUE_COUNTER_QUOTE,
   VENUE_OFFER_FIELDS,
   type BookingOffer,
   type BookingRequestRow,
+  type OfferCounter,
   type OfferHistoryEntry,
   type OfferRequestSummary,
+  type OfferTerms,
 } from './offers/queries';
+// The host's side of the same bargain: the pod's live offer, and Accept /
+// Reject / Counter back on the venue's counter (mWeb's pending page, the chat).
+export { default as HostOfferActions, type OfferSubject } from './offers/host/HostOfferActions';
+export { useChatVenueOffer, usePodVenueOffer } from './offers/host/usePodVenueOffer';
+export { POD_VENUE_OFFER_TERMS, type PodOffer } from './offers/host/queries';
+export type { OfferSide } from './offers/offer-target';
+// Every move of an offer as a card in the pod's venue chat, and the header's
+// way to reach the other side (mWeb, the Partners console, Duncit staff).
+export { default as OfferChatCard } from './offers/chat/OfferChatCard';
+export type { OfferChatAnswering } from './offers/chat/OfferChatActions';
+export { isOfferChatLine, type OfferChatViewer } from './offers/chat/chat-lines';
+export { default as VenueChatContactLine } from './offers/chat/VenueChatContactLine';

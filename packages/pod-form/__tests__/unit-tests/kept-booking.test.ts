@@ -31,6 +31,13 @@ describe('keepsExistingBooking', () => {
     expect(keepsExistingBooking({ ...kept, venue_offer_rate: '500' })).toBe(false);
   });
 
+  it('makes it an offer again once the host asks something of the venue', () => {
+    expect(keepsExistingBooking({ ...kept, venue_offer_offerings: 'A projector' })).toBe(false);
+    expect(keepsExistingBooking({ ...kept, venue_offer_note: 'We start at 7' })).toBe(false);
+    // Blank lines are not an ask.
+    expect(keepsExistingBooking({ ...kept, venue_offer_offerings: ' \n ', venue_offer_note: '  ' })).toBe(true);
+  });
+
   it('never applies to a new pod', () => {
     expect(keepsExistingBooking({ ...kept, kept_booking: '' })).toBe(false);
   });

@@ -1,65 +1,83 @@
 import { useMemo } from 'react';
-import { Controller, useForm } from 'react-hook-form';
-import { Spinner, Text, XStack, YStack } from 'tamagui';
+import { useForm } from 'react-hook-form';
+import { Text, XStack, YStack } from 'tamagui';
 import {
   makeVenueOfferCounterSchema,
-  VENUE_OFFER_COUNTER_MODELS,
   venueOfferCounterDefaults,
-  type VenueOfferCounterValues,
+  type VenueOfferCounterSource,
+  type VenueOfferTerms,
 } from '@duncit/forms/schemas';
-import { VENUE_OFFER_INBOX_MODEL_KEY } from '@duncit/utils';
 
 import { DuncitButton } from '@/components/DuncitButton';
 import { DuncitDialog } from '@/components/DuncitDialog';
-import { FormTextField } from '@/components/FormTextField';
-import { SelectChip } from '@/components/venue-availability/SelectChip';
-import { BreakdownLines } from '@/components/venue-pricing/BreakdownLines';
+import type { OfferSide } from '@/components/venue-offer/offer-format';
+import type { CounterQuoteTarget } from '@/hooks/useCounterQuote';
 import { useTranslation } from '@/hooks/useTranslation';
-import { useVenueCounterQuote } from '@/hooks/useVenueCounterQuote';
-import type { CounterTerms } from '@/hooks/useVenueSlotRequests';
+import { fireAndForget } from '@/utils/fire-and-forget';
 import { formResolver } from '@/utils/form-resolver';
+import { CounterOfferFields } from './CounterOfferFields';
+import { CounterQuotePreview } from './CounterQuotePreview';
+import { counterTermsOf, type CounterOfferValues } from './counter-offer.types';
 
 interface Props {
-  slotId: string;
-  /** The terms on the table — the counter starts as an edit of them. */
-  terms: { model: string; rate: number } | null;
+  /** Who counters: the venue on its booking, or the host countering back on their pod. */
+  side: OfferSide;
+  /** Prices the terms as they are typed. */
+  target: CounterQuoteTarget;
+  /** The terms on the table (`currentOfferTerms`) — the counter starts as an edit of them. */
+  terms: VenueOfferCounterSource | null;
+  /** The booking's guests: a minimum may not pass them. */
+  maxGuests: number;
   busy: boolean;
+  /** Why the server refused the counter; the sheet stays open to show it. */
+  error: string | null;
   onClose: () => void;
-  onSend: (terms: CounterTerms, note: string) => void;
+  onSend: (terms: VenueOfferTerms, note: string) => void;
 }
 
-const termsOf = (values: Pick<VenueOfferCounterValues, 'model' | 'rate'>): CounterTerms | null => {
-  const rate = Number(String(values.rate).trim());
-  return Number.isFinite(rate) && rate > 0 ? { model: values.model, rate } : null;
+/** The sheet's words, as each side reads them. */
+const COPY: Readonly<Record<OfferSide, { title: string; hint: string }>> = {
+  VENUE: { title: 'availability.offers.counterTitle', hint: 'availability.offers.counterHint' },
+  HOST: {
+    title: 'availability.offers.hostAnswer.counterTitle',
+    hint: 'availability.offers.hostAnswer.counterHint',
+  },
 };
 
 /**
- * The venue's counter to a host's offer: a pricing option, the amount and a
- * note, with the server's price of those terms for the booking's own window
- * as they are typed. One rule with the web (`makeVenueOfferCounterSchema`).
+ * Either side's counter to the terms on the table: a pricing option and the
+ * amount, the fewest guests paid for (a per-guest price), what the venue
+ * provides and a note — with the server's price of those terms as they are
+ * typed. One rule with the web (`makeVenueOfferCounterSchema`). mWeb twin:
+ * CounterOfferDialog + CounterOfferForm.
  */
-export function VenueOfferCounterForm({ slotId, terms, busy, onClose, onSend }: Readonly<Props>) {
+export function VenueOfferCounterForm({
+  side,
+  target,
+  terms,
+  maxGuests,
+  busy,
+  error,
+  onClose,
+  onSend,
+}: Readonly<Props>) {
   const { t } = useTranslation();
-  const schema = useMemo(() => makeVenueOfferCounterSchema(t), [t]);
-  const { control, handleSubmit, watch } = useForm<
-    VenueOfferCounterValues,
-    any,
-    VenueOfferCounterValues
+  const schema = useMemo(() => makeVenueOfferCounterSchema(t, maxGuests), [t, maxGuests]);
+  const { control, handleSubmit, watch, setValue } = useForm<
+    CounterOfferValues,
+    unknown,
+    CounterOfferValues
   >({
-    resolver: formResolver<VenueOfferCounterValues>(schema),
+    resolver: formResolver<CounterOfferValues>(schema),
     defaultValues: venueOfferCounterDefaults(terms),
   });
-  const model = watch('model');
-  const rate = watch('rate');
-  const quote = useVenueCounterQuote(
-    slotId,
-    termsOf({ model, rate }),
-    t('availability.offers.quoteFailed'),
-  );
+  const [model, rate, minGuests, offerings] = watch(['model', 'rate', 'min_guests', 'offerings']);
+  const typed = counterTermsOf({ model, rate, min_guests: minGuests, offerings });
   const send = handleSubmit((valid) => {
-    const next = termsOf(valid);
-    if (next) onSend(next, valid.note);
+    const next = counterTermsOf(valid);
+    if (next) onSend(next, valid.note.trim());
   });
+  const copy = COPY[side];
 
   const footer = (
     <XStack gap={10}>
@@ -70,6 +88,7 @@ export function VenueOfferCounterForm({ slotId, terms, busy, onClose, onSend }: 
           onPress={onClose}
           variant="ghost"
           tone="neutral"
+          disabled={busy}
           fullWidth
         />
       </YStack>
@@ -77,9 +96,7 @@ export function VenueOfferCounterForm({ slotId, terms, busy, onClose, onSend }: 
         <DuncitButton
           testID="venue-offer-counter-send"
           label={t('availability.offers.send')}
-          onPress={() => {
-            send().catch(() => undefined);
-          }}
+          onPress={() => fireAndForget(send())}
           loading={busy}
           disabled={busy}
           fullWidth
@@ -93,74 +110,26 @@ export function VenueOfferCounterForm({ slotId, terms, busy, onClose, onSend }: 
       open
       onClose={onClose}
       testID="venue-offer-counter"
-      title={t('availability.offers.counterTitle')}
-      subtitle={t('availability.offers.counterHint')}
+      title={t(copy.title)}
+      subtitle={t(copy.hint)}
       closeLabel={t('mweb.common.close')}
+      dismissOnBackdrop={!busy}
       footer={footer}
     >
       <YStack gap={12}>
-        <Controller
-          control={control}
-          name="model"
-          render={({ field }) => (
-            <XStack
-              gap={8}
-              flexWrap="wrap"
-              role="radiogroup"
-              aria-label={t('availability.offers.pricingOption')}
-            >
-              {VENUE_OFFER_COUNTER_MODELS.map((option) => (
-                <SelectChip
-                  key={option}
-                  testID={`venue-offer-counter-model-${option}`}
-                  role="radio"
-                  label={t(VENUE_OFFER_INBOX_MODEL_KEY[option].label)}
-                  selected={field.value === option}
-                  onPress={() => field.onChange(option)}
-                />
-              ))}
-            </XStack>
-          )}
-        />
-        <FormTextField
-          control={control}
-          name="rate"
-          label={t('availability.offers.amount')}
-          keyboardType="decimal-pad"
-        />
-        <FormTextField
-          control={control}
-          name="note"
-          label={t('availability.offers.note')}
-          multiline
-          numberOfLines={3}
-        />
-        <YStack gap={8} testID="venue-offer-counter-quote">
-          <Text role="heading" fontSize={15} fontWeight="600" color="$color">
-            {t('availability.offers.preview')}
+        {error ? (
+          <Text testID="venue-offer-counter-error" role="alert" fontSize={13} color="$danger">
+            {error}
           </Text>
-          {quote.isLoading ? (
-            <XStack gap={8} alignItems="center">
-              <Spinner color="$primary" />
-              <Text fontSize={13} color="$muted">
-                {t('availability.offers.quoteLoading')}
-              </Text>
-            </XStack>
-          ) : null}
-          {quote.error ? (
-            <Text role="alert" fontSize={13} color="$danger">
-              {quote.error}
-            </Text>
-          ) : null}
-          {quote.result && !quote.result.ok ? (
-            <Text role="alert" fontSize={13} color="$warning">
-              {quote.result.message}
-            </Text>
-          ) : null}
-          {quote.result?.quote ? (
-            <BreakdownLines breakdown={quote.result.quote} testID="venue-offer-counter-lines" />
-          ) : null}
-        </YStack>
+        ) : null}
+        <CounterOfferFields
+          control={control}
+          setValue={setValue}
+          model={model}
+          side={side}
+          maxGuests={maxGuests}
+        />
+        <CounterQuotePreview target={target} side={side} terms={typed} />
       </YStack>
     </DuncitDialog>
   );

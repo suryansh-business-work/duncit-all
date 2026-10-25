@@ -1,6 +1,6 @@
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
-import { PodModel } from '@modules/pods/pod/pod.model';
+import { isFreePod, PodModel } from '@modules/pods/pod/pod.model';
 import { VenueModel } from '@modules/venues/venue/venue.model';
 
 /** A venue booking's chat, as one member sees it. */
@@ -9,6 +9,8 @@ export interface VenueChatThread {
   podId: string;
   podTitle: string;
   podDateTime: Date | null;
+  /** A free pod: its host settles the venue directly, so the chat names no money. */
+  podIsFree: boolean;
   venueId: string;
   venueName: string;
   venuePhoto: string;
@@ -28,7 +30,7 @@ const forbidden = () =>
  */
 export async function venueChatThread(podId: string): Promise<VenueChatThread | null> {
   if (!Types.ObjectId.isValid(podId)) return null;
-  const pod = await PodModel.findById(podId).select('pod_title pod_date_time pod_hosts_id venue_id').lean();
+  const pod = await PodModel.findById(podId).select('pod_title pod_date_time pod_type pod_hosts_id venue_id').lean();
   if (!pod?.venue_id) return null;
   const venue = await VenueModel.findById(pod.venue_id).select('owner_user_id venue_name cover_image_url').lean();
   if (!venue) return null;
@@ -36,6 +38,7 @@ export async function venueChatThread(podId: string): Promise<VenueChatThread | 
     podId: String(pod._id),
     podTitle: pod.pod_title ?? '',
     podDateTime: pod.pod_date_time ?? null,
+    podIsFree: isFreePod(pod),
     venueId: String(venue._id),
     venueName: venue.venue_name ?? '',
     venuePhoto: venue.cover_image_url ?? '',

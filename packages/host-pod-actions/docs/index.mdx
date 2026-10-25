@@ -19,6 +19,7 @@ exports:
   - 'PodEditDialog'
   - 'podEditTicketDiscount'
   - 'PodResubmitDialog'
+  - 'VenueOfferPrefill'
   - 'TicketScanDialog'
   - 'PodMediaView'
   - 'usePodMediaBoard'
@@ -132,7 +133,7 @@ const { menuHandlers, dialogs } = useHostPodActions(() => refetch());
 ```
 
 `menuHandlers` also decides which edit a pod gets: a venue-**DECLINED** pod opens the full
-`PodResubmitDialog` (a new venue, a window from its `venueOfferCalendar` and an offer — how the venue is paid and how much — sent as `venue_offer`; same pod reused, and the venue accepts, rejects or counters it); every other pod opens the narrow
+`PodResubmitDialog` (a new venue, a window from its `venueOfferCalendar` and an offer — how the venue is paid and how much, what the host needs from it, the spots from its minimum — sent as `venue_offer`; same pod reused, and the venue accepts, rejects or counters it); every other pod opens the narrow
 `PodEditDialog` — title, description, media, the pod's capacity and its multi-ticket discount.
 
 ### The rows are their own file
@@ -287,6 +288,45 @@ buildHostUpdateInput(values, { includeSpots: true, ticketDiscount: discount });
 `PodResubmitDialog` does not carry the discount: a venue-rejected resubmission changes the venue,
 the window, the venue's terms and the copy, never the ticket price.
 
+## Resubmitting: a new offer to a venue
+
+The new offer asks what Create Pod asks. Beside the window and how the venue is paid, the host says
+what they need from the venue — one point per line, at least one — and may add a note
+(`VenueOfferAskFields` from `@duncit/forms`, with `/schemas`' `offeringsTextField` /
+`offerNoteField`). The spots are the offer's guests, so they run on the shared `SpotsStepper` from
+the picked venue's minimum (`offer_min_guests`, never more than the space holds — the server's
+`openingMinGuests`) up to what it holds, read for that one venue (`publicVenue`); a count outside
+snaps in once the venue is known, and the pod's `no_of_spots` goes with the offer. A switch says
+whether pets come. The ask's copy and rules are the shared `availability.offers.*` — one namespace
+on mWeb and every portal — so `buildPodResubmitSchema(labels, t?)` takes the surface's translator
+(bundled English when omitted) beside the labels.
+
+After a venue declines (or lets the offer expire), the venue chat's "Send a new offer" opens the
+dialog prefilled from the declined terms:
+
+```tsx
+import { PodResubmitDialog, type VenueOfferPrefill } from '@duncit/host-pod-actions';
+
+const offerPrefill: VenueOfferPrefill = {
+  model: offer.model,
+  rate: offer.rate,
+  offerings: offer.offerings,
+  note: offer.note,
+  start_at: offer.start_at,
+  end_at: offer.end_at,
+  space_label: offer.space_label,
+  pets: offer.pets,
+};
+
+<PodResubmitDialog pod={pod} offerPrefill={offerPrefill} onClose={close} onSaved={refetch} />;
+```
+
+With `offerPrefill` the form starts at the pod's own venue (`pod.venue_id`) with that window, space,
+pets, pricing option, amount, points and note; a pricing option or amount it cannot use is left for
+the host to pick again. The terms are compared by value, so a parent that rebuilds the object on
+every render never resets what the host has typed. Changing the venue drops the window and the space
+with it. `podResubmitInitialValues(pod, prefill?)` is the same start, outside React.
+
 ## The pod's media
 
 A pod's photos and videos belong to the POD, not to the dialog that completes it. `PodMediaView`
@@ -308,13 +348,25 @@ the payment release.
 
 ## Completing a pod: the venue's final bill
 
-`PodCompleteDialog` asks for the venue's final bill, and it is optional. Left empty, the venue is
-paid its booked slot price. With an amount, the bill itself must be uploaded (through the
-surface's own `renderMediaField`) and a checkbox says whether the bill comes on top of the slot
-price or replaces it. `SettlementPreview` re-reads the server's settlement as either changes and
-shows the earlier slot price, the bill, the venue total and the attendee count above the split —
-the words and the lines are `@duncit/utils`' `venue-bill`, drawn by `@duncit/ui`'s
-`VenueBillSummary`.
+A venue is paid the amount the host and the venue AGREED (the booking offer), and the venue's
+final bill is the PROOF of that amount. So on a paid pod at a venue `PodCompleteDialog` requires
+both the bill's total and the bill itself (uploaded through the surface's own `renderMediaField`),
+and asks for anything the venue charged beyond the agreed amount as **extra charges** (optional,
+0–1,000,000) — paid on top, with Duncit's fee, once Finance approves them against the bill. There
+is no "pay the bill on top of the slot price" choice any more: the form is
+`@duncit/forms/schemas`' `makePodCompleteSchema(hasVenue, labels.venueBill)` (`hasVenue` = the pod
+has a venue AND is not free), and `buildCompleteInput` always sends `venue_extra_amount` (0 included)
+and never `include_slot_price` — that is how the server knows this build completes against the
+agreed amount, and it refuses a paid venue pod without the bill (`VENUE_BILL_REQUIRED`).
+
+`SettlementPreview` (props `venueBillAmount`, `venueExtraAmount` — `venueExtraAmountOf(typed)` —
+and `venueUsage`) re-reads the server's settlement as they change, sending `venue_extra_amount` and
+no slot-price choice. Above the split it shows the **agreed terms** (`venue_agreed_model` +
+`venue_agreed_rate`, e.g. "Per guest · ₹300.00 per guest", in the `availability.offers.*` words every
+surface ships — `labels.agreedTerms`) and the bill lines from `@duncit/utils`' `buildVenueBillLines`:
+who came, the guests a per-guest booking is paid for (`venue_pax`, never fewer than
+`venue_min_guests`), the agreed amount, the bill uploaded, the extra charges and the venue total —
+all of them the server's figures, drawn by `@duncit/ui`'s `VenueBillSummary`.
 
 Submitting creates the payout releases PENDING: nothing reaches a wallet until Finance approves
 the request on its Payment Release page, and the dialog says so through `notifySuccess`.
@@ -331,9 +383,10 @@ note, never a split of zeros, and the success toast says the pod is completed ra
 ### The venue's usage
 
 Under the bill, the dialog asks (both optional) how many guests the venue charged for and how many
-hours the pod ran past its slot (`VenueUsageFields` from @duncit/forms). A per-guest slot is priced by
-the guests, an overtime rate by the hours; the live preview re-prices as they are typed, and the
-completion sends them with or without a bill.
+hours the pod ran past its slot (`VenueUsageFields` from @duncit/forms). An agreed per-guest booking
+is priced on the people who came (the server counts them, hosts included), raised by an entered
+count and never below its minimum; an overtime rate by the hours. The live preview re-prices as
+they are typed, and the completion sends them beside the bill.
 
 ## Copy lives in two namespaces
 

@@ -49,5 +49,25 @@ export const VENUE_SETTINGS_BUNDLE: NestedCatalogue = {
       percentMax: 'A percentage cannot go above 100',
       duplicateWindow: 'Another band already covers this window',
     },
+    // Booking offers: the fewest guests a host's offer may be for, and the
+    // hours either side has to answer an offer or a counter (VenueSettings.offers).
+    // 0 = Duncit's platform default; the hint states what is in effect. Shared
+    // by the Partners console, mWeb, the Venues console and (later) native.
+    offers: {
+      title: 'Booking offers',
+      intro:
+        'How hosts book your venue: the fewest guests an offer may be for, and how long you and the host each have to answer an offer or a counter before it expires. Leave a value at 0 to use Duncit’s default.',
+      minGuests: 'Minimum guests',
+      minGuestsHint: '0 uses Duncit’s default. In effect now: {count} guests.',
+      minGuestsInvalid: 'Enter a whole number of guests from 0 to {max}',
+      responseHours: 'Response time (hours)',
+      responseHoursHint: '0 uses Duncit’s default. In effect now: {count} hours.',
+      responseHoursInvalid: 'Enter a whole number of hours from 0 to {max}',
+      guestsValue: '{count} guests',
+      hoursValue: '{count} hours',
+      usingDefault: 'Duncit’s default',
+      save: 'Save booking offers',
+      saved: 'Booking offers saved.',
+    },
   },
 };

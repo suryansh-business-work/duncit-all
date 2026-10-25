@@ -3,6 +3,7 @@ import { fireEvent, render, screen, within } from '@testing-library/react';
 import { MockedProvider } from '@apollo/client/testing/react';
 import { gql } from '@apollo/client';
 import { describe, expect, it } from 'vitest';
+import type { OfferEarningsArgs } from '@duncit/utils';
 import PricePanel, {
   POTENTIAL_POD_EARNINGS,
   useEarningsPreview,
@@ -16,7 +17,7 @@ interface HarnessProps {
   venueId: string | null;
   isPhysical: boolean;
   isFree?: boolean;
-  venueQuote?: { payout: number; commissionOnTop: number } | null;
+  offerEarnings?: OfferEarningsArgs | null;
   onPreview?: (preview: EarningsPreview) => void;
 }
 
@@ -285,7 +286,7 @@ describe('PricePanel (four-way earnings split, host first)', () => {
       >
         <Harness
           slotPrice={384}
-          venueQuote={{ payout: 354, commissionOnTop: 30 }}
+          offerEarnings={{ venue_amount: 354, venue_commission_on_top: 30 }}
           podAmount={1000}
           noOfSpots={30}
           venueId="v1"
@@ -295,5 +296,54 @@ describe('PricePanel (four-way earnings split, host first)', () => {
     );
     // Only the matching variables resolve, so the host's earning proves what was sent.
     expect(await screen.findByText('₹20,742.71')).toBeInTheDocument();
+    // No minimum was asked, so the take-home is one amount, not a range.
+    expect(screen.queryByTestId('price-panel-earnings-range')).not.toBeInTheDocument();
+  });
+});
+
+describe('PricePanel — a venue offer paid for at least the venue minimum', () => {
+  // At the venue's minimum of 8 guests: 7 paying tickets, the venue's ₹2,640 cost at 8.
+  const ranged = { venue_amount: 6000, venue_commission_on_top: 600, min_spots: 8, venue_amount_at_min: 2400, venue_commission_on_top_at_min: 240 };
+  const rangedVariables = { pod_amount: 1000, no_of_spots: 30, venue_id: 'v1', ...ranged };
+  const withMinimum = (hostAtFewest: number) => ({
+    ...projection,
+    minimum: { total_spots: 8, waterfall: { host_receives: hostAtFewest } },
+  });
+  const panel = (hostAtFewest: number, onPreview?: (preview: EarningsPreview) => void) =>
+    render(
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }}
+        mocks={[
+          financeMock,
+          {
+            request: { query: POTENTIAL_POD_EARNINGS, variables: rangedVariables },
+            result: { data: { potentialPodEarnings: withMinimum(hostAtFewest) } },
+          },
+        ]}
+      >
+        <Harness slotPrice={6600} offerEarnings={ranged} podAmount={1000} noOfSpots={30} venueId="v1" isPhysical onPreview={onPreview} />
+      </MockedProvider>,
+    );
+
+  it('asks for the projection at the fewest guests too, and shows the take-home as a range', async () => {
+    panel(3200.5);
+    // Only the variables with the minimum resolve, so the range proves what was sent.
+    expect(await screen.findByTestId('price-panel-earnings-range-value')).toHaveTextContent('₹3,200.50 – ₹20,742.71');
+    expect(screen.getByTestId('price-panel-earnings-range')).toHaveTextContent(
+      'From 8 guests, the fewest the venue is paid for, up to all 30 spots.',
+    );
+    expect(screen.queryByTestId('price-panel-earnings-range-low')).not.toBeInTheDocument();
+  });
+
+  it('warns when the fewest guests would not cover the venue — without blocking the pod', async () => {
+    let latest: EarningsPreview | null = null;
+    panel(-450, (preview) => {
+      latest = preview;
+    });
+    expect(await screen.findByTestId('price-panel-earnings-range-low')).toHaveTextContent(
+      'With only 8 guests this pod would not cover the venue.',
+    );
+    expect(screen.getByTestId('price-panel-earnings-range-value')).toHaveTextContent('₹-450.00 – ₹20,742.71');
+    // The server judges a pod at all its spots, so the low end blocks nothing.
+    expect(latest).toMatchObject({ zeroEarnings: false, blocked: false });
   });
 });

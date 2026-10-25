@@ -10,11 +10,29 @@ beforeEach(() => {
 });
 afterEach(cleanup);
 
-const venue = (id: string, name: string, tiers: unknown[] = [], rescheduleOnly = false) => ({
+/** The venue's own booking-offer settings (0 = Duncit's default) and what is in effect. */
+interface OfferSettings {
+  own: { min_guests: number; response_hours: number };
+  effective: { min_guests: number; response_hours: number };
+}
+const DEFAULT_OFFERS: OfferSettings = {
+  own: { min_guests: 0, response_hours: 0 },
+  effective: { min_guests: 8, response_hours: 24 },
+};
+
+const venue = (
+  id: string,
+  name: string,
+  tiers: unknown[] = [],
+  rescheduleOnly = false,
+  offers: OfferSettings = DEFAULT_OFFERS,
+) => ({
   __typename: 'Venue',
   id,
   venue_name: name,
   status: 'APPROVED',
+  offer_min_guests: offers.effective.min_guests,
+  offer_response_hours: offers.effective.response_hours,
   settings: {
     __typename: 'VenueSettings',
     cancellation: {
@@ -22,6 +40,7 @@ const venue = (id: string, name: string, tiers: unknown[] = [], rescheduleOnly =
       reschedule_only: rescheduleOnly,
       tiers: tiers.map((tier) => ({ __typename: 'VenueCancellationTier', ...(tier as object) })),
     },
+    offers: { __typename: 'VenueOfferSettings', ...offers.own },
   },
 });
 
@@ -100,5 +119,69 @@ describe('VenueSettingsPage', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Save policy' }));
     expect(await screen.findByText('Venue is suspended')).toBeTruthy();
     expect(within(screen.getByRole('alert')).getByText('Venue is suspended')).toBeTruthy();
+  });
+});
+
+describe('VenueSettingsPage booking offers', () => {
+  const offersSaved = {
+    updateVenueSettings: { __typename: 'Venue', id: 'v1', offer_min_guests: 12, offer_response_hours: 48 },
+  };
+  const card = () => within(screen.getByTestId('booking-offers-card'));
+
+  // 0 leaves it to Duncit; the hint says what that means right now.
+  it('shows the venue’s own values with what is in effect under each', async () => {
+    mount([venue('v1', 'Court House')]);
+    expect(await screen.findByRole('heading', { name: 'Booking offers' })).toBeTruthy();
+    expect((card().getByLabelText('Minimum guests') as HTMLInputElement).value).toBe('0');
+    expect((card().getByLabelText('Response time (hours)') as HTMLInputElement).value).toBe('0');
+    expect(card().getByText('0 uses Duncit’s default. In effect now: 8 guests.')).toBeTruthy();
+    expect(card().getByText('0 uses Duncit’s default. In effect now: 24 hours.')).toBeTruthy();
+  });
+
+  it('saves the two numbers for the selected venue, says so and re-reads the venue', async () => {
+    const sent: SentOperation[] = [];
+    mount([venue('v1', 'Court House')], { UpdateVenueOfferSettings: offersSaved }, sent);
+    fireEvent.change(await screen.findByLabelText('Minimum guests'), { target: { value: '12' } });
+    fireEvent.change(card().getByLabelText('Response time (hours)'), { target: { value: '48' } });
+    fireEvent.click(card().getByRole('button', { name: 'Save booking offers' }));
+
+    expect(await screen.findByText('Booking offers saved.')).toBeTruthy();
+    const save = sent.find((op) => op.name === 'UpdateVenueOfferSettings');
+    expect(save?.variables).toEqual({ venue_doc_id: 'v1', input: { offers: { min_guests: 12, response_hours: 48 } } });
+    // Only the offers go: the cancellation policy is left alone.
+    expect(save?.variables.input).not.toHaveProperty('cancellation');
+    await waitFor(() => expect(sent.filter((op) => op.name === 'MyVenuesSettings').length).toBeGreaterThan(1));
+  });
+
+  it.each([
+    ['Minimum guests', '1001', 'Enter a whole number of guests from 0 to 1000'],
+    ['Minimum guests', '2.5', 'Enter a whole number of guests from 0 to 1000'],
+    ['Response time (hours)', '721', 'Enter a whole number of hours from 0 to 720'],
+    ['Response time (hours)', '-1', 'Enter a whole number of hours from 0 to 720'],
+  ])('refuses %s of %s and does not call the server', async (label, value, message) => {
+    const sent: SentOperation[] = [];
+    mount([venue('v1', 'Court House')], {}, sent);
+    fireEvent.change(await screen.findByLabelText(label), { target: { value } });
+    fireEvent.click(card().getByRole('button', { name: 'Save booking offers' }));
+
+    expect(await card().findByText(message)).toBeTruthy();
+    expect(sent.some((op) => op.name === 'UpdateVenueOfferSettings')).toBe(false);
+  });
+
+  it('shows the server’s refusal inside the card', async () => {
+    mount([venue('v1', 'Court House')], { UpdateVenueOfferSettings: new Error('Venue is suspended') });
+    fireEvent.click(await within(await screen.findByTestId('booking-offers-card')).findByRole('button', { name: 'Save booking offers' }));
+    expect(await card().findByText('Venue is suspended')).toBeTruthy();
+  });
+
+  it('loads the next venue’s own settings when the owner switches venue', async () => {
+    const own = { own: { min_guests: 15, response_hours: 6 }, effective: { min_guests: 15, response_hours: 6 } };
+    mount([venue('v1', 'Court House'), venue('v2', 'Arena', [], false, own)]);
+    await screen.findByText('0 uses Duncit’s default. In effect now: 8 guests.');
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Venue' }));
+    fireEvent.click(await screen.findByRole('option', { name: 'Arena' }));
+
+    expect(await screen.findByDisplayValue('15')).toBeTruthy();
+    expect(card().getByText('0 uses Duncit’s default. In effect now: 6 hours.')).toBeTruthy();
   });
 });

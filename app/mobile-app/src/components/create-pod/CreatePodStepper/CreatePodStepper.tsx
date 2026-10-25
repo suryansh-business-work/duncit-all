@@ -66,6 +66,7 @@ export function CreatePodStepper({
     availableProducts,
     podMode,
     spots,
+    offerMinGuests,
     pricing,
     venueNotice,
     venueQuote,
@@ -102,6 +103,7 @@ export function CreatePodStepper({
       venueNotice={venueNotice}
       forClubAdmin={!!clubAdmin}
       spots={spots}
+      offerMinGuests={offerMinGuests}
     />,
     <PricingStep
       key="pricing"

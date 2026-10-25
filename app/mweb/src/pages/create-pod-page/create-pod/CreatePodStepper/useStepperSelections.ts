@@ -4,6 +4,8 @@ import {
   clampSpots,
   filterProductsForClub,
   freePodVenueNotice,
+  offerEarningsArgs,
+  offerGuestFloor,
   pruneProductRequests,
   spotsBounds,
   type SpotsBounds,
@@ -43,6 +45,45 @@ function useClampedSpots(form: CreatePodForm, physical: boolean, spots: SpotsBou
     // The bounds object is rebuilt every render; its two ends are what move.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form, physical, spots.min, spots.max]);
+}
+
+/**
+ * What the venue costs the pod, for the Pricing panel: a held slot's price (a
+ * Pod Request), else the server's quote total for the host's offer (venue
+ * price + GST + Duncit's fee on top) — never a raw slot price. An offer is for
+ * at least the venue's minimum guests (`offerMinGuests`; a held slot was agreed
+ * already, so its own capacity is all that bounds it), and its money feeds the
+ * earnings preview at both ends of the guests.
+ */
+function useVenueCost(form: CreatePodForm, venues: CreatePodVenue[], podMode: string) {
+  const venueId = form.watch('venue_id');
+  const slotId = form.watch('venue_slot_id');
+  const requestId = form.watch('partner_request_id');
+  const spots = Number(form.watch('no_of_spots')) || 0;
+  const slotsQuery = useQuery(VENUE_AVAILABLE_SLOTS, {
+    variables: { venue_id: venueId, partner_request_id: requestId || null },
+    skip: podMode !== 'PHYSICAL' || !venueId || !slotId,
+    fetchPolicy: 'cache-first',
+  });
+  const { quote, quoteMin } = useOfferQuote(form);
+  const selectedVenue = venues.find((venue) => venue.id === venueId) ?? null;
+  const space = venueSpaces(selectedVenue).find((item) => item.label === form.watch('venue_space_label'));
+  if (slotId) {
+    const selectedSlot = (slotsQuery.data?.venueAvailableSlots ?? []).find((slot) => slot.id === slotId);
+    const amount = selectedSlot?.price ?? null;
+    return { venueId, selectedVenue, spots, amount, bookedCapacity: selectedSlot?.capacity, offerMinGuests: 0, offerEarnings: null };
+  }
+  const offering = podMode === 'PHYSICAL' && !requestId;
+  return {
+    venueId,
+    selectedVenue,
+    spots,
+    amount: quote?.total ?? null,
+    bookedCapacity: space?.capacity,
+    offerMinGuests: offering ? offerGuestFloor(selectedVenue?.offer_min_guests, space?.capacity) : 0,
+    // The quote priced at the venue's minimum names its guests (`pax`).
+    offerEarnings: quote ? offerEarningsArgs(quote, quoteMin, quoteMin?.pax ?? 0, spots) : null,
+  };
 }
 
 /** Everything the steps derive from the live selections: the scoped clubs,
@@ -86,30 +127,16 @@ export function useStepperSelections(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clubId, form]);
 
-  // What the venue costs the pod feeds the Pricing panel: a held slot's price
-  // (a Pod Request), else the server's quote total for the host's offer
-  // (venue price + GST + Duncit's fee on top) — never a raw slot price.
-  const venueId = form.watch('venue_id');
-  const slotId = form.watch('venue_slot_id');
-  const slotsQuery = useQuery(VENUE_AVAILABLE_SLOTS, {
-    variables: { venue_id: venueId, partner_request_id: form.watch('partner_request_id') || null },
-    skip: podMode !== 'PHYSICAL' || !venueId || !slotId,
-    fetchPolicy: 'cache-first',
-  });
-  const selectedSlot = (slotsQuery.data?.venueAvailableSlots ?? []).find((slot) => slot.id === slotId) ?? null;
-  const { quote } = useOfferQuote(form);
-  const selectedVenue = venues.find((venue) => venue.id === venueId) ?? null;
-  const space = venueSpaces(selectedVenue).find((item) => item.label === form.watch('venue_space_label'));
-  const venueAmount = slotId ? (selectedSlot?.price ?? null) : (quote?.total ?? null);
-  const bookedCapacity = slotId ? selectedSlot?.capacity : space?.capacity;
+  const venue = useVenueCost(form, venues, podMode);
 
   // How big this pod may be: floored by the sub-category's admin-set minimum
-  // (a doubles game needs 4), capped by the venue space the host picked (a Pod
-  // Request's held slot keeps its own capacity). The pod's sub-category is its
-  // club's `category_id`. Native twin (rule 27).
+  // (a doubles game needs 4) and an offer's venue minimum, capped by the venue
+  // space the host picked (a Pod Request's held slot keeps its own capacity).
+  // The pod's sub-category is its club's `category_id`. Native twin (rule 27).
   const spots = spotsBounds({
     minPax: subCategories.find((sub) => sub.id === selectedClub?.category_id)?.min_pax,
-    venueCapacity: podMode === 'PHYSICAL' ? bookedCapacity : null,
+    venueCapacity: podMode === 'PHYSICAL' ? venue.bookedCapacity : null,
+    venueMinPax: venue.offerMinGuests,
   });
   useClampedSpots(form, podMode === 'PHYSICAL', spots);
 
@@ -117,11 +144,11 @@ export function useStepperSelections(
   // rules the panel renders (zero earnings / venue price not covered).
   const podType = form.watch('pod_type');
   const preview = useEarningsPreview({
-    slotPrice: venueAmount,
-    venueQuote: !slotId && quote ? { payout: quote.venue_payout, commissionOnTop: quote.platform_fee } : null,
+    slotPrice: venue.amount,
+    offerEarnings: venue.offerEarnings,
     podAmount: Number(form.watch('pod_amount')) || 0,
-    noOfSpots: Number(form.watch('no_of_spots')) || 0,
-    venueId: venueId || null,
+    noOfSpots: venue.spots,
+    venueId: venue.venueId || null,
     isPhysical: podMode === 'PHYSICAL',
     isFree: podType === 'FREE',
   });
@@ -131,9 +158,19 @@ export function useStepperSelections(
   // again before publishing. The rule itself is shared with native (rule 27).
   const venueNotice = freePodVenueNotice({
     podType,
-    slotPrice: podMode === 'PHYSICAL' ? venueAmount : null,
-    ownVenue: selectedVenue?.owner_user_id === viewerUserId,
+    slotPrice: podMode === 'PHYSICAL' ? venue.amount : null,
+    ownVenue: venue.selectedVenue?.owner_user_id === viewerUserId,
   });
 
-  return { podMode, clubsInCity, clubsForLocation, clubVenueIds, availableProducts, spots, preview, venueNotice };
+  return {
+    podMode,
+    clubsInCity,
+    clubsForLocation,
+    clubVenueIds,
+    availableProducts,
+    spots,
+    offerMinGuests: venue.offerMinGuests,
+    preview,
+    venueNotice,
+  };
 }

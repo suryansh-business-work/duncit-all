@@ -3,6 +3,7 @@ import { useQuery } from '@apollo/client/react';
 import { Box, CircularProgress, Divider, Stack, Typography } from '@mui/material';
 import { EarningsSplitView, VenueBillSummary } from '@duncit/ui';
 import { buildVenueBillLines, shellVenueBillLabels } from '@duncit/utils';
+import { offerTermsLabel } from '@duncit/availability-calendar';
 import { useTranslation } from '@duncit/shell';
 import { POD_SETTLEMENT_PREVIEW } from '../queries';
 import type { SettlementPreviewProps } from './complete-pod.types';
@@ -11,26 +12,30 @@ import type { SettlementPreviewProps } from './complete-pod.types';
 export default function SettlementPreview({
   podId,
   venueBillAmount,
-  includeSlotPrice,
+  venueExtraAmount,
   hostUserId,
   venueUsage,
   free = false,
 }: Readonly<SettlementPreviewProps>) {
   const { t } = useTranslation();
-  // The bill and the usage settle for a moment before the preview re-prices.
-  const [typed, setTyped] = useState({ amount: venueBillAmount, usage: venueUsage ?? {} });
+  // The bill, the extra charges and the usage settle for a moment before the preview re-prices.
+  const [typed, setTyped] = useState({ amount: venueBillAmount, extra: venueExtraAmount, usage: venueUsage ?? {} });
   useEffect(() => {
-    const timer = setTimeout(() => setTyped({ amount: venueBillAmount, usage: venueUsage ?? {} }), 350);
+    const timer = setTimeout(
+      () => setTyped({ amount: venueBillAmount, extra: venueExtraAmount, usage: venueUsage ?? {} }),
+      350,
+    );
     return () => clearTimeout(timer);
-  }, [venueBillAmount, venueUsage]);
-  const amount = typed.amount;
+  }, [venueBillAmount, venueExtraAmount, venueUsage]);
 
   const { data, loading, error } = useQuery<any>(POD_SETTLEMENT_PREVIEW, {
     variables: {
       pod_id: podId,
-      venue_bill_amount: amount,
+      venue_bill_amount: typed.amount,
       host_user_id: hostUserId || null,
-      include_slot_price: includeSlotPrice,
+      // Always sent (0 included), never the old slot-price choice: the venue is
+      // paid the agreed amount plus these, with the bill as its proof.
+      venue_extra_amount: typed.extra,
       ...typed.usage,
     },
     fetchPolicy: 'cache-and-network',
@@ -62,6 +67,14 @@ export default function SettlementPreview({
     // The same four-way split (host first) as every other pod money view.
     return (
       <Stack spacing={1}>
+        {s.has_venue && s.venue_agreed_model && s.venue_agreed_rate != null && (
+          <Stack direction="row" spacing={2} data-testid="settlement-agreed-terms" sx={{ justifyContent: 'space-between' }}>
+            <Typography variant="body2">{t('availability.offers.agreedTerms')}</Typography>
+            <Typography variant="body2" sx={{ textAlign: 'end' }}>
+              {offerTermsLabel(t, s.venue_agreed_model, s.venue_agreed_rate)}
+            </Typography>
+          </Stack>
+        )}
         {s.has_venue && (
           <VenueBillSummary
             lines={buildVenueBillLines(
@@ -72,6 +85,10 @@ export default function SettlementPreview({
                 venue_amount: s.waterfall.venue_amount,
                 attended_seats: s.attended_seats,
                 booked_seats: s.booked_seats,
+                extra: s.venue_extra_amount,
+                min_guests: s.venue_min_guests,
+                // The guests the server priced a per-guest booking for — never below its minimum.
+                people_counted: s.venue_pax,
               },
               shellVenueBillLabels(t),
               s.currency_symbol,

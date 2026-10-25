@@ -1,10 +1,18 @@
 import { Box, Stack, Typography } from '@mui/material';
 import { useDateFormat, useTranslation } from '@duncit/app-settings';
 import { venueOfferHistoryKey } from '@duncit/utils';
+import type { Translate } from '../pricing/types';
 import { offerTermsLabel } from './format';
 import type { OfferHistoryEntry } from './queries';
 
-/** Every step of the negotiation, oldest first: who offered, countered, accepted or said no — and any note. */
+/** A step's terms — "Per guest · ₹300 per guest · at least 12 guests" — or '' for a step without terms. */
+function stepTerms(t: Translate, entry: OfferHistoryEntry): string {
+  if (!entry.model || !entry.rate) return '';
+  const terms = offerTermsLabel(t, entry.model, entry.rate);
+  return entry.min_guests ? `${terms} · ${t('availability.offers.history.minGuests', { vars: { n: entry.min_guests } })}` : terms;
+}
+
+/** Every step of the negotiation, oldest first: who offered, countered, accepted or said no — the fewest guests named, and any note. */
 export default function OfferHistory({ history }: Readonly<{ history: readonly OfferHistoryEntry[] }>) {
   const { t } = useTranslation();
   const fmt = useDateFormat({ timeZoneAware: true });
@@ -17,22 +25,19 @@ export default function OfferHistory({ history }: Readonly<{ history: readonly O
         {t('availability.offers.history.title')}
       </Typography>
       <Stack component="ol" spacing={0.5} sx={{ m: 0, pl: 2.5 }}>
-        {steps.map((entry, index) => {
-          const terms = entry.model && entry.rate ? offerTermsLabel(t, entry.model, entry.rate) : '';
-          return (
-            <Box component="li" key={`${entry.by}-${entry.action}-${entry.at ?? index}`}>
-              <Typography variant="caption" sx={{ display: 'block' }}>
-                {t(venueOfferHistoryKey(entry), { vars: { terms } })}
-                {entry.at ? ` · ${fmt.formatDateTime(entry.at)}` : ''}
+        {steps.map((entry, index) => (
+          <Box component="li" key={`${entry.by}-${entry.action}-${entry.at ?? index}`}>
+            <Typography variant="caption" sx={{ display: 'block' }}>
+              {t(venueOfferHistoryKey(entry), { vars: { terms: stepTerms(t, entry) } })}
+              {entry.at ? ` · ${fmt.formatDateTime(entry.at)}` : ''}
+            </Typography>
+            {entry.note && (
+              <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary' }}>
+                {t('availability.offers.history.note', { vars: { note: entry.note } })}
               </Typography>
-              {entry.note && (
-                <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary' }}>
-                  {t('availability.offers.history.note', { vars: { note: entry.note } })}
-                </Typography>
-              )}
-            </Box>
-          );
-        })}
+            )}
+          </Box>
+        ))}
       </Stack>
     </Stack>
   );

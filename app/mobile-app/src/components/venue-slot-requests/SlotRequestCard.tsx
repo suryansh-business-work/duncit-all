@@ -1,13 +1,13 @@
 import { Text, XStack, YStack } from 'tamagui';
 import { slotSpanLabel } from '@duncit/slots';
-import { venueOfferActions } from '@duncit/utils';
 
 import { NoticeCard } from '@/components/attendance/NoticeCard';
 import { SurfaceCard } from '@/components/SurfaceCard';
 import { slotPriceLabel } from '@/components/venue-availability/slot-labels';
+import { VenueOfferActions } from '@/components/venue-offer/VenueOfferActions';
 import { OfferSummary } from '@/components/venue-slot-requests/OfferSummary';
-import { SlotRequestActions } from '@/components/venue-slot-requests/SlotRequestActions';
 import { useDateFormat } from '@/hooks/useDateFormat';
+import type { VenueOfferAnswers } from '@/hooks/useVenueOfferAnswers';
 import type { SlotRequestRow } from '@/hooks/useVenueSlotRequests';
 import { useTranslation } from '@/hooks/useTranslation';
 
@@ -26,24 +26,14 @@ function Detail({ label, value }: Readonly<{ label: string; value: string }>) {
 
 interface Props {
   request: SlotRequestRow;
-  busy: boolean;
-  onApprove: (request: SlotRequestRow) => void;
-  onDecline: (slotId: string) => void;
-  onCounter: (request: SlotRequestRow) => void;
+  /** The venue's answers (`useVenueSlotRequests().answers`), each for the round on screen. */
+  answers: VenueOfferAnswers;
 }
-
-const LEGACY_ACTIONS = { accept: true, reject: true, counter: false };
 
 /** One booking request: the pod, the window it wants, who is asking, the host's
  * offer (or, from before offers, the slot price) and the answers — reject,
  * counter, accept. The RN twin of the web OfferRequestCard (rule 27). */
-export function SlotRequestCard({
-  request,
-  busy,
-  onApprove,
-  onDecline,
-  onCounter,
-}: Readonly<Props>) {
+export function SlotRequestCard({ request, answers }: Readonly<Props>) {
   const { t } = useTranslation();
   const fmt = useDateFormat();
   const { offer } = request;
@@ -119,13 +109,12 @@ export function SlotRequestCard({
 
       {offer ? <OfferSummary offer={offer} podIsFree={request.pod_is_free} /> : null}
 
-      <SlotRequestActions
+      <VenueOfferActions
         slotId={request.slot_id}
-        actions={offer ? venueOfferActions(offer) : LEGACY_ACTIONS}
-        busy={busy}
-        onAccept={() => onApprove(request)}
-        onReject={() => onDecline(request.slot_id)}
-        onCounter={() => onCounter(request)}
+        offer={offer}
+        subject={request}
+        answers={answers}
+        testIDPrefix={`slot-request-${request.slot_id}`}
       />
     </SurfaceCard>
   );

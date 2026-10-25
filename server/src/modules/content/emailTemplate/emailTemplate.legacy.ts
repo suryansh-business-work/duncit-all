@@ -235,4 +235,9 @@ export const LEGACY_FRAGMENT_FINGERPRINTS: Readonly<
  * so a template that DID ship before (and is missing its fingerprints) still
  * fails the unit test instead of slipping through as "new".
  */
-export const SHIPPED_AFTER_REDESIGN: ReadonlySet<string> = new Set(['env-access-otp']);
+export const SHIPPED_AFTER_REDESIGN: ReadonlySet<string> = new Set([
+  'env-access-otp',
+  // Venue booking offers bargained in the venue chat (2026-10-25).
+  'venue-offer-received',
+  'host-venue-counter-offer',
+]);

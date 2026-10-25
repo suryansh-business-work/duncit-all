@@ -9,10 +9,15 @@
  * held against a pod that was never going to happen.
  *
  * So the deadline IS the decision: once `start_at` has passed, the request is
- * declined with that as its reason. There is no admin-configured grace window
- * and deliberately no separate deadline setting — the slot's start time is the
- * only moment that means anything here, and a second clock would be a second
- * thing to get wrong.
+ * declined with that as its reason.
+ *
+ * A booking OFFER has a second, earlier clock, set by the venue (Venue settings
+ * > Booking offers > response time; the platform default when it set none):
+ * every offer and counter must be answered within it, and never later than the
+ * start. When `offer.expires_at` passes unanswered the offer expires the same
+ * way — declined, the time freed, the pod back with its host — so neither side
+ * can be kept waiting by silence, and the host can send a new offer from the
+ * venue chat.
  *
  * The write goes through `venueSlotService.expireRequest`, which is the SAME
  * path the owner's own decline takes: the pod comes out of PENDING and goes
@@ -39,18 +44,32 @@ const FIRST_SWEEP_DELAY_MS = 90_000; // ~1.5 min after boot
  */
 export const SLOT_REQUEST_EXPIRED_REASON = 'Missed View Deadline by the Venue';
 
+/** Why an offer expired: whoever's move it was did not make it in time. */
+export const OFFER_EXPIRED_REASON = {
+  VENUE: 'The venue did not answer the offer in time',
+  HOST: 'The host did not answer the counter offer in time',
+} as const;
+
+/** The reason stored for one overdue request: the start passing, or its offer running out. */
+function expiryReason(slot: { start_at: Date; offer?: { status?: string | null } | null }, now: Date): string {
+  if (slot.start_at.getTime() <= now.getTime() || !slot.offer) return SLOT_REQUEST_EXPIRED_REASON;
+  return slot.offer.status === 'COUNTERED' ? OFFER_EXPIRED_REASON.HOST : OFFER_EXPIRED_REASON.VENUE;
+}
+
 /**
- * One sweep: decline every pending request whose slot has already started.
- * Exported so it can be run on demand. Returns how many this run declined.
+ * One sweep: decline every pending request whose slot has already started, or
+ * whose offer was not answered in time. Exported so it can be run on demand.
+ * Returns how many this run declined.
  */
 export async function runSlotRequestExpirySweep(): Promise<number> {
   // Oldest first, and no limit clause: a request only ever becomes MORE overdue,
   // so nothing here can be starved by a capped read the way a sliding window
   // would be. Overlap between ticks is prevented by the `sweeping` guard below.
+  const now = new Date();
   const cursor = VenueSlotModel.find({
     status: 'PENDING',
     booked_by_pod_id: { $ne: null },
-    start_at: { $lte: new Date() },
+    $or: [{ start_at: { $lte: now } }, { 'offer.expires_at': { $lte: now } }],
   })
     .sort({ start_at: 1 })
     .cursor();
@@ -58,7 +77,7 @@ export async function runSlotRequestExpirySweep(): Promise<number> {
   let declined = 0;
   for await (const slot of cursor) {
     try {
-      if (await venueSlotService.expireRequest(slot, SLOT_REQUEST_EXPIRED_REASON)) {
+      if (await venueSlotService.expireRequest(slot, expiryReason(slot, now))) {
         declined += 1;
         logs.server.info('venue-slot-expiry', 'expireRequest', {
           slot_id: String(slot._id),

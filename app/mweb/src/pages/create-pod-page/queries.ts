@@ -37,6 +37,7 @@ export const CREATE_POD_OPTIONS = gql`
       venue_type
       capacity
       capacity_items { label capacity }
+      offer_min_guests
       cover_image_url
       city
       locality

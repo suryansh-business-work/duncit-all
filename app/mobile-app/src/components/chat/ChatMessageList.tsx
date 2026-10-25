@@ -1,4 +1,4 @@
-import { useRef, type RefObject } from 'react';
+import { useRef, type ReactNode, type RefObject } from 'react';
 import type { ScrollView } from 'react-native';
 import { Text, YStack } from 'tamagui';
 
@@ -30,6 +30,8 @@ interface Props {
   onOpenProfile?: (userId: string) => void;
   /** The sentence an empty room shows; the group chat's when omitted. */
   emptyText?: string;
+  /** Draws a line its own way (a venue chat's offer card); null keeps the bubble. */
+  renderMessage?: (message: ChatMessage) => ReactNode;
 }
 
 /** Room left above a line scrolled to from a quote, so it is not under the header. */
@@ -46,6 +48,7 @@ export function ChatMessageList({
   onReply,
   onOpenProfile,
   emptyText,
+  renderMessage,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   // Where each loaded line sits in the list, so a quote can scroll to its original.
@@ -91,14 +94,18 @@ export function ChatMessageList({
             key={message.id}
             onLayout={(e) => positions.current.set(message.id, e.nativeEvent.layout.y)}
           >
-            <ChatMessageBubble
-              message={message}
-              mine={message.user_id === meId}
-              onReact={message.deleted || !onOpenActions ? undefined : () => onOpenActions(message)}
-              onReply={onReply}
-              onJumpTo={jumpTo}
-              onOpenProfile={onOpenProfile}
-            />
+            {renderMessage?.(message) ?? (
+              <ChatMessageBubble
+                message={message}
+                mine={message.user_id === meId}
+                onReact={
+                  message.deleted || !onOpenActions ? undefined : () => onOpenActions(message)
+                }
+                onReply={onReply}
+                onJumpTo={jumpTo}
+                onOpenProfile={onOpenProfile}
+              />
+            )}
           </YStack>
         ))
       )}

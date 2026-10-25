@@ -1,18 +1,26 @@
 import { gql } from '@/generated/graphql';
 
-/** Live money-waterfall preview for a pod given the entered venue bill. */
+/**
+ * Live money-waterfall preview for a pod given the entered venue bill and extra
+ * charges. The extra charges always go (0 included) and the old slot-price
+ * choice never does: that is how the server knows the venue is paid the agreed
+ * amount, with the bill as its proof (mWeb: POD_SETTLEMENT_PREVIEW).
+ * `venue_pax` is the guests the venue is paid for — on an agreed per-guest
+ * booking the people who came (or the count entered), never below its
+ * minimum; `venue_people_counted` is only the roster's raw count.
+ */
 export const PodSettlementPreviewDocument = gql(`
   query MobilePodSettlementPreview(
     $pod_id: ID!
     $venue_bill_amount: Float!
-    $include_slot_price: Boolean
+    $venue_extra_amount: Float
     $venue_pax: Int
     $overtime_hours: Float
   ) {
     podSettlementPreview(
       pod_id: $pod_id
       venue_bill_amount: $venue_bill_amount
-      include_slot_price: $include_slot_price
+      venue_extra_amount: $venue_extra_amount
       venue_pax: $venue_pax
       overtime_hours: $overtime_hours
     ) {
@@ -26,6 +34,11 @@ export const PodSettlementPreviewDocument = gql(`
       venue_bill
       venue_slot_price
       include_slot_price
+      venue_extra_amount
+      venue_min_guests
+      venue_pax
+      venue_agreed_model
+      venue_agreed_rate
       complete_deadline
       complete_expired
       host_payout_amount

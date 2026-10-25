@@ -14,6 +14,9 @@ import { ChatErrorBanner } from '@/components/chat/ChatErrorBanner';
 import { ChatMessageList } from '@/components/chat/ChatMessageList';
 import { EmojiBar } from '@/components/chat/EmojiBar';
 import { VenueChatHeaderBar } from '@/components/chat/VenueChatHeaderBar';
+import { useOfferCards } from '@/components/venue-chat/useOfferCards';
+import { VenueChatResubmit } from '@/components/venue-chat/VenueChatResubmit';
+import { OfferNoticeText } from '@/components/venue-offer/OfferNoticeText';
 import { useChatImagePicker } from '@/hooks/useChatImagePicker';
 import { useMe } from '@/hooks/useMe';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -52,8 +55,10 @@ function VenueChatClosed({
 }
 
 /** `/venue-chat/:podId` — the private thread between a pod's hosts and the venue
- * it is booked at: the group chat's list, bubbles and composer, with the other
- * side in the header. RN twin of mWeb's VenueChatPage. */
+ * it is booked at, where the two also bargain over the booking offer: the
+ * group chat's list, bubbles and composer, each offer move drawn as its card
+ * (answerable on the move waiting on the reader), with the other side and how
+ * to reach them in the header. RN twin of mWeb's VenueChatPage. */
 export function VenueChatScreen() {
   const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -66,9 +71,11 @@ export function VenueChatScreen() {
   const [text, setText] = useState('');
   const [emojiOpen, setEmojiOpen] = useState(false);
   const listRef = useRef<ScrollView>(null);
+  const offers = useOfferCards(podId, room, messages, !chat.isLoading);
 
   useVenueChatSocket({
     podId: room?.pod_id ?? null,
+    // An offer move arrives on the same event as a text line; its card re-reads the offer.
     onLine: (line) => chat.addLines([line]),
     onJoinFailed: (code) =>
       setError(
@@ -113,6 +120,11 @@ export function VenueChatScreen() {
         ) : (
           <KeyboardScreen>
             <ChatErrorBanner error={error} onDismiss={() => setError(null)} />
+            <OfferNoticeText
+              notice={offers.notice}
+              onDismiss={offers.clearNotice}
+              testID="venue-chat-offer-notice"
+            />
             <ChatMessageList
               listRef={listRef}
               isLoading={chat.isLoading}
@@ -121,6 +133,7 @@ export function VenueChatScreen() {
               meId={meId}
               onOpenProfile={(userId) => navigation.navigate('PublicProfile', { userId })}
               emptyText={venueSide ? t('mweb.venueChat.emptyVenue') : t('mweb.venueChat.emptyHost')}
+              renderMessage={offers.renderMessage}
             />
             {emojiOpen ? (
               <EmojiBar
@@ -140,6 +153,12 @@ export function VenueChatScreen() {
             />
           </KeyboardScreen>
         )}
+        <VenueChatResubmit
+          podId={podId}
+          move={offers.newOffer}
+          onClose={offers.closeNewOffer}
+          onError={setError}
+        />
       </SafeAreaView>
     </YStack>
   );

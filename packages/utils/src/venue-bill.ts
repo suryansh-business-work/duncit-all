@@ -22,16 +22,25 @@ export type VenueBillTranslate = (
 export interface VenueBillLabels {
   /** Heads the section in the completion dialog and on the Finance page. */
   title: string;
-  amount: string;
-  amountHint: string;
+  /** The total on the venue's final bill — proof of the agreed amount, required on a paid venue pod. */
+  billTotal: string;
+  billTotalHint: string;
   amountInvalid: string;
+  /** A paid venue pod cannot complete without the bill's total. */
+  billRequired: string;
   upload: string;
-  uploadRequired: string;
-  includeSlot: string;
-  includeSlotHint: string;
+  billUploadRequired: string;
+  /** Charges on the bill beyond the agreed amount, paid on top once Finance approves them. */
+  extra: string;
+  extraHint: string;
+  extraInvalid: string;
+  extraCharges: string;
   viewBill: string;
   attendees: string;
   attendeesValue: (attended: number, booked: number) => string;
+  /** A per-guest booking: the guests the venue is paid for, never fewer than its minimum. */
+  paidGuests: string;
+  paidGuestsValue: (count: number, min: number) => string;
   slotPrice: string;
   finalBill: string;
   noBill: string;
@@ -52,17 +61,22 @@ export interface VenueBillLabels {
 export function mwebVenueBillLabels(t: VenueBillTranslate): VenueBillLabels {
   return {
     title: t('mweb.venueBill.title'),
-    amount: t('mweb.venueBill.amount'),
-    amountHint: t('mweb.venueBill.amountHint'),
+    billTotal: t('mweb.venueBill.billTotal'),
+    billTotalHint: t('mweb.venueBill.billTotalHint'),
     amountInvalid: t('mweb.venueBill.amountInvalid'),
+    billRequired: t('mweb.venueBill.billRequired'),
     upload: t('mweb.venueBill.upload'),
-    uploadRequired: t('mweb.venueBill.uploadRequired'),
-    includeSlot: t('mweb.venueBill.includeSlot'),
-    includeSlotHint: t('mweb.venueBill.includeSlotHint'),
+    billUploadRequired: t('mweb.venueBill.billUploadRequired'),
+    extra: t('mweb.venueBill.extra'),
+    extraHint: t('mweb.venueBill.extraHint'),
+    extraInvalid: t('mweb.venueBill.extraInvalid'),
+    extraCharges: t('mweb.venueBill.extraCharges'),
     viewBill: t('mweb.venueBill.viewBill'),
     attendees: t('mweb.venueBill.attendees'),
     attendeesValue: (attended, booked) =>
       t('mweb.venueBill.attendeesValue', { vars: { attended, booked } }),
+    paidGuests: t('mweb.venueBill.paidGuests'),
+    paidGuestsValue: (count, min) => t('mweb.venueBill.paidGuestsValue', { vars: { count, min } }),
     slotPrice: t('mweb.venueBill.slotPrice'),
     finalBill: t('mweb.venueBill.finalBill'),
     noBill: t('mweb.venueBill.noBill'),
@@ -82,17 +96,22 @@ export function mwebVenueBillLabels(t: VenueBillTranslate): VenueBillLabels {
 export function shellVenueBillLabels(t: VenueBillTranslate): VenueBillLabels {
   return {
     title: t('shell.venueBill.title'),
-    amount: t('shell.venueBill.amount'),
-    amountHint: t('shell.venueBill.amountHint'),
+    billTotal: t('shell.venueBill.billTotal'),
+    billTotalHint: t('shell.venueBill.billTotalHint'),
     amountInvalid: t('shell.venueBill.amountInvalid'),
+    billRequired: t('shell.venueBill.billRequired'),
     upload: t('shell.venueBill.upload'),
-    uploadRequired: t('shell.venueBill.uploadRequired'),
-    includeSlot: t('shell.venueBill.includeSlot'),
-    includeSlotHint: t('shell.venueBill.includeSlotHint'),
+    billUploadRequired: t('shell.venueBill.billUploadRequired'),
+    extra: t('shell.venueBill.extra'),
+    extraHint: t('shell.venueBill.extraHint'),
+    extraInvalid: t('shell.venueBill.extraInvalid'),
+    extraCharges: t('shell.venueBill.extraCharges'),
     viewBill: t('shell.venueBill.viewBill'),
     attendees: t('shell.venueBill.attendees'),
     attendeesValue: (attended, booked) =>
       t('shell.venueBill.attendeesValue', { vars: { attended, booked } }),
+    paidGuests: t('shell.venueBill.paidGuests'),
+    paidGuestsValue: (count, min) => t('shell.venueBill.paidGuestsValue', { vars: { count, min } }),
     slotPrice: t('shell.venueBill.slotPrice'),
     finalBill: t('shell.venueBill.finalBill'),
     noBill: t('shell.venueBill.noBill'),
@@ -120,10 +139,16 @@ export interface VenueBillTerms {
   venue_amount: number;
   attended_seats: number;
   booked_seats: number;
+  /** Charges on the bill beyond the agreed amount, paid on top. 0 or absent when none. */
+  extra?: number;
+  /** A per-guest booking's agreed minimum guests. 0 or absent when it has none. */
+  min_guests?: number;
+  /** The guests the venue was paid for: max(people who came, the minimum). */
+  people_counted?: number;
 }
 
 export interface VenueBillLine {
-  key: 'attendees' | 'slot-price' | 'final-bill' | 'venue-total';
+  key: 'attendees' | 'paid-guests' | 'slot-price' | 'final-bill' | 'extra' | 'venue-total';
   label: string;
   value: string;
   /** The line the others add up to. */
@@ -151,22 +176,30 @@ export function buildVenueBillLines(
       value: labels.attendeesValue(terms.attended_seats, terms.booked_seats),
     },
   ];
+  const minGuests = terms.min_guests ?? 0;
+  if (minGuests > 0) {
+    lines.push({
+      key: 'paid-guests',
+      label: labels.paidGuests,
+      value: labels.paidGuestsValue(terms.people_counted ?? minGuests, minGuests),
+    });
+  }
   if (terms.slot_price > 0) {
     lines.push({ key: 'slot-price', label: labels.slotPrice, value: money(terms.slot_price) });
   }
-  lines.push(
-    {
-      key: 'final-bill',
-      label: labels.finalBill,
-      value: terms.bill > 0 ? money(terms.bill) : labels.noBill,
-    },
-    {
-      key: 'venue-total',
-      label: terms.slot_included ? labels.venueTotalWithSlot : labels.venueTotal,
-      value: money(terms.venue_amount),
-      strong: true,
-    },
-  );
+  lines.push({
+    key: 'final-bill',
+    label: labels.finalBill,
+    value: terms.bill > 0 ? money(terms.bill) : labels.noBill,
+  });
+  const extra = terms.extra ?? 0;
+  if (extra > 0) lines.push({ key: 'extra', label: labels.extraCharges, value: money(extra) });
+  lines.push({
+    key: 'venue-total',
+    label: terms.slot_included ? labels.venueTotalWithSlot : labels.venueTotal,
+    value: money(terms.venue_amount),
+    strong: true,
+  });
   return lines;
 }
 

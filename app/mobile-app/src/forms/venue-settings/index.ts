@@ -1,4 +1,5 @@
 export { VenueSettingsForm, type VenueSettingsFormProps } from './venue-settings.form';
+export { BookingOffersForm, type BookingOffersFormProps } from './venue-offer-settings.form';
 export {
   emptyTier,
   makeVenueSettingsSchema,

@@ -1,5 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { ApolloLink } from '@apollo/client';
+import { Observable } from '@apollo/client/utilities';
 import SlotDecisionPage from './SlotDecisionPage';
 import { renderWithProviders } from '../../__tests__/render';
 import { scriptedLink, type ScriptedAnswer, type SentOperation } from '../../__tests__/groupC-link';
@@ -175,5 +177,163 @@ describe('SlotDecisionPage decline', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Decline booking' }));
     expect(await screen.findByText('Already decided')).toBeTruthy();
     expect(screen.getByTestId('slot-decline-reason')).toBeTruthy();
+  });
+});
+
+/** A quote of the host's terms, as the server prices them (BREAKDOWN_FIELDS). */
+const quote = (pax: number, venuePayout: number, total: number) => ({
+  __typename: 'VenuePriceBreakdown',
+  model: 'PER_PAX',
+  rate: 300,
+  pax,
+  hours: 2,
+  date: '2026-08-02',
+  base: venuePayout,
+  rules: [],
+  rules_total: 0,
+  min_spend_top_up: 0,
+  cleaning_fee: 0,
+  pet_fee: 0,
+  venue_price: venuePayout,
+  gst_pct: 0,
+  taxes: 0,
+  venue_payout: venuePayout,
+  platform_fee_pct: 10,
+  platform_fee: total - venuePayout,
+  total,
+  deposit: 0,
+});
+
+/** A host's per-guest offer for 8 to 20 guests, waiting on the venue in its second round. */
+const offer = (over: Record<string, unknown> = {}) => ({
+  __typename: 'VenueBookingOffer',
+  slot_id: 's1',
+  status: 'SENT',
+  round: 2,
+  awaiting: 'VENUE',
+  model: 'PER_GUEST',
+  rate: 300,
+  pax: 20,
+  min_guests: 8,
+  offerings: ['A long table for 20', 'Projector'],
+  note: 'We would love the terrace.',
+  pets: false,
+  space_label: 'Court 2',
+  expires_at: '2026-07-21T09:00:00.000Z',
+  quote: quote(20, 6000, 6600),
+  quote_min: quote(8, 2400, 2640),
+  counter: null,
+  history: [
+    {
+      __typename: 'VenueOfferHistoryEntry',
+      by: 'HOST',
+      action: 'OFFER',
+      model: 'PER_GUEST',
+      rate: 300,
+      min_guests: 8,
+      total: 6600,
+      note: '',
+      at: '2026-07-20T09:00:00.000Z',
+    },
+  ],
+  ...over,
+});
+
+const offerRequest = (over: Record<string, unknown> = {}) => slot({ offer: offer(over) });
+
+/** The venue's answer refused because the host moved first — the server's CAS guard. */
+const offerChangedLink = (answers: Record<string, ScriptedAnswer>, sent: SentOperation[]) =>
+  ApolloLink.split(
+    (operation) => operation.operationName === 'AcceptVenueOffer',
+    new ApolloLink((operation) => {
+      sent.push({ name: operation.operationName ?? '', variables: operation.variables });
+      return new Observable((observer) => {
+        Promise.resolve().then(() => {
+          observer.next({
+            errors: [
+              {
+                message: 'This offer was just answered or changed — refresh to see where it stands',
+                extensions: { code: 'CONFLICT', reason: 'OFFER_CHANGED' },
+              } as never,
+            ],
+          });
+          observer.complete();
+        });
+      });
+    }),
+    scriptedLink(answers, sent),
+  );
+
+describe('SlotDecisionPage offer', () => {
+  it('shows what the host asks: guests, the money as a range, what the venue provides, the note and the answer-by time', async () => {
+    mount({ VenueSlotDecision: decision(offerRequest()) });
+
+    expect((await screen.findByTestId('offer-guests')).textContent).toBe('8–20 guests');
+    const money = screen.getByTestId('offer-money').textContent ?? '';
+    expect(money).toContain('₹2,400');
+    expect(money).toContain('₹6,000');
+    const ask = screen.getByTestId('offer-ask');
+    expect(within(ask).getByText('A long table for 20')).toBeTruthy();
+    expect(within(ask).getByText('Projector')).toBeTruthy();
+    expect(within(ask).getByText('We would love the terrace.')).toBeTruthy();
+    expect(screen.getByTestId('offer-answer-by')).toBeTruthy();
+    // An offer is answered with its own Accept / Counter / Reject, not the one-tap approve.
+    expect(screen.queryByRole('button', { name: 'Approve booking' })).toBeNull();
+  });
+
+  it('reads one guest count, and says pets are coming, when there is no smaller minimum', async () => {
+    mount({ VenueSlotDecision: decision(offerRequest({ min_guests: 0, pets: true })) });
+
+    expect((await screen.findByTestId('offer-guests')).textContent).toBe('20 guests · Pets are coming');
+  });
+
+  it('does not accept an offer on arrival from the email link — the venue reads the terms first', async () => {
+    const sent: SentOperation[] = [];
+    mount({ VenueSlotDecision: decision(offerRequest()) }, '?action=approve', sent);
+
+    await screen.findByTestId('offer-guests');
+    expect(sent.some((op) => op.name === 'ApproveVenueSlotRequest' || op.name === 'AcceptVenueOffer')).toBe(false);
+  });
+
+  it('accepts the offer with the round it read and re-reads the outcome', async () => {
+    const sent: SentOperation[] = [];
+    mount(
+      {
+        VenueSlotDecision: decision(offerRequest()),
+        AcceptVenueOffer: { approveVenueSlotRequest: { __typename: 'VenueSlot', id: 's1', status: 'BOOKED' } },
+      },
+      '',
+      sent,
+    );
+    fireEvent.click(await screen.findByTestId('offer-accept-s1'));
+    fireEvent.click(await screen.findByTestId('answer-offer-submit'));
+
+    await waitFor(() => expect(sent.some((op) => op.name === 'AcceptVenueOffer')).toBe(true));
+    expect(sent.find((op) => op.name === 'AcceptVenueOffer')?.variables).toEqual({ slot_id: 's1', round: 2 });
+    await waitFor(() => expect(sent.filter((op) => op.name === 'VenueSlotDecision').length).toBeGreaterThan(1));
+  });
+
+  // The host countered while the venue was reading: nothing was accepted, the
+  // venue is told the terms changed, and the page re-reads the latest terms.
+  it('says the terms changed and re-reads the request when the host moved first', async () => {
+    const notices: string[] = [];
+    const listen = (event: Event) => notices.push((event as CustomEvent<{ message: string }>).detail.message);
+    globalThis.window.addEventListener('duncit:notify', listen);
+    const sent: SentOperation[] = [];
+    renderWithProviders(<SlotDecisionPage />, {
+      route: '/venues/requests/s1',
+      path: '/venues/requests/:slotId',
+      link: offerChangedLink({ VenueSlotDecision: decision(offerRequest()) }, sent),
+    });
+
+    fireEvent.click(await screen.findByTestId('offer-accept-s1'));
+    fireEvent.click(await screen.findByTestId('answer-offer-submit'));
+
+    await waitFor(() =>
+      expect(notices).toContain('The terms changed while you were reading them. Here are the latest.'),
+    );
+    expect(sent.find((op) => op.name === 'AcceptVenueOffer')?.variables).toEqual({ slot_id: 's1', round: 2 });
+    await waitFor(() => expect(sent.filter((op) => op.name === 'VenueSlotDecision').length).toBeGreaterThan(1));
+    globalThis.window.removeEventListener('duncit:notify', listen);
   });
 });

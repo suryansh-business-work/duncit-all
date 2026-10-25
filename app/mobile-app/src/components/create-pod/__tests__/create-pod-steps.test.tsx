@@ -639,7 +639,10 @@ describe('PricingStep', () => {
 
   it('passes the picked venue + slot price to the earnings preview (physical)', () => {
     renderWithProviders(<PricingHarness initial={{ pod_mode: 'PHYSICAL', venue_id: 'v1' }} />);
-    expect(mockedEarnings).toHaveBeenCalledWith(0, 0, 'v1', 400, null);
+    expect(mockedEarnings).toHaveBeenCalledWith(0, 0, 'v1', {
+      venue_amount: 400,
+      venue_commission_on_top: null,
+    });
   });
 });
 
@@ -717,7 +720,10 @@ describe('PricePanel', () => {
     );
     // The query runs on the total collection (1000 × 30); the venue slot price
     // is passed once, not multiplied by the spot count.
-    expect(mockedEarnings).toHaveBeenCalledWith(1000, 30, 'v1', 300, null);
+    expect(mockedEarnings).toHaveBeenCalledWith(1000, 30, 'v1', {
+      venue_amount: 300,
+      venue_commission_on_top: null,
+    });
     // ₹X,XXX.XX everywhere — identical to the mWeb statement.
     expect(screen.getByText('Total collection (₹1,000.00 × 29)')).toBeOnTheScreen();
     expect(screen.getByText('₹29,000.00')).toBeOnTheScreen();
@@ -947,7 +953,7 @@ describe('PricePanel', () => {
         isPhysical={false}
       />,
     );
-    expect(mockedEarnings).toHaveBeenCalledWith(100, 0, null, null, null);
+    expect(mockedEarnings).toHaveBeenCalledWith(100, 0, null, null);
     expect(
       screen.getByText('Set a ticket price and the number of spots to preview your earnings.'),
     ).toBeOnTheScreen();
@@ -979,7 +985,7 @@ describe('PricePanel', () => {
         isPhysical={false}
       />,
     );
-    expect(mockedEarnings).toHaveBeenCalledWith(1000, 30, null, null, null);
+    expect(mockedEarnings).toHaveBeenCalledWith(1000, 30, null, null);
     // No venue money: the Venue Take reads ₹0 and Duncit's host commission
     // sits in the Duncit & Govt row.
     expect(screen.getByText('Venue Take')).toBeOnTheScreen();
@@ -1035,6 +1041,6 @@ describe('PricePanel', () => {
       />,
     );
     // Physical but no slot picked → no venue args, on the total collection.
-    expect(mockedEarnings).toHaveBeenCalledWith(100, 3, null, null, null);
+    expect(mockedEarnings).toHaveBeenCalledWith(100, 3, null, null);
   });
 });

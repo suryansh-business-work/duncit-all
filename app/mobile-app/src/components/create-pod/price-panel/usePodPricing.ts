@@ -1,7 +1,8 @@
-import { payableSpots } from '@duncit/utils';
+import { payableSpots, type OfferEarningsArgs } from '@duncit/utils';
 
 import {
   usePotentialEarnings,
+  type EarningsVenueArgs,
   type PodEarningsProjection,
   type PotentialEarnings,
 } from '@/hooks/usePotentialEarnings';
@@ -12,13 +13,15 @@ export interface PodPricingInput {
   /** Total capacity the host entered, including their own free seat. */
   noOfSpots: number;
   venueId: string | null;
-  /** What the venue costs the pod, or null while nothing is booked: the instant
-   * booking's quoted total, or a Pod Request's held slot price. */
+  /** What the venue costs the pod, or null while nothing is booked: the
+   * offer's quoted total at the pod's spots, or a Pod Request's held slot price. */
   slotPrice: number | null;
-  /** An instant booking's quote: what the venue is paid (venue price + GST)
-   * and Duncit's commission on top, which comes off the host's side — sent to
-   * the preview so it matches settlement. Absent for a held slot. */
-  venueQuote?: { payout: number; commissionOnTop: number } | null;
+  /** A venue offer's money as `potentialPodEarnings` takes it
+   * (`offerEarningsArgs`): what the venue is paid (venue price + GST) and
+   * Duncit's commission on top, which comes off the host's side, at the pod's
+   * spots — and the same at the venue's minimum guests when that is fewer, so
+   * the host sees a range. Absent for a held slot. */
+  offerEarnings?: OfferEarningsArgs | null;
   isPhysical: boolean;
   /** A FREE pod is the only pod allowed to carry no ticket price. */
   isFree: boolean;
@@ -61,6 +64,17 @@ export function isVenueShortfall(input: PodPricingInput): boolean {
   return totalPodValue(podAmount, noOfSpots) < slotPrice;
 }
 
+/** The venue arguments the projection is asked with: an offer's money (at
+ * both ends of its guests), a held slot's price, or none. mWeb twin. */
+function venueArgsOf(
+  venuePicked: boolean,
+  slotPrice: number | null,
+  offerEarnings: OfferEarningsArgs | null | undefined,
+): EarningsVenueArgs | null {
+  if (!venuePicked) return null;
+  return offerEarnings ?? { venue_amount: slotPrice, venue_commission_on_top: null };
+}
+
 /**
  * The single source of truth for Step 4's money state: the server-computed
  * earnings projection plus the two guards that block publishing — a ₹0 (or
@@ -69,7 +83,7 @@ export function isVenueShortfall(input: PodPricingInput): boolean {
  * numbers; both guards clear themselves as soon as the price is raised.
  */
 export function usePodPricing(input: PodPricingInput): PodPricingState {
-  const { podAmount, noOfSpots, venueId, slotPrice, venueQuote, isPhysical, isFree } = input;
+  const { podAmount, noOfSpots, venueId, slotPrice, offerEarnings, isPhysical, isFree } = input;
   const venuePicked = isPhysical && slotPrice !== null;
   // A free pod has no calculation at all: a ₹0 amount is what makes the
   // earnings hook send nothing, whatever the field still holds.
@@ -77,8 +91,7 @@ export function usePodPricing(input: PodPricingInput): PodPricingState {
     isFree ? 0 : podAmount,
     noOfSpots,
     venuePicked ? venueId : null,
-    venuePicked ? (venueQuote?.payout ?? slotPrice) : null,
-    venuePicked ? (venueQuote?.commissionOnTop ?? null) : null,
+    venueArgsOf(venuePicked, slotPrice, offerEarnings),
   );
 
   const ready = !isFree && podAmount > 0 && noOfSpots > 0;

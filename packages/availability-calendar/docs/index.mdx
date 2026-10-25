@@ -9,6 +9,7 @@ consumers:
   - 'portals/partners-app'
   - 'portals/onboarding'
   - 'app/mweb'
+  - 'packages/entity-consoles'
 exports:
   - 'VenueAvailabilityEditor'
   - 'AvailabilityCalendar'
@@ -100,10 +101,18 @@ exports:
   - 'ProposedTerms'
   - 'VENUE_BOOKING_REQUESTS'
   - 'VENUE_OFFER_FIELDS'
+  - 'OFFER_TERMS_FIELDS'
   - 'VENUE_COUNTER_QUOTE'
   - 'ACCEPT_VENUE_OFFER'
   - 'REJECT_VENUE_OFFER'
   - 'COUNTER_VENUE_OFFER'
+  - 'HostOfferActions'
+  - 'usePodVenueOffer'
+  - 'useChatVenueOffer'
+  - 'POD_VENUE_OFFER_TERMS'
+  - 'OfferChatCard'
+  - 'isOfferChatLine'
+  - 'VenueChatContactLine'
 ---
 
 ## Why this exists
@@ -588,15 +597,61 @@ Partners console and mWeb: pass `venueId` (or `null` for every venue) and it lis
 `venueSlotRequests` with each request's `offer`, one `OfferRequestCard` each.
 
 - `OfferTermsPanel` — the terms on the table (the host's offer, or the venue's counter while the
-  host decides), where the request stands, what the venue receives, what the host pays, and the
-  server's quote line by line (`PriceBreakdownView`).
-- `OfferHistory` — every step so far (offered, countered, accepted, declined) with notes.
+  host decides), where the request stands, the money as a range from the venue's minimum guests
+  (`quote_min`) to the pod's spots (`quote`) — one amount when both ends agree — the server's
+  breakdown at the most guests (`PriceBreakdownView`), what the venue is asked to provide (a list),
+  the note ("Note from the host" / "from the venue"), and "Answer by" while the offer is open.
+  `side="HOST"` reads the same panel from the host's side: "Your offer" / "The venue's counter",
+  what it costs the pod first, and the host's own status chip.
+- `OfferHistory` — every step so far (offered, countered, accepted, declined) with the fewest guests
+  it named and its notes.
 - `OfferDecisionActions` — Accept (`approveVenueSlotRequest`, only while the offer waits on the
-  venue), Counter (a RHF form on `makeVenueOfferCounterSchema` from `@duncit/forms/schemas`,
-  priced live by `venueCounterQuote` for the booking's own window, sent with
-  `counterVenueOffer`) and Reject (`declineVenueSlotRequest` with an optional reason). While the
-  venue's counter waits, Counter becomes "Change counter" and Accept is gone. A request from before
-  offers keeps Accept and Reject only.
+  venue), Counter (a RHF form on `makeVenueOfferCounterSchema(t, offer.pax)` from
+  `@duncit/forms/schemas`: pricing option, amount, the fewest guests — shown only for a per-guest
+  price, never sent otherwise — the points, one per line, and a note of up to 1000 characters;
+  priced live by `venueCounterQuote` for the booking's own window, where typing the points or the
+  note never asks for a new price; sent with `counterVenueOffer`) and Reject
+  (`declineVenueSlotRequest` with an optional reason). While the venue's counter waits, Counter
+  becomes "Change counter" and Accept is gone. A request from before offers keeps Accept and
+  Reject only.
+
+Every answer carries the `round` it read. When the other side moved first (or the offer ran out)
+the server refuses it with `extensions.reason === 'OFFER_CHANGED'`: the dialog closes, a warning
+says the terms changed, and the list is re-read so the latest terms are on screen.
+
+### The host's side, and the venue chat
+
+`HostOfferActions` is the host's Accept / Reject (optional reason) / Counter back on their pod's
+offer while `hostOfferActions(offer)` allows it — `acceptVenueCounterOffer`,
+`rejectVenueCounterOffer` and `counterVenueOfferAsHost`, each with the round, the counter priced by
+`hostCounterQuote`. The counter form is the same one; only the quote source differs.
+`usePodVenueOffer(podId)` reads the pod's live offer (`POD_VENUE_OFFER_TERMS`, `podVenueOffer` —
+null once declined or expired). mWeb's pod-pending card is `OfferTermsPanel side="HOST"` plus
+`HostOfferActions`.
+
+In the pod's venue chat every move is an OFFER line. `OfferChatCard` draws one — the heading by who
+moved and how (`venueChatOfferTitleKey`), the terms, guests, when and where, pets, the money from
+the reader's side, the points, the note, the reason on a decline and "Answer by" on the newest open
+move. Pass `viewer` (`HOST`, `VENUE`, or `STAFF` for Duncit's read-only view, which reads in the
+third person and offers nothing) and `newest`; members also pass `answering` — the live offer, the
+pod and venue to name, `onAnswered`, and for a host `onSendNewOffer(move)` (the resubmit dialog,
+prefilled from the declined move). `venueChatOfferActions` decides what shows. Draw the card only
+for lines `isOfferChatLine` accepts; any other line keeps its text. `useChatVenueOffer(podId,
+lines, ready)` reads the live offer once the first page is in and re-reads it whenever a new OFFER
+line arrives. `VenueChatContactLine` is the header's way to reach the other side (`tel:` and
+`mailto:` links).
+
+```tsx
+const offers = useChatVenueOffer(room.pod_id, lines, !loading);
+const answering = { live: offers.offer, subject, onAnswered: offers.refresh, onSendNewOffer };
+{lines.map((line) =>
+  isOfferChatLine(line) ? (
+    <OfferChatCard key={line.id} move={line.offer} viewer={room.my_side} newest={line.id === offers.newestId} answering={answering} />
+  ) : (
+    <Bubble key={line.id} line={line} />
+  ),
+)}
+```
 
 `WindowOfferForm` proposes a booking outside an existing offer: a day, a start and an end, the
 space (a choice only when several are given), the guests (`askPax`) and a pricing option with an

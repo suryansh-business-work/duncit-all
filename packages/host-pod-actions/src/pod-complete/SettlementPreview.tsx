@@ -1,19 +1,20 @@
 import { useEffect, useState } from 'react';
 import { useQuery } from '@apollo/client/react';
 import { Box, CircularProgress, Divider, Stack, Typography } from '@mui/material';
-import { EarningsSplitView, VenueBillSummary } from '@duncit/ui';
-import { buildVenueBillLines } from '@duncit/utils';
+import { EarningsSplitView } from '@duncit/ui';
 import AttendanceRoster from './AttendanceRoster';
 import { AttendanceNote, FreeSettlement } from './SettlementNotes';
+import VenueSettlementSummary from './VenueSettlementSummary';
 import { POD_SETTLEMENT_PREVIEW } from '../queries';
 import { useHostPodActionsConfig } from '../HostPodActionsProvider';
 import type { PodSettlement } from '../types';
 
 interface Props {
   podId: string;
+  /** The venue's final bill total as typed — the proof of the agreed amount. */
   venueBillAmount: number;
-  /** The bill is paid on top of the booked slot price rather than instead of it. */
-  includeSlotPrice: boolean;
+  /** Charges on the bill beyond the agreed amount, as the server takes them (`venueExtraAmountOf`). */
+  venueExtraAmount: number;
   /** The venue's usage typed so far (guests charged for, overtime hours) — it prices the slot. */
   venueUsage?: { venue_pax?: number; overtime_hours?: number };
   /** Opens the ticket scanner for this pod. Attendance is only ever created by
@@ -31,26 +32,31 @@ interface Props {
 export default function SettlementPreview({
   podId,
   venueBillAmount,
-  includeSlotPrice,
+  venueExtraAmount,
   venueUsage,
   onScan,
   refreshToken,
   free = false,
 }: Readonly<Props>) {
   const { labels } = useHostPodActionsConfig();
-  // The bill and the usage settle for a moment before the preview re-prices, not on every keystroke.
-  const [typed, setTyped] = useState({ amount: venueBillAmount, usage: venueUsage });
+  // The bill, the extra charges and the usage settle for a moment before the
+  // preview re-prices, not on every keystroke.
+  const [typed, setTyped] = useState({ amount: venueBillAmount, extra: venueExtraAmount, usage: venueUsage });
   useEffect(() => {
-    const timer = setTimeout(() => setTyped({ amount: venueBillAmount, usage: venueUsage }), 350);
+    const timer = setTimeout(
+      () => setTyped({ amount: venueBillAmount, extra: venueExtraAmount, usage: venueUsage }),
+      350,
+    );
     return () => clearTimeout(timer);
-  }, [venueBillAmount, venueUsage]);
-  const amount = typed.amount;
+  }, [venueBillAmount, venueExtraAmount, venueUsage]);
 
   const { data, loading, error, refetch } = useQuery<any>(POD_SETTLEMENT_PREVIEW, {
     variables: {
       pod_id: podId,
-      venue_bill_amount: amount,
-      include_slot_price: includeSlotPrice,
+      venue_bill_amount: typed.amount,
+      // Always sent (0 included), never the old slot-price choice: the venue is
+      // paid the agreed amount plus these, and the bill is the proof.
+      venue_extra_amount: typed.extra,
       ...typed.usage,
     },
     fetchPolicy: 'cache-and-network',
@@ -95,24 +101,9 @@ export default function SettlementPreview({
         />
         <Divider />
         <AttendanceNote settlement={settlement} />
-        {/* What the venue's side comes to: the earlier slot price, the bill
-            entered above and the total the split below takes off the pool. */}
-        {settlement.has_venue && (
-          <VenueBillSummary
-            lines={buildVenueBillLines(
-              {
-                slot_price: settlement.venue_slot_price,
-                bill: settlement.venue_bill,
-                slot_included: settlement.include_slot_price,
-                venue_amount: settlement.waterfall.venue_amount,
-                attended_seats: settlement.attended_seats,
-                booked_seats: settlement.booked_seats,
-              },
-              labels.venueBill,
-              settlement.currency_symbol,
-            )}
-          />
-        )}
+        {/* What the venue's side comes to: the agreed terms, the bill entered
+            above, any extra charges and the total the split below takes off the pool. */}
+        {settlement.has_venue && <VenueSettlementSummary settlement={settlement} />}
         {/* The same four-way split (the host's earning first) as Create Pod
             and every portal. Where the release pays less than the engine's
             host figure — an expired window, or a host side below zero — the

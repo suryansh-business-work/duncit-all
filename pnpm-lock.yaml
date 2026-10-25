@@ -2664,6 +2664,9 @@ importers:
       '@duncit/category':
         specifier: workspace:*
         version: link:../category
+      '@duncit/forms':
+        specifier: workspace:*
+        version: link:../forms
       '@duncit/utils':
         specifier: workspace:*
         version: link:../utils

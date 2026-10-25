@@ -33,7 +33,10 @@ export function useOfferCalendar(venueId: string, spaceLabel: string) {
   const refetch = useCallback(() => setAttempt((value) => value + 1), []);
   useRefreshRegistration(refetch);
   const [state, setState] = useState<CalendarState>(IDLE);
-  const range = useMemo(() => bookingCalendarRange(fmt.dayKey(fmt.clock.nowMs())), [fmt]);
+  // Keyed on the day, not `fmt`: the formatter is rebuilt on every render, and
+  // a new range each render would re-run the read below forever.
+  const today = fmt.dayKey(fmt.clock.nowMs());
+  const range = useMemo(() => bookingCalendarRange(today), [today]);
   const space = bookingSpaceLabel(spaceLabel);
 
   useEffect(() => {

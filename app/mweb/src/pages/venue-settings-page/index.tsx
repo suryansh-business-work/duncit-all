@@ -7,6 +7,7 @@ import { parseApiError } from '@duncit/utils';
 import SectionHeader from '../../components/SectionHeader';
 import { notifySuccess } from '../../components/notify';
 import VenuePageFrame from '../venue-manage-page/VenuePageFrame';
+import BookingOffersCard from './BookingOffersCard';
 import {
   CancellationPolicyForm,
   toPolicyInput,
@@ -18,9 +19,9 @@ import { useTranslation } from '../../i18n/useTranslation';
 import { useSelectedVenue } from '../../hooks/useSelectedVenue';
 
 /**
- * Venue Settings, for a venue owner on their phone: the cancellation policy of
- * ONE venue at a time, because an owner with a turf and a banquet hall charges
- * differently for each. The rules and the form's copy are the shared
+ * Venue Settings, for a venue owner on their phone: the cancellation policy and
+ * the booking offers of ONE venue at a time, because an owner with a turf and a
+ * banquet hall charges differently for each. The rules and the form's copy are the shared
  * `@duncit/forms/schemas` + `venueSettings.*` pair the Partners console and
  * the native app use (rules 27 + 40).
  */
@@ -69,19 +70,22 @@ export default function VenueSettingsPage() {
       error={error}
       noVenuesMessage={t('mweb.venueSettingsPage.noVenues')}
     >
-      <Card sx={{ overflow: 'visible' }} data-testid="venue-settings-page">
-        <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-          <Stack spacing={1.5}>
-            <SectionHeader testId="venue-settings-page-header" title={t('venueSettings.cancellationTitle')} />
-            <CancellationPolicyForm
-              initialValues={initialValues}
-              saving={saveState.loading}
-              error={apiError}
-              onSubmit={submit}
-            />
-          </Stack>
-        </CardContent>
-      </Card>
+      <Stack spacing={2}>
+        <Card sx={{ overflow: 'visible' }} data-testid="venue-settings-page">
+          <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+            <Stack spacing={1.5}>
+              <SectionHeader testId="venue-settings-page-header" title={t('venueSettings.cancellationTitle')} />
+              <CancellationPolicyForm
+                initialValues={initialValues}
+                saving={saveState.loading}
+                error={apiError}
+                onSubmit={submit}
+              />
+            </Stack>
+          </CardContent>
+        </Card>
+        {venue && <BookingOffersCard venue={venue} onSaved={refetch} />}
+      </Stack>
     </VenuePageFrame>
   );
 }

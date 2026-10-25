@@ -12,7 +12,7 @@ export {
   mwebHostPodLabels,
   shellHostPodLabels,
 } from './labels';
-export type { HostPodActionLabels, HostPodTranslate } from './labels';
+export type { HostPodActionLabels, HostPodTranslate, VenueAgreedTermsLabels } from './labels';
 
 export { default as PodEditDialog } from './PodEditDialog';
 export { default as ContentCheckAlert } from './ContentCheckAlert';
@@ -51,7 +51,7 @@ export {
   buildPodResubmitSchema,
   podResubmitInitialValues,
 } from './pod-resubmit/pod-resubmit.form';
-export type { PodResubmitValues } from './pod-resubmit/pod-resubmit.form';
+export type { PodResubmitValues, VenueOfferPrefill } from './pod-resubmit/pod-resubmit.form';
 
 export { default as PodMediaView } from './pod-media/PodMediaView';
 export { default as PodMediaGrid } from './pod-media/PodMediaGrid';

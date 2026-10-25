@@ -116,6 +116,16 @@ export interface PodSettlement {
   venue_slot_price: number;
   /** True when the bill is paid on top of the slot price, not instead of it. */
   include_slot_price: boolean;
+  /** Charges on the venue's bill beyond the agreed amount, paid on top once Finance approves. */
+  venue_extra_amount: number;
+  /** An agreed per-guest booking's minimum guests (0 = no minimum). */
+  venue_min_guests: number;
+  /** The guests the venue is charged for — on an agreed per-guest booking, the
+   * people who came (or the count entered), never fewer than its minimum. */
+  venue_pax: number;
+  /** The agreed offer's pricing model (VenueOfferModel) and rate; null for a booking made before offers. */
+  venue_agreed_model: string | null;
+  venue_agreed_rate: number | null;
   has_venue: boolean;
   /** Seats the settlement was computed on — the ones scanned in. */
   paying_attendees: number;

@@ -1,0 +1,98 @@
+import { describe, expect, it, vi } from 'vitest';
+import { fireEvent, screen, within } from '@testing-library/react';
+import type { MockedResponse } from '@apollo/client/testing';
+import { VENUE_CHAT_PAGE } from '@duncit/utils';
+import { renderWithProviders } from '../../../../../__tests__/testkit';
+import { ADMIN_VENUE_CHAT_MESSAGES } from '../queries';
+import VenueChatReadOnlyThread from '../VenueChatReadOnlyThread';
+
+const move = (over: Record<string, unknown>) => ({
+  __typename: 'VenueChatOffer',
+  slot_id: 'slot-1',
+  round: 1,
+  event: 'OFFER',
+  by: 'HOST',
+  model: 'PER_GUEST',
+  rate: 300,
+  min_guests: 8,
+  max_guests: 20,
+  offerings: ['10 chairs'],
+  note: '',
+  start_at: '2026-12-05T12:30:00.000Z',
+  end_at: '2026-12-05T14:30:00.000Z',
+  space_label: '',
+  pets: false,
+  venue_receives_min: 2400,
+  venue_receives_max: 6000,
+  total_min: 2640,
+  total_max: 6600,
+  expires_at: '2026-12-02T06:30:00.000Z',
+  reason: '',
+  ...over,
+});
+
+const line = (id: string, over: Record<string, unknown> = {}) => ({
+  __typename: 'PodMessage',
+  id,
+  pod_id: 'pod-1',
+  user_id: 'u-host',
+  user_name: 'Asha',
+  user_photo: null,
+  type: 'TEXT',
+  text: 'Is the terrace free?',
+  image_url: null,
+  deleted: false,
+  createdAt: '2026-12-01T06:00:00.000Z',
+  offer: null,
+  ...over,
+});
+
+const messagesMock = (lines: object[]): MockedResponse => ({
+  request: { query: ADMIN_VENUE_CHAT_MESSAGES, variables: { pod_id: 'pod-1', limit: VENUE_CHAT_PAGE } },
+  result: { data: { adminVenueChatMessages: lines } },
+});
+
+const mount = (lines: object[], onBack = vi.fn()) => {
+  renderWithProviders(<VenueChatReadOnlyThread podId="pod-1" title="Pottery night" onBack={onBack} />, {
+    mocks: [messagesMock(lines)],
+  });
+  return onBack;
+};
+
+describe('VenueChatReadOnlyThread', () => {
+  it('reads every line to staff, each offer move as its card in the third person, with nothing to answer', async () => {
+    mount([
+      line('t1'),
+      line('p1', { type: 'IMAGE', text: '', image_url: 'https://img.test/terrace.jpg' }),
+      line('m1', { type: 'OFFER', text: 'Booking offer', offer: move({ event: 'OFFER', by: 'HOST' }) }),
+      line('m2', {
+        type: 'OFFER',
+        text: 'Counter offer',
+        user_id: 'u-venue',
+        user_name: 'Ravi',
+        offer: move({ event: 'COUNTER', by: 'VENUE', round: 2, model: 'FLAT', rate: 7000, note: 'Weekend rate' }),
+      }),
+    ]);
+    expect(await screen.findByText('Is the terrace free?')).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'Photo' })).toHaveAttribute('src', 'https://img.test/terrace.jpg');
+
+    const offered = within(screen.getByRole('article', { name: 'New booking offer' }));
+    expect(offered.getByText(/^Costs the pod/)).toHaveTextContent('₹2,640 – ₹6,600');
+    expect(offered.queryByTestId('offer-answer-by')).not.toBeInTheDocument();
+
+    const countered = within(screen.getByRole('article', { name: 'The venue countered' }));
+    expect(countered.getByText('Note from the venue')).toBeInTheDocument();
+    expect(countered.getByTestId('offer-answer-by')).toBeInTheDocument();
+    expect(screen.queryByText(/^You receive/)).not.toBeInTheDocument();
+    // Staff read; only the way back is a button.
+    expect(screen.getAllByRole('button')).toHaveLength(1);
+  });
+
+  it('keeps an offer line it cannot draw as its text, and goes back', async () => {
+    const onBack = mount([line('m1', { type: 'OFFER', text: 'Offer withdrawn', offer: move({ event: 'WITHDRAWN' }) })]);
+    expect(await screen.findByText('Offer withdrawn')).toBeInTheDocument();
+    expect(screen.queryByRole('article')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button'));
+    expect(onBack).toHaveBeenCalledTimes(1);
+  });
+});

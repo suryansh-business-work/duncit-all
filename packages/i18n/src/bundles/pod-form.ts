@@ -337,6 +337,14 @@ export const POD_FORM_BUNDLE: NestedCatalogue = {
         perSlot: 'Per slot',
         flat: 'Flat price',
       },
+      // One line under the picker on how the chosen option pays the venue.
+      help: {
+        perGuest:
+          'A minimum order value per person: the venue is paid this for every guest who comes, never for fewer than its minimum guests.',
+        perHour: 'Paid for every hour you book.',
+        perSlot: 'One amount for the time slot you picked.',
+        flat: 'One fixed price for the whole booking.',
+      },
     },
     whenWhereSection: {
       // Under the slot picker, for a FREE pod on a slot the venue charges for.

@@ -2592,6 +2592,14 @@ export const MWEB_BUNDLE: NestedCatalogue = {
           perSlot: 'Amount for the slot',
           flat: 'Flat price for the booking',
         },
+        // One line under the picker on how the chosen option pays the venue.
+        help: {
+          perGuest:
+            'A minimum order value per person: the venue is paid this for every guest who comes, never for fewer than its minimum guests.',
+          perHour: 'Paid for every hour you book.',
+          perSlot: 'One amount for the time slot you picked.',
+          flat: 'One fixed price for the whole booking.',
+        },
       },
       bookingPets: 'Pets are coming (the venue may charge a pet fee)',
       bookingStart: 'Start time',
@@ -2717,6 +2725,13 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       // The earnings panel. Every number on it is a server waterfall value —
       // only the words around them are copy.
       potentialEarnings: 'Potential earnings',
+      // A venue offer is paid for at least the venue's minimum guests, so the
+      // host's earnings read as a range: the fewest guests up to all the spots.
+      earningsRange: {
+        title: 'You could earn',
+        hint: "From {min} guests, the fewest the venue is paid for, up to all {max} spots. At the low end the venue's cost at its minimum comes off.",
+        lowWarning: 'With only {min} guests this pod would not cover the venue. You can still create it; fill more spots to earn.',
+      },
       takeHome: 'Your take-home for the full pod',
       hostFreeNote:
         'Your spot is free — that is why the total calculation is based on the remaining available slots.',
@@ -3147,17 +3162,26 @@ export const MWEB_BUNDLE: NestedCatalogue = {
     // reads both, and the server stores one row per key path.
     venueBill: {
       title: 'Venue bill',
-      amount: 'Venue final bill amount (optional)',
-      amountHint: 'Leave this empty to pay the venue its agreed booking amount.',
+      // The bill is proof of the agreed amount (required on a paid venue pod);
+      // anything the venue charged beyond it is entered as extra charges.
+      billTotal: 'Venue final bill total',
+      billTotalHint:
+        "Upload the venue's final bill as proof. The venue is paid the agreed booking amount; add anything it charged beyond that below.",
       amountInvalid: 'Enter a valid bill amount',
+      billRequired: "Enter the total on the venue's final bill",
       upload: 'Upload the venue bill',
-      uploadRequired: 'Upload the venue bill for the amount you entered',
-      includeSlot: 'Also pay the agreed booking amount with this bill',
-      includeSlotHint:
-        'Tick this when the bill covers extras only. Left unticked, the bill replaces the agreed booking amount.',
+      billUploadRequired: "Upload the venue's final bill",
+      extra: 'Extra charges on the bill (optional)',
+      extraHint:
+        "Anything the venue charged beyond the agreed amount. Paid on top, with Duncit's fee, once Finance approves it against the bill.",
+      extraInvalid: 'Enter the extra charges as an amount from 0 to 1000000',
+      extraCharges: 'Extra charges',
       viewBill: 'View bill',
       attendees: 'Total attendees',
       attendeesValue: '{attended} of {booked} seats',
+      // A booking priced per guest is paid for the people who came, never fewer than its minimum.
+      paidGuests: 'Guests the venue is paid for',
+      paidGuestsValue: '{count} (at least {min})',
       slotPrice: 'Agreed booking amount',
       finalBill: 'Final bill uploaded',
       noBill: 'None',
@@ -5875,6 +5899,8 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       noMessagesYet: 'No messages yet',
       unread: '{n} unread',
       showMore: 'Show more',
+      // "Send a new offer" on a declined offer line reads the pod first; this is when that read fails.
+      newOfferFailed: 'Could not open a new offer. Please try again.',
     },
     splash: {
       findYourTribeJoinPodsMeet:'Find your tribe. Join pods, meet locals, share moments.',

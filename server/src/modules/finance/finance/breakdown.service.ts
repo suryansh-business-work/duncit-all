@@ -34,6 +34,8 @@ export interface PodEarningsProjection {
   /** True when the projection is for a FREE pod: nothing to earn, every figure
    * 0, and clients hide the calculation rather than print it. */
   is_free: boolean;
+  /** The same projection at the venue booking's fewest guests, when asked for. */
+  minimum?: PodEarningsProjection | null;
 }
 
 /**
@@ -70,6 +72,27 @@ function projectionFor(
     waterfall,
     is_free: false,
   };
+}
+
+/**
+ * The low end of a pod's earnings: only the venue booking's fewest guests come
+ * (the host's seat among them), and the venue is paid its amount at that
+ * minimum. Null when no minimum was asked for, or it is not below the spots.
+ */
+function minimumProjection(
+  podAmount: number,
+  noOfSpots: number,
+  venueId: string | null | undefined,
+  rates: BreakdownRates,
+  atMinimum: { spots: number; venueAmount: number | null; commissionOnTop: number | null } | null | undefined,
+  venuePrice: number,
+  venueCommissionOnTop: number | null | undefined
+): PodEarningsProjection | null {
+  const spots = Math.floor(Number(atMinimum?.spots) || 0);
+  if (!atMinimum || spots < 1 || spots >= noOfSpots) return null;
+  const amount = assertPreviewInputs(spots, venueId, atMinimum.venueAmount ?? venuePrice);
+  const onTop = Number(atMinimum.commissionOnTop ?? venueCommissionOnTop);
+  return projectionFor(podAmount, spots, amount, rates, Number.isFinite(onTop) && onTop >= 0 ? onTop : null);
 }
 
 /** A free pod's projection: no ticket money, no venue amount, no negative host
@@ -414,7 +437,8 @@ export const breakdownService = {
     venueId?: string | null,
     venueAmount?: number | null,
     podType?: string | null,
-    venueCommissionOnTop?: number | null
+    venueCommissionOnTop?: number | null,
+    atMinimum?: { spots: number; venueAmount: number | null; commissionOnTop: number | null } | null
   ): Promise<PodEarningsProjection> {
     if (!Number.isFinite(podAmount) || podAmount < 0) {
       throw new GraphQLError('Amount must be 0 or more', { extensions: { code: 'BAD_USER_INPUT' } });
@@ -429,7 +453,9 @@ export const breakdownService = {
     // the real gap. Settlement runs the same unclamped branch. An instant
     // booking previews exactly as it will settle: commission on top (v3).
     const onTop = Number(venueCommissionOnTop);
-    return projectionFor(podAmount, noOfSpots, venuePrice, rates, Number.isFinite(onTop) && onTop >= 0 ? onTop : null);
+    const atMost = projectionFor(podAmount, noOfSpots, venuePrice, rates, Number.isFinite(onTop) && onTop >= 0 ? onTop : null);
+    const fewest = minimumProjection(podAmount, noOfSpots, venueId, rates, atMinimum, venuePrice, venueCommissionOnTop);
+    return fewest ? { ...atMost, minimum: fewest } : atMost;
   },
 
   /**

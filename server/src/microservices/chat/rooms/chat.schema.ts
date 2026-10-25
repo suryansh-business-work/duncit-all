@@ -4,6 +4,8 @@ export const chatTypeDefs = /* GraphQL */ `
     IMAGE
     STICKER
     SYSTEM
+    "A venue chat line recording a move in the booking offer (see offer); its text is a one-line summary."
+    OFFER
   }
 
   type PodMessageReaction {
@@ -33,6 +35,8 @@ export const chatTypeDefs = /* GraphQL */ `
     mentions: [ID!]!
     "The mentioned members, named now, so a bubble can find and link each @token."
     mention_users: [ChatUser!]!
+    "An OFFER line's terms (venue chat only); null on every other line."
+    offer: VenueChatOffer
   }
 
   "The quoted line shown inside a reply."

@@ -1,16 +1,18 @@
 import { useEffect, useState } from 'react';
 import { useQuery } from '@apollo/client/react';
-import { payableSpots } from '@duncit/utils';
+import { payableSpots, type OfferEarningsArgs } from '@duncit/utils';
 import { POTENTIAL_POD_EARNINGS, type EarningsProjection } from './queries';
 
 export interface EarningsPreviewInput {
-  /** What the venue costs the pod (null when nothing is booked): the instant
-   * booking's quoted total, or a Pod Request's held slot price. */
+  /** What the venue costs the pod (null when nothing is booked): the offer's
+   * quoted total at the pod's spots, or a Pod Request's held slot price. */
   slotPrice: number | null;
-  /** An instant booking's quote: what the venue is paid (venue price + GST)
-   * and Duncit's commission on top, which comes off the host's side — sent to
-   * the preview so it matches settlement. Absent for a held slot. */
-  venueQuote?: { payout: number; commissionOnTop: number } | null;
+  /** A venue offer's money as `potentialPodEarnings` takes it
+   * (`offerEarningsArgs`): what the venue is paid (venue price + GST) and
+   * Duncit's commission on top, which comes off the host's side, at the pod's
+   * spots — and the same at the venue's minimum guests when that is fewer, so
+   * the host sees a range. Absent for a held slot. */
+  offerEarnings?: OfferEarningsArgs | null;
   podAmount: number;
   noOfSpots: number;
   venueId: string | null;
@@ -66,24 +68,33 @@ function useDebouncedInputs(podAmount: number, noOfSpots: number) {
   return inputs;
 }
 
+/** The venue arguments the projection is asked with: an offer's money (at
+ * both ends of its guests), a held slot's price, or none. */
+function venueArgsOf(hasVenue: boolean, slotPrice: number | null, offerEarnings: OfferEarningsArgs | null | undefined) {
+  if (!hasVenue) return { venue_amount: null, venue_commission_on_top: null };
+  return offerEarnings ?? { venue_amount: slotPrice, venue_commission_on_top: null };
+}
+
 /**
  * The single source of truth for Step 4's money: the server-owned earnings
  * waterfall plus the two rules that block publishing. Both mirror the server's
  * `assertViablePodEconomics` exactly — a free pod (ticket ₹0) is exempt, the
- * pod must cover the venue's slot price, and the host's projected payout must
- * be positive. mWeb + native apply identical thresholds (rule 27).
+ * pod must cover the venue's cost at its spots, and the host's projected
+ * payout at its spots must be positive. The take-home at the venue's minimum
+ * guests (`projection.minimum`) is shown as the low end of a range, never a
+ * block: the server does not refuse on it. mWeb + native apply identical
+ * thresholds (rule 27).
  */
 export function useEarningsPreview(input: Readonly<EarningsPreviewInput>): EarningsPreview {
-  const { slotPrice, venueQuote, podAmount, noOfSpots, venueId, isPhysical, isFree } = input;
+  const { slotPrice, offerEarnings, podAmount, noOfSpots, venueId, isPhysical, isFree } = input;
   const sent = useDebouncedInputs(podAmount, noOfSpots);
   const hasVenue = isPhysical && slotPrice !== null;
-  const { data, loading } = useQuery<any>(POTENTIAL_POD_EARNINGS, {
+  const { data, loading } = useQuery<{ potentialPodEarnings: EarningsProjection }>(POTENTIAL_POD_EARNINGS, {
     variables: {
       pod_amount: sent.podAmount,
       no_of_spots: sent.noOfSpots,
       venue_id: hasVenue ? venueId : null,
-      venue_amount: hasVenue ? (venueQuote?.payout ?? slotPrice) : null,
-      venue_commission_on_top: hasVenue ? (venueQuote?.commissionOnTop ?? null) : null,
+      ...venueArgsOf(hasVenue, slotPrice, offerEarnings),
     },
     // A free pod has no calculation at all — its ₹0 would skip the query
     // anyway, but the debounced copy still holds the old price for 400ms after

@@ -13,7 +13,8 @@ interface Props {
 
 /**
  * How the host offers to pay the venue — per guest, per hour, for the slot or
- * a flat price — and the amount. The venue accepts it, rejects it or counters
+ * a flat price, with a line on how the picked option pays (per guest is a
+ * minimum order value per person) — and the amount. The venue accepts it, rejects it or counters
  * with its own terms; the price card below shows the offer priced with the
  * venue's charges. Native twin: OfferTermsFields.
  */
@@ -22,7 +23,10 @@ export default function OfferTermsFields({ form }: Readonly<Props>) {
   const { currency } = usePricing();
   const { control, formState } = form;
   const model = form.watch('venue_offer_model');
-  const rateLabel = isVenueOfferModel(model) ? t(VENUE_OFFER_MODEL_KEY[model].rate) : t('mweb.createPod.offer.rateLabel');
+  const picked = isVenueOfferModel(model) ? VENUE_OFFER_MODEL_KEY[model] : null;
+  const rateLabel = picked ? t(picked.rate) : t('mweb.createPod.offer.rateLabel');
+  // Once an option is picked, the line under it says how that option pays the venue.
+  const modelHelp = picked ? t(picked.help) : t('mweb.createPod.offer.modelHint');
 
   return (
     <Stack spacing={1.5} data-testid="create-pod-offer-terms">
@@ -38,7 +42,7 @@ export default function OfferTermsFields({ form }: Readonly<Props>) {
             value={field.value}
             onChange={(e) => field.onChange(e.target.value)}
             error={!!formState.errors.venue_offer_model}
-            helperText={formState.errors.venue_offer_model?.message || t('mweb.createPod.offer.modelHint')}
+            helperText={formState.errors.venue_offer_model?.message || modelHelp}
           >
             {VENUE_OFFER_MODELS.map((option) => (
               <MenuItem key={option} value={option} data-testid={`create-pod-offer-model-${option}`}>

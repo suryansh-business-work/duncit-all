@@ -1,4 +1,4 @@
-import { FormControlLabel, Stack, Switch } from '@mui/material';
+import { FormControlLabel, Stack, Switch, Typography } from '@mui/material';
 import { SpotsStepper, mwebSpotsLabels } from '@duncit/ui';
 import type { SpotsBounds } from '@duncit/utils';
 import { useTranslation } from '../../../../i18n/useTranslation';
@@ -8,17 +8,19 @@ interface Props {
   form: CreatePodForm;
   /** The range the pod may be sized within (activity + venue + space). */
   spots: SpotsBounds;
+  /** The fewest guests the venue takes an offer for (0 = none) — said under the spots. */
+  minGuests?: number;
 }
 
 const DIRTY = { shouldDirty: true, shouldValidate: true } as const;
 
 /**
  * The pod's spots — which ARE the booking's guests, so there is one number,
- * held inside the activity's minimum, the venue's guest range and the space's
- * capacity, and quoted as it changes — and whether pets come (the quote adds
- * the venue's pet fee, if it has one). Native twin: BookingGuestFields.
+ * held inside the activity's minimum, the venue's minimum guests and the
+ * space's capacity, and quoted as it changes — and whether pets come (the quote
+ * adds the venue's pet fee, if it has one). Native twin: BookingGuestFields.
  */
-export default function BookingGuestFields({ form, spots }: Readonly<Props>) {
+export default function BookingGuestFields({ form, spots, minGuests = 0 }: Readonly<Props>) {
   const { t } = useTranslation();
   const pets = form.watch('venue_booking_pets');
   const boundsHint = spots.slidable
@@ -39,6 +41,11 @@ export default function BookingGuestFields({ form, spots }: Readonly<Props>) {
         // Only fixed when the venue and space leave no room to choose.
         readOnly={spots.max <= spots.min}
       />
+      {minGuests > 0 && (
+        <Typography variant="caption" data-testid="create-pod-venue-minimum" sx={{ color: 'text.secondary' }}>
+          {t('availability.offers.ask.venueMinimum', { vars: { min: minGuests } })}
+        </Typography>
+      )}
       <FormControlLabel
         control={
           <Switch

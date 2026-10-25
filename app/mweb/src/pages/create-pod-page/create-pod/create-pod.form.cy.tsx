@@ -29,6 +29,8 @@ const valid = (over: Partial<CreatePodFormValues> = {}): CreatePodFormValues => 
   pod_end_date_time: END,
   venue_offer_model: 'PER_GUEST',
   venue_offer_rate: '300',
+  // What the host needs from the venue: at least one point, one per line.
+  venue_offer_offerings: 'A projector',
   // The blank default is invalid on purpose — a paid pod must carry a price.
   pod_amount: 499,
   media_text: 'https://cdn/img.jpg',
@@ -71,6 +73,36 @@ describe('createPodSchema', () => {
     // A Pod Request's held slot and a virtual pod carry no offer.
     const fromRequest = valid({ partner_request_id: 'req-1', venue_slot_id: 'slot-1', venue_offer_model: '', venue_offer_rate: '' });
     expect(createPodSchema.safeParse(fromRequest).success).toBe(true);
+  });
+
+  it('requires the offer to name at least one thing the host needs from the venue', () => {
+    expect(issuesOf(valid({ venue_offer_offerings: '' }))).toContain('venue_offer_offerings');
+    // Blank lines and a bare bullet are not points.
+    expect(issuesOf(valid({ venue_offer_offerings: '\n  \n- ' }))).toContain('venue_offer_offerings');
+    expect(createPodSchema.safeParse(valid({ venue_offer_offerings: '- A projector\n10 chairs' })).success).toBe(true);
+  });
+
+  it("holds the ask to the server's bounds: 20 points of 120 characters, a 1000-character note", () => {
+    const tooMany = Array.from({ length: 21 }, (_, index) => `Point ${index + 1}`).join('\n');
+    expect(issuesOf(valid({ venue_offer_offerings: tooMany }))).toContain('venue_offer_offerings');
+    expect(issuesOf(valid({ venue_offer_offerings: 'x'.repeat(121) }))).toContain('venue_offer_offerings');
+    expect(issuesOf(valid({ venue_offer_note: 'n'.repeat(1001) }))).toEqual(['venue_offer_note']);
+    // The note is optional, and up to the bound is fine.
+    expect(createPodSchema.safeParse(valid({ venue_offer_note: '' })).success).toBe(true);
+    expect(createPodSchema.safeParse(valid({ venue_offer_note: 'n'.repeat(1000) })).success).toBe(true);
+  });
+
+  it('asks nothing of the venue when no offer is sent — a held slot or a virtual pod', () => {
+    const fromRequest = valid({ partner_request_id: 'req-1', venue_slot_id: 'slot-1', venue_offer_offerings: '' });
+    expect(createPodSchema.safeParse(fromRequest).success).toBe(true);
+    const virtual = valid({
+      pod_mode: 'VIRTUAL',
+      venue_id: '',
+      meeting_platform: 'GOOGLE_MEET',
+      meeting_url: 'https://meet.duncit.com/x',
+      venue_offer_offerings: '',
+    });
+    expect(createPodSchema.safeParse(virtual).success).toBe(true);
   });
 
   it("requires a Pod Request's pod to keep the slot that request holds", () => {
@@ -232,6 +264,8 @@ describe('buildCreatePodInput', () => {
       pets: false,
       model: 'PER_GUEST',
       rate: 300,
+      offerings: ['A projector'],
+      note: '',
     });
     expect(input.location_id).toBe('loc-1');
     expect(input.meeting_url).toBeNull();
@@ -244,6 +278,13 @@ describe('buildCreatePodInput', () => {
       valid({ no_of_spots: 24, venue_booking_pets: true, venue_space_label: 'Lawn', venue_offer_model: 'FLAT', venue_offer_rate: '5000' }),
     );
     expect(input.venue_offer).toMatchObject({ pax: 24, pets: true, space_label: 'Lawn', model: 'FLAT', rate: 5000 });
+  });
+
+  it('sends what the host asks of the venue: one point per line and the trimmed note', () => {
+    const input = buildCreatePodInput(
+      valid({ venue_offer_offerings: '- A projector\n\n• 10 chairs  ', venue_offer_note: '  We start sharp at 7  ' }),
+    );
+    expect(input.venue_offer).toMatchObject({ offerings: ['A projector', '10 chairs'], note: 'We start sharp at 7' });
   });
 
   it("books a Pod Request's held slot by id, with no offer", () => {

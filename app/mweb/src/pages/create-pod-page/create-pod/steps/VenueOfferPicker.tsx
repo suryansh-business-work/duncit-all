@@ -1,8 +1,16 @@
 import { useMemo } from 'react';
 import { Alert, MenuItem, Stack, TextField, Typography } from '@mui/material';
+import { VenueOfferAskFields } from '@duncit/forms';
 import { buildSlotLabels } from '@duncit/slots';
 import { SlotCalendar } from '@duncit/slots/mui';
-import { bookingCalendarProps, formatStatementMoney, type BookingTile, type SpotsBounds } from '@duncit/utils';
+import {
+  VENUE_OFFER_ASK_LIMITS,
+  bookingCalendarProps,
+  formatStatementMoney,
+  type BookingTile,
+  type SpotsBounds,
+} from '@duncit/utils';
+import { requiredLabel } from '../../../../forms/components/requiredLabel';
 import { usePricing } from '../../../../hooks/usePricing';
 import { useDateFormat } from '../../../../utils/dateFormat';
 import { useTranslation } from '../../../../i18n/useTranslation';
@@ -20,18 +28,21 @@ interface Props {
   spaceLabel: string;
   /** The range the pod's spots (= the booking's guests) may take. */
   spots: SpotsBounds;
+  /** The fewest guests the venue takes an offer for (0 = none). */
+  minGuests?: number;
 }
 
 const DIRTY = { shouldDirty: true, shouldValidate: true } as const;
 
 /**
  * Offer the venue a booking: a start and an end inside its opening hours (days
- * it is shut, or times already booked, cannot be picked), the guests, and how
- * the host will pay it with an amount. The window becomes the pod's window, the
- * server prices the offer below, and the venue accepts, rejects or counters it
- * once the pod is sent. Native twin: VenueOfferPicker.
+ * it is shut, or times already booked, cannot be picked), the guests from the
+ * venue's minimum, how the host will pay it with an amount, and what they need
+ * from the venue. The window becomes the pod's window, the server prices the
+ * offer below at both ends of the guests, and the venue accepts, rejects or
+ * counters it once the pod is sent. Native twin: VenueOfferPicker.
  */
-export default function VenueOfferPicker({ form, venueId, spaceLabel, spots }: Readonly<Props>) {
+export default function VenueOfferPicker({ form, venueId, spaceLabel, spots, minGuests = 0 }: Readonly<Props>) {
   const { t } = useTranslation();
   const fmt = useDateFormat();
   const { currency } = usePricing();
@@ -66,7 +77,7 @@ export default function VenueOfferPicker({ form, venueId, spaceLabel, spots }: R
       <Alert severity="info" data-testid="create-pod-offer-intro">
         {t('mweb.createPod.offer.intro')}
       </Alert>
-      <BookingGuestFields form={form} spots={spots} />
+      <BookingGuestFields form={form} spots={spots} minGuests={minGuests} />
       {calendar.error ? (
         <Alert severity="error" data-testid="create-pod-calendar-error">{t('mweb.createPod.calendarLoadFailed')}</Alert>
       ) : (
@@ -103,7 +114,25 @@ export default function VenueOfferPicker({ form, venueId, spaceLabel, spots }: R
       )}
       <Typography variant="subtitle2" component="h3">{t('mweb.createPod.offer.title')}</Typography>
       <OfferTermsFields form={form} />
-      <VenueQuoteCard quote={quote.quote} message={quote.message} loading={quote.loading} error={quote.error} />
+      <VenueOfferAskFields
+        control={form.control}
+        offeringsName="venue_offer_offerings"
+        noteName="venue_offer_note"
+        idPrefix="create-pod"
+        labels={{
+          offerings: requiredLabel(t('availability.offers.ask.offeringsLabel'), true),
+          offeringsHint: t('availability.offers.ask.offeringsHint'),
+          note: t('availability.offers.ask.noteLabel'),
+          noteHint: t('availability.offers.ask.noteHint', { vars: { max: VENUE_OFFER_ASK_LIMITS.note } }),
+        }}
+      />
+      <VenueQuoteCard
+        quote={quote.quote}
+        quoteMin={quote.quoteMin}
+        message={quote.message}
+        loading={quote.loading}
+        error={quote.error}
+      />
     </Stack>
   );
 }

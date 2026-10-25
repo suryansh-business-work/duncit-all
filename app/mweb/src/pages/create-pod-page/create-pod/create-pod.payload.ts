@@ -12,7 +12,9 @@ const splitLines = (text: string) =>
 export const hasImageLine = (mediaText: string) =>
   splitLines(mediaText).some((url) => !isVideoUrl(url));
 
-/** The venue offer the form holds (window = the pod window, guests = its spots), or null. Native twin. */
+/** The venue offer the form holds (window = the pod window, guests = its spots),
+ * with what the host asks of the venue — or null. The live quote strips the
+ * ask (`venueOfferPriceInput`). Native twin. */
 export const venueOfferOf = (values: CreatePodFormValues) =>
   venueOfferInput({
     start: values.pod_date_time?.toISOString() ?? null,
@@ -22,6 +24,8 @@ export const venueOfferOf = (values: CreatePodFormValues) =>
     spaceLabel: values.venue_space_label,
     model: values.venue_offer_model,
     rate: values.venue_offer_rate,
+    offerings: values.venue_offer_offerings,
+    note: values.venue_offer_note,
   });
 
 /** Maps the validated form values onto the server's CreatePodInput. */

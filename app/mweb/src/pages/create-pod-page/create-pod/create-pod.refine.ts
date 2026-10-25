@@ -1,10 +1,25 @@
 import { z } from 'zod';
+import { makeVenueOfferAskSchema } from '@duncit/forms/schemas';
 import { isMeetingPlatform, isVenueOfferModel, offerRateOf } from '@duncit/utils';
 import type { Translate } from '../../../i18n/fallback';
 import { hasImageLine } from './create-pod.payload';
 import { POD_TYPE_VALUES, type CreatePodFormValues } from './create-pod.types';
 
-/** The host's offer to the venue: how they pay it and how much. */
+/** What the host asks of the venue beside the price — the shared rules
+ * (`makeVenueOfferAskSchema`: at least one point, each and the note within the
+ * server's bounds), pinned on this form's own fields. Native twin. */
+function refineOfferAsk(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Translate) {
+  const ask = makeVenueOfferAskSchema(t).safeParse({
+    offerings: values.venue_offer_offerings,
+    note: values.venue_offer_note,
+  });
+  for (const issue of ask.error?.issues ?? []) {
+    const path = issue.path[0] === 'note' ? 'venue_offer_note' : 'venue_offer_offerings';
+    ctx.addIssue({ code: 'custom', path: [path], message: issue.message });
+  }
+}
+
+/** The host's offer to the venue: how they pay it, how much, and what they ask of it. */
 function refineVenueOffer(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Translate) {
   if (!isVenueOfferModel(values.venue_offer_model)) {
     ctx.addIssue({ code: 'custom', path: ['venue_offer_model'], message: t('mweb.createPod.validation.offerModelRequired') });
@@ -12,6 +27,7 @@ function refineVenueOffer(values: CreatePodFormValues, ctx: z.RefinementCtx, t: 
   if (offerRateOf(values.venue_offer_rate) <= 0) {
     ctx.addIssue({ code: 'custom', path: ['venue_offer_rate'], message: t('mweb.createPod.validation.offerRateRequired') });
   }
+  refineOfferAsk(values, ctx, t);
 }
 
 /** A physical pod's time at the venue: a Pod Request books the slot it holds;

@@ -67,6 +67,10 @@ export function makeCreatePodSchema(t: Translate = fallbackT, ticketDiscountMaxP
       venue_booking_pets: z.boolean(),
       venue_offer_model: z.string(),
       venue_offer_rate: z.string(),
+      // Shape only — an offer's ask is checked in refineVenueOffer (a virtual
+      // pod or a held slot asks the venue nothing).
+      venue_offer_offerings: z.string(),
+      venue_offer_note: z.string(),
       no_of_spots: z
         .number({ error: t('mweb.createPod.validation.spotsNumber') })
         .min(0)

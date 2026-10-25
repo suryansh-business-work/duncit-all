@@ -13,8 +13,9 @@ export const VENUE_OFFER_CALENDAR: TypedDocumentNode<
   QueryVenueOfferCalendarArgs
 > = gql(VENUE_OFFER_CALENDAR_SDL);
 
-/** The server's price for the host's offer — or why it cannot be sent. */
+/** The server's price for the host's offer at the most guests (`quote`) and
+ * the fewest (`quote_min`) — or why it cannot be sent. */
 export const VENUE_OFFER_QUOTE: TypedDocumentNode<
-  { venueOfferQuote: { ok: boolean; message: string | null; quote: VenueQuote | null } },
+  { venueOfferQuote: { ok: boolean; message: string | null; quote: VenueQuote | null; quote_min: VenueQuote | null } },
   QueryVenueOfferQuoteArgs
 > = gql(VENUE_OFFER_QUOTE_SDL);

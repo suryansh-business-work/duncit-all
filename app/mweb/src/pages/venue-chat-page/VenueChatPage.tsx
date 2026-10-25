@@ -1,38 +1,37 @@
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
-import { Alert, Stack } from '@mui/material';
+import { Stack } from '@mui/material';
 import ChatBubbleOutlineRoundedIcon from '@mui/icons-material/ChatBubbleOutlineRounded';
 import ErrorOutlineRoundedIcon from '@mui/icons-material/ErrorOutlineRounded';
 import { logs } from '@duncit/logs';
-import { isVenueChatUnavailable, venueChatCounterpart } from '@duncit/utils';
+import { isVenueChatUnavailable } from '@duncit/utils';
 import EmptyState from '../../components/EmptyState';
 import { useTranslation } from '../../i18n/useTranslation';
-import { useUserInfo } from '../../user-info/useUserInfo';
-import ChatMessageList from '../chat-room-page/ChatRoomPage/ChatMessageList';
 import ChatRoomLoading from '../chat-room-page/ChatRoomPage/ChatRoomLoading';
-import VenueChatComposer from './VenueChatComposer';
+import HostPodActionsBridge from '../host-manage-page/HostPodActionsBridge';
 import VenueChatHeader from './VenueChatHeader';
+import VenueChatRoomView from './VenueChatRoomView';
 import { useVenueChatSocket } from './useVenueChatSocket';
 import { useVenueChatThread } from './useVenueChatThread';
 
 /**
  * `/venue-chat/:podId` — the private thread between a pod's hosts and the
- * venue it is booked at. The group chat's list, bubbles and composer; the
- * header shows the other side. A reader on neither side gets "not available".
+ * venue it is booked at, where the two also bargain over the booking offer.
+ * The group chat's list, bubbles and composer, with each offer move as a card;
+ * the header shows the other side. A reader on neither side gets "not available".
  */
 export default function VenueChatPage() {
   const { t } = useTranslation();
   const { podId } = useParams<{ podId: string }>();
   const navigate = useNavigate();
-  const { me } = useUserInfo();
   const thread = useVenueChatThread(podId);
-  const scrollRef = useRef<HTMLDivElement | null>(null);
   const [error, setError] = useState<string | null>(null);
   const room = thread.room;
   const venueSide = room?.my_side === 'VENUE';
 
   useVenueChatSocket({
     podId: room?.pod_id,
+    // An offer move arrives on the same event as a text line; the room view re-reads the offer for it.
     onLine: (line) => thread.addLines([line]),
     onJoinFailed: (code) =>
       setError(isVenueChatUnavailable(code) ? t('mweb.venueChat.unavailable') : t('mweb.venueChat.joinFailed')),
@@ -71,24 +70,9 @@ export default function VenueChatPage() {
   }
 
   return (
-    <Stack data-testid="venue-chat-screen" sx={{ height: '100%', minHeight: 0, mx: { xs: -1.25, sm: -2 } }}>
-      <VenueChatHeader counterpart={venueChatCounterpart(room)} venueSide={venueSide} onBack={goBack} />
-      {error && (
-        <Alert severity="error" data-testid="venue-chat-error" onClose={() => setError(null)}>
-          {error}
-        </Alert>
-      )}
-      <ChatMessageList
-        scrollRef={scrollRef}
-        podEnded={null}
-        messages={thread.lines}
-        myId={me?.user_id}
-        canLoadOlder={thread.canLoadOlder}
-        loadOlder={thread.loadOlder}
-        onOpenProfile={(userId) => navigate(`/u/${userId}`)}
-        emptyText={venueSide ? t('mweb.venueChat.emptyVenue') : t('mweb.venueChat.emptyHost')}
-      />
-      <VenueChatComposer send={thread.send} onError={setError} />
-    </Stack>
+    // The host's "Send a new offer" opens the shared resubmit dialog, which reads its config from here.
+    <HostPodActionsBridge>
+      <VenueChatRoomView room={room} thread={thread} error={error} onError={setError} onBack={goBack} />
+    </HostPodActionsBridge>
   );
 }

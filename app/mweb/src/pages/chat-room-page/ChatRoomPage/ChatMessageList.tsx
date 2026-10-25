@@ -1,4 +1,4 @@
-import { Fragment, useMemo, useState, type ComponentProps, type RefObject } from 'react';
+import { Fragment, useMemo, useState, type ComponentProps, type ReactNode, type RefObject } from 'react';
 import { Badge, Box, Chip, Fab, Typography } from '@mui/material';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import ChatHistoryTop from '../../../components/chat-history/ChatHistoryTop';
@@ -29,6 +29,8 @@ interface ChatMessageListProps {
   onOpenProfile: (userId: string) => void;
   /** The sentence an empty room shows; the group chat's when omitted. */
   emptyText?: string;
+  /** Draws a line its own way (a venue chat's offer card); null keeps the bubble. */
+  renderMessage?: (message: ChatMessage) => ReactNode;
 }
 
 /** Brings a loaded line into view and focuses it; an unloaded one is left alone. */
@@ -55,6 +57,7 @@ export default function ChatMessageList({
   loadOlder,
   onOpenProfile,
   emptyText,
+  renderMessage,
 }: Readonly<ChatMessageListProps>) {
   const { t } = useTranslation();
   const { formatDate, timeZone } = useDateFormat();
@@ -116,15 +119,17 @@ export default function ChatMessageList({
                 </Typography>
               </Box>
             )}
-            <MessageBubble
-              message={m}
-              mine={String(m.user_id) === String(myId)}
-              onOpenReact={onOpenReact}
-              onOpenActions={onOpenActions}
-              onOpenImage={(id) => setPhotoIndex(photos.findIndex((p: ChatMessage) => p.id === id))}
-              onJumpTo={(id) => jumpToMessage(scrollRef.current, id)}
-              onOpenProfile={onOpenProfile}
-            />
+            {renderMessage?.(m) ?? (
+              <MessageBubble
+                message={m}
+                mine={String(m.user_id) === String(myId)}
+                onOpenReact={onOpenReact}
+                onOpenActions={onOpenActions}
+                onOpenImage={(id) => setPhotoIndex(photos.findIndex((p: ChatMessage) => p.id === id))}
+                onJumpTo={(id) => jumpToMessage(scrollRef.current, id)}
+                onOpenProfile={onOpenProfile}
+              />
+            )}
           </Fragment>
         ))}
       </Box>

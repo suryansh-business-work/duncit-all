@@ -52,7 +52,7 @@ const WALLET_QUERY =`query E2ePayoutWallet {
   myWalletTransactions { id type amount source pod_id }
 }`;
 
-/** What the venue's final bill adds on top of the slot price, in rupees. */
+/** What the venue charged beyond the agreed slot price, in rupees: its bill totals SLOT_PRICE + this. */
 export const VENUE_BILL = 150;
 
 export type ReleaseKind = 'HOST_PAYMENT' | 'VENUE_BILLING' | 'CLUB_ADMIN';
@@ -292,10 +292,11 @@ export function completePodWithVenueBill(podId: string, stamp: string): void {
   cy.byTestId(`host-pod-actions-${podId}`).click();
   cy.byTestId(`host-pod-action-complete-${podId}`).click();
   cy.byTestId('pod-complete-dialog').should('be.visible');
-  cy.byTestId('pod-complete-venue-bill').find('input').type(String(VENUE_BILL));
+  // The bill is proof of the agreed amount; what the venue charged beyond it is entered as extra charges.
+  cy.byTestId('pod-complete-venue-bill').find('input').type(String(SLOT_PRICE + VENUE_BILL));
   cy.fixture('avatar.jpg', null).as('photo');
   attachThroughPicker(runPhoto(stamp, 'venue-bill'));
-  cy.byTestId('pod-complete-include-slot').find('input').check();
+  cy.byTestId('pod-complete-venue-extra').find('input').type(String(VENUE_BILL));
   cy.byTestId('venue-bill-line-venue-total').should('contain.text', String(SLOT_PRICE + VENUE_BILL));
   cy.interceptOperation('HostCompletePodSettlement');
   cy.byTestId('pod-complete-submit').click();

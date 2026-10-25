@@ -47,7 +47,13 @@ export default function PodPendingPage() {
       <>
         <PendingBanner status={view.pod.venue_approval_status} />
         <PodPendingSummaryCard view={view} />
-        <VenueOfferCard podId={view.pod.id} onAnswered={refetch} />
+        <VenueOfferCard
+          podId={view.pod.id}
+          podTitle={view.pod.pod_title}
+          venueName={view.venue?.venue_name ?? view.pod.place_label ?? ''}
+          podIsFree={view.pod.pod_type === 'FREE'}
+          onAnswered={refetch}
+        />
         {view.venue && (
           <VenuePendingCard venue={view.venue} status={view.pod.venue_approval_status} />
         )}

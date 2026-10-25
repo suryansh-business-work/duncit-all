@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { makeVenueOfferAskSchema } from '@duncit/forms/schemas';
 import { DEFAULT_TICKET_DISCOUNT_MAX_PCT, isVenueOfferModel, isVideoUrl, offerRateOf } from '@duncit/utils';
 import type { PodFormConfig, PodFormValues } from './types';
 import type { Translate } from './i18n/useTranslation';
@@ -80,9 +81,26 @@ function refineVenue(
 }
 
 /**
+ * What the host asks of the venue beside the price — the shared rules
+ * (`makeVenueOfferAskSchema`: at least one point, each and the note within the
+ * server's bounds), pinned on this form's own fields. mWeb's twin.
+ */
+function refineOfferAsk(values: PodFormValues, ctx: z.RefinementCtx, t: Translate) {
+  const ask = makeVenueOfferAskSchema(t).safeParse({
+    offerings: values.venue_offer_offerings,
+    note: values.venue_offer_note,
+  });
+  for (const issue of ask.error?.issues ?? []) {
+    const path = issue.path[0] === 'note' ? 'venue_offer_note' : 'venue_offer_offerings';
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: [path], message: issue.message });
+  }
+}
+
+/**
  * A physical pod offers its venue a window and terms: dates come from the
- * picked window, and the venue is told how it is paid. An edited pod that keeps
- * its already-booked slot (and its dates) never forces a new offer.
+ * picked window, the venue is told how it is paid and what the host needs from
+ * it. An edited pod that keeps its already-booked slot (and its dates) never
+ * forces a new offer.
  */
 function refineVenueOffer(values: PodFormValues, ctx: z.RefinementCtx, t: Translate) {
   if (values.venue_slot_id || keepsExistingBooking(values)) return;
@@ -95,6 +113,7 @@ function refineVenueOffer(values: PodFormValues, ctx: z.RefinementCtx, t: Transl
   if (offerRateOf(values.venue_offer_rate) <= 0) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['venue_offer_rate'], message: t('podForm.validation.offerRateRequired') });
   }
+  refineOfferAsk(values, ctx, t);
 }
 
 /** Meeting-link rules — only a VIRTUAL pod has one. */
@@ -227,6 +246,9 @@ export function makePodSchema(
       venue_slot_id: z.string().default(''),
       venue_offer_model: z.string().default(''),
       venue_offer_rate: z.string().default(''),
+      // Shape only — an offer's ask is checked in refineVenueOffer.
+      venue_offer_offerings: z.string().default(''),
+      venue_offer_note: z.string().default(''),
       kept_booking: z.string().default(''),
       location_id: z.string().default(''),
       zone_name: z.string().default(''),

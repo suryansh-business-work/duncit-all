@@ -14,3 +14,11 @@ export const PODFORM_OFFER_MODEL_KEY: Readonly<Record<string, string>> = {
   PER_SLOT: 'podForm.offer.model.perSlot',
   FLAT: 'podForm.offer.model.flat',
 };
+
+/** One line on how each pricing option pays the venue (per guest is a minimum order value per person). */
+export const PODFORM_OFFER_HELP_KEY: Readonly<Record<string, string>> = {
+  PER_GUEST: 'podForm.offer.help.perGuest',
+  PER_HOUR: 'podForm.offer.help.perHour',
+  PER_SLOT: 'podForm.offer.help.perSlot',
+  FLAT: 'podForm.offer.help.flat',
+};

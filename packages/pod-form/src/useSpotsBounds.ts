@@ -4,6 +4,7 @@ import { useAdminCategories } from '@duncit/category';
 import { spotsBounds, type SpotsBounds } from '@duncit/utils';
 import { usePodFormData } from './context';
 import { useVenueSlots } from './slots/useVenueSlots';
+import { useVenueOfferTerms } from './slots/useVenueOfferTerms';
 import { usePodSpotLimits } from './usePodSpotLimits';
 import type { PodFormValues } from './types';
 
@@ -16,7 +17,10 @@ import type { PodFormValues } from './types';
  *
  * Both reads are cache-first queries the form already issues elsewhere, so this
  * costs no extra round trip — Apollo serves the slot list the picker fetched and
- * the category tree the cascade fetched. The bounds themselves come from the one
+ * the category tree the cascade fetched. A pod that OFFERS its venue a window
+ * (no held slot) is also floored by the venue's minimum guests and capped by
+ * what the venue holds — one small read of that venue, shared with the offer
+ * terms (`useVenueOfferTerms`). The bounds themselves come from the one
  * shared `spotsBounds` in @duncit/utils, so the portals, mWeb and native cannot
  * disagree about the range (rules 27 + 40).
  *
@@ -37,6 +41,10 @@ export function useSpotsBounds(): SpotsBounds {
 
   const { categories } = useAdminCategories();
   const { slots } = useVenueSlots(venueId, podMode === 'VIRTUAL');
+  // A pod with no held slot offers its venue a window: the offer is for at
+  // least the venue's minimum guests, and no more than the venue holds.
+  const offering = config.showVenueSlot && podMode === 'PHYSICAL' && !slotId;
+  const offer = useVenueOfferTerms(offering ? venueId : '');
 
   const club = clubs.find((item: any) => String(item?.id) === String(clubId));
   // A club stores its SUB-category in `category_id`; an Auto Pod, having no
@@ -45,13 +53,13 @@ export function useSpotsBounds(): SpotsBounds {
   const subId = config.autoPod ? autoPodSubId : clubSubId;
   const minPax = categories.find((category) => category.id === subId)?.min_pax ?? 0;
 
-  const capacity = slots.find((slot) => slot.id === slotId)?.capacity ?? null;
+  const capacity = slots.find((slot) => slot.id === slotId)?.capacity ?? offer.capacity;
   const limits = usePodSpotLimits(editingPodDocId);
   if (limits) {
     return { min: limits.min, max: limits.max, slidable: limits.slidable };
   }
 
-  return spotsBounds({ minPax, venueCapacity: capacity });
+  return spotsBounds({ minPax, venueCapacity: capacity, venueMinPax: offer.minGuests });
 }
 
 /**

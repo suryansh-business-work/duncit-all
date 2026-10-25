@@ -131,9 +131,37 @@ describe('makePodSchema', () => {
     expect(paths).toContain('venue_offer_model');
     expect(paths).toContain('venue_offer_rate');
     const ok = makePodSchema(makeConfig({ showVenueSlot: true }), fallbackT).safeParse(
-      validValues({ venue_offer_model: 'PER_GUEST', venue_offer_rate: '300' }),
+      validValues({ venue_offer_model: 'PER_GUEST', venue_offer_rate: '300', venue_offer_offerings: 'A projector' }),
     );
     expect(ok.success).toBe(true);
+  });
+
+  it('requires the offer to name at least one thing the host needs from the venue', () => {
+    const terms = { venue_offer_model: 'PER_GUEST', venue_offer_rate: '300' };
+    const res = makePodSchema(makeConfig({ showVenueSlot: true }), fallbackT).safeParse(
+      validValues({ ...terms, venue_offer_offerings: '\n  \n- ' }),
+    );
+    expect(res.success).toBe(false);
+    expect(res.error?.issues.map((issue) => [issue.path.join('.'), issue.message])).toEqual([
+      ['venue_offer_offerings', 'Add at least one thing you need from the venue'],
+    ]);
+  });
+
+  it("holds the request note to the server's 1000 characters, and leaves it optional", () => {
+    const ask = { venue_offer_model: 'FLAT', venue_offer_rate: '5000', venue_offer_offerings: 'A projector' };
+    const schema = makePodSchema(makeConfig({ showVenueSlot: true }), fallbackT);
+    const long = schema.safeParse(validValues({ ...ask, venue_offer_note: 'n'.repeat(1001) }));
+    expect(long.error?.issues.map((issue) => [issue.path.join('.'), issue.message])).toEqual([
+      ['venue_offer_note', 'Keep the note under 1000 characters'],
+    ]);
+    expect(schema.safeParse(validValues({ ...ask, venue_offer_note: '' })).success).toBe(true);
+  });
+
+  it('asks nothing of the venue when no offer is sent — a held slot, or no venue step', () => {
+    expect(
+      makePodSchema(makeConfig({ showVenueSlot: true }), fallbackT).safeParse(validValues({ venue_slot_id: 'slot-1' })).success,
+    ).toBe(true);
+    expect(makePodSchema(makeConfig(), fallbackT).safeParse(validValues()).success).toBe(true);
   });
 
   it('asks no offer of an edit that keeps its booked slot', () => {

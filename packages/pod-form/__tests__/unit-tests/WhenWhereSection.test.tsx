@@ -85,9 +85,17 @@ const calendarQuery = (days: unknown[] = [OPEN_DAY], over: Partial<{ loading: bo
 });
 const quoteQuery = (venueOfferQuote: unknown) => ({ data: { venueOfferQuote }, loading: false, error: undefined });
 
-/** Routes the form's three reads: the offer quote, the offer calendar, the venue's slots. */
-function routeQueries({ calendar = calendarQuery(), quote = quoteQuery(null), slots = slotsQuery([]) } = {}) {
-  useQueryMock.mockImplementation((_doc: unknown, options: { variables?: Record<string, unknown> }) => {
+const termsQuery = (publicVenue: unknown) => ({ data: { publicVenue }, loading: false, error: undefined });
+
+/** Routes the form's four reads: the venue's offer bounds, the offer quote, the offer calendar, the venue's slots. */
+function routeQueries({
+  calendar = calendarQuery(),
+  quote = quoteQuery(null),
+  slots = slotsQuery([]),
+  terms = termsQuery(null),
+} = {}) {
+  useQueryMock.mockImplementation((doc: unknown, options: { variables?: Record<string, unknown> }) => {
+    if (String(doc).includes('PodFormVenueOfferTerms')) return terms;
     if (options?.variables && 'offer' in options.variables) return quote;
     if (options?.variables && 'to' in options.variables) return calendar;
     return slots;
@@ -360,6 +368,78 @@ describe('WhenWhereSection (offer terms)', () => {
     renderWW(termsData(), { club_id: 'c1', venue_id: 'v1', venue_offer_model: 'FLAT', venue_offer_rate: '5000' });
     const asked = useQueryMock.mock.calls.filter(([, options]) => options?.variables && 'offer' in options.variables);
     expect(asked.every(([, options]) => options.skip)).toBe(true);
+  });
+
+  it('says how the picked option pays the venue — per guest is a minimum order value per person', () => {
+    routeQueries();
+    renderWW(termsData(), { ...WINDOW, venue_offer_model: 'PER_GUEST' });
+    expect(screen.getByText(/A minimum order value per person/)).toBeInTheDocument();
+    expect(screen.queryByText('Per guest, per hour, for the time slot, or one flat price')).not.toBeInTheDocument();
+  });
+
+  it('keeps the general hint until an option is picked', () => {
+    routeQueries();
+    renderWW(termsData(), WINDOW);
+    expect(screen.getByText('Per guest, per hour, for the time slot, or one flat price')).toBeInTheDocument();
+  });
+
+  it('asks what the host needs from the venue (required) and an optional note — and never prices them', async () => {
+    const user = userEvent.setup();
+    routeQueries({ quote: quoteQuery({ ok: true, message: null, quote: QUOTE }) });
+    const ref = renderWW(termsData(), { ...WINDOW, venue_offer_model: 'PER_GUEST', venue_offer_rate: '300' });
+    const offerings = screen.getByRole('textbox', { name: /What you need from the venue/ });
+    expect(offerings).toBeRequired();
+    expect(screen.getByRole('textbox', { name: 'Request from the venue (optional)' })).not.toBeRequired();
+
+    await user.type(offerings, 'A projector{enter}10 chairs');
+    await user.type(screen.getByRole('textbox', { name: 'Request from the venue (optional)' }), 'We start at 7');
+    expect(ref.current?.getValues('venue_offer_offerings')).toBe('A projector\n10 chairs');
+    expect(ref.current?.getValues('venue_offer_note')).toBe('We start at 7');
+    const offers = useQueryMock.mock.calls
+      .filter(([, options]) => options?.variables?.offer)
+      .map(([, options]) => options.variables.offer);
+    expect(offers.length).toBeGreaterThan(0);
+    for (const offer of offers) {
+      expect(offer).not.toHaveProperty('offerings');
+      expect(offer).not.toHaveProperty('note');
+    }
+  });
+
+  it("names the venue's minimum guests when it has one", () => {
+    routeQueries({ terms: termsQuery({ id: 'v1', capacity: 40, offer_min_guests: 8 }) });
+    renderWW(termsData(), WINDOW);
+    expect(screen.getByTestId('pod-form-venue-minimum')).toHaveTextContent('This venue takes bookings for at least 8 guests.');
+  });
+
+  it('says no minimum when the venue names none', () => {
+    routeQueries({ terms: termsQuery({ id: 'v1', capacity: 40, offer_min_guests: 0 }) });
+    renderWW(termsData(), WINDOW);
+    expect(screen.queryByTestId('pod-form-venue-minimum')).not.toBeInTheDocument();
+  });
+
+  it("reads a per-guest offer as a range from the venue's minimum to the spots", () => {
+    const quoteMin = { ...QUOTE, pax: 8, base: 2400, taxes: 432, platform_fee: 283.2, venue_payout: 2832, total: 3115.2 };
+    routeQueries({ quote: quoteQuery({ ok: true, message: null, quote: QUOTE, quote_min: quoteMin }) });
+    renderWW(termsData({ platform_fee_pct: 10, gst_pct: 18, currency_symbol: '₹' }), {
+      ...WINDOW,
+      venue_offer_model: 'PER_GUEST',
+      venue_offer_rate: '300',
+    });
+    expect(screen.getByTestId('pod-form-offer-venue-range')).toHaveTextContent('₹2,832.00 – ₹3,540.00');
+    expect(screen.getByTestId('pod-form-offer-total-range')).toHaveTextContent('₹3,115.20 – ₹3,894.00');
+    expect(screen.getByText('From 8 guests, the fewest the venue is paid for, up to your 10 spots.')).toBeInTheDocument();
+    expect(screen.queryByTestId('pod-form-offer-total')).not.toBeInTheDocument();
+  });
+
+  it('reads one total when both ends of the guests cost the same', () => {
+    routeQueries({ quote: quoteQuery({ ok: true, message: null, quote: QUOTE, quote_min: { ...QUOTE, pax: 8 } }) });
+    renderWW(termsData({ platform_fee_pct: 10, gst_pct: 18, currency_symbol: '₹' }), {
+      ...WINDOW,
+      venue_offer_model: 'FLAT',
+      venue_offer_rate: '5000',
+    });
+    expect(screen.getByTestId('pod-form-offer-total')).toHaveTextContent('₹3,894');
+    expect(screen.queryByTestId('pod-form-offer-range')).not.toBeInTheDocument();
   });
 });
 

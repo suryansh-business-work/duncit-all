@@ -44,7 +44,7 @@ export default defineDemos('pod-form', [
     id: 'schema',
     title: 'One pod form, configured per surface',
     note:
-      'Turn showFinance off and the money rules stop applying; turn showVenueSlot off and the slot stops being required. The same component and the same schema serve Admin and Club Admin — the config is the only difference.',
+      'Turn showFinance off and the money rules stop applying; turn showVenueSlot off and the slot stops being required. Give the pod a venue_id and it offers that venue a window: it then needs a pricing option, an amount and at least one line in venue_offer_offerings (what the host needs from the venue; venue_offer_note is optional, up to 1000 characters). The same component and the same schema serve Admin and Club Admin — the config is the only difference.',
     mock: {
       config: {
         showHosts: true,

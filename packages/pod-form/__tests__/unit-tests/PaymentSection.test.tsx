@@ -421,6 +421,41 @@ describe('PaymentSection — spots bounds', () => {
     expect(screen.getByText('This activity needs at least 4 people.')).toBeInTheDocument();
   });
 
+  // No held slot: the pod offers its venue a window, and the server refuses an
+  // offer below the venue's minimum guests or above what the venue holds.
+  it("floors an offer at the venue's minimum and caps it at what the venue holds", () => {
+    apollo.data = {
+      categories: CATEGORIES,
+      venueAvailableSlots: [],
+      publicVenue: { id: 'v1', capacity: 40, offer_min_guests: 8 },
+    };
+    const ref = renderPayment(makeData({ clubs: [BADMINTON_CLUB] as never, config: makeConfig({ showVenueSlot: true }) }), {
+      club_id: 'c1',
+      venue_id: 'v1',
+      pod_mode: 'PHYSICAL',
+      no_of_spots: 4,
+    });
+    expect(screen.getByText(/needs at least 8, and the space booked holds 40/)).toBeInTheDocument();
+    // The form is raised to the floor it shows.
+    expect(ref.current?.getValues('no_of_spots')).toBe(8);
+  });
+
+  it('floors nothing by a venue minimum while the pod keeps a held slot', () => {
+    apollo.data = {
+      categories: CATEGORIES,
+      venueAvailableSlots: [{ id: 's1', start_at: '', end_at: '', notes: '', capacity: 30 }],
+      publicVenue: { id: 'v1', capacity: 40, offer_min_guests: 8 },
+    };
+    renderPayment(makeData({ clubs: [BADMINTON_CLUB] as never, config: makeConfig({ showVenueSlot: true }) }), {
+      club_id: 'c1',
+      venue_id: 'v1',
+      venue_slot_id: 's1',
+      pod_mode: 'PHYSICAL',
+      no_of_spots: 10,
+    });
+    expect(screen.getByText(/needs at least 4, and the space booked holds 30/)).toBeInTheDocument();
+  });
+
   it('falls back to the plain hint when the activity sets no minimum', () => {
     apollo.data = { categories: [], venueAvailableSlots: [] };
     renderPayment(makeData({ clubs: [BADMINTON_CLUB] as never }), {

@@ -213,7 +213,28 @@ describe('buildPodInput', () => {
       pets: false,
       model: 'PER_HOUR',
       rate: 800,
+      // Nothing typed into the ask yet: the schema refuses that before it is sent.
+      offerings: [],
+      note: '',
     });
+  });
+
+  it('sends what the host asks of the venue with the offer: one point per line and the trimmed note', () => {
+    const input = buildPodInput(
+      baseValues({
+        pod_mode: 'PHYSICAL',
+        venue_id: 'v1',
+        pod_date_time: new Date('2030-06-01T10:00:00.000Z'),
+        pod_end_date_time: new Date('2030-06-01T12:00:00.000Z'),
+        no_of_spots: 12,
+        venue_offer_model: 'PER_GUEST',
+        venue_offer_rate: '300',
+        venue_offer_offerings: '- A projector\n\n10 chairs ',
+        venue_offer_note: '  We start sharp at 7  ',
+      }),
+      { config: makeConfig({ showVenueSlot: true }) },
+    );
+    expect(input.venue_offer).toMatchObject({ offerings: ['A projector', '10 chairs'], note: 'We start sharp at 7' });
   });
 
   it('sends no offer until the window and the terms are all there', () => {

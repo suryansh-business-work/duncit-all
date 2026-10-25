@@ -37,6 +37,10 @@ export interface PodFormValues {
   venue_offer_model: string;
   /** Venue offer: the amount typed for that option, in rupees ('' until typed). */
   venue_offer_rate: string;
+  /** Venue offer: what the host needs from the venue, one point per line (at least one). */
+  venue_offer_offerings: string;
+  /** Venue offer: the request note to the venue (optional). */
+  venue_offer_note: string;
   /** On an edit: the venue + window the pod was loaded with (bookingKeyOf), so an
    * edit that keeps them keeps its booking. '' for a new pod. */
   kept_booking: string;
@@ -282,6 +286,8 @@ export const blankPodFormValues: PodFormValues = {
   venue_slot_id: '',
   venue_offer_model: '',
   venue_offer_rate: '',
+  venue_offer_offerings: '',
+  venue_offer_note: '',
   kept_booking: '',
   location_id: '',
   zone_name: '',

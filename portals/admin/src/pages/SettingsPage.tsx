@@ -4,6 +4,7 @@ import AppearanceSection from './settings-page/AppearanceSection';
 import DisplayFormatsSection from './settings-page/DisplayFormatsSection';
 import TimeSourceSection from './settings-page/TimeSourceSection';
 import MinAgeSection from './settings-page/MinAgeSection';
+import VenueOffersSection from './settings-page/venue-offers';
 import AccountDeletionSection from './settings-page/account-deletion';
 import { useTranslation } from '@duncit/shell';
 
@@ -24,6 +25,7 @@ export default function SettingsPage() {
       <DisplayFormatsSection onToast={setToast} />
       <TimeSourceSection onToast={setToast} />
       <MinAgeSection onToast={setToast} />
+      <VenueOffersSection onToast={setToast} />
       <AccountDeletionSection onToast={setToast} />
       <Snackbar
         open={!!toast}

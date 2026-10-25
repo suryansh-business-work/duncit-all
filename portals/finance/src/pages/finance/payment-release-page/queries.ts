@@ -96,6 +96,11 @@ const RELEASE_ROW_FIELDS = gql`
       attended_total
       venue_slot_price
       include_slot_price
+      venue_extra_amount
+      venue_min_guests
+      venue_pax
+      venue_agreed_model
+      venue_agreed_rate
     }
   }
 `;
@@ -209,6 +214,15 @@ export interface ReleaseBreakdown {
   booked_seats: number;
   venue_slot_price: number;
   include_slot_price: boolean;
+  /** Extra charges on the venue's bill, paid on top of the agreed amount (0 on older releases). */
+  venue_extra_amount: number;
+  /** An agreed per-guest booking's minimum guests (0 = none). */
+  venue_min_guests: number;
+  /** The guests the venue was charged for — on a per-guest booking, never fewer than its minimum. */
+  venue_pax: number;
+  /** The agreed offer's pricing model (VenueOfferModel) and rate; null before offers. */
+  venue_agreed_model: string | null;
+  venue_agreed_rate: number | null;
 }
 
 /** One request with every payout on it. */

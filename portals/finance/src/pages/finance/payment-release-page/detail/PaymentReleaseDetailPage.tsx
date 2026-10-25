@@ -11,6 +11,7 @@ import { formatDateTime, useTranslation } from '@duncit/app-settings';
 import PaymentReleaseReviewForm from '../payment-release-review';
 import ReleasePayoutList from './ReleasePayoutList';
 import ReleaseMediaGallery from './ReleaseMediaGallery';
+import AgreedTermsLine from './AgreedTermsLine';
 import { buildReleaseRequestView } from './release-terms';
 import { usePodPaymentRelease } from './usePodPaymentRelease';
 import { POD_FINANCE_BREAKDOWN, money, type PodFinanceBreakdown } from '../../pod-finance-page/queries';
@@ -88,6 +89,7 @@ function RequestBody({ detail, ctl }: Readonly<{ detail: PodPaymentReleaseDetail
       <Stack spacing={2} sx={{ maxWidth: 880 }}>
         {billLines.length > 0 && (
           <Section title={billLabels.title}>
+            {view.agreed && <AgreedTermsLine agreed={view.agreed} symbol={ctl.symbol} />}
             <VenueBillSummary lines={billLines} billUrl={view.billUrl} viewBillLabel={billLabels.viewBill} />
           </Section>
         )}

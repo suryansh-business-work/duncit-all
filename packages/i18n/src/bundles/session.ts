@@ -80,6 +80,7 @@ export const SESSION_BUNDLE: NestedCatalogue = {
         localization: 'Languages and every string across Duncit, translated with AI.',
         targets: 'The goals each team is working towards, and how close they are.',
         gigJobs: 'Every gig, freelancer and category behind Gig Jobs, moderated in one place.',
+        mcp: 'Connect Claude, ChatGPT or Gemini to Duncit and see every tool call.',
         support: 'Tickets, live chat and customer support.',
         tech: 'Environment, feature flags and platform config.',
         websiteApp: 'Site content, careers, newsroom and blog.',

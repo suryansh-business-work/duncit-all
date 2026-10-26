@@ -5,6 +5,7 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import { QueryGuard } from '@duncit/ui';
 import { notifySuccess, notifyError } from '@duncit/dialogs';
 import { useTranslation } from '@duncit/app-settings';
+import { parseApiError } from '@duncit/utils';
 import {
   BLANK_ONBOARDING_INTRO,
   ONBOARDING_INTRO_SETTINGS,
@@ -34,7 +35,7 @@ export default function OnboardingSettingsPage() {
       await update({ variables: { input: values } });
       notifySuccess(t('onboarding.settingsPage.saved'));
     } catch (e) {
-      const message = e instanceof Error ? e.message : t('onboarding.settingsPage.saveFailed');
+      const message = parseApiError(e, t('onboarding.settingsPage.saveFailed'));
       setSaveError(message);
       notifyError(message);
     }

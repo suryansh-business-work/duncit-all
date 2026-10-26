@@ -84,6 +84,19 @@ describe('CancellationTriggerForm', () => {
     );
   });
 
+  it('removes the last band and keeps the one before it, with its sentence', () => {
+    renderForm(ladder);
+
+    fireEvent.click(screen.getAllByRole('button', { name: 'Remove refund band' })[1]);
+
+    expect(hoursInputs()).toHaveLength(1);
+    expect(hoursInputs()[0]).toHaveValue(48);
+    expect(
+      screen.getByText('100% refund if the pod is cancelled more than 48 hours before the start time.'),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/50% refund/)).not.toBeInTheDocument();
+  });
+
   // Two bands with the same window cannot both apply — the server refuses the pair.
   it('flags a second band on the same window instead of saving', async () => {
     const onSubmit = renderForm(ladder);

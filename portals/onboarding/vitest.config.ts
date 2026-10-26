@@ -81,12 +81,11 @@ export default defineConfig({
         'src/pages/host-details-page/HostDetailsPage.tsx',
         'src/pages/venues-page/VenuesPage.tsx',
         'src/pages/venues-page/VenueEditDialog.tsx',
-        // E-commerce brands: Apollo list container + presentational review dialog
-        // (the table is unit-tested; rendered only for a non-null brand). The
-        // admin edit dialog + its form-section fields are the same class of
-        // MediaPicker/Apollo-driven edit UI as the excluded host/venue dialogs.
+        // E-commerce brands: Apollo list container (the table and the review
+        // dialog are unit-tested). The admin edit dialog + its form-section
+        // fields are the same class of MediaPicker/Apollo-driven edit UI as
+        // the excluded host/venue dialogs.
         'src/pages/ecomm-brands-page/EcommBrandsPage.tsx',
-        'src/pages/ecomm-brands-page/EcommBrandReviewDialog.tsx',
         'src/pages/ecomm-brands-page/EcommBrandEditDialog.tsx',
         'src/pages/ecomm-brands-page/EcommBrandEditFields.tsx',
         // Club Admins list: Apollo container (partnersTable query) — same class

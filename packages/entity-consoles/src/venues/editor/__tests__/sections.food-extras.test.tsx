@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { gql } from '@apollo/client';
 import type { MockedResponse } from '@apollo/client/testing';
 import { blankFoodDish, FOOD_CURRENCY_QUERY, VENUE_TABLE_STICKERS_QUERY } from '@duncit/utils';
@@ -400,5 +400,41 @@ describe('VenueDetailsSection — the venue videos', () => {
 
     expect(screen.getByTestId('venue-editor-videos-upload')).toBeDisabled();
     expect(screen.queryByRole('textbox', { name: 'YouTube link' })).not.toBeInTheDocument();
+  });
+});
+
+describe('VenueDetailsSection — whose videos the upload names', () => {
+  const mount = (over: Partial<VenueFormValues> = {}) =>
+    renderForm<VenueFormValues>(
+      venueValues(over),
+      ({ control }) => (
+        <VenueDetailsSection
+          control={control}
+          onPick={vi.fn()}
+          categoryLimit={5}
+          minCategories={0}
+          venueId="venue-1"
+          videoLimit={2}
+        />
+      ),
+      catalogueMocks,
+    );
+
+  it('names the venue on the upload button, trimmed', () => {
+    mount({ venue_name: '  Third Wave  ' });
+    expect(screen.getByRole('button', { name: 'Upload a video of Third Wave' })).toBeInTheDocument();
+  });
+
+  it('falls back to the section’s own name for a venue with a blank name', () => {
+    mount({ venue_name: '   ' });
+    expect(screen.getByRole('button', { name: 'Upload a video of Photos' })).toBeInTheDocument();
+  });
+
+  it('shows the form’s validation message under the videos', async () => {
+    const { form } = mount({ videos: [YOUTUBE] });
+
+    act(() => form().setError('videos', { type: 'validation', message: 'A video link is too long' }));
+
+    expect(await screen.findByText('A video link is too long')).toBeInTheDocument();
   });
 });

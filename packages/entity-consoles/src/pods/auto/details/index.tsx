@@ -50,8 +50,7 @@ export default function AutoPodDetailsPage() {
           notFoundSeverity="warning"
           notFoundText={t('admin.autoPods.detailsNotFound')}
         >
-          {() =>
-            row ? (
+          {row && (
               <Stack spacing={2}>
                 <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', flexWrap: 'wrap' }}>
                   <AutoModeIcon color="primary" />
@@ -88,8 +87,7 @@ export default function AutoPodDetailsPage() {
 
                 <AutoPodSummary row={row} t={t} labels={labels} formatDateTime={formatDateTime} />
               </Stack>
-            ) : null
-          }
+          )}
         </QueryGuard>
       </Stack>
 

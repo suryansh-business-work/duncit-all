@@ -37,11 +37,10 @@ export default function IosSigningFiles({ buildId }: Readonly<{ buildId: string 
   const [p12, setP12] = useState<P12Notice | null>(null);
   const signing = data?.iosSigningForBuild ?? null;
 
-  const onDownload = async (kind: IosSigningFileKind) => {
-    if (!signing) return;
+  const onDownload = async (signingId: string, kind: IosSigningFileKind) => {
     setBusy(kind);
     try {
-      const res = await download({ variables: { id: signing.id, kind } });
+      const res = await download({ variables: { id: signingId, kind } });
       const file = res.data?.downloadIosSigningFile;
       if (!file) return;
       downloadBase64File(file.content_base64, file.file_name, 'application/octet-stream');
@@ -80,7 +79,7 @@ export default function IosSigningFiles({ buildId }: Readonly<{ buildId: string 
                 startIcon={<DownloadIcon />}
                 loading={busy === f.kind}
                 disabled={busy !== null && busy !== f.kind}
-                onClick={() => onDownload(f.kind)}
+                onClick={() => onDownload(signing.id, f.kind)}
               >
                 {t(f.labelKey)}
               </DuncitButton>

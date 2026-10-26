@@ -33,6 +33,7 @@ export default function PodRentalsSection({ podId, editTo }: Readonly<Props>) {
   const { data, loading, error } = useQuery(POD_RENTALS, { variables: { pod_id: podId }, fetchPolicy: 'cache-and-network' });
   const catalogue = data?.podRentals;
   const items = catalogue?.items ?? [];
+  const currencySymbol = catalogue?.currency_symbol ?? '';
 
   return (
     <Stack spacing={2}>
@@ -65,7 +66,7 @@ export default function PodRentalsSection({ podId, editTo }: Readonly<Props>) {
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'right' }}>
                 {t('venueRentals.guest.rate', {
-                  vars: { amount: rentalMoney(catalogue?.currency_symbol ?? '', item.rate), unit: t(rentalUnitKey(item.unit)) },
+                  vars: { amount: rentalMoney(currencySymbol, item.rate), unit: t(rentalUnitKey(item.unit)) },
                 })}
                 {' · '}
                 {item.available > 0 ? t('venueRentals.guest.left', { vars: { count: item.available } }) : t('venueRentals.guest.soldOut')}

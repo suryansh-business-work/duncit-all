@@ -99,6 +99,9 @@ export function SelectionHeaderCheckbox({ api }: Readonly<CustomHeaderProps>) {
 
   useEffect(() => {
     const sync = () => {
+      // AG Grid flushes queued events on a timer, so one can land after the grid
+      // is gone — and a destroyed api has no methods left to read the page with.
+      if (api.isDestroyed()) return;
       let total = 0;
       api.forEachNode(() => {
         total += 1;

@@ -3,7 +3,7 @@ import { useTranslation } from '@duncit/shell';
 import { formatDateTime } from '@duncit/app-settings';
 import type { StoreReleaseAdvice } from './queries';
 
-type ChipColor = 'default' | 'info' | 'success' | 'warning';
+type ChipColor = 'info' | 'success' | 'warning';
 
 const CONFIDENCE_COLOR: Record<string, ChipColor> = { HIGH: 'success', MEDIUM: 'info', LOW: 'warning' };
 const CONFIDENCE_KEY: Record<string, string> = {
@@ -51,7 +51,7 @@ export default function ReleaseAdvice({ advice }: Readonly<{ advice: StoreReleas
           <Chip
             size="small"
             variant="outlined"
-            color={CONFIDENCE_COLOR[advice.confidence] ?? 'default'}
+            color={CONFIDENCE_COLOR[advice.confidence]}
             label={t(confidenceKey)}
           />
         )}

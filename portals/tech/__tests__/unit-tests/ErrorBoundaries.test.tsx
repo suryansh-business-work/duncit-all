@@ -113,6 +113,16 @@ describe('ErrorBoundaryDetailDialog', () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
+  it('shows a dash for the app version, URL and session when the crash carried none', () => {
+    render(<ErrorBoundaryDetailDialog row={makeRow({ client: null, url: null, session_id: null })} onClose={vi.fn()} />);
+    const dialog = screen.getByRole('dialog');
+    const valueOf = (label: string | RegExp) => within(dialog).getByText(label).nextElementSibling?.textContent;
+
+    expect(valueOf('App version')).toBe('—');
+    expect(valueOf('URL')).toBe('—');
+    expect(valueOf('Session')).toBe('—');
+  });
+
   it('falls back to the route as the title and leaves out stacks it never received', () => {
     render(
       <ErrorBoundaryDetailDialog

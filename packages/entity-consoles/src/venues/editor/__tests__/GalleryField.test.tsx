@@ -61,3 +61,32 @@ describe('GalleryField', () => {
     expect(screen.getByRole('img', { name: 'Venue photo' })).toHaveAttribute('src', TERRACE);
   });
 });
+
+describe('GalleryField / a server cap on the list', () => {
+  const renderCapped = (gallery: string[], limit: number) =>
+    renderForm<VenueFormValues>({ ...blankVenueValues, gallery }, ({ control }) => (
+      <GalleryField control={control} onPick={vi.fn().mockResolvedValue(TERRACE)} limit={limit} />
+    ));
+
+  it('keeps adding until the cap is reached, then stops the button', async () => {
+    const user = userEvent.setup();
+    const { form } = renderCapped([FRONT], 2);
+
+    const add = screen.getByRole('button', { name: 'Add a photo' });
+    expect(add).toBeEnabled();
+    await user.click(add);
+
+    await waitFor(() => expect(form().getValues('gallery')).toEqual([FRONT, TERRACE]));
+    expect(screen.getByRole('button', { name: 'Add a photo' })).toBeDisabled();
+  });
+
+  it('opens at the cap with the button already disabled, and frees it when a photo is removed', async () => {
+    const user = userEvent.setup();
+    renderCapped([FRONT, TERRACE], 2);
+
+    expect(screen.getByRole('button', { name: 'Add a photo' })).toBeDisabled();
+    await user.click(screen.getAllByRole('button', { name: 'Remove this photo' })[0]);
+
+    expect(screen.getByRole('button', { name: 'Add a photo' })).toBeEnabled();
+  });
+});

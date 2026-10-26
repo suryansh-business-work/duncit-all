@@ -61,7 +61,7 @@ function DishRow({ dish }: Readonly<{ dish: VenueFoodItem }>) {
  */
 export default function VenueFoodCard({ venue }: Readonly<{ venue: AdminVenueDetail }>) {
   const { t } = useTranslation();
-  const menu = venue.food_menu ?? [];
+  const menu = venue.food_menu;
   const title = t('directory.venueFood.title');
 
   if (!venue.offers_food) {
@@ -82,7 +82,7 @@ export default function VenueFoodCard({ venue }: Readonly<{ venue: AdminVenueDet
         <InfoRow
           label={t('directory.venueFood.qrOrdering')}
           value={
-            ordering?.enabled
+            ordering.enabled
               ? t('directory.venueFood.orderingOn')
               : t('directory.venueFood.orderingOff')
           }
@@ -90,7 +90,7 @@ export default function VenueFoodCard({ venue }: Readonly<{ venue: AdminVenueDet
         <InfoRow
           label={t('directory.venueFood.discount')}
           value={t('directory.venueFood.discountValue', {
-            vars: { pct: ordering?.discount_pct ?? 0 },
+            vars: { pct: ordering.discount_pct },
           })}
         />
 

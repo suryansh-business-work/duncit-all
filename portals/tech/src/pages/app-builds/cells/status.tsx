@@ -29,8 +29,8 @@ export const makeStatusOptions = (labels: StatusLabels) => [
 ];
 
 export const makeEnvOptions = (labels: Record<string, string>) => [
-  { value: 'PRODUCTION', label: labels.PRODUCTION ?? 'PRODUCTION' },
-  { value: 'STAGING', label: labels.STAGING ?? 'STAGING' },
+  { value: 'PRODUCTION', label: labels.PRODUCTION },
+  { value: 'STAGING', label: labels.STAGING },
 ];
 
 export const getRowId = (row: AppBuildRow) => row.id;

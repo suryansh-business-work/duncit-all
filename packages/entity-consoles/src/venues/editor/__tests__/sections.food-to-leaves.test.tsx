@@ -151,6 +151,27 @@ describe('DocumentsSection', () => {
   });
 });
 
+describe('DocumentsSection / removing a document', () => {
+  it('removes only the document whose button was pressed', async () => {
+    const onPick = vi.fn<PickMedia>().mockResolvedValue(null);
+    const { form } = renderForm<VenueFormValues>(
+      venueValues({
+        documents: [
+          { type: 'GST', url: 'https://cdn.example.test/gst.pdf' },
+          { type: 'FSSAI', url: 'https://cdn.example.test/fssai.pdf' },
+        ],
+      }),
+      ({ control }) => <DocumentsSection control={control} config={registrationConfig()} onPick={onPick} />,
+    );
+    const section = within(sectionCard('documents', 'Venue Documents'));
+
+    fireEvent.click(section.getAllByRole('button', { name: 'Remove this document' })[0]);
+
+    expect(form().getValues('documents')).toEqual([{ type: 'FSSAI', url: 'https://cdn.example.test/fssai.pdf' }]);
+    expect(section.getAllByRole('button', { name: 'Remove this document' })).toHaveLength(1);
+  });
+});
+
 describe('OwnerSection and PayoutSection', () => {
   it("keeps the owner's contact in Owner Details and leaves the payout to its own section", () => {
     const { form } = renderForm<VenueFormValues>(venueValues(), ({ control, setValue }) => (

@@ -24,8 +24,9 @@ async function pickPhotos(room: number): Promise<ImagePicker.ImagePickerAsset[] 
 /**
  * Photos attached to a counter offer: picked from the device's library (photos
  * only — never stock images or videos, which the server refuses) and uploaded
- * to ImageKit the way a chat photo is, up to the server's four. Each upload
- * joins the list as it lands, so a later failure keeps the earlier ones.
+ * to ImageKit the way a chat photo is, up to the server's four. They upload
+ * side by side; every one that lands joins the list, so one failure never
+ * costs the others.
  * `images` is the form's list; `onChange` writes it back.
  */
 export function useOfferPhotos(images: readonly string[], onChange: (next: string[]) => void) {
@@ -47,17 +48,23 @@ export function useOfferPhotos(images: readonly string[], onChange: (next: strin
         return;
       }
       setUploading(true);
-      let next = [...current.current];
-      for (const asset of assets) {
-        if (!asset.base64) continue;
-        const url = await uploadChatImage({
-          base64: asset.base64,
-          fileName: asset.fileName,
-          mimeType: asset.mimeType,
-        });
-        next = [...next, url].slice(0, VENUE_OFFER_IMAGES_MAX);
-        onChange(next);
-      }
+      // A photo the picker could not read is skipped; the rest upload side by side.
+      const readable = assets.flatMap((asset) =>
+        asset.base64
+          ? [{ base64: asset.base64, fileName: asset.fileName, mimeType: asset.mimeType }]
+          : [],
+      );
+      const uploads = await Promise.allSettled(readable.map((photo) => uploadChatImage(photo)));
+      const added = uploads.flatMap((upload) =>
+        upload.status === 'fulfilled' ? [upload.value] : [],
+      );
+      if (added.length > 0)
+        onChange([...current.current, ...added].slice(0, VENUE_OFFER_IMAGES_MAX));
+      // Every photo that did upload is kept; the first refusal is the one the reader is told.
+      const refused = uploads.find(
+        (upload): upload is PromiseRejectedResult => upload.status === 'rejected',
+      );
+      if (refused) throw refused.reason;
     } catch (err: unknown) {
       logs.mobileApp.warn('offerPhotos', 'upload', { error: err });
       setError(toErrorMessage(err, t('availability.offers.chat.actionFailed')));

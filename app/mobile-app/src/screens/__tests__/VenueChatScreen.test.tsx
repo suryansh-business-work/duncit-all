@@ -270,7 +270,7 @@ describe('VenueChatScreen', () => {
     const reacted = venueChatLine({ id: 'l2', reactions: [{ user_id: 'u1', emoji: '👍' }] });
     mount(chatState({ messages: [reacted] }));
     const chip = screen.getByTestId('reaction-l2-👍');
-    expect(chip).toHaveProp('aria-selected', true);
+    expect(chip).toHaveProp('aria-checked', true);
     fireEvent.press(chip);
     await waitFor(() => expect(lineActions.react).toHaveBeenCalledWith('l2', '👍'));
   });

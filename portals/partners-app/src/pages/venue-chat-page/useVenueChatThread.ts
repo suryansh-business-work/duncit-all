@@ -20,7 +20,7 @@ export function syncWithPage(
 ): VenueChatLine[] {
   const onPage = new Set(page.map((line) => line.id));
   const oldest = page.length >= VENUE_CHAT_PAGE ? Date.parse(page[0]?.createdAt ?? '') : -Infinity;
-  const newest = page.length > 0 ? Date.parse(page[page.length - 1]?.createdAt ?? '') : -Infinity;
+  const newest = page.length > 0 ? Date.parse(page.at(-1)?.createdAt ?? '') : -Infinity;
   const kept = current.filter((line) => {
     const at = Date.parse(line.createdAt);
     return onPage.has(line.id) || at < oldest || (at > newest && sentHere.has(line.id));

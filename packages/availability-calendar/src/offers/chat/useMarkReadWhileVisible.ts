@@ -1,5 +1,8 @@
 import { useEffect } from 'react';
+import { createLogger, fireAndForget } from '@duncit/logs';
 import type { VenueChatLine } from '@duncit/utils';
+
+const logger = createLogger('portal');
 
 /** Whether the reader can see the thread right now (a hidden tab has read nothing). */
 const pageVisible = () => document.visibilityState === 'visible';
@@ -20,12 +23,12 @@ export function useMarkReadWhileVisible(
   const newestFromOthers = newest && newest.user_id !== meId ? newest.id : null;
 
   useEffect(() => {
-    if (newestFromOthers && pageVisible()) markRead(podId);
+    if (newestFromOthers && pageVisible()) fireAndForget(markRead(podId), logger, 'venueChat', 'markRead');
   }, [newestFromOthers, podId, markRead]);
 
   useEffect(() => {
     const onVisible = () => {
-      if (pageVisible()) markRead(podId);
+      if (pageVisible()) fireAndForget(markRead(podId), logger, 'venueChat', 'markRead');
     };
     document.addEventListener('visibilitychange', onVisible);
     return () => document.removeEventListener('visibilitychange', onVisible);

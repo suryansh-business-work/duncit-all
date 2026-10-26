@@ -85,6 +85,47 @@ describe('useOfferPhotos', () => {
     expect(mockPermission).not.toHaveBeenCalled();
   });
 
+  it('keeps every photo that uploaded when another is refused, and says why', async () => {
+    mockLibrary.mockResolvedValue({
+      canceled: false,
+      assets: [
+        { base64: 'A', fileName: 'a.jpg', mimeType: 'image/jpeg' },
+        { base64: 'B', fileName: 'b.jpg', mimeType: 'image/jpeg' },
+        { base64: 'C', fileName: 'c.jpg', mimeType: 'image/jpeg' },
+      ],
+    });
+    mockUpload
+      .mockResolvedValueOnce(url(2))
+      .mockRejectedValueOnce(new Error('Upload too large'))
+      .mockResolvedValueOnce(url(3));
+    const onChange = jest.fn();
+    const { result } = renderHook(() => useOfferPhotos([url(1)], onChange));
+    await act(async () => {
+      await result.current.add();
+    });
+    expect(mockUpload).toHaveBeenCalledTimes(3);
+    expect(onChange).toHaveBeenCalledTimes(1);
+    expect(onChange).toHaveBeenCalledWith([url(1), url(2), url(3)]);
+    expect(result.current.error).toBe('Upload too large');
+    expect(mockWarn).toHaveBeenCalledWith('offerPhotos', 'upload', { error: expect.any(Error) });
+    expect(result.current.uploading).toBe(false);
+  });
+
+  it('adds nothing and says why when every upload is refused', async () => {
+    mockLibrary.mockResolvedValue({
+      canceled: false,
+      assets: [{ base64: 'A', fileName: 'a.jpg', mimeType: 'image/jpeg' }],
+    });
+    mockUpload.mockRejectedValue(new Error('Network down'));
+    const onChange = jest.fn();
+    const { result } = renderHook(() => useOfferPhotos([], onChange));
+    await act(async () => {
+      await result.current.add();
+    });
+    expect(onChange).not.toHaveBeenCalled();
+    expect(result.current.error).toBe('Network down');
+  });
+
   it('says why the library could not open, and logs it', async () => {
     mockLibrary.mockRejectedValue(new Error('Picker unavailable'));
     const { result } = renderHook(() => useOfferPhotos([], jest.fn()));

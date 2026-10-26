@@ -29,8 +29,9 @@ describe('ChatLineMeta', () => {
     );
     const mine = screen.getByTestId('reaction-l1-👍');
     expect(mine).toHaveTextContent('👍 2');
-    expect(mine).toHaveProp('aria-selected', true);
-    expect(screen.getByTestId('reaction-l1-❤️')).toHaveProp('aria-selected', false);
+    expect(mine).toHaveProp('role', 'checkbox');
+    expect(mine).toHaveProp('aria-checked', true);
+    expect(screen.getByTestId('reaction-l1-❤️')).toHaveProp('aria-checked', false);
     expect(screen.getByLabelText('👍 2, React with 👍')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('reaction-l1-❤️'));
     expect(onToggle).toHaveBeenCalledWith('❤️');
@@ -42,7 +43,7 @@ describe('ChatLineMeta', () => {
       <ChatLineMeta messageId="l1" reactions={reactions} time="" ink="$color" metaInk="$muted" />,
     );
     expect(screen.getByTestId('reaction-l1-👍')).toHaveTextContent('👍 2');
-    expect(screen.getByTestId('reaction-l1-👍')).not.toHaveProp('role', 'button');
+    expect(screen.getByTestId('reaction-l1-👍')).not.toHaveProp('role', 'checkbox');
     // No time and not edited: nothing at the foot.
     expect(screen.queryByTestId('chat-line-time-l1')).toBeNull();
   });

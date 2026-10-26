@@ -52,11 +52,12 @@ function ReactionChip({
   return (
     <XStack
       testID={`reaction-${messageId}-${group.emoji}`}
-      role="button"
+      // A toggle: checked while the reader's own reaction is on it (WAI-ARIA has no pressed state in RN).
+      role="checkbox"
       tabIndex={0}
       hitSlop={6}
       aria-label={`${count}, ${toggle}`}
-      aria-selected={group.mine}
+      aria-checked={group.mine}
       onPress={() => onToggle(group.emoji)}
       pressStyle={PRESS_STYLE.inline}
       alignItems="center"

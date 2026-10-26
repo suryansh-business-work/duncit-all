@@ -59,7 +59,8 @@ export function cleanOfferNote(raw: unknown): string {
  * stock library, not a video), repeats dropped, at most `OFFER_ASK_LIMITS.images`.
  */
 export function cleanOfferImages(raw: readonly unknown[] | null | undefined): string[] {
-  const images = [...new Set((raw ?? []).map((entry) => String(entry ?? '').trim()).filter(Boolean))];
+  const typed = (raw ?? []).map((entry) => (typeof entry === 'string' ? entry.trim() : ''));
+  const images = [...new Set(typed.filter(Boolean))];
   if (images.length > OFFER_ASK_LIMITS.images) throw bad(`Attach at most ${OFFER_ASK_LIMITS.images} photos`);
   if (images.some((url) => !isUploadedPhotoUrl(url))) throw bad('Attach photos uploaded from your device');
   return images;

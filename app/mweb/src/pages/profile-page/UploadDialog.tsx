@@ -44,7 +44,6 @@ export default function UploadDialog({ open, onClose, onSuccess, onError }: Read
   };
 
   const submit = async () => {
-    if (!imageUrl) return;
     setBusy(true);
     try {
       await createPost({ variables: { input: { image_url: imageUrl, caption } } });

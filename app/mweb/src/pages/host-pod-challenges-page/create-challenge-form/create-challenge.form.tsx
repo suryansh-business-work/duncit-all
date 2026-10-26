@@ -18,7 +18,7 @@ export interface CreateChallengeFormProps {
 export function CreateChallengeForm({ templates, defaultTemplateId, saving, onSubmit }: Readonly<CreateChallengeFormProps>) {
   const { t } = useTranslation();
   const schema = useMemo(() => buildCreateChallengeSchema(t), [t]);
-  const fallback = templates.some((x) => x.id === defaultTemplateId) ? (defaultTemplateId ?? '') : (templates[0]?.id ?? '');
+  const fallback = templates.find((x) => x.id === defaultTemplateId)?.id ?? templates[0]?.id ?? '';
   const { control, handleSubmit, reset } = useForm<CreateChallengeValues>({
     resolver: zodResolver(schema),
     defaultValues: { template_id: fallback, name: '' },

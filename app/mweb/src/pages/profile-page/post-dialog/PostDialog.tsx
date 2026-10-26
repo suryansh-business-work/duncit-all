@@ -55,7 +55,6 @@ export default function PostDialog({ postId, meId, onClose, onDeleted }: Readonl
   );
 
   const onLike = async () => {
-    if (!post) return;
     try {
       await toggleLike({ variables: { id: post.id } });
     } catch {
@@ -69,7 +68,7 @@ export default function PostDialog({ postId, meId, onClose, onDeleted }: Readonl
   };
 
   const onSend = async () => {
-    if (!post || !comment.trim()) return;
+    if (!comment.trim()) return;
     setSubmitting(true);
     try {
       await addComment({ variables: { id: post.id, text: comment.trim() } });
@@ -82,7 +81,6 @@ export default function PostDialog({ postId, meId, onClose, onDeleted }: Readonl
   };
 
   const performDeletePost = async () => {
-    if (!post) return;
     setDeletingPost(true);
     try {
       await deletePost({ variables: { id: post.id } });
@@ -96,7 +94,6 @@ export default function PostDialog({ postId, meId, onClose, onDeleted }: Readonl
   };
 
   const onDeleteComment = async (commentId: string) => {
-    if (!post) return;
     try {
       await deleteComment({ variables: { id: post.id, commentId } });
     } catch {

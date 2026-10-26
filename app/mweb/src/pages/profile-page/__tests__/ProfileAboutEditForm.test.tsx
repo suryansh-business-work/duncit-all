@@ -233,3 +233,43 @@ describe('ProfileAboutEditForm', () => {
     expect(spies.onSaved).not.toHaveBeenCalled();
   });
 });
+
+describe('ProfileAboutEditForm when the save is refused', () => {
+  it('shows the server message, stays open and does not announce a save', async () => {
+    const refused: MockedResponse = {
+      request: { query: UPDATE_MY_PROFILE, variables: () => true },
+      error: new Error('Profile locked'),
+      maxUsageCount: Number.POSITIVE_INFINITY,
+    };
+    const spies = { onCancel: vi.fn(), onSaved: vi.fn() };
+    const { container } = render(
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[refused]}>
+        <ThemeProvider theme={testTheme}>
+          <ProfileAboutEditForm bio="Hi" links={[LINK]} {...spies} />
+        </ThemeProvider>
+      </MockedProvider>
+    );
+
+    fireEvent.submit(container.querySelector('form') as HTMLFormElement);
+    await settle();
+    await settle();
+
+    expect(container.querySelector('[data-testid="profile-about-edit-form-error"]')?.textContent).toContain('Profile locked');
+    expect(spies.onSaved).not.toHaveBeenCalled();
+  });
+});
+
+describe('ProfileAboutEditForm link label rule', () => {
+  it('refuses an address with no label and names the label field', async () => {
+    const { container, spies } = form({ links: [] });
+    const inputs = [...container.querySelectorAll<HTMLInputElement>('input')];
+
+    fireEvent.change(inputs[1] as HTMLElement, { target: { value: 'https://strava.com/meera' } });
+    fireEvent.submit(container.querySelector('form') as HTMLFormElement);
+    await settle();
+    await settle();
+
+    expect(spies.onSaved).not.toHaveBeenCalled();
+    expect(container.querySelector('.Mui-error')).not.toBeNull();
+  });
+});

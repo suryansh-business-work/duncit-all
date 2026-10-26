@@ -34,18 +34,23 @@ export default function PetForm({ pet, onCancel, onSaved }: Readonly<PetFormProp
   const species = watch('species');
 
   const submit = handleSubmit(async (values) => {
-    await updateMut({
-      variables: {
-        input: {
-          name: values.name || null,
-          species: values.species || null,
-          breed: values.breed || null,
-          age: values.age === '' ? null : Number(values.age),
-          photo_url: values.photo_url || null,
-          bio: values.bio || null,
+    try {
+      await updateMut({
+        variables: {
+          input: {
+            name: values.name || null,
+            species: values.species || null,
+            breed: values.breed || null,
+            age: values.age === '' ? null : Number(values.age),
+            photo_url: values.photo_url || null,
+            bio: values.bio || null,
+          },
         },
-      },
-    });
+      });
+    } catch {
+      // The mutation's own error state renders the Alert below.
+      return;
+    }
     onSaved();
   });
 

@@ -4,7 +4,7 @@ import { logs } from '@duncit/logs';
 /** Browser full screen for one element (the arena), with Esc/exit kept in sync. */
 export function useFullscreen(ref: RefObject<HTMLElement | null>) {
   const [active, setActive] = useState(false);
-  const supported = typeof document !== 'undefined' && typeof document.documentElement.requestFullscreen === 'function';
+  const supported = typeof document.documentElement.requestFullscreen === 'function';
 
   useEffect(() => {
     const sync = () => setActive(document.fullscreenElement === ref.current && !!ref.current);

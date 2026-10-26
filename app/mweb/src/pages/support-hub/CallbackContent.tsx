@@ -30,9 +30,12 @@ export default function CallbackContent({ selected }: Readonly<Props>) {
     refetchQueries: [{ query: MY_CALLBACK_REQUESTS }],
   });
 
+  // Only an available target with a number can be dialled; the button is
+  // disabled otherwise, so the handler never runs without one.
+  const dialPhone = target?.available ? target.phone : null;
+
   const handleCallNow = () => {
-    if (!target?.available) return;
-    globalThis.window.location.href = `tel:${target.phone}`;
+    globalThis.window.location.href = `tel:${dialPhone}`;
   };
 
   const handleRequest = async () => {
@@ -46,7 +49,7 @@ export default function CallbackContent({ selected }: Readonly<Props>) {
       setReason('');
       setRequested(true);
     } catch (e: any) {
-      setError(e?.message || 'Could not request callback.');
+      setError(e.message || 'Could not request callback.');
     }
   };
 
@@ -58,8 +61,8 @@ export default function CallbackContent({ selected }: Readonly<Props>) {
           <Typography variant="body2" sx={{
             color: "text.secondary"
           }}>
-            {target?.available
-              ? `Dial ${target.phone}. We will answer in seconds.`
+            {dialPhone
+              ? `Dial ${dialPhone}. We will answer in seconds.`
               : 'Support phone is not configured yet — please request a callback below.'}
           </Typography>
           <DuncitButton
@@ -68,7 +71,7 @@ export default function CallbackContent({ selected }: Readonly<Props>) {
             color="primary"
             size="large"
             startIcon={<CallIcon />}
-            disabled={!target?.available}
+            disabled={!dialPhone}
             onClick={handleCallNow}
           >
             Call Now

@@ -134,6 +134,54 @@ describe('SupportTicketsPage', () => {
     expect(screen.getByDisplayValue('jane@example.com')).toBeInTheDocument();
   });
 
+  it('prefills the first name when the account has no full name', async () => {
+    const firstNameOnly = {
+      ...headerMock,
+      result: {
+        data: { ...headerMock.result.data, me: { ...headerMock.result.data.me, full_name: '' } },
+      },
+    };
+    renderPage(['/support/tickets'], [firstNameOnly, emptyTicketsMock]);
+    await waitFor(() => expect(screen.getByDisplayValue('Jane')).toBeInTheDocument());
+  });
+
+  it('leaves name and email blank when nobody is signed in', async () => {
+    localStorage.removeItem('token');
+    renderPage(['/support/tickets'], [emptyTicketsMock]);
+    expect(screen.getByLabelText(/^Name/)).toHaveValue('');
+    expect(screen.getByLabelText(/^Email/)).toHaveValue('');
+  });
+
+  it('sends the mapped category and the attached pod, with a blank title when none was given', async () => {
+    const createMock = {
+      request: {
+        query: CREATE_TICKET,
+        variables: {
+          input: {
+            subject: 'Broken thing',
+            category: 'TECHNICAL',
+            body_text: 'This is a long enough message',
+            attachments: [],
+            pod_id: 'POD1',
+            pod_title: '',
+          },
+        },
+      },
+      result: { data: { createTicket: { id: 'pod-ticket', ticket_no: 'TKT-5' } } },
+    };
+    renderPage(
+      ['/support/tickets?podId=POD1&category=BUG'],
+      [headerMock, emptyTicketsMock, createMock, emptyTicketsMock],
+    );
+    await waitFor(() => expect(screen.getByDisplayValue('Jane Doe')).toBeInTheDocument());
+    fireEvent.change(screen.getByLabelText(/^Subject/), { target: { value: 'Broken thing' } });
+    fireEvent.change(screen.getByLabelText(/Tell us what's going on/), {
+      target: { value: 'This is a long enough message' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Send to support' }));
+    await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith('/tickets/pod-ticket'));
+  });
+
   it('navigates to /faqs when the "already answered" card is clicked', async () => {
     renderPage(['/support/tickets'], [headerMock, emptyTicketsMock]);
     fireEvent.click(screen.getByText('Maybe answered already?'));

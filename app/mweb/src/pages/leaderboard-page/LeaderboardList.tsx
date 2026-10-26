@@ -39,10 +39,9 @@ function RankPill({ rank, color = 'text.primary' }: Readonly<{ rank: number; col
   );
 }
 
-function PodiumSpot({ entry }: Readonly<{ entry: LeaderboardEntry }>) {
+function PodiumSpot({ entry, medal }: Readonly<{ entry: LeaderboardEntry; medal: LeaderboardMedal }>) {
   const { t } = useTranslation();
-  const medal = leaderboardMedal(entry.rank);
-  const color = medal ? MEDAL_TONE[medal] : 'transparent';
+  const color = MEDAL_TONE[medal];
   const size = entry.rank === 1 ? 76 : 60;
   return (
     <Stack
@@ -116,7 +115,10 @@ export default function LeaderboardList({ rows }: Readonly<Props>) {
     );
   }
 
-  const podium = rows.filter((entry) => leaderboardMedal(entry.rank) !== null);
+  const podium = rows.flatMap((entry) => {
+    const medal = leaderboardMedal(entry.rank);
+    return medal ? [{ entry, medal }] : [];
+  });
   const rest = rows.filter((entry) => leaderboardMedal(entry.rank) === null);
   // Silver – gold – bronze, so #1 stands in the middle, a head taller.
   const podiumOrder = [podium[1], podium[0], podium[2]].filter(Boolean);
@@ -129,8 +131,8 @@ export default function LeaderboardList({ rows }: Readonly<Props>) {
         data-testid="leaderboard-podium"
         sx={{ justifyContent: 'center', alignItems: 'flex-end', p: 2 }}
       >
-        {podiumOrder.map((entry) => (
-          <PodiumSpot key={entry.user_id} entry={entry} />
+        {podiumOrder.map(({ entry, medal }) => (
+          <PodiumSpot key={entry.user_id} entry={entry} medal={medal} />
         ))}
       </Stack>
       {rest.length > 0 && (

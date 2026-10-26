@@ -20,7 +20,7 @@ interface GeoSample {
 }
 
 async function captureLocation(): Promise<GeoSample | null> {
-  if (typeof navigator === 'undefined' || !navigator.geolocation) return null;
+  if (!navigator.geolocation) return null;
   return new Promise((resolve) => {
     const timeout = globalThis.setTimeout(() => resolve(null), 5000);
     navigator.geolocation.getCurrentPosition(
@@ -29,7 +29,7 @@ async function captureLocation(): Promise<GeoSample | null> {
         resolve({
           lat: pos.coords.latitude,
           lng: pos.coords.longitude,
-          accuracy: pos.coords.accuracy ?? null,
+          accuracy: pos.coords.accuracy,
         });
       },
       () => {
@@ -46,9 +46,10 @@ export default function SosContent({ selected }: Readonly<Props>) {
   const [message, setMessage] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const podDocId = selected?.podDocId ?? '';
 
   const { data, refetch } = useQuery<any>(MY_ACTIVE_SOS, {
-    variables: { pod_id: selected?.podDocId ?? '' },
+    variables: { pod_id: podDocId },
     skip: !selected,
     fetchPolicy: 'cache-and-network',
   });
@@ -57,21 +58,20 @@ export default function SosContent({ selected }: Readonly<Props>) {
   const [raise, { loading }] = useMutation<any>(RAISE_SOS);
 
   const handleRaise = async () => {
-    if (!selected) return;
     setError(null);
     setSuccess(false);
     const location = await captureLocation();
     try {
       await raise({
         variables: {
-          input: { pod_id: selected.podDocId, message: message.trim() || null, location },
+          input: { pod_id: podDocId, message: message.trim() || null, location },
         },
       });
       setMessage('');
       setSuccess(true);
       refetch();
     } catch (e: any) {
-      setError(e?.message || 'Could not send SOS. Try again.');
+      setError(e.message || 'Could not send SOS. Try again.');
     }
   };
 

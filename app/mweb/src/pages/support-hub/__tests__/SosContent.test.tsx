@@ -199,6 +199,18 @@ describe('SosContent', () => {
     expect(container.textContent).toContain('could not be sent');
   });
 
+  it('falls back to a plain sentence when the failure carries no message', async () => {
+    const blank: MockedResponse = { ...raiseFails, error: new Error('') };
+    const { container } = sos(POD, [activeSos(null), blank]);
+    await settle();
+
+    sendButton(container)?.click();
+    await settle();
+    await settle();
+
+    expect(container.textContent).toContain('Could not send SOS. Try again.');
+  });
+
   it('lets the person dismiss the failure and try again', async () => {
     const { container } = sos(POD, [activeSos(null), raiseFails]);
     await settle();

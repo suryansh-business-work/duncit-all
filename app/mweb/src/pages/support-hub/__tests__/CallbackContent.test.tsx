@@ -121,6 +121,54 @@ describe('CallbackContent', () => {
     expect(globalThis.window.location.href).toBe('');
   });
 
+  it('treats an available target with no number as not dialable', async () => {
+    const noPhone = {
+      request: { query: SUPPORT_CALL_TARGET },
+      result: { data: { bouncerSupportTarget: { phone: null, available: true } } },
+    };
+    renderContent([noPhone, emptyHistoryMock]);
+    await waitFor(() =>
+      expect(screen.getByText(/Support phone is not configured yet/i)).toBeInTheDocument(),
+    );
+    expect(screen.getByRole('button', { name: /Call Now/i })).toBeDisabled();
+  });
+
+  it('falls back to a plain sentence when the callback failure has no message', async () => {
+    const blankErr = {
+      request: { query: REQUEST_CALLBACK, variables: { input: { pod_id: null, reason: null } } },
+      error: new Error(''),
+    };
+    renderContent([targetAvailableMock, emptyHistoryMock, blankErr], null);
+    fireEvent.click(screen.getByRole('button', { name: /Request callback/i }));
+    await waitFor(() =>
+      expect(screen.getByText('Could not request callback.')).toBeInTheDocument(),
+    );
+  });
+
+  it('shows a call shorter than a minute in seconds only', async () => {
+    const shortCall = {
+      request: { query: MY_CALLBACK_REQUESTS },
+      result: {
+        data: {
+          myCallbackRequests: [
+            {
+              id: 'cb9',
+              reason: '',
+              status: 'CONTACTED',
+              contacted_at: new Date('2026-01-02T10:00:00Z').toISOString(),
+              duration_seconds: 45,
+              conclusion: null,
+              created_at: new Date('2026-01-01T09:00:00Z').toISOString(),
+            },
+          ],
+        },
+      },
+    };
+    renderContent([targetAvailableMock, shortCall], null);
+    expect(await screen.findByText(/ · 45s/)).toBeInTheDocument();
+    expect(screen.queryByText(/0m/)).not.toBeInTheDocument();
+  });
+
   it('requests a callback successfully and shows the success alert', async () => {
     const requestMock = {
       request: {

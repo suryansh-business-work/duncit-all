@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import Alert from '@mui/material/Alert';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
+import { MinBusinessFields } from '@duncit/availability-calendar';
 import { DuncitButton } from '@duncit/buttons';
 import { RhfTextField } from '@duncit/forms';
 import { useTranslation } from '@duncit/shell';
@@ -11,9 +12,11 @@ import { BOOKING_OFFER_LIMITS, makeBookingOffersSchema } from './booking-offers.
 import type { BookingOffersFormProps, BookingOffersValues } from './booking-offers.types';
 
 /**
- * The venue's Booking offers: the fewest guests a host's offer may be for, and
- * the hours either side has to answer an offer or a counter before it expires.
- * 0 leaves it to Duncit's default, and each hint says what is in effect now.
+ * The venue's Booking offers: the fewest guests a host's offer may be for, the
+ * hours either side has to answer an offer or a counter before it expires (0
+ * leaves each to Duncit's default, and each hint says what is in effect now),
+ * and the business the venue hopes each booking brings — at least one amount,
+ * which hosts see on Create Pod as a guide.
  */
 export default function BookingOffersForm({
   initialValues,
@@ -67,6 +70,7 @@ export default function BookingOffersForm({
           }}
         />
       </Stack>
+      <MinBusinessFields control={control} idPrefix="booking-offers" disabled={saving} />
       {error ? <Alert severity="error">{error}</Alert> : null}
       <DuncitButton type="submit" variant="contained" disabled={saving} sx={{ alignSelf: 'flex-start' }}>
         {saving ? t('venueSettings.saving') : t('venueSettings.offers.save')}

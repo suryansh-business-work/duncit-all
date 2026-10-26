@@ -27,7 +27,7 @@ async function takeSample(): Promise<void> {
   await ServerMetricSampleModel.create({
     at,
     ...window,
-    load_avg_5: Math.round((os.loadavg()[1] ?? 0) * 100) / 100,
+    load_avg_5: Math.round(Number(os.loadavg()[1]) * 100) / 100,
     memory_pct: memory.usagePercent,
     memory_used_bytes: memory.usedBytes,
     memory_total_bytes: memory.totalBytes,

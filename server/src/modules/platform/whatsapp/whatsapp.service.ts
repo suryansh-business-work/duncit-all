@@ -29,7 +29,7 @@ import {
   type SendMedia,
   type WaDefaults,
 } from './whatsapp.media';
-import { WaEventSettingModel, WA_GLOBAL_DEFAULT_ENABLED, WA_GLOBAL_KEY } from './waEventSetting.model';
+import { WaEventSettingModel, WA_GLOBAL_KEY } from './waEventSetting.model';
 import { WaMessageLogModel, type WaMessageStatus } from './waMessageLog.model';
 import { WaPreferenceModel } from './waPreference.model';
 
@@ -100,7 +100,7 @@ const sent = (message_id: string): WaSendOutcome => ({ status: 'SENT', reason: '
 const skip = (reason: string): WaSendOutcome => ({ status: 'SKIPPED', reason, message_id: '' });
 const failed = (reason: string): WaSendOutcome => ({ status: 'FAILED', reason, message_id: '' });
 
-const digits = (v: unknown) => String(v ?? '').replaceAll(/\D/g, '');
+const digits = (v: string) => v.replaceAll(/\D/g, '');
 const text = (v: unknown) => String(v ?? '').trim();
 /** AiSensy records a name against every send and rejects an empty one. */
 const contactName = (input: WaSendInput) => text(input.name) || 'there';
@@ -146,8 +146,9 @@ async function switchesFor(eventKey: string): Promise<Switches> {
     link_button: null,
     defaults: { IMAGE: null, DOCUMENT: null },
   });
-  // An absent global row means nobody has turned automatic WhatsApp on yet.
-  if (!(global?.enabled ?? WA_GLOBAL_DEFAULT_ENABLED)) return off('Automatic WhatsApp is switched off');
+  // An absent global row means nobody has turned automatic WhatsApp on yet
+  // (WA_GLOBAL_DEFAULT_ENABLED is false), so it reads the same as an off one.
+  if (!global?.enabled) return off('Automatic WhatsApp is switched off');
   // An absent scenario row means ON — a newly wired scenario works without
   // anybody having to create a row for it first.
   if (own && !own.enabled) return off('This message is switched off');
@@ -173,8 +174,8 @@ async function switchesFor(eventKey: string): Promise<Switches> {
     // The global row's override pair IS the default image — the field it has
     // always been stored in, so nothing an operator already uploaded moves.
     defaults: {
-      IMAGE: mediaPair(global?.override_media_url ?? '', global?.override_media_filename),
-      DOCUMENT: mediaPair(global?.default_document_url ?? '', global?.default_document_filename),
+      IMAGE: mediaPair(global.override_media_url ?? '', global.override_media_filename),
+      DOCUMENT: mediaPair(global.default_document_url ?? '', global.default_document_filename),
     },
   };
 }
@@ -479,10 +480,10 @@ function recoveryFor(
 ): Recovery | null {
   if (resolved.media || !isMediaMissing(error)) return null;
   const known = resolved.header_format.trim().toUpperCase();
-  if (known) {
-    const media = assetFor(known, assets) ?? defaultFor(known, defaults);
-    return media ? { media, format: known } : null;
-  }
+  // `resolveMedia` already offered this send's own asset and the platform
+  // default for exactly this header kind, so a learned kind leaves nothing
+  // further to try.
+  if (known) return null;
   // Nobody has learned this template's header kind: reading it needs the
   // Project API, a second credential the send does not otherwise have. An image
   // is what 54 of the 59 media templates carry, so it is offered first — this

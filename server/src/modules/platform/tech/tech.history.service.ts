@@ -130,7 +130,7 @@ function containerDays(from: Date, zone: string) {
 }
 
 function toDay(date: string, host: HostDayRow | undefined, probe: ProbeDayRow | undefined) {
-  const weighted = (sum: number | undefined) => (host && host.requests > 0 ? round1((sum ?? 0) / host.requests) : null);
+  const weighted = (pick: (row: HostDayRow) => number) => (host && host.requests > 0 ? round1(pick(host) / host.requests) : null);
   return {
     date,
     samples: host?.samples ?? 0,
@@ -145,8 +145,8 @@ function toDay(date: string, host: HostDayRow | undefined, probe: ProbeDayRow | 
     diskTotalBytes: host?.disk_total ?? null,
     requests: host?.requests ?? null,
     errors5xx: host?.errors ?? null,
-    latencyAvgMs: weighted(host?.latency_weighted),
-    latencyP95Ms: weighted(host?.p95_weighted),
+    latencyAvgMs: weighted((row) => row.latency_weighted),
+    latencyP95Ms: weighted((row) => row.p95_weighted),
     latencyPeakMs: maybe(host?.latency_peak),
     eventLoopP99PeakMs: maybe(host?.loop_peak),
     rssPeakMb: maybe(host?.rss_peak),
@@ -188,7 +188,7 @@ function diskGrowthPerDay(days: ServerHistoryDay[]): number | null {
   const meanY = points.reduce((acc, p) => acc + p.y, 0) / n;
   const num = points.reduce((acc, p) => acc + (p.x - meanX) * (p.y - meanY), 0);
   const den = points.reduce((acc, p) => acc + (p.x - meanX) ** 2, 0);
-  return den > 0 ? Math.round(num / den) : null;
+  return Math.round(num / den);
 }
 
 const avgOf = (values: Array<number | null>) => {

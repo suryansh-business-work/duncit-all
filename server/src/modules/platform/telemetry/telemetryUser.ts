@@ -31,10 +31,7 @@ const cache = new Map<string, CacheEntry>();
 /** Oldest-first eviction; the map preserves insertion order, so the first key is it. */
 function evictIfFull(): void {
   if (cache.size < MAX_ENTRIES) return;
-  for (const oldest of cache.keys()) {
-    cache.delete(oldest);
-    return;
-  }
+  cache.delete(String(cache.keys().next().value));
 }
 
 interface UserLookupRow {

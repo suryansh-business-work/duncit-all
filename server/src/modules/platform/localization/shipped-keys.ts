@@ -13382,6 +13382,7 @@ export const SHIPPED_CLIENT_KEYS: Record<string, string> = {
   "mweb.nav.venues": "Venues",
   "mweb.notFound.goToHome": "Go to home",
   "mweb.notifications.allowNotifications": "Allow notifications",
+  "mweb.notifications.noneYet": "No notifications yet.",
   "mweb.openInApp.dismiss": "Dismiss",
   "mweb.openInApp.getApp": "Get app",
   "mweb.openInApp.open": "Open",

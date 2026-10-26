@@ -160,7 +160,7 @@ export default function NotificationsScreen({
               <Typography variant="body2" sx={{
                 color: "text.secondary"
               }}>
-                No notifications yet.
+                {t('mweb.notifications.noneYet')}
               </Typography>
             </Paper>
           )}

@@ -4490,6 +4490,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
     },
     notifications: {
       allowNotifications: 'Allow notifications',
+      noneYet: 'No notifications yet.',
     },
     // My Product Orders — the pod-shop order history. mWeb and the native app
     // render the same page (rule 27), so every key is used by BOTH surfaces.

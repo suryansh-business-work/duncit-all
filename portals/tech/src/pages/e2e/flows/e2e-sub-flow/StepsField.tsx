@@ -17,7 +17,7 @@ export default function StepsField({ control }: Readonly<Props>) {
   const { t } = useTranslation();
   const { fields, append, remove } = useFieldArray({ control, name: 'steps' });
   const { errors } = useFormState({ control, name: 'steps' });
-  const listError = errors.steps?.root?.message ?? errors.steps?.message;
+  const listError = errors.steps?.message;
 
   return (
     <Stack spacing={1.5}>

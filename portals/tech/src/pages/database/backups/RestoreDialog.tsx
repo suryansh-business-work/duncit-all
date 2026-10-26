@@ -25,7 +25,7 @@ interface Props {
   liveDatabase: string;
   busy: boolean;
   onClose: () => void;
-  onConfirm: () => void;
+  onConfirm: (backup: BackupRow) => void;
 }
 
 /**
@@ -111,7 +111,7 @@ export default function RestoreDialog({
         <DuncitButton onClick={onClose} disabled={busy}>
           {t('tech.dbBackup.cancel')}
         </DuncitButton>
-        <DuncitButton color="error" variant="contained" onClick={onConfirm} disabled={!matches || busy}>
+        <DuncitButton color="error" variant="contained" onClick={() => onConfirm(backup)} disabled={!matches || busy}>
           {busy ? t('tech.dbBackup.restoreStarting') : t('tech.dbBackup.restoreConfirm')}
         </DuncitButton>
       </DialogActions>

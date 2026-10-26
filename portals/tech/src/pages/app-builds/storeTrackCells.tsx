@@ -7,6 +7,7 @@ import type { DuncitColumn } from '@duncit/table';
 import { formatDateTime } from '@duncit/app-settings';
 import type { AppBuildRow } from './queries';
 import ReleaseLogDialog from './ReleaseLogDialog';
+import { releaseWhen } from './StoreReleases';
 
 /**
  * The store column, for either store: one cell per track, each showing where
@@ -85,7 +86,7 @@ function TrackCell<T extends string, R extends TrackRelease>({ row, track, cfg }
     );
   }
   if (release?.status === 'RELEASED') {
-    const when = formatDateTime(release.finished_at ?? release.started_at);
+    const when = releaseWhen(release);
     return (
       <Tooltip title={cfg.tips.released(track, release, when)}>
         <Chip size="small" color="success" icon={<CheckCircleIcon />} label={cfg.short[track]} data-testid={`${id}-released`} />

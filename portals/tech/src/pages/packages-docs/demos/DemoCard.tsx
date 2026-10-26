@@ -42,7 +42,7 @@ export default function DemoCard({ demo }: Readonly<{ demo: PackageDemo }>) {
   const output = useMemo(() => runCompute(demo, mock), [demo, mock]);
   // A changed mock must re-mount the boundary, so a demo that threw on bad data
   // gets a fresh chance the moment the data is fixed.
-  const resetKey = JSON.stringify(mock) ?? '';
+  const resetKey = JSON.stringify(mock);
 
   return (
     <Paper variant="outlined" sx={{ p: 2.5, borderRadius: 2 }}>

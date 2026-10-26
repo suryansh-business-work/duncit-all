@@ -15,7 +15,7 @@ function show(value: unknown): string {
   if (value === undefined) return 'undefined';
   if (typeof value === 'function') return `[function ${value.name || 'anonymous'}]`;
   if (typeof value === 'symbol') return value.toString();
-  return JSON.stringify(value, null, 2) ?? '[not serialisable]';
+  return JSON.stringify(value, null, 2);
 }
 
 interface Props {

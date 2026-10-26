@@ -36,6 +36,7 @@ export function useBackupUpload(onUploaded: () => void) {
       setError(null);
       setPercent(0);
       setPhase('sending');
+      let uploaded = false;
       try {
         const authorised = await authorise({ variables: { fileName: file.name } });
         const pass = authorised.data?.dbBackupUploadAuth as BackupUploadPass | undefined;
@@ -45,17 +46,17 @@ export function useBackupUpload(onUploaded: () => void) {
         await complete({ variables: { id: pass.backupId } });
         notifySuccess(t('tech.dbBackup.uploadedToast'));
         onUploaded();
-        return true;
+        uploaded = true;
       } catch (err) {
         // Shown in the dialog AND as a toast: the dialog is where the operator
         // is looking, and the toast is what survives them closing it.
         const message = err instanceof Error ? err.message : t('tech.dbBackup.uploadFailed');
         setError(message);
         notifyError(message);
-        return false;
       } finally {
         setPhase('idle');
       }
+      return uploaded;
     },
     [authorise, complete, onUploaded, t],
   );

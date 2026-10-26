@@ -84,11 +84,7 @@ export default function ScheduleFields({ control, errors, weekly }: Readonly<Pro
               value={timeToDate(field.value)}
               onChange={(value) => field.onChange(dateToTime(value))}
               slotProps={{
-                textField: {
-                  sx: { minWidth: 160 },
-                  error: Boolean(errors.time_of_day),
-                  helperText: errors.time_of_day?.message ?? t('tech.e2e.runAtHint'),
-                },
+                textField: { sx: { minWidth: 160 }, helperText: t('tech.e2e.runAtHint') },
               }}
             />
           )}

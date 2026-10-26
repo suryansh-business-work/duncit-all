@@ -10,7 +10,7 @@ interface Props<T extends FieldValues> {
   control: Control<T>;
   name: Path<T>;
   label: string;
-  hint?: string;
+  hint: string;
   options: ReadonlyArray<SelectOption>;
   /** Renders a multi-select whose value is a string array. */
   multiple?: boolean;
@@ -45,17 +45,16 @@ export default function EnumSelect<T extends FieldValues>({
     <Controller
       control={control}
       name={name}
-      render={({ field, fieldState }) => (
+      render={({ field }) => (
         <TextField
           select
           fullWidth
           label={label}
-          value={field.value ?? (multiple ? [] : '')}
+          value={field.value}
           onChange={field.onChange}
           onBlur={field.onBlur}
           inputRef={field.ref}
-          error={!!fieldState.error}
-          helperText={fieldState.error?.message ?? hint ?? ' '}
+          helperText={hint}
           slotProps={{
             select: {
               multiple,

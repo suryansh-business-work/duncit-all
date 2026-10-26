@@ -65,12 +65,7 @@ export default function ScheduleFields({ control, errors, weekly }: Readonly<Pro
             label={t('tech.dbBackup.runAt')}
             value={timeToDate(field.value)}
             onChange={(value) => field.onChange(dateToTime(value))}
-            slotProps={{
-              textField: {
-                sx: { minWidth: 160 },
-                error: !!errors.timeOfDay,
-                helperText: errors.timeOfDay?.message,
-              }}}
+            slotProps={{ textField: { sx: { minWidth: 160 } } }}
           />
         )}
       />

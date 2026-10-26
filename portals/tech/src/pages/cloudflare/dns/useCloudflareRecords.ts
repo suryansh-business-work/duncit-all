@@ -53,7 +53,6 @@ export function useCloudflareRecords() {
 
   const copy = useCallback(
     async (rows: readonly CloudflareCompareRow[]) => {
-      if (rows.length === 0) return;
       const ok = await confirm({
         title: t('tech.cloudflare.copyTitle'),
         message: t('tech.cloudflare.copyConfirm', {
@@ -66,16 +65,16 @@ export function useCloudflareRecords() {
       await run(async () => {
         const result = (await copyMutation({ variables: { ids: rows.map((row) => row.id) } })).data?.copyDnsToCloudflare;
         if (!result) return;
-        if (result.failed === 0) {
+        // Each failure carries Cloudflare's own reason; the first fits a toast,
+        // and the rest stay visible as rows still marked GoDaddy-only.
+        const [first] = result.outcomes.filter((entry) => !entry.ok);
+        if (!first) {
           notifySuccess(t('tech.cloudflare.copyDone', { vars: { count: String(result.synced) } }));
           return;
         }
-        // Each failure carries Cloudflare's own reason; the first fits a toast,
-        // and the rest stay visible as rows still marked GoDaddy-only.
-        const first = result.outcomes.find((entry) => !entry.ok);
         notifyError(
           t('tech.cloudflare.copyPartial', {
-            vars: { synced: String(result.synced), failed: String(result.failed), reason: first?.message ?? first?.host ?? '' },
+            vars: { synced: String(result.synced), failed: String(result.failed), reason: first.message ?? first.host },
           }),
         );
       }, t('tech.cloudflare.copyFailed'));
@@ -88,7 +87,7 @@ export function useCloudflareRecords() {
       const ok = await confirm({
         title: t('tech.cloudflare.deleteTitle'),
         message: t('tech.cloudflare.deleteConfirm', {
-          vars: { type: row.type, host: row.host, value: row.cloudflare_value ?? '' },
+          vars: { type: row.type, host: row.host, value: String(row.cloudflare_value) },
         }),
         destructive: true,
         confirmLabel: t('shell.common.delete'),

@@ -73,9 +73,9 @@ export default function RateLimitRuleFormBody({
   // do the arithmetic to know what they just wrote.
   const summary = t('tech.rateLimit.form.summary', {
     vars: {
-      limit: String(limit ?? 0),
-      seconds: String(windowSeconds ?? 0),
-      keyBy: enumLabel(t, keyBy ?? 'IP'),
+      limit: String(limit),
+      seconds: String(windowSeconds),
+      keyBy: enumLabel(t, keyBy),
     },
   });
 

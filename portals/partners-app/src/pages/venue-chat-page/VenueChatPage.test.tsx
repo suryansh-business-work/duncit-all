@@ -154,3 +154,33 @@ describe('VenueChatPage — how far the host has read', () => {
     expect(screen.getByText('See you then').closest('li')?.querySelector('[data-testid="seen-faces"]')).toBeNull();
   });
 });
+
+describe('VenueChatPage — when the room cannot be shown', () => {
+  it('says why a non-member cannot open the chat, and offers no thread', async () => {
+    mount({ VenueChatRoom: Object.assign(new Error('Not allowed'), { extensions: { code: 'FORBIDDEN' } }) });
+    expect(await screen.findByText("This chat is not available. Only this pod's hosts and its venue can open it.")).toBeTruthy();
+    expect(screen.queryByRole('heading', { name: /Chat ·/ })).toBeNull();
+  });
+
+  it('says the chat could not be loaded for any other failure, and loads it again on Retry', async () => {
+    const sent: SentOperation[] = [];
+    mount({ VenueChatRoom: new Error('Server down') }, sent);
+    expect(await screen.findByText('Could not load this chat.')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: /retry|try again/i }));
+    await waitFor(() => expect(sent.filter((op) => op.name === 'VenueChatRoom').length).toBeGreaterThan(1));
+  });
+
+  it('says the chat could not be found when the server has no such room', async () => {
+    mount({ VenueChatRoom: { venueChatRoom: null } });
+    expect(await screen.findByText('This chat could not be found.')).toBeTruthy();
+  });
+
+  it('opens a room that carries no read marks yet', async () => {
+    mount({
+      VenueChatRoom: room({ read_marks: null }),
+      VenueChatMessages: { venueChatMessages: [line('t1')] },
+      PodVenueOfferTerms: { podVenueOffer: null },
+    });
+    expect(await screen.findByText('Is the terrace free?')).toBeTruthy();
+  });
+});

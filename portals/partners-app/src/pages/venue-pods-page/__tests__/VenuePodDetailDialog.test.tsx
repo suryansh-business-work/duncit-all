@@ -73,6 +73,12 @@ describe('VenuePodDetailDialog', () => {
     expect(sent).toHaveLength(0);
   });
 
+  it('shows a dash for a pod with no host and no end time', async () => {
+    mount(makeVenuePodRow({ host_names: [], pod_end_date_time: null }), people());
+    const dialog = within(await screen.findByRole('dialog'));
+    expect(dialog.getAllByText('—').length).toBeGreaterThanOrEqual(2);
+  });
+
   it('shows when a pod was cancelled', async () => {
     mount(makeVenuePodRow({ bucket: 'CANCELLED', cancelled_at: '2026-08-09T10:00:00.000Z' }), people());
     const dialog = within(await screen.findByRole('dialog'));

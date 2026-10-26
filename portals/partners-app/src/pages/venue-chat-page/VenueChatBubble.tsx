@@ -27,7 +27,7 @@ interface Props {
 export default function VenueChatBubble({ line, mine, viewerId, onReact, onEdit, onDelete, seenBy }: Readonly<Props>) {
   const { t } = useTranslation();
   const author = mine ? t('partners.venueChat.you') : line.user_name || t('partners.venueChat.host');
-  const isPhoto = line.type === 'IMAGE' && Boolean(line.image_url);
+  const photo = line.type === 'IMAGE' ? line.image_url : null;
   const allowed = venueChatLineActions(line, viewerId);
 
   return (
@@ -52,10 +52,10 @@ export default function VenueChatBubble({ line, mine, viewerId, onReact, onEdit,
             {author} · <time dateTime={line.createdAt}>{fmtDate(line.createdAt)}</time>
             {line.edited_at ? ` · ${t('availability.offers.chat.edited')}` : ''}
           </Typography>
-          {isPhoto && (
+          {photo && (
             <Box
               component="img"
-              src={line.image_url ?? undefined}
+              src={photo}
               alt={t('partners.venueChat.photoAlt', { vars: { name: author } })}
               sx={{ display: 'block', maxWidth: '100%', maxHeight: 240, mt: 0.5, borderRadius: 1 }}
             />

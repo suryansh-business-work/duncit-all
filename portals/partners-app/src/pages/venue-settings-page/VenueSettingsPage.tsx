@@ -50,13 +50,12 @@ export default function VenueSettingsPage() {
     [policyJson]
   );
 
-  const submit = async (values: CancellationPolicyValues) => {
-    if (!selected) return;
+  const submit = async (venue: VenueSettingsVenue, values: CancellationPolicyValues) => {
     setApiError(null);
     try {
       await saveSettings({
         variables: {
-          venue_doc_id: selected.id,
+          venue_doc_id: venue.id,
           input: { cancellation: toPolicyInput(values, t) },
         },
       });
@@ -94,15 +93,13 @@ export default function VenueSettingsPage() {
         </Typography>
       </Stack>
 
-      {venues.length === 0 ? (
-        <Alert severity="info">{t('venueSettings.noVenues')}</Alert>
-      ) : (
+      {selected ? (
         <>
           <TextField
             select
             fullWidth
             label={t('venueSettings.venue')}
-            value={selected?.id ?? ''}
+            value={selected.id}
             onChange={(event) => selectVenue(event.target.value)}
           >
             {venues.map((venue) => (
@@ -125,22 +122,22 @@ export default function VenueSettingsPage() {
                   saving={saveState.loading}
                   error={apiError}
                   t={t}
-                  onSubmit={submit}
+                  onSubmit={(values) => submit(selected, values)}
                 />
               </Stack>
             </CardContent>
           </Card>
 
-          {selected && (
-            <BookingOffersCard
-              venue={selected}
-              onSaved={async (saved) => {
-                setMessage(saved);
-                await refetch();
-              }}
-            />
-          )}
+          <BookingOffersCard
+            venue={selected}
+            onSaved={async (saved) => {
+              setMessage(saved);
+              await refetch();
+            }}
+          />
         </>
+      ) : (
+        <Alert severity="info">{t('venueSettings.noVenues')}</Alert>
       )}
 
       <Snackbar

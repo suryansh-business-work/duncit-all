@@ -8,7 +8,12 @@ import type { SetupSectionKey } from '../register-venue-page/register-venue';
 import { useVenueSetupForm, type VenueSetupForm } from './useVenueSetupForm';
 
 /** What a setup page draws inside the editor: the section, given the loaded form. */
-type SetupContent = (ctx: Omit<VenueSetupForm, 'config'> & { config: NonNullable<VenueSetupForm['config']> }) => ReactNode;
+type SetupContent = (
+  ctx: Omit<VenueSetupForm, 'config' | 'venue'> & {
+    config: NonNullable<VenueSetupForm['config']>;
+    venue: NonNullable<VenueSetupForm['venue']>;
+  },
+) => ReactNode;
 
 interface Props {
   venueId: string;
@@ -45,7 +50,7 @@ export default function VenueSetupEditor({ venueId, section, testId, children }:
           }}
         >
           <Stack spacing={2.5}>
-            {children({ ...setup, config })}
+            {children({ ...setup, config, venue: setup.venue })}
             {error && <Alert severity="error">{error}</Alert>}
             <Stack direction="row" sx={{ justifyContent: 'flex-end' }}>
               <DuncitButton

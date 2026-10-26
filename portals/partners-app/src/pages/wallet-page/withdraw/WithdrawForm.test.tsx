@@ -71,6 +71,15 @@ describe('WithdrawForm', () => {
     });
   });
 
+  it('keeps the dialog open and shows why the server refused the withdrawal', async () => {
+    const { onDone } = mount({ RequestWithdrawal: new Error('A withdrawal is already pending') });
+    fireEvent.change(screen.getByLabelText(/Amount/), { target: { value: '100' } });
+    fireEvent.change(screen.getByLabelText('UPI ID'), { target: { value: 'asha@okaxis' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Request withdrawal' }));
+    expect(await screen.findByText('A withdrawal is already pending')).toBeTruthy();
+    expect(onDone).not.toHaveBeenCalled();
+  });
+
   it('refuses an amount below the role’s minimum', async () => {
     const sent: SentOperation[] = [];
     mount({}, sent, 200);

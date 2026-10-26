@@ -130,3 +130,23 @@ describe('VenueChatBubble — deleting their own line', () => {
     expect(screen.getByText('Yes, from 6 pm.')).toBeTruthy();
   });
 });
+
+describe('VenueChatBubble — gaps in a line', () => {
+  it('names a host who has no name on record Host', async () => {
+    mount({ VenueChatMessages: { venueChatMessages: [line('t9', { user_name: '', text: 'Anyone there?' })] } });
+    expect(await screen.findByText('Anyone there?')).toBeTruthy();
+    expect(screen.getByText('Anyone there?').closest('li')?.textContent).toContain('Host');
+  });
+
+  it('draws no picture for a photo line that carries no image address', async () => {
+    mount({ VenueChatMessages: { venueChatMessages: [line('p9', { type: 'IMAGE', text: '', image_url: null })] } });
+    expect(await screen.findByText(/^Asha ·/)).toBeTruthy();
+    expect(screen.queryByRole('img', { name: /Photo from/ })).toBeNull();
+  });
+
+  it('opens the editor empty for an own text line that carries no text', async () => {
+    mount({ VenueChatMessages: { venueChatMessages: [ownLine('o9', { text: null })] } });
+    fireEvent.click(await screen.findByTestId('venue-chat-edit-o9'));
+    expect(((await screen.findByRole('dialog', { name: 'Edit message' })).querySelector('textarea') as HTMLTextAreaElement).value).toBe('');
+  });
+});

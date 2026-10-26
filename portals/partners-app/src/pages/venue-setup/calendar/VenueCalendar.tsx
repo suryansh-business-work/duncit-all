@@ -41,13 +41,13 @@ export default function VenueCalendar({ venueId, holidays, onVenueChanged }: Rea
   const hasBookings =
     !!selectedDate && slots.slots.some((slot) => slot.status === 'BOOKED' && slotCoversDay(slot, selectedDate));
 
-  const setBlocked = async (next: boolean) => {
-    if (!selected || !pricingModule.pricing) return;
-    await pricingModule.save(pricingWithBlocked(pricingModule.pricing, selected, next));
+  const setBlocked = async (ymd: string, next: boolean) => {
+    // The block is written into the saved pricing, so without it there is nothing to write to — say so.
+    if (!pricingModule.pricing) throw new Error(t('partners.venueSetup.loadFailed'));
+    await pricingModule.save(pricingWithBlocked(pricingModule.pricing, ymd, next));
   };
-  const setHoliday = async (next: boolean) => {
-    if (!selected) return;
-    await pricingModule.saveHolidays(holidaysWith(holidays, selected, next));
+  const setHoliday = async (ymd: string, next: boolean) => {
+    await pricingModule.saveHolidays(holidaysWith(holidays, ymd, next));
     await onVenueChanged();
   };
 

@@ -14,7 +14,7 @@ import {
 } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { RhfTextField, zodRules } from '@duncit/forms';
-import { cancelPenaltyHeadline, type VenueCancelPodResult } from '@duncit/utils';
+import { cancelPenaltyHeadline, parseApiError, type VenueCancelPodResult } from '@duncit/utils';
 import { fmtDate, VENUE_CANCEL_PENALTY, VENUE_CANCEL_POD, type VenuePodRow } from './queries';
 import { useTranslation } from '@duncit/shell';
 
@@ -89,8 +89,7 @@ function VenueCancelPodBody({ row, onClose, onCancelled }: Readonly<BodyProps>) 
       });
       await onCancelled(response.data.venueCancelPod as VenueCancelPodResult);
     } catch (error) {
-      const message = error instanceof Error ? error.message : t('partners.venuePodsPage.couldNotCancelThisPod');
-      setError('root', { message });
+      setError('root', { message: parseApiError(error) || t('partners.venuePodsPage.couldNotCancelThisPod') });
     }
   });
 

@@ -149,6 +149,22 @@ describe('VenueCancelPodDialog', () => {
     expect(screen.getByText('Cancel this pod?')).toBeTruthy();
   });
 
+  it('says in its own words that the pod could not be cancelled when the server gives no reason', async () => {
+    const { onCancelled } = renderDialog([
+      penaltyMock(7),
+      {
+        request: { query: VENUE_CANCEL_POD, variables: { pod_id: '1', reason: REASON } },
+        result: { errors: [new GraphQLError('')] },
+      },
+    ]);
+
+    fireEvent.change(reasonField(), { target: { value: REASON } });
+    fireEvent.click(submitButton());
+
+    expect(await screen.findByText('Could not cancel this pod.')).toBeTruthy();
+    expect(onCancelled).not.toHaveBeenCalled();
+  });
+
   it('closes without cancelling when the owner keeps the pod', async () => {
     const { onClose, onCancelled } = renderDialog([penaltyMock(7)]);
 

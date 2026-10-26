@@ -41,6 +41,22 @@ export function isTrustedMediaUrl(url: string): boolean {
   }
 }
 
+const VIDEO_PATH = /\.(mp4|mov|m4v|webm|mkv|avi)$/i;
+
+/**
+ * A photo someone uploaded from their own device: https on our ImageKit CDN,
+ * not a video. Stock-library imports (Pexels, Unsplash) live on their own hosts,
+ * so they never pass.
+ */
+export function isUploadedPhotoUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === 'https:' && /(^|\.)imagekit\.io$/i.test(parsed.hostname) && !VIDEO_PATH.test(parsed.pathname);
+  } catch {
+    return false;
+  }
+}
+
 /** An address served by our ImageKit CDN — nothing else is rewritten. */
 const IMAGEKIT_URL = /^https?:\/\/([^/?#]*\.)?imagekit\.io(:\d+)?[/?#]/i;
 

@@ -149,6 +149,9 @@ export interface IAppSettings extends Document {
   /** Hours the other side has to answer a venue booking offer or counter, when
    * the venue has set no response time of its own. Past it the offer expires. */
   venue_offer_response_hours_default: number;
+  /** Counter offers one venue booking may carry in all (Pod Settings), split
+   * equally: the host and the venue may each counter half of it. Even, 2-20. */
+  venue_offer_max_counters: number;
   created_at: Date;
   updated_at: Date;
 }
@@ -207,6 +210,7 @@ const appSettingsSchema = new Schema<IAppSettings>(
     club_admin_change_request_health_penalty: { type: Number, default: 5, min: 0, max: 10 },
     venue_offer_min_guests_default: { type: Number, default: 8, min: 1, max: 1000 },
     venue_offer_response_hours_default: { type: Number, default: 24, min: 1, max: 720 },
+    venue_offer_max_counters: { type: Number, default: 6, min: 2, max: 20 },
     // `coin_earn_pct` used to live here. It moved to CoinSettings — split into a
     // pod-join and a shop rate — where the rest of the coin payout rules are;
     // coinSettingsService.seed() carries the configured value across on the

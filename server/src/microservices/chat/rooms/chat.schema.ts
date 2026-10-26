@@ -37,6 +37,8 @@ export const chatTypeDefs = /* GraphQL */ `
     mention_users: [ChatUser!]!
     "An OFFER line's terms (venue chat only); null on every other line."
     offer: VenueChatOffer
+    "When the author last changed the line (venue chat only); null while it is as first sent."
+    edited_at: String
   }
 
   "The quoted line shown inside a reply."

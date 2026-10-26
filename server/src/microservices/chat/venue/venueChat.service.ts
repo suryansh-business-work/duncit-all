@@ -1,12 +1,14 @@
 import { GraphQLError } from 'graphql';
-import { getIo } from '@realtime/io';
 import { logs } from '@observability/log';
 import { displayFrom, userDisplayMap } from '@modules/access/user/user.display';
+import { currentOfferModel } from '@modules/venues/venueOffer/venueOffer.types';
 import { shapeMessage } from '../rooms/chat.shape';
 import { assertCleanText } from '../rooms/chat.service';
 import { blockedPeerIds } from '../rooms/chat.access';
 import { VenueChatMessageModel, type VenueChatOfferPayload } from './venueChat.model';
-import { assertVenueChatMember, venueChatRoomOf, venueChatThread, type VenueChatThread } from './venueChat.access';
+import { assertVenueChatMember, venueChatThread, type VenueChatThread } from './venueChat.access';
+import { emitToThread, VENUE_CHAT_EVENTS } from './venueChat.emit';
+import { readThread } from './venueChat.marks';
 import { notifyVenueChat } from './venueChat.notify';
 import { markVenueChatRead } from './venueChat.read';
 
@@ -20,6 +22,8 @@ export interface StoredVenueLine {
   text?: string | null;
   image_url?: string | null;
   offer?: VenueChatOfferPayload | null;
+  reactions?: ReadonlyArray<{ user_id: unknown; emoji: string }> | null;
+  edited_at?: Date | null;
   deleted?: boolean | null;
   createdAt?: Date | null;
 }
@@ -31,14 +35,16 @@ function offerOut(offer: VenueChatOfferPayload | null | undefined) {
   if (!offer) return null;
   return {
     ...offer,
+    model: currentOfferModel(offer.model),
     offerings: [...(offer.offerings ?? [])],
+    images: [...(offer.images ?? [])],
     start_at: isoOrNull(offer.start_at),
     end_at: isoOrNull(offer.end_at),
     expires_at: isoOrNull(offer.expires_at),
   };
 }
 
-const MAX_TEXT = 2000;
+export const MAX_VENUE_CHAT_TEXT = 2000;
 
 /** A photo line carries an uploaded https URL, nothing else. */
 function isHttpsUrl(value: string): boolean {
@@ -47,6 +53,15 @@ function isHttpsUrl(value: string): boolean {
   } catch {
     return false;
   }
+}
+
+/** A line's text, checked as a new line's is: present, within bounds, and clean. */
+export function cleanLineText(raw: string | null | undefined): string {
+  const text = (raw ?? '').trim();
+  if (!text) throw new GraphQLError('Write a message first', { extensions: { code: 'BAD_USER_INPUT' } });
+  if (text.length > MAX_VENUE_CHAT_TEXT) throw new GraphQLError('This message is too long', { extensions: { code: 'BAD_USER_INPUT' } });
+  assertCleanText(text);
+  return text;
 }
 
 /**
@@ -59,17 +74,11 @@ export async function shapeVenueLines(thread: VenueChatThread, docs: ReadonlyArr
   return docs.map((d) => {
     const person = displayFrom(display, String(d.user_id));
     const signed = d.side === 'VENUE' ? { name: thread.venueName || person.name, photo: thread.venuePhoto || person.photo } : person;
-    return { ...shapeMessage({ ...d, club_id: null }, signed), offer: offerOut(d.offer) };
+    return { ...shapeMessage({ ...d, club_id: null }, signed), offer: offerOut(d.offer), edited_at: isoOrNull(d.edited_at) };
   });
 }
 
-function emitLine(podId: string, payload: unknown) {
-  try {
-    getIo().to(venueChatRoomOf(podId)).emit('venue_chat_message', payload);
-  } catch {
-    // Socket server not initialised (scripts, tests). The reply still lands on the next read.
-  }
-}
+const readMarkFailed = (error: unknown) => logs.server.warn('venueChat', 'readThread', { error });
 
 export const venueChatService = {
   /** The thread for this member, with their side. */
@@ -79,8 +88,9 @@ export const venueChatService = {
 
   /** One page, newest `limit` before `before`, oldest first — without anyone
    * either side has blocked. Opening the newest page marks the thread read for
-   * the caller (every client, installed builds included, reads it on open). */
-  async messages(podId: string, userId: string, limit = 50, before?: string | null) {
+   * the caller (every client, installed builds included, reads it on open);
+   * `markRead: false` reads without it (a poll from a tab nobody is looking at). */
+  async messages(podId: string, userId: string, limit = 50, before?: string | null, markRead = true) {
     const { thread } = await assertVenueChatMember(podId, userId);
     const q: Record<string, unknown> = { pod_id: thread.podId, deleted: false };
     const blocked = await blockedPeerIds(userId);
@@ -90,7 +100,7 @@ export const venueChatService = {
       .sort({ createdAt: -1 })
       .limit(Math.min(200, Math.max(1, limit)))
       .lean<StoredVenueLine[]>();
-    if (!before) await markVenueChatRead(userId, thread.podId);
+    if (!before && markRead) await markVenueChatRead(userId, thread.podId);
     return shapeVenueLines(thread, docs.reverse());
   },
 
@@ -107,16 +117,14 @@ export const venueChatService = {
     return shapeVenueLines(thread, docs.reverse());
   },
 
-  /** Posts a line, broadcasts it to the thread, and pushes the other members. */
+  /** Posts a line, broadcasts it to the thread, and pushes the other members. Writing a line reads the thread. */
   async send(podId: string, userId: string, args: { type?: 'TEXT' | 'IMAGE' | null; text?: string | null; image_url?: string | null }) {
     const { thread, side } = await assertVenueChatMember(podId, userId);
     const type = args.type === 'IMAGE' ? 'IMAGE' : 'TEXT';
-    const text = (args.text ?? '').trim();
     const imageUrl = (args.image_url ?? '').trim();
-    if (type === 'TEXT' && !text) throw new GraphQLError('Write a message first', { extensions: { code: 'BAD_USER_INPUT' } });
+    const text = type === 'TEXT' ? cleanLineText(args.text) : (args.text ?? '').trim();
     if (type === 'IMAGE' && !isHttpsUrl(imageUrl)) throw new GraphQLError('Attach a photo first', { extensions: { code: 'BAD_USER_INPUT' } });
-    if (text.length > MAX_TEXT) throw new GraphQLError('This message is too long', { extensions: { code: 'BAD_USER_INPUT' } });
-    if (text) assertCleanText(text);
+    if (type === 'IMAGE' && text) cleanLineText(text);
 
     const doc = await VenueChatMessageModel.create({
       pod_id: thread.podId,
@@ -128,7 +136,9 @@ export const venueChatService = {
       image_url: type === 'IMAGE' ? imageUrl : '',
     });
     const [shaped] = await shapeVenueLines(thread, [doc.toObject() as StoredVenueLine]);
-    emitLine(thread.podId, shaped);
+    emitToThread(thread.podId, VENUE_CHAT_EVENTS.line, shaped);
+    // Best-effort: the line is in, a failed read mark only leaves the face where it was.
+    await readThread(thread, String(userId), side, { name: shaped.user_name, photo: shaped.user_photo }).catch(readMarkFailed);
     notifyVenueChat({
       thread,
       messageId: shaped.id,
@@ -156,11 +166,15 @@ export const venueChatService = {
         user_id: String(args.userId),
         side: args.side,
         type: 'OFFER',
-        text: args.text.slice(0, MAX_TEXT),
+        text: args.text.slice(0, MAX_VENUE_CHAT_TEXT),
         offer: args.offer,
       });
       const [shaped] = await shapeVenueLines(thread, [doc.toObject() as StoredVenueLine]);
-      emitLine(thread.podId, shaped);
+      emitToThread(thread.podId, VENUE_CHAT_EVENTS.line, shaped);
+      // The side that moved has read the thread up to its own move; a late answer moved nobody.
+      if (args.offer.by !== 'SYSTEM') {
+        await readThread(thread, String(args.userId), args.side, { name: shaped.user_name, photo: shaped.user_photo }).catch(readMarkFailed);
+      }
       return shaped;
     } catch (error) {
       logs.server.error('venueChat', 'postOffer', { error, pod_id: args.podId, event: args.offer.event });

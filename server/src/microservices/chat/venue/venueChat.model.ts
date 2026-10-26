@@ -34,6 +34,8 @@ export interface VenueChatOfferPayload {
   expires_at: Date | null;
   /** Why it was declined, when someone said. */
   reason: string;
+  /** Photos the mover attached to a counter (uploaded https URLs). */
+  images: string[];
 }
 
 const offerPayloadSchema = new Schema<VenueChatOfferPayload>(
@@ -58,9 +60,13 @@ const offerPayloadSchema = new Schema<VenueChatOfferPayload>(
     total_max: { type: Number, default: 0 },
     expires_at: { type: Date, default: null },
     reason: { type: String, default: '' },
+    images: { type: [String], default: [] },
   },
   { _id: false }
 );
+
+/** One member's reaction to a line: one row per member per emoji. */
+const reactionSchema = new Schema({ user_id: { type: String, required: true }, emoji: { type: String, required: true } }, { _id: false });
 
 /**
  * One line of a venue booking's chat: the pod's hosts and the venue's owner,
@@ -80,6 +86,9 @@ const VenueChatMessageSchema = new Schema(
     text: { type: String, default: '' },
     image_url: { type: String, default: '' },
     offer: { type: offerPayloadSchema, default: null },
+    reactions: { type: [reactionSchema], default: [] },
+    /** When its author last changed the text (or the mover their counter); null while it is as first sent. */
+    edited_at: { type: Date, default: null },
     deleted: { type: Boolean, default: false },
   },
   { timestamps: true }

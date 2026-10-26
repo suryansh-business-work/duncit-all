@@ -240,6 +240,14 @@ async function bootstrap() {
   });
   // The Settings › Shipping pincode list moves to its own collection once,
   // then the old field is emptied — a no-op on every later boot.
+  // "For the slot" is retired: those offers were always priced as FLAT. Only
+  // PER_SLOT rows match, and FLAT is readable by every release, so it is safe
+  // on every boot.
+  await safeSeed('perSlotOffers', async () => {
+    const { migratePerSlotOffers } = await import('@modules/venues/venueOffer/venueOffer.migration');
+    const result = await migratePerSlotOffers();
+    if (Object.values(result).some((count) => count > 0)) logs.server.info('bootstrap', 'perSlotOffers', result);
+  });
   await safeSeed('storeServiceablePincodes', async () => {
     const { migrateServiceablePincodes } = await import('@modules/commerce/store/store.migration');
     const result = await migrateServiceablePincodes();

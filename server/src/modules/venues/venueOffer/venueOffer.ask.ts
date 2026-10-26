@@ -7,6 +7,7 @@
  */
 import { GraphQLError } from 'graphql';
 import { moderateText } from '@modules/moderation/moderation.rules';
+import { isUploadedPhotoUrl } from '@utils/url';
 import { OFFER_ASK_LIMITS, type VenueOfferAsk } from './venueOffer.types';
 
 const bad = (message: string, extra: Record<string, unknown> = {}) =>
@@ -51,6 +52,17 @@ export function cleanOfferNote(raw: unknown): string {
   if (text.length > OFFER_ASK_LIMITS.note) throw bad(`Keep the note under ${OFFER_ASK_LIMITS.note} characters`);
   if (text) assertClean('note', text);
   return text;
+}
+
+/**
+ * The photos a counter carries: each one uploaded from a device (our CDN, not a
+ * stock library, not a video), repeats dropped, at most `OFFER_ASK_LIMITS.images`.
+ */
+export function cleanOfferImages(raw: readonly unknown[] | null | undefined): string[] {
+  const images = [...new Set((raw ?? []).map((entry) => String(entry ?? '').trim()).filter(Boolean))];
+  if (images.length > OFFER_ASK_LIMITS.images) throw bad(`Attach at most ${OFFER_ASK_LIMITS.images} photos`);
+  if (images.some((url) => !isUploadedPhotoUrl(url))) throw bad('Attach photos uploaded from your device');
+  return images;
 }
 
 /** The fewest guests: a whole number from 1 up to the most guests the booking is for. */

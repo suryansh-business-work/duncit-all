@@ -3,9 +3,8 @@
  * the offer supplies the model and the rate, the venue supplies its charges
  * (price rules, minimum spend, cleaning and pet fees, GST). Pure.
  *
- * Per guest is the calculator's PER_PAX. A per-slot offer is one price for the
- * picked window, which the calculator already prices as FLAT; the breakdown is
- * then labelled PER_SLOT so both sides see what was offered.
+ * Per guest is the calculator's PER_PAX; a flat offer is one price for the
+ * picked window.
  */
 import { quoteVenuePrice } from '@modules/venues/venuePricing/venuePricing.calc';
 import type {
@@ -26,14 +25,13 @@ import {
 const CALC_MODEL: Record<VenueOfferTerms['model'], VenuePricingModel> = {
   PER_GUEST: 'PER_PAX',
   PER_HOUR: 'PER_HOUR',
-  PER_SLOT: 'FLAT',
   FLAT: 'FLAT',
 };
 
 /** Why these terms cannot be offered, or null when they can. */
 export function termsProblem(terms: Partial<VenueOfferTerms> | null | undefined): string | null {
   if (!terms?.model || !(VENUE_OFFER_MODELS as readonly string[]).includes(terms.model)) {
-    return 'Pick how you will pay the venue: per guest, per hour, per slot or a flat price';
+    return 'Pick how you will pay the venue: per guest, per hour or a flat price';
   }
   const rate = Number(terms.rate);
   if (!Number.isFinite(rate) || rate <= 0) return 'Enter the amount you offer the venue';
@@ -60,9 +58,7 @@ export function offerPricing(charges: VenuePricing, terms: VenueOfferTerms): Ven
 
 /** The offer, priced. Same inputs, same breakdown. */
 export function quoteOffer(charges: VenuePricing, terms: VenueOfferTerms, req: QuoteRequest): QuoteResult {
-  const result = quoteVenuePrice(offerPricing(charges, terms), req);
-  if (!result.ok) return result;
-  return { ok: true, breakdown: { ...result.breakdown, model: terms.model === 'PER_SLOT' ? 'PER_SLOT' : result.breakdown.model } };
+  return quoteVenuePrice(offerPricing(charges, terms), req);
 }
 
 /** The venue's charges as frozen beside a quote: the parts the calculation reads, without its own slots and hours. */

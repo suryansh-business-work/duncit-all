@@ -5,9 +5,7 @@ export const venueOfferTypeDefs = /* GraphQL */ `
     PER_GUEST
     "rate x hours booked"
     PER_HOUR
-    "rate for the picked window"
-    PER_SLOT
-    "one price"
+    "one price for the picked window"
     FLAT
   }
 
@@ -40,7 +38,7 @@ export const venueOfferTypeDefs = /* GraphQL */ `
     pax: Int
     pets: Boolean
     model: VenueOfferModel!
-    "Rupees per guest, per hour, for the slot, or the flat price."
+    "Rupees per guest, per hour, or the flat price."
     rate: Float!
     "What the venue should provide for this money, one point each (Create Pod requires at least one)."
     offerings: [String!]
@@ -56,6 +54,8 @@ export const venueOfferTypeDefs = /* GraphQL */ `
     min_guests: Int
     "What the venue provides for this money, one point each."
     offerings: [String!]
+    "Photos uploaded from the mover's device (at most 4; never stock images or videos). Left out: none."
+    images: [String!]
   }
 
   type VenueOfferCounter {
@@ -64,6 +64,8 @@ export const venueOfferTypeDefs = /* GraphQL */ `
     "The fewest guests the venue is paid for on these terms."
     min_guests: Int!
     offerings: [String!]!
+    "Photos the venue attached to its counter."
+    images: [String!]!
     "Priced for the most guests."
     quote: VenuePriceBreakdown!
     "Priced for the fewest guests."
@@ -102,13 +104,15 @@ export const venueOfferTypeDefs = /* GraphQL */ `
     offerings: [String!]!
     "The host's note to the venue."
     note: String!
+    "Photos the host attached to their latest counter-back."
+    images: [String!]!
     pets: Boolean!
     "The host's terms, priced for the most guests with the venue's charges and Duncit's commission on top."
     quote: VenuePriceBreakdown!
     "The host's terms priced for the fewest guests."
     quote_min: VenuePriceBreakdown!
     status: VenueOfferStatus!
-    "1 for the host's offer, +1 per counter from either side."
+    "The version of the terms on the table: 1 for the host's offer, moving on with every counter, edit or withdrawal. Answers name the round they read."
     round: Int!
     "The venue's counter, while it is the terms on the table."
     counter: VenueOfferCounter
@@ -117,6 +121,12 @@ export const venueOfferTypeDefs = /* GraphQL */ `
     awaiting: VenueOfferParty
     "When the side whose move it is must answer by (ISO); null once closed or on offers made before expiry."
     expires_at: String
+    "Counter offers each side may make on this booking (Pod Settings: half the total)."
+    counters_per_side: Int!
+    "Counters the host has made so far (the opening offer is not one)."
+    host_counters_used: Int!
+    "Counters the venue has made so far."
+    venue_counters_used: Int!
   }
 
   "A live price for an offer or a counter, at the most and the fewest guests. ok = false: why it cannot be sent (message)."
@@ -182,6 +192,8 @@ export const venueOfferTypeDefs = /* GraphQL */ `
     venueCounterQuote(slot_id: ID!, terms: VenueOfferTermsInput!): VenueOfferQuoteResult!
     "Pod host: a counter-back to the venue's counter, priced before it is sent."
     hostCounterQuote(pod_id: ID!, terms: VenueOfferTermsInput!): VenueOfferQuoteResult!
+    "Either side: an edit of its own latest counter, priced before it is saved."
+    editCounterQuote(pod_id: ID!, terms: VenueOfferTermsInput!): VenueOfferQuoteResult!
     "Open hours, closed days and busy windows between two dates (YYYY-MM-DD, at most 62 days)."
     venueOfferCalendar(venue_id: ID!, from: String!, to: String!, space_label: String): VenueBookingCalendar!
     "A pod's venue offer, for its hosts and the venue's owner. Null when the pod has none."
@@ -197,5 +209,9 @@ export const venueOfferTypeDefs = /* GraphQL */ `
     rejectVenueCounterOffer(pod_id: ID!, reason: String, round: Int): Boolean!
     "Host answers the venue's counter with terms of their own; the venue answers next."
     counterVenueOfferAsHost(pod_id: ID!, terms: VenueOfferTermsInput!, note: String, round: Int): VenueBookingOffer!
+    "Either side changes its own latest counter before the other side has seen it in the chat (else OFFER_SEEN). Priced again; the round moves on."
+    editVenueOfferCounter(pod_id: ID!, terms: VenueOfferTermsInput!, note: String, round: Int!): VenueBookingOffer!
+    "Either side takes back its own latest counter before the other side has seen it: the terms before it are back on the table."
+    withdrawVenueOfferCounter(pod_id: ID!, round: Int!): VenueBookingOffer!
   }
 `;

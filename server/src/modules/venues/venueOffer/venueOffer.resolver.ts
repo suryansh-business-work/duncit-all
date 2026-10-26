@@ -3,6 +3,8 @@ import { requireAuth, requireRole } from '@middleware/rbac';
 import { consoleReaders } from '@modules/portals/console-access';
 import { venuePricingService } from '@modules/venues/venuePricing/venuePricing.service';
 import { venueOfferService, type VenueOfferMoveTerms } from './venueOffer.service';
+import { requestCountersPerSide } from './venueOffer.limits';
+import { venueOfferReviseService } from './venueOffer.revise';
 import { venueOfferStaffService } from './venueOffer.staff';
 import type { VenueOfferRequest } from './venueOffer.types';
 
@@ -25,6 +27,8 @@ export const venueOfferResolvers = {
       venueOfferService.counterPreview(requireAuth(ctx).id, args.slot_id, args.terms),
     hostCounterQuote: (_p: unknown, args: { pod_id: string; terms: VenueOfferMoveTerms }, ctx: GraphQLContext) =>
       venueOfferService.hostCounterPreview(requireAuth(ctx).id, args.pod_id, args.terms),
+    editCounterQuote: (_p: unknown, args: { pod_id: string; terms: VenueOfferMoveTerms }, ctx: GraphQLContext) =>
+      venueOfferReviseService.editPreview(requireAuth(ctx).id, args.pod_id, args.terms),
     venueOfferCalendar: async (_p: unknown, args: CalendarArgs, ctx: GraphQLContext) => {
       requireAuth(ctx);
       const cal = await venuePricingService.calendar(args.venue_id, args.from, args.to, args.space_label);
@@ -66,5 +70,13 @@ export const venueOfferResolvers = {
     ) => venueOfferService.hostReject(requireAuth(ctx).id, args.pod_id, args.reason, args.round),
     counterVenueOfferAsHost: (_p: unknown, args: MoveArgs & { pod_id: string }, ctx: GraphQLContext) =>
       venueOfferService.hostCounter(requireAuth(ctx).id, args.pod_id, args.terms, args.note, args.round),
+    editVenueOfferCounter: (_p: unknown, args: MoveArgs & { pod_id: string; round: number }, ctx: GraphQLContext) =>
+      venueOfferReviseService.editCounter(requireAuth(ctx).id, args.pod_id, args.terms, args.note, args.round),
+    withdrawVenueOfferCounter: (_p: unknown, args: { pod_id: string; round: number }, ctx: GraphQLContext) =>
+      venueOfferReviseService.withdrawCounter(requireAuth(ctx).id, args.pod_id, args.round),
+  },
+  VenueBookingOffer: {
+    // One settings read per request, however many offers a list carries.
+    counters_per_side: (_p: unknown, _a: unknown, ctx: GraphQLContext) => requestCountersPerSide(ctx),
   },
 };

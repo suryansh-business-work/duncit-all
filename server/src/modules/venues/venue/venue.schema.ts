@@ -288,12 +288,26 @@ export const venueTypeDefs = /* GraphQL */ `
     refund_tiers: [VenueCancellationRefundTier!]!
   }
 
+  "Roughly the business a venue hopes one booking brings on one pricing basis (rupees). A guide for hosts, never enforced."
+  type VenueMinBusiness {
+    "PER_GUEST (per guest), PER_HOUR (per hour) or FLAT (per booking)."
+    model: VenueOfferModel!
+    amount: Float!
+  }
+
+  input VenueMinBusinessInput {
+    model: VenueOfferModel!
+    amount: Float!
+  }
+
   "A venue's own terms for hosts' booking offers. 0 = the platform's default (Admin settings)."
   type VenueOfferSettings {
     "The fewest guests a host may offer to book for."
     min_guests: Int!
     "Hours either side has to answer an offer or a counter before it expires."
     response_hours: Int!
+    "The business the venue hopes for, one per pricing basis (per guest, per hour, per booking)."
+    min_business: [VenueMinBusiness!]!
   }
 
   input VenueOfferSettingsInput {
@@ -301,6 +315,8 @@ export const venueTypeDefs = /* GraphQL */ `
     min_guests: Int
     "0 = the platform default (0-720)."
     response_hours: Int
+    "At least one, one per pricing basis. Left out: unchanged."
+    min_business: [VenueMinBusinessInput!]
   }
 
   type VenueSettings {
@@ -375,6 +391,8 @@ export const venueTypeDefs = /* GraphQL */ `
     offer_min_guests: Int!
     "Hours either side has to answer a booking offer or counter: the venue's own setting, else the platform default."
     offer_response_hours: Int!
+    "The business the venue hopes each booking brings (a guide Create Pod shows once it is picked; never enforced)."
+    offer_min_business: [VenueMinBusiness!]!
     capacity_items: [VenueCapacityItem!]!
     "The venue serves food. On publicVenue the menu is empty unless this is on."
     offers_food: Boolean!

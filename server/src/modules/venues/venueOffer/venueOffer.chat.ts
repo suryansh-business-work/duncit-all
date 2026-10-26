@@ -15,7 +15,6 @@ import type { VenueOfferProposal } from './venueOffer.types';
 const MODEL_WORDS: Record<string, string> = {
   PER_GUEST: 'per guest',
   PER_HOUR: 'per hour',
-  PER_SLOT: 'for the slot',
   FLAT: 'flat',
 };
 
@@ -63,6 +62,7 @@ export function offerLinePayload(
     total_max: terms.quote.total,
     expires_at: move.expiresAt,
     reason: (move.reason ?? '').trim(),
+    images: [...(terms.images ?? [])],
   };
 }
 
@@ -86,6 +86,44 @@ function postedAs(slot: Pick<IVenueSlot, 'owner_user_id'>, hostId: string, side:
 /** The platform's currency symbol, for summaries written on the server. */
 async function currencySymbol(): Promise<string> {
   return (await getFinanceSettings()).currency_symbol || '₹';
+}
+
+/**
+ * A counter edited before the other side saw it: its own line is rewritten with
+ * the new terms (marked edited) and the summary returned. Never throws, like
+ * `postOfferLine` — the edit itself is already saved.
+ */
+export async function rewriteOfferLine(args: {
+  lineId: unknown;
+  slot: Pick<IVenueSlot, '_id' | 'start_at' | 'end_at' | 'space_label' | 'offer'>;
+  terms: VenueOfferProposal;
+  move: Parameters<typeof offerLinePayload>[2];
+}): Promise<string> {
+  const payload = offerLinePayload(args.slot, args.terms, args.move);
+  let text = LEAD[args.move.event];
+  try {
+    text = offerLineText(payload, await currencySymbol());
+    const { venueChatLineService } = await import('@microservices/chat/venue/venueChat.lines');
+    await venueChatLineService.reviseOfferLine(args.lineId, payload, text);
+  } catch (error) {
+    logs.server.error('venueOffer', 'rewriteOfferLine', { error, slot_id: String(args.slot._id) });
+  }
+  return text;
+}
+
+/**
+ * A counter withdrawn before the other side saw it: its line leaves the thread,
+ * and the move it answered — back on the table under a new round — carries that
+ * round on its own line. Never throws.
+ */
+export async function removeOfferLine(args: { lineId: unknown; podId: string; slotId: string; restored: { from: number; to: number } }) {
+  try {
+    const { venueChatLineService } = await import('@microservices/chat/venue/venueChat.lines');
+    await venueChatLineService.withdrawOfferLine(args.lineId, args.podId);
+    await venueChatLineService.renumberOfferLine(args.podId, args.slotId, args.restored.from, args.restored.to);
+  } catch (error) {
+    logs.server.error('venueOffer', 'removeOfferLine', { error, pod_id: args.podId });
+  }
 }
 
 /**

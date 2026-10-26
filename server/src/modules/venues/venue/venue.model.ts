@@ -415,6 +415,11 @@ const venueOfferSettingsSchema = new Schema<IVenueOfferSettings>(
     // 0 = the platform default (Admin settings); see venue.offerSettings.
     min_guests: { type: Number, default: 0, min: 0, max: 1000 },
     response_hours: { type: Number, default: 0, min: 0, max: 720 },
+    // The business the venue hopes each booking brings, one per pricing basis — a guide shown on Create Pod.
+    min_business: {
+      type: [new Schema({ model: { type: String, required: true }, amount: { type: Number, required: true, min: 0 } }, { _id: false })],
+      default: [],
+    },
   },
   { _id: false }
 );

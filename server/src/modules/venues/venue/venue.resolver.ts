@@ -14,7 +14,7 @@ import { MeetingModel } from '@modules/survey/meeting.model';
 import { CategoryModel } from '@modules/pods/category/category.model';
 import type { GraphQLContext } from '@context';
 import { hasRole, requireRole } from '@middleware/rbac';
-import { effectiveOfferSettings, requestOfferDefaults, type IVenueOfferSettings } from './venue.offerSettings';
+import { effectiveOfferSettings, requestOfferDefaults, toOfferSettingsPub, type IVenueOfferSettings } from './venue.offerSettings';
 import {
   consoleEditors,
   consoleGovernors,
@@ -68,6 +68,7 @@ export const venueResolvers = {
       effectiveOfferSettings(parent.settings?.offers, await requestOfferDefaults(ctx)).min_guests,
     offer_response_hours: async (parent: VenueOfferParent, _a: unknown, ctx: GraphQLContext) =>
       effectiveOfferSettings(parent.settings?.offers, await requestOfferDefaults(ctx)).response_hours,
+    offer_min_business: (parent: VenueOfferParent) => toOfferSettingsPub(parent.settings?.offers).min_business,
     // Live pods hosted at this venue. `.exec()` returns a real Promise so the
     // GraphQL executor never adopts a bare Mongoose Query twice.
     pod_count: (parent: { id?: string }) => {

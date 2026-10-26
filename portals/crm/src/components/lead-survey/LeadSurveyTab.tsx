@@ -93,13 +93,13 @@ export default function LeadSurveyTab({ entity, leadId }: Readonly<Props>) {
         Multiple categories — pick which survey to use:
       </Typography>
       {categories.length > 0 && (
-        <TextField select size="small" label={t('crm.common.category')} value={categoryId || categories[0]?.id || ''} sx={{ minWidth: 180 }}
+        <TextField select size="small" label={t('crm.common.category')} value={categoryId || categories[0].id} sx={{ minWidth: 180 }}
           onChange={(e) => { setCategoryId(e.target.value); setSubCategoryId(''); }}>
           {categories.map((c) => <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>)}
         </TextField>
       )}
       {subCategories.length > 0 && (
-        <TextField select size="small" label="Sub-category" value={subCategoryId || subCategories[0]?.id || ''} sx={{ minWidth: 180 }}
+        <TextField select size="small" label="Sub-category" value={subCategoryId || subCategories[0].id} sx={{ minWidth: 180 }}
           onChange={(e) => setSubCategoryId(e.target.value)}>
           {subCategories.map((c) => <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>)}
         </TextField>

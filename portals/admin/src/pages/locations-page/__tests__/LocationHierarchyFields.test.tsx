@@ -37,6 +37,14 @@ const lastForm = (onForm: ReturnType<typeof vi.fn>) => onForm.mock.lastCall?.[0]
 const field = (label: RegExp) => screen.getByRole('combobox', { name: label });
 
 describe('LocationHierarchyFields — country', () => {
+  it('shows no country, and offers no states, for a location with none stored', () => {
+    renderFields(seed({ country: '', country_code: '', state: '', state_code: '' }));
+
+    expect(field(/^Country/)).toHaveValue('');
+    fireEvent.change(field(/^State/), { target: { value: 'Kar' } });
+    expect(screen.queryAllByRole('option')).toHaveLength(0);
+  });
+
   it('shows the stored country, and picking another resets state and city', () => {
     const onForm = renderFields();
     expect(field(/^Country/)).toHaveValue('🇮🇳  India');
@@ -60,7 +68,7 @@ describe('LocationHierarchyFields — country', () => {
     const onForm = renderFields();
     const countryField = field(/^Country/).closest('.MuiAutocomplete-root') as HTMLElement;
 
-    fireEvent.click(within(countryField).getByRole('button', { name: 'Clear', hidden: true }));
+    fireEvent.click(within(countryField).getByTitle('Clear'));
 
     expect(lastForm(onForm)).toMatchObject({ country: '', country_code: '', state: '', city: '' });
   });
@@ -91,7 +99,7 @@ describe('LocationHierarchyFields — state', () => {
     const onForm = renderFields();
     const stateField = field(/^State/).closest('.MuiAutocomplete-root') as HTMLElement;
 
-    fireEvent.click(within(stateField).getByRole('button', { name: 'Clear', hidden: true }));
+    fireEvent.click(within(stateField).getByTitle('Clear'));
 
     expect(lastForm(onForm)).toMatchObject({ state: '', state_code: '', city: '', location_name: '' });
   });
@@ -115,7 +123,7 @@ describe('LocationHierarchyFields — city', () => {
     expect(lastForm(onForm)).toMatchObject({ city: 'Lonavala Hills', location_name: 'Lonavala Hills' });
 
     const cityRoot = cityField.closest('.MuiAutocomplete-root') as HTMLElement;
-    fireEvent.click(within(cityRoot).getByRole('button', { name: 'Clear', hidden: true }));
+    fireEvent.click(within(cityRoot).getByTitle('Clear'));
     await waitFor(() => expect(lastForm(onForm)).toMatchObject({ city: '', location_name: '' }));
   });
 });

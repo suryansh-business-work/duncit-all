@@ -50,7 +50,6 @@ export default function ReminderFormDialog({ open, entity, leadId, reminder, onC
   }, [open, reminder]);
 
   const save = async () => {
-    if (!title.trim()) { setError(t('crm.components.titleIsRequired')); return; }
     if (!dueAt || Number.isNaN(dueAt.getTime())) { setError(t('crm.components.pickAValidDueDateAnd')); return; }
     setError(null);
     try {

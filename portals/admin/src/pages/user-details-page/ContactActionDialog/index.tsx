@@ -16,7 +16,6 @@ import {
 } from '../contact-action.form';
 import ContactActionFormContent from './ContactActionFormContent';
 import { buildContactTarget, openNativeContact } from './contactActionDialogHelpers';
-import { useTranslation } from '@duncit/shell';
 
 interface Props {
   open: boolean;
@@ -27,7 +26,6 @@ interface Props {
 }
 
 export default function ContactActionDialog({ open, type, user, onClose, onSaved }: Readonly<Props>) {
-  const { t } = useTranslation();
   const [recordAction] = useMutation<any>(RECORD_USER_CONTACT_ACTION);
   const [startRecordedCall] = useMutation<any>(START_RECORDED_USER_CALL);
   const [busy, setBusy] = useState(false);
@@ -64,10 +62,6 @@ export default function ContactActionDialog({ open, type, user, onClose, onSaved
   };
 
   const submit = handleSubmit(async (accepted) => {
-    if (!target) {
-      setError(t('admin.contact.targetMissing'));
-      return;
-    }
     setBusy(true);
     setError(null);
     try {

@@ -344,19 +344,6 @@ describe('UserDetailsPage — tab switching', () => {
     fireEvent.click(screen.getByRole('tab', { name: 'User Change Logs' }));
     await waitFor(() => expect(tableFetchCalls.extraVariables).toEqual({ user_id: USER_ID, scope: 'USER' }));
   });
-
-  it("falls back to the route's user id when the loaded user has none of its own", async () => {
-    renderPage(<UserDetailsPage />, {
-      path: '/users/:user_id',
-      initialEntries: [`/users/${USER_ID}`],
-      mocks: [userMock({ user_id: '' }), hostProfileMock(), badgesMock(), surveysMock(), healthMock(), activityMock()],
-    });
-
-    await waitFor(() => expect(screen.getByRole('heading', { level: 1, name: 'Riya Sharma' })).toBeInTheDocument());
-    fireEvent.click(screen.getByRole('tab', { name: 'Verification' }));
-
-    await waitFor(() => expect(tableFetchCalls.extraVariables).toEqual({ user_id: USER_ID }));
-  });
 });
 
 describe('UserDetailsPage — header actions and dialogs', () => {

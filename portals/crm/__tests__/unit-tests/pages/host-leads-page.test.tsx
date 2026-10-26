@@ -321,3 +321,26 @@ describe('HostLeadsPage navigation and dialogs', () => {
     expect(screen.queryByRole('alert')).toBeNull();
   });
 });
+
+describe('HostLeadsPage delete pressed twice', () => {
+  it('sends one delete when Delete is pressed again while the dialog is closing', async () => {
+    const deleted = vi.fn(() => ({ data: { deleteHostLead: true } }));
+    renderPage([
+      tableMock([hostLead()]),
+      { request: { query: DELETE_HOST_LEAD, variables: { id: 'host-1' } }, result: deleted },
+      tableMock([]),
+    ]);
+    await screen.findByText('Pune Runners');
+
+    fireEvent.click(screen.getByLabelText('Delete lead'));
+    const confirm = within(await screen.findByRole('dialog')).getByRole('button', { name: 'Delete' });
+    fireEvent.click(confirm);
+    await waitFor(() => expect(deleted).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(confirm).not.toBeDisabled());
+    // The dialog is still fading out; the lead it named is already forgotten.
+    fireEvent.click(confirm);
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(deleted).toHaveBeenCalledTimes(1);
+  });
+});

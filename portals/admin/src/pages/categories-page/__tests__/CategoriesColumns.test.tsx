@@ -160,6 +160,11 @@ describe('CategoriesColumns', () => {
     expect(props.setSubSel).toHaveBeenCalledWith(t20);
   });
 
+  it('marks the picked sub-category as the SUB column selection', () => {
+    setup({ catSel: item({ id: 'c1' }), subSel: item({ id: 'b1', level: 'SUB' }) });
+    expect(panelProps.SUB.selectedId).toBe('b1');
+  });
+
   it('guards SUB create/edit behind a picked category', () => {
     const props = setup({ catSel: null });
     panelProps.SUB.onCreate();

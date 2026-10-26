@@ -134,3 +134,40 @@ describe('CategoriesPage — the toast', () => {
     await waitFor(() => expect(screen.queryByText('Deleted')).not.toBeInTheDocument());
   });
 });
+
+describe('CategoriesPage — deleting the selected sub-category', () => {
+  it('drops the sub-category selection, leaving the category it sits in selected', async () => {
+    const cricket = catNode({ id: 'c1', name: 'Cricket', level: 'CATEGORY', parent_id: 's1' });
+    const t20 = catNode({ id: 'b1', name: 'T20', level: 'SUB', parent_id: 'c1' });
+    renderWithProviders(<CategoriesPage />, [
+      brandingMock(),
+      categoriesMock('SUPER', null, [human]),
+      categoriesMock('CATEGORY', 's1', [cricket]),
+      categoriesMock('SUB', 'c1', [t20]),
+      {
+        request: { query: DELETE_CATEGORY, variables: { category_id: 'b1' } },
+        result: { data: { deleteCategory: true } },
+      },
+      // The refetch still lists the row, so only the selection state can tell it was dropped.
+      categoriesMock('SUPER', null, [human]),
+      categoriesMock('CATEGORY', 's1', [cricket]),
+      categoriesMock('SUB', 'c1', [t20]),
+    ]);
+
+    await screen.findByText('Human');
+    fireEvent.click(rowOf('Human'));
+    await screen.findByText('Cricket');
+    fireEvent.click(rowOf('Cricket'));
+    await screen.findByText('T20');
+    fireEvent.click(rowOf('T20'));
+    expect(rowOf('T20')).toHaveAttribute('aria-current', 'true');
+
+    clickRowIcon('T20', 'DeleteIcon');
+    fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+
+    expect(await screen.findByText('Deleted')).toBeInTheDocument();
+    await waitFor(() => expect(rowOf('T20')).toHaveAttribute('aria-current', 'false'));
+    expect(rowOf('Cricket')).toHaveAttribute('aria-current', 'true');
+    expect(rowOf('Human')).toHaveAttribute('aria-current', 'true');
+  });
+});

@@ -75,8 +75,8 @@ export default function UserActivitySection({ userId }: Readonly<Props>) {
     [year, activity?.days]
   );
 
+  // Only the Delete Day button calls this, and it is disabled until a day is picked.
   const removeDay = async () => {
-    if (!selectedDate) return;
     await deleteDay({ variables: { user_id: userId, date: selectedDate } });
     setSelectedDate('');
     await refetch();

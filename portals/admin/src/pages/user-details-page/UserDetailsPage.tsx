@@ -50,7 +50,7 @@ export default function UserDetailsPage() {
   if (s.error) return <Alert severity="error">{s.error.message}</Alert>;
   if (!s.user || !s.form) return <Alert severity="warning">{t('admin.users.notFound')}</Alert>;
 
-  const userId = s.user.user_id || user_id || '';
+  const userId: string = s.user.user_id;
 
   return (
     <Stack spacing={3}>

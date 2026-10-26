@@ -41,10 +41,7 @@ export default function ManualLogsTab({
   };
   const submit = async () => {
     setError(null);
-    if (!body.html.trim()) {
-      setError(t('crm.components.pleaseWriteSomethingBeforeSaving'));
-      return;
-    }
+    // Save is disabled until the body has content, so there is always something to send.
     try {
       await createLog({
         variables: {

@@ -3,6 +3,7 @@ import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { notifyError, useConfirm } from '@duncit/dialogs';
+import { parseApiError } from '@duncit/utils';
 import { useSession, useTranslation } from '@duncit/app-settings';
 import { deletionSettingsSchema, type DeletionSettingsValues } from './schema';
 import {
@@ -56,7 +57,7 @@ export function useAccountDeletionSettings(onToast: (message: string) => void) {
       : undefined,
   });
 
-  const enabled = watch('cron_enabled') ?? false;
+  const enabled = watch('cron_enabled');
   const weekly = watch('cron_frequency') === 'WEEKLY';
 
   const submit = handleSubmit(async (values) => {
@@ -82,7 +83,7 @@ export function useAccountDeletionSettings(onToast: (message: string) => void) {
       await refetch();
       onToast(t('admin.accountDeletion.saved'));
     } catch (e) {
-      notifyError(e instanceof Error ? e.message : String(e));
+      notifyError(parseApiError(e));
     }
   });
 
@@ -100,7 +101,7 @@ export function useAccountDeletionSettings(onToast: (message: string) => void) {
       await refetch();
       onToast(t('admin.accountDeletion.runFinished', { vars: { count: run?.purged ?? 0 } }));
     } catch (e) {
-      notifyError(e instanceof Error ? e.message : String(e));
+      notifyError(parseApiError(e));
     }
   };
 

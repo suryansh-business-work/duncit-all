@@ -89,7 +89,7 @@ const FieldCell = ({ field, value, onChange }: CellProps) => {
     case 'number':
       return (
         <TextField fullWidth size="small" type="number" label={field.label} placeholder={placeholder}
-          helperText={hint} required={field.required} value={value ?? field.default_value ?? ''}
+          helperText={hint} required={field.required} value={value ?? field.default_value}
           onChange={(e) => onChange(e.target.value === '' ? null : Number(e.target.value))} />
       );
     case 'boolean':

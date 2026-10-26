@@ -6,10 +6,12 @@ import { DuncitButton } from '@/components/DuncitButton';
 import { HostOfferActions } from '@/components/venue-offer/HostOfferActions';
 import type { OfferSide, OfferTerms } from '@/components/venue-offer/offer-format';
 import { VenueOfferActions } from '@/components/venue-offer/VenueOfferActions';
+import type { OfferReviseAnswers } from '@/hooks/useOfferRevise';
 import type { HostOfferAnswers } from '@/hooks/usePodVenueOffer';
 import type { VenueOfferAnswers } from '@/hooks/useVenueOfferAnswers';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { OfferReviseActions } from './OfferReviseActions';
 
 /** What a thread's member needs to act on its offer lines. */
 export interface OfferChatAnswering {
@@ -20,6 +22,8 @@ export interface OfferChatAnswering {
   room: { pod_id: string; pod_title: string; venue_name: string; pod_is_free: boolean };
   venue: VenueOfferAnswers;
   host: HostOfferAnswers;
+  /** Either side's edit or withdrawal of its own unseen counter. */
+  revise: OfferReviseAnswers;
   /** A host sends a new offer after one was declined or ran out. */
   onSendNewOffer: (move: VenueChatOfferMove) => void;
 }
@@ -28,21 +32,24 @@ interface Props {
   move: VenueChatOfferMove;
   /** The thread's newest offer line — the only one that may still be answered. */
   newest: boolean;
+  /** The other side has read the thread as far as this line: a counter of the reader's is on the record. */
+  seen: boolean;
   answering: OfferChatAnswering;
 }
 
 /**
  * What an offer line lets its reader do (`venueChatOfferActions`): answer the
  * move still waiting on them — the venue with Accept / Counter / Reject, the
- * host with Accept / Reject / Counter back, each in its own sheet — or, for a
- * host, send a new offer once the last one closed. Every older line is a record
- * and offers nothing. mWeb twin: OfferChatActions.
+ * host with Accept / Reject / Counter back, each in its own sheet — edit or
+ * withdraw the reader's own counter while the other side has not seen it, or,
+ * for a host, send a new offer once the last one closed. Every older line is a
+ * record and offers nothing. mWeb twin: OfferChatActions.
  */
-export function OfferChatActions({ move, newest, answering }: Readonly<Props>) {
+export function OfferChatActions({ move, newest, seen, answering }: Readonly<Props>) {
   const { t } = useTranslation();
   const { primary } = useThemeColors();
   const { side, live, room } = answering;
-  const actions = venueChatOfferActions(move, { side, newest, live });
+  const actions = venueChatOfferActions(move, { side, newest, live, seen });
 
   if (actions.answer && live) {
     return side === 'VENUE' ? (
@@ -60,6 +67,17 @@ export function OfferChatActions({ move, newest, answering }: Readonly<Props>) {
         podTitle={room.pod_title}
         venueName={room.venue_name}
         answers={answering.host}
+      />
+    );
+  }
+  if (actions.revise && live) {
+    return (
+      <OfferReviseActions
+        podId={room.pod_id}
+        live={live}
+        move={move}
+        side={side}
+        revise={answering.revise}
       />
     );
   }

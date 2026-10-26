@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 import { isOpenOfferMove, venueChatOfferTitleKey, type VenueChatOfferMove } from '@duncit/utils';
@@ -12,17 +13,30 @@ interface Props {
   /** The thread's newest offer line: only it may still be answered, and only it shows an answer-by time. */
   newest: boolean;
   answering: OfferChatAnswering;
+  /** The other side has read the thread as far as this line — the reader's own counter is on the record. */
+  seen?: boolean;
+  /** The line's foot, as every chat line has: its reactions, when it was sent, whether it was edited. */
+  footer?: ReactNode;
+  /** Long press: the line's own actions (react). */
+  onLongPress?: () => void;
 }
-
-/** OFFER and COUNTER wait on an answer; the rest close the offer. */
 
 /**
  * One move of a booking offer as a card in the pod's venue chat — "The venue
  * countered", "You accepted — booking confirmed" — with the terms it carried
- * and, on the move still waiting on the reader, their answers. A move of the
- * reader's own sits on their side of the thread. mWeb twin: OfferChatCard.
+ * and any photos, on the move still waiting on the reader their answers (or,
+ * on their own unseen counter, edit and withdraw), and the line's reactions and
+ * time at its foot. A move of the reader's own sits on their side of the
+ * thread. mWeb twin: OfferChatCard.
  */
-export function OfferChatCard({ move, newest, answering }: Readonly<Props>) {
+export function OfferChatCard({
+  move,
+  newest,
+  answering,
+  seen = false,
+  footer,
+  onLongPress,
+}: Readonly<Props>) {
   const { t } = useTranslation();
   const { primary } = useThemeColors();
   const { side } = answering;
@@ -33,6 +47,7 @@ export function OfferChatCard({ move, newest, answering }: Readonly<Props>) {
       testID={`offer-line-${move.slot_id}-${move.round}-${move.event}`}
       role="article"
       aria-label={title}
+      onLongPress={onLongPress}
       gap={10}
       marginHorizontal={12}
       padding={12}
@@ -57,7 +72,8 @@ export function OfferChatCard({ move, newest, answering }: Readonly<Props>) {
         podIsFree={answering.room.pod_is_free}
         open={newest && isOpenOfferMove(move.event)}
       />
-      <OfferChatActions move={move} newest={newest} answering={answering} />
+      <OfferChatActions move={move} newest={newest} seen={seen} answering={answering} />
+      {footer}
     </YStack>
   );
 }

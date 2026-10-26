@@ -4,7 +4,6 @@ import { PRESS_STYLE } from '@duncit/buttons-native';
 import type { VenueChatCounterpart } from '@duncit/utils';
 
 import { ChatRoomAvatar } from '@/components/chat/ChatRoomAvatar';
-import { VenueChatContactRow } from '@/components/chat/VenueChatContactRow';
 import { useDateFormat } from '@/hooks/useDateFormat';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -15,14 +14,17 @@ interface Props {
   /** The reader is the venue: the face is the pod's, not a venue photo. */
   venueSide: boolean;
   onBack: () => void;
+  /** Opens both sides' contact details and profiles; absent until the thread is in. */
+  onContact?: () => void;
 }
 
-/** The venue thread's top bar: back, then who it is with — the venue for a
- * host, the pod for the venue — and how to reach them outside the chat.
- * mWeb twin: venue-chat-page/VenueChatHeader. */
-export function VenueChatHeaderBar({ counterpart, venueSide, onBack }: Readonly<Props>) {
+/** The venue thread's top bar: back, who it is with — the venue for a host, the
+ * pod for the venue — with the pod and when it runs under it, and Contact,
+ * which opens both sides' details and profiles in a sheet without leaving the
+ * chat. mWeb twin: venue-chat-page/VenueChatHeader. */
+export function VenueChatHeaderBar({ counterpart, venueSide, onBack, onContact }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { color: ink } = useThemeColors();
+  const { color: ink, accent } = useThemeColors();
   const { formatDateTime } = useDateFormat();
   const when = counterpart?.when ? formatDateTime(counterpart.when) : '';
   const about = [counterpart?.podTitle, when].filter(Boolean).join(' · ');
@@ -34,6 +36,8 @@ export function VenueChatHeaderBar({ counterpart, venueSide, onBack }: Readonly<
       gap={12}
       paddingHorizontal={16}
       paddingVertical={8}
+      borderBottomWidth={1}
+      borderColor="$borderColor"
     >
       <XStack
         testID="venue-chat-back"
@@ -74,8 +78,29 @@ export function VenueChatHeaderBar({ counterpart, venueSide, onBack }: Readonly<
             {about}
           </Text>
         ) : null}
-        <VenueChatContactRow contact={counterpart?.contact ?? null} />
       </YStack>
+      {onContact ? (
+        <XStack
+          testID="venue-chat-contact-open"
+          role="button"
+          tabIndex={0}
+          hitSlop={4}
+          aria-label={t('availability.offers.chat.contact')}
+          onPress={onContact}
+          alignItems="center"
+          gap={6}
+          minHeight={40}
+          paddingHorizontal={12}
+          borderRadius={999}
+          backgroundColor="$soft"
+          pressStyle={PRESS_STYLE.control}
+        >
+          <MaterialIcons name="contact-phone" size={18} color={accent} aria-hidden />
+          <Text fontSize={13} fontWeight="700" color="$accent">
+            {t('availability.offers.chat.contact')}
+          </Text>
+        </XStack>
+      ) : null}
     </XStack>
   );
 }

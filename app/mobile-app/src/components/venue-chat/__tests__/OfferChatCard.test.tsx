@@ -1,4 +1,5 @@
-import { fireEvent, screen } from '@testing-library/react-native';
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react-native';
+import { Text } from 'tamagui';
 import type { VenueChatOfferMove } from '@duncit/utils';
 
 import { OfferChatCard } from '@/components/venue-chat/OfferChatCard';
@@ -10,6 +11,7 @@ import {
   hostAnswersApi,
   offerMove,
   offerTerms,
+  reviseAnswersApi,
   venueAnswersApi,
 } from '@/utils/venue-offer-fixture';
 
@@ -34,12 +36,26 @@ const answeringAs = (
   room,
   venue: venueAnswersApi(),
   host: hostAnswersApi(),
+  revise: reviseAnswersApi(),
   onSendNewOffer: jest.fn(),
   ...over,
 });
 
-const mount = (move: VenueChatOfferMove, answering: OfferChatAnswering, newest = true) =>
-  renderWithProviders(<OfferChatCard move={move} newest={newest} answering={answering} />);
+const mount = (
+  move: VenueChatOfferMove,
+  answering: OfferChatAnswering,
+  newest = true,
+  extra: { seen?: boolean; onLongPress?: () => void } = {},
+) =>
+  renderWithProviders(
+    <OfferChatCard
+      move={move}
+      newest={newest}
+      answering={answering}
+      footer={<Text testID="offer-line-footer">Sent 29 Aug, 10:00</Text>}
+      {...extra}
+    />,
+  );
 
 describe('OfferChatCard — the venue reading a host offer', () => {
   it('shows the move, what the venue receives, the ask and its answers while it waits on the venue', () => {
@@ -124,5 +140,109 @@ describe('OfferChatCard — the host reading the venue', () => {
     );
     // Their own offer waits on the venue: nothing for the host to press.
     expect(screen.queryByTestId('host-offer-accept')).toBeNull();
+  });
+});
+
+describe('OfferChatCard — every line has its foot, its photos and its menu', () => {
+  it("shows the line's foot, the photos attached to the move, and opens the line's menu on a long press", () => {
+    const onLongPress = jest.fn();
+    const photos = [
+      'https://ik.imagekit.io/duncit/chat/a.jpg',
+      'https://ik.imagekit.io/duncit/chat/b.jpg',
+    ];
+    const move = offerMove({ event: 'COUNTER', by: 'VENUE', round: 2, images: photos });
+    mount(move, answeringAs('HOST', counteredOffer()), true, { onLongPress });
+    expect(screen.getByTestId('offer-line-footer')).toHaveTextContent('Sent 29 Aug, 10:00');
+    const thumbs = screen.getByTestId('offer-move-images-2');
+    expect(within(thumbs).getByLabelText('Open photo 1')).toBeOnTheScreen();
+    expect(within(thumbs).getByLabelText('Open photo 2')).toBeOnTheScreen();
+    fireEvent(screen.getByTestId('offer-line-slot-1-2-COUNTER'), 'longPress');
+    expect(onLongPress).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows no photo strip on a move that carries none', () => {
+    mount(offerMove(), answeringAs('VENUE', offerTerms()));
+    expect(screen.queryByTestId('offer-move-images-1')).toBeNull();
+  });
+});
+
+describe('OfferChatCard — revising the reader’s own unseen counter', () => {
+  // The venue's own counter on round 2, waiting on the host.
+  const ownCounter = offerMove({
+    event: 'COUNTER',
+    by: 'VENUE',
+    round: 2,
+    model: 'PER_GUEST',
+    rate: 350,
+    min_guests: 10,
+    note: 'Weekend rate',
+    images: ['https://ik.imagekit.io/duncit/chat/setup.jpg'],
+  });
+
+  it('offers Edit and Withdraw instead of answers while the host has not seen it', () => {
+    mount(ownCounter, answeringAs('VENUE', counteredOffer()));
+    expect(screen.getByTestId('offer-revise-hint')).toHaveTextContent(
+      'Not seen yet — you can still edit or withdraw it.',
+    );
+    expect(screen.getByTestId('offer-revise-edit')).toBeOnTheScreen();
+    expect(screen.getByTestId('offer-revise-withdraw')).toBeOnTheScreen();
+    expect(screen.queryByTestId('chat-offer-accept')).toBeNull();
+  });
+
+  it('keeps it on the record once the host has seen it, or when a newer line followed', () => {
+    const seen = mount(ownCounter, answeringAs('VENUE', counteredOffer()), true, { seen: true });
+    expect(screen.queryByTestId('offer-revise-edit')).toBeNull();
+    seen.unmount();
+    mount(ownCounter, answeringAs('VENUE', counteredOffer()), false);
+    expect(screen.queryByTestId('offer-revise-edit')).toBeNull();
+  });
+
+  it('re-opens the counter sheet filled with the counter, its note and photo, and saves it for the round read', async () => {
+    const revise = reviseAnswersApi();
+    mount(ownCounter, answeringAs('VENUE', counteredOffer(), { revise }));
+    fireEvent.press(screen.getByTestId('offer-revise-edit'));
+    expect(screen.getByText('Edit your counter')).toBeOnTheScreen();
+    expect(screen.getByTestId('venue-offer-counter-send')).toHaveTextContent('Save changes');
+    expect(screen.getByDisplayValue('350')).toBeOnTheScreen();
+    expect(screen.getByDisplayValue('10')).toBeOnTheScreen();
+    expect(screen.getByDisplayValue('Weekend rate')).toBeOnTheScreen();
+    const attached = screen.getByTestId('venue-offer-counter-image');
+    expect(within(attached).getByLabelText('Open photo 1')).toBeOnTheScreen();
+    await act(async () => {
+      fireEvent.press(screen.getByTestId('venue-offer-counter-send'));
+    });
+    await waitFor(() => expect(revise.edit).toHaveBeenCalled());
+    expect(revise.edit).toHaveBeenCalledWith(
+      {
+        model: 'PER_GUEST',
+        rate: 350,
+        min_guests: 10,
+        offerings: ['A projector'],
+        images: ['https://ik.imagekit.io/duncit/chat/setup.jpg'],
+      },
+      'Weekend rate',
+      2,
+    );
+    // Saved: the sheet closes.
+    await waitFor(() => expect(screen.queryByText('Edit your counter')).toBeNull());
+  });
+
+  it('withdraws it only once confirmed, for the round read, and keeps a refusal on screen', async () => {
+    const revise = reviseAnswersApi(
+      { error: 'The other side has already seen this counter' },
+      false,
+    );
+    mount(ownCounter, answeringAs('VENUE', counteredOffer(), { revise }));
+    fireEvent.press(screen.getByTestId('offer-revise-withdraw'));
+    expect(screen.getByText('Withdraw your counter?')).toBeOnTheScreen();
+    expect(revise.withdraw).not.toHaveBeenCalled();
+    await act(async () => {
+      fireEvent.press(screen.getByTestId('offer-withdraw-confirm-btn'));
+    });
+    expect(revise.withdraw).toHaveBeenCalledWith(2);
+    // Refused: the confirmation stays, with the reason.
+    expect(screen.getByText('The other side has already seen this counter')).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId('offer-withdraw-cancel'));
+    expect(revise.clearError).toHaveBeenCalled();
   });
 });

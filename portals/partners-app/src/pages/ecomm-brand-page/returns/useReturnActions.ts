@@ -51,24 +51,26 @@ export function useReturnActions(onUpdated: (row: ReturnRow) => void) {
     async (action: ReturnAction, id: string, note?: string | null): Promise<boolean> => {
       const { mutation, resultKey } = ACTIONS[action];
       setBusy(action);
-      try {
-        const variables = note === undefined ? { id } : { id, note };
-        const { data } = await client.mutate<Record<string, ReturnRow>>({ mutation, variables });
-        const row = data?.[resultKey];
-        // Razorpay can refuse a refund without the mutation failing — the return then carries the error.
-        if (row?.refund.status === 'FAILED' && (action === 'refund' || action === 'retryRefund')) {
-          notifyError(t('partners.returns.refundFailed', { vars: { error: row.refund.error } }));
-        } else {
-          notifySuccess(successText(t, action));
-        }
-        if (row) onUpdated(row);
-        return true;
-      } catch (error) {
-        notifyError(parseApiError(error));
-        return false;
-      } finally {
-        setBusy(null);
-      }
+      const variables = note === undefined ? { id } : { id, note };
+      const done = await client
+        .mutate<Record<string, ReturnRow>>({ mutation, variables })
+        .then(({ data }) => {
+          const row = data?.[resultKey];
+          // Razorpay can refuse a refund without the mutation failing — the return then carries the error.
+          if (row?.refund.status === 'FAILED' && (action === 'refund' || action === 'retryRefund')) {
+            notifyError(t('partners.returns.refundFailed', { vars: { error: row.refund.error } }));
+          } else {
+            notifySuccess(successText(t, action));
+          }
+          if (row) onUpdated(row);
+          return true;
+        })
+        .catch((error: unknown) => {
+          notifyError(parseApiError(error));
+          return false;
+        });
+      setBusy(null);
+      return done;
     },
     [client, onUpdated, t],
   );

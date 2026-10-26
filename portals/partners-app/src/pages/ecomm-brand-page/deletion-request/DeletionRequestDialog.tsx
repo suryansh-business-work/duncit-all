@@ -51,12 +51,11 @@ export default function DeletionRequestDialog({ target, onClose, onDone }: Reado
     onClose();
   };
 
-  const submit = async (values: DeletionRequestValues) => {
-    if (!target) return;
+  const submit = async (current: DeletionTarget, values: DeletionRequestValues) => {
     setApiError(null);
     try {
-      await requestDeletion({ variables: toDeletionRequestVariables(target, values) });
-      notifySuccess(t('partners.deletionRequest.submitted', { vars: { name: target.name } }));
+      await requestDeletion({ variables: toDeletionRequestVariables(current, values) });
+      notifySuccess(t('partners.deletionRequest.submitted', { vars: { name: current.name } }));
       onDone();
       close();
     } catch (error) {
@@ -66,7 +65,7 @@ export default function DeletionRequestDialog({ target, onClose, onDone }: Reado
     }
   };
 
-  const renderBody = () => {
+  const renderBody = (current: DeletionTarget) => {
     if (preview.loading && !data) {
       return (
         <Stack sx={{ alignItems: 'center', py: 4 }}>
@@ -91,13 +90,13 @@ export default function DeletionRequestDialog({ target, onClose, onDone }: Reado
       <Stack spacing={2.5}>
         <DeletionImpact preview={data} />
         <DeletionRequestForm
-          key={`${target?.kind}-${target?.id}`}
+          key={`${current.kind}-${current.id}`}
           earliest={data.window.earliest}
           latest={data.window.latest}
           defaultValues={deletionDefaults(data)}
           busy={requestState.loading}
           apiError={apiError}
-          onSubmit={submit}
+          onSubmit={(values) => submit(current, values)}
           onCancel={close}
         />
       </Stack>
@@ -107,7 +106,7 @@ export default function DeletionRequestDialog({ target, onClose, onDone }: Reado
   return (
     <Dialog open={Boolean(target)} onClose={requestState.loading ? undefined : close} fullWidth maxWidth="sm" aria-labelledby={TITLE_ID}>
       <DialogTitle id={TITLE_ID}>{t('partners.deletionRequest.title', { vars: { name: target?.name ?? '' } })}</DialogTitle>
-      <DialogContent>{renderBody()}</DialogContent>
+      <DialogContent>{target && renderBody(target)}</DialogContent>
     </Dialog>
   );
 }

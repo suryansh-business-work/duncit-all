@@ -5,6 +5,7 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { DuncitButton } from '@duncit/buttons';
 import { notifyError, notifySuccess } from '@duncit/dialogs';
 import { useTranslation } from '@duncit/shell';
+import { parseApiError } from '@duncit/utils';
 import { shiprocketWebhookUrl } from '../../../../config/integration-links';
 import type { BrandIntegrationProvider } from '../../queries';
 import { integrationGuide } from './integration-guide';
@@ -23,13 +24,12 @@ export default function IntegrationGuide({ provider, defaultExpanded }: Readonly
   const newTab = t('partners.brandWizard.integration.opensInNewTab');
   const webhookUrl = provider === 'SHIPROCKET' ? shiprocketWebhookUrl() : null;
 
-  const copyWebhook = async () => {
-    if (!webhookUrl) return;
+  const copyWebhook = async (url: string) => {
     try {
-      await globalThis.navigator.clipboard.writeText(webhookUrl);
+      await globalThis.navigator.clipboard.writeText(url);
       notifySuccess(t('partners.brandWizard.integration.copied'));
     } catch (error) {
-      notifyError(error instanceof Error ? error.message : String(error));
+      notifyError(parseApiError(error));
     }
   };
 
@@ -59,7 +59,7 @@ export default function IntegrationGuide({ provider, defaultExpanded }: Readonly
               >
                 {webhookUrl}
               </Typography>
-              <IconButton size="small" aria-label={t('partners.brandWizard.integration.copy')} onClick={copyWebhook}>
+              <IconButton size="small" aria-label={t('partners.brandWizard.integration.copy')} onClick={() => copyWebhook(webhookUrl)}>
                 <ContentCopyIcon fontSize="small" />
               </IconButton>
             </Stack>

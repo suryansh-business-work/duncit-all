@@ -43,24 +43,25 @@ export function useOrderActions(onUpdated: (row: OrderRow) => void) {
     async (action: OrderAction, id: string, input?: OrderActionInput): Promise<boolean> => {
       const { mutation, resultKey } = ACTIONS[action];
       setBusy(action);
-      try {
-        const variables = { id, ...input };
-        const { data } = await client.mutate<Record<string, OrderRow>>({ mutation, variables });
-        const row = data?.[resultKey];
-        // ShipRocket can stop a booking part-way without the mutation failing — the order then carries why.
-        if (action === 'book' && row?.last_error) {
-          notifyError(t('partners.orders.bookFailed', { vars: { error: row.last_error } }));
-        } else {
-          notifySuccess(successText(t, action));
-        }
-        if (row) onUpdated(row);
-        return true;
-      } catch (error) {
-        notifyError(parseApiError(error));
-        return false;
-      } finally {
-        setBusy(null);
-      }
+      const done = await client
+        .mutate<Record<string, OrderRow>>({ mutation, variables: { id, ...input } })
+        .then(({ data }) => {
+          const row = data?.[resultKey];
+          // ShipRocket can stop a booking part-way without the mutation failing — the order then carries why.
+          if (action === 'book' && row?.last_error) {
+            notifyError(t('partners.orders.bookFailed', { vars: { error: row.last_error } }));
+          } else {
+            notifySuccess(successText(t, action));
+          }
+          if (row) onUpdated(row);
+          return true;
+        })
+        .catch((error: unknown) => {
+          notifyError(parseApiError(error));
+          return false;
+        });
+      setBusy(null);
+      return done;
     },
     [client, onUpdated, t],
   );

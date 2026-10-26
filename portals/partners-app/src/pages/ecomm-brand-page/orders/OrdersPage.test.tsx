@@ -88,6 +88,26 @@ describe('OrdersPage brands', () => {
     expect(sent.find((op) => op.name === TABLE)?.variables).toMatchObject({ brand_id: null });
   });
 
+  it('forgets the deleted brand, asks for every brand again and reloads the orders', async () => {
+    const sent: SentOperation[] = [];
+    mount({ DeleteMyEcommBrand: { deleteMyEcommBrand: true } }, sent);
+    fireEvent.click(await screen.findByTestId('brand-danger-delete'));
+    const dialog = within(await screen.findByRole('dialog'));
+    const brandReads = sent.filter((op) => op.name === OPTIONS).length;
+    const orderReads = sent.filter((op) => op.name === TABLE).length;
+    fireEvent.click(dialog.getByRole('button', { name: 'Delete' }));
+
+    await waitFor(() => expect(sent.filter((op) => op.name === OPTIONS).length).toBeGreaterThan(brandReads));
+    await waitFor(() => expect(sent.filter((op) => op.name === TABLE).length).toBeGreaterThan(orderReads));
+    expect(sent.find((op) => op.name === 'DeleteMyEcommBrand')?.variables).toEqual({ brand_doc_id: 'b1' });
+  });
+
+  it('names a brand that has no name yet as untitled in its delete question', async () => {
+    mount({ [OPTIONS]: { myEcommBrands: [brandOption('b1', '')] } });
+    fireEvent.click(await screen.findByTestId('brand-danger-delete'));
+    expect(await screen.findByText('Delete Untitled brand?')).toBeTruthy();
+  });
+
   it('filters the orders by the picked brand and reloads', async () => {
     const sent: SentOperation[] = [];
     mount({ [OPTIONS]: { myEcommBrands: [brandOption('b1', 'Aurora Pets'), brandOption('b2', 'Blue Kettle', 'APPROVED')] } }, sent);

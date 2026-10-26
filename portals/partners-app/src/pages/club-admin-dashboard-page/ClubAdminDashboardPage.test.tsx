@@ -120,3 +120,15 @@ describe('ClubAdminDashboardPage', () => {
     expect(lastTable?.variables.from).toBeNull();
   });
 });
+
+describe('ClubAdminDashboardPage when the figures cannot be read', () => {
+  it('shows the server message above the cards', async () => {
+    renderWithProviders(<ClubAdminDashboardPage />, {
+      link: scriptedLink({
+        ClubAdminDashboard: new Error('Dashboard is down'),
+        ClubAdminDashboardTable: { clubAdminDashboardTable: { __typename: 'ClubAdminClubRowTablePage', total: 0, rows: [] } },
+      }),
+    });
+    expect(await screen.findByText('Dashboard is down')).toBeTruthy();
+  });
+});

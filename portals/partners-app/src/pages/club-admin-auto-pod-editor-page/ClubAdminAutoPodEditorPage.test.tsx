@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import ClubAdminAutoPodEditorPage from './index';
+import ClubAutoPodEditor from './ClubAutoPodEditor';
 import { renderWithProviders } from '../../__tests__/render';
 import { scriptedLink, type ScriptedAnswer, type SentOperation } from '../../__tests__/groupC-link';
 import { recordNotices } from '../../__tests__/groupC-notices';
@@ -86,6 +87,18 @@ describe('ClubAdminAutoPodEditorPage', () => {
     expect(screen.getByTestId('config').textContent).toBe('true|true|false');
     expect(screen.getByTestId('products').textContent).toBe('1');
     expect(screen.getByText(/already claimed for Smash Club/)).toBeTruthy();
+  });
+
+  it('seeds no super category for a club that has only a category', async () => {
+    mount({ ClubAdminPodLookups: lookups([club({ super_category_id: null })]) });
+    expect((await screen.findByTestId('seed')).textContent).toBe('|sub1');
+  });
+
+  it('seeds nothing at all when the editor is handed a club with no categories', async () => {
+    renderWithProviders(<ClubAutoPodEditor club={{ id: 'club1', club_name: 'Smash Club' }} backTo="/club-admin/clubs/club1" products={[]} />, {
+      link: scriptedLink({}),
+    });
+    expect((await screen.findByTestId('seed')).textContent).toBe('|');
   });
 
   it('refuses to open the form for a club with no category', async () => {

@@ -53,10 +53,10 @@ export default function StudioSwitcher({ roles, products, active }: Readonly<Pro
   const held = visibleSections(roles, products);
   const current = held.find((section) => section.role === active) ?? held[0];
   if (!current) return null;
-  const joinable = PARTNER_SECTIONS.filter(
-    (section) =>
-      section.onboarding && !held.includes(section) && (products || !section.products),
-  );
+  const joinable = PARTNER_SECTIONS.flatMap((section) => {
+    const to = section.onboarding?.to;
+    return to && !held.includes(section) && (products || !section.products) ? [{ section, to }] : [];
+  });
   const CurrentIcon = STUDIO_ICON[current.role];
   const go = (to: string) => {
     setAnchor(null);
@@ -121,10 +121,10 @@ export default function StudioSwitcher({ roles, products, active }: Readonly<Pro
           );
         })}
         {joinable.length > 0 && <Divider />}
-        {joinable.map((section) => (
+        {joinable.map(({ section, to }) => (
           <MenuItem
             key={section.role}
-            onClick={() => go(section.onboarding?.to ?? '/earn')}
+            onClick={() => go(to)}
             data-testid={`studio-join-${section.role}`}
           >
             <ListItemIcon>

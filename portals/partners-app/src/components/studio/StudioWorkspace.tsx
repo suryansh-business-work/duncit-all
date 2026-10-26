@@ -24,11 +24,12 @@ export default function StudioWorkspace({ children }: Readonly<{ children: JSX.E
   const { visible: products } = useProductVisibility();
   const autoPods = useFeatureFlag('auto_pods');
   const activeRole = useActiveStudio();
-  const roles = user?.roles;
+  const userRoles = user?.roles;
+  const roles = useMemo(() => userRoles ?? [], [userRoles]);
   const section = activeSection(roles, products, activeRole);
   const mode = section?.mode;
   const options = useMemo(
-    () => (mode ? studioOptionsFor(mode, roles ?? [], { autoPods, console: true }) : []),
+    () => (mode ? studioOptionsFor(mode, roles, { autoPods, console: true }) : []),
     [mode, roles, autoPods],
   );
   // Between `md` and `lg` the sidebar and an open menu leave the page too

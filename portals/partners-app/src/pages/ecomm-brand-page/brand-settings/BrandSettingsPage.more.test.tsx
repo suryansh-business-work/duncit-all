@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { cleanup, configure, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import type { MockedResponse } from '@apollo/client/testing';
+import { GraphQLError } from 'graphql';
 import BrandSettingsPage from './BrandSettingsPage';
 import { MY_BRANDS } from '../queries';
 import { DELETE_MY_WAREHOUSE, MY_BRAND_WAREHOUSES, MY_WAREHOUSE_USAGE, SAVE_MY_WAREHOUSE } from './warehouse.queries';
@@ -198,5 +199,59 @@ describe('BrandSettingsPage delete dialog', () => {
     expect(deleted).toBe(false);
     expect(screen.queryByText('Pickup address deleted.')).toBeNull();
     expect(screen.getByText('Delhi warehouse')).toBeTruthy();
+  });
+});
+
+describe('BrandSettingsPage delete dialog when the usage check fails', () => {
+  it('says what ships from the address could not be checked, and offers no way to confirm', async () => {
+    renderSettings([
+      brandsMock,
+      warehousesMock([warehouse]),
+      {
+        request: { query: MY_WAREHOUSE_USAGE, variables: { brand_doc_id: BRAND_ID, id: 'w1' } },
+        result: { errors: [new GraphQLError('Usage service is down')] },
+      },
+    ]);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Delete Delhi warehouse' }));
+    const dialog = within(await screen.findByRole('dialog'));
+    expect(await dialog.findByText(/Usage service is down/)).toBeTruthy();
+    expect(dialog.getByTestId('pickup-removal-confirm').hasAttribute('disabled')).toBe(true);
+  });
+});
+
+describe('BrandSettingsPage notices', () => {
+  const deleteWith = (result: MockedResponse['result']): MockedResponse[] => [
+    brandsMock,
+    warehousesMock([warehouse]),
+    {
+      request: { query: MY_WAREHOUSE_USAGE, variables: { brand_doc_id: BRAND_ID, id: 'w1' } },
+      result: { data: { myBrandPickupLocationUsage: { __typename: 'BrandPickupUsage', count: 0, products: [] } } },
+    },
+    { request: { query: DELETE_MY_WAREHOUSE, variables: { brand_doc_id: BRAND_ID, id: 'w1' } }, result },
+  ];
+
+  const deleteIt = async () => {
+    fireEvent.click(await screen.findByRole('button', { name: 'Delete Delhi warehouse' }));
+    const dialog = await screen.findByRole('dialog');
+    await within(dialog).findByText('Delhi warehouse will be deleted. No product ships from it.');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Delete' }));
+  };
+
+  it('keeps a refusal on screen when the partner clicks elsewhere on the page', async () => {
+    renderSettings(deleteWith({ errors: [new GraphQLError('Still used by a product')] }));
+    await deleteIt();
+    expect(await screen.findByText('Still used by a product')).toBeTruthy();
+    fireEvent.click(document.body);
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(screen.getByText('Still used by a product')).toBeTruthy();
+  });
+
+  it('lets a click elsewhere dismiss a confirmation', async () => {
+    renderSettings(deleteWith({ data: { deleteMyBrandPickupLocation: true } }));
+    await deleteIt();
+    expect(await screen.findByText('Pickup address deleted.')).toBeTruthy();
+    fireEvent.click(document.body);
+    await waitFor(() => expect(screen.queryByText('Pickup address deleted.')).toBeNull());
   });
 });

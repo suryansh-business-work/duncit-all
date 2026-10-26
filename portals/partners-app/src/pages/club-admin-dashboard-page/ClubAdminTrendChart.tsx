@@ -16,7 +16,8 @@ function buildLine(points: readonly ClubAdminTrendPoint[], key: ClubAdminTrendKe
   const values = points.map((point) => point[key]);
   const max = Math.max(...values, 0);
   const span = max || 1;
-  const step = points.length > 1 ? WIDTH / (points.length - 1) : 0;
+  // Only drawn for two points or more, so there is always a step between them.
+  const step = WIDTH / (points.length - 1);
   return points
     .map((point, index) => {
       const x = index * step;

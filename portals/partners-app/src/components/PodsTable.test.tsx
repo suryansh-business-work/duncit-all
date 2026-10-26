@@ -171,6 +171,30 @@ describe('PodsTable', () => {
     expect(onManage).toHaveBeenCalledWith('pod-2');
   });
 
+  it('shows the seats scanned at the door against the seats booked', async () => {
+    const scanned: PodRowBase = { ...pods[0], attendance: { attended_seats: 2, booked_seats: 5, recorded: true } };
+    renderPodsTable(makeFetch([scanned]));
+
+    const row = podRow(await screen.findByText('Rooftop Mixer'));
+    expect(within(row).getByText(/2\s*\/\s*5/)).toBeTruthy();
+  });
+
+  it('adds an AI monitor column that receives the clicked pod', async () => {
+    const onMonitor = vi.fn();
+    renderPodsTable(makeFetch(), {
+      renderMonitor: (pod: PodRowBase) => (
+        <DuncitButton size="small" onClick={() => onMonitor(pod.id)}>
+          Monitor
+        </DuncitButton>
+      ),
+    });
+
+    const buttons = await screen.findAllByRole('button', { name: 'Monitor' });
+    expect(buttons).toHaveLength(3);
+    fireEvent.click(buttons[0]);
+    expect(onMonitor).toHaveBeenCalledWith('pod-1');
+  });
+
   it('omits the Actions column when the caller renders none', async () => {
     renderPodsTable(makeFetch());
     await screen.findByText('Rooftop Mixer');

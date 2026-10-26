@@ -7,7 +7,7 @@ interface Props {
   brand: EcommBrand | null;
   percent: number;
   busy: boolean;
-  onWithdraw: () => void;
+  onWithdraw: (brandId: string) => void;
 }
 
 /** The progress line and the one alert a brand's status earns: under review, approved, or rejected. */
@@ -27,7 +27,7 @@ export default function BrandWizardAlerts({ brand, percent, busy, onWithdraw }: 
           severity="info"
           data-testid="brand-wizard-under-review"
           action={
-            <DuncitButton color="inherit" size="small" onClick={onWithdraw} disabled={busy} data-testid="brand-wizard-withdraw">
+            <DuncitButton color="inherit" size="small" onClick={() => onWithdraw(brand.id)} disabled={busy} data-testid="brand-wizard-withdraw">
               {t('partners.brandWizard.withdraw')}
             </DuncitButton>
           }

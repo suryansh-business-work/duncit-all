@@ -1,6 +1,7 @@
 import 'dotenv/config';
 // Before ANY model compiles — a global plugin only reaches models compiled after it.
 import './modules/platform/tableChangeLog/tableChangeLog.register';
+import './modules/platform/auditFields/auditFields.register';
 import './otel'; // OTLP log export to SignOz (gated on OTEL_EXPORTER_OTLP_ENDPOINT)
 import { logs, ingestRemoteLog } from './observability/log';
 import {

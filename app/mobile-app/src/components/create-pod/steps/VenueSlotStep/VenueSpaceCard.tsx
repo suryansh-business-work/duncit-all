@@ -6,6 +6,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import type { CreatePodVenue } from '../../create-pod.types';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
+import { VenueMinBusinessNote } from './VenueMinBusinessNote';
 import type { VenueSpace } from './venueSpaces';
 
 /** One bookable space — its capacity is the pod's No. of spots. `name` is the
@@ -48,7 +49,8 @@ function SpaceChip({
   );
 }
 
-/** The picked venue's total capacity + its bookable spaces (the booking follows). */
+/** The picked venue's total capacity, what it usually expects per booking (a
+ * guide, when it names any) + its bookable spaces (the booking follows). */
 export function VenueSpaceCard({
   venue,
   spaces,
@@ -71,6 +73,7 @@ export function VenueSpaceCard({
         {venue.venue_type ? `${venue.venue_type} · ` : ''}
         {t('mweb.createPod.totalCapacity', { vars: { count: venue.capacity ?? 0 } })}
       </Text>
+      <VenueMinBusinessNote rows={venue.offer_min_business} />
       <YStack gap={8}>
         <FieldLabel label={t('mweb.createPod.spaceCapacity')} required testID="create-pod-space" />
         <XStack

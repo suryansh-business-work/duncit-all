@@ -1,6 +1,11 @@
 import { useState } from 'react';
 import { slotSpanLabel } from '@duncit/slots';
-import { currentOfferTerms, offerQuoteRange, venueOfferActions } from '@duncit/utils';
+import {
+  currentOfferTerms,
+  offerCounterAllowance,
+  offerQuoteRange,
+  venueOfferActions,
+} from '@duncit/utils';
 
 import { VenueOfferCounterForm } from '@/forms/venue-offer-counter';
 import { useDateFormat } from '@/hooks/useDateFormat';
@@ -93,6 +98,7 @@ export function VenueOfferActions({
       <OfferActionButtons
         testIDPrefix={testIDPrefix}
         actions={offer ? venueOfferActions(offer) : LEGACY_ACTIONS}
+        allowance={offer ? offerCounterAllowance(offer, 'VENUE') : null}
         busy={answers.busy}
         onAccept={() => setChoice('accept')}
         onReject={() => setChoice('reject')}

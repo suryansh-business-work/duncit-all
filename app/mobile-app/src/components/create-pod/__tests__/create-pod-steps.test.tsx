@@ -264,6 +264,30 @@ describe('VenueSlotStep', () => {
     await waitFor(() => expect(screen.getByTestId('spots-readout')).toHaveTextContent('120'));
   });
 
+  it('shows what the picked venue usually expects per booking — a guide, only when it names any', () => {
+    const expecting: CreatePodVenue = {
+      ...venue,
+      capacity: 75,
+      offer_min_business: [
+        { model: 'FLAT', amount: 5000 },
+        { model: 'PER_GUEST', amount: 200 },
+      ],
+    };
+    const { unmount } = renderWithProviders(<SpaceHarness venues={[expecting]} />);
+    const note = screen.getByTestId('create-pod-venue-min-business');
+    expect(note).toHaveTextContent(/This venue usually expects/);
+    // In the pickers' order: per guest before per booking.
+    expect(screen.getByText('₹200 per guest')).toBeOnTheScreen();
+    expect(screen.getByText('₹5,000 per booking')).toBeOnTheScreen();
+    expect(note).toHaveTextContent(/A guide from the venue — your offer can be different./);
+    unmount();
+
+    renderWithProviders(
+      <SpaceHarness venues={[{ ...venue, capacity: 75, offer_min_business: [] }]} />,
+    );
+    expect(screen.queryByTestId('create-pod-venue-min-business')).toBeNull();
+  });
+
   it('offers the whole venue when only a total capacity is set', async () => {
     const totalOnly: CreatePodVenue = { ...venue, capacity: 75, capacity_items: [] };
     renderWithProviders(<SpaceHarness venues={[totalOnly]} />);

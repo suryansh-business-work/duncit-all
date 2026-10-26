@@ -1,6 +1,11 @@
 import { useState } from 'react';
 import { slotSpanLabel } from '@duncit/slots';
-import { currentOfferTerms, hostOfferActions, offerQuoteRange } from '@duncit/utils';
+import {
+  currentOfferTerms,
+  hostOfferActions,
+  offerCounterAllowance,
+  offerQuoteRange,
+} from '@duncit/utils';
 
 import { VenueOfferCounterForm } from '@/forms/venue-offer-counter';
 import { useDateFormat } from '@/hooks/useDateFormat';
@@ -26,9 +31,9 @@ interface Props {
 /**
  * What the host can do with the venue's counter while it waits on them: Accept
  * it (the pod goes live), Reject it (the hold is released; they may send a new
- * offer) or Counter back with terms of their own — each in its own sheet, sent
- * for the round they read. Nothing once it is not their move. mWeb twin:
- * HostOfferActions.
+ * offer) or Counter back with terms of their own while they have counters
+ * left — each in its own sheet, sent for the round they read. Nothing once it
+ * is not their move. mWeb twin: HostOfferActions.
  */
 export function HostOfferActions({ podId, offer, podTitle, venueName, answers }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -59,6 +64,7 @@ export function HostOfferActions({ podId, offer, podTitle, venueName, answers }:
       <OfferActionButtons
         testIDPrefix="host-offer"
         actions={actions}
+        allowance={offerCounterAllowance(offer, 'HOST')}
         busy={answers.busy}
         onAccept={() => setChoice('accept')}
         onReject={() => setChoice('reject')}

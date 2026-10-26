@@ -138,3 +138,25 @@ describe('VenueOfferActions', () => {
     expect(screen.queryByTestId('req-counter')).toBeNull();
   });
 });
+
+describe('VenueOfferActions — the counters each side may make', () => {
+  it('names how many counters the venue has left beside Counter', () => {
+    mount(offerTerms({ venue_counters_used: 2 }));
+    expect(screen.getByTestId('req-counter')).toBeOnTheScreen();
+    expect(screen.getByTestId('req-counters-left')).toHaveTextContent('1 of 3 counters left');
+  });
+
+  it('hides Counter once the venue has used its share, leaving accept or reject', () => {
+    mount(offerTerms({ venue_counters_used: 3 }));
+    expect(screen.queryByTestId('req-counter')).toBeNull();
+    expect(screen.getByTestId('req-accept')).toBeOnTheScreen();
+    expect(screen.getByTestId('req-counters-left')).toHaveTextContent(
+      'You have used all your counters — accept or reject',
+    );
+  });
+
+  it('names no allowance for a request from before offers', () => {
+    mount(null);
+    expect(screen.queryByTestId('req-counters-left')).toBeNull();
+  });
+});

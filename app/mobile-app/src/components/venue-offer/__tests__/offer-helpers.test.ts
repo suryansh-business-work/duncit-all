@@ -5,9 +5,14 @@ import {
   offerStepTerms,
   offerTermsText,
 } from '@/components/venue-offer/offer-format';
-import { offerPriceTermsInput, offerTermsInput } from '@/components/venue-offer/offer-terms-input';
+import {
+  offerModelEnum,
+  offerPriceTermsInput,
+  offerTermsInput,
+} from '@/components/venue-offer/offer-terms-input';
 import { VenueOfferModel } from '@/generated/graphql/graphql';
 
+const PHOTO = 'https://ik.imagekit.io/duncit/chat/setup.jpg';
 const vars = { pod: 'Sunday Badminton', venue: 'Court House', when: 'Sat 6 pm', amount: '₹6,000' };
 
 describe('offerTermsText', () => {
@@ -69,14 +74,34 @@ describe('offerTermsInput', () => {
     });
   });
 
-  it('prices on the option, the amount and the minimum — never the points', () => {
+  it('prices on the option, the amount and the minimum — never the points or the photos', () => {
     expect(
       offerPriceTermsInput({ model: 'PER_HOUR', rate: 900, min_guests: 4, offerings: ['Mic'] }),
     ).toEqual({ model: VenueOfferModel.PerHour, rate: 900, min_guests: 4 });
-    expect(offerPriceTermsInput({ model: 'PER_SLOT', rate: 5000, offerings: ['Mic'] })).toEqual({
-      model: VenueOfferModel.PerSlot,
-      rate: 5000,
-    });
+    expect(
+      offerPriceTermsInput({ model: 'FLAT', rate: 5000, offerings: ['Mic'], images: [PHOTO] }),
+    ).toEqual({ model: VenueOfferModel.Flat, rate: 5000 });
+  });
+
+  it('sends the photos attached to a counter, and none when there are none', () => {
+    expect(
+      offerTermsInput({ model: 'FLAT', rate: 5000, offerings: ['Mic'], images: [PHOTO] }),
+    ).toEqual({ model: VenueOfferModel.Flat, rate: 5000, offerings: ['Mic'], images: [PHOTO] });
+    expect(
+      offerTermsInput({ model: 'FLAT', rate: 5000, offerings: [], images: [] }),
+    ).not.toHaveProperty('images');
+  });
+});
+
+describe('offerModelEnum', () => {
+  it('maps each of the three pricing options to the enum, and nothing else', () => {
+    expect(offerModelEnum('PER_GUEST')).toBe(VenueOfferModel.PerGuest);
+    expect(offerModelEnum('PER_HOUR')).toBe(VenueOfferModel.PerHour);
+    expect(offerModelEnum('FLAT')).toBe(VenueOfferModel.Flat);
+    // The retired per-slot option is no longer a pricing option.
+    expect(offerModelEnum('PER_SLOT')).toBeNull();
+    expect(offerModelEnum('')).toBeNull();
+    expect(offerModelEnum(null)).toBeNull();
   });
 });
 

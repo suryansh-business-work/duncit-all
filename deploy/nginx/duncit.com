@@ -988,6 +988,52 @@ server {
     }
 }
 
+# --- MCP: mcp.duncit.com (console SPA on :2046, MCP + OAuth on the API :2001) ---
+# One host, two upstreams. The connectors and their OAuth server live in the API
+# server (server/src/microservices/mcp/http/mcp.router.ts); the regex below is
+# that file's MCP_PATH, so change the two together. The router sends its own
+# CORS headers, so none are added or hidden here. Everything else — the console
+# and its /connect consent page — is the SPA.
+server {
+    listen 80;
+    listen [::]:80;
+    http2 on;
+    server_name mcp.duncit.com;
+    client_max_body_size 25m;
+
+    location ~ ^/(?:(?:[a-z0-9-]+/)?mcp|authorize|token|register|revoke|\.well-known/oauth-authorization-server|\.well-known/oauth-protected-resource(?:/(?:[a-z0-9-]+/)?mcp)?)/?$ {
+        proxy_pass         http://127.0.0.1:2001;
+        proxy_http_version 1.1;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_set_header   Upgrade           $http_upgrade;
+        proxy_set_header   Connection        "upgrade";
+
+        # A tool call is a GraphQL operation that may answer as an SSE stream:
+        # pass it through as it is written, and allow a long tool the same 300s
+        # as the API block (the Node process is pinned to it, see index.ts).
+        proxy_buffering       off;
+        proxy_connect_timeout 60s;
+        proxy_send_timeout    300s;
+        proxy_read_timeout    300s;
+        send_timeout          300s;
+    }
+
+    location / {
+        proxy_pass         http://127.0.0.1:2046;
+        proxy_http_version 1.1;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_set_header   Upgrade           $http_upgrade;
+        proxy_set_header   Connection        "upgrade";
+        proxy_read_timeout 90s;
+    }
+}
+
 # --- E-commerce console: ecomm-portal.duncit.com (SPA on :2038) ---
 server {
     listen 80;

@@ -106,6 +106,16 @@ export const PORTAL_ACCESS: PortalAccess[] = [
   { key: 'localization', name: 'Localization', url: url('localization'), roles: [{ key: 'LOCALIZATION_MANAGER', name: 'Localization Manager' }] },
   { key: 'targets', name: 'Targets', url: url('targets'), roles: [{ key: 'TARGETS_MANAGER', name: 'Targets Manager' }] },
   { key: 'gig-jobs', name: 'Gig Jobs', url: url('gig-jobs'), roles: [{ key: 'GIG_JOBS_MANAGER', name: 'Gig Jobs Manager' }] },
+  {
+    key: 'mcp',
+    name: 'MCP',
+    url: url('mcp'),
+    // MCP_USER connects an AI app; MCP_MANAGER also sees everyone's usage and owns the settings.
+    roles: [
+      { key: 'MCP_USER', name: 'MCP User' },
+      { key: 'MCP_MANAGER', name: 'MCP Manager' },
+    ],
+  },
 ];
 
 export interface RolePortalInfo {

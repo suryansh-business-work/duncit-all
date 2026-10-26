@@ -73,6 +73,7 @@ export const PORTALS: PortalEntry[] = [
   { key: 'localization', name: 'Localization', descriptionKey: 'session.portals.descriptions.localization', port: 2042, subdomain: 'localization', category: 'operations', image: PEXELS('267669') },
   { key: 'targets', name: 'Targets', descriptionKey: 'session.portals.descriptions.targets', port: 2044, subdomain: 'targets', category: 'operations', image: PEXELS('3184291') },
   { key: 'gig-jobs', name: 'Gig Jobs', descriptionKey: 'session.portals.descriptions.gigJobs', port: 2045, subdomain: 'gig-jobs', category: 'operations', image: PEXELS('3184465') },
+  { key: 'mcp', name: 'MCP', descriptionKey: 'session.portals.descriptions.mcp', port: 2046, subdomain: 'mcp', category: 'operations', image: PEXELS('8386440') },
 ];
 
 /** Resolves a portal URL: localhost:<port> in dev, https://<sub>.duncit.com in prod. */

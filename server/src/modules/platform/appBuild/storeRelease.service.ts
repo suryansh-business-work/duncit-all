@@ -242,7 +242,7 @@ const rowOfIssue = (issue: IStoreReleaseIssue): StoreReleaseRow => ({
   version: issue.version,
   build_number: issue.build_number,
   state: issue.state,
-  status: issue.kind === 'REJECTION' ? 'REJECTED' : 'APPROVED',
+  status: 'REJECTED',
   track: '',
   review_state: issue.review_state,
   created_at: issue.detected_at.toISOString(),
@@ -268,7 +268,7 @@ async function decorate(store: ReleaseStore, rows: StoreReleaseRow[]) {
     const key = `${row.version}|${row.build_number}`;
     seen.add(key);
     const issue = issues.get(key);
-    const firstNumber = row.build_number.split(',')[0]?.trim() ?? '';
+    const firstNumber = row.build_number.replace(/,.*$/s, '').trim();
     return { ...row, build_no: buildNos.get(firstNumber) ?? '', issue: issue ? pubIssue(issue) : null };
   });
   for (const [key, issue] of issues) {

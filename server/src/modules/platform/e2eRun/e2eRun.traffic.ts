@@ -42,8 +42,11 @@ export async function trafficKeyForRun(stamp: string): Promise<string> {
 }
 
 function validKey(value: string, now: number): boolean {
-  const [stamp, mac] = value.split('.');
-  const at = stampTime(stamp ?? '');
+  const dot = value.indexOf('.');
+  if (dot < 0) return false;
+  const stamp = value.slice(0, dot);
+  const mac = value.slice(dot + 1);
+  const at = stampTime(stamp);
   if (!at || !mac) return false;
   const age = now - at.getTime();
   if (age < -KEY_LIFETIME_MS || age > KEY_LIFETIME_MS) return false;

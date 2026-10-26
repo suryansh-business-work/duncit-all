@@ -85,17 +85,17 @@ const toPub = (doc: IEntityChangeLog) => ({
   id: String(doc._id),
   entity_type: doc.entity_type,
   entity_id: String(doc.entity_id),
-  entity_label: doc.entity_label ?? '',
+  entity_label: doc.entity_label,
   field: doc.field,
   field_label: doc.field_label,
-  old_value: doc.old_value ?? '',
-  new_value: doc.new_value ?? '',
+  old_value: doc.old_value,
+  new_value: doc.new_value,
   action: doc.action,
   actor_type: doc.actor_type,
   actor_user_id: doc.actor_user_id ? String(doc.actor_user_id) : null,
-  actor_name: doc.actor_name ?? '',
+  actor_name: doc.actor_name,
   source: doc.source,
-  created_at: doc.created_at?.toISOString?.() ?? '',
+  created_at: doc.created_at.toISOString(),
 });
 
 /** Allowlists for the shared table engine (DUNCIT TABLE CONTRACT v1). */

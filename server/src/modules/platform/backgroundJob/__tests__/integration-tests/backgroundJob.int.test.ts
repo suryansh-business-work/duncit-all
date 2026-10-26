@@ -25,6 +25,7 @@ import { BackgroundJobModel } from '../../backgroundJob.model';
 import { backgroundJobResolvers } from '../../backgroundJob.resolver';
 import { backgroundJobService } from '../../backgroundJob.service';
 import { resumeBackgroundJobs, scheduleJob } from '../../backgroundJob.runner';
+import * as operations from '../../bulkDelete.operations';
 
 interface ILead {
   name: string;
@@ -427,6 +428,26 @@ describe('bulk delete runner', () => {
     // Let go means a later schedule picks it up again.
     scheduleJob(String(job._id));
     expect(await settled(String(job._id))).toMatchObject({ status: 'COMPLETED', succeeded: 0 });
+  });
+});
+
+describe('a delete that fails with something that is not an Error', () => {
+  it('records the failure by its text and carries on to the next row', async () => {
+    const ids = await seedLeads('Lucknow', ['Failing Lead', 'Fine Lead']);
+    const real = operations.runAs;
+    jest.spyOn(operations, 'runAs').mockImplementation((document, variables, actor, identity) =>
+      variables?.lead_id === ids[0] ? Promise.reject('storage offline') : real(document, variables, actor, identity)
+    );
+    const started = await backgroundJobService.startBulkDelete(manager, {
+      table: 'clubLeadsTable',
+      mode: 'SELECTED',
+      ids,
+      variables: vars({ city: 'Lucknow' }),
+    });
+    const job = await settled(started.id);
+    expect(job).toMatchObject({ status: 'COMPLETED', succeeded: 1, failed: 1 });
+    expect(job.failures).toEqual([expect.objectContaining({ id: ids[0], message: 'storage offline' })]);
+    expect((await LeadModel.find().lean()).map((lead) => lead.name)).toEqual(['Failing Lead']);
   });
 });
 

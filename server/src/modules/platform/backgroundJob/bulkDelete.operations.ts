@@ -73,12 +73,14 @@ const scopeDocuments = new Map<string, DocumentNode | null>();
 export function tableScopeDocument(table: string): DocumentNode | null {
   const schema = currentSchema();
   if (!schema || !table.endsWith('Table')) return null;
-  if (!scopeDocuments.has(table)) {
+  let document = scopeDocuments.get(table);
+  if (document === undefined) {
     const tableField = schema.getQueryType()?.getFields()[table];
     const read = tableField ? fieldInvocation(tableField) : null;
-    scopeDocuments.set(table, read && buildDocument(schema, `query TableScope${read.signature} { ${read.call} { total } }`));
+    document = read && buildDocument(schema, `query TableScope${read.signature} { ${read.call} { total } }`);
+    scopeDocuments.set(table, document);
   }
-  return scopeDocuments.get(table) ?? null;
+  return document;
 }
 function build(schema: GraphQLSchema, table: string): BulkDeleteOperations | null {
   const target = BULK_DELETE_TARGETS[table];

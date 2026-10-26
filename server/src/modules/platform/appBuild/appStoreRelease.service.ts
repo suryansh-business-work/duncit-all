@@ -286,7 +286,7 @@ export async function pushBuildToAppStore(id: string, track: AppStoreTrack, by: 
       'This build was reported before the runner sent its build number, which App Store Connect needs up front. Make a new build.'
     );
   }
-  if ((build.app_store_releases ?? []).some(isPushing)) {
+  if (build.app_store_releases.some(isPushing)) {
     throw badInput(`A push to ${STORE} is already in progress for ${build.build_no}.`);
   }
   await storedArtifactPath(build, 'IPA', STORE);

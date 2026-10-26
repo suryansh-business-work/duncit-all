@@ -87,7 +87,7 @@ export type StepLog = (line: string) => void;
 const noLog: StepLog = () => undefined;
 
 /** Run one step of a release, noting how it went; a failure names the step it happened in. */
-async function during<T>(step: string, run: () => Promise<T>, log: StepLog = noLog): Promise<T> {
+async function during<T>(step: string, run: () => Promise<T>, log: StepLog): Promise<T> {
   const started = Date.now();
   log(`${step}…`);
   try {

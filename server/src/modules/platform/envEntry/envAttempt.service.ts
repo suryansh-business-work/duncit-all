@@ -82,7 +82,7 @@ function toPublic(doc: IEnvAttemptSettings) {
       label: CATEGORY_LABELS[category],
       max_attempts: limitOf(doc, category),
     })),
-    updated_at: doc.updated_at ? doc.updated_at.toISOString() : null,
+    updated_at: doc.updated_at.toISOString(),
   };
 }
 
@@ -92,7 +92,8 @@ interface Counted {
 }
 
 /** The count as a reader sees it: a window that has run out reads as empty before anything resets it. */
-function attemptsOf(entry: Counted | null, max: number, windowHours: number, now = Date.now()): EnvTestAttempts {
+function attemptsOf(entry: Counted | null, max: number, windowHours: number): EnvTestAttempts {
+  const now = Date.now();
   const started = entry?.test_window_started_at?.getTime() ?? 0;
   const live = started > 0 && now - started < windowHours * HOUR_MS;
   const used = live ? (entry?.test_attempts ?? 0) : 0;

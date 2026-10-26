@@ -171,7 +171,7 @@ export function artifactKindOf(name: string): AppBuildArtifactKind {
  * only ever handles a list, instead of each growing its own idea of legacy.
  */
 function artifactsOf(doc: IAppBuild): IAppBuildArtifact[] {
-  if (doc.artifacts?.length) return doc.artifacts;
+  if (doc.artifacts.length) return doc.artifacts;
   if (!doc.build_name && !doc.artifact_url) return [];
   return [
     {
@@ -180,7 +180,7 @@ function artifactsOf(doc: IAppBuild): IAppBuildArtifact[] {
       url: doc.artifact_url,
       file_id: doc.artifact_file_id,
       size_mb: doc.size_mb,
-      error: doc.artifact_error ?? '',
+      error: doc.artifact_error,
     },
   ];
 }
@@ -191,25 +191,25 @@ const pub = (doc: IAppBuild) => ({
   platform: doc.platform,
   status: doc.status,
   version: doc.version,
-  build_number: doc.build_number ?? '',
-  bundle_id: doc.bundle_id ?? '',
+  build_number: doc.build_number,
+  bundle_id: doc.bundle_id,
   artifacts: artifactsOf(doc).map((a) => ({
     kind: a.kind,
     name: a.name,
     url: a.url,
     file_id: a.file_id,
     size_mb: a.size_mb,
-    error: a.error ?? '',
+    error: a.error,
   })),
   build_name: doc.build_name,
   artifact_url: doc.artifact_url,
   artifact_file_id: doc.artifact_file_id,
-  artifact_error: doc.artifact_error ?? '',
-  error_message: doc.error_message ?? '',
+  artifact_error: doc.artifact_error,
+  error_message: doc.error_message,
   size_mb: doc.size_mb,
   commit_sha: doc.commit_sha,
   branch: doc.branch,
-  commits: doc.commits.map((c) => ({ hash: c.hash, subject: c.subject, author: c.author ?? '' })),
+  commits: doc.commits.map((c) => ({ hash: c.hash, subject: c.subject, author: c.author })),
   files_changed: doc.files_changed,
   insertions: doc.insertions,
   deletions: doc.deletions,
@@ -217,46 +217,46 @@ const pub = (doc: IAppBuild) => ({
   workflow_run_url: doc.workflow_run_url,
   duration_seconds: doc.duration_seconds,
   reported_by: doc.reported_by,
-  dispatch_id: doc.dispatch_id ?? '',
-  trigger_source: doc.trigger_source ?? 'PUSH',
-  triggered_by: doc.triggered_by ?? '',
-  app_env: doc.app_env ?? 'PRODUCTION',
-  requested_artifacts: doc.requested_artifacts ?? [],
-  submit_to_play_store: doc.submit_to_play_store ?? false,
-  stage: doc.stage ?? '',
-  stages: (doc.stages ?? []).map((s) => ({ name: s.name, at: s.at?.toISOString() ?? '' })),
-  play_releases: (doc.play_releases ?? []).map((r) => ({
+  dispatch_id: doc.dispatch_id,
+  trigger_source: doc.trigger_source,
+  triggered_by: doc.triggered_by,
+  app_env: doc.app_env,
+  requested_artifacts: doc.requested_artifacts,
+  submit_to_play_store: doc.submit_to_play_store,
+  stage: doc.stage,
+  stages: doc.stages.map((s) => ({ name: s.name, at: s.at.toISOString() })),
+  play_releases: doc.play_releases.map((r) => ({
     track: r.track,
     status: r.status,
-    version_code: r.version_code ?? '',
-    error: r.error ?? '',
-    by: r.by ?? '',
-    log: r.log ?? [],
-    started_at: r.started_at?.toISOString() ?? '',
+    version_code: r.version_code,
+    error: r.error,
+    by: r.by,
+    log: r.log,
+    started_at: r.started_at.toISOString(),
     finished_at: r.finished_at?.toISOString() ?? null,
   })),
-  app_store_releases: (doc.app_store_releases ?? []).map((r) => ({
+  app_store_releases: doc.app_store_releases.map((r) => ({
     track: r.track,
     status: r.status,
-    step: r.step ?? 'UPLOAD',
-    stage: r.stage ?? '',
-    asc_build_id: r.asc_build_id ?? '',
-    version_id: r.version_id ?? '',
-    error: r.error ?? '',
-    by: r.by ?? '',
-    started_at: r.started_at?.toISOString() ?? '',
+    step: r.step,
+    stage: r.stage,
+    asc_build_id: r.asc_build_id,
+    version_id: r.version_id,
+    error: r.error,
+    by: r.by,
+    started_at: r.started_at.toISOString(),
     finished_at: r.finished_at?.toISOString() ?? null,
   })),
   slack_channel: doc.slack_channel,
   slack_ts: doc.slack_ts,
   slack_error: doc.slack_error,
-  created_at: doc.created_at?.toISOString() ?? null,
+  created_at: doc.created_at.toISOString(),
 });
 
 /** GitHub commit link derived from the run URL — both live on the same repo. */
 function commitUrl(build: IAppBuild): string {
   const base = build.workflow_run_url.split('/actions/')[0];
-  if (!base || !build.commit_sha) return '';
+  if (!base) return '';
   return `${base}/commit/${build.commit_sha}`;
 }
 
@@ -281,14 +281,13 @@ const normaliseStatus = (v: unknown): AppBuildStatus =>
 function factLines(build: IAppBuild): string[] {
   const facts: string[] = [
     `*Version:* ${escapeMrkdwn(build.version)}`,
-    `*Environment:* ${ENV_LABEL[build.app_env] ?? ENV_LABEL.PRODUCTION}`,
+    `*Environment:* ${ENV_LABEL[build.app_env]}`,
     `*Branch:* ${escapeMrkdwn(build.branch) || '—'}`,
   ];
   // One line covering every file, so an Android build shows its APK next to its
   // AAB rather than quietly naming only the first.
   const sizes = artifactsOf(build)
-    .filter((a) => a.size_mb != null)
-    .map((a) => `${a.kind} ${(a.size_mb ?? 0).toFixed(1)} MB`);
+    .flatMap((a) => (a.size_mb == null ? [] : [`${a.kind} ${a.size_mb.toFixed(1)} MB`]));
   if (sizes.length > 0) facts.push(`*Size:* ${sizes.join(' · ')}`);
   if (build.commit_sha) {
     const short = build.commit_sha.slice(0, 7);

@@ -7,8 +7,8 @@ type SaveArgs = { dashboard_id: string; items: IDashboardLayoutItem[] };
 
 const toPublic = (doc: IDashboardLayout) => ({
   dashboard_id: doc.dashboard_id,
-  items: doc.items ?? [],
-  updated_at: doc.updated_at?.toISOString() ?? null,
+  items: doc.items,
+  updated_at: doc.updated_at.toISOString(),
 });
 
 export const dashboardLayoutResolvers = {

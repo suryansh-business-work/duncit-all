@@ -1,7 +1,7 @@
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { hasRole, requireRole } from '@middleware/rbac';
-import type { GraphQLContext } from '@context';
+import type { AuthUser, GraphQLContext } from '@context';
 import type { TableQueryInput } from '@utils/table-query';
 import { RegionModel } from '@modules/clubs/region/region.model';
 import { entityAuditService } from './entityAudit.service';
@@ -53,14 +53,14 @@ async function assertBrandScope(entityId: string, ctx: GraphQLContext): Promise<
  * them read any region's trail by changing the id in the URL. Anybody who also
  * holds a directory role is unaffected — this only narrows the regional role.
  */
-async function assertRegionScope(entityId: string, ctx: GraphQLContext): Promise<void> {
+async function assertRegionScope(entityId: string, user: AuthUser): Promise<void> {
   const roles = [...PLATFORM_ADMINS, 'ALL_CLUB_ADMINS_ACCESS'];
-  if (ctx.user && hasRole(ctx.user, roles)) return;
+  if (hasRole(user, roles)) return;
   if (!Types.ObjectId.isValid(entityId)) {
     throw new GraphQLError('Region not found', { extensions: { code: 'NOT_FOUND' } });
   }
   const region = await RegionModel.findById(entityId).select('manager_user_id').lean();
-  if (!region || String(region.manager_user_id) !== ctx.user?.id) {
+  if (!region || String(region.manager_user_id) !== user.id) {
     throw new GraphQLError('That is not your region', { extensions: { code: 'FORBIDDEN' } });
   }
 }
@@ -76,8 +76,8 @@ export const entityAuditResolvers = {
         await assertBrandScope(args.entity_id, ctx);
         return entityAuditService.table(args.entity_type, args.entity_id, args.query);
       }
-      requireRole(ctx, AUDIT_ROLES[args.entity_type]);
-      if (args.entity_type === 'REGION') await assertRegionScope(args.entity_id, ctx);
+      const user = requireRole(ctx, AUDIT_ROLES[args.entity_type]);
+      if (args.entity_type === 'REGION') await assertRegionScope(args.entity_id, user);
       return entityAuditService.table(args.entity_type, args.entity_id, args.query);
     },
 

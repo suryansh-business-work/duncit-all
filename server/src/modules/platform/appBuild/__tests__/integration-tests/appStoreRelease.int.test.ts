@@ -579,3 +579,35 @@ describe('resumeAppStoreReleases — failures and scheduling', () => {
     expect(uploads.createBuildUpload).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('drive — failures outside the state machine', () => {
+  const errorLog = () => logs.server.error as unknown as jest.Mock;
+
+  it('stops quietly when the build row is gone by the time the push is picked up', async () => {
+    const build = await seeded(entry());
+    jest.spyOn(AppBuildModel, 'findById').mockResolvedValueOnce(null as never);
+    await resumeAppStoreReleases();
+    await settle();
+    expect(errorLog()).not.toHaveBeenCalled();
+    expect(((await AppBuildModel.findById(build.id).lean()) as any).app_store_releases[0].status).toBe('PUSHING');
+  });
+
+  it('logs a resumed push whose driver fails on the database, naming the build', async () => {
+    const build = await seeded(entry());
+    jest.spyOn(AppBuildModel, 'findById').mockRejectedValueOnce(new Error('db down'));
+    await resumeAppStoreReleases();
+    await until(() => errorLog().mock.calls.some((c) => c[1] === 'appStoreResume'));
+    expect(errorLog()).toHaveBeenCalledWith('appBuild', 'appStoreResume', { error: expect.any(Error), build_no: build.build_no });
+  });
+
+  it('logs a fresh push whose driver fails on the database while still answering with the PUSHING row', async () => {
+    const build = await makeBuild();
+    m(getStoreListing).mockResolvedValue(completeListing());
+    const real = AppBuildModel.findById.bind(AppBuildModel);
+    jest.spyOn(AppBuildModel, 'findById').mockImplementationOnce(real as never).mockRejectedValueOnce(new Error('db down'));
+    const pushed = await pushBuildToAppStore(build.id, 'TESTFLIGHT', BY);
+    expect(pushed.app_store_releases[0].status).toBe('PUSHING');
+    await until(() => errorLog().mock.calls.some((c) => c[1] === 'appStoreRelease'));
+    expect(errorLog()).toHaveBeenCalledWith('appBuild', 'appStoreRelease', { error: expect.any(Error), build_no: build.build_no });
+  });
+});

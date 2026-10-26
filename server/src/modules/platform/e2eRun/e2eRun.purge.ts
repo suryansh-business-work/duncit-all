@@ -94,7 +94,7 @@ async function purgeChallenges(accounts: RegExp, phone: string): Promise<PurgedC
   const or: Record<string, unknown>[] = [{ email: accounts }];
   if (phone) or.push({ phone_number: phone });
   const res = await OtpChallengeModel.deleteMany({ $or: or });
-  return { collection: OtpChallengeModel.collection.name, deleted: res.deletedCount ?? 0 };
+  return { collection: OtpChallengeModel.collection.name, deleted: res.deletedCount };
 }
 
 /**

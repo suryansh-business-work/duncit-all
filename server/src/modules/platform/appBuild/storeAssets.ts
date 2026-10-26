@@ -23,24 +23,25 @@ const EXTENSION_BY_TYPE: Record<string, string> = {
 };
 
 /** `screenshot-3.png` from the URL, or from the content type when the URL has no extension. */
-function assetFileName(url: string, contentType: string, index: number): string {
+function assetFileName(url: string, extension: string, index: number): string {
   const base = path.posix.basename(new URL(url).pathname).replaceAll(/[^\w.-]/g, '_');
   if (path.extname(base)) return base;
   const stem = base || `image-${index + 1}`;
-  return `${stem}${EXTENSION_BY_TYPE[contentType] ?? '.png'}`;
+  return `${stem}${extension}`;
 }
 
 /** Fetch one image. Refuses anything but PNG or JPEG — the stores would too, later and less clearly. */
 export async function fetchStoreAsset(url: string, index = 0): Promise<StoreAsset> {
   const res = await outboundFetch('ImageKit', url, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
   if (!res.ok) throw new Error(`Could not fetch listing image (HTTP ${res.status}): ${url}`);
-  const contentType = (res.headers.get('content-type') ?? '').split(';')[0]?.trim() ?? '';
-  if (!EXTENSION_BY_TYPE[contentType]) {
+  const contentType = (res.headers.get('content-type') ?? '').replace(/;.*$/, '').trim();
+  const extension = EXTENSION_BY_TYPE[contentType];
+  if (!extension) {
     throw new Error(`Listing image is ${contentType || 'of unknown type'}, not PNG or JPEG: ${url}`);
   }
   const bytes = Buffer.from(await res.arrayBuffer());
   return {
-    fileName: assetFileName(url, contentType, index),
+    fileName: assetFileName(url, extension, index),
     bytes,
     md5: createHash('md5').update(bytes).digest('hex'),
     contentType,

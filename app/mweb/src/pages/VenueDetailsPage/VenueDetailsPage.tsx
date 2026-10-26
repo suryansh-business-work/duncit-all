@@ -51,9 +51,9 @@ export default function VenueDetailsPage() {
   const copyLink = async () => {
     try {
       await navigator.clipboard?.writeText(globalThis.window.location.href);
-      setSnack('Venue link copied');
+      setSnack(t('mweb.venueDetailsPage.linkCopied'));
     } catch {
-      setSnack('Copy is unavailable in this browser');
+      setSnack(t('mweb.venueDetailsPage.copyUnavailable'));
     }
   };
 
@@ -90,7 +90,7 @@ export default function VenueDetailsPage() {
         <EmptyState
           testId="venue-details-empty"
           icon={<StorefrontIcon />}
-          title="This venue link may be unavailable or the venue may not be approved yet."
+          title={t('mweb.venueDetailsPage.venueUnavailable')}
         />
       </Stack>
     );
@@ -126,7 +126,7 @@ export default function VenueDetailsPage() {
           flexWrap: "wrap"
         }}>
           <Chip label={venue.venue_type} sx={VENUE_CHIP_SX} />
-          <Chip label={`${venue.capacity} capacity`} sx={VENUE_CHIP_SX} />
+          <Chip label={t('mweb.venues.capacity', { vars: { capacity: venue.capacity } })} sx={VENUE_CHIP_SX} />
           {venue.tags?.map((tag) => <Chip key={tag} label={tag} sx={VENUE_CHIP_SX} />)}
         </Stack>
         {venue.description && <Typography variant="body2" sx={{

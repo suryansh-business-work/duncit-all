@@ -1,5 +1,6 @@
 import {
   Alert,
+  Box,
   Dialog,
   DialogActions,
   DialogContent,
@@ -47,7 +48,7 @@ export default function LocationFormDialog({
   );
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="md" data-testid="location-form-dialog">
       <DialogTitle>{form.id ? 'Edit Location' : 'New Location'}</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
@@ -65,13 +66,15 @@ export default function LocationFormDialog({
             </Stack>
           )}
           <LocationLaunchFields form={form} setForm={setForm} />
-          <MediaPickerField
-            label={t('admin.locations.imageUrl')}
-            value={form.location_image}
-            onChange={(url) => setForm({ ...form, location_image: url })}
-            folder="/locations"
-            required
-          />
+          <Box data-testid="location-form-image">
+            <MediaPickerField
+              label={t('admin.locations.imageUrl')}
+              value={form.location_image}
+              onChange={(url) => setForm({ ...form, location_image: url })}
+              folder="/locations"
+              required
+            />
+          </Box>
 
           <LocationZonesField
             form={form}
@@ -82,7 +85,7 @@ export default function LocationFormDialog({
             removeZone={removeZone}
           />
 
-          {opError && <Alert severity="error">{opError}</Alert>}
+          {opError && <Alert severity="error" data-testid="location-form-error">{opError}</Alert>}
         </Stack>
       </DialogContent>
       <DialogActions>
@@ -91,6 +94,7 @@ export default function LocationFormDialog({
           variant="contained"
           onClick={onSubmit}
           disabled={busy || !form.location_name.trim() || launchInvalid}
+          data-testid="location-form-save"
         >
           {busy ? 'Saving…' : 'Save'}
         </DuncitButton>

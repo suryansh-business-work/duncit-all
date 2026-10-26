@@ -90,7 +90,7 @@ export default function MeetingHolidaysCard() {
           </Box>
         </Stack>
 
-        {error && <Alert severity="error" sx={{ mb: 1.5 }}>{error}</Alert>}
+        {error && <Alert severity="error" sx={{ mb: 1.5 }} data-testid="meeting-holidays-error">{error}</Alert>}
 
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{
           alignItems: "flex-start"
@@ -114,20 +114,21 @@ export default function MeetingHolidaysCard() {
               <MenuItem key={value} value={value}>{HOLIDAY_TYPE_LABELS[value]}</MenuItem>
             ))}
           </TextField>
-          <DuncitButton variant="contained" onClick={add} disabled={adding} sx={{ flexShrink: 0 }}>
+          <DuncitButton variant="contained" onClick={add} disabled={adding} sx={{ flexShrink: 0 }} data-testid="meeting-holidays-add">
             {adding ? 'Adding…' : 'Add'}
           </DuncitButton>
         </Stack>
 
         <Stack spacing={1} sx={{ mt: 2 }}>
           {holidays.length === 0 && (
-            <Typography variant="body2" sx={{
+            <Typography variant="body2" data-testid="meeting-holidays-empty" sx={{
               color: "text.secondary"
             }}>{t('onboarding.meetings.noHolidaysAddedYet')}</Typography>
           )}
           {holidays.map((h) => (
             <Stack
               key={h.id}
+              data-testid={`meeting-holiday-${h.id}`}
               direction="row"
               spacing={1}
               sx={{

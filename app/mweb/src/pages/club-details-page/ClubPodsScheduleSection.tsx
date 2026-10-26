@@ -14,9 +14,9 @@ interface Props {
 }
 
 const RAILS: ReadonlyArray<readonly [ClubPodPhase, string]> = [
-  ['SOON', 'Happening soon'],
-  ['UPCOMING', 'Upcoming'],
-  ['PREVIOUS', 'Previous'],
+  ['SOON', 'mweb.clubDetails.happeningSoon'],
+  ['UPCOMING', 'mweb.common.upcoming'],
+  ['PREVIOUS', 'mweb.common.previous'],
 ];
 
 function PodRail({ title, pods, priceFormat, onOpen }: Readonly<Props & { title: string }>) {
@@ -45,8 +45,8 @@ export default function ClubPodsScheduleSection({ pods, priceFormat, onOpen }: R
 
   return (
     <Stack data-testid="club-pods-schedule" spacing={2.5}>
-      {RAILS.map(([phase, title]) => (
-        <PodRail key={phase} title={title} pods={byPhase(phase)} priceFormat={priceFormat} onOpen={onOpen} />
+      {RAILS.map(([phase, titleKey]) => (
+        <PodRail key={phase} title={t(titleKey)}pods={byPhase(phase)} priceFormat={priceFormat} onOpen={onOpen} />
       ))}
     </Stack>
   );

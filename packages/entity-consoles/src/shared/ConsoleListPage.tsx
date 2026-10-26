@@ -6,6 +6,7 @@ import AddIcon from '@mui/icons-material/Add';
 import type { DocumentNode } from 'graphql';
 import { DuncitButton } from '@duncit/buttons';
 import { DuncitTable, useApolloTableFetch, type DuncitColumn } from '@duncit/table';
+import useUrlColumnFilters from './useUrlColumnFilters';
 
 /**
  * A console's list: the heading, the way to add one, and the table.
@@ -54,6 +55,8 @@ export default function ConsoleListPage<Row extends { id: string }>({
   const client = useApolloClient();
   const navigate = useNavigate();
   const fetchRows = useApolloTableFetch<Row>(client, document, resultKey);
+  // A dashboard tile links here as `?status=<S>`; the list opens already filtered.
+  const urlFilters = useUrlColumnFilters(columns);
 
   return (
     <Box>
@@ -83,6 +86,7 @@ export default function ConsoleListPage<Row extends { id: string }>({
             to={addTo}
             variant="contained"
             startIcon={<AddIcon />}
+            data-testid="console-list-add"
           >
             {addLabel}
           </DuncitButton>
@@ -98,6 +102,7 @@ export default function ConsoleListPage<Row extends { id: string }>({
         emptyText={emptyText}
         defaultSort={{ field: defaultSortField, dir: 'desc' }}
         searchPlaceholder={searchPlaceholder}
+        externalFilters={urlFilters}
         onRowClick={(row) => navigate(rowPath(row))}
       />
     </Box>

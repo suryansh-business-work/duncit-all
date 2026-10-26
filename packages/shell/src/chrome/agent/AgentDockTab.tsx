@@ -39,6 +39,7 @@ export function AgentDockTab({ onOpen }: Readonly<Props>) {
         type="button"
         onClick={onOpen}
         aria-label={t('shell.agent.open')}
+        data-testid="shell-agent-dock-tab"
         {...handlers}
         sx={{
           position: 'fixed',

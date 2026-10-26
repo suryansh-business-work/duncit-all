@@ -1,8 +1,11 @@
 import { ticketService } from './ticket.service';
 import type { GraphQLContext } from '@context';
 import { hasRole, requireAuth, requireRole } from '@middleware/rbac';
+import { consoleReaders } from '@modules/portals/console-access';
 
 const ADMIN_RW = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN', 'FINANCE_MANAGER'];
+/** The Pods console's Event Tickets table also reads for `ALL_PODS_ACCESS`. */
+const TICKETS_TABLE_READ = [...ADMIN_RW, ...consoleReaders('POD')];
 
 export const eventTicketResolvers = {
   Query: {
@@ -23,7 +26,7 @@ export const eventTicketResolvers = {
       return ticketService.listAdmin(args.filter);
     },
     eventTicketsTable: (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
-      requireRole(ctx, ADMIN_RW);
+      requireRole(ctx, TICKETS_TABLE_READ);
       return ticketService.table(args.query);
     },
     eventTicket: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {

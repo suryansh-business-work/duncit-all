@@ -37,7 +37,7 @@ export default function PodModeToggle() {
       aria-label={t('podForm.basicSection.podMode')}
     >
       {POD_MODES.map((option) => (
-        <ToggleButton key={option.value} value={option.value} aria-label={aria[option.value as PodMode]}>
+        <ToggleButton key={option.value} value={option.value} aria-label={aria[option.value as PodMode]} data-testid={`pod-mode-${option.value}`}>
           {ICONS[option.value as PodMode]} {t(option.labelKey)}
         </ToggleButton>
       ))}

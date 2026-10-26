@@ -134,7 +134,8 @@ const AFTER_ACTION_TEMPLATE: Partial<Record<HostAction, string>> = {
 export const registrationService = {
   async register(user: LiteUserDoc, eventId: string, input: RegisterInput) {
     const event = await LiteEventModel.findById(eventId);
-    if (event?.status !== 'PUBLISHED' || event.hidden) throw notFound('Event');
+    // A PRIVATE event is refused exactly as bySlug hides it, so a direct call cannot learn it exists.
+    if (event?.status !== 'PUBLISHED' || event.hidden || !(await eventService.isVisibleTo(event, viewerOf(user)))) throw notFound('Event');
     if (event.end_at.getTime() < Date.now()) throw badInput('This event has already ended');
     const existing = await LiteRegistrationModel.findOne({ event_id: event._id, user_id: user._id });
     const existingStatus = existing?.status;
@@ -227,7 +228,7 @@ export const registrationService = {
   async checkInByCode(user: LiteUserDoc, eventId: string, code: string) {
     const event = await eventService.requireHosted(eventId, user);
     const reg = await LiteRegistrationModel.findOne({ event_id: event._id, code: code.trim().toUpperCase() });
-    if (!reg) throw notFound('No ticket with that code');
+    if (!reg) throw notFound('A ticket with that code');
     if (reg.status !== 'CONFIRMED') throw badInput(`This ticket is ${reg.status.toLowerCase().replaceAll('_', ' ')}, not confirmed`);
     if (reg.checked_in_at) throw badInput('This ticket was already checked in');
     reg.checked_in_at = new Date();

@@ -115,7 +115,9 @@ export default function ClubAdminClubPodsPage() {
             }
             renderActions={renderActions}
             actionsWidth={160}
-            renderMonitor={(pod) => <AiMonitorPill onClick={() => setTrailPod(pod)} />}
+            renderMonitor={(pod) => (
+              <AiMonitorPill onClick={() => setTrailPod(pod)} testId={`club-pod-ai-monitor-${pod.id}`} />
+            )}
           />
         </Stack>
       </CardContent>

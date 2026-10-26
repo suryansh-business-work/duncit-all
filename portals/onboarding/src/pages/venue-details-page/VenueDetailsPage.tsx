@@ -14,8 +14,8 @@ type VenueTab = 'overview' | 'pods';
 type Translate = ReturnType<typeof useTranslation>['t'];
 
 const venueTabs = (t: Translate): DuncitTabItem<VenueTab>[] => [
-  { value: 'overview', label: t('onboarding.venueDetails.overview') },
-  { value: 'pods', label: t('shell.nav.pods') },
+  { value: 'overview', label: t('onboarding.venueDetails.overview'), testId: 'venue-details-tab-overview' },
+  { value: 'pods', label: t('shell.nav.pods'), testId: 'venue-details-tab-pods' },
 ];
 
 export default function VenueDetailsPage() {

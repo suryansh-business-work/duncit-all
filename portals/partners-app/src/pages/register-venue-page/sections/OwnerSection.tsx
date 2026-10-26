@@ -46,6 +46,7 @@ export default function OwnerSection({ form, accountEmail }: Readonly<Props>) {
             required
             autoComplete="email"
             disabled
+            data-testid="register-venue-owner-email"
             error={Boolean(fieldState.error)}
             helperText={
               fieldState.error?.message ??
@@ -67,6 +68,7 @@ export default function OwnerSection({ form, accountEmail }: Readonly<Props>) {
             required
             type="tel"
             autoComplete="tel"
+            data-testid="register-venue-owner-phone"
             error={Boolean(fieldState.error)}
             helperText={fieldState.error?.message ?? 'Digits only, with optional + country code'}
           />

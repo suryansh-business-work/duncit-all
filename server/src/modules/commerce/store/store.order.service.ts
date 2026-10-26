@@ -9,6 +9,7 @@ import {
 } from '@modules/commerce/productOrder/productOrder.model';
 import { productOrderService } from '@modules/commerce/productOrder/productOrder.service';
 import { cancelOrders } from '@modules/commerce/shiprocket/shiprocket.gateway';
+import { nextStatus } from '@modules/commerce/shiprocket/shiprocket.statusMap';
 import { PaymentModel } from '@modules/finance/payment/payment.model';
 import { creditCoinsBack, recordPaymentRefund } from '@modules/finance/payment/payment.refundRecord';
 import { StoreProductModel } from './storeProduct.model';
@@ -113,7 +114,8 @@ interface CancelOptions {
  * with ShipRocket or it ships anyway), then the order, the stock and the money.
  */
 async function cancelOrder(order: IProductOrder, opts: CancelOptions) {
-  if (order.cancelled_at || !CANCELLABLE.has(order.fulfilment_status)) {
+  if (order.cancelled_at || order.fulfilment_status === 'CANCELLED') badInput('This order is already cancelled');
+  if (!CANCELLABLE.has(order.fulfilment_status)) {
     badInput('This order can no longer be cancelled — it is already with the courier');
   }
   if (order.shiprocket?.order_id) {
@@ -380,6 +382,11 @@ export const storeOrderService = {
   async updateStatus(id: string, status: FulfilmentStatus, note: string) {
     const order = await adminOrder(id);
     if (status === 'CANCELLED') badInput('Use Cancel order — it also handles the stock and the refund');
+    // The order only moves forward, by the same lifecycle tracking follows: a
+    // delivered order cannot go back to pending, and a final state stays final.
+    if (!nextStatus(order.fulfilment_status, status)) {
+      badInput(`An order that is ${order.fulfilment_status} cannot be moved to ${status}`);
+    }
     return productOrderService.advanceStatus(String(order._id), status, note);
   },
 

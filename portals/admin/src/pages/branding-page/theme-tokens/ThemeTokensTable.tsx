@@ -35,7 +35,7 @@ export default function ThemeTokensTable({ title, local, values, onChange }: Rea
         {title}
       </Typography>
       <TableContainer component={Paper} variant="outlined">
-        <Table size="small" aria-label={title}>
+        <Table size="small" aria-label={title} data-testid="branding-token-table">
           <TableHead>
             <TableRow>
               <TableCell>{t('admin.branding.colToken')}</TableCell>

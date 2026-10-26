@@ -57,6 +57,7 @@ export default function VenuesPage() {
             to="/venues/new"
             variant="contained"
             startIcon={<AddIcon />}
+            data-testid="venues-add"
           >
             {t('directory.venueEditor.addVenue')}
           </DuncitButton>

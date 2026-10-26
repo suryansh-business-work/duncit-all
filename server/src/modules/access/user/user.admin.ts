@@ -16,8 +16,18 @@ import {
 } from './relations';
 import { userAuditService } from '@modules/access/userAudit/userAudit.service';
 import type { CreateUserDTO, UpdateUserDTO } from './user.validator';
+import type { SupportCreateUserDTO } from '@modules/access/auth/auth.validator';
+import { numberHeldElsewhere } from './number-owner';
+import { isDuplicateKeyError } from '@utils/mongo-error';
+import { logs } from '@observability/log';
 import { rbacService } from '@modules/access/role/rbac.service';
-import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
+import {
+  combineFilters,
+  runTableQuery,
+  type TableEntityConfig,
+  type TableQueryInput,
+} from '@utils/table-query';
+import { userScopeFilter, type ReadScope } from '@middleware/rbac';
 import { notifyEvent } from '@services/notify/notify.service';
 import { transitionEntityId } from '@modules/platform/whatsapp/whatsapp.entity';
 import { publishSession, toPublic } from './user.public';
@@ -267,13 +277,18 @@ function buildAdminUserWrite(input: UpdateUserDTO, before: any): AdminUserWrite 
 }
 
 export const userAdminMethods = {
-  async list(filter?: {
-    role?: string;
-    city?: string;
-    zone?: string;
-    status?: string;
-    search?: string;
-  }) {
+  /** `scope` (rbac `readScope`) keeps a city or zone admin inside their own
+   * members; it is ANDed on so no client filter can widen it. */
+  async list(
+    filter?: {
+      role?: string;
+      city?: string;
+      zone?: string;
+      status?: string;
+      search?: string;
+    },
+    scope: ReadScope = null
+  ) {
     const query: any = {};
     if (filter?.role) query['metadata.role_keys'] = filter.role;
     if (filter?.city) query['profile.city'] = filter.city;
@@ -298,17 +313,20 @@ export const userAdminMethods = {
       }
       query.$or = or;
     }
-    const all = await UserModel.find(query).sort({ 'metadata.created_at': -1 });
+    const all = await UserModel.find(combineFilters(query, userScopeFilter(scope))).sort({ 'metadata.created_at': -1 });
     return Promise.all(all.map((u) => toPublic(u)));
   },
 
   /** Server-side table page (search/filter/sort/paginate) for the usersTable query.
-   * A `data_issues` filter is not a stored field, so it becomes the base filter here. */
-  async table(input?: TableQueryInput | null) {
+   * A `data_issues` filter is not a stored field, so it becomes the base filter here.
+   * `scope` (rbac `readScope`) narrows it to a city or zone admin's own members
+   * BEFORE any client filter, so the rows, the total and a bulk action all
+   * agree — and no filter the client sends can widen it. */
+  async table(input?: TableQueryInput | null, scope: ReadScope = null) {
     const { base, rest } = await splitDataIssuesFilter(input);
     const { docs, total, page, page_size } = await runTableQuery(
       UserModel,
-      base,
+      combineFilters(base, userScopeFilter(scope)),
       rest,
       USER_TABLE_CONFIG
     );
@@ -317,11 +335,15 @@ export const userAdminMethods = {
 
   /** Admin Partners list — every user holding a partner-portal role (Host,
    * Venue Partner, Product Seller, Club Admin). The client's `role` filter
-   * narrows to one type; the base $in keeps non-partners out. */
-  async partnersTable(input?: TableQueryInput | null) {
+   * narrows to one type; the base $in keeps non-partners out, and `scope`
+   * (rbac `readScope`) keeps a city or zone admin to their own place. */
+  async partnersTable(input?: TableQueryInput | null, scope: ReadScope = null) {
     const { docs, total, page, page_size } = await runTableQuery(
       UserModel,
-      { 'metadata.role_keys': { $in: Object.keys(PARTNER_ROLE_LABELS) } },
+      combineFilters(
+        { 'metadata.role_keys': { $in: Object.keys(PARTNER_ROLE_LABELS) } },
+        userScopeFilter(scope)
+      ),
       input,
       USER_TABLE_CONFIG
     );
@@ -352,6 +374,46 @@ export const userAdminMethods = {
     const fresh = await UserModel.findById(created._id);
     await userAuditService.recordCreate(String(created._id), fresh);
     return toPublic(fresh);
+  },
+
+  /**
+   * Support › Chat with Us: an agent opens a MEMBER account (role USER, nothing
+   * else) on a caller's behalf, with the temporary password the dialog asks the
+   * agent to pass on. Email and phone are refused when another account holds
+   * them (the phone in either field it can live in — `numberHeldElsewhere`), and
+   * neither is marked verified: nobody answered a code. The change log records
+   * the agent as the actor; the role row records them as `assigned_by`.
+   */
+  async createForSupport(input: SupportCreateUserDTO, agentId: string) {
+    const email = input.email.toLowerCase();
+    if (await UserModel.exists({ 'auth.email': email })) {
+      throw new GraphQLError('Email already in use', { extensions: { code: 'CONFLICT' } });
+    }
+    if (input.phone_number && (await numberHeldElsewhere(input.phone_extension ?? '', input.phone_number))) {
+      throw new GraphQLError(
+        'This phone number is already registered. Please use a different number or login.',
+        { extensions: { code: 'CONFLICT' } }
+      );
+    }
+    const hashed = await bcrypt.hash(input.password, 10);
+    const username = await nextFreeUsername(input.first_name, input.last_name);
+    // The unique indexes stay the authority: a race past the checks above is
+    // still answered as the same CONFLICT.
+    const created = await UserModel.create(
+      shapeUserDoc({ ...input, email }, { passwordHash: hashed, username })
+    ).catch((e: unknown) => {
+      throw isDuplicateKeyError(e) ? registerDuplicateError(e) : e;
+    });
+    await UserRoleModel.create({
+      user_id: created._id,
+      role: 'USER',
+      scope: { city: null, zone: null },
+      assigned_by: new Types.ObjectId(agentId),
+    });
+    await welcomeNewAccount(created, 'support-create');
+    await userAuditService.recordCreate(String(created._id), created);
+    logs.server.info('user.service', 'support-create', { user_id: String(created._id), agent_id: agentId });
+    return toPublic(created);
   },
 
   async update(user_id: string, input: UpdateUserDTO) {

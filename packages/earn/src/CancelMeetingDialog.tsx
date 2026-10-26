@@ -38,27 +38,29 @@ export default function CancelMeetingDialog({ open, kind, onClose, onDone }: Rea
   };
 
   return (
-    <Dialog open={open} onClose={() => !cancelling && onClose()} maxWidth="xs" fullWidth>
-      <DialogTitle sx={{ fontWeight: 700 }}>{labels.cancelTitle}</DialogTitle>
+    <Dialog data-testid="cancel-dialog" open={open} onClose={() => !cancelling && onClose()} maxWidth="xs" fullWidth>
+      <DialogTitle data-testid="cancel-title" sx={{ fontWeight: 700 }}>{labels.cancelTitle}</DialogTitle>
       <DialogContent>
         <Stack spacing={1.5}>
-          <DialogContentText>{labels.cancelBody}</DialogContentText>
+          <DialogContentText data-testid="cancel-body">{labels.cancelBody}</DialogContentText>
           <MeetingReasonForm
             formId="cancel-reason-form"
+            testId="cancel-reason"
             label={labels.cancelReasonLabel}
             helperText={labels.cancelReasonHint}
             labels={labels}
             onSubmit={submit}
           />
-          {error && <Alert severity="warning">{error}</Alert>}
+          {error && <Alert data-testid="cancel-error" severity="warning">{error}</Alert>}
         </Stack>
       </DialogContent>
       <DialogActions>
-        <DuncitButton onClick={onClose} disabled={cancelling}>
+        <DuncitButton data-testid="cancel-keep" onClick={onClose} disabled={cancelling}>
           {labels.keepMeeting}
         </DuncitButton>
         <DuncitButton
           type="submit"
+          data-testid="cancel-confirm"
           form="cancel-reason-form"
           color="error"
           variant="contained"

@@ -61,7 +61,7 @@ export default function PodPlansPage() {
   return (
     <Stack spacing={3}>
       <Box>
-        <Typography variant="h5" component="h1" sx={{
+        <Typography variant="h5" component="h1" data-testid="pod-plans-title" sx={{
           fontWeight: 700
         }}>
           {t('admin.podPlans.title')}
@@ -86,6 +86,7 @@ export default function PodPlansPage() {
               setEditing(null);
               setOpen(true);
             }}
+            data-testid="pod-plan-new"
           >
             New plan
           </DuncitButton>

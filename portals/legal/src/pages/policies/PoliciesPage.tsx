@@ -163,7 +163,7 @@ export default function PoliciesPage() {
         onHistory={setHistoryTarget}
         onNotify={setNotifyTarget}
         toolbarActions={
-          <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={openNew}>
+          <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={openNew} data-testid="policy-new">
             {t('legal.policies.create')}
           </DuncitButton>
         }

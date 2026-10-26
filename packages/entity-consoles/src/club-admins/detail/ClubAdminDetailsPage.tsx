@@ -17,8 +17,8 @@ type ClubAdminTab = 'overview' | 'changeLogs';
 type Translate = ReturnType<typeof useTranslation>['t'];
 
 const tabItems = (t: Translate): DuncitTabItem<ClubAdminTab>[] => [
-  { value: 'overview', label: t('directory.hostEditor.tabOverview') },
-  { value: 'changeLogs', label: t('directory.changeLogs.tab') },
+  { value: 'overview', label: t('directory.hostEditor.tabOverview'), testId: 'club-admin-tab-overview' },
+  { value: 'changeLogs', label: t('directory.changeLogs.tab'), testId: 'club-admin-tab-changeLogs' },
 ];
 
 /** Where Back goes: the club admins list, or — when the clubs console opens one

@@ -46,14 +46,14 @@ export default function MonthView({ days, cursor, meetings, holidays, slotMinute
             }}>{d}</Typography>
         ))}
       </Box>
-      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', borderTop: 1, borderLeft: 1, borderColor: 'divider' }}>
+      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', borderTop: 1, borderLeft: 1, borderColor: 'divider' }} data-testid="meeting-calendar-month">
         {days.map((day) => {
           const dayMeetings = meetings.filter((m) => isSameDay(eventStart(m), day));
           const muted = !isSameMonth(day, cursor);
           const holiday = holidays.get(format(day, 'yyyy-MM-dd'));
           const holidayNamePart = holiday?.name ? ` · ${holiday.name}` : '';
           return (
-            <Box key={day.toISOString()} sx={{ minHeight: 96, borderRight: 1, borderBottom: 1, borderColor: 'divider', p: 0.5, bgcolor: holiday ? bg.holiday : cellBg(day, cursor, bg) }}>
+            <Box key={day.toISOString()} data-testid={`meeting-calendar-day-${format(day, 'yyyy-MM-dd')}`} sx={{ minHeight: 96, borderRight: 1, borderBottom: 1, borderColor: 'divider', p: 0.5, bgcolor: holiday ? bg.holiday : cellBg(day, cursor, bg) }}>
               <Typography variant="caption" sx={{ fontWeight: isToday(day) ? 800 : 500, color: muted ? 'text.secondary' : 'text.primary' }}>{format(day, 'd')}</Typography>
               {holiday && (
                 <Tooltip title={`${HOLIDAY_TYPE_LABELS[holiday.type]}${holidayNamePart}`}>
@@ -61,6 +61,7 @@ export default function MonthView({ days, cursor, meetings, holidays, slotMinute
                     size="small"
                     color="warning"
                     variant="outlined"
+                    data-testid={`meeting-calendar-holiday-${holiday.date}`}
                     label={holiday.name || HOLIDAY_TYPE_LABELS[holiday.type]}
                     sx={{ display: 'flex', height: 16, fontSize: 9, mt: 0.25, maxWidth: '100%' }}
                   />
@@ -76,6 +77,7 @@ export default function MonthView({ days, cursor, meetings, holidays, slotMinute
                       <Box
                         role="button"
                         tabIndex={0}
+                        data-testid={`meeting-calendar-event-${m.id}`}
                         onClick={() => onSelect(m)}
                         onContextMenu={(e) => onContext(e, m)}
                         onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onSelect(m)}

@@ -96,6 +96,7 @@ function CartLineRow({
         aria-label={t('mweb.cart.removeItem', { vars: { name: line.product_name } })}
         onClick={() => onRemove(line)}
         sx={{ color: 'text.secondary' }}
+        data-testid={`cart-remove-${cartLineKey(line)}`}
       >
         <DeleteOutlineIcon />
       </DuncitRoundButton>

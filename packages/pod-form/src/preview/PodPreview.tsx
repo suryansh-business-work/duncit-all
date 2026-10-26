@@ -20,7 +20,7 @@ export default function PodPreview() {
   // card or the page shows. `getValues` then reads the complete shape, which
   // `useWatch`'s partial return type cannot promise on its own.
   useWatch({ control });
-  const model = buildPodPreview(getValues(), data);
+  const model = buildPodPreview(getValues(), data, t);
 
   return (
     <PreviewPane

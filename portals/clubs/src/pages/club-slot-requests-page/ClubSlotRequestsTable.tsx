@@ -31,7 +31,12 @@ export default function ClubSlotRequestsTable({
 
   const columns = useMemo<DuncitColumn<ClubSlotRequestRow>[]>(() => {
     const renderClub = (row: ClubSlotRequestRow) => (
-      <Link component={RouterLink} to={`/clubs/${row.club_id}`} underline="hover">
+      <Link
+        component={RouterLink}
+        to={`/clubs/${row.club_id}`}
+        underline="hover"
+        data-testid={`club-slot-request-club-${row.id}`}
+      >
         {row.club_name}
       </Link>
     );

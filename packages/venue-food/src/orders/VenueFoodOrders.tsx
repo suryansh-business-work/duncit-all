@@ -17,12 +17,22 @@ import FoodOrderCancelDialog from './FoodOrderCancelDialog';
 import FoodOrderDetailsDialog from './FoodOrderDetailsDialog';
 import { buildFoodOrderColumns, getFoodOrderRowId, type FoodOrderRowHandlers } from './food-order-columns';
 
+interface Props extends VenueFoodTableProps {
+  /**
+   * Whether this viewer may cancel and refund an order. Refunding is a GOVERN
+   * power on the server (the owner or a platform governor), so a venues-console
+   * editor is not offered a button the server would refuse. Default: true —
+   * the owner's own surfaces.
+   */
+  canRefund?: boolean;
+}
+
 /**
  * A venue's order board: the server-side table, its row actions and their
  * dialogs. The owner moves each paid order through the kitchen, or cancels it
  * with a full refund.
  */
-export default function VenueFoodOrders({ venueId, surface }: Readonly<VenueFoodTableProps>) {
+export default function VenueFoodOrders({ venueId, surface, canRefund = true }: Readonly<Props>) {
   const { t } = useTranslation();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
@@ -68,9 +78,9 @@ export default function VenueFoodOrders({ venueId, surface }: Readonly<VenueFood
   );
 
   const columns = useMemo(() => {
-    const handlers: FoodOrderRowHandlers = { onAdvance: advance, onView: setViewing, onCancel: setCancelling };
+    const handlers: FoodOrderRowHandlers = { onAdvance: advance, onView: setViewing, onCancel: canRefund ? setCancelling : undefined };
     return buildFoodOrderColumns(t, handlers);
-  }, [t, advance]);
+  }, [t, advance, canRefund]);
 
   return (
     <Card variant="outlined" sx={{ borderRadius: 2 }}>

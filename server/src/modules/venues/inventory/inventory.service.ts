@@ -8,7 +8,7 @@ import { PodModel } from '@modules/pods/pod/pod.model';
 import { ClubModel } from '@modules/clubs/club/club.model';
 import { ProductOrderModel } from '@modules/commerce/productOrder/productOrder.model';
 import { effectiveRoleKeys } from '@modules/access/user/effective-roles';
-import { EcommBrandModel } from '@modules/venues/ecommBrand/ecommBrand.model';
+import { EcommBrandModel, ownedBrandIds } from '@modules/venues/ecommBrand/ecommBrand.model';
 import { BrandPickupLocationModel } from '@modules/venues/brandPickupLocation/brandPickupLocation.model';
 import { BRAND_PINCODE } from '@modules/venues/ecommBrand/brandDeliveryPincode.model';
 import { brandDeliveryPincodeService } from '@modules/venues/ecommBrand/brandDeliveryPincode.service';
@@ -34,6 +34,7 @@ import {
 } from './inventory.packaging';
 import { InventoryActivityLogModel } from './inventoryActivityLog.model';
 import { InventoryStockMovementModel } from './inventoryStockMovement.model';
+import { ADMIN_RW } from './inventory.roles';
 import { POD_VISIBLE_FILTER } from '@utils/hidden';
 
 const ECOMM_MANAGER_ROLE = 'ECOMM_MANAGER';
@@ -506,6 +507,15 @@ async function requireEcommManager(user: AuthUser | null) {
     throw new GraphQLError('You must be an Ecomm Manager to manage product listings', { extensions: { code: 'FORBIDDEN' } });
   }
   return user;
+}
+
+/** A partner lists only under a brand it owns; catalogue staff may list under any brand. */
+async function assertListingBrandOwned(user: AuthUser, brandId: unknown) {
+  const owned = await ownedBrandIds(user.id);
+  if (owned.some((id) => String(id) === String(brandId))) return;
+  const roles = await effectiveRoleKeys(user.id);
+  if (roles.some((role) => ADMIN_RW.includes(role))) return;
+  throw new GraphQLError('Not your brand', { extensions: { code: 'FORBIDDEN' } });
 }
 
 const toOid = (v: any) => (v && Types.ObjectId.isValid(v) ? new Types.ObjectId(v) : null);
@@ -1351,6 +1361,7 @@ export const inventoryService = {
   async submitProductListing(input: any, user: AuthUser | null) {
     const actor = await requireEcommManager(user);
     validateProductListingInput(input);
+    await assertListingBrandOwned(actor, input.brand_id);
     moderationService.assertProductCleanOrThrow(productModerationInput(input));
     await assertBrandActive(input.brand_id);
     await assertBrandWarehouse(input.pickup_location_id, input.brand_id);
@@ -1417,8 +1428,9 @@ export const inventoryService = {
   },
 
   async updateMyProductListing(id: string, input: any, user: AuthUser | null) {
-    await requireEcommManager(user);
+    const actor = await requireEcommManager(user);
     validateProductListingInput(input);
+    await assertListingBrandOwned(actor, input.brand_id);
     moderationService.assertProductCleanOrThrow(productModerationInput(input));
     await assertBrandWarehouse(input.pickup_location_id, input.brand_id);
     const doc = await ownedListing(id, user);

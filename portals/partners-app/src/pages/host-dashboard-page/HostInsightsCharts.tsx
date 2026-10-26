@@ -71,7 +71,7 @@ export default function HostInsightsCharts({ insights, currencySymbol }: Readonl
           xs: 12,
           md: 5
         }}>
-        <Card variant="outlined" sx={{ p: 2, borderRadius: 2, height: '100%' }}>
+        <Card variant="outlined" sx={{ p: 2, borderRadius: 2, height: '100%' }} data-testid="host-insights-status">
           <Stack spacing={1.5}>
             <Typography variant="subtitle2" component="h2" sx={{
               fontWeight: 900
@@ -123,7 +123,7 @@ export default function HostInsightsCharts({ insights, currencySymbol }: Readonl
           xs: 12,
           md: 7
         }}>
-        <Card variant="outlined" sx={{ p: 2, borderRadius: 2, height: '100%' }}>
+        <Card variant="outlined" sx={{ p: 2, borderRadius: 2, height: '100%' }} data-testid="host-insights-earnings">
           <Stack spacing={1.5}>
             <Typography variant="subtitle2" component="h2" sx={{
               fontWeight: 900

@@ -52,10 +52,10 @@ export default function CancelMeetingDialog({ meeting, onClose, onCancelled }: R
   };
 
   return (
-    <Dialog open={!!meeting} onClose={close} fullWidth maxWidth="xs">
+    <Dialog open={!!meeting} onClose={close} fullWidth maxWidth="xs" data-testid="cancel-meeting-dialog">
       <DialogTitle>{t('onboarding.meetings.cancelMeeting')}</DialogTitle>
       <DialogContent>
-        {error && <Alert severity="error" sx={{ mb: 1.5 }}>{error}</Alert>}
+        {error && <Alert severity="error" sx={{ mb: 1.5 }} data-testid="cancel-meeting-error">{error}</Alert>}
         <Typography
           variant="body2"
           sx={{
@@ -75,11 +75,12 @@ export default function CancelMeetingDialog({ meeting, onClose, onCancelled }: R
           minRows={2}
           fullWidth
           required
+          data-testid="cancel-meeting-reason"
         />
       </DialogContent>
       <DialogActions>
-        <DuncitButton onClick={close}>{t('onboarding.meetings.keepMeeting')}</DuncitButton>
-        <DuncitButton color="error" variant="contained" onClick={confirm} disabled={loading}>
+        <DuncitButton onClick={close} data-testid="cancel-meeting-keep">{t('onboarding.meetings.keepMeeting')}</DuncitButton>
+        <DuncitButton color="error" variant="contained" onClick={confirm} disabled={loading} data-testid="cancel-meeting-confirm">
           {loading ? 'Cancelling…' : 'Cancel meeting'}
         </DuncitButton>
       </DialogActions>

@@ -97,7 +97,7 @@ export default function VenueEditorPage() {
           <PayoutSection control={control} />
           <LeavesSection control={control} />
           <OperationsSection control={control} />
-          <CancellationSection control={control} />
+          <CancellationSection control={control} canGovern={canGovern} />
           <StatusSection control={control} canGovern={canGovern} />
         </EditorPageShell>
       )}

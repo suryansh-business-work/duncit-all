@@ -39,7 +39,7 @@ export function getPortalAccessColumns({
   const renderActions = (row: PortalAccessRequest) => {
     if (row.status !== 'PENDING') {
       return (
-        <Typography variant="caption" component="span" sx={{
+        <Typography variant="caption" component="span" data-testid="portal-access-reviewer" sx={{
           color: "text.secondary"
         }}>
           {row.reviewed_by_name || '—'}
@@ -54,6 +54,7 @@ export function getPortalAccessColumns({
           color="success"
           startIcon={<CheckIcon fontSize="small" />}
           onClick={() => onApprove(row)}
+          data-testid="portal-access-approve"
         >
           {t('admin.portalAccess.approve')}
         </DuncitButton>
@@ -63,6 +64,7 @@ export function getPortalAccessColumns({
           color="error"
           startIcon={<CloseIcon fontSize="small" />}
           onClick={() => onDeny(row)}
+          data-testid="portal-access-deny"
         >
           {t('admin.portalAccess.deny')}
         </DuncitButton>

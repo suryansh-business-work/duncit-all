@@ -36,6 +36,7 @@ function TaskbarWindowButton({ window, minimised, onToggle }: Readonly<ButtonPro
         color="inherit"
         aria-label={label}
         aria-pressed={!minimised}
+        data-testid={`shell-taskbar-window-${window.id}`}
         onClick={() => onToggle(window.id)}
         startIcon={<Icon fontSize="small" />}
         sx={{

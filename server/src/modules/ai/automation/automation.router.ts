@@ -1,5 +1,5 @@
 import { timingSafeEqual } from 'node:crypto';
-import { Router } from 'express';
+import express, { Router, type RequestHandler } from 'express';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
 import { logs } from '@observability/log';
 import { inboundWhatsapp, parseWhatsappInbound } from './automation.inbound';
@@ -27,7 +27,10 @@ function secretMatches(given: string, expected: string): boolean {
 export function buildAutomationRouter(): Router {
   const router = Router();
 
-  router.post('/whatsapp/inbound', async (req, res) => {
+  // The secret is checked before the body is even read; only then is AiSensy's
+  // JSON parsed (the app has no global body parser, so without this every
+  // message arrived as an undefined body and was "ignored").
+  const requireSecret: RequestHandler = async (req, res, next) => {
     const expected = await getRuntimeEnvValue('AISENSY_WEBHOOK_SECRET');
     const header = req.get('x-webhook-secret') ?? '';
     const given = typeof req.query.secret === 'string' ? req.query.secret : header;
@@ -35,6 +38,10 @@ export function buildAutomationRouter(): Router {
       res.status(403).json({ ok: false, error: 'Webhook secret missing or wrong' });
       return;
     }
+    next();
+  };
+
+  router.post('/whatsapp/inbound', requireSecret, express.json({ limit: '256kb' }), (req, res) => {
     const message = parseWhatsappInbound(req.body);
     if (!message) {
       // Delivery receipts and read events arrive on the same webhook; they carry no text.

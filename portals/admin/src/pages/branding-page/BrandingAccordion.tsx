@@ -12,7 +12,7 @@ interface Props {
 export default function BrandingAccordion({ title, subtitle, defaultExpanded, children }: Readonly<Props>) {
   return (
     <Accordion defaultExpanded={defaultExpanded} disableGutters>
-      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+      <AccordionSummary expandIcon={<ExpandMoreIcon />} data-testid="branding-section">
         <Box>
           <Typography variant="subtitle1" sx={{
             fontWeight: 700

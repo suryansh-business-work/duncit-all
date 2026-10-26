@@ -37,10 +37,10 @@ export default function FaqListField() {
               control={control}
               name={`faqs.${index}.question` as const}
               render={({ field: input }) => (
-                <TextField {...input} value={input.value ?? ''} fullWidth size="small" label={`Question ${index + 1}`} />
+                <TextField {...input} value={input.value ?? ''} fullWidth size="small" label={t('clubForm.faqListField.question', { vars: { number: index + 1 } })} />
               )}
             />
-            <DuncitIconButton aria-label={`Remove FAQ ${index + 1}`} onClick={() => remove(index)}>
+            <DuncitIconButton aria-label={t('clubForm.faqListField.removeFaq', { vars: { number: index + 1 } })} onClick={() => remove(index)}>
               <DeleteOutlineIcon />
             </DuncitIconButton>
           </Stack>
@@ -59,7 +59,7 @@ export default function FaqListField() {
         onClick={() => append({ question: '', answer: '' })}
         sx={{ alignSelf: 'flex-start' }}
       >
-        Add FAQ
+        {t('clubForm.faqListField.addFaq')}
       </DuncitButton>
     </Stack>
   );

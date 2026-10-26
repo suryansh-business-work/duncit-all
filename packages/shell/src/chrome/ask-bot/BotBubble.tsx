@@ -35,7 +35,7 @@ interface Props {
 export function BotBubble({ message }: Readonly<Props>) {
   const mine = message.role === 'USER';
   return (
-    <Box sx={{ display: 'flex', justifyContent: mine ? 'flex-end' : 'flex-start' }}>
+    <Box data-testid={`ask-bot-message-${message.role.toLowerCase()}`} sx={{ display: 'flex', justifyContent: mine ? 'flex-end' : 'flex-start' }}>
       <Paper
         variant="outlined"
         sx={{

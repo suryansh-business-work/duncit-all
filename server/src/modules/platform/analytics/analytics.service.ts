@@ -5,10 +5,9 @@ import type { RecordAppEventDTO } from './analytics.validator';
 import { CategoryModel } from '@modules/pods/category/category.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { ClubModel } from '@modules/clubs/club/club.model';
-import { UserModel } from '@modules/access/user/user.model';
-import { VenueModel } from '@modules/venues/venue/venue.model';
-import { HostModel } from '@modules/venues/host/host.model';
-import { ContactSubmissionModel } from '@modules/crm/contact/contact.model';
+import type { ReadScope } from '@middleware/rbac';
+import { combineFilters } from '@utils/table-query';
+import { placeFilters, placeTotals } from './analytics.place';
 
 type Granularity = 'DAY' | 'WEEK' | 'MONTH';
 
@@ -190,7 +189,9 @@ export const analyticsService = {
     };
   },
 
-  async dashboardTotals(super_category_slug?: string | null) {
+  /** `scope` (rbac `readScope`) holds a city or zonal admin to their own place (analytics.place.ts). */
+  async dashboardTotals(super_category_slug?: string | null, scope: ReadScope = null) {
+    const place = await placeFilters(scope);
     const supers = await CategoryModel.find({ level: 'SUPER', is_active: true })
       .sort({ sort_order: 1, name: 1 })
       .lean();
@@ -202,8 +203,9 @@ export const analyticsService = {
     const nameById = new Map(filteredSupers.map((s) => [String(s._id), s.name]));
 
     // Clubs grouped by super_category_id
+    const clubMatch = combineFilters(place?.clubs ?? {}, superIds.length ? { super_category_id: { $in: superIds } } : {});
     const clubAgg = await ClubModel.aggregate([
-      ...(superIds.length ? [{ $match: { super_category_id: { $in: superIds } } }] : []),
+      ...(Object.keys(clubMatch).length ? [{ $match: clubMatch }] : []),
       { $group: { _id: '$super_category_id', count: { $sum: 1 } } },
     ]);
     const clubCountById = new Map<string, number>(
@@ -212,6 +214,8 @@ export const analyticsService = {
 
     // Pods grouped by club -> super_category_id
     const podAgg = await PodModel.aggregate([
+      // The place first, so only the admin's own pods are joined to their club.
+      ...(place ? [{ $match: place.pods }] : []),
       {
         $lookup: {
           from: 'clubs',
@@ -237,18 +241,8 @@ export const analyticsService = {
         count: counts.get(String(s._id)) || 0,
       }));
 
-    const [users_total, pods_total, clubs_total, venues_total, hosts_total, support_tickets_open, support_tickets_total, support_status_agg] = await Promise.all([
-      UserModel.countDocuments({}),
-      PodModel.countDocuments({}),
-      ClubModel.countDocuments({}),
-      VenueModel.countDocuments({}),
-      HostModel.countDocuments({}),
-      ContactSubmissionModel.countDocuments({ status: { $in: ['NEW', 'IN_PROGRESS'] } }),
-      ContactSubmissionModel.countDocuments({}),
-      ContactSubmissionModel.aggregate([
-        { $group: { _id: '$status', count: { $sum: 1 } } },
-      ]),
-    ]);
+    const [users_total, pods_total, clubs_total, venues_total, hosts_total, support_tickets_open, support_tickets_total, support_status_agg] =
+      await placeTotals(place);
 
     const STATUSES = ['NEW', 'IN_PROGRESS', 'RESOLVED', 'ARCHIVED'];
     const statusMap = new Map<string, number>(
@@ -261,7 +255,7 @@ export const analyticsService = {
 
     // Pods & clubs are the only entities with a super-category dimension, so when
     // a super category is selected the totals must reflect that scope (users /
-    // venues / hosts / support tickets aren't category-scoped — they stay global).
+    // venues / hosts / support tickets aren't category-scoped — they are never narrowed by category).
     const sumCounts = (counts: Map<string, number>) => [...counts.values()].reduce((a, b) => a + b, 0);
 
     return {

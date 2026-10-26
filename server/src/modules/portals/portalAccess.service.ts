@@ -25,6 +25,10 @@ const badRequest = (message: string) =>
 /** The staff consoles only — the member app and websites are not "portals" to jump to. */
 const consoles = () => PORTAL_REGISTRY.filter((p) => p.kind === 'PORTAL');
 
+/** The role an approved request for this portal hands out (its first required role). */
+const roleGrantedBy = (portalKey: string): string | null =>
+  (PORTAL_ROLE_REQUIREMENTS[portalKey] ?? [])[0] ?? null;
+
 const canRequest = (portalKey: string) =>
   !NON_REQUESTABLE.has(portalKey) && !PORTAL_GATE_EXEMPT_KEYS.has(portalKey);
 
@@ -89,7 +93,7 @@ export const portalAccessService = {
         .join(' ') ||
       user.email ||
       'A user';
-    const grantsRole = (PORTAL_ROLE_REQUIREMENTS[portalKey] ?? [])[0] ?? '';
+    const grantsRole = roleGrantedBy(portalKey) ?? '';
     await ApprovalRequestModel.create({
       type: 'PORTAL_ACCESS',
       title: `Portal access — ${portal.name}`,
@@ -116,6 +120,11 @@ export const portalAccessService = {
     };
   },
 
+  /** The role approving this PORTAL_ACCESS request would grant, or null. */
+  grantedRole(doc: { target_id?: string | null }) {
+    return roleGrantedBy(String(doc?.target_id ?? ''));
+  },
+
   /**
    * Side effect of the admin's decision on a PORTAL_ACCESS request: approval
    * grants the portal's role and emails the requester; denial only emails.
@@ -130,7 +139,7 @@ export const portalAccessService = {
     const portalName = portal?.name ?? portalKey;
     try {
       if (status === 'APPROVED') {
-        const role = (PORTAL_ROLE_REQUIREMENTS[portalKey] ?? [])[0];
+        const role = roleGrantedBy(portalKey);
         if (role && doc?.subject_user_id) {
           const { userService } = await import('@modules/access/user/user.service');
           await userService.addRole(String(doc.subject_user_id), role);

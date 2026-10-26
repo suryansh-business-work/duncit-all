@@ -63,6 +63,9 @@ const settings = settingsService as unknown as Record<string, jest.Mock>;
 const otp = otpService as unknown as Record<string, jest.Mock>;
 const clubAdmins = clubAdminService as unknown as Record<string, jest.Mock>;
 
+/** PodModel.findById: awaited as is, or through `.setOptions({ includeDeleted })`. */
+const podQuery = (value: unknown) => Object.assign(Promise.resolve(value), { setOptions: jest.fn().mockResolvedValue(value) });
+
 /** `find().sort().lean()` and `findById().select().lean()` as one chain. */
 const chain = (value: unknown) => ({
   sort: () => chain(value),
@@ -126,7 +129,7 @@ const arrangeBoard = (
     completeTimeoutHours?: number;
   } = {}
 ) => {
-  pods.findById.mockResolvedValue(over.pod ?? pod());
+  pods.findById.mockReturnValue(podQuery(over.pod ?? pod()));
   members.find.mockReturnValue(chain(over.memberships ?? [membership()]));
   users.find.mockReturnValue(chain([attendee()]));
   tickets.find.mockResolvedValue(over.tickets ?? [ticket()]);
@@ -204,9 +207,19 @@ describe('attendanceService.board', () => {
   });
 
   it('refuses a pod that does not exist', async () => {
-    pods.findById.mockResolvedValue(null);
+    pods.findById.mockReturnValue(podQuery(null));
 
     await expect(attendanceService.board(POD_ID, host)).rejects.toThrow('Pod not found');
+  });
+
+  it('reads a cancelled (soft-deleted) pod and reports its board as CANCELLED', async () => {
+    arrangeBoard({ pod: pod({ deleted_at: new Date() }) });
+
+    const board = await attendanceService.board(POD_ID, host);
+
+    expect(pods.findById.mock.results[0].value.setOptions).toHaveBeenCalledWith({ includeDeleted: true });
+    expect(board.lock).toBe('CANCELLED');
+    expect(board.can_mark).toBe(false);
   });
 
   it('reads the roster for the pod’s host', async () => {

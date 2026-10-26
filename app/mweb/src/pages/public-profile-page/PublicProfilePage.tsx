@@ -98,7 +98,7 @@ export default function PublicProfilePage() {
           <ArrowBackIcon fontSize="small" />
         </DuncitIconButton>
         <Typography data-testid="public-profile-page-title" component="h2" sx={{ fontSize: 17, fontWeight: 600 }}>
-          Profile
+          {t('mweb.publicProfile.profile')}
         </Typography>
         {canAct && (
           <Stack sx={{ ml: 'auto' }}>

@@ -27,7 +27,7 @@ function StatusAlerts({ status, notes }: Readonly<{ status?: string; notes?: str
   if (status === 'SUBMITTED') return <Alert severity="info">{t('partners.page.applicationUnderReviewViewOnly')}</Alert>;
   if (status === 'APPROVED') {
     return (
-      <Alert severity="success">
+      <Alert severity="success" data-testid="register-venue-approved-alert">
         Approved — you can update the description, images, owner details and add new documents here.
         Type, capacity, hours, amenities and food are set up from Venue Options.
       </Alert>
@@ -113,7 +113,7 @@ export default function RegisterVenuePage() {
             <Typography variant="overline" sx={{ letterSpacing: 0.4, lineHeight: 1, fontWeight: 800 }}>
               {t('partners.venueListingsPage.venueRegistration')}
             </Typography>
-            <Typography variant="h4" component="h1" sx={{ fontWeight: 900, lineHeight: 1.05 }}>
+            <Typography variant="h4" component="h1" sx={{ fontWeight: 900, lineHeight: 1.05 }} data-testid="register-venue-title">
               {venue ? venue.venue_name || 'Your venue' : t('partners.common.registerYourVenue')}
             </Typography>
             <Typography variant="body2" sx={{ fontWeight: 600, mt: 0.5 }}>
@@ -124,6 +124,7 @@ export default function RegisterVenuePage() {
             <Chip
               size="small"
               label={status}
+              data-testid="register-venue-status"
               sx={{ bgcolor: statusChipColor(status), color: '#fff', fontWeight: 800 }}
             />
           )}
@@ -137,7 +138,7 @@ export default function RegisterVenuePage() {
       {status === 'APPROVED' && venue?.id && (
         <PublishPageCard kind="VENUE" refId={venue.id} title={venue.venue_name ?? ''} />
       )}
-      {notFound && <Alert severity="error">{t('partners.page.thisVenueRegistrationWasNotFound')}</Alert>}
+      {notFound && <Alert severity="error" data-testid="register-venue-not-found">{t('partners.page.thisVenueRegistrationWasNotFound')}</Alert>}
 
       {!notFound && (
         <RegisterVenueForm

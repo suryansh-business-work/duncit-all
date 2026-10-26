@@ -80,7 +80,7 @@ export default function DocumentsListPage() {
         onEdit={setEditing}
         onSign={setSigning}
         toolbarActions={
-          <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={() => setOpen(true)}>
+          <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={() => setOpen(true)} data-testid="document-new">
             New Document
           </DuncitButton>
         }
@@ -106,12 +106,12 @@ export default function DocumentsListPage() {
         onSigned={() => refetchRef.current?.()}
       />
 
-      <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="md">
+      <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="md" data-testid="document-create-dialog">
         <DialogTitle>{t('legal.documents.create')}</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 0.5 }}>
             {/* eslint-disable-next-line jsx-a11y/no-autofocus -- focus moves into the dialog the user just opened (WCAG 2.4.3) */}
-            <TextField label={t('legal.documents.documentName')} value={name} onChange={(e) => setName(e.target.value)} fullWidth autoFocus required />
+            <TextField label={t('legal.documents.documentName')} value={name} onChange={(e) => setName(e.target.value)} fullWidth autoFocus required slotProps={{ htmlInput: { 'data-testid': 'document-create-name' } }} />
             <DocumentTypeSelect value={docType} onChange={setDocType} required />
             <TextField
               label={t('shell.common.description')}
@@ -133,7 +133,7 @@ export default function DocumentsListPage() {
         </DialogContent>
         <DialogActions>
           <DuncitButton onClick={() => setOpen(false)}>{t('shell.common.cancel')}</DuncitButton>
-          <DuncitButton variant="contained" disabled={creating || !name.trim() || !docType.trim()} onClick={submit}>
+          <DuncitButton variant="contained" disabled={creating || !name.trim() || !docType.trim()} onClick={submit} data-testid="document-create-submit">
             Create
           </DuncitButton>
         </DialogActions>

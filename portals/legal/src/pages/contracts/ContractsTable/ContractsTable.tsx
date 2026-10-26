@@ -61,6 +61,7 @@ export default function ContractsTable({
           variant={signed ? 'filled' : 'outlined'}
           color={signed ? 'success' : 'default'}
           label={signedLabel(c)}
+          data-testid={`contract-signing-${c.id}`}
         />
       );
     };
@@ -75,7 +76,7 @@ export default function ContractsTable({
     const renderActions = (c: Contract) => (
       <>
         <Tooltip title={t('shell.common.view')}>
-          <DuncitIconButton size="small" aria-label={t('shell.common.view')} onClick={() => onView(c)}>
+          <DuncitIconButton size="small" aria-label={t('shell.common.view')} onClick={() => onView(c)} data-testid={`contract-view-${c.id}`}>
             <VisibilityIcon fontSize="small" />
           </DuncitIconButton>
         </Tooltip>
@@ -88,13 +89,14 @@ export default function ContractsTable({
               disabled={c.is_locked}
               aria-label={t('shell.common.edit')}
               onClick={() => onEdit(c)}
+              data-testid={`contract-edit-${c.id}`}
             >
               <EditIcon fontSize="small" />
             </DuncitIconButton>
           </span>
         </Tooltip>
         <Tooltip title={signTooltip(c)}>
-          <DuncitIconButton size="small" aria-label={t('legal.sign.action')} onClick={() => onSign(c)}>
+          <DuncitIconButton size="small" aria-label={t('legal.sign.action')} onClick={() => onSign(c)} data-testid={`contract-sign-${c.id}`}>
             <DrawIcon fontSize="small" />
           </DuncitIconButton>
         </Tooltip>
@@ -105,6 +107,7 @@ export default function ContractsTable({
               disabled={c.status === 'ARCHIVED'}
               aria-label={t('legal.contracts.archive')}
               onClick={() => onArchive(c)}
+              data-testid={`contract-archive-${c.id}`}
             >
               <ArchiveIcon fontSize="small" />
             </DuncitIconButton>

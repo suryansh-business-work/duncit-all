@@ -37,10 +37,11 @@ export default function BadgeScopeFields({ form, setForm, categories, roles }: R
         value={form.category_id}
         onChange={(e) => setForm({ ...form, category_id: e.target.value })}
         fullWidth
+        data-testid="badge-form-category"
       >
-        <MenuItem value="">{t('admin.badgesPage.categoryNone')}</MenuItem>
+        <MenuItem value="" data-testid="badge-form-category-none">{t('admin.badgesPage.categoryNone')}</MenuItem>
         {categories.map((c) => (
-          <MenuItem key={c.id} value={c.id}>
+          <MenuItem key={c.id} value={c.id} data-testid={`badge-form-category-${c.id}`}>
             {c.name} · {c.level}
           </MenuItem>
         ))}
@@ -57,6 +58,7 @@ export default function BadgeScopeFields({ form, setForm, categories, roles }: R
         value={form.role_key}
         onChange={(e) => setForm({ ...form, role_key: e.target.value })}
         fullWidth
+        data-testid="badge-form-role"
       >
         {roles.map((r) => (
           <MenuItem key={r.key} value={r.key}>

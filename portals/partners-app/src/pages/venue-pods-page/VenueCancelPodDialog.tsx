@@ -119,6 +119,7 @@ function VenueCancelPodBody({ row, onClose, onCancelled }: Readonly<BodyProps>) 
           <RhfTextField
             control={control}
             name="reason"
+            data-testid="venue-cancel-pod-reason"
             label={t('partners.venuePodsPage.whyAreYouCancelling')}
             required
             multiline
@@ -130,12 +131,13 @@ function VenueCancelPodBody({ row, onClose, onCancelled }: Readonly<BodyProps>) 
         </Stack>
       </DialogContent>
       <DialogActions>
-        <DuncitButton onClick={onClose} disabled={state.loading}>
+        <DuncitButton onClick={onClose} disabled={state.loading} data-testid="venue-cancel-pod-keep">
           Keep the pod
         </DuncitButton>
         <DuncitButton
           type="submit"
           form={FORM_ID}
+          data-testid="venue-cancel-pod-submit"
           variant="contained"
           color="error"
           loading={state.loading}
@@ -157,7 +159,7 @@ interface Props {
 /** Venue owner's confirm-and-explain step before a pod is cancelled and refunded. */
 export default function VenueCancelPodDialog({ row, onClose, onCancelled }: Readonly<Props>) {
   return (
-    <Dialog open={!!row} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog open={!!row} onClose={onClose} maxWidth="sm" fullWidth data-testid="venue-cancel-pod">
       {row && <VenueCancelPodBody row={row} onClose={onClose} onCancelled={onCancelled} />}
     </Dialog>
   );

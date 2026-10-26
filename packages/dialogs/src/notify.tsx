@@ -66,6 +66,7 @@ export function NotifyHost() {
     >
       <Alert
         severity={item?.severity ?? 'info'}
+        data-testid={`notify-${item?.severity ?? 'info'}`}
         onClose={() => setItem(null)}
         variant="filled"
         sx={{ width: '100%' }}

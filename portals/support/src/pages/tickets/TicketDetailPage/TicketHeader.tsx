@@ -52,13 +52,13 @@ export default function TicketHeader({ ticket, onBack, onStatus, onPriority, onR
           <>
             {isResolved ? (
               <Tooltip title={t('support.tickets.reopen')}>
-                <DuncitIconButton size="small" color="primary" aria-label={t('support.tickets.reopen')} onClick={onReopen}>
+                <DuncitIconButton size="small" color="primary" aria-label={t('support.tickets.reopen')} onClick={onReopen} data-testid="ticket-reopen">
                   <ReplayIcon />
                 </DuncitIconButton>
               </Tooltip>
             ) : (
               <Tooltip title={t('support.tickets.markResolved')}>
-                <DuncitIconButton size="small" color="success" aria-label={t('support.tickets.markResolved')} onClick={() => setConfirmResolve(true)}>
+                <DuncitIconButton size="small" color="success" aria-label={t('support.tickets.markResolved')} onClick={() => setConfirmResolve(true)} data-testid="ticket-resolve">
                   <CheckCircleIcon />
                 </DuncitIconButton>
               </Tooltip>
@@ -72,10 +72,11 @@ export default function TicketHeader({ ticket, onBack, onStatus, onPriority, onR
               label={t('support.tickets.priority')}
               value={ticket.priority}
               onChange={(e) => onPriority(e.target.value as TicketPriority)}
+              data-testid="ticket-priority"
               sx={{ minWidth: 120 }}
             >
               {PRIORITIES.map((p) => (
-                <MenuItem key={p} value={p}>
+                <MenuItem key={p} value={p} data-testid={`ticket-priority-option-${p}`}>
                   {p}
                 </MenuItem>
               ))}
@@ -87,10 +88,11 @@ export default function TicketHeader({ ticket, onBack, onStatus, onPriority, onR
               label={t('shell.common.status')}
               value={ticket.status}
               onChange={(e) => onStatus(e.target.value as TicketStatus)}
+              data-testid="ticket-status"
               sx={{ minWidth: 130 }}
             >
               {STATUSES.map((s) => (
-                <MenuItem key={s} value={s}>
+                <MenuItem key={s} value={s} data-testid={`ticket-status-option-${s}`}>
                   {s}
                 </MenuItem>
               ))}

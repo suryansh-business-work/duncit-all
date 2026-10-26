@@ -1,5 +1,7 @@
 import { Types } from 'mongoose';
+import type { ReadScope } from '@middleware/rbac';
 import { ActiveUserPingModel } from '../activeUser.model';
+import { placeFilters } from '../analytics.place';
 import { PodMemberModel } from '@modules/pods/podMember/podMember.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { dayKeyExpr, inRange, type AnalyticsGranularity } from './window';
@@ -14,25 +16,54 @@ import { dayKeyExpr, inRange, type AnalyticsGranularity } from './window';
 /** Live accounts — a deleted account is soft-deleted, never removed. */
 export const LIVE_USERS = { 'metadata.deleted_at': null } as const;
 
+/**
+ * The members a Users page is narrowed to — a City or Zonal Admin's own place
+ * (rbac `readScope`, the same member filter the dashboard totals and the users
+ * directory use) — as the filter on the user collection and the ids every
+ * activity row is matched on. null is every member.
+ */
+export interface UserPlace {
+  users: Record<string, unknown>;
+  ids: Types.ObjectId[];
+}
+
+export async function userPlace(scope: ReadScope): Promise<UserPlace | null> {
+  const place = await placeFilters(scope);
+  if (!place) return null;
+  const rows = await UserModel.find(place.users).select('_id').lean<Array<{ _id: Types.ObjectId }>>();
+  const ids = rows.map((row) => row._id);
+  return { users: place.users, ids };
+}
+
+/** The place's members on the user collection — empty for every member. */
+export const usersIn = (place: UserPlace | null): Record<string, unknown> => place?.users ?? {};
+
+/** Rows signed by a member of the place — or by any signed-in member. */
+export const byMembersOf = (place: UserPlace | null): Record<string, unknown> =>
+  place ? { user_id: { $in: place.ids } } : { user_id: { $ne: null } };
+
 const ymd = (date: Date) => date.toISOString().slice(0, 10);
 
 /** Pings between two instants, by their stored calendar day. */
 const pingDays = (from: Date, to: Date) => ({ date_ymd: { $gte: ymd(from), $lt: ymd(to) } });
 
 /** Signed-in users seen in the period, each with how many different days they were seen. */
-export async function activeUserDays(from: Date, to: Date): Promise<Map<string, number>> {
+export async function activeUserDays(from: Date, to: Date, place: UserPlace | null = null): Promise<Map<string, number>> {
   const rows = await ActiveUserPingModel.aggregate<{ _id: Types.ObjectId; days: number }>([
-    { $match: { ...pingDays(from, to), user_id: { $ne: null } } },
+    { $match: { ...pingDays(from, to), ...byMembersOf(place) } },
     { $group: { _id: { user: '$user_id', day: '$date_ymd' } } },
     { $group: { _id: '$_id.user', days: { $sum: 1 } } },
   ]);
   return new Map(rows.map((row) => [row._id.toHexString(), row.days]));
 }
 
-/** Devices seen in the period — signed-out visitors included. */
-export async function activeDevices(from: Date, to: Date): Promise<number> {
+/**
+ * Devices seen in the period — signed-out visitors included. A signed-out
+ * device has no place, so a place counts only its members' devices.
+ */
+export async function activeDevices(from: Date, to: Date, place: UserPlace | null = null): Promise<number> {
   const [row] = await ActiveUserPingModel.aggregate<{ devices: number }>([
-    { $match: pingDays(from, to) },
+    { $match: { ...pingDays(from, to), ...(place ? byMembersOf(place) : {}) } },
     { $group: { _id: '$device_id' } },
     { $count: 'devices' },
   ]);
@@ -40,9 +71,9 @@ export async function activeDevices(from: Date, to: Date): Promise<number> {
 }
 
 /** The average number of signed-in users seen per day of the period. */
-export async function averageDailyUsers(from: Date, to: Date, days: number): Promise<number> {
+export async function averageDailyUsers(from: Date, to: Date, days: number, place: UserPlace | null = null): Promise<number> {
   const [row] = await ActiveUserPingModel.aggregate<{ total: number }>([
-    { $match: { ...pingDays(from, to), user_id: { $ne: null } } },
+    { $match: { ...pingDays(from, to), ...byMembersOf(place) } },
     { $group: { _id: { user: '$user_id', day: '$date_ymd' } } },
     { $group: { _id: null, total: { $sum: 1 } } },
   ]);
@@ -79,9 +110,11 @@ export function distinctPerBucket(
   from: Date,
   to: Date,
   granularity: AnalyticsGranularity,
-  field: 'user_id' | 'device_id'
+  field: 'user_id' | 'device_id',
+  place: UserPlace | null = null
 ) {
-  const signedIn = field === 'user_id' ? { user_id: { $ne: null } } : {};
+  // A device has no place of its own, so a place's devices are its members' devices.
+  const signedIn = field === 'user_id' || place !== null ? byMembersOf(place) : {};
   return ActiveUserPingModel.aggregate<{ _id: string; value: number }>([
     { $match: { ...pingDays(from, to), ...signedIn } },
     { $group: { _id: { bucket: pingBucketExpr(granularity), id: `$${field}` } } },
@@ -90,22 +123,25 @@ export function distinctPerBucket(
 }
 
 /** Everyone who booked a seat in the period. */
-export async function bookerIds(from: Date, to: Date): Promise<Set<string>> {
-  const ids: Types.ObjectId[] = await PodMemberModel.distinct('user_id', { joined_at: inRange(from, to) });
+export async function bookerIds(from: Date, to: Date, place: UserPlace | null = null): Promise<Set<string>> {
+  const ids: Types.ObjectId[] = await PodMemberModel.distinct('user_id', {
+    joined_at: inRange(from, to),
+    ...(place ? byMembersOf(place) : {}),
+  });
   return new Set(ids.map((id) => id.toHexString()));
 }
 
 /** Accounts created in the period. */
-export async function signupIds(from: Date, to: Date): Promise<string[]> {
-  const rows = await UserModel.find({ 'metadata.created_at': inRange(from, to) })
+export async function signupIds(from: Date, to: Date, place: UserPlace | null = null): Promise<string[]> {
+  const rows = await UserModel.find({ 'metadata.created_at': inRange(from, to), ...usersIn(place) })
     .select('_id')
     .lean<Array<{ _id: Types.ObjectId }>>();
   return rows.map((row) => row._id.toHexString());
 }
 
 /** Sign-ups per calendar day, in the admin's zone. */
-export const signupDays = (from: Date, to: Date, zone: string) =>
+export const signupDays = (from: Date, to: Date, zone: string, place: UserPlace | null = null) =>
   UserModel.aggregate<{ _id: string; value: number }>([
-    { $match: { 'metadata.created_at': inRange(from, to) } },
+    { $match: { 'metadata.created_at': inRange(from, to), ...usersIn(place) } },
     { $group: { _id: dayKeyExpr('metadata.created_at', zone), value: { $sum: 1 } } },
   ]);

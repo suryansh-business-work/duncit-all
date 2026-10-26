@@ -209,6 +209,19 @@ describe('what the venue owner can still see and do', () => {
     expect((await PodModel.findById(podId))?.is_active).toBe(true);
   });
 
+  it('offers no decision for a slot booked outright, which was never a request', async () => {
+    const { slotId, podId } = await seedRequest(3);
+    // The owner's own pod (or a free pod on a ₹0 slot) books the slot directly.
+    await VenueSlotModel.updateOne({ _id: slotId }, { $set: { status: 'BOOKED', decision: 'NONE' } });
+
+    await expect(venueSlotService.decisionDetail(ownerId, slotId)).rejects.toThrow(
+      'This slot has no booking request',
+    );
+    // A pending request on the same kind of slot still reads as one.
+    await VenueSlotModel.updateOne({ _id: slotId }, { $set: { status: 'PENDING', booked_by_pod_id: podId } });
+    expect((await venueSlotService.decisionDetail(ownerId, slotId)).decision).toBe('NONE');
+  });
+
   it('reads the outcome back on the decision page the request email links to', async () => {
     const { slotId } = await seedRequest(-2);
     await runSlotRequestExpirySweep();

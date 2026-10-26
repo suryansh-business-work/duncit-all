@@ -2,10 +2,12 @@ import { GraphQLError } from 'graphql';
 import { podAuditService } from './podAudit.service';
 import type { GraphQLContext } from '@context';
 import { LOGS_READER, requireAuth, requireRole } from '@middleware/rbac';
+import { consoleReaders } from '@modules/portals/console-access';
 
-/** Admin-console roles that may read the full monitoring trail — and the Logs
- * console, which mounts the same Pod Monitoring page. */
-const ADMIN_READ = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN', LOGS_READER];
+/** Admin-console roles that may read the full monitoring trail — the Pods
+ * console readers (its Pod Monitoring page and the All Pods activity trail) and
+ * the Logs console, which mounts the same Pod Monitoring page. */
+const ADMIN_READ = [...consoleReaders('POD'), LOGS_READER];
 
 export const podAuditResolvers = {
   Query: {

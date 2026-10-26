@@ -532,7 +532,7 @@ jobs:
     needs: setup
     if: contains(format(',{0},', needs.setup.outputs.selected), ',accounts,')
     runs-on: ubuntu-latest
-    timeout-minutes: 160
+    timeout-minutes: 240
     env:
       DUNCIT_GRAPHQL_URL: ${{ inputs.report_url || 'https://server.duncit.com/graphql' }}
       DUNCIT_RELEASE_TOKEN: >-
@@ -547,6 +547,9 @@ jobs:
       E2E_LIVE_GRAPHQL_URL: https://staging.server.duncit.com/graphql
       CYPRESS_E2E_RELEASE_TOKEN: ${{ secrets.DUNCIT_RELEASE_TOKEN_STAGING }}
       CYPRESS_GRAPHQL_URL: https://staging.server.duncit.com/graphql
+      # A hostname from a staging CMS site's domains (Website portal > Sites), for the
+      # cms-site specs; set the repository variable E2E_CMS_SITE_HOST.
+      CYPRESS_CMS_SITE_HOST: ${{ vars.E2E_CMS_SITE_HOST }}
       JUNIT_ROOT: ${{ github.workspace }}/e2e-artifacts/junit
       E2E_STAGE: Preparing the runner
     steps:
@@ -629,6 +632,43 @@ jobs:
         env:
           VITE_GRAPHQL_URL: ${{ env.E2E_LIVE_GRAPHQL_URL }}
         run: pnpm build:e2e
+      # The other staff consoles the staff-portal specs drive (each signed in
+      # as the run account with a limited role granted for the spec). Their
+      # `build` is the same tsc + vite build the three above call build:e2e.
+      - name: Build the other staff consoles
+        env:
+          VITE_GRAPHQL_URL: ${{ env.E2E_LIVE_GRAPHQL_URL }}
+        run: |
+          for portal in admin finance onboarding venues hosts clubs club-admins crm communications logs products ecomm-portal; do
+            echo "::group::$portal"
+            (cd "portals/$portal" && pnpm build)
+            echo "::endgroup::"
+          done
+      # The public websites and the pet store, built against staging with the
+      # staging public hosts deploy.yml bakes in, for specs/ui/websites/**.
+      - name: Build the websites and the pet store
+        env:
+          PUBLIC_GRAPHQL_URL: ${{ env.E2E_LIVE_GRAPHQL_URL }}
+          PUBLIC_SERVER_URL: ${{ env.E2E_LIVE_API }}
+          PUBLIC_SITE_URL: https://staging.duncit.com
+          PUBLIC_MAIN_SITE_URL: https://staging.duncit.com
+          PUBLIC_MWEB_URL: https://staging.mweb.duncit.com
+          PUBLIC_ADS_SITE_URL: https://staging.ads.duncit.com
+          PUBLIC_ADS_PORTAL_URL: https://staging.ads-portal.duncit.com
+          PUBLIC_EARNWITH_URL: https://staging.earnwith.duncit.com
+          PUBLIC_PARTNERS_SITE_URL: https://staging.partners.duncit.com
+          PUBLIC_PARTNERS_APP_URL: https://staging.partners-app.duncit.com
+          VITE_SERVER_URL: ${{ env.E2E_LIVE_API }}
+          VITE_GRAPHQL_URL: ${{ env.E2E_LIVE_GRAPHQL_URL }}
+          VITE_MAIN_SITE_URL: https://staging.duncit.com
+          VITE_MWEB_URL: https://staging.mweb.duncit.com
+          VITE_SITE_URL: https://staging.ecomm.duncit.com
+        run: |
+          for site in main-website ads-website earnwith-website partners-website status-website ecomm-store cms-site; do
+            echo "::group::$site"
+            (cd "website/$site" && pnpm build)
+            echo "::endgroup::"
+          done
       # The same target native.duncit.com ships; the slow step of the job.
       - name: Export the native app for web
         working-directory: app/mobile-app
@@ -647,8 +687,28 @@ jobs:
           (cd portals/legal && nohup pnpm preview > "$RUNNER_TEMP/legal.log" 2>&1 &)
           (cd portals/pods && nohup pnpm preview > "$RUNNER_TEMP/pods.log" 2>&1 &)
           (cd app/mobile-app && nohup npx --yes serve dist --single -l 2022 > "$RUNNER_TEMP/native.log" 2>&1 &)
+          for portal in admin finance onboarding venues hosts clubs club-admins crm communications logs products ecomm-portal; do
+            (cd "portals/$portal" && nohup pnpm preview > "$RUNNER_TEMP/$portal.log" 2>&1 &)
+          done
+          # duncit.com, the pet store and the CMS renderer run their own Node
+          # servers (real 404s, redirects and per-request meta); the rest preview.
+          (cd website/main-website && PORT=2000 GRAPHQL_URL="$E2E_LIVE_GRAPHQL_URL" SERVER_URL="$E2E_LIVE_API" \
+            SITE_URL=https://staging.duncit.com nohup node dist-server/main.mjs > "$RUNNER_TEMP/main-website.log" 2>&1 &)
+          (cd website/ecomm-store && PORT=2039 GRAPHQL_URL="$E2E_LIVE_GRAPHQL_URL" SITE_URL=http://localhost:2039 \
+            nohup node dist-server/main.mjs > "$RUNNER_TEMP/ecomm-store.log" 2>&1 &)
+          (cd website/cms-site && HOST=127.0.0.1 PORT=2043 GRAPHQL_URL="$E2E_LIVE_GRAPHQL_URL" \
+            nohup node dist/server/entry.mjs > "$RUNNER_TEMP/cms-site.log" 2>&1 &)
+          for site in ads-website earnwith-website partners-website status-website; do
+            (cd "website/$site" && nohup pnpm preview > "$RUNNER_TEMP/$site.log" 2>&1 &)
+          done
           npx --yes wait-on http://localhost:2003 http://localhost:2005 http://localhost:2010 \
-            http://localhost:2012 http://localhost:2034 http://localhost:2022 --timeout 180000
+            http://localhost:2012 http://localhost:2034 http://localhost:2022 \
+            http://localhost:2002 http://localhost:2008 http://localhost:2016 http://localhost:2030 \
+            http://localhost:2033 http://localhost:2031 http://localhost:2032 http://localhost:2007 \
+            http://localhost:2035 http://localhost:2036 http://localhost:2014 http://localhost:2038 \
+            http://localhost:2000 http://localhost:2020 http://localhost:2025 http://localhost:2004 \
+            http://localhost:2019 http://localhost:2039/healthz http://localhost:2043/healthz \
+            --timeout 180000
 
       - run: echo "E2E_STAGE=Running the account lifecycle" >> "$GITHUB_ENV"
       - name: mWeb · signup, sign in, forgot password, profile, change password, support, pod ideas
@@ -658,6 +718,31 @@ jobs:
         run: >-
           pnpm e2e --browser chrome --spec "__tests__/e2e/specs/0[1-7]-*.cy.ts"
           --reporter junit --reporter-options "mochaFile=$JUNIT_ROOT/mweb-[hash].xml"
+          --config video=true,videoCompression=32
+
+      # The scenario map's API rows, one spec per module under specs/api/. They
+      # sign in as the run account while it is still a plain member (after 07,
+      # before the staff portals grant it roles) and assert what the server
+      # refuses or returns — no browser page is under test here. specs/api/fixtures/
+      # is left out: it makes the account a partner, so it runs on its own below.
+      - name: mWeb · API scenarios (access refusals and member data)
+        id: mweb_api
+        continue-on-error: true
+        working-directory: app/mweb
+        run: >-
+          pnpm e2e --browser chrome --spec "__tests__/e2e/specs/api/{apps,other,partners,staff}/**/*.cy.ts"
+          --reporter junit --reporter-options "mochaFile=$JUNIT_ROOT/mweb-api-[hash].xml"
+
+      # The scenario map's mWeb UI rows, one spec per module under specs/ui/.
+      # Same moment in the run as the API step: the account is still a member,
+      # and each spec grants (and revokes) any role it needs.
+      - name: mWeb · UI scenarios
+        id: mweb_ui
+        continue-on-error: true
+        working-directory: app/mweb
+        run: >-
+          pnpm e2e --browser chrome --spec "__tests__/e2e/specs/ui/**/*.cy.ts"
+          --reporter junit --reporter-options "mochaFile=$JUNIT_ROOT/mweb-ui-[hash].xml"
           --config video=true,videoCompression=32
 
       - name: Partners · sign in and profile, with the mWeb account
@@ -680,6 +765,32 @@ jobs:
         run: >-
           pnpm e2e --browser chrome
           --reporter junit --reporter-options "mochaFile=$JUNIT_ROOT/staff-[hash].xml"
+          --config video=true,videoCompression=32
+
+      # The fixture world (support/fixture-world.ts): the account registers a
+      # venue, applies to host and gets a club, each approved with a role granted
+      # for that one call, then hosts a FREE pod at its own venue — and the specs
+      # test the owner's and host's own side. Last before the delete, because it
+      # leaves the account a VENUE_OWNER, HOST and CLUB_ADMIN that every member
+      # spec above would trip on; the purge below removes all of it.
+      - name: mWeb · API scenarios on the run's own venue, host and pod
+        id: mweb_fixtures
+        continue-on-error: true
+        working-directory: app/mweb
+        run: >-
+          pnpm e2e --browser chrome --spec "__tests__/e2e/specs/api/fixtures/**/*.cy.ts"
+          --reporter junit --reporter-options "mochaFile=$JUNIT_ROOT/mweb-fixtures-[hash].xml"
+
+      # The Partners portal as the partner the fixture step just made: its own
+      # venue, host profile, club and free pod (found by the run marker; a spec
+      # fails loudly when the fixture step did not build them).
+      - name: Partners · UI scenarios on the run's own venue, host and club
+        id: partners_ui
+        continue-on-error: true
+        working-directory: portals/partners-app
+        run: >-
+          pnpm e2e --browser chrome --spec "__tests__/e2e/specs/ui/**/*.cy.ts"
+          --reporter junit --reporter-options "mochaFile=$JUNIT_ROOT/partners-ui-[hash].xml"
           --config video=true,videoCompression=32
 
       - name: mWeb · delete the account
@@ -765,8 +876,12 @@ jobs:
           failed=""
           for step in \
             "mWeb lifecycle=${{ steps.mweb_life.outcome }}" \
+            "mWeb API scenarios=${{ steps.mweb_api.outcome }}" \
+            "mWeb UI scenarios=${{ steps.mweb_ui.outcome }}" \
             "Partners=${{ steps.partners_life.outcome }}" \
             "Staff portals=${{ steps.staff_portals.outcome }}" \
+            "mWeb fixture scenarios=${{ steps.mweb_fixtures.outcome }}" \
+            "Partners UI scenarios=${{ steps.partners_ui.outcome }}" \
             "mWeb delete=${{ steps.mweb_delete.outcome }}" \
             "Partners after delete=${{ steps.partners_deleted.outcome }}" \
             "mWeb Google=${{ steps.mweb_google.outcome }}" \

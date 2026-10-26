@@ -52,7 +52,7 @@ export default function HealthScoreCard({ score, onUpdated }: Readonly<Props>) {
   };
 
   return (
-    <Card variant="outlined">
+    <Card variant="outlined" data-testid="admin-user-health-card">
       <CardContent>
         <Stack spacing={1.5}>
           <Stack
@@ -64,6 +64,7 @@ export default function HealthScoreCard({ score, onUpdated }: Readonly<Props>) {
               rowGap: 1
             }}>
             <Box
+              data-testid="admin-user-health-total"
               sx={{
                 width: 86,
                 height: 86,
@@ -104,7 +105,7 @@ export default function HealthScoreCard({ score, onUpdated }: Readonly<Props>) {
                 Base: {score.base_score} · Admin adjustment: {score.delta_sum >= 0 ? `+${score.delta_sum}` : score.delta_sum} · Final: {score.total_score}/100
               </Typography>
             </Box>
-            <DuncitButton variant="contained" size="small" startIcon={<EditIcon />} onClick={() => { setEditing(null); setOpen(true); }}>
+            <DuncitButton variant="contained" size="small" startIcon={<EditIcon />} data-testid="admin-user-health-adjust" onClick={() => { setEditing(null); setOpen(true); }}>
               Adjust
             </DuncitButton>
           </Stack>
@@ -119,7 +120,7 @@ export default function HealthScoreCard({ score, onUpdated }: Readonly<Props>) {
               Adjustment history
             </Typography>
             {score.adjustments.length === 0 ? (
-              <Alert severity="info" sx={{ mt: 0.5 }}>No admin adjustments yet. Default score is {score.base_score}.</Alert>
+              <Alert severity="info" sx={{ mt: 0.5 }} data-testid="admin-user-health-empty">No admin adjustments yet. Default score is {score.base_score}.</Alert>
             ) : (
               <Stack spacing={0.75} sx={{ mt: 0.5 }}>
                 {score.adjustments.map((a) => (

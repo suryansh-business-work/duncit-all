@@ -65,7 +65,7 @@ export default function VenueImagesField({
         >
           {coverImageUrl ? 'Change cover image' : 'Upload cover image'}
         </DuncitButton>
-        {coverError && <FormHelperText error>{coverError}</FormHelperText>}
+        {coverError && <FormHelperText error data-testid="register-venue-cover-error">{coverError}</FormHelperText>}
       </Stack>
       <Stack spacing={1}>
         <Stack

@@ -142,7 +142,7 @@ export default function MediaListRow({
         </span>
       </Tooltip>
       <Tooltip title={copy.remove}>
-        <DuncitIconButton size="small" color="error" onClick={onRemove}>
+        <DuncitIconButton size="small" color="error" onClick={onRemove} data-testid="media-list-remove">
           <DeleteIcon fontSize="small" />
         </DuncitIconButton>
       </Tooltip>

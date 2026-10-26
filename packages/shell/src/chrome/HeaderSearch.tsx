@@ -106,7 +106,7 @@ export function HeaderSearch({
         />
       )}
       renderOption={(props, option) => (
-        <Box component="li" {...props} key={option.to} sx={{ alignItems: 'flex-start' }}>
+        <Box component="li" {...props} key={option.to} data-testid={`shell-header-search-option-${option.to}`} sx={{ alignItems: 'flex-start' }}>
           <Box sx={{ minWidth: 0 }}>
             <Typography variant="body2" noWrap sx={{
               fontWeight: 700

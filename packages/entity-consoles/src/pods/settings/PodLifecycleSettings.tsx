@@ -142,6 +142,7 @@ export default function PodLifecycleSettings({
       />
       <NumberSettingCard
         title={t('admin.podSettings.riskWindowTitle')}
+        testId="pod-setting-risk-window"
         description={t('admin.podSettings.riskWindowDesc')}
         label={t('admin.podSettings.riskWindowLabel')}
         helperText={t('admin.podSettings.riskWindowMin')}
@@ -166,6 +167,7 @@ export default function PodLifecycleSettings({
       />
       <NumberSettingCard
         title={t('admin.podSettings.ticketDiscountMaxPctLabel')}
+        testId="pod-setting-ticket-discount-max"
         description={t('admin.podSettings.ticketDiscountMaxPctHint')}
         label={t('admin.podSettings.ticketDiscountMaxPctLabel')}
         helperText={t('admin.podSettings.ticketDiscountMaxPctMin')}

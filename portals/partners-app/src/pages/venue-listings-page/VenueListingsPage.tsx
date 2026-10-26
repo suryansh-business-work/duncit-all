@@ -26,7 +26,7 @@ export default function VenueListingsPage() {
               Track review status and continue your venue application.
             </Typography>
           </Box>
-          <DuncitButton component={RouterLink} to="/register-venue/new" variant="contained" startIcon={<AddBusinessIcon />} sx={{ bgcolor: '#fff', color: '#15111c', '&:hover': { bgcolor: 'rgba(255,255,255,0.9)' } }}>
+          <DuncitButton component={RouterLink} to="/register-venue/new" data-testid="register-venue-start" variant="contained" startIcon={<AddBusinessIcon />} sx={{ bgcolor: '#fff', color: '#15111c', '&:hover': { bgcolor: 'rgba(255,255,255,0.9)' } }}>
             Register Venue
           </DuncitButton>
         </Stack>

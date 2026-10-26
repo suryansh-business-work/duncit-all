@@ -228,6 +228,8 @@ export const verificationService = {
     if (!Types.ObjectId.isValid(userId)) {
       throw new GraphQLError('Invalid user', { extensions: { code: 'BAD_USER_INPUT' } });
     }
+    // Only a stored row is a submission (NOT_SUBMITTED is the absence of one),
+    // so no upsert: a verdict on a document nobody uploaded approves nothing.
     const doc = await UserVerificationModel.findOneAndUpdate(
       { user_id: new Types.ObjectId(userId), type },
       {
@@ -238,8 +240,13 @@ export const verificationService = {
           reviewed_at: new Date(),
         },
       },
-      { new: true, upsert: true }
+      { new: true }
     );
+    if (!doc) {
+      throw new GraphQLError('Nothing has been submitted for this verification yet', {
+        extensions: { code: 'NOT_FOUND' },
+      });
+    }
     return toPub(type, doc);
   },
 };

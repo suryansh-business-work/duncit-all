@@ -3,8 +3,9 @@ import { requireAuth, requireRole } from '@middleware/rbac';
 import { userDisplayOf } from '@modules/access/user/user.display';
 import { inventoryService } from './inventory.service';
 import { productReviewService } from '../productReview/productReview.service';
+import { ADMIN_RW } from './inventory.roles';
 
-export const ADMIN_RW = ['SUPER_ADMIN', 'CITY_ADMIN', 'PRODUCTS_MANAGER'];
+export { ADMIN_RW } from './inventory.roles';
 
 export const inventoryResolvers = {
   InventoryProduct: {

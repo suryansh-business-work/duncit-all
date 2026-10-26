@@ -38,7 +38,7 @@ export default function PodDetailsHeader({ pod, backTo, backLabel, actions, edit
             minWidth: 0
           }}>
           <BackButton onClick={() => navigate(backTo)}>{backLabel}</BackButton>
-          <Typography variant="h5" component="h1" noWrap sx={{
+          <Typography variant="h5" component="h1" noWrap data-testid="pod-details-title" sx={{
             fontWeight: 900
           }}>
             {pod.pod_title}
@@ -65,6 +65,7 @@ export default function PodDetailsHeader({ pod, backTo, backLabel, actions, edit
             variant="contained"
             startIcon={<EditIcon />}
             onClick={() => navigate(editTo(pod.id))}
+            data-testid="pod-details-edit"
           >
             Edit pod
           </DuncitButton>

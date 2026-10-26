@@ -27,7 +27,7 @@ export function ClubPodsHeader({ clubId, clubName }: Readonly<Props>) {
             color: "text.secondary",
             fontWeight: 800
           }}>{t('clubAdmin.pods.title')}</Typography>
-        <Typography variant="h6" component="h1" sx={{
+        <Typography variant="h6" component="h1" data-testid="club-pods-heading" sx={{
           fontWeight: 950
         }}>{clubName ?? t('clubAdmin.pods.clubPods')}</Typography>
         <Typography variant="body2" sx={{
@@ -39,6 +39,7 @@ export function ClubPodsHeader({ clubId, clubName }: Readonly<Props>) {
         startIcon={<EditIcon />}
         component={RouterLink}
         to={`/club-admin/clubs/${clubId}/edit`}
+        data-testid="club-pods-edit-club"
       >
         {t('clubAdmin.clubs.editClub')}
       </DuncitButton>

@@ -17,11 +17,11 @@ export default function WithdrawalsCard({ withdrawals, currency }: Readonly<Prop
         </Typography>
         <Divider sx={{ mb: 1.5 }} />
         {withdrawals.length === 0 ? (
-          <Alert severity="info">{t('partners.walletPage.noWithdrawalsYet')}</Alert>
+          <Alert severity="info" data-testid="wallet-withdrawals-empty">{t('partners.walletPage.noWithdrawalsYet')}</Alert>
         ) : (
           <Stack spacing={1}>
             {withdrawals.map((w) => (
-              <Stack key={w.id} direction="row" spacing={1} sx={{
+              <Stack key={w.id} data-testid={`wallet-withdrawal-${w.id}`} direction="row" spacing={1} sx={{
                 alignItems: "center"
               }}>
                 <Box sx={{ flex: 1, minWidth: 0 }}>

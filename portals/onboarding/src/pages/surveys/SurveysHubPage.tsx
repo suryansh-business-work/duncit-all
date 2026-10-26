@@ -13,7 +13,7 @@ interface CardProps {
 function SurveyKindCard({ meta, onOpen }: Readonly<CardProps>) {
   const { slug, title, subtitle, Icon } = meta;
   return (
-    <Card variant="outlined" sx={{ height: '100%' }}>
+    <Card variant="outlined" sx={{ height: '100%' }} data-testid={`survey-kind-card-${slug}`}>
       <CardActionArea onClick={() => onOpen(slug)} sx={{ p: 2.5, height: '100%' }}>
         <Stack spacing={1.5} sx={{
           alignItems: "flex-start"

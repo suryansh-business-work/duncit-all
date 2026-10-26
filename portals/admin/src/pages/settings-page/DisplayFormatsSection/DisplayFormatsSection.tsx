@@ -122,6 +122,7 @@ export default function DisplayFormatsSection({ onToast }: Readonly<Props>) {
             startIcon={<SaveIcon />}
             onClick={submit}
             disabled={busy || !dirty || loading || unusable}
+            data-testid="settings-formats-save"
           >
             {busy ? 'Saving…' : 'Save'}
           </DuncitButton>
@@ -129,18 +130,18 @@ export default function DisplayFormatsSection({ onToast }: Readonly<Props>) {
 
         <Stack spacing={2}>
           <FormatFields dateFmt={dateFmt} timeFmt={timeFmt} setDateFmt={setDateFmt} setTimeFmt={setTimeFmt} />
-          <Alert severity="info">Preview: <strong>{preview}</strong></Alert>
+          <Alert severity="info" data-testid="settings-format-preview">Preview: <strong>{preview}</strong></Alert>
           <Alert severity="info">{typedHint}</Alert>
           <Alert severity="info">{clockHint}</Alert>
           {unusable && (
-            <Alert severity="warning">
+            <Alert severity="warning" data-testid="settings-format-unusable">
               The date and time pickers cannot edit{' '}
               <strong>{[...badDateTokens, ...badTimeTokens].join(', ')}</strong>. Every screen
               where a date is typed uses these same patterns, so pick tokens from the presets
               (d, dd, M, MM, MMM, MMMM, yyyy, EEE, HH, hh, mm, ss, a).
             </Alert>
           )}
-          {err && <Alert severity="error">{err}</Alert>}
+          {err && <Alert severity="error" data-testid="settings-formats-error">{err}</Alert>}
         </Stack>
       </CardContent>
     </Card>

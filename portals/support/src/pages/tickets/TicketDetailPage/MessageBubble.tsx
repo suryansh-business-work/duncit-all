@@ -20,7 +20,7 @@ interface Props {
 export default function MessageBubble({ msg, time, userLastReadAt }: Readonly<Props>) {
   if (msg.author_role === 'SYSTEM') {
     return (
-      <Stack direction="row" sx={{ justifyContent: 'center' }}>
+      <Stack direction="row" sx={{ justifyContent: 'center' }} data-testid={`ticket-message-${msg.id}`}>
         <Chip size="small" label={msg.body_text} color="info" variant="outlined" />
       </Stack>
     );
@@ -29,7 +29,7 @@ export default function MessageBubble({ msg, time, userLastReadAt }: Readonly<Pr
   const seen =
     !!userLastReadAt && new Date(userLastReadAt).getTime() >= new Date(msg.created_at).getTime();
   return (
-    <Stack direction="row" spacing={1.25} sx={{ flexDirection: isAgent ? 'row-reverse' : 'row' }}>
+    <Stack direction="row" spacing={1.25} sx={{ flexDirection: isAgent ? 'row-reverse' : 'row' }} data-testid={`ticket-message-${msg.id}`}>
       <Avatar alt="" src={msg.author_photo || undefined} sx={{ width: 32, height: 32, fontSize: 13 }}>
         {msg.author_name?.[0]?.toUpperCase() || '?'}
       </Avatar>

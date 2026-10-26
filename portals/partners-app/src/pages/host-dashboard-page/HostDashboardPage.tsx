@@ -39,12 +39,12 @@ function QuickActions({ isHost }: Readonly<{ isHost: boolean }>) {
     <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{
       alignItems: { sm: 'center' }
     }}>
-      <DuncitButton component={RouterLink} to="/host/pods" size="small" variant="outlined" startIcon={<DashboardIcon />}>
+      <DuncitButton component={RouterLink} to="/host/pods" size="small" variant="outlined" startIcon={<DashboardIcon />} data-testid="host-quick-pods">
         Your Pods
       </DuncitButton>
       <DuncitButton
         component={RouterLink}
-        to="/wallet"
+        to="/wallet" data-testid="host-quick-wallet"
         size="small"
         variant="outlined"
         startIcon={<AccountBalanceWalletIcon />}
@@ -53,7 +53,7 @@ function QuickActions({ isHost }: Readonly<{ isHost: boolean }>) {
       </DuncitButton>
       <DuncitButton
         component={RouterLink}
-        to="/host/pods?new=1"
+        to="/host/pods?new=1" data-testid="host-quick-create"
         size="small"
         variant="contained"
         startIcon={<AddIcon />}
@@ -143,7 +143,7 @@ export default function HostDashboardPage() {
       dashboardId="partners.host"
       header={
         <Stack spacing={2.5}>
-          <Card sx={HERO_SX}>
+          <Card sx={HERO_SX} data-testid="host-dashboard-hero">
             <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{
               alignItems: { md: 'center' }
             }}>

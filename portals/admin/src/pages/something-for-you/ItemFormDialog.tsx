@@ -1,4 +1,5 @@
 import {
+  Alert,
   Dialog,
   DialogActions,
   DialogContent,
@@ -19,6 +20,8 @@ interface Props {
   form: SomethingForYouForm;
   setForm: (next: SomethingForYouForm) => void;
   busy: boolean;
+  /** The server's refusal of the last save, shown until the next save or close. */
+  error?: string | null;
   onClose: () => void;
   onSave: () => void;
 }
@@ -28,6 +31,7 @@ export default function ItemFormDialog({
   form,
   setForm,
   busy,
+  error,
   onClose,
   onSave,
 }: Readonly<Props>) {
@@ -39,6 +43,11 @@ export default function ItemFormDialog({
       <DialogTitle>{form.id ? 'Edit card' : 'New card'}</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
+          {error && (
+            <Alert severity="error" data-testid="sfy-form-error">
+              {error}
+            </Alert>
+          )}
           {/* Counted here rather than trimmed later: the card is a fixed size
               on both surfaces, so a longer headline is not wrapped, it is cut
               off — and this is the last moment anyone can choose what stays. */}
@@ -49,6 +58,7 @@ export default function ItemFormDialog({
             required
             fullWidth
             error={tooLong}
+            data-testid="sfy-form-title"
             helperText={`${form.title.length}/${TITLE_MAX} — shown over the image, up to three lines`}
             slotProps={{
               htmlInput: { maxLength: TITLE_MAX }
@@ -84,6 +94,7 @@ export default function ItemFormDialog({
               <Switch
                 checked={form.is_active}
                 onChange={(event) => setForm({ ...form, is_active: event.target.checked })}
+                slotProps={{ input: { 'data-testid': 'sfy-form-active' } as Record<string, string> }}
               />
             }
             label={t('admin.somethingForYou.showOnHome')}
@@ -98,6 +109,7 @@ export default function ItemFormDialog({
           variant="contained"
           onClick={onSave}
           disabled={busy || !form.title.trim() || tooLong}
+          data-testid="sfy-form-save"
         >
           Save
         </DuncitButton>

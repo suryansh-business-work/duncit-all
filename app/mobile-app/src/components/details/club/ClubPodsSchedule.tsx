@@ -9,9 +9,9 @@ import { clubPodPhase, type ClubPodPhase } from '@/utils/club-detail';
 import { ClubPodRailCard } from './ClubPodRailCard';
 
 const RAILS: readonly (readonly [ClubPodPhase, string])[] = [
-  ['SOON', 'Happening soon'],
-  ['UPCOMING', 'Upcoming'],
-  ['PREVIOUS', 'Previous'],
+  ['SOON', 'mweb.clubDetails.happeningSoon'],
+  ['UPCOMING', 'mweb.common.upcoming'],
+  ['PREVIOUS', 'mweb.common.previous'],
 ];
 
 interface Props {
@@ -34,14 +34,14 @@ export function ClubPodsSchedule({ pods, onOpenPod }: Readonly<Props>) {
   }
   return (
     <YStack gap={20} testID="club-pods-schedule">
-      {RAILS.map(([phase, title]) => {
+      {RAILS.map(([phase, titleKey]) => {
         const rail = pods.filter(
           (pod) => clubPodPhase(pod.pod_date_time, pod.pod_end_date_time) === phase,
         );
         if (rail.length === 0) return null;
         return (
           <YStack key={phase} gap={10}>
-            <SectionHeader title={title} />
+            <SectionHeader title={t(titleKey)} />
             <ScrollRail testID={`club-pods-schedule-rail-${phase}-scroll`} gap={12}>
               {rail.map((pod) => (
                 <ClubPodRailCard key={pod.id} pod={pod} onPress={() => onOpenPod(pod)} />

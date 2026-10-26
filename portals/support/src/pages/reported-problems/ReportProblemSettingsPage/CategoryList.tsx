@@ -46,6 +46,7 @@ function CategoryRow({ category, shownLabel, removeLabel, nameLabel, onChange, r
         color="error"
         aria-label={`${removeLabel}: ${category.label}`}
         onClick={() => onChange(removeCategory(rows, category.uid))}
+        data-testid="problem-settings-category-remove"
       >
         <DeleteIcon />
       </DuncitIconButton>

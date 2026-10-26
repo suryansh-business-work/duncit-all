@@ -100,7 +100,7 @@ export default function BrandSettingsPage({
   return (
     <Stack spacing={2.25} sx={{ width: '100%' }}>
       {!embedded && <BrandSettingsHero brand={brand} onBack={() => navigate('/ecomm-brand')} />}
-      {brandMissing && <Alert severity="warning">{t('partners.ecommBrandPage.brandWasNotFoundInYour')}</Alert>}
+      {brandMissing && <Alert severity="warning" data-testid="brand-settings-not-found">{t('partners.ecommBrandPage.brandWasNotFoundInYour')}</Alert>}
       {error && !brandMissing && <Alert severity="error">{parseApiError(error)}</Alert>}
       {!brandMissing && (
         <Card variant="outlined" sx={{ borderRadius: 2 }}>

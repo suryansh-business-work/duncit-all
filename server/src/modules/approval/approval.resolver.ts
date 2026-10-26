@@ -53,7 +53,13 @@ export const approvalResolvers = {
   Mutation: {
     approveRequest: (_p: unknown, args: { id: string; notes?: string | null }, ctx: GraphQLContext) => {
       const user = requireRole(ctx, APPROVAL_REVIEW);
-      return approvalService.approve(args.id, { id: user.id, name: user.email ?? null }, args.notes);
+      // The roles ride along: approving a request that grants a role takes the
+      // authority to grant it (approval.service → assertMayDecide).
+      return approvalService.approve(
+        args.id,
+        { id: user.id, name: user.email ?? null, roles: user.roles },
+        args.notes
+      );
     },
     denyRequest: (_p: unknown, args: { id: string; notes?: string | null }, ctx: GraphQLContext) => {
       const user = requireRole(ctx, APPROVAL_REVIEW);

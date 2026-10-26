@@ -71,7 +71,7 @@ export function DashboardToolbar({
         >
           {downloading ? labels.downloading : labels.download}
         </DuncitButton>
-        <DuncitButton size="small" startIcon={<TuneIcon />} onClick={onStart}>
+        <DuncitButton size="small" startIcon={<TuneIcon />} onClick={onStart} data-testid="dashboard-customise">
           {labels.customise}
         </DuncitButton>
       </Stack>
@@ -98,10 +98,10 @@ export function DashboardToolbar({
       <Stack direction="row" spacing={1} sx={{
         justifyContent: "flex-end"
       }}>
-        <DuncitButton size="small" color="inherit" startIcon={<RestartAltIcon />} onClick={onReset} disabled={saving}>
+        <DuncitButton size="small" color="inherit" startIcon={<RestartAltIcon />} onClick={onReset} disabled={saving} data-testid="dashboard-reset">
           {labels.reset}
         </DuncitButton>
-        <DuncitButton size="small" color="inherit" startIcon={<CloseIcon />} onClick={onCancel} disabled={saving}>
+        <DuncitButton size="small" color="inherit" startIcon={<CloseIcon />} onClick={onCancel} disabled={saving} data-testid="dashboard-cancel">
           {labels.cancel}
         </DuncitButton>
         <DuncitButton
@@ -109,6 +109,7 @@ export function DashboardToolbar({
           variant="contained"
           startIcon={<SaveIcon />}
           onClick={onSave}
+          data-testid="dashboard-save"
           disabled={saving || !dirty}
         >
           {saving ? labels.saving : labels.save}

@@ -138,6 +138,7 @@ export function BotChat({ botKey, copy, onRegisterRestart }: Readonly<Props>) {
                     edge="end"
                     disabled={loading || !draft.trim()}
                     aria-label={t('shell.askBot.send')}
+                    data-testid="ask-bot-send"
                   >
                     <SendIcon fontSize="small" />
                   </DuncitIconButton>

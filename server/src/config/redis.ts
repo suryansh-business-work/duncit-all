@@ -146,3 +146,15 @@ export async function cacheSet(key: string, value: unknown, ttlSeconds: number):
     logs.server.warn('redis', 'cacheSet', { error: err, key });
   }
 }
+
+/** Drop a cached value so the next read recomputes it. A no-op without Redis. */
+export async function cacheDel(key: string): Promise<void> {
+  if (!client || !connected) return;
+  try {
+    await client.del(key);
+  } catch (err) {
+    // Same reasoning as cacheSet: the write that made the value stale has
+    // already succeeded, and the entry's own TTL bounds how long it survives.
+    logs.server.warn('redis', 'cacheDel', { error: err, key });
+  }
+}

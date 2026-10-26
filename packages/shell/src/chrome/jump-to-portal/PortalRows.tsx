@@ -15,7 +15,7 @@ import type { PortalAccessEntry } from './queries';
 /** A console this user can open — the row is the link, in a new tab. */
 export function PortalLinkRow({ portal }: Readonly<{ portal: PortalAccessEntry }>) {
   return (
-    <ListItemButton component="a" href={portal.url} target="_blank" rel="noopener">
+    <ListItemButton component="a" data-testid={`jump-to-portal-open-${portal.key}`} href={portal.url} target="_blank" rel="noopener">
       <ListItemIcon sx={{ minWidth: 36 }}>
         <LaunchIcon fontSize="small" color="primary" />
       </ListItemIcon>
@@ -41,7 +41,7 @@ export function PortalRequestRow({ portal, busy, onRequest }: Readonly<RequestRo
     action = <Chip size="small" color="warning" variant="outlined" label={t('shell.jumpToPortal.requested')} />;
   } else if (portal.can_request) {
     action = (
-      <DuncitButton size="small" variant="outlined" disabled={busy} onClick={() => onRequest(portal.key)}>
+      <DuncitButton size="small" variant="outlined" data-testid={`jump-to-portal-request-${portal.key}`} disabled={busy} onClick={() => onRequest(portal.key)}>
         {t('shell.jumpToPortal.requestAccess')}
       </DuncitButton>
     );
@@ -60,7 +60,7 @@ export function PortalRequestRow({ portal, busy, onRequest }: Readonly<RequestRo
   else if (portal.request_status === 'DENIED') secondary = t('shell.jumpToPortal.deniedHint');
 
   return (
-    <ListItem secondaryAction={action}>
+    <ListItem secondaryAction={action} data-testid={`jump-to-portal-locked-${portal.key}`}>
       <ListItemIcon sx={{ minWidth: 36 }}>
         <LockOutlinedIcon fontSize="small" color="disabled" />
       </ListItemIcon>

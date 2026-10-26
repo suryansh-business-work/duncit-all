@@ -123,7 +123,7 @@ export default function ApprovalsPage() {
         autoHideDuration={3000}
         onClose={() => setToast(null)}
       >
-        <Alert severity="success" onClose={() => setToast(null)} variant="filled">
+        <Alert severity="success" onClose={() => setToast(null)} variant="filled" data-testid="approvals-toast">
           {toast}
         </Alert>
       </Snackbar>

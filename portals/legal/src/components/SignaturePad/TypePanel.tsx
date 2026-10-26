@@ -19,6 +19,7 @@ export function TypePanel({ typed, commitTyped, typedName, value, method }: Read
         label={t('legal.signature.typeYours')}
         value={typed}
         onChange={(e) => commitTyped(e.target.value)}
+        slotProps={{ htmlInput: { 'data-testid': 'signature-type-input' } }}
         placeholder={typedName || 'Your name'}
         fullWidth
       />

@@ -1,5 +1,5 @@
 import type { GraphQLContext } from '@context';
-import { requireAuth, requireRole } from '@middleware/rbac';
+import { readScope, requireAuth, requireRole } from '@middleware/rbac';
 import { validate } from '@utils/validate';
 import { analyticsService } from './analytics.service';
 import { recordAppEventSchema } from './analytics.validator';
@@ -22,7 +22,8 @@ export const analyticsResolvers = {
       ctx: GraphQLContext
     ) => {
       requireRole(ctx, ADMIN_ROLES);
-      return analyticsService.dashboardTotals(args.super_category_slug);
+      // A city admin's dashboard counts their own city, not the platform.
+      return analyticsService.dashboardTotals(args.super_category_slug, readScope(ctx));
     },
     userActivityYear: (
       _p: unknown,

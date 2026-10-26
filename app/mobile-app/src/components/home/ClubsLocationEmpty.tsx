@@ -16,7 +16,7 @@ export function ClubsLocationEmpty() {
       <EmptyState
         testID="clubs-location-empty"
         icon="location-off"
-        title="No Clubs operating at the selected location,"
+        title={t('mweb.home.noClubsAtLocation')}
         actionLabel={t('mweb.home.resetLocation')}
         actionTestID="clubs-location-reset"
         onAction={() => setOpen(true)}

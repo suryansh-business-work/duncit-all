@@ -104,9 +104,10 @@ export default function ClubDetailsPage() {
   const toggleClubFollow = async () => {
     try {
       const nextFollowing = await toggleFollow(club.id);
-      notify(nextFollowing ? `Following ${club.club_name}` : `Unfollowed ${club.club_name}`, 'success');
+      const followKey = nextFollowing ? 'mweb.clubDetailsPage.following' : 'mweb.clubDetailsPage.unfollowed';
+      notify(t(followKey, { vars: { name: club.club_name } }), 'success');
     } catch (toggleError: any) {
-      notify(toggleError?.message ?? 'Could not update club follow', 'error');
+      notify(toggleError?.message ?? t('mweb.clubDetailsPage.followFailed'), 'error');
     }
   };
 
@@ -122,7 +123,7 @@ export default function ClubDetailsPage() {
         return;
       }
       await navigator.clipboard.writeText(url);
-      notify('Link copied', 'success');
+      notify(t('mweb.clubDetailsPage.linkCopied'), 'success');
     } catch {
       /* user cancelled */
     }

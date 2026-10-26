@@ -84,7 +84,7 @@ export default function CreateUserDialog({
   );
 
   return (
-    <Dialog open={open} onClose={busy ? undefined : onClose} fullWidth maxWidth="sm">
+    <Dialog open={open} onClose={busy ? undefined : onClose} fullWidth maxWidth="sm" data-testid="create-user-dialog">
       <form noValidate onSubmit={submit}>
         <DialogTitle>{t('admin.users.create')}</DialogTitle>
         <DialogContent dividers>
@@ -93,13 +93,13 @@ export default function CreateUserDialog({
               size={{
                 xs: 12,
                 sm: 6
-              }}><RhfTextField control={control} name="first_name" label={t('shell.profile.firstName')} required /></Grid>
+              }}><RhfTextField control={control} name="first_name" label={t('shell.profile.firstName')} required data-testid="create-user-first-name" /></Grid>
             <Grid
               size={{
                 xs: 12,
                 sm: 6
-              }}><RhfTextField control={control} name="last_name" label={t('shell.profile.lastName')} required /></Grid>
-            <Grid size={12}><RhfTextField control={control} name="email" type="email" label={t('shell.common.email')} hint="Welcome email is sent if provided." /></Grid>
+              }}><RhfTextField control={control} name="last_name" label={t('shell.profile.lastName')} required data-testid="create-user-last-name" /></Grid>
+            <Grid size={12}><RhfTextField control={control} name="email" type="email" label={t('shell.common.email')} hint="Welcome email is sent if provided." data-testid="create-user-email" /></Grid>
             <Grid
               size={{
                 xs: 4,
@@ -117,7 +117,7 @@ export default function CreateUserDialog({
               size={{
                 xs: 8,
                 sm: 9
-              }}><RhfTextField control={control} name="phone_number" label={t('admin.users.phoneNumber')} required /></Grid>
+              }}><RhfTextField control={control} name="phone_number" label={t('admin.users.phoneNumber')} required data-testid="create-user-phone-number" /></Grid>
             <Grid size={12}>
               <Controller
                 control={control}
@@ -158,18 +158,18 @@ export default function CreateUserDialog({
               size={{
                 xs: 12,
                 sm: 6
-              }}><RhfTextField control={control} name="city" label={t('admin.profile.city')} /></Grid>
+              }}><RhfTextField control={control} name="city" label={t('admin.profile.city')} data-testid="create-user-city" /></Grid>
             <Grid
               size={{
                 xs: 12,
                 sm: 6
-              }}><RhfTextField control={control} name="zone" label={t('admin.profile.zone')} /></Grid>
+              }}><RhfTextField control={control} name="zone" label={t('admin.profile.zone')} data-testid="create-user-zone" /></Grid>
             {opError && <Grid size={12}><Alert severity="error">{opError}</Alert></Grid>}
           </Grid>
         </DialogContent>
         <DialogActions>
-          <DuncitButton type="button" onClick={onClose} disabled={busy}>{t('shell.common.cancel')}</DuncitButton>
-          <DuncitButton type="submit" variant="contained" loading={busy}>{busy ? 'Creating…' : t('admin.users.create')}</DuncitButton>
+          <DuncitButton type="button" onClick={onClose} disabled={busy} data-testid="create-user-cancel">{t('shell.common.cancel')}</DuncitButton>
+          <DuncitButton type="submit" variant="contained" loading={busy} data-testid="create-user-submit">{busy ? 'Creating…' : t('admin.users.create')}</DuncitButton>
         </DialogActions>
       </form>
     </Dialog>

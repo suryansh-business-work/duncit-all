@@ -51,6 +51,7 @@ export default function StatusSection({
                 type="number"
                 disabled={!canGovern}
                 hint={t('directory.venueEditor.sharePctHint')}
+                data-testid="venue-editor-share-pct"
               />
             </Grid>
             <Grid size={{ xs: 6, md: 4 }}>

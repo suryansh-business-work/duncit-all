@@ -53,7 +53,7 @@ export default function CreatePodLauncher({ onNormal }: Readonly<Props>) {
 
   return (
     <>
-      <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={start}>
+      <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={start} data-testid="pods-new">
         {podKindLabels.newPodCta}
       </DuncitButton>
 

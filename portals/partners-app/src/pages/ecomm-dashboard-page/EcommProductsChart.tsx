@@ -47,7 +47,7 @@ export default function EcommProductsChart({
   const { t } = useTranslation();
   if (rows.length === 0) {
     return (
-      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+      <Typography variant="body2" data-testid="ecomm-products-empty" sx={{ color: 'text.secondary' }}>
         {t('partners.ecommDashboardPage.noProductSalesYet')}
       </Typography>
     );

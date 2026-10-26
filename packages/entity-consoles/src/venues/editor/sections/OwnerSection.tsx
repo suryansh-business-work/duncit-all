@@ -80,6 +80,7 @@ export default function OwnerSection({
               label={t('directory.venueEditor.ownerPhone')}
               size="small"
               required
+              data-testid="venue-editor-owner-phone"
             />
           </Grid>
           <Grid size={{ xs: 12, md: 4 }}>

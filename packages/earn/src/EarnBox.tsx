@@ -23,6 +23,9 @@ interface Props {
   disabledLabel?: string;
   /** When set (approved user), rendered as a button to the right of the chip. */
   cta?: EarnBoxCta;
+  /** Root `data-testid`; the parts derive from it (`-open`, `-title`,
+   * `-description`, `-enabled`, `-cta`), matching the native EarnBox. */
+  testId?: string;
 }
 
 /** A single "earn" path card on the Earn with Duncit page. Disabled when the
@@ -39,11 +42,13 @@ export default function EarnBox({
   disabled,
   disabledLabel = 'Already enabled',
   cta,
+  testId = 'earn-box',
 }: Readonly<Props>) {
   const [brokenImage, setBrokenImage] = useState<string | undefined>(undefined);
   const showImage = Boolean(imageUrl) && brokenImage !== imageUrl;
   return (
     <Card
+      data-testid={testId}
       variant="outlined"
       sx={{
         borderRadius: '16px',
@@ -52,7 +57,7 @@ export default function EarnBox({
         '&:hover': { boxShadow: 'none' },
       }}
     >
-      <CardActionArea disabled={disabled} onClick={onOpen}>
+      <CardActionArea data-testid={`${testId}-open`} disabled={disabled} onClick={onOpen}>
         {showImage && (
           <CardMedia
             component="img"
@@ -82,16 +87,16 @@ export default function EarnBox({
             >
               {icon}
             </Box>
-            <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+            <Typography data-testid={`${testId}-title`} variant="subtitle1" sx={{ fontWeight: 700 }}>
               {title}
             </Typography>
-            <Typography variant="body2" sx={{
+            <Typography data-testid={`${testId}-description`} variant="body2" sx={{
               color: "text.secondary"
             }}>
               {description}
             </Typography>
             {disabled && !cta && (
-              <Chip size="small" color="success" label={disabledLabel} sx={{ fontWeight: 600 }} />
+              <Chip data-testid={`${testId}-enabled`} size="small" color="success" label={disabledLabel} sx={{ fontWeight: 600 }} />
             )}
           </Stack>
         </CardContent>
@@ -105,8 +110,9 @@ export default function EarnBox({
               alignItems: "center",
               flexWrap: "wrap"
             }}>
-            <Chip size="small" color="success" label={disabledLabel} sx={{ fontWeight: 600 }} />
+            <Chip data-testid={`${testId}-enabled`} size="small" color="success" label={disabledLabel} sx={{ fontWeight: 600 }} />
             <DuncitButton
+              data-testid={`${testId}-cta`}
               size="small"
               variant="contained"
               onClick={cta.onClick}

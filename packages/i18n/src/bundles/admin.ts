@@ -262,6 +262,7 @@ export const ADMIN_BUNDLE: NestedCatalogue = {
     surveys: {
       empty: 'No answers.',
       none: "This user hasn't submitted any onboarding survey yet.",
+      loadFailed: "This user's onboarding surveys could not be loaded.",
       interests: 'Signup Survey Interests',
     },
 

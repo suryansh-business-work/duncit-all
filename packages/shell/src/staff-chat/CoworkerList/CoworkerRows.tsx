@@ -92,7 +92,7 @@ export function PersonRow({ person, status, onOpen }: Readonly<PersonRowProps>) 
       disablePadding
       secondaryAction={<CoworkerInfoButton person={person} />}
     >
-      <ListItemButton onClick={() => onOpen(person)}>
+      <ListItemButton onClick={() => onOpen(person)} data-testid={`staff-chat-person-${person.id}`}>
         <ListItemAvatar>
           <PresenceDot status={status}>
             <Avatar src={person.photo || undefined} alt="" sx={{ width: 34, height: 34 }}>

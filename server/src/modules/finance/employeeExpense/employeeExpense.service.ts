@@ -15,6 +15,7 @@
 import crypto from 'node:crypto';
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
+import { logs } from '@observability/log';
 import { UserModel } from '@modules/access/user/user.model';
 import { EXPENSE_PAYMENT_METHODS } from '@modules/finance/expense/expense.model';
 import {
@@ -335,8 +336,11 @@ export const employeeExpenseService = {
     if (!Types.ObjectId.isValid(id)) {
       throw new GraphQLError('Expense claim not found', { extensions: { code: 'NOT_FOUND' } });
     }
+    await assertNotOwnClaim(id, reviewerId, decision);
     const doc = await EmployeeExpenseModel.findOneAndUpdate(
-      { _id: id, status: 'PENDING' },
+      // The claimant is in the filter too, so the decision can never be written
+      // by its own claimant even if the check above were raced.
+      { _id: id, status: 'PENDING', employee_id: { $ne: new Types.ObjectId(reviewerId) } },
       {
         $set: {
           status: decision,
@@ -355,6 +359,26 @@ export const employeeExpenseService = {
     return publishOne(doc._id);
   },
 };
+
+/**
+ * Nobody decides their own claim. SUPER_ADMIN both files claims (EMPLOYEE_RW)
+ * and decides them (FINANCE_RW), so without this one person could pay
+ * themselves with nobody else looking. The attempt is logged: a refused
+ * self-approval is exactly what an audit of this ledger wants to find.
+ */
+async function assertNotOwnClaim(id: string, reviewerId: string, decision: string) {
+  const claim = await EmployeeExpenseModel.findById(id).select('employee_id claim_id').lean();
+  if (claim?.employee_id?.toHexString() !== reviewerId) return;
+  logs.server.warn('employeeExpense', 'review', {
+    msg: 'self-review refused',
+    claimId: claim.claim_id,
+    reviewerId,
+    decision,
+  });
+  throw new GraphQLError('You cannot decide your own claim. Another Finance approver has to review it', {
+    extensions: { code: 'FORBIDDEN' },
+  });
+}
 
 function normalizeFields(raw: unknown) {
   const input = raw as Record<string, unknown>;

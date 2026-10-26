@@ -271,6 +271,21 @@ function normalizeCancellationInput(base: ReturnType<typeof toCancellationPub>, 
   return next;
 }
 
+type CancellationPub = ReturnType<typeof toCancellationPub>;
+
+/** Whether a save moves Duncit's half of the policy — the auto-cancel trigger
+ * or the refund ladder. Both sides are in the pub shape (ladder widest-first,
+ * one band per window), so equal terms compare equal band by band. */
+function autoCancelTermsChanged(before: CancellationPub, after: CancellationPub) {
+  if (before.trigger_hours !== after.trigger_hours) return true;
+  if (before.refund_tiers.length !== after.refund_tiers.length) return true;
+  return before.refund_tiers.some(
+    (tier, i) =>
+      tier.hours_before !== after.refund_tiers[i].hours_before ||
+      tier.refund_pct !== after.refund_tiers[i].refund_pct
+  );
+}
+
 function normalizeSettingsInput(current: IVenueSettings | undefined, input: any) {
   const base = toSettingsPub(current);
   const next = { ...base };
@@ -817,6 +832,12 @@ function applyGstin(v: { gstin?: string | null }, raw: unknown, isAdmin: boolean
   v.gstin = gstin;
 }
 
+/** A Venues console editor's GSTIN: checked like every other save, and a blank one still clears it. */
+function applyAdminGstin(v: { gstin?: string | null }, raw: unknown) {
+  if (typeof raw === 'string' && raw.trim()) applyGstin(v, raw, true);
+  else v.gstin = '';
+}
+
 /** Applies an admin status transition and its timestamp side-effects. */
 function applyAdminStatus(v: any, status: string) {
   v.status = status as any;
@@ -1226,7 +1247,7 @@ export const venueService = {
     v.documents = (opts.step2.documents || [])
       .filter((d: any) => d?.type && d?.url)
       .map((d: any) => ({ type: String(d.type).trim(), url: String(d.url).trim(), uploaded_at: new Date() }));
-    if (opts.step2.gstin !== undefined) v.gstin = opts.step2.gstin;
+    if (opts.step2.gstin !== undefined) applyAdminGstin(v, opts.step2.gstin);
     if (opts.step2.pan !== undefined) v.pan = opts.step2.pan;
     if (opts.step3.bank_account !== undefined) v.bank_account = normalizeBankAccountInput(opts.step3.bank_account) as any;
     v.owner_name = opts.step3.owner_name;
@@ -1301,18 +1322,27 @@ export const venueService = {
   },
 
   /** Owner (or admin) updates operating hours / weekly-off / holidays / rules.
-   * Drives the Recurring Availability generator + validation. */
-  async updateSettings(userId: string, isAdmin: boolean, venueId: string, input: any) {
+   * Drives the Recurring Availability generator + validation.
+   *
+   * `canSetAutoCancel` is whether the caller may move the auto-cancel trigger
+   * and refund ladder — the same people `setVenueCancellationTrigger` admits.
+   * Anyone else may still send them (the Venues console's one Save always
+   * does), but only unchanged. */
+  async updateSettings(userId: string, isAdmin: boolean, venueId: string, input: any, canSetAutoCancel = false) {
     if (!Types.ObjectId.isValid(venueId)) fail('BAD_USER_INPUT', 'Invalid venue id');
     const v = await VenueModel.findById(venueId);
     if (!v) return fail('NOT_FOUND', 'Venue not found');
     if (!isAdmin && String(v.owner_user_id) !== String(userId)) {
       fail('FORBIDDEN', 'Not your venue');
     }
+    const next = normalizeSettingsInput(v.settings, input);
+    if (!canSetAutoCancel && autoCancelTermsChanged(toCancellationPub(v.settings.cancellation), next.cancellation)) {
+      fail('FORBIDDEN', 'Only Onboarding or Finance can change the auto-cancel window and refund ladder');
+    }
     // `set(path, value)` bridges the pub-shaped normalized settings back onto the
     // Mongoose subdoc (it casts string ids → ObjectId on save) without a type
     // assertion — the plain `v.settings = … as IVenueSettings` tripped Sonar S4325.
-    v.set('settings', normalizeSettingsInput(v.settings, input));
+    v.set('settings', next);
     v.markModified('settings');
     await v.save();
     // Don't make the owner wait for the daily sweep: top up straight away when

@@ -58,6 +58,7 @@ export default function PodListCard({
                 <Link
                   component={RouterLink}
                   to={`/pods/${pod.id}`}
+                  data-testid={`pods-dashboard-pod-${pod.id}`}
                   variant="body2"
                   noWrap
                   underline="hover"

@@ -65,6 +65,7 @@ export default function PodInputsCard({ inputs, onChange }: Readonly<Props>) {
             }}
           />
           <PercentSlider
+            testId="calc-gst_percent"
             label="GST"
             value={inputs.gst_percent}
             onChange={(value) => onChange('gst_percent', value)}
@@ -72,6 +73,7 @@ export default function PodInputsCard({ inputs, onChange }: Readonly<Props>) {
             hint="Extracted from the GST-inclusive pod amount and remitted to the government."
           />
           <PercentSlider
+            testId="calc-platform_fee_percent"
             label={t('finance.calculators.platformFeeDuncitIncome')}
             value={inputs.platform_fee_percent}
             onChange={(value) => onChange('platform_fee_percent', value)}

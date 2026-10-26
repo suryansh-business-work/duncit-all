@@ -1,7 +1,7 @@
 import { LiteCalendarModel } from '../models/calendar.model';
 import { LiteCategoryModel } from '../models/category.model';
 import { LiteCityModel } from '../models/city.model';
-import { LiteEventModel, LOCATION_TYPES, QUESTION_TYPES, VISIBILITIES, type LiteEventDoc } from '../models/event.model';
+import { LiteEventModel, LOCATION_TYPES, QUESTION_TYPES, VISIBILITIES, type LiteEvent, type LiteEventDoc } from '../models/event.model';
 import { LiteRegistrationModel } from '../models/registration.model';
 import { LiteUserModel, type LiteUserDoc } from '../models/user.model';
 import { badInput, forbidden, notFound } from '../utils/errors';
@@ -156,17 +156,27 @@ async function applyInput(doc: LiteEventDoc, input: EventInput, user: LiteUserDo
   doc.calendar_id = await resolveCalendar(input.calendar_id, user);
 }
 
+type VisibleEvent = Pick<LiteEvent, 'status' | 'hidden' | 'visibility'> & { _id: unknown; hosts: { user_id: unknown }[] };
+
 export const eventService = {
+  /**
+   * Whether the viewer may see the event at all. Hosts and admins always can;
+   * anyone else only once it is out of draft and not hidden, and a PRIVATE
+   * event only when they already hold a registration for it.
+   */
+  async isVisibleTo(doc: VisibleEvent, viewer: Viewer | null): Promise<boolean> {
+    if (isHostOf(doc, viewer) || viewer?.is_admin) return true;
+    if (doc.status === 'DRAFT' || doc.hidden) return false;
+    if (doc.visibility !== 'PRIVATE') return true;
+    if (!viewer) return false;
+    return Boolean(await LiteRegistrationModel.exists({ event_id: doc._id, user_id: viewer.id }));
+  },
+
   async bySlug(slug: string, user: LiteUserDoc | null) {
     const doc = await LiteEventModel.findOne({ slug: slug.toLowerCase() }).lean();
     if (!doc) return null;
     const viewer = viewerOf(user);
-    const host = isHostOf(doc, viewer) || Boolean(viewer?.is_admin);
-    if (!host && (doc.status === 'DRAFT' || doc.hidden)) return null;
-    if (!host && doc.visibility === 'PRIVATE') {
-      const registered = viewer ? await LiteRegistrationModel.exists({ event_id: doc._id, user_id: viewer.id }) : null;
-      if (!registered) return null;
-    }
+    if (!(await eventService.isVisibleTo(doc, viewer))) return null;
     return toPublicEvent(doc, viewer);
   },
 

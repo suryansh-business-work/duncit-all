@@ -65,8 +65,8 @@ export function AgentChat({ isAvailable, canAct, onRegisterRestart }: Readonly<P
         }}>
           {t('shell.agent.greeting')}
         </Typography>
-        {!isAvailable && <Alert severity="warning">{t('shell.agent.notConfigured')}</Alert>}
-        {isAvailable && !canAct && <Alert severity="info">{t('shell.agent.readOnly')}</Alert>}
+        {!isAvailable && <Alert severity="warning" data-testid="shell-agent-not-configured">{t('shell.agent.notConfigured')}</Alert>}
+        {isAvailable && !canAct && <Alert severity="info" data-testid="shell-agent-read-only">{t('shell.agent.readOnly')}</Alert>}
 
         {messages.length === 0 && isAvailable && (
           <Box>
@@ -152,6 +152,7 @@ export function AgentChat({ isAvailable, canAct, onRegisterRestart }: Readonly<P
                     edge="end"
                     disabled={loading || !draft.trim() || !isAvailable}
                     aria-label={t('shell.agent.send')}
+                    data-testid="shell-agent-send"
                   >
                     <SendIcon fontSize="small" />
                   </DuncitIconButton>

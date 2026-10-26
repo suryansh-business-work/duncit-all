@@ -55,12 +55,13 @@ describe('cancelSpotErrorKey', () => {
     expect(cancelSpotErrorKey('BAD_REQUEST')).toBe('mweb.podDetails.cancelSpotStarted');
     expect(cancelSpotErrorKey('NOT_FOUND')).toBe('mweb.podDetails.cancelSpotNotMember');
     expect(cancelSpotErrorKey('CANCEL_LIMIT_REACHED')).toBe('mweb.podDetails.cancelSpotLimitReached');
+    expect(cancelSpotErrorKey('NOT_FREE_POD')).toBe('mweb.podDetails.cancelSpotPaidPod');
   });
 
   it('falls back to the generic sentence for a network failure or an unknown code', () => {
     expect(cancelSpotErrorKey(null)).toBe(CANCEL_SPOT_GENERIC_ERROR_KEY);
     expect(cancelSpotErrorKey(undefined)).toBe(CANCEL_SPOT_GENERIC_ERROR_KEY);
-    expect(cancelSpotErrorKey('NOT_FREE_POD')).toBe(CANCEL_SPOT_GENERIC_ERROR_KEY);
+    expect(cancelSpotErrorKey('INTERNAL_SERVER_ERROR')).toBe(CANCEL_SPOT_GENERIC_ERROR_KEY);
     expect(CANCEL_SPOT_GENERIC_ERROR_KEY).toBe('mweb.podDetails.cancelSpotFailed');
   });
 });

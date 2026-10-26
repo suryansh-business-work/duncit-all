@@ -97,7 +97,7 @@ export default function OnboardingIntroSettingsForm({ defaultValues, saving, onS
         </Stack>
         <SocialHandlesFields control={control} />
       </Box>
-      <DuncitButton type="submit" variant="contained" disabled={saving || !isDirty} sx={{ alignSelf: 'flex-start' }}>
+      <DuncitButton type="submit" variant="contained" disabled={saving || !isDirty} sx={{ alignSelf: 'flex-start' }} data-testid="onboarding-intro-save">
         {saving ? t('shell.common.saving') : t('shell.common.save')}
       </DuncitButton>
     </Stack>

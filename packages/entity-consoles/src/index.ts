@@ -110,6 +110,7 @@ export { default as SuperCategoryFilter } from './shared/SuperCategoryFilter';
 export { default as MediaGallery } from './shared/MediaGallery';
 export { default as EntityPodsTab } from './shared/EntityPodsTab';
 export { default as ConsoleListPage } from './shared/ConsoleListPage';
+export { default as useUrlColumnFilters, urlColumnFilters } from './shared/useUrlColumnFilters';
 export { default as AccountPicker } from './shared/AccountPicker';
 export { default as PayoutFields } from './shared/PayoutFields';
 export { default as EditorPageShell } from './shared/EditorPageShell';

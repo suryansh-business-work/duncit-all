@@ -307,10 +307,15 @@ describe('reviews', () => {
     await expect(svc.replyReview(String(new Types.ObjectId()), 'Thanks')).rejects.toThrow('Review not found');
   });
 
-  it('deleteReview reports whether a review was removed', async () => {
+  it('deleteReview removes a review, and answers NOT_FOUND for one that is gone or never existed', async () => {
     const review = await ProductReviewModel.create({ product_id: new Types.ObjectId(), user_id: new Types.ObjectId(), rating: 3 });
     await expect(svc.deleteReview(String(review._id))).resolves.toBe(true);
-    await expect(svc.deleteReview(String(review._id))).resolves.toBe(false);
+    expect(await ProductReviewModel.exists({ _id: review._id })).toBeNull();
+    await expect(svc.deleteReview(String(review._id))).rejects.toMatchObject({
+      message: 'Review not found',
+      extensions: { code: 'NOT_FOUND' },
+    });
+    await expect(svc.deleteReview('not-an-id')).rejects.toThrow('Review not found');
   });
 });
 

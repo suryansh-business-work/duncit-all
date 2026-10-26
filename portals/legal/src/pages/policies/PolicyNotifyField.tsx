@@ -71,6 +71,7 @@ export default function PolicyNotifyField({
             checked={checked}
             disabled={disabled || people === 0}
             onChange={(e) => onCheckedChange(e.target.checked)}
+            data-testid="policy-notify-checkbox"
           />
         }
         label={t('legal.policies.notify.label')}
@@ -78,7 +79,7 @@ export default function PolicyNotifyField({
       <Typography variant="caption" sx={{
         color: "text.secondary"
       }}>
-        {renderReach()}
+        <span data-testid="policy-notify-reach">{renderReach()}</span>
       </Typography>
       <Typography variant="caption" sx={{
         color: "text.secondary"
@@ -88,7 +89,7 @@ export default function PolicyNotifyField({
       <Typography variant="caption" sx={{
         color: "text.secondary"
       }}>
-        {renderLastSent()}
+        <span data-testid="policy-notify-last-sent">{renderLastSent()}</span>
       </Typography>
       {checked && (
         <>

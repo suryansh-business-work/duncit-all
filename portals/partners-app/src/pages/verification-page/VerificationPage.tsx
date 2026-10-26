@@ -41,7 +41,7 @@ export default function VerificationPage() {
   const verifications: Verification[] = data?.myVerifications ?? [];
 
   return (
-    <Stack spacing={2} sx={{ maxWidth: 640, mx: 'auto', width: '100%', pb: 4 }}>
+    <Stack data-testid="verification-page" spacing={2} sx={{ maxWidth: 640, mx: 'auto', width: '100%', pb: 4 }}>
       <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
         <VerifiedUserIcon color="primary" />
         <Box>
@@ -57,7 +57,7 @@ export default function VerificationPage() {
       <VerificationCards items={verifications} onChanged={onChanged} onError={setSnack} />
 
       {snack && (
-        <Alert severity="info" onClose={() => setSnack(null)}>
+        <Alert severity="info" data-testid="verification-page-snack" onClose={() => setSnack(null)}>
           {snack}
         </Alert>
       )}

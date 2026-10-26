@@ -31,6 +31,7 @@ export default function TimeGridEvent({ meeting, lo, hi, slotMinutes, now, onSel
       <Box
         role="button"
         tabIndex={0}
+        data-testid={`meeting-calendar-event-${meeting.id}`}
         onClick={() => onSelect(meeting)}
         onContextMenu={(e) => onContext(e, meeting)}
         onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onSelect(meeting)}

@@ -140,7 +140,7 @@ export default function MeetingSchedulePage() {
     [updateMeeting, applyMeeting, refresh, t],
   );
 
-  if (!valid) return <Alert severity="error">{t('onboarding.meetings.unknownMeetingKind')}</Alert>;
+  if (!valid) return <Alert severity="error" data-testid="meeting-schedule-unknown-kind">{t('onboarding.meetings.unknownMeetingKind')}</Alert>;
 
   return (
     <Stack spacing={2.5}>
@@ -149,7 +149,7 @@ export default function MeetingSchedulePage() {
       }}>
         <EventIcon color="primary" />
         <Box>
-          <Typography variant="h5" component="h1" sx={{
+          <Typography variant="h5" component="h1" data-testid="meeting-schedule-title" sx={{
             fontWeight: 800
           }}>{KIND_LABELS[kind]} Meeting Schedule</Typography>
           <Typography variant="body2" sx={{
@@ -159,10 +159,10 @@ export default function MeetingSchedulePage() {
       </Stack>
 
       <ToggleButtonGroup size="small" exclusive value={statusFilter} onChange={(_, v) => onStatusChange(v ?? '')} aria-label={t('onboarding.a11y.meetingStatusFilter')} data-testid="meeting-schedule-status-filter">
-        {statusFilters(t).map((f) => <ToggleButton key={f.label} value={f.value}>{f.label}</ToggleButton>)}
+        {statusFilters(t).map((f) => <ToggleButton key={f.label} value={f.value} data-testid={`meeting-status-${f.value || 'ALL'}`}>{f.label}</ToggleButton>)}
       </ToggleButtonGroup>
 
-      {actionError && <Alert severity="error" onClose={() => setActionError(null)}>{actionError}</Alert>}
+      {actionError && <Alert severity="error" onClose={() => setActionError(null)} data-testid="meeting-schedule-error">{actionError}</Alert>}
 
       {/* Remount when the route kind or status toggle changes so the query restarts from page 1. */}
       <MeetingsTable

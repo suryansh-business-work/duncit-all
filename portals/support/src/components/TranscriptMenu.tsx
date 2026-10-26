@@ -65,19 +65,20 @@ export default function TranscriptMenu({ onDownload, onEmail, busy }: Readonly<P
         </DuncitIconButton>
       </Tooltip>
       <Menu anchorEl={anchor} open={Boolean(anchor)} onClose={close}>
-        <MenuItem onClick={() => download('TXT')}>
+        <MenuItem onClick={() => download('TXT')} data-testid="transcript-download-txt">
           <ListItemIcon>
             <DescriptionIcon fontSize="small" />
           </ListItemIcon>
           <ListItemText>{t('support.transcript.downloadTxt')}</ListItemText>
         </MenuItem>
-        <MenuItem onClick={() => download('DOCX')}>
+        <MenuItem onClick={() => download('DOCX')} data-testid="transcript-download-docx">
           <ListItemIcon>
             <ArticleIcon fontSize="small" />
           </ListItemIcon>
           <ListItemText>{t('support.transcript.downloadDocx')}</ListItemText>
         </MenuItem>
         <MenuItem
+          data-testid="transcript-email-open"
           onClick={() => {
             close();
             setEmailOpen(true);
@@ -90,7 +91,7 @@ export default function TranscriptMenu({ onDownload, onEmail, busy }: Readonly<P
         </MenuItem>
       </Menu>
 
-      <Dialog open={emailOpen} onClose={() => setEmailOpen(false)} maxWidth="xs" fullWidth>
+      <Dialog open={emailOpen} onClose={() => setEmailOpen(false)} maxWidth="xs" fullWidth data-testid="transcript-email-dialog">
         <DialogTitle sx={{ fontWeight: 800 }}>{t('support.transcript.email')}</DialogTitle>
         <DialogContent>
           <TextField
@@ -102,13 +103,14 @@ export default function TranscriptMenu({ onDownload, onEmail, busy }: Readonly<P
             label={t('support.transcript.recipientEmail')}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            slotProps={{ htmlInput: { 'data-testid': 'transcript-email-input' } }}
             sx={{ mt: 1 }}
             required
           />
         </DialogContent>
         <DialogActions>
           <DuncitButton onClick={() => setEmailOpen(false)}>{t('shell.common.cancel')}</DuncitButton>
-          <DuncitButton variant="contained" disabled={!email.trim()} onClick={sendEmail}>
+          <DuncitButton variant="contained" disabled={!email.trim()} onClick={sendEmail} data-testid="transcript-email-send">
             Send
           </DuncitButton>
         </DialogActions>

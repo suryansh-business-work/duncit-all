@@ -5,6 +5,7 @@ import { hasRole, requireAuth } from '@middleware/rbac';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { LocationModel } from '@modules/platform/location/location.model';
 import { UserModel } from '@modules/access/user/user.model';
+import { VenueModel } from '@modules/venues/venue/venue.model';
 import { escapeRegExp } from '@utils/regex';
 
 /**
@@ -104,6 +105,35 @@ export async function assertPodFinanceScope(
   await assertPodsInScope(user, await podIds());
 }
 
+/**
+ * A money write on a venue's own takings (a food-order refund): the venue's
+ * city (its Location, or its own city text) must be a CITY_ADMIN's, or its
+ * locality — the Location zone it sits in — one of a ZONAL_ADMIN's zones. The
+ * venue's own owner is never refused here: refunding their own orders is the
+ * owner's right wherever the venue is. `venueId` is a thunk so callers who are
+ * not city-bound never pay for the lookup.
+ */
+export async function assertVenueFinanceScope(
+  ctx: GraphQLContext,
+  allowed: readonly string[],
+  venueId: () => Promise<unknown> | unknown
+): Promise<void> {
+  const user = requireAuth(ctx);
+  if (!isScopedOnly(user, allowed)) return;
+  const id = idText(await venueId());
+  const venue = id
+    ? await VenueModel.findById(id).select('owner_user_id location_id city locality').lean()
+    : null;
+  if (!venue) throw outOfScope();
+  if (idText(venue.owner_user_id) === user.id) return;
+  const locationId = idText(venue.location_id);
+  const location = locationId
+    ? await LocationModel.findById(locationId).select('location_id location_name city').lean()
+    : null;
+  const keys = new Set([...(location ? locationKeys(location) : []), norm(venue.city)].filter(Boolean));
+  if (!inScope(user, keys, venue.locality)) throw outOfScope();
+}
+
 /** Platform-wide money settings: no city owns them, so a city-bound admin may not change them. */
 export function assertPlatformFinanceWrite(ctx: GraphQLContext, allowed: readonly string[]): void {
   const user = requireAuth(ctx);
@@ -130,11 +160,25 @@ export async function assertUserFinanceScope(
   if (city) {
     // The admin's assigned city may be written as the Location's slug or id
     // rather than its name — resolve the person's city to all of them.
-    const exact = new RegExp(`^${escapeRegExp(city)}$`, 'i');
-    const locations = await LocationModel.find({ $or: [{ location_name: exact }, { city: exact }, { location_id: norm(city) }] })
-      .select('location_id location_name city')
-      .lean();
+    const locations = await locationsNamed(city);
     locations.flatMap(locationKeys).forEach((key) => keys.add(key));
   }
   if (!inScope(user, keys, target?.profile?.zone)) throw outOfScope();
+}
+
+/**
+ * The Locations a city name stands for — matched by display name or city
+ * (any case), by slug, or by id — so a city written any of the ways an admin's
+ * assigned city is written resolves to the same Locations.
+ */
+export async function locationsNamed(city: string) {
+  const name = city.trim();
+  if (!name) return [];
+  const exact = new RegExp(`^${escapeRegExp(name)}$`, 'i');
+  const id = idText(name);
+  return LocationModel.find({
+    $or: [{ location_name: exact }, { city: exact }, { location_id: norm(name) }, ...(id ? [{ _id: id }] : [])],
+  })
+    .select('location_id location_name city')
+    .lean();
 }

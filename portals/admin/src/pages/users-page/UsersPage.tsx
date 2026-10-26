@@ -95,7 +95,7 @@ export default function UsersPage() {
         getRowStyle={getRowStyle}
         onRowClick={(u) => navigate(`/users/${u.user_id}`)}
         toolbarActions={
-          <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
+          <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={openCreate} data-testid="admin-users-create">
             {t('admin.users.create')}
           </DuncitButton>
         }

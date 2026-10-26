@@ -65,15 +65,16 @@ export default function EditorPageShell({
   const submit = (event: FormEvent<HTMLFormElement>) =>
     onSubmit(event).then(() => setAttempts((count) => count + 1));
 
-  const save = (
-    <DuncitButton type="submit" variant="contained" startIcon={<SaveIcon />} loading={busy}>
+  // Drawn twice (header and foot), so each copy carries its own test id.
+  const save = (testId: string) => (
+    <DuncitButton type="submit" variant="contained" startIcon={<SaveIcon />} loading={busy} data-testid={testId}>
       {saveLabel}
     </DuncitButton>
   );
 
   return (
     <>
-      <form ref={formRef} onSubmit={submit} noValidate>
+      <form ref={formRef} onSubmit={submit} noValidate data-testid="entity-editor">
         <Stack spacing={2.5}>
           <BackHeader
             backTo={backTo}
@@ -83,11 +84,11 @@ export default function EditorPageShell({
             title={title}
             titleWeight={950}
             titleSx={{ lineHeight: 1.1 }}
-            actions={save}
+            actions={save('entity-editor-save')}
           />
 
           {error && (
-            <Alert ref={errorRef} severity="error">
+            <Alert ref={errorRef} severity="error" data-testid="entity-editor-error">
               {error}
             </Alert>
           )}
@@ -95,10 +96,10 @@ export default function EditorPageShell({
           {children}
 
           <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end' }}>
-            <DuncitButton onClick={() => navigate(backTo)} disabled={busy}>
+            <DuncitButton onClick={() => navigate(backTo)} disabled={busy} data-testid="entity-editor-cancel">
               {t('directory.venueEditor.cancel')}
             </DuncitButton>
-            {save}
+            {save('entity-editor-save-bottom')}
           </Stack>
         </Stack>
       </form>

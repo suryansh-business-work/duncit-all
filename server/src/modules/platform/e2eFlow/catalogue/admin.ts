@@ -108,7 +108,7 @@ export const ADMIN_FLOWS: readonly CatalogueFlow[] = [
   },
   {
     name: 'Admin: Dashboard',
-    description: 'Live platform totals and per-super-category counts on /dashboard (dashboardTotals is readable by SUPER_ADMIN and CITY_ADMIN).',
+    description: 'Live platform totals and per-super-category counts on /dashboard (dashboardTotals is readable by SUPER_ADMIN and CITY_ADMIN; a CITY_ADMIN\'s totals count only their assigned city, with support tickets at 0).',
     sub_flows: [
       {
         name: 'Review platform totals',
@@ -1182,6 +1182,17 @@ export const ADMIN_FLOWS: readonly CatalogueFlow[] = [
         ],
       },
       {
+        name: 'Who may decide a request',
+        description: 'Nobody approves their own request (denying it is a withdrawal), and approving one that grants a role takes the authority to grant it (SUPER_ADMIN, like assignUserRoles). Refusals are logged.',
+        steps: [
+          ['As a City Admin, file a Jump to Portal request and Approve it yourself', 'Error "You cannot approve your own request. Another admin has to review it"; the request stays Pending and no role is granted'],
+          ['Deny your own pending request', 'Allowed: it is withdrawn as Denied and nothing is granted'],
+          ['As a City Admin, Approve another member’s Tech or Finance access request', 'Error "Only a Super Admin can approve access that grants the TECH_MANAGER role" (or FINANCE_MANAGER); it stays Pending'],
+          ['As a City Admin, Deny that request with a reason', 'Allowed: denying grants nothing'],
+          ['As a Super Admin, Approve another member’s Tech access request', 'Approved, and the member holds TECH_MANAGER'],
+        ],
+      },
+      {
         name: 'Deny a request with a reason',
         description: 'A reason is required before confirming.',
         steps: [
@@ -1225,7 +1236,7 @@ export const ADMIN_FLOWS: readonly CatalogueFlow[] = [
       },
       {
         name: 'Approve portal access',
-        description: 'Grants the requested portal role.',
+        description: 'Grants the requested portal role — so only a Super Admin approves, and never their own request.',
         steps: [
           ['Click Approve on a Pending row', 'Confirm "Approve portal access" says "Grant <name> access to the <portal> portal? Their account gets the portal role and they are emailed."'],
           ['Cancel the confirm', 'Nothing changes and the row stays Pending'],

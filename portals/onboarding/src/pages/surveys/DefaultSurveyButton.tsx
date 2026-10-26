@@ -33,7 +33,7 @@ export default function DefaultSurveyButton({ kind }: Readonly<{ kind: SurveyKin
   };
 
   return (
-    <DuncitButton variant="outlined" startIcon={<StarIcon />} onClick={go}>
+    <DuncitButton variant="outlined" startIcon={<StarIcon />} onClick={go} data-testid="surveys-default">
       Default Survey
     </DuncitButton>
   );

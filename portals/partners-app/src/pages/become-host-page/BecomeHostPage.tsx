@@ -141,8 +141,9 @@ export default function BecomeHostPage() {
       {isHost && (
         <Alert
           severity="success"
+          data-testid="become-host-approved"
           action={
-            <DuncitButton component={RouterLink} to="/host/pods" size="small">
+            <DuncitButton component={RouterLink} to="/host/pods" size="small" data-testid="become-host-your-pods">
               Your Pods
             </DuncitButton>
           }

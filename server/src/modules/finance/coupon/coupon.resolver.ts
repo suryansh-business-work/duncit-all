@@ -7,6 +7,7 @@ import { requireAuth, requireRole } from '@middleware/rbac';
 import { validate } from '@utils/validate';
 import { assertPodFinanceScope } from '../financeScope';
 import { financeTargets } from '../financeScope.targets';
+import { consoleReaders } from '@modules/portals/console-access';
 
 /** MARKETING_MANAGER is here because the coupons console lives in the Marketing
  * portal — a discount code is a promotion. The admin roles stay because Admin
@@ -19,6 +20,11 @@ const ADMIN_RW = [
   'FINANCE_MANAGER',
   'MARKETING_MANAGER',
 ];
+
+/** The pod page's Offer codes table is a READ the Pods console makes too (see
+ * `console-access.ts`). Like every coupon read it is not city-scoped; writes
+ * stay with ADMIN_RW. */
+const POD_PAGE_READ = [...new Set([...ADMIN_RW, ...consoleReaders('POD')])];
 
 export const couponResolvers = {
   Coupon: {
@@ -54,7 +60,7 @@ export const couponResolvers = {
       return couponService.listForPod(args.pod_id);
     },
     couponsForPodTable: (_p: unknown, args: { pod_id: string; query?: any }, ctx: GraphQLContext) => {
-      requireRole(ctx, ADMIN_RW);
+      requireRole(ctx, POD_PAGE_READ);
       return couponService.tableForPod(args.pod_id, args.query);
     },
     availableCouponsForPod: (_p: unknown, args: { pod_id?: string }) =>

@@ -83,7 +83,7 @@ export default function TicketsListPage() {
                 </MenuItem>
               ))}
             </TextField>
-            <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={() => setOpen(true)}>
+            <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={() => setOpen(true)} data-testid="ticket-new">
               {t('support.tickets.create')}
             </DuncitButton>
           </>

@@ -65,7 +65,7 @@ export default function LocationHierarchyFields({ form, setForm }: Readonly<Prop
               location_name: '',
             }))
           }
-          renderInput={(params) => <TextField {...params} label={t('admin.locations.country')} required />}
+          renderInput={(params) => <TextField {...params} label={t('admin.locations.country')} required data-testid="location-form-country" />}
           fullWidth
         />
       </Stack>
@@ -90,7 +90,7 @@ export default function LocationHierarchyFields({ form, setForm }: Readonly<Prop
           onInputChange={(_, value, reason) => {
             if (reason !== 'reset') setForm((prev) => ({ ...prev, state: value, state_code: '', city: '' }));
           }}
-          renderInput={(params) => <TextField {...params} label={t('admin.locations.state')} required />}
+          renderInput={(params) => <TextField {...params} label={t('admin.locations.state')} required data-testid="location-form-state" />}
           fullWidth
         />
         <Autocomplete<GeoCity | string, false, false, true>
@@ -105,7 +105,7 @@ export default function LocationHierarchyFields({ form, setForm }: Readonly<Prop
           onInputChange={(_, value, reason) => {
             if (reason !== 'reset') setForm((prev) => ({ ...prev, city: value, location_name: value }));
           }}
-          renderInput={(params) => <TextField {...params} label={t('admin.locations.city')} required />}
+          renderInput={(params) => <TextField {...params} label={t('admin.locations.city')} required data-testid="location-form-city" />}
           fullWidth
         />
       </Stack>

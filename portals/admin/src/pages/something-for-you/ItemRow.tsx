@@ -21,7 +21,7 @@ interface Props {
 export default function ItemRow({ item, onEdit, onRemove }: Readonly<Props>) {
   const { t } = useTranslation();
   return (
-    <Card variant="outlined">
+    <Card variant="outlined" data-testid="sfy-card">
       <CardContent>
         <Stack direction="row" spacing={2} sx={{
           alignItems: "flex-start"
@@ -56,7 +56,7 @@ export default function ItemRow({ item, onEdit, onRemove }: Readonly<Props>) {
               }}>
                 {item.title}
               </Typography>
-              {!item.is_active && <Chip size="small" label={t('admin.somethingForYou.hidden')} />}
+              {!item.is_active && <Chip size="small" label={t('admin.somethingForYou.hidden')} data-testid="sfy-card-hidden" />}
             </Stack>
             <Typography variant="body2" noWrap sx={{
               color: "text.secondary"
@@ -68,16 +68,17 @@ export default function ItemRow({ item, onEdit, onRemove }: Readonly<Props>) {
               sx={{
                 color: "text.secondary",
                 display: 'block'
-              }}>
+              }}
+              data-testid="sfy-card-action">
               {describeAction(item)} · order {item.sort_order}
             </Typography>
           </Box>
 
           <Stack direction="row" sx={{ flexShrink: 0 }}>
-            <DuncitIconButton aria-label={t('admin.somethingForYou.editCard')} onClick={() => onEdit(item)}>
+            <DuncitIconButton aria-label={t('admin.somethingForYou.editCard')} onClick={() => onEdit(item)} data-testid="sfy-card-edit">
               <EditIcon fontSize="small" />
             </DuncitIconButton>
-            <DuncitIconButton aria-label={t('admin.somethingForYou.deleteCard')} onClick={() => onRemove(item)}>
+            <DuncitIconButton aria-label={t('admin.somethingForYou.deleteCard')} onClick={() => onRemove(item)} data-testid="sfy-card-delete">
               <DeleteIcon fontSize="small" />
             </DuncitIconButton>
           </Stack>

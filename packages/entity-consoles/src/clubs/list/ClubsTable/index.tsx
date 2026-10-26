@@ -17,6 +17,7 @@ import { clubTabPath } from '../../records/clubTabPath';
 import { useTranslation } from '@duncit/shell';
 import { clubNameRenderer, hasNoClubAdmin, renderCover, renderWhatsApp, whatsAppValue } from './cells';
 import { HiddenChip, VisibilityIconButton } from '../../../shared/visibility/VisibilityViews';
+import useUrlColumnFilters from '../../../shared/useUrlColumnFilters';
 
 export { hasNoClubAdmin } from './cells';
 
@@ -57,7 +58,12 @@ export default function ClubsTable({
           <VisibilityIconButton hidden={!!c.is_hidden} onClick={() => onToggleHidden(c)} />
         )}
         <Tooltip title={t('admin.clubs.viewPods')}>
-          <DuncitIconButton size="small" component={RouterLink} to={clubTabPath(c.id, 'pods')}>
+          <DuncitIconButton
+            size="small"
+            component={RouterLink}
+            to={clubTabPath(c.id, 'pods')}
+            data-testid={`club-view-pods-${c.id}`}
+          >
             <EventIcon fontSize="small" />
           </DuncitIconButton>
         </Tooltip>
@@ -143,11 +149,14 @@ export default function ClubsTable({
 
   // Pinned page filter rather than a column one: it belongs to the toolbar, so
   // it never shows as a removable chip and a change resets to page 1.
-  const externalFilters = useMemo<TableFilterValue[]>(
-    () =>
-      superCategoryId ? [{ field: 'super_category_id', op: 'eq', value: superCategoryId }] : [],
-    [superCategoryId],
-  );
+  // The URL's `?is_active=` / `?is_verified=` (a dashboard tile's link) is pinned the same way.
+  const urlFilters = useUrlColumnFilters(columns);
+  const externalFilters = useMemo<TableFilterValue[]>(() => {
+    const category: TableFilterValue[] = superCategoryId
+      ? [{ field: 'super_category_id', op: 'eq', value: superCategoryId }]
+      : [];
+    return [...category, ...urlFilters];
+  }, [superCategoryId, urlFilters]);
 
   return (
     <DuncitTable<ClubRow>

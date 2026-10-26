@@ -3,6 +3,7 @@ import { Alert, Autocomplete, Stack, TextField } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { type CategoryOption } from './queries';
 import { useCategoryLevel } from './useCategoryLevel';
+import { optionWithTestId } from '../pod-ideas-page/CategoryCascade';
 
 export interface CategoryScope {
   super_category_id: string;
@@ -85,6 +86,7 @@ export default function CategoryStep({
       options={list.map((c) => c.id)}
       value={scope[level] || null}
       getOptionLabel={(id) => list.find((c) => c.id === id)?.name ?? ''}
+      renderOption={optionWithTestId(testId, list)}
       onChange={(_, v) => pick(level, v ?? '')}
       getOptionDisabled={(id) => disabledSet.has(id)}
       loading={loading}

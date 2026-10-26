@@ -54,7 +54,7 @@ export default function CategoryDeleteDialog({ target, busy, error, onClose, onC
         <DuncitButton onClick={onClose} disabled={busy}>
           {t('shell.common.cancel')}
         </DuncitButton>
-        <DuncitButton onClick={onConfirm} color="error" variant="contained" disabled={busy}>
+        <DuncitButton onClick={onConfirm} color="error" variant="contained" disabled={busy} data-testid="category-delete-confirm">
           {busy ? 'Deleting…' : t('shell.common.delete')}
         </DuncitButton>
       </DialogActions>

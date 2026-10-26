@@ -117,7 +117,8 @@ export function ReviewCell({ item, saving, onAct }: Readonly<ReviewCellProps>) {
   // Already decided. Leaving Approve and Reject on a settled row invites a
   // second verdict on a document that has already been judged, and silently
   // rewrites who reviewed it and when — so the row goes quiet once it is done.
-  if (item.status === 'APPROVED' || item.status === 'REJECTED') return <NoReview />;
+  // Never submitted: there is no document to judge (the server refuses it too).
+  if (item.status !== 'PENDING') return <NoReview />;
   return (
     <Stack
       direction="row"

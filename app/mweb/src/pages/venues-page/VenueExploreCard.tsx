@@ -2,6 +2,7 @@ import { Card, CardActionArea, Stack, Typography } from '@mui/material';
 import PlaceIcon from '@mui/icons-material/Place';
 import { venueImages } from '@duncit/utils';
 import VenueCardMedia from './VenueCardMedia';
+import { useTranslation } from '../../i18n/useTranslation';
 
 export interface ExploreVenue {
   id: string;
@@ -22,11 +23,12 @@ export default function VenueExploreCard({
   venue,
   onOpen,
 }: Readonly<{ venue: ExploreVenue; onOpen: () => void }>) {
+  const { t } = useTranslation();
   const location = [venue.locality, venue.city].filter(Boolean).join(' · ');
   const meta = [
     venue.venue_type,
-    venue.capacity ? `${venue.capacity} capacity` : null,
-    venue.pod_count ? `${venue.pod_count} pods` : null,
+    venue.capacity ? t('mweb.venues.capacity', { vars: { capacity: venue.capacity } }) : null,
+    venue.pod_count ? t('mweb.venues.podCount', { count: venue.pod_count }) : null,
   ]
     .filter(Boolean)
     .join(' · ');

@@ -56,10 +56,14 @@ export function isSessionSealed(
   const at = sealedAt.get(userId);
   if (at === undefined) return false;
   if (typeof issuedAt !== 'number') return true;
-  // `iat` is in SECONDS. Comparing it to a millisecond instant unconverted
-  // would make every token look ~53 years old and sign out the account that
-  // just reset — including the session it is about to open.
-  return issuedAt * 1000 < at;
+  // `iat` is in SECONDS, so the seal is compared at second precision too.
+  // Comparing `iat * 1000` to the millisecond instant refused a token minted in
+  // the same second just AFTER the seal (iat 12:00:05 reads as .000, before a
+  // seal at 12:00:05.400) — the very session the reset is about to open. The
+  // trade-off is one second the other way: a token minted in the seal's second
+  // but before it is accepted too. That window is the same width as the
+  // token's own clock, and the reset's new session needs it more.
+  return issuedAt < Math.floor(at / 1000);
 }
 
 /** End every session older than `at`. Called the moment a password is reset. */

@@ -20,6 +20,8 @@ interface Props {
   helperText: string;
   labels: EarnMeetingLabels;
   onSubmit: (reason: string) => void;
+  /** `data-testid` of the field; its input (`-input`) and AI note (`-ai-monitoring`) derive from it. */
+  testId?: string;
 }
 
 /** Mandatory-reason field (RHF + Zod) for reschedule / cancel dialogs. */
@@ -29,6 +31,7 @@ export default function MeetingReasonForm({
   helperText,
   labels,
   onSubmit,
+  testId = 'meeting-reason',
 }: Readonly<Props>) {
   const {
     register,
@@ -48,6 +51,7 @@ export default function MeetingReasonForm({
   return (
     <form id={formId} onSubmit={submit}>
       <TextField
+        data-testid={testId}
         label={label}
         required
         fullWidth
@@ -58,6 +62,7 @@ export default function MeetingReasonForm({
         {...register('reason')}
         error={!!errors.reason}
         helperText={errors.reason?.message ?? helperText}
+        slotProps={{ htmlInput: { 'data-testid': `${testId}-input` } }}
       />
       <Stack
         direction="row"
@@ -68,7 +73,7 @@ export default function MeetingReasonForm({
           color: 'text.secondary'
         }}>
         <AutoAwesomeIcon sx={{ fontSize: 14 }} />
-        <Typography variant="caption">{labels.aiMonitoring}</Typography>
+        <Typography data-testid={`${testId}-ai-monitoring`} variant="caption">{labels.aiMonitoring}</Typography>
       </Stack>
     </form>
   );

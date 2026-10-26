@@ -50,7 +50,7 @@ export default function StatusFields<T extends FieldValues>({
   return (
     <Stack spacing={1.5}>
       {!canGovern && (
-        <Alert severity="info" variant="outlined">
+        <Alert severity="info" variant="outlined" data-testid="status-fields-governed">
           {governedByNote}
         </Alert>
       )}
@@ -63,6 +63,7 @@ export default function StatusFields<T extends FieldValues>({
             size="small"
             select
             disabled={!canGovern}
+            data-testid="status-fields-status"
           >
             {options.map((option) => (
               <MenuItem key={option.value} value={option.value}>
@@ -81,7 +82,12 @@ export default function StatusFields<T extends FieldValues>({
           <Stack spacing={0.5}>
             <FormControlLabel
               control={
-                <Switch checked={!!field.value} onChange={field.onChange} disabled={!canGovern} />
+                <Switch
+                  checked={!!field.value}
+                  onChange={field.onChange}
+                  disabled={!canGovern}
+                  data-testid="status-fields-active"
+                />
               }
               label={activeLabel}
             />

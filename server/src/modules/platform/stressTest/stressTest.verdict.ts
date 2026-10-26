@@ -43,12 +43,12 @@ const badInput = (msg: string) => new GraphQLError(msg, { extensions: { code: 'B
 const maxOf = (rows: IStressSample[], pick: (s: IStressSample) => number) =>
   rows.reduce((acc, s) => Math.max(acc, pick(s) ?? 0), 0);
 const avgOf = (rows: IStressSample[], pick: (s: IStressSample) => number) =>
-  rows.length === 0 ? 0 : Math.round((rows.reduce((acc, s) => acc + (pick(s) ?? 0), 0) / rows.length) * 10) / 10;
+  Math.round((rows.reduce((acc, s) => acc + (pick(s) ?? 0), 0) / rows.length) * 10) / 10;
 
 /** Every sample folded into at most SERIES_POINTS windows — the worst reading of each window. */
-function condensedSeries(samples: IStressSample[], startedAt: Date | null) {
+function condensedSeries(samples: IStressSample[], startedAt: Date) {
   const size = Math.max(1, Math.ceil(samples.length / SERIES_POINTS));
-  const start = (startedAt ?? samples[0]?.at ?? new Date()).getTime();
+  const start = startedAt.getTime();
   const points = [];
   for (let i = 0; i < samples.length; i += size) {
     const rows = samples.slice(i, i + size);
@@ -86,7 +86,7 @@ function containerPeaks(samples: IStressSample[]) {
   return rows.slice(0, MAX_CONTAINERS);
 }
 
-async function runData(run: IStressRun) {
+async function runData(run: IStressRun, startedAt: Date) {
   const [samples, settings] = await Promise.all([
     StressSampleModel.find({ run_id: run._id }).sort({ at: 1 }).lean<IStressSample[]>(),
     settingsDoc(),
@@ -106,7 +106,7 @@ async function runData(run: IStressRun) {
     peaks: pub.peaks,
     summary: pub.summary,
     slowest_endpoints: pub.endpoints.slice(0, MAX_ENDPOINTS),
-    time_series: condensedSeries(samples, run.started_at),
+    time_series: condensedSeries(samples, startedAt),
     containers: containerPeaks(samples),
   };
 }
@@ -154,7 +154,7 @@ export async function generateStressVerdict(id: string, user: AuthUser) {
   if (LIVE_STATUSES.includes(run.status)) throw badInput('Wait for the run to end before asking for a verdict.');
   if (!run.started_at) throw badInput('This run never generated load, so there is nothing to judge.');
 
-  const data = JSON.stringify(await runData(run));
+  const data = JSON.stringify(await runData(run, run.started_at));
   const [system, userTurn] = await Promise.all([
     resolvePrompt('stress.verdict'),
     resolvePrompt('stress.verdict.user', { run_data: data }),

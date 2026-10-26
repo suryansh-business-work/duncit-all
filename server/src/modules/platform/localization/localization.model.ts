@@ -79,6 +79,6 @@ export const TranslationModel = model<ITranslation>("Translation", translationSc
 
 /** Split a dot-path key into its surface + page segments. */
 export function keySegments(key: string): { surface: string; page: string } {
-  const parts = (key ?? "").split(".").filter(Boolean);
+  const parts = key.split(".").filter(Boolean);
   return { surface: parts[0] ?? "", page: parts[1] ?? "" };
 }

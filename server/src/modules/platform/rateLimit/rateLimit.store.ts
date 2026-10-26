@@ -135,7 +135,7 @@ function consumeMemory(input: ConsumeInput): ConsumeResult {
   entry.stamps.push(now);
   entry.expiresAt = now + windowMs;
   const count = entry.stamps.length;
-  const oldest = entry.stamps[0] ?? now;
+  const oldest = Math.min(now, ...entry.stamps);
   return {
     count,
     remaining: Math.max(0, input.limit - count),

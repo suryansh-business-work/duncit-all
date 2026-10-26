@@ -574,7 +574,7 @@ export async function authStatus(): Promise<SlackAuthStatus> {
       scope,
       granted: held.has(scope),
       required: !SLACK_OPTIONAL_SCOPES.includes(scope),
-      purpose: SCOPE_PURPOSE[scope] ?? '',
+      purpose: SCOPE_PURPOSE[scope],
     })),
   };
 }

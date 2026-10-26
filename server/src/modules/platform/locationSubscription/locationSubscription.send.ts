@@ -103,7 +103,7 @@ async function run(rows: readonly LaunchRow[], context: LaunchContext) {
 export async function sendLaunchMessage(locationDocId: string): Promise<{ queued: number }> {
   const { id, location } = await findCity({ location_doc_id: locationDocId });
   const city = cityOf(location);
-  if (!(location.is_launched ?? true)) {
+  if (!location.is_launched) {
     throw new GraphQLError(`Switch Launched on for ${city} before sending the launch message.`, {
       extensions: { code: 'BAD_USER_INPUT' },
     });

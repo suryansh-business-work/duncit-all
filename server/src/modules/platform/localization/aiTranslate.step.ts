@@ -100,7 +100,7 @@ async function writeValues(params: AiTranslateParams, entries: TranslatableEntry
         update: {
           $set: {
             [`values.${params.locale}`]: value,
-            [`synced_from.${params.locale}`]: sourceOf.get(key) ?? '',
+            [`synced_from.${params.locale}`]: sourceOf.get(key),
           },
         },
       },

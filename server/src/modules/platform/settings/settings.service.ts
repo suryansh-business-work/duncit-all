@@ -319,8 +319,8 @@ const toFlagPub = (d: any) => {
     description: d.description ?? "",
     enabled: !!d.enabled,
     is_system: !!d.is_system,
-    created_at: d.created_at?.toISOString?.() ?? "",
-    updated_at: d.updated_at?.toISOString?.() ?? "",
+    created_at: d.created_at.toISOString(),
+    updated_at: d.updated_at.toISOString(),
   };
 };
 
@@ -501,24 +501,24 @@ const brandingToPub = (doc: any) => ({
   theme_tokens_dark: themeTokensToPub(doc.theme_tokens_dark),
   pod_shop_slider: (doc.pod_shop_slider ?? []).map((m: any) => ({
     url: m.url,
-    type: m.type ?? "IMAGE",
-    order: m.order ?? 0,
-    heading: m.heading ?? "",
-    subheading: m.subheading ?? "",
-    cta_label: m.cta_label ?? "",
-    cta_url: m.cta_url ?? "",
+    type: m.type,
+    order: m.order,
+    heading: m.heading,
+    subheading: m.subheading,
+    cta_label: m.cta_label,
+    cta_url: m.cta_url,
   })),
   occasional_icons: (doc.occasional_icons ?? []).map((o: any) => ({
-    slug: o.slug ?? "",
-    label: o.label ?? "",
-    starts_at: o.starts_at?.toISOString?.() ?? "",
-    ends_at: o.ends_at?.toISOString?.() ?? "",
-    icon_url: o.icon_url ?? "",
+    slug: o.slug,
+    label: o.label,
+    starts_at: o.starts_at.toISOString(),
+    ends_at: o.ends_at.toISOString(),
+    icon_url: o.icon_url,
     fallback_icon: o.fallback_icon || "occasion",
     is_active: o.is_active !== false,
-    sort_order: o.sort_order ?? 0,
+    sort_order: o.sort_order,
   })),
-  updated_at: doc.updated_at?.toISOString?.() ?? "",
+  updated_at: doc.updated_at.toISOString(),
 });
 
 /** Default Play Store URL when the admin hasn't set an explicit one. */
@@ -1007,7 +1007,7 @@ export const settingsService = {
       google_client_id: cleanGoogleClientId(googleClientId),
       google_android_client_id: cleanGoogleClientId(googleAndroidClientId),
       google_ios_client_id: cleanGoogleClientId(googleIosClientId),
-      google_maps_api_key: googleMapsApiKey ?? "",
+      google_maps_api_key: googleMapsApiKey,
       apple_bundle_id: appleBundleId.trim(),
       apple_services_id: appleServicesId.trim(),
       apple_web_redirect_uri: appleWebRedirectUri.trim(),
@@ -1168,12 +1168,12 @@ export const settingsService = {
   async deleteFlag(id: string) {
     const f = await FeatureFlagModel.findById(id);
     if (!f) notFound("FeatureFlag");
-    if (f!.is_system) {
+    if (f.is_system) {
       throw new GraphQLError("System flag cannot be deleted", {
         extensions: { code: "FORBIDDEN" },
       });
     }
-    await f!.deleteOne();
+    await f.deleteOne();
     invalidateFeatureFlagCache();
     return true;
   },
@@ -1188,13 +1188,13 @@ export const settingsService = {
   async getAppVersionInfo() {
     const b = await this.getBranding();
     return {
-      latest_version: b.app_latest_version ?? "",
+      latest_version: b.app_latest_version,
       // Never falls back to app_latest_version: that is auto-synced on every
       // deploy, so defaulting to it would re-create the very lockout this
       // field exists to prevent. Blank blocks nobody.
-      min_supported_version: b.app_min_supported_version ?? "",
+      min_supported_version: b.app_min_supported_version,
       android_store_url: b.android_app_url || DEFAULT_ANDROID_STORE_URL,
-      ios_store_url: b.ios_app_url ?? "",
+      ios_store_url: b.ios_app_url,
     };
   },
 
@@ -1281,7 +1281,7 @@ export const settingsService = {
       cta_url?: string | null;
     }[],
   ) {
-    const media = (input ?? []).map((m, i) => ({
+    const media = input.map((m, i) => ({
       url: m.url,
       type: m.type === "VIDEO" ? "VIDEO" : "IMAGE",
       order: m.order ?? i,
@@ -1312,9 +1312,9 @@ export const settingsService = {
       sort_order?: number | null;
     }[],
   ) {
-    const rows = (input ?? [])
+    const rows = input
       .map((o, i) => ({
-        slug: (o.slug ?? "").trim().toLowerCase(),
+        slug: o.slug.trim().toLowerCase(),
         label: (o.label ?? "").trim(),
         starts_at: new Date(o.starts_at),
         ends_at: new Date(o.ends_at),

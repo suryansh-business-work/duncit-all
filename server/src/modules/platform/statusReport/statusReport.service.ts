@@ -59,22 +59,22 @@ export interface SubmitStatusReportInput extends CaptchaCarrier {
 
 const toPub = (doc: IStatusReport) => ({
   id: String(doc._id),
-  service_key: doc.service_key || '',
-  service_name: doc.service_name || '',
-  service_url: doc.service_url || '',
+  service_key: doc.service_key,
+  service_name: doc.service_name,
+  service_url: doc.service_url,
   impact: doc.impact,
   name: doc.name,
   email: doc.email,
-  page_url: doc.page_url || '',
+  page_url: doc.page_url,
   message: doc.message,
   environment: doc.environment,
   status: doc.status,
-  ip: doc.ip ?? null,
-  user_agent: doc.user_agent ?? null,
-  user_id: doc.user_id ?? null,
-  image_urls: doc.image_urls ?? [],
-  staff_image_urls: doc.staff_image_urls ?? [],
-  note: doc.note || '',
+  ip: doc.ip,
+  user_agent: doc.user_agent,
+  user_id: doc.user_id,
+  image_urls: doc.image_urls,
+  staff_image_urls: doc.staff_image_urls,
+  note: doc.note,
   created_at: doc.created_at.toISOString(),
   updated_at: doc.updated_at.toISOString(),
 });
@@ -123,7 +123,7 @@ export const statusReportService = {
    * already having a bad day, and a 500 on the "tell us what broke" form is the
    * worst possible last impression.
    */
-  async submit(input: SubmitStatusReportInput, origin: StatusReportOrigin = {}) {
+  async submit(input: SubmitStatusReportInput, origin: StatusReportOrigin) {
     let parsed: z.ZodSafeParseResult<z.infer<typeof submitSchema>>;
     try {
       parsed = await submitSchema.safeParseAsync(input);
@@ -131,7 +131,7 @@ export const statusReportService = {
       // A value the trim could not read — refused, never a 500.
       throw badInput('Invalid input');
     }
-    if (!parsed.success) throw badInput(parsed.error.issues[0]?.message ?? 'Invalid input');
+    if (!parsed.success) throw badInput(parsed.error.issues[0].message);
     const payload = parsed.data;
 
     // An unknown slug is treated as "not sure" rather than rejected: the
@@ -197,6 +197,6 @@ export const statusReportService = {
   async remove(ids: string[]) {
     if (ids.length === 0) return 0;
     const result = await StatusReportModel.deleteMany({ _id: { $in: ids } });
-    return result.deletedCount ?? 0;
+    return result.deletedCount;
   },
 };

@@ -246,6 +246,16 @@ describe('cool-off blocks', () => {
     await expect(blockedFor('k')).resolves.toBe(0);
   });
 
+  it('keeps a block that is still running when the counters are swept', async () => {
+    // Far past every earlier sweep, so the next consume sweeps again.
+    at(30 * 86_400_000);
+    await consume(input({ key: 'stale' }));
+    await block('long', 7200);
+    at(30 * 86_400_000 + 60_000);
+    await consume(input({ key: 'other' }));
+    await expect(blockedFor('long')).resolves.toBe(7140);
+  });
+
   it('sets the block in Redis with an expiry and reads its TTL back', async () => {
     const redis = fakeRedis({ pttl: jest.fn().mockResolvedValue(4_500) });
     connection.mockReturnValue(redis);

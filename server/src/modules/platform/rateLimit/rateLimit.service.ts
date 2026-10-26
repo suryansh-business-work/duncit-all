@@ -236,7 +236,7 @@ export const rateLimitService = {
 
   async clearEvents() {
     const { deletedCount } = await RateLimitEventModel.deleteMany({});
-    return deletedCount ?? 0;
+    return deletedCount;
   },
 
   /** Everything the console's header strip shows, over the last 24 hours. */
@@ -313,6 +313,6 @@ export const rateLimitService = {
     const settings = await getRateLimitSettingsDoc();
     const cutoff = new Date(Date.now() - settings.event_retention_days * 24 * 60 * 60 * 1000);
     const { deletedCount } = await RateLimitEventModel.deleteMany({ created_at: { $lt: cutoff } });
-    return deletedCount ?? 0;
+    return deletedCount;
   },
 };

@@ -99,7 +99,7 @@ const digits = (value: string) => value.replaceAll(/\D/g, '');
  * number is ever baked into the code, which is how a stale one ends up
  * messaging a stranger.
  */
-async function testDestination(provided: string | null | undefined, userId: string | null) {
+async function testDestination(provided: string | null | undefined, userId: string | null | undefined) {
   const typed = digits(provided ?? '');
   if (typed) return typed;
   if (!userId) return '';
@@ -174,7 +174,7 @@ const impl = {
   async connection(
     id: string,
     to: string | null | undefined,
-    userId: string | null
+    userId: string | null | undefined
   ): Promise<EnvConnectionResult> {
     const { category, config } = await rawEntry(id);
     // Thrown, not returned: "this category has no connection test" is a bad
@@ -470,7 +470,7 @@ const impl = {
 type Actor = string | null | undefined;
 
 export const envEntryTests = {
-  connection: (id: string, to: string | null | undefined, userId: string | null) =>
+  connection: (id: string, to: string | null | undefined, userId: string | null | undefined) =>
     tracked(id, 'CONNECTION', userId, () => impl.connection(id, to, userId)),
   email: (id: string, to: string, actor?: Actor) => tracked(id, 'EMAIL', actor, () => impl.email(id, to)),
   imagekitUpload: (id: string, fileBase64: string, fileName: string, actor?: Actor) =>

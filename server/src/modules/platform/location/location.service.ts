@@ -1,6 +1,6 @@
 import { GraphQLError } from 'graphql';
 import { isObjectIdOrHexString } from 'mongoose';
-import { DEFAULT_LAUNCH_TARGET, LocationModel, launchMediaOf } from './location.model';
+import { LocationModel, launchMediaOf } from './location.model';
 import {
   locationLaunchSchema,
   type LaunchMediaInput,
@@ -27,15 +27,16 @@ const toPub = (d: any) => {
     id: String(d._id),
     location_id: d.location_id,
     location_name: d.location_name,
-    country: d.country ?? 'India',
-    country_code: d.country_code ?? 'IN',
-    state: d.state ?? '',
-    state_code: d.state_code ?? '',
-    city: d.city ?? d.location_name ?? '',
+    country: d.country,
+    country_code: d.country_code,
+    state: d.state,
+    state_code: d.state_code,
+    city: d.city,
     location_image: d.location_image,
     location_pincode: d.location_pincode,
-    location_zones: (d.location_zones ?? []).map((z: any) => ({
+    location_zones: d.location_zones.map((z: any) => ({
       zone_name: z.zone_name,
+      // A zone saved without a code or pincode stores null, which a client expects as blank.
       zone_code: z.zone_code ?? '',
       pincode: z.pincode ?? '',
       // Hidden (not in the GraphQL schema) — lets the LocationZone.active_club_count
@@ -43,13 +44,14 @@ const toPub = (d: any) => {
       _location_id: String(d._id),
     })),
     is_active: !!d.is_active,
-    // A city saved before the launch fields existed was already live.
-    is_launched: d.is_launched ?? true,
-    launch_target: d.launch_target ?? DEFAULT_LAUNCH_TARGET,
-    whatsapp_group_url: d.whatsapp_group_url ?? '',
+    // A city saved before the launch fields existed reads as live: the schema
+    // default is true, and `backfillLaunched` stamps it into the stored row.
+    is_launched: d.is_launched,
+    launch_target: d.launch_target,
+    whatsapp_group_url: d.whatsapp_group_url,
     launch_media: launchMediaOf(d.launch_media),
-    created_at: d.created_at?.toISOString?.() ?? '',
-    updated_at: d.updated_at?.toISOString?.() ?? '',
+    created_at: d.created_at.toISOString(),
+    updated_at: d.updated_at.toISOString(),
   };
 };
 
@@ -141,7 +143,7 @@ export const locationService = {
    */
   async backfillLaunched(): Promise<{ repaired: number }> {
     const r = await LocationModel.updateMany({ is_launched: { $exists: false } }, { $set: { is_launched: true } });
-    return { repaired: r.modifiedCount ?? 0 };
+    return { repaired: r.modifiedCount };
   },
 
   /** Server-side table page (search/filter/sort/paginate) for the locationsTable query. */
@@ -175,7 +177,7 @@ export const locationService = {
   /** Several cities in one read, for a list keyed by location id. */
   async listByIds(ids: readonly string[]) {
     const docs = await LocationModel.find({ _id: { $in: ids } });
-    return docs.map(toPub);
+    return docs.map(toPub).filter((city) => city !== null);
   },
 
   async create(input: {
@@ -262,7 +264,7 @@ export const locationService = {
   async remove(id: string) {
     const doc = await LocationModel.findById(id);
     if (!doc) notFound();
-    await doc!.deleteOne();
+    await doc.deleteOne();
     return true;
   },
 };

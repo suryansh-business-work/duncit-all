@@ -26,19 +26,19 @@ export const portalModeResolvers = {
       args: { key: string; mode: PortalMode; note?: string | null },
       ctx: GraphQLContext
     ) => {
-      requireRole(ctx, TECH_MANAGE);
-      return portalModeService.setMode(args.key, args.mode, args.note ?? null, ctx.user?.id ?? null);
+      const user = requireRole(ctx, TECH_MANAGE);
+      return portalModeService.setMode(args.key, args.mode, args.note ?? null, user.id);
     },
     setPortalAppFeatures: async (
       _p: unknown,
       args: { key: string; chat_enabled?: boolean | null; apps_enabled?: boolean | null },
       ctx: GraphQLContext
     ) => {
-      requireRole(ctx, TECH_MANAGE);
+      const user = requireRole(ctx, TECH_MANAGE);
       return portalModeService.setAppFeatures(
         args.key,
         { chat_enabled: args.chat_enabled, apps_enabled: args.apps_enabled },
-        ctx.user?.id ?? null
+        user.id
       );
     },
   },

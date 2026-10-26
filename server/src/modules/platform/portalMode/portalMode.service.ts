@@ -3,8 +3,6 @@ import { PortalModeModel, PORTAL_MODES, type PortalMode } from './portalMode.mod
 import { PORTAL_REGISTRY } from './portalMode.registry';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 
-const iso = (v: any) => (v instanceof Date ? v.toISOString() : v ?? null);
-
 /** Public URL per portal key — kept in the registry (single source of truth). */
 const URL_BY_KEY = new Map(PORTAL_REGISTRY.map((e) => [e.key, e.url]));
 
@@ -34,15 +32,15 @@ const pub = (doc: any) => ({
   id: String(doc._id),
   key: doc.key,
   name: doc.name,
-  kind: doc.kind ?? 'PORTAL',
-  mode: (doc.mode ?? 'LIVE') as PortalMode,
-  // A row written before these fields existed has neither, and it kept both
-  // features — so an absent value reads as on, not off.
+  kind: doc.kind,
+  mode: doc.mode as PortalMode,
+  // Only an explicit false switches a feature off: a row written before these
+  // fields existed reads them as on (the schema default), not off.
   chat_enabled: doc.chat_enabled !== false,
   apps_enabled: doc.apps_enabled !== false,
-  note: doc.note ?? '',
+  note: doc.note,
   url: URL_BY_KEY.get(doc.key) ?? null,
-  updated_at: iso(doc.updated_at),
+  updated_at: doc.updated_at.toISOString(),
 });
 
 export const portalModeService = {

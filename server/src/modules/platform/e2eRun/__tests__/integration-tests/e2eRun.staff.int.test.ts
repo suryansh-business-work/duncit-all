@@ -13,6 +13,7 @@ jest.mock('../../e2eRun.mute', () => ({
 }));
 
 import { UserModel } from '@modules/access/user/user.model';
+import { sessionsWithoutTransactions } from '@modules/access/user/__tests__/integration-tests/standaloneSessions.fixture';
 import { grantRunAccountRoles, revokeRunAccountRoles } from '../../e2eRun.staff';
 
 const STAMP = '141020260300';
@@ -29,6 +30,12 @@ const codeOf = (promise: Promise<unknown>) =>
     (error: { extensions?: { code?: string } }) => error.extensions?.code,
   );
 
+let sessions: jest.SpyInstance;
+beforeAll(() => {
+  sessions = sessionsWithoutTransactions();
+});
+afterAll(() => sessions.mockRestore());
+
 beforeEach(async () => {
   mockOverrides.otpBypass = true;
   await UserModel.create({
@@ -44,7 +51,13 @@ afterEach(async () => {
 
 describe('grantRunAccountRoles / revokeRunAccountRoles', () => {
   it('grants limited staff and partner roles, then revokes one and keeps the rest', async () => {
-    const granted = await grantRunAccountRoles({ stamp: STAMP, email: RUN_EMAIL, roles: ['city_admin', 'FINANCE_USER'] });
+    // CITY_ADMIN travels with its city, as the specs grant it: the role row is refused without one.
+    const granted = await grantRunAccountRoles({
+      stamp: STAMP,
+      email: RUN_EMAIL,
+      roles: ['city_admin', 'FINANCE_USER'],
+      assigned_city: 'Pune',
+    });
     expect(granted).toEqual(expect.arrayContaining(['CITY_ADMIN', 'FINANCE_USER']));
     expect(await roleKeys(RUN_EMAIL)).toEqual(['CITY_ADMIN', 'FINANCE_USER', 'USER']);
 

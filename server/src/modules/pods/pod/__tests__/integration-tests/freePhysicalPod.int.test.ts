@@ -239,13 +239,18 @@ describe('creating a free physical pod', () => {
     await settle();
     // No request any more: the venue is told the booking is confirmed.
     expect(slotEmail).not.toHaveBeenCalled();
-    expect(notifyCreate).toHaveBeenCalledWith(
-      expect.objectContaining({ title: 'New booking confirmed', target_user_ids: [ownerId] })
-    );
+    const note = notifyCreate.mock.calls.find(([arg]) => arg.title === 'New booking confirmed')?.[0];
+    expect(note).toMatchObject({ target_user_ids: [ownerId] });
 
-    // The platform owes the venue nothing for a free pod.
-    const decision = await venueSlotService.decisionDetail(ownerId, slotId);
-    expect(decision).toMatchObject({ pod_is_free: true, price: 0, venue_commission_amount: 0, venue_receives: 0 });
+    // The platform owes the venue nothing for a free pod: the note says the host
+    // settles the venue directly, in place of a payout.
+    expect(note.body).toMatch(NOTICE);
+    expect(note.body).not.toContain('You receive');
+    // Booked outright, the slot was never a request, so it has no decision page.
+    await expect(venueSlotService.decisionDetail(ownerId, slotId)).rejects.toMatchObject({
+      message: 'This slot has no booking request',
+      extensions: { code: 'NOT_FOUND' },
+    });
   });
 
   it("books a paid pod's priced partner slot instantly, freezing its price and telling the venue its payout", async () => {
@@ -268,9 +273,11 @@ describe('creating a free physical pod', () => {
     expect(note).toMatchObject({ target_user_ids: [ownerId] });
     expect(note.body).toContain('You receive ₹300.');
     expect(note.body).not.toMatch(NOTICE);
-    const decision = await venueSlotService.decisionDetail(ownerId, slotId);
-    expect(decision.pod_is_free).toBe(false);
-    expect(decision.venue_receives).toBeGreaterThan(0);
+    // Booked outright, the slot was never a request, so it has no decision page.
+    await expect(venueSlotService.decisionDetail(ownerId, slotId)).rejects.toMatchObject({
+      message: 'This slot has no booking request',
+      extensions: { code: 'NOT_FOUND' },
+    });
   });
 
   it('still requires a free pod to cost nothing', async () => {

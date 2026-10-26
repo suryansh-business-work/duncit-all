@@ -18,13 +18,17 @@ interface Venue {
   offers_food: boolean;
 }
 
-const captured = vi.hoisted(() => ({ extraTabs: null as null | ((venue: Venue) => ExtraTab[]) }));
+const captured = vi.hoisted(() => ({
+  extraTabs: null as null | ((venue: Venue) => ExtraTab[]),
+  canGovern: true,
+}));
 
 vi.mock('@duncit/entity-consoles', () => ({
   VenueDetailsPage: ({ extraTabs }: { extraTabs: (venue: Venue) => ExtraTab[] }) => {
     captured.extraTabs = extraTabs;
     return null;
   },
+  useConsoleAccess: () => ({ canGovern: captured.canGovern }),
 }));
 vi.mock('@duncit/venue-food', () => ({
   VenueFoodMenu: () => null,
@@ -58,6 +62,7 @@ const elementOf = (tab: ExtraTab): ReactElement<Record<string, unknown>> => {
 
 beforeEach(() => {
   captured.extraTabs = null;
+  captured.canGovern = true;
 });
 
 describe('VenueRecordPage', () => {
@@ -112,12 +117,18 @@ describe('VenueRecordPage', () => {
     const orders = byValue.get('foodOrders');
     expect(orders?.type).toBe(VenueFoodOrders);
     expect(orders?.key).toBe('v9');
-    expect(orders?.props).toMatchObject({ venueId: 'v9', surface: 'venues' });
+    expect(orders?.props).toMatchObject({ venueId: 'v9', surface: 'venues', canRefund: true });
 
     const coupons = byValue.get('foodCoupons');
     expect(coupons?.type).toBe(VenueFoodCoupons);
     expect(coupons?.key).toBe('v9');
     expect(coupons?.props).toMatchObject({ venueId: 'v9', surface: 'venues' });
+  });
+
+  it('keeps the refund off the order board for a console editor, which the server would refuse', () => {
+    captured.canGovern = false;
+    const orders = tabsFor({ id: 'v9', offers_food: true }).find((tab) => tab.value === 'foodOrders');
+    expect(elementOf(orders as ExtraTab).props).toMatchObject({ canRefund: false });
   });
 
   it('opens the rental desk as an admin for the venue', () => {

@@ -84,7 +84,11 @@ describe('dashboardTotals place scope', () => {
   });
 
   it('refuses a CITY_ADMIN with no city assigned instead of showing the platform', async () => {
-    await expect(read(admin(['CITY_ADMIN']))).rejects.toMatchObject({ message: 'Out of city scope' });
+    // The scope check refuses before any count is started, so the resolver throws rather than rejects.
+    await expect(async () => read(admin(['CITY_ADMIN']))).rejects.toMatchObject({
+      message: 'Out of city scope',
+      extensions: { code: 'FORBIDDEN' },
+    });
   });
 
   it('leaves SUPER_ADMIN with the platform totals', async () => {

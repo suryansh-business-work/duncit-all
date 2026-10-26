@@ -36,20 +36,27 @@ import { logs } from '@observability/log';
 import { userService } from '@modules/access/user/user.service';
 import { UserModel } from '@modules/access/user/user.model';
 import { UserRoleModel } from '@modules/access/user/relations';
+import { sessionsWithoutTransactions } from '@modules/access/user/__tests__/integration-tests/standaloneSessions.fixture';
 
 const CITY_GATE = ['CITY_ADMIN'];
 const FINANCE_GATE = ['FINANCE_MANAGER'];
+/** A City Admin always administers a city: the role row is refused without one. */
+const CITY = 'Pune';
 
 let seq = 0;
 async function makeStaff(roleKeys: string[]) {
   seq += 1;
   const doc = await UserModel.create({
-    profile: { first_name: 'Staff' },
+    profile: { first_name: 'Staff', assigned_city: CITY },
     auth: { email: `current-roles-${seq}@example.com` },
     metadata: { status: 'ACTIVE', role_keys: roleKeys },
   });
   await UserRoleModel.insertMany(
-    roleKeys.map((role) => ({ user_id: doc._id, role, scope: { city: null, zone: null } })),
+    roleKeys.map((role) => ({
+      user_id: doc._id,
+      role,
+      scope: { city: role === 'CITY_ADMIN' ? CITY : null, zone: null },
+    })),
   );
   return String(doc._id);
 }
@@ -72,6 +79,12 @@ function refusalOf(run: () => unknown) {
   }
   throw new Error('Expected the gate to refuse');
 }
+
+let sessions: jest.SpyInstance;
+beforeAll(() => {
+  sessions = sessionsWithoutTransactions();
+});
+afterAll(() => sessions.mockRestore());
 
 beforeEach(() => {
   mockCache.clear();

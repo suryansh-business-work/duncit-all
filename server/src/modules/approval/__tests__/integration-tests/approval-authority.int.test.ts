@@ -10,6 +10,7 @@ import { makeContext } from '@test/harness';
 import { logs } from '@observability/log';
 import { UserModel } from '@modules/access/user/user.model';
 import { effectiveRoleKeys } from '@modules/access/user/effective-roles';
+import { sessionsWithoutTransactions } from '@modules/access/user/__tests__/integration-tests/standaloneSessions.fixture';
 import { portalAccessService } from '@modules/portals/portalAccess.service';
 import { approvalResolvers } from '../../approval.resolver';
 import { ApprovalRequestModel } from '../../approval.model';
@@ -27,7 +28,9 @@ const { Mutation } = approvalResolvers;
 async function makeStaff(roles: string[]) {
   const doc = await UserModel.create({
     auth: { email: `approval-${new Types.ObjectId().toHexString()}@duncit.com` },
-    profile: { first_name: 'Ira', last_name: 'Sen' },
+    // The city is stored too: a granted role rewrites every role row, and a
+    // CITY_ADMIN row is refused without the city it administers.
+    profile: { first_name: 'Ira', last_name: 'Sen', assigned_city: 'Pune' },
     metadata: { role_keys: roles },
   });
   const ctx = makeContext({ id: String(doc._id), roles, assigned_city: 'Pune' });
@@ -46,6 +49,12 @@ const FORBIDDEN_SELF = {
 };
 
 describe('approval inbox — who may decide', () => {
+  let sessions: jest.SpyInstance;
+  beforeAll(() => {
+    sessions = sessionsWithoutTransactions();
+  });
+  afterAll(() => sessions.mockRestore());
+
   let warn: jest.SpyInstance;
   beforeEach(() => {
     warn = jest.spyOn(logs.server, 'warn').mockImplementation(() => undefined);

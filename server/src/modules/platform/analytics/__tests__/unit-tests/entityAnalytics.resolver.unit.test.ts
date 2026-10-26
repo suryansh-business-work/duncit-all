@@ -61,7 +61,8 @@ describe('entityAnalytics resolver gate', () => {
     ['COMMUNICATIONS', 'SUPER_ADMIN'],
   ] as const)('%s is served to %s, with the period passed through', async (entity, role) => {
     await expect(read(entity, [role])).resolves.toEqual({ entity: 'stub' });
-    expect(load).toHaveBeenCalledWith(entity, { days: 30 }, 'PRODUCTION');
+    // Only the Users page is held to the reader's place; every other page reads unscoped (null).
+    expect(load).toHaveBeenCalledWith(entity, { days: 30 }, 'PRODUCTION', null);
   });
 
   it.each([

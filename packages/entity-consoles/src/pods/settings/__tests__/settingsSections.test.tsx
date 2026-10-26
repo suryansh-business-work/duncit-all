@@ -4,6 +4,7 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import AutoPodSettings from '../AutoPodSettings';
 import PodReminderSettings from '../PodReminderSettings';
 import RequestChangeSettings from '../RequestChangeSettings';
+import VenueOfferCounterSettings from '../VenueOfferCounterSettings';
 import type { PodSettingsSectionProps } from '../queries';
 
 /**
@@ -48,6 +49,11 @@ const SECTIONS: Section[] = [
       'club_admin_change_request_health_penalty',
     ],
   },
+  {
+    name: 'VenueOfferCounterSettings',
+    Component: VenueOfferCounterSettings,
+    keys: ['venue_offer_max_counters'],
+  },
 ];
 
 // Every card gets a distinct saved value (index + 5) so a card wired to the
@@ -88,5 +94,48 @@ describe.each(SECTIONS)('$name', ({ Component, keys }) => {
     for (const input of screen.getAllByRole('spinbutton')) {
       expect(input).toHaveValue(null);
     }
+  });
+});
+
+// The total is split equally between the host and the venue, and the server keeps
+// it even and within 2–20 — so the box refuses anything else instead of saving a
+// number that would never apply.
+describe('VenueOfferCounterSettings / its own bounds', () => {
+  const INVALID = 'Enter an even number from 2 to 20 — it is split equally between the host and the venue.';
+  const renderCounters = (onSave = vi.fn(async () => undefined)) => {
+    render(<VenueOfferCounterSettings settings={{ venue_offer_max_counters: 6 }} loading={false} onSave={onSave} />);
+    return { onSave, box: screen.getByRole('spinbutton', { name: 'Counters per booking (host + venue)' }) };
+  };
+
+  it('heads the group and states the range on the box', () => {
+    const { box } = renderCounters();
+    expect(screen.getByRole('heading', { name: 'Venue booking offers' })).toBeInTheDocument();
+    expect(screen.getByText('Counter offers per booking')).toBeInTheDocument();
+    expect(screen.getByText('An even number from 2 to 20. Default 6 (3 each).')).toBeInTheDocument();
+    expect(box).toHaveValue(6);
+    expect(box).toHaveAttribute('min', '2');
+    expect(box).toHaveAttribute('max', '20');
+    expect(box).toHaveAttribute('step', '2');
+  });
+
+  it.each(['5', '0', '22', '1'])('refuses %s and saves nothing', (value) => {
+    const { box, onSave } = renderCounters();
+    fireEvent.change(box, { target: { value } });
+    expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
+    expect(screen.getByText(INVALID)).toBeInTheDocument();
+    expect(onSave).not.toHaveBeenCalled();
+  });
+
+  it('saves the lowest and the highest total it allows', async () => {
+    const { box, onSave } = renderCounters();
+    fireEvent.change(box, { target: { value: '2' } });
+    expect(screen.queryByText(INVALID)).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(onSave).toHaveBeenLastCalledWith({ venue_offer_max_counters: 2 }));
+
+    fireEvent.change(box, { target: { value: '20' } });
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled());
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(onSave).toHaveBeenLastCalledWith({ venue_offer_max_counters: 20 }));
   });
 });

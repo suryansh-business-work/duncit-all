@@ -28,8 +28,11 @@ const move = (over: Record<string, unknown>) => ({
   total_max: 6600,
   expires_at: '2026-12-02T06:30:00.000Z',
   reason: '',
+  images: [],
   ...over,
 });
+
+const reaction = (user_id: string, emoji: string) => ({ __typename: 'PodMessageReaction', user_id, emoji });
 
 const line = (id: string, over: Record<string, unknown> = {}) => ({
   __typename: 'PodMessage',
@@ -43,6 +46,8 @@ const line = (id: string, over: Record<string, unknown> = {}) => ({
   image_url: null,
   deleted: false,
   createdAt: '2026-12-01T06:00:00.000Z',
+  edited_at: null,
+  reactions: [],
   offer: null,
   ...over,
 });
@@ -94,5 +99,55 @@ describe('VenueChatReadOnlyThread', () => {
     expect(screen.queryByRole('article')).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button'));
     expect(onBack).toHaveBeenCalledTimes(1);
+  });
+
+  it('says which lines were edited after they were sent — a text line and an offer card alike', async () => {
+    mount([
+      line('t1', { text: 'Terrace or loft?', edited_at: '2026-12-01T06:05:00.000Z' }),
+      line('t2', { user_id: 'u-venue', user_name: 'Ravi', text: 'Both are free.' }),
+      line('m1', {
+        type: 'OFFER',
+        text: 'Counter offer',
+        user_id: 'u-venue',
+        user_name: 'Ravi',
+        edited_at: '2026-12-01T07:00:00.000Z',
+        offer: move({ event: 'COUNTER', by: 'VENUE', round: 2 }),
+      }),
+    ]);
+    expect(await screen.findByText('Terrace or loft?')).toBeInTheDocument();
+
+    expect(screen.getByText(/^Asha · .+ · Edited$/)).toBeInTheDocument();
+    const ravi = screen.getAllByText(/^Ravi · /);
+    expect(ravi).toHaveLength(2);
+    // Ravi's text line is as first sent; his counter was revised, and says so on the card too.
+    expect(ravi[0]).not.toHaveTextContent('Edited');
+    expect(ravi[1]).toHaveTextContent(/ · Edited$/);
+    const card = within(screen.getByRole('article', { name: 'The venue countered' }));
+    expect(card.getByTestId('offer-line-time')).toHaveTextContent(/^Sent .+ · Edited$/);
+  });
+
+  it('shows the reactions on every line as a record staff cannot add to', async () => {
+    mount([
+      line('t1', { reactions: [reaction('u-host', '👍'), reaction('u-venue', '👍'), reaction('u-venue', '🎉')] }),
+      line('t2', { user_id: 'u-venue', user_name: 'Ravi', text: 'Both are free.' }),
+      line('m1', {
+        type: 'OFFER',
+        text: 'Booking offer',
+        offer: move({ event: 'OFFER', by: 'HOST' }),
+        reactions: [reaction('u-venue', '❤️')],
+      }),
+    ]);
+    expect(await screen.findByText('Is the terrace free?')).toBeInTheDocument();
+
+    // One row for the text line's chips and one inside the card — none for a line nobody reacted to.
+    const rows = screen.getAllByTestId('line-reactions');
+    expect(rows).toHaveLength(2);
+    expect(within(rows[0]).getByText('👍 2')).toBeInTheDocument();
+    expect(within(rows[0]).getByText('🎉 1')).toBeInTheDocument();
+    const card = within(screen.getByRole('article', { name: 'New booking offer' }));
+    expect(card.getByTestId('line-reactions')).toHaveTextContent('❤️ 1');
+    // Nothing to react with and no chip to toggle: only the way back is a button.
+    expect(screen.queryByRole('button', { name: 'React' })).not.toBeInTheDocument();
+    expect(screen.getAllByRole('button')).toHaveLength(1);
   });
 });

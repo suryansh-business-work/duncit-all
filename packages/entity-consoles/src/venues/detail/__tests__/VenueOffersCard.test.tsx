@@ -22,10 +22,49 @@ describe('VenueOffersCard', () => {
     expect(screen.getByText('48 hours')).toBeInTheDocument();
   });
 
-  it('reads a record saved before booking offers as Duncit’s defaults', () => {
+  it('reads a record saved before booking offers as Duncit’s defaults, with no business named', () => {
     render(<VenueOffersCard own={null} effective={{ min_guests: 8, response_hours: 24 }} />);
     expect(screen.getByText('8 guests · Duncit’s default')).toBeInTheDocument();
     expect(screen.getByText('24 hours · Duncit’s default')).toBeInTheDocument();
+    expect(screen.getByText('Business you expect per booking')).toBeInTheDocument();
+    expect(screen.getByText('Not set yet')).toBeInTheDocument();
+  });
+});
+
+// The business the venue hopes a booking brings — a guide hosts see, read back
+// to staff in the pickers' order whatever order the venue saved it in.
+describe('VenueOffersCard / business the venue expects', () => {
+  const withBusiness = (min_business: { model: string; amount: number }[] | null) =>
+    render(<VenueOffersCard own={{ ...EFFECTIVE, min_business }} effective={EFFECTIVE} />);
+
+  it('lists each amount on its basis in the pickers’ order, paise shown only when there are any', () => {
+    withBusiness([
+      { model: 'FLAT', amount: 5000 },
+      { model: 'PER_GUEST', amount: 249.5 },
+      { model: 'PER_HOUR', amount: 400 },
+    ]);
+    expect(screen.getByText('₹249.50 per guest · ₹400 per hour · ₹5,000 per booking')).toBeInTheDocument();
+    expect(screen.queryByText('Not set yet')).not.toBeInTheDocument();
+  });
+
+  it('leaves out an amount of 0 and a basis this client no longer offers', () => {
+    withBusiness([
+      { model: 'PER_SLOT', amount: 300 },
+      { model: 'PER_HOUR', amount: 0 },
+      { model: 'PER_GUEST', amount: 200 },
+    ]);
+    expect(screen.getByText('₹200 per guest')).toBeInTheDocument();
+    expect(screen.queryByText(/300/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/per hour/)).not.toBeInTheDocument();
+  });
+
+  it.each([
+    ['an empty list', []],
+    ['an absent list', null],
+    ['only amounts it cannot show', [{ model: 'PER_SLOT', amount: 300 }, { model: 'FLAT', amount: 0 }]],
+  ])('says it is not set yet for %s', (_label, rows) => {
+    withBusiness(rows);
+    expect(screen.getByText('Not set yet')).toBeInTheDocument();
   });
 });
 

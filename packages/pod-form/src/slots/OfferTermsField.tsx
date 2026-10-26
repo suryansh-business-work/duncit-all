@@ -5,7 +5,9 @@ import { VenueOfferAskFields } from '@duncit/forms';
 import {
   VENUE_OFFER_ASK_LIMITS,
   VENUE_OFFER_MODELS,
+  formatStatementMoney,
   isVenueOfferModel,
+  venueMinBusinessLines,
   venueOfferInput,
   type VenueQuote,
 } from '@duncit/utils';
@@ -26,9 +28,10 @@ interface QuoteAnswer {
 }
 
 /**
- * How the host offers to pay the venue — per guest, per hour, for the slot or a
- * flat price, with a line on how the picked option pays — the amount, and what
- * they need from the venue (one point per line) with an optional note. The
+ * How the host offers to pay the venue — per guest, per hour or a flat price,
+ * with a line on how the picked option pays — the amount, and what they need
+ * from the venue (one point per line) with an optional note. What the venue
+ * usually expects from a booking shows beside it as a guide. The
  * server prices the offer (the venue's charges and Duncit's commission on top)
  * at the pod's spots and at the venue's minimum guests, or says why it cannot
  * be sent; the points and the note never re-price it. The venue accepts,
@@ -44,7 +47,7 @@ export default function OfferTermsField({ venueId }: Readonly<{ venueId: string 
     name: ['pod_date_time', 'pod_end_date_time', 'venue_offer_model', 'venue_offer_rate', 'no_of_spots'],
   });
   const settledRate = useDebouncedValue(rate, QUOTE_DEBOUNCE_MS);
-  const { minGuests } = useVenueOfferTerms(venueId);
+  const { minGuests, minBusiness } = useVenueOfferTerms(venueId);
   // The price only: the points and the note are left out, so typing them asks nothing.
   const offer = venueOfferInput({
     start: start ? start.toISOString() : null,
@@ -63,6 +66,7 @@ export default function OfferTermsField({ venueId }: Readonly<{ venueId: string 
   const answer = offer ? data?.venueOfferQuote : undefined;
   const currency = finance?.currency_symbol ?? '';
   const modelHelp = isVenueOfferModel(model) ? t(PODFORM_OFFER_HELP_KEY[model]) : t('podForm.offer.modelHint');
+  const expects = venueMinBusinessLines(minBusiness, t, (value) => formatStatementMoney(value, currency));
 
   return (
     <Stack spacing={2} data-testid="pod-form-offer-terms">
@@ -110,6 +114,11 @@ export default function OfferTermsField({ venueId }: Readonly<{ venueId: string 
       {minGuests > 0 && (
         <Typography variant="caption" data-testid="pod-form-venue-minimum" sx={{ color: 'text.secondary' }}>
           {t('availability.offers.ask.venueMinimum', { vars: { min: minGuests } })}
+        </Typography>
+      )}
+      {expects.length > 0 && (
+        <Typography variant="caption" data-testid="pod-form-venue-min-business" sx={{ color: 'text.secondary' }}>
+          {`${t('availability.offers.minBusiness.createPodTitle')}: ${expects.join(' · ')} — ${t('availability.offers.minBusiness.createPodHint')}`}
         </Typography>
       )}
       <VenueOfferAskFields

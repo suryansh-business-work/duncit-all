@@ -374,13 +374,13 @@ describe('WhenWhereSection (offer terms)', () => {
     routeQueries();
     renderWW(termsData(), { ...WINDOW, venue_offer_model: 'PER_GUEST' });
     expect(screen.getByText(/A minimum order value per person/)).toBeInTheDocument();
-    expect(screen.queryByText('Per guest, per hour, for the time slot, or one flat price')).not.toBeInTheDocument();
+    expect(screen.queryByText('Per guest, per hour, or one flat price')).not.toBeInTheDocument();
   });
 
   it('keeps the general hint until an option is picked', () => {
     routeQueries();
     renderWW(termsData(), WINDOW);
-    expect(screen.getByText('Per guest, per hour, for the time slot, or one flat price')).toBeInTheDocument();
+    expect(screen.getByText('Per guest, per hour, or one flat price')).toBeInTheDocument();
   });
 
   it('asks what the host needs from the venue (required) and an optional note — and never prices them', async () => {
@@ -415,6 +415,52 @@ describe('WhenWhereSection (offer terms)', () => {
     routeQueries({ terms: termsQuery({ id: 'v1', capacity: 40, offer_min_guests: 0 }) });
     renderWW(termsData(), WINDOW);
     expect(screen.queryByTestId('pod-form-venue-minimum')).not.toBeInTheDocument();
+  });
+
+  // What the venue hopes a booking brings is a guide beside the offer, never a rule.
+  it('shows what the venue usually expects from a booking, in the pickers’ order, as a guide', () => {
+    routeQueries({
+      terms: termsQuery({
+        id: 'v1',
+        capacity: 40,
+        offer_min_guests: 8,
+        offer_min_business: [
+          { model: 'FLAT', amount: 5000 },
+          { model: 'PER_GUEST', amount: 200 },
+          { model: 'PER_HOUR', amount: 0 },
+        ],
+      }),
+    });
+    renderWW(termsData({ platform_fee_pct: 10, gst_pct: 18, currency_symbol: '₹' }), WINDOW);
+    expect(screen.getByTestId('pod-form-venue-min-business')).toHaveTextContent(
+      /^This venue usually expects: ₹200\.00 per guest · ₹5,000\.00 per booking — A guide from the venue — your offer can be different\.$/,
+    );
+  });
+
+  it('reads the amounts without a symbol when no currency is set', () => {
+    routeQueries({
+      terms: termsQuery({ id: 'v1', capacity: 40, offer_min_guests: 0, offer_min_business: [{ model: 'PER_HOUR', amount: 400 }] }),
+    });
+    renderWW(termsData(), WINDOW);
+    expect(screen.getByTestId('pod-form-venue-min-business')).toHaveTextContent(/^This venue usually expects: 400\.00 per hour — /);
+  });
+
+  it('says nothing of what the venue expects when it names no amount it can show', () => {
+    routeQueries({
+      terms: termsQuery({ id: 'v1', capacity: 40, offer_min_guests: 8, offer_min_business: [{ model: 'PER_GUEST', amount: 0 }] }),
+    });
+    renderWW(termsData(), WINDOW);
+    expect(screen.getByTestId('pod-form-venue-minimum')).toBeInTheDocument();
+    expect(screen.queryByTestId('pod-form-venue-min-business')).not.toBeInTheDocument();
+  });
+
+  it('offers only the ways a venue can still be paid — per guest, per hour or a flat price', async () => {
+    const user = userEvent.setup();
+    routeQueries();
+    renderWW(termsData(), WINDOW);
+    await user.click(screen.getByLabelText(/How you pay the venue/));
+    const options = await screen.findAllByRole('option');
+    expect(options.map((option) => option.textContent)).toEqual(['Per guest', 'Per hour', 'Flat price']);
   });
 
   it("reads a per-guest offer as a range from the venue's minimum to the spots", () => {

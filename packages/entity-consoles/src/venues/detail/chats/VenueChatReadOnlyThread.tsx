@@ -1,15 +1,15 @@
 import { useQuery } from '@apollo/client/react';
 import { Alert, Avatar, Box, CircularProgress, Stack, Typography } from '@mui/material';
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
-import { OfferChatCard, isOfferChatLine } from '@duncit/availability-calendar';
+import { LineReactions, OfferChatCard, isOfferChatLine } from '@duncit/availability-calendar';
 import { useDateFormat, useTranslation } from '@duncit/app-settings';
 import { DuncitButton } from '@duncit/buttons';
 import { newestOfferLineId, VENUE_CHAT_PAGE, type VenueChatLine } from '@duncit/utils';
 import { ADMIN_VENUE_CHAT_MESSAGES } from './queries';
 
-/** A line's content: an offer move as its card (a record — staff answer nothing), a photo, or the text. */
+/** A line's content: an offer move as its card (a record — staff answer nothing, react to nothing), a photo, or the text. */
 function LineBody({ line, newest, photoAlt }: Readonly<{ line: VenueChatLine; newest: boolean; photoAlt: string }>) {
-  if (isOfferChatLine(line)) return <OfferChatCard move={line.offer} viewer="STAFF" newest={newest} />;
+  if (isOfferChatLine(line)) return <OfferChatCard move={line.offer} viewer="STAFF" newest={newest} line={line} />;
   if (line.type === 'IMAGE' && line.image_url) {
     return <Box component="img" src={line.image_url} alt={photoAlt} sx={{ maxWidth: 240, borderRadius: 1 }} />;
   }
@@ -59,8 +59,10 @@ export default function VenueChatReadOnlyThread({
             <Stack spacing={0.25} sx={{ minWidth: 0, flex: 1 }}>
               <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                 {line.user_name} · {formatDateTime(line.createdAt)}
+                {line.edited_at ? ` · ${t('availability.offers.chat.edited')}` : ''}
               </Typography>
               <LineBody line={line} newest={line.id === newestId} photoAlt={t('admin.venueDetails.chatPhoto')} />
+              {!isOfferChatLine(line) && <LineReactions reactions={line.reactions} viewerId={null} />}
             </Stack>
           </Stack>
         ))}

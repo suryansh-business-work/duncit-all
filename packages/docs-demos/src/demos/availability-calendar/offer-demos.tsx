@@ -1,5 +1,5 @@
-import { OfferChatCard, type OfferChatViewer } from '@duncit/availability-calendar';
-import type { VenueChatOfferMove } from '@duncit/utils';
+import { OfferChatCard, VenueMinBusinessNote, VenueOfferPinnedBar, type OfferChatViewer } from '@duncit/availability-calendar';
+import type { PinnedOfferSource, VenueChatOfferMove, VenueChatSide, VenueMinBusinessRow } from '@duncit/utils';
 import { defineDemo } from '../../types';
 
 /** One move of a booking offer, as the pod's venue chat draws it. */
@@ -35,4 +35,38 @@ export const offerChatCardDemo = defineDemo<{ move: VenueChatOfferMove; viewer: 
     },
   },
   render: (mock) => <OfferChatCard move={mock.move} viewer={mock.viewer} newest={mock.newest} />,
+});
+
+/** The bar pinned to the top of a venue chat: where the offer stands, and the counters each side has left. */
+export const venueOfferPinDemo = defineDemo<{ offer: PinnedOfferSource; side: VenueChatSide }>({
+  id: 'venue-offer-pin',
+  title: 'Booking offers: the pinned bar at the top of the venue chat',
+  note:
+    'Flip side between HOST and VENUE: "Your move" follows awaiting. Pod Settings splits a total of counters equally (counters_per_side); raise venue_counters_used to 3 and the venue has none left. Set status to ACCEPTED and the counters and the answer-by time go.',
+  mock: {
+    side: 'HOST',
+    offer: {
+      status: 'COUNTERED',
+      awaiting: 'HOST',
+      expires_at: '2026-12-02T06:30:00.000Z',
+      counters_per_side: 3,
+      host_counters_used: 1,
+      venue_counters_used: 2,
+    },
+  },
+  render: (mock) => <VenueOfferPinnedBar offer={mock.offer} side={mock.side} />,
+});
+
+/** What a picked venue usually expects from one booking, as Create Pod shows it. */
+export const venueMinBusinessDemo = defineDemo<{ rows: VenueMinBusinessRow[] }>({
+  id: 'venue-min-business',
+  title: 'Booking offers: the business a venue hopes each booking brings',
+  note: 'The venue lists one amount per basis in its Booking offers settings. Remove every row and nothing is drawn; a basis this client does not know is left out.',
+  mock: {
+    rows: [
+      { model: 'PER_GUEST', amount: 200 },
+      { model: 'PER_HOUR', amount: 400 },
+    ],
+  },
+  render: (mock) => <VenueMinBusinessNote rows={mock.rows} money={(value) => `₹${value}`} testId="demo-min-business" />,
 });

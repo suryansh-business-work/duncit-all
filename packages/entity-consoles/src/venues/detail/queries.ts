@@ -145,6 +145,10 @@ export const VENUE_DETAIL = gql`
         offers {
           min_guests
           response_hours
+          min_business {
+            model
+            amount
+          }
         }
       }
       documents {
@@ -254,10 +258,12 @@ export interface VenueSettings {
   offers?: VenueOfferSettings | null;
 }
 
-/** The fewest guests a host's offer may be for, and the hours either side has to answer it. */
+/** The fewest guests a host's offer may be for, the hours either side has to answer it, and the business the venue hopes for. */
 export interface VenueOfferSettings {
   min_guests: number;
   response_hours: number;
+  /** One amount per basis (a guide hosts see, never a rule); absent on an older record. */
+  min_business?: { model: string; amount: number }[] | null;
 }
 
 export interface VenueDocument {

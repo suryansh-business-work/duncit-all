@@ -5,17 +5,16 @@ import { useHostPodActionsConfig } from '../HostPodActionsProvider';
 import type { PodResubmitValues } from './pod-resubmit.form';
 
 /** Each pricing option's label on the surface's own copy. */
-type ModelLabelKey = 'offerModelPerGuest' | 'offerModelPerHour' | 'offerModelPerSlot' | 'offerModelFlat';
+type ModelLabelKey = 'offerModelPerGuest' | 'offerModelPerHour' | 'offerModelFlat';
 const MODEL_LABEL: Readonly<Record<VenueOfferModel, ModelLabelKey>> = {
   PER_GUEST: 'offerModelPerGuest',
   PER_HOUR: 'offerModelPerHour',
-  PER_SLOT: 'offerModelPerSlot',
   FLAT: 'offerModelFlat',
 };
 
 /**
- * How the host offers to pay the new venue — per guest, per hour, for the slot
- * or a flat price — and the amount. The venue accepts, rejects or counters it.
+ * How the host offers to pay the new venue — per guest, per hour or a flat
+ * price — and the amount. The venue accepts, rejects or counters it.
  */
 export default function OfferTermsFields({ control }: Readonly<{ control: Control<PodResubmitValues> }>) {
   const { labels } = useHostPodActionsConfig();

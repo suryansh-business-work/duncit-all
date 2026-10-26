@@ -12,6 +12,8 @@ interface Props {
   min: number;
   /** Optional upper bound, for settings the server itself caps (e.g. a percent). */
   max?: number;
+  /** Optional step the value must be a multiple of (an even total split between two sides). */
+  step?: number;
   loading: boolean;
   /** Saved value from the server (null until the query resolves). */
   value: number | null;
@@ -28,6 +30,7 @@ export default function NumberSettingCard({
   invalidText,
   min,
   max,
+  step,
   loading,
   value,
   onSave,
@@ -47,7 +50,8 @@ export default function NumberSettingCard({
   // The server silently clamps an out-of-range percent, so the box must refuse
   // it here rather than save a number the admin never sees applied.
   const overMax = max !== undefined && num > max;
-  const invalid = raw.trim() === '' || !Number.isInteger(num) || num < min || overMax;
+  const offStep = step !== undefined && num % step !== 0;
+  const invalid = raw.trim() === '' || !Number.isInteger(num) || num < min || overMax || offStep;
   const dirty = value != null && num !== value;
 
   const submit = async () => {
@@ -98,7 +102,7 @@ export default function NumberSettingCard({
           fullWidth
           helperText={helperText}
           slotProps={{
-            htmlInput: { min, max }
+            htmlInput: { min, max, step }
           }}
         />
         {invalid && (

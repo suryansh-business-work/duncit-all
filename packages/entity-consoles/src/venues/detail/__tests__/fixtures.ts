@@ -26,8 +26,16 @@ export const venueSettings = (over: Partial<VenueSettings> = {}): VenueSettings 
     trigger_hours: 48,
     refund_tiers: [{ hours_before: 24, refund_pct: 50 }],
   },
-  // The venue set its own minimum and left the response time to Duncit.
-  offers: { min_guests: 10, response_hours: 0 },
+  // The venue set its own minimum and left the response time to Duncit — and
+  // names the business it hopes for, stored in an order other than the pickers'.
+  offers: {
+    min_guests: 10,
+    response_hours: 0,
+    min_business: [
+      { model: 'PER_HOUR', amount: 400 },
+      { model: 'PER_GUEST', amount: 200 },
+    ],
+  },
   ...over,
 });
 
@@ -146,6 +154,8 @@ export const makeVenue = (over: Partial<AdminVenueDetail> = {}): AdminVenueDetai
  * what `MockedProvider` (default `addTypename`) needs to write it to the cache. */
 export const venuePayload = (venue: AdminVenueDetail) => {
   const { settings } = venue;
+  // The server always answers the list (empty when the venue named none).
+  const offers = { min_guests: 0, response_hours: 0, ...settings.offers };
   return {
     ...venue,
     __typename: 'Venue',
@@ -171,7 +181,11 @@ export const venuePayload = (venue: AdminVenueDetail) => {
         tiers: settings.cancellation.tiers.map((tier) => ({ ...tier, __typename: 'VenueCancellationTier' })),
         refund_tiers: settings.cancellation.refund_tiers.map((tier) => ({ ...tier, __typename: 'VenueRefundTier' })),
       },
-      offers: { min_guests: 0, response_hours: 0, ...settings.offers, __typename: 'VenueOfferSettings' },
+      offers: {
+        ...offers,
+        __typename: 'VenueOfferSettings',
+        min_business: (offers.min_business ?? []).map((row) => ({ ...row, __typename: 'VenueMinBusiness' })),
+      },
     },
     documents: venue.documents?.map((doc) => ({ ...doc, __typename: 'VenueDocument' })) ?? null,
   };

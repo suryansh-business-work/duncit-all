@@ -74,7 +74,7 @@ export default function PostActions({
         sx={{ px: 1, mt: 0.5 }}
         inputRef={commentInput}
         slotProps={{
-          htmlInput: { 'aria-label': t('mweb.common.addAComment') },
+          htmlInput: { 'aria-label': t('mweb.common.addAComment'), 'data-testid': 'post-actions-comment-input' },
           input: {
             disableUnderline: true,
             endAdornment: (

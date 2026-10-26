@@ -33,6 +33,7 @@ export default function InvoiceBrandingForm({ value, onChange, emailError }: Rea
           </Typography>
           <Stack spacing={2}>
             <TextField
+              data-testid="invoice-business-name"
               label={t('finance.invoiceManagement.legalBusinessName')}
               value={value.business_name}
               onChange={set('business_name')}

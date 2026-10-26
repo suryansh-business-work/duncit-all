@@ -6,7 +6,10 @@ import { MemoryRouter, Route, Routes } from 'react-router';
 import { GraphQLError } from 'graphql';
 import ProductSettingsPage from './ProductSettingsPage';
 import { MY_PRODUCT_LISTINGS, UPDATE_PRODUCT_SETTINGS } from './queries';
-import { PRODUCT_ACCESS_MESSAGE, PRODUCT_LISTING_ACCESS } from './productAccess';
+import { PRODUCT_LISTING_ACCESS } from './productAccess';
+
+// The shipped English for partners.listProductsPage.ecommManagerRequired.
+const PRODUCT_ACCESS_MESSAGE = 'You must be an Ecomm Manager to add products.';
 
 afterEach(cleanup);
 

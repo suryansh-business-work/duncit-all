@@ -142,6 +142,7 @@ export default function FormFieldsCard() {
                   <Switch
                     checked={allowMedia}
                     onChange={(event) => setAllowMedia(event.target.checked)}
+                    data-testid="problem-settings-allow-screenshots"
                   />
                 }
                 label={t('support.problemSettings.allowScreenshots')}
@@ -153,6 +154,7 @@ export default function FormFieldsCard() {
                 value={maxMedia}
                 disabled={!allowMedia}
                 onChange={(event) => setMaxMedia(Number(event.target.value) || 1)}
+                slotProps={{ htmlInput: { 'data-testid': 'problem-settings-max-screenshots' } }}
                 sx={{ maxWidth: 200 }}
               />
             </Stack>
@@ -163,6 +165,7 @@ export default function FormFieldsCard() {
               variant="contained"
               onClick={submit}
               disabled={loading || saveState.loading || categories.length === 0}
+              data-testid="problem-settings-save"
               sx={{ alignSelf: 'flex-start', fontWeight: 700 }}
             >
               {saveState.loading ? t('shell.common.saving') : t('shell.common.save')}

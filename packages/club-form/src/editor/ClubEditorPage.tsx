@@ -77,7 +77,7 @@ export default function ClubEditorPage({
                 }}>
                 {eyebrow}
               </Typography>
-              <Typography variant="h6" component="h1" sx={{
+              <Typography variant="h6" component="h1" data-testid="club-editor-heading" sx={{
                 fontWeight: 950
               }}>
                 {heading ?? defaultHeading}
@@ -87,7 +87,7 @@ export default function ClubEditorPage({
               alignItems: "center"
             }}>
               {titleExtras}
-              <DuncitButton startIcon={<ArrowBackIcon />} onClick={onBack}>
+              <DuncitButton startIcon={<ArrowBackIcon />} onClick={onBack} data-testid="club-editor-back">
                 {backLabel}
               </DuncitButton>
             </Stack>

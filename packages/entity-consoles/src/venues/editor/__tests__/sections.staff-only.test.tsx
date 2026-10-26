@@ -29,14 +29,29 @@ describe('the staff-only sections', () => {
   it('anchors Cancellations and Status and money for the section strip', () => {
     renderForm<VenueFormValues>(venueValues(), ({ control }) => (
       <>
-        <CancellationSection control={control} />
+        <CancellationSection control={control} canGovern />
         <StatusSection control={control} canGovern />
       </>
     ));
 
-    expect(within(sectionCard('cancellation', 'Cancellations')).getByText('Duncit auto-cancellation')).toBeInTheDocument();
+    const cancellation = within(sectionCard('cancellation', 'Cancellations'));
+    expect(cancellation.getByText('Duncit auto-cancellation')).toBeInTheDocument();
+    expect(cancellation.getByRole('spinbutton', { name: /Auto-cancel within/ })).toBeEnabled();
+    expect(cancellation.getByRole('button', { name: 'Add a refund band' })).toBeEnabled();
     expect(
       within(sectionCard('status', 'Status and money')).getByRole('spinbutton', { name: /Venue share %/ }),
     ).toBeEnabled();
+  });
+
+  it("leaves Duncit's auto-cancel terms read-only for a console editor, and the venue's charge bands editable", () => {
+    renderForm<VenueFormValues>(venueValues(), ({ control }) => (
+      <CancellationSection control={control} canGovern={false} />
+    ));
+    const cancellation = within(sectionCard('cancellation', 'Cancellations'));
+
+    expect(cancellation.getByRole('spinbutton', { name: /Auto-cancel within/ })).toBeDisabled();
+    expect(cancellation.getByRole('button', { name: 'Add a refund band' })).toBeDisabled();
+    expect(cancellation.getByText(/set by platform admins and the onboarding desk/)).toBeInTheDocument();
+    expect(cancellation.getByRole('button', { name: 'Add a charge band' })).toBeEnabled();
   });
 });

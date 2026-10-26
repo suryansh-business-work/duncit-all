@@ -251,6 +251,7 @@ export const POD_FORM_BUNDLE: NestedCatalogue = {
       memberPreview: 'Member preview',
       onThePodPage: 'On the pod page',
       price: 'Price',
+      free: 'Free',
       spots: 'Spots',
       // The multi-ticket offer as the pod page will list it, one line per tier.
       ticketDiscount: 'Multi-ticket offer',

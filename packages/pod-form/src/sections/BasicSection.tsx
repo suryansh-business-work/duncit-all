@@ -21,6 +21,7 @@ function TitleField() {
       label={t('podForm.basicSection.podTitle')}
       required
       hint="A URL-friendly slug is auto-generated from this title"
+      slotProps={{ htmlInput: { 'data-testid': 'pod-form-title' } }}
     />
   );
 }

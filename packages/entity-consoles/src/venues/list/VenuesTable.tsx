@@ -8,6 +8,7 @@ import {
   type TableFilterValue,
 } from '@duncit/table';
 import { STATUS_OPTIONS, type VenueRow } from './queries';
+import useUrlColumnFilters from '../../shared/useUrlColumnFilters';
 import { formatDate } from '@duncit/app-settings';
 import { useTranslation } from '@duncit/shell';
 import { venueCategoryPaths } from '@duncit/utils';
@@ -104,11 +105,14 @@ export default function VenuesTable({
 
   // Pinned page filter rather than a column one: it belongs to the header, so
   // it never shows as a removable chip and a change resets to page 1.
-  const externalFilters = useMemo<TableFilterValue[]>(
-    () =>
-      superCategoryId ? [{ field: 'super_category_id', op: 'eq', value: superCategoryId }] : [],
-    [superCategoryId],
-  );
+  // The URL's `?status=` / `?is_active=` (a dashboard tile's link) is pinned the same way.
+  const urlFilters = useUrlColumnFilters(columns);
+  const externalFilters = useMemo<TableFilterValue[]>(() => {
+    const category: TableFilterValue[] = superCategoryId
+      ? [{ field: 'super_category_id', op: 'eq', value: superCategoryId }]
+      : [];
+    return [...category, ...urlFilters];
+  }, [superCategoryId, urlFilters]);
 
   return (
     <DuncitTable<VenueRow>

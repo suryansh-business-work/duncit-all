@@ -90,7 +90,7 @@ export default function BadgesPage() {
         <Typography variant="h5" component="h1" sx={{ fontWeight: 700 }}>
           {t('admin.badgesPage.title')}
         </Typography>
-        <DuncitButton variant="contained" startIcon={<AddIcon />} onClick={startCreate}>
+        <DuncitButton variant="contained" startIcon={<AddIcon />} onClick={startCreate} data-testid="badges-new">
           {t('admin.badgesPage.newBadge')}
         </DuncitButton>
       </Stack>

@@ -98,7 +98,7 @@ export function AgentLauncher() {
               <RestartAltIcon fontSize="small" />
             </DuncitIconButton>
           </Tooltip>
-          <DuncitIconButton size="small" onClick={close} aria-label={t('shell.agent.close')}>
+          <DuncitIconButton size="small" onClick={close} aria-label={t('shell.agent.close')} data-testid="shell-agent-close">
             <CloseIcon fontSize="small" />
           </DuncitIconButton>
         </Stack>

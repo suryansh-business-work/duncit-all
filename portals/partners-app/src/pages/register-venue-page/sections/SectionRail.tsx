@@ -70,6 +70,7 @@ export default function SectionRail({ active, sectionState, onSelect, mode }: Re
     <>
       <Box
         component="nav"
+        data-testid="register-venue-section-rail"
         aria-label={t('partners.registerVenuePage.registrationSections')}
         sx={{
           width: RAIL_WIDTH,
@@ -92,6 +93,7 @@ export default function SectionRail({ active, sectionState, onSelect, mode }: Re
               selected={active === section.key}
               onClick={() => onSelect(section.key)}
               aria-current={active === section.key ? 'true' : undefined}
+              data-testid={`register-venue-section-${section.key}`}
               sx={{ borderRadius: 1.5, mb: 0.5, alignItems: 'flex-start' }}
             >
               <ListItemIcon sx={{ minWidth: 34, mt: 0.4 }}>{SECTION_ICONS[section.key]}</ListItemIcon>
@@ -114,6 +116,7 @@ export default function SectionRail({ active, sectionState, onSelect, mode }: Re
           items={sections.map((section) => ({
             value: section.key,
             label: sectionLabel(section, t),
+            testId: `register-venue-section-tab-${section.key}`,
             sx: { fontWeight: 800 },
           }))}
           value={active}

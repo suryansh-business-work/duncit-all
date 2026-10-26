@@ -4,6 +4,7 @@ import type { TableQueryInput } from '@utils/table-query';
 import { podChangeRequestService } from './podChangeRequest.service';
 import type { PodChangeVenueWindow } from './podChangeRequest.assign';
 import type { PodChangeRole } from './podChangeRequest.model';
+import { consoleReaders } from '@modules/portals/console-access';
 
 /**
  * Who may work the queue. The same trio that reviews pods elsewhere —
@@ -11,6 +12,9 @@ import type { PodChangeRole } from './podChangeRequest.model';
  * to a read-only support role.
  */
 const ADMIN_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN'];
+
+/** Only the queue itself reads for the Pods console role; working it does not. */
+const QUEUE_READ = consoleReaders('POD');
 
 /**
  * Every partner-facing field is `requireAuth` only, and the SERVICE decides
@@ -27,7 +31,7 @@ export const podChangeRequestResolvers = {
       args: { role: PodChangeRole; query?: TableQueryInput | null },
       ctx: GraphQLContext
     ) => {
-      requireRole(ctx, ADMIN_ROLES);
+      requireRole(ctx, QUEUE_READ);
       return podChangeRequestService.adminTable(args.role, args.query);
     },
     podChangeRequest: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {

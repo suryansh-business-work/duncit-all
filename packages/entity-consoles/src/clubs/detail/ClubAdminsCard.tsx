@@ -43,7 +43,12 @@ function AdminRow({ admin, to }: Readonly<{ admin: ClubActor; to?: string }>) {
   if (to) {
     return (
       <ListItem disablePadding>
-        <ListItemButton component={RouterLink} to={to} sx={{ borderRadius: 2, px: 1 }}>
+        <ListItemButton
+          component={RouterLink}
+          to={to}
+          sx={{ borderRadius: 2, px: 1 }}
+          data-testid={`club-admin-link-${admin.id}`}
+        >
           <AdminIdentity admin={admin} />
         </ListItemButton>
       </ListItem>
@@ -60,7 +65,7 @@ function AdminRow({ admin, to }: Readonly<{ admin: ClubActor; to?: string }>) {
 export default function ClubAdminsCard({ admins, adminPath }: Readonly<Props>) {
   const { t } = useTranslation();
   return (
-    <Card>
+    <Card data-testid="club-admins-card">
       <CardContent>
         <Stack
           direction="row"

@@ -77,6 +77,7 @@ export function BotList({ onOpen }: Readonly<Props>) {
         {bots.map(({ bot, copy }) => (
           <ListItemButton
             key={bot.key}
+            data-testid={`ask-bot-row-${bot.key}`}
             disabled={!bot.is_available}
             onClick={() => onOpen(bot.key)}
             alignItems="flex-start"

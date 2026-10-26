@@ -61,7 +61,7 @@ export default function OptionsEditor({ options, onChange }: Readonly<Props>) {
               value={opt}
               onChange={(e) => set(i, e.target.value)}
               slotProps={{
-                htmlInput: { 'aria-label': `Option ${i + 1}` }
+                htmlInput: { 'aria-label': `Option ${i + 1}`, 'data-testid': `survey-option-${i}` }
               }}
             />
             {/* The Tooltip names its <span>, not the button inside it — so the button carries its own name. */}
@@ -71,7 +71,7 @@ export default function OptionsEditor({ options, onChange }: Readonly<Props>) {
           </Stack>
         );
       })}
-      <DuncitButton size="small" startIcon={<AddIcon />} onClick={add} sx={{ alignSelf: 'flex-start' }}>{t('onboarding.surveys.addOption')}</DuncitButton>
+      <DuncitButton size="small" startIcon={<AddIcon />} onClick={add} sx={{ alignSelf: 'flex-start' }} data-testid="survey-option-add">{t('onboarding.surveys.addOption')}</DuncitButton>
     </Stack>
   );
 }

@@ -16,10 +16,14 @@ import { sectionAnchor } from './venue-editor-sections';
  * loss-making pod at this venue may still be auto-cancelled, and what its
  * attendees get back. They sit in one section because they are one conversation
  * with the venue, and they are labelled apart because they pay opposite ways.
+ *
+ * Without `canGovern` (a console editor) Duncit's half is read-only: only
+ * Onboarding / Finance may move it, and the server refuses anyone else.
  */
 export default function CancellationSection({
   control,
-}: Readonly<{ control: Control<VenueFormValues> }>) {
+  canGovern,
+}: Readonly<{ control: Control<VenueFormValues>; canGovern: boolean }>) {
   const { t } = useTranslation();
 
   return (
@@ -49,6 +53,11 @@ export default function CancellationSection({
         <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
           {t('directory.venueEditor.autoCancel')}
         </Typography>
+        {!canGovern && (
+          <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+            {t('directory.venueEditor.governedBy')}
+          </Typography>
+        )}
         <Grid container spacing={1.5}>
           <Grid size={{ xs: 12, md: 4 }}>
             <RhfTextField
@@ -57,11 +66,13 @@ export default function CancellationSection({
               label={t('directory.venueEditor.triggerHours')}
               size="small"
               type="number"
+              disabled={!canGovern}
               hint={t('directory.venueEditor.triggerHoursHint')}
+              data-testid="venue-editor-trigger-hours"
             />
           </Grid>
         </Grid>
-        <RefundTiersField control={control} />
+        <RefundTiersField control={control} disabled={!canGovern} />
       </Stack>
     </SectionCard>
   );

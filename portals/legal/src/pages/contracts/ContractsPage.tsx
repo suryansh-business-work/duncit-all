@@ -132,7 +132,7 @@ export default function ContractsPage() {
         onArchive={setArchiveTarget}
         onSign={setSignTarget}
         toolbarActions={
-          <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={openNew}>
+          <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={openNew} data-testid="contract-new">
             {t('legal.contracts.add')}
           </DuncitButton>
         }

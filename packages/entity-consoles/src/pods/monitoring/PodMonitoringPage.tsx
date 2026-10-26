@@ -36,7 +36,7 @@ export default function PodMonitoringPage() {
         <Box>
           <Typography variant="h5" component="h1" sx={{
             fontWeight: 700
-          }}>{t('admin.podMonitoring.title')}</Typography>
+          }} data-testid="pod-monitoring-title">{t('admin.podMonitoring.title')}</Typography>
           <Typography variant="body2" sx={{
             color: "text.secondary"
           }}>

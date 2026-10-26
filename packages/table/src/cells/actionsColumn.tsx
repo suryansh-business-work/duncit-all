@@ -28,10 +28,12 @@ interface RowActionButtonProps<T> {
   color?: ActionColor;
   config?: RowActionOptions<T>;
   onClick: (row: T) => void;
+  /** `row-action-edit` / `row-action-delete` — found inside the row's own test id. */
+  testId: string;
 }
 
 function RowActionButton<T>(props: Readonly<RowActionButtonProps<T>>): JSX.Element {
-  const { row, fallbackTitleKey, icon, color, config, onClick } = props;
+  const { row, fallbackTitleKey, icon, color, config, onClick, testId } = props;
   const { t } = useTranslation();
   const disabled = config?.disabled?.(row) ?? false;
   const baseTitle = resolveLabel(config?.title, row, t(fallbackTitleKey));
@@ -49,6 +51,7 @@ function RowActionButton<T>(props: Readonly<RowActionButtonProps<T>>): JSX.Eleme
           disabled={disabled}
           onClick={() => onClick(row)}
           aria-label={resolveLabel(config?.ariaLabel, row, title)}
+          data-testid={testId}
         >
           {config?.icon ?? icon}
         </DuncitIconButton>
@@ -97,6 +100,7 @@ export function actionsColumn<T>(options: ActionsColumnOptions<T>): DuncitColumn
           <RowActionButton
             row={row}
             fallbackTitleKey="shell.common.edit"
+            testId="row-action-edit"
             icon={<EditIcon fontSize="small" />}
             config={edit}
             onClick={onEdit}
@@ -106,6 +110,7 @@ export function actionsColumn<T>(options: ActionsColumnOptions<T>): DuncitColumn
           <RowActionButton
             row={row}
             fallbackTitleKey="shell.common.delete"
+            testId="row-action-delete"
             icon={<DeleteIcon fontSize="small" />}
             color="error"
             config={deleteConfig}

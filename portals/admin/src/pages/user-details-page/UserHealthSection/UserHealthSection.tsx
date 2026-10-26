@@ -42,7 +42,7 @@ export default function UserHealthSection({ userId }: Readonly<Props>) {
         </Stack>
       )}
 
-      {error && <Alert severity="error">{error.message}</Alert>}
+      {error && <Alert severity="error" data-testid="admin-user-health-error">{error.message}</Alert>}
 
       {score && <HealthScoreCard score={score} onUpdated={setOverride} />}
     </Stack>

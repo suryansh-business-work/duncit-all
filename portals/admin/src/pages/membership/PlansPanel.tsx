@@ -80,6 +80,7 @@ export default function PlansPanel({ onChanged }: Readonly<{ onChanged: () => vo
             size="small"
             variant="contained"
             startIcon={<AddIcon />}
+            data-testid="membership-plan-new"
             onClick={() => {
               setEditing(null);
               setOpen(true);

@@ -5,7 +5,7 @@ import { supportChatService } from './supportChat.service';
 import type { TranscriptFormat } from '@modules/support/transcript';
 import { listMyUnifiedSupportTickets } from './unifiedTickets.service';
 import { userService } from '@modules/access/user/user.service';
-import { registerSchema } from '@modules/access/auth/auth.validator';
+import { supportCreateUserSchema } from '@modules/access/auth/auth.validator';
 import { validate } from '@utils/validate';
 
 const SUPPORT_ROLES = ['SUPER_ADMIN', 'SUPPORT_MANAGER', 'SUPPORT_USER'];
@@ -141,10 +141,10 @@ export const supportChatResolvers = {
       return supportChatService.claim(args.session_id, user.id);
     },
     supportCreateUser: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
-      requireRole(ctx, SUPPORT_ROLES);
-      // Reuses the public signup path (validation, USER role, welcome email);
-      // the agent never receives the session token — only the created profile.
-      const data = await validate(registerSchema, {
+      const agent = requireRole(ctx, SUPPORT_ROLES);
+      // Its own rules, not the public signup's: the dialog has no WhatsApp code
+      // or birthday to give. The agent gets the created profile, never a session.
+      const data = await validate(supportCreateUserSchema, {
         first_name: args.input.first_name,
         last_name: args.input.last_name || undefined,
         email: args.input.email,
@@ -152,8 +152,7 @@ export const supportChatResolvers = {
         phone_extension: args.input.phone_extension || undefined,
         password: args.input.password,
       });
-      const payload = await userService.register(data);
-      return (payload as any).user;
+      return userService.createForSupport(data, agent.id);
     },
   },
 };

@@ -53,12 +53,12 @@ export default function NewTicketDialog({ open, onClose, onCreated }: Readonly<P
   };
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm" data-testid="ticket-new-dialog">
       <DialogTitle>{t('support.tickets.create')}</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 0.5 }}>
           {/* eslint-disable-next-line jsx-a11y/no-autofocus -- focus moves into the dialog the user just opened (WCAG 2.4.3) */}
-          <TextField label={t('support.tickets.subject')} value={subject} onChange={(e) => setSubject(e.target.value)} fullWidth autoFocus required />
+          <TextField label={t('support.tickets.subject')} value={subject} onChange={(e) => setSubject(e.target.value)} fullWidth autoFocus required slotProps={{ htmlInput: { 'data-testid': 'ticket-new-subject' } }} />
           <TextField
             select
             label={t('support.tickets.category')}
@@ -91,7 +91,7 @@ export default function NewTicketDialog({ open, onClose, onCreated }: Readonly<P
       </DialogContent>
       <DialogActions>
         <DuncitButton onClick={onClose}>{t('shell.common.cancel')}</DuncitButton>
-        <DuncitButton variant="contained" disabled={creating || !subject.trim() || !htmlToText(bodyHtml)} onClick={submit}>
+        <DuncitButton variant="contained" disabled={creating || !subject.trim() || !htmlToText(bodyHtml)} onClick={submit} data-testid="ticket-new-create">
           Create
         </DuncitButton>
       </DialogActions>

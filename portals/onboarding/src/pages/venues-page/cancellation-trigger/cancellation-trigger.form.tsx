@@ -97,6 +97,7 @@ export default function CancellationTriggerForm({
             <TextField
               {...field}
               label={t('onboarding.venues.triggerHours')}
+              data-testid="cancellation-trigger-hours"
               type="number"
               size="small"
               fullWidth
@@ -149,10 +150,10 @@ export default function CancellationTriggerForm({
         ))}
 
         <Stack direction="row" spacing={1.5}>
-          <DuncitButton size="small" startIcon={<AddIcon />} onClick={() => append(emptyRefundTier)}>
+          <DuncitButton size="small" startIcon={<AddIcon />} onClick={() => append(emptyRefundTier)} data-testid="cancellation-trigger-add-band">
             {t('onboarding.venues.addRefundBand')}
           </DuncitButton>
-          <DuncitButton variant="outlined" size="small" onClick={submit} loading={saving}>
+          <DuncitButton variant="outlined" size="small" onClick={submit} loading={saving} data-testid="cancellation-trigger-save">
             {t('onboarding.venues.saveCancellationTrigger')}
           </DuncitButton>
         </Stack>

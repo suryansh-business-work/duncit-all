@@ -32,10 +32,10 @@ export default function PodAuditDetailDialog({ log, onClose }: Readonly<Props>) 
   const { t } = useTranslation();
   const emptyValue = t('clubAdmin.monitoring.emptyValue');
   return (
-    <Dialog open={!!log} onClose={onClose} fullWidth maxWidth="sm">
+    <Dialog open={!!log} onClose={onClose} fullWidth maxWidth="sm" data-testid="pod-audit-dialog">
       {log && (
         <>
-          <DialogTitle sx={{ fontWeight: 900 }}>
+          <DialogTitle sx={{ fontWeight: 900 }} data-testid="pod-audit-dialog-title">
             {podAuditActionLabel(log.action, t)} — {log.pod_title || log.pod_id}
           </DialogTitle>
           <DialogContent dividers>
@@ -97,7 +97,7 @@ export default function PodAuditDetailDialog({ log, onClose }: Readonly<Props>) 
             </Stack>
           </DialogContent>
           <DialogActions>
-            <DuncitButton onClick={onClose}>{t('shell.common.close')}</DuncitButton>
+            <DuncitButton onClick={onClose} data-testid="pod-audit-dialog-close">{t('shell.common.close')}</DuncitButton>
           </DialogActions>
         </>
       )}

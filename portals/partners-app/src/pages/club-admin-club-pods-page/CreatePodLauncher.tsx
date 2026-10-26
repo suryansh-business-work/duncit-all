@@ -50,7 +50,7 @@ export default function CreatePodLauncher({ clubId, onNormal }: Readonly<Props>)
 
   return (
     <>
-      <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={start}>
+      <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={start} data-testid="club-pods-new-pod">
         {podKindLabels.newPodCta}
       </DuncitButton>
 

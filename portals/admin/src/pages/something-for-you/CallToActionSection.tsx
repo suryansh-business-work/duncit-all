@@ -72,9 +72,9 @@ export default function CallToActionSection({ form, setForm }: Readonly<Props>) 
         value={form.action_type}
         onChange={(_event, value: SomethingForYouAction | null) => chooseAction(value)}
       >
-        <ToggleButton value="NONE">{t('admin.somethingForYou.ctaNothing')}</ToggleButton>
-        <ToggleButton value="ROUTE">{t('admin.somethingForYou.ctaScreen')}</ToggleButton>
-        <ToggleButton value="URL">{t('admin.somethingForYou.ctaLink')}</ToggleButton>
+        <ToggleButton value="NONE" data-testid="sfy-form-cta-NONE">{t('admin.somethingForYou.ctaNothing')}</ToggleButton>
+        <ToggleButton value="ROUTE" data-testid="sfy-form-cta-ROUTE">{t('admin.somethingForYou.ctaScreen')}</ToggleButton>
+        <ToggleButton value="URL" data-testid="sfy-form-cta-URL">{t('admin.somethingForYou.ctaLink')}</ToggleButton>
       </ToggleButtonGroup>
 
       {form.action_type === 'NONE' && (
@@ -110,6 +110,7 @@ export default function CallToActionSection({ form, setForm }: Readonly<Props>) 
               {...params}
               label={t('admin.somethingForYou.ctaScreenHint')}
               helperText={t('admin.somethingForYou.screenSearchHint')}
+              data-testid="sfy-form-route"
             />
           )}
         />
@@ -122,6 +123,7 @@ export default function CallToActionSection({ form, setForm }: Readonly<Props>) 
           onChange={(event) => setForm({ ...form, link_url: event.target.value })}
           fullWidth
           placeholder="https://duncit.com/…"
+          data-testid="sfy-form-url"
           helperText={t('admin.somethingForYou.linkHint')}
         />
       )}

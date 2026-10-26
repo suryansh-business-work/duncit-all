@@ -15,7 +15,7 @@ interface Props {
 export default function BadgeCard({ badge, onEdit, onRemove }: Readonly<Props>) {
   const { t } = useTranslation();
   return (
-    <Card variant="outlined">
+    <Card variant="outlined" data-testid="badge-card">
       <CardContent>
         <Stack direction="row" spacing={2} sx={{
           alignItems: "flex-start"
@@ -47,14 +47,15 @@ export default function BadgeCard({ badge, onEdit, onRemove }: Readonly<Props>) 
               }}>
                 {badge.title}
               </Typography>
-              {!badge.is_active && <Chip size="small" label={t('admin.profile.inactive')} />}
+              {!badge.is_active && <Chip size="small" label={t('admin.profile.inactive')} data-testid="badge-card-inactive" />}
             </Stack>
             <Typography
               variant="caption"
               sx={{
                 color: "text.secondary",
                 display: 'block'
-              }}>
+              }}
+              data-testid="badge-card-condition">
               {t(CONDITION_LABEL_KEY[badge.condition_type as BadgeCondition])} ≥ {badge.threshold}
             </Typography>
             <Typography

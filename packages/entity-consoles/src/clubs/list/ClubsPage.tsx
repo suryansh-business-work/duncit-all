@@ -82,6 +82,7 @@ export default function ClubsPage() {
             variant="contained"
             startIcon={<AddIcon />}
             onClick={() => navigate('/clubs/new')}
+            data-testid="clubs-new"
           >
             New Club
           </DuncitButton>

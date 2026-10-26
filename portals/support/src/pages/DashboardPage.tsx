@@ -42,6 +42,7 @@ function SupportStatCard({ label, count, icon, color, to }: Readonly<SupportStat
       valueVariant="h4"
       valueSx={{ lineHeight: 1 }}
       sx={{ height: '100%' }}
+      testId={`support-stat-${to.replaceAll('/', '-').slice(1)}`}
     />
   );
 }

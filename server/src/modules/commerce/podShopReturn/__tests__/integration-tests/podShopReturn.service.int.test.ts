@@ -9,6 +9,7 @@ jest.mock('@modules/commerce/productOrder/productOrder.refund', () => ({
 jest.mock('../../podShopReturn.pickup', () => ({ bookPodShopReturnPickup: jest.fn().mockResolvedValue(undefined) }));
 
 import { Types } from 'mongoose';
+import { logs } from '@observability/log';
 import { notifyReturnUpdate } from '@modules/commerce/productOrder/productOrder.notify';
 import { issueRefund, retryRefund } from '@modules/commerce/productOrder/productOrder.refund';
 import { ProductOrderModel } from '@modules/commerce/productOrder/productOrder.model';
@@ -284,6 +285,62 @@ describe('decide', () => {
     const pub = await svc.reject(staff, String(ret._id), ' Used item ');
     expect(pub).toMatchObject({ status: 'REJECTED', decision_note: 'Used item' });
     await expect(svc.reject(staff, String(ret._id), 'again')).rejects.toThrow('Only a requested return can be rejected');
+  });
+
+  it('lets only one of two simultaneous approvals through, so the courier is booked once', async () => {
+    const ret = await seedReturn();
+
+    const results = await Promise.allSettled([
+      svc.approve(staff, String(ret._id), 'First'),
+      svc.approve(staff, String(ret._id), 'Second'),
+    ]);
+
+    const won = results.filter((r) => r.status === 'fulfilled');
+    const lost = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected');
+    expect(won).toHaveLength(1);
+    expect(lost).toHaveLength(1);
+    expect(lost[0].reason).toMatchObject({ message: 'Only a requested return can be approved', extensions: { code: 'BAD_REQUEST' } });
+    expect(mockPickup).toHaveBeenCalledTimes(1);
+    const saved = await PodShopReturnModel.findById(ret._id);
+    expect(saved?.status).toBe('APPROVED');
+    expect(saved?.events.filter((e) => e.status === 'APPROVED')).toHaveLength(1);
+  });
+
+  it('never lets an approval and a rejection both land on the same return', async () => {
+    const ret = await seedReturn();
+
+    const results = await Promise.allSettled([
+      svc.approve(staff, String(ret._id), 'Fine'),
+      svc.reject(staff, String(ret._id), 'Used item'),
+    ]);
+
+    expect(results.filter((r) => r.status === 'fulfilled')).toHaveLength(1);
+    const saved = await PodShopReturnModel.findById(ret._id);
+    const decisions = saved?.events.filter((e) => e.status === 'APPROVED' || e.status === 'REJECTED') ?? [];
+    expect(decisions).toHaveLength(1);
+    expect(saved?.status).toBe(decisions[0].status);
+    expect(mockPickup).toHaveBeenCalledTimes(saved?.status === 'APPROVED' ? 1 : 0);
+  });
+
+  it('keeps the approval when booking the pickup throws, records why and lets it be retried', async () => {
+    const ret = await seedReturn();
+    mockPickup.mockRejectedValueOnce(new Error('ShipRocket account unreadable'));
+
+    const pub = await svc.approve(staff, String(ret._id), 'Ok');
+
+    expect(pub.status).toBe('APPROVED');
+    expect(pub.pickup).toMatchObject({ status: 'FAILED', last_error: 'ShipRocket account unreadable' });
+    const saved = await PodShopReturnModel.findById(ret._id);
+    expect(saved?.status).toBe('APPROVED');
+    expect(saved?.pickup).toMatchObject({ status: 'FAILED', last_error: 'ShipRocket account unreadable' });
+    expect(logs.server.warn).toHaveBeenCalledWith('podShopReturn', 'pickup', {
+      return_no: ret.return_no,
+      msg: 'ShipRocket account unreadable',
+    });
+    expect(mockNotify.mock.calls.at(-1)?.[1]).toMatchObject({ status: 'APPROVED' });
+
+    await svc.retryPickup(staff, String(ret._id));
+    expect(mockPickup).toHaveBeenCalledTimes(2);
   });
 });
 

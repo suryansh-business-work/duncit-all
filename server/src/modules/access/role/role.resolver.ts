@@ -1,8 +1,7 @@
 import { userService } from '@modules/access/user/user.service';
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
-
-const ROLE_ASSIGN_ROLES = ['SUPER_ADMIN'];
+import { ROLE_ASSIGNERS as ROLE_ASSIGN_ROLES } from '@modules/access/user/user.constants';
 
 export const userRoleResolvers = {
   Mutation: {

@@ -88,7 +88,14 @@ export default function BasicSection() {
 
   return (
     <Stack spacing={2}>
-      <RhfTextField control={control} name="club_name" label={t('clubForm.basicSection.clubName')} required hint={slugHint} />
+      <RhfTextField
+        control={control}
+        name="club_name"
+        label={t('clubForm.basicSection.clubName')}
+        required
+        hint={slugHint}
+        data-testid="club-form-name"
+      />
       <RhfTextField
         control={control}
         name="club_description"

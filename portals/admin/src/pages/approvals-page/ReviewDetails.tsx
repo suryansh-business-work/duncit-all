@@ -63,7 +63,7 @@ export default function ReviewDetails({ request, formatDateTime }: Readonly<Prop
       </Stack>
 
       {isReviewed && (
-        <Alert severity={request.status === 'APPROVED' ? 'success' : 'error'}>
+        <Alert severity={request.status === 'APPROVED' ? 'success' : 'error'} data-testid="approval-review-decision">
           <Typography variant="body2" sx={{
             fontWeight: 700
           }}>

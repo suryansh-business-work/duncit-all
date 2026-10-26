@@ -86,7 +86,7 @@ export default function ClubAdminReviewDialog({
   if (!active) return null;
 
   return (
-    <Dialog open onClose={onClose} maxWidth="md" fullWidth>
+    <Dialog open onClose={onClose} maxWidth="md" fullWidth data-testid="club-admin-review-dialog">
       <DialogTitle>
         <Stack direction="row" spacing={1.5} sx={{
           alignItems: "center"
@@ -168,13 +168,14 @@ export default function ClubAdminReviewDialog({
             minRows={2}
             fullWidth
             helperText={t('onboarding.clubAdmins.requiredToRejectOptionalWhenApproving')}
+            data-testid="club-admin-review-notes"
           />
         </Stack>
       </DialogContent>
 
       <DialogActions>
-        <DuncitButton onClick={onClose}>{t('shell.common.close')}</DuncitButton>
-        <DuncitButton color="error" disabled={!notes.trim()} onClick={onReject}>
+        <DuncitButton onClick={onClose} data-testid="club-admin-review-close">{t('shell.common.close')}</DuncitButton>
+        <DuncitButton color="error" disabled={!notes.trim()} onClick={onReject} data-testid="club-admin-review-reject">
           Reject
         </DuncitButton>
         <DuncitButton variant="contained" onClick={onApprove}>

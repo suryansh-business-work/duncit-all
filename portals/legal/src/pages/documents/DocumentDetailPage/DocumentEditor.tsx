@@ -33,6 +33,7 @@ export function DocumentEditor(props: Readonly<Props>) {
         <DocumentTypeSelect value={props.docType} onChange={props.onDocTypeChange} required />
         <TextField
           label={t('shell.common.description')}
+          slotProps={{ htmlInput: { 'data-testid': 'document-editor-description' } }}
           value={props.description}
           onChange={(event) => props.onDescriptionChange(event.target.value)}
           fullWidth
@@ -60,6 +61,7 @@ export function DocumentEditor(props: Readonly<Props>) {
             variant="contained"
             disabled={props.saving || !props.name.trim() || !props.docType.trim()}
             onClick={props.onSave}
+            data-testid="document-editor-save"
           >
             Save
           </DuncitButton>

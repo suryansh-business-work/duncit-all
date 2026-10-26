@@ -1,5 +1,5 @@
 import type { GraphQLContext } from '@context';
-import { LOGS_READER, requireRole } from '@middleware/rbac';
+import { LOGS_READER, readScope, requireRole } from '@middleware/rbac';
 import { callerEnvironment } from '@modules/ai/askBot/askBot.links';
 import { LocationModel } from '@modules/platform/location/location.model';
 import { entityAnalyticsService } from './entityAnalytics.service';
@@ -40,8 +40,11 @@ export const entityAnalyticsResolvers = {
     ) => {
       requireRole(ctx, entityReaders(args.entity));
       const { entity, ...period } = args;
+      // The Users page is also Admin's Users Dashboard, read by City and Zonal
+      // Admins: held to their own place, and refused without one (readScope).
+      const scope = entity === 'USERS' ? readScope(ctx) : null;
       // Links open the console the reader is actually using — local, staging or production.
-      return entityAnalyticsService.load(entity, period, callerEnvironment(ctx.req));
+      return entityAnalyticsService.load(entity, period, callerEnvironment(ctx.req), scope);
     },
     /** The cities a page can be narrowed to — every live location, by name. */
     analyticsCities: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {

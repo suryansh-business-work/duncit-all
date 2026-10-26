@@ -79,7 +79,7 @@ export default function ChatSidebar({
   canSeeEditHistory,
 }: Readonly<Props>) {
   return (
-    <Box sx={PANEL_SX}>
+    <Box sx={PANEL_SX} data-testid="staff-chat-panel">
       <PanelHeader
         settings={settings}
         onSettings={onSettingChange}

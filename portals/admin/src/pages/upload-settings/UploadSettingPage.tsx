@@ -45,7 +45,7 @@ export default function UploadSettingPage({ surface, title, subtitle }: Readonly
   return (
     <Stack spacing={3}>
       <Box>
-        <Typography variant="h5" component="h1">{title}</Typography>
+        <Typography variant="h5" component="h1" data-testid="upload-settings-title">{title}</Typography>
         <Typography variant="body2" sx={{
           color: "text.secondary"
         }}>
@@ -53,7 +53,7 @@ export default function UploadSettingPage({ surface, title, subtitle }: Readonly
         </Typography>
       </Box>
       {error && <Alert severity="error">{error.message}</Alert>}
-      {opError && <Alert severity="error">{opError}</Alert>}
+      {opError && <Alert severity="error" data-testid="upload-settings-error">{opError}</Alert>}
       {settings ? (
         <Stack spacing={1.5}>
           <SizesFormatsAccordion settings={settings} saving={saveState.loading} onSave={onSave} />

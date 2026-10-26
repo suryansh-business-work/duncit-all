@@ -437,6 +437,13 @@ export const adsService = {
     const doc = await AdRequestModel.findById(id);
     if (!doc) fail('Ad request not found', 'NOT_FOUND');
     if (doc.status !== 'PENDING') fail('Only pending requests can be reviewed');
+    // SUPER_ADMIN both submits (ADS_SUBMIT) and reviews (MARKETING_REVIEW), so
+    // without this one person could approve — and price — their own ad. The
+    // refused attempt is logged for the same trail the approval itself leaves.
+    if (doc.submitted_by.toHexString() === reviewerId) {
+      logs.server.warn('ads', 'review', { msg: 'self-review refused', adRequestId: id, reviewerId, approve });
+      fail('You cannot review your own ad request. Another Marketing reviewer has to decide it', 'FORBIDDEN');
+    }
     const pricing = await getAdPricing();
     doc.status = approve ? 'APPROVED' : 'REJECTED';
     doc.marketing_remarks = remarks?.trim() || null;

@@ -4,10 +4,13 @@ import { podMemberService, type BackoutRefundPart } from './podMember.service';
 import { myBookingClashes } from './podMember.clash';
 import { podService } from '@modules/pods/pod/pod.service';
 import type { GraphQLContext } from '@context';
-import { hasRole, requireRole } from '@middleware/rbac';
+import { FINANCE_READER, hasRole, requireRole } from '@middleware/rbac';
 
-// Finance/admin roles that may view the Backout Refunds list.
+// Finance/admin roles that may process a backout refund (and view the list).
 const ADMIN_RW = ['SUPER_ADMIN', 'CITY_ADMIN', 'FINANCE_MANAGER'];
+// The Finance console's READS of the queue also answer the analyst seat, as
+// every other Finance read does; processing a refund stays with ADMIN_RW.
+const BACKOUT_READ = [...ADMIN_RW, FINANCE_READER];
 // Roles that may read a pod's attendee contact list (Admin + Finance portals).
 const ATTENDEE_ADMIN_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN', 'FINANCE_MANAGER'];
 
@@ -135,15 +138,15 @@ export const podMemberResolvers = {
       return podMemberService.getBookingForUser(args.booking_id, uid);
     },
     backoutRefundRequests: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
-      requireRole(ctx, ADMIN_RW);
+      requireRole(ctx, BACKOUT_READ);
       return podMemberService.listBackoutRefunds();
     },
     backoutRefundRequestsTable: async (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
-      requireRole(ctx, ADMIN_RW);
+      requireRole(ctx, BACKOUT_READ);
       return podMemberService.tableBackoutRefunds(args.query);
     },
     backoutRefundRequest: async (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
-      requireRole(ctx, ADMIN_RW);
+      requireRole(ctx, BACKOUT_READ);
       return podMemberService.getBackoutRefund(args.id);
     },
   },

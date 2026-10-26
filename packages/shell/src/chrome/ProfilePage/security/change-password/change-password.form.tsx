@@ -72,6 +72,7 @@ export function CurrentPasswordForm({ loading, onSubmit }: Readonly<PasswordStep
         <RhfTextField
           control={control}
           name="current_password"
+          data-testid="change-password-current"
           label={t('shell.profile.security.currentPassword')}
           autoComplete="current-password"
           required
@@ -106,6 +107,7 @@ export function NewPasswordForm({ loading, onSubmit }: Readonly<PasswordStepProp
         <RhfTextField
           control={control}
           name="otp"
+          data-testid="change-password-otp"
           label={t('shell.profile.security.otp')}
           autoComplete="one-time-code"
           required
@@ -115,6 +117,7 @@ export function NewPasswordForm({ loading, onSubmit }: Readonly<PasswordStepProp
         <RhfTextField
           control={control}
           name="new_password"
+          data-testid="change-password-new"
           label={t('shell.profile.security.newPassword')}
           hint={t('shell.profile.security.newPasswordHint')}
           autoComplete="new-password"
@@ -125,6 +128,7 @@ export function NewPasswordForm({ loading, onSubmit }: Readonly<PasswordStepProp
         <RhfTextField
           control={control}
           name="confirm_password"
+          data-testid="change-password-confirm"
           label={t('shell.profile.security.confirmPassword')}
           autoComplete="new-password"
           required

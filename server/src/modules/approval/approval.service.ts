@@ -1,4 +1,6 @@
 import { GraphQLError } from 'graphql';
+import { isObjectIdOrHexString, Types } from 'mongoose';
+import { ROLE_ASSIGNERS } from '@modules/access/user/user.constants';
 import { ApprovalRequestModel, type ApprovalStatus } from './approval.model';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { logs } from '@observability/log';
@@ -77,6 +79,90 @@ export interface EcommChangeInput {
 interface Reviewer {
   id?: string | null;
   name?: string | null;
+  /** The reviewer's roles — needed to approve a request that grants one. */
+  roles?: readonly string[];
+}
+
+type Decision = 'APPROVED' | 'DENIED';
+
+/** The fields of a request the decision rules read. */
+interface DecidedRequest {
+  _id: Types.ObjectId;
+  type: string;
+  requested_by?: string | null;
+  subject_user_id?: Types.ObjectId | null;
+  target_id?: string | null;
+}
+
+const alreadyReviewed = () =>
+  new GraphQLError('This request has already been reviewed', { extensions: { code: 'BAD_USER_INPUT' } });
+
+const forbidden = (message: string) => new GraphQLError(message, { extensions: { code: 'FORBIDDEN' } });
+
+/** The reviewer raised this request, or it is about them (a Portal Access request's member). */
+const isOwnRequest = (doc: DecidedRequest, reviewerId: string) =>
+  doc.requested_by === reviewerId || doc.subject_user_id?.toHexString() === reviewerId;
+
+/** The same rule as a filter, so a raced check can never let a requester write their own decision. */
+function notOwnFilter(reviewerId: string): Record<string, unknown> {
+  const filter: Record<string, unknown> = { requested_by: { $ne: reviewerId } };
+  if (isObjectIdOrHexString(reviewerId)) filter.subject_user_id = { $ne: new Types.ObjectId(reviewerId) };
+  return filter;
+}
+
+/** A refused decision is logged: it is exactly what an audit of this inbox wants to find. */
+function refuse(doc: DecidedRequest, reviewer: Reviewer, decision: Decision, msg: string, extra: Record<string, unknown> = {}) {
+  logs.server.warn('approval', 'decide', {
+    msg,
+    requestId: String(doc._id),
+    type: doc.type,
+    reviewerId: reviewer.id ?? null,
+    decision,
+    ...extra,
+  });
+}
+
+/**
+ * Who may decide this request. Nobody decides their own — a City Admin
+ * approving its own Portal Access request would hand itself that console's
+ * role. And approving a request that grants a role takes the authority that
+ * grants the role directly (ROLE_ASSIGNERS), so the inbox is never a way
+ * round the role mutations. Denying grants nothing, so it needs no more.
+ */
+async function assertMayDecide(doc: DecidedRequest, reviewer: Reviewer, decision: Decision) {
+  if (decision !== 'APPROVED') return; // Denying your own request grants nothing — it is a withdrawal.
+  if (reviewer.id && isOwnRequest(doc, reviewer.id)) {
+    refuse(doc, reviewer, decision, 'self-review refused');
+    throw forbidden('You cannot approve your own request. Another admin has to review it');
+  }
+  if (doc.type !== 'PORTAL_ACCESS') return;
+  const { portalAccessService } = await import('@modules/portals/portalAccess.service');
+  const role = portalAccessService.grantedRole(doc);
+  if (!role || (reviewer.roles ?? []).some((r) => ROLE_ASSIGNERS.includes(r))) return;
+  refuse(doc, reviewer, decision, 'role grant refused', { role });
+  throw forbidden(`Only a Super Admin can approve access that grants the ${role} role`);
+}
+
+/** Record the decision once: the status and the not-own rule are both in the update filter. */
+async function decide(id: string, reviewer: Reviewer, decision: Decision, notes?: string | null) {
+  const existing = await ApprovalRequestModel.findById(id);
+  if (!existing) throw notFound();
+  if (existing.status !== 'PENDING') throw alreadyReviewed();
+  await assertMayDecide(existing, reviewer, decision);
+  const doc = await ApprovalRequestModel.findOneAndUpdate(
+    { _id: existing._id, status: 'PENDING', ...(reviewer.id && decision === 'APPROVED' ? notOwnFilter(reviewer.id) : {}) },
+    {
+      $set: {
+        status: decision,
+        reviewed_by: reviewer.id ?? null,
+        reviewed_at: new Date(),
+        review_notes: notes ?? null,
+      },
+    },
+    { new: true }
+  );
+  if (!doc) throw alreadyReviewed();
+  return doc;
 }
 
 /** Apply an approved ecomm change-request's payload to its brand/product. The
@@ -266,16 +352,7 @@ export const approvalService = {
   },
 
   async approve(id: string, reviewer: Reviewer, notes?: string | null) {
-    const doc = await ApprovalRequestModel.findById(id);
-    if (!doc) throw notFound();
-    if (doc.status !== 'PENDING') {
-      throw new GraphQLError('This request has already been reviewed', { extensions: { code: 'BAD_USER_INPUT' } });
-    }
-    doc.status = 'APPROVED';
-    doc.reviewed_by = reviewer.id ?? null;
-    doc.reviewed_at = new Date();
-    doc.review_notes = notes ?? null;
-    await doc.save();
+    const doc = await decide(id, reviewer, 'APPROVED', notes);
     if (doc.type === 'ECOMM_BRAND_CHANGE' || doc.type === 'ECOMM_PRODUCT_CHANGE') {
       await applyEcommChange(doc);
     } else if (doc.type === 'PORTAL_ACCESS') {
@@ -289,16 +366,7 @@ export const approvalService = {
   },
 
   async deny(id: string, reviewer: Reviewer, notes?: string | null) {
-    const doc = await ApprovalRequestModel.findById(id);
-    if (!doc) throw notFound();
-    if (doc.status !== 'PENDING') {
-      throw new GraphQLError('This request has already been reviewed', { extensions: { code: 'BAD_USER_INPUT' } });
-    }
-    doc.status = 'DENIED';
-    doc.reviewed_by = reviewer.id ?? null;
-    doc.reviewed_at = new Date();
-    doc.review_notes = notes ?? null;
-    await doc.save();
+    const doc = await decide(id, reviewer, 'DENIED', notes);
     if (doc.type === 'WAREHOUSE_APPROVAL') {
       await applyWarehouseReview(doc, 'REJECTED');
     } else if (doc.type === 'PORTAL_ACCESS') {

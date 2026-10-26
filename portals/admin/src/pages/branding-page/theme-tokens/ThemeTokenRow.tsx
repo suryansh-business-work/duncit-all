@@ -53,7 +53,7 @@ export default function ThemeTokenRow({ row, local, values, onChange }: Readonly
   const { t } = useTranslation();
   const valid = isTokenValueValid(values[row.key]);
   return (
-    <TableRow>
+    <TableRow data-testid={`branding-token-row-${row.key}`}>
       <TableCell>
         <Typography variant="body2" sx={{ ...MONO, fontWeight: 700 }}>
           {row.key}

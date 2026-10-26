@@ -29,6 +29,7 @@ export default function LoginLegalLinks({ config, t, onOpenPortals }: Readonly<L
         }}>
         <Link
           href={config.privacyUrl ?? DEFAULT_PRIVACY}
+          data-testid="login-privacy-link"
           target="_blank"
           rel="noopener"
           underline="none"
@@ -40,6 +41,7 @@ export default function LoginLegalLinks({ config, t, onOpenPortals }: Readonly<L
         <Box aria-hidden sx={{ color: 'text.disabled' }}>·</Box>
         <Link
           href={config.termsUrl ?? DEFAULT_TERMS}
+          data-testid="login-terms-link"
           target="_blank"
           rel="noopener"
           underline="none"
@@ -49,7 +51,7 @@ export default function LoginLegalLinks({ config, t, onOpenPortals }: Readonly<L
           {t('session.login.termsOfUse')}
         </Link>
         <Box aria-hidden sx={{ color: 'text.disabled' }}>·</Box>
-        <Link component="button" type="button" onClick={onOpenPortals} underline="none" color="primary" sx={legalLink}>
+        <Link component="button" type="button" data-testid="login-other-portals" onClick={onOpenPortals} underline="none" color="primary" sx={legalLink}>
           {t('session.login.otherPortals')}
         </Link>
       </Stack>
@@ -61,7 +63,7 @@ export default function LoginLegalLinks({ config, t, onOpenPortals }: Readonly<L
           mt: 1
         }}>
         {t('session.login.supportPrefix')}{' '}
-        <Link href={`mailto:${contact}`} underline="none" color="primary" sx={{
+        <Link data-testid="login-support-email" href={`mailto:${contact}`} underline="none" color="primary" sx={{
           fontWeight: 700
         }}>
           {contact}

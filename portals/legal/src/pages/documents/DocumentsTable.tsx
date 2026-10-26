@@ -68,6 +68,7 @@ export default function DocumentsTable({
               size="small"
               disabled={d.is_locked}
               aria-label={t('shell.common.edit')}
+              data-testid={`document-edit-${d.id}`}
               onClick={(event) => {
                 event.stopPropagation();
                 onEdit(d);
@@ -81,6 +82,7 @@ export default function DocumentsTable({
           <DuncitIconButton
             size="small"
             aria-label={t('legal.documents.sign')}
+            data-testid={`document-sign-${d.id}`}
             onClick={(event) => {
               event.stopPropagation();
               onSign(d);

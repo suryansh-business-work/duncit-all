@@ -48,7 +48,7 @@ export default function OtherPortalsDialog({ open, onClose, t = sessionT }: Read
   }, [query, category, t]);
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="md" scroll="paper">
+    <Dialog data-testid="other-portals-dialog" open={open} onClose={onClose} fullWidth maxWidth="md" scroll="paper">
       <DialogTitle sx={{ pb: 0.5 }}>
         <Typography component="span" variant="h6" sx={{
           fontWeight: 800
@@ -88,6 +88,7 @@ export default function OtherPortalsDialog({ open, onClose, t = sessionT }: Read
             variant={category === 'All' ? 'filled' : 'outlined'}
             aria-pressed={category === 'All'}
             onClick={() => setCategory('All')}
+            data-testid="other-portals-chip-all"
             sx={{ fontWeight: 700 }}
           />
           {PORTAL_CATEGORIES.map((option) => (
@@ -100,6 +101,7 @@ export default function OtherPortalsDialog({ open, onClose, t = sessionT }: Read
               // The filter in force is conveyed by state, not by colour alone (WCAG 1.4.1).
               aria-pressed={category === option.key}
               onClick={() => setCategory(option.key)}
+              data-testid={`other-portals-chip-${option.key}`}
               sx={{ fontWeight: 700 }}
             />
           ))}
@@ -113,7 +115,7 @@ export default function OtherPortalsDialog({ open, onClose, t = sessionT }: Read
         >
           {results.map((p) => (
             <Card key={p.key} variant="outlined" sx={(theme) => ({ ...glass(theme), borderRadius: 3 })}>
-              <CardActionArea onClick={() => window.open(resolvePortalUrl(p), '_self')} sx={{ p: 1.5 }}>
+              <CardActionArea data-testid={`other-portals-card-${p.key}`} onClick={() => window.open(resolvePortalUrl(p), '_self')} sx={{ p: 1.5 }}>
                 <Stack direction="row" spacing={1.5} sx={{
                   alignItems: "center"
                 }}>

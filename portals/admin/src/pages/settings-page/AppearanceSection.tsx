@@ -10,8 +10,9 @@ export default function AppearanceSection() {
           Appearance
         </Typography>
         <FormControlLabel
-          control={<Switch checked={mode === 'dark'} onChange={toggle} />}
+          control={<Switch checked={mode === 'dark'} onChange={toggle} slotProps={{ input: { 'data-testid': 'settings-appearance-switch' } as Record<string, string> }} />}
           label={mode === 'dark' ? 'Dark mode' : 'Light mode'}
+          data-testid="settings-appearance"
         />
       </CardContent>
     </Card>

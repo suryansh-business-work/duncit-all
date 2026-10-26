@@ -18,6 +18,7 @@ export default function AutoPodSettings({
     <Stack spacing={3}>
       <NumberSettingCard
         title={t('admin.podSettings.autoPodSlotWindowTitle')}
+        testId="pod-setting-auto-pod-slot-window"
         description={t('admin.podSettings.autoPodSlotWindowDesc')}
         label={t('admin.podSettings.autoPodSlotWindowLabel')}
         helperText={t('admin.podSettings.autoPodSlotWindowMin')}

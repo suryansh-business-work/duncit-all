@@ -6,7 +6,7 @@ import { purgeE2eRunData } from './e2eRun.purge';
 import { latestRunAccountCode } from './e2eRun.codes';
 import { trafficKeyForRun } from './e2eRun.traffic';
 import { mintE2eGoogleCredential } from './e2eRun.google';
-import { grantRunAccountRoles, type GrantE2eRunAccountRolesInput } from './e2eRun.staff';
+import { grantRunAccountRoles, revokeRunAccountRoles, type GrantE2eRunAccountRolesInput } from './e2eRun.staff';
 
 // E2E runs are a Tech-portal capability. The workflow authenticates with the
 // same TECH_MANAGER JWT the build workflows use (DUNCIT_RELEASE_TOKEN), so its
@@ -80,6 +80,10 @@ export const e2eRunResolvers = {
     grantE2eRunAccountRoles: (_p: unknown, args: { input: GrantE2eRunAccountRolesInput }, ctx: GraphQLContext) => {
       requireRole(ctx, E2E_MANAGE);
       return grantRunAccountRoles(args.input);
+    },
+    revokeE2eRunAccountRoles: (_p: unknown, args: { input: GrantE2eRunAccountRolesInput }, ctx: GraphQLContext) => {
+      requireRole(ctx, E2E_MANAGE);
+      return revokeRunAccountRoles(args.input);
     },
     updateE2eRunSettings: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
       requireRole(ctx, E2E_MANAGE);

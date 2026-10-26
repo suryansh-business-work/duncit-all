@@ -158,6 +158,7 @@ export default function ClubAdminEditorPage() {
                     type="number"
                     disabled={!canGovern}
                     hint={t('directory.clubAdminEditor.commissionHint')}
+                    data-testid="club-admin-editor-commission"
                   />
                 </Grid>
               }

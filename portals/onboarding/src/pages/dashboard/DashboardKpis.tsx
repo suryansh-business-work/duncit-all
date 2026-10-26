@@ -31,6 +31,7 @@ export default function DashboardKpis({ kpis }: Readonly<{ kpis: DashboardKpi[] 
           valueWeight={900}
           valueColor={TONE_COLOR[kpi.tone]}
           to={kpi.to}
+          testId={`onboarding-kpi-${kpi.label.toLowerCase().replaceAll(' ', '-')}`}
           sx={{ height: '100%' }}
         />
       ))}

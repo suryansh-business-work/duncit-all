@@ -29,6 +29,9 @@ import {
 const VENUE_READ = consoleReaders('VENUE');
 const VENUE_EDIT = consoleEditors('VENUE');
 const VENUE_GOVERN = consoleGovernors('VENUE');
+// The money a venue's terms move — its deductions, the auto-cancel trigger and
+// the refund ladder. Finance sets these too (Finance portal → overrides).
+const VENUE_FINANCE = [...VENUE_GOVERN, 'FINANCE_MANAGER'];
 // Permanent hard-delete is a developer-only action (mirrors the API-key gate).
 const DEVELOPER_DELETE = ['SUPER_ADMIN', 'DEVELOPERS_MANAGER'];
 
@@ -240,8 +243,7 @@ export const venueResolvers = {
       args: { venue_doc_id: string; venue_share_pct: number; venue_commission_pct: number },
       ctx: GraphQLContext
     ) => {
-      // Finance manages deduction overrides too (Finance portal → overrides).
-      requireRole(ctx, [...VENUE_GOVERN, 'FINANCE_MANAGER']);
+      requireRole(ctx, VENUE_FINANCE);
       return venueService.setDeductions(args.venue_doc_id, args.venue_share_pct, args.venue_commission_pct);
     },
     setVenueCancellationTrigger: async (
@@ -251,7 +253,7 @@ export const venueResolvers = {
     ) => {
       // Same gate as the deductions above it: it sits in the same review panel
       // and, like them, decides what money leaves Duncit.
-      requireRole(ctx, [...VENUE_GOVERN, 'FINANCE_MANAGER']);
+      requireRole(ctx, VENUE_FINANCE);
       return venueService.setCancellationTrigger(
         args.venue_doc_id,
         args.trigger_hours,
@@ -265,7 +267,10 @@ export const venueResolvers = {
     ) => {
       const userId = uid(ctx);
       const isAdmin = !!ctx.user && hasRole(ctx.user, VENUE_EDIT);
-      return venueService.updateSettings(userId, isAdmin, args.venue_doc_id, args.input);
+      // The same input carries the auto-cancel trigger and refund ladder; only
+      // the callers setVenueCancellationTrigger admits may actually move them.
+      const canSetAutoCancel = !!ctx.user && hasRole(ctx.user, VENUE_FINANCE);
+      return venueService.updateSettings(userId, isAdmin, args.venue_doc_id, args.input, canSetAutoCancel);
     },
     // Partner-facing like the other myVenue* entries: ownership of the venue the
     // pod is booked at is enforced inside the service, so no role gate here.

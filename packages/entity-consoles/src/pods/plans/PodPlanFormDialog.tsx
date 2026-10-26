@@ -56,10 +56,10 @@ export default function PodPlanFormDialog({ open, editing, loading, onClose, onS
   });
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm" data-testid="pod-plan-dialog">
       {/* noValidate: the required fields are checked by the Zod schema, so its
           localized messages show instead of the browser's own bubble. */}
-      <form noValidate onSubmit={submit}>
+      <form noValidate onSubmit={submit} data-testid="pod-plan-form">
         <DialogTitle>{editing ? 'Edit plan' : 'New plan'}</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 0.5 }}>
@@ -68,13 +68,14 @@ export default function PodPlanFormDialog({ open, editing, loading, onClose, onS
               name="key"
               label={t('admin.podPlans.key')}
               hint="e.g. free, premium"
+              slotProps={{ htmlInput: { 'data-testid': 'pod-plan-key' } }}
               disabled={!!editing}
               size="small"
               required
             />
-            <RhfTextField control={control} name="name" label={t('admin.podPlans.displayName')} size="small" required />
+            <RhfTextField control={control} name="name" label={t('admin.podPlans.displayName')} size="small" required slotProps={{ htmlInput: { 'data-testid': 'pod-plan-name' } }} />
             <RhfTextField control={control} name="description" label={t('shell.common.description')} multiline minRows={2} size="small" />
-            <RhfTextField control={control} name="image_url" label={t('admin.podPlans.imageUrl')} size="small" />
+            <RhfTextField control={control} name="image_url" label={t('admin.podPlans.imageUrl')} size="small" slotProps={{ htmlInput: { 'data-testid': 'pod-plan-image-url' } }} />
             <Controller
               control={control}
               name="features"
@@ -97,6 +98,7 @@ export default function PodPlanFormDialog({ open, editing, loading, onClose, onS
                 name="sort_order"
                 type="number"
                 label={t('admin.podPlans.sortOrder')}
+                slotProps={{ htmlInput: { 'data-testid': 'pod-plan-sort' } }}
                 size="small"
                 fullWidth={false}
                 sx={{ width: 130 }}
@@ -128,7 +130,7 @@ export default function PodPlanFormDialog({ open, editing, loading, onClose, onS
         </DialogContent>
         <DialogActions>
           <DuncitButton onClick={onClose}>{t('shell.common.cancel')}</DuncitButton>
-          <DuncitButton type="submit" variant="contained" loading={loading}>
+          <DuncitButton type="submit" variant="contained" loading={loading} data-testid="pod-plan-submit">
             {editing ? 'Save changes' : 'Create plan'}
           </DuncitButton>
         </DialogActions>

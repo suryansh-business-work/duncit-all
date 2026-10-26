@@ -10,6 +10,7 @@ import { dishPath, type FoodControlProps } from './food-paths';
 interface Props<T extends FieldValues, TOut> extends FoodControlProps<T, TOut> {
   index: number;
   priceMax: number;
+  idPrefix: string;
 }
 
 const SAVING_DISPLAY_KEYS: Record<(typeof FOOD_SAVING_DISPLAYS)[number], string> = {
@@ -24,7 +25,7 @@ const priceInput = (max: number) => ({ htmlInput: { min: 1, max, step: 'any', in
  * with the line the guest will see. The saving is display only: what the guest
  * pays is always the price (@duncit/utils `foodPriceDisplay`).
  */
-export default function FoodDishPricing<T extends FieldValues, TOut = T>({ control, index, priceMax }: Readonly<Props<T, TOut>>) {
+export default function FoodDishPricing<T extends FieldValues, TOut = T>({ control, index, priceMax, idPrefix }: Readonly<Props<T, TOut>>) {
   const { t } = useTranslation();
   const currency = useQuery(FOOD_CURRENCY).data?.publicFinanceSettings?.currency_symbol ?? '';
   const [price, original, display] = useWatch({
@@ -44,6 +45,7 @@ export default function FoodDishPricing<T extends FieldValues, TOut = T>({ contr
         <RhfTextField
           control={control}
           name={dishPath<T>(index, 'price')}
+          data-testid={`${idPrefix}-food-item-${index}-price`}
           label={t('venueFoodOwner.menu.price')}
           type="number"
           required

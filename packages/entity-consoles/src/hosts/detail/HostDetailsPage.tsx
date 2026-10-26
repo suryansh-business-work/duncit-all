@@ -18,9 +18,9 @@ type HostTab = 'overview' | 'pods' | 'changeLogs';
 type Translate = ReturnType<typeof useTranslation>['t'];
 
 const hostTabs = (t: Translate): DuncitTabItem<HostTab>[] => [
-  { value: 'overview', label: t('directory.hostEditor.tabOverview') },
-  { value: 'pods', label: t('directory.hostEditor.tabPods') },
-  { value: 'changeLogs', label: t('directory.changeLogs.tab') },
+  { value: 'overview', label: t('directory.hostEditor.tabOverview'), testId: 'host-tab-overview' },
+  { value: 'pods', label: t('directory.hostEditor.tabPods'), testId: 'host-tab-pods' },
+  { value: 'changeLogs', label: t('directory.changeLogs.tab'), testId: 'host-tab-changeLogs' },
 ];
 
 /** Where Back goes: the hosts list, or — when the clubs console opens a club's

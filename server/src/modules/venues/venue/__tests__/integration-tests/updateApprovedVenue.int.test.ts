@@ -71,6 +71,19 @@ describe("the venue's GST number on its food invoices", () => {
   const GSTIN = '22ABCDE1234F1Z5';
   const OTHER_GSTIN = '27ABCDE1234F1Z5';
   const gstinOf = async (venueId: string) => (await VenueModel.findById(venueId).lean())?.gstin;
+  const seedPune = () =>
+    LocationModel.create({
+      location_id: 'pune',
+      location_name: 'Pune',
+      country: 'India',
+      country_code: 'IN',
+      state: 'Maharashtra',
+      state_code: 'MH',
+      city: 'Pune',
+      location_image: 'https://img.example.test/pune.jpg',
+      location_pincode: '411001',
+      location_zones: [],
+    });
 
   it('lets the owner give a venue without one its GST number, stored upper-cased', async () => {
     const venueId = await seedApprovedVenue();
@@ -97,24 +110,33 @@ describe("the venue's GST number on its food invoices", () => {
 
   it('lets the venues console change a saved number', async () => {
     const venueId = await seedApprovedVenue({ gstin: GSTIN, owner_name: 'Asha', owner_email: 'a@x.in', owner_phone: '9999999999' });
-    await LocationModel.create({
-      location_id: 'pune',
-      location_name: 'Pune',
-      country: 'India',
-      country_code: 'IN',
-      state: 'Maharashtra',
-      state_code: 'MH',
-      city: 'Pune',
-      location_image: 'https://img.example.test/pune.jpg',
-      location_pincode: '411001',
-      location_zones: [],
-    });
+    await seedPune();
     const updated = await venueService.adminUpdate(venueId, {
       step1: { city: 'Pune', venue_name: 'Hall' },
       step2: { documents: [], gstin: OTHER_GSTIN },
       step3: { owner_name: 'Asha', owner_email: 'a@x.in', owner_phone: '9999999999' },
     });
     expect(updated.gstin).toBe(OTHER_GSTIN);
+  });
+
+  it('checks a GSTIN saved through the venues console edit like every other save, and lets a blank clear it', async () => {
+    const venueId = await seedApprovedVenue({ gstin: GSTIN, owner_name: 'Asha', owner_email: 'a@x.in', owner_phone: '9999999999' });
+    await seedPune();
+    const edit = (gstin: unknown) =>
+      venueService.adminUpdate(venueId, {
+        step1: { city: 'Pune', venue_name: 'Hall' },
+        step2: { documents: [], gstin },
+        step3: { owner_name: 'Asha', owner_email: 'a@x.in', owner_phone: '9999999999' },
+      });
+
+    await expect(edit('NOT-A-GSTIN')).rejects.toMatchObject({
+      message: 'Enter a valid 15-character GSTIN',
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+    expect(await gstinOf(venueId)).toBe(GSTIN);
+
+    expect((await edit(` ${OTHER_GSTIN.toLowerCase()} `)).gstin).toBe(OTHER_GSTIN);
+    expect((await edit('')).gstin).toBe('');
   });
 
   it("lets a console editor change a saved number from the Food Menu tab, on a venue that is not theirs", async () => {

@@ -89,7 +89,7 @@ export default function EventTicketsPage() {
   return (
     <Stack spacing={3}>
       <Box>
-        <Typography variant="h5" component="h1" sx={{
+        <Typography variant="h5" component="h1" data-testid="event-tickets-title" sx={{
           fontWeight: 900
         }}>
           {t('admin.eventTickets.title')}
@@ -124,16 +124,17 @@ export default function EventTicketsPage() {
               label={t('admin.eventTickets.pasteToken')}
               value={token}
               onChange={(e) => setToken(e.target.value)}
+              slotProps={{ htmlInput: { 'data-testid': 'event-tickets-token' } }}
             />
-            <DuncitButton variant="outlined" onClick={onVerify} disabled={!token.trim()}>
+            <DuncitButton variant="outlined" onClick={onVerify} disabled={!token.trim()} data-testid="event-tickets-verify">
               Verify
             </DuncitButton>
-            <DuncitButton variant="contained" onClick={onCheckInToken} disabled={!verifyResult?.ok}>
+            <DuncitButton variant="contained" onClick={onCheckInToken} disabled={!verifyResult?.ok} data-testid="event-tickets-check-in">
               {t('admin.eventTickets.checkIn')}
             </DuncitButton>
           </Stack>
           {verifyResult && (
-            <Alert severity={verifyResult.ok ? 'success' : 'error'} sx={{ mt: 1.5 }}>
+            <Alert severity={verifyResult.ok ? 'success' : 'error'} sx={{ mt: 1.5 }} data-testid={`event-tickets-verify-${verifyResult.ok ? 'ok' : 'error'}`}>
               {verifyResult.message}
             </Alert>
           )}

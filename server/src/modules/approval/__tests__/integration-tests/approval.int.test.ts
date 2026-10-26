@@ -12,6 +12,8 @@ import { EcommBrandModel } from '@modules/venues/ecommBrand/ecommBrand.model';
 import { BrandPickupLocationModel } from '@modules/venues/brandPickupLocation/brandPickupLocation.model';
 
 const ADMIN = { id: 'admin-1', name: 'admin@example.com' };
+// Nobody decides their own request, so the requests are raised by someone else.
+const REQUESTER = { id: 'pm-2', name: 'pm2@example.com' };
 const mockAddPickup = addPickupLocation as jest.Mock;
 
 // The generic Admin approval inbox now serves cross-portal (ecomm change)
@@ -73,7 +75,7 @@ describe('approval — ecomm change requests', () => {
         details: [{ label: 'Tagline', value: 'new tag' }],
         payload: JSON.stringify({ tagline: 'new tag' }),
       },
-      ADMIN,
+      REQUESTER,
     );
     expect(brandReq!.type).toBe('ECOMM_BRAND_CHANGE');
     await approvalService.approve(brandReq!.id, ADMIN);
@@ -89,7 +91,7 @@ describe('approval — ecomm change requests', () => {
         details: [{ label: 'x', value: 'y' }],
         payload: 'not-json',
       },
-      ADMIN,
+      REQUESTER,
     );
     const approved = await approvalService.approve(bad!.id, ADMIN);
     expect(approved!.status).toBe('APPROVED');
@@ -130,7 +132,7 @@ describe('approval — ecomm change requests', () => {
         details: [{ label: 'Status', value: 'APPROVED' }],
         payload: JSON.stringify({ status: 'APPROVED', tagline: 'now live' }),
       },
-      ADMIN,
+      REQUESTER,
     );
     await approvalService.approve(req!.id, ADMIN);
     const brand: any = await EcommBrandModel.findById(brandId);
@@ -165,7 +167,7 @@ describe('approval — ecomm change requests', () => {
         details: [{ label: 'Active', value: 'No' }],
         payload: JSON.stringify({ is_active: false }),
       },
-      ADMIN,
+      REQUESTER,
     );
     await approvalService.approve(req!.id, ADMIN);
 
@@ -186,7 +188,7 @@ describe('approval — ecomm change requests', () => {
         details: [{ label: 'Tagline', value: 'x' }],
         payload: JSON.stringify({ tagline: 'x' }),
       },
-      ADMIN,
+      REQUESTER,
     );
     const denied = await approvalService.deny(req!.id, ADMIN, 'Not now');
     expect(denied!.status).toBe('DENIED');
@@ -294,7 +296,7 @@ describe('approval — warehouse approval requests', () => {
     ).rejects.toThrow(/not found/i);
     const ecomm = await approvalService.submitEcommChange(
       { kind: 'PRODUCT', target_id: new Types.ObjectId().toString(), target_name: 'X', details: [], payload: '{}' },
-      ADMIN,
+      REQUESTER,
     );
     await expect(approvalService.reviewWarehouse(ecomm!.id, 'APPROVE', ADMIN)).rejects.toThrow(/not a pickup address/i);
   });

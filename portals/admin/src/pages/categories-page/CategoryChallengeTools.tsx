@@ -18,6 +18,7 @@ export default function CategoryChallengeTools({ categoryId }: Readonly<{ catego
       spacing={1.5}
       component="section"
       aria-labelledby="category-challenge-tools-title"
+      data-testid="category-challenge-tools"
       sx={{ p: 2, border: 1, borderColor: 'divider', borderRadius: 1 }}
     >
       <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>

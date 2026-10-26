@@ -149,14 +149,14 @@ export default function PodsDashboardPage() {
                 aria-label={t('admin.podsDashboard.reportingPeriod')}
               >
                 {WINDOW_OPTIONS.map((option) => (
-                  <ToggleButton key={option.days} value={option.days}>
+                  <ToggleButton key={option.days} value={option.days} data-testid={`pods-dashboard-period-${option.days}`}>
                     {option.label}
                   </ToggleButton>
                 ))}
               </ToggleButtonGroup>
             }
           />
-          {error && <Alert severity="error">{error.message}</Alert>}
+          {error && <Alert severity="error" data-testid="pods-dashboard-error">{error.message}</Alert>}
         </>
       }
       widgets={widgets}

@@ -100,10 +100,10 @@ const POD_MINUTES = 30;
 const MIN_SPOTS = 6;
 
 const DIAL_CODE = '+91';
-const DATE_OF_BIRTH = '1995-01-15';
+export const DATE_OF_BIRTH = '1995-01-15';
 /** Stands in for the KYC documents an admin attaches on a partner's behalf; never opened by the journey. */
-const PLACEHOLDER_DOCUMENT = 'https://example.com/e2e-placeholder-document.pdf';
-const PLACEHOLDER_ID_NUMBER = 'E2E-NOT-A-REAL-ID';
+export const PLACEHOLDER_DOCUMENT = 'https://example.com/e2e-placeholder-document.pdf';
+export const PLACEHOLDER_ID_NUMBER = 'E2E-NOT-A-REAL-ID';
 
 export interface Actor {
   id: string;

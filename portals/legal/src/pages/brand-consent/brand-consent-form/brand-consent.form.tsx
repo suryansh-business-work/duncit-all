@@ -58,7 +58,7 @@ export default function BrandConsentForm({ initialValues, saving, error, updated
   return (
     <Card variant="outlined">
       <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} noValidate>
+        <form onSubmit={handleSubmit(onSubmit)} noValidate data-testid="brand-consent-form">
           <Stack spacing={2}>
             {error && <Alert severity="error">{error}</Alert>}
 

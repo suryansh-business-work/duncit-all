@@ -43,7 +43,7 @@ export default function VenuePodDetailDialog({ row, onClose }: Readonly<Props>) 
   const profiles: AttendeeProfile[] = data?.publicUsersByIds ?? [];
 
   return (
-    <Dialog open={!!row} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog open={!!row} onClose={onClose} maxWidth="sm" fullWidth data-testid="venue-pod-detail">
       {row && (
         <>
           <DialogTitle sx={{ fontWeight: 800 }}>
@@ -60,7 +60,7 @@ export default function VenuePodDetailDialog({ row, onClose }: Readonly<Props>) 
             <Row label={t('partners.venuePodsPage.hosts')} value={row.host_names.join(', ') || '—'} />
             <Row label={t('partners.common.when')} value={fmtDate(row.pod_date_time)} />
             <Row label={t('partners.venuePodsPage.ends')} value={fmtDate(row.pod_end_date_time)} />
-            <Row label={t('partners.common.price')} value={row.pod_type === 'FREE' ? 'Free' : `₹${row.pod_amount}`} />
+            <Row label={t('partners.common.price')} value={row.pod_type === 'FREE' ? t('partners.common.free') : `₹${row.pod_amount}`} />
             <Row
               label={t('partners.common.attendees')}
               value={row.no_of_spots > 0 ? `${row.attendee_count} / ${row.no_of_spots}` : row.attendee_count}
@@ -101,7 +101,7 @@ export default function VenuePodDetailDialog({ row, onClose }: Readonly<Props>) 
           </DialogContent>
           <DialogActions>
             <ChatWithHostButton podId={row.id} />
-            <DuncitButton onClick={onClose}>{t('shell.common.close')}</DuncitButton>
+            <DuncitButton onClick={onClose} data-testid="venue-pod-detail-close">{t('shell.common.close')}</DuncitButton>
           </DialogActions>
         </>
       )}

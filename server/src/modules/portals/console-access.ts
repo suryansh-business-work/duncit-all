@@ -61,3 +61,16 @@ export const consoleEditors = (entity: ConsoleEntity): string[] => [
 
 /** Reading the list, the record and its history — same audience as editing. */
 export const consoleReaders = (entity: ConsoleEntity): string[] => consoleEditors(entity);
+
+/**
+ * Reading `entity` from inside another console's record — a club's page lists
+ * its admins and hosts and opens their records in place, so the clubs console
+ * reads the club admins' and hosts' table and record too. Its own readers plus
+ * each embedding console's readers; reads only, so nothing here widens who may
+ * edit or govern. A resolver that serves documents only its own console should
+ * see (a host's Aadhaar, PAN, bank) strips them for an embedded-only reader.
+ */
+export const embeddedConsoleReaders = (
+  entity: ConsoleEntity,
+  embeddedIn: readonly ConsoleEntity[]
+): string[] => [...new Set([...consoleReaders(entity), ...embeddedIn.flatMap(consoleReaders)])];

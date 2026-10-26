@@ -94,5 +94,5 @@ RUN pnpm --filter earnwith-website build
 # --- runner ---
 FROM nginxinc/nginx-unprivileged:alpine AS runner
 COPY --from=builder /repo/website/earnwith-website/dist /usr/share/nginx/html
-COPY deploy/nginx/spa.conf /etc/nginx/conf.d/default.conf
+COPY deploy/nginx/static-site.conf /etc/nginx/conf.d/default.conf
 EXPOSE 8080

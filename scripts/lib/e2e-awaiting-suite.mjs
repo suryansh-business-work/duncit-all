@@ -39,7 +39,7 @@ export const AWAITING_SUITE = new Set([
   'products',
   'regional-club-admin',
   'targets',
-  'gig-jobs',
+  'gig-jobs-portal',
   'tech',
   'venues',
   'website-app',

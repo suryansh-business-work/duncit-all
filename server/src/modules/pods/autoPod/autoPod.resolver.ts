@@ -18,19 +18,20 @@ import { CategoryModel } from '@modules/pods/category/category.model';
 import { ClubModel } from '@modules/clubs/club/club.model';
 import { clubAdminService } from '@modules/clubs/clubAdmin/clubAdmin.service';
 import { Types } from 'mongoose';
+import { consoleReaders } from '@modules/portals/console-access';
 
 const ADMIN_WRITE = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN'];
-
-const isAdminCtx = (ctx: GraphQLContext) =>
-  !!ctx.user?.roles?.some((r) => ADMIN_WRITE.includes(r));
+/** The Pods console's Auto Pods table also reads for `ALL_PODS_ACCESS`. */
+const AUTO_POD_READ = consoleReaders('POD');
 
 /**
  * A partner may read one Auto Pod when they could act on it or already have.
- * Admins see everything. Anyone else is refused rather than shown an offer they
- * have no standing in — the list queries are the discovery path.
+ * Admins and the Pods console (`AUTO_POD_READ`) see everything. Anyone else is
+ * refused rather than shown an offer they have no standing in — the list
+ * queries are the discovery path.
  */
 async function assertCanReadAutoPod(ctx: GraphQLContext, autoPodDocId: string) {
-  if (isAdminCtx(ctx)) return;
+  if (ctx.user?.roles?.some((r) => AUTO_POD_READ.includes(r))) return;
   const user = requireAuth(ctx);
   if (!(await autoPodService.canRead(user.id, autoPodDocId))) {
     throw new GraphQLError('Auto Pod not found', { extensions: { code: 'NOT_FOUND' } });
@@ -93,7 +94,7 @@ export const autoPodResolvers = {
 
   Query: {
     adminAutoPodsTable: async (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
-      requireRole(ctx, ADMIN_WRITE);
+      requireRole(ctx, AUTO_POD_READ);
       return autoPodService.table(args.query);
     },
 

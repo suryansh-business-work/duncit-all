@@ -67,6 +67,7 @@ export default function SizesFormatsAccordion({ settings, saving, onSave }: Read
               onChange={(e) => setImageMb(e.target.value)}
               error={imageInvalid}
               helperText={imageInvalid ? 'Enter a whole number of 1 or more.' : 'Default 15 MB.'}
+              data-testid="upload-settings-max-image"
             />
             <TextField
               label={t('admin.uploads.maxVideoSize')}
@@ -76,6 +77,7 @@ export default function SizesFormatsAccordion({ settings, saving, onSave }: Read
               onChange={(e) => setVideoMb(e.target.value)}
               error={videoInvalid}
               helperText={videoInvalid ? 'Enter a whole number of 1 or more.' : 'Default 100 MB.'}
+              data-testid="upload-settings-max-video"
             />
           </Stack>
           <Autocomplete
@@ -115,6 +117,7 @@ export default function SizesFormatsAccordion({ settings, saving, onSave }: Read
             sx={{ alignSelf: 'flex-start' }}
             disabled={saving || imageInvalid || videoInvalid || !imageFormats.length || !videoFormats.length}
             onClick={save}
+            data-testid="upload-settings-save-sizes"
           >
             Save sizes & formats
           </DuncitButton>

@@ -67,7 +67,7 @@ export default function InvoiceTemplatePage({ kind }: Readonly<Props>) {
         }}>
         <ReceiptLongIcon color="primary" sx={{ fontSize: 28 }} />
         <Box sx={{ flex: 1 }}>
-          <Typography component="h1" variant="h5" sx={{
+          <Typography component="h1" variant="h5" data-testid="invoice-template-title" sx={{
             fontWeight: 700
           }}>
             {meta.title}
@@ -88,9 +88,9 @@ export default function InvoiceTemplatePage({ kind }: Readonly<Props>) {
       <Card variant="outlined">
         <CardContent>
           <Stack spacing={2}>
-            <TextField label={t('finance.common.documentHeading')} value={form.label} onChange={(e) => set('label')(e.target.value)} fullWidth placeholder={meta.title.toUpperCase()} />
-            <TextField label={t('finance.common.termsAndConditions')} value={form.terms} onChange={(e) => set('terms')(e.target.value)} multiline minRows={3} fullWidth />
-            <TextField label={t('finance.common.footerNote')} value={form.footer} onChange={(e) => set('footer')(e.target.value)} fullWidth />
+            <TextField data-testid="invoice-template-label" label={t('finance.common.documentHeading')} value={form.label} onChange={(e) => set('label')(e.target.value)} fullWidth placeholder={meta.title.toUpperCase()} />
+            <TextField data-testid="invoice-template-terms" label={t('finance.common.termsAndConditions')} value={form.terms} onChange={(e) => set('terms')(e.target.value)} multiline minRows={3} fullWidth />
+            <TextField data-testid="invoice-template-footer" label={t('finance.common.footerNote')} value={form.footer} onChange={(e) => set('footer')(e.target.value)} fullWidth />
             <TextField label={t('finance.invoiceTemplate.emailNoteCoveringMessage')} value={form.note} onChange={(e) => set('note')(e.target.value)} multiline minRows={2} fullWidth />
           </Stack>
           <Typography

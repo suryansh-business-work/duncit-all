@@ -24,7 +24,7 @@ export default function HostHealthCard({ health, podsCompleted }: Readonly<Props
   const color = BAND_COLOR[health.band];
 
   return (
-    <Card variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+    <Card variant="outlined" sx={{ p: 2, borderRadius: 2 }} data-testid="host-health-card">
       <Stack direction="row" spacing={2} sx={{
         alignItems: "center"
       }}>

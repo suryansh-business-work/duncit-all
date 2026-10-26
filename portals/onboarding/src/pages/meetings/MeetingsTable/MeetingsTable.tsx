@@ -49,6 +49,7 @@ export default function MeetingsTable({
           component="button"
           type="button"
           variant="body2"
+          data-testid={`meeting-requester-${m.id}`}
           onClick={(e) => {
             e.stopPropagation();
             onRequester(m);

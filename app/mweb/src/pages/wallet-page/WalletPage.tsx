@@ -11,10 +11,10 @@ import { StatementForm } from './statement';
 import { WithdrawForm } from './withdraw';
 import { fmtDate, TxnRow, WalletSection, WithdrawalRow } from './WalletRows';
 
-const PAYOUT_LABEL: Record<string, string> = {
-  IMMEDIATE: 'Paid immediately after approval',
-  WEEKLY: 'Paid on the weekly payout cycle',
-  MONTH_END: 'Paid at month end',
+const PAYOUT_LABEL_KEY: Record<string, string> = {
+  IMMEDIATE: 'mweb.wallet.payoutImmediate',
+  WEEKLY: 'mweb.wallet.payoutWeekly',
+  MONTH_END: 'mweb.wallet.payoutMonthEnd',
 };
 
 export default function WalletPage() {
@@ -47,6 +47,7 @@ export default function WalletPage() {
   const minAmount = wallet?.min_withdrawal_amount ?? 0;
   const minNoticeKey = eligible ? 'mweb.wallet.minimumHint' : 'mweb.wallet.minimumBlocked';
   const minNotice = t(minNoticeKey, { vars: { amount: formatMoney(minAmount, { symbol: currency }) } });
+  const payoutKey: string | undefined = PAYOUT_LABEL_KEY[wallet?.payout_mode];
 
   return (
     <Stack data-testid="wallet-page" spacing={2.5} sx={{ maxWidth: 760, mx: 'auto', width: '100%', py: 0.5 }}>
@@ -65,7 +66,7 @@ export default function WalletPage() {
           {balance.toFixed(2)}
         </Typography>
         <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mt: 0.5 }}>
-          {PAYOUT_LABEL[wallet?.payout_mode] ?? ''} · Next cycle {fmtDate(wallet?.next_payout_at)}
+          {payoutKey ? t(payoutKey) : ''} · {t('mweb.wallet.nextCycle', { vars: { date: fmtDate(wallet?.next_payout_at) } })}
         </Typography>
         {minAmount > 0 && (
           <Typography

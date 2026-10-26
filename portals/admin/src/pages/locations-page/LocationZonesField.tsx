@@ -117,15 +117,16 @@ export default function LocationZonesField({
             }
             onClick={fillAreasWithAi}
             disabled={busy || fillingAreas}
+            data-testid="location-form-ai-fill"
           >
             {fillingAreas ? t('admin.locations.fillingWithAi') : t('admin.locations.fillWithAi')}
           </DuncitButton>
-          <DuncitButton size="small" startIcon={<AddIcon />} onClick={handleAddZone}>
+          <DuncitButton size="small" startIcon={<AddIcon />} onClick={handleAddZone} data-testid="location-form-add-zone">
             {t('admin.locations.addArea')}
           </DuncitButton>
         </Stack>
       </Stack>
-      {aiError && <Alert severity="error" sx={{ mb: 1 }}>{aiError}</Alert>}
+      {aiError && <Alert severity="error" sx={{ mb: 1 }} data-testid="location-form-ai-error">{aiError}</Alert>}
       <Stack spacing={1.5}>
         {zoneRows.map(({ z, index, key, isLast }) => (
           <Stack
@@ -143,6 +144,7 @@ export default function LocationZonesField({
               value={z.zone_name}
               onChange={(e) => updateZone(index, { zone_name: e.target.value })}
               sx={{ flex: 1 }}
+              data-testid="location-form-zone-name"
             />
             <TextField
               size="small"
@@ -150,6 +152,7 @@ export default function LocationZonesField({
               value={z.pincode}
               onChange={(e) => updateZone(index, { pincode: e.target.value })}
               sx={{ width: { xs: '100%', sm: 140 } }}
+              data-testid="location-form-zone-pin"
             />
             <DuncitIconButton
               size="small"

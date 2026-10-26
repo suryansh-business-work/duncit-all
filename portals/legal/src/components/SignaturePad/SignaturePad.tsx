@@ -40,7 +40,7 @@ export default function SignaturePad({
   // items are the ENABLED methods, so a link naming a switched-off one falls
   // back rather than showing a tab that leads to a rejected save.
   const tabs = useTabParam<SignatureMethod>({
-    items: methods.map((m) => ({ value: m, label: METHOD_LABEL[m] })),
+    items: methods.map((m) => ({ value: m, label: METHOD_LABEL[m], testId: `signature-tab-${m}` })),
     fallback: method ?? methods[0] ?? 'DRAW',
     param: 'selectedtab_signature',
   });

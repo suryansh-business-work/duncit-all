@@ -51,6 +51,7 @@ export default function StatusSection({
                   type="number"
                   disabled={!canGovern}
                   hint={t('directory.hostEditor.commissionHint')}
+                  data-testid="host-editor-commission"
                 />
               </Grid>
               <Grid size={{ xs: 12, md: 4 }}>

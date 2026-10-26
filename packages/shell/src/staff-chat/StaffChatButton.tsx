@@ -55,6 +55,7 @@ export function StaffChatButton({
       <DuncitIconButton
         size="small"
         onClick={onToggle}
+        data-testid="shell-header-chat"
         color={open ? 'primary' : 'default'}
         aria-label={t('shell.chat.panel.open')}
       >

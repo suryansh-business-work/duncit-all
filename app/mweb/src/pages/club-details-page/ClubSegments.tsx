@@ -63,18 +63,18 @@ export default function ClubSegments({ club, pods, priceFormat, onOpenPod }: Rea
   const moments = useMemo(() => pickPodMoments(pods, 12), [pods]);
   const segments = useMemo(() => {
     const all: ReadonlyArray<readonly [SegmentKey, string, boolean]> = [
-      ['PODS', 'Pods Schedule', true],
-      ['MOMENTS', 'Club Moments', moments.length > 0],
-      ['WHO', 'Who We Are', (club.who_we_are ?? []).length > 0],
-      ['WHAT', 'What We Do', (club.what_we_do ?? []).length > 0],
-      ['PERKS', 'Perks', (club.perks ?? []).length > 0],
-      ['VALUES', 'Values', (club.values ?? []).length > 0],
-      ['FAQS', 'FAQs', (club.faqs ?? []).length > 0],
-      ['HOSTS', 'Club Hosts', (club.hosts ?? []).length > 0],
-      ['ADMINS', 'Club Admins', (club.club_admins ?? []).length > 0],
+      ['PODS', t('mweb.clubDetails.podsSchedule'), true],
+      ['MOMENTS', t('mweb.clubDetails.clubMoments'), moments.length > 0],
+      ['WHO', t('mweb.common.whoWeAre'), (club.who_we_are ?? []).length > 0],
+      ['WHAT', t('mweb.common.whatWeDo'), (club.what_we_do ?? []).length > 0],
+      ['PERKS', t('mweb.common.perks'), (club.perks ?? []).length > 0],
+      ['VALUES', t('mweb.common.values'), (club.values ?? []).length > 0],
+      ['FAQS', t('mweb.clubDetails.faqs'), (club.faqs ?? []).length > 0],
+      ['HOSTS', t('mweb.details.clubHosts'), (club.hosts ?? []).length > 0],
+      ['ADMINS', t('mweb.clubDetails.clubAdmins'), (club.club_admins ?? []).length > 0],
     ];
     return all.filter(([, , available]) => available);
-  }, [club, moments.length]);
+  }, [club, moments.length, t]);
   const [active, setActive] = useState<SegmentKey>('PODS');
 
   return (

@@ -62,7 +62,7 @@ export default function CancellationPolicyForm({
         name="reschedule_only"
         render={({ field }) => (
           <FormControlLabel
-            control={<Checkbox checked={field.value} onChange={field.onChange} />}
+            control={<Checkbox checked={field.value} onChange={field.onChange} data-testid="cancellation-reschedule-only" />}
             label={t('venueSettings.rescheduleOnly')}
           />
         )}
@@ -76,7 +76,7 @@ export default function CancellationPolicyForm({
       <Divider />
 
       {rescheduleOnly ? (
-        <Alert severity="info">{t('venueSettings.policyDisabled')}</Alert>
+        <Alert severity="info" data-testid="cancellation-policy-disabled">{t('venueSettings.policyDisabled')}</Alert>
       ) : null}
 
       <Typography variant="subtitle2" component="h3">{t('venueSettings.bandsTitle')}</Typography>
@@ -87,7 +87,7 @@ export default function CancellationPolicyForm({
       </Typography>
 
       {fields.length === 0 ? (
-        <Alert severity="success">{t('venueSettings.noBands')}</Alert>
+        <Alert severity="success" data-testid="cancellation-no-bands">{t('venueSettings.noBands')}</Alert>
       ) : null}
 
       {fields.map((row, index) => (
@@ -106,15 +106,16 @@ export default function CancellationPolicyForm({
           startIcon={<AddIcon />}
           onClick={() => append(emptyTier)}
           disabled={rescheduleOnly}
+          data-testid="cancellation-add-band"
         >
           {t('venueSettings.addBand')}
         </DuncitButton>
-        <DuncitButton variant="contained" onClick={submit} disabled={saving}>
+        <DuncitButton variant="contained" onClick={submit} disabled={saving} data-testid="cancellation-save">
           {saving ? t('venueSettings.saving') : t('venueSettings.save')}
         </DuncitButton>
       </Stack>
 
-      {error ? <Alert severity="error">{error}</Alert> : null}
+      {error ? <Alert severity="error" data-testid="cancellation-error">{error}</Alert> : null}
     </Stack>
   );
 }

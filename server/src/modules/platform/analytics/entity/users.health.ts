@@ -4,6 +4,7 @@ import { USER_DATA_ISSUES } from '@modules/access/user/user.data-issues';
 import { countDataIssues } from '@modules/access/user/user.data-issues.query';
 import { ActiveUserPingModel } from '../activeUser.model';
 import { consoleLink } from './links';
+import { byMembersOf, usersIn, type UserPlace } from './users.data';
 import { breakdown, fixedSlices, kpi, type AnalyticsBreakdown, type AnalyticsKpi, type AnalyticsLeaderboard } from './shapes';
 
 /**
@@ -23,8 +24,8 @@ const daysSince = (ymd: string, now = Date.now()) =>
   Math.max(0, Math.floor((now - Date.parse(`${ymd}T00:00:00.000Z`)) / DAY_MS));
 
 /** Live accounts with a data issue, and how many have each one. */
-export async function dataHealth(): Promise<{ kpi: AnalyticsKpi; breakdown: AnalyticsBreakdown }> {
-  const { byIssue, affected } = await countDataIssues();
+export async function dataHealth(place: UserPlace | null = null): Promise<{ kpi: AnalyticsKpi; breakdown: AnalyticsBreakdown }> {
+  const { byIssue, affected } = await countDataIssues(usersIn(place));
   return {
     kpi: kpi('users_with_issues', affected, null, { higherIsBetter: false, link: USERS_LIST }),
     breakdown: breakdown('user_data_issues', fixedSlices(USER_DATA_ISSUES, byIssue), {
@@ -41,10 +42,10 @@ const LAST_SEEN_BANDS = [
   { key: 'seen_31_90', max: LAST_SEEN_DAYS },
 ] as const;
 
-/** The latest ping day per signed-in account — every one seen since `from`, or just `ids`, ever. */
-async function lastPingDays(scope: { from: string } | { ids: Types.ObjectId[] }) {
+/** The latest ping day per signed-in account — every one (of the place) seen since `from`, or just `ids`, ever. */
+async function lastPingDays(scope: { from: string; place: UserPlace | null } | { ids: Types.ObjectId[] }) {
   const match =
-    'from' in scope ? { date_ymd: { $gte: scope.from }, user_id: { $ne: null } } : { user_id: { $in: scope.ids } };
+    'from' in scope ? { date_ymd: { $gte: scope.from }, ...byMembersOf(scope.place) } : { user_id: { $in: scope.ids } };
   return ActiveUserPingModel.aggregate<{ _id: Types.ObjectId; day: string }>([
     { $match: match },
     { $group: { _id: '$user_id', day: { $max: '$date_ymd' } } },
@@ -56,9 +57,9 @@ async function lastPingDays(scope: { from: string } | { ids: Types.ObjectId[] })
  * quarter, or longer ago (never included). Read over the last 90 days of pings
  * only: anything older lands in the last band either way.
  */
-export async function lastSeenBreakdown(liveTotal: number): Promise<AnalyticsBreakdown> {
+export async function lastSeenBreakdown(liveTotal: number, place: UserPlace | null = null): Promise<AnalyticsBreakdown> {
   const since = new Date(Date.now() - LAST_SEEN_DAYS * DAY_MS).toISOString().slice(0, 10);
-  const rows = await lastPingDays({ from: since });
+  const rows = await lastPingDays({ from: since, place });
   const counts = new Map<string, number>();
   for (const row of rows) {
     const days = daysSince(row.day);

@@ -66,6 +66,7 @@ export default function EcommStatCards({ stats }: Readonly<{ stats?: PartnerEcom
       {cards.map((card) => (
         <Card
           key={card.key}
+          data-testid={`ecomm-stat-${card.key}`}
           variant="outlined"
           sx={{ borderRadius: 1.25, minWidth: { xs: '100%', sm: 156 }, flex: '1 1 156px' }}
         >

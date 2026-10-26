@@ -1007,3 +1007,43 @@ describe('who may manage the coupons of a venue', () => {
     logged.mockRestore();
   });
 });
+
+describe('who may cancel and refund a paid order', () => {
+  async function paidOrder() {
+    const venue = await makeVenue();
+    const { order } = await place(venue);
+    await pay(order.id);
+    return { venue, orderId: order.id };
+  }
+
+  it('refuses a venues-console editor the refund, but leaves them the kitchen board', async () => {
+    const { orderId } = await paidOrder();
+    const editor = signedIn(new Types.ObjectId().toHexString(), ['USER', 'ALL_VENUES_ACCESS']);
+
+    expect(
+      await refusal(async () => venueFoodResolvers.Mutation.cancelVenueFoodOrder(null, { order_id: orderId, reason: 'Kitchen closed' }, editor))
+    ).toMatchObject({ code: 'FORBIDDEN', message: 'Not your venue' });
+    expect(rzp.createRazorpayRefund).not.toHaveBeenCalled();
+    expect(await VenueFoodOrderModel.findById(orderId).lean()).toMatchObject({ status: 'PLACED', payment_status: 'PAID' });
+
+    // Running the board is still theirs.
+    expect(await venueFoodResolvers.Mutation.setVenueFoodOrderStatus(null, { order_id: orderId, status: 'ACCEPTED' }, editor)).toMatchObject({
+      status: 'ACCEPTED',
+    });
+  });
+
+  it('lets a platform governor who does not own the venue cancel and refund', async () => {
+    const { orderId } = await paidOrder();
+    const governor = signedIn(new Types.ObjectId().toHexString(), ['USER', 'SUPER_ADMIN']);
+
+    const cancelled = await venueFoodResolvers.Mutation.cancelVenueFoodOrder(null, { order_id: orderId, reason: 'Kitchen closed' }, governor);
+    expect(cancelled).toMatchObject({ status: 'CANCELLED', payment_status: 'REFUNDED' });
+    expect(rzp.createRazorpayRefund).toHaveBeenCalledTimes(1);
+  });
+
+  it('lets the owner cancel through the resolver with no staff role at all', async () => {
+    const { venue, orderId } = await paidOrder();
+    const cancelled = await venueFoodResolvers.Mutation.cancelVenueFoodOrder(null, { order_id: orderId, reason: 'Out of stock' }, signedIn(venue.ownerId));
+    expect(cancelled).toMatchObject({ status: 'CANCELLED' });
+  });
+});

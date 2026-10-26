@@ -57,6 +57,7 @@ export default function VenueDetailsSection({
           label={t('directory.venueEditor.venueName')}
           size="small"
           required
+          data-testid="venue-editor-name"
         />
         <RhfTextField
           control={control}

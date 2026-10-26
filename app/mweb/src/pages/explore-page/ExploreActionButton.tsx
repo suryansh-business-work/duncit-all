@@ -74,6 +74,7 @@ export default function ExploreActionButton({
       alignItems: "center"
     }}>
       <DuncitIconButton
+        data-testid={testId ? `${testId}-button` : undefined}
         onClick={onClick}
         disabled={loading}
         aria-label={ariaLabel}

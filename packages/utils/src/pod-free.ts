@@ -51,6 +51,7 @@ const CANCEL_SPOT_ERROR_KEYS: Record<string, string> = {
   BAD_REQUEST: 'mweb.podDetails.cancelSpotStarted',
   NOT_FOUND: 'mweb.podDetails.cancelSpotNotMember',
   CANCEL_LIMIT_REACHED: 'mweb.podDetails.cancelSpotLimitReached',
+  NOT_FREE_POD: 'mweb.podDetails.cancelSpotPaidPod',
 };
 
 /** The generic sentence — a network failure, or a code this flow does not know. */

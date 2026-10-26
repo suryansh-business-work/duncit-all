@@ -105,7 +105,7 @@ export default function ClubAdminsTable({
           </DuncitIconButton>
         </Tooltip>
         <Tooltip title={t('onboarding.common.review')}>
-          <DuncitIconButton size="small" onClick={() => onReview(row)}>
+          <DuncitIconButton size="small" onClick={() => onReview(row)} data-testid={`club-admin-review-${row.id}`}>
             <RateReviewIcon fontSize="small" />
           </DuncitIconButton>
         </Tooltip>

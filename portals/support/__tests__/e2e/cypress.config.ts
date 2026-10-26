@@ -41,6 +41,20 @@ export default defineConfig({
       GRAPHQL_URL: process.env.CYPRESS_GRAPHQL_URL || 'https://staging.server.duncit.com/graphql',
       LEGAL_URL: process.env.CYPRESS_LEGAL_URL || 'http://localhost:2012',
       PODS_URL: process.env.CYPRESS_PODS_URL || 'http://localhost:2034',
+      // The other staff consoles, each built against staging and served by its
+      // own preview on the port its vite.config.ts names.
+      ADMIN_URL: process.env.CYPRESS_ADMIN_URL || 'http://localhost:2002',
+      FINANCE_URL: process.env.CYPRESS_FINANCE_URL || 'http://localhost:2008',
+      ONBOARDING_URL: process.env.CYPRESS_ONBOARDING_URL || 'http://localhost:2016',
+      VENUES_URL: process.env.CYPRESS_VENUES_URL || 'http://localhost:2030',
+      HOSTS_URL: process.env.CYPRESS_HOSTS_URL || 'http://localhost:2033',
+      CLUBS_URL: process.env.CYPRESS_CLUBS_URL || 'http://localhost:2031',
+      CLUB_ADMINS_URL: process.env.CYPRESS_CLUB_ADMINS_URL || 'http://localhost:2032',
+      CRM_URL: process.env.CYPRESS_CRM_URL || 'http://localhost:2007',
+      COMMUNICATIONS_URL: process.env.CYPRESS_COMMUNICATIONS_URL || 'http://localhost:2035',
+      LOGS_URL: process.env.CYPRESS_LOGS_URL || 'http://localhost:2036',
+      PRODUCTS_URL: process.env.CYPRESS_PRODUCTS_URL || 'http://localhost:2014',
+      ECOMM_PORTAL_URL: process.env.CYPRESS_ECOMM_PORTAL_URL || 'http://localhost:2038',
     },
     setupNodeEvents(on) {
       registerScenarioClips(on);

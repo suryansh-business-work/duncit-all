@@ -85,7 +85,7 @@ export default function HostReviewDialog({
     // Add button on one row, and under ~700px each select is narrower than its
     // own label, which then runs under the dropdown arrow. HostEditDialog — the
     // picker's other host is already md for the same reason.
-    <Dialog open onClose={busy ? undefined : onClose} fullWidth maxWidth="md">
+    <Dialog open onClose={busy ? undefined : onClose} fullWidth maxWidth="md" data-testid="host-review-dialog">
       <DialogTitle sx={{ pb: 1 }}>
         <Typography
           variant="overline"
@@ -109,7 +109,7 @@ export default function HostReviewDialog({
               flex: 1,
               minWidth: 0
             }}>
-            {active.full_name || 'Host'}
+            <span data-testid="host-review-name">{active.full_name || 'Host'}</span>
           </Typography>
           <StatusChip status={active.status} colorMap={STATUS_COLOR} sx={{ fontWeight: 800 }} />
         </Stack>
@@ -171,6 +171,7 @@ export default function HostReviewDialog({
             multiline
             minRows={3}
             fullWidth
+            data-testid="host-review-notes"
           />
           <TextField
             label={t('onboarding.common.tags')}
@@ -182,10 +183,10 @@ export default function HostReviewDialog({
         </Stack>
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>
-        <DuncitButton onClick={onClose} disabled={busy}>
+        <DuncitButton onClick={onClose} disabled={busy} data-testid="host-review-close">
           Close
         </DuncitButton>
-        <DuncitButton color="error" variant="outlined" onClick={onReject} disabled={busy || !notes.trim()}>
+        <DuncitButton color="error" variant="outlined" onClick={onReject} disabled={busy || !notes.trim()} data-testid="host-review-reject">
           Reject
         </DuncitButton>
         <DuncitButton variant="contained" color="success" onClick={onApprove} disabled={busy}>

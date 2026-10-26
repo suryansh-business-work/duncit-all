@@ -8,8 +8,9 @@ import Inventory2Icon from '@mui/icons-material/Inventory2';
 import GroupsIcon from '@mui/icons-material/Groups';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { DuncitButton } from '@duncit/buttons';
-import { STUDIO_LABEL, availableModes, type StudioMode } from '../../../studio-mode';
+import { STUDIO_LABEL_KEY, availableModes, type StudioMode } from '../../../studio-mode';
 import { useTranslation } from '../../../i18n/useTranslation';
+import type { Translate } from '../../../i18n/fallback';
 
 const ICONS: Record<StudioMode, JSX.Element> = {
   USER: <PersonIcon fontSize="small" />,
@@ -19,12 +20,9 @@ const ICONS: Record<StudioMode, JSX.Element> = {
   CLUB: <GroupsIcon fontSize="small" />,
 };
 
-const ACTIVE_CAPTION = 'Active right now';
-const PENDING_CAPTION = 'Selected — press Switch to confirm';
-
 /** Label for the confirm button — naming the target makes the two-step flow obvious. */
-const switchButtonLabel = (changed: boolean, mode: StudioMode) =>
-  changed ? `Switch to ${STUDIO_LABEL[mode]}` : 'Switch';
+const switchButtonLabel = (t: Translate, changed: boolean, mode: StudioMode) =>
+  changed ? t('mweb.studioMode.switchTo', { vars: { mode: t(STUDIO_LABEL_KEY[mode]) } }) : t('mweb.studioMode.switch');
 
 interface Props {
   open: boolean;
@@ -71,7 +69,7 @@ export default function StudioSwitchDialog({ open, roles, showProducts = true, c
               <ButtonBase
                 key={option.mode}
                 data-testid={`studio-switch-${option.mode}`}
-                aria-label={STUDIO_LABEL[option.mode]}
+                aria-label={t(STUDIO_LABEL_KEY[option.mode])}
                 aria-pressed={selected}
                 onClick={() => setPending(option.mode)}
                 // Bubbles share the row and shrink together on a narrow phone,
@@ -118,10 +116,10 @@ export default function StudioSwitchDialog({ open, roles, showProducts = true, c
         >
           <Box sx={{ flex: 1, minWidth: 0 }}>
             <Typography sx={{ fontSize: 17, fontWeight: 600, lineHeight: 1.2 }} noWrap>
-              {STUDIO_LABEL[pending]}
+              {t(STUDIO_LABEL_KEY[pending])}
             </Typography>
             <Typography aria-live="polite" sx={{ fontSize: 12, fontWeight: 500, color: 'text.secondary' }}>
-              {changed ? PENDING_CAPTION : ACTIVE_CAPTION}
+              {changed ? t('mweb.studioMode.pendingSwitch') : t('mweb.studioMode.activeNow')}
             </Typography>
           </Box>
           <CheckCircleIcon color="primary" />
@@ -135,7 +133,7 @@ export default function StudioSwitchDialog({ open, roles, showProducts = true, c
           onClick={() => onSelect(pending)}
           sx={{ mt: 2, height: 52 }}
         >
-          {switchButtonLabel(changed, pending)}
+          {switchButtonLabel(t, changed, pending)}
         </DuncitButton>
       </DialogContent>
     </Dialog>

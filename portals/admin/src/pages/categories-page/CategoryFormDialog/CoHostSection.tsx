@@ -24,6 +24,7 @@ export default function CoHostSection({ dialog, setDialog }: Readonly<Props>) {
         }
         helperText={`The fewest people this activity needs (a doubles game needs 4). A host sizing a pod here cannot go below it. 0 = no minimum. Max ${MIN_PAX_CEILING}.`}
         sx={{ maxWidth: 320 }}
+        data-testid="category-form-min-pax"
         slotProps={{
           htmlInput: { min: MIN_PAX_FLOOR, max: MIN_PAX_CEILING, 'aria-label': 'Min number of pax allowed' }
         }}
@@ -39,7 +40,7 @@ export default function CoHostSection({ dialog, setDialog }: Readonly<Props>) {
               })
             }
             slotProps={{
-              input: { 'aria-label': 'Allow Co-Hosts' }
+              input: { 'aria-label': 'Allow Co-Hosts', 'data-testid': 'category-form-allow-co-hosts' } as Record<string, string>
             }}
           />
         }
@@ -58,9 +59,10 @@ export default function CoHostSection({ dialog, setDialog }: Readonly<Props>) {
           }
           helperText={t('admin.categories.maxCoHostsHint')}
           sx={{ maxWidth: 260 }}
+          data-testid="category-form-max-co-hosts"
         >
           {CO_HOST_LIMITS.map((n) => (
-            <MenuItem key={n} value={n}>
+            <MenuItem key={n} value={n} data-testid={`category-form-max-co-hosts-${n}`}>
               {n}
             </MenuItem>
           ))}

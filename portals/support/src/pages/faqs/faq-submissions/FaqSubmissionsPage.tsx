@@ -35,6 +35,7 @@ const renderStatus =
       status={row.status}
       label={labels[row.status]}
       colorMap={FAQ_SUBMISSION_STATUS_COLOR}
+      data-testid={`faq-submission-status-${row.id}`}
     />
   );
 
@@ -47,6 +48,7 @@ const renderActions =
         variant="outlined"
         disabled={row.status === 'CONVERTED'}
         onClick={() => setStatus(row, 'CONVERTED')}
+        data-testid={`faq-submission-convert-${row.id}`}
       >
         {t('support.faqSubmissions.markConverted')}
       </DuncitButton>
@@ -55,6 +57,7 @@ const renderActions =
         color="warning"
         disabled={row.status === 'IGNORED'}
         onClick={() => setStatus(row, 'IGNORED')}
+        data-testid={`faq-submission-ignore-${row.id}`}
       >
         {t('support.faqSubmissions.ignore')}
       </DuncitButton>

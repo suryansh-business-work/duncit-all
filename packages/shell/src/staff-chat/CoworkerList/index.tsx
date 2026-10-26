@@ -74,9 +74,9 @@ export default function CoworkerList({
             }
           }}
         />
-        <TextField select size="small" fullWidth label={t('shell.chat.list.team')} value={role} onChange={(e) => onRole(e.target.value)}>
+        <TextField select size="small" fullWidth data-testid="staff-chat-team" label={t('shell.chat.list.team')} value={role} onChange={(e) => onRole(e.target.value)}>
           {ROLE_FILTERS.map((option) => (
-            <MenuItem key={option.value || 'all'} value={option.value}>
+            <MenuItem key={option.value || 'all'} value={option.value} data-testid={`staff-chat-team-${option.value || 'all'}`}>
               {t(option.labelKey)}
             </MenuItem>
           ))}
@@ -115,6 +115,7 @@ export default function CoworkerList({
         {shownThreads.length === 0 && others.length === 0 && (
           <Typography
             variant="body2"
+            data-testid="staff-chat-nobody"
             sx={{
               color: "text.secondary",
               px: 2,

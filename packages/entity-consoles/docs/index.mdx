@@ -114,6 +114,16 @@ the list already filtered to what it counted:
 Without `listPath` the tiles render as plain figures. That is deliberate: a tile
 that navigates nowhere is worse than a tile that simply reports its number.
 
+The lists read that query back with `useUrlColumnFilters(columns)` (pure form:
+`urlColumnFilters(params, columns)`), which turns `?status=REJECTED` into
+`{ field: 'status', op: 'eq', value: 'REJECTED' }` and `?is_active=false` into
+`{ field: 'is_active', op: 'is_false' }`, and hands them to the table as
+`externalFilters`. The columns are the allowlist: only an `enum` column's own
+option or a `boolean` column's `true`/`false` is honoured, so a hand-edited URL
+cannot send the server a field or value the table itself could not. The Venues,
+Clubs, Hosts and Club Admins lists (and anything built on `ConsoleListPage`)
+all do this; All Pods keeps its own `?lifecycle=` params (below).
+
 ## Copy lives in one namespace
 
 `directory.common.*` is what every console says (`Total`, `Awaiting review`,
@@ -326,7 +336,7 @@ There are now three levels, defined once in
 | --- | --- | --- |
 | READ | platform admins, onboarding, **the console role** | the list, the record, its change log |
 | EDIT | same | the record's own details — name, address, photos, documents, contact, operating hours, categories, which clubs an admin runs |
-| GOVERN | platform admins, onboarding — **NOT the console role** | approve and reject, the commission and share percentages, the live on/off switch, the monthly Pod Request limit, and appointing a Club Admin |
+| GOVERN | platform admins, onboarding — **NOT the console role** | approve and reject, the commission and share percentages, the live on/off switch, the monthly Pod Request limit, the auto-cancel window and refund ladder (Finance too), and appointing a Club Admin |
 
 `useConsoleAccess()` is the client half. It does not decide anything — the server
 enforces the split, including refusing a `status` argument on `adminUpdateVenue`
@@ -344,7 +354,29 @@ const { canGovern } = useConsoleAccess();
 The editor hooks use the same flag to SKIP the governance writes rather than
 send-and-fail: a console-role editor saving a venue sends `adminUpdateVenue`
 (without a status) and `updateVenueSettings`, and never `setVenueDeductions` or
-`setVenueActive`.
+`setVenueActive`. `updateVenueSettings` still carries the auto-cancel window and
+refund ladder, which the Cancellations section shows read-only to that editor:
+the server accepts them unchanged and refuses (FORBIDDEN) any move from a caller
+who is not a governor or `FINANCE_MANAGER` — the venue owner included.
+
+### The pods console
+
+`pods.duncit.com` admits `ALL_PODS_ACCESS`, and every READ its pages make
+answers that role through `consoleReaders('POD')`: the brief, All Pods —
+including cancelled pods, by the **Include cancelled** switch or the Cancelled
+stage — a pod's record with its cancellation risk and its Offer codes table, the
+Auto Pods table and an Auto Pod's own page. Writes, money and platform settings
+stay with the platform admins; **Pod Settings** shows the server's refusal at
+the top of the page rather than leaving every card looking merely out of range.
+
+All Pods keeps its filters in the URL — `?club_id=` and `?lifecycle=`
+(`UPCOMING`, `ONGOING`, `COMPLETED`, `CANCELLED`) — so the brief's tiles open
+an already-filtered list, changing one filter keeps the other, and a link to
+the Cancelled stage switches **Include cancelled** on by itself:
+
+```tsx
+<Link to="/pods?lifecycle=UPCOMING">Upcoming</Link>
+```
 
 ## The club-admins console
 

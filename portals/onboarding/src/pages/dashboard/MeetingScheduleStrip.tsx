@@ -30,7 +30,7 @@ export default function MeetingScheduleStrip({
       }}
     >
       {kinds.map((kind) => (
-        <Card key={kind} variant="outlined" sx={{ height: '100%' }}>
+        <Card key={kind} variant="outlined" sx={{ height: '100%' }} data-testid={`onboarding-meeting-tile-${kind}`}>
           <CardActionArea onClick={() => onOpen(kind)} sx={{ height: '100%' }}>
             <CardContent>
               <Stack

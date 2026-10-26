@@ -119,7 +119,7 @@ export default function PortalAccessPage() {
         aria-label={t('admin.portalAccess.filterStatus')}
       >
         {STATUS_FILTERS.map((f) => (
-          <ToggleButton key={f.labelKey} value={f.value}>
+          <ToggleButton key={f.labelKey} value={f.value} data-testid={`portal-access-status-${f.value || 'ALL'}`}>
             {t(f.labelKey)}
           </ToggleButton>
         ))}

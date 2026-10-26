@@ -21,14 +21,14 @@ export {
   type StudioOption,
 } from '@duncit/utils';
 
-/** The words beside each mode — the header badge, the switcher bubbles and the
- * drawer title all read this map. */
-export const STUDIO_LABEL: Record<StudioMode, string> = {
-  USER: 'User',
-  HOST: 'Host Studio',
-  VENUE: 'Venue Studio',
-  ECOMM: 'ecomm',
-  CLUB: 'Club Admin',
+/** The translation key of the words beside each mode — the header badge, the
+ * switcher bubbles and the drawer title all render `t(STUDIO_LABEL_KEY[mode])`. */
+export const STUDIO_LABEL_KEY: Record<StudioMode, string> = {
+  USER: 'mweb.studioMode.user',
+  HOST: 'mweb.studioMode.host',
+  VENUE: 'mweb.studioMode.venue',
+  ECOMM: 'mweb.studioMode.ecomm',
+  CLUB: 'mweb.studioMode.club',
 };
 
 /** Each mode's dashboard. A role switch lands on the role's Studio page instead

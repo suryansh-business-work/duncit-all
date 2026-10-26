@@ -59,8 +59,8 @@ export default function IconLayoutSection({ form, onFormChange }: Readonly<Props
           if (next) setSurface(next);
         }}
       >
-        <ToggleButton value="MWEB">mWeb</ToggleButton>
-        <ToggleButton value="NATIVE">{t('admin.categories.layoutNative')}</ToggleButton>
+        <ToggleButton value="MWEB" data-testid="category-icon-surface-MWEB">mWeb</ToggleButton>
+        <ToggleButton value="NATIVE" data-testid="category-icon-surface-NATIVE">{t('admin.categories.layoutNative')}</ToggleButton>
       </ToggleButtonGroup>
       <ToggleButtonGroup
         value={layout.position}
@@ -71,7 +71,7 @@ export default function IconLayoutSection({ form, onFormChange }: Readonly<Props
         }}
       >
         {positionOptions(t).map((opt) => (
-          <ToggleButton key={opt.value} value={opt.value}>
+          <ToggleButton key={opt.value} value={opt.value} data-testid={`category-icon-position-${opt.value}`}>
             {opt.label}
           </ToggleButton>
         ))}

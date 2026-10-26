@@ -75,6 +75,7 @@ export default function EcommDashboardPage() {
                 variant="outlined"
                 startIcon={<StorefrontIcon />}
                 onClick={() => navigate('/ecomm-brand')}
+                data-testid="ecomm-dashboard-brands"
                 sx={{ color: 'inherit', borderColor: 'rgba(255,255,255,0.55)', alignSelf: { md: 'center' } }}
               >
                 Your Brands

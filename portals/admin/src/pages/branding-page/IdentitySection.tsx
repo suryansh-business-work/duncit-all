@@ -67,6 +67,7 @@ export default function IdentitySection({ form, setForm }: Readonly<Props>) {
         value={form.app_name}
         onChange={(e) => update('app_name', e.target.value)}
         fullWidth
+        data-testid="branding-app-name"
       />
       <TextField
         label={t('admin.branding.tagline')}
@@ -84,7 +85,7 @@ export default function IdentitySection({ form, setForm }: Readonly<Props>) {
         helperText={t('admin.branding.logoHint')}
         showPreview={false}
       />
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} data-testid="branding-primary-color">
         <ColorField
           label={t('admin.branding.primaryColor')}
           value={form.primary_color}

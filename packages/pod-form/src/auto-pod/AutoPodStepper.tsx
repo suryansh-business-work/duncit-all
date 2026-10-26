@@ -135,6 +135,7 @@ export default function AutoPodStepper({
               next().catch(() => undefined);
             }}
             disabled={nextDisabled}
+            data-testid="auto-pod-next"
           >
             {t('podForm.autoPod.next')}
           </DuncitButton>

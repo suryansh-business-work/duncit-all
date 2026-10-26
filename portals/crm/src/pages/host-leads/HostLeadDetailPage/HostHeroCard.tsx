@@ -44,7 +44,7 @@ export default function HostHeroCard({ lead, t, onAskAi, onEdit }: Readonly<Prop
             />
           )}
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography component="h1"
+            <Typography component="h1" data-testid="lead-detail-name"
               variant="h5"
               sx={{
                 fontWeight: 800,

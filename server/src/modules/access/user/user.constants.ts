@@ -52,6 +52,14 @@ export const ROLES = [
 
 export type UserRole = (typeof ROLES)[number];
 
+/**
+ * Who may hand a role to a member: the role mutations (assignUserRoles,
+ * addUserRole, grantAdminAccess). A path that ends in a role grant — an
+ * approved Portal Access request — asks for the same authority, so a request
+ * queue never grants what its reviewer could not grant directly.
+ */
+export const ROLE_ASSIGNERS: readonly string[] = ['SUPER_ADMIN'];
+
 export const STATUSES = ['ACTIVE', 'INACTIVE', 'SUSPENDED'] as const;
 export type UserStatus = (typeof STATUSES)[number];
 

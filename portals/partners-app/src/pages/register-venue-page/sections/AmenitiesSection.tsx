@@ -69,7 +69,7 @@ export default function AmenitiesSection({ form, config, disabled = false }: Rea
   return (
     <Stack spacing={3}>
       {disabled && (
-        <Alert severity="info">
+        <Alert severity="info" data-testid="register-venue-amenities-locked">
           Amenities, facilities and security are locked after approval. Contact support to change them.
         </Alert>
       )}
@@ -90,6 +90,7 @@ export default function AmenitiesSection({ form, config, disabled = false }: Rea
                 direction="row"
                 role="group"
                 aria-label={group.label}
+                data-testid={`register-venue-${group.name}`}
                 sx={{
                   flexWrap: "wrap",
                   gap: 1

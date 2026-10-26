@@ -35,6 +35,7 @@ export default function CancellationTierRow({
         control={control}
         name={`tiers.${index}.hours_before`}
         label={t('venueSettings.tierHours')}
+        data-testid={`cancellation-tier-${index}-hours`}
         type="number"
         disabled={disabled}
       />
@@ -42,6 +43,7 @@ export default function CancellationTierRow({
         control={control}
         name={`tiers.${index}.charge_type`}
         label={t('venueSettings.tierChargeType')}
+        data-testid={`cancellation-tier-${index}-type`}
         select
         disabled={disabled}
       >
@@ -52,6 +54,7 @@ export default function CancellationTierRow({
         control={control}
         name={`tiers.${index}.value`}
         label={t('venueSettings.tierValue')}
+        data-testid={`cancellation-tier-${index}-value`}
         type="number"
         disabled={disabled}
       />
@@ -61,6 +64,7 @@ export default function CancellationTierRow({
             aria-label={t('venueSettings.removeTier')}
             onClick={onRemove}
             disabled={disabled}
+            data-testid={`cancellation-tier-${index}-remove`}
             sx={{ mt: 1 }}
           >
             <DeleteOutlineIcon />

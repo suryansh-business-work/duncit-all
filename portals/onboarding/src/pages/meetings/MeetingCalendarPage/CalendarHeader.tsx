@@ -48,15 +48,15 @@ export default function CalendarHeader({ view, label, onView, onStep, onToday }:
           data-testid="meeting-calendar-view"
         >
           {VIEWS.map((v) => (
-            <ToggleButton key={v} value={v} sx={{ textTransform: 'capitalize', px: 1.5, fontWeight: 700 }}>{v}</ToggleButton>
+            <ToggleButton key={v} value={v} sx={{ textTransform: 'capitalize', px: 1.5, fontWeight: 700 }} data-testid={`meeting-calendar-view-${v}`}>{v}</ToggleButton>
           ))}
         </ToggleButtonGroup>
         <Stack direction="row" sx={{
           alignItems: "center"
         }}>
-          <DuncitIconButton size="small" aria-label={t('onboarding.meetings.previous')} onClick={() => onStep(-1)}><ChevronLeftIcon /></DuncitIconButton>
-          <DuncitButton size="small" onClick={onToday} sx={{ fontWeight: 700 }}>{t('onboarding.meetings.today')}</DuncitButton>
-          <DuncitIconButton size="small" aria-label={t('onboarding.meetings.next')} onClick={() => onStep(1)}><ChevronRightIcon /></DuncitIconButton>
+          <DuncitIconButton size="small" aria-label={t('onboarding.meetings.previous')} onClick={() => onStep(-1)} data-testid="meeting-calendar-prev"><ChevronLeftIcon /></DuncitIconButton>
+          <DuncitButton size="small" onClick={onToday} sx={{ fontWeight: 700 }} data-testid="meeting-calendar-today">{t('onboarding.meetings.today')}</DuncitButton>
+          <DuncitIconButton size="small" aria-label={t('onboarding.meetings.next')} onClick={() => onStep(1)} data-testid="meeting-calendar-next"><ChevronRightIcon /></DuncitIconButton>
         </Stack>
       </Stack>
       <Stack

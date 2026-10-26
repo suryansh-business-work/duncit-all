@@ -94,7 +94,7 @@ export function AppsDrawer({
           <Typography variant="h6" component="h2" id={titleId} sx={{ flex: 1 }}>
             {t('shell.appsDrawer.title')}
           </Typography>
-          <DuncitIconButton onClick={close} aria-label={t('shell.appsDrawer.close')}>
+          <DuncitIconButton onClick={close} aria-label={t('shell.appsDrawer.close')} data-testid="shell-apps-drawer-close">
             <CloseIcon />
           </DuncitIconButton>
         </Stack>

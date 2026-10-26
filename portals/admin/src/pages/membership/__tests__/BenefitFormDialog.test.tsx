@@ -42,3 +42,22 @@ describe('BenefitFormDialog — tiers arriving while open', () => {
     expect(controlSwitches).toEqual([]);
   });
 });
+
+describe('BenefitFormDialog — an over-long cell', () => {
+  it('names the error under that cell and does not submit', async () => {
+    const onSubmit = vi.fn();
+    render(<BenefitFormDialog open editing={EDITING} plans={ACCESS} onClose={vi.fn()} onSubmit={onSubmit} />);
+    await waitFor(() => expect(screen.getByLabelText('Access')).toHaveValue('12h'));
+
+    fireEvent.change(screen.getByLabelText('Access'), { target: { value: 'x'.repeat(61) } });
+    fireEvent.click(screen.getByTestId('benefit-form-submit'));
+
+    await waitFor(() =>
+      expect(screen.getByTestId('benefit-form-cell-access')).toHaveTextContent(
+        'Each cell must be 60 characters or fewer',
+      ),
+    );
+    expect(screen.getByLabelText('Access')).toHaveAttribute('aria-invalid', 'true');
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+});

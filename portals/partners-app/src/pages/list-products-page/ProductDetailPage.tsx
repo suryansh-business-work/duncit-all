@@ -9,7 +9,7 @@ import ProductAnalyticsPanel from './ProductAnalyticsPanel';
 import ProductReviewsPanel from './ProductReviewsPanel';
 import { MY_PRODUCT_LISTINGS } from './ProductListingsTable';
 import {
-  PRODUCT_ACCESS_MESSAGE,
+  PRODUCT_ACCESS_MESSAGE_KEY,
   PRODUCT_LISTING_ACCESS,
   canManageProductListings,
 } from './productAccess';
@@ -91,6 +91,7 @@ export default function ProductDetailPage() {
           {canManageProducts && product && (
             <DuncitButton
               onClick={editProduct}
+              data-testid="product-detail-edit"
               startIcon={<EditIcon />}
               variant="contained"
               color="inherit"
@@ -103,8 +104,8 @@ export default function ProductDetailPage() {
       </Box>
       {accessError && <Alert severity="error">{accessError.message}</Alert>}
       {error && <Alert severity="error">{error.message}</Alert>}
-      {!canManageProducts && <Alert severity="warning">{PRODUCT_ACCESS_MESSAGE}</Alert>}
-      {canManageProducts && notFound && <Alert severity="warning">{t('partners.listProductsPage.productListingWasNotFound')}</Alert>}
+      {!canManageProducts && <Alert severity="warning">{t(PRODUCT_ACCESS_MESSAGE_KEY)}</Alert>}
+      {canManageProducts && notFound && <Alert severity="warning" data-testid="product-detail-not-found">{t('partners.listProductsPage.productListingWasNotFound')}</Alert>}
       {canManageProducts && product && (
         <>
           <ProductDetailView product={product} />

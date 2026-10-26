@@ -48,12 +48,12 @@ export default function ContactActionFormContent({
   const { t } = useTranslation();
   return (
     <>
-      <DialogTitle data-dialog-drag-handle="true" sx={{ cursor: 'move' }}>
+      <DialogTitle data-dialog-drag-handle="true" data-testid="contact-action-title" sx={{ cursor: 'move' }}>
         {type === 'CALL' ? 'Call User' : 'Email User'}
       </DialogTitle>
       <DialogContent dividers>
         <Stack spacing={2} sx={{ mt: 1 }}>
-          {error && <Alert severity="error">{error}</Alert>}
+          {error && <Alert severity="error" data-testid="contact-action-error">{error}</Alert>}
           <Typography variant="body2" sx={{
             color: "text.secondary"
           }}>
@@ -61,13 +61,14 @@ export default function ContactActionFormContent({
           </Typography>
           <TextField
             label={type === 'CALL' ? 'Phone' : 'Email'}
+            data-testid="contact-action-target"
             value={target}
             disabled
             fullWidth
             helperText={target ? ' ' : 'No target available for this contact action.'}
           />
-          {type === 'EMAIL' && <RhfTextField control={control} name="subject" label={t('admin.contact.subject')} />}
-          <RhfTextField control={control} name="status" select label={t('shell.common.status')} required>
+          {type === 'EMAIL' && <RhfTextField control={control} name="subject" label={t('admin.contact.subject')} data-testid="contact-action-subject" />}
+          <RhfTextField control={control} name="status" select label={t('shell.common.status')} required data-testid="contact-action-status">
             {statusOptions.map((option) => (
               <MenuItem key={option} value={option}>
                 {option}
@@ -83,15 +84,15 @@ export default function ContactActionFormContent({
                 type="number"
                 slotProps={{ htmlInput: { min: 0, step: 1 } }}
               />
-              <RhfTextField control={control} name="recording_url" label={t('admin.contact.recordingUrl')} />
+              <RhfTextField control={control} name="recording_url" label={t('admin.contact.recordingUrl')} data-testid="contact-action-recording-url" />
             </Stack>
           )}
-          <RhfTextField control={control} name="notes" label={t('admin.contact.notes')} multiline minRows={4} />
+          <RhfTextField control={control} name="notes" label={t('admin.contact.notes')} multiline minRows={4} data-testid="contact-action-notes" />
         </Stack>
       </DialogContent>
       <DialogActions>
         {type === 'CALL' && (
-          <DuncitButton onClick={() => onStartRecorded(values.notes)} startIcon={<CallIcon />} disabled={busy || !target}>
+          <DuncitButton onClick={() => onStartRecorded(values.notes)} startIcon={<CallIcon />} disabled={busy || !target} data-testid="contact-action-start-recorded">
             Start Recorded Call
           </DuncitButton>
         )}
@@ -99,13 +100,14 @@ export default function ContactActionFormContent({
           onClick={() => onOpenNativeAction(values.subject)}
           startIcon={type === 'CALL' ? <CallIcon /> : <EmailIcon />}
           disabled={!target}
+          data-testid="contact-action-open-native"
         >
           {type === 'CALL' ? 'Open Dialer' : 'Open Email'}
         </DuncitButton>
-        <DuncitButton onClick={onClose} disabled={busy}>
+        <DuncitButton onClick={onClose} disabled={busy} data-testid="contact-action-cancel">
           {t('shell.common.cancel')}
         </DuncitButton>
-        <DuncitButton variant="contained" onClick={onSubmit} disabled={busy || !target}>
+        <DuncitButton variant="contained" onClick={onSubmit} disabled={busy || !target} data-testid="contact-action-save">
           {busy ? 'Saving...' : 'Save Log'}
         </DuncitButton>
       </DialogActions>

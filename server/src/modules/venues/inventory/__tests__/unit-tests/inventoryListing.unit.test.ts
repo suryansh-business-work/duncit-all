@@ -30,6 +30,7 @@ jest.mock('@modules/platform/whatsapp/whatsapp.service', () => ({
 jest.mock('@modules/access/user/relations', () => ({ UserRoleModel: { find: jest.fn() } }));
 jest.mock('@modules/venues/ecommBrand/ecommBrand.model', () => ({
   EcommBrandModel: { findById: jest.fn(), find: jest.fn() },
+  ownedBrandIds: jest.fn(),
 }));
 jest.mock('@modules/venues/brandPickupLocation/brandPickupLocation.model', () => ({
   BrandPickupLocationModel: { findById: jest.fn() },
@@ -54,7 +55,7 @@ jest.mock('@observability/log', () => ({
 import type { AuthUser } from '@context';
 import { UserModel } from '@modules/access/user/user.model';
 import { UserRoleModel } from '@modules/access/user/relations';
-import { EcommBrandModel } from '@modules/venues/ecommBrand/ecommBrand.model';
+import { EcommBrandModel, ownedBrandIds } from '@modules/venues/ecommBrand/ecommBrand.model';
 import { BrandPickupLocationModel } from '@modules/venues/brandPickupLocation/brandPickupLocation.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { ProductOrderModel } from '@modules/commerce/productOrder/productOrder.model';
@@ -72,6 +73,7 @@ const movementModel = InventoryStockMovementModel as unknown as Record<string, j
 const userModel = UserModel as unknown as Record<string, jest.Mock>;
 const roleModel = UserRoleModel as unknown as Record<string, jest.Mock>;
 const brandModel = EcommBrandModel as unknown as Record<string, jest.Mock>;
+const ownedBrands = ownedBrandIds as unknown as jest.Mock;
 const warehouseModel = BrandPickupLocationModel as unknown as Record<string, jest.Mock>;
 const podModel = PodModel as unknown as Record<string, jest.Mock>;
 const orderModel = ProductOrderModel as unknown as Record<string, jest.Mock>;
@@ -157,6 +159,8 @@ beforeEach(() => {
   withRoles(['ECOMM_MANAGER']);
   // Only an active, APPROVED brand may list products.
   brandModel.findById.mockReturnValue(query({ is_active: true, status: 'APPROVED' }));
+  // The partner owns the brand it lists under.
+  ownedBrands.mockResolvedValue([BRAND_ID]);
   productModel.exists.mockResolvedValue(null);
   activityModel.create.mockResolvedValue({});
   movementModel.create.mockResolvedValue({});
@@ -447,6 +451,60 @@ describe('inventoryService.submitProductListing', () => {
   it('generates a fresh SKU on demand', async () => {
     const sku = await inventoryService.generateSku();
     expect(sku).toMatch(/^[A-Z2-9]{8}$/);
+  });
+});
+
+describe('listing brand ownership', () => {
+  const FOREIGN_BRAND_ID = '65c0000000000000000000ee';
+
+  it("refuses to create a listing under another partner's brand, even with no pickup address", async () => {
+    await expect(
+      inventoryService.submitProductListing(listingInput({ brand_id: FOREIGN_BRAND_ID }), PARTNER)
+    ).rejects.toMatchObject({ message: 'Not your brand', extensions: { code: 'FORBIDDEN' } });
+    expect(ownedBrands).toHaveBeenCalledWith(PARTNER.id);
+    expect(productModel.create).not.toHaveBeenCalled();
+  });
+
+  it("refuses to move an existing listing onto another partner's brand", async () => {
+    const doc = productDoc({ brand_id: BRAND_ID });
+    productModel.findOne.mockResolvedValue(doc);
+    await expect(
+      inventoryService.updateMyProductListing('p1', listingInput({ brand_id: FOREIGN_BRAND_ID }), PARTNER)
+    ).rejects.toMatchObject({ message: 'Not your brand', extensions: { code: 'FORBIDDEN' } });
+    expect(doc.brand_id).toBe(BRAND_ID);
+    expect(doc.save).not.toHaveBeenCalled();
+  });
+
+  it('lets the owner create and update a listing under their own brand', async () => {
+    productModel.create.mockResolvedValue(productDoc());
+    await inventoryService.submitProductListing(listingInput(), PARTNER);
+    expect(String(productModel.create.mock.calls[0][0].brand_id)).toBe(BRAND_ID);
+
+    const doc = productDoc();
+    productModel.findOne.mockResolvedValue(doc);
+    await inventoryService.updateMyProductListing('p1', listingInput(), PARTNER);
+    expect(String(doc.brand_id)).toBe(BRAND_ID);
+    expect(doc.save).toHaveBeenCalled();
+  });
+
+  it('lets catalogue staff list under a brand they do not own', async () => {
+    withRoles(['ECOMM_MANAGER', 'PRODUCTS_MANAGER']);
+    ownedBrands.mockResolvedValue([]);
+    productModel.create.mockResolvedValue(productDoc());
+    await inventoryService.submitProductListing(listingInput({ brand_id: FOREIGN_BRAND_ID }), REVIEWER);
+    expect(String(productModel.create.mock.calls[0][0].brand_id)).toBe(FOREIGN_BRAND_ID);
+
+    const doc = productDoc({ listing_submitted_by_id: REVIEWER.id });
+    productModel.findOne.mockResolvedValue(doc);
+    await inventoryService.updateMyProductListing('p1', listingInput({ brand_id: FOREIGN_BRAND_ID }), REVIEWER);
+    expect(String(doc.brand_id)).toBe(FOREIGN_BRAND_ID);
+  });
+
+  it('still refuses a plain partner whose only extra role is not catalogue staff', async () => {
+    withRoles(['ECOMM_MANAGER', 'VENUE_OWNER']);
+    await expect(
+      inventoryService.submitProductListing(listingInput({ brand_id: FOREIGN_BRAND_ID }), PARTNER)
+    ).rejects.toThrow('Not your brand');
   });
 });
 

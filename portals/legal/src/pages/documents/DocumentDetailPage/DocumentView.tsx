@@ -28,7 +28,7 @@ export function DocumentView({ doc, onActiveChanged }: Readonly<Props>) {
           isActive={doc.is_active}
           onChanged={onActiveChanged}
         />
-        <Typography variant="body2" sx={{
+        <Typography variant="body2" data-testid="document-meta" sx={{
           color: "text.secondary"
         }}>
           Updated by {doc.updated_by_name || '—'} · v{doc.version_count}
@@ -40,7 +40,7 @@ export function DocumentView({ doc, onActiveChanged }: Readonly<Props>) {
         {doc.content ? (
           <DuncitRichTextInput value={doc.content} onChange={() => undefined} readOnly bare />
         ) : (
-          <Typography variant="body2" sx={{
+          <Typography variant="body2" data-testid="document-no-content" sx={{
             color: "text.secondary"
           }}>{t('legal.documents.noContent')}</Typography>
         )}
@@ -52,7 +52,7 @@ export function DocumentView({ doc, onActiveChanged }: Readonly<Props>) {
           Update history
         </Typography>
         {doc.versions.length === 0 ? (
-          <Typography variant="body2" sx={{
+          <Typography variant="body2" data-testid="document-history-empty" sx={{
             color: "text.secondary"
           }}>
             No edits yet — this is the original version.
@@ -60,7 +60,7 @@ export function DocumentView({ doc, onActiveChanged }: Readonly<Props>) {
         ) : (
           <Stack spacing={0.75}>
             {doc.versions.map((v) => (
-              <Stack key={v.id} direction="row" spacing={1} sx={{
+              <Stack key={v.id} data-testid={`document-history-${v.id}`} direction="row" spacing={1} sx={{
                 alignItems: "center"
               }}>
                 <Typography variant="body2" sx={{ fontWeight: 600 }}>

@@ -3,7 +3,7 @@ import { UserModel } from '@modules/access/user/user.model';
 import { AppEventModel } from '../appEvent.model';
 import { inRange, type AnalyticsWindow } from './window';
 import { locationNames } from './lookups';
-import { LIVE_USERS } from './users.data';
+import { LIVE_USERS, byMembersOf, usersIn, type UserPlace } from './users.data';
 import { bandSlices, breakdown, fixedSlices, topSlices, type AnalyticsBreakdown, type Band } from './shapes';
 
 /** The Users page's charts: who the members are, and how they use the app. */
@@ -25,9 +25,9 @@ const ACTIVE_DAYS: Band[] = [
 type GroupRow = { _id: string | boolean | Types.ObjectId | null; count: number };
 
 /** Live members grouped by one profile field, keyed as text ('none' when unset). */
-async function groupLive(field: string): Promise<Map<string, number>> {
+async function groupLive(field: string, place: UserPlace | null): Promise<Map<string, number>> {
   const rows = await UserModel.aggregate<GroupRow>([
-    { $match: LIVE_USERS },
+    { $match: { ...LIVE_USERS, ...usersIn(place) } },
     { $group: { _id: `$${field}`, count: { $sum: 1 } } },
   ]);
   const counts = new Map<string, number>();
@@ -59,7 +59,7 @@ const petKey = (value: string) => {
 };
 
 /** Age bands from date of birth, cut in the database against today's date. */
-async function ageBands(): Promise<Map<string, number>> {
+async function ageBands(place: UserPlace | null): Promise<Map<string, number>> {
   const yearsAgo = (years: number) => {
     const date = new Date();
     date.setFullYear(date.getFullYear() - years);
@@ -76,7 +76,7 @@ async function ageBands(): Promise<Map<string, number>> {
   ];
   const boundaries = [...bands.map((band) => band.from), new Date(Date.now() + 86_400_000)];
   const rows = await UserModel.aggregate<{ _id: Date | string; count: number }>([
-    { $match: LIVE_USERS },
+    { $match: { ...LIVE_USERS, ...usersIn(place) } },
     { $bucket: { groupBy: '$profile.dob', boundaries, default: 'none', output: { count: { $sum: 1 } } } },
   ]);
   const keyByStart = new Map(bands.map((band) => [band.from.getTime(), band.key]));
@@ -89,9 +89,10 @@ async function ageBands(): Promise<Map<string, number>> {
 }
 
 /** The screens people opened most in the period, by route (or path when no route was sent). */
-async function topScreens(window: AnalyticsWindow) {
+async function topScreens(window: AnalyticsWindow, place: UserPlace | null) {
+  const placed = place ? byMembersOf(place) : {};
   const rows = await AppEventModel.aggregate<{ _id: string; count: number }>([
-    { $match: { event_type: 'PAGE_VIEW', occurred_at: inRange(window.from, window.to) } },
+    { $match: { event_type: 'PAGE_VIEW', occurred_at: inRange(window.from, window.to), ...placed } },
     { $group: { _id: { $cond: [{ $eq: ['$route', ''] }, '$path', '$route'] }, count: { $sum: 1 } } },
     { $sort: { count: -1 } },
     { $limit: 10 },
@@ -102,16 +103,17 @@ async function topScreens(window: AnalyticsWindow) {
 
 export async function userBreakdowns(
   window: AnalyticsWindow,
-  activeDays: ReadonlyMap<string, number>
+  activeDays: ReadonlyMap<string, number>,
+  place: UserPlace | null = null
 ): Promise<AnalyticsBreakdown[]> {
   const [cities, genders, pets, locales, signIns, ages, screens] = await Promise.all([
-    groupLive('profile.selected_location_id'),
-    groupLive('profile.gender'),
-    groupLive('profile.is_pet_owner'),
-    groupLive('profile.locale'),
-    groupLive('auth.last_login_provider'),
-    ageBands(),
-    topScreens(window),
+    groupLive('profile.selected_location_id', place),
+    groupLive('profile.gender', place),
+    groupLive('profile.is_pet_owner', place),
+    groupLive('profile.locale', place),
+    groupLive('auth.last_login_provider', place),
+    ageBands(place),
+    topScreens(window, place),
   ]);
   const cityNames = await locationNames(cities.keys());
   const allTime = { scope: 'ALL_TIME' } as const;

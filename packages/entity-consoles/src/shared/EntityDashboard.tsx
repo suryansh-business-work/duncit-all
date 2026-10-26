@@ -71,6 +71,7 @@ function DirectoryStatTile({ tile, count, loading, icon, to, label, hint }: Read
       hint={hint}
       to={to}
       sx={{ flex: '1 1 180px', minWidth: 180 }}
+      testId={`directory-tile-${tile.key}`}
     />
   );
 }

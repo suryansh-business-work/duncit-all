@@ -120,7 +120,7 @@ export default function SignWorkflowDialog({ record, ops, onClose, onSigned }: R
     : t('legal.sign.downloadUnsigned');
 
   return (
-    <Dialog open={open} onClose={() => !signing && onClose()} fullWidth maxWidth="md">
+    <Dialog open={open} onClose={() => !signing && onClose()} fullWidth maxWidth="md" data-testid="sign-dialog">
       <SignWorkflowTitle
         title={record?.title ?? t('legal.sign.untitled')}
         alreadySigned={alreadySigned}
@@ -137,7 +137,7 @@ export default function SignWorkflowDialog({ record, ops, onClose, onSigned }: R
         </Stepper>
 
         {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
+          <Alert severity="error" sx={{ mb: 2 }} data-testid="sign-error">
             {error}
           </Alert>
         )}

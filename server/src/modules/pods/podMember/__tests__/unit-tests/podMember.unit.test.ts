@@ -1,4 +1,5 @@
 import { podMemberResolvers } from '../../podMember.resolver';
+import { podMemberService } from '../../podMember.service';
 import { makeContext } from '@test/harness';
 import { podMemberService } from '../../podMember.service';
 
@@ -85,5 +86,34 @@ describe('podMember unit', () => {
     } finally {
       cancel.mockRestore();
     }
+  });
+});
+
+describe('Backout Refunds for the Finance analyst seat (FINANCE_USER)', () => {
+  const analyst = () => makeContext({ id: 'analyst-1', roles: ['FINANCE_USER'] });
+  const Query = podMemberResolvers.Query as any;
+  const Mutation = podMemberResolvers.Mutation as any;
+
+  afterEach(() => jest.restoreAllMocks());
+
+  it('reads the queue page and delegates the table query', async () => {
+    const table = jest.spyOn(podMemberService, 'tableBackoutRefunds').mockResolvedValue({ rows: [], total: 0 } as any);
+    await expect(Query.backoutRefundRequestsTable({}, { query: { page: 2 } }, analyst())).resolves.toEqual({ rows: [], total: 0 });
+    expect(table).toHaveBeenCalledWith({ page: 2 });
+  });
+
+  it('reads one request, and the legacy list', async () => {
+    const one = jest.spyOn(podMemberService, 'getBackoutRefund').mockResolvedValue({ id: 'b-1' } as any);
+    const list = jest.spyOn(podMemberService, 'listBackoutRefunds').mockResolvedValue([] as any);
+    await expect(Query.backoutRefundRequest({}, { id: 'b-1' }, analyst())).resolves.toEqual({ id: 'b-1' });
+    expect(one).toHaveBeenCalledWith('b-1');
+    await expect(Query.backoutRefundRequests({}, {}, analyst())).resolves.toEqual([]);
+    expect(list).toHaveBeenCalledTimes(1);
+  });
+
+  it('is still refused processing a refund', async () => {
+    const processRefund = jest.spyOn(podMemberService, 'processBackoutRefund');
+    await expect((async () => Mutation.processBackoutRefund({}, { id: 'b-1' }, analyst()))()).rejects.toThrow(/access denied/i);
+    expect(processRefund).not.toHaveBeenCalled();
   });
 });

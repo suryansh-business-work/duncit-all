@@ -58,47 +58,49 @@ export default function RescheduleMeetingDialog({ open, kind, bookedAt, onClose,
   const showLoader = loading && !data;
 
   return (
-    <Dialog open={open} onClose={() => !rescheduling && onClose()} maxWidth="sm" fullWidth>
-      <DialogTitle sx={{ fontWeight: 700 }}>{labels.rescheduleTitle}</DialogTitle>
+    <Dialog data-testid="reschedule-dialog" open={open} onClose={() => !rescheduling && onClose()} maxWidth="sm" fullWidth>
+      <DialogTitle data-testid="reschedule-title" sx={{ fontWeight: 700 }}>{labels.rescheduleTitle}</DialogTitle>
       <DialogContent>
         {showLoader ? (
-          <Box sx={{ display: 'grid', placeItems: 'center', py: 4 }}><CircularProgress size={24} /></Box>
+          <Box data-testid="reschedule-loading" sx={{ display: 'grid', placeItems: 'center', py: 4 }}><CircularProgress size={24} /></Box>
         ) : (
           <Stack spacing={1.5}>
             {bookedAt && (
-              <Typography variant="body2" sx={{
+              <Typography data-testid="reschedule-current" variant="body2" sx={{
                 color: "text.secondary"
               }}>
                 {labels.currentlyBooked(formatSlot(bookedAt))}
               </Typography>
             )}
             {slots.length === 0 ? (
-              <Alert severity="info">{labels.noSlots}</Alert>
+              <Alert data-testid="reschedule-empty" severity="info">{labels.noSlots}</Alert>
             ) : (
               <EarnSlotPicker slots={slots} value={slot} onChange={setSlot} currentSlot={bookedAt} />
             )}
             {slot && (
-              <Typography variant="body2">
+              <Typography data-testid="reschedule-moving" variant="body2">
                 {labels.movingFromTo(formatSlot(bookedAt), formatSlot(slot))}
               </Typography>
             )}
             <MeetingReasonForm
               formId="reschedule-reason-form"
+              testId="reschedule-reason"
               label={labels.rescheduleReasonLabel}
               helperText={labels.rescheduleReasonHint}
               labels={labels}
               onSubmit={submit}
             />
-            {error && <Alert severity="warning">{error}</Alert>}
+            {error && <Alert data-testid="reschedule-error" severity="warning">{error}</Alert>}
           </Stack>
         )}
       </DialogContent>
       <DialogActions>
-        <DuncitButton onClick={onClose} disabled={rescheduling}>
+        <DuncitButton data-testid="reschedule-close" onClick={onClose} disabled={rescheduling}>
           {labels.close}
         </DuncitButton>
         <DuncitButton
           type="submit"
+          data-testid="reschedule-confirm"
           form="reschedule-reason-form"
           variant="contained"
           disabled={rescheduling || slots.length === 0}

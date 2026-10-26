@@ -30,6 +30,7 @@ export function ProfileLinksFields({ control }: Readonly<{ control: Control<Prof
           <RhfTextField
             control={control}
             name={`profile_links.${index}.label`}
+            data-testid={`profile-link-label-${index}`}
             label={t('shell.profile.details.linkLabel')}
             placeholder={t('shell.profile.details.linkLabelPlaceholder')}
             size="small"
@@ -38,6 +39,7 @@ export function ProfileLinksFields({ control }: Readonly<{ control: Control<Prof
           <RhfTextField
             control={control}
             name={`profile_links.${index}.url`}
+            data-testid={`profile-link-url-${index}`}
             label={t('shell.profile.details.linkUrl')}
             placeholder={t('shell.profile.details.linkUrlPlaceholder')}
             type="url"

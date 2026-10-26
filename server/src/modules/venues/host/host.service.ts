@@ -10,6 +10,8 @@ import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
 import { transitionEntityId } from '@modules/platform/whatsapp/whatsapp.entity';
 import { normalizeBankAccountInput, toBankAccountPub } from '@modules/finance/finance/bankAccount';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
+import { isDuplicateKeyError } from '@utils/mongo-error';
+import { redactHostIdentity } from './host.redact';
 import { logs } from '@observability/log';
 import { notifyEvent } from '@services/notify/notify.service';
 import { alertBankAccountChanged, bankAccountChanged } from '@modules/finance/finance/bankAccount.notify';
@@ -156,20 +158,9 @@ function parseHostDob(value: unknown) {
  * address, tags, categories. Nothing here is a credential.
  */
 const redactForPublic = (h: ReturnType<typeof toPub>) => ({
-  ...h,
+  ...redactHostIdentity(h),
   email: '',
   phone: '',
-  dob: null,
-  aadhar_number: '',
-  pan_number: '',
-  police_verification_url: '',
-  bank_account: {
-    ...h.bank_account,
-    account_number: '',
-    ifsc: '',
-    upi_id: '',
-    account_holder_name: '',
-  },
   reviewer_notes: '',
   host_commission_pct: null,
 });
@@ -252,6 +243,25 @@ async function getOrCreate(userId: string) {
   let h = await HostModel.findOne({ user_id: uid });
   if (!h) h = await HostModel.create({ user_id: uid });
   return h;
+}
+
+// BAD_USER_INPUT, as the Club Admin twin answers "This account is already a Club Admin".
+const alreadyHosts = () =>
+  new GraphQLError('This account already has a host profile', { extensions: { code: 'BAD_USER_INPUT' } });
+
+/**
+ * A NEW, unsaved host row for an admin-created host — never somebody's existing
+ * one, which an admin create used to overwrite field by field. Unsaved, so a
+ * validation failure before the first save leaves no empty row behind; the
+ * unique user_id index still refuses a create racing this one at save time.
+ */
+async function newHostFor(userId: string) {
+  if (!Types.ObjectId.isValid(userId)) {
+    throw new GraphQLError('Invalid user', { extensions: { code: 'BAD_USER_INPUT' } });
+  }
+  const uid = new Types.ObjectId(userId);
+  if (await HostModel.exists({ user_id: uid })) throw alreadyHosts();
+  return new HostModel({ user_id: uid });
 }
 
 async function assignApprovedHostRole(userId: Types.ObjectId) {
@@ -487,7 +497,7 @@ export const hostService = {
     step3: any;
     submit?: boolean;
   }) {
-    const h = await getOrCreate(opts.targetUserId);
+    const h = await newHostFor(opts.targetUserId);
     const { dob, ...step1 } = opts.step1 ?? {};
     Object.assign(h, step1);
     h.dob = parseHostDob(dob);
@@ -500,7 +510,11 @@ export const hostService = {
       h.status = 'SUBMITTED';
       h.submitted_at = new Date();
     }
-    await h.save();
+    try {
+      await h.save();
+    } catch (err) {
+      throw isDuplicateKeyError(err) ? alreadyHosts() : err;
+    }
     return toPub(h);
   },
   /**

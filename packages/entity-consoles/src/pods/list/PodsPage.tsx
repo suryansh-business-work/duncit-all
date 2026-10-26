@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useApolloClient } from '@apollo/client/react';
-import { Navigate, useNavigate, useSearchParams } from 'react-router';
+import { Navigate, useNavigate } from 'react-router';
 import { FormControlLabel, Snackbar, Stack, Switch } from '@mui/material';
 import { useApolloTableFetch } from '@duncit/table';
 import { EMPTY_CATEGORY, type AdminCategoryValue } from '@duncit/category';
@@ -17,6 +17,7 @@ import type { PodLifecycleFilter } from './podLifecycle';
 import { clubIdsInCategory, clubScopeFilter, scopedClubIds } from './podListFilters';
 import QuickEditPodDialog from './QuickEditPodDialog';
 import usePodDelete from './usePodDelete';
+import usePodListParams from './usePodListParams';
 import usePodPageData from './usePodPageData';
 import usePodReleaseRequest from './usePodReleaseRequest';
 import usePodVisibility from './usePodVisibility';
@@ -28,11 +29,10 @@ const noRows = async () => ({ rows: [], total: 0 });
 
 export default function PodsPage() {
   const { t } = useTranslation();
-  const [params, setParams] = useSearchParams();
   const navigate = useNavigate();
-  const clubFilter = params.get('club_id') ?? '';
-  // Bookmarks from before the editor became a page still point at /pods?edit=.
-  const legacyEditId = params.get('edit') ?? '';
+  // Upcoming / Ongoing / Completed / Cancelled is derived from the pod's dates
+  // server-side, so it is a query argument rather than a table column filter.
+  const { clubFilter, setClubFilter, legacyEditId, lifecycle, setLifecycle } = usePodListParams();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
 
@@ -40,11 +40,9 @@ export default function PodsPage() {
   const [toast, setToast] = useState<string | null>(null);
   const [quickPod, setQuickPod] = useState<PodRow | null>(null);
   const [trailPod, setTrailPod] = useState<PodRow | null>(null);
-  // Cancelled pods stay editable, so they must be findable — off by default.
-  const [showCancelled, setShowCancelled] = useState(false);
-  // Upcoming / Ongoing / Completed / Cancelled. Derived from the pod's dates
-  // server-side, so it is a query argument rather than a table column filter.
-  const [lifecycle, setLifecycle] = useState<PodLifecycleFilter>('');
+  // Cancelled pods stay editable, so they must be findable — off by default
+  // unless the link itself asks for the cancelled bucket.
+  const [showCancelled, setShowCancelled] = useState(lifecycle === 'CANCELLED');
   // Super → Category → Sub. A pod's category is its club's, so it resolves to a club scope.
   const [category, setCategory] = useState<AdminCategoryValue>(EMPTY_CATEGORY);
   const picker = useMediaPickerBridge();
@@ -112,7 +110,7 @@ export default function PodsPage() {
         clubs={lookups.clubs}
         locations={lookups.locations}
         clubFilter={clubFilter}
-        setClubFilter={(v) => (v ? setParams({ club_id: v }) : setParams({}))}
+        setClubFilter={setClubFilter}
         lifecycle={lifecycle}
         setLifecycle={pickLifecycle}
         category={category}
@@ -129,7 +127,7 @@ export default function PodsPage() {
                 <Switch
                   size="small"
                   checked={showCancelled}
-                  onChange={(e) => setShowCancelled(e.target.checked)}
+                  onChange={(e) => setShowCancelled(e.target.checked)} data-testid="pods-include-cancelled"
                 />
               }
               label={t('admin.pods.includeCancelled')}

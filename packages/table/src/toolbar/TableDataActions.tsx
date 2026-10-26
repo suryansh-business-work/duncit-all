@@ -67,6 +67,7 @@ export function TableDataActions<T>(props: Readonly<TableDataActionsProps<T>>) {
           aria-expanded={Boolean(menuAnchor)}
           disabled={loading || downloading}
           onClick={(event) => setMenuAnchor(event.currentTarget)}
+          data-testid="table-toolbar-download"
         >
           {downloading ? <CircularProgress size={18} /> : <FileDownloadIcon fontSize="small" />}
         </DuncitIconButton>
@@ -77,6 +78,7 @@ export function TableDataActions<T>(props: Readonly<TableDataActionsProps<T>>) {
             key={option.labelKey}
             disabled={option.scope === 'all' && total === 0}
             onClick={() => download(option.scope, option.format)}
+            data-testid={`table-download-${option.scope}-${option.format}`}
           >
             {t(option.labelKey)}
           </MenuItem>
@@ -91,6 +93,7 @@ export function TableDataActions<T>(props: Readonly<TableDataActionsProps<T>>) {
               aria-haspopup="dialog"
               disabled={loading}
               onClick={() => setApiOpen(true)}
+              data-testid="table-toolbar-get-api"
             >
               <ApiIcon fontSize="small" />
             </DuncitIconButton>

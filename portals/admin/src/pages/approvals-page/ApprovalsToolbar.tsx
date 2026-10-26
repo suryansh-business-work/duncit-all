@@ -20,7 +20,7 @@ export default function ApprovalsToolbar({ status, onChange }: Readonly<Props>) 
       aria-label={t('admin.approvals.filterByStatus')}
     >
       {STATUS_FILTERS.map((f) => (
-        <ToggleButton key={f.label} value={f.value}>
+        <ToggleButton key={f.label} value={f.value} data-testid={`approvals-status-${f.value || 'ALL'}`}>
           {f.label}
         </ToggleButton>
       ))}

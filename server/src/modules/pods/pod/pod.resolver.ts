@@ -18,8 +18,11 @@ import { throwIfClientGone } from '@utils/clientPresence';
 import { reelHasAudio } from './pod.reelAudio';
 import { podVisibleTo } from './pod.visibility';
 import { canSeeHidden } from '@utils/hidden';
+import { consoleReaders } from '@modules/portals/console-access';
 
 const ADMIN_WRITE = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN'];
+/** The Pods console's pages also read for `ALL_PODS_ACCESS` — see `console-access.ts`. */
+const POD_READ = consoleReaders('POD');
 // Roles allowed to see pods still awaiting a venue's slot approval (admin +
 // onboarding review consoles). Everyone else — including the public discovery
 // feed — never receives a PENDING pod, so it stays offline until approved.
@@ -30,6 +33,10 @@ const isAdminCtx = (ctx: GraphQLContext) =>
 
 const canReviewPendingPods = (ctx: GraphQLContext) =>
   !!ctx.user?.roles?.some((r) => POD_REVIEW_ROLES.has(r));
+
+/** Cancelled pods are a READ: reviewers and the Pods console (`POD_READ`) may include them. */
+const canReadCancelledPods = (ctx: GraphQLContext) =>
+  canReviewPendingPods(ctx) || !!ctx.user?.roles?.some((r) => POD_READ.includes(r));
 
 /** Per-request cache of live product free-delivery thresholds (one lookup per
  * product across every pod's product_requests in the operation). */
@@ -212,11 +219,11 @@ export const podResolvers = {
       return podService.revokePreview(args.pod_doc_id);
     },
     podCancellationRisk: (_p: unknown, args: { pod_doc_id: string }, ctx: GraphQLContext) => {
-      requireRole(ctx, ADMIN_WRITE);
+      requireRole(ctx, POD_READ);
       return podCancellationRisk(args.pod_doc_id);
     },
     podDashboard: (_p: unknown, args: { days?: number | null }, ctx: GraphQLContext) => {
-      requireRole(ctx, ADMIN_WRITE);
+      requireRole(ctx, POD_READ);
       return podDashboardService.load(args.days ?? 30);
     },
     pods: async (_p: unknown, args: { filter?: any }, ctx: GraphQLContext) => {
@@ -257,7 +264,8 @@ export const podResolvers = {
         // Filtering TO the cancelled bucket is that same request spelled out, so
         // it carries the same opt-in rather than quietly returning nothing.
         includeDeleted:
-          canReview && (args.include_deleted === true || args.lifecycle === 'CANCELLED'),
+          canReadCancelledPods(ctx) &&
+          (args.include_deleted === true || args.lifecycle === 'CANCELLED'),
         lifecycle: args.lifecycle ?? null,
       });
       throwIfClientGone(ctx);
@@ -287,7 +295,7 @@ export const podResolvers = {
       // the Cancelled stage); everyone else keeps the soft-delete guarantee.
       podVisibleTo(
         await podService.getById(args.pod_doc_id, {
-          includeDeleted: args.include_deleted === true && canReviewPendingPods(ctx),
+          includeDeleted: args.include_deleted === true && canReadCancelledPods(ctx),
         }),
         podReader(ctx)
       ),

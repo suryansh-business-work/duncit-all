@@ -50,10 +50,10 @@ export default function UserHeader({
       title={user.full_name || user.email || user.user_id}
       actions={
         <Stack direction="row" spacing={1}>
-        <DuncitButton size="small" variant="outlined" startIcon={<CallIcon />} onClick={onCallClick}>
+        <DuncitButton size="small" variant="outlined" startIcon={<CallIcon />} onClick={onCallClick} data-testid="admin-user-call">
           {t('admin.contact.call')}
         </DuncitButton>
-        <DuncitButton size="small" variant="outlined" startIcon={<EmailIcon />} onClick={onEmailClick}>
+        <DuncitButton size="small" variant="outlined" startIcon={<EmailIcon />} onClick={onEmailClick} data-testid="admin-user-email">
           {t('shell.common.email')}
         </DuncitButton>
         {status !== 'ACTIVE' && (

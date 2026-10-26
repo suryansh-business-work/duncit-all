@@ -65,7 +65,7 @@ export default function EcommBrandPage() {
   };
 
   return (
-    <Stack spacing={2.25} sx={{ width: '100%' }}>
+    <Stack spacing={2.25} sx={{ width: '100%' }} data-testid="ecomm-brand-page">
       <Box sx={{ p: 2.5, borderRadius: 2, color: 'common.white', background: primaryHeroBackground }}>
         <Typography variant="overline" sx={{ fontWeight: 800 }}>
           {t('partners.common.partnerTools')}

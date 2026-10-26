@@ -85,14 +85,14 @@ export function UserMenu({ user, fallbackName, profileTo, onLogout }: Readonly<U
         transformOrigin={{ vertical: 'top', horizontal: 'right' }}
       >
         {profileTo && (
-          <MenuItem onClick={handleProfile}>
+          <MenuItem onClick={handleProfile} data-testid="shell-user-menu-profile">
             <ListItemIcon>
               <PersonIcon fontSize="small" />
             </ListItemIcon>
             Profile
           </MenuItem>
         )}
-        <MenuItem onClick={handleLogout}>
+        <MenuItem onClick={handleLogout} data-testid="shell-user-menu-logout">
           <ListItemIcon>
             <LogoutIcon fontSize="small" />
           </ListItemIcon>

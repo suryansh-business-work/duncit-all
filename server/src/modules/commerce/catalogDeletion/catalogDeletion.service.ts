@@ -273,8 +273,15 @@ export const catalogDeletionService = {
     if (req.status !== 'PENDING') bad('Only a pending request can be reviewed');
     if (req.parent_id) bad('This product is part of a brand request — review the brand request');
     const text = note.trim().slice(0, 2000);
+    if (!approve && !text) bad('Tell the partner why the request is rejected');
+    // Claim the decision atomically: of two reviews pressed at once only the
+    // first still finds it PENDING; the second is refused, never applied twice.
+    const claimed = await CatalogDeletionRequestModel.updateOne(
+      { _id: req._id, status: 'PENDING' },
+      { $set: approve ? { status: 'APPROVED' } : { status: 'REJECTED', open: false } }
+    );
+    if (claimed.modifiedCount === 0) bad('Only a pending request can be reviewed');
     if (!approve) {
-      if (!text) bad('Tell the partner why the request is rejected');
       await closeRequest(req, 'REJECTED', text, by);
       await notifyDeletionUpdate(req, 'rejected — it is back on sale', text);
       logs.server.info('catalogDeletion', 'reject', { request_no: req.request_no, by });

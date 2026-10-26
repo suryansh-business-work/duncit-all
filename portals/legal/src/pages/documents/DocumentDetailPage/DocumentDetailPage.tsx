@@ -96,7 +96,7 @@ export default function DocumentDetailPage() {
     }
     if (!doc) {
       return (
-        <Typography variant="body2" sx={{
+        <Typography variant="body2" data-testid="document-not-found" sx={{
           color: "text.secondary"
         }}>This document could not be found.
                   </Typography>
@@ -147,16 +147,16 @@ export default function DocumentDetailPage() {
 
       {renderBody()}
 
-      <Dialog open={confirmDelete} onClose={() => setConfirmDelete(false)}>
+      <Dialog open={confirmDelete} onClose={() => setConfirmDelete(false)} data-testid="document-delete-dialog">
         <DialogTitle>{t('legal.documents.deleteTitle')}</DialogTitle>
         <DialogContent>
-          <DialogContentText>
+          <DialogContentText data-testid="document-delete-message">
             This permanently deletes “{doc?.name}” and its history.
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <DuncitButton onClick={() => setConfirmDelete(false)}>{t('shell.common.cancel')}</DuncitButton>
-          <DuncitButton color="error" variant="contained" onClick={doDelete}>{t('shell.common.delete')}</DuncitButton>
+          <DuncitButton onClick={() => setConfirmDelete(false)} data-testid="document-delete-cancel">{t('shell.common.cancel')}</DuncitButton>
+          <DuncitButton color="error" variant="contained" onClick={doDelete} data-testid="document-delete-confirm">{t('shell.common.delete')}</DuncitButton>
         </DialogActions>
       </Dialog>
 

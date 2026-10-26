@@ -120,7 +120,8 @@ export default function MeetingSection() {
                       </Tooltip>
                     </InputAdornment>
                   ) : undefined,
-                }
+                },
+                htmlInput: { 'data-testid': 'pod-form-meeting-url' },
               }}
             />
           )}

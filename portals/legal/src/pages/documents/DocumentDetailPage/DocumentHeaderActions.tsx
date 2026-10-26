@@ -24,12 +24,12 @@ export function DocumentHeaderActions({ onEdit, onPrint, onDownload, onCopy, onC
     <Stack direction="row" spacing={0.5} sx={{
       flexWrap: "wrap"
     }}>
-      <DuncitButton size="small" startIcon={<EditIcon />} onClick={onEdit}>{t('shell.common.edit')}</DuncitButton>
-      <DuncitButton size="small" startIcon={<PrintIcon />} onClick={onPrint}>{t('legal.documents.print')}</DuncitButton>
-      <DuncitButton size="small" startIcon={<DownloadIcon />} onClick={onDownload}>{t('legal.documents.download')}</DuncitButton>
-      <DuncitButton size="small" startIcon={<ContentCopyIcon />} onClick={onCopy}>{t('shell.common.copy')}</DuncitButton>
-      <DuncitButton size="small" startIcon={<FileCopyIcon />} onClick={onClone}>{t('legal.documents.clone')}</DuncitButton>
-      <DuncitButton size="small" color="error" startIcon={<DeleteIcon />} onClick={onDelete}>{t('shell.common.delete')}</DuncitButton>
+      <DuncitButton size="small" startIcon={<EditIcon />} onClick={onEdit} data-testid="document-action-edit">{t('shell.common.edit')}</DuncitButton>
+      <DuncitButton size="small" startIcon={<PrintIcon />} onClick={onPrint} data-testid="document-action-print">{t('legal.documents.print')}</DuncitButton>
+      <DuncitButton size="small" startIcon={<DownloadIcon />} onClick={onDownload} data-testid="document-action-download">{t('legal.documents.download')}</DuncitButton>
+      <DuncitButton size="small" startIcon={<ContentCopyIcon />} onClick={onCopy} data-testid="document-action-copy">{t('shell.common.copy')}</DuncitButton>
+      <DuncitButton size="small" startIcon={<FileCopyIcon />} onClick={onClone} data-testid="document-action-clone">{t('legal.documents.clone')}</DuncitButton>
+      <DuncitButton size="small" color="error" startIcon={<DeleteIcon />} onClick={onDelete} data-testid="document-action-delete">{t('shell.common.delete')}</DuncitButton>
     </Stack>
   );
 }

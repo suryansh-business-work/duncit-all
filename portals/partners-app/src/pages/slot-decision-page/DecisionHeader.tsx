@@ -60,6 +60,7 @@ export default function DecisionHeader({
           <Typography
             variant="h5"
             component="h1"
+            data-testid="slot-decision-title"
             sx={{
               fontWeight: 700,
               lineHeight: 1.2

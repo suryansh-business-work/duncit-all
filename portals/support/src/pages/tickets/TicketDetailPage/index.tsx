@@ -68,7 +68,7 @@ export default function TicketDetailPage() {
       return (
         <Typography variant="body2" sx={{
           color: "text.secondary"
-        }}>This ticket could not be found.
+        }} data-testid="ticket-not-found">This ticket could not be found.
                   </Typography>
       );
     }
@@ -121,7 +121,7 @@ export default function TicketDetailPage() {
         <BackHeader onBack={() => navigate('/tickets')} title={t('support.tickets.detailTitle')} titleWeight={800} />
       )}
       {renderBody()}
-      <Snackbar open={Boolean(actions.notice)} autoHideDuration={4000} onClose={actions.clearNotice} message={actions.notice} />
+      <Snackbar open={Boolean(actions.notice)} autoHideDuration={4000} onClose={actions.clearNotice} message={actions.notice} data-testid="ticket-notice" />
     </Stack>
   );
 }

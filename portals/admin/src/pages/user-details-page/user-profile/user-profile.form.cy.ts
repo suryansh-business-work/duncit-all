@@ -28,6 +28,11 @@ describe('userProfileSchema', () => {
     expect(messages({ ...valid, first_name: 'Jane!@' })).toMatch(/first name/i);
   });
 
+  it('accepts a member without a last name, but still shape-checks one that is typed', () => {
+    expect(userProfileSchema.parse({ ...valid, last_name: '  ' }).last_name).toBe('');
+    expect(messages({ ...valid, last_name: 'Doe_123' })).toMatch(/last name/i);
+  });
+
   it('rejects phone with letters', () => {
     expect(messages({ ...valid, phone_number: 'abc123' })).toMatch(/digits/i);
   });
@@ -65,6 +70,11 @@ describe('toUpdateUserInput', () => {
     expect(input.email).toBe('');
     expect(input.city).toBeUndefined();
     expect(input.bio).toBeUndefined();
+  });
+
+  it('omits a blank last name, which the server would refuse, and sends a typed one', () => {
+    expect(toUpdateUserInput({ ...valid, last_name: '' }).last_name).toBeUndefined();
+    expect(toUpdateUserInput(valid).last_name).toBe('Doe');
   });
 
   it('includes email when provided', () => {

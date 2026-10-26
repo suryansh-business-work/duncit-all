@@ -96,7 +96,7 @@ export default function ClubAdminPodEditorPage() {
             intro={
               <>
                 {lookups.error && <Alert severity="error">{lookups.error.message}</Alert>}
-                <Alert severity="info">{t('clubAdmin.editor.hostNote')}</Alert>
+                <Alert severity="info" data-testid="club-pod-editor-host-note">{t('clubAdmin.editor.hostNote')}</Alert>
               </>
             }
           />

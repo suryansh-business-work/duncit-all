@@ -36,15 +36,15 @@ export default function SurveyMetaCard({
           alignItems: { sm: 'center' }
         }}>
           {!isDefaultMode && (
-            <TextField select size="small" label={t('onboarding.surveys.kind')} value={kind} onChange={(e) => setKind(e.target.value as SurveyKind)} sx={{ minWidth: 160 }}>
+            <TextField select size="small" label={t('onboarding.surveys.kind')} value={kind} onChange={(e) => setKind(e.target.value as SurveyKind)} sx={{ minWidth: 160 }} data-testid="survey-meta-kind">
               <MenuItem value="VENUE">{t('onboarding.common.venue')}</MenuItem>
               <MenuItem value="HOST">Host</MenuItem>
               <MenuItem value="ECOMM">E-Commerce Brand</MenuItem>
               <MenuItem value="CLUB_ADMIN">{t('onboarding.common.clubAdmin')}</MenuItem>
             </TextField>
           )}
-          <TextField size="small" label={t('onboarding.surveys.surveyTitle')} value={title} onChange={(e) => setTitle(e.target.value)} sx={{ flex: 1 }} fullWidth />
-          <FormControlLabel control={<Switch checked={isActive} onChange={(e) => setIsActive(e.target.checked)} />} label={t('onboarding.common.active')} />
+          <TextField size="small" label={t('onboarding.surveys.surveyTitle')} value={title} onChange={(e) => setTitle(e.target.value)} sx={{ flex: 1 }} fullWidth data-testid="survey-meta-title" />
+          <FormControlLabel control={<Switch checked={isActive} onChange={(e) => setIsActive(e.target.checked)} />} label={t('onboarding.common.active')} data-testid="survey-meta-active" />
         </Stack>
         {!isDefaultMode && (
           <ScopePicker

@@ -135,27 +135,28 @@ export default function DefaultDeductionsPage() {
         </Alert>
 
         <DeductionCard title="GST" subtitle={t('finance.defaultDeductions.taxExtractedFromTheGstInclusive')}>
-          <DeductionSlider label="GST" value={form.gst_pct} onChange={set('gst_pct')} max={28} />
+          <DeductionSlider testId="deduction-gst_pct" label="GST" value={form.gst_pct} onChange={set('gst_pct')} max={28} />
         </DeductionCard>
 
         <DeductionCard title={t('finance.defaultDeductions.platformFees')} subtitle="Duncit's platform fee on the net (post-GST) amount.">
-          <DeductionSlider label={t('finance.common.platformFee')} value={form.platform_fee_pct} onChange={set('platform_fee_pct')} max={30} />
+          <DeductionSlider testId="deduction-platform_fee_pct" label={t('finance.common.platformFee')} value={form.platform_fee_pct} onChange={set('platform_fee_pct')} max={30} />
         </DeductionCard>
 
         <DeductionCard title={t('finance.defaultDeductions.host')} subtitle="The commission Duncit takes from the host's pool remainder.">
-          <DeductionSlider label={t('finance.defaultDeductions.commissionFromHost')} value={form.default_host_commission_pct} onChange={set('default_host_commission_pct')} />
+          <DeductionSlider testId="deduction-default_host_commission_pct" label={t('finance.defaultDeductions.commissionFromHost')} value={form.default_host_commission_pct} onChange={set('default_host_commission_pct')} />
         </DeductionCard>
 
         <DeductionCard title={t('finance.common.venue')} subtitle="Duncit's commission, added on top of the venue's agreed booking amount (a venue's own commission wins when set).">
-          <DeductionSlider label={t('finance.defaultDeductions.commissionFromVenue')} value={form.default_venue_commission_pct} onChange={set('default_venue_commission_pct')} />
+          <DeductionSlider testId="deduction-default_venue_commission_pct" label={t('finance.defaultDeductions.commissionFromVenue')} value={form.default_venue_commission_pct} onChange={set('default_venue_commission_pct')} />
         </DeductionCard>
 
         <DeductionCard title={t('finance.defaultDeductions.products')} subtitle="Duncit's commission on a product's selling price.">
-          <DeductionSlider label={t('finance.defaultDeductions.productCommission')} value={form.default_product_commission_pct} onChange={set('default_product_commission_pct')} max={50} />
+          <DeductionSlider testId="deduction-default_product_commission_pct" label={t('finance.defaultDeductions.productCommission')} value={form.default_product_commission_pct} onChange={set('default_product_commission_pct')} max={50} />
         </DeductionCard>
 
         <DeductionCard title={t('finance.common.clubAdmin')} subtitle="Cut taken off every pod's pool after GST + platform fee, before the venue/host split.">
           <DeductionSlider
+            testId="deduction-default_club_admin_pct"
             label={t('finance.defaultDeductions.clubAdminCut010')}
             value={form.default_club_admin_pct}
             onChange={set('default_club_admin_pct')}
@@ -169,6 +170,7 @@ export default function DefaultDeductionsPage() {
           subtitle="Kept from a member's refund when they back out of a paid pod — from the money AND from the Duncit Coins."
         >
           <DeductionSlider
+            testId="deduction-default_backout_deduction_pct"
             label={t('finance.defaultDeductions.backoutPaymentDeductionCharges0100')}
             value={form.default_backout_deduction_pct}
             onChange={set('default_backout_deduction_pct')}

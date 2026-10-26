@@ -701,6 +701,16 @@ changeRequests: {
       changeRequestLabel: 'Points',
       changeRequestMin: 'Between 0 and 10 points. Default 5.',
       changeRequestInvalid: 'Enter a whole number between 0 and 10.',
+      // Venue booking offers: how far a host and a venue may bargain in the venue chat.
+      venueOfferGroupTitle: 'Venue booking offers',
+      venueOfferGroupDesc:
+        'A host books a venue by sending it an offer in the venue chat (mWeb, the app and the Partners app). Either side can answer with a counter offer until one side accepts or rejects.',
+      maxCountersTitle: 'Counter offers per booking',
+      maxCountersDesc:
+        'The most counter offers the host and the venue can send each other on one booking, split equally between them. With 6, the host can counter 3 times and the venue 3 times. The host’s first offer is not a counter, editing a counter does not use another one, and a counter withdrawn before the other side saw it is given back. Once a side has used its share it can only accept or reject. A change applies to every booking still being negotiated.',
+      maxCountersLabel: 'Counters per booking (host + venue)',
+      maxCountersMin: 'An even number from 2 to 20. Default 6 (3 each).',
+      maxCountersInvalid: 'Enter an even number from 2 to 20 — it is split equally between the host and the venue.',
 
       // The cap on every pod's multi-ticket discount tiers (1–99, default 50).
       ticketDiscountMaxPctLabel: 'Max multi-ticket discount (%)',

@@ -1,9 +1,10 @@
 /** A booking's offer as the venue's inbox, the chat and the host's pod page read it. Pure. */
-import type {
-  VenueOffer,
-  VenueOfferHistoryEntry,
-  VenueOfferParty,
-  VenueOfferProposal,
+import {
+  currentOfferModel,
+  type VenueOffer,
+  type VenueOfferHistoryEntry,
+  type VenueOfferParty,
+  type VenueOfferProposal,
 } from './venueOffer.types';
 
 interface OfferSlot {
@@ -47,6 +48,10 @@ const quoteOut = (q: VenueOffer['quote']) => ({
   confirmed_at: iso(q.confirmed_at),
 });
 
+/** Counters this side has made on the offer so far (the opening offer is not one; a withdrawn one is gone). */
+export const countersUsed = (offer: Pick<VenueOffer, 'history'>, side: VenueOfferParty): number =>
+  (offer.history ?? []).filter((step) => step.action === 'COUNTER' && step.by === side).length;
+
 /** Whose move it is: the venue answers the host's terms, the host answers the venue's. */
 export function awaitingParty(offer: Pick<VenueOffer, 'status'>): VenueOfferParty | null {
   if (offer.status === 'SENT') return 'VENUE';
@@ -72,7 +77,7 @@ export const proposerOf = (offer: Pick<VenueOffer, 'status'>): VenueOfferParty =
 const historyOut = (h: VenueOfferHistoryEntry) => ({
   by: h.by,
   action: h.action,
-  model: h.model,
+  model: h.model ? currentOfferModel(h.model) : null,
   rate: h.rate,
   total: h.total,
   min_guests: h.min_guests ?? null,
@@ -83,10 +88,11 @@ const historyOut = (h: VenueOfferHistoryEntry) => ({
 /** One side's proposal as the API shows it. An offer from before minimums reads its guests as both ends. */
 function proposalOut(p: VenueOfferProposal, pax: number) {
   return {
-    model: p.model,
+    model: currentOfferModel(p.model),
     rate: p.rate,
     min_guests: p.min_guests || pax,
     offerings: [...(p.offerings ?? [])],
+    images: [...(p.images ?? [])],
     note: p.note ?? '',
     quote: quoteOut(p.quote),
     quote_min: quoteOut(p.quote_min ?? p.quote),
@@ -114,5 +120,7 @@ export function offerView(slot: OfferSlot) {
     history: (offer.history ?? []).map(historyOut),
     awaiting: awaitingParty(offer),
     expires_at: iso(offer.expires_at),
+    host_counters_used: countersUsed(offer, 'HOST'),
+    venue_counters_used: countersUsed(offer, 'VENUE'),
   };
 }

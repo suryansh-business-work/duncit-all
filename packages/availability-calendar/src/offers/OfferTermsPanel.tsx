@@ -4,6 +4,7 @@ import { currentOfferTerms, venueOfferInboxStatus, type OfferStatusTone } from '
 import type { Translate } from '../pricing/types';
 import { offerTermsLabel } from './format';
 import { OfferAnswerBy, OfferAsk } from './OfferAsk';
+import OfferImages from './OfferImages';
 import OfferQuoteView from './OfferQuoteView';
 import type { OfferSide } from './offer-target';
 import type { OfferTerms } from './queries';
@@ -42,8 +43,8 @@ const OPEN_STATUSES: ReadonlySet<string> = new Set(['SENT', 'COUNTERED']);
  * The terms on the table — the host's offer, or the venue's counter while it
  * waits — with where the offer stands, the server's quote of them as a range
  * from the venue's minimum guests to the pod's spots (and its breakdown at the
- * most), what the venue is asked to provide, the note, and the answer-by time
- * while it is open. The venue and the host each read it from their side.
+ * most), what the venue is asked to provide, the note, the photos attached, and
+ * the answer-by time while it is open. The venue and the host each read it from their side.
  */
 export default function OfferTermsPanel({ offer, podIsFree, side = 'VENUE' }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -62,6 +63,8 @@ export default function OfferTermsPanel({ offer, podIsFree, side = 'VENUE' }: Re
       </Stack>
       {podIsFree ? <Alert severity="info">{free}</Alert> : <OfferQuoteView side={side} quote={terms.quote} quoteMin={terms.quoteMin} />}
       <OfferAsk offerings={terms.offerings} note={terms.note} by={terms.by} />
+      {/* The photos go with the terms on the table: the venue's counter's while there is one. */}
+      <OfferImages images={offer.counter ? offer.counter.images : offer.images} />
       {OPEN_STATUSES.has(offer.status) && <OfferAnswerBy at={offer.expires_at} />}
     </Stack>
   );

@@ -21,6 +21,8 @@ const askFields = {
   quote_min: { type: priceSnapshotSchema, default: null },
   // The venue's charges the terms were priced with (see OfferCharges).
   charges: { type: Schema.Types.Mixed, default: null },
+  // Photos attached to a counter; empty on an opening offer and on older rows.
+  images: { type: [{ type: String, trim: true }], default: [] },
 };
 
 const counterSchema = new Schema<VenueOfferCounter>(
@@ -64,6 +66,8 @@ export const venueOfferSchema = new Schema<VenueOffer>(
     note: { type: String, default: '', trim: true, maxlength: OFFER_ASK_LIMITS.note },
     expires_at: { type: Date, default: null },
     move: { type: Number, default: 0, min: 0 },
+    // Where the offer stood before its latest counter (VenueOfferPrior): what a withdrawal puts back.
+    prior: { type: Schema.Types.Mixed, default: null },
     ...askFields,
   },
   { _id: false }

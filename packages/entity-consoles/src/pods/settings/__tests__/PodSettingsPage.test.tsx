@@ -43,6 +43,7 @@ const POD_SETTINGS = gql`
       venue_change_request_health_penalty
       host_change_request_health_penalty
       club_admin_change_request_health_penalty
+      venue_offer_max_counters
       updated_at
     }
   }
@@ -78,6 +79,7 @@ const UPDATE_POD_SETTINGS = gql`
       venue_change_request_health_penalty
       host_change_request_health_penalty
       club_admin_change_request_health_penalty
+      venue_offer_max_counters
       updated_at
     }
   }
@@ -113,6 +115,7 @@ const SAVED: SavedPodSettings = {
   venue_change_request_health_penalty: 5,
   host_change_request_health_penalty: 5,
   club_admin_change_request_health_penalty: 5,
+  venue_offer_max_counters: 6,
 };
 
 /** The page refetches after every save, so this mock must be reusable. */
@@ -316,6 +319,31 @@ describe('PodSettingsPage — free pod spot cancellations', () => {
 
     fireEvent.change(cap, { target: { value: '2' } });
     fireEvent.click(saveIn(cap));
+
+    // A mismatch in the mutation variables would leave the snackbar unrendered.
+    await waitForToast();
+  });
+});
+
+describe('PodSettingsPage — venue booking offer counters', () => {
+  const COUNTERS_LABEL = 'Counters per booking (host + venue)';
+  const COUNTERS_INVALID = 'Enter an even number from 2 to 20 — it is split equally between the host and the venue.';
+
+  it('shows the saved total under its own heading, refuses an odd one and saves only its own field', async () => {
+    renderPage([settingsMock(), publicMock(), updateOk({ venue_offer_max_counters: 8 })]);
+
+    expect(screen.getByRole('heading', { name: 'Venue booking offers' })).toBeInTheDocument();
+    const counters = screen.getByLabelText(COUNTERS_LABEL);
+    await waitFor(() => expect(counters).toHaveValue(6));
+    expect(saveIn(counters)).toBeDisabled();
+
+    fireEvent.change(counters, { target: { value: '7' } });
+    expect(saveIn(counters)).toBeDisabled();
+    expect(cardOf(counters).getByText(COUNTERS_INVALID)).toBeInTheDocument();
+
+    fireEvent.change(counters, { target: { value: '8' } });
+    expect(cardOf(counters).queryByText(COUNTERS_INVALID)).toBeNull();
+    fireEvent.click(saveIn(counters));
 
     // A mismatch in the mutation variables would leave the snackbar unrendered.
     await waitForToast();

@@ -1,2 +1,2 @@
-/** Quick-reaction / composer emoji set — mirrors mWeb's EMOJIS list. */
-export const CHAT_EMOJIS = ['👍', '❤️', '😂', '🎉', '🔥', '😢', '🙏', '😮'] as const;
+/** Quick-reaction / composer emoji set — the one list every chat shares (`@duncit/utils`). */
+export { CHAT_EMOJIS } from '@duncit/utils';

@@ -4,6 +4,7 @@ import { slotSpanLabel } from '@duncit/slots';
 import type { VenueChatOfferMove } from '@duncit/utils';
 import { offerGuestsLabel, offerTermsLabel } from '../format';
 import { OfferAnswerBy, OfferAsk } from '../OfferAsk';
+import OfferImages from '../OfferImages';
 import OfferMoney from '../OfferMoney';
 import type { OfferSide } from '../offer-target';
 
@@ -31,8 +32,8 @@ interface Props {
 /**
  * The terms one move of the offer carried, as they stood: how the venue is
  * paid, for how many guests, when and where, pets, the money as a range, what
- * the venue is asked to provide, the note, why it was declined, and until when
- * it may be answered.
+ * the venue is asked to provide, the note, the photos attached, why it was
+ * declined, and until when it may be answered.
  */
 export default function OfferMoveDetails({ move, money, open, podIsFree = false }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -57,6 +58,7 @@ export default function OfferMoveDetails({ move, money, open, podIsFree = false 
         <OfferMoney side={money} range={range} />
       )}
       <OfferAsk offerings={move.offerings} note={move.note} by={move.by} />
+      <OfferImages images={move.images} />
       {move.event === 'DECLINED' && move.reason && (
         <Typography variant="body2" sx={{ color: 'text.secondary', overflowWrap: 'anywhere' }} data-testid="offer-move-reason">
           {t('availability.offers.chat.reason', { vars: { reason: move.reason } })}

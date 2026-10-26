@@ -91,3 +91,23 @@ describe('HostOfferActions', () => {
     expect(screen.getByTestId('venue-offer-counter-error')).toHaveTextContent('Offer expired');
   });
 });
+
+describe('HostOfferActions — the counters each side may make', () => {
+  it('names how many counters the host has left beside Counter', () => {
+    mount(counteredOffer({ host_counters_used: 1 }));
+    expect(screen.getByTestId('host-offer-counter')).toBeOnTheScreen();
+    expect(screen.getByTestId('host-offer-counters-left')).toHaveTextContent(
+      '2 of 3 counters left',
+    );
+  });
+
+  it('hides Counter once the host has used their share, leaving accept or reject', () => {
+    mount(counteredOffer({ host_counters_used: 3 }));
+    expect(screen.queryByTestId('host-offer-counter')).toBeNull();
+    expect(screen.getByTestId('host-offer-accept')).toBeOnTheScreen();
+    expect(screen.getByTestId('host-offer-reject')).toBeOnTheScreen();
+    expect(screen.getByTestId('host-offer-counters-left')).toHaveTextContent(
+      'You have used all your counters — accept or reject',
+    );
+  });
+});

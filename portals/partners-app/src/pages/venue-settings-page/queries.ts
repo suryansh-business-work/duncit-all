@@ -38,6 +38,10 @@ export const MY_VENUES_SETTINGS = gql`
         offers {
           min_guests
           response_hours
+          min_business {
+            model
+            amount
+          }
         }
       }
     }

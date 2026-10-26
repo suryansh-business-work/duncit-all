@@ -24,6 +24,49 @@ export const venueChatTypeDefs = /* GraphQL */ `
     counterpart_phone: String
     "Their email. Null when none is on record."
     counterpart_email: String
+    "The pod's lead host, for the contact sheet (both sides see it). Null when the pod has no host on record."
+    host: VenueChatHostCard
+    "The venue, for the contact sheet (both sides see it)."
+    venue: VenueChatVenueCard!
+    "How far every other member has read the thread — the faces drawn under the last line each has seen."
+    read_marks: [VenueChatReadMark!]!
+  }
+
+  "The pod's lead host on a venue chat's contact sheet."
+  type VenueChatHostCard {
+    user_id: ID!
+    name: String!
+    photo: String
+    "Their @handle, for their profile link; empty when they have none."
+    username: String!
+    bio: String!
+    "With its country code; empty when none is on record."
+    phone: String!
+    email: String!
+  }
+
+  "The venue on a venue chat's contact sheet. name/phone/email are the person to ask for."
+  type VenueChatVenueCard {
+    venue_id: ID!
+    venue_name: String!
+    photo: String
+    venue_type: String!
+    capacity: Int!
+    "Street, locality and city, as one line."
+    address: String!
+    name: String!
+    phone: String!
+    email: String!
+  }
+
+  "How far one member has read a venue chat. The venue's owner reads as the venue (its name and photo)."
+  type VenueChatReadMark {
+    user_id: ID!
+    side: VenueChatSide!
+    name: String!
+    photo: String
+    "Every line written at or before this time has been seen by them."
+    last_read_at: String!
   }
 
   "One move of a booking offer, as a venue chat OFFER line records it (money in rupees)."
@@ -54,6 +97,8 @@ export const venueChatTypeDefs = /* GraphQL */ `
     "When the other side must answer by; null once the offer is closed."
     expires_at: String
     reason: String!
+    "Photos the mover attached to a counter (uploaded from their device)."
+    images: [String!]!
   }
 
   "A venue booking's chat in an inbox list, newest activity first."
@@ -89,12 +134,20 @@ export const venueChatTypeDefs = /* GraphQL */ `
     adminVenueChatMessages(pod_id: ID!, limit: Int, before: String): [PodMessage!]!
     "A venue booking's chat — only its hosts and the venue's owner may read it."
     venueChatRoom(pod_id: ID!): VenueChatRoom!
-    "One page of the thread, oldest first: the newest \`limit\` before \`before\`."
-    venueChatMessages(pod_id: ID!, limit: Int, before: String): [PodMessage!]!
+    "One page of the thread, oldest first: the newest \`limit\` before \`before\`. Reading the newest page marks the thread read unless mark_read is false."
+    venueChatMessages(pod_id: ID!, limit: Int, before: String, mark_read: Boolean): [PodMessage!]!
   }
 
   extend type Mutation {
     "Post to a venue booking's chat (TEXT, or IMAGE with an uploaded https URL)."
     sendVenueChatMessage(pod_id: ID!, type: PodMessageType, text: String, image_url: String): PodMessage!
+    "React to any line of a venue chat; the same emoji again takes the reaction back."
+    reactToVenueChatMessage(message_id: ID!, emoji: String!): PodMessage!
+    "The author rewrites their own text line; everyone sees it marked edited."
+    editVenueChatMessage(message_id: ID!, text: String!): PodMessage!
+    "The author removes their own text or photo line."
+    deleteVenueChatMessage(message_id: ID!): Boolean!
+    "The member has the thread open and read to the end: the other side sees their face move to the newest line."
+    markVenueChatRead(pod_id: ID!): Boolean!
   }
 `;

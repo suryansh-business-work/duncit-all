@@ -114,6 +114,8 @@ describe('VenueDetailsPage / tabs', () => {
     expect(screen.getByText('Booking offers', { selector: 'h6' })).toBeInTheDocument();
     expect(screen.getByText('10 guests')).toBeInTheDocument();
     expect(screen.getByText('24 hours · Duncit’s default')).toBeInTheDocument();
+    // The business it hopes for, as VENUE_DETAIL reads it, in the pickers' order.
+    expect(screen.getByText('₹200 per guest · ₹400 per hour')).toBeInTheDocument();
     expect(screen.queryByText('About', { selector: 'h6' })).not.toBeInTheDocument();
   });
 

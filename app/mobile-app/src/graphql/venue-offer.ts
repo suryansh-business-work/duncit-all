@@ -115,8 +115,9 @@ export const CounterQuoteResultFragment = gql(`
 /**
  * A booking offer's terms as both sides read them (`POD_VENUE_OFFER_SDL`): the
  * host's terms with what they ask beside the price, the server's quote at both
- * ends of the guests, the round, whose move it is and until when, and the
- * venue's counter while there is one.
+ * ends of the guests, the round, whose move it is and until when, the
+ * venue's counter while there is one, any photos either side attached, and how
+ * many counters each side has used of its share.
  */
 export const VenueOfferTermsFragment = gql(`
   fragment MobileVenueOfferTerms on VenueBookingOffer {
@@ -132,11 +133,15 @@ export const VenueOfferTermsFragment = gql(`
     min_guests
     offerings
     note
+    images
     pets
     status
     round
     awaiting
     expires_at
+    counters_per_side
+    host_counters_used
+    venue_counters_used
     quote {
       ...MobileVenueQuoteFields
     }
@@ -149,6 +154,7 @@ export const VenueOfferTermsFragment = gql(`
       min_guests
       offerings
       note
+      images
       at
       quote {
         ...MobileVenueQuoteFields
@@ -207,6 +213,45 @@ export const HostCounterQuoteDocument = gql(`
   query MobileHostCounterQuote($pod_id: ID!, $terms: VenueOfferTermsInput!) {
     hostCounterQuote(pod_id: $pod_id, terms: $terms) {
       ...MobileCounterQuoteResult
+    }
+  }
+`);
+
+/** Either side's edit of its own latest counter, priced before it is saved. */
+export const EditCounterQuoteDocument = gql(`
+  query MobileEditCounterQuote($pod_id: ID!, $terms: VenueOfferTermsInput!) {
+    editCounterQuote(pod_id: $pod_id, terms: $terms) {
+      ...MobileCounterQuoteResult
+    }
+  }
+`);
+
+/**
+ * Either side changes its own latest counter for the round it read, before the
+ * other side has seen it (else OFFER_SEEN); the round moves on.
+ */
+export const EditVenueOfferCounterDocument = gql(`
+  mutation MobileEditVenueOfferCounter(
+    $pod_id: ID!
+    $terms: VenueOfferTermsInput!
+    $note: String
+    $round: Int!
+  ) {
+    editVenueOfferCounter(pod_id: $pod_id, terms: $terms, note: $note, round: $round) {
+      slot_id
+      status
+      round
+    }
+  }
+`);
+
+/** Either side takes back its own latest counter before the other side has seen it: the terms before it stand again. */
+export const WithdrawVenueOfferCounterDocument = gql(`
+  mutation MobileWithdrawVenueOfferCounter($pod_id: ID!, $round: Int!) {
+    withdrawVenueOfferCounter(pod_id: $pod_id, round: $round) {
+      slot_id
+      status
+      round
     }
   }
 `);

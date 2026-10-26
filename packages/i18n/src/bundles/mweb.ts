@@ -2577,19 +2577,17 @@ export const MWEB_BUNDLE: NestedCatalogue = {
         intro: 'Pick a time the venue is open, then offer it a price. The venue accepts, rejects or counters your offer; your pod goes live once you both agree.',
         title: 'Your offer to the venue',
         modelLabel: 'How you pay the venue',
-        modelHint: 'Per guest, per hour, for the time slot, or one flat price',
+        modelHint: 'Per guest, per hour, or one flat price',
         rateLabel: 'Amount you offer',
         rateHint: "The venue's price rules, fees and GST are added on top, with Duncit's fee.",
         model: {
           perGuest: 'Per guest',
           perHour: 'Per hour',
-          perSlot: 'Per slot',
           flat: 'Flat price',
         },
         rate: {
           perGuest: 'Amount per guest',
           perHour: 'Amount per hour',
-          perSlot: 'Amount for the slot',
           flat: 'Flat price for the booking',
         },
         // One line under the picker on how the chosen option pays the venue.
@@ -2597,7 +2595,6 @@ export const MWEB_BUNDLE: NestedCatalogue = {
           perGuest:
             'A minimum order value per person: the venue is paid this for every guest who comes, never for fewer than its minimum guests.',
           perHour: 'Paid for every hour you book.',
-          perSlot: 'One amount for the time slot you picked.',
           flat: 'One fixed price for the whole booking.',
         },
       },
@@ -2877,7 +2874,6 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       terms: {
         perGuest: '{amount} per guest',
         perHour: '{amount} per hour',
-        perSlot: '{amount} for the slot',
         flat: '{amount} flat',
       },
     },
@@ -3275,7 +3271,6 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       offerModelLabel: 'How you pay the venue',
       offerModelPerGuest: 'Per guest',
       offerModelPerHour: 'Per hour',
-      offerModelPerSlot: 'Per slot',
       offerModelFlat: 'Flat price',
       offerRateLabel: 'Amount you offer (₹)',
       offerModelRequired: 'Pick how you will pay the venue',
@@ -4051,6 +4046,8 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       messageActions: 'Message actions',
       react: 'React',
       deleteMessage: 'Delete message',
+      editMessage: 'Edit message',
+      edited: 'Edited',
       deleteFailed: 'Could not delete this message. Please try again.',
       sendFailed: 'Could not send your message. Please try again.',
       reactFailed: 'Could not add your reaction. Please try again.',

@@ -327,14 +327,13 @@ export const POD_FORM_BUNDLE: NestedCatalogue = {
       endHint: 'Times the venue is free after your start',
       noEnd: 'No end time fits after this start. Pick another start.',
       modelLabel: 'How you pay the venue',
-      modelHint: 'Per guest, per hour, for the time slot, or one flat price',
+      modelHint: 'Per guest, per hour, or one flat price',
       rateLabel: 'Amount you offer',
       rateHint: "The venue's price rules, fees and GST are added on top, with Duncit's fee.",
       total: 'Venue cost with fees and GST: {amount}',
       model: {
         perGuest: 'Per guest',
         perHour: 'Per hour',
-        perSlot: 'Per slot',
         flat: 'Flat price',
       },
       // One line under the picker on how the chosen option pays the venue.
@@ -342,7 +341,6 @@ export const POD_FORM_BUNDLE: NestedCatalogue = {
         perGuest:
           'A minimum order value per person: the venue is paid this for every guest who comes, never for fewer than its minimum guests.',
         perHour: 'Paid for every hour you book.',
-        perSlot: 'One amount for the time slot you picked.',
         flat: 'One fixed price for the whole booking.',
       },
     },

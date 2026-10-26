@@ -11,7 +11,6 @@ export const VENUE_OFFER_QUOTE = gql`${VENUE_OFFER_QUOTE_SDL}`;
 export const PODFORM_OFFER_MODEL_KEY: Readonly<Record<string, string>> = {
   PER_GUEST: 'podForm.offer.model.perGuest',
   PER_HOUR: 'podForm.offer.model.perHour',
-  PER_SLOT: 'podForm.offer.model.perSlot',
   FLAT: 'podForm.offer.model.flat',
 };
 
@@ -19,6 +18,5 @@ export const PODFORM_OFFER_MODEL_KEY: Readonly<Record<string, string>> = {
 export const PODFORM_OFFER_HELP_KEY: Readonly<Record<string, string>> = {
   PER_GUEST: 'podForm.offer.help.perGuest',
   PER_HOUR: 'podForm.offer.help.perHour',
-  PER_SLOT: 'podForm.offer.help.perSlot',
   FLAT: 'podForm.offer.help.flat',
 };

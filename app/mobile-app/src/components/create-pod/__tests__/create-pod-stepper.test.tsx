@@ -88,10 +88,10 @@ const slot = {
 // window's start, and the window's end is offered after it.
 const slotTile = `slot-tile-${slot.start_at}`;
 const endChip = `create-pod-booking-end-${slot.end_at}`;
-// What the server quotes for a ₹400 slot offer: ₹400 + 18% GST to the venue,
+// What the server quotes for a flat ₹400 offer for the window: ₹400 + 18% GST to the venue,
 // plus Duncit's fee on top.
 const venuePriceQuote = {
-  model: 'PER_SLOT',
+  model: 'FLAT',
   rate: 400,
   pax: 0,
   hours: 2,
@@ -272,7 +272,7 @@ async function bookSlot() {
   press(slotTile);
   await screen.findByTestId(endChip);
   press(endChip);
-  press('create-pod-offer-model-PER_SLOT');
+  press('create-pod-offer-model-FLAT');
   fireEvent.changeText(screen.getByTestId('field-venue_offer_rate'), '400');
   // What the host needs from the venue is required beside the price.
   fireEvent.changeText(screen.getByTestId('field-venue_offer_offerings'), 'A projector');
@@ -390,7 +390,7 @@ describe('CreatePodStepper', () => {
         end_at: slot.end_at,
         pets: false,
         space_label: '',
-        model: 'PER_SLOT',
+        model: 'FLAT',
         rate: 400,
         offerings: ['A projector'],
         note: '',
@@ -1063,7 +1063,7 @@ describe('CreatePodStepper — a venue minimum', () => {
     press(slotTile);
     await screen.findByTestId(endChip);
     press(endChip);
-    press('create-pod-offer-model-PER_SLOT');
+    press('create-pod-offer-model-FLAT');
     fireEvent.changeText(screen.getByTestId('field-venue_offer_rate'), '400');
     await act(async () => {
       press('create-pod-submit');

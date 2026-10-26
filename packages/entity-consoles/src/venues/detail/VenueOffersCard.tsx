@@ -1,6 +1,7 @@
 import { Stack } from '@mui/material';
 import HandshakeOutlinedIcon from '@mui/icons-material/HandshakeOutlined';
 import { InfoRow } from '@duncit/ui';
+import { formatMoney, venueMinBusinessLines } from '@duncit/utils';
 import { useTranslation } from '@duncit/shell';
 import SectionCard from './SectionCard';
 import type { VenueOfferSettings } from './queries';
@@ -21,10 +22,12 @@ const valueLine = (value: string, ownValue: number | undefined, t: Translate) =>
 /**
  * The venue's booking-offer terms, read back for staff: the fewest guests a
  * host's offer may be for and the hours either side has to answer, each as it
- * is in effect, saying when that is Duncit's default rather than the venue's own.
+ * is in effect, saying when that is Duncit's default rather than the venue's own —
+ * and the business the venue hopes each booking brings (a guide hosts see).
  */
 export default function VenueOffersCard({ own, effective }: Readonly<Props>) {
   const { t } = useTranslation();
+  const business = venueMinBusinessLines(own?.min_business, t, (rupees) => formatMoney(rupees, { decimals: Number.isInteger(rupees) ? 0 : 2 }));
   return (
     <SectionCard icon={<HandshakeOutlinedIcon color="primary" />} title={t('venueSettings.offers.title')}>
       <Stack spacing={1.5} data-testid="venue-offers-card">
@@ -43,6 +46,10 @@ export default function VenueOffersCard({ own, effective }: Readonly<Props>) {
             own?.response_hours,
             t,
           )}
+        />
+        <InfoRow
+          label={t('availability.offers.minBusiness.title')}
+          value={business.length > 0 ? business.join(' · ') : t('availability.offers.minBusiness.notSet')}
         />
       </Stack>
     </SectionCard>

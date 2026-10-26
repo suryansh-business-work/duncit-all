@@ -1,11 +1,12 @@
 import { gql } from '@apollo/client';
 import { useQuery } from '@apollo/client/react';
-import { offerGuestFloor } from '@duncit/utils';
+import { offerGuestFloor, type VenueMinBusinessRow } from '@duncit/utils';
 
 /**
  * The venue's own bounds on an offer: how many guests its whole space holds,
- * and the fewest guests it takes an offer for (its setting, else the
- * platform's default — the server resolves it). The venues each portal hands
+ * the fewest guests it takes an offer for (its setting, else the platform's
+ * default — the server resolves it), and the business it hopes a booking
+ * brings (a guide shown beside the offer, never a rule). The venues each portal hands
  * the form are its own list and need not carry either, so the form asks for
  * the one venue it is offering to.
  */
@@ -15,6 +16,10 @@ export const POD_FORM_VENUE_OFFER_TERMS = gql`
       id
       capacity
       offer_min_guests
+      offer_min_business {
+        model
+        amount
+      }
     }
   }
 `;
@@ -27,10 +32,17 @@ export interface VenueOfferTerms {
   minGuests: number;
   /** What the whole venue holds; null while unknown or unset. */
   capacity: number | null;
+  /** What the venue hopes each booking brings, one amount per basis; empty while unknown or unset. */
+  minBusiness: VenueMinBusinessRow[];
 }
 
 interface TermsAnswer {
-  publicVenue: { id: string; capacity?: number | null; offer_min_guests?: number | null } | null;
+  publicVenue: {
+    id: string;
+    capacity?: number | null;
+    offer_min_guests?: number | null;
+    offer_min_business?: VenueMinBusinessRow[] | null;
+  } | null;
 }
 
 /** The bounds of an offer to `venueId` ('' asks nothing — no offer is being made). */
@@ -43,5 +55,9 @@ export function useVenueOfferTerms(venueId: string): VenueOfferTerms {
   // Skipped is no offer at all, whatever an earlier answer left behind.
   const venue = venueId ? data?.publicVenue : null;
   const capacity = Math.max(0, Math.floor(Number(venue?.capacity) || 0));
-  return { minGuests: offerGuestFloor(venue?.offer_min_guests, capacity), capacity: capacity > 0 ? capacity : null };
+  return {
+    minGuests: offerGuestFloor(venue?.offer_min_guests, capacity),
+    capacity: capacity > 0 ? capacity : null,
+    minBusiness: venue?.offer_min_business ?? [],
+  };
 }

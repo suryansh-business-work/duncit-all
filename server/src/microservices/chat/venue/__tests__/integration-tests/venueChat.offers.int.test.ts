@@ -93,7 +93,73 @@ describe('who each side is talking to', () => {
   it('has nobody to show for a pod without hosts', async () => {
     const { owner, pod } = await seed();
     await PodModel.updateOne({ _id: pod._id }, { $set: { pod_hosts_id: [] } });
-    await expect(room(pod._id, owner._id)).resolves.toMatchObject({ counterpart_name: null, counterpart_phone: null, counterpart_email: null });
+    await expect(room(pod._id, owner._id)).resolves.toMatchObject({
+      counterpart_name: null,
+      counterpart_phone: null,
+      counterpart_email: null,
+      host: null,
+      read_marks: [],
+    });
+  });
+});
+
+describe("the thread's contact sheet", () => {
+  it('shows both sides the same two cards: the lead host with their face and handle, the venue with its place', async () => {
+    const { owner, host, venue, pod } = await seed({
+      venue: {
+        cover_image_url: 'https://ik.imagekit.io/x/deck.jpg',
+        venue_type: 'Rooftop cafe',
+        capacity: 40,
+        address_line1: ' 12 MG Road ',
+        locality: 'Indiranagar',
+        city: 'Bengaluru',
+      },
+    });
+    await UserModel.collection.updateOne(
+      { _id: host._id },
+      { $set: { 'profile.profile_photo': 'https://ik.imagekit.io/x/meera.jpg', 'profile.username': 'meera_n', 'profile.bio': '  Plays the cajon  ' } }
+    );
+    const cards = {
+      host: {
+        user_id: String(host._id),
+        name: 'Meera Nair',
+        photo: 'https://ik.imagekit.io/x/meera.jpg',
+        username: 'meera_n',
+        bio: 'Plays the cajon',
+        phone: '+919876500000',
+        email: 'meera@x.com',
+      },
+      venue: {
+        venue_id: String(venue._id),
+        venue_name: 'Sky Deck',
+        photo: 'https://ik.imagekit.io/x/deck.jpg',
+        venue_type: 'Rooftop cafe',
+        capacity: 40,
+        address: '12 MG Road, Indiranagar, Bengaluru',
+        name: 'Deck Desk',
+        phone: '+919800000000',
+        email: 'desk@deck.com',
+      },
+    };
+
+    await expect(room(pod._id, host._id)).resolves.toMatchObject(cards);
+    await expect(room(pod._id, owner._id)).resolves.toMatchObject(cards);
+  });
+
+  it('says there is no photo rather than an empty one, and leaves blank parts out of the address', async () => {
+    const { host, pod } = await seed({ venue: { address_line1: '12 MG Road', locality: '  ', city: 'Bengaluru' } });
+    const shown = await room(pod._id, host._id);
+    expect(shown.host).toMatchObject({ photo: null, username: '', bio: '' });
+    expect(shown.venue).toMatchObject({ photo: null, address: '12 MG Road, Bengaluru', venue_type: '', capacity: 0 });
+    expect(shown.venue_photo).toBeNull();
+  });
+
+  it("fills only what the listing leaves blank from the owner's own account", async () => {
+    const { host, pod } = await seed({ venue: { owner_phone: '' } });
+    await expect(room(pod._id, host._id)).resolves.toMatchObject({
+      venue: { name: 'Deck Desk', phone: '+919811111111', email: 'desk@deck.com' },
+      counterpart_phone: '+919811111111',
+    });
   });
 });
 
@@ -119,6 +185,7 @@ describe('offer lines', () => {
     total_max: 13_200,
     expires_at: new Date('2027-01-03T12:30:00.000Z'),
     reason: '',
+    images: [],
     ...over,
   });
 
@@ -160,6 +227,30 @@ describe('offer lines', () => {
     const lines = await venueChatService.messages(String(pod._id), String(owner._id));
     expect(lines.find((l) => l.type === 'TEXT')?.offer).toBeNull();
     expect(lines.find((l) => l.type === 'OFFER')?.offer).toMatchObject({ event: 'ACCEPTED', expires_at: null });
+  });
+
+  it('carries the photos a counter attached, as their own copy, on a line that has never been edited', async () => {
+    const { owner, host, pod } = await seed();
+    const images = ['https://ik.imagekit.io/duncit/offer/terrace.jpg'];
+    await venueChatService.postOffer({ podId: String(pod._id), side: 'VENUE', userId: String(owner._id), text: 'Counter offer', offer: payload({ images }) });
+
+    const [line] = await venueChatService.messages(String(pod._id), String(host._id));
+    expect(line.offer?.images).toEqual(images);
+    expect(line.edited_at).toBeNull();
+  });
+
+  it('reads a line written before "for the slot" was retired as the flat price it always was', async () => {
+    const { owner, host, pod } = await seed();
+    await venueChatService.postOffer({
+      podId: String(pod._id),
+      side: 'VENUE',
+      userId: String(owner._id),
+      text: 'Counter offer',
+      offer: payload({ model: 'PER_SLOT', rate: 7000 }),
+    });
+
+    const [line] = await venueChatService.messages(String(pod._id), String(host._id));
+    expect(line.offer).toMatchObject({ model: 'FLAT', rate: 7000 });
   });
 
   it('posts nothing for a pod that is not at a venue', async () => {

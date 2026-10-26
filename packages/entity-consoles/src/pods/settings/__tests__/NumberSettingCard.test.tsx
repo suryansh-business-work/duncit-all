@@ -7,13 +7,14 @@ interface RenderArgs {
   loading?: boolean;
   min?: number;
   max?: number;
+  step?: number;
   onSave?: (next: number) => Promise<void>;
 }
 
 const LABEL = 'Remind Before (Hours)';
 const INVALID = 'Enter a whole number between 1 and 48.';
 
-const cardProps = ({ value = 24, loading = false, min = 1, max, onSave = vi.fn(async () => undefined) }: RenderArgs) => ({
+const cardProps = ({ value = 24, loading = false, min = 1, max, step, onSave = vi.fn(async () => undefined) }: RenderArgs) => ({
   title: 'Pod Reminder (Hours Before)',
   description: 'How long before a pod starts everyone who joined it is reminded.',
   label: LABEL,
@@ -21,6 +22,7 @@ const cardProps = ({ value = 24, loading = false, min = 1, max, onSave = vi.fn(a
   invalidText: INVALID,
   min,
   max,
+  step,
   loading,
   value,
   onSave,
@@ -92,6 +94,38 @@ describe('NumberSettingCard / validation', () => {
     renderCard({ max: undefined });
     type('100000');
     expect(saveButton()).toBeEnabled();
+  });
+
+  // A total split equally between two sides must be even: 7 would give one side
+  // a counter the other never gets, so the box refuses it rather than saving it.
+  it('refuses a number off the declared step, and accepts each multiple within the bounds', () => {
+    renderCard({ value: 6, min: 2, max: 20, step: 2 });
+    expect(input()).toHaveAttribute('step', '2');
+
+    type('7');
+    expect(saveButton()).toBeDisabled();
+    expect(screen.getByText(INVALID)).toBeInTheDocument();
+
+    type('8');
+    expect(saveButton()).toBeEnabled();
+    expect(screen.queryByText(INVALID)).not.toBeInTheDocument();
+
+    // The bounds still hold for a multiple of the step.
+    type('22');
+    expect(saveButton()).toBeDisabled();
+    type('0');
+    expect(saveButton()).toBeDisabled();
+
+    type('20');
+    expect(saveButton()).toBeEnabled();
+  });
+
+  it('takes any whole number when the setting declares no step', () => {
+    renderCard({ value: 24 });
+    expect(input()).not.toHaveAttribute('step');
+    type('7');
+    expect(saveButton()).toBeEnabled();
+    expect(screen.queryByText(INVALID)).not.toBeInTheDocument();
   });
 });
 

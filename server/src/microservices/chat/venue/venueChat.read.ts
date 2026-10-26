@@ -15,3 +15,22 @@ export async function markVenueChatRead(userId: string, podId: string, now = Dat
     { upsert: true }
   );
 }
+
+/** How far each of these members has read the thread; a member who never opened it is left out. */
+export async function venueChatReadMarks(podId: string, userIds: readonly string[]): Promise<Map<string, Date>> {
+  if (userIds.length === 0) return new Map();
+  const rows = await ChatReadStateModel.find({
+    user_id: { $in: userIds.map(String) },
+    room_kind: VENUE_CHAT_READ_KIND,
+    room_id: podId,
+  })
+    .select('user_id last_read_at')
+    .lean<{ user_id: string; last_read_at: Date }[]>();
+  return new Map(rows.map((row) => [String(row.user_id), row.last_read_at]));
+}
+
+/** Whether any of these members has read the thread up to `at` — they have seen a line written then. */
+export async function seenByAny(podId: string, userIds: readonly string[], at: Date): Promise<boolean> {
+  const marks = await venueChatReadMarks(podId, userIds);
+  return [...marks.values()].some((readAt) => readAt.getTime() >= at.getTime());
+}

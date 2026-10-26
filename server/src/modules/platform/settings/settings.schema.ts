@@ -86,6 +86,8 @@ export const settingsTypeDefs = gql`
     venue_offer_min_guests_default: Int!
     "Hours the other side has to answer a venue booking offer or counter before it expires, when the venue has set no response time of its own (1-720)."
     venue_offer_response_hours_default: Int!
+    "Counter offers one venue booking may carry in all (2-20, even), split equally: the host and the venue may each counter half of it."
+    venue_offer_max_counters: Int!
     updated_at: String
   }
 
@@ -216,6 +218,8 @@ export const settingsTypeDefs = gql`
     venue_offer_min_guests_default: Int
     "Hours to answer a venue booking offer or counter, when the venue set none (1-720)."
     venue_offer_response_hours_default: Int
+    "Counter offers per venue booking in all (2-20; an odd number rounds down), split equally between the host and the venue."
+    venue_offer_max_counters: Int
   }
 
   type FeatureFlag {

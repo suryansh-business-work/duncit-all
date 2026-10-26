@@ -132,7 +132,6 @@ export const VENUE_OFFER_EMAIL_FALLBACK: Record<string, string> = {
   'email.venueOffer.help': 'Unanswered offers expire at the time above. Per-guest money is settled on the people who come, never fewer than the minimum.',
   'email.venueOffer.model.PER_GUEST': 'per guest',
   'email.venueOffer.model.PER_HOUR': 'per hour',
-  'email.venueOffer.model.PER_SLOT': 'for the slot',
   'email.venueOffer.model.FLAT': 'flat',
   'email.venueOffer.guestRange': 'guests',
 };

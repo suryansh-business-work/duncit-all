@@ -1,11 +1,21 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Box, Card, CircularProgress, Divider, Stack, Typography } from '@mui/material';
-import { OfferChatCard, isOfferChatLine, useChatVenueOffer, type OfferSubject } from '@duncit/availability-calendar';
+import {
+  OfferChatCard,
+  SeenFaces,
+  VenueChatLineDialogs,
+  VenueOfferPinnedBar,
+  isOfferChatLine,
+  useChatVenueOffer,
+  useMarkReadWhileVisible,
+  useVenueChatLineActions,
+  type OfferSubject,
+} from '@duncit/availability-calendar';
 import { DuncitButton } from '@duncit/buttons';
 import { fireAndForget, logs } from '@duncit/logs';
 import { useTranslation } from '@duncit/shell';
 import { useUserData } from '@duncit/user-context';
-import type { VenueChatSide } from '@duncit/utils';
+import { seenByOtherSide, seenFacesByLine, type VenueChatReadMark, type VenueChatSide } from '@duncit/utils';
 import ChatComposer from './chat-composer';
 import VenueChatBubble from './VenueChatBubble';
 import { useVenueChatThread } from './useVenueChatThread';
@@ -19,22 +29,34 @@ interface Props {
   subject: OfferSubject;
   /** A free pod: its host settles the venue directly, so offer lines name no money. */
   podIsFree?: boolean;
+  /** How far every other member has read the thread (`venueChatRoom.read_marks`, re-read with the room). */
+  marks: readonly VenueChatReadMark[];
 }
 
 /**
- * The message list (oldest first, kept scrolled to the newest) and the
+ * The booking offer pinned on top (where it stands, the counters each side has
+ * left), the message list (oldest first, kept scrolled to the newest) and the
  * composer. Each OFFER line is the offer's card, answerable on the move still
- * waiting on the reader; the live offer is re-read when a poll brings a new one.
+ * waiting on the reader; every line carries its time, its reactions and the
+ * faces of whoever has read that far, and the owner's own lines can be edited or
+ * deleted. The thread is marked read whenever a new line from the host arrives
+ * while the owner is looking at it.
  */
-export default function VenueChatThread({ podId, side, subject, podIsFree = false }: Readonly<Props>) {
+export default function VenueChatThread({ podId, side, subject, podIsFree = false, marks }: Readonly<Props>) {
   const { t } = useTranslation();
   const { user } = useUserData();
   const thread = useVenueChatThread(podId);
   const offers = useChatVenueOffer(podId, thread.lines, !thread.loading);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [editing, setEditing] = useState<{ id: string; text: string } | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const actions = useVenueChatLineActions({ onLine: thread.putLine, onRemoved: thread.removeLine, onError: setNotice });
+  const meId = user?.user_id ?? '';
+  const faces = useMemo(() => seenFacesByLine(thread.lines, marks, meId), [thread.lines, marks, meId]);
+  useMarkReadWhileVisible(podId, thread.lines, meId, actions.markRead);
   // The list grows with the page (no inner scroll box, so keyboard and screen
   // reader users scroll it like any page); a new line brings the newest into view.
   const endRef = useRef<HTMLDivElement>(null);
-  const meId = user?.user_id ?? '';
   const answering = { live: offers.offer, subject, onAnswered: offers.refresh };
 
   useEffect(() => {
@@ -46,13 +68,15 @@ export default function VenueChatThread({ podId, side, subject, podIsFree = fals
 
   return (
     <Card variant="outlined" sx={{ p: { xs: 1.5, sm: 2 } }}>
+      <VenueOfferPinnedBar offer={offers.offer} side={side} />
       {thread.error && (
-        <Alert
-          severity="error"
-          sx={{ mb: 1.5 }}
-          action={<DuncitButton onClick={retry}>{t('shell.common.retry')}</DuncitButton>}
-        >
+        <Alert severity="error" sx={{ my: 1.5 }} action={<DuncitButton onClick={retry}>{t('shell.common.retry')}</DuncitButton>}>
           {t(venueChatErrorKey(thread.error))}
+        </Alert>
+      )}
+      {notice && (
+        <Alert severity="error" sx={{ my: 1.5 }} onClose={() => setNotice(null)}>
+          {notice}
         </Alert>
       )}
       {thread.loading && (
@@ -66,27 +90,34 @@ export default function VenueChatThread({ podId, side, subject, podIsFree = fals
         </Typography>
       )}
       {thread.lines.length > 0 && (
-        <Stack
-          component="ul"
-          role="log"
-          aria-live="polite"
-          aria-label={t('partners.venueChat.messagesLabel')}
-          spacing={1.25}
-          sx={{ m: 0, p: 0.5 }}
-        >
+        <Stack component="ul" role="log" aria-live="polite" aria-label={t('partners.venueChat.messagesLabel')} spacing={1.25} sx={{ m: 0, mt: 1, p: 0.5 }}>
           {thread.lines.map((line) =>
             isOfferChatLine(line) ? (
-              <Box component="li" key={line.id} sx={{ listStyle: 'none', display: 'flex' }}>
+              <Box component="li" key={line.id} sx={{ listStyle: 'none' }}>
                 <OfferChatCard
                   move={line.offer}
                   viewer={side}
                   newest={line.id === offers.newestId}
                   answering={answering}
                   podIsFree={podIsFree}
+                  line={line}
+                  viewerId={meId}
+                  onReact={(emoji) => actions.react(line.id, emoji)}
+                  seen={seenByOtherSide(line, marks, side)}
                 />
+                <SeenFaces marks={faces.get(line.id)} />
               </Box>
             ) : (
-              <VenueChatBubble key={line.id} line={line} mine={line.user_id === meId} />
+              <VenueChatBubble
+                key={line.id}
+                line={line}
+                mine={line.user_id === meId}
+                viewerId={meId}
+                onReact={(emoji) => actions.react(line.id, emoji)}
+                onEdit={() => setEditing({ id: line.id, text: line.text ?? '' })}
+                onDelete={() => setDeletingId(line.id)}
+                seenBy={faces.get(line.id)}
+              />
             ),
           )}
         </Stack>
@@ -94,6 +125,16 @@ export default function VenueChatThread({ podId, side, subject, podIsFree = fals
       <div ref={endRef} />
       <Divider sx={{ my: 1.5 }} />
       <ChatComposer sending={thread.sending} onSend={thread.sendText} />
+      <VenueChatLineDialogs
+        editing={editing}
+        deletingId={deletingId}
+        actions={actions}
+        error={notice}
+        onClose={() => {
+          setEditing(null);
+          setDeletingId(null);
+        }}
+      />
     </Card>
   );
 }

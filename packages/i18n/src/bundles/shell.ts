@@ -1935,7 +1935,6 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       offerModelLabel: 'How you pay the venue',
       offerModelPerGuest: 'Per guest',
       offerModelPerHour: 'Per hour',
-      offerModelPerSlot: 'Per slot',
       offerModelFlat: 'Flat price',
       offerRateLabel: 'Amount you offer (₹)',
       offerModelRequired: 'Pick how you will pay the venue',

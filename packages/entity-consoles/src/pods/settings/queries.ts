@@ -36,6 +36,7 @@ const FIELDS = `
   venue_change_request_health_penalty
   host_change_request_health_penalty
   club_admin_change_request_health_penalty
+  venue_offer_max_counters
   updated_at
 `;
 

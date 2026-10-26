@@ -550,10 +550,18 @@ exports:
   - 'offerQuoteRange'
   - 'offerEarningsArgs'
   - 'hostOfferActions'
+  - 'offerCountersLeft'
+  - 'mayCounter'
+  - 'venueMinBusinessLines'
   - 'venueChatOfferActions'
   - 'venueChatOfferTitleKey'
+  - 'venueChatLineActions'
+  - 'seenFacesByLine'
+  - 'reactionGroups'
   - 'currentOfferTerms'
   - 'venueOfferActions'
+  - 'venueOfferPin'
+  - 'offerCounterAllowance'
   - 'venueOfferInboxStatus'
   - 'venueOfferInboxModelKey'
   - 'VENUE_OFFER_INBOX_MODEL_KEY'
@@ -3535,16 +3543,20 @@ const { lines, total, deposit } = venueQuoteLines(result.quote, (v) => formatSta
 ## Offering a venue a price — `venue-offer`
 
 A host books a venue by offering how they will pay it — per guest (a minimum order value per
-person), per hour, for the slot, or a flat price — with an amount, what they need from the venue
+person), per hour, or a flat price for the window — with an amount, what they need from the venue
 (one point per line) and an optional note. The server prices the offer with the venue's own charges
 (price rules, minimum spend, fees, GST) and Duncit's commission on top at both ends of the guests:
 the venue's minimum and the pod's spots. The venue then accepts, rejects or counters it; a counter
 waits for the host, who may accept, reject or counter back. Every answer carries the `round` it
 read, so a move the other side made meanwhile is refused (`OFFER_CHANGED`) instead of overwritten.
+Each side may make only its share of counters (Pod Settings splits a total equally); the server
+says how many on the offer (`counters_per_side`, `host_counters_used`, `venue_counters_used`) and
+refuses one past it (`COUNTER_LIMIT`). The per-slot option is retired: `PER_SLOT` is no longer an
+offer's pricing (the legacy venue pricing calendar's `VenueBookingModel` still has it).
 
 | Export | Meaning |
 | --- | --- |
-| `VENUE_OFFER_MODELS` / `VENUE_OFFER_MODEL_KEY` | The pricing options (`PER_GUEST`, `PER_HOUR`, `PER_SLOT`, `FLAT`) in picker order, and each one's name, amount-field label and one-line `help` keys. |
+| `VENUE_OFFER_MODELS` / `VENUE_OFFER_MODEL_KEY` | The pricing options (`PER_GUEST`, `PER_HOUR`, `FLAT`) in picker order, and each one's name, amount-field label and one-line `help` keys. |
 | `isVenueOfferModel(model)` / `venueOfferModelKey(model)` | Whether a plain string (either app's enum) is an option; its name key, or `''`. |
 | `offerRateOf(rate)` | A typed amount as rupees (2 decimals), or 0 when it is not a positive number. |
 | `VENUE_OFFER_ASK_LIMITS` / `offeringsFromText(text)` / `offeringsToText(list)` | The server's bounds (20 points, 120 characters each, a 1000-character note); the box's text as points (trimmed, typed bullets and blank lines dropped) and back. |
@@ -3553,7 +3565,9 @@ read, so a move the other side made meanwhile is refused (`OFFER_CHANGED`) inste
 | `offerQuoteRange(quote, quoteMin)` / `moneyRangeText(min, max, money)` | A quote pair as `{ venueMin, venueMax, totalMin, totalMax, ranged }`, and one amount or "min – max" written with the surface's formatter. |
 | `offerEarningsArgs(quote, quoteMin, minGuests, spots)` | The venue arguments `potentialPodEarnings` takes, with `min_spots` and the money at the minimum when it is below the spots. |
 | `offerGuestFloor(venueMinimum, capacity)` / `offerGuestsText(t, min, max)` | The fewest spots an offer may be for (the venue's minimum, never more than the space holds — the server's rule), and "8–20 guests" / "20 guests". |
-| `hostMayAnswerCounter(offer)` / `hostOfferActions(offer)` | Whether the venue's counter waits on the host; what the host may do now (`accept`, `reject`, `counter`, or `sendNew` once declined). |
+| `hostMayAnswerCounter(offer)` / `hostOfferActions(offer)` | Whether the venue's counter waits on the host; what the host may do now (`accept`, `reject`, `counter` — only while the host has counters left — or `sendNew` once declined). |
+| `offerCountersLeft(offer, side)` / `mayCounter(offer, side)` | The counters a side (`VenueOfferParty`: `HOST` / `VENUE`) may still make of its share — never below 0, a side that has not countered has its whole share — or null when the server names no limit (`OfferCounterUsage` absent, older servers); whether it may counter now (always, with no limit known). |
+| `VENUE_MIN_BUSINESS_KEY` / `venueMinBusinessLines(rows, t, money)` | The business a venue hopes each booking brings (Booking offers), per basis: each one's label and amount-line keys (`FLAT` reads "per booking"); the saved amounts (`VenueMinBusinessRow`) as lines ("₹200 per guest") on the bases this client knows, in the pickers' order, skipping an amount that is not above 0 — what Create Pod shows once the venue is picked. Nothing for null or no rows. |
 | `isOfferChangedError(reason)` | Whether a refused answer's `extensions.reason` means the terms moved while it was being read. |
 | `offerPickerRules(calendar)` | The `BookingRules` an offer's pickers use: the 30-minute grid, no length limits, the venue's buffer and notice. |
 | `VENUE_OFFER_STATUS_KEY` / `venueOfferStatusKey(status)` | How `SENT`, `COUNTERED`, `ACCEPTED` and `DECLINED` read to the host; `''` for an unknown status. |
@@ -3574,7 +3588,10 @@ for the Partners console, mWeb and the native app. Every copy key is a literal (
 | Export | What it is |
 | --- | --- |
 | `currentOfferTerms(offer)` | The terms on the table and whose they are: the venue's counter while there is one (`by: 'VENUE'`), else the host's offer or latest counter back (`by: 'HOST'`) — with `quoteMin`, `minGuests`, `offerings` and `note` (empty on offers from older servers). |
-| `venueOfferActions(offer)` | What the venue may do now: `SENT` → accept, reject, counter; `COUNTERED` → reject or change the counter (it cannot accept its own terms); settled → nothing. |
+| `venueOfferActions(offer)` | What the venue may do now: `SENT` → accept, reject, counter; `COUNTERED` → reject or change the counter (it cannot accept its own terms); settled → nothing. Counter only while the venue has counters left of its share (`mayCounter`). |
+| `offerCounterAllowance(offer, side)` | The `left` / `of` pair a "counters left" line names for one side, or null when the server names no limit. |
+| `venueOfferPin(offer, side)` | The pinned bar at the top of a venue chat, for the reader's side: `statusKey` (`availability.offers.pin.yourMove` / `theirMove` while `SENT` or `COUNTERED`, by `awaiting`; `accepted` / `declined` once closed; `''` for an unknown status), `open`, the reader's own counters (`mine`) and the other side's (`theirs`), and `expiresAt` only while open. Null when the pod has no live offer. |
+| `isCounterLimitError(reason)` | Whether a refused move's `extensions.reason` (`COUNTER_LIMIT`) means the side has used every counter it may make. |
 | `venueOfferInboxStatus(offer)` | How the status reads to the venue, and the chip tone; `''` for an unknown status. |
 | `VENUE_OFFER_INBOX_MODEL_KEY` / `venueOfferInboxModelKey(model)` | Each pricing option's name and amount-line keys (`"{rate} per guest"`); null for an unknown option. |
 | `venueOfferTermsLine(t, model, amount)` | "Per guest · ₹300 per guest" — one side's terms in the booking's words, with the amount already formatted; the inbox, the chat, Complete Pod and Finance all write it this way. |
@@ -3583,6 +3600,7 @@ for the Partners console, mWeb and the native app. Every copy key is a literal (
 ```ts
 const { accept, reject, counter } = venueOfferActions(request.offer);
 const terms = currentOfferTerms(request.offer); // → { by: 'HOST', model: 'PER_GUEST', rate: 300, quote, quoteMin, minGuests: 6, offerings, note }
+const pin = venueOfferPin(liveOffer, room.my_side); // → { statusKey: 'availability.offers.pin.yourMove', open: true, mine: { left: 1, of: 2 }, theirs, expiresAt }
 ```
 
 ## Time clash before a booking — `pod-booking-clash`
@@ -3725,13 +3743,15 @@ Partners app share the operations and the merge below.
 
 | Export | Meaning |
 | --- | --- |
-| `VENUE_CHAT_ROOM_SDL` | `venueChatRoom(pod_id)`: pod title and time, the venue's name and photo, the caller's side (`HOST` / `VENUE`), whether the pod is free (`pod_is_free` — an OFFER card then names no money), and the other side's `counterpart_name` / `_phone` / `_email`. |
-| `VENUE_CHAT_MESSAGES_SDL` | One page of lines, oldest first (`limit`, `before`). An `OFFER` line carries the booking offer's move in `offer` (`VenueChatOfferMove`: event, who moved, round, the terms, the money at both ends, `expires_at`, `reason`). |
+| `VENUE_CHAT_ROOM_SDL` | `venueChatRoom(pod_id)`: pod title and time, the venue's name and photo, the caller's side (`HOST` / `VENUE`), whether the pod is free (`pod_is_free` — an OFFER card then names no money), the other side's `counterpart_name` / `_phone` / `_email`, the contact sheet's `host` (`VenueChatHostCard`) and `venue` (`VenueChatVenueCard`) cards, and every other member's `read_marks` (`VenueChatReadMark`: who, which side, `last_read_at`). The three are absent from older servers. |
+| `VENUE_CHAT_MESSAGES_SDL` | One page of lines, oldest first (`limit`, `before`; `mark_read` marks the thread read). Each line carries `edited_at` and its `reactions`; an `OFFER` line carries the booking offer's move in `offer` (`VenueChatOfferMove`: event, who moved, round, the terms, the money at both ends, `expires_at`, `reason`, a counter's `images`). |
 | `newestOfferLineId(lines)` | The OFFER line the thread ends on — the only one that may still be answered. |
-| `venueChatOfferActions(move, { side, newest, live })` | What an OFFER bubble offers the reader: `answer` (Accept / Reject / Counter) only on the newest open move of the live offer's round when it is their turn; `sendNew` only to a host, on the newest line that declined or ran out. |
+| `venueChatOfferActions(move, { side, newest, live, seen })` | What an OFFER bubble offers the reader: `answer` (Accept / Reject / Counter) only on the newest open move of the live offer's round when it is their turn; `revise` (Edit / Withdraw) only on the reader's OWN newest counter of that round while it waits on the other side and until the other side has seen it (`seen`); `sendNew` only to a host, on the newest line that declined or ran out. |
 | `venueChatOfferTitleKey(move, side)` | The bubble's heading key as the reader sees it ("You countered", "The venue countered", "The offer expired…"); `''` for an unknown move. |
 | `SEND_VENUE_CHAT_MESSAGE_SDL` | Post a `TEXT` line, or an `IMAGE` with an uploaded https URL. |
-| `VENUE_CHAT_SOCKET` | `join_venue_chat` / `leave_venue_chat` with the pod id; lines arrive as `venue_chat_message`. |
+| `REACT_TO_VENUE_CHAT_MESSAGE_SDL` / `EDIT_VENUE_CHAT_MESSAGE_SDL` | React to a line (the same emoji again takes it back) / the author rewrites their own text; both answer the whole line as everyone now sees it. |
+| `DELETE_VENUE_CHAT_MESSAGE_SDL` / `MARK_VENUE_CHAT_READ_SDL` | The author removes their own text or photo line (`message_id`); the reader marks the thread read to the end (`pod_id`), so the other side sees their face move. |
+| `VENUE_CHAT_SOCKET` | `join_venue_chat` / `leave_venue_chat` with the pod id; a new line arrives as `venue_chat_message`, a changed one (edited, reacted to, a counter revised) as `venue_chat_update`, a removed one as `venue_chat_delete` (its id and pod id) and a member reading as `venue_chat_read` (their `VenueChatReadMark`). |
 | `venueChatPath(podId)` | The thread's route on mWeb and in the app: `/venue-chat/<pod id>` (also the push link). |
 | `mergeVenueChatLines(current, incoming)` | Lines on screen plus a page, a send or a socket frame: each id once, oldest first. |
 | `VENUE_CHAT_PAGE` | Lines per page (50). |
@@ -3748,6 +3768,28 @@ venueChatPath('6650a1')                                    // '/venue-chat/6650a
 venueChatPodIdFromPath('/venue-chat/6650a1')               // '6650a1'
 venueChatCounterpart({ ...room, my_side: 'HOST' }).name    // the venue's name
 mergeVenueChatLines([sent], [sent])                        // one copy — the socket echo is dropped
+```
+
+## A venue thread's lines after they are sent — `venue-chat-lines`
+
+Reactions, edits, removals and how far each member has read, shared by mWeb, the native app and
+the Partners app. The server is the gate for every change; these helpers only decide what a screen
+offers and draws.
+
+| Export | Meaning |
+| --- | --- |
+| `CHAT_EMOJIS` | The eight quick emoji every chat offers, in order — to react, and to drop into the composer. |
+| `withoutVenueChatLine(lines, id)` | The thread without the line its author removed (the `venue_chat_delete` frame's id). |
+| `withReadMark(marks, mark)` | The read marks with one member's new mark in, one per member; a mark only ever moves forward (an older or equal one is ignored). |
+| `seenFacesByLine(lines, marks, viewerId)` | Every other member's face under the LAST line they have read (written at or before their mark), as a map of line id to marks — never the reader's own face, never under a line nobody has reached. Lines oldest first. |
+| `seenByOtherSide(line, marks, side)` | Whether anyone on the other side has read as far as this line — what ends an own counter's Edit / Withdraw. |
+| `venueChatLineActions(line, viewerId)` | What the reader may do to a line: `react` to any line still there, `edit` their own `TEXT`, `remove` their own `TEXT` or `IMAGE`. A removed line offers nothing; an `OFFER` line changes only through the offer itself. |
+| `reactionGroups(reactions, viewerId)` / `ReactionGroup` | A line's reactions as one chip per emoji in the order first used: the emoji, how many, and whether the reader is one of them (`mine`). |
+
+```ts
+const faces = seenFacesByLine(lines, room.read_marks ?? [], me.id); // Map: line id → marks drawn under it
+venueChatLineActions(line, me.id)                                   // { react: true, edit: true, remove: true } on my own text
+reactionGroups(line.reactions, me.id)                               // [{ emoji, count: 2, mine: true }, …]
 ```
 
 ## Scroll-up history in every chat room — `chat-history`

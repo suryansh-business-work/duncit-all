@@ -3,8 +3,9 @@ import { AppImage } from '@/components/AppImage';
 import { Text, XStack, YStack } from 'tamagui';
 
 import type { ChatMessage } from '@/hooks/useChat';
-import { formatMessageTime, groupReactions } from '@/utils/chat';
+import { formatMessageTime } from '@/utils/chat';
 import { useTranslation } from '@/hooks/useTranslation';
+import { ChatLineMeta, type LineInk } from '@/components/chat/ChatLineMeta';
 import { ChatMessageQuote } from '@/components/chat/ChatMessageQuote';
 import { ChatMessageText } from '@/components/chat/ChatMessageText';
 import { SwipeToReply } from '@/components/chat/SwipeToReply';
@@ -20,10 +21,15 @@ interface ChatMessageBubbleProps {
   onJumpTo?: (messageId: string) => void;
   /** A highlighted @mention was tapped. */
   onOpenProfile?: (userId: string) => void;
+  /** When it was sent, written out by the thread (a venue chat names the date too); its HH:mm when omitted. */
+  timeLabel?: string;
+  /** Its author changed it after sending. */
+  edited?: boolean;
+  /** The reader, whose own reactions are drawn picked. */
+  viewerId?: string | null;
+  /** Tapping a reaction chip toggles the reader's reaction. Absent: the chips only show. */
+  onToggleReaction?: (emoji: string) => void;
 }
-
-/** Foreground text colour for the bubble — tinted for my own messages. */
-type Ink = '$onPrimary' | '$color' | '$muted';
 
 /** Bubble body: a "deleted" placeholder, or the image and/or text content. */
 function BubbleBody({
@@ -35,7 +41,7 @@ function BubbleBody({
 }: Readonly<{
   message: ChatMessage;
   mine: boolean;
-  ink: Ink;
+  ink: LineInk;
   imageLabel: string;
   onOpenProfile?: (userId: string) => void;
 }>) {
@@ -68,35 +74,12 @@ function BubbleBody({
   );
 }
 
-/** Grouped reaction chips; renders nothing when there are no reactions. */
-function BubbleReactions({
-  reactions,
-  ink,
-  messageId,
-}: Readonly<{ reactions: ReturnType<typeof groupReactions>; ink: Ink; messageId: string }>) {
-  if (reactions.length === 0) return null;
-  return (
-    <XStack gap={6} flexWrap="wrap">
-      {reactions.map((reaction) => (
-        <Text
-          key={reaction.emoji}
-          testID={`reaction-${messageId}-${reaction.emoji}`}
-          fontSize={12}
-          color={ink}
-        >
-          {reaction.emoji} {reaction.count}
-        </Text>
-      ))}
-    </XStack>
-  );
-}
-
 /** The bubble's alignment, tail and colours for each side of the conversation. */
 interface BubbleTone {
   justify: 'flex-end' | 'flex-start';
-  ink: Ink;
+  ink: LineInk;
   /** Faded white on the red fill fails 4.5:1, so the time is solid there. */
-  metaInk: Ink;
+  metaInk: LineInk;
   bottomRight: number;
   bottomLeft: number;
   fill: '$primary' | '$surface';
@@ -132,10 +115,13 @@ export function ChatMessageBubble({
   onReply,
   onJumpTo,
   onOpenProfile,
+  timeLabel,
+  edited = false,
+  viewerId,
+  onToggleReaction,
 }: Readonly<ChatMessageBubbleProps>) {
   const { t } = useTranslation();
-  const time = formatMessageTime(message.createdAt);
-  const reactions = groupReactions(message.reactions);
+  const time = timeLabel ?? formatMessageTime(message.createdAt);
   const tone = mine ? MINE_TONE : THEIRS_TONE;
   const { ink, metaInk } = tone;
   // One spoken line per message: who, what and when — never a bare "Chat message".
@@ -180,13 +166,16 @@ export function ChatMessageBubble({
             imageLabel={t('mweb.chatRoom.image')}
             onOpenProfile={onOpenProfile}
           />
-          <BubbleReactions reactions={reactions} ink={ink} messageId={message.id} />
-
-          {time ? (
-            <Text fontSize={10} alignSelf="flex-end" color={metaInk}>
-              {time}
-            </Text>
-          ) : null}
+          <ChatLineMeta
+            messageId={message.id}
+            reactions={message.reactions}
+            time={time}
+            edited={edited && !message.deleted}
+            ink={ink}
+            metaInk={metaInk}
+            viewerId={viewerId}
+            onToggleReaction={message.deleted ? undefined : onToggleReaction}
+          />
         </YStack>
       </XStack>
     </SwipeToReply>

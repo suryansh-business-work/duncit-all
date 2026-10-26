@@ -32,11 +32,19 @@ export const hasVenueChat = (pod: { venue_id?: string | null } | null | undefine
  */
 export const isVenueChatUnavailable = (code: string | null | undefined): boolean => code === 'FORBIDDEN';
 
-/** Socket events: join with the pod id (acks ok/err), lines arrive as a PodMessage. */
+/**
+ * Socket events: join with the pod id (acks ok/err); new lines arrive as a
+ * PodMessage, a changed line (edited, reacted to, a counter revised) as the
+ * whole line again, a removed one as `{ id, pod_id }`, and a member reading the
+ * thread as their `VenueChatReadMark`.
+ */
 export const VENUE_CHAT_SOCKET = {
   join: 'join_venue_chat',
   leave: 'leave_venue_chat',
   message: 'venue_chat_message',
+  update: 'venue_chat_update',
+  remove: 'venue_chat_delete',
+  read: 'venue_chat_read',
 } as const;
 
 /** How many lines one page reads. */
@@ -53,6 +61,11 @@ const VENUE_CHAT_LINE_FIELDS = `
   image_url
   deleted
   createdAt
+  edited_at
+  reactions {
+    user_id
+    emoji
+  }
   offer {
     slot_id
     round
@@ -74,6 +87,7 @@ const VENUE_CHAT_LINE_FIELDS = `
     total_max
     expires_at
     reason
+    images
   }
 `;
 
@@ -91,19 +105,74 @@ export const VENUE_CHAT_ROOM_SDL = `
       counterpart_name
       counterpart_phone
       counterpart_email
+      host {
+        user_id
+        name
+        photo
+        username
+        bio
+        phone
+        email
+      }
+      venue {
+        venue_id
+        venue_name
+        photo
+        venue_type
+        capacity
+        address
+        name
+        phone
+        email
+      }
+      read_marks {
+        user_id
+        side
+        name
+        photo
+        last_read_at
+      }
     }
   }
 `;
 
 export const VENUE_CHAT_MESSAGES_SDL = `
-  query VenueChatMessages($pod_id: ID!, $limit: Int, $before: String) {
-    venueChatMessages(pod_id: $pod_id, limit: $limit, before: $before) {${VENUE_CHAT_LINE_FIELDS}}
+  query VenueChatMessages($pod_id: ID!, $limit: Int, $before: String, $mark_read: Boolean) {
+    venueChatMessages(pod_id: $pod_id, limit: $limit, before: $before, mark_read: $mark_read) {${VENUE_CHAT_LINE_FIELDS}}
   }
 `;
 
 export const SEND_VENUE_CHAT_MESSAGE_SDL = `
   mutation SendVenueChatMessage($pod_id: ID!, $type: PodMessageType, $text: String, $image_url: String) {
     sendVenueChatMessage(pod_id: $pod_id, type: $type, text: $text, image_url: $image_url) {${VENUE_CHAT_LINE_FIELDS}}
+  }
+`;
+
+/** React to a line; the same emoji again takes the reaction back. Answers the line as everyone now sees it. */
+export const REACT_TO_VENUE_CHAT_MESSAGE_SDL = `
+  mutation ReactToVenueChatMessage($message_id: ID!, $emoji: String!) {
+    reactToVenueChatMessage(message_id: $message_id, emoji: $emoji) {${VENUE_CHAT_LINE_FIELDS}}
+  }
+`;
+
+/** The author rewrites their own text line. */
+export const EDIT_VENUE_CHAT_MESSAGE_SDL = `
+  mutation EditVenueChatMessage($message_id: ID!, $text: String!) {
+    editVenueChatMessage(message_id: $message_id, text: $text) {${VENUE_CHAT_LINE_FIELDS}}
+  }
+`;
+
+/** The author removes their own text or photo line. */
+export const DELETE_VENUE_CHAT_MESSAGE_SDL = `
+  mutation DeleteVenueChatMessage($message_id: ID!) {
+    deleteVenueChatMessage(message_id: $message_id)
+  }
+`;
+
+/** The thread is open and read to the end: the other side sees the reader's face move to the newest line. */
+export const MARK_VENUE_CHAT_READ_SDL = `
+  mutation MarkVenueChatRead($pod_id: ID!) {
+    markVenueChatRead(pod_id: $pod_id)
   }
 `;
 
@@ -183,6 +252,45 @@ export interface VenueChatRoomInfo {
   counterpart_name?: string | null;
   counterpart_phone?: string | null;
   counterpart_email?: string | null;
+  /** The pod's lead host, for the contact sheet; absent from older servers, null when none is on record. */
+  host?: VenueChatHostCard | null;
+  /** The venue, for the contact sheet; absent from older servers. */
+  venue?: VenueChatVenueCard | null;
+  /** How far every other member has read the thread; absent from older servers. */
+  read_marks?: readonly VenueChatReadMark[] | null;
+}
+
+/** The pod's lead host on the thread's contact sheet (`VenueChatHostCard`). Empty strings: not on record. */
+export interface VenueChatHostCard {
+  user_id: string;
+  name: string;
+  photo?: string | null;
+  username: string;
+  bio: string;
+  phone: string;
+  email: string;
+}
+
+/** The venue on the thread's contact sheet (`VenueChatVenueCard`); `name` is the person to ask for. */
+export interface VenueChatVenueCard {
+  venue_id: string;
+  venue_name: string;
+  photo?: string | null;
+  venue_type: string;
+  capacity: number;
+  address: string;
+  name: string;
+  phone: string;
+  email: string;
+}
+
+/** How far one member has read a thread (`VenueChatReadMark`): every line at or before `last_read_at` is seen. */
+export interface VenueChatReadMark {
+  user_id: string;
+  side: VenueChatSide;
+  name: string;
+  photo?: string | null;
+  last_read_at: string;
 }
 
 /** How to reach the other side outside the chat — each null when none is on record. */
@@ -248,6 +356,8 @@ export interface VenueChatOfferMove {
   total_max: number;
   expires_at?: string | null;
   reason: string;
+  /** Photos attached to a counter; absent from older servers. */
+  images?: readonly string[] | null;
 }
 
 /** A line, as the three operations above select it. */
@@ -262,6 +372,10 @@ export interface VenueChatLine {
   image_url?: string | null;
   deleted: boolean;
   createdAt: string;
+  /** When its author last changed it; null (or absent, older servers) while it is as first sent. */
+  edited_at?: string | null;
+  /** One row per member per emoji; absent from older servers. */
+  reactions?: readonly { user_id: string; emoji: string }[] | null;
   /** Set on an OFFER line: the move it records. */
   offer?: VenueChatOfferMove | null;
 }
@@ -288,21 +402,25 @@ export const isOpenOfferMove = (event: string): boolean => OPEN_MOVES.has(event)
 /**
  * What an OFFER line's bubble lets the reader do. Accept, Reject or Counter
  * show only on the move still waiting for THEM: the thread's newest offer line,
- * the live offer's own round, still open, and their turn. Send a new offer shows
- * only to a host, on the newest line when it closed the offer (declined or ran
- * out) — a declined hold is released, so there is no live offer to read then.
- * Every older line is a record and offers nothing.
+ * the live offer's own round, still open, and their turn. Edit and Withdraw
+ * show only on their OWN newest counter while it waits on the other side, until
+ * the other side has seen it (`seen`). Send a new offer shows only to a host, on
+ * the newest line when it closed the offer (declined or ran out) — a declined
+ * hold is released, so there is no live offer to read then. Every older line is
+ * a record and offers nothing.
  */
 export function venueChatOfferActions(
-  move: Readonly<Pick<VenueChatOfferMove, 'event' | 'round'>>,
-  context: { side: VenueChatSide; newest: boolean; live: Readonly<LiveVenueOffer> | null }
-): { answer: boolean; sendNew: boolean } {
+  move: Readonly<Pick<VenueChatOfferMove, 'event' | 'round' | 'by'>>,
+  context: { side: VenueChatSide; newest: boolean; live: Readonly<LiveVenueOffer> | null; seen?: boolean }
+): { answer: boolean; sendNew: boolean; revise: boolean } {
   const { side, newest, live } = context;
-  if (!newest) return { answer: false, sendNew: false };
-  if (CLOSING_MOVES.has(move.event)) return { answer: false, sendNew: side === 'HOST' };
-  if (!live || !OPEN_MOVES.has(move.event)) return { answer: false, sendNew: false };
-  const open = live.status === 'SENT' || live.status === 'COUNTERED';
-  return { answer: open && live.round === move.round && live.awaiting === side, sendNew: false };
+  const none = { answer: false, sendNew: false, revise: false };
+  if (!newest) return none;
+  if (CLOSING_MOVES.has(move.event)) return { ...none, sendNew: side === 'HOST' };
+  if (!live || !OPEN_MOVES.has(move.event)) return none;
+  const current = (live.status === 'SENT' || live.status === 'COUNTERED') && live.round === move.round;
+  const revise = current && move.event === 'COUNTER' && move.by === side && live.awaiting !== side && !context.seen;
+  return { answer: current && live.awaiting === side, sendNew: false, revise };
 }
 
 /** An OFFER bubble's heading by who moved and how: as the mover reads it, and as the other side does. */

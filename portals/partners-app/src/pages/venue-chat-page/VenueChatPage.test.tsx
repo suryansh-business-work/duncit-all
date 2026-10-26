@@ -3,147 +3,104 @@ import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/re
 import VenueChatPage from './VenueChatPage';
 import { partnerUser, renderWithProviders } from '../../__tests__/render';
 import { scriptedLink, type ScriptedAnswer, type SentOperation } from '../../__tests__/groupC-link';
+import {
+  at,
+  line,
+  liveOffer,
+  offerLine,
+  ownLine,
+  readMark,
+  room,
+  venueCard,
+  venueCounter,
+} from '../../__tests__/venue-chat-fixtures';
 
 afterEach(cleanup);
-
-const START = '2026-12-05T12:30:00.000Z';
-const END = '2026-12-05T14:30:00.000Z';
-
-const breakdown = (venue_payout: number, total: number, pax: number) => ({
-  __typename: 'VenuePriceBreakdown',
-  model: 'PER_PAX',
-  rate: 300,
-  pax,
-  hours: 2,
-  date: '2026-12-05',
-  base: venue_payout,
-  rules: [],
-  rules_total: 0,
-  min_spend_top_up: 0,
-  cleaning_fee: 0,
-  pet_fee: 0,
-  venue_price: venue_payout,
-  gst_pct: 0,
-  taxes: 0,
-  venue_payout,
-  platform_fee_pct: 10,
-  platform_fee: total - venue_payout,
-  total,
-  deposit: 0,
-});
-
-const liveOffer = (over: Record<string, unknown> = {}) => ({
-  __typename: 'VenueBookingOffer',
-  slot_id: 'slot-1',
-  status: 'SENT',
-  round: 1,
-  awaiting: 'VENUE',
-  model: 'PER_GUEST',
-  rate: 300,
-  pax: 20,
-  min_guests: 8,
-  offerings: ['10 chairs'],
-  note: '',
-  pets: false,
-  space_label: '',
-  expires_at: '2026-12-02T06:30:00.000Z',
-  quote: breakdown(6000, 6600, 20),
-  quote_min: breakdown(2400, 2640, 8),
-  counter: null,
-  pod_id: 'pod-1',
-  start_at: START,
-  end_at: END,
-  ...over,
-});
-
-const move = (over: Record<string, unknown>) => ({
-  __typename: 'VenueChatOffer',
-  slot_id: 'slot-1',
-  round: 1,
-  event: 'OFFER',
-  by: 'HOST',
-  model: 'PER_GUEST',
-  rate: 300,
-  min_guests: 8,
-  max_guests: 20,
-  offerings: ['10 chairs'],
-  note: 'We will bring our own speakers.',
-  start_at: START,
-  end_at: END,
-  space_label: '',
-  pets: false,
-  venue_receives_min: 2400,
-  venue_receives_max: 6000,
-  total_min: 2640,
-  total_max: 6600,
-  expires_at: '2026-12-02T06:30:00.000Z',
-  reason: '',
-  ...over,
-});
-
-const line = (id: string, over: Record<string, unknown> = {}) => ({
-  __typename: 'PodMessage',
-  id,
-  pod_id: 'pod-1',
-  user_id: 'u-host',
-  user_name: 'Asha',
-  user_photo: null,
-  type: 'TEXT',
-  text: 'Is the terrace free?',
-  image_url: null,
-  deleted: false,
-  createdAt: '2026-12-01T06:00:00.000Z',
-  offer: null,
-  ...over,
-});
-
-const offerLine = (id: string, over: Record<string, unknown>) =>
-  line(id, { type: 'OFFER', text: 'Booking offer', createdAt: '2026-12-01T06:05:00.000Z', offer: move(over) });
-
-const room = (over: Record<string, unknown> = {}) => ({
-  venueChatRoom: {
-    __typename: 'VenueChatRoom',
-    pod_id: 'pod-1',
-    pod_title: 'Pottery night',
-    pod_date_time: START,
-    venue_id: 'venue-1',
-    venue_name: 'Skyline Banquets',
-    venue_photo: null,
-    my_side: 'VENUE',
-    counterpart_name: 'Asha',
-    counterpart_phone: '+91 98000 00000',
-    counterpart_email: 'asha@host.test',
-    ...over,
-  },
-});
 
 const mount = (answers: Record<string, ScriptedAnswer>, sent: SentOperation[] = []) =>
   renderWithProviders(<VenueChatPage />, {
     route: '/venues/pods/pod-1/chat',
     path: '/venues/pods/:podId/chat',
-    link: scriptedLink(answers, sent),
+    link: scriptedLink({ MarkVenueChatRead: { markVenueChatRead: true }, ...answers }, sent),
     user: partnerUser({ user_id: 'u-venue' }),
   });
 
+describe('VenueChatPage — who is on the other side', () => {
+  it('opens both sides’ details from the Contact button, each with a phone to dial and an email to write to', async () => {
+    mount({
+      VenueChatRoom: room(),
+      VenueChatMessages: { venueChatMessages: [line('t1')] },
+      PodVenueOfferTerms: { podVenueOffer: null },
+    });
+    expect(await screen.findByRole('heading', { name: 'Chat · Pottery night' })).toBeTruthy();
+    // The sheet is closed until asked for — the thread is what the page opens on.
+    expect(screen.queryByTestId('venue-chat-host-card')).toBeNull();
+
+    fireEvent.click(screen.getByTestId('venue-chat-contact-open'));
+    const sheet = within(await screen.findByRole('dialog', { name: 'Host and venue details' }));
+    const host = within(sheet.getByTestId('venue-chat-host-card'));
+    expect(host.getByRole('heading', { name: 'Asha Rao' })).toBeTruthy();
+    expect(host.getByText('@asha')).toBeTruthy();
+    expect(host.getByText('Runs pottery evenings in Indiranagar.')).toBeTruthy();
+    expect(host.getByRole('link', { name: 'Phone +91 98000 00000' }).getAttribute('href')).toBe('tel:+919800000000');
+    expect(host.getByRole('link', { name: 'Email asha@host.test' }).getAttribute('href')).toBe('mailto:asha@host.test');
+
+    const venue = within(sheet.getByTestId('venue-chat-venue-card'));
+    expect(venue.getByRole('heading', { name: 'Skyline Banquets' })).toBeTruthy();
+    expect(venue.getByText('Banquet hall · Up to 120 guests')).toBeTruthy();
+    expect(venue.getByText('12 Residency Road, Bengaluru')).toBeTruthy();
+    expect(venue.getByText('Ask for Ravi')).toBeTruthy();
+    expect(venue.getByRole('link', { name: 'Phone +91 97000 00000' }).getAttribute('href')).toBe('tel:+919700000000');
+    // The console opens no profile or venue page from the sheet.
+    expect(screen.queryByTestId('venue-chat-host-card-action')).toBeNull();
+    expect(screen.queryByTestId('venue-chat-venue-card-action')).toBeNull();
+
+    fireEvent.click(sheet.getByTestId('venue-chat-contact-close'));
+    await waitFor(() => expect(screen.queryByTestId('venue-chat-host-card')).toBeNull());
+    expect(screen.getByText('Is the terrace free?')).toBeTruthy();
+  });
+
+  it('shows only the venue when no host is on record, and says when there is no way to reach it', async () => {
+    mount({
+      VenueChatRoom: room({ host: null, venue: venueCard({ phone: '', email: '', name: '', capacity: 0 }) }),
+      VenueChatMessages: { venueChatMessages: [] },
+      PodVenueOfferTerms: { podVenueOffer: null },
+    });
+    fireEvent.click(await screen.findByTestId('venue-chat-contact-open'));
+    const sheet = within(await screen.findByRole('dialog', { name: 'Host and venue details' }));
+    expect(sheet.queryByTestId('venue-chat-host-card')).toBeNull();
+    const venue = within(sheet.getByTestId('venue-chat-venue-card'));
+    expect(venue.getByText('No phone or email on record')).toBeTruthy();
+    // No capacity and no named contact: neither line is written as an empty phrase.
+    expect(venue.getByText('Banquet hall')).toBeTruthy();
+    expect(venue.queryByText(/^Ask for/)).toBeNull();
+    expect(venue.queryByRole('link')).toBeNull();
+  });
+});
+
 describe('VenueChatPage — booking offers in the thread', () => {
-  it("says how to reach the host, and lets the venue answer the host's open offer for its round", async () => {
+  it("pins where the host's offer stands and lets the venue answer it for its round", async () => {
     const sent: SentOperation[] = [];
     mount(
       {
         VenueChatRoom: room(),
         VenueChatMessages: { venueChatMessages: [line('t1'), offerLine('m1', { event: 'OFFER', by: 'HOST' })] },
-        PodVenueOfferTerms: { podVenueOffer: liveOffer() },
+        PodVenueOfferTerms: { podVenueOffer: liveOffer({ host_counters_used: 1 }) },
         AcceptVenueOffer: { approveVenueSlotRequest: { __typename: 'VenueSlot', id: 'slot-1', status: 'BOOKED' } },
       },
       sent,
     );
-    expect((await screen.findByRole('link', { name: 'Phone +91 98000 00000' })).getAttribute('href')).toBe('tel:+919800000000');
-    expect(screen.getByRole('link', { name: 'Email asha@host.test' }).getAttribute('href')).toBe('mailto:asha@host.test');
     expect(await screen.findByText('Is the terrace free?')).toBeTruthy();
+
+    const pin = within(await screen.findByRole('status', { name: 'Booking offer' }));
+    expect(pin.getByTestId('venue-offer-pin-status').textContent).toBe('Your move');
+    expect(pin.getByText(/^Answer by /)).toBeTruthy();
+    expect(pin.getByTestId('venue-offer-pin-counters').textContent).toBe('You: 3 of 3 counters left · Host: 2 of 3 left');
 
     const card = within(await screen.findByRole('article', { name: 'New booking offer' }));
     expect(card.getByText(/^You receive/).textContent).toContain('₹2,400 – ₹6,000');
     expect(card.getByText('Note from the host')).toBeTruthy();
+    expect(card.getByTestId('offer-line-time').textContent).toMatch(/^Sent /);
     fireEvent.click(await card.findByTestId('offer-accept-slot-1'));
     fireEvent.click(within(screen.getByRole('dialog')).getByTestId('answer-offer-submit'));
     await waitFor(() => expect(sent.find((op) => op.name === 'AcceptVenueOffer')?.variables).toEqual({ slot_id: 'slot-1', round: 1 }));
@@ -153,38 +110,23 @@ describe('VenueChatPage — booking offers in the thread', () => {
 
   it("gives a host reading the thread here their answers to the venue's counter, but no new-offer button", async () => {
     mount({
-      VenueChatRoom: room({ my_side: 'HOST', counterpart_phone: null, counterpart_email: null }),
+      VenueChatRoom: room({ my_side: 'HOST' }),
       VenueChatMessages: {
-        venueChatMessages: [
-          offerLine('m1', { event: 'COUNTER', by: 'VENUE', round: 2, model: 'FLAT', rate: 7000, note: '' }),
-        ],
+        venueChatMessages: [offerLine('m1', { event: 'COUNTER', by: 'VENUE', round: 2, model: 'FLAT', rate: 7000, note: '' })],
       },
       PodVenueOfferTerms: {
-        podVenueOffer: liveOffer({
-          status: 'COUNTERED',
-          awaiting: 'HOST',
-          round: 2,
-          counter: {
-            __typename: 'VenueOfferCounter',
-            model: 'FLAT',
-            rate: 7000,
-            min_guests: 0,
-            offerings: [],
-            note: '',
-            at: null,
-            quote: breakdown(7000, 7700, 20),
-            quote_min: breakdown(7000, 7700, 20),
-          },
-        }),
+        podVenueOffer: liveOffer({ status: 'COUNTERED', awaiting: 'HOST', round: 2, counter: venueCounter() }),
       },
     });
     const card = within(await screen.findByRole('article', { name: 'The venue countered' }));
     expect(await card.findByTestId('host-offer-accept')).toBeTruthy();
     expect(card.getByText(/^Costs the pod/)).toBeTruthy();
-    expect(screen.queryByTestId('venue-chat-contact')).toBeNull();
+    expect(screen.queryByTestId('offer-send-new')).toBeNull();
+    // The host's own counters are named as theirs, the venue's as the venue's.
+    expect(screen.getByTestId('venue-offer-pin-counters').textContent).toBe('You: 3 of 3 counters left · Venue: 3 of 3 left');
   });
 
-  it('keeps an offer line it cannot draw as its text', async () => {
+  it('keeps an offer line it cannot draw as its text, and pins nothing without a live offer', async () => {
     mount({
       VenueChatRoom: room(),
       VenueChatMessages: { venueChatMessages: [offerLine('m1', { event: 'WITHDRAWN', by: 'HOST' })] },
@@ -192,5 +134,23 @@ describe('VenueChatPage — booking offers in the thread', () => {
     });
     expect(await screen.findByText('Booking offer')).toBeTruthy();
     expect(screen.queryByRole('article')).toBeNull();
+    expect(screen.queryByTestId('venue-offer-pin')).toBeNull();
+  });
+});
+
+describe('VenueChatPage — how far the host has read', () => {
+  it("draws the host's face under the last line they read, from the room's read marks", async () => {
+    mount({
+      VenueChatRoom: room({
+        read_marks: [readMark('u-host', 'HOST', 'Asha Rao', at(3)), readMark('u-venue', 'VENUE', 'Ravi', at(9))],
+      }),
+      VenueChatMessages: { venueChatMessages: [line('t1'), ownLine('o1', { createdAt: at(2) }), ownLine('o2', { text: 'See you then', createdAt: at(8) })] },
+      PodVenueOfferTerms: { podVenueOffer: null },
+    });
+    const seen = await screen.findByRole('img', { name: 'Seen by Asha Rao' });
+    expect(seen.closest('li')?.textContent).toContain('Yes, from 6 pm.');
+    // One face: never the reader's own, and none under a line nobody has reached.
+    expect(screen.getAllByTestId('seen-faces')).toHaveLength(1);
+    expect(screen.getByText('See you then').closest('li')?.querySelector('[data-testid="seen-faces"]')).toBeNull();
   });
 });

@@ -35,6 +35,7 @@ describe('OfferTermsPanel — the venue reading a host offer', () => {
         min_guests: 0,
         offerings: [],
         note: 'Weekend rate',
+        images: [],
         at: null,
         quote: flat,
         quote_min: flat,
@@ -118,5 +119,31 @@ describe('OfferTermsPanel — the host reading their pod', () => {
     );
     expect(screen.getAllByText('Chairs')).toHaveLength(1);
     expect(screen.queryByTestId('offer-ask-note')).toBeNull();
+  });
+});
+
+describe('OfferTermsPanel — photos', () => {
+  const photo = 'https://ik.imagekit.io/duncit/chat/menu.jpg';
+
+  it("shows the photos on the venue's counter while it is the terms on the table", () => {
+    const countered = counteredOffer();
+    const offer = counteredOffer({
+      images: ['https://ik.imagekit.io/duncit/chat/host.jpg'],
+      counter: countered.counter && { ...countered.counter, images: [photo] },
+    });
+    renderWithProviders(<OfferTermsPanel offer={offer} podIsFree={false} side="HOST" />);
+    const strip = screen.getByTestId('offer-terms-slot-1-images');
+    expect(within(strip).getByLabelText('Open photo 1')).toBeOnTheScreen();
+    expect(within(strip).queryByLabelText('Open photo 2')).toBeNull();
+  });
+
+  it("shows the host's photos on their own terms, and none when there are none", () => {
+    const { unmount } = renderWithProviders(
+      <OfferTermsPanel offer={offerTerms({ images: [photo] })} podIsFree={false} side="VENUE" />,
+    );
+    expect(screen.getByTestId('offer-terms-slot-1-images')).toBeOnTheScreen();
+    unmount();
+    renderWithProviders(<OfferTermsPanel offer={offerTerms()} podIsFree={false} side="VENUE" />);
+    expect(screen.queryByTestId('offer-terms-slot-1-images')).toBeNull();
   });
 });

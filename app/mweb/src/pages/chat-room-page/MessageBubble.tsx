@@ -127,6 +127,7 @@ export default function MessageBubble({
         )}
         <Typography variant="caption" sx={{ color: metaInk, display: 'block', mt: 0.5, textAlign: 'right' }}>
           {formatTime(m.createdAt)}
+          {m.edited_at && !m.deleted ? ` · ${t('mweb.chatRoom.edited')}` : ''}
         </Typography>
         {m.reactions?.length > 0 && (
           <Stack direction="row" spacing={0.5} sx={{ mt: 0.5, flexWrap: 'wrap' }}>

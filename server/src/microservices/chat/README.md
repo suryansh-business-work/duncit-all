@@ -12,6 +12,7 @@ moved here.
 | `rooms/`   | Pod and club group chat (one `PodMessage` collection for both), replies, @-mentions, per-member mute and read marks | `PodMessage`, `ChatMute`, `ChatReadState`, `ChatNotifyClaim` |
 | `staff/`   | Employee-to-employee direct messages, presence and WebRTC calls    | `StaffMessage`, `StaffCall`, `StaffChatState`           |
 | `support/` | Member-to-support-agent chat, AI first reply, unified ticket list  | `SupportChatSession`, `SupportChatMessage`              |
+| `venue/`   | A venue booking's private thread between the pod's hosts and the venue's owner, where they bargain over the booking offer (OFFER lines); reactions, edits, read marks | `VenueChatMessage`, `ChatReadState` (kind VENUE) |
 
 ## What it exports
 
@@ -86,6 +87,8 @@ Mutation: `startSupportChat`, `sendSupportChatMessage`, `closeSupportChat`,
 `emailSupportChatTranscript`, `markSupportChatRead`, `claimSupportChat`,
 `supportCreateUser`.
 
+**venue** — Query: `venueChatRoom` (both sides' contact cards and every other member's read mark), `venueChatMessages` (`mark_read: false` reads without marking — a poll), `myVenueChatThreads`, `adminVenueChatThreads`, `adminVenueChatMessages`. Mutation: `sendVenueChatMessage`, `reactToVenueChatMessage` (toggle), `editVenueChatMessage` (own text), `deleteVenueChatMessage` (own text or photo), `markVenueChatRead`. OFFER lines are written by `modules/venues/venueOffer` (`postOffer`, and `venueChat.lines`' `reviseOfferLine` / `withdrawOfferLine` / `renumberOfferLine` when a counter is edited or withdrawn before the other side saw it).
+
 Message history is cursor-paged everywhere: `podMessages`, `clubMessages`,
 `chatPreview`, `staffMessages` and `supportChatMessages` take `limit` (default
 50, clamped to 1–200) and `before` (an ISO time; the page holds messages older
@@ -103,6 +106,8 @@ removed), `typing`, `club_typing`.
 `call_resume`. Server → client: `staff_message`, `staff_message_changed`,
 `staff_presence`, `staff_typing`, the relayed `call_*` events and
 `call_error`.
+
+**venue** — client → server: `join_venue_chat`, `leave_venue_chat`. Server → thread: `venue_chat_message` (a new line), `venue_chat_update` (a line changed in place: edited, reacted to, a counter revised), `venue_chat_delete` (`{ id, pod_id }`), `venue_chat_read` (a member's read mark, drawn as the "seen" faces).
 
 **support** — client → server: `join_support_session`,
 `leave_support_session`, `support_typing`. Server → client:

@@ -29,17 +29,21 @@ describe('StoryViewersSheet', () => {
     expect(screen.getByText('Someone')).toBeOnTheScreen();
   });
 
+  // The title already reads "No views yet" while loading, so each wait is on the
+  // empty-list line, which only renders once the query has settled.
   it('shows the empty state when nobody has viewed', async () => {
     mockGraphql.mockResolvedValue({ storyViewers: [] });
     renderWithProviders(<StoryViewersSheet storyId="s1" onClose={jest.fn()} />);
-    await waitFor(() => expect(screen.getByText('No views yet')).toBeOnTheScreen());
-    expect(screen.getByText('No one has viewed this story yet.')).toBeOnTheScreen();
+    expect(await screen.findByText('No one has viewed this story yet.')).toBeOnTheScreen();
+    expect(screen.getByText('No views yet')).toBeOnTheScreen();
+    expect(screen.queryByText('Loading…')).toBeNull();
   });
 
   it('falls back to an empty list when the query fails', async () => {
     mockGraphql.mockRejectedValue(new Error('nope'));
     renderWithProviders(<StoryViewersSheet storyId="s1" onClose={jest.fn()} />);
-    await waitFor(() => expect(screen.getByText('No views yet')).toBeOnTheScreen());
+    expect(await screen.findByText('No one has viewed this story yet.')).toBeOnTheScreen();
+    expect(screen.queryByText('Loading…')).toBeNull();
   });
 
   it('does not fetch while closed', () => {
@@ -51,7 +55,7 @@ describe('StoryViewersSheet', () => {
     mockGraphql.mockResolvedValue({ storyViewers: [] });
     const onClose = jest.fn();
     renderWithProviders(<StoryViewersSheet storyId="s1" onClose={onClose} />);
-    await waitFor(() => expect(screen.getByText('No views yet')).toBeOnTheScreen());
+    await screen.findByText('No one has viewed this story yet.');
     fireEvent.press(screen.getByTestId('story-viewers-close'));
     expect(onClose).toHaveBeenCalled();
   });

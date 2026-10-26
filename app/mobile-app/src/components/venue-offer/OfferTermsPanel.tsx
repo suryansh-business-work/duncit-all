@@ -3,6 +3,7 @@ import { currentOfferTerms, venueOfferInboxStatus, type OfferStatusTone } from '
 
 import { useTranslation } from '@/hooks/useTranslation';
 import { OfferAnswerBy, OfferAsk } from './OfferAsk';
+import { OfferImages } from './OfferImages';
 import { OfferQuoteView } from './OfferQuoteView';
 import { offerTermsText, type OfferSide, type OfferTerms } from './offer-format';
 
@@ -44,8 +45,8 @@ interface Props {
  * The terms on the table — the host's offer, or the venue's counter while it
  * waits — with where the offer stands, the server's quote as a range from the
  * venue's minimum guests to the pod's spots (and its breakdown at the most),
- * what the venue is asked to provide, the note, and the answer-by time while it
- * is open. The venue and the host each read it from their side. mWeb twin:
+ * what the venue is asked to provide, the note, the photos attached to those
+ * terms, and the answer-by time while it is open. The venue and the host each read it from their side. mWeb twin:
  * OfferTermsPanel.
  */
 export function OfferTermsPanel({ offer, podIsFree, side }: Readonly<Props>) {
@@ -83,6 +84,10 @@ export function OfferTermsPanel({ offer, podIsFree, side }: Readonly<Props>) {
         />
       )}
       <OfferAsk offerings={terms.offerings} note={terms.note} by={terms.by} />
+      <OfferImages
+        images={offer.counter ? offer.counter.images : offer.images}
+        testID={`offer-terms-${offer.slot_id}-images`}
+      />
       {OPEN_STATUSES.has(offer.status) ? <OfferAnswerBy at={offer.expires_at} /> : null}
     </YStack>
   );

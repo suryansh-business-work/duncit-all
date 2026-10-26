@@ -18,8 +18,8 @@ export interface OfferTermsInputsProps {
 }
 
 /**
- * How the host offers to pay the venue — per guest, per hour, for the slot or
- * a flat price, with a line on how the picked option pays (per guest is a
+ * How the host offers to pay the venue — per guest, per hour or a flat price
+ * for the window, with a line on how the picked option pays (per guest is a
  * minimum order value per person) — and the amount. The venue accepts it,
  * rejects it or counters with its own terms. Presentational: Create Pod and the
  * resubmit sheet each bind it to their own form. mWeb twin: OfferTermsFields.

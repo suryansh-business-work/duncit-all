@@ -7,6 +7,7 @@ import { FormTextField } from '@/components/FormTextField';
 import { SelectChip } from '@/components/venue-availability/SelectChip';
 import type { OfferSide } from '@/components/venue-offer/offer-format';
 import { useTranslation } from '@/hooks/useTranslation';
+import { CounterImagesField } from './CounterImagesField';
 import { asksMinGuests, type CounterOfferValues } from './counter-offer.types';
 
 interface Props {
@@ -22,8 +23,9 @@ interface Props {
 
 /**
  * A counter's terms: the pricing option, the amount, the fewest guests paid
- * for (a per-guest price only), what the venue provides (one point per line)
- * and a note to the other side. mWeb twin: CounterOfferForm's fields.
+ * for (a per-guest price only), what the venue provides (one point per line),
+ * a note to the other side and up to four photos from the device. mWeb twin:
+ * CounterOfferForm's fields.
  */
 export function CounterOfferFields({ control, setValue, model, side, maxGuests }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -84,6 +86,7 @@ export function CounterOfferFields({ control, setValue, model, side, maxGuests }
         numberOfLines={4}
       />
       <FormTextField control={control} name="note" label={noteLabel} multiline numberOfLines={3} />
+      <CounterImagesField control={control} />
     </YStack>
   );
 }

@@ -342,4 +342,7 @@ export const COPY_REVISIONS: Readonly<Record<string, readonly string[]>> = {
   "podForm.whenWhereSection.freePodVenueNote": [
     "This pod is free, so Duncit will not pay the venue for this slot. The host settles the venue’s charges with the venue directly, and the venue is asked not to confirm the slot until the host has spoken to them or transferred the amount.",
   ],
+  // "For the slot" is no longer a way to pay a venue (it always priced as a flat price).
+  "mweb.createPod.offer.modelHint": ["Per guest, per hour, for the time slot, or one flat price"],
+  "podForm.offer.modelHint": ["Per guest, per hour, for the time slot, or one flat price"],
 };

@@ -35,10 +35,11 @@ import {
   type SpaceVenue,
 } from '@modules/venues/venuePricing/venuePricing.service';
 import { checkBookable } from '@modules/venues/venuePricing/venuePricing.availability';
-import { cleanMinGuests, cleanOfferNote, cleanOfferings, openingMinGuests } from './venueOffer.ask';
+import { cleanMinGuests, cleanOfferImages, cleanOfferNote, cleanOfferings, openingMinGuests } from './venueOffer.ask';
 import { asRead, assertRound, nextMove, staleOffer } from './venueOffer.cas';
 import { postOfferLine } from './venueOffer.chat';
 import { answerDeadline, holdWindow, type PricedOffer } from './venueOffer.hold';
+import { assertCounterLeft } from './venueOffer.limits';
 import { inAppOfferNote, tellHostsOfCounter, tellVenueOfOffer } from './venueOffer.notify';
 import { frozenCharges, quoteProposal, termsProblem } from './venueOffer.quote';
 import { currentTerms, offerView } from './venueOffer.view';
@@ -46,6 +47,8 @@ import type {
   OfferCharges,
   OfferQuote,
   VenueOffer,
+  VenueOfferHostTerms,
+  VenueOfferPrior,
   VenueOfferProposal,
   VenueOfferRequest,
   VenueOfferTerms,
@@ -55,10 +58,12 @@ const DAY_MS = 86_400_000;
 
 type Venue = Awaited<ReturnType<typeof loadVenue>>;
 
-/** A counter's terms: the price, and optionally a new minimum and new points (omitted = unchanged). */
+/** A counter's terms: the price, optionally a new minimum and new points (omitted = unchanged), and its own photos. */
 export interface VenueOfferMoveTerms extends VenueOfferTerms {
   min_guests?: number | null;
   offerings?: string[] | null;
+  /** Photos uploaded from the mover's device; omitted = none. */
+  images?: string[] | null;
 }
 
 function assertTerms(terms: Partial<VenueOfferTerms>) {
@@ -177,10 +182,10 @@ export async function loadBookableVenue(venueId: string, session?: ClientSession
   return venue;
 }
 
-const refuse = (code: string, message: string) => new GraphQLError(message, { extensions: { code } });
+export const refuse = (code: string, message: string) => new GraphQLError(message, { extensions: { code } });
 
 /** A booking with an offer on it — what every move below works on. */
-type OfferSlot = IVenueSlot & { offer: VenueOffer };
+export type OfferSlot = IVenueSlot & { offer: VenueOffer };
 
 async function loadSlot(slotId: string) {
   if (!Types.ObjectId.isValid(slotId)) throw refuse('BAD_USER_INPUT', 'Invalid booking');
@@ -190,7 +195,7 @@ async function loadSlot(slotId: string) {
 }
 
 /** The booking's offer, still waiting on an answer, or why it cannot be answered. */
-function pendingOffer(slot: IVenueSlot, statuses: readonly VenueOffer['status'][]): OfferSlot {
+export function pendingOffer(slot: IVenueSlot, statuses: readonly VenueOffer['status'][]): OfferSlot {
   const offer = slot.offer;
   if (slot.status !== 'PENDING' || !offer || !statuses.includes(offer.status)) {
     throw refuse('BAD_REQUEST', 'This booking has no offer to answer');
@@ -221,20 +226,21 @@ async function countered(userId: string, podId: string): Promise<OfferSlot> {
 }
 
 /** A move's terms priced: always with its fewest-guests price and the charges it was priced on. */
-type PricedProposal = VenueOfferProposal & { quote_min: OfferQuote; charges: OfferCharges };
+export type PricedProposal = VenueOfferProposal & { quote_min: OfferQuote; charges: OfferCharges };
 
 /**
  * A move's terms, priced for the booking's own window and guests with the
  * venue's charges as they are now. A minimum or points left out are carried
  * over from the terms being answered; the note is the mover's own.
  */
-async function pricedMove(slot: OfferSlot, terms: VenueOfferMoveTerms, note: string | null | undefined): Promise<PricedProposal> {
+export async function pricedMove(slot: OfferSlot, terms: VenueOfferMoveTerms, note: string | null | undefined): Promise<PricedProposal> {
   assertTerms(terms);
   const offer = slot.offer;
   const answering = currentTerms(offer);
   const min = cleanMinGuests(terms.min_guests ?? (answering.min_guests || offer.pax), offer.pax);
   const offerings = terms.offerings ? cleanOfferings(terms.offerings, false) : [...(answering.offerings ?? [])];
   const text = cleanOfferNote(note);
+  const images = cleanOfferImages(terms.images);
   const venue = await loadVenue(String(slot.venue_id));
   const priced = await pricedProposal(
     venue,
@@ -243,7 +249,7 @@ async function pricedMove(slot: OfferSlot, terms: VenueOfferMoveTerms, note: str
     { start: slot.start_at, end: slot.end_at },
     { pax: offer.pax, pets: offer.pets, min }
   );
-  return { model: terms.model, rate: terms.rate, ...priced, min_guests: min, offerings, note: text };
+  return { model: terms.model, rate: terms.rate, ...priced, min_guests: min, offerings, note: text, images };
 }
 
 /** When the side being answered must reply by: the venue's response time, never past the start. */
@@ -252,7 +258,42 @@ async function deadlineFor(slot: IVenueSlot): Promise<Date> {
   return answerDeadline((await venueOfferSettingsOf(venue)).response_hours, slot.start_at);
 }
 
-const historyOf = (by: 'HOST' | 'VENUE', p: VenueOfferProposal, at: Date) => ({
+/** The host's terms as `$set` paths on the offer: a counter-back, its edit, or the terms a withdrawal puts back. */
+export const hostTermsSet = (p: VenueOfferHostTerms) => ({
+  'offer.model': p.model,
+  'offer.rate': p.rate,
+  'offer.quote': p.quote,
+  'offer.quote_min': p.quote_min,
+  'offer.charges': p.charges,
+  'offer.min_guests': p.min_guests,
+  'offer.offerings': p.offerings,
+  'offer.note': p.note,
+  'offer.images': p.images ?? [],
+});
+
+/** Where the offer stands now, as plain values — what withdrawing the counter about to be made puts back. */
+function priorOf(slot: OfferSlot): VenueOfferPrior {
+  const offer = (slot.toObject() as { offer: VenueOffer }).offer;
+  return {
+    status: offer.status,
+    round: offer.round,
+    expires_at: offer.expires_at ?? null,
+    counter: offer.counter ?? null,
+    host: {
+      model: offer.model,
+      rate: offer.rate,
+      quote: offer.quote,
+      quote_min: offer.quote_min ?? null,
+      charges: offer.charges ?? null,
+      min_guests: offer.min_guests ?? 0,
+      offerings: offer.offerings ?? [],
+      note: offer.note ?? '',
+      images: offer.images ?? [],
+    },
+  };
+}
+
+export const historyOf = (by: 'HOST' | 'VENUE', p: VenueOfferProposal, at: Date) => ({
   by,
   action: 'COUNTER' as const,
   model: p.model,
@@ -264,7 +305,7 @@ const historyOf = (by: 'HOST' | 'VENUE', p: VenueOfferProposal, at: Date) => ({
 });
 
 /** The pod a booking is for, and its lead host — who a host-side line is posted as by default. */
-async function podOf(slot: IVenueSlot): Promise<{ podId: string; leadHostId: string; hostIds: string[] } | null> {
+export async function podOf(slot: IVenueSlot): Promise<{ podId: string; leadHostId: string; hostIds: string[] } | null> {
   const podId = slot.booked_by_pod_id ?? slot.decided_pod_id;
   if (!podId) return null;
   const pod = await PodModel.findById(podId).select('pod_hosts_id').lean();
@@ -371,6 +412,7 @@ export const venueOfferService = {
     const slot = await venueAnswering(userId, slotId);
     const offer = slot.offer;
     assertRound(offer, round);
+    await assertCounterLeft(offer, 'VENUE');
     const proposal = await pricedMove(slot, terms, note);
     const at = new Date();
     const updated = await VenueSlotModel.findOneAndUpdate(
@@ -381,6 +423,7 @@ export const venueOfferService = {
           'offer.status': 'COUNTERED',
           'offer.expires_at': await deadlineFor(slot),
           'offer.move': nextMove(offer),
+          'offer.prior': priorOf(slot),
         },
         $inc: { 'offer.round': 1 },
         $push: { 'offer.history': historyOf('VENUE', proposal, at) },
@@ -398,25 +441,20 @@ export const venueOfferService = {
     const slot = await countered(userId, podId);
     const offer = slot.offer;
     assertRound(offer, round);
+    await assertCounterLeft(offer, 'HOST');
     const proposal = await pricedMove(slot, terms, note);
     const at = new Date();
     const updated = await VenueSlotModel.findOneAndUpdate(
       asRead(slot),
       {
         $set: {
-          'offer.model': proposal.model,
-          'offer.rate': proposal.rate,
-          'offer.quote': proposal.quote,
-          'offer.quote_min': proposal.quote_min,
-          'offer.charges': proposal.charges,
-          'offer.min_guests': proposal.min_guests,
-          'offer.offerings': proposal.offerings,
-          'offer.note': proposal.note,
+          ...hostTermsSet(proposal),
           // The venue's counter has been answered: the host's terms are the ones on the table.
           'offer.counter': null,
           'offer.status': 'SENT',
           'offer.expires_at': await deadlineFor(slot),
           'offer.move': nextMove(offer),
+          'offer.prior': priorOf(slot),
         },
         $inc: { 'offer.round': 1 },
         $push: { 'offer.history': historyOf('HOST', proposal, at) },
@@ -466,14 +504,14 @@ export const venueOfferService = {
 };
 
 /** A booking's offer view, for a mutation that promises one. */
-function viewOf(slot: IVenueSlot) {
+export function viewOf(slot: IVenueSlot) {
   const view = offerView(slot);
   if (!view) throw refuse('NOT_FOUND', 'Booking not found');
   return view;
 }
 
 /** A move priced for its preview: the breakdown at both ends, or why it cannot be sent. Never throws for a refusal. */
-async function previewOf(price: () => Promise<PricedProposal>) {
+export async function previewOf(price: () => Promise<PricedProposal>) {
   try {
     const priced = await price();
     return { ok: true, message: null, quote: { ...priced.quote, confirmed_at: null }, quote_min: { ...priced.quote_min, confirmed_at: null } };

@@ -1,5 +1,5 @@
 import { HOST_COUNTER_OFFER_QUOTE } from './host/queries';
-import { VENUE_COUNTER_QUOTE } from './queries';
+import { EDIT_COUNTER_QUOTE, VENUE_COUNTER_QUOTE } from './queries';
 import { useLiveQuote, type LiveQuoteSource } from './useLiveQuote';
 
 /**
@@ -20,6 +20,13 @@ export const venueCounterQuoteSource = (slotId: string): CounterQuoteSource => (
   document: VENUE_COUNTER_QUOTE,
   field: 'venueCounterQuote',
   variables: (terms) => ({ slot_id: slotId, terms }),
+});
+
+/** Either side's edit of its own counter, priced for the pod's booking (`editCounterQuote`). */
+export const editCounterQuoteSource = (podId: string): CounterQuoteSource => ({
+  document: EDIT_COUNTER_QUOTE,
+  field: 'editCounterQuote',
+  variables: (terms) => ({ pod_id: podId, terms }),
 });
 
 export const hostCounterQuoteSource = (podId: string): CounterQuoteSource => ({

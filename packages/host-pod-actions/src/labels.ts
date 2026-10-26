@@ -184,7 +184,6 @@ export interface HostPodActionLabels {
   offerModelLabel: string;
   offerModelPerGuest: string;
   offerModelPerHour: string;
-  offerModelPerSlot: string;
   offerModelFlat: string;
   offerRateLabel: string;
   offerModelRequired: string;
@@ -375,7 +374,6 @@ export function mwebHostPodLabels(t: HostPodTranslate): HostPodActionLabels {
     offerModelLabel: t('mweb.hostPodActions.offerModelLabel'),
     offerModelPerGuest: t('mweb.hostPodActions.offerModelPerGuest'),
     offerModelPerHour: t('mweb.hostPodActions.offerModelPerHour'),
-    offerModelPerSlot: t('mweb.hostPodActions.offerModelPerSlot'),
     offerModelFlat: t('mweb.hostPodActions.offerModelFlat'),
     offerRateLabel: t('mweb.hostPodActions.offerRateLabel'),
     offerModelRequired: t('mweb.hostPodActions.offerModelRequired'),
@@ -525,7 +523,6 @@ export function shellHostPodLabels(t: HostPodTranslate): HostPodActionLabels {
     offerModelLabel: t('shell.hostPodActions.offerModelLabel'),
     offerModelPerGuest: t('shell.hostPodActions.offerModelPerGuest'),
     offerModelPerHour: t('shell.hostPodActions.offerModelPerHour'),
-    offerModelPerSlot: t('shell.hostPodActions.offerModelPerSlot'),
     offerModelFlat: t('shell.hostPodActions.offerModelFlat'),
     offerRateLabel: t('shell.hostPodActions.offerRateLabel'),
     offerModelRequired: t('shell.hostPodActions.offerModelRequired'),

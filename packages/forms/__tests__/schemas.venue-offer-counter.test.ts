@@ -14,18 +14,36 @@ import {
   venueOfferAskDefaults,
   venueOfferCounterDefaults,
   venueOfferCounterTermsOf,
+  venueOfferEditDefaults,
   venueOfferRejectDefaults,
   venueOfferTermsOf,
+  VENUE_OFFER_COUNTER_MODELS,
   VENUE_OFFER_GUESTS_MAX,
+  VENUE_OFFER_IMAGES_MAX,
   VENUE_OFFER_NOTE_MAX,
   VENUE_OFFER_RATE_MAX,
+  type VenueOfferCounterValues,
 } from '../src/schemas';
 
 const t = (key: string, options?: { vars?: Record<string, string | number> }) =>
   options?.vars ? `${key}:${JSON.stringify(options.vars)}` : key;
 const schema = makeVenueOfferCounterSchema(t, 20);
 
-const counter = (over: Record<string, unknown> = {}) => ({ model: 'FLAT', rate: '100', min_guests: '', offerings: '', note: '', ...over });
+/** Raw input for the schema — any field may be wrong. */
+const counter = (over: Record<string, unknown> = {}) => ({ model: 'FLAT', rate: '100', min_guests: '', offerings: '', note: '', images: [], ...over });
+
+/** A counter form's values, as `venueOfferTermsOf` reads them. */
+const formValues = (over: Partial<VenueOfferCounterValues> = {}): VenueOfferCounterValues => ({
+  model: 'FLAT',
+  rate: '100',
+  min_guests: '',
+  offerings: '',
+  note: '',
+  images: [],
+  ...over,
+});
+
+const photos = (n: number) => Array.from({ length: n }, (_, i) => `https://ik.imagekit.io/duncit/offers/p${i}.jpg`);
 
 const messagesFor = (values: Record<string, unknown>, against: z.ZodType = schema) => {
   const result = against.safeParse(values);
@@ -36,11 +54,22 @@ describe('makeVenueOfferCounterSchema', () => {
   it('accepts a pricing option with a positive amount, a minimum and points, and trims the text', () => {
     expect(
       schema.parse(counter({ model: 'PER_GUEST', rate: ' 500 ', min_guests: ' 6 ', offerings: '- DJ\nSnacks', note: '  Weekend rate  ' }))
-    ).toEqual({ model: 'PER_GUEST', rate: '500', min_guests: '6', offerings: '- DJ\nSnacks', note: 'Weekend rate' });
+    ).toEqual({ model: 'PER_GUEST', rate: '500', min_guests: '6', offerings: '- DJ\nSnacks', note: 'Weekend rate', images: [] });
   });
 
-  it('refuses an unknown pricing option', () => {
+  it('takes the three pricing options and refuses an unknown one, the retired per-slot option included', () => {
+    expect(VENUE_OFFER_COUNTER_MODELS).toEqual(['PER_GUEST', 'PER_HOUR', 'FLAT']);
+    for (const model of VENUE_OFFER_COUNTER_MODELS) expect(messagesFor(counter({ model }))).toEqual([]);
     expect(messagesFor(counter({ model: 'PER_DAY' }))).toEqual(['model=availability.offers.validation.model']);
+    expect(messagesFor(counter({ model: 'PER_SLOT' }))).toEqual(['model=availability.offers.validation.model']);
+  });
+
+  it("carries up to the server's four photos, and refuses a fifth", () => {
+    expect(VENUE_OFFER_IMAGES_MAX).toBe(4);
+    expect(schema.parse(counter({ images: photos(4) })).images).toEqual(photos(4));
+    expect(messagesFor(counter({ images: photos(5) }))).toEqual([
+      `images=availability.offers.validation.imagesTooMany:${JSON.stringify({ max: 4 })}`,
+    ]);
   });
 
   it('refuses a blank, zero, negative or non-numeric amount', () => {
@@ -95,53 +124,104 @@ describe('venueOfferCounterDefaults', () => {
       min_guests: '6',
       offerings: 'DJ\nSnacks',
       note: '',
+      images: [],
     });
   });
 
   it('falls back to a flat price with nothing else for missing or unknown terms', () => {
-    const blank = { model: 'FLAT', rate: '', min_guests: '', offerings: '', note: '' };
+    const blank = { model: 'FLAT', rate: '', min_guests: '', offerings: '', note: '', images: [] };
     expect(venueOfferCounterDefaults(null)).toEqual(blank);
     expect(venueOfferCounterDefaults({ model: 'PER_DAY', rate: 0, minGuests: 0 })).toEqual(blank);
+    expect(venueOfferCounterDefaults({ model: 'PER_SLOT', rate: 0, minGuests: 0 })).toEqual(blank);
     expect(venueOfferCounterDefaults({ model: null, rate: null, minGuests: null, offerings: null })).toEqual(blank);
+  });
+
+  it('starts a counter the form validates as it stands', () => {
+    expect(messagesFor(venueOfferCounterDefaults({ model: 'PER_HOUR', rate: 800, minGuests: null, offerings: ['Projector'] }))).toEqual([]);
+  });
+});
+
+describe('venueOfferEditDefaults', () => {
+  it('starts an edit from the counter as it was sent, its note and photos kept', () => {
+    const images = photos(2);
+    const edit = venueOfferEditDefaults({ model: 'PER_GUEST', rate: 450, minGuests: 6, offerings: ['DJ'], note: 'Weekend rate', images });
+    expect(edit).toEqual({
+      model: 'PER_GUEST',
+      rate: '450',
+      min_guests: '6',
+      offerings: 'DJ',
+      note: 'Weekend rate',
+      images: photos(2),
+    });
+    // The form gets its own list, so adding or removing a photo never touches the sent counter.
+    expect(edit.images).not.toBe(images);
+  });
+
+  it('starts with no note or photos when the counter carried none', () => {
+    expect(venueOfferEditDefaults({ model: 'FLAT', rate: 6000, note: null, images: null })).toMatchObject({ note: '', images: [] });
+    expect(venueOfferEditDefaults({ model: 'FLAT', rate: 6000 })).toMatchObject({ rate: '6000', note: '', images: [] });
+    expect(venueOfferEditDefaults(null)).toEqual({ model: 'FLAT', rate: '', min_guests: '', offerings: '', note: '', images: [] });
   });
 });
 
 describe('venueOfferTermsOf', () => {
   it('sends the option, the amount and the points, with the minimum only when one was typed', () => {
-    expect(venueOfferTermsOf(counter({ model: 'PER_GUEST', rate: ' 500 ', min_guests: '6', offerings: '- DJ\n\nSnacks' }))).toEqual({
+    expect(venueOfferTermsOf(formValues({ model: 'PER_GUEST', rate: ' 500 ', min_guests: '6', offerings: '- DJ\n\nSnacks' }))).toEqual({
       model: 'PER_GUEST',
       rate: 500,
       min_guests: 6,
       offerings: ['DJ', 'Snacks'],
     });
-    expect(venueOfferTermsOf(counter({ rate: '7000' }))).toEqual({ model: 'FLAT', rate: 7000, offerings: [] });
+    expect(venueOfferTermsOf(formValues({ rate: '7000' }))).toEqual({ model: 'FLAT', rate: 7000, offerings: [] });
   });
 
   it('is null until the amount and any minimum are usable', () => {
-    for (const rate of ['', 'abc', '0', '-1']) expect(venueOfferTermsOf(counter({ rate }))).toBeNull();
-    for (const min of ['0', '2.5', 'six']) expect(venueOfferTermsOf(counter({ min_guests: min }))).toBeNull();
+    for (const rate of ['', 'abc', '0', '-1']) expect(venueOfferTermsOf(formValues({ rate }))).toBeNull();
+    for (const min of ['0', '2.5', 'six']) expect(venueOfferTermsOf(formValues({ min_guests: min }))).toBeNull();
+  });
+
+  it('sends the photos as a list of its own, beside the minimum', () => {
+    const images = photos(2);
+    const terms = venueOfferTermsOf(formValues({ model: 'PER_GUEST', rate: '500', min_guests: '6', images }));
+    expect(terms).toEqual({ model: 'PER_GUEST', rate: 500, min_guests: 6, offerings: [], images: photos(2) });
+    expect(terms?.images).not.toBe(images);
+  });
+
+  it('leaves the photos out when the form has none', () => {
+    expect(venueOfferTermsOf(formValues({ images: [] }))).not.toHaveProperty('images');
+    expect(venueOfferTermsOf({ model: 'FLAT', rate: '7000', min_guests: '', offerings: '' })).toEqual({ model: 'FLAT', rate: 7000, offerings: [] });
   });
 });
 
 describe('venueOfferCounterTermsOf', () => {
   it('asks a minimum only beside a per-guest price', () => {
     expect(counterAsksMinGuests('PER_GUEST')).toBe(true);
-    for (const model of ['PER_HOUR', 'PER_SLOT', 'FLAT']) expect(counterAsksMinGuests(model)).toBe(false);
+    for (const model of ['PER_HOUR', 'FLAT']) expect(counterAsksMinGuests(model)).toBe(false);
   });
 
   it('sends the minimum with a per-guest price, and leaves it out (the one on the table stands) otherwise', () => {
-    expect(venueOfferCounterTermsOf(counter({ model: 'PER_GUEST', rate: '600', min_guests: '6' }))).toMatchObject({ min_guests: 6 });
-    expect(venueOfferCounterTermsOf(counter({ model: 'FLAT', rate: '7000', min_guests: '6' }))).toEqual({
+    expect(venueOfferCounterTermsOf(formValues({ model: 'PER_GUEST', rate: '600', min_guests: '6' }))).toMatchObject({ min_guests: 6 });
+    expect(venueOfferCounterTermsOf(formValues({ model: 'FLAT', rate: '7000', min_guests: '6' }))).toEqual({
       model: 'FLAT',
       rate: 7000,
       offerings: [],
     });
   });
 
+  it('keeps the photos whichever option the counter uses', () => {
+    expect(venueOfferCounterTermsOf(formValues({ model: 'PER_HOUR', rate: '900', min_guests: '6', images: photos(1) }))).toEqual({
+      model: 'PER_HOUR',
+      rate: 900,
+      offerings: [],
+      images: photos(1),
+    });
+    expect(venueOfferCounterTermsOf(formValues({ model: 'PER_GUEST', rate: '600', min_guests: '6', images: photos(3) }))?.images).toEqual(photos(3));
+  });
+
   it('is null until the per-guest minimum is usable', () => {
-    expect(venueOfferCounterTermsOf(counter({ model: 'PER_GUEST', rate: '600', min_guests: '0' }))).toBeNull();
+    expect(venueOfferCounterTermsOf(formValues({ model: 'PER_GUEST', rate: '600', min_guests: '0' }))).toBeNull();
     // A stale minimum left behind by another option does not block it.
-    expect(venueOfferCounterTermsOf(counter({ model: 'FLAT', rate: '7000', min_guests: 'six' }))).not.toBeNull();
+    expect(venueOfferCounterTermsOf(formValues({ model: 'FLAT', rate: '7000', min_guests: 'six' }))).not.toBeNull();
   });
 });
 

@@ -4,6 +4,7 @@ import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/app-settings';
 import { currentOfferTerms, hostOfferActions, offerQuoteRange } from '@duncit/utils';
 import AnswerOfferDialog, { type AnswerChoice } from '../AnswerOfferDialog';
+import CounterAllowanceNote from '../CounterAllowanceNote';
 import CounterOfferDialog from '../CounterOfferDialog';
 import { rupeesRange } from '../format';
 import type { OfferTarget } from '../offer-target';
@@ -27,7 +28,8 @@ interface Props {
 /**
  * What the host can do with the venue's counter while it waits on them: Accept
  * it (the pod goes live), Reject it (the hold is released; they may send a new
- * offer) or Counter back with terms of their own. Each opens its own dialog and
+ * offer) or Counter back with terms of their own while they have counters left
+ * (the note under the answers says how many). Each opens its own dialog and
  * answers the round it read. Nothing once it is not their move.
  */
 export default function HostOfferActions({ offer, subject, onDone }: Readonly<Props>) {
@@ -59,6 +61,7 @@ export default function HostOfferActions({ offer, subject, onDone }: Readonly<Pr
           </DuncitButton>
         )}
       </Stack>
+      <CounterAllowanceNote offer={offer} side="HOST" />
       <AnswerOfferDialog
         target={target}
         subject={{ ...subject, start_at: offer.start_at, end_at: offer.end_at, pod_is_free: false }}

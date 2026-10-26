@@ -112,7 +112,16 @@ exports:
   - 'POD_VENUE_OFFER_TERMS'
   - 'OfferChatCard'
   - 'isOfferChatLine'
-  - 'VenueChatContactLine'
+  - 'VenueOfferPinnedBar'
+  - 'VenueChatContactSheet'
+  - 'LineReactions'
+  - 'SeenFaces'
+  - 'VenueChatLineDialogs'
+  - 'useVenueChatLineActions'
+  - 'useMarkReadWhileVisible'
+  - 'OfferImages'
+  - 'MinBusinessFields'
+  - 'VenueMinBusinessNote'
 ---
 
 ## Why this exists
@@ -638,8 +647,31 @@ pod and venue to name, `onAnswered`, and for a host `onSendNewOffer(move)` (the 
 prefilled from the declined move). `venueChatOfferActions` decides what shows. Draw the card only
 for lines `isOfferChatLine` accepts; any other line keeps its text. `useChatVenueOffer(podId,
 lines, ready)` reads the live offer once the first page is in and re-reads it whenever a new OFFER
-line arrives. `VenueChatContactLine` is the header's way to reach the other side (`tel:` and
-`mailto:` links).
+line arrives.
+
+The card also carries the line it was posted as (`line`: its time — shown as the move's date and time —
+whether it was edited, its reactions), `viewerId` and `onReact` (members react to it like any line),
+and `seen`: whether the other side has read the thread that far. On the reader's own newest counter
+while the other side has not seen it, `venueChatOfferActions` returns `revise` and the card offers
+**Edit** (the counter dialog in `mode="edit"`, priced by `editCounterQuote`, saved by
+`editVenueOfferCounter`) and **Withdraw** (`withdrawVenueOfferCounter`; the terms before it stand
+again). Counters carry up to four photos from the device (`OfferImagesField` — `MediaPickerDialog`
+with `deviceOnly` and `accept="image/*"`; the server refuses stock images and videos), shown as
+`OfferImages`. Each side may counter only its share of Pod Settings' total
+(`counters_per_side`): `CounterAllowanceNote` says how many are left and Counter is hidden at none.
+
+Around the cards: `VenueOfferPinnedBar` pins the live offer to the top of the thread (whose move,
+until when, each side's counters left — `venueOfferPin`); `VenueChatContactSheet` rises over the
+chat with both sides' details and profiles (`venueChatRoom.host` / `.venue`, `tel:` and `mailto:`
+links, optional `onViewProfile` / `onViewVenue`); `LineReactions` and `SeenFaces` draw a line's
+reactions and the faces of whoever read that far (`seenFacesByLine`); `useVenueChatLineActions`
+reacts, edits, deletes and marks read, and `VenueChatLineDialogs` asks for the edit or the delete;
+`useMarkReadWhileVisible` marks the thread read when a line from the other side arrives while the
+page is in view.
+
+The venue's Booking offers settings draw `MinBusinessFields` (the business it hopes each booking
+brings — at least one amount, one per basis), and Create Pod shows the picked venue's amounts with
+`VenueMinBusinessNote`.
 
 ```tsx
 const offers = useChatVenueOffer(room.pod_id, lines, !loading);

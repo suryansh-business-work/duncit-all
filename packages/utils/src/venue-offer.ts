@@ -3,7 +3,7 @@
  * app and the Partners pod form (rules 29 + 56).
  *
  * The host picks a window the venue is open and free, the guests, and how they
- * will pay the venue (per guest, per hour, for the slot, or a flat price) with
+ * will pay the venue (per guest, per hour, or a flat price for the window) with
  * an amount, lists what they need from the venue and may add a note. The server
  * prices that offer with the venue's own charges (price rules, fees, minimum
  * spend, GST) and Duncit's commission on top (`venueOfferQuote`) at both ends
@@ -24,10 +24,10 @@ import {
 } from './venue-booking';
 
 /** How the host offers to pay the venue (`VenueOfferModel`). */
-export type VenueOfferModel = 'PER_GUEST' | 'PER_HOUR' | 'PER_SLOT' | 'FLAT';
+export type VenueOfferModel = 'PER_GUEST' | 'PER_HOUR' | 'FLAT';
 
 /** The pricing options, in the order the pickers list them. */
-export const VENUE_OFFER_MODELS: readonly VenueOfferModel[] = ['PER_GUEST', 'PER_HOUR', 'PER_SLOT', 'FLAT'];
+export const VENUE_OFFER_MODELS: readonly VenueOfferModel[] = ['PER_GUEST', 'PER_HOUR', 'FLAT'];
 
 /** Each pricing option's name, the label of its amount field, and one line on how it pays. */
 export const VENUE_OFFER_MODEL_KEY: Readonly<Record<VenueOfferModel, { label: string; rate: string; help: string }>> = {
@@ -40,11 +40,6 @@ export const VENUE_OFFER_MODEL_KEY: Readonly<Record<VenueOfferModel, { label: st
     label: 'mweb.createPod.offer.model.perHour',
     rate: 'mweb.createPod.offer.rate.perHour',
     help: 'mweb.createPod.offer.help.perHour',
-  },
-  PER_SLOT: {
-    label: 'mweb.createPod.offer.model.perSlot',
-    rate: 'mweb.createPod.offer.rate.perSlot',
-    help: 'mweb.createPod.offer.help.perSlot',
   },
   FLAT: { label: 'mweb.createPod.offer.model.flat', rate: 'mweb.createPod.offer.rate.flat', help: 'mweb.createPod.offer.help.flat' },
 };
@@ -73,7 +68,6 @@ export const venueOfferStatusKey = (status: string | null | undefined): string =
 export const VENUE_OFFER_TERMS_KEY: Readonly<Record<VenueOfferModel, string>> = {
   PER_GUEST: 'mweb.venueOffer.terms.perGuest',
   PER_HOUR: 'mweb.venueOffer.terms.perHour',
-  PER_SLOT: 'mweb.venueOffer.terms.perSlot',
   FLAT: 'mweb.venueOffer.terms.flat',
 };
 
@@ -100,18 +94,84 @@ export function offerGuestsText(t: OfferTranslate, minGuests: number, maxGuests:
   return t('availability.offers.guests', { vars: { n: maxGuests } });
 }
 
+/** Who moves next on an offer (`VenueOfferParty`). */
+export type VenueOfferParty = 'HOST' | 'VENUE';
+
+/**
+ * How many counter offers each side may make on a booking (Pod Settings splits
+ * a total equally) and how many each has made. Absent from older servers.
+ */
+export interface OfferCounterUsage {
+  counters_per_side?: number | null;
+  host_counters_used?: number | null;
+  venue_counters_used?: number | null;
+}
+
+/** Counters `side` may still make, or null when the server does not say (no limit known). */
+export function offerCountersLeft(offer: Readonly<OfferCounterUsage>, side: VenueOfferParty): number | null {
+  return offerCounterAllowance(offer, side)?.left ?? null;
+}
+
+/** The `{ left, of }` a "counters left" line names for one side — its share and what is left of it — or null when no limit is known. */
+export function offerCounterAllowance(offer: Readonly<OfferCounterUsage>, side: VenueOfferParty): { left: number; of: number } | null {
+  const perSide = offer.counters_per_side;
+  if (perSide === undefined || perSide === null) return null;
+  const used = (side === 'HOST' ? offer.host_counters_used : offer.venue_counters_used) ?? 0;
+  return { left: Math.max(0, perSide - used), of: perSide };
+}
+
+/** Whether `side` may still counter: always, when the server names no limit. */
+export const mayCounter = (offer: Readonly<OfferCounterUsage>, side: VenueOfferParty): boolean => offerCountersLeft(offer, side) !== 0;
+
+/**
+ * Each basis a venue may name the business it hopes for on (Booking offers),
+ * and how an amount reads: "₹200 per guest", "₹400 per hour", "₹5,000 per
+ * booking". A flat price is one amount for the whole booking.
+ */
+export const VENUE_MIN_BUSINESS_KEY: Readonly<Record<VenueOfferModel, { label: string; amount: string }>> = {
+  PER_GUEST: { label: 'availability.offers.minBusiness.perGuest', amount: 'availability.offers.minBusiness.perGuestAmount' },
+  PER_HOUR: { label: 'availability.offers.minBusiness.perHour', amount: 'availability.offers.minBusiness.perHourAmount' },
+  FLAT: { label: 'availability.offers.minBusiness.perBooking', amount: 'availability.offers.minBusiness.perBookingAmount' },
+};
+
+/** One amount a venue hopes for (`VenueMinBusiness`). */
+export interface VenueMinBusinessRow {
+  model: string;
+  amount: number;
+}
+
+/**
+ * The amounts as lines ("₹200 per guest"), on the bases this client knows, in
+ * the pickers' order — what Create Pod shows once the venue is picked. `money`
+ * is the surface's formatter.
+ */
+export function venueMinBusinessLines(
+  rows: readonly VenueMinBusinessRow[] | null | undefined,
+  t: (key: string, opts?: { vars?: Record<string, string | number> }) => string,
+  money: (rupees: number) => string
+): string[] {
+  return VENUE_OFFER_MODELS.flatMap((model) => {
+    const row = (rows ?? []).find((entry) => entry.model === model);
+    return row && row.amount > 0 ? [t(VENUE_MIN_BUSINESS_KEY[model].amount, { vars: { amount: money(row.amount) } })] : [];
+  });
+}
+
 /** Whether the host now has the venue's counter to accept or reject. */
 export const hostMayAnswerCounter = (offer: { status?: string | null; awaiting?: string | null } | null | undefined): boolean =>
   offer?.status === 'COUNTERED' && offer.awaiting === 'HOST';
 
 /**
  * What the host may do with their pod's offer now: answer the venue's counter
- * (accept it, reject it, or counter back) while it waits on them, or send a new
- * offer once the last one was declined.
+ * (accept it, reject it, or counter back while counters are left) while it waits
+ * on them, or send a new offer once the last one was declined.
  */
-export function hostOfferActions(offer: { status?: string | null; awaiting?: string | null } | null | undefined) {
+export function hostOfferActions(
+  offer: ({ status?: string | null; awaiting?: string | null } & OfferCounterUsage) | null | undefined
+) {
   const answering = hostMayAnswerCounter(offer);
-  return { accept: answering, reject: answering, counter: answering, sendNew: offer?.status === 'DECLINED' };
+  // Countering back stops once the host has used every counter Pod Settings allows them.
+  const counter = answering && !!offer && mayCounter(offer, 'HOST');
+  return { accept: answering, reject: answering, counter, sendNew: offer?.status === 'DECLINED' };
 }
 
 /**

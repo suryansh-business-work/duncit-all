@@ -17,12 +17,21 @@ jest.mock('../../venueOffer.service', () => ({
 jest.mock('@modules/venues/venueSlot/venueSlot.service', () => ({
   venueSlotService: { approveRequest: jest.fn().mockResolvedValue('approved'), declineRequest: jest.fn().mockResolvedValue('declined') },
 }));
+jest.mock('../../venueOffer.revise', () => ({
+  venueOfferReviseService: {
+    editPreview: jest.fn().mockResolvedValue('editPreview'),
+    editCounter: jest.fn().mockResolvedValue('editCounter'),
+    withdrawCounter: jest.fn().mockResolvedValue('withdrawCounter'),
+  },
+}));
 
 import { makeContext } from '@test/harness';
 import { venueOfferResolvers } from '../../venueOffer.resolver';
 import { venueSlotResolvers } from '../../../venueSlot/venueSlot.resolver';
 import { venueOfferService } from '../../venueOffer.service';
+import { venueOfferReviseService } from '../../venueOffer.revise';
 import { venueSlotService } from '@modules/venues/venueSlot/venueSlot.service';
+import { settingsService } from '@modules/platform/settings/settings.service';
 
 const ctx = makeContext({ id: 'user-1' });
 const terms = { model: 'PER_GUEST', rate: 600, min_guests: 8, offerings: ['Projector'] };
@@ -51,6 +60,37 @@ describe('venue offer resolvers', () => {
     expect(venueOfferService.hostAccept).toHaveBeenCalledWith('user-1', 'pod-1', 3);
     await mutation('rejectVenueCounterOffer')({}, { pod_id: 'pod-1', reason: 'No', round: 3 }, ctx);
     expect(venueOfferService.hostReject).toHaveBeenCalledWith('user-1', 'pod-1', 'No', 3);
+  });
+
+  it('price, save and withdraw an edit of the caller’s own counter, with the round that was read', async () => {
+    await expect(query('editCounterQuote')({}, { pod_id: 'pod-1', terms }, ctx)).resolves.toBe('editPreview');
+    expect(venueOfferReviseService.editPreview).toHaveBeenCalledWith('user-1', 'pod-1', terms);
+    await expect(mutation('editVenueOfferCounter')({}, { pod_id: 'pod-1', terms, note: 'Flat is simpler', round: 3 }, ctx)).resolves.toBe(
+      'editCounter'
+    );
+    expect(venueOfferReviseService.editCounter).toHaveBeenCalledWith('user-1', 'pod-1', terms, 'Flat is simpler', 3);
+    await expect(mutation('withdrawVenueOfferCounter')({}, { pod_id: 'pod-1', round: 4 }, ctx)).resolves.toBe('withdrawCounter');
+    expect(venueOfferReviseService.withdrawCounter).toHaveBeenCalledWith('user-1', 'pod-1', 4);
+  });
+
+  it('turn a signed-out caller away before a counter is touched', async () => {
+    const anonymous = makeContext(null);
+    const unauthenticated = expect.objectContaining({ extensions: expect.objectContaining({ code: 'UNAUTHENTICATED' }) });
+    expect(() => mutation('withdrawVenueOfferCounter')({}, { pod_id: 'pod-1', round: 4 }, anonymous)).toThrow(unauthenticated);
+    expect(() => query('editCounterQuote')({}, { pod_id: 'pod-1', terms }, anonymous)).toThrow(unauthenticated);
+    expect(venueOfferReviseService.withdrawCounter).not.toHaveBeenCalled();
+    expect(venueOfferReviseService.editPreview).not.toHaveBeenCalled();
+  });
+
+  it('tell every offer the counters each side may make, reading Pod Settings once per request', async () => {
+    const countersPerSide = venueOfferResolvers.VenueBookingOffer.counters_per_side;
+    const request = makeContext({ id: 'user-1' });
+    await expect(countersPerSide({}, {}, request)).resolves.toBe(3);
+
+    await settingsService.updateAppSettings({ venue_offer_max_counters: 10 });
+    // The same request keeps the value it read for its first offer; the next request reads the new one.
+    await expect(countersPerSide({}, {}, request)).resolves.toBe(3);
+    await expect(countersPerSide({}, {}, makeContext({ id: 'user-1' }))).resolves.toBe(5);
   });
 
   it('send the venue’s accept and decline with the round that was read', async () => {

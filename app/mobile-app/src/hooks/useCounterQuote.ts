@@ -2,15 +2,21 @@ import { useEffect, useRef, useState } from 'react';
 
 import type { CounterQuoteResult } from '@/components/venue-offer/offer-format';
 import type { VenueOfferTermsInput } from '@/generated/graphql/graphql';
-import { HostCounterQuoteDocument } from '@/graphql/venue-offer';
+import { EditCounterQuoteDocument, HostCounterQuoteDocument } from '@/graphql/venue-offer';
 import { VenueCounterQuoteDocument } from '@/graphql/venue-slot-requests';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { graphqlRequest } from '@/services/graphql.client';
 import { toErrorMessage } from '@/utils/errors';
 
-/** Who prices a counter: the venue for its booking (`venueCounterQuote`), the host for their pod (`hostCounterQuote`). */
+/**
+ * Who prices a counter: the venue for its booking (`venueCounterQuote`), the
+ * host for their pod (`hostCounterQuote`), or either side editing its own
+ * latest counter on the pod (`editCounterQuote`).
+ */
 export type CounterQuoteTarget =
-  { side: 'VENUE'; slotId: string } | { side: 'HOST'; podId: string };
+  | { side: 'VENUE'; slotId: string }
+  | { side: 'HOST'; podId: string }
+  | { side: 'EDIT'; podId: string };
 
 /** Long enough that typing an amount does not fire a quote per keystroke. */
 const QUOTE_DEBOUNCE_MS = 600;
@@ -34,6 +40,14 @@ async function askQuote(
       { auth: true },
     );
     return data.venueCounterQuote;
+  }
+  if (target.side === 'EDIT') {
+    const data = await graphqlRequest(
+      EditCounterQuoteDocument,
+      { pod_id: target.podId, terms },
+      { auth: true },
+    );
+    return data.editCounterQuote;
   }
   const data = await graphqlRequest(
     HostCounterQuoteDocument,
@@ -59,7 +73,8 @@ export function useCounterQuote(
   // The latest target, read when the terms settle: `targetKey` already says when it changed.
   const targetRef = useRef(target);
   targetRef.current = target;
-  const targetKey = target.side === 'VENUE' ? `VENUE:${target.slotId}` : `HOST:${target.podId}`;
+  const targetKey =
+    target.side === 'VENUE' ? `VENUE:${target.slotId}` : `${target.side}:${target.podId}`;
 
   useEffect(() => {
     const input: VenueOfferTermsInput | null = JSON.parse(settled);

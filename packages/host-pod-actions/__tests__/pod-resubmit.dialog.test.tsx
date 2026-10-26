@@ -15,7 +15,7 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 // localization context — the surface supplies one; here it does not.
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import PodResubmitDialog from '../src/pod-resubmit/PodResubmitDialog';
@@ -232,6 +232,23 @@ describe('PodResubmitDialog', () => {
     expect(screen.queryByText(slotLabels.pickVenueFirst)).not.toBeInTheDocument();
     expect(screen.getByTestId('pod-resubmit-offer-model')).toBeInTheDocument();
     expect(startTile()).not.toBeNull();
+  });
+
+  // Paying "for the slot" is gone: a venue is paid per guest, per hour or a flat price.
+  it('offers only the ways a venue can still be paid, each on the surface’s own copy', async () => {
+    dialog([venuesMock, calendarMock('v-1')]);
+    await settle();
+    await pickVenue('Indiranagar Court');
+
+    fireEvent.mouseDown(screen.getByLabelText(new RegExp(labels.offerModelLabel)));
+    await settle();
+
+    const pricing = within(screen.getByRole('listbox', { name: new RegExp(labels.offerModelLabel) }));
+    expect(pricing.getAllByRole('option').map((option) => option.textContent)).toEqual([
+      labels.offerModelPerGuest,
+      labels.offerModelPerHour,
+      labels.offerModelFlat,
+    ]);
   });
 
   // The window belonged to the venue the host just moved away from.

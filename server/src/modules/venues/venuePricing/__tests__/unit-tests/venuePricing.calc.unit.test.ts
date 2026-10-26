@@ -259,17 +259,18 @@ describe('quoteOffer — the host names the terms, the venue adds its charges', 
     expect(b.venue_price).toBe(4000);
   });
 
-  it('PER_SLOT is one price for the window, labelled as a slot; FLAT is one price', () => {
-    const slot = quote({ model: 'PER_SLOT', rate: 2500 }, req({ start: ist('2027-01-04', '18:00'), end: ist('2027-01-04', '22:00') }));
-    expect(slot.model).toBe('PER_SLOT');
-    expect(slot.base).toBe(2500);
-    const flat = quote({ model: 'FLAT', rate: 2500 }, req({ start: ist('2027-01-04', '18:00'), end: ist('2027-01-04', '22:00') }));
-    expect(flat.model).toBe('FLAT');
-    expect(flat.total).toBe(slot.total);
+  it('FLAT is one price for the picked window, however long it is, and is labelled FLAT', () => {
+    const evening = quote({ model: 'FLAT', rate: 2500 }, req({ start: ist('2027-01-04', '18:00'), end: ist('2027-01-04', '22:00') }));
+    expect(evening.model).toBe('FLAT');
+    expect(evening.base).toBe(2500);
+    const hour = quote({ model: 'FLAT', rate: 2500 }, req({ start: ist('2027-01-04', '18:00'), end: ist('2027-01-04', '19:00') }));
+    expect(hour.total).toBe(evening.total);
   });
 
   it('refuses terms with no model or no positive amount, and accepts sound ones', () => {
     expect(termsProblem(null)).not.toBeNull();
+    // "For the slot" is retired: an offer can no longer be made on it.
+    expect(termsProblem({ model: 'PER_SLOT' as never, rate: 2500 })).toBe('Pick how you will pay the venue: per guest, per hour or a flat price');
     expect(termsProblem({ model: 'PER_GUEST' })).not.toBeNull();
     expect(termsProblem({ model: 'FLAT', rate: 0 })).not.toBeNull();
     expect(termsProblem({ model: 'FLAT', rate: 20_000_000 })).not.toBeNull();

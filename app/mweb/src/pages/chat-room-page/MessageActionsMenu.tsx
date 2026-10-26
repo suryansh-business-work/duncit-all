@@ -1,5 +1,6 @@
 import { ListItemIcon, ListItemText, Menu, MenuItem } from '@mui/material';
 import AddReactionOutlinedIcon from '@mui/icons-material/AddReactionOutlined';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import ReplyIcon from '@mui/icons-material/Reply';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import FlagOutlinedIcon from '@mui/icons-material/FlagOutlined';
@@ -9,6 +10,8 @@ export interface MessageActionsTarget {
   el: HTMLElement;
   id: string;
   mine: boolean;
+  /** The reader may rewrite it (their own text line, where the room allows edits). */
+  editable?: boolean;
 }
 
 interface Props {
@@ -19,13 +22,17 @@ interface Props {
   onReact: (el: HTMLElement, id: string) => void;
   /** Answer this message: it is quoted over the composer. Absent in a closed room. */
   onReply?: (id: string) => void;
+  /** Rewrite it — only offered on a target marked editable (a venue chat's own text). */
+  onEdit?: (id: string) => void;
   onDelete: (id: string) => void;
-  onReport: (id: string) => void;
+  /** Absent in a room nothing is reported from (a venue chat). */
+  onReport?: (id: string) => void;
 }
 
 /**
- * What can be done to one message: react to it, reply to it, delete it (your own, or
- * anyone's in a room you moderate) and report it (anyone's but your own).
+ * What can be done to one message: react to it, reply to it, edit it (your own
+ * text, where the room allows), delete it (your own, or anyone's in a room you
+ * moderate) and report it (anyone's but your own, where the room reports).
  * The server is the gate for both — this only decides what is offered.
  */
 export default function MessageActionsMenu({
@@ -34,6 +41,7 @@ export default function MessageActionsMenu({
   onClose,
   onReact,
   onReply,
+  onEdit,
   onDelete,
   onReport,
 }: Readonly<Props>) {
@@ -63,6 +71,14 @@ export default function MessageActionsMenu({
           <ListItemText primary={t('mweb.chatRoom.reply.action')} />
         </MenuItem>
       )}
+      {onEdit && target?.editable && (
+        <MenuItem onClick={pick((m) => onEdit(m.id))} data-testid="chat-message-action-edit">
+          <ListItemIcon>
+            <EditOutlinedIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText primary={t('mweb.chatRoom.editMessage')} />
+        </MenuItem>
+      )}
       {target && (target.mine || canModerate) && (
         <MenuItem onClick={pick((m) => onDelete(m.id))} data-testid="chat-message-action-delete">
           <ListItemIcon>
@@ -71,7 +87,7 @@ export default function MessageActionsMenu({
           <ListItemText primary={t('mweb.chatRoom.deleteMessage')} />
         </MenuItem>
       )}
-      {target && !target.mine && (
+      {onReport && target && !target.mine && (
         <MenuItem onClick={pick((m) => onReport(m.id))} data-testid="chat-message-action-report">
           <ListItemIcon>
             <FlagOutlinedIcon fontSize="small" />

@@ -31,6 +31,8 @@ interface ChatMessageListProps {
   emptyText?: string;
   /** Draws a line its own way (a venue chat's offer card); null keeps the bubble. */
   renderMessage?: (message: ChatMessage) => ReactNode;
+  /** Drawn under a line, whichever way it was drawn (a venue chat's "seen" faces). */
+  renderAfter?: (message: ChatMessage) => ReactNode;
 }
 
 /** Brings a loaded line into view and focuses it; an unloaded one is left alone. */
@@ -58,6 +60,7 @@ export default function ChatMessageList({
   onOpenProfile,
   emptyText,
   renderMessage,
+  renderAfter,
 }: Readonly<ChatMessageListProps>) {
   const { t } = useTranslation();
   const { formatDate, timeZone } = useDateFormat();
@@ -130,6 +133,7 @@ export default function ChatMessageList({
                 onOpenProfile={onOpenProfile}
               />
             )}
+            {renderAfter?.(m)}
           </Fragment>
         ))}
       </Box>

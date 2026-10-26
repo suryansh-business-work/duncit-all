@@ -4,7 +4,7 @@
  * writes it, and with the venue chat's own content rules.
  */
 import type { GraphQLError } from 'graphql';
-import { cleanAsk, cleanMinGuests, cleanOfferNote, cleanOfferings, openingMinGuests } from '../../venueOffer.ask';
+import { cleanAsk, cleanMinGuests, cleanOfferImages, cleanOfferNote, cleanOfferings, openingMinGuests } from '../../venueOffer.ask';
 import { OFFER_ASK_LIMITS } from '../../venueOffer.types';
 
 /** The error a call throws, so its extensions can be read. */
@@ -80,6 +80,40 @@ describe('cleanOfferNote', () => {
   it('refuses a note carrying an email address', () => {
     const error = thrown(() => cleanOfferNote('Write to venue.owner@example.com for the menu'));
     expect(error.extensions).toMatchObject({ reason: 'MODERATION_BLOCKED', type: 'EMAIL', field: 'note' });
+  });
+});
+
+describe('cleanOfferImages', () => {
+  const photo = (name: string) => `https://ik.imagekit.io/duncit/staging/offer/${name}.jpg`;
+
+  it('reads no photos as none', () => {
+    expect(cleanOfferImages(undefined)).toEqual([]);
+    expect(cleanOfferImages(null)).toEqual([]);
+    expect(cleanOfferImages([])).toEqual([]);
+  });
+
+  it('trims each address and drops blanks and repeats, keeping the order they were attached in', () => {
+    expect(cleanOfferImages([`  ${photo('b')} `, '', null, photo('a'), photo('b'), '   '])).toEqual([photo('b'), photo('a')]);
+  });
+
+  it('allows the most photos and refuses one more, counting a repeat once', () => {
+    const most = ['a', 'b', 'c', 'd'].map(photo);
+    expect(most).toHaveLength(OFFER_ASK_LIMITS.images);
+    expect(cleanOfferImages([...most, photo('a')])).toEqual(most);
+    const error = thrown(() => cleanOfferImages([...most, photo('e')]));
+    expect(error.message).toBe(`Attach at most ${OFFER_ASK_LIMITS.images} photos`);
+    expect(error.extensions).toMatchObject({ code: 'BAD_USER_INPUT' });
+  });
+
+  it.each([
+    ['a stock-library image', 'https://images.pexels.com/photos/1/hall.jpg'],
+    ['a video', 'https://ik.imagekit.io/duncit/staging/offer/tour.mp4'],
+    ['an http address', 'http://ik.imagekit.io/duncit/staging/offer/hall.jpg'],
+    ['text that is not an address', 'my photo'],
+  ])('refuses %s, even beside a good photo', (_label, bad) => {
+    const error = thrown(() => cleanOfferImages([photo('a'), bad]));
+    expect(error.message).toBe('Attach photos uploaded from your device');
+    expect(error.extensions).toMatchObject({ code: 'BAD_USER_INPUT' });
   });
 });
 

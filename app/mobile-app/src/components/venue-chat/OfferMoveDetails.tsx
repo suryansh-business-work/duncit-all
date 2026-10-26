@@ -3,6 +3,7 @@ import { slotSpanLabel } from '@duncit/slots';
 import { offerGuestsText, type VenueChatOfferMove } from '@duncit/utils';
 
 import { OfferAnswerBy, OfferAsk } from '@/components/venue-offer/OfferAsk';
+import { OfferImages } from '@/components/venue-offer/OfferImages';
 import { OfferMoney } from '@/components/venue-offer/OfferMoney';
 import { offerTermsText, type OfferSide } from '@/components/venue-offer/offer-format';
 import { useDateFormat } from '@/hooks/useDateFormat';
@@ -34,8 +35,9 @@ interface Props {
 /**
  * The terms one move of the offer carried, as they stood: how the venue is
  * paid, for how many guests, when and where, pets, the money as a range (none
- * on a free pod), what the venue is asked to provide, the note, why it was
- * declined, and until when it may be answered. mWeb twin: OfferMoveDetails.
+ * on a free pod), what the venue is asked to provide, the note, any photos
+ * attached, why it was declined, and until when it may be answered. mWeb twin:
+ * OfferMoveDetails.
  */
 export function OfferMoveDetails({ move, side, podIsFree, open }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -73,6 +75,7 @@ export function OfferMoveDetails({ move, side, podIsFree, open }: Readonly<Props
         <OfferMoney side={side} range={range} />
       )}
       <OfferAsk offerings={move.offerings} note={move.note} by={move.by} />
+      <OfferImages images={move.images} testID={`offer-move-images-${move.round}`} />
       {move.event === 'DECLINED' && move.reason ? (
         <Text testID="offer-move-reason" fontSize={13} color="$muted">
           {t('availability.offers.chat.reason', { vars: { reason: move.reason } })}

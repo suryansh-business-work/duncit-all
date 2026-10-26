@@ -10,6 +10,7 @@ import OfferTermsFields from '../OfferTermsFields';
 import type { OfferSide } from '../offer-target';
 import { useCounterQuote, type CounterQuoteSource } from '../useCounterQuote';
 import { asksMinGuests, counterQuoteTermsOf, type CounterOfferValues } from './counter-offer.types';
+import OfferImagesField from './OfferImagesField';
 
 interface Props {
   formId: string;
@@ -25,9 +26,9 @@ interface Props {
 
 /**
  * Either side's counter: a pricing option and the amount, the fewest guests
- * paid for (a per-guest price only), what the venue provides and a note — with
- * the server's price of those terms as they are typed. The points and the note
- * never ask for a new price.
+ * paid for (a per-guest price only), what the venue provides, a note and photos
+ * from the device — with the server's price of those terms as they are typed.
+ * The points, the note and the photos never ask for a new price.
  */
 export default function CounterOfferForm({ formId, side, quote, maxGuests, defaultValues, onSubmit }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -76,6 +77,9 @@ export default function CounterOfferForm({ formId, side, quote, maxGuests, defau
             minRows={2}
             label={side === 'HOST' ? t('availability.offers.hostAnswer.note') : t('availability.offers.note')}
           />
+        </Grid>
+        <Grid size={12}>
+          <OfferImagesField control={control} />
         </Grid>
       </Grid>
       <Stack spacing={1} sx={{ mt: 1 }} data-testid="counter-offer-preview">

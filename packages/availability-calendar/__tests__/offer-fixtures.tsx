@@ -22,6 +22,10 @@ export const flatQuote = breakdownResult(
   makeBreakdown({ model: 'FLAT', rate: 7000, base: 7000, venue_price: 7000, venue_payout: 7000, platform_fee: 700, total: 7700 }),
 );
 
+/** Photos a side attached to its terms, as ImageKit serves them. */
+export const PHOTO_A = 'https://ik.imagekit.io/duncit/chat/setup.jpg';
+export const PHOTO_B = 'https://ik.imagekit.io/duncit/chat/menu.jpg';
+
 export function makeCounter(over: Partial<OfferCounter> = {}): OfferCounter {
   return {
     __typename: 'VenueOfferCounter',
@@ -30,6 +34,7 @@ export function makeCounter(over: Partial<OfferCounter> = {}): OfferCounter {
     min_guests: 0,
     offerings: [],
     note: '',
+    images: [],
     at: null,
     quote: flatQuote,
     quote_min: flatQuote,
@@ -51,9 +56,14 @@ export function makeOffer(over: Partial<BookingOffer> = {}): BookingOffer {
     min_guests: 8,
     offerings: ['10 chairs', 'A projector'],
     note: 'We will bring our own speakers.',
+    images: [],
     pets: false,
     space_label: '',
     expires_at: '2026-12-02T06:30:00.000Z',
+    // Pod Settings' share: three counters each side, none made yet.
+    counters_per_side: 3,
+    host_counters_used: 0,
+    venue_counters_used: 0,
     quote,
     quote_min: quoteMin,
     counter: null,
@@ -87,9 +97,9 @@ export function makePodOffer(over: Partial<PodOffer> = {}): PodOffer {
   } as PodOffer;
 }
 
-/** The venue countered the host's offer with a flat ₹7,000; the host's move. */
+/** The venue countered the host's offer with a flat ₹7,000 (its first counter); the host's move. */
 export const counteredPodOffer = (over: Partial<PodOffer> = {}) =>
-  makePodOffer({ status: 'COUNTERED', awaiting: 'HOST', round: 2, counter: makeCounter({ note: 'Weekend rate' }), ...over });
+  makePodOffer({ status: 'COUNTERED', awaiting: 'HOST', round: 2, venue_counters_used: 1, counter: makeCounter({ note: 'Weekend rate' }), ...over });
 
 export function makeRequest(over: Partial<BookingRequestRow> = {}): BookingRequestRow {
   return {

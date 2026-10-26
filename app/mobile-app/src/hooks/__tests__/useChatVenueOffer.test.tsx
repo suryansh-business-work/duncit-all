@@ -7,6 +7,7 @@ import {
   counteredOffer,
   hostAnswersApi,
   offerMove,
+  reviseAnswersApi,
   venueAnswersApi,
 } from '@/utils/venue-offer-fixture';
 
@@ -16,6 +17,11 @@ const mockVenue = venueAnswersApi();
 const mockLive = counteredOffer();
 jest.mock('@/hooks/usePodVenueOffer', () => ({
   usePodVenueOffer: () => ({ offer: mockLive, refresh: mockRefresh, host: mockHost }),
+}));
+const mockRevise = reviseAnswersApi();
+const mockReviseHook = jest.fn((..._args: unknown[]) => mockRevise);
+jest.mock('@/hooks/useOfferRevise', () => ({
+  useOfferRevise: (...args: unknown[]) => mockReviseHook(...args),
 }));
 const mockVenueAnswers = jest.fn((..._args: unknown[]) => mockVenue);
 jest.mock('@/hooks/useVenueOfferAnswers', () => ({
@@ -43,8 +49,8 @@ const line = (id: string, over: Partial<VenueChatMessage> = {}): VenueChatMessag
   ...over,
 });
 
-const offerLine = (id: string, event = 'OFFER') =>
-  line(id, { type: PodMessageType.Offer, offer: offerMove({ event }) });
+const offerLine = (id: string, event = 'OFFER', round = 1) =>
+  line(id, { type: PodMessageType.Offer, offer: offerMove({ event, round }) });
 
 beforeEach(() => mockRefresh.mockClear());
 
@@ -65,6 +71,33 @@ describe('useChatVenueOffer', () => {
     expect(result.current.venue).toBe(mockVenue);
     // The venue's answers re-read the same live offer.
     expect(mockVenueAnswers).toHaveBeenCalledWith(mockRefresh);
+    // So do an edit or withdrawal of one's own counter, on this pod.
+    expect(result.current.revise).toBe(mockRevise);
+    expect(mockReviseHook).toHaveBeenCalledWith('pod-1', mockRefresh);
+  });
+
+  it('re-reads the live offer when the newest counter is edited in place or withdrawn — not for a reaction', () => {
+    const counter = offerLine('c', 'COUNTER', 2);
+    const thread = [offerLine('a'), counter];
+    const { rerender } = renderHook(
+      ({ lines }: { lines: VenueChatMessage[] }) => useChatVenueOffer('pod-1', lines, true),
+      { initialProps: { lines: thread } },
+    );
+    expect(mockRefresh).not.toHaveBeenCalled();
+
+    // Someone reacted to it: the move is the same.
+    rerender({
+      lines: [offerLine('a'), { ...counter, reactions: [{ user_id: 'u2', emoji: '👍' }] }],
+    });
+    expect(mockRefresh).not.toHaveBeenCalled();
+
+    // Edited: the same line, its move on a new round.
+    rerender({ lines: [offerLine('a'), offerLine('c', 'COUNTER', 3)] });
+    expect(mockRefresh).toHaveBeenCalledTimes(1);
+
+    // Withdrawn: the line is gone and the opening offer is the newest again.
+    rerender({ lines: [offerLine('a')] });
+    expect(mockRefresh).toHaveBeenCalledTimes(2);
   });
 
   it('re-reads the live offer when a new offer line lands — not for the page it loaded with', () => {

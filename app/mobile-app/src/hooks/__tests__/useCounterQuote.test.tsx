@@ -1,7 +1,7 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 
 import { VenueOfferModel, type VenueOfferTermsInput } from '@/generated/graphql/graphql';
-import { HostCounterQuoteDocument } from '@/graphql/venue-offer';
+import { EditCounterQuoteDocument, HostCounterQuoteDocument } from '@/graphql/venue-offer';
 import { VenueCounterQuoteDocument } from '@/graphql/venue-slot-requests';
 import { useCounterQuote, type CounterQuoteTarget } from '@/hooks/useCounterQuote';
 import { graphqlRequest } from '@/services/graphql.client';
@@ -49,6 +49,28 @@ describe('useCounterQuote', () => {
     await waitFor(() => expect(result.current.result).toEqual(priced));
     expect(mockRequest).toHaveBeenCalledWith(
       HostCounterQuoteDocument,
+      { pod_id: 'p1', terms: FLAT },
+      { auth: true },
+    );
+  });
+
+  it("prices either side's edit of its own counter on the pod — a different target from the host's counter-back", async () => {
+    mockRequest.mockImplementation((document: unknown) =>
+      Promise.resolve(
+        document === EditCounterQuoteDocument
+          ? { editCounterQuote: priced }
+          : { hostCounterQuote: { ...priced, ok: false } },
+      ),
+    );
+    const { result, rerender } = renderHook(
+      ({ target }: { target: CounterQuoteTarget }) => useCounterQuote(target, FLAT, 'failed'),
+      { initialProps: { target: HOST } },
+    );
+    await waitFor(() => expect(result.current.result?.ok).toBe(false));
+    rerender({ target: { side: 'EDIT', podId: 'p1' } });
+    await waitFor(() => expect(result.current.result).toEqual(priced));
+    expect(mockRequest).toHaveBeenLastCalledWith(
+      EditCounterQuoteDocument,
       { pod_id: 'p1', terms: FLAT },
       { auth: true },
     );

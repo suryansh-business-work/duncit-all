@@ -102,6 +102,10 @@ const DEFAULT_AUTO_POD_CANCEL_HEALTH_PENALTY = 5;
 const DEFAULT_VENUE_OFFER_MIN_GUESTS = 8;
 /** Hours to answer a venue booking offer or counter, when the venue set none. */
 const DEFAULT_VENUE_OFFER_RESPONSE_HOURS = 24;
+/** Counter offers one booking may carry in all, split equally between the host and the venue. */
+const DEFAULT_VENUE_OFFER_MAX_COUNTERS = 6;
+/** The most counters a booking may be set to allow in all. */
+const VENUE_OFFER_MAX_COUNTERS_CAP = 20;
 
 const cleanRetentionDays = (value: unknown) =>
   Math.max(1, Math.floor(Number(value)) || DEFAULT_DRAFT_RETENTION_DAYS);
@@ -212,6 +216,17 @@ const cleanVenueOfferMinGuests = (value: unknown) =>
 const cleanVenueOfferResponseHours = (value: unknown) =>
   Math.min(720, Math.max(1, Math.floor(Number(value)) || DEFAULT_VENUE_OFFER_RESPONSE_HOURS));
 
+/**
+ * Counter offers per booking in all, 2–20 and even: the total is split equally
+ * between the host and the venue, so an odd number rounds down to the even
+ * one below it (7 → 6).
+ */
+const cleanVenueOfferMaxCounters = (value: unknown) => {
+  const n = Math.floor(Number(value)) || DEFAULT_VENUE_OFFER_MAX_COUNTERS;
+  const bounded = Math.min(VENUE_OFFER_MAX_COUNTERS_CAP, Math.max(2, n));
+  return bounded - (bounded % 2);
+};
+
 // 0 is a legal value here (it disables the penalty), so the `|| DEFAULT` idiom
 // would silently turn a saved 0 back into 5.
 const cleanAutoPodCancelHealthPenalty = (value: unknown) => {
@@ -291,6 +306,7 @@ const toAppPub = (d: any) => ({
   venue_offer_response_hours_default: cleanVenueOfferResponseHours(
     d?.venue_offer_response_hours_default,
   ),
+  venue_offer_max_counters: cleanVenueOfferMaxCounters(d?.venue_offer_max_counters),
   updated_at: d?.updated_at?.toISOString?.() ?? "",
 });
 
@@ -687,6 +703,7 @@ type AppSettingsUpdateInput = {
   club_admin_change_request_health_penalty?: number;
   venue_offer_min_guests_default?: number;
   venue_offer_response_hours_default?: number;
+  venue_offer_max_counters?: number;
 };
 
 /** Fields copied to the update as-is when the caller supplied them. */
@@ -742,6 +759,7 @@ const APP_SETTING_CLEANED_FIELDS: ReadonlyArray<
   ["club_admin_change_request_health_penalty", cleanChangeRequestHealthPenalty],
   ["venue_offer_min_guests_default", cleanVenueOfferMinGuests],
   ["venue_offer_response_hours_default", cleanVenueOfferResponseHours],
+  ["venue_offer_max_counters", cleanVenueOfferMaxCounters],
 ];
 
 const buildAppSettingsUpdate = (input: AppSettingsUpdateInput) => {
@@ -807,6 +825,12 @@ export const settingsService = {
       min_guests: cleanVenueOfferMinGuests(doc?.venue_offer_min_guests_default),
       response_hours: cleanVenueOfferResponseHours(doc?.venue_offer_response_hours_default),
     };
+  },
+
+  /** Counter offers each side of a venue booking may make — half the platform's total (Pod Settings). */
+  async getVenueOfferCountersPerSide(): Promise<number> {
+    const doc = await AppSettingsModel.findOne({ singleton_key: "app" }).select("venue_offer_max_counters").lean();
+    return cleanVenueOfferMaxCounters(doc?.venue_offer_max_counters) / 2;
   },
 
   async getPodCompletionSettings(): Promise<{ timeout_hours: number; reminder_hours: number }> {

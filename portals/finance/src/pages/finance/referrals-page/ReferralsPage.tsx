@@ -7,7 +7,7 @@ import CardGiftcardIcon from '@mui/icons-material/CardGiftcard';
 import { DuncitButton } from '@duncit/buttons';
 import { notifySuccess } from '@duncit/dialogs';
 import { useApolloTableFetch, type TableQueryState } from '@duncit/table';
-import { referralLink, renderReferralMessage } from '@duncit/utils';
+import { parseApiError, referralLink, renderReferralMessage } from '@duncit/utils';
 import { urlConfigs } from '../../../config/url-configs';
 import ReferralSettingsCard from './ReferralSettingsCard';
 import ReferralsTable from './ReferralsTable';
@@ -87,8 +87,8 @@ export default function ReferralsPage() {
       });
       await refetch();
       notifySuccess('Referral settings saved');
-    } catch (e: any) {
-      setError(e.message ?? 'Could not save the referral settings.');
+    } catch (e) {
+      setError(parseApiError(e, 'Could not save the referral settings.'));
     }
   });
 

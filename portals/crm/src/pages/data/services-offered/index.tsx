@@ -49,15 +49,8 @@ export default function ServicesOfferedPage() {
   const fetchRows = useApolloTableFetch<CrmServiceOfferedRow>(client, CRM_SERVICES_OFFERED_TABLE, 'crmServicesOfferedTable');
 
   const submit = async () => {
+    // Add is disabled until a super category, a title and a target are set.
     setFormError(null);
-    if (!draft.super_category_id || draft.titles.length === 0) {
-      setFormError('Pick a super category and add at least one title.');
-      return;
-    }
-    if (!targetValid) {
-      setFormError('Pick at least one of Venue or Host.');
-      return;
-    }
     try {
       await createMut({
         variables: {

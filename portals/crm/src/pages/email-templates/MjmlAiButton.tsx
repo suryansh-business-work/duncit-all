@@ -32,8 +32,8 @@ export default function MjmlAiButton({ currentMjml, onApply, iconOnly, label }: 
   const open = Boolean(anchorEl);
 
   const generate = async () => {
+    // Apply is disabled until something is typed, so the instruction is never blank.
     const instruction = prompt.trim();
-    if (!instruction) return;
     setError(null);
     try {
       const res = await run({ variables: { input: { prompt: instruction, current_mjml: currentMjml } } });

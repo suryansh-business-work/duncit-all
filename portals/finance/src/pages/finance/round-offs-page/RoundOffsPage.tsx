@@ -44,7 +44,7 @@ export default function RoundOffsPage() {
       });
       const page = data?.paymentRoundOffsTable;
       if (!page) return { rows: [], total: 0 };
-      setSummary(page.summary ?? EMPTY_ROUND_OFF_SUMMARY);
+      setSummary(page.summary);
       return { rows: page.rows, total: page.total };
     },
     [client],

@@ -53,21 +53,25 @@ export default function ManageDynamicFieldsPage() {
 
   const busy = createState.loading || updateState.loading || deleteState.loading || reorderState.loading;
 
-  const save = async () => {
-    if (!draft) return;
-    const sortOrder = draft.id ? rows.find((r) => r.id === draft.id)?.sort_order ?? 0 : rows.length;
-    const result = buildDynamicFieldInput(draft, sortOrder);
+  const persist = async (current: DraftState) => {
+    const sortOrder = current.id ? rows.find((r) => r.id === current.id)?.sort_order ?? 0 : rows.length;
+    const result = buildDynamicFieldInput(current, sortOrder);
     if (!result.ok) {
       setFormError(result.error);
       return;
     }
     try {
-      if (draft.id) await updateMut({ variables: { id: draft.id, input: result.input } });
+      if (current.id) await updateMut({ variables: { id: current.id, input: result.input } });
       else await createMut({ variables: { input: result.input } });
       setDraft(null);
     } catch (e) {
       setFormError(parseApiError(e));
     }
+  };
+
+  // The form that calls this is rendered only while a draft is open.
+  const save = async () => {
+    if (draft) await persist(draft);
   };
 
   const toggleActive = async (row: CrmDynamicField) => {

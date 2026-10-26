@@ -47,23 +47,27 @@ export function useManagedOptions(group: CrmManagedOptionGroup) {
     setFormError(null);
   };
 
-  const save = async () => {
-    if (!draft) return;
-    const name = draft.name.trim();
+  const persist = async (current: ManagedEditRow) => {
+    const name = current.name.trim();
     if (!name) return setFormError('Name is required.');
-    const parsed = Number.parseInt(draft.sort_order, 10);
+    const parsed = Number.parseInt(current.sort_order, 10);
     const sort_order = Number.isFinite(parsed) ? parsed : 0;
     try {
-      if (draft.id) {
-        await updateMut({ variables: { id: draft.id, input: { name, sort_order, is_active: draft.is_active } } });
+      if (current.id) {
+        await updateMut({ variables: { id: current.id, input: { name, sort_order, is_active: current.is_active } } });
       } else {
-        await createMut({ variables: { input: { name, group, sort_order, is_active: draft.is_active } } });
+        await createMut({ variables: { input: { name, group, sort_order, is_active: current.is_active } } });
       }
       setDraft(null);
       setFormError(null);
     } catch (e) {
       setFormError(parseApiError(e));
     }
+  };
+
+  // The inline row that calls this exists only while a draft is open.
+  const save = async () => {
+    if (draft) await persist(draft);
   };
 
   const confirmDelete = async () => {

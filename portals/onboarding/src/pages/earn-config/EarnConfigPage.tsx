@@ -5,6 +5,7 @@ import VolunteerActivismIcon from '@mui/icons-material/VolunteerActivism';
 import { QueryGuard } from '@duncit/ui';
 import { notifySuccess, notifyError } from '@duncit/dialogs';
 import { useTranslation } from '@duncit/app-settings';
+import { parseApiError } from '@duncit/utils';
 import {
   BLANK_EARN_CARD_IMAGES,
   EARN_CARD_IMAGES,
@@ -30,7 +31,7 @@ export default function EarnConfigPage() {
       await update({ variables: { input: { earn_card_images: values } } });
       notifySuccess(t('onboarding.earnConfigPage.saved'));
     } catch (e) {
-      const message = e instanceof Error ? e.message : t('onboarding.earnConfigPage.saveFailed');
+      const message = parseApiError(e, t('onboarding.earnConfigPage.saveFailed'));
       setSaveError(message);
       notifyError(message);
     }

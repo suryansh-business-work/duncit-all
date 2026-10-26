@@ -71,5 +71,5 @@ export const ROUND_OFFS_TABLE = gql`
 
 /** What `paymentRoundOffsTable` answers with: one page of rounded payments and the totals for the filter. */
 export interface RoundOffsData {
-  paymentRoundOffsTable: { rows: RoundOffRow[]; total: number; summary: RoundOffSummary | null } | null;
+  paymentRoundOffsTable: { rows: RoundOffRow[]; total: number; summary: RoundOffSummary };
 }

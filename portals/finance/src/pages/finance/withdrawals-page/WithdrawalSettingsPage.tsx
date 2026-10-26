@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
 import TuneIcon from '@mui/icons-material/Tune';
 import { notifySuccess } from '@duncit/dialogs';
+import { parseApiError } from '@duncit/utils';
 import MinimumAmountField from './MinimumAmountField';
 import {
   UPDATE_WITHDRAWAL_MINIMUMS,
@@ -56,8 +57,8 @@ export default function WithdrawalSettingsPage() {
         // progress — the mutation never touched them.
         resetField(field, { defaultValue: String(saved?.[field] ?? amount) });
         notifySuccess(`${ROLE_LABELS[role]} minimum saved`);
-      } catch (e: any) {
-        setError(e.message ?? 'Could not save the minimum withdrawal amount.');
+      } catch (e) {
+        setError(parseApiError(e, 'Could not save the minimum withdrawal amount.'));
       }
     },
     [trigger, getValues, updateMut, resetField],

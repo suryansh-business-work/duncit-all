@@ -7,6 +7,7 @@ import TuneIcon from '@mui/icons-material/Tune';
 import { DuncitButton } from '@duncit/buttons';
 import { notifySuccess } from '@duncit/dialogs';
 import { useTranslation } from '@duncit/app-settings';
+import { parseApiError } from '@duncit/utils';
 import CoinRatesCard from './CoinRatesCard';
 import CoinExpiryCard from './CoinExpiryCard';
 import CoinGrantCard from './CoinGrantCard';
@@ -63,8 +64,8 @@ export default function CoinSettingsPage() {
       });
       await refetch();
       notifySuccess('Coin settings saved');
-    } catch (e: any) {
-      setError(e.message ?? 'Could not save the coin settings.');
+    } catch (e) {
+      setError(parseApiError(e, 'Could not save the coin settings.'));
     }
   });
 

@@ -36,11 +36,10 @@ export default function SendTestDialog({ open, templateId, varsJson, onClose, on
     if (open) { setTo(''); setError(null); }
   }, [open]);
 
-  const submit = async () => {
-    if (!templateId || !valid) return;
+  const submit = async (id: string) => {
     setError(null);
     try {
-      const res = await sendTest({ variables: { id: templateId, to: to.trim(), vars: varsJson } });
+      const res = await sendTest({ variables: { id, to: to.trim(), vars: varsJson } });
       const r = res.data?.sendTestEmail;
       const message = r?.message || (r?.ok ? 'Sent' : 'Failed');
       onResult(r?.ok ? 'success' : 'error', message);
@@ -78,7 +77,7 @@ export default function SendTestDialog({ open, templateId, varsJson, onClose, on
         <DuncitButton onClick={onClose} disabled={loading}>{t('shell.common.cancel')}</DuncitButton>
         <DuncitButton
           variant="contained"
-          onClick={submit}
+          onClick={() => templateId && submit(templateId)}
           disabled={!templateId || loading || !valid}
           startIcon={loading ? <CircularProgress size={16} /> : undefined}
         >

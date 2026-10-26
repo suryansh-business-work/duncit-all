@@ -106,7 +106,7 @@ export function buildOrderRefundColumns(t: T, shop: PaymentShop): DuncitColumn<O
   );
 
   const renderMode = (r: OrderRefundRow) => {
-    const chip = <Chip size="small" color={MODE_COLORS[r.mode] ?? 'default'} label={modes[r.mode] ?? r.mode} />;
+    const chip = <Chip size="small" color={MODE_COLORS[r.mode]} label={modes[r.mode]} />;
     // Only a row whose figures were worked out, not read back, needs saying so.
     return r.derived ? <Tooltip title={derivedHint}>{chip}</Tooltip> : chip;
   };
@@ -128,8 +128,8 @@ export function buildOrderRefundColumns(t: T, shop: PaymentShop): DuncitColumn<O
       width: 130,
       type: 'enum',
       options: asOptions(kinds),
-      cellRenderer: (r) => <Chip size="small" variant="outlined" label={kinds[r.kind] ?? r.kind} />,
-      valueGetter: (r) => kinds[r.kind] ?? r.kind,
+      cellRenderer: (r) => <Chip size="small" variant="outlined" label={kinds[r.kind]} />,
+      valueGetter: (r) => kinds[r.kind],
     },
     {
       field: 'buyer_name',
@@ -168,7 +168,7 @@ export function buildOrderRefundColumns(t: T, shop: PaymentShop): DuncitColumn<O
       type: 'enum',
       options: asOptions(modes),
       cellRenderer: renderMode,
-      valueGetter: (r) => modes[r.mode] ?? r.mode,
+      valueGetter: (r) => modes[r.mode],
     },
     {
       field: 'status',

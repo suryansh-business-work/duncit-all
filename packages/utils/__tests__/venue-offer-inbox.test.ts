@@ -2,7 +2,10 @@ import { describe, expect, it } from 'vitest';
 
 import {
   currentOfferTerms,
+  isCounterLimitError,
+  offerCounterAllowance,
   venueOfferActions,
+  venueOfferPin,
   venueOfferHistoryKey,
   venueOfferInboxModelKey,
   venueOfferInboxStatus,
@@ -81,7 +84,8 @@ describe('venueOfferTermsLine', () => {
 
 describe('venueOfferInboxModelKey', () => {
   it('names every pricing option, with its amount line', () => {
-    for (const model of ['PER_GUEST', 'PER_HOUR', 'PER_SLOT', 'FLAT'] as const) {
+    expect(Object.keys(VENUE_OFFER_INBOX_MODEL_KEY)).toEqual(['PER_GUEST', 'PER_HOUR', 'FLAT']);
+    for (const model of ['PER_GUEST', 'PER_HOUR', 'FLAT'] as const) {
       expect(venueOfferInboxModelKey(model)).toBe(VENUE_OFFER_INBOX_MODEL_KEY[model]);
     }
     expect(venueOfferInboxModelKey('PER_HOUR')).toEqual({
@@ -90,7 +94,8 @@ describe('venueOfferInboxModelKey', () => {
     });
   });
 
-  it('is null for an option this client does not know', () => {
+  it('is null for an option this client does not know, the retired per-slot one included', () => {
+    expect(venueOfferInboxModelKey('PER_SLOT')).toBeNull();
     expect(venueOfferInboxModelKey('PER_DAY')).toBeNull();
     expect(venueOfferInboxModelKey(null)).toBeNull();
     expect(venueOfferInboxModelKey(undefined)).toBeNull();
@@ -123,6 +128,114 @@ describe('venueOfferActions', () => {
     for (const status of ['ACCEPTED', 'DECLINED', 'UNKNOWN']) {
       expect(venueOfferActions({ status })).toEqual({ accept: false, reject: false, counter: false });
     }
+  });
+
+  it('stops the venue countering once its own share is used, leaving accept and reject', () => {
+    const usedUp = { counters_per_side: 2, venue_counters_used: 2, host_counters_used: 0 };
+    expect(venueOfferActions({ status: 'SENT', ...usedUp })).toEqual({ accept: true, reject: true, counter: false });
+    expect(venueOfferActions({ status: 'COUNTERED', ...usedUp })).toEqual({ accept: false, reject: true, counter: false });
+  });
+
+  it("keeps the venue's counter while it has one left, however many the host used", () => {
+    expect(venueOfferActions({ status: 'SENT', counters_per_side: 2, venue_counters_used: 1, host_counters_used: 2 })).toEqual({
+      accept: true,
+      reject: true,
+      counter: true,
+    });
+  });
+});
+
+describe('offerCounterAllowance', () => {
+  const usage = { counters_per_side: 3, host_counters_used: 1, venue_counters_used: 3 };
+
+  it("names one side's counters left of its share", () => {
+    expect(offerCounterAllowance(usage, 'HOST')).toEqual({ left: 2, of: 3 });
+    expect(offerCounterAllowance(usage, 'VENUE')).toEqual({ left: 0, of: 3 });
+    expect(offerCounterAllowance({ counters_per_side: 1 }, 'VENUE')).toEqual({ left: 1, of: 1 });
+  });
+
+  it('is null when the server names no limit', () => {
+    expect(offerCounterAllowance({}, 'HOST')).toBeNull();
+    expect(offerCounterAllowance({ counters_per_side: null, venue_counters_used: 2 }, 'VENUE')).toBeNull();
+  });
+});
+
+describe('venueOfferPin', () => {
+  const live = {
+    status: 'COUNTERED',
+    awaiting: 'HOST',
+    expires_at: '2026-11-06T07:30:00.000Z',
+    counters_per_side: 3,
+    host_counters_used: 1,
+    venue_counters_used: 2,
+  };
+
+  it("tells the side the offer waits on that it is their move, with each side's counters and the deadline", () => {
+    expect(venueOfferPin(live, 'HOST')).toEqual({
+      statusKey: 'availability.offers.pin.yourMove',
+      open: true,
+      mine: { left: 2, of: 3 },
+      theirs: { left: 1, of: 3 },
+      expiresAt: '2026-11-06T07:30:00.000Z',
+    });
+  });
+
+  it('tells the other side it is waiting on them, with the counters read from its own end', () => {
+    expect(venueOfferPin(live, 'VENUE')).toEqual({
+      statusKey: 'availability.offers.pin.theirMove',
+      open: true,
+      mine: { left: 1, of: 3 },
+      theirs: { left: 2, of: 3 },
+      expiresAt: '2026-11-06T07:30:00.000Z',
+    });
+    expect(venueOfferPin({ ...live, status: 'SENT', awaiting: 'VENUE' }, 'VENUE')).toMatchObject({
+      statusKey: 'availability.offers.pin.yourMove',
+      open: true,
+    });
+  });
+
+  it('names an accepted or declined offer as closed, with no deadline', () => {
+    expect(venueOfferPin({ ...live, status: 'ACCEPTED', awaiting: null }, 'HOST')).toEqual({
+      statusKey: 'availability.offers.pin.accepted',
+      open: false,
+      mine: { left: 2, of: 3 },
+      theirs: { left: 1, of: 3 },
+      expiresAt: null,
+    });
+    expect(venueOfferPin({ ...live, status: 'DECLINED', awaiting: null }, 'VENUE')).toMatchObject({
+      statusKey: 'availability.offers.pin.declined',
+      open: false,
+      expiresAt: null,
+    });
+  });
+
+  it('says nothing about a status this client does not know, and reads it as closed', () => {
+    expect(venueOfferPin({ ...live, status: 'EXPIRED' }, 'HOST')).toMatchObject({ statusKey: '', open: false, expiresAt: null });
+  });
+
+  it('carries no deadline or counters when the server sends none (older servers)', () => {
+    expect(venueOfferPin({ status: 'SENT', awaiting: 'VENUE' }, 'VENUE')).toEqual({
+      statusKey: 'availability.offers.pin.yourMove',
+      open: true,
+      mine: null,
+      theirs: null,
+      expiresAt: null,
+    });
+  });
+
+  it('pins nothing when the pod has no live offer', () => {
+    expect(venueOfferPin(null, 'HOST')).toBeNull();
+    expect(venueOfferPin(undefined, 'VENUE')).toBeNull();
+  });
+});
+
+describe('isCounterLimitError', () => {
+  it("is true only for the server's COUNTER_LIMIT reason", () => {
+    expect(isCounterLimitError('COUNTER_LIMIT')).toBe(true);
+    expect(isCounterLimitError('OFFER_CHANGED')).toBe(false);
+    expect(isCounterLimitError('')).toBe(false);
+    expect(isCounterLimitError(null)).toBe(false);
+    expect(isCounterLimitError(undefined)).toBe(false);
   });
 });
 

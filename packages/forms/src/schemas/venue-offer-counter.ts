@@ -3,8 +3,11 @@ import { VENUE_OFFER_ASK_LIMITS, offeringsFromText, offeringsToText } from '@dun
 
 import type { Translate } from './translate';
 
-/** The four ways a booking can be priced (`VenueOfferModel`) — what the host offered with, and what a counter may use. */
-export const VENUE_OFFER_COUNTER_MODELS = ['PER_GUEST', 'PER_HOUR', 'PER_SLOT', 'FLAT'] as const;
+/** The three ways a booking can be priced (`VenueOfferModel`) — what the host offered with, and what a counter may use. */
+export const VENUE_OFFER_COUNTER_MODELS = ['PER_GUEST', 'PER_HOUR', 'FLAT'] as const;
+
+/** The server's bound on the photos one counter carries (venueOffer `OFFER_ASK_LIMITS.images`). */
+export const VENUE_OFFER_IMAGES_MAX = 4;
 
 /** A reject reason's bound (the host reads it in a notification). */
 export const VENUE_OFFER_NOTE_MAX = 280;
@@ -53,8 +56,8 @@ export const venueOfferAskDefaults: VenueOfferAskValues = { offerings: '', note:
 
 /**
  * Either side's counter to the terms on the table: a pricing option, the
- * amount, the fewest guests the venue is paid for, the points, and an optional
- * note. One rule for the Partners console, mWeb and the native sheet, for the
+ * amount, the fewest guests the venue is paid for, the points, an optional
+ * note and up to four photos uploaded from the device. One rule for the Partners console, mWeb and the native sheet, for the
  * venue's counter and the host's counter back (rules 27 + 56); the server
  * prices the terms, so the amount is kept as typed text and only checked to be
  * a usable number. `maxGuests` is the booking's guests — a minimum may not pass
@@ -84,6 +87,9 @@ export function makeVenueOfferCounterSchema(t: Translate, maxGuests = 0) {
       }, t('availability.offers.validation.minGuests', { vars: { max: most } })),
     offerings: offeringsTextField(t, false),
     note: offerNoteField(t),
+    images: z
+      .array(z.string())
+      .max(VENUE_OFFER_IMAGES_MAX, t('availability.offers.validation.imagesTooMany', { vars: { max: VENUE_OFFER_IMAGES_MAX } })),
   });
 }
 
@@ -107,7 +113,15 @@ export function venueOfferCounterDefaults(terms: VenueOfferCounterSource | null)
     min_guests: terms?.minGuests ? String(terms.minGuests) : '',
     offerings: offeringsToText(terms?.offerings),
     note: '',
+    images: [],
   };
+}
+
+/** A counter of one's own, as it was sent: its note and photos are kept, so an edit starts from it whole. */
+export function venueOfferEditDefaults(
+  terms: (VenueOfferCounterSource & { note?: string | null; images?: readonly string[] | null }) | null,
+): VenueOfferCounterValues {
+  return { ...venueOfferCounterDefaults(terms), note: terms?.note ?? '', images: [...(terms?.images ?? [])] };
 }
 
 /** What a counter carries to the server (`VenueOfferTermsInput`). */
@@ -117,6 +131,8 @@ export interface VenueOfferTerms {
   /** Left out: the minimum on the table stands. */
   min_guests?: number;
   offerings: string[];
+  /** Photos uploaded from the device; none when the form sends none. */
+  images?: string[];
 }
 
 /**
@@ -124,11 +140,12 @@ export interface VenueOfferTerms {
  * usable — the live quote asks nothing until then.
  */
 export function venueOfferTermsOf(
-  values: Readonly<Pick<VenueOfferCounterValues, 'model' | 'rate' | 'min_guests' | 'offerings'>>,
+  values: Readonly<Pick<VenueOfferCounterValues, 'model' | 'rate' | 'min_guests' | 'offerings'> & { images?: readonly string[] }>,
 ): VenueOfferTerms | null {
   const rate = Number(String(values.rate).trim());
   if (!Number.isFinite(rate) || rate <= 0) return null;
   const terms: VenueOfferTerms = { model: values.model, rate, offerings: offeringsFromText(values.offerings) };
+  if (values.images?.length) terms.images = [...values.images];
   const minText = values.min_guests.trim();
   if (minText === '') return terms;
   const min = Number(minText);
@@ -144,7 +161,7 @@ export const counterAsksMinGuests = (model: string): boolean => model === 'PER_G
  * console, mWeb and the native sheet all send this.
  */
 export function venueOfferCounterTermsOf(
-  values: Readonly<Pick<VenueOfferCounterValues, 'model' | 'rate' | 'min_guests' | 'offerings'>>,
+  values: Readonly<Pick<VenueOfferCounterValues, 'model' | 'rate' | 'min_guests' | 'offerings'> & { images?: readonly string[] }>,
 ): VenueOfferTerms | null {
   return venueOfferTermsOf(counterAsksMinGuests(values.model) ? values : { ...values, min_guests: '' });
 }

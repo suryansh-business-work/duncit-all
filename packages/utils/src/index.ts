@@ -1724,12 +1724,15 @@ export {
   VENUE_OFFER_QUOTE_SDL,
   VENUE_OFFER_STATUS_KEY,
   VENUE_OFFER_TERMS_KEY,
+  VENUE_MIN_BUSINESS_KEY,
   hostMayAnswerCounter,
   hostOfferActions,
   isOfferChangedError,
   isVenueOfferModel,
+  mayCounter,
   moneyRangeText,
   offerCalendarPicks,
+  offerCountersLeft,
   offerEarningsArgs,
   offerGuestFloor,
   offerGuestsText,
@@ -1744,8 +1747,10 @@ export {
   venueOfferPriceInput,
   venueOfferStatusKey,
   venueOfferTermsText,
+  venueMinBusinessLines,
   type OfferCalendar,
   type OfferCalendarLimits,
+  type OfferCounterUsage,
   type OfferEarningsArgs,
   type OfferQuoteMoney,
   type OfferQuoteRange,
@@ -1753,6 +1758,7 @@ export {
   type VenueOfferModel,
   type VenueOfferPrefill,
   type VenueOfferSource,
+  type VenueMinBusinessRow,
 } from './venue-offer';
 export { MY_BOOKING_CLASHES_SDL, uniqueClashingPods, type PodBookingClash } from './pod-booking-clash';
 export {
@@ -1767,7 +1773,11 @@ export {
 export {
   ADMIN_VENUE_CHAT_MESSAGES_SDL,
   ADMIN_VENUE_CHAT_THREADS_SDL,
+  DELETE_VENUE_CHAT_MESSAGE_SDL,
+  EDIT_VENUE_CHAT_MESSAGE_SDL,
+  MARK_VENUE_CHAT_READ_SDL,
   MY_VENUE_CHAT_THREADS_SDL,
+  REACT_TO_VENUE_CHAT_MESSAGE_SDL,
   SEND_VENUE_CHAT_MESSAGE_SDL,
   VENUE_CHAT_MESSAGES_SDL,
   VENUE_CHAT_PAGE,
@@ -1787,13 +1797,27 @@ export {
   type LiveVenueOffer,
   type VenueChatContact,
   type VenueChatCounterpart,
+  type VenueChatHostCard,
   type VenueChatLine,
   type VenueChatOfferEvent,
   type VenueChatOfferMove,
+  type VenueChatReadMark,
   type VenueChatRoomInfo,
   type VenueChatSide,
   type VenueChatThreadRow,
+  type VenueChatVenueCard,
 } from './venue-chat';
+// What happens to a venue thread's lines after they are sent: reactions, edits, removals, seen faces.
+export {
+  CHAT_EMOJIS,
+  reactionGroups,
+  seenByOtherSide,
+  seenFacesByLine,
+  venueChatLineActions,
+  withReadMark,
+  withoutVenueChatLine,
+  type ReactionGroup,
+} from './venue-chat-lines';
 export {
   CHAT_HISTORY_PAGE,
   CHAT_HISTORY_TRIGGER_PX,
@@ -2020,7 +2044,10 @@ export {
 // The venue's side of a host's booking offer: its inbox status, actions and history lines.
 export {
   currentOfferTerms,
+  isCounterLimitError,
+  offerCounterAllowance,
   venueOfferActions,
+  venueOfferPin,
   venueOfferHistoryKey,
   venueOfferInboxModelKey,
   venueOfferInboxStatus,
@@ -2029,5 +2056,7 @@ export {
   type CurrentOfferTerms,
   type InboxOffer,
   type OfferStatusTone,
+  type PinnedOfferSource,
   type VenueOfferParty,
+  type VenueOfferPin,
 } from './venue-offer-inbox';

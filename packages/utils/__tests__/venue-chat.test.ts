@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
+  DELETE_VENUE_CHAT_MESSAGE_SDL,
+  EDIT_VENUE_CHAT_MESSAGE_SDL,
+  MARK_VENUE_CHAT_READ_SDL,
+  REACT_TO_VENUE_CHAT_MESSAGE_SDL,
   VENUE_CHAT_MESSAGES_SDL,
   VENUE_CHAT_ROOM_SDL,
+  VENUE_CHAT_SOCKET,
   hasVenueChat,
   isOpenOfferMove,
   isVenueChatUnavailable,
@@ -171,7 +176,7 @@ describe('offer lines', () => {
   });
 
   it('selects the move on every line and the contact on the room', () => {
-    for (const field of ['offer {', 'venue_receives_max', 'offerings', 'expires_at', 'reason']) {
+    for (const field of ['offer {', 'venue_receives_max', 'offerings', 'expires_at', 'reason', 'images']) {
       expect(VENUE_CHAT_MESSAGES_SDL).toContain(field);
     }
     for (const field of ['pod_is_free', 'counterpart_name', 'counterpart_phone', 'counterpart_email']) expect(VENUE_CHAT_ROOM_SDL).toContain(field);
@@ -191,42 +196,59 @@ describe('offer lines', () => {
 
   describe('venueChatOfferActions', () => {
     const live = { round: 2, status: 'COUNTERED', awaiting: 'HOST' };
+    const none = { answer: false, sendNew: false, revise: false };
 
     it('lets the side whose turn it is answer the newest open move of the live round', () => {
-      expect(venueChatOfferActions(move(), { side: 'HOST', newest: true, live })).toEqual({ answer: true, sendNew: false });
+      expect(venueChatOfferActions(move(), { side: 'HOST', newest: true, live })).toEqual({ ...none, answer: true });
       const hostOffer = move({ round: 1, event: 'OFFER', by: 'HOST' });
       expect(venueChatOfferActions(hostOffer, { side: 'VENUE', newest: true, live: { round: 1, status: 'SENT', awaiting: 'VENUE' } })).toEqual({
+        ...none,
         answer: true,
-        sendNew: false,
       });
     });
 
-    it('offers nothing to the side that just moved, on an older line, or on a round the live offer moved past', () => {
-      expect(venueChatOfferActions(move(), { side: 'VENUE', newest: true, live })).toEqual({ answer: false, sendNew: false });
-      expect(venueChatOfferActions(move(), { side: 'HOST', newest: false, live })).toEqual({ answer: false, sendNew: false });
-      expect(venueChatOfferActions(move(), { side: 'HOST', newest: true, live: { ...live, round: 3 } })).toEqual({
-        answer: false,
-        sendNew: false,
+    it('lets the side that just countered edit or withdraw it while it waits on the other side, unseen', () => {
+      expect(venueChatOfferActions(move(), { side: 'VENUE', newest: true, live })).toEqual({ ...none, revise: true });
+      expect(venueChatOfferActions(move(), { side: 'VENUE', newest: true, live, seen: false })).toEqual({ ...none, revise: true });
+      // The host's counter back, waiting on the venue.
+      const hostCounter = move({ round: 3, by: 'HOST' });
+      expect(venueChatOfferActions(hostCounter, { side: 'HOST', newest: true, live: { round: 3, status: 'SENT', awaiting: 'VENUE' } })).toEqual({
+        ...none,
+        revise: true,
       });
+    });
+
+    it('stops the counter being revised once the other side has seen it', () => {
+      expect(venueChatOfferActions(move(), { side: 'VENUE', newest: true, live, seen: true })).toEqual(none);
+    });
+
+    it("never revises the host's first offer, or a move made by the other side", () => {
+      const hostOffer = move({ round: 1, event: 'OFFER', by: 'HOST' });
+      expect(venueChatOfferActions(hostOffer, { side: 'HOST', newest: true, live: { round: 1, status: 'SENT', awaiting: 'VENUE' } })).toEqual(none);
+      // The venue's counter, read by the host: theirs to answer, not to change.
+      expect(venueChatOfferActions(move(), { side: 'HOST', newest: true, live }).revise).toBe(false);
+    });
+
+    it('offers nothing on an older line, or on a round the live offer moved past', () => {
+      expect(venueChatOfferActions(move(), { side: 'HOST', newest: false, live })).toEqual(none);
+      expect(venueChatOfferActions(move(), { side: 'VENUE', newest: false, live })).toEqual(none);
+      expect(venueChatOfferActions(move(), { side: 'HOST', newest: true, live: { ...live, round: 3 } })).toEqual(none);
+      expect(venueChatOfferActions(move(), { side: 'VENUE', newest: true, live: { ...live, round: 3 } })).toEqual(none);
     });
 
     it('offers nothing once the live offer closed or is gone, or on an accepted line', () => {
-      expect(venueChatOfferActions(move(), { side: 'HOST', newest: true, live: { ...live, status: 'ACCEPTED' } })).toEqual({
-        answer: false,
-        sendNew: false,
-      });
-      expect(venueChatOfferActions(move(), { side: 'HOST', newest: true, live: null })).toEqual({ answer: false, sendNew: false });
-      expect(venueChatOfferActions(move({ event: 'ACCEPTED' }), { side: 'HOST', newest: true, live })).toEqual({
-        answer: false,
-        sendNew: false,
-      });
+      for (const side of ['HOST', 'VENUE'] as const) {
+        expect(venueChatOfferActions(move(), { side, newest: true, live: { ...live, status: 'ACCEPTED' } })).toEqual(none);
+        expect(venueChatOfferActions(move(), { side, newest: true, live: null })).toEqual(none);
+      }
+      expect(venueChatOfferActions(move({ event: 'ACCEPTED' }), { side: 'HOST', newest: true, live })).toEqual(none);
     });
 
     it('lets only the host send a new offer, from the newest line that declined or ran out', () => {
       for (const event of ['DECLINED', 'EXPIRED']) {
-        expect(venueChatOfferActions(move({ event }), { side: 'HOST', newest: true, live: null })).toEqual({ answer: false, sendNew: true });
-        expect(venueChatOfferActions(move({ event }), { side: 'VENUE', newest: true, live: null })).toEqual({ answer: false, sendNew: false });
-        expect(venueChatOfferActions(move({ event }), { side: 'HOST', newest: false, live: null })).toEqual({ answer: false, sendNew: false });
+        expect(venueChatOfferActions(move({ event }), { side: 'HOST', newest: true, live: null })).toEqual({ ...none, sendNew: true });
+        expect(venueChatOfferActions(move({ event }), { side: 'VENUE', newest: true, live: null })).toEqual(none);
+        expect(venueChatOfferActions(move({ event }), { side: 'HOST', newest: false, live: null })).toEqual(none);
       }
     });
   });
@@ -283,5 +305,45 @@ describe('mergeVenueChatLines', () => {
 
   it('answers nothing for nothing', () => {
     expect(mergeVenueChatLines([], [])).toEqual([]);
+  });
+});
+
+describe('venue chat documents and socket events', () => {
+  it("selects each line's edit time and reactions, and lets a page read mark the thread", () => {
+    for (const field of ['edited_at', 'reactions {', 'emoji']) expect(VENUE_CHAT_MESSAGES_SDL).toContain(field);
+    expect(VENUE_CHAT_MESSAGES_SDL).toContain('$mark_read: Boolean');
+    expect(VENUE_CHAT_MESSAGES_SDL).toContain('venueChatMessages(pod_id: $pod_id, limit: $limit, before: $before, mark_read: $mark_read)');
+  });
+
+  it("selects the host's and the venue's contact cards and every member's read mark on the room", () => {
+    for (const field of ['host {', 'username', 'bio', 'venue {', 'venue_type', 'capacity', 'address', 'read_marks {', 'side', 'last_read_at']) {
+      expect(VENUE_CHAT_ROOM_SDL).toContain(field);
+    }
+  });
+
+  it('reacts to and edits a line, answering the whole line as everyone now sees it', () => {
+    expect(REACT_TO_VENUE_CHAT_MESSAGE_SDL).toContain('reactToVenueChatMessage(message_id: $message_id, emoji: $emoji)');
+    expect(EDIT_VENUE_CHAT_MESSAGE_SDL).toContain('editVenueChatMessage(message_id: $message_id, text: $text)');
+    for (const document of [REACT_TO_VENUE_CHAT_MESSAGE_SDL, EDIT_VENUE_CHAT_MESSAGE_SDL]) {
+      for (const field of ['edited_at', 'reactions {', 'offer {', 'deleted']) expect(document).toContain(field);
+    }
+  });
+
+  it('removes a line and marks the thread read by id alone', () => {
+    expect(DELETE_VENUE_CHAT_MESSAGE_SDL).toContain('mutation DeleteVenueChatMessage($message_id: ID!)');
+    expect(DELETE_VENUE_CHAT_MESSAGE_SDL).toContain('deleteVenueChatMessage(message_id: $message_id)');
+    expect(MARK_VENUE_CHAT_READ_SDL).toContain('mutation MarkVenueChatRead($pod_id: ID!)');
+    expect(MARK_VENUE_CHAT_READ_SDL).toContain('markVenueChatRead(pod_id: $pod_id)');
+  });
+
+  it('names a socket event for a new, a changed and a removed line, and for a member reading', () => {
+    expect(VENUE_CHAT_SOCKET).toEqual({
+      join: 'join_venue_chat',
+      leave: 'leave_venue_chat',
+      message: 'venue_chat_message',
+      update: 'venue_chat_update',
+      remove: 'venue_chat_delete',
+      read: 'venue_chat_read',
+    });
   });
 });

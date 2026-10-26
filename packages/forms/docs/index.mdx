@@ -102,7 +102,10 @@ exports:
   - 'venueOfferTermsOf'
   - 'makeVenueOfferAskSchema'
   - 'makeBookingOffersSchema'
+  - 'nextMinBusinessRow'
   - 'venueOfferCounterDefaults'
+  - 'venueOfferEditDefaults'
+  - 'makeVenueChatEditSchema'
   - 'makeVenueOfferRejectSchema'
   - 'venueOfferRejectDefaults'
   - 'makePodRequestNoteSchema'
@@ -640,8 +643,9 @@ directly.
 | `makeWhatsappNumberSchema` | the Google door's number step | the WhatsApp row on its own — see below |
 | `makeCancellationPolicySchema` | a venue's cancellation policy | any number of bands, each a window + a charge — see below |
 | `makeVenueCancelPodSchema` | a venue owner cancelling a pod | the reason that goes into the cancellation email, at least 5 characters — see below |
-| `makeVenueOfferCounterSchema` | a venue owner countering a host's booking offer (Partners, mWeb, native) | either side countering the terms on the table: a pricing option (per guest / per hour / per slot / flat), an amount above 0 and at most the server ceiling, the fewest guests paid for (1 up to the booking's guests; empty keeps the one on the table), the points (one per line, at most 20 of 120 characters) and an optional note of at most 1000 characters; `venueOfferCounterDefaults(currentOfferTerms(offer))` starts from the terms on the table and `venueOfferTermsOf(values)` is what the counter sends (null until usable); `makeVenueOfferAskSchema` / `offeringsTextField` / `offerNoteField` are Create Pod's ask (at least one point); `makeVenueOfferRejectSchema` is the optional reason (≤ 280) a rejection sends |
-| `makeBookingOffersSchema` | a venue's own Booking offers settings (Partners, mWeb, native) | the fewest guests (0 to 1000) and the hours to answer (0 to 720), 0 = Duncit's default; `toBookingOffersValues` / `toBookingOffersInput` map them to and from `VenueSettings.offers` |
+| `makeVenueOfferCounterSchema` | a venue owner countering a host's booking offer (Partners, mWeb, native) | either side countering the terms on the table: a pricing option (`VENUE_OFFER_COUNTER_MODELS`: per guest / per hour / flat — the per-slot option is retired), an amount above 0 and at most the server ceiling, the fewest guests paid for (1 up to the booking's guests; empty keeps the one on the table), the points (one per line, at most 20 of 120 characters), an optional note of at most 1000 characters and up to `VENUE_OFFER_IMAGES_MAX` (4) uploaded photos (`images`); `venueOfferCounterDefaults(currentOfferTerms(offer))` starts from the terms on the table with no photos, `venueOfferEditDefaults(terms)` starts an edit of one's own counter with its note and photos kept, and `venueOfferTermsOf(values)` is what the counter sends (null until usable; `images` only when there are some); `makeVenueOfferAskSchema` / `offeringsTextField` / `offerNoteField` are Create Pod's ask (at least one point); `makeVenueOfferRejectSchema` is the optional reason (≤ 280) a rejection sends |
+| `makeBookingOffersSchema` | a venue's own Booking offers settings (Partners, mWeb, native) | the fewest guests (0 to 1000) and the hours to answer (0 to 720), 0 = Duncit's default, and the business the venue hopes each booking brings (`min_business`): at least one row, each a basis from `MIN_BUSINESS_MODELS` (per guest / per hour / per booking) named once — a repeat is flagged on the later row — and an amount above 0, at most `BOOKING_OFFER_LIMITS.amountMax`. A guide hosts see on Create Pod, never a rule. `nextMinBusinessRow(rows)` is "Add amount" (the first basis not listed yet); `toBookingOffersValues` / `toBookingOffersInput` map them to and from `VenueSettings.offers` (no stored amounts start one empty row; amounts are sent as numbers) |
+| `makeVenueChatEditSchema` | the author rewriting their own venue chat line (mWeb, Partners, native) | something to say, trimmed, at most `VENUE_CHAT_TEXT_MAX` (2000, the server's bound); the server checks the words themselves |
 | `makePodRequestNoteSchema` | a venue or host sending a Pod Request | an optional note of at most 500 characters — see below |
 | `makePodRequestOverrideSchema` | an admin setting a venue's or host's monthly Pod Request limit | empty (the default of 10) or a whole number 0–1000 — see below |
 | `makeRentalItemsSchema` | a venue's rented items | offers switch, the venue's rental terms (≤ `rental_terms_max`) and each item: name, unit, rate, deposit, stock, most per guest (≤ stock) — the caps are the server's `venueRegistrationConfig`. The MUI desk and the native desk both use it |

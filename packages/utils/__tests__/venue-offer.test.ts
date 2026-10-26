@@ -16,12 +16,15 @@ import {
   VENUE_OFFER_MODELS,
   VENUE_OFFER_MODEL_KEY,
   VENUE_OFFER_QUOTE_SDL,
+  VENUE_MIN_BUSINESS_KEY,
   hostMayAnswerCounter,
   hostOfferActions,
   isOfferChangedError,
   isVenueOfferModel,
+  mayCounter,
   moneyRangeText,
   offerCalendarPicks,
+  offerCountersLeft,
   offerEarningsArgs,
   offerGuestFloor,
   offerGuestsText,
@@ -36,6 +39,7 @@ import {
   venueOfferPriceInput,
   venueOfferStatusKey,
   venueOfferTermsText,
+  venueMinBusinessLines,
   type VenueOfferSource,
 } from '../src/venue-offer';
 
@@ -51,8 +55,9 @@ const source = (over: Partial<VenueOfferSource> = {}): VenueOfferSource => ({
 });
 
 describe('pricing options', () => {
-  it('lists the four options in picker order, each with a name, an amount label and how it pays', () => {
-    expect(VENUE_OFFER_MODELS).toEqual(['PER_GUEST', 'PER_HOUR', 'PER_SLOT', 'FLAT']);
+  it('lists the three options in picker order, each with a name, an amount label and how it pays', () => {
+    expect(VENUE_OFFER_MODELS).toEqual(['PER_GUEST', 'PER_HOUR', 'FLAT']);
+    expect(Object.keys(VENUE_OFFER_MODEL_KEY)).toEqual(['PER_GUEST', 'PER_HOUR', 'FLAT']);
     for (const model of VENUE_OFFER_MODELS) {
       expect(VENUE_OFFER_MODEL_KEY[model].label).toMatch(/^mweb\.createPod\.offer\.model\./);
       expect(VENUE_OFFER_MODEL_KEY[model].rate).toMatch(/^mweb\.createPod\.offer\.rate\./);
@@ -61,8 +66,10 @@ describe('pricing options', () => {
     expect(VENUE_OFFER_MODEL_KEY.PER_GUEST.help).toBe('mweb.createPod.offer.help.perGuest');
   });
 
-  it('accepts only the four options, whatever enum a client passes', () => {
-    expect(isVenueOfferModel('PER_HOUR')).toBe(true);
+  it('accepts only the three options, whatever enum a client passes', () => {
+    for (const model of VENUE_OFFER_MODELS) expect(isVenueOfferModel(model)).toBe(true);
+    // The retired per-slot option is no longer an offer's pricing.
+    expect(isVenueOfferModel('PER_SLOT')).toBe(false);
     expect(isVenueOfferModel('PER_PAX')).toBe(false);
     expect(isVenueOfferModel('')).toBe(false);
     expect(isVenueOfferModel(null)).toBe(false);
@@ -71,6 +78,7 @@ describe('pricing options', () => {
 
   it('names a known option and nothing for an unknown one', () => {
     expect(venueOfferModelKey('FLAT')).toBe('mweb.createPod.offer.model.flat');
+    expect(venueOfferModelKey('PER_SLOT')).toBe('');
     expect(venueOfferModelKey('PER_PAX')).toBe('');
     expect(venueOfferModelKey(null)).toBe('');
   });
@@ -94,10 +102,12 @@ describe('venueOfferTermsText', () => {
 
   it("writes each side's terms with the option's unit", () => {
     expect(venueOfferTermsText('PER_GUEST', 300, t, money)).toBe('mweb.venueOffer.terms.perGuest:₹300');
+    expect(venueOfferTermsText('PER_HOUR', 800, t, money)).toBe('mweb.venueOffer.terms.perHour:₹800');
     expect(venueOfferTermsText('FLAT', 5000, t, money)).toBe('mweb.venueOffer.terms.flat:₹5000');
   });
 
   it('falls back to the bare amount for an option this client does not know', () => {
+    expect(venueOfferTermsText('PER_SLOT', 300, t, money)).toBe('₹300');
     expect(venueOfferTermsText('PER_PAX', 300, t, money)).toBe('₹300');
     expect(venueOfferTermsText(null, 300, t, money)).toBe('₹300');
   });
@@ -124,6 +134,90 @@ describe('hostOfferActions', () => {
   it('sends a new offer once the last one was declined, and nothing without an offer', () => {
     expect(hostOfferActions({ status: 'DECLINED', awaiting: null })).toEqual({ accept: false, reject: false, counter: false, sendNew: true });
     expect(hostOfferActions(null)).toEqual({ accept: false, reject: false, counter: false, sendNew: false });
+  });
+
+  it("stops the host countering back once their share of counters is used, but still lets them accept or reject", () => {
+    const waiting = { status: 'COUNTERED', awaiting: 'HOST', counters_per_side: 2 };
+    expect(hostOfferActions({ ...waiting, host_counters_used: 2, venue_counters_used: 1 })).toEqual({
+      accept: true,
+      reject: true,
+      counter: false,
+      sendNew: false,
+    });
+    expect(hostOfferActions({ ...waiting, host_counters_used: 1, venue_counters_used: 2 })).toMatchObject({ counter: true });
+  });
+});
+
+describe('offerCountersLeft / mayCounter', () => {
+  const usage = { counters_per_side: 3, host_counters_used: 1, venue_counters_used: 3 };
+
+  it("counts each side's counters left of its own share", () => {
+    expect(offerCountersLeft(usage, 'HOST')).toBe(2);
+    expect(offerCountersLeft(usage, 'VENUE')).toBe(0);
+  });
+
+  it('reads a side that has not countered yet as having its whole share', () => {
+    expect(offerCountersLeft({ counters_per_side: 3 }, 'HOST')).toBe(3);
+    expect(offerCountersLeft({ counters_per_side: 3, venue_counters_used: null }, 'VENUE')).toBe(3);
+  });
+
+  it('never goes below zero, and a share of zero leaves none', () => {
+    expect(offerCountersLeft({ counters_per_side: 2, host_counters_used: 5 }, 'HOST')).toBe(0);
+    expect(offerCountersLeft({ counters_per_side: 0 }, 'VENUE')).toBe(0);
+  });
+
+  it('is null when the server names no limit (older servers)', () => {
+    expect(offerCountersLeft({}, 'HOST')).toBeNull();
+    expect(offerCountersLeft({ counters_per_side: null, host_counters_used: 4 }, 'HOST')).toBeNull();
+  });
+
+  it('lets a side counter while it has one left, and always when no limit is known', () => {
+    expect(mayCounter(usage, 'HOST')).toBe(true);
+    expect(mayCounter(usage, 'VENUE')).toBe(false);
+    expect(mayCounter({ counters_per_side: 0 }, 'HOST')).toBe(false);
+    expect(mayCounter({}, 'VENUE')).toBe(true);
+  });
+});
+
+describe('venueMinBusinessLines', () => {
+  const t = (key: string, opts?: { vars?: Record<string, string | number> }) => `${key}:${opts?.vars?.amount ?? ''}`;
+  const money = (rupees: number) => `₹${rupees}`;
+
+  it('names each basis a venue hopes for business on, with its amount line', () => {
+    expect(Object.keys(VENUE_MIN_BUSINESS_KEY)).toEqual(['PER_GUEST', 'PER_HOUR', 'FLAT']);
+    expect(VENUE_MIN_BUSINESS_KEY.FLAT).toEqual({
+      label: 'availability.offers.minBusiness.perBooking',
+      amount: 'availability.offers.minBusiness.perBookingAmount',
+    });
+  });
+
+  it("writes every amount with the surface's money, in the pickers' order whatever order the venue saved them", () => {
+    const rows = [
+      { model: 'FLAT', amount: 5000 },
+      { model: 'PER_GUEST', amount: 200 },
+      { model: 'PER_HOUR', amount: 400 },
+    ];
+    expect(venueMinBusinessLines(rows, t, money)).toEqual([
+      'availability.offers.minBusiness.perGuestAmount:₹200',
+      'availability.offers.minBusiness.perHourAmount:₹400',
+      'availability.offers.minBusiness.perBookingAmount:₹5000',
+    ]);
+  });
+
+  it('skips a basis this client does not know and an amount that is not above zero', () => {
+    const rows = [
+      { model: 'PER_SLOT', amount: 900 },
+      { model: 'PER_GUEST', amount: 0 },
+      { model: 'PER_HOUR', amount: -50 },
+      { model: 'FLAT', amount: 3000 },
+    ];
+    expect(venueMinBusinessLines(rows, t, money)).toEqual(['availability.offers.minBusiness.perBookingAmount:₹3000']);
+  });
+
+  it('writes nothing when the venue named no amounts', () => {
+    expect(venueMinBusinessLines([], t, money)).toEqual([]);
+    expect(venueMinBusinessLines(null, t, money)).toEqual([]);
+    expect(venueMinBusinessLines(undefined, t, money)).toEqual([]);
   });
 });
 

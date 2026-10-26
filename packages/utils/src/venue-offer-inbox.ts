@@ -8,10 +8,17 @@
  * price anything (the server's quote is what every surface prints). Every copy
  * key is written out literally, so the translation gate can see it.
  */
-import { isVenueOfferModel, type VenueOfferModel } from './venue-offer';
+import {
+  isVenueOfferModel,
+  mayCounter,
+  offerCounterAllowance,
+  type OfferCounterUsage,
+  type VenueOfferModel,
+  type VenueOfferParty,
+} from './venue-offer';
 
-/** Who moves next on an offer (`VenueOfferParty`). */
-export type VenueOfferParty = 'HOST' | 'VENUE';
+/** Who moves next on an offer (`VenueOfferParty`) — declared beside the host's side. */
+export type { VenueOfferParty };
 
 /** One side's terms as the inbox reads them. The ask (minimum, points, low-end quote) is absent on offers from older servers. */
 interface InboxTerms<Q> {
@@ -70,7 +77,6 @@ export function currentOfferTerms<Q>(offer: Readonly<InboxOffer<Q>>): CurrentOff
 export const VENUE_OFFER_INBOX_MODEL_KEY: Readonly<Record<VenueOfferModel, { label: string; rate: string }>> = {
   PER_GUEST: { label: 'availability.offers.model.perGuest', rate: 'availability.offers.rate.perGuest' },
   PER_HOUR: { label: 'availability.offers.model.perHour', rate: 'availability.offers.rate.perHour' },
-  PER_SLOT: { label: 'availability.offers.model.perSlot', rate: 'availability.offers.rate.perSlot' },
   FLAT: { label: 'availability.offers.model.flat', rate: 'availability.offers.rate.flat' },
 };
 
@@ -107,11 +113,60 @@ export function venueOfferInboxStatus(offer: Readonly<Pick<InboxOffer<unknown>, 
   return INBOX_STATUS[offer.status] ?? { key: '', tone: 'info' };
 }
 
-/** What the venue may do now: a fresh offer takes all three; while its counter waits it may change it or say no. */
-export function venueOfferActions(offer: Readonly<Pick<InboxOffer<unknown>, 'status'>>) {
+/**
+ * What the venue may do now: a fresh offer takes all three; while its counter
+ * waits it may change it or say no. Countering stops once its share is used.
+ */
+export function venueOfferActions(offer: Readonly<Pick<InboxOffer<unknown>, 'status'> & OfferCounterUsage>) {
   const open = offer.status === 'SENT' || offer.status === 'COUNTERED';
-  return { accept: offer.status === 'SENT', reject: open, counter: open };
+  return { accept: offer.status === 'SENT', reject: open, counter: open && mayCounter(offer, 'VENUE') };
 }
+
+/** One side's share of counters and what is left of it — declared beside the host's side. */
+export { offerCounterAllowance };
+
+/** The live offer as the venue chat's pinned bar reads it. */
+export interface PinnedOfferSource extends OfferCounterUsage {
+  status: string;
+  awaiting?: string | null;
+  expires_at?: string | null;
+}
+
+/** What the pinned bar at the top of a venue chat says, for the reader's side. */
+export interface VenueOfferPin {
+  /** Where the offer stands, as the reader is told (`availability.offers.pin.*`). */
+  statusKey: string;
+  /** Still waiting on an answer. */
+  open: boolean;
+  /** The reader's own counters left of their share; null when the server names no limit. */
+  mine: { left: number; of: number } | null;
+  /** The other side's. */
+  theirs: { left: number; of: number } | null;
+  /** When the move waiting must be answered by; null once closed. */
+  expiresAt: string | null;
+}
+
+const PIN_CLOSED_KEY: Readonly<Record<string, string>> = {
+  ACCEPTED: 'availability.offers.pin.accepted',
+  DECLINED: 'availability.offers.pin.declined',
+};
+
+/** The pinned bar for the pod's live offer, or null when it has none (declined or ran out: the hold is gone). */
+export function venueOfferPin(offer: Readonly<PinnedOfferSource> | null | undefined, side: VenueOfferParty): VenueOfferPin | null {
+  if (!offer) return null;
+  const open = offer.status === 'SENT' || offer.status === 'COUNTERED';
+  const turnKey = offer.awaiting === side ? 'availability.offers.pin.yourMove' : 'availability.offers.pin.theirMove';
+  return {
+    statusKey: open ? turnKey : (PIN_CLOSED_KEY[offer.status] ?? ''),
+    open,
+    mine: offerCounterAllowance(offer, side),
+    theirs: offerCounterAllowance(offer, side === 'HOST' ? 'VENUE' : 'HOST'),
+    expiresAt: open ? (offer.expires_at ?? null) : null,
+  };
+}
+
+/** Whether a refused move means the side has used every counter it may make (`extensions.reason`). */
+export const isCounterLimitError = (reason: string | null | undefined): boolean => reason === 'COUNTER_LIMIT';
 
 const HISTORY_KEY: Readonly<Record<string, string>> = {
   'HOST:OFFER': 'availability.offers.history.hostOffer',

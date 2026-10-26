@@ -251,12 +251,17 @@ export {
 
 export {
   BOOKING_OFFER_LIMITS,
+  MIN_BUSINESS_MODELS,
   makeBookingOffersSchema,
+  nextMinBusinessRow,
   toBookingOffersInput,
   toBookingOffersValues,
   type BookingOffersValues,
+  type MinBusinessRowValues,
   type VenueOfferSettings,
 } from './venue-offer-settings';
+
+export { VENUE_CHAT_TEXT_MAX, makeVenueChatEditSchema, type VenueChatEditValues } from './venue-chat-line';
 
 export {
   counterAsksMinGuests,
@@ -267,11 +272,13 @@ export {
   offeringsTextField,
   venueOfferAskDefaults,
   venueOfferCounterDefaults,
+  venueOfferEditDefaults,
   venueOfferRejectDefaults,
   venueOfferCounterTermsOf,
   venueOfferTermsOf,
   VENUE_OFFER_COUNTER_MODELS,
   VENUE_OFFER_GUESTS_MAX,
+  VENUE_OFFER_IMAGES_MAX,
   VENUE_OFFER_NOTE_MAX,
   VENUE_OFFER_RATE_MAX,
   type VenueOfferAskValues,

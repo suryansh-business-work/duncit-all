@@ -5,6 +5,7 @@ import { gql } from '@apollo/client';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import CreatePodStepper from '../CreatePodStepper';
 import { STEP_TITLES } from '../create-pod.form';
+import { fallbackT } from '../../../../i18n/fallback';
 import { blankCreatePodForm, type CreatePodFormValues } from '../create-pod.types';
 
 // A controllable feature-flag value for the products section.
@@ -268,5 +269,46 @@ describe('CreatePodStepper', () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  it('pins a violation on an unknown field to the title and jumps to its step', async () => {
+    const onModerate = vi.fn().mockResolvedValue({
+      allowed: false,
+      violations: [{ field: 'something_new', step: '', type: 'x', message: 'Unknown field problem' }],
+    });
+    setup({ initialStep: 3, onModerate });
+    fireEvent.click(screen.getByRole('button', { name: 'Create Pod' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Unknown field problem' }));
+    await waitFor(() => expect(screen.getByText('BasicsStep')).toBeInTheDocument());
+  });
+
+  it('shows the generic failure wording when publishing fails with something that is not an Error', async () => {
+    const onPublish = vi.fn().mockRejectedValue('boom');
+    setup({ initialStep: 3, onPublish });
+    fireEvent.click(screen.getByRole('button', { name: 'Create Pod' }));
+    expect(await screen.findByText(fallbackT('mweb.createPod.createFailed'))).toBeInTheDocument();
+  });
+
+  it('publishes without stale product rows when the products flag is off', async () => {
+    const { onPublish } = setup({
+      initialStep: 3,
+      initialValues: validVirtual({ products_enabled: true, product_requests: [{ product_id: 'p1', quantity: 2 }] }),
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Create Pod' }));
+    await waitFor(() => expect(onPublish).toHaveBeenCalled());
+    const input = onPublish.mock.calls[0][1];
+    expect(input.products_enabled).toBeFalsy();
+    expect(input.product_requests ?? []).toEqual([]);
+  });
+
+  it('keeps product rows when the products flag is on', async () => {
+    flagState.value = true;
+    const { onPublish } = setup({
+      initialStep: 3,
+      initialValues: validVirtual({ products_enabled: true, product_requests: [{ product_id: 'p1', quantity: 2 }] }),
+      products: [{ id: 'p1', name: 'Mat' } as never],
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Create Pod' }));
+    await waitFor(() => expect(onPublish).toHaveBeenCalled());
   });
 });

@@ -63,16 +63,21 @@ export default function LocationDialog({
 
   const handleCountry = (next: string) => {
     setCountry(next);
-    const first = tree.find((c) => c.country === next)?.states[0];
-    setState(first?.state ?? '');
-    selectFirstCity(first?.cities ?? []);
+    // The picker only offers countries from this tree, and every country has a
+    // state, so the match is always there.
+    tree
+      .filter((c) => c.country === next)
+      .forEach((c) => {
+        setState(c.states[0].state);
+        selectFirstCity(c.states[0].cities);
+      });
   };
 
   // Changing the state must reset the city so the area picker loads the new
   // state's localities instead of keeping the previous city's (BUG-3).
   const handleState = (next: string) => {
     setState(next);
-    selectFirstCity(activeCountry?.states.find((s) => s.state === next)?.cities ?? []);
+    activeCountry?.states.filter((s) => s.state === next).forEach((s) => selectFirstCity(s.cities));
   };
 
   const handleCity = (id: string) => {

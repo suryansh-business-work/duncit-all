@@ -73,8 +73,7 @@ function matchesDate(pod: any, dateFilter: DateFilter, b: DateBounds): boolean {
   if (dateFilter === 'TODAY') return dt >= b.today0 && dt < b.tomorrow0;
   if (dateFilter === 'TOMORROW') return dt >= b.tomorrow0 && dt < b.dayAfter0;
   if (dateFilter === 'WEEK') return dt >= b.today0 && dt < b.weekEnd;
-  if (dateFilter === 'MONTH') return dt >= b.today0 && dt < b.monthEnd;
-  return true;
+  return dt >= b.today0 && dt < b.monthEnd;
 }
 
 /** True when a chip (or any of its descendants) has at least one pod in context. */
@@ -272,8 +271,7 @@ export function useHomeData({
       phases.ongoing
         .slice()
         .sort(
-          (a: any, b: any) =>
-            new Date(a.pod_date_time || 0).getTime() - new Date(b.pod_date_time || 0).getTime()
+          (a: any, b: any) => new Date(a.pod_date_time).getTime() - new Date(b.pod_date_time).getTime()
         ),
     [phases]
   );
@@ -282,8 +280,7 @@ export function useHomeData({
       phases.previous
         .slice()
         .sort(
-          (a: any, b: any) =>
-            new Date(b.pod_date_time || 0).getTime() - new Date(a.pod_date_time || 0).getTime()
+          (a: any, b: any) => new Date(b.pod_date_time).getTime() - new Date(a.pod_date_time).getTime()
         ),
     [phases]
   );
@@ -332,8 +329,7 @@ export function useHomeData({
     return nearbyPods
       .slice()
       .sort(
-        (a: any, b: any) =>
-          new Date(a.pod_date_time || 0).getTime() - new Date(b.pod_date_time || 0).getTime()
+        (a: any, b: any) => new Date(a.pod_date_time).getTime() - new Date(b.pod_date_time).getTime()
       )
       .slice(0, 10);
   }, [nearbyPods]);

@@ -38,13 +38,13 @@ export const pickPodMoments = (pods: any[], limit: number) => {
 
 function renderSegment(active: SegmentKey, ctx: RenderCtx, t: Translate) {
   if (active === 'MOMENTS') return <ClubMomentsSection moments={ctx.moments} />;
-  if (active === 'WHO') return <ClubBulletsSection title={t('mweb.common.whoWeAre')} items={ctx.club.who_we_are ?? []} />;
-  if (active === 'WHAT') return <ClubBulletsSection title={t('mweb.common.whatWeDo')} items={ctx.club.what_we_do ?? []} />;
-  if (active === 'PERKS') return <ClubBulletsSection title={t('mweb.common.perks')} items={ctx.club.perks ?? []} />;
-  if (active === 'VALUES') return <ClubBulletsSection title={t('mweb.common.values')} items={ctx.club.values ?? []} />;
-  if (active === 'FAQS') return <ClubFaqsSection faqs={ctx.club.faqs ?? []} />;
-  if (active === 'HOSTS') return <ClubHostsSection hosts={ctx.club.hosts ?? []} />;
-  if (active === 'ADMINS') return <ClubAdminsSection admins={ctx.club.club_admins ?? []} />;
+  if (active === 'WHO') return <ClubBulletsSection title={t('mweb.common.whoWeAre')} items={ctx.club.who_we_are} />;
+  if (active === 'WHAT') return <ClubBulletsSection title={t('mweb.common.whatWeDo')} items={ctx.club.what_we_do} />;
+  if (active === 'PERKS') return <ClubBulletsSection title={t('mweb.common.perks')} items={ctx.club.perks} />;
+  if (active === 'VALUES') return <ClubBulletsSection title={t('mweb.common.values')} items={ctx.club.values} />;
+  if (active === 'FAQS') return <ClubFaqsSection faqs={ctx.club.faqs} />;
+  if (active === 'HOSTS') return <ClubHostsSection hosts={ctx.club.hosts} />;
+  if (active === 'ADMINS') return <ClubAdminsSection admins={ctx.club.club_admins} />;
   const schedule = (
     <ClubPodsScheduleSection pods={ctx.pods} priceFormat={ctx.priceFormat} onOpen={ctx.onOpenPod} />
   );

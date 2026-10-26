@@ -25,7 +25,6 @@ export function useStatusViewerPlayback({ item, startIndex, onNext, onClose, onR
   const [reporting, setReporting] = useState<string | null>(null);
   const frameRef = useRef<number | null>(null);
   const elapsedRef = useRef(0);
-  const startedAtRef = useRef<number | null>(null);
   const pointerStartX = useRef(0);
   // End of the last slide hands off to the next follower's story (bug 2).
   const goNextStory = onNext ?? onClose;
@@ -49,14 +48,12 @@ export function useStatusViewerPlayback({ item, startIndex, onNext, onClose, onR
     setReporting(null);
     setIndex(startIndex);
     elapsedRef.current = 0;
-    startedAtRef.current = null;
     if (frameRef.current) cancelAnimationFrame(frameRef.current);
   }, [itemKey, startIndex]);
 
   useEffect(() => {
     setProgress(0);
     elapsedRef.current = 0;
-    startedAtRef.current = null;
   }, [index]);
 
   // Seed the like control from the shown slide and record the view (Bugs 2 & 5).
@@ -72,9 +69,8 @@ export function useStatusViewerPlayback({ item, startIndex, onNext, onClose, onR
   useEffect(() => {
     // Videos drive their own progress/advance from the <video> element below.
     if (!item || held || isVideo) return undefined;
-    startedAtRef.current = performance.now() - elapsedRef.current;
+    const startedAt = performance.now() - elapsedRef.current;
     const tick = (now: number) => {
-      const startedAt = startedAtRef.current ?? now;
       const elapsed = now - startedAt;
       elapsedRef.current = elapsed;
       const nextProgress = Math.min(1, elapsed / STATUS_DURATION_MS);

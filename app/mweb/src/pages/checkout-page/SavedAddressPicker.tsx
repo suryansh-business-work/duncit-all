@@ -26,14 +26,14 @@ export default function SavedAddressPicker({ onPick }: Readonly<Props>) {
     onPick(selected);
   }, [selected, onPick]);
 
-  if (addresses.length === 0) return null;
+  if (!selected) return null;
   return (
     <TextField
       data-testid="checkout-address-picker"
       select
       size="small"
       label={t('mweb.checkout.deliverToSaved')}
-      value={selected?.id ?? ''}
+      value={selected.id}
       onChange={(event) => select(event.target.value)}
       sx={{ mb: 2, minWidth: 260 }}
     >

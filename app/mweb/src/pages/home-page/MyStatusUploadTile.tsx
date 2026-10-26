@@ -39,11 +39,6 @@ export default function MyStatusUploadTile({ me, onView }: Readonly<Props>) {
     openProfilePicker();
   };
 
-  const openPicker = () => {
-    if (uploading) return;
-    openProfilePicker();
-  };
-
   return (
     <Stack
       data-testid="my-status-upload-tile"
@@ -66,7 +61,7 @@ export default function MyStatusUploadTile({ me, onView }: Readonly<Props>) {
           data-testid="my-status-upload-tile-add"
           onClick={(e) => {
             e.stopPropagation();
-            openPicker();
+            openProfilePicker();
           }}
           sx={{
             position: 'absolute',

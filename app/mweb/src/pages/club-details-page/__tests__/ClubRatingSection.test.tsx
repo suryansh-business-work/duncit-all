@@ -187,6 +187,18 @@ describe('ClubRatingSection', () => {
     expect(screen.getByTestId('club-rating-dialog-submit')).toBeEnabled();
   });
 
+  it('falls back to a plain sentence when the failure carries no message', async () => {
+    const addMock: MockedResponse = {
+      request: { query: ADD_CLUB_RATING, variables: () => true },
+      error: new Error(''),
+    };
+    renderSection([ratingsMock([]), addMock]);
+    const dialog = await openDialog();
+    fireEvent.click(within(dialog).getByLabelText('3 Stars'));
+    fireEvent.click(screen.getByTestId('club-rating-dialog-submit'));
+    await waitFor(() => expect(h.notify).toHaveBeenCalledWith('Could not submit rating', 'error'));
+  });
+
   it('closes the dialog from Cancel without submitting', async () => {
     renderSection([ratingsMock([])]);
     await openDialog();

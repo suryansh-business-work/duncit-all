@@ -46,7 +46,6 @@ export default function CheckoutSuccess({ payment, pod, onHome, onProfile, profi
   const venueTotal = venueCharges.reduce((sum, charge) => sum + Number(charge.amount || 0), 0);
 
   const downloadTicket = async () => {
-    if (!pod?.id) return;
     setInvoiceError(null);
     try {
       const { data: tData } = await loadTicketForPod({ variables: { podId: pod.id } });
@@ -65,7 +64,6 @@ export default function CheckoutSuccess({ payment, pod, onHome, onProfile, profi
   };
 
   const downloadInvoice = async () => {
-    if (!payment?.invoice_no) return;
     setInvoiceError(null);
     try {
       const { data } = await loadInvoice({ variables: { id: payment.id } });

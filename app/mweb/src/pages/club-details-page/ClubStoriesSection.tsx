@@ -76,7 +76,7 @@ export default function ClubStoriesSection({ clubId, canPost }: Readonly<Props>)
       await refetch();
       notify(t('contentReport.deleted'), 'success');
     } catch (e) {
-      notify(parseApiError(e) || t('contentReport.deleteFailed'), 'error');
+      notify(parseApiError(e, t('contentReport.deleteFailed')), 'error');
     } finally {
       setBusy(false);
     }

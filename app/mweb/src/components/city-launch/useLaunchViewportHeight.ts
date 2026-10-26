@@ -13,7 +13,7 @@ const NAV_OVERLAY_VAR = '--duncit-bottom-nav-overlay-offset';
  * a percentage cannot climb through the route tree to the scroller.
  */
 export function useLaunchViewportHeight(): number {
-  const [height, setHeight] = useState(() => globalThis.innerHeight || 0);
+  const [height, setHeight] = useState(() => globalThis.innerHeight);
 
   useEffect(() => {
     const scroller = document.getElementById(SCROLLER_ID);

@@ -26,7 +26,6 @@ interface ContactsManager {
 }
 
 const contactsManager = (): ContactsManager | null => {
-  if (globalThis.navigator === undefined) return null;
   const manager = (globalThis.navigator as Navigator & { contacts?: ContactsManager }).contacts;
   return manager && typeof manager.select === 'function' ? manager : null;
 };

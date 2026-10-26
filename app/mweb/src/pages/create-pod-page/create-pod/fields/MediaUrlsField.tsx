@@ -74,7 +74,7 @@ export default function MediaUrlsField({
   // How many ONE open may return. Five is a batch size everywhere; it only
   // becomes a ceiling on a field that asked for one.
   const slotsLeft = pickerBatchSize(urls.length, maxImages);
-  const full = slotsLeft === 0;
+  const full = maxImages !== undefined && slotsLeft === 0;
   const removeUrl = (url: string) => onChange(urls.filter((item) => item !== url).join('\n'));
   const openPicker = () => setPickerOpen(true);
   const openOnKey = (e: React.KeyboardEvent) => {
@@ -161,7 +161,7 @@ export default function MediaUrlsField({
       {error && <FormHelperText data-testid="media_text-error" error>{error}</FormHelperText>}
       {full && (
         <FormHelperText>
-          {t('mweb.createPod.mediaMaxHint', { vars: { max: maxImages ?? 0 } })}
+          {t('mweb.createPod.mediaMaxHint', { vars: { max: maxImages } })}
         </FormHelperText>
       )}
       <MediaPickerDialog

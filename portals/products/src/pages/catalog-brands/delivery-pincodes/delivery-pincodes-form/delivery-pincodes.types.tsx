@@ -20,7 +20,7 @@ export const makeDeliveryPincodesSchema = (t: Translate) =>
         error: (issue) =>
           t('products.deliveryPincodes.invalid', {
             vars: {
-              list: parsePincodes(String(issue.input ?? ''))
+              list: parsePincodes(String(issue.input))
                 .filter((p) => !isPincode(p))
                 .slice(0, 5)
                 .join(', '),

@@ -72,3 +72,48 @@ describe('LeaderboardTable', () => {
     await waitUntil(() => expect(byTestId('table-empty').textContent).toBe(COPY['analytics.leaderboard.empty']));
   });
 });
+
+describe('LeaderboardTable - links and outcomes', () => {
+  it('opens a row with a record page in a new, isolated tab, and leaves a row without one as plain text', async () => {
+    const base = leaderboard();
+    await mount(
+      <LeaderboardTable
+        leaderboard={leaderboard({
+          rows: [
+            { ...base.rows[0], url: 'https://console.test/clubs/club-doc-1' },
+            { ...base.rows[1], url: null },
+          ],
+        })}
+      />,
+    );
+    await waitUntil(() => expect(rows()).toHaveLength(2));
+    const [linked, plain] = rows();
+    const anchor = byTestId('cell-name', linked).querySelector('a') as HTMLAnchorElement;
+    expect(anchor.getAttribute('href')).toBe('https://console.test/clubs/club-doc-1');
+    expect(anchor.getAttribute('target')).toBe('_blank');
+    expect(anchor.getAttribute('rel')).toBe('noopener noreferrer');
+    expect(anchor.textContent).toBe('Koramangala Runners');
+    expect(byTestId('cell-name', plain).querySelector('a')).toBeNull();
+  });
+
+  it('draws a result column as a chip that says passed, failed or untested', async () => {
+    await mount(
+      <LeaderboardTable
+        leaderboard={leaderboard({
+          key: 'brand_new_ranking',
+          columns: [{ key: 'last_result', format: 'OUTCOME' }],
+          rows: [
+            { __typename: 'AnalyticsLeaderRow', id: 'a', name: 'Alpha', caption: null, values: [1] },
+            { __typename: 'AnalyticsLeaderRow', id: 'b', name: 'Beta', caption: null, values: [0] },
+            { __typename: 'AnalyticsLeaderRow', id: 'c', name: 'Gamma', caption: null, values: [null] },
+          ],
+        })}
+      />,
+    );
+    await waitUntil(() => expect(rows()).toHaveLength(3));
+    const [alpha, beta, gamma] = rows();
+    expect(byTestId('analytics-outcome-passed', alpha).textContent).toBe(COPY['analytics.outcome.passed']);
+    expect(byTestId('analytics-outcome-failed', beta).textContent).toBe(COPY['analytics.outcome.failed']);
+    expect(byTestId('analytics-outcome-untested', gamma).textContent).toBe(COPY['analytics.outcome.untested']);
+  });
+});

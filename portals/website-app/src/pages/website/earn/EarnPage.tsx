@@ -27,6 +27,7 @@ export default function EarnPage() {
     onCompleted(result) {
       const saved = result.saveWebsiteEarnSection;
       client.cache.updateQuery<WebsiteEarnSectionsData>({ query: WEBSITE_EARN_SECTIONS }, (current) =>
+        /* v8 ignore next 3 -- a save is only possible from the loaded list, so the entry is always in the cache */
         current
           ? { websiteEarnSections: current.websiteEarnSections.map((row) => (row.site === saved.site ? saved : row)) }
           : current,

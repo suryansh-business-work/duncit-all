@@ -9,9 +9,13 @@ import { blankProductForm, type InventoryProductFormValues } from '../../src/pag
 import { renderWithProviders } from '../testkit';
 import { brandPickupLocationsMock, makeBrandPickupLocation } from '../mocks/pickup.mock';
 
-function Harness({ children, value = '' }: Readonly<{ children: ReactNode; value?: string }>) {
+function Harness({
+  children,
+  value = '',
+  newBrandId = '',
+}: Readonly<{ children: ReactNode; value?: string; newBrandId?: string }>) {
   const methods = useForm<InventoryProductFormValues, any, InventoryProductFormValues>({
-    defaultValues: { ...blankProductForm, pickup_location_id: value },
+    defaultValues: { ...blankProductForm, pickup_location_id: value, new_brand_id: newBrandId },
     resolver: zodResolver(productSchema) as unknown as Resolver<InventoryProductFormValues, any, InventoryProductFormValues>,
     mode: 'onChange',
   });
@@ -168,5 +172,55 @@ describe('WarehouseSelect', () => {
     );
     // The preset value 'w2' wins even though 'w1' is the default.
     await waitFor(() => expect(screen.getByText('South WH — Chennai')).toBeInTheDocument());
+  });
+
+  it('treats a warehouse with no recorded review status or active flag as ready', async () => {
+    renderWithProviders(
+      <Harness>
+        <WarehouseSelect />
+      </Harness>,
+      {
+        mocks: [
+          brandPickupLocationsMock([
+            wh({ id: 'w1', nickname: 'Legacy WH', city: 'Pune', review_status: null as never, is_active: null as never }),
+          ]),
+        ],
+      },
+    );
+    await waitFor(() => expect(screen.getByText('Legacy WH — Pune')).toBeInTheDocument());
+  });
+
+  it('lists a partner warehouse awaiting approval as disabled with its reason', async () => {
+    renderWithProviders(
+      <Harness>
+        <WarehouseSelect />
+      </Harness>,
+      {
+        mocks: [
+          brandPickupLocationsMock([
+            wh({ id: 'w1', nickname: 'Pending WH', city: 'Pune', is_default: true, review_status: 'PENDING' }),
+            wh({ id: 'w2', nickname: 'South WH', city: 'Chennai' }),
+          ]),
+        ],
+      },
+    );
+    await waitFor(() => expect(screen.getByText('South WH — Chennai')).toBeInTheDocument());
+    fireEvent.mouseDown(screen.getByRole('combobox'));
+    const pending = within(screen.getByRole('listbox')).getByText('Pending WH — Pune (Default)').closest('li');
+    expect(pending).toHaveAttribute('aria-disabled', 'true');
+    expect(within(pending as HTMLElement).getByText('Awaiting approval')).toBeInTheDocument();
+  });
+
+  it('asks for a brand warehouse when a brand catalogue product has none ready', async () => {
+    renderWithProviders(
+      <Harness newBrandId="b1">
+        <WarehouseSelect />
+      </Harness>,
+      { mocks: [brandPickupLocationsMock([])] },
+    );
+    await waitFor(() =>
+      expect(screen.getByText(/This brand has no approved pickup address on ShipRocket yet/i)).toBeInTheDocument(),
+    );
+    expect(screen.queryByText(/No pickup address is on the ShipRocket account yet/i)).not.toBeInTheDocument();
   });
 });

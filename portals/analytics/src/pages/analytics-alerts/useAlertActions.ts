@@ -25,6 +25,7 @@ export function useAlertActions() {
     async (row: AnalyticsAlert) => {
       const { data } = await checkNow({ variables: { id: row.id } });
       const result = data?.checkAnalyticsAlertNow;
+      /* v8 ignore next -- the field is non-null in the schema; Apollo only types `data` as optional for errorPolicy "ignore" */
       if (!result) return;
       if (result.status === 'ERROR') notifyError(t(alertErrorKey(result.error)));
       else if (result.status === 'OK') notify(t('analytics.alerts.checkedOk', { vars: { name: row.name } }));

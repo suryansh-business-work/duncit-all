@@ -85,3 +85,24 @@ export async function waitUntil(check: () => void, timeout = 3000): Promise<void
     }
   }
 }
+
+/**
+ * Picks an option in a MUI select: opens it from its hidden input's test id,
+ * then clicks the option whose text matches.
+ */
+export async function chooseOption(testId: string, optionText: string): Promise<void> {
+  const combobox = byTestId(testId).closest('.MuiInputBase-root')?.querySelector<HTMLElement>('[role="combobox"]');
+  if (!combobox) throw new Error(`no select behind data-testid "${testId}"`);
+  await act(async () => {
+    combobox.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0 }));
+  });
+  await waitUntil(() => {
+    if (document.querySelector('[role="option"]') === null) throw new Error('select did not open');
+  });
+  const option = [...document.querySelectorAll<HTMLElement>('[role="option"]')].find((o) => o.textContent === optionText);
+  if (!option) throw new Error(`no option "${optionText}"`);
+  await click(option);
+  await waitUntil(() => {
+    if (document.querySelector('[role="listbox"]') !== null) throw new Error('select did not close');
+  });
+}

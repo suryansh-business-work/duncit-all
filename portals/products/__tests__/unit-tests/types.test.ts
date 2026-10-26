@@ -114,4 +114,17 @@ describe('inventory product form mappers', () => {
     expect('delivery_target' in brand).toBe(false);
     expect('pickup_location_id' in brand).toBe(false);
   });
+
+  it('submits a new brand-catalogue product against the brand, with its warehouse and delivery method', () => {
+    const input = toSubmitInput({
+      ...blankProductForm,
+      ownership: 'BRAND',
+      new_brand_id: 'b7',
+      delivery_target: 'SHIPROCKET',
+      pickup_location_id: 'brand-wh',
+    });
+    expect(input).toMatchObject({ brand_id: 'b7', delivery_target: 'SHIPROCKET', pickup_location_id: 'brand-wh' });
+    expect('new_brand_id' in input).toBe(false);
+    expect('ownership' in input).toBe(false);
+  });
 });

@@ -86,9 +86,9 @@ function rowsOf(nodes: RegionTreeNode[], byId: Map<string, RegionTreeNode>, chil
         for (const child of [...children].reverse()) stack.push({ id: child, expanded: false });
         continue;
       }
-      const [firstChild] = children;
-      const first = row.get(firstChild) ?? 0;
-      const last = row.get(children.at(-1) ?? firstChild) ?? 0;
+      // Every child was measured before its parent: the frame is re-pushed ahead of them.
+      const first = row.get(children[0]) as number;
+      const last = row.get(children[children.length - 1]) as number;
       row.set(frame.id, (first + last) / 2);
     }
   };

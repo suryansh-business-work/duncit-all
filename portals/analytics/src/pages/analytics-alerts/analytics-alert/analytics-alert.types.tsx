@@ -1,3 +1,4 @@
+import type { FieldError } from 'react-hook-form';
 import { z } from 'zod';
 import type { AnalyticsAlertInput, AnalyticsEntity } from '@duncit/gql-types';
 import { ANALYTICS_PAGES } from '../../entity-analytics/pages';
@@ -83,3 +84,11 @@ export const toAlertInput = (values: AlertValues): AnalyticsAlertInput => ({
   threshold: Number(values.threshold.trim()),
   emails: values.emails.map((email) => email.trim().toLowerCase()),
 });
+
+/**
+ * The message to show under the recipients. An invalid address fails at its own
+ * position, so the field's error is then a list of per-address errors with a
+ * hole for each good address; the other rules fail the field as a whole.
+ */
+export const recipientsError = (error: FieldError | undefined): string | undefined =>
+  Array.isArray(error) ? error.find(Boolean)?.message : error?.message;

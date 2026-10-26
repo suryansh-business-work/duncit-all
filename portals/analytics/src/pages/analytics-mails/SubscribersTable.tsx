@@ -33,7 +33,7 @@ export default function SubscribersTable({ rows, onSend, onEdit, onDelete, sendi
   const { t } = useTranslation();
 
   const columns = useMemo<DuncitColumn<AnalyticsMailSubscription>[]>(() => {
-    const frequencyLabels: Record<string, string> = {
+    const frequencyLabels: Record<AnalyticsMailSubscription['frequency'], string> = {
       DAILY: t('analytics.mails.daily'),
       WEEKLY: t('analytics.mails.weekly'),
     };
@@ -74,7 +74,7 @@ export default function SubscribersTable({ rows, onSend, onEdit, onDelete, sendi
         headerName: t('analytics.mails.frequency'),
         width: 120,
         type: 'text',
-        valueGetter: (row) => frequencyLabels[row.frequency] ?? row.frequency,
+        valueGetter: (row) => frequencyLabels[row.frequency],
       },
       {
         field: 'days',

@@ -8,7 +8,7 @@ import TileFields from './TileFields';
 import RuleFields from './RuleFields';
 import RecipientsField from './RecipientsField';
 import { useDashboardTiles } from './useDashboardTiles';
-import { alertSchema, MAX_RECIPIENTS, type AlertValues } from './analytics-alert.types';
+import { alertSchema, MAX_RECIPIENTS, recipientsError, type AlertValues } from './analytics-alert.types';
 
 interface Props {
   defaultValues: AlertValues;
@@ -66,7 +66,7 @@ export default function AnalyticsAlertForm({ defaultValues, busy, onCancel, onSu
               <RecipientsField
                 value={field.value}
                 onChange={field.onChange}
-                error={fieldState.error?.message ?? fieldState.error?.root?.message}
+                error={recipientsError(fieldState.error)}
               />
             )}
           />

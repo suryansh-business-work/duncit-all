@@ -11,7 +11,15 @@ jest.mock('expo-image-picker', () => ({
 }));
 const mockWarn = jest.fn();
 jest.mock('@duncit/logs', () => ({
-  logs: { mobileApp: { warn: (...args: unknown[]) => mockWarn(...args), error: jest.fn() } },
+  // info/debug: the app's config logs its API origin on load in dev.
+  logs: {
+    mobileApp: {
+      warn: (...args: unknown[]) => mockWarn(...args),
+      error: jest.fn(),
+      info: jest.fn(),
+      debug: jest.fn(),
+    },
+  },
 }));
 const mockUpload = uploadChatImage as jest.Mock;
 const mockPermission = ImagePicker.requestMediaLibraryPermissionsAsync as jest.Mock;

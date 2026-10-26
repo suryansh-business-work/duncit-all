@@ -18,7 +18,7 @@ export default function LineEditForm({ formId, defaultValues, onSubmit }: Readon
 
   return (
     <form id={formId} noValidate onSubmit={handleSubmit(async (values) => onSubmit({ text: values.text.trim() }))}>
-      <RhfTextField control={control} name="text" multiline minRows={2} autoFocus label={t('availability.offers.chat.editTitle')} />
+      <RhfTextField control={control} name="text" multiline minRows={2} label={t('availability.offers.chat.editTitle')} />
     </form>
   );
 }

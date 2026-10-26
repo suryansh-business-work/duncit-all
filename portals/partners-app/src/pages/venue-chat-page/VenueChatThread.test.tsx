@@ -64,6 +64,7 @@ describe('VenueChatThread — reading', () => {
 
   it('says who wrote each line, and when one was edited', async () => {
     mount([line('t1'), ownLine('o1', { edited_at: at(4) }), ownLine('p1', { type: 'IMAGE', text: '', image_url: 'https://img.test/hall.jpg', createdAt: at(6) })]);
+    await screen.findByText('Is the terrace free?');
     const host = bubbleOf('Is the terrace free?');
     expect(host.getByText(/^Asha ·/).textContent).not.toContain('Edited');
     expect(bubbleOf('Yes, from 6 pm.').getByText(/^You ·/).textContent).toMatch(/ · Edited$/);

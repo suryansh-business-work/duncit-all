@@ -43,6 +43,8 @@ vi.mock('../useVenueChatSocket', () => ({
 vi.mock('../../../user-info/useUserInfo', () => ({ useUserInfo: () => ({ me: { user_id: 'u-host' } }) }));
 vi.mock('../../host-manage-page/HostPodActionsBridge', () => ({ default: ({ children }: { children: unknown }) => children }));
 vi.mock('../../../components/MediaPickerDialog', () => ({ default: () => null }));
+// The resubmit dialog needs the real host-pod-actions provider; it is not what these tests are about.
+vi.mock('../VenueChatResubmit', () => ({ default: () => null }));
 
 const FAILED = 'That did not go through. Please try again.';
 

@@ -132,8 +132,13 @@ describe('VenueChatSeenFaces', () => {
       <VenueChatSeenFaces lineId="l1" faces={[face('a', 'Asha'), face('b', 'Bilal')]} />,
     );
     expect(screen.getByLabelText('Seen by Asha, Bilal')).toBeOnTheScreen();
-    expect(screen.getByTestId('venue-chat-seen-face-a')).toBeOnTheScreen();
-    expect(screen.getByTestId('venue-chat-seen-face-b')).toBeOnTheScreen();
+    // Each face is hidden from screen readers — the group's label names them all once.
+    expect(
+      screen.getByTestId('venue-chat-seen-face-a', { includeHiddenElements: true }),
+    ).toBeOnTheScreen();
+    expect(
+      screen.getByTestId('venue-chat-seen-face-b', { includeHiddenElements: true }),
+    ).toBeOnTheScreen();
   });
 
   it('draws nothing under a line nobody stopped at', () => {

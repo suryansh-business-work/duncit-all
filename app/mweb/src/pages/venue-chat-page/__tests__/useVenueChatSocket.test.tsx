@@ -56,7 +56,8 @@ afterEach(() => {
 
 describe('useVenueChatSocket', () => {
   it('connects nothing until the pod is known, or without a session', () => {
-    renderHook(() => useVenueChatSocket(handlersFor(undefined)));
+    // Spread over the handlers: handlersFor(undefined) would take its 'pod-1' default.
+    renderHook(() => useVenueChatSocket({ ...handlersFor(), podId: undefined }));
     localStorage.clear();
     renderHook(() => useVenueChatSocket(handlersFor()));
     expect(ioMock).not.toHaveBeenCalled();

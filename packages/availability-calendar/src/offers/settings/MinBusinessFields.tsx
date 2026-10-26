@@ -27,7 +27,8 @@ export default function MinBusinessFields({ control, idPrefix, disabled = false 
   const { t } = useTranslation();
   const { fields, append, remove } = useFieldArray({ control, name: 'min_business' });
   const { errors } = useFormState({ control, name: 'min_business' });
-  const listError = errors.min_business?.message ?? errors.min_business?.root?.message;
+  // Only a list with no rows at all fails as a whole (the resolver sets it on the list itself).
+  const listError = errors.min_business?.message;
 
   return (
     <Stack spacing={1.25} data-testid={`${idPrefix}-min-business`}>

@@ -24,9 +24,9 @@ export default function LineReactions({ reactions, viewerId, onReact, alignEnd =
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
   const groups = reactionGroups(reactions, viewerId);
   if (!onReact && groups.length === 0) return null;
-  const react = (emoji: string) => {
+  const react = (emoji: string, handler: (emoji: string) => unknown) => {
     setAnchor(null);
-    onReact?.(emoji);
+    handler(emoji);
   };
 
   return (
@@ -44,30 +44,32 @@ export default function LineReactions({ reactions, viewerId, onReact, alignEnd =
           variant={group.mine ? 'filled' : 'outlined'}
           color={group.mine ? 'primary' : 'default'}
           label={t('availability.offers.chat.reactionCount', { vars: { emoji: group.emoji, count: group.count } })}
-          onClick={onReact ? () => react(group.emoji) : undefined}
+          onClick={onReact ? () => react(group.emoji, onReact) : undefined}
           data-testid={`line-reaction-${group.emoji}`}
         />
       ))}
       {onReact && (
-        <IconButton size="small" aria-label={t('availability.offers.chat.react')} onClick={(e) => setAnchor(e.currentTarget)} data-testid="line-react">
-          <AddReactionOutlinedIcon fontSize="small" />
-        </IconButton>
+        <>
+          <IconButton size="small" aria-label={t('availability.offers.chat.react')} onClick={(e) => setAnchor(e.currentTarget)} data-testid="line-react">
+            <AddReactionOutlinedIcon fontSize="small" />
+          </IconButton>
+          <Popover open={!!anchor} anchorEl={anchor} onClose={() => setAnchor(null)} anchorOrigin={{ vertical: 'top', horizontal: 'left' }}>
+            <Stack direction="row" spacing={0.5} sx={{ p: 1, fontSize: 22 }}>
+              {CHAT_EMOJIS.map((emoji) => (
+                <ButtonBase
+                  key={emoji}
+                  aria-label={t('availability.offers.chat.reactWith', { vars: { emoji } })}
+                  onClick={() => react(emoji, onReact)}
+                  sx={{ minWidth: 36, minHeight: 36, borderRadius: 1, font: 'inherit' }}
+                  data-testid={`line-react-${emoji}`}
+                >
+                  {emoji}
+                </ButtonBase>
+              ))}
+            </Stack>
+          </Popover>
+        </>
       )}
-      <Popover open={!!anchor} anchorEl={anchor} onClose={() => setAnchor(null)} anchorOrigin={{ vertical: 'top', horizontal: 'left' }}>
-        <Stack direction="row" spacing={0.5} sx={{ p: 1, fontSize: 22 }}>
-          {CHAT_EMOJIS.map((emoji) => (
-            <ButtonBase
-              key={emoji}
-              aria-label={t('availability.offers.chat.reactWith', { vars: { emoji } })}
-              onClick={() => react(emoji)}
-              sx={{ minWidth: 36, minHeight: 36, borderRadius: 1, font: 'inherit' }}
-              data-testid={`line-react-${emoji}`}
-            >
-              {emoji}
-            </ButtonBase>
-          ))}
-        </Stack>
-      </Popover>
     </Stack>
   );
 }

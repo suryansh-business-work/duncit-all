@@ -13,6 +13,9 @@ jest.mock('@duncit/logs', () => ({
     mobileApp: {
       warn: (...args: unknown[]) => mockWarn(...args),
       error: (...args: unknown[]) => mockError(...args),
+      // The app's config logs its API origin on load in dev.
+      info: jest.fn(),
+      debug: jest.fn(),
     },
   },
 }));

@@ -59,6 +59,7 @@
     "@duncit/forms": "workspace:*",
     "@duncit/gql-types": "workspace:*",
     "@duncit/logs": "workspace:*",
+    "@duncit/media-picker": "workspace:*",
     "@duncit/slots": "workspace:*",
     "@duncit/ui": "workspace:*",
     "@duncit/utils": "workspace:*"

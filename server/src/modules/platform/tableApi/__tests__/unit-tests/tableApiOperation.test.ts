@@ -1,5 +1,5 @@
-import { parse, print } from 'graphql';
-import { createTableOperations, isTextArg } from '../../tableApi.operation';
+import { buildSchema, getNamedType, isObjectType, parse, print } from 'graphql';
+import { createTableOperations, isTextArg, selectionOf } from '../../tableApi.operation';
 
 const SDL = /* GraphQL */ `
   type Query {
@@ -120,6 +120,23 @@ describe('createTableOperations', () => {
 
   it('answers null for a schema with no Query type', () => {
     expect(createTableOperations(['type Lonely { a: Int }'], []).get('lonelyTable')).toBeNull();
+  });
+});
+
+describe('selectionOf', () => {
+  it('hands a custom includeLeaf the whole field, at every depth, and drops what it refuses', () => {
+    const row = buildSchema(SDL).getType('Row');
+    if (!isObjectType(row)) throw new Error('no Row type');
+    const seen: string[] = [];
+    const text = selectionOf(row, 1, () => false, {
+      includeLeaf: (field) => {
+        const type = getNamedType(field.type).name;
+        seen.push(`${field.name}:${type}`);
+        return type !== 'Status';
+      },
+    });
+    expect(seen).toEqual(['id:ID', 'status:Status', 'since:Int', 'tags:String', 'city:String', 'lat:Float', 'name:String']);
+    expect(text).toBe('id since tags address { city geo { lat } } owner { name }');
   });
 });
 

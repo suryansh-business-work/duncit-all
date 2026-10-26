@@ -6,6 +6,7 @@ import HostOfferActions, { type OfferSubject } from '../host/HostOfferActions';
 import type { PodOffer } from '../host/queries';
 import OfferDecisionActions from '../OfferDecisionActions';
 import type { OfferRequestSummary } from '../queries';
+import OfferReviseActions from './OfferReviseActions';
 
 /** What a thread's member needs to act on its offer lines. */
 export interface OfferChatAnswering {
@@ -26,6 +27,8 @@ interface Props {
   answering: OfferChatAnswering;
   /** A free pod: the venue's accept names no amount. */
   podIsFree?: boolean;
+  /** The other side has read the thread as far as this line — the reader's own counter can no longer change. */
+  seen?: boolean;
 }
 
 /** The venue's booking, as its Accept / Counter / Reject answers name it. */
@@ -42,13 +45,14 @@ const requestOf = (subject: OfferSubject, live: PodOffer, podIsFree: boolean): O
 /**
  * What an offer line lets its reader do: answer the move still waiting on them
  * — the venue with Accept / Counter / Reject, the host with Accept / Reject /
- * Counter back — or, for a host, send a new offer once the last one closed.
- * Every older line is a record and offers nothing.
+ * Counter back — change or withdraw their own counter until the other side has
+ * seen it, or, for a host, send a new offer once the last one closed. Every
+ * older line is a record and offers nothing.
  */
-export default function OfferChatActions({ move, side, newest, answering, podIsFree = false }: Readonly<Props>) {
+export default function OfferChatActions({ move, side, newest, answering, podIsFree = false, seen = false }: Readonly<Props>) {
   const { t } = useTranslation();
   const { live, subject, onAnswered, onSendNewOffer } = answering;
-  const actions = venueChatOfferActions(move, { side, newest, live });
+  const actions = venueChatOfferActions(move, { side, newest, live, seen });
 
   if (actions.answer && live) {
     return side === 'VENUE' ? (
@@ -57,6 +61,7 @@ export default function OfferChatActions({ move, side, newest, answering, podIsF
       <HostOfferActions offer={live} subject={subject} onDone={onAnswered} />
     );
   }
+  if (actions.revise && live) return <OfferReviseActions live={live} podId={subject.pod_id} side={side} onDone={onAnswered} />;
   if (!actions.sendNew || !onSendNewOffer) return null;
   return (
     <DuncitButton

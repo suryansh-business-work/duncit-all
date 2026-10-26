@@ -64,6 +64,15 @@ export interface CounterCopy {
   done: string;
 }
 
+/** What the dialog says when one side changes its own counter before the other side saw it. */
+export function editCopy(t: Translate): CounterCopy {
+  return {
+    title: t('availability.offers.revise.editTitle'),
+    hint: t('availability.offers.revise.editHint'),
+    done: t('availability.offers.revise.edited'),
+  };
+}
+
 export function counterCopy(t: Translate, side: OfferSide): CounterCopy {
   if (side === 'HOST') {
     return {

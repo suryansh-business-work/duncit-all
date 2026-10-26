@@ -113,9 +113,22 @@ export { default as HostOfferActions, type OfferSubject } from './offers/host/Ho
 export { useChatVenueOffer, usePodVenueOffer } from './offers/host/usePodVenueOffer';
 export { POD_VENUE_OFFER_TERMS, type PodOffer } from './offers/host/queries';
 export type { OfferSide } from './offers/offer-target';
-// Every move of an offer as a card in the pod's venue chat, and the header's
-// way to reach the other side (mWeb, the Partners console, Duncit staff).
+// Every move of an offer as a card in the pod's venue chat (mWeb, the Partners
+// console, Duncit staff).
 export { default as OfferChatCard } from './offers/chat/OfferChatCard';
 export type { OfferChatAnswering } from './offers/chat/OfferChatActions';
 export { isOfferChatLine, type OfferChatViewer } from './offers/chat/chat-lines';
-export { default as VenueChatContactLine } from './offers/chat/VenueChatContactLine';
+// The rest of a venue thread on the web: the pinned offer bar, the contact sheet
+// with both sides, reactions on any line, the "seen" faces, and the reader's
+// own lines rewritten or taken back (mWeb and the Partners console).
+export { default as VenueOfferPinnedBar } from './offers/chat/VenueOfferPinnedBar';
+export { default as VenueChatContactSheet } from './offers/chat/VenueChatContactSheet';
+export { default as LineReactions } from './offers/chat/LineReactions';
+export { default as SeenFaces } from './offers/chat/SeenFaces';
+export { default as VenueChatLineDialogs } from './offers/chat/VenueChatLineDialogs';
+export { useVenueChatLineActions, type VenueChatLineActions } from './offers/chat/useVenueChatLineActions';
+export { useMarkReadWhileVisible } from './offers/chat/useMarkReadWhileVisible';
+export { default as OfferImages } from './offers/OfferImages';
+// A venue's Booking offers: the business it hopes each booking brings, and how Create Pod shows it.
+export { default as MinBusinessFields } from './offers/settings/MinBusinessFields';
+export { default as VenueMinBusinessNote } from './offers/settings/VenueMinBusinessNote';

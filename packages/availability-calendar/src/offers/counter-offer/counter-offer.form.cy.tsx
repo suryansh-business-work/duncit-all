@@ -7,13 +7,14 @@ const values = (over: Partial<CounterOfferValues> = {}): CounterOfferValues => (
   min_guests: '12',
   offerings: '- 10 chairs\n\n• A projector ',
   note: '',
+  images: [],
   ...over,
 });
 
 describe('asksMinGuests', () => {
   it('asks for the fewest guests only on a per-guest price', () => {
     expect(asksMinGuests('PER_GUEST')).toBe(true);
-    for (const model of ['PER_HOUR', 'PER_SLOT', 'FLAT', '']) expect(asksMinGuests(model)).toBe(false);
+    for (const model of ['PER_HOUR', 'FLAT', '']) expect(asksMinGuests(model)).toBe(false);
   });
 });
 
@@ -39,6 +40,14 @@ describe('counterTermsOf', () => {
     expect(counterTermsOf(values({ min_guests: '', offerings: '' }))).toEqual({ model: 'PER_GUEST', rate: 450, offerings: [] });
   });
 
+  it('carries the photos attached, as their own copy, and none when there are none', () => {
+    const images = ['https://ik.imagekit.io/duncit/chat/setup.jpg'];
+    const terms = counterTermsOf(values({ model: 'FLAT', images }));
+    expect(terms?.images).toEqual(images);
+    expect(terms?.images).not.toBe(images);
+    expect(counterTermsOf(values({ model: 'FLAT' }))).not.toHaveProperty('images');
+  });
+
   it('is null until the amount can be priced', () => {
     for (const rate of ['', '0', '-1', 'abc']) expect(counterTermsOf(values({ rate }))).toBeNull();
   });
@@ -51,11 +60,11 @@ describe('counterTermsOf', () => {
 describe('counterQuoteTermsOf', () => {
   it('prices the option, the amount and the minimum — never the points', () => {
     expect(counterQuoteTermsOf(values())).toEqual({ model: 'PER_GUEST', rate: 450, min_guests: 12 });
-    expect(counterQuoteTermsOf(values({ model: 'PER_SLOT', rate: '5000' }))).toEqual({ model: 'PER_SLOT', rate: 5000 });
+    expect(counterQuoteTermsOf(values({ model: 'PER_HOUR', rate: '5000' }))).toEqual({ model: 'PER_HOUR', rate: 5000 });
   });
 
-  it('asks the same price whatever points or note are typed', () => {
-    const one = counterQuoteTermsOf(values({ model: 'FLAT', rate: '7000', offerings: 'A stage', note: 'Weekend' }));
+  it('asks the same price whatever points, note or photos are typed', () => {
+    const one = counterQuoteTermsOf(values({ model: 'FLAT', rate: '7000', offerings: 'A stage', note: 'Weekend', images: ['https://ik.imagekit.io/a.jpg'] }));
     const other = counterQuoteTermsOf(values({ model: 'FLAT', rate: '7000', offerings: 'Two mics\nA stage', note: '' }));
     expect(JSON.stringify(one)).toBe(JSON.stringify(other));
     expect(one).toEqual({ model: 'FLAT', rate: 7000 });

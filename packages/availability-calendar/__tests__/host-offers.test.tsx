@@ -19,6 +19,8 @@ import {
 } from './offer-fixtures';
 
 vi.mock('@duncit/dialogs', async (importOriginal) => ({ ...(await importOriginal<object>()), notifySuccess: vi.fn(), notify: vi.fn() }));
+// The counter form attaches photos through the picker; the real one needs a router and ImageKit.
+vi.mock('@duncit/media-picker', async () => ({ MediaPickerDialog: (await import('./media-picker-stub')).MediaPickerStub }));
 
 const subject = { pod_id: 'pod-1', pod_title: 'Pottery night', venue_name: 'Skyline Banquets' };
 const dialog = () => within(screen.getByRole('dialog'));

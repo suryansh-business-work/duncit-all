@@ -5,7 +5,6 @@ import type { VenueChatOfferMove } from '@duncit/utils';
 import OfferChatCard from '../src/offers/chat/OfferChatCard';
 import type { OfferChatAnswering } from '../src/offers/chat/OfferChatActions';
 import { isOfferChatLine, type OfferChatViewer } from '../src/offers/chat/chat-lines';
-import VenueChatContactLine from '../src/offers/chat/VenueChatContactLine';
 import { REJECT_VENUE_COUNTER, type PodOffer } from '../src/offers/host/queries';
 import { ACCEPT_VENUE_OFFER } from '../src/offers/queries';
 import { SETTLED, counteredPodOffer, makeMove, makePodOffer, mockOf, withApollo, type Vars } from './offer-fixtures';
@@ -182,25 +181,5 @@ describe('OfferChatCard', () => {
     renderCard(makeMove({ event: 'ACCEPTED', by: 'HOST' }), { viewer: 'STAFF' });
     expect(screen.getByRole('heading')).toHaveTextContent('The host accepted — booking confirmed');
     expect(screen.queryByTestId('offer-answer-by')).not.toBeInTheDocument();
-  });
-});
-
-describe('VenueChatContactLine', () => {
-  it('draws nothing without a way to reach the other side', () => {
-    const { container } = withApollo([], <VenueChatContactLine contact={null} />);
-    expect(container).toBeEmptyDOMElement();
-  });
-
-  it('names them, dials their phone and mails their email', () => {
-    withApollo([], <VenueChatContactLine contact={{ name: 'Ravi', phone: '+91 98000-00000', email: 'ravi@venue.test' }} />);
-    expect(screen.getByText('Ravi')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Phone +91 98000-00000' })).toHaveAttribute('href', 'tel:+919800000000');
-    expect(screen.getByRole('link', { name: 'Email ravi@venue.test' })).toHaveAttribute('href', 'mailto:ravi@venue.test');
-  });
-
-  it('shows only what is on record', () => {
-    withApollo([], <VenueChatContactLine contact={{ name: null, phone: null, email: 'ravi@venue.test' }} />);
-    expect(screen.getAllByRole('link')).toHaveLength(1);
-    expect(screen.getByTestId('venue-chat-contact')).toHaveTextContent('ravi@venue.test');
   });
 });

@@ -7,7 +7,8 @@ import type { PriceBreakdown } from '../pricing/types';
  * offer, or their latest counter back) with the ask beside the price — the
  * fewest guests the venue is paid for, what it should provide, a note — the
  * server's quote at the most guests (`quote`) and at the fewest (`quote_min`),
- * whose move it is and until when, and the venue's counter while there is one.
+ * whose move it is and until when, the venue's counter while there is one, the
+ * photos each side attached, and how many counters each side has used of its share.
  */
 export const OFFER_TERMS_FIELDS = `
   slot_id
@@ -20,12 +21,16 @@ export const OFFER_TERMS_FIELDS = `
   min_guests
   offerings
   note
+  images
   pets
   space_label
   expires_at
+  counters_per_side
+  host_counters_used
+  venue_counters_used
   quote { ${BREAKDOWN_FIELDS} }
   quote_min { ${BREAKDOWN_FIELDS} }
-  counter { model rate min_guests offerings note at quote { ${BREAKDOWN_FIELDS} } quote_min { ${BREAKDOWN_FIELDS} } }
+  counter { model rate min_guests offerings note images at quote { ${BREAKDOWN_FIELDS} } quote_min { ${BREAKDOWN_FIELDS} } }
 `;
 
 /** A host's booking offer as the venue reads it: the terms above, and every step so far. */
@@ -97,6 +102,43 @@ export const VENUE_COUNTER_QUOTE = gql`
   }
 `;
 
+/**
+ * Either side changes its own latest counter before the other side has seen it
+ * (refused as OFFER_SEEN after). Priced again for the round read; the round moves on.
+ */
+export const EDIT_VENUE_OFFER_COUNTER = gql`
+  mutation EditVenueOfferCounter($pod_id: ID!, $terms: VenueOfferTermsInput!, $note: String, $round: Int!) {
+    editVenueOfferCounter(pod_id: $pod_id, terms: $terms, note: $note, round: $round) {
+      slot_id
+      status
+      round
+    }
+  }
+`;
+
+/** Either side takes back its own latest counter before the other side has seen it: the terms before it stand again. */
+export const WITHDRAW_VENUE_OFFER_COUNTER = gql`
+  mutation WithdrawVenueOfferCounter($pod_id: ID!, $round: Int!) {
+    withdrawVenueOfferCounter(pod_id: $pod_id, round: $round) {
+      slot_id
+      status
+      round
+    }
+  }
+`;
+
+/** An edit of one's own counter, priced before it is saved. */
+export const EDIT_COUNTER_QUOTE = gql`
+  query EditCounterQuote($pod_id: ID!, $terms: VenueOfferTermsInput!) {
+    editCounterQuote(pod_id: $pod_id, terms: $terms) {
+      ok
+      message
+      quote { ${BREAKDOWN_FIELDS} }
+      quote_min { ${BREAKDOWN_FIELDS} }
+    }
+  }
+`;
+
 export interface OfferHistoryEntry {
   by: string;
   action: string;
@@ -116,6 +158,8 @@ export interface OfferCounter {
   min_guests: number;
   offerings: string[];
   note: string;
+  /** Photos the venue attached; absent from older servers. */
+  images?: string[];
   at: string | null;
   quote: PriceBreakdown;
   quote_min: PriceBreakdown;
@@ -135,10 +179,16 @@ export interface OfferTerms {
   min_guests: number;
   offerings: string[];
   note: string;
+  /** Photos the host attached to their latest counter-back; absent from older servers. */
+  images?: string[];
   pets: boolean;
   space_label: string;
   /** When the side whose move it is must answer by; null once closed. */
   expires_at: string | null;
+  /** Counters each side may make, and each side's so far (Pod Settings); absent from older servers. */
+  counters_per_side?: number;
+  host_counters_used?: number;
+  venue_counters_used?: number;
   quote: PriceBreakdown;
   quote_min: PriceBreakdown;
   counter: OfferCounter | null;

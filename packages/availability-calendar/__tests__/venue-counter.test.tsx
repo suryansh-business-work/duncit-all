@@ -6,7 +6,10 @@ import { notify, notifySuccess } from '@duncit/dialogs';
 import OfferRequestCard from '../src/offers/OfferRequestCard';
 import { useCounterQuote, venueCounterQuoteSource } from '../src/offers/useCounterQuote';
 import { COUNTER_VENUE_OFFER, VENUE_COUNTER_QUOTE, type BookingRequestRow } from '../src/offers/queries';
+import { nextPicks } from './media-picker-stub';
 import {
+  PHOTO_A,
+  PHOTO_B,
   SETTLED,
   failWith,
   flatQuote,
@@ -22,6 +25,8 @@ import {
 } from './offer-fixtures';
 
 vi.mock('@duncit/dialogs', async (importOriginal) => ({ ...(await importOriginal<object>()), notifySuccess: vi.fn(), notify: vi.fn() }));
+// The counter form attaches photos through the picker; the real one needs a router and ImageKit.
+vi.mock('@duncit/media-picker', async () => ({ MediaPickerDialog: (await import('./media-picker-stub')).MediaPickerStub }));
 
 interface QuoteAnswer {
   ok: boolean;
@@ -139,6 +144,37 @@ describe('countering', () => {
     fireEvent.click(form.getByTestId('counter-offer-submit'));
     await waitFor(
       () => expect(sent).toEqual([{ slot_id: 'slot-1', terms: { model: 'FLAT', rate: 7000, offerings: ['A stage'] }, note: null, round: 2 }]),
+      SETTLED,
+    );
+  });
+
+  it('attaches photos from the device to the counter, never re-prices for them, and sends the ones kept', async () => {
+    const sent: Vars[] = [];
+    const seen: Vars[] = [];
+    const offer = makeOffer({ status: 'COUNTERED', awaiting: 'HOST', round: 2, counter: makeCounter() });
+    renderCard([counterOk(sent), quoteMock(seen)], makeRequest({ offer }));
+    const form = openCounter();
+    await waitFor(() => expect(seen).toHaveLength(1), SETTLED);
+
+    nextPicks.push(PHOTO_A, PHOTO_B);
+    fireEvent.click(form.getByRole('button', { name: 'Add photo' }));
+    const picker = screen.getByRole('dialog', { name: 'Attach a photo' });
+    // Images only, uploaded from the device into the chat's folder — never a stock library.
+    expect(picker).toHaveAttribute('data-accept', 'image/*');
+    expect(picker).toHaveAttribute('data-device-only', 'true');
+    expect(picker).toHaveAttribute('data-folder', '/chat');
+    fireEvent.click(within(picker).getByRole('button', { name: 'Pick photo' }));
+    fireEvent.click(form.getByRole('button', { name: 'Add photo' }));
+    fireEvent.click(within(screen.getByRole('dialog', { name: 'Attach a photo' })).getByRole('button', { name: 'Pick photo' }));
+    expect(form.getByRole('img', { name: 'Photo 2 attached to the terms' })).toHaveAttribute('src', PHOTO_B);
+    fireEvent.click(form.getByRole('button', { name: 'Remove photo 1' }));
+    expect(form.getByRole('img', { name: 'Photo 1 attached to the terms' })).toHaveAttribute('src', PHOTO_B);
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    expect(seen).toHaveLength(1);
+
+    fireEvent.click(form.getByTestId('counter-offer-submit'));
+    await waitFor(
+      () => expect(sent).toEqual([{ slot_id: 'slot-1', terms: { model: 'FLAT', rate: 7000, offerings: [], images: [PHOTO_B] }, note: null, round: 2 }]),
       SETTLED,
     );
   });

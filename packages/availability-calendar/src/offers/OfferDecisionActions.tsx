@@ -5,6 +5,7 @@ import { useTranslation } from '@duncit/app-settings';
 import { currentOfferTerms, offerQuoteRange, venueOfferActions } from '@duncit/utils';
 import { rupees } from '../pricing/format';
 import AnswerOfferDialog, { type AnswerChoice } from './AnswerOfferDialog';
+import CounterAllowanceNote from './CounterAllowanceNote';
 import CounterOfferDialog from './CounterOfferDialog';
 import { rupeesRange } from './format';
 import type { OfferTarget } from './offer-target';
@@ -30,8 +31,9 @@ function payoutText(request: OfferRequestSummary, offer: OfferTerms | null): str
 /**
  * What the venue can do with a booking request right now: Accept, Counter or
  * Reject a fresh offer; change or withdraw its counter while the host decides.
- * Each opens its own dialog — nothing is decided by one tap — and answers the
- * round it read.
+ * Countering stops once the venue's share of counters is used (the note under
+ * the answers says how many are left). Each opens its own dialog — nothing is
+ * decided by one tap — and answers the round it read.
  */
 export default function OfferDecisionActions({ request, offer, onDone }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -61,6 +63,7 @@ export default function OfferDecisionActions({ request, offer, onDone }: Readonl
           </DuncitButton>
         )}
       </Stack>
+      {offer && <CounterAllowanceNote offer={offer} side="VENUE" />}
       <AnswerOfferDialog
         target={target}
         subject={request}

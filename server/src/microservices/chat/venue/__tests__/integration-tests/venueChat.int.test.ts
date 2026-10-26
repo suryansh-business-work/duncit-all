@@ -149,7 +149,19 @@ describe('venue booking chat', () => {
 
     const line = await send(pod._id, owner._id, { type: 'IMAGE', image_url: 'https://ik.imagekit.io/x/patio.jpg' });
 
-    expect(line).toMatchObject({ type: 'IMAGE', image_url: 'https://ik.imagekit.io/x/patio.jpg', text: '' });
+    expect(line).toMatchObject({ type: 'IMAGE', image_url: 'https://ik.imagekit.io/x/patio.jpg', text: '', edited_at: null });
+  });
+
+  it("checks a photo's caption as it checks a line's own text", async () => {
+    const { host, pod } = await seedBooking();
+    const photo = { type: 'IMAGE', image_url: 'https://ik.imagekit.io/x/stage.jpg' };
+
+    await expect(send(pod._id, host._id, { ...photo, text: '  Our stage  ' })).resolves.toMatchObject({ type: 'IMAGE', text: 'Our stage' });
+    await expect(send(pod._id, host._id, { ...photo, text: 'call me on 9876543210' })).rejects.toMatchObject({
+      extensions: { reason: 'MODERATION_BLOCKED' },
+    });
+    await expect(send(pod._id, host._id, { ...photo, text: 'a'.repeat(2001) })).rejects.toMatchObject(BAD_INPUT);
+    expect(await VenueChatMessageModel.countDocuments({ pod_id: String(pod._id) })).toBe(1);
   });
 
   it('hides lines from someone the reader has blocked', async () => {

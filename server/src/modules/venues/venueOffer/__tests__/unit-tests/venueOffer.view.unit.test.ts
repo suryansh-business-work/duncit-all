@@ -4,8 +4,8 @@
  * ends of its guests — an offer written before minimums reading its guests as
  * both ends.
  */
-import { awaitingParty, currentTerms, offerView, proposerOf } from '../../venueOffer.view';
-import type { OfferQuote, VenueOffer, VenueOfferCounter } from '../../venueOffer.types';
+import { awaitingParty, countersUsed, currentTerms, offerView, proposerOf } from '../../venueOffer.view';
+import { currentOfferModel, type OfferQuote, type VenueOffer, type VenueOfferCounter, type VenueOfferHistoryEntry } from '../../venueOffer.types';
 
 const at = new Date('2027-01-01T10:00:00.000Z');
 const quote = (total: number): OfferQuote => ({ total, venue_payout: total - 100, confirmed_at: at }) as unknown as OfferQuote;
@@ -61,6 +61,28 @@ describe('awaitingParty / proposerOf', () => {
     expect(awaitingParty({ status: 'DECLINED' })).toBeNull();
     expect(proposerOf({ status: 'COUNTERED' })).toBe('VENUE');
     expect(proposerOf({ status: 'SENT' })).toBe('HOST');
+  });
+});
+
+describe('countersUsed', () => {
+  it("counts one side's counters only, and none on an offer without history", () => {
+    const history: VenueOfferHistoryEntry[] = [
+      { by: 'HOST', action: 'OFFER', model: 'PER_GUEST', rate: 500, total: 11_000, note: '', at },
+      { by: 'VENUE', action: 'COUNTER', model: 'FLAT', rate: 9000, total: 9900, note: '', at },
+      { by: 'HOST', action: 'ACCEPT', model: null, rate: null, total: null, note: '', at },
+    ];
+    expect(countersUsed({ history }, 'VENUE')).toBe(1);
+    expect(countersUsed({ history }, 'HOST')).toBe(0);
+    expect(countersUsed({ history: undefined as never }, 'HOST')).toBe(0);
+  });
+});
+
+describe('currentOfferModel', () => {
+  it('names the retired "for the slot" as FLAT and leaves every other model alone', () => {
+    expect(currentOfferModel('PER_SLOT')).toBe('FLAT');
+    expect(currentOfferModel('FLAT')).toBe('FLAT');
+    expect(currentOfferModel('PER_GUEST')).toBe('PER_GUEST');
+    expect(currentOfferModel('PER_HOUR')).toBe('PER_HOUR');
   });
 });
 
@@ -145,6 +167,46 @@ describe('offerView', () => {
     expect(view?.quote).toMatchObject({ model: 'PER_PAX', pax: 20, total: 11_800, venue_payout: 10_000, platform_fee: 1000 });
     expect(view?.quote.rules).toEqual([{ type: 'WEEKDAY', label: 'Friday', mode: 'PERCENT', value: 10, amount: 900 }]);
     expect(view?.quote_min.confirmed_at).toBe('2027-01-01T10:00:00.000Z');
+  });
+
+  it('shows the photos each side attached, as copies, and none on an offer from before photos', () => {
+    const images = ['https://ik.imagekit.io/duncit/offer/hall.jpg'];
+    const hostImages = ['https://ik.imagekit.io/duncit/offer/stage.jpg'];
+    const view = offerView(slot(offer({ status: 'COUNTERED', round: 2, images: hostImages, counter: { ...counter, images } })));
+    expect(view?.images).toEqual(hostImages);
+    expect(view?.images).not.toBe(hostImages);
+    expect(view?.counter?.images).toEqual(images);
+    expect(view?.counter?.images).not.toBe(images);
+    expect(offerView(slot(offer()))?.images).toEqual([]);
+  });
+
+  it('counts the counters each side has made, never the opening offer', () => {
+    const steps: VenueOfferHistoryEntry[] = [
+      { by: 'HOST', action: 'OFFER', model: 'PER_GUEST', rate: 500, total: 11_000, note: '', at },
+      { by: 'VENUE', action: 'COUNTER', model: 'PER_GUEST', rate: 600, total: 13_200, note: '', at },
+      { by: 'HOST', action: 'COUNTER', model: 'PER_GUEST', rate: 550, total: 12_100, note: '', at },
+      { by: 'VENUE', action: 'COUNTER', model: 'FLAT', rate: 9000, total: 9900, note: '', at },
+    ];
+    expect(offerView(slot(offer({ status: 'COUNTERED', round: 4, counter, history: steps }))))
+      .toMatchObject({ host_counters_used: 1, venue_counters_used: 2 });
+    expect(offerView(slot(offer()))).toMatchObject({ host_counters_used: 0, venue_counters_used: 0 });
+  });
+
+  it('reads a row written before "for the slot" was retired as the flat price it always was', () => {
+    const legacyCounter = { ...counter, model: 'PER_SLOT' } as unknown as VenueOfferCounter;
+    const legacy = offer({
+      model: 'PER_SLOT' as never,
+      status: 'COUNTERED',
+      counter: legacyCounter,
+      history: [
+        { by: 'HOST', action: 'OFFER', model: 'PER_SLOT' as never, rate: 7000, total: 7700, note: '', at },
+        { by: 'VENUE', action: 'ACCEPT', model: null, rate: null, total: null, note: '', at },
+      ],
+    });
+    const view = offerView(slot(legacy));
+    expect(view?.model).toBe('FLAT');
+    expect(view?.counter?.model).toBe('FLAT');
+    expect(view?.history.map((h) => h.model)).toEqual(['FLAT', null]);
   });
 
   it("reads a hydrated history step's fields the same way", () => {

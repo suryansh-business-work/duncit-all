@@ -7,16 +7,23 @@
 jest.mock('@modules/finance/finance/finance.model', () => ({ getFinanceSettings: jest.fn() }));
 jest.mock('@microservices/chat/venue/venueChat.service', () => ({ venueChatService: { postOffer: jest.fn() } }));
 jest.mock('@observability/log', () => ({ logs: { server: { error: jest.fn(), info: jest.fn(), warn: jest.fn() } } }));
+jest.mock('@microservices/chat/venue/venueChat.lines', () => ({
+  venueChatLineService: { reviseOfferLine: jest.fn(), withdrawOfferLine: jest.fn(), renumberOfferLine: jest.fn() },
+}));
 
 import { Types } from 'mongoose';
 import { getFinanceSettings } from '@modules/finance/finance/finance.model';
 import { venueChatService } from '@microservices/chat/venue/venueChat.service';
+import { venueChatLineService } from '@microservices/chat/venue/venueChat.lines';
 import { logs } from '@observability/log';
-import { offerLinePayload, offerLineText, postOfferLine } from '../../venueOffer.chat';
+import { offerLinePayload, offerLineText, postOfferLine, removeOfferLine, rewriteOfferLine } from '../../venueOffer.chat';
 import type { OfferQuote, VenueOffer, VenueOfferProposal } from '../../venueOffer.types';
 
 const finance = getFinanceSettings as jest.Mock;
 const postOffer = venueChatService.postOffer as jest.Mock;
+const reviseOfferLine = venueChatLineService.reviseOfferLine as jest.Mock;
+const withdrawOfferLine = venueChatLineService.withdrawOfferLine as jest.Mock;
+const renumberOfferLine = venueChatLineService.renumberOfferLine as jest.Mock;
 
 const q = (venue_payout: number, total: number) => ({ venue_payout, total }) as unknown as OfferQuote;
 const slotId = new Types.ObjectId();
@@ -42,6 +49,9 @@ const slot = (offer: Partial<VenueOffer> | null = { pax: 20, pets: true }) =>
 beforeEach(() => {
   finance.mockResolvedValue({ currency_symbol: '₹' });
   postOffer.mockResolvedValue({ id: 'line-1' });
+  reviseOfferLine.mockResolvedValue(undefined);
+  withdrawOfferLine.mockResolvedValue(undefined);
+  renumberOfferLine.mockResolvedValue(undefined);
 });
 
 describe('offerLinePayload', () => {
@@ -68,7 +78,15 @@ describe('offerLinePayload', () => {
       total_max: 11_000,
       expires_at: expiresAt,
       reason: '',
+      images: [],
     });
+  });
+
+  it("carries the photos attached to a counter, as their own copy", () => {
+    const images = ['https://ik.imagekit.io/duncit/staging/offer/setup.jpg'];
+    const payload = offerLinePayload(slot(), terms({ images }), { event: 'COUNTER', by: 'VENUE', round: 2, expiresAt: null });
+    expect(payload.images).toEqual(images);
+    expect(payload.images).not.toBe(images);
   });
 
   it('reads terms from before minimums as their guests at both ends', () => {
@@ -146,5 +164,51 @@ describe('postOfferLine', () => {
     const text = await postOfferLine({ podId: 'pod-1', slot: slot(), terms: terms(), side: 'VENUE', hostId: '', move });
     expect(text).toBe('Counter offer');
     expect(logs.server.error).toHaveBeenCalledWith('venueOffer', 'postOfferLine', expect.objectContaining({ pod_id: 'pod-1', event: 'COUNTER' }));
+  });
+});
+
+describe('rewriteOfferLine', () => {
+  const move = { event: 'COUNTER' as const, by: 'VENUE' as const, round: 3, expiresAt: null };
+  const edited = terms({ model: 'FLAT', rate: 9000, quote: q(9000, 9900), quote_min: q(9000, 9900), images: ['https://ik.imagekit.io/duncit/offer/hall.jpg'] });
+
+  it('rewrites the counter’s own line with the edited terms under the new round, and returns its summary', async () => {
+    const text = await rewriteOfferLine({ lineId: 'line-7', slot: slot(), terms: edited, move });
+    expect(text).toBe('Counter offer: ₹9,000 flat · 8–20 guests · venue receives ₹9,000');
+    expect(reviseOfferLine).toHaveBeenCalledWith(
+      'line-7',
+      expect.objectContaining({ round: 3, event: 'COUNTER', by: 'VENUE', model: 'FLAT', rate: 9000, images: edited.images }),
+      text
+    );
+  });
+
+  it('never fails the saved edit: a line that cannot be rewritten is logged, the summary still returned', async () => {
+    reviseOfferLine.mockRejectedValue(new Error('chat down'));
+    const text = await rewriteOfferLine({ lineId: 'line-7', slot: slot(), terms: edited, move });
+    expect(text).toBe('Counter offer: ₹9,000 flat · 8–20 guests · venue receives ₹9,000');
+    expect(logs.server.error).toHaveBeenCalledWith('venueOffer', 'rewriteOfferLine', expect.objectContaining({ slot_id: String(slotId) }));
+  });
+
+  it('falls back to the lead alone when the currency cannot be read, and rewrites nothing', async () => {
+    finance.mockRejectedValue(new Error('db down'));
+    await expect(rewriteOfferLine({ lineId: 'line-7', slot: slot(), terms: edited, move })).resolves.toBe('Counter offer');
+    expect(reviseOfferLine).not.toHaveBeenCalled();
+  });
+});
+
+describe('removeOfferLine', () => {
+  const args = { lineId: 'line-9', podId: 'pod-1', slotId: String(slotId), restored: { from: 1, to: 3 } };
+
+  it("takes the withdrawn counter's line out, then carries the new round on the restored move's line", async () => {
+    await expect(removeOfferLine(args)).resolves.toBeUndefined();
+    expect(withdrawOfferLine).toHaveBeenCalledWith('line-9', 'pod-1');
+    expect(renumberOfferLine).toHaveBeenCalledWith('pod-1', String(slotId), 1, 3);
+    expect(withdrawOfferLine.mock.invocationCallOrder[0]).toBeLessThan(renumberOfferLine.mock.invocationCallOrder[0]);
+  });
+
+  it('never throws: a failure is logged with the pod, and nothing after it runs', async () => {
+    withdrawOfferLine.mockRejectedValue(new Error('chat down'));
+    await expect(removeOfferLine(args)).resolves.toBeUndefined();
+    expect(renumberOfferLine).not.toHaveBeenCalled();
+    expect(logs.server.error).toHaveBeenCalledWith('venueOffer', 'removeOfferLine', expect.objectContaining({ pod_id: 'pod-1' }));
   });
 });

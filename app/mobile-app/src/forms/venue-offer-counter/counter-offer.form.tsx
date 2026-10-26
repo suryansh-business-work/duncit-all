@@ -4,6 +4,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import {
   makeVenueOfferCounterSchema,
   venueOfferCounterDefaults,
+  venueOfferEditDefaults,
   type VenueOfferCounterSource,
   type VenueOfferTerms,
 } from '@duncit/forms/schemas';
@@ -24,8 +25,14 @@ interface Props {
   side: OfferSide;
   /** Prices the terms as they are typed. */
   target: CounterQuoteTarget;
-  /** The terms on the table (`currentOfferTerms`) — the counter starts as an edit of them. */
-  terms: VenueOfferCounterSource | null;
+  /**
+   * The terms on the table (`currentOfferTerms`) — the counter starts as an
+   * edit of them. When `edit`, the reader's own counter, its note and photos too.
+   */
+  terms:
+    (VenueOfferCounterSource & { note?: string | null; images?: readonly string[] | null }) | null;
+  /** Changing the reader's own counter before the other side has seen it, rather than a new one. */
+  edit?: boolean;
   /** The booking's guests: a minimum may not pass them. */
   maxGuests: number;
   busy: boolean;
@@ -35,26 +42,38 @@ interface Props {
   onSend: (terms: VenueOfferTerms, note: string) => void;
 }
 
-/** The sheet's words, as each side reads them. */
-const COPY: Readonly<Record<OfferSide, { title: string; hint: string }>> = {
-  VENUE: { title: 'availability.offers.counterTitle', hint: 'availability.offers.counterHint' },
+/** The sheet's words, as each side reads them, and for an edit of one's own counter. */
+const COPY: Readonly<Record<OfferSide | 'EDIT', { title: string; hint: string; send: string }>> = {
+  VENUE: {
+    title: 'availability.offers.counterTitle',
+    hint: 'availability.offers.counterHint',
+    send: 'availability.offers.send',
+  },
   HOST: {
     title: 'availability.offers.hostAnswer.counterTitle',
     hint: 'availability.offers.hostAnswer.counterHint',
+    send: 'availability.offers.send',
+  },
+  EDIT: {
+    title: 'availability.offers.revise.editTitle',
+    hint: 'availability.offers.revise.editHint',
+    send: 'availability.offers.revise.save',
   },
 };
 
 /**
  * Either side's counter to the terms on the table: a pricing option and the
  * amount, the fewest guests paid for (a per-guest price), what the venue
- * provides and a note — with the server's price of those terms as they are
- * typed. One rule with the web (`makeVenueOfferCounterSchema`). mWeb twin:
- * CounterOfferDialog + CounterOfferForm.
+ * provides, a note and photos — with the server's price of those terms as they
+ * are typed. The same sheet edits the reader's own unseen counter (`edit`),
+ * starting from it whole. One rule with the web (`makeVenueOfferCounterSchema`).
+ * mWeb twin: CounterOfferDialog + CounterOfferForm.
  */
 export function VenueOfferCounterForm({
   side,
   target,
   terms,
+  edit = false,
   maxGuests,
   busy,
   error,
@@ -69,7 +88,7 @@ export function VenueOfferCounterForm({
     CounterOfferValues
   >({
     resolver: formResolver<CounterOfferValues>(schema),
-    defaultValues: venueOfferCounterDefaults(terms),
+    defaultValues: edit ? venueOfferEditDefaults(terms) : venueOfferCounterDefaults(terms),
   });
   const [model, rate, minGuests, offerings] = watch(['model', 'rate', 'min_guests', 'offerings']);
   const typed = counterTermsOf({ model, rate, min_guests: minGuests, offerings });
@@ -77,7 +96,7 @@ export function VenueOfferCounterForm({
     const next = counterTermsOf(valid);
     if (next) onSend(next, valid.note.trim());
   });
-  const copy = COPY[side];
+  const copy = COPY[edit ? 'EDIT' : side];
 
   const footer = (
     <XStack gap={10}>
@@ -95,7 +114,7 @@ export function VenueOfferCounterForm({
       <YStack flex={1}>
         <DuncitButton
           testID="venue-offer-counter-send"
-          label={t('availability.offers.send')}
+          label={t(copy.send)}
           onPress={() => fireAndForget(send())}
           loading={busy}
           disabled={busy}

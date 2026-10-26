@@ -1,5 +1,6 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 
+import { VenueOfferModel } from '@/generated/graphql/graphql';
 import { UpdateVenueSettingsDocument } from '@/graphql/venue-availability';
 import { useVenuesWithSettings } from '@/hooks/useVenuesWithSettings';
 import { VenueSettingsScreen } from '@/screens/VenueSettingsScreen';
@@ -19,7 +20,20 @@ jest.mock('@/hooks/useVenuesWithSettings', () => ({ useVenuesWithSettings: jest.
 const mockRequest = graphqlRequest as jest.Mock;
 const mockedUse = useVenuesWithSettings as jest.Mock;
 
-const venue = (id: string, offers: { min_guests: number; response_hours: number } | null) => ({
+interface StoredOffers {
+  min_guests: number;
+  response_hours: number;
+  min_business?: { model: string; amount: number }[];
+}
+
+// The venue hopes for at least ₹250 a guest per booking.
+const stored = {
+  min_guests: 0,
+  response_hours: 24,
+  min_business: [{ model: 'PER_GUEST', amount: 250 }],
+};
+
+const venue = (id: string, offers: StoredOffers | null) => ({
   id,
   venue_name: `Venue ${id}`,
   city: 'Pune',
@@ -37,8 +51,8 @@ const venue = (id: string, offers: { min_guests: number; response_hours: number 
 
 const refetch = jest.fn();
 const state = (over: Record<string, unknown> = {}) => ({
-  venues: [venue('v1', { min_guests: 0, response_hours: 24 })],
-  venue: venue('v1', { min_guests: 0, response_hours: 24 }),
+  venues: [venue('v1', stored)],
+  venue: venue('v1', stored),
   venueId: 'v1',
   selectVenue: jest.fn(),
   isLoading: false,
@@ -90,12 +104,38 @@ describe('VenueSettingsScreen', () => {
     expect(offerSaves()).toEqual([
       [
         UpdateVenueSettingsDocument,
-        { venue_doc_id: 'v1', input: { offers: { min_guests: 10, response_hours: 24 } } },
+        {
+          venue_doc_id: 'v1',
+          input: {
+            offers: {
+              min_guests: 10,
+              response_hours: 24,
+              min_business: [{ model: VenueOfferModel.PerGuest, amount: 250 }],
+            },
+          },
+        },
         { auth: true },
       ],
     ]);
     expect(refetch).toHaveBeenCalledTimes(1);
     expect(screen.queryByTestId('venue-offer-settings-error')).toBeNull();
+  });
+
+  it('starts from the business the venue stored, and saves a new amount on a new basis', async () => {
+    mockedUse.mockReturnValue(state());
+    renderWithProviders(<VenueSettingsScreen />);
+    expect(screen.getByTestId('venue-min-business-0-PER_GUEST')).toHaveProp('aria-checked', true);
+    expect(screen.getByTestId('field-min_business.0.amount').props.value).toBe('250');
+    fireEvent.press(screen.getByTestId('venue-min-business-add'));
+    // The new row takes the first basis not listed yet.
+    expect(screen.getByTestId('venue-min-business-1-PER_HOUR')).toHaveProp('aria-checked', true);
+    fireEvent.changeText(screen.getByTestId('field-min_business.1.amount'), '800');
+    fireEvent.press(screen.getByTestId('venue-offer-settings-save'));
+    await waitFor(() => expect(offerSaves()).toHaveLength(1));
+    expect(offerSaves()[0]?.[1].input.offers.min_business).toEqual([
+      { model: VenueOfferModel.PerGuest, amount: 250 },
+      { model: VenueOfferModel.PerHour, amount: 800 },
+    ]);
   });
 
   it('says why a save was refused and re-reads nothing', async () => {

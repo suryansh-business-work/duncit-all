@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { toBookingOffersInput, type BookingOffersValues } from '@duncit/forms/schemas';
 import { logs } from '@duncit/logs';
 
+import { offerModelEnum } from '@/components/venue-offer/offer-terms-input';
 import { BookingOffersForm } from '@/forms/venue-settings';
 import { UpdateVenueSettingsDocument } from '@/graphql/venue-availability';
 import type { SettingsVenue } from '@/hooks/useVenuesWithSettings';
@@ -15,10 +16,23 @@ interface Props {
   onSaved: () => void;
 }
 
+/** The validated values as the mutation's input — each basis as the codegen's enum. */
+function offersInput(values: BookingOffersValues) {
+  const input = toBookingOffersInput(values);
+  return {
+    ...input,
+    min_business: input.min_business.flatMap((row) => {
+      const model = offerModelEnum(row.model);
+      return model ? [{ model, amount: row.amount }] : [];
+    }),
+  };
+}
+
 /**
  * Venue settings > Booking offers, for the venue the switcher picked: saves
- * `VenueSettingsInput.offers` on its own, beside the cancellation policy, then
- * re-reads the venue. mWeb twin: venue-settings-page/BookingOffersCard.
+ * `VenueSettingsInput.offers` on its own — the minimum guests, the response
+ * hours and the business expected per booking — beside the cancellation
+ * policy, then re-reads the venue. mWeb twin: venue-settings-page/BookingOffersCard.
  */
 export function BookingOffersCard({ venue, onSaved }: Readonly<Props>) {
   const [saving, setSaving] = useState(false);
@@ -32,7 +46,7 @@ export function BookingOffersCard({ venue, onSaved }: Readonly<Props>) {
     try {
       await graphqlRequest(
         UpdateVenueSettingsDocument,
-        { venue_doc_id: venue.id, input: { offers: toBookingOffersInput(values) } },
+        { venue_doc_id: venue.id, input: { offers: offersInput(values) } },
         { auth: true },
       );
       setSaved(true);

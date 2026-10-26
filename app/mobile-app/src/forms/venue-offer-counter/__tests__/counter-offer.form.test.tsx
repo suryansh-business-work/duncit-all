@@ -1,14 +1,25 @@
-import { act, fireEvent, screen } from '@testing-library/react-native';
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react-native';
+import * as ImagePicker from 'expo-image-picker';
 import type { VenueOfferCounterSource } from '@duncit/forms/schemas';
 
 import { VenueOfferCounterForm } from '@/forms/venue-offer-counter';
 import { VenueOfferModel } from '@/generated/graphql/graphql';
+import { uploadChatImage } from '@/hooks/useChatRoom';
 import { useCounterQuote, type CounterQuoteTarget } from '@/hooks/useCounterQuote';
 import { renderWithProviders } from '@/utils/test-utils';
 import { offerQuote } from '@/utils/venue-offer-fixture';
 
 jest.mock('@/hooks/useCounterQuote', () => ({ useCounterQuote: jest.fn() }));
+jest.mock('@/hooks/useChatRoom', () => ({ uploadChatImage: jest.fn() }));
+jest.mock('expo-image-picker', () => ({
+  requestMediaLibraryPermissionsAsync: jest.fn(),
+  launchImageLibraryAsync: jest.fn(),
+}));
 const mockQuote = useCounterQuote as jest.Mock;
+const mockUpload = uploadChatImage as jest.Mock;
+const mockPermission = ImagePicker.requestMediaLibraryPermissionsAsync as jest.Mock;
+const mockLibrary = ImagePicker.launchImageLibraryAsync as jest.Mock;
+const PHOTO = 'https://ik.imagekit.io/duncit/chat/setup.jpg';
 
 const VENUE: CounterQuoteTarget = { side: 'VENUE', slotId: 's1' };
 const ON_TABLE: VenueOfferCounterSource = {
@@ -21,15 +32,18 @@ const ON_TABLE: VenueOfferCounterSource = {
 const mount = (
   over: Partial<{
     side: 'HOST' | 'VENUE';
-    terms: VenueOfferCounterSource | null;
+    terms: (VenueOfferCounterSource & { note?: string; images?: string[] }) | null;
     error: string;
+    edit: boolean;
+    target: CounterQuoteTarget;
   }> = {},
 ) => {
   const spies = { onClose: jest.fn(), onSend: jest.fn() };
   renderWithProviders(
     <VenueOfferCounterForm
       side={over.side ?? 'VENUE'}
-      target={VENUE}
+      edit={over.edit}
+      target={over.target ?? VENUE}
       terms={over.terms === undefined ? ON_TABLE : over.terms}
       maxGuests={20}
       busy={false}
@@ -47,6 +61,9 @@ const send = async () => {
 };
 
 beforeEach(() => {
+  mockUpload.mockReset();
+  mockPermission.mockReset();
+  mockLibrary.mockReset();
   mockQuote.mockReset();
   mockQuote.mockReturnValue({
     result: {
@@ -161,5 +178,115 @@ describe('VenueOfferCounterForm', () => {
     fireEvent.press(screen.getByTestId('venue-offer-counter-cancel'));
     expect(spies.onClose).toHaveBeenCalled();
     expect(spies.onSend).not.toHaveBeenCalled();
+  });
+});
+
+describe('VenueOfferCounterForm — photos', () => {
+  it('attaches photos picked from the device, uploaded as they land, and sends them with the terms', async () => {
+    mockPermission.mockResolvedValue({ granted: true });
+    mockLibrary.mockResolvedValue({
+      canceled: false,
+      assets: [{ base64: 'AAA', fileName: 'setup.jpg', mimeType: 'image/jpeg' }],
+    });
+    mockUpload.mockResolvedValue(PHOTO);
+    const spies = mount();
+    expect(screen.getByTestId('venue-offer-counter-images-hint')).toHaveTextContent(
+      'Up to 4 photos from your device, for example the set-up or the menu.',
+    );
+    await act(async () => {
+      fireEvent.press(screen.getByTestId('venue-offer-counter-image-add'));
+    });
+    // Photos only — never a video — and no more than the four allowed.
+    expect(mockLibrary).toHaveBeenCalledWith(
+      expect.objectContaining({ mediaTypes: ['images'], selectionLimit: 4 }),
+    );
+    expect(mockUpload).toHaveBeenCalledWith({
+      base64: 'AAA',
+      fileName: 'setup.jpg',
+      mimeType: 'image/jpeg',
+    });
+    await waitFor(() =>
+      expect(
+        within(screen.getByTestId('venue-offer-counter-image')).getByLabelText('Open photo 1'),
+      ).toBeOnTheScreen(),
+    );
+    await send();
+    expect(spies.onSend).toHaveBeenCalledWith(expect.objectContaining({ images: [PHOTO] }), '');
+  });
+
+  it('removes a photo, and says when photo access is refused', async () => {
+    mockPermission.mockResolvedValue({ granted: false });
+    const spies = mount({ terms: { ...ON_TABLE, note: '', images: [PHOTO] }, edit: true });
+    fireEvent.press(screen.getByTestId('venue-offer-counter-image-remove-0'));
+    expect(screen.queryByTestId('venue-offer-counter-image')).toBeNull();
+    await act(async () => {
+      fireEvent.press(screen.getByTestId('venue-offer-counter-image-add'));
+    });
+    expect(screen.getByTestId('venue-offer-counter-images-hint')).toHaveTextContent(
+      'Photo access is needed to send an image.',
+    );
+    expect(mockLibrary).not.toHaveBeenCalled();
+    await send();
+    expect(spies.onSend.mock.calls[0]?.[0]).not.toHaveProperty('images');
+  });
+
+  it('keeps the photos that landed and says why the next upload failed', async () => {
+    mockPermission.mockResolvedValue({ granted: true });
+    mockLibrary.mockResolvedValue({
+      canceled: false,
+      assets: [
+        { base64: 'AAA', fileName: 'a.jpg', mimeType: 'image/jpeg' },
+        { base64: 'BBB', fileName: 'b.jpg', mimeType: 'image/jpeg' },
+      ],
+    });
+    mockUpload.mockResolvedValueOnce(PHOTO).mockRejectedValueOnce(new Error('Upload failed'));
+    mount();
+    await act(async () => {
+      fireEvent.press(screen.getByTestId('venue-offer-counter-image-add'));
+    });
+    await waitFor(() =>
+      expect(screen.getByTestId('venue-offer-counter-images-hint')).toHaveTextContent(
+        'Upload failed',
+      ),
+    );
+    const attached = screen.getByTestId('venue-offer-counter-image');
+    expect(within(attached).getByLabelText('Open photo 1')).toBeOnTheScreen();
+    expect(within(attached).queryByLabelText('Open photo 2')).toBeNull();
+  });
+
+  it('offers no more photos once four are attached', () => {
+    const four = ['a', 'b', 'c', 'd'].map((n) => `https://ik.imagekit.io/duncit/chat/${n}.jpg`);
+    mount({ terms: { ...ON_TABLE, note: '', images: four }, edit: true });
+    expect(screen.queryByTestId('venue-offer-counter-image-add')).toBeNull();
+  });
+});
+
+describe('VenueOfferCounterForm — editing one’s own counter', () => {
+  it('starts from the counter whole — its note and photos — prices it as an edit and saves it', async () => {
+    const EDIT: CounterQuoteTarget = { side: 'EDIT', podId: 'pod-1' };
+    const spies = mount({
+      edit: true,
+      target: EDIT,
+      terms: { ...ON_TABLE, note: 'Weekend rate', images: [PHOTO] },
+    });
+    expect(screen.getByText('Edit your counter')).toBeOnTheScreen();
+    expect(screen.getByTestId('venue-offer-counter-send')).toHaveTextContent('Save changes');
+    expect(screen.getByTestId('field-note')).toHaveProp('value', 'Weekend rate');
+    expect(mockQuote).toHaveBeenLastCalledWith(
+      EDIT,
+      { model: VenueOfferModel.PerGuest, rate: 300, min_guests: 8 },
+      "We couldn't price these terms.",
+    );
+    await send();
+    expect(spies.onSend).toHaveBeenCalledWith(
+      {
+        model: 'PER_GUEST',
+        rate: 300,
+        min_guests: 8,
+        offerings: ['A projector', '10 chairs'],
+        images: [PHOTO],
+      },
+      'Weekend rate',
+    );
   });
 });

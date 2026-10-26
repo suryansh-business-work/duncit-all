@@ -14,6 +14,7 @@ import { SectionHeader } from '@/components/SectionHeader';
 import { SurfaceCard } from '@/components/SurfaceCard';
 import { useTranslation } from '@/hooks/useTranslation';
 import { formResolver } from '@/utils/form-resolver';
+import { MinBusinessRows } from './MinBusinessRows';
 
 export interface BookingOffersFormProps {
   /** The venue's own settings as stored (`VenueSettings.offers`); 0 = Duncit's default. */
@@ -27,9 +28,10 @@ export interface BookingOffersFormProps {
 }
 
 /**
- * The venue's Booking offers: the fewest guests a host's offer may be for, and
- * the hours either side has to answer an offer or a counter before it expires.
- * 0 leaves it to Duncit's default; each hint says what is in effect now. The
+ * The venue's Booking offers: the fewest guests a host's offer may be for, the
+ * hours either side has to answer an offer or a counter before it expires, and
+ * the business it expects per booking (at least one amount, one per basis).
+ * 0 leaves a number to Duncit's default; each hint says what is in effect now. The
  * Tamagui twin of mWeb's and the Partners console's Booking offers card — the
  * same rules and the same `venueSettings.offers.*` copy (rule 27).
  */
@@ -75,6 +77,7 @@ export function BookingOffersForm({
         keyboardType="number-pad"
         digitsOnly
       />
+      <MinBusinessRows control={control} />
       {error ? (
         <Text testID="venue-offer-settings-error" role="alert" fontSize={13} color="$danger">
           {error}

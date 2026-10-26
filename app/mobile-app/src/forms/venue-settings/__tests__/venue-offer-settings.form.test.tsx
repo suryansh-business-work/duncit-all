@@ -7,7 +7,11 @@ const mount = (over: Partial<BookingOffersFormProps> = {}) => {
   const onSubmit = jest.fn();
   renderWithProviders(
     <BookingOffersForm
-      stored={{ min_guests: 0, response_hours: 36 }}
+      stored={{
+        min_guests: 0,
+        response_hours: 36,
+        min_business: [{ model: 'FLAT', amount: 5000 }],
+      }}
       effective={{ min_guests: 8, response_hours: 36 }}
       saving={false}
       saved={false}
@@ -45,7 +49,11 @@ describe('BookingOffersForm', () => {
     fireEvent.changeText(screen.getByTestId('field-response_hours'), '48');
     fireEvent.press(screen.getByTestId('venue-offer-settings-save'));
     await waitFor(() =>
-      expect(onSubmit).toHaveBeenCalledWith({ min_guests: '12', response_hours: '48' }),
+      expect(onSubmit).toHaveBeenCalledWith({
+        min_guests: '12',
+        response_hours: '48',
+        min_business: [{ model: 'FLAT', amount: '5000' }],
+      }),
     );
   });
 
@@ -59,6 +67,48 @@ describe('BookingOffersForm', () => {
       await screen.findByText('Enter a whole number of guests from 0 to 1000'),
     ).toBeOnTheScreen();
     expect(screen.getByText('Enter a whole number of hours from 0 to 720')).toBeOnTheScreen();
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it('starts a venue with no amounts at one empty row, and holds the save until it is filled', async () => {
+    const onSubmit = mount({ stored: { min_guests: 0, response_hours: 0 } });
+    expect(screen.getByTestId('venue-min-business-0-PER_GUEST')).toHaveProp('aria-checked', true);
+    // One row is the least there can be: it cannot be removed.
+    expect(screen.queryByTestId('venue-min-business-remove-0')).toBeNull();
+    fireEvent.press(screen.getByTestId('venue-offer-settings-save'));
+    expect(await screen.findByText('Enter an amount above 0, up to 10000000')).toBeOnTheScreen();
+    expect(onSubmit).not.toHaveBeenCalled();
+
+    fireEvent.changeText(screen.getByTestId('field-min_business.0.amount'), '200');
+    fireEvent.press(screen.getByTestId('venue-offer-settings-save'));
+    await waitFor(() =>
+      expect(onSubmit).toHaveBeenCalledWith(
+        expect.objectContaining({ min_business: [{ model: 'PER_GUEST', amount: '200' }] }),
+      ),
+    );
+  });
+
+  it('adds a row per basis up to three, and removes one again', () => {
+    mount();
+    fireEvent.press(screen.getByTestId('venue-min-business-add'));
+    // Per booking is taken by the first row, so the new one starts per guest.
+    expect(screen.getByTestId('venue-min-business-1-PER_GUEST')).toHaveProp('aria-checked', true);
+    fireEvent.press(screen.getByTestId('venue-min-business-add'));
+    expect(screen.getByTestId('venue-min-business-2-PER_HOUR')).toHaveProp('aria-checked', true);
+    // Every basis is listed: nothing more to add.
+    expect(screen.queryByTestId('venue-min-business-add')).toBeNull();
+    fireEvent.press(screen.getByTestId('venue-min-business-remove-1'));
+    expect(screen.queryByTestId('venue-min-business-row-2')).toBeNull();
+    expect(screen.getByTestId('venue-min-business-add')).toBeOnTheScreen();
+  });
+
+  it('refuses the same basis twice', async () => {
+    const onSubmit = mount();
+    fireEvent.press(screen.getByTestId('venue-min-business-add'));
+    fireEvent.changeText(screen.getByTestId('field-min_business.1.amount'), '300');
+    fireEvent.press(screen.getByTestId('venue-min-business-1-FLAT'));
+    fireEvent.press(screen.getByTestId('venue-offer-settings-save'));
+    expect(await screen.findByText('List each basis once')).toBeOnTheScreen();
     expect(onSubmit).not.toHaveBeenCalled();
   });
 

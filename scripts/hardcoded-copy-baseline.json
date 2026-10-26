@@ -634,7 +634,6 @@
   "portals/partners-app/src/pages/register-venue-page/sections/venue-sections.ts": 8,
   "portals/partners-app/src/pages/register-venue-page/sections/VenueImagesField.tsx": 3,
   "portals/partners-app/src/pages/register-venue-page/sections/VenueTypeCapacitySection.tsx": 1,
-  "portals/partners-app/src/pages/register-venue-page/useVenueGeocoder.ts": 3,
   "portals/partners-app/src/pages/RegisterVenuePage.tsx": 2,
   "portals/partners-app/src/pages/slot-decision-page/DecisionHeader.tsx": 2,
   "portals/partners-app/src/pages/slot-decision-page/DeclineForm.tsx": 2,

@@ -55,6 +55,10 @@ export const CreatePodOptionsDocument = gql(`
         capacity
       }
       offer_min_guests
+      offer_min_business {
+        model
+        amount
+      }
       cover_image_url
       city
       locality

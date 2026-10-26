@@ -1,6 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { ResultOf } from '@graphql-typed-document-node/core';
-import { VENUE_CHAT_PAGE, isVenueChatUnavailable, mergeVenueChatLines } from '@duncit/utils';
+import {
+  VENUE_CHAT_PAGE,
+  isVenueChatUnavailable,
+  mergeVenueChatLines,
+  withReadMark,
+  withoutVenueChatLine,
+  type VenueChatReadMark,
+} from '@duncit/utils';
 
 import { useRefreshRegistration } from '@/components/PullToRefresh';
 import { PodMessageType } from '@/generated/graphql/graphql';
@@ -23,7 +30,7 @@ export type VenueChatMessage = ResultOf<
 
 const lineTime = (line: VenueChatMessage) => line.createdAt;
 
-/** The thread and its newest page, read together. */
+/** The thread and its newest page, read together — reading that page marks the thread read. */
 async function loadThread(podId: string) {
   const [room, page] = await Promise.all([
     graphqlRequest(VenueChatRoomDocument, { podId }, { auth: true }),
@@ -35,13 +42,15 @@ async function loadThread(podId: string) {
 /**
  * One venue thread — RN twin of mWeb's useVenueChatThread: who it is with, its
  * lines (the newest page, older pages on scroll-up, sent and socket lines —
- * each once, oldest first) and the sends. The screen owns the socket and feeds
- * its lines in through `addLines`.
+ * each once, oldest first), how far every other member has read it, and the
+ * sends. The screen owns the socket and feeds it in through `addLines`
+ * (a new line), `replaceLine` (a changed one), `removeLine` and `addMark`.
  */
 export function useVenueChat(podId: string) {
   const { t } = useTranslation();
   const [room, setRoom] = useState<VenueChatRoom | null>(null);
   const [messages, setMessages] = useState<VenueChatMessage[]>([]);
+  const [marks, setMarks] = useState<VenueChatReadMark[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [unavailable, setUnavailable] = useState(false);
   const [loadFailed, setLoadFailed] = useState(false);
@@ -78,6 +87,7 @@ export function useVenueChat(podId: string) {
         if (!active) return;
         setRoom(thread.room);
         setMessages(thread.lines);
+        setMarks(thread.room.read_marks);
         setUnavailable(false);
         setLoadFailed(false);
         startHistory(thread.lines.length);
@@ -98,6 +108,21 @@ export function useVenueChat(podId: string) {
   const addLines = useCallback(
     (incoming: readonly VenueChatMessage[]) =>
       setMessages((shown) => mergeVenueChatLines(shown, incoming)),
+    [],
+  );
+  // A changed line replaces its copy where it is on screen; one on a page not
+  // loaded stays out, so the scroll-up history never skips past a gap.
+  const replaceLine = useCallback(
+    (line: VenueChatMessage) =>
+      setMessages((shown) => shown.map((current) => (current.id === line.id ? line : current))),
+    [],
+  );
+  const removeLine = useCallback(
+    (id: string) => setMessages((shown) => withoutVenueChatLine(shown, id)),
+    [],
+  );
+  const addMark = useCallback(
+    (mark: VenueChatReadMark) => setMarks((current) => withReadMark(current, mark)),
     [],
   );
 
@@ -142,6 +167,7 @@ export function useVenueChat(podId: string) {
   return {
     room,
     messages,
+    marks,
     isLoading,
     unavailable,
     loadFailed,
@@ -151,6 +177,9 @@ export function useVenueChat(podId: string) {
     setError,
     reload,
     addLines,
+    replaceLine,
+    removeLine,
+    addMark,
     sendText,
     sendImage,
   };

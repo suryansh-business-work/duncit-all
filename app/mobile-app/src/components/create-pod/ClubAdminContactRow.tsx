@@ -37,13 +37,14 @@ export function ClubAdminContactRow({ admin }: Readonly<{ admin: ClubAdmin }>) {
       url: telUrl(admin.phone),
     });
   }
-  const wa = whatsappUrl(admin.whatsapp ?? '');
-  if (wa && admin.whatsapp) {
+  const whatsapp = admin.whatsapp ?? '';
+  const wa = whatsappUrl(whatsapp);
+  if (wa) {
     lines.push({
       key: 'whatsapp',
       icon: 'chat',
       label: t('mweb.podPending.whatsapp'),
-      value: admin.whatsapp,
+      value: whatsapp,
       url: wa,
     });
   }

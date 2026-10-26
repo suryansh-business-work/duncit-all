@@ -10,6 +10,7 @@ import { ClubClaimAutoPodDocument, MyAdminClubsForAutoPodDocument } from '@/grap
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { graphqlRequest } from '@/services/graphql.client';
 import { toErrorMessage } from '@/utils/errors';
+import { fireAndForget } from '@/utils/fire-and-forget';
 
 interface Props {
   row: AutoPodRow | null;
@@ -80,25 +81,27 @@ export function ClubClaimSheet({
     };
   }, [autoPodId, subCategoryId, pinnedLocationId, labels.loadFailed]);
 
-  const claim = useCallback(async () => {
-    if (!autoPodId || !clubId) return;
-    setBusy(true);
-    setFailure('');
-    try {
-      await graphqlRequest(
-        ClubClaimAutoPodDocument,
-        { auto_pod_doc_id: autoPodId, club_id: clubId },
-        { auth: true },
-      );
-      onClaimed();
-    } catch (err: unknown) {
-      setFailure(toErrorMessage(err, labels.claimedElsewhere));
-    } finally {
-      setBusy(false);
-    }
-  }, [autoPodId, clubId, labels.claimedElsewhere, onClaimed]);
+  const claim = useCallback(
+    async (offerId: string, pickedClubId: string) => {
+      setBusy(true);
+      setFailure('');
+      try {
+        await graphqlRequest(
+          ClubClaimAutoPodDocument,
+          { auto_pod_doc_id: offerId, club_id: pickedClubId },
+          { auth: true },
+        );
+        onClaimed();
+      } catch (err: unknown) {
+        setFailure(toErrorMessage(err, labels.claimedElsewhere));
+      } finally {
+        setBusy(false);
+      }
+    },
+    [labels.claimedElsewhere, onClaimed],
+  );
 
-  const footer = (
+  const footer = (offerId: string) => (
     <XStack gap={10}>
       <YStack flex={1}>
         <DuncitButton
@@ -113,9 +116,7 @@ export function ClubClaimSheet({
         <DuncitButton
           testID="auto-pod-claim-confirm"
           label={labels.claimForClubCta}
-          onPress={() => {
-            claim().catch(() => undefined);
-          }}
+          onPress={() => fireAndForget(claim(offerId, clubId))}
           disabled={!clubId || busy}
         />
       </YStack>
@@ -133,7 +134,7 @@ export function ClubClaimSheet({
       title={labels.confirmClaim}
       subtitle={labels.confirmClaimBody}
       closeLabel={labels.dismiss}
-      footer={footer}
+      footer={row ? footer(row.id) : undefined}
     >
       <YStack gap={14}>
         {row ? (

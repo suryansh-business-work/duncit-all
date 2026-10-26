@@ -20,6 +20,7 @@ import type { PodChallengeView } from '@/hooks/usePodChallengeLive';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { graphqlRequest } from '@/services/graphql.client';
+import { fireAndForget } from '@/utils/fire-and-forget';
 import { formResolver } from '@/utils/form-resolver';
 
 interface Props {
@@ -111,9 +112,7 @@ export function ChallengeJudgeSheet({ challenge, tool, onChanged }: Readonly<Pro
         label={t('mweb.challenge.submitScores')}
         loading={busy}
         disabled={busy}
-        onPress={() => {
-          submit().catch(() => undefined);
-        }}
+        onPress={() => fireAndForget(submit())}
         testID={`challenge-judge-submit-${tool.instance_id}`}
         fullWidth
       />

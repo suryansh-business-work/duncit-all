@@ -20,6 +20,7 @@ import { useAutoPodPricing } from '@/hooks/useAutoPodPricing';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { graphqlRequest } from '@/services/graphql.client';
 import { toErrorMessage } from '@/utils/errors';
+import { fireAndForget } from '@/utils/fire-and-forget';
 
 import { claimReady } from './claimReady';
 import { HostClaimFooter } from './HostClaimFooter';
@@ -90,55 +91,44 @@ export function HostClaimSheet({
   const meetingReady = !virtual || autoPodHostMeetingReady(meeting, now.getTime());
   const canAssign = claimReady({ autoPodId, needsLocation, projection, inRange, meetingReady });
 
-  const assign = useCallback(async () => {
-    if (!autoPodId || !canAssign) return;
-    setBusy(true);
-    setFailure('');
-    try {
-      // An unpinned offer takes the host's city; a pinned one already has its own.
-      await graphqlRequest(
-        HostAssignAutoPodDocument,
-        {
-          auto_pod_doc_id: autoPodId,
-          location_id: pinned ? null : locationId,
-          pod_amount: amount,
-          no_of_spots: spots,
-          // Only a virtual offer carries a meeting; a physical one sends none.
-          ...(virtual ? { meeting: hostMeetingInput(meeting) } : {}),
-        },
-        { auth: true },
-      );
-      onAssigned();
-    } catch (err: unknown) {
-      // Hosts race each other for the same offer, so losing it is an ordinary
-      // outcome and reads as one.
-      setFailure(toErrorMessage(err, labels.claimedElsewhere));
-    } finally {
-      setBusy(false);
-    }
-  }, [
-    autoPodId,
-    canAssign,
-    pinned,
-    locationId,
-    amount,
-    spots,
-    virtual,
-    meeting,
-    labels.claimedElsewhere,
-    onAssigned,
-  ]);
+  const assign = useCallback(
+    async (id: string) => {
+      setBusy(true);
+      setFailure('');
+      try {
+        // An unpinned offer takes the host's city; a pinned one already has its own.
+        await graphqlRequest(
+          HostAssignAutoPodDocument,
+          {
+            auto_pod_doc_id: id,
+            location_id: pinned ? null : locationId,
+            pod_amount: amount,
+            no_of_spots: spots,
+            // Only a virtual offer carries a meeting; a physical one sends none.
+            ...(virtual ? { meeting: hostMeetingInput(meeting) } : {}),
+          },
+          { auth: true },
+        );
+        onAssigned();
+      } catch (err: unknown) {
+        // Hosts race each other for the same offer, so losing it is an ordinary
+        // outcome and reads as one.
+        setFailure(toErrorMessage(err, labels.claimedElsewhere));
+      } finally {
+        setBusy(false);
+      }
+    },
+    [pinned, locationId, amount, spots, virtual, meeting, labels.claimedElsewhere, onAssigned],
+  );
 
-  const footer = (
+  const footer = row ? (
     <HostClaimFooter
       labels={labels}
       disabled={busy || !canAssign}
       onClose={onClose}
-      onAssign={() => {
-        assign().catch(() => undefined);
-      }}
+      onAssign={() => fireAndForget(assign(row.id))}
     />
-  );
+  ) : undefined;
 
   return (
     <DuncitDialog

@@ -8,6 +8,7 @@ import { ToggleRow } from '@/components/ToggleRow';
 import { UpdateVenueSettingsDocument } from '@/graphql/venue-availability';
 import { useTranslation } from '@/hooks/useTranslation';
 import { graphqlRequest } from '@/services/graphql.client';
+import { fireAndForget } from '@/utils/fire-and-forget';
 import { ExpandableSection } from './ExpandableSection';
 
 type NumKey =
@@ -131,9 +132,7 @@ export function VenueRulesSection({ venueId, rules, onSaved }: Readonly<Props>) 
         <DuncitButton
           testID="rules-save"
           label={saving ? t('availability.rules.saving') : t('availability.rules.save')}
-          onPress={() => {
-            save().catch(() => undefined);
-          }}
+          onPress={() => fireAndForget(save())}
           variant="outline"
           size="sm"
           disabled={saving}

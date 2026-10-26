@@ -48,11 +48,11 @@ export function AvailabilityGrid({
     <YStack gap={6} testID="availability-grid" role="radiogroup">
       {dayView ? null : <WeekdayHeader initials={weekdayInitials(fmt)} />}
 
-      {/* A row is keyed on its first day: a period's rows never reorder, and
-       * every row holds at least one day. A padding cell has no day, so its
-       * column is the only stable identity it has. */}
+      {/* A row is keyed on its days: a period's rows never reorder, and no two
+       * rows share a day. A padding cell has no day, so its column is the only
+       * stable identity it has. */}
       {rows.map((row) => {
-        const rowKey = row.find(Boolean) ?? '';
+        const rowKey = row.join('|');
         return (
           <XStack key={rowKey} gap={4}>
             {row.map((dayKey, column) => {

@@ -13,6 +13,7 @@ import {
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { graphqlRequest } from '@/services/graphql.client';
 import { toErrorMessage } from '@/utils/errors';
+import { fireAndForget } from '@/utils/fire-and-forget';
 
 interface Props {
   row: AutoPodRow | null;
@@ -45,29 +46,31 @@ export function AutoPodWithdrawSheet({ row, role, labels, onClose, onWithdrawn }
     setFailure('');
   }, [autoPodId]);
 
-  const withdraw = useCallback(async () => {
-    if (!autoPodId) return;
-    setBusy(true);
-    setFailure('');
-    try {
-      const variables = { auto_pod_doc_id: autoPodId };
-      // One mutation per role: the server authorises each against its own claim.
-      if (role === 'venue') {
-        await graphqlRequest(VenueWithdrawAutoPodDocument, variables, { auth: true });
-      } else if (role === 'host') {
-        await graphqlRequest(HostWithdrawAutoPodDocument, variables, { auth: true });
-      } else {
-        await graphqlRequest(ClubWithdrawAutoPodDocument, variables, { auth: true });
+  const withdraw = useCallback(
+    async (id: string) => {
+      setBusy(true);
+      setFailure('');
+      try {
+        const variables = { auto_pod_doc_id: id };
+        // One mutation per role: the server authorises each against its own claim.
+        if (role === 'venue') {
+          await graphqlRequest(VenueWithdrawAutoPodDocument, variables, { auth: true });
+        } else if (role === 'host') {
+          await graphqlRequest(HostWithdrawAutoPodDocument, variables, { auth: true });
+        } else {
+          await graphqlRequest(ClubWithdrawAutoPodDocument, variables, { auth: true });
+        }
+        onWithdrawn();
+      } catch (err: unknown) {
+        setFailure(toErrorMessage(err, labels.loadFailed));
+      } finally {
+        setBusy(false);
       }
-      onWithdrawn();
-    } catch (err: unknown) {
-      setFailure(toErrorMessage(err, labels.loadFailed));
-    } finally {
-      setBusy(false);
-    }
-  }, [autoPodId, role, labels.loadFailed, onWithdrawn]);
+    },
+    [role, labels.loadFailed, onWithdrawn],
+  );
 
-  const footer = (
+  const footer = (id: string) => (
     <XStack gap={10}>
       <YStack flex={1}>
         <DuncitButton
@@ -82,11 +85,9 @@ export function AutoPodWithdrawSheet({ row, role, labels, onClose, onWithdrawn }
         <DuncitButton
           testID="auto-pod-withdraw-confirm"
           label={labels.withdrawConfirm}
-          onPress={() => {
-            withdraw().catch(() => undefined);
-          }}
+          onPress={() => fireAndForget(withdraw(id))}
           tone="danger"
-          disabled={busy || !autoPodId}
+          disabled={busy}
         />
       </YStack>
     </XStack>
@@ -99,7 +100,7 @@ export function AutoPodWithdrawSheet({ row, role, labels, onClose, onWithdrawn }
       testID="auto-pod-withdraw-sheet"
       title={labels.withdrawTitle}
       closeLabel={labels.dismiss}
-      footer={footer}
+      footer={row ? footer(row.id) : undefined}
     >
       <YStack gap={12}>
         {row ? (

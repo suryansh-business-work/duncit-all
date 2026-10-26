@@ -108,25 +108,26 @@ export function HostChallengeLog({ challenge, actions }: Readonly<Props>) {
           )}
         </XStack>
       ))}
-      <ReasonSheet
-        open={!!voiding}
-        title={t('mweb.challenge.removeScoreTitle')}
-        message={t(
-          correcting ? 'mweb.challenge.removeScoreCorrection' : 'mweb.challenge.removeScoreBody',
-        )}
-        confirmLabel={t('mweb.challenge.removeScore')}
-        required={correcting}
-        busy={actions.busy}
-        onClose={() => setVoiding(null)}
-        onSubmit={(reason) => {
-          if (!voiding) return;
-          fireAndForget(
-            actions.voidScore(voiding.id, reason || undefined).then((ok) => {
-              if (ok) setVoiding(null);
-            }),
-          );
-        }}
-      />
+      {voiding ? (
+        <ReasonSheet
+          open
+          title={t('mweb.challenge.removeScoreTitle')}
+          message={t(
+            correcting ? 'mweb.challenge.removeScoreCorrection' : 'mweb.challenge.removeScoreBody',
+          )}
+          confirmLabel={t('mweb.challenge.removeScore')}
+          required={correcting}
+          busy={actions.busy}
+          onClose={() => setVoiding(null)}
+          onSubmit={(reason) =>
+            fireAndForget(
+              actions.voidScore(voiding.id, reason || undefined).then((ok) => {
+                if (ok) setVoiding(null);
+              }),
+            )
+          }
+        />
+      ) : null}
     </YStack>
   );
 }

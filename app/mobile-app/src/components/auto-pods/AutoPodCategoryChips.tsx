@@ -48,9 +48,9 @@ export function AutoPodCategoryChips({ value, onChange, labels }: Readonly<Props
         if (!active) return;
         const rows = res.myHost?.host_categories ?? [];
         setCategories(
-          rows
-            .filter((row) => !!row.sub_category_id)
-            .map((row) => [row.sub_category_id ?? '', pathOf(row)] as CategoryOption),
+          rows.flatMap((row): CategoryOption[] =>
+            row.sub_category_id ? [[row.sub_category_id, pathOf(row)]] : [],
+          ),
         );
       })
       .catch(() => undefined)

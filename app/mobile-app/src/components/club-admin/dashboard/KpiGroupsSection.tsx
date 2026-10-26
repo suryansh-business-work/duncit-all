@@ -38,7 +38,7 @@ export function KpiGroupsSection({ kpis }: Readonly<{ kpis: ClubAdminKpis }>) {
         <YStack key={group.key} gap={12} testID={`club-dashboard-group-${group.key}`}>
           <SectionHeader title={headings[group.key]} />
           {pairs(group.cards).map((row) => (
-            <XStack key={row[0]?.key ?? group.key} gap={10}>
+            <XStack key={row.map((card) => card.key).join('|')} gap={10}>
               {row.map((card) => (
                 <StatTile
                   key={card.key}

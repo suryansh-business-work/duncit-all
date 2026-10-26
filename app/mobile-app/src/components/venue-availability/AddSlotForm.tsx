@@ -16,6 +16,7 @@ import type { NewVenueSlotInput } from '@/hooks/useOwnerVenueSlots';
 import { useTranslation } from '@/hooks/useTranslation';
 import { appNow } from '@/utils/app-formatter';
 import { errorCode } from '@/utils/errors';
+import { fireAndForget } from '@/utils/fire-and-forget';
 import { AddSlotFields, type VenueSpace } from './AddSlotFields';
 
 // How often the form re-reads the clock: a window that passes while the sheet
@@ -120,12 +121,12 @@ export function AddSlotForm({ date, spaces, onCreate }: Readonly<Props>) {
       setError(slotIssueMessage(window, t));
       return;
     }
-    send(toPayload(window, draft, activeSpace), false).catch(() => undefined);
+    fireAndForget(send(toPayload(window, draft, activeSpace), false));
   };
 
-  const handleOverwrite = () => {
+  const handleOverwrite = (payload: NewVenueSlotInput) => {
     setConfirmOverwrite(false);
-    if (clashing) send(clashing, true).catch(() => undefined);
+    fireAndForget(send(payload, true));
   };
 
   // A submit/server failure outranks the live hint.
@@ -165,18 +166,20 @@ export function AddSlotForm({ date, spaces, onCreate }: Readonly<Props>) {
         size="lg"
         fullWidth
       />
-      <ConfirmSheet
-        open={confirmOverwrite}
-        busy={creating}
-        testIDPrefix="add-slot-overwrite"
-        title={t('availability.overwriteTitle')}
-        message={t('availability.overwriteMessage')}
-        cancelLabel={t('availability.cancel')}
-        confirmLabel={t('availability.overwriteConfirm')}
-        busyLabel={t('availability.adding')}
-        onCancel={() => setConfirmOverwrite(false)}
-        onConfirm={handleOverwrite}
-      />
+      {clashing ? (
+        <ConfirmSheet
+          open={confirmOverwrite}
+          busy={creating}
+          testIDPrefix="add-slot-overwrite"
+          title={t('availability.overwriteTitle')}
+          message={t('availability.overwriteMessage')}
+          cancelLabel={t('availability.cancel')}
+          confirmLabel={t('availability.overwriteConfirm')}
+          busyLabel={t('availability.adding')}
+          onCancel={() => setConfirmOverwrite(false)}
+          onConfirm={() => handleOverwrite(clashing)}
+        />
+      ) : null}
     </YStack>
   );
 }

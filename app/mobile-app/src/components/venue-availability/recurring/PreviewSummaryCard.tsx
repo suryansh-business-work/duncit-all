@@ -41,7 +41,7 @@ interface Props {
  * are worth — the Tamagui twin of the MUI PreviewBar (rule 27). */
 export function PreviewSummaryCard({ summary, maxAdvanceDays }: Readonly<Props>) {
   const { t } = useTranslation();
-  const spaceLabels = Object.keys(summary.bySpace).sort((a, b) => a.localeCompare(b));
+  const spaces = Object.entries(summary.bySpace).sort(([a], [b]) => a.localeCompare(b));
   const skips = skipLines(summary, maxAdvanceDays, t);
 
   return (
@@ -52,24 +52,20 @@ export function PreviewSummaryCard({ summary, maxAdvanceDays }: Readonly<Props>)
       <Text testID="recurring-preview-total" fontSize={24} fontWeight="700" color="$color">
         {t('availability.recurring.preview.slotsCount', { vars: { count: summary.total } })}
       </Text>
-      {spaceLabels.map((label) => {
-        const bucket = summary.bySpace[label];
-        if (!bucket) return null;
-        return (
-          <XStack key={label || 'whole-venue'} justifyContent="space-between" gap={8}>
-            <Text flex={1} fontSize={13} fontWeight="600" color="$color" numberOfLines={1}>
-              {label || t('availability.wholeVenue')}
-            </Text>
-            <Text fontSize={12} color="$muted">
-              {t('availability.recurring.preview.slotsCount', { vars: { count: bucket.count } })}
-              {' · '}
-              {t('availability.recurring.preview.priceCap', {
-                vars: { price: formatMoney(bucket.price), capacity: bucket.capacity },
-              })}
-            </Text>
-          </XStack>
-        );
-      })}
+      {spaces.map(([label, bucket]) => (
+        <XStack key={label || 'whole-venue'} justifyContent="space-between" gap={8}>
+          <Text flex={1} fontSize={13} fontWeight="600" color="$color" numberOfLines={1}>
+            {label || t('availability.wholeVenue')}
+          </Text>
+          <Text fontSize={12} color="$muted">
+            {t('availability.recurring.preview.slotsCount', { vars: { count: bucket.count } })}
+            {' · '}
+            {t('availability.recurring.preview.priceCap', {
+              vars: { price: formatMoney(bucket.price), capacity: bucket.capacity },
+            })}
+          </Text>
+        </XStack>
+      ))}
       <XStack justifyContent="space-between" alignItems="center">
         <Text fontSize={12} fontWeight="600" color="$muted">
           {t('availability.recurring.preview.totalRevenue')}

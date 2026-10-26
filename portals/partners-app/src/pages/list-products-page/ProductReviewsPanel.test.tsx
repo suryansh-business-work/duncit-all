@@ -3,6 +3,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import { type MockedResponse } from '@apollo/client/testing';
 import { MockedProvider } from '@apollo/client/testing/react';
 import { gql } from '@apollo/client';
+import { GraphQLError } from 'graphql';
 import ProductReviewsPanel from './ProductReviewsPanel';
 
 afterEach(cleanup);
@@ -189,6 +190,21 @@ describe('ProductReviewsPanel', () => {
     expect((screen.getByPlaceholderText('Reply to this review') as HTMLInputElement).value).toBe(
       'Sorry!',
     );
+  });
+
+  it('says in its own words that the reply could not be saved when the server gives no reason', async () => {
+    renderPanel([
+      reviewsMock([review()], { average_rating: 5, total: 1 }),
+      {
+        request: { query: REPLY_TO_REVIEW, variables: { review_id: 'r1', reply: 'Sorry!' } },
+        result: { errors: [new GraphQLError('')] },
+      },
+    ]);
+
+    fireEvent.change(await screen.findByPlaceholderText('Reply to this review'), { target: { value: 'Sorry!' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Reply' }));
+
+    await waitFor(() => expect(screen.getByRole('alert').textContent).toContain('Could not save your reply.'));
   });
 
   it('renders one divider between consecutive reviews', async () => {

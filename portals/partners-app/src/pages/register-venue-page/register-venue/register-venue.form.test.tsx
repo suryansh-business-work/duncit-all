@@ -370,6 +370,19 @@ describe('RegisterVenueForm — edit-approved mode', () => {
     expect(screen.getByLabelText(/Venue description/)).toBeTruthy();
   });
 
+  it('locks the payout method of an approved venue and says why, while a registering venue can still change it', async () => {
+    mount({ venue: savedVenue, mode: 'edit-approved' });
+    fireEvent.click(screen.getByRole('tab', { name: 'Payout method' }));
+    expect(await screen.findByText(/locked/i)).toBeTruthy();
+    expect(screen.getByRole('combobox', { name: /Payout method/i }).getAttribute('aria-disabled')).toBe('true');
+    cleanup();
+
+    mount({ venue: savedVenue, mode: 'register' });
+    fireEvent.click(screen.getByRole('tab', { name: 'Payout method' }));
+    const select = await screen.findByRole('combobox', { name: /Payout method/i });
+    expect(select.getAttribute('aria-disabled')).toBeNull();
+  });
+
   it('offers an approved venue no setup sections either — Venue Options edits them', () => {
     mount({ venue: { ...savedVenue, offers_food: true }, mode: 'edit-approved' });
 

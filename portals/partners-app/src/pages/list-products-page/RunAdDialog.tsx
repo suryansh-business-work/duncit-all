@@ -63,11 +63,11 @@ export default function RunAdDialog({ product, adKind, open, onClose, onSubmitte
     const base = blankAdRequestValues();
     if (!product) return base;
     const image = product.image_url || product.images?.[0] || '';
-    const name = String(product.product_name ?? '');
+    const name = product.product_name;
     return {
       ...base,
       ad_title: adKind === 'BRAND_AD' ? `Discover ${name}` : name,
-      ad_description: String(product.description ?? '').slice(0, 1000),
+      ad_description: (product.description ?? '').slice(0, 1000),
       media_url: image,
     };
   }, [product, adKind]);
@@ -77,12 +77,11 @@ export default function RunAdDialog({ product, adKind, open, onClose, onSubmitte
 
   const title = adKind === 'BRAND_AD' ? 'Run a Brand Ad' : 'Run a Product Ad';
 
-  const handleSubmit = async (values: AdRequestFormValues) => {
-    if (!product) return;
+  const handleSubmit = async (current: ProductListingRow, values: AdRequestFormValues) => {
     setError(null);
     try {
       const result = await submitAd({
-        variables: { input: { ...toSubmitAdRequestInput(values), ad_kind: adKind, product_id: product.id } },
+        variables: { input: { ...toSubmitAdRequestInput(values), ad_kind: adKind, product_id: current.id } },
       });
       onSubmitted(result.data?.submitAdRequest?.trace_id ?? '');
     } catch (submitError) {
@@ -102,16 +101,18 @@ export default function RunAdDialog({ product, adKind, open, onClose, onSubmitte
               xs: 12,
               md: 8
             }}>
-            <AdRequestForm
-              key={`${product?.id ?? 'none'}-${adKind}`}
-              initialValues={initialValues}
-              busy={saving}
-              errorMessage={error}
-              onValuesChange={setDraft}
-              onSubmit={handleSubmit}
-              submitLabel={title}
-              durationWindow={adDurationWindow(pricingData?.adPricing)}
-            />
+            {product && (
+              <AdRequestForm
+                key={`${product.id}-${adKind}`}
+                initialValues={initialValues}
+                busy={saving}
+                errorMessage={error}
+                onValuesChange={setDraft}
+                onSubmit={(values) => handleSubmit(product, values)}
+                submitLabel={title}
+                durationWindow={adDurationWindow(pricingData?.adPricing)}
+              />
+            )}
           </Grid>
           <Grid
             size={{

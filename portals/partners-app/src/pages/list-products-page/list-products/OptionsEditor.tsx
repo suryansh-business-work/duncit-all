@@ -46,7 +46,7 @@ export default function OptionsEditor({ control }: Readonly<Props>) {
                 multiple
                 freeSolo
                 options={[]}
-                value={(valuesField.value as string[] | undefined) ?? []}
+                value={valuesField.value as string[]}
                 onChange={(_event, next) => valuesField.onChange(next)}
                 sx={{ flex: 1, minWidth: 220 }}
                 renderInput={(params) => (

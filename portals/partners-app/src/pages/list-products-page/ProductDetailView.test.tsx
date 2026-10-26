@@ -147,3 +147,17 @@ describe('ProductDetailView', () => {
     expect(screen.queryByRole('heading', { name: /Variant \d/ })).toBeNull();
   });
 });
+
+describe('ProductDetailView with gaps in the listing', () => {
+  it('shows no categories and a zero commission for a listing that has neither', () => {
+    renderWithProviders(<ProductDetailView product={product({ categories: null, commission_pct: null })} />);
+    expect(screen.getByText(/Delivery: ShipRocket · Commission:/).textContent).toBe('Delivery: ShipRocket · Commission: 0%');
+    expect(screen.queryByText(/›/)).toBeNull();
+  });
+
+  it('shows no pictures for a variant whose images are not a list', () => {
+    const base = product();
+    renderWithProviders(<ProductDetailView product={product({ variants: [{ ...base.variants[0], images: null }] })} />);
+    expect(screen.queryAllByRole('img', { name: 'Variant' })).toHaveLength(0);
+  });
+});

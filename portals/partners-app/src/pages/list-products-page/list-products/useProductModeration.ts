@@ -47,7 +47,7 @@ export function useProductModeration(stepTitles: string[]) {
           message: violation.message,
           type: violation.type,
           stepIndex,
-          stepTitle: stepTitles[stepIndex] ?? 'the form',
+          stepTitle: stepTitles[stepIndex],
         };
       });
       setBlocked(items);

@@ -167,7 +167,7 @@ export function useRegisterVenueForm({
   const parsed = schema.safeParse(values);
   if (!parsed.success) {
     for (const issue of parsed.error.issues) {
-      const root = String(issue.path[0] ?? '');
+      const root = String(issue.path[0]);
       for (const section of Object.keys(SECTION_FIELDS) as EditableSectionKey[]) {
         if ((SECTION_FIELDS[section] as string[]).includes(root)) sectionState[section] = 'incomplete';
       }
@@ -268,12 +268,11 @@ export function useRegisterVenueForm({
     setError(null);
     const ok = await form.trigger();
     if (!ok) {
-      const parsed = schema.safeParse(form.getValues());
-      const firstPath = parsed.success ? '' : String(parsed.error.issues[0]?.path[0] ?? '');
-      const section = (Object.keys(SECTION_FIELDS) as EditableSectionKey[]).find((key) =>
-        (SECTION_FIELDS[key] as string[]).includes(firstPath)
-      );
-      if (section) setActive(section);
+      // Opens the first section the rail marks incomplete, so the reader lands on what to fix.
+      (Object.keys(SECTION_FIELDS) as EditableSectionKey[])
+        .filter((key) => sectionState[key] === 'incomplete')
+        .slice(0, 1)
+        .forEach((key) => setActive(key));
       setError('Fix the highlighted fields before submitting.');
       return null;
     }

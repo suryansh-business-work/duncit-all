@@ -60,9 +60,10 @@ export default function DocumentsSection({ form, config, mode, lockedDocCount = 
         testId={`register-venue-${toggle}-document`}
       />
     ) : null;
-  // Switching a tax id off drops its (unverified) document with it.
+  // Switching a tax id off drops its (unverified) document with it. The switch is disabled once
+  // the venue is approved, which is the only time a document is locked, so none is locked here.
   const dropTaxDocument = (toggle: TaxToggle) => () =>
-    remove(documents.flatMap((doc, index) => (doc.type === taxDocTypes[toggle] && !isRowLocked(index) ? [index] : [])));
+    remove(documents.flatMap((doc, index) => (doc.type === taxDocTypes[toggle] ? [index] : [])));
 
   return (
     <Stack spacing={2.5}>
@@ -152,7 +153,7 @@ export default function DocumentsSection({ form, config, mode, lockedDocCount = 
               )}
             />
             <DocumentFileControl
-              url={documents[index]?.url ?? ''}
+              url={documents[index].url}
               locked={isRowLocked(index)}
               onUpload={() => picker.open(index)}
               onClear={() => {

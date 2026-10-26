@@ -98,6 +98,18 @@ describe('ListProductsPage', () => {
     expect(screen.getByTestId('location').textContent).toBe('/ecomm-brand/b1/products/p1/settings');
   });
 
+  it('inside the brand page shows only the Add Product action above the table', async () => {
+    renderWithProviders(<ListProductsPage embedded />, {
+      mocks: [accessMock([ECOMM_MANAGER])],
+      path: '/ecomm-brand/:brandId/products',
+      route: '/ecomm-brand/b1/products',
+    });
+    expect(await screen.findByText('Listings of b1 (manageable)')).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Add Product' }).getAttribute('href')).toBe('/ecomm-brand/b1/products/new');
+    expect(screen.queryByRole('heading', { level: 1 })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Back to brands' })).toBeNull();
+  });
+
   it('goes back to the brands list', async () => {
     renderPage([accessMock([ECOMM_MANAGER])]);
     fireEvent.click(await screen.findByRole('button', { name: 'Back to brands' }));

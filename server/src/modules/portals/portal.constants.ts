@@ -40,6 +40,10 @@ export const PORTAL_ROLE_REQUIREMENTS: Record<string, readonly string[]> = {
   support: ['SUPPORT_MANAGER', 'SUPPORT_USER'],
   tech: ['TECH_MANAGER'],
   'website-app': ['WEBSITE_MANAGER'],
+  // MCP_USER may connect an AI client; MCP_MANAGER also sees everyone's usage
+  // and owns the settings. Neither widens what the AI can do: every tool runs
+  // with the person's own console roles.
+  mcp: ['MCP_MANAGER', 'MCP_USER'],
 };
 
 // Consumer + partner surfaces are never portal-gated at login.

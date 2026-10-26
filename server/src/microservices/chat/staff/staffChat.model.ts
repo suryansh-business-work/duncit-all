@@ -199,4 +199,5 @@ export const STAFF_ROLES = [
   'LOCALIZATION_MANAGER',
   'TARGETS_MANAGER',
   'GIG_JOBS_MANAGER',
+  'MCP_MANAGER',
 ] as const;

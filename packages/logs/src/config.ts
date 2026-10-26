@@ -41,6 +41,8 @@ export const PORTALS = [
   'targets',
   // Gig Jobs moderation.
   'gig-jobs',
+  // AI connectors (MCP): connections, tool calls and their settings.
+  'mcp',
 ] as const;
 export type PortalKey = (typeof PORTALS)[number];
 

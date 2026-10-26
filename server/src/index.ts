@@ -83,7 +83,7 @@ import { connectDB } from './config/db';
 import { initRedis } from './config/redis';
 import { startNotifyWorker } from '@services/notify/notify.service';
 import { redisResponseCachePlugin } from './config/redisResponseCache';
-import { typeDefs, resolvers } from './modules';
+import { typeDefs, typeDefsByModule, resolvers } from './modules';
 import { buildContext, GraphQLContext } from './context';
 import {
   surfaceFromOrigin,
@@ -95,6 +95,7 @@ import { telemetryService } from '@modules/platform/telemetry/telemetry.service'
 import { buildTelemetryFeedRouter } from '@modules/platform/telemetry/telemetry.router';
 import { buildAiPromptFeedRouter } from '@modules/ai/prompt/prompt.router';
 import { buildTableApiRouter } from '@modules/platform/tableApi/tableApi.router';
+import { buildMcpRouter } from '@microservices/mcp/http/mcp.router';
 import { categoryService } from '@modules/pods/category/category.service';
 import { notificationService } from '@modules/engagement/notification/notification.service';
 import { notificationStreamHandler } from '@modules/engagement/notification/notification.stream';
@@ -967,6 +968,11 @@ async function bootstrap() {
   // Every portal table's "GET API": /table-api/<tableQueryName>, authorised by the
   // caller's personal token and run through Apollo as them. See tableApi.router.ts.
   app.use('/table-api', buildTableApiRouter({ apollo, typeDefs, resolvers }));
+
+  // mcp.duncit.com: the MCP connectors (/mcp, /<portal>/mcp) and their OAuth
+  // server. Only those paths enter it; every tool runs through Apollo as the
+  // connected person. See microservices/mcp/README.md.
+  app.use(buildMcpRouter({ apollo, typeDefsByModule, resolvers }));
 
   // Branded notice at the API root instead of Express's default "Cannot GET /".
   app.get('/', (_req, res) => res.type('html').send(LANDING_HTML));

@@ -259,6 +259,15 @@ export const SURFACES: readonly Surface[] = [
       'The console for Gig Jobs: every gig hosts, venue owners and brand owners post (close, reopen or delete it), the freelancers who are interested and their shared contact, every freelancer who joined from Earn with Duncit, and the gig categories.',
   },
   {
+    key: 'mcp',
+    name: 'MCP',
+    kind: 'PORTAL',
+    host: 'mcp.duncit.com',
+    dev_port: 2046,
+    summary:
+      "The console for connecting AI apps (Claude, ChatGPT, Gemini) to Duncit over MCP: each console's connector URL, the AI apps you have connected and ending a connection, every tool call made for you, and — for MCP managers — everyone's usage and the MCP safety settings. The AI only ever acts with the consoles you already have.",
+  },
+  {
     key: 'ecomm',
     name: 'Duncit Pet Store',
     kind: 'WEBSITE',

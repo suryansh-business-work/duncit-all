@@ -10459,9 +10459,11 @@ export type GoogleSignupInput = {
 };
 
 export type GrantE2eRunAccountRolesInput = {
+  /** For CITY_ADMIN: the city the run account administers; cleared when CITY_ADMIN is revoked. */
+  assigned_city?: InputMaybe<Scalars['String']['input']>;
   /** The run account; must carry the stamp. */
   email: Scalars['String']['input'];
-  /** Portal roles to add: SUPPORT_MANAGER, LEGAL_MANAGER, ALL_PODS_ACCESS. */
+  /** Roles from the run-account list (never SUPER_ADMIN, TECH_MANAGER or FINANCE_MANAGER). */
   roles: Array<Scalars['String']['input']>;
   /** The run's ddMMyyyyHHmm stamp. */
   stamp: Scalars['String']['input'];
@@ -12635,6 +12637,224 @@ export type MarketingDashboardTopLink = {
   revenue: Scalars['Float']['output'];
 };
 
+export type McpAuthorizationDecision = {
+  __typename?: 'McpAuthorizationDecision';
+  /** Send the browser here to finish. */
+  redirect_url: Scalars['String']['output'];
+};
+
+/** What the consent page shows before the person approves an AI app. */
+export type McpAuthorizationRequest = {
+  __typename?: 'McpAuthorizationRequest';
+  /** False when this account has no MCP role — it may only decline. */
+  can_approve: Scalars['Boolean']['output'];
+  client_name: Scalars['String']['output'];
+  client_uri?: Maybe<Scalars['String']['output']>;
+  endpoint_label: Scalars['String']['output'];
+  expires_at: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  /** Where the app sends the person back after approving. */
+  redirect_host: Scalars['String']['output'];
+  requests_write: Scalars['Boolean']['output'];
+  resource: Scalars['String']['output'];
+  /** Whether that host is on the MCP settings' trusted list. */
+  trusted: Scalars['Boolean']['output'];
+};
+
+export type McpCatalog = {
+  __typename?: 'McpCatalog';
+  categories: Array<McpCategoryCount>;
+  tools: Array<McpToolInfo>;
+  total: Scalars['Int']['output'];
+};
+
+export type McpCategoryCount = {
+  __typename?: 'McpCategoryCount';
+  category: Scalars['String']['output'];
+  label: Scalars['String']['output'];
+  tools: Scalars['Int']['output'];
+};
+
+/** One approved AI app connection. */
+export type McpConnection = {
+  __typename?: 'McpConnection';
+  client_id: Scalars['String']['output'];
+  client_name: Scalars['String']['output'];
+  created_at: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  last_ip?: Maybe<Scalars['String']['output']>;
+  last_used_at?: Maybe<Scalars['String']['output']>;
+  resource: Scalars['String']['output'];
+  revoked_at?: Maybe<Scalars['String']['output']>;
+  revoked_reason?: Maybe<Scalars['String']['output']>;
+  scopes: Array<Scalars['String']['output']>;
+  /** ACTIVE, REVOKED or EXPIRED. */
+  status: Scalars['String']['output'];
+  user_agent?: Maybe<Scalars['String']['output']>;
+  user_email?: Maybe<Scalars['String']['output']>;
+  user_id: Scalars['ID']['output'];
+};
+
+export type McpConnectionTablePage = {
+  __typename?: 'McpConnectionTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<McpConnection>;
+  total: Scalars['Int']['output'];
+};
+
+/** One MCP connector URL — the gateway, or one console's own. */
+export type McpConnector = {
+  __typename?: 'McpConnector';
+  /** Whether the signed-in person can open it. */
+  accessible: Scalars['Boolean']['output'];
+  categories: Array<Scalars['String']['output']>;
+  key: Scalars['String']['output'];
+  label: Scalars['String']['output'];
+  /** The console whose access opens it (empty for the gateway). */
+  portal: Scalars['String']['output'];
+  /** Tools this person would see on it with a read & write connection. */
+  tool_count: Scalars['Int']['output'];
+  url: Scalars['String']['output'];
+};
+
+export type McpSettings = {
+  __typename?: 'McpSettings';
+  allow_untrusted_clients: Scalars['Boolean']['output'];
+  currency: Scalars['String']['output'];
+  /** block or warn. */
+  default_injection_guard: Scalars['String']['output'];
+  disabled_categories: Array<Scalars['String']['output']>;
+  disabled_tools: Array<Scalars['String']['output']>;
+  token_price_input_per_million: Scalars['Float']['output'];
+  token_price_output_per_million: Scalars['Float']['output'];
+  trusted_redirect_hosts: Array<Scalars['String']['output']>;
+  updated_at?: Maybe<Scalars['String']['output']>;
+  updated_by?: Maybe<Scalars['ID']['output']>;
+  write_tools_enabled: Scalars['Boolean']['output'];
+};
+
+export type McpSettingsInput = {
+  allow_untrusted_clients?: InputMaybe<Scalars['Boolean']['input']>;
+  currency?: InputMaybe<Scalars['String']['input']>;
+  default_injection_guard?: InputMaybe<Scalars['String']['input']>;
+  disabled_categories?: InputMaybe<Array<Scalars['String']['input']>>;
+  disabled_tools?: InputMaybe<Array<Scalars['String']['input']>>;
+  token_price_input_per_million?: InputMaybe<Scalars['Float']['input']>;
+  token_price_output_per_million?: InputMaybe<Scalars['Float']['input']>;
+  trusted_redirect_hosts?: InputMaybe<Array<Scalars['String']['input']>>;
+  write_tools_enabled?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+/** One MCP tool call — who, which tool, from which app, why, with what, and how it went. */
+export type McpToolCall = {
+  __typename?: 'McpToolCall';
+  /** The arguments as JSON — credentials redacted, long values cut. */
+  args_preview: Scalars['String']['output'];
+  category: Scalars['String']['output'];
+  client_name: Scalars['String']['output'];
+  connection_id?: Maybe<Scalars['ID']['output']>;
+  cost: Scalars['Float']['output'];
+  created_at: Scalars['String']['output'];
+  currency: Scalars['String']['output'];
+  duration_ms: Scalars['Int']['output'];
+  endpoint: Scalars['String']['output'];
+  error_code?: Maybe<Scalars['String']['output']>;
+  error_message?: Maybe<Scalars['String']['output']>;
+  guard_mode: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  injection_flags: Array<Scalars['String']['output']>;
+  input_tokens: Scalars['Int']['output'];
+  ip?: Maybe<Scalars['String']['output']>;
+  kind: Scalars['String']['output'];
+  output_tokens: Scalars['Int']['output'];
+  /** The reason the AI gave (mcp_reason). */
+  reason?: Maybe<Scalars['String']['output']>;
+  risk: Scalars['String']['output'];
+  /** OK, ERROR, DENIED, BLOCKED or INVALID. */
+  status: Scalars['String']['output'];
+  tool: Scalars['String']['output'];
+  user_agent?: Maybe<Scalars['String']['output']>;
+  user_email?: Maybe<Scalars['String']['output']>;
+  user_id: Scalars['ID']['output'];
+};
+
+export type McpToolCallTablePage = {
+  __typename?: 'McpToolCallTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<McpToolCall>;
+  total: Scalars['Int']['output'];
+};
+
+/** One MCP tool, as the console's Tools page lists it. */
+export type McpToolInfo = {
+  __typename?: 'McpToolInfo';
+  /** Whether the signed-in person could use it on a read & write connection. */
+  available: Scalars['Boolean']['output'];
+  category: Scalars['String']['output'];
+  category_label: Scalars['String']['output'];
+  description: Scalars['String']['output'];
+  /** Connector keys that list it (gateway reaches every tool through mcp_call_tool). */
+  endpoints: Array<Scalars['String']['output']>;
+  /** The tool's parameters as a JSON Schema document (JSON text). */
+  input_schema: Scalars['String']['output'];
+  /** QUERY, MUTATION or CURATED. */
+  kind: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  needs_confirmation: Scalars['Boolean']['output'];
+  reaches_outside: Scalars['Boolean']['output'];
+  /** READ, WRITE or DESTRUCTIVE. */
+  risk: Scalars['String']['output'];
+  title: Scalars['String']['output'];
+  unavailable_reason?: Maybe<Scalars['String']['output']>;
+};
+
+/** One bucket of the usage dashboard — a tool, a category, an app, a connector, a day or a person. */
+export type McpUsageBucket = {
+  __typename?: 'McpUsageBucket';
+  avg_ms: Scalars['Int']['output'];
+  blocked: Scalars['Int']['output'];
+  calls: Scalars['Int']['output'];
+  cost: Scalars['Float']['output'];
+  errors: Scalars['Int']['output'];
+  input_tokens: Scalars['Int']['output'];
+  key: Scalars['String']['output'];
+  last_at?: Maybe<Scalars['String']['output']>;
+  output_tokens: Scalars['Int']['output'];
+};
+
+export type McpUsageSummary = {
+  __typename?: 'McpUsageSummary';
+  by_category: Array<McpUsageBucket>;
+  by_client: Array<McpUsageBucket>;
+  by_day: Array<McpUsageBucket>;
+  by_endpoint: Array<McpUsageBucket>;
+  by_status: Array<McpUsageBucket>;
+  by_tool: Array<McpUsageBucket>;
+  /** MCP managers only — empty for everyone else. */
+  by_user: Array<McpUsageBucket>;
+  from: Scalars['String']['output'];
+  /** ALL for MCP managers, MINE for everyone else. */
+  scope: Scalars['String']['output'];
+  time_zone: Scalars['String']['output'];
+  to: Scalars['String']['output'];
+  totals: McpUsageTotals;
+};
+
+export type McpUsageTotals = {
+  __typename?: 'McpUsageTotals';
+  avg_ms: Scalars['Int']['output'];
+  blocked: Scalars['Int']['output'];
+  calls: Scalars['Int']['output'];
+  cost: Scalars['Float']['output'];
+  errors: Scalars['Int']['output'];
+  input_tokens: Scalars['Int']['output'];
+  last_at?: Maybe<Scalars['String']['output']>;
+  output_tokens: Scalars['Int']['output'];
+  users: Scalars['Int']['output'];
+};
+
 /**
  * One file (or folder) in the ImageKit media library.
  *
@@ -13172,6 +13392,8 @@ export type Mutation = {
   approveEcommBrand: EcommBrand;
   approveHost: Host;
   approveHostRequest: HostRequest;
+  /** Approve an AI app on the consent page. allow_write grants tools that change data. */
+  approveMcpAuthorization: McpAuthorizationDecision;
   /**
    * Approve every payout still pending on one pod request, in full, and credit
    * each beneficiary's wallet. Finance roles only.
@@ -13751,6 +13973,7 @@ export type Mutation = {
   deleteWebsiteContent: Scalars['Boolean']['output'];
   deleteWebsiteNavItem: Scalars['Boolean']['output'];
   deleteWebsiteReel: Scalars['Boolean']['output'];
+  denyMcpAuthorization: McpAuthorizationDecision;
   /** Admin denies a request. */
   denyRequest: ApprovalRequest;
   /** Products portal: deny a partner warehouse (stays blocked). */
@@ -13859,12 +14082,14 @@ export type Mutation = {
   getImagekitAuth: ImagekitAuth;
   grantAdminAccess: User;
   /**
-   * Add portal roles to this run's account, so the suite can follow what the
-   * member filed into the Support, Legal and Pods portals without a stored
+   * Add roles to this run's account, so the suite can follow what the member
+   * filed into the Support, Legal and Pods portals, and sign in with a limited
+   * staff or partner role to prove what that role is refused, without a stored
    * staff password. Answers with the account's roles. Tech/Super admin only;
    * refused unless "one-time codes for the run account" is on, for any address
-   * without the run's stamp, and for any role but a portal's sign-in role. The
-   * purge deletes the account, roles and all.
+   * without the run's stamp, and for any role outside the run-account list
+   * (never SUPER_ADMIN, TECH_MANAGER or FINANCE_MANAGER). The purge deletes the
+   * account, roles and all.
    */
   grantE2eRunAccountRoles: Array<Scalars['String']['output']>;
   /**
@@ -14566,7 +14791,11 @@ export type Mutation = {
   revokeAdminAccess: User;
   revokeApiKey: ApiKey;
   revokeBadge: Scalars['Boolean']['output'];
+  /** Take roles granted by grantE2eRunAccountRoles away again, under the same checks. Answers with the account's roles. */
+  revokeE2eRunAccountRoles: Array<Scalars['String']['output']>;
   revokeLeadSurveyLink: Scalars['Boolean']['output'];
+  /** End a connection — your own, or anyone's for MCP managers. */
+  revokeMcpConnection: McpConnection;
   revokeMyTableApiToken: TableApiAccess;
   /**
    * Undo a cancellation: the pod becomes visible again, reclaiming the venue slot
@@ -15350,6 +15579,8 @@ export type Mutation = {
   updateLocation: Location;
   /** Support portal: steps 2 and 3 — the reply message, the queue and the window. */
   updateMailAutomationRule: MailAutomationAccount;
+  /** MCP managers only. */
+  updateMcpSettings: McpSettings;
   /** Tags, and the focus rectangle a smart crop uses. */
   updateMediaFile: MediaItem;
   updateMeeting: OnboardingMeeting;
@@ -15850,6 +16081,12 @@ export type MutationApproveHostArgs = {
 export type MutationApproveHostRequestArgs = {
   id: Scalars['ID']['input'];
   notes?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type MutationApproveMcpAuthorizationArgs = {
+  allow_write: Scalars['Boolean']['input'];
+  id: Scalars['ID']['input'];
 };
 
 
@@ -17374,6 +17611,11 @@ export type MutationDeleteWebsiteReelArgs = {
 };
 
 
+export type MutationDenyMcpAuthorizationArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationDenyRequestArgs = {
   id: Scalars['ID']['input'];
   notes?: InputMaybe<Scalars['String']['input']>;
@@ -18767,8 +19009,18 @@ export type MutationRevokeBadgeArgs = {
 };
 
 
+export type MutationRevokeE2eRunAccountRolesArgs = {
+  input: GrantE2eRunAccountRolesInput;
+};
+
+
 export type MutationRevokeLeadSurveyLinkArgs = {
   entry_id: Scalars['ID']['input'];
+};
+
+
+export type MutationRevokeMcpConnectionArgs = {
+  id: Scalars['ID']['input'];
 };
 
 
@@ -20833,6 +21085,11 @@ export type MutationUpdateLocationArgs = {
 
 export type MutationUpdateMailAutomationRuleArgs = {
   input: MailAutomationRuleInput;
+};
+
+
+export type MutationUpdateMcpSettingsArgs = {
+  input: McpSettingsInput;
 };
 
 
@@ -27369,6 +27626,20 @@ export type Query = {
   marketplaceBrandsTable: EcommBrandTablePage;
   /** APPROVED, active venues that auto-match a club by location (+ locality) + Super/Sub category on ANY of the venue's categories (admin Club form). Empty when no location is given. */
   matchingVenues: Array<Venue>;
+  mcpAuthorizationRequest: McpAuthorizationRequest;
+  /** The tool catalog, optionally for one connector or category, or matching a word. */
+  mcpCatalog: McpCatalog;
+  /** Connections — own, or everyone's for MCP managers. */
+  mcpConnectionsTable: McpConnectionTablePage;
+  /** Every MCP connector URL, and which of them the signed-in person can open. */
+  mcpConnectors: Array<McpConnector>;
+  /** MCP managers only. */
+  mcpSettings: McpSettings;
+  mcpToolCall?: Maybe<McpToolCall>;
+  /** Activity — every tool call, newest first (own calls, or everyone's for MCP managers). */
+  mcpToolCallsTable: McpToolCallTablePage;
+  /** The usage dashboard. Everyone sees their own; MCP managers see everyone (or one person). */
+  mcpUsageSummary: McpUsageSummary;
   me?: Maybe<User>;
   /** Everything ImageKit knows about one file — the details panel. */
   mediaFile: MediaItem;
@@ -27531,6 +27802,7 @@ export type Query = {
   myLoginActivity: LoginActivityHistory;
   /** The signed-in person's own mail preferences. */
   myMailPreferences: MailPreference;
+  myMcpConnections: Array<McpConnection>;
   /** Current user's meeting request for a kind. */
   myMeeting?: Maybe<OnboardingMeeting>;
   /** All of the current user's onboarding meetings (one per kind). */
@@ -30271,6 +30543,40 @@ export type QueryMatchingVenuesArgs = {
   locality?: InputMaybe<Scalars['String']['input']>;
   location_id: Scalars['ID']['input'];
   super_category_id?: InputMaybe<Scalars['ID']['input']>;
+};
+
+
+export type QueryMcpAuthorizationRequestArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryMcpCatalogArgs = {
+  category?: InputMaybe<Scalars['String']['input']>;
+  endpoint?: InputMaybe<Scalars['String']['input']>;
+  search?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type QueryMcpConnectionsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryMcpToolCallArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryMcpToolCallsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryMcpUsageSummaryArgs = {
+  from?: InputMaybe<Scalars['String']['input']>;
+  to?: InputMaybe<Scalars['String']['input']>;
+  user_id?: InputMaybe<Scalars['ID']['input']>;
 };
 
 

@@ -43,6 +43,7 @@ export const PORTAL_REGISTRY: PortalRegistryEntry[] = [
   { key: 'localization', name: 'Localization', kind: 'PORTAL', url: 'https://localization.duncit.com/' },
   { key: 'targets', name: 'Targets', kind: 'PORTAL', url: 'https://targets.duncit.com/' },
   { key: 'gig-jobs', name: 'Gig Jobs', kind: 'PORTAL', url: 'https://gig-jobs.duncit.com/' },
+  { key: 'mcp', name: 'MCP', kind: 'PORTAL', url: 'https://mcp.duncit.com/' },
   { key: 'challenge', name: 'Challenges', kind: 'PORTAL', url: 'https://challenge.duncit.com/' },
   { key: 'developers', name: 'Developers', kind: 'PORTAL', url: 'https://developers.duncit.com/' },
   { key: 'mweb', name: 'mWeb (Member App)', kind: 'APP', url: 'https://mweb.duncit.com/' },

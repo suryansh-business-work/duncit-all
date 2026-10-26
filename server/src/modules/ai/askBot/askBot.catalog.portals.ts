@@ -771,6 +771,24 @@ export const PORTAL_PAGES: readonly NavigationPage[] = [
   { surface: 'targets', path: '/profile', label: 'Profile',
     description: 'Edit your first and last name, view your email, linked Google account and access-role chips, change your display language, and sign out of the Targets console.' },
 
+  // ---- MCP (mcp) -------------------------------------------------------
+  { surface: 'mcp', path: '/', label: 'Dashboard',
+    description: 'Your MCP usage over a date range — tool calls, how they went and what they cost. MCP managers see everyone, or one person.' },
+  { surface: 'mcp', path: '/activity', label: 'Activity',
+    description: 'Every tool call an AI app made through MCP, newest first: who, which app and tool, the reason it gave and the result. Your own calls; MCP managers see everyone\'s.' },
+  { surface: 'mcp', path: '/tools', label: 'Tools',
+    description: 'The tool catalogue — every tool an AI app can call, by connector and category, with a search.' },
+  { surface: 'mcp', path: '/connect', label: 'Connect',
+    description: 'The MCP URL for each console and the one gateway URL to add in Claude, ChatGPT or Gemini. An AI app asking to connect also lands here, to be approved read-only or read & write, or denied.' },
+  { surface: 'mcp', path: '/connections', label: 'Connections',
+    description: 'The AI apps connected to your account and ending a connection. MCP managers see and end anyone\'s.' },
+  { surface: 'mcp', path: '/settings', label: 'Settings',
+    description: 'MCP managers only: the MCP safety settings — kill switches, the default prompt-injection guard, tool prices and trusted redirect hosts.' },
+  { surface: 'mcp', path: '/guide', label: 'Guide',
+    description: 'How to connect an AI app (Claude, ChatGPT, Gemini or a coding tool) to Duncit over MCP, step by step.' },
+  { surface: 'mcp', path: '/profile', label: 'Profile',
+    description: 'Edit your first and last name, view your email, linked Google account and access-role chips, change your display language, and sign out of the MCP console.' },
+
   // ---- Duncit Pet Store (ecomm) ---------------------------------------
   { surface: 'ecomm', path: '/', label: 'Home',
     description: 'The pet store home page: offers, shop by pet, categories, curated collections and brands.' },

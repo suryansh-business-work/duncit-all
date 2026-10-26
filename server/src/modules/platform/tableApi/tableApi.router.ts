@@ -8,7 +8,7 @@ import { logs } from '@observability/log';
 import { createTableOperations, type SdlSource } from './tableApi.operation';
 import { pageUrl, TOKEN_HEADER, TOKEN_PARAM, tokenOf, variablesOf } from './tableApi.request';
 import { tableApiService } from './tableApi.service';
-import { NO_CONSENT } from '@utils/consent';
+import { executeAsUser } from '@utils/execute-as-user';
 
 /**
  * The GET API behind every portal table's "GET API" dialog.
@@ -122,21 +122,10 @@ export function buildTableApiRouter({ apollo, typeDefs, resolvers }: TableApiDep
         sendJson(res, 400, { error: 'BAD_USER_INPUT', message: (error as Error).message });
         return;
       }
-      const contextValue: GraphQLContext = {
-        req,
-        res,
-        user,
-        device_id: null,
-        consent: NO_CONSENT,
-        noRedis: true,
-        isClientGone: watchClientPresence(res),
-      };
-      const response = await apollo.executeOperation(
-        { query: operation.document, operationName: operation.operationName, variables },
-        { contextValue }
+      const { data, errors } = await executeAsUser(
+        { apollo, user, req, res, isClientGone: watchClientPresence(res) },
+        { document: operation.document, operationName: operation.operationName, variables }
       );
-      if (response.body.kind !== 'single') throw new Error('Unexpected incremental response');
-      const { data, errors } = response.body.singleResult;
       const payload = (data as Record<string, TablePayload | null> | null | undefined)?.[table];
       if (errors?.length || !payload) {
         sendFailure(res, errors?.[0]);

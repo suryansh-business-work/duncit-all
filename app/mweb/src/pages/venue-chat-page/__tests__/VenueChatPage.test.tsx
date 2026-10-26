@@ -3,23 +3,39 @@ import { act, fireEvent, render, screen, waitFor, within } from '@testing-librar
 import type { MockedResponse } from '@apollo/client/testing';
 import { MockedProvider } from '@apollo/client/testing/react';
 import { GraphQLError } from 'graphql';
-import { describe, expect, it, vi } from 'vitest';
-import { POD_VENUE_OFFER_TERMS } from '@duncit/availability-calendar';
-import { VENUE_CHAT_PAGE, type VenueChatLine } from '@duncit/utils';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import type { VenueChatLine } from '@duncit/utils';
 import VenueChatPage from '..';
-import { VENUE_CHAT_MESSAGES, VENUE_CHAT_RESUBMIT_POD, VENUE_CHAT_ROOM } from '../queries';
+import { VENUE_CHAT_RESUBMIT_POD, VENUE_CHAT_ROOM } from '../queries';
+import {
+  HOST_CARD,
+  at,
+  counter,
+  line,
+  linesMock,
+  liveOffer,
+  markReadMock,
+  offerLine,
+  offerMock,
+  roomMock,
+} from './fixtures';
 
+const navigate = vi.hoisted(() => vi.fn());
 vi.mock('react-router', async (importOriginal) => ({
   ...(await importOriginal<typeof import('react-router')>()),
   useParams: () => ({ podId: 'pod-1' }),
-  useNavigate: () => vi.fn(),
+  useNavigate: () => navigate,
 }));
 
-// The socket is its own hook; here only what it hands the page matters.
-const socket = vi.hoisted(() => ({ onLine: null as null | ((line: VenueChatLine) => void) }));
+// The socket is its own hook (useVenueChatSocket.test); here only what it hands the page matters.
+const socket = vi.hoisted(() => ({
+  onLine: null as null | ((line: VenueChatLine) => void),
+  onRemoved: null as null | ((id: string) => void),
+}));
 vi.mock('../useVenueChatSocket', () => ({
-  useVenueChatSocket: (params: { onLine: (line: VenueChatLine) => void }) => {
+  useVenueChatSocket: (params: { onLine: (line: VenueChatLine) => void; onRemoved: (id: string) => void }) => {
     socket.onLine = params.onLine;
+    socket.onRemoved = params.onRemoved;
   },
 }));
 
@@ -40,154 +56,8 @@ vi.mock('@duncit/host-pod-actions', async (importOriginal) => ({
     ) : null,
 }));
 
-const START = '2026-12-05T12:30:00.000Z';
-const END = '2026-12-05T14:30:00.000Z';
-
-const breakdown = (venue_payout: number, total: number, pax: number) => ({
-  __typename: 'VenuePriceBreakdown',
-  model: 'PER_PAX',
-  rate: 300,
-  pax,
-  hours: 2,
-  date: '2026-12-05',
-  base: venue_payout,
-  rules: [],
-  rules_total: 0,
-  min_spend_top_up: 0,
-  cleaning_fee: 0,
-  pet_fee: 0,
-  venue_price: venue_payout,
-  gst_pct: 0,
-  taxes: 0,
-  venue_payout,
-  platform_fee_pct: 10,
-  platform_fee: total - venue_payout,
-  total,
-  deposit: 0,
-});
-
-/** The live offer as `podVenueOffer` answers it. */
-const liveOffer = (over: Record<string, unknown> = {}) => ({
-  __typename: 'VenueBookingOffer',
-  slot_id: 'slot-1',
-  status: 'SENT',
-  round: 1,
-  awaiting: 'VENUE',
-  model: 'PER_GUEST',
-  rate: 300,
-  pax: 20,
-  min_guests: 8,
-  offerings: ['10 chairs'],
-  note: '',
-  pets: false,
-  space_label: '',
-  expires_at: '2026-12-02T06:30:00.000Z',
-  quote: breakdown(6000, 6600, 20),
-  quote_min: breakdown(2400, 2640, 8),
-  counter: null,
-  pod_id: 'pod-1',
-  start_at: START,
-  end_at: END,
-  ...over,
-});
-
-const counter = {
-  __typename: 'VenueOfferCounter',
-  model: 'FLAT',
-  rate: 7000,
-  min_guests: 0,
-  offerings: [],
-  note: 'Weekend rate',
-  at: null,
-  quote: breakdown(7000, 7700, 20),
-  quote_min: breakdown(7000, 7700, 20),
-};
-
-const move = (over: Record<string, unknown> = {}) => ({
-  __typename: 'VenueChatOffer',
-  slot_id: 'slot-1',
-  round: 1,
-  event: 'OFFER',
-  by: 'HOST',
-  model: 'PER_GUEST',
-  rate: 300,
-  min_guests: 8,
-  max_guests: 20,
-  offerings: ['10 chairs'],
-  note: '',
-  start_at: START,
-  end_at: END,
-  space_label: '',
-  pets: false,
-  venue_receives_min: 2400,
-  venue_receives_max: 6000,
-  total_min: 2640,
-  total_max: 6600,
-  expires_at: '2026-12-02T06:30:00.000Z',
-  reason: '',
-  ...over,
-});
-
-const line = (id: string, over: Record<string, unknown> = {}) => ({
-  __typename: 'PodMessage',
-  id,
-  pod_id: 'pod-1',
-  user_id: 'u-venue',
-  user_name: 'Ravi',
-  user_photo: null,
-  type: 'TEXT',
-  text: 'Hello!',
-  image_url: null,
-  deleted: false,
-  createdAt: '2026-12-01T06:00:00.000Z',
-  offer: null,
-  ...over,
-});
-
-const offerLine = (id: string, minute: number, over: Record<string, unknown>) =>
-  line(id, {
-    type: 'OFFER',
-    text: 'Booking offer',
-    user_id: over.by === 'HOST' ? 'u-host' : 'u-venue',
-    createdAt: `2026-12-01T06:${String(minute).padStart(2, '0')}:00.000Z`,
-    offer: move(over),
-  });
-
-const roomMock = (my_side: 'HOST' | 'VENUE'): MockedResponse => ({
-  request: { query: VENUE_CHAT_ROOM, variables: { pod_id: 'pod-1' } },
-  maxUsageCount: Number.POSITIVE_INFINITY,
-  result: {
-    data: {
-      venueChatRoom: {
-        __typename: 'VenueChatRoom',
-        pod_id: 'pod-1',
-        pod_title: 'Pottery night',
-        pod_date_time: START,
-        venue_id: 'venue-1',
-        venue_name: 'Skyline Banquets',
-        venue_photo: null,
-        my_side,
-        counterpart_name: my_side === 'HOST' ? 'Ravi' : 'Asha',
-        counterpart_phone: '+91 98000 00000',
-        counterpart_email: 'ravi@venue.test',
-      },
-    },
-  },
-});
-
-const linesMock = (lines: object[]): MockedResponse => ({
-  request: { query: VENUE_CHAT_MESSAGES, variables: { pod_id: 'pod-1', limit: VENUE_CHAT_PAGE } },
-  maxUsageCount: Number.POSITIVE_INFINITY,
-  result: { data: { venueChatMessages: lines } },
-});
-
-const offerMock = (offer: object | null, seen: unknown[] = []): MockedResponse => ({
-  request: { query: POD_VENUE_OFFER_TERMS, variables: () => true },
-  maxUsageCount: Number.POSITIVE_INFINITY,
-  result: (variables: unknown) => {
-    seen.push(variables);
-    return { data: { podVenueOffer: offer } };
-  },
+afterEach(() => {
+  navigate.mockReset();
 });
 
 const resubmitPodMock = (fail = false): MockedResponse => ({
@@ -212,7 +82,7 @@ const resubmitPodMock = (fail = false): MockedResponse => ({
 
 const renderPage = (mocks: MockedResponse[]) =>
   render(
-    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[...mocks, markReadMock()]}>
       <VenueChatPage />
     </MockedProvider>,
   );
@@ -221,15 +91,16 @@ const counterLines = [line('t1'), offerLine('m1', 1, { event: 'OFFER', by: 'HOST
 const countered = liveOffer({ status: 'COUNTERED', awaiting: 'HOST', round: 2, counter });
 
 describe('VenueChatPage', () => {
-  it("shows the venue's contact, text lines as bubbles and each offer move as a card — answerable only on the newest", async () => {
+  it('shows who the thread is with, text lines as bubbles and each offer move as a card — answerable only on the newest', async () => {
     renderPage([roomMock('HOST'), linesMock(counterLines), offerMock(countered)]);
     expect(await screen.findByTestId('venue-chat-title')).toHaveTextContent('Skyline Banquets');
-    expect(screen.getByRole('link', { name: 'Phone +91 98000 00000' })).toHaveAttribute('href', 'tel:+919800000000');
-    expect(screen.getByRole('link', { name: 'Email ravi@venue.test' })).toHaveAttribute('href', 'mailto:ravi@venue.test');
+    // The phone and email moved off the header into the Contact sheet.
+    expect(screen.queryByRole('link', { name: /^Phone/ })).not.toBeInTheDocument();
     expect(screen.getByText('Hello!')).toBeInTheDocument();
 
     const older = screen.getByRole('article', { name: 'You sent an offer' });
-    expect(within(older).queryByRole('button')).not.toBeInTheDocument();
+    // An older move is a record: it can be reacted to, never answered.
+    expect(within(older).getAllByRole('button')).toEqual([within(older).getByRole('button', { name: 'React' })]);
     const newest = screen.getByRole('article', { name: 'The venue countered' });
     expect(await within(newest).findByTestId('host-offer-accept')).toBeInTheDocument();
     expect(within(newest).getByTestId('host-offer-counter')).toBeInTheDocument();
@@ -242,7 +113,7 @@ describe('VenueChatPage', () => {
     await screen.findByRole('article', { name: 'The venue countered' });
     await waitFor(() => expect(seen).toHaveLength(1));
 
-    act(() => socket.onLine?.(line('t2', { text: 'See you there', createdAt: '2026-12-01T06:03:00.000Z' }) as VenueChatLine));
+    act(() => socket.onLine?.(line('t2', { text: 'See you there', createdAt: at(3) }) as VenueChatLine));
     expect(await screen.findByText('See you there')).toBeInTheDocument();
     expect(seen).toHaveLength(1);
 
@@ -251,11 +122,12 @@ describe('VenueChatPage', () => {
     await waitFor(() => expect(seen).toHaveLength(2));
   });
 
-  it('lets a host send a new offer from a declined line, prefilled from it', async () => {
+  it('lets a host send a new offer from a declined line, prefilled from it — with nothing pinned once the offer is gone', async () => {
     const declined = [offerLine('m1', 1, { event: 'OFFER', by: 'HOST' }), offerLine('m2', 2, { event: 'DECLINED', by: 'VENUE', reason: 'Fully booked' })];
     renderPage([roomMock('HOST'), linesMock(declined), offerMock(null), resubmitPodMock()]);
     const card = await screen.findByRole('article', { name: 'The venue declined the offer' });
     expect(within(card).getByText('Reason: Fully booked')).toBeInTheDocument();
+    expect(screen.queryByTestId('venue-offer-pin')).not.toBeInTheDocument();
     fireEvent.click(within(card).getByRole('button', { name: 'Send a new offer' }));
     expect(await screen.findByTestId('resubmit-dialog')).toHaveTextContent('pod-1 PER_GUEST 300');
     fireEvent.click(screen.getByRole('button', { name: 'saved' }));
@@ -279,5 +151,112 @@ describe('VenueChatPage', () => {
     expect(within(card).getByTestId('offer-counter-slot-1')).toBeInTheDocument();
     expect(within(card).getByTestId('offer-reject-slot-1')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Send a new offer' })).not.toBeInTheDocument();
+  });
+});
+
+describe('VenueChatPage — the pinned offer', () => {
+  it("pins the host's turn under the header, with when to answer and each side's counters left", async () => {
+    renderPage([roomMock('HOST'), linesMock(counterLines), offerMock(countered)]);
+    const pin = await screen.findByRole('status', { name: 'Booking offer' });
+    expect(within(pin).getByTestId('venue-offer-pin-status')).toHaveTextContent('Your move');
+    expect(within(pin).getByText(/^Answer by /)).toBeInTheDocument();
+    // 3 a side: the host has used none, the venue one.
+    expect(within(pin).getByTestId('venue-offer-pin-counters')).toHaveTextContent('You: 3 of 3 counters left · Venue: 2 of 3 left');
+  });
+
+  it("reads the same offer from the venue's side once it waits on the venue", async () => {
+    renderPage([roomMock('VENUE'), linesMock([offerLine('m1', 1, { event: 'OFFER', by: 'HOST' })]), offerMock(liveOffer())]);
+    const pin = await screen.findByRole('status', { name: 'Booking offer' });
+    expect(within(pin).getByTestId('venue-offer-pin-status')).toHaveTextContent('Your move');
+    expect(within(pin).getByTestId('venue-offer-pin-counters')).toHaveTextContent('You: 2 of 3 counters left · Host: 3 of 3 left');
+  });
+});
+
+describe('VenueChatPage — Contact', () => {
+  it("opens both sides' details over the chat, and each card opens its page", async () => {
+    renderPage([roomMock('HOST'), linesMock([line('t1')]), offerMock(null)]);
+    fireEvent.click(await screen.findByTestId('venue-chat-contact-open'));
+
+    const host = within(await screen.findByTestId('venue-chat-host-card'));
+    expect(host.getByRole('heading', { name: 'Asha Rao' })).toBeInTheDocument();
+    expect(host.getByText('@asha')).toBeInTheDocument();
+    expect(host.getByText('Pottery teacher')).toBeInTheDocument();
+    expect(host.getByRole('link', { name: 'Phone +91 90000 11111' })).toHaveAttribute('href', 'tel:+919000011111');
+    expect(host.getByRole('link', { name: 'Email asha@host.test' })).toHaveAttribute('href', 'mailto:asha@host.test');
+
+    const venue = within(screen.getByTestId('venue-chat-venue-card'));
+    expect(venue.getByText('Banquet hall · Up to 120 guests')).toBeInTheDocument();
+    expect(venue.getByText('4 MG Road, Bengaluru')).toBeInTheDocument();
+    expect(venue.getByText('Ask for Ravi')).toBeInTheDocument();
+    expect(venue.getByRole('link', { name: 'Phone +91 98000 00000' })).toHaveAttribute('href', 'tel:+919800000000');
+
+    fireEvent.click(host.getByRole('button', { name: 'View profile' }));
+    expect(navigate).toHaveBeenLastCalledWith('/u/asha');
+    fireEvent.click(venue.getByRole('button', { name: 'View venue' }));
+    expect(navigate).toHaveBeenLastCalledWith('/venue/venue-1');
+    // The chat stayed where it was underneath.
+    expect(screen.getByText('Hello!')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId('venue-chat-contact-close'));
+    await waitFor(() => expect(screen.queryByTestId('venue-chat-host-card')).not.toBeInTheDocument());
+  });
+
+  it('opens a host with no handle by their id', async () => {
+    renderPage([roomMock('VENUE', { host: { ...HOST_CARD, username: '' } }), linesMock([line('t1')]), offerMock(null)]);
+    fireEvent.click(await screen.findByTestId('venue-chat-contact-open'));
+    fireEvent.click(within(await screen.findByTestId('venue-chat-host-card')).getByRole('button', { name: 'View profile' }));
+    expect(navigate).toHaveBeenCalledWith('/u/u-host');
+  });
+
+  it('lists only the venue when the pod has no host on record — and reads no read marks as nobody having seen anything', async () => {
+    renderPage([roomMock('HOST', { host: null, read_marks: null }), linesMock([line('t1')]), offerMock(null)]);
+    expect(await screen.findByText('Hello!')).toBeInTheDocument();
+    expect(screen.queryByTestId('seen-faces')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId('venue-chat-contact-open'));
+    expect(await screen.findByTestId('venue-chat-venue-card')).toBeInTheDocument();
+    expect(screen.queryByTestId('venue-chat-host-card')).not.toBeInTheDocument();
+  });
+
+  it('offers no Contact on a thread the reader is not part of', async () => {
+    renderPage([
+      {
+        request: { query: VENUE_CHAT_ROOM, variables: { pod_id: 'pod-1' } },
+        result: { errors: [new GraphQLError('Not your thread', { extensions: { code: 'FORBIDDEN' } })] },
+      },
+      linesMock([]),
+    ]);
+    expect(await screen.findByTestId('venue-chat-unavailable')).toBeInTheDocument();
+    expect(screen.queryByTestId('venue-chat-contact-open')).not.toBeInTheDocument();
+  });
+});
+
+describe('VenueChatPage — lines that change after they are sent', () => {
+  it('puts a changed line in place of the one shown, marked edited', async () => {
+    renderPage([roomMock('HOST'), linesMock([line('t1'), line('t2', { text: 'Bring aprons', createdAt: at(1) })]), offerMock(null)]);
+    await screen.findByText('Hello!');
+
+    act(() => socket.onLine?.(line('t1', { text: 'Hello, Asha!', edited_at: at(5) }) as VenueChatLine));
+
+    const bubble = within(await screen.findByTestId('chat-message-t1'));
+    expect(bubble.getByText('Hello, Asha!')).toBeInTheDocument();
+    expect(bubble.getByText(/· Edited$/)).toBeInTheDocument();
+    expect(screen.queryByText('Hello!')).not.toBeInTheDocument();
+    // Only the changed line says so.
+    expect(within(screen.getByTestId('chat-message-t2')).queryByText(/Edited/)).not.toBeInTheDocument();
+  });
+
+  it('takes a line its author removed off the screen — one from the page or one the socket brought', async () => {
+    renderPage([roomMock('HOST'), linesMock([line('t1'), line('t2', { text: 'Bring aprons', createdAt: at(1) })]), offerMock(null)]);
+    await screen.findByText('Hello!');
+    act(() => socket.onLine?.(line('t3', { text: 'Typo here', createdAt: at(2) }) as VenueChatLine));
+    expect(await screen.findByText('Typo here')).toBeInTheDocument();
+
+    act(() => socket.onRemoved?.('t1'));
+    act(() => socket.onRemoved?.('t3'));
+
+    await waitFor(() => expect(screen.queryByText('Hello!')).not.toBeInTheDocument());
+    expect(screen.queryByText('Typo here')).not.toBeInTheDocument();
+    expect(screen.getByText('Bring aprons')).toBeInTheDocument();
   });
 });

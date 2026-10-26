@@ -20,12 +20,13 @@ export default function BookingOffersCard({ venue, onSaved }: Readonly<Props>) {
   const [save, saveState] = useMutation(UPDATE_VENUE_BOOKING_OFFERS);
   const [apiError, setApiError] = useState<string | null>(null);
 
-  // Keyed off the stored NUMBERS, not the object a refetch hands back fresh.
+  // Keyed off the stored VALUES, not the object a refetch hands back fresh.
   const minGuests = venue.settings?.offers?.min_guests ?? 0;
   const responseHours = venue.settings?.offers?.response_hours ?? 0;
+  const business = JSON.stringify(venue.settings?.offers?.min_business ?? []);
   const initialValues = useMemo(
-    () => toBookingOffersValues({ min_guests: minGuests, response_hours: responseHours }),
-    [minGuests, responseHours]
+    () => toBookingOffersValues({ min_guests: minGuests, response_hours: responseHours, min_business: JSON.parse(business) }),
+    [minGuests, responseHours, business]
   );
 
   const submit = async (values: BookingOffersValues) => {

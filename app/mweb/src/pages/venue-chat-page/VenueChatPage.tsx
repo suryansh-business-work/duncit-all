@@ -32,7 +32,10 @@ export default function VenueChatPage() {
   useVenueChatSocket({
     podId: room?.pod_id,
     // An offer move arrives on the same event as a text line; the room view re-reads the offer for it.
+    // A changed line (edited, reacted to, a counter revised) replaces the one on screen.
     onLine: (line) => thread.addLines([line]),
+    onRemoved: thread.removeLine,
+    onRead: thread.addMark,
     onJoinFailed: (code) =>
       setError(isVenueChatUnavailable(code) ? t('mweb.venueChat.unavailable') : t('mweb.venueChat.joinFailed')),
   });

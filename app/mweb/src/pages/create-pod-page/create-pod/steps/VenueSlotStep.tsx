@@ -1,5 +1,7 @@
 import { Controller } from 'react-hook-form';
 import { Alert, FormHelperText, MenuItem, Stack, TextField, Typography } from '@mui/material';
+import { VenueMinBusinessNote } from '@duncit/availability-calendar';
+import { formatStatementMoney } from '@duncit/utils';
 import VenueMapPreview from '../../../../components/VenueMapPreview';
 import { formatDurationBetween } from '../../../../utils/dateFormat';
 import type { FreePodVenueNotice, SpotsBounds } from '@duncit/utils';
@@ -11,6 +13,7 @@ import RequestSlotPicker from './RequestSlotPicker';
 import { venueSpaces, type VenueSpace } from './venueSpaces';
 import VirtualMeetingFields from '../VirtualMeetingFields';
 import { requiredLabel } from '../../../../forms/components/requiredLabel';
+import { usePricing } from '../../../../hooks/usePricing';
 import { useTranslation } from '../../../../i18n/useTranslation';
 import { SURFACE_SX } from '../../../../theme';
 import type { CreatePodForm, CreatePodVenue } from '../create-pod.types';
@@ -35,7 +38,8 @@ interface Props {
 /** Step 3 — pick a venue partner in the pod's city (card rail) and send it an
  * offer for a window (physical), or meeting details + schedule (virtual). A Pod
  * Request's pod keeps the slot that request holds. The offered window sets the
- * pod's date/time. */
+ * pod's date/time. Once a venue is picked, what it usually expects from a
+ * booking shows as a guide for the offer. */
 export default function VenueSlotStep({ form, venues, clubVenueIds, venueNotice, spots, offerMinGuests = 0 }: Readonly<Props>) {
   const {
     control,
@@ -44,6 +48,7 @@ export default function VenueSlotStep({ form, venues, clubVenueIds, venueNotice,
     formState: { errors },
   } = form;
   const { t } = useTranslation();
+  const { currency } = usePricing();
   const mode = watch('pod_mode');
   const locationId = watch('location_id');
   const venueId = watch('venue_id');
@@ -125,6 +130,13 @@ export default function VenueSlotStep({ form, venues, clubVenueIds, venueNotice,
             )}
           />
         </Stack>
+      )}
+      {selectedVenue && (
+        <VenueMinBusinessNote
+          rows={selectedVenue.offer_min_business}
+          money={(value) => formatStatementMoney(value, currency)}
+          testId="create-pod-venue-min-business"
+        />
       )}
       {selectedVenue && selectedSpace && !fromRequest && (
         <VenueOfferPicker form={form} venueId={selectedVenue.id} spaceLabel={selectedSpace.label} spots={spots} minGuests={offerMinGuests} />

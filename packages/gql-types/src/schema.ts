@@ -13829,6 +13829,7 @@ export type Mutation = {
   createSlotTemplate: SlotTemplate;
   createSomethingForYouItem: SomethingForYouItem;
   createSurvey: Survey;
+  createTeamStructureShare: TeamStructureShare;
   createTicket: Ticket;
   createUser: User;
   /** Venue owner / venues console: create a food coupon for a venue. */
@@ -14021,6 +14022,9 @@ export type Mutation = {
   deleteStatusReports: Scalars['Int']['output'];
   deleteStressRun: Scalars['Boolean']['output'];
   deleteSurvey: Scalars['Boolean']['output'];
+  deleteTeamStructure: Scalars['Boolean']['output'];
+  /** Delete one seat; its children move up to its parent. */
+  deleteTeamStructureNode: Scalars['Boolean']['output'];
   /**
    * Delete telemetry rows by ticked ids, by a table's own filters, or by a date
    * window. Returns how many actually went.
@@ -14885,6 +14889,7 @@ export type Mutation = {
    * NOT reversed.
    */
   revokePodCancellation: Pod;
+  revokeTeamStructureShare: Scalars['Boolean']['output'];
   /** Point every field a run rewrote back at the original file. */
   rollbackMediaOrganizerRun: BackgroundJob;
   /** Issues a new token; every URL built from the previous one stops working. */
@@ -14965,6 +14970,7 @@ export type Mutation = {
   saveShellWorkspaceState: ShellWorkspaceState;
   /** Save part of your chat setup. Anything omitted is left as it was. */
   saveStaffChatState: StaffChatState;
+  saveTeamStructure: TeamStructure;
   /** Saves one site's Earn section and pill. */
   saveWebsiteEarnSection: WebsiteEarnSection;
   seedSuperAdmin: SeedAdminResult;
@@ -15754,6 +15760,8 @@ export type Mutation = {
   upsertLocale: Locale;
   /** Create or correct one model's rate. Past rows keep the cost they were written with. */
   upsertOpenAiModelPrice: OpenAiModelPrice;
+  /** Create or update one seat. Moving a seat under its own descendant is refused. */
+  upsertTeamStructureNode: TeamStructureNode;
   upsertTranslation: Translation;
   /** Partner: pick a saved connection (one that passed its check) for a brand. */
   useBrandIntegration: BrandIntegrationStatus;
@@ -16997,6 +17005,14 @@ export type MutationCreateSurveyArgs = {
 };
 
 
+export type MutationCreateTeamStructureShareArgs = {
+  expires_at?: InputMaybe<Scalars['String']['input']>;
+  label?: InputMaybe<Scalars['String']['input']>;
+  show_salary?: InputMaybe<Scalars['Boolean']['input']>;
+  structure_id: Scalars['ID']['input'];
+};
+
+
 export type MutationCreateTicketArgs = {
   input: CreateTicketInput;
 };
@@ -17606,6 +17622,16 @@ export type MutationDeleteStressRunArgs = {
 
 
 export type MutationDeleteSurveyArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteTeamStructureArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteTeamStructureNodeArgs = {
   id: Scalars['ID']['input'];
 };
 
@@ -19124,6 +19150,11 @@ export type MutationRevokePodCancellationArgs = {
 };
 
 
+export type MutationRevokeTeamStructureShareArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationRollbackMediaOrganizerRunArgs = {
   run_id: Scalars['ID']['input'];
   url?: InputMaybe<Scalars['String']['input']>;
@@ -19254,6 +19285,14 @@ export type MutationSaveShellWorkspaceStateArgs = {
 
 export type MutationSaveStaffChatStateArgs = {
   input: StaffChatStateInput;
+};
+
+
+export type MutationSaveTeamStructureArgs = {
+  currency?: InputMaybe<Scalars['String']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  id?: InputMaybe<Scalars['ID']['input']>;
+  name: Scalars['String']['input'];
 };
 
 
@@ -21551,6 +21590,12 @@ export type MutationUpsertLocaleArgs = {
 
 export type MutationUpsertOpenAiModelPriceArgs = {
   input: OpenAiModelPriceInput;
+};
+
+
+export type MutationUpsertTeamStructureNodeArgs = {
+  input: TeamStructureNodeInput;
+  structure_id: Scalars['ID']['input'];
 };
 
 
@@ -27019,6 +27064,13 @@ export type PublicRole = {
   name: Scalars['String']['output'];
 };
 
+export type PublicTeamStructure = {
+  __typename?: 'PublicTeamStructure';
+  nodes: Array<TeamStructureNode>;
+  show_salary: Scalars['Boolean']['output'];
+  structure: TeamStructure;
+};
+
 export type PurgeAccountTraceInput = {
   field_path: Scalars['String']['input'];
   model_name: Scalars['String']['input'];
@@ -28500,6 +28552,8 @@ export type Query = {
   publicRoles: Array<PublicRole>;
   /** What Home should show: active cards, in the order an admin put them. */
   publicSomethingForYou: Array<SomethingForYouItem>;
+  /** No sign-in: the chart behind a live share link. Pay only when the link allows it. */
+  publicTeamStructure?: Maybe<PublicTeamStructure>;
   /**
    * Flat key/value catalogue for one locale, merged over the default locale so a
    * partially translated locale still returns complete text. Clients merge this
@@ -28892,6 +28946,12 @@ export type Query = {
    * so its own access rules decide what history they may see.
    */
   tableChangeLogs: TableChangeLogPage;
+  /** HR console: one structure with all its seats and pay. */
+  teamStructure: TeamStructureView;
+  /** HR console: share links of a structure. */
+  teamStructureShares: Array<TeamStructureShare>;
+  /** HR console: every team structure (SUPER_ADMIN / HR_MANAGER). */
+  teamStructures: Array<TeamStructure>;
   /** Recent logs for one container (demuxed) — polled by the restart log panel. */
   techContainerLogs: Scalars['String']['output'];
   /** Per-collection storage of the live database, for the shared table engine. */
@@ -31944,6 +32004,11 @@ export type QueryPublicPodEarningsEstimateArgs = {
 };
 
 
+export type QueryPublicTeamStructureArgs = {
+  token: Scalars['String']['input'];
+};
+
+
 export type QueryPublicTranslationsArgs = {
   locale: Scalars['String']['input'];
 };
@@ -32631,6 +32696,16 @@ export type QueryTableChangeLogsArgs = {
   query?: InputMaybe<TableQueryInput>;
   table: Scalars['String']['input'];
   variables: Scalars['String']['input'];
+};
+
+
+export type QueryTeamStructureArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryTeamStructureSharesArgs = {
+  structure_id: Scalars['ID']['input'];
 };
 
 
@@ -39342,6 +39417,121 @@ export type TableQueryInput = {
 export type TableSortDir =
   | 'asc'
   | 'desc';
+
+export type TeamEmploymentType =
+  | 'ADVISOR'
+  | 'AI_AGENT'
+  | 'CONTRACT'
+  | 'FULL_TIME'
+  | 'PART_TIME';
+
+export type TeamNodeKind =
+  | 'AI_AGENT'
+  | 'DEPARTMENT'
+  | 'HEAD'
+  | 'ROLE';
+
+export type TeamNodeStatus =
+  | 'FILLED'
+  | 'OPTIONAL'
+  | 'VACANT';
+
+/** One line of a seat's pay. VARIABLE lines range min_amount..max_amount with amount as the expected figure. */
+export type TeamPayComponent = {
+  __typename?: 'TeamPayComponent';
+  amount: Scalars['Float']['output'];
+  frequency: TeamPayFrequency;
+  kind: TeamPayKind;
+  label: Scalars['String']['output'];
+  max_amount?: Maybe<Scalars['Float']['output']>;
+  min_amount?: Maybe<Scalars['Float']['output']>;
+  note?: Maybe<Scalars['String']['output']>;
+};
+
+export type TeamPayComponentInput = {
+  amount: Scalars['Float']['input'];
+  frequency: TeamPayFrequency;
+  kind: TeamPayKind;
+  label: Scalars['String']['input'];
+  max_amount?: InputMaybe<Scalars['Float']['input']>;
+  min_amount?: InputMaybe<Scalars['Float']['input']>;
+  note?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type TeamPayFrequency =
+  | 'ANNUAL'
+  | 'MONTHLY'
+  | 'PER_UNIT';
+
+export type TeamPayKind =
+  | 'FIXED'
+  | 'VARIABLE';
+
+export type TeamStructure = {
+  __typename?: 'TeamStructure';
+  currency: Scalars['String']['output'];
+  description?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  /** Monthly pay budget of the non-optional seats. Only filled by teamStructures. */
+  monthly_cost?: Maybe<Scalars['Float']['output']>;
+  name: Scalars['String']['output'];
+  /** Seats on the chart. Only filled by teamStructures (the HR list). */
+  seat_count?: Maybe<Scalars['Int']['output']>;
+  updated_at?: Maybe<Scalars['String']['output']>;
+};
+
+/** A seat on the chart. pay and monthly_cost are null on a public link that hides salary. */
+export type TeamStructureNode = {
+  __typename?: 'TeamStructureNode';
+  department?: Maybe<Scalars['String']['output']>;
+  employment_type: TeamEmploymentType;
+  id: Scalars['ID']['output'];
+  kind: TeamNodeKind;
+  /** Fixed + expected variable, per month. Per-unit lines are not counted. */
+  monthly_cost?: Maybe<Scalars['Float']['output']>;
+  notes?: Maybe<Scalars['String']['output']>;
+  parent_id?: Maybe<Scalars['ID']['output']>;
+  pay?: Maybe<Array<TeamPayComponent>>;
+  person_name?: Maybe<Scalars['String']['output']>;
+  sort_order: Scalars['Int']['output'];
+  status: TeamNodeStatus;
+  structure_id: Scalars['ID']['output'];
+  title: Scalars['String']['output'];
+  user_id?: Maybe<Scalars['ID']['output']>;
+};
+
+export type TeamStructureNodeInput = {
+  department?: InputMaybe<Scalars['String']['input']>;
+  employment_type: TeamEmploymentType;
+  /** Pass an existing id to update, or a fresh/previously deleted id to (re)create the seat with it. */
+  id?: InputMaybe<Scalars['ID']['input']>;
+  kind: TeamNodeKind;
+  notes?: InputMaybe<Scalars['String']['input']>;
+  parent_id?: InputMaybe<Scalars['ID']['input']>;
+  pay?: InputMaybe<Array<TeamPayComponentInput>>;
+  person_name?: InputMaybe<Scalars['String']['input']>;
+  sort_order?: InputMaybe<Scalars['Int']['input']>;
+  status?: InputMaybe<TeamNodeStatus>;
+  title: Scalars['String']['input'];
+  user_id?: InputMaybe<Scalars['ID']['input']>;
+};
+
+export type TeamStructureShare = {
+  __typename?: 'TeamStructureShare';
+  expires_at?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  label?: Maybe<Scalars['String']['output']>;
+  revoked_at?: Maybe<Scalars['String']['output']>;
+  show_salary: Scalars['Boolean']['output'];
+  structure_id: Scalars['ID']['output'];
+  token: Scalars['String']['output'];
+};
+
+export type TeamStructureView = {
+  __typename?: 'TeamStructureView';
+  nodes: Array<TeamStructureNode>;
+  structure: TeamStructure;
+};
 
 export type TechBytesInfo = {
   __typename?: 'TechBytesInfo';

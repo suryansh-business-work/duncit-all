@@ -32,7 +32,7 @@ export const MCP_CATEGORIES = [
   { key: 'gig-jobs', label: 'Gig jobs', description: 'Gigs, freelancers and their interests.' },
   { key: 'ai', label: 'AI', description: 'AI features, the prompt library, usage, monitoring, automations, reels and the Agent.' },
   { key: 'website', label: 'Website & CMS', description: 'Website content, navigation, reels, CMS pages, public pages and newsletter.' },
-  { key: 'hr', label: 'HR', description: 'Job applications.' },
+  { key: 'hr', label: 'HR', description: 'Job applications and the team structure (seats, salary, share links).' },
   { key: 'legal', label: 'Legal', description: 'Policies, acceptances, legal documents, contracts and grievances.' },
   { key: 'support', label: 'Support', description: 'FAQs, tickets and support chats.' },
   { key: 'moderation', label: 'Moderation', description: 'Content moderation and user reports.' },
@@ -216,6 +216,7 @@ export const MODULE_CATEGORY: Record<ModuleName, McpCategoryKey | null> = {
   contactTypeDefs: 'website',
 
   jobApplicationTypeDefs: 'hr',
+  teamStructureTypeDefs: 'hr',
 
   policyTypeDefs: 'legal',
   policyAcceptanceTypeDefs: 'legal',

@@ -44,6 +44,7 @@ export const PORTAL_ROLE_REQUIREMENTS: Record<string, readonly string[]> = {
   // and owns the settings. Neither widens what the AI can do: every tool runs
   // with the person's own console roles.
   mcp: ['MCP_MANAGER', 'MCP_USER'],
+  tests: ['TESTS_MANAGER'],
 };
 
 // Consumer + partner surfaces are never portal-gated at login.

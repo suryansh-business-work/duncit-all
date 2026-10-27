@@ -128,7 +128,7 @@ export const teamStructureService = {
   },
 
   shares: (structureId: string): Promise<ITeamStructureShare[]> =>
-    TeamStructureShareModel.find({ structure_id: oid(structureId, 'structure') }).sort({ created_at: -1 }).lean<ITeamStructureShare[]>(),
+    TeamStructureShareModel.find({ structure_id: oid(structureId, 'structure') }).sort({ created_at: -1, _id: -1 }).lean<ITeamStructureShare[]>(),
 
   async createShare(args: { structure_id: string; label?: string | null; show_salary?: boolean | null; expires_at?: string | null }) {
     const structure_id = oid(args.structure_id, 'structure');

@@ -58,23 +58,23 @@ describe('accessibleEndpoints', () => {
   });
 
   it('adds the finance and loyalty consoles for a finance manager, but not Admin (which wants FINANCE_USER)', () => {
-    expect(keysFor(['FINANCE_MANAGER'])).toEqual(['app', 'partners', 'finance', 'loyalty']);
+    expect(keysFor(['FINANCE_MANAGER'])).toEqual(['app', 'partners', 'finance', 'loyalty', 'lite']);
   });
 
   it('opens Admin, Finance and Loyalty for a finance user, as the console logins do', () => {
-    expect(keysFor(['FINANCE_USER'])).toEqual(['admin', 'app', 'partners', 'finance', 'loyalty']);
+    expect(keysFor(['FINANCE_USER'])).toEqual(['admin', 'app', 'partners', 'finance', 'loyalty', 'lite']);
   });
 
   it('opens only the loyalty console for a loyalty manager', () => {
-    expect(keysFor(['LOYALTY_MANAGER'])).toEqual(['app', 'partners', 'loyalty']);
+    expect(keysFor(['LOYALTY_MANAGER'])).toEqual(['app', 'partners', 'loyalty', 'lite']);
   });
 
   it('opens the MCP console for an MCP user', () => {
-    expect(keysFor(['MCP_USER'])).toEqual(['app', 'partners', 'mcp']);
+    expect(keysFor(['MCP_USER'])).toEqual(['app', 'partners', 'mcp', 'lite']);
   });
 
   it('opens both consoles a role is listed on (onboarding managers reach hosts and venues too)', () => {
-    expect(keysFor(['ONBOARDING_MANAGER'])).toEqual(['app', 'partners', 'venues', 'hosts', 'onboarding']);
+    expect(keysFor(['ONBOARDING_MANAGER'])).toEqual(['app', 'partners', 'venues', 'hosts', 'onboarding', 'lite']);
   });
 });
 

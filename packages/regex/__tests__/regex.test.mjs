@@ -39,6 +39,8 @@ import {
   isUrlSlug,
   SOCIAL_HANDLE,
   isSocialHandle,
+  UNDERSCORE_HANDLE,
+  isUnderscoreHandle,
   SITE_PATH,
   isSitePath,
   CSS_VARIABLE,
@@ -443,6 +445,21 @@ describe('SOCIAL_HANDLE / isSocialHandle', () => {
   it('rejects an empty value, a leading @, a pasted link, spaces and anything over 100', () => {
     for (const handle of ['', '@duncit', 'instagram.com/duncit', 'https://x.com/duncit', 'two words', 'a?b', 'x'.repeat(101)]) {
       expect(isSocialHandle(handle)).toBe(false);
+    }
+  });
+});
+
+describe('UNDERSCORE_HANDLE / isUnderscoreHandle', () => {
+  it('accepts lowercase letters, digits and inner underscores, 3 to 30 long', () => {
+    for (const handle of ['abc', 'run_club', 'asha_rao2', '9to5', 'a_b', 'x'.repeat(30)]) {
+      expect(isUnderscoreHandle(handle)).toBe(true);
+      expect(UNDERSCORE_HANDLE.test(handle)).toBe(true);
+    }
+  });
+
+  it('rejects one or two characters, more than 30, edge underscores, capitals, hyphens and spaces', () => {
+    for (const handle of ['', 'a', 'ab', 'x'.repeat(31), '_abc', 'abc_', 'Run_club', 'run-club', 'run club', '@run']) {
+      expect(isUnderscoreHandle(handle)).toBe(false);
     }
   });
 });

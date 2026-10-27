@@ -151,6 +151,9 @@ const URL_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 /** A social-network handle such as `duncit.events`, without the `@`. See regex.mjs. */
 const SOCIAL_HANDLE = /^[A-Za-z0-9._-]{1,100}$/;
 
+/** A 3–30 character handle of lowercase letters, digits and inner underscores — `run_club`. See regex.mjs. */
+const UNDERSCORE_HANDLE = /^[a-z0-9][a-z0-9_]{1,28}[a-z0-9]$/;
+
 /** A website page path: `/`, `/about`, `/safety/tools`. See regex.mjs. */
 const SITE_PATH = /^\/(?:[a-z0-9]+(?:[-/][a-z0-9]+)*)?$/;
 
@@ -193,6 +196,7 @@ module.exports = {
   USERNAME,
   URL_SLUG,
   SOCIAL_HANDLE,
+  UNDERSCORE_HANDLE,
   SITE_PATH,
   CSS_VARIABLE,
   FONT_FAMILY,
@@ -218,6 +222,7 @@ module.exports = {
   isUsername: (v) => USERNAME.test(v),
   isUrlSlug: (v) => URL_SLUG.test(v),
   isSocialHandle: (v) => SOCIAL_HANDLE.test(v),
+  isUnderscoreHandle: (v) => UNDERSCORE_HANDLE.test(v),
   isSitePath: (v) => SITE_PATH.test(v),
   isCssVariable: (v) => CSS_VARIABLE.test(v),
   isFontFamily: (v) => FONT_FAMILY.test(v),

@@ -249,6 +249,17 @@ export const SOCIAL_HANDLE = /^[A-Za-z0-9._-]{1,100}$/;
 export const isSocialHandle = (v) => SOCIAL_HANDLE.test(v);
 
 /**
+ * A handle made of lowercase letters, digits and inner underscores, 3–30
+ * characters — `run_club`, `asha_rao2` — for products whose handles use `_`
+ * where {@link USERNAME} uses `-` (Duncit Lite). It starts and ends with a
+ * letter or digit. The middle run is bounded, so the pattern stays linear.
+ */
+export const UNDERSCORE_HANDLE = /^[a-z0-9][a-z0-9_]{1,28}[a-z0-9]$/;
+
+/** Underscore handle shape check. Lower-case before calling it — the pattern is strict. */
+export const isUnderscoreHandle = (v) => UNDERSCORE_HANDLE.test(v);
+
+/**
  * A website page path: `/` alone, or `/` followed by {@link URL_SLUG}-shaped
  * segments joined by single slashes — `/about`, `/safety/tools`. No trailing
  * slash, no query, no `..`: the CMS stores ONE spelling of each address.

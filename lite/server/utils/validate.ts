@@ -1,7 +1,8 @@
-import { EMAIL, PHONE_INTL, PHONE_NUMBER_IN, SOCIAL_HANDLE, URL_SLUG, toDigits } from '@duncit/regex';
+import { EMAIL, OTP_6, PHONE_INTL, PHONE_NUMBER_IN, SOCIAL_HANDLE, UNDERSCORE_HANDLE, UPI_ID, URL_SLUG, toDigits } from '@duncit/regex';
 import { badInput } from './errors';
 
-export { SOCIAL_HANDLE, URL_SLUG };
+/** A Lite handle: 3-30 lowercase letters, digits and inner underscores. */
+export { OTP_6, SOCIAL_HANDLE, UPI_ID, URL_SLUG, UNDERSCORE_HANDLE as HANDLE };
 
 /** India's calling code, the one country whose national numbers Lite checks in full. */
 const INDIA = '91';
@@ -32,11 +33,8 @@ export function coordinate(value: unknown, label: 'Latitude' | 'Longitude'): num
 /**
  * Email is `@duncit/regex`'s own pattern — the copy that lived here let two
  * quantifiers claim the same dots and backtracked quadratically (Sonar S5852).
- * The rest are the same shapes that package ships to the clients.
+ * The zone shape below has no counterpart there; the rest come from it.
  */
-export const UPI_ID = /^[\w.-]{2,256}@[a-z][a-z0-9]{1,63}$/i;
-export const HANDLE = /^[a-z0-9](?:[a-z0-9_]{1,28}[a-z0-9])?$/;
-export const OTP_6 = /^\d{6}$/;
 export const IANA_ZONE = /^[A-Za-z_]+(?:\/[A-Za-z0-9_+-]+)+$|^UTC$/;
 
 export function normalizeEmail(value: unknown): string {

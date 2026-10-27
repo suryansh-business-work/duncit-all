@@ -1,12 +1,10 @@
 import { z } from 'zod';
-import { EMAIL, OTP_6, PHONE_INTL_PLUS, SOCIAL_HANDLE, UPI_ID, URL_SLUG, toDigits } from '@duncit/regex';
+import { EMAIL, OTP_6, PHONE_INTL_PLUS, SOCIAL_HANDLE, UNDERSCORE_HANDLE, UPI_ID, URL_SLUG, toDigits } from '@duncit/regex';
 import { countIssue, type CountRange } from '../../shared/limits';
 
 export type { CountRange };
 
 export type Translate = (key: string, options?: { vars?: Record<string, string | number>; count?: number }) => string;
-
-const HANDLE = /^[a-z0-9](?:[a-z0-9_]{1,28}[a-z0-9])?$/;
 
 /** A full http(s) link, checked by the URL parser rather than a pattern. */
 export function isHttpUrl(value: string): boolean {
@@ -80,7 +78,7 @@ export const rules = {
       .trim()
       .toLowerCase()
       .refine((value) => value === '' || UPI_ID.test(value), t('liteWeb.validation.upiInvalid')),
-  handle: (t: Translate) => z.string().trim().toLowerCase().refine((value) => HANDLE.test(value), t('liteWeb.validation.handleInvalid')),
+  handle: (t: Translate) => z.string().trim().toLowerCase().refine((value) => UNDERSCORE_HANDLE.test(value), t('liteWeb.validation.handleInvalid')),
   /** A social handle with or without the leading @; a pasted link is refused. */
   socialHandle: (t: Translate) =>
     z

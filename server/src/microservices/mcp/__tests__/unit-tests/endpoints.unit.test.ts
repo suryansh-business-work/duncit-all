@@ -57,12 +57,16 @@ describe('accessibleEndpoints', () => {
     expect(keysFor([])).toEqual(['app', 'partners']);
   });
 
-  it('adds the finance console for a finance manager, but not Admin (which wants FINANCE_USER)', () => {
-    expect(keysFor(['FINANCE_MANAGER'])).toEqual(['app', 'partners', 'finance']);
+  it('adds the finance and loyalty consoles for a finance manager, but not Admin (which wants FINANCE_USER)', () => {
+    expect(keysFor(['FINANCE_MANAGER'])).toEqual(['app', 'partners', 'finance', 'loyalty']);
   });
 
-  it('opens Admin and Finance for a finance user, as the console login does', () => {
-    expect(keysFor(['FINANCE_USER'])).toEqual(['admin', 'app', 'partners', 'finance']);
+  it('opens Admin, Finance and Loyalty for a finance user, as the console logins do', () => {
+    expect(keysFor(['FINANCE_USER'])).toEqual(['admin', 'app', 'partners', 'finance', 'loyalty']);
+  });
+
+  it('opens only the loyalty console for a loyalty manager', () => {
+    expect(keysFor(['LOYALTY_MANAGER'])).toEqual(['app', 'partners', 'loyalty']);
   });
 
   it('opens the MCP console for an MCP user', () => {

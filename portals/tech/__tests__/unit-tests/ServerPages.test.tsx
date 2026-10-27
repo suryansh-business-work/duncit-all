@@ -53,7 +53,7 @@ vi.mock('@duncit/dashboard', () => ({
 vi.mock('../../src/pages/server/history', () => ({ default: () => <div>history-panel</div> }));
 vi.mock('../../src/pages/server/history/ContainerUsage', () => ({ default: () => <div>container-usage</div> }));
 vi.mock('../../src/pages/server/advice', () => ({ default: () => <div>advice-card</div> }));
-vi.mock('../../src/pages/stress-testing/components/LivePulse', () => ({ default: () => <div>live-pulse</div> }));
+vi.mock('../../../tests/src/pages/stress-testing/components/LivePulse', () => ({ default: () => <div>live-pulse</div> }));
 vi.mock('../../src/pages/server/ServerInfoDetails', () => ({
   default: (p: { info: ServerInfo }) => <div>details:{p.info.os.hostname}</div>,
 }));

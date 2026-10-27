@@ -8,14 +8,6 @@ import FeatureFlagsPage from './pages/feature-flags-page/FeatureFlagsPage';
 import AuthenticationPage from './pages/AuthenticationPage';
 import PackagesDocsPage from './pages/packages-docs';
 import PackageUpdatesPage from './pages/package-updates';
-import TelemetryDashboardPage from './pages/telemetry-dashboard';
-import BugsPage from './pages/bugs-page';
-import BugDetailPage from './pages/bug-detail-page';
-import TelemetryLogsPage from './pages/telemetry-logs-page';
-import TelemetryLogDetailPage from './pages/telemetry-log-detail-page';
-import ErrorLogsPage from './pages/error-logs-page';
-import ErrorBoundariesPage from './pages/error-boundaries-page';
-import TelemetryLogsSettingsPage from './pages/telemetry-logs-settings';
 import ServerInfoPage from './pages/server/ServerInfoPage';
 import DockerPage from './pages/server/DockerPage';
 import TerminalPage from './pages/server/TerminalPage';
@@ -32,20 +24,6 @@ import AppBuildsPage from './pages/app-builds';
 import AppBuildSettingsPage from './pages/app-builds/AppBuildSettingsPage';
 import StoreListingPage from './pages/app-builds/store-listing';
 import ReleasesPage from './pages/app-builds/releases';
-import E2eRunsPage from './pages/e2e';
-import { E2eSettingsPage } from './pages/e2e/settings';
-import E2eFlowsPage from './pages/e2e/flows';
-import E2eFlowDetailPage from './pages/e2e/flows/detail';
-import StressRunsPage from './pages/stress-testing/runs';
-import StressRunDetailPage from './pages/stress-testing/run-detail';
-import StressSettingsPage from './pages/stress-testing/settings';
-import GraphqlMonitorOverviewPage from './pages/graphql-monitor/overview';
-import GraphqlOperationsPage from './pages/graphql-monitor/operations';
-import GraphqlOperationDetailPage from './pages/graphql-monitor/operation-detail';
-import GraphqlQueryMutationPage from './pages/graphql-monitor/query-mutation';
-import GraphqlFieldsPage from './pages/graphql-monitor/fields';
-import GraphqlErrorsPage from './pages/graphql-monitor/errors';
-import GraphqlMonitorSettingsPage from './pages/graphql-monitor/settings';
 import TableApiSettingsPage from './pages/table-api-settings';
 import DomainOverviewPage from './pages/domain/overview';
 import DnsRecordsPage from './pages/domain/dns-records';
@@ -53,8 +31,6 @@ import DnsStagingPage from './pages/domain/staging';
 import PortMappingPage from './pages/domain/port-mapping';
 import SslPage from './pages/ssl';
 import CloudflarePage from './pages/cloudflare';
-import SonarqubePage from './pages/sonarqube';
-import SonarqubeSettingsPage from './pages/sonarqube-settings';
 import GoogleAnalyticsPage from './pages/google-analytics';
 import Msg91SettingsPage from './pages/msg91-settings';
 // The Communications console's own pages, mounted here as they are — one
@@ -83,34 +59,10 @@ export default function App() {
         <Route path="/package-updates" element={authed(<PackageUpdatesPage />)} />
         {/* The old path, kept working for bookmarks. */}
         <Route path="/emails/docs" element={<Navigate to="/package-docs" replace />} />
-        <Route path="/telemetry" element={<Navigate to="/telemetry/dashboard" replace />} />
-        <Route path="/telemetry/dashboard" element={authed(<TelemetryDashboardPage />)} />
-        <Route path="/telemetry/bugs" element={authed(<BugsPage />)} />
-        {/* One bug at its own address — reloadable, bookmarkable, pasteable. */}
-        <Route path="/telemetry/bugs/:bugId" element={authed(<BugDetailPage />)} />
-        <Route path="/telemetry/logs" element={authed(<TelemetryLogsPage />)} />
-        {/* One log at its own address — reloadable, bookmarkable, pasteable. */}
-        <Route path="/telemetry/log/:logId" element={authed(<TelemetryLogDetailPage />)} />
-        <Route path="/telemetry/error-logs" element={authed(<ErrorLogsPage />)} />
-        <Route path="/error-boundaries" element={authed(<ErrorBoundariesPage />)} />
-        <Route path="/telemetry/logs-settings" element={authed(<TelemetryLogsSettingsPage />)} />
-        {/* The old paths, kept working for bookmarks. */}
-        <Route path="/bugs" element={<Navigate to="/telemetry/bugs" replace />} />
-        <Route
-          path="/telemetry-logs-settings"
-          element={<Navigate to="/telemetry/logs-settings" replace />}
-        />
-        {/* What every GraphQL operation costs — the numbers Apollo GraphOS
-            reports, measured on this server and kept in its own database. */}
-        <Route path="/graphql-monitor" element={<Navigate to="/graphql-monitor/overview" replace />} />
-        <Route path="/graphql-monitor/overview" element={authed(<GraphqlMonitorOverviewPage />)} />
-        <Route path="/graphql-monitor/operations" element={authed(<GraphqlOperationsPage />)} />
-        {/* One operation at its own address — reloadable, bookmarkable, pasteable. */}
-        <Route path="/graphql-monitor/operations/:operationId" element={authed(<GraphqlOperationDetailPage />)} />
-        <Route path="/graphql-monitor/query-mutation" element={authed(<GraphqlQueryMutationPage />)} />
-        <Route path="/graphql-monitor/fields" element={authed(<GraphqlFieldsPage />)} />
-        <Route path="/graphql-monitor/errors" element={authed(<GraphqlErrorsPage />)} />
-        <Route path="/graphql-monitor/settings" element={authed(<GraphqlMonitorSettingsPage />)} />
+        {/* Telemetry, Error Boundaries, the GraphQL Monitor, Code Quality → SonarQube,
+            E2E Tests and Stress Testing moved to the Tests console (tests.duncit.com),
+            at the same paths. No helper here knows another console's address in
+            this environment, so their old paths fall through to the catch-all. */}
         {/* Each person's token for every portal table's GET API. */}
         <Route path="/table-api" element={<Navigate to="/table-api/settings" replace />} />
         <Route path="/table-api/settings" element={authed(<TableApiSettingsPage />)} />
@@ -136,14 +88,11 @@ export default function App() {
         <Route path="/dns" element={<Navigate to="/domain/overview" replace />} />
         <Route path="/dns/records" element={<Navigate to="/domain/dns-records" replace />} />
         {/* Security: every TLS certificate certbot holds on the VPS (the old
-            /ssl path still resolves), the GoDaddy → Cloudflare zone move, and
-            SonarQube's view of the code beside the keys it is read with. */}
+            /ssl path still resolves) and the GoDaddy → Cloudflare zone move. */}
         <Route path="/security" element={<Navigate to="/security/ssl" replace />} />
         <Route path="/security/ssl" element={authed(<SslPage />)} />
         <Route path="/ssl" element={<Navigate to="/security/ssl" replace />} />
         <Route path="/security/cloudflare" element={authed(<CloudflarePage />)} />
-        <Route path="/security/sonarqube" element={authed(<SonarqubePage />)} />
-        <Route path="/security/sonarqube-settings" element={authed(<SonarqubeSettingsPage />)} />
         {/* The GA4 tag each Duncit website loads, one per website. */}
         <Route path="/google-analytics" element={authed(<GoogleAnalyticsPage />)} />
         {/* MSG91 OTP Logs: the widget's records, read live from MSG91, beside
@@ -181,21 +130,6 @@ export default function App() {
         {/* What the stores say about every version — read live — with the
             rejections this server recorded, advised on and announced. */}
         <Route path="/app-builds/releases" element={authed(<ReleasesPage />)} />
-        {/* Every run of the end-to-end suite, and the nightly schedule that
-            produces most of them. The workflow has no cron of its own — the
-            schedule below is the only thing that starts a scheduled run. */}
-        <Route path="/e2e" element={<Navigate to="/e2e/runs" replace />} />
-        <Route path="/e2e/runs" element={authed(<E2eRunsPage />)} />
-        <Route path="/e2e/flows" element={authed(<E2eFlowsPage />)} />
-        <Route path="/e2e/flows/:flowId" element={authed(<E2eFlowDetailPage />)} />
-        <Route path="/e2e/settings" element={authed(<E2eSettingsPage />)} />
-        {/* Load against THIS environment from GitHub runners, watched live: the
-            server under test records the time series and enforces the guardrails. */}
-        <Route path="/stress-testing" element={<Navigate to="/stress-testing/runs" replace />} />
-        <Route path="/stress-testing/runs" element={authed(<StressRunsPage />)} />
-        {/* One run at its own address — live while it runs, the record afterwards. */}
-        <Route path="/stress-testing/runs/:runId" element={authed(<StressRunDetailPage />)} />
-        <Route path="/stress-testing/settings" element={authed(<StressSettingsPage />)} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <NotifyHost />

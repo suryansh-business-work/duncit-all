@@ -43,6 +43,7 @@ COPY portals/analytics/package.json ./portals/analytics/
 COPY portals/localization/package.json ./portals/localization/
 COPY portals/targets/package.json ./portals/targets/
 COPY portals/mcp/package.json ./portals/mcp/
+COPY portals/tests/package.json ./portals/tests/
 COPY portals/ecomm-portal/package.json ./portals/ecomm-portal/
 COPY website/ecomm-store/package.json ./website/ecomm-store/
 COPY website/status-website/package.json ./website/status-website/
@@ -93,6 +94,9 @@ COPY portals/logs ./portals/logs
 # The log pages are the owning consoles' own (src/log-pages.ts imports them from
 # their source), so their src folders are part of this build. Their
 # package.json files are copied above, so their dependencies are installed.
+# The telemetry logs are the Tests console's, and they borrow Tech components,
+# so both src folders are needed.
+COPY portals/tests/src ./portals/tests/src
 COPY portals/tech/src ./portals/tech/src
 COPY portals/ai/src ./portals/ai/src
 COPY portals/communications/src ./portals/communications/src

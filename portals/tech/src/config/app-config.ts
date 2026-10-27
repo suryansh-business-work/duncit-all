@@ -29,35 +29,8 @@ export const appConfig = {
     { label: 'Maintenance', labelKey: 'shell.nav.maintenance', to: '/portal-modes', icon: 'construction' },
     { label: 'Feature Flags', labelKey: 'shell.nav.featureFlags', to: '/feature-flags', icon: 'flag' },
     { label: 'Authentication', labelKey: 'shell.nav.authentication', to: '/authentication', icon: 'lock' },
-    {
-      label: 'Telemetry', labelKey: 'shell.nav.telemetry',
-      icon: 'insights',
-      children: [
-        { label: 'Dashboard', labelKey: 'shell.nav.dashboard', to: '/telemetry/dashboard', icon: 'dashboard' },
-        { label: 'Bugs', labelKey: 'shell.nav.bugs', to: '/telemetry/bugs', icon: 'bug' },
-        // Every persisted log, one table per level (Error / Warn / Info / Debug).
-        { label: 'Logs', labelKey: 'shell.nav.logs', to: '/telemetry/logs', icon: 'article' },
-        { label: 'Error Logs', labelKey: 'shell.nav.errorLogs', to: '/telemetry/error-logs', icon: 'report' },
-        { label: 'Logs Settings', labelKey: 'shell.nav.logsSettings', to: '/telemetry/logs-settings', icon: 'tune' },
-      ],
-    },
-    // Every page / screen that crashed into an error boundary on mWeb, the app
-    // or a portal, and every Report an Issue pressed on one.
-    { label: 'Error Boundaries', labelKey: 'shell.nav.errorBoundaries', to: '/error-boundaries', icon: 'shield' },
-    {
-      // Beside Telemetry: both watch the platform run, one through the logs it
-      // writes, the other through what every GraphQL operation costs.
-      label: 'GraphQL Monitor', labelKey: 'shell.nav.graphqlMonitor',
-      icon: 'hub',
-      children: [
-        { label: 'Overview', labelKey: 'shell.nav.overview', to: '/graphql-monitor/overview', icon: 'dashboard' },
-        { label: 'Operations', labelKey: 'shell.nav.operations', to: '/graphql-monitor/operations', icon: 'operations' },
-        { label: 'Query & Mutation', labelKey: 'shell.nav.graphqlQueryMutation', to: '/graphql-monitor/query-mutation', icon: 'code' },
-        { label: 'Fields', labelKey: 'shell.nav.fields', to: '/graphql-monitor/fields', icon: 'accountTree' },
-        { label: 'Errors', labelKey: 'shell.nav.errors', to: '/graphql-monitor/errors', icon: 'bug' },
-        { label: 'Settings', labelKey: 'shell.nav.settings', to: '/graphql-monitor/settings', icon: 'tune' },
-      ],
-    },
+    // Telemetry, Error Boundaries, the GraphQL Monitor, SonarQube, E2E Tests and
+    // Stress Testing live in the Tests console (tests.duncit.com).
     {
       // The token behind every portal table's "GET API" button.
       label: 'Table API', labelKey: 'shell.nav.tableApi',
@@ -112,16 +85,12 @@ export const appConfig = {
     {
       // Beside Domain. SSL: the certificates every host the zone points here
       // answers HTTPS with. Cloudflare: where the zone moves when DNS leaves
-      // GoDaddy, and the nameserver switch that decides which of the two
-      // answers. SonarQube: what the scanner says about the code itself, read
-      // live with the keys kept in SonarQube Settings.
+      // GoDaddy, and the nameserver switch that decides which of the two answers.
       label: 'Security', labelKey: 'shell.nav.security',
       icon: 'shield',
       children: [
         { label: 'SSL', labelKey: 'shell.nav.ssl', to: '/security/ssl', icon: 'lock' },
         { label: 'Cloudflare', labelKey: 'shell.nav.cloudflare', to: '/security/cloudflare', icon: 'dns' },
-        { label: 'SonarQube', labelKey: 'shell.nav.sonarqube', to: '/security/sonarqube', icon: 'policy' },
-        { label: 'SonarQube Settings', labelKey: 'shell.nav.sonarqubeSettings', to: '/security/sonarqube-settings', icon: 'tune' },
       ],
     },
     // Beside DNS Config: both decide something about every public website —
@@ -155,8 +124,8 @@ export const appConfig = {
         { label: 'Settings', labelKey: 'shell.nav.settings', to: '/rate-limiting/settings', icon: 'tune' },
       ],
     },
-    // Sits beside Telemetry rather than inside it: those rows are written by
-    // machines, these by people, and the triage is a different job.
+    // Kept apart from Telemetry (the Tests console's): those rows are written
+    // by machines, these by people, and the triage is a different job.
     { label: 'Status Reports', labelKey: 'shell.nav.statusReports', to: '/status-reports', icon: 'sos' },
     // Beside Status Reports for the same reason it sits beside Telemetry: both
     // are queues a PERSON filed and a person has to answer. Filed under Database
@@ -176,31 +145,6 @@ export const appConfig = {
         // rejections with their reason and advice, and the latest build's retry.
         { label: 'Releases', labelKey: 'shell.nav.releases', to: '/app-builds/releases', icon: 'upload' },
         { label: 'Settings', labelKey: 'shell.nav.settings', to: '/app-builds/settings', icon: 'settings' },
-      ],
-    },
-    {
-      // Beside App Builds because both are views of what CI did — one records
-      // the binaries a workflow produced, the other what the suite found. The
-      // nightly schedule lives under Settings, and is the ONLY thing that
-      // starts a scheduled run: the workflow declares no cron of its own.
-      label: 'E2E Tests', labelKey: 'shell.nav.e2eTests',
-      icon: 'rule',
-      children: [
-        { label: 'Runs', labelKey: 'shell.nav.runs', to: '/e2e/runs', icon: 'article' },
-        { label: 'Flows', labelKey: 'shell.nav.flows', to: '/e2e/flows', icon: 'hub' },
-        { label: 'Settings', labelKey: 'shell.nav.settings', to: '/e2e/settings', icon: 'settings' },
-      ],
-    },
-    {
-      // Beside E2E Tests: both drive a GitHub workflow at the platform, one to
-      // check it behaves, the other to find out how much it can take. The live
-      // pulse on Runs (who is on, how hard the server is working) is worth
-      // reading whether or not a run is going.
-      label: 'Stress Testing', labelKey: 'shell.nav.stressTesting',
-      icon: 'timeline',
-      children: [
-        { label: 'Runs', labelKey: 'shell.nav.runs', to: '/stress-testing/runs', icon: 'article' },
-        { label: 'Settings', labelKey: 'shell.nav.settings', to: '/stress-testing/settings', icon: 'tune' },
       ],
     },
     { label: 'Package Documentation', labelKey: 'shell.nav.packageDocumentation', to: '/package-docs', icon: 'menuBook' },

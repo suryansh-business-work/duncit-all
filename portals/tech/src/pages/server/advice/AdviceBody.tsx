@@ -1,7 +1,8 @@
 import { Box, Chip, Divider, Stack, Typography } from '@mui/material';
 import { formatDay } from '@duncit/app-settings';
 import { useTranslation } from '@duncit/shell';
-import VerdictItems from '../../stress-testing/run-detail/verdict/VerdictItems';
+// Borrowed from the Tests console, which owns stress testing (its src is copied into this build).
+import VerdictItems from '../../../../../tests/src/pages/stress-testing/run-detail/verdict/VerdictItems';
 import InfoList from '../InfoList';
 import { formatDateTime } from '../format';
 import type { ServerAdvice } from '../history/queries';

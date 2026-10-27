@@ -9,7 +9,8 @@ import ServerStatCard from './ServerStatCard';
 import ServerHistoryPanel from './history';
 import ContainerUsage from './history/ContainerUsage';
 import ServerAdviceCard from './advice';
-import LivePulse from '../stress-testing/components/LivePulse';
+// Borrowed from the Tests console, which owns stress testing (its src is copied into this build).
+import LivePulse from '../../../../tests/src/pages/stress-testing/components/LivePulse';
 import { formatBytes, formatUptime } from './format';
 import { SERVER_INFO, apiHost, type ServerInfo } from './queries';
 import { useTranslation } from '@duncit/app-settings';

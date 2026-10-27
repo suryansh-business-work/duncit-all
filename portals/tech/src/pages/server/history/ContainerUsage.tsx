@@ -1,7 +1,8 @@
 import { Typography } from '@mui/material';
 import { useTranslation } from '@duncit/shell';
 import { SectionCard } from '@duncit/ui';
-import { formatPct } from '../../stress-testing/labels';
+// Borrowed from the Tests console, which owns stress testing (its src is copied into this build).
+import { formatPct } from '../../../../../tests/src/pages/stress-testing/labels';
 import InfoList from '../InfoList';
 import { formatBytes } from '../format';
 import { useServerHistory } from './useServerHistory';

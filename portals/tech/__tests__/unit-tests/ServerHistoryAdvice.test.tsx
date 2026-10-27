@@ -33,7 +33,7 @@ vi.mock('../../src/pages/server/advice/AdviceBody', () => ({
   default: (p: { advice: { headline: string } }) => <div data-testid="advice-body">{p.advice.headline}</div>,
 }));
 vi.mock('../../src/pages/server/history/useServerHistory', () => ({ useServerHistory: () => m.history }));
-vi.mock('../../src/pages/stress-testing/run-detail/charts/TimeSeriesChart', () => ({
+vi.mock('../../../tests/src/pages/stress-testing/run-detail/charts/TimeSeriesChart', () => ({
   default: (p: (typeof m.chart)[number]) => {
     m.chart.push(p);
     return <div data-testid="chart">{p.title}</div>;

@@ -58,7 +58,7 @@ export const LOGS_PAGE: AnalyticsPageSpec = {
 };
 
 /**
- * What SonarQube says about the code. Also Tech → Security → SonarQube, which
+ * What SonarQube says about the code. Also Tests → Code Quality → SonarQube, which
  * mounts this same spec — so a layout saved in one console is the layout in the other.
  */
 export const SONARQUBE_PAGE: AnalyticsPageSpec = {

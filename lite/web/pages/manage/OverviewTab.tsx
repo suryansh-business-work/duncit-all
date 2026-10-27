@@ -15,7 +15,7 @@ import { CancelEventDialog } from './cancel-event';
 interface OverviewTabProps {
   event: LiteEvent;
   onChanged: () => void;
-  onOpenTab: (tab: 'guests' | 'checkin') => void;
+  onOpenTab: (tab: 'guests') => void;
 }
 
 const TILE_KEYS = ['going', 'pending', 'payment_pending', 'waitlisted', 'checked_in'] as const;
@@ -76,8 +76,8 @@ export function OverviewTab({ event, onChanged, onOpenTab }: Readonly<OverviewTa
           <DuncitButton variant="outlined" onClick={() => onOpenTab('guests')} data-testid="overview-guests">
             {t('liteWeb.manage.tabs.guests')}
           </DuncitButton>
-          <DuncitButton variant="outlined" onClick={() => onOpenTab('checkin')} data-testid="overview-checkin">
-            {t('liteWeb.manage.tabs.checkin')}
+          <DuncitButton component={RouterLink} to={paths.eventScan(event.slug)} variant="outlined" data-testid="overview-checkin">
+            {t('liteWeb.manage.scanner.open')}
           </DuncitButton>
         </Stack>
       </SectionCard>

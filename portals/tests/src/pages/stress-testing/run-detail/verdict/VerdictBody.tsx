@@ -3,7 +3,7 @@ import WhatshotIcon from '@mui/icons-material/Whatshot';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import { Box, Chip, Divider, Stack, Typography } from '@mui/material';
 import { useTranslation } from '@duncit/shell';
-import { formatDateTime } from '../../../server/format';
+import { formatDateTime } from '../../../../../../tech/src/pages/server/format';
 import MetricTiles, { type MetricTile } from '../../components/MetricTiles';
 import type { StressVerdict } from '../../queries';
 import { formatCount, gradeColor, gradeLabel, levelLabel } from '../../labels';

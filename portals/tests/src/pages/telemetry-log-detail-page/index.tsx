@@ -4,7 +4,7 @@ import { Alert, Chip, Paper, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { DuncitButton } from '@duncit/buttons';
 import { QueryGuard } from '@duncit/ui';
-import { ENV_COLOR } from '../../components/telemetry-identity';
+import { ENV_COLOR } from '../../../../tech/src/components/telemetry-identity';
 import LogDetailBody from '../telemetry-logs-page/LogDetailBody';
 import { TELEMETRY_LOG_BY_ID, type TelemetryLogRow } from '../telemetry-logs-page/queries';
 import { useTranslation } from '@duncit/app-settings';

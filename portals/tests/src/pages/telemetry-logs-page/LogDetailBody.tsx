@@ -1,6 +1,6 @@
 import { Box, Divider, Stack, Typography } from '@mui/material';
-import { DetailBlock, DetailField } from '../../components/DetailField';
-import { userLabel } from '../../components/telemetry-identity';
+import { DetailBlock, DetailField } from '../../../../tech/src/components/DetailField';
+import { userLabel } from '../../../../tech/src/components/telemetry-identity';
 import { type TelemetryLogRow } from './queries';
 import { formatDateTime, useTranslation } from '@duncit/app-settings';
 

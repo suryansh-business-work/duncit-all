@@ -33,9 +33,9 @@ import {
  * Monitor and Tech > Rate Limiting hold the records behind every number.
  */
 
-const OVERVIEW = consoleLink('tech', '/graphql-monitor/overview');
-const OPERATIONS = consoleLink('tech', '/graphql-monitor/operations');
-const ERRORS = consoleLink('tech', '/graphql-monitor/errors');
+const OVERVIEW = consoleLink('tests', '/graphql-monitor/overview');
+const OPERATIONS = consoleLink('tests', '/graphql-monitor/operations');
+const ERRORS = consoleLink('tests', '/graphql-monitor/errors');
 const BLOCKED = consoleLink('tech', '/rate-limiting/blocked');
 const SYSTEMS = consoleLink('tech', '/rate-limiting/systems');
 const TOP = 10;
@@ -92,7 +92,7 @@ function slowestOperations(operations: readonly OperationStats[]): AnalyticsLead
       name: operation.name,
       caption: operation.type,
       values: [operation.requests, operation.error_rate_pct, operation.p50_ms, operation.p95_ms, operation.p99_ms],
-      link: consoleLink('tech', `/graphql-monitor/operations/${operation.id}`),
+      link: consoleLink('tests', `/graphql-monitor/operations/${operation.id}`),
     })),
     link: OPERATIONS,
   };

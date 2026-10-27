@@ -6,7 +6,7 @@ import { useTranslation } from '@duncit/shell';
 import { notifyError, notifySuccess } from '@duncit/dialogs';
 import StressSettingsForm from './stress-settings.form';
 import type { StressSettingsValues } from './stress-settings.types';
-import { formatDateTime } from '../../server/format';
+import { formatDateTime } from '../../../../../tech/src/pages/server/format';
 import { STRESS_SETTINGS, UPDATE_STRESS_SETTINGS, type StressSettings } from '../queries';
 
 /**

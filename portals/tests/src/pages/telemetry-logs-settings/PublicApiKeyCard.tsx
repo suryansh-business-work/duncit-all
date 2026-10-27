@@ -7,7 +7,7 @@ import { notify, useConfirm } from '@duncit/dialogs';
 import { copyToClipboard, parseApiError } from '@duncit/utils';
 import { useUserData } from '@duncit/user-context';
 import { serverOrigin } from '../../components/CopyGetApiButton';
-import { SUPER_ROLE } from '../../lib/session';
+import { SUPER_ROLE } from '@duncit/shell';
 import { ROTATE_TELEMETRY_API_KEY, TELEMETRY_SETTINGS } from './queries';
 import { useTranslation } from '@duncit/app-settings';
 

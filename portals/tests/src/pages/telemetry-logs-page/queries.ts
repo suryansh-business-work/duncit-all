@@ -98,7 +98,7 @@ export const IMPORT_TELEMETRY_LOGS = gql`
   }
 `;
 
-import type { TelemetryUserRef } from '../../components/telemetry-identity';
+import type { TelemetryUserRef } from '../../../../tech/src/components/telemetry-identity';
 
 export type TelemetryLevel = 'error' | 'warn' | 'info' | 'debug';
 

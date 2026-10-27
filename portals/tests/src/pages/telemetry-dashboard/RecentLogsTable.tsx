@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { useApolloClient } from '@apollo/client/react';
 import { Chip, Typography } from '@mui/material';
 import { DuncitTable, useApolloTableFetch, type DuncitColumn } from '@duncit/table';
-import { envOptions } from '../../components/telemetry-identity';
+import { envOptions } from '../../../../tech/src/components/telemetry-identity';
 import { TELEMETRY_LOGS_TABLE, levelColor, type LogRow } from './queries';
 import { formatDateTime, useTranslation } from '@duncit/app-settings';
 

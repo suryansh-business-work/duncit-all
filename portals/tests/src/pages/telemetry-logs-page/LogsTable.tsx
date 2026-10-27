@@ -8,7 +8,7 @@ import {
   type TableFilterValue,
   type TableQuerySnapshot,
 } from '@duncit/table';
-import { ENV_COLOR, envOptions, UserCell } from '../../components/telemetry-identity';
+import { ENV_COLOR, envOptions, UserCell } from '../../../../tech/src/components/telemetry-identity';
 import { type TelemetryLevel, type TelemetryLogRow } from './queries';
 import { formatDateTime, useTranslation } from '@duncit/app-settings';
 

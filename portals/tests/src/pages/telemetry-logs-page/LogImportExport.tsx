@@ -1,12 +1,10 @@
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client/react';
 import { Stack } from '@mui/material';
-import DownloadIcon from '@mui/icons-material/Download';
-import UploadIcon from '@mui/icons-material/Upload';
-import { DuncitButton } from '@duncit/buttons';
 import { notify, useConfirm } from '@duncit/dialogs';
 import { downloadTextFile, parseApiError } from '@duncit/utils';
 import CopyGetApiButton from '../../components/CopyGetApiButton';
+import JsonImportExportButtons from '../../components/JsonImportExportButtons';
 import {
   IMPORT_TELEMETRY_LOGS,
   TELEMETRY_LOGS_EXPORT,
@@ -34,7 +32,6 @@ export default function LogImportExport({ level, onImported }: Readonly<Props>) 
   const { t } = useTranslation();
   const client = useApolloClient();
   const confirm = useConfirm();
-  const fileRef = useRef<HTMLInputElement | null>(null);
   const [importMut, { loading: importing }] = useMutation<{
     importTelemetryLogs: { created: number; skipped: number; expiring: number };
   }>(IMPORT_TELEMETRY_LOGS);
@@ -99,34 +96,16 @@ export default function LogImportExport({ level, onImported }: Readonly<Props>) 
   };
 
   return (
-    <Stack direction="row" spacing={0.5} sx={{
-      alignItems: "center"
-    }}>
-      <DuncitButton size="small" startIcon={<DownloadIcon />} disabled={exporting} onClick={runExport}>
-        {exporting ? 'Exporting…' : 'Export'}
-      </DuncitButton>
-      <DuncitButton
-        size="small"
-        startIcon={<UploadIcon />}
-        disabled={importing}
-        onClick={() => fileRef.current?.click()}
+    <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center' }}>
+      <JsonImportExportButtons
+        exporting={exporting}
+        importing={importing}
+        onExport={runExport}
+        onImport={runImport}
+        fileLabel={t('tech.telemetryLogs.logsJsonFile')}
       >
-        {importing ? 'Importing…' : 'Import'}
-      </DuncitButton>
-      <CopyGetApiButton path="/telemetry/logs.json" params={{ level }} />
-      <input
-        ref={fileRef}
-        type="file"
-        accept="application/json,.json"
-        hidden
-        aria-label={t('tech.telemetryLogs.logsJsonFile')}
-        onChange={async (e) => {
-          const file = e.target.files?.[0];
-          // Cleared so picking the SAME file again still fires a change event.
-          e.target.value = '';
-          if (file) await runImport(file);
-        }}
-      />
+        <CopyGetApiButton path="/telemetry/logs.json" params={{ level }} />
+      </JsonImportExportButtons>
     </Stack>
   );
 }

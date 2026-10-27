@@ -5,7 +5,7 @@ import { Box, Stack, Typography } from '@mui/material';
 import { useApolloTableFetch } from '@duncit/table';
 import { DuncitTabs, useTabParam } from '@duncit/tabs';
 import { useUserData } from '@duncit/user-context';
-import { SUPER_ROLE } from '../../lib/session';
+import { SUPER_ROLE } from '@duncit/shell';
 import {
   TelemetryBulkBar,
   TelemetryDeleteButton,

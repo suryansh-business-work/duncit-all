@@ -1,5 +1,7 @@
 import { z } from 'zod';
 import type { Translate } from '@duncit/forms/schemas';
+import { SETTING_BOUNDS } from '../../../../shared/limits';
+import { countRule } from '../../../components/countRule';
 import type { LiteLocale, LiteLocaleInput } from '../../../graphql/localization';
 
 export interface LocaleFormValues {
@@ -15,7 +17,6 @@ export interface LocaleFormValues {
 
 /** A BCP-47 tag: a 2–3 letter language, then optional subtags (en, en-IN, zh-Hant-TW). */
 const LOCALE_CODE = /^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$/;
-const DIGITS = /^\d*$/;
 
 export const emptyLocaleValues = (): LocaleFormValues => ({ code: '', label: '', english_label: '', is_rtl: false, is_default: false, sort_order: '0', is_active: true });
 
@@ -50,7 +51,7 @@ export const makeLocaleSchema = (t: Translate) => {
     english_label: z.string().trim().min(1, required(english)).max(60, max(english, 60)),
     is_rtl: z.boolean(),
     is_default: z.boolean(),
-    sort_order: z.string().trim().regex(DIGITS, t('litePortal.validation.integer', { vars: { field: t('litePortal.common.sortOrder') } })),
+    sort_order: countRule(t, t('litePortal.common.sortOrder'), SETTING_BOUNDS.sortOrder, true),
     is_active: z.boolean(),
   });
 };

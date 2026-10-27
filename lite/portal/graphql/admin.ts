@@ -27,6 +27,9 @@ export interface LiteAdminSettings {
   upi_help_text: string;
   admin_emails: string[];
   max_ticket_price: number;
+  max_event_capacity: number;
+  max_seats_per_registration: number;
+  sign_in_with_phone: boolean;
 }
 
 export const LITE_ADMIN_STATS = gql`
@@ -60,6 +63,9 @@ const SETTINGS_FIELDS = `
   upi_help_text
   admin_emails
   max_ticket_price
+  max_event_capacity
+  max_seats_per_registration
+  sign_in_with_phone
 `;
 
 export const LITE_ADMIN_SETTINGS = gql`

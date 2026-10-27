@@ -19,6 +19,7 @@ export function IntegrationsSection({ control, busy }: Readonly<Props>) {
       <SectionCard title={t('litePortal.settings.duncit')}>
         <Stack spacing={1.5}>
           <RhfSwitch control={control} name="sign_in_with_duncit" label={t('litePortal.settings.signInWithDuncit')} hint={t('litePortal.settings.signInWithDuncitHint')} disabled={busy} testId="settings-sign-in-with-duncit" />
+          <RhfSwitch control={control} name="sign_in_with_phone" label={t('litePortal.settings.signInWithPhone')} hint={t('litePortal.settings.signInWithPhoneHint')} disabled={busy} testId="settings-sign-in-with-phone" />
           <RhfTextField
             control={control}
             name="duncit_graphql_url"

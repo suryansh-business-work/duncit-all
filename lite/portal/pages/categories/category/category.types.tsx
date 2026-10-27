@@ -1,5 +1,7 @@
 import { z } from 'zod';
 import type { Translate } from '@duncit/forms/schemas';
+import { SETTING_BOUNDS } from '../../../../shared/limits';
+import { countRule } from '../../../components/countRule';
 import type { LiteAdminCategory, LiteCategoryInput } from '../../../graphql/catalogue';
 
 export interface CategoryFormValues {
@@ -12,7 +14,6 @@ export interface CategoryFormValues {
 }
 
 const ICON_NAME = /^[A-Za-z0-9]*$/;
-const DIGITS = /^\d*$/;
 
 export const emptyCategoryValues = (): CategoryFormValues => ({ name: '', slug: '', icon: '', sort_order: '0', is_active: true });
 
@@ -42,7 +43,7 @@ export const makeCategorySchema = (t: Translate) => {
       .max(60, t('litePortal.validation.max', { vars: { field: name, max: 60 } })),
     slug: z.string().trim().max(80, t('litePortal.validation.max', { vars: { field: t('litePortal.common.slug'), max: 80 } })),
     icon: z.string().trim().regex(ICON_NAME, t('litePortal.validation.iconName')),
-    sort_order: z.string().trim().regex(DIGITS, t('litePortal.validation.integer', { vars: { field: t('litePortal.common.sortOrder') } })),
+    sort_order: countRule(t, t('litePortal.common.sortOrder'), SETTING_BOUNDS.sortOrder, true),
     is_active: z.boolean(),
   });
 };

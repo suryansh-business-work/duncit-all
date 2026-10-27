@@ -1,77 +1,117 @@
-import { createTheme, type Theme } from '@mui/material/styles';
-import { light, radii } from '@duncit/auth-tokens';
+import { alpha, createTheme, type Theme } from '@mui/material/styles';
 import { focusVisibleGlobalCss, reducedMotionGlobalCss, withPress } from '@duncit/buttons';
+import { LITE_MOTION, LITE_RADII, LITE_SCHEMES, type LiteSchemeTokens } from './tokens';
+
+export { tintAt } from './tokens';
 
 const FONT_STACK = '"Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif';
 
-/** Lite's visual language: the Duncit red CTA on a light page, rounded cards, pill controls. */
-export const LITE_TOKENS = {
-  cta: light.primary,
-  ctaHover: light.primaryHover,
-  onBrand: light.onPrimary,
-  ink: light.ink,
-  muted: light.muted,
-  page: '#F6F6F8',
-  surface: light.surface,
-  border: light.border,
-  inputBorder: light.inputBorder,
-  brandTint: '#FFE9E9',
-  radius: { card: radii.xl, pill: radii.pill, control: radii.lg },
-  shadow: '0 8px 24px rgba(21, 21, 21, 0.06)',
-} as const;
+/** The attribute the colour scheme rides on (`<html data-lite-mode="dark">`), set before first paint. */
+export const COLOR_SCHEME_ATTRIBUTE = 'data-lite-mode';
+export const COLOR_SCHEME_SELECTOR = `[${COLOR_SCHEME_ATTRIBUTE}="%s"]`;
+/** Where the reader's Light / Dark / System choice is remembered on this device. */
+export const MODE_STORAGE_KEY = 'lite_display_mode';
 
-/** Soft tints rotated across cards so a grid never reads as one flat block. */
-const CARD_TINTS = ['#FFE9E9', '#FFEEDD', '#F1EAFF', '#E7F2FF', '#E5F7EE'] as const;
-export const tintAt = (position: number): string => CARD_TINTS[position % CARD_TINTS.length];
+const palette = (s: LiteSchemeTokens) => ({
+  primary: { main: s.cta, contrastText: s.onCta },
+  secondary: { main: s.accent, contrastText: s.onCta },
+  success: { main: s.success, contrastText: s.onSemantic },
+  warning: { main: s.warning, contrastText: s.onSemantic },
+  error: { main: s.error, contrastText: s.onSemantic },
+  info: { main: s.info, contrastText: s.onSemantic },
+  background: { default: s.page, paper: s.surface },
+  text: { primary: s.ink, secondary: s.muted },
+  divider: s.border,
+  lite: s,
+});
 
-/** The web app's MUI theme. The console uses `DuncitThemeProvider` from @duncit/theme instead. */
+/** The keyframes every animated surface shares; each is switched off under reduced motion. */
+const KEYFRAMES = {
+  '@keyframes lite-rise': { from: { opacity: 0, transform: 'translateY(12px)' }, to: { opacity: 1, transform: 'none' } },
+  '@keyframes lite-float': {
+    '0%, 100%': { transform: 'translateY(0) rotate(var(--lite-tilt, 0deg))' },
+    '50%': { transform: 'translateY(-14px) rotate(var(--lite-tilt, 0deg))' },
+  },
+  '@keyframes lite-fade': { from: { opacity: 0 }, to: { opacity: 1 } },
+};
+
+/**
+ * The web app's MUI theme: both colour schemes as CSS variables, so switching
+ * Light / Dark / System (or rendering on the server without knowing the
+ * reader's preference) never re-renders a different tree. The console uses
+ * `DuncitThemeProvider` from @duncit/theme instead.
+ */
 export function buildLiteTheme(): Theme {
-  const T = LITE_TOKENS;
+  const card = LITE_RADII.card;
   return createTheme({
-    palette: {
-      mode: 'light',
-      primary: { main: T.cta, dark: light.primaryActive, contrastText: T.onBrand },
-      secondary: { main: light.accent, contrastText: light.onAccent },
-      success: { main: light.success, contrastText: light.onSemantic },
-      warning: { main: light.warning, contrastText: light.onSemantic },
-      error: { main: light.error, contrastText: light.onSemantic },
-      info: { main: light.info, contrastText: light.onSemantic },
-      background: { default: T.page, paper: T.surface },
-      text: { primary: T.ink, secondary: T.muted },
-      divider: T.border,
-    },
-    shape: { borderRadius: 8 },
+    cssVariables: { colorSchemeSelector: COLOR_SCHEME_SELECTOR, cssVarPrefix: 'lite' },
+    colorSchemes: { dark: { palette: palette(LITE_SCHEMES.dark) }, light: { palette: palette(LITE_SCHEMES.light) } },
+    defaultColorScheme: 'dark',
+    shape: { borderRadius: LITE_RADII.control },
     typography: {
       fontFamily: FONT_STACK,
-      h1: { fontWeight: 800, fontSize: '2.25rem', lineHeight: 1.15 },
-      h2: { fontWeight: 800, fontSize: '1.6rem' },
+      h1: { fontWeight: 800, fontSize: 'clamp(2.4rem, 6vw, 4rem)', lineHeight: 1.05, letterSpacing: '-0.02em' },
+      h2: { fontWeight: 800, fontSize: '1.75rem', letterSpacing: '-0.01em' },
       h3: { fontWeight: 800, fontSize: '1.25rem' },
       h4: { fontWeight: 700, fontSize: '1.1rem' },
       h5: { fontWeight: 700, fontSize: '1rem' },
       h6: { fontWeight: 700, fontSize: '0.95rem' },
       button: { fontWeight: 700, textTransform: 'none' },
     },
-    components: withPress({
-      MuiCssBaseline: {
-        styleOverrides: {
-          body: { backgroundColor: T.page },
-          ...focusVisibleGlobalCss(light.accent),
-          ...reducedMotionGlobalCss,
-          '@media (pointer: coarse)': { 'button, a[role="button"], [role="button"]': { minHeight: 44 } },
+    transitions: { easing: { easeInOut: LITE_MOTION.ease, easeOut: LITE_MOTION.ease } },
+    components: withPress(
+      {
+        MuiCssBaseline: {
+          styleOverrides: (theme: Theme) => ({
+            ...KEYFRAMES,
+            body: { backgroundColor: theme.vars?.palette.background.default, colorScheme: 'light dark' },
+            ...focusVisibleGlobalCss(LITE_SCHEMES.dark.accent),
+            ...reducedMotionGlobalCss,
+            '@media (pointer: coarse)': { 'button, a[role="button"], [role="button"]': { minHeight: 44 } },
+            '@media (prefers-reduced-motion: reduce)': { '[data-lite-animate]': { animation: 'none !important' } },
+          }),
         },
-      },
-      MuiButton: { styleOverrides: { root: { borderRadius: T.radius.pill, paddingInline: 20, minHeight: 44 } } },
-      MuiToggleButton: { styleOverrides: { root: { borderRadius: T.radius.pill, textTransform: 'none', fontWeight: 700 } } },
-      MuiChip: { styleOverrides: { root: { borderRadius: T.radius.pill, fontWeight: 700 } } },
-      MuiOutlinedInput: {
-        styleOverrides: {
-          root: { borderRadius: T.radius.control, backgroundColor: T.surface },
-          notchedOutline: { borderColor: T.inputBorder },
+        MuiButton: {
+          styleOverrides: {
+            root: { borderRadius: LITE_RADII.control, paddingInline: 16, minHeight: 40, transition: `transform ${LITE_MOTION.fast}ms ${LITE_MOTION.ease}, background-color ${LITE_MOTION.fast}ms` },
+          },
         },
+        MuiToggleButton: { styleOverrides: { root: { borderRadius: LITE_RADII.control, textTransform: 'none', fontWeight: 700 } } },
+        MuiChip: { styleOverrides: { root: { borderRadius: LITE_RADII.pill, fontWeight: 700 } } },
+        MuiOutlinedInput: { styleOverrides: { root: { borderRadius: LITE_RADII.control } } },
+        MuiCard: {
+          styleOverrides: {
+            root: ({ theme }) => ({
+              borderRadius: card,
+              backgroundImage: 'none',
+              boxShadow: 'none',
+              border: `1px solid ${theme.vars?.palette.divider}`,
+              transition: `transform ${LITE_MOTION.base}ms ${LITE_MOTION.ease}, border-color ${LITE_MOTION.base}ms`,
+            }),
+          },
+        },
+        MuiPaper: { styleOverrides: { root: { backgroundImage: 'none' }, rounded: { borderRadius: card } } },
+        MuiDialog: {
+          styleOverrides: {
+            paper: ({ theme }) => ({ borderRadius: LITE_RADII.cover, border: `1px solid ${theme.vars?.palette.divider}` }),
+            root: { '& .MuiBackdrop-root': { backdropFilter: 'blur(6px)' } },
+          },
+        },
+        MuiTooltip: { styleOverrides: { tooltip: { borderRadius: LITE_RADII.control } } },
       },
-      MuiCard: { styleOverrides: { root: { borderRadius: T.radius.card, boxShadow: T.shadow, border: `1px solid ${T.border}` } } },
-      MuiPaper: { styleOverrides: { rounded: { borderRadius: T.radius.card } } },
-      MuiDialog: { styleOverrides: { paper: { borderRadius: T.radius.card } } },
-    }, { ink: T.ink, accent: light.accent }),
+      { ink: LITE_SCHEMES.dark.ink, accent: LITE_SCHEMES.dark.accent },
+    ),
   });
+}
+
+/** A translucent version of a token colour, for glows and tints. */
+export const tint = (color: string, opacity: number): string => alpha(color, opacity);
+
+declare module '@mui/material/styles' {
+  interface Palette {
+    lite: LiteSchemeTokens;
+  }
+  interface PaletteOptions {
+    lite?: LiteSchemeTokens;
+  }
 }

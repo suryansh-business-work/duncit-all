@@ -1,6 +1,6 @@
 import { gql } from '@apollo/client';
 
-export type LiteEnvCategory = 'EMAIL' | 'IMAGEKIT' | 'GOOGLE_OAUTH';
+export type LiteEnvCategory = 'EMAIL' | 'IMAGEKIT' | 'GOOGLE_OAUTH' | 'GOOGLE_MAPS' | 'MSG91';
 
 export interface LiteEnvFieldDef {
   name: string;
@@ -9,6 +9,9 @@ export interface LiteEnvFieldDef {
   number: boolean;
   bool: boolean;
   hint: string | null;
+  /** Bounds of a number field; the API refuses anything outside them. */
+  min: number | null;
+  max: number | null;
 }
 
 export interface LiteEnvCategoryDef {
@@ -83,6 +86,8 @@ export const LITE_ENV_CATEGORIES = gql`
         number
         bool
         hint
+        min
+        max
       }
     }
   }

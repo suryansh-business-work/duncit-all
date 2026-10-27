@@ -5,7 +5,7 @@
  * and the modules that must never reach an AI stay out.
  */
 import { typeDefsByModule } from '@modules/index';
-import { categoryLabel, MCP_CATEGORIES, MODULE_CATEGORY } from '../../catalog/categories';
+import { REMOTE_CATEGORIES, categoryLabel, MCP_CATEGORIES, MODULE_CATEGORY } from '../../catalog/categories';
 
 const CATEGORY_KEYS = new Set<string>(MCP_CATEGORIES.map((category) => category.key));
 
@@ -58,7 +58,12 @@ describe('MODULE_CATEGORY', () => {
   it('puts at least one module in every category, so no category is an empty shelf', () => {
     const used = new Set<string>();
     for (const category of Object.values(MODULE_CATEGORY)) if (category) used.add(category);
-    expect([...CATEGORY_KEYS].filter((key) => !used.has(key))).toEqual([]);
+    expect([...CATEGORY_KEYS].filter((key) => !used.has(key) && !REMOTE_CATEGORIES.has(key))).toEqual([]);
+  });
+
+  it('files no module under a remote category (its tools come from that product’s own API)', () => {
+    expect([...REMOTE_CATEGORIES]).toEqual(['lite']);
+    expect(Object.values(MODULE_CATEGORY).filter((category) => category !== null && REMOTE_CATEGORIES.has(category))).toEqual([]);
   });
 });
 

@@ -46,9 +46,21 @@ export const MCP_CATEGORIES = [
   { key: 'ads', label: 'Ads', description: 'Ad requests and campaigns.' },
   { key: 'chat', label: 'Chat', description: 'Pod chats and staff chat.' },
   { key: 'mcp', label: 'MCP', description: 'This MCP service: its tools, connections and usage.' },
+  {
+    key: 'lite',
+    label: 'Duncit Lite',
+    description: 'Duncit Lite events (lite.duncit.com): discover, create and manage events, guests, check-in, calendars and the Lite console — as your Lite account (same email).',
+  },
 ] as const;
 
 export type McpCategoryKey = (typeof MCP_CATEGORIES)[number]['key'];
+
+/**
+ * Categories whose tools come from another product's API rather than a module
+ * of this one — they are filled at run time (see lite/lite.catalog.ts), so no
+ * module is filed under them.
+ */
+export const REMOTE_CATEGORIES: ReadonlySet<McpCategoryKey> = new Set<McpCategoryKey>(['lite']);
 export type ModuleName = keyof typeof typeDefsByModule;
 
 export const MODULE_CATEGORY: Record<ModuleName, McpCategoryKey | null> = {

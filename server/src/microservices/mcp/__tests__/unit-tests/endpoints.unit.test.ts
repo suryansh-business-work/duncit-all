@@ -53,8 +53,8 @@ describe('accessibleEndpoints', () => {
     expect(keysFor(['SUPER_ADMIN'])).toEqual(MCP_ENDPOINTS.map((endpoint) => endpoint.key));
   });
 
-  it('opens only the member and partner apps for a plain member', () => {
-    expect(keysFor([])).toEqual(['app', 'partners']);
+  it('opens only the member and partner apps, and Duncit Lite, for a plain member', () => {
+    expect(keysFor([])).toEqual(['app', 'partners', 'lite']);
   });
 
   it('adds the finance and loyalty consoles for a finance manager, but not Admin (which wants FINANCE_USER)', () => {

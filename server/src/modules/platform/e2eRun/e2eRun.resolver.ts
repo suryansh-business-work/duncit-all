@@ -1,5 +1,5 @@
 import type { GraphQLContext } from '@context';
-import { requireRole } from '@middleware/rbac';
+import { requireRole, TESTS_MANAGER } from '@middleware/rbac';
 import type { TableQueryInput } from '@utils/table-query';
 import { e2eRunService } from './e2eRun.service';
 import { purgeE2eRunData } from './e2eRun.purge';
@@ -8,27 +8,29 @@ import { trafficKeyForRun } from './e2eRun.traffic';
 import { mintE2eGoogleCredential } from './e2eRun.google';
 import { grantRunAccountRoles, revokeRunAccountRoles, type GrantE2eRunAccountRolesInput } from './e2eRun.staff';
 
-// E2E runs are a Tech-portal capability. The workflow authenticates with the
-// same TECH_MANAGER JWT the build workflows use (DUNCIT_RELEASE_TOKEN), so its
-// reports carry the same gate as the reads.
+// The workflow authenticates with the same TECH_MANAGER JWT the build workflows
+// use (DUNCIT_RELEASE_TOKEN). What only it calls — run reports, run-account
+// codes and credentials, role grants, purges — stays behind this gate alone.
 const E2E_MANAGE = ['SUPER_ADMIN', 'TECH_MANAGER'];
+// What the E2E pages read and do. They moved from Tech to the Tests console.
+const E2E_CONSOLE = [...E2E_MANAGE, TESTS_MANAGER];
 
 export const e2eRunResolvers = {
   Query: {
     e2eRunsTable: (_p: unknown, args: { query?: TableQueryInput | null }, ctx: GraphQLContext) => {
-      requireRole(ctx, E2E_MANAGE);
+      requireRole(ctx, E2E_CONSOLE);
       return e2eRunService.table(args.query);
     },
     e2eRunSettings: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
-      requireRole(ctx, E2E_MANAGE);
+      requireRole(ctx, E2E_CONSOLE);
       return e2eRunService.settings();
     },
     e2eSuiteCatalogue: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
-      requireRole(ctx, E2E_MANAGE);
+      requireRole(ctx, E2E_CONSOLE);
       return e2eRunService.suiteCatalogue();
     },
     e2eTriggerConfig: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
-      requireRole(ctx, E2E_MANAGE);
+      requireRole(ctx, E2E_CONSOLE);
       return e2eRunService.triggerConfig();
     },
     e2eOneTimeCode: (
@@ -54,7 +56,7 @@ export const e2eRunResolvers = {
   },
   Mutation: {
     triggerE2eRun: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
-      const user = requireRole(ctx, E2E_MANAGE);
+      const user = requireRole(ctx, E2E_CONSOLE);
       return e2eRunService.trigger(args.input, user);
     },
     startE2eRun: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
@@ -86,11 +88,11 @@ export const e2eRunResolvers = {
       return revokeRunAccountRoles(args.input);
     },
     updateE2eRunSettings: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
-      requireRole(ctx, E2E_MANAGE);
+      requireRole(ctx, E2E_CONSOLE);
       return e2eRunService.updateSettings(args.input);
     },
     deleteE2eRun: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
-      requireRole(ctx, E2E_MANAGE);
+      requireRole(ctx, E2E_CONSOLE);
       return e2eRunService.remove(args.id);
     },
   },

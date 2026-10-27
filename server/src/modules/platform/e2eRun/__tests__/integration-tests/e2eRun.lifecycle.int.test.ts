@@ -59,7 +59,7 @@ async function runningRun(over: Record<string, unknown> = {}) {
 beforeEach(() => {
   for (const key of Object.keys(mockEnv)) delete mockEnv[key];
   mockEnv.SERVER_URL = 'https://api.example.test/';
-  mockEnv.TECH_URL = 'https://tech.example.test/';
+  mockEnv.TESTS_URL = 'https://tests.example.test/';
   mockEnv.SLACK_E2E_CHANNEL = 'C-E2E';
   post.mockResolvedValue({ channel: 'C-E2E', ts: '900.1' });
 });
@@ -286,7 +286,7 @@ describe('report', () => {
     expect(text).toContain('*Not run:* 1 suites');
     expect(text).toContain('<https://github.com/acme/app/commit/abcdef1234567|abcdef1>');
     expect(text).toContain('"style":"danger"');
-    expect(text).toContain('https://tech.example.test/e2e/runs');
+    expect(text).toContain('https://tests.example.test/e2e/runs');
 
     // The gate re-reporting the same outcome does not post a second time.
     await e2eRunService.report({ workflow_run_id: '500', status: 'FAILED' }, 'ci-gate');

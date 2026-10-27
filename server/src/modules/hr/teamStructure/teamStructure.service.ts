@@ -5,11 +5,13 @@ import {
   TeamStructureModel,
   TeamStructureNodeModel,
   TeamStructureShareModel,
+  type IKra,
   type IPayComponent,
   type ITeamStructure,
   type ITeamStructureNode,
   type ITeamStructureShare,
 } from './teamStructure.model';
+import { kraProblem } from './teamStructure.kra';
 import { monthlyCost, payProblem } from './teamStructure.pay';
 
 export type NodeInput = Partial<Pick<ITeamStructureNode, 'person_name' | 'department' | 'notes' | 'status' | 'sort_order'>> &
@@ -18,6 +20,8 @@ export type NodeInput = Partial<Pick<ITeamStructureNode, 'person_name' | 'depart
     parent_id?: string | null;
     user_id?: string | null;
     pay?: IPayComponent[];
+    /** Omitted = leave the seat's scorecard as it is; [] = clear it. */
+    kras?: IKra[];
   };
 
 const MAX_NODES = 500;
@@ -38,6 +42,12 @@ function checkPay(pay: readonly IPayComponent[] | undefined): IPayComponent[] {
     if (problem) throw bad(problem);
   }
   return [...lines];
+}
+
+function checkKras(kras: readonly IKra[]): IKra[] {
+  const problem = kraProblem(kras);
+  if (problem) throw bad(problem);
+  return [...kras];
 }
 
 /** True when `candidate` is `nodeId` itself or one of its descendants — a parent there would make a loop. */
@@ -108,10 +118,18 @@ export const teamStructureService = {
     if ((await TeamStructureNodeModel.countDocuments({ structure_id })) >= MAX_NODES && !(await TeamStructureNodeModel.exists({ _id }))) {
       throw bad(`A structure cannot hold more than ${MAX_NODES} seats`);
     }
-    const { id: _ignored, parent_id: _p, user_id, pay, ...rest } = input;
+    const { id: _ignored, parent_id: _p, user_id, pay, kras, ...rest } = input;
     const doc = await TeamStructureNodeModel.findOneAndUpdate(
       { _id, structure_id },
-      { $set: { ...rest, parent_id: parent, user_id: user_id ? oid(user_id, 'user') : null, pay: checkPay(pay) } },
+      {
+        $set: {
+          ...rest,
+          parent_id: parent,
+          user_id: user_id ? oid(user_id, 'user') : null,
+          pay: checkPay(pay),
+          ...(kras ? { kras: checkKras(kras) } : {}),
+        },
+      },
       { new: true, upsert: true, setDefaultsOnInsert: true }
     ).lean<ITeamStructureNode>();
     return doc;
@@ -130,7 +148,13 @@ export const teamStructureService = {
   shares: (structureId: string): Promise<ITeamStructureShare[]> =>
     TeamStructureShareModel.find({ structure_id: oid(structureId, 'structure') }).sort({ created_at: -1, _id: -1 }).lean<ITeamStructureShare[]>(),
 
-  async createShare(args: { structure_id: string; label?: string | null; show_salary?: boolean | null; expires_at?: string | null }) {
+  async createShare(args: {
+    structure_id: string;
+    label?: string | null;
+    show_salary?: boolean | null;
+    show_kpi_kra?: boolean | null;
+    expires_at?: string | null;
+  }) {
     const structure_id = oid(args.structure_id, 'structure');
     if (!(await TeamStructureModel.exists({ _id: structure_id }))) throw bad('Team structure not found', 'NOT_FOUND');
     const expires = args.expires_at ? new Date(args.expires_at) : null;
@@ -141,6 +165,7 @@ export const teamStructureService = {
         token: randomBytes(24).toString('base64url'),
         label: args.label ?? null,
         show_salary: args.show_salary === true,
+        show_kpi_kra: args.show_kpi_kra === true,
         expires_at: expires,
       })
     ).toObject();

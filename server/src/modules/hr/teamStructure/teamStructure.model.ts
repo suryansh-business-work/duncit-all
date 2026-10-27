@@ -27,6 +27,28 @@ export interface IPayComponent {
   note?: string | null;
 }
 
+export const KPI_FREQUENCIES = ['MONTHLY', 'QUARTERLY', 'ANNUAL'] as const;
+export type KpiFrequency = (typeof KPI_FREQUENCIES)[number];
+
+/** One measurable: a number to hit, how often it is reviewed, and its share of its KRA. */
+export interface IKpi {
+  name: string;
+  unit?: string | null;
+  target?: number | null;
+  frequency: KpiFrequency;
+  /** Percent of the KRA this measure carries. */
+  weight: number;
+}
+
+/** A Key Result Area: what the seat is accountable for, its share of the seat, and how it is measured. */
+export interface IKra {
+  title: string;
+  description?: string | null;
+  /** Percent of the whole seat's performance this area carries. */
+  weight: number;
+  kpis: IKpi[];
+}
+
 export interface ITeamStructure extends Document {
   name: string;
   description?: string | null;
@@ -53,6 +75,7 @@ export interface ITeamStructureNode extends Document {
   notes?: string | null;
   sort_order: number;
   pay: IPayComponent[];
+  kras: IKra[];
   created_at: Date;
   updated_at: Date;
 }
@@ -63,6 +86,7 @@ export interface ITeamStructureShare extends Document {
   token: string;
   label?: string | null;
   show_salary: boolean;
+  show_kpi_kra: boolean;
   expires_at?: Date | null;
   revoked_at?: Date | null;
   created_at: Date;
@@ -80,6 +104,27 @@ const payComponentSchema = new Schema<IPayComponent>(
     min_amount: { type: Number, min: 0, default: null },
     max_amount: { type: Number, min: 0, default: null },
     note: { type: String, trim: true, maxlength: 240, default: null },
+  },
+  { _id: false }
+);
+
+const kpiSchema = new Schema<IKpi>(
+  {
+    name: { type: String, required: true, trim: true, maxlength: 120 },
+    unit: { type: String, trim: true, maxlength: 24, default: null },
+    target: { type: Number, default: null },
+    frequency: { type: String, enum: KPI_FREQUENCIES, required: true },
+    weight: { type: Number, required: true, min: 0, max: 100 },
+  },
+  { _id: false }
+);
+
+const kraSchema = new Schema<IKra>(
+  {
+    title: { type: String, required: true, trim: true, maxlength: 120 },
+    description: { type: String, trim: true, maxlength: 500, default: null },
+    weight: { type: Number, required: true, min: 0, max: 100 },
+    kpis: { type: [kpiSchema], default: [] },
   },
   { _id: false }
 );
@@ -107,6 +152,7 @@ const nodeSchema = new Schema<ITeamStructureNode>(
     notes: { type: String, trim: true, maxlength: 500, default: null },
     sort_order: { type: Number, default: 0 },
     pay: { type: [payComponentSchema], default: [] },
+    kras: { type: [kraSchema], default: [] },
   },
   timestamps
 );
@@ -118,6 +164,7 @@ const shareSchema = new Schema<ITeamStructureShare>(
     token: { type: String, required: true, unique: true },
     label: { type: String, trim: true, maxlength: 80, default: null },
     show_salary: { type: Boolean, default: false },
+    show_kpi_kra: { type: Boolean, default: false },
     expires_at: { type: Date, default: null },
     revoked_at: { type: Date, default: null },
   },

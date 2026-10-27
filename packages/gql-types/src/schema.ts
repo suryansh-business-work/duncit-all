@@ -17008,6 +17008,7 @@ export type MutationCreateSurveyArgs = {
 export type MutationCreateTeamStructureShareArgs = {
   expires_at?: InputMaybe<Scalars['String']['input']>;
   label?: InputMaybe<Scalars['String']['input']>;
+  show_kpi_kra?: InputMaybe<Scalars['Boolean']['input']>;
   show_salary?: InputMaybe<Scalars['Boolean']['input']>;
   structure_id: Scalars['ID']['input'];
 };
@@ -27067,6 +27068,7 @@ export type PublicRole = {
 export type PublicTeamStructure = {
   __typename?: 'PublicTeamStructure';
   nodes: Array<TeamStructureNode>;
+  show_kpi_kra: Scalars['Boolean']['output'];
   show_salary: Scalars['Boolean']['output'];
   structure: TeamStructure;
 };
@@ -39425,6 +39427,45 @@ export type TeamEmploymentType =
   | 'FULL_TIME'
   | 'PART_TIME';
 
+/** A measure inside a KRA. weight is a percent of that KRA; the weights in one KRA add up to 100. */
+export type TeamKpi = {
+  __typename?: 'TeamKpi';
+  frequency: TeamKpiFrequency;
+  name: Scalars['String']['output'];
+  target?: Maybe<Scalars['Float']['output']>;
+  unit?: Maybe<Scalars['String']['output']>;
+  weight: Scalars['Float']['output'];
+};
+
+export type TeamKpiFrequency =
+  | 'ANNUAL'
+  | 'MONTHLY'
+  | 'QUARTERLY';
+
+export type TeamKpiInput = {
+  frequency: TeamKpiFrequency;
+  name: Scalars['String']['input'];
+  target?: InputMaybe<Scalars['Float']['input']>;
+  unit?: InputMaybe<Scalars['String']['input']>;
+  weight: Scalars['Float']['input'];
+};
+
+/** A Key Result Area. weight is a percent of the seat; a seat's KRA weights add up to 100. */
+export type TeamKra = {
+  __typename?: 'TeamKra';
+  description?: Maybe<Scalars['String']['output']>;
+  kpis: Array<TeamKpi>;
+  title: Scalars['String']['output'];
+  weight: Scalars['Float']['output'];
+};
+
+export type TeamKraInput = {
+  description?: InputMaybe<Scalars['String']['input']>;
+  kpis: Array<TeamKpiInput>;
+  title: Scalars['String']['input'];
+  weight: Scalars['Float']['input'];
+};
+
 export type TeamNodeKind =
   | 'AI_AGENT'
   | 'DEPARTMENT'
@@ -39487,6 +39528,8 @@ export type TeamStructureNode = {
   employment_type: TeamEmploymentType;
   id: Scalars['ID']['output'];
   kind: TeamNodeKind;
+  /** KRAs with their KPIs. Null on a public link that hides them. */
+  kras?: Maybe<Array<TeamKra>>;
   /** Fixed + expected variable, per month. Per-unit lines are not counted. */
   monthly_cost?: Maybe<Scalars['Float']['output']>;
   notes?: Maybe<Scalars['String']['output']>;
@@ -39506,6 +39549,8 @@ export type TeamStructureNodeInput = {
   /** Pass an existing id to update, or a fresh/previously deleted id to (re)create the seat with it. */
   id?: InputMaybe<Scalars['ID']['input']>;
   kind: TeamNodeKind;
+  /** Omit to leave the seat's scorecard as it is; [] clears it. */
+  kras?: InputMaybe<Array<TeamKraInput>>;
   notes?: InputMaybe<Scalars['String']['input']>;
   parent_id?: InputMaybe<Scalars['ID']['input']>;
   pay?: InputMaybe<Array<TeamPayComponentInput>>;
@@ -39522,6 +39567,7 @@ export type TeamStructureShare = {
   id: Scalars['ID']['output'];
   label?: Maybe<Scalars['String']['output']>;
   revoked_at?: Maybe<Scalars['String']['output']>;
+  show_kpi_kra: Scalars['Boolean']['output'];
   show_salary: Scalars['Boolean']['output'];
   structure_id: Scalars['ID']['output'];
   token: Scalars['String']['output'];

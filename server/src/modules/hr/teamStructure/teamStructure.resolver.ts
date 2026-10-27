@@ -18,8 +18,8 @@ const toStructure = (s: ITeamStructure) => ({
   updated_at: iso(s.updated_at),
 });
 
-/** `withPay` false drops every money field, which is how a public link hides salary. */
-const toNode = (n: ITeamStructureNode, withPay: boolean) => ({
+/** `withPay` / `withKra` false drop the money fields / the scorecard, which is how a public link hides them. */
+const toNode = (n: ITeamStructureNode, withPay: boolean, withKra = true) => ({
   ...n,
   id: n._id.toString(),
   structure_id: n.structure_id.toString(),
@@ -27,6 +27,7 @@ const toNode = (n: ITeamStructureNode, withPay: boolean) => ({
   user_id: idOf(n.user_id),
   pay: withPay ? n.pay : null,
   monthly_cost: withPay ? monthlyCost(n.pay) : null,
+  kras: withKra ? n.kras : null,
 });
 
 const toShare = (s: ITeamStructureShare) => ({
@@ -35,6 +36,7 @@ const toShare = (s: ITeamStructureShare) => ({
   token: s.token,
   label: s.label ?? null,
   show_salary: s.show_salary,
+  show_kpi_kra: s.show_kpi_kra,
   expires_at: iso(s.expires_at),
   revoked_at: iso(s.revoked_at),
 });
@@ -67,8 +69,9 @@ export const teamStructureResolvers = {
       return {
         structure: toStructure(structure),
         // A public link never carries the linked user or free-text notes.
-        nodes: nodes.map((n) => toNode({ ...n, user_id: null, notes: null } as ITeamStructureNode, share.show_salary)),
+        nodes: nodes.map((n) => toNode({ ...n, user_id: null, notes: null } as ITeamStructureNode, share.show_salary, share.show_kpi_kra)),
         show_salary: share.show_salary,
+        show_kpi_kra: share.show_kpi_kra,
       };
     },
   },
@@ -95,7 +98,7 @@ export const teamStructureResolvers = {
     },
     createTeamStructureShare: async (
       _p: unknown,
-      args: { structure_id: string; label?: string | null; show_salary?: boolean | null; expires_at?: string | null },
+      args: { structure_id: string; label?: string | null; show_salary?: boolean | null; show_kpi_kra?: boolean | null; expires_at?: string | null },
       ctx: GraphQLContext
     ) => {
       guard(ctx);

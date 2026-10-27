@@ -27,6 +27,44 @@ export const teamStructureTypeDefs = /* GraphQL */ `
     PER_UNIT
   }
 
+  enum TeamKpiFrequency {
+    MONTHLY
+    QUARTERLY
+    ANNUAL
+  }
+
+  "A measure inside a KRA. weight is a percent of that KRA; the weights in one KRA add up to 100."
+  type TeamKpi {
+    name: String!
+    unit: String
+    target: Float
+    frequency: TeamKpiFrequency!
+    weight: Float!
+  }
+
+  input TeamKpiInput {
+    name: String!
+    unit: String
+    target: Float
+    frequency: TeamKpiFrequency!
+    weight: Float!
+  }
+
+  "A Key Result Area. weight is a percent of the seat; a seat's KRA weights add up to 100."
+  type TeamKra {
+    title: String!
+    description: String
+    weight: Float!
+    kpis: [TeamKpi!]!
+  }
+
+  input TeamKraInput {
+    title: String!
+    description: String
+    weight: Float!
+    kpis: [TeamKpiInput!]!
+  }
+
   "One line of a seat's pay. VARIABLE lines range min_amount..max_amount with amount as the expected figure."
   type TeamPayComponent {
     label: String!
@@ -77,6 +115,8 @@ export const teamStructureTypeDefs = /* GraphQL */ `
     pay: [TeamPayComponent!]
     "Fixed + expected variable, per month. Per-unit lines are not counted."
     monthly_cost: Float
+    "KRAs with their KPIs. Null on a public link that hides them."
+    kras: [TeamKra!]
   }
 
   input TeamStructureNodeInput {
@@ -93,6 +133,8 @@ export const teamStructureTypeDefs = /* GraphQL */ `
     notes: String
     sort_order: Int
     pay: [TeamPayComponentInput!]
+    "Omit to leave the seat's scorecard as it is; [] clears it."
+    kras: [TeamKraInput!]
   }
 
   type TeamStructureView {
@@ -106,6 +148,7 @@ export const teamStructureTypeDefs = /* GraphQL */ `
     token: String!
     label: String
     show_salary: Boolean!
+    show_kpi_kra: Boolean!
     expires_at: String
     revoked_at: String
   }
@@ -114,6 +157,7 @@ export const teamStructureTypeDefs = /* GraphQL */ `
     structure: TeamStructure!
     nodes: [TeamStructureNode!]!
     show_salary: Boolean!
+    show_kpi_kra: Boolean!
   }
 
   extend type Query {
@@ -134,7 +178,7 @@ export const teamStructureTypeDefs = /* GraphQL */ `
     upsertTeamStructureNode(structure_id: ID!, input: TeamStructureNodeInput!): TeamStructureNode!
     "Delete one seat; its children move up to its parent."
     deleteTeamStructureNode(id: ID!): Boolean!
-    createTeamStructureShare(structure_id: ID!, label: String, show_salary: Boolean, expires_at: String): TeamStructureShare!
+    createTeamStructureShare(structure_id: ID!, label: String, show_salary: Boolean, show_kpi_kra: Boolean, expires_at: String): TeamStructureShare!
     revokeTeamStructureShare(id: ID!): Boolean!
   }
 `;

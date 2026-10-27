@@ -98,6 +98,8 @@ describe('UpdateForm', () => {
     const sent = await screen.findByTestId('update-sent');
     expect(sent).toHaveTextContent('Sent to 2 guests.');
     expect(sent.closest('[aria-live="polite"]')).not.toBeNull();
+    // The page behind the dialog is hidden from assistive tech until the dialog has gone.
+    await vi.waitFor(() => expect(screen.queryByTestId('confirm-dialog')).not.toBeInTheDocument());
     expect(screen.getByRole('textbox', { name: 'Subject' })).toHaveValue('');
     expect(screen.getByRole('textbox', { name: 'Message' })).toHaveValue('');
   });
@@ -121,6 +123,8 @@ describe('UpdateForm', () => {
 
     await vi.waitFor(() => expect(toasts.seen).toEqual([{ message: 'Email is not set up yet', severity: 'error' }]));
     expect(screen.queryByTestId('update-sent')).not.toBeInTheDocument();
+    // The page behind the dialog is hidden from assistive tech until the dialog has gone.
+    await vi.waitFor(() => expect(screen.queryByTestId('confirm-dialog')).not.toBeInTheDocument());
     expect(screen.getByRole('textbox', { name: 'Message' })).toHaveValue('We are now at Gate 2.');
   });
 });

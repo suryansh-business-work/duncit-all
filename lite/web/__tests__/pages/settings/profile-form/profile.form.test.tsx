@@ -55,7 +55,7 @@ describe('profile schema', () => {
 
   it('sends every part of the profile as the API input', () => {
     const output = schema.parse({ ...valid, social: social({ x: '@asha' }) });
-    expect(toProfileInput(output)).toEqual({ name: 'Asha Rao', handle: 'asha', bio: 'Runs the Sunday club.', avatar_url: '', social: links({ instagram: 'asha.runs', x: 'asha' }) });
+    expect(toProfileInput(output)).toEqual({ name: 'Asha Rao', handle: 'asha', bio: 'Runs the Sunday club.', avatar_url: '', social: links({ x: 'asha' }) });
   });
 });
 

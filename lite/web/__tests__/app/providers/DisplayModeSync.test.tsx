@@ -1,4 +1,4 @@
-import { act, screen } from '@testing-library/react';
+import { act, screen, waitFor } from '@testing-library/react';
 import { useColorScheme } from '@mui/material/styles';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { LITE_ME } from '../../../../shared/graphql/documents';
@@ -61,15 +61,16 @@ describe('DisplayModeSync', () => {
     expect(screen.getByTestId('mode')).toHaveTextContent('dark');
   });
 
-  it('applies the new mode when the account changes it on another device', () => {
+  it('applies the new mode when the account changes it on another device', async () => {
     const me = meFixture({ display_mode: 'LIGHT' });
     const { cache } = renderWithProviders(page, { me });
     expect(screen.getByTestId('mode')).toHaveTextContent('light');
 
-    act(() => {
+    // Apollo hands a cache write to its watchers asynchronously.
+    await act(async () => {
       cache.writeQuery({ query: LITE_ME, data: { liteMe: { ...me, display_mode: 'DARK' } } });
     });
 
-    expect(screen.getByTestId('mode')).toHaveTextContent('dark');
+    await waitFor(() => expect(screen.getByTestId('mode')).toHaveTextContent('dark'));
   });
 });

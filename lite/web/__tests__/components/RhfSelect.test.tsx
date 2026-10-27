@@ -76,7 +76,11 @@ describe('RhfSelect', () => {
 
   it('marks a required field and can be disabled', () => {
     renderWithProviders(<CityField required disabled />);
-    expect(screen.getByText(/City/, { selector: 'label' })).toHaveTextContent('*');
+    // MUI draws a select's label as the element the combobox names itself by.
+    const label = document.getElementById(select().getAttribute('aria-labelledby') ?? '');
+    expect(label).toHaveTextContent('City');
+    expect(label).toHaveTextContent('*');
+    expect(select()).toHaveAttribute('aria-required', 'true');
     expect(select()).toHaveAttribute('aria-disabled', 'true');
   });
 });

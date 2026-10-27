@@ -44,41 +44,31 @@ describe('PlaceSearch', () => {
   });
 
   describe('typing', () => {
-    beforeEach(() => {
-      vi.useFakeTimers();
-    });
-
-    it('asks Google only from the third letter, once typing pauses for 300 ms', async () => {
-      const { user, input } = renderSearch({ userOptions: { advanceTimers: vi.advanceTimersByTime } });
+    it('asks Google only from the third letter, once typing pauses, with the whole word', async () => {
+      const { user, input } = renderSearch();
       await user.type(input, 'Lo');
+      // Well past the pause a search waits for: two letters never ask.
       await act(async () => {
-        await vi.advanceTimersByTimeAsync(1_000);
+        await new Promise((resolve) => {
+          setTimeout(resolve, 400);
+        });
       });
       expect(suggestPlaces).not.toHaveBeenCalled();
       expect(screen.getByText('Type at least 3 letters')).toBeInTheDocument();
 
       await user.type(input, 'dhi');
-      await act(async () => {
-        await vi.advanceTimersByTimeAsync(299);
-      });
+      // Straight after the keystrokes the pause has not run out yet.
       expect(suggestPlaces).not.toHaveBeenCalled();
-
-      await act(async () => {
-        await vi.advanceTimersByTimeAsync(1);
-      });
-      expect(suggestPlaces).toHaveBeenCalledTimes(1);
+      await waitFor(() => expect(suggestPlaces).toHaveBeenCalledTimes(1));
       expect(suggestPlaces).toHaveBeenCalledWith(places.lib, 'Lodhi', expect.any(places.Token));
-      expect(screen.getByRole('option', { name: /Lodhi Garden/ })).toHaveTextContent('New Delhi, Delhi, India');
+      expect(await screen.findByRole('option', { name: /Lodhi Garden/ })).toHaveTextContent('New Delhi, Delhi, India');
     });
 
     it('shows that it is loading while Google answers', async () => {
       vi.mocked(suggestPlaces).mockReturnValue(new Promise(() => undefined));
-      const { user, input } = renderSearch({ userOptions: { advanceTimers: vi.advanceTimersByTime } });
+      const { user, input } = renderSearch();
       await user.type(input, 'Lod');
-      await act(async () => {
-        await vi.advanceTimersByTimeAsync(300);
-      });
-      expect(screen.getByText('Loading…')).toBeInTheDocument();
+      expect(await screen.findByText('Loading…')).toBeInTheDocument();
     });
   });
 

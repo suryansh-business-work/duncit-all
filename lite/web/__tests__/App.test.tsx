@@ -1,9 +1,10 @@
 import { ApolloClient } from '@apollo/client';
 import { MockLink, type MockedResponse } from '@apollo/client/testing';
-import { render, screen } from '@testing-library/react';
+import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it } from 'vitest';
 import { useConfirm, notifySuccess } from '@duncit/dialogs';
+import { STORAGE_KEYS } from '../../shared/env';
 import { useLiteSession } from '../../shared/session';
 import { App } from '../App';
 import { useLiteSettings } from '../app/providers/LiteSettingsProvider';
@@ -42,6 +43,8 @@ const renderApp = ({ initialToken = null, mocks = [], googleClientId = '' }: { i
 };
 
 afterEach(() => {
+  // Unmount first: Google's provider removes its own script on the way out.
+  cleanup();
   for (const script of document.querySelectorAll(GSI_SCRIPT)) script.remove();
   localStorage.clear();
 });
@@ -61,7 +64,9 @@ describe('App', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Saved to your account.');
   });
 
-  it('starts signed in from the token it is handed, and loads the account', async () => {
+  it('starts signed in from the stored token it is handed, and loads the account', async () => {
+    // main.tsx hands App the token it read from storage.
+    localStorage.setItem(STORAGE_KEYS.token, 'tok-1');
     renderApp({ initialToken: 'tok-1', mocks: [meMock(meFixture({ name: 'Asha Rao' }))] });
     expect(await screen.findByText('Asha Rao')).toBeInTheDocument();
   });

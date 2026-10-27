@@ -4198,6 +4198,20 @@ export type ClaimStressRunInput = {
   workflow_run_url?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type ClaimUnitTestRunInput = {
+  branch?: InputMaybe<Scalars['String']['input']>;
+  commit_sha?: InputMaybe<Scalars['String']['input']>;
+  /** Set when the console dispatched the run; claims its QUEUED row. */
+  dispatch_id?: InputMaybe<Scalars['String']['input']>;
+  github_run_attempt?: InputMaybe<Scalars['Int']['input']>;
+  github_run_id: Scalars['String']['input'];
+  github_run_url?: InputMaybe<Scalars['String']['input']>;
+  /** Only read when the claim opens a new row. */
+  trigger?: InputMaybe<UnitTestRunTrigger>;
+  triggered_by?: InputMaybe<Scalars['String']['input']>;
+  workflow: UnitTestWorkflow;
+};
+
 /** One record, as GoDaddy and Cloudflare each hold it. */
 export type CloudflareCompareRow = {
   __typename?: 'CloudflareCompareRow';
@@ -9796,6 +9810,14 @@ export type FinishStressRunInput = {
   summary: StressSummaryInput;
 };
 
+export type FinishUnitTestRunInput = {
+  duration_ms?: InputMaybe<Scalars['Float']['input']>;
+  error_message?: InputMaybe<Scalars['String']['input']>;
+  run_id: Scalars['ID']['input'];
+  /** Absent derives it from the workspaces: any red or broken workspace fails the run. */
+  status?: InputMaybe<UnitTestRunStatus>;
+};
+
 /** A pending ask to follow a PRIVATE profile. Answering it is what creates the follow. */
 export type FollowRequest = {
   __typename?: 'FollowRequest';
@@ -12424,6 +12446,268 @@ export type ManualLogInput = {
   summary?: InputMaybe<Scalars['String']['input']>;
 };
 
+/** One change to a case, from the platform's table change log. */
+export type ManualTestActivity = {
+  __typename?: 'ManualTestActivity';
+  /** CREATE or UPDATE. */
+  action: Scalars['String']['output'];
+  actor: ManualTestPerson;
+  created_at?: Maybe<Scalars['String']['output']>;
+  /** The changed field (title, column_id, assignee_id, …); empty on CREATE. */
+  field: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  new_value: Scalars['String']['output'];
+  /** Ids are shown as names; long rich-text values are left empty (the entry says only that they changed). */
+  old_value: Scalars['String']['output'];
+};
+
+export type ManualTestActivityPage = {
+  __typename?: 'ManualTestActivityPage';
+  /** Newest first. */
+  rows: Array<ManualTestActivity>;
+  total: Scalars['Int']['output'];
+};
+
+export type ManualTestBoard = {
+  __typename?: 'ManualTestBoard';
+  columns: Array<ManualTestBoardColumn>;
+};
+
+export type ManualTestBoardColumn = {
+  __typename?: 'ManualTestBoardColumn';
+  /** The first page of the column's cards matching the filter, in rank order. */
+  cases: Array<ManualTestCard>;
+  column: ManualTestColumn;
+  /** How many cards in the column match the filter in all. */
+  total: Scalars['Int']['output'];
+};
+
+export type ManualTestBoardFilter = {
+  assignee_id?: InputMaybe<Scalars['ID']['input']>;
+  environment?: InputMaybe<ManualTestEnvironment>;
+  /** One exact label. */
+  label?: InputMaybe<Scalars['String']['input']>;
+  priority?: InputMaybe<ManualTestPriority>;
+  /** Matches the key or the title. */
+  search?: InputMaybe<Scalars['String']['input']>;
+  /** A ManualTestSurface key. */
+  surface?: InputMaybe<Scalars['String']['input']>;
+  type?: InputMaybe<ManualTestCaseType>;
+};
+
+/**
+ * A case as the board and the Cases table show it — never the rich-text
+ * sections. The full case is ManualTestCase.
+ */
+export type ManualTestCard = {
+  __typename?: 'ManualTestCard';
+  assignee?: Maybe<ManualTestPerson>;
+  /** The case's column. Filled by manualTestCasesTable; null on the board, which groups by column. */
+  column?: Maybe<ManualTestColumn>;
+  column_id: Scalars['ID']['output'];
+  created_at?: Maybe<Scalars['String']['output']>;
+  /** Calendar day, yyyy-MM-dd. */
+  due_date?: Maybe<Scalars['String']['output']>;
+  environment: ManualTestEnvironment;
+  id: Scalars['ID']['output'];
+  /** QA-<n>; never changes. */
+  key: Scalars['String']['output'];
+  labels: Array<Scalars['String']['output']>;
+  priority: ManualTestPriority;
+  /** Fractional position inside the column; the board sorts on it as text. */
+  rank: Scalars['String']['output'];
+  /** A ManualTestSurface key; empty when not set. */
+  surface: Scalars['String']['output'];
+  title: Scalars['String']['output'];
+  type: ManualTestCaseType;
+  /** Send it back as expected_updated_at to have a stale write refused. */
+  updated_at?: Maybe<Scalars['String']['output']>;
+};
+
+/** A whole manual test case (Tests > Manual Testing > Cases > QA-12). */
+export type ManualTestCase = {
+  __typename?: 'ManualTestCase';
+  actual_result: Scalars['String']['output'];
+  assignee?: Maybe<ManualTestPerson>;
+  assignee_id?: Maybe<Scalars['ID']['output']>;
+  column?: Maybe<ManualTestColumn>;
+  column_id: Scalars['ID']['output'];
+  created_at?: Maybe<Scalars['String']['output']>;
+  /** Rich-text HTML from the portal editor; empty when not written. */
+  description: Scalars['String']['output'];
+  due_date?: Maybe<Scalars['String']['output']>;
+  e2e_flow?: Maybe<ManualTestLinkedFlow>;
+  e2e_sub_flow?: Maybe<ManualTestLinkedFlow>;
+  environment: ManualTestEnvironment;
+  estimate_minutes?: Maybe<Scalars['Int']['output']>;
+  /** When the case last landed in a PASSED or FAILED column. */
+  executed_at?: Maybe<Scalars['String']['output']>;
+  expected_result: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  key: Scalars['String']['output'];
+  labels: Array<Scalars['String']['output']>;
+  number: Scalars['Int']['output'];
+  preconditions: Scalars['String']['output'];
+  priority: ManualTestPriority;
+  rank: Scalars['String']['output'];
+  reporter?: Maybe<ManualTestPerson>;
+  reporter_id?: Maybe<Scalars['ID']['output']>;
+  steps: Array<ManualTestStep>;
+  surface: Scalars['String']['output'];
+  title: Scalars['String']['output'];
+  type: ManualTestCaseType;
+  updated_at?: Maybe<Scalars['String']['output']>;
+};
+
+/**
+ * A case's fields. On create only the title is required (the column defaults
+ * to the board's first). On update a field left out is unchanged and null
+ * clears it.
+ */
+export type ManualTestCaseInput = {
+  actual_result?: InputMaybe<Scalars['String']['input']>;
+  assignee_id?: InputMaybe<Scalars['ID']['input']>;
+  column_id?: InputMaybe<Scalars['ID']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  /** Calendar day, yyyy-MM-dd. */
+  due_date?: InputMaybe<Scalars['String']['input']>;
+  e2e_flow_id?: InputMaybe<Scalars['ID']['input']>;
+  e2e_sub_flow_id?: InputMaybe<Scalars['ID']['input']>;
+  environment?: InputMaybe<ManualTestEnvironment>;
+  estimate_minutes?: InputMaybe<Scalars['Int']['input']>;
+  expected_result?: InputMaybe<Scalars['String']['input']>;
+  labels?: InputMaybe<Array<Scalars['String']['input']>>;
+  preconditions?: InputMaybe<Scalars['String']['input']>;
+  priority?: InputMaybe<ManualTestPriority>;
+  reporter_id?: InputMaybe<Scalars['ID']['input']>;
+  steps?: InputMaybe<Array<ManualTestStepInput>>;
+  surface?: InputMaybe<Scalars['String']['input']>;
+  title?: InputMaybe<Scalars['String']['input']>;
+  type?: InputMaybe<ManualTestCaseType>;
+};
+
+export type ManualTestCaseType =
+  | 'BUG'
+  | 'EXPLORATORY'
+  | 'REGRESSION'
+  | 'TASK'
+  | 'TEST_CASE';
+
+export type ManualTestCasesTablePage = {
+  __typename?: 'ManualTestCasesTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<ManualTestCard>;
+  total: Scalars['Int']['output'];
+};
+
+/** What a board column means, whatever it is called. Drives the dashboard numbers and the chip tone. */
+export type ManualTestCategory =
+  | 'BLOCKED'
+  | 'FAILED'
+  | 'IN_PROGRESS'
+  | 'IN_REVIEW'
+  | 'PASSED'
+  | 'TODO';
+
+/** A column of the manual test board (Tests > Manual Testing). */
+export type ManualTestColumn = {
+  __typename?: 'ManualTestColumn';
+  /** Every case in the column, whatever the filter (the WIP limit is judged on it). Filled by manualTestColumns and manualTestBoard; null elsewhere. */
+  case_count?: Maybe<Scalars['Int']['output']>;
+  category: ManualTestCategory;
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  /** Left-to-right position. */
+  order: Scalars['Int']['output'];
+  /** Cards the column should hold at most; null for no limit. Exceeding it is a warning, never refused. */
+  wip_limit?: Maybe<Scalars['Int']['output']>;
+};
+
+export type ManualTestColumnCasesPage = {
+  __typename?: 'ManualTestColumnCasesPage';
+  cases: Array<ManualTestCard>;
+  total: Scalars['Int']['output'];
+};
+
+export type ManualTestColumnInput = {
+  category: ManualTestCategory;
+  name: Scalars['String']['input'];
+  wip_limit?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type ManualTestComment = {
+  __typename?: 'ManualTestComment';
+  author?: Maybe<ManualTestPerson>;
+  /** Rich-text HTML. */
+  body: Scalars['String']['output'];
+  /** The caller wrote it, or is a super admin. */
+  can_delete: Scalars['Boolean']['output'];
+  /** The caller wrote it. */
+  can_edit: Scalars['Boolean']['output'];
+  case_id: Scalars['ID']['output'];
+  created_at?: Maybe<Scalars['String']['output']>;
+  /** Null for a comment never edited. */
+  edited_at?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+};
+
+export type ManualTestCommentPage = {
+  __typename?: 'ManualTestCommentPage';
+  /** Oldest first. */
+  rows: Array<ManualTestComment>;
+  total: Scalars['Int']['output'];
+};
+
+export type ManualTestEnvironment =
+  | 'PRODUCTION'
+  | 'STAGING';
+
+/** An E2E flow or sub flow a case is linked to. */
+export type ManualTestLinkedFlow = {
+  __typename?: 'ManualTestLinkedFlow';
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+};
+
+/** A staff account as a case names it. */
+export type ManualTestPerson = {
+  __typename?: 'ManualTestPerson';
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  /** Empty when the account has no photo. */
+  photo: Scalars['String']['output'];
+};
+
+export type ManualTestPriority =
+  | 'HIGH'
+  | 'HIGHEST'
+  | 'LOW'
+  | 'LOWEST'
+  | 'MEDIUM';
+
+/** One step of a case: what the tester does, and what should happen. */
+export type ManualTestStep = {
+  __typename?: 'ManualTestStep';
+  action: Scalars['String']['output'];
+  /** Empty when the step states no outcome. */
+  expected: Scalars['String']['output'];
+};
+
+export type ManualTestStepInput = {
+  action: Scalars['String']['input'];
+  expected?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** A console or app a case can be about, from the platform surface registry. */
+export type ManualTestSurface = {
+  __typename?: 'ManualTestSurface';
+  key: Scalars['String']['output'];
+  /** PORTAL, APP or WEBSITE. */
+  kind: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+};
+
 export type MarkRentalBookingInput = {
   /** Rupees kept from the deposit, required for DAMAGED, never more than the deposit. */
   damage_claim?: InputMaybe<Scalars['Float']['input']>;
@@ -13297,6 +13581,7 @@ export type Mutation = {
   addCrmManualLog: CrmActivity;
   addDnsRecord: Scalars['Boolean']['output'];
   addExpenseRefund: Expense;
+  addManualCaseComment: ManualTestComment;
   /** Onboarding staff add (or update) a holiday / leave day. */
   addMeetingHoliday: MeetingHoliday;
   addPodComment: PodComment;
@@ -13548,6 +13833,11 @@ export type Mutation = {
   claimStressRun: StressClaimResult;
   /** Agent picks up an unassigned chat — announced as a SYSTEM bubble. */
   claimSupportChat: SupportChatSession;
+  /**
+   * CI only: open or find the row a workflow run attempt reports into. The same
+   * attempt always lands on the same row.
+   */
+  claimUnitTestRun: UnitTestRun;
   /** Removes a sub-category's challenge settings (challenges are then off for it). */
   clearChallengeCategoryMapping: ChallengeCategoryMapping;
   /** Hide every finished job; returns how many. */
@@ -13722,6 +14012,10 @@ export type Mutation = {
   createInventoryProduct: InventoryProduct;
   createLegalDocument: LegalDocument;
   createLocation: Location;
+  /** File a case; it gets the next QA-<n> key and lands at the bottom of its column. */
+  createManualCase: ManualTestCase;
+  /** Add a column at the right end of the board. */
+  createManualTestColumn: ManualTestColumn;
   createMarketingCampaign: MarketingCampaign;
   createMembershipBenefit: MembershipBenefit;
   createMembershipPlan: MembershipPlan;
@@ -13899,6 +14193,12 @@ export type Mutation = {
   deleteLegalDocument: Scalars['Boolean']['output'];
   deleteLocale: Scalars['Boolean']['output'];
   deleteLocation: Scalars['Boolean']['output'];
+  /** Delete a case with its comments. */
+  deleteManualCase: Scalars['Boolean']['output'];
+  /** The author, or a super admin. */
+  deleteManualCaseComment: Scalars['Boolean']['output'];
+  /** Delete a column; its cases move to the bottom of target_column_id, atomically. */
+  deleteManualTestColumn: Scalars['Boolean']['output'];
   /**
    * Delete a campaign. A scheduled one has its pending send cancelled with it;
    * a campaign that is sending right now is refused.
@@ -14029,6 +14329,8 @@ export type Mutation = {
   e2eVideoUploadAuth: E2eVideoUploadAuth;
   /**  Admin-only: edit an existing adjustment's delta/remark in place. Returns the recomputed score.  */
   editAdjustment: HealthScore;
+  /** The author only. */
+  editManualCaseComment: ManualTestComment;
   /** Change your own words. Only the text — never the attachment. */
   editStaffMessage: StaffMessage;
   /** The author rewrites their own text line; everyone sees it marked edited. */
@@ -14051,6 +14353,8 @@ export type Mutation = {
   expressGigInterest: GigJob;
   /** CI: a runner's final report. */
   finishStressRun: Scalars['Boolean']['output'];
+  /** CI only: close the run and build its regression report in the background. */
+  finishUnitTestRun: UnitTestRun;
   followClub: User;
   followPod: User;
   /**
@@ -14307,6 +14611,13 @@ export type Mutation = {
   moderatePodContent: ModerationResult;
   /** Deep-analyses a product listing's content against community guidelines before submit. */
   moderateProductContent: ModerationResult;
+  /**
+   * Move a case to a column and a place in it: directly after after_id, or
+   * directly before before_id, or at the bottom when neither is given. Writes
+   * one case. A stale expected_updated_at, or a neighbour no longer in that
+   * column, is refused (CONFLICT) so the board reloads.
+   */
+  moveManualCase: ManualTestCard;
   /** Mutes a chat you can open. Muting again replaces the length. */
   muteChat: ChatMuteState;
   /** Buyer: the seller's tax invoice (PDF) for one of their own pod-shop orders, once its shipment is booked. */
@@ -14508,6 +14819,8 @@ export type Mutation = {
   /** Re-open a resolved/closed ticket (owner within 3 days, or an agent). Reason logged to the thread. */
   reopenTicket: Ticket;
   reorderCrmDynamicFields: Array<CrmDynamicField>;
+  /** Set the board's order; ids must name every column once. */
+  reorderManualTestColumns: Array<ManualTestColumn>;
   /** Seller reply to a review of their own product (single reply). */
   replyToProductReview: ProductReview;
   replyToTicket: Ticket;
@@ -14555,6 +14868,12 @@ export type Mutation = {
   reportProfile: ContentReportReceipt;
   /** CI: a runner's periodic report. The answer says whether to stop. */
   reportStressRun: StressReportResult;
+  /** CI only: a chunk of the run's test cases, upserted. Answers how many were written. */
+  reportUnitTestCases: Scalars['Int']['output'];
+  /** CI only: a chunk of the run's test files, upserted. Answers how many were written. */
+  reportUnitTestFiles: Scalars['Int']['output'];
+  /** CI only: per-workspace summaries, replacing what each workspace said before. Answers how many were written. */
+  reportUnitTestWorkspaces: Scalars['Int']['output'];
   /**
    * Auth-required: email a confirmation code before asking to be deleted.
    *
@@ -15170,6 +15489,12 @@ export type Mutation = {
    */
   startTwoFactorSetup: TwoFactorSetup;
   /**
+   * Run the coverage workflow now, on this environment's branch. Writes a
+   * QUEUED row, then dispatches; the row is removed again if GitHub refuses.
+   * One console-started run at a time.
+   */
+  startUnitTestRun: UnitTestRunStartResult;
+  /**
    * Compress an already direct-uploaded ImageKit video with FFmpeg and re-upload
    * the result. Poll videoCompressionJob(job_id) for the real percentage.
    * An optional trim window (start + duration, seconds) cuts the video during
@@ -15579,6 +15904,12 @@ export type Mutation = {
   updateLocation: Location;
   /** Support portal: steps 2 and 3 — the reply message, the queue and the window. */
   updateMailAutomationRule: MailAutomationAccount;
+  /**
+   * Change some fields of a case. With expected_updated_at, a case someone else
+   * saved in the meantime is refused (CONFLICT).
+   */
+  updateManualCase: ManualTestCase;
+  updateManualTestColumn: ManualTestColumn;
   /** MCP managers only. */
   updateMcpSettings: McpSettings;
   /** Tags, and the focus rectangle a smart crop uses. */
@@ -15641,9 +15972,11 @@ export type Mutation = {
   updateStressSettings: StressSettings;
   updateSurvey: Survey;
   updateTelemetrySettings: TelemetrySettings;
+  updateTestsSettings: TestsSettings;
   /** Set a ticket's priority flag (High/Medium/Low) — support agents only. */
   updateTicketPriority: Ticket;
   updateTicketStatus: Ticket;
+  updateUnitTestSettings: UnitTestSettings;
   updateUploadSettings: UploadSetting;
   updateUser: User;
   /** Venue owner / venues console: edit a food coupon. */
@@ -15823,6 +16156,12 @@ export type MutationAddDnsRecordArgs = {
 export type MutationAddExpenseRefundArgs = {
   expense_doc_id: Scalars['ID']['input'];
   input: AddExpenseRefundInput;
+};
+
+
+export type MutationAddManualCaseCommentArgs = {
+  body: Scalars['String']['input'];
+  case_id: Scalars['ID']['input'];
 };
 
 
@@ -16363,6 +16702,11 @@ export type MutationClaimSupportChatArgs = {
 };
 
 
+export type MutationClaimUnitTestRunArgs = {
+  input: ClaimUnitTestRunInput;
+};
+
+
 export type MutationClearChallengeCategoryMappingArgs = {
   category_id: Scalars['ID']['input'];
 };
@@ -16763,6 +17107,16 @@ export type MutationCreateLegalDocumentArgs = {
 
 export type MutationCreateLocationArgs = {
   input: CreateLocationInput;
+};
+
+
+export type MutationCreateManualCaseArgs = {
+  input: ManualTestCaseInput;
+};
+
+
+export type MutationCreateManualTestColumnArgs = {
+  input: ManualTestColumnInput;
 };
 
 
@@ -17337,6 +17691,22 @@ export type MutationDeleteLocationArgs = {
 };
 
 
+export type MutationDeleteManualCaseArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteManualCaseCommentArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteManualTestColumnArgs = {
+  id: Scalars['ID']['input'];
+  target_column_id: Scalars['ID']['input'];
+};
+
+
 export type MutationDeleteMarketingCampaignArgs = {
   campaign_id: Scalars['ID']['input'];
 };
@@ -17722,6 +18092,12 @@ export type MutationEditAdjustmentArgs = {
 };
 
 
+export type MutationEditManualCaseCommentArgs = {
+  body: Scalars['String']['input'];
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationEditStaffMessageArgs = {
   id: Scalars['ID']['input'];
   text: Scalars['String']['input'];
@@ -17810,6 +18186,11 @@ export type MutationExpressGigInterestArgs = {
 
 export type MutationFinishStressRunArgs = {
   input: FinishStressRunInput;
+};
+
+
+export type MutationFinishUnitTestRunArgs = {
+  input: FinishUnitTestRunInput;
 };
 
 
@@ -18150,6 +18531,15 @@ export type MutationModeratePodContentArgs = {
 
 export type MutationModerateProductContentArgs = {
   input: ModerateProductContentInput;
+};
+
+
+export type MutationMoveManualCaseArgs = {
+  after_id?: InputMaybe<Scalars['ID']['input']>;
+  before_id?: InputMaybe<Scalars['ID']['input']>;
+  column_id: Scalars['ID']['input'];
+  expected_updated_at?: InputMaybe<Scalars['String']['input']>;
+  id: Scalars['ID']['input'];
 };
 
 
@@ -18593,6 +18983,11 @@ export type MutationReorderCrmDynamicFieldsArgs = {
 };
 
 
+export type MutationReorderManualTestColumnsArgs = {
+  ids: Array<Scalars['ID']['input']>;
+};
+
+
 export type MutationReplyToProductReviewArgs = {
   reply: Scalars['String']['input'];
   review_id: Scalars['ID']['input'];
@@ -18640,6 +19035,21 @@ export type MutationReportProfileArgs = {
 
 export type MutationReportStressRunArgs = {
   input: ReportStressRunInput;
+};
+
+
+export type MutationReportUnitTestCasesArgs = {
+  input: ReportUnitTestCasesInput;
+};
+
+
+export type MutationReportUnitTestFilesArgs = {
+  input: ReportUnitTestFilesInput;
+};
+
+
+export type MutationReportUnitTestWorkspacesArgs = {
+  input: ReportUnitTestWorkspacesInput;
 };
 
 
@@ -21088,6 +21498,19 @@ export type MutationUpdateMailAutomationRuleArgs = {
 };
 
 
+export type MutationUpdateManualCaseArgs = {
+  expected_updated_at?: InputMaybe<Scalars['String']['input']>;
+  id: Scalars['ID']['input'];
+  input: ManualTestCaseInput;
+};
+
+
+export type MutationUpdateManualTestColumnArgs = {
+  id: Scalars['ID']['input'];
+  input: ManualTestColumnInput;
+};
+
+
 export type MutationUpdateMcpSettingsArgs = {
   input: McpSettingsInput;
 };
@@ -21337,6 +21760,11 @@ export type MutationUpdateTelemetrySettingsArgs = {
 };
 
 
+export type MutationUpdateTestsSettingsArgs = {
+  input: UpdateTestsSettingsInput;
+};
+
+
 export type MutationUpdateTicketPriorityArgs = {
   priority: TicketPriority;
   ticket_id: Scalars['ID']['input'];
@@ -21346,6 +21774,11 @@ export type MutationUpdateTicketPriorityArgs = {
 export type MutationUpdateTicketStatusArgs = {
   status: TicketStatus;
   ticket_id: Scalars['ID']['input'];
+};
+
+
+export type MutationUpdateUnitTestSettingsArgs = {
+  input: UpdateUnitTestSettingsInput;
 };
 
 
@@ -27608,6 +28041,26 @@ export type Query = {
    * The signature in the link is what proves whose preferences these are.
    */
   mailPreferencesByToken?: Maybe<MailPreference>;
+  /** Active staff who hold TESTS_MANAGER or SUPER_ADMIN — who a case can be assigned to. */
+  manualTestAssignees: Array<ManualTestPerson>;
+  /** The board: every column with its first page of matching cards. Tests/Super admin only. */
+  manualTestBoard: ManualTestBoard;
+  /** One case by its key (QA-12), or null. */
+  manualTestCase?: Maybe<ManualTestCase>;
+  /** A case's history, newest first. */
+  manualTestCaseActivity: ManualTestActivityPage;
+  /** Every case (Tests > Manual Testing > Cases). */
+  manualTestCasesTable: ManualTestCasesTablePage;
+  /** The next page of one column (load more), under the same filter. */
+  manualTestColumnCases: ManualTestColumnCasesPage;
+  /** The board's columns left to right, with their case counts. */
+  manualTestColumns: Array<ManualTestColumn>;
+  /** A case's comment thread, oldest first. */
+  manualTestComments: ManualTestCommentPage;
+  /** Labels already in use, for autocomplete. */
+  manualTestLabels: Array<Scalars['String']['output']>;
+  /** The consoles and apps a case can be about. */
+  manualTestSurfaces: Array<ManualTestSurface>;
   /** One campaign in full, including its rendered HTML — powers the View dialog. */
   marketingCampaign: MarketingCampaign;
   marketingCampaignPreviewCards: Array<MarketingCampaignPreviewCard>;
@@ -28283,6 +28736,11 @@ export type Query = {
    * The pod filter is applied server-side and cannot be widened by the caller.
    */
   regionPodPayments: PaymentTablePage;
+  regressionReport?: Maybe<RegressionReport>;
+  /** A unit report's tests, one bucket at a time (filter on bucket). */
+  regressionReportItemsTable: RegressionItemTablePage;
+  /** Every regression report, newest first. Filter on kind, status, branch. Tests/Tech managers. */
+  regressionReportsTable: RegressionReportTablePage;
   /** Render MJML with sample vars for the editor preview (CRM store). */
   renderCrmEmailTemplate: CrmEmailTemplateRender;
   /**
@@ -28613,6 +29071,9 @@ export type Query = {
   telemetryLogsExport: Array<TelemetryLog>;
   telemetryLogsTable: TelemetryLogTablePage;
   telemetrySettings: TelemetrySettings;
+  /** The confidence score, coverage, scenario coverage and the latest of every kind of run. */
+  testsOverview: TestsOverview;
+  testsSettings: TestsSettings;
   ticket?: Maybe<Ticket>;
   /** Transcript of a ticket (.txt or .docx) — accessible to its owner or a support agent. */
   ticketTranscript: SupportChatTranscript;
@@ -28628,6 +29089,21 @@ export type Query = {
   translationsTable: TranslationTablePage;
   /** Mobile web: has Truecaller answered the request this page started? Public. */
   truecallerWebState: TruecallerWebState;
+  /** One run's test cases. Filter on status, workspace, file; search title and full name. */
+  unitTestCasesTable: UnitTestCaseTablePage;
+  /** Finished runs' totals and coverage, oldest first. limit defaults to 30, at most 200. */
+  unitTestCoverageTrend: Array<UnitTestCoveragePoint>;
+  /** One run's test files. Filter on kind, status, workspace, has_mocks. */
+  unitTestFilesTable: UnitTestFileTablePage;
+  /** The test files of the latest finished run that still has its detail. */
+  unitTestInventory: UnitTestInventoryPage;
+  /** Files per kind and the most-mocked modules, for the same run as unitTestInventory. */
+  unitTestInventorySummary?: Maybe<UnitTestInventorySummary>;
+  unitTestRun?: Maybe<UnitTestRun>;
+  /** Every unit run, newest first. Tests/Tech managers. */
+  unitTestRunsTable: UnitTestRunTablePage;
+  unitTestSettings: UnitTestSettings;
+  unitTestTriggerConfig: UnitTestTriggerConfig;
   /** Upload rules for the calling client's surface (any signed-in user). */
   uploadSettings: UploadSetting;
   user?: Maybe<User>;
@@ -30497,6 +30973,45 @@ export type QueryMailPreferencesByTokenArgs = {
 };
 
 
+export type QueryManualTestBoardArgs = {
+  filter?: InputMaybe<ManualTestBoardFilter>;
+};
+
+
+export type QueryManualTestCaseArgs = {
+  key: Scalars['String']['input'];
+};
+
+
+export type QueryManualTestCaseActivityArgs = {
+  id: Scalars['ID']['input'];
+  offset?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryManualTestCasesTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryManualTestColumnCasesArgs = {
+  column_id: Scalars['ID']['input'];
+  filter?: InputMaybe<ManualTestBoardFilter>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryManualTestCommentsArgs = {
+  case_id: Scalars['ID']['input'];
+  offset?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryManualTestLabelsArgs = {
+  search?: InputMaybe<Scalars['String']['input']>;
+};
+
+
 export type QueryMarketingCampaignArgs = {
   campaign_id: Scalars['ID']['input'];
 };
@@ -31726,6 +32241,22 @@ export type QueryRegionPodPaymentsArgs = {
 };
 
 
+export type QueryRegressionReportArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryRegressionReportItemsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+  report_id: Scalars['ID']['input'];
+};
+
+
+export type QueryRegressionReportsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
 export type QueryRenderCrmEmailTemplateArgs = {
   mjml: Scalars['String']['input'];
   vars?: InputMaybe<Scalars['String']['input']>;
@@ -32364,6 +32895,38 @@ export type QueryTranslationsTableArgs = {
 
 export type QueryTruecallerWebStateArgs = {
   request_nonce: Scalars['String']['input'];
+};
+
+
+export type QueryUnitTestCasesTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+  run_id: Scalars['ID']['input'];
+};
+
+
+export type QueryUnitTestCoverageTrendArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryUnitTestFilesTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+  run_id: Scalars['ID']['input'];
+};
+
+
+export type QueryUnitTestInventoryArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryUnitTestRunArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryUnitTestRunsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
 };
 
 
@@ -33604,6 +34167,136 @@ export type RegisterInput = {
   zone?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type RegressionBucket =
+  /** Failed in the previous run, passes now. */
+  | 'FIXED'
+  /** Did not exist in the previous run, and fails. */
+  | 'NEW_FAILING'
+  /** Did not exist in the previous run, and does not fail. */
+  | 'NEW_TESTS'
+  /** Passed in the previous run, fails now. */
+  | 'REGRESSED'
+  /** Existed in the previous run, and is gone. */
+  | 'REMOVED_TESTS'
+  /** Failed in both. */
+  | 'STILL_FAILING';
+
+/** How many tests (or suites, for E2E) landed in each bucket. Always exact. */
+export type RegressionCounts = {
+  __typename?: 'RegressionCounts';
+  fixed: Scalars['Int']['output'];
+  new_failing: Scalars['Int']['output'];
+  new_tests: Scalars['Int']['output'];
+  regressed: Scalars['Int']['output'];
+  removed_tests: Scalars['Int']['output'];
+  still_failing: Scalars['Int']['output'];
+};
+
+/** Coverage percentages before and after. Null where a side measured nothing. */
+export type RegressionCoverageDelta = {
+  __typename?: 'RegressionCoverageDelta';
+  branches_after?: Maybe<Scalars['Float']['output']>;
+  branches_before?: Maybe<Scalars['Float']['output']>;
+  branches_delta?: Maybe<Scalars['Float']['output']>;
+  functions_after?: Maybe<Scalars['Float']['output']>;
+  functions_before?: Maybe<Scalars['Float']['output']>;
+  functions_delta?: Maybe<Scalars['Float']['output']>;
+  lines_after?: Maybe<Scalars['Float']['output']>;
+  lines_before?: Maybe<Scalars['Float']['output']>;
+  lines_delta?: Maybe<Scalars['Float']['output']>;
+  statements_after?: Maybe<Scalars['Float']['output']>;
+  statements_before?: Maybe<Scalars['Float']['output']>;
+  statements_delta?: Maybe<Scalars['Float']['output']>;
+  /** A workspace name, or empty for the run's total. */
+  workspace: Scalars['String']['output'];
+};
+
+/** One unit test in a bucket. */
+export type RegressionItem = {
+  __typename?: 'RegressionItem';
+  bucket: RegressionBucket;
+  /** The failure in the newer run. Empty for a passing or removed test. */
+  failure_message: Scalars['String']['output'];
+  file: Scalars['String']['output'];
+  full_name: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  title: Scalars['String']['output'];
+  workspace: Scalars['String']['output'];
+};
+
+export type RegressionItemTablePage = {
+  __typename?: 'RegressionItemTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<RegressionItem>;
+  total: Scalars['Int']['output'];
+};
+
+/** What a regression report compares: unit runs test by test, E2E runs suite by suite. */
+export type RegressionKind =
+  | 'E2E'
+  | 'UNIT';
+
+export type RegressionReport = {
+  __typename?: 'RegressionReport';
+  /** The run it was compared with: the previous finished run on the same branch. */
+  base_run_id?: Maybe<Scalars['ID']['output']>;
+  base_run_no: Scalars['String']['output'];
+  branch: Scalars['String']['output'];
+  counts: RegressionCounts;
+  coverage_total?: Maybe<RegressionCoverageDelta>;
+  coverage_workspaces: Array<RegressionCoverageDelta>;
+  created_at: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  /** Items kept for the bucket tables. Every regression is kept; the other buckets are capped. */
+  items_kept: Scalars['Int']['output'];
+  /** True once retention removed the item lists; the counts remain. */
+  items_purged: Scalars['Boolean']['output'];
+  kind: RegressionKind;
+  /** The run this report is about. */
+  run_id: Scalars['ID']['output'];
+  run_no: Scalars['String']['output'];
+  /** Workspaces left out because one of the runs has no results for them. */
+  skipped_workspaces: Array<Scalars['String']['output']>;
+  status: RegressionStatus;
+  /** E2E only: every suite in either run. */
+  suites: Array<RegressionSuiteDelta>;
+  /** True when a bucket held more items than it keeps. */
+  truncated: Scalars['Boolean']['output'];
+  /** SONAR or COVERAGE for a unit report; empty for E2E. */
+  workflow: Scalars['String']['output'];
+};
+
+export type RegressionReportTablePage = {
+  __typename?: 'RegressionReportTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<RegressionReport>;
+  total: Scalars['Int']['output'];
+};
+
+/** REGRESSED when a test (or suite) that passed now fails, or a new one fails. */
+export type RegressionStatus =
+  | 'CLEAN'
+  | 'REGRESSED';
+
+/** One E2E suite in both runs. A status that is empty means the suite was not in that run. */
+export type RegressionSuiteDelta = {
+  __typename?: 'RegressionSuiteDelta';
+  changed: Scalars['Boolean']['output'];
+  failed_after?: Maybe<Scalars['Int']['output']>;
+  failed_before?: Maybe<Scalars['Int']['output']>;
+  failed_delta?: Maybe<Scalars['Int']['output']>;
+  passed_after?: Maybe<Scalars['Int']['output']>;
+  passed_before?: Maybe<Scalars['Int']['output']>;
+  passed_delta?: Maybe<Scalars['Int']['output']>;
+  status_after: Scalars['String']['output'];
+  status_before: Scalars['String']['output'];
+  suite: Scalars['String']['output'];
+  tests_after?: Maybe<Scalars['Int']['output']>;
+  tests_before?: Maybe<Scalars['Int']['output']>;
+};
+
 /** Why a release needed a person. */
 export type ReleaseIssueKind =
   /** Approved, and waiting for someone here to press release. */
@@ -33980,6 +34673,24 @@ export type ReportTargetType =
   | 'PRODUCT'
   | 'PROFILE'
   | 'STORY';
+
+export type ReportUnitTestCasesInput = {
+  /** At most 500. */
+  cases: Array<UnitTestCaseInput>;
+  run_id: Scalars['ID']['input'];
+};
+
+export type ReportUnitTestFilesInput = {
+  /** At most 500. */
+  files: Array<UnitTestFileInput>;
+  run_id: Scalars['ID']['input'];
+};
+
+export type ReportUnitTestWorkspacesInput = {
+  run_id: Scalars['ID']['input'];
+  /** At most 500. */
+  workspaces: Array<UnitTestWorkspaceInput>;
+};
 
 export type RequestCallbackInput = {
   pod_id?: InputMaybe<Scalars['ID']['input']>;
@@ -39659,6 +40370,188 @@ export type TelemetryUserImportInput = {
   roles?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
+/** Where a confidence score falls against the bands in Tests → Settings. UNKNOWN: no signal has data yet. */
+export type TestsConfidenceBand =
+  | 'HIGH'
+  | 'LOW'
+  | 'MEDIUM'
+  | 'UNKNOWN';
+
+export type TestsConfidenceSignal = {
+  __typename?: 'TestsConfidenceSignal';
+  /** Points this signal adds to the score; null when it was left out. */
+  contribution?: Maybe<Scalars['Float']['output']>;
+  signal: TestsConfidenceSignalKey;
+  /** 0-100, or null when that kind of testing has no data yet (left out of the score). */
+  value?: Maybe<Scalars['Float']['output']>;
+  weight: Scalars['Int']['output'];
+};
+
+/** One kind of testing the confidence score reads, as a 0-100 signal. */
+export type TestsConfidenceSignalKey =
+  | 'CODE_COVERAGE'
+  | 'E2E_PASS_RATE'
+  | 'MANUAL_PASS_RATE'
+  | 'REGRESSION_FREE'
+  | 'SCENARIO_COVERAGE'
+  | 'STRESS_HEALTH'
+  | 'UNIT_PASS_RATE';
+
+export type TestsCount = {
+  __typename?: 'TestsCount';
+  count: Scalars['Int']['output'];
+  key: Scalars['String']['output'];
+};
+
+export type TestsCoverage = {
+  __typename?: 'TestsCoverage';
+  branches: TestsCoverageMetric;
+  functions: TestsCoverageMetric;
+  lines: TestsCoverageMetric;
+  statements: TestsCoverageMetric;
+};
+
+export type TestsCoverageMetric = {
+  __typename?: 'TestsCoverageMetric';
+  covered?: Maybe<Scalars['Int']['output']>;
+  pct?: Maybe<Scalars['Float']['output']>;
+  total?: Maybe<Scalars['Int']['output']>;
+};
+
+/** One finished unit run's total coverage, for the trend chart. */
+export type TestsCoveragePoint = {
+  __typename?: 'TestsCoveragePoint';
+  branches?: Maybe<Scalars['Float']['output']>;
+  finished_at?: Maybe<Scalars['String']['output']>;
+  lines?: Maybe<Scalars['Float']['output']>;
+  run_id: Scalars['ID']['output'];
+};
+
+/** The latest finished E2E sweep. */
+export type TestsE2eSummary = {
+  __typename?: 'TestsE2eSummary';
+  failed: Scalars['Int']['output'];
+  finished_at?: Maybe<Scalars['String']['output']>;
+  passed: Scalars['Int']['output'];
+  ref?: Maybe<Scalars['String']['output']>;
+  run_id: Scalars['ID']['output'];
+  run_no: Scalars['String']['output'];
+  skipped: Scalars['Int']['output'];
+  status: Scalars['String']['output'];
+  suites: Scalars['Int']['output'];
+  suites_failed: Scalars['Int']['output'];
+  tests: Scalars['Int']['output'];
+  workflow_run_url?: Maybe<Scalars['String']['output']>;
+};
+
+/** The manual test board at a glance. */
+export type TestsManualSummary = {
+  __typename?: 'TestsManualSummary';
+  by_category: Array<TestsCount>;
+  by_priority: Array<TestsCount>;
+  executed_last_7_days: Scalars['Int']['output'];
+  open_bugs: Scalars['Int']['output'];
+  /** PASSED / (PASSED + FAILED), 0-100; null before anything was executed. */
+  pass_rate?: Maybe<Scalars['Float']['output']>;
+  total: Scalars['Int']['output'];
+};
+
+/** The Tests console's dashboard: the confidence score and every reading behind it. */
+export type TestsOverview = {
+  __typename?: 'TestsOverview';
+  band: TestsConfidenceBand;
+  coverage_trend: Array<TestsCoveragePoint>;
+  e2e?: Maybe<TestsE2eSummary>;
+  generated_at: Scalars['String']['output'];
+  manual?: Maybe<TestsManualSummary>;
+  regressions: Array<TestsRegressionSummary>;
+  scenario: TestsScenarioCoverage;
+  score?: Maybe<Scalars['Float']['output']>;
+  signals: Array<TestsConfidenceSignal>;
+  stress?: Maybe<TestsStressSummary>;
+  unit?: Maybe<TestsUnitSummary>;
+};
+
+/** The latest regression report of one kind (UNIT or E2E). */
+export type TestsRegressionSummary = {
+  __typename?: 'TestsRegressionSummary';
+  created_at?: Maybe<Scalars['String']['output']>;
+  fixed: Scalars['Int']['output'];
+  kind: Scalars['String']['output'];
+  new_failing: Scalars['Int']['output'];
+  regressed: Scalars['Int']['output'];
+  report_id: Scalars['ID']['output'];
+  status: Scalars['String']['output'];
+};
+
+/** How much of the E2E flow catalogue a person has reviewed as ready to automate. */
+export type TestsScenarioCoverage = {
+  __typename?: 'TestsScenarioCoverage';
+  flows: Scalars['Int']['output'];
+  looks_good: Scalars['Int']['output'];
+  needs_review: Scalars['Int']['output'];
+  not_reviewed: Scalars['Int']['output'];
+  pct?: Maybe<Scalars['Float']['output']>;
+  sub_flows: Scalars['Int']['output'];
+};
+
+/** How the confidence score is weighed and banded. */
+export type TestsSettings = {
+  __typename?: 'TestsSettings';
+  high_min: Scalars['Int']['output'];
+  medium_min: Scalars['Int']['output'];
+  regression_penalty: Scalars['Int']['output'];
+  updated_at?: Maybe<Scalars['String']['output']>;
+  updated_by?: Maybe<Scalars['String']['output']>;
+  weights: Array<TestsSignalWeight>;
+};
+
+export type TestsSignalWeight = {
+  __typename?: 'TestsSignalWeight';
+  signal: TestsConfidenceSignalKey;
+  weight: Scalars['Int']['output'];
+};
+
+export type TestsSignalWeightInput = {
+  signal: TestsConfidenceSignalKey;
+  weight: Scalars['Int']['input'];
+};
+
+/** The latest stress run on this environment that ran to an end. */
+export type TestsStressSummary = {
+  __typename?: 'TestsStressSummary';
+  ended_at?: Maybe<Scalars['String']['output']>;
+  /** The AI verdict's grade, when one was asked for. */
+  grade?: Maybe<Scalars['String']['output']>;
+  run_id: Scalars['ID']['output'];
+  run_no: Scalars['String']['output'];
+  status: Scalars['String']['output'];
+  terminated: Scalars['Boolean']['output'];
+};
+
+/** The latest finished unit test run. */
+export type TestsUnitSummary = {
+  __typename?: 'TestsUnitSummary';
+  branch?: Maybe<Scalars['String']['output']>;
+  coverage: TestsCoverage;
+  duration_ms?: Maybe<Scalars['Float']['output']>;
+  failed: Scalars['Int']['output'];
+  finished_at?: Maybe<Scalars['String']['output']>;
+  passed: Scalars['Int']['output'];
+  run_id: Scalars['ID']['output'];
+  skipped: Scalars['Int']['output'];
+  status: Scalars['String']['output'];
+  tests: Scalars['Int']['output'];
+  workspaces: Array<TestsWorkspaceCoverage>;
+};
+
+export type TestsWorkspaceCoverage = {
+  __typename?: 'TestsWorkspaceCoverage';
+  branches?: Maybe<Scalars['Float']['output']>;
+  lines?: Maybe<Scalars['Float']['output']>;
+  workspace: Scalars['String']['output'];
+};
+
 /**
  * One colour mode of the app theme, key for key the same as @duncit/auth-tokens'
  * ModeColors. Values are CSS colour strings (#hex or rgb/rgba); blank keeps the
@@ -40148,6 +41041,375 @@ export type UnifiedSupportTicket = {
   ticket_no: Scalars['String']['output'];
   title: Scalars['String']['output'];
 };
+
+export type UnitTestCase = {
+  __typename?: 'UnitTestCase';
+  /** The describe blocks the test sits in, outermost first. */
+  ancestor_titles: Array<Scalars['String']['output']>;
+  duration_ms?: Maybe<Scalars['Int']['output']>;
+  /** Terminal colours stripped, cut to 4,000 characters. Empty unless FAILED. */
+  failure_message: Scalars['String']['output'];
+  file: Scalars['String']['output'];
+  full_name: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  status: UnitTestCaseStatus;
+  /** The test's own description. */
+  title: Scalars['String']['output'];
+  workspace: Scalars['String']['output'];
+};
+
+export type UnitTestCaseInput = {
+  ancestor_titles?: InputMaybe<Array<Scalars['String']['input']>>;
+  duration_ms?: InputMaybe<Scalars['Float']['input']>;
+  failure_message?: InputMaybe<Scalars['String']['input']>;
+  file: Scalars['String']['input'];
+  full_name: Scalars['String']['input'];
+  /** 0 for the first test a file names this way, 1 for the second, and so on. */
+  ordinal?: InputMaybe<Scalars['Int']['input']>;
+  status: UnitTestCaseStatus;
+  title: Scalars['String']['input'];
+  workspace: Scalars['String']['input'];
+};
+
+export type UnitTestCaseStatus =
+  | 'FAILED'
+  | 'PASSED'
+  | 'SKIPPED'
+  | 'TODO';
+
+export type UnitTestCaseTablePage = {
+  __typename?: 'UnitTestCaseTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<UnitTestCase>;
+  total: Scalars['Int']['output'];
+};
+
+export type UnitTestCounts = {
+  __typename?: 'UnitTestCounts';
+  /** The suites' own time, summed — not wall-clock. */
+  duration_ms: Scalars['Int']['output'];
+  failed: Scalars['Int']['output'];
+  passed: Scalars['Int']['output'];
+  skipped: Scalars['Int']['output'];
+  /** Test files executed. */
+  suites: Scalars['Int']['output'];
+  /** Test files that failed, including those that died before any test ran. */
+  suites_failed: Scalars['Int']['output'];
+  tests: Scalars['Int']['output'];
+  todo: Scalars['Int']['output'];
+};
+
+export type UnitTestCoverage = {
+  __typename?: 'UnitTestCoverage';
+  branches: UnitTestCoverageMetric;
+  functions: UnitTestCoverageMetric;
+  lines: UnitTestCoverageMetric;
+  /** Only workspaces whose coverage config writes json-summary measure statements. */
+  statements: UnitTestCoverageMetric;
+};
+
+export type UnitTestCoverageInput = {
+  branches?: InputMaybe<UnitTestCoverageMetricInput>;
+  functions?: InputMaybe<UnitTestCoverageMetricInput>;
+  lines?: InputMaybe<UnitTestCoverageMetricInput>;
+  statements?: InputMaybe<UnitTestCoverageMetricInput>;
+};
+
+/** Covered of total. pct is null when nothing was measured — 0 of 0 is not 0%. */
+export type UnitTestCoverageMetric = {
+  __typename?: 'UnitTestCoverageMetric';
+  covered: Scalars['Int']['output'];
+  pct?: Maybe<Scalars['Float']['output']>;
+  total: Scalars['Int']['output'];
+};
+
+export type UnitTestCoverageMetricInput = {
+  covered?: InputMaybe<Scalars['Int']['input']>;
+  total?: InputMaybe<Scalars['Int']['input']>;
+};
+
+/** One finished run on the trend chart. */
+export type UnitTestCoveragePoint = {
+  __typename?: 'UnitTestCoveragePoint';
+  branch: Scalars['String']['output'];
+  coverage?: Maybe<UnitTestCoverage>;
+  finished_at?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  run_no: Scalars['String']['output'];
+  status: UnitTestRunStatus;
+  totals: UnitTestCounts;
+  workflow: UnitTestWorkflow;
+};
+
+export type UnitTestFile = {
+  __typename?: 'UnitTestFile';
+  duration_ms: Scalars['Int']['output'];
+  failed: Scalars['Int']['output'];
+  /** Why the whole file failed before any test ran. */
+  failure_message: Scalars['String']['output'];
+  /** GraphQL operations or documents the file stubs. */
+  gql_mocks: Array<Scalars['String']['output']>;
+  has_mocks: Scalars['Boolean']['output'];
+  id: Scalars['ID']['output'];
+  kind: UnitTestFileKind;
+  mock_count: Scalars['Int']['output'];
+  /** Module specifiers the file mocks (vi.mock, jest.mock, doMock). */
+  mocks: Array<Scalars['String']['output']>;
+  passed: Scalars['Int']['output'];
+  path: Scalars['String']['output'];
+  skipped: Scalars['Int']['output'];
+  status: UnitTestFileStatus;
+  tests: Scalars['Int']['output'];
+  /** The it(...) titles of a file that was not run, read from its source. */
+  titles: Array<Scalars['String']['output']>;
+  todo: Scalars['Int']['output'];
+  workspace: Scalars['String']['output'];
+};
+
+export type UnitTestFileInput = {
+  duration_ms?: InputMaybe<Scalars['Float']['input']>;
+  failed?: InputMaybe<Scalars['Int']['input']>;
+  failure_message?: InputMaybe<Scalars['String']['input']>;
+  gql_mocks?: InputMaybe<Array<Scalars['String']['input']>>;
+  kind: UnitTestFileKind;
+  mocks?: InputMaybe<Array<Scalars['String']['input']>>;
+  passed?: InputMaybe<Scalars['Int']['input']>;
+  path: Scalars['String']['input'];
+  skipped?: InputMaybe<Scalars['Int']['input']>;
+  status: UnitTestFileStatus;
+  tests?: InputMaybe<Scalars['Int']['input']>;
+  titles?: InputMaybe<Array<Scalars['String']['input']>>;
+  todo?: InputMaybe<Scalars['Int']['input']>;
+  workspace: Scalars['String']['input'];
+};
+
+export type UnitTestFileKind =
+  | 'CYPRESS_COMPONENT'
+  | 'CYPRESS_E2E'
+  | 'JEST'
+  | 'VITEST';
+
+/** NOT_RUN: the run never executed the file — a Cypress spec, or a suite outside its runner's config. */
+export type UnitTestFileStatus =
+  | 'FAILED'
+  | 'NOT_RUN'
+  | 'PASSED'
+  | 'SKIPPED';
+
+export type UnitTestFileTablePage = {
+  __typename?: 'UnitTestFileTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<UnitTestFile>;
+  total: Scalars['Int']['output'];
+};
+
+export type UnitTestInventoryPage = {
+  __typename?: 'UnitTestInventoryPage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<UnitTestFile>;
+  /** The latest finished run with its detail intact. Null before any run has finished. */
+  run?: Maybe<UnitTestRunRef>;
+  total: Scalars['Int']['output'];
+};
+
+export type UnitTestInventorySummary = {
+  __typename?: 'UnitTestInventorySummary';
+  files_with_mocks: Scalars['Int']['output'];
+  kinds: Array<UnitTestKindCount>;
+  run: UnitTestRunRef;
+  top_gql_mocks: Array<UnitTestMockCount>;
+  top_mocks: Array<UnitTestMockCount>;
+};
+
+export type UnitTestKindCount = {
+  __typename?: 'UnitTestKindCount';
+  files: Scalars['Int']['output'];
+  kind: UnitTestFileKind;
+  not_run: Scalars['Int']['output'];
+  tests: Scalars['Int']['output'];
+};
+
+export type UnitTestMockCount = {
+  __typename?: 'UnitTestMockCount';
+  files: Scalars['Int']['output'];
+  name: Scalars['String']['output'];
+};
+
+export type UnitTestRun = {
+  __typename?: 'UnitTestRun';
+  branch: Scalars['String']['output'];
+  commit_sha: Scalars['String']['output'];
+  coverage?: Maybe<UnitTestCoverage>;
+  created_at?: Maybe<Scalars['String']['output']>;
+  /** The run's files and test cases were pruned by retention; the summary is kept. */
+  details_purged: Scalars['Boolean']['output'];
+  /** Wall-clock time from claim to finish. */
+  duration_ms?: Maybe<Scalars['Float']['output']>;
+  error_message: Scalars['String']['output'];
+  finished_at?: Maybe<Scalars['String']['output']>;
+  github_run_attempt: Scalars['Int']['output'];
+  github_run_id: Scalars['String']['output'];
+  /** Empty until the workflow claims the row. */
+  github_run_url: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  /** coverage.lines as a percentage. */
+  lines_pct?: Maybe<Scalars['Float']['output']>;
+  /** The run's regression report, once one has been built. */
+  regression_report_id?: Maybe<Scalars['ID']['output']>;
+  /** The console account that pressed Run now. Empty for every other trigger. */
+  requested_by: Scalars['String']['output'];
+  /** Permanent, human-readable id (DUN-UT-000001). */
+  run_no: Scalars['String']['output'];
+  started_at?: Maybe<Scalars['String']['output']>;
+  status: UnitTestRunStatus;
+  totals: UnitTestCounts;
+  trigger: UnitTestRunTrigger;
+  triggered_by: Scalars['String']['output'];
+  workflow: UnitTestWorkflow;
+  workspaces: Array<UnitTestWorkspace>;
+};
+
+/** Which run a derived page was read from. */
+export type UnitTestRunRef = {
+  __typename?: 'UnitTestRunRef';
+  branch: Scalars['String']['output'];
+  finished_at?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  run_no: Scalars['String']['output'];
+  status: UnitTestRunStatus;
+  workflow: UnitTestWorkflow;
+};
+
+export type UnitTestRunStartResult = {
+  __typename?: 'UnitTestRunStartResult';
+  /** The workflow's run list on GitHub, for this branch. */
+  actions_url: Scalars['String']['output'];
+  run: UnitTestRun;
+};
+
+/**
+ * QUEUED belongs to a run started from the Tests console: the dispatch answers
+ * with no run id, so the row is written first and the workflow claims it.
+ * A QUEUED or RUNNING row whose workflow died is closed as CANCELLED by the
+ * sweeper, with the reason in error_message.
+ */
+export type UnitTestRunStatus =
+  | 'CANCELLED'
+  | 'FAILED'
+  | 'PASSED'
+  | 'QUEUED'
+  | 'RUNNING';
+
+export type UnitTestRunTablePage = {
+  __typename?: 'UnitTestRunTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<UnitTestRun>;
+  total: Scalars['Int']['output'];
+};
+
+/** What started a unit run. */
+export type UnitTestRunTrigger =
+  /** Started by hand from the GitHub Actions tab. */
+  | 'MANUAL'
+  /** Run now in the Tests console. */
+  | 'PORTAL'
+  /** A push to staging or main (sonar.yml). */
+  | 'PUSH'
+  /** The nightly coverage workflow. */
+  | 'SCHEDULE';
+
+export type UnitTestRunner =
+  | 'JEST'
+  | 'OTHER'
+  | 'VITEST';
+
+export type UnitTestSettings = {
+  __typename?: 'UnitTestSettings';
+  max_retention_runs: Scalars['Int']['output'];
+  min_retention_runs: Scalars['Int']['output'];
+  /** How many finished runs keep their files and test cases. */
+  retention_runs: Scalars['Int']['output'];
+};
+
+/**
+ * Whether Run now can work from this server. blocked_reason is LOCAL (a local
+ * server — CI cannot report to it), GITHUB (no GitHub token configured) or
+ * LIVE (a console-started run is still going); empty when it can.
+ */
+export type UnitTestTriggerConfig = {
+  __typename?: 'UnitTestTriggerConfig';
+  blocked_reason: Scalars['String']['output'];
+  /** The branch Run now dispatches on — the one this environment deploys from. */
+  branch: Scalars['String']['output'];
+  can_start: Scalars['Boolean']['output'];
+  live_run_no?: Maybe<Scalars['String']['output']>;
+  repository: Scalars['String']['output'];
+};
+
+/** Which workflow ran the suites. */
+export type UnitTestWorkflow =
+  | 'COVERAGE'
+  | 'SONAR';
+
+export type UnitTestWorkspace = {
+  __typename?: 'UnitTestWorkspace';
+  coverage?: Maybe<UnitTestCoverage>;
+  /** Repo-relative directory. */
+  dir: Scalars['String']['output'];
+  duration_ms: Scalars['Int']['output'];
+  /** Why there are no results. Empty otherwise. */
+  error: Scalars['String']['output'];
+  exit_code?: Maybe<Scalars['Int']['output']>;
+  failed: Scalars['Int']['output'];
+  /** The matrix group or surface that ran it. */
+  group: Scalars['String']['output'];
+  has_results: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+  passed: Scalars['Int']['output'];
+  runner: UnitTestRunner;
+  skipped: Scalars['Int']['output'];
+  status: UnitTestWorkspaceStatus;
+  suites: Scalars['Int']['output'];
+  suites_failed: Scalars['Int']['output'];
+  tests: Scalars['Int']['output'];
+  todo: Scalars['Int']['output'];
+};
+
+export type UnitTestWorkspaceInput = {
+  coverage?: InputMaybe<UnitTestCoverageInput>;
+  dir?: InputMaybe<Scalars['String']['input']>;
+  duration_ms?: InputMaybe<Scalars['Float']['input']>;
+  error?: InputMaybe<Scalars['String']['input']>;
+  exit_code?: InputMaybe<Scalars['Int']['input']>;
+  failed?: InputMaybe<Scalars['Int']['input']>;
+  group?: InputMaybe<Scalars['String']['input']>;
+  has_results: Scalars['Boolean']['input'];
+  name: Scalars['String']['input'];
+  passed?: InputMaybe<Scalars['Int']['input']>;
+  runner: UnitTestRunner;
+  skipped?: InputMaybe<Scalars['Int']['input']>;
+  status: UnitTestWorkspaceStatus;
+  suites?: InputMaybe<Scalars['Int']['input']>;
+  suites_failed?: InputMaybe<Scalars['Int']['input']>;
+  tests?: InputMaybe<Scalars['Int']['input']>;
+  todo?: InputMaybe<Scalars['Int']['input']>;
+};
+
+/**
+ * REUSED: sonar.yml found the workspace's code unchanged since a run it had
+ * cached, so the suites were not run again and the results are that run's.
+ * ERROR: the workspace produced no results — it timed out or died first.
+ */
+export type UnitTestWorkspaceStatus =
+  | 'ERROR'
+  | 'FAILED'
+  | 'NO_TESTS'
+  | 'PASSED'
+  | 'REUSED';
 
 export type UnitType =
   | 'BOTTLE'
@@ -40954,6 +42216,17 @@ export type UpdateTelemetrySettingsInput = {
   persisted_levels?: InputMaybe<Array<Scalars['String']['input']>>;
   retention_days?: InputMaybe<Scalars['Int']['input']>;
   signoz_enabled?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+export type UpdateTestsSettingsInput = {
+  high_min: Scalars['Int']['input'];
+  medium_min: Scalars['Int']['input'];
+  regression_penalty: Scalars['Int']['input'];
+  weights: Array<TestsSignalWeightInput>;
+};
+
+export type UpdateUnitTestSettingsInput = {
+  retention_runs: Scalars['Int']['input'];
 };
 
 export type UpdateUploadSettingInput = {

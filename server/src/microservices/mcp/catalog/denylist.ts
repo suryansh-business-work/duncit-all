@@ -13,6 +13,12 @@ const DENIED_FIELDS: ReadonlyMap<string, string> = new Map([
   ['downloadIosSigningFile', 'returns an iOS signing certificate'],
   ['requestDbBackupDownload', 'returns a link to a full database archive'],
   ['startE2eRun', 'hands the E2E workflow its test credentials; CI only'],
+  // The unit-test reporter's writes: a CI run records what it ran, not a person.
+  ['claimUnitTestRun', 'called by CI, not a person'],
+  ['reportUnitTestWorkspaces', 'called by CI, not a person'],
+  ['reportUnitTestFiles', 'called by CI, not a person'],
+  ['reportUnitTestCases', 'called by CI, not a person'],
+  ['finishUnitTestRun', 'called by CI, not a person'],
   ['attachStaffCallRecording', 'called by the call recorder, not a person'],
   // The MCP console's own decisions. An AI must never approve its own
   // connection, revoke one, or loosen the settings that constrain it.

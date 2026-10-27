@@ -26,6 +26,8 @@ export interface LiteTicketEvent extends LiteEventCard {
 
 export interface LiteTicket extends LiteRegistration {
   event: LiteTicketEvent;
+  /** The check-in QR (PNG data URL); null until the ticket is confirmed. */
+  qr_data_url: string | null;
 }
 
 export interface LiteRegisterInput {
@@ -60,6 +62,7 @@ export const LITE_REGISTRATION: TypedDocumentNode<{ liteRegistration: LiteTicket
   query LiteRegistration($id: ID!) {
     liteRegistration(id: $id) {
       ...LiteRegistrationFields
+      qr_data_url
       event {
         ...LiteTicketEventFields
       }

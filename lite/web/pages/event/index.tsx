@@ -4,23 +4,28 @@ import { Alert, Box, Card, CardContent, Stack } from '@mui/material';
 import { QueryGuard } from '@duncit/ui';
 import type { LiteEvent } from '../../../shared/graphql/documents';
 import { useWebT } from '../../../shared/i18n';
+import { EventThemeBackdrop } from '../../components/theme/EventThemeBackdrop';
 import { LITE_EVENT } from '../../graphql/events';
 import { usePageTitle } from '../../lib/usePageTitle';
 import { NotFoundPage } from '../not-found';
 import { DescriptionBlock } from './DescriptionBlock';
+import { EventMap } from './EventMap';
 import { EventHero } from './EventHero';
 import { HostBar } from './HostBar';
 import { HostsBlock } from './HostsBlock';
 import { RegistrationCard } from './RegistrationCard';
 import { WhenBlock } from './WhenBlock';
 import { WhereBlock } from './WhereBlock';
+import { useTrackView } from './useTrackView';
 import { WhoIsGoing } from './WhoIsGoing';
 
 /** The page once the event is in hand: details on the left, the registration card on the right. */
 function EventView({ event, onChanged }: Readonly<{ event: LiteEvent; onChanged: () => void }>) {
   const { t } = useWebT();
+  useTrackView(event.slug, event.viewer_is_host);
   return (
-    <Stack spacing={3} data-testid="event-page">
+    <Stack spacing={3} sx={{ position: 'relative' }} data-testid="event-page">
+      <EventThemeBackdrop themeKey={event.theme.key} accent={event.theme.accent} />
       {event.viewer_is_host ? <HostBar event={event} onChanged={onChanged} /> : null}
       {event.status === 'CANCELLED' ? (
         <Alert severity="error" data-testid="event-cancelled">
@@ -36,6 +41,7 @@ function EventView({ event, onChanged }: Readonly<{ event: LiteEvent; onChanged:
               <Stack spacing={3}>
                 <WhenBlock event={event} />
                 <WhereBlock event={event} />
+                <EventMap event={event} />
                 <WhoIsGoing event={event} />
               </Stack>
             </CardContent>
@@ -66,7 +72,7 @@ export function EventPage() {
   usePageTitle(event?.title ?? '', event?.description.slice(0, 160));
   if (!loading && !error && !event) return <NotFoundPage />;
   const reload = () => {
-    refetch().catch(() => undefined);
+    refetch().catch((err: unknown) => console.warn('[lite] event refresh failed', err));
   };
   return (
     <QueryGuard loading={loading && !event} error={error} loadingLabel={t('lite.common.loading')}>

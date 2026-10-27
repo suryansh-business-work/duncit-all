@@ -1,61 +1,71 @@
-import { Box, Stack } from '@mui/material';
+import { Link as RouterLink } from 'react-router';
+import { Box, Divider, Stack } from '@mui/material';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import EventBusyOutlinedIcon from '@mui/icons-material/EventBusyOutlined';
+import { DuncitButton } from '@duncit/buttons';
 import { useWebT } from '../../../shared/i18n';
+import { LITE_RADII } from '../../../shared/tokens';
 import { EmptyState } from '../../components/EmptyState';
-import { EventCard } from '../../components/events/EventCard';
-import { EventList } from '../../components/events/EventList';
+import { EventRow } from '../../components/events/EventRow';
 import type { LiteDiscover } from '../../graphql/discover';
+import { paths } from '../../lib/paths';
 import { CalendarCard } from './CalendarCard';
-import { CategoryChips } from './CategoryChips';
-import { CityCard } from './CityCard';
+import { CategoryGrid } from './CategoryGrid';
+import { CityRegions } from './CityRegions';
 import { DiscoverSection } from './DiscoverSection';
 
-const GRID_3 = { display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' } } as const;
-const GRID_4 = { display: 'grid', gap: 2, gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' } } as const;
+const TWO_COLUMNS = { display: 'grid', columnGap: 4, rowGap: 1.5, gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' } } as const;
+const THREE_COLUMNS = { display: 'grid', gap: 1.5, gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' } } as const;
+
+interface DiscoverSectionsProps {
+  discover: LiteDiscover;
+  /** The picked city's name, for "Popular events in …"; null means everywhere. */
+  cityName: string | null;
+  citySlug: string | null;
+}
 
 /** The bands of Discover, each shown only when it has something to show. */
-export function DiscoverSections({ discover, cityPicked }: Readonly<{ discover: LiteDiscover; cityPicked: boolean }>) {
+export function DiscoverSections({ discover, cityName, citySlug }: Readonly<DiscoverSectionsProps>) {
   const { t } = useWebT();
-  const { categories, cities, featured_calendars: calendars, popular_events: popular, upcoming_events: upcoming } = discover;
-  const nothing = categories.length === 0 && cities.length === 0 && calendars.length === 0 && popular.length === 0 && upcoming.length === 0;
-  if (nothing) return <EmptyState icon={<EventBusyOutlinedIcon />} title={t('liteWeb.discover.empty')} body={t('liteWeb.discover.emptyBody')} />;
+  const { categories, cities, featured_calendars: calendars, popular_events: popular } = discover;
+  if (categories.length + cities.length + calendars.length + popular.length === 0) {
+    return <EmptyState icon={<EventBusyOutlinedIcon />} title={t('liteWeb.discover.empty')} body={t('liteWeb.discover.emptyBody')} />;
+  }
+  const viewAll = (
+    <DuncitButton component={RouterLink} to={citySlug ? paths.city(citySlug) : paths.search('')} size="small" endIcon={<ArrowForwardIcon />} sx={{ borderRadius: LITE_RADII.pill }} data-testid="discover-view-all">
+      {t('liteWeb.discover.viewAll')}
+    </DuncitButton>
+  );
   return (
-    <Stack spacing={5}>
+    <Stack spacing={4} divider={<Divider flexItem />}>
+      {popular.length > 0 ? (
+        <DiscoverSection title={t('liteWeb.discover.popular')} subtitle={cityName ?? t('liteWeb.discover.everywhere')} action={viewAll} testId="discover-popular">
+          <Box sx={TWO_COLUMNS}>
+            {popular.map((event) => (
+              <EventRow key={event.id} event={event} />
+            ))}
+          </Box>
+        </DiscoverSection>
+      ) : null}
       {categories.length > 0 ? (
         <DiscoverSection title={t('liteWeb.discover.categories')} testId="discover-categories">
-          <CategoryChips categories={categories} />
+          <CategoryGrid categories={categories} />
         </DiscoverSection>
       ) : null}
       {calendars.length > 0 ? (
         <DiscoverSection title={t('liteWeb.discover.featuredCalendars')} testId="discover-calendars">
-          <Box sx={GRID_3}>
-            {calendars.map((calendar, index) => (
-              <CalendarCard key={calendar.id} calendar={calendar} position={index} />
+          <Box sx={THREE_COLUMNS}>
+            {calendars.map((calendar) => (
+              <CalendarCard key={calendar.id} calendar={calendar} followable />
             ))}
           </Box>
         </DiscoverSection>
       ) : null}
-      {cities.length > 0 && !cityPicked ? (
+      {cities.length > 0 ? (
         <DiscoverSection title={t('liteWeb.discover.exploreCities')} testId="discover-cities">
-          <Box sx={GRID_4}>
-            {cities.map((city, index) => (
-              <CityCard key={city.id} city={city} position={index} />
-            ))}
-          </Box>
+          <CityRegions cities={cities} />
         </DiscoverSection>
       ) : null}
-      {popular.length > 0 ? (
-        <DiscoverSection title={t('liteWeb.discover.popular')} testId="discover-popular">
-          <Box sx={GRID_3}>
-            {popular.map((event) => (
-              <EventCard key={event.id} event={event} />
-            ))}
-          </Box>
-        </DiscoverSection>
-      ) : null}
-      <DiscoverSection title={t('liteWeb.discover.upcoming')} testId="discover-upcoming">
-        <EventList events={upcoming} emptyTitle={t('liteWeb.discover.noUpcoming')} emptyBody={t('liteWeb.events.emptyBody')} />
-      </DiscoverSection>
     </Stack>
   );
 }

@@ -23,7 +23,7 @@ function TicketView({ ticket, onChanged }: Readonly<{ ticket: LiteTicket; onChan
         <Stack spacing={3}>
           <Card>
             <CardContent>
-              <CheckInCode code={ticket.code} />
+              <CheckInCode code={ticket.code} qrDataUrl={ticket.qr_data_url} />
             </CardContent>
           </Card>
           {ticket.status === 'PAYMENT_PENDING' ? <PaymentPanel ticket={ticket} onChanged={onChanged} /> : null}

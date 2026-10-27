@@ -1,7 +1,7 @@
 import type { LiteEvent } from '../../../shared/graphql/documents';
 
 /** What the registration card should say, from the event and the viewer's place at it. */
-export type RegistrationView = 'CANCELLED_EVENT' | 'DRAFT' | 'ENDED' | 'CONFIRMED' | 'PAYMENT_PENDING' | 'PENDING_APPROVAL' | 'WAITLISTED' | 'OPEN';
+export type RegistrationView = 'CANCELLED_EVENT' | 'DRAFT' | 'ENDED' | 'REGISTRATION_CLOSED' | 'CONFIRMED' | 'PAYMENT_PENDING' | 'PENDING_APPROVAL' | 'WAITLISTED' | 'OPEN';
 
 const HELD = new Set(['CONFIRMED', 'PAYMENT_PENDING', 'PENDING_APPROVAL', 'WAITLISTED']);
 
@@ -11,6 +11,8 @@ export function registrationView(event: LiteEvent, now: Date): RegistrationView 
   const registration = event.viewer_registration;
   if (registration && HELD.has(registration.status)) return registration.status as RegistrationView;
   if (new Date(event.end_at).getTime() < now.getTime()) return 'ENDED';
+  // Guests who already hold a place keep seeing it above; only new registrations stop.
+  if (!event.registration_open) return 'REGISTRATION_CLOSED';
   return 'OPEN';
 }
 

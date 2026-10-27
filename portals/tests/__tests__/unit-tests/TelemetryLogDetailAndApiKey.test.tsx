@@ -52,7 +52,7 @@ vi.mock('../../src/pages/telemetry-logs-page/LogDetailBody', () => ({
 
 import TelemetryLogDetailPage from '../../src/pages/telemetry-log-detail-page';
 import PublicApiKeyCard from '../../src/pages/telemetry-logs-settings/PublicApiKeyCard';
-import { SUPER_ROLE } from '../../src/lib/session';
+import { SUPER_ROLE } from '@duncit/shell';
 
 const logRow = (over: Record<string, unknown> = {}) => ({
   id: 'l1',

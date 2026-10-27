@@ -1,6 +1,6 @@
 import { Box, Chip, Divider, Stack, Typography } from '@mui/material';
-import { DetailBlock, DetailField as Field } from '../../components/DetailField';
-import { userLabel } from '../../components/telemetry-identity';
+import { DetailBlock, DetailField as Field } from '../../../../tech/src/components/DetailField';
+import { userLabel } from '../../../../tech/src/components/telemetry-identity';
 import { affectedSummary, type BugRow } from './queries';
 import BugOccurrences from './BugOccurrences';
 import { formatDateTime, useTranslation } from '@duncit/app-settings';

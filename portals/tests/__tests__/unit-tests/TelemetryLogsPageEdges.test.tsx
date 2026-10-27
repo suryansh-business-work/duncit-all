@@ -55,7 +55,7 @@ vi.mock('../../src/pages/telemetry-logs-page/LogsTable', () => ({
 }));
 
 import TelemetryLogsPage from '../../src/pages/telemetry-logs-page';
-import { SUPER_ROLE } from '../../src/lib/session';
+import { SUPER_ROLE } from '@duncit/shell';
 
 function LogRoute() {
   return <p>log {useParams().id}</p>;

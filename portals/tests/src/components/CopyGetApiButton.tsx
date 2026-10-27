@@ -5,7 +5,7 @@ import LinkIcon from '@mui/icons-material/Link';
 import { DuncitButton } from '@duncit/buttons';
 import { notify } from '@duncit/dialogs';
 import { copyToClipboard } from '@duncit/utils';
-import { urlConfigs } from '../config/url-configs';
+import { resolvePortalGraphqlUrl } from '@duncit/shell';
 import { useTranslation } from '@duncit/app-settings';
 
 /**
@@ -28,7 +28,7 @@ const TELEMETRY_API_KEY = gql`
 `;
 
 /** `https://server.duncit.com` — the API origin, without the /graphql path. */
-export const serverOrigin = (): string => urlConfigs.graphqlUrl.replace(/\/graphql$/, '');
+export const serverOrigin = (): string => resolvePortalGraphqlUrl(import.meta.env).replace(/\/graphql$/, '');
 
 interface Props {
   /** Feed path under the server origin, e.g. `/telemetry/logs.json`. */

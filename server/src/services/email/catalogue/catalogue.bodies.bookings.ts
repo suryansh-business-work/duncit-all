@@ -35,7 +35,7 @@ import { EMAIL_COLOR as C, EMAIL_SPACE as S, EMAIL_TYPE as F } from './tokens';
  * The one body with a stage of its own — the card is what somebody paid for,
  * so it is drawn as an object to keep rather than as another line of text.
  */
-const GIFT_CARD_STAGE = `      <mj-section padding="0 ${S.gutter} 20px ${S.gutter}">
+const GIFT_CARD_STAGE = `      <mj-section css-class="gutter" padding="0 ${S.gutter} 20px ${S.gutter}">
         <mj-column background-color="${C.stage}" border-radius="${S.panelRadius}" padding="28px 20px">
           <mj-text align="center" font-size="${F.caption.size}" line-height="${F.caption.line}" font-weight="700" text-transform="uppercase" letter-spacing="1px" color="${C.onStageMuted}" padding="0">{{scope_label}}</mj-text>
           <mj-text align="center" font-size="${F.code.size}" line-height="${F.code.line}" font-weight="700" color="${C.onStage}" padding="6px 0 0 0">{{amount}}</mj-text>

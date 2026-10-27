@@ -237,6 +237,18 @@ export const URL_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 export const isUrlSlug = (v) => URL_SLUG.test(v);
 
 /**
+ * A social-network handle as a profile stores it — `duncit.events`,
+ * `run_club-delhi` — with the leading `@` and the site's own address already
+ * dropped (the client shows them as fixed prefixes). Letters, digits, `.`, `_`
+ * and `-`, 1–100 characters: no `/`, `?` or spaces, so a pasted full link is
+ * refused rather than stored half-cleaned. One character class, so it is linear.
+ */
+export const SOCIAL_HANDLE = /^[A-Za-z0-9._-]{1,100}$/;
+
+/** Social handle shape check. Strip a leading `@` first. */
+export const isSocialHandle = (v) => SOCIAL_HANDLE.test(v);
+
+/**
  * A website page path: `/` alone, or `/` followed by {@link URL_SLUG}-shaped
  * segments joined by single slashes — `/about`, `/safety/tools`. No trailing
  * slash, no query, no `..`: the CMS stores ONE spelling of each address.

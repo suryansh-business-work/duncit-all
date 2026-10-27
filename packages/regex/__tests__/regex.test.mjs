@@ -37,6 +37,8 @@ import {
   UPI_ID,
   URL_SLUG,
   isUrlSlug,
+  SOCIAL_HANDLE,
+  isSocialHandle,
   SITE_PATH,
   isSitePath,
   CSS_VARIABLE,
@@ -426,6 +428,21 @@ describe('URL_SLUG / isUrlSlug', () => {
   it('rejects edge hyphens, doubled hyphens, capitals, spaces and other punctuation', () => {
     for (const slug of ['', '-a', 'a-', 'a--b', 'Blog', 'a b', 'a_b', 'a.b', 'a/b']) {
       expect(isUrlSlug(slug)).toBe(false);
+    }
+  });
+});
+
+describe('SOCIAL_HANDLE / isSocialHandle', () => {
+  it('accepts letters, digits, dots, underscores and hyphens, 1 to 100 long', () => {
+    for (const handle of ['a', 'duncit.events', 'run_club-delhi', 'Mixed.Case_42', 'x'.repeat(100)]) {
+      expect(isSocialHandle(handle)).toBe(true);
+      expect(SOCIAL_HANDLE.test(handle)).toBe(true);
+    }
+  });
+
+  it('rejects an empty value, a leading @, a pasted link, spaces and anything over 100', () => {
+    for (const handle of ['', '@duncit', 'instagram.com/duncit', 'https://x.com/duncit', 'two words', 'a?b', 'x'.repeat(101)]) {
+      expect(isSocialHandle(handle)).toBe(false);
     }
   });
 });

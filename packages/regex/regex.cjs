@@ -148,6 +148,9 @@ const USERNAME = /^(?=.{3,30}$)[a-z0-9]+(?:-[a-z0-9]+)*$/;
 /** A URL slug such as `summer-meetups-2026`. See regex.mjs for the full note. */
 const URL_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
+/** A social-network handle such as `duncit.events`, without the `@`. See regex.mjs. */
+const SOCIAL_HANDLE = /^[A-Za-z0-9._-]{1,100}$/;
+
 /** A website page path: `/`, `/about`, `/safety/tools`. See regex.mjs. */
 const SITE_PATH = /^\/(?:[a-z0-9]+(?:[-/][a-z0-9]+)*)?$/;
 
@@ -189,6 +192,7 @@ module.exports = {
   HOSTNAME_LABEL,
   USERNAME,
   URL_SLUG,
+  SOCIAL_HANDLE,
   SITE_PATH,
   CSS_VARIABLE,
   FONT_FAMILY,
@@ -213,6 +217,7 @@ module.exports = {
   isPhysicalGiftCardPasscode: (v) => PHYSICAL_GIFT_CARD_PASSCODE.test(toDigits(v)),
   isUsername: (v) => USERNAME.test(v),
   isUrlSlug: (v) => URL_SLUG.test(v),
+  isSocialHandle: (v) => SOCIAL_HANDLE.test(v),
   isSitePath: (v) => SITE_PATH.test(v),
   isCssVariable: (v) => CSS_VARIABLE.test(v),
   isFontFamily: (v) => FONT_FAMILY.test(v),

@@ -1,5 +1,33 @@
-import { EMAIL } from '@duncit/regex';
+import { EMAIL, PHONE_INTL, PHONE_NUMBER_IN, SOCIAL_HANDLE, URL_SLUG, toDigits } from '@duncit/regex';
 import { badInput } from './errors';
+
+export { SOCIAL_HANDLE, URL_SLUG };
+
+/** India's calling code, the one country whose national numbers Lite checks in full. */
+const INDIA = '91';
+
+/**
+ * A phone number as E.164 (`+919876543210`). A number typed with `+` carries
+ * its own country code; one without gets `defaultCountryCode`. Indian numbers
+ * must also be a real 10-digit mobile number, since every SMS code goes there.
+ */
+export function normalizePhone(value: unknown, defaultCountryCode: string): string {
+  const raw = typeof value === 'string' ? value.trim() : '';
+  const international = raw.startsWith('+');
+  const digits = toDigits(raw);
+  const full = international ? digits : `${toDigits(defaultCountryCode)}${digits.replace(/^0+/, '')}`;
+  if (!PHONE_INTL.test(full) || full.length < 8) throw badInput('Enter a valid phone number');
+  // Calling codes are prefix-free, so a number starting 91 is always Indian.
+  if (full.startsWith(INDIA) && !PHONE_NUMBER_IN.test(full.slice(INDIA.length))) throw badInput('Enter a valid Indian mobile number');
+  return `+${full}`;
+}
+
+/** A map coordinate inside its range, or a BAD_USER_INPUT. */
+export function coordinate(value: unknown, label: 'Latitude' | 'Longitude'): number {
+  const limit = label === 'Latitude' ? 90 : 180;
+  if (typeof value !== 'number' || !Number.isFinite(value) || Math.abs(value) > limit) throw badInput(`${label} must be between -${limit} and ${limit}`);
+  return value;
+}
 
 /**
  * Email is `@duncit/regex`'s own pattern — the copy that lived here let two
@@ -34,6 +62,28 @@ export function optionalUrl(value: unknown, label: string): string {
     throw badInput(`${label} must be a full http(s) link`);
   }
   return text;
+}
+
+export interface WholeNumberRange {
+  min: number;
+  max: number;
+}
+
+/**
+ * A whole number inside [min, max], or a BAD_USER_INPUT that names the field.
+ * Never a silent clamp: a negative price or a capacity of 0 is the host's
+ * mistake to hear about, not something to quietly turn into another number.
+ */
+export function wholeNumber(value: unknown, label: string, { min, max }: WholeNumberRange): number {
+  if (typeof value !== 'number' || !Number.isInteger(value)) throw badInput(`${label} must be a whole number`);
+  if (value < min) throw badInput(min === 0 ? `${label} cannot be negative` : `${label} must be at least ${min}`);
+  if (value > max) throw badInput(`${label} cannot be more than ${max}`);
+  return value;
+}
+
+/** `wholeNumber`, with null / undefined meaning "no limit". */
+export function optionalWholeNumber(value: unknown, label: string, range: WholeNumberRange): number | null {
+  return value == null ? null : wholeNumber(value, label, range);
 }
 
 export function optionalUpi(value: unknown): string {

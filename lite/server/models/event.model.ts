@@ -5,14 +5,27 @@ export const VISIBILITIES = ['PUBLIC', 'UNLISTED', 'PRIVATE'] as const;
 export const LOCATION_TYPES = ['IN_PERSON', 'VIRTUAL'] as const;
 export const QUESTION_TYPES = ['TEXT', 'LONG_TEXT', 'CHECKBOX', 'SELECT'] as const;
 export const HOST_ROLES = ['HOST', 'CO_HOST'] as const;
+/** How the event page dresses itself; the colours behind each key live in the web app's tokens. */
+export const EVENT_THEMES = ['MINIMAL', 'GRADIENT', 'AMBIENT', 'PATTERN', 'CONFETTI'] as const;
+export const THEME_ACCENTS = ['DEFAULT', 'RED', 'ORANGE', 'AMBER', 'GREEN', 'TEAL', 'BLUE', 'PURPLE', 'PINK'] as const;
+export type EventTheme = (typeof EVENT_THEMES)[number];
+export type ThemeAccent = (typeof THEME_ACCENTS)[number];
+
+const themeSchema = new Schema(
+  {
+    key: { type: String, enum: EVENT_THEMES, default: 'MINIMAL' },
+    accent: { type: String, enum: THEME_ACCENTS, default: 'DEFAULT' },
+  },
+  { _id: false },
+);
 
 const ticketSchema = new Schema(
   {
     name: { type: String, required: true, trim: true },
     description: { type: String, default: '' },
     price: { type: Number, default: 0, min: 0 },
-    quantity: { type: Number, default: null },
-    sold: { type: Number, default: 0 },
+    quantity: { type: Number, default: null, min: 1 },
+    sold: { type: Number, default: 0, min: 0 },
     is_active: { type: Boolean, default: true },
   },
   { _id: true },
@@ -54,6 +67,10 @@ const eventSchema = new Schema(
     address: { type: String, default: '' },
     venue_name: { type: String, default: '' },
     map_url: { type: String, default: '' },
+    /** The place picked from Google's search, so the page can draw its map; null when typed by hand. */
+    place_id: { type: String, default: '' },
+    lat: { type: Number, default: null },
+    lng: { type: Number, default: null },
     city_slug: { type: String, default: '', index: true },
     virtual_link: { type: String, default: '' },
     category_id: { type: Schema.Types.ObjectId, ref: 'LiteCategory', default: null, index: true },
@@ -61,8 +78,11 @@ const eventSchema = new Schema(
     hosts: { type: [hostSchema], default: [] },
     visibility: { type: String, enum: VISIBILITIES, default: 'PUBLIC', index: true },
     status: { type: String, enum: EVENT_STATUSES, default: 'DRAFT', index: true },
-    capacity: { type: Number, default: null },
+    capacity: { type: Number, default: null, min: 1 },
     require_approval: { type: Boolean, default: false },
+    /** A host can close registration without cancelling: the page stays up, the button goes. */
+    registration_open: { type: Boolean, default: true },
+    theme: { type: themeSchema, default: () => ({}) },
     tickets: { type: [ticketSchema], default: [] },
     questions: { type: [questionSchema], default: [] },
     upi_id: { type: String, default: '' },

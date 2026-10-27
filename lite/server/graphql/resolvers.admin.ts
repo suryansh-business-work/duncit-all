@@ -2,12 +2,12 @@ import { requireAdmin, type LiteContext } from '../context';
 import { LiteEmailTemplateModel } from '../models/emailTemplate.model';
 import { adminService } from '../services/admin.service';
 import { calendarService } from '../services/calendar.service';
-import { emailService, smtpFromConfig } from '../services/email.service';
-import { envEntryService, readString, type EnvConfig } from '../services/envEntry.service';
+import { emailService } from '../services/email.service';
+import { envEntryService } from '../services/envEntry.service';
+import { envTestService } from '../services/envTest.service';
 import { eventService } from '../services/event.service';
 import { localizationService } from '../services/localization.service';
 import { settingsService } from '../services/settings.service';
-import { probeImagekit } from '../services/upload.service';
 import { badInput, notFound } from '../utils/errors';
 import { iso } from '../utils/ids';
 import { cleanText, normalizeEmail } from '../utils/validate';
@@ -26,28 +26,6 @@ const toTemplate = (d: any) => ({
   sent_count: d.sent_count ?? 0,
   updated_at: iso(d.updated_at) ?? '',
 });
-
-/** Prove one entry against its vendor; EMAIL sends a real message. */
-async function testEntry(id: string, to: string | null | undefined, adminEmail: string) {
-  const entry = await envEntryService.byId(id);
-  const config = (entry.config ?? {}) as EnvConfig;
-  let result: { ok: boolean; message: string };
-  if (entry.category === 'EMAIL') {
-    const smtp = smtpFromConfig(config);
-    if (smtp) {
-      const settings = await settingsService.get();
-      const outcome = await emailService.sendRaw(normalizeEmail(to || adminEmail), `${settings.site_name} test email`, 'This is a test email from the Lite console. If you can read it, the mailbox works.', settings.site_name, smtp);
-      result = { ok: outcome.status === 'SENT', message: outcome.message };
-    } else result = { ok: false, message: 'SMTP host is required' };
-  } else if (entry.category === 'IMAGEKIT') {
-    result = await probeImagekit(readString(config, 'private_key'));
-  } else {
-    const clientId = readString(config, 'client_id');
-    result = clientId.endsWith('.apps.googleusercontent.com') ? { ok: true, message: 'Client id has the expected shape' } : { ok: false, message: 'A Google OAuth client id ends with .apps.googleusercontent.com' };
-  }
-  await envEntryService.recordTest(id, result.ok);
-  return result;
-}
 
 export const adminResolvers = {
   Query: {
@@ -162,7 +140,7 @@ export const adminResolvers = {
     },
     liteTestEnvEntry: async (_p: unknown, args: Args, ctx: LiteContext) => {
       const admin = await requireAdmin(ctx);
-      return testEntry(args.id, args.to, admin.email);
+      return envTestService.test(args.id, args.to, admin.email);
     },
     liteUpdateEmailTemplate: async (_p: unknown, args: Args, ctx: LiteContext) => {
       await requireAdmin(ctx);

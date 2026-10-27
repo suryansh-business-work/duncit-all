@@ -1,14 +1,15 @@
 import { useMemo } from 'react';
-import { Controller, type Control } from 'react-hook-form';
+import { Controller, useFormContext } from 'react-hook-form';
 import { Autocomplete, Stack, TextField } from '@mui/material';
+import ScheduleOutlinedIcon from '@mui/icons-material/ScheduleOutlined';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
-import { SectionCard } from '@duncit/ui';
 import { deviceTimeZone } from '../../../../shared/format';
 import { useWebT } from '../../../../shared/i18n';
 import type { EventFormValues } from '../event.types';
+import { FieldPanel } from './FieldPanel';
 
 /** Every IANA zone the browser knows; the device's own when it cannot list them. */
-function timeZones(): string[] {
+export function timeZones(): string[] {
   try {
     return Intl.supportedValuesOf('timeZone');
   } catch {
@@ -16,14 +17,8 @@ function timeZones(): string[] {
   }
 }
 
-interface PickerProps {
-  control: Control<EventFormValues>;
-  name: 'start_at' | 'end_at';
-  label: string;
-  testId: string;
-}
-
-function DateTimeField({ control, name, label, testId }: Readonly<PickerProps>) {
+function DateTimeField({ name, label, testId }: Readonly<{ name: 'start_at' | 'end_at'; label: string; testId: string }>) {
+  const { control } = useFormContext<EventFormValues>();
   return (
     <Controller
       control={control}
@@ -33,23 +28,24 @@ function DateTimeField({ control, name, label, testId }: Readonly<PickerProps>) 
           label={label}
           value={field.value}
           onChange={(date) => field.onChange(date)}
-          slotProps={{ textField: { fullWidth: true, required: true, error: Boolean(fieldState.error), helperText: fieldState.error?.message ?? ' ', slotProps: { htmlInput: { 'data-testid': testId } as Record<string, string> } } }}
+          slotProps={{ textField: { fullWidth: true, required: true, size: 'small', error: Boolean(fieldState.error), helperText: fieldState.error?.message ?? ' ', slotProps: { htmlInput: { 'data-testid': testId } as Record<string, string> } } }}
         />
       )}
     />
   );
 }
 
-/** Start, end and the zone the times are read in. */
-export function WhenSection({ control }: Readonly<{ control: Control<EventFormValues> }>) {
+/** Start, end, and the zone the times are read in. */
+export function WhenBox() {
   const { t } = useWebT();
+  const { control } = useFormContext<EventFormValues>();
   const zones = useMemo(timeZones, []);
   return (
-    <SectionCard title={t('liteWeb.eventForm.when')} subtitle={t('liteWeb.eventForm.whenHint')}>
-      <Stack spacing={2}>
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-          <DateTimeField control={control} name="start_at" label={t('liteWeb.eventForm.start')} testId="event-start" />
-          <DateTimeField control={control} name="end_at" label={t('liteWeb.eventForm.end')} testId="event-end" />
+    <FieldPanel icon={<ScheduleOutlinedIcon fontSize="small" />} title={t('liteWeb.eventForm.when')} testId="event-when">
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+        <Stack spacing={0.5} sx={{ flexGrow: 1 }}>
+          <DateTimeField name="start_at" label={t('liteWeb.eventForm.start')} testId="event-start" />
+          <DateTimeField name="end_at" label={t('liteWeb.eventForm.end')} testId="event-end" />
         </Stack>
         <Controller
           control={control}
@@ -60,9 +56,11 @@ export function WhenSection({ control }: Readonly<{ control: Control<EventFormVa
               value={field.value}
               onChange={(_event, value) => field.onChange(value ?? '')}
               disableClearable
+              sx={{ minWidth: { sm: 200 } }}
               renderInput={(params) => (
                 <TextField
                   {...params}
+                  size="small"
                   label={t('liteWeb.eventForm.timezone')}
                   error={Boolean(fieldState.error)}
                   helperText={fieldState.error?.message ?? t('liteWeb.eventForm.timezoneHint')}
@@ -73,6 +71,6 @@ export function WhenSection({ control }: Readonly<{ control: Control<EventFormVa
           )}
         />
       </Stack>
-    </SectionCard>
+    </FieldPanel>
   );
 }

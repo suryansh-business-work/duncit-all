@@ -44,6 +44,8 @@ export const MCP_ENDPOINTS: readonly McpEndpoint[] = [
   { key: 'analytics', label: 'Analytics', portal: 'analytics', categories: ['analytics'] },
   { key: 'logs', label: 'Logs', portal: 'logs', categories: ['logs'] },
   { key: 'tech', label: 'Tech', portal: 'tech', categories: ['tech', 'logs', 'platform'] },
+  // Telemetry, error boundaries and the GraphQL monitor moved here from Tech too.
+  { key: 'tests', label: 'Tests', portal: 'tests', categories: ['tests', 'logs'] },
   { key: 'ai', label: 'AI', portal: 'ai', categories: ['ai'] },
   { key: 'localization', label: 'Localization', portal: 'localization', categories: ['localization'] },
   { key: 'legal', label: 'Legal', portal: 'legal', categories: ['legal'] },

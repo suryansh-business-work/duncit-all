@@ -80,7 +80,12 @@ export default function HostPodActionsBridge({ children }: Readonly<{ children: 
         onClose={() => setToast(null)}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
-        <Alert severity={toast?.severity ?? 'success'} variant="filled" onClose={() => setToast(null)}>
+        <Alert
+          severity={toast?.severity ?? 'success'}
+          variant="filled"
+          onClose={() => setToast(null)}
+          data-testid="host-pod-actions-toast"
+        >
           {toast?.message}
         </Alert>
       </Snackbar>

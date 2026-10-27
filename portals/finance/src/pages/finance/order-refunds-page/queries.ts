@@ -91,5 +91,5 @@ export const SHOP_ORDER_REFUNDS_TABLE = gql`
 
 /** What `shopOrderRefundsTable` answers with: one page of refund events and the totals for the filter. */
 export interface OrderRefundsData {
-  shopOrderRefundsTable: { rows: OrderRefundRow[]; total: number; summary: OrderRefundSummary | null } | null;
+  shopOrderRefundsTable: { rows: OrderRefundRow[]; total: number; summary: OrderRefundSummary };
 }

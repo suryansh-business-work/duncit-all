@@ -420,8 +420,10 @@ Takes every `PodForm` prop except `onCancel` and `preview` (it mounts `<PodPrevi
 
 Reads the enclosing `FormProvider` and renders the pod as a member sees it: the
 list card and the pod page, stacked and live. Only valid inside `<PodForm>`.
-`buildPodPreview(values, data)` is the pure derivation behind it, so the shape
-both surfaces render can be asserted without mounting either.
+`buildPodPreview(values, data, t?)` is the pure derivation behind it, so the shape
+both surfaces render can be asserted without mounting either. `t` words the
+price of a free pod (`podForm.preview.free`); omitted, the bundled `fallbackT`
+answers.
 
 ### Functions and hooks
 

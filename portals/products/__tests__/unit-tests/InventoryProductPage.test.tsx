@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { MockedResponse } from '@apollo/client/testing';
 import { Route } from 'react-router';
+import { useFormContext, useWatch } from 'react-hook-form';
+import { NEW_PRODUCT_BRAND } from '../../src/pages/inventory-page/inventory-product-page/productQueries';
 import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import InventoryProductPage from '../../src/pages/inventory-page/inventory-product-page/InventoryProductPage';
 import { blankProductForm } from '../../src/pages/inventory-page/inventory-product-page/types';
@@ -23,7 +25,8 @@ const body = vi.hoisted(() => ({ props: null as null | Record<string, any> }));
 vi.mock('../../src/pages/inventory-page/inventory-product-page/ProductFormBody', () => ({
   default: (props: Record<string, any>) => {
     body.props = props;
-    return <div data-testid="form-body" />;
+    const { ownership, new_brand_id: brandId, brand_name: brandName } = useWatch({ control: useFormContext().control });
+    return <div data-testid="form-body">{`${ownership}|${brandId}|${brandName}`}</div>;
   },
 }));
 vi.mock('../../src/pages/inventory-page/inventory-product-page/ProductPageHeader', () => ({
@@ -54,6 +57,19 @@ const renderBrandEdit = (mocks: MockedResponse[]) =>
       />
     ),
   });
+
+/** A new product started from one brand's catalogue page. */
+const renderBrandNew = (mocks: MockedResponse[]) =>
+  renderWithProviders(<></>, {
+    mocks,
+    initialEntries: ['/catalog/brands/b1/products/new'],
+    routes: <Route path="/catalog/brands/:brandId/products/new" element={<InventoryProductPage />} />,
+  });
+
+const brandLookupMock = (brand_name: string): MockedResponse => ({
+  request: { query: NEW_PRODUCT_BRAND, variables: { id: 'b1' } },
+  result: { data: { ecommBrand: { __typename: 'EcommBrand', id: 'b1', brand_name } } },
+});
 
 const savedProduct = makeInventoryProduct({ id: 'p1', product_name: 'Cold Brew', sku: 'CB1', status: 'ACTIVE' });
 
@@ -126,6 +142,22 @@ describe('InventoryProductPage', () => {
     nav.fn.mockClear();
     fireEvent.click(screen.getByRole('button', { name: /Back to brand products/i }));
     expect(nav.fn).toHaveBeenCalledWith('/catalog/brands/b1/products');
+  });
+
+  it('starts a brand catalogue product as the brand-owned, named once the brand loads', async () => {
+    renderBrandNew([inventoryCategoriesMock(), brandLookupMock('Acme')]);
+    expect(screen.getByTestId('form-body')).toHaveTextContent('BRAND|b1|');
+    await waitFor(() => expect(screen.getByTestId('form-body')).toHaveTextContent('BRAND|b1|Acme'));
+  });
+
+  it('leaves the brand name blank when the brand lookup finds no brand', async () => {
+    const missing: MockedResponse = {
+      request: { query: NEW_PRODUCT_BRAND, variables: { id: 'b1' } },
+      result: { data: { ecommBrand: null } },
+    };
+    renderBrandNew([inventoryCategoriesMock(), missing]);
+    await waitFor(() => expect(screen.getByTestId('form-body')).toHaveTextContent('BRAND|b1|'));
+    expect(screen.getByTestId('form-body')).not.toHaveTextContent('Acme');
   });
 
   it('surfaces a save error', async () => {

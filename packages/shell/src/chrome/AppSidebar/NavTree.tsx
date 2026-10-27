@@ -76,6 +76,7 @@ export function NavTree({ nav: navItems, onNavigate }: Readonly<NavTreeProps>) {
           size="small"
           fullWidth
           onClick={toggleAll}
+          data-testid="shell-nav-expand-all"
           startIcon={allOpen ? <UnfoldLessIcon fontSize="small" /> : <UnfoldMoreIcon fontSize="small" />}
           sx={{ mt: 0.5, justifyContent: 'flex-start', color: 'text.secondary' }}
         >

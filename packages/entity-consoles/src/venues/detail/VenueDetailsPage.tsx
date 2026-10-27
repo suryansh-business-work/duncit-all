@@ -34,13 +34,16 @@ export interface VenueDetailsPageProps {
   extraTabs?: (venue: AdminVenueDetail) => VenueDetailsExtraTab[];
 }
 
+/** `venue-tab-<value>` — how an end-to-end suite picks a tab. */
+const venueTab = (value: string, label: string): DuncitTabItem<string> => ({ value, label, testId: `venue-tab-${value}` });
+
 const venueTabs = (t: Translate): DuncitTabItem<string>[] => [
-  { value: 'overview', label: t('admin.venueDetails.tabOverview') },
-  { value: 'pods', label: t('admin.venueDetails.tabPods') },
-  { value: 'operations', label: t('admin.venueDetails.tabOperations') },
-  { value: 'documents', label: t('admin.venueDetails.tabDocuments') },
-  { value: 'chats', label: t('admin.venueDetails.tabChats') },
-  { value: 'changeLogs', label: t('directory.changeLogs.tab') },
+  venueTab('overview', t('admin.venueDetails.tabOverview')),
+  venueTab('pods', t('admin.venueDetails.tabPods')),
+  venueTab('operations', t('admin.venueDetails.tabOperations')),
+  venueTab('documents', t('admin.venueDetails.tabDocuments')),
+  venueTab('chats', t('admin.venueDetails.tabChats')),
+  venueTab('changeLogs', t('directory.changeLogs.tab')),
 ];
 
 /**
@@ -64,7 +67,7 @@ export default function VenueDetailsPage({ extraTabs }: Readonly<VenueDetailsPag
   const extra = venue && extraTabs ? extraTabs(venue) : [];
   // The URL may name an extra tab before the venue is in; it resolves once the tab exists.
   const tabs = useTabParam<string>({
-    items: [...venueTabs(t), ...extra.map(({ value, label }) => ({ value, label }))],
+    items: [...venueTabs(t), ...extra.map(({ value, label }) => venueTab(value, label))],
     fallback: 'overview',
   });
   const openExtra = extra.find((tab) => tab.value === tabs.value);

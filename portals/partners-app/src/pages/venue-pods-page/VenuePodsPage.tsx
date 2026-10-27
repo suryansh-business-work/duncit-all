@@ -58,6 +58,7 @@ export default function VenuePodsPage() {
     () =>
       VENUE_POD_PHASES.map((phase) => ({
         value: phase,
+        testId: `venue-pods-tab-${phase}`,
         label: `${t(PHASE_COPY[phase].label)} (${phases[phase].length})`,
       })),
     [phases, t],
@@ -118,6 +119,7 @@ export default function VenuePodsPage() {
             label={t('partners.common.venue')}
             value={filter.value}
             onChange={(event) => filter.change(event.target.value)}
+            data-testid="venue-pods-venue-filter"
             sx={{ minWidth: 220 }}
           >
             <MenuItem value={ALL_VENUES}>{t('partners.venuePodsPage.allMyVenues')}</MenuItem>

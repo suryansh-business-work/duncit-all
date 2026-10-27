@@ -29,10 +29,11 @@ export default function EarnMeetingActions({ kind, bookedAt, rescheduleCount, on
   const afterCancel = () => { setCancelOpen(false); onChanged(); };
 
   return (
-    <Stack spacing={1} sx={{ px: 2, pb: 2 }}>
+    <Stack data-testid={`earn-meeting-actions-${kind}`} spacing={1} sx={{ px: 2, pb: 2 }}>
       <Stack direction="row" spacing={1}>
         {canReschedule && (
           <DuncitButton
+            data-testid={`reschedule-${kind}`}
             size="small"
             variant="outlined"
             startIcon={<EventRepeatIcon />}
@@ -43,6 +44,7 @@ export default function EarnMeetingActions({ kind, bookedAt, rescheduleCount, on
           </DuncitButton>
         )}
         <DuncitButton
+          data-testid={`cancel-${kind}`}
           size="small"
           color="error"
           variant="outlined"
@@ -54,7 +56,7 @@ export default function EarnMeetingActions({ kind, bookedAt, rescheduleCount, on
         </DuncitButton>
       </Stack>
       {!canReschedule && (
-        <Alert severity="info" sx={{ py: 0 }}>
+        <Alert data-testid={`reschedule-used-${kind}`} severity="info" sx={{ py: 0 }}>
           {labels.rescheduleUsed}
         </Alert>
       )}

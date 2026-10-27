@@ -88,6 +88,39 @@ describe('host initial values + variable mappers', () => {
     expect(values.step3.tags).toEqual(['vip']);
   });
 
+  it("fills the phone, birth date and address from the host's user account where the host's own are blank", () => {
+    const account = { phone: '+91 9123456780', dob: '1992-03-04T00:00:00.000Z', full_address: '7 Lake Road, Pune' };
+
+    const blankHost = hostEditInitialValues({ full_name: 'Asha', phone: '', dob: null, full_address: '' }, account);
+    expect(blankHost.step1.phone).toBe('9123456780');
+    expect(blankHost.step1.dob).toBe('1992-03-04');
+    expect(blankHost.step3.full_address).toBe('7 Lake Road, Pune');
+
+    const noHostRecord = hostEditInitialValues(null, account);
+    expect(noHostRecord.step1.phone).toBe('9123456780');
+    expect(noHostRecord.step1.dob).toBe('1992-03-04');
+    expect(noHostRecord.step3.full_address).toBe('7 Lake Road, Pune');
+  });
+
+  it("keeps the host's own phone, birth date and address over the account's", () => {
+    const values = hostEditInitialValues(
+      { phone: '+91 9876543210', dob: '1990-05-01T00:00:00.000Z', full_address: '1 Hill Street' },
+      { phone: '+91 9123456780', dob: '1992-03-04T00:00:00.000Z', full_address: '7 Lake Road, Pune' },
+    );
+
+    expect(values.step1.phone).toBe('9876543210');
+    expect(values.step1.dob).toBe('1990-05-01');
+    expect(values.step3.full_address).toBe('1 Hill Street');
+  });
+
+  it('leaves them blank when neither the host nor the account has them', () => {
+    const values = hostEditInitialValues({ full_name: 'Asha' }, { phone: null, dob: null, full_address: null });
+
+    expect(values.step1.phone).toBe('');
+    expect(values.step1.dob).toBe('');
+    expect(values.step3.full_address).toBe('');
+  });
+
   it('hydrates and maps host categories (ids only) for the edit form', () => {
     const values = hostEditInitialValues({
       status: 'APPROVED',

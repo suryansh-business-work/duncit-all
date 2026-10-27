@@ -130,14 +130,19 @@ export const clubSlotRequestService = {
     return { rows: docs.map(toPub), total, page, page_size };
   },
 
-  /** Staff close a request once the club's venues have published slots. */
+  /**
+   * Staff close a request once the club's venues have published slots.
+   * Idempotent: only an OPEN request is resolved, so a second press (or a
+   * second staff member) answers the request as the first resolution left it.
+   */
   async resolve(id: string, actorId: string) {
     if (!Types.ObjectId.isValid(id)) throw fail('BAD_USER_INPUT', 'Invalid request id');
-    const doc = await ClubSlotRequestModel.findByIdAndUpdate(
-      id,
-      { status: 'RESOLVED', resolved_at: new Date(), resolved_by_id: new Types.ObjectId(actorId) },
-      { new: true }
-    );
+    const doc =
+      (await ClubSlotRequestModel.findOneAndUpdate(
+        { _id: id, status: 'OPEN' },
+        { status: 'RESOLVED', resolved_at: new Date(), resolved_by_id: new Types.ObjectId(actorId) },
+        { new: true }
+      )) ?? (await ClubSlotRequestModel.findById(id));
     if (!doc) throw fail('NOT_FOUND', 'Request not found');
     return toPub(doc);
   },

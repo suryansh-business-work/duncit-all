@@ -58,11 +58,13 @@ export default function UploadBackupDialog({ maxBytes, onClose, onUploaded }: Re
     setFile(picked);
   };
 
-  const onConfirm = async () => {
-    if (!file) return;
-    const sent = await upload(file);
-    if (sent) onClose();
-  };
+  // Only exists once a valid archive is picked, which is also when the button is enabled.
+  const onConfirm = file
+    ? async () => {
+        const sent = await upload(file);
+        if (sent) onClose();
+      }
+    : undefined;
 
   return (
     <Dialog open onClose={busy ? undefined : onClose} maxWidth="sm" fullWidth>
@@ -132,7 +134,7 @@ export default function UploadBackupDialog({ maxBytes, onClose, onUploaded }: Re
         <DuncitButton onClick={onClose} disabled={busy}>
           {t('tech.dbBackup.cancel')}
         </DuncitButton>
-        <DuncitButton variant="contained" onClick={onConfirm} disabled={!file || busy}>
+        <DuncitButton variant="contained" onClick={onConfirm} disabled={!onConfirm || busy}>
           {t('tech.dbBackup.uploadAction')}
         </DuncitButton>
       </DialogActions>

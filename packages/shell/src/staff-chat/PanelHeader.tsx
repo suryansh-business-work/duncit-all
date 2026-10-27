@@ -67,6 +67,7 @@ export default function PanelHeader({
           <DuncitIconButton
             size="small"
             onClick={onMinimise}
+            data-testid="staff-chat-minimise"
             aria-label={t('shell.chat.panel.minimiseLabel')}
           >
             <MinimizeIcon fontSize="small" />
@@ -88,7 +89,7 @@ export default function PanelHeader({
         close button that does not close is the bug, whatever it was guarding.
       */}
       <Tooltip title={busy ? t('shell.chat.panel.closeBusy') : t('shell.chat.panel.close')}>
-        <DuncitIconButton size="small" onClick={onClose} aria-label={t('shell.chat.panel.close')}>
+        <DuncitIconButton size="small" onClick={onClose} aria-label={t('shell.chat.panel.close')} data-testid="staff-chat-close">
           <CloseIcon fontSize="small" />
         </DuncitIconButton>
       </Tooltip>

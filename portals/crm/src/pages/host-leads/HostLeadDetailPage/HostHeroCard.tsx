@@ -19,6 +19,7 @@ interface Props {
 }
 
 export default function HostHeroCard({ lead, t, onAskAi, onEdit }: Readonly<Props>) {
+  const interests = lead.interests ?? [];
   return (
     <Card
       sx={(t) => ({
@@ -44,7 +45,7 @@ export default function HostHeroCard({ lead, t, onAskAi, onEdit }: Readonly<Prop
             />
           )}
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography component="h1"
+            <Typography component="h1" data-testid="lead-detail-name"
               variant="h5"
               sx={{
                 fontWeight: 800,
@@ -69,11 +70,11 @@ export default function HostHeroCard({ lead, t, onAskAi, onEdit }: Readonly<Prop
                 <Chip size="small" color="primary" label={lead.super_category.name} variant="outlined" />
               )}
               {lead.matched_user && <MatchedUserChip matched={lead.matched_user} />}
-              {(lead.interests ?? []).slice(0, 2).map((t) => (
+              {interests.slice(0, 2).map((t) => (
                 <Chip key={t} size="small" label={t} variant="outlined" />
               ))}
-              {(lead.interests?.length ?? 0) > 2 && (
-                <Chip size="small" label={`+${(lead.interests?.length ?? 0) - 2} more`} variant="outlined" />
+              {interests.length > 2 && (
+                <Chip size="small" label={`+${interests.length - 2} more`} variant="outlined" />
               )}
             </Stack>
             {lead.tags.length > 0 && (

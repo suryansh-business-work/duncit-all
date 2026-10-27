@@ -160,7 +160,7 @@ export default function NotificationsScreen({
               <Typography variant="body2" sx={{
                 color: "text.secondary"
               }}>
-                {notifs.length === 0 ? 'No notifications yet.' : 'Nothing in this category.'}
+                {t('mweb.notifications.noneYet')}
               </Typography>
             </Paper>
           )}

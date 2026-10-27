@@ -71,7 +71,7 @@ export async function recordManualSend(input: WaManualLogInput): Promise<void> {
     destination: input.destination,
     status: input.reason ? 'FAILED' : 'SENT',
     reason: input.reason ?? '',
-    params: (input.params ?? []).map((value) => String(value ?? '')),
+    params: [...(input.params ?? [])],
     media_url: input.media?.url ?? '',
     media_filename: input.media?.filename ?? '',
     submitted_message_id: input.submitted_message_id ?? '',

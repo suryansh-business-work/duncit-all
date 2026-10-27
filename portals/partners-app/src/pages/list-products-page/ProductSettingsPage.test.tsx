@@ -6,7 +6,10 @@ import { MemoryRouter, Route, Routes } from 'react-router';
 import { GraphQLError } from 'graphql';
 import ProductSettingsPage from './ProductSettingsPage';
 import { MY_PRODUCT_LISTINGS, UPDATE_PRODUCT_SETTINGS } from './queries';
-import { PRODUCT_ACCESS_MESSAGE, PRODUCT_LISTING_ACCESS } from './productAccess';
+import { PRODUCT_LISTING_ACCESS } from './productAccess';
+
+// The shipped English for partners.listProductsPage.ecommManagerRequired.
+const PRODUCT_ACCESS_MESSAGE = 'You must be an Ecomm Manager to add products.';
 
 afterEach(cleanup);
 
@@ -170,6 +173,11 @@ describe('ProductSettingsPage', () => {
 
     expect(await screen.findByText('Settings saved.')).toBeTruthy();
     expect(sent).toEqual({ product_doc_id: 'p1', low_stock_alert: 12, notify_low_stock: false, return_window_days: 3 });
+  });
+
+  it('opens a listing with no return window on zero days', async () => {
+    renderPage([accessMock(['ECOMM_MANAGER'])], listingRow({ return_window_days: null }));
+    expect(((await screen.findByLabelText('Return window (days)')) as HTMLInputElement).value).toBe('0');
   });
 
   it('saves the return window the brand sets, in whole days', async () => {

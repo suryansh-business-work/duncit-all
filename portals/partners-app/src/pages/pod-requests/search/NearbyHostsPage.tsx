@@ -48,10 +48,11 @@ export default function NearbyHostsPage() {
     setCategoryIds(venueCategoryLevelIds(venue, 'category_id'));
   }
 
+  const venueId = venue?.id ?? '';
   const locationId = venue?.location_id ?? '';
   const hostsQ = useQuery<{ nearbyHostsForVenue: NearbyHostResult[] }>(NEARBY_HOSTS, {
     variables: {
-      venue_id: venue?.id ?? '',
+      venue_id: venueId,
       search: { location_id: locationId, zone_name: venue?.locality || null, radius_km: radiusKm, category_ids: categoryIds },
     },
     skip: !venue || !locationId,
@@ -60,7 +61,7 @@ export default function NearbyHostsPage() {
   const quota = usePodRequestQuota('VENUE', venue?.id ?? null);
   const request = useRequestPod({
     search: NEARBY_HOSTS,
-    toInput: (item, note) => ({ direction: 'VENUE_TO_HOST', venue_id: venue?.id ?? '', host_user_id: item.id, note }),
+    toInput: (item, note) => ({ direction: 'VENUE_TO_HOST', venue_id: venueId, host_user_id: item.id, note }),
   });
   const items = useMemo(() => (hostsQ.data?.nearbyHostsForVenue ?? []).map(toCard), [hostsQ.data]);
 
@@ -76,7 +77,7 @@ export default function NearbyHostsPage() {
       select
       size="small"
       label={t('podRequests.venueLabel')}
-      value={venue?.id ?? ''}
+      value={venueId}
       onChange={(event) => setPicked(event.target.value)}
       sx={{ maxWidth: 360 }}
     >

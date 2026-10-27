@@ -279,6 +279,18 @@ describe('useEmailTemplateEditor — with data', () => {
     expect(result.current.busy).toBe(false);
   });
 
+  it('reports a reset that fails with something other than an Error, as text', async () => {
+    const { result } = mount();
+    await waitFor(() => expect(result.current.draft).not.toBeNull());
+    m.confirmMock.mockResolvedValueOnce(true);
+    m.run.mockRejectedValueOnce('link dropped the request');
+    await act(async () => {
+      await result.current.onReset();
+    });
+    expect(result.current.snack).toEqual({ kind: 'error', msg: 'link dropped the request' });
+    expect(result.current.busy).toBe(false);
+  });
+
   it('imports detected variables not already present', async () => {
     const { result } = mount();
     await waitFor(() => expect(result.current.draft).not.toBeNull());

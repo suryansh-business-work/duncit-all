@@ -32,7 +32,12 @@ export default function ProfileAboutEditForm({ bio, links, onCancel, onSaved }: 
 
   const submit = handleSubmit(async (values) => {
     const profile_links = cleanProfileLinks(values.profile_links);
-    await updateProfile({ variables: { input: { bio: values.bio || '', profile_links } } });
+    try {
+      await updateProfile({ variables: { input: { bio: values.bio, profile_links } } });
+    } catch {
+      // The mutation's own error state renders the Alert below.
+      return;
+    }
     onSaved();
   });
 

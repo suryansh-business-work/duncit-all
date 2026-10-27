@@ -9,6 +9,7 @@ import StudioPageHeader from '../components/StudioPageHeader';
 import HostDraftsCard from './HostDraftsCard';
 import HostPodActionsBridge from './host-manage-page/HostPodActionsBridge';
 import HostPodSections from './host-manage-page/HostPodSections';
+import { useTranslation } from '../i18n/useTranslation';
 
 // Host-scoped list: unlike the public \`pods\` query this ALSO returns pods that
 // are offline while awaiting/refused venue approval, which is what lets the
@@ -68,6 +69,7 @@ const ME_QUERY = gql`
  * live on the Host dashboard; publishing, pod and change requests, Host Share
  * and categories each have their own Host Options page. B2-#5. */
 export default function HostManagePage() {
+  const { t } = useTranslation();
   // USER_INFO already holds these fields, so this answers from the cache.
   const meQ = useQuery<any>(ME_QUERY, { fetchPolicy: 'cache-first' });
   const userId = meQ.data?.me?.user_id;
@@ -82,7 +84,7 @@ export default function HostManagePage() {
     <Stack spacing={3} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }} data-testid="host-manage-screen">
       <StudioPageHeader
         icon={<DashboardIcon fontSize="small" />}
-        title="Your Pods"
+        title={t('mweb.common.yourPods')}
         action={
           <DuncitButton
             component={RouterLink}
@@ -92,7 +94,7 @@ export default function HostManagePage() {
             startIcon={<AddIcon />}
             data-testid="host-manage-create"
           >
-            Create
+            {t('mweb.hostManage.create')}
           </DuncitButton>
         }
       />

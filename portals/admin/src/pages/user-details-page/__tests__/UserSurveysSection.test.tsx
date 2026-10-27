@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { screen, waitFor } from '@testing-library/react';
 import { gql } from '@apollo/client';
+import { GraphQLError } from 'graphql';
 import type { MockedResponse } from '@apollo/client/testing';
 import { formatDateTime } from '@duncit/app-settings';
 import UserSurveysSection from '../UserSurveysSection';
@@ -110,5 +111,25 @@ describe('UserSurveysSection — with responses', () => {
 
     await waitFor(() => expect(screen.getByText('Notes')).toBeInTheDocument());
     expect(screen.getByText('—')).toBeInTheDocument();
+  });
+});
+
+describe('UserSurveysSection — a failed read', () => {
+  it('says the surveys could not be loaded instead of claiming there are none', async () => {
+    renderWithProviders(<UserSurveysSection userId={USER_ID} />, {
+      mocks: [
+        {
+          request: { query: USER_SURVEYS, variables: { user_id: USER_ID } },
+          result: { errors: [new GraphQLError('Access Denied')] },
+        },
+      ],
+    });
+
+    await waitFor(() =>
+      expect(screen.getByTestId('admin-user-surveys-error')).toHaveTextContent(
+        "This user's onboarding surveys could not be loaded.",
+      ),
+    );
+    expect(screen.queryByText("This user hasn't submitted any onboarding survey yet.")).toBeNull();
   });
 });

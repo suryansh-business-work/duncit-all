@@ -1,4 +1,6 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { VENUE_CHAT_THREADS_PAGE } from '@duncit/utils';
+import { ADMIN_VENUE_CHAT_THREADS } from '../chats/queries';
 import { fireEvent, screen } from '@testing-library/react';
 import { Route } from 'react-router';
 import { GraphQLError } from 'graphql';
@@ -7,7 +9,7 @@ import { renderWithProviders } from '../../../../__tests__/testkit';
 import { RECORD_PODS_TABLE } from '../../../shared/recordPods';
 import { ENTITY_CHANGE_LOGS_TABLE } from '../../../shared/change-logs/queries';
 import { VENUE_DETAIL, type AdminVenueDetail } from '../queries';
-import VenueDetailsPage from '../VenueDetailsPage';
+import VenueDetailsPage, { type VenueDetailsPageProps } from '../VenueDetailsPage';
 import { makeVenue, missing, venuePayload } from './fixtures';
 
 const detailMock = (venue: AdminVenueDetail | null): MockedResponse => ({
@@ -21,14 +23,14 @@ type TableVariables = {
   query: { filters: { field: string; op: string; value: string | null }[] };
 };
 
-const renderPage = (mocks: MockedResponse[], path = '/venues/venue-1') =>
+const renderPage = (mocks: MockedResponse[], path = '/venues/venue-1', props: VenueDetailsPageProps = {}) =>
   renderWithProviders(<></>, {
     mocks,
     initialEntries: [path],
     routes: (
       <>
         <Route path="/venues" element={<VenueDetailsPage />} />
-        <Route path="/venues/:venueId" element={<VenueDetailsPage />} />
+        <Route path="/venues/:venueId" element={<VenueDetailsPage {...props} />} />
         <Route path="/pods/:podId" element={<div>POD RECORD ROUTE</div>} />
       </>
     ),
@@ -200,5 +202,50 @@ describe('VenueDetailsPage / tabs', () => {
     expect(await screen.findByText('No changes recorded yet.')).toBeInTheDocument();
     expect(screen.getByText('Change logs')).toBeInTheDocument();
     expect(sent).toMatchObject({ entity_type: 'VENUE', entity_id: 'venue-1' });
+  });
+});
+
+describe('VenueDetailsPage / chats and console tabs', () => {
+  it('reads the venue’s chats with its hosts on Chats', async () => {
+    renderPage([
+      detailMock(makeVenue()),
+      {
+        request: { query: ADMIN_VENUE_CHAT_THREADS, variables: { venue_id: 'venue-1', limit: VENUE_CHAT_THREADS_PAGE, offset: 0 } },
+        result: { data: { adminVenueChatThreads: { __typename: 'VenueChatThreadPage', rows: [], total: 0 } } },
+      },
+    ]);
+    await loaded();
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Chats' }));
+
+    expect(await screen.findByText('This venue has no chats yet.')).toBeInTheDocument();
+    expect(screen.getByText('Chats with hosts')).toBeInTheDocument();
+    expect(screen.queryByText('About', { selector: 'h6' })).not.toBeInTheDocument();
+  });
+
+  it('adds the console’s own tab after the record’s, built from the loaded venue, and draws it when opened', async () => {
+    const extraTabs = vi.fn((venue: AdminVenueDetail) => [
+      { value: 'food', label: 'Food desk', render: () => <div>{`Food desk for ${venue.venue_name}`}</div> },
+    ]);
+    renderPage([detailMock(makeVenue())], '/venues/venue-1', { extraTabs });
+    await loaded();
+
+    const tabs = screen.getAllByRole('tab').map((tab) => tab.textContent);
+    expect(tabs.at(-1)).toBe('Food desk');
+    expect(tabs).toHaveLength(7);
+    expect(screen.queryByText('Food desk for The Board Room Cafe')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Food desk' }));
+
+    expect(await screen.findByText('Food desk for The Board Room Cafe')).toBeInTheDocument();
+    expect(screen.queryByText('About', { selector: 'h6' })).not.toBeInTheDocument();
+    expect(extraTabs).toHaveBeenCalledWith(expect.objectContaining({ id: 'venue-1' }));
+  });
+
+  it('adds no tab when the console has none for this venue', async () => {
+    renderPage([detailMock(makeVenue())], '/venues/venue-1', { extraTabs: () => [] });
+    await loaded();
+
+    expect(screen.getAllByRole('tab')).toHaveLength(6);
   });
 });

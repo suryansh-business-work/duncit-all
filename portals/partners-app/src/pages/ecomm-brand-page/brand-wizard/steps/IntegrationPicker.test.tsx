@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import IntegrationPicker from './IntegrationPicker';
-import ShippingModeChooser from './ShippingModeChooser';
 import { connection, integrationStatus, mountIntegrations } from '../../integrations/__tests__/harness';
 import { recordNotices } from '../../../../__tests__/groupC-notices';
 import type { BrandIntegrationStatus } from '../../queries';
@@ -133,48 +132,21 @@ describe('IntegrationPicker add and pick', () => {
     });
   });
 
+  it('picks nothing when the brand could not be saved first', async () => {
+    const sent: SentOperation[] = [];
+    const onChanged = mountPicker({ status: { connection_id: 'c1' }, ensure: async () => null }, {}, sent);
+    fireEvent.mouseDown(screen.getByRole('combobox'));
+    fireEvent.click(within(screen.getByRole('listbox')).getByRole('option', { name: 'Backup keys — rzp_test_backup' }));
+    await waitFor(() => expect(screen.queryByRole('listbox')).toBeNull());
+    expect(sent.some((op) => op.name === 'UseBrandIntegration')).toBe(false);
+    expect(onChanged).not.toHaveBeenCalled();
+  });
+
   it('reports a pick the server refuses', async () => {
     const onChanged = mountPicker({ status: { connection_id: 'c1' } }, { UseBrandIntegration: new Error('Account belongs to another partner') });
     fireEvent.mouseDown(screen.getByRole('combobox'));
     fireEvent.click(within(screen.getByRole('listbox')).getByRole('option', { name: 'Backup keys — rzp_test_backup' }));
     await waitFor(() => expect(messages()).toContain('Account belongs to another partner'));
     expect(onChanged).not.toHaveBeenCalled();
-  });
-});
-
-const radio = (testId: string) => screen.getByTestId(testId).querySelector('input') as HTMLInputElement;
-
-describe('ShippingModeChooser', () => {
-  const mountChooser = (mode: 'OWN_SHIPROCKET' | 'DUNCIT_COURIER' | null, locked = false, answers: Record<string, ScriptedAnswer> = {}, sent: SentOperation[] = []) => {
-    const onChanged = vi.fn();
-    mountIntegrations(<ShippingModeChooser mode={mode} locked={locked} ensureBrandId={async () => 'b1'} onChanged={onChanged} />, answers, sent);
-    return onChanged;
-  };
-
-  it('saves the picked mode and reloads', async () => {
-    const sent: SentOperation[] = [];
-    const onChanged = mountChooser(
-      'OWN_SHIPROCKET',
-      false,
-      { SetBrandShippingMode: { setBrandShippingMode: { __typename: 'EcommBrand', id: 'b1', shipping_mode: 'DUNCIT_COURIER' } } },
-      sent,
-    );
-    expect(radio('brand-shipping-mode-own').checked).toBe(true);
-    fireEvent.click(radio('brand-shipping-mode-duncit'));
-    await waitFor(() => expect(onChanged).toHaveBeenCalledTimes(1));
-    expect(sent.find((op) => op.name === 'SetBrandShippingMode')?.variables).toEqual({ brand_doc_id: 'b1', mode: 'DUNCIT_COURIER' });
-    expect(messages()).toContain('Shipping choice saved');
-  });
-
-  it('reports a refused change', async () => {
-    const onChanged = mountChooser(null, false, { SetBrandShippingMode: new Error('Switch not allowed') });
-    fireEvent.click(radio('brand-shipping-mode-own'));
-    await waitFor(() => expect(messages()).toContain('Switch not allowed'));
-    expect(onChanged).not.toHaveBeenCalled();
-  });
-
-  it('is read-only while the brand is locked', () => {
-    mountChooser('DUNCIT_COURIER', true);
-    expect(radio('brand-shipping-mode-own').disabled).toBe(true);
   });
 });

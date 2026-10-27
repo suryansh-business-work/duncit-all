@@ -106,16 +106,16 @@ const localeToPub = (doc: ILocale) => ({
   id: String(doc._id),
   code: doc.code,
   label: doc.label,
-  english_label: doc.english_label ?? "",
+  english_label: doc.english_label,
   is_rtl: !!doc.is_rtl,
   is_active: doc.is_active !== false,
   is_default: !!doc.is_default,
-  sort_order: doc.sort_order ?? 0,
-  updated_at: doc.updated_at?.toISOString?.() ?? "",
+  sort_order: doc.sort_order,
+  updated_at: doc.updated_at.toISOString(),
 });
 
 const valuesToPub = (values: ITranslation["values"]) =>
-  [...(values?.entries?.() ?? [])].map(([key, value]) => ({ key, value }));
+  [...values.entries()].map(([key, value]) => ({ key, value }));
 
 /**
  * `synced_from.<code>` for every language this save CHANGED by hand: its new
@@ -143,11 +143,11 @@ function syncStamps(
 const translationToPub = (doc: ITranslation) => ({
   id: String(doc._id),
   key: doc.key,
-  surface: doc.surface ?? "",
-  page: doc.page ?? "",
-  description: doc.description ?? "",
+  surface: doc.surface,
+  page: doc.page,
+  description: doc.description,
   values: valuesToPub(doc.values),
-  updated_at: doc.updated_at?.toISOString?.() ?? "",
+  updated_at: doc.updated_at.toISOString(),
 });
 
 export const localizationService = {
@@ -179,7 +179,7 @@ export const localizationService = {
    * over their bundled fallback on top of that.
    */
   async publicTranslations(locale: string) {
-    const code = (locale ?? "").trim();
+    const code = locale.trim();
     if (!code) throw badInput("A locale code is required");
     const fallbackCode = await this.defaultLocaleCode();
     // Only the two columns this answer can use. Every row carries a value per
@@ -213,8 +213,8 @@ export const localizationService = {
     is_default?: boolean | null;
     sort_order?: number | null;
   }) {
-    const code = (input.code ?? "").trim();
-    const label = (input.label ?? "").trim();
+    const code = input.code.trim();
+    const label = input.label.trim();
     if (!code) throw badInput("A locale code is required");
     if (!label) throw badInput("A locale label is required");
 
@@ -259,7 +259,7 @@ export const localizationService = {
   },
 
   async deleteLocale(code: string) {
-    const doc = await LocaleModel.findOne({ code: (code ?? "").trim() });
+    const doc = await LocaleModel.findOne({ code: code.trim() });
     if (!doc) return false;
     if (doc.is_default) throw badInput("The default locale cannot be deleted");
     await LocaleModel.deleteOne({ _id: doc._id });
@@ -276,7 +276,7 @@ export const localizationService = {
     description?: string | null;
     values?: { locale: string; value: string }[] | null;
   }) {
-    const key = (input.key ?? "").trim();
+    const key = input.key.trim();
     if (!key) throw badInput("A translation key is required");
     const { surface, page } = keySegments(key);
 
@@ -288,8 +288,8 @@ export const localizationService = {
     // clears another's text.
     const written: Record<string, string> = {};
     for (const entry of input.values ?? []) {
-      const locale = (entry.locale ?? "").trim();
-      if (locale) written[locale] = entry.value ?? "";
+      const locale = entry.locale.trim();
+      if (locale) written[locale] = entry.value;
     }
     for (const [locale, value] of Object.entries(written)) set[`values.${locale}`] = value;
 
@@ -308,7 +308,7 @@ export const localizationService = {
   },
 
   async deleteTranslation(key: string) {
-    const result = await TranslationModel.deleteOne({ key: (key ?? "").trim() });
+    const result = await TranslationModel.deleteOne({ key: key.trim() });
     return result.deletedCount > 0;
   },
 
@@ -332,7 +332,6 @@ export const localizationService = {
    */
   async seedDefaults() {
     const entries = Object.entries({ ...SHIPPED_CLIENT_KEYS, ...EMAIL_FALLBACK });
-    if (entries.length === 0) return 0;
 
     // A store with no locale has nothing to write text against. `en` matches
     // what scripts/sync-localization.mjs creates, so the two agree on a fresh
@@ -379,9 +378,9 @@ export const localizationService = {
    * rather than being retyped by hand. Existing keys are left untouched.
    */
   async importTranslationKeys(locale: string, entries: { key: string; value: string }[]) {
-    const code = (locale ?? "").trim();
+    const code = locale.trim();
     if (!code) throw badInput("A locale code is required");
-    const rows = (entries ?? []).filter((e) => (e.key ?? "").trim() !== "");
+    const rows = entries.filter((e) => e.key.trim() !== "");
     if (rows.length === 0) return 0;
 
     const existing = new Set(
@@ -397,7 +396,7 @@ export const localizationService = {
       fresh.map((r) => {
         const key = r.key.trim();
         const { surface, page } = keySegments(key);
-        return { key, surface, page, description: "", values: { [code]: r.value ?? "" } };
+        return { key, surface, page, description: "", values: { [code]: r.value } };
       }),
     );
     return fresh.length;
@@ -457,7 +456,7 @@ export const localizationService = {
     const rows = groups.map((group) => {
       const locales = codes.map((code, index) => ({
         locale: code,
-        translated: Number(group[localeCountField(index)] ?? 0),
+        translated: Number(group[localeCountField(index)]),
       }));
       return {
         id: `${group._id.surface}.${group._id.page}`,

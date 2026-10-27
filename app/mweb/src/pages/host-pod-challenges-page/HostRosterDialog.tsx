@@ -43,8 +43,8 @@ export default function HostRosterDialog({ open, podId, challenge, actions, onCl
 
   const save = async (v: RosterValues) => {
     const ok = await actions.roster({
-      competitors: v.competitors.map((c) => ({ competitor_id: c.competitor_id || null, name: c.name.trim(), user_id: c.user_id || null })),
-      players: v.players.map((p) => ({ player_id: p.player_id || null, name: p.name.trim(), team_id: p.team_id, user_id: p.user_id || null })),
+      competitors: v.competitors.map((c) => ({ competitor_id: c.competitor_id, name: c.name.trim(), user_id: c.user_id || null })),
+      players: v.players.map((p) => ({ player_id: p.player_id, name: p.name.trim(), team_id: p.team_id, user_id: p.user_id || null })),
       judge_user_ids: v.judge_user_ids,
     });
     if (ok) onClose();

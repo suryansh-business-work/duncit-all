@@ -6,7 +6,7 @@ export function EmptyCheckout({ onHome, title, action }: Readonly<{ onHome: () =
   return (
     <Box sx={{ p: 4, textAlign: 'center' }} data-testid="checkout-unavailable">
       <Alert severity="info" sx={{ mb: 2 }}>{title}</Alert>
-      <DuncitButton onClick={onHome} variant="contained">{action}</DuncitButton>
+      <DuncitButton data-testid="checkout-unavailable-home" onClick={onHome} variant="contained">{action}</DuncitButton>
     </Box>
   );
 }

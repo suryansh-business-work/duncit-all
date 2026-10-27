@@ -70,7 +70,7 @@ function assertSurface(surface: string): asserts surface is UploadSurface {
 function applyCropPresets(doc: IUploadSetting, input: UpdateUploadSettingInput): void {
   if (input.crop_presets === undefined) return;
   const presets = input.crop_presets
-    .filter((p) => p && typeof p.key === 'string' && p.key.trim())
+    .filter((p) => typeof p.key === 'string' && p.key.trim())
     .map((p) => ({
       key: String(p.key).trim().toUpperCase().slice(0, 40),
       label: String(p.label ?? p.key).trim().slice(0, 80),

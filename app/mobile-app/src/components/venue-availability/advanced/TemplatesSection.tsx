@@ -7,6 +7,7 @@ import { LabeledInput } from '@/components/LabeledInput';
 import type { SlotTemplate, SlotTemplateInput } from '@/hooks/useSlotTemplates';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { fireAndForget } from '@/utils/fire-and-forget';
 import { newTimeRange, toInt, type RecurringForm } from '../recurring/recurring-form';
 import { ExpandableSection } from './ExpandableSection';
 
@@ -49,6 +50,16 @@ export function TemplatesSection({
       skipWeeklyOff: template.config.skip_weekly_off,
       skipHolidays: template.config.skip_holidays,
     });
+
+  // A failed delete is said in place, like a failed save — never dropped.
+  const remove = async (id: string) => {
+    setError(null);
+    try {
+      await onRemove(id);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : t('availability.updateFailed'));
+    }
+  };
 
   const save = async () => {
     const first = form.timeSlots[0];
@@ -113,9 +124,7 @@ export function TemplatesSection({
             icon="delete-outline"
             label={t('availability.templates.delete', { vars: { name: template.name } })}
             tint={muted}
-            onPress={() => {
-              onRemove(template.id).catch(() => undefined);
-            }}
+            onPress={() => fireAndForget(remove(template.id))}
           />
         </XStack>
       ))}
@@ -135,9 +144,7 @@ export function TemplatesSection({
           <DuncitButton
             testID="template-save"
             label={saving ? t('availability.templates.saving') : t('availability.templates.save')}
-            onPress={() => {
-              save().catch(() => undefined);
-            }}
+            onPress={() => fireAndForget(save())}
             variant="outline"
             size="sm"
             disabled={saving || name.trim().length === 0}

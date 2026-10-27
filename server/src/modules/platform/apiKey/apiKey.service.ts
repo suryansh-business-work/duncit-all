@@ -44,10 +44,10 @@ const toPub = (k: IApiKey) => ({
   name: k.name,
   key_prefix: k.key_prefix,
   owner_user_id: String(k.owner_user_id),
-  scopes: k.scopes ?? [],
+  scopes: k.scopes,
   last_used_at: k.last_used_at ? k.last_used_at.toISOString() : null,
   revoked_at: k.revoked_at ? k.revoked_at.toISOString() : null,
-  created_at: k.created_at?.toISOString() ?? '',
+  created_at: k.created_at.toISOString(),
 });
 
 export const apiKeyService = {
@@ -56,7 +56,7 @@ export const apiKeyService = {
   /** Generates a `dk_live_…` key; only its SHA-256 hash is persisted. The raw
    * key is returned exactly once — it can never be recovered afterwards. */
   async create(ownerId: string, name: string) {
-    const trimmed = String(name ?? '').trim();
+    const trimmed = name.trim();
     if (!trimmed) fail('BAD_USER_INPUT', 'Key name is required');
     if (trimmed.length > MAX_NAME_LENGTH) {
       fail('BAD_USER_INPUT', `Key name must be ${MAX_NAME_LENGTH} characters or less`);
@@ -109,7 +109,7 @@ export const apiKeyService = {
   /** Hash lookup of a non-revoked key. Bumps last_used_at fire-and-forget so
    * the hot path never waits on the bookkeeping write. */
   async verify(rawKey: string): Promise<IApiKey | null> {
-    const trimmed = String(rawKey ?? '').trim();
+    const trimmed = rawKey.trim();
     if (!trimmed) return null;
     const doc = await ApiKeyModel.findOne({ key_hash: sha256(trimmed), revoked_at: null });
     if (!doc) return null;

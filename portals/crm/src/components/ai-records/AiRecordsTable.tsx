@@ -43,7 +43,7 @@ export default function AiRecordsTable({ entity, rows, onChange }: Readonly<Prop
       renderCell: ({ value }) => (
         <Stack direction="row" spacing={1} sx={{ alignItems: 'center', height: '100%', minWidth: 0 }}>
           <Box component="span" sx={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{value}</Box>
-          <EmailStatusBadge email={typeof value === 'string' ? value : ''} />
+          <EmailStatusBadge email={value} />
         </Stack>
       ),
     },

@@ -6,7 +6,6 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScrollView, Spinner, Text, YStack } from 'tamagui';
 import { makeGigJobSchema } from '@duncit/forms/schemas';
 import {
-  canPostGigs,
   emptyGigJobValues,
   gigJobToValues,
   parseApiError,
@@ -115,6 +114,7 @@ export function GigJobFormScreen() {
   const context = useGigContext();
   const gig = useGigJob(id ?? '', !!id);
   const job: GigJob | null = id ? gig.job : null;
+  const posterRoles = context.viewer?.poster_roles ?? [];
   const waiting = context.loading || (!!id && !job && !gig.failed && !gig.missing);
 
   let body;
@@ -122,14 +122,14 @@ export function GigJobFormScreen() {
     body = <Spinner role="progressbar" aria-label={t('mweb.a11y.loading')} color="$primary" />;
   else if (context.failed || (id && gig.failed))
     body = <GigNote text={t('gigJobs.form.loadFailed')} testID="gig-form-failed" />;
-  else if (!canPostGigs(context.viewer) || (id && !job?.is_mine)) {
+  else if (posterRoles.length === 0 || (id && !job?.is_mine)) {
     body = <GigNote text={t('gigJobs.form.notAllowed')} testID="gig-form-not-allowed" />;
   } else {
     body = (
       <GigJobFormBody
         initial={job ? gigJobToValues(job) : emptyGigJobValues(context.viewer)}
         categories={context.categories}
-        posterRoles={context.viewer?.poster_roles ?? []}
+        posterRoles={posterRoles}
         editId={id}
       />
     );

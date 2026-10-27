@@ -23,6 +23,7 @@ export default function DocumentTypeSelect({ value, onChange, label, required }:
       value={selected}
       onChange={(_e, v) => onChange(v?.label ?? '')}
       fullWidth
+      data-testid="document-type-select"
       renderInput={(params) => (
         <TextField {...params} label={fieldLabel} placeholder={t('legal.docTypeSelect.search')} required={required} />
       )}

@@ -25,7 +25,7 @@ interface Found {
 /** Every string in a document, with its dotted path. ObjectIds, dates and binaries are not text. */
 function collectStrings(value: unknown, path: string, depth: number, out: Found[]): void {
   if (typeof value === 'string') {
-    if (path) out.push({ path, value });
+    out.push({ path, value });
     return;
   }
   if (depth > MAX_DEPTH || value === null || typeof value !== 'object') return;
@@ -126,6 +126,5 @@ export async function scanBatch(runId: string, endpoint: string, ownerIndex: num
   if (!model) return { read: 0, cursor: null };
   const docs = (await model.collection.find(ownerFilter(owner, cursor)).sort({ _id: 1 }).limit(SCAN_BATCH).toArray()) as Array<Record<string, unknown>>;
   await record(runId, sightingsIn(docs, owner, endpoint));
-  const last = docs.at(-1);
-  return { read: docs.length, cursor: docs.length === SCAN_BATCH && last ? last._id : null };
+  return { read: docs.length, cursor: docs.length === SCAN_BATCH ? docs.at(-1)?._id : null };
 }

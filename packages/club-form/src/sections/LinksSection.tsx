@@ -94,6 +94,7 @@ export default function LinksSection() {
         label={t('clubForm.linksSection.whatsappCommunityLink')}
         required
         hint="Invite link members join — shown on the club page (mWeb + app)."
+        data-testid="club-form-community-link"
       />
       <RhfTextField
         control={control}

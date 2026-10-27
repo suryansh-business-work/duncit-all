@@ -5,6 +5,7 @@ import {
   applyVenuePodsQuery,
   cancelDisabledText,
   cancelSuccessMessage,
+  fmtDate,
   VENUE_CANCEL_PENALTY,
   VENUE_CANCEL_POD,
   VENUE_POD_ATTENDEE_PROFILES,
@@ -23,6 +24,18 @@ const baseQuery = {
   sortBy: null,
   sortDir: 'asc' as const,
 };
+
+describe('fmtDate', () => {
+  it('shows a dash for a missing time and for one that is not a date', () => {
+    expect(fmtDate(null)).toBe('—');
+    expect(fmtDate(undefined)).toBe('—');
+    expect(fmtDate('not-a-date')).toBe('—');
+  });
+
+  it('writes a real time with the configured formatter', () => {
+    expect(fmtDate('2026-08-10T18:00:00.000Z')).toMatch(/2026/);
+  });
+});
 
 describe('VENUE_PODS contract', () => {
   it('is the owner-scoped venuePods query with the fields the table renders', () => {

@@ -900,6 +900,57 @@ export async function settle(paymentDocId: string, methodLabel: string, componen
   return reloadPub(paymentDocId);
 }
 
+/** What the Razorpay sheet hands back for a verify. */
+interface RazorpayVerifyInput {
+  razorpay_order_id: string;
+  razorpay_payment_id: string;
+  razorpay_signature: string;
+}
+
+/** The checkout signature for this payment's order, checked against the account that opened it. */
+function checkRazorpaySignature(doc: IPayment, input: RazorpayVerifyInput): Promise<boolean> {
+  return verifyRazorpaySignature({
+    orderId: input.razorpay_order_id,
+    paymentId: input.razorpay_payment_id,
+    signature: input.razorpay_signature,
+    // The account that opened the order — a surface may choose one other than the default.
+    account: doc.metadata?.razorpay_account,
+  });
+}
+
+/**
+ * A verify for a payment that already settled on exactly this order and this
+ * Razorpay payment — a client retry, a double tap, an app resumed after the
+ * sheet closed. Once settled, `gateway_ref` holds the payment id (verify and the
+ * reconciler both move it there), so the order id now lives only in metadata.
+ */
+function isRepeatOfSettledVerify(doc: IPayment, input: RazorpayVerifyInput): boolean {
+  return (
+    doc.status === 'SUCCESS' &&
+    Boolean(input.razorpay_payment_id) &&
+    doc.gateway_ref === input.razorpay_payment_id &&
+    doc.metadata?.razorpay_payment_id === input.razorpay_payment_id &&
+    doc.metadata?.razorpay_order_id === input.razorpay_order_id
+  );
+}
+
+/**
+ * Answer a repeat verify with the payment as it stands, writing nothing. The
+ * signature is still checked: matching ids alone are not proof of payment.
+ */
+async function answerRepeatVerify(doc: IPayment, input: RazorpayVerifyInput, component: string) {
+  if (!(await checkRazorpaySignature(doc, input))) {
+    logs.server.warn('payment', component, {
+      payment_id: doc.payment_id,
+      msg: 'Razorpay signature refused on a repeat verify of a settled payment',
+    });
+    throw new GraphQLError('Payment signature verification failed', {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  }
+  return toPub(doc);
+}
+
 /**
  * The other dates of a multi-date booking of a (now retired) recurring pod,
  * kept so a booking paid before the retirement still settles: one Razorpay
@@ -934,20 +985,17 @@ async function settleGroupSiblings(primary: IPayment, razorpayPaymentId: string,
  * signature proves the money moved, not who is asking.
  */
 export async function verifyRazorpayAndSettle(doc: IPayment, input: any, component: string) {
-  if (doc.gateway !== 'RAZORPAY' || doc.gateway_ref !== input.razorpay_order_id)
+  if (doc.gateway !== 'RAZORPAY')
+    throw new GraphQLError('Payment/order mismatch', { extensions: { code: 'BAD_USER_INPUT' } });
+  if (isRepeatOfSettledVerify(doc, input)) return answerRepeatVerify(doc, input, component);
+  if (doc.gateway_ref !== input.razorpay_order_id)
     throw new GraphQLError('Payment/order mismatch', { extensions: { code: 'BAD_USER_INPUT' } });
   if (doc.status === 'SUCCESS') {
     await settleGroupSiblings(doc, String(doc.metadata?.razorpay_payment_id ?? doc.gateway_ref), input.razorpay_order_id, component);
     return toPub(doc);
   }
 
-  const ok = await verifyRazorpaySignature({
-    orderId: input.razorpay_order_id,
-    paymentId: input.razorpay_payment_id,
-    signature: input.razorpay_signature,
-    // The account that opened the order — a surface may choose one other than the default.
-    account: doc.metadata?.razorpay_account,
-  });
+  const ok = await checkRazorpaySignature(doc, input);
   if (!ok) {
     // A bad signature proves only that THIS request is not proof of payment —
     // not that Razorpay took no money. It used to mark the payment FAILED, and

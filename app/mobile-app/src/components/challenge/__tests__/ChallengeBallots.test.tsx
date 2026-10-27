@@ -150,4 +150,28 @@ describe('ChallengeBallots', () => {
       false,
     );
   });
+
+  it('ignores a second rating tap while the first is still being saved', async () => {
+    let finish: (value: unknown) => void = () => undefined;
+    mockRequest.mockImplementationOnce(() => new Promise((resolve) => (finish = resolve)));
+    const onChanged = jest.fn();
+    renderWithProviders(
+      <ChallengeBallots
+        challenge={challenge()}
+        tool={tool({ input_kind: 'RATING' })}
+        onChanged={onChanged}
+      />,
+    );
+    const ones = screen.getAllByTestId('attendance-otp-medium-1');
+    await act(async () => {
+      fireEvent.press(ones[0] as never);
+    });
+    await act(async () => {
+      fireEvent.press(ones[1] as never);
+    });
+    expect(mockRequest).toHaveBeenCalledTimes(1);
+    await act(async () => finish({ ratePodChallengeCompetitor: updated }));
+    await waitFor(() => expect(onChanged).toHaveBeenCalledWith(updated));
+    expect(onChanged).toHaveBeenCalledTimes(1);
+  });
 });

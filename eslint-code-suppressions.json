@@ -4043,11 +4043,6 @@
       "count": 5
     }
   },
-  "portals/partners-app/src/pages/register-venue-page/useVenueGeocoder.ts": {
-    "no-restricted-syntax": {
-      "count": 4
-    }
-  },
   "portals/partners-app/src/pages/slot-decision-page/SlotDecisionPage.tsx": {
     "no-restricted-syntax": {
       "count": 2

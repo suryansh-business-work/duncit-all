@@ -29,7 +29,7 @@ const CODE_LENGTH = 6;
  * type in. The moment ONE medium genuinely sends, the code is random and this
  * constant is unreachable.
  */
-const TEST_CODE = process.env.OTP_TEST_CODE || '123456';
+const testCode = (): string => process.env.OTP_TEST_CODE || '123456';
 
 const sha = (value: string) => crypto.createHash('sha256').update(value).digest('hex');
 
@@ -314,7 +314,7 @@ export const otpService = {
     // MSG91 made the SMS code; its request id is how that code is checked.
     const sms_request_id = outcomes.find((d) => d.request_id)?.request_id ?? '';
     const stubbed = deliberatelyStubbed(deliveries);
-    const code = stubbed ? TEST_CODE : candidate;
+    const code = stubbed ? testCode() : candidate;
 
     const expires_at = new Date(Date.now() + OTP_TTL_MS);
     const doc = await OtpChallengeModel.findOneAndUpdate(

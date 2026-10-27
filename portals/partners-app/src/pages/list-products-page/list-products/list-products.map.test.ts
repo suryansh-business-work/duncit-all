@@ -391,3 +391,77 @@ describe('toSubmitInput', () => {
     expect(input.super_category_id).toBe('');
   });
 });
+
+describe('records the server saved with gaps in them', () => {
+  const sparse = (over: Record<string, unknown> = {}) => ({ product_name: 'Alpha Tee', ...over });
+
+  it('maps a variant with no label, no option names and no images to blanks', () => {
+    const values = productToValues(
+      sparse({
+        variants: [
+          {
+            option_label: null,
+            option_values: [{ name: null, value: null }],
+            images: null,
+            color: '',
+            size_label: null,
+            description: null,
+            unit_cost: 100,
+          },
+        ],
+      }),
+    );
+    expect(values.variants[0]).toMatchObject({
+      option_label: '',
+      option_values: [{ name: '', value: '' }],
+      image_urls: [],
+      color: '#000000',
+      size_label: '',
+      description: '',
+      unit_cost: 100,
+    });
+  });
+
+  it('maps a variant whose option values are not a list to none', () => {
+    expect(productToValues(sparse({ variants: [{ option_values: null }] })).variants[0].option_values).toEqual([]);
+  });
+
+  it('keeps the names of a category path that has them, and blanks the ones it lacks', () => {
+    const values = productToValues(
+      sparse({
+        categories: [
+          { super_category_id: 's1', category_id: 'c1', sub_category_id: 'sc1', super_category_name: null, category_name: null, sub_category_name: null },
+        ],
+      }),
+    );
+    expect(values.categories).toEqual([
+      { super_id: 's1', super_name: '', category_id: 'c1', category_name: '', sub_id: 'sc1', sub_name: '' },
+    ]);
+  });
+
+  it('maps an option with no name and no values to blanks', () => {
+    expect(productToValues(sparse({ options: [{ name: null, values: null }] })).options).toEqual([{ name: '', values: [] }]);
+  });
+
+  it('regenerates the variant matrix over variants that carry no option values', () => {
+    const generated = generateVariants([{ name: 'Size', values: ['S'] }], [variant({ option_values: undefined as never })]);
+    expect(generated).toHaveLength(1);
+    expect(generated[0].option_label).toBe('S');
+  });
+
+  it('sends a typed SKU trimmed and in upper case', () => {
+    const input = toSubmitInput({ ...emptyValues, product_name: 'Alpha Tee', variants: [variant({ sku: ' abc-1 ' })] }, 'b1');
+    expect(input.variants[0]).toMatchObject({ sku: 'ABC-1' });
+  });
+
+  it('sends no SKU for a blank one, and no category ids for a listing with no category', () => {
+    const input = toSubmitInput(
+      { ...emptyValues, product_name: 'Alpha Tee', categories: [], variants: [variant({ sku: '   ' })] },
+      'b1',
+    );
+    expect(input.super_category_id).toBe('');
+    expect(input.category_id).toBe('');
+    expect(input.sub_category_id).toBe('');
+    expect(input.variants[0]).not.toHaveProperty('sku');
+  });
+});

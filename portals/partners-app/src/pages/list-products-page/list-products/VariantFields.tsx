@@ -63,10 +63,8 @@ export default function VariantFields({ control, index, watch, setValue, onPickI
   const { t } = useTranslation();
   const nm = (fieldName: string) => `variants.${index}.${fieldName}` as Path<ProductListingValues>;
   const imagePath = `variants.${index}.image_urls` as Path<ProductListingValues>;
-  const images = (watch(imagePath) as string[] | undefined) ?? [];
-  const optionValues = (watch(`variants.${index}.option_values` as Path<ProductListingValues>) as
-    | VariantOptionValue[]
-    | undefined) ?? [];
+  const images = watch(imagePath) as string[];
+  const optionValues = watch(`variants.${index}.option_values` as Path<ProductListingValues>) as VariantOptionValue[];
   const removeImage = (url: string) =>
     setValue(imagePath, images.filter((item) => item !== url), { shouldValidate: true });
 

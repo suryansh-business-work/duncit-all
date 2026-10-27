@@ -25,15 +25,15 @@ export default function ClubAdminAutoPodEditorPage() {
     null;
   const products = lookups.data?.availablePodProducts ?? [];
 
+  // The guard below only renders once the club is known (a missing one is its not-found state).
   const renderEditor = () => {
-    if (!club) return null;
-    if (club.category_id) return <ClubAutoPodEditor club={club} backTo={backTo} products={products} />;
+    if (club?.category_id) return <ClubAutoPodEditor club={club} backTo={backTo} products={products} />;
     return (
       <Stack spacing={2} sx={{ alignItems: 'flex-start' }}>
-        <Alert severity="error" sx={{ width: '100%' }}>
+        <Alert severity="error" sx={{ width: '100%' }} data-testid="club-auto-pod-category-missing">
           {t('admin.autoPods.clubCategoryMissing')}
         </Alert>
-        <DuncitButton startIcon={<ArrowBackIcon />} onClick={() => navigate(backTo)}>
+        <DuncitButton startIcon={<ArrowBackIcon />} onClick={() => navigate(backTo)} data-testid="club-auto-pod-back">
           {t('admin.autoPods.backToClubPods')}
         </DuncitButton>
       </Stack>

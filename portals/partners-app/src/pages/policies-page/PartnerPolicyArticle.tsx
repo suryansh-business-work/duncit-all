@@ -11,26 +11,29 @@ export default function PartnerPolicyArticle({ slug }: Readonly<{ slug: string }
   if (loading && !data) return <PolicySkeleton />;
   if (error) return <Alert severity="error">Could not load policy: {error.message}</Alert>;
   const policy = data?.policyBySlug;
-  if (!policy) return <Alert severity="warning">{t('partners.policiesPage.noPolicyFound')}</Alert>;
-  if (!policy.is_active) return <Alert severity="info">{t('partners.policiesPage.thisPolicyIsCurrentlyHidden')}</Alert>;
+  if (!policy) return <Alert severity="warning" data-testid="policy-not-found">{t('partners.policiesPage.noPolicyFound')}</Alert>;
+  if (!policy.is_active) return <Alert severity="info" data-testid="policy-hidden">{t('partners.policiesPage.thisPolicyIsCurrentlyHidden')}</Alert>;
 
   return (
     <Box>
       <Typography
         variant="h4"
         component="h2"
+        data-testid="policy-title"
         sx={{
           fontWeight: 950,
           mb: 2
         }}>{policy.title}</Typography>
       <Box
         className="ql-editor"
+        data-testid="policy-content"
         // This portal sets its headings heavier than the shared default.
         sx={mergeSx(RICH_TEXT_BODY_SX, { '& h1, & h2, & h3': { mt: 3, mb: 1.5, fontWeight: 900 } })}
         dangerouslySetInnerHTML={{ __html: policy.content || '' }}
       />
       <Typography
         variant="caption"
+        data-testid="policy-updated"
         sx={{
           color: "text.secondary",
           mt: 4,

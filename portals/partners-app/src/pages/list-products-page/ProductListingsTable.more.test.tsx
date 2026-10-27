@@ -4,7 +4,7 @@ import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/re
 import type { MockedResponse } from '@apollo/client/testing';
 import ProductListingsTable from './ProductListingsTable';
 import { DELETE_LISTING, MY_PRODUCT_LISTINGS_TABLE, SET_LISTING_ACTIVE } from './queries';
-import { MY_CATALOG_DELETION_REQUESTS } from '../ecomm-brand-page/deletion-request/deletion.queries';
+import { MY_CATALOG_DELETION_REQUESTS, WITHDRAW_CATALOG_DELETION } from '../ecomm-brand-page/deletion-request/deletion.queries';
 import { renderWithProviders } from '../../__tests__/render';
 
 afterEach(cleanup);
@@ -170,5 +170,69 @@ describe('ProductListingsTable pause, reactivate and delete guards', () => {
 
     menu = await openRowMenu('Archived Tee');
     expect(within(menu).getByRole('menuitem', { name: 'Temporarily deactivate' }).getAttribute('aria-disabled')).toBe('true');
+  });
+});
+
+const openRequest = (over: Record<string, unknown> = {}) => ({
+  __typename: 'CatalogDeletionRequest',
+  id: 'r1',
+  kind: 'PRODUCT',
+  brand_id: 'b1',
+  product_id: 'p1',
+  parent_id: null,
+  status: 'PENDING',
+  scheduled_for: '2026-11-01',
+  blocked_reason: '',
+  ...over,
+});
+
+const requestsMock = (rows: unknown[]): MockedResponse => ({
+  request: { query: MY_CATALOG_DELETION_REQUESTS, variables: { brand_id: 'b1' } },
+  result: { data: { myCatalogDeletionRequests: rows } },
+  maxUsageCount: Number.POSITIVE_INFINITY,
+});
+
+describe('ProductListingsTable deleting a live listing', () => {
+  it('opens a deletion request for an approved listing instead of deleting it', async () => {
+    renderTable([tableMock([listing()])]);
+    const menu = await openRowMenu('Alpha Tee');
+    fireEvent.click(within(menu).getByRole('menuitem', { name: 'Delete' }));
+    expect(await screen.findByText('Delete Alpha Tee')).toBeTruthy();
+  });
+
+  it('shows an open deletion request beside the listing status and offers to withdraw it instead of Delete', async () => {
+    renderTable([tableMock([listing()]), requestsMock([openRequest()])]);
+    const row = (await screen.findByText('Alpha Tee')).closest('[role="row"]') as HTMLElement;
+    expect((await within(row).findByTestId('deletion-chip')).textContent).toBe('Deletion pending review');
+    const menu = await openRowMenu('Alpha Tee');
+    expect(within(menu).queryByRole('menuitem', { name: 'Delete' })).toBeNull();
+    expect(within(menu).getByRole('menuitem', { name: 'Withdraw deletion request' }).getAttribute('aria-disabled')).not.toBe('true');
+  });
+
+  it('withdraws the request from the row menu and reloads the table and the requests', async () => {
+    let withdrawn = false;
+    renderTable([
+      tableMock([listing()]),
+      requestsMock([openRequest()]),
+      {
+        request: { query: WITHDRAW_CATALOG_DELETION, variables: { id: 'r1' } },
+        result: () => {
+          withdrawn = true;
+          return { data: { withdrawCatalogDeletion: openRequest({ status: 'WITHDRAWN' }) } };
+        },
+      },
+    ]);
+    const menu = await openRowMenu('Alpha Tee');
+    fireEvent.click(within(menu).getByRole('menuitem', { name: 'Withdraw deletion request' }));
+    const dialog = await screen.findByRole('dialog');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Withdraw deletion request' }));
+    await waitFor(() => expect(withdrawn).toBe(true));
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+  });
+
+  it('leaves a product whose brand is being deleted to be withdrawn with the brand', async () => {
+    renderTable([tableMock([listing()]), requestsMock([openRequest({ id: 'r2', parent_id: 'r9' })])]);
+    const menu = await openRowMenu('Alpha Tee');
+    expect(within(menu).getByRole('menuitem', { name: 'Withdraw deletion request' }).getAttribute('aria-disabled')).toBe('true');
   });
 });

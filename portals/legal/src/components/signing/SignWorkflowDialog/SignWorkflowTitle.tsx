@@ -19,6 +19,7 @@ export function SignWorkflowTitle({ title, alreadySigned, statusLabel }: Readonl
           color={alreadySigned ? 'success' : 'default'}
           variant={alreadySigned ? 'filled' : 'outlined'}
           label={statusLabel}
+          data-testid="sign-status"
         />
       </Stack>
     </DialogTitle>

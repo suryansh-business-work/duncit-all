@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { STUDIO_LABEL, availableModes, resolveMode, studioSwitchPath } from '../studio-mode';
+import { MWEB_FALLBACK_FLAT } from '../i18n/fallback';
+import { STUDIO_LABEL_KEY, availableModes, resolveMode, studioSwitchPath } from '../studio-mode';
 
 /** mWeb twin of the native studio-mode test (rule 27) — the two files hold the
  * same rules, so the E-commerce studio cannot go dark on one app only. */
@@ -54,8 +55,9 @@ describe('studio-mode', () => {
     expect(studioSwitchPath('USER', counts)).toBe('/');
   });
 
-  it('exposes labels for every mode', () => {
-    expect(STUDIO_LABEL.ECOMM).toBe('ecomm');
-    expect(STUDIO_LABEL.USER).toBe('User');
+  it('exposes a shipped label key for every mode', () => {
+    expect(MWEB_FALLBACK_FLAT[STUDIO_LABEL_KEY.ECOMM]).toBe('ecomm');
+    expect(MWEB_FALLBACK_FLAT[STUDIO_LABEL_KEY.USER]).toBe('User');
+    expect(MWEB_FALLBACK_FLAT[STUDIO_LABEL_KEY.HOST]).toBe('Host Studio');
   });
 });

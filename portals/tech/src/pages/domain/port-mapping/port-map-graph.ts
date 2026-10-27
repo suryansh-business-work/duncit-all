@@ -23,12 +23,12 @@ const ROW = 64;
 const addressOf = (route: PortMapRoute) => (route.port == null ? route.target : `${route.host}:${route.port}`);
 
 /** Each port sits beside the domains that reach it, pushed down just enough not to overlap the one above. */
-function portRows(routes: PortMapRoute[], domainRow: Map<string, number>): Map<string, number> {
+function portRows(routes: PortMapRoute[], domains: string[]): Map<string, number> {
   const sums = new Map<string, { total: number; count: number }>();
   for (const route of routes) {
     const address = addressOf(route);
     const entry = sums.get(address) ?? { total: 0, count: 0 };
-    entry.total += domainRow.get(route.domain) ?? 0;
+    entry.total += domains.indexOf(route.domain) * ROW;
     entry.count += 1;
     sums.set(address, entry);
   }
@@ -47,15 +47,14 @@ function portRows(routes: PortMapRoute[], domainRow: Map<string, number>): Map<s
 /** Domains on the left, local ports on the right, one arrow per (domain, location) route. */
 export function buildPortMapGraph(routes: PortMapRoute[]): { nodes: PortMapNode[]; edges: Edge[] } {
   const domains = [...new Set(routes.map((route) => route.domain))];
-  const domainRow = new Map(domains.map((domain, i) => [domain, i * ROW]));
-  const portRow = portRows(routes, domainRow);
+  const portRow = portRows(routes, domains);
 
-  const domainNodes: PortMapNode[] = domains.map((domain) => {
+  const domainNodes: PortMapNode[] = domains.map((domain, i) => {
     const own = routes.filter((route) => route.domain === domain);
     return {
       id: `domain:${domain}`,
       type: 'domain',
-      position: { x: DOMAIN_X, y: domainRow.get(domain) ?? 0 },
+      position: { x: DOMAIN_X, y: i * ROW },
       data: { domain, tls: own.some((route) => route.tls), enabled: own.some((route) => route.enabled) },
     };
   });

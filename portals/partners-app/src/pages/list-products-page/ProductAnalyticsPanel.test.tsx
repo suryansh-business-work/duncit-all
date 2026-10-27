@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { cleanup, screen, within } from '@testing-library/react';
+import { cleanup, screen, waitFor, within } from '@testing-library/react';
 import type { MockedResponse } from '@apollo/client/testing';
 import { GraphQLError } from 'graphql';
 import ProductAnalyticsPanel from './ProductAnalyticsPanel';
@@ -101,5 +101,14 @@ describe('ProductAnalyticsPanel', () => {
   it('reports a failed analytics query', async () => {
     renderPanel([analyticsMock({ errors: [new GraphQLError('Analytics are warming up')] })]);
     expect((await screen.findByRole('alert')).textContent).toContain('Analytics are warming up');
+  });
+});
+
+describe('ProductAnalyticsPanel with no analytics for the product', () => {
+  it('shows nothing once the answer arrives empty', async () => {
+    renderPanel([analyticsMock({ data: { myProductAnalytics: null } })]);
+    await waitFor(() => expect(screen.queryByRole('progressbar')).toBeNull());
+    expect(screen.queryByRole('heading', { name: 'Analytics' })).toBeNull();
+    expect(screen.queryByRole('alert')).toBeNull();
   });
 });

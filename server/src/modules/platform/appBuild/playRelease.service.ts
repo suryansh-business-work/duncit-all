@@ -146,7 +146,7 @@ async function runRelease(
  */
 export async function pushBuildToPlayStore(id: string, track: PlayStoreTrack, by: string): Promise<IAppBuild> {
   const build = await releasableBuild(id, 'ANDROID', STORE);
-  if ((build.play_releases ?? []).some(isInFlight)) {
+  if (build.play_releases.some(isInFlight)) {
     throw badInput(`A push to ${STORE} is already in progress for ${build.build_no}.`);
   }
   const aabPath = await storedArtifactPath(build, 'AAB', STORE);

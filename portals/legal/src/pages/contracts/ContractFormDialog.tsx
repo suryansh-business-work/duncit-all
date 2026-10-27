@@ -74,11 +74,11 @@ export default function ContractFormDialog({
   };
 
   return (
-    <Dialog open={open} onClose={() => !saving && onClose()} fullWidth maxWidth="md">
-      <DialogTitle>{heading()}</DialogTitle>
+    <Dialog open={open} onClose={() => !saving && onClose()} fullWidth maxWidth="md" data-testid="contract-form-dialog">
+      <DialogTitle data-testid="contract-form-title">{heading()}</DialogTitle>
       <DialogContent dividers>
         <Stack spacing={2} sx={{ mt: 1 }}>
-          {error && <Alert severity="error">{error}</Alert>}
+          {error && <Alert severity="error" data-testid="contract-form-error">{error}</Alert>}
 
           {!isNew && contractNo && (
             <Typography
@@ -96,6 +96,7 @@ export default function ContractFormDialog({
               label={t('shell.common.title')}
               value={form.title}
               onChange={(e) => onChange({ title: e.target.value })}
+              slotProps={{ htmlInput: { 'data-testid': 'contract-form-title-input' } }}
               required
               fullWidth
               // eslint-disable-next-line jsx-a11y/no-autofocus -- focus moves into the dialog the user just opened (WCAG 2.4.3)
@@ -106,6 +107,7 @@ export default function ContractFormDialog({
               label={t('legal.contracts.counterparty')}
               value={form.counterparty}
               onChange={(e) => onChange({ counterparty: e.target.value })}
+              slotProps={{ htmlInput: { 'data-testid': 'contract-form-counterparty' } }}
               fullWidth
               disabled={readOnly}
               helperText={t('legal.contracts.counterpartyHint')}
@@ -118,11 +120,12 @@ export default function ContractFormDialog({
               select
               value={form.status}
               onChange={(e) => onChange({ status: e.target.value as ContractStatus })}
+              data-testid="contract-form-status"
               disabled={readOnly}
               sx={{ minWidth: 180 }}
             >
               {CONTRACT_STATUS_OPTIONS.map((option) => (
-                <MenuItem key={option.value} value={option.value}>
+                <MenuItem key={option.value} value={option.value} data-testid={`contract-status-option-${option.value}`}>
                   {option.label}
                 </MenuItem>
               ))}
@@ -168,11 +171,11 @@ export default function ContractFormDialog({
         </Stack>
       </DialogContent>
       <DialogActions>
-        <DuncitButton onClick={onClose} disabled={saving}>
+        <DuncitButton onClick={onClose} disabled={saving} data-testid="contract-form-close">
           {readOnly ? 'Close' : 'Cancel'}
         </DuncitButton>
         {!readOnly && (
-          <DuncitButton variant="contained" disabled={saving || !form.title.trim()} onClick={onSubmit}>
+          <DuncitButton variant="contained" disabled={saving || !form.title.trim()} onClick={onSubmit} data-testid="contract-form-save">
             {saving ? 'Saving…' : saveLabel}
           </DuncitButton>
         )}

@@ -3,6 +3,7 @@ import type { AutoPodActionCounts } from '@duncit/utils';
 
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 import { useAutoPodCountsStore } from '@/stores/auto-pod-counts.store';
+import { fireAndForget } from '@/utils/fire-and-forget';
 
 /** Roles that can have an Auto Pod waiting on them. A pure consumer holds none
  * of these, so the query never leaves their phone. */
@@ -31,13 +32,13 @@ export function useAutoPodCounts(roles: readonly string[]): AutoPodCountsState {
   const fetch = useAutoPodCountsStore((s) => s.fetch);
 
   useEffect(() => {
-    if (active) fetch().catch(() => undefined);
+    if (active) fireAndForget(fetch());
   }, [active, fetch]);
 
   return {
     counts,
     reload: () => {
-      if (active) fetch(true).catch(() => undefined);
+      if (active) fireAndForget(fetch(true));
     },
   };
 }

@@ -50,13 +50,12 @@ export default function VenueSettingsPage() {
     [policyJson]
   );
 
-  const submit = async (values: CancellationPolicyValues) => {
-    if (!selected) return;
+  const submit = async (venue: VenueSettingsVenue, values: CancellationPolicyValues) => {
     setApiError(null);
     try {
       await saveSettings({
         variables: {
-          venue_doc_id: selected.id,
+          venue_doc_id: venue.id,
           input: { cancellation: toPolicyInput(values, t) },
         },
       });
@@ -82,7 +81,7 @@ export default function VenueSettingsPage() {
   return (
     <Stack spacing={2.25} sx={{ width: '100%', pb: 4 }}>
       <Stack spacing={0.5}>
-        <Typography variant="h5" component="h1" sx={{
+        <Typography variant="h5" component="h1" data-testid="venue-settings-title" sx={{
           fontWeight: 700
         }}>
           {t('venueSettings.title')}
@@ -94,15 +93,14 @@ export default function VenueSettingsPage() {
         </Typography>
       </Stack>
 
-      {venues.length === 0 ? (
-        <Alert severity="info">{t('venueSettings.noVenues')}</Alert>
-      ) : (
+      {selected ? (
         <>
           <TextField
             select
             fullWidth
             label={t('venueSettings.venue')}
-            value={selected?.id ?? ''}
+            data-testid="venue-settings-venue"
+            value={selected.id}
             onChange={(event) => selectVenue(event.target.value)}
           >
             {venues.map((venue) => (
@@ -125,22 +123,22 @@ export default function VenueSettingsPage() {
                   saving={saveState.loading}
                   error={apiError}
                   t={t}
-                  onSubmit={submit}
+                  onSubmit={(values) => submit(selected, values)}
                 />
               </Stack>
             </CardContent>
           </Card>
 
-          {selected && (
-            <BookingOffersCard
-              venue={selected}
-              onSaved={async (saved) => {
-                setMessage(saved);
-                await refetch();
-              }}
-            />
-          )}
+          <BookingOffersCard
+            venue={selected}
+            onSaved={async (saved) => {
+              setMessage(saved);
+              await refetch();
+            }}
+          />
         </>
+      ) : (
+        <Alert severity="info">{t('venueSettings.noVenues')}</Alert>
       )}
 
       <Snackbar
@@ -148,6 +146,7 @@ export default function VenueSettingsPage() {
         autoHideDuration={4000}
         onClose={() => setMessage(null)}
         message={message ?? ''}
+        data-testid="venue-settings-snackbar"
       />
     </Stack>
   );

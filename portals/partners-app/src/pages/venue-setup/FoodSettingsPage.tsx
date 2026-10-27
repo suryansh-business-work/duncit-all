@@ -23,9 +23,9 @@ export default function FoodSettingsPage() {
               config={config}
               mode={mode}
               venueId={venue.id}
-              savedGstin={record?.gstin ?? ''}
-              venueName={record?.venue_name ?? undefined}
-              hasSavedTables={(record?.food_tables?.length ?? 0) > 0}
+              savedGstin={record.gstin ?? ''}
+              venueName={record.venue_name ?? undefined}
+              hasSavedTables={(record.food_tables?.length ?? 0) > 0}
               showMenu={mode !== 'edit-approved'}
             />
           )}

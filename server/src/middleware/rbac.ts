@@ -38,31 +38,61 @@ export function requireRole(ctx: GraphQLContext, allowed: readonly string[]): Au
   return user;
 }
 
+/** Where a caller may act or look: one city, a set of zones, or everywhere (null). */
+export type ReadScope = { city: string } | { zones: string[] } | null;
+
+const outOfCity = () => new GraphQLError('Out of city scope', { extensions: { code: 'FORBIDDEN' } });
+const outOfZone = () => new GraphQLError('Out of zone scope', { extensions: { code: 'FORBIDDEN' } });
+
+/**
+ * The place a CITY_ADMIN or ZONAL_ADMIN is held to — their assigned_city, or
+ * their assigned_zones. SUPER_ADMIN, and every role that is not held to a
+ * place, gets null: everywhere. An admin with no city (or no zones) assigned
+ * operates nowhere — refused, never shown every city — as the finance scope
+ * does (finance/financeScope.ts).
+ *
+ * Lists use it to narrow what they show; `assertScope` uses it to check one
+ * record. One rule, so a read can never see a place a write would refuse.
+ */
+export function readScope(ctx: GraphQLContext): ReadScope {
+  const user = requireAuth(ctx);
+  if (hasRole(user, ['SUPER_ADMIN'])) return null;
+
+  if (hasRole(user, ['CITY_ADMIN'])) {
+    if (!user.assigned_city) throw outOfCity();
+    return { city: user.assigned_city };
+  }
+
+  if (hasRole(user, ['ZONAL_ADMIN'])) {
+    const zones = user.assigned_zones ?? [];
+    if (zones.length === 0) throw outOfZone();
+    return { zones };
+  }
+  return null;
+}
+
+/** A read scope as a Mongo filter on a member's own city / zone — the fields assertScope checks. */
+export function userScopeFilter(scope: ReadScope): Record<string, unknown> {
+  if (!scope) return {};
+  if ('city' in scope) return { 'profile.city': scope.city };
+  return { 'profile.zone': { $in: scope.zones } };
+}
+
 /**
  * Scope check: a CITY_ADMIN may only operate inside their assigned_city,
  * and a ZONAL_ADMIN only inside their assigned_zones. SUPER_ADMIN bypasses.
+ * An admin with no city (or no zones) assigned operates nowhere — the check
+ * fails closed (see {@link readScope}).
  */
 export function assertScope(
   ctx: GraphQLContext,
   target: { city?: string | null; zone?: string | null }
 ): void {
-  const user = requireAuth(ctx);
-  if (hasRole(user, ['SUPER_ADMIN'])) return;
-
-  if (hasRole(user, ['CITY_ADMIN'])) {
-    if (target.city && user.assigned_city && target.city !== user.assigned_city) {
-      throw new GraphQLError('Out of city scope', { extensions: { code: 'FORBIDDEN' } });
-    }
+  const scope = readScope(ctx);
+  if (!scope) return;
+  if ('city' in scope) {
+    if (target.city && target.city !== scope.city) throw outOfCity();
     return;
   }
-
-  if (hasRole(user, ['ZONAL_ADMIN'])) {
-    if (
-      target.zone &&
-      user.assigned_zones &&
-      !user.assigned_zones.includes(target.zone)
-    ) {
-      throw new GraphQLError('Out of zone scope', { extensions: { code: 'FORBIDDEN' } });
-    }
-  }
+  if (target.zone && !scope.zones.includes(target.zone)) throw outOfZone();
 }

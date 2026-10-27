@@ -368,8 +368,9 @@ function that names the row (`(row) => t('…', { vars: { name: row.name } })`) 
 identical "Delete" buttons become ten distinguishable ones.
 
 End-to-end suites select by test id only, so the table names its own parts: the search box is
-`table-toolbar-search`, a column's filter button is `table-filter-<field>`, Clear all is
-`table-toolbar-clear-filters`, and every row is `<tableId>-row-<rowId>` — the id `getRowId` returned,
+`table-toolbar-search`, a column's filter button is `table-filter-<field>`, a sortable header's label is
+`table-sort-<field>`, the pager is `table-pagination` with `table-page-next` / `table-page-previous`, Clear all is
+`table-toolbar-clear-filters`, a failed fetch's alert is `duncit-table-error`, and every row is `<tableId>-row-<rowId>` — the id `getRowId` returned,
 set when AG Grid creates the row. A spec that filed a ticket finds it as
 `support-tickets-row-<ticketId>` without reading AG Grid's attributes.
 

@@ -21,14 +21,15 @@ export default function VenueSwitcher({ venues, venueId, onChange }: Readonly<Ve
   const { t } = useTranslation();
   const untitled = t('mweb.venueManagePage.untitledVenue');
 
-  if (venues.length === 0) return null;
+  const current = pickVenue(venues, venueId);
+  if (!current) return null;
   if (!canSwitchVenues(venues)) {
     return (
       <TextField
         fullWidth
         size="small"
         label={t('mweb.studioOptions.selectedVenue')}
-        value={venueLabel(venues[0], untitled)}
+        value={venueLabel(current, untitled)}
         data-testid="venue-switcher-single"
         slotProps={{ input: { readOnly: true } }}
         sx={{ '& .MuiOutlinedInput-root': { borderRadius: '16px', fontWeight: 600 } }}
@@ -42,7 +43,7 @@ export default function VenueSwitcher({ venues, venueId, onChange }: Readonly<Ve
       fullWidth
       size="small"
       label={t('mweb.venueManagePage.switchYourVenue')}
-      value={pickVenue(venues, venueId)?.id ?? ''}
+      value={current.id}
       onChange={(event) => onChange(event.target.value)}
       data-testid="venue-switcher"
       slotProps={{

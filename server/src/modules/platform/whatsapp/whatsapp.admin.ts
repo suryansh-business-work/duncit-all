@@ -534,7 +534,7 @@ export const whatsappAdminService = {
       template_category: doc.template_category ?? '',
       msg_rate: doc.msg_rate ?? 0,
       duration_ms: doc.duration_ms ?? 0,
-      created_at: doc.created_at?.toISOString() ?? null,
+      created_at: doc.created_at.toISOString(),
     };
   },
 };

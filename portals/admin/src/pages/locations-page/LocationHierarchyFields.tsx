@@ -65,7 +65,7 @@ export default function LocationHierarchyFields({ form, setForm }: Readonly<Prop
               location_name: '',
             }))
           }
-          renderInput={(params) => <TextField {...params} label={t('admin.locations.country')} required />}
+          renderInput={(params) => <TextField {...params} label={t('admin.locations.country')} required data-testid="location-form-country" />}
           fullWidth
         />
       </Stack>
@@ -75,19 +75,22 @@ export default function LocationHierarchyFields({ form, setForm }: Readonly<Prop
           options={states}
           value={state}
           getOptionLabel={label}
-          onChange={(_, value) =>
+          onChange={(_, value) => {
+            // Typed text is stored by onInputChange as it is typed, so only a picked
+            // option or a clear reaches here.
+            const name = value ? label(value) : '';
             setForm((prev) => ({
               ...prev,
-              state: typeof value === 'string' ? value : value?.name ?? '',
-              state_code: typeof value === 'string' ? '' : value?.isoCode ?? '',
+              state: name,
+              state_code: states.find((option) => option.name === name)?.isoCode ?? '',
               city: '',
               location_name: '',
-            }))
-          }
+            }));
+          }}
           onInputChange={(_, value, reason) => {
             if (reason !== 'reset') setForm((prev) => ({ ...prev, state: value, state_code: '', city: '' }));
           }}
-          renderInput={(params) => <TextField {...params} label={t('admin.locations.state')} required />}
+          renderInput={(params) => <TextField {...params} label={t('admin.locations.state')} required data-testid="location-form-state" />}
           fullWidth
         />
         <Autocomplete<GeoCity | string, false, false, true>
@@ -96,13 +99,13 @@ export default function LocationHierarchyFields({ form, setForm }: Readonly<Prop
           value={form.city}
           getOptionLabel={label}
           onChange={(_, value) => {
-            const nextCity = typeof value === 'string' ? value : value?.name ?? '';
+            const nextCity = value ? label(value) : '';
             setForm((prev) => ({ ...prev, city: nextCity, location_name: nextCity }));
           }}
           onInputChange={(_, value, reason) => {
             if (reason !== 'reset') setForm((prev) => ({ ...prev, city: value, location_name: value }));
           }}
-          renderInput={(params) => <TextField {...params} label={t('admin.locations.city')} required />}
+          renderInput={(params) => <TextField {...params} label={t('admin.locations.city')} required data-testid="location-form-city" />}
           fullWidth
         />
       </Stack>

@@ -1,4 +1,5 @@
 import { Types } from 'mongoose';
+import type { ReadScope } from '@middleware/rbac';
 import { UserModel } from '@modules/access/user/user.model';
 import { PodMemberModel } from '@modules/pods/podMember/podMember.model';
 import { cumulative, inRange, seriesFromDays, type AnalyticsWindow } from './window';
@@ -11,6 +12,9 @@ import {
   distinctPerBucket,
   signupDays,
   signupIds,
+  userPlace,
+  usersIn,
+  type UserPlace,
 } from './users.data';
 import { userBreakdowns } from './users.breakdowns';
 import { dataHealth, lastSeenBreakdown, mostActiveMembers } from './users.health';
@@ -35,13 +39,13 @@ async function activatedCount(signups: readonly string[], from: Date, to: Date):
   return ids.length;
 }
 
-async function periodFigures(from: Date, to: Date, days: number) {
+async function periodFigures(from: Date, to: Date, days: number, place: UserPlace | null) {
   const [active, devices, averageDaily, bookers, signups] = await Promise.all([
-    activeUserDays(from, to),
-    activeDevices(from, to),
-    averageDailyUsers(from, to, days),
-    bookerIds(from, to),
-    signupIds(from, to),
+    activeUserDays(from, to, place),
+    activeDevices(from, to, place),
+    averageDailyUsers(from, to, days, place),
+    bookerIds(from, to, place),
+    signupIds(from, to, place),
   ]);
   const activated = await activatedCount(signups, from, to);
   const activeIds = new Set(active.keys());
@@ -61,17 +65,24 @@ async function periodFigures(from: Date, to: Date, days: number) {
 /** Of the members seen in one period, the share seen again in the next. */
 const retention = (earlier: ReadonlySet<string>, later: ReadonlySet<string>) => pct(overlap(earlier, later), earlier.size);
 
-async function liveFigures() {
+async function liveFigures(place: UserPlace | null) {
+  const live = { ...LIVE_USERS, ...usersIn(place) };
   const [total, phoneVerified, inactive] = await Promise.all([
-    UserModel.countDocuments(LIVE_USERS),
-    UserModel.countDocuments({ ...LIVE_USERS, 'auth.phone.is_verified': true }),
-    UserModel.countDocuments({ ...LIVE_USERS, 'metadata.status': { $in: ['INACTIVE', 'SUSPENDED'] } }),
+    UserModel.countDocuments(live),
+    UserModel.countDocuments({ ...live, 'auth.phone.is_verified': true }),
+    UserModel.countDocuments({ ...live, 'metadata.status': { $in: ['INACTIVE', 'SUSPENDED'] } }),
   ]);
   return { total, phoneVerified: pct(phoneVerified, total), inactive };
 }
 
-export async function userAnalytics(window: AnalyticsWindow): Promise<EntityAnalyticsSections> {
+/**
+ * `scope` (rbac `readScope`) holds a City or Zonal Admin — Admin's Users
+ * Dashboard mounts this page — to their own members: every figure is counted
+ * inside it. null is the whole platform.
+ */
+export async function userAnalytics(window: AnalyticsWindow, scope: ReadScope = null): Promise<EntityAnalyticsSections> {
   const { from, to, prevFrom, prevTo, days, zone, granularity } = window;
+  const place = await userPlace(scope);
   // Retention always reads "of the people active in the period just before,
   // how many came back" — even when the tiles compare with last year, so the
   // period right before each side is loaded on its own.
@@ -79,20 +90,20 @@ export async function userAnalytics(window: AnalyticsWindow): Promise<EntityAnal
   const beforeFrom = new Date(prevFrom.getTime() - (prevTo.getTime() - prevFrom.getTime()));
   const comparedWithLastPeriod = prevTo.getTime() === from.getTime();
   const [now, before, earliest, precedingNow, live, signupsPerDay, users, devices, createdBefore, health] = await Promise.all([
-    periodFigures(from, to, days),
-    periodFigures(prevFrom, prevTo, days),
-    activeUserDays(beforeFrom, prevFrom),
-    comparedWithLastPeriod ? null : activeUserDays(new Date(from.getTime() - span), from),
-    liveFigures(),
-    signupDays(from, to, zone),
-    distinctPerBucket(from, to, granularity, 'user_id'),
-    distinctPerBucket(from, to, granularity, 'device_id'),
-    UserModel.countDocuments({ 'metadata.created_at': { $lt: from } }),
-    dataHealth(),
+    periodFigures(from, to, days, place),
+    periodFigures(prevFrom, prevTo, days, place),
+    activeUserDays(beforeFrom, prevFrom, place),
+    comparedWithLastPeriod ? null : activeUserDays(new Date(from.getTime() - span), from, place),
+    liveFigures(place),
+    signupDays(from, to, zone, place),
+    distinctPerBucket(from, to, granularity, 'user_id', place),
+    distinctPerBucket(from, to, granularity, 'device_id', place),
+    UserModel.countDocuments({ 'metadata.created_at': { $lt: from }, ...usersIn(place) }),
+    dataHealth(place),
   ]);
   const [breakdowns, lastSeen, leaderboard] = await Promise.all([
-    userBreakdowns(window, now.active),
-    lastSeenBreakdown(live.total),
+    userBreakdowns(window, now.active, place),
+    lastSeenBreakdown(live.total, place),
     mostActiveMembers(now.active),
   ]);
   const signups = seriesFromDays(signupsPerDay, window);

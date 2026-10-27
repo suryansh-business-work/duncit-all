@@ -67,7 +67,9 @@ export default function BecomeHostPage() {
       if (step === 1) await m2({ variables: { input: s2 } });
       if (step === 2) await m3({ variables: { input: s3 } });
       if (step === 3) { await mFinal(); await refetch(); return; }
-      setStep((current) => Math.min(current + 1, 3));
+      // Absolute, not `current + 1`: the save's answer reaches the cache first and the effect above
+      // has already moved a resumed draft to the server's step, so adding one more would skip a step.
+      setStep(Math.min(step + 1, 3));
       await refetch();
     } catch (error: any) {
       setErr(error.message);
@@ -139,8 +141,9 @@ export default function BecomeHostPage() {
       {isHost && (
         <Alert
           severity="success"
+          data-testid="become-host-approved"
           action={
-            <DuncitButton component={RouterLink} to="/host/pods" size="small">
+            <DuncitButton component={RouterLink} to="/host/pods" size="small" data-testid="become-host-your-pods">
               Your Pods
             </DuncitButton>
           }

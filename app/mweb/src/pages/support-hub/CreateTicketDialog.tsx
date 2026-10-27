@@ -38,7 +38,6 @@ export default function CreateTicketDialog({ open, onClose, onCreated }: Readonl
   };
 
   const submit = async () => {
-    if (!subject.trim() || !message.trim()) return;
     const res = await createTicket({
       variables: {
         input: { subject: subject.trim(), category, body_text: message.trim(), attachments },

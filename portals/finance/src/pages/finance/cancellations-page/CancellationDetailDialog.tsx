@@ -28,10 +28,10 @@ interface Props {
 export default function CancellationDetailDialog({ row, onClose }: Readonly<Props>) {
   const { t } = useTranslation();
   return (
-    <Dialog open={!!row} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog open={!!row} onClose={onClose} maxWidth="sm" fullWidth data-testid="cancellation-detail-dialog">
       {row && (
         <>
-          <DialogTitle sx={{ fontWeight: 800 }}>
+          <DialogTitle sx={{ fontWeight: 800 }} data-testid="cancellation-detail-title">
             {row.pod_title}
             <StatusChip
               status={row.kind}

@@ -70,7 +70,7 @@ export function useCheckoutBillingForm(me: CheckoutBuyer | null | undefined, req
       ...prev,
       full_name: prev.full_name || fullName,
       email: prev.email || me.email || '',
-      phone_extension: prev.phone_extension || me.phone_extension || '+91',
+      phone_extension: me.phone_extension || prev.phone_extension || '+91',
       phone_number: prev.phone_number || me.phone_number || '',
       same_as_main: savedMainAddress,
       line1: prev.line1 || addr.line1 || '',

@@ -53,7 +53,7 @@ export default function AssignDrawer({ request, onClose, onOffered }: Readonly<P
 
   const rows: PodChangeCandidateRow[] = candidates.data?.podChangeCandidates ?? [];
 
-  const send = (input: { user_id: string; venue_id?: string }) => {
+  const send = (input: { user_id: string; venue_id?: string | null }) => {
     setErrorText(null);
     offer({ variables: { input: { request_id: request.id, ...input } } })
       .then(() => {
@@ -66,7 +66,7 @@ export default function AssignDrawer({ request, onClose, onOffered }: Readonly<P
 
   // A venue is offered by its venue; it brings its own time and price when it approves.
   const pickCandidate = (row: PodChangeCandidateRow) =>
-    send(request.role === 'VENUE' ? { user_id: row.user_id, venue_id: row.venue_id ?? undefined } : { user_id: row.user_id });
+    send(request.role === 'VENUE' ? { user_id: row.user_id, venue_id: row.venue_id } : { user_id: row.user_id });
 
   return (
     <Drawer

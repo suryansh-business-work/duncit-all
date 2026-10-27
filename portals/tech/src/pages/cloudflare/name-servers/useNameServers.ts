@@ -33,16 +33,17 @@ export function useNameServers(domain: string) {
       });
       if (!ok) return false;
       setBusy(true);
+      let applied = false;
       try {
         await setMutation({ variables: { target, name_servers: target === 'CUSTOM' ? [...servers] : null } });
         notifySuccess(t('tech.cloudflare.switchDone', { vars: { domain } }));
-        return true;
+        applied = true;
       } catch (e) {
         notifyError(messageOf(e, t('tech.cloudflare.switchFailed')));
-        return false;
       } finally {
         setBusy(false);
       }
+      return applied;
     },
     [confirm, domain, setMutation, t],
   );

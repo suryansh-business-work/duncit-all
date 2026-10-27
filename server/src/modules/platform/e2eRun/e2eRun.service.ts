@@ -47,6 +47,9 @@ const WORKFLOW_FILE = 'e2e.yml';
 
 const badInput = (msg: string) => new GraphQLError(msg, { extensions: { code: 'BAD_USER_INPUT' } });
 
+/** What went wrong, as a sentence — an Error's message, or whatever else was thrown. */
+const errText = (err: unknown): string => (err instanceof Error ? err.message : String(err));
+
 const str = (v: string | null | undefined): string => String(v ?? '').trim();
 /** A finite number, else null. Null/undefined/blank are "not given" — `Number(null)`
  * is 0, which saved a cleared weekday as Sunday instead of falling to its default. */
@@ -101,24 +104,24 @@ const pubSuite = (r: IE2eSuiteResult) => ({
   failed: r.failed,
   skipped: r.skipped,
   duration_seconds: r.duration_seconds,
-  error: r.error ?? '',
-  job_url: r.job_url ?? '',
-  video_file_id: r.video_file_id ?? '',
-  video_permalink: r.video_permalink ?? '',
-  video_seconds: r.video_seconds ?? null,
-  video_bytes: r.video_bytes ?? null,
-  reported_at: r.reported_at?.toISOString() ?? null,
+  error: r.error,
+  job_url: r.job_url,
+  video_file_id: r.video_file_id,
+  video_permalink: r.video_permalink,
+  video_seconds: r.video_seconds,
+  video_bytes: r.video_bytes,
+  reported_at: r.reported_at.toISOString(),
 });
 
 const pubScenario = (v: IE2eScenarioVideo) => ({
   suite: v.suite,
-  spec: v.spec ?? '',
+  spec: v.spec,
   title: v.title,
-  state: v.state ?? '',
+  state: v.state,
   file_id: v.file_id,
-  permalink: v.permalink ?? '',
-  seconds: v.seconds ?? null,
-  bytes: v.bytes ?? null,
+  permalink: v.permalink,
+  seconds: v.seconds,
+  bytes: v.bytes,
 });
 
 const pub = (doc: IE2eRun) => ({
@@ -126,41 +129,39 @@ const pub = (doc: IE2eRun) => ({
   run_no: doc.run_no,
   status: doc.status,
   trigger_source: doc.trigger_source,
-  triggered_by: doc.triggered_by ?? '',
-  ref: doc.ref ?? '',
-  commit_sha: doc.commit_sha ?? '',
-  requested_suites: doc.requested_suites ?? [],
-  results: (doc.results ?? []).map(pubSuite),
-  scenario_videos: (doc.scenario_videos ?? []).map(pubScenario),
-  // A row written before totals existed, or one whose legs have not reported
-  // yet, still has to answer with the whole shape — every field is non-null.
+  triggered_by: doc.triggered_by,
+  ref: doc.ref,
+  commit_sha: doc.commit_sha,
+  requested_suites: doc.requested_suites,
+  results: doc.results.map(pubSuite),
+  scenario_videos: doc.scenario_videos.map(pubScenario),
   totals: {
-    suites: doc.totals?.suites ?? 0,
-    suites_passed: doc.totals?.suites_passed ?? 0,
-    suites_failed: doc.totals?.suites_failed ?? 0,
-    suites_skipped: doc.totals?.suites_skipped ?? 0,
-    tests: doc.totals?.tests ?? 0,
-    passed: doc.totals?.passed ?? 0,
-    failed: doc.totals?.failed ?? 0,
-    skipped: doc.totals?.skipped ?? 0,
+    suites: doc.totals.suites,
+    suites_passed: doc.totals.suites_passed,
+    suites_failed: doc.totals.suites_failed,
+    suites_skipped: doc.totals.suites_skipped,
+    tests: doc.totals.tests,
+    passed: doc.totals.passed,
+    failed: doc.totals.failed,
+    skipped: doc.totals.skipped,
   },
-  workflow_run_id: doc.workflow_run_id ?? '',
-  workflow_run_url: doc.workflow_run_url ?? '',
-  dispatch_id: doc.dispatch_id ?? '',
+  workflow_run_id: doc.workflow_run_id,
+  workflow_run_url: doc.workflow_run_url,
+  dispatch_id: doc.dispatch_id,
   duration_seconds: doc.duration_seconds,
-  stage: doc.stage ?? '',
-  stages: (doc.stages ?? []).map((s) => ({ name: s.name, at: s.at.toISOString() })),
-  error_message: doc.error_message ?? '',
-  reported_by: doc.reported_by ?? '',
-  identity_stamp: doc.identity_stamp ?? '',
-  login_email: doc.login_email ?? '',
-  signup_email: doc.signup_email ?? '',
-  identity_phone: doc.identity_phone ?? '',
-  slack_channel: doc.slack_channel ?? null,
-  slack_ts: doc.slack_ts ?? null,
-  slack_error: doc.slack_error ?? null,
-  video_error: doc.video_error ?? null,
-  created_at: doc.created_at?.toISOString() ?? null,
+  stage: doc.stage,
+  stages: doc.stages.map((s) => ({ name: s.name, at: s.at.toISOString() })),
+  error_message: doc.error_message,
+  reported_by: doc.reported_by,
+  identity_stamp: doc.identity_stamp,
+  login_email: doc.login_email,
+  signup_email: doc.signup_email,
+  identity_phone: doc.identity_phone,
+  slack_channel: doc.slack_channel,
+  slack_ts: doc.slack_ts,
+  slack_error: doc.slack_error,
+  video_error: doc.video_error,
+  created_at: doc.created_at.toISOString(),
 });
 
 /** The settings singleton, created with defaults on first read. */
@@ -332,7 +333,7 @@ function factLines(run: IE2eRun): string[] {
  * suite went red without anybody opening GitHub.
  */
 function failuresBlock(run: IE2eRun): unknown {
-  const failed = (run.results ?? []).filter((r) => r.status === 'FAILED');
+  const failed = run.results.filter((r) => r.status === 'FAILED');
   if (failed.length === 0) return null;
   // Clipped per line so eight of them can never breach Slack's 3000-character
   // section limit, which fails the whole post as invalid_blocks.
@@ -354,13 +355,12 @@ function actionButtons(run: IE2eRun, techUrl: string): unknown[] {
       url: run.workflow_run_url,
     });
   }
-  if (techUrl) {
-    buttons.push({
-      type: 'button',
-      text: { type: 'plain_text', text: 'Open in Duncit' },
-      url: `${techUrl.replace(/\/$/, '')}/e2e/runs`,
-    });
-  }
+  // Always offered: the portal URL has a default, so it is never empty.
+  buttons.push({
+    type: 'button',
+    text: { type: 'plain_text', text: 'Open in Duncit' },
+    url: `${techUrl.replace(/\/$/, '')}/e2e/runs`,
+  });
   return buttons;
 }
 
@@ -374,8 +374,7 @@ function runBlocks(run: IE2eRun, techUrl: string): unknown[] {
   if (run.status === 'FAILED' && run.error_message) {
     blocks.push(contextBlock(`:rotating_light: ${escapeMrkdwn(clip(run.error_message, 500))}`));
   }
-  const buttons = actionButtons(run, techUrl);
-  if (buttons.length > 0) blocks.push({ type: 'actions', elements: buttons });
+  blocks.push({ type: 'actions', elements: actionButtons(run, techUrl) });
   return blocks;
 }
 
@@ -440,7 +439,7 @@ async function announceOutcome(run: IE2eRun): Promise<void> {
     run.slack_ts = outcome.ts ?? null;
     run.slack_error = outcome.skipped ?? null;
   } catch (err) {
-    run.slack_error = err instanceof Error ? err.message : String(err);
+    run.slack_error = errText(err);
     logs.server.error('e2eRun', 'announce', { error: err, run_no: run.run_no });
   }
   try {
@@ -492,7 +491,7 @@ function chunk<T>(items: T[], size: number): T[][] {
  * itself would drown the announcement they belong to.
  */
 async function shareVideos(run: IE2eRun): Promise<string | null> {
-  const pending = (run.results ?? []).filter((r) => str(r.video_file_id));
+  const pending = run.results.filter((r) => str(r.video_file_id));
   if (pending.length === 0) return null;
   if (!run.slack_channel || !run.slack_ts) {
     return 'The run was not announced, so there is no message to hang the recordings under.';
@@ -536,7 +535,7 @@ async function shareVideos(run: IE2eRun): Promise<string | null> {
  * is shared. The order is the order the scenarios ran.
  */
 async function shareScenarioClips(run: IE2eRun): Promise<void> {
-  const clips = (run.scenario_videos ?? []).filter((v) => str(v.file_id));
+  const clips = run.scenario_videos.filter((v) => str(v.file_id));
   if (clips.length === 0 || !run.slack_channel || !run.slack_ts) return;
   const shared: Array<{ id: string; permalink: string }> = [];
   const batches = chunk(clips, SLACK_FILES_PER_MESSAGE);
@@ -720,12 +719,12 @@ export const e2eRunService = {
       time_of_day: doc.time_of_day,
       weekday: doc.weekday,
       ref: doc.ref,
-      suites: doc.suites ?? [],
+      suites: doc.suites,
       keep_last: doc.keep_last,
-      email_prefix: doc.email_prefix ?? '',
-      email_domain: doc.email_domain ?? '',
+      email_prefix: doc.email_prefix,
+      email_domain: doc.email_domain,
       password_set: Boolean(str(doc.password)),
-      identity_phone: doc.identity_phone ?? '',
+      identity_phone: doc.identity_phone,
       mute_communications: Boolean(doc.mute_communications),
       otp_bypass: Boolean(doc.otp_bypass),
       record_videos: Boolean(doc.record_videos),
@@ -864,11 +863,11 @@ export const e2eRunService = {
           stamp: run.identity_stamp,
           login_email: run.login_email,
           signup_email: run.signup_email,
-          password: settings.password ?? '',
+          password: settings.password,
           phone: run.identity_phone,
         }
       : null;
-    return { run: pub(run), credentials, suites: run.requested_suites ?? [] };
+    return { run: pub(run), credentials, suites: run.requested_suites };
   },
 
   /**
@@ -892,7 +891,7 @@ export const e2eRunService = {
     const run = (await E2eRunModel.findById(found._id)) ?? found;
     const stage = str(input.stage);
     const status: E2eRunStatus | null = input.status ?? null;
-    run.totals = totalsOf(run.results ?? []);
+    run.totals = totalsOf(run.results);
 
     const stages = nextStages(run, stage);
     if (stages.stages) run.stages = stages.stages;
@@ -942,7 +941,7 @@ export const e2eRunService = {
       const slot = await getFileUploadUrl(str(input.file_name) || `${str(input.suite)}.mp4`, length);
       return { ok: true, upload_url: slot.upload_url, file_id: slot.file_id, reason: '' };
     } catch (err) {
-      const reason = err instanceof Error ? err.message : String(err);
+      const reason = errText(err);
       logs.server.warn('e2eRun', 'videoUploadAuth', { error: err, suite: str(input.suite) });
       return refused(reason);
     }
@@ -1000,7 +999,7 @@ export const e2eRunService = {
     try {
       fresh.video_error = await shareVideos(fresh);
     } catch (err) {
-      fresh.video_error = err instanceof Error ? err.message : String(err);
+      fresh.video_error = errText(err);
       logs.server.error('e2eRun', 'shareVideos', { error: err, run_no: fresh.run_no });
     }
     await fresh.save();
@@ -1031,7 +1030,7 @@ export const e2eRunService = {
       { $set: { last_run_at: now } }
     ).exec();
     const run = await dispatchRun({
-      suites: currentSuites(doc.suites ?? []),
+      suites: currentSuites(doc.suites),
       ref: doc.ref,
       trigger_source: 'SCHEDULE',
       triggered_by: 'schedule',
@@ -1047,6 +1046,6 @@ function normaliseSuitesOrThrow(asked: unknown): string[] {
   try {
     return normaliseSuites(asked);
   } catch (err) {
-    throw badInput(err instanceof Error ? err.message : String(err));
+    throw badInput(errText(err));
   }
 }

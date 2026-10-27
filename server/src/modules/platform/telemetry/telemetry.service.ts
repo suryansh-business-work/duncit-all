@@ -441,7 +441,7 @@ async function runTelemetryDelete(
     scope: narrowed ? 'filtered' : 'everything',
   });
   const res = await DELETE_MODEL[target].deleteMany(filter);
-  return res.deletedCount ?? 0;
+  return Number(res.deletedCount);
 }
 
 /* --------------------------- bug aggregation --------------------------- */
@@ -456,7 +456,7 @@ async function runTelemetryDelete(
  * "0 users affected" is how it gets ignored.
  */
 async function recordBugUser(fingerprint: string, user?: ITelemetryUser): Promise<void> {
-  if (!user?.id) {
+  if (!user) {
     await BugModel.updateOne({ fingerprint }, { $inc: { anonymous_count: 1 } });
     return;
   }
@@ -505,7 +505,7 @@ async function upsertBug(
         last_client: record.client,
         // Only when there IS one: an anonymous occurrence must not erase the
         // signed-in person the bug was last traced to.
-        ...(user?.id ? { last_user: user } : {}),
+        ...(user ? { last_user: user } : {}),
       },
       $setOnInsert: { page: record.page, first_seen_at: now, status: 'OPEN' },
     },
@@ -675,7 +675,8 @@ const trimmed = (value: unknown): string | undefined =>
 function logImportDoc(entry: TelemetryLogImportEntry): Record<string, unknown> {
   const level = VALID_LEVELS.has(entry.level as TelemetryLevel) ? entry.level : 'info';
   const app = trimmed(entry.app) ?? 'unknown';
-  const userId = trimmed(entry.user?.id);
+  const claimed = entry.user;
+  const userId = trimmed(claimed?.id);
   return {
     // A file from another database keeps its ids, so a re-import is a no-op.
     _id: isValidObjectId(entry.id) ? new Types.ObjectId(String(entry.id)) : new Types.ObjectId(),
@@ -699,12 +700,13 @@ function logImportDoc(entry: TelemetryLogImportEntry): Record<string, unknown> {
       : undefined,
     data: parseDataJson(entry.data_json),
     user_id: userId,
-    user: userId
-      ? {
-          id: userId,
-          roles: entry.user?.roles ?? undefined,
-        }
-      : undefined,
+    user:
+      claimed && userId
+        ? {
+            id: userId,
+            roles: claimed.roles ?? undefined,
+          }
+        : undefined,
     client: entry.client ?? undefined,
     duid: trimmed(entry.duid),
     session_id: trimmed(entry.session_id),
@@ -941,7 +943,7 @@ export const telemetryService = {
       return { updateOne: { filter: { _id }, update: { $setOnInsert: rest }, upsert: true } };
     });
     const res = await TelemetryLogModel.bulkWrite(ops, { ordered: false });
-    const created = res.upsertedCount ?? 0;
+    const created = res.upsertedCount;
     // An imported row keeps the timestamp it was written with, so anything
     // older than the retention window is deleted again by the next daily
     // cleanup — and the hard 90-day TTL index takes the rest within the

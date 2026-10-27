@@ -30,7 +30,7 @@ export default function PodCancellationRiskSection({ podId, cancelled }: Readonl
   );
   const risk = data?.podCancellationRisk;
 
-  if (error) return <Alert severity="warning">{t('admin.podRisk.loadFailed')}</Alert>;
+  if (error) return <Alert severity="warning" data-testid="pod-risk-load-failed">{t('admin.podRisk.loadFailed')}</Alert>;
   if (!risk?.at_risk) return null;
 
   const cancelAt = risk.cancel_at ? formatDateTime(risk.cancel_at) : '—';

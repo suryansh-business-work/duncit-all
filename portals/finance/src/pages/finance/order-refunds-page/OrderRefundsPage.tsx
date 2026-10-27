@@ -72,7 +72,7 @@ export default function OrderRefundsPage({ shop }: Readonly<{ shop: PaymentShop 
       });
       const page = data?.shopOrderRefundsTable;
       if (!page) return { rows: [], total: 0 };
-      setSummary(page.summary ?? EMPTY_ORDER_REFUND_SUMMARY);
+      setSummary(page.summary);
       return { rows: page.rows, total: page.total };
     },
     [client, shop],

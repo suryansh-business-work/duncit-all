@@ -64,7 +64,7 @@ export default function EditDocumentDialog({ doc, onClose, onSaved }: Readonly<P
   };
 
   return (
-    <Dialog open={!!doc} onClose={onClose} fullWidth maxWidth="sm">
+    <Dialog open={!!doc} onClose={onClose} fullWidth maxWidth="sm" data-testid="document-edit-dialog">
       <DialogTitle sx={{ pr: 6 }}>
         Edit Document
         <Typography variant="caption" component="div" sx={{
@@ -84,7 +84,7 @@ export default function EditDocumentDialog({ doc, onClose, onSaved }: Readonly<P
       <DialogContent dividers>
         <Stack spacing={2}>
           {locked && (
-            <Alert severity="info">
+            <Alert severity="info" data-testid="document-edit-locked">
               This document is signed, so its details are locked. The signature is what makes it
               final — edit a clone if the wording has to change.
             </Alert>
@@ -105,6 +105,7 @@ export default function EditDocumentDialog({ doc, onClose, onSaved }: Readonly<P
             disabled={locked}
             error={!!error && !trimmed}
             helperText={trimmed ? ' ' : 'The name this document is listed and searched by.'}
+            slotProps={{ htmlInput: { 'data-testid': 'document-edit-title' } }}
           />
 
           {/* The SAME switch the table renders, writing through its own
@@ -128,7 +129,7 @@ export default function EditDocumentDialog({ doc, onClose, onSaved }: Readonly<P
 
       <DialogActions>
         <DuncitButton onClick={onClose}>{t('shell.common.close')}</DuncitButton>
-        <DuncitButton variant="contained" onClick={apply} disabled={loading || locked || !trimmed}>
+        <DuncitButton variant="contained" onClick={apply} disabled={loading || locked || !trimmed} data-testid="document-edit-apply">
           Apply
         </DuncitButton>
       </DialogActions>

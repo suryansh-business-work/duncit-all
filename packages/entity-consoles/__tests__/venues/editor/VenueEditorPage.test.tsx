@@ -137,7 +137,8 @@ describe('VenueEditorPage', () => {
     expect(state.sections.payout).toEqual({ control: 'ctl' });
     expect(state.sections.leaves).toEqual({ control: 'ctl' });
     expect(state.sections.operations).toEqual({ control: 'ctl' });
-    expect(state.sections.cancellation).toEqual({ control: 'ctl' });
+    // Only a governor may change the auto-cancel window and refund ladder, as with the status.
+    expect(state.sections.cancellation).toEqual({ control: 'ctl', canGovern: true });
     expect(state.sections.status).toEqual({ control: 'ctl', canGovern: true });
   });
 
@@ -166,6 +167,7 @@ describe('VenueEditorPage', () => {
       hasSavedTables: true,
     });
     expect(state.sections.owner).toMatchObject({ isEdit: true });
+    expect(state.sections.cancellation).toMatchObject({ canGovern: false });
     expect(state.sections.status).toMatchObject({ canGovern: false });
   });
 

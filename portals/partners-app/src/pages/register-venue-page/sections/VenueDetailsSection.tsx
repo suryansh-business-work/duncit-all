@@ -66,6 +66,7 @@ export default function VenueDetailsSection({
             label={t('partners.registerVenuePage.venueName')}
             required
             disabled={locked}
+            data-testid="register-venue-name"
             error={Boolean(fieldState.error)}
             helperText={fieldState.error?.message ?? (locked ? 'Locked after approval' : 'Public name shown to hosts and guests')}
           />
@@ -79,6 +80,7 @@ export default function VenueDetailsSection({
             {...field}
             label={t('partners.registerVenuePage.venueDescription')}
             required
+            data-testid="register-venue-description"
             multiline
             minRows={3}
             error={Boolean(fieldState.error)}

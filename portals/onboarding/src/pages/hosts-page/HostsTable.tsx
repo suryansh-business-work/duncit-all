@@ -131,7 +131,7 @@ export default function HostsTable({
     const renderActions = (h: HostRow) => (
       <>
         <Tooltip title={t('onboarding.hosts.hostDetails')}>
-          <DuncitIconButton size="small" component={RouterLink} to={`/hosts/${h.id}`}>
+          <DuncitIconButton size="small" component={RouterLink} to={`/hosts/${h.id}`} data-testid={`host-view-${h.id}`}>
             <VisibilityIcon fontSize="small" />
           </DuncitIconButton>
         </Tooltip>
@@ -141,7 +141,7 @@ export default function HostsTable({
           </DuncitIconButton>
         </Tooltip>
         <Tooltip title={t('onboarding.common.review')}>
-          <DuncitIconButton size="small" onClick={() => onReview(h)}>
+          <DuncitIconButton size="small" onClick={() => onReview(h)} data-testid={`host-review-${h.id}`}>
             <RateReviewIcon fontSize="small" />
           </DuncitIconButton>
         </Tooltip>

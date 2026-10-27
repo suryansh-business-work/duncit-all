@@ -80,4 +80,25 @@ describe('WarehouseSync', () => {
     expect(onSynced).not.toHaveBeenCalled();
     expect(screen.queryByTestId('warehouse-synced-at')).toBeNull();
   });
+
+  it('shows nothing about a sync whose answer carries no result, but still re-reads the list', async () => {
+    const onSynced = vi.fn();
+    renderWithProviders(<WarehouseSync brandId="b1" onSynced={onSynced} />, {
+      mocks: [syncMock('b1', { data: { syncMyBrandPickupLocations: null } })],
+    });
+
+    await waitFor(() => expect(onSynced).toHaveBeenCalledTimes(1));
+    expect(screen.queryByTestId('warehouse-synced-at')).toBeNull();
+    expect(screen.queryByTestId('warehouse-sync-error')).toBeNull();
+  });
+
+  it('does not touch the list when the page is left before the answer arrives', async () => {
+    const onSynced = vi.fn();
+    const view = renderWithProviders(<WarehouseSync brandId="b1" onSynced={onSynced} />, {
+      mocks: [syncMock('b1', synced())],
+    });
+    view.unmount();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(onSynced).not.toHaveBeenCalled();
+  });
 });

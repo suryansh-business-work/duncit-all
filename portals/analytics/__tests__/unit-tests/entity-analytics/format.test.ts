@@ -67,3 +67,33 @@ describe('deltaOf', () => {
     expect(deltaOf(5, 0, 'COUNT', true)).toEqual({ amount: '+5', unit: 'plain', good: true, direction: 'up' });
   });
 });
+
+describe('formatValue - units and grades', () => {
+  it('writes bytes in the largest unit', () => {
+    expect(formatValue(1536, 'BYTES')).toBe('1.5 KB');
+  });
+
+  it('writes a duration in the largest unit that keeps it short', () => {
+    expect(formatValue(850, 'DURATION')).toBe('850 ms');
+    expect(formatValue(12400, 'DURATION')).toMatch(/^12\.4 secs?$/);
+    expect(formatValue(2310000, 'DURATION')).toMatch(/^38\.5 mins?$/);
+  });
+
+  it('writes SonarQube grades as letters, and an ungraded zero as a dash', () => {
+    expect(formatValue(1, 'GRADE')).toBe('A');
+    expect(formatValue(2.2, 'GRADE')).toBe('B');
+    expect(formatValue(5, 'GRADE')).toBe('E');
+    expect(formatValue(0, 'GRADE')).toBe('—');
+  });
+
+  it('writes US dollars to the cent, and to a hundredth of a cent under a dollar', () => {
+    expect(formatValue(12.5, 'USD')).toBe('$12.50');
+    expect(formatValue(0.1234, 'USD')).toBe('$0.1234');
+  });
+});
+
+describe('deltaOf - grades', () => {
+  it('moves a grade in whole steps, not percent of itself', () => {
+    expect(deltaOf(3, 2, 'GRADE', false)).toEqual({ amount: '+1', unit: 'plain', good: false, direction: 'up' });
+  });
+});

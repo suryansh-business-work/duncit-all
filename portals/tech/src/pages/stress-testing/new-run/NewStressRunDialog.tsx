@@ -53,11 +53,10 @@ export default function NewStressRunDialog({ open, onClose, onStarted }: Readonl
   const blocked = config ? blockedMessage(t, config) : null;
   const ready = Boolean(config) && !blocked;
 
-  const submit = async (values: NewStressRunValues) => {
-    if (!config) return;
+  const submit = async (target: StressTriggerConfig, values: NewStressRunValues) => {
     setBusy(true);
     try {
-      const input = toTriggerInput(values, { required: config.requires_confirmation, text: config.confirm_text });
+      const input = toTriggerInput(values, { required: target.requires_confirmation, text: target.confirm_text });
       const res = await trigger({ variables: { input } });
       const run = res.data?.triggerStressRun;
       notifySuccess(t('tech.stress.started', { vars: { run: run?.run_no ?? '' } }));
@@ -87,7 +86,7 @@ export default function NewStressRunDialog({ open, onClose, onStarted }: Readonl
         {blocked && <Alert severity="warning">{blocked}</Alert>}
         {ready && config && (
           <Stack spacing={2}>
-            <NewStressRunForm config={config} onSubmit={submit} />
+            <NewStressRunForm config={config} onSubmit={(values) => submit(config, values)} />
             <Typography variant="caption" sx={{ color: 'text.secondary' }}>
               {t('tech.stress.targets', {
                 vars: { mweb: config.target_mweb_url, api: config.target_graphql_url, repository: config.repository, ref: config.ref },

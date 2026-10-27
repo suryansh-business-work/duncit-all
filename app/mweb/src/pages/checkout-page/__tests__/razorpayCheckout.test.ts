@@ -175,3 +175,20 @@ describe('openRazorpayCheckout', () => {
     expect(onFailure).toHaveBeenCalledWith(null);
   });
 });
+
+describe('openRazorpayCheckout payment.failed without detail', () => {
+  it('reports null when the gateway sends a failure with no error object', async () => {
+    const on = vi.fn();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (globalThis as any).Razorpay = vi.fn().mockImplementation(() => ({ open: vi.fn(), on }));
+
+    const onFailure = vi.fn();
+    await openRazorpayCheckout(order, { onSuccess: vi.fn(), onFailure });
+    const [, failedCb] = on.mock.calls.find(([evt]) => evt === 'payment.failed') as [string, (r?: { error?: unknown }) => void];
+    failedCb({});
+    failedCb(undefined);
+
+    expect(onFailure).toHaveBeenCalledTimes(1);
+    expect(onFailure).toHaveBeenCalledWith(null);
+  });
+});

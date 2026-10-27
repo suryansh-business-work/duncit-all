@@ -1,5 +1,10 @@
 import { Controller, useController, type Control } from 'react-hook-form';
-import { GIG_EVENT_TYPES, gigEventTypeKey, type GigJobFormValues } from '@duncit/utils';
+import {
+  GIG_EVENT_TYPES,
+  gigEventTypeKey,
+  type GigEventType,
+  type GigJobFormValues,
+} from '@duncit/utils';
 
 import { ChipSelectField } from '@/components/create-pod/ChipSelectField';
 import { GigDateField } from './GigDateField';
@@ -28,9 +33,8 @@ export function GigWhenWhereFields({ control }: Readonly<{ control: Control<GigJ
               label: t(gigEventTypeKey(type)),
             }))}
             value={field.value}
-            onChange={(next) =>
-              field.onChange(GIG_EVENT_TYPES.find((type) => type === next) ?? 'EVENT')
-            }
+            // Only the option values below can arrive here.
+            onChange={(next) => field.onChange(next as GigEventType)}
           />
         )}
       />

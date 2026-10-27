@@ -68,9 +68,10 @@ export function mechanicalChangelog(commits: ReleaseCommit[], meta: ChangelogMet
     buckets.set(title, list);
   }
   const order = [...TYPE_SECTIONS.map((s) => s.title), OTHER_TITLE];
-  const sections = order
-    .filter((title) => buckets.has(title))
-    .map((title) => ({ title, items: buckets.get(title) ?? [] }));
+  const sections = order.flatMap((title) => {
+    const items = buckets.get(title);
+    return items ? [{ title, items }] : [];
+  });
   const count = commits.filter((c) => !isMergeCommit(c.subject)).length;
   const rangeSuffix = meta.rangeLabel ? ` (${meta.rangeLabel})` : '';
   return {

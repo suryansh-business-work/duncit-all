@@ -6,6 +6,7 @@ import {
   clubAdminTrendSeries,
   type ChartDatum,
   type ClubAdminTrendKey,
+  type ClubAdminTrendPalette,
   type ClubAdminTrendPoint,
 } from '@duncit/utils';
 
@@ -15,6 +16,11 @@ import { ChipSelectField } from '@/components/create-pod';
 import { InsightsLine } from '@/components/host-manage/host-insights/InsightCharts';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useTrendPalette } from '../tone';
+
+/** Each series' line colour name, from the shared list — every key is in it. */
+const PALETTE_OF = Object.fromEntries(
+  clubAdminTrendSeries.map((item) => [item.key, item.palette]),
+) as Record<ClubAdminTrendKey, ClubAdminTrendPalette>;
 
 interface Props {
   trend: readonly ClubAdminTrendPoint[];
@@ -34,8 +40,6 @@ export function TrendCard({ trend }: Readonly<Props>) {
     value: item.key,
     label: labels[item.key],
   }));
-  const paletteName =
-    clubAdminTrendSeries.find((item) => item.key === series)?.palette ?? 'primary';
   const data: ChartDatum[] = trend.map((point) => ({ label: point.label, value: point[series] }));
 
   return (
@@ -54,7 +58,7 @@ export function TrendCard({ trend }: Readonly<Props>) {
             {t('clubAdmin.dashboard.trendEmpty')}
           </Text>
         ) : (
-          <InsightsLine data={data} color={palette[paletteName]} area />
+          <InsightsLine data={data} color={palette[PALETTE_OF[series]]} area />
         )}
       </SurfaceCard>
     </YStack>

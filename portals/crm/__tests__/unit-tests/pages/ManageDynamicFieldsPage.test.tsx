@@ -355,3 +355,39 @@ describe('ManageDynamicFieldsPage mutations', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
   });
 });
+
+describe('ManageDynamicFieldsPage delete pressed twice', () => {
+  it('sends one delete when Delete is pressed again while the dialog is closing', async () => {
+    const sentIds: string[] = [];
+    const deleteOnce: MockedResponse = {
+      request: {
+        query: DELETE_CRM_DYNAMIC_FIELD,
+        variables: (vars: Record<string, string>) => {
+          sentIds.push(vars.id);
+          return true;
+        },
+      },
+      result: { data: { deleteCrmDynamicField: true } },
+    };
+    wrap([
+      {
+        request: { query: CRM_DYNAMIC_FIELDS, variables: { include_inactive: true } },
+        result: { data: { crmDynamicFields: [row] } },
+        maxUsageCount: 10,
+      },
+      deleteOnce,
+    ]);
+    await screen.findByText('Budget Band');
+
+    fireEvent.click(within(screen.getByTestId('dynamic-field-row-budget_band')).getByRole('button', { name: 'Delete' }));
+    const confirm = within(await screen.findByRole('dialog')).getByRole('button', { name: 'Delete' });
+    fireEvent.click(confirm);
+    await waitFor(() => expect(sentIds).toEqual(['f1']));
+    await waitFor(() => expect(confirm).not.toBeDisabled());
+    // The dialog is still fading out; the field it named is already forgotten.
+    fireEvent.click(confirm);
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(sentIds).toEqual(['f1']);
+  });
+});

@@ -108,14 +108,14 @@ export default function PolicyFormDialog({
     : t('legal.policies.editTitle', { vars: { title: editing?.title ?? '' } });
   const activeLabel = form.is_active ? t('legal.policies.active') : t('legal.policies.hidden');
   return (
-    <Dialog open={open} onClose={() => !saving && onClose()} fullWidth maxWidth="md">
-      <DialogTitle>{heading}</DialogTitle>
+    <Dialog open={open} onClose={() => !saving && onClose()} fullWidth maxWidth="md" data-testid="policy-form-dialog">
+      <DialogTitle data-testid="policy-form-title">{heading}</DialogTitle>
       <DialogContent dividers>
         <Stack spacing={2} sx={{ mt: 1 }}>
-          {error && <Alert severity="error">{error}</Alert>}
+          {error && <Alert severity="error" data-testid="policy-form-error">{error}</Alert>}
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
             {/* eslint-disable-next-line jsx-a11y/no-autofocus -- focus moves into the dialog the user just opened (WCAG 2.4.3) */}
-            <TextField label={t('shell.common.title')} value={form.title} onChange={(e) => onTitle(e.target.value)} required fullWidth autoFocus />
+            <TextField label={t('shell.common.title')} value={form.title} onChange={(e) => onTitle(e.target.value)} required fullWidth autoFocus slotProps={{ htmlInput: { 'data-testid': 'policy-form-title-input' } }} />
             <TextField
               label={t('legal.policies.slug')}
               value={form.slug}
@@ -123,6 +123,7 @@ export default function PolicyFormDialog({
               required
               fullWidth
               helperText={t('legal.policies.slugHint')}
+              slotProps={{ htmlInput: { 'data-testid': 'policy-form-slug' } }}
             />
           </Stack>
           <PolicyTypeSelect
@@ -139,10 +140,12 @@ export default function PolicyFormDialog({
               onChange={(e) => onChange({ sort_order: Number(e.target.value) })}
               size="small"
               sx={{ width: 150 }}
+              slotProps={{ htmlInput: { 'data-testid': 'policy-form-sort' } }}
             />
             <FormControlLabel
-              control={<Switch checked={form.is_active} onChange={(e) => onChange({ is_active: e.target.checked })} />}
+              control={<Switch checked={form.is_active} onChange={(e) => onChange({ is_active: e.target.checked })} data-testid="policy-form-active" />}
               label={activeLabel}
+              data-testid="policy-form-active-label"
             />
           </Stack>
           <Box>
@@ -174,7 +177,7 @@ export default function PolicyFormDialog({
       </DialogContent>
       <DialogActions>
         <DuncitButton onClick={onClose} disabled={saving}>{t('shell.common.cancel')}</DuncitButton>
-        <DuncitButton variant="contained" onClick={onSubmit} disabled={saving}>
+        <DuncitButton variant="contained" onClick={onSubmit} disabled={saving} data-testid="policy-form-save">
           {t('shell.common.save')}
         </DuncitButton>
       </DialogActions>

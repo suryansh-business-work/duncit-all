@@ -102,6 +102,17 @@ describe('VenuePodsTable actions column', () => {
     ).toBeTruthy();
   });
 
+  it('shows a free pod with no seat cap and no host without a price, a capacity or a name', async () => {
+    renderTable([
+      makeVenuePodRow({ id: 'p7', pod_title: 'Open Mic', pod_type: 'FREE', no_of_spots: 0, attendee_count: 3, host_names: [] }),
+    ]);
+
+    const row = podRow(await screen.findByText('Open Mic'));
+    expect(within(row).getByText('Free')).toBeTruthy();
+    expect(within(row).getByText('3')).toBeTruthy();
+    expect(within(row).getByText('—')).toBeTruthy();
+  });
+
   it('disables the action on an upcoming pod that is already cancelled', async () => {
     renderTable([
       makeVenuePodRow({

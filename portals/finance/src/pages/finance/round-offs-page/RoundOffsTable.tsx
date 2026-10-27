@@ -49,7 +49,7 @@ export default function RoundOffsTable({ fetchRows, refetchRef, onOpen }: Readon
   const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<RoundOffRow>[]>(() => {
     const labels = sourceLabels(t);
-    const sourceLabel = (r: RoundOffRow) => labels[r.source] ?? labels.OTHER;
+    const sourceLabel = (r: RoundOffRow) => labels[r.source];
     return [
       {
         field: 'created_at',

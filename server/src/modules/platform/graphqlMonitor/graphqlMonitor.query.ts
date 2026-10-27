@@ -92,10 +92,8 @@ export const binOf = (step: number) => ({
   $subtract: [{ $toLong: '$bucket_start' }, { $mod: [{ $toLong: '$bucket_start' }, step] }],
 });
 
-export function statMatch(range: ResolvedRange, opKey?: { $ne: string } | string): Record<string, unknown> {
-  const match: Record<string, unknown> = { granularity: range.granularity, bucket_start: { $gte: range.from } };
-  if (opKey !== undefined) match.op_key = opKey;
-  return match;
+export function statMatch(range: ResolvedRange, opKey: { $ne: string } | string): Record<string, unknown> {
+  return { granularity: range.granularity, bucket_start: { $gte: range.from }, op_key: opKey };
 }
 
 /** Summed counters per group key. */
@@ -150,7 +148,7 @@ export function summarize(counts: Counts, histogram: Histogram, minutes: number)
     errors: counts.errors,
     cached: counts.cached,
     error_rate_pct: pct(counts.errors, counts.requests),
-    rpm: minutes > 0 ? round1(counts.requests / minutes) : 0,
+    rpm: round1(counts.requests / minutes),
     avg_ms: avg(counts.duration_total_ms, counts.requests),
     p50_ms: percentileMs(histogram, 50, max),
     p90_ms: percentileMs(histogram, 90, max),

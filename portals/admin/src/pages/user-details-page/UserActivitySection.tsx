@@ -37,6 +37,9 @@ const levelForCount = (count: number) => {
   return 4;
 };
 
+/** `admin-user-activity-day-<yyyy-MM-dd>` — the calendar block an end-to-end suite clicks. */
+const dayTestId = (date: string) => ({ 'data-testid': `admin-user-activity-day-${date}` });
+
 const activityTheme = {
   light: ['#ecfdf3', '#bbf7d0', '#86efac', '#22c55e', '#15803d'],
 };
@@ -75,8 +78,8 @@ export default function UserActivitySection({ userId }: Readonly<Props>) {
     [year, activity?.days]
   );
 
+  // Only the Delete Day button calls this, and it is disabled until a day is picked.
   const removeDay = async () => {
-    if (!selectedDate) return;
     await deleteDay({ variables: { user_id: userId, date: selectedDate } });
     setSelectedDate('');
     await refetch();
@@ -103,7 +106,7 @@ export default function UserActivitySection({ userId }: Readonly<Props>) {
           }}>
             <Box>
               <Typography variant="subtitle1">{t('admin.activity.appVisit')}</Typography>
-              <Typography variant="body2" sx={{
+              <Typography variant="body2" data-testid="admin-user-activity-visits" sx={{
                 color: "text.secondary"
               }}>
                 {activity?.total_visits ?? 0} visits recorded in {year}.
@@ -135,6 +138,7 @@ export default function UserActivitySection({ userId }: Readonly<Props>) {
                   {cloneElement(block, {
                     role: 'button',
                     tabIndex: 0,
+                    ...dayTestId(activity.date),
                     onClick: () => {
                       setSelectedDate(activity.date);
                       setJourneyDate(activity.date);

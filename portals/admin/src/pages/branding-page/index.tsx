@@ -159,13 +159,13 @@ export default function BrandingPage() {
         </BrandingAccordion>
       </Stack>
 
-      {opError && <Alert severity="error">{opError}</Alert>}
+      {opError && <Alert severity="error" data-testid="branding-error">{opError}</Alert>}
 
       <Divider />
       <Stack direction="row" sx={{
         justifyContent: "flex-end"
       }}>
-        <DuncitButton variant="contained" size="large" onClick={submit} disabled={busy}>
+        <DuncitButton variant="contained" size="large" onClick={submit} disabled={busy} data-testid="branding-save">
           {busy ? 'Saving…' : 'Save Branding'}
         </DuncitButton>
       </Stack>

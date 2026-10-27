@@ -60,13 +60,13 @@ const subscriptionPub = (d: ILocationSubscription, cityById: ReadonlyMap<string,
   location_doc_id: d.location_id.toHexString(),
   city: cityById.get(d.location_id.toHexString()) ?? '',
   user_id: d.user_id.toHexString(),
-  name: d.name ?? '',
-  whatsapp: d.whatsapp ?? '',
-  location_shared: d.location_shared ?? false,
+  name: d.name,
+  whatsapp: d.whatsapp,
+  location_shared: d.location_shared,
   status: d.status,
-  reason: d.reason ?? '',
+  reason: d.reason,
   notified_at: iso(d.notified_at),
-  created_at: iso(d.created_at) ?? '',
+  created_at: d.created_at.toISOString(),
 });
 
 /** The city a mutation names (by slug or id, as the page's link carries it),
@@ -136,7 +136,7 @@ export const locationSubscriptionService = {
    */
   async subscribe(userId: string, locationDocId: string, locationShared: boolean) {
     const { id, location } = await findCity({ location_doc_id: locationDocId });
-    if (location.is_launched ?? true) {
+    if (location.is_launched) {
       throw new GraphQLError(`${cityOf(location)} is already live on Duncit.`, {
         extensions: { code: 'BAD_USER_INPUT' },
       });
@@ -144,8 +144,8 @@ export const locationSubscriptionService = {
     const user = await UserModel.findById(userId)
       .select('profile.first_name profile.last_name communication.whatsapp auth.phone')
       .lean();
-    const whatsapp = destinationFor(user ?? {});
-    if (!whatsapp) {
+    const whatsapp = user ? destinationFor(user) : null;
+    if (!user || !whatsapp) {
       throw new GraphQLError('Add your WhatsApp number to your profile first.', {
         extensions: { code: 'WHATSAPP_REQUIRED' },
       });
@@ -153,7 +153,7 @@ export const locationSubscriptionService = {
     await LocationSubscriptionModel.updateOne(
       { user_id: new Types.ObjectId(userId), location_id: id },
       {
-        $set: { name: userNameFor(user ?? {}), whatsapp, location_shared: locationShared },
+        $set: { name: userNameFor(user), whatsapp, location_shared: locationShared },
         $setOnInsert: { status: 'PENDING', reason: '', notified_at: null },
       },
       { upsert: true }
@@ -172,7 +172,7 @@ export const locationSubscriptionService = {
     const ids = [...new Set(docs.map((doc) => doc.location_id.toHexString()))];
     const cities = await locationService.listByIds(ids);
     const cityById = new Map<string, string>();
-    for (const city of cities) if (city) cityById.set(city.id, cityOf(city));
+    for (const city of cities) cityById.set(city.id, cityOf(city));
     return { rows: docs.map((doc) => subscriptionPub(doc, cityById)), total, page, page_size };
   },
 

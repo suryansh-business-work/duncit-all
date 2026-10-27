@@ -61,16 +61,16 @@ export function maskUri(uri: string): string {
   return `${scheme}${user}:••••@${host}`;
 }
 
-function toPublic(role: DataCloneRole, doc: DataCloneConnectionDoc | null): PublicCloneConnection {
+function toPublic(role: DataCloneRole, doc: DataCloneConnectionDoc): PublicCloneConnection {
   return {
     role,
-    uriMasked: maskUri(doc?.uri ?? ''),
-    hasUri: !!doc?.uri,
-    database: doc?.database ?? '',
-    connected: !!doc?.connected,
-    collectionCount: doc?.collection_count ?? 0,
-    lastTestedAt: doc?.last_tested_at ? new Date(doc.last_tested_at).toISOString() : null,
-    lastTestError: doc?.last_test_error ?? null,
+    uriMasked: maskUri(doc.uri),
+    hasUri: !!doc.uri,
+    database: doc.database,
+    connected: doc.connected,
+    collectionCount: doc.collection_count,
+    lastTestedAt: doc.last_tested_at ? new Date(doc.last_tested_at).toISOString() : null,
+    lastTestError: doc.last_test_error,
   };
 }
 

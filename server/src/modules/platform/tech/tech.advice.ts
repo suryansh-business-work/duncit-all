@@ -127,7 +127,7 @@ async function serverData(sslHost?: string) {
   };
 }
 
-const text = (v: unknown, max = 800) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
+const text = (v: unknown, max: number) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
 const level = (v: unknown): ServerAdviceLevel => (LEVELS.has(v as ServerAdviceLevel) ? (v as ServerAdviceLevel) : 'MEDIUM');
 const list = (v: unknown): Array<Record<string, unknown>> =>
   Array.isArray(v) ? v.slice(0, MAX_ITEMS).map((row) => (row && typeof row === 'object' ? row : {})) : [];

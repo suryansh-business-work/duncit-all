@@ -8,7 +8,7 @@ import { useTranslation } from '@duncit/shell';
 import { VisibilityIconButton } from '../../shared/visibility/VisibilityViews';
 
 interface Props {
-  pod: { is_deleted?: boolean | null; is_hidden?: boolean | null };
+  pod: { id?: string; is_deleted?: boolean | null; is_hidden?: boolean | null };
   onEdit: (pod: any) => void;
   onQuickEdit: (pod: any) => void;
   onDelete: (pod: any) => void;
@@ -35,7 +35,7 @@ export default function PodActionButtons({
     }}>
       {!cancelled && (
         <Tooltip title={t('admin.completePod.title')}>
-          <DuncitIconButton size="small" color="success" onClick={() => onComplete(pod)}>
+          <DuncitIconButton size="small" color="success" onClick={() => onComplete(pod)} data-testid={`pod-complete-${pod.id}`}>
             <TaskAltIcon fontSize="small" />
           </DuncitIconButton>
         </Tooltip>
@@ -44,18 +44,18 @@ export default function PodActionButtons({
         <VisibilityIconButton hidden={!!pod.is_hidden} onClick={onToggleHidden} />
       )}
       <Tooltip title={t('admin.pods.quickEditHint')}>
-        <DuncitIconButton size="small" onClick={() => onQuickEdit(pod)}>
+        <DuncitIconButton size="small" onClick={() => onQuickEdit(pod)} data-testid={`pod-quick-edit-${pod.id}`}>
           <EditNoteIcon fontSize="small" />
         </DuncitIconButton>
       </Tooltip>
       <Tooltip title={t('shell.common.edit')}>
-        <DuncitIconButton size="small" onClick={() => onEdit(pod)}>
+        <DuncitIconButton size="small" onClick={() => onEdit(pod)} data-testid={`pod-edit-${pod.id}`}>
           <EditIcon fontSize="small" />
         </DuncitIconButton>
       </Tooltip>
       {!cancelled && (
         <Tooltip title={t('shell.common.delete')}>
-          <DuncitIconButton size="small" onClick={() => onDelete(pod)}>
+          <DuncitIconButton size="small" onClick={() => onDelete(pod)} data-testid={`pod-delete-${pod.id}`}>
             <DeleteIcon fontSize="small" />
           </DuncitIconButton>
         </Tooltip>

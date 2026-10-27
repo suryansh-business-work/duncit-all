@@ -102,6 +102,27 @@ describe('WalletPage', () => {
     expect(screen.getByRole('button', { name: 'Withdraw' }).hasAttribute('disabled')).toBe(true);
   });
 
+  it('says what balance is needed when the role-wise minimum is not reached, and keeps Withdraw off', async () => {
+    renderWallet([walletMock({ balance: 120, min_withdrawal_amount: 500, can_withdraw: false } as never)]);
+    expect(await screen.findByText('You can withdraw once your balance reaches ₹500.00.')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Withdraw' }).hasAttribute('disabled')).toBe(true);
+  });
+
+  it('says nothing about a minimum when the wallet has none', async () => {
+    renderWallet([walletMock({ balance: 0, min_withdrawal_amount: 0, can_withdraw: false } as never)]);
+    await screen.findByText('₹0.00');
+    expect(screen.queryByText(/You can withdraw once/)).toBeNull();
+  });
+
+  it('opens the statement download and closes it again', async () => {
+    renderWallet([walletMock()]);
+    fireEvent.click(await screen.findByRole('button', { name: 'Download statement' }));
+    const dialog = await screen.findByRole('dialog');
+    expect(dialog).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+  });
+
   it('opens the withdrawal dialog capped at the available balance', async () => {
     renderWallet([walletMock()]);
     fireEvent.click(await screen.findByRole('button', { name: 'Withdraw' }));
@@ -127,6 +148,12 @@ describe('WalletPage', () => {
     expect(await screen.findByText('₹400.00 · UPI')).toBeTruthy();
     expect(screen.getByText('PENDING')).toBeTruthy();
     expect(screen.queryByText('No withdrawals yet.')).toBeNull();
+  });
+
+  it('shows a withdrawal state this console does not know yet in the neutral colour', async () => {
+    renderWallet([walletMock({}, [], [withdrawal({ status: 'ON_HOLD' })])]);
+    const chip = (await screen.findByText('ON_HOLD')).closest('.MuiChip-root') as HTMLElement;
+    expect(chip.className).toContain('MuiChip-colorDefault');
   });
 
   it('appends the rejection reason to a rejected withdrawal', async () => {

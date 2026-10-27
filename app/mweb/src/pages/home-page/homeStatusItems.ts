@@ -95,13 +95,13 @@ function userEntry(user: any, followedPosts: any[]): HomeStatusEntry | null {
   );
   if (posts.length === 0) return null;
   const firstPost = posts[0];
-  const firstIsVideo = firstPost?.media_type === 'VIDEO';
+  const firstIsVideo = firstPost.media_type === 'VIDEO';
   const name = user.first_name || user.full_name || 'User';
   return {
     key: `user-${user.user_id}`,
     label: name,
-    imageUrl: firstIsVideo ? null : firstPost?.image_url || user.profile_photo,
-    videoUrl: firstIsVideo ? firstPost?.image_url : null,
+    imageUrl: firstIsVideo ? null : firstPost.image_url || user.profile_photo,
+    videoUrl: firstIsVideo ? firstPost.image_url : null,
     initials: initials(user.full_name || user.first_name),
     // Unseen while any of the author's stories hasn't been opened (Bug 2).
     active: posts.some((post) => !post.seen_by_me),
@@ -110,8 +110,8 @@ function userEntry(user: any, followedPosts: any[]): HomeStatusEntry | null {
       label: name,
       subLabel: user.full_name,
       avatarUrl: user.profile_photo,
-      mediaUrl: firstPost?.image_url || user.profile_photo,
-      mediaType: firstPost?.media_type ?? 'IMAGE',
+      mediaUrl: firstPost.image_url || user.profile_photo,
+      mediaType: firstPost.media_type ?? 'IMAGE',
       slides: posts.map((post, index) => ({
         id: post.id,
         mediaUrl: post.image_url,

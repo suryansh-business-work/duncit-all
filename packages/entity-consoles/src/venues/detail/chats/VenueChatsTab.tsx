@@ -17,7 +17,7 @@ import VenueChatReadOnlyThread from './VenueChatReadOnlyThread';
 export default function VenueChatsTab({ venueId }: Readonly<{ venueId: string }>) {
   const { t } = useTranslation();
   const { formatDateTime } = useDateFormat();
-  const [open, setOpen] = useState<{ podId: string; title: string } | null>(null);
+  const [open, setOpen] = useState<string | null>(null);
   const { data, loading, error, fetchMore } = useQuery(ADMIN_VENUE_CHAT_THREADS, {
     variables: { venue_id: venueId, limit: VENUE_CHAT_THREADS_PAGE, offset: 0 },
     fetchPolicy: 'cache-and-network',
@@ -38,7 +38,10 @@ export default function VenueChatsTab({ venueId }: Readonly<{ venueId: string }>
   };
 
   const renderBody = () => {
-    if (open) return <VenueChatReadOnlyThread podId={open.podId} title={open.title} onBack={() => setOpen(null)} />;
+    const openRow = rows.find((row) => row.pod_id === open);
+    if (openRow) {
+      return <VenueChatReadOnlyThread podId={openRow.pod_id} title={openRow.pod_title} onBack={() => setOpen(null)} />;
+    }
     if (loading && !page) {
       return (
         <Box sx={{ display: 'grid', placeItems: 'center', py: 4 }}>
@@ -51,7 +54,7 @@ export default function VenueChatsTab({ venueId }: Readonly<{ venueId: string }>
       <>
         <VenueChatThreadList
           rows={rows}
-          onOpen={(podId) => setOpen({ podId, title: rows.find((row) => row.pod_id === podId)?.pod_title ?? '' })}
+          onOpen={setOpen}
           formatWhen={formatDateTime}
           labels={{
             empty: t('admin.venueDetails.chatsEmpty'),

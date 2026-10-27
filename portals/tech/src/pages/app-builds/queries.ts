@@ -535,10 +535,10 @@ export const canPushToAppStore = (row: AppBuildRow): boolean =>
 
 /** `62.4 MB` for one file; `APK 62.4 MB · AAB 48.1 MB` when a build made several. */
 export const sizeLabel = (row: AppBuildRow): string => {
-  const sized = row.artifacts.filter((a) => a.size_mb != null);
+  const sized = row.artifacts.flatMap((a) => (a.size_mb == null ? [] : [{ kind: a.kind, mb: a.size_mb.toFixed(1) }]));
   if (sized.length === 0) return '—';
-  if (sized.length === 1) return `${(sized[0]?.size_mb ?? 0).toFixed(1)} MB`;
-  return sized.map((a) => `${a.kind} ${(a.size_mb ?? 0).toFixed(1)} MB`).join(' · ');
+  if (sized.length === 1) return `${sized[0].mb} MB`;
+  return sized.map((a) => `${a.kind} ${a.mb} MB`).join(' · ');
 };
 
 /** `+12 / -34 (5 files)` — or an em-dash when the range was unknown. */

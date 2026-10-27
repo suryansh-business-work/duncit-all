@@ -1,5 +1,5 @@
 import '../helpers/agGridEnv';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import CallPromptsPage from '@/pages/call-prompts';
 import {
@@ -117,5 +117,28 @@ describe('CallPromptsPage', () => {
 
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     expect(screen.getByText('Venue intro')).toBeInTheDocument();
+  });
+});
+
+describe('CallPromptsPage delete pressed twice', () => {
+  it('sends one delete when Delete is pressed again while the dialog is closing', async () => {
+    const deleted = vi.fn(() => ({ data: { deleteCrmCallPrompt: true } }));
+    renderWithApollo(<CallPromptsPage />, [
+      tableMock([prompt]),
+      { request: { query: DELETE_CRM_CALL_PROMPT, variables: { id: 'p1' } }, result: deleted },
+      tableMock([]),
+    ]);
+    await screen.findByText('Venue intro');
+
+    fireEvent.click(screen.getByLabelText('Delete Venue intro'));
+    const confirm = within(await screen.findByRole('dialog')).getByRole('button', { name: 'Delete' });
+    fireEvent.click(confirm);
+    await waitFor(() => expect(deleted).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(confirm).not.toBeDisabled());
+    // The dialog is still fading out; the prompt it named is already forgotten.
+    fireEvent.click(confirm);
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(deleted).toHaveBeenCalledTimes(1);
   });
 });

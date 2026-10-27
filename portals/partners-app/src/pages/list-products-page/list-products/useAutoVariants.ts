@@ -20,7 +20,7 @@ export function useAutoVariants(
   setValue: UseFormSetValue<ProductListingValues>,
 ) {
   const options = useWatch({ control, name: 'options' });
-  const optionsKey = JSON.stringify(options ?? []);
+  const optionsKey = JSON.stringify(options);
   const firstRender = useRef(true);
 
   useEffect(() => {
@@ -28,7 +28,7 @@ export function useAutoVariants(
       firstRender.current = false;
       return;
     }
-    const active = (options ?? []).filter((option) => option.name.trim() && option.values.length > 0);
+    const active = options.filter((option) => option.name.trim() && option.values.length > 0);
     if (active.length === 0) return undefined;
     const timer = setTimeout(() => {
       setValue('variants', generateVariants(options, getValues('variants')), { shouldValidate: false });

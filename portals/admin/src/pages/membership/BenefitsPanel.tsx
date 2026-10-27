@@ -100,6 +100,7 @@ export default function BenefitsPanel({ plansVersion }: Readonly<{ plansVersion:
             size="small"
             variant="contained"
             startIcon={<AddIcon />}
+            data-testid="membership-benefit-new"
             onClick={() => {
               setEditing(null);
               setOpen(true);

@@ -20,6 +20,7 @@ interface Props {
 
 /** Hero card (Venue details on top, per spec). */
 export default function VenueHeroCard({ lead, t, onAskAi, onEdit }: Readonly<Props>) {
+  const venueTypes = lead.venue_types ?? [];
   return (
     <Card
       sx={(t) => ({
@@ -46,7 +47,7 @@ export default function VenueHeroCard({ lead, t, onAskAi, onEdit }: Readonly<Pro
             />
           )}
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography component="h1"
+            <Typography component="h1" data-testid="lead-detail-name"
               variant="h5"
               sx={{
                 fontWeight: 800,
@@ -77,11 +78,11 @@ export default function VenueHeroCard({ lead, t, onAskAi, onEdit }: Readonly<Pro
                 <Chip size="small" color="primary" label={lead.super_category.name} variant="outlined" />
               )}
               {lead.matched_user && <MatchedUserChip matched={lead.matched_user} />}
-              {(lead.venue_types ?? []).slice(0, 2).map((tag) => (
+              {venueTypes.slice(0, 2).map((tag) => (
                 <Chip key={tag} size="small" label={tag} variant="outlined" />
               ))}
-              {(lead.venue_types?.length ?? 0) > 2 && (
-                <Chip size="small" label={`+${(lead.venue_types?.length ?? 0) - 2} more`} variant="outlined" />
+              {venueTypes.length > 2 && (
+                <Chip size="small" label={`+${venueTypes.length - 2} more`} variant="outlined" />
               )}
             </Stack>
             {lead.tags.length > 0 && (

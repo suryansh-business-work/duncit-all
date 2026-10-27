@@ -10,6 +10,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useTranslation } from '@duncit/shell';
+import { parseApiError } from '@duncit/utils';
 import { PRODUCT_REVIEWS, REPLY_TO_REVIEW, type Review } from './queries';
 import ReviewRow from './ReviewRow';
 
@@ -31,7 +32,7 @@ export default function ProductReviewsPanel({ productId }: Readonly<{ productId:
       await replyMut({ variables: { review_id: reviewId, reply } });
       await refetch();
     } catch (e) {
-      setError(e instanceof Error ? e.message : t('partners.listProductsPage.couldNotSaveYourReply'));
+      setError(parseApiError(e) || t('partners.listProductsPage.couldNotSaveYourReply'));
     }
   };
 

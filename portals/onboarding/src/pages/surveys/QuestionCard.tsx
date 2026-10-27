@@ -43,7 +43,7 @@ export default function QuestionCard({ question, index, total, onChange, onMove,
   const isSection = question.type === 'SECTION';
 
   return (
-    <Card variant="outlined">
+    <Card variant="outlined" data-testid={`survey-question-${index}`}>
       <CardContent>
         <Stack
           direction="row"
@@ -59,9 +59,9 @@ export default function QuestionCard({ question, index, total, onChange, onMove,
               flex: 1
             }}>Q{index + 1}</Typography>
           {/* The Tooltip names its <span>, not the button inside it — so the button carries its own name. */}
-          <Tooltip title={t('onboarding.common.moveUp')}><span><DuncitIconButton size="small" aria-label={t('onboarding.common.moveUp')} onClick={() => onMove(-1)} disabled={index === 0}><ArrowUpwardIcon fontSize="small" /></DuncitIconButton></span></Tooltip>
-          <Tooltip title={t('onboarding.common.moveDown')}><span><DuncitIconButton size="small" aria-label={t('onboarding.common.moveDown')} onClick={() => onMove(1)} disabled={index === total - 1}><ArrowDownwardIcon fontSize="small" /></DuncitIconButton></span></Tooltip>
-          <Tooltip title={t('shell.common.delete')}><DuncitIconButton size="small" color="error" onClick={onDelete}><DeleteIcon fontSize="small" /></DuncitIconButton></Tooltip>
+          <Tooltip title={t('onboarding.common.moveUp')}><span><DuncitIconButton size="small" aria-label={t('onboarding.common.moveUp')} onClick={() => onMove(-1)} disabled={index === 0} data-testid="survey-question-up"><ArrowUpwardIcon fontSize="small" /></DuncitIconButton></span></Tooltip>
+          <Tooltip title={t('onboarding.common.moveDown')}><span><DuncitIconButton size="small" aria-label={t('onboarding.common.moveDown')} onClick={() => onMove(1)} disabled={index === total - 1} data-testid="survey-question-down"><ArrowDownwardIcon fontSize="small" /></DuncitIconButton></span></Tooltip>
+          <Tooltip title={t('shell.common.delete')}><DuncitIconButton size="small" color="error" onClick={onDelete} data-testid="survey-question-delete"><DeleteIcon fontSize="small" /></DuncitIconButton></Tooltip>
         </Stack>
         <Stack spacing={1.5}>
           <Stack direction="row" spacing={1.5} useFlexGap sx={{
@@ -70,7 +70,7 @@ export default function QuestionCard({ question, index, total, onChange, onMove,
             <TextField select size="small" label={t('shell.common.type')} value={question.type} onChange={(e) => set({ type: e.target.value as QuestionType })} sx={{ minWidth: 200 }}>
               {types(t).map((t) => <MenuItem key={t.value} value={t.value}>{t.label}</MenuItem>)}
             </TextField>
-            <TextField size="small" label={isSection ? 'Heading' : 'Question'} value={question.label} onChange={(e) => set({ label: e.target.value })} sx={{ flex: 1, minWidth: 220 }} />
+            <TextField size="small" label={isSection ? 'Heading' : 'Question'} value={question.label} onChange={(e) => set({ label: e.target.value })} sx={{ flex: 1, minWidth: 220 }} data-testid="survey-question-label" />
           </Stack>
           <TextField size="small" label={t('onboarding.surveys.helpTextOptional')} value={question.help ?? ''} onChange={(e) => set({ help: e.target.value })} fullWidth />
           {question.type === 'MCQ' && (

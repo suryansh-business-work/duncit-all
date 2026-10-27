@@ -45,10 +45,23 @@ jest.mock('@/components/club-admin/pods/ClubPodActionsSheet', () => {
   return { ClubPodActionsSheet: Stub };
 });
 jest.mock('@/components/club-admin/pods/ClubPodActivitySheet', () => {
-  const { Text: T } = jest.requireActual('react-native');
+  const { Pressable: P, Text: T } = jest.requireActual('react-native');
   return {
-    ClubPodActivitySheet: ({ pod }: { pod: { id: string } | null }) =>
-      pod ? <T testID="activity-open">{pod.id}</T> : null,
+    ClubPodActivitySheet: ({
+      pod,
+      onClose,
+    }: {
+      pod: { id: string } | null;
+      onClose: () => void;
+    }) =>
+      pod ? (
+        <>
+          <T testID="activity-open">{pod.id}</T>
+          <P testID="activity-close" onPress={onClose}>
+            <T>close</T>
+          </P>
+        </>
+      ) : null,
   };
 });
 jest.mock('@/components/change-requests/RequestChangeSheet', () => {
@@ -67,6 +80,9 @@ jest.mock('@/components/change-requests/RequestChangeSheet', () => {
           <T testID="change-meta">{`${props.penalty}|${props.attendeeCount}|${props.errorText ?? ''}`}</T>
           <P testID="change-confirm" onPress={() => props.onConfirm('wrong club')}>
             <T>confirm</T>
+          </P>
+          <P testID="change-close" onPress={props.onClose}>
+            <T>close</T>
           </P>
         </>
       ) : null,
@@ -231,5 +247,26 @@ describe('useClubPodSheets', () => {
     fireEvent.press(screen.getByTestId('delete-confirm'));
     await waitFor(() => expect(screen.getByTestId('delete-error').props.children).not.toBe(''));
     expect(screen.getByTestId('delete-error').props.children).not.toBe('nope');
+  });
+});
+
+describe('useClubPodSheets — dismissing the change request', () => {
+  it('closes the change sheet without filing anything', () => {
+    render(<Harness />);
+    open();
+    fireEvent.press(screen.getByTestId('act-onRequestChange'));
+    fireEvent.press(screen.getByTestId('change-close'));
+    expect(screen.queryByTestId('change-confirm')).toBeNull();
+    expect(mockFile).not.toHaveBeenCalled();
+  });
+});
+
+describe('useClubPodSheets — dismissing the activity sheet', () => {
+  it('closes the activity sheet', () => {
+    render(<Harness />);
+    open();
+    fireEvent.press(screen.getByTestId('act-onActivity'));
+    fireEvent.press(screen.getByTestId('activity-close'));
+    expect(screen.queryByTestId('activity-open')).toBeNull();
   });
 });

@@ -1,6 +1,6 @@
 import { Box, Card, Grid, LinearProgress, Stack, Typography, useTheme } from '@mui/material';
 import { formatMoney } from '@duncit/utils';
-import type { HostInsights } from './queries';
+import { emptyStatusCounts, type HostInsights } from './queries';
 import { formatDate } from '@duncit/app-settings';
 import { useTranslation } from '@duncit/shell';
 
@@ -31,7 +31,8 @@ function monthLabel(bucket: string): string {
 /** Where each month's point sits on the earnings polyline. */
 function earningsLine(totals: number[]): string {
   const span = Math.max(...totals, 0) || 1;
-  const step = totals.length > 1 ? WIDTH / (totals.length - 1) : 0;
+  // Only drawn for two months or more, so there is always a step between points.
+  const step = WIDTH / (totals.length - 1);
   return totals
     .map((total, index) => {
       const x = index * step;
@@ -57,11 +58,9 @@ interface Props {
 export default function HostInsightsCharts({ insights, currencySymbol }: Readonly<Props>) {
   const { t } = useTranslation();
   const theme = useTheme();
-  const counts = insights?.status_counts;
+  const counts = insights?.status_counts ?? emptyStatusCounts;
   const months = insights?.monthly_earnings ?? [];
-  const totalPods = counts
-    ? counts.upcoming + counts.ongoing + counts.completed + counts.cancelled
-    : 0;
+  const totalPods = counts.upcoming + counts.ongoing + counts.completed + counts.cancelled;
   const totals = months.map((month) => month.total);
   const hasTrend = months.length >= 2;
 
@@ -72,7 +71,7 @@ export default function HostInsightsCharts({ insights, currencySymbol }: Readonl
           xs: 12,
           md: 5
         }}>
-        <Card variant="outlined" sx={{ p: 2, borderRadius: 2, height: '100%' }}>
+        <Card variant="outlined" sx={{ p: 2, borderRadius: 2, height: '100%' }} data-testid="host-insights-status">
           <Stack spacing={1.5}>
             <Typography variant="subtitle2" component="h2" sx={{
               fontWeight: 900
@@ -87,7 +86,7 @@ export default function HostInsightsCharts({ insights, currencySymbol }: Readonl
               </Typography>
             ) : (
               status(t).map((status) => {
-                const value = counts?.[status.key] ?? 0;
+                const value = counts[status.key];
                 return (
                   <Stack key={status.key} spacing={0.5}>
                     <Stack direction="row" sx={{
@@ -124,7 +123,7 @@ export default function HostInsightsCharts({ insights, currencySymbol }: Readonl
           xs: 12,
           md: 7
         }}>
-        <Card variant="outlined" sx={{ p: 2, borderRadius: 2, height: '100%' }}>
+        <Card variant="outlined" sx={{ p: 2, borderRadius: 2, height: '100%' }} data-testid="host-insights-earnings">
           <Stack spacing={1.5}>
             <Typography variant="subtitle2" component="h2" sx={{
               fontWeight: 900

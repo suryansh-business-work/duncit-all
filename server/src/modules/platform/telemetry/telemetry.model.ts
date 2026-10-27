@@ -70,10 +70,15 @@ export const TelemetrySettingsModel = model<ITelemetrySettings>(
  * `key=undefined`, which the route refuses.
  */
 export async function getTelemetrySettings(): Promise<ITelemetrySettings> {
-  let doc = await TelemetrySettingsModel.findOne({ singleton_key: 'telemetry' });
-  if (!doc) doc = await TelemetrySettingsModel.create({ singleton_key: 'telemetry' });
-  if (!doc.public_api_key) {
-    doc.public_api_key = mintTelemetryApiKey();
+  const doc = await TelemetrySettingsModel.findOne({ singleton_key: 'telemetry' });
+  if (!doc) return TelemetrySettingsModel.create({ singleton_key: 'telemetry' });
+  // The schema default fills a missing key in memory on every read without
+  // ever storing it, so a row that predates the feed would hand out a different
+  // key each time. `isInit` is false for exactly that case: the key was not in
+  // the database, so the one just minted is saved and stays.
+  if (!doc.isInit('public_api_key') || !doc.public_api_key) {
+    if (!doc.public_api_key) doc.public_api_key = mintTelemetryApiKey();
+    doc.markModified('public_api_key');
     await doc.save();
   }
   return doc;

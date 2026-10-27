@@ -1,6 +1,6 @@
 import { Types } from 'mongoose';
 import { logs } from '@observability/log';
-import { requestIdentity, type RequestIdentity } from '@observability/requestIdentity';
+import { requestIdentity, type LogIdentityUser, type RequestIdentity } from '@observability/requestIdentity';
 import { readPath, valueText } from '@utils/doc-diff';
 import { auditActorName, sourceFromDeclared } from '@utils/audit-actor';
 import { TableChangeLogModel, type TableChangeAction } from './tableChangeLog.model';
@@ -29,14 +29,17 @@ const MASK = '••••••';
 
 export interface WriteContext {
   identity: RequestIdentity;
+  /** The signed-in person — `writeContext` hands out nothing without one. */
+  user: LogIdentityUser;
 }
 
 /** The person behind this write, or null — only a signed-in person's edits are logged. */
 export function writeContext(collection: string): WriteContext | null {
   if (!collection || SKIPPED_COLLECTION.test(collection)) return null;
   const identity = requestIdentity.current();
-  if (!identity?.user?.id) return null;
-  return { identity };
+  const user = identity?.user;
+  if (!identity || !user?.id) return null;
+  return { identity, user };
 }
 
 /**
@@ -52,7 +55,7 @@ export function readablePath(path: string): string {
 
 /** The written paths worth a log row, each once. */
 export function loggablePaths(paths: readonly string[]): string[] {
-  const kept = paths.map(readablePath).filter((path) => path && !SKIPPED_FIELD.test(path.split('.').at(-1) ?? ''));
+  const kept = paths.map(readablePath).filter((path) => path && !SKIPPED_FIELD.test(path.slice(path.lastIndexOf('.') + 1)));
   // A parent already covers its children (`address` covers `address.city`).
   return [...new Set(kept)].filter((path, _i, all) => !all.some((other) => path.startsWith(`${other}.`)));
 }
@@ -88,10 +91,10 @@ export function fieldChanges(paths: readonly string[], before: unknown, after: u
 /** Actor names, looked up once per request rather than once per write. */
 const names = new WeakMap<RequestIdentity, Promise<string>>();
 
-function actorName(identity: RequestIdentity): Promise<string> {
+function actorName(identity: RequestIdentity, userId: string): Promise<string> {
   let name = names.get(identity);
   if (!name) {
-    name = auditActorName(identity.user?.id ?? null);
+    name = auditActorName(userId);
     names.set(identity, name);
   }
   return name;
@@ -106,17 +109,16 @@ export interface ChangeRecord {
 }
 
 async function write(record: ChangeRecord): Promise<void> {
-  const { identity } = record.context;
-  const user = identity.user;
-  const actorId = user?.id && Types.ObjectId.isValid(user.id) ? new Types.ObjectId(user.id) : null;
+  const { identity, user } = record.context;
+  const actorId = Types.ObjectId.isValid(user.id) ? new Types.ObjectId(user.id) : null;
   const shared = {
     collection_name: record.collection,
     doc_id: String(record.docId),
     action: record.action,
     actor_user_id: actorId,
-    actor_name: await actorName(identity),
-    actor_email: user?.email ?? '',
-    actor_roles: user?.roles ?? [],
+    actor_name: await actorName(identity, user.id),
+    actor_email: user.email ?? '',
+    actor_roles: user.roles ?? [],
     source: sourceFromDeclared(identity.surface),
     ip: identity.ip ?? '',
     user_agent: identity.user_agent ?? '',
@@ -126,7 +128,7 @@ async function write(record: ChangeRecord): Promise<void> {
     record.action === 'UPDATE'
       ? record.changes.map((change) => ({ ...shared, ...change }))
       : [{ ...shared, field: '', old_value: '', new_value: '' }];
-  if (rows.length > 0) await TableChangeLogModel.insertMany(rows);
+  await TableChangeLogModel.insertMany(rows);
 }
 
 /** Fire-and-forget: a change log must never fail the edit that caused it. */

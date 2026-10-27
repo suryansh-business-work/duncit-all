@@ -64,6 +64,22 @@ describe('VenueEarningsPage', () => {
     expect(screen.getByText('₹950.00')).toBeTruthy();
   });
 
+  it('shows a dash for a payout with no date', async () => {
+    renderWithProviders(<VenueEarningsPage />, {
+      mocks: [earningsMock({ myVenueEarningsSummary: summary, myVenuePayouts: [payout({ created_at: null as unknown as string })] })],
+    });
+    const row = (await screen.findByText('Sunrise Yoga')).closest('[role="row"]') as HTMLElement;
+    expect(row.querySelector('[col-id="created_at"]')?.textContent).toBe('—');
+  });
+
+  it('shows an empty payout table when the answer carries no payouts at all', async () => {
+    renderWithProviders(<VenueEarningsPage />, {
+      mocks: [earningsMock({ myVenueEarningsSummary: summary, myVenuePayouts: null })],
+    });
+    expect(await screen.findByTestId('venue-earnings-stats')).toBeTruthy();
+    expect(screen.queryByText('Sunrise Yoga')).toBeNull();
+  });
+
   it('says when no payout has been released yet', async () => {
     renderWithProviders(<VenueEarningsPage />, {
       mocks: [earningsMock({ myVenueEarningsSummary: summary, myVenuePayouts: [] })],

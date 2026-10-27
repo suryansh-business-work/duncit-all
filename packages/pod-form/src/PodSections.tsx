@@ -125,7 +125,7 @@ export default function PodSections() {
         sx={{
           justifyContent: "flex-end"
         }}>
-        <DuncitButton size="small" startIcon={<UnfoldMoreIcon />} onClick={expandAll} disabled={allOpen} aria-label={t('podForm.podSections.expandAllSections')}>
+        <DuncitButton size="small" startIcon={<UnfoldMoreIcon />} onClick={expandAll} disabled={allOpen} data-testid="pod-form-expand-all" aria-label={t('podForm.podSections.expandAllSections')}>
           {t('podForm.podSections.expandAll')}
         </DuncitButton>
         <DuncitButton size="small" startIcon={<UnfoldLessIcon />} onClick={collapseAll} disabled={expanded.size === 0} aria-label={t('podForm.podSections.collapseAllSections')}>

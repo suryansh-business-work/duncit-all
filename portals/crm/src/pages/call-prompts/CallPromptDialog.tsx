@@ -26,7 +26,7 @@ export default function CallPromptDialog({ open, prompt, onClose, onSaved }: Rea
     setError(null);
     const input = {
       name: values.name,
-      description: values.description ?? '',
+      description: values.description,
       context: values.context,
       language: values.language,
       is_active: values.is_active,

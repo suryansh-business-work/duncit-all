@@ -296,3 +296,28 @@ describe('ManagedOptionList', () => {
     expect(await screen.findByText('Nothing here yet. Click "Add amenity".')).toBeInTheDocument();
   });
 });
+
+describe('ManagedOptionList delete pressed twice', () => {
+  it('sends one delete when Delete is pressed again while the dialog is closing', async () => {
+    const deleted = vi.fn(() => ({ data: { deleteCrmManagedOption: true } }));
+    renderList([
+      listMock([parking, stage]),
+      { request: { query: DELETE_CRM_MANAGED_OPTION, variables: { id: 'a2' } }, result: deleted },
+      listMock([parking]),
+      configMock,
+    ]);
+    await screen.findByText('Stage');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Delete Stage' }));
+    const confirm = within(await screen.findByRole('dialog')).getByRole('button', { name: 'Delete' });
+    fireEvent.click(confirm);
+    await waitFor(() => expect(deleted).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(confirm).not.toBeDisabled());
+    // The dialog is still fading out; the option it named is already forgotten.
+    fireEvent.click(confirm);
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(deleted).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole('alert')).toBeNull();
+  });
+});

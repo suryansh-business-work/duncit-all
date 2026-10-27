@@ -4,6 +4,7 @@ import { effectiveMaxAdvance, recurringErrorMessage } from '@duncit/slots';
 import { DuncitButton } from '@/components/DuncitButton';
 import { DuncitDialog } from '@/components/DuncitDialog';
 import { useTranslation } from '@/hooks/useTranslation';
+import { fireAndForget } from '@/utils/fire-and-forget';
 import { AdvancedSections } from '../advanced/AdvancedSections';
 import { PreviewSummaryCard } from './PreviewSummaryCard';
 import { RecurringBasicSection } from './RecurringBasicSection';
@@ -48,13 +49,12 @@ export function RecurringSheet({
     reset();
     onClose();
   };
-  const create = () => {
-    submit()
-      .then((ok) => {
+  const create = () =>
+    fireAndForget(
+      submit().then((ok) => {
         if (ok) close();
-      })
-      .catch(() => undefined);
-  };
+      }),
+    );
 
   const total = result.summary.total;
   const canCreate = result.errors.length === 0 && total > 0 && !submitting;

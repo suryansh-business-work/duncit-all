@@ -93,7 +93,7 @@ export default function CoinDashboardPage() {
 
           {error && <Alert severity="error">{error.message}</Alert>}
           {stats && drift !== 0 && (
-            <Alert severity="warning">
+            <Alert severity="warning" data-testid="coin-drift-warning">
               The ledger says {coinCount(stats.total_outstanding)} coins are outstanding, but user
               balances add up to {coinCount(stats.wallet_balance_total)} — a gap of{' '}
               {coinCount(Math.abs(drift))}. The ledger is the source of truth for the tiles below.

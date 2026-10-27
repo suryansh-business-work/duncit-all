@@ -124,3 +124,15 @@ describe('bookingPendingLabel', () => {
     expect(bookingPendingLabel(t, null)).toBe('availability.offers.termsPending');
   });
 });
+
+describe('VenueBookingTermsCard / a booking whose pod has no title', () => {
+  it('shows a dash in the title’s place instead of leaving the row headless', async () => {
+    mount([row({ pod_title: '' })]);
+    const ask = await screen.findByTestId('booking-terms-ask-s1');
+
+    const item = ask.closest('li');
+    expect(item).not.toBeNull();
+    expect(within(item as HTMLElement).getByText('—')).toBeInTheDocument();
+    expect(screen.queryByText('Sunday Brunch')).not.toBeInTheDocument();
+  });
+});

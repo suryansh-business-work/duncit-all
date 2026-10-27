@@ -8,6 +8,11 @@ import { integrationsOf, wizardBrand } from '../brand-wizard/__tests__/harness';
 // The tab bodies have suites of their own; only the details shell is under test here.
 vi.mock('../../list-products-page/ListProductsPage', () => ({ default: () => <p>products tab</p> }));
 vi.mock('../brand-settings/BrandSettingsPage', () => ({ default: () => <p>warehouses tab</p> }));
+vi.mock('@duncit/shell', async (importOriginal) => ({
+  ...(await importOriginal<Record<string, unknown>>()),
+  BrandAnalyticsPanel: ({ brandId }: { brandId: string }) => <p>{`analytics tab for ${brandId}`}</p>,
+  BrandLogsPanel: ({ brandId, tableId }: { brandId: string; tableId: string }) => <p>{`logs tab for ${brandId} in ${tableId}`}</p>,
+}));
 
 afterEach(cleanup);
 
@@ -102,6 +107,36 @@ describe('BrandOverviewTab', () => {
     expect(screen.getByText('Treats, Toys')).toBeTruthy();
   });
 
+  it('tells a brand whose integrations are ready that it goes live on approval', async () => {
+    mount(brand({ shipping_mode: 'DUNCIT_COURIER', integrations: integrationsOf(false, true, 'rzp_live_abc') }));
+    expect(await screen.findByText('Integrations are ready. Your brand goes live as soon as it is approved.')).toBeTruthy();
+    expect(screen.queryByTestId('brand-details-connect')).toBeNull();
+  });
+
+  it('shows dashes for everything a new brand has not filled in, and 0% progress', async () => {
+    mount(
+      brand({
+        completion: null,
+        brand_no: null,
+        product_categories: null,
+        contact_email: null,
+        submitted_at: null,
+        approved_at: null,
+        live_since: null,
+      }),
+    );
+    await screen.findByTestId('brand-details-page');
+    expect(screen.getByLabelText('0%')).toBeTruthy();
+    // Brand id, submitted, approved, live since, categories and contact — and the Razorpay id.
+    expect(screen.getAllByText('—').length).toBeGreaterThanOrEqual(7);
+  });
+
+  it('writes the submitted and approved dates once they exist', async () => {
+    mount(brand({ submitted_at: '2026-06-02T10:00:00.000Z', approved_at: '2026-06-05T10:00:00.000Z', status: 'APPROVED' }));
+    await screen.findByTestId('brand-details-page');
+    expect(screen.getAllByText(/2026/).length).toBeGreaterThanOrEqual(2);
+  });
+
   it('says Duncit courier for a brand still on it', async () => {
     mount(brand({ shipping_mode: 'DUNCIT_COURIER' }));
     expect(await screen.findByText('Duncit courier')).toBeTruthy();
@@ -118,5 +153,9 @@ describe('BrandDetailsRoute tabs', () => {
     expect(await screen.findByText('products tab')).toBeTruthy();
     fireEvent.click(tabs.getByRole('tab', { name: 'Pickup Addresses' }));
     expect(await screen.findByText('warehouses tab')).toBeTruthy();
+    fireEvent.click(tabs.getByRole('tab', { name: 'Analytics' }));
+    expect(await screen.findByText('analytics tab for b1')).toBeTruthy();
+    fireEvent.click(tabs.getByRole('tab', { name: 'Logs' }));
+    expect(await screen.findByText('logs tab for b1 in partners-app-brand-logs')).toBeTruthy();
   });
 });

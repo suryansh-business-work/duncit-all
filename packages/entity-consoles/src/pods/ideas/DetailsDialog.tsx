@@ -144,8 +144,9 @@ export default function DetailsDialog({ id, onClose, onChanged }: Readonly<Detai
       <Dialog
         open={!!confirmDeleteId}
         onClose={() => (deletingComment ? undefined : setConfirmDeleteId(null))}
+        data-testid="idea-comment-delete-dialog"
       >
-        <DialogTitle>{t('admin.podIdeas.deleteComment')}</DialogTitle>
+        <DialogTitle data-testid="idea-comment-delete-title">{t('admin.podIdeas.deleteComment')}</DialogTitle>
         <DialogContent>
           <Typography variant="body2">
             {t('admin.podIdeas.deleteCommentBody')}
@@ -157,6 +158,7 @@ export default function DetailsDialog({ id, onClose, onChanged }: Readonly<Detai
           </DuncitButton>
           <DuncitButton
             onClick={handleDeleteComment}
+            data-testid="idea-comment-delete-confirm"
             color="error"
             variant="contained"
             disabled={deletingComment}

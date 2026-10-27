@@ -69,28 +69,33 @@ export default function HomeStatusViewer({
   const hasMenu = !!onDelete || canReport;
   const chrome = viewerChrome(item.kind);
   const target = slideTarget(item, current);
-  const openTarget = () => {
-    if (!target.url) return;
-    onClose();
-    if (target.internal) navigate(target.url);
-    else window.open(target.url, '_blank', 'noreferrer');
-  };
+  const { url: targetUrl, internal: targetInternal } = target;
+  // Only a story with somewhere to go gets the button, so only then is there a handler.
+  const openTarget = targetUrl
+    ? () => {
+        onClose();
+        if (targetInternal) navigate(targetUrl);
+        else window.open(targetUrl, '_blank', 'noreferrer');
+      }
+    : undefined;
 
   // The header sits over the tap zones, so the name is a real target; the
   // viewer closes first or its dialog would sit over the profile it opened.
   const openAuthor = () => {
-    if (!item.authorId) return;
     onClose();
     navigate(`/u/${item.authorId}`);
   };
 
-  const toggleLike = () => {
-    if (!currentId || !onToggleLike) return;
-    const next = !liked;
-    setLiked(next);
-    setLikeCount((value) => (next ? value + 1 : value - 1));
-    onToggleLike(currentId);
-  };
+  // Only a slide with an id on a surface that handles likes shows the control.
+  const toggleLike =
+    currentId && onToggleLike
+      ? () => {
+          const next = !liked;
+          setLiked(next);
+          setLikeCount((value) => (next ? value + 1 : value - 1));
+          onToggleLike(currentId);
+        }
+      : () => undefined;
 
   const nextPeek = slides.slice(index + 1, index + 3);
   const agoLabel = current?.createdAt

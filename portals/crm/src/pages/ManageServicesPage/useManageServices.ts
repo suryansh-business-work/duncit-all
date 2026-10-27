@@ -62,23 +62,22 @@ export function useManageServices(kind: CrmServiceKind) {
     setFormError(null);
   };
 
-  const saveDraft = async () => {
-    if (!draft) return;
-    const name = draft.name.trim();
+  const persistDraft = async (current: EditRow) => {
+    const name = current.name.trim();
     if (!name) {
       setFormError('Service name is required');
       return;
     }
-    const sort_order = Number.parseInt(draft.sort_order, 10);
+    const sort_order = Number.parseInt(current.sort_order, 10);
     const input = {
       name,
       kind,
       sort_order: Number.isFinite(sort_order) ? sort_order : 0,
-      is_active: draft.is_active,
+      is_active: current.is_active,
     };
     try {
-      if (draft.id) {
-        await updateMut({ variables: { id: draft.id, input } });
+      if (current.id) {
+        await updateMut({ variables: { id: current.id, input } });
       } else {
         await createMut({ variables: { input } });
       }
@@ -87,6 +86,11 @@ export function useManageServices(kind: CrmServiceKind) {
     } catch (e) {
       setFormError(parseApiError(e));
     }
+  };
+
+  // The inline row that calls this exists only while a draft is open.
+  const saveDraft = async () => {
+    if (draft) await persistDraft(draft);
   };
 
   const confirmDelete = async () => {

@@ -34,6 +34,13 @@ const open = (route: string, roles: string[], flags: Record<string, boolean> = {
 const menuLinks = (menu: HTMLElement) => within(within(menu).getByRole('list')).getAllByRole('link');
 
 describe('StudioWorkspace', () => {
+  it('shows just the page, with no studio menu, when nobody is signed in', async () => {
+    renderWithProviders(<StudioWorkspace>{page}</StudioWorkspace>, { mocks: [flagsMock({ is_product_visible: true })], route: '/host/nearby-venues' });
+
+    expect(await screen.findByTestId('page')).toBeTruthy();
+    expect(screen.queryByRole('navigation', { name: 'Host Options' })).toBeNull();
+  });
+
   it('keeps the studio menu beside the open page, with that page marked as the current one', async () => {
     open('/host/nearby-venues', ['HOST']);
 

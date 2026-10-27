@@ -9,6 +9,7 @@ import { UpdateVenueSettingsDocument } from '@/graphql/venue-availability';
 import { useTranslation } from '@/hooks/useTranslation';
 import { graphqlRequest } from '@/services/graphql.client';
 import { appNow } from '@/utils/app-formatter';
+import { fireAndForget } from '@/utils/fire-and-forget';
 import { dayFromKey, dayKeyOf } from '../availability-grid';
 import { DateTimePickerField } from '../DateTimePickerField';
 import { ExpandableSection } from './ExpandableSection';
@@ -144,9 +145,7 @@ export function AutoExtendSection({
         <DuncitButton
           testID="auto-extend-save"
           label={saving ? t('availability.autoExtend.saving') : t('availability.autoExtend.save')}
-          onPress={() => {
-            save().catch(() => undefined);
-          }}
+          onPress={() => fireAndForget(save())}
           variant="outline"
           size="sm"
           disabled={saving}

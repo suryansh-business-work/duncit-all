@@ -86,7 +86,7 @@ export default function RentalSettingsForm({ values, busy, errorMessage, onSubmi
             <Stack spacing={0.75} role="group" aria-labelledby={termsLabelId}>
               <FormLabel id={termsLabelId}>{t('finance.rentedItems.terms')}</FormLabel>
               <DuncitRichTextInput
-                value={field.value ?? ''}
+                value={field.value}
                 onChange={(html) => field.onChange(html)}
                 ariaLabel={t('finance.rentedItems.terms')}
                 aiContext={t('finance.rentedItems.termsAiContext')}

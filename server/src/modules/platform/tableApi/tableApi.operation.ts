@@ -69,19 +69,33 @@ function hasRequiredArgs(field: GraphQLField<unknown, unknown>): boolean {
   return field.args.some((arg) => isNonNullType(arg.type) && arg.defaultValue === undefined);
 }
 
-function selectionOf(
+export interface SelectionOptions {
+  /** How many object levels deep to follow embedded data (default 3). */
+  maxDepth?: number;
+  /** Whether a plain field may be selected — every one is by default. */
+  includeLeaf?: (field: GraphQLField<unknown, unknown>) => boolean;
+}
+
+/**
+ * Every plain field of `type`, following embedded objects (no custom resolver
+ * on the field) a few levels down. Shared with the MCP catalog, which builds
+ * its read selections the same way for the same reason: no per-row lookups.
+ */
+export function selectionOf(
   type: GraphQLObjectType,
   depth: number,
-  hasResolver: (typeName: string, fieldName: string) => boolean
+  hasResolver: (typeName: string, fieldName: string) => boolean,
+  options: SelectionOptions = {}
 ): string {
+  const { maxDepth = MAX_DEPTH, includeLeaf } = options;
   const parts: string[] = [];
   for (const field of Object.values(type.getFields())) {
     if (hasRequiredArgs(field)) continue;
     const named = getNamedType(field.type);
     if (isLeafType(named)) {
-      parts.push(field.name);
-    } else if (isObjectType(named) && depth < MAX_DEPTH && !hasResolver(type.name, field.name)) {
-      const inner = selectionOf(named, depth + 1, hasResolver);
+      if (!includeLeaf || includeLeaf(field)) parts.push(field.name);
+    } else if (isObjectType(named) && depth < maxDepth && !hasResolver(type.name, field.name)) {
+      const inner = selectionOf(named, depth + 1, hasResolver, options);
       if (inner) parts.push(`${field.name} { ${inner} }`);
     }
   }

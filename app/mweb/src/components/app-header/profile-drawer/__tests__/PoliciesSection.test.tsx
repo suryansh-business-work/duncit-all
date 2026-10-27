@@ -50,6 +50,28 @@ describe('PoliciesSection', () => {
     expect(container.firstChild).toBeNull();
   });
 
+  it('holds a skeleton row instead of the list while the links load, even with policies known', () => {
+    render(
+      <MemoryRouter>
+        <PoliciesSection publicPolicies={policies} loading policiesOpen={false} setPoliciesOpen={vi.fn()} />
+      </MemoryRouter>,
+    );
+    expect(screen.getByTestId('policies-skeleton')).toBeInTheDocument();
+    expect(screen.queryByText('Policies')).not.toBeInTheDocument();
+  });
+
+  it('shows the collapse arrow when open and the expand arrow when closed', () => {
+    const { unmount } = render(
+      <MemoryRouter>
+        <PoliciesSection publicPolicies={policies} policiesOpen setPoliciesOpen={vi.fn()} />
+      </MemoryRouter>,
+    );
+    expect(screen.getByTestId('ExpandLessIcon')).toBeInTheDocument();
+    unmount();
+    renderSection();
+    expect(screen.getByTestId('ExpandMoreIcon')).toBeInTheDocument();
+  });
+
   it('renders the Policies header when policies exist', () => {
     renderSection();
     expect(screen.getByText('Policies')).toBeInTheDocument();

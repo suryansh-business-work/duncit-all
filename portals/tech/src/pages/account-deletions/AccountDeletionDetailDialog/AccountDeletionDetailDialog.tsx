@@ -85,9 +85,9 @@ export default function AccountDeletionDetailDialog({
         </DialogTitle>
         <DialogContent dividers>
           {loading && !detail && <LinearProgress />}
-          {request && (
+          {detail && (
             <Stack spacing={2}>
-              <RequestSummary request={request} />
+              <RequestSummary request={detail.request} />
 
               <Divider />
 
@@ -104,20 +104,20 @@ export default function AccountDeletionDetailDialog({
                 </Typography>
               </Stack>
 
-              <Alert severity={detail?.account_exists ? 'info' : 'success'}>
-                {detail?.account_exists
+              <Alert severity={detail.account_exists ? 'info' : 'success'}>
+                {detail.account_exists
                   ? t('tech.accountDeletions.accountPresent')
                   : t('tech.accountDeletions.accountRemoved')}
               </Alert>
 
               <TraceList
-                trace={detail?.trace ?? []}
+                trace={detail.trace}
                 busyKey={busyKey}
                 canDelete={!!actionable}
                 onDelete={setPendingGroup}
               />
 
-              {request.purge_log.length > 0 && <PurgeLog entries={request.purge_log} />}
+              {detail.request.purge_log.length > 0 && <PurgeLog entries={detail.request.purge_log} />}
             </Stack>
           )}
         </DialogContent>

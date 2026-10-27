@@ -12,6 +12,10 @@ const developmentUrls = {
   marketingUrl: 'http://localhost:2015',
   ecommUrl: 'http://localhost:2039',
   productsUrl: 'http://localhost:2014',
+  // In dev the MCP endpoints and OAuth routes are the API server's own; the
+  // console (and its /connect consent page) is the Vite dev server.
+  mcpUrl: 'http://localhost:2001',
+  mcpPortalUrl: 'http://localhost:2046',
   supportEmail: 'support@duncit.local',
   fromEmail: 'Duncit <noreply@duncit.local>',
 };
@@ -28,6 +32,8 @@ const productionUrls = {
   marketingUrl: 'https://marketing.duncit.com',
   ecommUrl: 'https://ecomm.duncit.com',
   productsUrl: 'https://products.duncit.com',
+  mcpUrl: 'https://mcp.duncit.com',
+  mcpPortalUrl: 'https://mcp.duncit.com',
   supportEmail: 'support@duncit.com',
   fromEmail: 'Duncit <noreply@duncit.com>',
 };
@@ -69,6 +75,11 @@ export async function getUrlConfigs() {
     ecommUrl: await configValue('ECOMM_URL', defaults.ecommUrl),
     // The Products console — where a submitted brand is reviewed.
     productsUrl: await configValue('PRODUCTS_URL', defaults.productsUrl),
+    // The MCP host (mcp.duncit.com): the OAuth issuer and every connector URL.
+    // Fixed server-side — an issuer read from the request could be anything.
+    mcpUrl: await configValue('MCP_URL', defaults.mcpUrl),
+    // Where /authorize sends a person to sign in and approve a connection.
+    mcpPortalUrl: await configValue('MCP_PORTAL_URL', defaults.mcpPortalUrl),
     supportEmail: await configValue('SUPPORT_EMAIL', defaults.supportEmail),
     mail: {
       host: await getRuntimeEnvValue('SMTP_HOST'),

@@ -73,7 +73,7 @@ export function AppHeader({
       <Toolbar sx={{ minHeight: `${tokens.size.headerHeight}px !important`, gap: 1, px: { xs: 1.25, sm: 2 } }}>
         {mobileSearchOpen ? (
           <>
-            <DuncitIconButton size="small" edge="start" onClick={() => setMobileSearchOpen(false)} aria-label={t('shell.chrome.closeSearch')}>
+            <DuncitIconButton size="small" edge="start" onClick={() => setMobileSearchOpen(false)} aria-label={t('shell.chrome.closeSearch')} data-testid="shell-header-close-search">
               <ArrowBackIcon fontSize="small" />
             </DuncitIconButton>
             <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -93,12 +93,13 @@ export function AppHeader({
               size="small"
               edge="start"
               onClick={onOpenMobileNav}
+              data-testid="shell-header-open-nav"
               aria-label={t('shell.chrome.openNav')}
               sx={{ display: { md: 'none' } }}
             >
               <MenuIcon />
             </DuncitIconButton>
-            <Box component={RouterLink} to="/" sx={{ color: 'inherit', textDecoration: 'none', minWidth: 0 }}>
+            <Box component={RouterLink} to="/" data-testid="shell-header-brand" sx={{ color: 'inherit', textDecoration: 'none', minWidth: 0 }}>
               <Typography variant="subtitle2" noWrap>
                 {title}
               </Typography>
@@ -110,6 +111,7 @@ export function AppHeader({
             <DuncitIconButton
               size="small"
               onClick={() => setMobileSearchOpen(true)}
+              data-testid="shell-header-open-search"
               aria-label={t('shell.chrome.openSearch')}
               sx={{ display: { sm: 'none' } }}
             >
@@ -121,13 +123,13 @@ export function AppHeader({
             )}
             {appsEnabled && (
               <Tooltip title={t('shell.chrome.apps')}>
-                <DuncitIconButton size="small" onClick={() => setAppsOpen(true)} aria-label={t('shell.chrome.openApps')}>
+                <DuncitIconButton size="small" onClick={() => setAppsOpen(true)} aria-label={t('shell.chrome.openApps')} data-testid="shell-header-apps">
                   <AppsIcon fontSize="small" />
                 </DuncitIconButton>
               </Tooltip>
             )}
             <Tooltip title={`Switch to ${colorMode.mode === 'light' ? 'dark' : 'light'} mode`}>
-              <DuncitIconButton size="small" onClick={colorMode.toggle} aria-label={t('shell.chrome.toggleColorMode')}>
+              <DuncitIconButton size="small" onClick={colorMode.toggle} aria-label={t('shell.chrome.toggleColorMode')} data-testid="shell-header-color-mode">
                 {colorMode.mode === 'light' ? <DarkModeIcon fontSize="small" /> : <LightModeIcon fontSize="small" />}
               </DuncitIconButton>
             </Tooltip>

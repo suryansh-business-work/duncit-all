@@ -93,7 +93,7 @@ export default function FaqsPage() {
         refetchRef={crud.refetchRef}
         entityColumn={entityColumn}
         toolbarActions={
-          <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={crud.openNew}>
+          <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={crud.openNew} data-testid="faq-new">
             {t('support.faqs.newFaq')}
           </DuncitButton>
         }

@@ -86,11 +86,11 @@ export default function ScheduleMeetingDialog({ meeting, onClose, onSaved }: Rea
   };
 
   return (
-    <Dialog open={!!meeting} onClose={onClose} fullWidth maxWidth="sm">
+    <Dialog open={!!meeting} onClose={onClose} fullWidth maxWidth="sm" data-testid="schedule-meeting-dialog">
       <DialogTitle>{t('onboarding.meetings.scheduleMeeting')}</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 0.5 }}>
-          {error && <Alert severity="error">{error}</Alert>}
+          {error && <Alert severity="error" data-testid="schedule-meeting-error">{error}</Alert>}
           <Typography variant="caption" sx={{
             color: "text.secondary"
           }}>
@@ -112,6 +112,7 @@ export default function ScheduleMeetingDialog({ meeting, onClose, onSaved }: Rea
             value={link}
             onChange={(e) => setLink(e.target.value)}
             fullWidth
+            data-testid="schedule-meeting-link"
           />
           <TextField select size="small" label={t('shell.common.status')} value={status} onChange={(e) => setStatus(e.target.value as MeetingStatus)} fullWidth>
             {STATUSES.map((s) => <MenuItem key={s} value={s}>{s}</MenuItem>)}
@@ -120,8 +121,8 @@ export default function ScheduleMeetingDialog({ meeting, onClose, onSaved }: Rea
         </Stack>
       </DialogContent>
       <DialogActions>
-        <DuncitButton onClick={onClose}>{t('shell.common.cancel')}</DuncitButton>
-        <DuncitButton variant="contained" onClick={save} disabled={saving}>{saving ? 'Saving…' : 'Save'}</DuncitButton>
+        <DuncitButton onClick={onClose} data-testid="schedule-meeting-cancel">{t('shell.common.cancel')}</DuncitButton>
+        <DuncitButton variant="contained" onClick={save} disabled={saving} data-testid="schedule-meeting-save">{saving ? 'Saving…' : 'Save'}</DuncitButton>
       </DialogActions>
     </Dialog>
   );

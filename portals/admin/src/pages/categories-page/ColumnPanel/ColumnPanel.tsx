@@ -108,7 +108,7 @@ export default function ColumnPanel({
 
   const createTitle = enabled ? `New ${title}` : 'Select a parent first';
   return (
-    <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }} data-testid={`category-column-${level}`}>
       <CardContent sx={{ pb: 1 }}>
         <Stack
           direction="row"

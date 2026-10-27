@@ -17,6 +17,7 @@ const PASS_DIRECTIVES = new Set(['proxy_pass', 'grpc_pass']);
 const DEFAULT_PORT: Record<string, number> = { http: 80, https: 443, grpc: 80, grpcs: 443 };
 const AUTHORITY = /^(\[[^\]]+\]|[^:]+)(?::(\d+))?$/;
 const SCHEME = /^([a-z]+):\/\//i;
+const PATH_TAIL = /\/.*$/s;
 /** `443`, `[::]:443`, `0.0.0.0:443` — not `8443`. */
 const HTTPS_LISTEN = /(?:^|:)443$/;
 
@@ -90,14 +91,14 @@ function passesIn(block: NginxDirective[], location: string): { location: string
 /** `http://127.0.0.1:2001/x` → host + port, resolving an upstream name; variables and sockets have no port. */
 export function resolveTarget(target: string, upstreams: Map<string, string>): { host: string | null; port: number | null } {
   const scheme = SCHEME.exec(target)?.[1]?.toLowerCase() ?? 'http';
-  const authority = target.replace(SCHEME, '').split('/')[0] ?? '';
+  const authority = target.replace(SCHEME, '').replace(PATH_TAIL, '');
   if (!authority || authority.includes('$')) return { host: null, port: null };
   const address = upstreams.get(authority) ?? authority;
   if (address.startsWith('unix:')) return { host: address, port: null };
   const match = AUTHORITY.exec(address);
   if (!match) return { host: address, port: null };
   const port = match[2] ? Number(match[2]) : (DEFAULT_PORT[scheme] ?? null);
-  return { host: match[1] ?? null, port };
+  return { host: match[1], port };
 }
 
 const listensTls = (server: NginxDirective) =>
@@ -130,14 +131,14 @@ function routesOfSite(site: SiteFile): PortMapRoute[] {
 /** Every site file and every domain → port route across them, sorted by domain then location. */
 export function parsePortMap(dump: string): { sites: PortMapSite[]; routes: PortMapRoute[] } {
   const files = splitSites(dump);
-  const perSite = files.map(routesOfSite);
-  const sites = files.map((file, i) => ({
+  const perSite = files.map((file) => ({ file, routes: routesOfSite(file) }));
+  const sites = perSite.map(({ file, routes }) => ({
     name: file.name,
     enabled: file.enabled,
-    domain_count: new Set(perSite[i]?.map((route) => route.domain)).size,
+    domain_count: new Set(routes.map((route) => route.domain)).size,
   }));
   const routes = perSite
-    .flat()
+    .flatMap((entry) => entry.routes)
     .sort((a, b) => a.domain.localeCompare(b.domain) || a.location.localeCompare(b.location));
   return { sites, routes };
 }

@@ -98,7 +98,7 @@ export default function AdjustHealthDialog({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs" data-testid="adjust-health-dialog">
       <DialogTitle sx={{ fontWeight: 900 }}>
         {editing ? 'Edit' : 'Adjust'} {subjectType === 'USER' ? 'user' : 'venue'} health
         <Typography
@@ -119,16 +119,17 @@ export default function AdjustHealthDialog({
             onChange={(_e, v) => v && setDirection(v)}
             fullWidth
           >
-            <ToggleButton value="minus">
+            <ToggleButton value="minus" data-testid="adjust-health-minus">
               <RemoveIcon fontSize="small" /> Decrease
             </ToggleButton>
-            <ToggleButton value="plus">
+            <ToggleButton value="plus" data-testid="adjust-health-plus">
               <AddIcon fontSize="small" /> Increase
             </ToggleButton>
           </ToggleButtonGroup>
 
           <TextField
             label={t('admin.health.magnitude')}
+            data-testid="adjust-health-magnitude"
             type="number"
             size="small"
             value={magnitude}
@@ -141,6 +142,7 @@ export default function AdjustHealthDialog({
 
           <TextField
             label={t('admin.health.remark')}
+            data-testid="adjust-health-remark"
             multiline
             minRows={3}
             value={remark}
@@ -151,12 +153,12 @@ export default function AdjustHealthDialog({
             }}
           />
 
-          {error && <Alert severity="error">{error}</Alert>}
+          {error && <Alert severity="error" data-testid="adjust-health-error">{error}</Alert>}
         </Stack>
       </DialogContent>
       <DialogActions>
-        <DuncitButton onClick={onClose}>{t('shell.common.cancel')}</DuncitButton>
-        <DuncitButton variant="contained" onClick={submit} disabled={loading}>
+        <DuncitButton onClick={onClose} data-testid="adjust-health-cancel">{t('shell.common.cancel')}</DuncitButton>
+        <DuncitButton variant="contained" onClick={submit} disabled={loading} data-testid="adjust-health-save">
           {loading ? 'Saving…' : 'Save adjustment'}
         </DuncitButton>
       </DialogActions>

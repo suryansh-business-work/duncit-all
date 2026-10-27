@@ -46,8 +46,8 @@ export interface DataCloneConnectionDoc {
   database: string;
   connected: boolean;
   collection_count: number;
-  last_tested_at?: Date | null;
-  last_test_error?: string | null;
+  last_tested_at: Date | null;
+  last_test_error: string | null;
 }
 
 export const DataCloneConnectionModel = model('DataCloneConnection', dataCloneConnectionSchema);

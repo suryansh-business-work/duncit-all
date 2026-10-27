@@ -71,12 +71,11 @@ export default function PortalCallDialog({ open, lead, onClose }: Readonly<Props
     onClose();
   };
 
-  const placeCall = async () => {
-    if (!lead) return;
+  const placeCall = async (target: PortalCallLead) => {
     setError(null);
     try {
       const res = await start({
-        variables: { entity: lead.entityType, id: lead.entityId, contact_number: lead.to, contact_name: lead.contactName ?? null },
+        variables: { entity: target.entityType, id: target.entityId, contact_number: target.to, contact_name: target.contactName ?? null },
       });
       const payload = res.data?.startCrmPortalCall;
       if (!payload?.ok) {
@@ -121,7 +120,7 @@ export default function PortalCallDialog({ open, lead, onClose }: Readonly<Props
       <DialogActions>
         <DuncitButton onClick={handleClose}>{ended ? t('shell.common.close') : t('shell.common.cancel')}</DuncitButton>
         {!placed && (
-          <DuncitButton variant="contained" startIcon={<PhoneInTalkIcon />} onClick={placeCall} disabled={loading || !lead}>
+          <DuncitButton variant="contained" startIcon={<PhoneInTalkIcon />} onClick={() => lead && placeCall(lead)} disabled={loading || !lead}>
             {loading ? 'Starting…' : 'Start Call'}
           </DuncitButton>
         )}

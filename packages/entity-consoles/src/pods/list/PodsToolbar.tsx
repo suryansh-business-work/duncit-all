@@ -42,7 +42,7 @@ export default function PodsToolbar({
           alignItems: "center"
         }}>
           <EventIcon color="primary" />
-          <Typography variant="h5" component="h1">Pods</Typography>
+          <Typography variant="h5" component="h1" data-testid="pods-list-title">Pods</Typography>
         </Stack>
         <Typography variant="body2" sx={{
           color: "text.secondary"
@@ -62,10 +62,11 @@ export default function PodsToolbar({
           label={t('admin.filters.podLifecycle')}
           value={lifecycle}
           onChange={(e) => setLifecycle(e.target.value as PodLifecycleFilter)}
+          data-testid="pods-lifecycle-filter"
           sx={{ minWidth: 180 }}
         >
           {POD_LIFECYCLE_OPTIONS.map((option) => (
-            <MenuItem key={option.labelKey} value={option.value}>
+            <MenuItem key={option.labelKey} value={option.value} data-testid={`pods-lifecycle-option-${option.value || 'ALL'}`}>
               {t(option.labelKey)}
             </MenuItem>
           ))}
@@ -91,11 +92,12 @@ export default function PodsToolbar({
           label={t('admin.pods.colClub')}
           value={clubFilter}
           onChange={(e) => setClubFilter(e.target.value)}
+          data-testid="pods-club-filter"
           sx={{ minWidth: 200 }}
         >
           <MenuItem value="">{t('admin.pods.allClubs')}</MenuItem>
           {clubs.map((c) => (
-            <MenuItem key={c.id} value={c.id}>
+            <MenuItem key={c.id} value={c.id} data-testid={`pods-club-option-${c.id}`}>
               <ClubLocationLabel name={c.club_name} location={clubLocationLabel(c, locations)} />
             </MenuItem>
           ))}

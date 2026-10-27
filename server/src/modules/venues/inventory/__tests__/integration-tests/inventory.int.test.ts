@@ -9,6 +9,7 @@ import { BrandPickupLocationModel } from '@modules/venues/brandPickupLocation/br
 import { UserModel } from '@modules/access/user/user.model';
 import { ProductOrderModel } from '@modules/commerce/productOrder/productOrder.model';
 import { makeContext } from '@test/harness';
+import type { AuthUser } from '@context';
 
 describe('inventoryService integration', () => {
   it('lists no products / requests on an empty dataset', async () => {
@@ -544,7 +545,8 @@ describe('partner listing warehouse + free-delivery threshold', () => {
       auth: { email: 'lister@example.com' },
       metadata: { role_keys: ['ECOMM_MANAGER'], status: 'ACTIVE' },
     } as never);
-    return { id: String(userId), email: 'lister@example.com' } as never;
+    const user: AuthUser = { id: String(userId), email: 'lister@example.com', roles: ['ECOMM_MANAGER'] };
+    return user;
   };
 
   const listingInput = (brandId: unknown, over: Record<string, unknown> = {}) => ({
@@ -564,7 +566,7 @@ describe('partner listing warehouse + free-delivery threshold', () => {
 
   it('rejects a warehouse that does not belong to the listing brand', async () => {
     const user = await seedManager();
-    const brand = await EcommBrandModel.create({ owner_user_id: new Types.ObjectId(), brand_name: 'List Co', status: 'APPROVED' });
+    const brand = await EcommBrandModel.create({ owner_user_id: new Types.ObjectId(user.id), brand_name: 'List Co', status: 'APPROVED' });
     // Another brand's warehouse.
     const foreignWh = await BrandPickupLocationModel.create({
       owner_kind: 'BRAND',
@@ -587,7 +589,7 @@ describe('partner listing warehouse + free-delivery threshold', () => {
 
   it('blocks a same-brand warehouse that is still awaiting approval', async () => {
     const user = await seedManager();
-    const brand = await EcommBrandModel.create({ owner_user_id: new Types.ObjectId(), brand_name: 'List Co Pending', status: 'APPROVED' });
+    const brand = await EcommBrandModel.create({ owner_user_id: new Types.ObjectId(user.id), brand_name: 'List Co Pending', status: 'APPROVED' });
     const pendingWh = await BrandPickupLocationModel.create({
       owner_kind: 'BRAND',
       brand_id: brand._id,
@@ -604,7 +606,7 @@ describe('partner listing warehouse + free-delivery threshold', () => {
 
   it('persists a same-brand warehouse + free-delivery threshold and round-trips them', async () => {
     const user = await seedManager();
-    const brand = await EcommBrandModel.create({ owner_user_id: new Types.ObjectId(), brand_name: 'List Co 2', status: 'APPROVED' });
+    const brand = await EcommBrandModel.create({ owner_user_id: new Types.ObjectId(user.id), brand_name: 'List Co 2', status: 'APPROVED' });
     const wh = await BrandPickupLocationModel.create({
       owner_kind: 'BRAND',
       brand_id: brand._id,
@@ -630,7 +632,7 @@ describe('partner listing warehouse + free-delivery threshold', () => {
   it('omitting the warehouse keeps the listing unassigned and validates the threshold', async () => {
     const user = await seedManager();
     // Only an APPROVED brand may list products, as in the cases above.
-    const brand = await EcommBrandModel.create({ owner_user_id: new Types.ObjectId(), brand_name: 'List Co 3', status: 'APPROVED' });
+    const brand = await EcommBrandModel.create({ owner_user_id: new Types.ObjectId(user.id), brand_name: 'List Co 3', status: 'APPROVED' });
     await expect(
       inventoryService.submitProductListing(listingInput(brand._id, { free_delivery_above: -5 }), user)
     ).rejects.toThrow(/cannot be negative/i);
@@ -641,6 +643,22 @@ describe('partner listing warehouse + free-delivery threshold', () => {
     const created = await inventoryService.submitProductListing(listingInput(brand._id), user);
     expect(created.pickup_location_id).toBeNull();
     expect(created.free_delivery_above).toBeNull();
+  });
+
+  it("refuses to list or move a listing under another partner's approved brand", async () => {
+    const user = await seedManager();
+    const mine = await EcommBrandModel.create({ owner_user_id: new Types.ObjectId(user.id), brand_name: 'List Co Mine', status: 'APPROVED' });
+    const theirs = await EcommBrandModel.create({ owner_user_id: new Types.ObjectId(), brand_name: 'List Co Theirs', status: 'APPROVED' });
+
+    await expect(inventoryService.submitProductListing(listingInput(theirs._id), user)).rejects.toThrow('Not your brand');
+    expect(await InventoryProductModel.countDocuments({ brand_id: theirs._id })).toBe(0);
+
+    const created = await inventoryService.submitProductListing(listingInput(mine._id), user);
+    await expect(
+      inventoryService.updateMyProductListing(created.id, listingInput(theirs._id), user)
+    ).rejects.toThrow('Not your brand');
+    const stored = await InventoryProductModel.findById(created.id).select('brand_id').lean();
+    expect(String(stored?.brand_id)).toBe(String(mine._id));
   });
 });
 

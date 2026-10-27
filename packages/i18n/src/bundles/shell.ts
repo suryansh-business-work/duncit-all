@@ -449,6 +449,11 @@ export const SHELL_BUNDLE: NestedCatalogue = {
         promoTitle: 'Every target, one console',
         promoText: 'Set the numbers each team is working towards and see how close they are.',
       },
+      mcp: {
+        tagline: 'Connect Claude, ChatGPT or Gemini to Duncit and see every tool call.',
+        promoTitle: 'Your AI, working in Duncit',
+        promoText: 'Approve an AI app once, then see every tool it calls: who, why, what it cost and how it went.',
+      },
       ecommPortal: {
         tagline: 'Run the Duncit Pet Store — shelves, orders and customers in one place.',
         promoTitle: 'Everything your pet store needs',
@@ -665,6 +670,11 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       browseGigs: 'Browse gigs',
       postGig: 'Post a gig',
       myGigPosts: 'My gig posts',
+      // The MCP console's own entries (Dashboard, Tools and Settings are shared).
+      mcpActivity: 'Activity',
+      mcpConnect: 'Connect',
+      mcpConnections: 'Connections',
+      mcpGuide: 'Guide',
       challengeAuditLogs: 'Audit Logs',
       challengeLiveMonitor: 'Live Challenge Monitor',
       challengeResults: 'Results & Leaderboards',
@@ -2080,6 +2090,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
         localization: 'Localization',
         targets: 'Targets',
         gigJobs: 'Gig Jobs',
+        mcp: 'MCP',
       },
       header: {
         back: 'Back to coworkers',

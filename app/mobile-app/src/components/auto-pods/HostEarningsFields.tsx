@@ -33,7 +33,8 @@ function SpotsSlider({ min, max, value, label, onChange }: Readonly<SpotsSliderP
       max={max}
       step={1}
       value={[value]}
-      onValueChange={([next]) => onChange(next ?? min)}
+      // One thumb, so the last value is the only one.
+      onValueChange={(thumbs) => onChange(thumbs.reduce((_, only) => only, min))}
       aria-label={label}
     />
   );

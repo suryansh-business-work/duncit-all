@@ -31,8 +31,8 @@ export type EnvEntryConfig = Record<string, string | number | boolean>;
  * eye-toggle — nothing is masked. `secrets` still flags which fields hold a
  * value so the UI can mark presence even when a value is blank.
  */
-const toPublicConfig = (category: EnvCategory, config: EnvEntryConfig = {}) => {
-  const fields = CATEGORY_FIELDS[category] ?? [];
+const toPublicConfig = (category: EnvCategory, config: EnvEntryConfig) => {
+  const fields = CATEGORY_FIELDS[category];
   const values: Record<string, string | number | boolean | null> = {};
   const secrets: Record<string, boolean> = {};
   for (const field of fields) {
@@ -43,21 +43,20 @@ const toPublicConfig = (category: EnvCategory, config: EnvEntryConfig = {}) => {
 };
 
 const pub = (doc: any) => {
-  if (!doc) return null;
-  const o = doc.toObject ? doc.toObject() : doc;
+  const o = doc.toObject();
   const { values, secrets } = toPublicConfig(o.category, o.config ?? {});
   return {
     id: String(o._id),
     name: o.name,
     category: o.category as EnvCategory,
-    description: o.description ?? '',
-    is_default: !!o.is_default,
-    is_active: o.is_active !== false,
-    assigned_portals: (o.assigned_portals ?? []) as string[],
+    description: o.description,
+    is_default: o.is_default,
+    is_active: o.is_active,
+    assigned_portals: o.assigned_portals as string[],
     // Flattened key/value pairs the UI renders (non-secret only).
     config: Object.entries(values).map(([key, value]) => ({
       key,
-      value: value === null || value === undefined ? '' : String(value),
+      value: value === null ? '' : String(value),
     })),
     secrets: Object.entries(secrets).map(([key, present]) => ({ key, present })),
     last_used_at: iso(o.last_used_at),
@@ -102,7 +101,7 @@ function notFound(): never {
 }
 
 /** Don't overwrite a secret when the incoming value is blank/undefined. */
-function mergeConfig(existing: EnvEntryConfig = {}, input: EnvEntryConfig = {}): EnvEntryConfig {
+function mergeConfig(existing: EnvEntryConfig, input: EnvEntryConfig): EnvEntryConfig {
   const next: EnvEntryConfig = { ...existing };
   for (const [key, value] of Object.entries(input)) {
     if (value === undefined) continue;
@@ -232,7 +231,7 @@ export async function testEnvConnection(
 }
 
 export const envEntryService = {
-  async list(filter: { category?: EnvCategory | null; is_active?: boolean | null } = {}) {
+  async list(filter: { category?: EnvCategory | null; is_active?: boolean | null }) {
     const query: any = {};
     if (filter.category) query.category = filter.category;
     if (filter.is_active != null) query.is_active = filter.is_active;

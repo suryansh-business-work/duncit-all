@@ -69,6 +69,18 @@ describe('ClubSettingsPage', () => {
     await waitFor(() => expect(screen.getByText('Club settings saved')).toBeInTheDocument());
   });
 
+  it('dismisses the saved confirmation', async () => {
+    renderPage([settingsMock(30), saveMock(45)]);
+    await waitFor(() => expect(daysInput()).toHaveValue(30));
+    fireEvent.change(daysInput(), { target: { value: '45' } });
+    fireEvent.click(saveButton());
+    await waitFor(() => expect(screen.getByText('Club settings saved')).toBeInTheDocument());
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+
+    await waitFor(() => expect(screen.queryByText('Club settings saved')).not.toBeInTheDocument());
+  });
+
   it('refuses a number past the ten-year ceiling without saving', async () => {
     renderPage([settingsMock(30)]);
     await waitFor(() => expect(daysInput()).toHaveValue(30));

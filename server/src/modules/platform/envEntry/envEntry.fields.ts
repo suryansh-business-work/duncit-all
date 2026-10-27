@@ -530,10 +530,22 @@ export const CATEGORY_GROUP_OF = new Map(
   CATEGORY_GROUPS.flatMap((group) => group.categories.map((category) => [category, group] as const))
 );
 
-const ungrouped = Object.keys(CATEGORY_LABELS).filter((c) => !CATEGORY_GROUP_OF.has(c as EnvCategory));
-if (ungrouped.length > 0) {
-  throw new Error(`Env categories with no sidebar group: ${ungrouped.join(', ')}. Add them to CATEGORY_GROUPS.`);
+/** The group a category sits in; the check below guarantees every category has one. */
+export function groupOf(category: EnvCategory) {
+  const group = CATEGORY_GROUP_OF.get(category);
+  if (!group) throw new Error(`No sidebar group for ${category}`);
+  return group;
 }
+
+/** Fails fast, at load, when a category exists that no sidebar group lists — it would be invisible in the portal. */
+export function assertEveryCategoryGrouped(categories: readonly string[], isGrouped: (category: string) => boolean): void {
+  const ungrouped = categories.filter((category) => !isGrouped(category));
+  if (ungrouped.length > 0) {
+    throw new Error(`Env categories with no sidebar group: ${ungrouped.join(', ')}. Add them to CATEGORY_GROUPS.`);
+  }
+}
+
+assertEveryCategoryGrouped(Object.keys(CATEGORY_LABELS), (category) => CATEGORY_GROUP_OF.has(category as EnvCategory));
 
 /** Where an operator obtains each category's credentials (shown in the Add dialog). */
 export const CATEGORY_DOCS: Record<EnvCategory, string> = {

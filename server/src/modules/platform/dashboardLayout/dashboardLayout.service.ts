@@ -44,7 +44,7 @@ function sanitiseItems(items: readonly IDashboardLayoutItem[]): IDashboardLayout
   const seen = new Set<string>();
   const clean: IDashboardLayoutItem[] = [];
   for (const item of items) {
-    const widgetId = item.widget_id?.trim();
+    const widgetId = item.widget_id.trim();
     if (!widgetId || seen.has(widgetId)) continue;
     seen.add(widgetId);
     const w = clamp(item.w, 1, MAX_SPAN);

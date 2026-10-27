@@ -41,15 +41,19 @@ export function tokenize(text: string): string[] {
 /** Parses tokens into a directive tree. An unbalanced `}` is ignored rather than thrown on — a half-written file still maps. */
 export function parseNginx(text: string): NginxDirective[] {
   const root: NginxDirective[] = [];
-  const stack: NginxDirective[][] = [root];
+  const parents: NginxDirective[][] = [];
+  let current = root;
   let words: string[] = [];
   for (const token of tokenize(text)) {
     if (token === ';' || token === '{') {
-      const block = endDirective(stack.at(-1) ?? root, words, token === '{');
-      if (block) stack.push(block);
+      const block = endDirective(current, words, token === '{');
+      if (block) {
+        parents.push(current);
+        current = block;
+      }
       words = [];
     } else if (token === '}') {
-      if (stack.length > 1) stack.pop();
+      current = parents.pop() ?? current;
       words = [];
     } else {
       words.push(unquote(token));

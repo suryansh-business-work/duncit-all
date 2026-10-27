@@ -41,11 +41,10 @@ export default function LeavesSection({ venueId, holidays, disabled = false, onS
 
   const removeDate = (date: string) => setDates((prev) => prev.filter((item) => item !== date));
 
-  const persist = async () => {
-    if (!venueId) return;
+  const persist = async (id: string) => {
     setFeedback(null);
     try {
-      await save({ variables: { venue_doc_id: venueId, input: { holidays: dates } } });
+      await save({ variables: { venue_doc_id: id, input: { holidays: dates } } });
       await onSaved();
       setFeedback({ severity: 'success', text: 'Leaves & holidays saved. These dates are now blocked for slots and bookings.' });
     } catch (err) {
@@ -128,7 +127,7 @@ export default function LeavesSection({ venueId, holidays, disabled = false, onS
           startIcon={<SaveIcon />}
           variant="contained"
           disabled={!venueId || !dirty || saveState.loading}
-          onClick={() => fireAndForget(persist(), logs.portal['partners-app'], 'LeavesSection', 'persist')}
+          onClick={venueId ? () => fireAndForget(persist(venueId), logs.portal['partners-app'], 'LeavesSection', 'persist') : undefined}
           sx={{ alignSelf: 'flex-start', fontWeight: 800 }}
         >
           {saveState.loading ? 'Saving…' : 'Save leaves & holidays'}

@@ -32,15 +32,15 @@ export default function PartnerPoliciesPage() {
           <CardContent>
             <Stack spacing={1}>
               {loading && policies.length === 0 && <CircularProgress size={22} aria-label={t('shell.a11y.loading')} />}
-              {policies.length === 0 && !loading && <Typography variant="body2" sx={{
+              {policies.length === 0 && !loading && <Typography variant="body2" data-testid="policies-empty" sx={{
                 color: "text.secondary"
               }}>{t('partners.policiesPage.noActivePoliciesYet')}</Typography>}
-              {policies.map((policy: any) => <DuncitButton key={policy.id} component={RouterLink} to={`/policies/${policy.slug}`} startIcon={<ArticleIcon />} variant={policy.slug === slug ? 'contained' : 'text'} aria-current={policy.slug === slug ? 'page' : undefined} sx={{ justifyContent: 'flex-start', borderRadius: 1.25 }}>{policy.title}</DuncitButton>)}
+              {policies.map((policy: any) => <DuncitButton key={policy.id} data-testid={`policy-link-${policy.slug}`} component={RouterLink} to={`/policies/${policy.slug}`} startIcon={<ArticleIcon />} variant={policy.slug === slug ? 'contained' : 'text'} aria-current={policy.slug === slug ? 'page' : undefined} sx={{ justifyContent: 'flex-start', borderRadius: 1.25 }}>{policy.title}</DuncitButton>)}
             </Stack>
           </CardContent>
         </Card>
         <Card variant="outlined" sx={{ borderRadius: 2, flex: 1, width: '100%' }}>
-          <CardContent>{slug ? <PartnerPolicyArticle slug={slug} /> : <Alert severity="info">{t('partners.policiesPage.selectAPolicy')}</Alert>}</CardContent>
+          <CardContent>{slug ? <PartnerPolicyArticle slug={slug} /> : <Alert severity="info" data-testid="policies-select">{t('partners.policiesPage.selectAPolicy')}</Alert>}</CardContent>
         </Card>
       </Stack>
     </Stack>

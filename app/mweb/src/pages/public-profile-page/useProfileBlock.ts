@@ -41,7 +41,7 @@ export function useProfileBlock(profile: BlockableProfile, onChanged: () => unkn
       notify(t(copy.done, { vars: { name } }), 'success');
       await onChanged();
     } catch (e) {
-      notify(parseApiError(e) || t(copy.failed), 'error');
+      notify(parseApiError(e, t(copy.failed)), 'error');
     }
   };
 

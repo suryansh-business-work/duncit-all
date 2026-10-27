@@ -34,9 +34,9 @@ export default function FeedbackPage() {
           // The browser is the device here. Support needs it for the same
           // reason native sends the handset: a report you cannot reproduce on
           // is a report you cannot act on.
-          device_os: globalThis.navigator?.userAgent ?? '',
-          device_model: `${globalThis.screen?.width ?? 0}x${globalThis.screen?.height ?? 0}`,
-          source_screen: globalThis.location?.pathname ?? '',
+          device_os: globalThis.navigator.userAgent,
+          device_model: `${globalThis.screen.width}x${globalThis.screen.height}`,
+          source_screen: globalThis.location.pathname,
         }),
       },
     });

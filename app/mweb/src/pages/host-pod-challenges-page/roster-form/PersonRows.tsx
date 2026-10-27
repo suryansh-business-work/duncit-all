@@ -17,18 +17,41 @@ interface Props {
   disabled: boolean;
 }
 
+interface RemoveProps {
+  control: Control<RosterValues>;
+  kind: Props['kind'];
+  index: number;
+  onRemove: () => void;
+  disabled: boolean;
+}
+
+/** Removes one row, named after the person in it as they are typed right now. */
+function RemoveRowButton({ control, kind, index, onRemove, disabled }: Readonly<RemoveProps>) {
+  const { t } = useTranslation();
+  const name = useWatch({ control, name: `${kind}.${index}.name` });
+  const label = t('mweb.challenge.remove', { vars: { name } });
+  return (
+    <Tooltip title={label}>
+      <span>
+        <IconButton aria-label={label} onClick={onRemove} disabled={disabled}>
+          <DeleteOutlinedIcon />
+        </IconButton>
+      </span>
+    </Tooltip>
+  );
+}
+
 /** A stable id for a new row, so a player can join a team before it is saved. */
 const newRowId = () => makeDeviceId().slice(-8);
 
 /** Editable rows of people: a name, an optional linked attendee and (players) a team. */
-export default function PersonRows({ control, kind, title, attendees, teams, disabled }: Readonly<Props>) {
+export default function PersonRows({ control, kind, title, attendees, teams = [], disabled }: Readonly<Props>) {
   const { t } = useTranslation();
   const rows = useFieldArray({ control, name: kind });
-  const values = useWatch({ control, name: kind });
 
   const add = () =>
     kind === 'players'
-      ? rows.append({ player_id: newRowId(), name: '', user_id: '', team_id: teams?.[0]?.id ?? '' })
+      ? rows.append({ player_id: newRowId(), name: '', user_id: '', team_id: teams[0].id })
       : rows.append({ competitor_id: newRowId(), name: '', user_id: '' });
 
   return (
@@ -71,9 +94,9 @@ export default function PersonRows({ control, kind, title, attendees, teams, dis
             <Controller
               name={`players.${i}.team_id`}
               control={control}
-              render={({ field }) => (
-                <TextField select size="small" label={t('mweb.challenge.fields.team')} {...field} disabled={disabled} sx={{ flex: 1 }}>
-                  {(teams ?? []).map((team) => (
+              render={({ field, fieldState }) => (
+                <TextField select size="small" label={t('mweb.challenge.fields.team')} {...field} error={!!fieldState.error} helperText={fieldState.error?.message} disabled={disabled} sx={{ flex: 1 }}>
+                  {teams.map((team) => (
                     <MenuItem key={team.id} value={team.id}>
                       {team.name}
                     </MenuItem>
@@ -82,16 +105,10 @@ export default function PersonRows({ control, kind, title, attendees, teams, dis
               )}
             />
           )}
-          <Tooltip title={t('mweb.challenge.remove', { vars: { name: values?.[i]?.name ?? '' } })}>
-            <span>
-              <IconButton aria-label={t('mweb.challenge.remove', { vars: { name: values?.[i]?.name ?? '' } })} onClick={() => rows.remove(i)} disabled={disabled}>
-                <DeleteOutlinedIcon />
-              </IconButton>
-            </span>
-          </Tooltip>
+          <RemoveRowButton control={control} kind={kind} index={i} onRemove={() => rows.remove(i)} disabled={disabled} />
         </Stack>
       ))}
-      <DuncitButton size="small" startIcon={<AddIcon />} onClick={add} disabled={disabled || (kind === 'players' && !teams?.length)} sx={{ alignSelf: 'flex-start' }}>
+      <DuncitButton size="small" startIcon={<AddIcon />} onClick={add} disabled={disabled || (kind === 'players' && !teams.length)} sx={{ alignSelf: 'flex-start' }}>
         {t(kind === 'players' ? 'mweb.challenge.addPlayer' : 'mweb.challenge.addCompetitor')}
       </DuncitButton>
     </Stack>

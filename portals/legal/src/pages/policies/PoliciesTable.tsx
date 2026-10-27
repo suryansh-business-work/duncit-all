@@ -47,26 +47,26 @@ export default function PoliciesTable({
     const activeLabel = (p: Policy) =>
       p.is_active ? t('shell.common.active') : t('legal.policies.hidden');
     const renderStatus = (p: Policy) => (
-      <Chip size="small" color={p.is_active ? 'success' : 'default'} label={activeLabel(p)} />
+      <Chip size="small" color={p.is_active ? 'success' : 'default'} label={activeLabel(p)} data-testid={`policy-status-${p.id}`} />
     );
     const renderActions = (p: Policy) => (
       <Stack direction="row" spacing={0.5} component="span" sx={{
         justifyContent: "flex-end"
       }}>
         <Tooltip title={t('legal.policies.versions.action')}>
-          <DuncitIconButton size="small" aria-label={t('legal.policies.versions.action')} onClick={() => onHistory(p)}>
+          <DuncitIconButton size="small" aria-label={t('legal.policies.versions.action')} onClick={() => onHistory(p)} data-testid={`policy-history-${p.id}`}>
             <HistoryIcon fontSize="small" />
           </DuncitIconButton>
         </Tooltip>
         <Tooltip title={t('legal.policies.notify.sendNowHint')}>
-          <DuncitIconButton size="small" aria-label={t('legal.policies.notify.sendNow')} onClick={() => onNotify(p)}>
+          <DuncitIconButton size="small" aria-label={t('legal.policies.notify.sendNow')} onClick={() => onNotify(p)} data-testid={`policy-notify-${p.id}`}>
             <MailOutlineIcon fontSize="small" />
           </DuncitIconButton>
         </Tooltip>
-        <DuncitButton size="small" onClick={() => onEdit(p)}>
+        <DuncitButton size="small" onClick={() => onEdit(p)} data-testid={`policy-edit-${p.id}`}>
           {t('shell.common.edit')}
         </DuncitButton>
-        <DuncitButton size="small" color="error" onClick={() => onRemove(p)}>
+        <DuncitButton size="small" color="error" onClick={() => onRemove(p)} data-testid={`policy-delete-${p.id}`}>
           {t('shell.common.delete')}
         </DuncitButton>
       </Stack>

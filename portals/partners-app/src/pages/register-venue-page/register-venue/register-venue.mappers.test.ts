@@ -708,3 +708,36 @@ describe('toApprovedUpdateInput — categories stay locked after approval', () =
     }
   });
 });
+
+describe('venueToValues — records with gaps', () => {
+  it('leaves the owner email blank when neither the account nor the venue has one', () => {
+    expect(venueToValues({ id: 'v1' }, [], { name: '', email: '' }).owner_email).toBe('');
+  });
+
+  it('reads a half-picked category as blanks for the levels it lacks rather than undefined', () => {
+    const values = venueToValues(
+      {
+        id: 'v1',
+        venue_categories: [
+          { super_category_id: 's1', super_category_name: 'Sports' },
+          { category_id: 'c1', category_name: 'Racket' },
+          { sub_category_id: 'b1', sub_category_name: 'Badminton' },
+        ],
+      },
+      [],
+      account,
+    );
+    expect(values.venue_categories).toEqual([
+      { super_id: 's1', super_name: 'Sports', category_id: '', category_name: '', sub_id: '', sub_name: '' },
+      { super_id: '', super_name: '', category_id: 'c1', category_name: 'Racket', sub_id: '', sub_name: '' },
+      { super_id: '', super_name: '', category_id: '', category_name: '', sub_id: 'b1', sub_name: 'Badminton' },
+    ]);
+  });
+
+  it('starts on one blank category row when every category entry is empty', () => {
+    const values = venueToValues({ id: 'v1', venue_categories: [{ super_category_id: null }] }, [], account);
+    expect(values.venue_categories).toEqual([
+      { super_id: '', super_name: '', category_id: '', category_name: '', sub_id: '', sub_name: '' },
+    ]);
+  });
+});

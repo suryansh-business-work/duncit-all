@@ -67,7 +67,7 @@ export async function locationPoint(locationId: string, zoneName?: string | null
     .select('location_name city state country lat lng location_zones')
     .lean<LeanLocation>();
   if (!loc) return null;
-  const cityName = loc.city || loc.location_name || '';
+  const cityName = loc.city || loc.location_name;
   const region = [cityName, loc.state, loc.country].filter(Boolean).join(', ');
 
   const zone = zoneName

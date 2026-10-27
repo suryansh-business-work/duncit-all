@@ -24,6 +24,7 @@ export default function SaveBar({ mode, active, busy, onSave, onSaveApproved, on
         startIcon={<SaveIcon />}
         disabled={busy}
         onClick={onSaveApproved}
+        data-testid="register-venue-save-approved"
         sx={{ flex: 1, borderRadius: 1, fontWeight: 800 }}
       >
         Save changes
@@ -38,6 +39,7 @@ export default function SaveBar({ mode, active, busy, onSave, onSaveApproved, on
         endIcon={<SendIcon />}
         disabled={busy}
         onClick={onSubmit}
+        data-testid="register-venue-submit"
         sx={{ flex: 1, borderRadius: 1, fontWeight: 800 }}
       >
         Submit for review
@@ -51,6 +53,7 @@ export default function SaveBar({ mode, active, busy, onSave, onSaveApproved, on
       startIcon={<SaveIcon />}
       disabled={busy}
       onClick={onSave}
+      data-testid="register-venue-save"
       sx={{ flex: 1, borderRadius: 1, fontWeight: 800 }}
     >
       Save & continue

@@ -50,7 +50,7 @@ export default function CountryStatePicker({ tree, country, state, onCountry, on
     return all.filter((s) => s.state.toLowerCase().includes(term));
   }, [activeCountry, stateQuery]);
 
-  if (tree.length === 0) return null;
+  if (!activeCountry) return null;
 
   return (
     <Stack data-testid="country-state-picker" spacing={2}>
@@ -64,10 +64,10 @@ export default function CountryStatePicker({ tree, country, state, onCountry, on
                 key={c.country}
                 data-testid={`country-state-picker-country-${c.country}`}
                 onClick={() => onCountry(c.country)}
-                aria-pressed={c.country === activeCountry?.country}
+                aria-pressed={c.country === activeCountry.country}
                 avatar={flag ? <Box component="img" src={flag} alt="" sx={{ width: 22, height: 16, borderRadius: '4px' }} /> : undefined}
                 label={c.country}
-                sx={chipSx(c.country === activeCountry?.country)}
+                sx={chipSx(c.country === activeCountry.country)}
               />
             );
           })}
@@ -76,7 +76,7 @@ export default function CountryStatePicker({ tree, country, state, onCountry, on
 
       <Box>
         <LocationSectionLabel>State</LocationSectionLabel>
-        {(activeCountry?.states.length ?? 0) > 6 && (
+        {activeCountry.states.length > 6 && (
           <TextField
             data-testid="country-state-picker-state-search"
             size="small"

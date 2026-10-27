@@ -46,11 +46,9 @@ export default function CategorySelectors({
     () => (subs.data?.categories ?? []).filter((s) => s.is_active !== false && s.parent_id && categoryIds.includes(s.parent_id)),
     [subs.data, categoryIds]
   );
-  const nameById = useMemo(() => {
-    const m = new Map<string, string>();
-    [...catOptions, ...subOptions].forEach((c) => m.set(c.id, c.name));
-    return m;
-  }, [catOptions, subOptions]);
+  // Saved ids the loaded options no longer carry (inactive, other super) drop out of the chips.
+  const pickedCats = categoryIds.flatMap((id) => catOptions.find((c) => c.id === id) ?? []);
+  const pickedSubs = subIds.flatMap((id) => subOptions.find((s) => s.id === id) ?? []);
 
   // Drop categories not under the current super, and subs not under a selected category.
   useEffect(() => {
@@ -82,10 +80,12 @@ export default function CategorySelectors({
         <Autocomplete
           multiple
           size="small"
-          options={catOptions.map((c) => c.id)}
-          value={categoryIds.filter((id) => catOptions.some((c) => c.id === id))}
-          getOptionLabel={(id) => nameById.get(id) ?? id}
-          onChange={(_, v) => setValue(categoryName, v, { shouldDirty: true })}
+          options={catOptions}
+          value={pickedCats}
+          getOptionLabel={(c) => c.name}
+          getOptionKey={(c) => c.id}
+          isOptionEqualToValue={(a, b) => a.id === b.id}
+          onChange={(_, v) => setValue(categoryName, v.map((c) => c.id), { shouldDirty: true })}
           renderInput={renderCatInput}
         />
       )}
@@ -93,10 +93,12 @@ export default function CategorySelectors({
         <Autocomplete
           multiple
           size="small"
-          options={subOptions.map((s) => s.id)}
-          value={subIds.filter((id) => subOptions.some((s) => s.id === id))}
-          getOptionLabel={(id) => nameById.get(id) ?? id}
-          onChange={(_, v) => setValue(subName, v, { shouldDirty: true })}
+          options={subOptions}
+          value={pickedSubs}
+          getOptionLabel={(s) => s.name}
+          getOptionKey={(s) => s.id}
+          isOptionEqualToValue={(a, b) => a.id === b.id}
+          onChange={(_, v) => setValue(subName, v.map((s) => s.id), { shouldDirty: true })}
           loading={subs.loading}
           renderInput={renderSubInput}
         />

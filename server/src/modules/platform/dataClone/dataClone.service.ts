@@ -71,7 +71,7 @@ function iso(value: Date | null | undefined): string | null {
 
 /** Totals are derived from the per-collection rows so they can never drift. */
 function toPublic(doc: DataCloneJobDoc): PublicCloneJob {
-  const collections = doc.collections ?? [];
+  const { collections } = doc;
   return {
     id: String(doc._id),
     status: doc.status,
@@ -92,7 +92,7 @@ function toPublic(doc: DataCloneJobDoc): PublicCloneJob {
       startedAt: iso(c.started_at),
       finishedAt: iso(c.finished_at),
     })),
-    excluded: doc.excluded ?? [],
+    excluded: doc.excluded,
     error: doc.error ?? null,
     startedBy: doc.started_by ?? null,
     startedAt: iso(doc.started_at),

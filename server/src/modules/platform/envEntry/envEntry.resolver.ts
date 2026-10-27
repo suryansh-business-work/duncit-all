@@ -6,7 +6,7 @@ import {
   CATEGORY_DESCRIPTIONS,
   CATEGORY_DOCS,
   CATEGORY_FIELDS,
-  CATEGORY_GROUP_OF,
+  groupOf,
   CATEGORY_LABELS,
 } from './envEntry.fields';
 import { envAccessService } from './envAccess.service';
@@ -106,12 +106,12 @@ export const envEntryResolvers = {
       return categories.map((category) => ({
         category,
         label: CATEGORY_LABELS[category],
-        docUrl: CATEGORY_DOCS[category] ?? null,
+        docUrl: CATEGORY_DOCS[category],
         apiDocsUrl: CATEGORY_API_DOCS[category] ?? null,
-        description: CATEGORY_DESCRIPTIONS[category] ?? null,
-        groupKey: CATEGORY_GROUP_OF.get(category)?.key ?? '',
-        groupLabel: CATEGORY_GROUP_OF.get(category)?.label ?? '',
-        groupDescription: CATEGORY_GROUP_OF.get(category)?.description ?? null,
+        description: CATEGORY_DESCRIPTIONS[category],
+        groupKey: groupOf(category).key,
+        groupLabel: groupOf(category).label,
+        groupDescription: groupOf(category).description,
         fields: CATEGORY_FIELDS[category].map((f) => ({
           name: f.name,
           label: f.label,
@@ -236,7 +236,7 @@ export const envEntryResolvers = {
       await manageable(ctx, args.id);
       // The signed-in admin is who a live test message falls back to, so the
       // caller cannot nominate somebody else's number by omitting one.
-      return envEntryTests.connection(args.id, args.input?.to, ctx.user?.id ?? null);
+      return envEntryTests.connection(args.id, args.input?.to, ctx.user?.id);
     },
 
     testEnvEmail: async (_p: unknown, args: { id: string; to: string }, ctx: GraphQLContext) => {

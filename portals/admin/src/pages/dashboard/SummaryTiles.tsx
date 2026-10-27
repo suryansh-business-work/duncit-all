@@ -23,6 +23,7 @@ export default function SummaryTiles({ totals, loading }: Readonly<Props>) {
             }}>
             <StatCard
               layout="split"
+              testId={`admin-dashboard-tile-${t.key}`}
               label={t.label}
               value={value}
               valueVariant="h4"

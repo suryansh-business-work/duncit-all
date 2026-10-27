@@ -177,8 +177,8 @@ async function fields(rangeName?: string | null) {
       deprecation_reason: field.deprecationReason ?? null,
       referenced: used?.referenced ?? 0,
       sampled_calls: calls,
-      error_rate_pct: calls > 0 ? round1(((used?.sampled_errors ?? 0) / calls) * 100) : 0,
-      avg_ms: calls > 0 ? round1((used?.duration_total_ms ?? 0) / calls) : 0,
+      error_rate_pct: used && calls > 0 ? round1((used.sampled_errors / calls) * 100) : 0,
+      avg_ms: used && calls > 0 ? round1(used.duration_total_ms / calls) : 0,
       max_ms: round1(used?.duration_max_ms ?? 0),
       last_seen_at: iso(used?.last_seen_at),
     };

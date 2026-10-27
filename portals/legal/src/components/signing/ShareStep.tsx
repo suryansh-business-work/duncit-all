@@ -35,7 +35,7 @@ export default function ShareStep({
 
   return (
     <Stack spacing={2} sx={{ mt: 2 }}>
-      <Alert severity="success">{t('legal.sign.lockedNotice')}</Alert>
+      <Alert severity="success" data-testid="sign-locked-notice">{t('legal.sign.lockedNotice')}</Alert>
       <Typography variant="subtitle2" sx={{
         fontWeight: 700
       }}>
@@ -46,6 +46,7 @@ export default function ShareStep({
           label={t('legal.sign.sendTo')}
           value={to}
           onChange={(e) => onToChange(e.target.value)}
+          slotProps={{ htmlInput: { 'data-testid': 'sign-share-to' } }}
           placeholder={t('legal.sign.sharePlaceholder')}
           fullWidth
         />
@@ -54,6 +55,7 @@ export default function ShareStep({
           startIcon={<SendIcon />}
           disabled={sending || !canShareTo(to)}
           onClick={onSend}
+          data-testid="sign-share-send"
           sx={{ flexShrink: 0 }}
         >
           {sending ? t('legal.sign.sending') : t('legal.sign.sendEmail')}

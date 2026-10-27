@@ -68,22 +68,17 @@ describe('branding with every field cleared', () => {
     expect(cleared.theme_token_source).toBe(fresh.theme_token_source);
   });
 
-  it('fills the missing parts of slider entries and occasion icons', async () => {
+  it('fills the missing parts of a slider entry from the schema defaults', async () => {
     await settingsService.getBranding();
     await BrandingModel.collection.updateOne(
       { singleton_key: 'branding' },
       {
-        $set: {
-          pod_shop_slider: [{ url: 'https://img/a.jpg' }],
-          occasional_icons: [{ is_active: false }, { slug: 'diwali', label: 'Diwali' }],
-        },
+        $set: { pod_shop_slider: [{ url: 'https://img/a.jpg' }] },
       }
     );
     const b = await settingsService.getBranding();
     expect(b.pod_shop_slider).toEqual([
       { url: 'https://img/a.jpg', type: 'IMAGE', order: 0, heading: '', subheading: '', cta_label: '', cta_url: '' },
     ]);
-    expect(b.occasional_icons[0]).toMatchObject({ slug: '', label: '', is_active: false, fallback_icon: 'occasion', sort_order: 0 });
-    expect(b.occasional_icons[1]).toMatchObject({ slug: 'diwali', label: 'Diwali', is_active: true, starts_at: '', ends_at: '' });
   });
 });

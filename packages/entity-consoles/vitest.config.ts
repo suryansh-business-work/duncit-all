@@ -45,7 +45,15 @@ export default defineConfig({
       reportsDirectory: './coverage',
       include: ['src/**'],
       // Pure re-export barrel and the gql document strings — nothing executable.
-      exclude: ['src/index.ts', 'src/**/*.d.ts', 'src/**/counts.ts'],
+      // Cypress component specs (`*.cy.ts[x]`, run by Cypress, never vitest) and
+      // the suites' own stand-ins/fixtures under `__tests__/` are test code, not
+      // the product: counting them reads as hundreds of "uncovered" lines.
+      exclude: ['src/index.ts', 'src/**/*.d.ts', 'src/**/counts.ts', 'src/**/*.cy.{ts,tsx}', 'src/**/__tests__/**',
+        // Modules that hold only types: erased at compile time, nothing to execute.
+        'src/**/*.types.{ts,tsx}',
+        'src/pods/list/podsColumns/types.ts',
+        'src/pods/change-requests/columns/types.ts',
+      ],
       // RATCHET, not a target — raise as suites arrive, never lower.
       //
       // These are the consoles' OWN suites, which moved in with them from the

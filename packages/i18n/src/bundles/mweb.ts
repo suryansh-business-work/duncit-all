@@ -971,6 +971,8 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       priceHighToLow: 'Price · High to Low',
       priceLowToHigh: 'Price · Low to High',
       resetLocation: 'Reset Location',
+      // The Clubs tab when the selected locality has no active club (mWeb ClubsPage, native ClubsLocationEmpty).
+      noClubsAtLocation: 'No Clubs operating at the selected location,',
       searchClubsByNameOrVibe: 'Search clubs by name or vibe…',
       seeAllLivePods: 'See all live pods',
       seeAllPreviousPods: 'See all previous pods',
@@ -1588,6 +1590,8 @@ export const MWEB_BUNDLE: NestedCatalogue = {
         'You can cancel your spot on this pod one more time. If you join again after that, the spot cannot be cancelled.',
       cancelSpotLimitReached:
         'You have cancelled your spot on this pod the maximum number of times allowed, so it can no longer be cancelled.',
+      // NOT_FREE_POD: the spot is on a paid pod, which is left through Backout.
+      cancelSpotPaidPod: 'Only a free pod’s spot can be cancelled. Use Backout to leave a paid pod.',
       // mWeb only — refilling your own released seat by referral is a web flow;
       // the native bar has no backed-out state.
       backedOutRefundLead: 'You have backed out. Refund status:',
@@ -3639,6 +3643,11 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       withdraw: 'Withdraw',
       withdrawFromWallet: 'Withdraw from wallet',
       yourPodPayoutsWillShowUp: 'Your pod payouts will show up here.',
+      // The payout cycle under the balance, by the wallet's payout_mode.
+      payoutImmediate: 'Paid immediately after approval',
+      payoutWeekly: 'Paid on the weekly payout cycle',
+      payoutMonthEnd: 'Paid at month end',
+      nextCycle: 'Next cycle {date}',
     },
     // The pod sections of the two partner studios: Venue Studio's "Pods hosted
     // on your Venue" and Club Studio's "Your Pods". ONE namespace because both
@@ -3703,6 +3712,14 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       searchVenues: 'Search venues',
       searchVenuesByNameTypeOr: 'Search venues by name, type or area',
       mapPreview: 'Map preview',
+      loadFailed: 'Could not load venues — please try again.',
+      empty: 'No venues found here yet — try another search or category.',
+      // The venue card and the venue page chips.
+      capacity: '{capacity} capacity',
+      podCount: {
+        one: '{count} pod',
+        other: '{count} pods',
+      },
     },
     // "Normal Pod or Auto Pod?" — the same question the portals ask under
     // shell.podKind, word-for-word (rule 27: mWeb and native share this).
@@ -4121,11 +4138,21 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       rateThisClub: 'Rate this Club',
       hosts: 'Hosts',
       viewAllClubMembers: 'View all club members',
+      // The segment pills and the Pods Schedule rails (mWeb ClubSegments + ClubPodsScheduleSection, native twins).
+      podsSchedule: 'Pods Schedule',
+      clubMoments: 'Club Moments',
+      faqs: 'FAQs',
+      clubAdmins: 'Club Admins',
+      happeningSoon: 'Happening soon',
     },
     clubDetailsPage: {
       moments: 'Moments',
       stories: 'Stories',
       clubNotFound: 'Club not found.',
+      following: 'Following {name}',
+      unfollowed: 'Unfollowed {name}',
+      followFailed: 'Could not update club follow',
+      linkCopied: 'Link copied',
     },
     // A city that is not launched yet: its location-picker tile and the
     // launch waitlist page (mWeb CityLaunchView, native CityLaunchView) — four
@@ -4333,6 +4360,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
     },
     hostManage: {
       applyNow: 'Apply Now',
+      create: 'Create',
       cancelPod: 'Cancel pod',
       commissionPct: '− Commission ({pct}%)',
       completeAPodToSeeYour: 'Complete a pod to see your share here.',
@@ -4462,6 +4490,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
     },
     notifications: {
       allowNotifications: 'Allow notifications',
+      noneYet: 'No notifications yet.',
     },
     // My Product Orders — the pod-shop order history. mWeb and the native app
     // render the same page (rule 27), so every key is used by BOTH surfaces.
@@ -5079,6 +5108,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       markResolved: 'Mark resolved',
       sendReply: 'Send reply',
       ticketDetails: 'Ticket Details',
+      notFound: 'This ticket could not be found.',
     },
     tourGuide: {
       back: 'Back',
@@ -5221,6 +5251,9 @@ export const MWEB_BUNDLE: NestedCatalogue = {
     venueDetailsPage: {
       copyLink: 'Copy link',
       venueNotFound: 'Venue not found',
+      venueUnavailable: 'This venue link may be unavailable or the venue may not be approved yet.',
+      linkCopied: 'Venue link copied',
+      copyUnavailable: 'Copy is unavailable in this browser',
     },
     venueEarnings: {
       earnings: 'Earnings',
@@ -5703,6 +5736,19 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       nearbyHosts: 'Search Nearby Hosts',
       withdrawalGroup: 'Earnings',
       withdrawal: 'Withdrawal',
+    },
+    // The words beside each studio mode (mWeb studio-mode STUDIO_LABEL_KEY): the
+    // header badge, the switcher dialog and the drawer's mode row.
+    studioMode: {
+      user: 'User',
+      host: 'Host Studio',
+      venue: 'Venue Studio',
+      ecomm: 'ecomm',
+      club: 'Club Admin',
+      switch: 'Switch',
+      switchTo: 'Switch to {mode}',
+      activeNow: 'Active right now',
+      pendingSwitch: 'Selected — press Switch to confirm',
     },
     venueMenu: {
       availability: 'Availability Calendar',

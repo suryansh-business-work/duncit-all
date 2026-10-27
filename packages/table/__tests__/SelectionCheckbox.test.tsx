@@ -130,6 +130,36 @@ describe('SelectionCheckbox', () => {
   });
 });
 
+describe('SelectionHeaderCheckbox / a grid that is gone', () => {
+  it('ignores a selection event that arrives after the grid was destroyed', () => {
+    let destroyed = false;
+    const listeners: Record<string, Listener> = {};
+    const getSelectedNodes = vi.fn(() => [{ id: 'n0' }]);
+    const api = {
+      forEachNode: (cb: () => void) => cb(),
+      getSelectedNodes,
+      addEventListener: vi.fn((name: string, cb: Listener) => {
+        listeners[name] = cb;
+      }),
+      removeEventListener: vi.fn(),
+      isDestroyed: () => destroyed,
+      selectAll: vi.fn(),
+      deselectAll: vi.fn(),
+    };
+    renderHeader(api);
+    expect(screen.getByRole('checkbox', { name: 'Select every row on this page' })).toBeChecked();
+    getSelectedNodes.mockClear();
+
+    destroyed = true;
+    // A destroyed AG Grid api answers nothing: reading the page would throw.
+    api.getSelectedNodes = undefined as never;
+
+    expect(() => act(() => listeners.selectionChanged())).not.toThrow();
+    expect(getSelectedNodes).not.toHaveBeenCalled();
+    expect(screen.getByRole('checkbox', { name: 'Select every row on this page' })).toBeChecked();
+  });
+});
+
 describe('SelectionHeaderCheckbox', () => {
   it('ticks every row on the page when checked, and unticks them when unchecked', () => {
     const { api } = makeApi(3, 0);

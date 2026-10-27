@@ -7,13 +7,15 @@ interface Props {
   onChange: (next: number) => void;
   hint?: string;
   max?: number;
+  /** data-testid on the slider block. */
+  testId?: string;
 }
 
 /** A labeled 0–max% MUI slider with a live value chip, used across the Default
  * Deductions cards. An optional `hint` renders an info tooltip on the label. */
-export default function DeductionSlider({ label, value, onChange, hint, max = 100 }: Readonly<Props>) {
+export default function DeductionSlider({ label, value, onChange, hint, max = 100, testId }: Readonly<Props>) {
   return (
-    <Box sx={{ flex: 1, minWidth: 220, px: 1 }}>
+    <Box sx={{ flex: 1, minWidth: 220, px: 1 }} data-testid={testId}>
       <Stack
         direction="row"
         sx={{

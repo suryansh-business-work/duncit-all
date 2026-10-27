@@ -158,7 +158,7 @@ function toIndexSpec(index: mongo.Document): mongo.IndexDescription {
   return { ...spec, key: index.key };
 }
 
-function touch(id: string, fields: Record<string, unknown> = {}): Promise<unknown> {
+function touch(id: string, fields: Record<string, unknown>): Promise<unknown> {
   return DbBackupModel.updateOne(
     { _id: id },
     { $set: { heartbeat_at: new Date(), ...fields } },
@@ -261,6 +261,9 @@ async function runBackup(id: string, fileName: string, startedAt: Date): Promise
     await failBackup(id, err);
   }
 }
+
+/** A table row as a plain object: the table query hands back Mongoose documents, which do not survive being spread into a repaired copy. */
+const plainOf = (doc: DbBackupDoc): DbBackupDoc => (doc as unknown as { toObject(): DbBackupDoc }).toObject();
 
 function findBackup(id: string): Promise<DbBackupDoc | null> {
   return DbBackupModel.findById(id).lean<DbBackupDoc>().exec();
@@ -387,7 +390,8 @@ async function prune(keepLast: number): Promise<number> {
     .lean<DbBackupDoc[]>()
     .exec();
   for (const doc of stale) {
-    if (doc.file_name) await deleteBackupFile(doc.file_name);
+    // The query above only returns rows that still have a file.
+    await deleteBackupFile(doc.file_name as string);
     await DbBackupModel.updateOne({ _id: doc._id }, { $set: { file_name: null } }).exec();
   }
   return stale.length;
@@ -435,7 +439,7 @@ export const dbBackupService = {
     // A run whose process was killed — a deploy mid-backup, a browser closed
     // mid-upload — otherwise sits at RUNNING until somebody happens to start
     // another one, with the page politely polling a corpse every five seconds.
-    const repaired = await Promise.all(docs.map(repairIfStale));
+    const repaired = await Promise.all(docs.map((doc) => repairIfStale(plainOf(doc))));
     return { rows: repaired.map(toPublicBackup), total, page, page_size };
   },
 

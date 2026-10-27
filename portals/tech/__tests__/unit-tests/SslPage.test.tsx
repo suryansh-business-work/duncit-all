@@ -92,6 +92,12 @@ describe('SSL certificates page', () => {
     expect(screen.queryByTestId('ssl-stat-count')).not.toBeInTheDocument();
   });
 
+  it('still says certbot is unavailable when the server gave no reason', async () => {
+    ops.q.SslCertificates = { data: { sslCertificates: overview({ available: false, error: null as never, certificates: [] }) } };
+    renderWithProviders(<SslPage />);
+    expect(await screen.findByTestId('ssl-unavailable')).toBeInTheDocument();
+  });
+
   it('shows a healthy fleet without a risk banner, and a failed read', async () => {
     ops.q.SslCertificates = { data: { sslCertificates: overview({ certificates: [cert({ days_remaining: 80 })] }) } };
     const first = renderWithProviders(<SslPage />);

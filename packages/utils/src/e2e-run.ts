@@ -48,12 +48,38 @@ export const E2E_GOOGLE_CREDENTIAL_QUERY = `query E2eGoogleCredential($email: St
   e2eGoogleCredential(email: $email, given_name: $given_name, family_name: $family_name)
 }`;
 
-/** The portal role each staff portal's sign-in admits. */
-export type E2eStaffRole = 'SUPPORT_MANAGER' | 'LEGAL_MANAGER' | 'ALL_PODS_ACCESS';
+/**
+ * The roles a run account may be given (server `e2eRun.staff.ts`): each staff
+ * portal's sign-in role, and the limited staff and partner roles the access
+ * specs sign in with. Never SUPER_ADMIN, TECH_MANAGER or FINANCE_MANAGER.
+ */
+export type E2eStaffRole =
+  | 'SUPPORT_MANAGER'
+  | 'LEGAL_MANAGER'
+  | 'ALL_PODS_ACCESS'
+  | 'CITY_ADMIN'
+  | 'ZONAL_ADMIN'
+  | 'SUPPORT_USER'
+  | 'FINANCE_USER'
+  | 'LOGS_MANAGER'
+  | 'ONBOARDING_MANAGER'
+  | 'ALL_VENUES_ACCESS'
+  | 'ALL_HOSTS_ACCESS'
+  | 'ALL_CLUBS_ACCESS'
+  | 'ALL_CLUB_ADMINS_ACCESS'
+  | 'ECOMM_MANAGER'
+  | 'CRM_MANAGER'
+  | 'COMMUNICATIONS_MANAGER'
+  | 'ADS_MANAGER';
 
 /** Give the run account portal roles, so the staff half of a journey needs no stored staff password. */
 export const E2E_GRANT_ROLES_MUTATION = `mutation GrantE2eRunAccountRoles($input: GrantE2eRunAccountRolesInput!) {
   grantE2eRunAccountRoles(input: $input)
+}`;
+
+/** Take granted roles away again, so the next spec finds a plain member. */
+export const E2E_REVOKE_ROLES_MUTATION = `mutation RevokeE2eRunAccountRoles($input: GrantE2eRunAccountRolesInput!) {
+  revokeE2eRunAccountRoles(input: $input)
 }`;
 
 /**

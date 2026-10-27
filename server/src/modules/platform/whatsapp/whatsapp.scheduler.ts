@@ -86,8 +86,8 @@ interface SweptPod {
   pod_title: string;
   pod_date_time: Date;
   pod_end_date_time?: Date | null;
-  pod_attendees?: any[];
-  pod_hosts_id?: any[];
+  pod_attendees: any[];
+  pod_hosts_id: any[];
   club_id?: any;
   venue_id?: any;
   extra_seats?: number;
@@ -183,7 +183,7 @@ function podUrl(mwebUrl: string, pod: SweptPod, slugById: Map<string, string>) {
 const feedbackUrl = (mwebUrl: string, pod: SweptPod) =>
   `${trimTrailingSlash(mwebUrl)}/pod/${String(pod._id)}/feedback`;
 
-const firstHostId = (pod: SweptPod) => String((pod.pod_hosts_id ?? [])[0] ?? '');
+const firstHostId = (pod: SweptPod) => String(pod.pod_hosts_id[0] ?? '');
 
 /* ------------------------------------------------------------------ *
  * 1. USER_POD_REMINDER — a joined pod starts soon.
@@ -198,8 +198,8 @@ function podReminders(
   const hostName = nameOf(users.get(firstHostId(pod)));
   const link = podUrl(mwebUrl, pod, slugById);
   const hours = hoursUntil(pod.pod_date_time);
-  const hostIds = new Set((pod.pod_hosts_id ?? []).map(String));
-  const guests = (pod.pod_attendees ?? []).filter((attendeeId) => !hostIds.has(String(attendeeId)));
+  const hostIds = new Set(pod.pod_hosts_id.map(String));
+  const guests = pod.pod_attendees.filter((attendeeId) => !hostIds.has(String(attendeeId)));
   const hostReminders = [...hostIds].map((hostId) => {
     const user = users.get(hostId);
     const name = nameOf(user);
@@ -262,7 +262,7 @@ async function remindAttendees(
   if (pods.length === 0) return;
   const slugById = await loadPodClubSlugMap(pods);
   const users = await waUsers(
-    pods.flatMap((pod) => [...(pod.pod_attendees ?? []), ...(pod.pod_hosts_id ?? [])])
+    pods.flatMap((pod) => [...pod.pod_attendees, ...pod.pod_hosts_id])
   );
   await sweepSend(
     pods.flatMap((pod) => podReminders(pod, users, slugById, mwebUrl))
@@ -290,12 +290,12 @@ async function remindAttendeesSameDay(now: number, cutoff: Date, mwebUrl: string
   if (pods.length === 0) return;
   const [slugById, users, venueNames] = await Promise.all([
     loadPodClubSlugMap(pods),
-    waUsers(pods.flatMap((pod) => pod.pod_attendees ?? [])),
+    waUsers(pods.flatMap((pod) => pod.pod_attendees)),
     venueNamesOf(pods),
   ]);
   await sweepSend(
     pods.flatMap((pod) =>
-      (pod.pod_attendees ?? []).map((attendeeId) => {
+      pod.pod_attendees.map((attendeeId) => {
         const user = users.get(String(attendeeId));
         const name = nameOf(user);
         return {
@@ -325,8 +325,8 @@ async function venueNamesOf(pods: SweptPod[]): Promise<Map<string, string>> {
   if (ids.length === 0) return new Map();
   const venues = await VenueModel.find({ _id: { $in: ids } })
     .select('venue_name')
-    .lean<{ _id: unknown; venue_name?: string | null }[]>();
-  return new Map(venues.map((venue) => [String(venue._id), venue.venue_name ?? '']));
+    .lean<{ _id: unknown; venue_name: string }[]>();
+  return new Map(venues.map((venue) => [String(venue._id), venue.venue_name]));
 }
 
 /* ------------------------------------------------------------------ *
@@ -349,9 +349,9 @@ async function remindVenues(now: number, cutoff: Date, clocks: SweepClocks) {
   if (pods.length === 0) return;
   const venues = await VenueModel.find({ _id: { $in: pods.map((pod) => pod.venue_id) } })
     .select('owner_user_id')
-    .lean<{ _id: unknown; owner_user_id?: unknown }[]>();
+    .lean<{ _id: unknown; owner_user_id: unknown }[]>();
   const ownerByVenue = new Map(
-    venues.map((venue) => [String(venue._id), String(venue.owner_user_id ?? '')])
+    venues.map((venue) => [String(venue._id), String(venue.owner_user_id)])
   );
   const users = await waUsers([...ownerByVenue.values(), ...pods.map(firstHostId)]);
   await sweepSend(
@@ -593,7 +593,7 @@ async function endedPods(now: number, cutoff: Date, delayHours: number): Promise
  * asked as the host below. Two feedback templates to one person about one pod
  * is two messages and two bills. */
 const guestsOf = (pod: SweptPod) =>
-  (pod.pod_attendees ?? []).map(String).filter((id) => id !== firstHostId(pod));
+  pod.pod_attendees.map(String).filter((id) => id !== firstHostId(pod));
 
 /**
  * Only guests the host marked present are asked to rate — a booking is not
@@ -627,7 +627,7 @@ async function askVenuesForFeedback(pods: SweptPod[], mwebUrl: string) {
     .select('owner_user_id')
     .lean();
   const ownerByVenue = new Map(
-    venues.map((venue: any) => [String(venue._id), String(venue.owner_user_id ?? '')])
+    venues.map((venue: any) => [String(venue._id), String(venue.owner_user_id)])
   );
   const users = await waUsers([...ownerByVenue.values()]);
   await sweepSend(

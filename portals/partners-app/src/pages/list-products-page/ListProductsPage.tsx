@@ -6,7 +6,7 @@ import { DuncitButton } from '@duncit/buttons';
 import { BackButton } from '@duncit/ui';
 import ProductListingsTable from './ProductListingsTable';
 import {
-  PRODUCT_ACCESS_MESSAGE,
+  PRODUCT_ACCESS_MESSAGE_KEY,
   PRODUCT_LISTING_ACCESS,
   canManageProductListings,
 } from './productAccess';
@@ -77,7 +77,7 @@ export default function ListProductsPage({
       </Box>
       )}
       {error && <Alert severity="error">{error.message}</Alert>}
-      {!loading && !canManageProducts && <Alert severity="warning">{PRODUCT_ACCESS_MESSAGE}</Alert>}
+      {!loading && !canManageProducts && <Alert severity="warning">{t(PRODUCT_ACCESS_MESSAGE_KEY)}</Alert>}
       <ProductListingsTable
         brandId={brandId}
         canManageProducts={canManageProducts}

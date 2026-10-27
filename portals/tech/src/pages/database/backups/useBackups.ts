@@ -132,16 +132,15 @@ export function useBackups() {
     [confirm, removeBackup, t],
   );
 
-  const onConfirmRestore = useCallback(async () => {
-    if (!restoreTarget) return;
+  const onConfirmRestore = useCallback(async (target: BackupRow) => {
     try {
-      await startRestore({ variables: { id: restoreTarget.id } });
+      await startRestore({ variables: { id: target.id } });
       setRestoreTarget(null);
       await restoreQuery.refetch();
     } catch (err) {
       notifyError(messageOf(err, t('tech.dbBackup.restoreFailed')));
     }
-  }, [restoreTarget, startRestore, restoreQuery, t]);
+  }, [startRestore, restoreQuery, t]);
 
   return {
     settings: settingsQuery.data?.dbBackupSettings ?? null,

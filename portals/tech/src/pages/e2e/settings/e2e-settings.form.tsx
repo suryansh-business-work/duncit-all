@@ -79,13 +79,12 @@ export default function E2eSettingsForm({
         <Controller
           control={control}
           name="suites"
-          render={({ field, fieldState }) => (
+          render={({ field }) => (
             <SuitePicker
               suites={suites}
               value={field.value}
               onChange={field.onChange}
               label={t('tech.e2e.scheduleSuites')}
-              error={fieldState.error?.message}
             />
           )}
         />

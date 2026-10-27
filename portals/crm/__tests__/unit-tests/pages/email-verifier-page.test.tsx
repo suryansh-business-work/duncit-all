@@ -130,6 +130,20 @@ describe('SingleCheckCard', () => {
   });
 });
 
+describe('SingleCheckCard outside the CRM email-status provider', () => {
+  it('sends nothing and shows no result when there is no store to run the check through', async () => {
+    const onChecked = vi.fn();
+    renderWithApollo(<SingleCheckCard onChecked={onChecked} />);
+
+    fireEvent.change(screen.getByTestId('email-verify-input'), { target: { value: 'asha@example.com' } });
+    fireEvent.click(screen.getByTestId('email-verify-submit'));
+
+    await waitFor(() => expect(screen.getByTestId('email-verify-submit')).toHaveTextContent('Verify'));
+    expect(screen.queryByTestId('email-verify-result')).toBeNull();
+    expect(onChecked).not.toHaveBeenCalled();
+  });
+});
+
 describe('BulkCheckCard', () => {
   const upload = (content = 'email\nasha@example.com\n', name = 'leads.csv') => {
     const file = new File([content], name, { type: 'text/csv' });
@@ -169,6 +183,16 @@ describe('BulkCheckCard', () => {
 
     expect(await screen.findByText(/No email column found/)).toBeInTheDocument();
     expect(notifySuccess).not.toHaveBeenCalled();
+  });
+
+  it('reports a count of zero when the server answers without the job', async () => {
+    renderWithApollo(<BulkCheckCard running={0} />, [
+      { request: { query: CRM_VERIFY_EMAILS_BULK, variables: anyVariables }, result: { data: null } },
+    ]);
+
+    upload();
+
+    await waitFor(() => expect(notifySuccess).toHaveBeenCalledWith('Checking 0 emails. Follow the progress in the header.'));
   });
 
   it('ignores a cancelled file picker and says when bulk checks are running', () => {

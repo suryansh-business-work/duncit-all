@@ -7,9 +7,27 @@ import {
 } from './user.validator';
 import { validate } from '@utils/validate';
 import type { GraphQLContext } from '@context';
-import { requireRole, assertScope } from '@middleware/rbac';
+import { GraphQLError } from 'graphql';
+import type { AuthUser } from '@context';
+import { requireRole, assertScope, readScope, hasRole } from '@middleware/rbac';
 import { loadUserDataIssues, type ContactRow } from './user.data-issues';
 import { loadLastActiveOn } from './user.last-active';
+import { ROLE_ASSIGNERS } from './user.constants';
+
+/**
+ * Assigning roles is a Super Admin's (ROLE_ASSIGNERS, as assignUserRoles):
+ * anyone else who may create or edit users creates plain members and never
+ * changes a user's roles — or a City Admin could hand out any console role.
+ */
+function assertMayAssignRoles(actor: AuthUser, requested: readonly string[] | undefined, current: readonly string[]) {
+  if (requested === undefined || hasRole(actor, ROLE_ASSIGNERS)) return;
+  const want = new Set(requested.map((role) => role.toUpperCase()));
+  const have = new Set(current.map((role) => role.toUpperCase()));
+  const unchanged = want.size === have.size && [...want].every((role) => have.has(role));
+  if (!unchanged) {
+    throw new GraphQLError('Only a Super Admin can assign roles', { extensions: { code: 'FORBIDDEN' } });
+  }
+}
 
 const ADMIN_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN', 'SUPPORT_USER'];
 const MUTATING_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN'];
@@ -37,19 +55,24 @@ export const userResolvers = {
   Query: {
     users: async (_p: unknown, args: { filter?: any }, ctx: GraphQLContext) => {
       requireRole(ctx, DIRECTORY_ROLES);
-      return userService.list(args.filter);
+      // A city or zonal admin reads their own city's / zones' members only.
+      return userService.list(args.filter, readScope(ctx));
     },
     usersTable: async (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
       requireRole(ctx, DIRECTORY_ROLES);
-      return userService.table(args.query);
+      // A city or zonal admin reads their own city's / zones' members only.
+      return userService.table(args.query, readScope(ctx));
     },
     partnersTable: async (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
       requireRole(ctx, PARTNERS_TABLE_ROLES);
-      return userService.partnersTable(args.query);
+      return userService.partnersTable(args.query, readScope(ctx));
     },
     user: async (_p: unknown, args: { user_id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_ROLES);
-      return userService.getById(args.user_id);
+      const target = await userService.getById(args.user_id);
+      // The same place check updateUser makes: a read never sees what a write would refuse.
+      if (target) assertScope(ctx, { city: target.city, zone: target.zone });
+      return target;
     },
     userContactActions: async (_p: unknown, args: { user_id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_ROLES);
@@ -66,9 +89,10 @@ export const userResolvers = {
   },
   Mutation: {
     createUser: async (_p: unknown, args: { input: unknown }, ctx: GraphQLContext) => {
-      requireRole(ctx, MUTATING_ROLES);
+      const actor = requireRole(ctx, MUTATING_ROLES);
       const data = await validate(createUserSchema, args.input);
       assertScope(ctx, { city: data.city, zone: data.zone });
+      assertMayAssignRoles(actor, data.roles as string[] | undefined, ['USER']);
       return userService.create(data as any);
     },
     recordUserContactAction: async (_p: unknown, args: { input: unknown }, ctx: GraphQLContext) => {
@@ -90,10 +114,11 @@ export const userResolvers = {
       args: { user_id: string; input: unknown },
       ctx: GraphQLContext
     ) => {
-      requireRole(ctx, MUTATING_ROLES);
+      const actor = requireRole(ctx, MUTATING_ROLES);
       const data = await validate(updateUserSchema, args.input);
       const target = await userService.getById(args.user_id);
       if (target) assertScope(ctx, { city: target.city, zone: target.zone });
+      assertMayAssignRoles(actor, data.roles as string[] | undefined, (target?.roles as string[] | undefined) ?? []);
       return userService.update(args.user_id, data as any);
     },
     deleteUser: async (_p: unknown, args: { user_id: string }, ctx: GraphQLContext) => {

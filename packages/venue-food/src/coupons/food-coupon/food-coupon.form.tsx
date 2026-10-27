@@ -103,7 +103,7 @@ export default function FoodCouponForm({ defaultValues, busy, apiError = null, o
       </Stack>
       <FoodCouponActiveField control={control} />
       <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end' }}>
-        <DuncitButton onClick={onCancel} disabled={busy}>
+        <DuncitButton onClick={onCancel} disabled={busy} data-testid="food-coupon-cancel">
           {t('venueFoodOwner.common.cancel')}
         </DuncitButton>
         <DuncitButton type="submit" variant="contained" loading={busy} data-testid="food-coupon-save">

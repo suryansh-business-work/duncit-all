@@ -84,8 +84,7 @@ export default function BrandWizardPage({ brandId }: Readonly<Props>) {
   };
 
   let title = t('partners.brandWizard.newTitle');
-  if (brand) title = brand.brand_name || t('partners.brandWizard.editTitle');
-  if (locked) title = brand?.brand_name || t('partners.brandWizard.viewTitle');
+  if (brand) title = brand.brand_name || t(locked ? 'partners.brandWizard.viewTitle' : 'partners.brandWizard.editTitle');
 
   if (brandId && loading && !data) {
     return (

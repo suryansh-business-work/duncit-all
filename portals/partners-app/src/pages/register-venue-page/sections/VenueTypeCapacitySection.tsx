@@ -37,6 +37,7 @@ export default function VenueTypeCapacitySection({ form, config, mode }: Readonl
             label={t('partners.registerVenuePage.venueType')}
             required
             disabled={typeLocked}
+            data-testid="register-venue-type"
             error={Boolean(fieldState.error)}
             helperText={fieldState.error?.message ?? (typeLocked ? 'Locked after approval' : 'Closest match for your space')}
           >
@@ -77,7 +78,7 @@ export default function VenueTypeCapacitySection({ form, config, mode }: Readonl
           List each space or unit with its own capacity — e.g. "Banquet hall" 120, "Rooftop tables" 40.
         </Typography>
       </Stack>
-      {typeof listError === 'string' && listError && <FormHelperText error>{listError}</FormHelperText>}
+      {typeof listError === 'string' && listError && <FormHelperText error data-testid="capacity-list-error">{listError}</FormHelperText>}
       {fields.map((row, index) => (
         <Stack key={row.id} direction="row" spacing={1} sx={{
           alignItems: "flex-start"
@@ -92,6 +93,7 @@ export default function VenueTypeCapacitySection({ form, config, mode }: Readonl
                 required
                 size="small"
                 fullWidth
+                data-testid={`capacity-item-${index}-label`}
                 error={Boolean(fieldState.error)}
                 helperText={fieldState.error?.message ?? 'e.g. Banquet hall, Rooftop tables'}
               />
@@ -108,6 +110,7 @@ export default function VenueTypeCapacitySection({ form, config, mode }: Readonl
                 required
                 size="small"
                 sx={{ minWidth: 130 }}
+                data-testid={`capacity-item-${index}-capacity`}
                 error={Boolean(fieldState.error)}
                 helperText={fieldState.error?.message ?? 'People it holds'}
                 slotProps={{
@@ -116,17 +119,18 @@ export default function VenueTypeCapacitySection({ form, config, mode }: Readonl
               />
             )}
           />
-          <DuncitIconButton size="small" aria-label={t('partners.registerVenuePage.removeCapacityEntry')} onClick={() => remove(index)}>
+          <DuncitIconButton size="small" aria-label={t('partners.registerVenuePage.removeCapacityEntry')} onClick={() => remove(index)} data-testid={`capacity-item-${index}-remove`}>
             <DeleteIcon />
           </DuncitIconButton>
         </Stack>
       ))}
       {atLimit && (
-        <Alert severity="info">At most {config.capacity_item_limit} capacity entries are allowed.</Alert>
+        <Alert severity="info" data-testid="capacity-limit">At most {config.capacity_item_limit} capacity entries are allowed.</Alert>
       )}
       <DuncitButton
         startIcon={<AddIcon />}
         disabled={atLimit}
+        data-testid="capacity-add"
         onClick={() => append({ label: '', capacity: '' })}
         sx={{ alignSelf: 'flex-start' }}
       >

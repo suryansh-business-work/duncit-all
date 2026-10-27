@@ -111,7 +111,7 @@ export default function ListProductsForm({ brandId, product = null, onSaved }: R
   const addVariantImage = (url: string) => {
     if (pickerIndex === null) return;
     const path = `variants.${pickerIndex}.image_urls` as Path<ProductListingValues>;
-    const current = (watch(path) as string[] | undefined) ?? [];
+    const current = watch(path) as string[];
     setValue(path, Array.from(new Set([...current, url])) as never, { shouldValidate: true });
     setPickerIndex(null);
   };

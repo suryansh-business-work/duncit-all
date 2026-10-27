@@ -3,6 +3,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MockedProvider } from '@apollo/client/testing/react';
 import type { MockedResponse } from '@apollo/client/testing';
 import { GraphQLError } from 'graphql';
+import { PUBLIC_FEATURE_FLAGS } from '@duncit/app-settings';
 import OnboardingSettingsPage from './OnboardingSettingsPage';
 import {
   ONBOARDING_INTRO_SETTINGS,
@@ -71,6 +72,15 @@ const updateMock = (opts: { failWith?: string; delay?: number } = {}): MockedRes
   ...(opts.delay ? { delay: opts.delay } : {}),
 });
 
+const flagMock = (productVisible: boolean): MockedResponse => ({
+  request: { query: PUBLIC_FEATURE_FLAGS },
+  result: {
+    data: {
+      publicFeatureFlags: [{ __typename: 'PublicFeatureFlag', key: 'is_product_visible', enabled: productVisible }],
+    },
+  },
+});
+
 const renderPage = (mocks: MockedResponse[]) =>
   render(
     <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
@@ -128,5 +138,45 @@ describe('OnboardingSettingsPage', () => {
   it('shows why the intros could not be loaded', async () => {
     renderPage([introMock({ failWith: 'Not allowed' })]);
     expect(await screen.findByTestId('query-guard-error')).toHaveTextContent('Not allowed');
+  });
+
+  it('draws the Product intro only while products are visible', async () => {
+    renderPage([introMock(), flagMock(true)]);
+
+    expect(await screen.findByLabelText('Product intro')).toHaveValue('');
+    expect(screen.getByLabelText('Host intro')).toBeInTheDocument();
+  });
+
+  it('hides the Product intro while products are off, but its stored copy still rides along on a save', async () => {
+    const withProductCopy = { ...saved, ecomm_intro_html: '<p>List a product</p>' };
+    const sent = { ...withProductCopy, venue_intro_html: edited.venue_intro_html };
+    renderPage([
+      {
+        request: { query: ONBOARDING_INTRO_SETTINGS },
+        result: { data: { onboardingIntro: asIntro(withProductCopy) } },
+      },
+      flagMock(false),
+      {
+        request: { query: UPDATE_ONBOARDING_INTRO_SETTINGS, variables: { input: sent } },
+        result: { data: { updateOnboardingIntro: asIntro(sent) } },
+      },
+    ]);
+    await editVenueIntro();
+    expect(screen.queryByLabelText('Product intro')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    // The mutation only answers when the hidden Product intro is still in the input.
+    await waitFor(() => expect(dialogsMock.notifySuccess).toHaveBeenCalledWith('Onboarding intro saved.'));
+  });
+
+  it('refuses a social link that is not an http(s) address, naming the problem, and sends nothing', async () => {
+    renderPage([introMock(), updateMock()]);
+
+    fireEvent.change(await screen.findByRole('textbox', { name: 'X' }), { target: { value: 'ftp://files.example/duncit' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(await screen.findByText('Enter a full link starting with https://')).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'X' })).toHaveAttribute('aria-invalid', 'true');
+    expect(dialogsMock.notifySuccess).not.toHaveBeenCalled();
   });
 });

@@ -35,7 +35,7 @@ export function useBrandWizardActions({ brandId, form, onChanged }: Readonly<Opt
       const res = await saveBrand({
         variables: { brand_doc_id: brandId ?? null, input: toSaveInput(form.getValues()) },
       });
-      return res.data?.saveEcommBrand?.id ?? brandId;
+      return res.data.saveEcommBrand.id;
     } catch (error) {
       notifyError(parseApiError(error));
       return null;
@@ -86,10 +86,9 @@ export function useBrandWizardActions({ brandId, form, onChanged }: Readonly<Opt
     }
   };
 
-  const withdraw = async () => {
-    if (!brandId) return;
+  const withdraw = async (id: string) => {
     try {
-      await withdrawBrand({ variables: { brand_doc_id: brandId } });
+      await withdrawBrand({ variables: { brand_doc_id: id } });
       notifySuccess(t('partners.brandWizard.withdrawn'));
       onChanged();
     } catch (error) {

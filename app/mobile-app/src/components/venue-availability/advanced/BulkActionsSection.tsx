@@ -74,9 +74,7 @@ export function BulkActionsSection({ venueId, onDone }: Readonly<Props>) {
   };
 
   const confirmThen = (text: string, run: () => Promise<void>) => setPending({ text, run });
-  const runConfirmed = () => {
-    const action = pending;
-    if (!action) return;
+  const runConfirmed = (action: PendingAction) => {
     setBusy(true);
     setError(null);
     action
@@ -182,18 +180,20 @@ export function BulkActionsSection({ venueId, onDone }: Readonly<Props>) {
           />
         </XStack>
       </YStack>
-      <ConfirmSheet
-        open={!!pending}
-        busy={busy}
-        testIDPrefix="bulk-action"
-        title={t('availability.bulk.confirmTitle')}
-        message={pending?.text ?? ''}
-        cancelLabel={t('availability.cancel')}
-        confirmLabel={t('availability.bulk.confirm')}
-        busyLabel={t('availability.bulk.confirm')}
-        onCancel={() => setPending(null)}
-        onConfirm={runConfirmed}
-      />
+      {pending ? (
+        <ConfirmSheet
+          open
+          busy={busy}
+          testIDPrefix="bulk-action"
+          title={t('availability.bulk.confirmTitle')}
+          message={pending.text}
+          cancelLabel={t('availability.cancel')}
+          confirmLabel={t('availability.bulk.confirm')}
+          busyLabel={t('availability.bulk.confirm')}
+          onCancel={() => setPending(null)}
+          onConfirm={() => runConfirmed(pending)}
+        />
+      ) : null}
     </ExpandableSection>
   );
 }

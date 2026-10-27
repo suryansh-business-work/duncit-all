@@ -170,7 +170,7 @@ export const mailAutomationService = {
           refresh_token: tokens.refresh_token,
           access_token: tokens.access_token,
           access_token_expires_at: new Date(now + tokens.expires_in * 1000),
-          granted_scopes: tokens.scope ? tokens.scope.split(' ') : [],
+          granted_scopes: tokens.scope.split(' '),
           last_history_id: profile.historyId,
           last_error: '',
           connected_by: new Types.ObjectId(userId),

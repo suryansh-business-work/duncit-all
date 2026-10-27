@@ -59,15 +59,13 @@ export function useClubPodSheets({ clubId, refetch, onDeleted }: Readonly<Option
     navigation.navigate('ClubPodDetails', { clubId, podId: pod.id });
 
   /** Close the actions sheet and run one action for the pod it was open on. */
-  const withPod = (action: (pod: ClubAdminPodRow) => void) => () => {
-    if (actionsPod) action(actionsPod);
+  const withPod = (pod: ClubAdminPodRow, action: (pod: ClubAdminPodRow) => void) => () => {
+    action(pod);
     setActionsPod(null);
   };
 
-  const confirmDelete = async () => {
-    const pod = deletePod;
+  const confirmDelete = async (pod: ClubAdminPodRow) => {
     setDeletePod(null);
-    if (!pod) return;
     setDeleteError(null);
     try {
       await graphqlRequest(ClubAdminDeletePodDocument, { pod_doc_id: pod.id }, { auth: true });
@@ -80,51 +78,61 @@ export function useClubPodSheets({ clubId, refetch, onDeleted }: Readonly<Option
 
   const sheets = (
     <>
-      <ClubPodActionsSheet
-        pod={actionsPod}
-        onClose={() => setActionsPod(null)}
-        onDetails={withPod(openPod)}
-        onAttendance={withPod((pod) => navigation.navigate('PodAttendance', { podId: pod.id }))}
-        onEdit={withPod((pod) => navigation.navigate('ClubPodEdit', { clubId, podId: pod.id }))}
-        onActivity={withPod(setActivityPod)}
-        onRequestChange={withPod(setChangePod)}
-        onDelete={withPod(setDeletePod)}
-      />
+      {actionsPod ? (
+        <ClubPodActionsSheet
+          pod={actionsPod}
+          onClose={() => setActionsPod(null)}
+          onDetails={withPod(actionsPod, openPod)}
+          onAttendance={withPod(actionsPod, (pod) =>
+            navigation.navigate('PodAttendance', { podId: pod.id }),
+          )}
+          onEdit={withPod(actionsPod, (pod) =>
+            navigation.navigate('ClubPodEdit', { clubId, podId: pod.id }),
+          )}
+          onActivity={withPod(actionsPod, setActivityPod)}
+          onRequestChange={withPod(actionsPod, setChangePod)}
+          onDelete={withPod(actionsPod, setDeletePod)}
+        />
+      ) : null}
       <ClubPodActivitySheet pod={activityPod} onClose={() => setActivityPod(null)} />
       {/* The same ask Club Studio offers, reachable from the row an admin is
           actually looking at. CLUB-level: approving hands over the whole club,
           which is what the sheet's copy says. */}
-      <RequestChangeSheet
-        open={!!changePod}
-        role="CLUB_ADMIN"
-        penalty={change.board.penalties.club_admin_penalty}
-        attendeeCount={changePod?.seats_taken ?? 0}
-        busy={change.busy}
-        errorText={change.feedback?.ok === false ? change.feedback.text : null}
-        onClose={() => setChangePod(null)}
-        onConfirm={(reason) => {
-          const pod = changePod;
-          if (!pod) return;
-          fireAndForget(
-            change.file(pod.id, 'CLUB_ADMIN', reason, t('changeRequest.filed')).then((ok) => {
-              if (ok) setChangePod(null);
-              return undefined;
-            }),
-          );
-        }}
-      />
-      <ConfirmDialog
-        open={!!deletePod}
-        title={t('clubAdmin.pods.deletePodConfirmTitle')}
-        message={t('clubAdmin.pods.deletePodConfirmBody', {
-          vars: { title: deletePod?.pod_title ?? '' },
-        })}
-        confirmLabel={t('mweb.common.delete')}
-        destructive
-        onConfirm={() => fireAndForget(confirmDelete())}
-        onCancel={() => setDeletePod(null)}
-        testID="club-pod-delete"
-      />
+      {changePod ? (
+        <RequestChangeSheet
+          open
+          role="CLUB_ADMIN"
+          penalty={change.board.penalties.club_admin_penalty}
+          attendeeCount={changePod.seats_taken}
+          busy={change.busy}
+          errorText={change.feedback?.ok === false ? change.feedback.text : null}
+          onClose={() => setChangePod(null)}
+          onConfirm={(reason) =>
+            fireAndForget(
+              change
+                .file(changePod.id, 'CLUB_ADMIN', reason, t('changeRequest.filed'))
+                .then((ok) => {
+                  if (ok) setChangePod(null);
+                  return undefined;
+                }),
+            )
+          }
+        />
+      ) : null}
+      {deletePod ? (
+        <ConfirmDialog
+          open
+          title={t('clubAdmin.pods.deletePodConfirmTitle')}
+          message={t('clubAdmin.pods.deletePodConfirmBody', {
+            vars: { title: deletePod.pod_title },
+          })}
+          confirmLabel={t('mweb.common.delete')}
+          destructive
+          onConfirm={() => fireAndForget(confirmDelete(deletePod))}
+          onCancel={() => setDeletePod(null)}
+          testID="club-pod-delete"
+        />
+      ) : null}
     </>
   );
 

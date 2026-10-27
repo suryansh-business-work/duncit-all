@@ -32,10 +32,12 @@ export default function ProviderSwitch({ migration, busy, onSwitch, onRecheck }:
   const onCloudflare = migration.live_provider === 'CLOUDFLARE';
   const blocked = blockedReason(migration, !onCloudflare, t);
   const zone = migration.zone;
+  // The switch to Cloudflare is only enabled with a zone (blockedReason), so the list is never empty then.
+  const cloudflareServers = zone?.name_servers ?? [];
 
   const flip = () => {
     if (onCloudflare) onSwitch('GODADDY', migration.godaddy_name_servers);
-    else onSwitch('CLOUDFLARE', zone?.name_servers ?? []);
+    else onSwitch('CLOUDFLARE', cloudflareServers);
   };
 
   return (

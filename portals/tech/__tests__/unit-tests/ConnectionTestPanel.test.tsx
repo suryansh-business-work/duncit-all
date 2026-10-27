@@ -131,6 +131,7 @@ describe('TestDrawer routing to the connection panel', () => {
 
   it.each([
     ['APPLE_SIGNIN', /Apple/i],
+    ['TRUECALLER', /Truecaller/i],
     ['APP_STORE_CONNECT', /App Store|certificate/i],
     ['GODADDY', /GoDaddy|domain/i],
     ['CLOUDFLARE', /Cloudflare|zone/i],

@@ -45,11 +45,14 @@ const baseProps = {
   superCategoryId: '',
 };
 
+/** The table reads its column filters from the URL, so it renders inside a router. */
+const renderTable = (ui: React.ReactElement) => render(ui, { wrapper: MemoryRouter });
+
 describe('ClubsTable', () => {
   it('wires tableId, getRowId, defaultSort, refetchRef and the search placeholder into DuncitTable', () => {
     const refetchRef = { current: null };
     const fetchRows = vi.fn();
-    render(
+    renderTable(
       <ClubsTable
         {...baseProps}
         fetchRows={fetchRows}
@@ -73,7 +76,7 @@ describe('ClubsTable', () => {
 
   it('passes onView as the row click handler', () => {
     const onView = vi.fn();
-    render(<ClubsTable {...baseProps} onEdit={vi.fn()} onRemove={vi.fn()} onView={onView} />);
+    renderTable(<ClubsTable {...baseProps} onEdit={vi.fn()} onRemove={vi.fn()} onView={onView} />);
     const onRowClick = captured.props?.onRowClick as (row: ClubRow) => void;
     const row = makeRow();
     onRowClick(row);
@@ -81,19 +84,19 @@ describe('ClubsTable', () => {
   });
 
   it('sets no external filter when superCategoryId is empty', () => {
-    render(<ClubsTable {...baseProps} onEdit={vi.fn()} onRemove={vi.fn()} onView={vi.fn()} />);
+    renderTable(<ClubsTable {...baseProps} onEdit={vi.fn()} onRemove={vi.fn()} onView={vi.fn()} />);
     expect(captured.props?.externalFilters).toEqual([]);
   });
 
   it('pins a super_category_id external filter when superCategoryId is set', () => {
-    render(
+    renderTable(
       <ClubsTable {...baseProps} superCategoryId="super-1" onEdit={vi.fn()} onRemove={vi.fn()} onView={vi.fn()} />,
     );
     expect(captured.props?.externalFilters).toEqual([{ field: 'super_category_id', op: 'eq', value: 'super-1' }]);
   });
 
   it('renders the passed-in toolbar actions', () => {
-    render(
+    renderTable(
       <ClubsTable
         {...baseProps}
         onEdit={vi.fn()}
@@ -106,7 +109,7 @@ describe('ClubsTable', () => {
   });
 
   it('builds the full club column set with translated headers', () => {
-    render(<ClubsTable {...baseProps} onEdit={vi.fn()} onRemove={vi.fn()} onView={vi.fn()} />);
+    renderTable(<ClubsTable {...baseProps} onEdit={vi.fn()} onRemove={vi.fn()} onView={vi.fn()} />);
     expect(screen.getByTestId('headers')).toHaveTextContent(
       [
         'Cover',
@@ -128,7 +131,7 @@ describe('ClubsTable', () => {
     const columnsFrom = () => captured.props?.columns as DuncitColumn<ClubRow>[];
 
     it("renders the club's first feature image and falls back to the club's initial", () => {
-      render(<ClubsTable {...baseProps} onEdit={vi.fn()} onRemove={vi.fn()} onView={vi.fn()} />);
+      renderTable(<ClubsTable {...baseProps} onEdit={vi.fn()} onRemove={vi.fn()} onView={vi.fn()} />);
       const coverCol = columnsFrom().find((c) => c.field === 'cover');
       if (!coverCol?.cellRenderer) throw new Error('cover column missing a cellRenderer');
 
@@ -144,7 +147,7 @@ describe('ClubsTable', () => {
 
   describe('club column', () => {
     const clubColumn = () => {
-      render(<ClubsTable {...baseProps} onEdit={vi.fn()} onRemove={vi.fn()} onView={vi.fn()} />);
+      renderTable(<ClubsTable {...baseProps} onEdit={vi.fn()} onRemove={vi.fn()} onView={vi.fn()} />);
       const columns = captured.props?.columns as DuncitColumn<ClubRow>[];
       const clubCol = columns.find((c) => c.field === 'club_name');
       if (!clubCol?.cellRenderer || !clubCol.valueGetter) throw new Error('club column missing renderer/getter');
@@ -187,7 +190,7 @@ describe('ClubsTable', () => {
 
   describe('category column', () => {
     it('renders a chip with the resolved category name when set, and a dash when unset', () => {
-      render(<ClubsTable {...baseProps} onEdit={vi.fn()} onRemove={vi.fn()} onView={vi.fn()} />);
+      renderTable(<ClubsTable {...baseProps} onEdit={vi.fn()} onRemove={vi.fn()} onView={vi.fn()} />);
       const columns = captured.props?.columns as DuncitColumn<ClubRow>[];
       const catCol = columns.find((c) => c.field === 'category_id');
       if (!catCol?.cellRenderer || !catCol.valueGetter) throw new Error('category column missing renderer/getter');
@@ -206,7 +209,7 @@ describe('ClubsTable', () => {
 
   describe('matched_venues_count column', () => {
     it('reads the count, defaulting a missing value to 0', () => {
-      render(<ClubsTable {...baseProps} onEdit={vi.fn()} onRemove={vi.fn()} onView={vi.fn()} />);
+      renderTable(<ClubsTable {...baseProps} onEdit={vi.fn()} onRemove={vi.fn()} onView={vi.fn()} />);
       const columns = captured.props?.columns as DuncitColumn<ClubRow>[];
       const col = columns.find((c) => c.field === 'matched_venues_count');
       if (!col?.valueGetter) throw new Error('venues column missing a valueGetter');
@@ -217,7 +220,7 @@ describe('ClubsTable', () => {
 
   describe('whatsapp column', () => {
     it('shows a C chip for the community link and a G chip for the group link, independently', () => {
-      render(<ClubsTable {...baseProps} onEdit={vi.fn()} onRemove={vi.fn()} onView={vi.fn()} />);
+      renderTable(<ClubsTable {...baseProps} onEdit={vi.fn()} onRemove={vi.fn()} onView={vi.fn()} />);
       const columns = captured.props?.columns as DuncitColumn<ClubRow>[];
       const col = columns.find((c) => c.field === 'whatsapp');
       if (!col?.cellRenderer || !col.valueGetter) throw new Error('whatsapp column missing renderer/getter');
@@ -240,7 +243,7 @@ describe('ClubsTable', () => {
 
   describe('verified column', () => {
     it('reads Yes for a verified club and No otherwise', () => {
-      render(<ClubsTable {...baseProps} onEdit={vi.fn()} onRemove={vi.fn()} onView={vi.fn()} />);
+      renderTable(<ClubsTable {...baseProps} onEdit={vi.fn()} onRemove={vi.fn()} onView={vi.fn()} />);
       const columns = captured.props?.columns as DuncitColumn<ClubRow>[];
       const col = columns.find((c) => c.field === 'is_verified');
       if (!col?.valueGetter) throw new Error('verified column missing a valueGetter');
@@ -251,7 +254,7 @@ describe('ClubsTable', () => {
 
   describe('visibility column', () => {
     const visibilityColumn = () => {
-      render(<ClubsTable {...baseProps} onEdit={vi.fn()} onRemove={vi.fn()} onView={vi.fn()} />);
+      renderTable(<ClubsTable {...baseProps} onEdit={vi.fn()} onRemove={vi.fn()} onView={vi.fn()} />);
       const columns = captured.props?.columns as DuncitColumn<ClubRow>[];
       const col = columns.find((c) => c.field === 'is_hidden');
       if (!col?.cellRenderer || !col.valueGetter) throw new Error('visibility column missing renderer/getter');
@@ -277,7 +280,7 @@ describe('ClubsTable', () => {
   describe('actions column', () => {
     it('offers Hide for a shown club when onToggleHidden is supplied, and hands it the row', () => {
       const onToggleHidden = vi.fn();
-      render(
+      renderTable(
         <ClubsTable
           {...baseProps}
           onEdit={vi.fn()}
@@ -297,7 +300,7 @@ describe('ClubsTable', () => {
     });
 
     it('offers no Hide / Show toggle without onToggleHidden', () => {
-      render(<ClubsTable {...baseProps} onEdit={vi.fn()} onRemove={vi.fn()} onView={vi.fn()} />);
+      renderTable(<ClubsTable {...baseProps} onEdit={vi.fn()} onRemove={vi.fn()} onView={vi.fn()} />);
       const columns = captured.props?.columns as DuncitColumn<ClubRow>[];
       const actionsCol = columns.find((c) => c.field === 'actions');
       if (!actionsCol?.cellRenderer) throw new Error('actions column missing a cellRenderer');
@@ -309,7 +312,7 @@ describe('ClubsTable', () => {
     it('wires the View Pods link plus edit/delete callbacks to the real row', () => {
       const onEdit = vi.fn();
       const onRemove = vi.fn();
-      render(<ClubsTable {...baseProps} onEdit={onEdit} onRemove={onRemove} onView={vi.fn()} />);
+      renderTable(<ClubsTable {...baseProps} onEdit={onEdit} onRemove={onRemove} onView={vi.fn()} />);
       const columns = captured.props?.columns as DuncitColumn<ClubRow>[];
       const actionsCol = columns.find((c) => c.field === 'actions');
       if (!actionsCol?.cellRenderer) throw new Error('actions column missing a cellRenderer');

@@ -51,21 +51,13 @@ export default function EditServiceOfferedDialog({ service, onClose, onSaved }: 
   }, [service]);
 
   const save = async () => {
-    const trimmed = title.trim();
-    if (!trimmed) {
-      setFormError(t('crm.components.titleIsRequired'));
-      return;
-    }
-    if (!venue && !host) {
-      setFormError('Pick at least one of Venue or Host.');
-      return;
-    }
+    // Save is disabled for a blank title or no target, so both are always set here.
     setFormError(null);
     try {
       await updateMut({
         variables: {
           id: service!.id,
-          input: { title: trimmed, is_active: isActive, applies_to_venue: venue, applies_to_host: host },
+          input: { title: title.trim(), is_active: isActive, applies_to_venue: venue, applies_to_host: host },
         },
       });
       onSaved?.();

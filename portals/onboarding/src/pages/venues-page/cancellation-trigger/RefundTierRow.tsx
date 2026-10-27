@@ -23,7 +23,7 @@ export interface RefundTierRowProps {
 export default function RefundTierRow({ control, index, onRemove, t }: Readonly<RefundTierRowProps>) {
   const tier = useWatch({ control, name: `refund_tiers.${index}` });
   const summary = t('onboarding.venues.refundBandSummary', {
-    vars: { pct: tier?.refund_pct ?? '', hours: tier?.hours_before ?? '' },
+    vars: { pct: tier.refund_pct, hours: tier.hours_before },
   });
   const removeLabel = t('onboarding.venues.removeRefundBand');
 
@@ -37,6 +37,7 @@ export default function RefundTierRow({ control, index, onRemove, t }: Readonly<
             <TextField
               {...field}
               label={t('onboarding.venues.hoursBeforeStart')}
+              data-testid={`refund-tier-${index}-hours`}
               type="number"
               size="small"
               fullWidth
@@ -53,6 +54,7 @@ export default function RefundTierRow({ control, index, onRemove, t }: Readonly<
             <TextField
               {...field}
               label={t('onboarding.venues.refundPercent')}
+              data-testid={`refund-tier-${index}-pct`}
               type="number"
               size="small"
               fullWidth

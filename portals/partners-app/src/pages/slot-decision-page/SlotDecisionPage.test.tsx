@@ -49,6 +49,11 @@ const mount = (answers: Record<string, ScriptedAnswer>, search = '', sent: SentO
 const approved = slot({ decision: 'APPROVED', decided_at: '2026-07-21T10:00:00.000Z' });
 
 describe('SlotDecisionPage states', () => {
+  it('calls a host with no name on record a host', async () => {
+    mount({ VenueSlotDecision: decision(slot({ host_name: '' })) });
+    expect(await screen.findByText('Hosted by a host')).toBeTruthy();
+  });
+
   it('shows a spinner, then a pending request with the money the venue would earn', async () => {
     mount({ VenueSlotDecision: decision(slot()) });
     expect(screen.getByRole('progressbar')).toBeTruthy();

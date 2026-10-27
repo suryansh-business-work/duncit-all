@@ -21,10 +21,6 @@ const ageField = z.union([z.literal(''), z.coerce.number()]).superRefine((value,
   if (value === '') {
     return;
   }
-  if (Number.isNaN(value)) {
-    ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Age must be a number' });
-    return;
-  }
   if (value < 0) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Age must be 0 or more' });
   }

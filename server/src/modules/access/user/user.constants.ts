@@ -48,9 +48,19 @@ export const ROLES = [
   'ANALYTICS_MANAGER',
   'LOCALIZATION_MANAGER',
   'TARGETS_MANAGER',
+  'MCP_USER',
+  'MCP_MANAGER',
 ] as const;
 
 export type UserRole = (typeof ROLES)[number];
+
+/**
+ * Who may hand a role to a member: the role mutations (assignUserRoles,
+ * addUserRole, grantAdminAccess). A path that ends in a role grant — an
+ * approved Portal Access request — asks for the same authority, so a request
+ * queue never grants what its reviewer could not grant directly.
+ */
+export const ROLE_ASSIGNERS: readonly string[] = ['SUPER_ADMIN'];
 
 export const STATUSES = ['ACTIVE', 'INACTIVE', 'SUSPENDED'] as const;
 export type UserStatus = (typeof STATUSES)[number];
@@ -109,6 +119,8 @@ export const ROLE_CATALOG: RoleDefinition[] = [
   { key: 'ANALYTICS_MANAGER', name: 'Analytics Manager', description: 'Analytics console — analytics.duncit.com.' },
   { key: 'LOCALIZATION_MANAGER', name: 'Localization Manager', description: 'Localization console — localization.duncit.com.' },
   { key: 'TARGETS_MANAGER', name: 'Targets Manager', description: 'Targets console — targets.duncit.com.' },
+  { key: 'MCP_USER', name: 'MCP User', description: 'Connect Claude, ChatGPT or Gemini to Duncit through mcp.duncit.com — the AI acts with exactly the consoles this person already has.' },
+  { key: 'MCP_MANAGER', name: 'MCP Manager', description: 'MCP console — mcp.duncit.com: every connection and tool call, usage and cost, and the MCP safety settings.' },
 ];
 
 // The portal login gate (PORTAL_ROLE_REQUIREMENTS / PORTAL_GATE_EXEMPT_KEYS /

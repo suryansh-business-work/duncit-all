@@ -143,11 +143,11 @@ export function useDeletionDetail(requestDocId: string | null, onChanged: () => 
       },
     ]);
     setPurgingAll(true);
+    let finished = false;
     try {
-      for (const step of plan) {
-        const group = groups.find((g) => groupKey(g) === step.key);
-        if (!group) continue;
-        patchStep(step.key, { status: 'RUNNING' });
+      for (const group of groups) {
+        const key = groupKey(group);
+        patchStep(key, { status: 'RUNNING' });
         const res = await purgeTrace({
           variables: {
             input: {
@@ -157,7 +157,7 @@ export function useDeletionDetail(requestDocId: string | null, onChanged: () => 
             },
           },
         });
-        patchStep(step.key, {
+        patchStep(key, {
           status: 'DONE',
           removed: lastRemoved(res.data?.purgeAccountTrace),
         });
@@ -167,7 +167,7 @@ export function useDeletionDetail(requestDocId: string | null, onChanged: () => 
       patchStep(ACCOUNT_STEP_KEY, { status: 'DONE', removed: 1 });
       notifySuccess(t('tech.accountDeletions.accountRemoved'));
       onChanged();
-      return true;
+      finished = true;
     } catch (e) {
       // Whichever step was mid-flight is the one that failed; the ones before
       // it are committed and stay marked done.
@@ -176,10 +176,10 @@ export function useDeletionDetail(requestDocId: string | null, onChanged: () => 
       );
       fail(e);
       onChanged();
-      return false;
     } finally {
       setPurgingAll(false);
     }
+    return finished;
   }, [requestDocId, detail, purgeTrace, purgeAll, patchStep, t, onChanged, fail]);
 
   const rejectRequest = useCallback(

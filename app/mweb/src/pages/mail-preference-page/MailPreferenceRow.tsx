@@ -2,6 +2,7 @@ import { Chip, CircularProgress, Stack, Switch, Typography } from '@mui/material
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { mailCategoryCopy, useTranslation } from '@duncit/app-settings';
 import type { MailPreferenceCategory } from './queries';
+import { testIdProps } from '../../utils/testIdProps';
 
 interface Props {
   item: MailPreferenceCategory;
@@ -61,7 +62,7 @@ export default function MailPreferenceRow({ item, busy, onChange }: Readonly<Pro
           disabled={item.required}
           onChange={(event) => onChange(item.category, event.target.checked)}
           slotProps={{
-            input: { 'aria-label': copy.label }
+            input: { 'aria-label': copy.label, ...testIdProps(`mail-preference-switch-${item.category}`) }
           }}
         />
       )}

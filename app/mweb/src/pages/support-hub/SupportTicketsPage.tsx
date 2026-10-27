@@ -67,7 +67,7 @@ export default function SupportTicketsPage() {
         variables: {
           input: {
             subject: values.subject,
-            category: TICKET_CATEGORY[values.category] ?? 'OTHER',
+            category: TICKET_CATEGORY[values.category],
             body_text: values.message,
             attachments: values.attachments,
             ...(values.pod_id ? { pod_id: values.pod_id, pod_title: values.pod_title } : {}),
@@ -82,7 +82,7 @@ export default function SupportTicketsPage() {
         setError(t('mweb.common.couldNotCreateTheTicketPlease'));
       }
     } catch (e: any) {
-      setError(e?.message ?? 'Network error. Please try again.');
+      setError(e.message);
       throw e;
     }
   };

@@ -268,6 +268,22 @@ describe('useClubAdminPodEditor — actions', () => {
     expect(vars.input).toMatchObject({ club_id: 'c1', pod_hosts_id: ['h1'] });
   });
 
+  it('re-routes an edit onto a newly picked venue offer, never beside a slot id', async () => {
+    serve({ pod });
+    const { result } = await mount('p1');
+    const offer = { venue_id: 'v2', start_at: '2030-01-06T10:00:00Z' };
+    const withOffer = {
+      ...input,
+      venue_slot_id: null,
+      venue_offer: offer,
+    } as unknown as CreatePodInput;
+    await expect(result.current.submit(withOffer, ['h1'])).resolves.toBe('updated');
+    const sent = mockRequest.mock.calls.at(-1)?.[1].input;
+    expect(sent.venue_offer).toEqual(offer);
+    expect(sent).not.toHaveProperty('venue_slot_id');
+    expect(sent).toMatchObject({ club_id: 'c1', pod_hosts_id: ['h1'] });
+  });
+
   it('sends the slot when it changed, and treats two missing slots as the same', async () => {
     serve({ pod });
     const { result } = await mount('p1');

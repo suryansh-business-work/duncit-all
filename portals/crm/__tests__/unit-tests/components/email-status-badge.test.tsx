@@ -1,15 +1,18 @@
-import { describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { fireEvent, render, renderHook, screen, waitFor } from '@testing-library/react';
 import type { MockedResponse } from '@apollo/client/testing';
 import { MockedProvider } from '@apollo/client/testing/react';
 import { CRM_EMAIL_STATUSES, CRM_VERIFY_EMAIL } from '@/api/emailVerification.gql';
 import { EmailStatusBadge, EmailStatusChip, EmailStatusProvider } from '@/components/email-status';
+import { useEmailStatus } from '@/components/email-status/useEmailStatus';
 
 const notifyError = vi.hoisted(() => vi.fn());
 vi.mock('@duncit/dialogs', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@duncit/dialogs')>()),
   notifyError,
 }));
+
+beforeEach(() => notifyError.mockClear());
 
 const statusesMock = (emails: string[], rows: object[]): MockedResponse => ({
   request: { query: CRM_EMAIL_STATUSES, variables: { emails } },
@@ -102,6 +105,27 @@ describe('EmailStatusBadge', () => {
     expect(screen.queryByTestId(/^email-status-/)).toBeNull();
   });
 
+  it('treats a lookup that answers with no data as nothing checked yet', async () => {
+    renderBadges(['asha@example.com'], [
+      { request: { query: CRM_EMAIL_STATUSES, variables: { emails: ['asha@example.com'] } }, result: { data: null } },
+    ]);
+
+    expect(await screen.findByTestId('email-status-not_checked')).toHaveTextContent('Not checked');
+  });
+
+  it('keeps the old status, without an error, when a check answers with no data', async () => {
+    renderBadges(['ravi@example.com'], [
+      statusesMock(['ravi@example.com'], []),
+      { request: { query: CRM_VERIFY_EMAIL, variables: { email: 'ravi@example.com' } }, result: { data: null } },
+    ]);
+
+    fireEvent.click(await screen.findByTestId('email-status-not_checked'));
+
+    await waitFor(() => expect(screen.queryByTestId('email-status-checking')).toBeNull());
+    expect(screen.getByTestId('email-status-not_checked')).toBeInTheDocument();
+    expect(notifyError).not.toHaveBeenCalled();
+  });
+
   it('renders nothing for a blank address or outside the CRM provider', () => {
     const { container } = render(
       <>
@@ -124,5 +148,14 @@ describe('EmailStatusChip', () => {
     const chip = screen.getByTestId(`email-status-${status.toLowerCase()}`);
     expect(chip).toHaveTextContent(label);
     expect(chip.className).toMatch(colour);
+  });
+});
+
+describe('useEmailStatus outside the CRM provider', () => {
+  it('has no status and a check that resolves to nothing instead of throwing', async () => {
+    const { result } = renderHook(() => useEmailStatus('asha@example.com'));
+
+    expect(result.current.entry).toBeUndefined();
+    await expect(result.current.verify()).resolves.toBeNull();
   });
 });

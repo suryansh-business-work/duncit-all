@@ -20,7 +20,7 @@ export default function AdjustmentRow({ adjustment, busy, onEdit, onDelete }: Re
   const remark = adjustment.remark?.trim();
 
   return (
-    <Paper variant="outlined" sx={{ p: 1 }}>
+    <Paper variant="outlined" sx={{ p: 1 }} data-testid={`admin-user-health-row-${adjustment.id}`}>
       <Stack direction="row" spacing={1} sx={{
         alignItems: "center"
       }}>

@@ -28,7 +28,6 @@ export function useStagingSync() {
 
   const run = useCallback(
     async (pairs: readonly DnsHostPair[]) => {
-      if (pairs.length === 0) return;
       const hosts = pairs.map((pair) => pair.staging_host).join('\n');
       const ok = await confirm({
         title: t('tech.dnsStaging.syncTitle'),
@@ -46,19 +45,19 @@ export function useStagingSync() {
         const result = await syncMutation({ variables: { ids: pairs.map((pair) => pair.id) } });
         const outcome = result.data?.syncStagingDns;
         if (!outcome) return;
-        if (outcome.failed === 0) {
+        // Each failure carries GoDaddy's own reason; the first is the one a
+        // toast has room for, and the rest are still in the reloaded table.
+        const [first] = outcome.outcomes.filter((entry) => !entry.ok);
+        if (!first) {
           notifySuccess(t('tech.dnsStaging.syncDone', { vars: { count: String(outcome.synced) } }));
           return;
         }
-        // Each failure carries GoDaddy's own reason; the first is the one a
-        // toast has room for, and the rest are still in the reloaded table.
-        const first = outcome.outcomes.find((entry) => !entry.ok);
         notifyError(
           t('tech.dnsStaging.syncPartial', {
             vars: {
               synced: String(outcome.synced),
               failed: String(outcome.failed),
-              reason: first?.message ?? first?.host ?? '',
+              reason: first.message ?? first.host,
             },
           }),
         );

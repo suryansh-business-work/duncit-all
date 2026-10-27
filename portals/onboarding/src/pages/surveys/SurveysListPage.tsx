@@ -88,7 +88,7 @@ export default function SurveysListPage() {
         }}>
         <Icon color="primary" />
         <Box sx={{ flex: 1 }}>
-          <Typography variant="h5" component="h1" sx={{
+          <Typography variant="h5" component="h1" data-testid="surveys-kind-title" sx={{
             fontWeight: 800
           }}>{meta.title}</Typography>
           <Typography variant="body2" sx={{
@@ -98,7 +98,7 @@ export default function SurveysListPage() {
           </Typography>
         </Box>
         <DefaultSurveyButton kind={meta.kind} />
-        <DuncitButton variant="contained" startIcon={<AddIcon />} onClick={() => navigate(`/surveys/new?kind=${meta.kind}`)}>{t('onboarding.surveys.newSurvey')}</DuncitButton>
+        <DuncitButton variant="contained" startIcon={<AddIcon />} onClick={() => navigate(`/surveys/new?kind=${meta.kind}`)} data-testid="surveys-new">{t('onboarding.surveys.newSurvey')}</DuncitButton>
       </Stack>
 
       <ScopePicker value={scope} onChange={setScope} />
@@ -111,7 +111,7 @@ export default function SurveysListPage() {
           }}><CircularProgress aria-label={t('shell.a11y.loading')} /></Stack>
       )}
       {!catsLoading && superIds.length === 0 && (
-        <Alert severity="info">{t('onboarding.surveys.noCategorySpecificSurveysYetThe')}</Alert>
+        <Alert severity="info" data-testid="surveys-no-taxonomy">{t('onboarding.surveys.noCategorySpecificSurveysYetThe')}</Alert>
       )}
       {superIds.length > 0 && (
         <SurveysTable
@@ -123,12 +123,12 @@ export default function SurveysListPage() {
         />
       )}
 
-      <Dialog open={!!confirmId} onClose={() => setConfirmId(null)}>
+      <Dialog open={!!confirmId} onClose={() => setConfirmId(null)} data-testid="survey-delete-dialog">
         <DialogTitle>{t('onboarding.surveys.deleteSurvey')}</DialogTitle>
         <DialogContent><DialogContentText>{t('onboarding.surveys.thisRemovesTheSurveyDefinitionExisting')}</DialogContentText></DialogContent>
         <DialogActions>
-          <DuncitButton onClick={() => setConfirmId(null)}>{t('shell.common.cancel')}</DuncitButton>
-          <DuncitButton color="error" variant="contained" onClick={onDelete} disabled={deleting}>{deleting ? 'Deleting…' : 'Delete'}</DuncitButton>
+          <DuncitButton onClick={() => setConfirmId(null)} data-testid="survey-delete-cancel">{t('shell.common.cancel')}</DuncitButton>
+          <DuncitButton color="error" variant="contained" onClick={onDelete} disabled={deleting} data-testid="survey-delete-confirm">{deleting ? 'Deleting…' : 'Delete'}</DuncitButton>
         </DialogActions>
       </Dialog>
     </Stack>

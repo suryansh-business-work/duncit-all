@@ -52,7 +52,7 @@ export function TableApiDialog({ open, onClose, source, query }: Readonly<TableA
   };
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="md" aria-labelledby={TITLE_ID}>
+    <Dialog data-testid="table-api-dialog" open={open} onClose={onClose} fullWidth maxWidth="md" aria-labelledby={TITLE_ID}>
       <DialogTitle id={TITLE_ID}>{t('shell.table.getApi')}</DialogTitle>
       <DialogContent>
         <Stack spacing={1.5}>

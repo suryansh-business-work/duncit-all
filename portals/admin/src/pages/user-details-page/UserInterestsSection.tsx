@@ -12,7 +12,7 @@ export default function UserInterestsSection({ user }: Readonly<{ user: any }>) 
   const { t } = useTranslation();
   const interests = user.interest_categories ?? [];
   return (
-    <Card>
+    <Card data-testid="admin-user-interests">
       <CardContent>
         <Stack
           direction="row"

@@ -7,7 +7,7 @@ import { ListProductsForm } from './list-products';
 import ProductReviewsPanel from './ProductReviewsPanel';
 import { MY_PRODUCT_LISTINGS } from './ProductListingsTable';
 import {
-  PRODUCT_ACCESS_MESSAGE,
+  PRODUCT_ACCESS_MESSAGE_KEY,
   PRODUCT_LISTING_ACCESS,
   canManageProductListings,
 } from './productAccess';
@@ -41,7 +41,7 @@ export default function ProductListingEditorPage() {
   const managedContent = notFound
     ? <Alert severity="warning">{t('partners.listProductsPage.productListingWasNotFound')}</Alert>
     : <ListProductsForm brandId={brandId} product={product} onSaved={() => navigate(productsHome, { replace: true })} />;
-  const content = canManageProducts ? managedContent : <Alert severity="warning">{PRODUCT_ACCESS_MESSAGE}</Alert>;
+  const content = canManageProducts ? managedContent : <Alert severity="warning">{t(PRODUCT_ACCESS_MESSAGE_KEY)}</Alert>;
 
   return (
     <Stack spacing={2.25} sx={{ width: '100%' }}>

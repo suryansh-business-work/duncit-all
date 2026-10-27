@@ -77,6 +77,15 @@ describe('toFormValues', () => {
     expect(toFormValues(undefined, '')).toEqual(blankBrand);
   });
 
+  it('opens a brand saved before it had categories or documents with empty lists', () => {
+    const values = toFormValues(
+      serverBrand({ product_categories: null, documents: null } as unknown as Partial<EcommBrand>),
+      'asha@duncit.com',
+    );
+    expect(values.product_categories).toEqual([]);
+    expect(values.documents).toEqual([]);
+  });
+
   it('copies every field of a saved brand, stringifying the year', () => {
     expect(toFormValues(serverBrand(), 'asha@duncit.com')).toEqual({
       brand_name: 'Chai Point',

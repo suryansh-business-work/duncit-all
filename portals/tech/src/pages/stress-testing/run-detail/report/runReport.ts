@@ -31,7 +31,7 @@ type Row = readonly string[];
 
 const ESCAPES: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
 
-const escapeHtml = (value: string) => value.replaceAll(/[&<>"']/g, (ch) => ESCAPES[ch] ?? ch);
+const escapeHtml = (value: string) => value.replaceAll(/[&<>"']/g, (ch) => ESCAPES[ch]);
 
 const tag = (name: string, content: string, className = '') =>
   ['<', name, className ? ' class="' + className + '"' : '', '>', content, '</', name, '>'].join('');

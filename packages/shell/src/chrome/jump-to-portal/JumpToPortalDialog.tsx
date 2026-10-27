@@ -64,7 +64,7 @@ export function JumpToPortalDialog({ open, onClose }: Readonly<Props>) {
 
   return (
     // Named by the title text alone — the title row also holds the subtitle and Close.
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm" aria-labelledby={headingId}>
+    <Dialog data-testid="jump-to-portal-dialog" open={open} onClose={onClose} fullWidth maxWidth="sm" aria-labelledby={headingId}>
       <DialogTitle id={titleRowId} sx={{ pr: 6 }}>
         <span id={headingId}>{t('shell.jumpToPortal.title')}</span>
         <Typography variant="body2" sx={{
@@ -86,11 +86,11 @@ export function JumpToPortalDialog({ open, onClose }: Readonly<Props>) {
             <CircularProgress size={28} />
           </Box>
         )}
-        {error && !data && <Alert severity="error">{t('shell.jumpToPortal.loadError')}</Alert>}
+        {error && !data && <Alert severity="error" data-testid="jump-to-portal-load-error">{t('shell.jumpToPortal.loadError')}</Alert>}
         {portals.length > 0 && (
           <Stack spacing={1}>
             {requestError && (
-              <Alert severity="error" onClose={() => setRequestError(null)}>
+              <Alert severity="error" data-testid="jump-to-portal-request-error" onClose={() => setRequestError(null)}>
                 {requestError}
               </Alert>
             )}
@@ -126,7 +126,7 @@ export function JumpToPortalDialog({ open, onClose }: Readonly<Props>) {
               </AccordionDetails>
             </Accordion>
             <Accordion disableGutters>
-              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <AccordionSummary expandIcon={<ExpandMoreIcon />} data-testid="jump-to-portal-no-access-toggle">
                 <Stack direction="row" spacing={1} sx={{
                   alignItems: "center"
                 }}>

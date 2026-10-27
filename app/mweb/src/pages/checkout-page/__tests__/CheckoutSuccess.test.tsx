@@ -229,6 +229,18 @@ describe('CheckoutSuccess', () => {
     expect(parsed.searchParams.get('dates')).toBe('20260801T100000Z/20260801T110000Z');
   });
 
+  it('starts the calendar event now when the pod has no date', () => {
+    const before = Date.now();
+    renderSuccess({ pod: pod({ pod_date_time: null, pod_end_date_time: null }) });
+    fireEvent.click(screen.getByTestId('success-pod-google-wallet'));
+
+    const dates = new URL(String(vi.mocked(window.open).mock.calls[0][0])).searchParams.get('dates') ?? '';
+    const [start, end] = dates.split('/');
+    const parse = (v: string) => Date.parse(`${v.slice(0, 4)}-${v.slice(4, 6)}-${v.slice(6, 8)}T${v.slice(9, 11)}:${v.slice(11, 13)}:${v.slice(13, 15)}Z`);
+    expect(parse(start)).toBeGreaterThanOrEqual(Math.floor(before / 1000) * 1000);
+    expect(parse(end) - parse(start)).toBe(60 * 60 * 1000);
+  });
+
   it('tells the member Apple Wallet is not available yet', () => {
     renderSuccess();
     fireEvent.click(screen.getByTestId('success-pod-apple-wallet'));

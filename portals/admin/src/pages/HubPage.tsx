@@ -78,6 +78,7 @@ function HubTile({ card }: Readonly<{ card: HubCard }>) {
     >
       <CardActionArea
         onClick={() => navigate(card.to)}
+        data-testid={`admin-hub-tile-${card.key}`}
         sx={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}
       >
         <Stack

@@ -6,6 +6,7 @@ import { STUDIO_OPTION_LIST } from '@duncit/utils';
 import { partnerUser, renderWithProviders } from '../../__tests__/render';
 import { myVenue as venue, myVenuesMock as venuesMock } from '../../__tests__/venue-fixtures';
 import { SELECTED_VENUE_KEY } from '../../components/venue/useSelectedVenue';
+import { MY_VENUES } from '../register-venue-page/queries';
 import StudioOptionsPage from './StudioOptionsPage';
 
 afterEach(() => {
@@ -73,6 +74,21 @@ describe('StudioOptionsPage', () => {
     expect(localStorage.getItem(SELECTED_VENUE_KEY)).toBe('v-1');
     expect(screen.getByRole('combobox').textContent).toContain('Rooftop');
     expect(screen.getByTestId('studio-option-item-fees').getAttribute('href')).toBe('/venues/fees');
+  });
+
+  it('lists nothing while nobody is signed in', async () => {
+    renderWithProviders(<StudioOptionsPage mode="HOST" />, { mocks: [flagsMock(false)] });
+    expect(await screen.findByRole('heading', { name: 'Host Options' })).toBeTruthy();
+    expect(within(screen.getByRole('list')).queryAllByRole('link')).toHaveLength(0);
+  });
+
+  it('shows the server message when the venue owner’s venues cannot be read', async () => {
+    renderWithProviders(<StudioOptionsPage mode="VENUE" />, {
+      mocks: [flagsMock(false), { request: { query: MY_VENUES, variables: {} }, error: new Error('Venues are unavailable') }],
+      user: partnerUser({ roles: ['USER', 'VENUE_OWNER'] }),
+    });
+    expect(await screen.findByText('Venues are unavailable')).toBeTruthy();
+    expect(screen.queryByRole('combobox')).toBeNull();
   });
 
   it('invites a venue owner with no venue to add one', async () => {

@@ -42,7 +42,7 @@ export default function VenueDetailsSection({
 }>) {
   const { t } = useTranslation();
   // The upload button names whose videos these are; a venue not yet named falls back to the section.
-  const venueName = useWatch({ control, name: 'venue_name' }) ?? '';
+  const venueName = useWatch({ control, name: 'venue_name' });
 
   return (
     <SectionCard
@@ -57,6 +57,7 @@ export default function VenueDetailsSection({
           label={t('directory.venueEditor.venueName')}
           size="small"
           required
+          data-testid="venue-editor-name"
         />
         <RhfTextField
           control={control}
@@ -85,7 +86,7 @@ export default function VenueDetailsSection({
           name="videos"
           render={({ field, fieldState }) => (
             <VideoLinksField
-              videos={field.value ?? []}
+              videos={field.value}
               onChange={field.onChange}
               limit={videoLimit}
               name={venueName.trim() || t('directory.venueEditor.media')}

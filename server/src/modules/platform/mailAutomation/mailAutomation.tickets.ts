@@ -126,7 +126,7 @@ async function openGrievance(input: InboundEmail): Promise<OpenedTicket> {
   });
   return {
     ticket_id: grievance._id as Types.ObjectId,
-    ticket_no: grievance.grievance_no ?? '',
+    ticket_no: String(grievance.grievance_no),
   };
 }
 

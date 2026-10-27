@@ -7,7 +7,7 @@ import { useColorMode } from '../../../ColorModeContext';
 import { useStudioMode } from '../../../StudioModeContext';
 import { useAutoPodCounts } from '../../../hooks/useAutoPodCounts';
 import { useTranslation } from '../../../i18n/useTranslation';
-import { STUDIO_LABEL, availableModes, resolveMode, studioSwitchPath } from '../../../studio-mode';
+import { STUDIO_LABEL_KEY, availableModes, resolveMode, studioSwitchPath } from '../../../studio-mode';
 import DrawerFooter from './DrawerFooter';
 import StudioSwitchDialog from './StudioSwitchDialog';
 import MenuRefreshBar from './MenuRefreshBar';
@@ -110,7 +110,7 @@ export default function MenuPanel({
           flags={flags}
           onNavigate={go}
           canSwitch={canSwitch}
-          modeLabel={STUDIO_LABEL[effectiveMode]}
+          modeLabel={t(STUDIO_LABEL_KEY[effectiveMode])}
           onSwitch={() => {
             autoPods.reload();
             setSwitchOpen(true);

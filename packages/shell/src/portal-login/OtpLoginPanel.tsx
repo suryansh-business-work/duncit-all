@@ -180,6 +180,7 @@ export default function OtpLoginPanel({
       <Link
         component="button"
         type="button"
+        data-testid="otp-login-use-password"
         onClick={() => {
           setOpen(false);
           setSent(false);

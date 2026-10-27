@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { Box, CardMedia } from '@mui/material';
 import EventIcon from '@mui/icons-material/Event';
 import { imageSourceUrl, isVideoMedia, videoSourceUrl } from '@duncit/utils';
@@ -21,10 +21,11 @@ const CARD_IMAGE_WIDTH = 720;
  * cards were waiting on.
  */
 function CardVideo({ src }: Readonly<{ src: string }>) {
-  const ref = useRef<HTMLVideoElement>(null);
+  // State, not a ref object: the effect runs again once the element is attached, so it
+  // needs no null-ref guard of its own.
+  const [video, setVideo] = useState<HTMLVideoElement | null>(null);
 
   useEffect(() => {
-    const video = ref.current;
     if (!video) return undefined;
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -39,9 +40,9 @@ function CardVideo({ src }: Readonly<{ src: string }>) {
     );
     observer.observe(video);
     return () => observer.disconnect();
-  }, []);
+  }, [video]);
 
-  return <Box component="video" ref={ref} src={src} muted loop playsInline preload="none" sx={FILL_SX} />;
+  return <Box component="video" ref={setVideo} src={src} muted loop playsInline preload="none" sx={FILL_SX} />;
 }
 
 /** The pod card's image area: image, silent looping video, or a calm soft

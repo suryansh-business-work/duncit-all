@@ -64,6 +64,9 @@ import {
 /** No vendor gets longer than this to answer a credential check. */
 const TIMEOUT_MS = 12_000;
 
+/** A caught value as the sentence a person reads: an Error's message, or whatever was thrown, as text. */
+const errText = (err: unknown): string => (err instanceof Error ? err.message : String(err));
+
 /** One config value as a string. An entry field is only ever a scalar. */
 export type EnvConfigReader = (key: string) => string;
 
@@ -475,7 +478,7 @@ export async function googleDriveConnection(str: EnvConfigReader): Promise<EnvCo
   } catch (err) {
     return {
       ok: false,
-      message: err instanceof Error ? err.message : String(err),
+      message: errText(err),
       details: ['If Google answered 403, enable the Google Drive API on the Cloud project the service account belongs to.'],
     };
   }
@@ -499,7 +502,7 @@ export async function googlePlayConnection(str: EnvConfigReader): Promise<EnvCon
   try {
     account = parseServiceAccount(str('service_account_json'));
   } catch (err) {
-    return { ok: false, message: err instanceof Error ? err.message : String(err), details: [] };
+    return { ok: false, message: errText(err), details: [] };
   }
   try {
     const token = await playAccessToken(account);
@@ -508,7 +511,7 @@ export async function googlePlayConnection(str: EnvConfigReader): Promise<EnvCon
   } catch (err) {
     return {
       ok: false,
-      message: err instanceof Error ? err.message : String(err),
+      message: errText(err),
       details: [
         `Signed in as ${account.client_email}. If Google answered 403 or 404, invite that address on the app in Play Console → Users and permissions, with release rights.`,
       ],
@@ -551,7 +554,7 @@ export async function msg91Connection(str: EnvConfigReader): Promise<EnvConnecti
       ],
     };
   } catch (err) {
-    return { ok: false, message: err instanceof Error ? err.message : String(err), details: [] };
+    return { ok: false, message: errText(err), details: [] };
   }
 }
 
@@ -703,7 +706,7 @@ export async function appStoreConnectConnection(str: EnvConfigReader): Promise<E
   } catch (err) {
     return {
       ok: false,
-      message: err instanceof Error ? err.message : String(err),
+      message: errText(err),
       details: ['The Issuer ID, Key ID and .p8 must all be from the same App Store Connect team key.'],
     };
   }
@@ -718,7 +721,7 @@ export async function appStoreConnectConnection(str: EnvConfigReader): Promise<E
       message: 'This key cannot manage certificates',
       details: [
         appLine,
-        err instanceof Error ? err.message : String(err),
+        errText(err),
         'Generate a new Team Key with Access "Admin" — only Admin may create the signing certificate.',
       ],
     };
@@ -757,7 +760,7 @@ export async function sonarqubeConnection(str: EnvConfigReader): Promise<EnvConn
       details: [`Quality gate: ${projectStatus.status}, ${failing} failing condition(s).`],
     };
   } catch (err) {
-    return { ok: false, message: err instanceof Error ? err.message : String(err), details: [] };
+    return { ok: false, message: errText(err), details: [] };
   }
 }
 
@@ -786,7 +789,7 @@ export async function godaddyConnection(str: EnvConfigReader): Promise<EnvConnec
     }
     return { ok: true, message: `Connected to ${cfg.domain} (${domain.status})`, details };
   } catch (err) {
-    return { ok: false, message: err instanceof Error ? err.message : String(err), details: [] };
+    return { ok: false, message: errText(err), details: [] };
   }
 }
 
@@ -815,7 +818,7 @@ export async function cloudflareConnection(str: EnvConfigReader): Promise<EnvCon
     if (zone.name_servers?.length) details.push(`Assigned nameservers: ${zone.name_servers.join(', ')}.`);
     return { ok: true, message: `Connected to ${cfg.domain} (${zone.status})`, details };
   } catch (err) {
-    return { ok: false, message: err instanceof Error ? err.message : String(err), details: [] };
+    return { ok: false, message: errText(err), details: [] };
   }
 }
 

@@ -154,7 +154,7 @@ export default function PodForm({
   return (
     <FormProvider {...methods}>
       <PodFormDataProvider value={data}>
-        <form noValidate onSubmit={submit}>
+        <form noValidate onSubmit={submit} data-testid="pod-form">
           <CascadeEffect />
           <PodFormLayout fields={fields} preview={preview} />
         </form>

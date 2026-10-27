@@ -49,8 +49,8 @@ export default function ClubRatingSection({ clubId, rating, ratingsCount }: Read
 
   const reviews: any[] = ratingsData?.clubRatings ?? [];
 
+  // Submit is disabled until a star is chosen, so a press always has stars.
   const handleSubmit = async () => {
-    if (!stars) return;
     try {
       await addRating({ variables: { clubId, stars, comment: comment.trim() || undefined } });
       notify('Thanks for your rating!', 'success');
@@ -58,7 +58,7 @@ export default function ClubRatingSection({ clubId, rating, ratingsCount }: Read
       setStars(null);
       setComment('');
     } catch (e: any) {
-      notify(e?.message ?? 'Could not submit rating', 'error');
+      notify(e.message || 'Could not submit rating', 'error');
     }
   };
 

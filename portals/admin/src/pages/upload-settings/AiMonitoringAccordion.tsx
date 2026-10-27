@@ -29,7 +29,7 @@ interface Props {
 export default function AiMonitoringAccordion({ settings, saving, onSave }: Readonly<Props>) {
   const { t } = useTranslation();
   return (
-    <Accordion>
+    <Accordion data-testid="upload-settings-ai">
       <AccordionSummary expandIcon={<ExpandMoreIcon />}>
         <Typography sx={{
           fontWeight: 700
@@ -43,6 +43,7 @@ export default function AiMonitoringAccordion({ settings, saving, onSave }: Read
                 checked={settings.ai_image_monitoring_enabled}
                 disabled={saving}
                 onChange={(e) => onSave({ ai_image_monitoring_enabled: e.target.checked })}
+                slotProps={{ input: { 'data-testid': 'upload-settings-ai-switch' } as Record<string, string> }}
               />
             }
             label={t('admin.uploads.aiReview')}

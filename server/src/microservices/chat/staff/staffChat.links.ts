@@ -54,6 +54,7 @@ const PORTAL_ROLES: Record<string, string[]> = {
   localization: ['LOCALIZATION_MANAGER'],
   targets: ['TARGETS_MANAGER'],
   'gig-jobs': ['GIG_JOBS_MANAGER'],
+  mcp: ['MCP_MANAGER', 'MCP_USER'],
   partners: [],
   mweb: [],
 };

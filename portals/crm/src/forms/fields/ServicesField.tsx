@@ -77,7 +77,7 @@ export default function ServicesField({ name, options }: Readonly<Props>) {
     detail?: { option: string }
   ) => {
     if (reason === 'selectOption' || reason === 'createOption') {
-      const picked = (detail?.option ?? '').trim();
+      const picked = detail?.option.trim();
       if (picked) addPicked(picked);
     } else if (reason === 'removeOption') {
       removePicked(next);

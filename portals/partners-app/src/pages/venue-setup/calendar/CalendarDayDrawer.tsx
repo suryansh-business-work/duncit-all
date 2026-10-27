@@ -15,8 +15,9 @@ interface Props {
   /** Something is booked that day — closing it keeps the booking. */
   hasBookings: boolean;
   onClose: () => void;
-  onBlocked: (next: boolean) => Promise<void>;
-  onHoliday: (next: boolean) => Promise<void>;
+  /** Each write names the date it is for — the drawer only offers them while a date is open. */
+  onBlocked: (ymd: string, next: boolean) => Promise<void>;
+  onHoliday: (ymd: string, next: boolean) => Promise<void>;
 }
 
 /** One date of the venue's calendar: block it, or mark it a holiday. No prices. */
@@ -66,8 +67,8 @@ export default function CalendarDayDrawer({ ymd, blocked, holiday, hasBookings, 
             holiday={holiday}
             busy={busy}
             hasBookings={hasBookings}
-            onBlocked={(next) => run(() => onBlocked(next))}
-            onHoliday={(next) => run(() => onHoliday(next))}
+            onBlocked={(next) => run(() => onBlocked(ymd, next))}
+            onHoliday={(next) => run(() => onHoliday(ymd, next))}
           />
         </Stack>
       )}

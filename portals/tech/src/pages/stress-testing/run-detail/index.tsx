@@ -70,33 +70,34 @@ export default function StressRunDetailPage() {
   const latest = samples.at(-1) ?? null;
   const shards = shardsQuery.data?.stressRunShards ?? [];
 
-  const onStop = useCallback(async () => {
-    if (!run) return;
+  const onStop = useCallback(async (target: StressRun) => {
     const ok = await confirm({
       title: t('tech.stress.stopTitle'),
-      message: t('tech.stress.stopMessage', { vars: { run: run.run_no } }),
+      message: t('tech.stress.stopMessage', { vars: { run: target.run_no } }),
       confirmLabel: t('tech.stress.stopRun'),
       destructive: true,
     });
     if (!ok) return;
     try {
-      await stopRun({ variables: { id: run.id } });
+      await stopRun({ variables: { id: target.id } });
       await runQuery.refetch();
     } catch (err) {
       notifyError(err instanceof Error ? err.message : String(err));
     }
-  }, [confirm, run, runQuery, stopRun, t]);
+  }, [confirm, runQuery, stopRun, t]);
 
-  const onDownload = useCallback(() => {
-    if (!run) return;
-    downloadTextFile(buildRunReport(t, run, samples), `${run.run_no}-stress-report.html`);
-  }, [run, samples, t]);
+  const onDownload = useCallback(
+    (target: StressRun) => {
+      downloadTextFile(buildRunReport(t, target, samples), `${target.run_no}-stress-report.html`);
+    },
+    [samples, t]
+  );
 
   return (
     <QueryGuard loading={runQuery.loading && !run} error={runQuery.error} errorText={runQuery.error?.message}>
       {run && (
         <Stack spacing={2.5}>
-          <RunHeader run={run} onStop={onStop} onDownload={onDownload} />
+          <RunHeader run={run} onStop={() => onStop(run)} onDownload={() => onDownload(run)} />
           <RunKpis run={run} latest={latest} />
           <VerdictCard run={run} />
           <RunCharts samples={samples} startedAt={run.started_at} />

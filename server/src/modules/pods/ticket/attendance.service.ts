@@ -146,7 +146,9 @@ async function resolveViewer(
   actor: Readonly<{ id: string; roles: string[] }>
 ): Promise<{ pod: any; viewer: AttendanceViewer }> {
   if (!Types.ObjectId.isValid(podDocId)) throw badInput('Invalid pod id');
-  const pod = await PodModel.findById(podDocId);
+  // A cancelled pod is soft-deleted; read it anyway so the board can say it was
+  // cancelled (attendanceLock → CANCELLED) — every mark path refuses a non-OPEN lock.
+  const pod = await PodModel.findById(podDocId).setOptions({ includeDeleted: true });
   if (!pod) throw notFound('Pod not found');
 
   const isHost = (pod.pod_hosts_id ?? []).some((id: any) => String(id) === actor.id);

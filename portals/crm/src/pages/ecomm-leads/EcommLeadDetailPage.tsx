@@ -68,7 +68,7 @@ export default function EcommLeadDetailPage() {
               <Avatar alt="" src={lead.profile_photo_url} sx={{ width: 56, height: 56, bgcolor: 'action.hover' }} />
             )}
             <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Typography component="h1"
+              <Typography component="h1" data-testid="lead-detail-name"
                 variant="h5"
                 sx={{
                   fontWeight: 800,

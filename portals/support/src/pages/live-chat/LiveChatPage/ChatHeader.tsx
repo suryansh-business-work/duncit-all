@@ -50,7 +50,7 @@ export default function ChatHeader({ session, onResolve, onReopen, onDownload, o
       </Box>
 
       {isResolved ? (
-        <DuncitButton size="small" startIcon={<ReplayIcon />} disabled={busy} onClick={onReopen}>
+        <DuncitButton size="small" startIcon={<ReplayIcon />} disabled={busy} onClick={onReopen} data-testid="live-chat-reopen">
           Re-open
         </DuncitButton>
       ) : (
@@ -60,6 +60,7 @@ export default function ChatHeader({ session, onResolve, onReopen, onDownload, o
           startIcon={<CheckCircleIcon />}
           disabled={busy}
           onClick={() => setConfirmResolve(true)}
+          data-testid="live-chat-resolve"
         >
           Resolve
         </DuncitButton>

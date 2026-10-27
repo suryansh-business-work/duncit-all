@@ -65,8 +65,8 @@ export function SubmissionPanel({ challenge, tool, actions }: Readonly<PanelProp
       setUploading(false);
     }
   };
-  const confirmRemove = async () => {
-    if (removing) await actions.removeEntry(removing.id);
+  const confirmRemove = async (entry: ChallengeEntry) => {
+    await actions.removeEntry(entry.id);
     setRemoving(null);
   };
 
@@ -91,20 +91,22 @@ export function SubmissionPanel({ challenge, tool, actions }: Readonly<PanelProp
           onSubmit={submit}
         />
       ) : null}
-      <ConfirmDialog
-        open={!!removing}
-        title={t('mweb.challenge.tools.removeEntryTitle')}
-        message={t('mweb.challenge.tools.removeEntryBody', {
-          vars: { name: names.get(removing?.competitor_id ?? '') ?? '' },
-        })}
-        confirmLabel={t('mweb.challenge.removeRow')}
-        cancelLabel={t('mweb.challenge.cancel')}
-        destructive
-        busy={actions.busy}
-        onConfirm={() => fireAndForget(confirmRemove())}
-        onCancel={() => setRemoving(null)}
-        testID={`${testID}-remove-confirm`}
-      />
+      {removing ? (
+        <ConfirmDialog
+          open
+          title={t('mweb.challenge.tools.removeEntryTitle')}
+          message={t('mweb.challenge.tools.removeEntryBody', {
+            vars: { name: names.get(removing.competitor_id) ?? '' },
+          })}
+          confirmLabel={t('mweb.challenge.removeRow')}
+          cancelLabel={t('mweb.challenge.cancel')}
+          destructive
+          busy={actions.busy}
+          onConfirm={() => fireAndForget(confirmRemove(removing))}
+          onCancel={() => setRemoving(null)}
+          testID={`${testID}-remove-confirm`}
+        />
+      ) : null}
     </ToolCard>
   );
 }

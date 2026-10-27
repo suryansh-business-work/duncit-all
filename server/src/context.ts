@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { watchClientPresence } from '@utils/clientPresence';
 import { isAccountLocked } from '@modules/access/accountDeletion/accountDeletion.lock';
 import { isSessionSealed } from '@modules/access/auth/session-seal';
+import { effectiveRoles } from '@modules/access/auth/current-roles';
 import { consentFromRequest, type TrackingConsent } from '@utils/consent';
 
 export interface AuthUser {
@@ -82,6 +83,22 @@ export function decodeAuthUser(authorization?: string | null): AuthUser | null {
   }
 }
 
+/**
+ * {@link decodeAuthUser}, with the roles cut down to the ones the account
+ * still holds (see `current-roles.ts`).
+ *
+ * Separate from the decode because the decode is synchronous and answers
+ * "who is this" for the log ingest, the rate limiter and the notification
+ * stream, none of which open a door on a role. The GraphQL context is where
+ * roles open doors, so it is where a revoked one has to stop working: on the
+ * very next request, without signing the person out.
+ */
+export async function resolveAuthUser(authorization?: string | null): Promise<AuthUser | null> {
+  const user = decodeAuthUser(authorization);
+  if (!user) return null;
+  return { ...user, roles: await effectiveRoles(user.id, user.roles ?? []) };
+}
+
 export async function buildContext({
   req,
   res,
@@ -89,7 +106,7 @@ export async function buildContext({
   req: Request;
   res: Response;
 }): Promise<GraphQLContext> {
-  const user: AuthUser | null = decodeAuthUser(req.headers.authorization);
+  const user: AuthUser | null = await resolveAuthUser(req.headers.authorization);
   const rawDuid = req.headers['x-duid'];
   const duidFromArray =
     Array.isArray(rawDuid) && rawDuid[0]

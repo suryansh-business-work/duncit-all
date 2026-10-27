@@ -46,10 +46,11 @@ export default function ConnectionDialog({ open, provider, connection, onClose, 
     try {
       const res = await save({ variables: toSaveConnectionVariables(provider, connection?.id ?? null, values) });
       const saved = res.data?.savePartnerIntegration;
-      if (!saved) return;
-      notifySuccess(t('partners.integrations.saved'));
-      onSaved?.(saved);
-      close();
+      if (saved) {
+        notifySuccess(t('partners.integrations.saved'));
+        onSaved?.(saved);
+        close();
+      }
     } catch (error) {
       setApiError(parseApiError(error));
     }

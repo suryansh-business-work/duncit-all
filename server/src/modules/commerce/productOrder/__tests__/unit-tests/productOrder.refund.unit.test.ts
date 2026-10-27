@@ -3,7 +3,7 @@
  * the idempotency of a re-run, and a gateway refusal that must never be
  * thrown past a cancellation. Gateway and ledger are mocked.
  */
-jest.mock('@observability/log', () => ({ logs: { server: { error: jest.fn(), info: jest.fn() } } }));
+jest.mock('@observability/log', () => ({ logs: { server: { error: jest.fn(), info: jest.fn(), warn: jest.fn() } } }));
 jest.mock('@modules/finance/payment/payment.model', () => ({
   PaymentModel: { findById: jest.fn(), updateOne: jest.fn() },
 }));
@@ -37,10 +37,14 @@ const payment = (over: Record<string, unknown> = {}) =>
     ...over,
   }) as never;
 
-const target = (refund: Record<string, unknown> = {}): Refundable & { refund: any } => ({
+const target = (refund: Record<string, unknown> = {}): Refundable & { refund: any; _id: string } => ({
+  _id: 'ord1',
   refund: { status: '', amount: 0, coins: 0, ...refund } as never,
   save: jest.fn().mockResolvedValue(undefined),
 });
+
+/** The refund's collection; `modifiedCount` says whether the conditional claim matched. */
+const store = (modifiedCount = 1) => ({ updateOne: jest.fn().mockResolvedValue({ modifiedCount }) });
 
 const req = (over: Record<string, unknown> = {}) => ({
   paymentId: 'pay1',
@@ -188,21 +192,49 @@ describe('issueRefund', () => {
   it('leaves the manual-payout flag when the retried refund fails again', async () => {
     m(createRazorpayRefund).mockRejectedValue(new Error('still no'));
     const t = target({ status: 'FAILED', amount: 900, coins: 0, finance_recorded: true });
-    await retryRefund(t, req());
+    await retryRefund(t, req(), store());
     expect(t.refund.status).toBe('FAILED');
     expect(PaymentModel.updateOne).not.toHaveBeenCalled();
   });
 });
 
 describe('retryRefund', () => {
-  it('retries FAILED and PENDING refunds only', async () => {
+  it('leaves a refund that is not FAILED or PENDING alone without claiming it', async () => {
     const processed = target({ status: 'PROCESSED' });
-    expect(await retryRefund(processed, req())).toBe(processed.refund);
+    const s = store();
+    expect(await retryRefund(processed, req(), s)).toBe(processed.refund);
+    expect(s.updateOne).not.toHaveBeenCalled();
     expect(PaymentModel.findById).not.toHaveBeenCalled();
+  });
 
+  it('claims a FAILED refund, or a PENDING one past the in-flight window, in one conditional write', async () => {
     const failed = target({ status: 'FAILED', amount: 900, coins: 100, finance_recorded: true });
-    const out = await retryRefund(failed, req());
-    expect(out.status).toBe('PROCESSED');
-    expect(out.razorpay_refund_id).toBe('rfnd_1');
+    const s = store();
+    const before = Date.now();
+    const out = await retryRefund(failed, req(), s);
+
+    const [filter, update] = s.updateOne.mock.calls[0];
+    expect(filter._id).toBe('ord1');
+    expect(filter.$or[0]).toEqual({ 'refund.status': 'FAILED' });
+    expect(filter.$or[1]['refund.status']).toBe('PENDING');
+    expect(before - filter.$or[1]['refund.attempted_at'].$lt.getTime()).toBeGreaterThanOrEqual(15 * 60_000);
+    expect(update.$set['refund.status']).toBe('PENDING');
+    expect(update.$set['refund.attempted_at'].getTime()).toBeGreaterThanOrEqual(before);
+    // The fresh stamp makes the send look the refund up by receipt before creating one.
+    expect(listRazorpayRefunds).toHaveBeenCalledWith('pay_rzp1', 'acct_1');
+    expect(createRazorpayRefund).toHaveBeenCalledTimes(1);
+    expect(out).toMatchObject({ status: 'PROCESSED', razorpay_refund_id: 'rfnd_1' });
+  });
+
+  it('refuses without touching the gateway when the claim matches nothing (in flight or already claimed)', async () => {
+    for (const status of ['PENDING', 'FAILED']) {
+      const t = target({ status, amount: 900, coins: 0, attempted_at: new Date() });
+      await expect(retryRefund(t, req(), store(0))).rejects.toThrow(/may still be on its way/);
+      expect(t.refund.status).toBe(status);
+    }
+    expect(PaymentModel.findById).not.toHaveBeenCalled();
+    expect(creditCoinsBack).not.toHaveBeenCalled();
+    expect(listRazorpayRefunds).not.toHaveBeenCalled();
+    expect(createRazorpayRefund).not.toHaveBeenCalled();
   });
 });

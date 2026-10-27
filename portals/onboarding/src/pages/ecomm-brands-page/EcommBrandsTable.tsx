@@ -91,7 +91,7 @@ export default function EcommBrandsTable({
           </DuncitIconButton>
         </Tooltip>
         <Tooltip title={t('onboarding.common.review')}>
-          <DuncitIconButton size="small" onClick={() => onReview(b)}>
+          <DuncitIconButton size="small" onClick={() => onReview(b)} data-testid={`brand-review-${b.id}`}>
             <RateReviewIcon fontSize="small" />
           </DuncitIconButton>
         </Tooltip>

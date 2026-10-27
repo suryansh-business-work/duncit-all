@@ -12,6 +12,7 @@ import EarnLayoutFields from './EarnLayoutFields';
 import {
   EARN_LIMITS,
   earnSchema,
+  imagesError,
   toEarnValues,
   type EarnFormOutput,
   type EarnFormValues,
@@ -47,7 +48,7 @@ export default function EarnForm({ section, submitting, errorMessage, onSubmit }
           control={control}
           name="images"
           render={({ field, fieldState }) => (
-            <EarnImagesField value={field.value} error={fieldState.error?.message} onChange={field.onChange} />
+            <EarnImagesField value={field.value} error={imagesError(fieldState.error)} onChange={field.onChange} />
           )}
         />
         <Divider />

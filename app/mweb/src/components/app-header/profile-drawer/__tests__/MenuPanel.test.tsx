@@ -31,6 +31,10 @@ vi.mock('../../../../hooks/useAutoPodCounts', () => ({
   useAutoPodCounts: () => ({ counts: null, reload: vi.fn() }),
 }));
 
+// The Chats tile's unread badge reads an Apollo query; the count itself is
+// owned by useChatUnreadTotal's own tests.
+vi.mock('../../../chat-state/useChatUnreadTotal', () => ({ useChatUnreadTotal: () => 0 }));
+
 // Stub the heavy consumer layout (fires ads/branding queries) — it is covered
 // by its own tests; here we only need a marker to assert it mounts.
 vi.mock('../UserModeContent', () => ({
@@ -75,6 +79,17 @@ describe('MenuPanel', () => {
     colorState.mode = 'light';
     studioState.mode = 'USER';
     flagValue = false;
+  });
+
+  it('shows the body skeleton instead of the user content while the account loads', () => {
+    renderPanel({ loading: true });
+    expect(screen.queryByTestId('user-mode-content')).not.toBeInTheDocument();
+  });
+
+  it('runs the top bar only while refreshing over content already on screen', () => {
+    renderPanel({ refreshing: true });
+    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    expect(screen.getByTestId('user-mode-content')).toBeInTheDocument();
   });
 
   it('mounts the user content in USER mode', () => {

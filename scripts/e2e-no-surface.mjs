@@ -109,6 +109,10 @@ const NO_E2E_SURFACE = new Map([
   ['@duncit/buttons', 'library — DuncitButton is rendered end-to-end by every portal + mWeb'],
   ['@duncit/buttons-native', 'framework-free press recipe (numbers only), no DOM — consumed by the native app'],
   ['@duncit/captcha', 'library — the human check is driven end-to-end by every public form in the websites + mWeb'],
+  [
+    '@duncit/challenges',
+    'library — the challenge tool mapping and settings are rendered end-to-end by the admin and challenge portals',
+  ],
   ['@duncit/dashboard', 'library — the GridStack dashboard is rendered end-to-end by every portal home'],
   ['@duncit/dialogs-native', 'framework-free sheet sizing + keyboard contract, no DOM — consumed by the native app'],
   ['@duncit/docs-demos', 'library — the runnable package demos are rendered end-to-end by the tech portal'],
@@ -130,6 +134,10 @@ const NO_E2E_SURFACE = new Map([
   ['status', 'static Astro site — no app state to drive'],
   ['earnwith-website', 'static Astro site — no app state to drive'],
   ['duncit-docs', 'static docs site — no app state to drive'],
+  [
+    'cms-site',
+    'Astro renderer for Website-portal pages — no auth or app state; covered by its vitest suite',
+  ],
 
   // --- the API. Its contract is exercised by every portal/mWeb suite through
   // the stubbed GraphQL layer, and directly by its own jest integration tests.

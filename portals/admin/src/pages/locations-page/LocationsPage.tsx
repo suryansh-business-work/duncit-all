@@ -146,7 +146,7 @@ export default function LocationsPage() {
             >
               {t('admin.locations.launchMedia')}
             </DuncitButton>
-            <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
+            <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={openCreate} data-testid="locations-new">
               New Location
             </DuncitButton>
           </Stack>
@@ -179,6 +179,7 @@ export default function LocationsPage() {
         autoHideDuration={2500}
         onClose={() => setToast(null)}
         message={toast ?? ''}
+        data-testid="locations-toast"
       />
     </Stack>
   );

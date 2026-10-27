@@ -79,7 +79,7 @@ export default function SendAdminCredentials() {
 
   return (
     <Stack spacing={1.5}>
-      <DuncitButton variant="outlined" onClick={openDialog} disabled={loading || sent}>
+      <DuncitButton variant="outlined" onClick={openDialog} disabled={loading || sent} data-testid="send-admin-credentials">
         {sent ? 'Credentials sent' : 'Send Credentials to Admin'}
       </DuncitButton>
 
@@ -101,7 +101,7 @@ export default function SendAdminCredentials() {
         First-time setup helper. Disable in production once configured.
       </Typography>
 
-      <Dialog open={open} onClose={loading ? undefined : () => setOpen(false)} maxWidth="xs" fullWidth>
+      <Dialog open={open} onClose={loading ? undefined : () => setOpen(false)} maxWidth="xs" fullWidth data-testid="send-admin-credentials-dialog">
         <DialogTitle>{t('admin.captcha.confirm')}</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 0.5 }}>
@@ -114,6 +114,7 @@ export default function SendAdminCredentials() {
               alignItems: "center"
             }}>
               <Box
+                data-testid="send-admin-credentials-code"
                 sx={{
                   flex: 1,
                   py: 1.25,
@@ -139,6 +140,7 @@ export default function SendAdminCredentials() {
             </Stack>
             <TextField
               label={t('admin.captcha.label')}
+              data-testid="send-admin-credentials-entry"
               value={entry}
               onChange={(e) => setEntry(e.target.value)}
               error={!!captchaError}
@@ -153,10 +155,10 @@ export default function SendAdminCredentials() {
           </Stack>
         </DialogContent>
         <DialogActions>
-          <DuncitButton onClick={() => setOpen(false)} disabled={loading}>
+          <DuncitButton onClick={() => setOpen(false)} disabled={loading} data-testid="send-admin-credentials-cancel">
             {t('shell.common.cancel')}
           </DuncitButton>
-          <DuncitButton variant="contained" onClick={confirm} disabled={loading || !entry.trim()}>
+          <DuncitButton variant="contained" onClick={confirm} disabled={loading || !entry.trim()} data-testid="send-admin-credentials-send">
             {loading ? 'Sending…' : 'Send credentials'}
           </DuncitButton>
         </DialogActions>

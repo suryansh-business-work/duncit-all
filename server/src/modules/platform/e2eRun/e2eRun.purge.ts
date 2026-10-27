@@ -8,6 +8,11 @@ import { userTrace } from '@modules/access/accountDeletion/accountDeletion.trace
 import { purgeReference } from '@modules/access/accountDeletion/accountDeletion.purge';
 import { mediaLibraryService } from '@modules/platform/upload/mediaLibrary.service';
 import { OtpChallengeModel } from '@modules/platform/otp/otp.model';
+import { PodModel } from '@modules/pods/pod/pod.model';
+import { PodMemberModel } from '@modules/pods/podMember/podMember.model';
+import { PodAuditLogModel } from '@modules/pods/podAudit/podAudit.model';
+import { ClubModel } from '@modules/clubs/club/club.model';
+import { ShortLinkModel } from '@modules/crm/marketing/shortLink.model';
 import { e2eOverrides } from './e2eRun.mute';
 import { forgetRunAccountCodes } from './e2eRun.codes';
 
@@ -89,7 +94,7 @@ async function purgeChallenges(accounts: RegExp, phone: string): Promise<PurgedC
   const or: Record<string, unknown>[] = [{ email: accounts }];
   if (phone) or.push({ phone_number: phone });
   const res = await OtpChallengeModel.deleteMany({ $or: or });
-  return { collection: OtpChallengeModel.collection.name, deleted: res.deletedCount ?? 0 };
+  return { collection: OtpChallengeModel.collection.name, deleted: res.deletedCount };
 }
 
 /**
@@ -112,6 +117,45 @@ async function purgeStampedUploads(stamp: string): Promise<PurgedCollection> {
   }
 }
 
+/**
+ * What the run account builds as a partner (the live suite's fixture world:
+ * specs/api/fixtures) that the account trace cannot take with it.
+ *
+ * The trace deletes what the account OWNS through a scalar reference — its
+ * venue, host profile, slots, Pod Requests and food coupons — but only pulls it
+ * out of an array. A pod it hosted would stay behind with no host at a venue
+ * that no longer exists, and so would the club it administers; a share link
+ * names its maker in a field the trace does not read. So, BEFORE the accounts
+ * go (while a pod can still be found by its host):
+ *   - pods hosted by the run's accounts and nobody else, cancelled ones too,
+ *     with their memberships and audit rows — a pod co-hosted by anyone else
+ *     is left to the trace, which only takes the run account off it;
+ *   - share links the run's accounts minted;
+ *   - clubs named with this run's marker (`[E2E <stamp> …]`).
+ */
+async function purgeRunFixtures(userIds: Types.ObjectId[], stamp: string): Promise<PurgedCollection[]> {
+  const runIds = new Set(userIds.map(String));
+  const hosted = await PodModel.find({ pod_hosts_id: { $in: userIds } }, { pod_hosts_id: 1 })
+    .setOptions({ includeDeleted: true })
+    .lean();
+  const podIds = hosted
+    .filter((pod) => pod.pod_hosts_id.every((hostId) => runIds.has(String(hostId))))
+    .map((pod) => pod._id);
+  const members = await PodMemberModel.deleteMany({ pod_id: { $in: podIds } });
+  const audits = await PodAuditLogModel.deleteMany({ pod_id: { $in: podIds } });
+  const pods = await PodModel.deleteMany({ _id: { $in: podIds } });
+  const links = await ShortLinkModel.deleteMany({ created_by: { $in: [...runIds] } });
+  const marked = new RegExp(`^${escapeRe(`[E2E ${stamp} `)}`);
+  const clubs = await ClubModel.deleteMany({ club_name: marked });
+  return [
+    { collection: PodMemberModel.collection.name, deleted: members.deletedCount ?? 0 },
+    { collection: PodAuditLogModel.collection.name, deleted: audits.deletedCount ?? 0 },
+    { collection: PodModel.collection.name, deleted: pods.deletedCount ?? 0 },
+    { collection: ShortLinkModel.collection.name, deleted: links.deletedCount ?? 0 },
+    { collection: ClubModel.collection.name, deleted: clubs.deletedCount ?? 0 },
+  ];
+}
+
 export async function purgeE2eRunData(input: PurgeE2eRunDataInput) {
   const stamp = clean(input?.stamp);
   if (!STAMP_RE.test(stamp)) throw badInput('stamp must be the run’s ddMMyyyyHHmm identity stamp.');
@@ -128,12 +172,14 @@ export async function purgeE2eRunData(input: PurgeE2eRunDataInput) {
 
   const addresses = stampedAccountsFilter(email, stamp);
   const accounts = await UserModel.find({ 'auth.email': addresses }, { _id: 1 }).lean();
+  const fixtures = await purgeRunFixtures(accounts.map((found) => found._id), stamp);
   for (const found of accounts) {
     await purgeAccount(String(found._id));
   }
 
   const phone = account?.phone ?? '';
   const records: PurgedCollection[] = [
+    ...fixtures,
     await purgeChallenges(addresses, phone),
     { collection: 'e2e one-time codes', deleted: await forgetRunAccountCodes(email, phone) },
     await purgeStampedUploads(stamp),

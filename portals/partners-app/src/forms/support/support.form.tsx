@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { Alert, MenuItem, Stack, TextField } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { RhfTextField, zodRules } from '@duncit/forms';
+import { parseApiError } from '@duncit/utils';
 import { supportCategories, supportInitialValues, type SupportFormValues } from './support.types';
 import { useTranslation } from '@duncit/shell';
 
@@ -50,25 +51,24 @@ export default function SupportForm({ initialValues, loading, errorMessage, onSu
     try {
       await onSubmit(values);
     } catch (error) {
-      const message = error instanceof Error ? error.message : t('partners.forms.couldNotSubmitSupportRequest');
-      setError('root', { message });
+      setError('root', { message: parseApiError(error, t('partners.forms.couldNotSubmitSupportRequest')) });
     }
   });
 
-  const categoryError = Boolean(errors.category);
   const rootError = errors.root?.message;
 
   return (
     <Stack component="form" noValidate onSubmit={submit} spacing={2}>
-      <RhfTextField control={control} name="name" label={t('partners.forms.yourName')} required autoComplete="name" />
-      <RhfTextField control={control} name="email" label={t('shell.common.email')} type="email" autoComplete="email" disabled slotProps={{ input: { readOnly: true } }} hint={t('partners.becomeHostPage.lockedToYourDuncitAccount')} />
-      <TextField select label={t('partners.common.category')} defaultValue={defaults.category} error={categoryError} helperText={categoryError ? errors.category?.message : ' '} fullWidth {...register('category')}>
+      <RhfTextField control={control} name="name" data-testid="support-name" label={t('partners.forms.yourName')} required autoComplete="name" />
+      <RhfTextField control={control} name="email" data-testid="support-email" label={t('shell.common.email')} type="email" autoComplete="email" disabled slotProps={{ input: { readOnly: true } }} hint={t('partners.becomeHostPage.lockedToYourDuncitAccount')} />
+      <TextField select label={t('partners.common.category')} defaultValue={defaults.category} helperText=" " fullWidth {...register('category')}>
+
         {supportCategories(t).map((category) => <MenuItem key={category.value} value={category.value}>{category.label}</MenuItem>)}
       </TextField>
-      <RhfTextField control={control} name="subject" label={t('partners.forms.subject')} required />
-      <RhfTextField control={control} name="message" label={t('partners.forms.message')} required multiline minRows={4} hint="At least 10 characters" />
+      <RhfTextField control={control} name="subject" data-testid="support-subject" label={t('partners.forms.subject')} required />
+      <RhfTextField control={control} name="message" data-testid="support-message" label={t('partners.forms.message')} required multiline minRows={4} hint="At least 10 characters" />
       {(errorMessage ?? rootError) && <Alert severity="error">{errorMessage ?? rootError}</Alert>}
-      <DuncitButton type="submit" variant="contained" size="large" loading={loading || isSubmitting}>{loading || isSubmitting ? 'Sending...' : 'Send to support'}</DuncitButton>
+      <DuncitButton type="submit" data-testid="support-submit" variant="contained" size="large" loading={loading || isSubmitting}>{loading || isSubmitting ? 'Sending...' : 'Send to support'}</DuncitButton>
     </Stack>
   );
 }

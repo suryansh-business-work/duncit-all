@@ -57,13 +57,13 @@ export default function WalletPage() {
   const withdrawals = data?.myWithdrawals ?? [];
 
   return (
-    <Stack spacing={2.25} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
+    <Stack data-testid="wallet-page" spacing={2.25} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
       <Stack direction="row" spacing={1.25} sx={{
         alignItems: "center"
       }}>
         <AccountBalanceWalletIcon color="primary" />
         <Typography variant="h4" component="h1" sx={{ fontWeight: 950, flex: 1 }}>
-          Wallet
+          {t('partners.walletPage.title')}
         </Typography>
         <DuncitButton variant="outlined" startIcon={<DownloadIcon />} onClick={() => setStatementOpen(true)}>
           {t('withdraw.statement.title')}
@@ -88,7 +88,7 @@ export default function WalletPage() {
             }}>
             Available balance
           </Typography>
-          <Typography variant="h3" sx={{ fontWeight: 950, my: 0.5 }}>
+          <Typography variant="h3" data-testid="wallet-balance" sx={{ fontWeight: 950, my: 0.5 }}>
             {currency}
             {balance.toFixed(2)}
           </Typography>
@@ -100,6 +100,7 @@ export default function WalletPage() {
           <Box sx={{ mt: 1.5 }}>
             <DuncitButton
               variant="contained"
+              data-testid="wallet-withdraw"
               disabled={!canWithdraw}
               onClick={() => setOpen(true)}
               sx={{ borderRadius: 999, fontWeight: 900 }}
@@ -109,6 +110,7 @@ export default function WalletPage() {
             {belowMinimum && (
               <Typography
                 variant="caption"
+                data-testid="wallet-min-withdrawal"
                 sx={{
                   color: "text.secondary",
                   display: 'block',

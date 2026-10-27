@@ -101,7 +101,7 @@ export default function ContactActionsSection({ userId, refreshToken }: Readonly
       <Stack direction="row" component="span" sx={{
         justifyContent: "flex-end"
       }}>
-        <DuncitIconButton size="small" color="error" onClick={() => remove(a)} aria-label={t('admin.contact.deleteLog')}>
+        <DuncitIconButton size="small" color="error" onClick={() => remove(a)} aria-label={t('admin.contact.deleteLog')} data-testid="admin-user-contact-log-delete">
           <DeleteIcon fontSize="small" />
         </DuncitIconButton>
       </Stack>

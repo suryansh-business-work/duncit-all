@@ -25,7 +25,7 @@ export const GIFT_CARD_GRADIENTS: readonly GiftCardGradient[] = [
 export function giftCardGradient(seed: string): GiftCardGradient {
   let hash = 0;
   for (const ch of seed) {
-    hash = (hash * 31 + (ch.codePointAt(0) ?? 0)) % 100003;
+    hash = (hash * 31 + Number(ch.codePointAt(0))) % 100003;
   }
   return GIFT_CARD_GRADIENTS[hash % GIFT_CARD_GRADIENTS.length];
 }

@@ -6,7 +6,6 @@ import {
   stripIgnoredCharacters,
   visit,
   visitWithTypeInfo,
-  type DefinitionNode,
   type DocumentNode,
   type GraphQLSchema,
   type OperationDefinitionNode,
@@ -55,12 +54,9 @@ const blankLiterals = {
   ObjectValue: (node: { fields: readonly unknown[] }) => ({ ...node, fields: [] }),
 };
 
-const definitionName = (definition: DefinitionNode): string =>
-  'name' in definition && definition.name ? definition.name.value : '';
-
 function signatureOf(document: DocumentNode, operation: OperationDefinitionNode): string {
   const fragments = document.definitions.filter((d) => d.kind === Kind.FRAGMENT_DEFINITION);
-  fragments.sort((a, b) => definitionName(a).localeCompare(definitionName(b)));
+  fragments.sort((a, b) => a.name.value.localeCompare(b.name.value));
   const reduced: DocumentNode = { ...document, definitions: [operation, ...fragments] };
   const blanked = visit(reduced, blankLiterals) as DocumentNode;
   return stripIgnoredCharacters(print(blanked)).slice(0, MAX_SIGNATURE_CHARS);
@@ -69,8 +65,8 @@ function signatureOf(document: DocumentNode, operation: OperationDefinitionNode)
 function rootFieldsOf(operation: OperationDefinitionNode): string[] {
   return operation.selectionSet.selections
     .filter((selection) => selection.kind === Kind.FIELD)
-    .map((selection) => (selection.kind === Kind.FIELD ? selection.name.value : ''))
-    .filter((name) => name && !name.startsWith('__'));
+    .map((selection) => selection.name.value)
+    .filter((name) => !name.startsWith('__'));
 }
 
 function fieldsOf(document: DocumentNode, schema: GraphQLSchema | null): string[] {

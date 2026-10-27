@@ -67,7 +67,7 @@ function GoLiveCard({ brand }: Readonly<{ brand: EcommBrand }>) {
 export default function BrandOverviewTab({ brand }: Readonly<{ brand: EcommBrand }>) {
   const { t } = useTranslation();
   const percent = brand.completion?.percent ?? 0;
-  const dash = (value: string | null | undefined) => (value ? formatDate(value) || '—' : '—');
+  const dash = (value: string | null | undefined) => formatDate(value) || '—';
   return (
     <Grid container spacing={2}>
       <Grid size={{ xs: 12, md: 6 }}>

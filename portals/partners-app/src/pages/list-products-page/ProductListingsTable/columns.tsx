@@ -59,7 +59,7 @@ export const buildListingColumns = (
     width: 130,
     type: 'enum',
     options: STATUS_OPTIONS,
-    cellRenderer: renderListingStatus,
+    cellRenderer: renderStatus,
     valueGetter: (product) => product.listing_review_status,
   },
   {

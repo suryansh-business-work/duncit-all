@@ -34,7 +34,7 @@ function PodFinanceDetail({ breakdown }: Readonly<{ breakdown: PodFinanceBreakdo
               alignItems: "center",
               flexWrap: "wrap"
             }}>
-            <Typography component="h1" variant="h5" sx={{
+            <Typography component="h1" variant="h5" data-testid="pod-finance-title" sx={{
               fontWeight: 700
             }}>{breakdown.pod_title}</Typography>
             <SettlementStatusChip status={breakdown.settlement_status} />

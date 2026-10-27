@@ -61,7 +61,7 @@ export default function DecisionDialog({ mode, request, busy, onClose, onConfirm
   };
 
   return (
-    <Dialog open={!!request} onClose={close} fullWidth maxWidth="xs">
+    <Dialog open={!!request} onClose={close} fullWidth maxWidth="xs" data-testid="host-request-decision">
       <DialogTitle>{dialogCopy.title}</DialogTitle>
       <DialogContent dividers>
         <Typography
@@ -81,11 +81,12 @@ export default function DecisionDialog({ mode, request, busy, onClose, onConfirm
           minRows={3}
           fullWidth
           required={mode === 'REJECT'}
+          data-testid="host-request-decision-notes"
         />
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>
-        <DuncitButton onClick={close}>{t('shell.common.cancel')}</DuncitButton>
-        <DuncitButton variant="contained" color={dialogCopy.color} onClick={confirm} disabled={disabled}>
+        <DuncitButton onClick={close} data-testid="host-request-decision-cancel">{t('shell.common.cancel')}</DuncitButton>
+        <DuncitButton variant="contained" color={dialogCopy.color} onClick={confirm} disabled={disabled} data-testid="host-request-decision-confirm">
           {dialogCopy.cta}
         </DuncitButton>
       </DialogActions>

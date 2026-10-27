@@ -143,7 +143,7 @@ export default function VenuesTable({
           </DuncitIconButton>
         </Tooltip>
         <Tooltip title={t('onboarding.common.review')}>
-          <DuncitIconButton size="small" onClick={() => onReview(v)}>
+          <DuncitIconButton size="small" onClick={() => onReview(v)} data-testid={`venue-review-${v.id}`}>
             <RateReviewIcon fontSize="small" />
           </DuncitIconButton>
         </Tooltip>

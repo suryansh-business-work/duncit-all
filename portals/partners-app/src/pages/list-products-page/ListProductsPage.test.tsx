@@ -4,9 +4,12 @@ import type { MockedResponse } from '@apollo/client/testing';
 import { GraphQLError } from 'graphql';
 import ListProductsPage from './ListProductsPage';
 import type { ProductListingRow } from './queries';
-import { PRODUCT_ACCESS_MESSAGE, PRODUCT_LISTING_ACCESS } from './productAccess';
+import { PRODUCT_LISTING_ACCESS } from './productAccess';
 import { ECOMM_MANAGER, accessMock } from '../../__tests__/groupB-fixtures';
 import { renderWithProviders } from '../../__tests__/render';
+
+// The shipped English for partners.listProductsPage.ecommManagerRequired.
+const PRODUCT_ACCESS_MESSAGE = 'You must be an Ecomm Manager to add products.';
 
 const { stubRow } = vi.hoisted(() => {
   const row: ProductListingRow = { id: 'p1', product_name: 'Alpha Tee', listing_review_status: 'APPROVED' };
@@ -96,6 +99,18 @@ describe('ListProductsPage', () => {
     renderPage([accessMock([ECOMM_MANAGER])]);
     fireEvent.click(await screen.findByRole('button', { name: 'Settings row' }));
     expect(screen.getByTestId('location').textContent).toBe('/ecomm-brand/b1/products/p1/settings');
+  });
+
+  it('inside the brand page shows only the Add Product action above the table', async () => {
+    renderWithProviders(<ListProductsPage embedded />, {
+      mocks: [accessMock([ECOMM_MANAGER])],
+      path: '/ecomm-brand/:brandId/products',
+      route: '/ecomm-brand/b1/products',
+    });
+    expect(await screen.findByText('Listings of b1 (manageable)')).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Add Product' }).getAttribute('href')).toBe('/ecomm-brand/b1/products/new');
+    expect(screen.queryByRole('heading', { level: 1 })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Back to brands' })).toBeNull();
   });
 
   it('goes back to the brands list', async () => {

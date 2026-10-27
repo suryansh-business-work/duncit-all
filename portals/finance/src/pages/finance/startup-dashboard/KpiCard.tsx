@@ -38,7 +38,7 @@ export default function KpiCard({ metric, onInfo, onSettings }: Readonly<Props>)
   const { t } = useTranslation();
   const isManual = metric.source === 'manual';
   return (
-    <Card variant="outlined" sx={{ height: '100%', borderRadius: 2 }}>
+    <Card variant="outlined" data-testid={`founder-kpi-${metric.key}`} sx={{ height: '100%', borderRadius: 2 }}>
       <CardContent sx={{ pb: 1.5 }}>
         <Stack
           direction="row"
@@ -62,7 +62,7 @@ export default function KpiCard({ metric, onInfo, onSettings }: Readonly<Props>)
               </DuncitIconButton>
             </Tooltip>
             <Tooltip title={t('finance.startupDashboard.formulaAndSettings')}>
-              <DuncitIconButton size="small" onClick={() => onSettings(metric)} aria-label={`Settings for ${metric.label}`}>
+              <DuncitIconButton size="small" onClick={() => onSettings(metric)} data-testid={`founder-kpi-${metric.key}-settings`} aria-label={`Settings for ${metric.label}`}>
                 <SettingsOutlinedIcon fontSize="small" />
               </DuncitIconButton>
             </Tooltip>

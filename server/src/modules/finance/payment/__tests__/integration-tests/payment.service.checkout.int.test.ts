@@ -185,11 +185,12 @@ describe('verifyRazorpayCheckout', () => {
     expect(mockVerify).toHaveBeenCalledWith({ orderId: 'order_TEST1', paymentId: 'pay_TEST1', signature: 'sig', account: undefined });
     await settled(sheet.payment_doc_id);
 
-    const again = await paymentService.verifyRazorpayCheckout(verifyArgs(sheet.payment_doc_id), String(user._id)).catch((e) => e);
-    // After the first verify the gateway_ref holds the payment id, so a replay
-    // with the order id is refused as a mismatch rather than re-settled.
-    expect(again).toBeInstanceOf(Error);
-    expect((again as Error).message).toBe('Payment/order mismatch');
+    // A replay of the same order and payment (a client retry, a double tap) is
+    // answered with the payment as it stands — its signature checked again —
+    // and settles nothing a second time.
+    const again = await paymentService.verifyRazorpayCheckout(verifyArgs(sheet.payment_doc_id), String(user._id));
+    expect(again).toMatchObject({ status: 'SUCCESS', total: 1180, invoice_no: first.invoice_no });
+    expect(mockVerify).toHaveBeenCalledTimes(2);
 
     const row = await PaymentModel.findById(sheet.payment_doc_id).lean();
     expect(row).toMatchObject({ gateway_ref: 'pay_TEST1', finalize_attempts: 1, coins_earned: 118, finalize_state: 'COMPLETE' });

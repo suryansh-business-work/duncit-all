@@ -43,7 +43,7 @@ export default function MeetingDetailsDrawer({ meeting, onClose, onEdit, onCance
       paper: { 'aria-labelledby': 'meeting-details-title', sx: { width: { xs: '100%', sm: 380 } } }
     }}>
       {meeting && (
-        <Stack spacing={2} sx={{ p: 2 }}>
+        <Stack spacing={2} sx={{ p: 2 }} data-testid="meeting-details">
           <Stack
             direction="row"
             sx={{
@@ -59,7 +59,7 @@ export default function MeetingDetailsDrawer({ meeting, onClose, onEdit, onCance
                 }}>
                 {KIND_LABEL[meeting.kind] ?? meeting.kind} meeting
               </Typography>
-              <Typography variant="h6" component="h2" id="meeting-details-title" sx={{
+              <Typography variant="h6" component="h2" id="meeting-details-title" data-testid="meeting-details-title" sx={{
                 fontWeight: 900
               }}>
                 {meeting.user_name || meeting.contact_name || 'Applicant'}
@@ -84,7 +84,7 @@ export default function MeetingDetailsDrawer({ meeting, onClose, onEdit, onCance
                   fontWeight: 700
                 }}>{t('onboarding.meetings.meetingLink')}</Typography>
               <Box>
-                <Link href={meeting.meeting_link} target="_blank" rel="noopener" variant="body2">{t('onboarding.meetings.joinMeeting')}</Link>
+                <Link href={meeting.meeting_link} target="_blank" rel="noopener" variant="body2" data-testid="meeting-details-join">{t('onboarding.meetings.joinMeeting')}</Link>
               </Box>
             </Box>
           )}
@@ -98,8 +98,8 @@ export default function MeetingDetailsDrawer({ meeting, onClose, onEdit, onCance
             <>
               <Divider />
               <Stack direction="row" spacing={1}>
-                {showEdit && <DuncitButton variant="contained" onClick={() => onEdit?.(meeting)}>{t('onboarding.meetings.schedule')}</DuncitButton>}
-                {showCancel && <DuncitButton color="error" onClick={() => onCancel?.(meeting)}>{t('shell.common.cancel')}</DuncitButton>}
+                {showEdit && <DuncitButton variant="contained" onClick={() => onEdit?.(meeting)} data-testid="meeting-details-schedule">{t('onboarding.meetings.schedule')}</DuncitButton>}
+                {showCancel && <DuncitButton color="error" onClick={() => onCancel?.(meeting)} data-testid="meeting-details-cancel">{t('shell.common.cancel')}</DuncitButton>}
               </Stack>
             </>
           )}

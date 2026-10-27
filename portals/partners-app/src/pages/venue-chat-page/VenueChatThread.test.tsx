@@ -151,3 +151,38 @@ describe('VenueChatThread — who has seen the venue’s counter', () => {
     expect(within(seen.closest('li') as HTMLElement).getByRole('article', { name: 'You countered' })).toBeTruthy();
   });
 });
+
+describe('VenueChatThread — when the thread cannot be read', () => {
+  const mountWith = (answer: ScriptedAnswer, sent: SentOperation[] = []) =>
+    renderWithProviders(<VenueChatThread podId="pod-1" side="VENUE" subject={SUBJECT} marks={[]} />, {
+      link: scriptedLink({ VenueChatMessages: answer, PodVenueOfferTerms: { podVenueOffer: null }, MarkVenueChatRead: { markVenueChatRead: true } }, sent),
+      user: partnerUser({ user_id: 'u-venue' }),
+    });
+
+  it('says the chat could not be loaded and reads it again on Retry', async () => {
+    const sent: SentOperation[] = [];
+    mountWith(new Error('Server down'), sent);
+    expect(await screen.findByText('Could not load this chat.')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: /retry|try again/i }));
+    await waitFor(() => expect(sent.filter((op) => op.name === 'VenueChatMessages').length).toBeGreaterThan(1));
+  });
+
+  it('says why a non-member cannot read the thread', async () => {
+    mountWith(Object.assign(new Error('Not allowed'), { extensions: { code: 'FORBIDDEN' } }));
+    expect(await screen.findByText("This chat is not available. Only this pod's hosts and its venue can open it.")).toBeTruthy();
+  });
+});
+
+describe('VenueChatThread — nobody signed in', () => {
+  it('shows every line as the other side’s, with no edit controls', async () => {
+    renderWithProviders(<VenueChatThread podId="pod-1" side="VENUE" subject={SUBJECT} marks={[]} />, {
+      link: scriptedLink({
+        VenueChatMessages: { venueChatMessages: [ownLine('o1')] },
+        PodVenueOfferTerms: { podVenueOffer: null },
+        MarkVenueChatRead: { markVenueChatRead: true },
+      }),
+    });
+    expect(await screen.findByText('Yes, from 6 pm.')).toBeTruthy();
+    expect(screen.queryByTestId('venue-chat-edit-o1')).toBeNull();
+  });
+});

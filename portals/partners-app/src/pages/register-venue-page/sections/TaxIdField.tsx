@@ -18,7 +18,7 @@ interface Props {
   /** Shown under the number while the switch is on — the proof document upload. */
   children?: ReactNode;
   /** Called when the reader turns the switch off, so its document is dropped too. */
-  onToggleOff?: () => void;
+  onToggleOff: () => void;
 }
 
 /**
@@ -56,7 +56,7 @@ export default function TaxIdField({
                 checked={field.value}
                 onChange={(_, checked) => {
                   field.onChange(checked);
-                  if (!checked) onToggleOff?.();
+                  if (!checked) onToggleOff();
                 }}
                 onBlur={field.onBlur}
                 disabled={locked}

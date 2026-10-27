@@ -222,7 +222,7 @@ function bufferEncodingFor(charset: string): BufferEncoding {
   return 'utf8';
 }
 
-const decodeBase64Url = (data: string, charset = 'utf-8') =>
+const decodeBase64Url = (data: string, charset: string) =>
   Buffer.from(data, 'base64url').toString(bufferEncodingFor(charset));
 
 const headerValue = (part: GmailPayloadPart | undefined, name: string): string => {
@@ -266,7 +266,7 @@ export function decodeEncodedWords(raw: string): string {
             bytes.push(Number.parseInt(text.slice(i + 1, i + 3), 16));
             i += 2;
           } else {
-            bytes.push(text.codePointAt(i) ?? 0);
+            bytes.push(Number(text.codePointAt(i)));
           }
         }
         return Buffer.from(bytes).toString(bufferEncodingFor(charset));
@@ -422,7 +422,7 @@ export async function getMessage(token: string, id: string): Promise<InboundMess
 function encodeHeader(value: string): string {
   let printableAscii = true;
   for (const char of value) {
-    const code = char.codePointAt(0) ?? 0;
+    const code = Number(char.codePointAt(0));
     if (code < 32 || code > 126) {
       printableAscii = false;
       break;

@@ -86,13 +86,15 @@ async function apply(
     // unlink a row a signed-in toggle already tied to one.
     { ...update, ...(userId ? { $set: { user_id: userId } } : {}) },
     { upsert: true, new: true, setDefaultsOnInsert: true }
-  ).lean();
+  )
+    .lean()
+    .orFail();
 
   await WaPreferenceEventModel.insertMany(
     categories.map((category) => ({ destination, user_id: userId, category, enabled }))
   ).catch((error) => logs.server.warn('whatsapp', 'preferenceEvent', { error, destination }));
 
-  return sheetFrom(destination, doc?.opted_out ?? [], doc?.updated_at);
+  return sheetFrom(destination, doc.opted_out ?? [], doc.updated_at);
 }
 
 /**

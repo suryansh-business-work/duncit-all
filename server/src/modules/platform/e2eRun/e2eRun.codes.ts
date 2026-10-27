@@ -147,5 +147,5 @@ export async function forgetRunAccountCodes(email: string, phone: string): Promi
   const digits = normPhone(phone);
   if (digits) or.push({ phone_number: digits });
   const res = await E2eOneTimeCodeModel.deleteMany({ $or: or });
-  return res.deletedCount ?? 0;
+  return res.deletedCount;
 }

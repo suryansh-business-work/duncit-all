@@ -50,7 +50,7 @@ export default function GrievanceOfficerForm({
   return (
     <Card variant="outlined">
       <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} noValidate>
+        <form onSubmit={handleSubmit(onSubmit)} noValidate data-testid="grievance-officer-form">
           <Stack spacing={2}>
             {error && <Alert severity="error">{error}</Alert>}
 
@@ -60,6 +60,7 @@ export default function GrievanceOfficerForm({
               label={t('shell.common.name')}
               required
               placeholder={t('legal.grievance.officerNamePlaceholder')}
+              slotProps={{ htmlInput: { 'data-testid': 'grievance-officer-name' } }}
             />
             <RhfTextField
               control={control}
@@ -67,6 +68,7 @@ export default function GrievanceOfficerForm({
               label={t('shell.common.email')}
               required
               placeholder="grievance@duncit.com"
+              slotProps={{ htmlInput: { 'data-testid': 'grievance-officer-email' } }}
             />
             <RhfTextField
               control={control}
@@ -74,6 +76,7 @@ export default function GrievanceOfficerForm({
               label={t('shell.common.phone')}
               required
               placeholder="+91 98765 43210"
+              slotProps={{ htmlInput: { 'data-testid': 'grievance-officer-phone' } }}
             />
             <RhfTextField
               control={control}
@@ -91,6 +94,7 @@ export default function GrievanceOfficerForm({
                 type="submit"
                 variant="contained"
                 loading={saving} disabled={!formState.isDirty}
+                data-testid="grievance-officer-save"
               >
                 Save
               </DuncitButton>

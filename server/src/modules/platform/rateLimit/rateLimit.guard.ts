@@ -2,7 +2,7 @@ import type { NextFunction, Request, RequestHandler, Response } from 'express';
 import { GraphQLError, Kind, type FieldNode } from 'graphql';
 import { HeaderMap, type ApolloServerPlugin } from '@apollo/server';
 import { logs } from '@observability/log';
-import { decodeAuthUser, type GraphQLContext } from '@context';
+import { decodeAuthUser, type AuthUser, type GraphQLContext } from '@context';
 import { evaluate, shouldSendHeaders, type RateLimitContextInfo } from './rateLimit.enforcer';
 import { normaliseApp, normaliseSurface } from './rateLimit.match';
 import type { RateLimitChannel, RateLimitDecision, RateLimitRequest } from './rateLimit.types';
@@ -37,12 +37,21 @@ function header(req: Request, name: string): string | undefined {
   return typeof first === 'string' && first.trim() ? first.trim() : undefined;
 }
 
-/** Everything a rule can match on, read off the request and nothing else. */
+/**
+ * Everything a rule can match on, read off the request and nothing else.
+ *
+ * `verifiedUser` is the account the GraphQL context already resolved. It is the
+ * same one the JWT decodes to for a console or app request, and the ONLY way to
+ * know the caller of an operation run for a non-JWT credential (a table API or
+ * MCP token) — without it those calls would count as anonymous, per address,
+ * and every person using one AI provider would share that provider's bucket.
+ */
 export function describeRequest(
   req: Request,
   channel: RateLimitChannel,
+  verifiedUser?: AuthUser | null,
 ): { request: RateLimitRequest; info: RateLimitContextInfo } {
-  const user = decodeAuthUser(req.headers.authorization);
+  const user = verifiedUser === undefined ? decodeAuthUser(req.headers.authorization) : verifiedUser;
   const declared = header(req, 'x-duncit-surface');
   // An api-key caller is an integration whatever it says it is, and it is the
   // one surface the server can verify for itself.
@@ -158,7 +167,7 @@ export const rateLimitPlugin: ApolloServerPlugin<GraphQLContext> = {
         // Same idea for a live e2e run: one runner signs up, in and out far more
         // often than a person may, and its key is verified the same way.
         if (await isE2eTraffic(ctx.contextValue.req)) return;
-        const { request, info } = describeRequest(ctx.contextValue.req, 'GRAPHQL');
+        const { request, info } = describeRequest(ctx.contextValue.req, 'GRAPHQL', ctx.contextValue.user);
         const decision = await evaluate(
           {
             ...request,

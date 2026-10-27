@@ -34,6 +34,7 @@ COPY portals/logs/package.json ./portals/logs/
 COPY portals/analytics/package.json ./portals/analytics/
 COPY portals/localization/package.json ./portals/localization/
 COPY portals/targets/package.json ./portals/targets/
+COPY portals/mcp/package.json ./portals/mcp/
 COPY portals/ecomm-portal/package.json ./portals/ecomm-portal/
 COPY website/ecomm-store/package.json ./website/ecomm-store/
 COPY website/status-website/package.json ./website/status-website/
@@ -98,5 +99,5 @@ RUN pnpm --filter ads-website build
 # --- runner ---
 FROM nginxinc/nginx-unprivileged:alpine AS runner
 COPY --from=builder /repo/website/ads-website/dist /usr/share/nginx/html
-COPY deploy/nginx/spa.conf /etc/nginx/conf.d/default.conf
+COPY deploy/nginx/static-site.conf /etc/nginx/conf.d/default.conf
 EXPOSE 8080

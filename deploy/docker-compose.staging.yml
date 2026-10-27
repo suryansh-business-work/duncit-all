@@ -29,6 +29,11 @@ services:
       # Same reasoning as APP_BUILDS_DIR: the image WORKDIR is /app/server, so the
       # cwd-relative default would resolve inside the app instead of the mount.
       DB_BACKUPS_DIR: /app/db-backups
+      # The MCP host: the OAuth issuer, every connector URL and the console
+      # /authorize sends a person to. Unset, both fall back to the compiled-in
+      # production host and staging would mint tokens for mcp.duncit.com.
+      MCP_URL: https://staging.mcp.duncit.com
+      MCP_PORTAL_URL: https://staging.mcp.duncit.com
     ports:
       - "127.0.0.1:2101:2001"
     volumes:
@@ -348,6 +353,13 @@ services:
     restart: unless-stopped
     ports:
       - "127.0.0.1:2145:8080"
+
+  mcp:
+    image: ${DOCKERHUB_USERNAME}/duncit-mcp:${IMAGE_TAG:-staging}
+    container_name: duncit-staging-mcp
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2146:8080"
 
   ecomm-portal:
     image: ${DOCKERHUB_USERNAME}/duncit-ecomm-portal:${IMAGE_TAG:-staging}

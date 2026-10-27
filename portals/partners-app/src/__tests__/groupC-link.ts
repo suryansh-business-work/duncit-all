@@ -11,7 +11,8 @@
 import { ApolloLink } from '@apollo/client';
 import { Observable } from '@apollo/client/utilities';
 
-export type ScriptedResult = Record<string, unknown> | Error;
+/** An Error may carry the GraphQL `extensions` the server would send with it (e.g. `{ code: 'FORBIDDEN' }`). */
+export type ScriptedResult = Record<string, unknown> | (Error & { extensions?: Record<string, unknown> });
 
 /** An answer, or one computed from the variables the operation carried. */
 export type ScriptedAnswer = ScriptedResult | ((variables: Record<string, unknown>) => ScriptedResult);
@@ -42,7 +43,7 @@ export function scriptedLink(
           return;
         }
         if (answer instanceof Error) {
-          observer.next({ errors: [{ message: answer.message }] });
+          observer.next({ errors: [{ message: answer.message, extensions: answer.extensions }] });
         } else {
           observer.next({ data: answer });
         }

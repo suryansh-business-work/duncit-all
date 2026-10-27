@@ -73,7 +73,7 @@ export function EntryGallery({ entries, names, canRemove, onRemove, busy }: Read
                   tone="danger"
                   disabled={busy}
                   label={t('mweb.challenge.removeRow')}
-                  aria-label={t('mweb.challenge.tools.removeEntry', { vars: { name } })}
+                  accessibilityLabel={t('mweb.challenge.tools.removeEntry', { vars: { name } })}
                   onPress={() => onRemove(entry)}
                   testID={`challenge-entry-remove-${entry.id}`}
                 />

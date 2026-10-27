@@ -1,3 +1,4 @@
+import type { FieldError } from 'react-hook-form';
 import { z } from 'zod';
 
 /*
@@ -106,3 +107,11 @@ export const toEarnInput = (values: EarnFormOutput, site: EarnSite): WebsiteEarn
   site,
   ...values,
 });
+
+/**
+ * The message to show under the photo wall. A photo that is not an https link
+ * fails at its own position, so the field's error is then a list with a hole
+ * for each good photo; the cap fails the field as a whole.
+ */
+export const imagesError = (error: FieldError | undefined): string | undefined =>
+  Array.isArray(error) ? error.find(Boolean)?.message : error?.message;

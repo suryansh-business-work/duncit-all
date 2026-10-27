@@ -67,6 +67,7 @@ export default function PartnerFaqsPage() {
 
       <TextField
         fullWidth
+        data-testid="partner-faqs-search"
         label={t('partners.page.searchFaqs')}
         value={search}
         onChange={(event) => setSearch(event.target.value)}
@@ -88,11 +89,11 @@ export default function PartnerFaqsPage() {
           py: 5
         }}><CircularProgress size={24} aria-label={t('shell.a11y.loading')} /></Stack>}
       {error && <Alert severity="error">{error.message}</Alert>}
-      {!loading && filteredFaqs.length === 0 && <Alert severity="info">{t('partners.page.noFaqsFoundForThisFilter')}</Alert>}
+      {!loading && filteredFaqs.length === 0 && <Alert severity="info" data-testid="partner-faqs-empty">{t('partners.page.noFaqsFoundForThisFilter')}</Alert>}
       <Stack spacing={1.25}>
         {filteredFaqs.map((faq: any) => (
-          <Accordion key={faq.id} disableGutters>
-            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          <Accordion key={faq.id} disableGutters data-testid={`partner-faq-${faq.id}`}>
+            <AccordionSummary expandIcon={<ExpandMoreIcon />} data-testid={`partner-faq-${faq.id}-question`}>
               <Stack
                 direction={{ xs: 'column', sm: 'row' }}
                 spacing={1}
@@ -109,6 +110,7 @@ export default function PartnerFaqsPage() {
               </Stack>
             </AccordionSummary>
             <AccordionDetails><Typography
+              data-testid={`partner-faq-${faq.id}-answer`}
               sx={{
                 color: "text.secondary",
                 whiteSpace: 'pre-line'

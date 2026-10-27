@@ -124,6 +124,45 @@ describe('HostPodsPage', () => {
     expect(screen.queryByRole('dialog')).toBeNull();
   });
 
+  it('asks Duncit for a different host from the pod’s menu, warning about the seats already sold', async () => {
+    mount({
+      PartnerMyHostPodsTable: podTablePage('myHostPodsTable', [partnerPodRow({ pod_date_time: '2027-10-04T07:30:00.000Z' })]),
+      MyPodChangeBoard: {
+        myPodChangeBoard: { __typename: 'PodChangeBoard', mine: [], incoming: [], venue_penalty: 5, host_penalty: 5, club_admin_penalty: 5 },
+      },
+    });
+    await screen.findByText('Sunrise Tennis Doubles');
+    fireEvent.click(screen.getByTestId('host-pod-actions-pod-1'));
+    fireEvent.click(await screen.findByTestId('host-pod-action-request-change-pod-1'));
+    const dialog = within(await screen.findByRole('dialog'));
+    expect(dialog.getByText('Ask Duncit for a change?')).toBeTruthy();
+    expect(dialog.getByText(/people have already booked seats on this pod/)).toBeTruthy();
+  });
+
+  it('opens that request without a seat warning for a pod nobody has booked', async () => {
+    mount({
+      PartnerMyHostPodsTable: podTablePage('myHostPodsTable', [partnerPodRow({ pod_attendees: null, pod_date_time: '2027-10-04T07:30:00.000Z' })]),
+      MyPodChangeBoard: {
+        myPodChangeBoard: { __typename: 'PodChangeBoard', mine: [], incoming: [], venue_penalty: 5, host_penalty: 5, club_admin_penalty: 5 },
+      },
+    });
+    await screen.findByText('Sunrise Tennis Doubles');
+    fireEvent.click(screen.getByTestId('host-pod-actions-pod-1'));
+    fireEvent.click(await screen.findByTestId('host-pod-action-request-change-pod-1'));
+    const dialog = within(await screen.findByRole('dialog'));
+    expect(dialog.getByText('Ask Duncit for a change?')).toBeTruthy();
+    expect(dialog.queryByText(/already booked/)).toBeNull();
+  });
+
+  it('falls back to a generic club and venue name for a pod whose club and venue the host no longer sees', async () => {
+    mount({
+      PartnerMyHostPodsTable: podTablePage('myHostPodsTable', [partnerPodRow({ club_id: 'club-gone', venue_id: 'venue-gone' })]),
+    });
+    const row = (await screen.findByText('Sunrise Tennis Doubles')).closest('[role="row"]') as HTMLElement;
+    expect(within(row).getByText('Club')).toBeTruthy();
+    expect(within(row).getByText('Venue')).toBeTruthy();
+  });
+
   it('closes the dialog from the form’s cancel', async () => {
     mount();
     fireEvent.click(await newPodButton());

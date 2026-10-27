@@ -99,7 +99,7 @@ function toPublic(doc: DbRestoreDoc): PublicRestore {
   };
 }
 
-function touch(id: string, fields: Record<string, unknown> = {}): Promise<unknown> {
+function touch(id: string, fields: Record<string, unknown>): Promise<unknown> {
   return DbRestoreModel.updateOne(
     { _id: id },
     { $set: { heartbeat_at: new Date(), ...fields } },

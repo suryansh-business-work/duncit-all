@@ -93,6 +93,44 @@ describe('VenueChatReadOnlyThread', () => {
     expect(screen.getAllByRole('button')).toHaveLength(1);
   });
 
+  it('shows a spinner while the lines load and a note when nobody has written', async () => {
+    mount([]);
+    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    expect(await screen.findByText('Nobody has written in this chat yet.')).toBeInTheDocument();
+    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+    expect(screen.queryByRole('list')).not.toBeInTheDocument();
+  });
+
+  it('says the chats could not be loaded when the read fails', async () => {
+    renderWithProviders(<VenueChatReadOnlyThread podId="pod-1" title="Pottery night" onBack={vi.fn()} />, {
+      mocks: [
+        {
+          request: { query: ADMIN_VENUE_CHAT_MESSAGES, variables: { pod_id: 'pod-1', limit: VENUE_CHAT_PAGE } },
+          error: new Error('network down'),
+        },
+      ],
+    });
+    expect(await screen.findByRole('alert')).toHaveTextContent("Could not load this venue's chats.");
+    expect(screen.queryByText('Nobody has written in this chat yet.')).not.toBeInTheDocument();
+  });
+
+  it('draws a sender with a photo, and a photo line without a url as its text', async () => {
+    mount([
+      line('t1', { user_photo: 'https://img.test/asha.jpg' }),
+      line('p1', { type: 'IMAGE', text: 'Terrace picture', image_url: null }),
+    ]);
+    expect(await screen.findByText('Terrace picture')).toBeInTheDocument();
+    expect(screen.queryByRole('img', { name: 'Photo' })).not.toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'Asha' })).toHaveAttribute('src', 'https://img.test/asha.jpg');
+  });
+
+  it('still draws a line whose sender has no name or photo on record', async () => {
+    mount([line('t1', { user_name: null, user_photo: null, text: 'Left the group' })]);
+    expect(await screen.findByText('Left the group')).toBeInTheDocument();
+    expect(screen.getByRole('listitem').querySelector('span')).toHaveTextContent(/^· \S+/);
+    expect(screen.queryByRole('img')).not.toBeInTheDocument();
+  });
+
   it('keeps an offer line it cannot draw as its text, and goes back', async () => {
     const onBack = mount([line('m1', { type: 'OFFER', text: 'Offer withdrawn', offer: move({ event: 'WITHDRAWN' }) })]);
     expect(await screen.findByText('Offer withdrawn')).toBeInTheDocument();

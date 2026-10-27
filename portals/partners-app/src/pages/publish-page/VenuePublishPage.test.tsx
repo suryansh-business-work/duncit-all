@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { cleanup, fireEvent, screen } from '@testing-library/react';
 import { renderWithProviders } from '../../__tests__/render';
+import { scriptedLink } from '../../__tests__/groupC-link';
 import { myVenue as venue, myVenuesMock as venuesMock } from '../../__tests__/venue-fixtures';
 import { SELECTED_VENUE_KEY } from '../../components/venue/useSelectedVenue';
 import VenuePublishPage from './VenuePublishPage';
@@ -41,5 +42,11 @@ describe('VenuePublishPage', () => {
 
     expect(await screen.findByText('You have no venues yet.')).toBeTruthy();
     expect(screen.queryByRole('combobox')).toBeNull();
+  });
+
+  it('shows the server message when the venues cannot be read', async () => {
+    renderWithProviders(<VenuePublishPage />, { link: scriptedLink({ MyVenues: new Error('Venues are down') }) });
+
+    expect(await screen.findByText('Venues are down')).toBeTruthy();
   });
 });

@@ -6,7 +6,7 @@ import { Alert, FormControlLabel, Stack, Switch } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { RhfTextField, zodRules } from '@duncit/forms';
 import { PHONE_NUMBER_IN, PINCODE, toDigits } from '@duncit/regex';
-import { emptyWarehouseValues, type WarehouseFormValues } from './warehouse.types';
+import type { WarehouseFormValues } from './warehouse.types';
 import { useTranslation } from '@duncit/shell';
 
 /**
@@ -46,7 +46,7 @@ export default function WarehouseForm({ defaultValues, busy, apiError = null, on
   const { t } = useTranslation();
   const { control, handleSubmit, reset } = useForm<WarehouseFormValues, any, WarehouseFormValues>({
     resolver: zodResolver(warehouseSchema) as unknown as Resolver<WarehouseFormValues, any, WarehouseFormValues>,
-    defaultValues: defaultValues ?? emptyWarehouseValues,
+    defaultValues,
     mode: 'onBlur',
   });
 

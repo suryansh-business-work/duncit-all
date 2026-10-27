@@ -54,11 +54,10 @@ export function DaySheet({
       .finally(() => setBusy(false));
   };
 
-  const confirmDelete = () => {
-    if (!deleting) return;
+  const confirmDelete = (slot: VenueSlot) => {
     setBusy(true);
     setError(null);
-    onDelete(deleting.id)
+    onDelete(slot.id)
       .catch((e: unknown) =>
         setError(e instanceof Error ? e.message : t('availability.deleteFailed')),
       )
@@ -114,18 +113,20 @@ export function DaySheet({
           )}
         </YStack>
       ) : null}
-      <ConfirmSheet
-        open={!!deleting}
-        busy={busy}
-        testIDPrefix="day-slot-delete"
-        title={t('availability.deleteTitle')}
-        message={t('availability.deleteBody')}
-        cancelLabel={t('availability.cancel')}
-        confirmLabel={t('availability.delete')}
-        busyLabel={t('availability.delete')}
-        onCancel={() => setDeleting(null)}
-        onConfirm={confirmDelete}
-      />
+      {deleting ? (
+        <ConfirmSheet
+          open
+          busy={busy}
+          testIDPrefix="day-slot-delete"
+          title={t('availability.deleteTitle')}
+          message={t('availability.deleteBody')}
+          cancelLabel={t('availability.cancel')}
+          confirmLabel={t('availability.delete')}
+          busyLabel={t('availability.delete')}
+          onCancel={() => setDeleting(null)}
+          onConfirm={() => confirmDelete(deleting)}
+        />
+      ) : null}
     </DuncitDialog>
   );
 }

@@ -37,7 +37,7 @@ export default function CategoryFormDialog({
 }: Readonly<Props>) {
   const { t } = useTranslation();
   return (
-    <Dialog open={!!dialog?.open} onClose={() => setDialog(null)} fullWidth maxWidth="sm">
+    <Dialog open={!!dialog?.open} onClose={() => setDialog(null)} fullWidth maxWidth="sm" data-testid="category-form-dialog">
       <DialogTitle>
         {dialog?.form.id ? 'Edit' : 'New'} {levelLabel(dialog?.level)}
       </DialogTitle>
@@ -52,6 +52,7 @@ export default function CategoryFormDialog({
               }
               fullWidth
               required
+              data-testid="category-form-name"
             />
             <ToggleButtonGroup
               value={dialog.form.iconMode}
@@ -128,6 +129,7 @@ export default function CategoryFormDialog({
               minRows={3}
               helperText={t('admin.categories.mediaHint')}
               fullWidth
+              data-testid="category-form-media"
             />
             <Stack direction="row" spacing={2}>
               <TextField
@@ -154,9 +156,10 @@ export default function CategoryFormDialog({
                     })
                   }
                   sx={{ minWidth: 160 }}
+                  data-testid="category-form-status"
                 >
-                  <MenuItem value="active">{t('admin.profile.active')}</MenuItem>
-                  <MenuItem value="inactive">{t('admin.profile.inactive')}</MenuItem>
+                  <MenuItem value="active" data-testid="category-form-status-active">{t('admin.profile.active')}</MenuItem>
+                  <MenuItem value="inactive" data-testid="category-form-status-inactive">{t('admin.profile.inactive')}</MenuItem>
                 </TextField>
               )}
             </Stack>
@@ -167,7 +170,7 @@ export default function CategoryFormDialog({
             {/* Challenge tools are chosen per SUB-category and nowhere else —
                 nothing is inherited from the levels above. */}
             {dialog.level === 'SUB' && <CategoryChallengeTools categoryId={dialog.form.id} />}
-            {opError && <Alert severity="error">{opError}</Alert>}
+            {opError && <Alert severity="error" data-testid="category-form-error">{opError}</Alert>}
           </Stack>
         )}
       </DialogContent>
@@ -177,6 +180,7 @@ export default function CategoryFormDialog({
           variant="contained"
           onClick={onSubmit}
           disabled={busy || !dialog?.form.name?.trim()}
+          data-testid="category-form-save"
         >
           {busy ? 'Saving…' : 'Save'}
         </DuncitButton>

@@ -104,9 +104,20 @@ describe('buildLocationInput — happy path shape', () => {
       location_image: 'https://cdn.test/bengaluru.jpg',
       location_pincode: '560001',
       location_zones: [{ zone_name: 'Koramangala', pincode: '560034' }],
-      is_launched: true,
+      // A new city starts NOT launched: it opens its waitlist until an admin flips the switch.
+      is_launched: false,
       launch_target: DEFAULT_LAUNCH_TARGET,
       whatsapp_group_url: '',
+      launch_media: {
+        hero_image_url: '',
+        hero_video_url: '',
+        host_image_url: '',
+        host_video_url: '',
+        venue_image_url: '',
+        venue_video_url: '',
+        club_admin_image_url: '',
+        club_admin_video_url: '',
+      },
     });
   });
 

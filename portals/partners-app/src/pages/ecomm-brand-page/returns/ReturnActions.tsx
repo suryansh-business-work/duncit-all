@@ -27,10 +27,9 @@ export default function ReturnActions({ row, onUpdated }: Readonly<Props>) {
   const awaitingGoods = status === 'APPROVED' || status === 'PICKUP_SCHEDULED';
   const act = (action: 'retryPickup' | 'received' | 'retryRefund') => fireAndForget(run(action, row.id), RETURNS_LOGGER, 'ReturnActions', action);
 
-  const decide = async (values: ReturnDecisionValues) => {
-    if (!decision) return;
+  const decide = async (current: ReturnDecision, values: ReturnDecisionValues) => {
     const note = values.note.trim();
-    const done = await run(decision, row.id, decision === 'reject' ? note : note || null);
+    const done = await run(current, row.id, current === 'reject' ? note : note || null);
     if (done) setDecision(null);
   };
 
@@ -79,7 +78,7 @@ export default function ReturnActions({ row, onUpdated }: Readonly<Props>) {
         </DialogTitle>
         <DialogContent>
           {decision && (
-            <ReturnDecisionForm decision={decision} busy={busy === decision} onSubmit={(values) => fireAndForget(decide(values), RETURNS_LOGGER, 'ReturnActions', 'decide')} onCancel={() => setDecision(null)} />
+            <ReturnDecisionForm decision={decision} busy={busy === decision} onSubmit={(values) => fireAndForget(decide(decision, values), RETURNS_LOGGER, 'ReturnActions', 'decide')} onCancel={() => setDecision(null)} />
           )}
         </DialogContent>
       </Dialog>

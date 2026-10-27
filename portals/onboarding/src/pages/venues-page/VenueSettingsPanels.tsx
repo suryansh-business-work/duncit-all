@@ -28,25 +28,13 @@ export interface VenueSettingsPanelsProps {
   onSaved: () => void;
 }
 
-/**
- * The two settlement panels an onboarded venue carries: what Duncit deducts
- * from its payout, and the auto-cancel trigger + refund ladder that decides
- * what a loss-making pod here costs. They are one unit because they answer the
- * same question from opposite ends, and both the Edit and the Review dialog
- * mount them — so the wiring lives here once rather than in each dialog's
- * parent (CLAUDE.md rule 34). The admin-only "Maximum Host Requests / Month"
- * (partners never see or change it; empty = the default of 10) sits beside the
- * deductions for the same reason.
- *
- * Each panel saves on its own button through its own mutation, independently of
- * the Edit dialog's Save.
- */
-export default function VenueSettingsPanels({ venue, onSaved }: Readonly<VenueSettingsPanelsProps>) {
+/** The panels only render with a venue open, so everything below has one to act on. */
+function SettlementPanels({ venue, onSaved }: Readonly<{ venue: SettingsPanelsVenue; onSaved: () => void }>) {
   const { t } = useTranslation();
   // What the server has kept, as the panels re-seed from it. Saved values are
   // merged in rather than refetched into: the panels read their fields back off
   // this object, so it has to be what they see next.
-  const [saved, setSaved] = useState<SettingsPanelsVenue | null>(venue);
+  const [saved, setSaved] = useState<SettingsPanelsVenue>(venue);
   const [setVenueDeductions, deductionsState] = useMutation(SET_VENUE_DEDUCTIONS);
   const [setCancellationTrigger, triggerState] = useMutation(SET_VENUE_CANCELLATION_TRIGGER);
   const [setHostRequestLimit, limitState] = useMutation(SET_VENUE_HOST_REQUEST_LIMIT);
@@ -61,45 +49,31 @@ export default function VenueSettingsPanels({ venue, onSaved }: Readonly<VenueSe
     setSaved(venue);
   }, [venue]);
 
-  // The panels only render with a venue open, so each save has one to act on.
   const saveDeductions = async (sharePct: number, commissionPct: number) => {
-    if (!venue) return;
     await setVenueDeductions({
       variables: { id: venue.id, venue_share_pct: sharePct, venue_commission_pct: commissionPct },
     });
-    setSaved((current) =>
-      current
-        ? { ...current, venue_share_pct: sharePct, venue_commission_pct: commissionPct }
-        : current
-    );
+    setSaved((current) => ({ ...current, venue_share_pct: sharePct, venue_commission_pct: commissionPct }));
     onSaved();
   };
 
   const saveCancellationTrigger = async (trigger: VenueCancellationTrigger) => {
-    if (!venue) return;
     await setCancellationTrigger({ variables: { id: venue.id, ...trigger } });
-    setSaved((current) =>
-      current
-        ? {
-            ...current,
-            settings: {
-              ...current.settings,
-              cancellation: { ...current.settings?.cancellation, ...trigger },
-            },
-          }
-        : current
-    );
+    setSaved((current) => ({
+      ...current,
+      settings: {
+        ...current.settings,
+        cancellation: { ...current.settings?.cancellation, ...trigger },
+      },
+    }));
     onSaved();
   };
 
   const saveRequestLimit = async (limit: number | null) => {
-    if (!venue) return;
     await setHostRequestLimit({ variables: { id: venue.id, limit } });
-    setSaved((current) => (current ? { ...current, host_requests_limit_override: limit } : current));
+    setSaved((current) => ({ ...current, host_requests_limit_override: limit }));
     onSaved();
   };
-
-  if (!venue) return null;
 
   return (
     <Stack spacing={2}>
@@ -111,16 +85,33 @@ export default function VenueSettingsPanels({ venue, onSaved }: Readonly<VenueSe
       />
       <RequestLimitForm
         label={t('podRequests.venueLimitLabel')}
-        limit={saved?.host_requests_limit_override}
+        limit={saved.host_requests_limit_override}
         saving={limitState.loading}
         onSave={saveRequestLimit}
         testId="venue-request-limit"
       />
       <CancellationTriggerForm
-        trigger={saved?.settings?.cancellation}
+        trigger={saved.settings?.cancellation}
         saving={triggerState.loading}
         onSubmit={saveCancellationTrigger}
       />
     </Stack>
   );
+}
+
+/**
+ * The two settlement panels an onboarded venue carries: what Duncit deducts
+ * from its payout, and the auto-cancel trigger + refund ladder that decides
+ * what a loss-making pod here costs. They are one unit because they answer the
+ * same question from opposite ends, and both the Edit and the Review dialog
+ * mount them — so the wiring lives here once rather than in each dialog's
+ * parent (CLAUDE.md rule 34). The admin-only "Maximum Host Requests / Month"
+ * (partners never see or change it; empty = the default of 10) sits beside the
+ * deductions for the same reason.
+ *
+ * Each panel saves on its own button through its own mutation, independently of
+ * the Edit dialog's Save.
+ */
+export default function VenueSettingsPanels({ venue, onSaved }: Readonly<VenueSettingsPanelsProps>) {
+  return venue ? <SettlementPanels venue={venue} onSaved={onSaved} /> : null;
 }

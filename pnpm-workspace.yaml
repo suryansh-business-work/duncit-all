@@ -35,6 +35,7 @@ packages:
   - portals/localization
   - portals/targets
   - portals/gig-jobs
+  - portals/mcp
   # The pet store: its console and its storefront.
   - portals/ecomm-portal
   - website/ecomm-store

@@ -6,7 +6,9 @@ import { FieldLabel } from '@/components/Field';
 import { useTranslation } from '@/hooks/useTranslation';
 import { SelectChip } from '../SelectChip';
 
-const ALL_DAYS = [0, 1, 2, 3, 4, 5, 6];
+// Literal indexes keep each day's two labels typed as present, with no fallback.
+const DAYS = [0, 1, 2, 3, 4, 5, 6] as const;
+const ALL_DAYS = [...DAYS];
 const WORK_DAYS = [1, 2, 3, 4, 5];
 const WEEKEND = [0, 6];
 
@@ -59,13 +61,13 @@ export function WeekdayChips({ value, onChange, weeklyOff = [], testID }: Readon
         role="group"
         aria-label={t('availability.recurring.repeatOnDays')}
       >
-        {labels.full.map((fullName, day) => (
+        {DAYS.map((day) => (
           <SelectChip
-            key={fullName}
+            key={labels.full[day]}
             testID={`${testID}-day-${day}`}
             role="checkbox"
-            label={labels.short[day] ?? ''}
-            ariaLabel={fullName}
+            label={labels.short[day]}
+            ariaLabel={labels.full[day]}
             selected={selected.has(day)}
             dim={weeklyOff.includes(day)}
             onPress={() => toggle(day)}

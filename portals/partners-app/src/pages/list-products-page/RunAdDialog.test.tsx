@@ -138,6 +138,28 @@ describe('RunAdDialog', () => {
     });
   });
 
+  it('prefills an empty description for a listing that has none', async () => {
+    renderDialog([pricingMock], { product: product({ description: null }) });
+    const dialog = await screen.findByRole('dialog');
+    expect((within(dialog).getByLabelText(/Description/) as HTMLTextAreaElement).value).toBe('');
+  });
+
+  it('reports an empty trace id when Marketing sends none', async () => {
+    const { onSubmitted } = renderDialog([
+      pricingMock,
+      submitMock({ data: { submitAdRequest: { __typename: 'AdRequest', id: 'ad-2', trace_id: null } } }),
+    ]);
+    const dialog = await screen.findByRole('dialog');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Run a Product Ad' }));
+    await waitFor(() => expect(onSubmitted).toHaveBeenCalledWith(''));
+  });
+
+  it('shows no request form while no product is chosen', async () => {
+    renderDialog([pricingMock], { product: null });
+    const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).queryByLabelText(/Ad Title/)).toBeNull();
+  });
+
   it('titles a brand ad after the product', async () => {
     renderDialog([pricingMock], { adKind: 'BRAND_AD' });
 

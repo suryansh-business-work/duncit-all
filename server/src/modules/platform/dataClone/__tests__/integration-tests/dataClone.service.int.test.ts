@@ -297,6 +297,22 @@ describe('dataCloneService.start', () => {
     expect(await target.listCollections({ name: 'alphas_view' }).toArray()).toEqual([]);
   });
 
+  it('copies an empty collection (with its indexes) and one that fills its last batch exactly', async () => {
+    await source.createCollection('empties');
+    await source.collection('empties').createIndex({ k: 1 }, { name: 'k_index' });
+    await source.collection('exact').insertMany(Array.from({ length: 500 }, (_, i) => ({ _id: `e${i}` })));
+
+    const job = await settled((await dataCloneService.start(OPERATOR)).id);
+
+    expect(job.status).toBe('SUCCEEDED');
+    expect(job.collections.map((c) => [c.name, c.status, c.sourceCount, c.copiedCount])).toEqual([
+      ['empties', 'DONE', 0, 0],
+      ['exact', 'DONE', 500, 500],
+    ]);
+    expect(await target.collection('exact').countDocuments()).toBe(500);
+    expect((await target.collection('empties').indexes()).some((i) => i.name === 'k_index')).toBe(true);
+  });
+
   it('marks one failing collection FAILED, still copies the rest, and fails the job', async () => {
     await source.collection('alphas').insertOne({ _id: 'a1' });
     await source.collection('brokens').insertOne({ _id: 'x1' });

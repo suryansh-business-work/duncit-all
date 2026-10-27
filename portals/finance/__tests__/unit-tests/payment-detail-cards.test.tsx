@@ -80,6 +80,33 @@ describe('AmountBreakupCard', () => {
       expect(rows[i].compareDocumentPosition(row) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     });
   });
+
+  it('adds the round off after the GST line, untaxed, when the bill was rounded up', () => {
+    // ₹847.46 + ₹152.54 GST = ₹1000.00; rounding a ₹999.60 bill up added ₹0.40 of the total.
+    const detail = makePaymentDetail({ payment: makeDetailPayment({ round_off: 0.4 }) });
+    renderWithProviders(<AmountBreakupCard detail={detail} />);
+
+    expect(valueOf('Round off')).toBe('+ ₹0.40');
+    expect(
+      screen.getByText('GST (18.00%)').compareDocumentPosition(screen.getByText('Round off')) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
+  it('prints no round off when coins cleared the whole bill, because nothing was charged for it to explain', () => {
+    const detail = makePaymentDetail({ payment: makeDetailPayment({ round_off: 0.4, total: 0 }) });
+    renderWithProviders(<AmountBreakupCard detail={detail} />);
+
+    expect(screen.queryByText('Round off')).not.toBeInTheDocument();
+    expect(valueOf('Total charged')).toBe('₹0.00');
+  });
+
+  it('prints no round off line when the payment carries none', () => {
+    const detail = makePaymentDetail({ payment: makeDetailPayment({ round_off: null }) });
+    renderWithProviders(<AmountBreakupCard detail={detail} />);
+
+    expect(screen.queryByText('Round off')).not.toBeInTheDocument();
+  });
 });
 
 describe('CouponCard', () => {

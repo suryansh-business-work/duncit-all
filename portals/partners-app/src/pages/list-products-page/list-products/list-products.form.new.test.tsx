@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createPortal } from 'react-dom';
-import { cleanup, configure, fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { act, cleanup, configure, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import ListProductsForm from './list-products.form';
 import { moderationMock, submitMock } from './__tests__/formMocks';
 import { categoriesMock, warehouseRow, warehousesMock } from '../../../__tests__/groupB-fixtures';
@@ -14,7 +14,11 @@ import { renderWithProviders } from '../../../__tests__/render';
  */
 vi.setConfig({ testTimeout: 20_000 });
 
-const picker = vi.hoisted(() => ({ url: 'https://cdn.test/cold-brew.jpg' }));
+const picker = vi.hoisted(() => ({
+  url: 'https://cdn.test/cold-brew.jpg',
+  /** The callback the dialog was last rendered with, for a pick that arrives after it closed. */
+  latest: null as ((url: string) => void) | null,
+}));
 
 /** The real picker uploads to ImageKit; this one hands back a fixed URL (or
  * nothing when dismissed), portalled like the real dialog. */
@@ -23,8 +27,9 @@ vi.mock('../../../components/MediaPickerDialog', () => ({
     open,
     onClose,
     onPicked,
-  }: Readonly<{ open: boolean; onClose: () => void; onPicked: (url: string) => void }>) =>
-    open
+  }: Readonly<{ open: boolean; onClose: () => void; onPicked: (url: string) => void }>) => {
+    picker.latest = onPicked;
+    return open
       ? createPortal(
           <div>
             <button type="button" onClick={() => onPicked(picker.url)}>
@@ -36,7 +41,8 @@ vi.mock('../../../components/MediaPickerDialog', () => ({
           </div>,
           document.body,
         )
-      : null,
+      : null;
+  },
 }));
 
 configure({ asyncUtilTimeout: 5000 });
@@ -91,6 +97,24 @@ describe('ListProductsForm — a new listing', () => {
 
     await waitFor(() => expect(screen.queryByRole('button', { name: 'Dismiss picker' })).toBeNull());
     expect(screen.queryByRole('img', { name: 'Variant' })).toBeNull();
+  });
+
+  it('ignores a pick that arrives after the picker already closed', async () => {
+    renderNewForm();
+    await pick(/^Super Category/, 'Apparel');
+    await pick(/^Category/, 'Tops');
+    await pick(/^Sub Category/, 'T-shirts');
+    next();
+    await fillProductStep();
+    next();
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Add variant image' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Confirm pick' }));
+    expect(await screen.findAllByRole('img', { name: 'Variant' })).toHaveLength(1);
+
+    // The dialog is closed but still mounted for its exit transition, so it can still call back.
+    act(() => picker.latest?.('https://cdn.test/late.jpg'));
+    expect(screen.getAllByRole('img', { name: 'Variant' })).toHaveLength(1);
   });
 
   it('builds a listing step by step and submits it for approval', async () => {

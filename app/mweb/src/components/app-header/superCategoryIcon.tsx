@@ -5,10 +5,8 @@ import { logs } from '@duncit/logs';
 
 type IconSet = Readonly<Record<string, SvgIconComponent>>;
 
-const isImageIcon = (value: string | null | undefined) => {
-  const next = (value ?? '').trim();
-  return /^data:image\//i.test(next) || /^https?:\/\//i.test(next) || next.startsWith('/');
-};
+const isImageIcon = (next: string) =>
+  /^data:image\//i.test(next) || /^https?:\/\//i.test(next) || next.startsWith('/');
 
 /** An MUI icon export is always a PascalCase identifier. */
 const isMuiIconName = (value: string) => /^[A-Z][A-Za-z\d]*$/.test(value);

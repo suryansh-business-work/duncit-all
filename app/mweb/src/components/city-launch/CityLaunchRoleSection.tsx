@@ -10,7 +10,7 @@ import { LaunchBadge, LaunchFooterLine, LaunchGlass, LaunchHeadline, LaunchTagli
 import { LaunchItemDiscs, LaunchItemPills, LaunchItemStrip } from './LaunchItems';
 import LaunchSection from './LaunchSection';
 
-const surveyPathOf = (kind: string) => EARN_JOURNEYS.find((journey) => journey.kind === kind)?.surveyPath ?? '/earn';
+const surveyPathOf = (kind: string) => EARN_JOURNEYS.filter((journey) => journey.kind === kind).map((journey) => journey.surveyPath)[0];
 
 interface Props {
   role: LaunchRoleDefinition;

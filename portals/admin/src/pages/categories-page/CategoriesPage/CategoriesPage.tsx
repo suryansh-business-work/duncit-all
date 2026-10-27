@@ -183,6 +183,7 @@ export default function CategoriesPage() {
         autoHideDuration={2500}
         onClose={() => setToast(null)}
         message={toast ?? ''}
+        data-testid="categories-toast"
       />
     </Stack>
   );

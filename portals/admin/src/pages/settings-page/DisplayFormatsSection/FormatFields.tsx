@@ -24,9 +24,10 @@ export default function FormatFields({ dateFmt, timeFmt, setDateFmt, setTimeFmt 
             setDateFmt(e.target.value === '__custom__' ? dateFmt : e.target.value)
           }
           fullWidth
+          data-testid="settings-date-preset"
         >
           {DATE_PRESETS.map((p) => (
-            <MenuItem key={p} value={p}>
+            <MenuItem key={p} value={p} data-testid={`settings-date-preset-${p}`}>
               {p} — {(() => { try { return format(new Date(), p); } catch { return ''; } })()}
             </MenuItem>
           ))}
@@ -56,6 +57,7 @@ export default function FormatFields({ dateFmt, timeFmt, setDateFmt, setTimeFmt 
           onChange={(e) => setDateFmt(e.target.value)}
           fullWidth
           helperText={t('admin.settings.datePatternHint')}
+          data-testid="settings-date-pattern"
         />
         <TextField
           label={t('admin.settings.timePattern')}

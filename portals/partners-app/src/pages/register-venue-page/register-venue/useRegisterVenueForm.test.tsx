@@ -101,7 +101,7 @@ interface Sent {
   variables: Record<string, any>;
 }
 
-const makeClient = (sent: Sent[], failOn?: string) =>
+const makeClient = (sent: Sent[], failOn?: string, results: Record<string, Record<string, unknown>> = RESULTS) =>
   new ApolloClient({
     cache: new InMemoryCache(),
     link: new ApolloLink((operation) => {
@@ -114,7 +114,7 @@ const makeClient = (sent: Sent[], failOn?: string) =>
           observer.error(new Error('Venue name already taken'));
           return;
         }
-        observer.next({ data: RESULTS[name] });
+        observer.next({ data: results[name] });
         observer.complete();
       });
     }),
@@ -142,15 +142,18 @@ interface MountOptions {
   mode?: RegisterVenueMode;
   categoryLimit?: number;
   failOn?: string;
+  /** Answers that replace the default ones, by operation name. */
+  results?: Record<string, Record<string, unknown>>;
 }
 
-const mount = ({ venue = null, mode = 'register', categoryLimit, failOn }: MountOptions = {}) => {
+const mount = ({ venue = null, mode = 'register', categoryLimit, failOn, results }: MountOptions = {}) => {
+  const answers = results ? { ...RESULTS, ...results } : RESULTS;
   const apiRef: { current: Api | null } = { current: null };
   const sent: Sent[] = [];
   const onPersisted = vi.fn().mockResolvedValue(undefined);
   // The active section lives in the URL (?selectedtab=), so the hook needs a router.
   const view = render(
-    <ApolloProvider client={makeClient(sent, failOn)}>
+    <ApolloProvider client={makeClient(sent, failOn, answers)}>
       <MemoryRouter>
         <Harness venue={venue} mode={mode} categoryLimit={categoryLimit} onPersisted={onPersisted} apiRef={apiRef} />
       </MemoryRouter>
@@ -158,7 +161,7 @@ const mount = ({ venue = null, mode = 'register', categoryLimit, failOn }: Mount
   );
   const rerenderWith = (nextVenue: any) =>
     view.rerender(
-      <ApolloProvider client={makeClient(sent, failOn)}>
+      <ApolloProvider client={makeClient(sent, failOn, answers)}>
         <MemoryRouter>
           <Harness venue={nextVenue} mode={mode} categoryLimit={categoryLimit} onPersisted={onPersisted} apiRef={apiRef} />
         </MemoryRouter>
@@ -340,6 +343,26 @@ describe('useRegisterVenueForm — submitting for review', () => {
     expect(id).toBe('venue-9');
     expect(onPersisted).toHaveBeenCalledTimes(1);
     expect(apiRef.current?.error).toBeNull();
+  });
+
+  it('keeps the venue id it already had when the server does not repeat it, and returns it when the final answer has none', async () => {
+    const { apiRef, sent } = mount({
+      venue: savedVenue,
+      results: {
+        V1: { submitVenueStep1: { __typename: 'Venue', id: null, step_completed: 1, status: 'DRAFT' } },
+        VFinal: { submitVenueFinal: null },
+      },
+    });
+
+    let id: string | null | undefined;
+    await act(async () => {
+      id = await apiRef.current?.submitAll();
+    });
+
+    expect(sent.map((call) => call.name)).toEqual(['V1', 'V2', 'V3', 'VFinal']);
+    expect(sent[1].variables.venue_id).toBe('venue-1');
+    expect(sent[3].variables).toEqual({ venue_id: 'venue-1' });
+    expect(id).toBe('venue-1');
   });
 
   it('reports the failing step instead of returning an id', async () => {

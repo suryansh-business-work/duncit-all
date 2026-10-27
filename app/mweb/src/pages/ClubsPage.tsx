@@ -162,8 +162,8 @@ export default function ClubsPage({
         <EmptyState
           testId="clubs-location-empty"
           icon={<LocationOffOutlinedIcon />}
-          title="No Clubs operating at the selected location,"
-          actionLabel="Reset Location"
+          title={t('mweb.home.noClubsAtLocation')}
+          actionLabel={t('mweb.home.resetLocation')}
           onAction={() => globalThis.dispatchEvent(new CustomEvent(OPEN_LOCATION_PICKER_EVENT))}
         />
       ) : (

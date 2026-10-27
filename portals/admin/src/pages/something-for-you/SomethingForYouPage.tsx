@@ -30,6 +30,7 @@ export default function SomethingForYouPage() {
   const { t } = useTranslation();
   const { data, loading, error, refetch } = useQuery<any>(SOMETHING_FOR_YOU_ITEMS);
   const [open, setOpen] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [form, setForm] = useState<SomethingForYouForm>(emptyItem);
   const [createItem, createState] = useMutation<any>(CREATE_SOMETHING_FOR_YOU);
   const [updateItem, updateState] = useMutation<any>(UPDATE_SOMETHING_FOR_YOU);
@@ -59,11 +60,24 @@ export default function SomethingForYouPage() {
     setOpen(true);
   };
 
+  const closeForm = () => {
+    setOpen(false);
+    setSaveError(null);
+  };
+
   const save = async () => {
     const { id, ...input } = form;
-    if (id) await updateItem({ variables: { itemId: id, input } });
-    else await createItem({ variables: { input } });
-    setOpen(false);
+    setSaveError(null);
+    try {
+      if (id) await updateItem({ variables: { itemId: id, input } });
+      else await createItem({ variables: { input } });
+    } catch (e) {
+      // The server's refusal (e.g. a web-link card with no address) stays in the
+      // open dialog, so the admin can fix the card. Apollo rejects with an Error.
+      setSaveError((e as Error).message);
+      return;
+    }
+    closeForm();
     await refetch();
   };
 
@@ -96,7 +110,7 @@ export default function SomethingForYouPage() {
             The row that scrolls sideways at the bottom of Home, on mWeb and in the app.
           </Typography>
         </Box>
-        <DuncitButton variant="contained" startIcon={<AddIcon />} onClick={startCreate}>
+        <DuncitButton variant="contained" startIcon={<AddIcon />} onClick={startCreate} data-testid="sfy-new">
           New card
         </DuncitButton>
       </Stack>
@@ -104,7 +118,7 @@ export default function SomethingForYouPage() {
       {error && <Alert severity="error">{error.message}</Alert>}
       {loading && <CircularProgress size={24} />}
       {!loading && items.length === 0 && (
-        <Alert severity="info">{t('admin.somethingForYou.empty')}</Alert>
+        <Alert severity="info" data-testid="sfy-empty">{t('admin.somethingForYou.empty')}</Alert>
       )}
 
       <Stack spacing={1.5}>
@@ -118,7 +132,8 @@ export default function SomethingForYouPage() {
         form={form}
         setForm={setForm}
         busy={busy}
-        onClose={() => setOpen(false)}
+        error={saveError}
+        onClose={closeForm}
         onSave={save}
       />
     </Stack>

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { Box } from '@mui/material';
 import { videoSourceUrl } from '@duncit/utils';
 
@@ -42,11 +42,12 @@ export default function StatusSlideVideo({
   onEnded,
   onError,
 }: Readonly<Props>) {
-  const ref = useRef<HTMLVideoElement | null>(null);
+  // State, not a ref object: the effects below run once on the render that mounts the
+  // element and again when it is attached, so they never need a null-ref guard of their own.
+  const [video, setVideo] = useState<HTMLVideoElement | null>(null);
   const source = videoSourceUrl(src);
 
   useEffect(() => {
-    const video = ref.current;
     if (!video) return;
     video.muted = muted;
     Promise.resolve(video.play()).catch(() => {
@@ -56,20 +57,19 @@ export default function StatusSlideVideo({
       onBlocked();
       Promise.resolve(video.play()).catch(() => undefined);
     });
-  }, [source, muted, onBlocked]);
+  }, [video, source, muted, onBlocked]);
 
   useEffect(() => {
-    const video = ref.current;
     if (!video) return;
     if (paused) video.pause();
     else Promise.resolve(video.play()).catch(() => undefined);
-  }, [paused]);
+  }, [video, paused]);
 
   return (
     // eslint-disable-next-line jsx-a11y/media-has-caption -- user-uploaded media; no caption track exists in the data model
     <Box
       component="video"
-      ref={ref}
+      ref={setVideo}
       src={source}
       data-testid="status-slide-video"
       autoPlay

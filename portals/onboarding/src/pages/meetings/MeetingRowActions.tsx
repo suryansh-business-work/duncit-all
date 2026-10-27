@@ -8,6 +8,8 @@ import { useTranslation } from '@duncit/app-settings';
 type Translate = ReturnType<typeof useTranslation>['t'];
 
 interface Action {
+  /** The menu item's test id suffix: `meeting-action-<testId>`. */
+  testId: string;
   label: string;
   onClick: () => void;
   danger?: boolean;
@@ -30,19 +32,19 @@ function buildActions(meeting: OnboardingMeeting, h: Handlers, t: Translate): Ac
   if (approval === 'DENIED' || meeting.status === 'CANCELLED') return [];
   if (meeting.status === 'REQUESTED') {
     return [
-      { label: t('onboarding.meetings.schedule'), onClick: () => h.onSchedule(meeting) },
-      { label: t('shell.common.cancel'), onClick: () => h.onReject(meeting), danger: true },
+      { testId: 'schedule', label: t('onboarding.meetings.schedule'), onClick: () => h.onSchedule(meeting) },
+      { testId: 'cancel', label: t('shell.common.cancel'), onClick: () => h.onReject(meeting), danger: true },
     ];
   }
   if (meeting.status === 'SCHEDULED') {
     return [
-      { label: t('onboarding.meetings.reschedule'), onClick: () => h.onSchedule(meeting) },
-      { label: t('onboarding.meetings.markDone'), onClick: () => h.onMarkDone(meeting) },
-      { label: t('onboarding.common.reject'), onClick: () => h.onReject(meeting), danger: true },
+      { testId: 'reschedule', label: t('onboarding.meetings.reschedule'), onClick: () => h.onSchedule(meeting) },
+      { testId: 'mark-done', label: t('onboarding.meetings.markDone'), onClick: () => h.onMarkDone(meeting) },
+      { testId: 'reject', label: t('onboarding.common.reject'), onClick: () => h.onReject(meeting), danger: true },
     ];
   }
   if (meeting.status === 'DONE' && approval === 'NONE') {
-    return [{ label: t('onboarding.meetings.approveDeny'), onClick: () => h.onDecide(meeting) }];
+    return [{ testId: 'decide', label: t('onboarding.meetings.approveDeny'), onClick: () => h.onDecide(meeting) }];
   }
   return [];
 }
@@ -54,7 +56,7 @@ export default function MeetingRowActions({ meeting, onSchedule, onMarkDone, onD
   const actions = buildActions(meeting, { onSchedule, onMarkDone, onDecide, onReject }, t);
   if (actions.length === 0) {
     return (
-      <Typography variant="caption" sx={{
+      <Typography variant="caption" data-testid={`meeting-actions-none-${meeting.id}`} sx={{
         color: "text.secondary"
       }}>—</Typography>
     );
@@ -65,12 +67,12 @@ export default function MeetingRowActions({ meeting, onSchedule, onMarkDone, onD
   };
   return (
     <>
-      <DuncitIconButton size="small" onClick={(e) => setAnchor(e.currentTarget)} aria-label={t('onboarding.meetings.meetingActions')} aria-haspopup="menu" aria-expanded={!!anchor}>
+      <DuncitIconButton size="small" onClick={(e) => setAnchor(e.currentTarget)} aria-label={t('onboarding.meetings.meetingActions')} aria-haspopup="menu" aria-expanded={!!anchor} data-testid={`meeting-actions-${meeting.id}`}>
         <MoreVertIcon fontSize="small" />
       </DuncitIconButton>
       <Menu anchorEl={anchor} open={!!anchor} onClose={() => setAnchor(null)}>
         {actions.map((action) => (
-          <MenuItem key={action.label} onClick={() => run(action)}>
+          <MenuItem key={action.label} onClick={() => run(action)} data-testid={`meeting-action-${action.testId}`}>
             <ListItemText
               primary={action.label}
               slotProps={{

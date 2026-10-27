@@ -78,7 +78,7 @@ export const envAccessService = {
       email: rootAdminEmail(),
       recipient_name: '',
       context: { user_id: ctx.user?.id },
-      requested_by: ctx.user?.id ?? null,
+      requested_by: ctx.user?.id,
     });
     if (!anyDelivered(issued.deliveries)) {
       const reason = issued.deliveries.map((d) => d.reason).filter(Boolean).join('; ');

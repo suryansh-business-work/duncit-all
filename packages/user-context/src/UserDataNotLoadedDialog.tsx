@@ -39,6 +39,7 @@ export default function UserDataNotLoadedDialog({
 }: Readonly<UserDataNotLoadedDialogProps>) {
   return (
     <Dialog
+      data-testid="user-data-not-loaded-dialog"
       open={open}
       // Neither outside-click nor Escape dismisses this: the app is unusable
       // without user data, so the recovery prompt cannot be waved away. MUI 9
@@ -71,10 +72,10 @@ export default function UserDataNotLoadedDialog({
         </Stack>
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2, gap: 1 }}>
-        <DuncitButton onClick={onLogout} startIcon={<LogoutIcon />} color="inherit">
+        <DuncitButton data-testid="user-data-not-loaded-logout" onClick={onLogout} startIcon={<LogoutIcon />} color="inherit">
           {t('session.notLoaded.logout')}
         </DuncitButton>
-        <DuncitButton onClick={onReload} startIcon={<RefreshIcon />} variant="contained">
+        <DuncitButton data-testid="user-data-not-loaded-reload" onClick={onReload} startIcon={<RefreshIcon />} variant="contained">
           {t('session.notLoaded.reload')}
         </DuncitButton>
       </DialogActions>

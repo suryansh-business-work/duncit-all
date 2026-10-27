@@ -68,7 +68,7 @@ export default function SessionInbox({
         <Typography variant="overline" sx={{ px: 1.5, pt: 1, display: 'block', fontWeight: 800 }}>
           Chat with Us
         </Typography>
-        <DuncitIconButton size="small" aria-label={t('support.createUser.title')} onClick={onCreateUser}>
+        <DuncitIconButton size="small" aria-label={t('support.createUser.title')} onClick={onCreateUser} data-testid="live-chat-create-user">
           <PersonAddAlt1Icon fontSize="small" />
         </DuncitIconButton>
       </Stack>

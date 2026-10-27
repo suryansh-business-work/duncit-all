@@ -73,6 +73,7 @@ export default function PaymentDetailHeader({
               flexWrap: "wrap"
             }}>
             <Typography component="h1"
+              data-testid="payment-detail-id"
               variant="h5"
               sx={{
                 fontWeight: 700,

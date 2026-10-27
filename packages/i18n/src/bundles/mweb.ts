@@ -3487,7 +3487,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
     },
     // Gift Cards — mWeb and native render the SAME screens (rule 27), so every
     // key here is used by BOTH. Amounts, validity and the category themes come
-    // from the server (Finance > Gift Cards + the category tree); nothing here
+    // from the server (Loyalty > Virtual Gift Cards + the category tree); nothing here
     // quotes a number, so a policy change never leaves this copy lying.
     giftCards: {
       title: 'Gift Cards',
@@ -3563,6 +3563,31 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       redeemAlreadyBody: 'This card was already redeemed into your coins.',
       goToCoins: 'See my coins',
       redeemError: 'This code could not be redeemed. Check it and try again.',
+      // Redeem page — the two ways in: the emailed code above, or a printed
+      // card's number plus the passcode under its scratch panel. Success reuses
+      // the redeemSuccess* lines; each physicalError* is one server refusal
+      // (`extensions.reason`), so none of them quotes a limit or a duration.
+      redeemModeLabel: 'How to redeem',
+      redeemModeCode: 'Gift card code',
+      redeemModePhysical: 'Physical card',
+      physicalIntro: 'Enter the number printed on your card and the passcode under its scratch panel.',
+      cardNumberLabel: 'Card number',
+      cardNumberHint: 'The 9-digit number printed on the card',
+      cardNumberPlaceholder: 'XXXXXXXXX',
+      passcodeLabel: 'Passcode',
+      passcodeHint: 'Scratch the panel to reveal the 16-digit passcode',
+      passcodePlaceholder: 'XXXX-XXXX-XXXX-XXXX',
+      cardNumberRequired: 'Enter the card number',
+      cardNumberInvalid: 'Enter the 9-digit number printed on the card',
+      passcodeRequired: 'Enter the passcode',
+      passcodeInvalid: 'Enter all 16 digits of the passcode',
+      physicalErrorInvalidFormat: 'Check the card number and passcode — one of them is not complete.',
+      physicalErrorMismatch: 'That card number and passcode do not match. Check both and try again.',
+      physicalErrorLocked: 'Too many wrong tries. Redeeming physical cards is paused for now — please try again later.',
+      physicalErrorVoid: 'This gift card has been cancelled and can no longer be redeemed.',
+      physicalErrorOtherAccount: 'This gift card is linked to a different Duncit account.',
+      physicalErrorAlreadyRedeemed: 'This gift card has already been redeemed.',
+      physicalErrorExpired: 'This gift card has expired and can no longer be redeemed.',
       // Claim page (opened from the shared link)
       claimFrom: 'From {sender}',
       claimExpiredBody: 'This gift card expired before it was redeemed.',

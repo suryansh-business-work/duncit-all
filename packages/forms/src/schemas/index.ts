@@ -287,3 +287,15 @@ export {
   type VenueOfferRejectValues,
   type VenueOfferTerms,
 } from './venue-offer-counter';
+
+export {
+  buildPhysicalGiftCardInput,
+  formatPhysicalGiftCardNumber,
+  formatPhysicalGiftCardPasscode,
+  makePhysicalGiftCardSchema,
+  physicalGiftCardDefaults,
+  physicalGiftCardErrorKey,
+  type PhysicalGiftCardErrorKey,
+  type PhysicalGiftCardRefusal,
+  type PhysicalGiftCardValues,
+} from './physical-gift-card';

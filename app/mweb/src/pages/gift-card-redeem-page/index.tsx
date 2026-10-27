@@ -1,65 +1,43 @@
-import { useState } from 'react';
-import { useLazyQuery, useQuery } from '@apollo/client/react';
-import { Alert, Card, Stack, TextField } from '@mui/material';
-import { DuncitButton } from '@duncit/buttons';
+import { Box, Stack } from '@mui/material';
+import { DuncitTabs, tabPanelProps, useTabParam } from '@duncit/tabs';
 import PageHeader from '../../components/PageHeader';
-import { PUBLIC_FINANCE } from '../checkout-page/queries';
 import { useTranslation } from '../../i18n/useTranslation';
-import GiftCardRedeemView from '../gift-cards-page/GiftCardRedeemView';
 import HowItWorksCard from '../gift-cards-page/HowItWorksCard';
-import { GIFT_CARD_BY_CODE, type GiftCard } from '../gift-cards-page/queries';
+import { SEGMENTED_TABS_SX } from '../gift-cards-page/segmentedSx';
+import GiftCodeRedeem from './GiftCodeRedeem';
+import PhysicalCardRedeem from './PhysicalCardRedeem';
+
+type RedeemMode = 'code' | 'physical';
 
 /**
- * Redeem a gift card — type the code from the email or link, check it, and
- * convert its full value into Duncit Coins. Twin of the native
- * GiftCardRedeemScreen (rule 27).
+ * Redeem a gift card — the emailed/linked code, or a printed card's number and
+ * scratch-panel passcode. Either way the full value lands in Duncit Coins. The
+ * open door is held in the URL (`?selectedtab=physical`), so a reload or a
+ * shared link keeps it. Twin of the native GiftCardRedeemScreen (rule 27).
  */
 export default function GiftCardRedeemPage() {
   const { t } = useTranslation();
-  const [codeInput, setCodeInput] = useState('');
-  // Every lookup must reach the server — a cached card could report a status
-  // that a redemption elsewhere has already changed.
-  const [runLookup, { data, loading, error }] = useLazyQuery<{ giftCardByCode: GiftCard }>(GIFT_CARD_BY_CODE, {
-    fetchPolicy: 'network-only',
+  const tabs = useTabParam<RedeemMode>({
+    items: [
+      { value: 'code', label: t('mweb.giftCards.redeemModeCode'), testId: 'gift-card-redeem-tab-code' },
+      { value: 'physical', label: t('mweb.giftCards.redeemModePhysical'), testId: 'gift-card-redeem-tab-physical' },
+    ],
+    fallback: 'code',
   });
-  const { data: financeData } = useQuery<any>(PUBLIC_FINANCE);
-
-  const currencySymbol = financeData?.publicFinanceSettings?.currency_symbol ?? '₹';
-  const card = data?.giftCardByCode ?? null;
-
-  const check = async () => {
-    await runLookup({ variables: { code: codeInput.trim() } });
-  };
 
   return (
     <Stack data-testid="gift-card-redeem-screen" spacing={2} sx={{ maxWidth: 560, mx: 'auto', width: '100%', py: 0.5 }}>
       <PageHeader testId="gift-card-redeem-header" title={t('mweb.giftCards.redeemTitle')} />
-      <Card sx={{ p: 2 }}>
-        <Stack direction="row" spacing={1} sx={{ alignItems: 'flex-start' }}>
-          <TextField
-            data-testid="gift-card-code"
-            fullWidth
-            label={t('mweb.giftCards.codeLabel')}
-            value={codeInput}
-            onChange={(event) => setCodeInput(event.target.value)}
-            helperText={t('mweb.giftCards.codeHint')}
-            slotProps={{
-              htmlInput: { style: { textTransform: 'uppercase' }, maxLength: 19, 'data-testid': 'gift-card-code-input' }
-            }}
-          />
-          <DuncitButton
-            data-testid="gift-card-check"
-            variant="contained"
-            disabled={!codeInput.trim() || loading}
-            onClick={check}
-            sx={{ flexShrink: 0, minHeight: 40 }}
-          >
-            {t('mweb.giftCards.checkCta')}
-          </DuncitButton>
-        </Stack>
-      </Card>
-      {error && <Alert data-testid="gift-card-lookup-error" severity="error">{t('mweb.giftCards.redeemError')}</Alert>}
-      {card && <GiftCardRedeemView key={card.id} card={card} currencySymbol={currencySymbol} />}
+      <DuncitTabs
+        {...tabs}
+        idPrefix="gift-card-redeem"
+        variant="fullWidth"
+        aria-label={t('mweb.giftCards.redeemModeLabel')}
+        sx={SEGMENTED_TABS_SX}
+      />
+      <Box {...tabPanelProps('gift-card-redeem', tabs.value)}>
+        {tabs.value === 'physical' ? <PhysicalCardRedeem /> : <GiftCodeRedeem />}
+      </Box>
       <HowItWorksCard />
     </Stack>
   );

@@ -51,6 +51,19 @@ export interface FormTextFieldProps<T extends FieldValues> extends PassthroughPr
    * @duncit/regex, the same rule the Zod schema then checks the length of.
    */
   digitsOnly?: boolean;
+  /**
+   * Store what is typed through this mask instead — a passcode grouped
+   * `XXXX-XXXX-…` as it is printed, say. Takes precedence over `digitsOnly`;
+   * the mask itself lives with the shared schema it feeds (mirrors mWeb's
+   * RhfTextField).
+   */
+  format?: (value: string) => string;
+}
+
+/** What a typed value is stored as: the caller's mask, else digits only, else as typed. */
+function storedValue(text: string, format: ((value: string) => string) | undefined, digitsOnly: boolean | undefined): string {
+  if (format) return format(text);
+  return digitsOnly ? toDigits(text) : text;
 }
 
 /**
@@ -69,6 +82,7 @@ export function FormTextField<T extends FieldValues>({
   errorText,
   labelAction,
   digitsOnly,
+  format,
   secureTextEntry,
   editable,
   ...inputProps
@@ -114,7 +128,7 @@ export function FormTextField<T extends FieldValues>({
           focusStyle={{ borderColor: hasError ? '$danger' : '$primary', borderWidth: 1.5 }}
           paddingRight={isSecure ? 44 : undefined}
           value={(field.value as string) ?? ''}
-          onChangeText={(text) => field.onChange(digitsOnly ? toDigits(text) : text)}
+          onChangeText={(text) => field.onChange(storedValue(text, format, digitsOnly))}
           onBlur={field.onBlur}
           secureTextEntry={masked}
           type={maskType}

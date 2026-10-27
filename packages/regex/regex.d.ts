@@ -62,6 +62,16 @@ export const REFERRAL_CODE: RegExp;
  * starting on a letter or digit. Case-sensitive — upper-case the input first.
  */
 export const COUPON_CODE: RegExp;
+/**
+ * A printed gift card's number — 9 digits, the first one 1–9. Applied to the
+ * digits-only value: strip spaces and dashes with {@link toDigits} first.
+ */
+export const PHYSICAL_GIFT_CARD_NUMBER: RegExp;
+/**
+ * The passcode under a printed card's scratch panel — 16 digits, printed as
+ * `XXXX-XXXX-XXXX-XXXX`. Applied to the digits-only value.
+ */
+export const PHYSICAL_GIFT_CARD_PASSCODE: RegExp;
 /** A GA4 measurement id — `G-` and the stream's alphanumeric suffix (G-XXXXXXXXXX). */
 export const GA_MEASUREMENT_ID: RegExp;
 /** One DNS label: letters, digits and inner hyphens, 1–63 characters, no leading or trailing hyphen. */
@@ -88,6 +98,10 @@ export function isPersonName(value: string): boolean;
 export function isReferralCode(value: string): boolean;
 /** Coupon-code shape check. Case-sensitive: upper-case before calling it. */
 export function isCouponCode(value: string): boolean;
+/** Printed gift card number check. Every non-digit is dropped first ({@link toDigits}). */
+export function isPhysicalGiftCardNumber(value: string): boolean;
+/** Printed gift card passcode check. Every non-digit is dropped first ({@link toDigits}). */
+export function isPhysicalGiftCardPasscode(value: string): boolean;
 /**
  * A Duncit @handle: lowercase letters, digits and single hyphens, 3–30
  * characters, starting and ending on an alphanumeric. It goes into

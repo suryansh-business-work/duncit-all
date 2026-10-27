@@ -222,7 +222,11 @@ describe('working on the canvas', () => {
   it('re-parents a seat under another, placed after that seat’s children, keeping its pay', async () => {
     mount();
     act(() => page.canvas.onReparent('c', 'a'));
-    expect(page.team.saveSeat).toHaveBeenCalledWith(expect.objectContaining({ id: 'c', parent_id: 'a', sort_order: 1, pay: [] }));
+    const sent = page.team.saveSeat.mock.calls[0][0];
+    expect(sent).toMatchObject({ id: 'c', parent_id: 'a', sort_order: 1, pay: [], kras: [] });
+    // Only fields the GraphQL input accepts: no server-derived or __typename keys.
+    expect(sent).not.toHaveProperty('monthly_cost');
+    expect(sent).not.toHaveProperty('structure_id');
   });
 
   it('treats a seat whose pay is hidden as having none when re-parenting it', () => {
@@ -302,7 +306,7 @@ describe('keyboard shortcuts', () => {
 
 describe('PublicTeamPage', () => {
   const view = (over: Record<string, unknown> = {}) => ({
-    publicTeamStructure: { show_salary: false, structure, nodes, ...over },
+    publicTeamStructure: { show_salary: false, show_kpi_kra: false, structure, nodes, ...over },
   });
   const mountPublic = () =>
     renderWithProviders(<PublicTeamPage />, {
@@ -339,7 +343,23 @@ describe('PublicTeamPage', () => {
     expect(page.canvas.onAddChild).toBeUndefined();
     expect(page.canvas.onReparent).toBeUndefined();
     expect(page.canvas.selectedId).toBeNull();
-    expect(page.canvas.onSelect()).toBeUndefined();
+    expect(screen.queryByRole('heading', { name: 'Seat a' })).not.toBeInTheDocument();
+  });
+
+  it('opens a seat’s details when it is selected, and closes them again', async () => {
+    mountPublic();
+    act(() => page.canvas.onSelect('a'));
+    expect(page.canvas.selectedId).toBe('a');
+    expect(await screen.findByRole('heading', { name: 'Seat a' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'hr.teamStructure.share.close' }));
+    await waitFor(() => expect(screen.queryByRole('heading', { name: 'Seat a' })).not.toBeInTheDocument());
+    expect(page.canvas.selectedId).toBeNull();
+  });
+
+  it('shows no details for a seat id that is not on the chart', () => {
+    mountPublic();
+    act(() => page.canvas.onSelect('ghost'));
+    expect(screen.queryByRole('heading', { name: /Seat/ })).not.toBeInTheDocument();
   });
 
   it('shows the monthly budget only when the link allows salary', async () => {

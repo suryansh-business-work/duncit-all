@@ -15,6 +15,7 @@ const node = (id: string, parent_id: string | null = null, over: Partial<TeamNod
   sort_order: 0,
   pay: [],
   monthly_cost: 0,
+  kras: [],
   ...over,
 });
 
@@ -119,6 +120,7 @@ describe('draftOf', () => {
       notes: 'n',
       sort_order: 3,
       pay: [{ label: 'Base', kind: 'FIXED', frequency: 'MONTHLY', amount: 100, min_amount: null, max_amount: null, note: 'x' }],
+      kras: [],
     });
     expect(JSON.stringify(draft)).not.toContain('__typename');
     expect(draft).not.toHaveProperty('monthly_cost');
@@ -126,7 +128,7 @@ describe('draftOf', () => {
 
   it('turns missing optional values and hidden pay into nulls and an empty list', () => {
     const draft = draftOf(node('b', null, { pay: null, monthly_cost: null }));
-    expect(draft).toMatchObject({ person_name: null, department: null, notes: null, pay: [] });
+    expect(draft).toMatchObject({ person_name: null, department: null, notes: null, pay: [], kras: [] });
   });
 
   it('fills a pay line’s absent range and note with null', () => {
@@ -137,7 +139,7 @@ describe('draftOf', () => {
 
 describe('seat form schema', () => {
   const schema = makeSeatSchema((key) => key);
-  const base = { kind: 'ROLE', title: 'Tester', employment_type: 'PART_TIME', status: 'FILLED', pay: [] };
+  const base = { kind: 'ROLE', title: 'Tester', employment_type: 'PART_TIME', status: 'FILLED', pay: [], kras: [] };
   const line = (over: Record<string, unknown> = {}) => ({ label: 'Base', kind: 'FIXED', frequency: 'MONTHLY', amount: '5000', min_amount: '', max_amount: '', ...over });
   const messages = (input: unknown) => {
     const result = schema.safeParse(input);

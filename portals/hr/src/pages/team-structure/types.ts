@@ -3,12 +3,14 @@ export const EMPLOYMENT_TYPES = ['FULL_TIME', 'PART_TIME', 'CONTRACT', 'ADVISOR'
 export const NODE_STATUSES = ['FILLED', 'VACANT', 'OPTIONAL'] as const;
 export const PAY_KINDS = ['FIXED', 'VARIABLE'] as const;
 export const PAY_FREQUENCIES = ['MONTHLY', 'ANNUAL', 'PER_UNIT'] as const;
+export const KPI_FREQUENCIES = ['MONTHLY', 'QUARTERLY', 'ANNUAL'] as const;
 
 export type NodeKind = (typeof NODE_KINDS)[number];
 export type EmploymentType = (typeof EMPLOYMENT_TYPES)[number];
 export type NodeStatus = (typeof NODE_STATUSES)[number];
 export type PayKind = (typeof PAY_KINDS)[number];
 export type PayFrequency = (typeof PAY_FREQUENCIES)[number];
+export type KpiFrequency = (typeof KPI_FREQUENCIES)[number];
 
 export interface PayLine {
   label: string;
@@ -18,6 +20,23 @@ export interface PayLine {
   min_amount?: number | null;
   max_amount?: number | null;
   note?: string | null;
+}
+
+export interface KpiLine {
+  name: string;
+  unit?: string | null;
+  target?: number | null;
+  frequency: KpiFrequency;
+  /** Percent of its KRA. */
+  weight: number;
+}
+
+export interface KraLine {
+  title: string;
+  description?: string | null;
+  /** Percent of the seat. */
+  weight: number;
+  kpis: KpiLine[];
 }
 
 export interface TeamNode {
@@ -36,6 +55,8 @@ export interface TeamNode {
   /** Null on a public link that hides salary. */
   pay: PayLine[] | null;
   monthly_cost: number | null;
+  /** Null on a public link that hides the scorecard. */
+  kras: KraLine[] | null;
 }
 
 export interface TeamStructureInfo {
@@ -62,6 +83,7 @@ export interface NodeDraft {
   notes?: string | null;
   sort_order: number;
   pay: PayLine[];
+  kras: KraLine[];
 }
 
 /** GraphQL rejects `__typename` inside an input, so it is stripped on the way back out. */
@@ -85,6 +107,18 @@ export function draftOf(node: TeamNode): NodeDraft {
       min_amount: min_amount ?? null,
       max_amount: max_amount ?? null,
       note: note ?? null,
+    })),
+    kras: (node.kras ?? []).map(({ title, description, weight, kpis }) => ({
+      title,
+      description: description ?? null,
+      weight,
+      kpis: kpis.map(({ name, unit, target, frequency, weight: kpiWeight }) => ({
+        name,
+        unit: unit ?? null,
+        target: target ?? null,
+        frequency,
+        weight: kpiWeight,
+      })),
     })),
   };
 }

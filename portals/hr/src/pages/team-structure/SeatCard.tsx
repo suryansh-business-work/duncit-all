@@ -74,6 +74,9 @@ export default function SeatCard({ data, selected }: NodeProps) {
         </Typography>
         <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center' }}>
           <Chip size="small" label={t(`hr.teamStructure.employment.${node.employment_type}`)} />
+          {node.kras && node.kras.length > 0 && (
+            <Chip size="small" variant="outlined" label={t('hr.teamStructure.kra.badge', { vars: { count: node.kras.length } })} />
+          )}
           {node.monthly_cost != null && (
             <Typography variant="caption" sx={{ fontWeight: 700 }}>
               {t('hr.teamStructure.perMonth', { vars: { amount: money(node.monthly_cost, currency) } })}

@@ -24,6 +24,18 @@ const NODE_FIELDS = gql`
       max_amount
       note
     }
+    kras {
+      title
+      description
+      weight
+      kpis {
+        name
+        unit
+        target
+        frequency
+        weight
+      }
+    }
   }
 `;
 
@@ -63,6 +75,7 @@ export const PUBLIC_TEAM_STRUCTURE = gql`
   query PublicTeamStructure($token: String!) {
     publicTeamStructure(token: $token) {
       show_salary
+      show_kpi_kra
       structure {
         id
         name
@@ -112,6 +125,7 @@ export const TEAM_SHARES = gql`
       token
       label
       show_salary
+      show_kpi_kra
       expires_at
       revoked_at
     }
@@ -119,8 +133,8 @@ export const TEAM_SHARES = gql`
 `;
 
 export const CREATE_SHARE = gql`
-  mutation CreateTeamStructureShare($structure_id: ID!, $label: String, $show_salary: Boolean, $expires_at: String) {
-    createTeamStructureShare(structure_id: $structure_id, label: $label, show_salary: $show_salary, expires_at: $expires_at) {
+  mutation CreateTeamStructureShare($structure_id: ID!, $label: String, $show_salary: Boolean, $show_kpi_kra: Boolean, $expires_at: String) {
+    createTeamStructureShare(structure_id: $structure_id, label: $label, show_salary: $show_salary, show_kpi_kra: $show_kpi_kra, expires_at: $expires_at) {
       id
     }
   }

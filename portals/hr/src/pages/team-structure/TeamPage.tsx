@@ -15,7 +15,7 @@ import SeatCanvas from './SeatCanvas';
 import SeatDrawer from './SeatDrawer';
 import ShareDialog from './ShareDialog';
 import { useTeamStructure } from './useTeamStructure';
-import type { NodeDraft, TeamNode } from './types';
+import { draftOf, type NodeDraft, type TeamNode } from './types';
 
 type Drawer = { parentId: string | null } | null;
 
@@ -72,7 +72,7 @@ export default function TeamPage() {
   const onReparent = (childId: string, parentId: string) => {
     const child = team.nodes.find((n) => n.id === childId);
     if (child && child.parent_id !== parentId) {
-      team.saveSeat({ ...child, parent_id: parentId, sort_order: nextOrder(parentId), pay: child.pay ?? [] });
+      team.saveSeat({ ...draftOf(child), parent_id: parentId, sort_order: nextOrder(parentId) });
     }
   };
 

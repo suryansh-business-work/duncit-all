@@ -1,4 +1,4 @@
-import { useFieldArray, useWatch, type Control } from 'react-hook-form';
+import { useFieldArray, useWatch } from 'react-hook-form';
 import { Box, MenuItem, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
@@ -6,9 +6,7 @@ import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { RhfTextField } from '@duncit/forms';
 import { useTranslation } from '@duncit/app-settings';
 import { PAY_FREQUENCIES, PAY_KINDS } from './types';
-import type { SeatFormOutput, SeatFormValues } from './seat.schema';
-
-type SeatControl = Control<SeatFormValues, unknown, SeatFormOutput>;
+import type { SeatControl } from './seat.schema';
 
 /** Salary lines: fixed ones pay one amount, variable ones a range with an expected figure. */
 export default function PayEditor({ control, currencyLabel }: Readonly<{ control: SeatControl; currencyLabel: string }>) {

@@ -40,7 +40,7 @@ vi.mock('@mui/x-date-pickers/DatePicker', () => ({
 
 const future = new Date(Date.now() + 7 * 86_400_000).toISOString();
 const past = new Date(Date.now() - 86_400_000).toISOString();
-const share = (id: string, over: Record<string, unknown> = {}) => ({ id, token: `tok-${id}`, label: `Link ${id}`, show_salary: false, expires_at: null, revoked_at: null, ...over });
+const share = (id: string, over: Record<string, unknown> = {}) => ({ id, token: `tok-${id}`, label: `Link ${id}`, show_salary: false, show_kpi_kra: false, expires_at: null, revoked_at: null, ...over });
 
 const mount = (open = true) => {
   const onClose = vi.fn();
@@ -78,6 +78,17 @@ describe('listing links', () => {
     expect(screen.getByText('hr.teamStructure.share.structureOnly')).toBeInTheDocument();
     expect(screen.getByText('hr.teamStructure.share.withSalary')).toBeInTheDocument();
     expect(screen.queryByText('hr.teamStructure.share.inactive')).not.toBeInTheDocument();
+  });
+
+  it('says which of salary and the scorecard a link reveals', () => {
+    apollo.shares = [
+      share('1', { show_kpi_kra: true }),
+      share('2', { show_salary: true, show_kpi_kra: true }),
+    ];
+    mount();
+    expect(screen.queryByText('hr.teamStructure.share.structureOnly')).not.toBeInTheDocument();
+    expect(screen.getAllByText('hr.teamStructure.share.withKpiKra')).toHaveLength(2);
+    expect(screen.getAllByText('hr.teamStructure.share.withSalary')).toHaveLength(1);
   });
 
   it('marks revoked and expired links inactive and disables copy and revoke on them', () => {
@@ -146,7 +157,7 @@ describe('creating a link', () => {
     mount();
     fireEvent.click(screen.getByRole('button', { name: 'hr.teamStructure.share.create' }));
     await waitFor(() => expect(apollo.create).toHaveBeenCalled());
-    expect(apollo.create).toHaveBeenCalledWith({ variables: { structure_id: 's1', label: null, show_salary: false, expires_at: null } });
+    expect(apollo.create).toHaveBeenCalledWith({ variables: { structure_id: 's1', label: null, show_salary: false, show_kpi_kra: false, expires_at: null } });
     expect(apollo.refetch).toHaveBeenCalled();
     expect(screen.queryByText('hr.teamStructure.share.salaryWarning')).not.toBeInTheDocument();
   });
@@ -155,11 +166,12 @@ describe('creating a link', () => {
     mount();
     fireEvent.change(screen.getByLabelText('hr.teamStructure.share.label'), { target: { value: 'Board' } });
     fireEvent.click(screen.getByLabelText('hr.teamStructure.share.showSalary'));
+    fireEvent.click(screen.getByLabelText('hr.teamStructure.share.showKpiKra'));
     expect(screen.getByText('hr.teamStructure.share.salaryWarning')).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText('hr.teamStructure.share.expires'), { target: { value: future } });
     fireEvent.click(screen.getByRole('button', { name: 'hr.teamStructure.share.create' }));
     await waitFor(() => expect(apollo.create).toHaveBeenCalled());
-    expect(apollo.create).toHaveBeenCalledWith({ variables: { structure_id: 's1', label: 'Board', show_salary: true, expires_at: future } });
+    expect(apollo.create).toHaveBeenCalledWith({ variables: { structure_id: 's1', label: 'Board', show_salary: true, show_kpi_kra: true, expires_at: future } });
     await waitFor(() => expect(screen.queryByText('hr.teamStructure.share.salaryWarning')).not.toBeInTheDocument());
     expect((screen.getByLabelText('hr.teamStructure.share.label') as HTMLInputElement).value).toBe('');
     expect((screen.getByLabelText('hr.teamStructure.share.expires') as HTMLInputElement).value).toBe('');

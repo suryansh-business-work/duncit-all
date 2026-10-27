@@ -1,14 +1,16 @@
+import { useState } from 'react';
 import { useQuery } from '@apollo/client/react';
 import { useParams } from 'react-router';
 import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
 import { useTranslation } from '@duncit/app-settings';
 import CostSummary from './CostSummary';
 import SeatCanvas from './SeatCanvas';
+import SeatDetail from './SeatDetail';
 import { PUBLIC_TEAM_STRUCTURE } from './queries';
 import type { TeamNode, TeamStructureInfo } from './types';
 
 interface Data {
-  publicTeamStructure: { show_salary: boolean; structure: TeamStructureInfo; nodes: TeamNode[] } | null;
+  publicTeamStructure: { show_salary: boolean; show_kpi_kra: boolean; structure: TeamStructureInfo; nodes: TeamNode[] } | null;
 }
 
 /**
@@ -21,6 +23,7 @@ export default function PublicTeamPage() {
   const { t } = useTranslation();
   const { data, loading, error } = useQuery<Data>(PUBLIC_TEAM_STRUCTURE, { variables: { token } });
   const view = data?.publicTeamStructure;
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   if (loading) return <CircularProgress aria-label={t('hr.teamStructure.loading')} sx={{ m: 4 }} />;
   if (error || !view) return <Alert severity="warning" sx={{ m: 2 }}>{t('hr.teamStructure.public.unavailable')}</Alert>;
@@ -31,8 +34,9 @@ export default function PublicTeamPage() {
       {view.structure.description && <Typography variant="body2" sx={{ color: 'text.secondary' }}>{view.structure.description}</Typography>}
       {view.show_salary && <CostSummary nodes={view.nodes} currency={view.structure.currency} />}
       <Box sx={{ flex: 1, border: 1, borderColor: 'divider' }}>
-        <SeatCanvas nodes={view.nodes} currency={view.structure.currency} selectedId={null} onSelect={() => undefined} />
+        <SeatCanvas nodes={view.nodes} currency={view.structure.currency} selectedId={selectedId} onSelect={setSelectedId} />
       </Box>
+      <SeatDetail node={view.nodes.find((n) => n.id === selectedId) ?? null} currency={view.structure.currency} onClose={() => setSelectedId(null)} />
     </Stack>
   );
 }

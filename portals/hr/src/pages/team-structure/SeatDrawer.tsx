@@ -5,6 +5,7 @@ import { Drawer, MenuItem, Stack, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { RhfTextField } from '@duncit/forms';
 import { useTranslation } from '@duncit/app-settings';
+import KraEditor from './KraEditor';
 import PayEditor from './PayEditor';
 import { makeSeatSchema, type SeatFormOutput, type SeatFormValues } from './seat.schema';
 import { currencySymbol } from './money';
@@ -32,6 +33,7 @@ const blank: SeatFormValues = {
   status: 'FILLED',
   notes: '',
   pay: [],
+  kras: [],
 };
 
 const valuesOf = (node: TeamNode | null): SeatFormValues =>
@@ -45,6 +47,11 @@ const valuesOf = (node: TeamNode | null): SeatFormValues =>
         status: node.status,
         notes: node.notes ?? '',
         pay: (node.pay ?? []).map((p) => ({ ...p, min_amount: p.min_amount ?? null, max_amount: p.max_amount ?? null, note: p.note ?? '' })),
+        kras: (node.kras ?? []).map((k) => ({
+          ...k,
+          description: k.description ?? '',
+          kpis: k.kpis.map((p) => ({ ...p, unit: p.unit ?? '', target: p.target ?? null })),
+        })),
       }
     : blank;
 
@@ -75,6 +82,11 @@ export default function SeatDrawer({ open, node, parentId, currency, nextOrder, 
       status: v.status,
       notes: emptyToNull(v.notes),
       pay: v.pay.map((p) => ({ ...p, note: emptyToNull(p.note) })),
+      kras: v.kras.map((k) => ({
+        ...k,
+        description: emptyToNull(k.description),
+        kpis: k.kpis.map((p) => ({ ...p, unit: emptyToNull(p.unit) })),
+      })),
     }),
   );
 
@@ -102,6 +114,7 @@ export default function SeatDrawer({ open, node, parentId, currency, nextOrder, 
         </Stack>
         <RhfTextField control={control} name="notes" label={t('hr.teamStructure.seat.notes')} multiline minRows={2} />
         <PayEditor control={control} currencyLabel={currencySymbol(currency)} />
+        <KraEditor control={control} />
         <Stack direction="row" spacing={1} sx={{ justifyContent: 'space-between' }}>
           {node ? (
             <DuncitButton color="error" variant="outlined" disabled={busy} onClick={() => onDelete(node)}>

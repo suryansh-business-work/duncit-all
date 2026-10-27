@@ -16,6 +16,7 @@ interface Share {
   token: string;
   label?: string | null;
   show_salary: boolean;
+  show_kpi_kra: boolean;
   expires_at?: string | null;
   revoked_at?: string | null;
 }
@@ -30,6 +31,7 @@ export default function ShareDialog({ structureId, open, onClose }: Readonly<{ s
   const [revoke] = useMutation(REVOKE_SHARE);
   const [label, setLabel] = useState('');
   const [showSalary, setShowSalary] = useState(false);
+  const [showKpiKra, setShowKpiKra] = useState(false);
   const [expires, setExpires] = useState<Date | null>(null);
 
   const guarded = async (work: () => Promise<unknown>) => {
@@ -43,9 +45,10 @@ export default function ShareDialog({ structureId, open, onClose }: Readonly<{ s
 
   const onCreate = () =>
     guarded(async () => {
-      await create({ variables: { structure_id: structureId, label: label || null, show_salary: showSalary, expires_at: expires?.toISOString() ?? null } });
+      await create({ variables: { structure_id: structureId, label: label || null, show_salary: showSalary, show_kpi_kra: showKpiKra, expires_at: expires?.toISOString() ?? null } });
       setLabel('');
       setShowSalary(false);
+      setShowKpiKra(false);
       setExpires(null);
     });
 
@@ -66,6 +69,10 @@ export default function ShareDialog({ structureId, open, onClose }: Readonly<{ s
           <FormControlLabel
             control={<Switch checked={showSalary} onChange={(e) => setShowSalary(e.target.checked)} />}
             label={t('hr.teamStructure.share.showSalary')}
+          />
+          <FormControlLabel
+            control={<Switch checked={showKpiKra} onChange={(e) => setShowKpiKra(e.target.checked)} />}
+            label={t('hr.teamStructure.share.showKpiKra')}
           />
           {showSalary && <Alert severity="warning">{t('hr.teamStructure.share.salaryWarning')}</Alert>}
           <DuncitButton variant="contained" disabled={creating} onClick={onCreate}>{t('hr.teamStructure.share.create')}</DuncitButton>
@@ -92,7 +99,11 @@ export default function ShareDialog({ structureId, open, onClose }: Readonly<{ s
                     primary={s.label || t('hr.teamStructure.share.unlabelled')}
                     secondary={s.expires_at ? t('hr.teamStructure.share.expiresOn', { vars: { date: formatDateTime(s.expires_at) } }) : t('hr.teamStructure.share.noExpiry')}
                   />
-                  <Chip size="small" sx={{ mr: 12 }} color={s.show_salary ? 'warning' : 'default'} label={t(s.show_salary ? 'hr.teamStructure.share.withSalary' : 'hr.teamStructure.share.structureOnly')} />
+                  <Stack direction="row" spacing={0.5} sx={{ mr: 12 }}>
+                    {!s.show_salary && !s.show_kpi_kra && <Chip size="small" label={t('hr.teamStructure.share.structureOnly')} />}
+                    {s.show_salary && <Chip size="small" color="warning" label={t('hr.teamStructure.share.withSalary')} />}
+                    {s.show_kpi_kra && <Chip size="small" color="info" label={t('hr.teamStructure.share.withKpiKra')} />}
+                  </Stack>
                   {dead && <Chip size="small" label={t('hr.teamStructure.share.inactive')} />}
                 </ListItem>
               );

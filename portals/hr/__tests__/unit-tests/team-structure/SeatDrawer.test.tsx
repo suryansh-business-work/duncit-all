@@ -54,6 +54,7 @@ describe('adding a seat', () => {
       status: 'FILLED',
       notes: null,
       pay: [],
+      kras: [],
     });
   });
 

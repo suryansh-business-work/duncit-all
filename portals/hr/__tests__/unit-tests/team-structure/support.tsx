@@ -22,6 +22,7 @@ export const seat = (id: string, over: Partial<TeamNode> = {}): TeamNode => ({
   sort_order: 0,
   pay: [],
   monthly_cost: 0,
+  kras: [],
   ...over,
 });
 

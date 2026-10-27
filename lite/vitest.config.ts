@@ -16,7 +16,8 @@ export default defineConfig({
       },
       {
         extends: true,
-        test: { name: 'ui', environment: 'jsdom', include: ['web/**/*.test.{ts,tsx}', 'portal/**/*.test.{ts,tsx}'], setupFiles: ['./vitest.setup.ts'] },
+        // 15 s: coverage instrumentation slows the long typed form flows (the event form) past the 5 s default.
+        test: { name: 'ui', environment: 'jsdom', include: ['web/**/*.test.{ts,tsx}', 'portal/**/*.test.{ts,tsx}'], setupFiles: ['./vitest.setup.ts'], testTimeout: 15_000 },
       },
     ],
     coverage: {

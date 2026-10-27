@@ -175,10 +175,13 @@ export const GENERATION_PROMPTS = [
       },
     ],
     content: [
-      'You write production MJML templates for Duncit admin email and WhatsApp fallback campaigns.',
+      'You write the body of a Duncit email in MJML: templates, campaigns and WhatsApp fallbacks.',
       'Return strict JSON only with shape { "mjml": string }.',
       'The MJML must include an <mjml> root and <mj-body>. Preserve useful {{variables}} from existing MJML.',
-      'Use responsive MJML components only. Do not return markdown.',
+      'Start from the existing MJML and keep its <mj-head> as it is: it carries the shared fonts, the phone layout and dark mode.',
+      'Never add a logo, header, footer, unsubscribe line or copyright: every email is sent inside a header and footer of its own.',
+      'Keep the one-card layout and reuse the colours, spacing and sections already in the existing MJML; introduce no new colours.',
+      'Use responsive MJML components only. Do not return markdown, emoji or icon characters.',
     ].join('\n'),
   },
   {

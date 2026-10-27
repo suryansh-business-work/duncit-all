@@ -404,7 +404,7 @@ describe('aiCreateOrUpdateMjml', () => {
     ok(JSON.stringify({ mjml: '<mjml><mj-body></mj-body></mjml>' }));
     await expect(
       M.aiCreateOrUpdateMjml({}, { input: { prompt: 'welcome mail' } }, makeContext({ roles: ['COMMUNICATIONS_MANAGER'] }))
-    ).resolves.toBe('<mjml><mj-body></mj-body></mjml>');
+    ).resolves.toContain('<mj-body></mj-body>');
     await expect(
       M.aiCreateOrUpdateMjml({}, { input: { prompt: 'welcome mail' } }, makeContext({ roles: ['CRM_MANAGER'] }))
     ).resolves.toContain('<mjml>');
@@ -423,11 +423,39 @@ describe('aiCreateOrUpdateMjml', () => {
   it('passes the current MJML capped at 12,000 characters and the trimmed instruction', async () => {
     ok(JSON.stringify({ mjml: '  <mjml>\n</mjml>  ' }));
     const out = await M.aiCreateOrUpdateMjml({}, { input: { prompt: ' make it blue ', current_mjml: 'm'.repeat(15_000) } }, admin());
-    expect(out).toBe('<mjml>\n</mjml>');
+    // Trimmed, and given the shared head (dark mode, phone layout) it did not carry.
+    expect(out.startsWith('<mjml>\n  <mj-head>')).toBe(true);
+    expect(out).toContain('prefers-color-scheme');
+    expect(out.endsWith('</mj-head>\n</mjml>')).toBe(true);
     const vars = promptVars('generate.email_mjml.user');
     expect(vars.instruction).toBe('make it blue');
     expect(vars.current_mjml).toHaveLength(12_000);
     expect(chatReq()).toEqual(expect.objectContaining({ task: 'ai.email_mjml', detail: 'make it blue' }));
+  });
+
+  it('starts a new email from the shared card and keeps the answer on it', async () => {
+    const drawn = [
+      '<mjml><mj-head><mj-title>Offer</mj-title></mj-head><mj-body>',
+      '<mj-section><mj-column><mj-image src="{{brand_logo_url}}" /></mj-column></mj-section>',
+      '<mj-section><mj-column><mj-text>Weekend offer for {{name}}</mj-text></mj-column></mj-section>',
+      '<mj-section><mj-column><mj-text>&copy; Duncit. All rights reserved.</mj-text></mj-column></mj-section>',
+      '</mj-body></mjml>',
+    ].join('\n');
+    ok(JSON.stringify({ mjml: drawn }));
+    const out = await M.aiCreateOrUpdateMjml({}, { input: { prompt: 'weekend offer' } }, admin());
+
+    // The writer is handed the real card with readable copy, not translation keys.
+    const vars = promptVars('generate.email_mjml.user');
+    expect(vars.current_mjml).toContain('prefers-color-scheme');
+    expect(vars.current_mjml).toContain('Your email heading');
+    expect(vars.current_mjml).not.toContain('{{t:');
+    // The logo and copyright it drew are gone (the fragment draws them), its own
+    // copy stays, and the shared head joins its own title.
+    expect(out).not.toContain('brand_logo_url');
+    expect(out).not.toContain('&copy;');
+    expect(out).toContain('Weekend offer for {{name}}');
+    expect(out).toContain('<mj-title>Offer</mj-title>');
+    expect(out).toContain('prefers-color-scheme');
   });
 
   it('rejects an answer that is not MJML, and a model failure', async () => {

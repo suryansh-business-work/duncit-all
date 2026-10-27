@@ -205,6 +205,9 @@ describe('SettingsForm', () => {
   it('prices tokens in another currency picked by its code', async () => {
     const onSubmit = renderForm();
     const currency = combobox(/Currency/);
+    // An unfocused MUI Autocomplete resets typed text on its next render.
+    fireEvent.focus(currency);
+    fireEvent.mouseDown(currency);
     fireEvent.change(currency, { target: { value: 'IN' } });
     fireEvent.click(await screen.findByRole('option', { name: /^INR/ }));
     expect(await submitted(onSubmit)).toMatchObject({ currency: 'INR' });

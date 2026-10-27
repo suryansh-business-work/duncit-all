@@ -27,6 +27,11 @@ on:
   schedule:
     - cron: '30 20 * * *' # 02:00 IST
   workflow_dispatch:
+    inputs:
+      dispatch_id:
+        description: Set by the Tests console (Run now) to claim the run it already created. Leave empty by hand.
+        type: string
+        default: ''
 
 permissions:
   contents: read
@@ -162,12 +167,22 @@ jobs:
       # workers run out of heap and the run ends early with whatever coverage it
       # had. A bounded heap plus a worker memory limit (so a leaking worker is
       # recycled rather than killed) is what keeps the report complete.
+      #
+      # --json --outputFile: the per-test results for the Tests console. The
+      # human-readable report still reaches the log (jest moves it to stderr).
       - name: Run coverage
         continue-on-error: true
         working-directory: app/mobile-app
         env:
           NODE_OPTIONS: --max-old-space-size=6144
-        run: npx jest --coverage --ci --maxWorkers=2 --workerIdleMemoryLimit=1536MB 2>&1 | tee jest-coverage.log | tail -120
+        run: |
+          mkdir -p unit-results
+          npx jest --coverage --ci --maxWorkers=2 --workerIdleMemoryLimit=1536MB --json "--outputFile=$GITHUB_WORKSPACE/app/mobile-app/unit-results/native.raw.json" 2>&1 | tee jest-coverage.log | tail -120
+
+      # Compacts that report with the app's coverage. Best-effort: never fails.
+      - name: Unit results for the Tests console
+        if: always()
+        run: node scripts/report-unit-run.mjs meta --dir app/mobile-app --group native --runner jest --raw app/mobile-app/unit-results/native.raw.json --out app/mobile-app/unit-results/native.unit.json
 
       # A partial report must never be indistinguishable from a complete one.
       - name: Coverage produced
@@ -214,6 +229,14 @@ jobs:
         with:
           name: coverage-logs-native
           path: app/mobile-app/jest-coverage.log
+          if-no-files-found: warn
+
+      - name: Upload unit results
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: unit-results-native
+          path: app/mobile-app/unit-results
           if-no-files-found: warn
 
   # ---------------------------------------------------------------------------
@@ -269,3 +292,85 @@ jobs:
 
       - name: Job summary
         run: cat coverage-comment.md >> "$GITHUB_STEP_SUMMARY"
+
+  # ---------------------------------------------------------------------------
+  # The Tests console (tests.duncit.com) — Unit Testing.
+  #
+  # REPORTING ONLY, never gating: both jobs are continue-on-error, nothing
+  # needs them, and scripts/report-unit-run.mjs exits 0 whatever happens. The
+  # claim opens (or, for Run now, claims by dispatch_id) the run's row while the
+  # suites go; the report sends every workspace, test file and test case.
+  #
+  # The nightly schedule runs on main and reports to production; a dispatch on
+  # staging (the staging console's Run now) reports to staging. Each server
+  # signs its own tokens, so the secret follows the server.
+  # ---------------------------------------------------------------------------
+  unit-claim:
+    name: Tests console — claim the unit run
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    continue-on-error: true
+    if: ${{ github.ref_name == 'staging' || github.ref_name == 'main' }}
+    env:
+      UNIT_WORKFLOW: COVERAGE
+      DISPATCH_ID: ${{ inputs.dispatch_id }}
+      DUNCIT_GRAPHQL_URL: ${{ github.ref_name == 'main' && 'https://server.duncit.com/graphql' || 'https://staging.server.duncit.com/graphql' }}
+      DUNCIT_RELEASE_TOKEN: ${{ github.ref_name == 'main' && secrets.DUNCIT_RELEASE_TOKEN || secrets.DUNCIT_RELEASE_TOKEN_STAGING }}
+      DUNCIT_RELEASE_EMAIL: ${{ secrets.DUNCIT_RELEASE_EMAIL }}
+      DUNCIT_RELEASE_PASSWORD: ${{ secrets.DUNCIT_RELEASE_PASSWORD }}
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          sparse-checkout: scripts
+      - name: Claim the run
+        run: node scripts/report-unit-run.mjs start
+
+  unit-report:
+    name: Tests console — report the unit run
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    continue-on-error: true
+    needs: [unit-claim, surface, native]
+    # After the coverage jobs whatever they concluded, and — only when this run
+    # had claimed a row — after a cancellation too, to close that row. The
+    # concurrency group cancels a run superseded on the same branch.
+    if: ${{ (!cancelled() || needs.unit-claim.result == 'success') && (github.ref_name == 'staging' || github.ref_name == 'main') }}
+    env:
+      UNIT_WORKFLOW: COVERAGE
+      DISPATCH_ID: ${{ inputs.dispatch_id }}
+      DUNCIT_GRAPHQL_URL: ${{ github.ref_name == 'main' && 'https://server.duncit.com/graphql' || 'https://staging.server.duncit.com/graphql' }}
+      DUNCIT_RELEASE_TOKEN: ${{ github.ref_name == 'main' && secrets.DUNCIT_RELEASE_TOKEN || secrets.DUNCIT_RELEASE_TOKEN_STAGING }}
+      DUNCIT_RELEASE_EMAIL: ${{ secrets.DUNCIT_RELEASE_EMAIL }}
+      DUNCIT_RELEASE_PASSWORD: ${{ secrets.DUNCIT_RELEASE_PASSWORD }}
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    steps:
+      # The whole tree: the report lists every test file in the repo.
+      - uses: actions/checkout@v5
+        if: ${{ always() }}
+      - uses: actions/setup-node@v5
+        if: ${{ always() }}
+        with:
+          node-version: 24
+          package-manager-cache: false
+      # One directory per artifact (no merge), as the reporter expects.
+      - name: Download the surface results
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        uses: actions/download-artifact@v6
+        with:
+          pattern: coverage-logs-*
+          path: unit-artifacts
+      - name: Download the native results
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        uses: actions/download-artifact@v6
+        with:
+          pattern: unit-results-*
+          path: unit-artifacts
+      - name: Report the run
+        if: ${{ !cancelled() }}
+        run: node scripts/report-unit-run.mjs report --artifacts unit-artifacts
+      - name: Close the cancelled run
+        if: ${{ cancelled() }}
+        run: node scripts/report-unit-run.mjs cancel

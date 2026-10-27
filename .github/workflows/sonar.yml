@@ -110,6 +110,7 @@ jobs:
           - { name: crm, filters: './portals/crm' }
           - { name: partners-app, filters: './portals/partners-app' }
           - { name: tech, filters: './portals/tech' }
+          - { name: tests, filters: './portals/tests' }
           - { name: finance, filters: './portals/finance' }
           - { name: marketing, filters: './portals/marketing' }
           - { name: onboarding, filters: './portals/onboarding' }
@@ -129,7 +130,7 @@ jobs:
       # only after the ratchet passes, so a red result is never replayed.
       - name: Coverage key
         id: key
-        run: echo "hash=$(node scripts/ci-affected.mjs hash ${{ matrix.group.filters }} scripts/ci-coverage-run.sh .github/workflows/sonar.yml)" >> "$GITHUB_OUTPUT"
+        run: echo "hash=$(node scripts/ci-affected.mjs hash ${{ matrix.group.filters }} scripts/ci-coverage-run.sh scripts/lib/unit-results.mjs .github/workflows/sonar.yml)" >> "$GITHUB_OUTPUT"
       - name: Reuse coverage of unchanged code
         id: reuse
         uses: actions/cache/restore@v5
@@ -138,6 +139,14 @@ jobs:
             lcov-out
             test-logs
           key: coverage-${{ matrix.group.name }}-${{ steps.key.outputs.hash }}
+      # For the Tests console: the per-workspace results ci-coverage-run.sh
+      # writes to test-logs/results ride along in the cache, so a REUSED group
+      # still hands up its (identical) results — this marker is what tells the
+      # reporter they were replayed rather than run.
+      - name: Mark the group for the Tests console
+        run: |
+          mkdir -p test-logs/results
+          printf '{"group":"%s","reused":%s}\n' "${{ matrix.group.name }}" "${{ steps.reuse.outputs.cache-hit == 'true' }}" > test-logs/results/_group.json
       - uses: pnpm/action-setup@v4.4.0
         if: steps.reuse.outputs.cache-hit != 'true'
       - uses: actions/setup-node@v5
@@ -213,7 +222,7 @@ jobs:
       # its codegen reads the server's schema, so both trees are in the key.
       - name: Coverage key
         id: key
-        run: echo "hash=$(node scripts/ci-affected.mjs hash app/mobile-app packages server .github/workflows/sonar.yml)" >> "$GITHUB_OUTPUT"
+        run: echo "hash=$(node scripts/ci-affected.mjs hash app/mobile-app packages server scripts/lib/unit-results.mjs .github/workflows/sonar.yml)" >> "$GITHUB_OUTPUT"
       - name: Reuse coverage of unchanged code
         id: reuse
         uses: actions/cache/restore@v5
@@ -221,7 +230,13 @@ jobs:
           path: |
             app/mobile-app/coverage/lcov.info
             app/mobile-app/jest-coverage.log
+            app/mobile-app/unit-results
           key: coverage-mobile-${{ steps.key.outputs.hash }}
+      # The Tests console's marker, as in the workspace groups.
+      - name: Mark the app for the Tests console
+        run: |
+          mkdir -p app/mobile-app/unit-results
+          printf '{"group":"mobile","reused":%s}\n' "${{ steps.reuse.outputs.cache-hit == 'true' }}" > app/mobile-app/unit-results/_group.json
       - uses: actions/setup-node@v5
         if: steps.reuse.outputs.cache-hit != 'true'
         with:
@@ -253,7 +268,13 @@ jobs:
           # the same step for the same reason; the schema is read from the
           # server sources in the checkout, so no running server is needed.
           npm run codegen
-          npx jest --coverage --ci --maxWorkers=2 --workerIdleMemoryLimit=1536MB 2>&1 | tee jest-coverage.log | tail -120
+          # --json --outputFile: the per-test results for the Tests console. The
+          # human-readable report still reaches the log (jest moves it to stderr).
+          npx jest --coverage --ci --maxWorkers=2 --workerIdleMemoryLimit=1536MB --json "--outputFile=$GITHUB_WORKSPACE/app/mobile-app/unit-results/mobile.raw.json" 2>&1 | tee jest-coverage.log | tail -120
+      # Compacts that report with the app's coverage. Best-effort: never fails.
+      - name: Unit results for the Tests console
+        if: always() && steps.reuse.outputs.cache-hit != 'true'
+        run: node scripts/report-unit-run.mjs meta --dir app/mobile-app --group mobile --runner jest --raw app/mobile-app/unit-results/mobile.raw.json --out app/mobile-app/unit-results/mobile.unit.json
       - name: Coverage produced
         working-directory: app/mobile-app
         run: |
@@ -281,6 +302,13 @@ jobs:
           name: testlog-mobile
           path: app/mobile-app/jest-coverage.log
           if-no-files-found: warn
+      - name: Upload mobile unit results
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: unit-results-mobile
+          path: app/mobile-app/unit-results
+          if-no-files-found: warn
       - uses: actions/upload-artifact@v6
         with:
           name: mobile-lcov
@@ -297,9 +325,13 @@ jobs:
         if: steps.reuse.outputs.cache-hit != 'true' && hashFiles('app/mobile-app/coverage/lcov.info') != ''
         uses: actions/cache/save@v5
         with:
+          # The same list as the restore above — the cache version is a hash of
+          # it, so a list that differs here is never found again. unit-results
+          # always exists (the marker step creates it).
           path: |
             app/mobile-app/coverage/lcov.info
             app/mobile-app/jest-coverage.log
+            app/mobile-app/unit-results
           key: coverage-mobile-${{ steps.key.outputs.hash }}
 
   # ---------------------------------------------------------------------------
@@ -539,3 +571,85 @@ jobs:
             echo "::error::A coverage job failed — open its 'Test failure ratchet' step for the test files that newly fail."
             exit 1
           fi
+
+  # ---------------------------------------------------------------------------
+  # The Tests console (tests.duncit.com) — Unit Testing.
+  #
+  # REPORTING ONLY, and never gating: both jobs are continue-on-error, nothing
+  # needs them, and scripts/report-unit-run.mjs exits 0 whatever happens. They
+  # record what the coverage jobs above already did: the claim opens the run's
+  # row while the suites go, and the report sends every workspace, test file
+  # and test case once they are done. A REUSED group sends the results cached
+  # with its coverage, marked as replayed.
+  #
+  # Pushes to staging report to the staging server and pushes to main to
+  # production — each server signs its own tokens, so the secret follows the
+  # server. A PR's branch has no console to report to.
+  # ---------------------------------------------------------------------------
+  unit-claim:
+    name: Tests console — claim the unit run
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    continue-on-error: true
+    if: ${{ github.event_name != 'pull_request' && (github.ref_name == 'staging' || github.ref_name == 'main') && !inputs.skip_coverage }}
+    env:
+      UNIT_WORKFLOW: SONAR
+      DUNCIT_GRAPHQL_URL: ${{ github.ref_name == 'main' && 'https://server.duncit.com/graphql' || 'https://staging.server.duncit.com/graphql' }}
+      DUNCIT_RELEASE_TOKEN: ${{ github.ref_name == 'main' && secrets.DUNCIT_RELEASE_TOKEN || secrets.DUNCIT_RELEASE_TOKEN_STAGING }}
+      DUNCIT_RELEASE_EMAIL: ${{ secrets.DUNCIT_RELEASE_EMAIL }}
+      DUNCIT_RELEASE_PASSWORD: ${{ secrets.DUNCIT_RELEASE_PASSWORD }}
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          sparse-checkout: scripts
+      - name: Claim the run
+        run: node scripts/report-unit-run.mjs start
+
+  unit-report:
+    name: Tests console — report the unit run
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    continue-on-error: true
+    needs: [unit-claim, coverage-workspaces, coverage-mobile]
+    # Runs after the coverage jobs whatever they concluded, and — only when this
+    # run had claimed a row — after a cancellation too, to close that row.
+    if: ${{ (!cancelled() || needs.unit-claim.result == 'success') && github.event_name != 'pull_request' && (github.ref_name == 'staging' || github.ref_name == 'main') && !inputs.skip_coverage }}
+    env:
+      UNIT_WORKFLOW: SONAR
+      DUNCIT_GRAPHQL_URL: ${{ github.ref_name == 'main' && 'https://server.duncit.com/graphql' || 'https://staging.server.duncit.com/graphql' }}
+      DUNCIT_RELEASE_TOKEN: ${{ github.ref_name == 'main' && secrets.DUNCIT_RELEASE_TOKEN || secrets.DUNCIT_RELEASE_TOKEN_STAGING }}
+      DUNCIT_RELEASE_EMAIL: ${{ secrets.DUNCIT_RELEASE_EMAIL }}
+      DUNCIT_RELEASE_PASSWORD: ${{ secrets.DUNCIT_RELEASE_PASSWORD }}
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    steps:
+      # The whole tree: the report lists every test file in the repo.
+      - uses: actions/checkout@v5
+        if: ${{ always() }}
+      - uses: actions/setup-node@v5
+        if: ${{ always() }}
+        with:
+          node-version: 24
+          package-manager-cache: false
+      # One directory per artifact (no merge): each group's results sit beside
+      # its own _group.json marker.
+      - name: Download the workspace results
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        uses: actions/download-artifact@v6
+        with:
+          pattern: testlog-*
+          path: unit-artifacts
+      - name: Download the mobile results
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        uses: actions/download-artifact@v6
+        with:
+          pattern: unit-results-*
+          path: unit-artifacts
+      - name: Report the run
+        if: ${{ !cancelled() }}
+        run: node scripts/report-unit-run.mjs report --artifacts unit-artifacts
+      - name: Close the cancelled run
+        if: ${{ cancelled() }}
+        run: node scripts/report-unit-run.mjs cancel

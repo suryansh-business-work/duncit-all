@@ -1,5 +1,5 @@
 import type { Translate } from '@duncit/shell';
-import { formatDateTime } from '../../../server/format';
+import { formatDateTime } from '../../../../../../tech/src/pages/server/format';
 import type { StressRun, StressSample, StressSummary, StressVerdict, StressVerdictItem } from '../../queries';
 import {
   environmentLabel,

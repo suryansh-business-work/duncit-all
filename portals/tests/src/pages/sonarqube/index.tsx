@@ -5,7 +5,7 @@
 import EntityAnalyticsPage from '../../../../analytics/src/pages/entity-analytics/EntityAnalyticsPage';
 import { SONARQUBE_PAGE } from '../../../../analytics/src/pages/entity-analytics/pages';
 
-/** Security → SonarQube: quality gate, issues, ratings and coverage for the repository. */
+/** Code Quality → SonarQube: quality gate, issues, ratings and coverage for the repository. */
 export default function SonarqubePage() {
   return <EntityAnalyticsPage page={SONARQUBE_PAGE} />;
 }

@@ -1,11 +1,11 @@
 import { Stack } from '@mui/material';
 import { PageHeader } from '@duncit/ui';
 import { useTranslation } from '@duncit/app-settings';
-import EnvVariablesTab from '../environment/EnvVariablesTab';
-import EnvAccessGate from '../environment/access-gate';
+import EnvVariablesTab from '../../../../tech/src/pages/environment/EnvVariablesTab';
+import EnvAccessGate from '../../../../tech/src/pages/environment/access-gate';
 
 /**
- * Security → SonarQube Settings: the SonarQube category of Environment
+ * Code Quality → SonarQube Settings: the SonarQube category of Environment
  * Variables on a page of its own — the server URL, user token and project key
  * the SonarQube dashboard reads with, with the same add / edit / test drawer.
  */

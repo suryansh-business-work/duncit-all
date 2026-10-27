@@ -4,7 +4,7 @@ import { Alert, Card, CardContent, Stack, Typography } from '@mui/material';
 import { PageHeader, QueryGuard } from '@duncit/ui';
 import { useTranslation } from '@duncit/shell';
 import { notifyError, notifySuccess } from '@duncit/dialogs';
-import { formatDateTime } from '../../server/format';
+import { formatDateTime } from '../../../../../tech/src/pages/server/format';
 import { GraphqlMonitorSettingsForm, type GraphqlMonitorSettingsValues } from './graphql-monitor-settings';
 import { GRAPHQL_MONITOR_SETTINGS, UPDATE_GRAPHQL_MONITOR_SETTINGS, type MonitorSettings } from '../queries';
 

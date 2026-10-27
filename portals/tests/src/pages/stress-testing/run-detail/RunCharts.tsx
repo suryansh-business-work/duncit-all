@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
-import { Box } from '@mui/material';
 import { useTranslation } from '@duncit/shell';
-import TimeSeriesChart, { type ChartSeries } from './charts/TimeSeriesChart';
+import type { ChartSeries } from './charts/TimeSeriesChart';
+import TimeSeriesChartGrid from './charts/TimeSeriesChartGrid';
 import type { StressSample } from '../queries';
 import { formatCount, formatMs, formatPct, formatRps, formatSeconds } from '../labels';
 
@@ -98,19 +98,5 @@ export default function RunCharts({ samples, startedAt }: Readonly<Props>) {
     ];
   }, [samples, t]);
 
-  return (
-    <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', lg: '1fr 1fr' } }}>
-      {charts.map((chart) => (
-        <TimeSeriesChart
-          key={chart.id}
-          title={chart.title}
-          subtitle={chart.subtitle}
-          labels={labels}
-          series={chart.series}
-          format={chart.format}
-          emptyText={emptyText}
-        />
-      ))}
-    </Box>
-  );
+  return <TimeSeriesChartGrid charts={charts} labels={labels} emptyText={emptyText} />;
 }

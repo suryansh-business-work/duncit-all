@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { Box, Chip, Stack, Typography } from '@mui/material';
 import { useTranslation } from '@duncit/shell';
-import { formatDateTime } from '../../server/format';
+import { formatDateTime } from '../../../../../tech/src/pages/server/format';
 import { SectionCard } from '@duncit/ui';
 import type { StressEvent } from '../queries';
 

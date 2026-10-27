@@ -46,4 +46,4 @@ export interface LiteSsrModule {
 }
 
 /** JSON for an inline `<script>`: every `<` escaped, so a value carrying `</script>` cannot close the tag. */
-export const serializeState = (state: LiteSsrState): string => JSON.stringify(state).replaceAll('<', String.raw`<`);
+export const serializeState = (state: LiteSsrState): string => JSON.stringify(state).replaceAll('<', String.raw`\u003c`);

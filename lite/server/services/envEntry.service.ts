@@ -102,7 +102,9 @@ export function toPublicEnvEntry(doc: any) {
     description: doc.description ?? '',
     is_default: Boolean(doc.is_default),
     is_active: doc.is_active !== false,
-    config: CATEGORY_FIELDS[category].map((f) => ({ key: f.name, value: config[f.name] === undefined ? '' : String(config[f.name]) })),
+    // A secret never leaves the server: it reads as blank, `secrets` says whether one is stored,
+    // and saving a blank keeps it (mergeConfig).
+    config: CATEGORY_FIELDS[category].map((f) => ({ key: f.name, value: f.secret || config[f.name] === undefined ? '' : String(config[f.name]) })),
     secrets: CATEGORY_FIELDS[category].filter((f) => f.secret).map((f) => ({ key: `has_${f.name}`, present: Boolean(config[f.name]) })),
     last_tested_at: iso(doc.last_tested_at),
     last_test_ok: doc.last_test_ok ?? null,

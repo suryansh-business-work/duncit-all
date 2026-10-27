@@ -34,6 +34,7 @@ import { VENUE_PRICING_BUNDLE } from './bundles/venue-pricing';
 import { GIG_JOBS_BUNDLE } from './bundles/gig-jobs';
 import { MCP_BUNDLE } from './bundles/mcp';
 import { LOYALTY_BUNDLE } from './bundles/loyalty';
+import { HR_BUNDLE } from './bundles/hr';
 import { POD_REQUESTS_BUNDLE } from './bundles/pod-requests';
 import { CLUB_ADMIN_BUNDLE } from './bundles/club-admin';
 import { FULFILMENT_BUNDLE } from './bundles/fulfilment';
@@ -139,6 +140,7 @@ export {
   GIG_JOBS_BUNDLE,
   MCP_BUNDLE,
   LOYALTY_BUNDLE,
+  HR_BUNDLE,
   POD_REQUESTS_BUNDLE,
   CLUB_ADMIN_BUNDLE,
   FULFILMENT_BUNDLE,
@@ -166,6 +168,7 @@ const financeBranch = (key: string) => catalogueBranch(catalogueBranch(FINANCE_B
  */
 export const LOYALTY_CONSOLE_CATALOGUE: NestedCatalogue = {
   ...LOYALTY_BUNDLE,
+  ...HR_BUNDLE,
   finance: {
     duncitCoin: financeBranch('duncitCoin'),
     giftCards: financeBranch('giftCards'),
@@ -210,6 +213,7 @@ export const SURFACE_BUNDLES: Record<string, NestedCatalogue> = {
   gigJobs: GIG_JOBS_BUNDLE,
   mcp: MCP_BUNDLE,
   loyalty: LOYALTY_BUNDLE,
+  hr: HR_BUNDLE,
   podRequests: POD_REQUESTS_BUNDLE,
   clubAdmin: CLUB_ADMIN_BUNDLE,
   fulfilment: FULFILMENT_BUNDLE,

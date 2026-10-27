@@ -23,7 +23,11 @@ import {
  * are typed, the way the card prints them. RN twin of mWeb's
  * gift-card-redeem-page/physical-card-form — same rules, same copy.
  */
-export function PhysicalGiftCardForm({ saving, errorMessage, onSubmit }: Readonly<PhysicalGiftCardFormProps>) {
+export function PhysicalGiftCardForm({
+  saving,
+  errorMessage,
+  onSubmit,
+}: Readonly<PhysicalGiftCardFormProps>) {
   const { t } = useTranslation();
   const schema = useMemo(() => makePhysicalGiftCardSchema(t), [t]);
   const { control, handleSubmit } = useForm<PhysicalGiftCardValues, any, PhysicalGiftCardValues>({

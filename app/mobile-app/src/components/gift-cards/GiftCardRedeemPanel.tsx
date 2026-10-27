@@ -58,7 +58,9 @@ export function GiftCardRedeemPanel({ card, currency }: Readonly<Props>) {
   };
 
   if (result) {
-    return <GiftCardRedeemSuccess coinsAdded={result.coins_added} coinBalance={result.coin_balance} />;
+    return (
+      <GiftCardRedeemSuccess coinsAdded={result.coins_added} coinBalance={result.coin_balance} />
+    );
   }
 
   let footer;

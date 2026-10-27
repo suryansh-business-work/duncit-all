@@ -13,7 +13,7 @@ export interface EventTime {
   time: string;
   /** Start – end; the end's date is added when it falls on another day. */
   range: string;
-  /** "Today", "Tomorrow", or the weekday — for timeline headings. */
+  /** "Today", "Yesterday", or else the start date (the same text as `date`). */
   day: string;
   sameDay: boolean;
 }
@@ -24,7 +24,7 @@ export interface EventTime {
  * instants into words, so no screen hand-writes a format.
  */
 export function useEventTime(event: Timed): EventTime {
-  const { formatDate, formatTime, dayLabel, dayKey } = useDateFormat({ timeZone: event.timezone || undefined });
+  const { formatDate, formatTime, dayLabel, dayKey } = useDateFormat({ timeZone: event.timezone || undefined, timeZoneAware: true });
   const sameDay = dayKey(event.start_at) === dayKey(event.end_at);
   const endText = sameDay ? formatTime(event.end_at) : `${formatDate(event.end_at)} ${formatTime(event.end_at)}`;
   return {

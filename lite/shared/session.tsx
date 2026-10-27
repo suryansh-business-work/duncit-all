@@ -38,17 +38,19 @@ export function LiteSessionProvider({ tokenKey, initialToken, cookieName, childr
   const { data, loading, error, refetch } = useQuery(LITE_ME, { skip: !token, fetchPolicy: 'cache-and-network' });
   const me = token ? ((data as { liteMe?: LiteMe | null } | undefined)?.liteMe ?? null) : null;
 
-  // After the first paint: adopt a stored token the server did not render
-  // with (a session from before the cookie existed), and keep the cookie in step.
-  // Once, on mount: later changes go through completeSignIn / signOut.
+  // After the first paint, storage is the truth: adopt a stored token the
+  // server did not render with (a session from before the cookie existed),
+  // drop a page-load token signed out of since (a remount must not revive it),
+  // and keep the cookie in step. Once per mount: later changes go through
+  // completeSignIn / signOut.
   const adopted = useRef(false);
   useEffect(() => {
     if (adopted.current || !cookieName) return;
     adopted.current = true;
     const stored = readStored(tokenKey);
-    if (stored && stored !== token) setToken(stored);
-    const current = stored ?? token;
-    if (current && readCookie(cookieName) !== current) writeCookie(cookieName, current);
+    if (stored !== token) setToken(stored);
+    if (stored && readCookie(cookieName) !== stored) writeCookie(cookieName, stored);
+    if (!stored && readCookie(cookieName)) removeCookie(cookieName);
   }, [cookieName, tokenKey, token]);
 
   const forget = useCallback(() => {

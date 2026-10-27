@@ -88,10 +88,14 @@ export async function checkSmsCode(reqId: string, code: string): Promise<boolean
 export async function sendEmailCode(email: string, purpose: 'SIGN_IN' | 'LINK', userId?: unknown) {
   const smtp = await emailService.smtp();
   const code = smtp ? oneTimeCode() : env.otpTestCode;
-  await otpChallenge.open({ email }, purpose, { via: 'LITE', code_hash: sha256(code), user_id: userId ?? null });
+  const challenge = await otpChallenge.open({ email }, purpose, { via: 'LITE', code_hash: sha256(code), user_id: userId ?? null });
   if (smtp) {
     const outcome = await emailService.send({ to: email, templateKey: 'sign_in_code', vars: { code, minutes: CODE_TTL_MINUTES } });
-    if (outcome.status === 'FAILED') throw upstreamError(`We could not email the code: ${outcome.message}`);
+    if (outcome.status === 'FAILED') {
+      // Nothing arrived, so the person may ask again at once.
+      await otpChallenge.discard(challenge);
+      throw upstreamError(`We could not email the code: ${outcome.message}`);
+    }
   } else {
     log.warn('auth', 'sendEmailCode', { msg: 'no mailbox configured; stub code returned', purpose });
   }

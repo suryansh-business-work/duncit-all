@@ -1,7 +1,9 @@
 import { useParams } from 'react-router';
 import { useQuery } from '@apollo/client/react';
 import { Box, Card, CardContent, Stack } from '@mui/material';
+import { notifyError } from '@duncit/dialogs';
 import { PageHeader, QueryGuard } from '@duncit/ui';
+import { parseApiError } from '@duncit/utils';
 import { eventWhen } from '../../../shared/format';
 import { useWebT } from '../../../shared/i18n';
 import { EventCard } from '../../components/events/EventCard';
@@ -47,7 +49,7 @@ function TicketLoader({ id }: Readonly<{ id: string }>) {
   usePageTitle(ticket ? t('liteWeb.ticket.title', { vars: { event: ticket.event.title } }) : '');
   if (!loading && !error && !ticket) return <NotFoundPage />;
   const reload = () => {
-    refetch().catch(() => undefined);
+    refetch().catch((failure: unknown) => notifyError(parseApiError(failure)));
   };
   return (
     <QueryGuard loading={loading && !ticket} error={error} loadingLabel={t('lite.common.loading')}>

@@ -20,13 +20,26 @@ interface PlaceSearchProps {
 export function PlaceSearch({ apiKey, onPick, onUnavailable }: Readonly<PlaceSearchProps>) {
   const { t } = useWebT();
   const [input, setInput] = useState('');
+  /** What the host typed: picking a suggestion also changes the input, and must not start another (billed) search. */
+  const [query, setQuery] = useState('');
   const [options, setOptions] = useState<PlaceSuggestion[]>([]);
   const [loading, setLoading] = useState(false);
   const session = useRef<unknown>(null);
   const places = useMemo(() => loadPlaces(apiKey), [apiKey]);
 
+  // A bad key or a blocked script shows at once, not on the first search.
   useEffect(() => {
-    if (input.trim().length < MIN_CHARS) {
+    let live = true;
+    places.catch(() => {
+      if (live) onUnavailable();
+    });
+    return () => {
+      live = false;
+    };
+  }, [places, onUnavailable]);
+
+  useEffect(() => {
+    if (query.trim().length < MIN_CHARS) {
       setOptions([]);
       return undefined;
     }
@@ -36,7 +49,7 @@ export function PlaceSearch({ apiKey, onPick, onUnavailable }: Readonly<PlaceSea
       places
         .then(async (lib) => {
           session.current ??= new lib.AutocompleteSessionToken();
-          const found = await suggestPlaces(lib, input, session.current);
+          const found = await suggestPlaces(lib, query, session.current);
           if (live) setOptions(found);
         })
         .catch(() => {
@@ -50,7 +63,7 @@ export function PlaceSearch({ apiKey, onPick, onUnavailable }: Readonly<PlaceSea
       live = false;
       clearTimeout(timer);
     };
-  }, [input, places, onUnavailable]);
+  }, [query, places, onUnavailable]);
 
   const pick = async (suggestion: PlaceSuggestion | null) => {
     if (!suggestion) return;
@@ -70,7 +83,10 @@ export function PlaceSearch({ apiKey, onPick, onUnavailable }: Readonly<PlaceSea
       getOptionLabel={(option) => option.main}
       isOptionEqualToValue={(a, b) => a.placeId === b.placeId}
       inputValue={input}
-      onInputChange={(_event, value) => setInput(value)}
+      onInputChange={(_event, value, reason) => {
+        setInput(value);
+        if (reason === 'input' || reason === 'clear') setQuery(value);
+      }}
       onChange={(_event, value) => {
         pick(value).catch(() => notifyError(t('liteWeb.eventForm.placeFailed')));
       }}

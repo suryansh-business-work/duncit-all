@@ -78,7 +78,7 @@ const fire = (promise: Promise<unknown>, what: string) => {
 function reminderLeadInWords(hoursBefore: number): string {
   if (hoursBefore >= 24) {
     const days = Math.round(hoursBefore / 24);
-    return `in ${days} day${hoursBefore >= 48 ? 's' : ''}`;
+    return `in ${days} day${days === 1 ? '' : 's'}`;
   }
   return `in ${hoursBefore} hour${hoursBefore === 1 ? '' : 's'}`;
 }

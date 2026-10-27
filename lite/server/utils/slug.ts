@@ -7,8 +7,9 @@ export function slugify(value: string): string {
     .replaceAll(/[̀-ͯ]/g, '')
     .toLowerCase()
     .replaceAll(/[^a-z0-9]+/g, '-')
-    .replaceAll(/^-|-$/g, '')
-    .slice(0, 60);
+    // Cut first, then trim: a cut can land just after a '-'.
+    .slice(0, 60)
+    .replaceAll(/^-|-$/g, '');
 }
 
 /** A short random suffix so two events with the same title get different links. */

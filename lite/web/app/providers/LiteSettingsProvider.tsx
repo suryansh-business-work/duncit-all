@@ -11,12 +11,14 @@ const SettingsContext = createContext<LitePublicSettings | null>(null);
 /**
  * Loads the public settings once and holds every page until they arrive: the
  * site name, the Google client id and the support address decide how the
- * shell renders.
+ * shell renders. Sign-in and sign-out reset the Apollo store, which refetches
+ * these with no data for a moment; the last settings carry on meanwhile, so
+ * the app below (and the session in it) is never torn down and remounted.
  */
 export function LiteSettingsProvider({ children }: Readonly<{ children: ReactNode }>) {
   const { t } = useWebT();
-  const { data, error } = useQuery<{ liteSettings: LitePublicSettings }>(LITE_SETTINGS, { fetchPolicy: 'cache-first' });
-  const settings = data?.liteSettings;
+  const { data, previousData, error } = useQuery<{ liteSettings: LitePublicSettings }>(LITE_SETTINGS, { fetchPolicy: 'cache-first' });
+  const settings = data?.liteSettings ?? previousData?.liteSettings;
   if (settings) return <SettingsContext.Provider value={settings}>{children}</SettingsContext.Provider>;
   if (error) {
     return (

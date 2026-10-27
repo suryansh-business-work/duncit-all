@@ -4,7 +4,7 @@ import { useEventTime } from '../../components/events/useEventTime';
 import { TimelineCard } from './TimelineCard';
 import type { MyEvent } from './useMyEvents';
 
-/** The day a group starts on, as the console formats a date, with its weekday underneath. */
+/** The day a group starts on, as the console formats a date, with Today / Yesterday underneath when it is one. */
 function DayHeading({ first }: Readonly<{ first: MyEvent['event'] }>) {
   const when = useEventTime(first);
   return (
@@ -12,9 +12,11 @@ function DayHeading({ first }: Readonly<{ first: MyEvent['event'] }>) {
       <Typography variant="body1" component="h2" sx={{ fontWeight: 700 }}>
         {when.date}
       </Typography>
-      <Typography variant="body2" color="text.secondary">
-        {when.day}
-      </Typography>
+      {when.day === when.date ? null : (
+        <Typography variant="body2" color="text.secondary">
+          {when.day}
+        </Typography>
+      )}
     </Stack>
   );
 }

@@ -1,3 +1,8 @@
+import { TAB_PARAM } from '@duncit/tabs';
+
+/** Opens a page on one of its tabs, under the key DuncitTabs reads the selection from. */
+const tabQuery = (tab?: string): string => (tab ? `?${TAB_PARAM}=${encodeURIComponent(tab)}` : '');
+
 /** Every route the web app links to, in one place. */
 export const paths = {
   home: '/',
@@ -9,7 +14,7 @@ export const paths = {
   category: (slug: string) => `/category/${slug}`,
   event: (slug: string) => `/e/${slug}`,
   eventEdit: (slug: string) => `/e/${slug}/edit`,
-  eventManage: (slug: string, tab?: string) => `/e/${slug}/manage${tab ? `?tab=${tab}` : ''}`,
+  eventManage: (slug: string, tab?: string) => `/e/${slug}/manage${tabQuery(tab)}`,
   /** The door scanner a host opens on their phone to check guests in. */
   eventScan: (slug: string) => `/e/${slug}/scan`,
   create: '/create',
@@ -22,7 +27,7 @@ export const paths = {
   calendar: (slug: string) => `/cal/${slug}`,
   user: (handle: string) => `/u/${handle}`,
   profile: '/profile',
-  settings: (tab?: string) => `/settings${tab ? `?tab=${tab}` : ''}`,
+  settings: (tab?: string) => `/settings${tabQuery(tab)}`,
   signIn: '/signin',
   ics: {
     event: (slug: string) => `/ics/event/${slug}.ics`,

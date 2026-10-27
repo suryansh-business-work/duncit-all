@@ -49,6 +49,11 @@ export const otpChallenge = {
     return { challenge, code };
   },
 
+  /** Drop a challenge whose code never reached the person, so it neither holds the resend window nor waits to be guessed. */
+  async discard(challenge: LiteOtpDoc): Promise<void> {
+    await LiteOtpModel.deleteOne({ _id: challenge._id });
+  },
+
   /** Spend a challenge once; a second, parallel use of the same code is refused. */
   async consume(challenge: LiteOtpDoc): Promise<void> {
     const res = await LiteOtpModel.updateOne({ _id: challenge._id, consumed_at: null }, { $set: { consumed_at: new Date() } });

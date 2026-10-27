@@ -2,7 +2,7 @@ import { defaultConfig } from '@tamagui/config/v4';
 import { Platform } from 'react-native';
 import { createTamagui } from 'tamagui';
 import { dark, light, typography, type ModeColors } from '@duncit/auth-tokens';
-import { pressThemeKeys } from '@duncit/buttons-native';
+import { pressThemeKeys, SOFT_ALPHA, withAlpha } from '@duncit/buttons-native';
 import type { ThemePalettes } from '@duncit/utils';
 
 /**
@@ -61,6 +61,8 @@ const brandTheme = (m: ModeColors, cardBorder: string) => ({
   success: m.success,
   warning: m.warning,
   info: m.info,
+  // The blue info tint, at the same alpha as the press system's other soft fills.
+  infoSoft: withAlpha(m.info, SOFT_ALPHA),
   // Text on a filled danger/success colour (dark ink in dark mode).
   onDanger: m.onSemantic,
   onSuccess: m.onSemantic,

@@ -13,10 +13,18 @@ interface Props {
   seats: number;
   /** Show only the first few: the Pod Details card. The sheet shows them all. */
   limit?: number;
+  /**
+   * The viewer already holds this pod. Rentals only ride on a booking's own
+   * checkout, and the server refuses a second one (ALREADY_BOOKED), so the rows
+   * stay a listing with the picker greyed out and a note points to the venue.
+   */
+  joined?: boolean;
 }
 
+const NONE_PICKED: Record<string, number> = {};
+
 /** What a guest can rent for this pod, with their picks and the running rental total. */
-export default function PodRentList({ rentals, picks, seats, limit }: Readonly<Props>) {
+export default function PodRentList({ rentals, picks, seats, limit, joined = false }: Readonly<Props>) {
   const { t } = useTranslation();
   const { catalogue, loading, error, refetch } = rentals;
   if (loading) return <Loader size={20} />;
@@ -42,9 +50,12 @@ export default function PodRentList({ rentals, picks, seats, limit }: Readonly<P
       </Typography>
     );
   }
-  const closedKey = rentalClosedKey(catalogue);
+  // A booked viewer's note explains the rows on its own, and picks left over
+  // from before they joined can no longer be paid for.
+  const closedKey = joined ? null : rentalClosedKey(catalogue);
+  const chosen = joined ? NONE_PICKED : picks.picks;
   const shown = limit ? catalogue.items.slice(0, limit) : catalogue.items;
-  const totals = rentalSelectionTotals(catalogue.items, picks.picks, catalogue.hours);
+  const totals = rentalSelectionTotals(catalogue.items, chosen, catalogue.hours);
   return (
     <Stack spacing={0.9} data-testid="pod-rent-list">
       {closedKey && (
@@ -57,9 +68,10 @@ export default function PodRentList({ rentals, picks, seats, limit }: Readonly<P
           key={item.id}
           item={item}
           catalogue={catalogue}
-          quantity={picks.picks[item.id] ?? 0}
+          quantity={chosen[item.id] ?? 0}
           max={rentalMaxQuantity(item, seats)}
           readOnly={!catalogue.open}
+          disabled={joined}
           onQuantity={picks.setQuantity}
         />
       ))}
@@ -71,6 +83,11 @@ export default function PodRentList({ rentals, picks, seats, limit }: Readonly<P
           )}
           <SummaryRow label={t('venueRentals.guest.total')} amount={rentalMoney(catalogue.currency_symbol, totals.total)} testId="pod-rent-grand-total" strong />
         </Stack>
+      )}
+      {joined && (
+        <Alert severity="info" data-testid="pod-rent-joined">
+          {t('venueRentals.guest.joinedNotice')}
+        </Alert>
       )}
     </Stack>
   );

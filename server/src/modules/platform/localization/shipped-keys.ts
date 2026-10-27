@@ -23235,6 +23235,7 @@ export const SHIPPED_CLIENT_KEYS: Record<string, string> = {
   "venueRentals.guest.historyTitle": "My Rented Items",
   "venueRentals.guest.increase": "Add one {name}",
   "venueRentals.guest.itemLine": "{name} × {quantity}",
+  "venueRentals.guest.joinedNotice": "Pod Rent isn’t available once you’ve joined this pod. If you still need to rent something, please contact the venue directly.",
   "venueRentals.guest.left": "{count} left",
   "venueRentals.guest.loadError": "The rented items could not load",
   "venueRentals.guest.loadMore": "Load more",

@@ -17,11 +17,13 @@ interface Props {
   max: number;
   /** Renting closed for the pod: the row is a listing only. */
   readOnly: boolean;
+  /** Renting is open, but not to this viewer: the picker shows, greyed out. */
+  disabled?: boolean;
   onQuantity: (itemId: string, quantity: number) => void;
 }
 
 /** One thing the venue rents: photo, name, rate per slot or hour, deposit, what is left, and the picker. */
-export default function RentalItemRow({ item, catalogue, quantity, max, readOnly, onQuantity }: Readonly<Props>) {
+export default function RentalItemRow({ item, catalogue, quantity, max, readOnly, disabled = false, onQuantity }: Readonly<Props>) {
   const { t } = useTranslation();
   const currency = catalogue.currency_symbol;
   const labels = useCartControlLabels()(item.name);
@@ -55,10 +57,11 @@ export default function RentalItemRow({ item, catalogue, quantity, max, readOnly
               quantity={quantity}
               max={max}
               labels={labels}
+              disabled={disabled}
               onChange={(next) => onQuantity(item.id, next)}
               testIdPrefix={`pod-rent-${item.id}`}
             />
-            {capped && (
+            {capped && !disabled && (
               <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mt: 0.5 }} data-testid={`pod-rent-max-${item.id}`}>
                 {t('venueRentals.guest.maxPerBooking', { vars: { count: max } })}
               </Typography>

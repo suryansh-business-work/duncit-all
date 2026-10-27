@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { EMAIL } from '@duncit/regex';
 import type { Translate } from '@duncit/forms/schemas';
 import { SETTING_BOUNDS, countIssue } from '../../../../shared/limits';
+import { isTimeZone, timeZoneOptions } from '../../../../shared/timezones';
 import { countRule } from '../../../components/countRule';
 import type { LiteAdminSettings } from '../../../graphql/admin';
 
@@ -26,9 +27,8 @@ export interface SettingsFormValues {
   sign_in_with_phone: boolean;
 }
 
-/** Every IANA zone the browser knows, read once. */
-export const TIME_ZONES: readonly string[] = Intl.supportedValuesOf('timeZone');
-const TIME_ZONE_SET: ReadonlySet<string> = new Set(TIME_ZONES);
+/** Every zone the browser lists, read once; the picker adds the saved one when the browser knows it by another name. */
+export const TIME_ZONES: readonly string[] = timeZoneOptions();
 
 const HOURS_LIST = /^\d+(\s*,\s*\d+)*$/;
 const CURRENCY = /^[A-Z]{3}$/;
@@ -99,7 +99,7 @@ export const makeSettingsSchema = (t: Translate) => {
   return z.object({
     site_name: z.string().trim().min(1, required(siteName)).max(80, max(siteName, 80)),
     support_email: z.string().trim().toLowerCase().min(1, required(t('litePortal.settings.supportEmail'))).email(t('litePortal.validation.email')),
-    default_timezone: z.string().refine((zone) => TIME_ZONE_SET.has(zone), t('litePortal.validation.timezone')),
+    default_timezone: z.string().refine(isTimeZone, t('litePortal.validation.timezone')),
     date_format: z.string().trim().min(1, required(dateFormat)).max(40, max(dateFormat, 40)),
     time_format: z.string().trim().min(1, required(timeFormat)).max(40, max(timeFormat, 40)),
     currency: z.string().trim().toUpperCase().regex(CURRENCY, t('litePortal.settings.currencyHint')),

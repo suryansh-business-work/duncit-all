@@ -1,21 +1,13 @@
 import { useMemo } from 'react';
-import { Controller, useFormContext } from 'react-hook-form';
+import { Controller, useFormContext, useWatch } from 'react-hook-form';
 import { Autocomplete, Stack, TextField } from '@mui/material';
 import ScheduleOutlinedIcon from '@mui/icons-material/ScheduleOutlined';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { deviceTimeZone } from '../../../../shared/format';
 import { useWebT } from '../../../../shared/i18n';
+import { timeZoneOptions } from '../../../../shared/timezones';
 import type { EventFormValues } from '../event.types';
 import { FieldPanel } from './FieldPanel';
-
-/** Every IANA zone the browser knows; the device's own when it cannot list them. */
-export function timeZones(): string[] {
-  try {
-    return Intl.supportedValuesOf('timeZone');
-  } catch {
-    return [deviceTimeZone()];
-  }
-}
 
 function DateTimeField({ name, label, testId }: Readonly<{ name: 'start_at' | 'end_at'; label: string; testId: string }>) {
   const { control } = useFormContext<EventFormValues>();
@@ -39,7 +31,8 @@ function DateTimeField({ name, label, testId }: Readonly<{ name: 'start_at' | 'e
 export function WhenBox() {
   const { t } = useWebT();
   const { control } = useFormContext<EventFormValues>();
-  const zones = useMemo(timeZones, []);
+  const current = useWatch({ control, name: 'timezone' });
+  const zones = useMemo(() => timeZoneOptions([deviceTimeZone(), current]), [current]);
   return (
     <FieldPanel icon={<ScheduleOutlinedIcon fontSize="small" />} title={t('liteWeb.eventForm.when')} testId="event-when">
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>

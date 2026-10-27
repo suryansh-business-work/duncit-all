@@ -8,6 +8,8 @@ export interface LiteSessionValue {
   me: LiteMe | null;
   /** True while a stored token is being checked against the API. */
   resolving: boolean;
+  /** Why the account could not be read (API down, network), while there is no account to show; null otherwise. */
+  error: unknown;
   completeSignIn: (token: string) => Promise<void>;
   signOut: () => Promise<void>;
   refresh: () => Promise<void>;
@@ -33,7 +35,7 @@ interface Props {
 export function LiteSessionProvider({ tokenKey, initialToken, cookieName, children }: Readonly<Props>) {
   const client = useApolloClient();
   const [token, setToken] = useState<string | null>(() => (initialToken === undefined ? readStored(tokenKey) : initialToken));
-  const { data, loading, refetch } = useQuery(LITE_ME, { skip: !token, fetchPolicy: 'cache-and-network' });
+  const { data, loading, error, refetch } = useQuery(LITE_ME, { skip: !token, fetchPolicy: 'cache-and-network' });
   const me = token ? ((data as { liteMe?: LiteMe | null } | undefined)?.liteMe ?? null) : null;
 
   // After the first paint: adopt a stored token the server did not render
@@ -80,8 +82,8 @@ export function LiteSessionProvider({ tokenKey, initialToken, cookieName, childr
   }, [token, refetch]);
 
   const value = useMemo<LiteSessionValue>(
-    () => ({ signedIn: Boolean(token), me, resolving: Boolean(token) && loading && !me, completeSignIn, signOut, refresh }),
-    [token, me, loading, completeSignIn, signOut, refresh],
+    () => ({ signedIn: Boolean(token), me, resolving: Boolean(token) && loading && !me, error: token && !me ? (error ?? null) : null, completeSignIn, signOut, refresh }),
+    [token, me, loading, error, completeSignIn, signOut, refresh],
   );
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
 }

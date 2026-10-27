@@ -15,6 +15,7 @@ export const LITE_PORTAL_BUNDLE: NestedCatalogue = {
       openSite: 'Open the site',
       language: 'Language',
       resolving: 'Checking your session…',
+      sessionErrorTitle: 'We could not check your account',
     },
     nav: {
       dashboard: 'Dashboard',

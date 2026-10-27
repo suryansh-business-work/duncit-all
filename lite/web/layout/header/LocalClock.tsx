@@ -7,7 +7,9 @@ import { deviceTimeZone } from '../../../shared/format';
 export function offsetLabel(date: Date, timeZone: string): string {
   try {
     const parts = new Intl.DateTimeFormat('en', { timeZone, timeZoneName: 'shortOffset' }).formatToParts(date);
-    return parts.find((part) => part.type === 'timeZoneName')?.value ?? '';
+    const label = parts.find((part) => part.type === 'timeZoneName')?.value ?? '';
+    // ICU builds differ on a zero offset (GMT vs GMT+0); every browser shows the same.
+    return label === 'GMT+0' || label === 'GMT-0' ? 'GMT' : label;
   } catch {
     return '';
   }

@@ -2,21 +2,24 @@ import { coinService } from './coin.service';
 import { coinAdminService } from './coin.admin.service';
 import { coinSettingsService } from './coin.settings.service';
 import type { GraphQLContext } from '@context';
-import { FINANCE_READER, LOGS_READER, requireAuth, requireRole } from '@middleware/rbac';
+import {
+  LOGS_READER,
+  LOYALTY_ADMIN_READ,
+  LOYALTY_ADMIN_WRITE,
+  requireAuth,
+  requireRole,
+} from '@middleware/rbac';
 import type { TableQueryInput } from '@utils/table-query';
 
-// Coin liability is a platform-wide money figure, not a zone-scoped one, so it
-// takes the same triple every other finance read in this module tree uses. The
-// console itself lives in the Finance portal, which FINANCE_MANAGER signs into
-// (and FINANCE_READER, the analyst seat, which reads it and never writes); the
-// other two keep their read so a platform-wide number stays visible to the
-// roles that answer for it.
-const COIN_ADMIN_READ = ['SUPER_ADMIN', 'CITY_ADMIN', 'FINANCE_MANAGER', FINANCE_READER];
+// Coin liability is a platform-wide money figure, not a zone-scoped one. The
+// console lives in the Loyalty portal; the Finance seats that answered for it
+// before the move keep their read (see LOYALTY_ADMIN_READ).
+const COIN_ADMIN_READ = LOYALTY_ADMIN_READ;
 
 // Writing is a narrower door than reading. Setting a rate changes what every
 // future payment pays out, and a manual adjustment mints value out of nothing —
 // so neither is offered to the read-only audience.
-const COIN_ADMIN_WRITE = ['SUPER_ADMIN', 'FINANCE_MANAGER'];
+const COIN_ADMIN_WRITE = LOYALTY_ADMIN_WRITE;
 
 // The transaction ledger is mounted in the Logs console too; the stats,
 // settings and manual adjustments are not.

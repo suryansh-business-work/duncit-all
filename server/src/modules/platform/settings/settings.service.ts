@@ -963,8 +963,8 @@ export const settingsService = {
   },
 
   // The Duncit Coin earn rate used to be read here. It is a coin payout rule
-  // now, alongside the others, in coinSettingsService (Finance > Duncit Coin >
-  // Settings) — and split in two, since a pod join and a shop order earn at
+  // now, alongside the others, in coinSettingsService (Loyalty > Duncit Coin >
+  // Coin Settings) — and split in two, since a pod join and a shop order earn at
   // their own rates.
 
   /**

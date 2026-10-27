@@ -8,7 +8,7 @@ export type CoinTxnType = 'CREDIT' | 'DEBIT';
  * POD_FEEDBACK pays a guest for rating a pod they were marked present at — the
  * one reward earned by saying something rather than by spending anything.
  * ADMIN_GRANT / ADMIN_DEDUCT are the manual, user-specific adjustments made from
- * Finance > Duncit Coin > Settings — the only rows a human types the amount for,
+ * Loyalty > Duncit Coin > Coin Settings — the only rows a human types the amount for,
  * which is why they are the only ones that record who did it.
  * COIN_EXPIRY takes back the unspent part of a grant once its expiry date has
  * passed. Only the expiry sweep writes it (coin.expiry.ts).

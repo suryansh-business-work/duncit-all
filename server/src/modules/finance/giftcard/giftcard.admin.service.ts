@@ -4,9 +4,13 @@ import {
   type IGiftCard,
   type IGiftCardTransaction,
 } from './giftcard.model';
+import { GraphQLError } from 'graphql';
+import { Types } from 'mongoose';
 import { giftCardPub } from './giftcard.service';
 import { giftCardSettingsService } from './giftcard.settings.service';
 import { getFinanceSettings } from '@modules/finance/finance/finance.model';
+import { CoinTransactionModel, type ICoinTransaction } from '@modules/finance/coin/coin.model';
+import { PaymentModel, type IPayment, type PaymentStepKey } from '@modules/finance/payment/payment.model';
 import {
   loadUserMap,
   monthKeys,
@@ -16,7 +20,7 @@ import {
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 
 /**
- * Platform-wide reads over the gift card book for Finance > Gift Cards. Kept
+ * Platform-wide reads over the gift card book for Loyalty > Virtual Gift Cards. Kept
  * apart from giftcard.service.ts so the money path stays a small file with one
  * job. Nothing here writes.
  */
@@ -110,6 +114,61 @@ const toTxnRow = (t: IGiftCardTransaction, users: Map<string, UserInfo>) => {
     source: t.source,
     payment_id: t.payment_id ?? null,
     created_at: t.created_at?.toISOString?.() ?? '',
+  };
+};
+
+/**
+ * The coin ledger row a redemption wrote — the other half of a card's story.
+ * Shared by the virtual and the physical card detail: both pay out through the
+ * same once-only GIFT_CARD_REDEEM credit, keyed on the card's id.
+ */
+export const coinCreditRow = (row: ICoinTransaction) => ({
+  id: String(row._id),
+  user_id: String(row.user_id),
+  amount: row.amount,
+  balance_after: row.balance_after,
+  reason: row.reason ?? '',
+  created_at: row.created_at?.toISOString?.() ?? '',
+});
+
+/** One step of the purchase payment's pipeline, as the detail page shows it. */
+const stepOf = (payment: IPayment, key: PaymentStepKey) => {
+  const step = payment.steps?.find((s) => s.key === key);
+  return {
+    status: step?.status ?? 'PENDING',
+    detail: step?.detail ?? '',
+    at: step?.at?.toISOString?.() ?? null,
+  };
+};
+
+/** The purchase as Finance recorded it: what was charged, how, and whether the
+ * card was issued and mailed. `id` is the payment document, which is what the
+ * Finance payment page is addressed by. */
+const paymentSummary = (payment: IPayment) => {
+  const issue = stepOf(payment, 'GIFT_CARD_ISSUED');
+  const email = stepOf(payment, 'GIFT_CARD_EMAIL');
+  return {
+    id: String(payment._id),
+    payment_id: payment.payment_id,
+    invoice_no: payment.invoice_no ?? null,
+    status: payment.status,
+    gateway: payment.gateway ?? '',
+    gateway_ref: payment.gateway_ref ?? null,
+    subtotal: payment.subtotal ?? 0,
+    platform_fee_amount: payment.platform_fee_amount ?? 0,
+    gst_amount: payment.gst_amount ?? 0,
+    coupon_code: payment.coupon_code ?? null,
+    coupon_discount: payment.coupon_discount ?? 0,
+    coins_redeemed: payment.coins_redeemed ?? 0,
+    total: payment.total ?? 0,
+    currency_symbol: payment.currency_symbol ?? '',
+    user_phone: payment.user_phone ?? null,
+    paid_at: payment.paid_at?.toISOString?.() ?? null,
+    created_at: payment.created_at?.toISOString?.() ?? '',
+    issue_step_status: issue.status,
+    email_step_status: email.status,
+    email_step_detail: email.detail,
+    email_step_at: email.at,
   };
 };
 
@@ -217,5 +276,35 @@ export const giftCardAdminService = {
     );
     const users = await loadUserMap(docs.map((d) => String(d.user_id)));
     return { rows: docs.map((d) => toTxnRow(d, users)), total, page, page_size };
+  },
+
+  /**
+   * Everything about one card on one page: the card with its buyer, recipient
+   * and redeemer, the purchase payment and its issue/email steps, the card's own
+   * ledger, and the coin credit its redemption wrote. Each half is read from its
+   * own source of truth, so a mismatch between them is visible rather than
+   * smoothed over.
+   */
+  async detail(id: string) {
+    const card = Types.ObjectId.isValid(id) ? await GiftCardModel.findById(id) : null;
+    if (!card) {
+      throw new GraphQLError('Gift card not found', { extensions: { code: 'NOT_FOUND' } });
+    }
+    const [transactions, credit, payment] = await Promise.all([
+      GiftCardTransactionModel.find({ gift_card_id: card._id }).sort({ created_at: -1, _id: -1 }),
+      CoinTransactionModel.findOne({ gift_card_id: String(card._id), source: 'GIFT_CARD_REDEEM' }),
+      PaymentModel.findOne({ payment_id: card.payment_id }),
+    ]);
+    const users = await loadUserMap([
+      String(card.purchaser_user_id),
+      card.redeemed_by_user_id ? String(card.redeemed_by_user_id) : '',
+      ...transactions.map((t) => String(t.user_id)),
+    ]);
+    return {
+      card: toCardRow(card, users),
+      payment: payment ? paymentSummary(payment) : null,
+      transactions: transactions.map((t) => toTxnRow(t, users)),
+      coin_credit: credit ? coinCreditRow(credit) : null,
+    };
   },
 };

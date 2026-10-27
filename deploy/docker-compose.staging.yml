@@ -361,6 +361,13 @@ services:
     ports:
       - "127.0.0.1:2146:8080"
 
+  loyalty:
+    image: ${DOCKERHUB_USERNAME}/duncit-loyalty:${IMAGE_TAG:-staging}
+    container_name: duncit-staging-loyalty
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2147:8080"
+
   ecomm-portal:
     image: ${DOCKERHUB_USERNAME}/duncit-ecomm-portal:${IMAGE_TAG:-staging}
     container_name: duncit-staging-ecomm-portal

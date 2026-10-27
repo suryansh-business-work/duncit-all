@@ -43,6 +43,8 @@ export const PORTALS = [
   'gig-jobs',
   // AI connectors (MCP): connections, tool calls and their settings.
   'mcp',
+  // Duncit Coin and every gift card, virtual and printed.
+  'loyalty',
 ] as const;
 export type PortalKey = (typeof PORTALS)[number];
 

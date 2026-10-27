@@ -42,6 +42,7 @@ COPY portals/localization/package.json ./portals/localization/
 COPY portals/targets/package.json ./portals/targets/
 COPY portals/gig-jobs/package.json ./portals/gig-jobs/
 COPY portals/mcp/package.json ./portals/mcp/
+COPY portals/loyalty/package.json ./portals/loyalty/
 COPY portals/ecomm-portal/package.json ./portals/ecomm-portal/
 COPY website/ecomm-store/package.json ./website/ecomm-store/
 COPY website/status-website/package.json ./website/status-website/

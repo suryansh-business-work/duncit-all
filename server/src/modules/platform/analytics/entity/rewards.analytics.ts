@@ -33,12 +33,12 @@ import {
  * all count by when they happened; the balances are as they stand now.
  */
 
-const COIN_DASHBOARD = consoleLink('finance', '/duncit-coin/dashboard');
-const COIN_LEDGER = consoleLink('finance', '/duncit-coin/transactions');
+const COIN_DASHBOARD = consoleLink('loyalty', '/duncit-coin/dashboard');
+const COIN_LEDGER = consoleLink('loyalty', '/duncit-coin/transactions');
 const REFERRALS = consoleLink('finance', '/referrals');
-const CARD_DASHBOARD = consoleLink('finance', '/gift-cards/dashboard');
-const CARDS = consoleLink('finance', '/gift-cards/cards');
-const CARD_LOGS = consoleLink('finance', '/gift-cards/logs');
+const CARD_DASHBOARD = consoleLink('loyalty', '/gift-cards/virtual/dashboard');
+const CARDS = consoleLink('loyalty', '/gift-cards/virtual/cards');
+const CARD_LOGS = consoleLink('loyalty', '/gift-cards/virtual/logs');
 
 const CREDIT_SOURCES = [
   'PAYMENT_EARN',

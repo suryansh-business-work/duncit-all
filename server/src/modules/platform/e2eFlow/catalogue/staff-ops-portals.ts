@@ -2347,7 +2347,7 @@ export const STAFF_OPS_PORTAL_FLOWS: readonly CatalogueFlow[] = [
         name: 'Edit the referral share message',
         description: 'Reward & message form with preview.',
         steps: [
-          ['Open /referrals', 'Info about one redemption per account, a read-only "COINS PER REFERRAL" box linking to /duncit-coin/settings and the referrals table'],
+          ['Open /referrals', 'Info about one redemption per account, a read-only "COINS PER REFERRAL" box linking to the Loyalty console\'s /duncit-coin/settings and the referrals table'],
           ['Type a message without {link}', 'Error "Include {link} so the message carries a signup link. Available: {code}, {link}, {coins}"'],
           ['Type a 501-character message', 'Error "Keep the share message under 500 characters."'],
           ['Enter a message with {code}, {link} and {coins}', 'PREVIEW renders it with code DUN-9F3A2C, the mWeb register link and the coin rate'],
@@ -2358,8 +2358,8 @@ export const STAFF_OPS_PORTAL_FLOWS: readonly CatalogueFlow[] = [
     ],
   },
   {
-    name: 'Finance: Duncit Coin',
-    description: 'Coin dashboard, transactions ledger, payout rules, expiry and manual grants at /duncit-coin/*.',
+    name: 'Loyalty: Duncit Coin',
+    description: 'Coin dashboard, transactions ledger, payout rules, expiry and manual grants at loyalty.duncit.com/duncit-coin/*.',
     sub_flows: [
       {
         name: 'Read the coin dashboard',
@@ -2389,7 +2389,7 @@ export const STAFF_OPS_PORTAL_FLOWS: readonly CatalogueFlow[] = [
           ['Enter Shop earn rate 5.5', 'Error "Whole percents only — digits, no decimals or symbols."'],
           ['Enter Coin expiry 4000', 'Error "Keep the expiry at or under 3650 days."'],
           ['Set valid values and click "Save settings"', 'Toast "Coin settings saved"; new earnings use the new rates and past grants keep their expiry'],
-          ['Save as a CITY_ADMIN via the API', 'FORBIDDEN — only SUPER_ADMIN and FINANCE_MANAGER can update coin settings'],
+          ['Save as a CITY_ADMIN via the API', 'FORBIDDEN — only SUPER_ADMIN, FINANCE_MANAGER and LOYALTY_MANAGER can update coin settings'],
         ],
       },
       {
@@ -2407,14 +2407,14 @@ export const STAFF_OPS_PORTAL_FLOWS: readonly CatalogueFlow[] = [
     ],
   },
   {
-    name: 'Finance: Gift Cards',
-    description: 'Gift card sales dashboard and policy, sold cards and card logs at /gift-cards/*. Cards are created only by purchases.',
+    name: 'Loyalty: Virtual Gift Cards',
+    description: 'Gift card sales dashboard and policy, sold cards and card logs at loyalty.duncit.com/gift-cards/virtual/*. Cards are created only by purchases.',
     sub_flows: [
       {
         name: 'Update the gift card sales policy',
         description: 'Dashboard stats and policy form.',
         steps: [
-          ['Open /gift-cards/dashboard', 'Tiles Cards sold, Value sold, Converted to coins, Outstanding liability, Expired unredeemed, Validity and a Sold vs redeemed chart'],
+          ['Open /gift-cards/virtual/dashboard', 'Tiles Cards sold, Value sold, Converted to coins, Outstanding liability, Expired unredeemed, Validity and a Sold vs redeemed chart'],
           ['Enter Amount presets "500, abc"', 'Error "Comma-separated whole rupees, e.g. 500, 1000, 2000"'],
           ['Enter presets "500, 1000, 2500", min 100, max 20000, validity 12 and click "Save policy"', 'Toast "Gift card policy saved"; the app offers the new presets'],
           ['Save with the server rejecting', 'Toast "The policy could not be saved. Please try again."'],
@@ -2424,9 +2424,9 @@ export const STAFF_OPS_PORTAL_FLOWS: readonly CatalogueFlow[] = [
         name: 'Browse sold cards and logs',
         description: 'Read-only tables.',
         steps: [
-          ['Open /gift-cards/cards', 'Columns Purchased, Code, Theme, Amount, Status, Buyer, Recipient, Redeemed by, Expires, Payment; empty "No gift cards sold yet."'],
+          ['Open /gift-cards/virtual/cards', 'Columns Purchased, Code, Theme, Amount, Status, Buyer, Recipient, Redeemed by, Expires, Payment; empty "No gift cards sold yet."'],
           ['Search a card code', 'The card row is shown with status Active, Redeemed or Expired'],
-          ['Open /gift-cards/logs and filter Type "Redeemed"', 'Only REDEEM_TO_COINS rows with balance after are listed'],
+          ['Open /gift-cards/virtual/logs and filter Type "Redeemed"', 'Only REDEEM_TO_COINS rows with balance after are listed'],
           ['Look for create or disable actions', 'None exist — cards are issued only when a purchase payment succeeds'],
         ],
       },

@@ -13,6 +13,9 @@ export interface PortalAppShellProps {
   hasAppAccess: (roles?: readonly string[] | null) => boolean;
   /** Route of the profile page; omit to hide the Profile menu item. */
   profileTo?: string;
+  /** Money moves in this console: every table change log also names the
+   * account's email and roles, the surface, the address and the browser. */
+  detailedChangeLogs?: boolean;
   children: ReactNode;
 }
 
@@ -32,6 +35,7 @@ export function PortalAppShell({
   clearToken,
   hasAppAccess,
   profileTo,
+  detailedChangeLogs,
   children,
 }: Readonly<PortalAppShellProps>) {
   const navigate = useNavigate();
@@ -53,6 +57,7 @@ export function PortalAppShell({
       onDenied={clearToken}
       profileTo={profileTo}
       onLogout={signOut}
+      detailedChangeLogs={detailedChangeLogs}
     >
       {children}
     </AppShell>

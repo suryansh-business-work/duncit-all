@@ -71,7 +71,7 @@ export const giftCardTypeDefs = /* GraphQL */ `
     card: GiftCard!
   }
 
-  "The gift card sales policy (Finance > Gift Cards)."
+  "The gift card sales policy (Loyalty > Virtual Gift Cards)."
   type GiftCardSettings {
     "Preset amount chips the buy page offers."
     denominations: [Int!]!
@@ -100,7 +100,7 @@ export const giftCardTypeDefs = /* GraphQL */ `
   }
 
   """
-  Platform-wide gift card position for Finance > Gift Cards > Dashboard.
+  Platform-wide gift card position for Loyalty > Virtual Gift Cards > Dashboard.
   Outstanding + expired + redeemed value always equals sold value.
   """
   type GiftCardAdminStats {
@@ -187,6 +187,61 @@ export const giftCardTypeDefs = /* GraphQL */ `
     page_size: Int!
   }
 
+  """
+  The Duncit Coin ledger row a gift card's redemption wrote — virtual and
+  physical cards both pay out through it, once per card.
+  """
+  type GiftCardCoinCredit {
+    id: ID!
+    user_id: ID!
+    amount: Float!
+    "The member's coin balance right after the credit landed."
+    balance_after: Float!
+    reason: String!
+    created_at: String!
+  }
+
+  "The purchase payment behind a virtual card, as Finance recorded it."
+  type GiftCardPaymentSummary {
+    "The payment document id — what the Finance payment page is addressed by."
+    id: ID!
+    payment_id: String!
+    invoice_no: String
+    status: String!
+    gateway: String!
+    gateway_ref: String
+    subtotal: Float!
+    platform_fee_amount: Float!
+    gst_amount: Float!
+    coupon_code: String
+    coupon_discount: Float!
+    coins_redeemed: Float!
+    total: Float!
+    currency_symbol: String!
+    "The buyer's phone as given at checkout."
+    user_phone: String
+    paid_at: String
+    created_at: String!
+    "PENDING, DONE, SKIPPED or FAILED — the card being created on payment success."
+    issue_step_status: String!
+    "PENDING, DONE, SKIPPED or FAILED — the card being mailed to its recipient."
+    email_step_status: String!
+    "Why the mail step was skipped, or its failure message."
+    email_step_detail: String!
+    email_step_at: String
+  }
+
+  "Everything about one virtual card (Loyalty > Virtual Gift Cards > card)."
+  type GiftCardAdminDetail {
+    card: GiftCardAdminCard!
+    "Null only when the payment record is gone."
+    payment: GiftCardPaymentSummary
+    "The card's own ledger, newest first."
+    transactions: [GiftCardAdminTransaction!]!
+    "Null until the card is redeemed."
+    coin_credit: GiftCardCoinCredit
+  }
+
   extend type Query {
     "Amount presets and validity for the buy page. Signed-in only."
     publicGiftCardSettings: GiftCardSettings!
@@ -194,12 +249,14 @@ export const giftCardTypeDefs = /* GraphQL */ `
     myGiftCards: MyGiftCards!
     "One card by its code, for the claim/redeem page. Holding the code is holding the value, so any signed-in holder may look."
     giftCardByCode(code: String!): GiftCard!
-    "Finance > Gift Cards > Dashboard. 'months' bounds the monthly series (default 12, max 36)."
+    "Loyalty > Virtual Gift Cards > Dashboard. 'months' bounds the monthly series (default 12, max 36)."
     giftCardAdminStats(months: Int): GiftCardAdminStats!
-    "Finance > Gift Cards > Cards. Every card ever sold, with buyer and redeemer."
+    "Loyalty > Virtual Gift Cards > Cards. Every card ever sold, with buyer and redeemer."
     giftCardsTable(query: TableQueryInput): GiftCardAdminCardTablePage!
-    "Finance > Gift Cards > Logs. Every issue and every conversion to coins."
+    "Loyalty > Virtual Gift Cards > Logs. Every issue and every conversion to coins."
     giftCardTransactionsTable(query: TableQueryInput): GiftCardAdminTransactionTablePage!
+    "Loyalty > Virtual Gift Cards > one card: the card, its payment, its ledger and its coin credit."
+    giftCardAdminDetail(id: ID!): GiftCardAdminDetail!
   }
 
   extend type Mutation {
@@ -209,7 +266,7 @@ export const giftCardTypeDefs = /* GraphQL */ `
     that reports coins_added: 0.
     """
     redeemGiftCard(code: String!): GiftCardRedeemResult!
-    "Finance: set the amounts offered and how long a card lives."
+    "Loyalty: set the amounts offered and how long a card lives."
     updateGiftCardSettings(input: GiftCardSettingsInput!): GiftCardSettings!
   }
 `;

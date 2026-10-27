@@ -33,6 +33,7 @@ export const MCP_ENDPOINTS: readonly McpEndpoint[] = [
   { key: 'venues', label: 'Venues console', portal: 'venues', categories: ['venues'] },
   { key: 'hosts', label: 'Hosts console', portal: 'hosts', categories: ['hosts'] },
   { key: 'finance', label: 'Finance', portal: 'finance', categories: ['finance'] },
+  { key: 'loyalty', label: 'Loyalty', portal: 'loyalty', categories: ['loyalty'] },
   { key: 'employee', label: 'Employee', portal: 'employee', categories: ['employee'] },
   { key: 'hr', label: 'HR', portal: 'hr', categories: ['hr'] },
   { key: 'products', label: 'Products (partner brands)', portal: 'products', categories: ['partner-brand'] },

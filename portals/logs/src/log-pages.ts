@@ -38,8 +38,10 @@ export type { WaAudienceList } from '../../communications/src/pages/whatsapp-pag
 export { default as PaymentLogsPage } from '../../finance/src/pages/finance/payment-logs-page/PaymentLogsPage';
 export { default as PaymentDetailPage } from '../../finance/src/pages/finance/payment-detail-page';
 export { default as UserRefundLogsPage } from '../../finance/src/pages/finance/user-refund-logs-page';
-export { default as GiftCardLogsPage } from '../../finance/src/pages/finance/gift-cards/GiftCardLogsPage';
-export { default as CoinTransactionsPage } from '../../finance/src/pages/finance/duncit-coin/CoinTransactionsPage';
+
+// Loyalty (Duncit Coin and gift cards moved here from Finance)
+export { default as GiftCardLogsPage } from '../../loyalty/src/pages/gift-cards/virtual/GiftCardLogsPage';
+export { default as CoinTransactionsPage } from '../../loyalty/src/pages/duncit-coin/CoinTransactionsPage';
 
 // Legal
 export { default as PolicyAcceptanceLogsPage } from '../../legal/src/pages/policy-acceptance-logs-page';

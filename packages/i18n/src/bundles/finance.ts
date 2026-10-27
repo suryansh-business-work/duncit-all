@@ -328,7 +328,7 @@ export const FINANCE_BUNDLE: NestedCatalogue = {
       totalCoins: 'Duncit Coins refunded',
       totalManual: 'Manual payout needed',
     },
-    // Finance > Gift Cards — the dashboard, the card book and the ledger.
+    // Loyalty > Virtual Gift Cards — the dashboard, the card book and the ledger.
     /**
      * Withdrawal Payments, which is now two screens: the pod list and one pod's
      * requests. Only the NEW copy is keyed — the per-withdrawal table below the
@@ -643,6 +643,10 @@ export const FINANCE_BUNDLE: NestedCatalogue = {
       termsAndConditions: 'Terms & conditions',
       venue: 'Venue',
       when: 'When',
+      // Duncit Coin and gift cards moved to the Loyalty console; an old Finance
+      // bookmark is sent on with this line showing meanwhile.
+      movedToLoyalty: 'This screen moved to the Loyalty console. Taking you there…',
+      openLoyalty: 'Open it in the Loyalty console',
     },
     dashboard: {
       completedPayouts: 'Completed Payouts',

@@ -26,6 +26,15 @@ export const LOGS_READER = 'LOGS_MANAGER';
  */
 export const FINANCE_READER = 'FINANCE_USER';
 
+/**
+ * The Tests console (tests.duncit.com). The E2E, stress, telemetry, error
+ * boundary, GraphQL monitor and SonarQube pages moved there from Tech, so every
+ * gate those pages hit — reads AND writes — adds this role beside
+ * TECH_MANAGER. TECH_MANAGER stays: the CI reporters sign in with a
+ * TECH_MANAGER token (DUNCIT_RELEASE_TOKEN), and removing it would orphan them.
+ */
+export const TESTS_MANAGER = 'TESTS_MANAGER';
+
 export function hasRole(user: AuthUser, allowed: readonly string[]): boolean {
   return user.roles.some((r) => allowed.includes(r));
 }

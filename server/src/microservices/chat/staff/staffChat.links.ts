@@ -55,6 +55,7 @@ const PORTAL_ROLES: Record<string, string[]> = {
   targets: ['TARGETS_MANAGER'],
   'gig-jobs': ['GIG_JOBS_MANAGER'],
   mcp: ['MCP_MANAGER', 'MCP_USER'],
+  tests: ['TESTS_MANAGER'],
   partners: [],
   mweb: [],
 };

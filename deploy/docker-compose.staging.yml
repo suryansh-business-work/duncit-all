@@ -34,6 +34,9 @@ services:
       # production host and staging would mint tokens for mcp.duncit.com.
       MCP_URL: https://staging.mcp.duncit.com
       MCP_PORTAL_URL: https://staging.mcp.duncit.com
+      # The Tests console the staging server links to (E2E run messages). Unset,
+      # it falls back to the compiled-in production host.
+      TESTS_URL: https://staging.tests.duncit.com
     ports:
       - "127.0.0.1:2101:2001"
     volumes:
@@ -339,6 +342,13 @@ services:
     restart: unless-stopped
     ports:
       - "127.0.0.1:2142:8080"
+
+  tests:
+    image: ${DOCKERHUB_USERNAME}/duncit-tests:${IMAGE_TAG:-staging}
+    container_name: duncit-staging-tests
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2147:8080"
 
   targets:
     image: ${DOCKERHUB_USERNAME}/duncit-targets:${IMAGE_TAG:-staging}

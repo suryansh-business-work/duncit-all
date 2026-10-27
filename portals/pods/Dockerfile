@@ -30,6 +30,7 @@ COPY portals/analytics/package.json ./portals/analytics/
 COPY portals/localization/package.json ./portals/localization/
 COPY portals/targets/package.json ./portals/targets/
 COPY portals/mcp/package.json ./portals/mcp/
+COPY portals/tests/package.json ./portals/tests/
 COPY portals/ecomm-portal/package.json ./portals/ecomm-portal/
 COPY website/ecomm-store/package.json ./website/ecomm-store/
 COPY portals/ai/package.json ./portals/ai/

@@ -116,6 +116,7 @@ export const PORTAL_ACCESS: PortalAccess[] = [
       { key: 'MCP_MANAGER', name: 'MCP Manager' },
     ],
   },
+  { key: 'tests', name: 'Tests', url: url('tests'), roles: [{ key: 'TESTS_MANAGER', name: 'Tests Manager' }] },
 ];
 
 export interface RolePortalInfo {

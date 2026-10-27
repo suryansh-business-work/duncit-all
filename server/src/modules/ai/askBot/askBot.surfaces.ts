@@ -268,6 +268,15 @@ export const SURFACES: readonly Surface[] = [
       "The console for connecting AI apps (Claude, ChatGPT, Gemini) to Duncit over MCP: each console's connector URL, the AI apps you have connected and ending a connection, every tool call made for you, and — for MCP managers — everyone's usage and the MCP safety settings. The AI only ever acts with the consoles you already have.",
   },
   {
+    key: 'tests',
+    name: 'Tests',
+    kind: 'PORTAL',
+    host: 'tests.duncit.com',
+    dev_port: 2047,
+    summary:
+      'The console for testing and quality: the confidence score and coverage dashboard, unit test runs (every test row by row, coverage, what each file mocks, the Cypress specs), E2E runs and flows, stress runs, regression reports between runs, the manual test board (drag-and-drop cases with rich-text steps, comments and history), SonarQube, and the platform monitoring that moved from Tech — telemetry, error boundaries and the GraphQL monitor.',
+  },
+  {
     key: 'ecomm',
     name: 'Duncit Pet Store',
     kind: 'WEBSITE',

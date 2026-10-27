@@ -33,6 +33,9 @@ import { VENUE_RENTALS_BUNDLE } from './bundles/venue-rentals';
 import { VENUE_PRICING_BUNDLE } from './bundles/venue-pricing';
 import { GIG_JOBS_BUNDLE } from './bundles/gig-jobs';
 import { MCP_BUNDLE } from './bundles/mcp';
+import { TESTS_BUNDLE } from './bundles/tests';
+import { TESTS_UNIT_BUNDLE } from './bundles/tests-unit';
+import { TESTS_MANUAL_BUNDLE } from './bundles/tests-manual';
 import { POD_REQUESTS_BUNDLE } from './bundles/pod-requests';
 import { CLUB_ADMIN_BUNDLE } from './bundles/club-admin';
 import { FULFILMENT_BUNDLE } from './bundles/fulfilment';
@@ -137,6 +140,9 @@ export {
   VENUE_PRICING_BUNDLE,
   GIG_JOBS_BUNDLE,
   MCP_BUNDLE,
+  TESTS_BUNDLE,
+  TESTS_UNIT_BUNDLE,
+  TESTS_MANUAL_BUNDLE,
   POD_REQUESTS_BUNDLE,
   CLUB_ADMIN_BUNDLE,
   FULFILMENT_BUNDLE,
@@ -191,6 +197,9 @@ export const SURFACE_BUNDLES: Record<string, NestedCatalogue> = {
   venuePricing: VENUE_PRICING_BUNDLE,
   gigJobs: GIG_JOBS_BUNDLE,
   mcp: MCP_BUNDLE,
+  tests: TESTS_BUNDLE,
+  testsUnit: TESTS_UNIT_BUNDLE,
+  testsManual: TESTS_MANUAL_BUNDLE,
   podRequests: POD_REQUESTS_BUNDLE,
   clubAdmin: CLUB_ADMIN_BUNDLE,
   fulfilment: FULFILMENT_BUNDLE,

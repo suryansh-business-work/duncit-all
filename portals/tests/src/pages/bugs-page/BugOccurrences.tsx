@@ -11,7 +11,7 @@ import {
   Typography,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { ENV_COLOR, userLabel } from '../../components/telemetry-identity';
+import { ENV_COLOR, userLabel } from '../../../../tech/src/components/telemetry-identity';
 import { BUG_OCCURRENCES, type BugOccurrence } from './queries';
 import { formatDateTime, useTranslation } from '@duncit/app-settings';
 

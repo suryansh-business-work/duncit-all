@@ -1,4 +1,4 @@
-import type { BugRow, BugStatus, BugUser } from './queries';
+import type { BugRow, BugUser } from './queries';
 
 /**
  * Reading and writing the bugs backup file.
@@ -12,35 +12,37 @@ import type { BugRow, BugStatus, BugUser } from './queries';
 /** Bumped only if the shape changes in a way an older file cannot satisfy. */
 export const BUG_EXPORT_VERSION = 1;
 
-export interface BugExportEntry {
-  fingerprint: string;
-  title: string;
-  error_name: string;
-  message: string;
-  page: string;
-  source: string;
-  app: string;
-  portal: string | null;
-  platform: string;
-  os: string | null;
-  occurrence_count: number;
-  first_seen_at: string;
-  last_seen_at: string;
-  env_counts: { localhost: number; staging: number; production: number };
-  last_url: string | null;
-  last_host: string | null;
-  last_stack: string | null;
-  last_user: BugUser | null;
-  last_environment: string | null;
-  last_app_version: string | null;
-  last_user_agent: string | null;
-  last_duid: string | null;
-  last_session_id: string | null;
-  affected_user_count: number;
-  affected_user_ids: string[];
-  anonymous_count: number;
-  status: BugStatus;
-}
+/** A bug as the file carries it: the row's own fields, without the ids and audit the database adds. */
+export type BugExportEntry = Pick<
+  BugRow,
+  | 'fingerprint'
+  | 'title'
+  | 'error_name'
+  | 'message'
+  | 'page'
+  | 'source'
+  | 'app'
+  | 'portal'
+  | 'platform'
+  | 'os'
+  | 'occurrence_count'
+  | 'first_seen_at'
+  | 'last_seen_at'
+  | 'env_counts'
+  | 'last_url'
+  | 'last_host'
+  | 'last_stack'
+  | 'last_user'
+  | 'last_environment'
+  | 'last_app_version'
+  | 'last_user_agent'
+  | 'last_duid'
+  | 'last_session_id'
+  | 'affected_user_count'
+  | 'affected_user_ids'
+  | 'anonymous_count'
+  | 'status'
+>;
 
 export interface BugExportFile {
   duncit_bugs_export: number;

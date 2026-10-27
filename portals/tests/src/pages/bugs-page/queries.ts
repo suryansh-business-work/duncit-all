@@ -1,5 +1,5 @@
 import { gql } from '@apollo/client';
-import type { TelemetryClientRef, TelemetryUserRef } from '../../components/telemetry-identity';
+import type { TelemetryClientRef, TelemetryUserRef } from '../../../../tech/src/components/telemetry-identity';
 
 /** Every field a bug carries — the table, the detail dialog and the export all read this. */
 const BUG_FIELDS = gql`

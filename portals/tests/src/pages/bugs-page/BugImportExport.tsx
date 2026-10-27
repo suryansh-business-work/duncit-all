@@ -1,11 +1,9 @@
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client/react';
-import DownloadIcon from '@mui/icons-material/Download';
-import UploadIcon from '@mui/icons-material/Upload';
-import { DuncitButton } from '@duncit/buttons';
 import { notify, useConfirm } from '@duncit/dialogs';
 import { downloadTextFile, parseApiError } from '@duncit/utils';
 import CopyGetApiButton from '../../components/CopyGetApiButton';
+import JsonImportExportButtons from '../../components/JsonImportExportButtons';
 import { BUGS_EXPORT, IMPORT_BUGS, type BugRow } from './queries';
 import { buildBugExport, bugExportFilename, parseBugImport } from './bug-io';
 import { useTranslation } from '@duncit/app-settings';
@@ -25,7 +23,6 @@ export default function BugImportExport({ onImported }: Readonly<Props>) {
   const { t } = useTranslation();
   const client = useApolloClient();
   const confirm = useConfirm();
-  const fileRef = useRef<HTMLInputElement | null>(null);
   const [importMut, { loading: importing }] = useMutation<{
     importBugs: { created: number; updated: number };
   }>(IMPORT_BUGS);
@@ -86,32 +83,14 @@ export default function BugImportExport({ onImported }: Readonly<Props>) {
   };
 
   return (
-    <>
-      <DuncitButton size="small" startIcon={<DownloadIcon />} disabled={exporting} onClick={runExport}>
-        {exporting ? 'Exporting…' : 'Export'}
-      </DuncitButton>
-      <DuncitButton
-        size="small"
-        startIcon={<UploadIcon />}
-        disabled={importing}
-        onClick={() => fileRef.current?.click()}
-      >
-        {importing ? 'Importing…' : 'Import'}
-      </DuncitButton>
+    <JsonImportExportButtons
+      exporting={exporting}
+      importing={importing}
+      onExport={runExport}
+      onImport={runImport}
+      fileLabel={t('tech.bugs.bugsJsonFile')}
+    >
       <CopyGetApiButton path="/telemetry/bugs.json" />
-      <input
-        ref={fileRef}
-        type="file"
-        accept="application/json,.json"
-        hidden
-        aria-label={t('tech.bugs.bugsJsonFile')}
-        onChange={async (e) => {
-          const file = e.target.files?.[0];
-          // Cleared so picking the SAME file again still fires a change event.
-          e.target.value = '';
-          if (file) await runImport(file);
-        }}
-      />
-    </>
+    </JsonImportExportButtons>
   );
 }

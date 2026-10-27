@@ -4,7 +4,7 @@ import { useApolloClient } from '@apollo/client/react';
 import { Box, Stack, Typography } from '@mui/material';
 import { useApolloTableFetch } from '@duncit/table';
 import { useUserData } from '@duncit/user-context';
-import { SUPER_ROLE } from '../../lib/session';
+import { SUPER_ROLE } from '@duncit/shell';
 import {
   TelemetryBulkBar,
   TelemetryDeleteButton,

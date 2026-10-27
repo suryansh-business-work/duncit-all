@@ -8,7 +8,7 @@ import {
   type TableFetch,
   type TableQuerySnapshot,
 } from '@duncit/table';
-import { UserCell } from '../../components/telemetry-identity';
+import { UserCell } from '../../../../tech/src/components/telemetry-identity';
 import { STATUS_OPTIONS, affectedSummary, statusColor, type BugRow } from './queries';
 import { formatDateTime, useTranslation } from '@duncit/app-settings';
 

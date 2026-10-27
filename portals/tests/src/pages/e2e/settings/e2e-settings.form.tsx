@@ -3,14 +3,14 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Divider, Stack, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
-import SlackChannelField from '../../../components/SlackChannelField';
+import SlackChannelField from '../../../../../tech/src/components/SlackChannelField';
 import SuitePicker from '../SuitePicker';
-import type { SlackChannel } from '../../../lib/slack-queries';
+import type { SlackChannel } from '../../../../../tech/src/lib/slack-queries';
 import type { E2eRunSettings, E2eSuite } from '../queries';
 import ScheduleFields from './ScheduleFields';
 import IdentityFields from './IdentityFields';
 import OverrideFields from './OverrideFields';
-import SwitchRow from '../../../components/SwitchRow';
+import SwitchRow from '../../../../../tech/src/components/SwitchRow';
 import {
   e2eSettingsSchema,
   toFormValues,

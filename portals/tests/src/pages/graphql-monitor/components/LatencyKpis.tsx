@@ -3,7 +3,7 @@ import { Box } from '@mui/material';
 import { useTranslation } from '@duncit/shell';
 import MetricTiles, { type MetricTile } from '../../stress-testing/components/MetricTiles';
 import { formatCount, formatMs, formatPct } from '../../stress-testing/labels';
-import { formatDateTime } from '../../server/format';
+import { formatDateTime } from '../../../../../tech/src/pages/server/format';
 import { errorRateColor, latencyColor } from '../labels';
 import type { LatencyNumbers } from '../queries';
 

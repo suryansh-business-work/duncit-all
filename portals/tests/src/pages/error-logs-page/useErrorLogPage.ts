@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useApolloClient } from '@apollo/client/react';
 import { useApolloTableFetch } from '@duncit/table';
 import { useUserData } from '@duncit/user-context';
-import { SUPER_ROLE } from '../../lib/session';
+import { SUPER_ROLE } from '@duncit/shell';
 import { useTelemetryTableSelection } from '../../components/telemetry-delete';
 import { getErrorRowId } from './errorLogCells';
 import { ERROR_LOGS_TABLE, type ErrorLogRow } from './queries';

@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { Chip } from '@mui/material';
 import { DuncitTable, type DuncitColumn } from '@duncit/table';
 import { useTranslation } from '@duncit/app-settings';
-import { envOptions } from '../../components/telemetry-identity';
+import { envOptions } from '../../../../tech/src/components/telemetry-identity';
 import { ERROR_MODULE_FILTER, parseIssueData, type ErrorLogRow } from './queries';
 import {
   getErrorRowId,

@@ -2,7 +2,7 @@ import { Controller, type Control, type FieldErrors } from 'react-hook-form';
 import { FormControlLabel, MenuItem, Stack, Switch, TextField } from '@mui/material';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import { useTranslation } from '@duncit/shell';
-import { dateToTime, timeToDate } from '../../../lib/time-of-day';
+import { dateToTime, timeToDate } from '../../../../../tech/src/lib/time-of-day';
 import type { E2eSettingsValues } from './e2e-settings.types';
 
 interface Props {

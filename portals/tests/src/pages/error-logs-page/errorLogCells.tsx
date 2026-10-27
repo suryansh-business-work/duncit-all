@@ -2,7 +2,7 @@ import type { MutableRefObject, ReactNode } from 'react';
 import { Chip, Typography } from '@mui/material';
 import type { TableFetch, TableQuerySnapshot } from '@duncit/table';
 import { formatDateTime } from '@duncit/app-settings';
-import { ENV_COLOR, UserCell } from '../../components/telemetry-identity';
+import { ENV_COLOR, UserCell } from '../../../../tech/src/components/telemetry-identity';
 import type { ErrorLogRow } from './queries';
 
 /**

@@ -1,8 +1,8 @@
 import { Box, Dialog, DialogActions, DialogContent, DialogTitle, Stack } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { formatDateTime, useTranslation } from '@duncit/app-settings';
-import { DetailBlock as Mono, DetailField as Field } from '../../components/DetailField';
-import { userLabel } from '../../components/telemetry-identity';
+import { DetailBlock as Mono, DetailField as Field } from '../../../../tech/src/components/DetailField';
+import { userLabel } from '../../../../tech/src/components/telemetry-identity';
 import type { ErrorLogRow } from '../error-logs-page/queries';
 import { parseBoundaryData, surfaceOf } from './boundary-data';
 

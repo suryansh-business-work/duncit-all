@@ -1,7 +1,7 @@
 import { gql } from '@apollo/client';
 import { ISSUE_LOG_COMPONENT } from '@duncit/errors';
 import type { TableFilterValue } from '@duncit/table';
-import type { TelemetryUserRef } from '../../components/telemetry-identity';
+import type { TelemetryUserRef } from '../../../../tech/src/components/telemetry-identity';
 
 /**
  * The Error Logs section reads the same persisted telemetry rows as the rest

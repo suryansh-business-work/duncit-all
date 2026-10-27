@@ -1,15 +1,26 @@
 import { LiteCalendarModel } from '../models/calendar.model';
 import { LiteCategoryModel } from '../models/category.model';
 import { LiteCityModel } from '../models/city.model';
-import { LiteEventModel, LOCATION_TYPES, QUESTION_TYPES, VISIBILITIES, type LiteEvent, type LiteEventDoc } from '../models/event.model';
+import {
+  EVENT_THEMES,
+  LiteEventModel,
+  LOCATION_TYPES,
+  QUESTION_TYPES,
+  THEME_ACCENTS,
+  VISIBILITIES,
+  type EventTheme,
+  type LiteEvent,
+  type LiteEventDoc,
+  type ThemeAccent,
+} from '../models/event.model';
 import { LiteRegistrationModel } from '../models/registration.model';
 import { LiteUserModel, type LiteUserDoc } from '../models/user.model';
 import { badInput, forbidden, notFound } from '../utils/errors';
 import { uniqueSlug } from '../utils/slug';
-import { cleanText, isObjectId, normalizeEmail, optionalUpi, optionalUrl, parseInstant, validTimezone } from '../utils/validate';
+import { URL_SLUG, cleanText, coordinate, isObjectId, normalizeEmail, optionalUpi, optionalUrl, optionalWholeNumber, parseInstant, validTimezone, wholeNumber } from '../utils/validate';
 import { notifications } from './notifications';
-import { isHostOf, toPublicEvent, type Viewer } from './projections';
-import { settingsService } from './settings.service';
+import { isHostOf, seatsHeld, toPublicEvent, type Viewer } from './projections';
+import { SETTING_BOUNDS, settingsService } from './settings.service';
 
 export interface TicketInput {
   id?: string | null;
@@ -50,6 +61,11 @@ export interface EventInput {
   questions?: QuestionInput[] | null;
   upi_id?: string | null;
   upi_name?: string | null;
+  place_id?: string | null;
+  lat?: number | null;
+  lng?: number | null;
+  registration_open?: boolean | null;
+  theme?: { key?: string | null; accent?: string | null } | null;
 }
 
 const viewerOf = (user: LiteUserDoc | null): Viewer | null => (user ? { id: String(user._id), is_admin: user.is_admin } : null);
@@ -61,22 +77,54 @@ async function requireHosted(id: string, user: LiteUserDoc): Promise<LiteEventDo
   return doc;
 }
 
-function cleanTickets(input: TicketInput[], existing: any[], maxPrice: number) {
+/** The limits a host's numbers are checked against, from the console's settings. */
+interface EventLimits {
+  maxPrice: number;
+  maxCapacity: number;
+}
+
+function cleanTickets(input: TicketInput[], existing: any[], limits: EventLimits) {
   if (!input.length) throw badInput('Add at least one ticket type');
+  // 0 in the console means "no ceiling"; the settings' own outer bound still applies.
+  const priceCeiling = limits.maxPrice > 0 ? limits.maxPrice : SETTING_BOUNDS.ticketPrice.max;
   return input.map((t) => {
-    const price = Math.max(0, Math.trunc(t.price ?? 0));
-    if (maxPrice > 0 && price > maxPrice) throw badInput(`A ticket cannot cost more than ₹${maxPrice}`);
-    const quantity = t.quantity == null ? null : Math.max(1, Math.trunc(t.quantity));
+    const name = cleanText(t.name, 60, 'Ticket name', true);
+    const price = wholeNumber(t.price, `Price of ${name}`, { min: 0, max: priceCeiling });
+    const quantity = optionalWholeNumber(t.quantity, `Seats on ${name}`, { min: 1, max: limits.maxCapacity });
     const prior = t.id ? existing.find((e) => String(e._id) === t.id) : null;
+    // Seats already sold on a ticket cannot be taken back by shrinking it.
+    if (prior && quantity != null && quantity < (prior.sold ?? 0)) throw badInput(`${name} already has ${prior.sold} seats taken; it cannot drop below that`);
     return {
       ...(prior ? { _id: prior._id, sold: prior.sold } : {}),
-      name: cleanText(t.name, 60, 'Ticket name', true),
+      name,
       description: cleanText(t.description, 300, 'Ticket description'),
       price,
       quantity,
       is_active: t.is_active !== false,
     };
   });
+}
+
+/** A capacity of at least 1 within the console's ceiling, and never below the seats already held. */
+async function cleanCapacity(doc: LiteEventDoc, requested: number | null | undefined, maxCapacity: number): Promise<number | null> {
+  const capacity = optionalWholeNumber(requested, 'Capacity', { min: 1, max: maxCapacity });
+  if (capacity != null && !doc.isNew) {
+    const held = await seatsHeld(doc._id);
+    if (capacity < held) throw badInput(`${held} seats are already taken, so the capacity cannot be lower than ${held}`);
+  }
+  return capacity;
+}
+
+function applyTheme(doc: LiteEventDoc, theme: EventInput['theme']): void {
+  if (!theme) return;
+  if (theme.key != null) {
+    if (!EVENT_THEMES.includes(theme.key as EventTheme)) throw badInput('Pick a theme from the list');
+    doc.set('theme.key', theme.key);
+  }
+  if (theme.accent != null) {
+    if (!THEME_ACCENTS.includes(theme.accent as ThemeAccent)) throw badInput('Pick a colour from the list');
+    doc.set('theme.accent', theme.accent);
+  }
 }
 
 function cleanQuestions(input: QuestionInput[] | null | undefined, existing: any[]) {
@@ -107,6 +155,11 @@ function applyPlace(doc: LiteEventDoc, input: EventInput): void {
   doc.virtual_link = optionalUrl(input.virtual_link, 'Join link');
   if (doc.location_type === 'VIRTUAL' && !doc.virtual_link) throw badInput('Add the join link for an online event');
   if (doc.location_type === 'IN_PERSON' && !doc.address && !doc.venue_name) throw badInput('Add a venue or an address');
+  // A pin only makes sense for a real place, and only as a pair.
+  const pinned = doc.location_type === 'IN_PERSON' && input.lat != null && input.lng != null;
+  doc.place_id = pinned ? cleanText(input.place_id, 300, 'Place') : '';
+  doc.lat = pinned ? coordinate(input.lat, 'Latitude') : null;
+  doc.lng = pinned ? coordinate(input.lng, 'Longitude') : null;
 }
 
 function applyPayment(doc: LiteEventDoc, input: EventInput, user: LiteUserDoc): void {
@@ -146,9 +199,12 @@ async function applyInput(doc: LiteEventDoc, input: EventInput, user: LiteUserDo
   applySchedule(doc, input);
   applyPlace(doc, input);
   doc.visibility = input.visibility as any;
-  doc.capacity = input.capacity == null ? null : Math.max(1, Math.trunc(input.capacity));
+  const limits: EventLimits = { maxPrice: settings.max_ticket_price ?? 0, maxCapacity: settings.max_event_capacity ?? SETTING_BOUNDS.eventCapacity.max };
+  doc.capacity = await cleanCapacity(doc, input.capacity, limits.maxCapacity);
   doc.require_approval = Boolean(input.require_approval);
-  doc.tickets = cleanTickets(input.tickets, doc.tickets as any[], settings.max_ticket_price) as any;
+  if (input.registration_open != null) doc.registration_open = input.registration_open;
+  applyTheme(doc, input.theme);
+  doc.tickets = cleanTickets(input.tickets, doc.tickets as any[], limits) as any;
   doc.questions = cleanQuestions(input.questions, doc.questions as any[]) as any;
   applyPayment(doc, input, user);
   doc.city_slug = await resolveCity(input.city_slug);
@@ -234,6 +290,7 @@ export const eventService = {
       hidden: false,
       going_count: 0,
       reminders_sent: [],
+      registration_open: true,
       tickets: source.tickets.map((t) => ({ ...t.toObject(), _id: undefined, sold: 0 })),
       questions: source.questions.map((q) => ({ ...q.toObject(), _id: undefined })),
       hosts: [{ user_id: user._id, role: 'HOST' }],
@@ -262,6 +319,27 @@ export const eventService = {
     if (!target) throw notFound('Co-host');
     if (target.role === 'HOST') throw badInput('The main host cannot be removed');
     doc.hosts = doc.hosts.filter((h) => String(h.user_id) !== userId) as any;
+    await doc.save();
+    return toPublicEvent(doc, viewerOf(user));
+  },
+
+  /** Close (or reopen) registration without touching anything else on the event. */
+  async setRegistrationOpen(user: LiteUserDoc, id: string, open: boolean) {
+    const doc = await requireHosted(id, user);
+    if (doc.status === 'CANCELLED') throw badInput('A cancelled event cannot take registrations');
+    doc.registration_open = open;
+    await doc.save();
+    return toPublicEvent(doc, viewerOf(user));
+  },
+
+  /** A new public address for the event. The old one stops working, so the client warns first. */
+  async changeSlug(user: LiteUserDoc, id: string, rawSlug: string) {
+    const doc = await requireHosted(id, user);
+    const slug = cleanText(rawSlug, 80, 'Event link', true).toLowerCase();
+    if (slug.length < 3 || !URL_SLUG.test(slug)) throw badInput('An event link is 3 to 80 lowercase letters, numbers and single hyphens');
+    if (slug === doc.slug) return toPublicEvent(doc, viewerOf(user));
+    if (await LiteEventModel.exists({ slug, _id: { $ne: doc._id } })) throw badInput('That event link is already taken');
+    doc.slug = slug;
     await doc.save();
     return toPublicEvent(doc, viewerOf(user));
   },

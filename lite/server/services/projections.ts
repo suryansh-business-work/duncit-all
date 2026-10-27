@@ -116,6 +116,7 @@ export function toPublicRegistration(doc: any, event: any, user: any) {
   return {
     id: idOf(doc._id),
     code: doc.code,
+    event_id: idOf(doc.event_id),
     event,
     ticket: { id: doc.ticket_id, name: doc.ticket_name, price: doc.ticket_price ?? 0 },
     quantity: doc.quantity ?? 1,
@@ -128,9 +129,10 @@ export function toPublicRegistration(doc: any, event: any, user: any) {
     answers: (doc.answers ?? []).map((a: any) => ({ question_id: a.question_id, label: a.label, answer: a.answer })),
     checked_in_at: iso(doc.checked_in_at),
     waitlist_position: doc.waitlist_position ?? null,
+    // Only the guest, the event's hosts and admins ever read a registration, so the contact is theirs to see.
     user: user
-      ? { id: idOf(user._id), name: user.name, email: user.email, handle: user.handle, avatar_url: user.avatar_url || null }
-      : { id: idOf(doc.user_id), name: doc.user_name, email: doc.user_email, handle: '', avatar_url: null },
+      ? { id: idOf(user._id), name: user.name, email: user.email || '', phone: user.phone || null, handle: user.handle, avatar_url: user.avatar_url || null }
+      : { id: idOf(doc.user_id), name: doc.user_name, email: doc.user_email || '', phone: null, handle: '', avatar_url: null },
     created_at: iso(doc.created_at) ?? '',
   };
 }
@@ -167,6 +169,9 @@ export async function toPublicEvent(doc: any, viewer: Viewer | null, options: Ev
     map_url: doc.map_url || null,
     city_slug: doc.city_slug || null,
     city_name: city?.name ?? null,
+    place_id: doc.place_id || null,
+    lat: typeof doc.lat === 'number' ? doc.lat : null,
+    lng: typeof doc.lng === 'number' ? doc.lng : null,
     virtual_link: isHost || confirmedGuest ? doc.virtual_link || null : null,
     category: category ? { id: idOf(category._id), name: category.name, slug: category.slug, icon: category.icon || null, sort_order: category.sort_order ?? 0, is_active: category.is_active !== false, events_count: 0 } : null,
     calendar: calendar ? await toPublicCalendar(calendar, viewer) : null,
@@ -175,6 +180,8 @@ export async function toPublicEvent(doc: any, viewer: Viewer | null, options: Ev
     status: doc.status,
     capacity: doc.capacity ?? null,
     require_approval: Boolean(doc.require_approval),
+    registration_open: doc.registration_open !== false,
+    theme: { key: doc.theme?.key || 'MINIMAL', accent: doc.theme?.accent || 'DEFAULT' },
     tickets: (doc.tickets ?? []).map((t: any) => ({ id: idOf(t._id), name: t.name, description: t.description || null, price: t.price ?? 0, quantity: t.quantity ?? null, sold: t.sold ?? 0, is_active: t.is_active !== false })),
     questions: (doc.questions ?? []).map((q: any) => ({ id: idOf(q._id), label: q.label, type: q.type, required: Boolean(q.required), options: q.options ?? [] })),
     upi_id: hasPaid ? doc.upi_id || null : null,

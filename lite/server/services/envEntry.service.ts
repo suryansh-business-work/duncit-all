@@ -1,7 +1,8 @@
+import { DIGITS } from '@duncit/regex';
 import { LITE_ENV_CATEGORIES, LiteEnvEntryModel, type LiteEnvCategory } from '../models/envEntry.model';
 import { badInput, notFound } from '../utils/errors';
 import { iso } from '../utils/ids';
-import { cleanText } from '../utils/validate';
+import { cleanText, wholeNumber } from '../utils/validate';
 
 export interface EnvFieldDef {
   name: string;
@@ -10,13 +11,16 @@ export interface EnvFieldDef {
   number?: boolean;
   bool?: boolean;
   hint?: string;
+  /** Bounds for a number field; a value outside them is refused, never clamped. */
+  min?: number;
+  max?: number;
 }
 
 /** The fields each category stores, rendered dynamically by the console's form. */
 export const CATEGORY_FIELDS: Record<LiteEnvCategory, EnvFieldDef[]> = {
   EMAIL: [
     { name: 'host', label: 'SMTP Host', hint: 'e.g. smtp.gmail.com' },
-    { name: 'port', label: 'Port', number: true, hint: '465 (SSL) or 587 (TLS)' },
+    { name: 'port', label: 'Port', number: true, min: 1, max: 65_535, hint: '465 (SSL) or 587 (TLS)' },
     { name: 'user', label: 'Username', hint: 'Full mailbox address' },
     { name: 'password', label: 'Password', secret: true, hint: 'SMTP password or app password' },
     { name: 'secure', label: 'Use TLS', bool: true },
@@ -32,12 +36,28 @@ export const CATEGORY_FIELDS: Record<LiteEnvCategory, EnvFieldDef[]> = {
   GOOGLE_OAUTH: [
     { name: 'client_id', label: 'OAuth Client ID', hint: 'xxxxxx.apps.googleusercontent.com' },
   ],
+  // A BROWSER key: the event form's place search and the event page's map run
+  // in the visitor's browser, so this key is public by design. Restrict it to
+  // the Lite hostnames (HTTP referrers) and to Maps JavaScript + Places APIs.
+  GOOGLE_MAPS: [
+    { name: 'api_key', label: 'Browser API Key', hint: 'AIza… — restrict it to lite.duncit.com/* and the Maps JavaScript, Places (New) and Maps Embed APIs' },
+    { name: 'map_id', label: 'Map ID', hint: 'Optional: a Map ID with a dark style, from Google Maps Platform → Map management' },
+  ],
+  // The SMS carrier for "Use phone number". MSG91's OTP widget makes, sends and
+  // checks the code; Lite only keeps the request id. Both values stay on the server.
+  MSG91: [
+    { name: 'widget_id', label: 'Widget ID', hint: 'MSG91 → OTP → Widgets → your widget. Set its OTP length to 6' },
+    { name: 'auth_key', label: 'Auth Key', secret: true, hint: 'MSG91 → Settings → Security → Auth Key' },
+    { name: 'default_country_code', label: 'Default Country Code', number: true, min: 1, max: 9999, hint: '91 for India — added when a number is typed without one' },
+  ],
 };
 
 export const CATEGORY_LABELS: Record<LiteEnvCategory, { label: string; docUrl: string }> = {
   EMAIL: { label: 'Email (SMTP)', docUrl: 'https://support.google.com/mail/answer/7126229' },
   IMAGEKIT: { label: 'ImageKit', docUrl: 'https://imagekit.io/dashboard/developer/api-keys' },
   GOOGLE_OAUTH: { label: 'Google sign-in', docUrl: 'https://console.cloud.google.com/apis/credentials' },
+  GOOGLE_MAPS: { label: 'Google Maps', docUrl: 'https://console.cloud.google.com/google/maps-apis/credentials' },
+  MSG91: { label: 'MSG91 (SMS sign-in)', docUrl: 'https://control.msg91.com/app/m/l/otp/widgets' },
 };
 
 export type EnvConfig = Record<string, string | number | boolean>;
@@ -52,9 +72,9 @@ const SECRET_FIELDS = new Set(
 function coerce(field: EnvFieldDef, raw: string): string | number | boolean {
   if (field.bool) return raw === 'true' || raw === '1' || raw === 'on';
   if (field.number) {
-    const n = Number.parseInt(raw, 10);
-    if (Number.isNaN(n)) throw badInput(`${field.label} must be a number`);
-    return n;
+    const text = raw.trim();
+    if (!DIGITS.test(text)) throw badInput(`${field.label} must be a whole number`);
+    return wholeNumber(Number(text), field.label, { min: field.min ?? 0, max: field.max ?? Number.MAX_SAFE_INTEGER });
   }
   return raw.trim();
 }

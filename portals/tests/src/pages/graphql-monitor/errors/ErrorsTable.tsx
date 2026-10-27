@@ -4,7 +4,7 @@ import { useTranslation } from '@duncit/shell';
 import type { DuncitColumn } from '@duncit/table';
 import LiveRowsTable from '../../stress-testing/components/LiveRowsTable';
 import { formatCount } from '../../stress-testing/labels';
-import { formatDateTime } from '../../server/format';
+import { formatDateTime } from '../../../../../tech/src/pages/server/format';
 import type { ErrorGroup } from '../queries';
 
 interface Props {

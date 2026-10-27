@@ -4,7 +4,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useTranslation } from '@duncit/shell';
 import MonitorHeader from '../components/MonitorHeader';
 import OperationTypeChip from '../components/OperationTypeChip';
-import { formatDateTime } from '../../server/format';
+import { formatDateTime } from '../../../../../tech/src/pages/server/format';
 import type { MonitorRange, OperationDetail } from '../queries';
 
 interface Props {

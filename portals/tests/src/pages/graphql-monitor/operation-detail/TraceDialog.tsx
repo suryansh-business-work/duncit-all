@@ -5,7 +5,7 @@ import { QueryGuard } from '@duncit/ui';
 import { useTranslation } from '@duncit/shell';
 import MetricTiles from '../../stress-testing/components/MetricTiles';
 import { formatMs } from '../../stress-testing/labels';
-import { formatDateTime } from '../../server/format';
+import { formatDateTime } from '../../../../../tech/src/pages/server/format';
 import TraceWaterfall from './TraceWaterfall';
 import { GRAPHQL_MONITOR_TRACE, type MonitorTrace } from '../queries';
 

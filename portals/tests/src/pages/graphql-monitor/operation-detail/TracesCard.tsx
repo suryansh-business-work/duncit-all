@@ -5,7 +5,7 @@ import type { DuncitColumn } from '@duncit/table';
 import LiveRowsTable from '../../stress-testing/components/LiveRowsTable';
 import { SectionCard } from '@duncit/ui';
 import { formatMs } from '../../stress-testing/labels';
-import { formatDateTime } from '../../server/format';
+import { formatDateTime } from '../../../../../tech/src/pages/server/format';
 import TraceDialog from './TraceDialog';
 import { MONITOR_POLL_MS } from '../hooks';
 import { GRAPHQL_MONITOR_TRACES, type MonitorTrace } from '../queries';

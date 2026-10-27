@@ -4,7 +4,7 @@ import { useTranslation } from '@duncit/shell';
 import type { DuncitColumn } from '@duncit/table';
 import LiveRowsTable from '../../stress-testing/components/LiveRowsTable';
 import { formatCount, formatMs, formatPct } from '../../stress-testing/labels';
-import { formatDateTime } from '../../server/format';
+import { formatDateTime } from '../../../../../tech/src/pages/server/format';
 import OperationTypeChip from '../components/OperationTypeChip';
 import { errorRateColor, fieldKindOptions } from '../labels';
 import type { FieldUsage } from '../queries';

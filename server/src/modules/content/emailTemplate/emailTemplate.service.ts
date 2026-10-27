@@ -10,18 +10,10 @@ import { CATEGORY_NOTE_KEY } from '@modules/content/emailFragment/emailFragment.
 import { TEMPLATE_CATEGORIES, TEMPLATE_FOOTER_NOTES } from '@services/email/template-categories';
 import { STARTER_MJML } from '@services/email/catalogue/starter';
 import { connectTemplateFragments } from './emailTemplate.chrome';
+import { applyEmailDesign, GENERAL_FRAGMENT_KEY } from './emailTemplate.design';
+import { detectVariables, shippedBodyUpdate } from './emailTemplate.variables';
 
-/** The header/footer a template started from the bare starter body gets. */
-const STARTER_FRAGMENT_KEY = 'notification';
-
-/** Walk the MJML source and extract every {{ var }} reference. */
-export function detectVariables(mjml: string): string[] {
-  const set = new Set<string>();
-  const re = /{{\s*(\w+)\s*}}/g;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(mjml))) set.add(m[1]);
-  return [...set];
-}
+export { detectVariables } from './emailTemplate.variables';
 
 /** Escaped so a var name containing regex metacharacters — such as the dot-path
  * of a translation key like `t:email.podRefund.title` — matches literally
@@ -183,17 +175,10 @@ async function upgradeRow(row: StoredBody): Promise<'current' | 'edited' | 'upgr
   if (!seed || current === shippedFingerprint(seed.mjml)) return 'current';
   if (!LEGACY_TEMPLATE_FINGERPRINTS[row.slug]?.includes(current)) return 'edited';
 
-  const known = new Set((row.variables ?? []).map((variable) => variable.key));
-  const added = detectVariables(seed.mjml)
-    .filter((key) => !known.has(key))
-    .map((key) => ({ key }));
   const subject = isShippedSubject(row.slug, row.subject, seed.subject) ? { subject: seed.subject } : {};
   const result = await EmailTemplateModel.updateOne(
     { slug: row.slug, mjml: row.mjml },
-    {
-      $set: { mjml: seed.mjml, ...subject },
-      ...(added.length ? { $push: { variables: { $each: added } } } : {}),
-    }
+    shippedBodyUpdate(seed.mjml, row.variables, subject)
   ).catch((error) => {
     logs.server.error('emailTemplate', 'upgradeShippedDefaults', { error, slug: row.slug });
     return null;
@@ -289,7 +274,7 @@ export const emailTemplateService = {
       // No body given: start from the shipped design, not a blank page. That
       // starter is a bare body (no logo, no footer), so it also gets a fragment
       // unless the admin picked one — otherwise the new template sends bare.
-      ...(input.mjml ? {} : { fragment_key: input.fragment_key ?? STARTER_FRAGMENT_KEY }),
+      ...(input.mjml ? {} : { fragment_key: input.fragment_key ?? GENERAL_FRAGMENT_KEY }),
       mjml: input.mjml || STARTER_MJML,
       template_id: crypto.randomUUID(),
     });
@@ -325,13 +310,9 @@ export const emailTemplateService = {
         extensions: { code: 'BAD_USER_INPUT' },
       });
     }
-    const known = new Set((doc.variables ?? []).map((variable) => variable.key));
-    const added = detectVariables(seed.mjml)
-      .filter((key) => !known.has(key))
-      .map((key) => ({ key }));
     const updated = await EmailTemplateModel.findOneAndUpdate(
       { template_id },
-      { $set: { mjml: seed.mjml }, ...(added.length ? { $push: { variables: { $each: added } } } : {}) },
+      shippedBodyUpdate(seed.mjml, doc.variables),
       { new: true }
     );
     logs.server.info('emailTemplate', 'reset', { slug: doc.slug, msg: `${doc.slug} reset to the shipped body` });
@@ -361,6 +342,14 @@ export const emailTemplateService = {
       )
     );
     await emailTemplateService.upgradeShippedDefaults();
+    // Once per design version, EVERY row — edited ones too — onto the shipped
+    // card, with what it replaced kept as a backup. It connects the fragments
+    // itself, so the plain connect below only runs when it did not.
+    const design = await applyEmailDesign().catch((error) => {
+      logs.server.error('emailTemplate', 'applyEmailDesign', { error });
+      return null;
+    });
+    if (design) return;
     // The upgraded bodies are BARE — no logo, no footer. A row that predates
     // fragments still names none, so without this every one of them sent with
     // no header and no footer. Shipped slugs only: an admin's own template is

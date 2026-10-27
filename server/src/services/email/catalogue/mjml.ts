@@ -214,12 +214,18 @@ function rowCells(row: DetailRow, last: boolean): string {
   const size = row.total ? F.value.size : '16px';
   return `            <tr>
               <td width="52" valign="middle" style="${top}width:52px;padding:10px 0;vertical-align:middle">${badge(name, S.rowBadge, '18px')}</td>
-              <th scope="row" align="left" style="${top}padding:14px 12px 14px 0;border-bottom:${edge};color:${C.muted};font-size:${F.body.size};line-height:${F.body.line};font-weight:400;text-align:left;vertical-align:middle;width:38%">${label}</th>
-              <td align="left" style="${top}padding:14px 0;border-bottom:${edge};color:${C.ink};font-size:${size};line-height:${F.body.line};font-weight:700;text-align:left;vertical-align:middle;word-break:break-word">{{${row.valueVar}}}</td>
+              <th scope="row" align="left" class="dl-label" style="${top}padding:14px 12px 14px 0;border-bottom:${edge};color:${C.muted};font-size:${F.body.size};line-height:${F.body.line};font-weight:400;text-align:left;vertical-align:middle;width:38%">${label}</th>
+              <td align="left" class="dl-value" style="${top}padding:14px 0;border-bottom:${edge};color:${C.ink};font-size:${size};line-height:${F.body.line};font-weight:700;text-align:left;vertical-align:middle;word-break:break-word">{{${row.valueVar}}}</td>
             </tr>`;
 }
 
-/** The record's own details, each with its icon, as a table a screen reader can walk. */
+/**
+ * The record's own details, each with its icon, as a table a screen reader can walk.
+ *
+ * Label beside value on a wide screen; on a phone `dl-label`/`dl-value` stack
+ * the label over its value (see `./mjml.head`), so a date or an invoice number
+ * keeps the whole width instead of breaking mid-word in a third of it.
+ */
 export function detailRows(rows: readonly DetailRow[]): string {
   const lines = rows.map((row, index) => rowCells(row, index === rows.length - 1)).join('\n');
   return section(
@@ -236,10 +242,12 @@ ${lines}
  * The bare URL is not decoration: a corporate mail client that strips buttons
  * leaves an email with nowhere to go, and the people these are written for —
  * venue owners, brand owners — are the most likely to be reading in one.
+ * On a phone the button fills the card's width (`.cta` in `./mjml.head`), the
+ * thumb-sized target a reader expects there.
  */
 export function cta(labelKey: string, urlVar: string): string {
   return section(
-    `          <mj-button href="{{${urlVar}}}" align="left">{{t:${labelKey}}}</mj-button>
+    `          <mj-button css-class="cta" href="{{${urlVar}}}" align="left">{{t:${labelKey}}}</mj-button>
           <mj-text ${caption} color="${C.muted}" padding="12px 0 0 0">{{t:email.common.linkFallback}} <a href="{{${urlVar}}}" style="color:${C.primary};word-break:break-all">{{${urlVar}}}</a></mj-text>`,
     { top: '4px', bottom: '20px' }
   );

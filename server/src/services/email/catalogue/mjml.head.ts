@@ -54,6 +54,9 @@ export function darkModeCss(): string {
  * own, so it applies the rules above instead of inverting the page itself.
  * `.hero` lifts the heading on a wide screen; `.gutter` narrows the card's side
  * padding on a phone — a class on an `<mj-section>` lands on its outer `<div>`.
+ * Also on a phone: `.cta` (the class an `<mj-button>` puts on its cell) fills
+ * the width, and a detail row's label stacks over its value. A client that
+ * drops the query keeps the wide layout, which still reads.
  */
 export const HEAD = `    <mj-raw>
     <meta name="color-scheme" content="light dark" />
@@ -73,6 +76,11 @@ export const HEAD = `    <mj-raw>
       }
       @media only screen and (max-width: 479px) {
         .gutter > table > tbody > tr > td { padding-left: ${S.gutterNarrow} !important; padding-right: ${S.gutterNarrow} !important; }
+        .cta table { width: 100% !important; }
+        .cta a { display: block !important; }
+        .dl-label, .dl-value { display: block !important; width: auto !important; }
+        .dl-label { padding: 12px 0 0 0 !important; border-bottom: 0 !important; }
+        .dl-value { padding: 2px 0 12px 0 !important; border-top: 0 !important; }
       }
     </mj-style>
 ${darkModeCss()}`;

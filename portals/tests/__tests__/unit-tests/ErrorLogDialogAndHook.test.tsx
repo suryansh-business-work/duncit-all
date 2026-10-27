@@ -39,7 +39,7 @@ import {
   renderWhen,
 } from '../../src/pages/error-logs-page/errorLogCells';
 import { ERROR_LOGS_TABLE, parseIssueData, type ErrorLogRow } from '../../src/pages/error-logs-page/queries';
-import { SUPER_ROLE } from '../../src/lib/session';
+import { SUPER_ROLE } from '@duncit/shell';
 
 const makeRow = (over: Partial<ErrorLogRow> = {}): ErrorLogRow =>
   ({

@@ -113,6 +113,8 @@ describe('ScannerPanel', () => {
 
     scan('ABC123');
     await screen.findByTestId('scan-ok');
+    // The countdown starts in an effect after the verdict paints: let it start before moving the clock.
+    await act(() => Promise.resolve());
 
     act(() => {
       vi.advanceTimersByTime(RESUME_AFTER_MS - 1_000);

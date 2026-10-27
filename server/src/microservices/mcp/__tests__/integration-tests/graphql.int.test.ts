@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { Types } from 'mongoose';
 import { resolvers, typeDefsByModule } from '@modules';
+import { UserModel } from '@modules/access/user/user.model';
 import { signToken, startTestServer, type TestServer } from '@test/harness';
 import { mcpConnectionService } from '../../auth/connections.service';
 import { mcpConsentService } from '../../auth/consent.service';
@@ -57,6 +58,24 @@ const person = (roles: string[], email = `gql-${new Types.ObjectId().toHexString
   roles,
 });
 
+/**
+ * A session token for `who`, backed by a real account. The request context
+ * keeps only the token roles the account still holds (`current-roles.ts`), so
+ * a token with no account behind it opens no door. Collections are wiped after
+ * every test, so the account is written on first use within each test.
+ */
+async function signIn(who: Person): Promise<string> {
+  if (!(await UserModel.exists({ _id: who.id }))) {
+    await UserModel.create({
+      _id: new Types.ObjectId(who.id),
+      auth: { email: who.email },
+      profile: { first_name: 'Asha', last_name: 'Rao' },
+      metadata: { role_keys: who.roles },
+    });
+  }
+  return signToken(who);
+}
+
 interface GqlResponse<T> {
   data?: T | null;
   errors?: Array<{ message: string; extensions?: { code?: string } }>;
@@ -67,9 +86,10 @@ async function ask<T = Record<string, unknown>>(
   query: string,
   variables: Record<string, unknown> = {}
 ): Promise<GqlResponse<T>> {
+  const authorization = who ? { authorization: `Bearer ${await signIn(who)}` } : {};
   const response = await fetch(server.url, {
     method: 'POST',
-    headers: { 'content-type': 'application/json', ...(who ? { authorization: `Bearer ${signToken(who)}` } : {}) },
+    headers: { 'content-type': 'application/json', ...authorization },
     body: JSON.stringify({ query, variables }),
   });
   return (await response.json()) as GqlResponse<T>;

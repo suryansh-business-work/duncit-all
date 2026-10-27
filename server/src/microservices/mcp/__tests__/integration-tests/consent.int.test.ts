@@ -26,7 +26,11 @@ const CHALLENGE =createHash('sha256').update(randomBytes(32).toString('base64url
 
 async function seedUser(roles: string[] = ['MCP_USER']): Promise<AuthUser> {
   const email = `consent-${new Types.ObjectId().toHexString()}@duncit.com`;
-  const doc = await UserModel.create({ auth: { email }, metadata: { role_keys: roles } });
+  const doc = await UserModel.create({
+    auth: { email },
+    profile: { first_name: 'Meera', last_name: 'Iyer' },
+    metadata: { role_keys: roles },
+  });
   return { id: String(doc._id), email, roles };
 }
 

@@ -438,6 +438,8 @@ export const publicTypeDefs = gql`
     liteCalendar(slug: String!): LiteCalendar
     liteCalendarEvents(slug: String!, past: Boolean): [LiteEvent!]!
     liteMyCalendars: [LiteCalendar!]!
+    "Calendars the signed-in person follows, the latest first."
+    liteSubscribedCalendars: [LiteCalendar!]!
     liteCategories(include_inactive: Boolean): [LiteCategory!]!
     liteCities(include_inactive: Boolean): [LiteCity!]!
     liteCity(slug: String!): LiteCity

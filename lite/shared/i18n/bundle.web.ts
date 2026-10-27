@@ -623,6 +623,13 @@ export const LITE_WEB_BUNDLE: NestedCatalogue = {
       avatar: 'Avatar',
       cover: 'Cover picture',
       saved: 'Calendar saved.',
+      pageTitle: 'Calendars',
+      create: 'Create',
+      editNamed: 'Edit {name}',
+      subscribedTitle: 'Subscribed calendars',
+      subscribedEmpty: 'No subscriptions yet',
+      subscribedEmptyBody: 'Follow a calendar and its new events reach you by email.',
+      browse: 'Discover calendars',
     },
     calendar: {
       by: 'By',
@@ -633,7 +640,11 @@ export const LITE_WEB_BUNDLE: NestedCatalogue = {
       subscribeInApp: 'Subscribe in your calendar app',
     },
     user: {
-      hosted: { one: '{count} event hosted', other: '{count} events hosted' },
+      joined: 'Joined {date}',
+      hostedLabel: 'Hosted',
+      attendedLabel: 'Attended',
+      hostingTitle: 'Events',
+      socialOn: '{name} on {network}',
     },
     profile: {
       title: 'Profile',

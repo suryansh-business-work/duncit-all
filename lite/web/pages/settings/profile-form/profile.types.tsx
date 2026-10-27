@@ -1,10 +1,9 @@
 import { z } from 'zod';
-import type { LiteMe, LiteSocialKey } from '../../../../shared/graphql/documents';
+import type { LiteMe } from '../../../../shared/graphql/documents';
 import type { LiteProfileInput } from '../../../graphql/profile';
 import { rules, type Translate } from '../../../lib/validation';
 
-/** The networks a profile links to, in the order the form lists them; the website is a full link. */
-export const SOCIAL_FIELDS: readonly LiteSocialKey[] = ['instagram', 'x', 'youtube', 'tiktok', 'linkedin', 'website'];
+export { SOCIAL_FIELDS } from '../../../lib/social';
 
 export const makeProfileSchema = (t: Translate) =>
   z.object({

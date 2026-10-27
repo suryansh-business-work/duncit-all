@@ -38,6 +38,7 @@ export const publicResolvers = {
     liteCalendar: async (_p: unknown, args: Args, ctx: LiteContext) => calendarService.bySlug(args.slug, await optionalUser(ctx)),
     liteCalendarEvents: async (_p: unknown, args: Args, ctx: LiteContext) => calendarService.events(args.slug, Boolean(args.past), await optionalUser(ctx)),
     liteMyCalendars: async (_p: unknown, _a: Args, ctx: LiteContext) => calendarService.mine(await requireUser(ctx)),
+    liteSubscribedCalendars: async (_p: unknown, _a: Args, ctx: LiteContext) => calendarService.subscribed(await requireUser(ctx)),
     liteCategories: (_p: unknown, args: Args) => publicCategories(Boolean(args.include_inactive)),
     liteCities: (_p: unknown, args: Args) => publicCities(Boolean(args.include_inactive)),
     liteCity: (_p: unknown, args: Args) => discoverService.city(args.slug),

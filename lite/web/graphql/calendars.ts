@@ -29,6 +29,15 @@ export const LITE_MY_CALENDARS: TypedDocumentNode<{ liteMyCalendars: LiteCalenda
   ${LITE_CALENDAR_FIELDS}
 `;
 
+export const LITE_SUBSCRIBED_CALENDARS: TypedDocumentNode<{ liteSubscribedCalendars: LiteCalendar[] }, NoVars> = gql`
+  query LiteSubscribedCalendars {
+    liteSubscribedCalendars {
+      ...LiteCalendarFields
+    }
+  }
+  ${LITE_CALENDAR_FIELDS}
+`;
+
 export interface LiteCalendarInput {
   name: string;
   slug: string | null;

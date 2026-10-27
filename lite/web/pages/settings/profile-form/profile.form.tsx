@@ -12,17 +12,8 @@ import { useWebT } from '../../../../shared/i18n';
 import { useLiteSession } from '../../../../shared/session';
 import { CoverUploader } from '../../../components/CoverUploader';
 import { LITE_UPDATE_PROFILE } from '../../../graphql/profile';
+import { SOCIAL_PREFIX } from '../../../lib/social';
 import { SOCIAL_FIELDS, makeProfileSchema, profileDefaults, toProfileInput, type ProfileOutput, type ProfileValues } from './profile.types';
-
-/** The fixed address in front of each handle, so a host types just their name on that network. */
-const SOCIAL_PREFIX: Record<(typeof SOCIAL_FIELDS)[number], string> = {
-  instagram: 'instagram.com/',
-  x: 'x.com/',
-  youtube: 'youtube.com/@',
-  tiktok: 'tiktok.com/@',
-  linkedin: 'linkedin.com/in/',
-  website: '',
-};
 
 /** Name, handle, bio, picture and the social links shown on the public profile. */
 export function ProfileForm({ me }: Readonly<{ me: LiteMe }>) {

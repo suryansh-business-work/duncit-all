@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { LITE_ME } from '../../../../shared/graphql/documents';
 import { MODE_STORAGE_KEY } from '../../../../shared/theme';
 import { DisplayModeSync, MUI_MODE } from '../../../app/providers/DisplayModeSync';
-import { meFixture, renderWithProviders } from '../../test-utils';
+import { meFixture, renderWithProviders, settle } from '../../test-utils';
 
 /** What the page is drawn in right now, and a way for the reader to flip it on this device. */
 function ModeProbe() {
@@ -65,6 +65,8 @@ describe('DisplayModeSync', () => {
     const me = meFixture({ display_mode: 'LIGHT' });
     const { cache } = renderWithProviders(page, { me });
     expect(screen.getByTestId('mode')).toHaveTextContent('light');
+    // Let the session's own read of the account land first, as it would before another device changes it.
+    await settle();
 
     // Apollo hands a cache write to its watchers asynchronously.
     await act(async () => {

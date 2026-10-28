@@ -61,7 +61,8 @@ describe('CoHostForm', () => {
 
     await vi.waitFor(() => expect(onAdded).toHaveBeenCalledTimes(1));
     expect(toasts.seen).toEqual([{ message: 'Co-host added.', severity: 'success' }]);
-    expect(field).toHaveValue('');
+    // reset() clears the box in a later render than the onAdded call: wait for that render, not just the callback.
+    await vi.waitFor(() => expect(field).toHaveValue(''));
   });
 
   it('keeps the email and shows the refusal when the API says no', async () => {

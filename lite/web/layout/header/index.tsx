@@ -30,7 +30,8 @@ function NavLinks() {
   const { pathname } = useLocation();
   const { signedIn } = useLiteSession();
   return (
-    <Stack component="nav" aria-label={t('liteWeb.nav.label')} direction="row" spacing={{ xs: 0, sm: 0.5 }}>
+    // On a phone the bottom tab bar carries these places, like a native app.
+    <Stack component="nav" aria-label={t('liteWeb.nav.label')} direction="row" spacing={{ xs: 0, sm: 0.5 }} sx={(theme) => ({ [theme.breakpoints.down('sm')]: { display: 'none' } })}>
       {NAV_ITEMS.filter((item) => signedIn || !item.signedIn).map((item) => {
         const active = item.match(pathname);
         const Icon = item.icon;
@@ -69,7 +70,7 @@ function PrimaryLink() {
     );
   }
   return (
-    <Link component={RouterLink} to={paths.create} underline="none" sx={{ ...LINK_SX, color: 'text.primary' }} data-testid="header-create">
+    <Link component={RouterLink} to={paths.create} underline="none" sx={(theme) => ({ ...LINK_SX, color: 'text.primary', [theme.breakpoints.down('sm')]: { display: 'none' } })} data-testid="header-create">
       {t('liteWeb.nav.create')}
     </Link>
   );

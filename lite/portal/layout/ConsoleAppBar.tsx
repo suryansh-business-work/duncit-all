@@ -5,14 +5,13 @@ import LightModeIcon from '@mui/icons-material/LightMode';
 import { DuncitIconButton } from '@duncit/buttons';
 import { useColorMode } from '@duncit/theme';
 import { usePortalT } from '../../shared/i18n';
-import { DRAWER_WIDTH } from './nav-items';
 import { UserMenu } from './UserMenu';
 
 interface Props {
   onOpenNav: () => void;
 }
 
-/** The console's top bar: menu button on phones, title, language, color mode, account. */
+/** The console's header, sticky at the top of the content panel: menu button on phones, title, language, color mode, account. */
 export function ConsoleAppBar({ onOpenNav }: Readonly<Props>) {
   const { t, locale, locales, setLocale } = usePortalT();
   const { mode, toggle } = useColorMode();
@@ -20,12 +19,18 @@ export function ConsoleAppBar({ onOpenNav }: Readonly<Props>) {
 
   return (
     <AppBar
-      position="fixed"
-      color="default"
+      position="sticky"
+      color="inherit"
       elevation={0}
-      sx={{ borderBottom: 1, borderColor: 'divider', width: { md: `calc(100% - ${DRAWER_WIDTH}px)` }, ml: { md: `${DRAWER_WIDTH}px` } }}
+      sx={(theme) => ({
+        top: 0,
+        borderBottom: 1,
+        borderColor: 'divider',
+        backdropFilter: 'saturate(140%) blur(12px)',
+        backgroundColor: `rgba(${theme.vars?.palette.background.paperChannel} / 0.85)`,
+      })}
     >
-      <Toolbar sx={{ gap: 1 }}>
+      <Toolbar sx={{ gap: 1, minHeight: { xs: 56, md: 60 } }}>
         <DuncitIconButton
           edge="start"
           onClick={onOpenNav}
@@ -35,7 +40,7 @@ export function ConsoleAppBar({ onOpenNav }: Readonly<Props>) {
         >
           <MenuIcon />
         </DuncitIconButton>
-        <Typography variant="h6" component="div" sx={{ flexGrow: 1, fontWeight: 800 }}>
+        <Typography variant="h6" component="div" noWrap sx={{ flexGrow: 1, minWidth: 0, fontWeight: 800, fontSize: { xs: '1rem', md: '1.1rem' } }}>
           {t('litePortal.app.title')}
         </Typography>
         {locales.length > 1 && (
@@ -45,7 +50,7 @@ export function ConsoleAppBar({ onOpenNav }: Readonly<Props>) {
             label={t('litePortal.app.language')}
             value={locale}
             onChange={(event) => setLocale(event.target.value)}
-            sx={{ minWidth: 140 }}
+            sx={{ minWidth: { xs: 112, sm: 140 } }}
             data-testid="app-bar-language"
           >
             {locales.map((option) => (

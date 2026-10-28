@@ -6,6 +6,9 @@ export const LITE_WEB_BUNDLE: NestedCatalogue = {
     nav: {
       label: 'Site navigation',
       clockZone: '{zone} · {offset}',
+      tabBar: 'App navigation',
+      tabHome: 'Home',
+      tabProfile: 'Profile',
       pricing: 'Pricing',
       discover: 'Discover',
       tickets: 'My tickets',

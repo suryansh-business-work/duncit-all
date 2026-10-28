@@ -7,6 +7,7 @@ import { useWebT } from '../../shared/i18n';
 import { SignInDialog } from '../components/auth/SignInDialog';
 import { Footer } from './Footer';
 import { Header } from './header';
+import { MobileTabBar, TAB_BAR_HEIGHT } from './MobileTabBar';
 import { PageBoundary } from './PageBoundary';
 import { TopGlow } from './TopGlow';
 
@@ -30,7 +31,17 @@ export function AppShell() {
   return (
     // reducedMotion="user": with the reader's reduced-motion setting on, every Framer animation drops its movement.
     <MotionConfig reducedMotion="user">
-      <Box sx={{ position: 'relative', display: 'flex', flexDirection: 'column', minHeight: '100dvh', overflowX: 'clip' }}>
+      <Box
+        sx={(theme) => ({
+          position: 'relative',
+          display: 'flex',
+          flexDirection: 'column',
+          minHeight: '100dvh',
+          overflowX: 'clip',
+          // Room for the phone tab bar, so the footer and the last card are never under it.
+          [theme.breakpoints.down('sm')]: { pb: `calc(${TAB_BAR_HEIGHT}px + env(safe-area-inset-bottom))` },
+        })}
+      >
         <TopGlow />
         <Link
           href={`#${MAIN_ID}`}
@@ -54,6 +65,7 @@ export function AppShell() {
           </PageBoundary>
         </Box>
         <Footer />
+        <MobileTabBar />
         <SignInDialog />
         <ScrollRestoration />
       </Box>

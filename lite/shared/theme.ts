@@ -64,7 +64,8 @@ export function buildLiteTheme(): Theme {
         MuiCssBaseline: {
           styleOverrides: (theme: Theme) => ({
             ...KEYFRAMES,
-            body: { backgroundColor: theme.vars?.palette.background.default, colorScheme: 'light dark' },
+            // No grey flash on tap: pressed states are drawn by the components, as in a native app.
+            body: { backgroundColor: theme.vars?.palette.background.default, colorScheme: 'light dark', WebkitTapHighlightColor: 'transparent' },
             ...focusVisibleGlobalCss(LITE_SCHEMES.dark.accent),
             ...reducedMotionGlobalCss,
             // One control height on a touch screen too: buttons and single-line inputs both grow to 44.

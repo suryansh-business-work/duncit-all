@@ -43,6 +43,7 @@ COPY portals/analytics/package.json ./portals/analytics/
 COPY portals/localization/package.json ./portals/localization/
 COPY portals/targets/package.json ./portals/targets/
 COPY portals/mcp/package.json ./portals/mcp/
+COPY portals/loyalty/package.json ./portals/loyalty/
 COPY portals/tests/package.json ./portals/tests/
 COPY portals/ecomm-portal/package.json ./portals/ecomm-portal/
 COPY website/ecomm-store/package.json ./website/ecomm-store/
@@ -101,6 +102,7 @@ COPY portals/tech/src ./portals/tech/src
 COPY portals/ai/src ./portals/ai/src
 COPY portals/communications/src ./portals/communications/src
 COPY portals/finance/src ./portals/finance/src
+COPY portals/loyalty/src ./portals/loyalty/src
 COPY portals/legal/src ./portals/legal/src
 # The dashboard at / is the Analytics console's Logs page, read from its source too.
 COPY portals/analytics/src ./portals/analytics/src

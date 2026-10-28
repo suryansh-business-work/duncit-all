@@ -347,7 +347,7 @@ services:
     container_name: duncit-tests
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2047:8080"
+      - "127.0.0.1:2048:8080"
 
   # The Targets console (targets.duncit.com).
   targets:
@@ -373,6 +373,14 @@ services:
     restart: unless-stopped
     ports:
       - "127.0.0.1:2046:8080"
+
+  # The Loyalty console (loyalty.duncit.com).
+  loyalty:
+    image: ${DOCKERHUB_USERNAME}/duncit-loyalty:${IMAGE_TAG:-latest}
+    container_name: duncit-loyalty
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2047:8080"
 
   # The pet store's console (ecomm-portal.duncit.com).
   ecomm-portal:

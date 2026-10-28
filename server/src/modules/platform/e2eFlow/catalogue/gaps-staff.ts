@@ -3423,14 +3423,14 @@ export const STAFF_GAP_FLOWS: readonly CatalogueFlow[] = [
     ],
   },
   {
-    name: 'Finance: Duncit Coin',
+    name: 'Loyalty: Duncit Coin',
     description:
       'Coin settings, stats and manual adjustments.',
     sub_flows: [
       {
         name: 'CITY_ADMIN reads coins and gift cards but cannot change them',
         description:
-          'Reads use COIN_ADMIN_READ / GIFT_CARD_ADMIN_READ (SUPER_ADMIN, CITY_ADMIN, FINANCE_MANAGER, FINANCE_USER); writes use *_WRITE (SUPER_ADMIN, FINANCE_MANAGER). The trail of a manual adjustment is a coin ledger row (source ADMIN_GRANT/ADMIN_DEDUCT with the reason), not a separate audit table.',
+          'Reads use LOYALTY_ADMIN_READ (SUPER_ADMIN, CITY_ADMIN, FINANCE_MANAGER, FINANCE_USER, LOYALTY_MANAGER); writes use LOYALTY_ADMIN_WRITE (SUPER_ADMIN, FINANCE_MANAGER, LOYALTY_MANAGER). The trail of a manual adjustment is a coin ledger row (source ADMIN_GRANT/ADMIN_DEDUCT with the reason), not a separate audit table.',
         steps: [
           [
             'As CITY_ADMIN, query coinAdminStats and giftCardAdminStats',
@@ -3445,8 +3445,8 @@ export const STAFF_GAP_FLOWS: readonly CatalogueFlow[] = [
             'FORBIDDEN "Access Denied" (the user picker for adjustments is write-gated)',
           ],
           [
-            'As CITY_ADMIN, sign in to the Finance console',
-            'Refused "You do not have access to Duncit Finance. Please contact your administrator."',
+            'As CITY_ADMIN, sign in to the Loyalty console',
+            'Refused "You do not have access to Duncit Loyalty. Please contact your administrator."',
           ],
           [
             'As FINANCE_USER, query coinAdminStats then call adjustUserCoins',

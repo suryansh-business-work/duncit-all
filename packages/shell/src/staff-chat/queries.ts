@@ -457,6 +457,7 @@ export const ROLE_FILTERS = [
   { value: 'TARGETS_MANAGER', labelKey: 'shell.chat.team.targets' },
   { value: 'GIG_JOBS_MANAGER', labelKey: 'shell.chat.team.gigJobs' },
   { value: 'MCP_MANAGER', labelKey: 'shell.chat.team.mcp' },
+  { value: 'LOYALTY_MANAGER', labelKey: 'shell.chat.team.loyalty' },
   { value: 'TESTS_MANAGER', labelKey: 'shell.chat.team.tests' },
 ];
 

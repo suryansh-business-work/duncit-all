@@ -42,7 +42,7 @@ async function claim(userId: string, expiresAt: Date): Promise<boolean> {
  * Coins used to disappear on their date with nothing said; the reminder is the
  * one message that turns a lost balance into a booking. In-app (with push) and
  * email — never WhatsApp, whose marketing messages people did not opt into for
- * this. The lead is Finance > Duncit Coin > "Remind before expiry"; 0 is off.
+ * this. The lead is Loyalty > Duncit Coin > "Remind before expiry"; 0 is off.
  */
 export async function runCoinExpiryReminders(now = Date.now()): Promise<void> {
   const days = await coinSettingsService.expiryReminderDays();

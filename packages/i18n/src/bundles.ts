@@ -33,6 +33,7 @@ import { VENUE_RENTALS_BUNDLE } from './bundles/venue-rentals';
 import { VENUE_PRICING_BUNDLE } from './bundles/venue-pricing';
 import { GIG_JOBS_BUNDLE } from './bundles/gig-jobs';
 import { MCP_BUNDLE } from './bundles/mcp';
+import { LOYALTY_BUNDLE } from './bundles/loyalty';
 import { TESTS_BUNDLE } from './bundles/tests';
 import { TESTS_UNIT_BUNDLE } from './bundles/tests-unit';
 import { TESTS_MANUAL_BUNDLE } from './bundles/tests-manual';
@@ -140,6 +141,7 @@ export {
   VENUE_PRICING_BUNDLE,
   GIG_JOBS_BUNDLE,
   MCP_BUNDLE,
+  LOYALTY_BUNDLE,
   TESTS_BUNDLE,
   TESTS_UNIT_BUNDLE,
   TESTS_MANUAL_BUNDLE,
@@ -159,6 +161,22 @@ export {
  */
 export const SHELL_FOOD_TAX_SLICE: NestedCatalogue = {
   shell: { foodTax: catalogueBranch(catalogueBranch(SHELL_BUNDLE, 'shell'), 'foodTax') },
+};
+
+const financeBranch = (key: string) => catalogueBranch(catalogueBranch(FINANCE_BUNDLE, 'finance'), key);
+
+/**
+ * What the Loyalty console ships: its own `loyalty` namespace, plus the Duncit
+ * Coin and virtual gift card screens' `finance.*` branches — those screens
+ * moved from Finance with their keys, so every stored translation still applies.
+ */
+export const LOYALTY_CONSOLE_CATALOGUE: NestedCatalogue = {
+  ...LOYALTY_BUNDLE,
+  finance: {
+    duncitCoin: financeBranch('duncitCoin'),
+    giftCards: financeBranch('giftCards'),
+    common: financeBranch('common'),
+  },
 };
 
 /** Every client bundle, by the surface that ships it. */
@@ -197,6 +215,7 @@ export const SURFACE_BUNDLES: Record<string, NestedCatalogue> = {
   venuePricing: VENUE_PRICING_BUNDLE,
   gigJobs: GIG_JOBS_BUNDLE,
   mcp: MCP_BUNDLE,
+  loyalty: LOYALTY_BUNDLE,
   tests: TESTS_BUNDLE,
   testsUnit: TESTS_UNIT_BUNDLE,
   testsManual: TESTS_MANUAL_BUNDLE,

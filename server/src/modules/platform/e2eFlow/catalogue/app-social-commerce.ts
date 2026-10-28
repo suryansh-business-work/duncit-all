@@ -1112,13 +1112,13 @@ export const APP_SOCIAL_COMMERCE_FLOWS: readonly CatalogueFlow[] = [
         name: 'Pod feedback coin note',
         description: 'The feedback reward line is shown only when Finance pays it.',
         steps: [
-          ['Set the attended-pod feedback reward to 20 coins in Finance', 'The balance card shows "You earn 20 Duncit Coins on your Attended Pod Feedback."'],
+          ['Set the attended-pod feedback reward to 20 coins in Loyalty', 'The balance card shows "You earn 20 Duncit Coins on your Attended Pod Feedback."'],
           ['Set the reward to 0', 'The line is hidden'],
         ],
       },
       {
         name: 'Coins expire',
-        description: 'Each grant carries its own expiry (Finance coin expiry days, 0 = never); spends use the soonest-expiring coins first; a sweep runs every 10 minutes. Gift-card coins never expire.',
+        description: 'Each grant carries its own expiry (Loyalty coin expiry days, 0 = never); spends use the soonest-expiring coins first; a sweep runs every 10 minutes. Gift-card coins never expire.',
         steps: [
           ['Earn coins with a 30-day expiry configured', 'The balance card shows "<coins> coins expire on <date>" for the soonest batch'],
           ['Move past that date and wait for the sweep', 'The balance drops by the unspent coins of that batch and a row labelled "Expired" is added'],

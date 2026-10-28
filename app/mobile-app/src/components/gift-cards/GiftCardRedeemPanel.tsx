@@ -1,7 +1,5 @@
 import { useState } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { ResultOf } from '@graphql-typed-document-node/core';
 import { Text, XStack, YStack } from 'tamagui';
 
@@ -13,10 +11,10 @@ import { refreshCoinBalance } from '@/hooks/useCoins';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { graphqlRequest } from '@/services/graphql.client';
-import type { RootStackParamList } from '@/navigation/types';
 import { formatMoney } from '@/utils/checkout-math';
 import { formatDate } from '@/utils/date-format';
 import { toErrorMessage } from '@/utils/errors';
+import { GiftCardRedeemSuccess } from './GiftCardRedeemSuccess';
 import { GiftCardVisual } from './GiftCardVisual';
 
 export type GiftCardByCode = ResultOf<typeof MobileGiftCardByCodeDocument>['giftCardByCode'];
@@ -36,7 +34,6 @@ interface Props {
 export function GiftCardRedeemPanel({ card, currency }: Readonly<Props>) {
   const { t } = useTranslation();
   const { accent } = useThemeColors();
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [redeeming, setRedeeming] = useState(false);
   const [result, setResult] = useState<RedeemResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -61,39 +58,7 @@ export function GiftCardRedeemPanel({ card, currency }: Readonly<Props>) {
   };
 
   if (result) {
-    const body =
-      result.coins_added > 0
-        ? t('mweb.giftCards.redeemSuccessBody', {
-            vars: { coins: result.coins_added, balance: result.coin_balance },
-          })
-        : t('mweb.giftCards.redeemAlreadyBody');
-    return (
-      <SurfaceCard testID="gift-card-redeem-success" alignItems="center" gap={12} padding={24}>
-        <YStack
-          width={72}
-          height={72}
-          borderRadius={36}
-          alignItems="center"
-          justifyContent="center"
-          backgroundColor="$primarySoft"
-        >
-          <MaterialIcons name="check" size={40} color={accent} />
-        </YStack>
-        <Text role="heading" fontSize={20} fontWeight="600" color="$color" textAlign="center">
-          {t('mweb.giftCards.redeemSuccessTitle')}
-        </Text>
-        <Text fontSize={14} color="$muted" textAlign="center">
-          {body}
-        </Text>
-        <YStack alignSelf="stretch" marginTop={8}>
-          <PrimaryButton
-            testID="gift-card-go-to-coins"
-            label={t('mweb.giftCards.goToCoins')}
-            onPress={() => navigation.navigate('DuncitCoin')}
-          />
-        </YStack>
-      </SurfaceCard>
-    );
+    return <GiftCardRedeemSuccess coinsAdded={result.coins_added} coinBalance={result.coin_balance} />;
   }
 
   let footer;

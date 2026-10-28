@@ -62,6 +62,7 @@ const consoles: StatusService[] = [
   { key: 'targets', name: 'Targets', url: 'https://targets.duncit.com/', description: 'Team goals & progress' },
   { key: 'gig-jobs', name: 'Gig Jobs', url: 'https://gig-jobs.duncit.com/', description: 'Gig moderation & freelancers' },
   { key: 'mcp', name: 'MCP', url: 'https://mcp.duncit.com/', description: 'AI connectors (MCP)' },
+  { key: 'loyalty', name: 'Loyalty', url: 'https://loyalty.duncit.com/', description: 'Duncit Coin & gift cards' },
   { key: 'tests', name: 'Tests', url: 'https://tests.duncit.com/', description: 'Testing and quality' },
   { key: 'ecomm', name: 'Pet Store', url: 'https://ecomm.duncit.com/', description: 'Online pet store' },
 ];

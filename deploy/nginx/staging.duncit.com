@@ -858,7 +858,7 @@ server {
     }
 }
 
-# --- Tests console: staging.tests.duncit.com (SPA on :2147) ---
+# --- Tests console: staging.tests.duncit.com (SPA on :2148) ---
 server {
     listen 80;
     listen [::]:80;
@@ -867,7 +867,7 @@ server {
     client_max_body_size 25m;
 
     location / {
-        proxy_pass         http://127.0.0.1:2147;
+        proxy_pass         http://127.0.0.1:2148;
         proxy_http_version 1.1;
         proxy_set_header   Host              $host;
         proxy_set_header   X-Real-IP         $remote_addr;
@@ -950,6 +950,27 @@ server {
 
     location / {
         proxy_pass         http://127.0.0.1:2146;
+        proxy_http_version 1.1;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_set_header   Upgrade           $http_upgrade;
+        proxy_set_header   Connection        "upgrade";
+        proxy_read_timeout 90s;
+    }
+}
+
+# --- Loyalty console: staging.loyalty.duncit.com (SPA on :2147) ---
+server {
+    listen 80;
+    listen [::]:80;
+    http2 on;
+    server_name staging.loyalty.duncit.com;
+    client_max_body_size 25m;
+
+    location / {
+        proxy_pass         http://127.0.0.1:2147;
         proxy_http_version 1.1;
         proxy_set_header   Host              $host;
         proxy_set_header   X-Real-IP         $remote_addr;

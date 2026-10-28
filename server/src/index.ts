@@ -436,6 +436,14 @@ async function bootstrap() {
     const { giftcardService } = await import('@modules/finance/giftcard/giftcard.service');
     await giftcardService.syncIndexes();
   });
+  // The physical card indexes: the unique card number and the once-only redeem
+  // line in the card history.
+  await safeSeed('physicalGiftCardIndexes', async () => {
+    const { physicalGiftCardService } = await import(
+      '@modules/finance/physicalGiftCard/physicalGiftCard.service'
+    );
+    await physicalGiftCardService.syncIndexes();
+  });
   // Our own sites and the two app stores, as a Mongo-side regex — the backfill
   // below runs in the database, so it cannot call the TypeScript classifier.
   // TWIN of shortLink.destination.ts's host rule; change one, change the other.
@@ -639,7 +647,7 @@ async function bootstrap() {
   startSlotRequestExpiryScheduler();
 
   // Duncit Coin expiry: take back the unspent part of every grant whose date
-  // (Finance > Duncit Coin > Settings, 30 days by default) has passed.
+  // (Loyalty > Duncit Coin > Coin Settings, 30 days by default) has passed.
   startCoinExpiryScheduler();
 
   // Brand/product deletion requests: carry out the approved ones whose date has
@@ -752,7 +760,7 @@ async function bootstrap() {
   // One nudge to a member who left a pod checkout unpaid (Admin > Pods > Pod
   // Settings > Unfinished Booking Nudge).
   startCheckoutNudgeScheduler();
-  // A reminder a few days before a member's coins lapse (Finance > Duncit Coin).
+  // A reminder a few days before a member's coins lapse (Loyalty > Duncit Coin).
   startCoinExpiryReminderScheduler();
 
   const app = express();

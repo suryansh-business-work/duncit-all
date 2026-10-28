@@ -5429,7 +5429,7 @@ export type CoinMonthBucket = {
 
 /**
  * Every rule that decides how many coins someone is given, in one place
- * (Finance > Duncit Coin > Settings).
+ * (Loyalty > Duncit Coin > Coin Settings).
  */
 export type CoinSettings = {
   __typename?: 'CoinSettings';
@@ -10001,6 +10001,22 @@ export type Gender =
   | 'OTHER';
 
 /**
+ * Mint a batch. Give user_ids for one card per member (only that member can
+ * redeem it), or quantity for unmapped cards (whoever redeems first is mapped).
+ */
+export type GeneratePhysicalGiftCardsInput = {
+  /** Coins on each card, 1 to the gift card maximum amount. */
+  coins: Scalars['Int']['input'];
+  /** 'YYYY-MM-DD' in the app time zone; omitted means the gift card validity from today. */
+  expires_on?: InputMaybe<Scalars['String']['input']>;
+  label: Scalars['String']['input'];
+  /** Unmapped cards to mint (1-500). Ignored when user_ids is given. */
+  quantity?: InputMaybe<Scalars['Int']['input']>;
+  /** One card per member (up to 500). */
+  user_ids?: InputMaybe<Array<Scalars['ID']['input']>>;
+};
+
+/**
  * A purchased gift card. A bearer instrument: whoever holds the code holds the
  * value, which is what sharing it by email or link means. Redeeming converts the
  * whole balance into Duncit Coins in one act.
@@ -10076,8 +10092,20 @@ export type GiftCardAdminCardTablePage = {
   total: Scalars['Int']['output'];
 };
 
+/** Everything about one virtual card (Loyalty > Virtual Gift Cards > card). */
+export type GiftCardAdminDetail = {
+  __typename?: 'GiftCardAdminDetail';
+  card: GiftCardAdminCard;
+  /** Null until the card is redeemed. */
+  coin_credit?: Maybe<GiftCardCoinCredit>;
+  /** Null only when the payment record is gone. */
+  payment?: Maybe<GiftCardPaymentSummary>;
+  /** The card's own ledger, newest first. */
+  transactions: Array<GiftCardAdminTransaction>;
+};
+
 /**
- * Platform-wide gift card position for Finance > Gift Cards > Dashboard.
+ * Platform-wide gift card position for Loyalty > Virtual Gift Cards > Dashboard.
  * Outstanding + expired + redeemed value always equals sold value.
  */
 export type GiftCardAdminStats = {
@@ -10158,6 +10186,21 @@ export type GiftCardCheckoutInput = {
   scope_type: GiftCardScopeType;
 };
 
+/**
+ * The Duncit Coin ledger row a gift card's redemption wrote — virtual and
+ * physical cards both pay out through it, once per card.
+ */
+export type GiftCardCoinCredit = {
+  __typename?: 'GiftCardCoinCredit';
+  amount: Scalars['Float']['output'];
+  /** The member's coin balance right after the credit landed. */
+  balance_after: Scalars['Float']['output'];
+  created_at: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  reason: Scalars['String']['output'];
+  user_id: Scalars['ID']['output'];
+};
+
 /** One calendar month of gift card flow. The client formats the label from the key. */
 export type GiftCardMonthBucket = {
   __typename?: 'GiftCardMonthBucket';
@@ -10165,6 +10208,37 @@ export type GiftCardMonthBucket = {
   month: Scalars['String']['output'];
   redeemed: Scalars['Float']['output'];
   sold: Scalars['Float']['output'];
+};
+
+/** The purchase payment behind a virtual card, as Finance recorded it. */
+export type GiftCardPaymentSummary = {
+  __typename?: 'GiftCardPaymentSummary';
+  coins_redeemed: Scalars['Float']['output'];
+  coupon_code?: Maybe<Scalars['String']['output']>;
+  coupon_discount: Scalars['Float']['output'];
+  created_at: Scalars['String']['output'];
+  currency_symbol: Scalars['String']['output'];
+  email_step_at?: Maybe<Scalars['String']['output']>;
+  /** Why the mail step was skipped, or its failure message. */
+  email_step_detail: Scalars['String']['output'];
+  /** PENDING, DONE, SKIPPED or FAILED — the card being mailed to its recipient. */
+  email_step_status: Scalars['String']['output'];
+  gateway: Scalars['String']['output'];
+  gateway_ref?: Maybe<Scalars['String']['output']>;
+  gst_amount: Scalars['Float']['output'];
+  /** The payment document id — what the Finance payment page is addressed by. */
+  id: Scalars['ID']['output'];
+  invoice_no?: Maybe<Scalars['String']['output']>;
+  /** PENDING, DONE, SKIPPED or FAILED — the card being created on payment success. */
+  issue_step_status: Scalars['String']['output'];
+  paid_at?: Maybe<Scalars['String']['output']>;
+  payment_id: Scalars['String']['output'];
+  platform_fee_amount: Scalars['Float']['output'];
+  status: Scalars['String']['output'];
+  subtotal: Scalars['Float']['output'];
+  total: Scalars['Float']['output'];
+  /** The buyer's phone as given at checkout. */
+  user_phone?: Maybe<Scalars['String']['output']>;
 };
 
 /** What redeeming a card left behind: the coins minted and the new balance. */
@@ -10189,7 +10263,7 @@ export type GiftCardScopeType =
   | 'SUB'
   | 'SUPER';
 
-/** The gift card sales policy (Finance > Gift Cards). */
+/** The gift card sales policy (Loyalty > Virtual Gift Cards). */
 export type GiftCardSettings = {
   __typename?: 'GiftCardSettings';
   /** Preset amount chips the buy page offers. */
@@ -14376,6 +14450,8 @@ export type Mutation = {
   generateIosSigning: IosSigning;
   generateLeadSurveyLink: LeadSurveyEntry;
   generateMeetingLink: MeetingLinkResult;
+  /** Loyalty: mint a batch of printed cards. */
+  generatePhysicalGiftCards: PhysicalGiftCardBatch;
   generateSocialIdeas: Array<SocialIdea>;
   /** Ask OpenAI for the verdict on a finished run — capacity, bottlenecks, upgrades. Replaces an earlier verdict. */
   generateStressVerdict: StressRun;
@@ -14759,6 +14835,12 @@ export type Mutation = {
    * that reports coins_added: 0.
    */
   redeemGiftCard: GiftCardRedeemResult;
+  /**
+   * Turn a printed card into Duncit Coins for the caller. A wrong number and a
+   * wrong passcode get the same answer; too many wrong tries pause redeeming
+   * for the caller for an hour.
+   */
+  redeemPhysicalGiftCard: PhysicalGiftCardRedeemResult;
   redeemPodReferral: PodMember;
   /** Ops: pull the latest tracking from ShipRocket. */
   refreshProductOrderTracking: ProductOrder;
@@ -15889,7 +15971,7 @@ export type Mutation = {
   updateFinanceSettings: FinanceSettings;
   /** Finance roles: set the default GST on venue food orders. Venues that override it keep their own. */
   updateFoodTaxDefaults: FoodTaxDefaults;
-  /** Finance: set the amounts offered and how long a card lives. */
+  /** Loyalty: set the amounts offered and how long a card lives. */
   updateGiftCardSettings: GiftCardSettings;
   updateGigCategory: GigCategory;
   updateGigJob: GigJob;
@@ -16052,6 +16134,8 @@ export type Mutation = {
   verifySignupWhatsAppOtp: SignupWhatsAppProof;
   /** Public: confirm the Razorpay payment of an order. */
   verifyVenueFoodOrderPayment: VenueFoodOrder;
+  /** Loyalty: cancel an unredeemed card so it can never pay out. */
+  voidPhysicalGiftCard: PhysicalGiftCardAdminCard;
   voidPodChallengeScore: PodChallenge;
   /** Thumbs up/down a review. vote: 1 up, -1 down, 0 clears. */
   voteProductReview: ProductReview;
@@ -18236,6 +18320,11 @@ export type MutationGenerateMeetingLinkArgs = {
 };
 
 
+export type MutationGeneratePhysicalGiftCardsArgs = {
+  input: GeneratePhysicalGiftCardsInput;
+};
+
+
 export type MutationGenerateSocialIdeasArgs = {
   input: SocialIdeasInput;
 };
@@ -18792,6 +18881,12 @@ export type MutationRecordUserContactActionArgs = {
 
 export type MutationRedeemGiftCardArgs = {
   code: Scalars['String']['input'];
+};
+
+
+export type MutationRedeemPhysicalGiftCardArgs = {
+  card_number: Scalars['String']['input'];
+  passcode: Scalars['String']['input'];
 };
 
 
@@ -21980,6 +22075,12 @@ export type MutationVerifyVenueFoodOrderPaymentArgs = {
 };
 
 
+export type MutationVoidPhysicalGiftCardArgs = {
+  id: Scalars['ID']['input'];
+  reason: Scalars['String']['input'];
+};
+
+
 export type MutationVoidPodChallengeScoreArgs = {
   event_id: Scalars['ID']['input'];
   reason?: InputMaybe<Scalars['String']['input']>;
@@ -23566,6 +23667,198 @@ export type PhoneOtpRequestResult = {
    */
   test_code?: Maybe<Scalars['String']['output']>;
 };
+
+/** A printed scratch card as its holder sees it — never the passcode. */
+export type PhysicalGiftCard = {
+  __typename?: 'PhysicalGiftCard';
+  /** The 9-digit number printed on the card. */
+  card_number: Scalars['String']['output'];
+  coins: Scalars['Int']['output'];
+  expires_at: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  redeemed_at?: Maybe<Scalars['String']['output']>;
+  status: PhysicalGiftCardStatus;
+};
+
+/** One printed card in the Loyalty console, joined with its batch and the people on it. */
+export type PhysicalGiftCardAdminCard = {
+  __typename?: 'PhysicalGiftCardAdminCard';
+  assigned_user_email: Scalars['String']['output'];
+  /** The member the card is mapped to: chosen at generation, or whoever redeemed a bulk card. */
+  assigned_user_id?: Maybe<Scalars['ID']['output']>;
+  assigned_user_name: Scalars['String']['output'];
+  batch_id: Scalars['ID']['output'];
+  batch_label: Scalars['String']['output'];
+  card_number: Scalars['String']['output'];
+  coins: Scalars['Int']['output'];
+  created_at: Scalars['String']['output'];
+  created_by_name: Scalars['String']['output'];
+  expires_at: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  /** Only the last four digits — the full passcode is read through physicalGiftCardPasscode. */
+  passcode_last4: Scalars['String']['output'];
+  redeemed_at?: Maybe<Scalars['String']['output']>;
+  redeemed_by_user_id?: Maybe<Scalars['ID']['output']>;
+  redeemer_email: Scalars['String']['output'];
+  redeemer_name: Scalars['String']['output'];
+  status: PhysicalGiftCardStatus;
+  void_reason: Scalars['String']['output'];
+  voided_at?: Maybe<Scalars['String']['output']>;
+  voided_by_name: Scalars['String']['output'];
+};
+
+export type PhysicalGiftCardAdminCardTablePage = {
+  __typename?: 'PhysicalGiftCardAdminCardTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<PhysicalGiftCardAdminCard>;
+  total: Scalars['Int']['output'];
+};
+
+/** Everything about one printed card. */
+export type PhysicalGiftCardAdminDetail = {
+  __typename?: 'PhysicalGiftCardAdminDetail';
+  batch?: Maybe<PhysicalGiftCardBatch>;
+  card: PhysicalGiftCardAdminCard;
+  /** Null until the card is redeemed. */
+  coin_credit?: Maybe<GiftCardCoinCredit>;
+  /** The card's history, newest first. */
+  events: Array<PhysicalGiftCardEvent>;
+};
+
+/**
+ * The physical card position for Loyalty > Physical Gift Cards > Dashboard.
+ * generated = redeemed + outstanding + expired + voided, in cards and in coins.
+ */
+export type PhysicalGiftCardAdminStats = {
+  __typename?: 'PhysicalGiftCardAdminStats';
+  batch_count: Scalars['Int']['output'];
+  expired_coins: Scalars['Float']['output'];
+  /** Cards that lapsed unredeemed. */
+  expired_count: Scalars['Int']['output'];
+  generated_coins: Scalars['Float']['output'];
+  generated_count: Scalars['Int']['output'];
+  /** Cards mapped to a member, at generation or by redeeming. */
+  mapped_count: Scalars['Int']['output'];
+  /** Oldest first, one entry per calendar month, empty months filled with zeroes. */
+  monthly: Array<PhysicalGiftCardMonthBucket>;
+  outstanding_coins: Scalars['Float']['output'];
+  /** Live, unexpired, unredeemed cards — coins the platform still owes. */
+  outstanding_count: Scalars['Int']['output'];
+  redeemed_coins: Scalars['Float']['output'];
+  redeemed_count: Scalars['Int']['output'];
+  voided_coins: Scalars['Float']['output'];
+  voided_count: Scalars['Int']['output'];
+};
+
+/** One generation run — every card minted together, each carrying the same coins. */
+export type PhysicalGiftCardBatch = {
+  __typename?: 'PhysicalGiftCardBatch';
+  /** True when every card was mapped to a member at generation. */
+  assigned: Scalars['Boolean']['output'];
+  /** Coins on each card. */
+  coins: Scalars['Int']['output'];
+  created_at: Scalars['String']['output'];
+  created_by_email: Scalars['String']['output'];
+  created_by_name: Scalars['String']['output'];
+  expires_at: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  label: Scalars['String']['output'];
+  quantity: Scalars['Int']['output'];
+  redeemed_coins: Scalars['Int']['output'];
+  redeemed_count: Scalars['Int']['output'];
+  /** coins x quantity — what the batch is worth if every card is redeemed. */
+  total_coins: Scalars['Int']['output'];
+  voided_count: Scalars['Int']['output'];
+};
+
+export type PhysicalGiftCardBatchTablePage = {
+  __typename?: 'PhysicalGiftCardBatchTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<PhysicalGiftCardBatch>;
+  total: Scalars['Int']['output'];
+};
+
+/**
+ * One line of the physical card history: GENERATED, REDEEMED, VOIDED,
+ * REDEEM_FAILED (a wrong number or passcode), PASSCODE_VIEWED or
+ * PASSCODES_EXPORTED (a person read the passcodes in the console).
+ */
+export type PhysicalGiftCardEvent = {
+  __typename?: 'PhysicalGiftCardEvent';
+  actor_email: Scalars['String']['output'];
+  actor_name: Scalars['String']['output'];
+  /** The admin on generation, cancellation and passcode reads; the member on redemption tries. */
+  actor_user_id: Scalars['ID']['output'];
+  batch_id?: Maybe<Scalars['ID']['output']>;
+  batch_label: Scalars['String']['output'];
+  card_id?: Maybe<Scalars['ID']['output']>;
+  card_number: Scalars['String']['output'];
+  coins: Scalars['Int']['output'];
+  created_at: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  note: Scalars['String']['output'];
+  type: Scalars['String']['output'];
+};
+
+export type PhysicalGiftCardEventTablePage = {
+  __typename?: 'PhysicalGiftCardEventTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<PhysicalGiftCardEvent>;
+  total: Scalars['Int']['output'];
+};
+
+/** One calendar month of physical card flow, in coins. The client formats the label from the key. */
+export type PhysicalGiftCardMonthBucket = {
+  __typename?: 'PhysicalGiftCardMonthBucket';
+  generated: Scalars['Float']['output'];
+  /** Calendar month as a 'YYYY-MM' key, in UTC. */
+  month: Scalars['String']['output'];
+  redeemed: Scalars['Float']['output'];
+};
+
+/** One line of a batch's print file. */
+export type PhysicalGiftCardPasscodeRow = {
+  __typename?: 'PhysicalGiftCardPasscodeRow';
+  assigned_user_email: Scalars['String']['output'];
+  assigned_user_name: Scalars['String']['output'];
+  card_number: Scalars['String']['output'];
+  coins: Scalars['Int']['output'];
+  expires_at: Scalars['String']['output'];
+  /** XXXX-XXXX-XXXX-XXXX. */
+  passcode: Scalars['String']['output'];
+  status: PhysicalGiftCardStatus;
+};
+
+/** The limits a new batch is checked against — read live, so the form and the server never disagree. */
+export type PhysicalGiftCardPolicy = {
+  __typename?: 'PhysicalGiftCardPolicy';
+  /** Most cards one generation run may mint. */
+  max_cards_per_batch: Scalars['Int']['output'];
+  /** Most coins one card may carry (the gift card maximum amount; 1 coin = 1 rupee). */
+  max_coins_per_card: Scalars['Int']['output'];
+  /** Months a batch stays redeemable when no expiry date is chosen. */
+  validity_months: Scalars['Int']['output'];
+};
+
+/** What redeeming a printed card left behind: the coins minted and the new balance. */
+export type PhysicalGiftCardRedeemResult = {
+  __typename?: 'PhysicalGiftCardRedeemResult';
+  card: PhysicalGiftCard;
+  /** The caller's Duncit Coin balance after the credit. */
+  coin_balance: Scalars['Float']['output'];
+  /** Coins credited by THIS call — 0 when the card had already paid out to the caller. */
+  coins_added: Scalars['Float']['output'];
+};
+
+/** EXPIRED is derived from the expiry date at read time; VOID is a card the Loyalty team cancelled. */
+export type PhysicalGiftCardStatus =
+  | 'ACTIVE'
+  | 'EXPIRED'
+  | 'REDEEMED'
+  | 'VOID';
 
 export type PickupOwnerKind =
   | 'BRAND'
@@ -27586,11 +27879,11 @@ export type Query = {
   cmsVersions: Array<CmsVersion>;
   /** Approved hosts in the same sub-category who can be invited as co-hosts. Excludes the caller and anyone already invited. */
   coHostCandidates: Array<CoHostCandidate>;
-  /** Finance > Duncit Coin > Dashboard. 'months' bounds the distribution series (default 12, max 36). */
+  /** Loyalty > Duncit Coin > Dashboard. 'months' bounds the distribution series (default 12, max 36). */
   coinAdminStats: CoinAdminStats;
-  /** Every coin payout rule, for Finance > Duncit Coin > Settings. */
+  /** Every coin payout rule, for Loyalty > Duncit Coin > Coin Settings. */
   coinSettings: CoinSettings;
-  /** Finance > Duncit Coin > Transactions. 'pod_doc_id' scopes the page to coins settled by that pod's payments. */
+  /** Loyalty > Duncit Coin > Transactions. 'pod_doc_id' scopes the page to coins settled by that pod's payments. */
   coinTransactionsTable: CoinAdminTransactionTablePage;
   /** Name/email search for the manual-adjustment picker. Under two characters returns nothing. */
   coinUserSearch: Array<CoinUserOption>;
@@ -27874,13 +28167,15 @@ export type Query = {
   /** Founder/Startup dashboard: every KPI for the date range, computed + manual. */
   founderDashboard: FounderDashboard;
   freelancersAdminTable: FreelancerAdminTablePage;
-  /** Finance > Gift Cards > Dashboard. 'months' bounds the monthly series (default 12, max 36). */
+  /** Loyalty > Virtual Gift Cards > one card: the card, its payment, its ledger and its coin credit. */
+  giftCardAdminDetail: GiftCardAdminDetail;
+  /** Loyalty > Virtual Gift Cards > Dashboard. 'months' bounds the monthly series (default 12, max 36). */
   giftCardAdminStats: GiftCardAdminStats;
   /** One card by its code, for the claim/redeem page. Holding the code is holding the value, so any signed-in holder may look. */
   giftCardByCode: GiftCard;
-  /** Finance > Gift Cards > Logs. Every issue and every conversion to coins. */
+  /** Loyalty > Virtual Gift Cards > Logs. Every issue and every conversion to coins. */
   giftCardTransactionsTable: GiftCardAdminTransactionTablePage;
-  /** Finance > Gift Cards > Cards. Every card ever sold, with buyer and redeemer. */
+  /** Loyalty > Virtual Gift Cards > Cards. Every card ever sold, with buyer and redeemer. */
   giftCardsTable: GiftCardAdminCardTablePage;
   gigCategories: Array<GigCategory>;
   gigCategoriesTable: GigCategoryTablePage;
@@ -28414,6 +28709,24 @@ export type Query = {
   paymentsTable: PaymentTablePage;
   pexelsSearch: PexelsSearchResult;
   pexelsSearchVideos: PexelsVideoSearchResult;
+  /** Loyalty > Physical Gift Cards > one card. */
+  physicalGiftCardAdminDetail: PhysicalGiftCardAdminDetail;
+  /** Loyalty > Physical Gift Cards > Dashboard. 'months' bounds the monthly series (default 12, max 36). */
+  physicalGiftCardAdminStats: PhysicalGiftCardAdminStats;
+  /** One batch, for its page header. */
+  physicalGiftCardBatch: PhysicalGiftCardBatch;
+  /** A batch's print file — every card with its passcode. The export is written to the history. */
+  physicalGiftCardBatchPasscodes: Array<PhysicalGiftCardPasscodeRow>;
+  /** Loyalty > Physical Gift Cards > Batches. */
+  physicalGiftCardBatchesTable: PhysicalGiftCardBatchTablePage;
+  /** Loyalty > Physical Gift Cards > History. Every card minted, redeemed, tried, cancelled or read. */
+  physicalGiftCardEventsTable: PhysicalGiftCardEventTablePage;
+  /** One card's full passcode. Every read is written to the card's history. */
+  physicalGiftCardPasscode: Scalars['String']['output'];
+  /** The limits the Generate Cards form validates against. */
+  physicalGiftCardPolicy: PhysicalGiftCardPolicy;
+  /** Loyalty > Physical Gift Cards > Cards. Pass batch_id for one batch's cards. */
+  physicalGiftCardsTable: PhysicalGiftCardAdminCardTablePage;
   /** Everything pinned on this line, newest pin first. */
   pinnedStaffMessages: Array<StaffMessage>;
   /** include_deleted opens a cancelled pod too — honored for admin reviewers only. */
@@ -30596,6 +30909,11 @@ export type QueryFreelancersAdminTableArgs = {
 };
 
 
+export type QueryGiftCardAdminDetailArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type QueryGiftCardAdminStatsArgs = {
   months?: InputMaybe<Scalars['Int']['input']>;
 };
@@ -31607,6 +31925,47 @@ export type QueryPexelsSearchVideosArgs = {
   page?: InputMaybe<Scalars['Int']['input']>;
   perPage?: InputMaybe<Scalars['Int']['input']>;
   query?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type QueryPhysicalGiftCardAdminDetailArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryPhysicalGiftCardAdminStatsArgs = {
+  months?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryPhysicalGiftCardBatchArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryPhysicalGiftCardBatchPasscodesArgs = {
+  batch_id: Scalars['ID']['input'];
+};
+
+
+export type QueryPhysicalGiftCardBatchesTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryPhysicalGiftCardEventsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryPhysicalGiftCardPasscodeArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryPhysicalGiftCardsTableArgs = {
+  batch_id?: InputMaybe<Scalars['ID']['input']>;
+  query?: InputMaybe<TableQueryInput>;
 };
 
 
@@ -33971,8 +34330,8 @@ export type ReferralSettings = {
   __typename?: 'ReferralSettings';
   /**
    * Coins EACH side of a referral earns — the referrer and the new member.
-   * Read-only here: it is a coin payout rule, set in Finance > Duncit Coin >
-   * Settings alongside the earn rates, and reported here so the copy that quotes
+   * Read-only here: it is a coin payout rule, set in Loyalty > Duncit Coin >
+   * Coin Settings alongside the earn rates, and reported here so the copy that quotes
    * it can never drift from what is actually paid.
    */
   coins_per_referral: Scalars['Int']['output'];

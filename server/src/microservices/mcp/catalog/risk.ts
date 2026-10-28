@@ -70,6 +70,13 @@ const CONFIRM_WORDS = new Set([
   'impersonate',
 ]);
 
+/**
+ * Mutations whose NAME carries none of the words above but which still mint
+ * value. Named one by one, because the word itself ("generate") is harmless on
+ * every other tool that uses it.
+ */
+const CONFIRM_FIELDS = new Set(['generatePhysicalGiftCards']);
+
 /** Words that mean a mutation reaches people or systems outside Duncit. */
 const OUTWARD_WORDS = new Set([
   'send',
@@ -102,6 +109,7 @@ export function riskOf(kind: OperationKind, fieldName: string): ToolRisk {
 /** Whether the tool refuses to run until `mcp_confirm: true` says the person agreed. */
 export function needsConfirmation(kind: OperationKind, fieldName: string): boolean {
   if (riskOf(kind, fieldName) === 'DESTRUCTIVE') return true;
+  if (kind === 'MUTATION' && CONFIRM_FIELDS.has(fieldName)) return true;
   return kind === 'MUTATION' && wordsOf(fieldName).some((word) => CONFIRM_WORDS.has(word));
 }
 

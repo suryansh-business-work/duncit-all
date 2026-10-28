@@ -33,5 +33,6 @@ export const STAFF_CHAT_ROLES = new Set([
   'TARGETS_MANAGER',
   'GIG_JOBS_MANAGER',
   'MCP_MANAGER',
+  'LOYALTY_MANAGER',
   'TESTS_MANAGER',
 ]);

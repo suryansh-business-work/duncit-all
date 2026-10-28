@@ -27,6 +27,18 @@ export interface RhfTextFieldProps<T extends FieldValues> extends Omit<TextField
    * @duncit/regex, the same rule the Zod schema then checks the length of.
    */
   digitsOnly?: boolean;
+  /**
+   * Store what is typed through this mask instead — a passcode grouped
+   * `XXXX-XXXX-…` as it is printed, say. Takes precedence over `digitsOnly`;
+   * the mask itself lives with the shared schema it feeds, never in the page.
+   */
+  format?: (value: string) => string;
+}
+
+/** What a typed value is stored as: the caller's mask, else digits only, else as typed. */
+function storedValue(raw: string, format: ((value: string) => string) | undefined, digitsOnly: boolean | undefined): string {
+  if (format) return format(raw);
+  return digitsOnly ? toDigits(raw) : raw;
 }
 
 /**
@@ -42,6 +54,7 @@ export default function RhfTextField<T extends FieldValues>({
   hint,
   errorText,
   digitsOnly,
+  format,
   slotProps,
   ...rest
 }: Readonly<RhfTextFieldProps<T>>) {
@@ -62,9 +75,7 @@ export default function RhfTextField<T extends FieldValues>({
             // The <input>, not the root <div>: a failed submit focuses the first
             // invalid field through this ref, and a div cannot take focus.
             inputRef={ref}
-            onChange={(event) =>
-              field.onChange(digitsOnly ? toDigits(event.target.value) : event.target.value)
-            }
+            onChange={(event) => field.onChange(storedValue(event.target.value, format, digitsOnly))}
             value={field.value ?? ''}
             fullWidth={rest.fullWidth ?? true}
             error={hasError}

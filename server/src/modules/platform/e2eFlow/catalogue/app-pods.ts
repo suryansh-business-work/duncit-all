@@ -773,7 +773,7 @@ export const APP_POD_FLOWS: readonly CatalogueFlow[] = [
           ['Read the aspects', 'Overall pod experience, Host, and — only when applicable — Venue, Food (physical pods), Club admin (when not also the host), Safety, Anything else; plus a Comments field'],
           ['Look at "Submit" before rating Overall', 'Submit is disabled'],
           ['Rate Overall 4 stars and Venue 2 stars, add a comment, tap "Submit"', 'Button shows "Sending…", dialog closes'],
-          ['Check the coin balance', 'When Finance pays pod_feedback_coins > 0 the balance increases once for this feedback'],
+          ['Check the coin balance', 'When Loyalty pays pod_feedback_coins > 0 the balance increases once for this feedback'],
           ['Force the submit to fail (network off)', 'Error "That could not be sent. Please try again." and the dialog stays open with the answers'],
         ],
       },

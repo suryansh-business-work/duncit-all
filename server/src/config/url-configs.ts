@@ -9,7 +9,7 @@ const developmentUrls = {
   adsUrl: 'http://localhost:2006',
   websiteUrl: 'http://localhost:2000',
   techUrl: 'http://localhost:2009',
-  testsUrl: 'http://localhost:2047',
+  testsUrl: 'http://localhost:2048',
   marketingUrl: 'http://localhost:2015',
   ecommUrl: 'http://localhost:2039',
   productsUrl: 'http://localhost:2014',

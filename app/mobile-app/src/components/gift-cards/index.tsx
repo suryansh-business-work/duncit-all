@@ -7,4 +7,6 @@ export { GiftCardHowItWorks } from './GiftCardHowItWorks';
 export { GiftCardRow } from './GiftCardRow';
 export { MyGiftCardsList } from './MyGiftCardsList';
 export { GiftCardRedeemPanel, type GiftCardByCode } from './GiftCardRedeemPanel';
+export { GiftCardCodeRedeem } from './GiftCardCodeRedeem';
+export { GiftCardPhysicalRedeem } from './GiftCardPhysicalRedeem';
 export { GiftCardPurchaseSuccess } from './GiftCardPurchaseSuccess';

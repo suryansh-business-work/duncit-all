@@ -115,12 +115,6 @@ const ROUTES = [
   '/ledger',
   '/pod-expenses',
   '/referrals',
-  '/duncit-coin/dashboard',
-  '/duncit-coin/transactions',
-  '/duncit-coin/settings',
-  '/gift-cards/dashboard',
-  '/gift-cards/cards',
-  '/gift-cards/logs',
   '/payouts',
   '/calculators/pod-profit',
 ];

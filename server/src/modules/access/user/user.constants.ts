@@ -50,6 +50,7 @@ export const ROLES = [
   'TARGETS_MANAGER',
   'MCP_USER',
   'MCP_MANAGER',
+  'LOYALTY_MANAGER',
   'TESTS_MANAGER',
 ] as const;
 
@@ -122,6 +123,7 @@ export const ROLE_CATALOG: RoleDefinition[] = [
   { key: 'TARGETS_MANAGER', name: 'Targets Manager', description: 'Targets console — targets.duncit.com.' },
   { key: 'MCP_USER', name: 'MCP User', description: 'Connect Claude, ChatGPT or Gemini to Duncit through mcp.duncit.com — the AI acts with exactly the consoles this person already has.' },
   { key: 'MCP_MANAGER', name: 'MCP Manager', description: 'MCP console — mcp.duncit.com: every connection and tool call, usage and cost, and the MCP safety settings.' },
+  { key: 'LOYALTY_MANAGER', name: 'Loyalty Manager', description: 'Loyalty console — loyalty.duncit.com: Duncit Coin, virtual gift cards and physical gift cards.' },
   { key: 'TESTS_MANAGER', name: 'Tests Manager', description: 'Tests console — tests.duncit.com: unit, E2E, stress, regression and manual testing, code quality and platform monitoring.' },
 ];
 

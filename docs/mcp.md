@@ -30,10 +30,11 @@ finance role). Removing your MCP role ends every connection at its next call.
 
 Consoles: `admin`, `app` (member features: join a pod, profile…), `partners`,
 `pods`, `clubs`, `club-admins`, `regional-club-admin`, `venues`, `hosts`,
-`finance`, `employee`, `hr`, `products` (partner brands), `ecomm-portal` (pet
-store), `crm`, `onboarding`, `communications`, `marketing`, `analytics`, `logs`,
-`tech`, `ai`, `localization`, `legal`, `support`, `website-app`, `challenge`,
-`gig-jobs`, `ads`, `mcp`.
+`finance`, `loyalty` (Duncit Coin, virtual and printed gift cards), `employee`,
+`hr`, `products` (partner brands), `ecomm-portal` (pet store), `crm`,
+`onboarding`, `communications`, `marketing`, `analytics`, `logs`, `tech`, `ai`,
+`localization`, `legal`, `support`, `website-app`, `challenge`, `gig-jobs`,
+`ads`, `mcp`.
 
 The MCP console's **Connect** page lists the ones you can open, with copy buttons.
 

@@ -22,7 +22,8 @@ export const MCP_CATEGORIES = [
   { key: 'clubs', label: 'Clubs', description: 'Clubs, regions, club admins and their slot and event requests.' },
   { key: 'venues', label: 'Venues', description: 'Venues, slots, offers, rentals, food menus, partner requests and venue chats.' },
   { key: 'hosts', label: 'Hosts', description: 'Hosts and host applications.' },
-  { key: 'finance', label: 'Finance', description: 'Payments, payouts, settlements, coupons, expenses, wallets, Duncit Coin, gift cards and the pod calculator.' },
+  { key: 'finance', label: 'Finance', description: 'Payments, payouts, settlements, coupons, expenses, wallets and the pod calculator.' },
+  { key: 'loyalty', label: 'Loyalty', description: 'Duncit Coin, virtual gift cards and printed (physical) gift cards.' },
   { key: 'employee', label: 'Employee', description: 'Employee expense claims.' },
   { key: 'partner-brand', label: 'Partner brands', description: 'Partner Brand products, inventory, reviews, pod-shop carts, orders and returns (partners-app.duncit.com/ecomm-brand).' },
   { key: 'ecomm-store', label: 'E-commerce store', description: 'The pet store at ecomm.duncit.com — its catalogue, orders and shipping. Separate from partner brands.' },
@@ -147,9 +148,11 @@ export const MODULE_CATEGORY: Record<ModuleName, McpCategoryKey | null> = {
   podExpenseTypeDefs: 'finance',
   podCalculatorTypeDefs: 'finance',
   walletTypeDefs: 'finance',
-  coinTypeDefs: 'finance',
-  giftCardTypeDefs: 'finance',
   founderTypeDefs: 'finance',
+
+  coinTypeDefs: 'loyalty',
+  giftCardTypeDefs: 'loyalty',
+  physicalGiftCardTypeDefs: 'loyalty',
 
   employeeExpenseTypeDefs: 'employee',
 

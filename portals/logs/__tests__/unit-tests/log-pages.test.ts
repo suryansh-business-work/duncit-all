@@ -30,8 +30,8 @@ vi.mock('../../../communications/src/pages/whatsapp-page/useLogCampaignParam', (
 vi.mock('../../../finance/src/pages/finance/payment-logs-page/PaymentLogsPage', page('finance/payment-logs'));
 vi.mock('../../../finance/src/pages/finance/payment-detail-page', page('finance/payment-detail'));
 vi.mock('../../../finance/src/pages/finance/user-refund-logs-page', page('finance/user-refund-logs'));
-vi.mock('../../../finance/src/pages/finance/gift-cards/GiftCardLogsPage', page('finance/gift-card-logs'));
-vi.mock('../../../finance/src/pages/finance/duncit-coin/CoinTransactionsPage', page('finance/coin-transactions'));
+vi.mock('../../../loyalty/src/pages/gift-cards/virtual/GiftCardLogsPage', page('loyalty/gift-card-logs'));
+vi.mock('../../../loyalty/src/pages/duncit-coin/CoinTransactionsPage', page('loyalty/coin-transactions'));
 
 vi.mock('../../../legal/src/pages/policy-acceptance-logs-page', page('legal/policy-acceptance-logs'));
 
@@ -71,8 +71,11 @@ describe('log-pages', () => {
     expect(logPages.PaymentLogsPage).toBe('page:finance/payment-logs');
     expect(logPages.PaymentDetailPage).toBe('page:finance/payment-detail');
     expect(logPages.UserRefundLogsPage).toBe('page:finance/user-refund-logs');
-    expect(logPages.GiftCardLogsPage).toBe('page:finance/gift-card-logs');
-    expect(logPages.CoinTransactionsPage).toBe('page:finance/coin-transactions');
+  });
+
+  it('borrows the coin and gift card ledgers from the Loyalty console', () => {
+    expect(logPages.GiftCardLogsPage).toBe('page:loyalty/gift-card-logs');
+    expect(logPages.CoinTransactionsPage).toBe('page:loyalty/coin-transactions');
   });
 
   it('borrows policy acceptance from Legal, pod monitoring from the directory consoles, and the dashboard from Analytics', () => {

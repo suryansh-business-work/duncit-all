@@ -1,9 +1,9 @@
 import { Controller, type Control } from 'react-hook-form';
-import { Link as RouterLink } from 'react-router';
 import { Card, CardContent, Link, Stack, TextField, Typography } from '@mui/material';
 import { REFERRAL_MESSAGE_TOKENS } from '@duncit/utils';
 import type { ReferralSettingsForm } from './referral-settings.schema';
 import { useTranslation } from '@duncit/app-settings';
+import { urlConfigs } from '../../../config/url-configs';
 
 interface Props {
   control: Control<ReferralSettingsForm>;
@@ -63,8 +63,8 @@ export default function ReferralSettingsCard({
               color: "text.secondary"
             }}>
               Paid to each side the moment the code is redeemed. Change it in{' '}
-              <Link component={RouterLink} to="/duncit-coin/settings">
-                Duncit Coin &rsaquo; Coin Settings
+              <Link href={`${urlConfigs.loyaltyUrl}/duncit-coin/settings`}>
+                Loyalty &rsaquo; Duncit Coin &rsaquo; Coin Settings
               </Link>
               , where every coin payout rule lives.
             </Typography>

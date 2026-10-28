@@ -36,6 +36,7 @@ packages:
   - portals/targets
   - portals/gig-jobs
   - portals/mcp
+  - portals/loyalty
   - portals/tests
   # The pet store: its console and its storefront.
   - portals/ecomm-portal

@@ -25,7 +25,5 @@ export { default as EmployeeExpensePage } from './employee-expense-page';
 export { default as ExpenseDashboardPage } from './expense-dashboard-page';
 export { default as ExpenseSettingsPage } from './expense-settings-page';
 export { default as ReferralsPage } from './referrals-page';
-export { CoinDashboardPage, CoinTransactionsPage, CoinSettingsPage } from './duncit-coin';
-export { GiftCardDashboardPage, GiftCardCardsPage, GiftCardLogsPage } from './gift-cards';
 export { default as PayoutCyclesPage } from './PayoutCyclesPage';
 export { default as StartupDashboardPage } from './startup-dashboard';

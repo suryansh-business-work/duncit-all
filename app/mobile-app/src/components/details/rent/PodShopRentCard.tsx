@@ -30,6 +30,8 @@ interface Props {
   rentals: PodRentals;
   picks: PodRentalPicks;
   seats: number;
+  /** The viewer already holds this pod: Pod Rent is a listing with a note. */
+  joined?: boolean;
 }
 
 /**
@@ -44,6 +46,7 @@ export function PodShopRentCard({
   rentals,
   picks,
   seats,
+  joined = false,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const [tab, setTab] = useState<ShopRentTab>(hasProducts ? 'shop' : 'rent');
@@ -82,7 +85,13 @@ export function PodShopRentCard({
       {shown === 'shop' ? (
         shop
       ) : (
-        <PodRentList rentals={rentals} picks={picks} seats={seats} limit={PREVIEW_ROWS} />
+        <PodRentList
+          rentals={rentals}
+          picks={picks}
+          seats={seats}
+          limit={PREVIEW_ROWS}
+          joined={joined}
+        />
       )}
       <DuncitDialog
         open={sheetOpen}
@@ -101,7 +110,7 @@ export function PodShopRentCard({
           <YStack gap={8}>
             {/* A rent-only sheet needs no sub-heading: the card already says Pod Rent. */}
             {hasProducts ? <SectionHeader title={t('venueRentals.guest.rentTab')} /> : null}
-            <PodRentList rentals={rentals} picks={picks} seats={seats} />
+            <PodRentList rentals={rentals} picks={picks} seats={seats} joined={joined} />
           </YStack>
         </YStack>
       </DuncitDialog>

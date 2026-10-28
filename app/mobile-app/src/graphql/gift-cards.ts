@@ -144,6 +144,17 @@ export const MobileRedeemGiftCardDocument = gql(`
   }
 `);
 
+/** Redeem a PRINTED card by its number and scratch-panel passcode — the only
+ * call there is for one (no lookup). Asks for what the success card shows. */
+export const MobileRedeemPhysicalGiftCardDocument = gql(`
+  mutation MobileRedeemPhysicalGiftCard($card_number: String!, $passcode: String!) {
+    redeemPhysicalGiftCard(card_number: $card_number, passcode: $passcode) {
+      coins_added
+      coin_balance
+    }
+  }
+`);
+
 /** Gift card purchase via the dummy gateway — selection mirrors
  * MobileDummyCheckout so the shared success view renders it unchanged. */
 export const MobileDummyGiftCardCheckoutDocument = gql(`

@@ -22,6 +22,8 @@ interface Props {
   rentals: PodRentals;
   picks: PodRentalPicks;
   seats: number;
+  /** The viewer already holds this pod: Pod Rent is a listing with a note. */
+  joined?: boolean;
 }
 
 /**
@@ -29,10 +31,10 @@ interface Props {
  * named for this pod with everything it sells and rents, on the same tab. The
  * card's panel scrolls inside a capped height, so it never stretches the page.
  */
-export default function PodShopRentCard({ podTitle, hasProducts, renderShop, rentals, picks, seats }: Readonly<Props>) {
+export default function PodShopRentCard({ podTitle, hasProducts, renderShop, rentals, picks, seats, joined = false }: Readonly<Props>) {
   const { t } = useTranslation();
   const [sheetOpen, setSheetOpen] = useState(false);
-  const rentList = (limit?: number) => <PodRentList rentals={rentals} picks={picks} seats={seats} limit={limit} />;
+  const rentList = (limit?: number) => <PodRentList rentals={rentals} picks={picks} seats={seats} limit={limit} joined={joined} />;
 
   return (
     <Box data-testid="pod-shop-rent" sx={{ ...SURFACE_SX, p: 2, overflow: 'hidden' }}>

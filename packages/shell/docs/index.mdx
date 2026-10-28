@@ -434,6 +434,7 @@ non-empty one, else `http://localhost:2001/graphql` under `vite dev`, else
 | `clearToken` | `() => void` | yes | — | From `createSession`. Called on sign-out **and** on a denied session. |
 | `hasAppAccess` | `(roles?) => boolean` | yes | — | From `createSession`. The portal's own role gate. |
 | `profileTo` | `string` | no | `undefined` | Profile route; omit to hide the Profile menu item. |
+| `detailedChangeLogs` | `boolean` | no | `false` | Forwarded to `AppShell`: table change logs also record the account's email and roles, the surface, the address and the browser. For consoles where money moves (Loyalty). |
 | `children` | `ReactNode` | yes | — | The routed page. |
 
 ### `<HeaderSearch>` — `HeaderSearchProps`

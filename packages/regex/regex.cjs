@@ -119,6 +119,12 @@ const REFERRAL_CODE = /^DUN-[0-9A-F]{6}$/;
  */
 const COUPON_CODE = /^[A-Z0-9][A-Z0-9_-]{2,29}$/;
 
+/** A printed gift card's 9-digit number, first digit 1–9 — digits-only value. See regex.mjs for the full note. */
+const PHYSICAL_GIFT_CARD_NUMBER = /^[1-9]\d{8}$/;
+
+/** The 16-digit passcode under a printed card's scratch panel — digits-only value. See regex.mjs. */
+const PHYSICAL_GIFT_CARD_PASSCODE = /^\d{16}$/;
+
 /**
  * A GA4 measurement id — `G-` and the data stream's alphanumeric suffix
  * (G-XXXXXXXXXX), as Google Analytics → Admin → Data streams shows it. The
@@ -154,6 +160,9 @@ const FONT_FAMILY = /^[A-Za-z0-9][A-Za-z0-9 -]{0,79}$/;
 /** A `<meta>` name or property like `og:locale`. See regex.mjs. */
 const META_NAME = /^[A-Za-z][\w:.-]{0,79}$/;
 
+/** Keep only the digits in a string. See regex.mjs for the full note. */
+const toDigits = (v) => String(v ?? '').replaceAll(NON_DIGITS, '');
+
 module.exports = {
   PHONE_NUMBER,
   PHONE_NUMBER_IN,
@@ -174,6 +183,8 @@ module.exports = {
   PERSON_NAME,
   REFERRAL_CODE,
   COUPON_CODE,
+  PHYSICAL_GIFT_CARD_NUMBER,
+  PHYSICAL_GIFT_CARD_PASSCODE,
   GA_MEASUREMENT_ID,
   HOSTNAME_LABEL,
   USERNAME,
@@ -182,7 +193,7 @@ module.exports = {
   CSS_VARIABLE,
   FONT_FAMILY,
   META_NAME,
-  toDigits: (v) => String(v ?? '').replaceAll(NON_DIGITS, ''),
+  toDigits,
   isPhoneNumber: (v) => PHONE_NUMBER.test(v),
   isPincode: (v) => PINCODE.test(v),
   isEmail: (v) => EMAIL.test(v),
@@ -198,6 +209,8 @@ module.exports = {
   isPersonName: (v) => PERSON_NAME.test(v),
   isReferralCode: (v) => REFERRAL_CODE.test(v),
   isCouponCode: (v) => COUPON_CODE.test(v),
+  isPhysicalGiftCardNumber: (v) => PHYSICAL_GIFT_CARD_NUMBER.test(toDigits(v)),
+  isPhysicalGiftCardPasscode: (v) => PHYSICAL_GIFT_CARD_PASSCODE.test(toDigits(v)),
   isUsername: (v) => USERNAME.test(v),
   isUrlSlug: (v) => URL_SLUG.test(v),
   isSitePath: (v) => SITE_PATH.test(v),

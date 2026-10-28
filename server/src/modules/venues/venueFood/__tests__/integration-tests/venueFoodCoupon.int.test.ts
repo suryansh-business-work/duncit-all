@@ -128,7 +128,7 @@ async function refusal(run: () => Promise<unknown>) {
 // The one-code-per-venue and one-order-per-attempt rules ARE unique indexes, so they must be built before a test leans on them.
 beforeAll(async () => {
   await Promise.all([VenueFoodCouponModel.init(), VenueFoodOrderModel.init()]);
-});
+}, 60_000);
 
 // The coupon and pricing cases were written against prices that include GST at 5%; pin that, rather than
 // inherit whatever Finance's shipped default is, so they keep testing coupons. The default has its own suite.

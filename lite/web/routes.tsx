@@ -10,6 +10,7 @@ const page = <T extends Record<string, unknown>>(load: () => Promise<T>, name: k
 const EventsHomePage = page(() => import('./pages/home'), 'EventsHomePage');
 const DiscoverPage = page(() => import('./pages/discover'), 'DiscoverPage');
 const PricingPage = page(() => import('./pages/pricing'), 'PricingPage');
+const PolicyPage = page(() => import('./pages/legal'), 'PolicyPage');
 const CityPage = page(() => import('./pages/lists'), 'CityPage');
 const CategoryPage = page(() => import('./pages/lists'), 'CategoryPage');
 const SearchPage = page(() => import('./pages/lists'), 'SearchPage');
@@ -46,6 +47,7 @@ export const routes: RouteObject[] = [
       { path: '/hosting', element: <EventsHomePage /> },
       { path: '/discover', element: <DiscoverPage /> },
       { path: '/pricing', element: <PricingPage /> },
+      { path: '/legal/:slug', element: <PolicyPage /> },
       { path: '/category/:slug', element: <CategoryPage /> },
       { path: '/search', element: <SearchPage /> },
       { path: '/e/:slug', element: <EventPage /> },

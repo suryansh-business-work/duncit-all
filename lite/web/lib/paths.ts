@@ -10,6 +10,7 @@ export const paths = {
   events: '/home',
   discover: '/discover',
   pricing: '/pricing',
+  legal: (slug: string) => `/legal/${slug}`,
   search: (q: string) => `/search?q=${encodeURIComponent(q)}`,
   city: (slug: string) => `/${slug}`,
   category: (slug: string) => `/category/${slug}`,

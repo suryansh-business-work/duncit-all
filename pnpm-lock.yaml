@@ -460,6 +460,9 @@ importers:
       '@duncit/regex':
         specifier: workspace:*
         version: link:../packages/regex
+      '@duncit/rich-text':
+        specifier: workspace:*
+        version: link:../packages/rich-text
       '@duncit/table':
         specifier: workspace:*
         version: link:../packages/table

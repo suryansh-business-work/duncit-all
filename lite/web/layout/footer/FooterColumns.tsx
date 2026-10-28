@@ -1,7 +1,9 @@
 import { Link as RouterLink } from 'react-router';
+import { useQuery } from '@apollo/client/react';
 import { Box, Link, Stack, Typography } from '@mui/material';
 import { useWebT } from '../../../shared/i18n';
 import { useLiteSettings } from '../../app/providers/LiteSettingsProvider';
+import { LITE_POLICIES, type LitePolicyLink } from '../../graphql/policies';
 import { paths } from '../../lib/paths';
 
 const FOOT_LINK = {
@@ -19,10 +21,13 @@ interface Column {
   links: { label: string; to?: string; href?: string; testId: string }[];
 }
 
-/** Explore, Host and Help: where a visitor goes next (inside the footer's navigation landmark). */
+/** Explore, Host, Help and Legal (the console's live policies): where a visitor goes next (inside the footer's navigation landmark). */
 export function FooterColumns() {
   const { t } = useWebT();
   const { support_email: supportEmail } = useLiteSettings();
+  // Read once and cached: every page draws the footer.
+  const { data } = useQuery<{ litePolicies: LitePolicyLink[] }>(LITE_POLICIES, { fetchPolicy: 'cache-first' });
+  const policies = data?.litePolicies ?? [];
   const columns: Column[] = [
     {
       key: 'explore',
@@ -45,9 +50,14 @@ export function FooterColumns() {
       title: t('liteWeb.footer.help'),
       links: supportEmail ? [{ label: t('liteWeb.footer.help'), href: `mailto:${supportEmail}`, testId: 'footer-support' }] : [],
     },
+    {
+      key: 'legal',
+      title: t('liteWeb.footer.legal'),
+      links: policies.map((policy) => ({ label: policy.title, to: paths.legal(policy.slug), testId: `footer-policy-${policy.slug}` })),
+    },
   ];
   return (
-    <Box sx={{ display: 'grid', gap: 3, gridTemplateColumns: { xs: 'repeat(2, minmax(0, 1fr))', sm: 'repeat(3, minmax(0, 1fr))' } }}>
+    <Box sx={{ display: 'grid', gap: 3, gridTemplateColumns: { xs: 'repeat(2, minmax(0, 1fr))', sm: 'repeat(4, minmax(0, 1fr))' } }}>
       {columns
         .filter((column) => column.links.length > 0)
         .map((column) => (

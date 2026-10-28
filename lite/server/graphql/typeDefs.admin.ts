@@ -267,6 +267,27 @@ export const adminTypeDefs = gql`
     page_size: Int!
   }
 
+  "A policy page as the console edits it."
+  type LiteAdminPolicy {
+    id: ID!
+    title: String!
+    slug: String!
+    content: String!
+    sort_order: Int!
+    is_active: Boolean!
+    updated_at: String
+  }
+
+  input LitePolicyInput {
+    title: String!
+    "Optional; made from the title when blank, and kept unique."
+    slug: String
+    "Rich-text HTML; scripts, frames and embedded objects are refused."
+    content: String!
+    sort_order: Int
+    is_active: Boolean
+  }
+
   input LiteCategoryInput {
     name: String!
     slug: String
@@ -328,6 +349,8 @@ export const adminTypeDefs = gql`
     liteAdminCalendarsTable(query: TableQueryInput): LiteCalendarTablePage!
     liteEnvEntries(category: LiteEnvCategory): [LiteEnvEntry!]!
     liteEnvCategories: [LiteEnvCategoryDef!]!
+    "Every policy page, live or switched off, in the console's order."
+    liteAdminPolicies: [LiteAdminPolicy!]!
     liteEmailTemplates: [LiteEmailTemplate!]!
     liteEmailLogsTable(query: TableQueryInput): LiteEmailLogTablePage!
     liteLocales: [LiteLocale!]!
@@ -340,6 +363,9 @@ export const adminTypeDefs = gql`
     liteAdminCancelEvent(id: ID!, reason: String): LiteEvent!
     liteAdminSetUserFlags(id: ID!, is_admin: Boolean, is_blocked: Boolean): LiteUser!
     liteAdminSetCalendarFeatured(id: ID!, featured: Boolean!): LiteCalendar!
+    "Create (no id) or update a policy page."
+    liteUpsertPolicy(id: ID, input: LitePolicyInput!): LiteAdminPolicy!
+    liteDeletePolicy(id: ID!): Boolean!
     liteUpsertCategory(id: ID, input: LiteCategoryInput!): LiteCategory!
     liteDeleteCategory(id: ID!): Boolean!
     liteUpsertCity(id: ID, input: LiteCityInput!): LiteCity!

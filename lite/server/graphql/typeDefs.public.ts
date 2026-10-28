@@ -318,6 +318,24 @@ export const publicTypeDefs = gql`
     max_mb: Int!
   }
 
+  "A policy page (privacy, terms of use, data policy...) as the footer links to it."
+  type LitePolicyLink {
+    id: ID!
+    title: String!
+    "The page lives at /legal/<slug>."
+    slug: String!
+  }
+
+  "A live policy page."
+  type LitePolicy {
+    id: ID!
+    title: String!
+    slug: String!
+    "The body as rich-text HTML from the shared editor."
+    content: String!
+    updated_at: String
+  }
+
   "Which way a stock photo search leans."
   enum LitePictureOrientation {
     LANDSCAPE
@@ -486,6 +504,10 @@ export const publicTypeDefs = gql`
     "Calendars the signed-in person follows, the latest first."
     liteSubscribedCalendars: [LiteCalendar!]!
     liteCategories(include_inactive: Boolean): [LiteCategory!]!
+    "The live policy pages, in the console's order."
+    litePolicies: [LitePolicyLink!]!
+    "One live policy page by its link; null when it is switched off or does not exist."
+    litePolicy(slug: String!): LitePolicy
     liteCities(include_inactive: Boolean): [LiteCity!]!
     liteCity(slug: String!): LiteCity
     liteUserProfile(handle: String!): LiteUser

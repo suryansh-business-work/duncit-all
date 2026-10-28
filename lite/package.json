@@ -47,6 +47,7 @@
     "@duncit/i18n": "workspace:*",
     "@duncit/logs": "workspace:*",
     "@duncit/regex": "workspace:*",
+    "@duncit/rich-text": "workspace:*",
     "@duncit/table": "workspace:*",
     "@duncit/tabs": "workspace:*",
     "@duncit/theme": "workspace:*",

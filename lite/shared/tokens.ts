@@ -72,9 +72,14 @@ export const LITE_SCHEMES: Record<LiteScheme, LiteSchemeTokens> = {
   },
 };
 
-/** The headline gradient ("start here"), red into amber; darker stops on the light page keep AA contrast. */
-export const HEADLINE_GRADIENT = [brand[500], dark.warning] as const;
-export const HEADLINE_GRADIENT_LIGHT = [brand[800], semantic.warning] as const;
+/**
+ * The headline gradient ("start here", pricing, footer wordmark): Duncit's own red
+ * (#F82C2E, the brand token for large display type) into a lighter red on the dark
+ * page and a deeper one on the light page. Large text, so 3:1 is the AA floor:
+ * 4.9:1 on dark, 3.5:1 on light.
+ */
+export const HEADLINE_GRADIENT = [dark.brand, brand[500]] as const;
+export const HEADLINE_GRADIENT_LIGHT = [light.brand, brand[700]] as const;
 
 export const LITE_RADII = { card: radii.md + 2, control: radii.sm, pill: radii.pill, cover: radii.lg } as const;
 

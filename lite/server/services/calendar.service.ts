@@ -17,7 +17,7 @@ export interface CalendarInput {
   city_slug?: string | null;
 }
 
-const RESERVED = new Set(['discover', 'pricing', 'create', 'tickets', 'calendars', 'profile', 'signin', 'e', 'u', 'cal', 'category', 'admin', 'graphql', 'upload', 'ics', 'health']);
+const RESERVED = new Set(['discover', 'pricing', 'legal', 'create', 'tickets', 'calendars', 'profile', 'signin', 'e', 'u', 'cal', 'category', 'admin', 'graphql', 'upload', 'ics', 'health']);
 
 async function cleanCity(slug: unknown): Promise<string> {
   const text = cleanText(slug, 80, 'City').toLowerCase();

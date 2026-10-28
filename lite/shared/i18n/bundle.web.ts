@@ -30,6 +30,7 @@ export const LITE_WEB_BUNDLE: NestedCatalogue = {
       getApp: 'Get the app',
       installFailed: 'The app could not be installed. Try again from your browser menu.',
       explore: 'Explore',
+      legal: 'Legal',
       host: 'Host',
       createEvent: 'Create an event',
       yourCalendars: 'Your calendars',
@@ -75,6 +76,9 @@ export const LITE_WEB_BUNDLE: NestedCatalogue = {
       next: 'Scan next ticket',
       manual: 'Or type the code from the ticket',
       progress: 'Guests checked in',
+    },
+    legal: {
+      updated: 'Last updated {date}',
     },
     pricing: {
       pageTitle: 'Pricing',

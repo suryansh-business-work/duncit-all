@@ -11,6 +11,7 @@ import VpnKeyIcon from '@mui/icons-material/VpnKey';
 import EmailIcon from '@mui/icons-material/Email';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import TranslateIcon from '@mui/icons-material/Translate';
+import GavelIcon from '@mui/icons-material/Gavel';
 import SettingsIcon from '@mui/icons-material/Settings';
 
 export interface NavItem {
@@ -31,6 +32,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { path: '/calendars', labelKey: 'litePortal.nav.calendars', icon: CalendarMonthIcon, testId: 'nav-calendars' },
   { path: '/categories', labelKey: 'litePortal.nav.categories', icon: CategoryIcon, testId: 'nav-categories' },
   { path: '/cities', labelKey: 'litePortal.nav.cities', icon: LocationCityIcon, testId: 'nav-cities' },
+  { path: '/policies', labelKey: 'litePortal.nav.policies', icon: GavelIcon, testId: 'nav-policies' },
   { path: '/environment', labelKey: 'litePortal.nav.environment', icon: VpnKeyIcon, testId: 'nav-environment' },
   { path: '/email-templates', labelKey: 'litePortal.nav.emailTemplates', icon: EmailIcon, testId: 'nav-email-templates' },
   { path: '/email-logs', labelKey: 'litePortal.nav.emailLogs', icon: ReceiptLongIcon, testId: 'nav-email-logs' },

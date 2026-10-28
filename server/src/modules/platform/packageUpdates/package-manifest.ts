@@ -301,6 +301,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
       { name: "@duncit/i18n", range: "workspace:*", kind: "devDependencies" },
       { name: "@duncit/logs", range: "workspace:*", kind: "devDependencies" },
       { name: "@duncit/regex", range: "workspace:*", kind: "devDependencies" },
+      { name: "@duncit/rich-text", range: "workspace:*", kind: "devDependencies" },
       { name: "@duncit/table", range: "workspace:*", kind: "devDependencies" },
       { name: "@duncit/tabs", range: "workspace:*", kind: "devDependencies" },
       { name: "@duncit/theme", range: "workspace:*", kind: "devDependencies" },

@@ -127,7 +127,16 @@ describe('emailService.sendRaw', () => {
     const outcome = await emailService.sendRaw('gita@lite.test', 'Your ticket', 'See you there', 'Duncit Lite', SMTP, QR);
 
     expect(outcome).toEqual({ status: 'SENT', message: 'Sent to gita@lite.test', messageId: '<m-1@smtp.duncit.com>' });
-    expect(mailer.createTransport).toHaveBeenCalledWith({ host: 'smtp.duncit.com', port: 465, secure: true, auth: { user: 'mailer@duncit.com', pass: 'pw' }, pool: true });
+    expect(mailer.createTransport).toHaveBeenCalledWith({
+      host: 'smtp.duncit.com',
+      port: 465,
+      secure: true,
+      auth: { user: 'mailer@duncit.com', pass: 'pw' },
+      pool: true,
+      connectionTimeout: 10_000,
+      greetingTimeout: 10_000,
+      socketTimeout: 30_000,
+    });
     const mail = mailer.sendMail.mock.calls[0][0];
     expect(mail).toMatchObject({ from: 'no-reply@duncit.com', to: 'gita@lite.test', replyTo: 'help@duncit.com', subject: 'Your ticket', text: 'See you there' });
     expect(mail.html).toContain('cid:ticket-qr');

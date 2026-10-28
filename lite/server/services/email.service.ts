@@ -45,16 +45,21 @@ function smtpFrom(config: EnvConfig | null): SmtpConfig | null {
 }
 
 function transporterFor(config: SmtpConfig): Transporter {
-  const key = createHash('sha256').update(`${config.host} ${config.port} ${config.user} ${config.pass}`).digest('hex');
+  const key = createHash('sha256').update(`${config.host} ${config.port} ${config.secure} ${config.user} ${config.pass}`).digest('hex');
   if (transporter && transporterKey === key) return transporter;
   transporterKey = key;
   transporter?.close();
   transporter = nodemailer.createTransport({
     host: config.host,
     port: config.port,
-    secure: config.secure,
+    // 465 speaks TLS from the first byte: a plain connect there waits on a greeting that never comes.
+    secure: config.port === 465 || config.secure,
     auth: config.user ? { user: config.user, pass: config.pass } : undefined,
     pool: true,
+    // nodemailer waits 2 min to connect and 10 min on a silent socket; the console's test awaits the send.
+    connectionTimeout: 10_000,
+    greetingTimeout: 10_000,
+    socketTimeout: 30_000,
   });
   return transporter;
 }

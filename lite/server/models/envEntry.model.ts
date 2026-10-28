@@ -1,7 +1,7 @@
 import { Schema, model, type HydratedDocument, type InferSchemaType } from 'mongoose';
 
 /** The credential categories the Lite console manages. */
-export const LITE_ENV_CATEGORIES = ['EMAIL', 'IMAGEKIT', 'GOOGLE_OAUTH', 'GOOGLE_MAPS', 'MSG91'] as const;
+export const LITE_ENV_CATEGORIES = ['EMAIL', 'IMAGEKIT', 'GOOGLE_OAUTH', 'GOOGLE_MAPS', 'MSG91', 'PEXELS'] as const;
 export type LiteEnvCategory = (typeof LITE_ENV_CATEGORIES)[number];
 
 /**

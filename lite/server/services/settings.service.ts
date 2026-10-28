@@ -1,6 +1,6 @@
 import { SETTING_BOUNDS } from '../../shared/limits';
 import { env } from '../config/env';
-import { LiteSettingsModel, type LiteSettings } from '../models/settings.model';
+import { DEFAULT_PICTURE_TOPICS, LiteSettingsModel, type LiteSettings } from '../models/settings.model';
 import { envEntryService, readString } from './envEntry.service';
 import { badInput } from '../utils/errors';
 import { cleanText, normalizeEmail, validTimezone, wholeNumber } from '../utils/validate';
@@ -26,9 +26,34 @@ export interface AdminSettingsInput {
   max_event_capacity?: number | null;
   max_seats_per_registration?: number | null;
   sign_in_with_phone?: boolean | null;
+  picture_topics?: string[] | null;
 }
 
 export { SETTING_BOUNDS };
+
+const MAX_PICTURE_TOPICS = 40;
+const MAX_TOPIC_LENGTH = 40;
+
+/** Trimmed, non-blank and distinct (ignoring case), in the order given; an empty list switches topics off. */
+function pictureTopics(requested: string[]): string[] {
+  const seen = new Set<string>();
+  const topics: string[] = [];
+  for (const raw of requested) {
+    const topic = cleanText(raw, MAX_TOPIC_LENGTH, 'Picture topic');
+    if (topic && !seen.has(topic.toLowerCase())) {
+      seen.add(topic.toLowerCase());
+      topics.push(topic);
+    }
+  }
+  if (topics.length > MAX_PICTURE_TOPICS) throw badInput(`Give at most ${MAX_PICTURE_TOPICS} picture topics`);
+  return topics;
+}
+
+/** The part of an update that touches the picture topics, kept out of `update` so it stays readable. */
+const pictureTopicsSet = (input: AdminSettingsInput): Record<string, unknown> => (input.picture_topics == null ? {} : { picture_topics: pictureTopics(input.picture_topics) });
+
+/** A row saved before the field existed is read lean, without the schema default. */
+const topicsOf = (settings: LiteSettings): string[] => settings.picture_topics ?? [...DEFAULT_PICTURE_TOPICS];
 
 /** Whole, distinct reminder hours in 1–720, latest first; at least one is required. */
 function reminderHours(requested: number[]): number[] {
@@ -97,7 +122,13 @@ export const settingsService = {
       duncit_app_url: settings.duncit_app_url || env.duncitAppUrl,
       reminder_hours_before: settings.reminder_hours_before ?? [],
       admin_emails: settings.admin_emails ?? [],
+      picture_topics: topicsOf(settings),
     };
+  },
+
+  /** The topics the picture picker lists. */
+  async pictureTopics(): Promise<string[]> {
+    return topicsOf(await this.get());
   },
 
   async update(input: AdminSettingsInput) {
@@ -121,6 +152,7 @@ export const settingsService = {
       $set.max_seats_per_registration = wholeNumber(input.max_seats_per_registration, 'Seats per registration', SETTING_BOUNDS.seatsPerRegistration);
     }
     if (input.sign_in_with_phone != null) $set.sign_in_with_phone = input.sign_in_with_phone;
+    Object.assign($set, pictureTopicsSet(input));
     await LiteSettingsModel.updateOne({ key: 'global' }, { $set }, { upsert: true });
     cache = null;
     return this.adminSettings();

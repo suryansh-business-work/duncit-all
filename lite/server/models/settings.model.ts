@@ -1,5 +1,8 @@
 import { Schema, model, type InferSchemaType } from 'mongoose';
 
+/** The picture picker's starting topics; the console edits the list (Settings → General). */
+export const DEFAULT_PICTURE_TOPICS: readonly string[] = ['Diwali', 'Holi', 'Christmas', 'New Year', 'Food', 'Party', 'Music', 'Sports', 'Fitness', 'Tech', 'Business', 'Art', 'Wellness', 'Nature', 'Travel', 'Pets'];
+
 /** The one settings row (key `global`), seeded on boot and edited from the console. */
 const settingsSchema = new Schema(
   {
@@ -28,6 +31,8 @@ const settingsSchema = new Schema(
     max_seats_per_registration: { type: Number, default: 10, min: 1 },
     /** Offer "Use phone number" on sign-in (it also needs an MSG91 entry under Environment). */
     sign_in_with_phone: { type: Boolean, default: true },
+    /** Stock-photo topics listed beside the picture picker's results; each one is searched on Pexels. */
+    picture_topics: { type: [String], default: () => [...DEFAULT_PICTURE_TOPICS] },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } },
 );

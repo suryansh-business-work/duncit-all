@@ -13,6 +13,14 @@ export interface UploadResult {
   fileId: string;
 }
 
+interface UploadOptions {
+  privateKey?: string;
+  /** False keeps the name as given, so the same source always lands on the same file. */
+  unique: boolean;
+  /** A folder inside the configured one, e.g. `pexels`. */
+  subfolder?: string;
+}
+
 export function isImageMime(mime: string): boolean {
   return IMAGE_MIME.test(mime);
 }
@@ -23,25 +31,45 @@ function basicAuth(privateKey: string): string {
   return `Basic ${credentials}`;
 }
 
+const folderFor = (base: string, subfolder: string | undefined): string => {
+  if (!subfolder) return base;
+  return `${base.endsWith('/') ? base.slice(0, -1) : base}/${subfolder}`;
+};
+
 /**
  * The one call that puts a file on ImageKit: the server uploads over Basic
  * auth with the private key, so the browser never holds a credential and there
- * is no signature to get wrong.
+ * is no signature to get wrong. `file` is the bytes, or a public URL ImageKit
+ * fetches itself.
  */
-export async function uploadImage(bytes: Buffer, fileName: string, privateKeyOverride?: string): Promise<UploadResult> {
+async function postToImagekit(file: Blob | string, fileName: string, options: UploadOptions): Promise<UploadResult> {
   const config = await envEntryService.activeConfig('IMAGEKIT');
-  const privateKey = privateKeyOverride ?? readString(config, 'private_key');
+  const privateKey = options.privateKey ?? readString(config, 'private_key');
   if (!privateKey) throw configError('Image uploads are not configured yet (Console → Environment → ImageKit).');
   const form = new FormData();
-  form.append('file', new Blob([new Uint8Array(bytes)]), fileName);
+  if (typeof file === 'string') form.append('file', file);
+  else form.append('file', file, fileName);
   form.append('fileName', fileName);
-  form.append('useUniqueFileName', 'true');
-  form.append('folder', readString(config, 'folder') || '/lite');
+  form.append('useUniqueFileName', String(options.unique));
+  form.append('folder', folderFor(readString(config, 'folder') || '/lite', options.subfolder));
   const auth = basicAuth(privateKey);
   const res = await fetch(IMAGEKIT_UPLOAD_URL, { method: 'POST', headers: { Authorization: auth }, body: form });
   const json = (await res.json().catch(() => ({}))) as { url?: string; fileId?: string; message?: string };
   if (!res.ok || !json.url) throw upstreamError(`ImageKit upload failed: ${json.message ?? res.statusText}`);
   return { url: json.url, fileId: json.fileId ?? '' };
+}
+
+/** A picture the browser sent: always a fresh, uniquely named file. */
+export function uploadImage(bytes: Buffer, fileName: string, privateKeyOverride?: string): Promise<UploadResult> {
+  return postToImagekit(new Blob([new Uint8Array(bytes)]), fileName, { privateKey: privateKeyOverride, unique: true });
+}
+
+/**
+ * Copy a stock photo to ImageKit by its URL. The name is kept, so choosing the
+ * same photo again lands on the same file instead of a duplicate.
+ */
+export function uploadRemoteImage(url: string, fileName: string, subfolder: string): Promise<UploadResult> {
+  return postToImagekit(url, fileName, { unique: false, subfolder });
 }
 
 /** Prove an ImageKit key without uploading anything. */

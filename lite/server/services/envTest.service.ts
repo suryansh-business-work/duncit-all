@@ -4,6 +4,7 @@ import { emailService, smtpFromConfig } from './email.service';
 import { envEntryService, readString, type EnvConfig } from './envEntry.service';
 import { probeMaps } from './maps.service';
 import { msg91CredentialsFrom, msg91Probe } from './msg91.gateway';
+import { probePexels } from './pexels.service';
 import { settingsService } from './settings.service';
 import { probeImagekit } from './upload.service';
 
@@ -43,6 +44,7 @@ const PROBES: Record<LiteEnvCategory, Probe> = {
     const creds = msg91CredentialsFrom(config);
     return creds ? msg91Probe(creds) : { ok: false, message: 'Widget ID and auth key are both required' };
   },
+  PEXELS: (config) => probePexels(readString(config, 'api_key')),
 };
 
 export const envTestService = {

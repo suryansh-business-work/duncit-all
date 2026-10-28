@@ -50,6 +50,9 @@ export const CATEGORY_FIELDS: Record<LiteEnvCategory, EnvFieldDef[]> = {
     { name: 'auth_key', label: 'Auth Key', secret: true, hint: 'MSG91 → Settings → Security → Auth Key' },
     { name: 'default_country_code', label: 'Default Country Code', number: true, min: 1, max: 9999, hint: '91 for India — added when a number is typed without one' },
   ],
+  // Stock photos in the picture picker. The key stays on the server: the
+  // browser asks the Lite API, which searches Pexels and copies a chosen photo to ImageKit.
+  PEXELS: [{ name: 'api_key', label: 'API Key', secret: true, hint: 'pexels.com/api → Your API key' }],
 };
 
 export const CATEGORY_LABELS: Record<LiteEnvCategory, { label: string; docUrl: string }> = {
@@ -58,6 +61,7 @@ export const CATEGORY_LABELS: Record<LiteEnvCategory, { label: string; docUrl: s
   GOOGLE_OAUTH: { label: 'Google sign-in', docUrl: 'https://console.cloud.google.com/apis/credentials' },
   GOOGLE_MAPS: { label: 'Google Maps', docUrl: 'https://console.cloud.google.com/google/maps-apis/credentials' },
   MSG91: { label: 'MSG91 (SMS sign-in)', docUrl: 'https://control.msg91.com/app/m/l/otp/widgets' },
+  PEXELS: { label: 'Pexels (stock photos)', docUrl: 'https://www.pexels.com/api/' },
 };
 
 export type EnvConfig = Record<string, string | number | boolean>;

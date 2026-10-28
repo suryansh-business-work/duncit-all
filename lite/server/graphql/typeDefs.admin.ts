@@ -60,6 +60,8 @@ export const adminTypeDefs = gql`
     max_seats_per_registration: Int!
     "Offer Use phone number on sign-in (also needs an MSG91 entry)."
     sign_in_with_phone: Boolean!
+    "Stock photo topics listed in the picture picker; each is searched on Pexels."
+    picture_topics: [String!]!
   }
 
   input LiteAdminSettingsInput {
@@ -80,6 +82,8 @@ export const adminTypeDefs = gql`
     max_event_capacity: Int
     max_seats_per_registration: Int
     sign_in_with_phone: Boolean
+    "Up to 40 topics of 40 characters; an empty list hides topics."
+    picture_topics: [String!]
   }
 
   type LiteEnvFieldDef {

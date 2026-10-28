@@ -112,6 +112,9 @@ exactly as it was rather than writing a `src` nobody can fetch into saved HTML.
   here. **Not** the base64 sibling: this one streams the bytes over XHR, which is the only way
   to get real progress, and base64 costs a third more than the file, so a photo straight off a
   phone can miss the API body limit for no reason.
+- `aiImprove={false}` and `images={false}` are for a surface on another API (Duncit Lite's console):
+  both actions call the main Duncit API. The formatting toolbar stays, and the actions bar only
+  appears to report a failed picture.
 - `imageFolder` defaults to `/rich-text`, which keeps document images clear of the venue, club
   and pod media the other pickers write. Pass a folder of your own when a surface wants its
   pictures grouped.
@@ -148,6 +151,8 @@ constrain it.
 | `bare`        | `boolean`              | `false`            | Removes outer border/background.       |
 | `aiContext`   | `string`               | omitted            | Short task context for the AI rewrite. |
 | `imageFolder` | `string`               | `'/rich-text'`     | ImageKit folder for inserted pictures. |
+| `aiImprove`   | `boolean`              | `true`             | Offer Improve with AI (main Duncit API). |
+| `images`      | `boolean`              | `true`             | Offer Insert picture (main Duncit API). |
 
 `htmlToText(html)` extracts the plain-text companion used by search, previews and API payloads.
 

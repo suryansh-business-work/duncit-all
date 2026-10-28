@@ -3,6 +3,8 @@ import { defineConfig, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 
 const ASSET_PREFIXES = ['/@', '/node_modules', '/web/', '/portal/', '/shared/', '/public/'];
+/** The API paths the dev server proxies to the Node server (see server.proxy below). */
+const API_PREFIXES = ['/graphql', '/upload', '/ics', '/health'];
 const HAS_EXTENSION = /\.[a-z0-9]+(\?.*)?$/i;
 
 /**
@@ -18,7 +20,9 @@ function hostSwitch(): Plugin {
         const host = String(req.headers.host ?? '');
         const path = req.url ?? '/';
         const isAsset = ASSET_PREFIXES.some((prefix) => path.startsWith(prefix)) || HAS_EXTENSION.test(path);
-        if (!isAsset) req.url = host.startsWith('portal.') ? '/portal.html' : '/index.html';
+        // This runs before the proxy: rewriting an API call to the page would answer it with HTML.
+        const isApi = API_PREFIXES.some((prefix) => path.startsWith(prefix));
+        if (!isAsset && !isApi) req.url = host.startsWith('portal.') ? '/portal.html' : '/index.html';
         next();
       });
     },

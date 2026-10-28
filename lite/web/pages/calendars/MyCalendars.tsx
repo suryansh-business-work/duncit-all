@@ -13,6 +13,7 @@ import { UserAvatar } from '../../components/UserAvatar';
 import { LITE_MY_CALENDARS } from '../../graphql/calendars';
 import { paths } from '../../lib/paths';
 import { DiscoverSection } from '../discover/DiscoverSection';
+import { CalendarCardsSkeleton } from './CalendarsSkeletons';
 
 export const CALENDAR_GRID = { display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, listStyle: 'none', p: 0, m: 0 } as const;
 
@@ -63,7 +64,7 @@ export function MyCalendars() {
   );
   return (
     <DiscoverSection title={t('liteWeb.calendars.title')} subtitle={t('liteWeb.calendars.subtitle')} action={create} testId="my-calendars-section">
-      <QueryGuard loading={loading && !data} error={error} loadingLabel={t('lite.common.loading')}>
+      <QueryGuard loading={loading && !data} error={error} skeleton={<CalendarCardsSkeleton />}>
         {rows.length === 0 ? (
           <EmptyState icon={<CalendarMonthOutlinedIcon />} title={t('liteWeb.calendars.empty')} body={t('liteWeb.calendars.emptyBody')} testId="my-calendars-empty" />
         ) : (

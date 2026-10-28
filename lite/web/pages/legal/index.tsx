@@ -7,6 +7,7 @@ import { useWebT } from '../../../shared/i18n';
 import { LITE_POLICY, type LitePolicyPage } from '../../graphql/policies';
 import { usePageTitle } from '../../lib/usePageTitle';
 import { NotFoundPage } from '../not-found';
+import { PolicySkeleton } from './PolicySkeleton';
 
 /** One policy as a readable article: its title, when it last changed, and the text. */
 function PolicyArticle({ policy }: Readonly<{ policy: LitePolicyPage }>) {
@@ -35,14 +36,13 @@ function PolicyArticle({ policy }: Readonly<{ policy: LitePolicyPage }>) {
 
 /** /legal/:slug — a policy page the console wrote (privacy, terms of use, data policy…). */
 export function PolicyPage() {
-  const { t } = useWebT();
   const { slug = '' } = useParams();
   const { data, loading, error } = useQuery<{ litePolicy: LitePolicyPage | null }>(LITE_POLICY, { variables: { slug }, fetchPolicy: 'cache-and-network' });
   const policy = data?.litePolicy ?? null;
   usePageTitle(policy?.title ?? '');
   if (!loading && !error && !policy) return <NotFoundPage />;
   return (
-    <QueryGuard loading={loading && !policy} error={error} loadingLabel={t('lite.common.loading')}>
+    <QueryGuard loading={loading && !policy} error={error} skeleton={<PolicySkeleton />}>
       {() => (policy ? <PolicyArticle policy={policy} /> : null)}
     </QueryGuard>
   );

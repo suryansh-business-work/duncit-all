@@ -5,6 +5,7 @@ import { usePageTitle } from '../../lib/usePageTitle';
 import { CalendarsHelp } from './CalendarsHelp';
 import { MyCalendars } from './MyCalendars';
 import { SubscribedCalendars } from './SubscribedCalendars';
+import { CalendarCardsSkeleton } from './CalendarsSkeletons';
 
 export { CalendarFormPage } from './CalendarFormPage';
 
@@ -18,7 +19,7 @@ export function CalendarsPage() {
         {t('liteWeb.calendars.pageTitle')}
       </Typography>
       <CalendarsHelp />
-      <SignedInGate body={t('liteWeb.calendars.gate')}>
+      <SignedInGate skeleton={<CalendarCardsSkeleton />} body={t('liteWeb.calendars.gate')}>
         <Stack spacing={5}>
           <MyCalendars />
           <SubscribedCalendars />

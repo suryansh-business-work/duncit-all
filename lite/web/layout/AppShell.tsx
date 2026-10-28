@@ -2,9 +2,10 @@ import { Suspense, useRef } from 'react';
 import { Outlet, ScrollRestoration, useMatches } from 'react-router';
 import { MotionConfig } from 'framer-motion';
 import { Box, Container, Link } from '@mui/material';
-import { Loader, useRouteFocus } from '@duncit/ui';
+import { useRouteFocus } from '@duncit/ui';
 import { useWebT } from '../../shared/i18n';
 import { SignInDialog } from '../components/auth/SignInDialog';
+import { PageSkeleton } from '../components/skeletons';
 import { Footer } from './Footer';
 import { Header } from './header';
 import { MobileTabBar, TAB_BAR_HEIGHT } from './MobileTabBar';
@@ -27,7 +28,7 @@ export function AppShell() {
   const matches = useMatches();
   const bleed = isBleed(matches.at(-1)?.handle);
   useRouteFocus(mainRef);
-  const fallback = <Loader label={t('lite.common.loading')} />;
+  const fallback = <PageSkeleton />;
   return (
     // reducedMotion="user": with the reader's reduced-motion setting on, every Framer animation drops its movement.
     <MotionConfig reducedMotion="user">

@@ -6,7 +6,7 @@ import { tintAt } from '../../../shared/tokens';
 import { paths } from '../../lib/paths';
 import { categoryIcon } from './categoryIcon';
 
-const GRID = { display: 'grid', gap: 1.5, gridTemplateColumns: { xs: 'repeat(2, minmax(0, 1fr))', sm: 'repeat(3, minmax(0, 1fr))' } } as const;
+export const CATEGORY_GRID = { display: 'grid', gap: 1.5, gridTemplateColumns: { xs: 'repeat(2, minmax(0, 1fr))', sm: 'repeat(3, minmax(0, 1fr))' } } as const;
 
 interface CategoryGridProps {
   categories: readonly LiteCategory[];
@@ -18,7 +18,7 @@ interface CategoryGridProps {
 export function CategoryGrid({ categories, showCounts = true }: Readonly<CategoryGridProps>) {
   const { t } = useWebT();
   return (
-    <Box component="ul" sx={{ ...GRID, listStyle: 'none', p: 0, m: 0 }} data-testid="category-grid">
+    <Box component="ul" sx={{ ...CATEGORY_GRID, listStyle: 'none', p: 0, m: 0 }} data-testid="category-grid">
       {categories.map((category, index) => (
         <Box component="li" key={category.id} sx={{ minWidth: 0 }}>
           <Card sx={{ height: '100%' }}>

@@ -13,6 +13,7 @@ import { LITE_MY_REGISTRATIONS } from '../../graphql/registrations';
 import { paths } from '../../lib/paths';
 import { usePageTitle } from '../../lib/usePageTitle';
 import { TicketRow } from './TicketRow';
+import { TicketRowsSkeleton } from './TicketRowsSkeleton';
 
 const TABS_ID = 'tickets';
 
@@ -21,7 +22,7 @@ function TicketsList({ past }: Readonly<{ past: boolean }>) {
   const { data, loading, error } = useQuery(LITE_MY_REGISTRATIONS, { variables: { past }, fetchPolicy: 'cache-and-network' });
   const rows = data?.liteMyRegistrations ?? [];
   return (
-    <QueryGuard loading={loading && !data} error={error} loadingLabel={t('lite.common.loading')}>
+    <QueryGuard loading={loading && !data} error={error} skeleton={<TicketRowsSkeleton />}>
       {rows.length === 0 ? (
         <EmptyState
           icon={<ConfirmationNumberOutlinedIcon />}
@@ -56,7 +57,7 @@ export function TicketsPage() {
   return (
     <Stack spacing={2} data-testid="tickets-page">
       <PageHeader title={t('liteWeb.tickets.title')} subtitle={t('liteWeb.tickets.subtitle')} titleVariant="h4" />
-      <SignedInGate body={t('liteWeb.tickets.gate')}>
+      <SignedInGate skeleton={<TicketRowsSkeleton />} body={t('liteWeb.tickets.gate')}>
         <DuncitTabs {...tabs} idPrefix={TABS_ID} />
         <Box {...tabPanelProps(TABS_ID, tabs.value)}>
           <TicketsList past={tabs.past} />

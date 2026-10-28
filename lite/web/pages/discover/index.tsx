@@ -8,6 +8,7 @@ import { LITE_DISCOVER } from '../../graphql/discover';
 import { usePageTitle } from '../../lib/usePageTitle';
 import { CitySelect } from './CitySelect';
 import { DiscoverSections } from './DiscoverSections';
+import { DiscoverSkeleton } from './DiscoverSkeleton';
 
 export { CalendarCard } from './CalendarCard';
 export { CategoryGrid } from './CategoryGrid';
@@ -41,7 +42,7 @@ export function DiscoverPage() {
           <Typography color="text.secondary">{t('liteWeb.discover.subtitle')}</Typography>
         </Stack>
         <SearchForm citySlug={citySlug || null} />
-        <QueryGuard loading={loading && !discover} error={error} loadingLabel={t('lite.common.loading')}>
+        <QueryGuard loading={loading && !discover} error={error} skeleton={<DiscoverSkeleton />}>
           {() =>
             discover ? (
               <DiscoverSections

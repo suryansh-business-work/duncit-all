@@ -8,15 +8,15 @@ import { LITE_MY_CALENDARS } from '../../graphql/calendars';
 import { usePageTitle } from '../../lib/usePageTitle';
 import { NotFoundPage } from '../not-found';
 import { CalendarForm } from './calendar-form';
+import { CalendarFormSkeleton } from './CalendarsSkeletons';
 
 /** The edit form, once the calendar is found among the reader's own. */
 function EditCalendar({ id }: Readonly<{ id: string }>) {
-  const { t } = useWebT();
   const { data, loading, error } = useQuery(LITE_MY_CALENDARS);
   const calendar = data?.liteMyCalendars.find((row) => row.id === id) ?? null;
   if (!loading && !error && !calendar) return <NotFoundPage />;
   return (
-    <QueryGuard loading={loading && !data} error={error} loadingLabel={t('lite.common.loading')}>
+    <QueryGuard loading={loading && !data} error={error} skeleton={<CalendarFormSkeleton />}>
       {() => (calendar ? <CalendarForm calendar={calendar} /> : null)}
     </QueryGuard>
   );
@@ -32,7 +32,7 @@ export function CalendarFormPage() {
     <Container maxWidth={false} disableGutters sx={{ maxWidth: 800 }}>
       <Stack spacing={3} data-testid="calendar-form-page">
         <PageHeader title={title} subtitle={t('liteWeb.calendars.formSubtitle')} titleVariant="h4" />
-        <SignedInGate body={t('liteWeb.calendars.gate')}>{id ? <EditCalendar id={id} /> : <CalendarForm calendar={null} />}</SignedInGate>
+        <SignedInGate skeleton={<CalendarFormSkeleton />} body={t('liteWeb.calendars.gate')}>{id ? <EditCalendar id={id} /> : <CalendarForm calendar={null} />}</SignedInGate>
       </Stack>
     </Container>
   );

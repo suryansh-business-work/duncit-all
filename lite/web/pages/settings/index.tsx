@@ -10,6 +10,7 @@ import { ContactSection } from './ContactSection';
 import { DisplayPicker } from './DisplayPicker';
 import { PaymentForm } from './payment-form';
 import { ProfileForm } from './profile-form';
+import { FormSkeleton } from '../../components/skeletons';
 
 type SettingsTab = 'account' | 'preferences' | 'payment';
 const TAB_VALUES: SettingsTab[] = ['account', 'preferences', 'payment'];
@@ -83,7 +84,7 @@ export function SettingsPage() {
         {tabs.value === 'preferences' ? (
           <SettingsBody tab="preferences" />
         ) : (
-          <SignedInGate body={t('liteWeb.profile.gate')}>
+          <SignedInGate skeleton={<FormSkeleton />} body={t('liteWeb.profile.gate')}>
             <SettingsBody tab={tabs.value} />
           </SignedInGate>
         )}

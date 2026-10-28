@@ -10,6 +10,7 @@ import { LITE_RADII } from '../../../shared/tokens';
 import { EmptyState } from '../../components/EmptyState';
 import { LITE_EVENT_INSIGHTS, type LiteInsightDay } from '../../graphql/events';
 import { visuallyHidden } from '../../lib/a11y';
+import { InsightsSkeleton } from './ManageSkeleton';
 
 type Window = '7' | '30' | '90';
 const WINDOWS: readonly Window[] = ['7', '30', '90'];
@@ -69,7 +70,7 @@ export function InsightsTab({ event }: Readonly<{ event: LiteEvent }>) {
           ))}
         </ToggleButtonGroup>
       </Stack>
-      <QueryGuard loading={loading && !insights} error={error} loadingLabel={t('lite.common.loading')}>
+      <QueryGuard loading={loading && !insights} error={error} skeleton={<InsightsSkeleton />}>
         {() =>
           insights ? (
             <Stack spacing={2}>

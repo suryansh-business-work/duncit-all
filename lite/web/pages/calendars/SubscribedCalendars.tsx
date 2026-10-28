@@ -11,6 +11,7 @@ import { paths } from '../../lib/paths';
 import { CalendarCard } from '../discover/CalendarCard';
 import { DiscoverSection } from '../discover/DiscoverSection';
 import { CALENDAR_GRID } from './MyCalendars';
+import { CalendarCardsSkeleton } from './CalendarsSkeletons';
 
 /** "Subscribed calendars": the ones the reader follows, each with Following to stop. */
 export function SubscribedCalendars() {
@@ -19,7 +20,7 @@ export function SubscribedCalendars() {
   const rows = data?.liteSubscribedCalendars ?? [];
   return (
     <DiscoverSection title={t('liteWeb.calendars.subscribedTitle')} testId="subscribed-calendars-section">
-      <QueryGuard loading={loading && !data} error={error} loadingLabel={t('lite.common.loading')}>
+      <QueryGuard loading={loading && !data} error={error} skeleton={<CalendarCardsSkeleton testId="subscribed-calendars-skeleton" />}>
         {rows.length === 0 ? (
           <EmptyState
             icon={<ExploreOutlinedIcon />}

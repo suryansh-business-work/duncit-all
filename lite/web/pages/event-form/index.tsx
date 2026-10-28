@@ -10,6 +10,7 @@ import { paths } from '../../lib/paths';
 import { usePageTitle } from '../../lib/usePageTitle';
 import { NotFoundPage } from '../not-found';
 import { EventForm } from './event.form';
+import { EventFormSkeleton } from './EventFormSkeleton';
 
 export { EventForm } from './event.form';
 export { eventDefaults, makeEventSchema, toEventInput } from './event.types';
@@ -26,7 +27,7 @@ export function CreateEventPage() {
       <Typography variant="h1" sx={visuallyHidden}>
         {t('liteWeb.eventForm.createTitle')}
       </Typography>
-      <SignedInGate body={t('liteWeb.eventForm.gate')}>
+      <SignedInGate skeleton={<EventFormSkeleton />} body={t('liteWeb.eventForm.gate')}>
         <EventForm event={null} />
       </SignedInGate>
     </Box>
@@ -35,13 +36,12 @@ export function CreateEventPage() {
 
 /** The form once the event is loaded; only its hosts may edit, and a cancelled event is read-only. */
 function EditLoader({ slug }: Readonly<{ slug: string }>) {
-  const { t } = useWebT();
   const { data, loading, error } = useQuery(LITE_EVENT, { variables: { slug }, fetchPolicy: 'network-only' });
   const event = data?.liteEvent ?? null;
   if (!loading && !error && !event) return <NotFoundPage />;
   if (event && (!event.viewer_is_host || event.status === 'CANCELLED')) return <Navigate to={paths.event(event.slug)} replace />;
   return (
-    <QueryGuard loading={loading && !event} error={error} loadingLabel={t('lite.common.loading')}>
+    <QueryGuard loading={loading && !event} error={error} skeleton={<EventFormSkeleton />}>
       {() => (event ? <EventForm key={event.id} event={event} /> : null)}
     </QueryGuard>
   );
@@ -57,7 +57,7 @@ export function EditEventPage() {
       <Typography variant="h1" sx={visuallyHidden}>
         {t('liteWeb.eventForm.editTitle')}
       </Typography>
-      <SignedInGate body={t('liteWeb.eventForm.gate')}>
+      <SignedInGate skeleton={<EventFormSkeleton />} body={t('liteWeb.eventForm.gate')}>
         <EditLoader slug={slug} />
       </SignedInGate>
     </Box>

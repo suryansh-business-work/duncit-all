@@ -16,6 +16,7 @@ import { CheckInCode } from './CheckInCode';
 import { CheckInLocked } from './CheckInLocked';
 import { PaymentPanel } from './payment-panel';
 import { TicketDetails } from './TicketDetails';
+import { TicketPageSkeleton } from './TicketPageSkeleton';
 
 function TicketView({ ticket, onChanged }: Readonly<{ ticket: LiteTicket; onChanged: () => void }>) {
   const { t } = useWebT();
@@ -54,7 +55,7 @@ function TicketLoader({ id }: Readonly<{ id: string }>) {
     refetch().catch((failure: unknown) => notifyError(parseApiError(failure)));
   };
   return (
-    <QueryGuard loading={loading && !ticket} error={error} loadingLabel={t('lite.common.loading')}>
+    <QueryGuard loading={loading && !ticket} error={error} skeleton={<TicketPageSkeleton />}>
       {() => (ticket ? <TicketView ticket={ticket} onChanged={reload} /> : null)}
     </QueryGuard>
   );
@@ -65,7 +66,7 @@ export function TicketPage() {
   const { t } = useWebT();
   const { id = '' } = useParams();
   return (
-    <SignedInGate body={t('liteWeb.tickets.gate')}>
+    <SignedInGate skeleton={<TicketPageSkeleton />} body={t('liteWeb.tickets.gate')}>
       <TicketLoader id={id} />
     </SignedInGate>
   );

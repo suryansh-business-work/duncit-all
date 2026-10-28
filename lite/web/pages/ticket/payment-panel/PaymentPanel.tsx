@@ -2,11 +2,12 @@ import { useQuery } from '@apollo/client/react';
 import { Alert, Box, Stack, Typography } from '@mui/material';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { DuncitButton } from '@duncit/buttons';
-import { Loader, SectionCard } from '@duncit/ui';
+import { SectionCard } from '@duncit/ui';
 import { formatMoney } from '@duncit/utils';
 import { useWebT } from '../../../../shared/i18n';
 import { useLiteSettings } from '../../../app/providers/LiteSettingsProvider';
 import { CopyField } from '../../../components/CopyField';
+import { Shape, SkeletonFrame } from '../../../components/skeletons';
 import { LITE_UPI_QR, type LiteTicket } from '../../../graphql/registrations';
 import { PaymentReferenceForm } from './payment-reference.form';
 
@@ -37,7 +38,11 @@ export function PaymentPanel({ ticket, onChanged }: Readonly<PaymentPanelProps>)
         {upiId ? (
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ alignItems: { sm: 'flex-start' } }}>
             <Box sx={{ width: 200, flexShrink: 0, alignSelf: { xs: 'center', sm: 'flex-start' } }}>
-              {loading ? <Loader label={t('lite.common.loading')} /> : null}
+              {loading ? (
+                <SkeletonFrame testId="upi-qr-skeleton">
+                  <Shape width={200} height={200} radius={2} />
+                </SkeletonFrame>
+              ) : null}
               {qr ? <Box component="img" src={qr.data_url} alt={t('liteWeb.payment.qrAlt', { vars: { upi: upiId } })} width={200} height={200} sx={{ borderRadius: 2, border: 1, borderColor: 'divider' }} data-testid="upi-qr" /> : null}
             </Box>
             <Stack spacing={1.5} sx={{ flexGrow: 1 }}>

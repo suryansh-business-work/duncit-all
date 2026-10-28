@@ -1,10 +1,9 @@
 import type { ReactNode } from 'react';
 import { Stack } from '@mui/material';
 import EventBusyOutlinedIcon from '@mui/icons-material/EventBusyOutlined';
-import { Loader } from '@duncit/ui';
 import type { LiteEventCard as LiteEventCardData } from '../../../shared/graphql/documents';
-import { useWebT } from '../../../shared/i18n';
 import { EmptyState } from '../EmptyState';
+import { EventListSkeleton } from '../skeletons';
 import { EventDayGroup } from './EventDayGroup';
 import { groupEventsByDay } from './groupByDay';
 
@@ -18,10 +17,9 @@ interface EventListProps {
   cardTo?: (event: LiteEventCardData) => string;
 }
 
-/** Events grouped by day, or a spinner, or an empty state — the same three answers on every list. */
+/** Events grouped by day, or their skeleton, or an empty state — the same three answers on every list. */
 export function EventList({ events, loading = false, emptyTitle, emptyBody, emptyAction, showStatus, cardTo }: Readonly<EventListProps>) {
-  const { t } = useWebT();
-  if (loading && events.length === 0) return <Loader label={t('lite.common.loading')} />;
+  if (loading && events.length === 0) return <EventListSkeleton />;
   if (events.length === 0) return <EmptyState icon={<EventBusyOutlinedIcon />} title={emptyTitle} body={emptyBody} action={emptyAction} />;
   return (
     <Stack spacing={4} data-testid="event-list">

@@ -9,6 +9,7 @@ import { LITE_EVENT } from '../../graphql/events';
 import { usePageTitle } from '../../lib/usePageTitle';
 import { NotFoundPage } from '../not-found';
 import { ScannerPanel } from './ScannerPanel';
+import { ScanSkeleton } from './ScanSkeleton';
 
 /** "12 of 40 checked in", with a bar, kept current as the door scans. */
 function Tally({ event }: Readonly<{ event: LiteEvent }>) {
@@ -30,7 +31,7 @@ function Scanner({ slug }: Readonly<{ slug: string }>) {
   const event = data?.liteEvent ?? null;
   if (!loading && !error && !event) return <NotFoundPage />;
   return (
-    <QueryGuard loading={loading && !event} error={error} loadingLabel={t('lite.common.loading')}>
+    <QueryGuard loading={loading && !event} error={error} skeleton={<ScanSkeleton />}>
       {() => {
         if (!event) return null;
         if (!event.viewer_is_host) {
@@ -72,7 +73,7 @@ export function ScanPage() {
   usePageTitle(t('liteWeb.scan.title'));
   return (
     <Stack sx={{ maxWidth: 520, mx: 'auto' }} data-testid="scan-page">
-      <SignedInGate body={t('liteWeb.scan.gate')}>
+      <SignedInGate skeleton={<ScanSkeleton />} body={t('liteWeb.scan.gate')}>
         <Scanner slug={slug} />
       </SignedInGate>
     </Stack>

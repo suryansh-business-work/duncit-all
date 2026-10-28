@@ -15,8 +15,8 @@ import { CategoryGrid } from './CategoryGrid';
 import { CityRegions } from './CityRegions';
 import { DiscoverSection } from './DiscoverSection';
 
-const TWO_COLUMNS = { display: 'grid', columnGap: 4, rowGap: 1.5, gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' } } as const;
-const THREE_COLUMNS = { display: 'grid', gap: 1.5, gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' } } as const;
+export const TWO_COLUMNS = { display: 'grid', columnGap: 4, rowGap: 1.5, gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' } } as const;
+export const THREE_COLUMNS = { display: 'grid', gap: 1.5, gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' } } as const;
 
 interface DiscoverSectionsProps {
   discover: LiteDiscover;

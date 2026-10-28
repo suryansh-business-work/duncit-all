@@ -9,6 +9,9 @@ interface EventDayGroupProps {
   cardTo?: (event: LiteEventCardData) => string;
 }
 
+/** One, two or three cards across; the list's skeleton draws the same grid. */
+export const EVENT_GRID = { display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' } } as const;
+
 /** A day heading and the cards under it, three across on desktop and one on a phone. */
 export function EventDayGroup({ label, events, showStatus, cardTo }: Readonly<EventDayGroupProps>) {
   return (
@@ -16,7 +19,7 @@ export function EventDayGroup({ label, events, showStatus, cardTo }: Readonly<Ev
       <Typography variant="h3" component="h2">
         {label}
       </Typography>
-      <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' } }}>
+      <Box sx={EVENT_GRID}>
         {events.map((event) => (
           <EventCard key={event.id} event={event} showStatus={showStatus} to={cardTo?.(event)} />
         ))}

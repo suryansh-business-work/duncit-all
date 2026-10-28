@@ -23,6 +23,7 @@ import { OverviewTab } from './OverviewTab';
 import { RegistrationTab } from './RegistrationTab';
 import { SettingsTab } from './settings';
 import { UpdatesTab } from './updates';
+import { ManageSkeleton } from './ManageSkeleton';
 
 type ManageTab = 'overview' | 'guests' | 'registration' | 'blasts' | 'insights' | 'more';
 const TAB_VALUES: ManageTab[] = ['overview', 'guests', 'registration', 'blasts', 'insights', 'more'];
@@ -93,7 +94,7 @@ function ManageLoader({ slug }: Readonly<{ slug: string }>) {
     refetch().catch((err: unknown) => console.warn('[lite] manage refresh failed', err));
   };
   return (
-    <QueryGuard loading={loading && !event} error={error} loadingLabel={t('lite.common.loading')}>
+    <QueryGuard loading={loading && !event} error={error} skeleton={<ManageSkeleton />}>
       {() => (event ? <ManageView event={event} onChanged={reload} /> : null)}
     </QueryGuard>
   );
@@ -104,7 +105,7 @@ export function ManagePage() {
   const { t } = useWebT();
   const { slug = '' } = useParams();
   return (
-    <SignedInGate body={t('liteWeb.home.gate')}>
+    <SignedInGate skeleton={<ManageSkeleton />} body={t('liteWeb.home.gate')}>
       <ManageLoader slug={slug} />
     </SignedInGate>
   );

@@ -5,10 +5,10 @@ import { deviceTimeZone } from '../../../shared/format';
 import { useWebT } from '../../../shared/i18n';
 
 /** ISO 8601's 24-hour time, the standard the header shows (no AM/PM, no regional order). */
+const ISO_TIME = 'HH:mm';
 
 /** Read by a screen reader, not drawn: the tooltip is for the pointer. */
 const SR_ONLY = { position: 'absolute', width: 1, height: 1, p: 0, m: -1, overflow: 'hidden', clip: 'rect(0 0 0 0)', whiteSpace: 'nowrap', border: 0 } as const;
-const ISO_TIME = 'HH:mm';
 
 /** "GMT+5:30" for a zone, from the platform's own names — never a hand-written format. */
 export function offsetLabel(date: Date, timeZone: string): string {

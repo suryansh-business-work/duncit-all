@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { act, fireEvent, render, renderHook, screen, waitFor, within } from '@testing-library/react';
 import PetsIcon from '@mui/icons-material/Pets';
 import PetsOutlinedIcon from '@mui/icons-material/PetsOutlined';
@@ -52,6 +52,13 @@ async function renderPicker(props: Partial<MuiIconPickerProps> = {}, factory?: (
   render(<Harness />);
   return { onChange, input: screen.getByRole('combobox') };
 }
+
+// The first fresh() transforms the picker's whole @mui/material graph, and in a coverage run instruments it,
+// which takes longer than one test's 5 s on a CI runner. Pay it once here: after resetModules every fresh()
+// re-runs the modules but reuses the transformed code. The icon set itself stays mocked per test.
+beforeAll(async () => {
+  await import('../src/mui-icon/MuiIconPicker');
+}, 60_000);
 
 afterEach(() => {
   vi.doUnmock('@mui/icons-material');

@@ -1,13 +1,17 @@
 import { useEffect, useMemo } from 'react';
-import { useForm, type Resolver } from 'react-hook-form';
+import { Controller, useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Stack } from '@mui/material';
 import { RhfTextField } from '@duncit/forms';
+import { MuiIconPicker } from '@duncit/ui';
 import { usePortalT } from '../../../../shared/i18n';
+import { liteLog } from '../../../../shared/log';
 import { FormDialog } from '../../../components/FormDialog';
 import { RhfSwitch } from '../../../components/RhfSwitch';
 import type { LiteAdminCategory } from '../../../graphql/catalogue';
 import { categoryValuesFrom, emptyCategoryValues, makeCategorySchema, type CategoryFormValues } from './category.types';
+
+const reportIconListLoad = (error: unknown) => liteLog.error('categories', 'CategoryForm', { error });
 
 interface Props {
   open: boolean;
@@ -37,7 +41,23 @@ export function CategoryForm({ open, initial, busy, onClose, onSubmit }: Readonl
       <Stack spacing={1.5}>
         <RhfTextField control={control} name="name" label={t('litePortal.common.name')} required disabled={busy} slotProps={{ htmlInput: { 'data-testid': 'category-name' } }} />
         <RhfTextField control={control} name="slug" label={t('litePortal.common.slug')} hint={t('litePortal.common.slugHint')} disabled={busy} slotProps={{ htmlInput: { 'data-testid': 'category-slug' } }} />
-        <RhfTextField control={control} name="icon" label={t('litePortal.categories.icon')} hint={t('litePortal.categories.iconHint')} disabled={busy} slotProps={{ htmlInput: { 'data-testid': 'category-icon' } }} />
+        <Controller
+          control={control}
+          name="icon"
+          render={({ field, fieldState }) => (
+            <MuiIconPicker
+              value={field.value}
+              onChange={field.onChange}
+              onBlur={field.onBlur}
+              label={t('litePortal.categories.icon')}
+              helperText={fieldState.error?.message ?? t('litePortal.categories.iconHint')}
+              error={!!fieldState.error}
+              disabled={busy}
+              testId="category-icon"
+              onLoadError={reportIconListLoad}
+            />
+          )}
+        />
         <RhfTextField
           control={control}
           name="sort_order"

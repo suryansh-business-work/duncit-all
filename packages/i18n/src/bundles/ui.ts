@@ -33,6 +33,12 @@ export const UI_BUNDLE: NestedCatalogue = {
     language: {
       label: 'Language',
     },
+    /** The searchable MUI icon list on the Admin and Duncit Lite category forms. */
+    iconPicker: {
+      loading: 'Loading icons…',
+      loadFailed: 'The icon list could not load. You can still type an icon name.',
+      selected: 'Material icon: {name}',
+    },
     /**
      * The money waterfall for one pod, line by line. Staff read it in the
      * portals and the host reads the same shape on their own share, so it is

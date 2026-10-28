@@ -1,9 +1,11 @@
 import { useEffect, useMemo } from 'react';
-import { useForm, type Resolver } from 'react-hook-form';
+import { Controller, useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { MenuItem, Stack } from '@mui/material';
 import { RhfTextField } from '@duncit/forms';
+import { STORAGE_KEYS } from '../../../../shared/env';
 import { usePortalT } from '../../../../shared/i18n';
+import { PictureField } from '../../../../shared/picture-picker';
 import { FormDialog } from '../../../components/FormDialog';
 import { RhfSwitch } from '../../../components/RhfSwitch';
 import type { LiteAdminCity } from '../../../graphql/catalogue';
@@ -45,14 +47,21 @@ export function CityForm({ open, initial, busy, onClose, onSubmit }: Readonly<Pr
             </MenuItem>
           ))}
         </RhfTextField>
-        <RhfTextField
+        <Controller
           control={control}
           name="cover_url"
-          type="url"
-          label={t('litePortal.cities.coverUrl')}
-          hint={t('litePortal.cities.coverUrlHint')}
-          disabled={busy}
-          slotProps={{ htmlInput: { 'data-testid': 'city-cover-url' } }}
+          render={({ field, fieldState }) => (
+            <PictureField
+              label={t('litePortal.cities.cover')}
+              value={field.value}
+              onChange={field.onChange}
+              hint={t('litePortal.cities.coverHint')}
+              error={fieldState.error?.message}
+              disabled={busy}
+              tokenKey={STORAGE_KEYS.portalToken}
+              testId="city-cover"
+            />
+          )}
         />
         <RhfTextField
           control={control}

@@ -59,6 +59,16 @@ export function GeneralSection({ control, busy }: Readonly<Props>) {
             slotProps={{ htmlInput: { inputMode: 'numeric', 'data-testid': 'settings-max-seats' } }}
           />
         </Stack>
+        <RhfTextField
+          control={control}
+          name="picture_topics"
+          label={t('litePortal.settings.pictureTopics')}
+          hint={t('litePortal.settings.pictureTopicsHint')}
+          multiline
+          minRows={2}
+          disabled={busy}
+          slotProps={{ htmlInput: { 'data-testid': 'settings-picture-topics' } }}
+        />
       </Stack>
     </SectionCard>
   );

@@ -13,7 +13,6 @@ import { useLiteSettings } from '../../app/providers/LiteSettingsProvider';
 import { useSignInPrompt } from '../../app/providers/SignInPromptProvider';
 import { paths } from '../../lib/paths';
 import { FloatingCovers } from './FloatingCovers';
-import { HeroBackdrop } from './HeroBackdrop';
 
 /** The headline's lines arrive one after another. */
 const STAGGER: Variants = { hidden: {}, shown: { transition: { staggerChildren: 0.09, delayChildren: 0.1 } } };
@@ -52,7 +51,6 @@ export function Hero({ covers }: Readonly<{ covers: readonly string[] }>) {
   const coversY = useTransform(scrollYProgress, [0, 1], [0, -180]);
   return (
     <Box component="section" ref={heroRef} aria-labelledby="landing-title" sx={{ position: 'relative', minHeight: { xs: 560, md: 680 }, display: 'grid', placeItems: 'center', px: 2, overflow: 'hidden' }} data-testid="landing-hero">
-      <HeroBackdrop scroll={scrollYProgress} />
       {/* Scroll-linked depth is motion too: with reduced motion on, nothing moves with the scroll. */}
       <motion.div style={{ position: 'absolute', inset: 0, ...(reduceMotion ? {} : { y: coversY }) }}>
         <FloatingCovers covers={covers} />

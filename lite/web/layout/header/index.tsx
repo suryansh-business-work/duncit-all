@@ -7,7 +7,6 @@ import { LITE_MOTION } from '../../../shared/tokens';
 import { paths } from '../../lib/paths';
 import { AccountMenu } from './AccountMenu';
 import { LiteLogo } from './LiteLogo';
-import { LocalClock } from './LocalClock';
 import { ModeToggle } from './ModeToggle';
 import { visibleNavItems } from './nav';
 import { NavDrawer } from './NavDrawer';
@@ -77,7 +76,7 @@ function PrimaryLink() {
   );
 }
 
-/** A slim, see-through header over the glow: the menu (below a laptop), logo, the places, the clock, Create and the account. */
+/** A slim, see-through header over the glow: the menu (below a laptop), logo, the places, Create and the account. */
 export function Header() {
   return (
     <Box
@@ -96,7 +95,6 @@ export function Header() {
           <LiteLogo />
           <NavLinks />
           <Box sx={{ flexGrow: 1 }} />
-          <LocalClock />
           <ModeToggle />
           <PrimaryLink />
           <AccountMenu />

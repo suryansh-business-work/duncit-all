@@ -51,9 +51,10 @@ describe('Header', () => {
     expect(within(siteNav()).getByRole('link', { name: 'Discover' })).toHaveAttribute('aria-current', 'page');
   });
 
-  it('shows the display toggle and the local clock', () => {
+  it('shows the display toggle and no clock or time zone', () => {
     renderWithProviders(<Header />);
     expect(screen.getByTestId('mode-toggle')).toBeInTheDocument();
-    expect(screen.getByTestId('header-clock')).toBeInTheDocument();
+    expect(screen.queryByRole('time')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('header-clock')).not.toBeInTheDocument();
   });
 });

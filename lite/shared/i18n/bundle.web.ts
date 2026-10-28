@@ -475,7 +475,6 @@ export const LITE_WEB_BUNDLE: NestedCatalogue = {
       placeNone: 'No places match. Try another name, or enter the address by hand.',
       placeFailed: 'That place could not be loaded. Try again, or enter the address by hand.',
       placeUnavailable: 'Place search is not available right now. Enter the venue and address by hand below.',
-      placeManual: 'Enter the address by hand',
     },
     manage: {
       title: 'Manage · {title}',

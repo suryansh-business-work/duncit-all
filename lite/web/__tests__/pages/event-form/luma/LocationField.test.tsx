@@ -63,8 +63,9 @@ describe('LocationField', () => {
 
   it('searches Google with a Maps key and fills the place, pin, map link and city from a pick', async () => {
     const { user, form } = renderInEventForm(<LocationField cities={CITIES} />, { ...WITH_MAPS, defaults: BLANK_PLACE });
-    expect(screen.queryByRole('textbox', { name: 'Venue' })).not.toBeInTheDocument();
-    expect(screen.queryByTestId('event-place-picked')).not.toBeInTheDocument();
+    // Search and the boxes to type or paste into are offered together; nothing to map yet.
+    expect(screen.getByRole('textbox', { name: 'Map link' })).toHaveValue('');
+    expect(screen.queryByTestId('event-map')).not.toBeInTheDocument();
 
     await user.type(screen.getByRole('combobox', { name: 'Venue or address' }), 'Lod');
     await user.click(await screen.findByRole('option', { name: /Lodhi Garden/ }));
@@ -79,9 +80,9 @@ describe('LocationField', () => {
       map_url: mapsLink(place),
       city_slug: 'delhi',
     });
-    const picked = screen.getByTestId('event-place-picked');
-    expect(within(picked).getByText(place.name)).toBeInTheDocument();
-    expect(within(picked).getByText(place.address)).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Venue' })).toHaveValue(place.name);
+    expect(screen.getByRole('textbox', { name: 'Address' })).toHaveValue(place.address);
+    expect(within(screen.getByTestId('event-map')).getByTitle(`Map of ${place.name}`)).toHaveAttribute('src', expect.stringContaining(`q=place_id:${place.placeId}`));
   });
 
   it('leaves the city alone when the place is in none of Lite’s cities', async () => {
@@ -93,17 +94,16 @@ describe('LocationField', () => {
     expect(form().getValues('city_slug')).toBe('mumbai');
   });
 
-  it('drops the verified pin when the host switches to typing the address', async () => {
+  it('keeps a saved pin until the host edits the place by hand, then drops it so the map follows the words', async () => {
     const { user, form } = renderInEventForm(<LocationField cities={CITIES} />, {
       ...WITH_MAPS,
-      defaults: { venue_name: 'Lodhi Garden', address: 'Lodhi Road', place_id: 'place-1', lat: 28.59, lng: 77.21 },
+      defaults: { venue_name: 'Lodhi Garden', address: 'Lodhi Road', map_url: '', place_id: 'place-1', lat: 28.59, lng: 77.21 },
     });
-    expect(screen.getByTestId('event-place-picked')).toHaveTextContent('Lodhi Garden');
-    await user.click(screen.getByRole('button', { name: 'Enter the address by hand' }));
+    expect(form().getValues()).toMatchObject({ place_id: 'place-1', lat: 28.59, lng: 77.21 });
+    await user.type(screen.getByRole('textbox', { name: 'Address' }), ', Gate 2');
 
-    expect(form().getValues()).toMatchObject({ place_id: '', lat: null, lng: null, venue_name: 'Lodhi Garden', address: 'Lodhi Road' });
-    expect(screen.getByRole('textbox', { name: 'Venue' })).toHaveValue('Lodhi Garden');
-    expect(screen.queryByRole('combobox', { name: 'Venue or address' })).not.toBeInTheDocument();
+    await waitFor(() => expect(form().getValues()).toMatchObject({ place_id: '', lat: null, lng: null, venue_name: 'Lodhi Garden', address: 'Lodhi Road, Gate 2' }));
+    expect(screen.getByTitle('Map of Lodhi Garden')).toHaveAttribute('src', expect.stringContaining(`q=${encodeURIComponent('Lodhi Garden, Lodhi Road, Gate 2')}`));
   });
 
   it('falls back to typed fields, and says why, when Google cannot be reached', async () => {

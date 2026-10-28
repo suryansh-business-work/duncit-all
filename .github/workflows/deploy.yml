@@ -2512,6 +2512,16 @@ jobs:
           # Lite (verifies). Unset = the connector stays off; nothing else changes.
           LITE_MCP_SECRET:       ${{ github.ref_name == 'staging' && secrets.STAGING_LITE_MCP_SECRET || secrets.LITE_MCP_SECRET }}
         run: |
+          # Duncit Lite on mcp.duncit.com needs no secret of its own: without an
+          # explicit LITE_MCP_SECRET, both containers get a key DERIVED from this
+          # stack's JWT secret (HMAC-SHA256 of a fixed label), so the API and Lite
+          # agree and the connector is on like every other one. It is a separate
+          # key, never the JWT secret itself, so an MCP assertion cannot pass as a
+          # sign-in token. Masked before anything could print it.
+          if [ -z "${LITE_MCP_SECRET}" ] && [ -n "${JWT_SECRET}" ]; then
+            LITE_MCP_SECRET="$(printf '%s' 'duncit-lite-mcp-v1' | openssl dgst -sha256 -hmac "${JWT_SECRET}" -r | cut -d' ' -f1)"
+            echo "::add-mask::${LITE_MCP_SECRET}"
+          fi
           envsubst '$DOCKERHUB_USERNAME' < "${{ env.COMPOSE_SRC }}" > /tmp/docker-compose.yml
           # OpenWA gateway env (SQLite + session data on the mounted /app/data
           # volume so a connected account survives restarts). API_MASTER_KEY

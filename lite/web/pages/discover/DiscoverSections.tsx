@@ -1,5 +1,6 @@
+import type { ReactNode } from 'react';
 import { Link as RouterLink } from 'react-router';
-import { Box, Divider, Stack } from '@mui/material';
+import { Box, Divider, Stack, Typography } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import EventBusyOutlinedIcon from '@mui/icons-material/EventBusyOutlined';
 import { DuncitButton } from '@duncit/buttons';
@@ -22,10 +23,12 @@ interface DiscoverSectionsProps {
   /** The picked city's name, for "Popular events in …"; null means everywhere. */
   cityName: string | null;
   citySlug: string | null;
+  /** The city picker, drawn beside View all in the "Popular events" header. */
+  cityPicker?: ReactNode;
 }
 
 /** The bands of Discover, each shown only when it has something to show. */
-export function DiscoverSections({ discover, cityName, citySlug }: Readonly<DiscoverSectionsProps>) {
+export function DiscoverSections({ discover, cityName, citySlug, cityPicker }: Readonly<DiscoverSectionsProps>) {
   const { t } = useWebT();
   const { categories, cities, featured_calendars: calendars, popular_events: popular } = discover;
   if (categories.length + cities.length + calendars.length + popular.length === 0) {
@@ -36,15 +39,28 @@ export function DiscoverSections({ discover, cityName, citySlug }: Readonly<Disc
       {t('liteWeb.discover.viewAll')}
     </DuncitButton>
   );
+  const actions = (
+    <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+      {cityPicker}
+      {viewAll}
+    </Stack>
+  );
   return (
     <Stack spacing={4} divider={<Divider flexItem />}>
-      {popular.length > 0 ? (
-        <DiscoverSection title={t('liteWeb.discover.popular')} subtitle={cityName ?? t('liteWeb.discover.everywhere')} action={viewAll} testId="discover-popular">
-          <Box sx={TWO_COLUMNS}>
-            {popular.map((event) => (
-              <EventRow key={event.id} event={event} />
-            ))}
-          </Box>
+      {/* Kept while a city is picked, even with nothing popular there, so the picker stays in reach. */}
+      {popular.length > 0 || citySlug ? (
+        <DiscoverSection title={t('liteWeb.discover.popular')} subtitle={cityName ?? t('liteWeb.discover.everywhere')} action={actions} testId="discover-popular">
+          {popular.length > 0 ? (
+            <Box sx={TWO_COLUMNS}>
+              {popular.map((event) => (
+                <EventRow key={event.id} event={event} />
+              ))}
+            </Box>
+          ) : (
+            <Typography color="text.secondary" data-testid="discover-popular-empty">
+              {t('liteWeb.discover.popularEmpty')}
+            </Typography>
+          )}
         </DiscoverSection>
       ) : null}
       {categories.length > 0 ? (

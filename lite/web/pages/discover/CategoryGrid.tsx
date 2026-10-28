@@ -6,7 +6,7 @@ import { tintAt } from '../../../shared/tokens';
 import { paths } from '../../lib/paths';
 import { categoryIcon } from './categoryIcon';
 
-const GRID = { display: 'grid', gap: 1.5, gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(4, 1fr)' } } as const;
+const GRID = { display: 'grid', gap: 1.5, gridTemplateColumns: { xs: 'repeat(2, minmax(0, 1fr))', sm: 'repeat(3, minmax(0, 1fr))' } } as const;
 
 interface CategoryGridProps {
   categories: readonly LiteCategory[];
@@ -14,7 +14,7 @@ interface CategoryGridProps {
   showCounts?: boolean;
 }
 
-/** Every category as a tile with its own coloured glyph. */
+/** Every category as a tile: its own coloured glyph beside the name (and the count under it). */
 export function CategoryGrid({ categories, showCounts = true }: Readonly<CategoryGridProps>) {
   const { t } = useWebT();
   return (
@@ -22,12 +22,12 @@ export function CategoryGrid({ categories, showCounts = true }: Readonly<Categor
       {categories.map((category, index) => (
         <Box component="li" key={category.id} sx={{ minWidth: 0 }}>
           <Card sx={{ height: '100%' }}>
-            <CardActionArea component={RouterLink} to={paths.category(category.slug)} sx={{ p: 1.75, height: '100%' }} data-testid={`category-${category.slug}`}>
-              <Stack spacing={showCounts ? 1 : 2.5}>
-                <Box aria-hidden sx={{ color: tintAt(index), display: 'flex', '& svg': { fontSize: 26 } }}>
+            <CardActionArea component={RouterLink} to={paths.category(category.slug)} sx={{ px: 1.75, py: 1.5, height: '100%' }} data-testid={`category-${category.slug}`}>
+              <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', minWidth: 0 }}>
+                <Box aria-hidden sx={{ color: tintAt(index), display: 'flex', flexShrink: 0, '& svg': { fontSize: 28 } }}>
                   {categoryIcon(category.icon)}
                 </Box>
-                <Stack>
+                <Stack sx={{ minWidth: 0 }}>
                   <Typography variant="body2" sx={{ fontWeight: 700 }} noWrap>
                     {category.name}
                   </Typography>

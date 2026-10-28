@@ -13,13 +13,14 @@ export { CalendarCard } from './CalendarCard';
 export { CategoryGrid } from './CategoryGrid';
 export { DiscoverSection } from './DiscoverSection';
 
-/** /discover — popular events (by city), categories, featured calendars and local events by region. */
+/** /discover — search, then popular events (with the city picker), categories, featured calendars and local events by region. */
 export function DiscoverPage() {
   const { t } = useWebT();
   const [params, setParams] = useSearchParams();
   const citySlug = params.get('city') ?? '';
-  const { data, loading, error } = useQuery(LITE_DISCOVER, { variables: { city_slug: citySlug || null }, fetchPolicy: 'cache-and-network' });
-  const discover = data?.liteDiscover;
+  const { data, previousData, loading, error } = useQuery(LITE_DISCOVER, { variables: { city_slug: citySlug || null }, fetchPolicy: 'cache-and-network' });
+  // The last city's Discover stays up while the next one loads, so the picker (inside it) never blinks out.
+  const discover = (data ?? previousData)?.liteDiscover;
   const city = discover?.cities.find((c) => c.slug === citySlug) ?? null;
   usePageTitle(t('liteWeb.discover.title'), t('liteWeb.discover.subtitle'));
 
@@ -39,14 +40,18 @@ export function DiscoverPage() {
           </Typography>
           <Typography color="text.secondary">{t('liteWeb.discover.subtitle')}</Typography>
         </Stack>
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ alignItems: { sm: 'flex-start' } }}>
-          <Box sx={{ flexGrow: 1 }}>
-            <SearchForm citySlug={citySlug || null} />
-          </Box>
-          <CitySelect cities={discover?.cities ?? []} value={citySlug} onChange={pickCity} />
-        </Stack>
+        <SearchForm citySlug={citySlug || null} />
         <QueryGuard loading={loading && !discover} error={error} loadingLabel={t('lite.common.loading')}>
-          {() => (discover ? <DiscoverSections discover={discover} cityName={city?.name ?? null} citySlug={city?.slug ?? null} /> : null)}
+          {() =>
+            discover ? (
+              <DiscoverSections
+                discover={discover}
+                cityName={city?.name ?? null}
+                citySlug={city?.slug ?? null}
+                cityPicker={<CitySelect cities={discover.cities} value={citySlug} onChange={pickCity} />}
+              />
+            ) : null
+          }
         </QueryGuard>
       </Stack>
     </Box>

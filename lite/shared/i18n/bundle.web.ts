@@ -184,6 +184,7 @@ export const LITE_WEB_BUNDLE: NestedCatalogue = {
       subscribers: { one: '{count} subscriber', other: '{count} subscribers' },
       viewAll: 'View all',
       everywhere: 'Everywhere',
+      popularEmpty: 'No popular events in this city yet. Pick another, or Everywhere.',
       follow: 'Follow',
       following: 'Following',
       followNamed: 'Follow {name}',

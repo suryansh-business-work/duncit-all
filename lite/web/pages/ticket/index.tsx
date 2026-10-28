@@ -9,9 +9,11 @@ import { useWebT } from '../../../shared/i18n';
 import { EventCard } from '../../components/events/EventCard';
 import { SignedInGate } from '../../components/SignedInGate';
 import { LITE_REGISTRATION, type LiteTicket } from '../../graphql/registrations';
+import { awaitsCheckInCode, showsCheckInCode } from '../../lib/ticketState';
 import { usePageTitle } from '../../lib/usePageTitle';
 import { NotFoundPage } from '../not-found';
 import { CheckInCode } from './CheckInCode';
+import { CheckInLocked } from './CheckInLocked';
 import { PaymentPanel } from './payment-panel';
 import { TicketDetails } from './TicketDetails';
 
@@ -23,11 +25,11 @@ function TicketView({ ticket, onChanged }: Readonly<{ ticket: LiteTicket; onChan
       <PageHeader title={ticket.event.title} subtitle={`${when.date} · ${when.time}`} titleVariant="h4" />
       <Box sx={{ display: 'grid', gap: 3, gridTemplateColumns: { xs: '1fr', md: 'minmax(0, 7fr) minmax(0, 5fr)' }, alignItems: 'start' }}>
         <Stack spacing={3}>
-          <Card>
-            <CardContent>
-              <CheckInCode code={ticket.code} qrDataUrl={ticket.qr_data_url} />
-            </CardContent>
-          </Card>
+          {showsCheckInCode(ticket.status) || awaitsCheckInCode(ticket.status) ? (
+            <Card>
+              <CardContent>{showsCheckInCode(ticket.status) ? <CheckInCode code={ticket.code} qrDataUrl={ticket.qr_data_url} /> : <CheckInLocked status={ticket.status} />}</CardContent>
+            </Card>
+          ) : null}
           {ticket.status === 'PAYMENT_PENDING' ? <PaymentPanel ticket={ticket} onChanged={onChanged} /> : null}
           <TicketDetails ticket={ticket} onChanged={onChanged} />
         </Stack>

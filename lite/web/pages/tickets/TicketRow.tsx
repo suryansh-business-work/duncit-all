@@ -6,6 +6,7 @@ import { LiteImage } from '../../../shared/LiteImage';
 import { PaymentStatusChip, RegistrationStatusChip } from '../../components/StatusChips';
 import type { LiteTicket } from '../../graphql/registrations';
 import { paths } from '../../lib/paths';
+import { showsCheckInCode, showsPaymentChip } from '../../lib/ticketState';
 
 /** One registration in the reader's list: the event, when, and where the ticket stands. */
 export function TicketRow({ ticket }: Readonly<{ ticket: LiteTicket }>) {
@@ -30,12 +31,14 @@ export function TicketRow({ ticket }: Readonly<{ ticket: LiteTicket }>) {
             {when.date} · {when.time}
           </Typography>
           <Typography variant="body2" color="text.secondary" noWrap>
-            {t('liteWeb.tickets.summary', { vars: { ticket: ticket.ticket.name, quantity: ticket.quantity, code: ticket.code } })}
+            {showsCheckInCode(ticket.status)
+              ? t('liteWeb.tickets.summary', { vars: { ticket: ticket.ticket.name, quantity: ticket.quantity, code: ticket.code } })
+              : t('liteWeb.tickets.summaryNoCode', { vars: { ticket: ticket.ticket.name, quantity: ticket.quantity } })}
           </Typography>
         </Stack>
         <Stack spacing={0.5} sx={{ alignItems: 'flex-end', flexShrink: 0 }}>
           <RegistrationStatusChip status={ticket.status} />
-          {ticket.payment_status === 'NOT_REQUIRED' ? null : <PaymentStatusChip status={ticket.payment_status} />}
+          {showsPaymentChip(ticket.status, ticket.payment_status) ? <PaymentStatusChip status={ticket.payment_status} /> : null}
         </Stack>
       </Stack>
     </ButtonBase>

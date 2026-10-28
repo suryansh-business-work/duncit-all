@@ -41,9 +41,16 @@ export function PaymentPanel({ ticket, onChanged }: Readonly<PaymentPanelProps>)
               {qr ? <Box component="img" src={qr.data_url} alt={t('liteWeb.payment.qrAlt', { vars: { upi: upiId } })} width={200} height={200} sx={{ borderRadius: 2, border: 1, borderColor: 'divider' }} data-testid="upi-qr" /> : null}
             </Box>
             <Stack spacing={1.5} sx={{ flexGrow: 1 }}>
-              <Typography sx={{ fontWeight: 800, fontSize: '1.4rem' }} data-testid="payment-amount">
-                {amount}
-              </Typography>
+              <Stack spacing={0.25}>
+                <Typography sx={{ fontWeight: 800, fontSize: '1.4rem' }} data-testid="payment-amount">
+                  {amount}
+                </Typography>
+                {ticket.quantity > 1 ? (
+                  <Typography variant="body2" color="text.secondary" data-testid="payment-breakdown">
+                    {t('liteWeb.payment.breakdown', { vars: { price: formatMoney(ticket.ticket.price), quantity: ticket.quantity, ticket: ticket.ticket.name } })}
+                  </Typography>
+                ) : null}
+              </Stack>
               {payee ? <Typography color="text.secondary">{t('liteWeb.payment.payee', { vars: { name: payee } })}</Typography> : null}
               <CopyField label={t('liteWeb.payment.upiId')} value={upiId} testId="payment-upi-id" />
               {qr ? (

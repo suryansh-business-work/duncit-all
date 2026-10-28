@@ -75,7 +75,11 @@ export const settingsService = {
   async get(): Promise<LiteSettings> {
     if (cache && Date.now() - cache.at < TTL_MS) return cache.value;
     const doc = await LiteSettingsModel.findOne({ key: 'global' }).lean();
-    const value = (doc ?? new LiteSettingsModel({ key: 'global' }).toObject()) as LiteSettings;
+    // A lean read skips schema defaults, so a row saved before a field existed came back without it
+    // (max_event_capacity null broke liteAdminSettings). Defaults first, then every value the row holds.
+    const defaults = new LiteSettingsModel({ key: 'global' }).toObject() as LiteSettings;
+    const stored = Object.fromEntries(Object.entries(doc ?? {}).filter(([, held]) => held != null));
+    const value = { ...defaults, ...stored } as LiteSettings;
     cache = { at: Date.now(), value };
     return value;
   },

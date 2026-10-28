@@ -53,7 +53,9 @@ describe('TicketPage', () => {
 
     expect(await screen.findByTestId('payment-panel')).toBeInTheDocument();
     expect(screen.getByText('Pay ₹500 over UPI')).toBeInTheDocument();
-    expect(screen.getByText('Show this at the door. The host types it in.')).toBeInTheDocument();
+    // No code to show at the door until the host confirms the payment.
+    expect(screen.queryByTestId('check-in-code')).not.toBeInTheDocument();
+    expect(screen.getByTestId('check-in-locked')).toHaveTextContent('Your check-in code and QR will show here once your payment is done and the host confirms it.');
   });
 
   it('shows the not-found page for a ticket that is not the reader’s', async () => {

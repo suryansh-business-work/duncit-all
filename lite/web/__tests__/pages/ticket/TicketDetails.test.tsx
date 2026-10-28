@@ -33,9 +33,14 @@ describe('TicketDetails', () => {
     expect(screen.getByTestId('status-timeline')).toBeInTheDocument();
   });
 
-  it('shows where a paid ticket’s payment stands', () => {
-    renderDetails(myTicketFixture({ status: 'PAYMENT_PENDING', amount_due: 500, payment_status: 'PENDING' }));
-    expect(screen.getByTestId('payment-status-chip')).toHaveTextContent('Awaiting payment');
+  it('says a waiting payment once, and names a rejected one', () => {
+    const { unmount } = renderDetails(myTicketFixture({ status: 'PAYMENT_PENDING', amount_due: 500, payment_status: 'PENDING' }));
+    expect(screen.getByTestId('registration-status-chip')).toHaveTextContent('Payment pending');
+    expect(screen.queryByTestId('payment-status-chip')).not.toBeInTheDocument();
+    unmount();
+
+    renderDetails(myTicketFixture({ status: 'PAYMENT_PENDING', amount_due: 500, payment_status: 'REJECTED' }));
+    expect(screen.getByTestId('payment-status-chip')).toHaveTextContent('Payment rejected');
   });
 
   it('lists the ticket, the quantity and the answers given, with a dash for a blank answer', () => {

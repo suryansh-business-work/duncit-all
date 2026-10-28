@@ -7,6 +7,7 @@ import { parseApiError } from '@duncit/utils';
 import { useWebT } from '../../../shared/i18n';
 import { PaymentStatusChip, RegistrationStatusChip } from '../../components/StatusChips';
 import { LITE_CANCEL_REGISTRATION, type LiteTicket } from '../../graphql/registrations';
+import { showsPaymentChip } from '../../lib/ticketState';
 import { StatusTimeline } from './StatusTimeline';
 
 const CAN_CANCEL = new Set(['PENDING_APPROVAL', 'PAYMENT_PENDING', 'CONFIRMED', 'WAITLISTED']);
@@ -42,7 +43,7 @@ export function TicketDetails({ ticket, onChanged }: Readonly<{ ticket: LiteTick
         <Stack spacing={1.5}>
           <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
             <RegistrationStatusChip status={ticket.status} />
-            {ticket.payment_status === 'NOT_REQUIRED' ? null : <PaymentStatusChip status={ticket.payment_status} />}
+            {showsPaymentChip(ticket.status, ticket.payment_status) ? <PaymentStatusChip status={ticket.payment_status} /> : null}
           </Stack>
           <StatusTimeline registration={ticket} requiresApproval={ticket.event.require_approval} />
           {showJoin ? (

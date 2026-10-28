@@ -6,6 +6,7 @@ import { describe, expect, it, vi } from 'vitest';
 /** Each borrowed page is a stand-in that names itself, so the table can be read off the markup. */
 const PAGES = vi.hoisted(() => [
   'AiMonitoringLogsPage',
+  'CoinTransactionDetailPage',
   'CoinTransactionsPage',
   'EmailLogsPage',
   'ErrorLogsPage',
@@ -55,6 +56,7 @@ const TABLE: Array<[string, string]> = [
   ['/user-refund-logs', 'UserRefundLogsPage'],
   ['/gift-cards/logs', 'GiftCardLogsPage'],
   ['/duncit-coin/transactions', 'CoinTransactionsPage'],
+  ['/duncit-coin/transactions/txn_1', 'CoinTransactionDetailPage'],
   ['/policy-acceptance-logs', 'PolicyAcceptanceLogsPage'],
   ['/pod-monitoring', 'PodMonitoringPage'],
 ];
@@ -68,7 +70,7 @@ describe('logRoutes', () => {
 
   it('serves exactly one page per address', () => {
     for (const [path] of TABLE) expect(pageAt(path).match(/data-page="/g)).toHaveLength(1);
-    expect(TABLE).toHaveLength(17);
+    expect(TABLE).toHaveLength(18);
   });
 
   it('serves nothing at an address that is not a log', () => {

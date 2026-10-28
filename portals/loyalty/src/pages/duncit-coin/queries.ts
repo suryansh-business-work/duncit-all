@@ -40,11 +40,13 @@ export interface CoinSettings {
   updated_at: string;
 }
 
-/** One account the manual-adjustment picker can offer. */
+/** One account the member pickers can offer. */
 export interface CoinUserOption {
   id: string;
   full_name: string;
   email: string;
+  /** Country code and number, or '' when the account has no phone. */
+  phone: string;
   balance: number;
 }
 
@@ -74,6 +76,18 @@ export interface CoinTxnRow {
   earn_pct: number;
   spend_amount: number;
   created_at: string;
+}
+
+/** A ledger row's own page: the table row plus what else it is keyed on and when its coins lapse. */
+export interface CoinTxnDetail extends CoinTxnRow {
+  referral_id: string | null;
+  gift_card_id: string | null;
+  backout_id: string | null;
+  feedback_id: string | null;
+  /** When the unspent part of this grant lapses. Null when it never does. */
+  expires_at: string | null;
+  /** How much of this grant is still unspent — only rows that expire carry it. */
+  remaining: number;
 }
 
 /** The slice of a pod the picker renders — deliberately narrow: `podsTable`
@@ -133,6 +147,39 @@ export const COIN_TRANSACTIONS_TABLE = gql`
         spend_amount
         created_at
       }
+    }
+  }
+`;
+
+export const COIN_TRANSACTION = gql`
+  query LoyaltyCoinTransaction($id: ID!) {
+    coinTransaction(id: $id) {
+      id
+      user_id
+      user_name
+      user_email
+      admin_name
+      type
+      amount
+      balance_after
+      source
+      reason
+      payment_id
+      payment_total
+      pods {
+        id
+        title
+        slug
+      }
+      earn_pct
+      spend_amount
+      referral_id
+      gift_card_id
+      backout_id
+      feedback_id
+      expires_at
+      remaining
+      created_at
     }
   }
 `;
@@ -210,6 +257,7 @@ export const COIN_USER_SEARCH = gql`
       id
       full_name
       email
+      phone
       balance
     }
   }

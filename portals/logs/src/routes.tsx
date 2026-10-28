@@ -2,6 +2,7 @@ import { Route } from 'react-router';
 import type { createAuthed } from '@duncit/shell';
 import {
   AiMonitoringLogsPage,
+  CoinTransactionDetailPage,
   CoinTransactionsPage,
   EmailLogsPage,
   ErrorLogsPage,
@@ -46,6 +47,7 @@ export function logRoutes(authed: ReturnType<typeof createAuthed>) {
       <Route path="/user-refund-logs" element={authed(<UserRefundLogsPage />)} />
       <Route path="/gift-cards/logs" element={authed(<GiftCardLogsPage />)} />
       <Route path="/duncit-coin/transactions" element={authed(<CoinTransactionsPage />)} />
+      <Route path="/duncit-coin/transactions/:id" element={authed(<CoinTransactionDetailPage />)} />
 
       <Route path="/policy-acceptance-logs" element={authed(<PolicyAcceptanceLogsPage />)} />
 

@@ -102,6 +102,7 @@ export const makeCoinUser = (over: Partial<CoinUserOption> = {}): { __typename: 
   id: 'u-1',
   full_name: 'Asha Rao',
   email: 'asha@duncit.com',
+  phone: '',
   balance: 120,
   ...over,
 });

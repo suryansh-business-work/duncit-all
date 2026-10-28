@@ -16,9 +16,10 @@ export const memberLabel = (o: CoinUserOption) => (o.full_name ? `${o.full_name}
 /**
  * The member search behind every picker that hands coins or cards to someone.
  *
- * Nothing is listed until two characters are typed — a picker that offers the
- * first ten accounts on the platform before you have said who you mean is a
- * picker that hands value to the wrong person. Each option carries its current
+ * Members are found by name, full name, email or phone (the server reads a
+ * number however it was typed). Nothing is listed until two characters are
+ * typed — a picker that offers the first ten accounts on the platform before
+ * you have said who you mean is a picker that hands value to the wrong person. Each option carries its current
  * coin balance, because that is the number that decides what is reasonable.
  */
 export function useMemberSearch() {
@@ -38,14 +39,18 @@ export function useMemberSearch() {
   }, [term, search]);
 
   const noOptionsText =
-    term.trim().length < USER_SEARCH_MIN_CHARS ? t('loyalty.members.typeToSearch') : t('loyalty.members.noMatch');
+    term.trim().length < USER_SEARCH_MIN_CHARS ? t('loyalty.members.typeToSearchAny') : t('loyalty.members.noMatch');
 
   const renderOption = (props: HTMLAttributes<HTMLLIElement> & { key?: Key }, option: CoinUserOption) => (
     <Box component="li" {...props} key={option.id}>
       <Box>
         <Typography variant="body2">{option.full_name || option.email}</Typography>
         <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-          {t('loyalty.members.optionHolds', { vars: { email: option.email, coins: option.balance } })}
+          {option.phone
+            ? t('loyalty.members.optionHoldsWithPhone', {
+                vars: { email: option.email, phone: option.phone, coins: option.balance },
+              })
+            : t('loyalty.members.optionHolds', { vars: { email: option.email, coins: option.balance } })}
         </Typography>
       </Box>
     </Box>

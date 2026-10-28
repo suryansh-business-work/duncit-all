@@ -44,6 +44,7 @@ export { default as UserRefundLogsPage } from '../../finance/src/pages/finance/u
 // Loyalty (Duncit Coin and gift cards moved here from Finance)
 export { default as GiftCardLogsPage } from '../../loyalty/src/pages/gift-cards/virtual/GiftCardLogsPage';
 export { default as CoinTransactionsPage } from '../../loyalty/src/pages/duncit-coin/CoinTransactionsPage';
+export { default as CoinTransactionDetailPage } from '../../loyalty/src/pages/duncit-coin/CoinTransactionDetailPage';
 
 // Legal
 export { default as PolicyAcceptanceLogsPage } from '../../legal/src/pages/policy-acceptance-logs-page';

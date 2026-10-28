@@ -5,6 +5,7 @@ import PlaceOutlinedIcon from '@mui/icons-material/PlaceOutlined';
 import { RhfTextField } from '@duncit/forms';
 import { useWebT } from '../../../../shared/i18n';
 import { useLiteSettings } from '../../../app/providers/LiteSettingsProvider';
+import { EventMap } from '../../../components/EventMap';
 import type { SelectOption } from '../../../components/RhfSelect';
 import { mapsLink, type PickedPlace } from '../../../lib/googleMaps';
 import type { EventFormValues } from '../event.types';
@@ -29,7 +30,7 @@ export function LocationField({ cities }: Readonly<{ cities: readonly SelectOpti
   const { t } = useWebT();
   const { maps_api_key: mapsKey } = useLiteSettings();
   const { control, setValue } = useFormContext<EventFormValues>();
-  const [locationType, venue, address] = useWatch({ control, name: ['location_type', 'venue_name', 'address'] });
+  const [locationType, venue, address, placeId, lat, lng] = useWatch({ control, name: ['location_type', 'venue_name', 'address', 'place_id', 'lat', 'lng'] });
   const [manual, setManual] = useState(!mapsKey);
   const [unavailable, setUnavailable] = useState(false);
   const fallBack = useCallback(() => {
@@ -82,6 +83,8 @@ export function LocationField({ cities }: Readonly<{ cities: readonly SelectOpti
                 </Typography>
               </Box>
             ) : null}
+            {/* The picked place on the map, as guests will see it on the event page. */}
+            <EventMap event={{ location_type: 'IN_PERSON', place_id: placeId || null, lat, lng, venue_name: venue || null, address: address || null }} />
             <Link
               component="button"
               type="button"

@@ -1,6 +1,6 @@
 import { screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { EventMap } from '../../../pages/event/EventMap';
+import { EventMap } from '../../../components/EventMap';
 import { eventFixture, renderWithProviders } from '../../test-utils';
 
 const KEY = 'browser-key';

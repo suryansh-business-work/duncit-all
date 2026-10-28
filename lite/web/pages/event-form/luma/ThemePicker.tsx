@@ -1,12 +1,35 @@
 import { useId } from 'react';
 import { useController, useFormContext } from 'react-hook-form';
 import { Box, Stack, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
+import type { Theme } from '@mui/material/styles';
 import { useWebT } from '../../../../shared/i18n';
 import { ACCENT_COLORS, EVENT_THEME_KEYS, LITE_RADII, THEME_ACCENT_KEYS } from '../../../../shared/tokens';
 import { themeBackground } from '../../../components/theme/EventThemeBackdrop';
 import type { EventFormValues } from '../event.types';
 
-const SWATCH = { width: 56, height: 40, borderRadius: `${LITE_RADII.control}px`, border: 1, borderColor: 'divider', bgcolor: 'background.paper' } as const;
+const SWATCH = { width: 56, height: 40, borderRadius: `${LITE_RADII.control}px`, border: 1, borderColor: 'divider', bgcolor: 'background.paper', transition: 'box-shadow 150ms' } as const;
+
+/**
+ * A ToggleButtonGroup squares off and pulls together its middle buttons (no side
+ * border, no corner radius). These are separate tiles and circles in a wrapping
+ * row, so every button keeps its own shape, and the chosen one gets a ring.
+ */
+const ungrouped = (borderRadius: string) => ({ '& .MuiToggleButtonGroup-grouped.MuiToggleButton-root': { margin: 0, border: 0, borderRadius } });
+const THEME_TILE = {
+  flexDirection: 'column',
+  gap: 0.5,
+  p: 0.75,
+  color: 'text.secondary',
+  '&.Mui-selected, &.Mui-selected:hover': { bgcolor: 'transparent', color: 'text.primary' },
+  '&.Mui-selected .theme-swatch': { boxShadow: (theme: Theme) => `0 0 0 2px ${theme.vars?.palette.background.paper}, 0 0 0 4px ${theme.vars?.palette.text.primary}` },
+} as const;
+const ACCENT_DOT = {
+  width: 36,
+  height: 36,
+  p: 0,
+  '&.Mui-selected, &.Mui-selected:hover': { bgcolor: 'transparent' },
+  '&.Mui-selected .accent-dot': { boxShadow: (theme: Theme) => `0 0 0 2px ${theme.vars?.palette.background.paper}, 0 0 0 4px ${theme.vars?.palette.text.primary}` },
+} as const;
 
 /** The look of the event page: a theme (Minimal, Gradient, Ambient, Pattern, Confetti) and its colour. */
 export function ThemePicker() {
@@ -20,26 +43,26 @@ export function ThemePicker() {
       <Typography variant="body2" component="h2" sx={{ fontWeight: 700 }} id={labelId}>
         {t('liteWeb.eventForm.theme')}
       </Typography>
-      <ToggleButtonGroup exclusive value={themeField.value} onChange={(_event, next: EventFormValues['theme_key'] | null) => next && themeField.onChange(next)} aria-labelledby={labelId} sx={{ flexWrap: 'wrap', gap: 1 }}>
+      <ToggleButtonGroup exclusive value={themeField.value} onChange={(_event, next: EventFormValues['theme_key'] | null) => next && themeField.onChange(next)} aria-labelledby={labelId} sx={{ flexWrap: 'wrap', gap: 1, ...ungrouped(`${LITE_RADII.control}px`) }}>
         {EVENT_THEME_KEYS.map((key) => (
-          <ToggleButton key={key} value={key} sx={{ flexDirection: 'column', gap: 0.5, p: 0.75, border: 0, borderRadius: `${LITE_RADII.control}px` }} data-testid={`theme-${key}`}>
-            <Box aria-hidden sx={{ ...SWATCH, background: themeBackground(key, accentField.value) }} />
-            <Typography variant="caption" sx={{ fontWeight: 700 }}>
+          <ToggleButton key={key} value={key} sx={THEME_TILE} data-testid={`theme-${key}`}>
+            <Box aria-hidden className="theme-swatch" sx={{ ...SWATCH, background: themeBackground(key, accentField.value) }} />
+            <Typography variant="caption" sx={{ fontWeight: themeField.value === key ? 800 : 600 }}>
               {t(`liteWeb.eventForm.themes.${key}`)}
             </Typography>
           </ToggleButton>
         ))}
       </ToggleButtonGroup>
-      <ToggleButtonGroup exclusive value={accentField.value} onChange={(_event, next: EventFormValues['theme_accent'] | null) => next && accentField.onChange(next)} aria-label={t('liteWeb.eventForm.themeColor')} sx={{ flexWrap: 'wrap', gap: 0.75 }}>
+      <ToggleButtonGroup exclusive value={accentField.value} onChange={(_event, next: EventFormValues['theme_accent'] | null) => next && accentField.onChange(next)} aria-label={t('liteWeb.eventForm.themeColor')} sx={{ flexWrap: 'wrap', gap: 0.75, ...ungrouped('50%') }}>
         {THEME_ACCENT_KEYS.map((accent) => (
           <ToggleButton
             key={accent}
             value={accent}
             aria-label={t(`liteWeb.eventForm.accents.${accent}`)}
-            sx={{ width: 36, height: 36, p: 0, borderRadius: '50%', border: 2, borderColor: 'transparent', '&.Mui-selected': { borderColor: 'text.primary' } }}
+            sx={ACCENT_DOT}
             data-testid={`accent-${accent}`}
           >
-            <Box aria-hidden sx={{ width: 22, height: 22, borderRadius: '50%', bgcolor: ACCENT_COLORS[accent] }} />
+            <Box aria-hidden className="accent-dot" sx={{ width: 24, height: 24, borderRadius: '50%', bgcolor: ACCENT_COLORS[accent], transition: 'box-shadow 150ms' }} />
           </ToggleButton>
         ))}
       </ToggleButtonGroup>

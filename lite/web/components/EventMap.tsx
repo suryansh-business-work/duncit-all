@@ -1,9 +1,9 @@
 import { Box } from '@mui/material';
-import type { LiteEvent } from '../../../shared/graphql/documents';
-import { useWebT } from '../../../shared/i18n';
-import { LITE_RADII } from '../../../shared/tokens';
-import { useLiteSettings } from '../../app/providers/LiteSettingsProvider';
-import { embedMapUrl } from '../../lib/googleMaps';
+import type { LiteEvent } from '../../shared/graphql/documents';
+import { useWebT } from '../../shared/i18n';
+import { LITE_RADII } from '../../shared/tokens';
+import { useLiteSettings } from '../app/providers/LiteSettingsProvider';
+import { embedMapUrl } from '../lib/googleMaps';
 
 /** The venue on a Google map, when the host picked the place from search and the console has a Maps key. */
 export function EventMap({ event }: Readonly<{ event: Pick<LiteEvent, 'location_type' | 'place_id' | 'lat' | 'lng' | 'venue_name' | 'address'> }>) {

@@ -1,9 +1,11 @@
 import { useMemo } from 'react';
 import { Controller, useFormContext, useWatch } from 'react-hook-form';
 import { InputBase, Stack, Typography } from '@mui/material';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlined';
 import NotesOutlinedIcon from '@mui/icons-material/NotesOutlined';
 import { RhfTextField } from '@duncit/forms';
 import { useWebT } from '../../../../shared/i18n';
+import { LITE_RADII } from '../../../../shared/tokens';
 import { PictureField } from '../../../../shared/picture-picker';
 import { RhfSelect, type SelectOption } from '../../../components/RhfSelect';
 import { VISIBILITIES, type EventFormValues } from '../event.types';
@@ -34,21 +36,41 @@ export function TitleInput() {
     <Controller
       control={control}
       name="title"
-      render={({ field, fieldState }) => (
-        <Stack spacing={0.5}>
+      render={({ field: { ref, ...field }, fieldState }) => (
+        <Stack spacing={0.75}>
           <InputBase
             {...field}
+            // On the textarea itself, so a failed submit can focus the title and scroll it into view.
+            inputRef={ref}
             placeholder={t('liteWeb.eventForm.titlePlaceholder')}
             multiline
             fullWidth
             error={Boolean(fieldState.error)}
             inputProps={{ maxLength: 120, 'aria-label': t('liteWeb.eventForm.title'), 'aria-invalid': Boolean(fieldState.error), 'aria-describedby': fieldState.error ? 'event-title-error' : undefined, 'data-testid': 'event-title' }}
-            sx={{ fontSize: { xs: '2rem', md: '2.6rem' }, fontWeight: 800, lineHeight: 1.15, '& textarea::placeholder': { opacity: 0.5 } }}
+            sx={{
+              fontSize: { xs: '2rem', md: '2.6rem' },
+              fontWeight: 800,
+              lineHeight: 1.15,
+              px: 2,
+              py: 1.5,
+              borderRadius: `${LITE_RADII.card}px`,
+              border: 2,
+              borderStyle: field.value ? 'solid' : 'dashed',
+              borderColor: fieldState.error ? 'error.main' : 'divider',
+              bgcolor: 'action.hover',
+              transition: 'border-color 150ms, background-color 150ms',
+              '&:hover': { borderColor: fieldState.error ? 'error.main' : 'text.secondary' },
+              '&.Mui-focused': { borderStyle: 'solid', borderColor: fieldState.error ? 'error.main' : 'primary.main', bgcolor: 'background.paper' },
+              '& textarea::placeholder': { opacity: 0.7 },
+            }}
           />
           {fieldState.error ? (
-            <Typography id="event-title-error" variant="caption" color="error" role="alert">
-              {fieldState.error.message}
-            </Typography>
+            <Stack id="event-title-error" direction="row" spacing={0.75} role="alert" sx={{ alignItems: 'center', color: 'error.main', px: 0.5 }}>
+              <ErrorOutlineIcon fontSize="small" aria-hidden />
+              <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                {fieldState.error.message}
+              </Typography>
+            </Stack>
           ) : null}
         </Stack>
       )}

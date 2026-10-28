@@ -1,6 +1,6 @@
 import { useId } from 'react';
 import { Dialog, DialogContent, DialogTitle, useMediaQuery } from '@mui/material';
-import type { Theme } from '@mui/material/styles';
+import { useTheme } from '@mui/material/styles';
 import CloseIcon from '@mui/icons-material/Close';
 import { DuncitIconButton } from '@duncit/buttons';
 import { useCommonT } from '../i18n';
@@ -20,7 +20,9 @@ interface PictureDialogProps {
 export function PictureDialog({ open, onClose, onPicked, shape, tokenKey, testId }: Readonly<PictureDialogProps>) {
   const { t } = useCommonT();
   const titleId = useId();
-  const phone = useMediaQuery((theme: Theme) => theme.breakpoints.down('sm'));
+  // The material useTheme answers the default theme without a provider, so the field also renders in a bare tree.
+  const theme = useTheme();
+  const phone = useMediaQuery(theme.breakpoints.down('sm'));
   return (
     <Dialog open={open} onClose={onClose} fullScreen={phone} fullWidth maxWidth="md" aria-labelledby={titleId} data-testid={testId}>
       <DialogTitle id={titleId} sx={{ pr: 7, textAlign: 'center', fontWeight: 700 }}>

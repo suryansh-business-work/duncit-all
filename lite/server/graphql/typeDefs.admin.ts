@@ -15,6 +15,8 @@ export const adminTypeDefs = gql`
     GOOGLE_MAPS
     "The SMS carrier for phone sign-in codes."
     MSG91
+    "Stock photos in the picture picker."
+    PEXELS
   }
 
   enum LiteEmailStatus {

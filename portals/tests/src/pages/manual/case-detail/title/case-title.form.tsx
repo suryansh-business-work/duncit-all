@@ -27,7 +27,7 @@ export default function CaseTitleForm({ initial, state, onSubmit, onCancel }: Re
   });
   const saving = state === 'saving';
 
-  const onKeyDown = (event: KeyboardEvent<HTMLFormElement>) => {
+  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (event.key === 'Escape') onCancel();
   };
 
@@ -37,7 +37,6 @@ export default function CaseTitleForm({ initial, state, onSubmit, onCancel }: Re
       direction={{ xs: 'column', sm: 'row' }}
       spacing={1}
       noValidate
-      onKeyDown={onKeyDown}
       onSubmit={handleSubmit((values) => onSubmit(values.title))}
       sx={{ alignItems: { sm: 'flex-start' } }}
     >
@@ -45,6 +44,8 @@ export default function CaseTitleForm({ initial, state, onSubmit, onCancel }: Re
         control={control}
         name="title"
         label={t('testsManual.field.title')}
+        onKeyDown={onKeyDown}
+        // eslint-disable-next-line jsx-a11y/no-autofocus -- focus moves into the rename field the user just opened (WCAG 2.4.3)
         autoFocus
         required
         disabled={saving}

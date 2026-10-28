@@ -34,6 +34,7 @@ export default function ColumnForm({ initial, onSubmit }: Readonly<Props>) {
         name="name"
         label={t('testsManual.settings.name')}
         required
+        // eslint-disable-next-line jsx-a11y/no-autofocus -- focus moves into the dialog the user just opened (WCAG 2.4.3)
         autoFocus
         slotProps={{ htmlInput: { maxLength: MANUAL_LIMITS.columnNameMax } }}
       />

@@ -38,6 +38,7 @@ export default function NewCaseForm({ onSubmit }: Readonly<Props>) {
             label={t('testsManual.field.title')}
             hint={t('testsManual.newCase.titleHint')}
             required
+            // eslint-disable-next-line jsx-a11y/no-autofocus -- focus moves into the dialog the user just opened (WCAG 2.4.3)
             autoFocus
             slotProps={{ htmlInput: { maxLength: MANUAL_LIMITS.titleMax } }}
           />

@@ -67,7 +67,8 @@ export function buildLiteTheme(): Theme {
             body: { backgroundColor: theme.vars?.palette.background.default, colorScheme: 'light dark' },
             ...focusVisibleGlobalCss(LITE_SCHEMES.dark.accent),
             ...reducedMotionGlobalCss,
-            '@media (pointer: coarse)': { 'button, a[role="button"], [role="button"]': { minHeight: 44 } },
+            // One control height on a touch screen too: buttons and single-line inputs both grow to 44.
+            '@media (pointer: coarse)': { 'button, a[role="button"], [role="button"]': { minHeight: 44 }, '.MuiInputBase-root:not(.MuiInputBase-multiline)': { minHeight: 44 } },
             '@media (prefers-reduced-motion: reduce)': { '[data-lite-animate]': { animation: 'none !important' } },
           }),
         },
@@ -79,6 +80,10 @@ export function buildLiteTheme(): Theme {
         MuiToggleButton: { styleOverrides: { root: { borderRadius: LITE_RADII.control, textTransform: 'none', fontWeight: 700 } } },
         MuiChip: { styleOverrides: { root: { borderRadius: LITE_RADII.pill, fontWeight: 700 } } },
         MuiOutlinedInput: { styleOverrides: { root: { borderRadius: LITE_RADII.control } } },
+        // Inputs default to the small (40px) size so a box and the button beside it line up everywhere.
+        MuiTextField: { defaultProps: { size: 'small' } },
+        MuiFormControl: { defaultProps: { size: 'small' } },
+        MuiAutocomplete: { defaultProps: { size: 'small' } },
         MuiCard: {
           styleOverrides: {
             root: ({ theme }) => ({

@@ -1,7 +1,6 @@
 import { Link as RouterLink } from 'react-router';
 import { useMutation } from '@apollo/client/react';
 import { Box, Link, Stack, Typography } from '@mui/material';
-import RssFeedIcon from '@mui/icons-material/RssFeed';
 import { DuncitButton } from '@duncit/buttons';
 import { notifyError, notifySuccess } from '@duncit/dialogs';
 import { PageHeader } from '@duncit/ui';
@@ -12,9 +11,9 @@ import { useSignInPrompt } from '../../app/providers/SignInPromptProvider';
 import { LiteImage } from '../../../shared/LiteImage';
 import { UserAvatar } from '../../components/UserAvatar';
 import { LITE_SUBSCRIBE_CALENDAR, LITE_UNSUBSCRIBE_CALENDAR } from '../../graphql/calendars';
-import { calendarWebcalUrl } from '../../lib/calendarLinks';
 import { paragraphs } from '../../lib/text';
 import { paths } from '../../lib/paths';
+import { SubscribeMenu } from './SubscribeMenu';
 
 /** Cover, avatar, name, owner, subscriber count, Subscribe, and the feed for a calendar app. */
 export function CalendarHeader({ calendar, onChanged }: Readonly<{ calendar: LiteCalendar; onChanged: () => void }>) {
@@ -72,9 +71,7 @@ export function CalendarHeader({ calendar, onChanged }: Readonly<{ calendar: Lit
               {calendar.viewer_subscribed ? t('liteWeb.calendar.unsubscribe') : t('liteWeb.calendar.subscribe')}
             </DuncitButton>
           )}
-          <DuncitButton component="a" href={calendarWebcalUrl(calendar.slug)} variant="text" startIcon={<RssFeedIcon />} data-testid="calendar-webcal">
-            {t('liteWeb.calendar.subscribeInApp')}
-          </DuncitButton>
+          <SubscribeMenu slug={calendar.slug} name={calendar.name} />
         </Stack>
       </Stack>
       {calendar.description ? paragraphs(calendar.description).map((block) => <Typography key={block.slice(0, 40)}>{block}</Typography>) : null}

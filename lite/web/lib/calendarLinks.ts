@@ -21,8 +21,21 @@ export const eventUrl = (slug: string): string => `${SITE_URL}${paths.event(slug
 /** The absolute ICS feed of an event. */
 export const eventIcsUrl = (slug: string): string => `${SITE_URL}${paths.ics.event(slug)}`;
 
-/** A calendar's feed as a webcal:// link, which calendar apps open as a subscription. */
+/** A calendar's feed over https, for a reader to paste into any calendar app. */
+export const calendarFeedUrl = (slug: string): string => `${SITE_URL}${paths.ics.calendar(slug)}`;
+
+/** A calendar's feed as a webcal:// link, which Apple Calendar (and any app that claims webcal) opens as a subscription. */
 export const calendarWebcalUrl = (slug: string): string => `${SITE_URL.replace(/^https?:/, 'webcal:')}${paths.ics.calendar(slug)}`;
+
+/**
+ * Google Calendar's own "add by URL" page for the feed. A bare webcal:// link does
+ * nothing in a desktop browser with no calendar app behind it, which is why a
+ * single webcal button looked broken.
+ */
+export const googleSubscribeUrl = (slug: string): string => `https://calendar.google.com/calendar/render?${new URLSearchParams({ cid: calendarWebcalUrl(slug) }).toString()}`;
+
+/** Outlook on the web's "subscribe from web" page for the feed. */
+export const outlookSubscribeUrl = (slug: string, name: string): string => `https://outlook.live.com/calendar/0/addfromweb?${new URLSearchParams({ url: calendarFeedUrl(slug), name }).toString()}`;
 
 /** A prefilled "add to Google Calendar" link. */
 export function googleCalendarUrl(event: CalendarEventLike, onlineLabel: string): string {

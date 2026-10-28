@@ -28,18 +28,21 @@ export default function QuickCreateForm({ onSubmit, onCancel, saving }: Readonly
     if (await onSubmit(values)) reset({ ...BLANK_QUICK_CREATE, type: values.type });
   });
 
-  const onKeyDown = (event: KeyboardEvent<HTMLFormElement>) => {
+  // On the title field, not the form: Escape that closes the Type menu must not drop the whole draft.
+  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (event.key === 'Escape') onCancel();
   };
 
   return (
-    <Stack component="form" spacing={1} onSubmit={submit} onKeyDown={onKeyDown} noValidate sx={{ p: 1 }}>
+    <Stack component="form" spacing={1} onSubmit={submit} noValidate sx={{ p: 1 }}>
       <RhfTextField
         control={control}
         name="title"
         size="small"
         label={t('testsManual.quickCreate.title')}
         placeholder={t('testsManual.quickCreate.placeholder')}
+        onKeyDown={onKeyDown}
+        // eslint-disable-next-line jsx-a11y/no-autofocus -- focus moves into the form the user just opened (WCAG 2.4.3)
         autoFocus
         required
         slotProps={{ htmlInput: { maxLength: MANUAL_LIMITS.titleMax } }}

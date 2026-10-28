@@ -34,6 +34,7 @@ const ADMIN_ERROR =
   'The action shows an error saying the AI feature is switched off; nothing is generated.';
 const MARKETING_ERROR = 'The Marketing portal shows an error saying AI is unavailable.';
 const TECH_ERROR = 'The Tech portal shows an error saying the AI feature is switched off.';
+const TESTS_ERROR = 'The Tests console shows an error saying the AI feature is switched off.';
 const REASON_ACCEPTED = 'Every reason is accepted, exactly as during an AI outage.';
 
 export const OPENAI_TASKS = {
@@ -175,8 +176,8 @@ export const OPENAI_TASKS = {
   'platform.stress_verdict': {
     label: 'Stress test verdict',
     module: 'Platform',
-    description: 'Explains a stress-test run in the Tech portal.',
-    when_off: TECH_ERROR,
+    description: 'Explains a stress-test run in the Tests console.',
+    when_off: TESTS_ERROR,
   },
   'platform.server_advice': {
     label: 'Server recommendations',

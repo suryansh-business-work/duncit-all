@@ -36,10 +36,14 @@ export const SortableCard = memo(function SortableCard({ card, onOpen }: Readonl
       style={{ transform: CSS.Transform.toString(transform), transition }}
       sx={{ opacity: isDragging ? 0.4 : 1 }}
     >
+      {/* role and tabIndex repeat dnd-kit's own values (the card is never disabled);
+          spelled out so the a11y lint sees a focusable button, not a clickable div. */}
       <Card
         variant="outlined"
         {...attributes}
         {...listeners}
+        role="button"
+        tabIndex={0}
         onKeyDown={onKeyDown}
         onClick={() => onOpen(card.key)}
         aria-label={t('testsManual.board.cardLabel', { vars: { key: card.key, title: card.title } })}

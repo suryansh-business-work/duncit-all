@@ -9,7 +9,8 @@ interface Props {
 
 /**
  * A failure message as the runner printed it — monospace, wrapped, scrollable
- * past a screenful, and focusable so a keyboard can scroll it too.
+ * past a screenful. A named region (the LogPane pattern): browsers make the
+ * scrollable box itself keyboard-focusable, so no tabIndex.
  */
 export default function FailureText({ text, label }: Readonly<Props>) {
   return (
@@ -19,7 +20,7 @@ export default function FailureText({ text, label }: Readonly<Props>) {
       </Typography>
       <Box
         component="pre"
-        tabIndex={0}
+        role="region"
         aria-label={label}
         sx={{
           m: 0,

@@ -9,6 +9,8 @@ import type { LiteCalendar } from '../../../shared/graphql/documents';
 import { useWebT } from '../../../shared/i18n';
 import { useSignInPrompt } from '../../app/providers/SignInPromptProvider';
 import { LiteImage } from '../../../shared/LiteImage';
+import { accentWash } from '../../../shared/theme';
+import { ACCENT_COLORS } from '../../../shared/tokens';
 import { UserAvatar } from '../../components/UserAvatar';
 import { LITE_SUBSCRIBE_CALENDAR, LITE_UNSUBSCRIBE_CALENDAR } from '../../graphql/calendars';
 import { paragraphs } from '../../lib/text';
@@ -39,9 +41,14 @@ export function CalendarHeader({ calendar, onChanged }: Readonly<{ calendar: Lit
   };
 
   const busy = subscribeState.loading || unsubscribeState.loading;
+  const accent = ACCENT_COLORS[calendar.tint];
   return (
     <Stack spacing={2} data-testid="calendar-header">
-      {calendar.cover_url ? <LiteImage src={calendar.cover_url} alt="" width={1200} height={400} eager sx={{ borderRadius: 4 }} /> : null}
+      {calendar.cover_url ? (
+        <LiteImage src={calendar.cover_url} alt="" width={1200} height={400} eager sx={{ borderRadius: 4 }} />
+      ) : (
+        <Box aria-hidden sx={{ height: { xs: 96, sm: 140 }, borderRadius: 4, background: accentWash(accent) }} data-testid="calendar-tint-wash" />
+      )}
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ alignItems: { sm: 'center' } }}>
         <UserAvatar name={calendar.name} url={calendar.avatar_url} size={72} />
         <Box sx={{ flexGrow: 1 }}>
@@ -67,7 +74,14 @@ export function CalendarHeader({ calendar, onChanged }: Readonly<{ calendar: Lit
               {t('lite.common.edit')}
             </DuncitButton>
           ) : (
-            <DuncitButton variant={calendar.viewer_subscribed ? 'outlined' : 'contained'} onClick={toggle} loading={busy} data-testid="calendar-subscribe">
+            <DuncitButton
+              variant={calendar.viewer_subscribed ? 'outlined' : 'contained'}
+              onClick={toggle}
+              loading={busy}
+              // Subscribe wears the calendar's tint; Unsubscribe stays plain.
+              sx={calendar.viewer_subscribed ? undefined : (theme) => ({ bgcolor: accent, color: theme.palette.getContrastText(accent), '&:hover': { bgcolor: accent, filter: 'brightness(0.92)' } })}
+              data-testid="calendar-subscribe"
+            >
               {calendar.viewer_subscribed ? t('liteWeb.calendar.unsubscribe') : t('liteWeb.calendar.subscribe')}
             </DuncitButton>
           )}

@@ -1,6 +1,6 @@
 import { useParams } from 'react-router';
 import { useQuery } from '@apollo/client/react';
-import { Card, CardContent, Container, Stack } from '@mui/material';
+import { Container, Stack } from '@mui/material';
 import { PageHeader, QueryGuard } from '@duncit/ui';
 import { useWebT } from '../../../shared/i18n';
 import { SignedInGate } from '../../components/SignedInGate';
@@ -29,14 +29,10 @@ export function CalendarFormPage() {
   const title = id ? t('liteWeb.calendars.editTitle') : t('liteWeb.calendars.newTitle');
   usePageTitle(title);
   return (
-    <Container maxWidth="sm" disableGutters>
-      <Stack spacing={2} data-testid="calendar-form-page">
+    <Container maxWidth={false} disableGutters sx={{ maxWidth: 800 }}>
+      <Stack spacing={3} data-testid="calendar-form-page">
         <PageHeader title={title} subtitle={t('liteWeb.calendars.formSubtitle')} titleVariant="h4" />
-        <SignedInGate body={t('liteWeb.calendars.gate')}>
-          <Card>
-            <CardContent>{id ? <EditCalendar id={id} /> : <CalendarForm calendar={null} />}</CardContent>
-          </Card>
-        </SignedInGate>
+        <SignedInGate body={t('liteWeb.calendars.gate')}>{id ? <EditCalendar id={id} /> : <CalendarForm calendar={null} />}</SignedInGate>
       </Stack>
     </Container>
   );

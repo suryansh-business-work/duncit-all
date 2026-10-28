@@ -100,6 +100,7 @@ export async function toPublicCalendar(doc: any, viewer: Viewer | null) {
     cover_url: doc.cover_url || null,
     city_slug: doc.city_slug || null,
     city_name: city?.name ?? null,
+    tint: doc.tint ?? 'DEFAULT',
     owner: owner
       ? { id: idOf(owner._id), name: owner.name, handle: owner.handle, avatar_url: owner.avatar_url || null }
       : { id: idOf(doc.owner_id), name: 'Host', handle: '', avatar_url: null },

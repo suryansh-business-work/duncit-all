@@ -2,12 +2,13 @@ import { Stack, Typography } from '@mui/material';
 import { useWebT } from '../../../shared/i18n';
 import { SignedInGate } from '../../components/SignedInGate';
 import { usePageTitle } from '../../lib/usePageTitle';
+import { CalendarsHelp } from './CalendarsHelp';
 import { MyCalendars } from './MyCalendars';
 import { SubscribedCalendars } from './SubscribedCalendars';
 
 export { CalendarFormPage } from './CalendarFormPage';
 
-/** /calendars — the calendars the reader owns, then the ones they follow. */
+/** /calendars — how calendars work, the calendars the reader owns, then the ones they follow. */
 export function CalendarsPage() {
   const { t } = useWebT();
   usePageTitle(t('liteWeb.calendars.pageTitle'));
@@ -16,6 +17,7 @@ export function CalendarsPage() {
       <Typography variant="h2" component="h1">
         {t('liteWeb.calendars.pageTitle')}
       </Typography>
+      <CalendarsHelp />
       <SignedInGate body={t('liteWeb.calendars.gate')}>
         <Stack spacing={5}>
           <MyCalendars />

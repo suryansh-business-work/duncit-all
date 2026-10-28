@@ -81,6 +81,8 @@ export const publicTypeDefs = gql`
     cover_url: String
     city_slug: String
     city_name: String
+    "The calendar page's colour, one of the event theme accents."
+    tint: LiteThemeAccent!
     owner: LiteCalendarOwner!
     featured: Boolean!
     subscriber_count: Int!
@@ -484,7 +486,10 @@ export const publicTypeDefs = gql`
     description: String
     avatar_url: String
     cover_url: String
+    "Empty for a global calendar."
     city_slug: String
+    "Omitted: Duncit red on create, unchanged on update."
+    tint: LiteThemeAccent
   }
 
   extend type Query {

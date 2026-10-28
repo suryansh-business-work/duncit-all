@@ -43,29 +43,34 @@ describe('CalendarForm — new', () => {
 
     await user.type(screen.getByRole('textbox', { name: 'Name' }), 'Run Club');
     await user.type(screen.getByRole('textbox', { name: 'Description' }), 'Saturday 6am runs.');
+    await user.click(screen.getByRole('button', { name: 'City' }));
     await user.click(screen.getByTestId('calendar-city'));
     await user.click(await screen.findByRole('option', { name: 'Delhi' }));
-    await user.click(await screen.findByRole('button', { name: 'Save' }));
+    await user.click(screen.getByTestId('calendar-tint-BLUE'));
+    await user.click(await screen.findByRole('button', { name: 'Create calendar' }));
 
     await waitFor(() => expect(router.state.location.pathname).toBe('/cal/run-club'));
     expect(toasts.seen).toContainEqual({ message: 'Calendar saved.', severity: 'success' });
     expect(create.calls.at(-1)).toEqual({
-      input: { name: 'Run Club', slug: null, description: 'Saturday 6am runs.', avatar_url: null, cover_url: null, city_slug: 'delhi' },
+      input: { name: 'Run Club', slug: null, description: 'Saturday 6am runs.', avatar_url: null, cover_url: null, city_slug: 'delhi', tint: 'BLUE' },
     });
   });
 
-  it('offers no city by default, then the cities Lite knows', async () => {
+  it('starts global, and offers the cities Lite knows once City is picked', async () => {
     const { user } = renderWithProviders(<CalendarForm calendar={null} />, { me: meFixture(), mocks: [citiesMock] });
+    expect(screen.getByRole('button', { name: 'Global' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByTestId('calendar-global-hint')).toBeInTheDocument();
+    expect(screen.queryByTestId('calendar-city')).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'City' }));
     await user.click(screen.getByTestId('calendar-city'));
     expect(await screen.findByRole('option', { name: 'Delhi' })).toBeInTheDocument();
-    expect(screen.getByRole('option', { name: 'No city' })).toHaveAttribute('aria-selected', 'true');
   });
 
   it('flags a blank name and a bad link, and sends nothing', async () => {
     const create = recorded(LITE_CREATE_CALENDAR, { data: { liteCreateCalendar: calendarFixture() } });
     const { user, router } = renderWithProviders(<CalendarForm calendar={null} />, { me: meFixture(), mocks: [citiesMock, create.mock] });
-    await user.type(screen.getByRole('textbox', { name: 'Link' }), 'run club!');
-    await user.click(screen.getByRole('button', { name: 'Save' }));
+    await user.type(screen.getByRole('textbox', { name: 'Public URL' }), 'run club!');
+    await user.click(screen.getByRole('button', { name: 'Create calendar' }));
 
     expect(await screen.findByText('This is required')).toBeInTheDocument();
     expect(screen.getByText('Use lowercase letters, numbers and hyphens only')).toBeInTheDocument();
@@ -78,7 +83,7 @@ describe('CalendarForm — new', () => {
     const create = recorded(LITE_CREATE_CALENDAR, { errors: [{ message: 'That link is already taken' }] });
     const { user, router } = renderWithProviders(<CalendarForm calendar={null} />, { me: meFixture(), mocks: [citiesMock, create.mock] });
     await user.type(screen.getByRole('textbox', { name: 'Name' }), 'Run Club');
-    await user.click(screen.getByRole('button', { name: 'Save' }));
+    await user.click(screen.getByRole('button', { name: 'Create calendar' }));
 
     await waitFor(() => expect(toasts.seen).toContainEqual({ message: 'That link is already taken', severity: 'error' }));
     expect(router.state.location.pathname).toBe('/');
@@ -94,9 +99,10 @@ describe('CalendarForm — edit', () => {
 
     const name = screen.getByRole('textbox', { name: 'Name' });
     expect(name).toHaveValue('Run Club');
-    expect(screen.getByRole('textbox', { name: 'Link' })).toHaveValue('run-club');
+    expect(screen.getByRole('textbox', { name: 'Public URL' })).toHaveValue('run-club');
     expect(screen.getByRole('textbox', { name: 'Description' })).toHaveValue('Saturday 6am runs.');
-    expect(screen.getByTestId('calendar-avatar-preview')).toHaveAttribute('src', 'https://cdn.example/rc.png');
+    expect(screen.getByTestId('calendar-identity').querySelector('img')).toHaveAttribute('src', 'https://cdn.example/rc.png');
+    expect(screen.getByRole('button', { name: 'City' })).toHaveAttribute('aria-pressed', 'true');
 
     await user.clear(name);
     await user.type(name, 'Run Club Delhi');
@@ -105,7 +111,7 @@ describe('CalendarForm — edit', () => {
     await waitFor(() => expect(router.state.location.pathname).toBe('/cal/run-club-delhi'));
     expect(update.calls.at(-1)).toEqual({
       id: 'cal-1',
-      input: { name: 'Run Club Delhi', slug: 'run-club', description: 'Saturday 6am runs.', avatar_url: 'https://cdn.example/rc.png', cover_url: null, city_slug: 'delhi' },
+      input: { name: 'Run Club Delhi', slug: 'run-club', description: 'Saturday 6am runs.', avatar_url: 'https://cdn.example/rc.png', cover_url: null, city_slug: 'delhi', tint: 'DEFAULT' },
     });
     expect(toasts.seen).toContainEqual({ message: 'Calendar saved.', severity: 'success' });
   });

@@ -1,5 +1,5 @@
 import { gql, type TypedDocumentNode } from '@apollo/client';
-import { LITE_CALENDAR_FIELDS, LITE_EVENT_CARD_FIELDS, type LiteCalendar, type LiteEventCard } from '../../shared/graphql/documents';
+import { LITE_CALENDAR_FIELDS, LITE_EVENT_CARD_FIELDS, type LiteCalendar, type LiteEventCard, type LiteThemeAccent } from '../../shared/graphql/documents';
 import type { NoVars } from './types';
 
 export const LITE_CALENDAR: TypedDocumentNode<{ liteCalendar: LiteCalendar | null }, { slug: string }> = gql`
@@ -45,6 +45,7 @@ export interface LiteCalendarInput {
   avatar_url: string | null;
   cover_url: string | null;
   city_slug: string | null;
+  tint: LiteThemeAccent;
 }
 
 export const LITE_CREATE_CALENDAR: TypedDocumentNode<{ liteCreateCalendar: LiteCalendar }, { input: LiteCalendarInput }> = gql`

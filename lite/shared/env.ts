@@ -28,4 +28,6 @@ export const STORAGE_KEYS = {
   colorMode: 'lite_color_mode',
   portalToken: 'lite_portal_token',
   portalColorMode: 'lite_portal_color_mode',
+  /** Set once the reader closes the "How calendars work" card. */
+  calendarsHelp: 'lite_calendars_help_closed',
 } as const;

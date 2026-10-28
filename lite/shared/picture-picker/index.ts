@@ -7,6 +7,10 @@
  * The API side is `litePictureOptions`, `litePexelsSearch`,
  * `liteImportPexelsPhoto` and POST /upload; the Pexels key lives under
  * Console → Environment → Pexels and the topics under Console → Settings.
+ *
+ * `PictureDialog` alone is for a page that draws its own picture and trigger
+ * (the calendar form's cover and avatar).
  */
+export { PictureDialog } from './PictureDialog';
 export { PictureField, type PictureFieldProps } from './PictureField';
 export type { PictureShape } from './picture.types';

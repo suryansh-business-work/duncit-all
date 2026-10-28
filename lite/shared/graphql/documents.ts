@@ -45,6 +45,7 @@ export const LITE_CALENDAR_FIELDS = gql`
     cover_url
     city_slug
     city_name
+    tint
     owner {
       id
       name
@@ -421,6 +422,7 @@ export interface LiteCalendar {
   cover_url: string | null;
   city_slug: string | null;
   city_name: string | null;
+  tint: LiteThemeAccent;
   owner: { id: string; name: string; handle: string; avatar_url: string | null };
   featured: boolean;
   subscriber_count: number;

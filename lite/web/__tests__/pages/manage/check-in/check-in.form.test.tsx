@@ -60,7 +60,8 @@ describe('CheckInForm', () => {
 
     await vi.waitFor(() => expect(onCheckedIn).toHaveBeenCalledTimes(1));
     expect(onCheckedIn.mock.calls[0][0]).toMatchObject({ id: 'reg-1', code: 'ABC123' });
-    expect(field).toHaveValue('');
+    // The form clears after it reports the guest, in a later render: wait for that render, not just the callback.
+    await vi.waitFor(() => expect(field).toHaveValue(''));
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 

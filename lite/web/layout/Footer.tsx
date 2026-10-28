@@ -12,6 +12,7 @@ import { useWebT } from '../../shared/i18n';
 import { tint } from '../../shared/theme';
 import { HEADLINE_GRADIENT, HEADLINE_GRADIENT_LIGHT, LITE_RADII } from '../../shared/tokens';
 import { useLiteSettings } from '../app/providers/LiteSettingsProvider';
+import { useCanObserve } from '../lib/motion';
 import { useInstallPrompt } from '../lib/useInstallPrompt';
 import { FooterColumns } from './footer/FooterColumns';
 
@@ -42,6 +43,8 @@ export function Footer() {
   const { site_name: siteName } = useLiteSettings();
   const { canInstall, install } = useInstallPrompt();
   const { source } = resolveIconSource(null, LITE_FALLBACK_ICONS.logo);
+  // The wordmark rises in once it scrolls into view, where the browser can tell.
+  const rise = useCanObserve() ? { initial: { opacity: 0, y: 60 }, whileInView: { opacity: 1, y: 0 }, viewport: { once: true, amount: 0.2 } } : {};
   return (
     <Box component="footer" sx={(theme) => ({ position: 'relative', mt: 10, overflow: 'hidden', borderTop: 1, borderColor: 'divider', backgroundImage: `radial-gradient(80% 60% at 50% 120%, ${tint(theme.palette.primary.main, 0.16)}, transparent)` })} data-testid="footer">
       <Container maxWidth={false} sx={{ maxWidth: 1040, pt: { xs: 5, md: 7 } }}>
@@ -91,9 +94,7 @@ export function Footer() {
       <Box
         component={motion.span}
         aria-hidden
-        initial={{ opacity: 0, y: 60 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.2 }}
+        {...rise}
         transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
         sx={(theme: Theme) => ({ ...wordmark(theme), mt: { xs: 3, md: 4 }, mb: { xs: '-4vw', md: '-2.5rem' } })}
       >

@@ -5,6 +5,7 @@ import type { Theme } from '@mui/material/styles';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { tint } from '../../../shared/theme';
 import { LITE_RADII } from '../../../shared/tokens';
+import { useCanObserve } from '../../lib/motion';
 
 interface PlanCardProps {
   name: string;
@@ -24,13 +25,12 @@ interface PlanCardProps {
 /** One plan: badge, name, price, what it includes and its call to action. */
 export function PlanCard({ name, badge, highlighted, price, tagline, includedLabel, features, action, index, testId }: Readonly<PlanCardProps>) {
   const titleId = useId();
+  const rise = useCanObserve() ? { initial: { opacity: 0, y: 32 }, whileInView: { opacity: 1, y: 0 }, viewport: { once: true, amount: 0.3 } } : {};
   return (
     <Box
       component={motion.section}
       aria-labelledby={titleId}
-      initial={{ opacity: 0, y: 32 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.3 }}
+      {...rise}
       transition={{ duration: 0.55, delay: index * 0.12, ease: [0.22, 1, 0.36, 1] }}
       whileHover={{ y: -6 }}
       data-testid={testId}

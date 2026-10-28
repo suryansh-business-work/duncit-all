@@ -2,6 +2,7 @@ import { renderToString } from 'react-dom/server';
 import { MockedProvider } from '@apollo/client/testing/react';
 import { act, fireEvent, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { deviceTimeZone } from '../../../../shared/format';
 import { LocalClock, offsetLabel } from '../../../layout/header/LocalClock';
 import { renderWithProviders } from '../../test-utils';
 
@@ -39,7 +40,8 @@ describe('LocalClock', () => {
     renderWithProviders(<LocalClock />);
     const clock = screen.getByTestId('header-clock');
     expect(clock.tagName).toBe('TIME');
-    expect(clock.textContent).toBe('19:00 Asia/Kolkata · GMT+5:30');
+    // The zone as the platform names it (ICU builds differ: Asia/Kolkata or Asia/Calcutta).
+    expect(clock.textContent).toBe(`19:00 ${deviceTimeZone()} · GMT+5:30`);
     expect(clock).toHaveAttribute('datetime', '2026-11-21T19:00+05:30');
     expect(clock.firstChild?.textContent).toBe('19:00');
   });
@@ -48,7 +50,7 @@ describe('LocalClock', () => {
     renderWithProviders(<LocalClock />);
     const clock = screen.getByTestId('header-clock');
     fireEvent.mouseOver(clock);
-    expect(await screen.findByRole('tooltip')).toHaveTextContent('Asia/Kolkata · GMT+5:30');
+    expect(await screen.findByRole('tooltip')).toHaveTextContent(`${deviceTimeZone()} · GMT+5:30`);
     expect(clock).not.toHaveAttribute('aria-label');
   });
 

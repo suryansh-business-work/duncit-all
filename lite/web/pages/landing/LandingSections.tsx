@@ -6,6 +6,7 @@ import type { LiteDiscover } from '../../graphql/discover';
 import { CalendarCard } from '../discover/CalendarCard';
 import { CategoryGrid } from '../discover/CategoryGrid';
 import { DiscoverSection } from '../discover/DiscoverSection';
+import { Reveal } from '../../components/Reveal';
 
 const TILES = { display: 'grid', gap: 2, gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(5, 1fr)' } } as const;
 const FOUR = { display: 'grid', gap: 1.5, gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' } } as const;
@@ -19,36 +20,44 @@ export function LandingSections({ discover, cityName }: Readonly<{ discover: Lit
   return (
     <Stack spacing={7}>
       {popular.length > 0 ? (
-        <DiscoverSection title={cityName ? t('liteWeb.landing.popularIn', { vars: { city: cityName } }) : t('liteWeb.discover.popular')} testId="landing-popular">
-          <Box sx={TILES}>
-            {popular.map((event) => (
-              <EventTile key={event.id} event={event} />
-            ))}
-          </Box>
-        </DiscoverSection>
+        <Reveal>
+          <DiscoverSection title={cityName ? t('liteWeb.landing.popularIn', { vars: { city: cityName } }) : t('liteWeb.discover.popular')} testId="landing-popular">
+            <Box sx={TILES}>
+              {popular.map((event) => (
+                <EventTile key={event.id} event={event} />
+              ))}
+            </Box>
+          </DiscoverSection>
+        </Reveal>
       ) : null}
       {major.length > 0 ? (
-        <DiscoverSection title={t('liteWeb.landing.major')} testId="landing-major">
-          <Box sx={FOUR}>
-            {major.map((event) => (
-              <EventPill key={event.id} event={event} />
-            ))}
-          </Box>
-        </DiscoverSection>
+        <Reveal>
+          <DiscoverSection title={t('liteWeb.landing.major')} testId="landing-major">
+            <Box sx={FOUR}>
+              {major.map((event) => (
+                <EventPill key={event.id} event={event} />
+              ))}
+            </Box>
+          </DiscoverSection>
+        </Reveal>
       ) : null}
       {calendars.length > 0 ? (
-        <DiscoverSection title={t('liteWeb.landing.communities')} testId="landing-communities">
-          <Box sx={FOUR}>
-            {calendars.map((calendar) => (
-              <CalendarCard key={calendar.id} calendar={calendar} />
-            ))}
-          </Box>
-        </DiscoverSection>
+        <Reveal>
+          <DiscoverSection title={t('liteWeb.landing.communities')} testId="landing-communities">
+            <Box sx={FOUR}>
+              {calendars.map((calendar) => (
+                <CalendarCard key={calendar.id} calendar={calendar} />
+              ))}
+            </Box>
+          </DiscoverSection>
+        </Reveal>
       ) : null}
       {discover.categories.length > 0 ? (
-        <DiscoverSection title={t('liteWeb.discover.categories')} testId="landing-categories">
-          <CategoryGrid categories={discover.categories} showCounts={false} />
-        </DiscoverSection>
+        <Reveal>
+          <DiscoverSection title={t('liteWeb.discover.categories')} testId="landing-categories">
+            <CategoryGrid categories={discover.categories} showCounts={false} />
+          </DiscoverSection>
+        </Reveal>
       ) : null}
     </Stack>
   );

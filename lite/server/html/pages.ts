@@ -92,6 +92,9 @@ export async function headFor(path: string): Promise<PageHead | null> {
   if (parts[0] === 'cal' && parts[1]) return calendarHead(parts[1].toLowerCase(), siteName);
   if (parts[0] === 'u' && parts[1]) return profileHead(parts[1].toLowerCase(), siteName);
   if (parts[0] === 'category' && parts[1]) return categoryHead(parts[1].toLowerCase(), siteName);
+  if (parts.length === 1 && parts[0] === 'pricing') {
+    return { meta: { title: `Pricing · ${siteName}`, description: `Host unlimited events on ${siteName} for free during our launch. A paid plan is coming soon.`, url: pageUrl('/pricing'), siteName }, structured: [] };
+  }
   if (parts.length === 1) return cityHead(parts[0].toLowerCase(), siteName);
   return null;
 }

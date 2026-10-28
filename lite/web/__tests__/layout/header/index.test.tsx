@@ -15,11 +15,11 @@ describe('Header', () => {
     expect(screen.getByRole('link', { name: 'Lite Events home' })).toHaveAttribute('href', '/');
   });
 
-  it('shows a visitor only Discover, an Explore link and Sign in', () => {
+  it('shows a visitor only Discover and Pricing, an Explore link and Sign in', () => {
     renderWithProviders(<Header />);
 
     const links = within(siteNav()).getAllByRole('link');
-    expect(links.map((link) => link.getAttribute('href'))).toEqual(['/discover']);
+    expect(links.map((link) => link.getAttribute('href'))).toEqual(['/discover', '/pricing']);
     expect(screen.getByRole('link', { name: 'Explore events' })).toHaveAttribute('href', '/discover');
     expect(screen.getByRole('button', { name: 'Sign in' })).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Create event' })).not.toBeInTheDocument();

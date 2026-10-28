@@ -9,6 +9,7 @@ export const paths = {
   /** Your events: hosting and attending, upcoming and past. */
   events: '/home',
   discover: '/discover',
+  pricing: '/pricing',
   search: (q: string) => `/search?q=${encodeURIComponent(q)}`,
   city: (slug: string) => `/${slug}`,
   category: (slug: string) => `/category/${slug}`,

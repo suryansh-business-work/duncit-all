@@ -136,6 +136,7 @@ describe('emailService.sendRaw', () => {
       connectionTimeout: 10_000,
       greetingTimeout: 10_000,
       socketTimeout: 30_000,
+      maxRequeues: 1,
     });
     const mail = mailer.sendMail.mock.calls[0][0];
     expect(mail).toMatchObject({ from: 'no-reply@duncit.com', to: 'gita@lite.test', replyTo: 'help@duncit.com', subject: 'Your ticket', text: 'See you there' });

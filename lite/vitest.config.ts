@@ -12,7 +12,15 @@ export default defineConfig({
     projects: [
       {
         extends: true,
-        test: { name: 'server', environment: 'node', include: ['server/**/*.test.ts', 'shared/**/*.test.ts'], testTimeout: 30_000, hookTimeout: 120_000 },
+        test: {
+          name: 'server',
+          environment: 'node',
+          include: ['server/**/*.test.ts', 'shared/**/*.test.ts'],
+          // The MongoDB binary is fetched once, up front, so the files' own servers never race to download it.
+          globalSetup: ['./server/__tests__/helpers/mongo-binary.ts'],
+          testTimeout: 30_000,
+          hookTimeout: 120_000,
+        },
       },
       {
         extends: true,

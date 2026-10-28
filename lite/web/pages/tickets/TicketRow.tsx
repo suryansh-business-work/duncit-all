@@ -2,7 +2,7 @@ import { Link as RouterLink } from 'react-router';
 import { Box, ButtonBase, Stack, Typography } from '@mui/material';
 import { eventWhen } from '../../../shared/format';
 import { useWebT } from '../../../shared/i18n';
-import { LiteImage } from '../../components/LiteImage';
+import { LiteImage } from '../../../shared/LiteImage';
 import { PaymentStatusChip, RegistrationStatusChip } from '../../components/StatusChips';
 import type { LiteTicket } from '../../graphql/registrations';
 import { paths } from '../../lib/paths';

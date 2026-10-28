@@ -4,7 +4,7 @@ import { InputBase, Stack, Typography } from '@mui/material';
 import NotesOutlinedIcon from '@mui/icons-material/NotesOutlined';
 import { RhfTextField } from '@duncit/forms';
 import { useWebT } from '../../../../shared/i18n';
-import { CoverUploader } from '../../../components/CoverUploader';
+import { PictureField } from '../../../../shared/picture-picker';
 import { RhfSelect, type SelectOption } from '../../../components/RhfSelect';
 import { VISIBILITIES, type EventFormValues } from '../event.types';
 import { FieldPanel } from './FieldPanel';
@@ -73,7 +73,7 @@ export function CoverField() {
   const { control, setValue, formState } = useFormContext<EventFormValues>();
   const cover = useWatch({ control, name: 'cover_url' });
   return (
-    <CoverUploader
+    <PictureField
       label={t('liteWeb.eventForm.cover')}
       value={cover}
       onChange={(url) => setValue('cover_url', url, { shouldDirty: true, shouldValidate: true })}

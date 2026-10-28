@@ -10,6 +10,9 @@ export const WEB_FALLBACK: FlatCatalogue = mergeCatalogues(flattenCatalogue(LITE
 /** The console's local fallback. */
 export const PORTAL_FALLBACK: FlatCatalogue = mergeCatalogues(flattenCatalogue(LITE_COMMON_BUNDLE), flattenCatalogue(LITE_PORTAL_BUNDLE));
 
+/** The shared words alone, for components both pages render. */
+const COMMON_FALLBACK: FlatCatalogue = flattenCatalogue(LITE_COMMON_BUNDLE);
+
 /** Every key Lite ships, for Console → Localization → "Import app keys". */
 export const ALL_LITE_ENTRIES = (): { key: string; value: string }[] =>
   Object.entries(mergeCatalogues(WEB_FALLBACK, PORTAL_FALLBACK)).map(([key, value]) => ({ key, value }));
@@ -22,4 +25,9 @@ export function useWebT() {
 /** `t()` for the console. */
 export function usePortalT() {
   return useTranslation(PORTAL_FALLBACK);
+}
+
+/** `t()` for a shared component (the picture picker), which only uses the shared words. */
+export function useCommonT() {
+  return useTranslation(COMMON_FALLBACK);
 }

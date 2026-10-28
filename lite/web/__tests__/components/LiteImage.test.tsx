@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { LITE_FALLBACK_ICONS } from '../../../shared/fallback-icons';
-import { LiteImage } from '../../components/LiteImage';
+import { LiteImage } from '../../../shared/LiteImage';
 
 const COVER = 'https://img.example/cover.jpg';
 

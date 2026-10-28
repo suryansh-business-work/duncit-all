@@ -115,13 +115,6 @@ export const LITE_WEB_BUNDLE: NestedCatalogue = {
       googleFailed: 'Google sign-in did not go through. Please try again.',
       openDuncit: 'Open Duncit',
     },
-    upload: {
-      choose: 'Choose a picture',
-      remove: 'Remove picture',
-      urlLabel: 'Or paste an image link',
-      urlHint: 'JPEG, PNG, WebP, GIF or AVIF',
-      failed: 'The picture could not be uploaded.',
-    },
     discover: {
       title: 'Discover events',
       subtitle: 'Find something to do near you, or host your own.',

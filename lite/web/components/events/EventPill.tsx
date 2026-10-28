@@ -4,7 +4,7 @@ import type { LiteEventCard } from '../../../shared/graphql/documents';
 import { useWebT } from '../../../shared/i18n';
 import { LITE_RADII } from '../../../shared/tokens';
 import { paths } from '../../lib/paths';
-import { LiteImage } from '../LiteImage';
+import { LiteImage } from '../../../shared/LiteImage';
 import { useEventTime } from './useEventTime';
 
 /** A small thumb, the title, and "date · city" — one of the "Upcoming major events". */

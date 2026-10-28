@@ -9,7 +9,7 @@ import { parseApiError } from '@duncit/utils';
 import type { LiteCalendar } from '../../../shared/graphql/documents';
 import { useWebT } from '../../../shared/i18n';
 import { useSignInPrompt } from '../../app/providers/SignInPromptProvider';
-import { LiteImage } from '../../components/LiteImage';
+import { LiteImage } from '../../../shared/LiteImage';
 import { UserAvatar } from '../../components/UserAvatar';
 import { LITE_SUBSCRIBE_CALENDAR, LITE_UNSUBSCRIBE_CALENDAR } from '../../graphql/calendars';
 import { calendarWebcalUrl } from '../../lib/calendarLinks';

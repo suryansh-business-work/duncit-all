@@ -3,7 +3,7 @@ import { Box } from '@mui/material';
 import type { SxProps, Theme } from '@mui/material/styles';
 import { resolveIconSource } from '@duncit/fallback-icons';
 import { mergeSx } from '@duncit/ui';
-import { LITE_FALLBACK_ICONS } from '../../shared/fallback-icons';
+import { LITE_FALLBACK_ICONS } from './fallback-icons';
 
 interface LiteImageProps {
   src: string | null | undefined;

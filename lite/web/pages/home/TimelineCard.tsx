@@ -7,7 +7,7 @@ import VideocamOutlinedIcon from '@mui/icons-material/VideocamOutlined';
 import { DuncitButton } from '@duncit/buttons';
 import { useWebT } from '../../../shared/i18n';
 import { LITE_RADII } from '../../../shared/tokens';
-import { LiteImage } from '../../components/LiteImage';
+import { LiteImage } from '../../../shared/LiteImage';
 import { EventStatusChip } from '../../components/StatusChips';
 import { useEventTime } from '../../components/events/useEventTime';
 import { paths } from '../../lib/paths';

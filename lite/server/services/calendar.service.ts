@@ -58,6 +58,16 @@ export const calendarService = {
     return Promise.all(docs.map((d) => toPublicCalendar(d, viewerOf(user))));
   },
 
+  /** Calendars the person follows, the latest first; one deleted since drops out. */
+  async subscribed(user: LiteUserDoc) {
+    const subscriptions = await LiteSubscriptionModel.find({ user_id: user._id }).sort({ created_at: -1 }).limit(100).select('calendar_id').lean();
+    const ids = subscriptions.map((s) => s.calendar_id);
+    const docs = await LiteCalendarModel.find({ _id: { $in: ids } }).lean();
+    const byId = new Map(docs.map((d) => [String(d._id), d]));
+    const ordered = ids.flatMap((id) => byId.get(String(id)) ?? []);
+    return Promise.all(ordered.map((d) => toPublicCalendar(d, viewerOf(user))));
+  },
+
   async create(user: LiteUserDoc, input: CalendarInput) {
     const name = cleanText(input.name, 80, 'Name', true);
     const wanted = slugify(input.slug || name);

@@ -10,6 +10,8 @@ import {
   isPincode,
   isReferralCode,
   isSitePath,
+  isSocialHandle,
+  isUnderscoreHandle,
   isUpiId,
   isUrlSlug,
   isUsername,
@@ -22,6 +24,8 @@ interface CandidateMock {
   email: string;
   pincode: string;
   username: string;
+  underscore_handle: string;
+  social_handle: string;
   referral_code: string;
 }
 
@@ -63,6 +67,8 @@ export default defineDemos('regex', [
       email: 'meera@duncit.com',
       pincode: '560102',
       username: 'meera.n',
+      underscore_handle: 'meera_n',
+      social_handle: 'meera.events',
       referral_code: 'DUNMEERA24',
     },
     compute: (mock) => ({
@@ -70,6 +76,8 @@ export default defineDemos('regex', [
       'isEmail(email)': isEmail(mock.email),
       'isPincode(pincode)': isPincode(mock.pincode),
       'isUsername(username)': isUsername(mock.username),
+      'isUnderscoreHandle(underscore_handle)': isUnderscoreHandle(mock.underscore_handle),
+      'isSocialHandle(social_handle)': isSocialHandle(mock.social_handle),
       'isReferralCode(referral_code)': isReferralCode(mock.referral_code),
     }),
   }),

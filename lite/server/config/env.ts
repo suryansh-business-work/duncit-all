@@ -40,6 +40,11 @@ export const env = {
   /** The code every stubbed sign-in accepts while no mailbox is configured. */
   otpTestCode: read('LITE_OTP_TEST_CODE', '123456'),
   appEnv: read('APP_ENV', read('NODE_ENV', 'development')),
+  /**
+   * Shared with mcp.duncit.com: it signs a short-lived assertion naming the
+   * person an MCP tool call is for. Blank switches the MCP connector off.
+   */
+  mcpSecret: read('LITE_MCP_SECRET'),
 } as const;
 
 export const isProduction = env.nodeEnv === 'production';

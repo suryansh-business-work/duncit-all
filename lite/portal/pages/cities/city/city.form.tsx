@@ -1,13 +1,13 @@
 import { useEffect, useMemo } from 'react';
 import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Stack } from '@mui/material';
+import { MenuItem, Stack } from '@mui/material';
 import { RhfTextField } from '@duncit/forms';
 import { usePortalT } from '../../../../shared/i18n';
 import { FormDialog } from '../../../components/FormDialog';
 import { RhfSwitch } from '../../../components/RhfSwitch';
 import type { LiteAdminCity } from '../../../graphql/catalogue';
-import { cityValuesFrom, emptyCityValues, makeCitySchema, type CityFormValues } from './city.types';
+import { CITY_REGIONS, cityValuesFrom, emptyCityValues, makeCitySchema, type CityFormValues } from './city.types';
 
 interface Props {
   open: boolean;
@@ -38,6 +38,13 @@ export function CityForm({ open, initial, busy, onClose, onSubmit }: Readonly<Pr
         <RhfTextField control={control} name="name" label={t('litePortal.common.name')} required disabled={busy} slotProps={{ htmlInput: { 'data-testid': 'city-name' } }} />
         <RhfTextField control={control} name="slug" label={t('litePortal.common.slug')} hint={t('litePortal.common.slugHint')} disabled={busy} slotProps={{ htmlInput: { 'data-testid': 'city-slug' } }} />
         <RhfTextField control={control} name="country" label={t('litePortal.cities.country')} hint={t('litePortal.cities.countryHint')} disabled={busy} slotProps={{ htmlInput: { 'data-testid': 'city-country' } }} />
+        <RhfTextField control={control} name="region" select label={t('litePortal.cities.region')} hint={t('litePortal.cities.regionHint')} disabled={busy} slotProps={{ select: { SelectDisplayProps: { 'data-testid': 'city-region' } as Record<string, string> } }}>
+          {CITY_REGIONS.map((region) => (
+            <MenuItem key={region} value={region}>
+              {t(`litePortal.cities.regions.${region}`)}
+            </MenuItem>
+          ))}
+        </RhfTextField>
         <RhfTextField
           control={control}
           name="cover_url"

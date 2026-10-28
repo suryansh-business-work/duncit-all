@@ -17,6 +17,7 @@ const developmentUrls = {
   // console (and its /connect consent page) is the Vite dev server.
   mcpUrl: 'http://localhost:2001',
   mcpPortalUrl: 'http://localhost:2046',
+  liteUrl: 'http://localhost:2040',
   supportEmail: 'support@duncit.local',
   fromEmail: 'Duncit <noreply@duncit.local>',
 };
@@ -36,6 +37,7 @@ const productionUrls = {
   productsUrl: 'https://products.duncit.com',
   mcpUrl: 'https://mcp.duncit.com',
   mcpPortalUrl: 'https://mcp.duncit.com',
+  liteUrl: 'https://lite.duncit.com',
   supportEmail: 'support@duncit.com',
   fromEmail: 'Duncit <noreply@duncit.com>',
 };
@@ -84,6 +86,9 @@ export async function getUrlConfigs() {
     mcpUrl: await configValue('MCP_URL', defaults.mcpUrl),
     // Where /authorize sends a person to sign in and approve a connection.
     mcpPortalUrl: await configValue('MCP_PORTAL_URL', defaults.mcpPortalUrl),
+    // Duncit Lite's API, which the MCP "lite" connector calls on a person's
+    // behalf with a signed one-minute assertion (never Lite's database).
+    liteUrl: await configValue('LITE_URL', defaults.liteUrl),
     supportEmail: await configValue('SUPPORT_EMAIL', defaults.supportEmail),
     mail: {
       host: await getRuntimeEnvValue('SMTP_HOST'),

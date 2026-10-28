@@ -13,14 +13,14 @@ interface CoverUploaderProps {
   label: string;
   value: string;
   onChange: (url: string) => void;
-  /** The preview's shape: a wide cover or a square avatar. */
-  shape?: 'cover' | 'avatar';
+  /** The preview's shape: a wide cover, a square event cover, or a small avatar. */
+  shape?: 'cover' | 'square' | 'avatar';
   hint?: string;
   error?: string;
   testId?: string;
 }
 
-const SHAPES = { cover: { width: 640, height: 360, max: 480 }, avatar: { width: 160, height: 160, max: 160 } } as const;
+const SHAPES = { cover: { width: 640, height: 360, max: 480 }, square: { width: 640, height: 640, max: 420 }, avatar: { width: 160, height: 160, max: 160 } } as const;
 
 /** Pick a picture from the device (uploaded to the API) or paste a URL; shows the result with the bundled fallback behind it. */
 export function CoverUploader({ label, value, onChange, shape = 'cover', hint, error, testId = 'cover-uploader' }: Readonly<CoverUploaderProps>) {

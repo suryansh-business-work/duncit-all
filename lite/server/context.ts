@@ -1,44 +1,31 @@
 import type { Request, Response } from 'express';
-import jwt from 'jsonwebtoken';
-import { env } from './config/env';
+import { MCP_ASSERTION_HEADER, verifyMcpAssertion, type McpScope } from './mcp/assertion';
 import { LiteUserModel, type LiteUserDoc } from './models/user.model';
+import { authService } from './services/auth.service';
 import { forbidden, unauthenticated } from './utils/errors';
+import { decodeAuthUser, type AuthUser } from './utils/token';
 
-export interface AuthUser {
-  id: string;
-  email: string;
-  is_admin: boolean;
-}
+export { decodeAuthUser, signToken, type AuthUser, type TokenClaims } from './utils/token';
 
 export interface LiteContext {
   req: Request;
   res: Response;
   user: AuthUser | null;
+  /** Set when the call came through the MCP connector, with the connection's scope. */
+  mcp?: { scope: McpScope };
 }
 
-export interface TokenClaims {
-  sub: string;
-  email: string;
-  admin: boolean;
-}
-
-export function signToken(user: { _id: unknown; email: string; is_admin: boolean }): string {
-  const claims: TokenClaims = { sub: String(user._id), email: user.email, admin: user.is_admin };
-  return jwt.sign(claims, env.jwtSecret, { expiresIn: '90d' });
-}
-
-/** The verified account behind an `Authorization: Bearer …` header, or null. */
-export function decodeAuthUser(authorization?: string | null): AuthUser | null {
-  if (!authorization?.startsWith('Bearer ')) return null;
-  try {
-    const claims = jwt.verify(authorization.slice(7), env.jwtSecret) as TokenClaims;
-    return { id: claims.sub, email: claims.email, is_admin: Boolean(claims.admin) };
-  } catch {
-    return null;
-  }
-}
-
+/**
+ * The person behind a request: a session token, or — for a call through
+ * mcp.duncit.com — a signed MCP assertion, whose email finds (or makes) the
+ * Lite account exactly as signing in with that email would.
+ */
 export async function buildContext({ req, res }: { req: Request; res: Response }): Promise<LiteContext> {
+  const assertion = verifyMcpAssertion(req.headers[MCP_ASSERTION_HEADER]);
+  if (assertion?.purpose === 'call' && assertion.email) {
+    const account = await authService.accountForEmail(assertion.email, assertion.name, assertion.duncit_user_id);
+    return { req, res, user: { id: String(account._id), email: account.email ?? '', is_admin: account.is_admin }, mcp: { scope: assertion.scope } };
+  }
   return { req, res, user: decodeAuthUser(req.headers.authorization) };
 }
 

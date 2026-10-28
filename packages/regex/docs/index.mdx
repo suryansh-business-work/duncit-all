@@ -35,6 +35,8 @@ exports:
   - 'HOSTNAME_LABEL'
   - 'USERNAME'
   - 'URL_SLUG'
+  - 'SOCIAL_HANDLE'
+  - 'UNDERSCORE_HANDLE'
   - 'SITE_PATH'
   - 'CSS_VARIABLE'
   - 'FONT_FAMILY'
@@ -49,6 +51,8 @@ exports:
   - 'isUsername'
   - 'isHostname'
   - 'isUrlSlug'
+  - 'isSocialHandle'
+  - 'isUnderscoreHandle'
   - 'isSitePath'
   - 'isCssVariable'
   - 'isFontFamily'
@@ -203,6 +207,8 @@ above holds for everything you can import.
 | `GA_MEASUREMENT_ID` | `/^G-[A-Z\d]{6,16}$/` | — | a GA4 measurement id — `G-V0CTVZFGM0` |
 | `USERNAME` | `/^(?=.{3,30}$)[a-z0-9]+(?:-[a-z0-9]+)*$/` | `isUsername` | a Duncit @handle — `suryansh-srivastava-7k2f` |
 | `URL_SLUG` | `/^[a-z0-9]+(?:-[a-z0-9]+)*$/` | `isUrlSlug` | a page or post slug — `summer-meetups-2026` |
+| `SOCIAL_HANDLE` | `/^[A-Za-z0-9._-]{1,100}$/` | `isSocialHandle` | a social-network handle without the `@` — `duncit.events`; a pasted link is refused |
+| `UNDERSCORE_HANDLE` | `/^[a-z0-9][a-z0-9_]{1,28}[a-z0-9]$/` | `isUnderscoreHandle` | a 3–30 character handle with inner underscores — `run_club` (Duncit Lite) |
 | `SITE_PATH` | `/^\/(?:[a-z0-9]+(?:[-/][a-z0-9]+)*)?$/` | `isSitePath` | a website page path — `/`, `/safety/tools`; no trailing slash |
 | `CSS_VARIABLE` | `/^--[a-z0-9-]{1,60}$/` | `isCssVariable` | a design token name — `--color-primary` |
 | `FONT_FAMILY` | `/^[A-Za-z0-9][A-Za-z0-9 -]{0,79}$/` | `isFontFamily` | a font family name — `Plus Jakarta Sans`; no quotes, commas or semicolons |

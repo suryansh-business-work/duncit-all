@@ -1,11 +1,18 @@
 import { z } from 'zod';
 import type { Translate } from '@duncit/forms/schemas';
+import { SETTING_BOUNDS } from '../../../../shared/limits';
+import { countRule } from '../../../components/countRule';
 import type { LiteAdminCity, LiteCityInput } from '../../../graphql/catalogue';
+
+/** The tabs of the web app's "Explore local events", in display order. */
+export const CITY_REGIONS = ['ASIA_PACIFIC', 'EUROPE', 'AFRICA', 'NORTH_AMERICA', 'SOUTH_AMERICA'] as const;
+export type CityRegion = (typeof CITY_REGIONS)[number];
 
 export interface CityFormValues {
   name: string;
   slug: string;
   country: string;
+  region: CityRegion;
   cover_url: string;
   featured: boolean;
   /** Kept as text in the form; parsed on submit. */
@@ -13,7 +20,6 @@ export interface CityFormValues {
   is_active: boolean;
 }
 
-const DIGITS = /^\d*$/;
 
 const isBlankOrHttpUrl = (value: string): boolean => {
   if (value === '') return true;
@@ -25,12 +31,13 @@ const isBlankOrHttpUrl = (value: string): boolean => {
   }
 };
 
-export const emptyCityValues = (): CityFormValues => ({ name: '', slug: '', country: '', cover_url: '', featured: false, sort_order: '0', is_active: true });
+export const emptyCityValues = (): CityFormValues => ({ name: '', slug: '', country: '', region: 'ASIA_PACIFIC', cover_url: '', featured: false, sort_order: '0', is_active: true });
 
 export const cityValuesFrom = (city: LiteAdminCity): CityFormValues => ({
   name: city.name,
   slug: city.slug,
   country: city.country,
+  region: city.region,
   cover_url: city.cover_url ?? '',
   featured: city.featured,
   sort_order: String(city.sort_order),
@@ -41,6 +48,7 @@ export const toCityInput = (values: CityFormValues): LiteCityInput => ({
   name: values.name,
   slug: values.slug || null,
   country: values.country || null,
+  region: values.region,
   cover_url: values.cover_url || null,
   featured: values.featured,
   sort_order: values.sort_order === '' ? 0 : Number(values.sort_order),
@@ -54,9 +62,10 @@ export const makeCitySchema = (t: Translate) => {
     name: z.string().trim().min(1, t('litePortal.validation.required', { vars: { field: name } })).max(60, max(name, 60)),
     slug: z.string().trim().max(80, max(t('litePortal.common.slug'), 80)),
     country: z.string().trim().max(60, max(t('litePortal.cities.country'), 60)),
+    region: z.enum(CITY_REGIONS),
     cover_url: z.string().trim().refine(isBlankOrHttpUrl, t('litePortal.validation.url', { vars: { field: t('litePortal.cities.coverUrl') } })),
     featured: z.boolean(),
-    sort_order: z.string().trim().regex(DIGITS, t('litePortal.validation.integer', { vars: { field: t('litePortal.common.sortOrder') } })),
+    sort_order: countRule(t, t('litePortal.common.sortOrder'), SETTING_BOUNDS.sortOrder, true),
     is_active: z.boolean(),
   });
 };

@@ -14,6 +14,9 @@ import { vi } from 'vitest';
 export { useTranslation } from '../../../../../packages/shell/src/i18n/useTranslation';
 export { fallbackT } from '../../../../../packages/shell/src/i18n/fallback';
 
+/** The API URL config/url-configs.ts reads at import: a local, non-staging server, so links stay on dev. */
+export const resolvePortalGraphqlUrl = (): string => 'http://localhost:2001/graphql';
+
 export const AppIcon = ({ name }: any) => <span data-testid="app-icon">{name}</span>;
 
 export const WelcomeDashboard = ({ name, tagline, children }: any) => (

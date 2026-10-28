@@ -20,7 +20,11 @@ export function GiftCardRedeemScreen() {
   const { t } = useTranslation();
   const [mode, setMode] = useState<RedeemMode>('code');
   const modes: readonly SegmentOption<RedeemMode>[] = [
-    { value: 'code', label: t('mweb.giftCards.redeemModeCode'), testID: 'gift-card-redeem-tab-code' },
+    {
+      value: 'code',
+      label: t('mweb.giftCards.redeemModeCode'),
+      testID: 'gift-card-redeem-tab-code',
+    },
     {
       value: 'physical',
       label: t('mweb.giftCards.redeemModePhysical'),

@@ -3,10 +3,12 @@ import { LiteRegistrationModel, type LiteRegistrationDoc, type RegistrationStatu
 import { LiteUserModel, type LiteUserDoc } from '../models/user.model';
 import { badInput, forbidden, notFound } from '../utils/errors';
 import { checkInCode } from '../utils/ids';
-import { cleanText } from '../utils/validate';
+import { cleanText, wholeNumber } from '../utils/validate';
 import { eventService } from './event.service';
 import { notifications } from './notifications';
 import { seatsHeld, toPublicEvent, toPublicRegistration, type Viewer } from './projections';
+import { parseTicketQr } from './qr';
+import { settingsService } from './settings.service';
 
 export interface RegisterInput {
   ticket_id: string;
@@ -49,6 +51,22 @@ async function initialStatus(event: LiteEventDoc, quantity: number, paid: boolea
 
 async function bump(event: LiteEventDoc, ticketId: string, delta: number): Promise<void> {
   await LiteEventModel.updateOne({ _id: event._id, 'tickets._id': ticketId }, { $inc: { 'tickets.$.sold': delta } });
+}
+
+/**
+ * Take `quantity` seats on a limited ticket in ONE conditional update, so two
+ * guests racing for the last seat cannot both get it. False when it sold out.
+ */
+async function reserveSeats(event: LiteEventDoc, ticket: { _id: unknown; quantity?: number | null }, quantity: number): Promise<boolean> {
+  if (ticket.quantity == null) {
+    await bump(event, String(ticket._id), quantity);
+    return true;
+  }
+  const res = await LiteEventModel.updateOne(
+    { _id: event._id, tickets: { $elemMatch: { _id: ticket._id, sold: { $lte: ticket.quantity - quantity } } } },
+    { $inc: { 'tickets.$.sold': quantity } },
+  );
+  return res.modifiedCount === 1;
 }
 
 async function waitlistPosition(reg: { event_id: unknown; created_at?: Date | null }): Promise<number> {
@@ -137,15 +155,20 @@ export const registrationService = {
     // A PRIVATE event is refused exactly as bySlug hides it, so a direct call cannot learn it exists.
     if (event?.status !== 'PUBLISHED' || event.hidden || !(await eventService.isVisibleTo(event, viewerOf(user)))) throw notFound('Event');
     if (event.end_at.getTime() < Date.now()) throw badInput('This event has already ended');
+    if (event.registration_open === false) throw badInput('The host has closed registration for this event');
     const existing = await LiteRegistrationModel.findOne({ event_id: event._id, user_id: user._id });
     const existingStatus = existing?.status;
     if (existingStatus !== undefined && !LAPSED_STATUSES.has(existingStatus)) throw badInput('You are already registered for this event');
     const ticket = event.tickets.find((t) => String(t._id) === input.ticket_id && t.is_active !== false);
     if (!ticket) throw badInput('Pick a ticket type');
-    const quantity = Math.min(10, Math.max(1, Math.trunc(input.quantity ?? 1)));
+    const { max_seats_per_registration: maxSeats } = await settingsService.get();
+    const quantity = wholeNumber(input.quantity ?? 1, 'Number of seats', { min: 1, max: maxSeats ?? 10 });
     if (ticket.quantity != null && ticket.sold + quantity > ticket.quantity) throw badInput('That ticket type is sold out');
+    const answers = cleanAnswers(event, input.answers);
     const paid = ticket.price > 0;
     const status = await initialStatus(event, quantity, paid);
+    // Seats are taken before the registration is written; a write that fails gives them back.
+    if (status !== 'WAITLISTED' && !(await reserveSeats(event, ticket, quantity))) throw badInput('That ticket type is sold out');
     const fields = {
       event_id: event._id,
       user_id: user._id,
@@ -160,18 +183,22 @@ export const registrationService = {
       payment_reference: '',
       payment_note: '',
       payment_confirmed_at: null,
-      answers: cleanAnswers(event, input.answers),
+      answers,
       checked_in_at: null,
       approved_at: null,
       cancelled_at: null,
       event_title: event.title,
       event_start_at: event.start_at,
-      user_email: user.email,
+      user_email: user.email ?? '',
       user_name: user.name,
     };
     const reg = existing ? Object.assign(existing, fields) : new LiteRegistrationModel(fields);
-    await reg.save();
-    if (status !== 'WAITLISTED') await bump(event, reg.ticket_id, quantity);
+    try {
+      await reg.save();
+    } catch (error) {
+      if (status !== 'WAITLISTED') await bump(event, String(ticket._id), -quantity);
+      throw error;
+    }
     const template = STATUS_TEMPLATE[status];
     const position = status === 'WAITLISTED' ? await waitlistPosition(reg) : null;
     if (template) notifications.guestStatus(event, { ...reg.toObject(), waitlist_position: position }, template);
@@ -225,15 +252,22 @@ export const registrationService = {
     return project(reg, viewerOf(user));
   },
 
-  async checkInByCode(user: LiteUserDoc, eventId: string, code: string) {
+  /**
+   * Check a guest in from the code a host typed or the QR they scanned. The
+   * stamp is one conditional update, so two door phones scanning the same
+   * ticket at once cannot both let it in.
+   */
+  async checkInByCode(user: LiteUserDoc, eventId: string, rawCode: string) {
     const event = await eventService.requireHosted(eventId, user);
-    const reg = await LiteRegistrationModel.findOne({ event_id: event._id, code: code.trim().toUpperCase() });
+    const scanned = parseTicketQr(String(rawCode ?? ''));
+    if (scanned && scanned.eventId !== String(event._id)) throw badInput('This ticket is for a different event');
+    const code = scanned?.code ?? cleanText(rawCode, 40, 'Check-in code', true).toUpperCase();
+    const reg = await LiteRegistrationModel.findOne({ event_id: event._id, code });
     if (!reg) throw notFound('A ticket with that code');
     if (reg.status !== 'CONFIRMED') throw badInput(`This ticket is ${reg.status.toLowerCase().replaceAll('_', ' ')}, not confirmed`);
-    if (reg.checked_in_at) throw badInput('This ticket was already checked in');
-    reg.checked_in_at = new Date();
-    await reg.save();
-    return project(reg, viewerOf(user));
+    const stamped = await LiteRegistrationModel.findOneAndUpdate({ _id: reg._id, checked_in_at: null }, { $set: { checked_in_at: new Date() } }, { new: true });
+    if (!stamped) throw badInput('This ticket was already checked in');
+    return project(stamped, viewerOf(user));
   },
 
   async mine(user: LiteUserDoc, past: boolean) {

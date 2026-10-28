@@ -24,8 +24,8 @@ describe('Duncit HR app config', () => {
     expect(appConfig.loginImage).toContain('pexels.com');
   });
 
-  it('exposes a single Dashboard nav entry', () => {
-    expect(appConfig.nav.map((n) => n.to)).toEqual(['/']);
+  it('exposes the Dashboard and Team Structure nav entries', () => {
+    expect(appConfig.nav.map((n) => n.to)).toEqual(['/', '/team-structure']);
     expect(appConfig.nav[0].label).toBe('Dashboard');
     expect(appConfig.nav[0].icon).toBe('dashboard');
   });

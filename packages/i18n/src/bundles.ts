@@ -37,6 +37,7 @@ import { LOYALTY_BUNDLE } from './bundles/loyalty';
 import { TESTS_BUNDLE } from './bundles/tests';
 import { TESTS_UNIT_BUNDLE } from './bundles/tests-unit';
 import { TESTS_MANUAL_BUNDLE } from './bundles/tests-manual';
+import { HR_BUNDLE } from './bundles/hr';
 import { POD_REQUESTS_BUNDLE } from './bundles/pod-requests';
 import { CLUB_ADMIN_BUNDLE } from './bundles/club-admin';
 import { FULFILMENT_BUNDLE } from './bundles/fulfilment';
@@ -145,6 +146,7 @@ export {
   TESTS_BUNDLE,
   TESTS_UNIT_BUNDLE,
   TESTS_MANUAL_BUNDLE,
+  HR_BUNDLE,
   POD_REQUESTS_BUNDLE,
   CLUB_ADMIN_BUNDLE,
   FULFILMENT_BUNDLE,
@@ -172,6 +174,7 @@ const financeBranch = (key: string) => catalogueBranch(catalogueBranch(FINANCE_B
  */
 export const LOYALTY_CONSOLE_CATALOGUE: NestedCatalogue = {
   ...LOYALTY_BUNDLE,
+  ...HR_BUNDLE,
   finance: {
     duncitCoin: financeBranch('duncitCoin'),
     giftCards: financeBranch('giftCards'),
@@ -219,6 +222,7 @@ export const SURFACE_BUNDLES: Record<string, NestedCatalogue> = {
   tests: TESTS_BUNDLE,
   testsUnit: TESTS_UNIT_BUNDLE,
   testsManual: TESTS_MANUAL_BUNDLE,
+  hr: HR_BUNDLE,
   podRequests: POD_REQUESTS_BUNDLE,
   clubAdmin: CLUB_ADMIN_BUNDLE,
   fulfilment: FULFILMENT_BUNDLE,

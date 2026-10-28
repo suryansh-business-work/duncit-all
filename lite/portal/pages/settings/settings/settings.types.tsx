@@ -1,6 +1,9 @@
 import { z } from 'zod';
 import { EMAIL } from '@duncit/regex';
 import type { Translate } from '@duncit/forms/schemas';
+import { SETTING_BOUNDS, countIssue } from '../../../../shared/limits';
+import { isTimeZone, timeZoneOptions } from '../../../../shared/timezones';
+import { countRule } from '../../../components/countRule';
 import type { LiteAdminSettings } from '../../../graphql/admin';
 
 /** Lists are edited as comma-separated text; numbers as text; parsed on submit. */
@@ -19,13 +22,14 @@ export interface SettingsFormValues {
   upi_help_text: string;
   admin_emails: string;
   max_ticket_price: string;
+  max_event_capacity: string;
+  max_seats_per_registration: string;
+  sign_in_with_phone: boolean;
 }
 
-/** Every IANA zone the browser knows, read once. */
-export const TIME_ZONES: readonly string[] = Intl.supportedValuesOf('timeZone');
-const TIME_ZONE_SET: ReadonlySet<string> = new Set(TIME_ZONES);
+/** Every zone the browser lists, read once; the picker adds the saved one when the browser knows it by another name. */
+export const TIME_ZONES: readonly string[] = timeZoneOptions();
 
-const DIGITS = /^\d+$/;
 const HOURS_LIST = /^\d+(\s*,\s*\d+)*$/;
 const CURRENCY = /^[A-Z]{3}$/;
 
@@ -60,6 +64,9 @@ export const settingsValuesFrom = (settings: LiteAdminSettings): SettingsFormVal
   upi_help_text: settings.upi_help_text,
   admin_emails: settings.admin_emails.join(', '),
   max_ticket_price: String(settings.max_ticket_price),
+  max_event_capacity: String(settings.max_event_capacity),
+  max_seats_per_registration: String(settings.max_seats_per_registration),
+  sign_in_with_phone: settings.sign_in_with_phone,
 });
 
 export const toSettingsInput = (values: SettingsFormValues): Partial<LiteAdminSettings> => ({
@@ -77,6 +84,9 @@ export const toSettingsInput = (values: SettingsFormValues): Partial<LiteAdminSe
   upi_help_text: values.upi_help_text,
   admin_emails: splitList(values.admin_emails).map((email) => email.toLowerCase()),
   max_ticket_price: Number(values.max_ticket_price),
+  max_event_capacity: Number(values.max_event_capacity),
+  max_seats_per_registration: Number(values.max_seats_per_registration),
+  sign_in_with_phone: values.sign_in_with_phone,
 });
 
 export const makeSettingsSchema = (t: Translate) => {
@@ -89,7 +99,7 @@ export const makeSettingsSchema = (t: Translate) => {
   return z.object({
     site_name: z.string().trim().min(1, required(siteName)).max(80, max(siteName, 80)),
     support_email: z.string().trim().toLowerCase().min(1, required(t('litePortal.settings.supportEmail'))).email(t('litePortal.validation.email')),
-    default_timezone: z.string().refine((zone) => TIME_ZONE_SET.has(zone), t('litePortal.validation.timezone')),
+    default_timezone: z.string().refine(isTimeZone, t('litePortal.validation.timezone')),
     date_format: z.string().trim().min(1, required(dateFormat)).max(40, max(dateFormat, 40)),
     time_format: z.string().trim().min(1, required(timeFormat)).max(40, max(timeFormat, 40)),
     currency: z.string().trim().toUpperCase().regex(CURRENCY, t('litePortal.settings.currencyHint')),
@@ -97,9 +107,15 @@ export const makeSettingsSchema = (t: Translate) => {
     duncit_graphql_url: z.string().trim().refine(isBlankOrHttpUrl, url(t('litePortal.settings.duncitGraphqlUrl'))),
     duncit_app_url: z.string().trim().refine(isBlankOrHttpUrl, url(t('litePortal.settings.duncitAppUrl'))),
     reminders_enabled: z.boolean(),
-    reminder_hours_before: z.string().trim().refine((text) => text === '' || HOURS_LIST.test(text), t('litePortal.validation.hoursList')),
+    reminder_hours_before: z
+      .string()
+      .trim()
+      .refine((text) => text === '' || (HOURS_LIST.test(text) && splitList(text).every((hour) => countIssue(hour, SETTING_BOUNDS.reminderHour) === null)), t('litePortal.validation.hoursList')),
     upi_help_text: z.string().trim().max(500, max(t('litePortal.settings.upiHelpText'), 500)),
     admin_emails: z.string().trim().refine((text) => splitList(text).every((email) => EMAIL.test(email)), t('litePortal.validation.emailsList')),
-    max_ticket_price: z.string().trim().regex(DIGITS, t('litePortal.validation.integer', { vars: { field: t('litePortal.settings.maxTicketPrice') } })),
+    max_ticket_price: countRule(t, t('litePortal.settings.maxTicketPrice'), SETTING_BOUNDS.ticketPrice),
+    max_event_capacity: countRule(t, t('litePortal.settings.maxEventCapacity'), SETTING_BOUNDS.eventCapacity),
+    max_seats_per_registration: countRule(t, t('litePortal.settings.maxSeats'), SETTING_BOUNDS.seatsPerRegistration),
+    sign_in_with_phone: z.boolean(),
   });
 };

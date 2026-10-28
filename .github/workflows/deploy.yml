@@ -2508,6 +2508,9 @@ jobs:
           LITE_MONGO_URI:        ${{ github.ref_name == 'staging' && secrets.STAGING_LITE_MONGO_URI || secrets.LITE_MONGO_URI }}
           LITE_JWT_SECRET:       ${{ github.ref_name == 'staging' && secrets.STAGING_LITE_JWT_SECRET || secrets.LITE_JWT_SECRET }}
           LITE_ADMIN_EMAILS:     ${{ secrets.LITE_ADMIN_EMAILS }}
+          # Shared by the API (mcp.duncit.com's "lite" connector signs with it) and
+          # Lite (verifies). Unset = the connector stays off; nothing else changes.
+          LITE_MCP_SECRET:       ${{ github.ref_name == 'staging' && secrets.STAGING_LITE_MCP_SECRET || secrets.LITE_MCP_SECRET }}
         run: |
           envsubst '$DOCKERHUB_USERNAME' < "${{ env.COMPOSE_SRC }}" > /tmp/docker-compose.yml
           # OpenWA gateway env (SQLite + session data on the mounted /app/data
@@ -2531,6 +2534,8 @@ jobs:
           cat > /tmp/server.env <<EOF
           NODE_ENV=production
           PORT=2001
+          LITE_URL=http://lite:2040
+          LITE_MCP_SECRET=${LITE_MCP_SECRET}
           MONGO_URI=${MONGO_URI}
           JWT_SECRET=${JWT_SECRET}
           OPENWA_API_MASTER_KEY=${OPENWA_API_MASTER_KEY}
@@ -2647,6 +2652,7 @@ jobs:
           LITE_ADMIN_EMAILS=${LITE_ADMIN_EMAILS:-admin@duncit.com}
           DUNCIT_GRAPHQL_URL=${{ env.GRAPHQL_URL }}
           DUNCIT_APP_URL=${{ env.MWEB_URL }}
+          LITE_MCP_SECRET=${LITE_MCP_SECRET}
           EOF
 
       - name: Push files to VPS

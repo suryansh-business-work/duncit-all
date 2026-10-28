@@ -32,7 +32,7 @@ export const MCP_CATEGORIES = [
   { key: 'gig-jobs', label: 'Gig jobs', description: 'Gigs, freelancers and their interests.' },
   { key: 'ai', label: 'AI', description: 'AI features, the prompt library, usage, monitoring, automations, reels and the Agent.' },
   { key: 'website', label: 'Website & CMS', description: 'Website content, navigation, reels, CMS pages, public pages and newsletter.' },
-  { key: 'hr', label: 'HR', description: 'Job applications.' },
+  { key: 'hr', label: 'HR', description: 'Job applications and the team structure (seats, salary, share links).' },
   { key: 'legal', label: 'Legal', description: 'Policies, acceptances, legal documents, contracts and grievances.' },
   { key: 'support', label: 'Support', description: 'FAQs, tickets and support chats.' },
   { key: 'moderation', label: 'Moderation', description: 'Content moderation and user reports.' },
@@ -47,9 +47,21 @@ export const MCP_CATEGORIES = [
   { key: 'ads', label: 'Ads', description: 'Ad requests and campaigns.' },
   { key: 'chat', label: 'Chat', description: 'Pod chats and staff chat.' },
   { key: 'mcp', label: 'MCP', description: 'This MCP service: its tools, connections and usage.' },
+  {
+    key: 'lite',
+    label: 'Duncit Lite',
+    description: 'Duncit Lite events (lite.duncit.com): discover, create and manage events, guests, check-in, calendars and the Lite console — as your Lite account (same email).',
+  },
 ] as const;
 
 export type McpCategoryKey = (typeof MCP_CATEGORIES)[number]['key'];
+
+/**
+ * Categories whose tools come from another product's API rather than a module
+ * of this one — they are filled at run time (see lite/lite.catalog.ts), so no
+ * module is filed under them.
+ */
+export const REMOTE_CATEGORIES: ReadonlySet<McpCategoryKey> = new Set<McpCategoryKey>(['lite']);
 export type ModuleName = keyof typeof typeDefsByModule;
 
 export const MODULE_CATEGORY: Record<ModuleName, McpCategoryKey | null> = {
@@ -205,6 +217,7 @@ export const MODULE_CATEGORY: Record<ModuleName, McpCategoryKey | null> = {
   contactTypeDefs: 'website',
 
   jobApplicationTypeDefs: 'hr',
+  teamStructureTypeDefs: 'hr',
 
   policyTypeDefs: 'legal',
   policyAcceptanceTypeDefs: 'legal',

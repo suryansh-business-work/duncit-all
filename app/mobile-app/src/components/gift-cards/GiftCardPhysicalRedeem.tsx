@@ -48,7 +48,9 @@ export function GiftCardPhysicalRedeem() {
   };
 
   if (result) {
-    return <GiftCardRedeemSuccess coinsAdded={result.coins_added} coinBalance={result.coin_balance} />;
+    return (
+      <GiftCardRedeemSuccess coinsAdded={result.coins_added} coinBalance={result.coin_balance} />
+    );
   }
   return <PhysicalGiftCardForm saving={saving} errorMessage={error} onSubmit={submit} />;
 }

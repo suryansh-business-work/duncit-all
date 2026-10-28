@@ -6,7 +6,9 @@ import {
   LITE_USER_FIELDS,
   type LiteEvent,
   type LiteEventCard,
+  type LiteEventThemeKey,
   type LiteMe,
+  type LiteThemeAccent,
 } from '../../shared/graphql/documents';
 import type { LiteEventFilterVars } from './types';
 
@@ -116,6 +118,11 @@ export interface LiteEventInput {
   questions: LiteQuestionInput[];
   upi_id: string | null;
   upi_name: string | null;
+  place_id: string | null;
+  lat: number | null;
+  lng: number | null;
+  registration_open?: boolean;
+  theme: { key: LiteEventThemeKey; accent: LiteThemeAccent };
 }
 
 export const LITE_CREATE_EVENT: TypedDocumentNode<{ liteCreateEvent: LiteEvent }, { input: LiteEventInput }> = gql`
@@ -161,4 +168,56 @@ export const LITE_DUPLICATE_EVENT: TypedDocumentNode<{ liteDuplicateEvent: LiteE
     }
   }
   ${LITE_EVENT_FIELDS}
+`;
+
+export const LITE_SET_REGISTRATION_OPEN: TypedDocumentNode<{ liteSetRegistrationOpen: LiteEvent }, { id: string; open: boolean }> = gql`
+  mutation LiteSetRegistrationOpen($id: ID!, $open: Boolean!) {
+    liteSetRegistrationOpen(id: $id, open: $open) {
+      ...LiteEventFields
+    }
+  }
+  ${LITE_EVENT_FIELDS}
+`;
+
+export const LITE_CHANGE_EVENT_SLUG: TypedDocumentNode<{ liteChangeEventSlug: LiteEvent }, { id: string; slug: string }> = gql`
+  mutation LiteChangeEventSlug($id: ID!, $slug: String!) {
+    liteChangeEventSlug(id: $id, slug: $slug) {
+      ...LiteEventFields
+    }
+  }
+  ${LITE_EVENT_FIELDS}
+`;
+
+export const LITE_TRACK_EVENT_VIEW: TypedDocumentNode<{ liteTrackEventView: boolean }, { slug: string }> = gql`
+  mutation LiteTrackEventView($slug: String!) {
+    liteTrackEventView(slug: $slug)
+  }
+`;
+
+export interface LiteInsightDay {
+  day: string;
+  views: number;
+  registrations: number;
+}
+
+export interface LiteEventInsights {
+  days: number;
+  total_views: number;
+  total_registrations: number;
+  series: LiteInsightDay[];
+}
+
+export const LITE_EVENT_INSIGHTS: TypedDocumentNode<{ liteEventInsights: LiteEventInsights }, { event_id: string; days?: number | null }> = gql`
+  query LiteEventInsights($event_id: ID!, $days: Int) {
+    liteEventInsights(event_id: $event_id, days: $days) {
+      days
+      total_views
+      total_registrations
+      series {
+        day
+        views
+        registrations
+      }
+    }
+  }
 `;

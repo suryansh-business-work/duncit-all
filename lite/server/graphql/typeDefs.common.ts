@@ -55,10 +55,53 @@ export const commonTypeDefs = gql`
     CO_HOST
   }
 
-  "Which service proved the email: Lite's own code, or the person's Duncit account."
+  "Which service proved the contact: Lite's own email code, the person's Duncit account, or an SMS."
   enum LiteSignInVia {
     LITE
     DUNCIT
+    SMS
+  }
+
+  "A contact a signed-in account can add or change, proved by a code."
+  enum LiteContactKind {
+    EMAIL
+    PHONE
+  }
+
+  enum LiteDisplayMode {
+    SYSTEM
+    LIGHT
+    DARK
+  }
+
+  "The tabs of Discover's Explore local events."
+  enum LiteCityRegion {
+    ASIA_PACIFIC
+    EUROPE
+    AFRICA
+    NORTH_AMERICA
+    SOUTH_AMERICA
+  }
+
+  "How an event page dresses itself."
+  enum LiteEventThemeKey {
+    MINIMAL
+    GRADIENT
+    AMBIENT
+    PATTERN
+    CONFETTI
+  }
+
+  enum LiteThemeAccent {
+    DEFAULT
+    RED
+    ORANGE
+    AMBER
+    GREEN
+    TEAL
+    BLUE
+    PURPLE
+    PINK
   }
 
   enum LiteRegistrationAction {

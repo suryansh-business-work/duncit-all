@@ -1,10 +1,11 @@
 import { Navigate, useParams } from 'react-router';
 import { useQuery } from '@apollo/client/react';
-import { Container, Stack } from '@mui/material';
-import { PageHeader, QueryGuard } from '@duncit/ui';
+import { Box, Typography } from '@mui/material';
+import { QueryGuard } from '@duncit/ui';
 import { useWebT } from '../../../shared/i18n';
 import { SignedInGate } from '../../components/SignedInGate';
 import { LITE_EVENT } from '../../graphql/events';
+import { visuallyHidden } from '../../lib/a11y';
 import { paths } from '../../lib/paths';
 import { usePageTitle } from '../../lib/usePageTitle';
 import { NotFoundPage } from '../not-found';
@@ -14,19 +15,21 @@ export { EventForm } from './event.form';
 export { eventDefaults, makeEventSchema, toEventInput } from './event.types';
 export type { EventFormValues } from './event.types';
 
-/** /create */
+const PAGE_SX = { maxWidth: 980, mx: 'auto' } as const;
+
+/** /create — one page: cover and theme on the left, everything else on the right. */
 export function CreateEventPage() {
   const { t } = useWebT();
   usePageTitle(t('liteWeb.eventForm.createTitle'));
   return (
-    <Container maxWidth="md" disableGutters>
-      <Stack spacing={3} data-testid="create-event-page">
-        <PageHeader title={t('liteWeb.eventForm.createTitle')} subtitle={t('liteWeb.eventForm.createSubtitle')} titleVariant="h4" />
-        <SignedInGate body={t('liteWeb.eventForm.gate')}>
-          <EventForm event={null} />
-        </SignedInGate>
-      </Stack>
-    </Container>
+    <Box sx={PAGE_SX} data-testid="create-event-page">
+      <Typography variant="h1" sx={visuallyHidden}>
+        {t('liteWeb.eventForm.createTitle')}
+      </Typography>
+      <SignedInGate body={t('liteWeb.eventForm.gate')}>
+        <EventForm event={null} />
+      </SignedInGate>
+    </Box>
   );
 }
 
@@ -50,13 +53,13 @@ export function EditEventPage() {
   const { slug = '' } = useParams();
   usePageTitle(t('liteWeb.eventForm.editTitle'));
   return (
-    <Container maxWidth="md" disableGutters>
-      <Stack spacing={3} data-testid="edit-event-page">
-        <PageHeader title={t('liteWeb.eventForm.editTitle')} titleVariant="h4" />
-        <SignedInGate body={t('liteWeb.eventForm.gate')}>
-          <EditLoader slug={slug} />
-        </SignedInGate>
-      </Stack>
-    </Container>
+    <Box sx={PAGE_SX} data-testid="edit-event-page">
+      <Typography variant="h1" sx={visuallyHidden}>
+        {t('liteWeb.eventForm.editTitle')}
+      </Typography>
+      <SignedInGate body={t('liteWeb.eventForm.gate')}>
+        <EditLoader slug={slug} />
+      </SignedInGate>
+    </Box>
   );
 }

@@ -69,14 +69,29 @@ export function interpolate(template: string, vars: TemplateVars): string {
   return template.replaceAll(/\{(\w+)\}/g, (match, name: string) => (vars[name] === undefined ? match : String(vars[name])));
 }
 
-/** Paragraphs of escaped text, links made clickable, inside the Duncit chrome. */
-export function renderHtml(body: string, siteName: string): string {
+/**
+ * A picture embedded in the email itself (a CID attachment), e.g. a ticket's
+ * check-in QR. Mail apps block `data:` images but show an inline attachment.
+ */
+export interface InlineImage {
+  cid: string;
+  png: Buffer;
+  alt: string;
+}
+
+const inlineImageHtml = (image: InlineImage | undefined): string =>
+  image
+    ? `<p style="margin:8px 0 16px;text-align:center"><img src="cid:${escapeHtml(image.cid)}" alt="${escapeHtml(image.alt)}" width="220" height="220" style="display:inline-block;width:220px;height:220px;border:0" /></p>`
+    : '';
+
+/** Paragraphs of escaped text, links made clickable, inside the Duncit chrome; an inline image after the text. */
+export function renderHtml(body: string, siteName: string, image?: InlineImage): string {
   const paragraphs = body
     .split(/\n{2,}/)
     .map((block) => escapeHtml(block.trim()).replaceAll('\n', '<br />').replaceAll(URL_IN_TEXT, '<a href="$1" style="color:#D92D2D">$1</a>'))
     .filter(Boolean)
     .map((html) => `<p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#151515">${html}</p>`)
-    .join('');
+    .join('') + inlineImageHtml(image);
   return `<!doctype html><html><body style="margin:0;background:#F6F6F8;font-family:Nunito,-apple-system,Segoe UI,Roboto,Arial,sans-serif"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F6F6F8;padding:24px 12px"><tr><td align="center"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:16px;padding:32px"><tr><td style="font-size:20px;font-weight:800;color:#D92D2D;padding-bottom:20px">${escapeHtml(siteName)}</td></tr><tr><td>${paragraphs}</td></tr><tr><td style="font-size:12px;color:#6b7280;padding-top:16px;border-top:1px solid #eee">${escapeHtml(siteName)} · ${escapeHtml(env.siteUrl)}</td></tr></table></td></tr></table></body></html>`;
 }
 
@@ -85,6 +100,7 @@ export interface SendInput {
   templateKey: string;
   vars: TemplateVars;
   eventId?: string | null;
+  inlineImage?: InlineImage;
 }
 
 export interface SendOutcome {
@@ -133,14 +149,14 @@ export const emailService = {
       await record(input, subject, 'SKIPPED', { error: 'Template switched off' });
       return { status: 'SKIPPED', message: 'Template switched off' };
     }
-    const outcome = await this.sendRaw(input.to, subject, interpolate(template.body, vars), settings.site_name);
+    const outcome = await this.sendRaw(input.to, subject, interpolate(template.body, vars), settings.site_name, null, input.inlineImage);
     await record(input, subject, outcome.status, { error: outcome.status === 'SENT' ? '' : outcome.message, messageId: outcome.messageId });
     if (outcome.status === 'SENT') await LiteEmailTemplateModel.updateOne({ key: input.templateKey }, { $inc: { sent_count: 1 } });
     return outcome;
   },
 
   /** A plain send with no template; the console's "send test" uses this too. */
-  async sendRaw(to: string, subject: string, body: string, siteName: string, override?: SmtpConfig | null): Promise<SendOutcome & { messageId?: string }> {
+  async sendRaw(to: string, subject: string, body: string, siteName: string, override?: SmtpConfig | null, image?: InlineImage): Promise<SendOutcome & { messageId?: string }> {
     const config = override ?? (await this.smtp());
     if (!config) return { status: 'SKIPPED', message: 'No mailbox configured (Console → Environment → Email)' };
     try {
@@ -150,7 +166,8 @@ export const emailService = {
         replyTo: config.replyTo || undefined,
         subject,
         text: body,
-        html: renderHtml(body, siteName),
+        html: renderHtml(body, siteName, image),
+        ...(image ? { attachments: [{ filename: `${image.cid}.png`, content: image.png, cid: image.cid, contentType: 'image/png' }] } : {}),
       });
       return { status: 'SENT', message: `Sent to ${to}`, messageId: String(info.messageId ?? '') };
     } catch (error) {

@@ -1,6 +1,7 @@
 import { LiteCalendarModel } from '../models/calendar.model';
 import { LiteCategoryModel } from '../models/category.model';
-import { LiteCityModel } from '../models/city.model';
+import { SETTING_BOUNDS } from '../../shared/limits';
+import { CITY_REGIONS, LiteCityModel, type CityRegion } from '../models/city.model';
 import { LiteEmailLogModel } from '../models/emailLog.model';
 import { LiteEventModel } from '../models/event.model';
 import { LiteRegistrationModel } from '../models/registration.model';
@@ -9,7 +10,7 @@ import { badInput, notFound } from '../utils/errors';
 import { iso } from '../utils/ids';
 import { slugify, uniqueSlug } from '../utils/slug';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '../utils/table-query';
-import { cleanText, optionalUrl } from '../utils/validate';
+import { cleanText, optionalUrl, wholeNumber } from '../utils/validate';
 import { publicCategories, publicCities } from './discover.service';
 import { toPublicCalendar, toPublicEvent, toPublicRegistration, type Viewer } from './projections';
 import { toPublicUser } from './user.service';
@@ -69,8 +70,20 @@ export interface CategoryInput {
 
 export interface CityInput extends CategoryInput {
   country?: string | null;
+  region?: string | null;
   cover_url?: string | null;
   featured?: boolean | null;
+}
+
+/** Where a row sits in its list; a typo'd minus sign is refused, not saved. */
+const sortOrder = (requested: number | null | undefined, current: number | null | undefined): number =>
+  requested == null ? (current ?? 0) : wholeNumber(requested, 'Sort order', SETTING_BOUNDS.sortOrder);
+
+/** The saved row as the console reads it; a save that cannot be read back is a server fault, not a silent null. */
+function savedRow<T extends { id: string }>(rows: T[], id: unknown, what: string): T {
+  const row = rows.find((r) => r.id === String(id));
+  if (!row) throw notFound(what);
+  return row;
 }
 
 export const adminService = {
@@ -152,11 +165,10 @@ export const adminService = {
       doc.slug = taken ? await uniqueSlug(wanted, async (s) => Boolean(await LiteCategoryModel.exists({ slug: s })), 'category') : wanted;
     }
     doc.icon = cleanText(input.icon, 60, 'Icon');
-    doc.sort_order = Math.trunc(input.sort_order ?? doc.sort_order ?? 0);
+    doc.sort_order = sortOrder(input.sort_order, doc.sort_order);
     doc.is_active = input.is_active ?? doc.is_active ?? true;
     await doc.save();
-    const all = await publicCategories(true);
-    return all.find((c) => c.id === String(doc._id))!;
+    return savedRow(await publicCategories(true), doc._id, 'Category');
   },
 
   async deleteCategory(id: string) {
@@ -178,13 +190,16 @@ export const adminService = {
       doc.slug = wanted;
     }
     doc.country = cleanText(input.country, 60, 'Country') || doc.country || 'India';
+    if (input.region != null) {
+      if (!CITY_REGIONS.includes(input.region as CityRegion)) throw badInput('Pick a region from the list');
+      doc.region = input.region as CityRegion;
+    }
     doc.cover_url = optionalUrl(input.cover_url, 'Cover');
     doc.featured = input.featured ?? doc.featured ?? false;
-    doc.sort_order = Math.trunc(input.sort_order ?? doc.sort_order ?? 0);
+    doc.sort_order = sortOrder(input.sort_order, doc.sort_order);
     doc.is_active = input.is_active ?? doc.is_active ?? true;
     await doc.save();
-    const all = await publicCities(true);
-    return all.find((c) => c.id === String(doc._id))!;
+    return savedRow(await publicCities(true), doc._id, 'City');
   },
 
   async deleteCity(id: string) {

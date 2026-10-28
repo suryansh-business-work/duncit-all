@@ -61,7 +61,11 @@ export interface FormTextFieldProps<T extends FieldValues> extends PassthroughPr
 }
 
 /** What a typed value is stored as: the caller's mask, else digits only, else as typed. */
-function storedValue(text: string, format: ((value: string) => string) | undefined, digitsOnly: boolean | undefined): string {
+function storedValue(
+  text: string,
+  format: ((value: string) => string) | undefined,
+  digitsOnly: boolean | undefined,
+): string {
   if (format) return format(text);
   return digitsOnly ? toDigits(text) : text;
 }

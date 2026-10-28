@@ -15,7 +15,12 @@ interface RegistrationCardProps {
   onChanged: () => void;
 }
 
-const CLOSED_KEYS = { CANCELLED_EVENT: 'liteWeb.event.closed.cancelled', DRAFT: 'liteWeb.event.closed.draft', ENDED: 'liteWeb.event.closed.ended' } as const;
+const CLOSED_KEYS = {
+  CANCELLED_EVENT: 'liteWeb.event.closed.cancelled',
+  DRAFT: 'liteWeb.event.closed.draft',
+  ENDED: 'liteWeb.event.closed.ended',
+  REGISTRATION_CLOSED: 'liteWeb.event.closed.registration',
+} as const;
 
 /** The right-hand card: tickets and the one call to action the viewer's situation allows. */
 export function RegistrationCard({ event, onChanged }: Readonly<RegistrationCardProps>) {
@@ -30,7 +35,7 @@ export function RegistrationCard({ event, onChanged }: Readonly<RegistrationCard
   };
 
   let body;
-  if (view === 'CANCELLED_EVENT' || view === 'DRAFT' || view === 'ENDED') {
+  if (view === 'CANCELLED_EVENT' || view === 'DRAFT' || view === 'ENDED' || view === 'REGISTRATION_CLOSED') {
     body = (
       <Alert severity={view === 'DRAFT' ? 'warning' : 'info'} data-testid="registration-closed">
         {t(CLOSED_KEYS[view])}

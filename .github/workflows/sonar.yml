@@ -120,6 +120,7 @@ jobs:
           - { name: packages, filters: './packages/**' }
           - { name: small-portals, filters: './portals/support ./portals/ads-portal ./portals/ai ./portals/challenge-portal ./portals/developers ./portals/employee ./portals/hr ./portals/legal ./portals/website-app ./portals/regional-club-admin ./portals/venues ./portals/clubs ./portals/club-admins ./portals/hosts ./portals/pods ./portals/communications ./portals/logs ./portals/analytics ./portals/ecomm-portal ./portals/localization ./portals/targets ./portals/mcp ./portals/loyalty' }
           - { name: websites, filters: './website/**' }
+          - { name: lite, filters: './lite' }
     steps:
       - uses: actions/checkout@v5
       # REUSE, don't re-run. The key is the git tree of the group's workspaces,

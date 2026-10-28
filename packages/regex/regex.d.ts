@@ -118,6 +118,20 @@ export const URL_SLUG: RegExp;
 /** Slug shape check. Lower-case before calling it — the pattern is strict. */
 export function isUrlSlug(value: string): boolean;
 /**
+ * A social-network handle such as `duncit.events`, stored without the `@` or
+ * the site's address: letters, digits, `.`, `_` and `-`, 1–100 characters.
+ */
+export const SOCIAL_HANDLE: RegExp;
+/** Social handle shape check. Strip a leading `@` first. */
+export function isSocialHandle(value: string): boolean;
+/**
+ * A handle of lowercase letters, digits and inner underscores, 3–30 characters,
+ * starting and ending with a letter or digit — `run_club`.
+ */
+export const UNDERSCORE_HANDLE: RegExp;
+/** Underscore handle shape check. Lower-case before calling it. */
+export function isUnderscoreHandle(value: string): boolean;
+/**
  * A website page path: `/` alone, or slug-shaped segments joined by single
  * slashes — `/about`, `/safety/tools`. No trailing slash, query or `..`.
  */

@@ -1,8 +1,9 @@
+import { SETTING_BOUNDS } from '../../shared/limits';
 import { env } from '../config/env';
 import { LiteSettingsModel, type LiteSettings } from '../models/settings.model';
 import { envEntryService, readString } from './envEntry.service';
 import { badInput } from '../utils/errors';
-import { cleanText, normalizeEmail, validTimezone } from '../utils/validate';
+import { cleanText, normalizeEmail, validTimezone, wholeNumber } from '../utils/validate';
 
 const TTL_MS = 15_000;
 let cache: { at: number; value: LiteSettings } | null = null;
@@ -22,12 +23,17 @@ export interface AdminSettingsInput {
   upi_help_text?: string | null;
   admin_emails?: string[] | null;
   max_ticket_price?: number | null;
+  max_event_capacity?: number | null;
+  max_seats_per_registration?: number | null;
+  sign_in_with_phone?: boolean | null;
 }
+
+export { SETTING_BOUNDS };
 
 /** Whole, distinct reminder hours in 1–720, latest first; at least one is required. */
 function reminderHours(requested: number[]): number[] {
-  const hours = [...new Set(requested.map((h) => Math.trunc(h)).filter((h) => h > 0 && h <= 720))];
-  if (hours.length === 0) throw badInput('Give at least one reminder hour between 1 and 720');
+  if (requested.length === 0) throw badInput('Give at least one reminder hour between 1 and 720');
+  const hours = [...new Set(requested.map((h) => wholeNumber(h, 'Reminder hour', SETTING_BOUNDS.reminderHour)))];
   hours.sort((a, b) => b - a);
   return hours;
 }
@@ -57,7 +63,12 @@ export const settingsService = {
 
   async publicSettings() {
     const settings = await this.get();
-    const google = await envEntryService.activeConfig('GOOGLE_OAUTH');
+    const [google, maps, msg91] = await Promise.all([
+      envEntryService.activeConfig('GOOGLE_OAUTH'),
+      envEntryService.activeConfig('GOOGLE_MAPS'),
+      envEntryService.activeConfig('MSG91'),
+    ]);
+    const smsReady = Boolean(readString(msg91, 'widget_id') && readString(msg91, 'auth_key'));
     return {
       site_name: settings.site_name,
       support_email: settings.support_email,
@@ -65,6 +76,14 @@ export const settingsService = {
       currency: settings.currency,
       google_client_id: readString(google, 'client_id'),
       sign_in_with_duncit: settings.sign_in_with_duncit,
+      // Only ever the browser key (restricted by referrer) and the switch — never the MSG91 auth key.
+      maps_api_key: readString(maps, 'api_key'),
+      maps_map_id: readString(maps, 'map_id'),
+      phone_sign_in: Boolean(settings.sign_in_with_phone) && smsReady,
+      default_country_code: readString(msg91, 'default_country_code') || '91',
+      max_ticket_price: settings.max_ticket_price ?? 0,
+      max_event_capacity: settings.max_event_capacity ?? SETTING_BOUNDS.eventCapacity.max,
+      max_seats_per_registration: settings.max_seats_per_registration ?? 10,
       upi_help_text: settings.upi_help_text,
       duncit_app_url: settings.duncit_app_url || env.duncitAppUrl,
     };
@@ -96,7 +115,12 @@ export const settingsService = {
     if (input.reminder_hours_before != null) $set.reminder_hours_before = reminderHours(input.reminder_hours_before);
     if (input.upi_help_text != null) $set.upi_help_text = cleanText(input.upi_help_text, 500, 'UPI help text');
     if (input.admin_emails != null) $set.admin_emails = [...new Set(input.admin_emails.map(normalizeEmail))];
-    if (input.max_ticket_price != null) $set.max_ticket_price = Math.max(0, Math.trunc(input.max_ticket_price));
+    if (input.max_ticket_price != null) $set.max_ticket_price = wholeNumber(input.max_ticket_price, 'Highest ticket price', SETTING_BOUNDS.ticketPrice);
+    if (input.max_event_capacity != null) $set.max_event_capacity = wholeNumber(input.max_event_capacity, 'Largest event capacity', SETTING_BOUNDS.eventCapacity);
+    if (input.max_seats_per_registration != null) {
+      $set.max_seats_per_registration = wholeNumber(input.max_seats_per_registration, 'Seats per registration', SETTING_BOUNDS.seatsPerRegistration);
+    }
+    if (input.sign_in_with_phone != null) $set.sign_in_with_phone = input.sign_in_with_phone;
     await LiteSettingsModel.updateOne({ key: 'global' }, { $set }, { upsert: true });
     cache = null;
     return this.adminSettings();

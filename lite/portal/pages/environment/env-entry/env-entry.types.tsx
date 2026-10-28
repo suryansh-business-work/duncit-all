@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { Translate } from '@duncit/forms/schemas';
+import { countMessage } from '../../../components/countRule';
 import type { LiteEnvCategoryDef, LiteEnvEntry, LiteEnvEntryInput, LiteEnvFieldDef } from '../../../graphql/environment';
 
 export interface EnvEntryFormValues {
@@ -11,7 +12,6 @@ export interface EnvEntryFormValues {
   config: Record<string, string>;
 }
 
-const DIGITS = /^\d*$/;
 
 export const emptyEnvValues = (): EnvEntryFormValues => ({ name: '', description: '', is_default: false, is_active: true, config: {} });
 
@@ -40,7 +40,7 @@ export const toEnvInput = (def: LiteEnvCategoryDef, values: EnvEntryFormValues):
   return { name: values.name.trim(), description: values.description.trim(), is_default: values.is_default, is_active: values.is_active, config };
 };
 
-/** Name required; a secret required until the entry holds one; a number field must be digits. */
+/** Name required; a secret required until the entry holds one; a number field a whole number inside its bounds. */
 export const makeEnvEntrySchema = (t: Translate, def: LiteEnvCategoryDef, initial: LiteEnvEntry | null) => {
   const name = t('litePortal.common.name');
   const required = (field: string) => t('litePortal.validation.required', { vars: { field } });
@@ -58,9 +58,8 @@ export const makeEnvEntrySchema = (t: Translate, def: LiteEnvCategoryDef, initia
         if (field.secret && value === '' && !secretPresent(initial, field)) {
           ctx.addIssue({ code: 'custom', path: ['config', field.name], message: required(field.label) });
         }
-        if (field.number && !DIGITS.test(value)) {
-          ctx.addIssue({ code: 'custom', path: ['config', field.name], message: t('litePortal.validation.integer', { vars: { field: field.label } }) });
-        }
+        const problem = field.number && value !== '' ? countMessage(t, field.label, value, { min: field.min ?? 0, max: field.max ?? Number.MAX_SAFE_INTEGER }) : null;
+        if (problem) ctx.addIssue({ code: 'custom', path: ['config', field.name], message: problem });
       }
     });
 };

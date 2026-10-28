@@ -10,9 +10,13 @@ import { eventIcsUrl, eventUrl } from '../../../lib/calendarLinks';
 import { paths } from '../../../lib/paths';
 import { CancelEventDialog } from '../cancel-event';
 import { CoHostForm } from './co-host-form';
+import { EventLinkForm } from './event-link-form';
 import { CoHostList } from './CoHostList';
 
-/** Links, co-hosts, and the door out. */
+/** The one-line button snippet a host pastes into their own site. */
+const embedSnippet = (url: string, label: string): string => `<a href="${url}" target="_blank" rel="noopener">${label}</a>`;
+
+/** "More": the event's links, its public address, the embed snippet, co-hosts, and the door out. */
 export function SettingsTab({ event, onChanged }: Readonly<{ event: LiteEvent; onChanged: () => void }>) {
   const { t } = useWebT();
   const [cancelOpen, setCancelOpen] = useState(false);
@@ -33,6 +37,14 @@ export function SettingsTab({ event, onChanged }: Readonly<{ event: LiteEvent; o
           <CopyField label={t('liteWeb.manage.settings.eventLink')} value={eventUrl(event.slug)} testId="settings-event-link" />
           <CopyField label={t('liteWeb.manage.settings.icsLink')} value={eventIcsUrl(event.slug)} testId="settings-ics-link" />
         </Stack>
+      </SectionCard>
+      {live ? (
+        <SectionCard title={t('liteWeb.manage.link.title')} subtitle={t('liteWeb.manage.link.warning')}>
+          <EventLinkForm event={event} />
+        </SectionCard>
+      ) : null}
+      <SectionCard title={t('liteWeb.manage.embed.title')} subtitle={t('liteWeb.manage.embed.body')}>
+        <CopyField label={t('liteWeb.manage.embed.snippet')} value={embedSnippet(eventUrl(event.slug), t('liteWeb.manage.embed.button'))} testId="settings-embed" />
       </SectionCard>
       <SectionCard title={t('liteWeb.manage.settings.coHosts')} subtitle={t('liteWeb.manage.settings.coHostsHint')}>
         <Stack spacing={2}>

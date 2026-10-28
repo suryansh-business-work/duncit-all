@@ -15,6 +15,8 @@ export interface LiteDiscover {
   featured_calendars: LiteCalendar[];
   popular_events: LiteEventCard[];
   upcoming_events: LiteEventCard[];
+  /** Admin-featured events in every city: the "Upcoming major events" row. */
+  featured_events: LiteEventCard[];
 }
 
 const LITE_CITY_FIELDS = gql`
@@ -23,6 +25,7 @@ const LITE_CITY_FIELDS = gql`
     name
     slug
     country
+    region
     cover_url
     featured
     sort_order
@@ -51,6 +54,9 @@ export const LITE_DISCOVER: TypedDocumentNode<{ liteDiscover: LiteDiscover }, { 
         ...LiteEventCardFields
       }
       upcoming_events {
+        ...LiteEventCardFields
+      }
+      featured_events {
         ...LiteEventCardFields
       }
     }

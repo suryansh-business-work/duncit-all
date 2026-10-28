@@ -35,7 +35,7 @@ import {
 
 const COIN_DASHBOARD = consoleLink('loyalty', '/duncit-coin/dashboard');
 const COIN_LEDGER = consoleLink('loyalty', '/duncit-coin/transactions');
-const REFERRALS = consoleLink('finance', '/referrals');
+const REFERRALS = consoleLink('loyalty', '/referrals/history');
 const CARD_DASHBOARD = consoleLink('loyalty', '/gift-cards/virtual/dashboard');
 const CARDS = consoleLink('loyalty', '/gift-cards/virtual/cards');
 const CARD_LOGS = consoleLink('loyalty', '/gift-cards/virtual/logs');

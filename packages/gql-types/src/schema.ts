@@ -424,10 +424,19 @@ export type AdminPodAttendee = {
 export type AdminReferral = {
   __typename?: 'AdminReferral';
   code: Scalars['String']['output'];
+  /** True once the member who signed up has paid for anything. */
+  converted: Scalars['Boolean']['output'];
   created_at: Scalars['String']['output'];
   id: Scalars['ID']['output'];
+  payout_status: ReferralPayoutStatus;
+  /** Coins the ledger paid the member who signed up with it. */
+  referred_coins: Scalars['Float']['output'];
+  referred_email?: Maybe<Scalars['String']['output']>;
   referred_name?: Maybe<Scalars['String']['output']>;
   referred_user_id: Scalars['ID']['output'];
+  /** Coins the ledger paid the member who shared the code. */
+  referrer_coins: Scalars['Float']['output'];
+  referrer_email?: Maybe<Scalars['String']['output']>;
   referrer_name?: Maybe<Scalars['String']['output']>;
   referrer_user_id: Scalars['ID']['output'];
 };
@@ -438,6 +447,33 @@ export type AdminReferralTablePage = {
   page: Scalars['Int']['output'];
   page_size: Scalars['Int']['output'];
   rows: Array<AdminReferral>;
+  total: Scalars['Int']['output'];
+};
+
+/** One member's referral code and what it has brought in. */
+export type AdminReferrer = {
+  __typename?: 'AdminReferrer';
+  code: Scalars['String']['output'];
+  coins_earned: Scalars['Float']['output'];
+  converted: Scalars['Int']['output'];
+  /** When the member first opened Refer & Earn. */
+  created_at: Scalars['String']['output'];
+  email: Scalars['String']['output'];
+  /** The code's own id. */
+  id: Scalars['ID']['output'];
+  joined: Scalars['Int']['output'];
+  /** When their code was last redeemed. Null while nobody has signed up with it. */
+  last_referral_at?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+  user_id: Scalars['ID']['output'];
+};
+
+/** Server-side table page for the shared table engine (referrersTable). */
+export type AdminReferrerTablePage = {
+  __typename?: 'AdminReferrerTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<AdminReferrer>;
   total: Scalars['Int']['output'];
 };
 
@@ -5354,10 +5390,18 @@ export type CoinAdminTransaction = {
   /** Who typed this adjustment. Empty on every automatic row. */
   admin_name: Scalars['String']['output'];
   amount: Scalars['Float']['output'];
+  /** The backout request this refund paid back (PAYMENT_REFUND). */
+  backout_id?: Maybe<Scalars['String']['output']>;
   balance_after: Scalars['Float']['output'];
   created_at: Scalars['String']['output'];
   /** Rate in effect when these coins were granted. */
   earn_pct: Scalars['Float']['output'];
+  /** When the unspent part of this grant lapses. Null when it never does. */
+  expires_at?: Maybe<Scalars['String']['output']>;
+  /** The pod rating this reward paid for (POD_FEEDBACK). */
+  feedback_id?: Maybe<Scalars['String']['output']>;
+  /** The gift card whose value became these coins (GIFT_CARD_REDEEM). */
+  gift_card_id?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   payment_id?: Maybe<Scalars['String']['output']>;
   /** What the payment charged, so the row audits on its own. */
@@ -5369,6 +5413,10 @@ export type CoinAdminTransaction = {
    */
   pods: Array<CoinAdminPod>;
   reason: Scalars['String']['output'];
+  /** The referral that earned this row (REFERRAL_EARN / REFERRAL_SIGNUP). */
+  referral_id?: Maybe<Scalars['String']['output']>;
+  /** How much of this grant is still unspent. Only rows that expire carry it. */
+  remaining: Scalars['Float']['output'];
   /** PAYMENT_EARN or PAYMENT_REDEEM. */
   source: Scalars['String']['output'];
   /** Order total the grant was computed from. */
@@ -5495,6 +5543,8 @@ export type CoinUserOption = {
   email: Scalars['String']['output'];
   full_name: Scalars['String']['output'];
   id: Scalars['ID']['output'];
+  /** Country code and number, or empty when the account has no phone. */
+  phone: Scalars['String']['output'];
 };
 
 /** A way Duncit can reach a person. Channel and kind are different axes. */
@@ -16031,7 +16081,7 @@ export type Mutation = {
   updateRateLimitRule: RateLimitRule;
   updateRateLimitSettings: RateLimitSettings;
   updateReelProject: ReelProject;
-  /** Finance: what a referral pays and what a member's share sheet says. */
+  /** Loyalty: the gift line and the message a member's share sheet pre-fills. */
   updateReferralSettings: ReferralSettings;
   /** Finance: change the rental settings. Fields left out keep their value. */
   updateRentalSettings: RentalSettings;
@@ -27937,9 +27987,11 @@ export type Query = {
   coinAdminStats: CoinAdminStats;
   /** Every coin payout rule, for Loyalty > Duncit Coin > Coin Settings. */
   coinSettings: CoinSettings;
+  /** Loyalty > Duncit Coin > Transactions > one row. Null when no ledger row has that id. */
+  coinTransaction?: Maybe<CoinAdminTransaction>;
   /** Loyalty > Duncit Coin > Transactions. 'pod_doc_id' scopes the page to coins settled by that pod's payments. */
   coinTransactionsTable: CoinAdminTransactionTablePage;
-  /** Name/email search for the manual-adjustment picker. Under two characters returns nothing. */
+  /** Name, email or phone search for the member pickers. Under two characters returns nothing. */
   coinUserSearch: Array<CoinUserOption>;
   commsProvider?: Maybe<CommsProvider>;
   /**
@@ -29059,11 +29111,16 @@ export type Query = {
   reelDriveStatus: ReelDriveStatus;
   reelProject?: Maybe<ReelProject>;
   reelProjects: Array<ReelProjectSummary>;
+  /** Loyalty > Refer & Earn > Dashboard. 'months' bounds the monthly series (default 12, max 36). */
+  referralAdminStats: ReferralAdminStats;
   referralLookup?: Maybe<PodMember>;
   referralSettings: ReferralSettings;
   /** Admin: every redeemed referral, newest first. */
   referrals: Array<AdminReferral>;
+  /** Loyalty > Refer & Earn > Referrals: who referred whom. Search finds a code or either person by name, email or phone. */
   referralsTable: AdminReferralTablePage;
+  /** Loyalty > Refer & Earn > Referrals: every member's code and what it brought in. */
+  referrersTable: AdminReferrerTablePage;
   /** Club Admins this manager could add to the region. */
   regionClubAdminCandidates: Array<RegionCandidate>;
   /**
@@ -30399,6 +30456,11 @@ export type QueryCoHostCandidatesArgs = {
 
 export type QueryCoinAdminStatsArgs = {
   months?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryCoinTransactionArgs = {
+  id: Scalars['ID']['input'];
 };
 
 
@@ -32605,12 +32667,22 @@ export type QueryReelProjectArgs = {
 };
 
 
+export type QueryReferralAdminStatsArgs = {
+  months?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
 export type QueryReferralLookupArgs = {
   token: Scalars['String']['input'];
 };
 
 
 export type QueryReferralsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryReferrersTableArgs = {
   query?: InputMaybe<TableQueryInput>;
 };
 
@@ -34396,12 +34468,63 @@ export type ReelUploadInput = {
   width?: InputMaybe<Scalars['Int']['input']>;
 };
 
+/** Loyalty > Refer & Earn > Dashboard. Totals are all-time; 'monthly' covers the chosen window. */
+export type ReferralAdminStats = {
+  __typename?: 'ReferralAdminStats';
+  /** Members whose code has brought at least one signup. */
+  active_referrers: Scalars['Int']['output'];
+  /** Referred members who have not paid for anything yet. */
+  awaiting_first_payment: Scalars['Int']['output'];
+  /** Members who have a code — one is made the first time they open Refer & Earn. */
+  codes_issued: Scalars['Int']['output'];
+  coins_paid: Scalars['Float']['output'];
+  /** Today's rate, paid to each side (Loyalty > Duncit Coin > Coin Settings). */
+  coins_per_referral: Scalars['Int']['output'];
+  /** converted / total_referrals, as a percentage (one decimal). */
+  conversion_pct: Scalars['Float']['output'];
+  /** Referred members who have paid for anything since. */
+  converted: Scalars['Int']['output'];
+  /** Codes nobody has signed up with yet. */
+  idle_codes: Scalars['Int']['output'];
+  monthly: Array<ReferralMonthBucket>;
+  new_member_coins: Scalars['Float']['output'];
+  payouts_paid: Scalars['Int']['output'];
+  payouts_partial: Scalars['Int']['output'];
+  payouts_unpaid: Scalars['Int']['output'];
+  referrer_coins: Scalars['Float']['output'];
+  top_referrers: Array<ReferralTopReferrer>;
+  /** Codes redeemed at signup. */
+  total_referrals: Scalars['Int']['output'];
+};
+
 export type ReferralEntry = {
   __typename?: 'ReferralEntry';
   full_name?: Maybe<Scalars['String']['output']>;
   referred_at: Scalars['String']['output'];
   user_id: Scalars['ID']['output'];
 };
+
+/** One calendar month (UTC) of the referral programme. */
+export type ReferralMonthBucket = {
+  __typename?: 'ReferralMonthBucket';
+  /** Referral coins credited that month, both sides together. */
+  coins: Scalars['Float']['output'];
+  /** Of those, members who have since paid for anything. */
+  converted: Scalars['Int']['output'];
+  /** Codes redeemed at signup that month. */
+  joined: Scalars['Int']['output'];
+  /** 'YYYY-MM'. */
+  month: Scalars['String']['output'];
+};
+
+/**
+ * Whether both sides of a referral were credited their coins. UNPAID means the
+ * credit failed after the referral was recorded, or the rate was 0 coins then.
+ */
+export type ReferralPayoutStatus =
+  | 'PAID'
+  | 'PARTIAL'
+  | 'UNPAID';
 
 export type ReferralSettings = {
   __typename?: 'ReferralSettings';
@@ -34417,10 +34540,22 @@ export type ReferralSettings = {
   share_message: Scalars['String']['output'];
 };
 
-/** Finance > Referrals. Every field is optional; an omitted one is left alone. */
+/** Loyalty > Refer & Earn > Settings. Every field is optional; an omitted one is left alone. */
 export type ReferralSettingsInput = {
   gift_description?: InputMaybe<Scalars['String']['input']>;
   share_message?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type ReferralTopReferrer = {
+  __typename?: 'ReferralTopReferrer';
+  code: Scalars['String']['output'];
+  /** Coins this member was credited for referring. */
+  coins: Scalars['Float']['output'];
+  converted: Scalars['Int']['output'];
+  email: Scalars['String']['output'];
+  joined: Scalars['Int']['output'];
+  name: Scalars['String']['output'];
+  user_id: Scalars['ID']['output'];
 };
 
 export type RefundStatus =

@@ -23,11 +23,11 @@ export const MCP_CATEGORIES = [
   { key: 'venues', label: 'Venues', description: 'Venues, slots, offers, rentals, food menus, partner requests and venue chats.' },
   { key: 'hosts', label: 'Hosts', description: 'Hosts and host applications.' },
   { key: 'finance', label: 'Finance', description: 'Payments, payouts, settlements, coupons, expenses, wallets and the pod calculator.' },
-  { key: 'loyalty', label: 'Loyalty', description: 'Duncit Coin, virtual gift cards and printed (physical) gift cards.' },
+  { key: 'loyalty', label: 'Loyalty', description: 'Duncit Coin, Refer & Earn referrals, virtual gift cards and printed (physical) gift cards.' },
   { key: 'employee', label: 'Employee', description: 'Employee expense claims.' },
   { key: 'partner-brand', label: 'Partner brands', description: 'Partner Brand products, inventory, reviews, pod-shop carts, orders and returns (partners-app.duncit.com/ecomm-brand).' },
   { key: 'ecomm-store', label: 'E-commerce store', description: 'The pet store at ecomm.duncit.com — its catalogue, orders and shipping. Separate from partner brands.' },
-  { key: 'engagement', label: 'Engagement', description: 'Referrals, leaderboard, membership, badges and posts.' },
+  { key: 'engagement', label: 'Engagement', description: 'Member referral codes, leaderboard, membership, badges and posts.' },
   { key: 'challenges', label: 'Challenges', description: 'Challenges, challenge tools and pod challenges.' },
   { key: 'gig-jobs', label: 'Gig jobs', description: 'Gigs, freelancers and their interests.' },
   { key: 'ai', label: 'AI', description: 'AI features, the prompt library, usage, monitoring, automations, reels and the Agent.' },
@@ -183,6 +183,8 @@ export const MODULE_CATEGORY: Record<ModuleName, McpCategoryKey | null> = {
   storeShippingTypeDefs: 'ecomm-store',
 
   referralTypeDefs: 'engagement',
+  // The admin side of referrals is run from the Loyalty console (Refer & Earn).
+  referralAdminTypeDefs: 'loyalty',
   leaderboardTypeDefs: 'engagement',
   membershipTypeDefs: 'engagement',
   badgeTypeDefs: 'engagement',

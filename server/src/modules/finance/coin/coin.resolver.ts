@@ -55,6 +55,10 @@ export const coinResolvers = {
       requireRole(ctx, COIN_LOG_READ);
       return coinAdminService.table(args.query, args.pod_doc_id);
     },
+    coinTransaction: async (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, COIN_LOG_READ);
+      return coinAdminService.transaction(args.id);
+    },
     coinSettings: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       requireRole(ctx, COIN_ADMIN_READ);
       return coinSettingsService.pub();

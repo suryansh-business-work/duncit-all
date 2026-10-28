@@ -13,6 +13,15 @@ import { coinSettingsService } from '@modules/finance/coin/coin.settings.service
 import { logs } from '@observability/log';
 import { notifyReferrerRewarded } from './referral.notify';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
+import { loadUserMap, type UserInfo } from '@utils/admin-ledger';
+import {
+  loadPayers,
+  loadReferralPayouts,
+  memberOrCodeSearch,
+  payoutOf,
+  payoutStatus,
+  type ReferralPayout,
+} from './referral.facts';
 
 const badInput = (message: string): never => {
   throw new GraphQLError(message, { extensions: { code: 'BAD_USER_INPUT' } });
@@ -26,8 +35,8 @@ const generateCode = () => `DUN-${randomBytes(3).toString('hex').toUpperCase()}`
  *
  * `coins_per_referral` is still reported here — the referral screens and the
  * share message are what quote it — but it is no longer OWNED here: it is one
- * of the coin payout rules, and all of those are edited together in Finance >
- * Duncit Coin > Settings. Reporting a number this page cannot change is the
+ * of the coin payout rules, and all of those are edited together in Loyalty >
+ * Duncit Coin > Coin Settings. Reporting a number this page cannot change is the
  * point; it means the copy and the rate can never disagree.
  */
 const settingsPub = (doc: IReferralSettings, coinsPerReferral: number) => ({
@@ -56,16 +65,51 @@ async function nameMap(ids: string[]): Promise<Map<string, string>> {
   );
 }
 
+/** A referral as the admin log reads it off the collection. */
+interface ReferralDoc {
+  _id: Types.ObjectId;
+  code: string;
+  referrer_user_id: Types.ObjectId;
+  referred_user_id: Types.ObjectId;
+  created_at: Date;
+}
+
 /** Admin-log row mapper — shared by listAll and the table page. */
-const toAdminPub = (r: any, names: Map<string, string>) => ({
-  id: String(r._id),
-  code: r.code,
-  referrer_user_id: String(r.referrer_user_id),
-  referrer_name: names.get(String(r.referrer_user_id)) || null,
-  referred_user_id: String(r.referred_user_id),
-  referred_name: names.get(String(r.referred_user_id)) || null,
-  created_at: r.created_at.toISOString(),
-});
+const toAdminPub = (
+  r: ReferralDoc,
+  users: Map<string, UserInfo>,
+  payouts: Map<string, ReferralPayout>,
+  payers: Set<string>
+) => {
+  const referrer = users.get(String(r.referrer_user_id));
+  const referred = users.get(String(r.referred_user_id));
+  const payout = payoutOf(payouts, String(r._id));
+  return {
+    id: String(r._id),
+    code: r.code,
+    referrer_user_id: String(r.referrer_user_id),
+    referrer_name: referrer?.name || null,
+    referrer_email: referrer?.email || null,
+    referred_user_id: String(r.referred_user_id),
+    referred_name: referred?.name || null,
+    referred_email: referred?.email || null,
+    referrer_coins: payout.referrer_coins,
+    referred_coins: payout.referred_coins,
+    payout_status: payoutStatus(payout),
+    converted: payers.has(String(r.referred_user_id)),
+    created_at: r.created_at.toISOString(),
+  };
+};
+
+/** A page of referrals as the admin log shows them: both people, what each was paid, and whether the newcomer has paid. */
+async function toAdminRows(docs: ReferralDoc[]) {
+  const [users, payouts, payers] = await Promise.all([
+    loadUserMap(docs.flatMap((r) => [String(r.referrer_user_id), String(r.referred_user_id)])),
+    loadReferralPayouts(docs.map((r) => String(r._id))),
+    loadPayers(docs.map((r) => r.referred_user_id)),
+  ]);
+  return docs.map((r) => toAdminPub(r, users, payouts, payers));
+}
 
 /** Allowlists for the shared table engine (referralsTable — DUNCIT TABLE CONTRACT v1). */
 const REFERRAL_TABLE_CONFIG: TableEntityConfig = {
@@ -200,25 +244,24 @@ export const referralService = {
 
   /** Admin: full who-referred-whom log, newest first. */
   async listAll() {
-    const rows = await ReferralModel.find().sort({ created_at: -1 }).limit(500).lean();
-    const names = await nameMap(
-      rows.flatMap((r: any) => [String(r.referrer_user_id), String(r.referred_user_id)])
-    );
-    return rows.map((r: any) => toAdminPub(r, names));
+    const rows = await ReferralModel.find().sort({ created_at: -1 }).limit(500).lean<ReferralDoc[]>();
+    return toAdminRows(rows);
   },
 
-  /** Server-side table page (search/filter/sort/paginate) for referralsTable. */
+  /**
+   * Server-side table page (search/filter/sort/paginate) for referralsTable.
+   * The search box finds a code, or either person by name, email or phone.
+   */
   async table(input?: TableQueryInput | null) {
-    const { docs, total, page, page_size } = await runTableQuery<any>(
+    const { search, ...rest } = input ?? {};
+    const baseFilter = await memberOrCodeSearch(search, ['referrer_user_id', 'referred_user_id']);
+    const { docs, total, page, page_size } = await runTableQuery<ReferralDoc>(
       ReferralModel,
-      {},
-      input,
+      baseFilter,
+      rest,
       REFERRAL_TABLE_CONFIG
     );
-    const names = await nameMap(
-      docs.flatMap((r: any) => [String(r.referrer_user_id), String(r.referred_user_id)])
-    );
-    return { rows: docs.map((r: any) => toAdminPub(r, names)), total, page, page_size };
+    return { rows: await toAdminRows(docs), total, page, page_size };
   },
 
   async settings() {
@@ -230,7 +273,7 @@ export const referralService = {
   },
 
   /**
-   * Finance: the gift copy and the share message.
+   * Loyalty > Refer & Earn > Settings: the gift copy and the share message.
    *
    * The rate they describe is NOT written here. It is a coin payout rule, and
    * every one of those is set in one place so no screen can quote a reward the

@@ -888,6 +888,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       websites: 'Websites',
       productDeletionRequests: 'Product Deletion Requests',
       productReturns: 'Product Returns',
+      referAndEarn: 'Refer & Earn',
       referrals: 'Referrals',
       regionStructure: 'Region Structure',
       reminders: 'Reminders',

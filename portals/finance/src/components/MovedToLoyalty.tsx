@@ -4,7 +4,7 @@ import { useTranslation } from '@duncit/app-settings';
 import { urlConfigs } from '../config/url-configs';
 
 /**
- * Duncit Coin and gift cards moved to the Loyalty console. An old Finance
+ * Duncit Coin, gift cards and referrals moved to the Loyalty console. An old Finance
  * bookmark lands here and is sent on to the same screen there; the link is for
  * the moment before the browser follows, and for anyone whose browser does not.
  */

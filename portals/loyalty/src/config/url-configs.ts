@@ -13,8 +13,16 @@ const financeFallback = (): string => {
   return isStagingApi ? 'https://staging.finance.duncit.com' : 'https://finance.duncit.com';
 };
 
+/** mWeb hosts signup, so a referral link points there. */
+const mwebFallback = (): string => {
+  if (import.meta.env.DEV) return 'http://localhost:2003';
+  return isStagingApi ? 'https://staging.mweb.duncit.com' : 'https://mweb.duncit.com';
+};
+
 export const urlConfigs = {
   graphqlUrl,
   /** The Finance console — where the payment behind a virtual gift card lives. */
   financeUrl: import.meta.env.VITE_FINANCE_URL || financeFallback(),
+  /** Where a member's referral link lands — the share-message preview shows that URL. */
+  mwebUrl: import.meta.env.VITE_MWEB_URL || mwebFallback(),
 };

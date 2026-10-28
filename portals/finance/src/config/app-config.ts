@@ -104,8 +104,7 @@ export const appConfig = {
         { label: 'Employee Expenses', labelKey: 'shell.nav.employeeExpenses', to: '/employee-expenses', icon: 'quote' },
       ],
     },
-    // Duncit Coin and Gift Cards moved to the Loyalty console (loyalty.duncit.com).
-    { label: 'Referrals', labelKey: 'shell.nav.referrals', to: '/referrals', icon: 'campaign' },
+    // Duncit Coin, Gift Cards and Referrals moved to the Loyalty console (loyalty.duncit.com).
     { label: 'Payout Cycles', labelKey: 'shell.nav.payoutCycles', to: '/payouts', icon: 'calendar' },
     {
       label: 'Settings', labelKey: 'shell.nav.settings',

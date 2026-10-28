@@ -54,6 +54,15 @@ export const appConfig = {
       ],
     },
     {
+      label: 'Refer & Earn', labelKey: 'shell.nav.referAndEarn',
+      icon: 'campaign',
+      children: [
+        { label: 'Dashboard', labelKey: 'shell.nav.dashboard', to: '/referrals/dashboard', icon: 'insights' },
+        { label: 'Referrals', labelKey: 'shell.nav.referrals', to: '/referrals/history', icon: 'people' },
+        { label: 'Settings', labelKey: 'shell.nav.settings', to: '/referrals/settings', icon: 'tune' },
+      ],
+    },
+    {
       label: 'Cards', labelKey: 'shell.nav.cards',
       icon: 'ticket',
       children: [

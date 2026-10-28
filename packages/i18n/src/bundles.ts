@@ -178,6 +178,7 @@ export const LOYALTY_CONSOLE_CATALOGUE: NestedCatalogue = {
   finance: {
     duncitCoin: financeBranch('duncitCoin'),
     giftCards: financeBranch('giftCards'),
+    referrals: financeBranch('referrals'),
     common: financeBranch('common'),
   },
 };

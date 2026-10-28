@@ -88,8 +88,8 @@ describe('makeCitySchema', () => {
   it('takes a blank or http(s) cover URL', () => {
     expect(messageFor('cover_url', '')).toBeUndefined();
     expect(messageFor('cover_url', 'http://img.example.com/a.png')).toBeUndefined();
-    expect(messageFor('cover_url', 'ftp://img.example.com/a.png')).toBe('Cover image URL must be a valid URL');
-    expect(messageFor('cover_url', 'img.example.com/a.png')).toBe('Cover image URL must be a valid URL');
+    expect(messageFor('cover_url', 'ftp://img.example.com/a.png')).toBe('Cover picture must be a valid URL');
+    expect(messageFor('cover_url', 'img.example.com/a.png')).toBe('Cover picture must be a valid URL');
   });
 
   it('takes a blank sort order or a whole number from 0 to 9999', () => {

@@ -7,6 +7,7 @@ import { envEntryService } from '../services/envEntry.service';
 import { envTestService } from '../services/envTest.service';
 import { eventService } from '../services/event.service';
 import { localizationService } from '../services/localization.service';
+import { policyService } from '../services/policy.service';
 import { settingsService } from '../services/settings.service';
 import { badInput, notFound } from '../utils/errors';
 import { iso } from '../utils/ids';
@@ -72,6 +73,10 @@ export const adminResolvers = {
       await requireAdmin(ctx);
       return envEntryService.categories();
     },
+    liteAdminPolicies: async (_p: unknown, _a: Args, ctx: LiteContext) => {
+      await requireAdmin(ctx);
+      return policyService.adminList();
+    },
     liteEmailTemplates: async (_p: unknown, _a: Args, ctx: LiteContext) => {
       await requireAdmin(ctx);
       const docs = await LiteEmailTemplateModel.find({}).sort({ name: 1 }).lean();
@@ -105,6 +110,11 @@ export const adminResolvers = {
     liteAdminSetCalendarFeatured: async (_p: unknown, args: Args, ctx: LiteContext) => {
       await requireAdmin(ctx);
       return calendarService.setFeatured(args.id, args.featured);
+    },
+    liteUpsertPolicy: async (_p: unknown, args: Args, ctx: LiteContext) => policyService.upsert(args.id, args.input, await requireAdmin(ctx)),
+    liteDeletePolicy: async (_p: unknown, args: Args, ctx: LiteContext) => {
+      await requireAdmin(ctx);
+      return policyService.remove(args.id);
     },
     liteUpsertCategory: async (_p: unknown, args: Args, ctx: LiteContext) => {
       await requireAdmin(ctx);

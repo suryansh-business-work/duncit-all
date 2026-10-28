@@ -22,4 +22,11 @@ export interface DuncitRichTextInputProps {
    * the other pickers write.
    */
   imageFolder?: string;
+  /**
+   * Offer the one-click AI improvement (default true). It calls the main
+   * Duncit API, so a surface on another API (Duncit Lite) turns it off.
+   */
+  aiImprove?: boolean;
+  /** Offer the toolbar's Insert picture (default true); it uploads through the main Duncit API's media picker. */
+  images?: boolean;
 }

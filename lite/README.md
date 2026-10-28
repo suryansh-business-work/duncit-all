@@ -10,7 +10,7 @@ API's public sign-in mutations to prove an email — never its database.
 | `server/` | Express + Apollo GraphQL API, upload and `.ics` routes, and the HTML server for both hostnames (bundled to `dist-server/index.mjs`) |
 | `web/` | The public app (Discover, city and category pages, event pages, registration and UPI payment, tickets, hosting, calendars, profile) |
 | `portal/` | The console (dashboard, events, users, registrations, calendars, categories, cities, environment keys, email templates and logs, localization, settings) |
-| `shared/` | What both pages share: Apollo client, session, theme, i18n bundles, fallback icons, formatting |
+| `shared/` | What both pages share: Apollo client, session, theme, i18n bundles, fallback icons, formatting, and the picture picker (`shared/picture-picker`) |
 
 ## Run it locally
 
@@ -35,8 +35,22 @@ Email (SMTP) entry under Console → Environment to send real codes and notifica
 - mcp.duncit.com/lite/mcp exposes Lite's API as MCP tools. It calls `/graphql`
   with a signed assertion (`server/mcp/`, `LITE_MCP_SECRET`) and reads the
   schema from `GET /mcp/schema`.
-- Console → Environment holds Google Maps (browser key: place search, event map)
-  and MSG91 (phone sign-in codes) beside SMTP, ImageKit and Google sign-in.
+- Console → Environment holds Google Maps (browser key: place search, event map),
+  MSG91 (phone sign-in codes) and Pexels (stock photos) beside SMTP, ImageKit and
+  Google sign-in.
+
+## Pictures
+
+Every cover, calendar picture, avatar and city cover is chosen with `PictureField`
+from `shared/picture-picker` — there is no box to paste a link into. Its dialog takes
+a drag-and-drop or device upload (POST `/upload`, stored on ImageKit by the server)
+or a Pexels stock photo: Featured (curated picks), Previous events (covers of events
+the person hosts), a topic, or a search, with a shape filter. A chosen photo is copied
+to ImageKit by `liteImportPexelsPhoto`, which takes only the Pexels id, so no
+arbitrary link reaches the image store. The topics are Console → Settings → General →
+Picture topics; without a Pexels entry the dialog offers uploads and earlier covers.
+The web app passes nothing extra; the console passes `tokenKey={STORAGE_KEYS.portalToken}`
+so uploads carry its own session.
 
 ## How it deploys
 

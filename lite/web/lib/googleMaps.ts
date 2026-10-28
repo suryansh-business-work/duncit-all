@@ -109,3 +109,63 @@ export const embedMapUrl = (apiKey: string, place: { placeId?: string | null; la
   place.placeId
     ? `https://www.google.com/maps/embed/v1/place?key=${encodeURIComponent(apiKey)}&q=place_id:${encodeURIComponent(place.placeId)}`
     : `https://www.google.com/maps/embed/v1/view?key=${encodeURIComponent(apiKey)}&center=${place.lat},${place.lng}&zoom=15`;
+
+export interface MapSource {
+  placeId?: string | null;
+  lat?: number | null;
+  lng?: number | null;
+  /** A Google Maps link the host pasted. */
+  mapUrl?: string | null;
+  venue?: string | null;
+  address?: string | null;
+}
+
+/** "28.59,77.21" from the "@28.59,77.21,15z" segment of a Google Maps link; null when there is none. */
+function coordinatesIn(pathname: string): string | null {
+  const segment = pathname.split('/').find((part) => part.startsWith('@'));
+  const [lat, lng] = segment ? segment.slice(1).split(',').map(Number) : [];
+  return Number.isFinite(lat) && Number.isFinite(lng) ? `${lat},${lng}` : null;
+}
+
+/** The place name of a ".../maps/place/<name>/..." link. */
+function placeIn(pathname: string): string | null {
+  const parts = pathname.split('/');
+  const name = parts[parts.indexOf('place') + 1];
+  return parts.includes('place') && name ? decodeURIComponent(name.replaceAll('+', ' ')) : null;
+}
+
+/**
+ * What a pasted Google Maps link points at: its search, its coordinates or its
+ * place name. Short links (maps.app.goo.gl) carry none of these, so they give null.
+ */
+export function queryFromMapsLink(link: string | null | undefined): string | null {
+  if (!link) return null;
+  try {
+    const url = new URL(link);
+    if (!url.hostname.includes('google.')) return null;
+    return url.searchParams.get('q') ?? url.searchParams.get('query') ?? coordinatesIn(url.pathname) ?? placeIn(url.pathname);
+  } catch {
+    return null;
+  }
+}
+
+/** What a map should show: the picked pin, else the pasted link, else the typed venue and address. */
+export function mapQueryFor(place: MapSource): string | null {
+  if (place.lat != null && place.lng != null) return `${place.lat},${place.lng}`;
+  const typed = [place.venue, place.address].filter(Boolean).join(', ');
+  return queryFromMapsLink(place.mapUrl) ?? (typed || null);
+}
+
+/**
+ * The map to embed for a place. With the console's key: the Maps Embed API (the
+ * place by id, the point, or a search). Without one: Google's classic keyless
+ * embed of the same search, so a map still shows on every event with a place.
+ */
+export function mapEmbedSrc(apiKey: string, place: MapSource): string | null {
+  if (apiKey && place.lat != null && place.lng != null) return embedMapUrl(apiKey, { placeId: place.placeId, lat: place.lat, lng: place.lng });
+  const query = mapQueryFor(place);
+  if (!query) return null;
+  return apiKey
+    ? `https://www.google.com/maps/embed/v1/place?key=${encodeURIComponent(apiKey)}&q=${encodeURIComponent(query)}`
+    : `https://maps.google.com/maps?q=${encodeURIComponent(query)}&z=15&output=embed`;
+}

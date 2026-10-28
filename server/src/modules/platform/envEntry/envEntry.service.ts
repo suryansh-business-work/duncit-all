@@ -231,9 +231,11 @@ export async function testEnvConnection(
 }
 
 export const envEntryService = {
-  async list(filter: { category?: EnvCategory | null; is_active?: boolean | null }) {
+  /** `category` may be a list: a caller confined to some categories reads any of them. */
+  async list(filter: { category?: EnvCategory | readonly EnvCategory[] | null; is_active?: boolean | null }) {
     const query: any = {};
-    if (filter.category) query.category = filter.category;
+    if (typeof filter.category === 'string') query.category = filter.category;
+    else if (filter.category) query.category = { $in: filter.category };
     if (filter.is_active != null) query.is_active = filter.is_active;
     const docs = await EnvEntryModel.find(query).sort({ category: 1, is_default: -1, name: 1 });
     return docs.map(pub);

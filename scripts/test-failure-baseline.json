@@ -349,8 +349,6 @@
     "__tests__/unit-tests/UploadField.test.tsx"
   ],
   "tech": [
-    "__tests__/unit-tests/BugDetailDialog.test.tsx",
-    "__tests__/unit-tests/BugsPage.test.tsx",
     "__tests__/unit-tests/containers.test.tsx",
     "__tests__/unit-tests/DbInfoPage.test.tsx",
     "__tests__/unit-tests/FeatureFlagsTable.test.tsx",
@@ -360,9 +358,13 @@
     "__tests__/unit-tests/routes-smoke.test.tsx",
     "__tests__/unit-tests/server.test.tsx",
     "__tests__/unit-tests/ServerPages.test.tsx",
-    "__tests__/unit-tests/TelemetryDashboardPage.test.tsx",
-    "__tests__/unit-tests/TelemetryLogsSettingsPage.test.tsx",
     "__tests__/unit-tests/TerminalPage.test.tsx",
     "__tests__/unit-tests/test-panels.test.tsx"
+  ],
+  "tests-portal": [
+    "__tests__/unit-tests/BugDetailDialog.test.tsx",
+    "__tests__/unit-tests/BugsPage.test.tsx",
+    "__tests__/unit-tests/TelemetryDashboardPage.test.tsx",
+    "__tests__/unit-tests/TelemetryLogsSettingsPage.test.tsx"
   ]
 }

@@ -106,12 +106,12 @@ describe('the Slack announcement of a run with little to say', () => {
   });
 
   it('points the portal button at the configured portal', async () => {
-    mockEnv.TECH_URL = 'https://tech.example.test/';
+    mockEnv.TESTS_URL = 'https://tests.example.test/';
     const run = await row({ ref: 'staging' });
     await e2eRunService.report({ dispatch_id: run.dispatch_id, status: 'SUCCESS' }, 'ci');
     const elements = post.mock.calls.at(-1)?.[0].blocks.at(-1).elements;
     expect(elements.map((b: { text: { text: string } }) => b.text.text)).toEqual(['Open in Duncit']);
-    expect(elements[0].url).toBe('https://tech.example.test/e2e/runs');
+    expect(elements[0].url).toBe('https://tests.example.test/e2e/runs');
   });
 
   it('names at most eight red suites and counts the rest', async () => {

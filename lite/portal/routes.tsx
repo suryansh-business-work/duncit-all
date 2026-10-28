@@ -8,6 +8,7 @@ import { UsersPage } from './pages/users';
 import { RegistrationsPage } from './pages/registrations';
 import { CalendarsPage } from './pages/calendars';
 import { CategoriesPage } from './pages/categories';
+import { PoliciesPage } from './pages/policies';
 import { CitiesPage } from './pages/cities';
 import { EnvironmentPage } from './pages/environment';
 import { EmailTemplatesPage } from './pages/email-templates';
@@ -27,6 +28,7 @@ export function ConsoleRoutes() {
           <Route path="/registrations" element={<RegistrationsPage />} />
           <Route path="/calendars" element={<CalendarsPage />} />
           <Route path="/categories" element={<CategoriesPage />} />
+          <Route path="/policies" element={<PoliciesPage />} />
           <Route path="/cities" element={<CitiesPage />} />
           <Route path="/environment" element={<EnvironmentPage />} />
           <Route path="/email-templates" element={<EmailTemplatesPage />} />

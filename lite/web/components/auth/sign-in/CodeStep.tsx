@@ -18,8 +18,14 @@ interface CodeStepProps {
 /** Seconds until "send a new code" opens again, counting down from the server's figure. */
 function useCountdown(seconds: number): number {
   const [left, setLeft] = useState(seconds);
-  useEffect(() => {
+  const [counting, setCounting] = useState(seconds);
+  // A new figure restarts the count in the SAME render that shows the new code. Set in an
+  // effect, it landed a render later, so "Send a new code" flashed open (and clickable) in between.
+  if (counting !== seconds) {
+    setCounting(seconds);
     setLeft(seconds);
+  }
+  useEffect(() => {
     if (seconds <= 0) return undefined;
     const timer = globalThis.setInterval(() => setLeft((value) => Math.max(0, value - 1)), 1000);
     return () => globalThis.clearInterval(timer);

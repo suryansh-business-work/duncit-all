@@ -39,7 +39,7 @@ import {
 
 const ANDROID = consoleLink('tech', '/app-builds/android');
 const IOS = consoleLink('tech', '/app-builds/ios');
-const ERROR_LOGS = consoleLink('tech', '/telemetry/error-logs');
+const ERROR_LOGS = consoleLink('tests', '/telemetry/error-logs');
 
 const BUILD_STATUSES = ['SUCCESS', 'FAILED', 'IN_PROGRESS'] as const;
 const TRIGGERS = ['PUSH', 'PORTAL'] as const;

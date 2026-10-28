@@ -82,6 +82,7 @@ export const SESSION_BUNDLE: NestedCatalogue = {
         gigJobs: 'Every gig, freelancer and category behind Gig Jobs, moderated in one place.',
         mcp: 'Connect Claude, ChatGPT or Gemini to Duncit and see every tool call.',
         loyalty: 'Duncit Coin, virtual gift cards and printed gift cards, in one place.',
+        tests: 'Unit, E2E, stress, regression and manual testing, with one confidence score.',
         support: 'Tickets, live chat and customer support.',
         tech: 'Environment, feature flags and platform config.',
         websiteApp: 'Site content, careers, newsroom and blog.',

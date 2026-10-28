@@ -7,7 +7,7 @@ import { eventWhen, fromPriceLabel } from '../../../shared/format';
 import type { LiteEventCard as LiteEventCardData } from '../../../shared/graphql/documents';
 import { useWebT } from '../../../shared/i18n';
 import { paths } from '../../lib/paths';
-import { LiteImage } from '../LiteImage';
+import { LiteImage } from '../../../shared/LiteImage';
 import { EventStatusChip } from '../StatusChips';
 
 interface EventCardProps {

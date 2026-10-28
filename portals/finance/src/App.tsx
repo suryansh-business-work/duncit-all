@@ -33,7 +33,6 @@ import {
   ExpenseDashboardPage,
   ExpenseSettingsPage,
   PayoutCyclesPage,
-  ReferralsPage,
   StartupDashboardPage,
 } from './pages/finance';
 import AppShell from './components/AppShell';
@@ -51,6 +50,7 @@ const MOVED_TO_LOYALTY: ReadonlyArray<readonly [from: string, to: string]> = [
   ['/gift-cards/dashboard', '/gift-cards/virtual/dashboard'],
   ['/gift-cards/cards', '/gift-cards/virtual/cards'],
   ['/gift-cards/logs', '/gift-cards/virtual/logs'],
+  ['/referrals', '/referrals/history'],
 ];
 
 export default function App() {
@@ -96,7 +96,6 @@ export default function App() {
       <Route path="/employee-expenses" element={authed(<EmployeeExpensePage />)} />
       <Route path="/expenses/dashboard" element={authed(<ExpenseDashboardPage />)} />
       <Route path="/settings/expenses" element={authed(<ExpenseSettingsPage />)} />
-      <Route path="/referrals" element={authed(<ReferralsPage />)} />
       {MOVED_TO_LOYALTY.map(([from, to]) => (
         <Route key={from} path={from} element={<MovedToLoyalty to={to} />} />
       ))}

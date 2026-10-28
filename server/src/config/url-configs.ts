@@ -9,6 +9,7 @@ const developmentUrls = {
   adsUrl: 'http://localhost:2006',
   websiteUrl: 'http://localhost:2000',
   techUrl: 'http://localhost:2009',
+  testsUrl: 'http://localhost:2048',
   marketingUrl: 'http://localhost:2015',
   ecommUrl: 'http://localhost:2039',
   productsUrl: 'http://localhost:2014',
@@ -30,6 +31,7 @@ const productionUrls = {
   adsUrl: 'https://ads.duncit.com',
   websiteUrl: 'https://duncit.com',
   techUrl: 'https://tech.duncit.com',
+  testsUrl: 'https://tests.duncit.com',
   marketingUrl: 'https://marketing.duncit.com',
   ecommUrl: 'https://ecomm.duncit.com',
   productsUrl: 'https://products.duncit.com',
@@ -70,6 +72,8 @@ export async function getUrlConfigs() {
     // server-side value on purpose: taking the return address from the request
     // would make this an open redirect wearing an OAuth callback's clothes.
     techUrl: await configValue('TECH_URL', defaults.techUrl),
+    // The Tests console — where an E2E run's Slack message links back to.
+    testsUrl: await configValue('TESTS_URL', defaults.testsUrl),
     // Where a social network's OAuth callback returns the marketer to — fixed
     // server-side for the same open-redirect reason as techUrl.
     marketingUrl: await configValue('MARKETING_URL', defaults.marketingUrl),

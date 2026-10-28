@@ -1,5 +1,5 @@
 import { mountPortal } from '@duncit/shell';
-import { ANALYTICS_BUNDLE, flattenCatalogue, STATUS_BUNDLE, TECH_BUNDLE } from '@duncit/app-settings';
+import { flattenCatalogue, STATUS_BUNDLE, TECH_BUNDLE } from '@duncit/app-settings';
 import { createSessionUserLoader } from '@duncit/user-context';
 import { logs } from '@duncit/logs';
 import { urlConfigs } from './config/url-configs';
@@ -13,16 +13,14 @@ mountPortal({
   graphqlUrl: urlConfigs.graphqlUrl,
   logsPortal: logs.portal.tech,
   // This portal's OWN namespace, layered over the shell chrome's. Shipping it
-  // here is what compiles the copy into the build, so the server console and
-  // the telemetry tables read correctly offline and before the API answers.
+  // here is what compiles the copy into the build, so the server console reads
+  // correctly offline and before the API answers.
   // STATUS_BUNDLE too: the Status Reports table reads the same impact and
   // triage words the public status page writes them in, and one namespace for
   // both is what keeps the dropdown and the chip from drifting apart.
-  // ANALYTICS_BUNDLE for Security → SonarQube, the Analytics console's own page.
   i18nFallback: {
     ...flattenCatalogue(TECH_BUNDLE),
     ...flattenCatalogue(STATUS_BUNDLE),
-    ...flattenCatalogue(ANALYTICS_BUNDLE),
   },
   loadUser: createSessionUserLoader(apolloClient),
   children: <App />,

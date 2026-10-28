@@ -110,7 +110,7 @@ export default function GenerateCardsForm({ policy, busy, errorMessage, onSubmit
                 value={field.value}
                 onChange={field.onChange}
                 label={t('loyalty.physical.membersLabel')}
-                helperText={fieldState.error?.message ?? t('loyalty.physical.membersHint')}
+                helperText={fieldState.error?.message ?? t('loyalty.physical.membersSearchHint')}
                 error={Boolean(fieldState.error)}
               />
             )}

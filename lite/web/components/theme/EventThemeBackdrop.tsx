@@ -1,4 +1,4 @@
-import { Box } from '@mui/material';
+import { Box, Portal } from '@mui/material';
 import type { LiteEventThemeKey, LiteThemeAccent } from '../../../shared/graphql/documents';
 import { tint } from '../../../shared/theme';
 import { ACCENT_COLORS, BADGE_TINTS, LITE_SCHEMES } from '../../../shared/tokens';
@@ -32,23 +32,30 @@ export function themeBackground(key: LiteEventThemeKey, accent: LiteThemeAccent)
  * The page behind an event (and behind the create form, as a live preview):
  * fixed to the viewport, behind everything, decorative only. AMBIENT drifts
  * slowly; reduced motion holds it still.
+ *
+ * Portalled to <body>: the page container keeps a transform from its entrance
+ * animation, and a transformed ancestor becomes the box a fixed element is
+ * placed in, which clipped the theme to the 1040px column.
  */
 export function EventThemeBackdrop({ themeKey, accent }: Readonly<{ themeKey: LiteEventThemeKey; accent: LiteThemeAccent }>) {
   return (
-    <Box
-      aria-hidden
-      data-lite-animate
-      data-testid="event-theme-backdrop"
-      data-theme-key={themeKey}
-      sx={{
-        position: 'fixed',
-        inset: 0,
-        pointerEvents: 'none',
-        background: themeBackground(themeKey, accent),
-        filter: themeKey === 'AMBIENT' ? 'blur(12px)' : undefined,
-        animation: themeKey === 'AMBIENT' ? 'lite-float 14s ease-in-out infinite' : undefined,
-        transition: 'background 400ms ease',
-      }}
-    />
+    <Portal>
+      <Box
+        aria-hidden
+        data-lite-animate
+        data-testid="event-theme-backdrop"
+        data-theme-key={themeKey}
+        sx={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: -1,
+          pointerEvents: 'none',
+          background: themeBackground(themeKey, accent),
+          filter: themeKey === 'AMBIENT' ? 'blur(12px)' : undefined,
+          animation: themeKey === 'AMBIENT' ? 'lite-float 14s ease-in-out infinite' : undefined,
+          transition: 'background 400ms ease',
+        }}
+      />
+    </Portal>
   );
 }

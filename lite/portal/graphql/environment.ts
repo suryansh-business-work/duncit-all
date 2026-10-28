@@ -1,6 +1,6 @@
 import { gql } from '@apollo/client';
 
-export type LiteEnvCategory = 'EMAIL' | 'IMAGEKIT' | 'GOOGLE_OAUTH' | 'GOOGLE_MAPS' | 'MSG91';
+export type LiteEnvCategory = 'EMAIL' | 'IMAGEKIT' | 'GOOGLE_OAUTH' | 'GOOGLE_MAPS' | 'MSG91' | 'PEXELS';
 
 export interface LiteEnvFieldDef {
   name: string;

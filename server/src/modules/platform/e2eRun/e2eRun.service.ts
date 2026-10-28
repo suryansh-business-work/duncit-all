@@ -41,6 +41,7 @@ import {
 import { E2E_SUITES, currentSuites, normaliseSuites, suitesInput } from './e2eRun.suites';
 import { buildIdentity, type E2eIdentity } from './e2eRun.identity';
 import { forgetMuteCache } from './e2eRun.mute';
+import { regressionReportService } from '@modules/platform/regressionReport/regressionReport.service';
 
 /** The one workflow this module drives. */
 const WORKFLOW_FILE = 'e2e.yml';
@@ -345,7 +346,7 @@ function failuresBlock(run: IE2eRun): unknown {
   return { type: 'section', text: { type: 'mrkdwn', text: lines.join('\n') } };
 }
 
-function actionButtons(run: IE2eRun, techUrl: string): unknown[] {
+function actionButtons(run: IE2eRun, testsUrl: string): unknown[] {
   const buttons: unknown[] = [];
   if (run.workflow_run_url) {
     buttons.push({
@@ -359,12 +360,12 @@ function actionButtons(run: IE2eRun, techUrl: string): unknown[] {
   buttons.push({
     type: 'button',
     text: { type: 'plain_text', text: 'Open in Duncit' },
-    url: `${techUrl.replace(/\/$/, '')}/e2e/runs`,
+    url: `${testsUrl.replace(/\/$/, '')}/e2e/runs`,
   });
   return buttons;
 }
 
-function runBlocks(run: IE2eRun, techUrl: string): unknown[] {
+function runBlocks(run: IE2eRun, testsUrl: string): unknown[] {
   const blocks: unknown[] = [
     { type: 'section', text: { type: 'mrkdwn', text: `*${headline(run)}*` } },
     { type: 'section', fields: factLines(run).map((text) => ({ type: 'mrkdwn', text })) },
@@ -374,7 +375,7 @@ function runBlocks(run: IE2eRun, techUrl: string): unknown[] {
   if (run.status === 'FAILED' && run.error_message) {
     blocks.push(contextBlock(`:rotating_light: ${escapeMrkdwn(clip(run.error_message, 500))}`));
   }
-  blocks.push({ type: 'actions', elements: actionButtons(run, techUrl) });
+  blocks.push({ type: 'actions', elements: actionButtons(run, testsUrl) });
   return blocks;
 }
 
@@ -390,13 +391,13 @@ async function announce(
   if (!channel) {
     return { skipped: 'No Slack channel is configured for e2e results' };
   }
-  const { techUrl } = await getUrlConfigs();
+  const { testsUrl } = await getUrlConfigs();
   const result = await postMessage({
     channel,
     // The emoji is decoration in the blocks and noise in a notification
     // preview, which is what `text` becomes.
     text: headline(run).replace(/:[a-z_]+:\s*/g, ''),
-    blocks: runBlocks(run, techUrl),
+    blocks: runBlocks(run, testsUrl),
   });
   logs.server.info('e2eRun', 'announce', {
     channel: result.channel,
@@ -914,6 +915,14 @@ export const e2eRunService = {
     // lands, and a channel that posted twenty times per sweep would be muted
     // inside a week.
     if (finished) await announceOutcome(run);
+    // The Tests console's regression report against the previous finished run.
+    // Not awaited: it logs its own failures and never throws into a report; the
+    // catch is the backstop so a rejection can never go unhandled.
+    if (finished) {
+      regressionReportService
+        .buildForE2eRun(String(run._id))
+        .catch((error) => logs.server.error('e2eRun', 'regressionReport', { run_no: run.run_no, error }));
+    }
     return pub(run);
   },
 

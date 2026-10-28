@@ -19,7 +19,7 @@ const smtp = (name: string, extra: Record<string, string> = {}) =>
 describe('envEntryService.categories', () => {
   it('lists every category with its fields, including Google Maps and MSG91', () => {
     const categories = envEntryService.categories();
-    expect(categories.map((c) => c.category)).toEqual(['EMAIL', 'IMAGEKIT', 'GOOGLE_OAUTH', 'GOOGLE_MAPS', 'MSG91']);
+    expect(categories.map((c) => c.category)).toEqual(['EMAIL', 'IMAGEKIT', 'GOOGLE_OAUTH', 'GOOGLE_MAPS', 'MSG91', 'PEXELS']);
     const maps = categories.find((c) => c.category === 'GOOGLE_MAPS');
     expect(maps?.label).toBe('Google Maps');
     expect(maps?.fields.map((f) => f.name)).toEqual(['api_key', 'map_id']);

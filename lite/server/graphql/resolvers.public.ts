@@ -6,6 +6,8 @@ import { contactService } from '../services/contact.service';
 import { discoverService, publicCategories, publicCities } from '../services/discover.service';
 import { eventService } from '../services/event.service';
 import { insightsService } from '../services/insights.service';
+import { activePexelsKey, importPexelsPhoto, searchPexels } from '../services/pexels.service';
+import { policyService } from '../services/policy.service';
 import { upiLink, upiQrDataUrl } from '../services/qr';
 import { registrationService } from '../services/registration.service';
 import { settingsService } from '../services/settings.service';
@@ -41,6 +43,8 @@ export const publicResolvers = {
     liteSubscribedCalendars: async (_p: unknown, _a: Args, ctx: LiteContext) => calendarService.subscribed(await requireUser(ctx)),
     liteCategories: (_p: unknown, args: Args) => publicCategories(Boolean(args.include_inactive)),
     liteCities: (_p: unknown, args: Args) => publicCities(Boolean(args.include_inactive)),
+    litePolicies: () => policyService.publicList(),
+    litePolicy: (_p: unknown, args: Args) => policyService.bySlug(args.slug),
     liteCity: (_p: unknown, args: Args) => discoverService.city(args.slug),
     liteUserProfile: (_p: unknown, args: Args) => userService.byHandle(args.handle),
     liteUserEvents: async (_p: unknown, args: Args, ctx: LiteContext) => eventService.byHandle(args.handle, Boolean(args.past), await optionalUser(ctx)),
@@ -51,6 +55,15 @@ export const publicResolvers = {
     liteUploadTicket: async (_p: unknown, _a: Args, ctx: LiteContext) => {
       await requireUser(ctx);
       return { upload_url: `${env.siteUrl}/upload`, max_mb: UPLOAD_MAX_MB };
+    },
+    litePictureOptions: async (_p: unknown, _a: Args, ctx: LiteContext) => {
+      const user = await requireUser(ctx);
+      const [key, topics, previous] = await Promise.all([activePexelsKey(), settingsService.pictureTopics(), eventService.coverHistory(user)]);
+      return { pexels_ready: Boolean(key), topics, previous_covers: previous, max_mb: UPLOAD_MAX_MB };
+    },
+    litePexelsSearch: async (_p: unknown, args: Args, ctx: LiteContext) => {
+      await requireUser(ctx);
+      return searchPexels({ query: args.query, orientation: args.orientation, page: args.page });
     },
     liteEventInsights: async (_p: unknown, args: Args, ctx: LiteContext) => insightsService.forEvent(await requireUser(ctx), args.event_id, args.days),
   },
@@ -66,6 +79,10 @@ export const publicResolvers = {
     liteTrackEventView: async (_p: unknown, args: Args, ctx: LiteContext) => insightsService.trackView(args.slug, await optionalUser(ctx)),
     liteUpdateProfile: async (_p: unknown, args: Args, ctx: LiteContext) => userService.updateProfile(await requireUser(ctx), args.input),
     liteSetMyLocale: async (_p: unknown, args: Args, ctx: LiteContext) => userService.setLocale(await requireUser(ctx), args.locale),
+    liteImportPexelsPhoto: async (_p: unknown, args: Args, ctx: LiteContext) => {
+      await requireUser(ctx);
+      return importPexelsPhoto(args.id);
+    },
 
     liteCreateEvent: async (_p: unknown, args: Args, ctx: LiteContext) => eventService.create(await requireUser(ctx), args.input),
     liteUpdateEvent: async (_p: unknown, args: Args, ctx: LiteContext) => eventService.update(await requireUser(ctx), args.id, args.input),

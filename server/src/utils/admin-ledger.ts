@@ -31,15 +31,17 @@ export interface UserInfo {
 export async function loadUserMap(userIds: string[]): Promise<Map<string, UserInfo>> {
   const unique = [...new Set(userIds.filter(Boolean))].filter((id) => Types.ObjectId.isValid(id));
   if (unique.length === 0) return new Map();
+  // The address lives at `auth.email`. `email` is only a document virtual, and a
+  // lean read never runs virtuals — selecting it returned every email blank.
   const rows = await UserModel.find({ _id: { $in: unique } })
-    .select('email profile.first_name profile.last_name')
+    .select('auth.email profile.first_name profile.last_name')
     .lean();
   return new Map(
     rows.map((u: any) => [
       String(u._id),
       {
         name: `${u.profile?.first_name ?? ''} ${u.profile?.last_name ?? ''}`.trim(),
-        email: u.email ?? '',
+        email: u.auth?.email ?? '',
       },
     ])
   );

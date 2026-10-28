@@ -163,6 +163,18 @@ export const coinTypeDefs = /* GraphQL */ `
     earn_pct: Float!
     "Order total the grant was computed from."
     spend_amount: Float!
+    "The referral that earned this row (REFERRAL_EARN / REFERRAL_SIGNUP)."
+    referral_id: String
+    "The gift card whose value became these coins (GIFT_CARD_REDEEM)."
+    gift_card_id: String
+    "The backout request this refund paid back (PAYMENT_REFUND)."
+    backout_id: String
+    "The pod rating this reward paid for (POD_FEEDBACK)."
+    feedback_id: String
+    "When the unspent part of this grant lapses. Null when it never does."
+    expires_at: String
+    "How much of this grant is still unspent. Only rows that expire carry it."
+    remaining: Float!
     created_at: String!
   }
 
@@ -183,6 +195,8 @@ export const coinTypeDefs = /* GraphQL */ `
     id: ID!
     full_name: String!
     email: String!
+    "Country code and number, or empty when the account has no phone."
+    phone: String!
     balance: Float!
   }
 
@@ -193,9 +207,11 @@ export const coinTypeDefs = /* GraphQL */ `
     coinAdminStats(months: Int): CoinAdminStats!
     "Loyalty > Duncit Coin > Transactions. 'pod_doc_id' scopes the page to coins settled by that pod's payments."
     coinTransactionsTable(query: TableQueryInput, pod_doc_id: ID): CoinAdminTransactionTablePage!
+    "Loyalty > Duncit Coin > Transactions > one row. Null when no ledger row has that id."
+    coinTransaction(id: ID!): CoinAdminTransaction
     "Every coin payout rule, for Loyalty > Duncit Coin > Coin Settings."
     coinSettings: CoinSettings!
-    "Name/email search for the manual-adjustment picker. Under two characters returns nothing."
+    "Name, email or phone search for the member pickers. Under two characters returns nothing."
     coinUserSearch(term: String!): [CoinUserOption!]!
   }
 

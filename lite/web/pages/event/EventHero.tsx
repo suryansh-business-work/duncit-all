@@ -2,7 +2,7 @@ import { Chip, Stack, Typography } from '@mui/material';
 import { PageHeader } from '@duncit/ui';
 import type { LiteEvent } from '../../../shared/graphql/documents';
 import { useWebT } from '../../../shared/i18n';
-import { LiteImage } from '../../components/LiteImage';
+import { LiteImage } from '../../../shared/LiteImage';
 import { EventStatusChip } from '../../components/StatusChips';
 import { ShareButton } from './ShareButton';
 

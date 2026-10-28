@@ -45,6 +45,8 @@ interface Props {
   editor: Editor;
   /** ImageKit folder for pictures dropped into this editor. */
   imageFolder: string;
+  /** Offer Insert picture (off where the main Duncit API's media picker is not reachable). */
+  images: boolean;
   /** Raised when an image upload fails, so the editor can say so. */
   onImageError: (failed: boolean) => void;
 }
@@ -55,6 +57,7 @@ export function RichTextToolbar({
   compact,
   editor,
   imageFolder,
+  images,
   onImageError,
 }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -132,7 +135,7 @@ export function RichTextToolbar({
         {/* Table and picture sit together: everything before them formats a
             selection, and these two insert a BLOCK. */}
         <TableMenu editor={editor} />
-        <ImageButton editor={editor} folder={imageFolder} onError={onImageError} />
+        {images ? <ImageButton editor={editor} folder={imageFolder} onError={onImageError} /> : null}
         <Divider orientation="vertical" flexItem sx={DIVIDER_SX} />
         <ToolbarButton
           label={label('undo')}

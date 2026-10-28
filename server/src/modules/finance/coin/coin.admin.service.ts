@@ -13,6 +13,7 @@ import {
 } from '@utils/admin-ledger';
 import { coinSettingsService } from './coin.settings.service';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
+import { phoneLabel, userSearchFilter } from '@utils/user-search';
 
 /**
  * Platform-wide reads over the coin ledger for Admin > Duncit Coin. Kept apart
@@ -188,9 +189,30 @@ const toAdminRow = (
     pods: rowPods,
     earn_pct: t.earn_pct ?? 0,
     spend_amount: t.spend_amount ?? 0,
+    // What else the row is keyed on — the event that earned or spent the coins.
+    referral_id: t.referral_id ?? null,
+    gift_card_id: t.gift_card_id ?? null,
+    backout_id: t.backout_id ?? null,
+    feedback_id: t.feedback_id ?? null,
+    expires_at: t.expires_at?.toISOString?.() ?? null,
+    remaining: t.remaining ?? 0,
     created_at: t.created_at?.toISOString?.() ?? '',
   };
 };
+
+/** Joins ledger rows to their payments, those payments' pods and the people named on them. */
+async function toAdminRows(docs: ICoinTransaction[]) {
+  const paymentIds = docs.map((d) => d.payment_id).filter((id): id is string => !!id);
+  const payments = await loadPaymentMap(paymentIds);
+  const podIds = [...payments.values()].flatMap((p) => p.pod_ids);
+  // Both sides of a manual row in one lookup: the account it moved coins for,
+  // and the admin who typed it.
+  const [pods, users] = await Promise.all([
+    loadPodMap([...new Set(podIds)]),
+    loadUserMap(docs.flatMap((d) => [String(d.user_id), d.admin_id ? String(d.admin_id) : ''])),
+  ]);
+  return docs.map((d) => toAdminRow(d, payments, pods, users));
+}
 
 export const coinAdminService = {
   /**
@@ -265,21 +287,19 @@ export const coinAdminService = {
   },
 
   /**
-   * Accounts the manual-adjustment picker can offer, with the balance each one
-   * currently holds — the number an admin needs before deciding what to type.
+   * Accounts the manual-adjustment and card pickers can offer, with the balance
+   * each one currently holds — the number an admin needs before deciding what
+   * to type. Found by name, full name, email or phone (userSearchFilter).
    *
    * A short term is answered with nothing rather than the first ten accounts on
    * the platform: this picker exists to find ONE known person, and a list that
    * appears before you have said who you mean invites picking the wrong one.
    */
   async userSearch(term: string) {
-    const needle = (term ?? '').trim();
-    if (needle.length < 2) return [];
-    const rx = new RegExp(needle.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`), 'i');
-    const users = await UserModel.find({
-      $or: [{ email: rx }, { 'profile.first_name': rx }, { 'profile.last_name': rx }],
-    })
-      .select('email profile.first_name profile.last_name')
+    const filter = userSearchFilter(term);
+    if (!filter) return [];
+    const users = await UserModel.find(filter)
+      .select('auth.email auth.phone.number auth.phone.extension profile.first_name profile.last_name')
       .limit(10)
       .lean();
     const balances = await CoinBalanceModel.find({
@@ -291,9 +311,19 @@ export const coinAdminService = {
     return users.map((u: any) => ({
       id: String(u._id),
       full_name: `${u.profile?.first_name ?? ''} ${u.profile?.last_name ?? ''}`.trim(),
-      email: u.email ?? '',
+      email: u.auth?.email ?? '',
+      phone: phoneLabel(u.auth?.phone),
       balance: byUser.get(String(u._id)) ?? 0,
     }));
+  },
+
+  /** One ledger row, joined exactly as the table joins it — a Transactions row's own page. */
+  async transaction(id: string) {
+    if (!Types.ObjectId.isValid(id)) return null;
+    const doc = await CoinTransactionModel.findById(id).lean<ICoinTransaction>();
+    if (!doc) return null;
+    const [row] = await toAdminRows([doc]);
+    return row;
   },
 
   /**
@@ -310,17 +340,8 @@ export const coinAdminService = {
       input,
       COIN_TXN_TABLE_CONFIG
     );
-    const paymentIds = docs.map((d) => d.payment_id).filter((id): id is string => !!id);
-    const payments = await loadPaymentMap(paymentIds);
-    const podIds = [...payments.values()].flatMap((p) => p.pod_ids);
-    // Both sides of a manual row in one lookup: the account it moved coins for,
-    // and the admin who typed it.
-    const [pods, users] = await Promise.all([
-      loadPodMap([...new Set(podIds)]),
-      loadUserMap(docs.flatMap((d) => [String(d.user_id), d.admin_id ? String(d.admin_id) : ''])),
-    ]);
     return {
-      rows: docs.map((d) => toAdminRow(d, payments, pods, users)),
+      rows: await toAdminRows(docs),
       total,
       page,
       page_size,

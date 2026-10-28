@@ -2,6 +2,7 @@ import { Chip, Stack, Typography } from '@mui/material';
 import { EM_DASH, dateColumn, type DuncitColumn } from '@duncit/table';
 import { formatMoney } from '@duncit/utils';
 import type { DateFormatter, useTranslation } from '@duncit/app-settings';
+import PersonCell from '../../../components/PersonCell';
 import { coinCount, type CoinTxnRow } from '../queries';
 
 export const getCoinRowId = (row: CoinTxnRow) => row.id;
@@ -33,7 +34,7 @@ const sourceOptions = (t: Translate) => [
   { value: 'EARN_REVOKE', label: t('finance.duncitCoin.earnRevoked') },
 ];
 
-const sourceLabel = (t: Translate) =>
+export const sourceLabel = (t: Translate) =>
   new Map(sourceOptions(t).map((option) => [option.value, option.label]));
 
 const isCredit = (row: CoinTxnRow) => row.type === 'CREDIT';
@@ -48,18 +49,7 @@ const renderType = (row: CoinTxnRow, t: Translate) => (
   />
 );
 
-const renderUser = (row: CoinTxnRow) => (
-  <Stack sx={{ minWidth: 0 }}>
-    <Typography variant="body2" noWrap sx={{ fontWeight: 700 }}>
-      {row.user_name || row.user_id}
-    </Typography>
-    <Typography variant="caption" noWrap sx={{
-      color: "text.secondary"
-    }}>
-      {row.user_email || EM_DASH}
-    </Typography>
-  </Stack>
-);
+const renderUser = (row: CoinTxnRow) => <PersonCell name={row.user_name} email={row.user_email} id={row.user_id} />;
 
 /** A shop cart can span pods, so the extra ones are counted rather than hidden. */
 const podCaption = (row: CoinTxnRow) => {

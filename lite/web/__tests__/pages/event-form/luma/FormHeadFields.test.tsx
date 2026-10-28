@@ -65,20 +65,23 @@ describe('CalendarAndVisibility', () => {
 });
 
 describe('CoverField', () => {
-  it('takes a pasted link as the cover and previews it', async () => {
-    const { user, form } = renderInEventForm(<CoverField />);
-    expect(screen.queryByTestId('event-cover-preview')).not.toBeInTheDocument();
-    await user.type(screen.getByRole('textbox', { name: 'Or paste an image link' }), 'https://pictures.example/roof.jpg');
-    expect(form().getValues('cover_url')).toBe('https://pictures.example/roof.jpg');
+  it('previews the cover the form holds and clears it with Remove picture', async () => {
+    const { user, form } = renderInEventForm(<CoverField />, { defaults: { cover_url: 'https://pictures.example/roof.jpg' } });
     expect(screen.getByTestId('event-cover-preview')).toHaveAttribute('src', 'https://pictures.example/roof.jpg');
-    expect(screen.queryByText('Enter a full link starting with http:// or https://')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Change picture' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Remove picture' }));
+    expect(form().getValues('cover_url')).toBe('');
+    expect(screen.queryByTestId('event-cover-preview')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Choose a picture' })).toBeInTheDocument();
   });
 
   it('shows the link problem in place of the hint', async () => {
-    const { user } = renderInEventForm(<CoverField />);
+    const { form } = renderInEventForm(<CoverField />, { defaults: { cover_url: 'roof.jpg' } });
     expect(screen.getByText('Wide pictures look best')).toBeInTheDocument();
-    await user.type(screen.getByRole('textbox', { name: 'Or paste an image link' }), 'roof.jpg');
-    expect(await screen.findByText('Enter a full link starting with http:// or https://')).toBeInTheDocument();
+    await act(async () => {
+      await form().trigger('cover_url');
+    });
+    expect(screen.getByRole('alert')).toHaveTextContent('Enter a full link starting with http:// or https://');
     expect(screen.queryByText('Wide pictures look best')).not.toBeInTheDocument();
   });
 });

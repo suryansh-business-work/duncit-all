@@ -59,9 +59,16 @@ describe('CalendarHeader', () => {
     expect(screen.getByTestId('calendar-header').querySelector('img[src="https://cdn.example/cover.jpg"]')).not.toBeNull();
   });
 
-  it('offers the feed as a webcal subscription for calendar apps', () => {
-    renderHeader(calendarFixture());
-    expect(screen.getByRole('link', { name: 'Subscribe in your calendar app' }).getAttribute('href')).toMatch(/^webcal:\/\/.+\/ics\/cal\/run-club\.ics$/);
+  it('offers the feed to Google, Apple and Outlook calendars from one menu', async () => {
+    const { user } = renderHeader(calendarFixture());
+    await user.click(screen.getByRole('button', { name: 'Subscribe in your calendar app' }));
+    expect(screen.getByRole('menuitem', { name: 'Apple Calendar' }).getAttribute('href')).toMatch(/^webcal:\/\/.+\/ics\/cal\/run-club\.ics$/);
+    const google = new URL(screen.getByRole('menuitem', { name: 'Google Calendar' }).getAttribute('href') ?? '');
+    expect(google.hostname).toBe('calendar.google.com');
+    expect(google.searchParams.get('cid')).toMatch(/^webcal:\/\/.+\/ics\/cal\/run-club\.ics$/);
+    const outlook = new URL(screen.getByRole('menuitem', { name: 'Outlook' }).getAttribute('href') ?? '');
+    expect(outlook.searchParams.get('url')).toMatch(/^https?:\/\/.+\/ics\/cal\/run-club\.ics$/);
+    expect(screen.getByRole('menuitem', { name: 'Copy feed link' })).toBeInTheDocument();
   });
 
   it('gives the owner Edit instead of Subscribe', () => {

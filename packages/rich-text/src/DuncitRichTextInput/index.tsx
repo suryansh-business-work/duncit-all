@@ -39,6 +39,8 @@ export function DuncitRichTextInput({
   bare = false,
   aiContext,
   imageFolder = DEFAULT_IMAGE_FOLDER,
+  aiImprove = true,
+  images = true,
 }: Readonly<DuncitRichTextInputProps>) {
   const { t } = useTranslation();
   const resolvedPlaceholder = placeholder ?? t('shell.richText.placeholder');
@@ -109,6 +111,7 @@ export function DuncitRichTextInput({
           compact={compact}
           editor={editor}
           imageFolder={imageFolder}
+          images={images}
           onImageError={setImageError}
         />
       ) : null}
@@ -118,6 +121,7 @@ export function DuncitRichTextInput({
           disabled={!editor.getText().trim()}
           error={aiError}
           imageError={imageError}
+          improve={aiImprove}
           loading={loading}
           onImprove={() => {
             improveContent().catch(() => setAiError(true));

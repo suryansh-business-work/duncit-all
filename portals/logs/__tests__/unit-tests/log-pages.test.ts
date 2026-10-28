@@ -7,9 +7,10 @@ import { describe, expect, it, vi } from 'vitest';
  */
 const page = vi.hoisted(() => (name: string) => () => ({ default: `page:${name}` }));
 
-vi.mock('../../../tech/src/pages/telemetry-logs-page', page('tech/telemetry-logs'));
-vi.mock('../../../tech/src/pages/telemetry-log-detail-page', page('tech/telemetry-log-detail'));
-vi.mock('../../../tech/src/pages/error-logs-page', page('tech/error-logs'));
+vi.mock('../../../tests/src/pages/telemetry-logs-page', page('tests/telemetry-logs'));
+vi.mock('../../../tests/src/pages/telemetry-log-detail-page', page('tests/telemetry-log-detail'));
+vi.mock('../../../tests/src/pages/error-logs-page', page('tests/error-logs'));
+
 vi.mock('../../../tech/src/pages/rate-limiting/blocked', page('tech/rate-limit-blocked'));
 vi.mock('../../../tech/src/pages/msg91-settings', page('tech/msg91-settings'));
 
@@ -31,6 +32,7 @@ vi.mock('../../../finance/src/pages/finance/payment-detail-page', page('finance/
 vi.mock('../../../finance/src/pages/finance/user-refund-logs-page', page('finance/user-refund-logs'));
 vi.mock('../../../loyalty/src/pages/gift-cards/virtual/GiftCardLogsPage', page('loyalty/gift-card-logs'));
 vi.mock('../../../loyalty/src/pages/duncit-coin/CoinTransactionsPage', page('loyalty/coin-transactions'));
+vi.mock('../../../loyalty/src/pages/duncit-coin/CoinTransactionDetailPage', page('loyalty/coin-transaction-detail'));
 
 vi.mock('../../../legal/src/pages/policy-acceptance-logs-page', page('legal/policy-acceptance-logs'));
 
@@ -42,10 +44,13 @@ vi.mock('../../../analytics/src/pages/entity-analytics/pages', () => ({ LOGS_PAG
 import * as logPages from '../../src/log-pages';
 
 describe('log-pages', () => {
+  it('borrows the telemetry logs from the Tests console', () => {
+    expect(logPages.TelemetryLogsPage).toBe('page:tests/telemetry-logs');
+    expect(logPages.TelemetryLogDetailPage).toBe('page:tests/telemetry-log-detail');
+    expect(logPages.ErrorLogsPage).toBe('page:tests/error-logs');
+  });
+
   it('borrows each Tech log from the Tech console', () => {
-    expect(logPages.TelemetryLogsPage).toBe('page:tech/telemetry-logs');
-    expect(logPages.TelemetryLogDetailPage).toBe('page:tech/telemetry-log-detail');
-    expect(logPages.ErrorLogsPage).toBe('page:tech/error-logs');
     expect(logPages.RateLimitBlockedPage).toBe('page:tech/rate-limit-blocked');
     expect(logPages.Msg91SettingsPage).toBe('page:tech/msg91-settings');
   });
@@ -72,6 +77,7 @@ describe('log-pages', () => {
   it('borrows the coin and gift card ledgers from the Loyalty console', () => {
     expect(logPages.GiftCardLogsPage).toBe('page:loyalty/gift-card-logs');
     expect(logPages.CoinTransactionsPage).toBe('page:loyalty/coin-transactions');
+    expect(logPages.CoinTransactionDetailPage).toBe('page:loyalty/coin-transaction-detail');
   });
 
   it('borrows policy acceptance from Legal, pod monitoring from the directory consoles, and the dashboard from Analytics', () => {
@@ -85,6 +91,7 @@ describe('log-pages', () => {
     expect(Object.keys(logPages).sort()).toEqual(
       [
         'AiMonitoringLogsPage',
+        'CoinTransactionDetailPage',
         'CoinTransactionsPage',
         'EmailLogsPage',
         'EntityAnalyticsPage',

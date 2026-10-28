@@ -14,24 +14,39 @@ import { envTestLogService } from './envTestLog.service';
 import { ENV_CATEGORIES, type EnvCategory } from './envEntry.model';
 import type { GraphQLContext } from '@context';
 import { GraphQLError } from 'graphql';
-import { hasRole, LOGS_READER, requireRole } from '@middleware/rbac';
+import { hasRole, LOGS_READER, requireRole, TESTS_MANAGER } from '@middleware/rbac';
 
 const TECH_MANAGE = ['SUPER_ADMIN', 'TECH_MANAGER'];
 
 /**
- * The MSG91 keys are the one category another console manages. The
- * Communications console owns the OTP channel, so its MSG91 Settings page
- * reads and edits MSG91 entries — and no other category: every other secret
- * stays Tech's. The Logs console mounts the same page, and only reads.
+ * The categories another console manages, each role confined to its own. The
+ * Communications console owns the OTP channel, so its MSG91 Settings page reads
+ * and edits MSG91 entries; the Tests console's SonarQube Settings page reads and
+ * edits SONARQUBE entries — and neither reaches any other category: every other
+ * secret stays Tech's. Someone holding several of these roles gets the union.
  */
-const CHANNEL_CATEGORY: EnvCategory = 'MSG91';
-const CHANNEL_MANAGE = ['COMMUNICATIONS_MANAGER'];
-const CHANNEL_READ = [...CHANNEL_MANAGE, LOGS_READER];
+const CONFINED_MANAGE: ReadonlyMap<string, readonly EnvCategory[]> = new Map<string, readonly EnvCategory[]>([
+  ['COMMUNICATIONS_MANAGER', ['MSG91']],
+  [TESTS_MANAGER, ['SONARQUBE']],
+]);
+/** The Logs console mounts the MSG91 page too, and only reads. */
+const CONFINED_READ: ReadonlyMap<string, readonly EnvCategory[]> = new Map<string, readonly EnvCategory[]>([
+  ...CONFINED_MANAGE,
+  [LOGS_READER, ['MSG91']],
+]);
 
-/** The one category the caller is confined to — none for Tech, which reads them all. */
-function scopeOf(ctx: GraphQLContext): EnvCategory | null {
-  const user = requireRole(ctx, [...TECH_MANAGE, ...CHANNEL_READ]);
-  return hasRole(user, TECH_MANAGE) ? null : CHANNEL_CATEGORY;
+/** Every category the caller's confined roles grant. */
+function grantedBy(roles: readonly string[], grants: ReadonlyMap<string, readonly EnvCategory[]>): EnvCategory[] {
+  return [...new Set(roles.flatMap((role) => grants.get(role) ?? []))];
+}
+
+const inScope = (scope: readonly EnvCategory[], category: string | null | undefined): boolean =>
+  scope.some((c) => c === category);
+
+/** The categories the caller is confined to — null for Tech, which reads them all. */
+function scopeOf(ctx: GraphQLContext): readonly EnvCategory[] | null {
+  const user = requireRole(ctx, [...TECH_MANAGE, ...CONFINED_READ.keys()]);
+  return hasRole(user, TECH_MANAGE) ? null : grantedBy(user.roles, CONFINED_READ);
 }
 
 /**
@@ -39,16 +54,16 @@ function scopeOf(ctx: GraphQLContext): EnvCategory | null {
  * root admin's emailed code (`envAccess.service.ts`). Checked here, server
  * side, so hiding the page in the portal is not what protects the keys.
  */
-async function readScope(ctx: GraphQLContext): Promise<EnvCategory | null> {
+async function readScope(ctx: GraphQLContext): Promise<readonly EnvCategory[] | null> {
   const scope = scopeOf(ctx);
   await envAccessService.require(ctx);
   return scope;
 }
 
-/** Tech manages every category; a channel manager only the OTP channel's. */
+/** Tech manages every category; a confined manager only the ones their roles grant. */
 async function requireManage(ctx: GraphQLContext, category: string | null | undefined): Promise<void> {
-  const user = requireRole(ctx, [...TECH_MANAGE, ...CHANNEL_MANAGE]);
-  if (!hasRole(user, TECH_MANAGE) && category !== CHANNEL_CATEGORY) {
+  const user = requireRole(ctx, [...TECH_MANAGE, ...CONFINED_MANAGE.keys()]);
+  if (!hasRole(user, TECH_MANAGE) && !inScope(grantedBy(user.roles, CONFINED_MANAGE), category)) {
     throw new GraphQLError('Access Denied', { extensions: { code: 'FORBIDDEN' } });
   }
   await envAccessService.require(ctx);
@@ -86,23 +101,27 @@ export const envEntryResolvers = {
   Query: {
     envEntries: async (_p: unknown, args: { filter?: any }, ctx: GraphQLContext) => {
       const scope = await readScope(ctx);
-      // A confined caller's filter cannot name another category: theirs is pinned over it.
-      return envEntryService.list(scope ? { ...args.filter, category: scope } : args.filter ?? {});
+      if (!scope) return envEntryService.list(args.filter ?? {});
+      // A confined caller's filter cannot name another category: theirs are pinned over it.
+      const category = inScope(scope, args.filter?.category) ? [args.filter.category] : scope;
+      return envEntryService.list({ ...args.filter, category });
     },
     envEntriesTable: async (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
       const scope = await readScope(ctx);
-      return envEntryService.table(args.query, scope ? { category: scope } : {});
+      return envEntryService.table(args.query, scope ? { category: { $in: scope } } : {});
     },
     envEntry: async (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
       const scope = await readScope(ctx);
       const entry = await envEntryService.get(args.id);
-      if (scope && entry?.category !== scope) return null;
+      if (scope && !inScope(scope, entry?.category)) return null;
       return entry;
     },
     // No secrets in the catalogue, so it answers while locked too.
     envCategories: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       const scope = scopeOf(ctx);
-      const categories: readonly EnvCategory[] = scope ? [scope] : ENV_CATEGORIES;
+      const categories: readonly EnvCategory[] = scope
+        ? ENV_CATEGORIES.filter((c) => inScope(scope, c))
+        : ENV_CATEGORIES;
       return categories.map((category) => ({
         category,
         label: CATEGORY_LABELS[category],
@@ -146,12 +165,14 @@ export const envEntryResolvers = {
       ctx: GraphQLContext
     ) => {
       const scope = await readScope(ctx);
-      if (scope && args.category && args.category !== scope) return [];
+      if (scope && args.category && !inScope(scope, args.category)) return [];
       if (args.entryId) {
         const entry = await envEntryService.get(args.entryId);
-        if (!entry || (scope && entry.category !== scope)) return [];
+        if (!entry || (scope && !inScope(scope, entry.category))) return [];
       }
-      return envTestLogService.history(args.entryId, args.limit, scope ?? args.category);
+      // A confined caller reads their own categories' history (the one asked for, checked above).
+      const within = scope && args.category ? [args.category] : scope;
+      return envTestLogService.history(args.entryId, args.limit, within ?? args.category);
     },
     envOverview: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       await requireTech(ctx);

@@ -9,7 +9,7 @@ import { LITE_EVENT } from '../../graphql/events';
 import { usePageTitle } from '../../lib/usePageTitle';
 import { NotFoundPage } from '../not-found';
 import { DescriptionBlock } from './DescriptionBlock';
-import { EventMap } from './EventMap';
+import { EventMap } from '../../components/EventMap';
 import { EventHero } from './EventHero';
 import { HostBar } from './HostBar';
 import { HostsBlock } from './HostsBlock';

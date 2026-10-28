@@ -49,7 +49,7 @@ describe('CityForm', () => {
     render(form({ initial: makeCity({ region: 'AFRICA' }) }));
     expect(screen.getByRole('dialog', { name: 'Edit Bengaluru' })).toBeInTheDocument();
     expect(screen.getByTestId('city-name')).toHaveValue('Bengaluru');
-    expect(screen.getByTestId('city-cover-url')).toHaveValue('https://img.example.com/blr.jpg');
+    expect(screen.getByTestId('city-cover-preview')).toHaveAttribute('src', 'https://img.example.com/blr.jpg');
     expect(screen.getByTestId('city-region')).toHaveTextContent('Africa');
     expect(screen.getByTestId('city-sort-order')).toHaveValue('3');
   });
@@ -67,19 +67,20 @@ describe('CityForm', () => {
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
-  it('refuses a cover that is not a web address', async () => {
+  it('saves the city without its cover once the picture is removed', async () => {
     const user = userEvent.setup();
-    render(form({ initial: makeCity() }));
-    const cover = screen.getByTestId('city-cover-url');
-    await user.clear(cover);
-    await user.type(cover, 'blr.jpg');
-    await user.tab();
-    expect(await screen.findByText('Cover image URL must be a valid URL')).toBeInTheDocument();
+    const onSubmit = vi.fn<Submit>(() => Promise.resolve());
+    render(form({ initial: makeCity(), onSubmit }));
+    await user.click(screen.getByRole('button', { name: 'Remove picture' }));
+    expect(screen.queryByTestId('city-cover-preview')).not.toBeInTheDocument();
+    await user.click(screen.getByTestId('city-dialog-submit'));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(onSubmit.mock.calls[0]?.[0]).toMatchObject({ name: 'Bengaluru', cover_url: '' });
   });
 
   it('locks every field while saving', () => {
     render(form({ busy: true }));
-    for (const id of ['city-name', 'city-slug', 'city-country', 'city-cover-url', 'city-sort-order', 'city-featured', 'city-active']) {
+    for (const id of ['city-name', 'city-slug', 'city-country', 'city-cover-pick', 'city-sort-order', 'city-featured', 'city-active']) {
       expect(screen.getByTestId(id), id).toBeDisabled();
     }
   });

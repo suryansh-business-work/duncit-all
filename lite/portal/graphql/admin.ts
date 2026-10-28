@@ -30,6 +30,7 @@ export interface LiteAdminSettings {
   max_event_capacity: number;
   max_seats_per_registration: number;
   sign_in_with_phone: boolean;
+  picture_topics: string[];
 }
 
 export const LITE_ADMIN_STATS = gql`
@@ -66,6 +67,7 @@ const SETTINGS_FIELDS = `
   max_event_capacity
   max_seats_per_registration
   sign_in_with_phone
+  picture_topics
 `;
 
 export const LITE_ADMIN_SETTINGS = gql`

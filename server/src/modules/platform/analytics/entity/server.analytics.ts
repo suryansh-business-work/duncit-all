@@ -46,9 +46,9 @@ import {
 
 const INFO = consoleLink('tech', '/server/info');
 const DOCKER = consoleLink('tech', '/server/docker');
-const LOGS = consoleLink('tech', '/telemetry/logs');
-const ERROR_LOGS = consoleLink('tech', '/telemetry/error-logs');
-const TELEMETRY = consoleLink('tech', '/telemetry/dashboard');
+const LOGS = consoleLink('tests', '/telemetry/logs');
+const ERROR_LOGS = consoleLink('tests', '/telemetry/error-logs');
+const TELEMETRY = consoleLink('tests', '/telemetry/dashboard');
 const REPORTS = consoleLink('tech', '/status-reports');
 /** Docker reports container memory in MiB; the console formats bytes. */
 const MIB = 1024 * 1024;

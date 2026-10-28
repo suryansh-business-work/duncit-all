@@ -61,7 +61,9 @@ export const makeGenerateCardsSchema = (t: Translator['t'], policy: PhysicalPoli
         }),
       mode: z.enum(['BULK', 'MEMBERS']),
       quantity: z.string(),
-      members: z.array(z.object({ id: z.string(), full_name: z.string(), email: z.string(), balance: z.number() })),
+      members: z.array(
+        z.object({ id: z.string(), full_name: z.string(), email: z.string(), phone: z.string(), balance: z.number() })
+      ),
       expires_on: z.date().nullable(),
     })
     .superRefine((v, ctx) => {

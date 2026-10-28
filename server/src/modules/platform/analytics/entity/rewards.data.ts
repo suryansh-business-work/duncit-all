@@ -3,6 +3,7 @@ import { CoinBalanceModel, CoinTransactionModel } from '@modules/finance/coin/co
 import { GiftCardModel, GiftCardTransactionModel } from '@modules/finance/giftcard/giftcard.model';
 import { PaymentModel } from '@modules/finance/payment/payment.model';
 import { ReferralCodeModel, ReferralModel } from '@modules/engagement/referral/referral.model';
+import { loadPayers } from '@modules/engagement/referral/referral.facts';
 import { dayKeyExpr, inRange } from './window';
 import { CAPTURED } from './revenue.data';
 import type { Keyed } from './aggregates';
@@ -34,15 +35,9 @@ export interface RewardsPeriod {
   value_redeemed: number;
 }
 
-/** Referred members who have made at least one paid checkout — a code only counts once it brings a customer. */
-async function convertedMembers(referrals: readonly ReferralRow[]): Promise<Set<string>> {
-  if (referrals.length === 0) return new Set();
-  const payers = await PaymentModel.distinct('user_id', {
-    user_id: { $in: referrals.map((row) => row.referred_user_id) },
-    status: { $in: CAPTURED },
-  });
-  return new Set(payers.map(String));
-}
+/** Referred members who have made at least one paid checkout — the same reading Loyalty > Refer & Earn makes. */
+const convertedMembers = (referrals: readonly ReferralRow[]): Promise<Set<string>> =>
+  loadPayers(referrals.map((row) => row.referred_user_id));
 
 const sumBy = (rows: ReadonlyArray<{ _id: string; value: number }>) =>
   new Map(rows.map((row) => [row._id, row.value]));

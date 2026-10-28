@@ -25,10 +25,14 @@ export interface SettingsFormValues {
   max_event_capacity: string;
   max_seats_per_registration: string;
   sign_in_with_phone: boolean;
+  picture_topics: string;
 }
 
 /** Every zone the browser lists, read once; the picker adds the saved one when the browser knows it by another name. */
 export const TIME_ZONES: readonly string[] = timeZoneOptions();
+
+/** The API refuses more topics, or longer ones, than this. */
+const PICTURE_TOPICS = { max: 40, length: 40 } as const;
 
 const HOURS_LIST = /^\d+(\s*,\s*\d+)*$/;
 const CURRENCY = /^[A-Z]{3}$/;
@@ -67,6 +71,7 @@ export const settingsValuesFrom = (settings: LiteAdminSettings): SettingsFormVal
   max_event_capacity: String(settings.max_event_capacity),
   max_seats_per_registration: String(settings.max_seats_per_registration),
   sign_in_with_phone: settings.sign_in_with_phone,
+  picture_topics: settings.picture_topics.join(', '),
 });
 
 export const toSettingsInput = (values: SettingsFormValues): Partial<LiteAdminSettings> => ({
@@ -87,6 +92,7 @@ export const toSettingsInput = (values: SettingsFormValues): Partial<LiteAdminSe
   max_event_capacity: Number(values.max_event_capacity),
   max_seats_per_registration: Number(values.max_seats_per_registration),
   sign_in_with_phone: values.sign_in_with_phone,
+  picture_topics: splitList(values.picture_topics),
 });
 
 export const makeSettingsSchema = (t: Translate) => {
@@ -117,5 +123,12 @@ export const makeSettingsSchema = (t: Translate) => {
     max_event_capacity: countRule(t, t('litePortal.settings.maxEventCapacity'), SETTING_BOUNDS.eventCapacity),
     max_seats_per_registration: countRule(t, t('litePortal.settings.maxSeats'), SETTING_BOUNDS.seatsPerRegistration),
     sign_in_with_phone: z.boolean(),
+    picture_topics: z
+      .string()
+      .trim()
+      .refine((text) => {
+        const topics = splitList(text);
+        return topics.length <= PICTURE_TOPICS.max && topics.every((topic) => topic.length <= PICTURE_TOPICS.length);
+      }, t('litePortal.validation.topicsList', { vars: PICTURE_TOPICS })),
   });
 };

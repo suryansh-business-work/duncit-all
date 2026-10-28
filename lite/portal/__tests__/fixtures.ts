@@ -33,6 +33,7 @@ export const makeSettings = (over: Partial<LiteAdminSettings> = {}): LiteAdminSe
   max_event_capacity: 5_000,
   max_seats_per_registration: 10,
   sign_in_with_phone: false,
+  picture_topics: ['Diwali', 'Food'],
   ...over,
 });
 

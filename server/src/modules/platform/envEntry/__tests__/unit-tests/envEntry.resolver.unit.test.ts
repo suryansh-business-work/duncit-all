@@ -44,9 +44,9 @@ describe('queries: roles and category scope', () => {
 
   it('pins a channel manager to MSG91 over whatever filter they send', async () => {
     await Q.envEntries({}, { filter: { category: 'EMAIL', q: 'a' } }, comms);
-    expect(envEntryService.list).toHaveBeenCalledWith({ category: 'MSG91', q: 'a' });
+    expect(envEntryService.list).toHaveBeenCalledWith({ category: ['MSG91'], q: 'a' });
     await Q.envEntries({}, {}, logs);
-    expect(envEntryService.list).toHaveBeenLastCalledWith({ category: 'MSG91' });
+    expect(envEntryService.list).toHaveBeenLastCalledWith({ category: ['MSG91'] });
   });
 
   it('requires the emailed-code unlock and a permitted role', async () => {
@@ -60,7 +60,7 @@ describe('queries: roles and category scope', () => {
     await Q.envEntriesTable({}, { query: { page: 1 } }, tech);
     expect(envEntryService.table).toHaveBeenCalledWith({ page: 1 }, {});
     await Q.envEntriesTable({}, { query: { page: 2 } }, comms);
-    expect(envEntryService.table).toHaveBeenLastCalledWith({ page: 2 }, { category: 'MSG91' });
+    expect(envEntryService.table).toHaveBeenLastCalledWith({ page: 2 }, { category: { $in: ['MSG91'] } });
   });
 
   it('returns a single entry for Tech, only an in-scope entry for a channel manager', async () => {
@@ -151,9 +151,9 @@ describe('envTestHistory', () => {
   it('reads their own category for a channel manager, pinning it over the argument', async () => {
     (envEntryService.get as jest.Mock).mockResolvedValue({ category: 'MSG91' });
     await call({ entryId: 'e', category: 'MSG91', limit: 3 }, comms);
-    expect(envTestLogService.history).toHaveBeenCalledWith('e', 3, 'MSG91');
+    expect(envTestLogService.history).toHaveBeenCalledWith('e', 3, ['MSG91']);
     await call({}, comms);
-    expect(envTestLogService.history).toHaveBeenLastCalledWith(undefined, undefined, 'MSG91');
+    expect(envTestLogService.history).toHaveBeenLastCalledWith(undefined, undefined, ['MSG91']);
   });
 });
 

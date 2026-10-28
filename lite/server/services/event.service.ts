@@ -358,6 +358,16 @@ export const eventService = {
     return Promise.all(docs.map((d) => toPublicEvent(d, viewerOf(user))));
   },
 
+  /** Covers of the events this person hosts, the latest first and each once: the picker's "Previous events". */
+  async coverHistory(user: LiteUserDoc, limit = 24): Promise<string[]> {
+    const docs = await LiteEventModel.find({ 'hosts.user_id': user._id, cover_url: { $nin: ['', null] } })
+      .sort({ start_at: -1 })
+      .limit(limit * 2)
+      .select('cover_url')
+      .lean();
+    return [...new Set(docs.map((d) => d.cover_url))].slice(0, limit);
+  },
+
   async byHandle(handle: string, past: boolean, user: LiteUserDoc | null) {
     const person = await LiteUserModel.findOne({ handle: handle.toLowerCase(), is_blocked: false }).lean();
     if (!person) return [];

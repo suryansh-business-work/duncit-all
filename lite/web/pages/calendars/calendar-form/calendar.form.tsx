@@ -10,7 +10,7 @@ import { RhfTextField } from '@duncit/forms';
 import { parseApiError } from '@duncit/utils';
 import type { LiteCalendar } from '../../../../shared/graphql/documents';
 import { useWebT } from '../../../../shared/i18n';
-import { CoverUploader } from '../../../components/CoverUploader';
+import { PictureField } from '../../../../shared/picture-picker';
 import { RhfSelect } from '../../../components/RhfSelect';
 import { LITE_CREATE_CALENDAR, LITE_MY_CALENDARS, LITE_UPDATE_CALENDAR } from '../../../graphql/calendars';
 import { LITE_CITIES } from '../../../graphql/discover';
@@ -59,14 +59,14 @@ export function CalendarForm({ calendar }: Readonly<{ calendar: LiteCalendar | n
         control={control}
         name="avatar_url"
         render={({ field, fieldState }) => (
-          <CoverUploader label={t('liteWeb.calendars.avatar')} value={field.value} onChange={field.onChange} shape="avatar" error={fieldState.error?.message} testId="calendar-avatar" />
+          <PictureField label={t('liteWeb.calendars.avatar')} value={field.value} onChange={field.onChange} shape="avatar" error={fieldState.error?.message} testId="calendar-avatar" />
         )}
       />
       <Controller
         control={control}
         name="cover_url"
         render={({ field, fieldState }) => (
-          <CoverUploader label={t('liteWeb.calendars.cover')} value={field.value} onChange={field.onChange} error={fieldState.error?.message} testId="calendar-cover" />
+          <PictureField label={t('liteWeb.calendars.cover')} value={field.value} onChange={field.onChange} error={fieldState.error?.message} testId="calendar-cover" />
         )}
       />
       <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end' }}>

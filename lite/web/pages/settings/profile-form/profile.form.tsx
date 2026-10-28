@@ -10,7 +10,7 @@ import { parseApiError } from '@duncit/utils';
 import type { LiteMe } from '../../../../shared/graphql/documents';
 import { useWebT } from '../../../../shared/i18n';
 import { useLiteSession } from '../../../../shared/session';
-import { CoverUploader } from '../../../components/CoverUploader';
+import { PictureField } from '../../../../shared/picture-picker';
 import { LITE_UPDATE_PROFILE } from '../../../graphql/profile';
 import { SOCIAL_PREFIX } from '../../../lib/social';
 import { SOCIAL_FIELDS, makeProfileSchema, profileDefaults, toProfileInput, type ProfileOutput, type ProfileValues } from './profile.types';
@@ -50,7 +50,7 @@ export function ProfileForm({ me }: Readonly<{ me: LiteMe }>) {
         <Controller
           control={control}
           name="avatar_url"
-          render={({ field, fieldState }) => <CoverUploader label={t('liteWeb.profile.avatar')} value={field.value} onChange={field.onChange} shape="avatar" error={fieldState.error?.message} testId="profile-avatar" />}
+          render={({ field, fieldState }) => <PictureField label={t('liteWeb.profile.avatar')} value={field.value} onChange={field.onChange} shape="avatar" error={fieldState.error?.message} testId="profile-avatar" />}
         />
       </Box>
       <RhfTextField control={control} name="bio" label={t('liteWeb.profile.bio')} hint={t('liteWeb.profile.bioHint')} multiline minRows={3} slotProps={{ htmlInput: { maxLength: 500, 'data-testid': 'profile-bio' } }} />

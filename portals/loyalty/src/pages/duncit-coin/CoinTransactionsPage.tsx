@@ -1,7 +1,7 @@
 import { useApolloClient } from '@apollo/client/react';
 import { Stack } from '@mui/material';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
-import { useSearchParams } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
 import { useApolloTableFetch } from '@duncit/table';
 import { useDateFormat, useTranslation } from '@duncit/app-settings';
 import TablePageHeader from '../../components/TablePageHeader';
@@ -16,6 +16,7 @@ import { COIN_CURRENCY, COIN_TRANSACTIONS_TABLE, type CoinTxnRow } from './queri
 export default function CoinTransactionsPage() {
   const { t } = useTranslation();
   const client = useApolloClient();
+  const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const podId = params.get('pod_id') ?? '';
   const { formatDateTime } = useDateFormat();
@@ -52,6 +53,7 @@ export default function CoinTransactionsPage() {
         podId={podId}
         currencySymbol={currencySymbol}
         formatDateTime={formatDateTime}
+        onRowClick={(row) => navigate(`/duncit-coin/transactions/${row.id}`)}
       />
     </Stack>
   );

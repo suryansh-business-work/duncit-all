@@ -3,7 +3,7 @@ import { Box, Link, Stack, Typography } from '@mui/material';
 import type { LiteEventCard } from '../../../shared/graphql/documents';
 import { LITE_MOTION, LITE_RADII } from '../../../shared/tokens';
 import { paths } from '../../lib/paths';
-import { LiteImage } from '../LiteImage';
+import { LiteImage } from '../../../shared/LiteImage';
 import { useEventTime } from './useEventTime';
 
 /** A square cover, the title and when it starts — the landing page's "Popular events" row. */

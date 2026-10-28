@@ -7,8 +7,9 @@ import TimerIcon from '@mui/icons-material/Timer';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import SpeedIcon from '@mui/icons-material/Speed';
 import { useTranslation, type Translate } from '@duncit/shell';
-import MetricTiles, { type MetricTile } from '../../stress-testing/components/MetricTiles';
-import { formatCount, formatMs, formatPct } from '../../stress-testing/labels';
+// Borrowed from the Tests console, which owns stress testing (its src is copied into this build).
+import MetricTiles, { type MetricTile } from '../../../../../tests/src/pages/stress-testing/components/MetricTiles';
+import { formatCount, formatMs, formatPct } from '../../../../../tests/src/pages/stress-testing/labels';
 import { formatBytes } from '../format';
 import type { ServerHistorySummary } from './queries';
 

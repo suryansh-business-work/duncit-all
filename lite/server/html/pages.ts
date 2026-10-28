@@ -3,6 +3,7 @@ import { LiteCalendarModel } from '../models/calendar.model';
 import { LiteCategoryModel } from '../models/category.model';
 import { LiteCityModel } from '../models/city.model';
 import { LiteEventModel } from '../models/event.model';
+import { LitePolicyModel } from '../models/policy.model';
 import { LiteUserModel } from '../models/user.model';
 import { formatWhen, formatWhere } from '../services/projections';
 import { settingsService } from '../services/settings.service';
@@ -68,6 +69,12 @@ async function profileHead(handle: string, siteName: string): Promise<PageHead |
   return { meta: { title: person.name, description: clip(person.bio || `Events hosted by ${person.name} on ${siteName}.`), url: pageUrl(`/u/${person.handle}`), siteName, imageUrl: person.avatar_url || null }, structured: [] };
 }
 
+async function legalHead(slug: string, siteName: string): Promise<PageHead | null> {
+  const policy = await LitePolicyModel.findOne({ slug, is_active: true }).select('title slug').lean();
+  if (!policy) return null;
+  return { meta: { title: `${policy.title} · ${siteName}`, description: `${policy.title} for ${siteName}.`, url: pageUrl(`/legal/${policy.slug}`), siteName }, structured: [] };
+}
+
 async function categoryHead(slug: string, siteName: string): Promise<PageHead | null> {
   const category = await LiteCategoryModel.findOne({ slug, is_active: true }).lean();
   if (!category) return null;
@@ -92,6 +99,10 @@ export async function headFor(path: string): Promise<PageHead | null> {
   if (parts[0] === 'cal' && parts[1]) return calendarHead(parts[1].toLowerCase(), siteName);
   if (parts[0] === 'u' && parts[1]) return profileHead(parts[1].toLowerCase(), siteName);
   if (parts[0] === 'category' && parts[1]) return categoryHead(parts[1].toLowerCase(), siteName);
+  if (parts[0] === 'legal' && parts[1]) return legalHead(parts[1].toLowerCase(), siteName);
+  if (parts.length === 1 && parts[0] === 'pricing') {
+    return { meta: { title: `Pricing · ${siteName}`, description: `Host unlimited events on ${siteName} for free during our launch. A paid plan is coming soon.`, url: pageUrl('/pricing'), siteName }, structured: [] };
+  }
   if (parts.length === 1) return cityHead(parts[0].toLowerCase(), siteName);
   return null;
 }

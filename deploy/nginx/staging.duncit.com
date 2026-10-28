@@ -858,6 +858,27 @@ server {
     }
 }
 
+# --- Tests console: staging.tests.duncit.com (SPA on :2148) ---
+server {
+    listen 80;
+    listen [::]:80;
+    http2 on;
+    server_name staging.tests.duncit.com;
+    client_max_body_size 25m;
+
+    location / {
+        proxy_pass         http://127.0.0.1:2148;
+        proxy_http_version 1.1;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_set_header   Upgrade           $http_upgrade;
+        proxy_set_header   Connection        "upgrade";
+        proxy_read_timeout 90s;
+    }
+}
+
 # --- Targets console: staging.targets.duncit.com (SPA on :2144) ---
 server {
     listen 80;

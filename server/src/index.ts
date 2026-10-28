@@ -45,6 +45,7 @@ import { startDbBackupScheduler } from '@modules/platform/dbBackup/dbBackup.sche
 import { startAppStoreReleaseScheduler } from '@modules/platform/appBuild/appStoreRelease.scheduler';
 import { startStoreReleaseScheduler } from '@modules/platform/appBuild/storeRelease.scheduler';
 import { startE2eRunScheduler } from '@modules/platform/e2eRun/e2eRun.scheduler';
+import { startUnitTestRunSweeper } from '@modules/platform/unitTestRun/unitTestRun.sweep';
 import { startAnalyticsMailScheduler } from '@modules/platform/analytics/mail/analyticsMail.scheduler';
 import { startAnalyticsAlertScheduler } from '@modules/platform/analytics/alerts/analyticsAlert.scheduler';
 import { startStressTestSampler } from '@modules/platform/stressTest/stressTest.sampler';
@@ -591,6 +592,11 @@ async function bootstrap() {
     const { seedE2eFlowCatalogue } = await import('@modules/platform/e2eFlow/e2eFlow.seed');
     await seedE2eFlowCatalogue();
   });
+  // The manual test board's default columns, written once when none exist.
+  await safeSeed('manualTestBoard', async () => {
+    const { seedManualTestBoard } = await import('@modules/platform/manualTest/manualTest.seed');
+    await seedManualTestBoard();
+  });
   // Status-page incidents: seed minimum historical data so the 90-day chart
   // and Incidents feed render (gated to staging / STATUS_SEED_INCIDENTS=1).
   await safeSeed('statusIncidents', async () => {
@@ -714,6 +720,8 @@ async function bootstrap() {
   // nightly at 03:00 by default). The workflow declares no cron of its own, so
   // this is the only thing that starts a scheduled run.
   startE2eRunScheduler();
+  // Times out stuck unit runs and trims old unit/regression detail past retention.
+  startUnitTestRunSweeper();
 
   // Analytics reports: a one-minute tick that mails each subscriber their
   // dashboards, with the PDF attached, when their daily or weekly slot has

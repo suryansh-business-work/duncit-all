@@ -45,6 +45,8 @@ export const PORTALS = [
   'mcp',
   // Duncit Coin and every gift card, virtual and printed.
   'loyalty',
+  // Testing, code quality and platform monitoring.
+  'tests',
 ] as const;
 export type PortalKey = (typeof PORTALS)[number];
 

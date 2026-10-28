@@ -114,7 +114,6 @@ const ROUTES = [
   '/invoices/product',
   '/ledger',
   '/pod-expenses',
-  '/referrals',
   '/payouts',
   '/calculators/pod-profit',
 ];

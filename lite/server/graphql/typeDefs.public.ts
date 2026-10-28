@@ -318,6 +318,69 @@ export const publicTypeDefs = gql`
     max_mb: Int!
   }
 
+  "A policy page (privacy, terms of use, data policy...) as the footer links to it."
+  type LitePolicyLink {
+    id: ID!
+    title: String!
+    "The page lives at /legal/<slug>."
+    slug: String!
+  }
+
+  "A live policy page."
+  type LitePolicy {
+    id: ID!
+    title: String!
+    slug: String!
+    "The body as rich-text HTML from the shared editor."
+    content: String!
+    updated_at: String
+  }
+
+  "Which way a stock photo search leans."
+  enum LitePictureOrientation {
+    LANDSCAPE
+    PORTRAIT
+    SQUARE
+  }
+
+  "A Pexels stock photo, as the picture picker lists it. Credit the photographer where it is shown."
+  type LitePexelsPhoto {
+    "The Pexels photo id, passed to liteImportPexelsPhoto."
+    id: ID!
+    alt: String!
+    photographer: String!
+    photographer_url: String!
+    "A hex colour to paint while the thumbnail loads."
+    avg_color: String
+    "A small preview; the import copies a larger version."
+    thumb_url: String!
+    width: Int!
+    height: Int!
+  }
+
+  type LitePexelsPage {
+    photos: [LitePexelsPhoto!]!
+    page: Int!
+    has_more: Boolean!
+  }
+
+  "What the picture picker offers the signed-in person."
+  type LitePictureOptions {
+    "False until a Pexels entry exists under Environment; uploads still work."
+    pexels_ready: Boolean!
+    "Topics listed beside the results; each one is a stock photo search."
+    topics: [String!]!
+    "Covers of the events this person hosts, the latest first."
+    previous_covers: [String!]!
+    "The largest picture the upload route takes, in MB."
+    max_mb: Int!
+  }
+
+  type LiteImportedPicture {
+    "The picture's address on ImageKit, ready for a cover_url or avatar_url."
+    url: String!
+  }
+
   input LiteTicketInput {
     "Omit for a new ticket; pass the existing id to keep its sales."
     id: ID
@@ -441,12 +504,20 @@ export const publicTypeDefs = gql`
     "Calendars the signed-in person follows, the latest first."
     liteSubscribedCalendars: [LiteCalendar!]!
     liteCategories(include_inactive: Boolean): [LiteCategory!]!
+    "The live policy pages, in the console's order."
+    litePolicies: [LitePolicyLink!]!
+    "One live policy page by its link; null when it is switched off or does not exist."
+    litePolicy(slug: String!): LitePolicy
     liteCities(include_inactive: Boolean): [LiteCity!]!
     liteCity(slug: String!): LiteCity
     liteUserProfile(handle: String!): LiteUser
     liteUserEvents(handle: String!, past: Boolean): [LiteEvent!]!
     liteUpiQr(upi_id: String!, name: String, amount: Int, note: String): LiteUpiQr!
     liteUploadTicket: LiteUploadTicket!
+    "The picture picker's topics, earlier covers and whether stock photos are switched on."
+    litePictureOptions: LitePictureOptions!
+    "Search Pexels stock photos (24 a page, pages 1-50). Without a query it lists curated picks, and orientation is ignored."
+    litePexelsSearch(query: String, orientation: LitePictureOrientation, page: Int): LitePexelsPage!
     "Page views and registrations per day, for the event's hosts (days: 1-90, default 7)."
     liteEventInsights(event_id: ID!, days: Int): LiteEventInsights!
   }
@@ -465,6 +536,8 @@ export const publicTypeDefs = gql`
     liteTrackEventView(slug: String!): Boolean!
     liteUpdateProfile(input: LiteProfileInput!): LiteUser!
     liteSetMyLocale(locale: String!): LiteUser!
+    "Copy a Pexels photo (by the id from litePexelsSearch) to ImageKit and return its URL, for an event cover, calendar picture or avatar."
+    liteImportPexelsPhoto(id: ID!): LiteImportedPicture!
 
     liteCreateEvent(input: LiteEventInput!): LiteEvent!
     liteUpdateEvent(id: ID!, input: LiteEventInput!): LiteEvent!

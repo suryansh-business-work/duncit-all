@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react';
-import { Box, Card, CardContent, CircularProgress, Typography } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import {
   BarElement,
@@ -12,6 +11,7 @@ import {
 } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
 import { format, parse } from 'date-fns';
+import ChartCard, { chartTooltip } from './ChartCard';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
 
@@ -72,13 +72,7 @@ export default function MonthlyBarChart<B extends { month: string }>({
     interaction: { mode: 'index', intersect: false },
     plugins: {
       legend: { position: 'top', labels: { color: theme.palette.text.secondary } },
-      tooltip: {
-        backgroundColor: theme.palette.background.paper,
-        titleColor: theme.palette.text.primary,
-        bodyColor: theme.palette.text.primary,
-        borderColor: theme.palette.divider,
-        borderWidth: 1,
-      },
+      tooltip: chartTooltip(theme),
     },
     scales: {
       x: { grid: { display: false }, ticks: { color: theme.palette.text.secondary } },
@@ -90,25 +84,9 @@ export default function MonthlyBarChart<B extends { month: string }>({
     },
   };
 
-  // Computed above the JSX so the empty state never nests a ternary.
-  let fallback = <Typography sx={{ color: 'text.secondary', pt: 4 }}>{emptyText}</Typography>;
-  if (loading) fallback = <CircularProgress sx={{ mt: 4 }} />;
-
   return (
-    <Card variant="outlined" sx={{ borderRadius: 3 }}>
-      <CardContent>
-        <Typography component="h2" variant="subtitle1" sx={{ fontWeight: 900 }}>
-          {title}
-        </Typography>
-        {caption && (
-          <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-            {caption}
-          </Typography>
-        )}
-        <Box sx={{ height: 300, mt: 2 }}>
-          {hasData ? <Bar data={data} options={options} role="img" aria-label={ariaLabel} /> : fallback}
-        </Box>
-      </CardContent>
-    </Card>
+    <ChartCard title={title} caption={caption} height={300} hasData={hasData} loading={loading} emptyText={emptyText}>
+      <Bar data={data} options={options} role="img" aria-label={ariaLabel} />
+    </ChartCard>
   );
 }

@@ -1,5 +1,5 @@
 import type { FormEventHandler, ReactNode } from 'react';
-import { Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
+import { Dialog, DialogActions, DialogContent, DialogTitle, type DialogProps } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { usePortalT } from '../../shared/i18n';
 
@@ -14,16 +14,18 @@ interface Props {
   submitLabel?: string;
   /** Extra leading action at the start of the footer (a Test button). */
   secondaryAction?: ReactNode;
+  /** Wider for a form with a long editor (a policy); small by default. */
+  maxWidth?: DialogProps['maxWidth'];
   testId: string;
   children: ReactNode;
 }
 
 /** Every console form dialog: title, a `<form>`, Cancel + Save with the busy state. */
-export function FormDialog({ open, title, onSubmit, onClose, busy = false, submitLabel, secondaryAction, testId, children }: Readonly<Props>) {
+export function FormDialog({ open, title, onSubmit, onClose, busy = false, submitLabel, secondaryAction, maxWidth = 'sm', testId, children }: Readonly<Props>) {
   const { t } = usePortalT();
   const titleId = `${testId}-title`;
   return (
-    <Dialog open={open} onClose={busy ? undefined : onClose} fullWidth maxWidth="sm" aria-labelledby={titleId} data-testid={testId}>
+    <Dialog open={open} onClose={busy ? undefined : onClose} fullWidth maxWidth={maxWidth} aria-labelledby={titleId} data-testid={testId}>
       <form onSubmit={onSubmit} noValidate>
         <DialogTitle id={titleId}>{title}</DialogTitle>
         <DialogContent dividers>{children}</DialogContent>

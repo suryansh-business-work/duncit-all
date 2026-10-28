@@ -110,7 +110,7 @@ describe('CoinGrantCard', () => {
     mount([coinUserSearchMock('zz', [])]);
     fireEvent.focus(userBox());
     fireEvent.change(userBox(), { target: { value: 'z' } });
-    expect(await screen.findByText('Type a name or email to search')).toBeInTheDocument();
+    expect(await screen.findByText('Type a name, email or phone to search')).toBeInTheDocument();
 
     fireEvent.change(userBox(), { target: { value: 'zz' } });
     expect(await screen.findByText('No account matches that', {}, { timeout: 2000 })).toBeInTheDocument();

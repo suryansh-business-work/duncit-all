@@ -2,7 +2,13 @@ import { Navigate, Route, Routes } from 'react-router';
 import { createAuthed, ProfilePage } from '@duncit/shell';
 import LoyaltyAppShell from './components/LoyaltyAppShell';
 import DashboardPage from './pages/dashboard/DashboardPage';
-import { CoinDashboardPage, CoinSettingsPage, CoinTransactionsPage } from './pages/duncit-coin';
+import {
+  CoinDashboardPage,
+  CoinSettingsPage,
+  CoinTransactionDetailPage,
+  CoinTransactionsPage,
+} from './pages/duncit-coin';
+import { ReferralDashboardPage, ReferralHistoryPage, ReferralSettingsPage } from './pages/referrals';
 import {
   GiftCardCardsPage,
   GiftCardDashboardPage,
@@ -40,7 +46,12 @@ export default function App() {
 
       <Route path="/duncit-coin/dashboard" element={authed(<CoinDashboardPage />)} />
       <Route path="/duncit-coin/transactions" element={authed(<CoinTransactionsPage />)} />
+      <Route path="/duncit-coin/transactions/:id" element={authed(<CoinTransactionDetailPage />)} />
       <Route path="/duncit-coin/settings" element={authed(<CoinSettingsPage />)} />
+
+      <Route path="/referrals/dashboard" element={authed(<ReferralDashboardPage />)} />
+      <Route path="/referrals/history" element={authed(<ReferralHistoryPage />)} />
+      <Route path="/referrals/settings" element={authed(<ReferralSettingsPage />)} />
 
       <Route path="/gift-cards/virtual/dashboard" element={authed(<GiftCardDashboardPage />)} />
       <Route path="/gift-cards/virtual/cards" element={authed(<GiftCardCardsPage cardPath={virtualCardPath} />)} />

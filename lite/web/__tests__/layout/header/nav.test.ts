@@ -8,11 +8,12 @@ const item = (to: string) => {
 };
 
 describe('NAV_ITEMS', () => {
-  it('lists Events and Calendars for a signed-in reader, and Discover for everyone', () => {
+  it('lists Events and Calendars for a signed-in reader, and Discover and Pricing for everyone', () => {
     expect(NAV_ITEMS.map(({ to, labelKey, signedIn }) => ({ to, labelKey, signedIn: signedIn === true }))).toEqual([
       { to: '/home', labelKey: 'liteWeb.nav.events', signedIn: true },
       { to: '/calendars', labelKey: 'liteWeb.nav.calendars', signedIn: true },
       { to: '/discover', labelKey: 'liteWeb.nav.discover', signedIn: false },
+      { to: '/pricing', labelKey: 'liteWeb.nav.pricing', signedIn: false },
     ]);
   });
 

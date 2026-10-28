@@ -8,12 +8,10 @@ const isDevelopment = import.meta.env.DEV;
 const fallback = isDevelopment
   ? {
       graphqlUrl: 'http://localhost:2001/graphql',
-      mwebUrl: 'http://localhost:2003',
       loyaltyUrl: 'http://localhost:2047',
     }
   : {
       graphqlUrl: 'https://server.duncit.com/graphql',
-      mwebUrl: 'https://mweb.duncit.com',
       loyaltyUrl: 'https://loyalty.duncit.com',
     };
 
@@ -26,9 +24,6 @@ const stagingLoyaltyUrl = graphqlUrl.includes('://staging.') ? 'https://staging.
 export const urlConfigs = {
   isDevelopment,
   graphqlUrl,
-  // Where a referral link lands — mWeb hosts signup, so the share-message
-  // preview on Finance > Referrals shows the URL members will actually send.
-  mwebUrl: import.meta.env.VITE_MWEB_URL || fallback.mwebUrl,
-  // Duncit Coin and gift cards moved to the Loyalty console.
+  // Duncit Coin, gift cards and referrals moved to the Loyalty console.
   loyaltyUrl: import.meta.env.VITE_LOYALTY_URL || stagingLoyaltyUrl || fallback.loyaltyUrl,
 };

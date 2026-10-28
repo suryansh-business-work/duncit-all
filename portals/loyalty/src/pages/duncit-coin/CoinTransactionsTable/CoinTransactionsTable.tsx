@@ -14,6 +14,8 @@ interface Props {
    * server does the real scoping from the `pod_doc_id` variable and drops this
    * unknown filter field. */
   podId: string;
+  /** Opens the row's own page. */
+  onRowClick: (row: CoinTxnRow) => void;
 }
 
 export default function CoinTransactionsTable({
@@ -21,6 +23,7 @@ export default function CoinTransactionsTable({
   currencySymbol,
   formatDateTime,
   podId,
+  onRowClick,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   // Memoised: DuncitTable rebuilds its AG Grid column defs whenever this array
@@ -37,6 +40,7 @@ export default function CoinTransactionsTable({
       columns={columns}
       fetchRows={fetchRows}
       getRowId={getCoinRowId}
+      onRowClick={onRowClick}
       externalFilters={[{ field: 'pod_doc_id', op: 'eq', value: podId }]}
       emptyText={t('finance.duncitCoin.noCoinActivityYet')}
       defaultSort={{ field: 'created_at', dir: 'desc' }}

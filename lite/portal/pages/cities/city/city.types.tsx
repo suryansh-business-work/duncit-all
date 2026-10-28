@@ -63,7 +63,7 @@ export const makeCitySchema = (t: Translate) => {
     slug: z.string().trim().max(80, max(t('litePortal.common.slug'), 80)),
     country: z.string().trim().max(60, max(t('litePortal.cities.country'), 60)),
     region: z.enum(CITY_REGIONS),
-    cover_url: z.string().trim().refine(isBlankOrHttpUrl, t('litePortal.validation.url', { vars: { field: t('litePortal.cities.coverUrl') } })),
+    cover_url: z.string().trim().refine(isBlankOrHttpUrl, t('litePortal.validation.url', { vars: { field: t('litePortal.cities.cover') } })),
     featured: z.boolean(),
     sort_order: countRule(t, t('litePortal.common.sortOrder'), SETTING_BOUNDS.sortOrder, true),
     is_active: z.boolean(),

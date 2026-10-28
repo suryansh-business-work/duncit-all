@@ -13,7 +13,7 @@ import { founderResolvers } from '../../founder/founder.resolver';
 import { podCalculatorResolvers } from '../../podCalculator/podCalculator.resolver';
 import { podExpenseResolvers } from '../../podExpense/podExpense.resolver';
 import { couponResolvers } from '../../coupon/coupon.resolver';
-import { referralResolvers } from '@modules/engagement/referral/referral.resolver';
+import { referralAdminResolvers } from '@modules/engagement/referral/referral.admin.resolver';
 import { getFinanceSettings } from '../../finance/finance.model';
 
 /**
@@ -51,7 +51,7 @@ const consoleReads: [string, Field][] = [
   ...pick(founderResolvers.Query, ['founderDashboard']),
   ...pick(podCalculatorResolvers.Query, ['podCalculators']),
   ...pick(podExpenseResolvers.Query, ['podExpensePodsTable', 'podExpenseSummary']),
-  ...pick(referralResolvers.Query, ['referrals', 'referralsTable']),
+  ...pick(referralAdminResolvers.Query, ['referrals', 'referralsTable']),
 ];
 
 /** Every write behind those screens — none of them is the analyst's. */
@@ -71,7 +71,7 @@ const consoleWrites: [string, Field][] = [
   ...pick(podCalculatorResolvers.Mutation, ['createPodCalculator', 'updatePodCalculator', 'deletePodCalculator', 'emailPodCalculator']),
   ...pick(podExpenseResolvers.Mutation, ['createPodExpense', 'updatePodExpense', 'deletePodExpense']),
   ...pick(couponResolvers.Mutation, ['createCoupon', 'updateCoupon', 'deleteCoupon']),
-  ...pick(referralResolvers.Mutation, ['updateReferralSettings']),
+  ...pick(referralAdminResolvers.Mutation, ['updateReferralSettings']),
 ];
 
 /** The code a call fails with, or null when it answered. */

@@ -1,5 +1,5 @@
 import type { GraphQLContext } from '@context';
-import { LOGS_READER, readScope, requireRole } from '@middleware/rbac';
+import { LOGS_READER, readScope, requireRole, TESTS_MANAGER } from '@middleware/rbac';
 import { callerEnvironment } from '@modules/ai/askBot/askBot.links';
 import { LocationModel } from '@modules/platform/location/location.model';
 import { entityAnalyticsService } from './entityAnalytics.service';
@@ -9,7 +9,10 @@ import type { PeriodRequest } from './window';
 /** The Analytics console's staff, plus the admins who can open every console. */
 const ANALYTICS_ROLES = ['SUPER_ADMIN', 'ANALYTICS_MANAGER'];
 
-/** The Tech console's staff: SonarQube is also Tech → Security → SonarQube. */
+/**
+ * SonarQube is also Tests → Code Quality → SonarQube. Tech's staff keep reading
+ * it: it was Tech → Security → SonarQube until the Tests console took it.
+ */
 const TECH_READER = 'TECH_MANAGER';
 
 /** Admin > User Management's staff: the Users page is also Admin's Users Dashboard. */
@@ -25,7 +28,7 @@ const MARKETING_READER = 'MARKETING_MANAGER';
 export const entityReaders = (entity: AnalyticsEntity) => {
   if (entity === 'LOGS') return [...ANALYTICS_ROLES, LOGS_READER];
   if (entity === 'USERS') return [...ANALYTICS_ROLES, ...USER_MANAGERS];
-  if (entity === 'SONARQUBE') return [...ANALYTICS_ROLES, TECH_READER];
+  if (entity === 'SONARQUBE') return [...ANALYTICS_ROLES, TECH_READER, TESTS_MANAGER];
   if (entity === 'COMMUNICATIONS') return [...ANALYTICS_ROLES, COMMUNICATIONS_READER];
   if (entity === 'CONTACTS') return [...ANALYTICS_ROLES, MARKETING_READER];
   return ANALYTICS_ROLES;

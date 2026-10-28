@@ -18,6 +18,7 @@ export const LITE_WEB_BUNDLE: NestedCatalogue = {
       profile: 'Profile',
       home: '{name} home',
       menu: 'Account menu',
+      openMenu: 'Open menu',
       events: 'Events',
       explore: 'Explore events',
       settings: 'Settings',

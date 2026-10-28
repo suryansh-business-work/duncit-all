@@ -31,7 +31,7 @@ export function LiteLogo() {
           height={40}
           sx={(theme) => ({ display: 'block', width: { xs: 36, md: 40 }, height: { xs: 36, md: 40 }, borderRadius: `${LITE_RADII.control + 2}px`, boxShadow: `0 4px 14px ${tint(theme.palette.primary.main, 0.35)}` })}
         />
-        <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' }, fontWeight: 800, fontSize: { sm: '1.1rem', md: '1.2rem' }, letterSpacing: '-0.01em', color: 'text.primary' }}>
+        <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' }, whiteSpace: 'nowrap', fontWeight: 800, fontSize: { sm: '1.1rem', md: '1.2rem' }, letterSpacing: '-0.01em', color: 'text.primary' }}>
           {siteName}
         </Box>
       </Stack>

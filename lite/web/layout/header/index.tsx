@@ -9,7 +9,8 @@ import { AccountMenu } from './AccountMenu';
 import { LiteLogo } from './LiteLogo';
 import { LocalClock } from './LocalClock';
 import { ModeToggle } from './ModeToggle';
-import { NAV_ITEMS } from './nav';
+import { visibleNavItems } from './nav';
+import { NavDrawer } from './NavDrawer';
 
 const LINK_SX = {
   px: { xs: 1, sm: 1.25 },
@@ -24,15 +25,15 @@ const LINK_SX = {
   '&:hover': { color: 'text.primary', bgcolor: 'action.hover' },
 } as const;
 
-/** Events · Calendars · Discover, icon and word (the word folds away on a narrow phone). */
+/** Events · Calendars · Discover · Pricing, icon and word, from a laptop up. */
 function NavLinks() {
   const { t } = useWebT();
   const { pathname } = useLocation();
   const { signedIn } = useLiteSession();
   return (
-    // On a phone the bottom tab bar carries these places, like a native app.
-    <Stack component="nav" aria-label={t('liteWeb.nav.label')} direction="row" spacing={{ xs: 0, sm: 0.5 }} sx={(theme) => ({ [theme.breakpoints.down('sm')]: { display: 'none' } })}>
-      {NAV_ITEMS.filter((item) => signedIn || !item.signedIn).map((item) => {
+    // Below a laptop the menu drawer carries these places (and on a phone the bottom tab bar too).
+    <Stack component="nav" aria-label={t('liteWeb.nav.label')} direction="row" spacing={{ xs: 0, sm: 0.5 }} sx={(theme) => ({ [theme.breakpoints.down('md')]: { display: 'none' } })}>
+      {visibleNavItems(signedIn).map((item) => {
         const active = item.match(pathname);
         const Icon = item.icon;
         return (
@@ -76,7 +77,7 @@ function PrimaryLink() {
   );
 }
 
-/** A slim, see-through header over the glow: logo, the three places, the clock, Create and the account. */
+/** A slim, see-through header over the glow: the menu (below a laptop), logo, the places, the clock, Create and the account. */
 export function Header() {
   return (
     <Box
@@ -91,6 +92,7 @@ export function Header() {
     >
       <Container maxWidth={false} sx={{ maxWidth: 1240 }}>
         <Toolbar disableGutters sx={{ gap: { xs: 0.5, sm: 1.5 }, minHeight: { xs: 56, md: 60 } }}>
+          <NavDrawer />
           <LiteLogo />
           <NavLinks />
           <Box sx={{ flexGrow: 1 }} />

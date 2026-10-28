@@ -31,3 +31,6 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { to: paths.discover, labelKey: 'liteWeb.nav.discover', icon: ExploreOutlinedIcon, match: (p) => DISCOVER_PREFIXES.some((prefix) => p.startsWith(prefix)) },
   { to: paths.pricing, labelKey: 'liteWeb.nav.pricing', icon: SellOutlinedIcon, match: (p) => p.startsWith('/pricing') },
 ];
+
+/** The places a reader sees: the signed-in ones only once signed in. */
+export const visibleNavItems = (signedIn: boolean): readonly NavItem[] => NAV_ITEMS.filter((item) => signedIn || !item.signedIn);

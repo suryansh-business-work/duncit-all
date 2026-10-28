@@ -9,17 +9,28 @@ export const LITE_USER_FIELDS = gql`
   fragment LiteUserFields on LiteUser {
     id
     email
+    phone
     name
     handle
     avatar_url
     bio
+    social {
+      instagram
+      x
+      youtube
+      tiktok
+      linkedin
+      website
+    }
     upi_id
     upi_name
     locale
+    display_mode
     is_admin
     is_blocked
     duncit_linked
     events_hosted
+    events_attended
     created_at
   }
 `;
@@ -97,6 +108,11 @@ export const LITE_EVENT_CARD_FIELDS = gql`
       revenue_confirmed
     }
     viewer_is_host
+    registration_open
+    theme {
+      key
+      accent
+    }
   }
 `;
 
@@ -107,6 +123,9 @@ export const LITE_EVENT_FIELDS = gql`
     description
     address
     map_url
+    place_id
+    lat
+    lng
     virtual_link
     calendar {
       ...LiteCalendarFields
@@ -168,6 +187,7 @@ export const LITE_REGISTRATION_FIELDS = gql`
       id
       name
       email
+      phone
       handle
       avatar_url
     }
@@ -193,6 +213,13 @@ export const LITE_SETTINGS = gql`
       currency
       google_client_id
       sign_in_with_duncit
+      maps_api_key
+      maps_map_id
+      phone_sign_in
+      default_country_code
+      max_ticket_price
+      max_event_capacity
+      max_seats_per_registration
       upi_help_text
       duncit_app_url
     }
@@ -235,6 +262,30 @@ export const LITE_SIGN_IN_WITH_GOOGLE = gql`
   ${LITE_USER_FIELDS}
 `;
 
+export const LITE_REQUEST_PHONE_SIGN_IN_CODE = gql`
+  mutation LiteRequestPhoneSignInCode($phone: String!) {
+    liteRequestPhoneSignInCode(phone: $phone) {
+      ok
+      via
+      expires_in_minutes
+      resend_after_seconds
+      test_code
+    }
+  }
+`;
+
+export const LITE_VERIFY_PHONE_SIGN_IN_CODE = gql`
+  mutation LiteVerifyPhoneSignInCode($phone: String!, $code: String!, $name: String) {
+    liteVerifyPhoneSignInCode(phone: $phone, code: $code, name: $name) {
+      token
+      user {
+        ...LiteUserFields
+      }
+    }
+  }
+  ${LITE_USER_FIELDS}
+`;
+
 export const LITE_SET_MY_LOCALE = gql`
   mutation LiteSetMyLocale($locale: String!) {
     liteSetMyLocale(locale: $locale) {
@@ -244,20 +295,29 @@ export const LITE_SET_MY_LOCALE = gql`
   }
 `;
 
+export type LiteDisplayMode = 'SYSTEM' | 'LIGHT' | 'DARK';
+export type LiteSocialKey = 'instagram' | 'x' | 'youtube' | 'tiktok' | 'linkedin' | 'website';
+export type LiteSocialLinks = Record<LiteSocialKey, string>;
+
 export interface LiteMe {
   id: string;
+  /** '' for a phone-only account. */
   email: string;
+  phone: string | null;
   name: string;
   handle: string;
   avatar_url: string | null;
   bio: string | null;
+  social: LiteSocialLinks;
   upi_id: string | null;
   upi_name: string | null;
   locale: string | null;
+  display_mode: LiteDisplayMode;
   is_admin: boolean;
   is_blocked: boolean;
   duncit_linked: boolean;
   events_hosted: number;
+  events_attended: number;
   created_at: string;
 }
 
@@ -268,11 +328,25 @@ export interface LitePublicSettings {
   currency: string;
   google_client_id: string;
   sign_in_with_duncit: boolean;
+  maps_api_key: string;
+  maps_map_id: string;
+  phone_sign_in: boolean;
+  default_country_code: string;
+  max_ticket_price: number;
+  max_event_capacity: number;
+  max_seats_per_registration: number;
   upi_help_text: string;
   duncit_app_url: string;
 }
 
-export type LiteSignInVia = 'LITE' | 'DUNCIT';
+export type LiteSignInVia = 'LITE' | 'DUNCIT' | 'SMS';
+export type LiteEventThemeKey = 'MINIMAL' | 'GRADIENT' | 'AMBIENT' | 'PATTERN' | 'CONFETTI';
+export type LiteThemeAccent = 'DEFAULT' | 'RED' | 'ORANGE' | 'AMBER' | 'GREEN' | 'TEAL' | 'BLUE' | 'PURPLE' | 'PINK';
+export type LiteCityRegion = 'ASIA_PACIFIC' | 'EUROPE' | 'AFRICA' | 'NORTH_AMERICA' | 'SOUTH_AMERICA';
+export interface LiteEventTheme {
+  key: LiteEventThemeKey;
+  accent: LiteThemeAccent;
+}
 export type LiteEventStatus = 'DRAFT' | 'PUBLISHED' | 'CANCELLED';
 export type LiteVisibility = 'PUBLIC' | 'UNLISTED' | 'PRIVATE';
 export type LiteLocationType = 'IN_PERSON' | 'VIRTUAL';
@@ -330,6 +404,7 @@ export interface LiteCity {
   name: string;
   slug: string;
   country: string;
+  region: LiteCityRegion;
   cover_url: string | null;
   featured: boolean;
   sort_order: number;
@@ -376,12 +451,17 @@ export interface LiteEventCard {
   tickets: LiteTicketType[];
   stats: LiteEventStats;
   viewer_is_host: boolean;
+  registration_open: boolean;
+  theme: LiteEventTheme;
 }
 
 export interface LiteEvent extends LiteEventCard {
   description: string;
   address: string | null;
   map_url: string | null;
+  place_id: string | null;
+  lat: number | null;
+  lng: number | null;
   virtual_link: string | null;
   calendar: LiteCalendar | null;
   capacity: number | null;
@@ -412,6 +492,6 @@ export interface LiteRegistration {
   answers: { question_id: string; label: string; answer: string }[];
   checked_in_at: string | null;
   waitlist_position: number | null;
-  user: { id: string; name: string; email: string; handle: string; avatar_url: string | null };
+  user: { id: string; name: string; email: string; phone?: string | null; handle: string; avatar_url: string | null };
   created_at: string;
 }

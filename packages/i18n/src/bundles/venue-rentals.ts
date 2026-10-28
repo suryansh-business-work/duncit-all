@@ -174,6 +174,8 @@ export const VENUE_RENTALS_BUNDLE: NestedCatalogue = {
       soldOut: 'Sold out',
       closedCutoff: 'Renting closed {hours} hours before the pod starts',
       closedDisabled: 'Renting is not available right now',
+      joinedNotice:
+        'Pod Rent isn’t available once you’ve joined this pod. If you still need to rent something, please contact the venue directly.',
       none: 'Nothing to rent for this pod',
       add: 'Add',
       increase: 'Add one {name}',

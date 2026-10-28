@@ -39,6 +39,26 @@ export function GeneralSection({ control, busy }: Readonly<Props>) {
             slotProps={{ htmlInput: { inputMode: 'numeric', 'data-testid': 'settings-max-ticket-price' } }}
           />
         </Stack>
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+          <RhfTextField
+            control={control}
+            name="max_event_capacity"
+            label={t('litePortal.settings.maxEventCapacity')}
+            hint={t('litePortal.settings.maxEventCapacityHint')}
+            required
+            disabled={busy}
+            slotProps={{ htmlInput: { inputMode: 'numeric', 'data-testid': 'settings-max-event-capacity' } }}
+          />
+          <RhfTextField
+            control={control}
+            name="max_seats_per_registration"
+            label={t('litePortal.settings.maxSeats')}
+            hint={t('litePortal.settings.maxSeatsHint')}
+            required
+            disabled={busy}
+            slotProps={{ htmlInput: { inputMode: 'numeric', 'data-testid': 'settings-max-seats' } }}
+          />
+        </Stack>
       </Stack>
     </SectionCard>
   );

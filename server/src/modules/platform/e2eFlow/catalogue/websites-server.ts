@@ -1284,7 +1284,7 @@ export const WEBSITE_SERVER_FLOWS: readonly CatalogueFlow[] = [
   {
     name: 'Server: Duncit Coin expiry',
     description:
-      'Every 10 minutes (first ~2 min): take back unspent coins from grant lots whose expires_at passed (Finance > Duncit Coin > Settings, default 30 days), writing COIN_EXPIRY debits.',
+      'Every 10 minutes (first ~2 min): take back unspent coins from grant lots whose expires_at passed (Loyalty > Duncit Coin > Coin Settings, default 30 days), writing COIN_EXPIRY debits.',
     sub_flows: [
       {
         name: 'Expire an unspent lot',

@@ -63,6 +63,9 @@ import { clearToken, setToken } from '../../src/lib/session';
 const ROUTES = [
   '/profile',
   '/login',
+  '/shared/smoke-token',
+  '/team-structure',
+  '/team-structure/smoke-team',
   '/',
 ];
 

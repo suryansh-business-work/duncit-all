@@ -8,6 +8,7 @@ coverageGate: false
 consumers:
   - 'app/mweb'
   - 'portals/partners-app'
+  - 'lite'
 exports:
   - 'HostPodActionsProvider'
   - 'useHostPodActionsConfig'
@@ -25,6 +26,7 @@ exports:
   - 'usePodMediaBoard'
   - 'useHostPodMediaLink'
   - 'buildHostPodActionLabels'
+  - 'useQrScanner'
 ---
 
 ## Why this exists
@@ -395,6 +397,25 @@ they are typed, and the completion sends them beside the bill.
 namespace because the server stores one Localization row per key path, and they are written out as
 literal `t('…')` calls because `scripts/verify-translation-keys.mjs` greps for the literal key. Same
 shape, and same reasons, as `@duncit/slots`' `buildSlotLabels`.
+
+## The camera scanner on its own: `@duncit/host-pod-actions/qr-scanner`
+
+`useQrScanner(active, onCode)` is the camera loop behind `TicketScanDialog`: rear camera,
+one frame decoded per animation frame with jsQR, the camera released the moment `active`
+goes false. It knows nothing about pods, so it is also exported on its own subpath for a
+surface that only needs a scanner — Duncit Lite's door check-in uses it without pulling in
+any pod dialog or GraphQL document:
+
+```tsx
+import { useQrScanner } from '@duncit/host-pod-actions/qr-scanner';
+
+const { videoRef, canvasRef, error } = useQrScanner(scanning, (value) => {
+  setScanning(false); // stop reading the same code on every frame
+  void checkIn(value);
+});
+```
+
+`error` is set when the camera is refused or missing; offer a typed-code fallback then.
 
 ## What it deliberately does not own
 

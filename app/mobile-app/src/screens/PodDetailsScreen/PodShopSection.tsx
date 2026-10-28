@@ -16,6 +16,8 @@ interface PodShopSectionProps {
   onVariantQuantity: (meta: CartLineMeta, quantity: number) => void;
   /** Seats being booked: each guest may rent up to an item's per-guest limit. */
   seats: number;
+  /** The viewer already holds this pod, so nothing more can be rented on it. */
+  joined?: boolean;
 }
 
 /**
@@ -32,6 +34,7 @@ export function PodShopSection({
   selectedTotal,
   onVariantQuantity,
   seats,
+  joined = false,
 }: Readonly<PodShopSectionProps>) {
   // The generated PodMode is a TS enum; compared as the string the server sends.
   const rentable = String(pod.pod_mode) !== 'VIRTUAL' && Boolean(pod.venue_id);
@@ -81,6 +84,7 @@ export function PodShopSection({
         rentals={rentals}
         picks={picks}
         seats={seats}
+        joined={joined}
       />
     </Reveal>
   );

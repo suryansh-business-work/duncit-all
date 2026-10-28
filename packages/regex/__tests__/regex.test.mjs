@@ -3,6 +3,10 @@ import {
   BANK_ACCOUNT_NUMBER,
   COUPON_CODE,
   isCouponCode,
+  PHYSICAL_GIFT_CARD_NUMBER,
+  PHYSICAL_GIFT_CARD_PASSCODE,
+  isPhysicalGiftCardNumber,
+  isPhysicalGiftCardPasscode,
   DIAL_CODE,
   DIGITS,
   EMAIL,
@@ -33,6 +37,10 @@ import {
   UPI_ID,
   URL_SLUG,
   isUrlSlug,
+  SOCIAL_HANDLE,
+  isSocialHandle,
+  UNDERSCORE_HANDLE,
+  isUnderscoreHandle,
   SITE_PATH,
   isSitePath,
   CSS_VARIABLE,
@@ -426,6 +434,36 @@ describe('URL_SLUG / isUrlSlug', () => {
   });
 });
 
+describe('SOCIAL_HANDLE / isSocialHandle', () => {
+  it('accepts letters, digits, dots, underscores and hyphens, 1 to 100 long', () => {
+    for (const handle of ['a', 'duncit.events', 'run_club-delhi', 'Mixed.Case_42', 'x'.repeat(100)]) {
+      expect(isSocialHandle(handle)).toBe(true);
+      expect(SOCIAL_HANDLE.test(handle)).toBe(true);
+    }
+  });
+
+  it('rejects an empty value, a leading @, a pasted link, spaces and anything over 100', () => {
+    for (const handle of ['', '@duncit', 'instagram.com/duncit', 'https://x.com/duncit', 'two words', 'a?b', 'x'.repeat(101)]) {
+      expect(isSocialHandle(handle)).toBe(false);
+    }
+  });
+});
+
+describe('UNDERSCORE_HANDLE / isUnderscoreHandle', () => {
+  it('accepts lowercase letters, digits and inner underscores, 3 to 30 long', () => {
+    for (const handle of ['abc', 'run_club', 'asha_rao2', '9to5', 'a_b', 'x'.repeat(30)]) {
+      expect(isUnderscoreHandle(handle)).toBe(true);
+      expect(UNDERSCORE_HANDLE.test(handle)).toBe(true);
+    }
+  });
+
+  it('rejects one or two characters, more than 30, edge underscores, capitals, hyphens and spaces', () => {
+    for (const handle of ['', 'a', 'ab', 'x'.repeat(31), '_abc', 'abc_', 'Run_club', 'run-club', 'run club', '@run']) {
+      expect(isUnderscoreHandle(handle)).toBe(false);
+    }
+  });
+});
+
 describe('SITE_PATH / isSitePath', () => {
   it('accepts the root and slug-shaped segments joined by single slashes', () => {
     for (const path of ['/', '/about', '/safety/tools', '/case-studies/acme-2026', '/1/2/3']) {
@@ -509,6 +547,82 @@ describe('COUPON_CODE / isCouponCode', () => {
     for (const code of ['welcome10', 'Welcome10', 'SAVE 10', ' SAVE10', 'SAVE10 ', 'SAVE.10', 'SAVE10%', 'SAVE10\n']) {
       expect(isCouponCode(code)).toBe(false);
     }
+  });
+});
+
+describe('PHYSICAL_GIFT_CARD_NUMBER / isPhysicalGiftCardNumber', () => {
+  it('accepts the 9 digits printed on a card, first digit 1–9', () => {
+    for (const number of ['123456789', '900000000', '100000001', '999999999']) {
+      expect(PHYSICAL_GIFT_CARD_NUMBER.test(number)).toBe(true);
+      expect(isPhysicalGiftCardNumber(number)).toBe(true);
+    }
+  });
+
+  it('refuses a number starting on 0 — no card is minted that way', () => {
+    expect(PHYSICAL_GIFT_CARD_NUMBER.test('012345678')).toBe(false);
+    expect(isPhysicalGiftCardNumber('012345678')).toBe(false);
+    expect(isPhysicalGiftCardNumber('0 1234 5678')).toBe(false);
+  });
+
+  it('refuses one digit short or one digit over', () => {
+    for (const number of ['12345678', '1234567890', '1', '']) {
+      expect(isPhysicalGiftCardNumber(number)).toBe(false);
+    }
+  });
+
+  it('judges only the digits, so a number typed with spaces or dashes still passes', () => {
+    for (const typed of ['123 456 789', '123-456-789', ' 123456789 ', '12 34-56 789']) {
+      expect(isPhysicalGiftCardNumber(typed)).toBe(true);
+    }
+    // The pattern itself is digits-only: the separators are the validator's job.
+    expect(PHYSICAL_GIFT_CARD_NUMBER.test('123-456-789')).toBe(false);
+  });
+
+  it('drops letters like any other non-digit, so they can never make up the count', () => {
+    expect(isPhysicalGiftCardNumber('ABCDEFGHI')).toBe(false);
+    // Letter O typed for a zero leaves 8 digits behind — short, not accepted.
+    expect(isPhysicalGiftCardNumber('12345678O')).toBe(false);
+    expect(PHYSICAL_GIFT_CARD_NUMBER.test('12345678A')).toBe(false);
+  });
+
+  it('answers false for an empty or missing value instead of throwing', () => {
+    expect(isPhysicalGiftCardNumber('')).toBe(false);
+    expect(isPhysicalGiftCardNumber(null)).toBe(false);
+    expect(isPhysicalGiftCardNumber(undefined)).toBe(false);
+  });
+});
+
+describe('PHYSICAL_GIFT_CARD_PASSCODE / isPhysicalGiftCardPasscode', () => {
+  it('accepts the 16 digits under the scratch panel, leading zeros included', () => {
+    for (const passcode of ['1234567890123456', '0000000000000000', '0123456789012345']) {
+      expect(PHYSICAL_GIFT_CARD_PASSCODE.test(passcode)).toBe(true);
+      expect(isPhysicalGiftCardPasscode(passcode)).toBe(true);
+    }
+  });
+
+  it('accepts the passcode as it is printed, in four dashed groups, or spaced', () => {
+    for (const typed of ['1234-5678-9012-3456', '1234 5678 9012 3456', ' 1234-5678 9012-3456 ']) {
+      expect(isPhysicalGiftCardPasscode(typed)).toBe(true);
+    }
+    expect(PHYSICAL_GIFT_CARD_PASSCODE.test('1234-5678-9012-3456')).toBe(false);
+  });
+
+  it('refuses 15 or 17 digits', () => {
+    for (const passcode of ['123456789012345', '12345678901234567', '1234-5678-9012-345', '1234-5678-9012-34567']) {
+      expect(isPhysicalGiftCardPasscode(passcode)).toBe(false);
+    }
+  });
+
+  it('drops letters, so a letter in place of a digit leaves the code short', () => {
+    expect(isPhysicalGiftCardPasscode('ABCD-EFGH-IJKL-MNOP')).toBe(false);
+    expect(isPhysicalGiftCardPasscode('1234-5678-9012-345O')).toBe(false);
+    expect(PHYSICAL_GIFT_CARD_PASSCODE.test('123456789012345A')).toBe(false);
+  });
+
+  it('answers false for an empty or missing value instead of throwing', () => {
+    expect(isPhysicalGiftCardPasscode('')).toBe(false);
+    expect(isPhysicalGiftCardPasscode(null)).toBe(false);
+    expect(isPhysicalGiftCardPasscode(undefined)).toBe(false);
   });
 });
 

@@ -94,7 +94,7 @@ export const BALANCE_BANDS: Band[] = [
 export async function loadRewardsLive(now: Date) {
   const lastBand = BALANCE_BANDS.at(-1)?.min ?? 0;
   const [ledger, holders, cards] = await Promise.all([
-    // Outstanding is read from the insert-only ledger, as Finance > Duncit Coin does, so it can never drift from it.
+    // Outstanding is read from the insert-only ledger, as Loyalty > Duncit Coin does, so it can never drift from it.
     CoinTransactionModel.aggregate<{ _id: string; value: number }>([
       { $group: { _id: '$type', value: { $sum: '$amount' } } },
     ]),

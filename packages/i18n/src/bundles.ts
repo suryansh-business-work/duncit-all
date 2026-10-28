@@ -33,6 +33,8 @@ import { VENUE_RENTALS_BUNDLE } from './bundles/venue-rentals';
 import { VENUE_PRICING_BUNDLE } from './bundles/venue-pricing';
 import { GIG_JOBS_BUNDLE } from './bundles/gig-jobs';
 import { MCP_BUNDLE } from './bundles/mcp';
+import { LOYALTY_BUNDLE } from './bundles/loyalty';
+import { HR_BUNDLE } from './bundles/hr';
 import { POD_REQUESTS_BUNDLE } from './bundles/pod-requests';
 import { CLUB_ADMIN_BUNDLE } from './bundles/club-admin';
 import { FULFILMENT_BUNDLE } from './bundles/fulfilment';
@@ -137,6 +139,8 @@ export {
   VENUE_PRICING_BUNDLE,
   GIG_JOBS_BUNDLE,
   MCP_BUNDLE,
+  LOYALTY_BUNDLE,
+  HR_BUNDLE,
   POD_REQUESTS_BUNDLE,
   CLUB_ADMIN_BUNDLE,
   FULFILMENT_BUNDLE,
@@ -153,6 +157,23 @@ export {
  */
 export const SHELL_FOOD_TAX_SLICE: NestedCatalogue = {
   shell: { foodTax: catalogueBranch(catalogueBranch(SHELL_BUNDLE, 'shell'), 'foodTax') },
+};
+
+const financeBranch = (key: string) => catalogueBranch(catalogueBranch(FINANCE_BUNDLE, 'finance'), key);
+
+/**
+ * What the Loyalty console ships: its own `loyalty` namespace, plus the Duncit
+ * Coin and virtual gift card screens' `finance.*` branches — those screens
+ * moved from Finance with their keys, so every stored translation still applies.
+ */
+export const LOYALTY_CONSOLE_CATALOGUE: NestedCatalogue = {
+  ...LOYALTY_BUNDLE,
+  ...HR_BUNDLE,
+  finance: {
+    duncitCoin: financeBranch('duncitCoin'),
+    giftCards: financeBranch('giftCards'),
+    common: financeBranch('common'),
+  },
 };
 
 /** Every client bundle, by the surface that ships it. */
@@ -191,6 +212,8 @@ export const SURFACE_BUNDLES: Record<string, NestedCatalogue> = {
   venuePricing: VENUE_PRICING_BUNDLE,
   gigJobs: GIG_JOBS_BUNDLE,
   mcp: MCP_BUNDLE,
+  loyalty: LOYALTY_BUNDLE,
+  hr: HR_BUNDLE,
   podRequests: POD_REQUESTS_BUNDLE,
   clubAdmin: CLUB_ADMIN_BUNDLE,
   fulfilment: FULFILMENT_BUNDLE,

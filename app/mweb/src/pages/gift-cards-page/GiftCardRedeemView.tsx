@@ -1,12 +1,10 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router';
 import { useMutation } from '@apollo/client/react';
-import { Alert, Box, Card, Stack, Typography } from '@mui/material';
-import { alpha, type Theme } from '@mui/material/styles';
-import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
+import { Alert, Card, Stack, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
 import { useDateFormat } from '../../utils/dateFormat';
+import GiftCardRedeemSuccess from './GiftCardRedeemSuccess';
 import GiftCardVisual from './GiftCardVisual';
 import { REDEEM_GIFT_CARD, type GiftCard, type GiftCardRedeemResult } from './queries';
 import { MY_COIN_BALANCE } from '../duncit-coin-page/queries';
@@ -16,19 +14,6 @@ interface GiftCardRedeemViewProps {
   currencySymbol: string;
 }
 
-/** The success mark: a green check on the tonal green disc. */
-const CHECK_DISC_SX = {
-  width: 72,
-  height: 72,
-  mx: 'auto',
-  borderRadius: '50%',
-  display: 'grid',
-  placeItems: 'center',
-  color: 'accent.main',
-  bgcolor: (theme: Theme) => alpha(theme.palette.primary.main, 0.12),
-  '& svg': { fontSize: 40 },
-} as const;
-
 /**
  * The looked-up card plus its redeem action — shared by the redeem page (code
  * typed in) and the claim page (code in the link), so both flows behave
@@ -36,7 +21,6 @@ const CHECK_DISC_SX = {
  */
 export default function GiftCardRedeemView({ card, currencySymbol }: Readonly<GiftCardRedeemViewProps>) {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const { formatDate } = useDateFormat();
   // The card turns into coins, so the cached balance (menu, checkout) is re-read.
   const [doRedeem, { loading }] = useMutation<{ redeemGiftCard: GiftCardRedeemResult }>(REDEEM_GIFT_CARD, {
@@ -58,34 +42,7 @@ export default function GiftCardRedeemView({ card, currencySymbol }: Readonly<Gi
   };
 
   if (result) {
-    // A repeat redemption by the same holder is a no-op reporting 0 coins.
-    const body =
-      result.coins_added > 0
-        ? t('mweb.giftCards.redeemSuccessBody', {
-            vars: { coins: result.coins_added, balance: result.coin_balance },
-          })
-        : t('mweb.giftCards.redeemAlreadyBody');
-    return (
-      <Card data-testid="gift-card-redeem-success" sx={{ p: 3, textAlign: 'center' }}>
-        <Box sx={CHECK_DISC_SX}>
-          <CheckRoundedIcon />
-        </Box>
-        <Typography component="h2" sx={{ fontSize: '1.25rem', fontWeight: 600, mt: 2 }}>
-          {t('mweb.giftCards.redeemSuccessTitle')}
-        </Typography>
-        <Typography
-          variant="body2"
-          sx={{
-            color: "text.secondary",
-            mt: 0.75
-          }}>
-          {body}
-        </Typography>
-        <DuncitButton data-testid="gift-card-go-to-coins" variant="contained" size="large" fullWidth onClick={() => navigate('/duncit-coin')} sx={{ mt: 2.5 }}>
-          {t('mweb.giftCards.goToCoins')}
-        </DuncitButton>
-      </Card>
-    );
+    return <GiftCardRedeemSuccess coinsAdded={result.coins_added} coinBalance={result.coin_balance} />;
   }
 
   let statusBody: string | null = null;

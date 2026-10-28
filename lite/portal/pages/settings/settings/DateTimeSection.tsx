@@ -1,9 +1,11 @@
-import { Controller, type Control } from 'react-hook-form';
+import { useMemo } from 'react';
+import { Controller, useWatch, type Control } from 'react-hook-form';
 import { Autocomplete, Stack, TextField } from '@mui/material';
 import { RhfTextField } from '@duncit/forms';
 import { SectionCard } from '@duncit/ui';
 import { usePortalT } from '../../../../shared/i18n';
-import { TIME_ZONES, type SettingsFormValues } from './settings.types';
+import { timeZoneOptions } from '../../../../shared/timezones';
+import type { SettingsFormValues } from './settings.types';
 
 interface Props {
   control: Control<SettingsFormValues>;
@@ -13,6 +15,8 @@ interface Props {
 /** The zone new events default to, and the date-fns patterns every date is shown in. */
 export function DateTimeSection({ control, busy }: Readonly<Props>) {
   const { t } = usePortalT();
+  const saved = useWatch({ control, name: 'default_timezone' });
+  const zones = useMemo(() => timeZoneOptions([saved]), [saved]);
   return (
     <SectionCard title={t('litePortal.settings.dateTime')}>
       <Stack spacing={1.5}>
@@ -21,7 +25,7 @@ export function DateTimeSection({ control, busy }: Readonly<Props>) {
           name="default_timezone"
           render={({ field, fieldState }) => (
             <Autocomplete
-              options={TIME_ZONES}
+              options={zones}
               value={field.value || null}
               onChange={(_event, value) => field.onChange(value ?? '')}
               onBlur={field.onBlur}

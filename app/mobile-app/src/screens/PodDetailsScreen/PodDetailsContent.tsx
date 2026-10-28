@@ -123,6 +123,10 @@ export function PodDetailsContent(props: Readonly<PodDetailsContentProps>) {
         selectedTotal={props.selectedTotal}
         onVariantQuantity={props.onVariantQuantity}
         seats={actions.seats}
+        // The two statuses the server's ALREADY_BOOKED check refuses a second checkout for.
+        joined={Boolean(
+          props.membershipState?.is_member || props.membershipState?.backout_in_process,
+        )}
       />
       <Reveal index={4}>
         <PodAccordions

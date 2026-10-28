@@ -35,17 +35,23 @@ import {
   PayoutCyclesPage,
   ReferralsPage,
   StartupDashboardPage,
-  CoinDashboardPage,
-  CoinTransactionsPage,
-  CoinSettingsPage,
-  GiftCardDashboardPage,
-  GiftCardCardsPage,
-  GiftCardLogsPage,
 } from './pages/finance';
 import AppShell from './components/AppShell';
+import MovedToLoyalty from './components/MovedToLoyalty';
 import { getToken } from './lib/session';
 
 const authed = createAuthed({ getToken, wrap: (el) => <AppShell>{el}</AppShell> });
+
+/** Old Finance addresses of the screens that moved to the Loyalty console, and
+ * where each one lives now — so a bookmark still opens the right screen. */
+const MOVED_TO_LOYALTY: ReadonlyArray<readonly [from: string, to: string]> = [
+  ['/duncit-coin/dashboard', '/duncit-coin/dashboard'],
+  ['/duncit-coin/transactions', '/duncit-coin/transactions'],
+  ['/duncit-coin/settings', '/duncit-coin/settings'],
+  ['/gift-cards/dashboard', '/gift-cards/virtual/dashboard'],
+  ['/gift-cards/cards', '/gift-cards/virtual/cards'],
+  ['/gift-cards/logs', '/gift-cards/virtual/logs'],
+];
 
 export default function App() {
   return (
@@ -91,12 +97,9 @@ export default function App() {
       <Route path="/expenses/dashboard" element={authed(<ExpenseDashboardPage />)} />
       <Route path="/settings/expenses" element={authed(<ExpenseSettingsPage />)} />
       <Route path="/referrals" element={authed(<ReferralsPage />)} />
-      <Route path="/duncit-coin/dashboard" element={authed(<CoinDashboardPage />)} />
-      <Route path="/duncit-coin/transactions" element={authed(<CoinTransactionsPage />)} />
-      <Route path="/duncit-coin/settings" element={authed(<CoinSettingsPage />)} />
-      <Route path="/gift-cards/dashboard" element={authed(<GiftCardDashboardPage />)} />
-      <Route path="/gift-cards/cards" element={authed(<GiftCardCardsPage />)} />
-      <Route path="/gift-cards/logs" element={authed(<GiftCardLogsPage />)} />
+      {MOVED_TO_LOYALTY.map(([from, to]) => (
+        <Route key={from} path={from} element={<MovedToLoyalty to={to} />} />
+      ))}
       <Route path="/payouts" element={authed(<PayoutCyclesPage />)} />
       <Route path="/calculators/pod-profit" element={authed(<PodProfitCalculatorPage />)} />
       <Route path="*" element={<Navigate to="/" replace />} />

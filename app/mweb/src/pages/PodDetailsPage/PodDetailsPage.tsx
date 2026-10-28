@@ -134,6 +134,8 @@ export default function PodDetailsPage() {
         showProducts={showProducts}
         seats={actions.seats}
         picks={rentalPicks}
+        // The two statuses the server's ALREADY_BOOKED check refuses a second checkout for.
+        joined={Boolean(membershipState?.is_member || membershipState?.backout_in_process)}
       />
 
       <PodDetailAccordions

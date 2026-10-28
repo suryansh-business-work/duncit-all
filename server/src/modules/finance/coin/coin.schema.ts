@@ -24,7 +24,7 @@ export const coinTypeDefs = /* GraphQL */ `
 
   """
   Every rule that decides how many coins someone is given, in one place
-  (Finance > Duncit Coin > Settings).
+  (Loyalty > Duncit Coin > Coin Settings).
   """
   type CoinSettings {
     "Percent of a pod-ticket payment granted back to the buyer (0 turns it off)."
@@ -189,11 +189,11 @@ export const coinTypeDefs = /* GraphQL */ `
   extend type Query {
     myCoinBalance: CoinBalance!
     myCoinTransactions: [CoinTransaction!]!
-    "Finance > Duncit Coin > Dashboard. 'months' bounds the distribution series (default 12, max 36)."
+    "Loyalty > Duncit Coin > Dashboard. 'months' bounds the distribution series (default 12, max 36)."
     coinAdminStats(months: Int): CoinAdminStats!
-    "Finance > Duncit Coin > Transactions. 'pod_doc_id' scopes the page to coins settled by that pod's payments."
+    "Loyalty > Duncit Coin > Transactions. 'pod_doc_id' scopes the page to coins settled by that pod's payments."
     coinTransactionsTable(query: TableQueryInput, pod_doc_id: ID): CoinAdminTransactionTablePage!
-    "Every coin payout rule, for Finance > Duncit Coin > Settings."
+    "Every coin payout rule, for Loyalty > Duncit Coin > Coin Settings."
     coinSettings: CoinSettings!
     "Name/email search for the manual-adjustment picker. Under two characters returns nothing."
     coinUserSearch(term: String!): [CoinUserOption!]!

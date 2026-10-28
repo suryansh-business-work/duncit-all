@@ -11,8 +11,9 @@ import { buildContext, type LiteContext } from './context';
 import { resolvers } from './graphql/resolvers';
 import { typeDefs } from './graphql/typeDefs';
 import { distFile, sendBody, sendStatic, shellHtml } from './html/files';
-import { buildMetaTags, injectMeta, jsonLdTag } from './html/meta';
-import { headFor } from './html/pages';
+import { renderWebPage } from './html/render';
+import { buildMcpRouter, mcpScopePlugin } from './mcp/bridge';
+import { migrateUserIndexes } from './models/user.model';
 import { buildIcsRouter } from './routes/ics';
 import { buildUploadRouter } from './routes/upload';
 import { startScheduler } from './scheduler';
@@ -28,6 +29,7 @@ import { log } from './utils/log';
  * web app, with the page's own head written in for crawlers and link previews.
  */
 const HTML_TYPE = 'text/html; charset=utf-8';
+const SHELLS: ReadonlySet<string> = new Set(['/index.html', '/portal.html']);
 const NO_CACHE = 'no-cache';
 /** Browser origins the API answers: a local dev host, or any duncit.com host. */
 const LOCAL_ORIGIN = /^https?:\/\/(localhost|127\.0\.0\.1|[a-z0-9-]+\.localhost)(:\d+)?$/;
@@ -39,27 +41,17 @@ const isPortalHost = (req: Request): boolean => {
   return host.startsWith('lite-portal.') || host.startsWith('portal.') || host.startsWith('staging.lite-portal.');
 };
 
-async function renderWebPage(path: string): Promise<string> {
-  const html = shellHtml('index.html');
-  try {
-    const head = await headFor(path);
-    if (!head) return html;
-    return injectMeta(html, [buildMetaTags(head.meta), ...head.structured.map(jsonLdTag)].join('\n    '));
-  } catch (error) {
-    log.warn('html', 'renderWebPage', { error, path });
-    return html;
-  }
-}
-
 async function servePage(req: Request, res: Response): Promise<void> {
-  const raw = new URL(req.url ?? '/', 'http://localhost').pathname;
+  const parsed = new URL(req.url ?? '/', 'http://localhost');
+  const raw = parsed.pathname;
   let path = raw;
   try {
     path = decodeURIComponent(raw);
   } catch {
     path = raw;
   }
-  const file = path === '/' || path.endsWith('.html') ? null : distFile(path);
+  // The two page shells are only ever served rendered; any other built file (offline.html, sw.js, icons) is static.
+  const file = path === '/' || SHELLS.has(path) ? null : distFile(path);
   if (file) {
     sendStatic(req, res, file, path);
     return;
@@ -72,11 +64,14 @@ async function servePage(req: Request, res: Response): Promise<void> {
     sendBody(req, res, shellHtml('portal.html'), HTML_TYPE, NO_CACHE);
     return;
   }
-  sendBody(req, res, await renderWebPage(path), HTML_TYPE, NO_CACHE);
+  const page = await renderWebPage(req, path, `${raw}${parsed.search}`);
+  // A page rendered for a signed-in viewer must never be cached by a proxy.
+  sendBody(req, res, page.html, HTML_TYPE, 'private, no-cache', page.status);
 }
 
 async function bootstrap(): Promise<void> {
   await connectDb();
+  await migrateUserIndexes();
   await settingsService.seed();
   await emailService.seedTemplates();
   await localizationService.seed();
@@ -91,13 +86,14 @@ async function bootstrap(): Promise<void> {
   });
   app.use(buildUploadRouter());
   app.use(buildIcsRouter());
+  app.use(buildMcpRouter());
 
   const httpServer = http.createServer(app);
   const apollo = new ApolloServer<LiteContext>({
     typeDefs,
     resolvers,
     introspection: !isProduction,
-    plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
+    plugins: [ApolloServerPluginDrainHttpServer({ httpServer }), mcpScopePlugin],
     formatError: (formatted, error) => {
       const code = (formatted.extensions?.code as string | undefined) ?? 'INTERNAL_SERVER_ERROR';
       if (code === 'INTERNAL_SERVER_ERROR') {

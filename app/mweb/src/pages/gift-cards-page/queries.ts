@@ -198,3 +198,17 @@ export const REDEEM_GIFT_CARD = gql`
     }
   }
 `;
+
+/**
+ * Redeem a PRINTED card by its number and scratch-panel passcode — the only
+ * call there is for one (no lookup). Asks for what the success card shows; the
+ * balance query is refetched beside it.
+ */
+export const REDEEM_PHYSICAL_GIFT_CARD = gql`
+  mutation RedeemPhysicalGiftCard($card_number: String!, $passcode: String!) {
+    redeemPhysicalGiftCard(card_number: $card_number, passcode: $passcode) {
+      coins_added
+      coin_balance
+    }
+  }
+`;

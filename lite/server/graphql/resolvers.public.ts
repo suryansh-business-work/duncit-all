@@ -2,8 +2,10 @@ import { env } from '../config/env';
 import { optionalUser, requireUser, type LiteContext } from '../context';
 import { authService } from '../services/auth.service';
 import { calendarService } from '../services/calendar.service';
+import { contactService } from '../services/contact.service';
 import { discoverService, publicCategories, publicCities } from '../services/discover.service';
 import { eventService } from '../services/event.service';
+import { insightsService } from '../services/insights.service';
 import { upiLink, upiQrDataUrl } from '../services/qr';
 import { registrationService } from '../services/registration.service';
 import { settingsService } from '../services/settings.service';
@@ -36,6 +38,7 @@ export const publicResolvers = {
     liteCalendar: async (_p: unknown, args: Args, ctx: LiteContext) => calendarService.bySlug(args.slug, await optionalUser(ctx)),
     liteCalendarEvents: async (_p: unknown, args: Args, ctx: LiteContext) => calendarService.events(args.slug, Boolean(args.past), await optionalUser(ctx)),
     liteMyCalendars: async (_p: unknown, _a: Args, ctx: LiteContext) => calendarService.mine(await requireUser(ctx)),
+    liteSubscribedCalendars: async (_p: unknown, _a: Args, ctx: LiteContext) => calendarService.subscribed(await requireUser(ctx)),
     liteCategories: (_p: unknown, args: Args) => publicCategories(Boolean(args.include_inactive)),
     liteCities: (_p: unknown, args: Args) => publicCities(Boolean(args.include_inactive)),
     liteCity: (_p: unknown, args: Args) => discoverService.city(args.slug),
@@ -49,12 +52,18 @@ export const publicResolvers = {
       await requireUser(ctx);
       return { upload_url: `${env.siteUrl}/upload`, max_mb: UPLOAD_MAX_MB };
     },
+    liteEventInsights: async (_p: unknown, args: Args, ctx: LiteContext) => insightsService.forEvent(await requireUser(ctx), args.event_id, args.days),
   },
   Mutation: {
     _lite: () => true,
     liteRequestSignInCode: (_p: unknown, args: Args) => authService.requestCode(args.email),
     liteVerifySignInCode: (_p: unknown, args: Args) => authService.verifyCode(args.email, args.code, args.name),
     liteSignInWithGoogle: (_p: unknown, args: Args) => authService.signInWithGoogle(args.id_token),
+    liteRequestPhoneSignInCode: (_p: unknown, args: Args) => authService.requestPhoneCode(args.phone),
+    liteVerifyPhoneSignInCode: (_p: unknown, args: Args) => authService.verifyPhoneCode(args.phone, args.code, args.name),
+    liteRequestContactCode: async (_p: unknown, args: Args, ctx: LiteContext) => contactService.requestCode(await requireUser(ctx), args.kind, args.value),
+    liteVerifyContact: async (_p: unknown, args: Args, ctx: LiteContext) => contactService.verify(await requireUser(ctx), args.kind, args.value, args.code),
+    liteTrackEventView: async (_p: unknown, args: Args, ctx: LiteContext) => insightsService.trackView(args.slug, await optionalUser(ctx)),
     liteUpdateProfile: async (_p: unknown, args: Args, ctx: LiteContext) => userService.updateProfile(await requireUser(ctx), args.input),
     liteSetMyLocale: async (_p: unknown, args: Args, ctx: LiteContext) => userService.setLocale(await requireUser(ctx), args.locale),
 
@@ -63,6 +72,8 @@ export const publicResolvers = {
     litePublishEvent: async (_p: unknown, args: Args, ctx: LiteContext) => eventService.publish(await requireUser(ctx), args.id),
     liteCancelEvent: async (_p: unknown, args: Args, ctx: LiteContext) => eventService.cancel(await requireUser(ctx), args.id, args.reason),
     liteDuplicateEvent: async (_p: unknown, args: Args, ctx: LiteContext) => eventService.duplicate(await requireUser(ctx), args.id),
+    liteSetRegistrationOpen: async (_p: unknown, args: Args, ctx: LiteContext) => eventService.setRegistrationOpen(await requireUser(ctx), args.id, args.open),
+    liteChangeEventSlug: async (_p: unknown, args: Args, ctx: LiteContext) => eventService.changeSlug(await requireUser(ctx), args.id, args.slug),
     liteAddCoHost: async (_p: unknown, args: Args, ctx: LiteContext) => eventService.addCoHost(await requireUser(ctx), args.event_id, args.email),
     liteRemoveCoHost: async (_p: unknown, args: Args, ctx: LiteContext) => eventService.removeCoHost(await requireUser(ctx), args.event_id, args.user_id),
     liteSendEventUpdate: async (_p: unknown, args: Args, ctx: LiteContext) => eventService.sendUpdate(await requireUser(ctx), args.event_id, args.subject, args.body),

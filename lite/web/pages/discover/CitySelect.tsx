@@ -20,7 +20,8 @@ export function CitySelect({ cities, value, onChange }: Readonly<CitySelectProps
       value={known}
       onChange={(event) => onChange(event.target.value)}
       sx={{ minWidth: 200 }}
-      slotProps={{ select: { SelectDisplayProps: { 'data-testid': 'city-select' } as Record<string, string> } }}
+      // displayEmpty: no city picked reads "Everywhere", not a blank box under a floating label.
+      slotProps={{ select: { displayEmpty: true, SelectDisplayProps: { 'data-testid': 'city-select' } as Record<string, string> }, inputLabel: { shrink: true } }}
     >
       <MenuItem value="">{t('liteWeb.discover.allCities')}</MenuItem>
       {cities.map((city) => (

@@ -16,6 +16,8 @@ interface PodCommerceSectionProps {
   seats: number;
   /** The guest's rental picks for this pod — held by the page, whose Book reads them too. */
   picks: PodRentalPicks;
+  /** The viewer already holds this pod, so nothing more can be rented on it. */
+  joined?: boolean;
 }
 
 /**
@@ -24,7 +26,7 @@ interface PodCommerceSectionProps {
  * Pod Shop | Pod Rent card; otherwise the shop card stays exactly as it was.
  * Rentals ride on the seat's payment; on a free pod they are the whole payment.
  */
-export default function PodCommerceSection({ pod, priceFormat, productSelection, showProducts, seats, picks }: Readonly<PodCommerceSectionProps>) {
+export default function PodCommerceSection({ pod, priceFormat, productSelection, showProducts, seats, picks, joined = false }: Readonly<PodCommerceSectionProps>) {
   const hasProducts = showProducts && (pod.product_requests ?? []).some((item: { product_name?: string | null } | null) => Boolean(item?.product_name));
   const rentable = pod.pod_mode !== 'VIRTUAL' && Boolean(pod.venue_id);
   const rentals = usePodRentals(pod.id, rentable);
@@ -69,6 +71,7 @@ export default function PodCommerceSection({ pod, priceFormat, productSelection,
       rentals={rentals}
       picks={picks}
       seats={seats}
+      joined={joined}
     />
   );
 }

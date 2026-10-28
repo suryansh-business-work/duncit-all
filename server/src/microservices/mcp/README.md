@@ -94,6 +94,30 @@ Gemini expect from a remote MCP server. Discovery: `/.well-known/oauth-protected
 | `mcp_guard` | `block` (default from Settings) refuses arguments that look like injected instructions; `warn` lets them through and flags them. |
 | `mcp_confirm` | Only on destructive / consequential tools (delete, cancel, refund, approve, pay…): must be `true`, after the person agreed. |
 
+## Duncit Lite connector (`/lite/mcp`)
+
+Duncit Lite (lite.duncit.com) is a separate product with its own API, database
+and accounts, so its tools are not built from this API's schema:
+
+- `lite/lite.catalog.ts` reads Lite's SDL from `GET <LITE_URL>/mcp/schema` at
+  boot and every 10 minutes, and rebuilds the catalog only when it changed — a
+  new Lite feature becomes a tool without a deploy here.
+- `lite/lite.tools.ts` turns each Lite Query/Mutation field into a tool named
+  `lite_<field>` (same denylist, risk, confirm and JSON-schema rules as every
+  other tool), listed on the `lite` connector and reachable from the gateway.
+  Sign-in, contact proofs, Lite credentials, uploads and page views stay out.
+- `lite/lite.client.ts` runs a call against `<LITE_URL>/graphql` with a signed
+  one-minute assertion (`lite/lite.assertion.ts`, HS256 over
+  `LITE_MCP_SECRET`): the person's verified email, their Duncit id, and the
+  connection's read / read-write scope. Lite acts as the Lite account for that
+  email — the same proof "Sign in with Duncit" gives — and refuses mutations on
+  a read-only assertion itself, independently of the check here.
+- The connector is open to every MCP user (like the member app); Lite's own
+  resolvers decide what their Lite account may do (admin tools need a Lite admin).
+- Off until `LITE_MCP_SECRET` is set on both the API and Lite (deploy.yml reads
+  the `LITE_MCP_SECRET` / `STAGING_LITE_MCP_SECRET` repo secrets). The API reaches
+  Lite on the stack's network: `LITE_URL=http://lite:2040`.
+
 ## Curated tools
 
 `mcp_whoami`, `mcp_list_tools`, `mcp_search_tools`, `mcp_describe_tool`,

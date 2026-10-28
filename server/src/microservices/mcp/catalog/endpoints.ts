@@ -33,6 +33,7 @@ export const MCP_ENDPOINTS: readonly McpEndpoint[] = [
   { key: 'venues', label: 'Venues console', portal: 'venues', categories: ['venues'] },
   { key: 'hosts', label: 'Hosts console', portal: 'hosts', categories: ['hosts'] },
   { key: 'finance', label: 'Finance', portal: 'finance', categories: ['finance'] },
+  { key: 'loyalty', label: 'Loyalty', portal: 'loyalty', categories: ['loyalty'] },
   { key: 'employee', label: 'Employee', portal: 'employee', categories: ['employee'] },
   { key: 'hr', label: 'HR', portal: 'hr', categories: ['hr'] },
   { key: 'products', label: 'Products (partner brands)', portal: 'products', categories: ['partner-brand'] },
@@ -53,6 +54,10 @@ export const MCP_ENDPOINTS: readonly McpEndpoint[] = [
   { key: 'gig-jobs', label: 'Gig Jobs', portal: 'gig-jobs', categories: ['gig-jobs'] },
   { key: 'ads', label: 'Ads', portal: 'ads', categories: ['ads'] },
   { key: 'mcp', label: 'MCP console', portal: MCP_PORTAL_KEY, categories: ['mcp'] },
+  // Duncit Lite is its own product with its own accounts: every MCP user may
+  // open it (like the member app), and Lite's resolvers decide what their Lite
+  // account — found by email — may do. Admin tools need a Lite admin.
+  { key: 'lite', label: 'Duncit Lite', portal: 'mweb', categories: ['lite'] },
 ];
 
 const BY_KEY: ReadonlyMap<string, McpEndpoint> = new Map(MCP_ENDPOINTS.map((e) => [e.key, e]));

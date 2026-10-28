@@ -14,6 +14,8 @@ import {
   makeForceMarkSchema,
   makeVenueCancelPodSchema,
   makeTwoFactorCodeSchema,
+  makePhysicalGiftCardSchema,
+  formatPhysicalGiftCardPasscode,
 } from '@duncit/forms/schemas';
 import { defineDemo } from '../../types';
 
@@ -46,6 +48,9 @@ interface SchemaMock {
   companion_name: string;
   /** What is typed into the authenticator step — 6 digits, or a recovery code. */
   two_factor_code: string;
+  /** A printed gift card's number and its scratch-panel passcode, as typed. */
+  gift_card_number: string;
+  gift_card_passcode: string;
 }
 
 /** The `schemas` demo: every mWeb/native form contract, parsed side by side. */
@@ -73,6 +78,8 @@ export const schemasDemo = defineDemo<SchemaMock>({
     bio: 'Weekend trail runner in Bengaluru — hosting DUN-POD-4821 on Saturdays.',
     companion_name: 'Rohan Mehta',
     two_factor_code: 'K7QD-M2XA',
+    gift_card_number: '123 456 789',
+    gift_card_passcode: '1234567890123456',
   },
   compute: (mock) => {
     // Messages are keys here so the demo shows WHICH sentence fires without
@@ -201,6 +208,13 @@ export const schemasDemo = defineDemo<SchemaMock>({
           country: 'India',
         }),
       ),
+      'Printed gift card': say(
+        makePhysicalGiftCardSchema(t).safeParse({
+          card_number: mock.gift_card_number,
+          passcode: mock.gift_card_passcode,
+        }),
+      ),
+      'Printed gift card — the passcode box shows': formatPhysicalGiftCardPasscode(mock.gift_card_passcode),
     };
   },
 });

@@ -1,3 +1,4 @@
+import { liteCatalogState, startLiteCatalog } from '../lite/lite.catalog';
 import { CURATED_TOOLS } from '../tools/curated';
 import type { McpCatalog, McpTool } from '../tools/tool.types';
 import { buildGraphQLTools, type CatalogSource } from './build';
@@ -18,18 +19,27 @@ let cached: McpCatalog | null = null;
 export function registerCatalogSource(next: CatalogSource): void {
   source = next;
   cached = null;
+  // Duncit Lite's tools come from its own API, read in the background; the
+  // catalog is rebuilt whenever Lite's schema changes.
+  startLiteCatalog(invalidateCatalog);
+}
+
+/** Drop the built catalog so the next read includes the latest Lite tools. */
+export function invalidateCatalog(): void {
+  cached = null;
 }
 
 export function getCatalog(): McpCatalog {
   if (cached) return cached;
   if (!source) throw new Error('The MCP catalog has no source yet — registerCatalogSource runs at server start');
   const built = buildGraphQLTools(source);
-  const tools: McpTool[] = [...CURATED_TOOLS, ...built.tools];
+  const lite = liteCatalogState();
+  const tools: McpTool[] = [...CURATED_TOOLS, ...built.tools, ...lite.tools];
   const byName = new Map<string, McpTool>();
   for (const tool of tools) {
     if (byName.has(tool.name)) throw new Error(`Two MCP tools are both called ${tool.name}`);
     byName.set(tool.name, tool);
   }
-  cached = { schema: built.schema, tools, byName, skipped: built.skipped };
+  cached = { schema: built.schema, tools, byName, skipped: [...built.skipped, ...lite.skipped] };
   return cached;
 }

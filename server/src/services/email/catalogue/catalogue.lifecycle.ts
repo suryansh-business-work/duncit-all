@@ -629,7 +629,7 @@ const FOLLOW_UP_EMAILS: readonly EmailDef[] = [
   defineEmail({
     slug: 'coin-expiry-reminder',
     name: 'Coins Expiring Soon',
-    description: 'A member whose unspent coins lapse within the reminder window (Finance > Duncit Coin).',
+    description: 'A member whose unspent coins lapse within the reminder window (Loyalty > Duncit Coin).',
     audience: 'USER',
     category: 'notification',
     fires: 'A member’s coins are within the reminder window of their expiry date',

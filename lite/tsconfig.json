@@ -9,5 +9,5 @@
     "useDefineForClassFields": true,
     "types": ["vite/client"]
   },
-  "include": ["web", "portal", "shared"]
+  "include": ["web", "portal", "shared", "vitest.setup.ts"]
 }

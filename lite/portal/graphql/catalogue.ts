@@ -26,6 +26,7 @@ export interface LiteCityInput {
   name: string;
   slug?: string | null;
   country?: string | null;
+  region?: string | null;
   cover_url?: string | null;
   featured?: boolean;
   sort_order?: number;
@@ -50,6 +51,7 @@ const CITY_FIELDS = gql`
     name
     slug
     country
+    region
     cover_url
     featured
     sort_order

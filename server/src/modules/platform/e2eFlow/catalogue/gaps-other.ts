@@ -949,7 +949,7 @@ export const OTHER_GAP_FLOWS: readonly CatalogueFlow[] = [
     ],
   },
   {
-    name: 'Finance: Gift Cards',
+    name: 'Loyalty: Virtual Gift Cards',
     description: 'Gift cards and the coin ledger.',
     sub_flows: [
       {

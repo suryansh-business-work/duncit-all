@@ -5,9 +5,13 @@ import {
   isHostname,
   isIfsc,
   isPhoneNumber,
+  isPhysicalGiftCardNumber,
+  isPhysicalGiftCardPasscode,
   isPincode,
   isReferralCode,
   isSitePath,
+  isSocialHandle,
+  isUnderscoreHandle,
   isUpiId,
   isUrlSlug,
   isUsername,
@@ -20,6 +24,8 @@ interface CandidateMock {
   email: string;
   pincode: string;
   username: string;
+  underscore_handle: string;
+  social_handle: string;
   referral_code: string;
 }
 
@@ -45,6 +51,11 @@ interface BankMock {
   gstin: string;
 }
 
+interface PrintedCardMock {
+  card_number: string;
+  passcode: string;
+}
+
 export default defineDemos('regex', [
   defineDemo<CandidateMock>({
     id: 'identity',
@@ -56,6 +67,8 @@ export default defineDemos('regex', [
       email: 'meera@duncit.com',
       pincode: '560102',
       username: 'meera.n',
+      underscore_handle: 'meera_n',
+      social_handle: 'meera.events',
       referral_code: 'DUNMEERA24',
     },
     compute: (mock) => ({
@@ -63,6 +76,8 @@ export default defineDemos('regex', [
       'isEmail(email)': isEmail(mock.email),
       'isPincode(pincode)': isPincode(mock.pincode),
       'isUsername(username)': isUsername(mock.username),
+      'isUnderscoreHandle(underscore_handle)': isUnderscoreHandle(mock.underscore_handle),
+      'isSocialHandle(social_handle)': isSocialHandle(mock.social_handle),
       'isReferralCode(referral_code)': isReferralCode(mock.referral_code),
     }),
   }),
@@ -97,6 +112,21 @@ export default defineDemos('regex', [
       'isBankAccountNumber(account_number)': isBankAccountNumber(mock.account_number),
       'isUpiId(upi_id)': isUpiId(mock.upi_id),
       'isGstin(gstin)': isGstin(mock.gstin),
+    }),
+  }),
+
+  defineDemo<PrintedCardMock>({
+    id: 'printed-gift-card',
+    title: 'What a printed gift card carries',
+    note:
+      'The 9-digit number on the face and the 16-digit passcode under the scratch panel. Only the digits are judged, so spaces and dashes still pass — start the number with 0 or drop one passcode digit and that row turns false.',
+    mock: {
+      card_number: '123 456 789',
+      passcode: '1234-5678-9012-3456',
+    },
+    compute: (mock) => ({
+      'isPhysicalGiftCardNumber(card_number)': isPhysicalGiftCardNumber(mock.card_number),
+      'isPhysicalGiftCardPasscode(passcode)': isPhysicalGiftCardPasscode(mock.passcode),
     }),
   }),
 

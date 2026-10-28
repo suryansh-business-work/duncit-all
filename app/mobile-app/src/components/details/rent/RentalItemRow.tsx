@@ -23,6 +23,8 @@ interface Props {
   max: number;
   /** Renting closed for the pod: the row is a listing only. */
   readOnly: boolean;
+  /** Renting is open, but not to this viewer: the picker shows, greyed out. */
+  disabled?: boolean;
   onQuantity: (itemId: string, quantity: number) => void;
 }
 
@@ -33,6 +35,7 @@ export function RentalItemRow({
   quantity,
   max,
   readOnly,
+  disabled = false,
   onQuantity,
 }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -67,12 +70,13 @@ export function RentalItemRow({
               max={max}
               labels={labels}
               size="sm"
+              disabled={disabled}
               onChange={(next) => onQuantity(item.id, next)}
               testIdPrefix={`pod-rent-${item.id}`}
             />
           </XStack>
         ) : null}
-        {!readOnly && !soldOut && capped ? (
+        {!readOnly && !disabled && !soldOut && capped ? (
           <Text fontSize={12} color="$muted" testID={`pod-rent-max-${item.id}`}>
             {t('venueRentals.guest.maxPerBooking', { vars: { count: max } })}
           </Text>

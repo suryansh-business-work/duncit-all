@@ -21,7 +21,13 @@ const settingsSchema = new Schema(
         'Pay the host on any UPI app using the ID or QR below, then paste the transaction reference (UTR). The host confirms it and your spot is held.',
     },
     admin_emails: { type: [String], default: [] },
-    max_ticket_price: { type: Number, default: 0 },
+    max_ticket_price: { type: Number, default: 0, min: 0 },
+    /** The most seats one event may offer; a host's capacity is checked against it. */
+    max_event_capacity: { type: Number, default: 10_000, min: 1 },
+    /** The most seats one guest may take in a single registration. */
+    max_seats_per_registration: { type: Number, default: 10, min: 1 },
+    /** Offer "Use phone number" on sign-in (it also needs an MSG91 entry under Environment). */
+    sign_in_with_phone: { type: Boolean, default: true },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } },
 );

@@ -104,24 +104,7 @@ export const appConfig = {
         { label: 'Employee Expenses', labelKey: 'shell.nav.employeeExpenses', to: '/employee-expenses', icon: 'quote' },
       ],
     },
-    {
-      label: 'Duncit Coin', labelKey: 'shell.nav.duncitCoin',
-      icon: 'wallet',
-      children: [
-        { label: 'Dashboard', labelKey: 'shell.nav.dashboard', to: '/duncit-coin/dashboard', icon: 'insights' },
-        { label: 'Transactions', labelKey: 'shell.nav.transactions', to: '/duncit-coin/transactions', icon: 'receipt' },
-        { label: 'Coin Settings', labelKey: 'shell.nav.coinSettings', to: '/duncit-coin/settings', icon: 'tune' },
-      ],
-    },
-    {
-      label: 'Gift Cards', labelKey: 'shell.nav.giftCards',
-      icon: 'wallet',
-      children: [
-        { label: 'Dashboard', labelKey: 'shell.nav.dashboard', to: '/gift-cards/dashboard', icon: 'insights' },
-        { label: 'Cards', labelKey: 'shell.nav.cards', to: '/gift-cards/cards', icon: 'ticket' },
-        { label: 'Logs', labelKey: 'shell.nav.logs', to: '/gift-cards/logs', icon: 'receipt' },
-      ],
-    },
+    // Duncit Coin and Gift Cards moved to the Loyalty console (loyalty.duncit.com).
     { label: 'Referrals', labelKey: 'shell.nav.referrals', to: '/referrals', icon: 'campaign' },
     { label: 'Payout Cycles', labelKey: 'shell.nav.payoutCycles', to: '/payouts', icon: 'calendar' },
     {

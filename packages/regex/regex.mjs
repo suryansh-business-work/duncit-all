@@ -135,6 +135,24 @@ export const REFERRAL_CODE = /^DUN-[0-9A-F]{6}$/;
 export const COUPON_CODE = /^[A-Z0-9][A-Z0-9_-]{2,29}$/;
 
 /**
+ * A printed Duncit gift card's number — the 9 digits printed in the open on
+ * the card, the first one 1–9 (no card is minted starting on 0, so a leading
+ * zero is a typo). The server keeps the same shape (finance/physicalGiftCard).
+ *
+ * Applied to the DIGITS-ONLY value: a card is read off cardboard and typed with
+ * spaces or dashes, so strip with {@link toDigits} first — exactly what
+ * {@link isPhysicalGiftCardNumber} does.
+ */
+export const PHYSICAL_GIFT_CARD_NUMBER = /^[1-9]\d{8}$/;
+
+/**
+ * The passcode under a printed card's scratch panel — 16 digits, printed in
+ * four groups (`XXXX-XXXX-XXXX-XXXX`). Applied to the DIGITS-ONLY value, like
+ * {@link PHYSICAL_GIFT_CARD_NUMBER}.
+ */
+export const PHYSICAL_GIFT_CARD_PASSCODE = /^\d{16}$/;
+
+/**
  * A GA4 measurement id — `G-` and the data stream's alphanumeric suffix
  * (G-XXXXXXXXXX), as Google Analytics → Admin → Data streams shows it. The
  * server checks the same shape before Tech → Google Analytics saves a tag.
@@ -183,6 +201,10 @@ export const isPersonName = (v) => PERSON_NAME.test(v);
 export const isReferralCode = (v) => REFERRAL_CODE.test(v);
 /** Coupon-code shape check. Case-sensitive: upper-case before calling it. */
 export const isCouponCode = (v) => COUPON_CODE.test(v);
+/** Printed gift card number check. Every non-digit is dropped first ({@link toDigits}). */
+export const isPhysicalGiftCardNumber = (v) => PHYSICAL_GIFT_CARD_NUMBER.test(toDigits(v));
+/** Printed gift card passcode check. Every non-digit is dropped first ({@link toDigits}). */
+export const isPhysicalGiftCardPasscode = (v) => PHYSICAL_GIFT_CARD_PASSCODE.test(toDigits(v));
 
 /**
  * A Duncit @handle — the thing that stands in for a Mongo id in a profile URL.
@@ -213,6 +235,29 @@ export const URL_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 /** Slug shape check. Lower-case before calling it — the pattern is strict. */
 export const isUrlSlug = (v) => URL_SLUG.test(v);
+
+/**
+ * A social-network handle as a profile stores it — `duncit.events`,
+ * `run_club-delhi` — with the leading `@` and the site's own address already
+ * dropped (the client shows them as fixed prefixes). Letters, digits, `.`, `_`
+ * and `-`, 1–100 characters: no `/`, `?` or spaces, so a pasted full link is
+ * refused rather than stored half-cleaned. One character class, so it is linear.
+ */
+export const SOCIAL_HANDLE = /^[A-Za-z0-9._-]{1,100}$/;
+
+/** Social handle shape check. Strip a leading `@` first. */
+export const isSocialHandle = (v) => SOCIAL_HANDLE.test(v);
+
+/**
+ * A handle made of lowercase letters, digits and inner underscores, 3–30
+ * characters — `run_club`, `asha_rao2` — for products whose handles use `_`
+ * where {@link USERNAME} uses `-` (Duncit Lite). It starts and ends with a
+ * letter or digit. The middle run is bounded, so the pattern stays linear.
+ */
+export const UNDERSCORE_HANDLE = /^[a-z0-9][a-z0-9_]{1,28}[a-z0-9]$/;
+
+/** Underscore handle shape check. Lower-case before calling it — the pattern is strict. */
+export const isUnderscoreHandle = (v) => UNDERSCORE_HANDLE.test(v);
 
 /**
  * A website page path: `/` alone, or `/` followed by {@link URL_SLUG}-shaped

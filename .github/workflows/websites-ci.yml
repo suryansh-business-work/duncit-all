@@ -11,6 +11,7 @@ on:
     branches: [main, master, develop, staging]
     paths:
       - 'website/**'
+      - 'lite/**'
       - 'packages/**'
       - 'package.json'
       - 'pnpm-lock.yaml'
@@ -22,6 +23,7 @@ on:
     branches: [master, develop, staging]
     paths:
       - 'website/**'
+      - 'lite/**'
       - 'packages/**'
       - 'package.json'
       - 'pnpm-lock.yaml'
@@ -76,6 +78,13 @@ jobs:
       # - name: Test
       #   working-directory: ${{ matrix.dir }}
       #   run: pnpm run --if-present test
+
+      # Duncit Lite's suites run (the owner asked for them with the Lite batch);
+      # every other website stays under the pause above.
+      - name: Test (Duncit Lite)
+        if: matrix.name == 'duncit-lite'
+        working-directory: ${{ matrix.dir }}
+        run: pnpm run test
 
       - name: Typecheck
         working-directory: ${{ matrix.dir }}

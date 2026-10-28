@@ -9,6 +9,10 @@ import { UserModel } from '@modules/access/user/user.model';
 import { analyticsService } from '@modules/platform/analytics/analytics.service';
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
+import { STARTER_MJML } from '@services/email/catalogue/starter';
+import { EMAIL_FALLBACK } from '@services/email/email-i18n';
+import { applyVars } from '@modules/content/emailTemplate/emailTemplate.service';
+import { onSharedDesign } from '@modules/content/emailTemplate/emailTemplate.chrome';
 
 type Entity = 'CLUB' | 'POD' | 'INVENTORY_PRODUCT';
 const ADMIN_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN', 'SUPPORT_USER'];
@@ -459,6 +463,22 @@ async function adminAiChat(prompt: string) {
   throw openAiGraphQLError(res);
 }
 
+/**
+ * The shared card a new email is written from, its placeholder copy spelled
+ * out: handed the starter's translation keys, the writer kept them, and the
+ * email said "Your email heading".
+ */
+const starterForAi = (): string =>
+  applyVars(
+    STARTER_MJML,
+    Object.fromEntries(Object.entries(EMAIL_FALLBACK).map(([key, value]) => [`t:${key}`, value]))
+  );
+
+/**
+ * Write or rework an email body. What comes back is put on the shared card
+ * (`onSharedDesign`) whatever the model returned — the consoles that call this
+ * all wrap the result in a header/footer fragment of their own.
+ */
 async function createOrUpdateMjml(input: AiMjmlTemplateInput) {
   const prompt = input.prompt.trim();
   if (!prompt) {
@@ -468,7 +488,7 @@ async function createOrUpdateMjml(input: AiMjmlTemplateInput) {
     resolvePrompt('generate.email_mjml'),
     resolvePrompt('generate.email_mjml.user', {
       instruction: prompt,
-      current_mjml: (input.current_mjml || '').slice(0, 12000),
+      current_mjml: (input.current_mjml || starterForAi()).slice(0, 12000),
     }),
   ]);
   const res = await openaiChat({
@@ -490,7 +510,7 @@ async function createOrUpdateMjml(input: AiMjmlTemplateInput) {
       extensions: { code: 'AI_INVALID_JSON' },
     });
   }
-  return mjml;
+  return onSharedDesign(mjml);
 }
 
 function improvedHtml(content: string): string {

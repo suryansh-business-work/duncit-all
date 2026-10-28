@@ -44,8 +44,8 @@ export const referralTypeDefs = /* GraphQL */ `
     gift_description: String!
     """
     Coins EACH side of a referral earns — the referrer and the new member.
-    Read-only here: it is a coin payout rule, set in Finance > Duncit Coin >
-    Settings alongside the earn rates, and reported here so the copy that quotes
+    Read-only here: it is a coin payout rule, set in Loyalty > Duncit Coin >
+    Coin Settings alongside the earn rates, and reported here so the copy that quotes
     it can never drift from what is actually paid.
     """
     coins_per_referral: Int!

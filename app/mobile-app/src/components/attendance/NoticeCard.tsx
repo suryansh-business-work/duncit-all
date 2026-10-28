@@ -3,14 +3,17 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 
-export type NoticeTone = 'info' | 'success' | 'warning' | 'danger';
+export type NoticeTone = 'info' | 'note' | 'success' | 'warning' | 'danger';
 
 type IconName = keyof typeof MaterialIcons.glyphMap;
 
 /** The tonal ground each tone sits on. There is no warning tint, so a warning
- * sits on the neutral soft fill and carries its colour in the icon. */
+ * sits on the neutral soft fill and carries its colour in the icon. `info`
+ * keeps the brand tint; `note` is the blue info colour, mWeb's
+ * `<Alert severity="info">`. */
 const FILL = {
   info: '$primarySoft',
+  note: '$infoSoft',
   success: '$successSoft',
   warning: '$soft',
   danger: '$dangerSoft',
@@ -18,6 +21,7 @@ const FILL = {
 
 const ICON: Record<NoticeTone, IconName> = {
   info: 'info-outline',
+  note: 'info-outline',
   success: 'check-circle',
   warning: 'warning-amber',
   danger: 'error-outline',
@@ -41,6 +45,7 @@ export function NoticeCard({ tone, title, body, icon, testID }: Readonly<Props>)
   const colors = useThemeColors();
   const tint = {
     info: colors.primary,
+    note: colors.info,
     success: colors.success,
     warning: colors.warning,
     danger: colors.danger,

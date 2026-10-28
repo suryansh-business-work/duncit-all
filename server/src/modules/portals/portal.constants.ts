@@ -14,6 +14,9 @@ export const PORTAL_ROLE_REQUIREMENTS: Record<string, readonly string[]> = {
   localization: ['LOCALIZATION_MANAGER'],
   targets: ['TARGETS_MANAGER'],
   'gig-jobs': ['GIG_JOBS_MANAGER'],
+  // Duncit Coin and gift cards moved here from Finance, so the Finance seats
+  // that ran them keep a way in beside the console's own role.
+  loyalty: ['LOYALTY_MANAGER', 'FINANCE_MANAGER', 'FINANCE_USER'],
   challenge: ['CHALLENGE_MANAGER'],
   communications: ['COMMUNICATIONS_MANAGER'],
   // The directory consoles. An Onboarding Manager opens the venue and

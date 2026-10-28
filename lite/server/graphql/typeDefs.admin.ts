@@ -11,6 +11,10 @@ export const adminTypeDefs = gql`
     EMAIL
     IMAGEKIT
     GOOGLE_OAUTH
+    "The browser key behind the event form's place search and the event page map."
+    GOOGLE_MAPS
+    "The SMS carrier for phone sign-in codes."
+    MSG91
   }
 
   enum LiteEmailStatus {
@@ -50,6 +54,12 @@ export const adminTypeDefs = gql`
     admin_emails: [String!]!
     "Rupee ceiling on a single ticket price; 0 means no ceiling."
     max_ticket_price: Int!
+    "The most seats one event may offer."
+    max_event_capacity: Int!
+    "The most seats one guest may take in one registration."
+    max_seats_per_registration: Int!
+    "Offer Use phone number on sign-in (also needs an MSG91 entry)."
+    sign_in_with_phone: Boolean!
   }
 
   input LiteAdminSettingsInput {
@@ -67,6 +77,9 @@ export const adminTypeDefs = gql`
     upi_help_text: String
     admin_emails: [String!]
     max_ticket_price: Int
+    max_event_capacity: Int
+    max_seats_per_registration: Int
+    sign_in_with_phone: Boolean
   }
 
   type LiteEnvFieldDef {
@@ -76,6 +89,10 @@ export const adminTypeDefs = gql`
     number: Boolean!
     bool: Boolean!
     hint: String
+    "Smallest accepted value of a number field."
+    min: Int
+    "Largest accepted value of a number field."
+    max: Int
   }
 
   type LiteEnvCategoryDef {
@@ -256,6 +273,7 @@ export const adminTypeDefs = gql`
     name: String!
     slug: String
     country: String
+    region: LiteCityRegion
     cover_url: String
     featured: Boolean
     sort_order: Int

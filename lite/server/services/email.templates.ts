@@ -28,7 +28,7 @@ export const DEFAULT_TEMPLATES: DefaultTemplate[] = [
     name: 'Registration confirmed',
     description: 'A guest is in: free ticket, approved, or payment confirmed.',
     subject: "You're in: {event_title}",
-    body: 'Hi {name},\n\nYour spot at {event_title} is confirmed.\n\nWhen: {event_when}\nWhere: {event_where}\n\nYour check-in code is {code}. Open your ticket here: {ticket_url}\n\nSee you there,\n{host_name}',
+    body: 'Hi {name},\n\nYour spot at {event_title} is confirmed.\n\nWhen: {event_when}\nWhere: {event_where}\n\nYour check-in code is {code}. Show the QR code below at the door, or open your ticket here: {ticket_url}\n\nSee you there,\n{host_name}',
     vars: [...EVENT_VARS, 'code', 'ticket_url'],
   },
   {

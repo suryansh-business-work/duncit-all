@@ -1,22 +1,39 @@
 import { Link as RouterLink, useLocation } from 'react-router';
-import { AppBar, Box, Container, Link, Stack, Toolbar } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import { DuncitButton } from '@duncit/buttons';
-import { LanguageSelect } from '@duncit/ui';
+import { Box, Container, Link, Stack, Toolbar } from '@mui/material';
+import ArrowOutwardIcon from '@mui/icons-material/ArrowOutward';
 import { useWebT } from '../../../shared/i18n';
+import { useLiteSession } from '../../../shared/session';
+import { LITE_MOTION } from '../../../shared/tokens';
 import { paths } from '../../lib/paths';
 import { AccountMenu } from './AccountMenu';
 import { LiteLogo } from './LiteLogo';
+import { LocalClock } from './LocalClock';
+import { ModeToggle } from './ModeToggle';
 import { NAV_ITEMS } from './nav';
 
-/** The desktop text links. */
+const LINK_SX = {
+  px: { xs: 1, sm: 1.25 },
+  minHeight: 40,
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: 0.75,
+  borderRadius: 1,
+  fontWeight: 700,
+  fontSize: '0.95rem',
+  transition: `color ${LITE_MOTION.fast}ms, background-color ${LITE_MOTION.fast}ms`,
+  '&:hover': { color: 'text.primary', bgcolor: 'action.hover' },
+} as const;
+
+/** Events · Calendars · Discover, icon and word (the word folds away on a narrow phone). */
 function NavLinks() {
   const { t } = useWebT();
   const { pathname } = useLocation();
+  const { signedIn } = useLiteSession();
   return (
-    <Stack component="nav" aria-label={t('liteWeb.nav.label')} direction="row" spacing={0.5} sx={{ display: { xs: 'none', md: 'flex' } }}>
-      {NAV_ITEMS.map((item) => {
+    <Stack component="nav" aria-label={t('liteWeb.nav.label')} direction="row" spacing={{ xs: 0, sm: 0.5 }}>
+      {NAV_ITEMS.filter((item) => signedIn || !item.signedIn).map((item) => {
         const active = item.match(pathname);
+        const Icon = item.icon;
         return (
           <Link
             key={item.to}
@@ -24,20 +41,14 @@ function NavLinks() {
             to={item.to}
             underline="none"
             aria-current={active ? 'page' : undefined}
-            sx={{
-              px: 1.5,
-              minHeight: 44,
-              display: 'inline-flex',
-              alignItems: 'center',
-              borderRadius: 999,
-              fontWeight: 700,
-              color: active ? 'primary.main' : 'text.primary',
-              bgcolor: active ? 'rgba(217, 45, 45, 0.08)' : 'transparent',
-              '&:hover': { bgcolor: 'action.hover' },
-            }}
+            aria-label={t(item.labelKey)}
+            sx={{ ...LINK_SX, color: active ? 'text.primary' : 'text.secondary' }}
             data-testid={`nav-${item.to.slice(1)}`}
           >
-            {t(item.labelKey)}
+            <Icon fontSize="small" aria-hidden />
+            <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+              {t(item.labelKey)}
+            </Box>
           </Link>
         );
       })}
@@ -45,32 +56,49 @@ function NavLinks() {
   );
 }
 
-/** Sticky header: the logo, the four places, the language, "Create event" and the account. */
-export function Header() {
-  const { t, locale, locales, setLocale } = useWebT();
+/** "Create event" for a signed-in reader, "Explore events" for a visitor. */
+function PrimaryLink() {
+  const { t } = useWebT();
+  const { signedIn } = useLiteSession();
+  if (!signedIn) {
+    return (
+      <Link component={RouterLink} to={paths.discover} underline="none" sx={{ ...LINK_SX, color: 'text.secondary', display: { xs: 'none', sm: 'inline-flex' } }} data-testid="header-explore">
+        {t('liteWeb.nav.explore')}
+        <ArrowOutwardIcon sx={{ fontSize: 16 }} aria-hidden />
+      </Link>
+    );
+  }
   return (
-    <AppBar position="sticky" color="inherit" elevation={0} sx={{ bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider' }}>
-      <Container maxWidth={false} sx={{ maxWidth: 1100 }}>
-        <Toolbar disableGutters sx={{ gap: 1.5, minHeight: { xs: 60, md: 68 } }}>
+    <Link component={RouterLink} to={paths.create} underline="none" sx={{ ...LINK_SX, color: 'text.primary' }} data-testid="header-create">
+      {t('liteWeb.nav.create')}
+    </Link>
+  );
+}
+
+/** A slim, see-through header over the glow: logo, the three places, the clock, Create and the account. */
+export function Header() {
+  return (
+    <Box
+      component="header"
+      sx={(theme) => ({
+        position: 'sticky',
+        top: 0,
+        zIndex: theme.zIndex.appBar,
+        backdropFilter: 'saturate(140%) blur(12px)',
+        backgroundColor: `rgba(${theme.vars?.palette.background.defaultChannel} / 0.72)`,
+      })}
+    >
+      <Container maxWidth={false} sx={{ maxWidth: 1240 }}>
+        <Toolbar disableGutters sx={{ gap: { xs: 0.5, sm: 1.5 }, minHeight: { xs: 56, md: 60 } }}>
           <LiteLogo />
-          <Box sx={{ flexGrow: 1 }} />
           <NavLinks />
-          <Box sx={{ display: { xs: 'none', md: 'block' }, width: 180 }}>
-            <LanguageSelect value={locale} options={locales} onChange={setLocale} size="small" />
-          </Box>
-          <DuncitButton
-            component={RouterLink}
-            to={paths.create}
-            variant="contained"
-            startIcon={<AddIcon />}
-            sx={{ display: { xs: 'none', sm: 'inline-flex' } }}
-            data-testid="header-create"
-          >
-            {t('liteWeb.nav.create')}
-          </DuncitButton>
+          <Box sx={{ flexGrow: 1 }} />
+          <LocalClock />
+          <ModeToggle />
+          <PrimaryLink />
           <AccountMenu />
         </Toolbar>
       </Container>
-    </AppBar>
+    </Box>
   );
 }

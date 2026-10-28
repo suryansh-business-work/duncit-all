@@ -127,6 +127,8 @@ describe('mcp_audit_tools — scope "mine"', () => {
       { key: 'partners', url: `${PUBLIC_URL}/partners/mcp`, tools: 16 },
       { key: 'pods', url: `${PUBLIC_URL}/pods/mcp`, tools: 15 },
       { key: 'mcp', url: `${PUBLIC_URL}/mcp/mcp`, tools: 7 },
+      // Duncit Lite is open to every MCP user (its own resolvers decide what each may do).
+      { key: 'lite', url: `${PUBLIC_URL}/lite/mcp`, tools: 7 },
     ]);
   });
 

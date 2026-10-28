@@ -38,6 +38,10 @@ const DENIED_WORDS: ReadonlyMap<string, string> = new Map([
   ['credential', 'credentials never leave the server'],
   ['credentials', 'credentials never leave the server'],
   ['base64', 'whole files do not belong in a chat context'],
+  // A printed gift card's passcode IS its coins: reading one belongs to a person
+  // in the Loyalty console, where every read is written to the card's history.
+  ['passcode', 'a gift card passcode is the value of the card'],
+  ['passcodes', 'a gift card passcode is the value of the card'],
 ]);
 
 const DENIED_PAIRS: ReadonlyArray<readonly [string, string, string]> = [

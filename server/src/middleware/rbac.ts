@@ -26,6 +26,23 @@ export const LOGS_READER = 'LOGS_MANAGER';
  */
 export const FINANCE_READER = 'FINANCE_USER';
 
+/**
+ * The Loyalty console (loyalty.duncit.com) owns Duncit Coin and every gift card,
+ * virtual and physical. Coin and card liability is a platform-wide money figure,
+ * so the Finance seats that answered for it before the move keep their doors;
+ * LOYALTY_MANAGER is the console's own seat. Writing — rates, manual coin
+ * adjustments, card policy, minting physical cards — is the narrower door, and
+ * FINANCE_READER (the analyst seat) never takes it.
+ */
+export const LOYALTY_ADMIN_READ: readonly string[] = [
+  'SUPER_ADMIN',
+  'CITY_ADMIN',
+  'FINANCE_MANAGER',
+  FINANCE_READER,
+  'LOYALTY_MANAGER',
+];
+export const LOYALTY_ADMIN_WRITE: readonly string[] = ['SUPER_ADMIN', 'FINANCE_MANAGER', 'LOYALTY_MANAGER'];
+
 export function hasRole(user: AuthUser, allowed: readonly string[]): boolean {
   return user.roles.some((r) => allowed.includes(r));
 }

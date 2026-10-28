@@ -50,7 +50,7 @@ describe('isListedOn', () => {
 describe('reachableCategories', () => {
   it('is the union of the categories of every console the person can open', () => {
     expect([...reachableCategories(MEMBER)].sort()).toEqual(
-      ['account', 'chat', 'clubs', 'engagement', 'gig-jobs', 'hosts', 'legal', 'mcp', 'partner-brand', 'pods', 'support', 'venues'].sort()
+      ['account', 'chat', 'clubs', 'engagement', 'gig-jobs', 'hosts', 'legal', 'lite', 'mcp', 'partner-brand', 'pods', 'support', 'venues'].sort()
     );
   });
 

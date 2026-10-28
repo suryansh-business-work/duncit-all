@@ -784,11 +784,6 @@
       "count": 1
     }
   },
-  "app/mweb/src/pages/gift-card-redeem-page/index.tsx": {
-    "no-restricted-syntax": {
-      "count": 1
-    }
-  },
   "app/mweb/src/pages/gift-cards-page/BuyTab.tsx": {
     "no-restricted-syntax": {
       "count": 1
@@ -3206,57 +3201,9 @@
       "count": 3
     }
   },
-  "portals/finance/src/pages/finance/duncit-coin/CoinDashboardPage.tsx": {
-    "no-restricted-syntax": {
-      "count": 1
-    }
-  },
-  "portals/finance/src/pages/finance/duncit-coin/CoinGrantCard.tsx": {
-    "no-restricted-syntax": {
-      "count": 4
-    }
-  },
-  "portals/finance/src/pages/finance/duncit-coin/CoinSettingsPage.tsx": {
-    "no-restricted-syntax": {
-      "count": 5
-    }
-  },
-  "portals/finance/src/pages/finance/duncit-coin/CoinTransactionsPage.tsx": {
-    "no-restricted-syntax": {
-      "count": 1
-    }
-  },
-  "portals/finance/src/pages/finance/duncit-coin/PodPicker.tsx": {
-    "no-restricted-syntax": {
-      "count": 2
-    },
-    "react-hooks/exhaustive-deps": {
-      "count": 1
-    }
-  },
   "portals/finance/src/pages/finance/expense-management-page/RefundTimeline.tsx": {
     "no-restricted-syntax": {
       "count": 2
-    }
-  },
-  "portals/finance/src/pages/finance/gift-cards/GiftCardCardsPage.tsx": {
-    "no-restricted-syntax": {
-      "count": 1
-    }
-  },
-  "portals/finance/src/pages/finance/gift-cards/GiftCardDashboardPage.tsx": {
-    "no-restricted-syntax": {
-      "count": 1
-    }
-  },
-  "portals/finance/src/pages/finance/gift-cards/GiftCardLogsPage.tsx": {
-    "no-restricted-syntax": {
-      "count": 1
-    }
-  },
-  "portals/finance/src/pages/finance/gift-cards/GiftCardSettingsCard.tsx": {
-    "no-restricted-syntax": {
-      "count": 3
     }
   },
   "portals/finance/src/pages/finance/invoice-management-page/InvoiceManagementPage.tsx": {

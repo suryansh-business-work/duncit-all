@@ -13,6 +13,7 @@
 import { EmailTemplateModel } from './emailTemplate.model';
 import { EmailFragmentModel } from '@modules/content/emailFragment/emailFragment.model';
 import { TEMPLATE_CATEGORIES } from '@services/email/template-categories';
+import { HEAD } from '@services/email/catalogue/mjml.head';
 import { logs } from '@observability/log';
 
 export interface StripResult {
@@ -130,6 +131,34 @@ export function stripChrome(mjml: string): StripResult {
     removedHeader: Boolean(header),
     removedFooter: Boolean(footer),
   };
+}
+
+/** Just inside the first `<tag …>`, or -1 when the source has none. */
+function insideOpenTag(mjml: string, tag: string): number {
+  const open = mjml.toLowerCase().indexOf(`<${tag}`);
+  if (open === -1) return -1;
+  const close = mjml.indexOf('>', open);
+  return close === -1 ? -1 : close + 1;
+}
+
+/**
+ * MJML written outside the builders — the AI button in Communications, CRM and
+ * Marketing — brought onto the shared card.
+ *
+ * Every one of those consoles wraps what it sends in a header/footer fragment,
+ * so a logo or copyright the writer drew is removed (it would render twice),
+ * and the shared head — attributes, phone layout, dark mode — goes in when the
+ * source does not carry it, so the email reads like every other one. A source
+ * with no `<mjml>` root is returned as it is, for the caller to reject.
+ */
+export function onSharedDesign(mjml: string): string {
+  const body = stripChrome(mjml).mjml;
+  if (body.includes('prefers-color-scheme')) return body;
+  const inHead = insideOpenTag(body, 'mj-head');
+  if (inHead !== -1) return `${body.slice(0, inHead)}\n${HEAD}${body.slice(inHead)}`;
+  const inRoot = insideOpenTag(body, 'mjml');
+  if (inRoot === -1) return body;
+  return `${body.slice(0, inRoot)}\n  <mj-head>\n${HEAD}\n  </mj-head>${body.slice(inRoot)}`;
 }
 
 /** One template's line in the plan — what was (or would be) done to it. */

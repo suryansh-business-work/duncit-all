@@ -39,7 +39,18 @@ export async function publicCategories(includeInactive = false) {
 
 export async function publicCities(includeInactive = false) {
   const [docs, counts] = await Promise.all([LiteCityModel.find(includeInactive ? {} : { is_active: true }).sort({ featured: -1, sort_order: 1, name: 1 }).lean(), countsByField('city_slug')]);
-  return docs.map((c) => ({ id: String(c._id), name: c.name, slug: c.slug, country: c.country, cover_url: c.cover_url || null, featured: Boolean(c.featured), sort_order: c.sort_order ?? 0, is_active: c.is_active !== false, events_count: counts.get(c.slug) ?? 0 }));
+  return docs.map((c) => ({
+    id: String(c._id),
+    name: c.name,
+    slug: c.slug,
+    country: c.country,
+    region: c.region ?? 'ASIA_PACIFIC',
+    cover_url: c.cover_url || null,
+    featured: Boolean(c.featured),
+    sort_order: c.sort_order ?? 0,
+    is_active: c.is_active !== false,
+    events_count: counts.get(c.slug) ?? 0,
+  }));
 }
 
 /** The time window and the plain scalar filters. */
@@ -103,12 +114,14 @@ export const discoverService = {
     const now = new Date();
     const scope: Record<string, unknown> = { ...LISTABLE, end_at: { $gte: now } };
     if (citySlug) scope.city_slug = citySlug.toLowerCase();
-    const [categories, cities, calendars, popular, upcoming] = await Promise.all([
+    const [categories, cities, calendars, popular, upcoming, featured] = await Promise.all([
       publicCategories(),
       publicCities(),
       LiteCalendarModel.find({ featured: true }).sort({ subscriber_count: -1 }).limit(8).lean(),
       LiteEventModel.find(scope).sort({ featured: -1, going_count: -1, start_at: 1 }).limit(8).lean(),
       LiteEventModel.find(scope).sort({ start_at: 1 }).limit(24).lean(),
+      // "Upcoming major events" are the ones an admin featured, wherever they are.
+      LiteEventModel.find({ ...LISTABLE, featured: true, end_at: { $gte: now } }).sort({ start_at: 1 }).limit(8).lean(),
     ]);
     return {
       categories,
@@ -116,6 +129,7 @@ export const discoverService = {
       featured_calendars: await Promise.all(calendars.map((c) => toPublicCalendar(c, viewer))),
       popular_events: await Promise.all(popular.map((e) => toPublicEvent(e, viewer))),
       upcoming_events: await Promise.all(upcoming.map((e) => toPublicEvent(e, viewer))),
+      featured_events: await Promise.all(featured.map((e) => toPublicEvent(e, viewer))),
     };
   },
 

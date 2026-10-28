@@ -25,6 +25,19 @@ The first account whose email is in `LITE_ADMIN_EMAILS` signs in as an admin. Wi
 mailbox configured the sign-in code is `LITE_OTP_TEST_CODE` (shown on screen); add an
 Email (SMTP) entry under Console → Environment to send real codes and notifications.
 
+## Server rendering, PWA and MCP
+
+- Every web page is rendered with React on the server (`web/entry-server.tsx`,
+  bundled by `vite.config.ssr.ts` into `dist-server/ssr/`) and hydrated in the
+  browser; `server/html/render.ts` falls back to the plain shell on any error.
+- The app is an installable PWA (`public/manifest.webmanifest`, `public/sw.js` —
+  hashed assets and an offline page only, never personalised HTML).
+- mcp.duncit.com/lite/mcp exposes Lite's API as MCP tools. It calls `/graphql`
+  with a signed assertion (`server/mcp/`, `LITE_MCP_SECRET`) and reads the
+  schema from `GET /mcp/schema`.
+- Console → Environment holds Google Maps (browser key: place search, event map)
+  and MSG91 (phone sign-in codes) beside SMTP, ImageKit and Google sign-in.
+
 ## How it deploys
 
 `lite/Dockerfile` builds one image (`duncit-lite`) that `deploy/docker-compose*.yml`

@@ -47,6 +47,26 @@ describe('QueryGuard', () => {
     expect(alert).toHaveClass('MuiAlert-standard', 'MuiAlert-colorWarning');
   });
 
+  it('draws the given skeleton instead of the spinner while loading, then the content', () => {
+    const skeleton = <div role="status" aria-label="Loading the pod">placeholder</div>;
+    const { container, rerender } = render(
+      <QueryGuard loading skeleton={skeleton}>
+        <div>content</div>
+      </QueryGuard>,
+    );
+    expect(screen.getByRole('status', { name: 'Loading the pod' })).toHaveTextContent('placeholder');
+    expect(container.querySelector('.MuiCircularProgress-root')).not.toBeInTheDocument();
+    expect(screen.queryByText('content')).not.toBeInTheDocument();
+
+    rerender(
+      <QueryGuard loading={false} skeleton={skeleton}>
+        <div>content</div>
+      </QueryGuard>,
+    );
+    expect(screen.queryByRole('status', { name: 'Loading the pod' })).not.toBeInTheDocument();
+    expect(screen.getByText('content')).toBeInTheDocument();
+  });
+
   it('renders node children once all guards pass', () => {
     render(
       <QueryGuard>

@@ -13,7 +13,8 @@ import {
   type LiteEventDoc,
   type ThemeAccent,
 } from '../models/event.model';
-import { LiteRegistrationModel } from '../models/registration.model';
+import { LiteEventViewModel } from '../models/eventView.model';
+import { LAPSED_STATUSES, LiteRegistrationModel } from '../models/registration.model';
 import { LiteUserModel, type LiteUserDoc } from '../models/user.model';
 import { badInput, forbidden, notFound } from '../utils/errors';
 import { uniqueSlug } from '../utils/slug';
@@ -273,6 +274,32 @@ export const eventService = {
     await doc.save();
     notifications.eventCancelled(doc);
     return toPublicEvent(doc, viewerOf(user));
+  },
+
+  /**
+   * Delete an event for good. Only its creator may (not a co-host), and only
+   * while nobody holds a place on it (every registration cancelled or
+   * declined) and no guest's payment is on record, which a delete would erase.
+   * The delete itself is one conditional write that also needs every ticket's
+   * sold count at 0: a guest takes their seat on the event before their
+   * registration is written, so one registering at this moment stops it.
+   */
+  async remove(user: LiteUserDoc, id: string) {
+    const doc = await LiteEventModel.findById(id);
+    if (!doc) throw notFound('Event');
+    const creator = { user_id: user._id, role: 'HOST' };
+    if (!doc.hosts.some((h) => String(h.user_id) === String(user._id) && h.role === 'HOST')) throw forbidden('Only the person who created this event can delete it');
+    const holding = await LiteRegistrationModel.countDocuments({ event_id: doc._id, status: { $nin: [...LAPSED_STATUSES] } });
+    if (holding > 0) {
+      throw badInput(`${holding} ${holding === 1 ? 'guest is' : 'guests are'} still registered. An event can be deleted once every spot is cancelled; you can cancel the event instead`);
+    }
+    const paid = await LiteRegistrationModel.exists({ event_id: doc._id, $or: [{ payment_status: 'PAID' }, { payment_reference: { $ne: '' } }] });
+    if (paid) throw badInput("A guest's payment is on record for this event, so it cannot be deleted. Cancel it instead; the payment history stays");
+    const res = await LiteEventModel.deleteOne({ _id: doc._id, hosts: { $elemMatch: creator }, 'tickets.sold': { $not: { $gt: 0 } } });
+    if (res.deletedCount !== 1) throw badInput('Someone took a spot just now, so the event was not deleted. Check the guest list');
+    // What is left is cancelled and declined registrations and the view counts; with the event gone they would point at nothing.
+    await Promise.all([LiteRegistrationModel.deleteMany({ event_id: doc._id }), LiteEventViewModel.deleteMany({ event_id: doc._id })]);
+    return true;
   },
 
   async duplicate(user: LiteUserDoc, id: string) {

@@ -334,6 +334,7 @@ export const adminTypeDefs = gql`
     min_signup_age: Int!
     draft_retention_days: Int!
     ticket_discount_max_pct: Int!
+    happening_nearby_days: Int!
   }
 
   extend type Query {

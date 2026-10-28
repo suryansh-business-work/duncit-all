@@ -8,7 +8,7 @@
  */
 const VERSION = 'lite-v1';
 const OFFLINE_URL = '/offline.html';
-const PRECACHE = [OFFLINE_URL, '/manifest.webmanifest', '/icons/icon-192.png', '/duncit-logo.svg'];
+const PRECACHE = [OFFLINE_URL, '/manifest.webmanifest', '/icons/mark-192.png'];
 const NEVER = ['/graphql', '/upload', '/ics/', '/mcp', '/health'];
 
 self.addEventListener('install', (event) => {

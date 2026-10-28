@@ -162,6 +162,7 @@ export const calendarFixture = (over: Partial<LiteCalendar> = {}): LiteCalendar 
     cover_url: null,
     city_slug: null,
     city_name: null,
+    tint: 'DEFAULT',
     owner: typed('LiteCalendarOwner', { id: 'u-1', name: 'Asha Rao', handle: 'asha', avatar_url: null }),
     featured: false,
     subscriber_count: 0,

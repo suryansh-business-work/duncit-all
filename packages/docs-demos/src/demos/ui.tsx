@@ -22,6 +22,7 @@ import { SpotsDemo, type SpotsMock } from './ui/SpotsDemo';
 import { cartControlDemo } from './ui/CartControlDemo';
 import { TicketDiscountDemo, type TicketDiscountMock } from './ui/TicketDiscountDemo';
 import { LoaderDemo, type LoaderMock } from './ui/LoaderDemo';
+import { MuiIconPickerDemo, type MuiIconPickerMock } from './ui/MuiIconPickerDemo';
 
 interface ErrorFallbackMock {
   reference: string;
@@ -152,6 +153,15 @@ export default defineDemos('ui', [
         ))}
       </ScrollRail>
     ),
+  }),
+
+  defineDemo<MuiIconPickerMock>({
+    id: 'mui-icon-picker',
+    title: 'MuiIconPicker — a category icon picked from the whole MUI list',
+    note:
+      'Click the field: the list opens with a preview of every icon. Type "soccer" or "music note" and it narrows, exact name first. Pick one and the hint names it with the glyph in front; paste an emoji and that is kept as typed. Change icon in the mock to start from another value.',
+    mock: { icon: 'SportsSoccer', label: 'Icon', hint: 'Pick a Material icon, or paste an emoji.' },
+    render: (mock) => <MuiIconPickerDemo mock={mock} />,
   }),
 
   defineDemo<ChartFrameMock>({

@@ -7,6 +7,7 @@ import { SearchForm } from '../../components/search-form';
 import { LITE_CATEGORIES, LITE_CITY } from '../../graphql/discover';
 import { usePageTitle } from '../../lib/usePageTitle';
 import { NotFoundPage } from '../not-found';
+import { ListPageSkeleton } from './ListPageSkeleton';
 
 /** /:citySlug — every upcoming event in one city. */
 export function CityPage() {
@@ -17,7 +18,7 @@ export function CityPage() {
   usePageTitle(city ? t('liteWeb.city.title', { vars: { name: city.name } }) : '');
   if (!loading && !error && !city) return <NotFoundPage />;
   return (
-    <QueryGuard loading={loading && !city} error={error} loadingLabel={t('lite.common.loading')}>
+    <QueryGuard loading={loading && !city} error={error} skeleton={<ListPageSkeleton withSearch />}>
       {() =>
         city ? (
           <EventListPage
@@ -43,7 +44,7 @@ export function CategoryPage() {
   usePageTitle(category?.name ?? '');
   if (!loading && !error && !category) return <NotFoundPage />;
   return (
-    <QueryGuard loading={loading && !category} error={error} loadingLabel={t('lite.common.loading')}>
+    <QueryGuard loading={loading && !category} error={error} skeleton={<ListPageSkeleton />}>
       {() =>
         category ? (
           <EventListPage

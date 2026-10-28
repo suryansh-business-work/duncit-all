@@ -13,6 +13,7 @@ import { paths } from '../../lib/paths';
 import { usePageTitle } from '../../lib/usePageTitle';
 import { Timeline } from './Timeline';
 import { useMyEvents } from './useMyEvents';
+import { TimelineSkeleton } from './TimelineSkeleton';
 
 const TABS_ID = 'my-events';
 
@@ -20,7 +21,7 @@ function MyEventsList({ past }: Readonly<{ past: boolean }>) {
   const { t } = useWebT();
   const { rows, loading, error } = useMyEvents(past);
   return (
-    <QueryGuard loading={loading} error={error} loadingLabel={t('lite.common.loading')}>
+    <QueryGuard loading={loading} error={error} skeleton={<TimelineSkeleton />}>
       {() =>
         rows.length > 0 ? (
           <Timeline rows={rows} />
@@ -55,7 +56,7 @@ export function EventsHomePage() {
         </Typography>
         <DuncitTabs {...tabs} idPrefix={TABS_ID} searchable={false} />
       </Stack>
-      <SignedInGate body={t('liteWeb.home.gate')}>
+      <SignedInGate skeleton={<TimelineSkeleton />} body={t('liteWeb.home.gate')}>
         <div {...tabPanelProps(TABS_ID, tabs.value)}>
           <MyEventsList past={tabs.past} />
         </div>

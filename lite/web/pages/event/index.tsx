@@ -18,6 +18,7 @@ import { WhenBlock } from './WhenBlock';
 import { WhereBlock } from './WhereBlock';
 import { useTrackView } from './useTrackView';
 import { WhoIsGoing } from './WhoIsGoing';
+import { EventPageSkeleton } from './EventPageSkeleton';
 
 /** The page once the event is in hand: details on the left, the registration card on the right. */
 function EventView({ event, onChanged }: Readonly<{ event: LiteEvent; onChanged: () => void }>) {
@@ -65,7 +66,6 @@ function EventView({ event, onChanged }: Readonly<{ event: LiteEvent; onChanged:
 
 /** /e/:slug */
 export function EventPage() {
-  const { t } = useWebT();
   const { slug = '' } = useParams();
   const { data, loading, error, refetch } = useQuery(LITE_EVENT, { variables: { slug }, fetchPolicy: 'cache-and-network' });
   const event = data?.liteEvent ?? null;
@@ -75,7 +75,7 @@ export function EventPage() {
     refetch().catch((err: unknown) => console.warn('[lite] event refresh failed', err));
   };
   return (
-    <QueryGuard loading={loading && !event} error={error} loadingLabel={t('lite.common.loading')}>
+    <QueryGuard loading={loading && !event} error={error} skeleton={<EventPageSkeleton />}>
       {() => (event ? <EventView event={event} onChanged={reload} /> : null)}
     </QueryGuard>
   );

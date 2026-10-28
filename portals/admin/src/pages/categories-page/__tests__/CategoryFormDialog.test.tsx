@@ -79,12 +79,12 @@ describe('CategoryFormDialog', () => {
     expect(formSentTo(setDialog).description).toBe('keep me');
   });
 
-  it('offers the Material icon picker in ICON mode', () => {
+  it('offers the Material icon picker in ICON mode', async () => {
     renderDialog(dialogState('SUPER', { iconMode: 'ICON', icon: 'Pets' }));
 
     expect(screen.getByLabelText('Icon')).toBeTruthy();
     expect(screen.queryByLabelText('Category image')).toBeNull();
-    expect(screen.getByText('Material icon: Pets')).toBeTruthy();
+    expect(await screen.findByText('Material icon: Pets')).toBeTruthy();
   });
 
   it('stores a Material icon name typed into the picker', () => {

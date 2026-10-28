@@ -139,6 +139,17 @@ import { BackHeader, QueryGuard, StatusChip, StatCard } from '@duncit/ui';
 dereferences the entity — it defers evaluation past the `notFound` branch, so
 `{() => <div>{ad.title}</div>}` cannot throw on a null `ad`.
 
+Pass `skeleton` to draw a placeholder shaped like the page instead of the spinner while
+`loading` (Duncit Lite gives every page its own). The skeleton must announce itself the way
+the spinner does — a `role="status"` wrapper with a name such as "Loading…", its shapes hidden
+from screen readers — since a screen reader cannot see grey blocks:
+
+```tsx
+<QueryGuard loading={loading && !event} error={error} skeleton={<EventPageSkeleton />}>
+  {() => <EventView event={event} />}
+</QueryGuard>
+```
+
 <Preview
   title="Detail-page header — BackHeader, StatusChip, InfoRow"
   code={podDetailHeaderSource}
@@ -148,9 +159,9 @@ dereferences the entity — it defers evaluation past the `notFound` branch, so
 </Preview>
 
 <Preview
-  title="QueryGuard — all four branches"
+  title="QueryGuard — every branch"
   code={queryGuardStatesSource}
-  note="Switch states to see the trio. The error text comes from parseApiError reading the GraphQL error shape — nothing formats it at the call site."
+  note="Switch states to see the trio, and a skeleton standing in for the spinner. The error text comes from parseApiError reading the GraphQL error shape — nothing formats it at the call site."
 >
   <QueryGuardStates client:load />
 </Preview>
@@ -947,6 +958,61 @@ The tile is `role="img"` with the `label` you pass as its accessible name.
 ```
 
 Used by the Partners brand wizard (Integration step) and the Products portal brand review page.
+
+## `MuiIconPicker` — the whole MUI icon list, searchable
+
+Wherever a form stores an `@mui/icons-material` name, this is the field: Admin's category dialog
+(the "MUI Icon" mode, through `IconPickerField`) and the Duncit Lite console's category form. The
+list opens on focus and on the arrow, and every row previews its glyph. It holds every export —
+about 10.7k names across the five variants — so typing narrows it: the exact name first, then names
+starting with the search, then names containing it; case and spaces are ignored ("music note" finds
+`MusicNote`), and at most 120 rows show at once.
+
+The icon set is one lazy chunk (`import('@mui/icons-material')`), fetched the first time a picker or
+a `useMuiIcons` caller mounts and shared after that. The field is `freeSolo`: whatever is typed is
+written through, so an emoji (Admin allows one) or a name still works while the list downloads — or
+if it cannot, in which case the hint says so and `onLoadError` receives the cause for the host's logger.
+
+```tsx
+import { MuiIconPicker } from '@duncit/ui';
+
+<Controller
+  control={control}
+  name="icon"
+  render={({ field, fieldState }) => (
+    <MuiIconPicker
+      value={field.value}
+      onChange={field.onChange}
+      onBlur={field.onBlur}
+      label={t('litePortal.categories.icon')}
+      helperText={fieldState.error?.message ?? t('litePortal.categories.iconHint')}
+      error={!!fieldState.error}
+      testId="category-icon"
+      onLoadError={(error) => liteLog.error('categories', 'CategoryForm', { error })}
+    />
+  )}
+/>
+```
+
+| Prop | Type | Required | Default | Meaning |
+| --- | --- | --- | --- | --- |
+| `value` | `string` | yes | — | An icon export name (`Pets`, `SportsSoccerOutlined`) or free text. |
+| `onChange` | `(next: string) => void` | yes | — | Every keystroke and every pick; `''` when cleared. |
+| `label` | `string` | yes | — | The field label. |
+| `helperText` | `string` | no | — | Shown while the value is not an icon, and instead of everything else when `error` is set. |
+| `error` | `boolean` | no | `false` | Marks the field invalid. |
+| `disabled` | `boolean` | no | `false` | Locks the input. |
+| `onBlur` | `() => void` | no | — | For react-hook-form's `field.onBlur`. |
+| `testId` | `string` | no | — | Set on the `<input>` itself. |
+| `onLoadError` | `(error: unknown) => void` | no | — | The icon list failed to download. Pass a module-level function so it keeps one identity. |
+
+Once the value names an icon, the hint reads `ui.iconPicker.selected` ("Material icon: `{name}`") and
+the glyph sits in front of the input; a value with no letters (an emoji) is shown there as-is. The
+other words are `ui.iconPicker.loading` and `ui.iconPicker.loadFailed`.
+
+`useMuiIcons(onError?)` is the same set for a component that draws icons by name — Lite's Discover
+grid draws any category icon with it. It returns `{ icons, names, find, loading, failed }`;
+`find(name)` gives the icon exported under exactly that name, or `undefined` for anything else.
 
 ## Localization and coverage
 

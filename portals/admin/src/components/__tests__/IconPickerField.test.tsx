@@ -35,9 +35,9 @@ describe('IconPickerField — labels and hints', () => {
     expect(screen.getByText('Emoji or icon')).toBeInTheDocument();
   });
 
-  it('names the Material icon and previews it once the value resolves', () => {
+  it('names the Material icon and previews it once the icon list has loaded', async () => {
     render(<IconPickerField value="Pets" onChange={vi.fn()} helperText="Emoji or icon" />);
-    expect(screen.getByText('Material icon: Pets')).toBeInTheDocument();
+    expect(await screen.findByText('Material icon: Pets')).toBeInTheDocument();
     expect(screen.getByTestId('PetsIcon')).toBeInTheDocument();
   });
 
@@ -55,12 +55,12 @@ describe('IconPickerField — editing', () => {
     expect(onChange).toHaveBeenLastCalledWith('Sp');
   });
 
-  it('lists matching icons with their preview and stores the one picked', () => {
+  it('lists matching icons from the full MUI set with their preview and stores the one picked', async () => {
     const onChange = vi.fn();
     render(<Harness initial="" onChange={onChange} />);
     fireEvent.change(screen.getByRole('combobox'), { target: { value: 'Sp' } });
 
-    const option = screen.getByRole('option', { name: 'Spa' });
+    const option = await screen.findByRole('option', { name: 'Spa' });
     expect(within(option).getByTestId('SpaIcon')).toBeInTheDocument();
     fireEvent.click(option);
 

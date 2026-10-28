@@ -161,6 +161,12 @@ export const LITE_CANCEL_EVENT: TypedDocumentNode<{ liteCancelEvent: LiteEvent }
   ${LITE_EVENT_FIELDS}
 `;
 
+export const LITE_DELETE_EVENT: TypedDocumentNode<{ liteDeleteEvent: boolean }, { id: string }> = gql`
+  mutation LiteDeleteEvent($id: ID!) {
+    liteDeleteEvent(id: $id)
+  }
+`;
+
 export const LITE_DUPLICATE_EVENT: TypedDocumentNode<{ liteDuplicateEvent: LiteEvent }, { id: string }> = gql`
   mutation LiteDuplicateEvent($id: ID!) {
     liteDuplicateEvent(id: $id) {

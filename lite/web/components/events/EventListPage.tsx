@@ -7,6 +7,7 @@ import { useWebT } from '../../../shared/i18n';
 import { LITE_EVENTS } from '../../graphql/events';
 import type { LiteEventFilterVars } from '../../graphql/types';
 import { EventList } from './EventList';
+import { EventListSkeleton } from '../skeletons';
 
 const PAGE_SIZE = 18;
 
@@ -51,7 +52,7 @@ export function EventListPage({ title, subtitle, filter, emptyTitle, emptyBody, 
     <Stack spacing={3} data-testid="event-list-page">
       <PageHeader title={title} subtitle={subtitle} titleVariant="h4" />
       {toolbar}
-      <QueryGuard loading={loading && !page} error={error} loadingLabel={t('lite.common.loading')}>
+      <QueryGuard loading={loading && !page} error={error} skeleton={<EventListSkeleton />}>
         <EventList events={rows} emptyTitle={emptyTitle} emptyBody={emptyBody} />
         {hasMore ? (
           <Stack sx={{ alignItems: 'center', pt: 1 }}>

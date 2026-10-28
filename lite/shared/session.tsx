@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import type { ApolloClient } from '@apollo/client';
 import { useApolloClient, useQuery } from '@apollo/client/react';
 import { LITE_ME, type LiteMe } from './graphql/documents';
 import { readCookie, readStored, removeCookie, removeStored, writeCookie, writeStored } from './storage';
@@ -16,6 +17,21 @@ export interface LiteSessionValue {
 }
 
 const SessionContext = createContext<LiteSessionValue | null>(null);
+
+/**
+ * Empty the cache and refetch what is on screen under the new token. A page
+ * that unmounts as the token changes (a signed-in page on sign-out) has its
+ * refetch aborted, which Apollo rejects as an AbortError: that is the page
+ * leaving, not a failure. Every other error still reaches the caller.
+ */
+async function resetCache(client: ApolloClient): Promise<void> {
+  try {
+    await client.resetStore();
+  } catch (error) {
+    const aborted = typeof error === 'object' && error !== null && 'name' in error && error.name === 'AbortError';
+    if (!aborted) throw error;
+  }
+}
 
 interface Props {
   /** Which localStorage slot holds this page's token (the app and the console differ). */
@@ -69,14 +85,14 @@ export function LiteSessionProvider({ tokenKey, initialToken, cookieName, childr
       writeStored(tokenKey, next);
       if (cookieName) writeCookie(cookieName, next);
       setToken(next);
-      await client.resetStore();
+      await resetCache(client);
     },
     [client, tokenKey, cookieName],
   );
 
   const signOut = useCallback(async () => {
     forget();
-    await client.resetStore();
+    await resetCache(client);
   }, [client, forget]);
 
   const refresh = useCallback(async () => {

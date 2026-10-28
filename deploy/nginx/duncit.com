@@ -651,7 +651,9 @@ server {
     listen [::]:80;
     http2 on;
     server_name sonarqube.duncit.com;
-    client_max_body_size 100m;
+    # The monorepo's analysis report is ~109 MB zipped and growing; at 100m every scan got HTTP 413
+    # before publishing, so no quality gate was ever evaluated.
+    client_max_body_size 300m;
 
     location / {
         proxy_pass         http://127.0.0.1:2023;

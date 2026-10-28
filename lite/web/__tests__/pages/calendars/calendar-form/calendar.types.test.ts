@@ -5,7 +5,7 @@ import { t } from '../../event-form/helpers';
 
 const schema = makeCalendarSchema(t);
 
-const valid = (over: Partial<CalendarValues> = {}): CalendarValues => ({ name: 'Run Club', slug: '', description: '', avatar_url: '', cover_url: '', city_slug: '', ...over });
+const valid = (over: Partial<CalendarValues> = {}): CalendarValues => ({ name: 'Run Club', slug: '', description: '', avatar_url: '', cover_url: '', tint: 'DEFAULT', place: 'GLOBAL', city_slug: '', ...over });
 
 function problems(values: CalendarValues): string[] {
   const result = schema.safeParse(values);
@@ -52,7 +52,7 @@ describe('makeCalendarSchema', () => {
 
 describe('calendarDefaults', () => {
   it('starts a new calendar blank', () => {
-    expect(calendarDefaults(null)).toEqual({ name: '', slug: '', description: '', avatar_url: '', cover_url: '', city_slug: '' });
+    expect(calendarDefaults(null)).toEqual({ name: '', slug: '', description: '', avatar_url: '', cover_url: '', tint: 'DEFAULT', place: 'GLOBAL', city_slug: '' });
   });
 
   it('loads an existing calendar, its missing parts as blanks', () => {
@@ -62,6 +62,8 @@ describe('calendarDefaults', () => {
       description: 'Saturday runs.',
       avatar_url: 'https://cdn.example/a.png',
       cover_url: '',
+      tint: 'DEFAULT',
+      place: 'CITY',
       city_slug: 'delhi',
     });
   });
@@ -69,17 +71,18 @@ describe('calendarDefaults', () => {
 
 describe('toCalendarInput', () => {
   it('sends blank boxes as null so the API makes the link from the name', () => {
-    expect(toCalendarInput(valid({ description: '  ' }))).toEqual({ name: 'Run Club', slug: null, description: null, avatar_url: null, cover_url: null, city_slug: null });
+    expect(toCalendarInput(valid({ description: '  ' }))).toEqual({ name: 'Run Club', slug: null, description: null, avatar_url: null, cover_url: null, city_slug: null, tint: 'DEFAULT' });
   });
 
   it('sends what was typed, trimmed', () => {
-    expect(toCalendarInput(valid({ slug: 'run-club', description: ' Saturday runs. ', city_slug: 'delhi', cover_url: 'https://cdn.example/c.png' }))).toEqual({
+    expect(toCalendarInput(valid({ slug: 'run-club', description: ' Saturday runs. ', place: 'CITY', city_slug: 'delhi', cover_url: 'https://cdn.example/c.png', tint: 'TEAL' }))).toEqual({
       name: 'Run Club',
       slug: 'run-club',
       description: 'Saturday runs.',
       avatar_url: null,
       cover_url: 'https://cdn.example/c.png',
       city_slug: 'delhi',
+      tint: 'TEAL',
     });
   });
 });

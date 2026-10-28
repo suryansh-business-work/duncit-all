@@ -113,6 +113,9 @@ export function buildLiteTheme(): Theme {
 /** A translucent version of a token colour, for glows and tints. */
 export const tint = (color: string, opacity: number): string => alpha(color, opacity);
 
+/** A soft diagonal wash of one colour: where a cover goes before there is a picture (a calendar's tint). */
+export const accentWash = (color: string): string => `linear-gradient(135deg, ${tint(color, 0.45)}, ${tint(color, 0.08)})`;
+
 declare module '@mui/material/styles' {
   interface Palette {
     lite: LiteSchemeTokens;

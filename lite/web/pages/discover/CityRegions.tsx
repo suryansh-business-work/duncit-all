@@ -11,7 +11,7 @@ import { paths } from '../../lib/paths';
 /** The tab order of "Explore local events"; a region with no city is left out. */
 export const REGION_ORDER: readonly LiteCityRegion[] = ['ASIA_PACIFIC', 'EUROPE', 'AFRICA', 'NORTH_AMERICA', 'SOUTH_AMERICA'];
 const TABS_ID = 'discover-regions';
-const GRID = { display: 'grid', gap: 2, gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' } } as const;
+export const CITY_GRID = { display: 'grid', gap: 2, gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' } } as const;
 
 function CityLink({ city, position }: Readonly<{ city: LiteCity; position: number }>) {
   const { t } = useWebT();
@@ -48,7 +48,7 @@ export function CityRegions({ cities }: Readonly<{ cities: readonly LiteCity[] }
   return (
     <Stack spacing={2}>
       {present.length > 1 ? <DuncitTabs {...tabs} idPrefix={TABS_ID} searchable={false} variant="scrollable" allowScrollButtonsMobile /> : null}
-      <Box {...tabPanelProps(TABS_ID, tabs.value)} sx={GRID}>
+      <Box {...tabPanelProps(TABS_ID, tabs.value)} sx={CITY_GRID}>
         {shown.map((city, index) => (
           <CityLink key={city.id} city={city} position={index} />
         ))}

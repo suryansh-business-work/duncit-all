@@ -12,8 +12,10 @@ import RestaurantOutlinedIcon from '@mui/icons-material/RestaurantOutlined';
 import SchoolOutlinedIcon from '@mui/icons-material/SchoolOutlined';
 import SportsSoccerOutlinedIcon from '@mui/icons-material/SportsSoccerOutlined';
 import TheaterComedyOutlinedIcon from '@mui/icons-material/TheaterComedyOutlined';
+import { useMuiIcons } from '@duncit/ui';
+import { liteLog } from '../../../shared/log';
 
-/** The glyph for the icon name an admin typed on a category (`@mui/icons-material` names). */
+/** The usual category glyphs, drawn at once (and in the server render) without the full icon set. */
 const GLYPHS: Record<string, ReactElement> = {
   MusicNote: <MusicNoteOutlinedIcon />,
   SportsSoccer: <SportsSoccerOutlinedIcon />,
@@ -29,6 +31,21 @@ const GLYPHS: Record<string, ReactElement> = {
   Celebration: <CelebrationOutlinedIcon />,
 };
 
+const reportIconListLoad = (error: unknown) => liteLog.error('discover', 'categoryIcon', { error });
+
+/**
+ * Any other icon the console's picker offers, from the lazily loaded MUI set:
+ * its outlined form when MUI has one (Lite's look), else the exact export. The
+ * generic glyph shows meanwhile, and for a name that is no MUI icon.
+ */
+function NamedGlyph({ name }: Readonly<{ name: string }>) {
+  const { find } = useMuiIcons(reportIconListLoad);
+  const Icon = find(`${name}Outlined`) ?? find(name) ?? CategoryOutlinedIcon;
+  return <Icon />;
+}
+
+/** The glyph for the `@mui/icons-material` name an admin picked on a category. */
 export function categoryIcon(name: string | null | undefined): ReactElement {
-  return (name && GLYPHS[name]) || <CategoryOutlinedIcon />;
+  if (!name) return <CategoryOutlinedIcon />;
+  return GLYPHS[name] ?? <NamedGlyph name={name} />;
 }

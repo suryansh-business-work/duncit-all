@@ -1,5 +1,5 @@
 import { LiteEventModel, type LiteEventDoc } from '../models/event.model';
-import { LiteRegistrationModel, type LiteRegistrationDoc, type RegistrationStatus } from '../models/registration.model';
+import { LAPSED_STATUSES, LiteRegistrationModel, type LiteRegistrationDoc, type RegistrationStatus } from '../models/registration.model';
 import { LiteUserModel, type LiteUserDoc } from '../models/user.model';
 import { badInput, forbidden, notFound } from '../utils/errors';
 import { checkInCode } from '../utils/ids';
@@ -19,7 +19,7 @@ export interface RegisterInput {
 export type HostAction = 'APPROVE' | 'DECLINE' | 'CONFIRM_PAYMENT' | 'REJECT_PAYMENT' | 'CHECK_IN' | 'UNDO_CHECK_IN' | 'REMOVE';
 
 /** A registration in one of these no longer holds a place, so the guest may register again. */
-const LAPSED_STATUSES: ReadonlySet<string> = new Set(['CANCELLED', 'DECLINED']);
+const LAPSED: ReadonlySet<string> = new Set(LAPSED_STATUSES);
 
 const viewerOf = (user: LiteUserDoc | null): Viewer | null => (user ? { id: String(user._id), is_admin: user.is_admin } : null);
 
@@ -59,8 +59,9 @@ async function bump(event: LiteEventDoc, ticketId: string, delta: number): Promi
  */
 async function reserveSeats(event: LiteEventDoc, ticket: { _id: unknown; quantity?: number | null }, quantity: number): Promise<boolean> {
   if (ticket.quantity == null) {
-    await bump(event, String(ticket._id), quantity);
-    return true;
+    // Matches only while the event still exists, so a registration cannot outlive a delete that raced it.
+    const res = await LiteEventModel.updateOne({ _id: event._id, 'tickets._id': ticket._id }, { $inc: { 'tickets.$.sold': quantity } });
+    return res.matchedCount === 1;
   }
   const res = await LiteEventModel.updateOne(
     { _id: event._id, tickets: { $elemMatch: { _id: ticket._id, sold: { $lte: ticket.quantity - quantity } } } },
@@ -158,7 +159,7 @@ export const registrationService = {
     if (event.registration_open === false) throw badInput('The host has closed registration for this event');
     const existing = await LiteRegistrationModel.findOne({ event_id: event._id, user_id: user._id });
     const existingStatus = existing?.status;
-    if (existingStatus !== undefined && !LAPSED_STATUSES.has(existingStatus)) throw badInput('You are already registered for this event');
+    if (existingStatus !== undefined && !LAPSED.has(existingStatus)) throw badInput('You are already registered for this event');
     const ticket = event.tickets.find((t) => String(t._id) === input.ticket_id && t.is_active !== false);
     if (!ticket) throw badInput('Pick a ticket type');
     const { max_seats_per_registration: maxSeats } = await settingsService.get();

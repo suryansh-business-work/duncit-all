@@ -10,6 +10,8 @@ import { LITE_USER_EVENTS, LITE_USER_PROFILE } from '../../graphql/events';
 import { usePageTitle } from '../../lib/usePageTitle';
 import { NotFoundPage } from '../not-found';
 import { ProfileHeader } from './ProfileHeader';
+import { EventListSkeleton } from '../../components/skeletons';
+import { ProfileSkeleton } from './ProfileSkeleton';
 
 const TABS_ID = 'user';
 
@@ -17,7 +19,7 @@ function UserEvents({ handle, past }: Readonly<{ handle: string; past: boolean }
   const { t } = useWebT();
   const { data, loading, error } = useQuery(LITE_USER_EVENTS, { variables: { handle, past }, fetchPolicy: 'cache-and-network' });
   return (
-    <QueryGuard loading={loading && !data} error={error} loadingLabel={t('lite.common.loading')}>
+    <QueryGuard loading={loading && !data} error={error} skeleton={<EventListSkeleton groups={1} />}>
       <EventList events={data?.liteUserEvents ?? []} emptyTitle={past ? t('liteWeb.events.noPast') : t('liteWeb.events.noUpcoming')} />
     </QueryGuard>
   );
@@ -33,7 +35,7 @@ export function UserPage() {
   usePageTitle(user?.name ?? '');
   if (!loading && !error && !user) return <NotFoundPage />;
   return (
-    <QueryGuard loading={loading && !user} error={error} loadingLabel={t('lite.common.loading')}>
+    <QueryGuard loading={loading && !user} error={error} skeleton={<ProfileSkeleton />}>
       {() =>
         user ? (
           <Stack spacing={3} sx={{ maxWidth: 820, mx: 'auto', width: '100%' }} data-testid="user-page">

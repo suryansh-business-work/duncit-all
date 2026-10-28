@@ -15,7 +15,7 @@ export function DiscoverSection({ title, subtitle, action, children, testId }: R
   const headingId = useId();
   return (
     <Stack component="section" aria-labelledby={headingId} spacing={2} data-testid={testId}>
-      <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between', gap: 1 }}>
+      <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 1 }}>
         <Stack sx={{ minWidth: 0 }}>
           <Typography id={headingId} variant="h3" component="h2">
             {title}

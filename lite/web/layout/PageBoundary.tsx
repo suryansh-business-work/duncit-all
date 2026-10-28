@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { useLocation } from 'react-router';
 import { DuncitErrorBoundary } from '@duncit/ui';
-import { liteLog } from '../lib/log';
+import { liteLog } from '../../shared/log';
 
 /**
  * One page's crash stays on that page: the shared Duncit boundary shows Retry

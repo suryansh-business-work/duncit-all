@@ -1,10 +1,10 @@
 import { createContext, useContext, type ReactNode } from 'react';
 import { useQuery } from '@apollo/client/react';
 import { Alert, Container } from '@mui/material';
-import { Loader } from '@duncit/ui';
 import { parseApiError } from '@duncit/utils';
 import { LITE_SETTINGS, type LitePublicSettings } from '../../../shared/graphql/documents';
 import { useWebT } from '../../../shared/i18n';
+import { ShellSkeleton } from '../../components/skeletons';
 
 const SettingsContext = createContext<LitePublicSettings | null>(null);
 
@@ -29,7 +29,7 @@ export function LiteSettingsProvider({ children }: Readonly<{ children: ReactNod
       </Container>
     );
   }
-  return <Loader variant="page" label={t('lite.common.loading')} />;
+  return <ShellSkeleton />;
 }
 
 export function useLiteSettings(): LitePublicSettings {

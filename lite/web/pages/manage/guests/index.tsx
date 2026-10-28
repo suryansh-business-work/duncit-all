@@ -15,6 +15,7 @@ import type { LiteRegistrationAction } from '../../../graphql/types';
 import { exportGuestsCsv } from './exportCsv';
 import { GuestsTable } from './GuestsTable';
 import { DESTRUCTIVE_ACTIONS } from './rowActions';
+import { ListRowsSkeleton } from '../../../components/skeletons';
 
 const STATUSES: LiteRegistrationStatus[] = ['PENDING_APPROVAL', 'PAYMENT_PENDING', 'CONFIRMED', 'WAITLISTED', 'DECLINED', 'CANCELLED'];
 
@@ -74,7 +75,7 @@ export function GuestsTab({ event, onChanged }: Readonly<{ event: LiteEvent; onC
           <Chip key={value} label={t(`lite.status.${value}`)} color={status === value ? 'primary' : 'default'} onClick={() => setStatus(value)} data-testid={`guests-filter-${value}`} />
         ))}
       </Stack>
-      <QueryGuard loading={loading && !data} error={error} loadingLabel={t('lite.common.loading')}>
+      <QueryGuard loading={loading && !data} error={error} skeleton={<ListRowsSkeleton testId="guests-skeleton" />}>
         {guests.length === 0 ? (
           <EmptyState icon={<PeopleOutlineIcon />} title={t('liteWeb.manage.guests.empty')} body={t('liteWeb.manage.guests.emptyBody')} />
         ) : (

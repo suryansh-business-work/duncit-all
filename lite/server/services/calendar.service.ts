@@ -1,6 +1,6 @@
 import { LiteCalendarModel, type LiteCalendarDoc } from '../models/calendar.model';
 import { LiteCityModel } from '../models/city.model';
-import { LiteEventModel } from '../models/event.model';
+import { LiteEventModel, type ThemeAccent } from '../models/event.model';
 import { LiteSubscriptionModel } from '../models/subscription.model';
 import type { LiteUserDoc } from '../models/user.model';
 import { badInput, forbidden, notFound } from '../utils/errors';
@@ -15,6 +15,8 @@ export interface CalendarInput {
   avatar_url?: string | null;
   cover_url?: string | null;
   city_slug?: string | null;
+  /** Omitted: Duncit red on create, unchanged on update. */
+  tint?: ThemeAccent | null;
 }
 
 const RESERVED = new Set(['discover', 'pricing', 'legal', 'create', 'tickets', 'calendars', 'profile', 'signin', 'e', 'u', 'cal', 'category', 'admin', 'graphql', 'upload', 'ics', 'health']);
@@ -81,6 +83,7 @@ export const calendarService = {
       avatar_url: optionalUrl(input.avatar_url, 'Avatar'),
       cover_url: optionalUrl(input.cover_url, 'Cover'),
       city_slug: await cleanCity(input.city_slug),
+      tint: input.tint ?? 'DEFAULT',
     });
     return toPublicCalendar(doc, viewerOf(user));
   },
@@ -99,6 +102,7 @@ export const calendarService = {
     doc.avatar_url = optionalUrl(input.avatar_url, 'Avatar');
     doc.cover_url = optionalUrl(input.cover_url, 'Cover');
     doc.city_slug = await cleanCity(input.city_slug);
+    if (input.tint) doc.tint = input.tint;
     await doc.save();
     return toPublicCalendar(doc, viewerOf(user));
   },

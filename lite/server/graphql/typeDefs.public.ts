@@ -81,6 +81,8 @@ export const publicTypeDefs = gql`
     cover_url: String
     city_slug: String
     city_name: String
+    "The calendar page's colour, one of the event theme accents."
+    tint: LiteThemeAccent!
     owner: LiteCalendarOwner!
     featured: Boolean!
     subscriber_count: Int!
@@ -484,7 +486,10 @@ export const publicTypeDefs = gql`
     description: String
     avatar_url: String
     cover_url: String
+    "Empty for a global calendar."
     city_slug: String
+    "Omitted: Duncit red on create, unchanged on update."
+    tint: LiteThemeAccent
   }
 
   extend type Query {
@@ -543,6 +548,8 @@ export const publicTypeDefs = gql`
     liteUpdateEvent(id: ID!, input: LiteEventInput!): LiteEvent!
     litePublishEvent(id: ID!): LiteEvent!
     liteCancelEvent(id: ID!, reason: String): LiteEvent!
+    "Delete an event for good: its page, guest list and view counts. Only the person who created it can (not a co-host), and only while nobody is registered (no guests, or every guest cancelled or was declined) and no guest's payment is on record; otherwise cancel the event instead. True once deleted."
+    liteDeleteEvent(id: ID!): Boolean!
     liteDuplicateEvent(id: ID!): LiteEvent!
     liteSetRegistrationOpen(id: ID!, open: Boolean!): LiteEvent!
     "A new public link for the event; the old link stops working."

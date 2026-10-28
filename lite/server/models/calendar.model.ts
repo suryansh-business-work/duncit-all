@@ -1,4 +1,5 @@
 import { Schema, model, type HydratedDocument, type InferSchemaType } from 'mongoose';
+import { THEME_ACCENTS } from './event.model';
 
 /** A host's public page: their events, and the people who follow it. */
 const calendarSchema = new Schema(
@@ -10,6 +11,8 @@ const calendarSchema = new Schema(
     avatar_url: { type: String, default: '' },
     cover_url: { type: String, default: '' },
     city_slug: { type: String, default: '', index: true },
+    /** The page's colour, one of the event theme accents. */
+    tint: { type: String, enum: THEME_ACCENTS, default: 'DEFAULT' },
     featured: { type: Boolean, default: false, index: true },
     subscriber_count: { type: Number, default: 0 },
   },

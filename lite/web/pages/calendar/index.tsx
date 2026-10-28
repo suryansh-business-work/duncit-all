@@ -10,6 +10,8 @@ import { LITE_CALENDAR, LITE_CALENDAR_EVENTS } from '../../graphql/calendars';
 import { usePageTitle } from '../../lib/usePageTitle';
 import { NotFoundPage } from '../not-found';
 import { CalendarHeader } from './CalendarHeader';
+import { EventListSkeleton } from '../../components/skeletons';
+import { CalendarPageSkeleton } from './CalendarPageSkeleton';
 
 const TABS_ID = 'calendar';
 
@@ -17,7 +19,7 @@ function CalendarEvents({ slug, past }: Readonly<{ slug: string; past: boolean }
   const { t } = useWebT();
   const { data, loading, error } = useQuery(LITE_CALENDAR_EVENTS, { variables: { slug, past }, fetchPolicy: 'cache-and-network' });
   return (
-    <QueryGuard loading={loading && !data} error={error} loadingLabel={t('lite.common.loading')}>
+    <QueryGuard loading={loading && !data} error={error} skeleton={<EventListSkeleton groups={1} />}>
       <EventList events={data?.liteCalendarEvents ?? []} emptyTitle={past ? t('liteWeb.events.noPast') : t('liteWeb.events.noUpcoming')} />
     </QueryGuard>
   );
@@ -25,7 +27,6 @@ function CalendarEvents({ slug, past }: Readonly<{ slug: string; past: boolean }
 
 /** /cal/:slug — a calendar's public page: who runs it, subscribe, and its events. */
 export function CalendarPage() {
-  const { t } = useWebT();
   const { slug = '' } = useParams();
   const tabs = useUpcomingPastTabs();
   const { data, loading, error, refetch } = useQuery(LITE_CALENDAR, { variables: { slug }, fetchPolicy: 'cache-and-network' });
@@ -36,7 +37,7 @@ export function CalendarPage() {
     refetch().catch(() => undefined);
   };
   return (
-    <QueryGuard loading={loading && !calendar} error={error} loadingLabel={t('lite.common.loading')}>
+    <QueryGuard loading={loading && !calendar} error={error} skeleton={<CalendarPageSkeleton />}>
       {() =>
         calendar ? (
           <Stack spacing={3} data-testid="calendar-page">

@@ -42,9 +42,12 @@ export const adminResolvers = {
         custom_time: null,
         custom_time_set_at: null,
         server_time: new Date().toISOString(),
+        // The shared @duncit/app-settings query also selects the main app's own settings; Lite has none
+        // of those features, so each answers 0. A field missing here fails the whole query on every page.
         min_signup_age: 0,
         draft_retention_days: 0,
         ticket_discount_max_pct: 0,
+        happening_nearby_days: 0,
       };
     },
     liteAdminStats: async (_p: unknown, _a: Args, ctx: LiteContext) => {

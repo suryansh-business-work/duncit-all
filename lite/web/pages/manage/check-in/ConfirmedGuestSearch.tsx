@@ -8,6 +8,7 @@ import { parseApiError } from '@duncit/utils';
 import type { LiteRegistration } from '../../../../shared/graphql/documents';
 import { useWebT } from '../../../../shared/i18n';
 import { LITE_EVENT_REGISTRATIONS, LITE_HOST_REGISTRATION_ACTION } from '../../../graphql/manage';
+import { ListRowsSkeleton } from '../../../components/skeletons';
 
 interface ConfirmedGuestSearchProps {
   eventId: string;
@@ -47,7 +48,7 @@ export function ConfirmedGuestSearch({ eventId, onCheckedIn }: Readonly<Confirme
         onChange={(e) => setSearch(e.target.value)}
         slotProps={{ htmlInput: { 'data-testid': 'check-in-search' } }}
       />
-      <QueryGuard loading={loading && !data} error={error} loadingLabel={t('lite.common.loading')}>
+      <QueryGuard loading={loading && !data} error={error} skeleton={<ListRowsSkeleton rows={3} chip={false} testId="check-in-skeleton" />}>
         {guests.length === 0 ? (
           <Typography variant="body2" color="text.secondary">
             {t('liteWeb.manage.checkIn.noneFound')}

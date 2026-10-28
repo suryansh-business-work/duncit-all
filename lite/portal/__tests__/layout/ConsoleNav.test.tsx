@@ -41,6 +41,7 @@ describe('ConsoleNav', () => {
       'Calendars',
       'Categories',
       'Cities',
+      'Policies',
       'Environment',
       'Email templates',
       'Email logs',

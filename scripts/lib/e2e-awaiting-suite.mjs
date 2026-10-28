@@ -42,6 +42,7 @@ export const AWAITING_SUITE = new Set([
   'gig-jobs-portal',
   'mcp-portal',
   'loyalty',
+  'tests-portal',
   'tech',
   'venues',
   'website-app',

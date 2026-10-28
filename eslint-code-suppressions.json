@@ -4429,12 +4429,12 @@
       "count": 1
     }
   },
-  "portals/tech/src/pages/bug-detail-page/index.tsx": {
+  "portals/tests/src/pages/bug-detail-page/index.tsx": {
     "no-restricted-syntax": {
       "count": 1
     }
   },
-  "portals/tech/src/pages/bugs-page/BugsTable.tsx": {
+  "portals/tests/src/pages/bugs-page/BugsTable.tsx": {
     "react-hooks/exhaustive-deps": {
       "count": 1
     }
@@ -4469,62 +4469,62 @@
       "count": 2
     }
   },
-  "portals/tech/src/pages/e2e/flows/FlowDialog.tsx": {
+  "portals/tests/src/pages/e2e/flows/FlowDialog.tsx": {
     "no-restricted-syntax": {
       "count": 2
     }
   },
-  "portals/tech/src/pages/e2e/flows/detail/SubFlowDialog.tsx": {
+  "portals/tests/src/pages/e2e/flows/detail/SubFlowDialog.tsx": {
     "no-restricted-syntax": {
       "count": 2
     }
   },
-  "portals/tech/src/pages/e2e/flows/detail/SubFlowReview.tsx": {
+  "portals/tests/src/pages/e2e/flows/detail/SubFlowReview.tsx": {
     "no-restricted-syntax": {
       "count": 1
     }
   },
-  "portals/tech/src/pages/e2e/flows/detail/index.tsx": {
+  "portals/tests/src/pages/e2e/flows/detail/index.tsx": {
     "no-restricted-syntax": {
       "count": 1
     }
   },
-  "portals/tech/src/pages/e2e/flows/e2e-flow/e2e-flow.form.tsx": {
+  "portals/tests/src/pages/e2e/flows/e2e-flow/e2e-flow.form.tsx": {
     "no-restricted-syntax": {
       "count": 2
     }
   },
-  "portals/tech/src/pages/e2e/flows/e2e-sub-flow/e2e-sub-flow.form.tsx": {
+  "portals/tests/src/pages/e2e/flows/e2e-sub-flow/e2e-sub-flow.form.tsx": {
     "no-restricted-syntax": {
       "count": 2
     }
   },
-  "portals/tech/src/pages/e2e/flows/index.tsx": {
+  "portals/tests/src/pages/e2e/flows/index.tsx": {
     "no-restricted-syntax": {
       "count": 1
     }
   },
-  "portals/tech/src/pages/e2e/index.tsx": {
+  "portals/tests/src/pages/e2e/index.tsx": {
     "no-restricted-syntax": {
       "count": 1
     }
   },
-  "portals/tech/src/pages/e2e/run-tests/RunTestsDialog.tsx": {
+  "portals/tests/src/pages/e2e/run-tests/RunTestsDialog.tsx": {
     "no-restricted-syntax": {
       "count": 1
     }
   },
-  "portals/tech/src/pages/e2e/run-tests/run-tests.form.tsx": {
+  "portals/tests/src/pages/e2e/run-tests/run-tests.form.tsx": {
     "no-restricted-syntax": {
       "count": 2
     }
   },
-  "portals/tech/src/pages/e2e/settings/E2eSettingsPage.tsx": {
+  "portals/tests/src/pages/e2e/settings/E2eSettingsPage.tsx": {
     "no-restricted-syntax": {
       "count": 1
     }
   },
-  "portals/tech/src/pages/e2e/settings/e2e-settings.form.tsx": {
+  "portals/tests/src/pages/e2e/settings/e2e-settings.form.tsx": {
     "no-restricted-syntax": {
       "count": 2
     }
@@ -4605,7 +4605,7 @@
       "count": 2
     }
   },
-  "portals/tech/src/pages/error-logs-page/ErrorLogsTable.tsx": {
+  "portals/tests/src/pages/error-logs-page/ErrorLogsTable.tsx": {
     "react-hooks/exhaustive-deps": {
       "count": 1
     }
@@ -4670,32 +4670,32 @@
       "count": 1
     }
   },
-  "portals/tech/src/pages/stress-testing/new-run/new-stress-run.form.tsx": {
+  "portals/tests/src/pages/stress-testing/new-run/new-stress-run.form.tsx": {
     "react-hooks/exhaustive-deps": {
       "count": 1
     }
   },
-  "portals/tech/src/pages/stress-testing/run-detail/index.tsx": {
+  "portals/tests/src/pages/stress-testing/run-detail/index.tsx": {
     "react-hooks/exhaustive-deps": {
       "count": 1
     }
   },
-  "portals/tech/src/pages/telemetry-dashboard/RecentLogsTable.tsx": {
+  "portals/tests/src/pages/telemetry-dashboard/RecentLogsTable.tsx": {
     "react-hooks/exhaustive-deps": {
       "count": 1
     }
   },
-  "portals/tech/src/pages/telemetry-logs-page/LogsTable.tsx": {
+  "portals/tests/src/pages/telemetry-logs-page/LogsTable.tsx": {
     "react-hooks/exhaustive-deps": {
       "count": 1
     }
   },
-  "portals/tech/src/pages/telemetry-logs-settings/PublicApiKeyCard.tsx": {
+  "portals/tests/src/pages/telemetry-logs-settings/PublicApiKeyCard.tsx": {
     "no-restricted-syntax": {
       "count": 1
     }
   },
-  "portals/tech/src/pages/telemetry-logs-settings/index.tsx": {
+  "portals/tests/src/pages/telemetry-logs-settings/index.tsx": {
     "no-restricted-syntax": {
       "count": 4
     }

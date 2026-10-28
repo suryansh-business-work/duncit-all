@@ -1,10 +1,11 @@
 import type { GraphQLContext } from '@context';
-import { requireRole } from '@middleware/rbac';
+import { requireRole, TESTS_MANAGER } from '@middleware/rbac';
 import type { TableQueryInput } from '@utils/table-query';
 import { e2eFlowService } from './e2eFlow.service';
 
-// Flows are documented beside the e2e runs, by the same people who run them.
-const E2E_MANAGE = ['SUPER_ADMIN', 'TECH_MANAGER'];
+// Flows are documented beside the e2e runs, by the same people who run them —
+// in the Tests console now (they moved from Tech, whose managers keep access).
+const E2E_MANAGE = ['SUPER_ADMIN', 'TECH_MANAGER', TESTS_MANAGER];
 
 type SubFlowArgs = { flow_id: string; sub_flow_id: string };
 

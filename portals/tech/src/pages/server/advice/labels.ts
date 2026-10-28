@@ -1,5 +1,6 @@
 import type { Translate } from '@duncit/shell';
-import type { ChipColor } from '../../stress-testing/labels';
+// Borrowed from the Tests console, which owns stress testing (its src is copied into this build).
+import type { ChipColor } from '../../../../../tests/src/pages/stress-testing/labels';
 import type { ServerAdviceGrade } from '../history/queries';
 
 /** Every key written out literally — the localization gates read keys straight off the source. */

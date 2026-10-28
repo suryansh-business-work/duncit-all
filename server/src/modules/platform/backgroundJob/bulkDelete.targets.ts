@@ -1,3 +1,5 @@
+import { TESTS_MANAGER } from '@middleware/rbac';
+
 /**
  * Which portal tables offer bulk delete, and how one of their rows is deleted.
  *
@@ -32,6 +34,8 @@ export interface BulkDeleteTarget {
 }
 
 const TECH = ['SUPER_ADMIN', 'TECH_MANAGER'];
+// The E2E and stress pages moved from Tech to the Tests console.
+const TESTS = [...TECH, TESTS_MANAGER];
 const FINANCE = ['SUPER_ADMIN', 'CITY_ADMIN', 'FINANCE_MANAGER'];
 const LEGAL = ['SUPER_ADMIN', 'LEGAL_MANAGER'];
 const WEBSITE = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN', 'WEBSITE_MANAGER'];
@@ -48,9 +52,9 @@ const INVENTORY = { mutation: 'deleteInventoryProduct', idArg: 'product_doc_id',
 export const BULK_DELETE_TARGETS: Readonly<Record<string, BulkDeleteTarget>> = {
   // Tech
   appBuildsTable: { mutation: 'deleteAppBuild', roles: TECH },
-  e2eRunsTable: { mutation: 'deleteE2eRun', roles: TECH },
-  e2eFlowsTable: { mutation: 'deleteE2eFlow', roles: TECH },
-  stressRunsTable: { mutation: 'deleteStressRun', roles: TECH },
+  e2eRunsTable: { mutation: 'deleteE2eRun', roles: TESTS },
+  e2eFlowsTable: { mutation: 'deleteE2eFlow', roles: TESTS },
+  stressRunsTable: { mutation: 'deleteStressRun', roles: TESTS },
   rateLimitRulesTable: { mutation: 'deleteRateLimitRule', idArg: 'rule_id', roles: TECH },
   featureFlagsTable: { mutation: 'deleteFeatureFlag', idArg: 'flag_id', roles: TECH },
   // Admin

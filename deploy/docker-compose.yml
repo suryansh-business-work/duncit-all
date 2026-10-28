@@ -341,6 +341,14 @@ services:
     ports:
       - "127.0.0.1:2042:8080"
 
+  # The Tests console (tests.duncit.com).
+  tests:
+    image: ${DOCKERHUB_USERNAME}/duncit-tests:${IMAGE_TAG:-latest}
+    container_name: duncit-tests
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2048:8080"
+
   # The Targets console (targets.duncit.com).
   targets:
     image: ${DOCKERHUB_USERNAME}/duncit-targets:${IMAGE_TAG:-latest}

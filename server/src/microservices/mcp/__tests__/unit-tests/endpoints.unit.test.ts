@@ -87,8 +87,8 @@ describe('endpointsForCategory', () => {
     expect(endpointsForCategory('finance')).toEqual(['finance']);
   });
 
-  it('serves logs on both Logs and Tech', () => {
-    expect(endpointsForCategory('logs')).toEqual(['logs', 'tech']);
+  it('serves logs on Logs, Tech and Tests', () => {
+    expect(endpointsForCategory('logs')).toEqual(['logs', 'tech', 'tests']);
   });
 });
 

@@ -34,6 +34,9 @@ import { VENUE_PRICING_BUNDLE } from './bundles/venue-pricing';
 import { GIG_JOBS_BUNDLE } from './bundles/gig-jobs';
 import { MCP_BUNDLE } from './bundles/mcp';
 import { LOYALTY_BUNDLE } from './bundles/loyalty';
+import { TESTS_BUNDLE } from './bundles/tests';
+import { TESTS_UNIT_BUNDLE } from './bundles/tests-unit';
+import { TESTS_MANUAL_BUNDLE } from './bundles/tests-manual';
 import { HR_BUNDLE } from './bundles/hr';
 import { POD_REQUESTS_BUNDLE } from './bundles/pod-requests';
 import { CLUB_ADMIN_BUNDLE } from './bundles/club-admin';
@@ -140,6 +143,9 @@ export {
   GIG_JOBS_BUNDLE,
   MCP_BUNDLE,
   LOYALTY_BUNDLE,
+  TESTS_BUNDLE,
+  TESTS_UNIT_BUNDLE,
+  TESTS_MANUAL_BUNDLE,
   HR_BUNDLE,
   POD_REQUESTS_BUNDLE,
   CLUB_ADMIN_BUNDLE,
@@ -213,6 +219,9 @@ export const SURFACE_BUNDLES: Record<string, NestedCatalogue> = {
   gigJobs: GIG_JOBS_BUNDLE,
   mcp: MCP_BUNDLE,
   loyalty: LOYALTY_BUNDLE,
+  tests: TESTS_BUNDLE,
+  testsUnit: TESTS_UNIT_BUNDLE,
+  testsManual: TESTS_MANUAL_BUNDLE,
   hr: HR_BUNDLE,
   podRequests: POD_REQUESTS_BUNDLE,
   clubAdmin: CLUB_ADMIN_BUNDLE,

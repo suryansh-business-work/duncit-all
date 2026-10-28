@@ -41,6 +41,7 @@ COPY portals/localization/package.json ./portals/localization/
 COPY portals/targets/package.json ./portals/targets/
 COPY portals/mcp/package.json ./portals/mcp/
 COPY portals/loyalty/package.json ./portals/loyalty/
+COPY portals/tests/package.json ./portals/tests/
 COPY portals/ecomm-portal/package.json ./portals/ecomm-portal/
 COPY website/ecomm-store/package.json ./website/ecomm-store/
 COPY website/status-website/package.json ./website/status-website/
@@ -117,8 +118,10 @@ COPY portals/tech ./portals/tech
 # mounts them from their source), so its src folder is part of this build. Its
 # package.json is copied above, so its dependencies are installed.
 COPY portals/communications/src ./portals/communications/src
-# Security → SonarQube is the Analytics console's own dashboard, mounted the same way.
-COPY portals/analytics/src ./portals/analytics/src
+# Server Info's live pulse, history tiles and charts are the Tests console's
+# stress-testing parts (src/pages/server imports them from its source), so its
+# src folder is part of this build too.
+COPY portals/tests/src ./portals/tests/src
 RUN pnpm --filter tech build
 
 # --- runner ---

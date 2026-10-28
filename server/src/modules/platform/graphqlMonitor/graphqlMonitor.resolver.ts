@@ -1,13 +1,14 @@
 import type { GraphQLContext } from '@context';
-import { requireRole } from '@middleware/rbac';
+import { requireRole, TESTS_MANAGER } from '@middleware/rbac';
 import { graphqlMonitorService } from './graphqlMonitor.service';
 
 /**
- * Platform plumbing, read and tuned from the Tech portal only: the operation
- * list names every document every client sends, which is a map of the API
- * nobody outside engineering needs.
+ * Platform plumbing, read and tuned from the Tests console only (it moved there
+ * from Tech, whose managers keep access): the operation list names every
+ * document every client sends, which is a map of the API nobody outside
+ * engineering needs.
  */
-const MANAGE = ['SUPER_ADMIN', 'TECH_MANAGER'];
+const MANAGE = ['SUPER_ADMIN', 'TECH_MANAGER', TESTS_MANAGER];
 
 type RangeArgs = { range?: string | null };
 

@@ -1,13 +1,13 @@
 import { slackService } from './slack.service';
 import type { GraphQLContext } from '@context';
-import { requireAuth, requireRole } from '@middleware/rbac';
+import { requireAuth, requireRole, TESTS_MANAGER } from '@middleware/rbac';
 
 // Reading and posting to Slack is the Communications console's; server-side
 // code calls slackService.send directly (ungated) for its own notifications.
 const SLACK_MANAGE = ['SUPER_ADMIN', 'COMMUNICATIONS_MANAGER'];
-// The Tech console still picks a results channel on App Builds and E2E
-// settings, so the two reads behind that picker stay open to it.
-const SLACK_READ = [...SLACK_MANAGE, 'TECH_MANAGER'];
+// The Tech console still picks a results channel on App Builds, and the Tests
+// console on E2E settings, so the two reads behind that picker stay open to both.
+const SLACK_READ = [...SLACK_MANAGE, 'TECH_MANAGER', TESTS_MANAGER];
 
 export const slackResolvers = {
   Query: {

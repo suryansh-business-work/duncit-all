@@ -215,6 +215,7 @@ jobs:
       gig_jobs: ${{ steps.gate.outputs.gig_jobs }}
       mcp: ${{ steps.gate.outputs.mcp }}
       loyalty: ${{ steps.gate.outputs.loyalty }}
+      tests: ${{ steps.gate.outputs.tests }}
       ecomm_portal: ${{ steps.gate.outputs.ecomm_portal }}
       ecomm_store: ${{ steps.gate.outputs.ecomm_store }}
       lite: ${{ steps.gate.outputs.lite }}
@@ -346,8 +347,9 @@ jobs:
               - 'portals/tech/**'
               # The MSG91 OTP Logs pages it mounts are read from this console's source.
               - 'portals/communications/src/**'
-              # So is Security → SonarQube, from the Analytics console's.
-              - 'portals/analytics/src/**'
+              # Server Info's live pulse, verdict and charts are the Tests console's
+              # stress-testing components, borrowed from its source.
+              - 'portals/tests/src/**'
               - 'package.json'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
@@ -536,6 +538,7 @@ jobs:
               - 'portals/logs/**'
               # The log pages it mounts are read from these consoles' source.
               - 'portals/tech/src/**'
+              - 'portals/tests/src/**'
               - 'portals/ai/src/**'
               - 'portals/communications/src/**'
               - 'portals/finance/src/**'
@@ -587,6 +590,20 @@ jobs:
               - '.github/workflows/deploy.yml'
             loyalty:
               - 'portals/loyalty/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'tsconfig.base.json'
+              - 'packages/**'
+              - 'deploy/**'
+              - '.github/workflows/deploy.yml'
+            tests:
+              - 'portals/tests/**'
+              # Pages it mounts from their owning consoles' source: the Slack
+              # channel picker, schedule fields, telemetry identity and the
+              # Environment Variables tab (Tech), and SonarQube (Analytics).
+              - 'portals/tech/src/**'
+              - 'portals/analytics/src/**'
               - 'package.json'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
@@ -2154,6 +2171,42 @@ jobs:
               --cache-to   type=gha,scope=duncit-loyalty${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
 
+  build-tests:
+    needs: changes
+    if: needs.changes.outputs.tests == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: TypeScript
+        uses: ./.github/actions/portal-ci
+        with:
+          workspace: tests-portal
+          typecheck: 'tsc -b --noEmit'
+      - uses: docker/setup-buildx-action@v4
+        with:
+          buildkitd-config-inline: ${{ env.BUILDKITD_CONFIG }}
+      - uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build & push tests
+        uses: nick-fields/retry@v4
+        with:
+          timeout_minutes: 30
+          max_attempts: 3
+          retry_wait_seconds: 20
+          command: |
+            docker buildx build \
+              --file portals/tests/Dockerfile \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-tests:${{ env.IMAGE_TAG }} \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-tests:${{ env.SHA_TAG }} \
+              --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
+              --build-arg VITE_REQUIRED_ROLES=TESTS_MANAGER \
+              --build-arg VITE_GOOGLE_CLIENT_ID=${{ env.BUILD_GOOGLE_CLIENT_ID }} \
+              --cache-from type=gha,scope=duncit-tests${{ env.SCOPE_SUFFIX }} \
+              --cache-to   type=gha,scope=duncit-tests${{ env.SCOPE_SUFFIX }},mode=max \
+              --push .
+
   build-ecomm-portal:
     needs: changes
     if: needs.changes.outputs.ecomm_portal == 'true' || github.event_name == 'workflow_dispatch'
@@ -2337,8 +2390,8 @@ jobs:
   # restarts the services whose images were rebuilt.
   # -----------------------------------------------------------
   deploy:
-    needs: [changes, build-server, build-admin, build-mweb, build-website, build-partners-app, build-partners-website, build-ads-portal, build-ads-website, build-native, build-crm, build-open-wa, build-finance, build-tech, build-support, build-website-app, build-legal, build-ai, build-products, build-marketing, build-onboarding, build-hr, build-employee, build-status, build-challenge, build-developers, build-regional-club-admin, build-venues, build-clubs, build-club-admins, build-hosts, build-pods, build-communications, build-logs, build-analytics, build-localization, build-targets, build-gig-jobs, build-mcp, build-loyalty, build-ecomm-portal, build-ecomm-store, build-earnwith, build-lite, build-cms-site]
-    if: always() && (needs.build-server.result == 'success' || needs.build-admin.result == 'success' || needs.build-mweb.result == 'success' || needs.build-website.result == 'success' || needs.build-partners-app.result == 'success' || needs.build-partners-website.result == 'success' || needs.build-ads-portal.result == 'success' || needs.build-ads-website.result == 'success' || needs.build-native.result == 'success' || needs.build-crm.result == 'success' || needs.build-open-wa.result == 'success' || needs.build-finance.result == 'success' || needs.build-tech.result == 'success' || needs.build-support.result == 'success' || needs.build-website-app.result == 'success' || needs.build-legal.result == 'success' || needs.build-ai.result == 'success' || needs.build-products.result == 'success' || needs.build-marketing.result == 'success' || needs.build-onboarding.result == 'success' || needs.build-hr.result == 'success' || needs.build-employee.result == 'success' || needs.build-status.result == 'success' || needs.build-challenge.result == 'success' || needs.build-developers.result == 'success' || needs.build-regional-club-admin.result == 'success' || needs.build-venues.result == 'success' || needs.build-clubs.result == 'success' || needs.build-club-admins.result == 'success' || needs.build-hosts.result == 'success' || needs.build-pods.result == 'success' || needs.build-communications.result == 'success' || needs.build-logs.result == 'success' || needs.build-analytics.result == 'success' || needs.build-localization.result == 'success' || needs.build-targets.result == 'success' || needs.build-gig-jobs.result == 'success' || needs.build-mcp.result == 'success' || needs.build-loyalty.result == 'success' || needs.build-ecomm-portal.result == 'success' || needs.build-ecomm-store.result == 'success' || needs.build-earnwith.result == 'success' || needs.build-lite.result == 'success' || needs.build-cms-site.result == 'success')
+    needs: [changes, build-server, build-admin, build-mweb, build-website, build-partners-app, build-partners-website, build-ads-portal, build-ads-website, build-native, build-crm, build-open-wa, build-finance, build-tech, build-support, build-website-app, build-legal, build-ai, build-products, build-marketing, build-onboarding, build-hr, build-employee, build-status, build-challenge, build-developers, build-regional-club-admin, build-venues, build-clubs, build-club-admins, build-hosts, build-pods, build-communications, build-logs, build-analytics, build-localization, build-targets, build-gig-jobs, build-mcp, build-loyalty, build-tests, build-ecomm-portal, build-ecomm-store, build-earnwith, build-lite, build-cms-site]
+    if: always() && (needs.build-server.result == 'success' || needs.build-admin.result == 'success' || needs.build-mweb.result == 'success' || needs.build-website.result == 'success' || needs.build-partners-app.result == 'success' || needs.build-partners-website.result == 'success' || needs.build-ads-portal.result == 'success' || needs.build-ads-website.result == 'success' || needs.build-native.result == 'success' || needs.build-crm.result == 'success' || needs.build-open-wa.result == 'success' || needs.build-finance.result == 'success' || needs.build-tech.result == 'success' || needs.build-support.result == 'success' || needs.build-website-app.result == 'success' || needs.build-legal.result == 'success' || needs.build-ai.result == 'success' || needs.build-products.result == 'success' || needs.build-marketing.result == 'success' || needs.build-onboarding.result == 'success' || needs.build-hr.result == 'success' || needs.build-employee.result == 'success' || needs.build-status.result == 'success' || needs.build-challenge.result == 'success' || needs.build-developers.result == 'success' || needs.build-regional-club-admin.result == 'success' || needs.build-venues.result == 'success' || needs.build-clubs.result == 'success' || needs.build-club-admins.result == 'success' || needs.build-hosts.result == 'success' || needs.build-pods.result == 'success' || needs.build-communications.result == 'success' || needs.build-logs.result == 'success' || needs.build-analytics.result == 'success' || needs.build-localization.result == 'success' || needs.build-targets.result == 'success' || needs.build-gig-jobs.result == 'success' || needs.build-mcp.result == 'success' || needs.build-loyalty.result == 'success' || needs.build-tests.result == 'success' || needs.build-ecomm-portal.result == 'success' || needs.build-ecomm-store.result == 'success' || needs.build-earnwith.result == 'success' || needs.build-lite.result == 'success' || needs.build-cms-site.result == 'success')
     runs-on: ubuntu-latest
     env:
       # Branch-aware deploy target: the staging stack lives side-by-side with
@@ -2417,6 +2470,7 @@ jobs:
           [ "${{ needs.build-gig-jobs.result }}" = "success" ] && PARTS+=("gig-jobs")
           [ "${{ needs.build-mcp.result }}" = "success" ] && PARTS+=("mcp")
           [ "${{ needs.build-loyalty.result }}" = "success" ] && PARTS+=("loyalty")
+          [ "${{ needs.build-tests.result }}" = "success" ] && PARTS+=("tests")
           [ "${{ needs.build-ecomm-portal.result }}" = "success" ] && PARTS+=("ecomm-portal")
           [ "${{ needs.build-ecomm-store.result }}" = "success" ] && PARTS+=("ecomm-store")
           [ "${{ needs.build-earnwith.result }}" = "success" ] && PARTS+=("earnwith")
@@ -2664,7 +2718,7 @@ jobs:
           # second list is folded in only once each hostname's DNS resolves.
           bash ${{ env.STACK_DIR }}/configure-nginx-tls.sh duncit.com ${{ env.STACK_DIR }}/nginx/duncit.com duncit.com \
             "duncit.com www.duncit.com admin.duncit.com mweb.duncit.com server.duncit.com partners.duncit.com partners-app.duncit.com ads.duncit.com ads-portal.duncit.com crm.duncit.com finance.duncit.com tech.duncit.com support.duncit.com website.duncit.com legal.duncit.com ai.duncit.com products.duncit.com marketing.duncit.com onboarding.duncit.com hr.duncit.com employee.duncit.com status.duncit.com signoz.duncit.com native.duncit.com sonarqube.duncit.com open-wa-server.duncit.com" \
-            "earnwith.duncit.com challenge.duncit.com developers.duncit.com regional-club-admin.duncit.com redis.duncit.com venues.duncit.com clubs.duncit.com club-admins.duncit.com hosts.duncit.com pods.duncit.com communications.duncit.com logs.duncit.com analytics.duncit.com localization.duncit.com ecomm.duncit.com ecomm-portal.duncit.com lite.duncit.com lite-portal.duncit.com targets.duncit.com gig-jobs.duncit.com mcp.duncit.com loyalty.duncit.com"
+            "earnwith.duncit.com challenge.duncit.com developers.duncit.com regional-club-admin.duncit.com redis.duncit.com venues.duncit.com clubs.duncit.com club-admins.duncit.com hosts.duncit.com pods.duncit.com communications.duncit.com logs.duncit.com analytics.duncit.com localization.duncit.com ecomm.duncit.com ecomm-portal.duncit.com lite.duncit.com lite-portal.duncit.com targets.duncit.com gig-jobs.duncit.com mcp.duncit.com loyalty.duncit.com tests.duncit.com"
           REMOTE
 
       - name: Configure nginx + TLS (staging)
@@ -2678,7 +2732,7 @@ jobs:
           # DNS-gated: a missing A record drops that one host, not the whole cert.
           bash ${{ env.STACK_DIR }}/configure-nginx-tls.sh staging.duncit.com ${{ env.STACK_DIR }}/nginx/staging.duncit.com staging.duncit.com \
             "" \
-            "staging.duncit.com staging.server.duncit.com staging.admin.duncit.com staging.mweb.duncit.com staging.partners.duncit.com staging.partners-app.duncit.com staging.ads.duncit.com staging.ads-portal.duncit.com staging.crm.duncit.com staging.finance.duncit.com staging.tech.duncit.com staging.support.duncit.com staging.website.duncit.com staging.legal.duncit.com staging.ai.duncit.com staging.products.duncit.com staging.marketing.duncit.com staging.onboarding.duncit.com staging.hr.duncit.com staging.employee.duncit.com staging.status.duncit.com staging.native.duncit.com staging.open-wa-server.duncit.com staging.earnwith.duncit.com staging.challenge.duncit.com staging.developers.duncit.com staging.regional-club-admin.duncit.com staging.redis.duncit.com staging.venues.duncit.com staging.clubs.duncit.com staging.club-admins.duncit.com staging.hosts.duncit.com staging.pods.duncit.com staging.communications.duncit.com staging.logs.duncit.com staging.analytics.duncit.com staging.localization.duncit.com staging.ecomm.duncit.com staging.ecomm-portal.duncit.com staging.lite.duncit.com staging.lite-portal.duncit.com staging.targets.duncit.com staging.gig-jobs.duncit.com staging.mcp.duncit.com staging.loyalty.duncit.com"
+            "staging.duncit.com staging.server.duncit.com staging.admin.duncit.com staging.mweb.duncit.com staging.partners.duncit.com staging.partners-app.duncit.com staging.ads.duncit.com staging.ads-portal.duncit.com staging.crm.duncit.com staging.finance.duncit.com staging.tech.duncit.com staging.support.duncit.com staging.website.duncit.com staging.legal.duncit.com staging.ai.duncit.com staging.products.duncit.com staging.marketing.duncit.com staging.onboarding.duncit.com staging.hr.duncit.com staging.employee.duncit.com staging.status.duncit.com staging.native.duncit.com staging.open-wa-server.duncit.com staging.earnwith.duncit.com staging.challenge.duncit.com staging.developers.duncit.com staging.regional-club-admin.duncit.com staging.redis.duncit.com staging.venues.duncit.com staging.clubs.duncit.com staging.club-admins.duncit.com staging.hosts.duncit.com staging.pods.duncit.com staging.communications.duncit.com staging.logs.duncit.com staging.analytics.duncit.com staging.localization.duncit.com staging.ecomm.duncit.com staging.ecomm-portal.duncit.com staging.lite.duncit.com staging.lite-portal.duncit.com staging.targets.duncit.com staging.gig-jobs.duncit.com staging.mcp.duncit.com staging.loyalty.duncit.com staging.tests.duncit.com"
           REMOTE
 
       - name: Remote redeploy (only changed services)

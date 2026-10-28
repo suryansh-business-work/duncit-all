@@ -6,14 +6,15 @@ import {
 } from './telemetry.service';
 import type { TableQueryInput } from '@utils/table-query';
 import type { GraphQLContext } from '@context';
-import { LOGS_READER, requireRole } from '@middleware/rbac';
+import { LOGS_READER, requireRole, TESTS_MANAGER } from '@middleware/rbac';
 import { describeLogUser } from './telemetryUser';
 
-// Telemetry is managed from the Tech portal.
-const TELEMETRY_READ = ['SUPER_ADMIN', 'TECH_MANAGER'];
-const TELEMETRY_WRITE = ['SUPER_ADMIN', 'TECH_MANAGER'];
+// Telemetry is managed from the Tests console (it moved there from Tech, whose
+// managers keep their access).
+const TELEMETRY_READ = ['SUPER_ADMIN', 'TECH_MANAGER', TESTS_MANAGER];
+const TELEMETRY_WRITE = ['SUPER_ADMIN', 'TECH_MANAGER', TESTS_MANAGER];
 // The Logs console reads the log tables too (plus the settings its GET API
-// button takes the feed key from). Bugs and the dashboard stay Tech's.
+// button takes the feed key from). Bugs and the dashboard stay the Tests console's.
 const LOG_READ = [...TELEMETRY_READ, LOGS_READER];
 
 /**

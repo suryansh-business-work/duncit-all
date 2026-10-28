@@ -16,9 +16,20 @@
 # `reportOnFailure: true` for precisely that reason). A non-zero exit would throw
 # the other workspaces' reports away with it.
 #
+# MACHINE-READABLE RESULTS. Beside each log, the run also leaves
+# `<results>/<workspace>.unit.json` for the Tests console (tests.duncit.com):
+# the runner's own JSON report, test by test, compacted with the coverage the
+# workspace wrote (scripts/report-unit-run.mjs meta). The flags that ask for it
+# are APPENDED to the workspace's own `test:coverage` — no `--` separator,
+# because pnpm forwards whatever follows the script name and a literal `--`
+# would turn vitest's flags into file filters. The default reporter (and, on
+# Actions, the github-actions one vitest adds by itself when no reporter is
+# named) stays, so the log and the ratchet that reads it are unchanged.
+#
 # Env:
-#   COVERAGE_TIMEOUT   per-workspace time box (default 60m)
-#   COVERAGE_LOG_DIR   where the full per-workspace logs are written (default test-logs)
+#   COVERAGE_TIMEOUT      per-workspace time box (default 60m)
+#   COVERAGE_LOG_DIR      where the full per-workspace logs are written (default test-logs)
+#   COVERAGE_RESULTS_DIR  where the per-workspace results go (default <log dir>/results)
 set +e
 
 LABEL="$1"
@@ -27,24 +38,49 @@ shift
 TIMEOUT="${COVERAGE_TIMEOUT:-60m}"
 LOG_DIR="${COVERAGE_LOG_DIR:-test-logs}"
 mkdir -p "$LOG_DIR"
+RESULTS_DIR="${COVERAGE_RESULTS_DIR:-$LOG_DIR/results}"
+mkdir -p "$RESULTS_DIR"
+# Absolute, because each runner writes its report from its own workspace dir.
+RESULTS_ABS=$(cd "$RESULTS_DIR" && pwd)
+REPORTER="$(cd "$(dirname "$0")" && pwd)/report-unit-run.mjs"
 
-# Resolve the filters to workspace names through pnpm itself, so a new package
-# under ./packages is picked up with no edit here.
+# Resolve the filters to workspace names (and their directories) through pnpm
+# itself, so a new package under ./packages is picked up with no edit here.
 args=()
 for f in "$@"; do args+=(--filter "$f"); done
 mapfile -t WORKSPACES < <(pnpm list -r --depth -1 --json "${args[@]}" |
   node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{
-    for (const w of JSON.parse(s)) if (w.path && w.name) console.log(w.name);
+    for (const w of JSON.parse(s)) if (w.path && w.name) console.log(w.name + "\t" + w.path);
   })')
 
-echo "group $LABEL: ${#WORKSPACES[@]} workspace(s): ${WORKSPACES[*]}"
+echo "group $LABEL: ${#WORKSPACES[@]} workspace(s): ${WORKSPACES[*]%%$'\t'*}"
 
 failed=()
-for ws in "${WORKSPACES[@]}"; do
+for entry in "${WORKSPACES[@]}"; do
+  ws="${entry%%$'\t'*}"
+  wsdir="${entry#*$'\t'}"
   # Each workspace is time-boxed so one hang cannot eat the group.
   slug=$(printf '%s' "$ws" | tr -c 'A-Za-z0-9._-' '_')
-  timeout "$TIMEOUT" pnpm --filter "$ws" --if-present test:coverage > "/tmp/cov-$$.log" 2>&1
+  raw="$RESULTS_ABS/$slug.raw.json"
+  rm -f "$raw"
+  runner=$(node "$REPORTER" runner "$wsdir" 2>/dev/null)
+  extra=()
+  case "$runner" in
+    vitest)
+      extra=(--reporter=default --reporter=json "--outputFile.json=$raw")
+      if [ "$GITHUB_ACTIONS" = "true" ]; then extra+=(--reporter=github-actions); fi
+      ;;
+    jest) extra=(--json "--outputFile=$raw") ;;
+    *) runner=none ;;
+  esac
+  started=$(date +%s%3N)
+  timeout "$TIMEOUT" pnpm --filter "$ws" --if-present test:coverage "${extra[@]}" > "/tmp/cov-$$.log" 2>&1
   code=$?
+  elapsed=$(( $(date +%s%3N) - started ))
+  # Best-effort: the reporter never fails, and a missing results file only
+  # means the console shows this workspace as unreported.
+  node "$REPORTER" meta --dir "$wsdir" --workspace "$ws" --group "$LABEL" --runner "$runner" \
+    --exit "$code" --duration-ms "$elapsed" --raw "$raw" --out "$RESULTS_ABS/$slug.unit.json"
   # Keep the FULL output for EVERY workspace, colour codes stripped. The
   # summaries below are cut to 160 chars and de-duplicated, which shows THAT a
   # suite died but never why — the stack frame naming the missing provider is

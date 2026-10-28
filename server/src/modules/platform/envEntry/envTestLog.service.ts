@@ -82,12 +82,23 @@ function count(target: Counts, active: boolean, health: TestHealth): void {
 }
 
 export const envTestLogService = {
-  /** Newest first — one entry's, or every entry's when no id is given. */
-  async history(entryId: string | null | undefined, limit: number | null | undefined, category?: string | null) {
+  /**
+   * Newest first — one entry's, or every entry's when no id is given. `category`
+   * may be a list: a caller confined to some categories reads any of them.
+   */
+  async history(
+    entryId: string | null | undefined,
+    limit: number | null | undefined,
+    category?: string | readonly string[] | null
+  ) {
     const size = Math.min(Math.max(Number(limit) || 20, 1), HISTORY_MAX);
     const filter: Record<string, unknown> = {};
     if (entryId) filter.entry_id = toObjectId(entryId) ?? new Types.ObjectId();
-    if (category) filter.category = category;
+    if (typeof category === 'string') {
+      if (category) filter.category = category;
+    } else if (category) {
+      filter.category = { $in: category };
+    }
     const rows = await EnvTestLogModel.find(filter).sort({ created_at: -1 }).limit(size).lean();
     const names = await testerNames(rows.map((r) => r.tested_by));
     return rows.map((r) => ({

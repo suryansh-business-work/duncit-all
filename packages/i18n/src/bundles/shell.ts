@@ -459,6 +459,11 @@ export const SHELL_BUNDLE: NestedCatalogue = {
         promoTitle: 'Every reward, one console',
         promoText: 'Run Duncit Coin, sell virtual gift cards and mint printed scratch cards — with the full history of each.',
       },
+      tests: {
+        tagline: 'Every test, run and quality signal behind a Duncit release.',
+        promoTitle: 'Ship with confidence',
+        promoText: 'Unit, E2E, stress, regression and manual testing, with one confidence score.',
+      },
       ecommPortal: {
         tagline: 'Run the Duncit Pet Store — shelves, orders and customers in one place.',
         promoTitle: 'Everything your pet store needs',
@@ -682,6 +687,17 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       mcpConnect: 'Connect',
       mcpConnections: 'Connections',
       mcpGuide: 'Guide',
+      // The Tests console's own entries (Runs, Flows, Settings, the Telemetry
+      // and GraphQL Monitor pages and SonarQube are shared with Tech).
+      automatedTesting: 'Automated Testing',
+      unitTests: 'Unit Tests',
+      mocksCypress: 'Mocks & Cypress',
+      regression: 'Regression',
+      manualTesting: 'Manual Testing',
+      testBoard: 'Board',
+      testCases: 'Test Cases',
+      codeQuality: 'Code Quality',
+      monitoring: 'Monitoring',
       challengeAuditLogs: 'Audit Logs',
       challengeLiveMonitor: 'Live Challenge Monitor',
       challengeResults: 'Results & Leaderboards',
@@ -2104,6 +2120,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
         gigJobs: 'Gig Jobs',
         mcp: 'MCP',
         loyalty: 'Loyalty',
+        tests: 'Tests',
       },
       header: {
         back: 'Back to coworkers',

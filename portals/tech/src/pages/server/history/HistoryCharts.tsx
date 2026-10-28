@@ -1,9 +1,10 @@
 import { useMemo } from 'react';
-import { Box } from '@mui/material';
 import { formatDay } from '@duncit/app-settings';
 import { useTranslation, type Translate } from '@duncit/shell';
-import TimeSeriesChart, { type ChartSeries } from '../../stress-testing/run-detail/charts/TimeSeriesChart';
-import { formatCount, formatMs, formatPct } from '../../stress-testing/labels';
+// Borrowed from the Tests console, which owns stress testing (its src is copied into this build).
+import type { ChartSeries } from '../../../../../tests/src/pages/stress-testing/run-detail/charts/TimeSeriesChart';
+import TimeSeriesChartGrid from '../../../../../tests/src/pages/stress-testing/run-detail/charts/TimeSeriesChartGrid';
+import { formatCount, formatMs, formatPct } from '../../../../../tests/src/pages/stress-testing/labels';
 import type { ServerHistoryDay } from './queries';
 
 interface Props {
@@ -94,22 +95,5 @@ export default function HistoryCharts({ days }: Readonly<Props>) {
   const charts = useMemo(() => chartSpecs(t, days), [t, days]);
   const emptyText = t('tech.server.chartEmpty');
 
-  return (
-    <Box
-      data-testid="server-history-charts"
-      sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', lg: '1fr 1fr' } }}
-    >
-      {charts.map((chart) => (
-        <TimeSeriesChart
-          key={chart.id}
-          title={chart.title}
-          subtitle={chart.subtitle}
-          labels={labels}
-          series={chart.series}
-          format={chart.format}
-          emptyText={emptyText}
-        />
-      ))}
-    </Box>
-  );
+  return <TimeSeriesChartGrid testId="server-history-charts" charts={charts} labels={labels} emptyText={emptyText} />;
 }

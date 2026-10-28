@@ -13,10 +13,12 @@
  * server/src/middleware/rbac.ts). What it WRITES stays with its console.
  */
 
+// Tests
+export { default as TelemetryLogsPage } from '../../tests/src/pages/telemetry-logs-page';
+export { default as TelemetryLogDetailPage } from '../../tests/src/pages/telemetry-log-detail-page';
+export { default as ErrorLogsPage } from '../../tests/src/pages/error-logs-page';
+
 // Tech
-export { default as TelemetryLogsPage } from '../../tech/src/pages/telemetry-logs-page';
-export { default as TelemetryLogDetailPage } from '../../tech/src/pages/telemetry-log-detail-page';
-export { default as ErrorLogsPage } from '../../tech/src/pages/error-logs-page';
 export { default as RateLimitBlockedPage } from '../../tech/src/pages/rate-limiting/blocked';
 // The keys behind the MSG91 log below, on the page Tech and Communications share.
 export { default as Msg91SettingsPage } from '../../tech/src/pages/msg91-settings';

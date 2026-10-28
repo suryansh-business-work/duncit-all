@@ -119,6 +119,7 @@ export const PORTAL_ACCESS: PortalAccess[] = [
   // The Finance seats open it too (Duncit Coin and gift cards moved here from
   // Finance), but they are granted under Finance: a role is listed once.
   { key: 'loyalty', name: 'Loyalty', url: url('loyalty'), roles: [{ key: 'LOYALTY_MANAGER', name: 'Loyalty Manager' }] },
+  { key: 'tests', name: 'Tests', url: url('tests'), roles: [{ key: 'TESTS_MANAGER', name: 'Tests Manager' }] },
 ];
 
 export interface RolePortalInfo {

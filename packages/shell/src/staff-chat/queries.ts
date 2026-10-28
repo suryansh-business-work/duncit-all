@@ -458,6 +458,7 @@ export const ROLE_FILTERS = [
   { value: 'GIG_JOBS_MANAGER', labelKey: 'shell.chat.team.gigJobs' },
   { value: 'MCP_MANAGER', labelKey: 'shell.chat.team.mcp' },
   { value: 'LOYALTY_MANAGER', labelKey: 'shell.chat.team.loyalty' },
+  { value: 'TESTS_MANAGER', labelKey: 'shell.chat.team.tests' },
 ];
 
 /** Label KEYS for the chips under a coworker's name, by role. */

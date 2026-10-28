@@ -84,8 +84,8 @@ const PAGE_LINKS: Partial<Record<AnalyticsEntity, ConsoleLink>> = {
   HOSTS: consoleLink('hosts', '/hosts'),
   DATABASE: consoleLink('tech', '/database/info'),
   ENV_KEYS: consoleLink('tech', '/'),
-  STRESS_TESTS: consoleLink('tech', '/stress-testing/runs'),
-  E2E_TESTS: consoleLink('tech', '/e2e/runs'),
+  STRESS_TESTS: consoleLink('tests', '/stress-testing/runs'),
+  E2E_TESTS: consoleLink('tests', '/e2e/runs'),
   PET_STORE: consoleLink('ecomm-portal', '/'),
 };
 

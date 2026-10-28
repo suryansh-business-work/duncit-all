@@ -27,6 +27,8 @@ export function SearchRow({ value, onChange, onSubmit, orientation, onOrientatio
       noValidate
       onSubmit={(event) => {
         event.preventDefault();
+        // React bubbles the submit out of the dialog's portal into the form the field sits in (the event form), which would submit it too.
+        event.stopPropagation();
         onSubmit();
       }}
       direction={{ xs: 'column', sm: 'row' }}

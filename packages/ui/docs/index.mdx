@@ -139,6 +139,17 @@ import { BackHeader, QueryGuard, StatusChip, StatCard } from '@duncit/ui';
 dereferences the entity — it defers evaluation past the `notFound` branch, so
 `{() => <div>{ad.title}</div>}` cannot throw on a null `ad`.
 
+Pass `skeleton` to draw a placeholder shaped like the page instead of the spinner while
+`loading` (Duncit Lite gives every page its own). The skeleton must announce itself the way
+the spinner does — a `role="status"` wrapper with a name such as "Loading…", its shapes hidden
+from screen readers — since a screen reader cannot see grey blocks:
+
+```tsx
+<QueryGuard loading={loading && !event} error={error} skeleton={<EventPageSkeleton />}>
+  {() => <EventView event={event} />}
+</QueryGuard>
+```
+
 <Preview
   title="Detail-page header — BackHeader, StatusChip, InfoRow"
   code={podDetailHeaderSource}
@@ -148,9 +159,9 @@ dereferences the entity — it defers evaluation past the `notFound` branch, so
 </Preview>
 
 <Preview
-  title="QueryGuard — all four branches"
+  title="QueryGuard — every branch"
   code={queryGuardStatesSource}
-  note="Switch states to see the trio. The error text comes from parseApiError reading the GraphQL error shape — nothing formats it at the call site."
+  note="Switch states to see the trio, and a skeleton standing in for the spinner. The error text comes from parseApiError reading the GraphQL error shape — nothing formats it at the call site."
 >
   <QueryGuardStates client:load />
 </Preview>

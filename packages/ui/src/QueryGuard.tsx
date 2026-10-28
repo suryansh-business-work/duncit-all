@@ -24,13 +24,19 @@ export interface QueryGuardProps {
   spinnerSx?: SxProps<Theme>;
   /** What is loading, for the screen reader. Defaults to the shared `Loading…`. */
   loadingLabel?: string;
+  /**
+   * Drawn instead of the spinner while loading: a placeholder shaped like the
+   * content about to appear. It announces itself, as the spinner does
+   * (role="status" with a name); `loadingLabel` and the spinner props are then unused.
+   */
+  skeleton?: ReactNode;
   /** Content once loading/error/not-found have all passed. A function defers evaluation. */
   children?: ReactNode | (() => ReactNode);
 }
 
 /**
- * The detail/list page query guard trio: centered spinner while loading, an
- * error Alert, a not-found Alert, then the page content.
+ * The detail/list page query guard trio: centered spinner (or the given
+ * skeleton) while loading, an error Alert, a not-found Alert, then the page content.
  */
 export function QueryGuard({
   loading,
@@ -42,11 +48,12 @@ export function QueryGuard({
   spinnerSize,
   spinnerSx,
   loadingLabel,
+  skeleton,
   children,
 }: Readonly<QueryGuardProps>) {
   const { t } = useTranslation();
   if (loading) {
-    return <Loader size={spinnerSize} label={loadingLabel} sx={spinnerSx} />;
+    return skeleton ?? <Loader size={spinnerSize} label={loadingLabel} sx={spinnerSx} />;
   }
   if (error) {
     return <Alert severity="error" data-testid="query-guard-error">{errorText ?? parseApiError(error)}</Alert>;

@@ -12,6 +12,7 @@ import { CancelEventDialog } from '../cancel-event';
 import { CoHostForm } from './co-host-form';
 import { EventLinkForm } from './event-link-form';
 import { CoHostList } from './CoHostList';
+import { DeleteEventCard } from './DeleteEventCard';
 
 /** The one-line button snippet a host pastes into their own site. */
 const embedSnippet = (url: string, label: string): string => `<a href="${url}" target="_blank" rel="noopener">${label}</a>`;
@@ -63,6 +64,7 @@ export function SettingsTab({ event, onChanged }: Readonly<{ event: LiteEvent; o
           {t('liteWeb.event.closed.cancelled')}
         </Typography>
       )}
+      <DeleteEventCard event={event} />
       <CancelEventDialog eventId={event.id} open={cancelOpen} onClose={() => setCancelOpen(false)} onCancelled={onChanged} />
     </Stack>
   );

@@ -88,6 +88,7 @@ export const publicResolvers = {
     liteUpdateEvent: async (_p: unknown, args: Args, ctx: LiteContext) => eventService.update(await requireUser(ctx), args.id, args.input),
     litePublishEvent: async (_p: unknown, args: Args, ctx: LiteContext) => eventService.publish(await requireUser(ctx), args.id),
     liteCancelEvent: async (_p: unknown, args: Args, ctx: LiteContext) => eventService.cancel(await requireUser(ctx), args.id, args.reason),
+    liteDeleteEvent: async (_p: unknown, args: Args, ctx: LiteContext) => eventService.remove(await requireUser(ctx), args.id),
     liteDuplicateEvent: async (_p: unknown, args: Args, ctx: LiteContext) => eventService.duplicate(await requireUser(ctx), args.id),
     liteSetRegistrationOpen: async (_p: unknown, args: Args, ctx: LiteContext) => eventService.setRegistrationOpen(await requireUser(ctx), args.id, args.open),
     liteChangeEventSlug: async (_p: unknown, args: Args, ctx: LiteContext) => eventService.changeSlug(await requireUser(ctx), args.id, args.slug),

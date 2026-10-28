@@ -543,6 +543,8 @@ export const publicTypeDefs = gql`
     liteUpdateEvent(id: ID!, input: LiteEventInput!): LiteEvent!
     litePublishEvent(id: ID!): LiteEvent!
     liteCancelEvent(id: ID!, reason: String): LiteEvent!
+    "Delete an event for good: its page, guest list and view counts. Only the person who created it can (not a co-host), and only while nobody is registered (no guests, or every guest cancelled or was declined) and no guest's payment is on record; otherwise cancel the event instead. True once deleted."
+    liteDeleteEvent(id: ID!): Boolean!
     liteDuplicateEvent(id: ID!): LiteEvent!
     liteSetRegistrationOpen(id: ID!, open: Boolean!): LiteEvent!
     "A new public link for the event; the old link stops working."

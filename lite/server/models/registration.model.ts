@@ -16,6 +16,9 @@ export type PaymentStatus = (typeof PAYMENT_STATUSES)[number];
 /** Statuses that hold a seat against the event's capacity. */
 export const SEAT_HOLDING: readonly RegistrationStatus[] = ['CONFIRMED', 'PAYMENT_PENDING', 'PENDING_APPROVAL'];
 
+/** Statuses that no longer hold a place: the guest may register again, and they do not stop the host deleting the event. */
+export const LAPSED_STATUSES: readonly RegistrationStatus[] = ['CANCELLED', 'DECLINED'];
+
 const answerSchema = new Schema(
   {
     question_id: { type: String, required: true },

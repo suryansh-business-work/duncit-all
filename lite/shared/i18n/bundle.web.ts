@@ -567,6 +567,14 @@ export const LITE_WEB_BUNDLE: NestedCatalogue = {
         confirm: 'Cancel the event',
         done: 'The event was cancelled and guests were told.',
       },
+      delete: {
+        title: 'Delete event',
+        body: 'Removes the event page and its guest list for good. Only you, as its creator, can do this, and only while nobody is registered.',
+        blocked: 'Guests are still registered. Once every spot is cancelled you can delete the event; until then you can cancel it instead.',
+        confirmTitle: 'Delete this event?',
+        confirmBody: '"{title}" and its page will be gone for good. This cannot be undone.',
+        done: 'The event was deleted.',
+      },
       guests: {
         search: 'Search by name or email',
         export: 'Export CSV',

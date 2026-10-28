@@ -66,7 +66,7 @@ describe('mcp_whoami', () => {
 
   it('lists only the connectors this account can open', async () => {
     expect((await whoami({ user: MEMBER })).connectors.map((c) => c.key)).toEqual(['app', 'partners', 'mcp', 'lite']);
-    expect((await whoami({ user: FINANCE_STAFF })).connectors.map((c) => c.key)).toEqual(['app', 'partners', 'finance', 'mcp', 'lite']);
+    expect((await whoami({ user: FINANCE_STAFF })).connectors.map((c) => c.key)).toEqual(['app', 'partners', 'finance', 'loyalty', 'mcp', 'lite']);
   });
 
   it('counts the tools each connector would list for this person', async () => {

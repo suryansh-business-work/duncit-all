@@ -86,7 +86,7 @@ describe('the teams list', () => {
     state.query = { data: undefined, loading: true, error: undefined };
     mount();
     expect(screen.queryByTestId('table')).not.toBeInTheDocument();
-    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    expect(screen.getByRole('status')).toBeInTheDocument();
   });
 
   it('keeps showing the table while it refreshes in the background', () => {

@@ -51,7 +51,8 @@ export function Footer() {
         <Stack component="nav" aria-label={t('liteWeb.footer.label')} direction={{ xs: 'column', md: 'row' }} spacing={{ xs: 4, md: 6 }} sx={{ justifyContent: 'space-between' }}>
           <Stack spacing={1.5} sx={{ maxWidth: 320 }}>
             <Stack direction="row" spacing={1.25} sx={{ alignItems: 'center' }}>
-              <img src={source} alt={siteName} width={40} height={40} style={{ display: 'block', borderRadius: LITE_RADII.control + 2 }} />
+              {/* The same mark as the header, in grey: the footer stays quiet. */}
+              <img src={source} alt={siteName} width={40} height={40} style={{ display: 'block', filter: 'grayscale(1)' }} />
               <Typography component="span" sx={{ fontWeight: 800, fontSize: '1.2rem' }}>
                 {siteName}
               </Typography>

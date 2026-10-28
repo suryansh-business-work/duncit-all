@@ -70,14 +70,15 @@ function PickerBody({ options, shape, tokenKey, onPicked }: Readonly<PicturePick
   };
 
   return (
-    <Stack spacing={2} sx={{ minHeight: 0 }}>
+    <Stack spacing={2} sx={{ flex: 1, minHeight: 0 }}>
       <DropZone ratio={spec.ratio} maxMb={options.max_mb} busy={busyId === UPLOADING} onFile={upload} testId="picture-drop" />
       {options.pexels_ready ? (
         <SearchRow value={search} onChange={setSearch} onSubmit={submitSearch} orientation={orientation} onOrientation={setOrientation} showShape={source.kind === 'topic' || source.kind === 'search'} />
       ) : null}
-      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2, minHeight: 0 }}>
+      {/* Takes the rest of the dialog's height; the topic list and the photos each scroll inside it. */}
+      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2, flex: 1, minHeight: 0 }}>
         <SourceList topics={options.topics} stockReady={options.pexels_ready} selected={source} onSelect={select} />
-        <Box sx={{ flexGrow: 1, minWidth: 0, maxHeight: { md: 460 }, overflowY: { md: 'auto' }, pr: { md: 0.5 } }}>
+        <Box sx={{ flex: 1, minWidth: 0, minHeight: 0, overflowY: 'auto', pr: { md: 0.5 } }}>
           {query === null ? (
             <PreviousResults covers={options.previous_covers} stockReady={options.pexels_ready} busyId={busyId} onPick={onPicked} />
           ) : (

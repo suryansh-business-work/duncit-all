@@ -16,7 +16,10 @@ interface PictureDialogProps {
   testId: string;
 }
 
-/** "Choose a picture": full screen on a phone. Its body mounts only while open, so nothing is fetched before. */
+/**
+ * "Choose a picture": full screen on a phone, as tall as the window allows elsewhere, so only the
+ * topic list and the photos scroll. Its body mounts only while open, so nothing is fetched before.
+ */
 export function PictureDialog({ open, onClose, onPicked, shape, tokenKey, testId }: Readonly<PictureDialogProps>) {
   const { t } = useCommonT();
   const titleId = useId();
@@ -24,14 +27,24 @@ export function PictureDialog({ open, onClose, onPicked, shape, tokenKey, testId
   const theme = useTheme();
   const phone = useMediaQuery(theme.breakpoints.down('sm'));
   return (
-    <Dialog open={open} onClose={onClose} fullScreen={phone} fullWidth maxWidth="md" aria-labelledby={titleId} data-testid={testId}>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      fullScreen={phone}
+      fullWidth
+      maxWidth="md"
+      aria-labelledby={titleId}
+      data-testid={testId}
+      // The paper's own max-height keeps the margin round it.
+      slotProps={{ paper: { sx: { height: '100%' } } }}
+    >
       <DialogTitle id={titleId} sx={{ pr: 7, textAlign: 'center', fontWeight: 700 }}>
         {t('lite.picture.dialogTitle')}
         <DuncitIconButton aria-label={t('lite.common.close')} onClick={onClose} sx={{ position: 'absolute', right: 12, top: 12 }} data-testid={`${testId}-close`}>
           <CloseIcon fontSize="small" />
         </DuncitIconButton>
       </DialogTitle>
-      <DialogContent dividers>
+      <DialogContent dividers sx={{ display: 'flex', flexDirection: 'column' }}>
         <PicturePicker shape={shape} tokenKey={tokenKey} onPicked={onPicked} />
       </DialogContent>
     </Dialog>

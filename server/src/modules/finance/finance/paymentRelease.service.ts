@@ -850,6 +850,7 @@ export function releaseGroupFilter(groupId: string): Record<string, unknown> {
 interface CompletingPod {
   _id: unknown;
   venue_id?: unknown;
+  venue_slot_id?: unknown;
   pod_hosts_id?: unknown[] | null;
   pod_party_media?: { url: string; type?: string | null }[] | null;
 }
@@ -909,11 +910,14 @@ function podEvidence(input: CompleteInput, pod: CompletingPod) {
  * the venue is paid, and Finance approves it against the document. A build from
  * before any of this sends an amount and no slot-price choice; its bill is
  * evidence only (see venueChargeForPod), so it is not asked for a document it
- * has no way to upload. */
-function venueBillFor(pod: CompletingPod, input: CompleteInput) {
+ * has no way to upload.
+ *
+ * A free venue (its offer was FREE) is owed nothing for the booking, so there is
+ * no bill to prove; extras it charged still need one, like any bill entered. */
+function venueBillFor(pod: CompletingPod, input: CompleteInput, freeVenue = false) {
   const billAmount = pod.venue_id ? Math.max(0, Number(input.venue_bill_amount) || 0) : 0;
   const billUrl = billAmount > 0 ? clean(input.venue_bill_url) : '';
-  if (input.include_slot_price != null && billAmount > 0 && !billUrl) {
+  if ((input.include_slot_price != null || freeVenue) && billAmount > 0 && !billUrl) {
     throw new GraphQLError('Upload the venue bill for the amount you entered', {
       extensions: { code: 'BAD_USER_INPUT' },
     });
@@ -923,12 +927,22 @@ function venueBillFor(pod: CompletingPod, input: CompleteInput) {
   // required for every paid pod at a venue. Builds from before this never send
   // the field, and complete exactly as they always have.
   const agreedAmountClient = input.venue_extra_amount !== undefined && input.venue_extra_amount !== null;
-  if (agreedAmountClient && pod.venue_id && (billAmount <= 0 || !billUrl)) {
+  const extras = Math.max(0, Number(input.venue_extra_amount) || 0);
+  const billOwed = !freeVenue || extras > 0;
+  if (agreedAmountClient && pod.venue_id && billOwed && (billAmount <= 0 || !billUrl)) {
     throw new GraphQLError("Upload the venue's final bill and enter its total", {
       extensions: { code: 'BAD_USER_INPUT', reason: 'VENUE_BILL_REQUIRED' },
     });
   }
   return { billAmount, billUrl };
+}
+
+/** Whether the pod's venue booking was offered FREE (a free venue takes no counters, so the host's terms are the agreed ones). */
+async function isFreeVenueBooking(slotId: unknown): Promise<boolean> {
+  if (!slotId) return false;
+  const { VenueSlotModel } = await import('@modules/venues/venueSlot/venueSlot.model');
+  const slot = await VenueSlotModel.findById(slotId).select('offer.model').lean<{ offer?: { model?: string } | null }>();
+  return slot?.offer?.model === 'FREE';
 }
 
 /** Refuse a settlement that would freeze a wrong payout while it is still
@@ -1122,7 +1136,7 @@ export const paymentReleaseService = {
 
     const evidence = podEvidence(input, pod);
 
-    const { billAmount, billUrl } = venueBillFor(pod, input);
+    const { billAmount, billUrl } = venueBillFor(pod, input, await isFreeVenueBooking(pod.venue_slot_id));
 
     // The chosen beneficiary's commission override prices the settlement — a
     // co-host with a negotiated rate must not settle at the primary host's %.

@@ -29,7 +29,7 @@ import { trimTrailingSlash } from '@utils/url';
 import { escapeHtml } from '@utils/html';
 import { appDate, appDateTime, appTime } from '@utils/app-time';
 import { logs } from '@observability/log';
-import type { VenueOfferProposal } from './venueOffer.types';
+import { FREE_OFFER_MODEL, type VenueOfferProposal } from './venueOffer.types';
 
 type Translate = (key: string) => string;
 
@@ -93,8 +93,10 @@ async function loadFacts(slot: Pick<IVenueSlot, 'venue_id' | 'start_at' | 'end_a
 function termsText(t: Translate, symbol: string, terms: VenueOfferProposal, maxGuests: number) {
   const fewest = terms.min_guests || maxGuests;
   const guestsWord = t('email.venueOffer.guestRange');
+  // A free venue is offered no money: its terms are the words alone.
+  const amount = terms.model === FREE_OFFER_MODEL ? '' : money(symbol, terms.rate);
   return {
-    terms: `${money(symbol, terms.rate)} ${t(`email.venueOffer.model.${terms.model}`)}`.trim(),
+    terms: `${amount} ${t(`email.venueOffer.model.${terms.model}`)}`.trim(),
     guests: fewest === maxGuests ? `${maxGuests} ${guestsWord}` : `${fewest}–${maxGuests} ${guestsWord}`,
   };
 }

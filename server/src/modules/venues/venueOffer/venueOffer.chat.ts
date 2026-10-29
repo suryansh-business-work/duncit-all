@@ -9,13 +9,14 @@ import type { IVenueSlot } from '@modules/venues/venueSlot/venueSlot.model';
 import type { VenueChatOfferEvent, VenueChatOfferPayload } from '@microservices/chat/venue/venueChat.model';
 import { getFinanceSettings } from '@modules/finance/finance/finance.model';
 import { logs } from '@observability/log';
-import type { VenueOfferProposal } from './venueOffer.types';
+import { FREE_OFFER_MODEL, type VenueOfferProposal } from './venueOffer.types';
 
 /** The words a summary uses for each pricing model. */
 const MODEL_WORDS: Record<string, string> = {
   PER_GUEST: 'per guest',
   PER_HOUR: 'per hour',
   FLAT: 'flat',
+  FREE: 'free venue',
 };
 
 const LEAD: Record<VenueChatOfferEvent, string> = {
@@ -73,6 +74,8 @@ export function offerLineText(payload: VenueChatOfferPayload, currencySymbol: st
   if (payload.event === 'DECLINED') return payload.reason ? `${lead}: ${payload.reason}` : lead;
   const guests =
     payload.min_guests === payload.max_guests ? `${payload.max_guests} guests` : `${payload.min_guests}–${payload.max_guests} guests`;
+  // A free venue receives nothing: the line says so instead of "₹0 … venue receives ₹0".
+  if (payload.model === FREE_OFFER_MODEL) return `${lead}: ${MODEL_WORDS.FREE} · ${guests}`;
   const terms = `${money(currencySymbol, payload.rate)} ${MODEL_WORDS[payload.model] ?? ''}`.trim();
   const receives = range(currencySymbol, payload.venue_receives_min, payload.venue_receives_max);
   return `${lead}: ${terms} · ${guests} · venue receives ${receives}`;

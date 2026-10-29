@@ -40,10 +40,11 @@ const query = (name: string) => (venueOfferResolvers.Query as Record<string, Res
 const mutation = (name: string) => (venueOfferResolvers.Mutation as Record<string, Resolver>)[name];
 
 describe('venue offer resolvers', () => {
-  it("price Create Pod's offer from the venue's own minimum, as the offer it sends will be", async () => {
+  it("price Create Pod's offer from the venue's own minimum, as the offer it sends will be — a free venue included", async () => {
     const offer = { start_at: 's', end_at: 'e', pax: 20, model: 'PER_GUEST', rate: 500 };
     await expect(query('venueOfferQuote')({}, { venue_id: 'venue-1', offer }, ctx)).resolves.toBe('preview');
-    expect(venueOfferService.preview).toHaveBeenCalledWith('venue-1', offer, undefined, true);
+    // Opening offers may be FREE: the preview is asked to allow it.
+    expect(venueOfferService.preview).toHaveBeenCalledWith('venue-1', offer, undefined, true, true);
   });
 
   it('price a host’s counter-back for its pod', async () => {
@@ -91,6 +92,15 @@ describe('venue offer resolvers', () => {
     // The same request keeps the value it read for its first offer; the next request reads the new one.
     await expect(countersPerSide({}, {}, request)).resolves.toBe(3);
     await expect(countersPerSide({}, {}, makeContext({ id: 'user-1' }))).resolves.toBe(5);
+  });
+
+  it('give a free venue, and any offer on a free pod, no counters at all — the venue accepts or declines', async () => {
+    const countersPerSide = venueOfferResolvers.VenueBookingOffer.counters_per_side;
+    const request = makeContext({ id: 'user-1' });
+    await expect(countersPerSide({ model: 'FREE', free_pod: false }, {}, request)).resolves.toBe(0);
+    await expect(countersPerSide({ model: 'FLAT', free_pod: true }, {}, request)).resolves.toBe(0);
+    // A priced offer on a paid pod still reads Pod Settings.
+    await expect(countersPerSide({ model: 'FLAT', free_pod: false }, {}, request)).resolves.toBeGreaterThan(0);
   });
 
   it('send the venue’s accept and decline with the round that was read', async () => {

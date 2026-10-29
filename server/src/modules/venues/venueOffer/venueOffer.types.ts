@@ -9,8 +9,43 @@
  */
 import type { VenuePriceBreakdown, VenuePricing } from '@modules/venues/venuePricing/venuePricing.types';
 
+/** The priced options: the venue's minimum-business guide and every counter use these. */
 export const VENUE_OFFER_MODELS = ['PER_GUEST', 'PER_HOUR', 'FLAT'] as const;
 export type VenueOfferModel = (typeof VENUE_OFFER_MODELS)[number];
+
+/**
+ * The venue gives the window for nothing. Only a host's opening offer may name
+ * it, with a justification (FreeJustification); the venue accepts or declines
+ * it and nobody counters it.
+ */
+export const FREE_OFFER_MODEL = 'FREE' as const;
+
+/** Every model an offer may carry: the priced ones and FREE. */
+export const OFFER_MODELS = [...VENUE_OFFER_MODELS, FREE_OFFER_MODEL] as const;
+export type OfferModel = (typeof OFFER_MODELS)[number];
+
+/** Why a host made a pod or a venue booking free: Duncit allows it only for these. */
+export const FREE_REASONS = ['INITIATIVE', 'PROMOTIONAL', 'CAMPAIGN', 'OTHER'] as const;
+export type FreeReason = (typeof FREE_REASONS)[number];
+
+/**
+ * The host's justification for a free arrangement, kept for Duncit's audit:
+ * the reason, its details (required for OTHER), and when and by whom the free
+ * policy was accepted.
+ */
+export interface FreeJustification {
+  reason: FreeReason;
+  details: string;
+  accepted_at: Date;
+  accepted_by: unknown;
+}
+
+/** What a client sends for a free arrangement; `accepted` must be true. */
+export interface FreeJustificationInput {
+  reason?: string | null;
+  details?: string | null;
+  accepted?: boolean | null;
+}
 
 /**
  * A model as the API names it now: "for the slot" (PER_SLOT) was retired for the
@@ -30,8 +65,8 @@ export type VenueOfferParty = 'HOST' | 'VENUE';
 
 /** The price terms one side put forward. */
 export interface VenueOfferTerms {
-  model: VenueOfferModel;
-  /** Rupees: per guest, per hour, or the flat price for the window. */
+  model: OfferModel;
+  /** Rupees: per guest, per hour, or the flat price for the window. 0 for FREE. */
   rate: number;
 }
 
@@ -64,6 +99,8 @@ export interface VenueOfferRequest extends VenueOfferTerms {
   min_guests?: number | null;
   offerings?: string[] | null;
   note?: string | null;
+  /** Required with FREE: why the venue is asked to give the window for nothing. */
+  free_justification?: FreeJustificationInput | null;
 }
 
 export type OfferQuote = VenuePriceBreakdown & { confirmed_at: Date };
@@ -94,7 +131,7 @@ export interface VenueOfferCounter extends VenueOfferProposal {
 export interface VenueOfferHistoryEntry {
   by: VenueOfferParty;
   action: VenueOfferAction;
-  model: VenueOfferModel | null;
+  model: OfferModel | null;
   rate: number | null;
   total: number | null;
   /** The fewest guests on the terms this move was about. Null before minimums. */
@@ -145,7 +182,15 @@ export interface VenueOffer extends VenueOfferProposal {
   move: number;
   /** Where it stood before the latest counter; null before any counter and on offers from before withdrawal. */
   prior?: VenueOfferPrior | null;
+  /** The pod was free when the offer was made: the venue accepts or declines, nobody counters. */
+  free_pod?: boolean;
+  /** Why a FREE offer is free; null on priced offers and older rows. */
+  free_justification?: FreeJustification | null;
 }
+
+/** A free venue or a free pod: the venue may only accept or decline, and neither side counters. */
+export const isFreeArrangement = (offer: { model?: string | null; free_pod?: boolean | null }): boolean =>
+  offer.model === FREE_OFFER_MODEL || !!offer.free_pod;
 
 /** An agreed per-guest booking's terms, frozen at accept to price it again at completion. */
 export interface VenuePriceBasis {

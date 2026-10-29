@@ -6575,6 +6575,8 @@ export type CreatePodInput = {
   club_id: Scalars['ID']['input'];
   /** Users to invite as co-hosts. Capped by the sub-category's max_co_hosts. */
   co_host_user_ids?: InputMaybe<Array<Scalars['ID']['input']>>;
+  /** Required when a host makes the pod FREE (pod_type FREE): why it is free, and the host accepts Duncit's free policy. */
+  free_justification?: InputMaybe<FreeJustificationInput>;
   is_active?: InputMaybe<Scalars['Boolean']['input']>;
   location_id?: InputMaybe<Scalars['ID']['input']>;
   meeting_notes?: InputMaybe<Scalars['String']['input']>;
@@ -9969,6 +9971,66 @@ export type FounderSettingKv = {
   value: Scalars['Float']['output'];
 };
 
+/** Why a host made a pod or a venue booking free. Duncit allows free only for these. */
+export type FreeArrangementReason =
+  | 'CAMPAIGN'
+  | 'INITIATIVE'
+  /** details required */
+  | 'OTHER'
+  | 'PROMOTIONAL';
+
+/** A free pod, a pod whose venue was asked for free, or both — as Duncit audits it (Pods console > Free Arrangements). */
+export type FreeArrangementRow = {
+  __typename?: 'FreeArrangementRow';
+  cancelled: Scalars['Boolean']['output'];
+  club_name: Scalars['String']['output'];
+  created_at?: Maybe<Scalars['String']['output']>;
+  /** Why the pod is free (FREE pods). */
+  free_justification?: Maybe<FreeJustification>;
+  host_email: Scalars['String']['output'];
+  host_name: Scalars['String']['output'];
+  /** The pod's document id. */
+  id: Scalars['ID']['output'];
+  is_active: Scalars['Boolean']['output'];
+  /** FREE_POD, FREE_VENUE or BOTH. */
+  kind: Scalars['String']['output'];
+  pod_date_time?: Maybe<Scalars['String']['output']>;
+  pod_slug: Scalars['String']['output'];
+  pod_title: Scalars['String']['output'];
+  pod_type: PodType;
+  /** NONE, PENDING, APPROVED or DECLINED: the venue's answer. */
+  venue_approval_status: Scalars['String']['output'];
+  /** Why the venue was asked for free (free venue offers). */
+  venue_free_justification?: Maybe<FreeJustification>;
+  venue_name: Scalars['String']['output'];
+};
+
+/** Server-side table page for the shared table engine (adminFreeArrangementsTable). */
+export type FreeArrangementTablePage = {
+  __typename?: 'FreeArrangementTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<FreeArrangementRow>;
+  total: Scalars['Int']['output'];
+};
+
+/** Why a pod or a venue booking is free, as the host gave it. */
+export type FreeJustification = {
+  __typename?: 'FreeJustification';
+  /** When the host accepted Duncit's free policy (ISO). */
+  accepted_at?: Maybe<Scalars['String']['output']>;
+  details: Scalars['String']['output'];
+  reason: FreeArrangementReason;
+};
+
+/** The host's justification for a free pod or a free venue. accepted must be true: the host accepts Duncit's free policy. */
+export type FreeJustificationInput = {
+  accepted: Scalars['Boolean']['input'];
+  /** Required for OTHER (3-300 characters); optional otherwise. */
+  details?: InputMaybe<Scalars['String']['input']>;
+  reason: FreeArrangementReason;
+};
+
 export type FreelancerAdminRow = {
   __typename?: 'FreelancerAdminRow';
   category_titles: Array<Scalars['String']['output']>;
@@ -11329,6 +11391,8 @@ export type HostRequestTablePage = {
 /** Full edit + resubmission of a venue-rejected (DECLINED) pod. Booking state, hosts and club stay server-managed. */
 export type HostResubmitPodInput = {
   available_perks?: InputMaybe<Array<Scalars['String']['input']>>;
+  /** Required when a host makes the pod FREE (pod_type FREE): why it is free, and the host accepts Duncit's free policy. */
+  free_justification?: InputMaybe<FreeJustificationInput>;
   location_id?: InputMaybe<Scalars['ID']['input']>;
   meeting_notes?: InputMaybe<Scalars['String']['input']>;
   meeting_platform?: InputMaybe<Scalars['String']['input']>;
@@ -27726,6 +27790,8 @@ export type Query = {
   adRequestsTable: AdRequestTablePage;
   /** Admin console table — every Auto Pod at every stage. */
   adminAutoPodsTable: AutoPodTablePage;
+  /** Pods console: every free pod and free venue booking with the host's justification, newest first (filters: pod_type, reason, venue_approval_status, is_active, pod_date_time, created_at). */
+  adminFreeArrangementsTable: FreeArrangementTablePage;
   /** Admin/Finance: everyone on a pod with contact info and replacement links. */
   adminPodAttendees: Array<AdminPodAttendee>;
   /**
@@ -29862,6 +29928,11 @@ export type QueryAdRequestsTableArgs = {
 
 
 export type QueryAdminAutoPodsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryAdminFreeArrangementsTableArgs = {
   query?: InputMaybe<TableQueryInput>;
 };
 
@@ -42912,6 +42983,8 @@ export type UpdatePodIdeaInput = {
 export type UpdatePodInput = {
   available_perks?: InputMaybe<Array<Scalars['String']['input']>>;
   club_id?: InputMaybe<Scalars['ID']['input']>;
+  /** Required when a host makes the pod FREE (pod_type FREE): why it is free, and the host accepts Duncit's free policy. */
+  free_justification?: InputMaybe<FreeJustificationInput>;
   is_active?: InputMaybe<Scalars['Boolean']['input']>;
   location_id?: InputMaybe<Scalars['ID']['input']>;
   meeting_notes?: InputMaybe<Scalars['String']['input']>;
@@ -43786,6 +43859,10 @@ export type VenueBookingOffer = {
   end_at: Scalars['String']['output'];
   /** When the side whose move it is must answer by (ISO); null once closed or on offers made before expiry. */
   expires_at?: Maybe<Scalars['String']['output']>;
+  /** Why a FREE offer is free; null on a priced offer. */
+  free_justification?: Maybe<FreeJustification>;
+  /** The pod was free when the offer was made: the venue accepts or declines it, nobody counters (counters_per_side is 0). */
+  free_pod: Scalars['Boolean']['output'];
   history: Array<VenueOfferHistoryEntry>;
   /** Counters the host has made so far (the opening offer is not one). */
   host_counters_used: Scalars['Int']['output'];
@@ -44656,6 +44733,8 @@ export type VenueOfferHistoryEntry = {
 /** A host's venue booking: the window, the guests and the terms. The server prices it; a client never sends a total. */
 export type VenueOfferInput = {
   end_at: Scalars['String']['input'];
+  /** Required with model FREE: why the venue is asked to give the window for nothing. */
+  free_justification?: InputMaybe<FreeJustificationInput>;
   model: VenueOfferModel;
   /** Anything else asked of the venue. Optional. */
   note?: InputMaybe<Scalars['String']['input']>;
@@ -44674,6 +44753,8 @@ export type VenueOfferInput = {
 export type VenueOfferModel =
   /** one price for the picked window */
   | 'FLAT'
+  /** the venue gives the window for nothing (a host's opening offer only, with a FreeJustificationInput; accepted or declined, never countered) */
+  | 'FREE'
   /** rate x guests (a minimum order value per person) */
   | 'PER_GUEST'
   /** rate x hours booked */

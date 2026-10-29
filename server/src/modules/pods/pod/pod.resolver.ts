@@ -3,6 +3,8 @@ import { podService, mapPodToPublic, loadPodClubSlugMap } from './pod.service';
 import { podCancellationRisk } from './pod.cancellationRisk';
 import type { PodLifecycle } from './pod.lifecycle';
 import { podDashboardService } from './pod.dashboard';
+import { podFreeArrangementsService } from './pod.freeArrangements';
+import type { TableQueryInput } from '@utils/table-query';
 import { coHostService } from './coHost.service';
 import { podMediaService } from './podMedia.service';
 import { loadClub } from '@modules/clubs/club/club.loaders';
@@ -214,6 +216,10 @@ export const podResolvers = {
     },
   },
   Query: {
+    adminFreeArrangementsTable: (_p: unknown, args: { query?: TableQueryInput | null }, ctx: GraphQLContext) => {
+      requireRole(ctx, POD_READ);
+      return podFreeArrangementsService.table(args.query);
+    },
     podRevokePreview: (_p: unknown, args: { pod_doc_id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_WRITE);
       return podService.revokePreview(args.pod_doc_id);

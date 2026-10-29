@@ -6,7 +6,7 @@ import { venueOfferService, type VenueOfferMoveTerms } from './venueOffer.servic
 import { requestCountersPerSide } from './venueOffer.limits';
 import { venueOfferReviseService } from './venueOffer.revise';
 import { venueOfferStaffService } from './venueOffer.staff';
-import type { VenueOfferRequest } from './venueOffer.types';
+import { isFreeArrangement, type VenueOfferRequest } from './venueOffer.types';
 
 const iso = (d: Date | null | undefined) => (d ? d.toISOString() : null);
 
@@ -20,8 +20,8 @@ export const venueOfferResolvers = {
   Query: {
     venueOfferQuote: (_p: unknown, args: { venue_id: string; offer: VenueOfferRequest }, ctx: GraphQLContext) => {
       requireAuth(ctx);
-      // Create Pod's quote: priced from the venue's own minimum, as the offer it sends will be.
-      return venueOfferService.preview(args.venue_id, args.offer, undefined, true);
+      // Create Pod's quote: priced from the venue's own minimum, as the offer it sends will be — FREE included.
+      return venueOfferService.preview(args.venue_id, args.offer, undefined, true, true);
     },
     venueCounterQuote: (_p: unknown, args: { slot_id: string; terms: VenueOfferMoveTerms }, ctx: GraphQLContext) =>
       venueOfferService.counterPreview(requireAuth(ctx).id, args.slot_id, args.terms),
@@ -76,7 +76,9 @@ export const venueOfferResolvers = {
       venueOfferReviseService.withdrawCounter(requireAuth(ctx).id, args.pod_id, args.round),
   },
   VenueBookingOffer: {
-    // One settings read per request, however many offers a list carries.
-    counters_per_side: (_p: unknown, _a: unknown, ctx: GraphQLContext) => requestCountersPerSide(ctx),
+    // One settings read per request, however many offers a list carries. A free
+    // venue or a free pod is accepted or declined, never countered: none for either side.
+    counters_per_side: (parent: { model?: string | null; free_pod?: boolean | null }, _a: unknown, ctx: GraphQLContext) =>
+      isFreeArrangement(parent) ? Promise.resolve(0) : requestCountersPerSide(ctx),
   },
 };

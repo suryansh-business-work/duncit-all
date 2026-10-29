@@ -419,6 +419,8 @@ export const podTypeDefs = /* GraphQL */ `
     pod_date_time: String!
     pod_end_date_time: String
     pod_type: PodType!
+    "Required when a host makes the pod FREE (pod_type FREE): why it is free, and the host accepts Duncit's free policy."
+    free_justification: FreeJustificationInput
     pod_amount: Int
     pod_occurrence: PodOccurrence
     no_of_spots: Int
@@ -464,6 +466,8 @@ export const podTypeDefs = /* GraphQL */ `
     pod_date_time: String
     pod_end_date_time: String
     pod_type: PodType
+    "Required when a host makes the pod FREE (pod_type FREE): why it is free, and the host accepts Duncit's free policy."
+    free_justification: FreeJustificationInput
     pod_amount: Int
     pod_occurrence: PodOccurrence
     no_of_spots: Int
@@ -553,6 +557,8 @@ export const podTypeDefs = /* GraphQL */ `
     pod_date_time: String
     pod_end_date_time: String
     pod_type: PodType
+    "Required when a host makes the pod FREE (pod_type FREE): why it is free, and the host accepts Duncit's free policy."
+    free_justification: FreeJustificationInput
     pod_amount: Int
     pod_occurrence: PodOccurrence
     no_of_spots: Int
@@ -568,7 +574,42 @@ export const podTypeDefs = /* GraphQL */ `
     ticket_discount_tiers: [PodTicketDiscountTierInput!]
   }
 
+  "A free pod, a pod whose venue was asked for free, or both — as Duncit audits it (Pods console > Free Arrangements)."
+  type FreeArrangementRow {
+    "The pod's document id."
+    id: ID!
+    pod_slug: String!
+    pod_title: String!
+    pod_type: PodType!
+    pod_date_time: String
+    "FREE_POD, FREE_VENUE or BOTH."
+    kind: String!
+    host_name: String!
+    host_email: String!
+    club_name: String!
+    venue_name: String!
+    "NONE, PENDING, APPROVED or DECLINED: the venue's answer."
+    venue_approval_status: String!
+    is_active: Boolean!
+    cancelled: Boolean!
+    created_at: String
+    "Why the pod is free (FREE pods)."
+    free_justification: FreeJustification
+    "Why the venue was asked for free (free venue offers)."
+    venue_free_justification: FreeJustification
+  }
+
+  "Server-side table page for the shared table engine (adminFreeArrangementsTable)."
+  type FreeArrangementTablePage {
+    rows: [FreeArrangementRow!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   extend type Query {
+    "Pods console: every free pod and free venue booking with the host's justification, newest first (filters: pod_type, reason, venue_approval_status, is_active, pod_date_time, created_at)."
+    adminFreeArrangementsTable(query: TableQueryInput): FreeArrangementTablePage!
     "What revoking this pod's cancellation would cost, and whether it is allowed."
     podRevokePreview(pod_doc_id: ID!): PodRevokePreview!
     "The live cancellation-risk picture for one pod — the admin detail page's risk section."

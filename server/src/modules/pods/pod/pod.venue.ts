@@ -24,7 +24,12 @@ import { appDate, appDateTime, appTime } from '@utils/app-time';
 import { emailTranslationVars, recipientLocale } from '@services/email/email-i18n';
 import { isFreePod } from './pod.model';
 import type { IVenueSlot } from '@modules/venues/venueSlot/venueSlot.model';
-import type { OfferQuote, VenueOfferRequest } from '@modules/venues/venueOffer/venueOffer.types';
+import {
+  FREE_OFFER_MODEL,
+  type FreeJustification,
+  type OfferQuote,
+  type VenueOfferRequest,
+} from '@modules/venues/venueOffer/venueOffer.types';
 
 /** What a venue offer reads (and writes back) on a create, re-route or resubmit input. */
 export interface VenueOfferCreateInput {
@@ -41,17 +46,19 @@ export interface VenueOfferCreateInput {
   pod_end_date_time?: unknown;
 }
 
-/** A resolved venue offer: the request to place, its price, and whether the host owns the venue. */
+/** A resolved venue offer: the request to place, its price, whether the host owns the venue, and why a FREE one is free. */
 export interface ResolvedVenueOffer {
   request: VenueOfferRequest;
   quote: OfferQuote;
   own: boolean;
+  freeJustification?: FreeJustification | null;
 }
 
 /** The pod fields a venue booking reads, notifies with, and writes back. */
 type BookingPod = Parameters<typeof notifyFreeSlotBooked>[0] & {
   venue_id?: unknown;
   venue_slot_id?: unknown;
+  venue_free_justification?: FreeJustification | null;
   no_of_spots?: number | null;
   pod_type?: string | null;
   deleteOne: () => Promise<unknown>;
@@ -457,10 +464,15 @@ async function openingAsk(venueId: string, offer: VenueOfferRequest, pax: number
  * becomes the offered window. Nothing is written here; `placeVenueOfferForPod`
  * holds the time once the pod exists. An app build from before offers sends
  * an instant booking instead, which is refused with a message to update.
+ *
+ * A FREE offer (the venue gives the window for nothing) is the host's own
+ * choice, so it needs `actorUserId` — who accepted the free policy — and a
+ * justification; without either it is refused.
  */
 export async function resolveVenueOfferForCreate(
   input: VenueOfferCreateInput,
-  podMode: PodMode
+  podMode: PodMode,
+  actorUserId?: string | null
 ): Promise<ResolvedVenueOffer | null> {
   if (podMode !== 'PHYSICAL' || input.venue_slot_id) return null;
   if (!input.venue_offer) {
@@ -474,12 +486,31 @@ export async function resolveVenueOfferForCreate(
   // offered exactly the seats the pod sells.
   const spots = Math.floor(Number(input.no_of_spots) || 0);
   const pax = spots > 0 ? spots : Math.floor(Number(input.venue_offer.pax) || 0);
-  const request: VenueOfferRequest = { ...input.venue_offer, pax, ...(await openingAsk(input.venue_id, input.venue_offer, pax)) };
-  const prepared = await venueOfferService.prepare(input.venue_id, request, input.reroute_pod_id ?? undefined);
+  const freeJustification = await freeOfferJustification(input.venue_offer, actorUserId);
+  // The raw justification stops here; the checked one travels beside the request.
+  const request: VenueOfferRequest = {
+    ...input.venue_offer,
+    free_justification: null,
+    pax,
+    ...(await openingAsk(input.venue_id, input.venue_offer, pax)),
+  };
+  const prepared = await venueOfferService.prepare(input.venue_id, request, input.reroute_pod_id ?? undefined, false, !!freeJustification);
   input.pod_date_time = prepared.start.toISOString();
   input.pod_end_date_time = prepared.end.toISOString();
   const own = (input.pod_hosts_id ?? []).map(String).includes(prepared.ownerUserId);
-  return { request, quote: prepared.quote, own };
+  return { request, quote: prepared.quote, own, freeJustification };
+}
+
+/** A FREE offer's justification, checked and stamped with who accepted the policy; null for a priced offer. */
+async function freeOfferJustification(offer: VenueOfferRequest, actorUserId?: string | null): Promise<FreeJustification | null> {
+  if (offer.model !== FREE_OFFER_MODEL) return null;
+  if (!actorUserId) {
+    throw new GraphQLError("A free venue can only be offered by the pod's host", {
+      extensions: { code: 'BAD_USER_INPUT', reason: 'FREE_HOST_ONLY' },
+    });
+  }
+  const { cleanFreeJustification } = await import('@modules/venues/venueOffer/venueOffer.free');
+  return cleanFreeJustification(offer.free_justification, actorUserId);
 }
 
 /**
@@ -496,12 +527,17 @@ export async function placeVenueOfferForPod(
   const { venueOfferService } = await import('@modules/venues/venueOffer/venueOffer.service');
   let slot;
   try {
-    slot = await venueOfferService.place(String(doc._id), String(doc.venue_id), offer.request, offer.own);
+    slot = await venueOfferService.place(String(doc._id), String(doc.venue_id), offer.request, offer.own, {
+      freePod: isFreePod(doc),
+      justification: offer.freeJustification ?? null,
+    });
   } catch (e) {
     if (opts.deleteOnConflict) await doc.deleteOne();
     throw e;
   }
   doc.venue_slot_id = slot._id;
+  // The audit copy follows the offer now on the table: set for a free venue, cleared for a priced one.
+  doc.venue_free_justification = offer.freeJustification ?? null;
   await doc.save();
   // The host's own venue hears nothing (the owner is the host); every other
   // venue gets the offer in its chat, its app, its inbox and on WhatsApp — with

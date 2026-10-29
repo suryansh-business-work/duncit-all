@@ -39,7 +39,21 @@ const TRACKED_FIELDS = [
   'pod_hosts_id',
   'ticket_discount_enabled',
   'ticket_discount_tiers',
+  'free_justification',
+  'venue_free_justification',
 ] as const;
+
+/** "PROMOTIONAL: launch week" — a free justification as one readable line. */
+function justificationLine(value: unknown): string {
+  const justification = (value ?? {}) as { reason?: string; details?: string };
+  return justification.reason ? [justification.reason, justification.details].filter(Boolean).join(': ') : '';
+}
+
+/** Fields whose raw value is a sub-document, summarised as one line rather than '[object Object]'. */
+const OBJECT_FIELD_SUMMARY: Record<string, (value: unknown) => string> = {
+  free_justification: justificationLine,
+  venue_free_justification: justificationLine,
+};
 
 /** Fields whose raw value is an array — summarised rather than stringified, so
  * a media/host edit produces a readable diff instead of '[object Object]'
@@ -70,9 +84,11 @@ export function snapshotPod(doc: any): PodAuditSnapshot {
   const snap: PodAuditSnapshot = {};
   for (const field of TRACKED_FIELDS) {
     const summarise = ARRAY_FIELD_SUMMARY[field];
+    const summariseObject = OBJECT_FIELD_SUMMARY[field];
     const value = doc?.[field];
-    const asArray = Array.isArray(value) ? value : [];
-    snap[field] = summarise ? summarise(asArray) : asText(value);
+    if (summarise) snap[field] = summarise(Array.isArray(value) ? value : []);
+    else if (summariseObject) snap[field] = summariseObject(value);
+    else snap[field] = asText(value);
   }
   return snap;
 }

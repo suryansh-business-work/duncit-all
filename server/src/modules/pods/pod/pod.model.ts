@@ -8,6 +8,8 @@ import {
   type Query,
 } from 'mongoose';
 import { ClubModel } from '@modules/clubs/club/club.model';
+import { freeJustificationSchema } from '@modules/venues/venueOffer/venueOffer.schema.model';
+import type { FreeJustification } from '@modules/venues/venueOffer/venueOffer.types';
 
 /** A pod of either mode can be FREE (amount 0) or PAID. Legacy values are
  * collapsed to these two by the boot-time migration (pod-type.migration.ts). */
@@ -205,6 +207,10 @@ export interface IPod extends Document {
   pod_date_time: Date;
   pod_end_date_time?: Date | null;
   pod_type: PodType;
+  /** Why a FREE pod is free, as its host gave it (Pods portal > Free Arrangements audits it). Null on paid pods. */
+  free_justification?: FreeJustification | null;
+  /** Why the pod's latest venue offer asked for the venue free (a copy of the offer's), for the same audit. Null otherwise. */
+  venue_free_justification?: FreeJustification | null;
   pod_amount: number;
   pod_occurrence: PodOccurrence;
   no_of_spots: number;
@@ -382,6 +388,8 @@ const podSchema = new Schema<IPod>(
       enum: ['FREE', 'PAID'],
       required: true,
     },
+    free_justification: { type: freeJustificationSchema, default: null },
+    venue_free_justification: { type: freeJustificationSchema, default: null },
     pod_amount: { type: Number, default: 0, min: 0, max: 1999 },
     pod_occurrence: {
       type: String,

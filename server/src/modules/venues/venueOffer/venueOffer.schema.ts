@@ -7,6 +7,33 @@ export const venueOfferTypeDefs = /* GraphQL */ `
     PER_HOUR
     "one price for the picked window"
     FLAT
+    "the venue gives the window for nothing (a host's opening offer only, with a FreeJustificationInput; accepted or declined, never countered)"
+    FREE
+  }
+
+  "Why a host made a pod or a venue booking free. Duncit allows free only for these."
+  enum FreeArrangementReason {
+    INITIATIVE
+    PROMOTIONAL
+    CAMPAIGN
+    "details required"
+    OTHER
+  }
+
+  "The host's justification for a free pod or a free venue. accepted must be true: the host accepts Duncit's free policy."
+  input FreeJustificationInput {
+    reason: FreeArrangementReason!
+    "Required for OTHER (3-300 characters); optional otherwise."
+    details: String
+    accepted: Boolean!
+  }
+
+  "Why a pod or a venue booking is free, as the host gave it."
+  type FreeJustification {
+    reason: FreeArrangementReason!
+    details: String!
+    "When the host accepted Duncit's free policy (ISO)."
+    accepted_at: String
   }
 
   "SENT: the host's terms, the venue answers. COUNTERED: the venue's terms, the host answers. ACCEPTED / DECLINED: closed."
@@ -44,6 +71,8 @@ export const venueOfferTypeDefs = /* GraphQL */ `
     offerings: [String!]
     "Anything else asked of the venue. Optional."
     note: String
+    "Required with model FREE: why the venue is asked to give the window for nothing."
+    free_justification: FreeJustificationInput
   }
 
   "Price terms one side puts forward. A counter may also change the fewest guests and the points (left out: unchanged)."
@@ -127,6 +156,10 @@ export const venueOfferTypeDefs = /* GraphQL */ `
     host_counters_used: Int!
     "Counters the venue has made so far."
     venue_counters_used: Int!
+    "The pod was free when the offer was made: the venue accepts or declines it, nobody counters (counters_per_side is 0)."
+    free_pod: Boolean!
+    "Why a FREE offer is free; null on a priced offer."
+    free_justification: FreeJustification
   }
 
   "A live price for an offer or a counter, at the most and the fewest guests. ok = false: why it cannot be sent (message)."

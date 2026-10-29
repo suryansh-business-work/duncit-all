@@ -1,5 +1,6 @@
 import { Controller } from 'react-hook-form';
 import { Box, Stack, TextField } from '@mui/material';
+import { FreeArrangementFields } from '@duncit/forms';
 import { PodProductsField } from '@duncit/pod-product-picker';
 import { SpotsStepper, mwebSpotsLabels } from '@duncit/ui';
 import PlaceChargesField from '../fields/PlaceChargesField';
@@ -10,7 +11,7 @@ import TermsAgreement from '../TermsAgreement';
 import { useTranslation } from '../../../../i18n/useTranslation';
 import { SURFACE_SX } from '../../../../theme';
 import type { FreePodVenueNotice, SpotsBounds } from '@duncit/utils';
-import type { CreatePodForm, CreatePodProduct } from '../create-pod.types';
+import { FREE_JUSTIFICATION_NAMES, type CreatePodForm, type CreatePodProduct } from '../create-pod.types';
 
 interface Props {
   form: CreatePodForm;
@@ -26,7 +27,9 @@ interface Props {
 /** Step 4 — Free/Paid cards, spots stepper, optional products and the Organizer
  * Terms publish gate. A PAID pod adds the ticket price, its multi-ticket
  * discount and the slot-cost / GST / earnings panel; a FREE pod has none of the
- * three — no amount and no calculation — and reads a short note instead. */
+ * three — no amount and no calculation — and reads a short note instead, with
+ * Duncit's free policy, why it is free and the host's acceptance (the same
+ * fields a free venue asks on the venue step, so they arrive filled). */
 export default function PricingStep({ form, products, showProducts, preview, spots, venueNotice }: Readonly<Props>) {
   const { control, register, watch, setValue } = form;
   const { t } = useTranslation();
@@ -45,6 +48,7 @@ export default function PricingStep({ form, products, showProducts, preview, spo
     <Stack data-testid="create-pod-pricing-step" spacing={2}>
       <Stack spacing={2} sx={{ ...SURFACE_SX, p: 2 }}>
         <PodTypeCards form={form} />
+        {isFree && <FreeArrangementFields control={control} names={FREE_JUSTIFICATION_NAMES} t={t} idPrefix="create-pod-pricing" />}
         {!isFree && <TicketPriceField form={form} preview={preview} />}
         <Controller
           control={control}

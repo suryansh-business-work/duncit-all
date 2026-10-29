@@ -65,6 +65,9 @@ export const liveOffer = (over: Record<string, unknown> = {}) => ({
   counters_per_side: 3,
   host_counters_used: 0,
   venue_counters_used: 1,
+  // A priced offer on a paid pod: no free justification.
+  free_pod: false,
+  free_justification: null,
   quote: breakdown(6000, 6600, 20),
   quote_min: breakdown(2400, 2640, 8),
   counter: null,

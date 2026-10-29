@@ -3,12 +3,12 @@ import { useRef, useState } from 'react';
 import { Alert, Box, Stack } from '@mui/material';
 import {
   MODERATION_FIELD_MAP,
-  STEP_FIELDS,
   STEP_TITLE_KEYS,
   stepTitleKey,
   buildCreatePodInput,
   buildModerationInput,
   serializeDraft,
+  stepFieldsFor,
   stepForField,
 } from '../create-pod.form';
 import { useTranslation } from '../../../../i18n/useTranslation';
@@ -75,7 +75,7 @@ export default function CreatePodStepper({
     persist(target).catch(() => undefined);
   };
   const next = async () => {
-    if (!(await form.trigger(STEP_FIELDS[step]))) return;
+    if (!(await form.trigger(stepFieldsFor(step, form.getValues())))) return;
     // The category, locality and club are the FIRST step — a host should not
     // fill a whole pod out and only then be told to pick them.
     goTo(step + 1);

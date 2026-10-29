@@ -1,7 +1,8 @@
 import { z } from 'zod';
+import { freeJustificationFields } from '@duncit/forms/schemas';
 import { DEFAULT_TICKET_DISCOUNT_MAX_PCT } from '@duncit/utils';
 import { fallbackT, type Translate } from '../../../i18n/fallback';
-import { refinePublish, refineVenueOrMeeting } from './create-pod.refine';
+import { refineFreeJustification, refinePublish, refineVenueOrMeeting } from './create-pod.refine';
 import { refineTicketDiscount } from './create-pod.ticket-discount';
 
 export { hasImageLine, buildCreatePodInput, buildModerationInput, MODERATION_FIELD_MAP } from './create-pod.payload';
@@ -14,6 +15,7 @@ export {
   STEP_TITLES,
   STEP_SUBTITLES,
   stepForField,
+  stepFieldsFor,
 } from './create-pod.steps';
 export { hostCategoryKeyOf, filterClubs } from './create-pod.clubs';
 export { serializeDraft, hydrateDraft } from './create-pod.draft';
@@ -112,9 +114,12 @@ export function makeCreatePodSchema(t: Translate = fallbackT, ticketDiscountMaxP
       ticket_discount_tiers: z.array(z.object({ min_tickets: z.number(), discount_pct: z.number() })),
       payment_terms: z.string().max(4000),
       agreed_to_terms: z.boolean(),
+      // Shape only — asked while the pod or its venue is free (refineFreeJustification).
+      ...freeJustificationFields,
     })
     .superRefine((values, ctx) => {
       refineVenueOrMeeting(values, ctx, t);
+      refineFreeJustification(values, ctx, t);
       if (values.pod_date_time.getTime() <= Date.now()) {
         ctx.addIssue({ code: 'custom', path: ['pod_date_time'], message: t('mweb.createPod.validation.startFuture') });
       }

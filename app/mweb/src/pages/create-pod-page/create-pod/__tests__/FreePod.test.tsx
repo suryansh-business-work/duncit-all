@@ -187,7 +187,16 @@ describe('Step 4 — a free physical pod', () => {
     const { last } = renderStep(physical({ payment_terms: 'No refunds after Friday.' }));
     choose('create-pod-free');
 
-    let valid = false;
+    // A free pod says why it is free before it can be sent.
+    let valid = true;
+    await act(async () => {
+      valid = await last().form.trigger();
+    });
+    expect(valid).toBe(false);
+    expect(screen.getByText(fallbackT('availability.freeArrangement.validation.reason'))).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('radio', { name: fallbackT('availability.freeArrangement.reason.campaign') }));
+    fireEvent.click(screen.getByRole('checkbox', { name: fallbackT('availability.freeArrangement.policy.accept') }));
     await act(async () => {
       valid = await last().form.trigger();
     });
@@ -195,16 +204,17 @@ describe('Step 4 — a free physical pod', () => {
     expect(buildCreatePodInput(last().form.getValues())).toMatchObject({
       pod_mode: 'PHYSICAL',
       pod_type: 'FREE',
+      free_justification: { reason: 'CAMPAIGN', details: '', accepted: true },
       pod_amount: 0,
       venue_slot_id: 'slot-1',
       ticket_discount_enabled: false,
       ticket_discount_tiers: [],
       payment_terms: null,
     });
-    // The same terms on a paid pod still travel.
-    expect(buildCreatePodInput({ ...last().form.getValues(), pod_type: 'PAID', pod_amount: 500 }).payment_terms).toBe(
-      'No refunds after Friday.',
-    );
+    // The same terms on a paid pod still travel; a paid pod carries no justification.
+    const paid = buildCreatePodInput({ ...last().form.getValues(), pod_type: 'PAID', pod_amount: 500 });
+    expect(paid.payment_terms).toBe('No refunds after Friday.');
+    expect(paid).not.toHaveProperty('free_justification');
   });
 
   it('never asks the server for earnings, even when a stale price is still in the form', async () => {

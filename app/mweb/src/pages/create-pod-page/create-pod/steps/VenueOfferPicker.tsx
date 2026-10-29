@@ -1,12 +1,13 @@
 import { useMemo } from 'react';
 import { Alert, MenuItem, Stack, TextField, Typography } from '@mui/material';
-import { VenueOfferAskFields } from '@duncit/forms';
+import { FreeArrangementFields, VenueOfferAskFields } from '@duncit/forms';
 import { buildSlotLabels } from '@duncit/slots';
 import { SlotCalendar } from '@duncit/slots/mui';
 import {
   VENUE_OFFER_ASK_LIMITS,
   bookingCalendarProps,
   formatStatementMoney,
+  isFreeVenueOfferModel,
   type BookingTile,
   type SpotsBounds,
 } from '@duncit/utils';
@@ -14,7 +15,7 @@ import { requiredLabel } from '../../../../forms/components/requiredLabel';
 import { usePricing } from '../../../../hooks/usePricing';
 import { useDateFormat } from '../../../../utils/dateFormat';
 import { useTranslation } from '../../../../i18n/useTranslation';
-import type { CreatePodForm } from '../create-pod.types';
+import { FREE_JUSTIFICATION_NAMES, type CreatePodForm } from '../create-pod.types';
 import { useOfferQuote } from '../useOfferQuote';
 import BookingGuestFields from './BookingGuestFields';
 import OfferTermsFields from './OfferTermsFields';
@@ -40,7 +41,9 @@ const DIRTY = { shouldDirty: true, shouldValidate: true } as const;
  * venue's minimum, how the host will pay it with an amount, and what they need
  * from the venue. The window becomes the pod's window, the server prices the
  * offer below at both ends of the guests, and the venue accepts, rejects or
- * counters it once the pod is sent. Native twin: VenueOfferPicker.
+ * counters it once the pod is sent. Asking for the venue free adds Duncit's free
+ * policy, why it is free and the host's acceptance; the venue then only accepts
+ * or declines. Native twin: VenueOfferPicker.
  */
 export default function VenueOfferPicker({ form, venueId, spaceLabel, spots, minGuests = 0 }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -50,6 +53,7 @@ export default function VenueOfferPicker({ form, venueId, spaceLabel, spots, min
   const quote = useOfferQuote(form);
   const start = form.watch('pod_date_time');
   const end = form.watch('pod_end_date_time');
+  const freeVenue = isFreeVenueOfferModel(form.watch('venue_offer_model'));
   const startIso = start ? start.toISOString() : null;
   const endIso = end ? end.toISOString() : '';
   const labels = useMemo(
@@ -114,6 +118,9 @@ export default function VenueOfferPicker({ form, venueId, spaceLabel, spots, min
       )}
       <Typography variant="subtitle2" component="h3">{t('mweb.createPod.offer.title')}</Typography>
       <OfferTermsFields form={form} />
+      {freeVenue && (
+        <FreeArrangementFields control={form.control} names={FREE_JUSTIFICATION_NAMES} t={t} idPrefix="create-pod-venue" />
+      )}
       <VenueOfferAskFields
         control={form.control}
         offeringsName="venue_offer_offerings"
@@ -132,6 +139,7 @@ export default function VenueOfferPicker({ form, venueId, spaceLabel, spots, min
         message={quote.message}
         loading={quote.loading}
         error={quote.error}
+        free={freeVenue}
       />
     </Stack>
   );

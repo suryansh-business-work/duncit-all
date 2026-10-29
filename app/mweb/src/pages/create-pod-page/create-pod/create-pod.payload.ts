@@ -1,4 +1,4 @@
-import { isVideoUrl, mediaTypeForUrl, ticketDiscountInput, venueOfferInput } from '@duncit/utils';
+import { freeJustificationInput, isVideoUrl, mediaTypeForUrl, ticketDiscountInput, venueOfferInput } from '@duncit/utils';
 import { isFreePodType, type CreatePodFormValues } from './create-pod.types';
 
 const splitLines = (text: string) =>
@@ -12,9 +12,16 @@ const splitLines = (text: string) =>
 export const hasImageLine = (mediaText: string) =>
   splitLines(mediaText).some((url) => !isVideoUrl(url));
 
+/** The free justification as the form holds it — one set of fields for a free pod and a free venue. */
+const freeJustificationOf = (values: CreatePodFormValues) => ({
+  reason: values.free_reason,
+  details: values.free_details,
+  accepted: values.free_accepted,
+});
+
 /** The venue offer the form holds (window = the pod window, guests = its spots),
- * with what the host asks of the venue — or null. The live quote strips the
- * ask (`venueOfferPriceInput`). Native twin. */
+ * with what the host asks of the venue — and, for a free venue, why it is free
+ * — or null. The live quote strips the ask (`venueOfferPriceInput`). Native twin. */
 export const venueOfferOf = (values: CreatePodFormValues) =>
   venueOfferInput({
     start: values.pod_date_time?.toISOString() ?? null,
@@ -26,6 +33,7 @@ export const venueOfferOf = (values: CreatePodFormValues) =>
     rate: values.venue_offer_rate,
     offerings: values.venue_offer_offerings,
     note: values.venue_offer_note,
+    freeJustification: freeJustificationOf(values),
   });
 
 /** Maps the validated form values onto the server's CreatePodInput. */
@@ -51,6 +59,8 @@ export function buildCreatePodInput(values: CreatePodFormValues) {
     pod_date_time: values.pod_date_time?.toISOString(),
     pod_end_date_time: values.pod_end_date_time?.toISOString() ?? null,
     pod_type: values.pod_type,
+    // A free pod says why it is free; the server refuses a host's free pod without it.
+    ...(isFreePodType(values.pod_type) ? { free_justification: freeJustificationInput(freeJustificationOf(values)) } : {}),
     pod_amount: Number(values.pod_amount) || 0,
     no_of_spots: Number(values.no_of_spots) || 0,
     pod_info: values.pod_info,

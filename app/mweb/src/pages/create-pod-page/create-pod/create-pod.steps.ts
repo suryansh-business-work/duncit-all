@@ -1,5 +1,10 @@
 import { fallbackT } from '../../../i18n/fallback';
-import type { CreatePodFormValues } from './create-pod.types';
+import {
+  FREE_JUSTIFICATION_NAMES,
+  isFreePodType,
+  offersFreeVenue,
+  type CreatePodFormValues,
+} from './create-pod.types';
 
 /** Fields validated when leaving each stepper step (index aligned with STEPS). */
 export const STEP_FIELDS: (keyof CreatePodFormValues)[][] = [
@@ -38,6 +43,24 @@ export const STEP_SUBTITLE_KEYS = [
  * has no venue to pick, so "Venue & Slot" describes a screen it never shows.
  */
 const VIRTUAL_STEP_INDEX = 2;
+const VENUE_STEP_INDEX = 2;
+const PRICING_STEP_INDEX = 3;
+
+const FREE_JUSTIFICATION_FIELDS: (keyof CreatePodFormValues)[] = Object.values(FREE_JUSTIFICATION_NAMES);
+
+/**
+ * The fields checked when leaving `step`: its STEP_FIELDS, plus the free
+ * justification on the step that draws it — beside a free venue offer on the
+ * venue step, under a free pod on Pricing. Never on a step that does not show
+ * it, so a host back on the venue step of a free pod is not held by fields
+ * they cannot see there.
+ */
+export function stepFieldsFor(step: number, values: Readonly<CreatePodFormValues>): (keyof CreatePodFormValues)[] {
+  const fields = STEP_FIELDS[step] ?? [];
+  const drawn =
+    (step === VENUE_STEP_INDEX && offersFreeVenue(values)) || (step === PRICING_STEP_INDEX && isFreePodType(values.pod_type));
+  return drawn ? [...fields, ...FREE_JUSTIFICATION_FIELDS] : fields;
+}
 
 export const stepTitleKey = (step: number, podMode?: string | null): string =>
   step === VIRTUAL_STEP_INDEX && podMode === 'VIRTUAL'

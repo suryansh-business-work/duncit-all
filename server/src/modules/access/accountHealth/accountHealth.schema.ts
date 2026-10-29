@@ -17,6 +17,10 @@ export const accountHealthTypeDefs = /* GraphQL */ `
     created_by_id: ID
     created_by_name: String!
     created_at: String!
+    "True once Legal accepted an appeal against it: still listed, no longer counted."
+    waived: Boolean!
+    "Where the appeal against this deduction stands; null when nobody has appealed it."
+    appeal_status: HealthAppealStatus
   }
 
   type HealthScore {

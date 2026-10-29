@@ -256,6 +256,9 @@ export const LEGACY_FRAGMENT_FINGERPRINTS: Readonly<
  * fails the unit test instead of slipping through as "new".
  */
 export const SHIPPED_AFTER_REDESIGN: ReadonlySet<string> = new Set<string>([
-  // Empty since 2026-10-27: env-access-otp and the two venue-offer mails
-  // shipped a body before the phone layout, so they have fingerprints now.
+  // env-access-otp and the two venue-offer mails left this list on 2026-10-27:
+  // they shipped a body before the phone layout, so they have fingerprints now.
+  // The account health appeal answers, first shipped 2026-10-29.
+  'health-appeal-accepted',
+  'health-appeal-denied',
 ]);

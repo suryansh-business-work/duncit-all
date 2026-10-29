@@ -12,6 +12,10 @@ export interface IHealthAdjustment extends Document {
   delta: number;
   remark: string;
   created_by: Types.ObjectId | null;
+  // Set when Legal accepts an appeal against this deduction. The row is kept —
+  // it is the record of what happened — but it no longer counts toward the score.
+  waived_at: Date | null;
+  waived_by: Types.ObjectId | null;
   created_at: Date;
   updated_at: Date;
 }
@@ -24,6 +28,8 @@ const healthAdjustmentSchema = new Schema<IHealthAdjustment>(
     delta: { type: Number, required: true, min: -100, max: 100 },
     remark: { type: String, required: false, default: '', trim: true, maxlength: 500 },
     created_by: { type: Schema.Types.ObjectId, ref: 'User', default: null },
+    waived_at: { type: Date, default: null },
+    waived_by: { type: Schema.Types.ObjectId, ref: 'User', default: null },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );

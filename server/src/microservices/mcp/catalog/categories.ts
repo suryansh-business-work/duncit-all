@@ -33,7 +33,7 @@ export const MCP_CATEGORIES = [
   { key: 'ai', label: 'AI', description: 'AI features, the prompt library, usage, monitoring, automations, reels and the Agent.' },
   { key: 'website', label: 'Website & CMS', description: 'Website content, navigation, reels, CMS pages, public pages and newsletter.' },
   { key: 'hr', label: 'HR', description: 'Job applications and the team structure (seats, salary, share links).' },
-  { key: 'legal', label: 'Legal', description: 'Policies, acceptances, legal documents, contracts and grievances.' },
+  { key: 'legal', label: 'Legal', description: 'Policies, acceptances, legal documents, contracts, grievances and account health appeals.' },
   { key: 'support', label: 'Support', description: 'FAQs, tickets and support chats.' },
   { key: 'moderation', label: 'Moderation', description: 'Content moderation and user reports.' },
   { key: 'crm', label: 'CRM', description: 'Leads, communication logs, call prompts, email verification, reminders, surveys and WhatsApp leads.' },
@@ -226,6 +226,9 @@ export const MODULE_CATEGORY: Record<ModuleName, McpCategoryKey | null> = {
   legalDocumentTypeDefs: 'legal',
   contractTypeDefs: 'legal',
   grievanceTypeDefs: 'legal',
+  // Decided in Legal > Account Health Appeals; filing one is a member action,
+  // which the app connector reaches through this category too.
+  healthAppealTypeDefs: 'legal',
 
   faqTypeDefs: 'support',
   ticketTypeDefs: 'support',

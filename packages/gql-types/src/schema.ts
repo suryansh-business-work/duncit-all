@@ -1843,6 +1843,12 @@ export type AppVersionInfo = {
   min_supported_version: Scalars['String']['output'];
 };
 
+export type AppealHealthAdjustmentInput = {
+  adjustment_id: Scalars['ID']['input'];
+  message: Scalars['String']['input'];
+  reason: HealthAppealReason;
+};
+
 /** An Apple id_token, from the iOS app's native sheet or the web flow. */
 export type AppleAuthInput = {
   id_token: Scalars['String']['input'];
@@ -10894,12 +10900,71 @@ export type GrievanceTicketTablePage = {
 
 export type HealthAdjustment = {
   __typename?: 'HealthAdjustment';
+  /** Where the appeal against this deduction stands; null when nobody has appealed it. */
+  appeal_status?: Maybe<HealthAppealStatus>;
   created_at: Scalars['String']['output'];
   created_by_id?: Maybe<Scalars['ID']['output']>;
   created_by_name: Scalars['String']['output'];
   delta: Scalars['Int']['output'];
   id: Scalars['ID']['output'];
   remark: Scalars['String']['output'];
+  /** True once Legal accepted an appeal against it: still listed, no longer counted. */
+  waived: Scalars['Boolean']['output'];
+};
+
+/**
+ * An appeal against one health deduction, filed from mWeb or the app by the
+ * person it hit, and decided in Legal > Account Health Appeals.
+ */
+export type HealthAppeal = {
+  __typename?: 'HealthAppeal';
+  adjusted_at: Scalars['String']['output'];
+  adjustment_id: Scalars['ID']['output'];
+  /** The permanent handle, e.g. APL-000042. */
+  appeal_no: Scalars['String']['output'];
+  appellant_name: Scalars['String']['output'];
+  created_at: Scalars['String']['output'];
+  decided_at?: Maybe<Scalars['String']['output']>;
+  decided_by_name: Scalars['String']['output'];
+  decision_note: Scalars['String']['output'];
+  /** The deduction as it stood when appealed. */
+  delta: Scalars['Int']['output'];
+  id: Scalars['ID']['output'];
+  message: Scalars['String']['output'];
+  reason: HealthAppealReason;
+  remark: Scalars['String']['output'];
+  status: HealthAppealStatus;
+  subject_id: Scalars['ID']['output'];
+  /** The account or venue name when the appeal was filed. */
+  subject_label: Scalars['String']['output'];
+  subject_type: HealthSubjectType;
+};
+
+/** Why the person says a deduction should be lifted. */
+export type HealthAppealReason =
+  | 'INCORRECT'
+  | 'WONT_HAPPEN_AGAIN';
+
+/** What filing an appeal answers with — the handle to quote. */
+export type HealthAppealReceipt = {
+  __typename?: 'HealthAppealReceipt';
+  appeal_no: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  status: HealthAppealStatus;
+};
+
+/** Where the Legal team has taken an appeal. */
+export type HealthAppealStatus =
+  | 'ACCEPTED'
+  | 'DENIED'
+  | 'PENDING';
+
+export type HealthAppealTablePage = {
+  __typename?: 'HealthAppealTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<HealthAppeal>;
+  total: Scalars['Int']['output'];
 };
 
 export type HealthBand =
@@ -13678,6 +13743,8 @@ export type Mutation = {
   _noop?: Maybe<Scalars['Boolean']['output']>;
   /** The private profile's owner accepts — this is what creates the follow. */
   acceptFollowRequest: User;
+  /**  Legal-only: lift the deduction and tell the person (in-app + email).  */
+  acceptHealthAppeal: HealthAppeal;
   /**
    * Auth-required: record acceptance from inside the account.
    *
@@ -13791,6 +13858,8 @@ export type Mutation = {
   answerPodChallengeQuiz: PodChallenge;
   /** Authorise one build-artifact upload through the server. Tech/Super admin only. */
   appBuildUploadAuth: AppBuildUploadAuth;
+  /**  Appeal a deduction on your own account or venue. Once per deduction.  */
+  appealHealthAdjustment: HealthAppealReceipt;
   /** Carry out a dry run's findings without scanning again. */
   applyMediaOrganizerRun: BackgroundJob;
   /** Redeem someone's referral code (once per account, not your own). */
@@ -14401,6 +14470,8 @@ export type Mutation = {
   deleteWebsiteContent: Scalars['Boolean']['output'];
   deleteWebsiteNavItem: Scalars['Boolean']['output'];
   deleteWebsiteReel: Scalars['Boolean']['output'];
+  /**  Legal-only: keep the deduction and tell the person (in-app + email).  */
+  denyHealthAppeal: HealthAppeal;
   denyMcpAuthorization: McpAuthorizationDecision;
   /** Admin denies a request. */
   denyRequest: ApprovalRequest;
@@ -16238,6 +16309,12 @@ export type MutationAcceptFollowRequestArgs = {
 };
 
 
+export type MutationAcceptHealthAppealArgs = {
+  id: Scalars['ID']['input'];
+  note?: InputMaybe<Scalars['String']['input']>;
+};
+
+
 export type MutationAcceptPoliciesArgs = {
   policy_ids: Array<Scalars['ID']['input']>;
   surface?: InputMaybe<PolicyAcceptanceSurface>;
@@ -16525,6 +16602,11 @@ export type MutationAnswerPodChallengeQuizArgs = {
   id: Scalars['ID']['input'];
   option_index: Scalars['Int']['input'];
   tool_instance_id: Scalars['String']['input'];
+};
+
+
+export type MutationAppealHealthAdjustmentArgs = {
+  input: AppealHealthAdjustmentInput;
 };
 
 
@@ -18139,6 +18221,12 @@ export type MutationDeleteWebsiteNavItemArgs = {
 
 export type MutationDeleteWebsiteReelArgs = {
   reel_id: Scalars['ID']['input'];
+};
+
+
+export type MutationDenyHealthAppealArgs = {
+  id: Scalars['ID']['input'];
+  note?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -28315,6 +28403,8 @@ export type Query = {
   grievanceStats: GrievanceStats;
   grievanceTicket?: Maybe<GrievanceTicket>;
   grievanceTicketsTable: GrievanceTicketTablePage;
+  /**  Legal-only: every appeal against a health deduction (DUNCIT TABLE CONTRACT v1).  */
+  healthAppealsTable: HealthAppealTablePage;
   host?: Maybe<Host>;
   hostAgainPrefill: HostAgainPrefill;
   /**
@@ -31143,6 +31233,11 @@ export type QueryGrievanceTicketArgs = {
 
 
 export type QueryGrievanceTicketsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryHealthAppealsTableArgs = {
   query?: InputMaybe<TableQueryInput>;
 };
 

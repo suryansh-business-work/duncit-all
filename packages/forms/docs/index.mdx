@@ -25,6 +25,9 @@ exports:
   - 'VenueOfferAskFields'
   - 'VenueOfferAskFieldsProps'
   - 'VenueOfferAskLabels'
+  - 'FreeArrangementFields'
+  - 'FreeArrangementFieldsProps'
+  - 'FreePolicyDialog'
   - 'PackagingFields'
   - 'PackagingFieldsProps'
   - 'PackagingTranslate'
@@ -506,6 +509,41 @@ import { VenueOfferAskFields } from '@duncit/forms';
 
 Labels are nodes, so mWeb passes its own required marker (`requiredLabel`) instead of `required`.
 The test ids are `<idPrefix>-offer-ask`, `<idPrefix>-offer-offerings` and `<idPrefix>-offer-note`.
+
+## Free pods and free venues — `FreeArrangementFields`
+
+Duncit allows a free pod, or a free venue (the offer's `FREE` model), only for special
+initiatives, promotional offers or approved campaigns. Once a host picks "Free" — for the pod, the
+venue or both — `FreeArrangementFields` (package root, MUI) draws Duncit's free policy in an info
+notice with a "More details" button (`FreePolicyDialog`), why it is free (Initiative, Promotional,
+Campaign or Other — "Other" asks for details), the warning that misuse may cost account health or
+hold payments, and the acceptance checkbox. One set of three fields serves both choices, so a host
+who filled it at the venue step finds it filled at the pricing step.
+
+The rules are `/schemas`' `freeJustificationFields` (`free_reason`, `free_details`,
+`free_accepted`), `freeJustificationDefaults` and `addFreeJustificationIssues(values, ctx, t)` —
+call it from the surface's `superRefine` only while the pod or its venue is free; it reports the
+server's checks in the server's order, each on its own field. `freeJustificationInput` and
+`venueOfferInput({ …, freeJustification })` (@duncit/utils) turn the values into the pod's and the
+offer's `free_justification`. All copy is `FREE_POLICY_KEYS` / `FREE_REASON_KEY` (@duncit/utils).
+
+```tsx
+import { FreeArrangementFields } from '@duncit/forms';
+
+{isFree ? (
+  <FreeArrangementFields
+    control={control}
+    names={{ reason: 'free_reason', details: 'free_details', accepted: 'free_accepted' }}
+    t={t}
+    idPrefix="create-pod"
+  />
+) : null}
+```
+
+The test ids are `<idPrefix>-free-arrangement`, `-free-policy`, `-free-more-details`,
+`-free-reason`, `-free-details`, `-free-warning`, `-free-accept`, and the dialog's
+`-free-policy-dialog` / `-free-policy-close`. The native app draws a Tamagui twin over the same
+schema and keys.
 
 ## `RhfTextField` vs `FormField`
 

@@ -291,6 +291,13 @@ export {
 } from './venue-offer-counter';
 
 export {
+  addFreeJustificationIssues,
+  freeJustificationDefaults,
+  freeJustificationFields,
+  type FreeJustificationValues,
+} from './free-arrangement';
+
+export {
   buildPhysicalGiftCardInput,
   formatPhysicalGiftCardNumber,
   formatPhysicalGiftCardPasscode,

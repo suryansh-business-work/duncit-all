@@ -22,12 +22,36 @@ import {
   type BookingRules,
   type BookingTile,
 } from './venue-booking';
+import { FREE_JUSTIFICATION_FIELDS, freeJustificationInput, type FreeJustificationInput, type FreeJustificationSource } from './free-arrangement';
 
-/** How the host offers to pay the venue (`VenueOfferModel`). */
+/** How the host offers to pay the venue (`VenueOfferModel`): the priced options. */
 export type VenueOfferModel = 'PER_GUEST' | 'PER_HOUR' | 'FLAT';
 
-/** The pricing options, in the order the pickers list them. */
+/** The pricing options, in the order the pickers list them (counters and the venue's guide use these). */
 export const VENUE_OFFER_MODELS: readonly VenueOfferModel[] = ['PER_GUEST', 'PER_HOUR', 'FLAT'];
+
+/**
+ * The venue gives the window for nothing. Only a host's opening offer (Create
+ * Pod, resubmit) may name it, with a free justification (`free-arrangement`);
+ * no amount is asked, the venue accepts or declines, and nobody counters.
+ */
+export const FREE_VENUE_OFFER_MODEL = 'FREE' as const;
+
+/** What a host's opening offer may name: the priced options, then free. */
+export type HostOfferModel = VenueOfferModel | typeof FREE_VENUE_OFFER_MODEL;
+
+/** The opening offer's options, in picker order. */
+export const HOST_OFFER_MODELS: readonly HostOfferModel[] = [...VENUE_OFFER_MODELS, FREE_VENUE_OFFER_MODEL];
+
+/** The free option's name and its one line on what it means. */
+export const FREE_VENUE_OFFER_KEY = { label: 'mweb.createPod.offer.model.free', help: 'mweb.createPod.offer.help.free' } as const;
+
+/** Whether a plain string is an opening-offer option (priced, or FREE). */
+export const isHostOfferModel = (model: string | null | undefined): model is HostOfferModel =>
+  model === FREE_VENUE_OFFER_MODEL || isVenueOfferModel(model);
+
+/** Whether the offer is a free venue. */
+export const isFreeVenueOfferModel = (model: string | null | undefined): boolean => model === FREE_VENUE_OFFER_MODEL;
 
 /** Each pricing option's name, the label of its amount field, and one line on how it pays. */
 export const VENUE_OFFER_MODEL_KEY: Readonly<Record<VenueOfferModel, { label: string; rate: string; help: string }>> = {
@@ -48,9 +72,17 @@ export const VENUE_OFFER_MODEL_KEY: Readonly<Record<VenueOfferModel, { label: st
 export const isVenueOfferModel = (model: string | null | undefined): model is VenueOfferModel =>
   !!model && (VENUE_OFFER_MODELS as readonly string[]).includes(model);
 
-/** The option's name key, or '' for one this client does not know. */
-export const venueOfferModelKey = (model: string | null | undefined): string =>
-  isVenueOfferModel(model) ? VENUE_OFFER_MODEL_KEY[model].label : '';
+/** The option's name key (free included), or '' for one this client does not know. */
+export function venueOfferModelKey(model: string | null | undefined): string {
+  if (isFreeVenueOfferModel(model)) return FREE_VENUE_OFFER_KEY.label;
+  return isVenueOfferModel(model) ? VENUE_OFFER_MODEL_KEY[model].label : '';
+}
+
+/** The option's one-line help key (free included), or '' for one this client does not know. */
+export function venueOfferHelpKey(model: string | null | undefined): string {
+  if (isFreeVenueOfferModel(model)) return FREE_VENUE_OFFER_KEY.help;
+  return isVenueOfferModel(model) ? VENUE_OFFER_MODEL_KEY[model].help : '';
+}
 
 /** Where an offer stands (`VenueOfferStatus`), as the host is told. */
 export const VENUE_OFFER_STATUS_KEY: Readonly<Record<string, string>> = {
@@ -74,13 +106,14 @@ export const VENUE_OFFER_TERMS_KEY: Readonly<Record<VenueOfferModel, string>> = 
 /** The `t` either app passes in. */
 type OfferTranslate = (key: string, opts?: { vars?: Record<string, string | number> }) => string;
 
-/** One side's terms as a line ("₹300 per guest"), or just the money for an unknown option. */
+/** One side's terms as a line ("₹300 per guest", "Free venue"), or just the money for an unknown option. */
 export function venueOfferTermsText(
   model: string | null | undefined,
   rate: number,
   t: OfferTranslate,
   money: (rupees: number) => string
 ): string {
+  if (isFreeVenueOfferModel(model)) return t('mweb.venueOffer.terms.free');
   const amount = money(rate);
   return isVenueOfferModel(model) ? t(VENUE_OFFER_TERMS_KEY[model], { vars: { amount } }) : amount;
 }
@@ -107,17 +140,28 @@ export interface OfferCounterUsage {
   venue_counters_used?: number | null;
 }
 
-/** Counters `side` may still make, or null when the server does not say (no limit known). */
-export function offerCountersLeft(offer: Readonly<OfferCounterUsage>, side: VenueOfferParty): number | null {
-  return offerCounterAllowance(offer, side)?.left ?? null;
-}
-
-/** The `{ left, of }` a "counters left" line names for one side — its share and what is left of it — or null when no limit is known. */
-export function offerCounterAllowance(offer: Readonly<OfferCounterUsage>, side: VenueOfferParty): { left: number; of: number } | null {
+/** One side's share and what is left of it, or null when the server names no limit. */
+function counterShare(offer: Readonly<OfferCounterUsage>, side: VenueOfferParty): { left: number; of: number } | null {
   const perSide = offer.counters_per_side;
   if (perSide === undefined || perSide === null) return null;
   const used = (side === 'HOST' ? offer.host_counters_used : offer.venue_counters_used) ?? 0;
   return { left: Math.max(0, perSide - used), of: perSide };
+}
+
+/** Counters `side` may still make, or null when the server does not say (no limit known). */
+export function offerCountersLeft(offer: Readonly<OfferCounterUsage>, side: VenueOfferParty): number | null {
+  return counterShare(offer, side)?.left ?? null;
+}
+
+/**
+ * The `{ left, of }` a "counters left" line names for one side — its share and
+ * what is left of it — or null when no limit is known, or when the booking
+ * takes no counters at all (a free one: accepted or declined, so there is no
+ * share to count down).
+ */
+export function offerCounterAllowance(offer: Readonly<OfferCounterUsage>, side: VenueOfferParty): { left: number; of: number } | null {
+  const share = counterShare(offer, side);
+  return share && share.of > 0 ? share : null;
 }
 
 /** Whether `side` may still counter: always, when the server names no limit. */
@@ -214,12 +258,15 @@ export interface VenueOfferInput {
   space_label: string;
   pax: number;
   pets: boolean;
-  model: VenueOfferModel;
+  model: HostOfferModel;
+  /** 0 for a free venue. */
   rate: number;
   /** What the venue should provide, one point each (Create Pod requires one). */
   offerings?: string[];
   /** Anything else asked of the venue. */
   note?: string;
+  /** Why a free venue is free — required with FREE. */
+  free_justification?: FreeJustificationInput;
 }
 
 /** What a form holds for an offer. `rate` is the typed amount (text or number). */
@@ -237,6 +284,8 @@ export interface VenueOfferSource {
   offerings?: string | null;
   /** The note as typed. Left out, the input carries none. */
   note?: string | null;
+  /** The free justification as the form holds it; read only for a FREE offer. */
+  freeJustification?: FreeJustificationSource | null;
 }
 
 /** The typed amount as rupees: a positive finite number, else 0 (nothing offered). */
@@ -268,17 +317,23 @@ export function venueOfferPrefillValues(prefill: Readonly<VenueOfferPrefill>) {
     offer_end: prefill.end_at,
     space_label: prefill.space_label,
     pets: prefill.pets,
-    venue_offer_model: isVenueOfferModel(prefill.model) ? prefill.model : '',
+    venue_offer_model: isHostOfferModel(prefill.model) ? prefill.model : '',
     venue_offer_rate: prefill.rate > 0 ? String(prefill.rate) : '',
     offerings: offeringsToText(prefill.offerings),
     note: prefill.note,
   };
 }
 
-/** The `venue_offer` input, or null until a window, a pricing option and an amount are all there. */
+/**
+ * The `venue_offer` input, or null until a window, a pricing option and an
+ * amount are all there. A free venue needs no amount; its justification rides
+ * along once the form holds a complete, accepted one (the server requires it).
+ */
 export function venueOfferInput(source: Readonly<VenueOfferSource>): VenueOfferInput | null {
-  const rate = offerRateOf(source.rate);
-  if (!source.start || !source.end || !isVenueOfferModel(source.model) || rate <= 0) return null;
+  if (!source.start || !source.end || !isHostOfferModel(source.model)) return null;
+  const free = source.model === FREE_VENUE_OFFER_MODEL;
+  const rate = free ? 0 : offerRateOf(source.rate);
+  if (!free && rate <= 0) return null;
   const input: VenueOfferInput = {
     start_at: source.start,
     end_at: source.end,
@@ -290,6 +345,8 @@ export function venueOfferInput(source: Readonly<VenueOfferSource>): VenueOfferI
   };
   if (source.offerings !== undefined) input.offerings = offeringsFromText(source.offerings);
   if (source.note !== undefined) input.note = String(source.note ?? '').trim();
+  const justification = free && source.freeJustification ? freeJustificationInput(source.freeJustification) : null;
+  if (justification) input.free_justification = justification;
   return input;
 }
 
@@ -500,6 +557,10 @@ const OFFER_FIELDS = `
       round
       awaiting
       expires_at
+      counters_per_side
+      host_counters_used
+      venue_counters_used
+      free_pod${FREE_JUSTIFICATION_FIELDS}
       quote {${BREAKDOWN_FIELDS}
       }
       quote_min {${BREAKDOWN_FIELDS}

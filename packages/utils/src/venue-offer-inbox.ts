@@ -9,6 +9,7 @@
  * key is written out literally, so the translation gate can see it.
  */
 import {
+  isFreeVenueOfferModel,
   isVenueOfferModel,
   mayCounter,
   offerCounterAllowance,
@@ -80,9 +81,12 @@ export const VENUE_OFFER_INBOX_MODEL_KEY: Readonly<Record<VenueOfferModel, { lab
   FLAT: { label: 'availability.offers.model.flat', rate: 'availability.offers.rate.flat' },
 };
 
-/** A pricing option's keys, or null for one this client does not know. */
+/** A pricing option's keys, or null for one this client does not know (and for a free venue, which names no rate). */
 export const venueOfferInboxModelKey = (model: string | null | undefined) =>
   isVenueOfferModel(model) ? VENUE_OFFER_INBOX_MODEL_KEY[model] : null;
+
+/** A free venue's name in the inbox, the chat, Complete Pod and Finance. */
+export const FREE_VENUE_INBOX_KEY = 'availability.offers.model.free';
 
 /** The `t` every surface passes in. */
 type InboxTranslate = (key: string, opts?: { vars?: Record<string, string | number> }) => string;
@@ -94,6 +98,7 @@ type InboxTranslate = (key: string, opts?: { vars?: Record<string, string | numb
  * know reads as just that amount.
  */
 export function venueOfferTermsLine(t: InboxTranslate, model: string | null | undefined, amount: string): string {
+  if (isFreeVenueOfferModel(model)) return t(FREE_VENUE_INBOX_KEY);
   const keys = venueOfferInboxModelKey(model);
   if (!keys) return amount;
   return t('availability.offers.termsLine', { vars: { model: t(keys.label), rate: t(keys.rate, { vars: { rate: amount } }) } });

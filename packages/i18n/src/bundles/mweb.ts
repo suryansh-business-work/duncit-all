@@ -2584,10 +2584,13 @@ export const MWEB_BUNDLE: NestedCatalogue = {
         modelHint: 'Per guest, per hour, or one flat price',
         rateLabel: 'Amount you offer',
         rateHint: "The venue's price rules, fees and GST are added on top, with Duncit's fee.",
+        // The quote card when the host asks for the venue free: no money, an answer still needed.
+        freeQuote: 'Free venue: the venue is paid nothing for this booking. It still accepts or declines it, and free bookings cannot be countered.',
         model: {
           perGuest: 'Per guest',
           perHour: 'Per hour',
           flat: 'Flat price',
+          free: 'Free venue',
         },
         rate: {
           perGuest: 'Amount per guest',
@@ -2600,6 +2603,8 @@ export const MWEB_BUNDLE: NestedCatalogue = {
             'A minimum order value per person: the venue is paid this for every guest who comes, never for fewer than its minimum guests.',
           perHour: 'Paid for every hour you book.',
           flat: 'One fixed price for the whole booking.',
+          free:
+            "The venue gives this time for free — only for initiatives, promotions or approved campaigns. The venue still accepts or declines, and nobody counters.",
         },
       },
       bookingPets: 'Pets are coming (the venue may charge a pet fee)',
@@ -2879,6 +2884,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
         perGuest: '{amount} per guest',
         perHour: '{amount} per hour',
         flat: '{amount} flat',
+        free: 'Free venue',
       },
     },
     podPending: {
@@ -3276,6 +3282,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       offerModelPerGuest: 'Per guest',
       offerModelPerHour: 'Per hour',
       offerModelFlat: 'Flat price',
+      offerModelFree: 'Free venue',
       offerRateLabel: 'Amount you offer (₹)',
       offerModelRequired: 'Pick how you will pay the venue',
       offerRateRequired: 'Enter the amount you offer the venue',

@@ -336,6 +336,7 @@ export const POD_FORM_BUNDLE: NestedCatalogue = {
         perGuest: 'Per guest',
         perHour: 'Per hour',
         flat: 'Flat price',
+        free: 'Free venue',
       },
       // One line under the picker on how the chosen option pays the venue.
       help: {
@@ -343,6 +344,8 @@ export const POD_FORM_BUNDLE: NestedCatalogue = {
           'A minimum order value per person: the venue is paid this for every guest who comes, never for fewer than its minimum guests.',
         perHour: 'Paid for every hour you book.',
         flat: 'One fixed price for the whole booking.',
+        free:
+          'The venue gives this time for free — only for initiatives, promotions or approved campaigns. The venue still accepts or declines, and nobody counters.',
       },
     },
     whenWhereSection: {

@@ -473,6 +473,37 @@ export const ADMIN_BUNDLE: NestedCatalogue = {
         'Every pod edit, status change and critical action — risk-scored by AI for auditability.',
     },
 
+    // Pods console › Free Arrangements: every free pod and free venue request,
+    // with the reason its host gave and when they accepted the free policy.
+    freeArrangements: {
+      title: 'Free Arrangements',
+      subtitle:
+        'Free pods and free venues are allowed only for initiatives, promotions and approved campaigns. Every one is listed here with its reason, for monitoring and audit.',
+      empty: 'No free pods or free venue requests yet.',
+      search: 'Search pod title or reason details',
+      colPod: 'Pod',
+      colKind: 'What is free',
+      colReason: 'Reason',
+      colDetails: 'Details',
+      colAcceptedAt: 'Policy accepted',
+      colHost: 'Host',
+      colClub: 'Club',
+      colVenue: 'Venue',
+      colVenueStatus: 'Venue answer',
+      colPodDate: 'Pod date',
+      kind: {
+        freePod: 'Free pod',
+        freeVenue: 'Free venue',
+        both: 'Free pod and venue',
+      },
+      venueStatus: {
+        none: 'No request',
+        pending: 'Awaiting venue',
+        approved: 'Accepted',
+        declined: 'Declined',
+      },
+    },
+
     eventTickets: {
       empty: 'No tickets yet.',
       pasteToken: 'Paste scanned QR token',

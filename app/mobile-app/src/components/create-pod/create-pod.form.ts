@@ -1,8 +1,15 @@
 import { z } from 'zod';
-import { makeVenueOfferAskSchema } from '@duncit/forms/schemas';
 import {
+  addFreeJustificationIssues,
+  freeJustificationFields,
+  makeVenueOfferAskSchema,
+  type FreeJustificationValues,
+} from '@duncit/forms/schemas';
+import {
+  isFreePod,
+  isFreeVenueOfferModel,
+  isHostOfferModel,
   isMeetingPlatform,
-  isVenueOfferModel,
   isVideoUrl,
   offerRateOf,
   ticketDiscountInput,
@@ -11,12 +18,8 @@ import {
   type VenueOfferSource,
 } from '@duncit/utils';
 
-import {
-  CategoryMediaType,
-  type PodMode,
-  type PodType,
-  type VenueOfferModel,
-} from '@/generated/graphql/graphql';
+import { appFreeJustification, hostOfferInput } from '@/components/venue-offer/offer-terms-input';
+import { CategoryMediaType, type PodMode, type PodType } from '@/generated/graphql/graphql';
 import { fallbackT, type Translate } from '@/i18n/fallback';
 import { appFormatter } from '@/utils/app-formatter';
 import { blankCreatePodForm, type CreatePodFormValues } from './create-pod.types';
@@ -94,17 +97,20 @@ function refineOfferAsk(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Tr
   }
 }
 
-/** The host's offer to the venue: how they pay it, how much, and what they ask
- * of it. mWeb twin. */
+/** The host's offer to the venue: how they pay it (or that it is free), how
+ * much, and what they ask of it. A free venue asks no amount. mWeb twin. */
 function refineVenueOffer(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Translate) {
-  if (!isVenueOfferModel(values.venue_offer_model)) {
+  if (!isHostOfferModel(values.venue_offer_model)) {
     ctx.addIssue({
       code: 'custom',
       path: ['venue_offer_model'],
       message: t('mweb.createPod.validation.offerModelRequired'),
     });
   }
-  if (offerRateOf(values.venue_offer_rate) <= 0) {
+  if (
+    !isFreeVenueOfferModel(values.venue_offer_model) &&
+    offerRateOf(values.venue_offer_rate) <= 0
+  ) {
     ctx.addIssue({
       code: 'custom',
       path: ['venue_offer_rate'],
@@ -246,6 +252,30 @@ export const isFreeTicket = (
   values: Pick<CreatePodFormValues, 'pod_type' | 'pod_amount_text'>,
 ): boolean => values.pod_type === 'FREE' || (Number(values.pod_amount_text) || 0) <= 0;
 
+/** Whether the pod sends its venue a FREE offer: a physical pod with no held
+ * slot, asking for the window for nothing. mWeb twin. */
+export const sendsFreeVenueOffer = (
+  values: Pick<CreatePodFormValues, 'pod_mode' | 'venue_slot_id' | 'venue_offer_model'>,
+): boolean =>
+  values.pod_mode === 'PHYSICAL' &&
+  !values.venue_slot_id &&
+  isFreeVenueOfferModel(values.venue_offer_model);
+
+/** Whether the host must say why something here is free — the venue, the pod or both. */
+export const needsFreeJustification = (
+  values: Pick<
+    CreatePodFormValues,
+    'pod_mode' | 'venue_slot_id' | 'venue_offer_model' | 'pod_type'
+  >,
+): boolean => sendsFreeVenueOffer(values) || isFreePod(values.pod_type);
+
+/** A form's free justification as the shared helpers read it (Create Pod, the resubmit sheet). */
+export const freeSourceOf = (values: FreeJustificationValues) => ({
+  reason: values.free_reason,
+  details: values.free_details,
+  accepted: values.free_accepted,
+});
+
 /** Products, media and the Organizer Terms gate on the publish step. */
 function refinePublish(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Translate) {
   // Products are optional and `products_enabled` is derived from the rows, so
@@ -357,6 +387,8 @@ export function makeCreatePodSchema(t: Translate = fallbackT) {
       ...ticketDiscountSchemaShape,
       payment_terms: z.string().max(4000),
       agreed_to_terms: z.boolean(),
+      // Shape only — checked below whenever the venue offer or the pod is free.
+      ...freeJustificationFields,
     })
     .superRefine((values, ctx) => {
       refineVenue(values, ctx, t);
@@ -364,6 +396,7 @@ export function makeCreatePodSchema(t: Translate = fallbackT) {
       refineSchedule(values, ctx, t);
       refinePodType(values, ctx, t);
       refineTicketPrice(values, ctx, t);
+      if (needsFreeJustification(values)) addFreeJustificationIssues(values, ctx, t);
       refineTicketDiscount(
         {
           ticket_discount_enabled: values.ticket_discount_enabled,
@@ -424,6 +457,34 @@ export const STEP_FIELDS: (keyof CreatePodFormValues)[][] = [
   ],
 ];
 
+const VENUE_STEP_INDEX = 2;
+const PRICING_STEP_INDEX = 3;
+const FREE_JUSTIFICATION_FIELDS: (keyof CreatePodFormValues)[] = [
+  'free_reason',
+  'free_details',
+  'free_accepted',
+];
+
+/**
+ * The fields leaving `step` validates: its STEP_FIELDS, plus the free
+ * justification on the step that shows it — the venue step for a free venue
+ * offer, the pricing step for a free pod. A pod made free on the pricing step
+ * never blocks the venue step, which does not draw the fields. mWeb twin.
+ */
+export function stepFieldsFor(
+  step: number,
+  values: Pick<
+    CreatePodFormValues,
+    'pod_mode' | 'venue_slot_id' | 'venue_offer_model' | 'pod_type'
+  >,
+): (keyof CreatePodFormValues)[] {
+  const fields = STEP_FIELDS[step] ?? [];
+  const showsFree =
+    (step === VENUE_STEP_INDEX && sendsFreeVenueOffer(values)) ||
+    (step === PRICING_STEP_INDEX && isFreePod(values.pod_type));
+  return showsFree ? [...fields, ...FREE_JUSTIFICATION_FIELDS] : fields;
+}
+
 /** Catalogue keys for the four step titles, in step order. Components translate
  * these with their own `t`; the arrays below are the English resolution for
  * callers outside the stepper (the Host Management draft cards). The club step
@@ -480,27 +541,34 @@ const offerSourceOf = (values: CreatePodFormValues): VenueOfferSource => ({
   rate: values.venue_offer_rate,
   offerings: values.venue_offer_offerings,
   note: values.venue_offer_note,
+  // Read only for a FREE offer: why the venue is asked for the window for nothing.
+  freeJustification: freeSourceOf(values),
 });
 
-/** The app's generated enum carries the same four values the shared union does. */
-const withAppModel = <T extends { model: string }>(offer: T) => ({
-  ...offer,
-  model: offer.model as VenueOfferModel,
-});
-
-/** The venue offer the form holds, with what the host asks of the venue, or
- * null until it is complete. mWeb twin: venueOfferOf. */
+/** The venue offer the form holds, with what the host asks of the venue (and,
+ * for a free venue, why it is free), or null until it is complete. mWeb twin:
+ * venueOfferOf. */
 export function venueOfferOf(values: CreatePodFormValues) {
   const offer = venueOfferInput(offerSourceOf(values));
-  return offer ? withAppModel(offer) : null;
+  return offer ? hostOfferInput(offer) : null;
 }
 
 /** The same offer as the live quote asks for it — everything that moves the
- * price, none of the points or the note, so typing those never re-prices. */
+ * price, none of the points, the note or the free reason, so typing those never
+ * re-prices. */
 export function venueOfferPriceOf(values: CreatePodFormValues) {
   const offer = venueOfferInput(offerSourceOf(values));
-  return offer ? withAppModel(venueOfferPriceInput(offer)) : null;
+  return offer ? hostOfferInput(venueOfferPriceInput(offer)) : null;
 }
+
+/** A free pod's justification, as CreatePodInput takes it — nothing for a paid
+ * pod, or until the host has given a complete, accepted one. */
+const podFreeJustificationOf = (values: CreatePodFormValues) => {
+  const justification = isFreePod(values.pod_type)
+    ? appFreeJustification(freeSourceOf(values))
+    : null;
+  return justification ? { free_justification: justification } : {};
+};
 
 /** Maps validated form values onto the server's CreatePodInput. */
 export function buildCreatePodInput(values: CreatePodFormValues) {
@@ -529,6 +597,8 @@ export function buildCreatePodInput(values: CreatePodFormValues) {
     pod_date_time: start.toISOString(),
     pod_end_date_time: parseDateTimeText(values.pod_end_date_time_text)?.toISOString() ?? null,
     pod_type: values.pod_type as PodType,
+    // A free pod says why it is free, with the host's acceptance of the policy.
+    ...podFreeJustificationOf(values),
     pod_amount: Number(values.pod_amount_text) || 0,
     no_of_spots: Number(values.no_of_spots_text) || 0,
     pod_info: values.pod_info,

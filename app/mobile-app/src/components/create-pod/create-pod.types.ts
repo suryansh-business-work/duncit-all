@@ -1,5 +1,6 @@
 /** Option lists + form value shape for the host Create Pod stepper. */
 import type { UseFormReturn } from 'react-hook-form';
+import { freeJustificationDefaults, type FreeJustificationValues } from '@duncit/forms/schemas';
 import type { CreatePodClub, PodPickerProduct, TicketDiscountTier } from '@duncit/utils';
 
 import type { CreatePodInput } from '@/generated/graphql/graphql';
@@ -22,8 +23,10 @@ export interface PodPlaceCharge {
   note: string;
 }
 
-/** RN inputs are strings; numbers/dates are parsed by the schema + mapper. */
-export interface CreatePodFormValues {
+/** RN inputs are strings; numbers/dates are parsed by the schema + mapper.
+ * `free_reason` / `free_details` / `free_accepted` are the one justification a
+ * host gives when the venue offer or the pod itself is FREE. */
+export interface CreatePodFormValues extends FreeJustificationValues {
   /** Pod location — defaults to the host's selected location; filters clubs + venues. */
   location_id: string;
   /** Optional locality within the city — narrows clubs to that zone. */
@@ -120,6 +123,7 @@ export const blankCreatePodForm: CreatePodFormValues = {
   ticket_discount_tiers: [],
   payment_terms: '',
   agreed_to_terms: false,
+  ...freeJustificationDefaults,
 };
 
 /** One shape for mWeb and the native app (@duncit/utils). */

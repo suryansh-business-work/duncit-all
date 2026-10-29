@@ -8,6 +8,7 @@ import {
   hydrateDraft,
   parseDateTimeText,
   serializeDraft,
+  stepFieldsFor,
 } from '@/components/create-pod/create-pod.form';
 import {
   blankCreatePodForm,
@@ -58,6 +59,18 @@ const valid = (over: Partial<CreatePodFormValues> = {}): CreatePodFormValues => 
 const issuesOf = (values: CreatePodFormValues) => {
   const result = createPodSchema.safeParse(values);
   return result.success ? [] : result.error.issues.map((issue) => issue.path.join('.'));
+};
+
+/** Why the pod or the venue is free, with the host's acceptance of the policy. */
+const justified: Partial<CreatePodFormValues> = { free_reason: 'INITIATIVE', free_accepted: true };
+
+/** An offer to the venue for the window, asking for it FREE. */
+const freeVenueOffer: Partial<CreatePodFormValues> = {
+  venue_slot_id: '',
+  pod_end_date_time_text: futureEndText,
+  venue_offer_model: 'FREE',
+  venue_offer_rate: '',
+  venue_offer_offerings: 'A projector',
 };
 
 describe('parseDateTimeText', () => {
@@ -217,7 +230,8 @@ describe('createPodSchema', () => {
     expect(valid({}).pod_mode).toBe('PHYSICAL');
     expect(messagesFor({ pod_type: 'FREE', pod_amount_text: '0' })).toEqual([]);
     expect(
-      createPodSchema.safeParse(valid({ pod_type: 'FREE', pod_amount_text: '0' })).success,
+      createPodSchema.safeParse(valid({ pod_type: 'FREE', pod_amount_text: '0', ...justified }))
+        .success,
     ).toBe(true);
     // …but free still means ₹0.
     expect(issuesOf(valid({ pod_type: 'FREE', pod_amount_text: '250' }))).toContain(
@@ -271,6 +285,7 @@ describe('createPodSchema', () => {
           pod_type: 'FREE',
           pod_amount_text: '0',
           ...virtualPod,
+          ...justified,
         }),
       ).success,
     ).toBe(true);
@@ -296,6 +311,75 @@ describe('createPodSchema', () => {
   it('gates publishing on accepting the Organizer Terms', () => {
     expect(issuesOf(valid({ agreed_to_terms: false }))).toContain('agreed_to_terms');
     expect(createPodSchema.safeParse(valid({ agreed_to_terms: true })).success).toBe(true);
+  });
+});
+
+describe('createPodSchema — free pods and free venues', () => {
+  const messageOn = (values: CreatePodFormValues, field: string) => {
+    const result = createPodSchema.safeParse(values);
+    return result.success
+      ? undefined
+      : result.error.issues.find((i) => i.path[0] === field)?.message;
+  };
+
+  it('asks a free pod why it is free, for its details on Other, and for the policy', () => {
+    const freePod = { pod_type: 'FREE', pod_amount_text: '0' };
+    expect(messageOn(valid(freePod), 'free_reason')).toBe('Pick why this is free');
+    expect(
+      messageOn(valid({ ...freePod, free_reason: 'OTHER', free_accepted: true }), 'free_details'),
+    ).toBe('Tell Duncit why this is free');
+    expect(messageOn(valid({ ...freePod, free_reason: 'CAMPAIGN' }), 'free_accepted')).toBe(
+      'Accept the policy for free pods and free venues to continue',
+    );
+    expect(
+      issuesOf(
+        valid({
+          ...freePod,
+          free_reason: 'OTHER',
+          free_details: 'Launch week',
+          free_accepted: true,
+        }),
+      ),
+    ).toEqual([]);
+  });
+
+  it('takes a free venue offer with no amount, once it is justified', () => {
+    expect(issuesOf(valid({ ...freeVenueOffer, ...justified }))).toEqual([]);
+    const unjustified = issuesOf(valid(freeVenueOffer));
+    expect(unjustified).toContain('free_reason');
+    // Free names no amount, so none is asked for.
+    expect(unjustified).not.toContain('venue_offer_rate');
+    // …but a free venue still says what it needs from the venue.
+    expect(issuesOf(valid({ ...freeVenueOffer, ...justified, venue_offer_offerings: '' }))).toEqual(
+      ['venue_offer_offerings'],
+    );
+  });
+
+  it('asks nothing of a paid pod at a priced or held venue, whatever the hidden fields hold', () => {
+    expect(issuesOf(valid({ free_reason: 'NOPE' }))).toEqual([]);
+    // A held slot sends no offer, so a stale FREE model there is not a free venue.
+    expect(issuesOf(valid({ venue_offer_model: 'FREE' }))).toEqual([]);
+  });
+});
+
+describe('stepFieldsFor', () => {
+  const free = ['free_reason', 'free_details', 'free_accepted'];
+  const venueStep = STEP_FIELDS[2] ?? [];
+  const pricingStep = STEP_FIELDS[3] ?? [];
+
+  it('validates the justification on the step that shows it', () => {
+    // The venue step for a free venue offer…
+    expect(stepFieldsFor(2, valid(freeVenueOffer))).toEqual([...venueStep, ...free]);
+    // …the pricing step for a free pod.
+    expect(stepFieldsFor(3, valid({ pod_type: 'FREE' }))).toEqual([...pricingStep, ...free]);
+  });
+
+  it('never blocks a step that does not draw the fields', () => {
+    // A pod made free on the pricing step leaves the venue step as it was.
+    expect(stepFieldsFor(2, valid({ pod_type: 'FREE' }))).toEqual(venueStep);
+    expect(stepFieldsFor(3, valid(freeVenueOffer))).toEqual(pricingStep);
+    expect(stepFieldsFor(0, valid({ pod_type: 'FREE' }))).toEqual(STEP_FIELDS[0]);
+    expect(stepFieldsFor(9, valid())).toEqual([]);
   });
 });
 
@@ -418,6 +502,28 @@ describe('buildCreatePodInput', () => {
     );
   });
 
+  it('round-trips a free justification through a draft, and starts old drafts without one', () => {
+    const payload = serializeDraft(
+      valid({
+        pod_type: 'FREE',
+        free_reason: 'OTHER',
+        free_details: 'Launch',
+        free_accepted: true,
+      }),
+      3,
+    ).payload;
+    expect(hydrateDraft(payload)).toEqual(
+      expect.objectContaining({
+        free_reason: 'OTHER',
+        free_details: 'Launch',
+        free_accepted: true,
+      }),
+    );
+    expect(hydrateDraft(JSON.stringify({ pod_title: 'Old' }))).toEqual(
+      expect.objectContaining({ free_reason: '', free_details: '', free_accepted: false }),
+    );
+  });
+
   it('derives the shop flag from the product rows and nulls virtual extras', () => {
     const input = buildCreatePodInput(
       valid({
@@ -448,6 +554,44 @@ describe('buildCreatePodInput fallbacks', () => {
   it('maps a free pod to ₹0 — the only pod allowed to carry no price', () => {
     const input = buildCreatePodInput(valid({ pod_type: 'FREE', pod_amount_text: '0' }));
     expect(input.pod_amount).toBe(0);
+  });
+
+  it("sends a free pod's justification, one line and accepted, and a paid pod none", () => {
+    const input = buildCreatePodInput(
+      valid({
+        pod_type: 'FREE',
+        pod_amount_text: '0',
+        free_reason: 'OTHER',
+        free_details: '  A  neighbourhood clean-up ',
+        free_accepted: true,
+      }),
+    );
+    expect(input.free_justification).toEqual({
+      reason: 'OTHER',
+      details: 'A neighbourhood clean-up',
+      accepted: true,
+    });
+    expect(buildCreatePodInput(valid({ ...justified }))).not.toHaveProperty('free_justification');
+    // Not accepted yet: nothing is sent, and the server refuses the free pod.
+    expect(
+      buildCreatePodInput(valid({ pod_type: 'FREE', free_reason: 'CAMPAIGN' })),
+    ).not.toHaveProperty('free_justification');
+  });
+
+  it('offers a free venue at ₹0 with its reason, whatever amount was typed before', () => {
+    const input = buildCreatePodInput(
+      valid({ ...freeVenueOffer, ...justified, venue_offer_rate: '900' }),
+    );
+    expect(input.venue_offer).toEqual(
+      expect.objectContaining({
+        model: 'FREE',
+        rate: 0,
+        offerings: ['A projector'],
+        free_justification: { reason: 'INITIATIVE', details: '', accepted: true },
+      }),
+    );
+    // The pod itself is paid, so it carries no justification of its own.
+    expect(input).not.toHaveProperty('free_justification');
   });
 
   // A free pod has no money terms: one typed while the pod was paid is not sent.

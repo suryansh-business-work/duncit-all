@@ -4,6 +4,7 @@ import {
   blankPodCompleteValues,
   buildCompleteInput,
   buildPodCompleteSchema,
+  freeVenueBillOwed,
   type PodCompleteValues,
 } from '../pod-complete.form';
 
@@ -75,6 +76,38 @@ describe('buildPodCompleteSchema', () => {
     expect(issuesOf(false, { ...blankPodCompleteValues })).toEqual([]);
     expect(issuesOf(false, valid({ venue_bill_amount: 'abc', venue_bill_media: '' }))).toEqual([]);
     expect(issuesOf(false, valid({ venue_extra_amount: 'abc' }))).toEqual([]);
+  });
+
+  // A free venue is agreed no amount: the bill proves only what the host enters.
+  it('asks a free venue for no bill until a total or extra charges are entered', () => {
+    const freeIssues = (values: PodCompleteValues) => {
+      const result = buildPodCompleteSchema(true, labels, true).safeParse(values);
+      return result.success ? [] : result.error.issues.map((issue) => issue.path.join('.'));
+    };
+    expect(freeIssues({ ...blankPodCompleteValues })).toEqual([]);
+    expect(freeIssues({ ...blankPodCompleteValues, venue_extra_amount: '0' })).toEqual([]);
+    expect(freeIssues({ ...blankPodCompleteValues, venue_extra_amount: '300' })).toEqual([
+      'venue_bill_amount',
+      'venue_bill_media',
+    ]);
+    // A total typed without its bill still needs the bill.
+    expect(freeIssues({ ...blankPodCompleteValues, venue_bill_amount: '300' })).toEqual([
+      'venue_bill_media',
+    ]);
+    expect(freeIssues(valid({ venue_extra_amount: '300' }))).toEqual([]);
+    // The venue's usage is checked either way.
+    expect(freeIssues({ ...blankPodCompleteValues, venue_pax: '2.5' })).toEqual(['venue_pax']);
+    // Not a free venue: the shared rule stands.
+    expect(issuesOf(true, { ...blankPodCompleteValues })).toHaveLength(2);
+  });
+
+  it('owes a free venue bill only for an entered total or non-zero extra charges', () => {
+    expect(freeVenueBillOwed({ venue_bill_amount: '', venue_extra_amount: '' })).toBe(false);
+    expect(freeVenueBillOwed({ venue_bill_amount: ' ', venue_extra_amount: ' 0 ' })).toBe(false);
+    expect(freeVenueBillOwed({ venue_bill_amount: '', venue_extra_amount: '50' })).toBe(true);
+    // Something typed that is not a number is checked against the bill's rules.
+    expect(freeVenueBillOwed({ venue_bill_amount: '', venue_extra_amount: 'abc' })).toBe(true);
+    expect(freeVenueBillOwed({ venue_bill_amount: '120', venue_extra_amount: '' })).toBe(true);
   });
 
   it('trims the amounts it hands on', () => {

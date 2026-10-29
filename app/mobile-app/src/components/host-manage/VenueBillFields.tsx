@@ -9,6 +9,8 @@ import type { PodCompleteValues } from './pod-complete.form';
 interface Props {
   control: Control<PodCompleteValues>;
   labels: VenueBillLabels;
+  /** Off for a free venue: its bill is owed only once extra charges or a total are entered. */
+  billRequired?: boolean;
 }
 
 /**
@@ -19,9 +21,10 @@ interface Props {
  * of that amount: the bill's total and the bill itself are both required.
  * Anything the venue charged beyond the agreed amount goes in as extra charges,
  * paid on top (with Duncit's fee) once Finance approves them against the bill.
+ * A free venue is agreed no amount, so its bill is not marked required.
  * mWeb twin: @duncit/host-pod-actions VenueBillFields.
  */
-export function VenueBillFields({ control, labels }: Readonly<Props>) {
+export function VenueBillFields({ control, labels, billRequired = true }: Readonly<Props>) {
   return (
     <YStack gap={12} testID="pod-complete-venue-bill-fields">
       <Text fontSize={14} fontWeight="600" color="$color">
@@ -33,7 +36,7 @@ export function VenueBillFields({ control, labels }: Readonly<Props>) {
         label={labels.billTotal}
         hint={labels.billTotalHint}
         keyboardType="decimal-pad"
-        required
+        required={billRequired}
       />
       <Controller
         control={control}
@@ -48,7 +51,7 @@ export function VenueBillFields({ control, labels }: Readonly<Props>) {
             folder="/pod-completion"
             maxImages={1}
             deviceOnly
-            required
+            required={billRequired}
           />
         )}
       />

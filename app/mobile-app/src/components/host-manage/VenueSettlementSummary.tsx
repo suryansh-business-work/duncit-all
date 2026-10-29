@@ -3,7 +3,7 @@ import {
   buildVenueBillLines,
   formatMoney,
   mwebVenueBillLabels,
-  venueOfferInboxModelKey,
+  venueOfferTermsLine,
 } from '@duncit/utils';
 
 import type { PodSettlement } from '@/hooks/useSettlementPreview';
@@ -13,17 +13,13 @@ import { VenueBillSummary } from './VenueBillSummary';
 type Translate = ReturnType<typeof useTranslation>['t'];
 
 /**
- * "Per guest · ₹300.00 per guest" — the agreed terms in the words the venue's
- * own booking requests use (`availability.*`, shipped by both apps); just the
- * formatted rate for an option this build does not know. mWeb twin:
- * @duncit/host-pod-actions labels' agreedTerms.
+ * "Per guest · ₹300.00 per guest", "Free venue" — the agreed terms in the words
+ * the venue's own booking requests use (`availability.*`, shipped by both
+ * apps); just the formatted rate for an option this build does not know. mWeb
+ * twin: @duncit/host-pod-actions labels' agreedTerms.
  */
 export function agreedTermsText(t: Translate, model: string, rate: string): string {
-  const keys = venueOfferInboxModelKey(model);
-  if (!keys) return rate;
-  return t('availability.offers.termsLine', {
-    vars: { model: t(keys.label), rate: t(keys.rate, { vars: { rate } }) },
-  });
+  return venueOfferTermsLine(t, model, rate);
 }
 
 /**

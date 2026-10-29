@@ -5,6 +5,7 @@ import { YStack } from 'tamagui';
 import { FormTextField } from '@/components/FormTextField';
 import { SurfaceCard } from '@/components/SurfaceCard';
 import { useTranslation } from '@/hooks/useTranslation';
+import { FREE_JUSTIFICATION_NAMES, FreeArrangementFields } from '../free-arrangement';
 import { PlaceChargesField } from '../PlaceChargesField';
 import { PodTicketDiscountCard } from '../PodTicketDiscountCard';
 import { PodTypeCards } from '../PodTypeCards';
@@ -43,7 +44,8 @@ interface Props {
  * Terms gate. A PAID pod adds the ticket price (with its suggested-price helper
  * and zero-earnings guard), its multi-ticket discount and the slot-cost / GST /
  * earnings panel; a FREE pod has none of them — no amount and no calculation —
- * and reads a short note instead. mWeb twin. */
+ * and reads a short note instead, then says why it is free and accepts Duncit's
+ * free policy (the same fields a free venue fills on step 3). mWeb twin. */
 export function PricingStep({
   form,
   products,
@@ -107,6 +109,15 @@ export function PricingStep({
       ) : (
         <PricePanel finance={finance} pricing={pricing} />
       )}
+      {isFree ? (
+        <SurfaceCard testID="pricing-step-free-card">
+          <FreeArrangementFields
+            control={control}
+            names={FREE_JUSTIFICATION_NAMES}
+            testIDPrefix="create-pod-pod"
+          />
+        </SurfaceCard>
+      ) : null}
       {isFree ? null : <PodTicketDiscountCard form={form} currency={finance.currency_symbol} />}
       {/* Payment terms describe refunds and charges a free pod does not have. */}
       {isFree ? null : (

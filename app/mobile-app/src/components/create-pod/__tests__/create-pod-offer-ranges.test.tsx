@@ -66,6 +66,37 @@ describe('VenueQuoteCard ranges', () => {
     expect(screen.getByTestId('create-pod-venue-quote')).toBeOnTheScreen();
     expect(screen.queryByTestId('create-pod-quote-range')).toBeNull();
   });
+
+  it('quotes a free venue no money — only that it still answers — but keeps why it cannot be sent', () => {
+    const { rerender } = renderWithProviders(
+      <VenueQuoteCard
+        quote={breakdown(20, 0, 0)}
+        loading={false}
+        error={null}
+        currencySymbol="₹"
+        free
+      />,
+    );
+    expect(screen.getByTestId('create-pod-venue-quote-free')).toHaveTextContent(
+      /the venue is paid nothing for this booking.*free bookings cannot be countered/,
+    );
+    expect(screen.queryByTestId('create-pod-venue-quote')).toBeNull();
+    expect(screen.queryByText(/₹0/)).toBeNull();
+    rerender(
+      <VenueQuoteCard
+        quote={null}
+        message="The venue is closed then"
+        loading={false}
+        error={null}
+        currencySymbol="₹"
+        free
+      />,
+    );
+    expect(screen.getByTestId('create-pod-offer-problem')).toHaveTextContent(
+      'The venue is closed then',
+    );
+    expect(screen.queryByTestId('create-pod-venue-quote-free')).toBeNull();
+  });
 });
 
 const waterfall = (hostReceives: number) => ({

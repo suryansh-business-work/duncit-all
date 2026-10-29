@@ -2,6 +2,7 @@ import { Box, Chip, Paper, Stack, Tooltip, Typography } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { DuncitIconButton } from '@duncit/buttons';
+import { HEALTH_APPEAL_STATUS_COLOR, HEALTH_APPEAL_STATUS_KEY } from '@duncit/utils';
 import type { AdminHealthAdjustment } from './queries';
 import { formatDateTime } from '@duncit/app-settings';
 import { useTranslation } from '@duncit/shell';
@@ -18,13 +19,24 @@ export default function AdjustmentRow({ adjustment, busy, onEdit, onDelete }: Re
   const sign = adjustment.delta > 0 ? `+${adjustment.delta}` : `${adjustment.delta}`;
   const color: 'success' | 'error' = adjustment.delta > 0 ? 'success' : 'error';
   const remark = adjustment.remark?.trim();
+  const appeal = adjustment.appeal_status;
 
   return (
     <Paper variant="outlined" sx={{ p: 1 }} data-testid={`admin-user-health-row-${adjustment.id}`}>
       <Stack direction="row" spacing={1} sx={{
         alignItems: "center"
       }}>
-        <Chip size="small" color={color} label={sign} sx={{ fontWeight: 900 }} />
+        {/* A deduction Legal lifted on appeal no longer counts: faded, struck through. */}
+        <Chip
+          size="small"
+          color={color}
+          label={sign}
+          sx={{
+            fontWeight: 900,
+            textDecoration: adjustment.waived ? 'line-through' : 'none',
+            opacity: (theme) => (adjustment.waived ? theme.palette.action.disabledOpacity : 1),
+          }}
+        />
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Typography variant="body2">{remark || '—'}</Typography>
           <Typography variant="caption" sx={{
@@ -34,6 +46,15 @@ export default function AdjustmentRow({ adjustment, busy, onEdit, onDelete }: Re
             {formatDateTime(adjustment.created_at)}
           </Typography>
         </Box>
+        {appeal && (
+          <Chip
+            size="small"
+            variant="outlined"
+            color={HEALTH_APPEAL_STATUS_COLOR[appeal]}
+            label={t(HEALTH_APPEAL_STATUS_KEY[appeal])}
+            data-testid={`admin-user-health-appeal-${adjustment.id}`}
+          />
+        )}
         <Tooltip title={t('shell.common.edit')}>
           <span>
             <DuncitIconButton

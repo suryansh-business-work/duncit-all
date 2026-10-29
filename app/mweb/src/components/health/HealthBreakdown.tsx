@@ -1,8 +1,9 @@
-import { Box, Card, Chip, Divider, Stack, Typography } from '@mui/material';
-import { formatDistanceToNow } from 'date-fns';
-import type { HealthScore } from './queries';
+import { useState } from 'react';
+import { Card, Chip, Divider, Stack, Typography } from '@mui/material';
+import type { HealthAdjustment, HealthScore } from './queries';
 import SectionHeader from '../SectionHeader';
-import { formatDateTime } from '../../utils/dateFormat';
+import HealthRemarkRow from './HealthRemarkRow';
+import AppealHealthDialog from './AppealHealthDialog';
 
 interface Props {
   score: HealthScore;
@@ -20,29 +21,8 @@ const BAND_COLOR: Record<HealthScore['band'], 'error' | 'warning' | 'success'> =
   GREEN: 'success',
 };
 
-type Adjustment = HealthScore['adjustments'][number];
-
-function RemarkRow({ adjustment }: Readonly<{ adjustment: Adjustment }>) {
-  const sign = adjustment.delta > 0 ? `+${adjustment.delta}` : `${adjustment.delta}`;
-  const color: 'success' | 'error' = adjustment.delta > 0 ? 'success' : 'error';
-  const rowTestId = `health-remark-${adjustment.id}`;
-  return (
-    <Stack data-testid={rowTestId} direction="row" spacing={1.5} sx={{ alignItems: 'center', px: 2, py: 1.75 }}>
-      <Chip size="small" color={color} label={sign} sx={{ minWidth: 44 }} />
-      <Box sx={{ flex: 1, minWidth: 0 }}>
-        <Typography variant="body2" sx={{ fontWeight: 500 }}>
-          {adjustment.remark}
-        </Typography>
-        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-          {adjustment.created_by_name} · {formatDateTime(adjustment.created_at)} ·{' '}
-          {formatDistanceToNow(new Date(adjustment.created_at), { addSuffix: true })}
-        </Typography>
-      </Box>
-    </Stack>
-  );
-}
-
 export default function HealthBreakdown({ score }: Readonly<Props>) {
+  const [appealing, setAppealing] = useState<HealthAdjustment | null>(null);
   return (
     <Stack data-testid="health-breakdown" spacing={2.5}>
       <Card sx={{ p: 2 }}>
@@ -81,12 +61,13 @@ export default function HealthBreakdown({ score }: Readonly<Props>) {
           <Card>
             <Stack divider={<Divider />}>
               {score.adjustments.map((a) => (
-                <RemarkRow key={a.id} adjustment={a} />
+                <HealthRemarkRow key={a.id} adjustment={a} onAppeal={setAppealing} />
               ))}
             </Stack>
           </Card>
         )}
       </Stack>
+      <AppealHealthDialog adjustment={appealing} onClose={() => setAppealing(null)} />
     </Stack>
   );
 }

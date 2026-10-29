@@ -1,57 +1,27 @@
-import { Fragment } from 'react';
+import { Fragment, useState } from 'react';
 import { Text, XStack, YStack } from 'tamagui';
 
 import {
-  adjustmentSign,
   healthBandColor,
   healthBandLabel,
   healthScoreCaption,
+  type HealthAdjustmentLike,
   type HealthScoreLike,
 } from '@/utils/health';
-import { formatDateTime, formatRelative } from '@/utils/date-format';
 import { SectionHeader } from '@/components/SectionHeader';
 import { SurfaceCard } from '@/components/SurfaceCard';
-import { semantic } from '@duncit/auth-tokens';
+import { HealthRemarkRow } from './HealthRemarkRow';
+import { AppealHealthSheet } from './AppealHealthSheet';
 
-type Adjustment = HealthScoreLike['adjustments'][number];
-
-function RemarkRow({ adjustment }: Readonly<{ adjustment: Adjustment }>) {
-  const positive = adjustment.delta > 0;
-  return (
-    <XStack
-      testID={`health-remark-${adjustment.id}`}
-      gap={12}
-      alignItems="center"
-      paddingHorizontal={16}
-      paddingVertical={14}
-    >
-      <XStack
-        minWidth={44}
-        justifyContent="center"
-        borderRadius={999}
-        paddingHorizontal={10}
-        paddingVertical={4}
-        backgroundColor={positive ? semantic.success : semantic.error}
-      >
-        <Text fontSize={12} fontWeight="600" color="white">
-          {adjustmentSign(adjustment.delta)}
-        </Text>
-      </XStack>
-      <YStack flex={1}>
-        <Text fontSize={14} fontWeight="500" color="$color">
-          {adjustment.remark}
-        </Text>
-        <Text fontSize={12} color="$muted">
-          {adjustment.created_by_name} · {formatDateTime(adjustment.created_at)} ·{' '}
-          {formatRelative(adjustment.created_at)} ago
-        </Text>
-      </YStack>
-    </XStack>
-  );
+interface Props {
+  score: HealthScoreLike;
+  /** Reload the score once an appeal is filed, so the row reads "Appeal pending". */
+  onAppealed: () => void;
 }
 
 /** Score summary + admin remarks list — RN twin of mWeb's <HealthBreakdown/>. */
-export function HealthBreakdown({ score }: Readonly<{ score: HealthScoreLike }>) {
+export function HealthBreakdown({ score, onAppealed }: Readonly<Props>) {
+  const [appealing, setAppealing] = useState<HealthAdjustmentLike | null>(null);
   const bandColor = healthBandColor(score.band);
 
   return (
@@ -98,12 +68,17 @@ export function HealthBreakdown({ score }: Readonly<{ score: HealthScoreLike }>)
             {score.adjustments.map((adjustment, index) => (
               <Fragment key={adjustment.id}>
                 {index > 0 ? <YStack height={1} backgroundColor="$borderColor" /> : null}
-                <RemarkRow adjustment={adjustment} />
+                <HealthRemarkRow adjustment={adjustment} onAppeal={setAppealing} />
               </Fragment>
             ))}
           </SurfaceCard>
         )}
       </YStack>
+      <AppealHealthSheet
+        adjustment={appealing}
+        onClose={() => setAppealing(null)}
+        onAppealed={onAppealed}
+      />
     </YStack>
   );
 }

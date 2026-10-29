@@ -7,6 +7,7 @@ import {
   createTranslator,
   flattenCatalogue,
   GRIEVANCE_BUNDLE,
+  HEALTH_APPEAL_BUNDLE,
   MAIL_PREFERENCE_BUNDLE,
   MWEB_BUNDLE,
   POD_DETAILS_BUNDLE,
@@ -61,6 +62,7 @@ export const NATIVE_FALLBACK: NestedCatalogue = {
   ...EARNINGS_BUNDLE,
   ...POD_TIMELINE_BUNDLE,
   ...GRIEVANCE_BUNDLE,
+  ...HEALTH_APPEAL_BUNDLE,
   ...MAIL_PREFERENCE_BUNDLE,
   // The Club Admin's pod detail screen renders the SAME sections
   // `@duncit/pod-details` draws on mWeb and in the Partners console, so the

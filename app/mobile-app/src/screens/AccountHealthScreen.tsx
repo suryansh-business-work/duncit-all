@@ -13,7 +13,7 @@ import { RefreshScrollView } from '@/components/PullToRefresh';
  * RN twin of mWeb's AccountHealthPage. */
 export function AccountHealthScreen() {
   const { t } = useTranslation();
-  const { health, isLoading, error } = useAccountHealth();
+  const { health, isLoading, error, reload } = useAccountHealth();
   const loadingRegion = useLoadingRegion();
 
   let body: ReactNode;
@@ -39,7 +39,7 @@ export function AccountHealthScreen() {
             label={t('mweb.common.accountHealth')}
           />
         </YStack>
-        <HealthBreakdown score={health} />
+        <HealthBreakdown score={health} onAppealed={reload} />
       </RefreshScrollView>
     );
   } else {

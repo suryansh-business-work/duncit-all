@@ -6,6 +6,7 @@ import { ClubModel } from '@modules/clubs/club/club.model';
 import { HostModel } from '@modules/venues/host/host.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { PodModel, type CoHostStatus, type IPod } from './pod.model';
+import { loadPodClubSlugMap, podNotificationLink } from './pod.shared';
 import { podAuditService } from '@modules/pods/podAudit/podAudit.service';
 
 /**
@@ -126,8 +127,9 @@ async function recordCoHostAudit(pod: IPod, actorUserId: string, note: string) {
   await podAuditService.record({ pod, action: 'UPDATE', source: 'HOST', actorUserId, note });
 }
 
-/** Fire-and-forget in-app notification; a failure must never fail the mutation. */
-async function notify(userIds: string[], title: string, body: string) {
+/** Fire-and-forget in-app notification that opens the pod it is about; a
+ * failure must never fail the mutation. */
+async function notify(userIds: string[], title: string, body: string, pod: IPod) {
   if (!userIds.length) return;
   try {
     const { notificationService } = await import(
@@ -136,6 +138,7 @@ async function notify(userIds: string[], title: string, body: string) {
     await notificationService.create({
       title,
       body,
+      link_url: podNotificationLink(pod, await loadPodClubSlugMap([pod])),
       scope: 'USER',
       target_user_ids: userIds,
       silent: false,
@@ -212,7 +215,8 @@ export const coHostService = {
     await notify(
       [String(inviteeId)],
       'Co-host invite',
-      `You've been invited to co-host "${pod.pod_title}".`
+      `You've been invited to co-host "${pod.pod_title}".`,
+      pod
     );
     return pod;
   },
@@ -252,7 +256,8 @@ export const coHostService = {
     await notify(
       (pod.pod_hosts_id ?? []).map(String),
       accept ? 'Co-host accepted' : 'Co-host declined',
-      `${who} ${accept ? 'accepted' : 'declined'} your invite to co-host "${pod.pod_title}".`
+      `${who} ${accept ? 'accepted' : 'declined'} your invite to co-host "${pod.pod_title}".`,
+      pod
     );
     return pod;
   },

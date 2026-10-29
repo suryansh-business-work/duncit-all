@@ -78,9 +78,12 @@ async function tellRequester(doc: IEventRequest) {
       COUNTERED: `${doc.target_name} suggested another time for your event request.`,
       REJECTED: `${doc.target_name} cannot take your event request.`,
     };
+    // Back to the page the member asked from: the venue's, or the host's profile.
+    const target = String(doc.target_id);
     await notificationService.create({
       title: 'Your event request was answered',
       body: body[doc.status] ?? body.ACCEPTED,
+      link_url: doc.target_type === 'VENUE' ? `/venue/${target}` : `/u/${target}`,
       scope: 'USER',
       target_user_ids: [String(doc.requester_id)],
     });

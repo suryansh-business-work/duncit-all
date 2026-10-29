@@ -497,7 +497,9 @@ export async function notifyAttendanceMarked(ticket: ITicket): Promise<void> {
     await notificationService.create({
       title: 'Attendance marked',
       body: `Your attendance is marked for ${(pod as any)?.pod_title ?? 'this pod'}.`,
-      link_url: `/pod/${String(ticket.pod_id)}`,
+      // The booking's own path (no origin): mWeb and the app both resolve it
+      // to this pod's page. There is no bare `/pod/:id` page on either.
+      link_url: bookingLinkUrl('', String(ticket.membership_id)),
       scope: 'USER',
       target_user_ids: [String(ticket.user_id)],
     });

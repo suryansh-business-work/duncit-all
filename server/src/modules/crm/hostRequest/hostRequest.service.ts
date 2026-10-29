@@ -145,13 +145,15 @@ const HOST_REQUEST_TABLE_CONFIG: TableEntityConfig = {
 const catPath = (h: IHostRequest) =>
   [h.super_category_name, h.category_name, h.sub_category_name].filter(Boolean).join(' › ');
 
-/** Best-effort in-app (Notification Center) message to the host. */
+/** Best-effort in-app (Notification Center) message to the host. It opens the
+ * host application page, where the request's status is shown. */
 async function notifyHost(hostUserId: string, title: string, body: string) {
   try {
     const { notificationService } = await import('@modules/engagement/notification/notification.service');
     await notificationService.create({
       title,
       body,
+      link_url: '/host/apply',
       scope: 'USER',
       target_user_ids: [hostUserId],
       silent: false,

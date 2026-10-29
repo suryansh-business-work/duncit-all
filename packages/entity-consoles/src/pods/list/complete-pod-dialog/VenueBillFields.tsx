@@ -10,15 +10,18 @@ import type { CompletePodValues } from './complete-pod.types';
 
 interface Props {
   control: Control<CompletePodValues, unknown, CompletePodValues>;
+  /** The agreed offer was a free venue: owed nothing, so its bill is needed only for extras. */
+  freeVenue?: boolean;
 }
 
 /**
  * The venue's final bill, in the Admin console's completion dialog — the same
  * answers the host gives in theirs (@duncit/host-pod-actions): the bill's total
  * and the bill itself, both required on a paid venue pod as proof of the agreed
- * amount, and any extra charges the venue added on top.
+ * amount (a free venue's only when it charged extra), and any extra charges the
+ * venue added on top.
  */
-export default function VenueBillFields({ control }: Readonly<Props>) {
+export default function VenueBillFields({ control, freeVenue = false }: Readonly<Props>) {
   const { t } = useTranslation();
   const copy = useMemo(() => shellVenueBillLabels(t), [t]);
   return (
@@ -28,9 +31,9 @@ export default function VenueBillFields({ control }: Readonly<Props>) {
         control={control}
         name="venue_bill_amount"
         type="number"
-        required
+        required={!freeVenue}
         label={copy.billTotal}
-        hint={copy.billTotalHint}
+        hint={freeVenue ? t('availability.offers.freeVenueBillHint') : copy.billTotalHint}
         slotProps={{ htmlInput: { min: 0, step: 'any', inputMode: 'decimal' } }}
       />
       <Controller

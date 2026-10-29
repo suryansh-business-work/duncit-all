@@ -378,6 +378,20 @@ the Cancelled stage switches **Include cancelled** on by itself:
 <Link to="/pods?lifecycle=UPCOMING">Upcoming</Link>
 ```
 
+**Free Arrangements** (`FreeArrangementsPage`, `/free-arrangements`) is the
+audit of every free pod and every free venue request — Duncit allows them only
+for initiatives, promotions and approved campaigns. One read-only table over
+`adminFreeArrangementsTable`: what is free (pod, venue or both), the host's
+reason and details for each, when they accepted the free policy, the host, club
+and venue, how the venue answered, the pod's date and status. Cancelled pods
+stay listed. The reason filter matches the pod's and the venue's justification
+alike; search covers the title and both sets of details; a pod from before the
+policy shows its reason as "—". The title links to the pod's page here.
+
+```tsx
+<Route path="/free-arrangements" element={authed(<FreeArrangementsPage />)} />
+```
+
 ## The club-admins console
 
 `club-admins.duncit.com` reads `clubAdminProfilesTable`, and its editor is the

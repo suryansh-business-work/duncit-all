@@ -18,8 +18,9 @@ import {
   fallbackT,
 } from '@duncit/pod-form';
 import { defineDemo, defineDemos } from '../types';
-// The Club Admin editor's demo and the shared issue formatter live beside this file.
+// The Club Admin editor's and the free-arrangement demos, and the shared issue formatter, live beside this file.
 import { clubAdminDemo } from './pod-form/club-admin-demo';
+import { freeArrangementDemo } from './pod-form/free-demo';
 import { issueLines } from './pod-form/issue-lines';
 
 interface PodMock {
@@ -146,4 +147,5 @@ export default defineDemos('pod-form', [
   }),
 
   clubAdminDemo,
+  freeArrangementDemo,
 ]);

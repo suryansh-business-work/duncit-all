@@ -371,6 +371,80 @@ describe('makePodSchema - multi-ticket discount', () => {
   });
 });
 
+// Free pods and free venues are allowed only for initiatives, promotions and
+// approved campaigns: whoever picks "Free" says why and accepts the policy.
+describe('makePodSchema - free justification', () => {
+  const issuesOf = (config: PodFormConfig, values: PodFormValues) => {
+    const res = makePodSchema(config, fallbackT).safeParse(values);
+    return res.success ? [] : res.error.issues.map((i) => [i.path.join('.'), i.message]);
+  };
+  const offerConfig = makeConfig({ showVenueSlot: true });
+  // A paid pod offering its venue nothing.
+  const freeVenue = (over: Partial<PodFormValues> = {}) =>
+    validValues({
+      pod_type: 'PAID',
+      pod_amount: 300,
+      venue_offer_model: 'FREE',
+      venue_offer_rate: '',
+      venue_offer_offerings: 'A projector',
+      ...over,
+    });
+
+  it('asks a free venue no amount, only why it is free', () => {
+    expect(issuesOf(offerConfig, freeVenue())).toEqual([['free_reason', 'Pick why this is free']]);
+    expect(issuesOf(offerConfig, freeVenue({ free_reason: 'PROMOTIONAL', free_accepted: true }))).toEqual([]);
+  });
+
+  it('holds the reason to the server’s checks, one at a time: Other needs details, then the policy accepted', () => {
+    expect(issuesOf(offerConfig, freeVenue({ free_reason: 'OTHER', free_details: ' ' }))).toEqual([
+      ['free_details', 'Tell Duncit why this is free'],
+    ]);
+    expect(issuesOf(offerConfig, freeVenue({ free_reason: 'OTHER', free_details: 'Diwali community drive' }))).toEqual([
+      ['free_accepted', 'Accept the policy for free pods and free venues to continue'],
+    ]);
+  });
+
+  it('asks a host’s own FREE pod why it is free', () => {
+    const hostConfig = makeConfig({ requireFreeJustification: true });
+    expect(issuesOf(hostConfig, validValues())).toEqual([['free_reason', 'Pick why this is free']]);
+    expect(issuesOf(hostConfig, validValues({ free_reason: 'INITIATIVE', free_accepted: true }))).toEqual([]);
+  });
+
+  it('lets a staff editor save a FREE pod with no reason, but never with half of one', () => {
+    expect(issuesOf(makeConfig(), validValues())).toEqual([]);
+    expect(issuesOf(makeConfig(), validValues({ free_reason: 'CAMPAIGN' }))).toEqual([
+      ['free_accepted', 'Accept the policy for free pods and free venues to continue'],
+    ]);
+    expect(issuesOf(makeConfig(), validValues({ free_details: 'Launch week' }))).toEqual([
+      ['free_reason', 'Pick why this is free'],
+    ]);
+    expect(issuesOf(makeConfig(), validValues({ free_accepted: true }))).toEqual([['free_reason', 'Pick why this is free']]);
+  });
+
+  it('asks a paid pod on a priced venue nothing, whatever the hidden fields still hold', () => {
+    const priced = validValues({
+      pod_type: 'PAID',
+      pod_amount: 300,
+      venue_offer_model: 'PER_GUEST',
+      venue_offer_rate: '300',
+      venue_offer_offerings: 'A projector',
+      free_reason: 'CAMPAIGN',
+    });
+    expect(issuesOf(makeConfig({ showVenueSlot: true, requireFreeJustification: true }), priced)).toEqual([]);
+  });
+
+  // Callers that build their values by hand (the Partners schema spec, the AI fill) predate the fields.
+  it('fills the three fields in when a caller leaves them out', () => {
+    const older: Record<string, unknown> = { ...validValues() };
+    delete older.free_reason;
+    delete older.free_details;
+    delete older.free_accepted;
+    const res = makePodSchema(makeConfig(), fallbackT).safeParse(older);
+    expect(res.success).toBe(true);
+    expect(res.data && [res.data.free_reason, res.data.free_details, res.data.free_accepted]).toEqual(['', '', false]);
+  });
+});
+
 describe('makePodSchema - venue and date guards', () => {
   it('requires a club on an ordinary pod', () => {
     const paths = errorPaths(makeConfig(), validValues({ club_id: '' }));

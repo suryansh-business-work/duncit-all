@@ -454,13 +454,30 @@ describe('WhenWhereSection (offer terms)', () => {
     expect(screen.queryByTestId('pod-form-venue-min-business')).not.toBeInTheDocument();
   });
 
-  it('offers only the ways a venue can still be paid — per guest, per hour or a flat price', async () => {
+  it('offers the ways a venue can be paid — per guest, per hour or a flat price — then a free venue', async () => {
     const user = userEvent.setup();
     routeQueries();
     renderWW(termsData(), WINDOW);
     await user.click(screen.getByLabelText(/How you pay the venue/));
     const options = await screen.findAllByRole('option');
-    expect(options.map((option) => option.textContent)).toEqual(['Per guest', 'Per hour', 'Flat price']);
+    expect(options.map((option) => option.textContent)).toEqual(['Per guest', 'Per hour', 'Flat price', 'Free venue']);
+  });
+
+  // A free venue is offered no amount; on a paid pod the host says here why it is free.
+  it('asks a free venue on a paid pod no amount — why it is free and the free policy instead', () => {
+    routeQueries();
+    renderWW(termsData(), { ...WINDOW, pod_type: 'PAID', pod_amount: 300, venue_offer_model: 'FREE' });
+    expect(screen.queryByLabelText(/Amount you offer/)).not.toBeInTheDocument();
+    expect(screen.getByText(/The venue gives this time for free/)).toBeInTheDocument();
+    expect(screen.getByTestId('pod-form-free-arrangement')).toBeInTheDocument();
+    expect(screen.getByRole('radiogroup', { name: /Why is this free/ })).toBeInTheDocument();
+  });
+
+  it("leaves a free pod's free venue to the pod's own justification — never a second set", () => {
+    routeQueries();
+    renderWW(termsData(), { ...WINDOW, pod_type: 'FREE', venue_offer_model: 'FREE' });
+    expect(screen.queryByLabelText(/Amount you offer/)).not.toBeInTheDocument();
+    expect(screen.queryByTestId('pod-form-free-arrangement')).not.toBeInTheDocument();
   });
 
   it("reads a per-guest offer as a range from the venue's minimum to the spots", () => {

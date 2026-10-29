@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useQuery } from '@apollo/client/react';
 import { Box, CircularProgress, Divider, Stack, Typography } from '@mui/material';
 import { EarningsSplitView, VenueBillSummary } from '@duncit/ui';
-import { buildVenueBillLines, shellVenueBillLabels } from '@duncit/utils';
+import { buildVenueBillLines, isFreeVenueOfferModel, shellVenueBillLabels } from '@duncit/utils';
 import { offerTermsLabel } from '@duncit/availability-calendar';
 import { useTranslation } from '@duncit/shell';
 import { POD_SETTLEMENT_PREVIEW } from '../queries';
@@ -16,6 +16,7 @@ export default function SettlementPreview({
   hostUserId,
   venueUsage,
   free = false,
+  onFreeVenue,
 }: Readonly<SettlementPreviewProps>) {
   const { t } = useTranslation();
   // The bill, the extra charges and the usage settle for a moment before the preview re-prices.
@@ -43,6 +44,11 @@ export default function SettlementPreview({
   const s = data?.podSettlementPreview;
   // A free pod moves no platform money — its host settles the venue directly.
   const isFree = free || !!s?.is_free;
+  // A free venue is owed nothing for the booking: the dialog then asks for its bill only with extras.
+  const freeVenue = isFreeVenueOfferModel(s?.venue_agreed_model);
+  useEffect(() => {
+    onFreeVenue?.(freeVenue);
+  }, [freeVenue, onFreeVenue]);
 
   const body = () => {
     if (!s) {

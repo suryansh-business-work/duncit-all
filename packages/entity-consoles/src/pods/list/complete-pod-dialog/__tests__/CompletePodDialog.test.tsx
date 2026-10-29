@@ -30,20 +30,32 @@ vi.mock('@duncit/media-picker', () => ({
 }));
 
 // SettlementPreview runs its own GraphQL query and has its own suite; here it
-// only has to show what the dialog hands it.
-vi.mock('../SettlementPreview', () => ({
-  default: (props: {
-    podId: string;
-    venueBillAmount: number;
-    venueExtraAmount: number;
-    hostUserId: string;
-    free?: boolean;
-  }) => (
-    <div data-testid="preview" data-free={String(props.free)}>
-      {`${props.podId}|${props.venueBillAmount}|${props.venueExtraAmount}|${props.hostUserId}`}
-    </div>
-  ),
-}));
+// only has to show what the dialog hands it — and, like the real one once its
+// settlement loads, say whether the agreed offer was a free venue (the pod id
+// 'pod-free-venue' stands in for one).
+vi.mock('../SettlementPreview', async () => {
+  const { useEffect } = await import('react');
+  return {
+    default: (props: {
+      podId: string;
+      venueBillAmount: number;
+      venueExtraAmount: number;
+      hostUserId: string;
+      free?: boolean;
+      onFreeVenue?: (freeVenue: boolean) => void;
+    }) => {
+      const { podId, onFreeVenue } = props;
+      useEffect(() => {
+        onFreeVenue?.(podId === 'pod-free-venue');
+      }, [podId, onFreeVenue]);
+      return (
+        <div data-testid="preview" data-free={String(props.free)}>
+          {`${props.podId}|${props.venueBillAmount}|${props.venueExtraAmount}|${props.hostUserId}`}
+        </div>
+      );
+    },
+  };
+});
 
 const VENUE_POD = {
   id: 'pod-1',
@@ -254,6 +266,37 @@ describe('CompletePodDialog / submit', () => {
     expect(onSubmit.mock.calls[0][0]).not.toHaveProperty('include_slot_price');
   });
 
+  // A free venue is owed nothing for the booking, so its bill proves only the extras it charged.
+  describe('at a free venue', () => {
+    const FREE_VENUE_POD = { ...VENUE_POD, id: 'pod-free-venue' };
+    const HINT = 'Free venue — upload its bill only if it charged extra.';
+
+    it('completes with no bill when the venue charged nothing extra, and says why', async () => {
+      const { onSubmit } = renderDialog({ pod: FREE_VENUE_POD });
+      expect(await screen.findByText(HINT)).toBeInTheDocument();
+      expect(billTotal()).not.toBeRequired();
+      const [, mediaField] = screen.getAllByRole('textbox').filter((el) => el.tagName === 'TEXTAREA');
+      fireEvent.change(mediaField, { target: { value: MEDIA } });
+      fireEvent.click(screen.getByRole('button', { name: 'Complete pod' }));
+
+      await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+      expect(onSubmit.mock.calls[0][0]).toMatchObject({ venue_bill_amount: '', venue_bill_media: '' });
+    });
+
+    it('still demands the bill once the venue charged extra', async () => {
+      const { onSubmit } = renderDialog({ pod: FREE_VENUE_POD });
+      await screen.findByText(HINT);
+      fireEvent.change(extraCharges(), { target: { value: '300' } });
+      const [, mediaField] = screen.getAllByRole('textbox').filter((el) => el.tagName === 'TEXTAREA');
+      fireEvent.change(mediaField, { target: { value: MEDIA } });
+      fireEvent.click(screen.getByRole('button', { name: 'Complete pod' }));
+
+      expect(await screen.findByText(BILL_REQUIRED)).toBeInTheDocument();
+      expect(screen.getByText(BILL_UPLOAD_REQUIRED)).toBeInTheDocument();
+      expect(onSubmit).not.toHaveBeenCalled();
+    });
+  });
+
   it('starts clean for the next pod rather than keeping what was typed for the last', () => {
     const { rerender, props } = renderDialog();
     fireEvent.change(billTotal(), { target: { value: '900' } });
@@ -311,6 +354,23 @@ describe('buildCompleteSchema / buildCompleteInput / mediaTextToInput', () => {
     expect(messages(true, values({ venue_extra_amount: '1000000' }))).toEqual([]);
     expect(messages(true, values({ venue_extra_amount: '-1' }))).toEqual(['shell.venueBill.extraInvalid']);
     expect(messages(true, values({ venue_extra_amount: '1000000.5' }))).toEqual(['shell.venueBill.extraInvalid']);
+  });
+
+  // A free venue is owed nothing for the booking: its bill is asked for only once extras or a bill are entered.
+  it('asks a free venue for its bill only with extras, or once a bill is entered', () => {
+    const freeVenue = (input: CompletePodValues) => {
+      const parsed = buildCompleteSchema(true, t, true).safeParse(input);
+      return parsed.success ? [] : parsed.error.issues.map((issue) => issue.message);
+    };
+    const noBill = { venue_bill_amount: '', venue_bill_media: '' };
+    expect(freeVenue(values(noBill))).toEqual([]);
+    expect(freeVenue(values({ ...noBill, venue_extra_amount: '0' }))).toEqual([]);
+    expect(freeVenue(values({ ...noBill, venue_extra_amount: '300' }))).toEqual([
+      'shell.venueBill.billRequired',
+      'shell.venueBill.billUploadRequired',
+    ]);
+    expect(freeVenue(values({ venue_bill_media: '' }))).toEqual(['shell.venueBill.billUploadRequired']);
+    expect(freeVenue(values())).toEqual([]);
   });
 
   // A pod with no venue, or a free one, owes no venue bill at all.

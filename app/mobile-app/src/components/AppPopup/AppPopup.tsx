@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Linking, useWindowDimensions } from 'react-native';
+import { useWindowDimensions } from 'react-native';
 import { YStack } from 'tamagui';
 import {
   APP_POPUP_VIEWPORT_GUTTER,
@@ -17,7 +17,7 @@ import { useAppPopupStore } from '@/stores/app-popup.store';
 import { useAuthStore } from '@/stores/auth.store';
 import { fireAndForget } from '@/utils/fire-and-forget';
 import { navigationRef } from '@/navigation/navigationRef';
-import { resolveNotificationLink } from '@/utils/notification-link';
+import { openNotificationTarget, resolveNotificationLink } from '@/utils/notification-link';
 import { AppPopupCard } from './AppPopupCard';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
@@ -25,26 +25,9 @@ import { PRESS_STYLE } from '@duncit/buttons-native';
  * a marketer writes one kind of link for pushes and popups alike. */
 function openCta(url: string) {
   const target = resolveNotificationLink(url);
-  if (target.kind === 'external') {
-    fireAndForget(Linking.openURL(target.url));
-    return;
-  }
-  if (!navigationRef.isReady()) return;
-  if (target.kind === 'post') {
-    navigationRef.navigate('PostDetail', { postId: target.postId });
-    return;
-  }
-  if (target.kind === 'pod') {
-    navigationRef.navigate('PodDetails', { clubSlug: target.clubSlug, podSlug: target.podSlug });
-    return;
-  }
-  if (target.kind === 'podRequest') {
-    navigationRef.navigate('PodRequestDetail', { id: target.id });
-    return;
-  }
-  if (target.kind === 'screen') {
-    navigationRef.navigate(target.route);
-  }
+  // An external link needs no navigator; an in-app one waits for it.
+  if (target.kind !== 'external' && !navigationRef.isReady()) return;
+  openNotificationTarget(navigationRef, target);
 }
 
 /**

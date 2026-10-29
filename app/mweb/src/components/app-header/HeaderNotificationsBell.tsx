@@ -62,9 +62,13 @@ export default function HeaderNotificationsBell({ onToast }: Readonly<HeaderNoti
         setBusyId(null);
       }
     }
-    const link = n.notification?.link_url;
+    const link: string | null | undefined = n.notification?.link_url;
     setNotificationsOpen(false);
-    if (link) navigate(link);
+    if (!link) return;
+    // A full URL (a short link, the Partners portal) is not a route here —
+    // the router would land it on NotFound.
+    if (link.startsWith('http')) window.open(link, '_blank', 'noopener,noreferrer');
+    else navigate(link);
   };
 
   const onMarkAll = async () => {

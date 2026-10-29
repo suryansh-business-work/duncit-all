@@ -11,7 +11,10 @@ type Nav = NativeStackNavigationProp<RootStackParamList>;
 /** Route a notification payload's `link` to the right screen (post-activity
  * notifications deep-link to PostDetail). Exported for direct unit testing. */
 export function navigateForPushLink(navigation: Nav, link: unknown) {
-  openNotificationTarget(navigation, resolveNotificationLink(typeof link === 'string' ? link : null));
+  openNotificationTarget(
+    navigation,
+    resolveNotificationLink(typeof link === 'string' ? link : null),
+  );
 }
 
 /**

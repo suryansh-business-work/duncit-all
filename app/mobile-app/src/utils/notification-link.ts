@@ -53,7 +53,9 @@ export type NotificationLinkTarget =
   | { kind: 'none' };
 
 /** Deepest route a parsed path lands on — `NotFound` when the map has no screen for it. */
-function leafRouteName(state: Parameters<typeof getActionFromState>[0] | undefined): string | undefined {
+function leafRouteName(
+  state: Parameters<typeof getActionFromState>[0] | undefined,
+): string | undefined {
   const leaf = state?.routes.at(-1);
   return leaf?.state ? leafRouteName(leaf.state) : leaf?.name;
 }

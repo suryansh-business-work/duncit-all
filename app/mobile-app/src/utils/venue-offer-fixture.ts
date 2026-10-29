@@ -1,5 +1,6 @@
 import type { OfferQuote, OfferTerms } from '@/components/venue-offer/offer-format';
 import {
+  FreeArrangementReason,
   PodMessageType,
   VenueChatSide,
   VenueOfferModel,
@@ -40,7 +41,8 @@ export const offerQuote = (venuePayout: number, total: number, pax = 20): OfferQ
 
 /**
  * A host's per-guest offer for 20 guests, at least 8 paid for, waiting on the
- * venue (round 1) — three counters a side, none used yet.
+ * venue (round 1) — three counters a side, none used yet; a priced booking for
+ * a paid pod, so no free reason.
  */
 export const offerTerms = (over: Partial<OfferTerms> = {}): OfferTerms => ({
   slot_id: 'slot-1',
@@ -64,6 +66,8 @@ export const offerTerms = (over: Partial<OfferTerms> = {}): OfferTerms => ({
   counters_per_side: 3,
   host_counters_used: 0,
   venue_counters_used: 0,
+  free_pod: false,
+  free_justification: null,
   quote: offerQuote(6000, 6600, 20),
   quote_min: offerQuote(2400, 2640, 8),
   counter: null,
@@ -88,6 +92,26 @@ export const counteredOffer = (over: Partial<OfferTerms> = {}): OfferTerms =>
       quote: offerQuote(7000, 7700, 20),
       quote_min: offerQuote(3500, 3850, 10),
     },
+    ...over,
+  });
+
+/**
+ * A host asking the venue for the window FREE — "a promotional offer: launch
+ * week" — waiting on the venue: nothing quoted, and no counters on either side.
+ */
+export const freeVenueOffer = (over: Partial<OfferTerms> = {}): OfferTerms =>
+  offerTerms({
+    model: VenueOfferModel.Free,
+    rate: 0,
+    min_guests: 0,
+    counters_per_side: 0,
+    free_justification: {
+      reason: FreeArrangementReason.Promotional,
+      details: 'Launch week',
+      accepted_at: '2026-08-29T09:00:00.000Z',
+    },
+    quote: offerQuote(0, 0, 20),
+    quote_min: offerQuote(0, 0, 20),
     ...over,
   });
 

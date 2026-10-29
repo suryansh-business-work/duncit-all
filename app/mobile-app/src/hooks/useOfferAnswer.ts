@@ -11,6 +11,9 @@ export interface OfferNotice {
   text: string;
 }
 
+/** The refusal a counter on a free venue or a free pod gets (`extensions.reason`): it is only accepted or declined. */
+const FREE_NO_COUNTER = 'FREE_NO_COUNTER';
+
 /** The state every booking-offer answer shares — either side, any move. */
 export interface OfferAnswerState {
   busy: boolean;
@@ -25,9 +28,10 @@ export interface OfferAnswerState {
  * One answer to a booking offer (accept, reject, counter — either side): run
  * it and, once it is saved, say so and re-read. When the other side moved
  * first or the offer ran out (OFFER_CHANGED) the answer was not made: say the
- * terms changed and re-read, so the latest are on screen. Any other refusal
- * keeps the sheet open with the server's reason. `run` resolves true when the
- * sheet should close. mWeb twin: useOfferMutation.
+ * terms changed and re-read, so the latest are on screen. A counter on a free
+ * booking (FREE_NO_COUNTER) is told it can only be accepted or declined. Any
+ * other refusal keeps the sheet open with the server's reason. `run` resolves
+ * true when the sheet should close. mWeb twin: useOfferMutation.
  */
 export function useOfferAnswer(reread: () => Promise<unknown>, logTag: string) {
   const { t } = useTranslation();
@@ -54,8 +58,13 @@ export function useOfferAnswer(reread: () => Promise<unknown>, logTag: string) {
         setNotice({ tone: 'success', text: doneText });
       } catch (err: unknown) {
         logs.mobileApp.warn(logTag, 'answer', { error: err });
-        if (!isOfferChangedError(errorReason(err))) {
-          setError(toErrorMessage(err, t('availability.offers.failed')));
+        const reason = errorReason(err);
+        if (!isOfferChangedError(reason)) {
+          setError(
+            reason === FREE_NO_COUNTER
+              ? t('availability.offers.freeNoCounters')
+              : toErrorMessage(err, t('availability.offers.failed')),
+          );
           setBusy(false);
           return false;
         }

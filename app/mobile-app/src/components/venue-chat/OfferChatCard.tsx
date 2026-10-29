@@ -3,6 +3,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 import { isOpenOfferMove, venueChatOfferTitleKey, type VenueChatOfferMove } from '@duncit/utils';
 
+import { freeReasonNote } from '@/components/venue-offer/offer-format';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { OfferChatActions, type OfferChatAnswering } from './OfferChatActions';
@@ -27,7 +28,8 @@ interface Props {
  * and any photos, on the move still waiting on the reader their answers (or,
  * on their own unseen counter, edit and withdraw), and the line's reactions and
  * time at its foot. A move of the reader's own sits on their side of the
- * thread. mWeb twin: OfferChatCard.
+ * thread. The venue reads why the host asked for the venue free on a move of
+ * the live booking. mWeb twin: OfferChatCard.
  */
 export function OfferChatCard({
   move,
@@ -39,8 +41,13 @@ export function OfferChatCard({
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const { primary } = useThemeColors();
-  const { side } = answering;
+  const { side, live } = answering;
   const title = t(venueChatOfferTitleKey(move, side));
+  // The reason rides on the live offer, so only its own moves can name it.
+  const freeNote =
+    side === 'VENUE' && live?.slot_id === move.slot_id
+      ? freeReasonNote(t, live.free_justification)
+      : '';
 
   return (
     <YStack
@@ -71,6 +78,7 @@ export function OfferChatCard({
         side={side}
         podIsFree={answering.room.pod_is_free}
         open={newest && isOpenOfferMove(move.event)}
+        freeNote={freeNote}
       />
       <OfferChatActions move={move} newest={newest} seen={seen} answering={answering} />
       {footer}

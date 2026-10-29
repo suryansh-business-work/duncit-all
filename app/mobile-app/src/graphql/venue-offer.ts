@@ -116,8 +116,10 @@ export const CounterQuoteResultFragment = gql(`
  * A booking offer's terms as both sides read them (`POD_VENUE_OFFER_SDL`): the
  * host's terms with what they ask beside the price, the server's quote at both
  * ends of the guests, the round, whose move it is and until when, the
- * venue's counter while there is one, any photos either side attached, and how
- * many counters each side has used of its share.
+ * venue's counter while there is one, any photos either side attached, how
+ * many counters each side has used of its share, and whether it is a free
+ * arrangement (a free pod, or a FREE venue with the host's reason) — accepted
+ * or declined, never countered.
  */
 export const VenueOfferTermsFragment = gql(`
   fragment MobileVenueOfferTerms on VenueBookingOffer {
@@ -142,6 +144,12 @@ export const VenueOfferTermsFragment = gql(`
     counters_per_side
     host_counters_used
     venue_counters_used
+    free_pod
+    free_justification {
+      reason
+      details
+      accepted_at
+    }
     quote {
       ...MobileVenueQuoteFields
     }

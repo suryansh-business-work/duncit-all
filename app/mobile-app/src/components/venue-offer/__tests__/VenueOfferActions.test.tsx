@@ -6,7 +6,12 @@ import {
 } from '@/components/venue-offer/VenueOfferActions';
 import { VenueOfferStatus } from '@/generated/graphql/graphql';
 import { renderWithProviders } from '@/utils/test-utils';
-import { counteredOffer, offerTerms, venueAnswersApi } from '@/utils/venue-offer-fixture';
+import {
+  counteredOffer,
+  freeVenueOffer,
+  offerTerms,
+  venueAnswersApi,
+} from '@/utils/venue-offer-fixture';
 import type { OfferTerms } from '@/components/venue-offer/offer-format';
 import type { VenueOfferAnswers } from '@/hooks/useVenueOfferAnswers';
 
@@ -158,5 +163,27 @@ describe('VenueOfferActions — the counters each side may make', () => {
   it('names no allowance for a request from before offers', () => {
     mount(null);
     expect(screen.queryByTestId('req-counters-left')).toBeNull();
+  });
+});
+
+describe('VenueOfferActions — a free booking', () => {
+  it('is accepted or declined, never countered, and its accept names no amount', () => {
+    mount(freeVenueOffer());
+    expect(screen.queryByTestId('req-counter')).toBeNull();
+    expect(screen.getByTestId('req-reject')).toBeOnTheScreen();
+    expect(screen.getByTestId('req-counters-left')).toHaveTextContent(
+      'Free booking — it can only be accepted or declined, never countered.',
+    );
+    fireEvent.press(screen.getByTestId('req-accept'));
+    expect(
+      screen.getByText(/^“Sunday Badminton” goes live at Court House on .+\.$/),
+    ).toBeOnTheScreen();
+    expect(screen.queryByText(/you receive/)).toBeNull();
+  });
+
+  it('takes no counter on a free pod either, even from a server that still names a share', () => {
+    mount(offerTerms({ free_pod: true }));
+    expect(screen.queryByTestId('req-counter')).toBeNull();
+    expect(screen.getByTestId('req-counters-left')).toHaveTextContent(/never countered/);
   });
 });

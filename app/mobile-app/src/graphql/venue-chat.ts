@@ -164,8 +164,8 @@ export const SendVenueChatMessageDocument = gql(`
 
 /**
  * What the resubmit sheet edits when a host sends a new offer from the thread
- * after one was declined or ran out: the pod's own details (mWeb:
- * VENUE_CHAT_RESUBMIT_POD).
+ * after one was declined or ran out: the pod's own details, and whether it is
+ * free (its resubmission then says why) (mWeb: VENUE_CHAT_RESUBMIT_POD).
  */
 export const VenueChatResubmitPodDocument = gql(`
   query MobileVenueChatResubmitPod($podId: ID!) {
@@ -179,6 +179,7 @@ export const VenueChatResubmitPodDocument = gql(`
       }
       venue_id
       no_of_spots
+      pod_type
     }
   }
 `);

@@ -40,18 +40,19 @@ const KEYS: Readonly<Record<OfferSide, Record<AnswerChoice, readonly [string, st
 
 /**
  * The venue accepting or rejecting a host's terms, or the host the venue's
- * counter. A venue accepting a free pod is told no amount: the host settles
- * its charges directly.
+ * counter. Accepting a free arrangement names no amount, on either side: a free
+ * pod's host settles the venue's charges directly, and a free venue is paid
+ * nothing.
  */
 export function offerAnswerCopy(
   t: Translate,
   side: OfferSide,
   choice: AnswerChoice,
   vars: AnswerVars,
-  podIsFree: boolean,
+  free: boolean,
 ): AnswerCopy {
   const [title, message, reason] = KEYS[side][choice];
-  const freeAccept = side === 'VENUE' && choice === 'accept' && podIsFree;
+  const freeAccept = choice === 'accept' && free;
   return {
     title: t(title),
     message: t(freeAccept ? 'availability.offers.acceptMessageFree' : message, { vars }),

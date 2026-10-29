@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { slotSpanLabel } from '@duncit/slots';
 import {
   currentOfferTerms,
+  isFreeArrangement,
   offerCounterAllowance,
   offerQuoteRange,
   venueOfferActions,
@@ -49,11 +50,20 @@ function payoutText(subject: VenueOfferSubject, offer?: OfferTerms | null): stri
   return offerMoneyRange(range.venueMin, range.venueMax);
 }
 
+/** What the venue may do: a free venue or a free pod is accepted or declined, never countered. */
+function actionsFor(offer: OfferTerms | null | undefined, free: boolean) {
+  if (!offer) return LEGACY_ACTIONS;
+  const open = venueOfferActions(offer);
+  return { ...open, counter: open.counter && !free };
+}
+
 /**
  * What the venue can do with a booking right now — Accept, Counter or Reject a
  * fresh offer; change or withdraw its counter while the host decides — from its
- * booking requests and from the pod's venue chat. Each opens its own sheet and
- * answers the round it read. mWeb twin: OfferDecisionActions.
+ * booking requests and from the pod's venue chat. A free booking (a free venue
+ * or a free pod) is only accepted or declined, and its accept names no amount.
+ * Each opens its own sheet and answers the round it read. mWeb twin:
+ * OfferDecisionActions.
  */
 export function VenueOfferActions({
   slotId,
@@ -67,6 +77,7 @@ export function VenueOfferActions({
   const [choice, setChoice] = useState<AnswerChoice | null>(null);
   const [countering, setCountering] = useState(false);
   const round = offer ? offer.round : null;
+  const free = subject.pod_is_free || isFreeArrangement(offer);
   const close = () => {
     answers.clearError();
     setChoice(null);
@@ -97,8 +108,9 @@ export function VenueOfferActions({
     <>
       <OfferActionButtons
         testIDPrefix={testIDPrefix}
-        actions={offer ? venueOfferActions(offer) : LEGACY_ACTIONS}
+        actions={actionsFor(offer, free)}
         allowance={offer ? offerCounterAllowance(offer, 'VENUE') : null}
+        free={!!offer && free}
         busy={answers.busy}
         onAccept={() => setChoice('accept')}
         onReject={() => setChoice('reject')}
@@ -107,7 +119,7 @@ export function VenueOfferActions({
       {choice ? (
         <OfferAnswerSheet
           choice={choice}
-          copy={offerAnswerCopy(t, 'VENUE', choice, vars, subject.pod_is_free)}
+          copy={offerAnswerCopy(t, 'VENUE', choice, vars, free)}
           busy={answers.busy}
           error={answers.error}
           onClose={close}

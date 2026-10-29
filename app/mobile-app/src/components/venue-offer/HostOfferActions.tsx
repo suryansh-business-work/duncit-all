@@ -3,6 +3,7 @@ import { slotSpanLabel } from '@duncit/slots';
 import {
   currentOfferTerms,
   hostOfferActions,
+  isFreeArrangement,
   offerCounterAllowance,
   offerQuoteRange,
 } from '@duncit/utils';
@@ -32,15 +33,18 @@ interface Props {
  * What the host can do with the venue's counter while it waits on them: Accept
  * it (the pod goes live), Reject it (the hold is released; they may send a new
  * offer) or Counter back with terms of their own while they have counters
- * left — each in its own sheet, sent for the round they read. Nothing once it
- * is not their move. mWeb twin: HostOfferActions.
+ * left — each in its own sheet, sent for the round they read. A free venue or
+ * a free pod is never countered. Nothing once it is not their move. mWeb twin:
+ * HostOfferActions.
  */
 export function HostOfferActions({ podId, offer, podTitle, venueName, answers }: Readonly<Props>) {
   const { t } = useTranslation();
   const fmt = useDateFormat();
   const [choice, setChoice] = useState<AnswerChoice | null>(null);
   const [countering, setCountering] = useState(false);
-  const actions = hostOfferActions(offer);
+  const free = isFreeArrangement(offer);
+  const answerable = hostOfferActions(offer);
+  const actions = { ...answerable, counter: answerable.counter && !free };
   const terms = currentOfferTerms(offer);
   const close = () => {
     answers.clearError();
@@ -65,6 +69,7 @@ export function HostOfferActions({ podId, offer, podTitle, venueName, answers }:
         testIDPrefix="host-offer"
         actions={actions}
         allowance={offerCounterAllowance(offer, 'HOST')}
+        free={free}
         busy={answers.busy}
         onAccept={() => setChoice('accept')}
         onReject={() => setChoice('reject')}
@@ -73,7 +78,7 @@ export function HostOfferActions({ podId, offer, podTitle, venueName, answers }:
       {choice ? (
         <OfferAnswerSheet
           choice={choice}
-          copy={offerAnswerCopy(t, 'HOST', choice, vars, false)}
+          copy={offerAnswerCopy(t, 'HOST', choice, vars, free)}
           busy={answers.busy}
           error={answers.error}
           onClose={close}

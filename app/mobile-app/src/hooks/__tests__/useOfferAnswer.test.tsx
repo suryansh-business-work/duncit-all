@@ -81,6 +81,30 @@ describe('useOfferAnswer', () => {
     expect(result.current.error).toBeNull();
   });
 
+  it('tells a counter on a free booking that it can only be accepted or declined', async () => {
+    const reread = jest.fn();
+    const { result } = renderHook(() => useOfferAnswer(reread, 'test'));
+    let closes = true;
+    await act(async () => {
+      closes = await result.current.run(
+        () =>
+          Promise.reject(
+            new ApiError('Free bookings cannot be countered', 400, {
+              code: 'BAD_REQUEST',
+              reason: 'FREE_NO_COUNTER',
+            }),
+          ),
+        'Your counter was sent.',
+      );
+    });
+    expect(closes).toBe(false);
+    expect(result.current.error).toBe(
+      'Free booking — it can only be accepted or declined, never countered.',
+    );
+    expect(result.current.notice).toBeNull();
+    expect(reread).not.toHaveBeenCalled();
+  });
+
   it('keeps an answer that went through when only the re-read fails', async () => {
     const reread = jest.fn().mockRejectedValue(new Error('offline'));
     const { result } = renderHook(() => useOfferAnswer(reread, 'test'));

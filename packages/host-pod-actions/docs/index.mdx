@@ -135,7 +135,7 @@ const { menuHandlers, dialogs } = useHostPodActions(() => refetch());
 ```
 
 `menuHandlers` also decides which edit a pod gets: a venue-**DECLINED** pod opens the full
-`PodResubmitDialog` (a new venue, a window from its `venueOfferCalendar` and an offer — how the venue is paid and how much, what the host needs from it, the spots from its minimum — sent as `venue_offer`; same pod reused, and the venue accepts, rejects or counters it); every other pod opens the narrow
+`PodResubmitDialog` (a new venue, a window from its `venueOfferCalendar` and an offer — how the venue is paid and how much (or free), what the host needs from it, the spots from its minimum — sent as `venue_offer`; same pod reused, and the venue accepts, rejects or counters it — a free one it only accepts or declines); every other pod opens the narrow
 `PodEditDialog` — title, description, media, the pod's capacity and its multi-ticket discount.
 
 ### The rows are their own file
@@ -303,6 +303,21 @@ whether pets come. The ask's copy and rules are the shared `availability.offers.
 on mWeb and every portal — so `buildPodResubmitSchema(labels, t?)` takes the surface's translator
 (bundled English when omitted) beside the labels.
 
+### A free venue, or a free pod
+
+The pricing options are `@duncit/utils`' `HOST_OFFER_MODELS` — per guest, per hour, a flat price,
+or **Free venue** (`FREE`, `labels.offerModelFree`). A free venue takes no amount (the rate field
+is hidden and the offer goes at rate 0); the venue may only accept or decline it, never counter.
+Whenever the venue is asked for free OR the pod itself is free (`pod.pod_type === 'FREE'`, carried
+in the values as `pod_type`), the dialog renders `@duncit/forms`' `FreeArrangementFields` — Duncit's
+free policy with "More details", why it is free (initiative, promotional, campaign, or other with
+details), the misuse warning and the "I accept" checkbox — on the form's `free_reason`,
+`free_details` and `free_accepted` (`freeJustificationFields`), checked by
+`addFreeJustificationIssues` (`needsResubmitFreeJustification(values)` says when). The
+justification rides on `venue_offer.free_justification` for a free venue and on the input's own
+`free_justification` for a free pod — the server refuses a host's free pod without one
+(`FREE_JUSTIFICATION_REQUIRED`).
+
 After a venue declines (or lets the offer expire), the venue chat's "Send a new offer" opens the
 dialog prefilled from the declined terms:
 
@@ -381,6 +396,16 @@ directly. The dialog then asks for no venue bill, the preview is headed "Free po
 only the attendance roster (rows without amounts — scanning still gates completion) and one
 note, never a split of zeros, and the success toast says the pod is completed rather than
 "sent to Finance".
+
+### A free venue
+
+A paid pod whose venue gave the booking free (the settlement's `venue_agreed_model` is `FREE`)
+owes that venue nothing for it. `SettlementPreview` reports the agreed model through
+`onAgreedModel`, and the dialog then builds `buildPodCompleteSchema(hasVenue, labels, freeVenue)`:
+the bill fields stay (so extras can be entered), the total is no longer marked required, and the
+bill is asked for only once extra charges are entered — or a total is typed anyway, which then
+needs the bill itself. The venue usage is still checked. That is the server's own rule
+(`venueBillFor`).
 
 ### The venue's usage
 

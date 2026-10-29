@@ -1,4 +1,6 @@
 import { gql } from '@apollo/client';
+import type { FreeJustification } from '@duncit/gql-types';
+import { FREE_JUSTIFICATION_FIELDS } from '@duncit/utils';
 import { BREAKDOWN_FIELDS } from '../pricing/queries';
 import type { PriceBreakdown } from '../pricing/types';
 
@@ -8,7 +10,9 @@ import type { PriceBreakdown } from '../pricing/types';
  * fewest guests the venue is paid for, what it should provide, a note — the
  * server's quote at the most guests (`quote`) and at the fewest (`quote_min`),
  * whose move it is and until when, the venue's counter while there is one, the
- * photos each side attached, and how many counters each side has used of its share.
+ * photos each side attached, how many counters each side has used of its share,
+ * and whether it is free (a free pod, or a free venue with the host's reason) —
+ * accepted or declined, never countered.
  */
 export const OFFER_TERMS_FIELDS = `
   slot_id
@@ -28,6 +32,7 @@ export const OFFER_TERMS_FIELDS = `
   counters_per_side
   host_counters_used
   venue_counters_used
+  free_pod${FREE_JUSTIFICATION_FIELDS}
   quote { ${BREAKDOWN_FIELDS} }
   quote_min { ${BREAKDOWN_FIELDS} }
   counter { model rate min_guests offerings note images at quote { ${BREAKDOWN_FIELDS} } quote_min { ${BREAKDOWN_FIELDS} } }
@@ -165,6 +170,9 @@ export interface OfferCounter {
   quote_min: PriceBreakdown;
 }
 
+/** Why the host asked the venue for the window free, and when they accepted Duncit's free policy. */
+export type OfferFreeJustification = Omit<FreeJustification, '__typename'>;
+
 /** `OFFER_TERMS_FIELDS`, as both sides' answers read it. */
 export interface OfferTerms {
   slot_id: string;
@@ -189,6 +197,10 @@ export interface OfferTerms {
   counters_per_side?: number;
   host_counters_used?: number;
   venue_counters_used?: number;
+  /** The pod was free when the offer was made: the venue accepts or declines it, nobody counters. Absent from older servers. */
+  free_pod?: boolean;
+  /** Why a free venue (model FREE) is free; null on a priced offer, absent from older servers. */
+  free_justification?: OfferFreeJustification | null;
   quote: PriceBreakdown;
   quote_min: PriceBreakdown;
   counter: OfferCounter | null;

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Stack } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/app-settings';
-import { currentOfferTerms, hostOfferActions, offerQuoteRange } from '@duncit/utils';
+import { currentOfferTerms, hostOfferActions, isFreeArrangement, offerQuoteRange } from '@duncit/utils';
 import AnswerOfferDialog, { type AnswerChoice } from '../AnswerOfferDialog';
 import CounterAllowanceNote from '../CounterAllowanceNote';
 import CounterOfferDialog from '../CounterOfferDialog';
@@ -21,6 +21,8 @@ interface Props {
   /** The pod's live offer (`usePodVenueOffer`). */
   offer: PodOffer;
   subject: OfferSubject;
+  /** A free pod, when the caller knows it: the accept names no amount. The offer's own `free_pod` and a free venue say the same. */
+  podIsFree?: boolean;
   /** Re-reads whatever shows the offer, after any answer. */
   onDone: () => unknown;
 }
@@ -29,10 +31,11 @@ interface Props {
  * What the host can do with the venue's counter while it waits on them: Accept
  * it (the pod goes live), Reject it (the hold is released; they may send a new
  * offer) or Counter back with terms of their own while they have counters left
- * (the note under the answers says how many). Each opens its own dialog and
- * answers the round it read. Nothing once it is not their move.
+ * (the note under the answers says how many — or, on a free booking, that it is
+ * only accepted or declined). Each opens its own dialog and answers the round
+ * it read. Nothing once it is not their move.
  */
-export default function HostOfferActions({ offer, subject, onDone }: Readonly<Props>) {
+export default function HostOfferActions({ offer, subject, podIsFree = false, onDone }: Readonly<Props>) {
   const { t } = useTranslation();
   const [answer, setAnswer] = useState<AnswerChoice | null>(null);
   const [countering, setCountering] = useState(false);
@@ -64,7 +67,7 @@ export default function HostOfferActions({ offer, subject, onDone }: Readonly<Pr
       <CounterAllowanceNote offer={offer} side="HOST" />
       <AnswerOfferDialog
         target={target}
-        subject={{ ...subject, start_at: offer.start_at, end_at: offer.end_at, pod_is_free: false }}
+        subject={{ ...subject, start_at: offer.start_at, end_at: offer.end_at, pod_is_free: podIsFree || isFreeArrangement(offer) }}
         choice={answer}
         amount={rupeesRange(range.venueMin, range.venueMax)}
         round={offer.round}

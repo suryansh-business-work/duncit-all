@@ -1,4 +1,9 @@
-import { makePodCompleteSchema } from '@duncit/forms/schemas';
+import {
+  addVenueBillIssues,
+  addVenueUsageIssues,
+  makePodCompleteSchema,
+  type PodCompleteValues,
+} from '@duncit/forms/schemas';
 import type { HostPodActionLabels } from '../labels';
 
 /**
@@ -13,6 +18,25 @@ export {
   type PodCompleteValues,
 } from '@duncit/forms/schemas';
 
-/** `hasVenue` is true only for a paid pod at a venue — a free pod's host settles the venue directly. */
-export const buildPodCompleteSchema = (hasVenue: boolean, labels: HostPodActionLabels) =>
-  makePodCompleteSchema(hasVenue, labels.venueBill);
+/**
+ * A free venue (its offer was FREE) is owed nothing for the booking, so its
+ * bill is asked for only once it charged extras — or a bill total is entered
+ * anyway, which then needs the bill itself. The server's `venueBillFor`.
+ */
+const freeVenueBillOwed = (values: Readonly<Pick<PodCompleteValues, 'venue_bill_amount' | 'venue_extra_amount'>>) => {
+  const extra = values.venue_extra_amount.trim();
+  return values.venue_bill_amount.trim() !== '' || (extra !== '' && Number(extra) !== 0);
+};
+
+/**
+ * `hasVenue` is true only for a paid pod at a venue — a free pod's host settles
+ * the venue directly. `freeVenue`: that venue gave the booking free, so its
+ * usage is still checked but its bill only when it is owed.
+ */
+export const buildPodCompleteSchema = (hasVenue: boolean, labels: HostPodActionLabels, freeVenue = false) => {
+  if (!hasVenue || !freeVenue) return makePodCompleteSchema(hasVenue, labels.venueBill);
+  return makePodCompleteSchema(false, labels.venueBill).superRefine((values, ctx) => {
+    addVenueUsageIssues(values, ctx, labels.venueBill);
+    if (freeVenueBillOwed(values)) addVenueBillIssues(values, ctx, labels.venueBill);
+  });
+};

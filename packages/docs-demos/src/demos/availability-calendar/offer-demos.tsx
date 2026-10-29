@@ -1,6 +1,37 @@
-import { OfferChatCard, VenueMinBusinessNote, VenueOfferPinnedBar, type OfferChatViewer } from '@duncit/availability-calendar';
+import {
+  OfferChatCard,
+  OfferTermsPanel,
+  VenueMinBusinessNote,
+  VenueOfferPinnedBar,
+  type OfferChatViewer,
+  type OfferTerms,
+  type PriceBreakdown,
+} from '@duncit/availability-calendar';
 import type { PinnedOfferSource, VenueChatOfferMove, VenueChatSide, VenueMinBusinessRow } from '@duncit/utils';
 import { defineDemo } from '../../types';
+
+/** A free venue's quote: nothing to pay at any guests. */
+const FREE_QUOTE: PriceBreakdown = {
+  model: 'FLAT',
+  rate: 0,
+  pax: 20,
+  hours: 2,
+  date: '2026-12-05',
+  base: 0,
+  rules: [],
+  rules_total: 0,
+  min_spend_top_up: 0,
+  cleaning_fee: 0,
+  pet_fee: 0,
+  venue_price: 0,
+  gst_pct: 0,
+  taxes: 0,
+  venue_payout: 0,
+  platform_fee_pct: 10,
+  platform_fee: 0,
+  total: 0,
+  deposit: 0,
+};
 
 /** One move of a booking offer, as the pod's venue chat draws it. */
 export const offerChatCardDemo = defineDemo<{ move: VenueChatOfferMove; viewer: OfferChatViewer; newest: boolean }>({
@@ -55,6 +86,47 @@ export const venueOfferPinDemo = defineDemo<{ offer: PinnedOfferSource; side: Ve
     },
   },
   render: (mock) => <VenueOfferPinnedBar offer={mock.offer} side={mock.side} />,
+});
+
+/** A host asked the venue for the window free: the venue accepts or declines it, and nobody counters. */
+export const freeVenueOfferDemo = defineDemo<{ offer: OfferTerms; podIsFree: boolean }>({
+  id: 'free-venue-offer',
+  title: 'Booking offers: a free venue, as the venue answers it',
+  note:
+    'The host picked Free venue and said why, so the terms read "Free venue", no money is quoted and the venue reads the reason. counters_per_side is 0 — a free booking is only accepted or declined, and the pinned bar says so. Change free_justification.reason to INITIATIVE or CAMPAIGN, or clear details; set model to FLAT with a rate and free_pod true for a priced offer on a free pod.',
+  mock: {
+    podIsFree: false,
+    offer: {
+      slot_id: 'slot-1',
+      status: 'SENT',
+      round: 1,
+      awaiting: 'VENUE',
+      model: 'FREE',
+      rate: 0,
+      pax: 20,
+      min_guests: 0,
+      offerings: ['A quiet corner', '10 chairs'],
+      note: 'We will credit your venue on every post.',
+      images: [],
+      pets: false,
+      space_label: 'Terrace',
+      expires_at: '2026-12-02T06:30:00.000Z',
+      counters_per_side: 0,
+      host_counters_used: 0,
+      venue_counters_used: 0,
+      free_pod: false,
+      free_justification: { reason: 'PROMOTIONAL', details: 'Launch week for the new terrace', accepted_at: '2026-12-01T06:30:00.000Z' },
+      quote: FREE_QUOTE,
+      quote_min: FREE_QUOTE,
+      counter: null,
+    },
+  },
+  render: (mock) => (
+    <>
+      <VenueOfferPinnedBar offer={mock.offer} side="VENUE" />
+      <OfferTermsPanel offer={mock.offer} podIsFree={mock.podIsFree} />
+    </>
+  ),
 });
 
 /** What a picked venue usually expects from one booking, as Create Pod shows it. */

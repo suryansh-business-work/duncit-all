@@ -234,7 +234,8 @@ describe('PodResubmitDialog', () => {
     expect(startTile()).not.toBeNull();
   });
 
-  // Paying "for the slot" is gone: a venue is paid per guest, per hour or a flat price.
+  // Paying "for the slot" is gone: a venue is paid per guest, per hour or a flat
+  // price — or asked for the window free.
   it('offers only the ways a venue can still be paid, each on the surface’s own copy', async () => {
     dialog([venuesMock, calendarMock('v-1')]);
     await settle();
@@ -248,7 +249,41 @@ describe('PodResubmitDialog', () => {
       labels.offerModelPerGuest,
       labels.offerModelPerHour,
       labels.offerModelFlat,
+      labels.offerModelFree,
     ]);
+  });
+
+  // A free venue is paid nothing: no amount, but why it is free and the policy accepted.
+  it('asks a free venue for no amount, and sends why it is free once the host says so', async () => {
+    const sent: Record<string, any>[] = [];
+    const { props } = dialog([venuesMock, calendarMock('v-1'), cleanCheck, recording(sent)]);
+    await settle();
+    await pickVenue('Indiranagar Court');
+    fireEvent.click(startTile());
+    await settle();
+    fireEvent.mouseDown(screen.getByLabelText(new RegExp(labels.offerModelLabel)));
+    await settle();
+    fireEvent.click(screen.getByRole('option', { name: labels.offerModelFree }));
+    await settle();
+    await askFor('Two courts');
+
+    expect(screen.queryByTestId('pod-resubmit-offer-rate')).not.toBeInTheDocument();
+    expect(screen.getByTestId('pod-resubmit-free-policy')).toBeInTheDocument();
+    await submit();
+    expect(props.onSaved).not.toHaveBeenCalled();
+    expect(screen.getByText('Pick why this is free')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('radio', { name: 'Approved campaign' }));
+    fireEvent.click(screen.getByRole('checkbox', { name: 'I accept Duncit’s policy for free pods and free venues' }));
+    await submit();
+
+    expect(props.onSaved).toHaveBeenCalledTimes(1);
+    expect(sent.at(-1)?.input.venue_offer).toMatchObject({
+      model: 'FREE',
+      rate: 0,
+      free_justification: { reason: 'CAMPAIGN', details: '', accepted: true },
+    });
+    expect(sent.at(-1)?.input).not.toHaveProperty('free_justification');
   });
 
   // The window belonged to the venue the host just moved away from.

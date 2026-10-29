@@ -7,6 +7,8 @@ import type { PodCompleteValues } from './pod-complete.form';
 
 interface Props {
   control: Control<PodCompleteValues, unknown, PodCompleteValues>;
+  /** The venue gave the booking free: its bill is owed only with extra charges, so the total is not marked required. */
+  billOptional?: boolean;
 }
 
 /**
@@ -17,8 +19,10 @@ interface Props {
  * of that amount: the bill's total and the bill itself are both required.
  * Anything the venue charged beyond the agreed amount goes in as extra charges,
  * paid on top (with Duncit's fee) once Finance approves them against the bill.
+ * A venue that gave the booking free is owed nothing for it, so its bill is
+ * needed only for extras (`billOptional`).
  */
-export default function VenueBillFields({ control }: Readonly<Props>) {
+export default function VenueBillFields({ control, billOptional = false }: Readonly<Props>) {
   const { labels, renderMediaField } = useHostPodActionsConfig();
   const copy = labels.venueBill;
   return (
@@ -30,7 +34,7 @@ export default function VenueBillFields({ control }: Readonly<Props>) {
         control={control}
         name="venue_bill_amount"
         type="number"
-        required
+        required={!billOptional}
         label={copy.billTotal}
         hint={copy.billTotalHint}
         data-testid="pod-complete-venue-bill"

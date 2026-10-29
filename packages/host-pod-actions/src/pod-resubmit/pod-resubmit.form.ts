@@ -1,7 +1,18 @@
 import { z } from 'zod';
-import { offerNoteField, offeringsTextField, type Translate } from '@duncit/forms/schemas';
 import {
-  isVenueOfferModel,
+  addFreeJustificationIssues,
+  freeJustificationDefaults,
+  freeJustificationFields,
+  offerNoteField,
+  offeringsTextField,
+  type FreeJustificationValues,
+  type Translate,
+} from '@duncit/forms/schemas';
+import {
+  freeJustificationInput,
+  isFreePod,
+  isFreeVenueOfferModel,
+  isHostOfferModel,
   offerRateOf,
   podModerationImageUrls,
   venueOfferInput,
@@ -13,7 +24,12 @@ import type { HostPodActionLabels } from '../labels';
 import type { HostPodTarget } from '../types';
 import { askFallbackT } from './ask-translation';
 
-export interface PodResubmitValues {
+/**
+ * `free_reason` / `free_details` / `free_accepted`: why the pod or the venue
+ * asked for is free, and the host's acceptance of Duncit's free policy — asked
+ * whenever either is free (`needsResubmitFreeJustification`).
+ */
+export interface PodResubmitValues extends FreeJustificationValues {
   pod_title: string;
   pod_description: string;
   media_text: string;
@@ -25,9 +41,9 @@ export interface PodResubmitValues {
   space_label: string;
   /** Whether pets come (the venue may charge a pet fee). */
   pets: boolean;
-  /** How the host pays the venue (a VenueOfferModel), '' until picked. */
+  /** How the host pays the venue (a VenueOfferModel, FREE included), '' until picked. */
   venue_offer_model: string;
-  /** The amount typed for that option, in rupees. */
+  /** The amount typed for that option, in rupees (none for a free venue). */
   venue_offer_rate: string;
   /** What the host needs from the venue, one point per line (at least one). */
   offerings: string;
@@ -35,6 +51,8 @@ export interface PodResubmitValues {
   note: string;
   /** The pod's spots — the offer's guests, from the venue's minimum up to what it holds. */
   pax: number;
+  /** The pod's type as it stands (FREE / PAID) — read, never sent: a resubmission does not change it. */
+  pod_type: string;
 }
 
 /** The declined offer's terms "Send a new offer" starts the form from (shared with the app: @duncit/utils). */
@@ -54,31 +72,56 @@ export const blankPodResubmitValues: PodResubmitValues = {
   offerings: '',
   note: '',
   pax: 0,
+  pod_type: '',
+  ...freeJustificationDefaults,
 };
+
+/** Whether the host owes Duncit's free justification: the pod is free, or the venue it asks is. */
+export const needsResubmitFreeJustification = (values: Readonly<Pick<PodResubmitValues, 'pod_type' | 'venue_offer_model'>>) =>
+  isFreePod(values.pod_type) || isFreeVenueOfferModel(values.venue_offer_model);
 
 /** Built from the surface's labels, like the edit dialog's schema: a validation
  *  message is copy the host reads, so it follows their language (rule 38). The
  *  ask beside the price is the shared rule (`offeringsTextField` /
  *  `offerNoteField`), worded by `t` — the surface's translator for the shared
- *  `availability.offers.*` copy (the bundled English when none is given). */
+ *  `availability.*` copy (the bundled English when none is given) — and so is
+ *  the free justification (`addFreeJustificationIssues`). A free venue takes
+ *  no amount. */
 export const buildPodResubmitSchema = (labels: HostPodActionLabels, t: Translate = askFallbackT) =>
-  z.object({
-    pod_title: z.string().trim().min(3, labels.titleTooShort).max(120, labels.titleTooLong),
-    pod_description: z.string().trim().min(10, labels.descriptionTooShort),
-    media_text: z.string().refine(hasImageLine, labels.imageRequired),
-    venue_id: z.string().min(1, labels.venueRequired),
-    offer_start: z.string().min(1, labels.slotRequired),
-    offer_end: z.string().min(1, labels.slotRequired),
-    space_label: z.string(),
-    pets: z.boolean(),
-    venue_offer_model: z.string().refine(isVenueOfferModel, labels.offerModelRequired),
-    venue_offer_rate: z.string().refine((rate) => offerRateOf(rate) > 0, labels.offerRateRequired),
-    offerings: offeringsTextField(t, true),
-    note: offerNoteField(t),
-    pax: z.number(),
-  });
+  z
+    .object({
+      pod_title: z.string().trim().min(3, labels.titleTooShort).max(120, labels.titleTooLong),
+      pod_description: z.string().trim().min(10, labels.descriptionTooShort),
+      media_text: z.string().refine(hasImageLine, labels.imageRequired),
+      venue_id: z.string().min(1, labels.venueRequired),
+      offer_start: z.string().min(1, labels.slotRequired),
+      offer_end: z.string().min(1, labels.slotRequired),
+      space_label: z.string(),
+      pets: z.boolean(),
+      venue_offer_model: z.string().refine(isHostOfferModel, labels.offerModelRequired),
+      venue_offer_rate: z.string(),
+      offerings: offeringsTextField(t, true),
+      note: offerNoteField(t),
+      pax: z.number(),
+      pod_type: z.string(),
+      ...freeJustificationFields,
+    })
+    .superRefine((values, ctx) => {
+      if (!isFreeVenueOfferModel(values.venue_offer_model) && offerRateOf(values.venue_offer_rate) <= 0) {
+        ctx.addIssue({ code: 'custom', path: ['venue_offer_rate'], message: labels.offerRateRequired });
+      }
+      if (needsResubmitFreeJustification(values)) addFreeJustificationIssues(values, ctx, t);
+    });
 
-/** The offer the values hold, with what the host asks of the venue, or null until it is complete. */
+/** The justification as the values hold it — one set of fields for a free pod and a free venue. */
+const freeJustificationOf = (values: PodResubmitValues) => ({
+  reason: values.free_reason,
+  details: values.free_details,
+  accepted: values.free_accepted,
+});
+
+/** The offer the values hold, with what the host asks of the venue (and, for a
+ *  free venue, why it is free), or null until it is complete. */
 export const resubmitOfferOf = (values: PodResubmitValues) =>
   venueOfferInput({
     start: values.offer_start || null,
@@ -90,12 +133,14 @@ export const resubmitOfferOf = (values: PodResubmitValues) =>
     rate: values.venue_offer_rate,
     offerings: values.offerings,
     note: values.note,
+    freeJustification: freeJustificationOf(values),
   });
 
 /** Maps the validated values onto the server's HostResubmitPodInput: the new
- *  venue gets an offer for the window, which it accepts, rejects or counters.
- *  The pod's spots go with it once known — raised to the venue's minimum, they
- *  are the offer's guests. */
+ *  venue gets an offer for the window, which it accepts, rejects or counters
+ *  (a free one: accepts or declines). The pod's spots go with it once known —
+ *  raised to the venue's minimum, they are the offer's guests. A free pod says
+ *  why it is free again; the server refuses a host's free pod without it. */
 export function buildHostResubmitInput(values: PodResubmitValues) {
   return {
     pod_title: values.pod_title.trim(),
@@ -104,6 +149,7 @@ export function buildHostResubmitInput(values: PodResubmitValues) {
     venue_id: values.venue_id,
     ...(values.pax > 0 ? { no_of_spots: values.pax } : {}),
     venue_offer: resubmitOfferOf(values),
+    ...(isFreePod(values.pod_type) ? { free_justification: freeJustificationInput(freeJustificationOf(values)) } : {}),
   };
 }
 
@@ -140,6 +186,7 @@ export function podResubmitInitialValues(
     pod_description: pod.pod_description ?? '',
     media_text: mediaToText(pod.pod_images_and_videos),
     pax: pod.no_of_spots ?? 0,
+    pod_type: pod.pod_type ?? '',
   };
   return prefill ? { ...values, ...prefilledOffer(pod, prefill) } : values;
 }

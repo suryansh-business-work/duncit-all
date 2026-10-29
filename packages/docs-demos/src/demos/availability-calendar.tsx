@@ -13,7 +13,7 @@ import { defineDemo, defineDemos } from '../types';
 // The past-slot demo and its draft mock live beside this file.
 import { pastSlotDemo } from './availability-calendar/past-slot-demo';
 import { priceBreakdownDemo, pricingInputDemo } from './availability-calendar/pricing-demos';
-import { offerChatCardDemo, venueMinBusinessDemo, venueOfferPinDemo } from './availability-calendar/offer-demos';
+import { freeVenueOfferDemo, offerChatCardDemo, venueMinBusinessDemo, venueOfferPinDemo } from './availability-calendar/offer-demos';
 
 interface SlotMock {
   start_at: string;
@@ -160,6 +160,7 @@ export default defineDemos('availability-calendar', [
   pricingInputDemo,
   offerChatCardDemo,
   venueOfferPinDemo,
+  freeVenueOfferDemo,
   venueMinBusinessDemo,
   pastSlotDemo,
 ]);

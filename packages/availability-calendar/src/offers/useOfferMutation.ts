@@ -5,7 +5,7 @@ import { useTranslation } from '@duncit/app-settings';
 import { notify, notifySuccess } from '@duncit/dialogs';
 import { createLogger } from '@duncit/logs';
 import { errorText } from '../pricing/format';
-import { isOfferChanged, targetVariables, type OfferTarget } from './offer-target';
+import { isFreeNoCounter, isOfferChanged, targetVariables, type OfferTarget } from './offer-target';
 
 const logger = createLogger('portal');
 
@@ -15,6 +15,8 @@ const logger = createLogger('portal');
  * saved say so, close, and re-read — a failed re-read only leaves it a moment
  * stale. When the other side moved first (OFFER_CHANGED) the answer was not
  * made: say the terms changed, close, and re-read so the latest are on screen.
+ * A counter on a free booking (FREE_NO_COUNTER) says, in the reader's language,
+ * that it can only be accepted or declined.
  */
 export function useOfferMutation(document: DocumentNode, target: OfferTarget, onClose: () => void, onDone: () => unknown) {
   const { t } = useTranslation();
@@ -37,7 +39,7 @@ export function useOfferMutation(document: DocumentNode, target: OfferTarget, on
     } catch (e) {
       logger.warn('venueOffer', 'answer', { error: e, ...ids });
       if (!isOfferChanged(e)) {
-        setError(errorText(e, t('availability.offers.failed')));
+        setError(isFreeNoCounter(e) ? t('availability.offers.freeNoCounters') : errorText(e, t('availability.offers.failed')));
         return;
       }
       notify(t('availability.offers.offerChanged'), 'warning');

@@ -185,6 +185,8 @@ export interface HostPodActionLabels {
   offerModelPerGuest: string;
   offerModelPerHour: string;
   offerModelFlat: string;
+  /** Asking the venue for the window free — no amount, accepted or declined, never countered. */
+  offerModelFree: string;
   offerRateLabel: string;
   offerModelRequired: string;
   offerRateRequired: string;
@@ -375,6 +377,7 @@ export function mwebHostPodLabels(t: HostPodTranslate): HostPodActionLabels {
     offerModelPerGuest: t('mweb.hostPodActions.offerModelPerGuest'),
     offerModelPerHour: t('mweb.hostPodActions.offerModelPerHour'),
     offerModelFlat: t('mweb.hostPodActions.offerModelFlat'),
+    offerModelFree: t('mweb.hostPodActions.offerModelFree'),
     offerRateLabel: t('mweb.hostPodActions.offerRateLabel'),
     offerModelRequired: t('mweb.hostPodActions.offerModelRequired'),
     offerRateRequired: t('mweb.hostPodActions.offerRateRequired'),
@@ -524,6 +527,7 @@ export function shellHostPodLabels(t: HostPodTranslate): HostPodActionLabels {
     offerModelPerGuest: t('shell.hostPodActions.offerModelPerGuest'),
     offerModelPerHour: t('shell.hostPodActions.offerModelPerHour'),
     offerModelFlat: t('shell.hostPodActions.offerModelFlat'),
+    offerModelFree: t('shell.hostPodActions.offerModelFree'),
     offerRateLabel: t('shell.hostPodActions.offerRateLabel'),
     offerModelRequired: t('shell.hostPodActions.offerModelRequired'),
     offerRateRequired: t('shell.hostPodActions.offerRateRequired'),

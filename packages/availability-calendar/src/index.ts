@@ -79,6 +79,7 @@ export type { SlotRequestHistoryRow, UpcomingBooking } from './bookings/queries'
 export { default as VenueOfferInbox } from './offers/VenueOfferInbox';
 export { default as OfferRequestCard } from './offers/OfferRequestCard';
 export { default as OfferTermsPanel } from './offers/OfferTermsPanel';
+export { default as FreeJustificationNote } from './offers/FreeJustificationNote';
 export { default as OfferHistory } from './offers/OfferHistory';
 export { default as OfferDecisionActions } from './offers/OfferDecisionActions';
 export { offerTermsLabel } from './offers/format';
@@ -103,6 +104,7 @@ export {
   type BookingOffer,
   type BookingRequestRow,
   type OfferCounter,
+  type OfferFreeJustification,
   type OfferHistoryEntry,
   type OfferRequestSummary,
   type OfferTerms,

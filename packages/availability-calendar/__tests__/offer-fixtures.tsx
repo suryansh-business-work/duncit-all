@@ -64,6 +64,9 @@ export function makeOffer(over: Partial<BookingOffer> = {}): BookingOffer {
     counters_per_side: 3,
     host_counters_used: 0,
     venue_counters_used: 0,
+    // A priced offer on a paid pod: countered freely, no free justification.
+    free_pod: false,
+    free_justification: null,
     quote,
     quote_min: quoteMin,
     counter: null,
@@ -96,6 +99,27 @@ export function makePodOffer(over: Partial<PodOffer> = {}): PodOffer {
     ...over,
   } as PodOffer;
 }
+
+/** Nothing to pay: a free venue's quote at any guests. */
+export const freeQuote = breakdownResult(
+  makeBreakdown({ model: 'FLAT', rate: 0, base: 0, venue_price: 0, venue_payout: 0, platform_fee: 0, total: 0 }),
+);
+
+/** The host asked the venue for the window free, for a launch promotion — no counters either way. */
+export const freeVenueOffer = (over: Partial<BookingOffer> = {}): BookingOffer =>
+  makeOffer({
+    model: 'FREE',
+    rate: 0,
+    min_guests: 0,
+    counters_per_side: 0,
+    quote: freeQuote,
+    quote_min: freeQuote,
+    free_justification: { __typename: 'FreeJustification', reason: 'PROMOTIONAL', details: 'Launch week', accepted_at: '2026-12-01T06:30:00.000Z' },
+    history: [
+      { __typename: 'VenueOfferHistoryEntry', by: 'HOST', action: 'OFFER', model: 'FREE', rate: 0, min_guests: 0, total: 0, note: '', at: '2026-12-01T06:30:00.000Z' },
+    ],
+    ...over,
+  } as Partial<BookingOffer>);
 
 /** The venue countered the host's offer with a flat ₹7,000 (its first counter); the host's move. */
 export const counteredPodOffer = (over: Partial<PodOffer> = {}) =>

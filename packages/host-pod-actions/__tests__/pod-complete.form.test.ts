@@ -91,6 +91,38 @@ describe('buildPodCompleteSchema on a paid venue pod', () => {
   });
 });
 
+describe('buildPodCompleteSchema at a venue that gave the booking free', () => {
+  // Owed nothing for the booking, so a bill is the proof of extras only (the server's venueBillFor).
+  const freeVenueSchema = buildPodCompleteSchema(true, labels, true);
+
+  it('completes with no bill while the venue charged nothing beyond the booking', () => {
+    expect(errorsFor(freeVenueSchema, values())).toEqual({});
+    expect(errorsFor(freeVenueSchema, values({ venue_extra_amount: '0' }))).toEqual({});
+  });
+
+  it('asks for the bill total and the bill once the venue charged extras', () => {
+    expect(errorsFor(freeVenueSchema, values({ venue_extra_amount: '120' }))).toEqual({
+      venue_bill_amount: labels.venueBill.billRequired,
+      venue_bill_media: labels.venueBill.billUploadRequired,
+    });
+    expect(errorsFor(freeVenueSchema, billed({ venue_extra_amount: '120' }))).toEqual({});
+  });
+
+  it('asks for the bill itself when a total is entered anyway', () => {
+    expect(errorsFor(freeVenueSchema, values({ venue_bill_amount: '450' }))).toEqual({
+      venue_bill_media: labels.venueBill.billUploadRequired,
+    });
+  });
+
+  it('still checks the venue usage', () => {
+    expect(errorsFor(freeVenueSchema, values({ venue_pax: '2.5' }))).toEqual({ venue_pax: labels.venueBill.paxInvalid });
+  });
+
+  it('means nothing for a pod with no venue bill to ask for', () => {
+    expect(errorsFor(buildPodCompleteSchema(false, labels, true), values({ venue_bill_amount: '-5' }))).toEqual({});
+  });
+});
+
 describe('buildPodCompleteSchema with no bill to ask for', () => {
   // A pod with no venue, and a free pod: neither has a venue bill.
   it('completes with every venue field empty', () => {

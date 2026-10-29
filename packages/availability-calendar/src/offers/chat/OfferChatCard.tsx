@@ -3,10 +3,15 @@ import { Paper, Stack, Typography } from '@mui/material';
 import HandshakeOutlinedIcon from '@mui/icons-material/HandshakeOutlined';
 import { useDateFormat, useTranslation } from '@duncit/app-settings';
 import { venueChatOfferTitleKey, type VenueChatLine, type VenueChatOfferMove } from '@duncit/utils';
+import type { PodOffer } from '../host/queries';
 import LineReactions from './LineReactions';
 import OfferChatActions, { type OfferChatAnswering } from './OfferChatActions';
 import OfferMoveDetails from './OfferMoveDetails';
 import { isOpenMove, titleSideOf, type OfferChatViewer } from './chat-lines';
+
+/** The host's reason for asking the venue free, on that offer's own line: the live offer carries it, the line does not. */
+const freeReasonOf = (move: VenueChatOfferMove, live: PodOffer | null | undefined) =>
+  live && live.slot_id === move.slot_id && move.event === 'OFFER' ? live.free_justification : null;
 
 interface Props {
   move: VenueChatOfferMove;
@@ -75,7 +80,13 @@ export default function OfferChatCard({ move, viewer, newest, answering, podIsFr
             {line.edited_at ? ` · ${t('availability.offers.chat.edited')}` : ''}
           </Typography>
         )}
-        <OfferMoveDetails move={move} money={money} open={newest && isOpenMove(move.event)} podIsFree={podIsFree} />
+        <OfferMoveDetails
+          move={move}
+          money={money}
+          open={newest && isOpenMove(move.event)}
+          podIsFree={podIsFree}
+          freeJustification={freeReasonOf(move, answering?.live)}
+        />
         {answering && viewer !== 'STAFF' && (
           <OfferChatActions move={move} side={viewer} newest={newest} answering={answering} podIsFree={podIsFree} seen={seen} />
         )}

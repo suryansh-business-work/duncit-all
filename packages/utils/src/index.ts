@@ -138,6 +138,19 @@ export {
   type ReportableKind,
 } from './content-report';
 export {
+  HEALTH_APPEAL_MESSAGE_MAX,
+  HEALTH_APPEAL_REASONS,
+  HEALTH_APPEAL_REASON_KEY,
+  HEALTH_APPEAL_STATUSES,
+  HEALTH_APPEAL_STATUS_COLOR,
+  HEALTH_APPEAL_STATUS_KEY,
+  healthAppealStateOf,
+  isHealthAppealReason,
+  type AppealableAdjustment,
+  type HealthAppealReason,
+  type HealthAppealStatus,
+} from './health-appeal';
+export {
   readReferralCode,
   referralLink,
   renderReferralMessage,

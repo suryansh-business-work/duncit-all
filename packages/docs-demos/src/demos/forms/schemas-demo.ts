@@ -13,6 +13,7 @@ import {
   makeResetPasswordSchema,
   makeForceMarkSchema,
   makeVenueCancelPodSchema,
+  makeHealthAppealSchema,
   makeTwoFactorCodeSchema,
   makePhysicalGiftCardSchema,
   formatPhysicalGiftCardPasscode,
@@ -165,6 +166,10 @@ export const schemasDemo = defineDemo<SchemaMock>({
       ),
       // The venue owner's reason for cancelling a pod: the same box, a floor of 5.
       'Venue cancels a pod': say(makeVenueCancelPodSchema(t).safeParse({ reason: mock.reason })),
+      // An appeal against a health deduction: a stored reason and some words.
+      'Health appeal': say(
+        makeHealthAppealSchema(t).safeParse({ reason: 'INCORRECT', message: mock.reason }),
+      ),
       // The Club Admin's by-name mark. Blank the name and it still passes —
       // the admin records what the call told them; a one-letter name does not.
       'Club Admin marks by name': say(

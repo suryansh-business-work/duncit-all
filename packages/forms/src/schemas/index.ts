@@ -137,6 +137,8 @@ export {
   type VenueCancelPodValues,
 } from './venue-cancel-pod';
 
+export { healthAppealDefaults, makeHealthAppealSchema, type HealthAppealValues } from './health-appeal';
+
 export {
   POD_REQUEST_NOTE_MAX,
   POD_REQUEST_OVERRIDE_MAX,

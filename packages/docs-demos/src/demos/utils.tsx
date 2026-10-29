@@ -25,6 +25,7 @@ import { profileMenuDemos } from './utils/profile-menu';
 import { chatRoomDemos } from './utils/chat-rooms';
 import { venuePriceRulesDemos } from './utils/venue-price-rules';
 import { venueBookingDemos } from './utils/venue-booking';
+import { healthAppealDemos } from './utils/health-appeal';
 import { defineDemos } from '../types';
 
 export default defineDemos('utils', [
@@ -42,6 +43,7 @@ export default defineDemos('utils', [
   ...clubAdminDemos,
   ...invitesAndClaimsDemos,
   ...privacyDemos,
+  ...healthAppealDemos,
   ...crashReportDemos,
   ...cartReminderDemos,
   ...fitScaleDemos,

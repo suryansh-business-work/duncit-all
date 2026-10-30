@@ -13849,6 +13849,7 @@ export type Mutation = {
   addReelDriveAssets: ReelProject;
   /** Refused for somebody who is not a Club Admin, or is already in a region. */
   addRegionClubAdmin: Region;
+  addTutorialComment: TutorialComment;
   addUserRole: User;
   /**  Admin-only: append a delta with an optional remark. Returns the updated score.  */
   adjustHealth: HealthScore;
@@ -14308,6 +14309,8 @@ export type Mutation = {
   createSurvey: Survey;
   createTeamStructureShare: TeamStructureShare;
   createTicket: Ticket;
+  createTutorial: Tutorial;
+  createTutorialTopic: TutorialTopic;
   createUser: User;
   /** Venue owner / venues console: create a food coupon for a venue. */
   createVenueFoodCoupon: VenueFoodCoupon;
@@ -14472,6 +14475,7 @@ export type Mutation = {
   /** Partner: delete an OWN brand. Refused for an approved brand that still has products — deactivate it instead. */
   deleteMyEcommBrand: Scalars['Boolean']['output'];
   deleteMyProductListing: Scalars['Boolean']['output'];
+  deleteMyTutorialComment: Scalars['Boolean']['output'];
   deleteNotification: Scalars['Boolean']['output'];
   deleteOfficialStatus: Scalars['Boolean']['output'];
   /** Partner: delete a saved connection. Refused while a brand uses it. */
@@ -14517,6 +14521,8 @@ export type Mutation = {
    */
   deleteTelemetryRecords: Scalars['Int']['output'];
   deleteTranslation: Scalars['Boolean']['output'];
+  deleteTutorial: Scalars['Boolean']['output'];
+  deleteTutorialTopic: Scalars['Boolean']['output'];
   deleteUser: Scalars['Boolean']['output'];
   deleteUserActivityDay: Scalars['Boolean']['output'];
   deleteUserActivityYear: Scalars['Boolean']['output'];
@@ -14870,6 +14876,8 @@ export type Mutation = {
   markSupportChatRead: SupportChatSession;
   /** Mark a ticket thread read (owner or agent) — updates the side's last-read so the other side's ticks turn 'Seen' (B12). */
   markTicketRead: Ticket;
+  /** Idempotent: the first call per member counts one view; later calls change nothing. */
+  markTutorialWatched: TutorialWatchResult;
   /** The member has the thread open and read to the end: the other side sees their face move to the newest line. */
   markVenueChatRead: Scalars['Boolean']['output'];
   /** Deep-analyses a pod's content against community guidelines before publishing. */
@@ -16042,6 +16050,7 @@ export type Mutation = {
   togglePodLike: Pod;
   togglePostLike: Post;
   toggleSavedPod: SavedPodState;
+  toggleTutorialLike: TutorialLikeResult;
   /** SCHEDULE, UNSCHEDULE, START, PAUSE, RESUME, COMPLETE, CANCEL or ARCHIVE. */
   transitionPodChallenge: PodChallenge;
   /**
@@ -16249,6 +16258,8 @@ export type Mutation = {
   /** Set a ticket's priority flag (High/Medium/Low) — support agents only. */
   updateTicketPriority: Ticket;
   updateTicketStatus: Ticket;
+  updateTutorial: Tutorial;
+  updateTutorialTopic: TutorialTopic;
   updateUnitTestSettings: UnitTestSettings;
   updateUploadSettings: UploadSetting;
   updateUser: User;
@@ -16491,6 +16502,12 @@ export type MutationAddReelDriveAssetsArgs = {
 
 export type MutationAddRegionClubAdminArgs = {
   user_id: Scalars['ID']['input'];
+};
+
+
+export type MutationAddTutorialCommentArgs = {
+  text: Scalars['String']['input'];
+  tutorial_id: Scalars['ID']['input'];
 };
 
 
@@ -17569,6 +17586,16 @@ export type MutationCreateTicketArgs = {
 };
 
 
+export type MutationCreateTutorialArgs = {
+  input: TutorialInput;
+};
+
+
+export type MutationCreateTutorialTopicArgs = {
+  input: TutorialTopicInput;
+};
+
+
 export type MutationCreateUserArgs = {
   input: CreateUserInput;
 };
@@ -18045,6 +18072,11 @@ export type MutationDeleteMyProductListingArgs = {
 };
 
 
+export type MutationDeleteMyTutorialCommentArgs = {
+  comment_id: Scalars['ID']['input'];
+};
+
+
 export type MutationDeleteNotificationArgs = {
   notification_doc_id: Scalars['ID']['input'];
 };
@@ -18211,6 +18243,16 @@ export type MutationDeleteTelemetryRecordsArgs = {
 
 export type MutationDeleteTranslationArgs = {
   key: Scalars['String']['input'];
+};
+
+
+export type MutationDeleteTutorialArgs = {
+  tutorial_id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteTutorialTopicArgs = {
+  topic_id: Scalars['ID']['input'];
 };
 
 
@@ -18834,6 +18876,11 @@ export type MutationMarkSupportChatReadArgs = {
 
 export type MutationMarkTicketReadArgs = {
   ticket_id: Scalars['ID']['input'];
+};
+
+
+export type MutationMarkTutorialWatchedArgs = {
+  tutorial_id: Scalars['ID']['input'];
 };
 
 
@@ -21350,6 +21397,11 @@ export type MutationToggleSavedPodArgs = {
 };
 
 
+export type MutationToggleTutorialLikeArgs = {
+  tutorial_id: Scalars['ID']['input'];
+};
+
+
 export type MutationTransitionPodChallengeArgs = {
   action: Scalars['String']['input'];
   id: Scalars['ID']['input'];
@@ -22111,6 +22163,18 @@ export type MutationUpdateTicketPriorityArgs = {
 export type MutationUpdateTicketStatusArgs = {
   status: TicketStatus;
   ticket_id: Scalars['ID']['input'];
+};
+
+
+export type MutationUpdateTutorialArgs = {
+  input: TutorialInput;
+  tutorial_id: Scalars['ID']['input'];
+};
+
+
+export type MutationUpdateTutorialTopicArgs = {
+  input: TutorialTopicInput;
+  topic_id: Scalars['ID']['input'];
 };
 
 
@@ -29677,6 +29741,17 @@ export type Query = {
   translationsTable: TranslationTablePage;
   /** Mobile web: has Truecaller answered the request this page started? Public. */
   truecallerWebState: TruecallerWebState;
+  /** A tutorial's comments, newest first. */
+  tutorialComments: TutorialCommentPage;
+  tutorialStats: TutorialStats;
+  /** Active topics (Support staff may ask for inactive ones too). */
+  tutorialTopics: Array<TutorialTopic>;
+  /** Server-side table page over tutorial topics. */
+  tutorialTopicsTable: TutorialTopicTablePage;
+  /** Published tutorials for the signed-in member, with their own like/watched flags. */
+  tutorials: TutorialPage;
+  /** Server-side table page (search/filter/sort/paginate) over every tutorial. */
+  tutorialsTable: TutorialTablePage;
   /** One run's test cases. Filter on status, workspace, file; search title and full name. */
   unitTestCasesTable: UnitTestCaseTablePage;
   /** Finished runs' totals and coverage, oldest first. limit defaults to 30, at most 200. */
@@ -29859,6 +29934,12 @@ export type Query = {
   websiteNavTable: WebsiteNavItemTablePage;
   websiteReelSettings: WebsiteReelSettings;
   websiteReelsTable: WebsiteReelTablePage;
+  /**
+   * The soonest upcoming pods discovery would offer, for every Duncit website's
+   * home rail. Deliberately unauthenticated (a website visitor has no session);
+   * limit defaults to 12 and is capped at 24.
+   */
+  websiteUpcomingPods: Array<WebsitePod>;
   /** The default header assets every media-header scenario falls back to. Cheap: no AiSensy read. */
   whatsappDefaultMedia: WaDefaultMedia;
   /** One send attempt in full — the detail behind a row of the merged WhatsApp log. */
@@ -33572,6 +33653,37 @@ export type QueryTruecallerWebStateArgs = {
 };
 
 
+export type QueryTutorialCommentsArgs = {
+  page?: InputMaybe<Scalars['Int']['input']>;
+  page_size?: InputMaybe<Scalars['Int']['input']>;
+  tutorial_id: Scalars['ID']['input'];
+};
+
+
+export type QueryTutorialTopicsArgs = {
+  include_inactive?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+
+export type QueryTutorialTopicsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryTutorialsArgs = {
+  language?: InputMaybe<TutorialLanguage>;
+  page?: InputMaybe<Scalars['Int']['input']>;
+  page_size?: InputMaybe<Scalars['Int']['input']>;
+  search?: InputMaybe<Scalars['String']['input']>;
+  topic?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type QueryTutorialsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
 export type QueryUnitTestCasesTableArgs = {
   query?: InputMaybe<TableQueryInput>;
   run_id: Scalars['ID']['input'];
@@ -34008,6 +34120,11 @@ export type QueryWebsiteNavTableArgs = {
 
 export type QueryWebsiteReelsTableArgs = {
   query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryWebsiteUpcomingPodsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -41894,6 +42011,157 @@ export type TruecallerWebState =
   | 'REJECTED'
   | 'USED';
 
+/** A short how-to video members watch from the app's Tutorials menu. */
+export type Tutorial = {
+  __typename?: 'Tutorial';
+  comment_count: Scalars['Int']['output'];
+  created_at: Scalars['String']['output'];
+  description: Scalars['String']['output'];
+  duration_sec: Scalars['Int']['output'];
+  id: Scalars['ID']['output'];
+  language: TutorialLanguage;
+  like_count: Scalars['Int']['output'];
+  /** The signed-in member liked it (always false on the Support table). */
+  liked_by_me: Scalars['Boolean']['output'];
+  sort_order: Scalars['Int']['output'];
+  status: TutorialStatus;
+  thumbnail_url: Scalars['String']['output'];
+  title: Scalars['String']['output'];
+  topic: Scalars['String']['output'];
+  updated_at: Scalars['String']['output'];
+  video_url: Scalars['String']['output'];
+  /** Unique members who watched it. */
+  view_count: Scalars['Int']['output'];
+  /** The signed-in member has watched it (always false on the Support table). */
+  watched_by_me: Scalars['Boolean']['output'];
+};
+
+export type TutorialComment = {
+  __typename?: 'TutorialComment';
+  author?: Maybe<User>;
+  author_id: Scalars['ID']['output'];
+  created_at: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  /** The signed-in member wrote it, so may delete it. */
+  is_mine: Scalars['Boolean']['output'];
+  text: Scalars['String']['output'];
+  tutorial_id: Scalars['ID']['output'];
+};
+
+export type TutorialCommentPage = {
+  __typename?: 'TutorialCommentPage';
+  has_more: Scalars['Boolean']['output'];
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<TutorialComment>;
+  total: Scalars['Int']['output'];
+};
+
+export type TutorialInput = {
+  description?: InputMaybe<Scalars['String']['input']>;
+  duration_sec?: InputMaybe<Scalars['Int']['input']>;
+  language: TutorialLanguage;
+  sort_order?: InputMaybe<Scalars['Int']['input']>;
+  status?: InputMaybe<TutorialStatus>;
+  thumbnail_url?: InputMaybe<Scalars['String']['input']>;
+  title: Scalars['String']['input'];
+  topic: Scalars['String']['input'];
+  video_url: Scalars['String']['input'];
+};
+
+/** The language a tutorial is spoken in. */
+export type TutorialLanguage =
+  | 'en'
+  | 'hi';
+
+export type TutorialLikeResult = {
+  __typename?: 'TutorialLikeResult';
+  like_count: Scalars['Int']['output'];
+  liked: Scalars['Boolean']['output'];
+  tutorial_id: Scalars['ID']['output'];
+};
+
+export type TutorialPage = {
+  __typename?: 'TutorialPage';
+  has_more: Scalars['Boolean']['output'];
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<Tutorial>;
+  total: Scalars['Int']['output'];
+};
+
+/** Support dashboard totals for Tutorials. */
+export type TutorialStats = {
+  __typename?: 'TutorialStats';
+  published_tutorials: Scalars['Int']['output'];
+  /** Most-watched tutorials, highest first. */
+  top_tutorials: Array<TutorialViewStat>;
+  total_comments: Scalars['Int']['output'];
+  total_likes: Scalars['Int']['output'];
+  total_tutorials: Scalars['Int']['output'];
+  /** Sum of every tutorial's unique viewers. */
+  total_views: Scalars['Int']['output'];
+  /** Distinct members who watched at least one tutorial. */
+  unique_viewers: Scalars['Int']['output'];
+};
+
+export type TutorialStatus =
+  | 'DRAFT'
+  | 'PUBLISHED';
+
+/** Server-side table page for the shared table engine (tutorialsTable). */
+export type TutorialTablePage = {
+  __typename?: 'TutorialTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<Tutorial>;
+  total: Scalars['Int']['output'];
+};
+
+/** A topic tutorials are grouped under, managed from the Support portal. */
+export type TutorialTopic = {
+  __typename?: 'TutorialTopic';
+  created_at: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  is_active: Scalars['Boolean']['output'];
+  key: Scalars['String']['output'];
+  label: Scalars['String']['output'];
+  sort_order: Scalars['Int']['output'];
+  updated_at: Scalars['String']['output'];
+};
+
+export type TutorialTopicInput = {
+  is_active?: InputMaybe<Scalars['Boolean']['input']>;
+  key: Scalars['String']['input'];
+  label: Scalars['String']['input'];
+  sort_order?: InputMaybe<Scalars['Int']['input']>;
+};
+
+/** Server-side table page for the shared table engine (tutorialTopicsTable). */
+export type TutorialTopicTablePage = {
+  __typename?: 'TutorialTopicTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<TutorialTopic>;
+  total: Scalars['Int']['output'];
+};
+
+export type TutorialViewStat = {
+  __typename?: 'TutorialViewStat';
+  comment_count: Scalars['Int']['output'];
+  like_count: Scalars['Int']['output'];
+  title: Scalars['String']['output'];
+  tutorial_id: Scalars['ID']['output'];
+  view_count: Scalars['Int']['output'];
+};
+
+export type TutorialWatchResult = {
+  __typename?: 'TutorialWatchResult';
+  tutorial_id: Scalars['ID']['output'];
+  view_count: Scalars['Int']['output'];
+  watched: Scalars['Boolean']['output'];
+};
+
 export type TwoFactorEnableResult = {
   __typename?: 'TwoFactorEnableResult';
   accounts: ConnectedAccounts;
@@ -46288,6 +46556,24 @@ export type WebsitePageType =
   | 'BLOG'
   | 'CAREERS'
   | 'NEWSROOM';
+
+/**
+ * One upcoming pod as the public websites' home rail shows it: the card's
+ * facts and the two slugs mWeb's pod page lives at — nothing about members,
+ * hosts, venues or money beyond the ticket price.
+ */
+export type WebsitePod = {
+  __typename?: 'WebsitePod';
+  club_slug: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  image_url?: Maybe<Scalars['String']['output']>;
+  pod_amount: Scalars['Float']['output'];
+  pod_date_time: Scalars['String']['output'];
+  pod_id: Scalars['String']['output'];
+  pod_title: Scalars['String']['output'];
+  pod_type: Scalars['String']['output'];
+  zone_name?: Maybe<Scalars['String']['output']>;
+};
 
 /** A reel in a marketing website's home-page Reel Slider, managed from the Website portal. */
 export type WebsiteReel = {

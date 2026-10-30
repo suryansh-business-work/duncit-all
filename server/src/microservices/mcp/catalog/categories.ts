@@ -231,6 +231,7 @@ export const MODULE_CATEGORY: Record<ModuleName, McpCategoryKey | null> = {
   healthAppealTypeDefs: 'legal',
 
   faqTypeDefs: 'support',
+  tutorialTypeDefs: 'support',
   ticketTypeDefs: 'support',
   supportChatTypeDefs: 'support',
 

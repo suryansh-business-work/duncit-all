@@ -1,10 +1,10 @@
 import { useMemo } from 'react';
 import { Controller, useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Alert, DialogActions, FormControlLabel, Stack, Switch } from '@mui/material';
-import { DuncitButton } from '@duncit/buttons';
+import { Alert, FormControlLabel, Stack, Switch } from '@mui/material';
 import { RhfTextField } from '@duncit/forms';
 import { useTranslation } from '@duncit/shell';
+import FormDialogActions from '../../../../components/FormDialogActions';
 import { TOPIC_FIELD_MAX, topicSchema, type TopicFormOutput, type TopicFormValues } from './topic.types';
 
 interface Props {
@@ -64,14 +64,7 @@ export default function TopicForm({ initialValues, submitting, errorMessage, onS
           />
         </Stack>
       </Stack>
-      <DialogActions sx={{ px: 0, pt: 3 }}>
-        <DuncitButton onClick={onCancel} disabled={submitting}>
-          {t('shell.common.cancel')}
-        </DuncitButton>
-        <DuncitButton type="submit" variant="contained" disabled={submitting}>
-          {submitting ? t('shell.common.saving') : t('shell.common.save')}
-        </DuncitButton>
-      </DialogActions>
+      <FormDialogActions submitting={submitting} onCancel={onCancel} />
     </form>
   );
 }

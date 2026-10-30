@@ -20,6 +20,15 @@ interface Props {
 
 const toMb = (bytes: number) => (bytes / MB).toFixed(1);
 
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+/** Why a picked file cannot be uploaded (not a video, over the admin's cap), or null when it can. */
+function videoRefusal(file: File, maxBytes: number, t: Translate): string | null {
+  if (!file.type.startsWith('video/')) return t('support.tutorials.notVideo');
+  if (file.size <= maxBytes) return null;
+  return t('support.tutorials.videoTooLarge', { vars: { size: toMb(file.size), max: toMb(maxBytes) } });
+}
+
 /** Pick a tutorial video, refuse it in the browser when it is over the admin's
  * cap, otherwise stream it to ImageKit with a real byte-progress bar. The
  * preview's metadata fills the tutorial's length. */
@@ -33,20 +42,12 @@ export default function TutorialVideoField({ value, durationSec, error, onUpload
   const [problem, setProblem] = useState<string | null>(null);
 
   const onPick = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+    const [file] = Array.from(event.target.files ?? []);
     event.target.value = '';
     if (!file) return;
-    if (!file.type.startsWith('video/')) {
-      setProblem(t('support.tutorials.notVideo'));
-      return;
-    }
-    if (file.size > maxVideoBytes) {
-      setProblem(
-        t('support.tutorials.videoTooLarge', { vars: { size: toMb(file.size), max: toMb(maxVideoBytes) } }),
-      );
-      return;
-    }
-    setProblem(null);
+    const refusal = videoRefusal(file, maxVideoBytes, t);
+    setProblem(refusal);
+    if (refusal) return;
     setProgress(0);
     try {
       onUploaded(await upload(file, '/support/tutorials', setProgress));

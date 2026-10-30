@@ -1,11 +1,11 @@
 import { useMemo } from 'react';
 import { Controller, useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Alert, DialogActions, MenuItem, Stack } from '@mui/material';
-import { DuncitButton } from '@duncit/buttons';
+import { Alert, MenuItem, Stack } from '@mui/material';
 import { RhfTextField } from '@duncit/forms';
 import { SingleImageUploadField } from '@duncit/media-picker';
 import { useTranslation } from '@duncit/shell';
+import FormDialogActions from '../../../components/FormDialogActions';
 import TutorialVideoField from './TutorialVideoField';
 import {
   TUTORIAL_DESCRIPTION_MAX,
@@ -113,14 +113,7 @@ export default function TutorialForm({
           />
         </Stack>
       </Stack>
-      <DialogActions sx={{ px: 0, pt: 3 }}>
-        <DuncitButton onClick={onCancel} disabled={submitting}>
-          {t('shell.common.cancel')}
-        </DuncitButton>
-        <DuncitButton type="submit" variant="contained" disabled={submitting} data-testid="tutorial-form-save">
-          {submitting ? t('shell.common.saving') : t('shell.common.save')}
-        </DuncitButton>
-      </DialogActions>
+      <FormDialogActions submitting={submitting} onCancel={onCancel} saveTestId="tutorial-form-save" />
     </form>
   );
 }

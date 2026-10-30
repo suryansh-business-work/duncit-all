@@ -71,7 +71,8 @@ export interface PolicyResult {
   policyBySlug: LivePolicy | null;
 }
 
-const MAX_DESCRIPTION = 300;
+/** What a search result snippet shows before it cuts the line itself. */
+const MAX_DESCRIPTION = 160;
 
 /** An author's rich text becomes the one plain line a card displays. */
 function plainText(value: string | null): string | null {
@@ -81,7 +82,11 @@ function plainText(value: string | null): string | null {
     .replaceAll(/\s+/g, ' ')
     .trim();
   if (!text) return null;
-  return text.length <= MAX_DESCRIPTION ? text : `${text.slice(0, MAX_DESCRIPTION - 1)}…`;
+  if (text.length <= MAX_DESCRIPTION) return text;
+  // End on a whole word, so the snippet never stops half way through one.
+  const cut = text.slice(0, MAX_DESCRIPTION - 1);
+  const lastSpace = cut.lastIndexOf(' ');
+  return `${lastSpace > 0 ? cut.slice(0, lastSpace) : cut}…`;
 }
 
 /**

@@ -156,13 +156,17 @@ const SCENARIO_CHUNK = 500;
  * vanished scenarios behind; a retried chunk upserts the same keys again.
  */
 async function sendScenarios(token, suite, scenarios) {
+  // Only the join keys: the input declares no run url, and an undeclared field
+  // refuses the whole chunk.
+  const { dispatch_id, workflow_run_id } = runIdentity();
   let written = 0;
   for (let i = 0; i < scenarios.length; i += SCENARIO_CHUNK) {
     const data = await gql(
       SCENARIOS_MUTATION,
       {
         input: {
-          ...runIdentity(),
+          dispatch_id,
+          workflow_run_id,
           suite,
           reset: i === 0,
           scenarios: scenarios.slice(i, i + SCENARIO_CHUNK),

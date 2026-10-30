@@ -1199,9 +1199,7 @@ describe('CreatePodStepper — a venue minimum', () => {
     expect(screen.queryByTestId('create-pod-venue-min-business')).toBeNull();
     press('create-pod-submit');
     await screen.findByTestId('create-pod-offer-step');
-    expect(screen.getByTestId('create-pod-venue-min-business')).toHaveTextContent(
-      /₹200 per guest/,
-    );
+    expect(screen.getByTestId('create-pod-venue-min-business')).toHaveTextContent(/₹200 per guest/);
     press('create-pod-offer-model-PER_GUEST');
     fireEvent.changeText(screen.getByTestId('field-venue_offer_rate'), '150');
     fireEvent.changeText(screen.getByTestId('field-venue_offer_offerings'), 'A projector');

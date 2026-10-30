@@ -2,7 +2,12 @@ import { useMemo } from 'react';
 import { format } from 'date-fns';
 import { Text, YStack } from 'tamagui';
 import { buildSlotLabels } from '@duncit/slots';
-import { bookingCalendarProps, formatStatementMoney, type BookingTile, type SpotsBounds } from '@duncit/utils';
+import {
+  bookingCalendarProps,
+  formatStatementMoney,
+  type BookingTile,
+  type SpotsBounds,
+} from '@duncit/utils';
 
 import { SlotCalendar } from '@/components/slots';
 import { useDateFormat } from '@/hooks/useDateFormat';

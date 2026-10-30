@@ -1,5 +1,5 @@
 /**
- * A FREE physical pod on Step 4.
+ * A FREE physical pod on the Pricing step (Step 5).
  *
  * A physical pod may now be free (`pod_type: 'FREE'`, `pod_amount: 0`). A free
  * pod shows no calculation anywhere: no amount field, no suggested prices, no
@@ -140,7 +140,7 @@ const choose = (testId: 'create-pod-free' | 'create-pod-paid') =>
 
 const settleLine = fallbackT('mweb.createPod.freeVenueSettle');
 
-describe('Step 4 — a paid physical pod is unchanged', () => {
+describe('Pricing — a paid physical pod is unchanged', () => {
   it('shows the amount, suggested prices, the discount and the earnings panel, and no free note', () => {
     renderStep(physical());
     expect(screen.getByTestId('create-pod-ticket-price-input')).toHaveValue(500);
@@ -161,7 +161,7 @@ describe('Step 4 — a paid physical pod is unchanged', () => {
   });
 });
 
-describe('Step 4 — a free physical pod', () => {
+describe('Pricing — a free physical pod', () => {
   it('drops the amount and every calculation the moment Free is picked', async () => {
     const { values } = renderStep(physical());
     choose('create-pod-free');
@@ -247,7 +247,7 @@ describe('Step 4 — a free physical pod', () => {
   });
 });
 
-describe('Step 4 — the venue note on a free pod', () => {
+describe('Pricing — the venue note on a free pod', () => {
   it('tells the host to settle a priced partner slot directly', async () => {
     const { last } = renderStep(physical({ pod_type: 'FREE', pod_amount: 0 }));
     const note = await screen.findByTestId('create-pod-free-note-venue');

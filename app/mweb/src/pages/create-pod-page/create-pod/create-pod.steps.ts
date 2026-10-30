@@ -1,3 +1,4 @@
+import { CREATE_POD_OFFER_STEP } from '@duncit/utils';
 import { fallbackT } from '../../../i18n/fallback';
 import {
   FREE_JUSTIFICATION_NAMES,
@@ -10,11 +11,13 @@ import {
 export const STEP_FIELDS: (keyof CreatePodFormValues)[][] = [
   ['host_category_key', 'location_id', 'locality', 'pod_mode', 'club_id'],
   ['pod_title', 'pod_description', 'media_text', 'reel_url', 'pod_hashtag_text', 'pod_info', 'what_this_pod_offers', 'available_perks'],
-  ['venue_id', 'venue_slot_id', 'venue_space_label', 'venue_offer_model', 'venue_offer_rate', 'venue_offer_offerings', 'venue_offer_note', 'meeting_platform', 'meeting_url', 'meeting_notes', 'pod_date_time', 'pod_end_date_time'],
+  ['venue_id', 'venue_slot_id', 'venue_space_label', 'meeting_platform', 'meeting_url', 'meeting_notes', 'pod_date_time', 'pod_end_date_time'],
+  ['venue_offer_model', 'venue_offer_rate', 'venue_offer_offerings', 'venue_offer_note'],
   ['pod_type', 'pod_amount', 'no_of_spots', 'place_charges', 'ticket_discount_enabled', 'ticket_discount_tiers', 'smart_incentive_enabled', 'smart_incentive_pct', 'payment_terms', 'products_enabled', 'product_requests', 'agreed_to_terms'],
 ];
 
-/** Catalogue keys for the four step titles, in step order. Components translate
+/** Catalogue keys for the five step titles, in step order (a pod that sends no
+ * venue offer skips "Offer for Venue" — `createPodStepShown`). Components translate
  * these with their own `t`; the arrays below are the English resolution for
  * callers outside the stepper (the Host Management draft cards). The club step
  * now comes first, so its `step2*` keys lead: the keys keep their names because
@@ -23,6 +26,7 @@ export const STEP_TITLE_KEYS = [
   'mweb.createPod.step2Title',
   'mweb.createPod.step1Title',
   'mweb.createPod.step3Title',
+  'mweb.createPod.stepOfferTitle',
   'mweb.createPod.step4Title',
 ];
 
@@ -31,6 +35,7 @@ export const STEP_SUBTITLE_KEYS = [
   'mweb.createPod.step2Subtitle',
   'mweb.createPod.step1Subtitle',
   'mweb.createPod.step3Subtitle',
+  'mweb.createPod.stepOfferSubtitle',
   'mweb.createPod.step4Subtitle',
 ];
 
@@ -43,22 +48,21 @@ export const STEP_SUBTITLE_KEYS = [
  * has no venue to pick, so "Venue & Slot" describes a screen it never shows.
  */
 const VIRTUAL_STEP_INDEX = 2;
-const VENUE_STEP_INDEX = 2;
-const PRICING_STEP_INDEX = 3;
+const PRICING_STEP_INDEX = 4;
 
 const FREE_JUSTIFICATION_FIELDS: (keyof CreatePodFormValues)[] = Object.values(FREE_JUSTIFICATION_NAMES);
 
 /**
  * The fields checked when leaving `step`: its STEP_FIELDS, plus the free
  * justification on the step that draws it — beside a free venue offer on the
- * venue step, under a free pod on Pricing. Never on a step that does not show
- * it, so a host back on the venue step of a free pod is not held by fields
+ * offer step, under a free pod on Pricing. Never on a step that does not show
+ * it, so a host back on the offer step of a free pod is not held by fields
  * they cannot see there.
  */
 export function stepFieldsFor(step: number, values: Readonly<CreatePodFormValues>): (keyof CreatePodFormValues)[] {
   const fields = STEP_FIELDS[step] ?? [];
   const drawn =
-    (step === VENUE_STEP_INDEX && offersFreeVenue(values)) || (step === PRICING_STEP_INDEX && isFreePodType(values.pod_type));
+    (step === CREATE_POD_OFFER_STEP && offersFreeVenue(values)) || (step === PRICING_STEP_INDEX && isFreePodType(values.pod_type));
   return drawn ? [...fields, ...FREE_JUSTIFICATION_FIELDS] : fields;
 }
 

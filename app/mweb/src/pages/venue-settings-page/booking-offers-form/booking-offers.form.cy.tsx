@@ -147,7 +147,7 @@ describe('BookingOffersForm', () => {
     expect(screen.getByText('0 uses Duncit’s default. In effect now: 8 guests.')).toBeInTheDocument();
     expect(screen.getByText('0 uses Duncit’s default. In effect now: 24 hours.')).toBeInTheDocument();
     expect(screen.getByText('Business you expect per booking')).toBeInTheDocument();
-    expect(screen.getByText(/it is a guide for their offer, not a rule/)).toBeInTheDocument();
+    expect(screen.getByText(/an offer below the amount for the way they pay cannot be sent/)).toBeInTheDocument();
   });
 
   it('submits the typed values with the amounts', async () => {

@@ -80,6 +80,9 @@ vi.mock('../steps/VenueSlotStep', async () => ({
   // The stepper sizes the pod from the booked space — the real (pure) helper.
   venueSpaces: (await vi.importActual<typeof import('../steps/venueSpaces')>('../steps/venueSpaces')).venueSpaces,
 }));
+vi.mock('../steps/VenueOfferStep', () => ({
+  default: () => <div>VenueOfferStep</div>,
+}));
 vi.mock('../steps/PricingStep', () => ({
   default: () => <div>PricingStep</div>,
 }));
@@ -207,8 +210,56 @@ describe('CreatePodStepper', () => {
     expect(await screen.findByText(STEP_TITLES[0])).toBeInTheDocument();
   });
 
+  it('takes a virtual pod from its Meeting step straight to Pricing — it sends no venue offer', async () => {
+    const { onSaveDraft } = setup({ initialStep: 2 });
+    expect(screen.getByText(fallbackT('mweb.createPod.step3TitleVirtual'))).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    expect(await screen.findByText(STEP_TITLES[4])).toBeInTheDocument();
+    expect(screen.getByText('PricingStep')).toBeInTheDocument();
+    expect(screen.queryByText('VenueOfferStep')).not.toBeInTheDocument();
+    await waitFor(() => expect(onSaveDraft).toHaveBeenCalledWith(null, expect.objectContaining({ step: 4 })));
+  });
+
+  it('takes a virtual pod back from Pricing to its Meeting step, passing over the offer step', async () => {
+    setup({ initialStep: 4 });
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }));
+    expect(await screen.findByText(fallbackT('mweb.createPod.step3TitleVirtual'))).toBeInTheDocument();
+    expect(screen.queryByText('VenueOfferStep')).not.toBeInTheDocument();
+  });
+
+  it('resumes a draft saved on the offer step on Pricing when the pod no longer sends an offer', () => {
+    setup({ initialStep: 3 });
+    expect(screen.getByText(STEP_TITLES[4])).toBeInTheDocument();
+    expect(screen.queryByText('VenueOfferStep')).not.toBeInTheDocument();
+  });
+
+  it('walks a physical offer pod through "Offer for Venue" between the venue and Pricing', async () => {
+    setup({ initialStep: 3, initialValues: validVirtual({ pod_mode: 'PHYSICAL', venue_id: 'venue-1' }) });
+    expect(screen.getByText(STEP_TITLES[3])).toBeInTheDocument();
+    expect(screen.getByText('VenueOfferStep')).toBeInTheDocument();
+    // An offer with no terms does not leave the step.
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    });
+    expect(screen.getByText('VenueOfferStep')).toBeInTheDocument();
+    expect(screen.queryByText('PricingStep')).not.toBeInTheDocument();
+    // Back returns to Venue & Slot.
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }));
+    expect(await screen.findByText(STEP_TITLES[2])).toBeInTheDocument();
+    expect(screen.getByText('VenueSlotStep')).toBeInTheDocument();
+  });
+
+  it('skips the offer step for a Pod Request pod, which books the slot its request holds', () => {
+    setup({
+      initialStep: 3,
+      initialValues: validVirtual({ pod_mode: 'PHYSICAL', venue_id: 'venue-1', partner_request_id: 'req-1', venue_slot_id: 'slot-1' }),
+    });
+    expect(screen.getByText(STEP_TITLES[4])).toBeInTheDocument();
+    expect(screen.queryByText('VenueOfferStep')).not.toBeInTheDocument();
+  });
+
   it('publishes: moderates, persists then calls onPublish on the last step', async () => {
-    const { onModerate, onPublish } = setup({ initialStep: 3 });
+    const { onModerate, onPublish } = setup({ initialStep: 4 });
     fireEvent.click(screen.getByRole('button', { name: 'Create Pod' }));
     await waitFor(() => expect(onModerate).toHaveBeenCalled());
     await waitFor(() => expect(onPublish).toHaveBeenCalled());
@@ -219,7 +270,7 @@ describe('CreatePodStepper', () => {
       allowed: false,
       violations: [{ field: 'pod_description', step: '', type: 'contact', message: 'No contact info allowed' }],
     });
-    const { onPublish } = setup({ initialStep: 3, onModerate });
+    const { onPublish } = setup({ initialStep: 4, onModerate });
     fireEvent.click(screen.getByRole('button', { name: 'Create Pod' }));
     expect(await screen.findByTestId('blocked-dialog')).toBeInTheDocument();
     expect(onPublish).not.toHaveBeenCalled();
@@ -235,7 +286,7 @@ describe('CreatePodStepper', () => {
       allowed: false,
       violations: [{ field: 'pod_title', step: '', type: 'x', message: 'Bad title' }],
     });
-    setup({ initialStep: 3, onModerate });
+    setup({ initialStep: 4, onModerate });
     fireEvent.click(screen.getByRole('button', { name: 'Create Pod' }));
     await screen.findByTestId('blocked-dialog');
     fireEvent.click(screen.getByRole('button', { name: 'close-blocked' }));
@@ -244,7 +295,7 @@ describe('CreatePodStepper', () => {
 
   it('shows a generic error alert when publishing fails', async () => {
     const onPublish = vi.fn().mockRejectedValue(new Error('Server exploded'));
-    setup({ initialStep: 3, onPublish });
+    setup({ initialStep: 4, onPublish });
     fireEvent.click(screen.getByRole('button', { name: 'Create Pod' }));
     expect(await screen.findByText('Server exploded')).toBeInTheDocument();
   });
@@ -279,7 +330,7 @@ describe('CreatePodStepper', () => {
       allowed: false,
       violations: [{ field: 'something_new', step: '', type: 'x', message: 'Unknown field problem' }],
     });
-    setup({ initialStep: 3, onModerate });
+    setup({ initialStep: 4, onModerate });
     fireEvent.click(screen.getByRole('button', { name: 'Create Pod' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Unknown field problem' }));
     await waitFor(() => expect(screen.getByText('BasicsStep')).toBeInTheDocument());
@@ -287,14 +338,14 @@ describe('CreatePodStepper', () => {
 
   it('shows the generic failure wording when publishing fails with something that is not an Error', async () => {
     const onPublish = vi.fn().mockRejectedValue('boom');
-    setup({ initialStep: 3, onPublish });
+    setup({ initialStep: 4, onPublish });
     fireEvent.click(screen.getByRole('button', { name: 'Create Pod' }));
     expect(await screen.findByText(fallbackT('mweb.createPod.createFailed'))).toBeInTheDocument();
   });
 
   it('publishes without stale product rows when the products flag is off', async () => {
     const { onPublish } = setup({
-      initialStep: 3,
+      initialStep: 4,
       initialValues: validVirtual({ products_enabled: true, product_requests: [{ product_id: 'p1', quantity: 2 }] }),
     });
     fireEvent.click(screen.getByRole('button', { name: 'Create Pod' }));
@@ -307,7 +358,7 @@ describe('CreatePodStepper', () => {
   it('keeps product rows when the products flag is on', async () => {
     flagState.value = true;
     const { onPublish } = setup({
-      initialStep: 3,
+      initialStep: 4,
       initialValues: validVirtual({ products_enabled: true, product_requests: [{ product_id: 'p1', quantity: 2 }] }),
       products: [{ id: 'p1', name: 'Mat' } as never],
     });

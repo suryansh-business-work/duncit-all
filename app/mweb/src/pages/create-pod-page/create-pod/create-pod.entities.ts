@@ -34,7 +34,7 @@ export interface CreatePodVenue {
   capacity_items?: { label: string; capacity: number }[] | null;
   /** The fewest guests an offer may be for: the venue's own setting, else the platform default. */
   offer_min_guests?: number | null;
-  /** The business the venue hopes each booking brings — a guide Create Pod shows once it is picked. */
+  /** The least the venue takes per booking on each pricing basis — shown on the offer step, enforced there. */
   offer_min_business?: { model: string; amount: number }[] | null;
   cover_image_url?: string | null;
   location_id?: string | null;

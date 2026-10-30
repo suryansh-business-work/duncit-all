@@ -15,7 +15,7 @@ vi.mock('react-router', async (importOriginal) => {
 vi.mock('../create-pod', () => ({
   blankCreatePodForm: { location_id: '', name: 'blank' },
   hydrateDraft: (payload: unknown) => ({ location_id: 'from-draft', payload }),
-  STEP_TITLES: ['A', 'B', 'C', 'D'],
+  STEP_TITLES: ['A', 'B', 'C', 'D', 'E'],
   CreatePodStepper: (props: Record<string, unknown>) => (
     <div data-testid="stepper">
       <span data-testid="step">{String(props.initialStep)}</span>

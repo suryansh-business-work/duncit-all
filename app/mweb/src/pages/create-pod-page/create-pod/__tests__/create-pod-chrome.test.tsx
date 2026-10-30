@@ -61,6 +61,16 @@ describe('StepHero', () => {
     expect(bar).toHaveAttribute('aria-valuemax', '5');
     expect(bar).toHaveAttribute('aria-label', fallbackT('mweb.createPod.stepCounter', { vars: { step: 2, total: 5 } }));
     expect(screen.getByRole('heading', { name: 'Where and when' })).toBeInTheDocument();
+    expect(bar.children).toHaveLength(5);
+  });
+
+  it('draws one pill per step the pod walks — four when it sends no venue offer', () => {
+    render(<StepHero step={3} total={4} title="Pricing" />);
+    const bar = screen.getByRole('progressbar');
+    expect(bar.children).toHaveLength(4);
+    expect(bar).toHaveAttribute('aria-valuenow', '4');
+    expect(bar).toHaveAttribute('aria-valuemax', '4');
+    expect(bar).toHaveAttribute('aria-label', fallbackT('mweb.createPod.stepCounter', { vars: { step: 4, total: 4 } }));
   });
 
   it('opens the guidelines dialog from the AI chip and closes it again', async () => {

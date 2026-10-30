@@ -1,5 +1,5 @@
 /**
- * The spots a venue offer may be for, and the money Step 4 is asked about.
+ * The spots a venue offer may be for, and the money the Pricing step is asked about.
  *
  * Spots ARE the offer's guests, and the server refuses an offer below the
  * venue's minimum (BELOW_VENUE_MINIMUM) — never more than the space holds, so

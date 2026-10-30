@@ -7,11 +7,14 @@ import { STUDIO_ROUTE } from '@/utils/studio-mode';
 import { renderWithProviders } from '@/utils/test-utils';
 
 const mockNavigate = jest.fn();
+const mockPush = jest.fn();
 const mockLogout = jest.fn().mockResolvedValue(undefined);
 const mockFlags: Record<string, boolean> = {};
 
 jest.mock('@react-navigation/native', () => ({
-  useNavigation: () => ({ canGoBack: () => true, navigate: mockNavigate }),
+  useNavigation: () => ({ canGoBack: () => true, navigate: mockNavigate, push: mockPush, dispatch: jest.fn() }),
+  // The menu pushes its pages as a dispatched action; the name is what matters.
+  StackActions: { push: (...args: unknown[]) => mockPush(...args) },
 }));
 jest.mock('@/services/secure-storage', () => ({
   getItem: jest.fn(async () => null),
@@ -102,22 +105,23 @@ describe('Sidebar', () => {
     const onClose = jest.fn();
     renderWithProviders(<Sidebar onClose={onClose} />);
     fireEvent.press(screen.getByTestId('sidebar-identity'));
-    expect(onClose).toHaveBeenCalled();
-    expect(mockNavigate).toHaveBeenCalledWith('Profile');
+    // Pushed over the menu, which stays beneath for Back.
+    expect(onClose).not.toHaveBeenCalled();
+    expect(mockPush).toHaveBeenCalledWith('Profile');
   });
 
-  it('closes and navigates from a Quick Access tile and from section rows', () => {
+  it('pushes a Quick Access tile and section rows over the menu', () => {
     const onClose = jest.fn();
     renderWithProviders(<Sidebar onClose={onClose} />);
     fireEvent.press(screen.getByTestId('sidebar-grid-pod-history'));
-    expect(onClose).toHaveBeenCalled();
-    expect(mockNavigate).toHaveBeenCalledWith('PodHistory');
+    expect(onClose).not.toHaveBeenCalled();
+    expect(mockPush).toHaveBeenCalledWith('PodHistory');
     expand('work');
     fireEvent.press(screen.getByTestId('sidebar-item-referral'));
-    expect(mockNavigate).toHaveBeenCalledWith('Referral');
+    expect(mockPush).toHaveBeenCalledWith('Referral');
     expand('account');
     fireEvent.press(screen.getByTestId('sidebar-item-saved'));
-    expect(mockNavigate).toHaveBeenCalledWith('Saved');
+    expect(mockPush).toHaveBeenCalledWith('Saved');
   });
 
   it('shows the completion nudge in the profile card and opens Account from it', () => {
@@ -125,7 +129,7 @@ describe('Sidebar', () => {
     expect(screen.getByTestId('profile-completion')).toBeOnTheScreen();
     expect(screen.getByText('Your profile is 10% complete')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('profile-completion-cta'));
-    expect(mockNavigate).toHaveBeenCalledWith('Account');
+    expect(mockPush).toHaveBeenCalledWith('Account');
   });
 
   it('switches into Host Studio and keeps the unified card layout', () => {
@@ -159,8 +163,8 @@ describe('Sidebar', () => {
     expect(screen.queryByTestId('sidebar-policy-terms')).toBeNull();
     fireEvent.press(screen.getByText('Policies'));
     fireEvent.press(screen.getByTestId('sidebar-policy-terms'));
-    expect(onClose).toHaveBeenCalled();
-    expect(mockNavigate).toHaveBeenCalledWith('Policy', { slug: 'terms' });
+    expect(onClose).not.toHaveBeenCalled();
+    expect(mockPush).toHaveBeenCalledWith('Policy', { slug: 'terms' });
   });
 
   it('closes from the close button', () => {

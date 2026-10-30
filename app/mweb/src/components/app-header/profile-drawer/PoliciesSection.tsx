@@ -60,7 +60,7 @@ export default function PoliciesSection({
             <Divider sx={{ ml: 8, mr: 2 }} />
             <ButtonBase
               data-testid={`sidebar-policy-${p.slug}`}
-              onClick={() => navigate(`/policies/${p.slug}`, { replace: true })}
+              onClick={() => navigate(`/policies/${p.slug}`)}
               sx={{
                 width: '100%',
                 display: 'flex',

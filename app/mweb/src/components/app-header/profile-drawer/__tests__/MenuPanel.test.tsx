@@ -146,9 +146,9 @@ describe('MenuPanel', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Switch to Venue Studio' }));
     expect(studioState.setMode).toHaveBeenCalledWith('VENUE');
     // It lands on the role's Studio page — every Venue option, with the role
-    // switcher at its top. Leaving the menu replaces its history entry, so
-    // Back skips the menu.
-    expect(mockNavigate).toHaveBeenCalledWith('/venues/options', { replace: true });
+    // switcher at its top. Leaving the menu pushes over it, so Back returns
+    // to the menu.
+    expect(mockNavigate).toHaveBeenCalledWith('/venues/options');
   });
 
   it('falls a persisted mode the user no longer qualifies for back to USER', () => {
@@ -198,7 +198,7 @@ describe('MenuPanel', () => {
     expect(toggle).toHaveAttribute('aria-expanded', 'true');
     expect(screen.getByRole('region', { name: 'Explore & Community' })).toBeInTheDocument();
     fireEvent.click(screen.getByTestId('sidebar-item-ideas'));
-    expect(mockNavigate).toHaveBeenCalledWith('/pod-ideas', { replace: true });
+    expect(mockNavigate).toHaveBeenCalledWith('/pod-ideas');
   });
 
   it('lists every flag-gated row once the flags are on', () => {
@@ -210,7 +210,7 @@ describe('MenuPanel', () => {
     expand('work');
     expect(screen.getByTestId('sidebar-item-membership')).toHaveTextContent('Coming soon');
     fireEvent.click(screen.getByTestId('sidebar-item-membership'));
-    expect(mockNavigate).toHaveBeenCalledWith('/membership', { replace: true });
+    expect(mockNavigate).toHaveBeenCalledWith('/membership');
   });
 
   it('fires onLogout from the footer button', () => {

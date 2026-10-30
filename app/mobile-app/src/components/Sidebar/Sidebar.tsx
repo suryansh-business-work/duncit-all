@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { StackActions, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
 import { XStack, YStack } from 'tamagui';
@@ -81,22 +81,22 @@ export function Sidebar({ onClose }: Readonly<{ onClose: () => void }>) {
   };
 
   // MenuStackRoute is a union of param-less screens; RN v7's distributive
-  // `navigate` overload can't accept a union arg directly, so reshape the method
-  // to a single-arg signature (safe — none of these screens take required params).
-  const navigate: (screen: MenuStackRoute) => void = navigation.navigate;
-  // Leave the menu BEFORE navigating: `navigate` rewinds to a route already in
-  // the stack rather than pushing, so a menu left underneath would swallow the
-  // destination (Switch role -> "User" targets Home, and every header avatar
-  // targets Menu itself). mWeb replaces its /menu entry for the same reason.
+  // `push` overload can't accept a union arg directly, so the action is
+  // dispatched instead (safe — none of these screens take required params).
+  const push =(screen: MenuStackRoute) => navigation.dispatch(StackActions.push(screen));
+  // A page opened from the menu is PUSHED over it, so Back returns to the menu
+  // (as on mWeb's /menu). `push`, not `navigate`: navigate would rewind to a
+  // copy of the route already lower in the stack instead of opening it here.
   const go = (route: MenuRoute) => {
-    onClose();
-    // The Shop group still offers the Cart, and the cart is a TAB now — a bare
-    // navigate would bubble up past a destination that lives one level down.
+    // A tab lives under Home, BELOW the menu, so the menu leaves first. The Shop
+    // group still offers the Cart, and the cart is a TAB now — a bare navigate
+    // would bubble up past a destination that lives one level down.
     if (isTabRoute(route)) {
+      onClose();
       navigation.navigate('Home', { screen: route });
       return;
     }
-    navigate(route);
+    push(route);
   };
 
   return (
@@ -155,10 +155,7 @@ export function Sidebar({ onClose }: Readonly<{ onClose: () => void }>) {
             onToggleTheme={toggleTheme}
             policies={policiesData?.publicPolicies ?? []}
             policiesLoading={policiesLoading}
-            onSelectPolicy={(slug) => {
-              onClose();
-              navigation.navigate('Policy', { slug });
-            }}
+            onSelectPolicy={(slug) => navigation.push('Policy', { slug })}
           />
         </RefreshScrollView>
 

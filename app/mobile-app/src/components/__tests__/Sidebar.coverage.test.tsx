@@ -7,6 +7,7 @@ import { STUDIO_ROUTE } from '@/utils/studio-mode';
 import { renderWithProviders } from '@/utils/test-utils';
 
 const mockNavigate = jest.fn();
+const mockPush = jest.fn();
 const mockMe = jest.fn();
 const mockPolicies = jest.fn();
 const mockFlags: Record<string, boolean> = {};
@@ -25,7 +26,9 @@ const FULL_ACCOUNT = {
 };
 
 jest.mock('@react-navigation/native', () => ({
-  useNavigation: () => ({ canGoBack: () => true, navigate: mockNavigate }),
+  useNavigation: () => ({ canGoBack: () => true, navigate: mockNavigate, push: mockPush, dispatch: jest.fn() }),
+  // The menu pushes its pages as a dispatched action; the name is what matters.
+  StackActions: { push: (...args: unknown[]) => mockPush(...args) },
 }));
 jest.mock('@/hooks/useLogout', () => ({ useLogout: () => jest.fn() }));
 jest.mock('@/services/secure-storage', () => ({
@@ -75,7 +78,7 @@ describe('Sidebar branch coverage', () => {
     expect(screen.getByTestId('sidebar-section-account-subtitle')).toHaveTextContent(/Pod Plans/);
     fireEvent.press(screen.getByTestId('sidebar-section-account-toggle'));
     fireEvent.press(screen.getByTestId('sidebar-item-plans'));
-    expect(mockNavigate).toHaveBeenCalledWith('PodPlans');
+    expect(mockPush).toHaveBeenCalledWith('PodPlans');
   });
 
   it('puts the Pod Shop rows in Shopping & Orders and the cart tab under Home, behind the products flag', () => {
@@ -83,7 +86,7 @@ describe('Sidebar branch coverage', () => {
     renderWithProviders(<Sidebar onClose={jest.fn()} />);
     fireEvent.press(screen.getByTestId('sidebar-section-shopping-toggle'));
     fireEvent.press(screen.getByTestId('sidebar-item-orders'));
-    expect(mockNavigate).toHaveBeenCalledWith('OrdersHistory');
+    expect(mockPush).toHaveBeenCalledWith('OrdersHistory');
     fireEvent.press(screen.getByTestId('sidebar-item-cart'));
     // The cart is a tab, so it is reached through Home rather than navigated to bare.
     expect(mockNavigate).toHaveBeenCalledWith('Home', { screen: 'Cart' });

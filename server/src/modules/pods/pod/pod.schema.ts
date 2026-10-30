@@ -607,7 +607,30 @@ export const podTypeDefs = /* GraphQL */ `
     page_size: Int!
   }
 
+  """
+  One upcoming pod as the public websites' home rail shows it: the card's
+  facts and the two slugs mWeb's pod page lives at — nothing about members,
+  hosts, venues or money beyond the ticket price.
+  """
+  type WebsitePod {
+    id: ID!
+    pod_id: String!
+    club_slug: String!
+    pod_title: String!
+    pod_date_time: String!
+    image_url: String
+    zone_name: String
+    pod_type: String!
+    pod_amount: Float!
+  }
+
   extend type Query {
+    """
+    The soonest upcoming pods discovery would offer, for every Duncit website's
+    home rail. Deliberately unauthenticated (a website visitor has no session);
+    limit defaults to 12 and is capped at 24.
+    """
+    websiteUpcomingPods(limit: Int): [WebsitePod!]!
     "Pods console: every free pod and free venue booking with the host's justification, newest first (filters: pod_type, reason, venue_approval_status, is_active, pod_date_time, created_at)."
     adminFreeArrangementsTable(query: TableQueryInput): FreeArrangementTablePage!
     "What revoking this pod's cancellation would cost, and whether it is allowed."

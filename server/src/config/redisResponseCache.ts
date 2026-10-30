@@ -93,6 +93,10 @@ const PUBLIC_CACHEABLE_FIELDS = new Set([
   // Argument-keyed but user-independent: the same shared link unfurls the same
   // card for every crawler, and a 60s TTL absorbs WhatsApp/Slack re-fetch storms.
   'linkPreview',
+  // Every Duncit website's home rail of upcoming pods. Argument-keyed (limit),
+  // no auth, no ctx; returns only public card fields (pod.websiteRail.ts), and
+  // a new or changed pod reaches the rails within the TTL.
+  'websiteUpcomingPods',
   // Public discovery/catalog queries — verified to take no `ctx` and to build
   // their Mongo filter solely from the query's own arguments.
   //

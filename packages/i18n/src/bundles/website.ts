@@ -1312,6 +1312,16 @@ export const WEBSITE_BUNDLE: NestedCatalogue = {
         unmute: 'Turn sound on',
         goTo: 'Go to reel {index}',
       },
+      /** The home-page rail of upcoming pods (PodRail.astro). Pod titles and
+       * places are content, not keys. */
+      podRail: {
+        eyebrow: 'Happening soon',
+        heading: 'Pods you can join',
+        free: 'Free',
+        previous: 'Scroll back',
+        next: 'Scroll forward',
+        open: 'Open pod',
+      },
     },
     // The CMS renderer (website/cms-site): only the words it draws itself —
     // everything on a CMS page is written in the Website portal.

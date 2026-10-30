@@ -11,6 +11,7 @@ import RealVibes from '../components/home/RealVibes.astro';
 import FlowStrip from '../components/home/FlowStrip.astro';
 import EarnShowcase from '@duncit/brand/EarnShowcase.astro';
 import ReelSlider from '@duncit/brand/ReelSlider.astro';
+import PodRail from '@duncit/brand/PodRail.astro';
 import { urlConfigs } from '../config/url-configs';
 import { getTranslator } from '../lib/i18n';
 
@@ -23,6 +24,8 @@ const { t } = await getTranslator();
     <TopBar />
     <main>
       <HomeHero />
+      <!-- Upcoming pods, live from the API, right under the banner; each opens on mWeb. -->
+      <PodRail graphqlUrl={urlConfigs.graphqlUrl} mwebUrl={urlConfigs.mwebUrl} t={t} />
       <ActivityMarquee />
 
       <!-- Website portal > Reel Slider. Second on the page, straight after the

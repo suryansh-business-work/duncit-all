@@ -19,6 +19,7 @@ import { primePodRelations } from './pod.loaders';
 import { throwIfClientGone } from '@utils/clientPresence';
 import { reelHasAudio } from './pod.reelAudio';
 import { podVisibleTo } from './pod.visibility';
+import { websiteUpcomingPods } from './pod.websiteRail';
 import { canSeeHidden } from '@utils/hidden';
 import { consoleReaders } from '@modules/portals/console-access';
 
@@ -216,6 +217,8 @@ export const podResolvers = {
     },
   },
   Query: {
+    // Public: every Duncit website's home rail asks this with no session.
+    websiteUpcomingPods: (_p: unknown, args: { limit?: number | null }) => websiteUpcomingPods(args.limit),
     adminFreeArrangementsTable: (_p: unknown, args: { query?: TableQueryInput | null }, ctx: GraphQLContext) => {
       requireRole(ctx, POD_READ);
       return podFreeArrangementsService.table(args.query);

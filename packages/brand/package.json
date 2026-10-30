@@ -32,6 +32,8 @@
     "./SiteStructuredData.astro": "./src/SiteStructuredData.astro",
     "./ReelSlider.astro": "./src/ReelSlider.astro",
     "./reel-slider": "./src/reel-slider.ts",
+    "./PodRail.astro": "./src/PodRail.astro",
+    "./pod-rail": "./src/pod-rail.ts",
     "./cms-block": "./src/cms-block.ts",
     "./CareersApply.astro": "./src/CareersApply.astro",
     "./ApplyButton.astro": "./src/ApplyButton.astro",

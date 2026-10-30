@@ -7,6 +7,7 @@ import Hero from '../components/home/Hero.astro';
 import PartnerPaths from '../components/home/PartnerPaths.astro';
 import PartnerSteps from '../components/home/PartnerSteps.astro';
 import ReelSlider from '@duncit/brand/ReelSlider.astro';
+import PodRail from '@duncit/brand/PodRail.astro';
 import EarnShowcase from '@duncit/brand/EarnShowcase.astro';
 import { urlConfigs } from '../config/url-configs';
 import { getSiteTranslator } from '@duncit/brand/site-i18n';
@@ -19,6 +20,8 @@ const { t } = await getSiteTranslator(urlConfigs.graphqlUrl);
     <SiteHeader />
     <main class="mt-3 sm:mt-4">
       <Hero />
+      <!-- Upcoming pods, live from the API, right under the banner; each opens on mWeb. -->
+      <PodRail graphqlUrl={urlConfigs.graphqlUrl} mwebUrl={urlConfigs.mwebUrl} t={t} />
 
       <!-- Reels second, straight after the hero (hidden when there are none),
            then the Earn section the Website portal can move into a slot below. -->

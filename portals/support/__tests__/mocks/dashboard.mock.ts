@@ -2,6 +2,7 @@ import type { MockedResponse } from '@apollo/client/testing';
 import { BOUNCER_CALLBACK_REQUESTS, BOUNCER_SOS_ALERTS } from '../../src/graphql/bouncer';
 import { TICKETS } from '../../src/graphql/tickets';
 import { SUPPORT_CHAT_SESSIONS } from '../../src/graphql/supportChat';
+import { TUTORIAL_STATS } from '../../src/pages/tutorials/queries';
 import { faqSubmissionsListMock, makeFaqSubmission } from './faq.mock';
 
 /**
@@ -19,7 +20,28 @@ interface DashboardCounts {
   tickets?: number;
   chats?: number;
   submissions?: number;
+  /** Unique members who watched a Learnings video, summed across videos. */
+  learningViews?: number;
 }
+
+/** The Learnings views tile reads one stats object (no paging). */
+const learningStatsMock = (views: number): MockedResponse => ({
+  request: { query: TUTORIAL_STATS },
+  result: {
+    data: {
+      tutorialStats: {
+        __typename: 'TutorialStats',
+        total_views: views,
+        unique_viewers: views,
+        published_tutorials: 1,
+        total_likes: 0,
+        total_comments: 0,
+        top_tutorials: [],
+      },
+    },
+  },
+  maxUsageCount: 5,
+});
 
 const countMock = (
   query: MockedResponse['request']['query'],
@@ -53,4 +75,5 @@ export const dashboardMocks = (counts: DashboardCounts = {}): MockedResponse[] =
       makeFaqSubmission({ id: `sub-${index}` }),
     ),
   ),
+  learningStatsMock(counts.learningViews ?? 7),
 ];

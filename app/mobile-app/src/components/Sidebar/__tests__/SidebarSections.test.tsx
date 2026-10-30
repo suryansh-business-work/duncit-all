@@ -55,7 +55,7 @@ describe('SidebarSections', () => {
     expect(subtitle('work')).toHaveTextContent('Gig Jobs');
     expect(subtitle('loyalty')).toHaveTextContent('Duncit Coin, Refer & Earn');
     expect(subtitle('shopping')).toHaveTextContent('Food, My Rented Items');
-    expect(subtitle('support')).toHaveTextContent('Help, FAQs, Policies');
+    expect(subtitle('support')).toHaveTextContent('Help, FAQs, Learnings, Policies');
     expect(screen.queryByTestId('sidebar-item-ideas')).toBeNull();
   });
 
@@ -138,7 +138,7 @@ describe('SidebarSections', () => {
 
   it('drops Policies from the Support subtitle when no policy is published', () => {
     renderSections({ policies: [] });
-    expect(subtitle('support')).toHaveTextContent(/^Help, FAQs$/);
+    expect(subtitle('support')).toHaveTextContent(/^Help, FAQs, Learnings$/);
     fireEvent.press(toggle('support'));
     expect(screen.queryByTestId('sidebar-policies')).toBeNull();
   });

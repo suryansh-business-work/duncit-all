@@ -121,7 +121,8 @@ describe('Sidebar', () => {
     fireEvent.press(screen.getByTestId('sidebar-grid-pod-history'));
     expect(onClose).not.toHaveBeenCalled();
     expect(mockPush).toHaveBeenCalledWith('PodHistory');
-    expand('work');
+    // Refer & Earn lives in the Loyalty section.
+    expand('loyalty');
     fireEvent.press(screen.getByTestId('sidebar-item-referral'));
     expect(mockPush).toHaveBeenCalledWith('Referral');
     expand('account');

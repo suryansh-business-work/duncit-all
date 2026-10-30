@@ -30,6 +30,7 @@ describe('Duncit Support app config', () => {
       '/tickets',
       '/live-chat',
       'FAQs',
+      'Learnings',
       '/mail-automation',
       'Reported Problems',
     ]);
@@ -48,6 +49,12 @@ describe('Duncit Support app config', () => {
     // two children sharing one label would collapse into a single row.
     const labels = faqs?.children?.map((child) => child.label) ?? [];
     expect(new Set(labels).size).toBe(labels.length);
+  });
+
+  it('nests the Learnings videos and topics under one non-linking group', () => {
+    const learnings = appConfig.nav.find((n) => n.label === 'Learnings');
+    expect(learnings?.to).toBeUndefined();
+    expect(learnings?.children?.map((child) => child.to)).toEqual(['/learnings', '/learnings/topics']);
   });
 
   it('honours VITE_REQUIRED_ROLES when provided', async () => {

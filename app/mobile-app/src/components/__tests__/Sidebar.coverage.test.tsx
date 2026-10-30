@@ -124,7 +124,9 @@ describe('Sidebar branch coverage', () => {
     expect(screen.getByTestId('sidebar-panel')).toBeOnTheScreen();
     expect(screen.getByTestId('profile-completion')).toBeOnTheScreen();
     // Support lists Help and FAQs but no Policies, and Account no Switch role.
-    expect(screen.getByTestId('sidebar-section-support-subtitle')).toHaveTextContent('Help, FAQs');
+    expect(screen.getByTestId('sidebar-section-support-subtitle')).toHaveTextContent(
+      'Help, FAQs, Learnings',
+    );
     expect(screen.getByTestId('sidebar-section-account-subtitle')).not.toHaveTextContent(
       /Switch role/,
     );

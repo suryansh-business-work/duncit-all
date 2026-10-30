@@ -66,7 +66,10 @@ export default function AppRoutes({ superCategory, locationId, zoneName }: Reado
         <Route path="/chats/:id" element={withAuth(<ChatRoomPage />)} />
         <Route path="/venue-chat/:podId" element={withAuth(<VenueChatPage />)} />
         <Route path="/register" element={redirectIfAuthed(<RegisterPage />)} />
+        {/* The chosen sign-in method is a place too, so Back returns to the options. */}
         <Route path="/login" element={redirectIfAuthed(<LoginPage />)} />
+        <Route path="/login/with-password" element={redirectIfAuthed(<LoginPage />)} />
+        <Route path="/login/with-otp" element={redirectIfAuthed(<LoginPage />)} />
         <Route path="/forgot-password" element={redirectIfAuthed(<ForgotPasswordPage />)} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>

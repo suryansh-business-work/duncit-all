@@ -45,7 +45,7 @@ export function useWithRedirect() {
 
 export function getSafeRedirectPath(value?: string | null) {
   if (!value || !value.startsWith('/') || value.startsWith('//')) return '';
-  if (value === '/login' || value.startsWith('/login?')) return '';
+  if (value === '/login' || value.startsWith('/login?') || value.startsWith('/login/')) return '';
   if (value === '/register' || value.startsWith('/register?')) return '';
   return value;
 }

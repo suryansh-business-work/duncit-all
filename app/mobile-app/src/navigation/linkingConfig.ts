@@ -1,6 +1,11 @@
 import type { LinkingOptions } from '@react-navigation/native';
 
-import type { RootStackParamList } from '@/navigation/types';
+import type { LoginMethod, RootStackParamList } from '@/navigation/types';
+
+const LOGIN_STEP_BY_SEGMENT: Record<string, LoginMethod | undefined> = {
+  'with-otp': 'OTP',
+  'with-password': 'PASSWORD',
+};
 
 /**
  * The screen ↔ URL map (mirrors mWeb's paths: /explore, /clubs, /pod/:id …).
@@ -12,7 +17,12 @@ import type { RootStackParamList } from '@/navigation/types';
  */
 export const linkingConfig: NonNullable<LinkingOptions<RootStackParamList>['config']> = {
   screens: {
-    Login: 'login',
+    // The chosen sign-in method is its own entry, as on mWeb: /login/with-otp.
+    Login: {
+      path: 'login/:step?',
+      parse: { step: (segment: string) => LOGIN_STEP_BY_SEGMENT[segment] },
+      stringify: { step: (step: string) => (step === 'OTP' ? 'with-otp' : 'with-password') },
+    },
     Signup: 'signup',
     ForgotPassword: 'forgot-password',
     Survey: 'survey',

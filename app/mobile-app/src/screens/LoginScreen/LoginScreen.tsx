@@ -38,8 +38,21 @@ export function LoginScreen() {
   const authenticate = useAuthStore((s) => s.authenticate);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  // A choice of method, not a place — reopening the app lands on the options.
-  const [step, setStep] = useState<LoginStep>('CHOOSE');
+  const route = useRoute<RouteProp<RootStackParamList, 'Login'>>();
+  // The chosen method is its own stack entry (/login/with-otp), so the back
+  // button returns to the options instead of offering to leave the app.
+  const step: LoginStep = route.params?.step ?? 'CHOOSE';
+  const setStep = (next: LoginStep) => {
+    const routes = navigation.getState()?.routes ?? [];
+    if (next !== 'CHOOSE') {
+      navigation.push('Login', { step: next });
+    } else if (routes.at(-2)?.name === 'Login') {
+      navigation.goBack();
+    } else {
+      // Opened straight on a method (a link): nothing beneath it to return to.
+      navigation.replace('Login');
+    }
+  };
   // Continue with OTP: a correct code flips the same auth gate every other
   // method flips.
   const otp = useOtpLogin(authenticate, t('mweb.auth.somethingWentWrong'));
@@ -51,7 +64,6 @@ export function LoginScreen() {
     credential the provider had already returned: spend it on the login here,
     where every answer it can get is handled. Claimed once per credential.
   */
-  const route = useRoute<RouteProp<RootStackParamList, 'Login'>>();
   const carried = readGoogleSignupHandoff(route.params?.socialLogin);
   const carriedToken = carried?.idToken ?? '';
   useEffect(() => {

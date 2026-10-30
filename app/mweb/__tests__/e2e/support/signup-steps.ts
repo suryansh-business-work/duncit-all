@@ -25,10 +25,17 @@ export function openSignup(path = '/register'): void {
   onSignupStep(1);
 }
 
+/** The "I confirm I'm 18 or older" tick — the age signup needs; the birthday is optional. */
+export function confirmAge(): void {
+  cy.byTestId('signup-age-confirm').click();
+  cy.byTestId('signup-age-confirm-input').should('be.checked');
+}
+
 /** Step 1. An empty referral code leaves the box untouched. */
 export function fillWho(name: string, dob: Dob, referralCode = ''): void {
   fill('field-name', name);
   typeDob(dob);
+  confirmAge();
   if (referralCode) fill('field-referralCode', referralCode);
 }
 

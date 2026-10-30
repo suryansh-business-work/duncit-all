@@ -1,6 +1,7 @@
 /// <reference types="cypress" />
 import type { E2eCodePurpose } from '@duncit/utils';
 import type { CodeTarget } from './commands';
+import { declineTracking } from './ui-apps-3';
 
 /**
  * Steps the account specs share: signing in, asking for a one-time code and
@@ -72,9 +73,13 @@ export function fill(testId: string, text: string, options: Partial<Cypress.Type
 export const openPasswordStep = () => cy.byTestId('continue-with-password').click();
 export const openOtpStep = () => cy.byTestId('continue-with-otp').click();
 
-/** Signed out, on the page that holds the flow. */
+/**
+ * Signed out, on the page that holds the flow. The tracking question is answered
+ * first: its banner sits over the bottom of a phone-sized form, Continue included.
+ */
 export function openSignedOut(path: string): void {
   cy.clearAuth();
+  declineTracking();
   cy.visitApp(path);
 }
 

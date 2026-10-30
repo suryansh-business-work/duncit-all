@@ -32,10 +32,12 @@ describe('Native · 01 signup', () => {
     });
   });
 
-  /** Step one filled with a name and a birthday well over the minimum age. */
+  /** Step one filled with a name, a birthday well over the minimum age, and the age tick. */
   const fillWho = (): void => {
     fill('field-name', NAME);
     pickDob(new Date().getFullYear() - (minAge + 10), 15);
+    tap('signup-age-confirm');
+    cy.byTestId('signup-age-confirm').should('have.attr', 'aria-checked', 'true');
   };
 
   /** Steps one and two filled with the run's own (still free) contacts. */
@@ -65,11 +67,16 @@ describe('Native · 01 signup', () => {
       cy.byTestId('go-login').should('have.text', 'Log in');
     });
 
-    it('SU-02 Continue with step 1 empty asks for the name and the date of birth', () => {
+    it('SU-02 Continue with step 1 empty asks for the name and the age tick, never the date of birth', () => {
       cy.visitApp('/signup');
       tap('signup-next');
       cy.byTestId('name-error').should('have.text', 'Name is required');
-      cy.byTestId('dob-error').should('have.text', 'Date of birth is required');
+      cy.byTestId('signup-age-confirm-error').should(
+        'have.text',
+        `Please confirm you’re ${minAge} or older to join Duncit`,
+      );
+      // The birthday is optional (App Store 5.1.1): an empty box is not an error.
+      cy.byTestId('dob-error').should('not.exist');
     });
 
     it('SU-03 a name with digits is refused', () => {

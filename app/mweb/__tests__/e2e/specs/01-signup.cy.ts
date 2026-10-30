@@ -95,12 +95,16 @@ describe('01 Sign up', () => {
       cy.byTestId('go-login').should('have.text', 'Log in').and('have.attr', 'href', '/login');
     });
 
-    it('SU-02 Continue with step 1 empty asks for the name and the date of birth', () => {
-      openSignup();
-      signupNext().click();
-      cy.byTestId('name-error').should('have.text', 'Name is required');
-      cy.byTestId('dob-error').should('have.text', 'Date of birth is required');
-      onSignupStep(1);
+    it('SU-02 Continue with step 1 empty asks for the name and the age tick, never the date of birth', () => {
+      minSignupAge().then((minAge) => {
+        openSignup();
+        signupNext().click();
+        cy.byTestId('name-error').should('have.text', 'Name is required');
+        cy.byTestId('signup-screen').should('contain.text', `Please confirm you’re ${minAge} or older to join Duncit`);
+        // The birthday is optional (App Store 5.1.1): an empty box is not an error.
+        cy.byTestId('dob-error').should('not.exist');
+        onSignupStep(1);
+      });
     });
 
     itRefusesOnStepOne(STEP_ONE_REFUSALS.nameWithDigits);

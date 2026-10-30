@@ -5,6 +5,8 @@ import {
   E2E_PURGE_MUTATION,
   E2E_TRAFFIC_HEADER,
   E2E_TRAFFIC_KEY_QUERY,
+  makeConsent,
+  serializeConsent,
   type E2eCodePurpose,
 } from '@duncit/utils';
 
@@ -83,6 +85,8 @@ const TRAFFIC_KEY = '__trafficKey';
 const DUID = 'e2e-live-duid';
 /** `DUID_STORAGE_KEY` in @duncit/user-core, which the app reads through secure storage. */
 const DUID_KEY = 'duncit_duid';
+/** `KEY` in `src/stores/consent.store.ts` — the tracking choice the privacy sheet asks for. */
+const CONSENT_KEY = 'duncit.consent';
 const OTP_POLL_MS = 1000;
 const OTP_POLL_TRIES = 30;
 
@@ -230,6 +234,12 @@ Cypress.Commands.add('visitApp', (path: string, options: VisitAppOptions = {}) =
         // on its own timer, so it never needs skipping.
         win.localStorage.setItem(DUID_KEY, DUID);
         win.localStorage.setItem(APP_POPUP_DISMISSED_KEY, JSON.stringify(popupIds));
+        // Tracking declined up front: the privacy sheet covers the bottom of every
+        // phone-sized form, Continue included, until it is answered.
+        win.localStorage.setItem(
+          CONSENT_KEY,
+          serializeConsent(makeConsent({ analytics: false, marketing: false })),
+        );
         if (token) {
           win.localStorage.setItem(APP_TOKEN_KEY, token);
         } else {

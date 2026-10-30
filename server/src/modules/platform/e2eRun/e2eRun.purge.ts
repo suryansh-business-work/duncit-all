@@ -13,8 +13,10 @@ import { PodMemberModel } from '@modules/pods/podMember/podMember.model';
 import { PodAuditLogModel } from '@modules/pods/podAudit/podAudit.model';
 import { ClubModel } from '@modules/clubs/club/club.model';
 import { ShortLinkModel } from '@modules/crm/marketing/shortLink.model';
+import { maskEmail } from '@modules/platform/envEntry/envAccess.service';
 import { e2eOverrides } from './e2eRun.mute';
 import { forgetRunAccountCodes } from './e2eRun.codes';
+import { stampTime, type RunAccountMatcher } from './e2eRun.identity';
 
 /**
  * Removing the run account.
@@ -69,6 +71,57 @@ function stampedAccountsFilter(email: string, stamp: string): RegExp {
     throw badInput('The address does not carry the run stamp, so it is not this run’s account.');
   }
   return new RegExp(`^${escapeRe(local)}(?:-[a-z0-9-]{1,40})?@${escapeRe(domain)}$`, 'i');
+}
+
+/**
+ * How old an earlier run must be before its account is taken off the run
+ * phone: longer than the slowest whole run, so a run still going on the other
+ * branch (main and staging do not share a concurrency group, and both drive
+ * staging) is never pulled out from under itself.
+ */
+const EARLIER_RUN_MS = 6 * 60 * 60 * 1000;
+
+/** The stamp inside a run address: `admin+301020262320-new@…` → `301020262320`. */
+const STAMP_IN_ADDRESS = /(\d{12})(?:-[a-z0-9-]{1,40})?@/i;
+
+interface PhoneHolders {
+  /** Earlier runs' accounts still on the run phone — removed with this run's. */
+  stale: Types.ObjectId[];
+  /** A masked address on the run phone that is not an earlier run's account; null when there is none. */
+  heldBy: string | null;
+}
+
+/**
+ * Who else holds the run phone.
+ *
+ * Every run signs up with a fresh, stamped address but the SAME phone, and the
+ * stamped sweep only reaches this run. A run that never got to its own purge
+ * (cancelled, killed, or from before the purge existed) leaves an account on
+ * the number, and every later signup is refused "This phone number is already
+ * registered" — the whole live suite then dies in its setup hooks. An earlier
+ * RUN account (a run address, stamped long enough ago) goes with this purge.
+ * Anything else on the number — a real member, or a run still going — is never
+ * touched, only named, masked, so the operator can move the run to another
+ * phone. Both fields a number can live in are read, as signup reads them.
+ */
+async function runPhoneHolders(account: RunAccountMatcher | null, stamp: string, now: number): Promise<PhoneHolders> {
+  if (!account?.phone) return { stale: [], heldBy: null };
+  const holders = await UserModel.find(
+    { $or: [{ 'auth.phone.number': account.phone }, { 'communication.whatsapp.number': account.phone }] },
+    { 'auth.email': 1 }
+  ).lean();
+  const stale: Types.ObjectId[] = [];
+  let heldBy: string | null = null;
+  for (const holder of holders) {
+    const email = holder.auth?.email ?? '';
+    const runStamp = account.email.test(email) ? STAMP_IN_ADDRESS.exec(email)?.[1] : undefined;
+    // This run's own account is the stamped sweep's to remove.
+    if (runStamp === stamp) continue;
+    const startedAt = runStamp ? stampTime(runStamp) : null;
+    if (startedAt && now - startedAt.getTime() > EARLIER_RUN_MS) stale.push(holder._id);
+    else heldBy ??= maskEmail(email);
+  }
+  return { stale, heldBy };
 }
 
 /** One account and everything that points at it, in one transaction. */
@@ -171,10 +224,12 @@ export async function purgeE2eRunData(input: PurgeE2eRunDataInput) {
   }
 
   const addresses = stampedAccountsFilter(email, stamp);
-  const accounts = await UserModel.find({ 'auth.email': addresses }, { _id: 1 }).lean();
-  const fixtures = await purgeRunFixtures(accounts.map((found) => found._id), stamp);
-  for (const found of accounts) {
-    await purgeAccount(String(found._id));
+  const stamped = await UserModel.find({ 'auth.email': addresses }, { _id: 1 }).lean();
+  const holders = await runPhoneHolders(account, stamp, Date.now());
+  const accounts = [...stamped.map((found) => found._id), ...holders.stale];
+  const fixtures = await purgeRunFixtures(accounts, stamp);
+  for (const id of accounts) {
+    await purgeAccount(String(id));
   }
 
   const phone = account?.phone ?? '';
@@ -185,6 +240,12 @@ export async function purgeE2eRunData(input: PurgeE2eRunDataInput) {
     await purgeStampedUploads(stamp),
   ];
 
-  logs.server.info('e2eRun', 'purge', { stamp, accounts: accounts.length, records });
-  return { accounts_deleted: accounts.length, records };
+  logs.server.info('e2eRun', 'purge', {
+    stamp,
+    accounts: accounts.length,
+    earlier_run_accounts: holders.stale.length,
+    phone_held: Boolean(holders.heldBy),
+    records,
+  });
+  return { accounts_deleted: accounts.length, records, phone_held_by: holders.heldBy };
 }

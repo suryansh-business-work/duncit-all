@@ -7936,8 +7936,10 @@ export type E2eOneTimeCode = {
 
 export type E2ePurgeReport = {
   __typename?: 'E2ePurgeReport';
-  /** How many accounts were removed — the run account and any address it derived. */
+  /** How many accounts were removed — the run account, any address it derived, and earlier runs' accounts left on the run phone. */
   accounts_deleted: Scalars['Int']['output'];
+  /** Who else holds the run phone, masked (ad***@duncit.com): a real account, or a run still going. Never removed. Null when the phone is free for this run's signup. */
+  phone_held_by?: Maybe<Scalars['String']['output']>;
   /** Per collection, what else was removed: one-time codes and the run's uploads. */
   records: Array<E2ePurgedCollection>;
 };
@@ -15154,8 +15156,11 @@ export type Mutation = {
    * Deletes every account whose email carries the run's stamp, with everything
    * that points at it (the same trace the account-deletion console walks), and
    * every record the sign-in account created with the run's marker in its
-   * title or subject. Called by the live leg after Cypress, whether the suite
-   * passed or failed — a failed run leaves the most data behind.
+   * title or subject. Also removes an EARLIER run's account still holding the
+   * run phone (a run address stamped more than six hours ago), and names —
+   * masked, never removed — any other account on that phone. Called by the
+   * live leg before signup to free the phone, and after Cypress whether the
+   * suite passed or failed — a failed run leaves the most data behind.
    */
   purgeE2eRunData: E2ePurgeReport;
   /** Drop a URL from ImageKit's CDN cache, after replacing what sits behind it. */

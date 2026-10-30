@@ -599,6 +599,23 @@ jobs:
           E2E_STAMP: ${{ steps.identity.outputs.e2e_stamp }}
         run: node scripts/e2e-check-token.mjs
 
+      # Every run signs up with a fresh, stamped address but the SAME phone. A
+      # run that never reached its own purge (cancelled, killed) leaves an
+      # account on that number, and this run's signup would be refused — every
+      # spec after it then dies in its setup hook. The purge also clears an
+      # earlier RUN's account off the phone; anything else on it is never
+      # touched, and the leg stops here naming it (masked) instead.
+      - name: Free the run phone from an earlier run
+        id: free_phone
+        timeout-minutes: 5
+        env:
+          E2E_APP_GRAPHQL_URL: ${{ env.E2E_LIVE_GRAPHQL_URL }}
+          DUNCIT_RELEASE_TOKEN: ${{ secrets.DUNCIT_RELEASE_TOKEN_STAGING }}
+          E2E_STAMP: ${{ steps.identity.outputs.e2e_stamp }}
+          E2E_SIGNUP_EMAIL: ${{ steps.identity.outputs.e2e_signup_email }}
+          E2E_REQUIRE_FREE_PHONE: '1'
+        run: node scripts/e2e-purge.mjs
+
       - run: echo "E2E_STAGE=Installing dependencies" >> "$GITHUB_ENV"
       - name: Install workspace deps
         run: pnpm install --frozen-lockfile
@@ -920,7 +937,7 @@ jobs:
           MODE: suite
           SUITE_KEY: accounts
           SUITE_STATUS: ${{ job.status == 'success' && 'PASSED' || 'FAILED' }}
-          SUITE_ERROR: "${{ job.status == 'success' && '' || steps.staging_token.outputs.error || steps.verdict.outputs.error || format('Failed during: {0}', env.E2E_STAGE) }}"
+          SUITE_ERROR: "${{ job.status == 'success' && '' || steps.staging_token.outputs.error || steps.free_phone.outputs.error || steps.verdict.outputs.error || format('Failed during: {0}', env.E2E_STAGE) }}"
           RESULTS_DIR: ${{ env.E2E_RESULTS_DIR }}
           JUNIT_DIR: ${{ env.JUNIT_ROOT }}
           STAGE: Running suites

@@ -29,12 +29,13 @@ export default function ChatHeader({ session, onResolve, onReopen, onDownload, o
       spacing={1.25}
       sx={{
         alignItems: "center",
-        px: 2,
-        py: 1,
+        px: 2.5,
+        py: 1.25,
         borderBottom: 1,
-        borderColor: 'divider'
+        borderColor: 'divider',
+        bgcolor: 'background.paper'
       }}>
-      <Avatar alt="" src={session.user.avatar_url || undefined} sx={{ width: 32, height: 32, fontSize: 13 }}>
+      <Avatar alt="" src={session.user.avatar_url || undefined} sx={{ width: 40, height: 40, fontSize: 16 }}>
         {session.user.name?.[0]?.toUpperCase() || '?'}
       </Avatar>
       <Box sx={{ flex: 1, minWidth: 0 }}>

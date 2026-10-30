@@ -1,4 +1,5 @@
-import { Box, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
+import ForumOutlinedIcon from '@mui/icons-material/ForumOutlined';
 import type {
   SupportChatMessage,
   SupportChatSession,
@@ -88,9 +89,10 @@ export default function ChatPane({
           )}
         </>
       ) : (
-        <Box sx={{ flex: 1, display: 'grid', placeItems: 'center', color: 'text.secondary' }}>
+        <Stack spacing={1} sx={{ flex: 1, alignItems: 'center', justifyContent: 'center', color: 'text.secondary', bgcolor: 'background.default' }}>
+          <ForumOutlinedIcon sx={{ fontSize: 48, opacity: 0.5 }} aria-hidden />
           <Typography variant="body2">{t('support.chat.selectSession')}</Typography>
-        </Box>
+        </Stack>
       )}
     </Box>
   );

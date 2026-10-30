@@ -1,12 +1,13 @@
-import { Box, Stack, TablePagination, TextField, Typography } from '@mui/material';
+import { Box, InputAdornment, Stack, TablePagination, TextField, Typography } from '@mui/material';
 import PersonAddAlt1Icon from '@mui/icons-material/PersonAddAlt1';
+import SearchIcon from '@mui/icons-material/Search';
 import { DuncitIconButton } from '@duncit/buttons';
 import type { SupportChatSession, SupportChatStatus } from '../../../graphql/supportChat';
 import SessionList from '../SessionList';
 import SessionFilter from './SessionFilter';
 import { useTranslation } from '@duncit/shell';
 
-const LIST_WIDTH = 220;
+const LIST_WIDTH = 300;
 
 interface Props {
   statusFilter: SupportChatStatus;
@@ -54,6 +55,7 @@ export default function SessionInbox({
         flexShrink: 0,
         borderRight: 1,
         borderColor: 'divider',
+        bgcolor: 'background.paper',
         display: 'flex',
         flexDirection: 'column',
       }}
@@ -63,22 +65,33 @@ export default function SessionInbox({
         sx={{
           alignItems: "center",
           justifyContent: "space-between",
-          pr: 0.5
+          px: 2,
+          pt: 1.5,
+          pb: 0.5
         }}>
-        <Typography variant="overline" sx={{ px: 1.5, pt: 1, display: 'block', fontWeight: 800 }}>
-          Chat with Us
+        <Typography variant="subtitle1" component="h2" sx={{ fontWeight: 800 }}>
+          {t('shell.nav.chatWithUs')}
         </Typography>
         <DuncitIconButton size="small" aria-label={t('support.createUser.title')} onClick={onCreateUser} data-testid="live-chat-create-user">
           <PersonAddAlt1Icon fontSize="small" />
         </DuncitIconButton>
       </Stack>
       <SessionFilter value={statusFilter} onChange={onStatusChange} />
-      <Box sx={{ px: 1, pb: 0.5 }}>
+      <Box sx={{ px: 1.5, py: 1.25 }}>
         <TextField
           size="small"
           fullWidth
-          label={t('support.chat.search')}
-          slotProps={{ htmlInput: { 'data-testid': 'live-chat-search' } }}
+          placeholder={t('support.chat.search')}
+          slotProps={{
+            htmlInput: { 'aria-label': t('support.chat.search'), 'data-testid': 'live-chat-search' },
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon fontSize="small" />
+                </InputAdornment>
+              ),
+            },
+          }}
           value={searchInput}
           onChange={(e) => onSearchChange(e.target.value)}
         />
@@ -101,7 +114,16 @@ export default function SessionInbox({
         rowsPerPage={pageSize}
         onRowsPerPageChange={(e) => onPageSizeChange(Number.parseInt(e.target.value, 10))}
         rowsPerPageOptions={[10, 25, 50]}
-        sx={{ flexShrink: 0, borderTop: 1, borderColor: 'divider', '.MuiTablePagination-toolbar': { pl: 1 } }}
+        sx={{
+          flexShrink: 0,
+          borderTop: 1,
+          borderColor: 'divider',
+          '.MuiTablePagination-toolbar': { pl: 1.5, pr: 0.5, minHeight: 44 },
+          '.MuiTablePagination-spacer': { display: 'none' },
+          '.MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows': { typography: 'caption' },
+          '.MuiTablePagination-input': { ml: 0.5, mr: 1 },
+          '.MuiTablePagination-actions': { ml: 'auto' },
+        }}
       />
     </Box>
   );

@@ -71,7 +71,7 @@ export default function ChatThread({
   };
 
   return (
-    <Box sx={{ flex: 1, minHeight: 0, position: 'relative' }}>
+    <Box sx={{ flex: 1, minHeight: 0, position: 'relative', bgcolor: 'background.default' }}>
       <Box
         data-testid="chat-scroll"
         ref={scrollRef}
@@ -79,7 +79,7 @@ export default function ChatThread({
         aria-busy={loadingOlder}
         // The history hook holds the agent's line itself; the browser's own
         // scroll anchoring would move it a second time.
-        sx={{ height: '100%', overflowY: 'auto', overflowAnchor: 'none', p: 2 }}
+        sx={{ height: '100%', overflowY: 'auto', overflowAnchor: 'none', px: { xs: 2, md: 4 }, py: 2.5 }}
       >
         {loadingOlder && (
           <Box role="status" sx={{ display: 'flex', justifyContent: 'center', pb: 1.5 }}>

@@ -7,7 +7,7 @@
  * Placed on each site's home page only; Google reads the organization from there.
  */
 import { buildOrganizationJsonLd, buildWebSiteJsonLd, serializeJsonLd } from './seo';
-import { DUNCIT_SOCIAL } from './social-accounts';
+import { DUNCIT_SOCIAL_URLS } from './social-accounts';
 import type { SiteBranding } from './site-branding';
 
 interface Props {
@@ -29,7 +29,7 @@ const json = serializeJsonLd([
     logoUrl: branding.website_header_logo_url || null,
     email: branding.support_email || null,
     phone: branding.support_phone || null,
-    sameAs: DUNCIT_SOCIAL.map((account) => account.href),
+    sameAs: Object.values(DUNCIT_SOCIAL_URLS),
   }),
   buildWebSiteJsonLd({ name: siteName, url: siteUrl, organizationUrl }),
 ]);

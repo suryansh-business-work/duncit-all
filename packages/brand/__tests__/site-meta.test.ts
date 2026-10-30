@@ -19,6 +19,14 @@ describe('buildSiteMetaTags', () => {
     expect(tags).not.toContain('og:image');
   });
 
+  it('names a canonical for an indexable page, and none for a noindex page', () => {
+    expect(buildSiteMetaTags(base)).toContain('<link rel="canonical" href="https://duncit.com/careers" />');
+    expect(buildSiteMetaTags(base)).not.toContain('name="robots"');
+    const hidden = buildSiteMetaTags({ ...base, noindex: true });
+    expect(hidden).toContain('<meta name="robots" content="noindex" />');
+    expect(hidden).not.toContain('rel="canonical"');
+  });
+
   it('does not repeat a site name the title already carries', () => {
     expect(buildSiteMetaTags({ ...base, title: 'Duncit Careers' })).toContain('<title>Duncit Careers</title>');
   });

@@ -14,10 +14,23 @@
  * Tailwind source scan, so utilities written here compile to nothing.
  */
 import { cmsBlockProps } from './cms-block';
-import { DUNCIT_SOCIAL, type SocialAccount } from './social-accounts';
+import { DUNCIT_SOCIAL_URLS } from './social-accounts';
+
+interface Account {
+  /** Font Awesome brand class, e.g. `fa-instagram`. */
+  icon: string;
+  label: string;
+  href: string;
+}
+
+const DUNCIT_SOCIAL: Account[] = [
+  { icon: 'fa-instagram', label: 'Instagram', href: DUNCIT_SOCIAL_URLS.instagram },
+  { icon: 'fa-linkedin-in', label: 'LinkedIn', href: DUNCIT_SOCIAL_URLS.linkedin },
+  { icon: 'fa-facebook-f', label: 'Facebook', href: DUNCIT_SOCIAL_URLS.facebook },
+];
 
 interface Props {
-  accounts?: SocialAccount[];
+  accounts?: Account[];
   heading?: string | null;
   class?: string;
 }

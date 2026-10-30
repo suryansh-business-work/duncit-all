@@ -1,17 +1,10 @@
 /**
- * The company's accounts elsewhere. Drawn as a row of marks by SocialLinks and
- * named as the organization's `sameAs` profiles in its structured data, so a
- * changed handle is changed once.
+ * The company's profiles elsewhere. SocialLinks draws them as a row of marks
+ * and the organization's structured data names them as its `sameAs`
+ * profiles, so a changed handle is changed once.
  */
-export interface SocialAccount {
-  /** Font Awesome brand class, e.g. `fa-instagram`. */
-  icon: string;
-  label: string;
-  href: string;
-}
-
-export const DUNCIT_SOCIAL: SocialAccount[] = [
-  { icon: 'fa-instagram', label: 'Instagram', href: 'https://www.instagram.com/duncit_app/' },
-  { icon: 'fa-linkedin-in', label: 'LinkedIn', href: 'https://linkedin.com/company/duncit' },
-  { icon: 'fa-facebook-f', label: 'Facebook', href: 'https://facebook.com/duncitapp' },
-];
+export const DUNCIT_SOCIAL_URLS = {
+  instagram: 'https://www.instagram.com/duncit_app/',
+  linkedin: 'https://linkedin.com/company/duncit',
+  facebook: 'https://facebook.com/duncitapp',
+} as const;

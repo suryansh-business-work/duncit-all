@@ -2,6 +2,7 @@ import { Box, Stack, Typography } from '@mui/material';
 import { auth } from '@duncit/auth-tokens';
 import AuthHero from './AuthHero';
 import AuthLogo from './AuthLogo';
+import AuthPodBanner from './AuthPodBanner';
 import TwoToneHeading from './TwoToneHeading';
 import { useAuthFit } from '../hooks/useAuthFit';
 
@@ -30,38 +31,40 @@ export default function AuthHeading({ title, accent, subtitle }: Readonly<Props>
   const { size } = useAuthFit();
   const gap = size(FIT.gap);
   return (
-    <AuthHero room={size(FIT.heroRoom)} gap={gap}>
-      <Stack
-        data-testid="auth-heading"
-        sx={{ alignItems: 'flex-start', gap: `${size(FIT.gap / 2)}px` }}
-      >
-        <AuthLogo size={size(FIT.logoSize)} square />
-        {/* TwoToneHeading has no size prop; the hero size is set here, once. */}
-        <Box
-          sx={{
-            width: '100%',
-            '& .MuiTypography-root': {
-              fontSize: `${size(FIT.titleSize, FIT.titleMinSize)}px`,
-              fontWeight: 800,
-            },
-          }}
-        >
-          <TwoToneHeading lead={title} trail={accent} trailTone="accent" stacked align="left" />
-        </Box>
-        {subtitle && (
-          <Typography
-            data-testid="auth-heading-subtitle"
-            variant="body1"
+    <>
+      <AuthHero room={size(FIT.heroRoom)} gap={gap}>
+        <Stack data-testid="auth-heading" sx={{ alignItems: 'flex-start', gap: `${size(FIT.gap / 2)}px` }}>
+          <AuthLogo size={size(FIT.logoSize)} square />
+          {/* TwoToneHeading has no size prop; the hero size is set here, once. */}
+          <Box
             sx={{
-              color: 'text.secondary',
-              maxWidth: 360,
-              fontSize: `${size(FIT.subtitleSize, FIT.subtitleMinSize)}px`,
+              width: '100%',
+              '& .MuiTypography-root': {
+                fontSize: `${size(FIT.titleSize, FIT.titleMinSize)}px`,
+                fontWeight: 800,
+              },
             }}
           >
-            {subtitle}
-          </Typography>
-        )}
-      </Stack>
-    </AuthHero>
+            <TwoToneHeading lead={title} trail={accent} trailTone="accent" stacked align="left" />
+          </Box>
+          {subtitle && (
+            <Typography
+              data-testid="auth-heading-subtitle"
+              variant="body1"
+              sx={{
+                color: 'text.secondary',
+                maxWidth: 360,
+                fontSize: `${size(FIT.subtitleSize, FIT.subtitleMinSize)}px`,
+              }}
+            >
+              {subtitle}
+            </Typography>
+          )}
+        </Stack>
+      </AuthHero>
+      {/* The pod a signed-out visitor tapped — under the hero, so the hero stays
+        flush with the top of the screen. */}
+      <AuthPodBanner />
+    </>
   );
 }

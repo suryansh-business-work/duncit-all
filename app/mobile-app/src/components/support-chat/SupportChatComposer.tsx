@@ -167,7 +167,8 @@ export function SupportChatComposer({
             placeholder={t('mweb.supportChat.typeAMessage')}
             accessibilityLabel={t('mweb.supportChat.typeAMessage')}
             placeholderTextColor={muted}
-            style={{ flex: 1, color: ink, paddingVertical: 8 }}
+            // Grows with the message up to about four lines, then scrolls.
+            style={{ flex: 1, color: ink, paddingVertical: 8, maxHeight: 112 }}
             multiline
           />
         </XStack>

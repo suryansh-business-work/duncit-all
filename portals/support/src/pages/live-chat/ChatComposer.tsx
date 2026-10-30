@@ -29,7 +29,7 @@ export default function ChatComposer({ text, attachments, sending, onText, onAtt
     }
   };
   return (
-    <Stack spacing={1} sx={{ p: 1.5 }}>
+    <Stack spacing={1} sx={{ px: 2.5, py: 1.5, borderTop: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
       <AttachmentUploadField
         value={attachments}
         onChange={onAttachments}
@@ -40,11 +40,13 @@ export default function ChatComposer({ text, attachments, sending, onText, onAtt
         allowDocuments
       />
       <Stack direction="row" spacing={1} sx={{
-        alignItems: "center"
+        alignItems: "flex-end"
       }}>
         <TextField
           size="small"
           fullWidth
+          multiline
+          maxRows={4}
           placeholder={t('support.chat.placeholder')}
           slotProps={{ htmlInput: { 'aria-label': t('support.chat.placeholder'), 'data-testid': 'live-chat-composer-input' } }}
           value={text}

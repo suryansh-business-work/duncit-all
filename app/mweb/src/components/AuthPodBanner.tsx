@@ -74,7 +74,7 @@ export default function AuthPodBanner() {
   const place = pod.place_label || pod.locality;
 
   return (
-    <Card data-testid="auth-pod-banner" variant="outlined" sx={{ p: 1.5, mb: 2 }}>
+    <Card data-testid="auth-pod-banner" variant="outlined" sx={{ p: 1.5 }}>
       <Typography variant="overline" component="p" sx={{ color: 'text.secondary', lineHeight: 1.5 }}>
         {t('publicPage.authPod.eyebrow')}
       </Typography>

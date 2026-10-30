@@ -101,7 +101,7 @@ export default function ChatBubble({ msg, agentLastReadAt, timeText, onRetry }: 
             {label}
           </Typography>
         )}
-        {msg.text && <Typography variant="body2">{msg.text}</Typography>}
+        {msg.text && <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{msg.text}</Typography>}
         <AttachmentList urls={msg.attachments} />
         <Stack
           direction="row"

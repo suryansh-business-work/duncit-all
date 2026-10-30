@@ -18,6 +18,7 @@ import {
 } from '../support/google-stand-in';
 import { runAccount } from '../support/run-account';
 import {
+  confirmAge,
   expectSameAsMobile,
   finishInterestSurvey,
   logNoPolicies,
@@ -120,12 +121,13 @@ describe('09 Google sign-up and sign-in', () => {
       sendCodeButton().should('be.disabled');
     });
 
-    it('GA-04 the WhatsApp number, left ticked as the mobile number, and a date of birth send the code', () => {
+    it('GA-04 the WhatsApp number, left ticked as the mobile number, the age tick and a date of birth send the code', () => {
       cy.interceptOperation('SignupContactAvailability');
       fill('field-phoneNumber', account.phone);
       cy.wait('@SignupContactAvailability');
       expectSameAsMobile();
       typeDob(ADULT_DOB);
+      confirmAge();
       sendAndReadCode('WHATSAPP_SIGNUP', phoneTarget, 'RequestSignupWhatsAppOtp', () => {
         sendCodeButton().should('be.enabled').click();
       }).then((code) => {

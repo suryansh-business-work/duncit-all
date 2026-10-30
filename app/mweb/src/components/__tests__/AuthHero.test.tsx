@@ -2,6 +2,7 @@ import '@testing-library/jest-dom/vitest';
 import type { ReactNode } from 'react';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import { MockedProvider } from '@apollo/client/testing/react';
+import { MemoryRouter } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import AuthBackground from '../AuthBackground';
 import AuthHero from '../AuthHero';
@@ -31,9 +32,11 @@ function preferReducedMotion(reduce: boolean) {
 
 const wrap = (ui: ReactNode) =>
   render(
-    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
-      {ui}
-    </MockedProvider>,
+    <MemoryRouter>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
+        {ui}
+      </MockedProvider>
+    </MemoryRouter>,
   );
 
 beforeEach(() => {

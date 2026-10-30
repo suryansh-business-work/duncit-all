@@ -113,7 +113,7 @@ export default function LiveChatPage() {
   const emptyLabel = statusFilter === 'OPEN' ? 'No open chats.' : 'No resolved chats.';
 
   return (
-    <Box sx={{ display: 'flex', height: 'calc(100dvh - 150px)', border: 1, borderColor: 'divider', borderRadius: 1, overflow: 'hidden' }}>
+    <Box sx={{ display: 'flex', height: 'calc(100dvh - 150px)', border: 1, borderColor: 'divider', borderRadius: 2, overflow: 'hidden', bgcolor: 'background.paper' }}>
       <SessionInbox
         statusFilter={statusFilter}
         onStatusChange={(v) => {

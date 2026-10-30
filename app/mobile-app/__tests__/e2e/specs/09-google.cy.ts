@@ -107,7 +107,7 @@ describe('Native · 09 google', () => {
       cy.byTestId('google-auth-button').should('not.exist');
     });
 
-    it('GA-03 the number, "also my mobile" and a birthday send the WhatsApp code', () => {
+    it('GA-03 the number, "also my mobile", a birthday and the age tick send the WhatsApp code', () => {
       expectDisabled('signup-number-continue');
       cy.byTestId('signup-phone-code-trigger').should('contain', '+91');
       cy.interceptOperation('MobileSignupContactAvailability');
@@ -117,6 +117,8 @@ describe('Native · 09 google', () => {
       minSignupAge().then((minAge) => {
         pickDob(new Date().getFullYear() - (minAge + 10), 15);
       });
+      tap('signup-age-confirm');
+      cy.byTestId('signup-age-confirm').should('have.attr', 'aria-checked', 'true');
 
       cy.lastOtpIssuedAt('WHATSAPP_SIGNUP', { phone: account.phone }).then((issuedAt) => {
         issuedBefore = issuedAt;

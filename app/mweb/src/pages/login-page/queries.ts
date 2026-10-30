@@ -1,5 +1,4 @@
-import { gql, type TypedDocumentNode } from '@apollo/client';
-import type { LinkPreview, QueryLinkPreviewArgs } from '@duncit/gql-types';
+import { gql } from '@apollo/client';
 
 export const LOGIN = gql`
   mutation Login($input: LoginInput!) {
@@ -109,22 +108,6 @@ export const LOGIN_WITH_OTP = gql`
         roles
         onboarding_survey_completed
       }
-    }
-  }
-`;
-
-/**
- * The pod a signed-out visitor was heading to (a website's pod rail, a shared
- * link) — the public card slice only, so the login screen can show it on top.
- */
-export const LOGIN_POD_PREVIEW: TypedDocumentNode<
-  { linkPreview: Pick<LinkPreview, 'title' | 'image_url'> | null },
-  QueryLinkPreviewArgs
-> = gql`
-  query LoginPodPreview($kind: LinkPreviewKind!, $id: String!, $secondary_id: String) {
-    linkPreview(kind: $kind, id: $id, secondary_id: $secondary_id) {
-      title
-      image_url
     }
   }
 `;

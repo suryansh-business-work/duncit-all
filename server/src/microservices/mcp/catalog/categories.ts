@@ -74,7 +74,6 @@ export const MODULE_CATEGORY: Record<ModuleName, McpCategoryKey | null> = {
   apiKeyTypeDefs: null,
   tableApiTypeDefs: null,
   envEntryTypeDefs: null,
-  accountDeletionCronTypeDefs: null,
 
   userTypeDefs: 'users',
   userAuditTypeDefs: 'users',
@@ -84,6 +83,9 @@ export const MODULE_CATEGORY: Record<ModuleName, McpCategoryKey | null> = {
   accountHealthTypeDefs: 'users',
   portalAccessTypeDefs: 'users',
   accountDeletionTypeDefs: 'users',
+  // The Admin Panel's deletion schedule and its run log. "Run now" is a purge,
+  // so it is DESTRUCTIVE and waits for mcp_confirm like every other delete.
+  accountDeletionCronTypeDefs: 'users',
   approvalTypeDefs: 'users',
 
   profileTypeDefs: 'account',

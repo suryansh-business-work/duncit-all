@@ -47,7 +47,7 @@ export default function SessionList({ sessions, loading, selectedId, freshIds, e
     );
   }
   return (
-    <List dense sx={{ py: 0 }}>
+    <List dense sx={{ py: 0.5, px: 1 }}>
       {sessions.map((s) => (
         <ListItemButton
           key={s.id}
@@ -56,17 +56,23 @@ export default function SessionList({ sessions, loading, selectedId, freshIds, e
           data-testid={`live-chat-session-row-${s.id}`}
           onClick={() => onSelect(s.id)}
           sx={{
-            alignItems: 'flex-start',
+            alignItems: 'center',
+            gap: 0.5,
+            py: 1,
+            mb: 0.5,
+            borderRadius: 1,
+            borderLeft: 3,
+            borderColor: 'transparent',
             ...(s.status !== 'CLOSED' &&
               (freshIds.has(s.id) || !s.agent_id) && {
-                bgcolor: 'warning.light',
-                '&:hover': { bgcolor: 'warning.light' },
+                borderColor: 'warning.main',
+                bgcolor: 'action.hover',
               }),
           }}
         >
-          <ListItemAvatar sx={{ minWidth: 40 }}>
+          <ListItemAvatar sx={{ minWidth: 48 }}>
             <Badge color="error" badgeContent={s.unread_for_agent} max={9}>
-              <Avatar alt="" src={s.user.avatar_url || undefined} sx={{ width: 30, height: 30, fontSize: 13 }}>
+              <Avatar alt="" src={s.user.avatar_url || undefined} sx={{ width: 36, height: 36, fontSize: 14 }}>
                 {s.user.name?.[0]?.toUpperCase() || '?'}
               </Avatar>
             </Badge>
@@ -74,12 +80,13 @@ export default function SessionList({ sessions, loading, selectedId, freshIds, e
           <ListItemText
             primary={s.user.name}
             secondary={s.last_message_preview}
+            sx={{ my: 0, minWidth: 0 }}
             slotProps={{
               primary: { variant: 'body2', noWrap: true, sx: { fontWeight: 700 } },
-              secondary: { variant: 'caption', noWrap: true }
+              secondary: { variant: 'caption', noWrap: true, component: 'span', sx: { display: 'block' } }
             }} />
-          {s.status === 'CLOSED' && <Chip size="small" color="success" label={t('support.chat.filterResolved')} sx={{ ml: 0.5, mt: 0.25 }} />}
-          {s.status !== 'CLOSED' && !s.agent_id && <Chip size="small" color="error" label={t('support.chat.newSession')} sx={{ ml: 0.5, mt: 0.25 }} />}
+          {s.status === 'CLOSED' && <Chip size="small" variant="outlined" color="success" label={t('support.chat.filterResolved')} sx={{ flexShrink: 0 }} />}
+          {s.status !== 'CLOSED' && !s.agent_id && <Chip size="small" color="error" label={t('support.chat.newSession')} sx={{ flexShrink: 0, fontWeight: 700 }} />}
         </ListItemButton>
       ))}
     </List>

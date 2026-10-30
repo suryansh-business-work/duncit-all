@@ -21,9 +21,12 @@ export default function MessageBubble({ message: m, time, userLastReadAt }: Read
         variant="outlined"
         data-testid={`live-chat-message-${m.id}`}
         sx={{
-          p: 1,
-          px: 1.25,
-          maxWidth: '70%',
+          py: 1,
+          px: 1.5,
+          maxWidth: { xs: '85%', md: '60%' },
+          borderRadius: 2,
+          // The corner nearest the sender stays square — the bubble's "tail".
+          ...(isAgent ? { borderBottomRightRadius: 0 } : { borderBottomLeftRadius: 0 }),
           bgcolor: isAgent ? 'primary.main' : 'background.paper',
           color: isAgent ? 'primary.contrastText' : 'text.primary',
           borderColor: isAgent ? 'primary.main' : 'divider',
@@ -37,9 +40,9 @@ export default function MessageBubble({ message: m, time, userLastReadAt }: Read
             sx={{ mb: 0.5, height: 18, '& .MuiChip-label': { px: 0.5, fontSize: 10, fontWeight: 700 } }}
           />
         )}
-        {m.text && <Typography variant="body2">{m.text}</Typography>}
+        {m.text && <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{m.text}</Typography>}
         <AttachmentList urls={m.attachments} size={52} />
-        <Typography variant="caption" sx={{ color: timeColor, display: 'block', mt: 0.25 }}>
+        <Typography variant="caption" sx={{ color: timeColor, display: 'block', mt: 0.25, textAlign: 'right' }}>
           {time}
           {isAgent && <MessageTicks state={tickState(m.id, m.created_at, userLastReadAt)} />}
         </Typography>

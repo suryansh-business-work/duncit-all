@@ -1,4 +1,4 @@
-import { Chip, Divider, Stack, Typography } from '@mui/material';
+import { Chip, Divider, Stack } from '@mui/material';
 import type { SupportChatMessage } from '../../../graphql/supportChat';
 import { useDateFormat } from '@duncit/app-settings';
 import { groupByDay } from './groupByDay';
@@ -20,12 +20,8 @@ export default function ChatMessages({ messages, userLastReadAt }: Readonly<Prop
     <Stack spacing={1.25} role="log">
       {groups.map((group) => (
         <Stack key={group.key} spacing={1.25}>
-          <Divider>
-            <Typography variant="caption" sx={{
-              color: "text.secondary"
-            }}>
-              {group.label}
-            </Typography>
+          <Divider sx={{ '&::before, &::after': { borderColor: 'divider' } }}>
+            <Chip size="small" variant="outlined" label={group.label} sx={{ color: 'text.secondary', bgcolor: 'background.paper' }} />
           </Divider>
           {group.messages.map((m) =>
             m.sender_role === 'SYSTEM' ? (

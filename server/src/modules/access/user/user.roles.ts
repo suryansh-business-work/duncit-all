@@ -158,9 +158,10 @@ async function syncRevokedOnboarding(userId: string, removedRoles: string[]) {
  * Give a freshly granted onboarding role the record that role is supposed to
  * have.
  *
- * Club Admin is the only one that needs it: Host, Venue Partner and E-Commerce
- * Brand each draft their entity when somebody APPLIES, so by the time the role
- * is granted the record already exists. A Club Admin has no application —
+ * Venue Partner and E-Commerce Brand draft their entity when somebody APPLIES,
+ * so by the time the role is granted the record already exists. Host does too,
+ * but a Super Admin can also grant HOST straight from Portal Access with no
+ * application, so it gets the same treatment. A Club Admin has no application —
  * granting the role from the Admin portal IS the appointment — so without this
  * the person holds the role, opens the Partners console and works, while the
  * Onboarded Club Admins table and every picker built on that record show
@@ -170,6 +171,19 @@ async function syncRevokedOnboarding(userId: string, removedRoles: string[]) {
  * not fail because a downstream record could not be drafted.
  */
 async function syncGrantedOnboarding(userId: string, addedRoles: string[]) {
+  if (addedRoles.includes('HOST')) {
+    // Granted straight from Portal Access, HOST had no host record behind it.
+    try {
+      const { hostService } = await import('@modules/venues/host/host.service');
+      await hostService.ensureApprovedForUser(userId);
+    } catch (err) {
+      logs.server.error('user.replaceUserRoles', 'syncGrantedOnboarding', {
+        error: err,
+        msg: 'host record could not be drafted',
+        userId,
+      });
+    }
+  }
   if (!addedRoles.includes('CLUB_ADMIN')) return;
   try {
     const { clubAdminProfileService } = await import(

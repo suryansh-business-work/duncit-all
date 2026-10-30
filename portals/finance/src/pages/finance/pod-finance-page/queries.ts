@@ -30,6 +30,7 @@ export const POD_FINANCE_BREAKDOWN = gql`
       coins_redeemed_total
       coins_earned_total
       ticket_discount_total
+      smart_incentive_total
       currency_symbol
       has_venue
       completed_at
@@ -98,6 +99,8 @@ export interface PodFinanceBreakdown {
   coins_earned_total: number;
   /** Multi-ticket discounts frozen on the pod's successful payments — already off collected_total. */
   ticket_discount_total: number;
+  /** Smart Incentive discounts frozen on the pod's successful payments — host-funded, already off collected_total. */
+  smart_incentive_total: number;
   currency_symbol: string;
   has_venue: boolean;
   completed_at: string | null;

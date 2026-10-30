@@ -375,11 +375,17 @@ export interface PodCoinTotalsMock {
   coins_redeemed_total: number;
   coins_earned_total: number;
   ticket_discount_total: number;
+  /** 0 unless a test says otherwise — the query selects it either way. */
+  smart_incentive_total?: number;
 }
 
-/** The pod's live coin movement + multi-ticket discounts behind the review's explanatory notes. */
+/** The pod's live coin movement + multi-ticket and Smart Incentive discounts behind the review's explanatory notes. */
 export const podCoinTotalsMock = (totals: PodCoinTotalsMock, podId = 'pod1'): MockedResponse => ({
   request: { query: POD_COIN_TOTALS, variables: { podId } },
-  result: { data: { podFinanceBreakdown: { __typename: 'PodFinanceBreakdown', pod_id: podId, ...totals } } },
+  result: {
+    data: {
+      podFinanceBreakdown: { __typename: 'PodFinanceBreakdown', pod_id: podId, smart_incentive_total: 0, ...totals },
+    },
+  },
   maxUsageCount: 20,
 });

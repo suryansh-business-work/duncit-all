@@ -88,6 +88,9 @@ export const makeDetailPayment = (over: Partial<DetailPaymentMock> = {}): Detail
   coupon_discount: 100,
   ticket_discount_amount: 50,
   ticket_discount_pct: 5,
+  // This buyer had not unlocked a Smart Incentive.
+  smart_incentive_amount: 0,
+  smart_incentive_pct: 0,
   status: 'SUCCESS',
   gateway: 'razorpay',
   gateway_ref: 'pay_Nx12Razor',

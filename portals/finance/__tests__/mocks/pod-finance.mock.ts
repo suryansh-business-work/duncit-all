@@ -84,6 +84,7 @@ interface BreakdownMock {
   frozen: boolean;
   bookings_count: number;
   collected_total: number;
+  smart_incentive_total: number;
   currency_symbol: string;
   has_venue: boolean;
   completed_at: string | null;
@@ -98,6 +99,8 @@ export const makePodBreakdown = (over: Partial<BreakdownMock> = {}): BreakdownMo
   frozen: true,
   bookings_count: 10,
   collected_total: 1000,
+  // No booking on this pod carried a Smart Incentive.
+  smart_incentive_total: 0,
   currency_symbol: '₹',
   has_venue: true,
   completed_at: '2024-01-05T00:00:00Z',

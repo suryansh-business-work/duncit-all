@@ -11,6 +11,7 @@ export const PAYMENT_TOTALS = gql`
       fee
       gst
       ticket_discount_total
+      smart_incentive_total
     }
   }
 `;
@@ -23,6 +24,8 @@ export interface PaymentTotals {
   gst: number;
   /** Sum of the multi-ticket discounts frozen on those payments. */
   ticket_discount_total: number;
+  /** Sum of the Smart Incentive discounts frozen on those payments — like the tiers, already off gross. */
+  smart_incentive_total: number;
 }
 
 /** Row shape for the payments table (fields the columns and dialogs touch). */
@@ -41,6 +44,8 @@ export interface PaymentRow {
   /** The multi-ticket tier frozen on the payment at checkout (0 when none applied). */
   ticket_discount_amount: number;
   ticket_discount_pct: number;
+  /** The member's unlocked Smart Incentive frozen on the payment at checkout (0 when none applied). */
+  smart_incentive_amount: number;
   total: number;
   /** What rounding the bill up to a whole rupee added — inside `total` (0 when none). */
   round_off?: number | null;
@@ -70,6 +75,7 @@ const PAYMENT_ROW_FIELDS = gql`
     coins_earned
     ticket_discount_amount
     ticket_discount_pct
+    smart_incentive_amount
     total
     round_off
     target_type

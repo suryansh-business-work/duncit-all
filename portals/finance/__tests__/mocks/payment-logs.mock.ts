@@ -80,8 +80,9 @@ const totalsOf = (payments: PaymentRowMock[] | null) =>
     gross: payments.reduce((sum, p) => sum + p.total, 0),
     fee: payments.reduce((sum, p) => sum + p.platform_fee_amount, 0),
     gst: payments.reduce((sum, p) => sum + p.gst_amount, 0),
-    // None of these rows reached a multi-ticket tier.
+    // None of these rows reached a multi-ticket tier or carried a Smart Incentive.
     ticket_discount_total: 0,
+    smart_incentive_total: 0,
   };
 
 export const paymentTotalsMock = (payments: PaymentRowMock[] | null): MockedResponse => ({

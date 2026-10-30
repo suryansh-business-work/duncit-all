@@ -1,12 +1,12 @@
 import { useMemo } from 'react';
 import { useQuery } from '@apollo/client/react';
-import { useNavigate } from 'react-router';
+import OndemandVideoIcon from '@mui/icons-material/OndemandVideo';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import PhoneCallbackIcon from '@mui/icons-material/PhoneCallback';
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 import ForumIcon from '@mui/icons-material/Forum';
 import HelpOutlinedIcon from '@mui/icons-material/HelpOutlined';
-import { PageHeader, StatCard } from '@duncit/ui';
+import { PageHeader } from '@duncit/ui';
 import { DuncitDashboard, type DashboardWidget } from '@duncit/dashboard';
 import {
   BOUNCER_SOS_ALERTS,
@@ -19,33 +19,8 @@ import { SUPPORT_CHAT_SESSIONS, type SupportChatSessionPage } from '../graphql/s
 import { FAQ_SUBMISSIONS, type FaqSubmissionRow } from './faqs/faq-submissions';
 import { useSupportSocket } from '../lib/useSupportSocket';
 import { useTranslation } from '@duncit/shell';
-
-interface SupportStatCardProps {
-  label: string;
-  count: number;
-  icon: React.ReactNode;
-  color: string;
-  to: string;
-}
-
-/** One dashboard KPI tile: icon-left count that navigates to its list page. */
-function SupportStatCard({ label, count, icon, color, to }: Readonly<SupportStatCardProps>) {
-  const navigate = useNavigate();
-  return (
-    <StatCard
-      layout="valueFirst"
-      label={label}
-      value={count}
-      icon={icon}
-      iconColor={color}
-      onClick={() => navigate(to)}
-      valueVariant="h4"
-      valueSx={{ lineHeight: 1 }}
-      sx={{ height: '100%' }}
-      testId={`support-stat-${to.replaceAll('/', '-').slice(1)}`}
-    />
-  );
-}
+import SupportStatCard from '../components/SupportStatCard';
+import { TUTORIAL_STATS, type TutorialStatsData } from './tutorials/queries';
 
 export default function DashboardPage() {
   const { t } = useTranslation();
@@ -71,6 +46,8 @@ export default function DashboardPage() {
     variables: { status: 'NEW' },
     fetchPolicy: 'cache-and-network',
   });
+  // Unique members per tutorial, summed — how far the how-to videos reach.
+  const tutorials = useQuery<TutorialStatsData>(TUTORIAL_STATS, { fetchPolicy: 'cache-and-network' });
 
   useSupportSocket({
     onSos: () => sos.refetch(),
@@ -167,8 +144,24 @@ export default function DashboardPage() {
           />
         ),
       },
+      {
+        id: 'tutorial-views',
+        bare: true,
+        defaultLayout: { x: 3, y: 2, w: 3, h: 2 },
+        minW: 2,
+        minH: 2,
+        content: (
+          <SupportStatCard
+            label={t('support.dashboard.tutorialViews')}
+            count={tutorials.data?.tutorialStats.total_views ?? 0}
+            icon={<OndemandVideoIcon fontSize="large" />}
+            color="secondary.main"
+            to="/tutorials"
+          />
+        ),
+      },
     ],
-    [sos.data, callbacks.data, tickets.data, chats.data, submissions.data],
+    [sos.data, callbacks.data, tickets.data, chats.data, submissions.data, tutorials.data],
   );
 
   return (

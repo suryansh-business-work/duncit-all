@@ -20728,6 +20728,7 @@ export const SHIPPED_CLIENT_KEYS: Record<string, string> = {
   "support.tutorials.statusPublished": "Published",
   "support.tutorials.subtitle": "Upload and manage the short how-to videos members watch from the app menu.",
   "support.tutorials.title": "Tutorials",
+  "support.tutorials.topicsLoadFailed": "Couldn't load the topic list.",
   "support.tutorials.updated": "Tutorial updated",
   "support.tutorials.uploadedDuration": "Length: {duration}",
   "support.tutorials.uploadFailed": "The video didn't upload. Try again.",

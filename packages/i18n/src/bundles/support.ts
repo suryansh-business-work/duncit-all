@@ -321,6 +321,7 @@ export const SUPPORT_BUNDLE: NestedCatalogue = {
       statsComments: 'Comments',
       statsPublished: 'Published tutorials',
       statsLoadFailed: "Couldn't load tutorial stats.",
+      topicsLoadFailed: "Couldn't load the topic list.",
     },
 
     tutorialTopics: {

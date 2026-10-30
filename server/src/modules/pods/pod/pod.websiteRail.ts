@@ -40,16 +40,22 @@ const coverImage = (media: unknown): string | null => {
   return (media as MediaItem[]).find((m) => m?.url && (m.type ?? 'IMAGE') === 'IMAGE')?.url ?? null;
 };
 
+/**
+ * The pods a public surface may show at all: live, not deleted or hidden, not
+ * waiting on (or turned down by) the venue, and not a retired series parent.
+ * The rail adds "still to come"; the pod page and the sitemap share the rest.
+ */
+export const PUBLIC_POD_FILTER = {
+  is_active: true,
+  deleted_at: null,
+  venue_approval_status: { $nin: ['PENDING', 'DECLINED'] },
+  series_role: { $ne: 'PARENT' },
+  ...POD_VISIBLE_FILTER,
+} as const;
+
 export async function websiteUpcomingPods(limit?: number | null) {
   const size = Math.min(Math.max(Math.trunc(limit ?? DEFAULT_RAIL_SIZE), 1), MAX_RAIL_SIZE);
-  const docs = await PodModel.find({
-    is_active: true,
-    deleted_at: null,
-    venue_approval_status: { $nin: ['PENDING', 'DECLINED'] },
-    series_role: { $ne: 'PARENT' },
-    pod_date_time: { $gt: new Date() },
-    ...POD_VISIBLE_FILTER,
-  })
+  const docs = await PodModel.find({ ...PUBLIC_POD_FILTER, pod_date_time: { $gt: new Date() } })
     .sort({ pod_date_time: 1 })
     .limit(size)
     .select('pod_id pod_title pod_date_time pod_images_and_videos zone_name pod_type pod_amount club_id')

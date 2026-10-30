@@ -97,6 +97,10 @@ const PUBLIC_CACHEABLE_FIELDS = new Set([
   // no auth, no ctx; returns only public card fields (pod.websiteRail.ts), and
   // a new or changed pod reaches the rails within the TTL.
   'websiteUpcomingPods',
+  // mWeb's crawler-facing pod page and sitemap: the same public pod filter, no
+  // auth, no ctx, slug-keyed; only what the pod page shows any visitor.
+  'websitePodPage',
+  'websitePodSitemap',
   // Public discovery/catalog queries — verified to take no `ctx` and to build
   // their Mongo filter solely from the query's own arguments.
   //

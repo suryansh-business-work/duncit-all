@@ -1,6 +1,8 @@
 import { cachedGql } from './graphql-client';
 import { getTranslator } from './i18n';
+import { fetchPodPage, type WebsitePodPage } from './pod-page';
 import {
+  POD_PAGE_PATTERN,
   DYNAMIC_ROUTES,
   STATIC_ROUTES,
   matchPattern,
@@ -24,6 +26,12 @@ export interface PageMeta {
    * between them unless one names the other.
    */
   canonicalPath: string | null;
+  /** Only a pod's details page may be indexed; every other page of the app is noindex. */
+  indexable: boolean;
+  /** The address names no page (a pod that is not public, or never was): a 404. */
+  notFound: boolean;
+  /** The pod behind an indexable pod page — its text and Event JSON-LD go into the HTML. */
+  pod: WebsitePodPage | null;
 }
 
 interface BrandingResult {
@@ -104,7 +112,39 @@ const defaultMeta = ({ t, appName, defaultImageUrl, themeColor }: Defaults): Pag
   defaultImageUrl,
   themeColor,
   canonicalPath: null,
+  indexable: false,
+  notFound: false,
+  pod: null,
 });
+
+/** What a result snippet shows; the full text is in the page itself. */
+const SNIPPET_MAX = 160;
+
+function snippet(text: string): string {
+  if (text.length <= SNIPPET_MAX) return text;
+  const cut = text.slice(0, SNIPPET_MAX - 1);
+  const lastSpace = cut.lastIndexOf(' ');
+  return `${lastSpace > 0 ? cut.slice(0, lastSpace) : cut}…`;
+}
+
+/**
+ * The pod details page. The API down: the plain default card, still a 200, so
+ * an outage never tells a crawler the pod is gone. No such public pod: a 404.
+ */
+async function podMeta(params: Record<string, string>, defaults: Defaults): Promise<PageMeta> {
+  const pod = await fetchPodPage(params.clubSlug ?? '', params.podSlug ?? '');
+  if (pod === undefined) return defaultMeta(defaults);
+  if (pod === null) return { ...defaultMeta(defaults), notFound: true };
+  return {
+    ...defaultMeta(defaults),
+    title: pod.title,
+    description: pod.description ? snippet(pod.description) : defaults.t('mweb.meta.pod.description'),
+    imageUrl: pod.image_urls[0] ?? null,
+    canonicalPath: pod.canonical_path,
+    indexable: true,
+    pod,
+  };
+}
 
 function staticMeta(route: StaticRoute, defaults: Defaults): PageMeta {
   const { t } = defaults;
@@ -147,6 +187,8 @@ async function dynamicMeta(
  */
 export async function resolvePageMeta(path: string): Promise<PageMeta> {
   const defaults = await loadDefaults();
+  const podParams = matchPattern(POD_PAGE_PATTERN, path);
+  if (podParams) return podMeta(podParams, defaults);
   for (const route of DYNAMIC_ROUTES) {
     const params = matchPattern(route.pattern, path);
     if (params) return dynamicMeta(route, params, defaults);

@@ -7878,6 +7878,10 @@ export type E2eFlow = {
   /** How many of its sub flows are marked LOOKS_GOOD. */
   looks_good_count: Scalars['Int']['output'];
   name: Scalars['String']['output'];
+  /** Its runs, passes and failures from those specs' scenarios. Null when no spec tests it yet. */
+  run_stats?: Maybe<E2eFlowRunStats>;
+  /** The live Cypress spec files that test it, as project/spec (e2eFlow/catalogue/spec-links.ts). */
+  specs: Array<Scalars['String']['output']>;
   sub_flow_count: Scalars['Int']['output'];
   sub_flows: Array<E2eSubFlow>;
   updated_at?: Maybe<Scalars['String']['output']>;
@@ -7886,6 +7890,17 @@ export type E2eFlow = {
 export type E2eFlowInput = {
   description?: InputMaybe<Scalars['String']['input']>;
   name: Scalars['String']['input'];
+};
+
+/** How a flow's linked specs did across the E2E runs still on record. */
+export type E2eFlowRunStats = {
+  __typename?: 'E2eFlowRunStats';
+  /** Runs in which any scenario of its specs failed or never ran. */
+  failed: Scalars['Int']['output'];
+  /** Runs in which every scenario of its specs passed. */
+  passed: Scalars['Int']['output'];
+  /** Runs in which at least one of its specs ran. */
+  runs: Scalars['Int']['output'];
 };
 
 /** One step of a sub flow: what the person does, and what should happen. */
@@ -30227,6 +30242,10 @@ export type Query = {
   websiteEarnSections: Array<WebsiteEarnSection>;
   websiteNav: Array<WebsiteNavItem>;
   websiteNavTable: WebsiteNavItemTablePage;
+  /** Public: one pod's page for crawlers, by its club and pod slugs; null when there is no such public pod. */
+  websitePodPage?: Maybe<WebsitePodPage>;
+  /** Public: every pod page still to come, for mWeb's sitemap.xml. */
+  websitePodSitemap: Array<WebsitePodSitemapEntry>;
   websiteReelSettings: WebsiteReelSettings;
   websiteReelsTable: WebsiteReelTablePage;
   /**
@@ -34437,6 +34456,12 @@ export type QueryWebsiteNavArgs = {
 
 export type QueryWebsiteNavTableArgs = {
   query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryWebsitePodPageArgs = {
+  club_slug: Scalars['String']['input'];
+  pod_slug: Scalars['String']['input'];
 };
 
 
@@ -47038,6 +47063,39 @@ export type WebsitePod = {
   pod_title: Scalars['String']['output'];
   pod_type: Scalars['String']['output'];
   zone_name?: Maybe<Scalars['String']['output']>;
+};
+
+/**
+ * One pod's page as a search engine reads it: what mWeb's HTML server writes
+ * under the heading and into the page's schema.org Event. Only what the pod
+ * page shows any visitor — venue name and area, never an address line.
+ */
+export type WebsitePodPage = {
+  __typename?: 'WebsitePodPage';
+  canonical_path: Scalars['String']['output'];
+  city?: Maybe<Scalars['String']['output']>;
+  club_name: Scalars['String']['output'];
+  club_slug: Scalars['String']['output'];
+  country_code?: Maybe<Scalars['String']['output']>;
+  currency: Scalars['String']['output'];
+  description: Scalars['String']['output'];
+  end?: Maybe<Scalars['String']['output']>;
+  image_urls: Array<Scalars['String']['output']>;
+  locality?: Maybe<Scalars['String']['output']>;
+  price: Scalars['Float']['output'];
+  region?: Maybe<Scalars['String']['output']>;
+  sold_out: Scalars['Boolean']['output'];
+  start: Scalars['String']['output'];
+  title: Scalars['String']['output'];
+  venue_name?: Maybe<Scalars['String']['output']>;
+  virtual: Scalars['Boolean']['output'];
+};
+
+/** One pod page for mWeb's sitemap.xml. */
+export type WebsitePodSitemapEntry = {
+  __typename?: 'WebsitePodSitemapEntry';
+  path: Scalars['String']['output'];
+  updated_at?: Maybe<Scalars['String']['output']>;
 };
 
 /** A reel in a marketing website's home-page Reel Slider, managed from the Website portal. */

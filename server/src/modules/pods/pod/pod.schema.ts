@@ -641,7 +641,42 @@ export const podTypeDefs = /* GraphQL */ `
     pod_amount: Float!
   }
 
+  """
+  One pod's page as a search engine reads it: what mWeb's HTML server writes
+  under the heading and into the page's schema.org Event. Only what the pod
+  page shows any visitor — venue name and area, never an address line.
+  """
+  type WebsitePodPage {
+    title: String!
+    description: String!
+    start: String!
+    end: String
+    virtual: Boolean!
+    image_urls: [String!]!
+    price: Float!
+    currency: String!
+    sold_out: Boolean!
+    club_name: String!
+    club_slug: String!
+    canonical_path: String!
+    venue_name: String
+    locality: String
+    city: String
+    region: String
+    country_code: String
+  }
+
+  "One pod page for mWeb's sitemap.xml."
+  type WebsitePodSitemapEntry {
+    path: String!
+    updated_at: String
+  }
+
   extend type Query {
+    "Public: one pod's page for crawlers, by its club and pod slugs; null when there is no such public pod."
+    websitePodPage(club_slug: String!, pod_slug: String!): WebsitePodPage
+    "Public: every pod page still to come, for mWeb's sitemap.xml."
+    websitePodSitemap: [WebsitePodSitemapEntry!]!
     """
     The soonest upcoming pods discovery would offer, for every Duncit website's
     home rail. Deliberately unauthenticated (a website visitor has no session);

@@ -24,6 +24,9 @@ export interface DynamicRoute {
   descriptionKey: string;
 }
 
+/** The pod details page — the one mWeb page search engines may index (pod-page.ts). */
+export const POD_PAGE_PATTERN = '/club/:clubSlug/pod/:podSlug';
+
 /**
  * More specific than the static rows, so these are matched first. An entity
  * that cannot be resolved (deleted, private, bad id) falls all the way back to
@@ -31,7 +34,7 @@ export interface DynamicRoute {
  */
 export const DYNAMIC_ROUTES: DynamicRoute[] = [
   {
-    pattern: '/club/:clubSlug/pod/:podSlug',
+    pattern: POD_PAGE_PATTERN,
     kind: 'POD',
     idParams: ['clubSlug', 'podSlug'],
     descriptionKey: 'mweb.meta.pod.description',

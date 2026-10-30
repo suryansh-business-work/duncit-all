@@ -8177,6 +8177,54 @@ export type E2eRunVideoInput = {
   suite: Scalars['String']['input'];
 };
 
+/** One it() of one run, as Cypress counted it. */
+export type E2eScenarioResult = {
+  __typename?: 'E2eScenarioResult';
+  duration_ms?: Maybe<Scalars['Int']['output']>;
+  /** The error as Cypress printed it, cut to 4,000 characters. Empty unless FAILED. */
+  error: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  /** The Cypress project, e.g. mweb, partners-app, support, mobile-app. */
+  project: Scalars['String']['output'];
+  /** The spec file, relative to the project. */
+  spec: Scalars['String']['output'];
+  state: E2eScenarioState;
+  /** The leg that ran it, e.g. accounts. */
+  suite: Scalars['String']['output'];
+  title: Scalars['String']['output'];
+  /** The describe blocks, then the test's own title. */
+  title_path: Array<Scalars['String']['output']>;
+};
+
+export type E2eScenarioResultInput = {
+  duration_ms?: InputMaybe<Scalars['Float']['input']>;
+  error?: InputMaybe<Scalars['String']['input']>;
+  /** 0 for the first test a spec titles this way, 1 for the second, and so on. */
+  ordinal?: InputMaybe<Scalars['Int']['input']>;
+  project?: InputMaybe<Scalars['String']['input']>;
+  spec: Scalars['String']['input'];
+  state: E2eScenarioState;
+  title_path: Array<Scalars['String']['input']>;
+};
+
+export type E2eScenarioResultTablePage = {
+  __typename?: 'E2eScenarioResultTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<E2eScenarioResult>;
+  total: Scalars['Int']['output'];
+};
+
+/**
+ * How one scenario ended. SKIPPED is a test a failed hook blocked: it never
+ * ran. PENDING is an it.skip somebody wrote.
+ */
+export type E2eScenarioState =
+  | 'FAILED'
+  | 'PASSED'
+  | 'PENDING'
+  | 'SKIPPED';
+
 /**
  * One scenario's clip — a single test, cut out of its spec's recording and
  * posted under the run's message beside the suite videos. Only the suites that
@@ -15159,6 +15207,12 @@ export type Mutation = {
    */
   reportE2eRun: E2eRun;
   /**
+   * CI only: a chunk of one leg's scenarios, upserted, so a retried chunk
+   * writes the same rows again. Tech/Super admin only. Answers how many were
+   * written.
+   */
+  reportE2eScenarios: Scalars['Int']['output'];
+  /**
    * Report a post or a story. Open to any signed-in viewer — that is the point.
    * Refused with REPORT_ALREADY_PENDING while the viewer's earlier report on the
    * same thing is still open; allowed again once Legal has closed it.
@@ -19420,6 +19474,11 @@ export type MutationReportChatMessageArgs = {
 
 export type MutationReportE2eRunArgs = {
   input: ReportE2eRunInput;
+};
+
+
+export type MutationReportE2eScenariosArgs = {
+  input: ReportE2eScenariosInput;
 };
 
 
@@ -28436,9 +28495,13 @@ export type Query = {
    * Pass email for a mailed code or phone for a WhatsApp one.
    */
   e2eOneTimeCode?: Maybe<E2eOneTimeCode>;
+  /** One e2e run, or null when it does not exist. */
+  e2eRun?: Maybe<E2eRun>;
   e2eRunSettings: E2eRunSettings;
   /** Every e2e run, newest first (Tech portal E2E Tests table). */
   e2eRunsTable: E2eRunTablePage;
+  /** Every scenario one run held. Filter on project, spec, title, state; search titles, spec and error. */
+  e2eScenarioResultsTable: E2eScenarioResultTablePage;
   /** The suites a run can be asked for. */
   e2eSuiteCatalogue: Array<E2eSuite>;
   /**
@@ -31079,8 +31142,19 @@ export type QueryE2eOneTimeCodeArgs = {
 };
 
 
+export type QueryE2eRunArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type QueryE2eRunsTableArgs = {
   query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryE2eScenarioResultsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+  run_id: Scalars['ID']['input'];
 };
 
 
@@ -35509,6 +35583,16 @@ export type ReportE2eRunInput = {
   suite?: InputMaybe<E2eSuiteResultInput>;
   workflow_run_id?: InputMaybe<Scalars['String']['input']>;
   workflow_run_url?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type ReportE2eScenariosInput = {
+  dispatch_id?: InputMaybe<Scalars['String']['input']>;
+  /** Drop the leg's earlier rows first. The first chunk of a report sends it. */
+  reset?: InputMaybe<Scalars['Boolean']['input']>;
+  /** At most 500. */
+  scenarios: Array<E2eScenarioResultInput>;
+  suite: Scalars['String']['input'];
+  workflow_run_id?: InputMaybe<Scalars['String']['input']>;
 };
 
 /** Who a reviewer is writing to about a report. */
@@ -45442,6 +45526,10 @@ export type VenueRegistrationConfig = {
   food_video_limit: Scalars['Int']['output'];
   /** The doc_types entry uploaded beside a GSTIN, not from the general list. */
   gstin_doc_type: Scalars['String']['output'];
+  /** Entries a venue may add of its own to each of its amenities, facilities and security lists. */
+  own_option_limit: Scalars['Int']['output'];
+  /** Characters in one of a venue's own entries. */
+  own_option_max_length: Scalars['Int']['output'];
   /** The doc_types entry uploaded beside a PAN, not from the general list. */
   pan_doc_type: Scalars['String']['output'];
   /** Category rows one rented item may be offered under. */
@@ -45558,6 +45646,11 @@ export type VenueSettingsInput = {
  * (draft, under review or approved). Omitted fields keep what is stored.
  */
 export type VenueSetupInput = {
+  /**
+   * venueRegistrationConfig.amenities options plus at most own_option_limit
+   * entries of the venue's own (each up to own_option_max_length characters),
+   * kept on this venue only. The same holds for facilities and security.
+   */
   amenities?: InputMaybe<Array<Scalars['String']['input']>>;
   capacity_items?: InputMaybe<Array<VenueCapacityItemInput>>;
   facilities?: InputMaybe<Array<Scalars['String']['input']>>;

@@ -196,6 +196,9 @@ describe('REGISTRATION_CONFIG', () => {
       'amenities',
       'facilities',
       'security',
+      // How many entries of its own a venue may add to those lists, and how long each may be.
+      'own_option_limit',
+      'own_option_max_length',
       // The food menu's option lists and caps.
       'food_diets',
       'food_spice_levels',

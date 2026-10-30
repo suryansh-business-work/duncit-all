@@ -207,6 +207,10 @@ export const venueTypeDefs = /* GraphQL */ `
     amenities: [String!]!
     facilities: [String!]!
     security: [String!]!
+    "Entries a venue may add of its own to each of its amenities, facilities and security lists."
+    own_option_limit: Int!
+    "Characters in one of a venue's own entries."
+    own_option_max_length: Int!
     food_diets: [VenueFoodDiet!]!
     food_spice_levels: [VenueFoodSpiceLevel!]!
     food_menu_limit: Int!
@@ -581,6 +585,11 @@ export const venueTypeDefs = /* GraphQL */ `
     "One of venueRegistrationConfig.venue_types. Locked for the owner once the venue is approved."
     venue_type: String
     capacity_items: [VenueCapacityItemInput!]
+    """
+    venueRegistrationConfig.amenities options plus at most own_option_limit
+    entries of the venue's own (each up to own_option_max_length characters),
+    kept on this venue only. The same holds for facilities and security.
+    """
     amenities: [String!]
     facilities: [String!]
     security: [String!]

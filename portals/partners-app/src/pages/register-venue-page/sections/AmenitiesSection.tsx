@@ -1,7 +1,13 @@
+import { useState } from 'react';
 import { Controller, type UseFormReturn } from 'react-hook-form';
-import { Alert, Chip, Stack, Typography } from '@mui/material';
+import { Alert, InputAdornment, Stack, TextField, Typography } from '@mui/material';
+import ClearIcon from '@mui/icons-material/Clear';
+import SearchIcon from '@mui/icons-material/Search';
+import { DuncitIconButton } from '@duncit/buttons';
 import type { RegisterVenueValues, VenueRegistrationConfig } from '../register-venue';
 import { useTranslation } from '@duncit/shell';
+import AmenityGroup, { type AmenityGroupDef } from './amenities/AmenityGroup';
+import { ownOptionLimitsOf } from './amenities/amenity-options';
 
 interface Props {
   form: UseFormReturn<RegisterVenueValues>;
@@ -9,43 +15,14 @@ interface Props {
   disabled?: boolean;
 }
 
-interface GroupDef {
-  name: 'amenities' | 'facilities' | 'security';
-  label: string;
-  hint: string;
-  options: string[];
-}
-
-interface OptionChipProps {
-  option: string;
-  selected: boolean;
-  disabled: boolean;
-  value: string[];
-  onChange: (next: string[]) => void;
-}
-
-/** One toggle chip. Hoisted to module scope so the toggle handler is not nested
- * five function levels deep (SonarQube S2004). */
-function OptionChip({ option, selected, disabled, value, onChange }: Readonly<OptionChipProps>) {
-  const toggle = () => onChange(selected ? value.filter((item: string) => item !== option) : [...value, option]);
-  return (
-    <Chip
-      label={option}
-      clickable={!disabled}
-      disabled={disabled}
-      color={selected ? 'primary' : 'default'}
-      variant={selected ? 'filled' : 'outlined'}
-      aria-pressed={selected}
-      onClick={disabled ? undefined : toggle}
-    />
-  );
-}
-
-/** Toggle-chip checklist groups for Amenities, Facilities and Venue Security.
- * Options come from `venueRegistrationConfig` — never hardcoded. */
+/** Toggle-chip checklist groups for Amenities, Facilities and Venue Security,
+ * with one search over all three. Options come from `venueRegistrationConfig` —
+ * never hardcoded — and the venue may add a few entries of its own to each. */
 export default function AmenitiesSection({ form, config, disabled = false }: Readonly<Props>) {
   const { t } = useTranslation();
-  const groups: GroupDef[] = [
+  const [search, setSearch] = useState('');
+  const limits = ownOptionLimitsOf(config);
+  const groups: AmenityGroupDef[] = [
     {
       name: 'amenities',
       label: t('partners.registerVenuePage.amenities'),
@@ -65,6 +42,13 @@ export default function AmenitiesSection({ form, config, disabled = false }: Rea
       options: config.security,
     },
   ];
+  const clearSearch = search === '' ? undefined : (
+    <InputAdornment position="end">
+      <DuncitIconButton size="small" aria-label={t('partners.registerVenuePage.clearAmenitySearch')} onClick={() => setSearch('')}>
+        <ClearIcon fontSize="small" />
+      </DuncitIconButton>
+    </InputAdornment>
+  );
 
   return (
     <Stack spacing={3}>
@@ -73,40 +57,41 @@ export default function AmenitiesSection({ form, config, disabled = false }: Rea
           Amenities, facilities and security are locked after approval. Contact support to change them.
         </Alert>
       )}
+      <TextField
+        size="small"
+        value={search}
+        onChange={(event) => setSearch(event.target.value)}
+        // Enter in a field of the setup page's form would save the page; a search only filters.
+        onKeyDown={(event) => {
+          if (event.key === 'Enter') event.preventDefault();
+        }}
+        label={t('partners.registerVenuePage.searchAmenities')}
+        slotProps={{
+          input: {
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon fontSize="small" />
+              </InputAdornment>
+            ),
+            endAdornment: clearSearch,
+          },
+          htmlInput: { 'data-testid': 'register-venue-amenities-search' },
+        }}
+      />
       {groups.map((group) => (
         <Controller
           key={group.name}
           name={group.name}
           control={form.control}
           render={({ field }) => (
-            <Stack spacing={1}>
-              <Typography variant="subtitle2" sx={{
-                fontWeight: 800
-              }}>{group.label}</Typography>
-              <Typography variant="caption" sx={{
-                color: "text.secondary"
-              }}>{group.hint}</Typography>
-              <Stack
-                direction="row"
-                role="group"
-                aria-label={group.label}
-                data-testid={`register-venue-${group.name}`}
-                sx={{
-                  flexWrap: "wrap",
-                  gap: 1
-                }}>
-                {group.options.map((option) => (
-                  <OptionChip
-                    key={option}
-                    option={option}
-                    selected={field.value.includes(option)}
-                    disabled={disabled}
-                    value={field.value}
-                    onChange={field.onChange}
-                  />
-                ))}
-              </Stack>
-            </Stack>
+            <AmenityGroup
+              group={group}
+              value={field.value}
+              onChange={field.onChange}
+              search={search}
+              disabled={disabled}
+              limits={limits}
+            />
           )}
         />
       ))}

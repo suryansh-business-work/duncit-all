@@ -115,6 +115,10 @@ export interface VenueRegistrationConfig extends FoodLimits {
   amenities: string[];
   facilities: string[];
   security: string[];
+  /** Entries a venue may add of its own to each of those three lists. Absent until the config has answered. */
+  own_option_limit?: number | null;
+  /** Characters in one such entry. Absent until the config has answered. */
+  own_option_max_length?: number | null;
   food_diets: string[];
   food_spice_levels: string[];
   /** Videos the venue page may carry. Absent until the config has answered. */

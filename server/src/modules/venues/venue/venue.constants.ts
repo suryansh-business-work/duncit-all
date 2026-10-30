@@ -114,3 +114,9 @@ export const VENUE_SECURITY = [
   'Visitor Log',
   'Women Safety Trained Staff',
 ];
+
+/** Entries a venue may add of its own to each of its amenities, facilities and
+ * security lists — beside the catalogues above, and seen on that venue only. */
+export const VENUE_OWN_OPTION_LIMIT = 10;
+/** Characters in one of a venue's own entries. */
+export const VENUE_OWN_OPTION_MAX_LENGTH = 40;

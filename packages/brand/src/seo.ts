@@ -113,4 +113,4 @@ export function buildWebSiteJsonLd(site: { name: string; url: string; organizati
 
 /** JSON safe to place inside a script tag: a `</script>` in any value cannot close it. */
 export const serializeJsonLd = (data: JsonLd | JsonLd[]): string =>
-  JSON.stringify(data).replaceAll('<', String.raw`<`);
+  JSON.stringify(data).replaceAll('<', String.raw`\u003c`);

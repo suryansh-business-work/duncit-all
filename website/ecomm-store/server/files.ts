@@ -27,6 +27,14 @@ const TYPES = new Map<string, string>([
 /** Text is worth compressing; images and fonts already are. */
 const TEXTUAL = /^(text\/|application\/(json|manifest)|image\/svg)/;
 
+/** The same response hardening nginx gives the other Duncit sites (deploy/nginx/static-site.conf). */
+const SECURITY_HEADERS: Readonly<Record<string, string>> = {
+  'X-Content-Type-Options': 'nosniff',
+  'X-Frame-Options': 'SAMEORIGIN',
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+  'Strict-Transport-Security': 'max-age=31536000',
+};
+
 const root = resolve(DIST_DIR);
 
 /** The dist file for a URL path. Never resolves to anything outside dist. */
@@ -52,6 +60,7 @@ export function sendBody(
   const gzip = TEXTUAL.test(type) && wantsGzip(req);
   const payload = gzip ? gzipSync(raw) : raw;
   res.writeHead(status, {
+    ...SECURITY_HEADERS,
     ...extraHeaders,
     'Content-Type': type,
     'Cache-Control': cache,

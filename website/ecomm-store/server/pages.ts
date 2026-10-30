@@ -1,3 +1,4 @@
+import { buildOrganizationJsonLd, buildWebSiteJsonLd } from '@duncit/brand/seo';
 import type { SiteMetaInput } from '@duncit/brand/site-meta';
 import { ECOMM_STORE_BUNDLE, flattenCatalogue } from '@duncit/i18n';
 
@@ -30,6 +31,8 @@ export interface PageHead {
   favicon: string;
   /** No such page: an unknown address, or a product/shelf/brand/page that is gone. Served as a 404. */
   notFound?: boolean;
+  /** The page's own words in full, for the text under its heading; the description when it has none. */
+  summary?: string;
 }
 
 /** The storefront's own titles, read from the copy it ships so the head says what the page says. */
@@ -62,7 +65,28 @@ const lookup = (table: Record<string, string>, key: string): string => (Object.h
 /** Keep descriptions to what a result snippet shows. */
 const clip = (text: string): string => (text.length > 160 ? `${text.slice(0, 157).trimEnd()}...` : text);
 
+/** Enough of the page's text for a crawler to tell what it is about, without the whole catalogue copy. */
+const SUMMARY_MAX = 1200;
+
+/** Authored rich text as one plain run of words. */
+const plainSummary = (text: string): string => text.replaceAll(/<[^>]*>?/g, ' ').replaceAll(/\s+/g, ' ').trim().slice(0, SUMMARY_MAX);
+
 const faviconOf = (s: SeoSettings): string => s.active_occasion?.favicon_url || s.favicon_url;
+
+/** The store home: its head, plus who runs the store and the site itself as JSON-LD. */
+function homeHead(s: SeoSettings): PageHead {
+  const head = baseHead(s, '/');
+  const url = `${SITE_URL}/`;
+  const organization = buildOrganizationJsonLd({
+    name: s.store_name,
+    url,
+    logoUrl: s.logo_url || null,
+    email: s.support_email || null,
+    phone: s.support_phone || null,
+    sameAs: s.social_links.map((link) => link.url).filter(Boolean),
+  });
+  return { ...head, structured: [organization, buildWebSiteJsonLd({ name: s.store_name, url, organizationUrl: url })] };
+}
 
 async function settings(): Promise<SeoSettings | null> {
   const data = await askApi<{ storeSettings: SeoSettings }>(SEO_SETTINGS);
@@ -100,6 +124,7 @@ async function productHead(s: SeoSettings, slug: string, path: string): Promise<
     meta: { title: firstFilled(product.seo_title, product.title), description, url, siteName: s.store_name, imageUrl: product.image_url || null, largeImage: Boolean(product.image_url) },
     structured,
     favicon: faviconOf(s),
+    summary: plainSummary(firstFilled(product.description, product.short_description)),
   };
 }
 
@@ -132,6 +157,7 @@ async function shelfHead(s: SeoSettings, kind: ShelfKind, slug: string, path: st
     },
     structured: [breadcrumbList(crumbs)],
     favicon: faviconOf(s),
+    summary: plainSummary(shelf.description),
   };
 }
 
@@ -201,6 +227,7 @@ function notFoundHead(s: SeoSettings, path: string): PageHead {
 export async function headFor(path: string): Promise<PageHead | null> {
   const s = await settings();
   if (!s) return null;
+  if (path === '/') return homeHead(s);
   const fixedKey = lookup(FIXED_TITLES, withoutTrailingSlash(path));
   if (fixedKey) return baseHead(s, path, copy(fixedKey));
   for (const route of ROUTES) {

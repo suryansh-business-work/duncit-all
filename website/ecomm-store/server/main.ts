@@ -39,7 +39,8 @@ const ROOT_OPEN = '<div id="root">';
  * the same title and text, drawn properly.
  */
 function withRootText(html: string, head: PageHead): string {
-  const text = `<main><h1>${escapeXml(head.meta.title)}</h1><p>${escapeXml(head.meta.description)}</p></main>`;
+  const body = head.summary || head.meta.description;
+  const text = `<main><h1>${escapeXml(head.meta.title)}</h1><p>${escapeXml(body)}</p></main>`;
   return html.replace(ROOT_OPEN, `${ROOT_OPEN}\n      ${text}`);
 }
 

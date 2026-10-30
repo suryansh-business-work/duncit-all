@@ -1,0 +1,38 @@
+---
+/**
+ * The JSON-LD a search engine reads to know whose site this is: the company
+ * (Organization) and this site of it (WebSite). Every subdomain names the same
+ * organization node — duncit.com's — so they are understood as one company.
+ *
+ * Placed on each site's home page only; Google reads the organization from there.
+ */
+import { buildOrganizationJsonLd, buildWebSiteJsonLd, serializeJsonLd } from './seo';
+import { DUNCIT_SOCIAL } from './social-accounts';
+import type { SiteBranding } from './site-branding';
+
+interface Props {
+  branding: SiteBranding;
+  /** This site's own home, e.g. https://earnwith.duncit.com. */
+  siteUrl: string;
+  /** duncit.com — the company's home, whichever site is rendering. */
+  organizationUrl: string;
+  /** This site's name when it differs from the company's (e.g. "Duncit Ads"). */
+  siteName?: string;
+}
+
+const { branding, siteUrl, organizationUrl, siteName = branding.app_name } = Astro.props;
+
+const json = serializeJsonLd([
+  buildOrganizationJsonLd({
+    name: branding.app_name,
+    url: organizationUrl,
+    logoUrl: branding.website_header_logo_url || null,
+    email: branding.support_email || null,
+    phone: branding.support_phone || null,
+    sameAs: DUNCIT_SOCIAL.map((account) => account.href),
+  }),
+  buildWebSiteJsonLd({ name: siteName, url: siteUrl, organizationUrl }),
+]);
+---
+
+<script type="application/ld+json" is:inline set:html={json} />

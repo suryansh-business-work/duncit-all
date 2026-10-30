@@ -4,6 +4,7 @@ import { fetchBranding } from '../lib/site-data';
 import { urlConfigs } from '../config/url-configs';
 import { getTranslator } from '../lib/i18n';
 import SiteMeta from '@duncit/brand/SiteMeta.astro';
+import SiteStructuredData from '@duncit/brand/SiteStructuredData.astro';
 import GoogleAnalytics from '@duncit/brand/GoogleAnalytics.astro';
 import ConsentBanner from '@duncit/brand/ConsentBanner.astro';
 import ScrollReveal from '@duncit/brand/ScrollReveal.astro';
@@ -13,11 +14,13 @@ const { t } = await getTranslator();
 interface Props {
   title: string;
   description?: string;
+  noindex?: boolean;
 }
 
 const {
   title,
   description = t('website.main.layout.siteDescription'),
+  noindex = false,
 } = Astro.props;
 
 // Admin-managed favicon (Branding → Website Logos), baked in at build time.
@@ -38,7 +41,11 @@ const favicon = branding.website_favicon_url || '/duncit-logo.svg';
       url={`${urlConfigs.siteUrl.replace(/\/+$/, '')}${Astro.url.pathname}`}
       siteName={branding.app_name}
       imageUrl={branding.website_header_logo_url || null}
+      noindex={noindex}
     />
+    {Astro.url.pathname === '/' && (
+      <SiteStructuredData branding={branding} siteUrl={urlConfigs.siteUrl} organizationUrl={urlConfigs.siteUrl} />
+    )}
     <link rel="icon" href={favicon} />
     <script is:inline>
       // Runs before the first paint so the page never flashes one theme and

@@ -19,6 +19,9 @@ exports:
   - 'SiteMenu.astro'
   - 'SiteMeta.astro'
   - 'site-meta'
+  - 'seo'
+  - 'social-accounts'
+  - 'SiteStructuredData.astro'
   - 'site-branding'
   - 'GoogleAnalytics.astro'
   - 'google-analytics'
@@ -224,12 +227,46 @@ const branding = await fetchBranding();
 | `type` | `'website' \| 'article'` | `'website'` | `article` for a blog post. |
 | `socialTitle` / `socialDescription` | `string` | the title / description | The share card's own copy (`og:*` and `twitter:*`) when it should differ from the search title. |
 | `twitterCard` | `'summary' \| 'summary_large_image'` | from `largeImage` | Forces the X card type. |
+| `noindex` | `boolean` | `false` | Keeps the page out of search (every site's 404). Emits `robots: noindex` in place of the canonical. |
 
 The component writes the tags between `<!-- meta:start -->` and `<!-- meta:end -->`
 markers, and `site-meta` exports the same builder as a plain function
 (`buildSiteMetaTags`, `injectSiteMeta`, `META_START`, `META_END`). That is what lets the
 sites' HTML server recompose the block per request for the pages whose card is not
 knowable at build time — one builder, so a card cannot drift from the page it describes.
+
+### `seo` and `SiteStructuredData.astro`
+
+The crawler-facing files. Each site serves `/robots.txt` and `/sitemap.xml` from two
+Astro endpoints built on these helpers, and puts the organization's JSON-LD on its home
+page.
+
+```ts
+// src/pages/sitemap.xml.ts
+import type { APIRoute } from 'astro';
+import { buildSitemapXml, routesFromPageFiles, SITEMAP_HEADERS } from '@duncit/brand/seo';
+
+export const GET: APIRoute = () => {
+  const pages = routesFromPageFiles(Object.keys(import.meta.glob('./**/*.astro')));
+  return new Response(buildSitemapXml(pages.map((path) => ({ loc: `https://duncit.com${path}` }))), {
+    headers: SITEMAP_HEADERS,
+  });
+};
+```
+
+| Export | What it does |
+| --- | --- |
+| `buildRobotsTxt(siteUrl, disallow?)` | `Allow: /` for every crawler, the given `Disallow` paths, and the `Sitemap:` line. |
+| `buildSitemapXml(entries)` | A `urlset` of `{ loc, lastmod? }`, XML-escaped. |
+| `routesFromPageFiles(files, exclude?)` | Page files → addresses as Astro canonicalises them (`/about/`), minus 404/500, `[dynamic]` routes and `exclude`. A new page is in the sitemap without anyone listing it. |
+| `buildOrganizationJsonLd` / `buildWebSiteJsonLd` / `serializeJsonLd` | schema.org nodes; every site's WebSite points at duncit.com's one `#organization`. |
+
+```astro
+<SiteStructuredData branding={branding} siteUrl={siteUrl} organizationUrl={mainSiteUrl} siteName="Duncit Ads" />
+```
+
+The organization's `sameAs` profiles are `DUNCIT_SOCIAL` from `social-accounts` — the
+same list `SocialLinks.astro` draws.
 
 ### `GoogleAnalytics.astro`
 

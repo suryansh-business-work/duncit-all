@@ -14,25 +14,13 @@
  * Tailwind source scan, so utilities written here compile to nothing.
  */
 import { cmsBlockProps } from './cms-block';
-
-interface Account {
-  /** Font Awesome brand class, e.g. `fa-instagram`. */
-  icon: string;
-  label: string;
-  href: string;
-}
+import { DUNCIT_SOCIAL, type SocialAccount } from './social-accounts';
 
 interface Props {
-  accounts?: Account[];
+  accounts?: SocialAccount[];
   heading?: string | null;
   class?: string;
 }
-
-export const DUNCIT_SOCIAL: Account[] = [
-  { icon: 'fa-instagram', label: 'Instagram', href: 'https://www.instagram.com/duncit_app/' },
-  { icon: 'fa-linkedin-in', label: 'LinkedIn', href: 'https://linkedin.com/company/duncit' },
-  { icon: 'fa-facebook-f', label: 'Facebook', href: 'https://facebook.com/duncitapp' },
-];
 
 const { accounts = DUNCIT_SOCIAL, heading = null, class: className = '' } = Astro.props;
 ---

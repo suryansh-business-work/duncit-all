@@ -8,7 +8,7 @@ import { getSiteTranslator } from '@duncit/brand/site-i18n';
 const { t } = await getSiteTranslator(urlConfigs.graphqlUrl);
 ---
 
-<Layout title={`${t('website.partners.notFound.title')} — ${t('website.partners.brand.footerName')}`}>
+<Layout title={`${t('website.partners.notFound.title')} — ${t('website.partners.brand.footerName')}`} noindex>
   <div class="min-h-screen bg-frame p-3 sm:p-4">
     <SiteHeader />
     <main class="relative isolate mt-3 overflow-hidden rounded-[2rem] bg-cream px-5 py-24 sm:mt-4 sm:rounded-[2.75rem] sm:py-32">

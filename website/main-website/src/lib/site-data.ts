@@ -108,6 +108,24 @@ export async function fetchPolicies(): Promise<SitePolicy[]> {
   return data?.publicPolicies ?? [];
 }
 
+export interface SiteBlogPost {
+  slug: string;
+  published_at: string | null;
+}
+
+/** Published blog posts — only what the sitemap needs to list them. */
+export async function fetchBlogPosts(): Promise<SiteBlogPost[]> {
+  const data = await gqlFetch<{ publicWebsiteContent: SiteBlogPost[] | null }>(`
+    query WebsiteBlogSitemap {
+      publicWebsiteContent(type: BLOG) {
+        slug
+        published_at
+      }
+    }
+  `);
+  return data?.publicWebsiteContent ?? [];
+}
+
 /** The Grievance Officer the Legal portal publishes. Blank until they fill it in. */
 export interface SiteGrievanceOfficer {
   name: string;

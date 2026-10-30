@@ -2,19 +2,21 @@
 interface Props {
   title: string;
   description?: string;
+  noindex?: boolean;
 }
 
 import { fetchBranding } from '../lib/site-data';
 import { getSiteTranslator } from '@duncit/brand/site-i18n';
 import { urlConfigs } from '../config/url-configs';
 import SiteMeta from '@duncit/brand/SiteMeta.astro';
+import SiteStructuredData from '@duncit/brand/SiteStructuredData.astro';
 import GoogleAnalytics from '@duncit/brand/GoogleAnalytics.astro';
 import ConsentBanner from '@duncit/brand/ConsentBanner.astro';
 import ScrollReveal from '@duncit/brand/ScrollReveal.astro';
 import '../styles/global.css';
 
 const { t } = await getSiteTranslator(urlConfigs.graphqlUrl);
-const { title, description = t('website.partners.brand.description') } = Astro.props;
+const { title, description = t('website.partners.brand.description'), noindex = false } = Astro.props;
 
 const branding = await fetchBranding();
 const favicon =
@@ -35,7 +37,16 @@ const favicon =
       url={`${urlConfigs.siteUrl.replace(/\/+$/, '')}${Astro.url.pathname}`}
       siteName={branding.app_name}
       imageUrl={branding.website_header_logo_url || null}
+      noindex={noindex}
     />
+    {Astro.url.pathname === '/' && (
+      <SiteStructuredData
+        branding={branding}
+        siteUrl={urlConfigs.siteUrl}
+        organizationUrl={urlConfigs.mainSiteUrl}
+        siteName={t('website.partners.brand.footerName')}
+      />
+    )}
     <link rel="icon" type="image/png" href={favicon} />
     <script is:inline>
       // Runs before the first paint so the page never flashes one theme and

@@ -7,7 +7,7 @@ import { siteContent } from '../config/site-config';
 const siteConfig = await siteContent();
 ---
 
-<Layout title={`${siteConfig.notFound.title} — ${siteConfig.brand.name}`}>
+<Layout title={`${siteConfig.notFound.title} — ${siteConfig.brand.name}`} noindex>
   <SiteHeader />
   <main class="relative mx-auto flex max-w-3xl flex-col items-center overflow-hidden px-5 pt-20 pb-32 text-center sm:pt-28">
     <div class="blob top-0 left-1/2 h-80 w-80 -translate-x-1/2 bg-primary opacity-20" aria-hidden="true"></div>

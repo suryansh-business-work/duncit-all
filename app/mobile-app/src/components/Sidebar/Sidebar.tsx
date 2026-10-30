@@ -83,7 +83,7 @@ export function Sidebar({ onClose }: Readonly<{ onClose: () => void }>) {
   // MenuStackRoute is a union of param-less screens; RN v7's distributive
   // `push` overload can't accept a union arg directly, so the action is
   // dispatched instead (safe — none of these screens take required params).
-  const push =(screen: MenuStackRoute) => navigation.dispatch(StackActions.push(screen));
+  const push = (screen: MenuStackRoute) => navigation.dispatch(StackActions.push(screen));
   // A page opened from the menu is PUSHED over it, so Back returns to the menu
   // (as on mWeb's /menu). `push`, not `navigate`: navigate would rewind to a
   // copy of the route already lower in the stack instead of opening it here.

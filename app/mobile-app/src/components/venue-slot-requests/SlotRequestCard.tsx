@@ -44,10 +44,18 @@ function HostReach({
       {request.host_phone || request.host_email ? (
         <XStack gap={16} flexWrap="wrap">
           {request.host_phone ? (
-            <VenueChatContactLink kind="phone" value={request.host_phone} testID={`slot-request-${id}-phone`} />
+            <VenueChatContactLink
+              kind="phone"
+              value={request.host_phone}
+              testID={`slot-request-${id}-phone`}
+            />
           ) : null}
           {request.host_email ? (
-            <VenueChatContactLink kind="email" value={request.host_email} testID={`slot-request-${id}-email`} />
+            <VenueChatContactLink
+              kind="email"
+              value={request.host_email}
+              testID={`slot-request-${id}-email`}
+            />
           ) : null}
         </XStack>
       ) : (

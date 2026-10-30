@@ -73,7 +73,12 @@ export function VenueRequestReach({ podId }: Readonly<{ podId: string }>) {
         />
       </XStack>
       {failed ? (
-        <Text role="alert" fontSize={12} color="$danger" testID={`venue-request-contact-error-${podId}`}>
+        <Text
+          role="alert"
+          fontSize={12}
+          color="$danger"
+          testID={`venue-request-contact-error-${podId}`}
+        >
           {t('mweb.venueChat.loadFailed')}
         </Text>
       ) : null}

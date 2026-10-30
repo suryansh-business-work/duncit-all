@@ -24,15 +24,29 @@ export function FeaturedTileBackdrop() {
   const sweep = useSharedValue(-1);
   useEffect(() => {
     if (reduceMotion) return;
-    sweep.value = withRepeat(withTiming(2, { duration: 2800, easing: Easing.inOut(Easing.quad) }), -1, false);
+    sweep.value = withRepeat(
+      withTiming(2, { duration: 2800, easing: Easing.inOut(Easing.quad) }),
+      -1,
+      false,
+    );
   }, [reduceMotion, sweep]);
-  const band = useAnimatedStyle(() => ({ transform: [{ translateX: sweep.value * 60 }, { rotate: '20deg' }] }));
+  const band = useAnimatedStyle(() => ({
+    transform: [{ translateX: sweep.value * 60 }, { rotate: '20deg' }],
+  }));
 
   return (
     <>
-      <LinearGradient colors={[brand, primary]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
+      <LinearGradient
+        colors={[brand, primary]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={StyleSheet.absoluteFill}
+      />
       {reduceMotion ? null : (
-        <Animated.View pointerEvents="none" style={[styles.band, { backgroundColor: onPrimary }, band]} />
+        <Animated.View
+          pointerEvents="none"
+          style={[styles.band, { backgroundColor: onPrimary }, band]}
+        />
       )}
     </>
   );

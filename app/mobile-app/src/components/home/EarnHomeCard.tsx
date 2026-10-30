@@ -19,7 +19,11 @@ import { useTranslation } from '@/hooks/useTranslation';
 type RoleIcon = 'groups' | 'storefront' | 'volunteer-activism';
 
 /** One of the ways to earn — hosting, a venue, a brand — as a disc that bobs on its own beat. */
-function RoleDisc({ icon, delay, overlap }: Readonly<{ icon: RoleIcon; delay: number; overlap: boolean }>) {
+function RoleDisc({
+  icon,
+  delay,
+  overlap,
+}: Readonly<{ icon: RoleIcon; delay: number; overlap: boolean }>) {
   const { brand, onPrimary } = useThemeColors();
   const reduceMotion = useReduceMotion();
   const lift = useSharedValue(0);
@@ -32,7 +36,12 @@ function RoleDisc({ icon, delay, overlap }: Readonly<{ icon: RoleIcon; delay: nu
 
   return (
     <Animated.View
-      style={[styles.disc, overlap && styles.overlap, { borderColor: onPrimary, backgroundColor: brand }, style]}
+      style={[
+        styles.disc,
+        overlap && styles.overlap,
+        { borderColor: onPrimary, backgroundColor: brand },
+        style,
+      ]}
     >
       <MaterialIcons name={icon} size={18} color={onPrimary} />
     </Animated.View>

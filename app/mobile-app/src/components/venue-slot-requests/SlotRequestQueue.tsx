@@ -72,7 +72,12 @@ export function SlotRequestQueue({ onDecided, onChat }: Readonly<Props>) {
       )}
 
       {slots.requests.map((request) => (
-        <SlotRequestCard key={request.slot_id} request={request} answers={answers} onChat={onChat} />
+        <SlotRequestCard
+          key={request.slot_id}
+          request={request}
+          answers={answers}
+          onChat={onChat}
+        />
       ))}
     </YStack>
   );

@@ -1,10 +1,10 @@
 // Single source of truth for the "Earn with Duncit" marketing site. The URLs
 // are resolved from the environment so deployments stay dynamic without a code
 // change; the WORDS come from Admin > Localization, like every other surface
-// (rule 38) — see `siteContent` below.
+// (rule 38); see `siteContent` below.
 //
 // `astro dev` is local by definition, so a dev server targets the local API
-// without anyone remembering a flag — running the site locally against the
+// without anyone remembering a flag. Running the site locally against the
 // production server is how a missing local change looks like a broken page.
 // PUBLIC_IS_DEVELOPMENT still forces the dev targets for a built preview.
 import { getSiteTranslator, type SiteTranslate } from '@duncit/brand/site-i18n';
@@ -30,7 +30,7 @@ const siteUrl =
   (isDevelopment ? 'http://localhost:2025' : 'https://earnwith.duncit.com');
 
 /** Stock photography is served through Pexels' own resizer rather than at full
- * resolution — the originals are several megabytes each. */
+ * resolution, since the originals are several megabytes each. */
 const photo = (id: string, width: number) =>
   `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=${width}`;
 
@@ -103,7 +103,7 @@ const build = (t: SiteTranslate) => ({
     image: photo('34766307', 1920),
     imageAlt: t('website.earn.hero.imageAlt'),
     proof: t('website.earn.hero.proof'),
-    /** The cards floating beside the headline — what the app does for an earner. */
+    /** The cards floating beside the headline: what the app does for an earner. */
     cards: [
       { icon: 'fa-users', title: t('website.earn.hero.card1Title'), text: t('website.earn.hero.card1Text') },
       { icon: 'fa-clipboard-check', title: t('website.earn.hero.card2Title'), text: t('website.earn.hero.card2Text') },
@@ -119,7 +119,7 @@ const build = (t: SiteTranslate) => ({
     ],
   },
   // The same five journeys the app offers (@duncit/onboarding journeys), each
-  // deep-linking into its start — the site and the Earn screen must not drift apart.
+  // deep-linking into its start, so the site and the Earn screen do not drift apart.
   pathsSection: {
     eyebrow: t('website.earn.paths.sectionEyebrow'),
     headingLead: t('website.earn.paths.sectionHeadingLead'),
@@ -229,7 +229,7 @@ const build = (t: SiteTranslate) => ({
       },
     ] as Step[],
   },
-  // The estimator's inputs. The RATES are not here on purpose — GST, the
+  // The estimator's inputs. The RATES are left out on purpose: GST, the
   // platform fee and the rest come from the server's settlement waterfall, so
   // this page cannot state a percentage the platform no longer charges.
   calculator: {
@@ -238,8 +238,8 @@ const build = (t: SiteTranslate) => ({
     text: t('website.earn.calculator.text'),
     currency: '₹',
     rolesAriaLabel: t('website.earn.calculator.rolesAriaLabel'),
-    // Every money line is a month's worth, like the take-home — only the row
-    // that says "per pod" is not.
+    // Every money line is a month's worth, like the take-home, except the row
+    // that says "per pod".
     rowLabels: {
       gross: t('website.earn.calculator.rowGross'),
       gst: t('website.earn.calculator.rowGst'),
@@ -252,7 +252,7 @@ const build = (t: SiteTranslate) => ({
     },
     /**
      * The two people a pod pays. Both read the SAME waterfall the server
-     * returns — `field` picks which line of it is that role's money, so the two
+     * returns; `field` picks which line of it is that role's money, so the two
      * tabs can never disagree about the same pod.
      */
     roles: [
@@ -268,7 +268,7 @@ const build = (t: SiteTranslate) => ({
         // Deductions shown above the take-home, in the order money leaves,
         // then the per-pod payout and the count it multiplies by.
         // Every deduction the pod's money passes through, so the column
-        // actually adds up to the take-home rather than nearly.
+        // adds up exactly to the take-home.
         rows: ['gross', 'gst', 'platform', 'venue', 'clubAdmin', 'hostCommission', 'perPod', 'pods'],
         dutiesTitle: t('website.earn.calculator.hostDutiesTitle'),
         duties: [
@@ -285,10 +285,10 @@ const build = (t: SiteTranslate) => ({
         field: 'club_admin_amount',
         takeHomeLabel: t('website.earn.calculator.clubAdminTakeHome'),
         /** The share this role is paid on. Zero means the platform has not set
-         * one — the panel says that instead of showing ₹0 as if it were news. */
+         * one; the panel says that instead of showing a zero amount as if it were news. */
         rateField: 'club_admin_pct',
         // The club admin's money is per pod and then multiplied by how many
-        // pods the club runs — the rows show that sum being made.
+        // pods the club runs. The rows show that sum being made.
         multiplier: 'pods',
         rows: ['gross', 'gst', 'platform', 'perPod', 'pods'],
         dutiesTitle: t('website.earn.calculator.clubAdminDutiesTitle'),
@@ -301,7 +301,7 @@ const build = (t: SiteTranslate) => ({
     ],
     note: t('website.earn.calculator.note'),
     loadError: t('website.earn.calculator.loadError'),
-    /** The downloadable copy of an estimate — a real PDF the visitor keeps, drawn
+    /** The downloadable copy of an estimate: a real PDF the visitor keeps, drawn
      * page-first rather than handed to the browser's print dialog. The library
      * that draws it is fetched on the first click, so the page costs nothing to
      * load for everyone who never asks for one. */
@@ -318,7 +318,7 @@ const build = (t: SiteTranslate) => ({
     /** Shown instead of a confident figure when the pod cannot pay this role. */
     shortfallNote: t('website.earn.calculator.shortfallNote'),
     /** A club admin is paid a share Duncit sets; at 0% there is nothing to
-     * estimate, and a cheerful ₹0 would be worse than saying so. */
+     * estimate, and a cheerful zero amount would be worse than saying so. */
     noShareNote: t('website.earn.calculator.noShareNote'),
     disclaimer: t('website.earn.calculator.disclaimer'),
     fields: [
@@ -381,8 +381,8 @@ const build = (t: SiteTranslate) => ({
     text: t('website.earn.newsletter.text'),
     placeholder: t('website.earn.newsletter.placeholder'),
     button: t('website.earn.newsletter.button'),
-    /** Consent is taken before the address is sent, not assumed from typing
-     * one in — and it names what is being agreed to. */
+    /** Consent is taken before the address is sent instead of being assumed
+     * from typing one in, and it names what is being agreed to. */
     consent: t('website.earn.newsletter.consent'),
     consentLinkLabel: t('website.earn.newsletter.consentLinkLabel'),
     /** Where the subscription came from, for the CRM's own reporting. */

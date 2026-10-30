@@ -12,7 +12,12 @@ const mockLogout = jest.fn().mockResolvedValue(undefined);
 const mockFlags: Record<string, boolean> = {};
 
 jest.mock('@react-navigation/native', () => ({
-  useNavigation: () => ({ canGoBack: () => true, navigate: mockNavigate, push: mockPush, dispatch: jest.fn() }),
+  useNavigation: () => ({
+    canGoBack: () => true,
+    navigate: mockNavigate,
+    push: mockPush,
+    dispatch: jest.fn(),
+  }),
   // The menu pushes its pages as a dispatched action; the name is what matters.
   StackActions: { push: (...args: unknown[]) => mockPush(...args) },
 }));

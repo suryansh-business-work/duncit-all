@@ -690,16 +690,6 @@ export const VENUE_EMAILS: readonly EmailDef[] = [
       ctaVar: 'app_url',
     },
   }),
-
-  podFeedback({
-    slug: 'venue-pod-feedback',
-    name: 'Venue: Pod Feedback',
-    audience: 'VENUE',
-    who: 'venue owner',
-    copyKey: 'email.venuePodFeedback',
-    waEvent: 'VENUE_POD_FEEDBACK',
-    footer: FOOTER.venue,
-  }),
 ];
 
 /** `['Recipient name','Product','Brand','Available Quantity']`. */
@@ -1059,16 +1049,6 @@ export const CLUB_ADMIN_EMAILS: readonly EmailDef[] = [
       ctaKey: CTA.openPartners,
       ctaVar: 'app_url',
     },
-  }),
-
-  podFeedback({
-    slug: 'club-admin-pod-feedback',
-    name: 'Club Admin: Pod Feedback',
-    audience: 'CLUB_ADMIN',
-    who: 'club admin',
-    copyKey: 'email.clubAdminPodFeedback',
-    waEvent: 'CLUB_ADMIN_FEEDBACK',
-    footer: FOOTER.clubAdmin,
   }),
 
   defineEmail({

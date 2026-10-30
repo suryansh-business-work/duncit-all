@@ -1,5 +1,6 @@
 import { Box, ButtonBase, Link, Typography } from '@mui/material';
-import type { ProfileMenuKey } from '@duncit/utils';
+import { FEATURED_QUICK_ACCESS, type ProfileMenuKey } from '@duncit/utils';
+import { ANIMATED_BRAND_GRADIENT_SX } from '../../brandGradient';
 import { RADIUS, SURFACE_SX } from '../../../theme';
 import { useTranslation } from '../../../i18n/useTranslation';
 import { profileIcon } from './profileIcons';
@@ -24,6 +25,9 @@ interface TileProps {
 export function QuickTile({ tile, badgeCount, onNavigate }: Readonly<TileProps>) {
   const { t } = useTranslation();
   const unread = badgeCount && badgeCount > 0 ? badgeCount : 0;
+  // Earn with Duncit stands out: the animated brand gradient, with its icon
+  // and label in the gradient's own contrast colour.
+  const featured = tile.key === FEATURED_QUICK_ACCESS;
   return (
     <ButtonBase
       data-testid={`sidebar-grid-${tile.key}`}
@@ -46,9 +50,14 @@ export function QuickTile({ tile, badgeCount, onNavigate }: Readonly<TileProps>)
         transition: 'border-color 160ms ease',
         '&:hover': { borderColor: 'divider' },
         '&.Mui-focusVisible': { outline: '2px solid', outlineColor: 'primary.main', outlineOffset: 2 },
+        ...(featured && { ...ANIMATED_BRAND_GRADIENT_SX, borderColor: 'transparent' }),
       }}
     >
-      <Box component="span" aria-hidden sx={{ display: 'flex', color: 'secondary.main', '& svg': { fontSize: 26 } }}>
+      <Box
+        component="span"
+        aria-hidden
+        sx={{ display: 'flex', color: featured ? 'inherit' : 'secondary.main', '& svg': { fontSize: 26 } }}
+      >
         {profileIcon(tile.icon)}
       </Box>
       <Typography component="span" sx={{ fontSize: 12, fontWeight: 600, textAlign: 'center', lineHeight: 1.25 }}>

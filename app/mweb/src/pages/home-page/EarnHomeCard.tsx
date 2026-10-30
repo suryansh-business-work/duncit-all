@@ -5,23 +5,15 @@ import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded';
 import GroupsRoundedIcon from '@mui/icons-material/GroupsRounded';
 import StorefrontRoundedIcon from '@mui/icons-material/StorefrontRounded';
 import VolunteerActivismRoundedIcon from '@mui/icons-material/VolunteerActivismRounded';
+import { ANIMATED_BRAND_GRADIENT_SX, REDUCED_MOTION } from '../../components/brandGradient';
 import { RADIUS } from '../../theme';
 import { useTranslation } from '../../i18n/useTranslation';
-
-/** The gradient drifts across the card, slowly — a sign it is alive, not a banner ad. */
-const drift = keyframes`
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-`;
 
 /** Each role disc bobs on its own beat. */
 const bob = keyframes`
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-4px); }
 `;
-
-const REDUCED_MOTION = '@media (prefers-reduced-motion: reduce)';
 
 /** One of the ways to earn — hosting, a venue, a brand — as a floating disc. */
 function RoleDisc({ icon, delay, offset }: Readonly<{ icon: ReactNode; delay: string; offset: number }>) {
@@ -71,11 +63,7 @@ export default function EarnHomeCard({ onOpen }: Readonly<{ onOpen: () => void }
         overflow: 'hidden',
         borderRadius: `${RADIUS.surface}px`,
         p: 2,
-        color: 'primary.contrastText',
-        backgroundImage: (theme) =>
-          `linear-gradient(120deg, ${theme.palette.primary.dark}, ${theme.palette.primary.main}, ${theme.palette.secondary.main}, ${theme.palette.primary.dark})`,
-        backgroundSize: '300% 300%',
-        animation: `${drift} 10s ease infinite`,
+        ...ANIMATED_BRAND_GRADIENT_SX,
         boxShadow: 'var(--duncit-card-shadow)',
         transition: 'transform 180ms ease, box-shadow 180ms ease',
         '&:hover': { transform: 'translateY(-2px)' },

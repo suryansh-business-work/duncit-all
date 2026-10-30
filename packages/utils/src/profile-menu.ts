@@ -205,6 +205,10 @@ export const DEFAULT_QUICK_ACCESS: readonly ProfileMenuKey[] = [
   'support',
 ];
 
+/** The one Quick Access tile both apps dress up (an animated brand gradient)
+ * wherever the member has it pinned — the way into earning on Duncit. */
+export const FEATURED_QUICK_ACCESS: ProfileMenuKey = 'earn';
+
 const QUICK_ACCESS_SET: ReadonlySet<string> = new Set(QUICK_ACCESS_CATALOGUE);
 
 function isQuickAccessKey(value: unknown): value is ProfileMenuKey {

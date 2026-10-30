@@ -399,6 +399,9 @@ async function announce(
 async function writeSlackChannel(channel: string): Promise<void> {
   const entry = await slackEntry();
   if (!entry) {
+    // The form sends its empty channel field even while Slack is not
+    // connected, and an empty channel with no entry has nothing to clear.
+    if (!channel) return;
     throw badInput(
       'Connect Slack first — add a bot token in Environment Variables → Slack, and mark the entry default.'
     );
@@ -766,15 +769,16 @@ export const e2eRunService = {
     // at two in the afternoon starts a forty-minute run at two in the
     // afternoon. Every later window still catches up normally.
     if (set.enabled && !previous.enabled) set.last_run_at = new Date();
+    // The channel is NOT part of this document. It lives on the SLACK env
+    // entry beside the bot token, so every channel the platform posts to is
+    // configured in one place and the Environment page can show it. Written
+    // first, so a refused channel leaves nothing half-saved behind its error.
+    if (input.slack_channel !== undefined) await writeSlackChannel(str(input.slack_channel));
     await E2eRunSettingsModel.updateOne({ key: E2E_SETTINGS_KEY }, { $set: set }, { upsert: true });
     // The mute is read on the path of every mail and every message, so it is
     // cached — dropping that cache here is what makes switching it take effect
     // as the operator presses Save rather than up to ten seconds afterwards.
     forgetMuteCache();
-    // The channel is NOT part of this document. It lives on the SLACK env
-    // entry beside the bot token, so every channel the platform posts to is
-    // configured in one place and the Environment page can show it.
-    if (input.slack_channel !== undefined) await writeSlackChannel(str(input.slack_channel));
     return this.settings();
   },
 

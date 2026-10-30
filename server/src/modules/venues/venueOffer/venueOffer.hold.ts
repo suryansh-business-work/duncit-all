@@ -14,6 +14,7 @@ import { loadVenue, spaceCapacity, type HoldRef } from '@modules/venues/venuePri
 import { venueOfferSettingsOf } from '@modules/venues/venue/venue.offerSettings';
 import { currentTerms } from './venueOffer.view';
 import type {
+  FreeJustification,
   OfferCharges,
   OfferQuote,
   VenueOffer,
@@ -53,6 +54,10 @@ export interface WindowHoldOptions {
   agreed: boolean;
   /** Who closed agreed terms (default: the other party). A venue committing its own terms closes them itself. */
   closedBy?: VenueOfferParty;
+  /** The pod is free: the venue accepts or declines the offer, nobody counters it. */
+  freePod?: boolean;
+  /** Why a FREE offer is free (checked by the caller); null on a priced offer. */
+  freeJustification?: FreeJustification | null;
   priceInLock: PriceInLock;
 }
 
@@ -123,6 +128,8 @@ export async function holdWindow(opts: WindowHoldOptions): Promise<IVenueSlot> {
       history: historyFor(opts, priced, now),
       expires_at: expiresAt,
       move: 0,
+      free_pod: !!opts.freePod,
+      free_justification: opts.freeJustification ?? null,
     };
     const [slot] = await VenueSlotModel.create(
       [

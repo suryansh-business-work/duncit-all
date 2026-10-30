@@ -61,8 +61,11 @@ describe('SlotRequestCard', () => {
     expect(notice.props.role).toBe('status');
     expect(screen.getByText('This pod is free')).toBeOnTheScreen();
     expect(screen.queryByText('Slot price')).toBeNull();
-    // The host's contact stays on the card, and the decision stays open.
-    expect(screen.getByText('meera@duncit.com · 9000000001')).toBeOnTheScreen();
+    // The host's contact stays on the card as tap-to-call / tap-to-mail links
+    // (their icon glyph shares the text, so match the value, not the whole node),
+    // and the decision stays open.
+    expect(screen.getByTestId('slot-request-slot-1-phone')).toHaveTextContent(/9000000001/);
+    expect(screen.getByTestId('slot-request-slot-1-email')).toHaveTextContent(/meera@duncit\.com/);
     fireEvent.press(screen.getByTestId('slot-request-slot-1-accept'));
     expect(
       screen.getByText(/^“Sunday Badminton” goes live at Indiranagar Courts on .+\.$/),

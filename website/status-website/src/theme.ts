@@ -1,7 +1,7 @@
 import { createTheme, type Theme } from '@mui/material/styles';
 import type { ColorMode } from './hooks/useColorMode';
 
-/** Duncit brand red — replaced at runtime by the admin-configured primary color. */
+/** Duncit brand red, replaced at runtime by the admin-configured primary color. */
 export const DEFAULT_PRIMARY = '#ff5757';
 
 const FONT_FAMILY = "'Nunito', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif";

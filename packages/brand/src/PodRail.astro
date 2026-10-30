@@ -1,0 +1,189 @@
+---
+/**
+ * The home-page rail of upcoming pods — every Duncit website, right under its
+ * banner. Cards open the pod on mWeb; see pod-rail.ts.
+ *
+ * Ships HIDDEN and stays hidden until pods arrive: no pods (or no API) shows
+ * nothing rather than an empty row. Plain CSS on the site's own colour
+ * variables: this package is outside every site's Tailwind scan.
+ */
+import { siteT, type SiteTranslate } from './site-i18n';
+import { podRailCopy } from './pod-rail';
+
+interface Props {
+  /** Where to read the pods from. The site already has this per environment. */
+  graphqlUrl: string;
+  /** mWeb's origin — every card opens its pod there. */
+  mwebUrl: string;
+  /** The site's build-time translator. Omit it and the shipped copy renders. */
+  t?: SiteTranslate;
+  class?: string;
+}
+
+const { graphqlUrl, mwebUrl, t = siteT, class: className = '' } = Astro.props;
+const copy = JSON.stringify(podRailCopy((key) => t(key)));
+---
+
+<section
+  class:list={['pod-rail', className]}
+  data-pod-rail
+  data-graphql={graphqlUrl}
+  data-mweb={mwebUrl}
+  data-copy={copy}
+  aria-labelledby="pod-rail-heading"
+  hidden
+>
+  <header class="pod-rail-header">
+    <div>
+      <span class="pod-rail-eyebrow">{t('website.brand.podRail.eyebrow')}</span>
+      <h2 id="pod-rail-heading" class="pod-rail-heading">{t('website.brand.podRail.heading')}</h2>
+    </div>
+    <div class="pod-rail-arrows">
+      <button type="button" class="pod-rail-arrow" data-pod-rail-prev><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button>
+      <button type="button" class="pod-rail-arrow" data-pod-rail-next><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></button>
+    </div>
+  </header>
+  <div class="pod-rail-track" role="list" data-pod-rail-track></div>
+</section>
+
+<script>
+  import { mountPodRail } from './pod-rail-dom';
+  import type { PodRailCopy } from './pod-rail';
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-pod-rail]')) {
+    const { graphql, mweb, copy } = root.dataset;
+    if (graphql && mweb && copy) mountPodRail(root, graphql, mweb, JSON.parse(copy) as PodRailCopy);
+  }
+</script>
+
+<style is:global>
+  .pod-rail {
+    padding: 1.5rem 0 0.5rem;
+  }
+  .pod-rail[hidden] {
+    display: none;
+  }
+  .pod-rail-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0 1rem 0.75rem;
+  }
+  .pod-rail-eyebrow {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-primary);
+  }
+  .pod-rail-heading {
+    margin: 0.15rem 0 0;
+    font-family: var(--font-head, inherit);
+    font-size: clamp(1.25rem, 2.5vw, 1.75rem);
+    font-weight: 800;
+    color: var(--color-ink);
+  }
+  .pod-rail-arrows {
+    display: flex;
+    gap: 0.5rem;
+  }
+  .pod-rail-arrow {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 999px;
+    border: 1px solid var(--color-line);
+    background: var(--color-surface);
+    color: var(--color-ink);
+    cursor: pointer;
+    transition: border-color 160ms ease, transform 160ms ease;
+  }
+  .pod-rail-arrow:hover {
+    border-color: var(--color-primary);
+  }
+  .pod-rail-arrow:focus-visible,
+  .pod-rail-card:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+  .pod-rail-track {
+    display: flex;
+    gap: 0.875rem;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-padding: 0 1rem;
+    padding: 0.25rem 1rem 1rem;
+    scrollbar-width: none;
+  }
+  .pod-rail-track::-webkit-scrollbar {
+    display: none;
+  }
+  .pod-rail-card {
+    flex: 0 0 clamp(13rem, 42vw, 16rem);
+    scroll-snap-align: start;
+    display: flex;
+    flex-direction: column;
+    border-radius: 1rem;
+    overflow: hidden;
+    background: var(--color-surface);
+    border: 1px solid var(--color-line);
+    color: var(--color-ink);
+    text-decoration: none;
+    transition: transform 180ms ease, box-shadow 180ms ease;
+  }
+  .pod-rail-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 24px -14px var(--color-ink);
+  }
+  .pod-rail-cover {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    background: var(--color-line);
+  }
+  .pod-rail-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .pod-rail-price {
+    position: absolute;
+    left: 0.6rem;
+    bottom: 0.6rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    background: var(--color-primary);
+    color: var(--color-surface);
+  }
+  .pod-rail-body {
+    padding: 0.75rem 0.875rem 0.9rem;
+    display: grid;
+    gap: 0.2rem;
+  }
+  .pod-rail-title {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 700;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .pod-rail-meta {
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--color-ink-soft, var(--color-ink));
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .pod-rail-card,
+    .pod-rail-arrow {
+      transition: none;
+    }
+    .pod-rail-card:hover {
+      transform: none;
+    }
+  }
+</style>

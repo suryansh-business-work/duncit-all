@@ -11,8 +11,9 @@ import DownloadApps from '../components/DownloadApps.astro';
 import CtaBand from '../components/CtaBand.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import ReelSlider from '@duncit/brand/ReelSlider.astro';
+import PodRail from '@duncit/brand/PodRail.astro';
 import { getSiteTranslator } from '@duncit/brand/site-i18n';
-import { siteContent } from '../config/site-config';
+import { siteContent, siteUrls } from '../config/site-config';
 
 const siteConfig = await siteContent();
 const { t } = await getSiteTranslator(siteConfig.graphqlUrl);
@@ -22,6 +23,8 @@ const { t } = await getSiteTranslator(siteConfig.graphqlUrl);
   <SiteHeader overlay />
   <main>
     <Hero />
+    <!-- Upcoming pods, live from the API, right under the banner; each opens on mWeb. -->
+    <PodRail graphqlUrl={siteConfig.graphqlUrl} mwebUrl={siteUrls.mwebUrl} t={t} />
     <!-- Reels second, straight after the hero; hidden when there are none. -->
     <ReelSlider graphqlUrl={siteConfig.graphqlUrl} site="EARNWITH" t={t} />
     <EarnPaths />

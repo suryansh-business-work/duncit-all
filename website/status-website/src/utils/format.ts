@@ -1,6 +1,6 @@
 /** Display formatting helpers for the status page. */
 
-/** 99.9583 → "99.96%"; null/undefined (no data) → "—". */
+/** 99.9583 -> "99.96%"; null/undefined (no data) -> an em dash. */
 export function formatUptime(pct: number | null | undefined): string {
   if (pct === null || pct === undefined) return '—';
   return `${pct.toFixed(2)}%`;
@@ -33,7 +33,7 @@ export function formatBytes(bytes: number): string {
   return `${Number.parseFloat(value.toFixed(i === 0 || value >= 100 ? 0 : 1))} ${units[i]}`;
 }
 
-/** Seconds → "3d 4h" / "2h 5m" / "<1m". */
+/** Seconds -> "3d 4h" / "2h 5m" / "<1m". */
 export function formatDuration(seconds: number): string {
   const d = Math.floor(seconds / 86400);
   const h = Math.floor((seconds % 86400) / 3600);

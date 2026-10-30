@@ -17,7 +17,7 @@ export function VenueHealthScreen() {
   const { t } = useTranslation();
   const route = useRoute<RouteProp<RootStackParamList, 'VenueHealth'>>();
   const venueId = route.params?.venueId ?? '';
-  const { health, isLoading, error } = useVenueHealth(venueId);
+  const { health, isLoading, error, reload } = useVenueHealth(venueId);
 
   let body: ReactNode;
   if (isLoading && !health) {
@@ -47,7 +47,7 @@ export function VenueHealthScreen() {
             label={t('mweb.venueHealth.venueHealth')}
           />
         </SurfaceCard>
-        <HealthBreakdown score={health} />
+        <HealthBreakdown score={health} onAppealed={reload} />
       </RefreshScrollView>
     );
   } else {

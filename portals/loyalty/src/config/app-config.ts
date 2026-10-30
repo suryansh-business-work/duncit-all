@@ -63,6 +63,14 @@ export const appConfig = {
       ],
     },
     {
+      label: 'Smart Incentive', labelKey: 'shell.nav.smartIncentive',
+      icon: 'percent',
+      children: [
+        { label: 'Dashboard', labelKey: 'shell.nav.dashboard', to: '/smart-incentive/dashboard', icon: 'insights' },
+        { label: 'Settings', labelKey: 'shell.nav.settings', to: '/smart-incentive/settings', icon: 'tune' },
+      ],
+    },
+    {
       label: 'Cards', labelKey: 'shell.nav.cards',
       icon: 'ticket',
       children: [

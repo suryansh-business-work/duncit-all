@@ -5,7 +5,7 @@ import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import PlaceIcon from '@mui/icons-material/Place';
 import ScheduleSendIcon from '@mui/icons-material/ScheduleSend';
-import { coverImageUrl } from '@duncit/utils';
+import { coverImageUrl, hasVenueChat } from '@duncit/utils';
 import {
   HostPodActionsMenu,
   VENUE_REJECTED_NOTE,
@@ -15,6 +15,7 @@ import {
 import PodThumb from '../PodThumb';
 import type { HostPodRowActions } from '../hostPodRowActions';
 import VenueCounteredChip from '../VenueCounteredChip';
+import VenueRequestReach from './VenueRequestReach';
 import { formatDateTime } from '../../../utils/dateFormat';
 import { useTranslation } from '../../../i18n/useTranslation';
 
@@ -142,6 +143,7 @@ export default function VenueRequestRow({
           {VENUE_REJECTED_NOTE}
         </Alert>
       )}
+      {hasVenueChat(pod) && <VenueRequestReach podId={pod.id} />}
     </Stack>
   );
 }

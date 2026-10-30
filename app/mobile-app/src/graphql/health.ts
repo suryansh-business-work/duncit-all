@@ -18,7 +18,20 @@ export const MobileVenueHealthDocument = gql(`
         remark
         created_by_name
         created_at
+        waived
+        appeal_status
       }
+    }
+  }
+`);
+
+/** Appeal one deduction to Legal — RN port of mWeb's APPEAL_HEALTH_ADJUSTMENT. */
+export const MobileAppealHealthAdjustmentDocument = gql(`
+  mutation MobileAppealHealthAdjustment($input: AppealHealthAdjustmentInput!) {
+    appealHealthAdjustment(input: $input) {
+      id
+      appeal_no
+      status
     }
   }
 `);

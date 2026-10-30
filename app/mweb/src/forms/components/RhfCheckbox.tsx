@@ -34,7 +34,7 @@ export default function RhfCheckbox<T extends FieldValues>({
     <Controller
       control={control}
       name={name}
-      render={({ field }) => (
+      render={({ field, fieldState }) => (
         <Stack>
           <FormControlLabel
             label={label}
@@ -46,10 +46,22 @@ export default function RhfCheckbox<T extends FieldValues>({
                 onChange={(event) => field.onChange(event.target.checked)}
                 onBlur={field.onBlur}
                 data-testid={testId}
-                slotProps={{ input: { 'aria-label': label, ...inputTestId } }}
+                slotProps={{
+                  input: {
+                    'aria-label': label,
+                    'aria-invalid': !!fieldState.error,
+                    ...inputTestId,
+                  },
+                }}
               />
             }
           />
+          {/* A box the schema requires (the age tick) says why it is refused. */}
+          {fieldState.error?.message ? (
+            <FormHelperText error role="alert" sx={{ mt: 0 }}>
+              {fieldState.error.message}
+            </FormHelperText>
+          ) : null}
           {hint ? <FormHelperText sx={{ mt: 0 }}>{hint}</FormHelperText> : null}
         </Stack>
       )}

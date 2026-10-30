@@ -22,7 +22,7 @@ const MAIN_ID = 'main-content';
 /**
  * A full-height column whose main grows, so the footer always ends the page.
  * `overflowX: clip` stops an absolutely positioned element wider than the
- * viewport from adding a horizontal scrollbar — without making the page a
+ * viewport from adding a horizontal scrollbar, without making the page a
  * scroll container, which would break the sticky header.
  */
 const ROOT_SX = { display: 'flex', flexDirection: 'column', minHeight: '100dvh', overflowX: 'clip' } as const;

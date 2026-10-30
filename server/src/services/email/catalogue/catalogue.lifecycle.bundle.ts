@@ -13,6 +13,11 @@ export const LIFECYCLE_FALLBACK: Record<string, string> = {
   'email.label.alert': 'Alert',
   'email.cta.contactUs': 'Contact us',
   'email.cta.openBrandOrder': 'Open the order',
+  'email.cta.viewHealth': 'View your health score',
+  'email.field.pointsRestored': 'Points given back',
+  'email.field.pointsDeducted': 'Points deducted',
+  'email.field.healthScore': 'Health score',
+  'email.label.appeal': 'Appeal',
   'email.footer.staff': "You're receiving this because you manage this area at Duncit.",
   'email.help.podMoved':
     'Your spot moved with the pod, so there is nothing to rebook. If the new time does not work for you, open the pod to see your options.',
@@ -91,6 +96,12 @@ export const LIFECYCLE_FALLBACK: Record<string, string> = {
   'email.referralReward.title': 'Your referral worked',
   'email.referralReward.body':
     'Someone you invited has joined Duncit with your code, and the coins below are now in your account. Thank you for bringing a friend along.',
+  'email.healthAppealAccepted.title': 'Your appeal was accepted',
+  'email.healthAppealAccepted.body':
+    'Our Legal team reviewed your appeal and lifted the deduction below. The points are back on your health score.',
+  'email.healthAppealDenied.title': 'About your appeal',
+  'email.healthAppealDenied.body':
+    'Our Legal team reviewed your appeal, and the deduction below stays in place. Their note says why.',
   'email.coinExpiryReminder.title': 'Your coins expire soon',
   'email.coinExpiryReminder.body':
     'Some of your Duncit Coins expire on the date below. Use them on a pod or in the shop before then so they are not lost.',

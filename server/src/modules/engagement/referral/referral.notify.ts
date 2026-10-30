@@ -31,6 +31,8 @@ export async function notifyReferrerRewarded(referrerId: string, referredUserId:
         target_user_ids: [referrerId],
         title: 'Your referral worked',
         body: `${friend} joined Duncit with your code. You earned ${coins} Duncit Coins.`,
+        // The wallet the mail's button opens, as an in-app path.
+        link_url: '/duncit-coin',
         silent: false,
       })
       .catch((error: unknown) => logs.server.warn('referral', 'rewardInApp', { error }));

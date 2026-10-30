@@ -14,22 +14,31 @@ import type {
   VenuePricing,
   VenuePricingModel,
 } from '@modules/venues/venuePricing/venuePricing.types';
+import { localParts } from '@modules/venues/venuePricing/venuePricing.time';
 import {
+  FREE_OFFER_MODEL,
   MAX_OFFER_RATE,
   VENUE_OFFER_MODELS,
   type OfferCharges,
+  type VenueOfferModel,
   type VenueOfferTerms,
   type VenuePriceBasis,
 } from './venueOffer.types';
 
-const CALC_MODEL: Record<VenueOfferTerms['model'], VenuePricingModel> = {
+const CALC_MODEL: Record<VenueOfferModel, VenuePricingModel> = {
   PER_GUEST: 'PER_PAX',
   PER_HOUR: 'PER_HOUR',
   FLAT: 'FLAT',
 };
 
-/** Why these terms cannot be offered, or null when they can. */
-export function termsProblem(terms: Partial<VenueOfferTerms> | null | undefined): string | null {
+/**
+ * Why these terms cannot be offered, or null when they can. FREE is only for a
+ * host's opening offer (`allowFree`); a counter names a price.
+ */
+export function termsProblem(terms: Partial<VenueOfferTerms> | null | undefined, opts: { allowFree?: boolean } = {}): string | null {
+  if (terms?.model === FREE_OFFER_MODEL) {
+    return opts.allowFree ? null : "Only a host's new offer can ask for the venue free, with a reason — a counter names a price";
+  }
   if (!terms?.model || !(VENUE_OFFER_MODELS as readonly string[]).includes(terms.model)) {
     return 'Pick how you will pay the venue: per guest, per hour or a flat price';
   }
@@ -39,8 +48,45 @@ export function termsProblem(terms: Partial<VenueOfferTerms> | null | undefined)
   return null;
 }
 
+/**
+ * A FREE offer priced: nothing for the venue, no fees, no GST and no
+ * commission — the venue's own charges do not apply to a window it gives away.
+ * Pure.
+ */
+export function freeQuote(req: QuoteRequest): QuoteResult {
+  if (Number.isNaN(req.start.getTime()) || Number.isNaN(req.end.getTime()) || req.end <= req.start) {
+    return { ok: false, code: 'INVALID_WINDOW', message: 'Pick a start and an end time' };
+  }
+  const { ymd } = localParts(req.start, req.timeZone);
+  const hours = Math.round((req.end.getTime() - req.start.getTime()) / 60_000) / 60;
+  return {
+    ok: true,
+    breakdown: {
+      model: 'FLAT',
+      rate: 0,
+      pax: 0,
+      hours,
+      date: ymd,
+      base: 0,
+      rules: [],
+      rules_total: 0,
+      min_spend_top_up: 0,
+      cleaning_fee: 0,
+      pet_fee: 0,
+      venue_price: 0,
+      gst_pct: 0,
+      taxes: 0,
+      venue_payout: 0,
+      platform_fee_pct: 0,
+      platform_fee: 0,
+      total: 0,
+      deposit: 0,
+    },
+  };
+}
+
 /** The venue's charges with the offer's model and rate in place of the venue's own. */
-export function offerPricing(charges: VenuePricing, terms: VenueOfferTerms): VenuePricing {
+export function offerPricing(charges: VenuePricing, terms: VenueOfferTerms & { model: VenueOfferModel }): VenuePricing {
   return {
     ...charges,
     model: CALC_MODEL[terms.model],
@@ -58,7 +104,8 @@ export function offerPricing(charges: VenuePricing, terms: VenueOfferTerms): Ven
 
 /** The offer, priced. Same inputs, same breakdown. */
 export function quoteOffer(charges: VenuePricing, terms: VenueOfferTerms, req: QuoteRequest): QuoteResult {
-  return quoteVenuePrice(offerPricing(charges, terms), req);
+  if (terms.model === FREE_OFFER_MODEL) return freeQuote(req);
+  return quoteVenuePrice(offerPricing(charges, { model: terms.model, rate: terms.rate }), req);
 }
 
 /** The venue's charges as frozen beside a quote: the parts the calculation reads, without its own slots and hours. */

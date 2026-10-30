@@ -1275,16 +1275,16 @@ export const APP_GAP_FLOWS: readonly CatalogueFlow[] = [
       {
         name: 'Sign up and sign in with Apple',
         description:
-          'The Apple door mirrors Google: signupWithApple creates the account only after the policy dialog, a WhatsApp number, a date of birth and the WhatsApp code; loginWithApple signs in an already-linked account. The Apple button renders only once Tech holds a Services ID and Return URL.',
+          'The Apple door mirrors Google: signupWithApple creates the account only after the policy dialog, a WhatsApp number, the age tick (date of birth optional) and the WhatsApp code; loginWithApple signs in an already-linked account. The Apple button renders only once Tech holds a Services ID and Return URL.',
         steps: [
           ['Clear the Apple Services ID or Return URL in the Tech portal and open /register', 'No Apple button is drawn at all (the round row shows Google only)'],
           ['Restore the Apple keys, open /register and press the round Apple button (accessible name "Sign up with Apple", caption "Apple") with an Apple ID Duncit has never seen', 'While the id_token is spent the button reads "Connecting to Apple…", then the "Policies you need to accept" dialog opens'],
-          ['Press "Accept all"', 'The step "A few details" shows "Apple doesn’t share your WhatsApp number or your date of birth, so tell us here. Your sign-up code goes to that number." with WhatsApp number, "This is also my mobile number", Date of birth and "Send code"'],
-          ['Enter an unused WhatsApp number and a valid date of birth, tap "Send code", type the test code and tap "Verify number"', 'signupWithApple creates the account with the Apple email verified and apple_id linked, and the app lands on /signup-referral'],
+          ['Press "Accept all"', 'The step "A few details" shows "Apple doesn’t share your WhatsApp number, so tell us here — your sign-up code goes to that number. Confirm your age too; your date of birth is optional." with WhatsApp number, "This is also my mobile number", Date of birth (optional), "I confirm I’m 18 or older" and "Send code"'],
+          ['Enter an unused WhatsApp number, tick "I confirm I’m 18 or older", tap "Send code", type the test code and tap "Verify number"', 'signupWithApple creates the account with the Apple email verified and apple_id linked, and the app lands on /signup-referral'],
           ['Close the Apple popup without choosing an Apple ID', 'Nothing is shown — a cancel is silent; any other Apple failure shows "Apple sign-in failed. Please try again."'],
           ['Press the Apple button on /register with an Apple ID that already has a Duncit account', 'The dialog "You’re already on Duncit" says "<email> already has a Duncit account. Shall we log you in instead?" with "Log me in" and "Cancel"'],
           ['Sign out, open /login and press the Apple button ("Sign in with Apple") with the linked Apple ID', 'loginWithApple returns a session, the app opens Home and last_login_provider is APPLE'],
-          ['On /login use an Apple ID that is linked to nobody and whose email holds no account', 'Server answers "User is not in our system. Please sign up first." (APPLE_ACCOUNT_NOT_FOUND) and the "No Duncit account yet" dialog shows "We will carry this Apple sign-in into the next steps — you only need to add your WhatsApp number and date of birth. Nothing is created until you finish."'],
+          ['On /login use an Apple ID that is linked to nobody and whose email holds no account', 'Server answers "User is not in our system. Please sign up first." (APPLE_ACCOUNT_NOT_FOUND) and the "No Duncit account yet" dialog shows "We will carry this Apple sign-in into the next steps — you only need to add your WhatsApp number and confirm your age. Nothing is created until you finish."'],
         ],
       },
     ],
@@ -1317,11 +1317,13 @@ export const APP_GAP_FLOWS: readonly CatalogueFlow[] = [
       {
         name: 'Block and unblock a profile',
         description:
-          'blockUser cuts every follow edge and open follow request between the two both ways and hides each one\'s posts and stories from the other; unblockUser lifts the block but does not restore the follows. The blocker gets a confirmation; the blocked member is never told.',
+          'blockUser cuts every follow edge and open follow request between the two both ways and hides each one\'s posts, stories and comments from the other in every feed at once; unblockUser lifts the block but does not restore the follows. The blocker gets a confirmation, Legal is alerted to review the account, and the blocked member is never told.',
         steps: [
           ['As USER A who follows and is followed by USER B, open /u/<B handle> and tap the 3-dot "Profile options" button', 'The menu shows "Block" (in red) and "Report profile"; the button is absent on your own profile'],
           ['Tap "Block"', 'A confirm "Block <name>?" says "They will not be able to follow you or see your posts and stories, and you will not see theirs. Any follow between you is removed. They will not be told."'],
           ['Confirm with "Block"', 'Toast "<name> is blocked"; the profile shows "You blocked this account. Their posts and stories are hidden from you, and they cannot see yours." and the follow buttons disappear; both follow edges are gone'],
+          ['Go back to the Following feed, the story rail and a club story rail without refreshing', 'None of B\'s posts or stories show, B\'s comments are gone from every post, and a link to one of B\'s posts opens as not found'],
+          ['Check the Legal desk', 'Legal managers get the "A member blocked an account" email and the Slack legal channel a message naming both account ids'],
           ['As USER B open /u/<A handle> and tap Follow', 'Server refuses "You cannot follow this account" (FORBIDDEN) and A\'s posts are hidden'],
           ['Call blockUser with your own user id, then with a malformed id', '"You cannot block yourself" and "Invalid user" (BAD_USER_INPUT)'],
           ['As A open the menu again and tap "Unblock", then confirm', 'The confirm reads "Unblock <name>?" / "They will be able to see your public posts and follow you again. Follows removed by the block do not come back." and the toast reads "<name> is unblocked"'],

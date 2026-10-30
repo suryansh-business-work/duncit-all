@@ -6,10 +6,10 @@ import { useMoney } from '../../lib/money';
 import { useStoreT } from '../../i18n';
 import { STORE_TOKENS as T } from '../../theme/tokens';
 
-/** "1.2K" for 1,234 — the shopper's own number format. */
+/** "1.2K" for 1,234, in the shopper's own number format. */
 const COMPACT = new Intl.NumberFormat(undefined, { notation: 'compact', maximumFractionDigits: 1 });
 
-/** ★ 4.8 (1.2K) — one image for assistive technology, read as the full sentence. */
+/** Star, 4.8 (1.2K): one image for assistive technology, read as the full sentence. */
 export function CardRating({ product }: Readonly<{ product: StoreProductCard }>) {
   const { t } = useStoreT();
   if (product.rating_count <= 0) return null;

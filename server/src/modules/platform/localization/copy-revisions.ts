@@ -345,4 +345,62 @@ export const COPY_REVISIONS: Readonly<Record<string, readonly string[]>> = {
   // "For the slot" is no longer a way to pay a venue (it always priced as a flat price).
   "mweb.createPod.offer.modelHint": ["Per guest, per hour, for the time slot, or one flat price"],
   "podForm.offer.modelHint": ["Per guest, per hour, for the time slot, or one flat price"],
+  // Product renamed the Tutorials feature to Learnings (2026-10-30).
+  "mweb.meta.tutorials.title": ["Tutorials"],
+  "mweb.sidebar.tutorials": ["Tutorials"],
+  "mweb.tutorials.title": ["Tutorials"],
+  "mweb.tutorials.searchLabel": ["Search tutorials"],
+  "mweb.tutorials.searchPlaceholder": ["Search tutorials"],
+  "mweb.tutorials.watchedA11y": ["You have watched this tutorial"],
+  "mweb.tutorials.shareFailed": ["Couldn't share this tutorial."],
+  "mweb.tutorials.videoLabel": ["Tutorial video: {title}"],
+  "mweb.tutorials.empty": ["No tutorials here yet"],
+  "mweb.tutorials.loadFailed": ["We couldn't load tutorials."],
+  "mweb.tutorials.loadingMore": ["Loading more tutorials"],
+  "shell.nav.tutorials": ["Tutorials"],
+  "support.dashboard.tutorialViews": ["Tutorial views"],
+  "support.tutorials.title": ["Tutorials"],
+  "support.tutorials.newTutorial": ["New tutorial"],
+  "support.tutorials.newTitle": ["New tutorial"],
+  "support.tutorials.editTitle": ["Edit tutorial"],
+  "support.tutorials.empty": ["No tutorials yet."],
+  "support.tutorials.colTitle": ["Tutorial"],
+  "support.tutorials.errTitle": ["Give the tutorial a title."],
+  "support.tutorials.noTopicsYet": ["Add a topic first under Tutorials → Topics."],
+  "support.tutorials.created": ["Tutorial created"],
+  "support.tutorials.updated": ["Tutorial updated"],
+  "support.tutorials.deleted": ["Tutorial deleted"],
+  "support.tutorials.saveFailed": ["Couldn't save the tutorial."],
+  "support.tutorials.deleteTitle": ["Delete this tutorial?"],
+  "support.tutorials.deleteFailed": ["Couldn't delete the tutorial."],
+  "support.tutorials.statsPublished": ["Published tutorials"],
+  "support.tutorials.statsLoadFailed": ["Couldn't load tutorial stats."],
+  "support.tutorialTopics.title": ["Tutorial topics"],
+  "support.tutorialTopics.subtitle": ["The topics members filter tutorials by. A topic with tutorials cannot be deleted."],
+  // App Store review (5.1.1): the date of birth became optional at signup and an
+  // "I confirm I’m 18 or older" tick replaced it, so no line may still ask for it.
+  "mweb.login.googleNotFoundDetail": [
+    "We will carry this Google sign-in into the next steps — you only need to add your WhatsApp number and date of birth. Nothing is created until you finish.",
+  ],
+  "mweb.login.appleNotFoundDetail": [
+    "We will carry this Apple sign-in into the next steps — you only need to add your WhatsApp number and date of birth. Nothing is created until you finish.",
+  ],
+  "mweb.signupSteps.whoSubtitleBirthDate": ["Your name, your date of birth, and a referral code if you have one."],
+  "mweb.signupSteps.detailsSubtitle": [
+    "Google doesn’t share your WhatsApp number or your date of birth, so tell us here. Your sign-up code goes to that number.",
+  ],
+  "mweb.signupSteps.appleDetailsSubtitle": [
+    "Apple doesn’t share your WhatsApp number or your date of birth, so tell us here. Your sign-up code goes to that number.",
+  ],
+  // App Store review (1.2): the policy dialog every signup door shows now says
+  // Duncit has zero tolerance for objectionable content and abusive users.
+  "policyAcceptance.dialogIntro": [
+    "These apply to your account from the moment it exists. Read each one and accept it — you can open any of them again later from your profile.",
+  ],
+  "policyAcceptance.googleIntro": [
+    "Google has confirmed who you are, but your account is not created yet. Accept each policy below and we will finish signing you up.",
+  ],
+  "policyAcceptance.appleIntro": [
+    "Apple has confirmed who you are, but your account is not created yet. Accept each policy below and we will finish signing you up.",
+  ],
 };

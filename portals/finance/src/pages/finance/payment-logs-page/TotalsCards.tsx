@@ -34,6 +34,8 @@ export default function TotalsCards({ totals }: Readonly<{ totals: PaymentTotals
       <TotalCard label={t('finance.payment.totalGst')} value={fmt(totals.gst)} />
       {/* Already off the gross above — the tiers cut the ticket price before checkout. */}
       <TotalCard label={t('finance.payment.totalTicketDiscount')} value={fmt(totals.ticket_discount_total)} />
+      {/* Also already off the gross — the member's unlocked offer came off the ticket money at checkout. */}
+      <TotalCard label={t('finance.payment.totalSmartIncentive')} value={fmt(totals.smart_incentive_total)} />
     </Stack>
   );
 }

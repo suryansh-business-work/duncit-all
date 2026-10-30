@@ -101,6 +101,20 @@ describe('HostOfferActions — the counters each side may make', () => {
     );
   });
 
+  it('never counters back on a free pod, says why, and names no amount on accept', () => {
+    // A server from before free bookings still names a share; the free flag wins.
+    mount(counteredOffer({ free_pod: true }));
+    expect(screen.queryByTestId('host-offer-counter')).toBeNull();
+    expect(screen.getByTestId('host-offer-counters-left')).toHaveTextContent(
+      'Free booking — it can only be accepted or declined, never countered.',
+    );
+    fireEvent.press(screen.getByTestId('host-offer-accept'));
+    expect(
+      screen.getByText(/^“Sunday Badminton” goes live at Court House on .+\.$/),
+    ).toBeOnTheScreen();
+    expect(screen.queryByText(/The venue receives/)).toBeNull();
+  });
+
   it('hides Counter once the host has used their share, leaving accept or reject', () => {
     mount(counteredOffer({ host_counters_used: 3 }));
     expect(screen.queryByTestId('host-offer-counter')).toBeNull();

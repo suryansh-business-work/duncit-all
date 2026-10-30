@@ -66,6 +66,15 @@ function PodFinanceDetail({ breakdown }: Readonly<{ breakdown: PodFinanceBreakdo
               })}
             </Typography>
           )}
+          {/* So does each member's unlocked Smart Incentive — host-funded, since
+              the settlement runs on what was collected. */}
+          {breakdown.smart_incentive_total > 0 && (
+            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+              {t('finance.podFinance.smartIncentiveNote', {
+                vars: { amount: money(sym, breakdown.smart_incentive_total) },
+              })}
+            </Typography>
+          )}
         </Box>
       </Stack>
 

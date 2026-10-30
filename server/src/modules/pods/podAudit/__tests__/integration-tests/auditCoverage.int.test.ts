@@ -57,6 +57,24 @@ describe('snapshotPod — array fields are diffed, not stringified', () => {
     // Media entries without a url still summarise to a stable string.
     expect(snapshotPod({ pod_images_and_videos: [{}] }).pod_images_and_videos).toBe('');
   });
+
+  it('reads a free justification as one line, so making a pod free (or why) is an audited change', () => {
+    const paid = snapshotPod({ pod_title: 'A', pod_type: 'PAID' });
+    expect(paid.free_justification).toBe('');
+    const free = snapshotPod({
+      pod_title: 'A',
+      pod_type: 'FREE',
+      free_justification: { reason: 'OTHER', details: 'NGO tie-up' },
+      venue_free_justification: { reason: 'PROMOTIONAL', details: '' },
+    });
+    expect(free.free_justification).toBe('OTHER: NGO tie-up');
+    expect(free.venue_free_justification).toBe('PROMOTIONAL');
+    expect(diffSnapshots(paid, free)).toEqual([
+      { field: 'pod_type', from: 'PAID', to: 'FREE' },
+      { field: 'free_justification', from: '', to: 'OTHER: NGO tie-up' },
+      { field: 'venue_free_justification', from: '', to: 'PROMOTIONAL' },
+    ]);
+  });
 });
 
 describe('co-host roster changes are audited', () => {

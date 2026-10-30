@@ -94,6 +94,7 @@ export const BULK_DELETE_TARGETS: Readonly<Record<string, BulkDeleteTarget>> = {
     idArg: 'faq_doc_id',
     roles: ['SUPER_ADMIN', 'CITY_ADMIN', 'SUPPORT_MANAGER'],
   },
+  tutorialsTable: { mutation: 'deleteTutorial', idArg: 'tutorial_id', roles: ['SUPER_ADMIN', 'CITY_ADMIN', 'SUPPORT_MANAGER'] },
   // Marketing
   notificationsTable: { mutation: 'deleteNotification', idArg: 'notification_doc_id', roles: MARKETING },
   officialStatusesTable: { mutation: 'deleteOfficialStatus', idArg: 'status_doc_id', roles: MARKETING },

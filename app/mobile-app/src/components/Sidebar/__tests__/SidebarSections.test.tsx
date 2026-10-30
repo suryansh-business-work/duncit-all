@@ -39,21 +39,23 @@ const toggle = (id: string) => screen.getByTestId(`sidebar-section-${id}-toggle`
 const subtitle = (id: string) => screen.getByTestId(`sidebar-section-${id}-subtitle`);
 
 describe('SidebarSections', () => {
-  it('draws the five cards collapsed, titled, each naming what is inside', () => {
+  it('draws the six cards collapsed, titled, each naming what is inside', () => {
     renderSections();
     expect(screen.getByText('Explore & Community')).toBeOnTheScreen();
     expect(screen.getByText('Work & Earnings')).toBeOnTheScreen();
+    expect(screen.getByText('Loyalty')).toBeOnTheScreen();
     expect(screen.getByText('Shopping & Orders')).toBeOnTheScreen();
     expect(screen.getByText('Account & Preferences')).toBeOnTheScreen();
     expect(screen.getByText('Support & Legal')).toBeOnTheScreen();
-    for (const id of ['explore', 'work', 'shopping', 'account', 'support']) {
+    for (const id of ['explore', 'work', 'loyalty', 'shopping', 'account', 'support']) {
       expect(toggle(id)).toBeCollapsed();
     }
     // Flags off: a subtitle lists only the rows that are there.
     expect(subtitle('explore')).toHaveTextContent('Pod Ideas, Badges');
-    expect(subtitle('work')).toHaveTextContent('Gig Jobs, Refer & Earn');
+    expect(subtitle('work')).toHaveTextContent('Gig Jobs');
+    expect(subtitle('loyalty')).toHaveTextContent('Duncit Coin, Refer & Earn');
     expect(subtitle('shopping')).toHaveTextContent('Food, My Rented Items');
-    expect(subtitle('support')).toHaveTextContent('Help, FAQs, Policies');
+    expect(subtitle('support')).toHaveTextContent('Help, FAQs, Learnings, Policies');
     expect(screen.queryByTestId('sidebar-item-ideas')).toBeNull();
   });
 
@@ -77,9 +79,10 @@ describe('SidebarSections', () => {
   it('adds every flag-gated row once its flag is on', () => {
     const { onNavigate } = renderSections({ flags: ALL_ON });
     expect(subtitle('explore')).toHaveTextContent('Pod Ideas, Leaderboard, Badges');
-    expect(subtitle('work')).toHaveTextContent('Gig Jobs, Refer & Earn, Membership');
+    expect(subtitle('work')).toHaveTextContent('Gig Jobs, Membership');
+    expect(subtitle('loyalty')).toHaveTextContent('Duncit Coin, Gift Cards, Refer & Earn');
     expect(subtitle('shopping')).toHaveTextContent(
-      'Pod Shop, Cart, Food, Gift Cards, My Product Order History, Address Book, My Rented Items',
+      'Pod Shop, Cart, Food, My Product Order History, Address Book, My Rented Items',
     );
     expect(subtitle('account')).toHaveTextContent(
       'Manage Account, Saved Items, Contacts, Verification, Tour Guide, Pod Plans, Dark mode',
@@ -96,7 +99,9 @@ describe('SidebarSections', () => {
     fireEvent.press(screen.getByTestId('sidebar-item-membership'));
     expect(onNavigate).toHaveBeenLastCalledWith('Membership');
 
-    fireEvent.press(toggle('shopping'));
+    fireEvent.press(toggle('loyalty'));
+    fireEvent.press(screen.getByTestId('sidebar-item-duncit-coin'));
+    expect(onNavigate).toHaveBeenLastCalledWith('DuncitCoin');
     fireEvent.press(screen.getByTestId('sidebar-item-gift-cards-buy'));
     expect(onNavigate).toHaveBeenLastCalledWith('GiftCards');
     fireEvent.press(screen.getByTestId('sidebar-item-gift-cards-redeem'));
@@ -133,7 +138,7 @@ describe('SidebarSections', () => {
 
   it('drops Policies from the Support subtitle when no policy is published', () => {
     renderSections({ policies: [] });
-    expect(subtitle('support')).toHaveTextContent(/^Help, FAQs$/);
+    expect(subtitle('support')).toHaveTextContent(/^Help, FAQs, Learnings$/);
     fireEvent.press(toggle('support'));
     expect(screen.queryByTestId('sidebar-policies')).toBeNull();
   });

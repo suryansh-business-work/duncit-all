@@ -8,6 +8,8 @@ import {
   type Query,
 } from 'mongoose';
 import { ClubModel } from '@modules/clubs/club/club.model';
+import { freeJustificationSchema } from '@modules/venues/venueOffer/venueOffer.schema.model';
+import type { FreeJustification } from '@modules/venues/venueOffer/venueOffer.types';
 
 /** A pod of either mode can be FREE (amount 0) or PAID. Legacy values are
  * collapsed to these two by the boot-time migration (pod-type.migration.ts). */
@@ -205,6 +207,10 @@ export interface IPod extends Document {
   pod_date_time: Date;
   pod_end_date_time?: Date | null;
   pod_type: PodType;
+  /** Why a FREE pod is free, as its host gave it (Pods portal > Free Arrangements audits it). Null on paid pods. */
+  free_justification?: FreeJustification | null;
+  /** Why the pod's latest venue offer asked for the venue free (a copy of the offer's), for the same audit. Null otherwise. */
+  venue_free_justification?: FreeJustification | null;
   pod_amount: number;
   pod_occurrence: PodOccurrence;
   no_of_spots: number;
@@ -221,6 +227,12 @@ export interface IPod extends Document {
   ticket_discount_enabled: boolean;
   /** Strictly increasing in both tickets and discount; empty when switched off. */
   ticket_discount_tiers: IPodTicketDiscountTier[];
+  /** The host offers members who linger on the pod page without booking a
+   * one-time discount (Loyalty > Smart Incentive). Always false (with 0%) on a
+   * FREE or zero-priced pod. Rules: engagement/smartIncentive. */
+  smart_incentive_enabled: boolean;
+  /** Percent off the ticket money the offer gives; 0 when switched off. */
+  smart_incentive_pct: number;
   liked_user_ids: Types.ObjectId[];
   comments: IPodComment[];
   completed_at?: Date | null;
@@ -382,6 +394,8 @@ const podSchema = new Schema<IPod>(
       enum: ['FREE', 'PAID'],
       required: true,
     },
+    free_justification: { type: freeJustificationSchema, default: null },
+    venue_free_justification: { type: freeJustificationSchema, default: null },
     pod_amount: { type: Number, default: 0, min: 0, max: 1999 },
     pod_occurrence: {
       type: String,
@@ -399,6 +413,8 @@ const podSchema = new Schema<IPod>(
     product_cost_total: { type: Number, default: 0, min: 0 },
     ticket_discount_enabled: { type: Boolean, default: false },
     ticket_discount_tiers: { type: [ticketDiscountTierSchema], default: [] },
+    smart_incentive_enabled: { type: Boolean, default: false },
+    smart_incentive_pct: { type: Number, default: 0, min: 0, max: 90 },
     liked_user_ids: [{ type: Schema.Types.ObjectId, ref: 'User', default: [] }],
     comments: { type: [commentSchema], default: [] },
     completed_at: { type: Date, default: null, index: true },
@@ -439,6 +455,12 @@ podSchema.index({ deleted_at: 1, is_active: 1, pod_date_time: -1 });
 // which ORs host and attendee membership — each side needs its own index.
 podSchema.index({ pod_hosts_id: 1, pod_date_time: -1 });
 podSchema.index({ pod_attendees: 1 });
+// Loyalty > Smart Incentive's dashboard reads only the opted-in pods. PARTIAL:
+// they are a slice of every pod, and the dashboard's filter is this predicate.
+podSchema.index(
+  { smart_incentive_enabled: 1 },
+  { name: 'smart_incentive_opted_in', partialFilterExpression: { smart_incentive_enabled: true } }
+);
 
 // Soft-delete: every read automatically excludes deleted pods (deleted_at set),
 // so discovery/listing/metrics never surface a deleted pod. Callers that must

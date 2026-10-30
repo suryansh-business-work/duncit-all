@@ -5,10 +5,10 @@ import { useTranslation } from '../i18n';
  * A hairline progress bar pinned to the top of the viewport while any fetch is
  * in flight.
  *
- * The board refreshes itself every 60 seconds and used to do it in complete
- * silence, so a reader watching for a service to come back had no way to tell a
- * live figure from one that was already a minute old — and no way to tell the
- * page was still trying at all.
+ * The board refreshes itself every 60 seconds and used to do it with no visible
+ * sign, so a reader watching for a service to come back could not tell a live
+ * figure from one that was already a minute old, or whether the page was still
+ * trying at all.
  */
 export default function RefreshIndicator({ active }: Readonly<{ active: boolean }>) {
   const { t } = useTranslation();

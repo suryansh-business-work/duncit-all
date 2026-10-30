@@ -29,7 +29,7 @@ export function ProductSliderSection({ section }: Readonly<SectionProps>) {
   );
 }
 
-/** CATEGORY_ICONS: round aisle icons with their names — a scrolling row on a phone. */
+/** CATEGORY_ICONS: round aisle icons with their names, in a scrolling row on a phone. */
 export function CategoryIconsSection({ section }: Readonly<SectionProps>) {
   const { t } = useStoreT();
   if (section.categories.length === 0) return null;

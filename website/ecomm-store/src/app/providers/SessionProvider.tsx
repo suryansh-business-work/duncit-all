@@ -32,7 +32,7 @@ export function SessionProvider({ children }: Readonly<{ children: ReactNode }>)
   });
   const me = token ? (data?.me ?? null) : null;
 
-  // A stored token the server no longer recognises answers `me: null` — drop it.
+  // A stored token the server no longer recognises answers `me: null`, so drop it.
   useEffect(() => {
     if (token && !loading && data?.me === null) {
       removeStored(STORAGE_KEYS.token);

@@ -15,7 +15,7 @@ import { useStoreT } from '../../i18n';
 import { makeCodOtpSchema, type CodOtpValues } from './cod-otp.types';
 
 interface CodOtpFormProps {
-  /** The 10-digit number the order is for — the code goes there. */
+  /** The 10-digit number the order is for; the code goes there. */
   phone: string;
   /** Already verified for this number: nothing to ask. */
   verified: boolean;

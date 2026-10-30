@@ -4,7 +4,7 @@ import { urlConfigs } from './url-configs';
 /**
  * The partner site's content.
  *
- * The photographs and the layout live here; the WORDS come from Admin >
+ * The photographs and the layout live here; the words come from Admin >
  * Localization like every other surface (rule 38), which is why this is a
  * function of the site's translator rather than a plain constant.
  */
@@ -115,7 +115,7 @@ export type PartnerLanding = ReturnType<typeof build>;
 /**
  * Awaited in each component's frontmatter rather than threaded down as a prop:
  * Astro renders the whole page on the server, so a component can await the same
- * memoised promise the one above it did — the catalogue is fetched ONCE for the
+ * memoised promise the one above it did, so the catalogue is fetched once for the
  * whole build.
  */
 let content: Promise<PartnerLanding> | null = null;

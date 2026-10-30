@@ -1,4 +1,17 @@
 import { semantic } from '@duncit/auth-tokens';
+import type { HealthAppealStatus } from '@duncit/utils';
+
+/** One line of the health history (account & venue). */
+export interface HealthAdjustmentLike {
+  id: string;
+  delta: number;
+  remark: string;
+  created_by_name: string;
+  created_at: string;
+  /** Lifted on appeal: still listed, no longer counted. */
+  waived: boolean;
+  appeal_status?: HealthAppealStatus | null;
+}
 
 /** A health record shape shared by the meter + breakdown (account & venue). */
 export interface HealthScoreLike {
@@ -6,13 +19,7 @@ export interface HealthScoreLike {
   delta_sum: number;
   total_score: number;
   band: string;
-  adjustments: {
-    id: string;
-    delta: number;
-    remark: string;
-    created_by_name: string;
-    created_at: string;
-  }[];
+  adjustments: HealthAdjustmentLike[];
 }
 
 /** Band → ring/chip colour — mirrors mWeb's HealthMeter/HealthBreakdown palette. */

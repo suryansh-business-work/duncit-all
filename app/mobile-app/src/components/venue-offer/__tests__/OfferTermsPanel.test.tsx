@@ -3,7 +3,12 @@ import { screen, within } from '@testing-library/react-native';
 import { OfferTermsPanel } from '@/components/venue-offer/OfferTermsPanel';
 import { VenueOfferModel, VenueOfferParty, VenueOfferStatus } from '@/generated/graphql/graphql';
 import { renderWithProviders } from '@/utils/test-utils';
-import { counteredOffer, offerQuote, offerTerms } from '@/utils/venue-offer-fixture';
+import {
+  counteredOffer,
+  freeVenueOffer,
+  offerQuote,
+  offerTerms,
+} from '@/utils/venue-offer-fixture';
 
 describe('OfferTermsPanel — the venue reading a host offer', () => {
   it("shows the host's terms, the money as a range, the ask and the answer-by", () => {
@@ -119,6 +124,30 @@ describe('OfferTermsPanel — the host reading their pod', () => {
     );
     expect(screen.getAllByText('Chairs')).toHaveLength(1);
     expect(screen.queryByTestId('offer-ask-note')).toBeNull();
+  });
+});
+
+describe('OfferTermsPanel — a free venue', () => {
+  it("names the free venue without ₹0, and gives the venue the host's reason instead of money", () => {
+    renderWithProviders(
+      <OfferTermsPanel offer={freeVenueOffer()} podIsFree={false} side="VENUE" />,
+    );
+    expect(screen.getByTestId('offer-terms-line')).toHaveTextContent('Free venue');
+    expect(screen.getByTestId('offer-free-reason')).toHaveTextContent(
+      'Requested free — Promotional offer: Launch week',
+    );
+    expect(screen.queryByTestId('offer-money')).toBeNull();
+    expect(screen.queryByText(/₹0/)).toBeNull();
+  });
+
+  it('tells the host the venue is paid nothing and still answers', () => {
+    renderWithProviders(<OfferTermsPanel offer={freeVenueOffer()} podIsFree={false} side="HOST" />);
+    expect(screen.getByTestId('offer-free-venue')).toHaveTextContent(
+      /^Free venue: the venue is paid nothing for this booking\./,
+    );
+    // The reason is the venue's to read; the host wrote it.
+    expect(screen.queryByTestId('offer-free-reason')).toBeNull();
+    expect(screen.queryByTestId('offer-money')).toBeNull();
   });
 });
 

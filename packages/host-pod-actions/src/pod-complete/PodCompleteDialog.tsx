@@ -12,7 +12,7 @@ import {
   Typography,
 } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
-import { isFreePod } from '@duncit/utils';
+import { isFreePod, isFreeVenueOfferModel } from '@duncit/utils';
 import { venueExtraAmountOf, venueUsageInput } from '@duncit/forms/schemas';
 import SettlementPreview from './SettlementPreview';
 import PodMediaSummary from './PodMediaSummary';
@@ -41,14 +41,18 @@ interface Props {
  * (its total + the file) as proof of the agreed amount, and enters anything the
  * venue charged beyond it as extra charges. The split is previewed live; on
  * submit the payout releases are created for Finance to approve — nothing is
- * credited until then. */
+ * credited until then. A venue that gave the booking free is owed no bill
+ * unless it charged extras. */
 export default function PodCompleteDialog({ pod, onClose, onCompleted }: Readonly<Props>) {
   const { labels, notifySuccess } = useHostPodActionsConfig();
   // A free pod's host settles the venue directly — no bill is asked for here.
   const free = isFreePod(pod?.pod_type);
   const hasVenue = !!pod?.venue_id && !free;
+  // The agreed terms arrive with the settlement preview below.
+  const [agreedModel, setAgreedModel] = useState<string | null>(null);
+  const freeVenue = hasVenue && isFreeVenueOfferModel(agreedModel);
   const { control, handleSubmit, reset, watch } = useForm<PodCompleteValues, any, PodCompleteValues>({
-    resolver: zodResolver(buildPodCompleteSchema(hasVenue, labels)) as unknown as Resolver<PodCompleteValues, any, PodCompleteValues>,
+    resolver: zodResolver(buildPodCompleteSchema(hasVenue, labels, freeVenue)) as unknown as Resolver<PodCompleteValues, any, PodCompleteValues>,
     defaultValues: blankPodCompleteValues,
   });
   const [complete, completeState] = useMutation<any>(COMPLETE_POD);
@@ -108,7 +112,7 @@ export default function PodCompleteDialog({ pod, onClose, onCompleted }: Readonl
           }}>
             {free ? labels.completeHintFree : labels.completeHint}
           </Typography>
-          {hasVenue && <VenueBillFields control={control} />}
+          {hasVenue && <VenueBillFields control={control} billOptional={freeVenue} />}
           {pod && <PodMediaSummary podId={pod.id} />}
           {pod && (
             <SettlementPreview
@@ -119,6 +123,7 @@ export default function PodCompleteDialog({ pod, onClose, onCompleted }: Readonl
               refreshToken={scansDone}
               free={free}
               onScan={() => setScanOpen(true)}
+              onAgreedModel={setAgreedModel}
             />
           )}
           {completeState.error && (

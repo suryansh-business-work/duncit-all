@@ -20,6 +20,7 @@ import { PackagingDemo, type PackagingMock } from './forms/PackagingDemo';
 import { rulesDemo } from './forms/rules-demo';
 import { schemasDemo } from './forms/schemas-demo';
 import { venueOfferAskDemo } from './forms/VenueOfferAskDemo';
+import { freeArrangementDemo } from './forms/FreeArrangementDemo';
 import { WalletStatementDemo, type WalletStatementMock } from './forms/WalletStatementDemo';
 
 interface FoodTaxMock {
@@ -58,6 +59,7 @@ export default defineDemos('forms', [
   rulesDemo,
   schemasDemo,
   venueOfferAskDemo,
+  freeArrangementDemo,
 
   defineDemo<FoodTaxMock>({
     id: 'food-tax',

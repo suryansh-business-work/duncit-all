@@ -4,7 +4,7 @@
  * priced again, at completion, for the people who came: never fewer than its
  * minimum, on the charges and percents both sides agreed.
  */
-import { billableGuests, frozenCharges, priceForGuests, quoteProposal } from '../../venueOffer.quote';
+import { billableGuests, freeQuote, frozenCharges, priceForGuests, quoteOffer, quoteProposal, termsProblem } from '../../venueOffer.quote';
 import type { QuoteRequest, VenuePricing } from '../../../venuePricing/venuePricing.types';
 import type { VenuePriceBasis } from '../../venueOffer.types';
 
@@ -76,6 +76,59 @@ describe('quoteProposal', () => {
   it('answers why the offer cannot be priced', () => {
     const result = quoteProposal(charges, perGuest, req({ end: ist('2027-01-04', '17:00') }), 8);
     expect(result).toEqual({ ok: false, code: 'INVALID_WINDOW', message: 'Pick a start and an end time' });
+  });
+});
+
+describe('a free venue', () => {
+  /** A venue that charges for everything: none of it applies to a window it gives away. */
+  const pricey: VenuePricing = { ...charges, min_spend: 20_000, cleaning_fee: 1500, pet_fee: 500, gst_enabled: true };
+
+  it('is priced at nothing: no rate, fees, minimum spend, GST or commission', () => {
+    const result = quoteOffer(pricey, { model: 'FREE', rate: 900 }, req({ pets: true }));
+    expect(result).toEqual({
+      ok: true,
+      breakdown: expect.objectContaining({
+        model: 'FLAT',
+        rate: 0,
+        hours: 2,
+        date: '2027-01-04',
+        base: 0,
+        min_spend_top_up: 0,
+        cleaning_fee: 0,
+        pet_fee: 0,
+        taxes: 0,
+        venue_payout: 0,
+        platform_fee: 0,
+        total: 0,
+        deposit: 0,
+      }),
+    });
+  });
+
+  it('is priced the same at both ends of the guests', () => {
+    const result = quoteProposal(pricey, { model: 'FREE', rate: 0 }, req(), 6);
+    expect(result.ok && result.quote.total).toBe(0);
+    expect(result.ok && result.quote_min.total).toBe(0);
+  });
+
+  it('still needs a window that ends after it starts', () => {
+    expect(freeQuote(req({ end: ist('2027-01-04', '17:00') }))).toMatchObject({ ok: false, code: 'INVALID_WINDOW' });
+    expect(freeQuote(req({ start: new Date('nope') }))).toMatchObject({ ok: false, code: 'INVALID_WINDOW' });
+  });
+});
+
+describe('termsProblem', () => {
+  it("allows a free venue only in a host's opening offer", () => {
+    expect(termsProblem({ model: 'FREE', rate: 0 }, { allowFree: true })).toBeNull();
+    expect(termsProblem({ model: 'FREE', rate: 0 })).toMatch(/counter names a price/);
+  });
+
+  it('needs a known priced option and an amount within bounds otherwise', () => {
+    expect(termsProblem({ model: 'PER_GUEST', rate: 300 })).toBeNull();
+    expect(termsProblem({ model: 'PER_SLOT' as never, rate: 300 })).toMatch(/per guest, per hour or a flat price/);
+    expect(termsProblem(null)).toMatch(/per guest, per hour or a flat price/);
+    expect(termsProblem({ model: 'FLAT', rate: 0 })).toBe('Enter the amount you offer the venue');
+    expect(termsProblem({ model: 'FLAT', rate: 100_000_000 })).toBe('This amount is too large');
   });
 });
 

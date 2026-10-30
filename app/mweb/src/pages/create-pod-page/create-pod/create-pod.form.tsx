@@ -1,7 +1,9 @@
 import { z } from 'zod';
-import { DEFAULT_TICKET_DISCOUNT_MAX_PCT } from '@duncit/utils';
+import { freeJustificationFields } from '@duncit/forms/schemas';
+import { DEFAULT_SMART_INCENTIVE_MAX_PCT, DEFAULT_TICKET_DISCOUNT_MAX_PCT } from '@duncit/utils';
 import { fallbackT, type Translate } from '../../../i18n/fallback';
-import { refinePublish, refineVenueOrMeeting } from './create-pod.refine';
+import { refineFreeJustification, refinePublish, refineVenueOrMeeting } from './create-pod.refine';
+import { refineSmartIncentive } from './create-pod.smart-incentive';
 import { refineTicketDiscount } from './create-pod.ticket-discount';
 
 export { hasImageLine, buildCreatePodInput, buildModerationInput, MODERATION_FIELD_MAP } from './create-pod.payload';
@@ -14,6 +16,7 @@ export {
   STEP_TITLES,
   STEP_SUBTITLES,
   stepForField,
+  stepFieldsFor,
 } from './create-pod.steps';
 export { hostCategoryKeyOf, filterClubs } from './create-pod.clubs';
 export { serializeDraft, hydrateDraft } from './create-pod.draft';
@@ -29,8 +32,14 @@ const MIN_POD_DURATION_MS = MIN_POD_DURATION_MINUTES * 60_000;
  * The messages are copy, so they come from the shared catalogue (rule 38): the
  * stepper passes its live `t`, and the export below resolves against the
  * bundled English for callers that parse the schema outside React.
- * `ticketDiscountMaxPct` is the admin's public `ticket_discount_max_pct`. */
-export function makeCreatePodSchema(t: Translate = fallbackT, ticketDiscountMaxPct = DEFAULT_TICKET_DISCOUNT_MAX_PCT) {
+ * `ticketDiscountMaxPct` is the admin's public `ticket_discount_max_pct`;
+ * `smartIncentiveMaxPct` is Loyalty > Smart Incentive's `max_discount_pct`, or
+ * null while the programme is not known to be on (its editor is hidden then). */
+export function makeCreatePodSchema(
+  t: Translate = fallbackT,
+  ticketDiscountMaxPct = DEFAULT_TICKET_DISCOUNT_MAX_PCT,
+  smartIncentiveMaxPct: number | null = DEFAULT_SMART_INCENTIVE_MAX_PCT,
+) {
   return z
     .object({
       location_id: z.string().min(1, t('mweb.createPod.validation.locationRequired')),
@@ -110,11 +119,17 @@ export function makeCreatePodSchema(t: Translate = fallbackT, ticketDiscountMaxP
       // Shape only — the tier rules run in refineTicketDiscount below.
       ticket_discount_enabled: z.boolean(),
       ticket_discount_tiers: z.array(z.object({ min_tickets: z.number(), discount_pct: z.number() })),
+      // Shape only — the percentage is checked in refineSmartIncentive below.
+      smart_incentive_enabled: z.boolean(),
+      smart_incentive_pct: z.string(),
       payment_terms: z.string().max(4000),
       agreed_to_terms: z.boolean(),
+      // Shape only — asked while the pod or its venue is free (refineFreeJustification).
+      ...freeJustificationFields,
     })
     .superRefine((values, ctx) => {
       refineVenueOrMeeting(values, ctx, t);
+      refineFreeJustification(values, ctx, t);
       if (values.pod_date_time.getTime() <= Date.now()) {
         ctx.addIssue({ code: 'custom', path: ['pod_date_time'], message: t('mweb.createPod.validation.startFuture') });
       }
@@ -133,6 +148,7 @@ export function makeCreatePodSchema(t: Translate = fallbackT, ticketDiscountMaxP
       }
       refinePublish(values, ctx, t);
       refineTicketDiscount(values, ctx, t, ticketDiscountMaxPct);
+      refineSmartIncentive(values, ctx, t, smartIncentiveMaxPct);
     });
 }
 

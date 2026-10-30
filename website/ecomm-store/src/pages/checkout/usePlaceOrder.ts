@@ -21,7 +21,7 @@ const FAILURE_KEYS = {
 
 /**
  * Place the order; when the server hands back a Razorpay sheet, open it and
- * verify its signature. Every path ends on the confirmation page — or with a
+ * verify its signature. Every path ends on the confirmation page or with a
  * message saying exactly why it did not.
  */
 export function usePlaceOrder(controls: CheckoutControls, couponCode: string, redeemCoins: number) {

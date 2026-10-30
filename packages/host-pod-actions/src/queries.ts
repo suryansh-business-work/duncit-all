@@ -1,7 +1,7 @@
 import { gql } from '@apollo/client';
 
-/** Host self-service edit — title, images, description, the pod's capacity and
- * its multi-ticket discount. */
+/** Host self-service edit — title, images, description, the pod's capacity,
+ * its multi-ticket discount and its Smart Incentive. */
 export const HOST_UPDATE_POD = gql`
   mutation HostUpdatePod($pod_doc_id: ID!, $input: HostUpdatePodInput!) {
     hostUpdatePod(pod_doc_id: $pod_doc_id, input: $input) {
@@ -18,6 +18,23 @@ export const HOST_UPDATE_POD = gql`
         min_tickets
         discount_pct
       }
+      smart_incentive_enabled
+      smart_incentive_pct
+    }
+  }
+`;
+
+/**
+ * Loyalty > Smart Incentive's settings: whether the programme runs at all, how
+ * long a member stays on a pod page before the offer shows, and the biggest
+ * discount a host may choose. Any signed-in account may read them.
+ */
+export const SMART_INCENTIVE_SETTINGS = gql`
+  query HostSmartIncentiveSettings {
+    smartIncentiveSettings {
+      enabled
+      delay_seconds
+      max_discount_pct
     }
   }
 `;

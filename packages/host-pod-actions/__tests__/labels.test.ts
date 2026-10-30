@@ -60,6 +60,23 @@ describe('the two namespaces', () => {
     expect(Object.keys(shell).sort()).toEqual(Object.keys(mweb).sort());
   });
 
+  // The Smart Incentive editor is @duncit/utils' own block too, nested two deep
+  // (its errors and its explainer), so the flat string checks above miss it.
+  it('reads the Smart Incentive block from the same namespace as the rest of the surface', () => {
+    const mweb = mwebHostPodLabels(t).smartIncentive;
+    const shell = shellHostPodLabels(t).smartIncentive;
+
+    expect(mweb.title).toBe('mweb.smartIncentive.title');
+    expect(mweb.pricePreview('₹424.15')).toBe('mweb.smartIncentive.pricePreview({"price":"₹424.15"})');
+    expect(mweb.errors.PCT_MAX(20)).toBe('mweb.smartIncentive.errorPctMax({"max":20})');
+    expect(mweb.info.what(15)).toBe('mweb.smartIncentive.infoWhat({"seconds":15})');
+    expect(shell.title).toBe('shell.smartIncentive.title');
+    expect(shell.errors.REQUIRED(20)).toBe('shell.smartIncentive.errorRequired');
+    expect(shell.info.gotIt).toBe('shell.smartIncentive.gotIt');
+    expect(Object.keys(shell).sort()).toEqual(Object.keys(mweb).sort());
+    expect(Object.keys(shell.info).sort()).toEqual(Object.keys(mweb.info).sort());
+  });
+
   // The agreed terms are the venue booking's own words, which every surface
   // ships under availability.* — so both builders read the same keys.
   it('reads the agreed terms from availability.* on both surfaces', () => {

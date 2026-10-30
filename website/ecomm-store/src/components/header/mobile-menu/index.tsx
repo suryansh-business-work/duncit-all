@@ -7,7 +7,7 @@ import { MobileMenuDrawer } from './MobileMenuDrawer';
 
 /**
  * The phone's hamburger: a round button that opens the full menu drawer. Only
- * the phone headers render it — the desktop header has the mega menu.
+ * the phone headers render it; the desktop header has the mega menu.
  */
 export function MobileMenuButton() {
   const { t } = useStoreT();

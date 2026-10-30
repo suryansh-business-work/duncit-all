@@ -18,7 +18,7 @@ interface OrderDetailProps {
   canAct: boolean;
 }
 
-/** One order as its buyer sees it — shared by the account area and guest tracking. */
+/** One order as its buyer sees it, shared by the account area and guest tracking. */
 export function OrderDetail({ order, orderKey, canAct }: Readonly<OrderDetailProps>) {
   const { t } = useStoreT();
   const { formatDateTime } = useDateFormat();

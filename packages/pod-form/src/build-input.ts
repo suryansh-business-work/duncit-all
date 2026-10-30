@@ -1,4 +1,4 @@
-import { mediaTypeForUrl, ticketDiscountInput, venueOfferInput } from '@duncit/utils';
+import { freeJustificationInput, mediaTypeForUrl, ticketDiscountInput, venueOfferInput } from '@duncit/utils';
 
 import { isFreePodType, normalizePodType } from './pod-type';
 import { bookingKeyOf, keepsExistingBooking } from './kept-booking';
@@ -37,6 +37,13 @@ const productRequestsOf = (values: PodFormValues) =>
   values.product_requests
     .map((item) => ({ product_id: item.product_id, quantity: Number(item.quantity) || 0 }))
     .filter((item) => item.product_id && item.quantity > 0);
+
+/** The free justification as the form holds it — one set for a FREE pod and a FREE venue offer. */
+const freeJustificationOf = (values: PodFormValues) => ({
+  reason: values.free_reason,
+  details: values.free_details,
+  accepted: values.free_accepted,
+});
 
 /** The meeting details a VIRTUAL pod sends; a physical pod nulls them. */
 const meetingFieldsOf = (values: PodFormValues, isVirtual: boolean) => ({
@@ -103,6 +110,11 @@ export function buildPodInput(values: PodFormValues, { draft, config }: BuildPod
     is_active: !draft,
   };
 
+  // Why a FREE pod is free — sent only once the form holds a complete, accepted
+  // justification, so an edit that gives none keeps the one the pod has.
+  const podJustification = isFreePodType(values.pod_type) ? freeJustificationInput(freeJustificationOf(values)) : null;
+  if (podJustification) input.free_justification = podJustification;
+
   if (config.showVenueSlot) Object.assign(input, venueBookingOf(values, isPhysical));
 
   return input;
@@ -129,6 +141,8 @@ function venueBookingOf(values: PodFormValues, isPhysical: boolean): Record<stri
       rate: values.venue_offer_rate,
       offerings: values.venue_offer_offerings,
       note: values.venue_offer_note,
+      // Read only for a FREE offer (rate 0), where the server requires it.
+      freeJustification: freeJustificationOf(values),
     }),
   };
 }

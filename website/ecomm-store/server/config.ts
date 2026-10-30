@@ -20,7 +20,7 @@ const withoutTrailingSlashes = (url: string): string => {
 
 export const SITE_URL = withoutTrailingSlashes(envOr('SITE_URL', 'https://ecomm.duncit.com'));
 
-/** The built SPA sits beside this bundle: dist-server/main.mjs → ../dist. */
+/** The built SPA sits beside this bundle: dist-server/main.mjs, so ../dist. */
 export const DIST_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', 'dist');
 
 /** How long an answer from the API is reused before asking again. */

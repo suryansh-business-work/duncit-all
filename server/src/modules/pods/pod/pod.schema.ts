@@ -246,6 +246,10 @@ export const podTypeDefs = /* GraphQL */ `
     ticket_discount_enabled: Boolean!
     "The multi-ticket discount tiers, ascending. Empty when the discount is off; one ticket always pays full price."
     ticket_discount_tiers: [PodTicketDiscountTier!]!
+    "The host offers members who stay on the pod page without booking a one-time discount (Smart Incentive). Always false on a free or zero-priced pod."
+    smart_incentive_enabled: Boolean!
+    "Percent off the ticket money that offer gives (after any multi-ticket discount); 0 when switched off."
+    smart_incentive_pct: Int!
     is_active: Boolean!
     """
     An admin took this pod off every member-facing surface. Not a cancellation:
@@ -419,6 +423,8 @@ export const podTypeDefs = /* GraphQL */ `
     pod_date_time: String!
     pod_end_date_time: String
     pod_type: PodType!
+    "Required when a host makes the pod FREE (pod_type FREE): why it is free, and the host accepts Duncit's free policy."
+    free_justification: FreeJustificationInput
     pod_amount: Int
     pod_occurrence: PodOccurrence
     no_of_spots: Int
@@ -432,6 +438,10 @@ export const podTypeDefs = /* GraphQL */ `
     "Offer a multi-ticket discount. Ignored (stored off) on a free or zero-priced pod."
     ticket_discount_enabled: Boolean
     ticket_discount_tiers: [PodTicketDiscountTierInput!]
+    "Offer a Smart Incentive. Ignored (stored off) on a free or zero-priced pod."
+    smart_incentive_enabled: Boolean
+    "Whole percent, 1 up to Loyalty's maximum. Required when smart_incentive_enabled is true."
+    smart_incentive_pct: Int
     is_active: Boolean
   }
 
@@ -464,6 +474,8 @@ export const podTypeDefs = /* GraphQL */ `
     pod_date_time: String
     pod_end_date_time: String
     pod_type: PodType
+    "Required when a host makes the pod FREE (pod_type FREE): why it is free, and the host accepts Duncit's free policy."
+    free_justification: FreeJustificationInput
     pod_amount: Int
     pod_occurrence: PodOccurrence
     no_of_spots: Int
@@ -477,6 +489,9 @@ export const podTypeDefs = /* GraphQL */ `
     "Offer a multi-ticket discount. Cleared when the pod becomes free or zero-priced."
     ticket_discount_enabled: Boolean
     ticket_discount_tiers: [PodTicketDiscountTierInput!]
+    "Offer a Smart Incentive — omit both fields to leave it alone. Cleared when the pod becomes free or zero-priced."
+    smart_incentive_enabled: Boolean
+    smart_incentive_pct: Int
     is_active: Boolean
   }
 
@@ -530,6 +545,9 @@ export const podTypeDefs = /* GraphQL */ `
     "Offer a multi-ticket discount — omit both discount fields to leave it alone."
     ticket_discount_enabled: Boolean
     ticket_discount_tiers: [PodTicketDiscountTierInput!]
+    "Offer a Smart Incentive — omit both fields to leave it alone."
+    smart_incentive_enabled: Boolean
+    smart_incentive_pct: Int
   }
 
   "Full edit + resubmission of a venue-rejected (DECLINED) pod. Booking state, hosts and club stay server-managed."
@@ -553,6 +571,8 @@ export const podTypeDefs = /* GraphQL */ `
     pod_date_time: String
     pod_end_date_time: String
     pod_type: PodType
+    "Required when a host makes the pod FREE (pod_type FREE): why it is free, and the host accepts Duncit's free policy."
+    free_justification: FreeJustificationInput
     pod_amount: Int
     pod_occurrence: PodOccurrence
     no_of_spots: Int
@@ -566,9 +586,70 @@ export const podTypeDefs = /* GraphQL */ `
     "Offer a multi-ticket discount. Cleared when the pod becomes free or zero-priced."
     ticket_discount_enabled: Boolean
     ticket_discount_tiers: [PodTicketDiscountTierInput!]
+    "Offer a Smart Incentive — omit both fields to leave it alone. Cleared when the pod becomes free or zero-priced."
+    smart_incentive_enabled: Boolean
+    smart_incentive_pct: Int
+  }
+
+  "A free pod, a pod whose venue was asked for free, or both — as Duncit audits it (Pods console > Free Arrangements)."
+  type FreeArrangementRow {
+    "The pod's document id."
+    id: ID!
+    pod_slug: String!
+    pod_title: String!
+    pod_type: PodType!
+    pod_date_time: String
+    "FREE_POD, FREE_VENUE or BOTH."
+    kind: String!
+    host_name: String!
+    host_email: String!
+    club_name: String!
+    venue_name: String!
+    "NONE, PENDING, APPROVED or DECLINED: the venue's answer."
+    venue_approval_status: String!
+    is_active: Boolean!
+    cancelled: Boolean!
+    created_at: String
+    "Why the pod is free (FREE pods)."
+    free_justification: FreeJustification
+    "Why the venue was asked for free (free venue offers)."
+    venue_free_justification: FreeJustification
+  }
+
+  "Server-side table page for the shared table engine (adminFreeArrangementsTable)."
+  type FreeArrangementTablePage {
+    rows: [FreeArrangementRow!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
+  """
+  One upcoming pod as the public websites' home rail shows it: the card's
+  facts and the two slugs mWeb's pod page lives at — nothing about members,
+  hosts, venues or money beyond the ticket price.
+  """
+  type WebsitePod {
+    id: ID!
+    pod_id: String!
+    club_slug: String!
+    pod_title: String!
+    pod_date_time: String!
+    image_url: String
+    zone_name: String
+    pod_type: String!
+    pod_amount: Float!
   }
 
   extend type Query {
+    """
+    The soonest upcoming pods discovery would offer, for every Duncit website's
+    home rail. Deliberately unauthenticated (a website visitor has no session);
+    limit defaults to 12 and is capped at 24.
+    """
+    websiteUpcomingPods(limit: Int): [WebsitePod!]!
+    "Pods console: every free pod and free venue booking with the host's justification, newest first (filters: pod_type, reason, venue_approval_status, is_active, pod_date_time, created_at)."
+    adminFreeArrangementsTable(query: TableQueryInput): FreeArrangementTablePage!
     "What revoking this pod's cancellation would cost, and whether it is allowed."
     podRevokePreview(pod_doc_id: ID!): PodRevokePreview!
     "The live cancellation-risk picture for one pod — the admin detail page's risk section."

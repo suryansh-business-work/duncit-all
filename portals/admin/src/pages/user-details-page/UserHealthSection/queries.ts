@@ -1,4 +1,5 @@
 import { gql } from '@apollo/client';
+import type { HealthAppealStatus } from '@duncit/utils';
 
 export const HEALTH_FIELDS = gql`
   fragment AdminHealthFields on HealthScore {
@@ -9,7 +10,7 @@ export const HEALTH_FIELDS = gql`
     delta_sum
     total_score
     band
-    adjustments { id delta remark created_by_name created_at }
+    adjustments { id delta remark created_by_name created_at waived appeal_status }
   }
 `;
 
@@ -64,6 +65,9 @@ export interface AdminHealthAdjustment {
   remark: string;
   created_by_name: string;
   created_at: string;
+  /** Lifted on appeal in Legal: still listed, no longer counted. */
+  waived: boolean;
+  appeal_status: HealthAppealStatus | null;
 }
 
 export interface AdminHealthScore {

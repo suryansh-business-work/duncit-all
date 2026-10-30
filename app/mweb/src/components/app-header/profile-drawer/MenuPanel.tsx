@@ -68,10 +68,9 @@ export default function MenuPanel({
   const studioAccess = { products: showProducts };
   const effectiveMode = resolveMode(mode, roles, studioAccess);
   const canSwitch = availableModes(roles, studioAccess).length > 1;
-  // Leaving the menu REPLACES its history entry, so Back from the destination
-  // returns to the page the menu was opened from — never through the menu
-  // again. Native pops the menu before navigating for the same reason.
-  const go = (to: string) => navigate(to, { replace: true });
+  // Leaving the menu PUSHES the destination over it, so Back from that page
+  // returns to /menu, as on native; the ✕ is the way out of the menu itself.
+  const go = (to: string) => navigate(to);
 
   return (
     <Box

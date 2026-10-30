@@ -8,9 +8,10 @@
  *           suite runs. The credentials come back HERE rather than travelling
  *           as workflow inputs, because a dispatch input is displayed on the
  *           run's own page and a password does not belong there.
- *   suite   records one matrix leg's outcome, with the counts read out of the
- *           JUnit report Cypress wrote. Called by every leg, always, so a leg
- *           that was filtered out reports SKIPPED rather than going silent.
+ *   suite   records one matrix leg's outcome and every scenario it ran, read
+ *           out of the per-spec results Cypress wrote (the JUnit report when
+ *           there are none). Called by every leg, always, so a leg that was
+ *           filtered out reports SKIPPED rather than going silent.
  *   finish  records the run's outcome and how long it took. Called by the gate.
  *
  * Every mode writes to ONE row: they join on DISPATCH_ID (a portal- or
@@ -29,8 +30,12 @@
  *   SUITE_KEY            (suite) which leg is reporting.
  *   SUITE_STATUS         (suite) PASSED | FAILED | SKIPPED | RUNNING.
  *   SUITE_ERROR          (suite) why it failed.
- *   JUNIT_DIR            (suite) where to look for JUnit XML. Missing is fine —
- *                        the leg still reports its status, without counts.
+ *   RESULTS_DIR          (suite) where scripts/lib/cypress-scenarios.mjs wrote
+ *                        one result file per spec. Read first: it is the only
+ *                        source that lists the tests a failed hook blocked.
+ *   JUNIT_DIR            (suite) where to look for JUnit XML when there are no
+ *                        result files. Missing is fine — the leg still reports
+ *                        its status, without counts.
  *   RUN_STATUS           (finish) SUCCESS | FAILED.
  *   RUN_ERROR            (finish) why the run failed.
  *   STARTED_AT           (finish) unix seconds the run began, for the duration.
@@ -45,9 +50,9 @@
  * secret is found the day it happens, not the day someone reads the table.
  */
 import fs from 'node:fs';
-import path from 'node:path';
 import process from 'node:process';
 import { createCiClient, describeError, MISSING_CREDENTIALS } from './lib/ci-report.mjs';
+import { countsOf, readJunit, readSpecResults, scenariosOf } from './lib/e2e-results.mjs';
 
 const GRAPHQL_URL = process.env.DUNCIT_GRAPHQL_URL || 'https://server.duncit.com/graphql';
 
@@ -72,82 +77,6 @@ const runIdentity = () => ({
   workflow_run_id: env('GITHUB_RUN_ID'),
   workflow_run_url: env('RUN_URL'),
 });
-
-/* ── reading what Cypress produced ────────────────────────────────────────── */
-
-/**
- * Cypress ships mocha's JUnit reporter, so the counts come out of XML rather
- * than out of stdout. Parsed with a regex on purpose: the file is machine-
- * written and shallow, and adding an XML parser to a zero-dependency reporter
- * that runs on a bare runner after a failure is a poor trade.
- */
-const SUITE_ATTR_RE = /<testsuite\b[^>]*>/g;
-const attr = (tag, name) => {
-  const match = new RegExp(String.raw`\b${name}="([^"]*)"`).exec(tag);
-  return match ? match[1] : null;
-};
-
-function* junitFiles(dir) {
-  let entries;
-  try {
-    entries = fs.readdirSync(dir, { withFileTypes: true });
-  } catch {
-    return;
-  }
-  for (const entry of entries) {
-    const full = path.join(dir, entry.name);
-    if (entry.isDirectory()) {
-      yield* junitFiles(full);
-    } else if (entry.name.toLowerCase().endsWith('.xml')) {
-      yield full;
-    }
-  }
-}
-
-/**
- * The counts across every JUnit file a leg wrote, or null when it wrote none.
- *
- * Null rather than zeroes: "this suite ran nothing" and "this suite never got
- * far enough to write a report" look identical as numbers and are completely
- * different facts, and the second is the one worth seeing on a red row.
- *
- * mocha's reporter emits a "Root Suite" wrapper with tests="0" alongside the
- * real ones. Counting every testsuite element would double nothing, but the
- * SPEC count would be one too high per file, so the empty wrapper is dropped.
- */
-function readJunit(dir) {
-  const totals = { specs: 0, tests: 0, failed: 0, skipped: 0, duration: 0 };
-  let sawFile = false;
-  for (const file of junitFiles(dir)) {
-    sawFile = true;
-    let xml;
-    try {
-      xml = fs.readFileSync(file, 'utf8');
-    } catch {
-      continue;
-    }
-    for (const tag of xml.match(SUITE_ATTR_RE) ?? []) {
-      const tests = Number.parseInt(attr(tag, 'tests') ?? '0', 10) || 0;
-      if (tests === 0) continue;
-      totals.specs += 1;
-      totals.tests += tests;
-      totals.failed +=
-        (Number.parseInt(attr(tag, 'failures') ?? '0', 10) || 0) +
-        (Number.parseInt(attr(tag, 'errors') ?? '0', 10) || 0);
-      totals.skipped += Number.parseInt(attr(tag, 'skipped') ?? '0', 10) || 0;
-      totals.duration += Number.parseFloat(attr(tag, 'time') ?? '0') || 0;
-    }
-  }
-  if (!sawFile) return null;
-  return {
-    specs: totals.specs,
-    tests: totals.tests,
-    failed: totals.failed,
-    skipped: totals.skipped,
-    passed: Math.max(totals.tests - totals.failed - totals.skipped, 0),
-    duration_seconds: Math.round(totals.duration),
-  };
-}
 
 /* ── the three modes ──────────────────────────────────────────────────────── */
 
@@ -214,11 +143,52 @@ async function start(token) {
   }
 }
 
+const SCENARIOS_MUTATION = `mutation($input: ReportE2eScenariosInput!){
+  reportE2eScenarios(input:$input)
+}`;
+
+/** Rows one call may carry — the server refuses more. */
+const SCENARIO_CHUNK = 500;
+
+/**
+ * Every scenario the leg ran, in chunks. The first chunk resets the leg's rows,
+ * so a re-run job replaces what an earlier attempt said instead of leaving its
+ * vanished scenarios behind; a retried chunk upserts the same keys again.
+ */
+async function sendScenarios(token, suite, scenarios) {
+  let written = 0;
+  for (let i = 0; i < scenarios.length; i += SCENARIO_CHUNK) {
+    const data = await gql(
+      SCENARIOS_MUTATION,
+      {
+        input: {
+          ...runIdentity(),
+          suite,
+          reset: i === 0,
+          scenarios: scenarios.slice(i, i + SCENARIO_CHUNK),
+        },
+      },
+      token
+    );
+    written += data.reportE2eScenarios;
+  }
+  console.log(`✓ ${written} scenarios recorded for ${suite}`);
+}
+
+/** The leg's counts and scenarios: Cypress's own per-spec results, else the JUnit report. */
+function legResults(status) {
+  if (status === 'SKIPPED') return { counts: null, scenarios: [] };
+  const specs = readSpecResults(env('RESULTS_DIR'));
+  if (!specs) return { counts: readJunit(env('JUNIT_DIR') || '.'), scenarios: [] };
+  const scenarios = scenariosOf(specs);
+  return { counts: countsOf(specs, scenarios), scenarios };
+}
+
 async function reportSuite(token) {
   const key = env('SUITE_KEY');
   if (!key) throw new Error('SUITE_KEY is required in suite mode');
   const status = env('SUITE_STATUS') || 'FAILED';
-  const counts = status === 'SKIPPED' ? null : readJunit(env('JUNIT_DIR') || '.');
+  const { counts, scenarios } = legResults(status);
   const data = await gql(
     REPORT_MUTATION,
     {
@@ -238,6 +208,7 @@ async function reportSuite(token) {
   );
   const detail = counts ? ` (${counts.passed}/${counts.tests} passed)` : '';
   console.log(`✓ ${data.reportE2eRun.run_no}: ${key} ${status}${detail}`);
+  if (scenarios.length > 0) await sendScenarios(token, key, scenarios);
 }
 
 /** Whole seconds since the job began, or null when nothing said when that was. */

@@ -12,6 +12,8 @@ export const MobileDummyProductCheckoutDocument = gql(`
       total
       ticket_discount_amount
       ticket_discount_pct
+      smart_incentive_amount
+      smart_incentive_pct
       currency_symbol
       status
       paid_at
@@ -45,6 +47,8 @@ export const MobileCreateRazorpayProductOrderDocument = gql(`
         total
         ticket_discount_amount
         ticket_discount_pct
+        smart_incentive_amount
+        smart_incentive_pct
         currency_symbol
         status
         paid_at

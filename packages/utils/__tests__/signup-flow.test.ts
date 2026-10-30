@@ -36,6 +36,7 @@ describe('what signup starts out holding', () => {
       askingNumber: false,
       verifying: null,
       googleDob: null,
+      googleAgeConfirmed: false,
       pendingForm: null,
       pendingGoogle: null,
     });
@@ -96,12 +97,15 @@ describe('the Google door', () => {
         phoneNumber: '7700900123',
         whatsappIsMobile: false,
         dob: '1998-04-23',
+        ageConfirmed: true,
       },
     });
 
     expect(state.askingNumber).toBe(false);
     // Google never carried a birthday, so the step's answer is what is held.
     expect(state.googleDob).toBe('1998-04-23');
+    // ...and the age tick beside it, which the account is made with.
+    expect(state.googleAgeConfirmed).toBe(true);
     expect(state.verifying).toEqual({
       extension: '+44',
       number: '7700900123',
@@ -121,6 +125,7 @@ describe('the Google door', () => {
         phoneNumber: '9845012345',
         whatsappIsMobile: true,
         dob: '1998-04-23',
+        ageConfirmed: true,
         name: '  Riya Sharma ',
       },
     });
@@ -136,6 +141,7 @@ describe('the Google door', () => {
         phoneNumber: '9845012345',
         whatsappIsMobile: true,
         dob: '1998-04-23',
+        ageConfirmed: true,
         name: 'Riya Sharma',
       },
     });

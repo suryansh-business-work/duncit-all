@@ -628,7 +628,7 @@ describe('notifyAttendanceMarked', () => {
     expect(notify).toHaveBeenCalledWith({
       title: 'Attendance marked',
       body: 'Your attendance is marked for Sunday Run.',
-      link_url: `/pod/${String(POD)}`,
+      link_url: `/booking/${String(MEMBERSHIP)}`,
       scope: 'USER',
       target_user_ids: [String(USER)],
     });

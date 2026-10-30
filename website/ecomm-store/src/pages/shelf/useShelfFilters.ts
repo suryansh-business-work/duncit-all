@@ -10,7 +10,7 @@ const LIST_SEPARATOR = ',';
 export const SORTS: readonly StoreSort[] = ['RELEVANCE', 'NEWEST', 'BESTSELLING', 'PRICE_ASC', 'PRICE_DESC', 'DISCOUNT', 'RATING'];
 const SORT_SET: ReadonlySet<string> = new Set(SORTS);
 
-/** What the route itself fixes — a category page is always that category. */
+/** What the route itself fixes: a category page is always that category. */
 export type ShelfScope = Pick<StoreSearchInput, 'category' | 'collection' | 'pet_type' | 'brand_ids'>;
 
 export interface ShelfFilters {

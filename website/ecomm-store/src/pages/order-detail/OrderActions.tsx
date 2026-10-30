@@ -14,7 +14,7 @@ import { ReturnRequestDialog } from './return-request';
 
 type Open = 'cancel' | 'return' | null;
 
-/** Invoice download, and — when the order still allows it — cancel or return. */
+/** Invoice download, and (when the order still allows it) cancel or return. */
 export function OrderActions({ order, orderKey }: Readonly<{ order: StoreOrder; orderKey?: string }>) {
   const { t } = useStoreT();
   const client = useApolloClient();

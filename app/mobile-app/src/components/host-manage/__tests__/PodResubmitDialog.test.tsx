@@ -286,6 +286,58 @@ describe('PodResubmitDialog', () => {
     );
   });
 
+  it('asks a new venue for the window free, with the reason and the policy accepted', async () => {
+    const onSaved = jest.fn();
+    renderWithProviders(<PodResubmitDialog pod={pod} onClose={jest.fn()} onSaved={onSaved} />);
+    await waitFor(() => expect(screen.getByTestId('resubmit-venue-v1')).toBeOnTheScreen());
+    fireEvent.press(screen.getByTestId('resubmit-venue-v1'));
+    fireEvent.press(screen.getByTestId(TILE));
+    fireEvent.press(screen.getByTestId('create-pod-offer-model-FREE'));
+    expect(screen.queryByTestId('field-venue_offer_rate')).toBeNull();
+    expect(screen.getByTestId('pod-resubmit-free-policy')).toBeOnTheScreen();
+    fireEvent.changeText(screen.getByTestId('field-offerings'), 'A projector');
+    fireEvent.press(screen.getByTestId('pod-resubmit-save'));
+    expect(await screen.findByTestId('pod-resubmit-free-reason-error')).toHaveTextContent(
+      'Pick why this is free',
+    );
+    expect(resubmitCalls()).toHaveLength(0);
+    fireEvent.press(screen.getByTestId('pod-resubmit-free-reason-INITIATIVE'));
+    fireEvent.press(screen.getByTestId('pod-resubmit-free-accept'));
+    fireEvent.press(screen.getByTestId('pod-resubmit-save'));
+    await waitFor(() => expect(onSaved).toHaveBeenCalled());
+    expect(resubmitCalls().at(-1)?.[1].input.venue_offer).toEqual(
+      expect.objectContaining({
+        model: 'FREE',
+        rate: 0,
+        free_justification: { reason: 'INITIATIVE', details: '', accepted: true },
+      }),
+    );
+  });
+
+  it('asks a free pod why it is free again when it is resubmitted', async () => {
+    const onSaved = jest.fn();
+    renderWithProviders(
+      <PodResubmitDialog
+        pod={{ ...pod, pod_type: 'FREE' }}
+        onClose={jest.fn()}
+        onSaved={onSaved}
+      />,
+    );
+    await waitFor(() => expect(screen.getByTestId('resubmit-venue-v1')).toBeOnTheScreen());
+    fireEvent.press(screen.getByTestId('resubmit-venue-v1'));
+    offer();
+    // A priced venue, but the pod itself is free: the policy shows all the same.
+    expect(screen.getByTestId('pod-resubmit-free-policy')).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId('pod-resubmit-free-reason-CAMPAIGN'));
+    fireEvent.press(screen.getByTestId('pod-resubmit-free-accept'));
+    fireEvent.press(screen.getByTestId('pod-resubmit-save'));
+    await waitFor(() => expect(onSaved).toHaveBeenCalled());
+    const input = resubmitCalls().at(-1)?.[1].input;
+    expect(input.free_justification).toEqual({ reason: 'CAMPAIGN', details: '', accepted: true });
+    expect(input.venue_offer).toEqual(expect.objectContaining({ model: 'PER_GUEST', rate: 300 }));
+    expect(input.venue_offer).not.toHaveProperty('free_justification');
+  });
+
   it('asks for what the venue should provide before resubmitting', async () => {
     renderWithProviders(<PodResubmitDialog pod={pod} onClose={jest.fn()} onSaved={jest.fn()} />);
     await waitFor(() => expect(screen.getByTestId('resubmit-venue-v1')).toBeOnTheScreen());

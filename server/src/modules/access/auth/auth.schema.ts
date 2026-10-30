@@ -41,7 +41,15 @@ export const authTypeDefs = gql`
     """
     whatsapp_token: String!
     password: String!
-    dob: String!
+    "Date of birth. Optional — the age tick below is what signup needs; a birthday given here must clear the minimum age."
+    dob: String
+    """
+    The signup form's "I confirm I'm 18 or older" tick (18 being Admin's
+    minimum joining age). Required when no date of birth is sent; a birthday,
+    when there is one, is checked against the same age instead. Builds that
+    predate the tick always send a birthday, so they never need it.
+    """
+    age_confirmed: Boolean = false
     city: String
     zone: String
     """
@@ -228,11 +236,18 @@ export const authTypeDefs = gql`
     "From verifySignupWhatsAppOtp. Spent here, once."
     whatsapp_token: String!
     """
-    Date of birth. A Google credential carries no birthday, so the client asks
-    for it on the same step as the number — and it is as required as it is on
-    the email door, because the joining age is checked against it.
+    Date of birth. Optional, as on the email door: a Google credential carries
+    no birthday, so the client asks for the age tick on the same step as the
+    number and offers the birthday beside it.
     """
-    dob: String!
+    dob: String
+    """
+    The signup form's "I confirm I'm 18 or older" tick (18 being Admin's
+    minimum joining age). Required when no date of birth is sent; a birthday,
+    when there is one, is checked against the same age instead. Builds that
+    predate the tick always send a birthday, so they never need it.
+    """
+    age_confirmed: Boolean = false
     city: String
     zone: String
     """
@@ -270,7 +285,15 @@ export const authTypeDefs = gql`
     phone_extension: String!
     whatsapp_is_mobile: Boolean = true
     whatsapp_token: String!
-    dob: String!
+    "Optional, as on the other doors."
+    dob: String
+    """
+    The signup form's "I confirm I'm 18 or older" tick (18 being Admin's
+    minimum joining age). Required when no date of birth is sent; a birthday,
+    when there is one, is checked against the same age instead. Builds that
+    predate the tick always send a birthday, so they never need it.
+    """
+    age_confirmed: Boolean = false
     city: String
     zone: String
     accepted_policy_ids: [ID!]

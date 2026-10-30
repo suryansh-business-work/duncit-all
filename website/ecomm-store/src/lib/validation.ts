@@ -16,7 +16,7 @@ export const emailRule = (t: Translate) =>
     .max(254, t('ecommStore.validation.emailTooLong'))
     .regex(EMAIL, t('ecommStore.validation.emailInvalid'));
 
-/** A 10-digit mobile number, judged on its digits so a pasted "+91 98…" still passes. */
+/** A 10-digit mobile number, judged on its digits so a pasted "+91 98..." still passes. */
 export const phoneRule = (t: Translate) =>
   z
     .string()

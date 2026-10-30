@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Controller, useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -37,12 +37,19 @@ export const mediaTextToInput = (value: string) =>
 
 type Translate = ReturnType<typeof useTranslation>['t'];
 
+/** A free venue is owed nothing for the booking, so its bill proves only what
+ *  it charged on top: asked for once extras (or a bill) are entered — the
+ *  server's rule. */
+const freeVenueOwesBill = (values: Pick<CompletePodValues, 'venue_bill_amount' | 'venue_bill_media' | 'venue_extra_amount'>) =>
+  [values.venue_bill_amount, values.venue_bill_media].some((value) => value.trim() !== '') || Number(values.venue_extra_amount) !== 0;
+
 /** The same rules as the host's dialog: on a paid pod at a venue the venue's
  *  final bill (its total + the file) is required as proof of the agreed amount,
  *  and extra charges are within the server's bound. `hasVenue` is false for a
- *  pod with no venue and for a free pod. Messages are copy, so the translator
- *  comes in with it. */
-export const buildCompleteSchema = (hasVenue: boolean, t: Translate) => {
+ *  pod with no venue and for a free pod; `freeVenue` (the agreed offer was a
+ *  free venue) asks for the bill only with extras. Messages are copy, so the
+ *  translator comes in with it. */
+export const buildCompleteSchema = (hasVenue: boolean, t: Translate, freeVenue = false) => {
   const bill = shellVenueBillLabels(t);
   return z
     .object({
@@ -58,6 +65,7 @@ export const buildCompleteSchema = (hasVenue: boolean, t: Translate) => {
     .superRefine((values, ctx) => {
       if (!hasVenue) return;
       addVenueUsageIssues(values, ctx, bill);
+      if (freeVenue && !freeVenueOwesBill(values)) return;
       addVenueBillIssues(values, ctx, bill);
     });
 };
@@ -87,6 +95,8 @@ export default function CompletePodDialog({
   // A free pod's host settles the venue directly — no bill is asked for here.
   const free = isFreePod(pod?.pod_type);
   const hasVenue = !!pod?.venue_id && !free;
+  // The settlement preview says once it loads whether the agreed offer was a free venue.
+  const [freeVenue, setFreeVenue] = useState(false);
   const hostIds = (pod?.pod_hosts_id ?? []) as string[];
   const hostOptions = hostIds.map((id) => users.find((user) => user.user_id === id) ?? { user_id: id, full_name: id });
   const initialValues: CompletePodValues = {
@@ -102,7 +112,7 @@ export default function CompletePodDialog({
 
   const { control, handleSubmit, watch, reset } = useForm<CompletePodValues, any, CompletePodValues>({
     defaultValues: initialValues,
-    resolver: zodResolver(buildCompleteSchema(hasVenue, t)) as Resolver<CompletePodValues>,
+    resolver: zodResolver(buildCompleteSchema(hasVenue, t, freeVenue)) as Resolver<CompletePodValues>,
     mode: 'onTouched',
   });
 
@@ -140,7 +150,7 @@ export default function CompletePodDialog({
                   </MenuItem>
                 ))}
               </RhfTextField>
-              {hasVenue && <VenueBillFields control={control} />}
+              {hasVenue && <VenueBillFields control={control} freeVenue={freeVenue} />}
               <Controller
                 control={control}
                 name="media_text"
@@ -163,6 +173,7 @@ export default function CompletePodDialog({
                   hostUserId={selectedHostId}
                   venueUsage={venueUsage}
                   free={free}
+                  onFreeVenue={setFreeVenue}
                 />
               )}
               <RhfTextField control={control} name="notes" label={t('admin.contact.notes')} multiline minRows={2} />

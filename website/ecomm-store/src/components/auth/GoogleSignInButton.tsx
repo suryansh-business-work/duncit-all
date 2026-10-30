@@ -8,7 +8,7 @@ import { LOGIN_WITH_GOOGLE } from '../../graphql/account';
 import { useStoreT } from '../../i18n';
 
 /**
- * "Continue with Google" — Google's own button, whose id_token the API trades
+ * "Continue with Google": Google's own button, whose id_token the API trades
  * for a session. Rendered only when a client id was configured (the dialog
  * decides), because the provider is not mounted otherwise.
  */

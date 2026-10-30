@@ -177,26 +177,25 @@ describe('parseStoredQuickAccess', () => {
 });
 
 describe('profileMenuSections', () => {
-  it('groups every row into the five sections, in order, with every flag on', () => {
+  it('groups every row into the six sections, in order, with every flag on', () => {
     expect(sectionKeys(ALL_ON)).toEqual([
       { id: 'explore', items: ['ideas', 'leaderboard', 'badges'] },
-      { id: 'work', items: ['gigs', 'referral', 'membership'] },
-      {
-        id: 'shopping',
-        items: ['shop', 'cart', 'food-orders', 'gift-cards-buy', 'gift-cards-redeem', 'orders', 'addresses', 'rentals'],
-      },
+      { id: 'work', items: ['gigs', 'membership'] },
+      { id: 'loyalty', items: ['duncit-coin', 'gift-cards-buy', 'gift-cards-redeem', 'referral'] },
+      { id: 'shopping', items: ['shop', 'cart', 'food-orders', 'orders', 'addresses', 'rentals'] },
       { id: 'account', items: ['account', 'saved', 'contacts', 'verification', 'tour', 'plans'] },
-      { id: 'support', items: ['help', 'faqs'] },
+      { id: 'support', items: ['help', 'faqs', 'tutorials'] },
     ]);
   });
 
   it('keeps only the ungated rows with every flag off', () => {
     expect(sectionKeys(ALL_OFF)).toEqual([
       { id: 'explore', items: ['ideas', 'badges'] },
-      { id: 'work', items: ['gigs', 'referral'] },
+      { id: 'work', items: ['gigs'] },
+      { id: 'loyalty', items: ['duncit-coin', 'referral'] },
       { id: 'shopping', items: ['food-orders', 'rentals'] },
       { id: 'account', items: ['account', 'saved', 'contacts', 'verification'] },
-      { id: 'support', items: ['help', 'faqs'] },
+      { id: 'support', items: ['help', 'faqs', 'tutorials'] },
     ]);
   });
 
@@ -219,13 +218,21 @@ describe('profileMenuSections', () => {
 });
 
 describe('profileSectionSubtitleKeys', () => {
-  it('names each visible row, the gift-card pair once, food by its short name', () => {
+  it('names the gift-card pair once in the Loyalty subtitle', () => {
+    const loyalty = profileMenuSections(ALL_ON).find((s) => s.id === 'loyalty');
+    expect(profileSectionSubtitleKeys(loyalty?.items ?? [])).toEqual([
+      'mweb.coin.title',
+      'mweb.giftCards.title',
+      'mweb.referral.title',
+    ]);
+  });
+
+  it('names each visible row, food by its short name', () => {
     const shopping = profileMenuSections(ALL_ON).find((s) => s.id === 'shopping');
     expect(profileSectionSubtitleKeys(shopping?.items ?? [])).toEqual([
       'mweb.shop.title',
       'mweb.nav.cart',
       'mweb.venueFood.myOrders.sidebarTitle',
-      'mweb.giftCards.title',
       'mweb.sidebar.productOrders',
       'mweb.addressBook.addressBook',
       'venueRentals.guest.sidebarLabel',

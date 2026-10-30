@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Stack } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/app-settings';
-import { currentOfferTerms, offerQuoteRange, venueOfferActions } from '@duncit/utils';
+import { currentOfferTerms, isFreeArrangement, offerQuoteRange, venueOfferActions } from '@duncit/utils';
 import { rupees } from '../pricing/format';
 import AnswerOfferDialog, { type AnswerChoice } from './AnswerOfferDialog';
 import CounterAllowanceNote from './CounterAllowanceNote';
@@ -32,8 +32,9 @@ function payoutText(request: OfferRequestSummary, offer: OfferTerms | null): str
  * What the venue can do with a booking request right now: Accept, Counter or
  * Reject a fresh offer; change or withdraw its counter while the host decides.
  * Countering stops once the venue's share of counters is used (the note under
- * the answers says how many are left). Each opens its own dialog — nothing is
- * decided by one tap — and answers the round it read.
+ * the answers says how many are left); a free booking — a free venue or a free
+ * pod — is only accepted or declined, and its accept names no amount. Each
+ * opens its own dialog — nothing is decided by one tap — and answers the round it read.
  */
 export default function OfferDecisionActions({ request, offer, onDone }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -66,7 +67,7 @@ export default function OfferDecisionActions({ request, offer, onDone }: Readonl
       {offer && <CounterAllowanceNote offer={offer} side="VENUE" />}
       <AnswerOfferDialog
         target={target}
-        subject={request}
+        subject={{ ...request, pod_is_free: request.pod_is_free || isFreeArrangement(offer) }}
         choice={answer}
         amount={payoutText(request, offer)}
         round={offer ? offer.round : null}

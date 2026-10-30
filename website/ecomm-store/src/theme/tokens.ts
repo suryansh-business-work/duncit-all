@@ -34,7 +34,7 @@ export interface StorePalette {
  *
  * Contrast rules these encode:
  * - `brand` (#F82C2E) is a FILL for icons, bubbles, illustration and LARGE
- *   white text only (3.9:1 with white) — never small white text, never red text.
+ *   white text only (3.9:1 with white). Never use it for small white text or red text.
  * - `cta` (#D92D2D) is the same red at 4.8:1, for buttons and chips that carry
  *   ordinary-size white text; `ctaInk` is red that is itself text (4.5:1+ on tints).
  * - `navBar` is the strong neutral fill under `onBrand` (white) text in both modes.

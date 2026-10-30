@@ -3,7 +3,7 @@ import { gql, type TypedDocumentNode } from '@apollo/client';
 import type { StorePetType } from './settings';
 import type { NoVars } from './types';
 
-/** A product as a shelf card — the one selection every rail and grid reads. */
+/** A product as a shelf card: the one selection every rail and grid reads. */
 export interface StoreProductCard {
   id: string;
   slug: string;
@@ -16,7 +16,7 @@ export interface StoreProductCard {
   mrp: number;
   discount_pct: number;
   has_variants: boolean;
-  /** The variant the card prices — what its cart button adds; '' when none. */
+  /** The variant the card prices, which its cart button adds; '' when none. */
   lead_variant_id: string;
   in_stock: boolean;
   low_stock: boolean;
@@ -233,7 +233,7 @@ export interface StoreHomeSection {
   ends_at: string | null;
 }
 
-/** One arranged section — the selection the home and every other arranged page read. */
+/** One arranged section: the selection the home and every other arranged page read. */
 const SECTION_FIELDS = `
   id
   kind

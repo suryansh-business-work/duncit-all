@@ -28,8 +28,10 @@ const phoneExtension = () =>
   str(z.string().check(matches(extRegex, 'Invalid extension'), filled()), { required: true });
 const portalKey = () => str(z.string().check(maxLen(64)).optional());
 const requiredEmail = () => str(z.string().check(email(), filled()), { required: true });
+// Optional at signup (App Store 5.1.1): the "I confirm I'm 18 or older" tick
+// stands in for it, and the resolver gates whichever of the two arrived.
 const dateOfBirth = () =>
-  date(z.date().check(notAfter(BOOTED_AT, 'DOB must be in the past')), { required: true });
+  date(z.date().check(notAfter(BOOTED_AT, 'DOB must be in the past')).nullish());
 
 const registerNames = {
   // Names are shape-checked, not just length-checked: the single "Name" box is
@@ -212,8 +214,8 @@ const googleSignupFields = {
   phone_extension: phoneExtension(),
   whatsapp_is_mobile: bool(z.boolean(), { default: true }),
   whatsapp_token: whatsappToken(),
-  // Google proves no birthday either, so the age gate needs this told — the
-  // same rule as the email door's registerSchema.
+  // Google proves no birthday either — optional here exactly as on the email
+  // door's registerSchema, the age tick standing in for it.
   dob: dateOfBirth(),
   city: optionalText(),
   zone: optionalText(),

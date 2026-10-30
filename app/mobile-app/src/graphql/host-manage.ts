@@ -31,6 +31,8 @@ export const HostPodsDocument = gql(`
         min_tickets
         discount_pct
       }
+      smart_incentive_enabled
+      smart_incentive_pct
       seats_taken
       location_id
       venue_id
@@ -105,8 +107,8 @@ export const HostResubmitPodDocument = gql(`
   }
 `);
 
-/** Host self-service edit — title, images, description, the pod's capacity and
- * its multi-ticket discount. */
+/** Host self-service edit — title, images, description, the pod's capacity,
+ * its multi-ticket discount and its Smart Incentive. */
 export const HostUpdatePodDocument = gql(`
   mutation MobileHostUpdatePod($pod_doc_id: ID!, $input: HostUpdatePodInput!) {
     hostUpdatePod(pod_doc_id: $pod_doc_id, input: $input) {
@@ -119,6 +121,8 @@ export const HostUpdatePodDocument = gql(`
         min_tickets
         discount_pct
       }
+      smart_incentive_enabled
+      smart_incentive_pct
       pod_images_and_videos {
         url
         type

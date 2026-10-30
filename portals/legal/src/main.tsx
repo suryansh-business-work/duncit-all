@@ -1,6 +1,6 @@
 import { mountPortal } from '@duncit/shell';
 import { createSessionUserLoader } from '@duncit/user-context';
-import { CONTENT_REPORT_BUNDLE,
+import { CONTENT_REPORT_BUNDLE, HEALTH_APPEAL_BUNDLE,
   LEGAL_BUNDLE, flattenCatalogue, POLICY_ACCEPTANCE_BUNDLE } from '@duncit/app-settings';
 import { logs } from '@duncit/logs';
 import { urlConfigs } from './config/url-configs';
@@ -17,7 +17,12 @@ mountPortal({
   // reads back the same gate mWeb and the native app render at signup (rule
   // 40), so one bundle serves all three — a policy called one thing at signup
   // and another in the audit table is exactly what an auditor cannot have.
-  i18nFallback: flattenCatalogue({ ...POLICY_ACCEPTANCE_BUNDLE, ...CONTENT_REPORT_BUNDLE, ...LEGAL_BUNDLE }),
+  i18nFallback: flattenCatalogue({
+    ...POLICY_ACCEPTANCE_BUNDLE,
+    ...CONTENT_REPORT_BUNDLE,
+    ...HEALTH_APPEAL_BUNDLE,
+    ...LEGAL_BUNDLE,
+  }),
   loadUser: createSessionUserLoader(apolloClient),
   children: <App />,
 });

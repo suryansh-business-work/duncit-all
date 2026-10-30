@@ -17,6 +17,7 @@ import { EMPLOYEE_EXPENSE_BUNDLE } from './bundles/employee-expense';
 import { POD_TIMELINE_BUNDLE } from './bundles/pod-timeline';
 import { FINANCE_BUNDLE } from './bundles/finance';
 import { GRIEVANCE_BUNDLE } from './bundles/grievance';
+import { HEALTH_APPEAL_BUNDLE } from './bundles/health-appeal';
 import { LEGAL_BUNDLE } from './bundles/legal';
 import { LOCALIZATION_BUNDLE } from './bundles/localization';
 import { MAIL_PREFERENCE_BUNDLE } from './bundles/mail-preference';
@@ -107,6 +108,7 @@ export {
   POD_TIMELINE_BUNDLE,
   FINANCE_BUNDLE,
   GRIEVANCE_BUNDLE,
+  HEALTH_APPEAL_BUNDLE,
   LEGAL_BUNDLE,
   LOCALIZATION_BUNDLE,
   MAIL_PREFERENCE_BUNDLE,
@@ -203,6 +205,7 @@ export const SURFACE_BUNDLES: Record<string, NestedCatalogue> = {
   podTimeline: POD_TIMELINE_BUNDLE,
   finance: FINANCE_BUNDLE,
   grievance: GRIEVANCE_BUNDLE,
+  healthAppeal: HEALTH_APPEAL_BUNDLE,
   legal: LEGAL_BUNDLE,
   localization: LOCALIZATION_BUNDLE,
   mailPreference: MAIL_PREFERENCE_BUNDLE,

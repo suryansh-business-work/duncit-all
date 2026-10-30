@@ -1,5 +1,5 @@
 ---
-// Policy Hub — every active policy from the Legal portal. Fetched in the
+// Policy Hub: every active policy from the Legal portal. Fetched in the
 // browser so newly published policies appear without a site redeploy.
 import PageLayout from '../layouts/PageLayout.astro';
 import CtaBand from '../components/page/CtaBand.astro';
@@ -20,7 +20,7 @@ const { t } = await getTranslator();
   wide
 >
   <!-- Thirteen policies is more than anyone scans. The field filters the list
-       as you type; it stays hidden until the list has actually loaded, because
+       as you type; it stays hidden until the list has loaded, because
        a search box over four skeletons is a control that does nothing. -->
   <div class="not-prose mx-auto mb-10 hidden max-w-3xl" id="policySearchWrap" data-policy-search-wrap>
     <label class="sr-only" for="policySearch">{t('website.main.policies.searchLabel')}</label>

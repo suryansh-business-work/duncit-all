@@ -5,6 +5,8 @@ import { graphqlRequest } from '@/services/graphql.client';
 import { renderWithProviders } from '@/utils/test-utils';
 
 jest.mock('@/services/graphql.client', () => ({ graphqlRequest: jest.fn() }));
+// Rendered outside a navigator; returning to the screen is not part of these cases.
+jest.mock('@react-navigation/native', () => ({ useFocusEffect: jest.fn() }));
 
 const mockRequest = graphqlRequest as jest.Mock;
 

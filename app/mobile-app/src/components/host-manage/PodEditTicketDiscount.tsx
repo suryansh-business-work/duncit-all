@@ -1,9 +1,6 @@
-import type { UseFormReturn } from 'react-hook-form';
-
 import { TicketDiscountField } from '@/components/create-pod/TicketDiscountField';
 import { useTicketDiscountField } from '@/components/create-pod/useTicketDiscountField';
-import { usePublicFinance } from '@/hooks/usePublicFinance';
-import type { PodEditValues } from './pod-edit.form';
+import type { PodEditForm } from './usePodEditForm';
 
 /**
  * The multi-ticket discount inside the host's Edit Pod sheet. The sheet only
@@ -14,9 +11,9 @@ import type { PodEditValues } from './pod-edit.form';
 export function PodEditTicketDiscount({
   form,
   unitPrice,
-}: Readonly<{ form: UseFormReturn<PodEditValues, any, PodEditValues>; unitPrice: number }>) {
+  currency,
+}: Readonly<{ form: PodEditForm; unitPrice: number; currency: string }>) {
   const { watch, setValue, formState } = form;
-  const { currency } = usePublicFinance();
   const field = useTicketDiscountField({
     enabled: watch('ticket_discount_enabled'),
     tiers: watch('ticket_discount_tiers'),

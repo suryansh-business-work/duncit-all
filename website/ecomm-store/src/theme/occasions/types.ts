@@ -32,7 +32,7 @@ export type ParticleMotion = 'fall' | 'rise' | 'drift' | 'twinkle';
 /** An occasion's light animation, drawn on one canvas behind nothing interactive. */
 export interface OccasionEffect {
   shapes: readonly ParticleShape[];
-  /** Fill colours, picked per particle. Decorative only — nothing reads text on them. */
+  /** Fill colours, picked per particle. Decorative only; nothing reads text on them. */
   colors: readonly string[];
   motion: ParticleMotion;
   /** How many marks on a 1440px-wide desktop; phones get proportionally fewer. */

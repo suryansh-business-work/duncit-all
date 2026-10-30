@@ -16,9 +16,9 @@ describe('RefreshIndicator', () => {
   it('sits above the app bar rather than sliding under it', () => {
     render(<RefreshIndicator active />);
 
-    // The bar is fixed to the top of the viewport, which is exactly where the
-    // header already is — the zIndex is what keeps it visible rather than
-    // hidden behind the chrome.
+    // The bar is fixed to the top of the viewport, which is where the header
+    // already is. The zIndex keeps it in front of the chrome instead of
+    // hidden behind it.
     const style = getComputedStyle(screen.getByRole('progressbar'));
     expect(style.position).toBe('fixed');
     expect(Number(style.zIndex)).toBeGreaterThan(0);

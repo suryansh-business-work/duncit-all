@@ -13,7 +13,7 @@ interface GalleryThumbnailsProps {
   onSelect: (n: number) => void;
 }
 
-/** The photo a key moves to — possibly one past either end — or null for any other key. */
+/** The photo a key moves to (possibly one past either end), or null for any other key. */
 function keyTarget(key: string, index: number, total: number): number | null {
   if (key === 'ArrowRight') return index + 1;
   if (key === 'ArrowLeft') return index - 1;

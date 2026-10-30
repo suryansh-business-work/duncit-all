@@ -127,7 +127,11 @@ and accounts, so its tools are not built from this API's schema:
 ## Prompts (ready-made commands)
 
 `audit_tools`, `list_all_tools`, `audit_pod_timings`, `create_pod`,
-`join_free_pod`, `my_activity`, `run_self_test`, `find_tool`.
+`review_free_arrangements`, `join_free_pod`, `my_activity`, `run_self_test`, `find_tool`.
+
+`create_pod` walks a free pod or a free venue through Duncit's free policy and asks for the
+`free_justification` the server requires of a host; `review_free_arrangements` audits them with
+`pods_admin_free_arrangements_table` (the Pods console's Free Arrangements page), read-only.
 
 ## Never exposed
 

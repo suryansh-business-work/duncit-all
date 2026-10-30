@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
@@ -56,6 +57,8 @@ interface Props {
   approval: VenueApprovalChip | null;
   /** Rejection note shown under a Venue Rejected pod. */
   rejectedNote: string | null;
+  /** Under the row: how to reach the venue (VenueRequestReach), when it has one. */
+  footer?: ReactNode;
   onOpen: () => void;
   onActions: () => void;
 }
@@ -77,6 +80,7 @@ export function VenueRequestRow({
   eventDate,
   approval,
   rejectedNote,
+  footer,
   onOpen,
   onActions,
 }: Readonly<Props>) {
@@ -138,6 +142,7 @@ export function VenueRequestRow({
       {rejectedNote ? (
         <WarningNote testID={`venue-request-note-${id}`} text={rejectedNote} />
       ) : null}
+      {footer}
     </YStack>
   );
 }

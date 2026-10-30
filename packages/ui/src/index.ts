@@ -70,6 +70,8 @@ export type {
 } from './cart-control';
 export { TicketDiscountField } from './ticket-discount';
 export type { TicketDiscountFieldErrors, TicketDiscountFieldProps } from './ticket-discount';
+export { SmartIncentiveField, SmartIncentiveInfoDialog } from './smart-incentive';
+export type { SmartIncentiveFieldProps, SmartIncentiveInfoDialogProps } from './smart-incentive';
 export { SectionCard } from './SectionCard';
 export type { SectionCardProps } from './SectionCard';
 export { DistributionCard } from './DistributionCard';

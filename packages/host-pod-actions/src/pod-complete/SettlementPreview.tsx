@@ -26,6 +26,8 @@ interface Props {
   /** The pod is FREE: there is no payout to preview, only the roster. The
    * settlement's own `is_free` says the same once it has loaded. */
   free?: boolean;
+  /** Told the agreed offer's pricing model (`venue_agreed_model`, null until known) — a FREE venue asks no bill unless it charged extras. */
+  onAgreedModel?: (model: string | null) => void;
 }
 
 /** Live "Host Share" preview — the finance-engine split for this pod. */
@@ -37,6 +39,7 @@ export default function SettlementPreview({
   onScan,
   refreshToken,
   free = false,
+  onAgreedModel,
 }: Readonly<Props>) {
   const { labels } = useHostPodActionsConfig();
   // The bill, the extra charges and the usage settle for a moment before the
@@ -70,6 +73,10 @@ export default function SettlementPreview({
 
   const settlement: PodSettlement | undefined = data?.podSettlementPreview;
   const isFree = free || !!settlement?.is_free;
+  const agreedModel = settlement?.venue_agreed_model ?? null;
+  useEffect(() => {
+    onAgreedModel?.(agreedModel);
+  }, [agreedModel, onAgreedModel]);
 
   const body = () => {
     if (!settlement) {

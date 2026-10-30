@@ -1,9 +1,9 @@
 import { parseProps } from './segments';
 
 /**
- * `/__block/<key>?props=<json>&origin=<editor origin>` — one live block drawn
+ * `/__block/<key>?props=<json>&origin=<editor origin>`: one live block drawn
  * on its own, for the Website portal's designer, which cannot draw a live
- * block itself (the reel slider, the earn showcase… are this renderer's
+ * block itself (the reel slider, the earn showcase and others are this renderer's
  * components). The frame reports its height to `origin` so the designer can
  * size it.
  *
@@ -21,7 +21,7 @@ export interface BlockFrame {
   origin: string | null;
 }
 
-/** An http(s) origin, exactly — anything else is no target at all. */
+/** An http(s) origin, exactly; anything else is no target at all. */
 function originOf(raw: string | null): string | null {
   if (!raw) return null;
   try {

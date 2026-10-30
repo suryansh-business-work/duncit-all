@@ -92,6 +92,9 @@ export const PodDetailsDocument = gql(`
         min_tickets
         discount_pct
       }
+      # Only whether the host offers it: the viewer's own offer (its % and
+      # delay) is podSmartIncentive's answer, asked only when this is true.
+      smart_incentive_enabled
       products_enabled
       product_requests {
         product_id
@@ -166,6 +169,36 @@ export const PodDetailsDocument = gql(`
       name
       level
       parent_id
+    }
+  }
+`);
+
+/**
+ * The signed-in member's Smart Incentive on one pod, or null when there is
+ * nothing to offer them (programme off, pod not offering it or no longer
+ * bookable, viewer hosts it or holds a seat). Read by the pod page before it
+ * counts down, and by checkout to price an unlocked offer.
+ */
+export const PodSmartIncentiveDocument = gql(`
+  query MobilePodSmartIncentive($podId: ID!) {
+    podSmartIncentive(pod_id: $podId) {
+      pod_id
+      discount_pct
+      delay_seconds
+      unlocked
+    }
+  }
+`);
+
+/** The pod page showed the offer: unlock it for the member, freezing its %.
+ * Idempotent server-side; refused (BAD_REQUEST) when the pod offers them none. */
+export const UnlockSmartIncentiveDocument = gql(`
+  mutation MobileUnlockSmartIncentive($podId: ID!) {
+    unlockSmartIncentive(pod_id: $podId) {
+      pod_id
+      discount_pct
+      delay_seconds
+      unlocked
     }
   }
 `);

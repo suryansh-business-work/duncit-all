@@ -8,7 +8,7 @@ import { useStoreT } from '../../../i18n';
 import { STORE_TOKENS as T } from '../../../theme/tokens';
 import type { SectionProps } from './types';
 
-/** A collection's products — "Bestseller Products", as a four-up rail. */
+/** A collection's products ("Bestseller Products") as a four-up rail. */
 export function CollectionSection({ section }: Readonly<SectionProps>) {
   const { t } = useStoreT();
   if (section.products.length === 0) return null;

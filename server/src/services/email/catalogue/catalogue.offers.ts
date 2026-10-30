@@ -133,5 +133,6 @@ export const VENUE_OFFER_EMAIL_FALLBACK: Record<string, string> = {
   'email.venueOffer.model.PER_GUEST': 'per guest',
   'email.venueOffer.model.PER_HOUR': 'per hour',
   'email.venueOffer.model.FLAT': 'flat',
+  'email.venueOffer.model.FREE': 'Free venue (no charge) — accept or decline it; free bookings cannot be countered',
   'email.venueOffer.guestRange': 'guests',
 };

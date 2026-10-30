@@ -18,7 +18,7 @@ const isWebAddress = (value: string) => {
 /**
  * Built from the translator rather than declared at module scope, so a
  * validation message arrives in the reader's language like every other string
- * on the page. The server re-validates all of it — this half only exists to
+ * on the page. The server re-validates all of it; this half only exists to
  * answer before a round trip.
  */
 export function buildReportSchema(t: Translator['t']) {
@@ -46,8 +46,8 @@ export function buildReportSchema(t: Translator['t']) {
       .min(1, t('status.report.messageRequired'))
       .min(MESSAGE_MIN, t('status.report.messageShort'))
       .max(MESSAGE_MAX, t('status.report.messageLong')),
-    // Only "did you type something" here. Whether it is the RIGHT something is
-    // the server's answer to give — this half exists to save a round trip.
+    // Only "did you type something" here. Whether it is the right something is
+    // the server's answer to give; this half exists to save a round trip.
     captcha_answer: z.string().trim().min(1, t('captcha.required')),
   });
 }

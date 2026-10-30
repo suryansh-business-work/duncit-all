@@ -1,9 +1,9 @@
 import { z } from 'zod';
-import { makeVenueOfferAskSchema } from '@duncit/forms/schemas';
-import { isMeetingPlatform, isVenueOfferModel, offerRateOf } from '@duncit/utils';
+import { addFreeJustificationIssues, makeVenueOfferAskSchema } from '@duncit/forms/schemas';
+import { isFreeVenueOfferModel, isHostOfferModel, isMeetingPlatform, offerRateOf } from '@duncit/utils';
 import type { Translate } from '../../../i18n/fallback';
 import { hasImageLine } from './create-pod.payload';
-import { POD_TYPE_VALUES, type CreatePodFormValues } from './create-pod.types';
+import { POD_TYPE_VALUES, needsFreeJustification, type CreatePodFormValues } from './create-pod.types';
 
 /** What the host asks of the venue beside the price — the shared rules
  * (`makeVenueOfferAskSchema`: at least one point, each and the note within the
@@ -19,12 +19,13 @@ function refineOfferAsk(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Tr
   }
 }
 
-/** The host's offer to the venue: how they pay it, how much, and what they ask of it. */
+/** The host's offer to the venue: how they pay it, how much (nothing for a free
+ * venue, whose window and ask are still required), and what they ask of it. */
 function refineVenueOffer(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Translate) {
-  if (!isVenueOfferModel(values.venue_offer_model)) {
+  if (!isHostOfferModel(values.venue_offer_model)) {
     ctx.addIssue({ code: 'custom', path: ['venue_offer_model'], message: t('mweb.createPod.validation.offerModelRequired') });
   }
-  if (offerRateOf(values.venue_offer_rate) <= 0) {
+  if (!isFreeVenueOfferModel(values.venue_offer_model) && offerRateOf(values.venue_offer_rate) <= 0) {
     ctx.addIssue({ code: 'custom', path: ['venue_offer_rate'], message: t('mweb.createPod.validation.offerRateRequired') });
   }
   refineOfferAsk(values, ctx, t);
@@ -73,6 +74,13 @@ export function refineVenueOrMeeting(values: CreatePodFormValues, ctx: z.Refinem
       ctx.addIssue({ code: 'custom', path: ['meeting_url'], message: t('mweb.createPod.validation.meetingUrlInvalid') });
     }
   }
+}
+
+/** A free pod or a free venue says why it is free and accepts Duncit's free
+ * policy — the shared rules, the server's `cleanFreeJustification` order. One
+ * set of fields serves both, so a pod free twice over is checked once. */
+export function refineFreeJustification(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Translate) {
+  if (needsFreeJustification(values)) addFreeJustificationIssues(values, ctx, t);
 }
 
 /** The ticket price is blank until the host types one, so a PAID pod can never

@@ -1,6 +1,7 @@
 /** Shared option lists + form value shape for the host Create Pod stepper. */
 import type { UseFormReturn } from 'react-hook-form';
-import type { PodPickerProduct, TicketDiscountTier } from '@duncit/utils';
+import { freeJustificationDefaults, type FreeJustificationValues } from '@duncit/forms/schemas';
+import { isFreeVenueOfferModel, type PodPickerProduct, type TicketDiscountTier } from '@duncit/utils';
 import type { Translate } from '../../../i18n/fallback';
 export type {
   CreatePodClub,
@@ -24,6 +25,27 @@ export const POD_TYPE_VALUES = new Set<string>(['FREE', 'PAID']);
 
 export const isFreePodType = (podType?: string | null) => podType === 'FREE';
 
+/** The values the free rules read: the pod's type and, for its venue, the offer that applies. */
+type FreeSource = Pick<CreatePodFormValues, 'pod_type' | 'pod_mode' | 'venue_slot_id' | 'partner_request_id' | 'venue_offer_model'>;
+
+/** The pod sends its venue an offer (physical, not a held slot) and asks for the venue free. */
+export const offersFreeVenue = (values: Readonly<FreeSource>) =>
+  values.pod_mode === 'PHYSICAL' &&
+  !values.venue_slot_id &&
+  !values.partner_request_id &&
+  isFreeVenueOfferModel(values.venue_offer_model);
+
+/** Whether the host owes Duncit's free justification: the pod is free, or its venue is. */
+export const needsFreeJustification = (values: Readonly<FreeSource>) =>
+  isFreePodType(values.pod_type) || offersFreeVenue(values);
+
+/** Where the form holds the justification — one set of fields for a free pod and a free venue alike. */
+export const FREE_JUSTIFICATION_NAMES = {
+  reason: 'free_reason',
+  details: 'free_details',
+  accepted: 'free_accepted',
+} as const;
+
 export interface PodProductRequest {
   product_id: string;
   quantity: number;
@@ -35,7 +57,10 @@ export interface PodPlaceCharge {
   note: string;
 }
 
-export interface CreatePodFormValues {
+/** `free_reason` / `free_details` / `free_accepted`: why the pod or its venue is
+ * free and the host's acceptance of the free policy — asked on the step that
+ * makes it free (the venue offer or Pricing), the same three fields for both. */
+export interface CreatePodFormValues extends FreeJustificationValues {
   /** Pod location — defaults to the host's selected location; filters clubs + venues. */
   location_id: string;
   /** Optional locality within the city — narrows clubs to that zone. */
@@ -53,9 +78,9 @@ export interface CreatePodFormValues {
   /** Venue offer (no slot id): whether pets come (pet fee). Its guests are
    * the pod's spots; its window is pod_date_time..pod_end_date_time. */
   venue_booking_pets: boolean;
-  /** Venue offer: how the host pays the venue (a VenueOfferModel), '' until picked. */
+  /** Venue offer: how the host pays the venue (a VenueOfferModel, FREE included), '' until picked. */
   venue_offer_model: string;
-  /** Venue offer: the amount typed for that option, in rupees ('' until typed). */
+  /** Venue offer: the amount typed for that option, in rupees ('' until typed; unused for a free venue). */
   venue_offer_rate: string;
   /** Venue offer: what the host needs from the venue, one point per line (at least one). */
   venue_offer_offerings: string;
@@ -83,6 +108,10 @@ export interface CreatePodFormValues {
   place_charges: PodPlaceCharge[];
   ticket_discount_enabled: boolean;
   ticket_discount_tiers: TicketDiscountTier[];
+  /** Smart Incentive: a one-time offer to members still deciding, off by default. */
+  smart_incentive_enabled: boolean;
+  /** The discount as typed ('' until typed) — `smartIncentiveInput` sends it as a number. */
+  smart_incentive_pct: string;
   payment_terms: string;
   /** Client-side publish gate — host must accept the Organizer Terms (last step). */
   agreed_to_terms: boolean;
@@ -126,9 +155,12 @@ export const blankCreatePodForm: CreatePodFormValues = {
   place_charges: [],
   ticket_discount_enabled: false,
   ticket_discount_tiers: [],
+  smart_incentive_enabled: false,
+  smart_incentive_pct: '',
   payment_terms: '',
   agreed_to_terms: false,
   partner_request_id: '',
+  ...freeJustificationDefaults,
 };
 
 /** The catalogue row Step 4's product picker renders. Aliased to the shared

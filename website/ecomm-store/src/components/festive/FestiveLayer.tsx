@@ -14,7 +14,7 @@ const FestiveCanvas = lazy(async () => ({ default: (await import('./FestiveCanva
 
 /**
  * The pause control WCAG 2.2.2 asks for: anything moving longer than five
- * seconds can be stopped. A toggle — `aria-pressed` says "paused" — kept on
+ * seconds can be stopped. A toggle (`aria-pressed` says "paused"), kept on
  * screen while paused so the celebration can be played again. It sits
  * bottom-left, clear of the phone's bottom navigation.
  */

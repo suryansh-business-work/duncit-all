@@ -14,6 +14,8 @@ export interface CheckoutPodRecord {
   pod_date_time?: string | null;
   ticket_discount_enabled?: boolean | null;
   ticket_discount_tiers?: { min_tickets: number; discount_pct: number }[] | null;
+  /** Whether to read the member's Smart Incentive at all (usePodCheckoutBill). */
+  smart_incentive_enabled?: boolean | null;
 }
 
 /**

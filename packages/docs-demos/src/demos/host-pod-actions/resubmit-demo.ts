@@ -23,7 +23,7 @@ export const resubmitDemo = defineDemo<VenueOfferPrefill>({
   id: 'resubmit-offer',
   title: 'A new offer after a decline — started from the declined terms',
   note:
-    'This is what the venue chat\'s "Send a new offer" hands PodResubmitDialog as offerPrefill. The form starts at the pod\'s own venue with that window, space, pets, pricing option, amount, points and note, so the host edits the last offer rather than retyping it. Empty offerings and it refuses: a new offer must say what the host needs from the venue. Set model to PER_PAX or rate to 0 and the form leaves that term for the host to pick again.',
+    'This is what the venue chat\'s "Send a new offer" hands PodResubmitDialog as offerPrefill. The form starts at the pod\'s own venue with that window, space, pets, pricing option, amount, points and note, so the host edits the last offer rather than retyping it. Empty offerings and it refuses: a new offer must say what the host needs from the venue. Set model to PER_PAX or rate to 0 and the form leaves that term for the host to pick again. Set model to FREE and no amount is asked, but the form now wants why the venue is free (free_reason) and the free policy accepted — the errors say so.',
   mock: {
     model: 'PER_GUEST',
     rate: 350,

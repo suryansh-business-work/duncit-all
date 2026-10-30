@@ -103,8 +103,8 @@ export interface SignupStepMock {
 export interface SignupFlowMock {
   /** Which door is being walked: the email form, or Google. */
   door: 'EMAIL' | 'GOOGLE';
-  /** The number row both signup forms spell the same way, plus the date of
-   * birth the Google door's step asks beside it. */
+  /** The number row both signup forms spell the same way, plus the age tick
+   * and the optional date of birth the Google door's step asks beside it. */
   values: SignupGoogleDetails;
 }
 

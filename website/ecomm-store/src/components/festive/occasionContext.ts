@@ -12,7 +12,7 @@ export interface OccasionValue {
   greeting: string;
   /** The animation may play here (a look with effects on, and no reduced-motion request). */
   canAnimate: boolean;
-  /** …and the shopper has not paused it. */
+  /** ...and the shopper has not paused it. */
   effectsOn: boolean;
 }
 

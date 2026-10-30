@@ -40,6 +40,8 @@ export const PAYMENT_DETAIL_FIELDS = gql`
       coupon_discount
       ticket_discount_amount
       ticket_discount_pct
+      smart_incentive_amount
+      smart_incentive_pct
       status
       gateway
       gateway_ref
@@ -199,6 +201,10 @@ export interface DetailPayment {
   ticket_discount_amount: number;
   /** That tier's percentage (0 when none). */
   ticket_discount_pct: number;
+  /** Rupees the member's unlocked Smart Incentive took off what the tier left, frozen at checkout (0 when none). */
+  smart_incentive_amount: number;
+  /** That offer's percentage (0 when none). */
+  smart_incentive_pct: number;
   status: string;
   gateway: string;
   gateway_ref: string | null;
@@ -302,7 +308,7 @@ export interface PaymentDetail {
   pod_booking: PaymentPodBooking | null;
   product_orders: PaymentProductOrderLine[];
   gift_card: PaymentGiftCardInfo | null;
-  /** The cart before EVERY discount: ticket gross + products, ahead of the tier, coupon and coins. */
+  /** The cart before EVERY discount: ticket gross + products, ahead of the tier, Smart Incentive, coupon and coins. */
   original_total: number;
   coins_redeemed: number;
   coins_earned: number;

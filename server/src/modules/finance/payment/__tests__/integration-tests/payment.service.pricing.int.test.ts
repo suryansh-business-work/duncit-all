@@ -350,9 +350,23 @@ describe('Finance reads', () => {
     await seedPayment({ status: 'FAILED', total: 999 });
     await seedPayment({ status: 'REFUNDED', total: 999 });
 
-    expect(await paymentService.totals()).toEqual({ count: 2, gross: 300.3, fee: 12.75, gst: 45.81, ticket_discount_total: 10 });
+    expect(await paymentService.totals()).toEqual({
+      count: 2,
+      gross: 300.3,
+      fee: 12.75,
+      gst: 45.81,
+      ticket_discount_total: 10,
+      smart_incentive_total: 0,
+    });
     expect(await paymentService.totals({ pod_id: String(pod), status: 'SUCCESS' })).toMatchObject({ count: 2 });
-    expect(await paymentService.totals({ status: 'FAILED' })).toEqual({ count: 0, gross: 0, fee: 0, gst: 0, ticket_discount_total: 0 });
+    expect(await paymentService.totals({ status: 'FAILED' })).toEqual({
+      count: 0,
+      gross: 0,
+      fee: 0,
+      gst: 0,
+      ticket_discount_total: 0,
+      smart_incentive_total: 0,
+    });
     expect(await paymentService.totals({ search: 'nobody-matches' })).toMatchObject({ count: 0, gross: 0 });
   });
 

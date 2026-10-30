@@ -482,14 +482,6 @@ export const WA_EVENTS: readonly WaEvent[] = [
     params: ['Recipient name', 'Pod title', 'Pod', 'Date', 'Time', 'Amount'],
   },
   {
-    key: 'VENUE_POD_FEEDBACK',
-    campaign: 'venue_feedback',
-    audience: 'VENUE',
-    category: 'feedback',
-    fires: 'A pod at the venue has finished',
-    params: ['Recipient name', 'Pod', 'Date', 'Time', 'Feedback'],
-  },
-  {
     key: 'ECOMM_ONBOARDING_BOOKED',
     campaign: 'ecomm_onboarding_scheduled',
     audience: 'ECOMM',
@@ -808,14 +800,6 @@ export const WA_EVENTS: readonly WaEvent[] = [
     category: 'notification',
     fires: 'A host cannot create a pod because no venue of the club has an open slot',
     params: ['Recipient name', 'Club', 'Host', 'Host Contact', 'Club Link'],
-  },
-  {
-    key: 'CLUB_ADMIN_FEEDBACK',
-    campaign: 'feedback_club_admin',
-    audience: 'CLUB_ADMIN',
-    category: 'feedback',
-    fires: 'A pod the club admin managed has finished',
-    params: ['Recipient name', 'Pod', 'Date', 'Time', 'Feedback'],
   },
   {
     key: 'CLUB_ADMIN_POD_CANCELLATION_RISK',

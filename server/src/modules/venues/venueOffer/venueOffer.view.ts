@@ -1,4 +1,5 @@
 /** A booking's offer as the venue's inbox, the chat and the host's pod page read it. Pure. */
+import { freeJustificationOut } from './venueOffer.free';
 import {
   currentOfferModel,
   type VenueOffer,
@@ -122,5 +123,7 @@ export function offerView(slot: OfferSlot) {
     expires_at: iso(offer.expires_at),
     host_counters_used: countersUsed(offer, 'HOST'),
     venue_counters_used: countersUsed(offer, 'VENUE'),
+    free_pod: !!offer.free_pod,
+    free_justification: freeJustificationOut(offer.free_justification),
   };
 }

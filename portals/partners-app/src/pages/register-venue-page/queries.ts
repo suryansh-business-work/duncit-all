@@ -162,6 +162,8 @@ export const REGISTRATION_CONFIG = gql`
       amenities
       facilities
       security
+      own_option_limit
+      own_option_max_length
       food_diets
       food_spice_levels
       food_menu_limit

@@ -139,6 +139,23 @@ describe('PaymentSection', () => {
     expect(screen.queryByLabelText(/Amount/)).not.toBeInTheDocument();
   });
 
+  // Free is only for initiatives, promotions and approved campaigns: picking it
+  // asks why, under the pod type, and the free policy's acceptance.
+  it('asks a free pod why it is free and for the free policy, and writes the answers to the form', async () => {
+    const user = userEvent.setup();
+    const ref = renderPayment(makeData(), { pod_type: 'FREE', pod_amount: 0 });
+    expect(screen.getByTestId('pod-form-free-policy')).toHaveTextContent('Free is only for special cases');
+    await user.click(screen.getByRole('radio', { name: 'Approved campaign' }));
+    await user.click(screen.getByRole('checkbox', { name: 'I accept Duncit’s policy for free pods and free venues' }));
+    expect(ref.current?.getValues('free_reason')).toBe('CAMPAIGN');
+    expect(ref.current?.getValues('free_accepted')).toBe(true);
+  });
+
+  it('asks a paid pod nothing about why it is free', () => {
+    renderPayment(makeData(), { pod_type: 'PAID', pod_amount: 300 });
+    expect(screen.queryByTestId('pod-form-free-arrangement')).not.toBeInTheDocument();
+  });
+
   it('opens a pod holding a legacy paid type on the Paid option, priced', () => {
     renderPayment(makeData(), { pod_type: 'NATIVE_PAID_PREMIUM', pod_amount: 750 });
     expect(screen.getByLabelText(/Pod type/)).toHaveTextContent('Paid');

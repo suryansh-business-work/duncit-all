@@ -1,3 +1,4 @@
+import { freeJustificationDefaults, type FreeJustificationValues } from '@duncit/forms/schemas';
 import type { SlotFormatter, SlotLabels } from '@duncit/slots';
 import type { ClubCityLocation, TicketDiscountTier } from '@duncit/utils';
 
@@ -18,8 +19,13 @@ export interface PodProductRequest {
  * The unified SUPERSET of every field the Admin and Partner pod editors edit.
  * Dates are `Date | null` (MUI X pickers); perks/offers are string arrays;
  * media is newline-separated text.
+ *
+ * `free_reason` / `free_details` / `free_accepted` (`FreeJustificationValues`)
+ * are why a FREE pod or a FREE venue offer is free and the free policy
+ * accepted — one set for both. They start empty on an edit too: a pod's stored
+ * justification is never re-sent, so re-saving it never re-stamps who accepted.
  */
-export interface PodFormValues {
+export interface PodFormValues extends FreeJustificationValues {
   pod_id?: string;
   pod_title: string;
   club_id: string;
@@ -138,6 +144,13 @@ export interface PodFormConfig {
    * shown read-only.
    */
   lockCategory?: boolean;
+  /**
+   * The author is the pod's own host (the Partners host forms): a FREE pod then
+   * needs the free justification before it saves, as the server requires of a
+   * host. Off when omitted — a staff editor may give one but need not, though
+   * one started must be finished. A FREE venue offer needs one either way.
+   */
+  requireFreeJustification?: boolean;
 }
 
 /** A host option in the assign-host pickers. */
@@ -315,6 +328,7 @@ export const blankPodFormValues: PodFormValues = {
   ticket_discount_enabled: false,
   ticket_discount_tiers: [],
   is_active: true,
+  ...freeJustificationDefaults,
 };
 
 /**

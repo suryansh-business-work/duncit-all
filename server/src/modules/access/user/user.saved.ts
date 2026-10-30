@@ -121,6 +121,8 @@ const podToPublic = (d: any, clubSlug = '') => ({
     min_tickets: tier.min_tickets,
     discount_pct: tier.discount_pct,
   })),
+  smart_incentive_enabled: !!d.smart_incentive_enabled,
+  smart_incentive_pct: d.smart_incentive_pct ?? 0,
   like_count: (d.liked_user_ids ?? []).length,
   comment_count: (d.comments ?? []).length,
   liked_user_ids: idStrings(d.liked_user_ids),

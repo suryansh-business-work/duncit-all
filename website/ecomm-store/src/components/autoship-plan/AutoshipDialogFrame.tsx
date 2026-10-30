@@ -25,7 +25,7 @@ interface AutoshipDialogFrameProps {
 /**
  * The dialog both Autoship forms share: title, the caller's form, the COD phone
  * check kept OUTSIDE that form (it is a form of its own), the error, and the
- * actions — the submit button reaches the form through its id.
+ * actions. The submit button reaches the form through its id.
  */
 export function AutoshipDialogFrame({ title, submitLabel, onSubmit, onClose, submitting, error, lead, children, cod }: Readonly<AutoshipDialogFrameProps>) {
   const { t } = useStoreT();

@@ -68,7 +68,7 @@ jest.mock('@/screens/SignupScreen/VerifyWhatsappStep', () => ({
     );
   },
 }));
-/* Google's own number + date-of-birth step, answered in one press. */
+/* Google's own number + age step, answered in one press (birthday left out). */
 jest.mock('@/screens/SignupScreen/GoogleDetailsStep', () => ({
   GoogleDetailsStep: ({ onSubmit }: { onSubmit: (v: Record<string, unknown>) => void }) => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -81,7 +81,8 @@ jest.mock('@/screens/SignupScreen/GoogleDetailsStep', () => ({
             phoneExtension: '+91',
             phoneNumber: '9845099999',
             whatsappIsMobile: true,
-            dob: '1990-01-02',
+            dob: '',
+            ageConfirmed: true,
             name: '',
           })
         }
@@ -178,7 +179,8 @@ describe('SignupScreen', () => {
       'idtok',
       [],
       { extension: '+91', number: '9845099999', alsoMobile: true, whatsappToken: 'wa-tok' },
-      '1990-01-02',
+      // The tick the details step required travels with the optional birthday.
+      { dob: '', ageConfirmed: true },
     );
   });
 

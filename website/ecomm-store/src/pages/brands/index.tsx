@@ -10,7 +10,7 @@ import { usePageSeo } from '../../lib/usePageSeo';
 import { useStoreT } from '../../i18n';
 import { STORE_TOKENS as T, tintAt } from '../../theme/tokens';
 
-/** /brands — every brand on the shelf. */
+/** /brands: every brand on the shelf. */
 export function BrandsPage() {
   const { t } = useStoreT();
   usePageSeo(t('ecommStore.menu.brands'));

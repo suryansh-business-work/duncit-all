@@ -4,7 +4,7 @@ import LocalOfferRoundedIcon from '@mui/icons-material/LocalOfferRounded';
 import { useStoreT } from '../../i18n';
 import { STORE_TOKENS as T } from '../../theme/tokens';
 
-/** The product's offer line on a brand-tinted pill — dark ink on the pastel, never red text. */
+/** The product's offer line on a brand-tinted pill: dark ink on the pastel, with no red text. */
 export function OfferPill({ text }: Readonly<{ text: string }>) {
   const { t } = useStoreT();
   return (

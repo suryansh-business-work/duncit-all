@@ -238,6 +238,9 @@ export const ClubAdminPodForEditDocument = gql(`
         min_tickets
         discount_pct
       }
+      # Round-tripped through the editor's form, so a save keeps the host's offer.
+      smart_incentive_enabled
+      smart_incentive_pct
     }
   }
 `);

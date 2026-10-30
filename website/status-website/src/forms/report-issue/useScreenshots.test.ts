@@ -5,8 +5,8 @@
  * this form has no session behind it, and handing an anonymous visitor an
  * upload credential is a far bigger door than it needs open. So the limits
  * here are the only ones applied before the server sees them, and each of the
- * three ways a file is turned away has to say which one it was — "nothing
- * happened" is the worst possible answer to a person already reporting a bug.
+ * three ways a file is turned away has to say which one it was. "Nothing
+ * happened" is the worst answer to give a person already reporting a bug.
  */
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -89,7 +89,7 @@ describe('useScreenshots', () => {
     });
 
     await waitFor(() => expect(result.current.shots).toHaveLength(1));
-    // The one that fits still lands — a rejected file must not cost the others.
+    // The one that fits still lands; a rejected file must not cost the others.
     expect(result.current.shots[0]?.file_name).toBe('small.png');
     expect(result.current.error).toBe('status.report.screenshotTooLarge');
   });

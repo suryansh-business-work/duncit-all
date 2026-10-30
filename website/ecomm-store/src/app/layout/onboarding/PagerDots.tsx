@@ -5,7 +5,7 @@ import { STORE_TOKENS as T } from '../../../theme/tokens';
 interface PagerDotsProps {
   count: number;
   active: number;
-  /** "Page 2 of 3" — the dots themselves are decoration. */
+  /** "Page 2 of 3". The dots themselves are decoration. */
   label: string;
 }
 

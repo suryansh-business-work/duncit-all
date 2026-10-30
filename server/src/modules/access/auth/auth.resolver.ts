@@ -26,7 +26,7 @@ import {
 import { signOutEverywhere } from './sign-out-everywhere';
 import { loginActivityService } from './login-activity/loginActivity.service';
 import { validate } from '@utils/validate';
-import { assertEligibleDob } from '@utils/age';
+import { assertSignupAge } from '@utils/age';
 import { referralService } from '@modules/engagement/referral/referral.service';
 import { assertPoliciesAccepted } from '@modules/content/policyAcceptance/policyAcceptance.service';
 import type {
@@ -46,6 +46,8 @@ interface SignupPolicyInput {
   accepted_policy_ids?: string[] | null;
   accepted_policy_surface?: PolicyAcceptanceSurface | null;
   marketing_opt_in?: boolean | null;
+  /** The "I confirm I'm 18 or older" tick — the age gate's answer when no dob came. */
+  age_confirmed?: boolean | null;
 }
 
 const acceptanceIntent = (input?: SignupPolicyInput | null): PolicyAcceptanceIntent => ({
@@ -114,7 +116,7 @@ export const authResolvers = {
       // The age gate is admin-configured, so it lives here rather than in the
       // static validator schema — and it must be server-side: the client rule only
       // shapes the form, it cannot stop a hand-rolled mutation.
-      await assertEligibleDob(data.dob);
+      await assertSignupAge(data.dob, args.input?.age_confirmed);
       // Same reasoning, same place: the tick boxes shape the form, they cannot
       // stop a hand-rolled mutation. Checked BEFORE the account exists, so a
       // refusal leaves nothing behind.
@@ -229,7 +231,7 @@ export const authResolvers = {
     },
     signupWithGoogle: async (_p: unknown, args: { input: SignupPolicyInput }) => {
       const data = await validate(googleSignupSchema, args.input);
-      await assertEligibleDob(data.dob);
+      await assertSignupAge(data.dob, args.input?.age_confirmed);
       await assertPoliciesAccepted(args.input?.accepted_policy_ids);
       return userService.signupWithGoogle(data, acceptanceIntent(args.input));
     },
@@ -254,7 +256,7 @@ export const authResolvers = {
     },
     signupWithApple: async (_p: unknown, args: { input: SignupPolicyInput }) => {
       const data = await validate(appleSignupSchema, args.input);
-      await assertEligibleDob(data.dob);
+      await assertSignupAge(data.dob, args.input?.age_confirmed);
       await assertPoliciesAccepted(args.input?.accepted_policy_ids);
       return userService.signupWithApple(data, acceptanceIntent(args.input));
     },

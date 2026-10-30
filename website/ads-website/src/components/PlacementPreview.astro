@@ -1,8 +1,8 @@
 ---
 /**
- * A phone showing where each placement actually sits in the app.
+ * A phone showing where each placement sits in the app.
  *
- * The ads site's own device — a picture of the product being sold. The
+ * The ads site's own device, a picture of the product being sold. The
  * calculator toggles `is-live` on the zone whose placement is ticked, so
  * choosing a placement and seeing where it lands are the same action.
  */
@@ -59,7 +59,7 @@ const { preview } = await siteContent();
       transform 400ms var(--ease-smooth);
   }
 
-  /* A bought placement stops looking like an empty slot — it fills and pops. */
+  /* A bought placement stops looking like an empty slot: it fills and pops. */
   .zone.is-live {
     border-style: solid;
     border-color: var(--color-primary);

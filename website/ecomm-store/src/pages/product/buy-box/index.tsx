@@ -16,7 +16,7 @@ import { StockAlertForm } from '../stock-alert';
 interface BuyBoxProps {
   product: StoreProduct;
   variant: StoreVariant | null;
-  /** Rendered between the title and the quantity — the option pickers. */
+  /** The option pickers, rendered between the title and the quantity. */
   picker: ReactNode;
 }
 

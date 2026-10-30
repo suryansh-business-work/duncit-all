@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { GraphQLError } from 'graphql';
+import { Types } from 'mongoose';
 import { logs } from '@observability/log';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
 import { getUrlConfigs } from '@config/url-configs';
@@ -41,6 +42,8 @@ import {
 import { E2E_SUITES, currentSuites, normaliseSuites, suitesInput } from './e2eRun.suites';
 import { buildIdentity, type E2eIdentity } from './e2eRun.identity';
 import { forgetMuteCache } from './e2eRun.mute';
+import { openRowFor } from './e2eRun.lookup';
+import { e2eScenarioService } from './e2eRun.scenarios';
 import { regressionReportService } from '@modules/platform/regressionReport/regressionReport.service';
 
 /** The one workflow this module drives. */
@@ -196,27 +199,6 @@ function totalsOf(results: IE2eSuiteResult[]) {
     failed: sum((r) => r.failed),
     skipped: sum((r) => r.skipped),
   };
-}
-
-/**
- * The row this report belongs to.
- *
- * Two join keys, checked in this order because they become available in this
- * order. A dispatched run has a row BEFORE it has a run id — the dispatch
- * answers 204 with nothing in it — so `dispatch_id` is the only thing that can
- * claim it on the first report. Everything after that joins on the run.
- */
-async function openRowFor(input: any): Promise<IE2eRun | null> {
-  const dispatchId = str(input.dispatch_id);
-  if (dispatchId) {
-    const claimed = await E2eRunModel.findOne({ dispatch_id: dispatchId });
-    if (claimed) return claimed;
-  }
-  const runId = str(input.workflow_run_id);
-  // A hand-made report has no run id, and every one of those would otherwise
-  // look like the same run and overwrite the last.
-  if (!runId) return null;
-  return E2eRunModel.findOne({ workflow_run_id: runId });
 }
 
 /**
@@ -679,6 +661,7 @@ async function prune(keepLast: number): Promise<void> {
   // Slack, and the file ids that free that storage exist nowhere else.
   const doomed = await E2eRunModel.find(filter, VIDEO_FILE_FIELDS).lean();
   await E2eRunModel.deleteMany(filter);
+  await e2eScenarioService.forget(doomed.map((run) => run._id));
   await forgetVideos(doomed);
 }
 
@@ -691,6 +674,13 @@ export const e2eRunService = {
       E2E_TABLE_CONFIG
     );
     return { rows: docs.map(pub), total, page, page_size };
+  },
+
+  /** One run, or null — the scenario page's header. */
+  async byId(id: string) {
+    if (!Types.ObjectId.isValid(id)) return null;
+    const doc = await E2eRunModel.findById(id);
+    return doc ? pub(doc) : null;
   },
 
   suiteCatalogue() {
@@ -1019,7 +1009,10 @@ export const e2eRunService = {
     // Same order as prune: the recordings can only be found through the row.
     const doomed = await E2eRunModel.findById(id, VIDEO_FILE_FIELDS).lean();
     const res = await E2eRunModel.deleteOne({ _id: id });
-    if (res.deletedCount > 0 && doomed) await forgetVideos([doomed]);
+    if (res.deletedCount > 0 && doomed) {
+      await e2eScenarioService.forget([doomed._id]);
+      await forgetVideos([doomed]);
+    }
     return res.deletedCount > 0;
   },
 

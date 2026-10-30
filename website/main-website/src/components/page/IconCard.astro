@@ -1,6 +1,6 @@
 ---
-// The inner pages' card: an icon tile, a title, a line or two, and — when it
-// leads somewhere — an arrow that turns as the card lifts. Renders as a list
+// The inner pages' card: an icon tile, a title, a line or two, and (when it
+// leads somewhere) an arrow that turns as the card lifts. Renders as a list
 // item so a grid of them is a real list to a screen reader.
 //
 // Tones: the tile's colour. `tertiary` is yellow, which never inverts, so it
@@ -18,7 +18,7 @@ interface Props {
   tone?: CardTone;
   /** A small rotated label in the card's corner. */
   sticker?: string;
-  /** `brands` for a brand glyph (Discord…), `solid` otherwise. */
+  /** `brands` for a brand glyph (Discord...), `solid` otherwise. */
   iconSet?: 'solid' | 'brands';
   class?: string;
 }

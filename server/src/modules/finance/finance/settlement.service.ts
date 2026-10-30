@@ -143,9 +143,10 @@ export const SETTLEMENT_ENGINE_VERSION_ON_TOP = 3;
  * already refunded back to the buyer (a partial backout leaves the payment
  * SUCCESS and records the returned money in metadata.refunded_amount).
  *
- * `total` is already net of the pod's multi-ticket discount (frozen on the
- * payment at checkout, taken off the ticket money only), so the discount is
- * host-funded by construction — never add `ticket_discount_amount` back here.
+ * `total` is already net of the pod's multi-ticket discount and of the member's
+ * Smart Incentive (both frozen on the payment at checkout, taken off the ticket
+ * money only), so both are host-funded by construction — never add
+ * `ticket_discount_amount` or `smart_incentive_amount` back here.
  */
 const ticketMoneyOf = (p: { total?: number; round_off?: number; metadata?: any }) => {
   // Products and rented items (rent + deposit) settle outside the pod.

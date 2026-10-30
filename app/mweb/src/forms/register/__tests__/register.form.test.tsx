@@ -119,10 +119,14 @@ const next = () => screen.getByTestId('signup-next');
  */
 const dobInput = () => screen.getByTestId('field-dob-input') as HTMLInputElement;
 
+/** The "I confirm I’m 18 or older" box — the age signup needs (the birthday is optional). */
+const ageBox = () => screen.getByTestId('signup-age-confirm-input') as HTMLInputElement;
+
 /** Step one, answered. */
 function fillWho() {
   fireEvent.change(field('^Name'), { target: { value: 'Riya Sharma' } });
   fireEvent.change(dobInput(), { target: { value: '23 04 1990' } });
+  fireEvent.click(ageBox());
 }
 
 /**
@@ -158,6 +162,8 @@ describe('RegisterForm — one step at a time', () => {
     expect(screen.getByLabelText(/^Name/i)).toBeInTheDocument();
     expect(screen.getByRole('group', { name: /date of birth/i })).toBeInTheDocument();
     expect(dobInput()).toBeInTheDocument();
+    expect(ageBox()).not.toBeChecked();
+    expect(screen.getByText(/Optional. If you add it, you must be at least 18 years old/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/referral code/i)).toBeInTheDocument();
     // The later steps' fields are not merely hidden — they are not rendered.
     expect(screen.queryByLabelText(/^Email/i)).not.toBeInTheDocument();
@@ -195,6 +201,7 @@ describe('RegisterForm — one step at a time', () => {
       phoneNumber: '9845012345',
       password: 'password123',
       dob: '1990-04-23',
+      ageConfirmed: true,
     });
   });
 
@@ -216,6 +223,9 @@ describe('RegisterForm — a step validates its own boxes only', () => {
     renderForm({ onSubmit });
     fireEvent.click(next());
     await waitFor(() => expect(screen.getByText(/Name is required/i)).toBeInTheDocument());
+    // The age tick is required; the empty birthday is not an error.
+    expect(screen.getByText(/Please confirm you’re 18 or older to join Duncit/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Date of birth is required/i)).not.toBeInTheDocument();
     // Still on step one, and nothing was submitted.
     expect(screen.getByLabelText(/^Name/i)).toBeInTheDocument();
     expect(onSubmit).not.toHaveBeenCalled();
@@ -315,6 +325,7 @@ describe('RegisterForm — errors and toggles', () => {
         password: 'seedpass1',
         confirmPassword: 'seedpass1',
         dob: '2000-04-23',
+        ageConfirmed: true,
         referralCode: 'DUN-A1B2C3',
         acceptedPolicyIds: [],
         marketingOptIn: false,

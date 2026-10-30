@@ -13,7 +13,8 @@ export interface StatTile {
   icon: SvgIconComponent;
   /** A theme palette value — it is tinted for the icon box. */
   color: string;
-  to: string;
+  /** Left out when no page holds more on the number; the tile is then not a link. */
+  to?: string;
 }
 
 interface Props {

@@ -29,7 +29,7 @@ describe('HealthMeter', () => {
 
 describe('HealthBreakdown', () => {
   it('shows the score, band label and the empty-remarks state', () => {
-    renderWithProviders(<HealthBreakdown score={score()} />);
+    renderWithProviders(<HealthBreakdown score={score()} onAppealed={jest.fn()} />);
     expect(screen.getByText('100')).toBeOnTheScreen();
     expect(screen.getByText('In great shape')).toBeOnTheScreen();
     expect(screen.getByText('Base score: 100')).toBeOnTheScreen();
@@ -50,6 +50,7 @@ describe('HealthBreakdown', () => {
               remark: 'Great host',
               created_by_name: 'Admin',
               created_at: '2026-06-01T10:00:00Z',
+              waived: false,
             },
             {
               id: 'a2',
@@ -57,9 +58,11 @@ describe('HealthBreakdown', () => {
               remark: 'Late cancel',
               created_by_name: 'Mod',
               created_at: '2026-06-02T10:00:00Z',
+              waived: false,
             },
           ],
         })}
+        onAppealed={jest.fn()}
       />,
     );
     expect(screen.getByText('Doing OK')).toBeOnTheScreen();

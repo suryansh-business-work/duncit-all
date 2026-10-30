@@ -32,6 +32,9 @@ describe('DashboardPage', () => {
     // The submissions tile counts NEW rows rather than reading a page total.
     expect(await screen.findByText('New FAQ submissions')).toBeInTheDocument();
     expect(screen.getByText('4')).toBeInTheDocument();
+    // Learnings: unique members who watched, summed across the videos.
+    expect(screen.getByText('Learning views')).toBeInTheDocument();
+    expect(await screen.findByText('7')).toBeInTheDocument();
 
     // Cover every live-refetch callback.
     sockMock.events.onSos();

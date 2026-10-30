@@ -17,6 +17,7 @@ import {
 import { FormTextField } from '@/components/FormTextField';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { DobDateField } from '@/forms/account-edit/DobDateField';
+import { FormCheckbox } from '@/forms/components/FormCheckbox';
 import { WhatsappNumberFields } from '@/forms/signup';
 import { useAppSettings } from '@/hooks/useAppSettings';
 import { useSignupPhoneCheck } from '@/hooks/useSignupContactCheck';
@@ -93,6 +94,12 @@ export function GoogleDetailsStep({ provider, askName, onSubmit }: Readonly<Prop
         phoneStatus={phoneStatus}
       />
       <DobDateField control={control} minAge={minSignupAge} />
+      <FormCheckbox
+        control={control}
+        name="ageConfirmed"
+        label={t('mweb.signup.ageConfirmLabel', { vars: { years: minSignupAge } })}
+        testID="signup-age-confirm"
+      />
       <PrimaryButton
         testID="signup-number-continue"
         label={labels.sendCode}

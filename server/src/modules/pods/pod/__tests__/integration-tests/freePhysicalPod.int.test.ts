@@ -221,10 +221,18 @@ describe('creating a free physical pod', () => {
       venue_approval_status: 'DECLINED',
     });
 
-    const out = await podService.hostResubmit(String(pod._id), hostId, { venue_id: venueId, venue_slot_id: slotId });
+    // The pod has no justification yet, so the host says why it is free.
+    const out = await podService.hostResubmit(String(pod._id), hostId, {
+      venue_id: venueId,
+      venue_slot_id: slotId,
+      free_justification: { reason: 'INITIATIVE', details: 'Community games night', accepted: true },
+    });
 
     expect(out).toMatchObject({ venue_approval_status: 'APPROVED', is_active: true });
     expect((await VenueSlotModel.findById(slotId))!.status).toBe('BOOKED');
+    const stored = (await PodModel.findById(pod._id).lean())!.free_justification;
+    expect(stored).toMatchObject({ reason: 'INITIATIVE', details: 'Community games night' });
+    expect(String(stored!.accepted_by)).toBe(hostId);
   });
 
   it('books a priced partner slot instantly for a FREE pod and quotes the venue no platform money', async () => {

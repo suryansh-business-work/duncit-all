@@ -4,9 +4,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
  * site-config is mostly a content manifest, but the top of it is not: three
  * URLs each fall back to a local target or a production one depending on the
  * environment, and `siteContent()` memoises a single translator fetch for the
- * whole build. Those are the parts a wrong answer would actually break — a dev
- * server silently pointing at the production API is exactly the failure the
- * file's own comment warns about — so they are what this covers.
+ * whole build. Those are the parts a wrong answer would break (a dev server
+ * silently pointing at the production API is the failure the file's own
+ * comment warns about), so they are what this covers.
  */
 
 const getSiteTranslator = vi.fn();

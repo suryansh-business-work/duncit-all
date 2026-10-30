@@ -1,13 +1,16 @@
 import { Box, Stack, Typography } from '@mui/material';
 import { useDateFormat, useTranslation } from '@duncit/app-settings';
-import { venueOfferHistoryKey } from '@duncit/utils';
+import { isFreeVenueOfferModel, venueOfferHistoryKey } from '@duncit/utils';
 import type { Translate } from '../pricing/types';
 import { offerTermsLabel } from './format';
 import type { OfferHistoryEntry } from './queries';
 
-/** A step's terms — "Per guest · ₹300 per guest · at least 12 guests" — or '' for a step without terms. */
+/** A step's terms — "Per guest · ₹300 per guest · at least 12 guests", "Free venue" — or '' for a step without terms. */
 function stepTerms(t: Translate, entry: OfferHistoryEntry): string {
-  if (!entry.model || !entry.rate) return '';
+  if (!entry.model) return '';
+  // A free venue names no amount: its terms are just "Free venue".
+  if (isFreeVenueOfferModel(entry.model)) return offerTermsLabel(t, entry.model, 0);
+  if (!entry.rate) return '';
   const terms = offerTermsLabel(t, entry.model, entry.rate);
   return entry.min_guests ? `${terms} · ${t('availability.offers.history.minGuests', { vars: { n: entry.min_guests } })}` : terms;
 }

@@ -7,7 +7,7 @@ import { paths } from '../../lib/paths';
 import { usePageSeo } from '../../lib/usePageSeo';
 import { useStoreT } from '../../i18n';
 
-/** The "nothing here" body — also shown by a shelf or product whose slug is unknown. */
+/** The "nothing here" body, also shown by a shelf or product whose slug is unknown. */
 export function NotFoundContent() {
   const { t } = useStoreT();
   usePageSeo(t('ecommStore.notFound.title'));

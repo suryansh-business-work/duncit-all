@@ -1,9 +1,9 @@
 import { formResolver } from '../../utils/form-resolver';
 import { venueExtraAmountOf, venueUsageInput } from '@duncit/forms/schemas';
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Text, YStack } from 'tamagui';
-import { isFreePod, mwebVenueBillLabels } from '@duncit/utils';
+import { isFreePod, isFreeVenueOfferModel, mwebVenueBillLabels } from '@duncit/utils';
 
 import { PodMediaSummary } from '@/components/pod-media/PodMediaSummary';
 import { DuncitDialog } from '@/components/DuncitDialog';
@@ -33,17 +33,22 @@ interface Props {
  * venue charged beyond it as extra charges. The pod's own media is shown, not
  * asked for — it is uploaded on the Upload Pod Media screen. The split is
  * previewed live; on submit the payout releases are created for Finance to
- * approve — nothing is credited until then. mWeb twin: @duncit/host-pod-actions
- * PodCompleteDialog. */
+ * approve — nothing is credited until then. A FREE venue (the preview's agreed
+ * model) is owed no bill unless extra charges or a total are entered. mWeb
+ * twin: @duncit/host-pod-actions PodCompleteDialog. */
 export function PodCompleteDialog({ pod, onClose, onCompleted }: Readonly<Props>) {
   const { t } = useTranslation();
   const { onPrimary } = useThemeColors();
   // A free pod's host settles the venue directly — no bill is asked for here.
   const free = isFreePod(pod?.pod_type);
   const hasVenue = !!pod?.venue_id && !free;
+  // Whether the venue's booking was agreed FREE — known once the preview answers.
+  const [freeVenue, setFreeVenue] = useState(false);
   const billLabels = useMemo(() => mwebVenueBillLabels(t), [t]);
   const { control, handleSubmit, watch } = useForm<PodCompleteValues, unknown, PodCompleteValues>({
-    resolver: formResolver<PodCompleteValues>(buildPodCompleteSchema(hasVenue, billLabels)),
+    resolver: formResolver<PodCompleteValues>(
+      buildPodCompleteSchema(hasVenue, billLabels, freeVenue),
+    ),
     defaultValues: blankPodCompleteValues,
   });
 
@@ -66,6 +71,9 @@ export function PodCompleteDialog({ pod, onClose, onCompleted }: Readonly<Props>
     usage.venue_pax,
     usage.overtime_hours,
   );
+  const agreedFree = isFreeVenueOfferModel(settlement?.venue_agreed_model);
+  // Adjusted while rendering, not in an effect: the next render's rules follow the preview.
+  if (agreedFree !== freeVenue) setFreeVenue(agreedFree);
 
   const { busy, error, run } = usePodCompleteSubmit(
     pod,
@@ -104,7 +112,9 @@ export function PodCompleteDialog({ pod, onClose, onCompleted }: Readonly<Props>
     />
   );
 
-  const billField = hasVenue ? <VenueBillFields control={control} labels={billLabels} /> : null;
+  const billField = hasVenue ? (
+    <VenueBillFields control={control} labels={billLabels} billRequired={!freeVenue} />
+  ) : null;
   const mediaSummary = pod ? <PodMediaSummary podId={pod.id} onLeave={onClose} /> : null;
   // The preview error only speaks when there is nothing better to show.
   const previewErrorText =

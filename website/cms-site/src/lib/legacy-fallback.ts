@@ -2,10 +2,10 @@
  * The hand-built site behind a CMS site, for whatever the CMS does not have.
  *
  * When duncit.com moved to the CMS, its old server still answered things that
- * are not pages: short links (duncit.com/aB3xY9Zq → a 302 to the shared pod,
+ * are not pages: short links (duncit.com/aB3xY9Zq answers with a 302 to the shared pod,
  * club or profile), policies published after the migration, and per-post share
  * cards. So a path the CMS answers with 404 is handed to that site's old
- * container, untouched, and its answer is passed back — redirects included.
+ * container, untouched, and its answer is passed back, redirects included.
  *
  * Configured per legacy site (the CMS site's `legacy_site`):
  *   LEGACY_ORIGIN_MAIN=http://website:2000   (and _PARTNERS, _ADS, _EARNWITH)

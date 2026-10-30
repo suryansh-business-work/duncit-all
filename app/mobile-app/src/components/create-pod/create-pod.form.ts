@@ -1,25 +1,35 @@
 import { z } from 'zod';
-import { makeVenueOfferAskSchema } from '@duncit/forms/schemas';
 import {
+  addFreeJustificationIssues,
+  freeJustificationFields,
+  makeVenueOfferAskSchema,
+  type FreeJustificationValues,
+} from '@duncit/forms/schemas';
+import {
+  DEFAULT_SMART_INCENTIVE_MAX_PCT,
+  isFreePod,
+  isFreeVenueOfferModel,
+  isHostOfferModel,
   isMeetingPlatform,
-  isVenueOfferModel,
   isVideoUrl,
   offerRateOf,
+  smartIncentiveInput,
   ticketDiscountInput,
   venueOfferInput,
   venueOfferPriceInput,
   type VenueOfferSource,
 } from '@duncit/utils';
 
-import {
-  CategoryMediaType,
-  type PodMode,
-  type PodType,
-  type VenueOfferModel,
-} from '@/generated/graphql/graphql';
+import { appFreeJustification, hostOfferInput } from '@/components/venue-offer/offer-terms-input';
+import { CategoryMediaType, type PodMode, type PodType } from '@/generated/graphql/graphql';
 import { fallbackT, type Translate } from '@/i18n/fallback';
 import { appFormatter } from '@/utils/app-formatter';
 import { blankCreatePodForm, type CreatePodFormValues } from './create-pod.types';
+import {
+  hydrateSmartIncentive,
+  refineSmartIncentive,
+  smartIncentiveSchemaShape,
+} from './smart-incentive.form';
 import {
   hydrateTicketDiscount,
   refineTicketDiscount,
@@ -94,17 +104,20 @@ function refineOfferAsk(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Tr
   }
 }
 
-/** The host's offer to the venue: how they pay it, how much, and what they ask
- * of it. mWeb twin. */
+/** The host's offer to the venue: how they pay it (or that it is free), how
+ * much, and what they ask of it. A free venue asks no amount. mWeb twin. */
 function refineVenueOffer(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Translate) {
-  if (!isVenueOfferModel(values.venue_offer_model)) {
+  if (!isHostOfferModel(values.venue_offer_model)) {
     ctx.addIssue({
       code: 'custom',
       path: ['venue_offer_model'],
       message: t('mweb.createPod.validation.offerModelRequired'),
     });
   }
-  if (offerRateOf(values.venue_offer_rate) <= 0) {
+  if (
+    !isFreeVenueOfferModel(values.venue_offer_model) &&
+    offerRateOf(values.venue_offer_rate) <= 0
+  ) {
     ctx.addIssue({
       code: 'custom',
       path: ['venue_offer_rate'],
@@ -241,10 +254,35 @@ function refineTicketPrice(values: CreatePodFormValues, ctx: z.RefinementCtx, t:
   }
 }
 
-/** A FREE pod, or one priced at ₹0, never carries a multi-ticket discount. mWeb twin. */
+/** A FREE pod, or one priced at ₹0, never carries a multi-ticket discount or a
+ * Smart Incentive. mWeb twin. */
 export const isFreeTicket = (
   values: Pick<CreatePodFormValues, 'pod_type' | 'pod_amount_text'>,
 ): boolean => values.pod_type === 'FREE' || (Number(values.pod_amount_text) || 0) <= 0;
+
+/** Whether the pod sends its venue a FREE offer: a physical pod with no held
+ * slot, asking for the window for nothing. mWeb twin. */
+export const sendsFreeVenueOffer = (
+  values: Pick<CreatePodFormValues, 'pod_mode' | 'venue_slot_id' | 'venue_offer_model'>,
+): boolean =>
+  values.pod_mode === 'PHYSICAL' &&
+  !values.venue_slot_id &&
+  isFreeVenueOfferModel(values.venue_offer_model);
+
+/** Whether the host must say why something here is free — the venue, the pod or both. */
+export const needsFreeJustification = (
+  values: Pick<
+    CreatePodFormValues,
+    'pod_mode' | 'venue_slot_id' | 'venue_offer_model' | 'pod_type'
+  >,
+): boolean => sendsFreeVenueOffer(values) || isFreePod(values.pod_type);
+
+/** A form's free justification as the shared helpers read it (Create Pod, the resubmit sheet). */
+export const freeSourceOf = (values: FreeJustificationValues) => ({
+  reason: values.free_reason,
+  details: values.free_details,
+  accepted: values.free_accepted,
+});
 
 /** Products, media and the Organizer Terms gate on the publish step. */
 function refinePublish(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Translate) {
@@ -271,8 +309,15 @@ function refinePublish(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Tra
  *
  * The messages are copy, so they come from the shared catalogue (rule 38): the
  * stepper passes its live `t`, and the export below resolves against the
- * bundled English for callers that parse the schema outside React. */
-export function makeCreatePodSchema(t: Translate = fallbackT) {
+ * bundled English for callers that parse the schema outside React.
+ *
+ * `smartIncentiveMaxPct` is Loyalty > Smart Incentive's `max_discount_pct`, or
+ * null while the programme is not known to be on — Step 4 hides the editor
+ * then, so the percentage is not checked (see `refineSmartIncentive`). */
+export function makeCreatePodSchema(
+  t: Translate = fallbackT,
+  smartIncentiveMaxPct: number | null = DEFAULT_SMART_INCENTIVE_MAX_PCT,
+) {
   return z
     .object({
       location_id: z.string().min(1, t('mweb.createPod.validation.locationRequired')),
@@ -355,8 +400,11 @@ export function makeCreatePodSchema(t: Translate = fallbackT) {
         )
         .max(10),
       ...ticketDiscountSchemaShape,
+      ...smartIncentiveSchemaShape,
       payment_terms: z.string().max(4000),
       agreed_to_terms: z.boolean(),
+      // Shape only — checked below whenever the venue offer or the pod is free.
+      ...freeJustificationFields,
     })
     .superRefine((values, ctx) => {
       refineVenue(values, ctx, t);
@@ -364,6 +412,7 @@ export function makeCreatePodSchema(t: Translate = fallbackT) {
       refineSchedule(values, ctx, t);
       refinePodType(values, ctx, t);
       refineTicketPrice(values, ctx, t);
+      if (needsFreeJustification(values)) addFreeJustificationIssues(values, ctx, t);
       refineTicketDiscount(
         {
           ticket_discount_enabled: values.ticket_discount_enabled,
@@ -373,6 +422,16 @@ export function makeCreatePodSchema(t: Translate = fallbackT) {
         },
         ctx,
         t,
+      );
+      refineSmartIncentive(
+        {
+          smart_incentive_enabled: values.smart_incentive_enabled,
+          smart_incentive_pct: values.smart_incentive_pct,
+          free: isFreeTicket(values),
+        },
+        ctx,
+        t,
+        smartIncentiveMaxPct,
       );
       refinePublish(values, ctx, t);
     });
@@ -417,12 +476,42 @@ export const STEP_FIELDS: (keyof CreatePodFormValues)[][] = [
     'place_charges',
     'ticket_discount_enabled',
     'ticket_discount_tiers',
+    'smart_incentive_enabled',
+    'smart_incentive_pct',
     'payment_terms',
     'products_enabled',
     'product_requests',
     'agreed_to_terms',
   ],
 ];
+
+const VENUE_STEP_INDEX = 2;
+const PRICING_STEP_INDEX = 3;
+const FREE_JUSTIFICATION_FIELDS: (keyof CreatePodFormValues)[] = [
+  'free_reason',
+  'free_details',
+  'free_accepted',
+];
+
+/**
+ * The fields leaving `step` validates: its STEP_FIELDS, plus the free
+ * justification on the step that shows it — the venue step for a free venue
+ * offer, the pricing step for a free pod. A pod made free on the pricing step
+ * never blocks the venue step, which does not draw the fields. mWeb twin.
+ */
+export function stepFieldsFor(
+  step: number,
+  values: Pick<
+    CreatePodFormValues,
+    'pod_mode' | 'venue_slot_id' | 'venue_offer_model' | 'pod_type'
+  >,
+): (keyof CreatePodFormValues)[] {
+  const fields = STEP_FIELDS[step] ?? [];
+  const showsFree =
+    (step === VENUE_STEP_INDEX && sendsFreeVenueOffer(values)) ||
+    (step === PRICING_STEP_INDEX && isFreePod(values.pod_type));
+  return showsFree ? [...fields, ...FREE_JUSTIFICATION_FIELDS] : fields;
+}
 
 /** Catalogue keys for the four step titles, in step order. Components translate
  * these with their own `t`; the arrays below are the English resolution for
@@ -480,30 +569,48 @@ const offerSourceOf = (values: CreatePodFormValues): VenueOfferSource => ({
   rate: values.venue_offer_rate,
   offerings: values.venue_offer_offerings,
   note: values.venue_offer_note,
+  // Read only for a FREE offer: why the venue is asked for the window for nothing.
+  freeJustification: freeSourceOf(values),
 });
 
-/** The app's generated enum carries the same four values the shared union does. */
-const withAppModel = <T extends { model: string }>(offer: T) => ({
-  ...offer,
-  model: offer.model as VenueOfferModel,
-});
-
-/** The venue offer the form holds, with what the host asks of the venue, or
- * null until it is complete. mWeb twin: venueOfferOf. */
+/** The venue offer the form holds, with what the host asks of the venue (and,
+ * for a free venue, why it is free), or null until it is complete. mWeb twin:
+ * venueOfferOf. */
 export function venueOfferOf(values: CreatePodFormValues) {
   const offer = venueOfferInput(offerSourceOf(values));
-  return offer ? withAppModel(offer) : null;
+  return offer ? hostOfferInput(offer) : null;
 }
 
 /** The same offer as the live quote asks for it — everything that moves the
- * price, none of the points or the note, so typing those never re-prices. */
+ * price, none of the points, the note or the free reason, so typing those never
+ * re-prices. */
 export function venueOfferPriceOf(values: CreatePodFormValues) {
   const offer = venueOfferInput(offerSourceOf(values));
-  return offer ? withAppModel(venueOfferPriceInput(offer)) : null;
+  return offer ? hostOfferInput(venueOfferPriceInput(offer)) : null;
 }
 
-/** Maps validated form values onto the server's CreatePodInput. */
-export function buildCreatePodInput(values: CreatePodFormValues) {
+/** A free pod's justification, as CreatePodInput takes it — nothing for a paid
+ * pod, or until the host has given a complete, accepted one. */
+const podFreeJustificationOf = (values: CreatePodFormValues) => {
+  const justification = isFreePod(values.pod_type)
+    ? appFreeJustification(freeSourceOf(values))
+    : null;
+  return justification ? { free_justification: justification } : {};
+};
+
+/** The pod's Smart Incentive as CreatePodInput takes it — off at 0% for a free
+ * pod, a switched-off incentive, or one the host could not see. */
+const podSmartIncentiveOf = (values: CreatePodFormValues, smartIncentiveOn: boolean) =>
+  smartIncentiveInput(values, isFreeTicket(values) || !smartIncentiveOn);
+
+/**
+ * Maps validated form values onto the server's CreatePodInput.
+ *
+ * `smartIncentiveOn` is false while Loyalty's programme is not known to be on:
+ * Step 4 hides the editor then, so a value carried in from a draft or a Host
+ * Again copy is sent switched off rather than published unseen. mWeb twin.
+ */
+export function buildCreatePodInput(values: CreatePodFormValues, { smartIncentiveOn = true } = {}) {
   const virtual = values.pod_mode === 'VIRTUAL';
   const start = parseDateTimeText(values.pod_date_time_text);
   if (!start) throw new Error('Invalid start date/time');
@@ -529,6 +636,8 @@ export function buildCreatePodInput(values: CreatePodFormValues) {
     pod_date_time: start.toISOString(),
     pod_end_date_time: parseDateTimeText(values.pod_end_date_time_text)?.toISOString() ?? null,
     pod_type: values.pod_type as PodType,
+    // A free pod says why it is free, with the host's acceptance of the policy.
+    ...podFreeJustificationOf(values),
     pod_amount: Number(values.pod_amount_text) || 0,
     no_of_spots: Number(values.no_of_spots_text) || 0,
     pod_info: values.pod_info,
@@ -548,6 +657,7 @@ export function buildCreatePodInput(values: CreatePodFormValues) {
     place_charges: values.place_charges,
     // Off with no tiers for a free pod, whatever a stale draft still holds.
     ...ticketDiscountInput(values, isFreeTicket(values)),
+    ...podSmartIncentiveOf(values, smartIncentiveOn),
     // Derived, not chosen: the "Attach products" switch is gone, so a pod's shop
     // is open exactly when it carries products. Guarding on the rows rather than
     // the flag also means a stale draft that still holds `products_enabled: true`
@@ -627,8 +737,9 @@ export function hydrateDraft(payload: string): CreatePodFormValues {
     };
     // Old drafts may carry retired pod types — coerce onto FREE/PAID.
     values.pod_type = normalizePodType(values.pod_type);
-    // …and the discount tiers may be missing or half-typed.
-    return { ...values, ...hydrateTicketDiscount(values) };
+    // …and the discount tiers may be missing or half-typed, and the Smart
+    // Incentive missing altogether (a draft from before it existed).
+    return { ...values, ...hydrateTicketDiscount(values), ...hydrateSmartIncentive(values) };
   } catch {
     return blankCreatePodForm;
   }

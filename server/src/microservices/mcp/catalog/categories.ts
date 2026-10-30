@@ -23,7 +23,7 @@ export const MCP_CATEGORIES = [
   { key: 'venues', label: 'Venues', description: 'Venues, slots, offers, rentals, food menus, partner requests and venue chats.' },
   { key: 'hosts', label: 'Hosts', description: 'Hosts and host applications.' },
   { key: 'finance', label: 'Finance', description: 'Payments, payouts, settlements, coupons, expenses, wallets and the pod calculator.' },
-  { key: 'loyalty', label: 'Loyalty', description: 'Duncit Coin, Refer & Earn referrals, virtual gift cards and printed (physical) gift cards.' },
+  { key: 'loyalty', label: 'Loyalty', description: 'Duncit Coin, Refer & Earn referrals, Smart Incentive, virtual gift cards and printed (physical) gift cards.' },
   { key: 'employee', label: 'Employee', description: 'Employee expense claims.' },
   { key: 'partner-brand', label: 'Partner brands', description: 'Partner Brand products, inventory, reviews, pod-shop carts, orders and returns (partners-app.duncit.com/ecomm-brand).' },
   { key: 'ecomm-store', label: 'E-commerce store', description: 'The pet store at ecomm.duncit.com — its catalogue, orders and shipping. Separate from partner brands.' },
@@ -33,7 +33,7 @@ export const MCP_CATEGORIES = [
   { key: 'ai', label: 'AI', description: 'AI features, the prompt library, usage, monitoring, automations, reels and the Agent.' },
   { key: 'website', label: 'Website & CMS', description: 'Website content, navigation, reels, CMS pages, public pages and newsletter.' },
   { key: 'hr', label: 'HR', description: 'Job applications and the team structure (seats, salary, share links).' },
-  { key: 'legal', label: 'Legal', description: 'Policies, acceptances, legal documents, contracts and grievances.' },
+  { key: 'legal', label: 'Legal', description: 'Policies, acceptances, legal documents, contracts, grievances and account health appeals.' },
   { key: 'support', label: 'Support', description: 'FAQs, tickets and support chats.' },
   { key: 'moderation', label: 'Moderation', description: 'Content moderation and user reports.' },
   { key: 'crm', label: 'CRM', description: 'Leads, communication logs, call prompts, email verification, reminders, surveys and WhatsApp leads.' },
@@ -185,6 +185,10 @@ export const MODULE_CATEGORY: Record<ModuleName, McpCategoryKey | null> = {
   referralTypeDefs: 'engagement',
   // The admin side of referrals is run from the Loyalty console (Refer & Earn).
   referralAdminTypeDefs: 'loyalty',
+  // A pod page's offer and its unlock are members' own pod actions; the
+  // programme's settings and dashboard are run from the Loyalty console.
+  smartIncentiveTypeDefs: 'pods',
+  smartIncentiveAdminTypeDefs: 'loyalty',
   leaderboardTypeDefs: 'engagement',
   membershipTypeDefs: 'engagement',
   badgeTypeDefs: 'engagement',
@@ -226,8 +230,12 @@ export const MODULE_CATEGORY: Record<ModuleName, McpCategoryKey | null> = {
   legalDocumentTypeDefs: 'legal',
   contractTypeDefs: 'legal',
   grievanceTypeDefs: 'legal',
+  // Decided in Legal > Account Health Appeals; filing one is a member action,
+  // which the app connector reaches through this category too.
+  healthAppealTypeDefs: 'legal',
 
   faqTypeDefs: 'support',
+  tutorialTypeDefs: 'support',
   ticketTypeDefs: 'support',
   supportChatTypeDefs: 'support',
 

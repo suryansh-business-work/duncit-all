@@ -7,7 +7,7 @@ import { money, type DetailPayment, type PaymentPodBooking } from './queries';
 
 interface Props {
   booking: PaymentPodBooking;
-  /** The payment the seats were bought on — its multi-ticket tier is frozen there. */
+  /** The payment the seats were bought on — its multi-ticket tier and Smart Incentive are frozen there. */
   payment: DetailPayment;
   formatDateTime: DateFormatter['formatDateTime'];
 }
@@ -31,6 +31,14 @@ export default function PodBookingCard({ booking, payment, formatDateTime }: Rea
         <InfoRow variant="split" label={t('finance.payment.podDate')} value={podDate} />
         <InfoRow variant="split" label={t('finance.payment.seats')} value={String(booking.seats)} />
         <InfoRow variant="split" label={t('finance.payment.ticketDiscountTier')} value={ticketDiscount} />
+        {/* The offer this member had unlocked at checkout — absent unless one applied. */}
+        {payment.smart_incentive_pct > 0 && (
+          <InfoRow
+            variant="split"
+            label={t('finance.payment.smartIncentiveOffer')}
+            value={t('finance.payment.smartIncentivePct', { vars: { pct: payment.smart_incentive_pct } })}
+          />
+        )}
         <InfoRow variant="split" label={t('finance.payment.membership')} value={booking.membership_id ?? EM_DASH} />
         <InfoRow variant="split" label={t('finance.payment.membershipStatus')} value={booking.membership_status ?? EM_DASH} />
         <InfoRow variant="split" label={t('finance.payment.ticketCode')} value={booking.ticket_code ?? EM_DASH} />

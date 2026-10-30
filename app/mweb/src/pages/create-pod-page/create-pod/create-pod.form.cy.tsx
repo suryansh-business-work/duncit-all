@@ -39,6 +39,9 @@ const valid = (over: Partial<CreatePodFormValues> = {}): CreatePodFormValues => 
   ...over,
 });
 
+/** Why a free pod or a free venue is free, with the host's acceptance of the free policy. */
+const JUSTIFIED = { free_reason: 'INITIATIVE', free_details: '', free_accepted: true } as const;
+
 const issuesOf = (values: CreatePodFormValues) => {
   const result = createPodSchema.safeParse(values);
   return result.success ? [] : result.error.issues.map((issue) => issue.path.join('.'));
@@ -160,6 +163,7 @@ describe('createPodSchema', () => {
     expect(
       createPodSchema.safeParse(
         valid({
+          ...JUSTIFIED,
           pod_type: 'FREE',
           pod_amount: 0,
           pod_mode: 'VIRTUAL',
@@ -176,8 +180,10 @@ describe('createPodSchema', () => {
   it('lets a physical pod be free, at ₹0 and nothing else', () => {
     // `valid()` is a physical pod with a venue, a space and a slot.
     expect(valid({}).pod_mode).toBe('PHYSICAL');
-    expect(createPodSchema.safeParse(valid({ pod_type: 'FREE', pod_amount: 0 })).success).toBe(true);
+    expect(createPodSchema.safeParse(valid({ ...JUSTIFIED, pod_type: 'FREE', pod_amount: 0 })).success).toBe(true);
     expect(issuesOf(valid({ pod_type: 'FREE', pod_amount: 0 }))).not.toContain('pod_type');
+    // A free pod says why it is free, like a free venue — once, on the same fields.
+    expect(issuesOf(valid({ pod_type: 'FREE', pod_amount: 0 }))).toEqual(['free_reason']);
     // Free still means ₹0 — a physical free pod carrying a price is refused.
     expect(issuesOf(valid({ pod_type: 'FREE', pod_amount: 250 }))).toContain('pod_amount');
   });

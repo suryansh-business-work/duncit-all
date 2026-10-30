@@ -32,7 +32,7 @@ function tilesOf(section: SectionProps['section']): PetTileData[] {
   }));
 }
 
-/** PET_TYPES — "Shop by Pet": tinted tiles in a snap-scrolling row. */
+/** PET_TYPES, "Shop by Pet": tinted tiles in a snap-scrolling row. */
 export function PetTypesSection({ section }: Readonly<SectionProps>) {
   const { t } = useStoreT();
   const tiles = tilesOf(section);

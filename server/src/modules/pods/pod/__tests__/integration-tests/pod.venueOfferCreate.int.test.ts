@@ -95,3 +95,49 @@ describe('a Create Pod offer', () => {
     await expect(resolveVenueOfferForCreate(input(String(new Types.ObjectId()), 12, offer()), 'PHYSICAL')).rejects.toThrow('Select a venue');
   });
 });
+
+describe('a free venue on Create Pod', () => {
+  const freeOffer = (justification?: VenueOfferRequest['free_justification']) =>
+    offer({ model: 'FREE', rate: 1200, free_justification: justification });
+
+  it("is asked at no money, with the host's justification checked and stamped", async () => {
+    const venueId = await seedVenue();
+    const resolved = await resolveVenueOfferForCreate(
+      input(venueId, 12, freeOffer({ reason: 'CAMPAIGN', details: ' Diwali  drive ', accepted: true })),
+      'PHYSICAL',
+      hostId
+    );
+    expect(resolved?.quote).toMatchObject({ total: 0, venue_payout: 0 });
+    expect(resolved?.request).toMatchObject({ model: 'FREE', free_justification: null });
+    expect(resolved?.freeJustification).toMatchObject({ reason: 'CAMPAIGN', details: 'Diwali drive' });
+    expect(String(resolved?.freeJustification?.accepted_by)).toBe(hostId);
+  });
+
+  it('is refused without a justification, or without the policy accepted', async () => {
+    const venueId = await seedVenue();
+    await expect(resolveVenueOfferForCreate(input(venueId, 12, freeOffer()), 'PHYSICAL', hostId)).rejects.toMatchObject({
+      extensions: { reason: 'FREE_REASON_REQUIRED' },
+    });
+    await expect(
+      resolveVenueOfferForCreate(input(venueId, 12, freeOffer({ reason: 'INITIATIVE', accepted: false })), 'PHYSICAL', hostId)
+    ).rejects.toMatchObject({ extensions: { reason: 'FREE_POLICY_NOT_ACCEPTED' } });
+  });
+
+  it('is refused when nobody is there to accept the policy (a re-route, not the host)', async () => {
+    const venueId = await seedVenue();
+    await expect(
+      resolveVenueOfferForCreate(input(venueId, 12, freeOffer({ reason: 'INITIATIVE', accepted: true })), 'PHYSICAL')
+    ).rejects.toMatchObject({ extensions: { reason: 'FREE_HOST_ONLY' } });
+  });
+
+  it('keeps a priced offer free of any justification', async () => {
+    const venueId = await seedVenue();
+    const resolved = await resolveVenueOfferForCreate(
+      input(venueId, 12, offer({ free_justification: { reason: 'CAMPAIGN', accepted: true } })),
+      'PHYSICAL',
+      hostId
+    );
+    expect(resolved?.freeJustification).toBeNull();
+    expect(resolved?.quote.total).toBeGreaterThan(0);
+  });
+});

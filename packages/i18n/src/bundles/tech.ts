@@ -915,6 +915,35 @@ export const TECH_BUNDLE: NestedCatalogue = {
       ciTokenHint:
         'The workflow authenticates with the same DUNCIT_RELEASE_TOKEN repo secret the app builds use — generate one under App Builds → Settings.',
     },
+    // Every scenario one run held, as Cypress counted it — including the ones
+    // a failed hook blocked, which never ran and are not passes.
+    e2eScenarios: {
+      open: 'All scenarios',
+      back: 'All runs',
+      title: 'Scenarios · {run}',
+      subtitle: '{tests} scenarios: {passed} passed, {failed} failed, {skipped} did not run.',
+      tabAll: 'All scenarios',
+      tabFailed: 'Failed ({count})',
+      tabFailedAria: 'Failed scenarios',
+      colProject: 'Project',
+      colSpec: 'Spec',
+      colDescribe: 'Inside',
+      colScenario: 'Scenario',
+      colState: 'Result',
+      colDuration: 'Duration',
+      colError: 'Error',
+      statePassed: 'Passed',
+      stateFailed: 'Failed',
+      statePending: 'Pending',
+      stateSkipped: 'Not run',
+      skippedHint: 'This scenario never ran: a hook before it failed, so Cypress skipped it. Fix the failed scenario above it in the same spec first.',
+      search: 'Search scenarios, specs or errors',
+      empty:
+        'No scenarios are recorded for this run. Runs from before the scenario list, and legs that never reached Cypress, have none.',
+      emptyFailed: 'No scenario failed in this run.',
+      loadFailed: 'The run could not be loaded.',
+      notFound: 'This run does not exist, or it was removed.',
+    },
     e2eFlows: {
       title: 'Flows',
       subtitle:

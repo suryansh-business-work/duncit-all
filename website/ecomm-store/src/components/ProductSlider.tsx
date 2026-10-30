@@ -13,7 +13,7 @@ const EDGE_SLACK = 4;
 /** The gap between rail items, in theme spacing units. */
 const RAIL_GAP = 2;
 
-/** How many items show at once per breakpoint — fractions leave a peek of the next. */
+/** How many items show at once per breakpoint; fractions leave a peek of the next. */
 export interface RailVisible {
   xs: number;
   sm: number;

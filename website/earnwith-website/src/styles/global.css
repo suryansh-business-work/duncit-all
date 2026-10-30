@@ -8,13 +8,13 @@
 
 /* The palette is declared as tokens and REDEFINED for dark mode below, so a
    theme switch recolours every utility built from them (bg-surface, text-ink,
-   border-line …) instead of asking each component to know about themes. */
+   border-line ...) instead of asking each component to know about themes. */
 @theme {
   --color-primary: #ff4f73;
   --color-primary-dark: #e23a5e;
   --color-primary-light: #ffe1e8;
   /* Pink TEXT on the page background. Primary itself is a 3:1 colour on
-     cream — fine for a big headline, too faint for a kicker or a link. */
+     cream: fine for a big headline, too faint for a kicker or a link. */
   --color-primary-strong: #c81e4a;
   /* A filled pink that white text reads on at AA (the buttons, the ribbon).
      Does not invert: what sits on it is always on-primary. */
@@ -27,14 +27,14 @@
   --color-cream: #fff7f4;
   /* Cards and panels: white on the light theme, a lifted slate on the dark. */
   --color-surface: #ffffff;
-  /* Hairlines — a token rather than black/5, which cannot invert. */
+  /* Hairlines. A token instead of black/5, which cannot invert. */
   --color-line: rgba(22, 19, 26, 0.08);
-  /* Ink that sits ON a filled or dark surface — the primary button, the header
+  /* Ink that sits ON a filled or dark surface: the primary button, the header
      while it is over the banner. A token so no component writes `#fff` itself;
      it holds in both themes because what is behind it does not invert. */
   --color-on-primary: #ffffff;
-  /* The dark matte the hero, the calculator's result and the footer sit on —
-     dark in BOTH themes, so the words on it are on-frame, never ink. */
+  /* The dark matte the hero, the calculator's result and the footer sit on.
+     It is dark in BOTH themes, so the words on it use on-frame, never ink. */
   --color-frame: #100e14;
   --color-on-frame: #f5f2f7;
   --color-on-frame-soft: #bdb6c6;
@@ -86,7 +86,7 @@
     color: var(--color-ink);
     -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
-    /* Theme changes fade rather than snap — the whole page is repainting. */
+    /* Theme changes fade instead of snapping, since the whole page is repainting. */
     transition: background-color 200ms ease, color 200ms ease;
   }
   h1, h2, h3, h4 {

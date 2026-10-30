@@ -22,6 +22,8 @@ interface Props {
   membershipState: PodMembershipState | null;
   /** Seats this booking will take (1 by default). */
   seats: number;
+  /** The member's unlocked Smart Incentive % (0 without one) — the price drops by it. */
+  smartIncentivePct?: number;
   onSeatsChange: (seats: number) => void;
   onCheckout: () => void;
   onBackout: () => void;
@@ -53,6 +55,7 @@ export function PodBookingBar({
   isHost,
   membershipState,
   seats,
+  smartIncentivePct = 0,
   onSeatsChange,
   onCheckout,
   onBackout,
@@ -135,6 +138,7 @@ export function PodBookingBar({
                 isFull={isFull}
                 podAmount={pod.pod_amount}
                 ticketDiscount={pod}
+                smartIncentivePct={smartIncentivePct}
                 seats={seats}
                 maxSeats={Number(membershipState?.max_seats_per_booking ?? 1)}
                 onSeatsChange={onSeatsChange}

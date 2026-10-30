@@ -75,7 +75,9 @@ export default function DobDateField<T extends FieldValues>({
                 error: !!fieldState.error,
                 helperText:
                   fieldState.error?.message ??
-                  t('mweb.signup.dobHint', { vars: { years: minAge } }),
+                  (required
+                    ? t('mweb.signup.dobHint', { vars: { years: minAge } })
+                    : t('mweb.signup.dobOptionalHint', { vars: { years: minAge } })),
               },
             }}
           />

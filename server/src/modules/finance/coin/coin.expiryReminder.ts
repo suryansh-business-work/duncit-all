@@ -75,6 +75,8 @@ export async function runCoinExpiryReminders(now = Date.now()): Promise<void> {
         target_user_ids: [userId],
         title: 'Your coins expire soon',
         body: `${batch.coins} Duncit Coins expire on ${expiresOn}. Use them on a pod or in the shop before then.`,
+        // The wallet the mail's button opens, as an in-app path.
+        link_url: '/duncit-coin',
         silent: false,
       })
       .catch((error: unknown) => logs.server.warn('coin-expiry', 'reminderInApp', { error }));

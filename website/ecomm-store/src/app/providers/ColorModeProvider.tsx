@@ -12,7 +12,7 @@ interface ColorModeValue {
   prefs: StorePreferences;
   /** Change some choices; the rest stay. Saved for this browser. */
   setPrefs: (patch: Partial<StorePreferences>) => void;
-  /** The parts of the choices the theme is built from — an occasion theme reuses them. */
+  /** The parts of the choices the theme is built from. An occasion theme reuses them. */
   themePrefs: StoreThemePrefs;
 }
 

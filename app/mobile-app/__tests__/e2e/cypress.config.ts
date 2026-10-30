@@ -43,8 +43,8 @@ export default defineConfig({
     env: {
       GRAPHQL_URL: process.env.CYPRESS_GRAPHQL_URL || 'https://staging.server.duncit.com/graphql',
     },
-    setupNodeEvents(on) {
-      registerScenarioClips(on);
+    setupNodeEvents(on, config) {
+      registerScenarioClips(on, config);
     },
   },
 });

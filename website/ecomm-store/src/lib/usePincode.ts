@@ -5,7 +5,7 @@ import { STORAGE_KEYS, readStored, writeStored } from './storage';
 /**
  * The shopper's delivery pincode, kept in the browser and shared by every
  * component that reads it (the "Deliver to" pill, the product page's delivery
- * check, checkout's address form) — one change updates them all.
+ * check, checkout's address form). One change updates them all.
  */
 const listeners = new Set<() => void>();
 

@@ -341,8 +341,9 @@ Parsing `{ ...blankPodFormValues, pod_title: 'Su', club_id: '…a3b', pod_descri
 
 The venue rule is conditional in a way worth knowing. A physical pod (with `showVenueSlot`) offers
 its venue a **window and terms**: it needs `pod_date_time` and `pod_end_date_time` (reported on
-`venue_slot_id`, "Pick an available slot"), a pricing option in `venue_offer_model` (`PER_GUEST`,
-`PER_HOUR`, `PER_SLOT` or `FLAT`), a positive `venue_offer_rate`, and what the host needs from the
+`venue_slot_id`, "Pick an available slot"), an option in `venue_offer_model` (`PER_GUEST`,
+`PER_HOUR`, `FLAT` or `FREE` — `HOST_OFFER_MODELS`), a positive `venue_offer_rate` (not asked for
+`FREE`, which needs the free justification instead — see "Free justification"), and what the host needs from the
 venue in `venue_offer_offerings` (one point per line, at least one; each point and the optional
 `venue_offer_note` within the server's bounds — the shared `makeVenueOfferAskSchema` from
 `@duncit/forms/schemas`, pinned on these two fields). An edited pod that keeps the slot it already
@@ -482,6 +483,7 @@ them straight to `MediaPickerDialog`.
 | `autoPod` | `boolean` | `false` | Auto Pod mode — the three-step template stepper; see "Auto Pod mode" below. |
 | `lockCategory` | `boolean` | `false` | Auto Pod mode only: the category is fixed and shown read-only. |
 | `showAutoPodAudience` | `boolean` | `false` | Auto Pod mode only: step 1 counts the venues, hosts and club admins in the category and gates step 2 on all three being above zero. Admin only — the rows carry partners' contact details. |
+| `requireFreeJustification` | `boolean` | `false` | The author is the pod's own host (the Partners host forms, `PARTNER_POD_CONFIG`): a FREE pod must carry the free justification before it saves, as `createPartnerPod` requires. Off, a staff editor may give one and need not — but one started must be finished. A FREE venue offer needs one either way. See "Free justification". |
 
 ## Live preview
 
@@ -499,7 +501,7 @@ worked examples above are the honest version — a screenshot or a fake would go
 
 `PodFormConfig` is the whole compatibility surface: `showHosts`, `requireHosts`, `singleHost`,
 `showLocationZone`, `showVenueSlot`, `showPlaceCharges`, `showInventory`, `showFinance`,
-`showIsActive`, `showProducts`, `showReel`. Start from `makeNativeParityPodConfig({ showProducts })`,
+`showIsActive`, `showProducts`, `showReel`, `requireFreeJustification`. Start from `makeNativeParityPodConfig({ showProducts })`,
 which mirrors the native create-pod flow (venue slots on, place charges on, reel on, hosts optional).
 Club Admin uses it as-is; Admin spreads its extras (`showFinance`, `showInventory`, `showIsActive`,
 `requireHosts: true`, `singleHost: true`) on top.
@@ -531,7 +533,9 @@ is physical *and* `showProducts` *and* `values.products_enabled`.
 Do not hand-build the mutation input from `PodFormValues`. With `config.showVenueSlot` a physical pod
 sends **either** the slot it already holds (`venue_slot_id`, an edit that keeps it) **or** a
 `venue_offer` for its window (`{ start_at, end_at, space_label: '', pax: no_of_spots, pets: false, model, rate, offerings, note }`,
-null until complete; `offerings` is the typed points one per line, `note` trimmed) — never a null slot beside an offer, which would read as "release the booking".
+null until complete; `offerings` is the typed points one per line, `note` trimmed; a `FREE` offer goes at `rate: 0`
+with `free_justification` once the form holds a complete one) — never a null slot beside an offer, which would read as "release the booking".
+A FREE pod also carries `free_justification` on the pod input, under the same condition.
 A virtual pod sends `venue_slot_id: null`. A hand-rolled input is where that gets forgotten.
 
 `podToFormValues` is the inverse for edit flows; `linesToMedia` converts the newline-separated
@@ -586,6 +590,41 @@ podToFormValues({ pod_type: 'NON_NATIVE_PAID', pod_amount: 499 }).pod_type; // '
 ```
 
 An Auto Pod is still PAID-only.
+
+### Free justification — free pods and free venues
+
+Duncit allows a free pod (`pod_type: 'FREE'`) or a free venue (`venue_offer_model: 'FREE'`, the
+venue gives the window for ₹0) only for initiatives, promotions and approved campaigns. Whoever picks
+"Free" says why and accepts Duncit's free policy, through ONE set of fields for both —
+`FreeArrangementFields` from `@duncit/forms` (the policy notice with "More details", the reason
+radios `INITIATIVE` / `PROMOTIONAL` / `CAMPAIGN` / `OTHER`, the details box for Other, the misuse
+warning and the acceptance), held in `free_reason`, `free_details` and `free_accepted`
+(`FreeJustificationValues`, blank in `blankPodFormValues`):
+
+- a FREE pod draws them under the **Pod type** select (`FreeJustificationField place="pod"`);
+- a free venue on a paid pod draws them in place of the **Amount you offer** box
+  (`place="venue"`) — a free pod's block already covers its venue, so there is never a second one.
+
+When they must be filled (`refineFreeJustification`, the server's own checks via
+`addFreeJustificationIssues`):
+
+| Case | Required |
+| --- | --- |
+| A FREE venue offer is being sent | Always — the server refuses a FREE offer without one. |
+| A FREE pod, `requireFreeJustification` on (Partners host forms) | Always — `createPartnerPod` refuses a host's FREE pod without one. |
+| A FREE pod on a staff editor (Admin, Club Admin) | Optional — but once any part is given, the rest must be too, so a half-filled one is never silently dropped. |
+
+`buildPodInput` sends `free_justification: { reason, details, accepted: true }` only once the form
+holds a complete one (`freeJustificationInput` from `@duncit/utils`): on the pod input for a FREE
+pod, inside `venue_offer` for a FREE offer. An edit never rehydrates the stored justification, so a
+re-save sends none and the server keeps the one the pod has — and who accepted it. Every free
+arrangement is listed in the Pods console under **Free Arrangements** (`adminFreeArrangementsTable`).
+
+```js
+const values = { ...blankPodFormValues, pod_type: 'FREE', free_reason: 'CAMPAIGN', free_accepted: true };
+buildPodInput(values, { config }).free_justification;
+// { reason: 'CAMPAIGN', details: '', accepted: true }
+```
 
 ## Multi-ticket discount
 

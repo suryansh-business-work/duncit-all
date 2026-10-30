@@ -8,7 +8,7 @@ interface StoreErrorBoundaryProps {
   children: ReactNode;
   /** `root` wraps the whole app (Retry reloads it); `page` wraps one routed page. */
   scope?: 'root' | 'page';
-  /** A new value (the path) clears a caught crash — navigating away is a recovery. */
+  /** A new value (the path) clears a caught crash, so navigating away recovers. */
   resetKey?: string;
 }
 

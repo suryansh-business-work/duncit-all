@@ -33,10 +33,11 @@ function venueReject(t: Translate): AnswerCopy {
   };
 }
 
-function hostAccept(t: Translate, vars: AnswerVars): AnswerCopy {
+function hostAccept(t: Translate, vars: AnswerVars, free: boolean): AnswerCopy {
   return {
     title: t('availability.offers.hostAnswer.acceptTitle'),
-    message: t('availability.offers.hostAnswer.acceptMessage', { vars }),
+    // A free booking quotes no amount, so the confirmation names none (the venue's words read the same from the host's side).
+    message: free ? t('availability.offers.acceptMessageFree', { vars }) : t('availability.offers.hostAnswer.acceptMessage', { vars }),
     reasonLabel: '',
     done: t('availability.offers.hostAnswer.accepted'),
   };
@@ -53,7 +54,7 @@ function hostReject(t: Translate): AnswerCopy {
 
 /** The venue accepts or rejects a host's terms; the host accepts or rejects the venue's counter. */
 export function answerCopy(t: Translate, side: OfferSide, accept: boolean, vars: AnswerVars, free: boolean): AnswerCopy {
-  if (side === 'HOST') return accept ? hostAccept(t, vars) : hostReject(t);
+  if (side === 'HOST') return accept ? hostAccept(t, vars, free) : hostReject(t);
   return accept ? venueAccept(t, vars, free) : venueReject(t);
 }
 

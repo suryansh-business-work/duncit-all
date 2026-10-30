@@ -305,6 +305,12 @@ async function fillToPricing(mode: 'PHYSICAL' | 'VIRTUAL') {
   press('create-pod-terms');
 }
 
+// Says why the pod (or the venue) is free and accepts Duncit's free policy.
+function justifyFree(prefix: string) {
+  press(`${prefix}-free-reason-PROMOTIONAL`);
+  press(`${prefix}-free-accept`);
+}
+
 const expectStep = (step: number) =>
   expect(screen.getByTestId('create-pod-progress')).toHaveProp('aria-label', `Step ${step} of 4`);
 
@@ -420,6 +426,54 @@ describe('CreatePodStepper', () => {
     expect(input.pod_end_date_time).not.toBeNull();
   });
 
+  it('asks the venue for the window free: no amount, the policy and a reason, then offers it at ₹0', async () => {
+    const { onPublish } = setup();
+    await pickClub();
+    await fillBasics();
+    press('create-pod-submit');
+    await screen.findByTestId('create-pod-venue-v1');
+    press('create-pod-venue-v1');
+    press('create-pod-space-Whole venue');
+    await screen.findByTestId(slotTile);
+    press(slotTile);
+    await screen.findByTestId(endChip);
+    press(endChip);
+    press('create-pod-offer-model-FREE');
+    // Free names no amount: the rate goes, and the free policy takes its place.
+    expect(screen.queryByTestId('field-venue_offer_rate')).toBeNull();
+    expect(screen.getByTestId('create-pod-venue-free-policy')).toBeOnTheScreen();
+    expect(screen.getByTestId('create-pod-venue-free-warning')).toBeOnTheScreen();
+    fireEvent.changeText(screen.getByTestId('field-venue_offer_offerings'), 'A projector');
+    expect(await screen.findByTestId('create-pod-venue-quote-free')).toHaveTextContent(
+      /the venue is paid nothing for this booking/,
+    );
+    // The venue step holds until the host says why it is free and accepts the policy.
+    press('create-pod-submit');
+    expect(await screen.findByTestId('create-pod-venue-free-reason-error')).toHaveTextContent(
+      'Pick why this is free',
+    );
+    expect(screen.queryByTestId('create-pod-paid')).toBeNull();
+    justifyFree('create-pod-venue');
+    press('create-pod-submit');
+    await screen.findByTestId('create-pod-paid');
+    fireEvent.changeText(screen.getByTestId('field-pod_amount_text'), '500');
+    press('create-pod-terms');
+    press('create-pod-submit');
+    await waitFor(() => expect(onPublish).toHaveBeenCalled());
+    const input = onPublish.mock.calls[0]?.[1];
+    expect(input.venue_offer).toEqual(
+      expect.objectContaining({
+        model: 'FREE',
+        rate: 0,
+        offerings: ['A projector'],
+        free_justification: { reason: 'PROMOTIONAL', details: '', accepted: true },
+      }),
+    );
+    // The pod itself stays paid.
+    expect(input).toMatchObject({ pod_type: 'PAID' });
+    expect(input).not.toHaveProperty('free_justification');
+  });
+
   it('holds a virtual pod on step 3 until it has a platform and an end', async () => {
     setup();
     await pickClub('VIRTUAL');
@@ -448,9 +502,22 @@ describe('CreatePodStepper', () => {
     );
     // A virtual pod books no venue, so there is nothing to settle.
     expect(screen.queryByTestId('create-pod-free-note-venue')).toBeNull();
+    // Free asks why, under Duncit's free policy, and the host's acceptance —
+    // publishing is held until both are given.
+    expect(screen.getByTestId('create-pod-pod-free-policy')).toBeOnTheScreen();
+    press('create-pod-submit');
+    expect(await screen.findByTestId('create-pod-pod-free-reason-error')).toHaveTextContent(
+      'Pick why this is free',
+    );
+    expect(onPublish).not.toHaveBeenCalled();
+    justifyFree('create-pod-pod');
     press('create-pod-submit');
     await waitFor(() => expect(onPublish).toHaveBeenCalled());
-    expect(onPublish.mock.calls[0]?.[1]).toMatchObject({ pod_type: 'FREE', pod_amount: 0 });
+    expect(onPublish.mock.calls[0]?.[1]).toMatchObject({
+      pod_type: 'FREE',
+      pod_amount: 0,
+      free_justification: { reason: 'PROMOTIONAL', details: '', accepted: true },
+    });
   });
 
   it('keeps a free pod free when it becomes physical, and tells the host to settle the priced slot', async () => {
@@ -505,6 +572,7 @@ describe('CreatePodStepper', () => {
     press('create-pod-free');
     expect(screen.queryByTestId('field-pod_amount_text')).toBeNull();
     expect(mockPotentialEarnings.mock.calls.at(-1)?.[0]).toBe(0);
+    justifyFree('create-pod-pod');
     press('create-pod-submit');
     await waitFor(() => expect(onPublish).toHaveBeenCalled());
     expect(onPublish.mock.calls[0]?.[1]).toMatchObject({

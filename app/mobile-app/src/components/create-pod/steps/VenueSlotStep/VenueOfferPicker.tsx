@@ -5,6 +5,7 @@ import { buildSlotLabels } from '@duncit/slots';
 import {
   bookingCalendarProps,
   formatStatementMoney,
+  isFreeVenueOfferModel,
   type BookingTile,
   type SpotsBounds,
 } from '@duncit/utils';
@@ -15,6 +16,7 @@ import { useOfferCalendar } from '@/hooks/useOfferCalendar';
 import { useTranslation } from '@/hooks/useTranslation';
 import { parseDateTimeText } from '../../create-pod.form';
 import type { CreatePodForm } from '../../create-pod.types';
+import { FREE_JUSTIFICATION_NAMES, FreeArrangementFields } from '../../free-arrangement';
 import { BookingEndPicker } from './BookingEndPicker';
 import { BookingGuestFields } from './BookingGuestFields';
 import { OfferAskFields } from './OfferAskFields';
@@ -83,6 +85,8 @@ export function VenueOfferPicker({
   const pick = (tile: BookingTile) =>
     setWindow(tile.start_at, calendar.endsFor(tile.start_at)[0] ?? null);
   const errors = form.formState.errors;
+  // A free venue asks no amount: the host says why it is free instead.
+  const freeVenue = isFreeVenueOfferModel(form.watch('venue_offer_model'));
   // With no start picked, the (hidden) start box's typed-format error would
   // read as nonsense under a calendar: ask for a time instead.
   const timeError = startIso
@@ -126,12 +130,19 @@ export function VenueOfferPicker({
         {t('mweb.createPod.offer.title')}
       </Text>
       <OfferTermsFields form={form} />
+      {freeVenue ? (
+        <FreeArrangementFields
+          control={form.control}
+          names={FREE_JUSTIFICATION_NAMES}
+          testIDPrefix="create-pod-venue"
+        />
+      ) : null}
       <OfferAskFields
         control={form.control}
         offeringsName="venue_offer_offerings"
         noteName="venue_offer_note"
       />
-      <VenueQuoteCard {...quote} currencySymbol={currencySymbol} />
+      <VenueQuoteCard {...quote} currencySymbol={currencySymbol} free={freeVenue} />
     </YStack>
   );
 }

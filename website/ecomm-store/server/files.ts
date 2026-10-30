@@ -29,7 +29,7 @@ const TEXTUAL = /^(text\/|application\/(json|manifest)|image\/svg)/;
 
 const root = resolve(DIST_DIR);
 
-/** The dist file for a URL path — never anything outside dist. */
+/** The dist file for a URL path. Never resolves to anything outside dist. */
 export function distFile(urlPath: string): string | null {
   const target = resolve(root, `.${urlPath}`);
   if (!target.startsWith(root + sep)) return null;
@@ -46,11 +46,12 @@ export function sendBody(
   type: string,
   cache: string,
   extraHeaders: Readonly<Record<string, string>> = {},
+  status = 200,
 ): void {
   const raw = typeof body === 'string' ? Buffer.from(body) : body;
   const gzip = TEXTUAL.test(type) && wantsGzip(req);
   const payload = gzip ? gzipSync(raw) : raw;
-  res.writeHead(200, {
+  res.writeHead(status, {
     ...extraHeaders,
     'Content-Type': type,
     'Cache-Control': cache,

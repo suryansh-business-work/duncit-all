@@ -10,6 +10,7 @@ const ALL_KEYS: ProfileIconKey[] = [
   'verification',
   'support',
   'referral',
+  'loyalty',
   'account',
   'earn',
   'ideas',

@@ -7,6 +7,7 @@ import { FollowingFeedSource } from '@/generated/graphql/graphql';
 import { graphqlRequest } from '@/services/graphql.client';
 import { fireAndForget } from '@/utils/fire-and-forget';
 import { useRefreshRegistration } from '@/components/PullToRefresh';
+import { useBlockStore } from '@/stores/block.store';
 
 export type FeedPost = ResultOf<typeof FollowingFeedDocument>['followingFeed'][number];
 export type FeedSource = 'PEOPLE' | 'CLUBS';
@@ -43,10 +44,13 @@ export function useFollowingFeed(source: FeedSource) {
     }
   }, [source]);
 
+  // A block anywhere re-reads the feed: the server has taken that member out.
+  const blocks = useBlockStore((state) => state.version);
+
   useEffect(() => {
     // fetch never rejects (errors are captured into state), so no catch needed.
     fireAndForget(fetch());
-  }, [fetch]);
+  }, [fetch, blocks]);
 
   useRefreshRegistration(fetch);
 

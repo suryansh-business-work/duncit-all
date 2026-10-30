@@ -113,9 +113,26 @@ export const MCP_PROMPTS: readonly McpPrompt[] = [
         '1. Find the club with clubs_clubs_table (search by name) and confirm it with me.',
         '2. For an in-person pod, find the venue with venues_venues_table and a free slot with venues_venue_slots.',
         '3. Read the exact parameters with mcp_describe_tool name "pods_create_pod" and ask me for anything required that is still missing (description, spots, price, start and end).',
+        '   If the pod is free, or its venue is asked for free (offer model FREE), first tell me Duncit allows free only for special initiatives, promotional offers or approved campaigns, that the venue must still accept a free venue and nobody can counter it, that Duncit audits every free arrangement, and that misuse can reduce account health or hold payments. Ask me why it is free (INITIATIVE, PROMOTIONAL, CAMPAIGN, or OTHER with details) and pass free_justification with accepted: true only after I accept.',
         `4. Show me the complete pod you are about to create and wait for my yes. Then call pods_create_pod with ${META_REASON} saying why.`,
         '5. Read it back with pods_pod and confirm its history row exists with pods_pod_audit_logs.',
         'If a tool answers with an error, show me the error message as it is and stop.'
+      ),
+  },
+  {
+    name: 'review_free_arrangements',
+    title: 'Review free arrangements',
+    description: 'Audit free pods and free venue bookings with the reason each host gave (Pods console > Free Arrangements).',
+    arguments: [{ name: 'reason', description: 'Only one reason: INITIATIVE, PROMOTIONAL, CAMPAIGN or OTHER.' }],
+    tools: ['pods_admin_free_arrangements_table', 'pods_pod', 'pods_pod_audit_logs'],
+    render: (args) =>
+      lines(
+        `Review the free pods and free venue bookings${promptValue(args.reason) ? ` given the reason "${promptValue(args.reason)}"` : ''}.`,
+        `1. Call pods_admin_free_arrangements_table, newest first, page_size 100${promptValue(args.reason) ? ' with a filter on reason' : ''}.`,
+        '2. Group them by host and by reason; flag hosts with many free arrangements, OTHER reasons with thin details, and free venues the venue declined.',
+        '3. For anything that looks like misuse, read the pod with pods_pod and its history with pods_pod_audit_logs.',
+        '4. Report what you found and what you would review further, but do NOT change any pod, account or payment unless I explicitly ask.',
+        DATA_RULE
       ),
   },
   {

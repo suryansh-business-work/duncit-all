@@ -10,6 +10,7 @@ import {
   venueOfferInboxModelKey,
   venueOfferInboxStatus,
   venueOfferTermsLine,
+  FREE_VENUE_INBOX_KEY,
   VENUE_OFFER_INBOX_MODEL_KEY,
 } from '../src/venue-offer-inbox';
 
@@ -79,6 +80,12 @@ describe('venueOfferTermsLine', () => {
   it('is just the amount for an option this client does not know', () => {
     expect(venueOfferTermsLine(t, 'PER_DAY', '₹300.00')).toBe('₹300.00');
     expect(venueOfferTermsLine(t, null, '₹300.00')).toBe('₹300.00');
+  });
+
+  it('names a free venue without any amount', () => {
+    expect(venueOfferTermsLine(t, 'FREE', '₹0.00')).toBe(FREE_VENUE_INBOX_KEY);
+    expect(FREE_VENUE_INBOX_KEY).toBe('availability.offers.model.free');
+    expect(venueOfferInboxModelKey('FREE')).toBeNull();
   });
 });
 
@@ -157,6 +164,11 @@ describe('offerCounterAllowance', () => {
   it('is null when the server names no limit', () => {
     expect(offerCounterAllowance({}, 'HOST')).toBeNull();
     expect(offerCounterAllowance({ counters_per_side: null, venue_counters_used: 2 }, 'VENUE')).toBeNull();
+  });
+
+  it('is null on a booking that takes no counters at all — a free one has no share to count down', () => {
+    expect(offerCounterAllowance({ counters_per_side: 0 }, 'HOST')).toBeNull();
+    expect(offerCounterAllowance({ counters_per_side: 0, venue_counters_used: 0 }, 'VENUE')).toBeNull();
   });
 });
 

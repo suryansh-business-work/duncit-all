@@ -14,7 +14,7 @@ type Method = 'PASSWORD' | 'CODE';
 
 /**
  * Sign in to the store: password, a one-time code, or Google. New shoppers are
- * sent to the Duncit signup in a new tab — accounts are made there, not here.
+ * sent to the Duncit signup in a new tab, because accounts are only made there.
  */
 export function SignInDialog() {
   const { t } = useStoreT();

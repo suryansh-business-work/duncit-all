@@ -75,6 +75,10 @@ export const paymentTypeDefs = /* GraphQL */ `
     ticket_discount_amount: Float!
     "Percentage of the multi-ticket tier that applied (0 when none)."
     ticket_discount_pct: Int!
+    "The member's unlocked Smart Incentive, frozen at checkout: rupees taken off the ticket money after the multi-ticket discount and before the coupon and coins (host-funded). 0 when none applied."
+    smart_incentive_amount: Float!
+    "Percentage of the Smart Incentive that applied (0 when none)."
+    smart_incentive_pct: Int!
     status: PaymentStatus!
     gateway: String!
     gateway_ref: String
@@ -438,6 +442,8 @@ export const paymentTypeDefs = /* GraphQL */ `
     gst: Float!
     "Multi-ticket discounts given on the matching payments — already off gross."
     ticket_discount_total: Float!
+    "Smart Incentive discounts given on the matching payments — already off gross."
+    smart_incentive_total: Float!
   }
 
   type CheckoutQuote {
@@ -456,6 +462,10 @@ export const paymentTypeDefs = /* GraphQL */ `
     ticket_discount_amount: Float!
     "Percentage of the multi-ticket tier that applied (0 when none)."
     ticket_discount_pct: Int!
+    "The caller's unlocked Smart Incentive taken off the ticket money (0 when none applies)."
+    smart_incentive_amount: Float!
+    "Percentage of that Smart Incentive (0 when none)."
+    smart_incentive_pct: Int!
   }
 
   "Retired with recurring pods — kept so installed apps that still send it get a clear refusal."

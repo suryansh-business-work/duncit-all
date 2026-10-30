@@ -1,4 +1,5 @@
-import { ticketDiscountFor, type TicketDiscountSource } from '@duncit/utils';
+import type { Translator } from '@duncit/i18n';
+import { smartIncentiveFor, ticketDiscountFor, type TicketDiscountSource } from '@duncit/utils';
 
 import { BarCta, BarLabel } from '@/components/details/BarLabel';
 import { SeatPicker } from '@/components/details/SeatPicker';
@@ -10,20 +11,41 @@ export interface PodBookBarProps {
   podAmount: number;
   /** The pod's multi-ticket discount — the price drops once the seats reach a tier. */
   ticketDiscount: TicketDiscountSource;
+  /** The member's unlocked Smart Incentive %; 0 (or absent) when they hold none. */
+  smartIncentivePct?: number;
   seats: number;
   maxSeats: number;
   onSeatsChange: (seats: number) => void;
   onCheckout: () => void;
 }
 
+/** What the price already has taken off — the tier the seats reach and the
+ * member's unlocked offer, whichever apply; null when neither does. */
+function discountNote(
+  ticketPct: number,
+  incentivePct: number,
+  seats: number,
+  t: Translator['t'],
+): string | null {
+  const notes = [
+    ticketPct > 0
+      ? t('mweb.podDetails.ticketDiscountApplied', { vars: { pct: ticketPct, count: seats } })
+      : '',
+    incentivePct > 0 ? t('mweb.smartIncentive.unlockedNote', { vars: { pct: incentivePct } }) : '',
+  ].filter(Boolean);
+  return notes.length > 0 ? notes.join(' · ') : null;
+}
+
 /** Not-yet-booked state: price + seat picker + a Join/Book button (disabled when
  * the pod is full). The price shown is the ticket × seats, less the multi-ticket
- * tier those seats reach — the same figure checkout starts from. */
+ * tier those seats reach and then the member's unlocked Smart Incentive — the
+ * same figure checkout starts from. */
 export function PodBookBar({
   isFree,
   isFull,
   podAmount,
   ticketDiscount,
+  smartIncentivePct = 0,
   seats,
   maxSeats,
   onSeatsChange,
@@ -36,18 +58,17 @@ export function PodBookBar({
   const bookText = isFull ? t('mweb.podDetails.podIsFull') : freeOrBookText;
   const priceCaption = isFree ? t('mweb.podDetails.entry') : t('mweb.podDetails.price');
   const ticket = ticketDiscountFor(podAmount, seats, ticketDiscount);
-  const priceValue = isFree ? t('mweb.podDetails.free') : `₹${ticket.net}`;
-  const discountNote =
-    ticket.pct > 0 && !isFree
-      ? t('mweb.podDetails.ticketDiscountApplied', { vars: { pct: ticket.pct, count: seats } })
-      : null;
+  // Off what the tier left, as checkout takes it — the two compound, never add.
+  const incentive = smartIncentiveFor(ticket.net, smartIncentivePct);
+  const priceValue = isFree ? t('mweb.podDetails.free') : `₹${incentive.net}`;
+  const note = isFree ? null : discountNote(ticket.pct, incentive.pct, seats, t);
   return (
     <>
       <BarLabel
         caption={priceCaption}
         value={priceValue}
         emphasis="price"
-        note={discountNote}
+        note={note}
         noteTestID="pod-ticket-discount-applied"
       />
       <SeatPicker value={seats} onChange={onSeatsChange} maxSeats={maxSeats} disabled={isFull} />

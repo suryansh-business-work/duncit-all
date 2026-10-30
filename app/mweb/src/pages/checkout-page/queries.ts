@@ -73,6 +73,9 @@ export const CHECKOUT_POD = gql`
         min_tickets
         discount_pct
       }
+      # The member's Smart Incentive comes off next — read only for a pod that
+      # offers it, so every other checkout skips that request.
+      smart_incentive_enabled
       place_charges {
         label
         amount
@@ -113,6 +116,8 @@ export const DUMMY_CHECKOUT = gql`
       total
       ticket_discount_amount
       ticket_discount_pct
+      smart_incentive_amount
+      smart_incentive_pct
       currency_symbol
       status
       paid_at
@@ -181,6 +186,8 @@ export const CREATE_RAZORPAY_ORDER = gql`
         total
         ticket_discount_amount
         ticket_discount_pct
+        smart_incentive_amount
+        smart_incentive_pct
         currency_symbol
         status
         paid_at
@@ -199,6 +206,8 @@ export const VERIFY_RAZORPAY_PAYMENT = gql`
       total
       ticket_discount_amount
       ticket_discount_pct
+      smart_incentive_amount
+      smart_incentive_pct
       currency_symbol
       status
       paid_at
@@ -225,6 +234,8 @@ export const MY_PAYMENT = gql`
       total
       ticket_discount_amount
       ticket_discount_pct
+      smart_incentive_amount
+      smart_incentive_pct
       currency_symbol
       status
       paid_at
@@ -244,6 +255,9 @@ export interface CheckoutPaymentRow {
   /** The multi-ticket discount frozen on this payment (0 when none applied). */
   ticket_discount_amount: number;
   ticket_discount_pct: number;
+  /** The member's Smart Incentive frozen on this payment (0 when none applied). */
+  smart_incentive_amount: number;
+  smart_incentive_pct: number;
   currency_symbol: string;
   status: string;
   paid_at: string | null;
@@ -263,6 +277,8 @@ export const DUMMY_PRODUCT_CHECKOUT = gql`
       total
       ticket_discount_amount
       ticket_discount_pct
+      smart_incentive_amount
+      smart_incentive_pct
       currency_symbol
       status
       paid_at
@@ -295,6 +311,8 @@ export const CREATE_RAZORPAY_PRODUCT_ORDER = gql`
         total
         ticket_discount_amount
         ticket_discount_pct
+        smart_incentive_amount
+        smart_incentive_pct
         currency_symbol
         status
         paid_at

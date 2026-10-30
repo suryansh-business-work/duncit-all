@@ -18,7 +18,8 @@ import { usePodProductSelection } from '@/hooks/usePodProductSelection';
 import type { RootStackParamList } from '@/navigation/types';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
-import { useMirrorLikeToExplore, useRefetchOnFocus } from './podDetailsEffects';
+import { useRefetchOnFocus } from '@/hooks/useRefetchOnFocus';
+import { useMirrorLikeToExplore } from './podDetailsEffects';
 import { PodDetailsContent } from './PodDetailsContent';
 import { PodDetailsOverlays } from './PodDetailsOverlays';
 import { usePodDetailActions } from './usePodDetailActions';
@@ -177,6 +178,7 @@ export function PodDetailsScreen() {
           viewerPhoto={viewerPhoto}
           setCommentDelta={setCommentDelta}
           locationPrompt={locationPrompt}
+          currency={finance.currency}
         />
       ) : null}
     </YStack>

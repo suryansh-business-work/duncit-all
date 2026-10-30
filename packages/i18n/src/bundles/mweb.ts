@@ -301,6 +301,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       clubPodEditor: { title: 'Club pod' },
       clubEdit: { title: 'Edit club' },
       faqs: { title: 'FAQs' },
+      tutorials: { title: 'Learnings', description: 'Short videos that show you how to get the most out of Duncit.' },
       policies: { title: 'Policies' },
       podIdeas: {
         title: 'Pod ideas',
@@ -684,7 +685,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       googleNotFoundBody:
         'We could not find a Duncit account for {email}. Would you like to create one?',
       googleNotFoundDetail:
-        'We will carry this Google sign-in into the next steps — you only need to add your WhatsApp number and date of birth. Nothing is created until you finish.',
+        'We will carry this Google sign-in into the next steps — you only need to add your WhatsApp number and confirm your age. Nothing is created until you finish.',
       googleNotFoundAction: 'Create my account',
       googleNotFoundDismiss: 'Not now',
       // The consent step. An email/password account whose address matches a
@@ -703,7 +704,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       // The same invite and consent step, when the door was Apple. The title,
       // body, actions and "Not now" above are the provider-free half.
       appleNotFoundDetail:
-        'We will carry this Apple sign-in into the next steps — you only need to add your WhatsApp number and date of birth. Nothing is created until you finish.',
+        'We will carry this Apple sign-in into the next steps — you only need to add your WhatsApp number and confirm your age. Nothing is created until you finish.',
       appleLinkConsentTitle: 'Also sign in with Apple?',
       appleLinkConsentBody:
         'You registered {email} with an email and password. Allow Apple to sign you in to this same account?',
@@ -735,6 +736,12 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       // mWeb only — MUI X's picker carries a helper line under the box; the
       // native field says it through its validation message instead.
       dobHint: 'You must be at least {years} years old',
+      // Both surfaces — the birthday is optional at signup and in the profile
+      // editor, so the line under the box says so before it states the rule.
+      dobOptionalHint: 'Optional. If you add it, you must be at least {years} years old',
+      // The tick that replaced the required birthday (App Store 5.1.1): the age
+      // is what signup needs, and {years} is the admin’s minimum joining age.
+      ageConfirmLabel: 'I confirm I’m {years} or older',
       // Native only — its date of birth is typed as well as picked. The shape
       // comes from the admin's configured date pattern, never a literal.
       dobPlaceholder: '{format}',
@@ -759,7 +766,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
         nameMin: 'Name must be at least 2 characters',
         nameTooLong: 'Name is too long',
         confirmRequired: 'Please confirm your password',
-        dobRequired: 'Date of birth is required',
+        ageConfirmRequired: 'Please confirm you’re {years} or older to join Duncit',
         dobInvalid: 'Enter a valid date of birth',
         dobFormat: 'Use the format {format}',
         dobMinAge: 'You must be at least {years} years old to join Duncit',
@@ -776,7 +783,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
     // buildSignupStepperLabels in @duncit/utils, so both apps read one set.
     signupSteps: {
       whoTitle: 'About you',
-      whoSubtitleBirthDate: 'Your name, your date of birth, and a referral code if you have one.',
+      whoSubtitleBirthDate: 'Your name, your age, and a referral code if you have one.',
       contactTitle: 'How we reach you',
       contactSubtitle: 'Your WhatsApp number and email address.',
       securityTitle: 'Your password',
@@ -798,10 +805,10 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       testCode: 'Test code: {code}',
       // The Google door has no form behind it, so it asks on a step of its own
       // for the two things a Google account never tells us: the WhatsApp number
-      // a code can be sent to, and the date of birth the joining age is checked on.
+      // a code can be sent to, and the joining age (a tick; the birthday is optional).
       detailsTitle: 'A few details',
-      detailsSubtitle: 'Google doesn’t share your WhatsApp number or your date of birth, so tell us here. Your sign-up code goes to that number.',
-      appleDetailsSubtitle: 'Apple doesn’t share your WhatsApp number or your date of birth, so tell us here. Your sign-up code goes to that number.',
+      detailsSubtitle: 'Google doesn’t share your WhatsApp number, so tell us here — your sign-up code goes to that number. Confirm your age too; your date of birth is optional.',
+      appleDetailsSubtitle: 'Apple doesn’t share your WhatsApp number, so tell us here — your sign-up code goes to that number. Confirm your age too; your date of birth is optional.',
       truecallerVerified: 'Your number is verified with Truecaller. Finish your details — no WhatsApp code needed for this number.',
       sameAsMobile: 'This is also my mobile number',
       sameAsMobileHint: 'Untick if your mobile number is different — we will leave the phone number on your profile blank.',
@@ -2362,6 +2369,39 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       errorPctMax: 'Discount can’t be more than {max}%',
       errorPctNotIncreasing: 'Needs a bigger discount than the row above',
     },
+    // Smart Incentive, on mWeb and native alike. The member's offer on a pod
+    // page and its checkout lines, then the host's editor in Create Pod and
+    // Edit Pod — the editor keys are rendered through `mwebSmartIncentiveLabels`
+    // in @duncit/utils and are word-for-word identical to `shell.smartIncentive`.
+    smartIncentive: {
+      offerTitle: 'Get {pct}% off this pod',
+      offerBody: 'Book now and your tickets cost {pct}% less. The discount is applied automatically at checkout.',
+      offerPrice: '{price} per ticket instead of {fullPrice}',
+      offerBook: 'Book now',
+      offerLater: 'Maybe later',
+      unlockedNote: '{pct}% offer applied',
+      checkoutLine: 'Smart Incentive ({pct}% off)',
+      checkoutSaved: 'Smart Incentive',
+      title: 'Smart Incentive',
+      switchLabel: 'Offer a discount to members who are still deciding',
+      hint: 'Members who stay on your pod page without booking get a one-time offer. The discount comes out of your earnings.',
+      pctLabel: 'Discount %',
+      maxHint: 'Up to {max}% off',
+      pricePreview: 'With the offer, a ticket costs {price}',
+      learnMore: 'How it works',
+      errorRequired: 'Enter the discount',
+      errorPctMin: 'Discount must be a whole number of at least 1%',
+      errorPctMax: 'Discount can’t be more than {max}%',
+      infoTitle: 'What is Smart Incentive?',
+      infoWhat:
+        'When a member stays on your pod page for {seconds} seconds without booking, they see a one-time offer: book now and get your discount.',
+      infoWho: 'Only members who see the offer get the discount. Everyone else pays your full ticket price.',
+      infoCut:
+        'The discount comes out of your share: your payout is worked out on what members actually pay, so each discounted booking earns you less.',
+      infoChange:
+        'You can change the discount or switch it off anytime by editing the pod. Switching it off withdraws offers members have not used yet.',
+      gotIt: 'Got it',
+    },
     // Creating a pod — the host's 4-step stepper (Basics → Location/Category/
     // Club → Venue & Slot → Pricing & Publish), its fields, its cover picker
     // and its pricing panel. mWeb and the native app render the SAME journey
@@ -2584,10 +2624,13 @@ export const MWEB_BUNDLE: NestedCatalogue = {
         modelHint: 'Per guest, per hour, or one flat price',
         rateLabel: 'Amount you offer',
         rateHint: "The venue's price rules, fees and GST are added on top, with Duncit's fee.",
+        // The quote card when the host asks for the venue free: no money, an answer still needed.
+        freeQuote: 'Free venue: the venue is paid nothing for this booking. It still accepts or declines it, and free bookings cannot be countered.',
         model: {
           perGuest: 'Per guest',
           perHour: 'Per hour',
           flat: 'Flat price',
+          free: 'Free venue',
         },
         rate: {
           perGuest: 'Amount per guest',
@@ -2600,6 +2643,8 @@ export const MWEB_BUNDLE: NestedCatalogue = {
             'A minimum order value per person: the venue is paid this for every guest who comes, never for fewer than its minimum guests.',
           perHour: 'Paid for every hour you book.',
           flat: 'One fixed price for the whole booking.',
+          free:
+            "The venue gives this time for free — only for initiatives, promotions or approved campaigns. The venue still accepts or declines, and nobody counters.",
         },
       },
       bookingPets: 'Pets are coming (the venue may charge a pet fee)',
@@ -2879,6 +2924,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
         perGuest: '{amount} per guest',
         perHour: '{amount} per hour',
         flat: '{amount} flat',
+        free: 'Free venue',
       },
     },
     podPending: {
@@ -3276,6 +3322,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       offerModelPerGuest: 'Per guest',
       offerModelPerHour: 'Per hour',
       offerModelFlat: 'Flat price',
+      offerModelFree: 'Free venue',
       offerRateLabel: 'Amount you offer (₹)',
       offerModelRequired: 'Pick how you will pay the venue',
       offerRateRequired: 'Enter the amount you offer the venue',
@@ -5011,12 +5058,14 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       helpSupport: 'Help & Support',
       help: 'Help',
       faqs: 'FAQs',
+      tutorials: 'Learnings',
       productOrders: 'My Product Order History',
       // The Account section subtitle's short name for the contacts row.
       contacts: 'Contacts',
       // The collapsible section cards.
       sectionExplore: 'Explore & Community',
       sectionWork: 'Work & Earnings',
+      sectionLoyalty: 'Loyalty',
       sectionShopping: 'Shopping & Orders',
       sectionAccount: 'Account & Preferences',
       sectionSupport: 'Support & Legal',
@@ -5972,6 +6021,62 @@ export const MWEB_BUNDLE: NestedCatalogue = {
     },
     splash: {
       findYourTribeJoinPodsMeet:'Find your tribe. Join pods, meet locals, share moments.',
+    },
+    // Tutorials (/tutorials on mWeb, the Tutorials screen on native): short
+    // how-to videos authored in the Support portal.
+    tutorials: {
+      title: 'Learnings',
+      subtitle: 'Short videos that show you how Duncit works',
+      searchLabel: 'Search learnings',
+      searchPlaceholder: 'Search learnings',
+      clearSearch: 'Clear search',
+      topicsLabel: 'Topics',
+      allTopics: 'All',
+      languageLabel: 'Language',
+      languageEnglish: 'English',
+      languageHindi: 'Hindi',
+      watched: 'Watched',
+      watchedA11y: 'You have watched this learning',
+      like: 'Like',
+      unlike: 'Remove like',
+      likesA11y: 'Likes: {count}',
+      comment: 'Comment',
+      commentsA11y: 'Comments: {count}',
+      share: 'Share',
+      shareText: 'Watch "{title}" on Duncit',
+      shareCopied: 'Link copied',
+      shareFailed: "Couldn't share this learning.",
+      play: 'Play',
+      pause: 'Pause',
+      mute: 'Mute',
+      unmute: 'Unmute',
+      videoLabel: 'Learning video: {title}',
+      empty: 'No learnings here yet',
+      emptyHint: 'Try another topic or language, or clear the search.',
+      clearFilters: 'Clear filters',
+      loadFailed: "We couldn't load learnings.",
+      retry: 'Try again',
+      loadingMore: 'Loading more learnings',
+      likeFailed: "Couldn't update your like. Try again.",
+      commentsTitle: 'Comments',
+      commentsEmpty: 'No comments yet. Be the first to say something.',
+      commentsLoadFailed: "Couldn't load comments.",
+      loadMoreComments: 'Show more comments',
+      commentLabel: 'Your comment',
+      commentPlaceholder: 'Add a comment…',
+      commentPost: 'Post',
+      commentRequired: 'Write a comment first',
+      commentTooLong: 'Keep it under {max} characters',
+      commentFailed: "Couldn't post your comment.",
+      commentDelete: 'Delete comment',
+      commentDeleted: 'Comment deleted',
+      commentDeleteFailed: "Couldn't delete the comment.",
+      deleteConfirmTitle: 'Delete this comment?',
+      deleteConfirmBody: 'It will be removed for everyone.',
+      deleteConfirm: 'Delete',
+      cancel: 'Cancel',
+      member: 'Duncit member',
+      close: 'Close',
     },
   },
 };

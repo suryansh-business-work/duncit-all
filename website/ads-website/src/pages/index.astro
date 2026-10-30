@@ -12,6 +12,7 @@ import DownloadApps from '../components/DownloadApps.astro';
 import CtaBand from '../components/CtaBand.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import ReelSlider from '@duncit/brand/ReelSlider.astro';
+import PodRail from '@duncit/brand/PodRail.astro';
 import EarnShowcase from '@duncit/brand/EarnShowcase.astro';
 import { getSiteTranslator } from '@duncit/brand/site-i18n';
 import { siteContent, siteUrls } from '../config/site-config';
@@ -26,11 +27,13 @@ const { t } = await getSiteTranslator(siteConfig.graphqlUrl);
   <SiteHeader overlay />
   <main>
     <Hero />
+    <!-- Upcoming pods, live from the API, right under the banner; each opens on mWeb. -->
+    <PodRail graphqlUrl={siteConfig.graphqlUrl} mwebUrl={siteUrls.mwebUrl} t={t} />
     <!-- Reels second, straight after the hero (hidden when there are none),
          then the Earn section the Website portal can move into a slot below. -->
     <ReelSlider graphqlUrl={siteConfig.graphqlUrl} site="ADS" t={t} />
     <EarnShowcase href={siteUrls.earnwithUrl} graphqlUrl={siteConfig.graphqlUrl} site="ADS" t={t} />
-    <!-- Where, then what it costs — an advertiser's two questions, in that
+    <!-- Where, then what it costs: an advertiser's two questions, in that
          order, before anything about the console. -->
     <Placements />
     <CampaignCalculator />

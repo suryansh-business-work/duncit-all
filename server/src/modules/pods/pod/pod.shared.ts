@@ -104,6 +104,8 @@ export const toPub = (d: any, clubSlugById?: Map<string, string>) => {
       min_tickets: tier.min_tickets,
       discount_pct: tier.discount_pct,
     })),
+    smart_incentive_enabled: !!d.smart_incentive_enabled,
+    smart_incentive_pct: d.smart_incentive_pct ?? 0,
     is_active: !!d.is_active,
     is_hidden: !!d.is_hidden,
     hidden_by_club: !!d.hidden_by_club,

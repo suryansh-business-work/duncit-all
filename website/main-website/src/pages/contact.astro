@@ -1,5 +1,5 @@
 ---
-// Contact — reach-us cards come from Admin branding (support email/phone) and
+// Contact: reach-us cards come from Admin branding (support email/phone) and
 // the form lands in the Website portal's Contact Submissions inbox.
 import { captchaCopy } from '@duncit/i18n';
 import Captcha from '@duncit/captcha/Captcha.astro';
@@ -91,7 +91,7 @@ const fields = [
 
 <!-- The copy reaches the script through the form's own data attribute, NOT
      `define:vars`: that directive makes a script `is:inline`, and an inline
-     script cannot import — this one needs @duncit/captcha. -->
+     script cannot import. This one needs @duncit/captcha. -->
 <script>
   import { mount } from '@duncit/brand/widgets/contact-form';
 

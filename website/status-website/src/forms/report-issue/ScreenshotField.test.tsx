@@ -5,7 +5,7 @@
  * will type: a screenshot carries the error text, the address bar and the state
  * of the page at once. So what matters here is that the control is reachable,
  * that it stops offering itself once the limit is reached, and that picking the
- * SAME file twice still registers — a browser fires no change event for an
+ * same file twice still registers. A browser fires no change event for an
  * unchanged input value, which is why the input is cleared after every pick.
  */
 import { fireEvent, render, screen } from '@testing-library/react';

@@ -14,7 +14,7 @@ import { NotFoundContent } from '../info/NotFoundPage';
 import { ShelfHeading } from './ShelfHeading';
 import { ShelfView } from './ShelfView';
 
-/** /c/:slug — an aisle, its breadcrumbs and its sub-aisles as chips. */
+/** /c/:slug: an aisle, its breadcrumbs and its sub-aisles as chips. */
 export function CategoryPage() {
   const { t } = useStoreT();
   const { slug = '' } = useParams();

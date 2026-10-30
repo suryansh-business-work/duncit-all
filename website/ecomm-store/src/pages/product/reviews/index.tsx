@@ -12,7 +12,7 @@ import { ReviewForm } from '../review-form';
 
 const STARS = [5, 4, 3, 2, 1] as const;
 
-/** Average, count and one bar per star (star_counts: index 0 = 1★ … 4 = 5★). */
+/** Average, count and one bar per star (star_counts: index 0 = 1 star ... 4 = 5 stars). */
 function StarBars({ product }: Readonly<{ product: StoreProduct }>) {
   const { t } = useStoreT();
   const total = product.star_counts.reduce((sum, n) => sum + n, 0);
@@ -79,7 +79,7 @@ function ReviewItem({ review }: Readonly<{ review: ProductReview }>) {
   );
 }
 
-/** Ratings summary, the reviews, and — for a signed-in buyer — the review form. */
+/** Ratings summary, the reviews, and, for a signed-in buyer, the review form. */
 export function ProductReviews({ product }: Readonly<{ product: StoreProduct }>) {
   const { t } = useStoreT();
   const { signedIn, openSignIn } = useStoreSession();

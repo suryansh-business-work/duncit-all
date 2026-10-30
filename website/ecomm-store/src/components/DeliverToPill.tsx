@@ -8,7 +8,7 @@ import { useStoreT } from '../i18n';
 import { STORE_TOKENS as T } from '../theme/tokens';
 import { PincodeDialog } from './pincode-form';
 
-/** "Deliver to 400001" — opens the pincode dialog. */
+/** "Deliver to 400001": opens the pincode dialog. */
 export function DeliverToPill() {
   const { t } = useStoreT();
   const [pincode] = usePincode();

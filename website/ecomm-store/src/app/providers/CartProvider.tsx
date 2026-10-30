@@ -8,7 +8,7 @@ import { getCartToken } from '../../lib/cartToken';
 import { useStoreT } from '../../i18n';
 
 interface AddToCartOptions {
-  /** `false` when the caller shows the result itself — a product card's notice. */
+  /** `false` when the caller shows the result itself (a product card's notice). */
   openDrawer?: boolean;
 }
 

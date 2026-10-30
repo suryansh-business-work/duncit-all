@@ -41,6 +41,8 @@ const adjustment = (over: Partial<AdminHealthAdjustment> = {}): AdminHealthAdjus
   remark: 'No-showed twice in a month',
   created_by_name: 'Asha Rao',
   created_at: '2026-08-01T10:00:00.000Z',
+  waived: false,
+  appeal_status: null,
   ...over,
 });
 

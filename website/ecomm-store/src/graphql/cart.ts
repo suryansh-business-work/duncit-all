@@ -149,7 +149,7 @@ export interface StoreCheckoutQuote {
   autoship_discount: number;
   discount_total: number;
   gst_amount: number;
-  /** What rounding the bill up to a whole rupee added — already inside `total`. */
+  /** What rounding the bill up to a whole rupee added. Already inside `total`. */
   round_off: number;
   total: number;
   currency_symbol: string;

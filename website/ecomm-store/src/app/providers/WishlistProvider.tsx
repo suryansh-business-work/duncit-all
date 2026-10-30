@@ -16,7 +16,7 @@ interface WishlistValue {
 
 const WishlistContext = createContext<WishlistValue | null>(null);
 
-/** Saved products — the account's when signed in, the browser's cart token's otherwise. */
+/** Saved products: the account's when signed in, the browser's cart token's otherwise. */
 export function WishlistProvider({ children }: Readonly<{ children: ReactNode }>) {
   const { t } = useStoreT();
   const client = useApolloClient();

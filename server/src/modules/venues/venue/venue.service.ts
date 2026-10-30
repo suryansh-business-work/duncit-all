@@ -29,6 +29,8 @@ import {
   VENUE_FACILITIES,
   VENUE_GSTIN_DOC_TYPE,
   VENUE_GSTIN_PATTERN,
+  VENUE_OWN_OPTION_LIMIT,
+  VENUE_OWN_OPTION_MAX_LENGTH,
   VENUE_PAN_DOC_TYPE,
   VENUE_SECURITY,
   VENUE_TYPES,
@@ -603,12 +605,27 @@ function normalizeCapacityItems(items: unknown) {
   return list;
 }
 
-/** One of the registration config's chip lists (amenities, facilities,
- * security): known options only, each once. Null when the field was not sent. */
+/** One of the venue's chip lists (amenities, facilities, security): the
+ * catalogue's options plus up to VENUE_OWN_OPTION_LIMIT entries of the venue's
+ * own, each once. Spellings are compared without case, so a typed "wi-fi" is
+ * stored as the catalogue's "Wi-Fi". Null when the field was not sent. */
 function normalizeOptionList(raw: unknown, allowed: readonly string[]): string[] | null {
   if (!Array.isArray(raw)) return null;
-  const known = new Set(allowed);
-  return [...new Set(raw.map((item) => String(item ?? '').trim()))].filter((item) => known.has(item));
+  const catalogue = new Map(allowed.map((option) => [option.toLowerCase(), option]));
+  const list = new Map<string, string>();
+  for (const item of raw) {
+    const text = String(item ?? '').trim();
+    const key = text.toLowerCase();
+    if (text && !list.has(key)) list.set(key, catalogue.get(key) ?? text);
+  }
+  const own = [...list.keys()].filter((key) => !catalogue.has(key));
+  if (own.length > VENUE_OWN_OPTION_LIMIT) {
+    fail('BAD_USER_INPUT', `Add at most ${VENUE_OWN_OPTION_LIMIT} entries of your own to each list`);
+  }
+  if (own.some((key) => key.length > VENUE_OWN_OPTION_MAX_LENGTH)) {
+    fail('BAD_USER_INPUT', `Keep each entry to ${VENUE_OWN_OPTION_MAX_LENGTH} characters or fewer`);
+  }
+  return [...list.values()];
 }
 
 /** What `updateVenueSetup` takes: the venue's type, spaces, amenities and food. */
@@ -858,6 +875,8 @@ export const venueService = {
       amenities: VENUE_AMENITIES,
       facilities: VENUE_FACILITIES,
       security: VENUE_SECURITY,
+      own_option_limit: VENUE_OWN_OPTION_LIMIT,
+      own_option_max_length: VENUE_OWN_OPTION_MAX_LENGTH,
       ...venueFoodConfig(),
       ...venueRentalConfig(),
     };

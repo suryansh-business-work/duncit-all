@@ -52,8 +52,8 @@ export function fetchHealth(url: string, signal?: AbortSignal): Promise<HealthRe
 }
 
 /**
- * One POST to /graphql. The status page has no Apollo client — it renders
- * before any session exists — so the four documents it needs share this
+ * One POST to /graphql. The status page has no Apollo client (it renders
+ * before any session exists), so the four documents it needs share this
  * instead of four hand-rolled fetches (rule 34).
  *
  * Returns null on a transport or GraphQL error: every caller here has a
@@ -103,7 +103,7 @@ async function graphqlRequest<T>(
   return json.data ?? null;
 }
 
-/** Live brand (logo, name, accent) from admin settings — same query the old site used. */
+/** Live brand (logo, name, accent) from admin settings, the same query the old site used. */
 export async function fetchBranding(signal?: AbortSignal): Promise<Branding | null> {
   const data = await graphqlRequest<{ branding?: Branding }>(
     '{ branding { app_name logo_url primary_color } }',
@@ -147,19 +147,19 @@ const SUBMIT_REPORT_MUTATION =
   'mutation SubmitStatusReport($input: SubmitStatusReportInput!) {' +
   ' submitStatusReport(input: $input) { ok id } }';
 
-/** Whether it landed, and — when it did not — what the server said about it. */
+/** Whether it landed and, when it did not, what the server said about it. */
 export interface StatusReportOutcome {
   ok: boolean;
   errors: GraphqlErrorLike[];
 }
 
 /**
- * File one problem report. Unauthenticated by design — the visitor this form
+ * File one problem report. Unauthenticated by design: the visitor this form
  * exists for may be the one who cannot sign in anywhere.
  *
  * The errors come back rather than being thrown, because one of them is
  * routine: a mistyped verification code is answered by the captcha widget
- * itself, not by the form's failure banner.
+ * itself rather than the form's failure banner.
  */
 export async function submitStatusReport(
   input: StatusReportInput,

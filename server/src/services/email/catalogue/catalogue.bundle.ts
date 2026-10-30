@@ -345,9 +345,6 @@ export const CATALOGUE_FALLBACK: Record<string, string> = {
   'email.venuePodPublished.title': 'A pod is live at your venue',
   'email.venuePodPublished.body':
     'The pod below is published and taking bookings at your venue. The club admin named here is who to reach on the day.',
-  'email.venuePodFeedback.title': 'How did the pod go?',
-  'email.venuePodFeedback.body':
-    'The pod below ran at your venue. Tell us how the host and the group were — it is what decides who we send you next.',
 
   // --- Brand, running --------------------------------------------------------
   'email.ecommBrandSubmitted.title': 'Your brand is under review',
@@ -388,9 +385,6 @@ export const CATALOGUE_FALLBACK: Record<string, string> = {
   'email.clubAdminVenueSlotsNeeded.title': 'Your club has no open venue slots',
   'email.clubAdminVenueSlotsNeeded.body':
     'A host tried to create a pod in the club below, but none of its venues has an open slot right now, so the pod could not be planned. Please speak to the venues of this club and ask them to publish available slots. The host’s contact is here if you would like to reach them directly.',
-  'email.clubAdminPodFeedback.title': 'How did the pod go?',
-  'email.clubAdminPodFeedback.body':
-    'You looked after the pod below. Tell us how the host, the venue and the group were — it is what we act on.',
 
   // --- Support ----------------------------------------------------------------
   'email.supportTicketCreated.title': 'We have your request',

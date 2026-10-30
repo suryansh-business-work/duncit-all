@@ -478,6 +478,24 @@ describe('VenueSlotStep', () => {
     expect(askedForSlots).toBe(false);
   });
 
+  it('offers a free venue last, which asks no amount and shows the free policy', async () => {
+    routeBookingReads();
+    renderWithProviders(<VenueSlotHarness initial={instantVenue} />);
+    await screen.findByTestId('create-pod-offer-intro');
+    expect(screen.queryByTestId('create-pod-venue-free-arrangement')).toBeNull();
+    fireEvent.press(screen.getByTestId('create-pod-offer-model-FREE'));
+    expect(screen.getByTestId('create-pod-offer-model-FREE')).toHaveProp('aria-checked', true);
+    expect(screen.getByTestId('create-pod-offer-model-hint')).toHaveTextContent(
+      /accepts or declines/,
+    );
+    expect(screen.queryByTestId('field-venue_offer_rate')).toBeNull();
+    expect(screen.getByTestId('create-pod-venue-free-arrangement')).toBeOnTheScreen();
+    // Back to a priced option: the amount returns and the policy goes.
+    fireEvent.press(screen.getByTestId('create-pod-offer-model-PER_HOUR'));
+    expect(screen.getByTestId('field-venue_offer_rate')).toBeOnTheScreen();
+    expect(screen.queryByTestId('create-pod-venue-free-arrangement')).toBeNull();
+  });
+
   it("says so when the venue's calendar fails to load", async () => {
     routeBookingReads(new Error('down'));
     renderWithProviders(<VenueSlotHarness initial={instantVenue} />);

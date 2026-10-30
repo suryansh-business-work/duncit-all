@@ -46,7 +46,7 @@ const charges: VenuePricing = {
 const start = new Date(Date.now() - 3 * HOUR);
 const end = new Date(Date.now() - HOUR);
 
-function agreedQuote(model: 'PER_GUEST' | 'FLAT', rate: number, pax: number) {
+function agreedQuote(model: 'PER_GUEST' | 'FLAT' | 'FREE', rate: number, pax: number) {
   const result = quoteOffer(charges, { model, rate }, { start, end, pax, commissionPct: 10, gstPct: 18, timeZone: 'Asia/Kolkata' });
   if (!result.ok) throw new Error(result.message);
   return { ...result.breakdown, confirmed_at: new Date() };
@@ -58,7 +58,7 @@ interface Seeded {
 }
 
 /** A pod that ran at a venue on an accepted offer — per guest with a minimum, or flat. */
-async function seedAgreed(over: { model?: 'PER_GUEST' | 'FLAT'; rate?: number; min?: number; counterRate?: number; free?: boolean } = {}): Promise<Seeded> {
+async function seedAgreed(over: { model?: 'PER_GUEST' | 'FLAT' | 'FREE'; rate?: number; min?: number; counterRate?: number; free?: boolean } = {}): Promise<Seeded> {
   seq += 1;
   const model = over.model ?? 'PER_GUEST';
   const rate = over.rate ?? 500;
@@ -287,6 +287,24 @@ describe('completing a pod against an agreed amount', () => {
       venue_agreed_rate: 500,
     });
     expect(out.settlement.waterfall.venue_amount).toBe(3150);
+  });
+
+  it('asks no bill of a free venue, which is owed nothing for the booking', async () => {
+    const { podId, hostId } = await seedAgreed({ model: 'FREE', rate: 0 });
+    const out = await svc.completePod({ pod_id: podId, venue_bill_amount: 0, venue_extra_amount: 0 }, actorOf(hostId));
+    expect(out.settlement.waterfall.venue_amount).toBe(0);
+    // Nothing to release to the venue.
+    expect(out.releases.map((r) => r.kind)).not.toContain('VENUE_BILLING');
+  });
+
+  it("still needs the bill when a free venue charged extras, and the bill's file with any total entered", async () => {
+    const { podId, hostId } = await seedAgreed({ model: 'FREE', rate: 0 });
+    await expect(svc.completePod({ pod_id: podId, venue_bill_amount: 0, venue_extra_amount: 200 }, actorOf(hostId))).rejects.toMatchObject({
+      extensions: { reason: 'VENUE_BILL_REQUIRED' },
+    });
+    await expect(svc.completePod({ pod_id: podId, venue_bill_amount: 200, venue_extra_amount: 0 }, actorOf(hostId))).rejects.toThrow(
+      'Upload the venue bill for the amount you entered'
+    );
   });
 
   it('still completes from an app build that never sends the extra charges, with no bill asked for', async () => {

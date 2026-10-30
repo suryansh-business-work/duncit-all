@@ -22,7 +22,7 @@ const VALUE_SX = {
   '&.Mui-selected, &.Mui-selected:hover': { bgcolor: T.navBar, color: T.onBrand },
 } as const;
 
-/** One pill row per option (size, flavour…); impossible values are disabled, sold-out ones struck. */
+/** One pill row per option (size, flavour, ...); impossible values are disabled, sold-out ones struck. */
 export function VariantPicker({ options, selection, stateOf, onChoose }: Readonly<VariantPickerProps>) {
   const { t } = useStoreT();
   const baseId = useId();

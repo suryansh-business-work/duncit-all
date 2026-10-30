@@ -100,6 +100,7 @@ export { default as AutoPodEditorPage } from './pods/auto/editor';
 export { default as AutoPodDetailsPage } from './pods/auto/details';
 export { default as PodSettingsPage } from './pods/settings/PodSettingsPage';
 export { default as PodMonitoringPage } from './pods/monitoring/PodMonitoringPage';
+export { default as FreeArrangementsPage } from './pods/free-arrangements/FreeArrangementsPage';
 export { default as EventTicketsPage } from './pods/event-tickets/EventTicketsPage';
 export { default as PodIdeasPage } from './pods/ideas/PodIdeasPage';
 export { default as PodPlansPage } from './pods/plans/PodPlansPage';

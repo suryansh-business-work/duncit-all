@@ -33,7 +33,7 @@ interface DeliveryCheckFormProps {
   variantId: string | null;
 }
 
-/** "Deliver to 400001?" — the courier's answer for this product, with COD and an ETD. */
+/** "Deliver to 400001?": the courier's answer for this product, with COD and an ETD. */
 export function DeliveryCheckForm({ productId, variantId }: Readonly<DeliveryCheckFormProps>) {
   const { t } = useStoreT();
   const [savedPincode, setSavedPincode] = usePincode();

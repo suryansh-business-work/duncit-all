@@ -15,6 +15,8 @@ export {
   type VenueOfferAskFieldsProps,
   type VenueOfferAskLabels,
 } from './VenueOfferAskFields';
+export { default as FreeArrangementFields, type FreeArrangementFieldsProps } from './FreeArrangementFields';
+export { default as FreePolicyDialog, type FreePolicyDialogProps } from './FreePolicyDialog';
 export {
   default as WalletStatementFields,
   type WalletStatementClock,

@@ -96,6 +96,8 @@ export const MobileAccountHealthDocument = gql(`
         remark
         created_by_name
         created_at
+        waived
+        appeal_status
       }
     }
   }

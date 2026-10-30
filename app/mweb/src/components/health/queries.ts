@@ -1,4 +1,5 @@
 import { gql } from '@apollo/client';
+import type { HealthAppealStatus } from '@duncit/utils';
 
 export const HEALTH_SCORE_FIELDS = gql`
   fragment HealthScoreFields on HealthScore {
@@ -15,6 +16,8 @@ export const HEALTH_SCORE_FIELDS = gql`
       remark
       created_by_name
       created_at
+      waived
+      appeal_status
     }
   }
 `;
@@ -37,12 +40,28 @@ export const MY_VENUE_HEALTH = gql`
   ${HEALTH_SCORE_FIELDS}
 `;
 
+/** File an appeal against one deduction. The health queries refetch by name. */
+export const APPEAL_HEALTH_ADJUSTMENT = gql`
+  mutation AppealHealthAdjustment($input: AppealHealthAdjustmentInput!) {
+    appealHealthAdjustment(input: $input) {
+      id
+      appeal_no
+      status
+    }
+  }
+`;
+
+/** The health views an appeal changes — refetched by operation name when active. */
+export const HEALTH_QUERY_NAMES = ['MyAccountHealth', 'MyVenueHealth'];
+
 export interface HealthAdjustment {
   id: string;
   delta: number;
   remark: string;
   created_by_name: string;
   created_at: string;
+  waived: boolean;
+  appeal_status: HealthAppealStatus | null;
 }
 
 export interface HealthScore {

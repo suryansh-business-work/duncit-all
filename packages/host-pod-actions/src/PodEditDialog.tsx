@@ -18,7 +18,9 @@ import ContentCheckAlert from './ContentCheckAlert';
 import { useContentCheck } from './useContentCheck';
 import PodSpotsField from './PodSpotsField';
 import PodTicketDiscountField from './PodTicketDiscountField';
+import PodSmartIncentiveField from './PodSmartIncentiveField';
 import { usePodEditTicketDiscount } from './usePodEditTicketDiscount';
+import { usePodEditSmartIncentive } from './usePodEditSmartIncentive';
 import { HOST_UPDATE_POD, POD_SPOT_LIMITS } from './queries';
 import {
   buildHostUpdateInput,
@@ -36,8 +38,8 @@ interface Props {
 }
 
 /**
- * Host's pod edit dialog — title, images, description, the pod's capacity and
- * its multi-ticket discount (hidden on a free pod).
+ * Host's pod edit dialog — title, images, description, the pod's capacity, its
+ * multi-ticket discount and its Smart Incentive (both hidden on a free pod).
  *
  * "Flexible pod count": a pod published with fewer spots than the space it
  * booked can hold is not stuck that way. The range comes from the server, which
@@ -52,6 +54,7 @@ interface Props {
 export default function PodEditDialog({ pod, onClose, onSaved }: Readonly<Props>) {
   const { labels, renderMediaField } = useHostPodActionsConfig();
   const discount = usePodEditTicketDiscount(pod);
+  const incentive = usePodEditSmartIncentive(pod);
   const {
     register,
     control,
@@ -61,7 +64,7 @@ export default function PodEditDialog({ pod, onClose, onSaved }: Readonly<Props>
     setError,
     formState: { errors },
   } = useForm<z.input<ReturnType<typeof buildPodEditSchema>>, any, PodEditValues>({
-    resolver: zodResolver(buildPodEditSchema(labels, discount)),
+    resolver: zodResolver(buildPodEditSchema(labels, discount, incentive)),
     defaultValues: podEditInitialValues(pod),
   });
   const [save, saveState] = useMutation<any>(HOST_UPDATE_POD);
@@ -90,7 +93,8 @@ export default function PodEditDialog({ pod, onClose, onSaved }: Readonly<Props>
   }, [limits, setValue]);
 
   const submit = handleSubmit(async (values) => {
-    const input = buildHostUpdateInput(values, { includeSpots: !!limits, ticketDiscount: discount });
+    const options = { includeSpots: !!limits, ticketDiscount: discount, smartIncentive: incentive };
+    const input = buildHostUpdateInput(values, options);
     const saved = await check.run(buildPodEditModerationInput(values), () =>
       save({ variables: { pod_doc_id: pod?.id, input } }),
     );
@@ -159,6 +163,12 @@ export default function PodEditDialog({ pod, onClose, onSaved }: Readonly<Props>
               unitPrice={Number(pod?.pod_amount)}
             />
           )}
+          <PodSmartIncentiveField
+            control={control}
+            incentive={incentive}
+            labels={labels.smartIncentive}
+            unitPrice={Number(pod?.pod_amount)}
+          />
           <ContentCheckAlert violations={check.blocked} title={labels.contentCheck} />
           {check.failure && (
             <Alert severity="error" data-testid="pod-edit-error">

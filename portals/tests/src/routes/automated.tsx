@@ -3,6 +3,7 @@ import UnitRunsPage from '../pages/unit/runs';
 import UnitRunDetailPage from '../pages/unit/run-detail';
 import UnitInventoryPage from '../pages/unit/inventory';
 import E2eRunsPage from '../pages/e2e';
+import E2eScenariosPage from '../pages/e2e/scenarios';
 import { E2eSettingsPage } from '../pages/e2e/settings';
 import E2eFlowsPage from '../pages/e2e/flows';
 import E2eFlowDetailPage from '../pages/e2e/flows/detail';
@@ -26,6 +27,7 @@ export function automatedRoutes(authed: Authed) {
           only thing that starts a scheduled run. */}
       <Route path="/e2e" element={<Navigate to="/e2e/runs" replace />} />
       <Route path="/e2e/runs" element={authed(<E2eRunsPage />)} />
+      <Route path="/e2e/runs/:runId/scenarios" element={authed(<E2eScenariosPage />)} />
       <Route path="/e2e/flows" element={authed(<E2eFlowsPage />)} />
       <Route path="/e2e/flows/:flowId" element={authed(<E2eFlowDetailPage />)} />
       <Route path="/e2e/settings" element={authed(<E2eSettingsPage />)} />

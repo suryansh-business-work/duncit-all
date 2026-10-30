@@ -35,6 +35,8 @@ export const appConfig = {
     // than under it: a grievance is someone complaining about US, a report is
     // someone flagging another user's content.
     { label: 'UGC Monitoring', labelKey: 'shell.nav.ugcMonitoring', to: '/ugc-monitoring', icon: 'flag' },
+    // Deductions people appealed from the account / venue health history.
+    { label: 'Account Health Appeals', labelKey: 'shell.nav.healthAppeals', to: '/account-health-appeals', icon: 'shield' },
     {
       label: 'Grievance', labelKey: 'shell.nav.grievance',
       icon: 'flag',

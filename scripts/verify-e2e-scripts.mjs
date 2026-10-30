@@ -12,6 +12,7 @@
  * browser surface must use scripts/e2e-no-surface.mjs, which carries its own
  * allowlist so a portal cannot quietly opt out.
  */
+import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -87,7 +88,20 @@ for (const dir of workspaceDirs()) {
     continue;
   }
 
-  rows.push([dir, script.includes(NO_OP_RUNNER) ? 'no browser surface (allowlisted)' : script]);
+  if (!script.includes(NO_OP_RUNNER)) {
+    rows.push([dir, script]);
+    continue;
+  }
+  // Run the no-op itself: it is the one that knows the allowlist, and a package
+  // missing from it only fails when the E2E sweep reaches it otherwise.
+  const name = script.split(NO_OP_RUNNER)[1].trim();
+  const noop = spawnSync(process.execPath, [path.join(ROOT, NO_OP_RUNNER), name], { encoding: 'utf8' });
+  if (noop.status === 0) {
+    rows.push([dir, 'no browser surface (allowlisted)']);
+  } else {
+    problems.push(`${dir} runs the no-op but "${name}" is not on the scripts/e2e-no-surface.mjs allowlist.`);
+    rows.push([dir, '*** NOT ALLOWLISTED ***']);
+  }
 }
 
 const width = Math.max(...rows.map(([d]) => d.length));

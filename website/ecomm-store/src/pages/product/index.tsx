@@ -45,7 +45,7 @@ function ProductView({ product }: Readonly<{ product: StoreProduct }>) {
           display: 'grid',
           gap: { xs: 2, md: 5 },
           alignItems: 'start',
-          // minmax(0, …): the gallery's off-screen slides must not widen the column past the phone.
+          // minmax(0, ...): the gallery's off-screen slides must not widen the column past the phone.
           gridTemplateColumns: { xs: 'minmax(0, 1fr)', md: 'repeat(2, minmax(0, 1fr))' },
           gridTemplateAreas: { xs: '"title" "gallery" "buy"', md: '"gallery title" "gallery buy"' },
         }}
@@ -69,7 +69,7 @@ function ProductView({ product }: Readonly<{ product: StoreProduct }>) {
   );
 }
 
-/** /p/:slug — one product, counted as viewed once per visit. */
+/** /p/:slug: one product, counted as viewed once per visit. */
 export function ProductPage() {
   const { t } = useStoreT();
   const { slug = '' } = useParams();

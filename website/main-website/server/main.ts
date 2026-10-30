@@ -1,11 +1,11 @@
 /**
- * duncit.com's HTML server — Node, not nginx.
+ * duncit.com's HTML server (Node, not nginx).
  *
  * It exists for the links that are a REDIRECT rather than a page. A short
  * link, duncit.com/aB3xY9Zq, used to be resolved by an inline script on the
  * home page: the apex answers every unknown path with index.html, so the code
  * landed there and JavaScript sent it on. That works for a person and not at
- * all for a crawler, which reads the head and leaves — so every pod, club and
+ * all for a crawler, which reads the head and leaves, so every pod, club and
  * profile anyone shared unfurled as the Duncit home page.
  *
  * Here the hop is a real 302 before any HTML is written, which the unfurlers
@@ -22,6 +22,7 @@ import { gzipSync } from 'node:zlib';
 import { injectSiteMeta } from '@duncit/brand/site-meta';
 import { SHORT_CODE_PATTERN, trimSlashes } from '../src/lib/short-link';
 import { POLICY_PAGE_PATTERN, POLICY_READER_PATH, policyPagePath } from '../src/lib/policy-page';
+import { BLOG_POST_SHELL, blogPostPath, blogSlugFromPath, isBlogPostShell } from '../src/lib/blog-path';
 import { blogPostMeta, fetchLivePolicy, policyMeta } from './page-meta';
 import { acceptsGzip, resolveDistFile, sendFile, setSecurityHeaders } from './static-files';
 
@@ -32,10 +33,6 @@ const DIST_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', 'dist');
  * with, so a staging image resolves against staging. */
 const SERVER_URL = (process.env.SERVER_URL || 'https://server.duncit.com').replace(/\/+$/, '');
 const SITE_URL = (process.env.SITE_URL || 'https://duncit.com').replace(/\/+$/, '');
-
-/** The page that serves every blog post — the one route whose head cannot be
- * built, because which post it shows is in the query string. */
-const BLOG_POST_PATH = '/blog/post';
 
 const redirect = (res: ServerResponse, status: number, location: string): void => {
   res.writeHead(status, { Location: location, 'Cache-Control': 'no-store' });
@@ -67,10 +64,10 @@ function handleShortLink(
 }
 
 /**
- * `/policy?slug=…` is the address policies used to live at, kept so that every
+ * `/policy?slug=...` is the address policies used to live at, kept so that every
  * link already printed in an email or a receipt still lands. It was a page
- * whose script rewrote the location, which meant it unfurled as "Redirecting…"
- * — a permanent move deserves to be answered as one.
+ * whose script rewrote the location, which meant it unfurled as "Redirecting...".
+ * A permanent move should be answered as one.
  */
 function handlePolicyAlias(res: ServerResponse, path: string, search: string): boolean {
   if (path !== '/policy') return false;
@@ -89,7 +86,7 @@ function handlePolicyAlias(res: ServerResponse, path: string, search: string): b
  * real answer: the reader page, a 404, and a redirect to the new slug.
  *
  * An unreachable API degrades to the built page (or the reader), whose script
- * loads the text itself — the site keeps serving policies with the API slow.
+ * loads the text itself, so the site keeps serving policies with the API slow.
  */
 async function handlePolicyPage(
   req: IncomingMessage,
@@ -128,8 +125,8 @@ async function handlePolicyPage(
   return true;
 }
 
-/** The description the page was BUILT with — already localized, and the right
- * thing to fall back on when a post carries no summary of its own. */
+/** The description the page was BUILT with. It is already localized, and the
+ * right thing to fall back on when a post carries no summary of its own. */
 function builtDescription(html: string): string {
   const match = /<meta name="description" content="([^"]*)"/.exec(html);
   return match?.[1] ?? '';
@@ -149,24 +146,42 @@ function sendHtml(req: IncomingMessage, res: ServerResponse, html: string): void
   res.end(gzip ? gzipSync(Buffer.from(html)) : html);
 }
 
-/** The blog post page, with the post's own card in place of the blog's. */
-async function serveBlogPost(
+/**
+ * A blog post at its own address, /blog/<slug>: the one built post page with
+ * that post's card, and a 404 once the API says there is no such post. The old
+ * /blog/post?slug=... address answers with a permanent redirect; the bare shell
+ * is served as built (its script sends the visitor to /blog).
+ */
+async function handleBlogPost(
   req: IncomingMessage,
   res: ServerResponse,
-  filePath: string,
+  rawPath: string,
   search: string
-): Promise<void> {
-  const html = readFileSync(filePath, 'utf8');
-  const slug = new URLSearchParams(search).get('slug') ?? '';
-  const pageUrl = `${SITE_URL}${BLOG_POST_PATH}${search}`;
-  const block = await blogPostMeta(slug, pageUrl, builtDescription(html)).catch(() => null);
-  sendHtml(req, res, block ? injectSiteMeta(html, block) : html);
+): Promise<boolean> {
+  if (isBlogPostShell(rawPath)) {
+    const legacySlug = new URLSearchParams(search).get('slug');
+    if (!legacySlug) return false;
+    redirect(res, 301, blogPostPath(legacySlug));
+    return true;
+  }
+  const slug = blogSlugFromPath(rawPath);
+  if (!slug) return false;
+  const shell = resolveDistFile(DIST_DIR, BLOG_POST_SHELL);
+  if (!shell) {
+    notFound(req, res);
+    return true;
+  }
+  const html = readFileSync(shell, 'utf8');
+  const block = await blogPostMeta(slug, `${SITE_URL}${blogPostPath(slug)}`, builtDescription(html)).catch(() => null);
+  if (block === 'missing') notFound(req, res);
+  else sendHtml(req, res, block ? injectSiteMeta(html, block) : html);
+  return true;
 }
 
 /** Astro builds the 404 page as a file at the root, not a directory. Serving it
  * with a real 404 is a change from the nginx runner, which answered every
- * unknown path with the home page at 200 — the shape the short-link hop needed
- * back when it was a script on that page. */
+ * unknown path with the home page at 200 (the shape the short-link hop needed
+ * back when it was a script on that page). */
 function notFound(req: IncomingMessage, res: ServerResponse): void {
   const page = resolveDistFile(DIST_DIR, '/404.html');
   if (!page) {
@@ -192,14 +207,11 @@ async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> 
   if (handleShortLink(req, res, path, url.search)) return;
   if (handlePolicyAlias(res, path, url.search)) return;
   if (await handlePolicyPage(req, res, path)) return;
+  if (await handleBlogPost(req, res, url.pathname, url.search)) return;
 
   const filePath = resolveDistFile(DIST_DIR, path);
   if (!filePath) {
     notFound(req, res);
-    return;
-  }
-  if (`/${trimSlashes(path)}` === BLOG_POST_PATH) {
-    await serveBlogPost(req, res, filePath, url.search);
     return;
   }
   sendFile(req, res, filePath, path);

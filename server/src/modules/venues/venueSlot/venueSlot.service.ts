@@ -646,6 +646,11 @@ async function podPublishedSends(facts: SlotDecisionFacts): Promise<NotifyInput[
 }
 
 /** The pod fields the decision templates read. */
+/** Where the in-app slot notes open, on mWeb's paths (the app maps the same
+ * ones): the host's pods, and the pods booked at the owner's venues. */
+const HOST_PODS_PATH = '/host/manage';
+const VENUE_PODS_PATH = '/venues/pods';
+
 interface SlotDecisionPod {
   _id: unknown;
   pod_title?: string | null;
@@ -771,6 +776,7 @@ async function notifySlotDecision(
     await notificationService.create({
       title,
       body,
+      link_url: HOST_PODS_PATH,
       scope: 'USER',
       target_user_ids: (pod.pod_hosts_id ?? []).map(String),
       silent: false,
@@ -830,6 +836,7 @@ async function announceLiveBooking(pod: SlotDecisionPod, slot: IVenueSlot, title
     await notificationService.create({
       title,
       body,
+      link_url: VENUE_PODS_PATH,
       scope: 'USER',
       target_user_ids: [String(slot.owner_user_id)],
       silent: false,
@@ -1003,7 +1010,14 @@ function approvedFields(slot: IVenueSlot) {
 async function tellVenueOwner(slot: IVenueSlot, title: string, body: string) {
   try {
     const { notificationService } = await import('@modules/engagement/notification/notification.service');
-    await notificationService.create({ title, body, scope: 'USER', target_user_ids: [String(slot.owner_user_id)], silent: false });
+    await notificationService.create({
+      title,
+      body,
+      link_url: VENUE_PODS_PATH,
+      scope: 'USER',
+      target_user_ids: [String(slot.owner_user_id)],
+      silent: false,
+    });
   } catch (error) {
     logs.server.error('venueSlot', 'tellVenueOwner', { error, slot_id: String(slot._id) });
   }

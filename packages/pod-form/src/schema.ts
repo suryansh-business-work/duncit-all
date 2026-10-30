@@ -1,9 +1,21 @@
 import { z } from 'zod';
-import { makeVenueOfferAskSchema } from '@duncit/forms/schemas';
-import { DEFAULT_TICKET_DISCOUNT_MAX_PCT, isVenueOfferModel, isVideoUrl, offerRateOf } from '@duncit/utils';
+import {
+  addFreeJustificationIssues,
+  freeJustificationDefaults,
+  freeJustificationFields,
+  makeVenueOfferAskSchema,
+} from '@duncit/forms/schemas';
+import {
+  DEFAULT_TICKET_DISCOUNT_MAX_PCT,
+  isFreeVenueOfferModel,
+  isHostOfferModel,
+  isVideoUrl,
+  offerRateOf,
+} from '@duncit/utils';
 import type { PodFormConfig, PodFormValues } from './types';
 import type { Translate } from './i18n/useTranslation';
 import { keepsExistingBooking } from './kept-booking';
+import { isFreePodType } from './pod-type';
 import { refineTicketDiscount, ticketDiscountTierSchema } from './ticket-discount';
 
 /** Returns true when the string parses as an http(s) URL. */
@@ -76,9 +88,22 @@ function refineVenue(
   if (values.pod_mode === 'PHYSICAL' && !values.venue_id) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['venue_id'], message: t('podForm.validation.venueRequired') });
   }
-  if (config.showVenueSlot && values.pod_mode === 'PHYSICAL' && values.venue_id) refineVenueOffer(values, ctx, t);
+  if (offersVenue(values, config)) refineVenueOffer(values, ctx, t);
   refineMeeting(values, ctx, t);
 }
+
+/**
+ * Whether the form offers the venue a window and terms: a physical pod (with
+ * the offer picker) on a venue, holding no slot. An edited pod that keeps its
+ * already-booked slot (and its dates) never makes a new offer. The offer's
+ * rules and a free venue's justification both hang on this.
+ */
+const offersVenue = (values: PodFormValues, config: PodFormConfig) =>
+  config.showVenueSlot &&
+  values.pod_mode === 'PHYSICAL' &&
+  !!values.venue_id &&
+  !values.venue_slot_id &&
+  !keepsExistingBooking(values);
 
 /**
  * What the host asks of the venue beside the price — the shared rules
@@ -99,21 +124,44 @@ function refineOfferAsk(values: PodFormValues, ctx: z.RefinementCtx, t: Translat
 /**
  * A physical pod offers its venue a window and terms: dates come from the
  * picked window, the venue is told how it is paid and what the host needs from
- * it. An edited pod that keeps its already-booked slot (and its dates) never
- * forces a new offer.
+ * it. A free venue (model FREE) is asked no amount — why it is free is
+ * `refineFreeJustification`'s.
  */
 function refineVenueOffer(values: PodFormValues, ctx: z.RefinementCtx, t: Translate) {
-  if (values.venue_slot_id || keepsExistingBooking(values)) return;
   if (!values.pod_date_time || !values.pod_end_date_time) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['venue_slot_id'], message: t('podForm.validation.slotRequired') });
   }
-  if (!isVenueOfferModel(values.venue_offer_model)) {
+  if (!isHostOfferModel(values.venue_offer_model)) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['venue_offer_model'], message: t('podForm.validation.offerModelRequired') });
   }
-  if (offerRateOf(values.venue_offer_rate) <= 0) {
+  if (!isFreeVenueOfferModel(values.venue_offer_model) && offerRateOf(values.venue_offer_rate) <= 0) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['venue_offer_rate'], message: t('podForm.validation.offerRateRequired') });
   }
   refineOfferAsk(values, ctx, t);
+}
+
+/** Whether any part of a free justification has been given. */
+const startedFreeJustification = (values: PodFormValues) =>
+  !!(values.free_reason || values.free_details.trim() || values.free_accepted);
+
+/**
+ * Why the pod or its venue is free, with the free policy accepted — one set of
+ * fields for both, held to the server's own checks (`addFreeJustificationIssues`).
+ * A free venue offer always needs it (the server refuses one without). A FREE
+ * pod needs it where the author is its host (`requireFreeJustification`); on a
+ * staff editor it is optional, but one started must be finished rather than
+ * silently left unsent.
+ */
+function refineFreeJustification(
+  values: PodFormValues,
+  ctx: z.RefinementCtx,
+  config: PodFormConfig,
+  t: Translate,
+) {
+  const freeVenue = offersVenue(values, config) && isFreeVenueOfferModel(values.venue_offer_model);
+  const freePod =
+    isFreePodType(values.pod_type) && (!!config.requireFreeJustification || startedFreeJustification(values));
+  if (freeVenue || freePod) addFreeJustificationIssues(values, ctx, t);
 }
 
 /** Meeting-link rules — only a VIRTUAL pod has one. */
@@ -302,6 +350,10 @@ export function makePodSchema(
       ticket_discount_enabled: z.boolean().default(false),
       ticket_discount_tiers: z.array(ticketDiscountTierSchema).default([]),
       is_active: z.boolean().default(true),
+      // Shape only — whether they are needed is refineFreeJustification's.
+      free_reason: freeJustificationFields.free_reason.default(freeJustificationDefaults.free_reason),
+      free_details: freeJustificationFields.free_details.default(freeJustificationDefaults.free_details),
+      free_accepted: freeJustificationFields.free_accepted.default(freeJustificationDefaults.free_accepted),
     })
     .superRefine((values, ctx) => {
       if (config.autoPod) {
@@ -313,6 +365,7 @@ export function makePodSchema(
       refineVenue(values, ctx, config, t);
       refineDates(values, ctx, t);
       refinePricingAndMedia(values, ctx, t);
+      refineFreeJustification(values, ctx, config, t);
       refineTicketDiscount(values, ctx, t, ticketDiscountMaxPct);
       refineReel(values, ctx, config, t);
       refineProducts(values, ctx, config, t);

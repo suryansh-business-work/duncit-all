@@ -74,6 +74,7 @@ export async function notifyPodRescheduled(pod: MovedPod, opts: { inApp?: boolea
           title: `${pod.pod_title} has moved`,
           body: `${pod.pod_title} now runs at ${venueName} on ${date}, ${time}. Your spot moved with it.`,
           image_url: pod.pod_images_and_videos?.[0]?.url ?? null,
+          link_url: path,
           scope: 'USER',
           target_user_ids: attendees,
         })

@@ -8,6 +8,7 @@ import type { OfferTerms } from '@/components/venue-offer/offer-format';
 import { renderWithProviders } from '@/utils/test-utils';
 import {
   counteredOffer,
+  freeVenueOffer,
   hostAnswersApi,
   offerMove,
   offerTerms,
@@ -96,6 +97,32 @@ describe('OfferChatCard — the venue reading a host offer', () => {
     expect(screen.queryByTestId('offer-money')).toBeNull();
     // No live offer: nothing to answer.
     expect(screen.queryByTestId('chat-offer-accept')).toBeNull();
+  });
+
+  it("reads a free venue request with the host's reason, no money and no counter", () => {
+    const move = offerMove({
+      model: 'FREE',
+      rate: 0,
+      venue_receives_min: 0,
+      venue_receives_max: 0,
+      total_min: 0,
+      total_max: 0,
+    });
+    mount(move, answeringAs('VENUE', freeVenueOffer()));
+    expect(screen.getByTestId('offer-move-terms')).toHaveTextContent('Free venue');
+    expect(screen.getByTestId('offer-move-free-reason')).toHaveTextContent(
+      'Requested free — Promotional offer: Launch week',
+    );
+    expect(screen.queryByTestId('offer-money')).toBeNull();
+    expect(screen.getByTestId('chat-offer-accept')).toBeOnTheScreen();
+    expect(screen.queryByTestId('chat-offer-counter')).toBeNull();
+  });
+
+  it("never lends the live booking's free reason to an older booking's line", () => {
+    const older = offerMove({ slot_id: 'slot-0', model: 'FREE', rate: 0 });
+    mount(older, answeringAs('VENUE', freeVenueOffer()), false);
+    expect(screen.getByTestId('offer-move-terms')).toHaveTextContent('Free venue');
+    expect(screen.queryByTestId('offer-move-free-reason')).toBeNull();
   });
 
   it('offers the venue no new offer after it declined', () => {

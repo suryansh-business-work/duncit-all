@@ -239,11 +239,12 @@ export const WEBSITE_SERVER_FLOWS: readonly CatalogueFlow[] = [
       },
       {
         name: 'Blog post card for crawlers',
-        description: 'The one route whose card depends on the query string.',
+        description: 'Each post is served at /blog/<slug> with its own card; the old ?slug= address redirects.',
         steps: [
           ['Publish a BLOG post with a summary and image in the Website portal', 'The post is returned by publicWebsiteContent(type: BLOG)'],
-          ['Request https://duncit.com/blog/post?slug=<slug> with curl', 'The HTML head carries og:title = post title, og:description = plain-text summary, og:type article and twitter:card summary_large_image'],
-          ['Request /blog/post?slug=does-not-exist', 'The built blog page meta is served unchanged with 200'],
+          ['Request https://duncit.com/blog/<slug> with curl', 'Status 200; canonical is https://duncit.com/blog/<slug>; the HTML head carries og:title = post title, og:description = plain-text summary, og:type article and twitter:card summary_large_image'],
+          ['Request /blog/post?slug=<slug>', '301 to /blog/<slug>'],
+          ['Request /blog/does-not-exist', '404 with the site 404 page and robots noindex'],
         ],
       },
       {
@@ -438,14 +439,14 @@ export const WEBSITE_SERVER_FLOWS: readonly CatalogueFlow[] = [
         description: 'Blog cards from BLOG content.',
         steps: [
           ['Open https://duncit.com/blog', 'Skeletons show, then one card per published post with image, category, date, title and summary'],
-          ['Click a blog card', 'The browser opens /blog/post?slug=<slug>'],
+          ['Click a blog card', 'The browser opens /blog/<slug>'],
         ],
       },
       {
         name: 'Read a blog post',
         description: 'Post body with Suggested, Related and Archive sidebars.',
         steps: [
-          ['Open /blog/post?slug=<published-slug>', 'The heading and tab title become the post title ("<title> — Duncit Blog") and the image, category, date and body render'],
+          ['Open /blog/<published-slug>', 'The heading and tab title become the post title ("<title> — Duncit Blog") and the image, category, date and body render'],
           ['Check the Suggested sidebar', 'Up to 3 other posts from the same category, or "No other posts in this category yet."'],
           ['Check the Related sidebar', 'Up to 3 other recent posts, or "More posts coming soon."'],
           ['Check the Archive sidebar', 'Month rows (newest first) with the post count for each month'],
@@ -456,7 +457,7 @@ export const WEBSITE_SERVER_FLOWS: readonly CatalogueFlow[] = [
         description: 'Missing and unknown slugs.',
         steps: [
           ['Open /blog/post with no slug query', 'The page redirects to /blog'],
-          ['Open /blog/post?slug=unknown-post', 'The body reads "This post could not be found. It may have been unpublished."'],
+          ['Open /blog/unknown-post', 'The server answers 404 with the site 404 page'],
           ['Block the GraphQL request and open a valid post', 'The body reads "The post could not be loaded right now. Please try again later."'],
         ],
       },
@@ -1379,7 +1380,7 @@ export const WEBSITE_SERVER_FLOWS: readonly CatalogueFlow[] = [
         steps: [
           ['Create a pod with attendees starting in 23.5 hours and wait a tick', 'Each attendee gets USER_POD_REMINDER on WhatsApp and the matching reminder email'],
           ['Wait for the next tick', 'No duplicate reminder is sent; the send log unique index rejects the repeat'],
-          ['Let the pod end and wait 1 hour plus a tick', 'Attendees get USER_POD_FEEDBACK, the host HOST_POD_FEEDBACK, the venue owner VENUE_POD_FEEDBACK and each club admin CLUB_ADMIN_FEEDBACK'],
+          ['Let the pod end and wait 1 hour plus a tick', 'Only people marked present are asked, once each: guests get USER_POD_FEEDBACK, a marked host HOST_POD_FEEDBACK; unmarked bookers, the venue owner and club admins get nothing'],
         ],
       },
       {

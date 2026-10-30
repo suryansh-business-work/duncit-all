@@ -6,7 +6,7 @@ type Translate = (key: string) => string;
 
 /**
  * The courier's bar, mirrored from the server's `addressProblems`: a street
- * or city of at least three characters that is not just the country — the
+ * or city of at least three characters that is not just the country. The
  * browser's autofill likes to put "India" in both, and ShipRocket refuses it.
  */
 const courierPlace = (t: Translate, key: string, max: number) =>

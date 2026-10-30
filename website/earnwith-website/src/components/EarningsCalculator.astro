@@ -26,7 +26,7 @@ const widgetCopy = {
 };
 ---
 
-<!-- The interactive piece: move the inputs, watch what a pod actually pays —
+<!-- The interactive piece: move the inputs and see what a pod pays, either
      as a host, or as the club admin whose club it runs under. Every figure
      comes from the server's own settlement waterfall, so this page cannot
      drift from what either of them is really paid. -->
@@ -108,8 +108,8 @@ const widgetCopy = {
           <p class="mt-5 text-xs text-ink-soft" data-earn-note>{calculator.note}</p>
         </div>
 
-        <!-- Beside the money, the job: what that role is actually signing up
-             for. The two move together, so neither is read on its own. -->
+        <!-- Beside the money, the job: what that role is signing up for. The
+             two move together, so neither is read on its own. -->
         <div class="rounded-card border border-line bg-cream p-6">
           <h3 class="font-head text-lg font-extrabold text-ink" data-duties-title>
             {calculator.roles[0].dutiesTitle}

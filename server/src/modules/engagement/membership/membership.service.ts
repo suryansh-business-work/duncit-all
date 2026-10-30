@@ -10,9 +10,13 @@ import {
   type IMembershipPlan,
 } from './membership.model';
 import { DEFAULT_MEMBERSHIP_BENEFITS, DEFAULT_MEMBERSHIP_PLANS } from './membership.seed';
+import { isFeatureEnabled } from '@modules/platform/settings/featureFlag.gate';
 
 /** Mongo's duplicate-key error — the unique user index rejecting a repeat. */
 const DUPLICATE_KEY = 11000;
+
+/** The feature flag that shows Membership in the apps (Admin > Feature flags). */
+export const MEMBERSHIP_FLAG = 'membership';
 
 export const planPub = (d: IMembershipPlan) => ({
   id: String(d._id),
@@ -59,6 +63,16 @@ export const membershipService = {
    * hand one member's subscribed state to everybody else.
    */
   async pricing(userId?: string | null) {
+    /*
+      With the `membership` flag off, no tier or price leaves the server. The
+      flag already hides the menu row, but a deep link — or a build already in
+      the store — still opens the page, and the App Store reads any price shown
+      in the iOS app as a paid membership sold outside In-App Purchase (3.1.1).
+      Empty lists render the clients' own "announced soon" state.
+    */
+    if (!(await isFeatureEnabled(MEMBERSHIP_FLAG))) {
+      return { plans: [], benefits: [], is_subscribed: await this.isSubscribed(userId) };
+    }
     const [plans, benefits, subscribed] = await Promise.all([
       MembershipPlanModel.find({ is_active: true }).sort({ sort_order: 1, name: 1 }),
       MembershipBenefitModel.find({ is_active: true }).sort({ sort_order: 1, label: 1 }),

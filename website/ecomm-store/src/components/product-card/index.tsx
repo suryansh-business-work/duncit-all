@@ -32,7 +32,7 @@ const TITLE_CLAMP = {
 
 interface ProductCardProps {
   product: StoreProductCard;
-  /** Position in its grid — picks the image panel's tint. */
+  /** Position in its grid; it picks the image panel's tint. */
   position: number;
 }
 

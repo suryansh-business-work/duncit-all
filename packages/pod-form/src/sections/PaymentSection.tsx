@@ -3,6 +3,7 @@ import { Box, MenuItem, Slider, Stack, Switch, TextField, Typography } from '@mu
 import { payableSpots } from '@duncit/utils';
 import { useSpotsBounds, useSpotsFloor } from '../useSpotsBounds';
 import EarningsProjection from '../components/EarningsProjection';
+import FreeJustificationField from '../components/FreeJustificationField';
 import PlaceChargesField from '../components/PlaceChargesField';
 import { getProductRequestTotal } from '../build-input';
 import { usePodFormData } from '../context';
@@ -90,6 +91,7 @@ export default function PaymentSection() {
           ))}
         </TextField>
       </Stack>
+      <FreeJustificationField place="pod" />
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{
         alignItems: "flex-start"
       }}>

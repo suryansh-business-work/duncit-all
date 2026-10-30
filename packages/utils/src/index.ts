@@ -138,6 +138,19 @@ export {
   type ReportableKind,
 } from './content-report';
 export {
+  HEALTH_APPEAL_MESSAGE_MAX,
+  HEALTH_APPEAL_REASONS,
+  HEALTH_APPEAL_REASON_KEY,
+  HEALTH_APPEAL_STATUSES,
+  HEALTH_APPEAL_STATUS_COLOR,
+  HEALTH_APPEAL_STATUS_KEY,
+  healthAppealStateOf,
+  isHealthAppealReason,
+  type AppealableAdjustment,
+  type HealthAppealReason,
+  type HealthAppealStatus,
+} from './health-appeal';
+export {
   readReferralCode,
   referralLink,
   renderReferralMessage,
@@ -654,6 +667,25 @@ export type {
   TicketDiscountTierErrors,
 } from './pod-ticket-discount-field';
 export {
+  DEFAULT_SMART_INCENTIVE_DELAY_SECONDS,
+  DEFAULT_SMART_INCENTIVE_MAX_PCT,
+  smartIncentiveFor,
+  smartIncentiveFormValues,
+  smartIncentiveInput,
+  smartIncentivePctIssue,
+  type SmartIncentivePctIssue,
+  type SmartIncentiveQuote,
+  type SmartIncentiveValues,
+} from './smart-incentive';
+export {
+  mwebSmartIncentiveLabels,
+  shellSmartIncentiveLabels,
+  type SmartIncentiveInfoLabels,
+  type SmartIncentiveLabels,
+  type SmartIncentiveTranslate,
+} from './smart-incentive-copy';
+export type { SmartIncentiveFieldProps } from './smart-incentive-field';
+export {
   HOST_FREE_SPOT_NOTE,
   SPOTS_HARD_MAX,
   attendeeSeatCount,
@@ -1167,6 +1199,25 @@ export {
   shouldExtendReelFeed,
   type ReelFeedEntry,
 } from './reel-feed';
+export {
+  formatTutorialDuration,
+  hasTutorialFilters,
+  hasWatchedEnough,
+  parseTutorialFilters,
+  TUTORIAL_COMMENT_MAX,
+  TUTORIAL_FILTER_PARAMS,
+  TUTORIAL_LANGUAGE_OPTIONS,
+  TUTORIAL_LANGUAGES,
+  TUTORIAL_PAGE_SIZE,
+  TUTORIAL_WATCHED_RATIO,
+  TUTORIALS_PATH,
+  tutorialFeedVariables,
+  tutorialFilterParams,
+  tutorialShareUrl,
+  withFocusedFirst,
+  type TutorialFilters,
+  type TutorialLanguageCode,
+} from './tutorials';
 export {
   allZero,
   buildEarningsBars,
@@ -1712,10 +1763,31 @@ export {
   type VenueSpace,
   type VenueSpaceSource,
 } from './venue-booking';
+// Free pods and free venues: the reasons, the policy's keys and the justification input.
+export {
+  FREE_DETAILS_LIMITS,
+  FREE_JUSTIFICATION_FIELDS,
+  FREE_POLICY_KEYS,
+  FREE_REASONS,
+  FREE_REASON_KEY,
+  FREE_VALIDATION_KEYS,
+  freeDetailsOf,
+  freeJustificationInput,
+  freeJustificationProblem,
+  freeReasonKey,
+  isFreeArrangement,
+  isFreeReason,
+  type FreeJustificationInput,
+  type FreeJustificationSource,
+  type FreeReason,
+} from './free-arrangement';
 export {
   ACCEPT_VENUE_COUNTER_OFFER_SDL,
   COUNTER_VENUE_OFFER_AS_HOST_SDL,
+  FREE_VENUE_OFFER_KEY,
+  FREE_VENUE_OFFER_MODEL,
   HOST_COUNTER_QUOTE_SDL,
+  HOST_OFFER_MODELS,
   POD_VENUE_OFFER_SDL,
   REJECT_VENUE_COUNTER_OFFER_SDL,
   VENUE_OFFER_ASK_LIMITS,
@@ -1728,6 +1800,8 @@ export {
   VENUE_MIN_BUSINESS_KEY,
   hostMayAnswerCounter,
   hostOfferActions,
+  isFreeVenueOfferModel,
+  isHostOfferModel,
   isOfferChangedError,
   isVenueOfferModel,
   mayCounter,
@@ -1742,6 +1816,7 @@ export {
   offerRateOf,
   offeringsFromText,
   offeringsToText,
+  venueOfferHelpKey,
   venueOfferInput,
   venueOfferModelKey,
   venueOfferPrefillValues,
@@ -1755,6 +1830,7 @@ export {
   type OfferEarningsArgs,
   type OfferQuoteMoney,
   type OfferQuoteRange,
+  type HostOfferModel,
   type VenueOfferInput,
   type VenueOfferModel,
   type VenueOfferPrefill,
@@ -2003,6 +2079,7 @@ export {
 } from './gig-jobs';
 export {
   DEFAULT_QUICK_ACCESS,
+  FEATURED_QUICK_ACCESS,
   PROFILE_MENU_ITEMS,
   PROFILE_MENU_SECTIONS,
   QUICK_ACCESS_CATALOGUE,
@@ -2053,6 +2130,7 @@ export {
   venueOfferInboxModelKey,
   venueOfferInboxStatus,
   venueOfferTermsLine,
+  FREE_VENUE_INBOX_KEY,
   VENUE_OFFER_INBOX_MODEL_KEY,
   type CurrentOfferTerms,
   type InboxOffer,

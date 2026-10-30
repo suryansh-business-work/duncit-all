@@ -33,6 +33,7 @@ exports:
   - 'PROFILE_MENU_SECTIONS'
   - 'QUICK_ACCESS_CATALOGUE'
   - 'DEFAULT_QUICK_ACCESS'
+  - 'FEATURED_QUICK_ACCESS'
   - 'QUICK_ACCESS_SIZE'
   - 'QUICK_ACCESS_STORAGE_KEY'
   - 'isProfileMenuItemVisible'
@@ -145,6 +146,23 @@ exports:
   - 'shouldExtendReelFeed'
   - 'isReelPreloaded'
   - 'REEL_PRELOAD_DISTANCE'
+  - 'TUTORIALS_PATH'
+  - 'TUTORIAL_LANGUAGES'
+  - 'TUTORIAL_LANGUAGE_OPTIONS'
+  - 'TUTORIAL_WATCHED_RATIO'
+  - 'TUTORIAL_COMMENT_MAX'
+  - 'TUTORIAL_PAGE_SIZE'
+  - 'TUTORIAL_FILTER_PARAMS'
+  - 'TutorialFilters'
+  - 'TutorialLanguageCode'
+  - 'hasWatchedEnough'
+  - 'parseTutorialFilters'
+  - 'tutorialFilterParams'
+  - 'tutorialFeedVariables'
+  - 'hasTutorialFilters'
+  - 'tutorialShareUrl'
+  - 'formatTutorialDuration'
+  - 'withFocusedFirst'
   - 'coverImageUrl'
   - 'podPhase'
   - 'canCompletePod'
@@ -228,6 +246,21 @@ exports:
   - 'TicketDiscountLabels'
   - 'TicketDiscountLimits'
   - 'TicketDiscountTranslate'
+  - 'smartIncentiveFor'
+  - 'smartIncentivePctIssue'
+  - 'smartIncentiveInput'
+  - 'smartIncentiveFormValues'
+  - 'DEFAULT_SMART_INCENTIVE_MAX_PCT'
+  - 'DEFAULT_SMART_INCENTIVE_DELAY_SECONDS'
+  - 'SmartIncentiveQuote'
+  - 'SmartIncentivePctIssue'
+  - 'SmartIncentiveValues'
+  - 'mwebSmartIncentiveLabels'
+  - 'shellSmartIncentiveLabels'
+  - 'SmartIncentiveLabels'
+  - 'SmartIncentiveInfoLabels'
+  - 'SmartIncentiveTranslate'
+  - 'SmartIncentiveFieldProps'
   - 'buildEarningsStatement'
   - 'formatStatementMoney'
   - 'buildEarningsSplit'
@@ -546,6 +579,11 @@ exports:
   - 'bookingRateText'
   - 'bookingTileCaption'
   - 'venueOfferInput'
+  - 'HOST_OFFER_MODELS'
+  - 'freeJustificationInput'
+  - 'freeJustificationProblem'
+  - 'isFreeArrangement'
+  - 'FREE_POLICY_KEYS'
   - 'venueOfferPriceInput'
   - 'offeringsFromText'
   - 'offerQuoteRange'
@@ -1208,6 +1246,36 @@ const labels = mwebTicketDiscountLabels(t);
 labels.errors.PCT_MAX({ maxPct: 50, maxTickets: 11, maxTiers: 10 })   // 'Discount can’t be more than 50%'
 ```
 
+### Smart Incentive — `smart-incentive` + `smart-incentive-copy` + `smart-incentive-field`
+
+| Export | Signature | Meaning |
+| --- | --- | --- |
+| `smartIncentiveFor` | `(ticketNet: number, pct: number \| null \| undefined) => SmartIncentiveQuote` | `{ pct, amount, net }` — the member's unlocked offer taken off the ticket money AFTER the multi-ticket discount (the two compound). All 0 off when there is no whole, positive offer. |
+| `smartIncentivePctIssue` | `(value: unknown, maxPct: number) => SmartIncentivePctIssue \| null` | `REQUIRED`, `PCT_MIN` (not a whole 1% or more) or `PCT_MAX` for the % a host typed; `null` when it can be saved. |
+| `smartIncentiveInput` | `(values: SmartIncentiveValues, free: boolean) => { smart_incentive_enabled; smart_incentive_pct }` | The mutation input: off at 0% on a free pod or a switched-off incentive, the typed % as a number otherwise. |
+| `smartIncentiveFormValues` | `(pod) => SmartIncentiveValues` | A stored pod as the forms hold it — the % as text, empty when off. |
+| `DEFAULT_SMART_INCENTIVE_MAX_PCT` / `DEFAULT_SMART_INCENTIVE_DELAY_SECONDS` | `20` / `15` | Server-twin defaults, used only while `smartIncentiveSettings` loads. |
+| `mwebSmartIncentiveLabels` / `shellSmartIncentiveLabels` | `(t: SmartIncentiveTranslate) => SmartIncentiveLabels` | Every word the host's editor and its explainer render — `mweb.smartIncentive.*` and `shell.smartIncentive.*`, word-for-word identical; `errors[code](maxPct)` words each issue. |
+| `SmartIncentiveFieldProps` | type | The contract the MUI editor in `@duncit/ui` and its Tamagui twin in the native app both render against. |
+
+A host switches Smart Incentive on for a pod and picks a percentage up to Loyalty's maximum. A member
+who stays on that pod page without booking for Loyalty's delay unlocks the offer, and checkout takes it
+off the ticket money on its own — after the multi-ticket discount, before the coupon, Duncit Coins and
+GST. The server keeps its own twin in `server/src/modules/engagement/smartIncentive/smartIncentive.rules.ts`,
+prices the charge with it and freezes it on the Payment; this copy only previews it:
+
+```ts
+const tier = ticketDiscountFor(499, 4, pod);              // net 1596.8 after the 20% tier
+smartIncentiveFor(tier.net, 10)
+// { pct: 10, amount: 159.68, net: 1437.12 }
+
+smartIncentivePctIssue('25', 20)                           // 'PCT_MAX'
+smartIncentiveInput({ smart_incentive_enabled: true, smart_incentive_pct: '12' }, false)
+// { smart_incentive_enabled: true, smart_incentive_pct: 12 }
+
+mwebSmartIncentiveLabels(t).errors.PCT_MAX(20)             // 'Discount can’t be more than 20%'
+```
+
 ### Coin ledger rows — `coin-ledger`
 
 | Export | Signature | Meaning |
@@ -1360,6 +1428,33 @@ if (shouldExtendReelFeed(activeIndex, reels.length)) setCycles((count) => count 
 | `shouldExtendReelFeed` | `(activeIndex, length) => boolean` | — | True once the reel on screen is within the preload distance of the end. |
 | `isReelPreloaded` | `(index, activeIndex) => boolean` | — | Whether a reel should be buffering — the ones within `REEL_PRELOAD_DISTANCE` either side. |
 | `REEL_PRELOAD_DISTANCE` | `2` | — | Reels kept loading ahead of and behind the one on screen. |
+
+### Learnings (tutorials) — `tutorials`
+
+The Learnings page (mWeb `/learnings`, the native `Tutorials` screen at linking path `learnings`; code keeps the tutorial name) reads its
+filters from the URL — `q`, `topic`, `lang` and `v` (a tutorial to bring to the
+front, which is what a shared link carries). A video counts as watched once 90%
+of it has played, or when it ends; both apps call `markTutorialWatched` once at
+that point and the server keeps it idempotent.
+
+```ts
+const filters = parseTutorialFilters((name) => searchParams.get(name));
+const variables = tutorialFeedVariables(filters, page);
+if (hasWatchedEnough(video.currentTime, video.duration)) markWatched();
+```
+
+| Export | Signature | Returns | Notes |
+| --- | --- | --- | --- |
+| `parseTutorialFilters` | `(read: (name) => unknown) => TutorialFilters` | — | Unknown languages are dropped; every value is trimmed. |
+| `tutorialFilterParams` | `(filters) => Record<string, string>` | — | Only the set filters, so a clean feed has a clean URL. |
+| `tutorialFeedVariables` | `(filters, page?) => variables` | — | The `tutorials` query variables, empty filters sent as null. |
+| `hasTutorialFilters` | `(filters) => boolean` | — | Whether search, topic or language narrows the feed. |
+| `hasWatchedEnough` | `(position, duration) => boolean` | — | True at `TUTORIAL_WATCHED_RATIO` (0.9); a zero or unknown duration never counts. |
+| `tutorialShareUrl` | `(origin, id) => string` | — | `<origin>/learnings?v=<id>`. |
+| `formatTutorialDuration` | `(seconds) => string` | — | `2:05`; an hour or more reads `1:02:05`. |
+| `withFocusedFirst` | `(rows, focusId) => rows` | — | Moves the shared tutorial to the front of its page. |
+| `TUTORIAL_LANGUAGE_OPTIONS` | `{ value, labelKey }[]` | — | The English / Hindi toggle; labels are `mweb.tutorials.*` keys. |
+| `TUTORIAL_COMMENT_MAX` | `500` | — | Same limit the server enforces. |
 
 ### Pod phase — the Home rails
 
@@ -2660,7 +2755,7 @@ a step can only be left once its OWN boxes are right and nobody is told off abou
 screens ahead.
 
 ```ts
-SIGNUP_STEP_FIELDS.WHO;       // ['name', 'dob', 'referralCode']
+SIGNUP_STEP_FIELDS.WHO;       // ['name', 'dob', 'ageConfirmed', 'referralCode']
 SIGNUP_STEP_FIELDS.CONTACT;   // includes 'whatsappIsMobile' — the tick box is CONTACT's
 nextSignupStep('CONTACT');    // 'SECURITY'
 stepSubmitsAccount('SECURITY'); // true — the last step with boxes; VERIFY spends the answers
@@ -2671,8 +2766,9 @@ Both apps render the same four steps from `buildSignupStepperLabels`; the MUI an
 components stay separate and thin (rule 40).
 
 Google is the same four steps with the first three answered for it, so it lands straight on
-VERIFY — where it has to ask for the WhatsApp number and the date of birth before it can ask
-for the code, because a Google credential carries neither. `detailsTitle` / `detailsSubtitle`
+VERIFY — where it has to ask for the WhatsApp number and the joining age (the "I confirm I am
+N or older" tick, plus an optional date of birth) before it can ask for the code, because a
+Google credential carries neither. `detailsTitle` / `detailsSubtitle`
 are that half-step's words, and `sameAsMobile` / `sameAsMobileHint` are the tick box's,
 rendered from the same builder so neither door words it differently.
 
@@ -2701,11 +2797,12 @@ state.askingNumber;      // true — Google brought no number to send a code to,
 
 state = signupFlowReducer(state, {
   type: 'DETAILS_GIVEN',
-  values: { ...whatsappNumberValues, dob: '1998-04-23' },
+  values: { ...whatsappNumberValues, dob: '', ageConfirmed: true },
 });
 state.askingNumber;      // false — both doors meet at the code step now
 state.verifying;         // { extension: '+91', number: '9845012345', alsoMobile: true }
-state.googleDob;         // '1998-04-23' — what signupWithGoogle is sent, since Google never had it
+state.googleDob;         // '' — the birthday is optional, so it may stay blank
+state.googleAgeConfirmed; // true — what signupWithGoogle is sent in its place
 
 signupNumberOf({ phoneExtension: '+91', phoneNumber: '9845012345', whatsappIsMobile: false });
 // { extension: '+91', number: '9845012345', alsoMobile: false }
@@ -3557,11 +3654,13 @@ offer's pricing (the legacy venue pricing calendar's `VenueBookingModel` still h
 
 | Export | Meaning |
 | --- | --- |
-| `VENUE_OFFER_MODELS` / `VENUE_OFFER_MODEL_KEY` | The pricing options (`PER_GUEST`, `PER_HOUR`, `FLAT`) in picker order, and each one's name, amount-field label and one-line `help` keys. |
-| `isVenueOfferModel(model)` / `venueOfferModelKey(model)` | Whether a plain string (either app's enum) is an option; its name key, or `''`. |
+| `VENUE_OFFER_MODELS` / `VENUE_OFFER_MODEL_KEY` | The pricing options (`PER_GUEST`, `PER_HOUR`, `FLAT`) in picker order, and each one's name, amount-field label and one-line `help` keys. Counters and the venue's business guide use only these. |
+| `HOST_OFFER_MODELS` / `FREE_VENUE_OFFER_MODEL` / `FREE_VENUE_OFFER_KEY` | The host's opening-offer options: the priced three, then `FREE` — the venue gives the window for nothing (no amount; a free justification is required; the venue accepts or declines and nobody counters). The free option's name and help keys. |
+| `isVenueOfferModel(model)` / `isHostOfferModel(model)` / `isFreeVenueOfferModel(model)` | Whether a plain string is a priced option; an opening-offer option (priced or free); the free venue. |
+| `venueOfferModelKey(model)` / `venueOfferHelpKey(model)` | An option's name and one-line help keys (free included), or `''` for one this client does not know. |
 | `offerRateOf(rate)` | A typed amount as rupees (2 decimals), or 0 when it is not a positive number. |
 | `VENUE_OFFER_ASK_LIMITS` / `offeringsFromText(text)` / `offeringsToText(list)` | The server's bounds (20 points, 120 characters each, a 1000-character note); the box's text as points (trimmed, typed bullets and blank lines dropped) and back. |
-| `venueOfferInput(source)` | The `venue_offer` input (`start_at`, `end_at`, `space_label` — `''` for the whole venue — `pax`, `pets`, `model`, `rate`, and `offerings` / `note` when the source has them), or null until a window, an option and an amount are all there. |
+| `venueOfferInput(source)` | The `venue_offer` input (`start_at`, `end_at`, `space_label` — `''` for the whole venue — `pax`, `pets`, `model`, `rate`, and `offerings` / `note` when the source has them), or null until a window, an option and an amount are all there. A `FREE` offer needs no amount (rate 0) and carries `free_justification` once `source.freeJustification` is complete and accepted. |
 | `venueOfferPriceInput(input)` | The same input without the points and note — what a live quote asks with, so typing them never re-prices. |
 | `offerQuoteRange(quote, quoteMin)` / `moneyRangeText(min, max, money)` | A quote pair as `{ venueMin, venueMax, totalMin, totalMax, ranged }`, and one amount or "min – max" written with the surface's formatter. |
 | `offerEarningsArgs(quote, quoteMin, minGuests, spots)` | The venue arguments `potentialPodEarnings` takes, with `min_spots` and the money at the minimum when it is below the spots. |
@@ -3581,6 +3680,33 @@ const range = offerQuoteRange(result.quote, result.quote_min);
 moneyRangeText(range.venueMin, range.venueMax, money); // '₹1,800 – ₹6,000'
 ```
 
+## Free pods and free venues — `free-arrangement`
+
+Duncit allows a FREE pod, or a FREE venue booking, only for special initiatives, promotional offers
+or approved campaigns. Whoever picks "Free" names the reason (`OTHER` needs details), accepts the
+free policy, and is warned that misuse may cost account health or hold payments; the server stamps
+who accepted it and when, and the Pods console's Free Arrangements page audits every one. A free
+booking still goes to the venue, which may only accept or decline it: the server answers
+`counters_per_side: 0` for a free venue and for any offer on a free pod, and refuses a counter with
+`FREE_NO_COUNTER`.
+
+| Export | Meaning |
+| --- | --- |
+| `FREE_REASONS` / `FREE_REASON_KEY` / `isFreeReason(value)` / `freeReasonKey(value)` | The reasons (`INITIATIVE`, `PROMOTIONAL`, `CAMPAIGN`, `OTHER`) in picker order, their label keys, and a guard / lookup (`''` for an unknown one). |
+| `FREE_POLICY_KEYS` | The policy's copy in reading order: the notice (`title`, three `paragraphs`), "More details" and its dialog (`detailsTitle`, five `detailsPoints`, `close`), the acceptance, the warning on misuse, and the reason/details labels. |
+| `FREE_DETAILS_LIMITS` / `freeDetailsOf(details)` | The server's bounds (3–300 characters, the lower one only for `OTHER`) and the details as it stores them (one line, trimmed). |
+| `freeJustificationProblem(source)` / `FREE_VALIDATION_KEYS` | Which check fails first — `reason`, `detailsTooLong`, `details`, `accept` — the server's order, or null; each one's message key. |
+| `freeJustificationInput(source)` | The `FreeJustificationInput` to send (`reason`, cleaned `details`, `accepted: true`), or null until it is complete and accepted. |
+| `isFreeArrangement(offer)` | A free venue (`model: 'FREE'`) or an offer on a free pod (`free_pod`) — accepted or declined, never countered. |
+| `FREE_JUSTIFICATION_FIELDS` | The selection `free_justification { reason details accepted_at }` for an offer or a Free Arrangements row. |
+
+```ts
+const justification = freeJustificationInput({ reason: values.free_reason, details: values.free_details, accepted: values.free_accepted });
+// → { reason: 'PROMOTIONAL', details: '', accepted: true } — or null while incomplete
+const offer = venueOfferInput({ ...window, model: 'FREE', rate: '', freeJustification: { reason: 'CAMPAIGN', accepted: true } });
+// → { …, model: 'FREE', rate: 0, free_justification: { reason: 'CAMPAIGN', details: '', accepted: true } }
+```
+
 ## Answering a host's offer — `venue-offer-inbox`
 
 The venue's side of `venue-offer`: where a booking request stands and what the venue may do,
@@ -3590,12 +3716,12 @@ for the Partners console, mWeb and the native app. Every copy key is a literal (
 | --- | --- |
 | `currentOfferTerms(offer)` | The terms on the table and whose they are: the venue's counter while there is one (`by: 'VENUE'`), else the host's offer or latest counter back (`by: 'HOST'`) — with `quoteMin`, `minGuests`, `offerings` and `note` (empty on offers from older servers). |
 | `venueOfferActions(offer)` | What the venue may do now: `SENT` → accept, reject, counter; `COUNTERED` → reject or change the counter (it cannot accept its own terms); settled → nothing. Counter only while the venue has counters left of its share (`mayCounter`). |
-| `offerCounterAllowance(offer, side)` | The `left` / `of` pair a "counters left" line names for one side, or null when the server names no limit. |
+| `offerCounterAllowance(offer, side)` | The `left` / `of` pair a "counters left" line names for one side, or null when the server names no limit — and null on a booking that takes no counters at all (`counters_per_side: 0`, a free one), whose surfaces say "accepted or declined, never countered" instead. |
 | `venueOfferPin(offer, side)` | The pinned bar at the top of a venue chat, for the reader's side: `statusKey` (`availability.offers.pin.yourMove` / `theirMove` while `SENT` or `COUNTERED`, by `awaiting`; `accepted` / `declined` once closed; `''` for an unknown status), `open`, the reader's own counters (`mine`) and the other side's (`theirs`), and `expiresAt` only while open. Null when the pod has no live offer. |
 | `isCounterLimitError(reason)` | Whether a refused move's `extensions.reason` (`COUNTER_LIMIT`) means the side has used every counter it may make. |
 | `venueOfferInboxStatus(offer)` | How the status reads to the venue, and the chip tone; `''` for an unknown status. |
 | `VENUE_OFFER_INBOX_MODEL_KEY` / `venueOfferInboxModelKey(model)` | Each pricing option's name and amount-line keys (`"{rate} per guest"`); null for an unknown option. |
-| `venueOfferTermsLine(t, model, amount)` | "Per guest · ₹300 per guest" — one side's terms in the booking's words, with the amount already formatted; the inbox, the chat, Complete Pod and Finance all write it this way. |
+| `venueOfferTermsLine(t, model, amount)` / `FREE_VENUE_INBOX_KEY` | "Per guest · ₹300 per guest" — one side's terms in the booking's words, with the amount already formatted; the inbox, the chat, Complete Pod and Finance all write it this way. A free venue reads "Free venue", with no amount. |
 | `venueOfferHistoryKey(entry)` | One negotiation step's sentence key by who took it (`HOST:OFFER`, `VENUE:COUNTER`, …); `''` for an unknown one. |
 
 ```ts
@@ -4451,8 +4577,9 @@ profileSectionSubtitleKeys(explore?.items ?? []);
 | Export | Signature | Meaning |
 | --- | --- | --- |
 | `PROFILE_MENU_ITEMS` | `Record<ProfileMenuKey, ProfileMenuItem>` | Every destination: `labelKey`, optional `flag`, `badgeKey` and `subtitleKey`. |
-| `PROFILE_MENU_SECTIONS` | `ProfileMenuSectionDef[]` | The five section cards, their title keys and rows, in order. |
+| `PROFILE_MENU_SECTIONS` | `ProfileMenuSectionDef[]` | The six section cards (Explore, Work, Loyalty — Duncit Coin, gift cards, Refer & Earn — Shopping, Account, Support), their title keys and rows, in order. |
 | `QUICK_ACCESS_CATALOGUE` / `DEFAULT_QUICK_ACCESS` | `ProfileMenuKey[]` | What may be pinned, in editor order / the grid until edited. |
+| `FEATURED_QUICK_ACCESS` | `ProfileMenuKey` | The tile both apps highlight with an animated brand gradient (`'earn'`). |
 | `isProfileMenuItemVisible` | `(key, flags) => boolean` | False while the destination's flag is not explicitly on. |
 | `availableQuickAccess` | `(flags) => ProfileMenuKey[]` | The catalogue entries pickable right now. |
 | `isValidQuickAccess` | `(selection, flags) => boolean` | Exactly six, distinct, each pickable. |

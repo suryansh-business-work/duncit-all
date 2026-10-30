@@ -67,8 +67,8 @@ export default defineConfig({
       LINK_PARTNERS_SITE_URL: process.env.CYPRESS_LINK_PARTNERS_SITE_URL || 'https://staging.partners.duncit.com',
       LINK_PARTNERS_APP_URL: process.env.CYPRESS_LINK_PARTNERS_APP_URL || 'https://staging.partners-app.duncit.com',
     },
-    setupNodeEvents(on) {
-      registerScenarioClips(on);
+    setupNodeEvents(on, config) {
+      registerScenarioClips(on, config);
       // Visiting another origin (the Finance portal in specs/10) reloads the spec and
       // runs its `before` again; a journey keeps what it has made here, across that.
       const kept = new Map<string, unknown>();

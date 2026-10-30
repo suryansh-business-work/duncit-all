@@ -95,33 +95,39 @@ export const WHATSAPP_NUMBER_NAMES = {
 } as const;
 
 /**
- * The date of birth — a full calendar day, required, and old enough.
+ * The joining age — an OPTIONAL date of birth, and a REQUIRED "I confirm I am
+ * N or older" tick.
+ *
+ * The App Store does not let signup demand personal data the app can work
+ * without, and a birthday is one of them: what the app needs is the minimum
+ * age, which the tick states. So the box may stay empty, and when it is filled
+ * it still has to be a real day (INVALID otherwise) that clears the minimum age
+ * — a birthday that contradicts the tick is refused, not quietly kept. The
+ * server re-asks both questions against the admin's setting.
  *
  * Held as 'YYYY-MM-DD', which is what both pickers emit and what the API is
- * sent. Three rules, in the order a person meets them: an empty box is
- * REQUIRED, a half-typed one is INVALID (a real day, on a real calendar), and
- * a real day that is too recent names the minimum age. The server re-checks
- * the age against the admin's setting; this is the same calendar question,
- * asked before the request leaves.
- *
- * A birth YEAR was tried here and taken out again: a year cannot say whether
- * this year's birthday has happened, so the gate had to round — and it rounded
- * in the applicant's favour, admitting somebody born in December of the cut-off
- * year all through it.
+ * sent. A birth YEAR was tried here and taken out again: a year cannot say
+ * whether this year's birthday has happened, so the gate had to round — and it
+ * rounded in the applicant's favour.
  */
-function dobShape(t: Translate, minAge: number) {
+function ageShape(t: Translate, minAge: number) {
   return {
     dob: z
       .string()
       .trim()
-      .min(1, t('mweb.signup.validation.dobRequired'))
       .refine(
-        (v) => isIsoDay(v) && ageInYears(v) !== null,
+        (v) => v === '' || (isIsoDay(v) && ageInYears(v) !== null),
         t('mweb.signup.validation.dobInvalid'),
       )
       .refine(
-        (v) => isEligibleDob(v, minAge),
+        (v) => v === '' || isEligibleDob(v, minAge),
         t('mweb.signup.validation.dobMinAge', { vars: { years: minAge } }),
+      ),
+    ageConfirmed: z
+      .boolean()
+      .refine(
+        (v) => v,
+        t('mweb.signup.validation.ageConfirmRequired', { vars: { years: minAge } }),
       ),
   };
 }
@@ -145,13 +151,13 @@ function nameRule(t: Translate) {
 }
 
 /**
- * The Google door's own step: the WhatsApp row and the date of birth.
+ * The Google door's own step: the WhatsApp row and the joining age.
  *
  * Google proves an address and nothing else — no number to send a code to, and
- * no birthday to gate the age on — so the two things the email form asked on
- * its first two steps are asked here on one step of their own, before
- * `signupWithGoogle` is called: that mutation needs the number, the code that
- * proved it, and the date of birth, and refuses without any of them.
+ * no age to gate on — so the two things the email form asked on its first two
+ * steps are asked here on one step of their own, before `signupWithGoogle` is
+ * called: that mutation needs the number, the code that proved it, and either
+ * the age tick or a date of birth, and refuses without them.
  *
  * Apple rides the same step. It also never puts a name in its token — it shares
  * one once, on the first authorisation — so `askName` makes the name a real
@@ -166,7 +172,7 @@ export function makeGoogleSignupSchema(
   return z.object({
     name: askName ? nameRule(t) : z.string(),
     ...whatsappNumberShape(t),
-    ...dobShape(t, minAge),
+    ...ageShape(t, minAge),
   });
 }
 
@@ -176,6 +182,7 @@ export const googleSignupDefaults: GoogleSignupValues = {
   ...whatsappNumberDefaults,
   name: '',
   dob: '',
+  ageConfirmed: false,
 };
 
 export function makeSignupSchema(
@@ -186,8 +193,8 @@ export function makeSignupSchema(
   return z
     .object({
       name: nameRule(t),
-      // The full date of birth — the same rule the Google door's step runs.
-      ...dobShape(t, minAge),
+      // The age tick and the optional birthday — the same rule the Google door's step runs.
+      ...ageShape(t, minAge),
       email: z
         .string()
         .trim()
@@ -256,6 +263,8 @@ export type SignupFormValues = z.infer<ReturnType<typeof makeSignupSchema>>;
 export const signupDefaults: SignupFormValues = {
   name: '',
   dob: '',
+  // Unticked: the person has to say it themselves.
+  ageConfirmed: false,
   email: '',
   // Same default dial as every other phone row in both apps — India is the
   // market, and the box is a searchable list for everyone else.

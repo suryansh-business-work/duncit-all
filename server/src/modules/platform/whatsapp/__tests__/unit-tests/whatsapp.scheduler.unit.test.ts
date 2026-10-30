@@ -548,10 +548,9 @@ describe('the feedback asks', () => {
       chain([user('u-1'), user('u-2', 'Vikram'), user('u-3', 'Venue'), user('u-4', 'Asha'), user('u-5', 'Ravi')])
     );
 
-  it('asks guests, the host, the venue owner and every club admin, each once', async () => {
+  it('asks a marked host once as the host and a marked guest once as a guest — nobody else', async () => {
+    marked.mockResolvedValue(new Map([['pod-doc-1', new Set(['u-1', 'u-2'])]]));
     podsBySweep({ ended: [ended()] });
-    venues.find.mockReturnValue(chain([{ _id: 'v-1', owner_user_id: 'u-3' }]));
-    clubs.find.mockReturnValue(chain([{ _id: 'club-1', admin_user_ids: ['u-4', 'u-5'] }]));
     everybody();
 
     await runWhatsappSweeps();
@@ -559,8 +558,9 @@ describe('the feedback asks', () => {
     // The host sits in pod_attendees too and is asked only as the host.
     expect(eventsNamed('USER_POD_FEEDBACK').map((ask) => ask.name)).toEqual(['Vikram N']);
     expect(eventsNamed('HOST_POD_FEEDBACK').map((ask) => ask.name)).toEqual(['Meera N']);
-    expect(eventsNamed('VENUE_POD_FEEDBACK').map((ask) => ask.name)).toEqual(['Venue N']);
-    expect(eventsNamed('CLUB_ADMIN_FEEDBACK').map((ask) => ask.name)).toEqual(['Asha N', 'Ravi N']);
+    // A venue or club role is not attendance: neither is asked.
+    expect(eventsNamed('VENUE_POD_FEEDBACK')).toHaveLength(0);
+    expect(eventsNamed('CLUB_ADMIN_FEEDBACK')).toHaveLength(0);
   });
 
   it('asks only the guests the host marked present — a booked no-show gets no ask', async () => {
@@ -572,19 +572,27 @@ describe('the feedback asks', () => {
 
     expect(marked).toHaveBeenCalledWith(['pod-doc-1']);
     expect(eventsNamed('USER_POD_FEEDBACK').map((ask) => ask.name)).toEqual(['Vikram N']);
-    // The host is still asked as the host.
-    expect(eventsNamed('HOST_POD_FEEDBACK').map((ask) => ask.name)).toEqual(['Meera N']);
   });
 
-  it('asks no guest at all when nobody was marked present, and never reads a mark from another pod', async () => {
-    marked.mockResolvedValue(new Map([['pod-doc-other', new Set(['u-2'])]]));
+  it('does not ask a host who was not marked present', async () => {
+    podsBySweep({ ended: [ended()] });
+    everybody();
+
+    await runWhatsappSweeps();
+
+    expect(eventsNamed('HOST_POD_FEEDBACK')).toHaveLength(0);
+    expect(eventsNamed('USER_POD_FEEDBACK')).toHaveLength(1);
+  });
+
+  it('asks nobody when nobody was marked present, and never reads a mark from another pod', async () => {
+    marked.mockResolvedValue(new Map([['pod-doc-other', new Set(['u-1', 'u-2'])]]));
     podsBySweep({ ended: [ended()] });
     everybody();
 
     await runWhatsappSweeps();
 
     expect(eventsNamed('USER_POD_FEEDBACK')).toHaveLength(0);
-    expect(eventsNamed('HOST_POD_FEEDBACK')).toHaveLength(1);
+    expect(eventsNamed('HOST_POD_FEEDBACK')).toHaveLength(0);
   });
 
   it('links every ask to the pod’s rating form', async () => {
@@ -596,31 +604,6 @@ describe('the feedback asks', () => {
     const [ask] = eventsNamed('USER_POD_FEEDBACK');
     expect(ask.params[4]).toBe('https://mweb.duncit.com/pod/pod-doc-1/feedback');
     expect(ask.entityId).toBe('pod-doc-1');
-  });
-
-  it('skips the venue and club reads for a pod with neither', async () => {
-    podsBySweep({ ended: [ended({ venue_id: null, club_id: null })] });
-    everybody();
-
-    await runWhatsappSweeps();
-
-    expect(venues.find).not.toHaveBeenCalled();
-    expect(clubs.find).not.toHaveBeenCalled();
-    expect(eventsNamed('VENUE_POD_FEEDBACK')).toHaveLength(0);
-    expect(eventsNamed('CLUB_ADMIN_FEEDBACK')).toHaveLength(0);
-  });
-
-  it('asks no venue owner the venue does not name, and no admin of a club with none', async () => {
-    podsBySweep({ ended: [ended()] });
-    venues.find.mockReturnValue(chain([{ _id: 'v-1' }]));
-    clubs.find.mockReturnValue(chain([{ _id: 'club-1' }]));
-    everybody();
-
-    await runWhatsappSweeps();
-
-    expect(eventsNamed('VENUE_POD_FEEDBACK')).toHaveLength(0);
-    expect(eventsNamed('CLUB_ADMIN_FEEDBACK')).toHaveLength(0);
-    expect(eventsNamed('HOST_POD_FEEDBACK')).toHaveLength(1);
   });
 });
 

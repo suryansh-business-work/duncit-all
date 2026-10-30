@@ -22,6 +22,7 @@ import { PodDetailsSkeleton } from '../pod-details-page/queries';
 import PodCommerceSection from './PodCommerceSection';
 import { usePodRentalPicks } from '../pod-rent/usePodRentalPicks';
 import PodDetailsDialogs from './PodDetailsDialogs';
+import SmartIncentiveOfferDialog from '../pod-details-page/SmartIncentiveOfferDialog';
 import PodHashtagsAndSupport from './PodHashtagsAndSupport';
 import { usePodDetailsData } from './usePodDetailsData';
 
@@ -38,6 +39,7 @@ export default function PodDetailsPage() {
   const {
     slugResolution, id, data, error, peopleData, spotFillData, onJoinMeeting,
     seatsByUser, pod, locationPrompt, productSelection, actions,
+    isFree, isPodHost, joined, smartIncentive,
   } = usePodDetailsData({ clubSlug, podSlug, referralFromUrl, navigate });
   // Held here (not in the shop card) because Book reads them: a free pod with picks goes through checkout.
   const rentalPicks = usePodRentalPicks(id);
@@ -84,8 +86,6 @@ export default function PodDetailsPage() {
     };
   });
 
-  const isFree = pod.pod_type === 'FREE';
-  const isPodHost = (pod.pod_hosts_id ?? []).includes(data?.me?.user_id);
   const media = pod.pod_images_and_videos ?? [];
   const membershipState = data?.podMembershipState;
   const backoutAttemptsLeft = attemptsLeftFor(membershipState);
@@ -134,8 +134,7 @@ export default function PodDetailsPage() {
         showProducts={showProducts}
         seats={actions.seats}
         picks={rentalPicks}
-        // The two statuses the server's ALREADY_BOOKED check refuses a second checkout for.
-        joined={Boolean(membershipState?.is_member || membershipState?.backout_in_process)}
+        joined={joined}
       />
 
       <PodDetailAccordions
@@ -158,6 +157,7 @@ export default function PodDetailsPage() {
         isFree={isFree}
         isHost={isPodHost}
         priceFormat={priceFormat}
+        smartIncentive={smartIncentive.offer}
         membershipState={data?.podMembershipState}
         joining={actions.joinState.loading}
         backingOut={actions.backoutState.loading}
@@ -188,6 +188,7 @@ export default function PodDetailsPage() {
         currency={priceCurrency}
         backoutAttemptsLeft={backoutAttemptsLeft}
       />
+      <SmartIncentiveOfferDialog incentive={smartIncentive} unitPrice={Number(pod.pod_amount) || 0} onBook={actions.onPaidCheckout} />
       <LocationMismatchDialog kind="POD" {...locationPrompt} />
     </Stack>
   );

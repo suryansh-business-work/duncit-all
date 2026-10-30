@@ -202,7 +202,8 @@ describe('E2E runs table / empty fields', () => {
 
 describe('RunDetailsDialog', () => {
   it('shows a dash for the branch of a run that has none', () => {
-    render(<RunDetailsDialog run={e2eRun({ ref: '' })} onClose={vi.fn()} />);
+    // In a router: the dialog links to the run's scenario page.
+    renderWithProviders(<RunDetailsDialog run={e2eRun({ ref: '' })} onClose={vi.fn()} />);
     expect(screen.getByRole('dialog')).toHaveTextContent('—');
   });
 });

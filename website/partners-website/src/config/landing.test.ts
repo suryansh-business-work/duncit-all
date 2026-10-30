@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 /**
  * landing.ts is mostly the site's photographs and layout, but `partnerLanding`
- * memoises one translator fetch for the whole static build — every component
+ * memoises one translator fetch for the whole static build. Every component
  * awaits the same promise in its frontmatter, so re-fetching per component
  * would multiply one request by the page count.
  */

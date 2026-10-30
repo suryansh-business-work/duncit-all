@@ -133,6 +133,8 @@ const adjustment = {
   remark: 'nice',
   created_by_name: 'Admin',
   created_at: '2021-01-01',
+  waived: false,
+  appeal_status: null,
 };
 
 const health = {

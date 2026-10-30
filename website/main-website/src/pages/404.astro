@@ -8,7 +8,7 @@ import { getTranslator } from '../lib/i18n';
 
 const { t } = await getTranslator();
 
-// Stickers bobbing around the 404 — decoration, all hidden from screen readers.
+// Stickers bobbing around the 404. Decoration, all hidden from screen readers.
 const stickers = [
   { icon: 'fa-compass', label: t('website.main.notFound.lost'), place: 'top-[2%] left-[4%] sm:left-[14%] -rotate-12 bg-primary-dark text-white', delay: '0s' },
   { icon: 'fa-map-location-dot', label: t('website.main.notFound.offMap'), place: 'top-[4%] right-[4%] sm:right-[14%] rotate-12 bg-tertiary text-on-accent', delay: '-1.5s' },
@@ -29,7 +29,7 @@ const links = [
 const button = 'inline-flex h-14 items-center gap-2.5 rounded-full px-7 font-head font-bold transition duration-300 ease-soft hover:-translate-y-0.5';
 ---
 
-<Layout title={t('website.main.notFound.title')}>
+<Layout title={t('website.main.notFound.title')} noindex>
   <SiteNav />
   <div class="bg-frame p-2 sm:p-3">
     <TopBar />

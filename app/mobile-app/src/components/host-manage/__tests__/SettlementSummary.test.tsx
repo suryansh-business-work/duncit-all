@@ -149,6 +149,18 @@ describe('SettlementSummary', () => {
     expect(agreed.getByText('₹1200.00')).toBeOnTheScreen();
   });
 
+  it('names a free venue as the agreed terms, not a ₹0 rate', () => {
+    renderWithProviders(
+      <SettlementSummary
+        settlement={{ ...settlement, venue_agreed_model: 'FREE', venue_agreed_rate: 0 }}
+        isLoading={false}
+      />,
+    );
+    const agreed = within(screen.getByTestId('settlement-agreed-terms'));
+    expect(agreed.getByText('Free venue')).toBeOnTheScreen();
+    expect(agreed.queryByText('₹0.00')).toBeNull();
+  });
+
   it('states no agreed terms when the model is known but the rate is not', () => {
     renderWithProviders(
       <SettlementSummary

@@ -3,6 +3,7 @@
  * blog post page (blog-post.ts): the item shape, and the three helpers every
  * string needs before it lands in an innerHTML template.
  */
+import { blogPostPath } from '../lib/blog-path';
 
 export interface ContentItem {
   id: string;
@@ -48,4 +49,4 @@ export const formatDate = (value: unknown): string => {
 };
 
 /** The on-site address of one blog post. */
-export const postLink = (item: Pick<ContentItem, 'slug'>): string => `/blog/post?slug=${encodeURIComponent(item.slug)}`;
+export const postLink = (item: Pick<ContentItem, 'slug'>): string => blogPostPath(item.slug);

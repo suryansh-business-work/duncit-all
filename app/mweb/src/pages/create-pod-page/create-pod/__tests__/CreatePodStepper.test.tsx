@@ -102,6 +102,9 @@ const validVirtual = (over: Partial<CreatePodFormValues> = {}): CreatePodFormVal
   pod_end_date_time: new Date(future.getTime() + 2 * 3600 * 1000),
   pod_type: 'FREE',
   pod_amount: 0,
+  // A free pod says why it is free and accepts Duncit's free policy.
+  free_reason: 'INITIATIVE',
+  free_accepted: true,
   media_text: 'https://cdn.example.com/cover.jpg',
   what_this_pod_offers: ['Great fun'],
   agreed_to_terms: true,

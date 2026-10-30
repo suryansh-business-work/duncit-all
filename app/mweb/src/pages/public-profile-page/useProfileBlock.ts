@@ -1,9 +1,16 @@
-import { useMutation } from '@apollo/client/react';
+import { useApolloClient, useMutation } from '@apollo/client/react';
 import { useConfirm } from '@duncit/dialogs';
 import { BLOCK_ACTION_COPY, parseApiError, type BlockAction } from '@duncit/utils';
 import { useTranslation } from '../../i18n/useTranslation';
 import { notify } from '../../components/notify';
 import { BLOCK_USER, UNBLOCK_USER } from '../../components/content-report/queries';
+
+/**
+ * Every cached read that can hold another member's posts, stories or comments.
+ * The server leaves a blocked member out of all of them (App Store 1.2: at
+ * once), so a block drops them and each refetches as it is shown.
+ */
+const FEED_FIELDS = ['posts', 'stories', 'followingFeed', 'clubStories', 'post'] as const;
 
 export interface BlockableProfile {
   user_id: string;
@@ -26,6 +33,7 @@ export function useProfileBlock(profile: BlockableProfile, onChanged: () => unkn
   const action: BlockAction = profile.blocked_by_viewer ? 'UNBLOCK' : 'BLOCK';
   const copy = BLOCK_ACTION_COPY[action];
   const [run, { loading }] = useMutation(action === 'BLOCK' ? BLOCK_USER : UNBLOCK_USER);
+  const client = useApolloClient();
   const name = profile.full_name || (profile.username ? `@${profile.username}` : '');
 
   const toggle = async () => {
@@ -38,6 +46,8 @@ export function useProfileBlock(profile: BlockableProfile, onChanged: () => unkn
     if (!agreed) return;
     try {
       await run({ variables: { user_id: profile.user_id } });
+      for (const fieldName of FEED_FIELDS) client.cache.evict({ id: 'ROOT_QUERY', fieldName });
+      client.cache.gc();
       notify(t(copy.done, { vars: { name } }), 'success');
       await onChanged();
     } catch (e) {

@@ -39,7 +39,7 @@ export function useAccountHealth() {
 
   useRefreshRegistration(load);
 
-  return { health, isLoading, error };
+  return { health, isLoading, error, reload: load };
 }
 
 /** Venue health detail for an owned venue — RN port of mWeb's VenueHealthPage.
@@ -71,5 +71,5 @@ export function useVenueHealth(venueId: string) {
 
   useRefreshRegistration(load);
 
-  return { health, isLoading, error };
+  return { health, isLoading, error, reload: load };
 }

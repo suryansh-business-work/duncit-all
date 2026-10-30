@@ -8,7 +8,7 @@ import { CtaPill } from './CtaPill';
 import type { SectionProps } from './types';
 
 /**
- * EARN_PROMO — "Earn with Duncit": a dark banner (white on the nav-bar fill,
+ * EARN_PROMO, "Earn with Duncit": a dark banner (white on the nav-bar fill,
  * which every look keeps above 10:1). Blank operator fields fall back to the
  * bundled copy; the link falls back to Earn with Duncit, opened in a new tab.
  */

@@ -1,11 +1,13 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
+import { FEATURED_QUICK_ACCESS } from '@duncit/utils';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { TourAnchor } from '@/tours/TourAnchor';
 import type { MenuRoute } from '@/navigation/types';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+import { FeaturedTileBackdrop } from './FeaturedTileBackdrop';
 import type { MenuEntry } from './profileSections';
 
 /** The red count on a tile's corner — "9+" past nine, so it stays a dot. */
@@ -40,8 +42,10 @@ export function QuickTile({
   onNavigate,
 }: Readonly<{ tile: MenuEntry; badgeCount?: number; onNavigate: (route: MenuRoute) => void }>) {
   const { t } = useTranslation();
-  const { accent } = useThemeColors();
+  const { accent, onPrimary } = useThemeColors();
   const unread = badgeCount && badgeCount > 0 ? badgeCount : 0;
+  // Earn with Duncit stands out: the animated brand gradient behind it.
+  const featured = tile.key === FEATURED_QUICK_ACCESS;
   return (
     <YStack
       testID={`sidebar-grid-${tile.key}`}
@@ -57,13 +61,21 @@ export function QuickTile({
       gap={8}
       borderRadius={16}
       borderWidth={1}
-      borderColor="$cardBorder"
+      borderColor={featured ? 'transparent' : '$cardBorder'}
       backgroundColor="$surface"
+      overflow="hidden"
       padding={8}
       pressStyle={PRESS_STYLE.surface}
     >
-      <MaterialIcons name={tile.icon} size={26} color={accent} />
-      <Text numberOfLines={2} textAlign="center" fontSize={12} fontWeight="600" color="$color">
+      {featured ? <FeaturedTileBackdrop /> : null}
+      <MaterialIcons name={tile.icon} size={26} color={featured ? onPrimary : accent} />
+      <Text
+        numberOfLines={2}
+        textAlign="center"
+        fontSize={12}
+        fontWeight="600"
+        color={featured ? '$onPrimary' : '$color'}
+      >
         {tile.label}
       </Text>
       {unread ? <TileBadge count={unread} /> : null}

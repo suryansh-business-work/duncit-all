@@ -1,12 +1,14 @@
 import { Stack, Typography } from '@mui/material';
 import { useDateFormat, useTranslation } from '@duncit/app-settings';
 import { slotSpanLabel } from '@duncit/slots';
-import type { VenueChatOfferMove } from '@duncit/utils';
+import { isFreeVenueOfferModel, type VenueChatOfferMove } from '@duncit/utils';
 import { offerGuestsLabel, offerTermsLabel } from '../format';
+import FreeJustificationNote from '../FreeJustificationNote';
 import { OfferAnswerBy, OfferAsk } from '../OfferAsk';
 import OfferImages from '../OfferImages';
 import OfferMoney from '../OfferMoney';
 import type { OfferSide } from '../offer-target';
+import type { OfferFreeJustification } from '../queries';
 
 function Fact({ label, value }: Readonly<{ label: string; value: string }>) {
   return (
@@ -27,20 +29,36 @@ interface Props {
   open: boolean;
   /** A free pod: its host settles the venue directly, so the move names no money. */
   podIsFree?: boolean;
+  /** Why the host asked for the venue free (the live offer carries it; the line does not). */
+  freeJustification?: OfferFreeJustification | null;
+}
+
+/** The money the move came to — none for a free venue (its terms say "Free venue"), the free-pod notice for a free pod. */
+function MoveMoney({ move, money, podIsFree }: Readonly<Pick<Props, 'move' | 'money'> & { podIsFree: boolean }>) {
+  const { t } = useTranslation();
+  if (isFreeVenueOfferModel(move.model)) return null;
+  if (!podIsFree) {
+    const range = { venueMin: move.venue_receives_min, venueMax: move.venue_receives_max, totalMin: move.total_min, totalMax: move.total_max };
+    return <OfferMoney side={money} range={range} />;
+  }
+  return (
+    <Typography variant="body2" sx={{ color: 'text.secondary' }} data-testid="offer-move-free">
+      {money === 'VENUE' ? t('availability.offers.freePod') : t('availability.offers.hostAnswer.freePod')}
+    </Typography>
+  );
 }
 
 /**
  * The terms one move of the offer carried, as they stood: how the venue is
- * paid, for how many guests, when and where, pets, the money as a range, what
- * the venue is asked to provide, the note, the photos attached, why it was
- * declined, and until when it may be answered.
+ * paid, for how many guests, when and where, pets, the money as a range, why
+ * the host asked for it free, what the venue is asked to provide, the note, the
+ * photos attached, why it was declined, and until when it may be answered.
  */
-export default function OfferMoveDetails({ move, money, open, podIsFree = false }: Readonly<Props>) {
+export default function OfferMoveDetails({ move, money, open, podIsFree = false, freeJustification }: Readonly<Props>) {
   const { t } = useTranslation();
   const fmt = useDateFormat({ timeZoneAware: true });
   const guests = offerGuestsLabel(t, move.min_guests, move.max_guests);
   const when = slotSpanLabel(move.start_at, move.end_at, false, fmt, t('availability.wholeDay'));
-  const range = { venueMin: move.venue_receives_min, venueMax: move.venue_receives_max, totalMin: move.total_min, totalMax: move.total_max };
 
   return (
     <Stack spacing={0.75}>
@@ -50,13 +68,8 @@ export default function OfferMoveDetails({ move, money, open, podIsFree = false 
       <Fact label={t('availability.offers.guestsLabel')} value={move.pets ? `${guests} · ${t('availability.offers.pets')}` : guests} />
       <Fact label={t('availability.offers.when')} value={when} />
       <Fact label={t('availability.offers.space')} value={move.space_label || t('availability.offers.wholeVenue')} />
-      {podIsFree ? (
-        <Typography variant="body2" sx={{ color: 'text.secondary' }} data-testid="offer-move-free">
-          {money === 'VENUE' ? t('availability.offers.freePod') : t('availability.offers.hostAnswer.freePod')}
-        </Typography>
-      ) : (
-        <OfferMoney side={money} range={range} />
-      )}
+      <MoveMoney move={move} money={money} podIsFree={podIsFree} />
+      <FreeJustificationNote justification={freeJustification} />
       <OfferAsk offerings={move.offerings} note={move.note} by={move.by} />
       <OfferImages images={move.images} />
       {move.event === 'DECLINED' && move.reason && (

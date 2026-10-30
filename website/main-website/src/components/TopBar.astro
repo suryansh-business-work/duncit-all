@@ -1,11 +1,11 @@
 ---
 // The one top bar every page wears: a floating glass pill that stays put as
 // the page scrolls. It sits over each page's first panel (the home reel, an
-// inner page's photo, the 404 card) — the wrapper is zero-height and sticky,
+// inner page's photo, the 404 card). The wrapper is zero-height and sticky,
 // so the pill floats ON that panel instead of pushing it down. The panel
 // leaves room for it with its own top padding.
 //
-// Menu opens the SiteNav drawer (any [data-nav-toggle] does — see
+// Menu opens the SiteNav drawer (any [data-nav-toggle] does; see
 // @duncit/brand/widgets/site-nav). The theme button here and the one in the
 // drawer are kept in step by @duncit/brand/widgets/theme-toggle.
 import ThemeToggle from '@duncit/brand/ThemeToggle.astro';
@@ -17,8 +17,8 @@ import { getTranslator } from '../lib/i18n';
 
 const { t } = await getTranslator();
 
-// The desktop shortcuts are the header groups' own first links — the
-// Navigation manager decides them, the same request the drawer makes.
+// The desktop shortcuts are the header groups' own first links. The
+// Navigation manager decides them, from the same request the drawer makes.
 const groups = await fetchNavGroups('MAIN', 'HEADER', navFallback(t));
 const shortcuts = groups
   .flatMap((group) => (group.links[0] ? [{ label: group.label, href: group.links[0].url }] : []))

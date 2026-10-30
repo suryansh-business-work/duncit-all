@@ -26,6 +26,8 @@ export {
 export type { PodEditFormInput, PodEditValues } from './pod-edit.form';
 export { podEditTicketDiscount } from './pod-edit-ticket-discount';
 export type { PodEditTicketDiscount } from './pod-edit-ticket-discount';
+export { podEditSmartIncentive } from './pod-edit-smart-incentive';
+export type { PodEditSmartIncentive, SmartIncentiveProgramme } from './pod-edit-smart-incentive';
 
 export {
   default as PodCancelDialog,

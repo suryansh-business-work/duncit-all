@@ -61,6 +61,48 @@ const uploadBill = async () => {
 };
 
 const venuePod = { id: 'p1', pod_title: 'Cafe jam', venue_id: 'v1' };
+
+/** A paid pod whose venue gave the booking free: the venue's side is ₹0 and the host keeps the pool. */
+const freeVenueSettlement = {
+  is_free: false,
+  currency_symbol: '₹',
+  collected_total: 1000,
+  has_venue: true,
+  paying_attendees: 4,
+  attended_seats: 5,
+  booked_seats: 6,
+  venue_bill: 0,
+  venue_slot_price: 0,
+  include_slot_price: false,
+  venue_extra_amount: 0,
+  venue_min_guests: 0,
+  venue_pax: 0,
+  venue_agreed_model: 'FREE',
+  venue_agreed_rate: 0,
+  complete_deadline: '2026-08-25T05:30:00.000Z',
+  complete_expired: false,
+  host_payout_amount: 724.58,
+  waterfall: {
+    amount: 1000,
+    gst_pct: 18,
+    gst_amount: 152.54,
+    net_amount: 847.46,
+    platform_fee_pct: 5,
+    platform_fee_amount: 42.37,
+    pool_amount: 805.09,
+    club_admin_pct: 0,
+    club_admin_amount: 0,
+    venue_amount: 0,
+    venue_commission_pct: 10,
+    venue_commission_amount: 0,
+    venue_receives: 0,
+    host_amount: 805.09,
+    host_commission_pct: 10,
+    host_commission_amount: 80.51,
+    host_receives: 724.58,
+    host_earn_pct: 72.46,
+  },
+};
 const virtualPod = { id: 'p2', pod_title: 'Online jam', venue_id: null };
 
 beforeEach(() => {
@@ -203,6 +245,27 @@ describe('PodCompleteDialog', () => {
     );
     expect(completionInputs()).toEqual([]);
     expect(onCompleted).not.toHaveBeenCalled();
+  });
+
+  it('asks a free venue for no bill until it charged extras, and completes without one', async () => {
+    mockPreview.settlement = freeVenueSettlement;
+    const onCompleted = jest.fn();
+    renderWithProviders(
+      <PodCompleteDialog pod={venuePod} onClose={jest.fn()} onCompleted={onCompleted} />,
+    );
+    // The fields stay for any extras, but the bill is no longer marked required.
+    expect(screen.getByTestId('pod-complete-venue-bill-fields')).toBeOnTheScreen();
+    expect(screen.queryByLabelText('Upload the venue bill, required')).toBeNull();
+    // Extras need the bill that proves them.
+    fireEvent.changeText(screen.getByTestId('field-venue_extra_amount'), '300');
+    fireEvent.press(screen.getByTestId('pod-complete-submit'));
+    await waitFor(() => expect(screen.getByTestId('venue_bill_amount-error')).toBeOnTheScreen());
+    expect(completionInputs()).toEqual([]);
+    // No extras: nothing is owed, so nothing is asked for.
+    fireEvent.changeText(screen.getByTestId('field-venue_extra_amount'), '');
+    fireEvent.press(screen.getByTestId('pod-complete-submit'));
+    await waitFor(() => expect(onCompleted).toHaveBeenCalled());
+    expect(completionInputs()).toEqual([{ pod_id: 'p1', venue_bill_amount: 0 }]);
   });
 
   it('refuses a total with no uploaded bill, and sends nothing', async () => {

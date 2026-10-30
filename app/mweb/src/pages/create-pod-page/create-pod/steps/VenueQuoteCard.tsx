@@ -13,6 +13,8 @@ interface Props {
   message?: string | null;
   loading: boolean;
   error: unknown;
+  /** The host asks for the venue free: once the server has checked the offer, it says so instead of a price. */
+  free?: boolean;
 }
 
 /**
@@ -21,10 +23,11 @@ interface Props {
  * guests to the pod's spots (when those differ), then the breakdown at the
  * spots — the offered base, each of the venue's price rules, any min-spend
  * top-up, its fees, taxes and Duncit's fee on top — or why the offer cannot be
- * sent. Read-only: the host changes the offer, not the price. Native twin:
+ * sent. A free venue's all-zero quote reads as one line, never a row of zeros.
+ * Read-only: the host changes the offer, not the price. Native twin:
  * VenueQuoteCard.
  */
-export default function VenueQuoteCard({ quote, quoteMin = null, message, loading, error }: Readonly<Props>) {
+export default function VenueQuoteCard({ quote, quoteMin = null, message, loading, error, free = false }: Readonly<Props>) {
   const { t } = useTranslation();
   const { currency } = usePricing();
   const money = (value: number) => formatStatementMoney(value, currency);
@@ -45,6 +48,13 @@ export default function VenueQuoteCard({ quote, quoteMin = null, message, loadin
   }
   if (!quote) {
     return loading ? <CircularProgress size={20} aria-label={t('mweb.a11y.loading')} /> : null;
+  }
+  if (free) {
+    return (
+      <Typography variant="body2" sx={{ ...SURFACE_SX, p: 2 }} data-testid="create-pod-venue-quote-free" aria-live="polite">
+        {t('mweb.createPod.offer.freeQuote')}
+      </Typography>
+    );
   }
   const { lines, total, deposit } = venueQuoteLines(quote, money);
   return (

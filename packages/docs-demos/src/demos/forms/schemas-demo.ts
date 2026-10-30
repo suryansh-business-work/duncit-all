@@ -13,6 +13,7 @@ import {
   makeResetPasswordSchema,
   makeForceMarkSchema,
   makeVenueCancelPodSchema,
+  makeHealthAppealSchema,
   makeTwoFactorCodeSchema,
   makePhysicalGiftCardSchema,
   formatPhysicalGiftCardPasscode,
@@ -24,7 +25,10 @@ const SAMPLE_PASSPHRASE = ['a', 'longer', 'passphrase'].join('-');
 
 interface SchemaMock {
   name: string;
+  /** Optional at signup — blank it and the signup still passes on the age tick. */
   dob: string;
+  /** Signup's "I confirm I am 18 or older" tick. Untick it and signup is refused. */
+  age_confirmed: boolean;
   email: string;
   password: string;
   otp: string;
@@ -62,6 +66,7 @@ export const schemasDemo = defineDemo<SchemaMock>({
   mock: {
     name: 'Meera Nair',
     dob: '1998-04-23',
+    age_confirmed: true,
     email: 'meera@duncit.com',
     password: 'correct-horse',
     otp: '482913',
@@ -121,6 +126,7 @@ export const schemasDemo = defineDemo<SchemaMock>({
         makeSignupSchema(t, 18).safeParse({
           name: mock.name,
           dob: mock.dob,
+          ageConfirmed: mock.age_confirmed,
           email: mock.email,
           phoneExtension: mock.extension,
           phoneNumber: mock.number,
@@ -165,6 +171,10 @@ export const schemasDemo = defineDemo<SchemaMock>({
       ),
       // The venue owner's reason for cancelling a pod: the same box, a floor of 5.
       'Venue cancels a pod': say(makeVenueCancelPodSchema(t).safeParse({ reason: mock.reason })),
+      // An appeal against a health deduction: a stored reason and some words.
+      'Health appeal': say(
+        makeHealthAppealSchema(t).safeParse({ reason: 'INCORRECT', message: mock.reason }),
+      ),
       // The Club Admin's by-name mark. Blank the name and it still passes —
       // the admin records what the call told them; a one-letter name does not.
       'Club Admin marks by name': say(

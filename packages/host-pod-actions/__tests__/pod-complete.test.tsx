@@ -131,9 +131,9 @@ const previewMock = (
 });
 
 /** The preview at whatever bill the dialog has reached — the dialog suites assert the write, not the read. */
-const anyPreviewMock = (): MockedResponse => ({
+const anyPreviewMock = (over: Record<string, unknown> = {}): MockedResponse => ({
   request: { query: POD_SETTLEMENT_PREVIEW, variables: () => true },
-  result: { data: { podSettlementPreview: settlement() } },
+  result: { data: { podSettlementPreview: settlement(over) } },
   maxUsageCount: Number.POSITIVE_INFINITY,
 });
 
@@ -766,6 +766,33 @@ describe('PodCompleteDialog settlement', () => {
     expect(sent).toEqual([{ pod_id: 'pod-1', venue_bill_amount: 0 }]);
     expect(notifySuccess).toHaveBeenCalledWith(labels.shareFreeCompleted);
     expect(notifySuccess).not.toHaveBeenCalledWith(labels.venueBill.sentToFinance);
+    expect(props.onCompleted).toHaveBeenCalledTimes(1);
+  });
+
+  // A venue that gave the booking free is owed nothing for it: no bill unless
+  // it charged extras — the server's own rule (venueBillFor).
+  it('completes at a venue that gave the booking free with no bill, and asks for one once extras are charged', async () => {
+    const { mock, sent } = completeMock();
+    const { props, notifySuccess } = dialog(VENUE_POD, [
+      anyPreviewMock({ venue_agreed_model: 'FREE', venue_agreed_rate: 0, venue_slot_price: 0 }),
+      mediaBoardMock(),
+      mock,
+    ]);
+    await settle();
+    await settle();
+
+    expect(billInput()).not.toBeRequired();
+    fireEvent.change(extraInput(), { target: { value: '120' } });
+    await submitForm();
+    expect(screen.getByText(labels.venueBill.billRequired)).toBeInTheDocument();
+    expect(sent).toEqual([]);
+
+    fireEvent.change(extraInput(), { target: { value: '' } });
+    await settle();
+    await submitForm();
+
+    expect(sent).toEqual([{ pod_id: 'pod-1', venue_bill_amount: 0 }]);
+    expect(notifySuccess).toHaveBeenCalledWith(labels.venueBill.sentToFinance);
     expect(props.onCompleted).toHaveBeenCalledTimes(1);
   });
 

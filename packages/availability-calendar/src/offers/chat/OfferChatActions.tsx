@@ -25,7 +25,7 @@ interface Props {
   /** The thread's newest offer line — the only one that may still be answered. */
   newest: boolean;
   answering: OfferChatAnswering;
-  /** A free pod: the venue's accept names no amount. */
+  /** A free pod: neither side's accept names an amount. */
   podIsFree?: boolean;
   /** The other side has read the thread as far as this line — the reader's own counter can no longer change. */
   seen?: boolean;
@@ -58,7 +58,7 @@ export default function OfferChatActions({ move, side, newest, answering, podIsF
     return side === 'VENUE' ? (
       <OfferDecisionActions request={requestOf(subject, live, podIsFree)} offer={live} onDone={onAnswered} />
     ) : (
-      <HostOfferActions offer={live} subject={subject} onDone={onAnswered} />
+      <HostOfferActions offer={live} subject={subject} podIsFree={podIsFree} onDone={onAnswered} />
     );
   }
   if (actions.revise && live) return <OfferReviseActions live={live} podId={subject.pod_id} side={side} onDone={onAnswered} />;

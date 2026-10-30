@@ -451,6 +451,54 @@ export const AVAILABILITY_BUNDLE: NestedCatalogue = {
         reason: 'Reason: {reason}',
       },
     },
+    // Free pods and free venues: Duncit allows them only for initiatives,
+    // promotions and approved campaigns. Whoever picks "Free" says why and
+    // accepts the policy (mWeb, native, Partners, the Pods console).
+    freeArrangement: {
+      reasonLabel: 'Why is this free?',
+      reason: {
+        initiative: 'Special initiative',
+        promotional: 'Promotional offer',
+        campaign: 'Approved campaign',
+        other: 'Other',
+      },
+      detailsLabel: 'Tell us more',
+      detailsHelp: 'Required for Other. Up to {max} characters — the venue sees this.',
+      policy: {
+        title: 'Free is only for special cases',
+        permitted:
+          'When selecting the “Free” option for a Venue or Host, please note that Duncit permits this only for special initiatives, promotional offers, or officially approved campaigns.',
+        venueApproval:
+          'In such cases, the request must also be forwarded to the Venue for approval. All free arrangements involving Hosts or Venues must be strictly monitored, tracked, and audited by Duncit to prevent misuse or unauthorized benefits.',
+        transparency:
+          'Every free offering must have proper justification, documented approval, and complete transparency. Duncit reserves the right to review, reject, or revoke any free arrangement that does not comply with its policies and guidelines.',
+        moreDetails: 'More details',
+        detailsTitle: 'How free pods and free venues work',
+        detailsReasons:
+          'Pick the reason that fits — a special initiative, a promotional offer or an approved campaign. Choose Other only with a clear explanation.',
+        detailsVenue:
+          'A free venue request still goes to the venue. The venue accepts or declines it, and your pod stays offline until it accepts.',
+        detailsNoCounter:
+          'Free bookings cannot be countered or bargained: neither you nor the venue can change the terms, only accept or decline them.',
+        detailsAudit:
+          'Duncit records your reason, your account and the time you accepted this policy, and reviews every free arrangement.',
+        detailsRevoke:
+          'Duncit may review, reject or revoke a free arrangement that does not follow its policies and guidelines.',
+        close: 'Close',
+        accept: 'I accept Duncit’s policy for free pods and free venues',
+        warning:
+          'If you misuse the free option, Duncit may reduce your account health or temporarily hold your payments and your account until you clarify.',
+      },
+      validation: {
+        reason: 'Pick why this is free',
+        details: 'Tell Duncit why this is free',
+        detailsTooLong: 'Keep the reason under {max} characters',
+        accept: 'Accept the policy for free pods and free venues to continue',
+      },
+      // What the venue reads beside a free request (inbox, chat, decision page).
+      venueNote: 'Requested free — {reason}',
+      venueNoteDetails: 'Requested free — {reason}: {details}',
+    },
     // A host's booking offer, as the venue answers it (Partners, mWeb, native).
     offers: {
       tab: 'Booking requests',
@@ -492,6 +540,7 @@ export const AVAILABILITY_BUNDLE: NestedCatalogue = {
         perGuest: 'Per guest',
         perHour: 'Per hour',
         flat: 'Flat price',
+        free: 'Free venue',
       },
       rate: {
         perGuest: '{rate} per guest',
@@ -567,6 +616,8 @@ export const AVAILABILITY_BUNDLE: NestedCatalogue = {
       // Each side may counter only so many times (Pod Settings splits a total equally).
       countersLeft: '{left} of {of} counters left',
       noCountersLeft: 'You have used all your counters — accept or reject',
+      // A free venue or a free pod takes no counters: the venue accepts or declines it.
+      freeNoCounters: 'Free booking — it can only be accepted or declined, never countered.',
       // Either side may change or take back its own counter until the other side has seen it.
       revise: {
         edit: 'Edit counter',
@@ -708,6 +759,8 @@ export const AVAILABILITY_BUNDLE: NestedCatalogue = {
       duncitFee: 'Duncit fee on top',
       hostTotal: 'Host pays',
       termsPending: 'Waiting for the venue',
+      // Completing a pod whose venue was free: it is owed nothing, so a bill proves only extras.
+      freeVenueBillHint: 'Free venue — upload its bill only if it charged extra.',
     },
     upcomingBookings: {
       title: 'Upcoming bookings',

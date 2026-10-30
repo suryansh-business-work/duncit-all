@@ -8,6 +8,12 @@ import { bookingMinMinutes, bookingStepMinutes, WHOLE_VENUE_SPACE } from '../src
 import {
   ACCEPT_VENUE_COUNTER_OFFER_SDL,
   COUNTER_VENUE_OFFER_AS_HOST_SDL,
+  FREE_VENUE_OFFER_KEY,
+  FREE_VENUE_OFFER_MODEL,
+  HOST_OFFER_MODELS,
+  isFreeVenueOfferModel,
+  isHostOfferModel,
+  venueOfferHelpKey,
   HOST_COUNTER_QUOTE_SDL,
   POD_VENUE_OFFER_SDL,
   REJECT_VENUE_COUNTER_OFFER_SDL,
@@ -84,6 +90,33 @@ describe('pricing options', () => {
   });
 });
 
+describe('free venue option', () => {
+  it("lists free after the priced options for the host's opening offer, and only there", () => {
+    expect(HOST_OFFER_MODELS).toEqual(['PER_GUEST', 'PER_HOUR', 'FLAT', 'FREE']);
+    expect(FREE_VENUE_OFFER_MODEL).toBe('FREE');
+    // Counters and the venue's business guide stay priced.
+    expect(VENUE_OFFER_MODELS).not.toContain('FREE');
+    expect(isVenueOfferModel('FREE')).toBe(false);
+  });
+
+  it('accepts free and the priced options as an opening offer, nothing else', () => {
+    for (const model of HOST_OFFER_MODELS) expect(isHostOfferModel(model)).toBe(true);
+    expect(isHostOfferModel('PER_SLOT')).toBe(false);
+    expect(isHostOfferModel(null)).toBe(false);
+    expect(isFreeVenueOfferModel('FREE')).toBe(true);
+    expect(isFreeVenueOfferModel('FLAT')).toBe(false);
+    expect(isFreeVenueOfferModel(undefined)).toBe(false);
+  });
+
+  it('names free and explains it, and explains every priced option', () => {
+    expect(venueOfferModelKey('FREE')).toBe(FREE_VENUE_OFFER_KEY.label);
+    expect(venueOfferHelpKey('FREE')).toBe('mweb.createPod.offer.help.free');
+    expect(venueOfferHelpKey('PER_HOUR')).toBe('mweb.createPod.offer.help.perHour');
+    expect(venueOfferHelpKey('PER_SLOT')).toBe('');
+    expect(venueOfferHelpKey(null)).toBe('');
+  });
+});
+
 describe('venueOfferStatusKey', () => {
   it('names each offer status and nothing for an unknown or missing one', () => {
     expect(venueOfferStatusKey('SENT')).toBe('mweb.venueOffer.status.sent');
@@ -107,6 +140,8 @@ describe('venueOfferTermsText', () => {
   });
 
   it('falls back to the bare amount for an option this client does not know', () => {
+    // A free venue names no money at all.
+    expect(venueOfferTermsText('FREE', 0, t, money)).toBe('mweb.venueOffer.terms.free:');
     expect(venueOfferTermsText('PER_SLOT', 300, t, money)).toBe('₹300');
     expect(venueOfferTermsText('PER_PAX', 300, t, money)).toBe('₹300');
     expect(venueOfferTermsText(null, 300, t, money)).toBe('₹300');
@@ -336,6 +371,33 @@ describe('venueOfferInput', () => {
     expect(venueOfferInput(source({ rate: '' }))).toBeNull();
     expect(venueOfferInput(source({ rate: 0 }))).toBeNull();
   });
+
+  it('asks no amount of a free venue, whatever the rate box still holds', () => {
+    expect(venueOfferInput(source({ model: 'FREE', rate: '' }))).toEqual({
+      start_at: '2026-11-07T07:30:00.000Z',
+      end_at: '2026-11-07T09:30:00.000Z',
+      space_label: 'Lawn',
+      pax: 20,
+      pets: false,
+      model: 'FREE',
+      rate: 0,
+    });
+    expect(venueOfferInput(source({ model: 'FREE', rate: '500' }))?.rate).toBe(0);
+  });
+
+  it("carries a free venue's justification once it is complete and accepted", () => {
+    const justified = venueOfferInput(
+      source({ model: 'FREE', freeJustification: { reason: 'OTHER', details: ' NGO  tie-up ', accepted: true } })
+    );
+    expect(justified?.free_justification).toEqual({ reason: 'OTHER', details: 'NGO tie-up', accepted: true });
+    const unaccepted = venueOfferInput(source({ model: 'FREE', freeJustification: { reason: 'PROMOTIONAL', accepted: false } }));
+    expect(unaccepted).not.toHaveProperty('free_justification');
+  });
+
+  it('never sends a justification with a priced offer', () => {
+    const priced = venueOfferInput(source({ freeJustification: { reason: 'CAMPAIGN', accepted: true } }));
+    expect(priced).not.toHaveProperty('free_justification');
+  });
 });
 
 describe('venueOfferPrefillValues', () => {
@@ -365,6 +427,10 @@ describe('venueOfferPrefillValues', () => {
 
   it('leaves an option this client does not know, and no amount, to be picked again', () => {
     expect(venueOfferPrefillValues({ ...declined, model: 'PER_DAY', rate: 0 })).toMatchObject({ venue_offer_model: '', venue_offer_rate: '' });
+  });
+
+  it('starts again from a declined free venue, with no amount to fill', () => {
+    expect(venueOfferPrefillValues({ ...declined, model: 'FREE', rate: 0 })).toMatchObject({ venue_offer_model: 'FREE', venue_offer_rate: '' });
   });
 });
 
@@ -513,6 +579,10 @@ describe('offer documents', () => {
     expect(POD_VENUE_OFFER_SDL).toContain('podVenueOffer(pod_id: $pod_id)');
     expect(POD_VENUE_OFFER_SDL).toContain('counter {');
     for (const field of ['min_guests', 'offerings', 'note', 'expires_at', 'quote_min {']) {
+      expect(POD_VENUE_OFFER_SDL).toContain(field);
+    }
+    // The host's page must know a booking is free (no counters) and why.
+    for (const field of ['counters_per_side', 'host_counters_used', 'free_pod', 'free_justification {']) {
       expect(POD_VENUE_OFFER_SDL).toContain(field);
     }
   });

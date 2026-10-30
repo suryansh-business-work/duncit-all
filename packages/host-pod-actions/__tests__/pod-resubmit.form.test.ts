@@ -87,6 +87,34 @@ describe('buildPodResubmitSchema', () => {
   });
 });
 
+describe('buildPodResubmitSchema on a free pod or a free venue', () => {
+  const JUSTIFIED = { free_reason: 'CAMPAIGN', free_details: '', free_accepted: true };
+
+  it('asks a free venue for no amount, but for why it is free and the accepted policy', () => {
+    const freeVenue = values({ venue_offer_model: 'FREE', venue_offer_rate: '' });
+
+    expect(errorsFor(freeVenue)).toEqual({ free_reason: 't:availability.freeArrangement.validation.reason' });
+    expect(errorsFor({ ...freeVenue, free_reason: 'CAMPAIGN' })).toEqual({
+      free_accepted: 't:availability.freeArrangement.validation.accept',
+    });
+    expect(errorsFor({ ...freeVenue, ...JUSTIFIED })).toEqual({});
+  });
+
+  it('asks a free pod why it is free whatever the venue is paid — in words, for Other', () => {
+    const freePod = values({ pod_type: 'FREE' });
+
+    expect(errorsFor(freePod)).toEqual({ free_reason: 't:availability.freeArrangement.validation.reason' });
+    expect(errorsFor({ ...freePod, free_reason: 'OTHER', free_details: 'ok', free_accepted: true })).toEqual({
+      free_details: 't:availability.freeArrangement.validation.details',
+    });
+    expect(errorsFor({ ...freePod, free_reason: 'OTHER', free_details: 'Launch week', free_accepted: true })).toEqual({});
+  });
+
+  it('asks a paid pod at a priced venue nothing about being free', () => {
+    expect(errorsFor(values({ pod_type: 'PAID' }))).toEqual({});
+  });
+});
+
 describe('buildHostResubmitInput', () => {
   it('sends the trimmed copy, the typed gallery, the spots and the offer with its ask to the new venue', () => {
     expect(
@@ -127,6 +155,33 @@ describe('buildHostResubmitInput', () => {
     expect(resubmitOfferOf(values({ offer_end: '' }))).toBeNull();
     expect(resubmitOfferOf(values({ venue_offer_rate: '' }))).toBeNull();
   });
+
+  it('offers a free venue at no amount, with why it is free', () => {
+    const input = buildHostResubmitInput(
+      values({
+        venue_offer_model: 'FREE',
+        venue_offer_rate: '',
+        free_reason: 'OTHER',
+        free_details: '  Launch   week  ',
+        free_accepted: true,
+      }),
+    );
+
+    expect(input.venue_offer).toMatchObject({
+      model: 'FREE',
+      rate: 0,
+      free_justification: { reason: 'OTHER', details: 'Launch week', accepted: true },
+    });
+    // The pod itself is not free, so it carries no justification of its own.
+    expect(input).not.toHaveProperty('free_justification');
+  });
+
+  it('says why a free pod is free on the pod, and keeps it off a priced offer', () => {
+    const input = buildHostResubmitInput(values({ pod_type: 'FREE', free_reason: 'PROMOTIONAL', free_accepted: true }));
+
+    expect(input).toHaveProperty('free_justification', { reason: 'PROMOTIONAL', details: '', accepted: true });
+    expect(input.venue_offer).not.toHaveProperty('free_justification');
+  });
 });
 
 describe('buildPodResubmitModerationInput', () => {
@@ -158,6 +213,10 @@ describe('podResubmitInitialValues', () => {
       media_text: IMG,
       pax: 12,
     });
+  });
+
+  it('carries the pod’s type, so a free pod is asked why it is free', () => {
+    expect(podResubmitInitialValues({ ...pod, pod_type: 'FREE' })).toMatchObject({ pod_type: 'FREE', free_reason: '', free_accepted: false });
   });
 
   it('opens blank when there is no pod yet', () => {

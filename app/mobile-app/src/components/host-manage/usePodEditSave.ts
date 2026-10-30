@@ -36,6 +36,8 @@ export function usePodEditSave(
   includeSpots = false,
   /** A FREE / ₹0 pod — its multi-ticket discount is always sent off. */
   free = false,
+  /** The sheet shows the Smart Incentive, so the save sends it — see buildHostUpdateInput. */
+  smartIncentive = false,
 ) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -76,7 +78,10 @@ export function usePodEditSave(
       }
       await graphqlRequest(
         HostUpdatePodDocument,
-        { pod_doc_id: podId, input: buildHostUpdateInput(values, { includeSpots, free }) },
+        {
+          pod_doc_id: podId,
+          input: buildHostUpdateInput(values, { includeSpots, free, smartIncentive }),
+        },
         { auth: true },
       );
       onSaved();

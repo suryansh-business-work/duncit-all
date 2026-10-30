@@ -4,6 +4,7 @@ import type { ResultOf } from '@graphql-typed-document-node/core';
 import { ClubStoriesDocument } from '@/graphql/status';
 import { graphqlRequest } from '@/services/graphql.client';
 import { useRefreshRegistration } from '@/components/PullToRefresh';
+import { useBlockStore } from '@/stores/block.store';
 
 export type ClubStory = ResultOf<typeof ClubStoriesDocument>['clubStories'][number];
 
@@ -25,6 +26,9 @@ export function useClubStories(clubId: string) {
     setIsLoading(false);
   }, [clubId]);
 
+  // A block re-reads the rail at once rather than on the next poll.
+  const blocks = useBlockStore((state) => state.version);
+
   useEffect(() => {
     // The poll is best-effort: a failed refresh leaves the last good list in
     // place rather than surfacing an error on the club page.
@@ -32,7 +36,7 @@ export function useClubStories(clubId: string) {
     run();
     const timer = globalThis.setInterval(run, POLL_MS);
     return () => globalThis.clearInterval(timer);
-  }, [refetch]);
+  }, [refetch, blocks]);
 
   useRefreshRegistration(refetch);
 

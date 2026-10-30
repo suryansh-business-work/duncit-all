@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Linking } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -9,7 +8,7 @@ import { HeaderRoundButton } from '@/components/AppHeader/HeaderRoundButton';
 import { useNotifications, type UserNotification } from '@/hooks/useNotifications';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { RootStackParamList } from '@/navigation/types';
-import { resolveNotificationLink } from '@/utils/notification-link';
+import { openNotificationTarget, resolveNotificationLink } from '@/utils/notification-link';
 import { useTranslation } from '@/hooks/useTranslation';
 import { NotificationsScreen } from './NotificationsScreen';
 
@@ -30,35 +29,9 @@ export function NotificationsBell() {
 
   const openLink = (link: string) => {
     const target = resolveNotificationLink(link);
-    if (target.kind === 'external') {
-      setOpen(false);
-      Linking.openURL(target.url);
-      return;
-    }
-    if (target.kind === 'post') {
-      setOpen(false);
-      navigation.navigate('PostDetail', { postId: target.postId });
-      return;
-    }
-    if (target.kind === 'pod') {
-      setOpen(false);
-      navigation.navigate('PodDetails', { clubSlug: target.clubSlug, podSlug: target.podSlug });
-      return;
-    }
-    if (target.kind === 'podRequest') {
-      setOpen(false);
-      navigation.navigate('PodRequestDetail', { id: target.id });
-      return;
-    }
-    if (target.kind === 'venueChat') {
-      setOpen(false);
-      navigation.navigate('VenueChat', { podId: target.podId });
-      return;
-    }
-    if (target.kind === 'screen') {
-      setOpen(false);
-      navigation.navigate(target.route);
-    }
+    if (target.kind === 'none') return;
+    setOpen(false);
+    openNotificationTarget(navigation, target);
   };
 
   const onNotifClick = async (item: UserNotification) => {

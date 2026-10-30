@@ -340,6 +340,52 @@ describe('buildPodInput', () => {
   });
 });
 
+describe('buildPodInput — free justification', () => {
+  const justified = { free_reason: 'OTHER', free_details: '  Diwali   community drive ', free_accepted: true };
+
+  it('sends why a FREE pod is free once the justification is complete and accepted, details on one line', () => {
+    const input = buildPodInput(baseValues({ pod_type: 'FREE', ...justified }), { config: makeConfig() });
+    expect(input.free_justification).toEqual({ reason: 'OTHER', details: 'Diwali community drive', accepted: true });
+  });
+
+  it('sends none for a half-given justification, so an edit keeps the one the pod has', () => {
+    const input = buildPodInput(baseValues({ pod_type: 'FREE', free_reason: 'CAMPAIGN' }), { config: makeConfig() });
+    expect('free_justification' in input).toBe(false);
+  });
+
+  it('sends none for a paid pod, whatever the hidden fields still hold', () => {
+    const input = buildPodInput(baseValues({ pod_type: 'PAID', pod_amount: 300, ...justified }), { config: makeConfig() });
+    expect('free_justification' in input).toBe(false);
+  });
+
+  it('offers a free venue at ₹0 with the justification, whatever amount the hidden box holds', () => {
+    const input = buildPodInput(
+      baseValues({
+        pod_mode: 'PHYSICAL',
+        pod_type: 'PAID',
+        pod_amount: 300,
+        venue_id: 'v1',
+        pod_date_time: new Date('2030-06-01T10:00:00.000Z'),
+        pod_end_date_time: new Date('2030-06-01T12:00:00.000Z'),
+        no_of_spots: 10,
+        venue_offer_model: 'FREE',
+        venue_offer_rate: '500',
+        venue_offer_offerings: 'A projector',
+        free_reason: 'CAMPAIGN',
+        free_accepted: true,
+      }),
+      { config: makeConfig({ showVenueSlot: true }) },
+    );
+    expect(input.venue_offer).toMatchObject({
+      model: 'FREE',
+      rate: 0,
+      free_justification: { reason: 'CAMPAIGN', details: '', accepted: true },
+    });
+    // The pod itself is paid, so only the venue carries one.
+    expect('free_justification' in input).toBe(false);
+  });
+});
+
 describe('podToFormValues', () => {
   it('fills defaults for a minimal pod', () => {
     const values = podToFormValues({});

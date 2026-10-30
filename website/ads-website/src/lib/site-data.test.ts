@@ -171,7 +171,7 @@ describe('fetchAdRateCard', () => {
 describe('the build-time request cache', () => {
   /**
    * A static build renders many pages and every one of them asks for the same
-   * branding. Without this they would each POST again — more chances to hit
+   * branding. Without this they would each POST again: more chances to hit
    * the fetch timeout, and none of them able to return anything new, because a
    * build is a single moment in time.
    */
@@ -195,7 +195,7 @@ describe('the build-time request cache', () => {
     await siteData.fetchBranding();
     await siteData.fetchPolicies();
 
-    // Two different questions, two requests — a single cached answer for the
+    // Two different questions, two requests. A single cached answer for the
     // build would hand the second caller the first one's data.
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });

@@ -48,7 +48,7 @@ async function request<T>(query: string, variables?: Variables): Promise<T | nul
   }
 }
 
-/** Null answers are cached too — a deleted post would otherwise re-query on
+/** Null answers are cached too; a deleted post would otherwise re-query on
  * every crawler retry. */
 export async function cachedGql<T>(
   query: string,

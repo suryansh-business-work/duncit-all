@@ -21,6 +21,7 @@ import { useMe } from '@/hooks/useMe';
 import { AdSlot } from '@/components/ads/AdSlot';
 import { ClubRecommendationRow } from '@/components/home/ClubRecommendationRow';
 import { CreatePodFab } from '@/components/home/CreatePodFab';
+import { EarnHomeCard } from '@/components/home/EarnHomeCard';
 import { HappeningNearbySection } from '@/components/home/HappeningNearbySection';
 import { HomeClubRails } from '@/components/home/HomeClubRails';
 import { HostCtaBanner } from '@/components/home/HostCtaBanner';
@@ -152,6 +153,7 @@ export function HomeFeed() {
             savingOf={savingOf}
             onToggleSave={onToggleSave}
           />
+          <EarnHomeCard onOpen={() => navigation.navigate('Earn')} />
           <Reveal index={5}>
             <PreviousPodsRail
               pods={previousPods}

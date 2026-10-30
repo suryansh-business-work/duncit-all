@@ -37,4 +37,6 @@ export interface SettlementPreviewProps {
   venueUsage?: { venue_pax?: number; overtime_hours?: number };
   /** The pod is FREE: no payout to preview. The settlement's `is_free` agrees once loaded. */
   free?: boolean;
+  /** Told whether the agreed offer is a free venue (owed nothing, so its bill proves only extras) each time that changes. */
+  onFreeVenue?: (freeVenue: boolean) => void;
 }

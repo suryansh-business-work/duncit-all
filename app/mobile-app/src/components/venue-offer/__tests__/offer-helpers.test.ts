@@ -1,16 +1,21 @@
 import { fallbackT } from '@/i18n/fallback';
 import { offerAnswerCopy } from '@/components/venue-offer/answer-copy';
 import {
+  freeMoneyLine,
+  freeReasonNote,
   offerMoneyRange,
   offerStepTerms,
   offerTermsText,
 } from '@/components/venue-offer/offer-format';
 import {
+  appFreeJustification,
+  hostOfferInput,
+  hostOfferModelEnum,
   offerModelEnum,
   offerPriceTermsInput,
   offerTermsInput,
 } from '@/components/venue-offer/offer-terms-input';
-import { VenueOfferModel } from '@/generated/graphql/graphql';
+import { FreeArrangementReason, VenueOfferModel } from '@/generated/graphql/graphql';
 
 const PHOTO = 'https://ik.imagekit.io/duncit/chat/setup.jpg';
 const vars = { pod: 'Sunday Badminton', venue: 'Court House', when: 'Sat 6 pm', amount: '₹6,000' };
@@ -22,6 +27,49 @@ describe('offerTermsText', () => {
 
   it('is just the amount for an option this build does not know', () => {
     expect(offerTermsText(fallbackT, 'PER_DAY', 1500)).toBe('₹1,500');
+  });
+
+  it('names a free venue without a ₹0 money line', () => {
+    expect(offerTermsText(fallbackT, 'FREE', 0)).toBe('Free venue');
+  });
+});
+
+describe('freeMoneyLine', () => {
+  it('stands aside for priced terms, so the money shows', () => {
+    expect(freeMoneyLine(fallbackT, 'VENUE', false, 'PER_GUEST')).toBeNull();
+    expect(freeMoneyLine(fallbackT, 'HOST', false, 'FLAT')).toBeNull();
+  });
+
+  it("tells each side a free pod's venue is settled directly", () => {
+    expect(freeMoneyLine(fallbackT, 'VENUE', true, 'FLAT')).toBe(
+      'Free pod: the host settles your charges with you directly, so no amount is quoted here.',
+    );
+    expect(freeMoneyLine(fallbackT, 'HOST', true, 'FREE')).toBe(
+      "Free pod: you settle the venue's charges with it directly, so no amount is quoted here.",
+    );
+  });
+
+  it('tells the host a free venue is paid nothing, and leaves the venue to read the reason', () => {
+    expect(freeMoneyLine(fallbackT, 'HOST', false, 'FREE')).toMatch(
+      /^Free venue: the venue is paid nothing for this booking\./,
+    );
+    expect(freeMoneyLine(fallbackT, 'VENUE', false, 'FREE')).toBe('');
+  });
+});
+
+describe('freeReasonNote', () => {
+  it('names the reason, with the details when the host gave them', () => {
+    expect(freeReasonNote(fallbackT, { reason: 'PROMOTIONAL', details: '' })).toBe(
+      'Requested free — Promotional offer',
+    );
+    expect(freeReasonNote(fallbackT, { reason: 'OTHER', details: ' Launch week ' })).toBe(
+      'Requested free — Other: Launch week',
+    );
+  });
+
+  it('says nothing for a priced offer or a reason this build does not know', () => {
+    expect(freeReasonNote(fallbackT, null)).toBe('');
+    expect(freeReasonNote(fallbackT, { reason: 'BARTER', details: 'x' })).toBe('');
   });
 });
 
@@ -51,6 +99,10 @@ describe('offerStepTerms', () => {
     expect(offerStepTerms(fallbackT, { model: 'FLAT', rate: 7000, min_guests: 0 })).toBe(
       'Flat price · ₹7,000 flat',
     );
+  });
+
+  it('names a free venue step, which carries no amount', () => {
+    expect(offerStepTerms(fallbackT, { model: 'FREE', rate: 0 })).toBe('Free venue');
   });
 });
 
@@ -102,6 +154,63 @@ describe('offerModelEnum', () => {
     expect(offerModelEnum('PER_SLOT')).toBeNull();
     expect(offerModelEnum('')).toBeNull();
     expect(offerModelEnum(null)).toBeNull();
+    // A free venue is an opening offer only, never a counter's or a venue guide's basis.
+    expect(offerModelEnum('FREE')).toBeNull();
+  });
+
+  it('maps a host opening offer, free venue included', () => {
+    expect(hostOfferModelEnum('FREE')).toBe(VenueOfferModel.Free);
+    expect(hostOfferModelEnum('PER_HOUR')).toBe(VenueOfferModel.PerHour);
+    expect(hostOfferModelEnum('PER_SLOT')).toBeNull();
+  });
+});
+
+describe('hostOfferInput', () => {
+  const booking = {
+    start_at: '2030-03-05T12:30:00.000Z',
+    end_at: '2030-03-05T14:30:00.000Z',
+    space_label: '',
+    pax: 12,
+    pets: false,
+  };
+
+  it('sends a priced offer with the codegen enum and no free reason', () => {
+    expect(hostOfferInput({ ...booking, model: 'FLAT', rate: 5000, offerings: ['Mic'] })).toEqual({
+      ...booking,
+      model: VenueOfferModel.Flat,
+      rate: 5000,
+      offerings: ['Mic'],
+    });
+  });
+
+  it("sends a free venue with its reason mapped onto the codegen's enum", () => {
+    expect(
+      hostOfferInput({
+        ...booking,
+        model: 'FREE',
+        rate: 0,
+        free_justification: { reason: 'CAMPAIGN', details: '', accepted: true },
+      }),
+    ).toEqual({
+      ...booking,
+      model: VenueOfferModel.Free,
+      rate: 0,
+      free_justification: { reason: FreeArrangementReason.Campaign, details: '', accepted: true },
+    });
+  });
+});
+
+describe('appFreeJustification', () => {
+  it('is the justification once it is complete and accepted', () => {
+    expect(
+      appFreeJustification({ reason: 'OTHER', details: ' A  launch ', accepted: true }),
+    ).toEqual({ reason: FreeArrangementReason.Other, details: 'A launch', accepted: true });
+  });
+
+  it('is nothing until a reason is picked, Other is explained and the policy accepted', () => {
+    expect(appFreeJustification({ reason: '', accepted: true })).toBeNull();
+    expect(appFreeJustification({ reason: 'OTHER', details: 'ok', accepted: true })).toBeNull();
+    expect(appFreeJustification({ reason: 'INITIATIVE', accepted: false })).toBeNull();
   });
 });
 
@@ -129,12 +238,16 @@ describe('offerAnswerCopy', () => {
   });
 
   it("words the host's answers to the venue's counter", () => {
-    expect(offerAnswerCopy(fallbackT, 'HOST', 'accept', vars, true)).toEqual({
+    expect(offerAnswerCopy(fallbackT, 'HOST', 'accept', vars, false)).toEqual({
       title: "Accept the venue's terms?",
       message:
         '“Sunday Badminton” goes live at Court House on Sat 6 pm. The venue receives ₹6,000.',
       reasonLabel: '',
     });
+    // A free arrangement pays the venue nothing through Duncit, so no amount is named.
+    expect(offerAnswerCopy(fallbackT, 'HOST', 'accept', vars, true).message).toBe(
+      '“Sunday Badminton” goes live at Court House on Sat 6 pm.',
+    );
     expect(offerAnswerCopy(fallbackT, 'HOST', 'reject', vars, false)).toEqual({
       title: "Reject the venue's terms?",
       message: 'The venue keeps the time free for others, and you can send a new offer.',

@@ -14,7 +14,7 @@ const TranslationContext = createContext<LocaleState>({ locale: null, server: nu
  * Localization for the status page.
  *
  * The site carries no Apollo client and no session, so it cannot use the
- * portals' `LocaleProvider` — but it uses the SAME runtime and the same admin
+ * portals' `LocaleProvider`, but it uses the same runtime and the same admin
  * data underneath (rule 38): the active locales and their catalogue come from
  * the public localization queries, layered over the bundled fallback. Both
  * fetches are best-effort; the fallback is what renders when either is absent,

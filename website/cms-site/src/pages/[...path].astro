@@ -2,7 +2,7 @@
 /**
  * Every address of every CMS site. The hostname picks the site, the path picks
  * the page (or a collection list / entry), and the API answers with the page
- * already composed — this route only renders it into the site's document.
+ * already composed; this route only renders it into the site's document.
  */
 import NotFound from '../components/NotFound.astro';
 import { CmsUnavailableError, publicGraphqlUrl, renderPage, renderPreview, requestHost } from '../lib/cms-api';

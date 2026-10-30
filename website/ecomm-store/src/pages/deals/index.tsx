@@ -11,7 +11,7 @@ import { useDealsSections } from './useDealsSections';
 import { useDealTiers } from './useDealTiers';
 
 /**
- * /deals — the operator's sections (if any) over everything on sale, biggest
+ * /deals: the operator's sections (if any) over everything on sale, biggest
  * discount first, narrowed by the flash sale's tiers. The results never wait
  * for the sections.
  */

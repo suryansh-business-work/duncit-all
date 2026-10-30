@@ -1,21 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { AppState } from 'react-native';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useIsFocused } from '@react-navigation/native';
 import { logs } from '@duncit/logs';
 import { createChatReadMarker } from '@duncit/utils';
 
 import { MarkVenueChatReadDocument } from '@/graphql/venue-chat';
+import { useAppActive } from '@/hooks/useAppActive';
 import { graphqlRequest } from '@/services/graphql.client';
-
-/** Whether the app is in front now, following it as it comes and goes. */
-function useAppActive(): boolean {
-  const [active, setActive] = useState(AppState.currentState === 'active');
-  useEffect(() => {
-    const sub = AppState.addEventListener('change', (state) => setActive(state === 'active'));
-    return () => sub.remove();
-  }, []);
-  return active;
-}
 
 /** The newest line the other side wrote, or null while they have written none. */
 function newestFromOthers(

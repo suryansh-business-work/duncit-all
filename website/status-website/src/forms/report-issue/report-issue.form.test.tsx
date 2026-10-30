@@ -1,8 +1,8 @@
 /**
  * "Report a problem" on the public status page.
  *
- * The probes above it answer one question — is the host returning an HTTP
- * status — and most of what actually goes wrong is invisible to that. So this
+ * The probes above it answer one question (is the host returning an HTTP
+ * status?), and most of what goes wrong is invisible to that. So this
  * form is the other half of the page, and the things worth holding are the
  * ones that decide whether a report is filed at all: it is unauthenticated by
  * design (the visitor it exists for may be the one who cannot sign in), a
@@ -85,7 +85,7 @@ describe('ReportIssueForm', () => {
     expect(list.getByText('mWeb')).toBeTruthy();
     expect(list.getByText('API')).toBeTruthy();
     // A visitor who does not know which service broke still has to be able to
-    // file — that is most of them.
+    // file, and that is most of them.
     expect(list.getAllByRole('option')[0]?.textContent).toBeTruthy();
   });
 
@@ -135,7 +135,7 @@ describe('ReportIssueForm', () => {
 
   /**
    * A spent code cannot be reused whether it was right or wrong, so the next
-   * attempt needs a fresh one — and the box it was typed into is cleared with
+   * attempt needs a fresh one, and the box it was typed into is cleared with
    * it. Leaving the old answer sitting there is how somebody presses Send
    * twice and is refused twice for the same reason.
    */
@@ -151,7 +151,7 @@ describe('ReportIssueForm', () => {
 
     await waitFor(() => expect(reload).toHaveBeenCalledTimes(1));
     await waitFor(() => expect(screen.getByTestId('captcha-error').textContent).not.toBe(''));
-    // Named, not the generic banner: this one is the reader's to fix.
+    // Named on the field instead of the generic banner, since the reader can fix it.
     expect(screen.queryByRole('alert')).toBeNull();
   });
 
@@ -209,7 +209,7 @@ describe('ReportIssueSection', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Send report' }));
 
     await waitFor(() => expect(submitStatusReport).toHaveBeenCalled());
-    // The images travel INSIDE the mutation as base64 — the form is
+    // The images travel inside the mutation as base64. The form is
     // unauthenticated, so there is no upload credential to hand out.
     const sent = submitStatusReport.mock.calls[0][0];
     expect(sent.images).toHaveLength(1);

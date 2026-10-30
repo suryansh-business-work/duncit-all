@@ -24,6 +24,8 @@ function fillWho() {
   fireEvent.changeText(screen.getByTestId('field-name'), 'Riya Sharma');
   // The date of birth is typed into the shared picker's box.
   fireEvent.changeText(screen.getByTestId('field-dob'), ELIGIBLE_DOB);
+  // The age tick is what lets the step go; the birthday is optional.
+  fireEvent.press(screen.getByTestId('signup-age-confirm'));
 }
 
 function fillContact() {
@@ -54,6 +56,7 @@ describe('SignupForm — one step at a time', () => {
     renderWithProviders(<Harness />);
     expect(screen.getByTestId('field-name')).toBeOnTheScreen();
     expect(screen.getByTestId('field-dob')).toBeOnTheScreen();
+    expect(screen.getByTestId('signup-age-confirm')).toHaveProp('aria-checked', false);
     expect(screen.getByTestId('field-referralCode')).toBeOnTheScreen();
     // The later steps' fields are not rendered at all.
     expect(screen.queryByTestId('field-email')).toBeNull();
@@ -86,6 +89,7 @@ describe('SignupForm — one step at a time', () => {
     expect(onSubmit.mock.calls[0][0]).toMatchObject({
       name: 'Riya Sharma',
       dob: ELIGIBLE_DOB,
+      ageConfirmed: true,
       email: 'riya@duncit.com',
       phoneNumber: '9845012345',
       password: 'StrongPass123',

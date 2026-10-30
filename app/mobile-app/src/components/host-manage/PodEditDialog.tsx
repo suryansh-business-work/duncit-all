@@ -10,7 +10,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { fireAndForget } from '@/utils/fire-and-forget';
 import { ContentCheckNotice } from './ContentCheckNotice';
-import { PodEditTicketDiscount } from './PodEditTicketDiscount';
+import { PodEditOffers } from './PodEditOffers';
 import { PodSpotsField } from './PodSpotsField';
 import { usePodEditForm } from './usePodEditForm';
 import type { HostPodSummary } from './pod-edit.form';
@@ -24,7 +24,7 @@ interface Props {
 
 /**
  * Host's pod edit sheet — title, images, description, the pod's capacity and
- * (for a paid pod) its multi-ticket discount.
+ * (for a paid pod) its multi-ticket discount and Smart Incentive.
  *
  * "Flexible pod count": a pod published with fewer spots than the space it
  * booked can hold is not stuck that way. The range comes from the server, which
@@ -132,9 +132,7 @@ export function PodEditDialog({ pod, onClose, onSaved }: Readonly<Props>) {
                       )}
                     />
                   ) : null}
-                  {free ? null : (
-                    <PodEditTicketDiscount form={form} unitPrice={Number(pod?.pod_amount) || 0} />
-                  )}
+                  {free ? null : <PodEditOffers form={form} pod={pod} />}
                   <ContentCheckNotice
                     violations={blocked}
                     title={t('mweb.hostPodEdit.contentCheck')}

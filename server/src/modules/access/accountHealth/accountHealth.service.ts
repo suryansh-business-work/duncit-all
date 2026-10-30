@@ -5,6 +5,7 @@ import {
   type HealthSubjectType,
   type IHealthAdjustment,
 } from './accountHealth.model';
+import { HealthAppealModel, type HealthAppealStatus } from './healthAppeal.model';
 import { VenueModel } from '@modules/venues/venue/venue.model';
 import { UserModel } from '@modules/access/user/user.model';
 
@@ -32,15 +33,29 @@ async function loadAdjustments(subjectType: HealthSubjectType, subjectId: string
   return docs;
 }
 
+/** Where the appeal against each deduction stands, in one read for the whole list. */
+async function appealStatusMap(adjustments: IHealthAdjustment[]) {
+  const negativeIds = adjustments.filter((a) => a.delta < 0).map((a) => a._id);
+  const appeals = negativeIds.length
+    ? await HealthAppealModel.find({ adjustment_id: { $in: negativeIds } })
+        .select('adjustment_id status')
+        .lean<{ adjustment_id: Types.ObjectId; status: HealthAppealStatus }[]>()
+    : [];
+  return new Map(appeals.map((a) => [String(a.adjustment_id), a.status]));
+}
+
 async function adjustmentsToPub(adjustments: IHealthAdjustment[]) {
   const adminIds = Array.from(
     new Set(adjustments.map((a) => a.created_by).filter(Boolean).map(String))
   );
-  const admins = adminIds.length
-    ? await UserModel.find({ _id: { $in: adminIds } }).select(
-        'profile.first_name profile.last_name auth.email'
-      )
-    : [];
+  const [admins, appealStatus] = await Promise.all([
+    adminIds.length
+      ? UserModel.find({ _id: { $in: adminIds } }).select(
+          'profile.first_name profile.last_name auth.email'
+        )
+      : [],
+    appealStatusMap(adjustments),
+  ]);
   const adminMap = new Map(
     admins.map((a: any) => [
       String(a._id),
@@ -54,6 +69,8 @@ async function adjustmentsToPub(adjustments: IHealthAdjustment[]) {
     created_by_id: a.created_by ? String(a.created_by) : null,
     created_by_name: a.created_by ? adminMap.get(String(a.created_by)) ?? 'Admin' : 'System',
     created_at: a.created_at.toISOString(),
+    waived: !!a.waived_at,
+    appeal_status: appealStatus.get(String(a._id)) ?? null,
   }));
 }
 
@@ -63,7 +80,8 @@ async function buildScore(
   subjectLabel: string
 ) {
   const adjustments = await loadAdjustments(subjectType, subjectId);
-  const delta_sum = adjustments.reduce((sum, a) => sum + a.delta, 0);
+  // A deduction lifted on appeal stays in the list but no longer counts.
+  const delta_sum = adjustments.reduce((sum, a) => (a.waived_at ? sum : sum + a.delta), 0);
   const total_score = clamp(BASE_SCORE + delta_sum, 0, 100);
   return {
     subject_type: subjectType,
@@ -97,8 +115,8 @@ function validateDelta(input: number): number {
 }
 
 // Resolves the user this adjustment impacts + a human-readable label for the
-// subject. Shared by adjust + editAdjustment + deleteAdjustment.
-async function resolveSubject(
+// subject. Shared by adjust + editAdjustment + deleteAdjustment + appeals.
+export async function resolveSubject(
   subjectType: HealthSubjectType,
   subjectId: string
 ): Promise<{ subjectUserId: Types.ObjectId; subjectLabel: string }> {
@@ -147,6 +165,12 @@ export const accountHealthService = {
     const venue = await VenueModel.findById(venueId).select('venue_name');
     if (!venue) fail('NOT_FOUND', 'Venue not found');
     return buildScore('VENUE', String(venue!._id), venue!.venue_name || 'Venue');
+  },
+
+  /** The current score of a user or venue, for a caller that already knows which. */
+  async scoreOf(subjectType: HealthSubjectType, subjectId: string) {
+    const { subjectLabel } = await resolveSubject(subjectType, subjectId);
+    return buildScore(subjectType, subjectId, subjectLabel);
   },
 
   async adjust(adminId: string, input: {

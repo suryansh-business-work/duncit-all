@@ -1,51 +1,20 @@
 import { useEffect } from 'react';
-import { Linking, Platform } from 'react-native';
+import { Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import type { RootStackParamList } from '@/navigation/types';
-import { resolveNotificationLink } from '@/utils/notification-link';
-import { fireAndForget } from '@/utils/fire-and-forget';
+import { openNotificationTarget, resolveNotificationLink } from '@/utils/notification-link';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
 /** Route a notification payload's `link` to the right screen (post-activity
  * notifications deep-link to PostDetail). Exported for direct unit testing. */
 export function navigateForPushLink(navigation: Nav, link: unknown) {
-  const target = resolveNotificationLink(typeof link === 'string' ? link : null);
-  if (target.kind === 'external') {
-    fireAndForget(Linking.openURL(target.url));
-    return;
-  }
-  if (target.kind === 'post') {
-    navigation.navigate('PostDetail', { postId: target.postId });
-    return;
-  }
-  if (target.kind === 'pod') {
-    navigation.navigate('PodDetails', { clubSlug: target.clubSlug, podSlug: target.podSlug });
-    return;
-  }
-  if (target.kind === 'podRequest') {
-    navigation.navigate('PodRequestDetail', { id: target.id });
-    return;
-  }
-  if (target.kind === 'chat') {
-    // The room reads its own title once it loads.
-    navigation.navigate(
-      'ChatRoom',
-      target.room.kind === 'CLUB'
-        ? { clubId: target.room.id, title: '' }
-        : { podId: target.room.id, title: '' },
-    );
-    return;
-  }
-  if (target.kind === 'venueChat') {
-    navigation.navigate('VenueChat', { podId: target.podId });
-    return;
-  }
-  if (target.kind === 'screen') {
-    navigation.navigate(target.route);
-  }
+  openNotificationTarget(
+    navigation,
+    resolveNotificationLink(typeof link === 'string' ? link : null),
+  );
 }
 
 /**

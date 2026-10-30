@@ -1843,6 +1843,12 @@ export type AppVersionInfo = {
   min_supported_version: Scalars['String']['output'];
 };
 
+export type AppealHealthAdjustmentInput = {
+  adjustment_id: Scalars['ID']['input'];
+  message: Scalars['String']['input'];
+  reason: HealthAppealReason;
+};
+
 /** An Apple id_token, from the iOS app's native sheet or the web flow. */
 export type AppleAuthInput = {
   id_token: Scalars['String']['input'];
@@ -1859,8 +1865,16 @@ export type AppleAuthInput = {
 export type AppleSignupInput = {
   accepted_policy_ids?: InputMaybe<Array<Scalars['ID']['input']>>;
   accepted_policy_surface?: InputMaybe<PolicyAcceptanceSurface>;
+  /**
+   * The signup form's "I confirm I'm 18 or older" tick (18 being Admin's
+   * minimum joining age). Required when no date of birth is sent; a birthday,
+   * when there is one, is checked against the same age instead. Builds that
+   * predate the tick always send a birthday, so they never need it.
+   */
+  age_confirmed?: InputMaybe<Scalars['Boolean']['input']>;
   city?: InputMaybe<Scalars['String']['input']>;
-  dob: Scalars['String']['input'];
+  /** Optional, as on the other doors. */
+  dob?: InputMaybe<Scalars['String']['input']>;
   first_name: Scalars['String']['input'];
   id_token: Scalars['String']['input'];
   last_name?: InputMaybe<Scalars['String']['input']>;
@@ -4205,6 +4219,10 @@ export type CheckoutQuote = {
   platform_fee_pct: Scalars['Float']['output'];
   /** What that rounding added (0 when the amount was already whole). Inside total, outside subtotal and gst_amount. */
   round_off: Scalars['Float']['output'];
+  /** The caller's unlocked Smart Incentive taken off the ticket money (0 when none applies). */
+  smart_incentive_amount: Scalars['Float']['output'];
+  /** Percentage of that Smart Incentive (0 when none). */
+  smart_incentive_pct: Scalars['Int']['output'];
   subtotal: Scalars['Float']['output'];
   /** Multi-ticket discount taken off the ticket price for the quoted seats (0 when no tier applies). */
   ticket_discount_amount: Scalars['Float']['output'];
@@ -6569,6 +6587,8 @@ export type CreatePodInput = {
   club_id: Scalars['ID']['input'];
   /** Users to invite as co-hosts. Capped by the sub-category's max_co_hosts. */
   co_host_user_ids?: InputMaybe<Array<Scalars['ID']['input']>>;
+  /** Required when a host makes the pod FREE (pod_type FREE): why it is free, and the host accepts Duncit's free policy. */
+  free_justification?: InputMaybe<FreeJustificationInput>;
   is_active?: InputMaybe<Scalars['Boolean']['input']>;
   location_id?: InputMaybe<Scalars['ID']['input']>;
   meeting_notes?: InputMaybe<Scalars['String']['input']>;
@@ -6596,6 +6616,10 @@ export type CreatePodInput = {
   product_requests?: InputMaybe<Array<PodProductRequestInput>>;
   products_enabled?: InputMaybe<Scalars['Boolean']['input']>;
   reel_url?: InputMaybe<Scalars['String']['input']>;
+  /** Offer a Smart Incentive. Ignored (stored off) on a free or zero-priced pod. */
+  smart_incentive_enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Whole percent, 1 up to Loyalty's maximum. Required when smart_incentive_enabled is true. */
+  smart_incentive_pct?: InputMaybe<Scalars['Int']['input']>;
   /** The sub-category the host picked in step 2. Required to enforce the co-host cap. */
   sub_category_id?: InputMaybe<Scalars['ID']['input']>;
   /** Offer a multi-ticket discount. Ignored (stored off) on a free or zero-priced pod. */
@@ -8152,6 +8176,54 @@ export type E2eRunVideoInput = {
   seconds?: InputMaybe<Scalars['Int']['input']>;
   suite: Scalars['String']['input'];
 };
+
+/** One it() of one run, as Cypress counted it. */
+export type E2eScenarioResult = {
+  __typename?: 'E2eScenarioResult';
+  duration_ms?: Maybe<Scalars['Int']['output']>;
+  /** The error as Cypress printed it, cut to 4,000 characters. Empty unless FAILED. */
+  error: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  /** The Cypress project, e.g. mweb, partners-app, support, mobile-app. */
+  project: Scalars['String']['output'];
+  /** The spec file, relative to the project. */
+  spec: Scalars['String']['output'];
+  state: E2eScenarioState;
+  /** The leg that ran it, e.g. accounts. */
+  suite: Scalars['String']['output'];
+  title: Scalars['String']['output'];
+  /** The describe blocks, then the test's own title. */
+  title_path: Array<Scalars['String']['output']>;
+};
+
+export type E2eScenarioResultInput = {
+  duration_ms?: InputMaybe<Scalars['Float']['input']>;
+  error?: InputMaybe<Scalars['String']['input']>;
+  /** 0 for the first test a spec titles this way, 1 for the second, and so on. */
+  ordinal?: InputMaybe<Scalars['Int']['input']>;
+  project?: InputMaybe<Scalars['String']['input']>;
+  spec: Scalars['String']['input'];
+  state: E2eScenarioState;
+  title_path: Array<Scalars['String']['input']>;
+};
+
+export type E2eScenarioResultTablePage = {
+  __typename?: 'E2eScenarioResultTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<E2eScenarioResult>;
+  total: Scalars['Int']['output'];
+};
+
+/**
+ * How one scenario ended. SKIPPED is a test a failed hook blocked: it never
+ * ran. PENDING is an it.skip somebody wrote.
+ */
+export type E2eScenarioState =
+  | 'FAILED'
+  | 'PASSED'
+  | 'PENDING'
+  | 'SKIPPED';
 
 /**
  * One scenario's clip — a single test, cut out of its spec's recording and
@@ -9963,6 +10035,66 @@ export type FounderSettingKv = {
   value: Scalars['Float']['output'];
 };
 
+/** Why a host made a pod or a venue booking free. Duncit allows free only for these. */
+export type FreeArrangementReason =
+  | 'CAMPAIGN'
+  | 'INITIATIVE'
+  /** details required */
+  | 'OTHER'
+  | 'PROMOTIONAL';
+
+/** A free pod, a pod whose venue was asked for free, or both — as Duncit audits it (Pods console > Free Arrangements). */
+export type FreeArrangementRow = {
+  __typename?: 'FreeArrangementRow';
+  cancelled: Scalars['Boolean']['output'];
+  club_name: Scalars['String']['output'];
+  created_at?: Maybe<Scalars['String']['output']>;
+  /** Why the pod is free (FREE pods). */
+  free_justification?: Maybe<FreeJustification>;
+  host_email: Scalars['String']['output'];
+  host_name: Scalars['String']['output'];
+  /** The pod's document id. */
+  id: Scalars['ID']['output'];
+  is_active: Scalars['Boolean']['output'];
+  /** FREE_POD, FREE_VENUE or BOTH. */
+  kind: Scalars['String']['output'];
+  pod_date_time?: Maybe<Scalars['String']['output']>;
+  pod_slug: Scalars['String']['output'];
+  pod_title: Scalars['String']['output'];
+  pod_type: PodType;
+  /** NONE, PENDING, APPROVED or DECLINED: the venue's answer. */
+  venue_approval_status: Scalars['String']['output'];
+  /** Why the venue was asked for free (free venue offers). */
+  venue_free_justification?: Maybe<FreeJustification>;
+  venue_name: Scalars['String']['output'];
+};
+
+/** Server-side table page for the shared table engine (adminFreeArrangementsTable). */
+export type FreeArrangementTablePage = {
+  __typename?: 'FreeArrangementTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<FreeArrangementRow>;
+  total: Scalars['Int']['output'];
+};
+
+/** Why a pod or a venue booking is free, as the host gave it. */
+export type FreeJustification = {
+  __typename?: 'FreeJustification';
+  /** When the host accepted Duncit's free policy (ISO). */
+  accepted_at?: Maybe<Scalars['String']['output']>;
+  details: Scalars['String']['output'];
+  reason: FreeArrangementReason;
+};
+
+/** The host's justification for a free pod or a free venue. accepted must be true: the host accepts Duncit's free policy. */
+export type FreeJustificationInput = {
+  accepted: Scalars['Boolean']['input'];
+  /** Required for OTHER (3-300 characters); optional otherwise. */
+  details?: InputMaybe<Scalars['String']['input']>;
+  reason: FreeArrangementReason;
+};
+
 export type FreelancerAdminRow = {
   __typename?: 'FreelancerAdminRow';
   category_titles: Array<Scalars['String']['output']>;
@@ -10577,13 +10709,20 @@ export type GoogleSignupInput = {
   accepted_policy_ids?: InputMaybe<Array<Scalars['ID']['input']>>;
   /** Which app they accepted in. Recorded on every acceptance row. */
   accepted_policy_surface?: InputMaybe<PolicyAcceptanceSurface>;
+  /**
+   * The signup form's "I confirm I'm 18 or older" tick (18 being Admin's
+   * minimum joining age). Required when no date of birth is sent; a birthday,
+   * when there is one, is checked against the same age instead. Builds that
+   * predate the tick always send a birthday, so they never need it.
+   */
+  age_confirmed?: InputMaybe<Scalars['Boolean']['input']>;
   city?: InputMaybe<Scalars['String']['input']>;
   /**
-   * Date of birth. A Google credential carries no birthday, so the client asks
-   * for it on the same step as the number — and it is as required as it is on
-   * the email door, because the joining age is checked against it.
+   * Date of birth. Optional, as on the email door: a Google credential carries
+   * no birthday, so the client asks for the age tick on the same step as the
+   * number and offers the birthday beside it.
    */
-  dob: Scalars['String']['input'];
+  dob?: InputMaybe<Scalars['String']['input']>;
   id_token: Scalars['String']['input'];
   /** The signup form's marketing box. Marketing email and WhatsApp start OFF unless it is ticked (GDPR opt-in). */
   marketing_opt_in?: InputMaybe<Scalars['Boolean']['input']>;
@@ -10894,12 +11033,71 @@ export type GrievanceTicketTablePage = {
 
 export type HealthAdjustment = {
   __typename?: 'HealthAdjustment';
+  /** Where the appeal against this deduction stands; null when nobody has appealed it. */
+  appeal_status?: Maybe<HealthAppealStatus>;
   created_at: Scalars['String']['output'];
   created_by_id?: Maybe<Scalars['ID']['output']>;
   created_by_name: Scalars['String']['output'];
   delta: Scalars['Int']['output'];
   id: Scalars['ID']['output'];
   remark: Scalars['String']['output'];
+  /** True once Legal accepted an appeal against it: still listed, no longer counted. */
+  waived: Scalars['Boolean']['output'];
+};
+
+/**
+ * An appeal against one health deduction, filed from mWeb or the app by the
+ * person it hit, and decided in Legal > Account Health Appeals.
+ */
+export type HealthAppeal = {
+  __typename?: 'HealthAppeal';
+  adjusted_at: Scalars['String']['output'];
+  adjustment_id: Scalars['ID']['output'];
+  /** The permanent handle, e.g. APL-000042. */
+  appeal_no: Scalars['String']['output'];
+  appellant_name: Scalars['String']['output'];
+  created_at: Scalars['String']['output'];
+  decided_at?: Maybe<Scalars['String']['output']>;
+  decided_by_name: Scalars['String']['output'];
+  decision_note: Scalars['String']['output'];
+  /** The deduction as it stood when appealed. */
+  delta: Scalars['Int']['output'];
+  id: Scalars['ID']['output'];
+  message: Scalars['String']['output'];
+  reason: HealthAppealReason;
+  remark: Scalars['String']['output'];
+  status: HealthAppealStatus;
+  subject_id: Scalars['ID']['output'];
+  /** The account or venue name when the appeal was filed. */
+  subject_label: Scalars['String']['output'];
+  subject_type: HealthSubjectType;
+};
+
+/** Why the person says a deduction should be lifted. */
+export type HealthAppealReason =
+  | 'INCORRECT'
+  | 'WONT_HAPPEN_AGAIN';
+
+/** What filing an appeal answers with — the handle to quote. */
+export type HealthAppealReceipt = {
+  __typename?: 'HealthAppealReceipt';
+  appeal_no: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  status: HealthAppealStatus;
+};
+
+/** Where the Legal team has taken an appeal. */
+export type HealthAppealStatus =
+  | 'ACCEPTED'
+  | 'DENIED'
+  | 'PENDING';
+
+export type HealthAppealTablePage = {
+  __typename?: 'HealthAppealTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<HealthAppeal>;
+  total: Scalars['Int']['output'];
 };
 
 export type HealthBand =
@@ -11264,6 +11462,8 @@ export type HostRequestTablePage = {
 /** Full edit + resubmission of a venue-rejected (DECLINED) pod. Booking state, hosts and club stay server-managed. */
 export type HostResubmitPodInput = {
   available_perks?: InputMaybe<Array<Scalars['String']['input']>>;
+  /** Required when a host makes the pod FREE (pod_type FREE): why it is free, and the host accepts Duncit's free policy. */
+  free_justification?: InputMaybe<FreeJustificationInput>;
   location_id?: InputMaybe<Scalars['ID']['input']>;
   meeting_notes?: InputMaybe<Scalars['String']['input']>;
   meeting_platform?: InputMaybe<Scalars['String']['input']>;
@@ -11285,6 +11485,9 @@ export type HostResubmitPodInput = {
   product_requests?: InputMaybe<Array<PodProductRequestInput>>;
   products_enabled?: InputMaybe<Scalars['Boolean']['input']>;
   reel_url?: InputMaybe<Scalars['String']['input']>;
+  /** Offer a Smart Incentive — omit both fields to leave it alone. Cleared when the pod becomes free or zero-priced. */
+  smart_incentive_enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  smart_incentive_pct?: InputMaybe<Scalars['Int']['input']>;
   /** Offer a multi-ticket discount. Cleared when the pod becomes free or zero-priced. */
   ticket_discount_enabled?: InputMaybe<Scalars['Boolean']['input']>;
   ticket_discount_tiers?: InputMaybe<Array<PodTicketDiscountTierInput>>;
@@ -11372,6 +11575,9 @@ export type HostUpdatePodInput = {
   pod_images_and_videos: Array<PodMediaInput>;
   pod_title: Scalars['String']['input'];
   reel_url?: InputMaybe<Scalars['String']['input']>;
+  /** Offer a Smart Incentive — omit both fields to leave it alone. */
+  smart_incentive_enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  smart_incentive_pct?: InputMaybe<Scalars['Int']['input']>;
   /** Offer a multi-ticket discount — omit both discount fields to leave it alone. */
   ticket_discount_enabled?: InputMaybe<Scalars['Boolean']['input']>;
   ticket_discount_tiers?: InputMaybe<Array<PodTicketDiscountTierInput>>;
@@ -13678,6 +13884,8 @@ export type Mutation = {
   _noop?: Maybe<Scalars['Boolean']['output']>;
   /** The private profile's owner accepts — this is what creates the follow. */
   acceptFollowRequest: User;
+  /**  Legal-only: lift the deduction and tell the person (in-app + email).  */
+  acceptHealthAppeal: HealthAppeal;
   /**
    * Auth-required: record acceptance from inside the account.
    *
@@ -13718,6 +13926,7 @@ export type Mutation = {
   addReelDriveAssets: ReelProject;
   /** Refused for somebody who is not a Club Admin, or is already in a region. */
   addRegionClubAdmin: Region;
+  addTutorialComment: TutorialComment;
   addUserRole: User;
   /**  Admin-only: append a delta with an optional remark. Returns the updated score.  */
   adjustHealth: HealthScore;
@@ -13791,6 +14000,8 @@ export type Mutation = {
   answerPodChallengeQuiz: PodChallenge;
   /** Authorise one build-artifact upload through the server. Tech/Super admin only. */
   appBuildUploadAuth: AppBuildUploadAuth;
+  /**  Appeal a deduction on your own account or venue. Once per deduction.  */
+  appealHealthAdjustment: HealthAppealReceipt;
   /** Carry out a dry run's findings without scanning again. */
   applyMediaOrganizerRun: BackgroundJob;
   /** Redeem someone's referral code (once per account, not your own). */
@@ -14175,6 +14386,8 @@ export type Mutation = {
   createSurvey: Survey;
   createTeamStructureShare: TeamStructureShare;
   createTicket: Ticket;
+  createTutorial: Tutorial;
+  createTutorialTopic: TutorialTopic;
   createUser: User;
   /** Venue owner / venues console: create a food coupon for a venue. */
   createVenueFoodCoupon: VenueFoodCoupon;
@@ -14339,6 +14552,7 @@ export type Mutation = {
   /** Partner: delete an OWN brand. Refused for an approved brand that still has products — deactivate it instead. */
   deleteMyEcommBrand: Scalars['Boolean']['output'];
   deleteMyProductListing: Scalars['Boolean']['output'];
+  deleteMyTutorialComment: Scalars['Boolean']['output'];
   deleteNotification: Scalars['Boolean']['output'];
   deleteOfficialStatus: Scalars['Boolean']['output'];
   /** Partner: delete a saved connection. Refused while a brand uses it. */
@@ -14384,6 +14598,8 @@ export type Mutation = {
    */
   deleteTelemetryRecords: Scalars['Int']['output'];
   deleteTranslation: Scalars['Boolean']['output'];
+  deleteTutorial: Scalars['Boolean']['output'];
+  deleteTutorialTopic: Scalars['Boolean']['output'];
   deleteUser: Scalars['Boolean']['output'];
   deleteUserActivityDay: Scalars['Boolean']['output'];
   deleteUserActivityYear: Scalars['Boolean']['output'];
@@ -14401,6 +14617,8 @@ export type Mutation = {
   deleteWebsiteContent: Scalars['Boolean']['output'];
   deleteWebsiteNavItem: Scalars['Boolean']['output'];
   deleteWebsiteReel: Scalars['Boolean']['output'];
+  /**  Legal-only: keep the deduction and tell the person (in-app + email).  */
+  denyHealthAppeal: HealthAppeal;
   denyMcpAuthorization: McpAuthorizationDecision;
   /** Admin denies a request. */
   denyRequest: ApprovalRequest;
@@ -14735,6 +14953,8 @@ export type Mutation = {
   markSupportChatRead: SupportChatSession;
   /** Mark a ticket thread read (owner or agent) — updates the side's last-read so the other side's ticks turn 'Seen' (B12). */
   markTicketRead: Ticket;
+  /** Idempotent: the first call per member counts one view; later calls change nothing. */
+  markTutorialWatched: TutorialWatchResult;
   /** The member has the thread open and read to the end: the other side sees their face move to the newest line. */
   markVenueChatRead: Scalars['Boolean']['output'];
   /** Deep-analyses a pod's content against community guidelines before publishing. */
@@ -14986,6 +15206,12 @@ export type Mutation = {
    * matrix and the final gate all write to ONE row rather than twenty.
    */
   reportE2eRun: E2eRun;
+  /**
+   * CI only: a chunk of one leg's scenarios, upserted, so a retried chunk
+   * writes the same rows again. Tech/Super admin only. Answers how many were
+   * written.
+   */
+  reportE2eScenarios: Scalars['Int']['output'];
   /**
    * Report a post or a story. Open to any signed-in viewer — that is the point.
    * Refused with REPORT_ALREADY_PENDING while the viewer's earlier report on the
@@ -15907,6 +16133,7 @@ export type Mutation = {
   togglePodLike: Pod;
   togglePostLike: Post;
   toggleSavedPod: SavedPodState;
+  toggleTutorialLike: TutorialLikeResult;
   /** SCHEDULE, UNSCHEDULE, START, PAUSE, RESUME, COMPLETE, CANCEL or ARCHIVE. */
   transitionPodChallenge: PodChallenge;
   /**
@@ -15938,6 +16165,8 @@ export type Mutation = {
   unfollowClub: User;
   unfollowPod: User;
   unfollowUser: User;
+  /** The pod page showed the offer: unlock it for the signed-in member. Idempotent; refused when the pod offers them none. */
+  unlockSmartIncentive: PodSmartIncentive;
   unmuteChat: ChatMuteState;
   unpublishCmsPage: CmsPage;
   unsubscribeAllByToken: MailPreference;
@@ -16095,6 +16324,8 @@ export type Mutation = {
   /** Rename a link, re-point it, or change its link-preview card. */
   updateShortLink: ShortLink;
   updateShortLinkPolicy: ShortLinkPolicy;
+  /** Loyalty: switch the programme, its delay and the biggest discount a host may offer. */
+  updateSmartIncentiveSettings: SmartIncentiveSettings;
   updateSomethingForYouItem: SomethingForYouItem;
   /**
    * Triage one report: its state, the note, and any images the operator added.
@@ -16114,6 +16345,8 @@ export type Mutation = {
   /** Set a ticket's priority flag (High/Medium/Low) — support agents only. */
   updateTicketPriority: Ticket;
   updateTicketStatus: Ticket;
+  updateTutorial: Tutorial;
+  updateTutorialTopic: TutorialTopic;
   updateUnitTestSettings: UnitTestSettings;
   updateUploadSettings: UploadSetting;
   updateUser: User;
@@ -16238,6 +16471,12 @@ export type MutationAcceptFollowRequestArgs = {
 };
 
 
+export type MutationAcceptHealthAppealArgs = {
+  id: Scalars['ID']['input'];
+  note?: InputMaybe<Scalars['String']['input']>;
+};
+
+
 export type MutationAcceptPoliciesArgs = {
   policy_ids: Array<Scalars['ID']['input']>;
   surface?: InputMaybe<PolicyAcceptanceSurface>;
@@ -16350,6 +16589,12 @@ export type MutationAddReelDriveAssetsArgs = {
 
 export type MutationAddRegionClubAdminArgs = {
   user_id: Scalars['ID']['input'];
+};
+
+
+export type MutationAddTutorialCommentArgs = {
+  text: Scalars['String']['input'];
+  tutorial_id: Scalars['ID']['input'];
 };
 
 
@@ -16525,6 +16770,11 @@ export type MutationAnswerPodChallengeQuizArgs = {
   id: Scalars['ID']['input'];
   option_index: Scalars['Int']['input'];
   tool_instance_id: Scalars['String']['input'];
+};
+
+
+export type MutationAppealHealthAdjustmentArgs = {
+  input: AppealHealthAdjustmentInput;
 };
 
 
@@ -17423,6 +17673,16 @@ export type MutationCreateTicketArgs = {
 };
 
 
+export type MutationCreateTutorialArgs = {
+  input: TutorialInput;
+};
+
+
+export type MutationCreateTutorialTopicArgs = {
+  input: TutorialTopicInput;
+};
+
+
 export type MutationCreateUserArgs = {
   input: CreateUserInput;
 };
@@ -17899,6 +18159,11 @@ export type MutationDeleteMyProductListingArgs = {
 };
 
 
+export type MutationDeleteMyTutorialCommentArgs = {
+  comment_id: Scalars['ID']['input'];
+};
+
+
 export type MutationDeleteNotificationArgs = {
   notification_doc_id: Scalars['ID']['input'];
 };
@@ -18068,6 +18333,16 @@ export type MutationDeleteTranslationArgs = {
 };
 
 
+export type MutationDeleteTutorialArgs = {
+  tutorial_id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteTutorialTopicArgs = {
+  topic_id: Scalars['ID']['input'];
+};
+
+
 export type MutationDeleteUserArgs = {
   user_id: Scalars['ID']['input'];
 };
@@ -18139,6 +18414,12 @@ export type MutationDeleteWebsiteNavItemArgs = {
 
 export type MutationDeleteWebsiteReelArgs = {
   reel_id: Scalars['ID']['input'];
+};
+
+
+export type MutationDenyHealthAppealArgs = {
+  id: Scalars['ID']['input'];
+  note?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -18685,6 +18966,11 @@ export type MutationMarkTicketReadArgs = {
 };
 
 
+export type MutationMarkTutorialWatchedArgs = {
+  tutorial_id: Scalars['ID']['input'];
+};
+
+
 export type MutationMarkVenueChatReadArgs = {
   pod_id: Scalars['ID']['input'];
 };
@@ -19188,6 +19474,11 @@ export type MutationReportChatMessageArgs = {
 
 export type MutationReportE2eRunArgs = {
   input: ReportE2eRunInput;
+};
+
+
+export type MutationReportE2eScenariosArgs = {
+  input: ReportE2eScenariosInput;
 };
 
 
@@ -21198,6 +21489,11 @@ export type MutationToggleSavedPodArgs = {
 };
 
 
+export type MutationToggleTutorialLikeArgs = {
+  tutorial_id: Scalars['ID']['input'];
+};
+
+
 export type MutationTransitionPodChallengeArgs = {
   action: Scalars['String']['input'];
   id: Scalars['ID']['input'];
@@ -21236,6 +21532,11 @@ export type MutationUnfollowPodArgs = {
 
 export type MutationUnfollowUserArgs = {
   user_id: Scalars['ID']['input'];
+};
+
+
+export type MutationUnlockSmartIncentiveArgs = {
+  pod_id: Scalars['ID']['input'];
 };
 
 
@@ -21905,6 +22206,11 @@ export type MutationUpdateShortLinkPolicyArgs = {
 };
 
 
+export type MutationUpdateSmartIncentiveSettingsArgs = {
+  input: SmartIncentiveSettingsInput;
+};
+
+
 export type MutationUpdateSomethingForYouItemArgs = {
   input: SomethingForYouInput;
   item_id: Scalars['ID']['input'];
@@ -21959,6 +22265,18 @@ export type MutationUpdateTicketPriorityArgs = {
 export type MutationUpdateTicketStatusArgs = {
   status: TicketStatus;
   ticket_id: Scalars['ID']['input'];
+};
+
+
+export type MutationUpdateTutorialArgs = {
+  input: TutorialInput;
+  tutorial_id: Scalars['ID']['input'];
+};
+
+
+export type MutationUpdateTutorialTopicArgs = {
+  input: TutorialTopicInput;
+  topic_id: Scalars['ID']['input'];
 };
 
 
@@ -23234,6 +23552,10 @@ export type Payment = {
   rental_lines: Array<PaymentRentalLine>;
   /** What rounding the bill UP to a whole rupee added (0 ≤ x < 1; 0 when it was already whole or the payment predates the rule). Already inside total; never taxable and never part of a fee, commission or settlement. */
   round_off: Scalars['Float']['output'];
+  /** The member's unlocked Smart Incentive, frozen at checkout: rupees taken off the ticket money after the multi-ticket discount and before the coupon and coins (host-funded). 0 when none applied. */
+  smart_incentive_amount: Scalars['Float']['output'];
+  /** Percentage of the Smart Incentive that applied (0 when none). */
+  smart_incentive_pct: Scalars['Int']['output'];
   status: PaymentStatus;
   subtotal: Scalars['Float']['output'];
   target_type: PaymentTargetType;
@@ -23639,6 +23961,8 @@ export type PaymentTotals = {
   fee: Scalars['Float']['output'];
   gross: Scalars['Float']['output'];
   gst: Scalars['Float']['output'];
+  /** Smart Incentive discounts given on the matching payments — already off gross. */
+  smart_incentive_total: Scalars['Float']['output'];
   /** Multi-ticket discounts given on the matching payments — already off gross. */
   ticket_discount_total: Scalars['Float']['output'];
 };
@@ -24104,6 +24428,10 @@ export type Pod = {
   series_role?: Maybe<PodSeriesRole>;
   /** @deprecated Recurring pods are retired; always null. */
   series_total?: Maybe<Scalars['Int']['output']>;
+  /** The host offers members who stay on the pod page without booking a one-time discount (Smart Incentive). Always false on a free or zero-priced pod. */
+  smart_incentive_enabled: Scalars['Boolean']['output'];
+  /** Percent off the ticket money that offer gives (after any multi-ticket discount); 0 when switched off. */
+  smart_incentive_pct: Scalars['Int']['output'];
   /** Whether one booking of several seats gets a tiered discount on its tickets. Always false on a free or zero-priced pod. */
   ticket_discount_enabled: Scalars['Boolean']['output'];
   /** The multi-ticket discount tiers, ascending. Empty when the discount is off; one ticket always pays full price. */
@@ -25359,6 +25687,12 @@ export type PodFinanceBreakdown = {
   refunded_total: Scalars['Float']['output'];
   settlement_status: PodSettlementStatus;
   /**
+   * Smart Incentive discounts given across this pod's successful bookings. They
+   * come off the ticket money the same way, so collected_total is already lower
+   * by this much — the host funds them, since settlement runs on what was collected.
+   */
+  smart_incentive_total: Scalars['Float']['output'];
+  /**
    * Multi-ticket discounts given across this pod's successful bookings. Like
    * coins, they come off the ticket price before GST, so collected_total is
    * already lower by this much — stated so the gap is explainable.
@@ -26442,6 +26776,18 @@ export type PodShopSliderMediaInput = {
   subheading?: InputMaybe<Scalars['String']['input']>;
   type?: InputMaybe<CategoryMediaType>;
   url: Scalars['String']['input'];
+};
+
+/** A pod page's Smart Incentive for the signed-in member. */
+export type PodSmartIncentive = {
+  __typename?: 'PodSmartIncentive';
+  /** Seconds on the pod page before the offer shows (Loyalty > Smart Incentive > Settings). */
+  delay_seconds: Scalars['Int']['output'];
+  /** Percent off the ticket money, after any multi-ticket discount. Frozen once unlocked. */
+  discount_pct: Scalars['Int']['output'];
+  pod_id: Scalars['ID']['output'];
+  /** True once the offer was shown: checkout takes it off on its own. */
+  unlocked: Scalars['Boolean']['output'];
 };
 
 /** One filled Backout seat on a pod — who released the spot and who took it. */
@@ -27638,6 +27984,8 @@ export type Query = {
   adRequestsTable: AdRequestTablePage;
   /** Admin console table — every Auto Pod at every stage. */
   adminAutoPodsTable: AutoPodTablePage;
+  /** Pods console: every free pod and free venue booking with the host's justification, newest first (filters: pod_type, reason, venue_approval_status, is_active, pod_date_time, created_at). */
+  adminFreeArrangementsTable: FreeArrangementTablePage;
   /** Admin/Finance: everyone on a pod with contact info and replacement links. */
   adminPodAttendees: Array<AdminPodAttendee>;
   /**
@@ -28147,9 +28495,13 @@ export type Query = {
    * Pass email for a mailed code or phone for a WhatsApp one.
    */
   e2eOneTimeCode?: Maybe<E2eOneTimeCode>;
+  /** One e2e run, or null when it does not exist. */
+  e2eRun?: Maybe<E2eRun>;
   e2eRunSettings: E2eRunSettings;
   /** Every e2e run, newest first (Tech portal E2E Tests table). */
   e2eRunsTable: E2eRunTablePage;
+  /** Every scenario one run held. Filter on project, spec, title, state; search titles, spec and error. */
+  e2eScenarioResultsTable: E2eScenarioResultTablePage;
   /** The suites a run can be asked for. */
   e2eSuiteCatalogue: Array<E2eSuite>;
   /**
@@ -28315,6 +28667,8 @@ export type Query = {
   grievanceStats: GrievanceStats;
   grievanceTicket?: Maybe<GrievanceTicket>;
   grievanceTicketsTable: GrievanceTicketTablePage;
+  /**  Legal-only: every appeal against a health deduction (DUNCIT TABLE CONTRACT v1).  */
+  healthAppealsTable: HealthAppealTablePage;
   host?: Maybe<Host>;
   hostAgainPrefill: HostAgainPrefill;
   /**
@@ -28952,6 +29306,12 @@ export type Query = {
   podSettlementPreview: PodSettlement;
   /** Products team: every return (optionally one brand's). Partner: their own brands' returns. */
   podShopReturnsTable: PodShopReturnTablePage;
+  /**
+   * The signed-in member's Smart Incentive on one pod. Null when there is
+   * nothing to offer them: the programme is off, the pod does not offer it or
+   * can no longer be booked, or they host it or already hold a seat.
+   */
+  podSmartIncentive?: Maybe<PodSmartIncentive>;
   /** Every filled Backout seat of a pod — struck-through attendee rows (public). */
   podSpotFills: Array<PodSpotFill>;
   /** The range this pod may be resized within. Host, the pod's club admin, or an admin. */
@@ -29276,6 +29636,10 @@ export type Query = {
   slackConfigured: Scalars['Boolean']['output'];
   /** What the bot token is allowed to do, and where to change it. */
   slackPermissions: SlackPermissions;
+  /** Loyalty > Smart Incentive > Dashboard. 'months' bounds the monthly series (default 12, max 36). */
+  smartIncentiveAdminStats: SmartIncentiveAdminStats;
+  /** The programme's settings. Any signed-in account reads them: a host's Create Pod form is capped by max_discount_pct. */
+  smartIncentiveSettings: SmartIncentiveSettings;
   socialAccounts: Array<SocialAccount>;
   socialAnalytics: SocialAnalytics;
   /** Everything dated in [from, to): posts written here and posts read from the networks. */
@@ -29521,6 +29885,17 @@ export type Query = {
   translationsTable: TranslationTablePage;
   /** Mobile web: has Truecaller answered the request this page started? Public. */
   truecallerWebState: TruecallerWebState;
+  /** A tutorial's comments, newest first. */
+  tutorialComments: TutorialCommentPage;
+  tutorialStats: TutorialStats;
+  /** Active topics (Support staff may ask for inactive ones too). */
+  tutorialTopics: Array<TutorialTopic>;
+  /** Server-side table page over tutorial topics. */
+  tutorialTopicsTable: TutorialTopicTablePage;
+  /** Published tutorials for the signed-in member, with their own like/watched flags. */
+  tutorials: TutorialPage;
+  /** Server-side table page (search/filter/sort/paginate) over every tutorial. */
+  tutorialsTable: TutorialTablePage;
   /** One run's test cases. Filter on status, workspace, file; search title and full name. */
   unitTestCasesTable: UnitTestCaseTablePage;
   /** Finished runs' totals and coverage, oldest first. limit defaults to 30, at most 200. */
@@ -29703,6 +30078,12 @@ export type Query = {
   websiteNavTable: WebsiteNavItemTablePage;
   websiteReelSettings: WebsiteReelSettings;
   websiteReelsTable: WebsiteReelTablePage;
+  /**
+   * The soonest upcoming pods discovery would offer, for every Duncit website's
+   * home rail. Deliberately unauthenticated (a website visitor has no session);
+   * limit defaults to 12 and is capped at 24.
+   */
+  websiteUpcomingPods: Array<WebsitePod>;
   /** The default header assets every media-header scenario falls back to. Cheap: no AiSensy read. */
   whatsappDefaultMedia: WaDefaultMedia;
   /** One send attempt in full — the detail behind a row of the merged WhatsApp log. */
@@ -29772,6 +30153,11 @@ export type QueryAdRequestsTableArgs = {
 
 
 export type QueryAdminAutoPodsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryAdminFreeArrangementsTableArgs = {
   query?: InputMaybe<TableQueryInput>;
 };
 
@@ -30756,8 +31142,19 @@ export type QueryE2eOneTimeCodeArgs = {
 };
 
 
+export type QueryE2eRunArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type QueryE2eRunsTableArgs = {
   query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryE2eScenarioResultsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+  run_id: Scalars['ID']['input'];
 };
 
 
@@ -31143,6 +31540,11 @@ export type QueryGrievanceTicketArgs = {
 
 
 export type QueryGrievanceTicketsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryHealthAppealsTableArgs = {
   query?: InputMaybe<TableQueryInput>;
 };
 
@@ -32375,6 +32777,11 @@ export type QueryPodShopReturnsTableArgs = {
 };
 
 
+export type QueryPodSmartIncentiveArgs = {
+  pod_id: Scalars['ID']['input'];
+};
+
+
 export type QueryPodSpotFillsArgs = {
   pod_doc_id: Scalars['ID']['input'];
 };
@@ -32894,6 +33301,11 @@ export type QuerySlackChannelHistoryArgs = {
 };
 
 
+export type QuerySmartIncentiveAdminStatsArgs = {
+  months?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
 export type QuerySocialAnalyticsArgs = {
   input: SocialAnalyticsInput;
 };
@@ -33406,6 +33818,37 @@ export type QueryTruecallerWebStateArgs = {
 };
 
 
+export type QueryTutorialCommentsArgs = {
+  page?: InputMaybe<Scalars['Int']['input']>;
+  page_size?: InputMaybe<Scalars['Int']['input']>;
+  tutorial_id: Scalars['ID']['input'];
+};
+
+
+export type QueryTutorialTopicsArgs = {
+  include_inactive?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+
+export type QueryTutorialTopicsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryTutorialsArgs = {
+  language?: InputMaybe<TutorialLanguage>;
+  page?: InputMaybe<Scalars['Int']['input']>;
+  page_size?: InputMaybe<Scalars['Int']['input']>;
+  search?: InputMaybe<Scalars['String']['input']>;
+  topic?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type QueryTutorialsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
 export type QueryUnitTestCasesTableArgs = {
   query?: InputMaybe<TableQueryInput>;
   run_id: Scalars['ID']['input'];
@@ -33842,6 +34285,11 @@ export type QueryWebsiteNavTableArgs = {
 
 export type QueryWebsiteReelsTableArgs = {
   query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryWebsiteUpcomingPodsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -34691,8 +35139,16 @@ export type RegisterInput = {
   accepted_policy_ids?: InputMaybe<Array<Scalars['ID']['input']>>;
   /** Which app they accepted in. Recorded on every acceptance row. */
   accepted_policy_surface?: InputMaybe<PolicyAcceptanceSurface>;
+  /**
+   * The signup form's "I confirm I'm 18 or older" tick (18 being Admin's
+   * minimum joining age). Required when no date of birth is sent; a birthday,
+   * when there is one, is checked against the same age instead. Builds that
+   * predate the tick always send a birthday, so they never need it.
+   */
+  age_confirmed?: InputMaybe<Scalars['Boolean']['input']>;
   city?: InputMaybe<Scalars['String']['input']>;
-  dob: Scalars['String']['input'];
+  /** Date of birth. Optional — the age tick below is what signup needs; a birthday given here must clear the minimum age. */
+  dob?: InputMaybe<Scalars['String']['input']>;
   email: Scalars['String']['input'];
   first_name: Scalars['String']['input'];
   last_name?: InputMaybe<Scalars['String']['input']>;
@@ -35127,6 +35583,16 @@ export type ReportE2eRunInput = {
   suite?: InputMaybe<E2eSuiteResultInput>;
   workflow_run_id?: InputMaybe<Scalars['String']['input']>;
   workflow_run_url?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type ReportE2eScenariosInput = {
+  dispatch_id?: InputMaybe<Scalars['String']['input']>;
+  /** Drop the leg's earlier rows first. The first chunk of a report sends it. */
+  reset?: InputMaybe<Scalars['Boolean']['input']>;
+  /** At most 500. */
+  scenarios: Array<E2eScenarioResultInput>;
+  suite: Scalars['String']['input'];
+  workflow_run_id?: InputMaybe<Scalars['String']['input']>;
 };
 
 /** Who a reviewer is writing to about a report. */
@@ -36349,6 +36815,84 @@ export type SlotTemplatePerDayPrice = {
 export type SlotTemplatePerDayPriceInput = {
   price: Scalars['Int']['input'];
   weekday: Scalars['Int']['input'];
+};
+
+/** Loyalty > Smart Incentive > Dashboard. Totals are all-time; 'monthly' covers the chosen window. */
+export type SmartIncentiveAdminStats = {
+  __typename?: 'SmartIncentiveAdminStats';
+  /** The average discount across opted-in pods (one decimal). */
+  avg_discount_pct: Scalars['Float']['output'];
+  /** Bookings paid with an unlocked offer. */
+  bookings: Scalars['Int']['output'];
+  /** bookings / offers_shown, as a percentage (one decimal). */
+  conversion_pct: Scalars['Float']['output'];
+  delay_seconds: Scalars['Int']['output'];
+  /** What those bookings took off ticket money, GST included — funded by the hosts. */
+  discount_given: Scalars['Float']['output'];
+  discount_split: Array<SmartIncentiveDiscountShare>;
+  enabled: Scalars['Boolean']['output'];
+  /** Hosts who switched the incentive on for at least one pod (cancelled pods left out). */
+  hosts_opted_in: Scalars['Int']['output'];
+  max_discount_pct: Scalars['Int']['output'];
+  monthly: Array<SmartIncentiveMonthBucket>;
+  /** Offers the pod pages have shown — one per member per pod. */
+  offers_shown: Scalars['Int']['output'];
+  pods_opted_in: Scalars['Int']['output'];
+  top_hosts: Array<SmartIncentiveTopHost>;
+  /** Opted-in pods that have not started yet. */
+  upcoming_pods: Scalars['Int']['output'];
+};
+
+/** How many opted-in pods offer one discount percentage. */
+export type SmartIncentiveDiscountShare = {
+  __typename?: 'SmartIncentiveDiscountShare';
+  discount_pct: Scalars['Int']['output'];
+  pods: Scalars['Int']['output'];
+};
+
+/** One calendar month (UTC) of the programme. */
+export type SmartIncentiveMonthBucket = {
+  __typename?: 'SmartIncentiveMonthBucket';
+  /** Bookings paid with an unlocked offer that month. */
+  bookings: Scalars['Int']['output'];
+  /** What those bookings took off ticket money, GST included. */
+  discount: Scalars['Float']['output'];
+  /** 'YYYY-MM'. */
+  month: Scalars['String']['output'];
+  /** Offers the pod pages showed that month. */
+  offers: Scalars['Int']['output'];
+};
+
+export type SmartIncentiveSettings = {
+  __typename?: 'SmartIncentiveSettings';
+  /** Seconds a member stays on a pod page before the offer shows. */
+  delay_seconds: Scalars['Int']['output'];
+  /** The programme's switch. Off: no pod page offers anything and checkout applies no unlocked offer. */
+  enabled: Scalars['Boolean']['output'];
+  /** The biggest discount a host may choose when switching it on for a pod. */
+  max_discount_pct: Scalars['Int']['output'];
+  updated_at: Scalars['String']['output'];
+};
+
+/** Loyalty > Smart Incentive > Settings. Every field is optional; an omitted one is left alone. */
+export type SmartIncentiveSettingsInput = {
+  /** Whole seconds, 5 to 300. */
+  delay_seconds?: InputMaybe<Scalars['Int']['input']>;
+  enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Whole percent, 1 to 90. Pods already above a lowered ceiling keep their discount until edited. */
+  max_discount_pct?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type SmartIncentiveTopHost = {
+  __typename?: 'SmartIncentiveTopHost';
+  avg_discount_pct: Scalars['Float']['output'];
+  bookings: Scalars['Int']['output'];
+  discount_given: Scalars['Float']['output'];
+  email: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  /** Pods this host switched the incentive on for. */
+  pods: Scalars['Int']['output'];
+  user_id: Scalars['ID']['output'];
 };
 
 export type SocialAccount = {
@@ -41728,6 +42272,157 @@ export type TruecallerWebState =
   | 'REJECTED'
   | 'USED';
 
+/** A short how-to video members watch from the app's Tutorials menu. */
+export type Tutorial = {
+  __typename?: 'Tutorial';
+  comment_count: Scalars['Int']['output'];
+  created_at: Scalars['String']['output'];
+  description: Scalars['String']['output'];
+  duration_sec: Scalars['Int']['output'];
+  id: Scalars['ID']['output'];
+  language: TutorialLanguage;
+  like_count: Scalars['Int']['output'];
+  /** The signed-in member liked it (always false on the Support table). */
+  liked_by_me: Scalars['Boolean']['output'];
+  sort_order: Scalars['Int']['output'];
+  status: TutorialStatus;
+  thumbnail_url: Scalars['String']['output'];
+  title: Scalars['String']['output'];
+  topic: Scalars['String']['output'];
+  updated_at: Scalars['String']['output'];
+  video_url: Scalars['String']['output'];
+  /** Unique members who watched it. */
+  view_count: Scalars['Int']['output'];
+  /** The signed-in member has watched it (always false on the Support table). */
+  watched_by_me: Scalars['Boolean']['output'];
+};
+
+export type TutorialComment = {
+  __typename?: 'TutorialComment';
+  author?: Maybe<User>;
+  author_id: Scalars['ID']['output'];
+  created_at: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  /** The signed-in member wrote it, so may delete it. */
+  is_mine: Scalars['Boolean']['output'];
+  text: Scalars['String']['output'];
+  tutorial_id: Scalars['ID']['output'];
+};
+
+export type TutorialCommentPage = {
+  __typename?: 'TutorialCommentPage';
+  has_more: Scalars['Boolean']['output'];
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<TutorialComment>;
+  total: Scalars['Int']['output'];
+};
+
+export type TutorialInput = {
+  description?: InputMaybe<Scalars['String']['input']>;
+  duration_sec?: InputMaybe<Scalars['Int']['input']>;
+  language: TutorialLanguage;
+  sort_order?: InputMaybe<Scalars['Int']['input']>;
+  status?: InputMaybe<TutorialStatus>;
+  thumbnail_url?: InputMaybe<Scalars['String']['input']>;
+  title: Scalars['String']['input'];
+  topic: Scalars['String']['input'];
+  video_url: Scalars['String']['input'];
+};
+
+/** The language a tutorial is spoken in. */
+export type TutorialLanguage =
+  | 'en'
+  | 'hi';
+
+export type TutorialLikeResult = {
+  __typename?: 'TutorialLikeResult';
+  like_count: Scalars['Int']['output'];
+  liked: Scalars['Boolean']['output'];
+  tutorial_id: Scalars['ID']['output'];
+};
+
+export type TutorialPage = {
+  __typename?: 'TutorialPage';
+  has_more: Scalars['Boolean']['output'];
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<Tutorial>;
+  total: Scalars['Int']['output'];
+};
+
+/** Support dashboard totals for Tutorials. */
+export type TutorialStats = {
+  __typename?: 'TutorialStats';
+  published_tutorials: Scalars['Int']['output'];
+  /** Most-watched tutorials, highest first. */
+  top_tutorials: Array<TutorialViewStat>;
+  total_comments: Scalars['Int']['output'];
+  total_likes: Scalars['Int']['output'];
+  total_tutorials: Scalars['Int']['output'];
+  /** Sum of every tutorial's unique viewers. */
+  total_views: Scalars['Int']['output'];
+  /** Distinct members who watched at least one tutorial. */
+  unique_viewers: Scalars['Int']['output'];
+};
+
+export type TutorialStatus =
+  | 'DRAFT'
+  | 'PUBLISHED';
+
+/** Server-side table page for the shared table engine (tutorialsTable). */
+export type TutorialTablePage = {
+  __typename?: 'TutorialTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<Tutorial>;
+  total: Scalars['Int']['output'];
+};
+
+/** A topic tutorials are grouped under, managed from the Support portal. */
+export type TutorialTopic = {
+  __typename?: 'TutorialTopic';
+  created_at: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  is_active: Scalars['Boolean']['output'];
+  key: Scalars['String']['output'];
+  label: Scalars['String']['output'];
+  sort_order: Scalars['Int']['output'];
+  updated_at: Scalars['String']['output'];
+};
+
+export type TutorialTopicInput = {
+  is_active?: InputMaybe<Scalars['Boolean']['input']>;
+  key: Scalars['String']['input'];
+  label: Scalars['String']['input'];
+  sort_order?: InputMaybe<Scalars['Int']['input']>;
+};
+
+/** Server-side table page for the shared table engine (tutorialTopicsTable). */
+export type TutorialTopicTablePage = {
+  __typename?: 'TutorialTopicTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<TutorialTopic>;
+  total: Scalars['Int']['output'];
+};
+
+export type TutorialViewStat = {
+  __typename?: 'TutorialViewStat';
+  comment_count: Scalars['Int']['output'];
+  like_count: Scalars['Int']['output'];
+  title: Scalars['String']['output'];
+  tutorial_id: Scalars['ID']['output'];
+  view_count: Scalars['Int']['output'];
+};
+
+export type TutorialWatchResult = {
+  __typename?: 'TutorialWatchResult';
+  tutorial_id: Scalars['ID']['output'];
+  view_count: Scalars['Int']['output'];
+  watched: Scalars['Boolean']['output'];
+};
+
 export type TwoFactorEnableResult = {
   __typename?: 'TwoFactorEnableResult';
   accounts: ConnectedAccounts;
@@ -42817,6 +43512,8 @@ export type UpdatePodIdeaInput = {
 export type UpdatePodInput = {
   available_perks?: InputMaybe<Array<Scalars['String']['input']>>;
   club_id?: InputMaybe<Scalars['ID']['input']>;
+  /** Required when a host makes the pod FREE (pod_type FREE): why it is free, and the host accepts Duncit's free policy. */
+  free_justification?: InputMaybe<FreeJustificationInput>;
   is_active?: InputMaybe<Scalars['Boolean']['input']>;
   location_id?: InputMaybe<Scalars['ID']['input']>;
   meeting_notes?: InputMaybe<Scalars['String']['input']>;
@@ -42841,6 +43538,9 @@ export type UpdatePodInput = {
   product_requests?: InputMaybe<Array<PodProductRequestInput>>;
   products_enabled?: InputMaybe<Scalars['Boolean']['input']>;
   reel_url?: InputMaybe<Scalars['String']['input']>;
+  /** Offer a Smart Incentive — omit both fields to leave it alone. Cleared when the pod becomes free or zero-priced. */
+  smart_incentive_enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  smart_incentive_pct?: InputMaybe<Scalars['Int']['input']>;
   /** Offer a multi-ticket discount. Cleared when the pod becomes free or zero-priced. */
   ticket_discount_enabled?: InputMaybe<Scalars['Boolean']['input']>;
   ticket_discount_tiers?: InputMaybe<Array<PodTicketDiscountTierInput>>;
@@ -43691,6 +44391,10 @@ export type VenueBookingOffer = {
   end_at: Scalars['String']['output'];
   /** When the side whose move it is must answer by (ISO); null once closed or on offers made before expiry. */
   expires_at?: Maybe<Scalars['String']['output']>;
+  /** Why a FREE offer is free; null on a priced offer. */
+  free_justification?: Maybe<FreeJustification>;
+  /** The pod was free when the offer was made: the venue accepts or declines it, nobody counters (counters_per_side is 0). */
+  free_pod: Scalars['Boolean']['output'];
   history: Array<VenueOfferHistoryEntry>;
   /** Counters the host has made so far (the opening offer is not one). */
   host_counters_used: Scalars['Int']['output'];
@@ -44561,6 +45265,8 @@ export type VenueOfferHistoryEntry = {
 /** A host's venue booking: the window, the guests and the terms. The server prices it; a client never sends a total. */
 export type VenueOfferInput = {
   end_at: Scalars['String']['input'];
+  /** Required with model FREE: why the venue is asked to give the window for nothing. */
+  free_justification?: InputMaybe<FreeJustificationInput>;
   model: VenueOfferModel;
   /** Anything else asked of the venue. Optional. */
   note?: InputMaybe<Scalars['String']['input']>;
@@ -44579,6 +45285,8 @@ export type VenueOfferInput = {
 export type VenueOfferModel =
   /** one price for the picked window */
   | 'FLAT'
+  /** the venue gives the window for nothing (a host's opening offer only, with a FreeJustificationInput; accepted or declined, never countered) */
+  | 'FREE'
   /** rate x guests (a minimum order value per person) */
   | 'PER_GUEST'
   /** rate x hours booked */
@@ -44818,6 +45526,10 @@ export type VenueRegistrationConfig = {
   food_video_limit: Scalars['Int']['output'];
   /** The doc_types entry uploaded beside a GSTIN, not from the general list. */
   gstin_doc_type: Scalars['String']['output'];
+  /** Entries a venue may add of its own to each of its amenities, facilities and security lists. */
+  own_option_limit: Scalars['Int']['output'];
+  /** Characters in one of a venue's own entries. */
+  own_option_max_length: Scalars['Int']['output'];
   /** The doc_types entry uploaded beside a PAN, not from the general list. */
   pan_doc_type: Scalars['String']['output'];
   /** Category rows one rented item may be offered under. */
@@ -44934,6 +45646,11 @@ export type VenueSettingsInput = {
  * (draft, under review or approved). Omitted fields keep what is stored.
  */
 export type VenueSetupInput = {
+  /**
+   * venueRegistrationConfig.amenities options plus at most own_option_limit
+   * entries of the venue's own (each up to own_option_max_length characters),
+   * kept on this venue only. The same holds for facilities and security.
+   */
   amenities?: InputMaybe<Array<Scalars['String']['input']>>;
   capacity_items?: InputMaybe<Array<VenueCapacityItemInput>>;
   facilities?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -46112,6 +46829,24 @@ export type WebsitePageType =
   | 'BLOG'
   | 'CAREERS'
   | 'NEWSROOM';
+
+/**
+ * One upcoming pod as the public websites' home rail shows it: the card's
+ * facts and the two slugs mWeb's pod page lives at — nothing about members,
+ * hosts, venues or money beyond the ticket price.
+ */
+export type WebsitePod = {
+  __typename?: 'WebsitePod';
+  club_slug: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  image_url?: Maybe<Scalars['String']['output']>;
+  pod_amount: Scalars['Float']['output'];
+  pod_date_time: Scalars['String']['output'];
+  pod_id: Scalars['String']['output'];
+  pod_title: Scalars['String']['output'];
+  pod_type: Scalars['String']['output'];
+  zone_name?: Maybe<Scalars['String']['output']>;
+};
 
 /** A reel in a marketing website's home-page Reel Slider, managed from the Website portal. */
 export type WebsiteReel = {

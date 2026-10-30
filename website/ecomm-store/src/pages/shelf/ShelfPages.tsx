@@ -13,14 +13,14 @@ import { ShelfView } from './ShelfView';
 
 const NO_SCOPE = {};
 
-/** /shop — everything on the shelf. */
+/** /shop: everything on the shelf. */
 export function ShopPage() {
   const { t } = useStoreT();
   usePageSeo(t('ecommStore.shelf.shopTitle'));
   return <ShelfView scope={NO_SCOPE} header={<ShelfHeading title={t('ecommStore.shelf.shopTitle')} />} />;
 }
 
-/** /search?q= — the same shelf, narrowed by what was typed. */
+/** /search?q=: the same shelf, narrowed by what was typed. */
 export function SearchPage() {
   const { t } = useStoreT();
   const [params] = useSearchParams();
@@ -30,7 +30,7 @@ export function SearchPage() {
   return <ShelfView scope={NO_SCOPE} header={<ShelfHeading title={title} />} />;
 }
 
-/** /brand/:slug — one brand's products, found by its public slug and scoped by its id. */
+/** /brand/:slug: one brand's products, found by its public slug and scoped by its id. */
 export function BrandPage() {
   const { t } = useStoreT();
   const { slug = '' } = useParams();

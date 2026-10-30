@@ -8,7 +8,7 @@ import { useStoreT } from '../../i18n';
 import { ReturnsList } from '../order-detail/ReturnsList';
 import { AccountLayout } from './AccountLayout';
 
-/** /account/returns — every return the buyer has asked for. */
+/** /account/returns: every return the buyer has asked for. */
 export function ReturnsPage() {
   const { t } = useStoreT();
   const { data, loading } = useQuery(MY_RETURNS, { fetchPolicy: 'cache-and-network' });

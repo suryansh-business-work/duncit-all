@@ -7,7 +7,7 @@ import { useStoreT } from '../../i18n';
 import { ContactForm } from './contact-form';
 import type { CheckoutControls } from './useCheckoutState';
 
-/** Step 1: sign in, or — when the store allows it — carry on as a guest. */
+/** Step 1: sign in, or (when the store allows it) carry on as a guest. */
 export function ContactStep({ controls }: Readonly<{ controls: CheckoutControls }>) {
   const { t } = useStoreT();
   const { signedIn, me, openSignIn } = useStoreSession();

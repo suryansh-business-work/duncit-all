@@ -16,8 +16,9 @@ interface BreakupLine {
  * and ONLY the lines that actually reconcile to the total.
  *
  * `original_total` is the cart before EVERY discount (ticket gross + products).
- * The multi-ticket tier comes off the tickets first; the coupon is then
- * evaluated on that discounted payable and coins re-quote what the coupon left
+ * The multi-ticket tier comes off the tickets first and the member's unlocked
+ * Smart Incentive off what the tier left; the coupon is then evaluated on that
+ * discounted payable and coins re-quote what the coupon left
  * (payment.service `applyCoupon`/`applyCoins`), and `computeQuote` extracts GST
  * inclusive from what is left. So every deduction cuts the value BEFORE tax —
  * the way GST law reads an invoice discount (CGST Act s.15(3)(a)) — and the
@@ -28,8 +29,10 @@ interface BreakupLine {
  * list: it is carved out of the subtotal, not added on top — see the memo block below.
  *
  * Each deduction is skipped when zero rather than shown as a "− ₹0.00" no-op.
- * The ticket discount reads the payment's frozen snapshot, never the pod's
- * current tiers.
+ * The ticket discount and the Smart Incentive read the payment's frozen
+ * snapshot, never the pod's current offers. Both are host-funded by
+ * construction: the charged total is already net of them, and settlement runs
+ * on that total, so no later screen adds either back.
  */
 function buildLines(detail: PaymentDetail, t: Translator['t']): BreakupLine[] {
   const p = detail.payment;
@@ -46,6 +49,11 @@ function buildLines(detail: PaymentDetail, t: Translator['t']): BreakupLine[] {
         key: 'ticket-discount',
         label: t('finance.payment.ticketDiscountLine', { vars: { pct: p.ticket_discount_pct } }),
         amount: p.ticket_discount_amount,
+      },
+      {
+        key: 'smart-incentive',
+        label: t('finance.payment.smartIncentiveLine', { vars: { pct: p.smart_incentive_pct } }),
+        amount: p.smart_incentive_amount,
       },
       { key: 'coupon', label: couponLabel, amount: p.coupon_discount },
       {

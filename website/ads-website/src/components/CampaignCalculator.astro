@@ -8,8 +8,8 @@ import SmartLink from './SmartLink.astro';
 const { calculator, graphqlUrl } = await siteContent();
 // The card as it was at build time: the chips and the slider render with real
 // placements and real prices before any JavaScript runs. The widget refreshes
-// it, so a price Marketing changed after this deploy is still the one quoted —
-// and if this build could not reach the API at all, the refresh builds the
+// it, so a price Marketing changed after this deploy is still the one quoted.
+// If this build could not reach the API at all, the refresh builds the
 // chips itself.
 const rateCard = await fetchAdRateCard();
 const initial = rateCard ?? {

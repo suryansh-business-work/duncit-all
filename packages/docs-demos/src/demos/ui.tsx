@@ -21,6 +21,7 @@ import { RowsAndChipsDemo, type RowsMock } from './ui/RowsAndChipsDemo';
 import { SpotsDemo, type SpotsMock } from './ui/SpotsDemo';
 import { cartControlDemo } from './ui/CartControlDemo';
 import { TicketDiscountDemo, type TicketDiscountMock } from './ui/TicketDiscountDemo';
+import { smartIncentiveDemo } from './ui/SmartIncentiveDemo';
 import { LoaderDemo, type LoaderMock } from './ui/LoaderDemo';
 import { MuiIconPickerDemo, type MuiIconPickerMock } from './ui/MuiIconPickerDemo';
 
@@ -104,6 +105,8 @@ export default defineDemos('ui', [
     },
     render: (mock) => <TicketDiscountDemo mock={mock} />,
   }),
+
+  smartIncentiveDemo,
 
   defineDemo<SeatsMock>({
     id: 'pod-seats-cell',

@@ -25,6 +25,8 @@ export const partnerPodRow = (over: Record<string, unknown> = {}) => ({
   no_of_spots: 8,
   ticket_discount_enabled: false,
   ticket_discount_tiers: [],
+  smart_incentive_enabled: false,
+  smart_incentive_pct: 0,
   pod_attendees: ['user-2', 'user-3'],
   seats_taken: 3,
   attendance: null,

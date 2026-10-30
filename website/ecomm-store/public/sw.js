@@ -1,7 +1,7 @@
 /*
  * The pet store's service worker: the app shell opens offline, hashed build
  * assets come from cache. It never touches the API, any non-GET request, or
- * another origin — prices, stock, carts and orders are always live.
+ * another origin, so prices, stock, carts and orders are always live.
  * Bump VERSION to drop every old cache on the next visit.
  */
 const VERSION = 'v1';

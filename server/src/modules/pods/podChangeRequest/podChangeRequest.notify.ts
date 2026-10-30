@@ -7,6 +7,7 @@ import { VenueModel } from '@modules/venues/venue/venue.model';
 import { notifyEvent } from '@services/notify/notify.service';
 import { notificationService } from '@modules/engagement/notification/notification.service';
 import { podImageAssets } from '@modules/platform/whatsapp/whatsapp.assets';
+import { loadPodClubSlugMap, podNotificationLink } from '@modules/pods/pod/pod.shared';
 import { CONTACT_FIELDS, contactName, waWhen } from './podChangeRequest.common';
 import type { IPodChangeRequest, PodChangeRole } from './podChangeRequest.model';
 
@@ -249,6 +250,8 @@ export async function notifyAttendeesOfVenueChange(pod: any, venueName: string, 
       title: `New venue for ${pod.pod_title}`,
       body: `${pod.pod_title} now runs at ${venueName} on ${when}. Your seat moved with it.`,
       image_url: pod.pod_images_and_videos?.[0]?.url ?? null,
+      // Opens the pod's page, where the new venue now shows.
+      link_url: podNotificationLink(pod, await loadPodClubSlugMap([pod])),
       scope: 'USER',
       target_user_ids: targets,
     });

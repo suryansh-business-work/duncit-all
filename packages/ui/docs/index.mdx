@@ -73,6 +73,10 @@ exports:
   - 'TicketDiscountField'
   - 'TicketDiscountFieldProps'
   - 'TicketDiscountFieldErrors'
+  - 'SmartIncentiveField'
+  - 'SmartIncentiveFieldProps'
+  - 'SmartIncentiveInfoDialog'
+  - 'SmartIncentiveInfoDialogProps'
   - 'SpotsStepperLabels'
   - 'StatusColorMap'
   - 'StatCardLayout'
@@ -867,6 +871,78 @@ Test ids (the native twin in `app/mobile-app/src/components/create-pod/` uses th
 
 Hide the whole field on a FREE pod and send `ticketDiscountInput(values, true)` — a free pod
 never carries a discount, and the server clears one if it arrives.
+
+## `SmartIncentiveField` — the host's Smart Incentive editor
+
+A host can offer members who stay on the pod page without booking a one-time discount: a switch
+and one percentage, capped by Loyalty > Smart Incentive's `max_discount_pct`. A member who stays
+for the programme's `delay_seconds` sees the offer, and checkout takes it off after the
+multi-ticket discount and before the coupon, Duncit Coins and GST. The host pays for it. The
+mWeb Create Pod stepper and the host's Edit Pod dialog both render this one editor.
+
+Like `TicketDiscountField`, it is **controlled and form-library free**. The calling form owns
+`enabled` and `pct` (the percentage as typed), runs `smartIncentivePctIssue(pct, maxPct)` from
+`@duncit/utils` in its own Zod refine, and hands the translated message back as `error`. Send the
+values with `smartIncentiveInput(values, free)`, and seed an edit form with
+`smartIncentiveFormValues(pod)`.
+
+```tsx
+import { useController } from 'react-hook-form';
+import { SmartIncentiveField } from '@duncit/ui';
+import { formatMoney, mwebSmartIncentiveLabels } from '@duncit/utils';
+
+const labels = mwebSmartIncentiveLabels(t); // shellSmartIncentiveLabels(t) in a portal
+const enabled = useController({ control, name: 'smart_incentive_enabled' });
+const pct = useController({ control, name: 'smart_incentive_pct' });
+
+<SmartIncentiveField
+  enabled={enabled.field.value}
+  pct={pct.field.value}
+  onEnabledChange={enabled.field.onChange}
+  onPctChange={pct.field.onChange}
+  onPctBlur={pct.field.onBlur}
+  maxPct={settings.max_discount_pct}
+  delaySeconds={settings.delay_seconds}
+  labels={labels}
+  unitPrice={499}
+  formatPrice={(amount) => formatMoney(amount, { decimals: 2 })}
+  error={pct.fieldState.error?.message}
+/>;
+```
+
+| Prop | Type | Required | Default | Meaning |
+| --- | --- | --- | --- | --- |
+| `enabled` | `boolean` | yes | — | The switch. |
+| `pct` | `string` | yes | — | The discount as typed — `''` until the host types one. |
+| `onEnabledChange` | `(enabled: boolean) => void` | yes | — | Called when the switch flips. |
+| `onPctChange` | `(pct: string) => void` | yes | — | The input's raw value on every edit. |
+| `onPctBlur` | `() => void` | no | — | Leaving the input; wire the form's blur so the message re-validates. |
+| `maxPct` | `number` | yes | — | `smartIncentiveSettings.max_discount_pct` — the input's `max` and the "Up to N% off" hint. |
+| `delaySeconds` | `number` | yes | — | `smartIncentiveSettings.delay_seconds`, quoted in the explainer. |
+| `labels` | `SmartIncentiveLabels` | yes | — | `mwebSmartIncentiveLabels(t)` or `shellSmartIncentiveLabels(t)`. |
+| `unitPrice` / `formatPrice` | `number` / `(amount: number) => string` | no | — | Both given, with a whole positive %: "With the offer, a ticket costs …". |
+| `error` | `string` | no | — | Replaces the max hint under the input. |
+| `disabled` | `boolean` | no | `false` | Locks the switch and the input; "How it works" stays readable. |
+
+What it does on its own, so no surface re-implements it:
+
+- Switching it **on** opens `SmartIncentiveInfoDialog`: what the offer is, who gets it, that it
+  comes out of the host's share and how to change it. Nobody opts in without being told who pays.
+  Switching it **off** opens nothing; `smartIncentiveInput` then sends it off at 0%.
+- **How it works** reopens the explainer at any time, switched on or not.
+- The percentage input shows only while the switch is on.
+
+`SmartIncentiveInfoDialog` is exported on its own too (`open`, `onClose`, `labels` — the
+`labels.info` part — and `delaySeconds`), for a surface that needs the explainer without the editor.
+
+Test ids (the native twin uses the same names as `testID`): `smart-incentive-field`,
+`smart-incentive-switch`, `smart-incentive-pct`, `smart-incentive-learn-more`,
+`smart-incentive-price-preview`, `smart-incentive-info`, `smart-incentive-info-close`,
+`smart-incentive-info-what`, `smart-incentive-info-who`, `smart-incentive-info-cut`,
+`smart-incentive-info-change`.
+
+Hide the whole field on a FREE pod, and while Loyalty has the programme switched off. A free pod
+never carries the incentive; the server stores it off if one arrives.
 
 ## Console panels — `SectionCard`, `DistributionCard`, `FillViewport`, `SidebarList`
 

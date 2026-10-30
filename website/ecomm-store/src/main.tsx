@@ -13,10 +13,10 @@ import { captureInstallPrompt, registerServiceWorker } from './lib/pwa';
 
 configureLogs(httpTransport(GRAPHQL_URL.replace(/\/graphql$/, '/logs')), { platform: 'web', portal: 'ecomm' });
 
-// The GA4 tag set for this website in Tech → Google Analytics, if any.
+// The GA4 tag set for this website in Tech > Google Analytics, if any.
 loadGoogleAnalytics(GRAPHQL_URL, 'ECOMM');
 
-// The tracking-consent banner — GA above waits for its answer.
+// The tracking-consent banner. GA above waits for its answer.
 mountConsentBanner(consentBannerCopy(siteT), { policyUrl: `${MAIN_SITE_URL}/policies` });
 
 // Installable, and the shell opens offline (production builds only).

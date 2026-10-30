@@ -3,7 +3,7 @@
  * are broken.
  *
  * It carries no Apollo client and no session, so it cannot use the portals'
- * LocaleProvider — but it uses the same runtime and the same admin data (rule
+ * LocaleProvider, but it uses the same runtime and the same admin data (rule
  * 38). Both fetches are best-effort on purpose: the bundled fallback is what
  * renders when either is missing, and a status page that went blank because a
  * localization query failed would be reporting on its own outage.
@@ -53,7 +53,7 @@ describe('useTranslation outside a provider', () => {
 
     expect(text('locale')).toBe('en-IN');
     expect(text('rtl')).toBe('false');
-    // Real copy, not the key — the fallback is the point of shipping one.
+    // Real copy instead of the key, which is the point of shipping a fallback.
     expect(text('heading')).not.toBe('status.report.heading');
   });
 });

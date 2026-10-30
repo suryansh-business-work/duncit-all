@@ -4,12 +4,13 @@ import { useForm } from 'react-hook-form';
 
 import { useTranslation } from '@/hooks/useTranslation';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
+import { useSmartIncentiveSettings } from '@/hooks/useSmartIncentiveSettings';
 import {
-  STEP_FIELDS,
   STEP_TITLE_KEYS,
   hostCategoryKeyOf,
   makeCreatePodSchema,
   serializeDraft,
+  stepFieldsFor,
 } from '../create-pod.form';
 import type { CreatePodFormValues, PodHostOption } from '../create-pod.types';
 import type { BlockedViolation } from '../ModerationBlockedDialog';
@@ -35,9 +36,17 @@ export function useCreatePodForm({
   clubAdmin,
 }: CreatePodFormArgs) {
   const { t } = useTranslation();
+  // Step 4 shows the Smart Incentive only while Loyalty's programme is known to
+  // be on; only then is its percentage checked (a null maximum skips it) and
+  // published as the form holds it. mWeb twin: useCreatePodSchema.
+  const smartIncentive = useSmartIncentiveSettings();
+  const smartIncentiveMaxPct = smartIncentive.enabled ? smartIncentive.maxPct : null;
   // The schema cannot call `t` at module scope, so it is built here from the
   // reader's own catalogue — the validation messages are copy like any other.
-  const schema = useMemo(() => makeCreatePodSchema(t), [t]);
+  const schema = useMemo(
+    () => makeCreatePodSchema(t, smartIncentiveMaxPct),
+    [t, smartIncentiveMaxPct],
+  );
   const form = useForm<CreatePodFormValues, any, CreatePodFormValues>({
     resolver: formResolver<CreatePodFormValues>(schema),
     defaultValues: initialValues,
@@ -103,8 +112,9 @@ export function useCreatePodForm({
     // The category is on the FIRST step, so it gates it — enforced
     // by the schema (host_category_key is in STEP_FIELDS[0]) rather than by a
     // second hand-written check here, which only ran when the host already had
-    // categories and so let a category-less host straight through.
-    if (!(await form.trigger(STEP_FIELDS[step]))) return;
+    // categories and so let a category-less host straight through. A free
+    // venue or a free pod adds its justification to the step that shows it.
+    if (!(await form.trigger(stepFieldsFor(step, form.getValues())))) return;
     goTo(step + 1);
   };
 
@@ -112,6 +122,7 @@ export function useCreatePodForm({
     t,
     form,
     showProducts,
+    smartIncentiveOn: smartIncentive.enabled,
     step,
     setStep,
     busy,

@@ -6,9 +6,20 @@ import { login, loginWithGoogle } from '@/services/auth.service';
 import { renderWithProviders } from '@/utils/test-utils';
 
 const mockNavigate = jest.fn();
+const mockPush = jest.fn();
+const mockGoBack = jest.fn();
+const mockReplace = jest.fn();
 let mockRouteParams: Record<string, unknown> | undefined;
+let mockStackRoutes: { name: string }[] = [{ name: 'Login' }];
 jest.mock('@react-navigation/native', () => ({
-  useNavigation: () => ({ canGoBack: () => true, navigate: mockNavigate }),
+  useNavigation: () => ({
+    canGoBack: () => true,
+    navigate: mockNavigate,
+    push: mockPush,
+    goBack: mockGoBack,
+    replace: mockReplace,
+    getState: () => ({ routes: mockStackRoutes }),
+  }),
   useRoute: () => ({ params: mockRouteParams }),
 }));
 
@@ -84,21 +95,22 @@ const mockHandoff = {
 beforeEach(() => {
   jest.clearAllMocks();
   mockRouteParams = undefined;
+  mockStackRoutes = [{ name: 'Login' }];
 });
 
 /**
- * Sign-in is a choice of method now, so the email/password form lives one step
- * in. Every password assertion below walks through the landing step first.
+ * Sign-in is a choice of method, and the chosen method is its own stack entry
+ * (`step`), so the email/password form renders on the Login opened at PASSWORD.
  */
-function openPasswordStep() {
-  fireEvent.press(screen.getByTestId('continue-with-password'));
+function renderPasswordStep() {
+  mockRouteParams = { step: 'PASSWORD' };
+  return renderWithProviders(<LoginScreen />);
 }
 
 describe('LoginScreen', () => {
   it('logs in and flips the auth gate', async () => {
     mockedLogin.mockResolvedValue({ token: 't', surveyCompleted: true });
-    renderWithProviders(<LoginScreen />);
-    openPasswordStep();
+    renderPasswordStep();
     fireEvent.press(screen.getByTestId('submit-login'));
     await waitFor(() => expect(mockAuthenticate).toHaveBeenCalledWith('t', true));
   });
@@ -113,8 +125,7 @@ describe('LoginScreen', () => {
   it('does not authenticate when login fails', async () => {
     const { ApiError } = jest.requireActual('@/utils/errors');
     mockedLogin.mockRejectedValue(new ApiError('bad creds'));
-    renderWithProviders(<LoginScreen />);
-    openPasswordStep();
+    renderPasswordStep();
     fireEvent.press(screen.getByTestId('submit-login'));
     await waitFor(() => expect(mockedLogin).toHaveBeenCalled());
     expect(mockAuthenticate).not.toHaveBeenCalled();
@@ -135,8 +146,7 @@ describe('LoginScreen', () => {
   });
 
   it('carries the typed channel and value into forgot password', () => {
-    renderWithProviders(<LoginScreen />);
-    openPasswordStep();
+    renderPasswordStep();
     fireEvent.press(screen.getByTestId('go-forgot-password'));
     expect(mockNavigate).toHaveBeenCalledWith('ForgotPassword', { recovery: mockHandoff });
   });
@@ -159,25 +169,36 @@ describe('LoginScreen', () => {
     expect(mockedGoogle).not.toHaveBeenCalled();
   });
 
-  it('opens on the method chooser, and goes back to it from the password step', () => {
+  it('opens on the method chooser and pushes each method as its own entry', () => {
     renderWithProviders(<LoginScreen />);
-    // The landing step offers the two methods; the boxes are one step in.
+    // The landing step offers the two methods; the boxes are one entry in.
     expect(screen.queryByTestId('submit-login')).toBeNull();
-    openPasswordStep();
-    expect(screen.getByTestId('submit-login')).toBeTruthy();
-
-    fireEvent.press(screen.getByTestId('back-to-options'));
-    expect(screen.queryByTestId('submit-login')).toBeNull();
-    expect(screen.getByTestId('continue-with-password')).toBeTruthy();
+    fireEvent.press(screen.getByTestId('continue-with-password'));
+    expect(mockPush).toHaveBeenCalledWith('Login', { step: 'PASSWORD' });
+    fireEvent.press(screen.getByTestId('continue-with-otp'));
+    expect(mockPush).toHaveBeenCalledWith('Login', { step: 'OTP' });
   });
 
-  it('opens the OTP method and comes back to the options', () => {
+  it('shows the password boxes on its entry and pops back to the options beneath it', () => {
+    mockStackRoutes = [{ name: 'Login' }, { name: 'Login' }];
+    renderPasswordStep();
+    expect(screen.getByTestId('submit-login')).toBeTruthy();
+    expect(screen.queryByTestId('continue-with-password')).toBeNull();
+
+    fireEvent.press(screen.getByTestId('back-to-options'));
+    expect(mockGoBack).toHaveBeenCalledTimes(1);
+    expect(mockReplace).not.toHaveBeenCalled();
+  });
+
+  it('opened straight on OTP (a link), goes to the options by replacing itself', () => {
+    mockStackRoutes = [{ name: 'Signup' }, { name: 'Login' }];
+    mockRouteParams = { step: 'OTP' };
     renderWithProviders(<LoginScreen />);
-    fireEvent.press(screen.getByTestId('continue-with-otp'));
     expect(screen.getByTestId('otp-channel-step')).toBeTruthy();
 
     fireEvent.press(screen.getByTestId('otp-back'));
-    expect(screen.getByTestId('continue-with-otp')).toBeTruthy();
+    expect(mockReplace).toHaveBeenCalledWith('Login');
+    expect(mockGoBack).not.toHaveBeenCalled();
   });
 
   it('shows the running app version footer', () => {

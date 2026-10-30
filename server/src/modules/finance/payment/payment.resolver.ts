@@ -108,8 +108,9 @@ export const paymentResolvers = {
       args: { input: { amount: number; pod_id?: string; seats?: number | null } },
       ctx: GraphQLContext
     ) => {
-      requireAuth(ctx);
-      return paymentService.quoteCheckout(args.input);
+      const u = requireAuth(ctx);
+      // The caller's own unlocked Smart Incentive is part of what they would pay.
+      return paymentService.quoteCheckout(args.input, u.id);
     },
     recurringCheckoutQuote: (_p: unknown, _args: unknown, ctx: GraphQLContext) => {
       requireAuth(ctx);

@@ -3,6 +3,8 @@ import { podService, mapPodToPublic, loadPodClubSlugMap } from './pod.service';
 import { podCancellationRisk } from './pod.cancellationRisk';
 import type { PodLifecycle } from './pod.lifecycle';
 import { podDashboardService } from './pod.dashboard';
+import { podFreeArrangementsService } from './pod.freeArrangements';
+import type { TableQueryInput } from '@utils/table-query';
 import { coHostService } from './coHost.service';
 import { podMediaService } from './podMedia.service';
 import { loadClub } from '@modules/clubs/club/club.loaders';
@@ -17,6 +19,7 @@ import { primePodRelations } from './pod.loaders';
 import { throwIfClientGone } from '@utils/clientPresence';
 import { reelHasAudio } from './pod.reelAudio';
 import { podVisibleTo } from './pod.visibility';
+import { websiteUpcomingPods } from './pod.websiteRail';
 import { canSeeHidden } from '@utils/hidden';
 import { consoleReaders } from '@modules/portals/console-access';
 
@@ -214,6 +217,12 @@ export const podResolvers = {
     },
   },
   Query: {
+    // Public: every Duncit website's home rail asks this with no session.
+    websiteUpcomingPods: (_p: unknown, args: { limit?: number | null }) => websiteUpcomingPods(args.limit),
+    adminFreeArrangementsTable: (_p: unknown, args: { query?: TableQueryInput | null }, ctx: GraphQLContext) => {
+      requireRole(ctx, POD_READ);
+      return podFreeArrangementsService.table(args.query);
+    },
     podRevokePreview: (_p: unknown, args: { pod_doc_id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_WRITE);
       return podService.revokePreview(args.pod_doc_id);

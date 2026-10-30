@@ -6,7 +6,7 @@ import { STORE_TOKENS as T } from '../../../theme/tokens';
 import { AccountLayout } from '../AccountLayout';
 import { PetProfileForm } from './pet-profile-form';
 
-/** /account/pet — the pet the home page greets ("For Buddy"). */
+/** /account/pet: the pet the home page greets ("For Buddy"). */
 export function PetProfilePage() {
   const { t } = useStoreT();
   const { me } = useStoreSession();

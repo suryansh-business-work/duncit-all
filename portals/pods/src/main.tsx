@@ -6,6 +6,7 @@ import {
   AutoPodEditorPage,
   AutoPodsPage,
   EventTicketsPage,
+  FreeArrangementsPage,
   mountDirectoryPortal,
   PodChangeRequestsPage,
   PodDetailsPage,
@@ -34,7 +35,7 @@ function AutoPodsRoute({ page }: Readonly<{ page: React.ReactNode }>) {
 /**
  * The pods console — admin's whole Pods group, on its own subdomain.
  *
- * Nine sidebar entries and thirteen routes, which is why a console hands over
+ * Ten sidebar entries and sixteen routes, which is why a console hands over
  * its ROUTES and its NAV rather than a list and a detail: this one was never
  * shaped like the simple two.
  */
@@ -61,6 +62,7 @@ mountDirectoryPortal({
           { label: 'Event Tickets', labelKey: 'shell.nav.eventTickets', to: '/event-tickets', icon: 'ticket' },
           { label: 'Pod Settings', labelKey: 'shell.nav.podSettings', to: '/pod-settings', icon: 'tune' },
           { label: 'Pod Monitoring (AI)', labelKey: 'shell.nav.podMonitoringAi', to: '/pod-monitoring', icon: 'insights' },
+          { label: 'Free Arrangements', labelKey: 'shell.nav.freeArrangements', to: '/free-arrangements', icon: 'policy' },
         ],
       },
     ],
@@ -80,6 +82,7 @@ mountDirectoryPortal({
         <Route path="/auto-pods/:id/edit" element={authed(<AutoPodsRoute page={<AutoPodEditorPage />} />)} />
         <Route path="/pod-settings" element={authed(<PodSettingsPage />)} />
         <Route path="/pod-monitoring" element={authed(<PodMonitoringPage />)} />
+        <Route path="/free-arrangements" element={authed(<FreeArrangementsPage />)} />
         <Route path="/event-tickets" element={authed(<EventTicketsPage />)} />
         <Route path="/pod-ideas" element={authed(<PodIdeasPage />)} />
         <Route path="/pod-plans" element={authed(<PodPlansPage />)} />

@@ -1,9 +1,10 @@
 /**
  * The blog post page (pages/blog/post.astro): load every published post once,
- * show the one in `?slug=`, and fill the side panels — Suggested (same
+ * show the one at /blog/<slug> (or the old `?slug=`), and fill the side panels: Suggested (same
  * category), Related (the latest others) and a month-by-month Archive.
  */
 import { escapeHtml, formatDate, postLink, safeUrl, type ContentItem } from './content-format';
+import { blogSlugFrom } from '../lib/blog-path';
 
 interface PostCopy {
   notFound: string;
@@ -55,7 +56,7 @@ function postMarkup(post: ContentItem): string {
     <div class="prose-page">${post.body || `<p>${escapeHtml(post.summary)}</p>`}</div>`;
 }
 
-/** "October 2026" → how many posts, newest month first. */
+/** "October 2026" mapped to how many posts, newest month first. */
 function archiveMarkup(posts: ContentItem[], copy: PostCopy): string {
   const byMonth = new Map<string, number>();
   for (const post of posts) {
@@ -94,12 +95,12 @@ function showPost(post: ContentItem, posts: ContentItem[], copy: PostCopy, body:
 export async function loadBlogPost(graphqlUrl: string): Promise<void> {
   const body = document.getElementById('postBody');
   if (!body) return;
-  const slug = new URLSearchParams(globalThis.location.search).get('slug') ?? '';
+  const slug = blogSlugFrom(globalThis.location.pathname, globalThis.location.search);
   if (!slug) {
     globalThis.location.replace('/blog');
     return;
   }
-  // Handed over by the markup — a module script cannot read Astro frontmatter.
+  // Handed over by the markup, since a module script cannot read Astro frontmatter.
   const copy: PostCopy = JSON.parse(body.dataset.copy ?? '{}');
   try {
     const res = await fetch(graphqlUrl, {

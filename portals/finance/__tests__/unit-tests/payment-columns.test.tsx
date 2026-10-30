@@ -28,6 +28,7 @@ const payment = (over: Partial<PaymentRow> = {}): PaymentRow => ({
   coins_earned: 10,
   ticket_discount_amount: 0,
   ticket_discount_pct: 0,
+  smart_incentive_amount: 0,
   total: 1000,
   round_off: 0.4,
   target_type: 'PRODUCT',

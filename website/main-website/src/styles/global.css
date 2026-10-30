@@ -7,11 +7,11 @@
 
 /* The palette is declared as tokens and REDEFINED for dark mode below, so a
    theme switch recolours every utility built from them (bg-surface, text-ink,
-   border-line …) instead of asking each component to know about themes.
+   border-line ...) instead of asking each component to know about themes.
 
    `ink` and `cream` are an inverting PAIR: ink is the page frame and the text,
    cream is the panel it sits on, and they swap together. Anything painted
-   `bg-ink` must therefore write in `text-cream`, never `text-white` — white on
+   `bg-ink` must therefore write in `text-cream`, never `text-white`. White on
    a light frame is invisible, and that is the one way this can go wrong. */
 @theme {
   --color-primary: #ff5757;
@@ -30,12 +30,12 @@
      dark. Hairlines get a token too, because black/5 cannot invert. */
   --color-surface: #ffffff;
   --color-line: rgba(22, 19, 26, 0.08);
-  /* Text on a block whose colour does NOT invert — the yellow bands, the
+  /* Text on a block whose colour does NOT invert: the yellow bands, the
      coloured stickers. Those stay yellow in the dark, so writing on them in
      `ink` would turn near-white and vanish. This one never moves. */
   --color-on-accent: #16131a;
   /* The matte the rounded panels sit in. It is the site's frame, not a
-     surface, and it reads as one in both themes — inverting it turned the
+     surface, and it reads as one in both themes. Inverting it turned the
      page's border white, which looked like a rendering fault rather than a
      theme. So it never moves either. */
   --color-frame: #100e14;
@@ -122,7 +122,7 @@
     color-scheme: dark;
   }
   body {
-    /* The matte behind the rounded panels — the same one the page wrappers
+    /* The matte behind the rounded panels, the same one the page wrappers
        paint, so an overscroll bounce shows the frame rather than a flash of
        some other colour. */
     background: var(--color-frame);
@@ -150,8 +150,8 @@
     html {
       scroll-behavior: auto;
     }
-    /* The site animates a lot — entrances, marquees, hovers. Someone who asked
-       for less motion gets the end state, not the journey. */
+    /* The site animates a lot (entrances, marquees, hovers). Someone who asked
+       for less motion gets the end state without the animation. */
     *,
     *::before,
     *::after {
@@ -187,7 +187,7 @@
   text-transform: uppercase;
   color: var(--color-primary-ink);
 }
-/* Hollow letters — the footer's big wordmark. */
+/* Hollow letters for the footer's big wordmark. */
 @utility outline-text {
   color: transparent;
   -webkit-text-stroke: 1.5px color-mix(in srgb, var(--color-ink) 16%, transparent);
@@ -197,7 +197,7 @@
   box-shadow: 3px 3px 0 var(--color-ink);
 }
 
-/* Frosted-glass surfaces — the shared Gen-Z glassmorphism language used for
+/* Frosted-glass surfaces: the shared Gen-Z glassmorphism style used for
  * headers, chips and feature cards across every Duncit website. */
 @utility glass {
   /* Built from the surface token, so frosted glass over a dark page is dark
@@ -222,7 +222,7 @@
   border: 1px solid color-mix(in srgb, var(--color-surface) 65%, transparent);
 }
 
-/* Skeleton shimmer for client-fetched content (blog, careers, policies…). */
+/* Skeleton shimmer for client-fetched content (blog, careers, policies...). */
 @utility skeleton {
   position: relative;
   overflow: hidden;

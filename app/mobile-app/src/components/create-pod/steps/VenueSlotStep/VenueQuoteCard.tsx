@@ -18,6 +18,8 @@ export interface VenueQuoteState {
 
 interface Props extends VenueQuoteState {
   currencySymbol: string;
+  /** A free venue: the venue is paid nothing, so no money is quoted — only that it still answers. */
+  free?: boolean;
 }
 
 function Row({
@@ -48,8 +50,9 @@ function Row({
  * guests to the pod's spots (when those differ), then the breakdown at the
  * spots — the offered base, each of the venue's price rules, any min-spend
  * top-up, its fees, taxes and Duncit's fee on top — or why the offer cannot be
- * sent. Read-only: the host changes the offer, not the price. mWeb twin:
- * VenueQuoteCard.
+ * sent. A free venue reads that it is paid nothing and still accepts or
+ * declines, in place of the money. Read-only: the host changes the offer, not
+ * the price. mWeb twin: VenueQuoteCard.
  */
 export function VenueQuoteCard({
   quote,
@@ -58,6 +61,7 @@ export function VenueQuoteCard({
   loading,
   error,
   currencySymbol,
+  free = false,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const money = (value: number) => formatStatementMoney(value, currencySymbol);
@@ -74,6 +78,18 @@ export function VenueQuoteCard({
       <Text testID="create-pod-offer-problem" role="alert" fontSize={13} color="$warning">
         {message}
       </Text>
+    );
+  }
+  if (free) {
+    return (
+      <SurfaceCard gap={8} testID="create-pod-venue-quote-free">
+        <Text fontSize={14} fontWeight="700" color="$color">
+          {t('mweb.createPod.quoteTitle')}
+        </Text>
+        <Text fontSize={13} color="$muted">
+          {t('mweb.createPod.offer.freeQuote')}
+        </Text>
+      </SurfaceCard>
     );
   }
   if (!quote) {

@@ -4,8 +4,8 @@ import { cachedGql } from './graphql-client';
 /**
  * The cards that can only be composed when somebody asks for one.
  *
- * A blog post is one page serving every post — the body arrives from the API
- * after the page loads — so what was built into its head describes the blog,
+ * A blog post is one page serving every post (the body arrives from the API
+ * after the page loads), so what was built into its head describes the blog,
  * not the post. A crawler never runs that fetch, which is why every post used
  * to unfurl under the same title.
  */
@@ -60,7 +60,7 @@ interface BrandingResult {
 }
 
 export interface LivePolicy {
-  /** The policy's CURRENT slug — differs from the one asked for once it was renamed. */
+  /** The policy's CURRENT slug. It differs from the one asked for once it was renamed. */
   slug: string;
   title: string;
   content: string | null;
@@ -85,19 +85,21 @@ function plainText(value: string | null): string | null {
 }
 
 /**
- * The meta block for one blog post, or null when there is no such post — an
- * old link, a draft, an unreachable API. Null leaves the built page's own tags
- * in place, which describe the blog and are never wrong, only general.
+ * The meta block for one blog post. `missing` means the API answered and there
+ * is no such post (an old link, a draft), which is a 404. Null means the API
+ * could not be asked: the built page's own tags stay, which describe the blog
+ * and are never wrong, only general.
  */
 export async function blogPostMeta(
   slug: string,
   pageUrl: string,
   fallbackDescription: string
-): Promise<string | null> {
+): Promise<string | 'missing' | null> {
   if (!slug) return null;
   const data = await cachedGql<BlogResult>(BLOG_QUERY, FIVE_MINUTES);
-  const post = data?.publicWebsiteContent?.find((entry) => entry.slug === slug);
-  if (!post) return null;
+  if (!data?.publicWebsiteContent) return null;
+  const post = data.publicWebsiteContent.find((entry) => entry.slug === slug);
+  if (!post) return 'missing';
   const branding = await cachedGql<BrandingResult>(BRANDING_QUERY, FIVE_MINUTES);
   return buildSiteMetaTags({
     title: post.title,

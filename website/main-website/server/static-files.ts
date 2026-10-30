@@ -5,7 +5,7 @@ import { pipeline } from 'node:stream';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
 /**
- * The static half of the site server — every cache rule here is the one
+ * The static half of the site server. Every cache rule here is the one
  * deploy/nginx/spa.conf applied before this process replaced it.
  */
 const MIME_TYPES: Record<string, string> = {
@@ -48,7 +48,7 @@ const COMPRESSIBLE = new Set([
 const cacheControl = (urlPath: string): string =>
   urlPath.startsWith('/_astro/') ? 'public, max-age=31536000, immutable' : 'public, max-age=2592000';
 
-/** The security headers spa.conf sends on every response — see the reasoning there. */
+/** The security headers spa.conf sends on every response; see the reasoning there. */
 export function setSecurityHeaders(res: ServerResponse): void {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'SAMEORIGIN');

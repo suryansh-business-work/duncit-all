@@ -90,6 +90,7 @@ exports:
   - 'VenueOfferInbox'
   - 'OfferRequestCard'
   - 'OfferTermsPanel'
+  - 'FreeJustificationNote'
   - 'OfferHistory'
   - 'OfferDecisionActions'
   - 'offerTermsLabel'
@@ -628,6 +629,27 @@ Every answer carries the `round` it read. When the other side moved first (or th
 the server refuses it with `extensions.reason === 'OFFER_CHANGED'`: the dialog closes, a warning
 says the terms changed, and the list is re-read so the latest terms are on screen.
 
+### Free bookings — a free venue, or any offer on a free pod
+
+A host may offer the venue nothing (`model: 'FREE'`, rate 0) with a justification
+(`free_justification { reason details accepted_at }` — INITIATIVE, PROMOTIONAL, CAMPAIGN or OTHER
+with details — after accepting Duncit's free policy), and any offer on a free pod carries
+`free_pod: true`. `OFFER_TERMS_FIELDS` selects both. Either way the venue still approves it, but
+only by accepting or declining: the server answers `counters_per_side: 0` (so `mayCounter` is false
+and no Counter button shows) and refuses a counter with `extensions.reason === 'FREE_NO_COUNTER'`,
+which the counter dialog shows as "Free booking — it can only be accepted or declined, never
+countered" in the reader's language. On a free booking (`isFreeArrangement(offer)` from `@duncit/utils`):
+
+- the terms read "Free venue" (`offerTermsLabel` → `venueOfferTermsLine`), in `OfferHistory` too;
+  `OfferTermsPanel` and the chat's move quote no money — never "₹0";
+- `FreeJustificationNote` — "Requested free — Promotional offer: launch week" — sits under the terms
+  in `OfferTermsPanel` and on the free offer's own chat line (read off the live offer, which carries
+  the justification; the chat line does not), so the venue weighs the reason before it answers;
+- `CounterAllowanceNote` and `VenueOfferPinnedBar` say it is only accepted or declined instead of
+  counting counters;
+- accepting names no amount — `OfferDecisionActions` and `HostOfferActions` (which also takes an
+  optional `podIsFree`) read it off the offer.
+
 ### The host's side, and the venue chat
 
 `HostOfferActions` is the host's Accept / Reject (optional reason) / Counter back on their pod's
@@ -658,7 +680,8 @@ while the other side has not seen it, `venueChatOfferActions` returns `revise` a
 again). Counters carry up to four photos from the device (`OfferImagesField` — `MediaPickerDialog`
 with `deviceOnly` and `accept="image/*"`; the server refuses stock images and videos), shown as
 `OfferImages`. Each side may counter only its share of Pod Settings' total
-(`counters_per_side`): `CounterAllowanceNote` says how many are left and Counter is hidden at none.
+(`counters_per_side`): `CounterAllowanceNote` says how many are left and Counter is hidden at none
+(a free booking takes none at all — see *Free bookings* above).
 
 Around the cards: `VenueOfferPinnedBar` pins the live offer to the top of the thread (whose move,
 until when, each side's counters left — `venueOfferPin`); `VenueChatContactSheet` rises over the
@@ -700,6 +723,18 @@ app (which draws its own Tamagui rows) says the same.
 
 ```tsx
 <VenueOfferInbox venueId={selectedVenueId ?? null} onAnswered={refreshCounts} />
+```
+
+Pass `chat={{ label, onOpen }}` to put a button on every request that opens the pod's venue chat
+with its host (`onOpen` gets the request's `pod_id`). The app names and routes it, so the package
+holds no app route; mWeb passes its "Chat with host" copy and `venueChatPath`. The Partners console
+leaves it out and shows no button.
+
+```tsx
+<VenueOfferInbox
+  venueId={venueId}
+  chat={{ label: t('mweb.venueChat.chatWithHost'), onOpen: (podId) => navigate(venueChatPath(podId)) }}
+/>
 ```
 
 ## Localization

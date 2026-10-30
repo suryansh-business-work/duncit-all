@@ -1,16 +1,16 @@
 // Single source of truth for the Duncit Ads marketing site. The URLs are
 // resolved from the environment so deployments stay dynamic without a code
 // change; the WORDS come from Admin > Localization, like every other surface
-// (rule 38) — see `siteContent` below.
+// (rule 38); see `siteContent` below.
 //
-// `astro dev` is local by definition — a dev server targets the local API
+// `astro dev` is local by definition, so a dev server targets the local API
 // without anyone remembering a flag. PUBLIC_IS_DEVELOPMENT still forces the
 // dev targets for a built preview.
 import { getSiteTranslator, type SiteTranslate } from '@duncit/brand/site-i18n';
 
 const isDevelopment = import.meta.env.DEV || import.meta.env.PUBLIC_IS_DEVELOPMENT === 'true';
 
-// Localhost targets in dev, production hosts otherwise — every cross-site
+// Localhost targets in dev, production hosts otherwise. Every cross-site
 // link goes through this map so environments never leak into each other.
 const portalUrl =
   import.meta.env.PUBLIC_ADS_PORTAL_URL ||
@@ -154,7 +154,7 @@ const build = (t: SiteTranslate) => ({
     loading: t('website.ads.placements.loading'),
     noscript: t('website.ads.placements.noscript'),
     /** Copy for the placements the rate card returns. A placement with no note
-     * still renders — the server owns the list, this only enriches it. */
+     * still renders; the server owns the list, this only enriches it. */
     notes: {
       AUTO: t('website.ads.placements.auto'),
       HOME_BOTTOM: t('website.ads.placements.homeBottom'),
@@ -180,7 +180,7 @@ const build = (t: SiteTranslate) => ({
     caption: t('website.ads.preview.caption'),
   } as Record<string, string>,
   /** Creative services. The most common reason a small brand never books an ad
-   * is that it has nothing to run — so this answers that before the price does. */
+   * is that it has nothing to run, so this answers that before the price does. */
   design: {
     eyebrow: t('website.ads.design.eyebrow'),
     heading: t('website.ads.design.heading'),
@@ -278,7 +278,7 @@ const build = (t: SiteTranslate) => ({
     placeholder: t('website.brand.newsletter.placeholder'),
     button: t('website.brand.newsletter.button'),
     /** Consent is taken before the address is sent, not assumed from typing
-     * one in — and it names what is being agreed to. */
+     * one in, and it names what is being agreed to. */
     consent: t('website.ads.newsletter.consent'),
     consentLinkLabel: t('website.brand.newsletter.consentLink'),
     /** Where the subscription came from, for the CRM's own reporting. */

@@ -106,6 +106,16 @@ export function buildPaymentColumns({ t, renderActions, shop }: Readonly<Options
       type: 'number',
       valueGetter: (p) => fmt(p.ticket_discount_amount, p.currency_symbol),
     },
+    {
+      // Next in the same order: the member's unlocked offer came off what the
+      // tier left, still ahead of the subtotal GST was worked out on.
+      field: 'smart_incentive_amount',
+      headerName: t('finance.payment.colSmartIncentive'),
+      width: 150,
+      hide: !!shop,
+      type: 'number',
+      valueGetter: (p) => fmt(p.smart_incentive_amount, p.currency_symbol),
+    },
     { field: 'subtotal', headerName: t('finance.payment.colSubtotal'), width: 100, type: 'number', valueGetter: (p) => fmt(p.subtotal, p.currency_symbol) },
     { field: 'platform_fee_amount', headerName: t('finance.payment.colFee'), width: 90, type: 'number', valueGetter: (p) => fmt(p.platform_fee_amount, p.currency_symbol) },
     { field: 'gst_amount', headerName: t('finance.payment.colGst'), width: 90, type: 'number', valueGetter: (p) => fmt(p.gst_amount, p.currency_symbol) },

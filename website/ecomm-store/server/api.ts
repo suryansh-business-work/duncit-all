@@ -2,7 +2,7 @@ import { API_TIMEOUT_MS, API_TTL_MS, GRAPHQL_URL } from './config';
 
 /**
  * The server's only reach into the API: a POST with a hard timeout, answers
- * remembered for a minute. Any failure — slow, down, an error in the payload —
+ * remembered for a minute. Any failure (slow, down, an error in the payload)
  * is `null`, and the caller falls back to the plain page.
  */
 interface Remembered {

@@ -613,8 +613,8 @@ const round2 = (n: number) => Math.round(n * 100) / 100;
 
 /**
  * The gross the cart was worth before every discount came off — the
- * multi-ticket discount, the coupon and the coins — the top line of the amount
- * waterfall, which then SUBTRACTS all three from it.
+ * multi-ticket discount, the Smart Incentive, the coupon and the coins — the
+ * top line of the amount waterfall, which then SUBTRACTS all four from it.
  *
  * `metadata.original_total` is that number frozen at checkout, but it only
  * exists on payments priced after the key shipped. `payment.total` is not a
@@ -628,6 +628,7 @@ function originalTotal(payment: IPayment, meta: Record<string, unknown> | undefi
   return round2(
     payment.total +
       (payment.ticket_discount_amount ?? 0) +
+      (payment.smart_incentive_amount ?? 0) +
       (payment.coupon_discount ?? 0) +
       (payment.coins_redeemed ?? 0) -
       // The round-off was added to the bill after every discount; it is not cart value.

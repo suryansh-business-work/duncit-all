@@ -90,6 +90,7 @@ describe('truecallerDetailsShortcut', () => {
     phoneNumber: '9845012345',
     whatsappIsMobile: false,
     dob: '1999-04-01',
+    ageConfirmed: true,
     name: '  Riya Sharma ',
   };
 
@@ -99,6 +100,7 @@ describe('truecallerDetailsShortcut', () => {
       google: { ...google, name: 'Riya Sharma' },
       number: { extension: '+91', number: '9845012345', alsoMobile: false },
       dob: '1999-04-01',
+      ageConfirmed: true,
     });
   });
 

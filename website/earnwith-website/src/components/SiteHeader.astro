@@ -106,8 +106,8 @@ const position = overlay ? 'fixed inset-x-0 top-0' : 'sticky top-0';
 </style>
 
 <script>
-  // Keeps `at-top` on the header for the shadow above — the CMS widget
-  // @duncit/brand/widgets/site-header.
+  // Keeps `at-top` on the header for the shadow above (the CMS widget
+  // @duncit/brand/widgets/site-header).
   import { mount } from '@duncit/brand/widgets/site-header';
 
   for (const root of document.querySelectorAll<HTMLElement>('[data-cms-widget="site-header"]')) mount(root);

@@ -12,6 +12,8 @@ interface Props {
   actions: { accept: boolean; reject: boolean; counter: boolean };
   /** The reader's counters left of their share (`offerCounterAllowance`); null when no limit is known. */
   allowance?: { left: number; of: number } | null;
+  /** A free venue or a free pod (`isFreeArrangement`): it is only accepted or declined — said in place of the counters. */
+  free?: boolean;
   busy: boolean;
   onAccept: () => void;
   onReject: () => void;
@@ -24,12 +26,14 @@ interface Props {
  * waits (they cannot accept then) — and accept as the solid one. Each opens its
  * own sheet: nothing is decided by one tap. Under them, how many counters the
  * reader has left — or, once their share is used, that only accept or reject
- * remain (Counter is gone then).
+ * remain (Counter is gone then). A free booking takes no counters at all, and
+ * says so instead.
  */
 export function OfferActionButtons({
   testIDPrefix,
   actions,
   allowance = null,
+  free = false,
   busy,
   onAccept,
   onReject,
@@ -39,7 +43,9 @@ export function OfferActionButtons({
   const { danger, onPrimary, primary } = useThemeColors();
   if (!actions.accept && !actions.reject && !actions.counter) return null;
   let share = '';
-  if (allowance && actions.counter) {
+  if (free) {
+    share = t('availability.offers.freeNoCounters');
+  } else if (allowance && actions.counter) {
     share = t('availability.offers.countersLeft', { vars: allowance });
   } else if (allowance?.left === 0 && actions.accept) {
     share = t('availability.offers.noCountersLeft');

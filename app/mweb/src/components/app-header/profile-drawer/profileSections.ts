@@ -3,6 +3,7 @@ import {
   MY_FOOD_ORDERS_PATH,
   MY_RENTED_ITEMS_PATH,
   PROFILE_MENU_ITEMS,
+  TUTORIALS_PATH,
   type ProfileMenuKey,
   type ProfileMenuSectionId,
 } from '@duncit/utils';
@@ -28,6 +29,7 @@ export type ProfileIconKey =
   | 'ideas'
   | 'plans'
   | 'faqs'
+  | 'tutorials'
   | 'badges'
   | 'tour'
   | 'shop'
@@ -63,6 +65,7 @@ export type ProfileIconKey =
   | 'menu'
   | 'gigs'
   | 'explore'
+  | 'loyalty'
   | 'shopping';
 
 interface Destination {
@@ -79,10 +82,12 @@ export const MENU_DESTINATIONS: Readonly<Record<ProfileMenuKey, Destination>> = 
   support: { to: '/support', icon: 'support' },
   help: { to: '/support', icon: 'support' },
   faqs: { to: '/faqs', icon: 'faqs' },
+  tutorials: { to: TUTORIALS_PATH, icon: 'tutorials' },
   leaderboard: { to: '/leaderboard', icon: 'leaderboard' },
   badges: { to: '/badges', icon: 'badges' },
   gigs: { to: GIG_JOBS_PATH, icon: 'gigs' },
   referral: { to: '/referral', icon: 'referral' },
+  'duncit-coin': { to: '/duncit-coin', icon: 'coin' },
   membership: { to: '/membership', icon: 'membership' },
   shop: { to: '/shop', icon: 'shop' },
   cart: { to: '/cart', icon: 'cart' },
@@ -104,13 +109,14 @@ export const MENU_DESTINATIONS: Readonly<Record<ProfileMenuKey, Destination>> = 
 export const SECTION_ICONS: Readonly<Record<ProfileMenuSectionId, ProfileIconKey>> = {
   explore: 'explore',
   work: 'gigs',
+  loyalty: 'loyalty',
   shopping: 'shopping',
   account: 'account',
   support: 'support',
 };
 
-/** The Duncit Coin card's destination. Shown in User mode only. */
-export const COIN_DESTINATION: Destination = { to: '/duncit-coin', icon: 'coin' };
+/** The Duncit Coin card's destination (the Loyalty row's own). Shown in User mode only. */
+export const COIN_DESTINATION: Destination = MENU_DESTINATIONS['duncit-coin'];
 
 /** One menu destination, translated and ready to draw. */
 export interface MenuEntry {

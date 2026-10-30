@@ -50,6 +50,7 @@ import {
   resolveClubCategory,
 } from './pod.products';
 import { insertPodWithFreeSlug, resolvePodSlugForCreate } from './pod.slug';
+import { freePodJustification } from './pod.free';
 import {
   assertRequestReadyForPod,
   markPartnerRequestPodCreated,
@@ -58,6 +59,7 @@ import {
   applyPodEditCore,
   applyRerouteState,
   applyResubmitPhysicalVenue,
+  applySmartIncentiveForUpdate,
   applyTicketDiscountForUpdate,
   claimRerouteSlot,
   holdOrBookForResubmit,
@@ -65,6 +67,7 @@ import {
   HOST_RESUBMIT_BLOCKED_FIELDS,
   meetingFieldsForCreate,
   prepareSlotReroute,
+  smartIncentiveForCreate,
   snapshotBooking,
   ticketDiscountForCreate,
 } from './pod.edit';
@@ -142,7 +145,12 @@ export const podWriteMethods = {
     const podMode = normalizePodMode(input.pod_mode);
     assertWritablePodType(input.pod_type);
     validateAmount(input.pod_type, input.pod_amount ?? 0);
+    const freeJustification = freePodJustification(input.pod_type, input.free_justification, {
+      userId: audit?.actorUserId,
+      source: audit?.source ?? 'ADMIN',
+    });
     const ticketDiscount = await ticketDiscountForCreate(input);
+    const smartIncentive = await smartIncentiveForCreate(input);
 
     const { slotDoc, needsVenueApproval } = await resolveSlotForCreate(
       input,
@@ -150,7 +158,7 @@ export const podWriteMethods = {
       autoPodSlot?.autoPodId,
       partnerRequestSlot?.requestId
     );
-    const offer = await resolveVenueOfferForCreate(input, podMode);
+    const offer = await resolveVenueOfferForCreate(input, podMode, audit?.actorUserId);
     const venueState = venueStateForCreate({ slotDoc, needsVenueApproval }, offer, autoPodSlot ?? partnerRequestSlot);
 
     validateFutureDates(input.pod_date_time, input.pod_end_date_time, podMode === 'VIRTUAL');
@@ -227,6 +235,7 @@ export const podWriteMethods = {
         pod_date_time: new Date(input.pod_date_time),
         pod_end_date_time: input.pod_end_date_time ? new Date(input.pod_end_date_time) : null,
         pod_type: input.pod_type,
+        free_justification: freeJustification,
         pod_amount: input.pod_amount ?? 0,
         pod_occurrence: input.pod_occurrence ?? 'ONE_TIME',
         no_of_spots: input.no_of_spots ?? 0,
@@ -239,6 +248,7 @@ export const podWriteMethods = {
         product_requests: productRequests,
         product_cost_total: productRequests.reduce((sum, item) => sum + item.total_cost, 0),
         ...ticketDiscount,
+        ...smartIncentive,
         // A pod awaiting the venue's answer stays offline until it is accepted.
         is_active: venueState.pending ? false : input.is_active ?? true,
         venue_approval_status: venueState.approval,
@@ -333,6 +343,16 @@ export const podWriteMethods = {
     const booking = reroute ? snapshotBooking(doc) : null;
     const before = snapshotPod(doc);
     const was = { pod_date_time: doc.pod_date_time, venue_id: doc.venue_id };
+    // A portal turning a pod free (or paid) keeps its justification in step; staff may give one.
+    if (input.pod_type !== undefined || input.free_justification) {
+      doc.free_justification = freePodJustification(
+        input.pod_type ?? doc.pod_type,
+        input.free_justification,
+        { userId: audit?.actorUserId, source },
+        doc.free_justification
+      );
+    }
+    delete input.free_justification;
     await applyPodEditCore(doc, input);
     if (reroute) applyRerouteState(doc, input, reroute);
     await doc.save();
@@ -406,7 +426,7 @@ export const podWriteMethods = {
       pod_hosts_id: slotInput.pod_hosts_id,
       reroute_pod_id: String(doc._id),
     };
-    const offer = await resolveVenueOfferForCreate(offerInput, nextMode);
+    const offer = await resolveVenueOfferForCreate(offerInput, nextMode, userId);
     delete input.venue_offer;
     delete input.venue_booking;
     if (offer) {
@@ -432,8 +452,17 @@ export const podWriteMethods = {
       venueAmount: venueCostForCreate(offer, slotDoc, input.no_of_spots ?? doc.no_of_spots ?? 0),
       commissionOnTop: !offer && !!slotDoc,
     });
+    // A pod resubmitted free says why (again, if it had no justification yet).
+    const freeJustification = freePodJustification(
+      input.pod_type ?? doc.pod_type,
+      input.free_justification,
+      { userId, source: 'HOST' },
+      doc.free_justification
+    );
+    delete input.free_justification;
 
     const before = snapshotPod(doc);
+    doc.free_justification = freeJustification;
     await applyPodEditCore(doc, input);
     // Resubmission state: a slot books instantly (confirmed, live); a
     // virtual / no-venue resubmission needs no venue at all.
@@ -531,8 +560,10 @@ export const podWriteMethods = {
       doc.no_of_spots = Math.floor(Number(input.no_of_spots) || 0);
     }
     // The host may set or change the multi-ticket discount on a live pod; it is
-    // judged on the spots just applied above.
+    // judged on the spots just applied above. Likewise the Smart Incentive —
+    // an offer a member already unlocked keeps its frozen percentage.
     await applyTicketDiscountForUpdate(doc, input);
+    await applySmartIncentiveForUpdate(doc, input);
     await doc.save();
     await podAuditService.record({ pod: doc, action: 'UPDATE', source: 'HOST', actorUserId: userId, before });
 

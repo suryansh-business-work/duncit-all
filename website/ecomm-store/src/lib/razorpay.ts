@@ -54,8 +54,8 @@ function loadCheckoutScript(): Promise<RazorpayCtor> {
 /**
  * Open the hosted payment sheet for an order the server created. Resolves with
  * the signature on success; rejects with a RazorpayFailure carrying Razorpay's
- * error, or `null` when the buyer closed the sheet. Settles exactly once — Razorpay reports a
- * failure and then a dismissal, and only the first is the truth.
+ * error, or `null` when the buyer closed the sheet. Settles exactly once: Razorpay reports a
+ * failure and then a dismissal, and only the first is accurate.
  */
 export async function payWithRazorpay(sheet: RazorpaySheet): Promise<RazorpaySuccess> {
   const Razorpay = await loadCheckoutScript();

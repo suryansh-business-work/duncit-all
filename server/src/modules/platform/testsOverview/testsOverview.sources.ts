@@ -98,7 +98,8 @@ export async function latestStress() {
       id: String(run._id),
       run_no: run.run_no,
       status: run.status,
-      terminated: run.terminated,
+      // Runs saved before the field existed have none, and lean() skips defaults.
+      terminated: run.terminated ?? false,
       grade,
       ended_at: run.ended_at,
     },

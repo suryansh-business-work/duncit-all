@@ -18,6 +18,7 @@ interface PodMoneyNotes {
   coins_redeemed_total: number;
   coins_earned_total: number;
   ticket_discount_total: number;
+  smart_incentive_total: number;
 }
 
 const partyLabelByKind = (t: Translate): Record<string, string> => ({
@@ -79,7 +80,8 @@ export default function ReleaseBreakdownLines({ request }: Readonly<{ request: a
   // the settlement record, and back-filling one would rewrite money history.
   // They explain the COLLECTED figure at the top of the waterfall — the pod
   // banked less than the tickets' face value because coins cut the gross.
-  // The multi-ticket discounts ride on the same read for the same reason.
+  // The multi-ticket and Smart Incentive discounts ride on the same read for
+  // the same reason: both came off the ticket money before it was collected.
   const coins = useQuery<{ podFinanceBreakdown: PodMoneyNotes }>(POD_COIN_TOTALS, {
     variables: { podId: request?.pod_id },
     skip: !request?.pod_id,
@@ -89,6 +91,7 @@ export default function ReleaseBreakdownLines({ request }: Readonly<{ request: a
   if (!breakdown) return null;
 
   const sym = settings.data?.publicFinanceSettings?.currency_symbol ?? '';
+  const notes = coins.data?.podFinanceBreakdown;
   const lines = breakdown.version >= 2
     ? buildV2Lines(breakdown, request.kind, sym, t)
     : buildV1Lines(breakdown, sym, t);
@@ -117,8 +120,13 @@ export default function ReleaseBreakdownLines({ request }: Readonly<{ request: a
           </Stack>
         ))}
       </Stack>
-      {coinsNote(coins.data?.podFinanceBreakdown, t)}
-      {ticketDiscountNote(coins.data?.podFinanceBreakdown, sym, t)}
+      {coinsNote(notes, t)}
+      {discountNote(notes?.ticket_discount_total, sym, (amount) =>
+        t('finance.paymentRelease.ticketDiscountNote', { vars: { amount } }),
+      )}
+      {discountNote(notes?.smart_incentive_total, sym, (amount) =>
+        t('finance.paymentRelease.smartIncentiveNote', { vars: { amount } }),
+      )}
     </Box>
   );
 }
@@ -138,13 +146,13 @@ function noteLine(text: string) {
   );
 }
 
-/** One line naming the multi-ticket discounts already off the collected total,
- * or nothing when no booking on the pod reached a tier. */
-function ticketDiscountNote(totals: PodMoneyNotes | undefined, sym: string, t: Translate) {
-  const total = Math.max(0, Number(totals?.ticket_discount_total) || 0);
+/** One line naming a discount already off the collected total — the multi-ticket
+ * tiers or the Smart Incentive — or nothing when no booking on the pod got it.
+ * `text` words the formatted amount, so each discount keeps its own literal key. */
+function discountNote(value: number | undefined, sym: string, text: (amount: string) => string) {
+  const total = Math.max(0, Number(value) || 0);
   if (total === 0) return null;
-  const amount = formatMoney(total, { symbol: sym, decimals: 2, grouping: false });
-  return noteLine(t('finance.paymentRelease.ticketDiscountNote', { vars: { amount } }));
+  return noteLine(text(formatMoney(total, { symbol: sym, decimals: 2, grouping: false })));
 }
 
 /** One line naming both halves of the pod's coin movement, or nothing when the

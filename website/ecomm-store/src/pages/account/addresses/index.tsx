@@ -49,7 +49,7 @@ function AddressCard({ address, onEdit }: Readonly<{ address: UserAddress; onEdi
   );
 }
 
-/** /account/addresses — the address book: add, edit, delete, choose the default. */
+/** /account/addresses: the address book (add, edit, delete, choose the default). */
 export function AddressesPage() {
   const { t } = useStoreT();
   const [editing, setEditing] = useState<Editing>(null);

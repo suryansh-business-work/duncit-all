@@ -1,7 +1,11 @@
+import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 import { slotSpanLabel } from '@duncit/slots';
 
 import { NoticeCard } from '@/components/attendance/NoticeCard';
+import { VenueChatContactLink } from '@/components/chat/VenueChatContactLink';
+import { DuncitButton } from '@/components/DuncitButton';
+import { useThemeColors } from '@/hooks/useThemeColors';
 import { SurfaceCard } from '@/components/SurfaceCard';
 import { slotPriceLabel } from '@/components/venue-availability/slot-labels';
 import { VenueOfferActions } from '@/components/venue-offer/VenueOfferActions';
@@ -24,16 +28,69 @@ function Detail({ label, value }: Readonly<{ label: string; value: string }>) {
   );
 }
 
+/** The host's phone (dials) and email (opens mail), and the pod's venue chat. */
+function HostReach({
+  request,
+  onChat,
+}: Readonly<{ request: SlotRequestRow; onChat?: (podId: string) => void }>) {
+  const { t } = useTranslation();
+  const { accent } = useThemeColors();
+  const id = request.slot_id;
+  return (
+    <YStack gap={6}>
+      <Text fontSize={12} color="$muted">
+        {t('mweb.venueSlotRequests.contact')}
+      </Text>
+      {request.host_phone || request.host_email ? (
+        <XStack gap={16} flexWrap="wrap">
+          {request.host_phone ? (
+            <VenueChatContactLink
+              kind="phone"
+              value={request.host_phone}
+              testID={`slot-request-${id}-phone`}
+            />
+          ) : null}
+          {request.host_email ? (
+            <VenueChatContactLink
+              kind="email"
+              value={request.host_email}
+              testID={`slot-request-${id}-email`}
+            />
+          ) : null}
+        </XStack>
+      ) : (
+        <Text fontSize={14} color="$color">
+          —
+        </Text>
+      )}
+      {onChat ? (
+        <XStack>
+          <DuncitButton
+            testID={`slot-request-${id}-chat`}
+            label={t('mweb.venueChat.chatWithHost')}
+            variant="soft"
+            size="sm"
+            icon={<MaterialIcons name="chat-bubble-outline" size={16} color={accent} />}
+            onPress={() => onChat(request.pod_id)}
+          />
+        </XStack>
+      ) : null}
+    </YStack>
+  );
+}
+
 interface Props {
   request: SlotRequestRow;
   /** The venue's answers (`useVenueSlotRequests().answers`), each for the round on screen. */
   answers: VenueOfferAnswers;
+  /** Opens the pod's venue chat with the host; left out, the card offers none. */
+  onChat?: (podId: string) => void;
 }
 
 /** One booking request: the pod, the window it wants, who is asking, the host's
  * offer (or, from before offers, the slot price) and the answers — reject,
  * counter, accept. The RN twin of the web OfferRequestCard (rule 27). */
-export function SlotRequestCard({ request, answers }: Readonly<Props>) {
+export function SlotRequestCard({ request, answers, onChat }: Readonly<Props>) {
   const { t } = useTranslation();
   const fmt = useDateFormat();
   const { offer } = request;
@@ -101,10 +158,7 @@ export function SlotRequestCard({ request, answers }: Readonly<Props>) {
           value={fmt.formatDateTime(request.requested_at) || '—'}
         />
         <Detail label={t('mweb.venueSlotRequests.host')} value={request.host_name || '—'} />
-        <Detail
-          label={t('mweb.venueSlotRequests.contact')}
-          value={[request.host_email, request.host_phone].filter(Boolean).join(' · ') || '—'}
-        />
+        <HostReach request={request} onChat={onChat} />
       </YStack>
 
       {offer ? <OfferSummary offer={offer} podIsFree={request.pod_is_free} /> : null}

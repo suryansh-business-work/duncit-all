@@ -4,6 +4,9 @@ import { BLOCK_ACTION_COPY, parseApiError, type BlockAction } from '@duncit/util
 import { BlockUserDocument, UnblockUserDocument } from '@/graphql/report';
 import { useTranslation } from '@/hooks/useTranslation';
 import { graphqlRequest } from '@/services/graphql.client';
+import { useBlockStore } from '@/stores/block.store';
+import { useStatusStore } from '@/stores/status.store';
+import { fireAndForget } from '@/utils/fire-and-forget';
 
 interface BlockableProfile {
   user_id: string;
@@ -40,6 +43,10 @@ export function useProfileBlock(profile: BlockableProfile | null, reload: () => 
         { user_id: profile.user_id },
         { auth: true },
       );
+      // The server now leaves this member out of every feed: the open feeds
+      // and the story rail re-read, so their posts are gone at once.
+      useBlockStore.getState().bump();
+      fireAndForget(useStatusStore.getState().fetch(true));
       await reload();
       setConfirming(false);
     } catch (e) {

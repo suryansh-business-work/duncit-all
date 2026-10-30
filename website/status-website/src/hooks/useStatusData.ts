@@ -18,9 +18,9 @@ export interface StatusData {
   incidents: Incident[] | null;
   loading: boolean;
   /**
-   * A fetch is in flight. True during the first load AND during every 60s
-   * refresh, so the page can say it is working rather than showing figures that
-   * are quietly a minute old.
+   * A fetch is in flight. True during the first load and during every 60s
+   * refresh, so the page can show it is working instead of showing figures
+   * that may already be a minute old with no sign of it.
    */
   refreshing: boolean;
   error: string | null;

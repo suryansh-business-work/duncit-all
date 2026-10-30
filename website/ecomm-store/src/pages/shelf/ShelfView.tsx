@@ -34,7 +34,7 @@ const PAGE_LABELS = {
 
 /**
  * Every product listing: a filter sidebar on a desktop (a full screen on a
- * phone), sort, active-filter chips, the grid and paging — all in the URL.
+ * phone), sort, active-filter chips, the grid and paging, all kept in the URL.
  */
 export function ShelfView({ scope, header }: Readonly<ShelfViewProps>) {
   const { t } = useStoreT();

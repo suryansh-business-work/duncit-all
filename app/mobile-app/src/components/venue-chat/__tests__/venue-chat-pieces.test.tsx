@@ -7,7 +7,12 @@ import { VenueChatOfferPin } from '@/components/venue-chat/VenueChatOfferPin';
 import { VenueChatSeenFaces } from '@/components/venue-chat/VenueChatSeenFaces';
 import { VenueOfferStatus } from '@/generated/graphql/graphql';
 import { renderWithProviders } from '@/utils/test-utils';
-import { counteredOffer, offerTerms, venueChatRoomFixture } from '@/utils/venue-offer-fixture';
+import {
+  counteredOffer,
+  freeVenueOffer,
+  offerTerms,
+  venueChatRoomFixture,
+} from '@/utils/venue-offer-fixture';
 
 const { host, venue } = venueChatRoomFixture();
 
@@ -57,6 +62,14 @@ describe('VenueChatOfferPin', () => {
   it('pins nothing while the pod has no live offer', () => {
     renderWithProviders(<VenueChatOfferPin offer={null} side="HOST" />);
     expect(screen.queryByTestId('venue-chat-offer-pin')).toBeNull();
+  });
+
+  it('says a free booking is only accepted or declined, in place of the counters', () => {
+    renderWithProviders(<VenueChatOfferPin offer={freeVenueOffer()} side="VENUE" />);
+    expect(screen.getByTestId('venue-chat-offer-pin-status')).toHaveTextContent('Your move');
+    expect(screen.getByTestId('venue-chat-offer-pin-counters')).toHaveTextContent(
+      'Free booking — it can only be accepted or declined, never countered.',
+    );
   });
 });
 

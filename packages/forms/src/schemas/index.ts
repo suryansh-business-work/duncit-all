@@ -137,6 +137,8 @@ export {
   type VenueCancelPodValues,
 } from './venue-cancel-pod';
 
+export { healthAppealDefaults, makeHealthAppealSchema, type HealthAppealValues } from './health-appeal';
+
 export {
   POD_REQUEST_NOTE_MAX,
   POD_REQUEST_OVERRIDE_MAX,
@@ -182,6 +184,7 @@ export {
 export { makeRentalItemsSchema, type RentalItemsOutput } from './rental-items';
 export { makeMarkRentalSchema, type MarkRentalOutput, type MarkRentalValues } from './mark-rental';
 export { makeQuickAccessSchema, type QuickAccessValues } from './quick-access';
+export { makeTutorialCommentSchema, type TutorialCommentValues } from './tutorial-comment';
 export {
   FOOD_DISH_CATEGORY_MAX,
   FOOD_DISH_DESCRIPTION_MAX,
@@ -287,6 +290,13 @@ export {
   type VenueOfferRejectValues,
   type VenueOfferTerms,
 } from './venue-offer-counter';
+
+export {
+  addFreeJustificationIssues,
+  freeJustificationDefaults,
+  freeJustificationFields,
+  type FreeJustificationValues,
+} from './free-arrangement';
 
 export {
   buildPhysicalGiftCardInput,

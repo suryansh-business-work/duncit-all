@@ -22,7 +22,7 @@ import PaymentsTable from './PaymentsTable';
 import RefundDialog from './RefundDialog';
 
 const POLL_MS = 30000;
-const EMPTY_TOTALS: PaymentTotals = { count: 0, gross: 0, fee: 0, gst: 0, ticket_discount_total: 0 };
+const EMPTY_TOTALS: PaymentTotals = { count: 0, gross: 0, fee: 0, gst: 0, ticket_discount_total: 0, smart_incentive_total: 0 };
 
 /** A log's heading, and for a shop's log a line saying what is — and is not — in
  * it. Every key is a literal so the localization gate can see it rendered. */

@@ -43,15 +43,18 @@ import { assertCounterLeft } from './venueOffer.limits';
 import { inAppOfferNote, tellHostsOfCounter, tellVenueOfOffer } from './venueOffer.notify';
 import { frozenCharges, quoteProposal, termsProblem } from './venueOffer.quote';
 import { currentTerms, offerView } from './venueOffer.view';
-import type {
-  OfferCharges,
-  OfferQuote,
-  VenueOffer,
-  VenueOfferHostTerms,
-  VenueOfferPrior,
-  VenueOfferProposal,
-  VenueOfferRequest,
-  VenueOfferTerms,
+import {
+  FREE_OFFER_MODEL,
+  isFreeArrangement,
+  type FreeJustification,
+  type OfferCharges,
+  type OfferQuote,
+  type VenueOffer,
+  type VenueOfferHostTerms,
+  type VenueOfferPrior,
+  type VenueOfferProposal,
+  type VenueOfferRequest,
+  type VenueOfferTerms,
 } from './venueOffer.types';
 
 const DAY_MS = 86_400_000;
@@ -66,9 +69,21 @@ export interface VenueOfferMoveTerms extends VenueOfferTerms {
   images?: string[] | null;
 }
 
-function assertTerms(terms: Partial<VenueOfferTerms>) {
-  const problem = termsProblem(terms);
+function assertTerms(terms: Partial<VenueOfferTerms>, allowFree = false) {
+  const problem = termsProblem(terms, { allowFree });
   if (problem) fail('BAD_USER_INPUT', problem);
+}
+
+/** A FREE request carries no money, whatever amount a client sent with it. */
+export const freeRateFixed = <T extends VenueOfferRequest>(req: T): T =>
+  req.model === FREE_OFFER_MODEL ? { ...req, rate: 0 } : req;
+
+/** A free venue or a free pod is answered by accepting or declining it — never by a counter (FREE_NO_COUNTER). */
+export function assertCounterable(offer: Pick<VenueOffer, 'model' | 'free_pod'>) {
+  if (!isFreeArrangement(offer)) return;
+  throw new GraphQLError('This booking is free — the venue can only accept or decline it', {
+    extensions: { code: 'BAD_REQUEST', reason: 'FREE_NO_COUNTER' },
+  });
 }
 
 const guestsOf = (req: Pick<VenueOfferRequest, 'pax'>) => Math.max(0, Math.floor(Number(req.pax) || 0));
@@ -146,9 +161,9 @@ export async function checkAndPrice(
   venue: Venue,
   venueId: string,
   req: VenueOfferRequest,
-  opts: { session?: ClientSession; ignore?: string | HoldRef } = {}
+  opts: { session?: ClientSession; ignore?: string | HoldRef; allowFree?: boolean } = {}
 ): Promise<PricedOffer> {
-  assertTerms(req);
+  assertTerms(req, opts.allowFree);
   const space = (req.space_label ?? '').trim();
   const pax = guestsOf(req);
   assertGuestsFit(venue, space, pax);
@@ -234,6 +249,7 @@ export type PricedProposal = VenueOfferProposal & { quote_min: OfferQuote; charg
  * over from the terms being answered; the note is the mover's own.
  */
 export async function pricedMove(slot: OfferSlot, terms: VenueOfferMoveTerms, note: string | null | undefined): Promise<PricedProposal> {
+  assertCounterable(slot.offer);
   assertTerms(terms);
   const offer = slot.offer;
   const answering = currentTerms(offer);
@@ -347,19 +363,21 @@ export const venueOfferService = {
    * approved and open then, the guests fit the space, the terms are sound.
    * `ignorePodId` lets a pod moving its booking ignore the booking it leaves.
    * `atVenueMinimum` prices the fewest guests at the venue's own minimum, as a
-   * host's opening offer is; the other flows settle as before.
+   * host's opening offer is; the other flows settle as before. `allowFree`
+   * lets a host's opening offer be FREE; every other flow names a price.
    */
-  async prepare(venueId: string, req: VenueOfferRequest, ignore?: string | HoldRef, atVenueMinimum = false) {
+  async prepare(venueId: string, req: VenueOfferRequest, ignore?: string | HoldRef, atVenueMinimum = false, allowFree = false) {
     const venue = await loadBookableVenue(venueId);
-    const request = atVenueMinimum ? { ...req, min_guests: await openingMinimum(venue, req) } : req;
-    const priced = await checkAndPrice(venue, venueId, request, { ignore });
+    const fixed = freeRateFixed(req);
+    const request = atVenueMinimum ? { ...fixed, min_guests: await openingMinimum(venue, fixed) } : fixed;
+    const priced = await checkAndPrice(venue, venueId, request, { ignore, allowFree });
     return { ...priced, ownerUserId: String(venue.owner_user_id) };
   },
 
   /** Create Pod's live price: the breakdown at both ends of the guests, or why the offer cannot be sent (never throws for that). */
-  async preview(venueId: string, req: VenueOfferRequest, ignore?: string | HoldRef, atVenueMinimum = false) {
+  async preview(venueId: string, req: VenueOfferRequest, ignore?: string | HoldRef, atVenueMinimum = false, allowFree = false) {
     try {
-      const { quote, quote_min } = await this.prepare(venueId, req, ignore, atVenueMinimum);
+      const { quote, quote_min } = await this.prepare(venueId, req, ignore, atVenueMinimum, allowFree);
       return { ok: true, message: null, quote: { ...quote, confirmed_at: null }, quote_min: { ...quote_min, confirmed_at: null } };
     } catch (error) {
       if (error instanceof GraphQLError) return { ok: false, message: error.message, quote: null, quote_min: null };
@@ -371,20 +389,38 @@ export const venueOfferService = {
    * Holds the window for the pod, atomically — the same lock-row transaction
    * the venue's calendar has always been guarded by, so two pods can never
    * hold one time. Another partner's venue gets a PENDING offer; the host's
-   * own venue is confirmed at once with the quote frozen.
+   * own venue is confirmed at once with the quote frozen. A FREE offer needs
+   * its checked justification; on a free pod (`freePod`) neither side counters.
    */
-  async place(podId: string, venueId: string, req: VenueOfferRequest, own: boolean): Promise<IVenueSlot> {
+  async place(
+    podId: string,
+    venueId: string,
+    req: VenueOfferRequest,
+    own: boolean,
+    free: { freePod?: boolean; justification?: FreeJustification | null } = {}
+  ): Promise<IVenueSlot> {
+    const request = freeRateFixed(req);
+    const allowFree = !!free.justification;
     const slot = await holdWindow({
       venueId,
-      req,
+      req: request,
       holder: { field: 'booked_by_pod_id', id: podId },
       status: own ? 'BOOKED' : 'PENDING',
       offerStatus: own ? 'ACCEPTED' : 'SENT',
       proposedBy: 'HOST',
       agreed: own,
-      priceInLock: (venue, session) => checkAndPrice(venue, venueId, req, { session, ignore: podId }),
+      freePod: !!free.freePod,
+      freeJustification: request.model === FREE_OFFER_MODEL ? (free.justification ?? null) : null,
+      priceInLock: (venue, session) => checkAndPrice(venue, venueId, request, { session, ignore: podId, allowFree }),
     });
-    logs.server.info('venueOffer', 'place', { pod_id: podId, venue_id: venueId, own, total: slot.offer?.quote.total ?? null });
+    logs.server.info('venueOffer', 'place', {
+      pod_id: podId,
+      venue_id: venueId,
+      own,
+      model: request.model,
+      free_pod: !!free.freePod,
+      total: slot.offer?.quote.total ?? null,
+    });
     return slot;
   },
 

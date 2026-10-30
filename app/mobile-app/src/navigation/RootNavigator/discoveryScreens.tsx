@@ -9,6 +9,7 @@ import { CityLaunchScreen } from '@/screens/CityLaunchScreen';
 import { ClubDetailsScreen } from '@/screens/ClubDetailsScreen';
 import { DuncitCoinScreen } from '@/screens/DuncitCoinScreen';
 import { FaqsScreen } from '@/screens/FaqsScreen';
+import { TutorialsScreen } from '@/screens/TutorialsScreen';
 import { FollowListScreen } from '@/screens/FollowListScreen';
 import { FollowingScreen } from '@/screens/FollowingScreen';
 import { GiftCardCheckoutScreen } from '@/screens/GiftCardCheckoutScreen';
@@ -67,6 +68,7 @@ export function renderDiscoveryScreens() {
       <Stack.Screen name="PreviousPods" component={PreviousPodsScreen} />
       <Stack.Screen name="HappeningNearby" component={HappeningNearbyScreen} />
       <Stack.Screen name="Faqs" component={FaqsScreen} />
+      <Stack.Screen name="Tutorials" component={TutorialsScreen} />
       <Stack.Screen name="Badges" component={BadgesScreen} />
       <Stack.Screen name="TourGuide" component={TourGuideScreen} />
       <Stack.Screen name="PodPlans" component={PodPlansScreen} />

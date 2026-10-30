@@ -51,6 +51,15 @@ export const PARTNER_ROLE_LABELS: Record<string, string> = {
   CLUB_ADMIN: 'Club Admin',
 };
 
+/** Where a freshly granted partner's in-app note opens — that studio's home,
+ * on mWeb's paths (the app maps the same paths to the same screens). */
+const PARTNER_ROLE_HOME: Record<string, string> = {
+  HOST: '/host/dashboard',
+  VENUE_OWNER: '/venues/manage',
+  ECOMM_MANAGER: '/products/manage',
+  CLUB_ADMIN: '/clubs/dashboard',
+};
+
 /** Best-effort partner-access mail + push for freshly granted partner roles —
  * never blocks the role write. */
 async function notifyPartnerAccessGranted(userId: string, addedRoles: string[]) {
@@ -75,6 +84,7 @@ async function notifyPartnerAccessGranted(userId: string, addedRoles: string[]) 
       await notificationService.create({
         title: `You're now a Duncit ${label} 🎉`,
         body: 'Your Partners account is live — open it to get started.',
+        link_url: PARTNER_ROLE_HOME[role],
         scope: 'USER',
         target_user_ids: [userId],
         silent: false,

@@ -28,7 +28,7 @@ interface Props {
 
 const { block, props, graphqlUrl, legacySite, t } = Astro.props;
 const reelSite = legacySite === 'MAIN' || legacySite === 'PARTNERS' || legacySite === 'ADS' || legacySite === 'EARNWITH' ? legacySite : null;
-// Website portal > Earn with Duncit has a row for these three (earnwith IS the earn site).
+// Website portal > Earn with Duncit has a row for these three (earnwith is the earn site).
 const earnSite = reelSite === 'EARNWITH' ? undefined : (reelSite ?? undefined);
 const variant = text(props.variant) === 'inline' ? 'inline' : 'card';
 const stores = list(props.stores).map(record).map((s) => ({

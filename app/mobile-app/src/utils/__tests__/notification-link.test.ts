@@ -53,8 +53,11 @@ describe('resolveNotificationLink', () => {
       kind: 'chat',
       room: { kind: 'CLUB', id: 'c1' },
     });
-    // The Chats list itself is not a room.
-    expect(resolveNotificationLink('/chats')).toEqual({ kind: 'none' });
+    // The Chats list itself is not a room — it opens the Chats screen.
+    expect(resolveNotificationLink('/chats')).toMatchObject({
+      kind: 'route',
+      action: { type: 'NAVIGATE', payload: { name: 'Chats' } },
+    });
   });
 
   it('opens Live Chat for a support reply push', () => {

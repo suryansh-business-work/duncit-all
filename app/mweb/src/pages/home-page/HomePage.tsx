@@ -14,6 +14,7 @@ import HostCtaBanner from './HostCtaBanner';
 import OngoingPodsRail from './OngoingPodsRail';
 import ClubRecommendationRow from './ClubRecommendationRow';
 import ClubSection from './ClubSection';
+import EarnHomeCard from './EarnHomeCard';
 import PreviousPodsRail from './PreviousPodsRail';
 import SomethingForYouRail from './SomethingForYouRail';
 import AdSlot from '../../components/ads/AdSlot';
@@ -168,6 +169,7 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Re
           ))}
         </Stack>
       )}
+      <EarnHomeCard onOpen={() => navigate('/earn')} />
       <PreviousPodsRail pods={previousPods} hostNameOf={hostNameOf} filtered={railsFiltered} />
       <SomethingForYouRail />
       <AdSlot position="HOME_BOTTOM" variant="banner" />

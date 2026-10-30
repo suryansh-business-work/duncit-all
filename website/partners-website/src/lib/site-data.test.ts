@@ -15,14 +15,14 @@ const ok = (data: unknown, errors?: unknown[]): FakeResponse => ({
 const fetchMock = vi.fn();
 
 /**
- * A FRESH module per test.
+ * A fresh module per test.
  *
  * site-data keeps a module-level `inFlight` map so a static build makes one
  * request per distinct query however many pages ask for it. Left in place
  * between tests it does the same thing to the suite: only the first call per
  * query reaches `fetch`, and every later test reads the first one's answer
- * instead of its own. Resetting the registry is what makes each case actually
- * exercise the code it names.
+ * instead of its own. Resetting the registry makes each case exercise the
+ * code it names.
  */
 beforeEach(async () => {
   vi.resetModules();
@@ -121,7 +121,7 @@ describe('fetchNavGroups', () => {
 describe('the build-time request cache', () => {
   /**
    * A static build renders many pages and every one of them asks for the same
-   * branding. Without this they would each POST again — more chances to hit
+   * branding. Without this they would each POST again, with more chances to hit
    * the fetch timeout, and none of them able to return anything new, because a
    * build is a single moment in time.
    */
@@ -145,7 +145,7 @@ describe('the build-time request cache', () => {
     await siteData.fetchBranding();
     await siteData.fetchPolicies();
 
-    // Two different questions, two requests — a single cached answer for the
+    // Two different questions, two requests: a single cached answer for the
     // build would hand the second caller the first one's data.
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });

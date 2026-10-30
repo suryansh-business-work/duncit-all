@@ -56,8 +56,8 @@ export default defineConfig({
       PRODUCTS_URL: process.env.CYPRESS_PRODUCTS_URL || 'http://localhost:2014',
       ECOMM_PORTAL_URL: process.env.CYPRESS_ECOMM_PORTAL_URL || 'http://localhost:2038',
     },
-    setupNodeEvents(on) {
-      registerScenarioClips(on);
+    setupNodeEvents(on, config) {
+      registerScenarioClips(on, config);
     },
   },
 });

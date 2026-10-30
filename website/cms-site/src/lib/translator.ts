@@ -21,7 +21,7 @@ async function load(): Promise<SiteTranslate> {
     cached = { t: translator.t, expires: Date.now() + TTL_MS };
     t = translator.t;
   } catch (error) {
-    // The bundled catalogue still names every key — never render blank.
+    // The bundled catalogue still names every key, so never render blank.
     console.warn('[cms-site] server localization unavailable, using the bundled copy', error);
   }
   loading = null;

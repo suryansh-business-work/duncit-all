@@ -51,6 +51,7 @@ export const RentedItemsPage = lazy(() => import('../../pages/rented-items-page'
 export const ShopTabsPage = lazy(() => import('../../pages/shop-page/ShopTabsPage'));
 export const VenuesPage = lazy(() => import('../../pages/venues-page'));
 export const FaqsPage = lazy(() => import('../../pages/FaqsPage'));
+export const LearningsPage = lazy(() => import('../../pages/learnings-page'));
 export const BadgesPage = lazy(() => import('../../pages/badges-page'));
 export const PolicyPage = lazy(() => import('../../pages/PolicyPage'));
 export const PodIdeasPage = lazy(() => import('../../pages/PodIdeasPage'));

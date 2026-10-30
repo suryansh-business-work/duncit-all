@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useMutation } from '@apollo/client/react';
-import { useLocation } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 import {
   claimGoogleSignupHandoff,
   createGoogleSignupClaims,
@@ -21,12 +21,37 @@ import { useSocialLogin } from './useSocialLogin';
  * so it outlives the remount it guards against (see RegisterPage's twin). */
 const CLAIMS = createGoogleSignupClaims();
 
+/** Where each part of the sign-in screen lives, so Back leaves a method for the options. */
+const STEP_PATH: Record<LoginStep, string> = {
+  CHOOSE: '/login',
+  PASSWORD: '/login/with-password',
+  OTP: '/login/with-otp',
+};
+
+const stepOf = (pathname: string): LoginStep =>
+  (Object.keys(STEP_PATH) as LoginStep[]).find((step) => STEP_PATH[step] === pathname.replace(/\/$/, '')) ??
+  'CHOOSE';
+
 export default function LoginPage() {
-  // Which half of the sign-in screen is showing. Kept in state rather than the
-  // URL: it is a choice of method, not a place — a shared /login link should
-  // always open on the options.
-  const [step, setStep] = useState<LoginStep>('CHOOSE');
+  // Which part of the sign-in screen is showing comes from the URL: choosing a
+  // method pushes its path, so the browser's Back returns to the options rather
+  // than leaving the app. A `?redirect` rides along on every step.
   const location = useLocation();
+  const navigate = useNavigate();
+  const step = stepOf(location.pathname);
+  const setStep = (next: LoginStep) => {
+    if (next === step) return;
+    // Back to the options: pop the method we pushed, so history keeps one /login;
+    // a method opened straight from a link has nothing to pop, so it is replaced.
+    if (next === 'CHOOSE' && (location.state as { fromChooser?: boolean } | null)?.fromChooser) {
+      navigate(-1);
+      return;
+    }
+    navigate(
+      { pathname: STEP_PATH[next], search: location.search },
+      next === 'CHOOSE' ? { replace: true } : { state: { fromChooser: true } },
+    );
+  };
   const [loginMutation, { loading, error }] = useMutation<any>(LOGIN);
   const { finishLogin, starting } = useFinishLogin();
 

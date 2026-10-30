@@ -57,6 +57,7 @@ describe('auth.service mutations', () => {
       {
         name: 'Riya Sharma',
         dob: '1995-01-01',
+        ageConfirmed: true,
         email: 'Riya@Duncit.com',
         phoneNumber: '9845012345',
         phoneExtension: '+91',
@@ -81,6 +82,7 @@ describe('auth.service mutations', () => {
         whatsapp_token: 'wa-proof-1',
         password: 'StrongPass123',
         dob: '1995-01-01T00:00:00.000Z',
+        age_confirmed: true,
         accepted_policy_ids: ['pol-1'],
         accepted_policy_surface: 'APP',
         marketing_opt_in: true,
@@ -130,7 +132,7 @@ describe('auth.service mutations', () => {
     expect(result).toEqual({ token: 'tok-5', surveyCompleted: false });
   });
 
-  it('signupWithGoogle sends the id_token with the accepted policies and the date of birth', async () => {
+  it('signupWithGoogle sends the id_token with the accepted policies and the age tick, leaving a blank birthday out', async () => {
     mockedRequest.mockResolvedValue({
       signupWithGoogle: { token: 'tok-3', user: { onboarding_survey_completed: false } },
     } as never);
@@ -144,7 +146,8 @@ describe('auth.service mutations', () => {
         alsoMobile: true,
         whatsappToken: 'wa-proof-2',
       },
-      '1998-04-23',
+      // The birthday is optional: '' is not a date, so it is not sent at all.
+      { dob: '', ageConfirmed: true },
     );
 
     expect(mockedRequest.mock.calls[0]?.[1]).toEqual({
@@ -154,7 +157,7 @@ describe('auth.service mutations', () => {
         phone_extension: '+91',
         whatsapp_is_mobile: true,
         whatsapp_token: 'wa-proof-2',
-        dob: '1998-04-23T00:00:00.000Z',
+        age_confirmed: true,
         accepted_policy_ids: ['pol-1'],
         accepted_policy_surface: 'APP',
       },

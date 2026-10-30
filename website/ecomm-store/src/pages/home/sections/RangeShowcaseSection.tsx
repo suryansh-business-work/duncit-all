@@ -52,7 +52,7 @@ function RangeCard({ item, position }: Readonly<{ item: StoreSectionItem; positi
   );
 }
 
-/** RANGE_SHOWCASE — "Explore Our Range": two big cards side by side, stacked on a phone. */
+/** RANGE_SHOWCASE, "Explore Our Range": two big cards side by side, stacked on a phone. */
 export function RangeShowcaseSection({ section }: Readonly<SectionProps>) {
   if (section.items.length === 0) return null;
   return (

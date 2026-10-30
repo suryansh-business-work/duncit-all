@@ -48,6 +48,9 @@ export interface SiteMetaInput {
   socialDescription?: string;
   /** Forces the Twitter card; omitted, a page with its own image gets the wide one. */
   twitterCard?: 'summary' | 'summary_large_image';
+  /** Keeps the page out of search results (a 404). Such a page names no
+   * canonical: pointing an unindexable page at itself sends crawlers mixed signals. */
+  noindex?: boolean;
 }
 
 export function buildSiteMetaTags(meta: SiteMetaInput): string {
@@ -68,7 +71,7 @@ export function buildSiteMetaTags(meta: SiteMetaInput): string {
   const tags = [
     `<title>${fullTitle}</title>`,
     `<meta name="description" content="${description}" />`,
-    `<link rel="canonical" href="${url}" />`,
+    meta.noindex ? '<meta name="robots" content="noindex" />' : `<link rel="canonical" href="${url}" />`,
     `<meta property="og:type" content="${meta.type ?? 'website'}" />`,
     `<meta property="og:site_name" content="${siteName}" />`,
     `<meta property="og:title" content="${socialTitle}" />`,

@@ -1,5 +1,6 @@
 /** Option lists + form value shape for the host Create Pod stepper. */
 import type { UseFormReturn } from 'react-hook-form';
+import { freeJustificationDefaults, type FreeJustificationValues } from '@duncit/forms/schemas';
 import type { CreatePodClub, PodPickerProduct, TicketDiscountTier } from '@duncit/utils';
 
 import type { CreatePodInput } from '@/generated/graphql/graphql';
@@ -22,8 +23,10 @@ export interface PodPlaceCharge {
   note: string;
 }
 
-/** RN inputs are strings; numbers/dates are parsed by the schema + mapper. */
-export interface CreatePodFormValues {
+/** RN inputs are strings; numbers/dates are parsed by the schema + mapper.
+ * `free_reason` / `free_details` / `free_accepted` are the one justification a
+ * host gives when the venue offer or the pod itself is FREE. */
+export interface CreatePodFormValues extends FreeJustificationValues {
   /** Pod location — defaults to the host's selected location; filters clubs + venues. */
   location_id: string;
   /** Optional locality within the city — narrows clubs to that zone. */
@@ -76,6 +79,10 @@ export interface CreatePodFormValues {
   ticket_discount_enabled: boolean;
   /** Stored tiers only (min 2 tickets); the "1 ticket · 0%" base row is implied. */
   ticket_discount_tiers: TicketDiscountTier[];
+  /** Smart Incentive switch — never sent on for a FREE pod. */
+  smart_incentive_enabled: boolean;
+  /** The Smart Incentive % as typed; '' while the switch is off. */
+  smart_incentive_pct: string;
   payment_terms: string;
   /** Client-side publish gate — host must accept the Organizer Terms (last step). */
   agreed_to_terms: boolean;
@@ -118,8 +125,11 @@ export const blankCreatePodForm: CreatePodFormValues = {
   place_charges: [],
   ticket_discount_enabled: false,
   ticket_discount_tiers: [],
+  smart_incentive_enabled: false,
+  smart_incentive_pct: '',
   payment_terms: '',
   agreed_to_terms: false,
+  ...freeJustificationDefaults,
 };
 
 /** One shape for mWeb and the native app (@duncit/utils). */

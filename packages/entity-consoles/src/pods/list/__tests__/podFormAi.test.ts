@@ -66,6 +66,10 @@ const prev = (over: Partial<PodFormValues> = {}): PodFormValues => ({
   ticket_discount_enabled: false,
   ticket_discount_tiers: [],
   is_active: true,
+  // Why a FREE pod or venue is free — an AI fill never writes them.
+  free_reason: '',
+  free_details: '',
+  free_accepted: false,
   ...over,
 });
 

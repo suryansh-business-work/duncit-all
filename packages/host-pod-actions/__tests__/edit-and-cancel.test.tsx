@@ -11,7 +11,7 @@ import { PUBLIC_APP_SETTINGS } from '@duncit/app-settings';
 import { type MockedResponse } from '@apollo/client/testing';
 import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import PodCancelDialog from '../src/PodCancelDialog';
@@ -23,12 +23,18 @@ import {
   HOST_UPDATE_POD,
   MODERATE_POD_CONTENT,
   POD_SPOT_LIMITS,
+  SMART_INCENTIVE_SETTINGS,
 } from '../src/queries';
 import { hostActionsConfig, labelsFor } from './host-actions-config';
 import type { HostPodTarget } from '../src/types';
 
-/** The discount fields of the HostUpdatePodInput a save sent. */
-type SentInput = { ticket_discount_enabled?: boolean; ticket_discount_tiers?: object[] };
+/** The offer fields of the HostUpdatePodInput a save sent. */
+type SentInput = {
+  ticket_discount_enabled?: boolean;
+  ticket_discount_tiers?: object[];
+  smart_incentive_enabled?: boolean;
+  smart_incentive_pct?: number;
+};
 
 const labels = labelsFor();
 const testTheme = createTheme();
@@ -111,6 +117,21 @@ describe('PodEditDialog', () => {
       maxUsageCount: Number.POSITIVE_INFINITY,
       ...over,
     }) as MockedResponse;
+
+  /** A save mock that records the input the mutation was actually sent. */
+  const recordingSave = () => {
+    const sent: SentInput[] = [];
+    const mock = saveMock({
+      request: {
+        query: HOST_UPDATE_POD,
+        variables: (v: { input: SentInput }) => {
+          sent.push(v.input);
+          return true;
+        },
+      },
+    });
+    return { sent, mock };
+  };
 
   const dialog = (mocks: readonly MockedResponse[], target: HostPodTarget | null = pod()) => {
     const props = { pod: target, onClose: vi.fn(), onSaved: vi.fn() };
@@ -277,21 +298,6 @@ describe('PodEditDialog', () => {
       ] as unknown as HostPodTarget['ticket_discount_tiers'],
     });
 
-    /** A save mock that records the input the mutation was actually sent. */
-    const recordingSave = () => {
-      const sent: SentInput[] = [];
-      const mock = saveMock({
-        request: {
-          query: HOST_UPDATE_POD,
-          variables: (v: { input: SentInput }) => {
-            sent.push(v.input);
-            return true;
-          },
-        },
-      });
-      return { sent, mock };
-    };
-
     it('offers the stored tiers on a paid pod, priced per ticket against the admin max', async () => {
       dialog([limitsMock(), settingsMock], paidPod);
       await settle();
@@ -374,6 +380,138 @@ describe('PodEditDialog', () => {
 
       expect(props.onSaved).toHaveBeenCalledTimes(1);
       expect(sent[0]).toMatchObject({ ticket_discount_enabled: false, ticket_discount_tiers: [] });
+    });
+  });
+
+  // The Smart Incentive rides in the same sheet: offered on a paid pod while
+  // Loyalty runs the programme, hidden (and switched off on save) on a free one.
+  describe('the Smart Incentive', () => {
+    /** Loyalty runs the programme, caps an offer at 20% and shows it after 30 seconds. */
+    const programmeMock = (over: Record<string, unknown> = {}): MockedResponse => ({
+      request: { query: SMART_INCENTIVE_SETTINGS },
+      result: {
+        data: {
+          smartIncentiveSettings: {
+            __typename: 'SmartIncentiveSettings',
+            enabled: true,
+            delay_seconds: 30,
+            max_discount_pct: 20,
+            ...over,
+          },
+        },
+      },
+      maxUsageCount: Number.POSITIVE_INFINITY,
+    });
+
+    /** ₹499 a ticket, offering 15% today. */
+    const offerPod = pod({ pod_type: 'PAID', pod_amount: 499, smart_incentive_enabled: true, smart_incentive_pct: 15 });
+
+    const switchInput = () => within(screen.getByTestId('smart-incentive-switch')).getByRole('switch');
+
+    it('offers the stored percentage on a paid pod, priced per ticket against the programme max', async () => {
+      dialog([limitsMock(), programmeMock()], offerPod);
+      await settle();
+      await settle();
+
+      expect(switchInput()).toBeChecked();
+      expect(screen.getByTestId('smart-incentive-pct')).toHaveValue(15);
+      expect(screen.getByText(labels.smartIncentive.maxHint(20))).toBeInTheDocument();
+      // 15% off ₹499 is ₹424.15 — priced to the paisa.
+      expect(screen.getByTestId('smart-incentive-price-preview')).toHaveTextContent(
+        labels.smartIncentive.pricePreview('₹424.15'),
+      );
+    });
+
+    // Loyalty lowering its maximum must not stop a host fixing a typo in their title.
+    it('saves an untouched offer as stored, even above a maximum Loyalty has since lowered', async () => {
+      const { sent, mock } = recordingSave();
+      const { props } = dialog([limitsMock(), programmeMock({ max_discount_pct: 10 }), cleanCheck, mock], offerPod);
+      await settle();
+      await settle();
+
+      await save();
+
+      expect(props.onSaved).toHaveBeenCalledTimes(1);
+      expect(sent[0]).toMatchObject({ smart_incentive_enabled: true, smart_incentive_pct: 15 });
+    });
+
+    it('refuses a changed percentage above the programme max, naming the max under the field', async () => {
+      const { props } = dialog([limitsMock(), programmeMock(), cleanCheck, saveMock()], offerPod);
+      await settle();
+      await settle();
+
+      fireEvent.change(screen.getByTestId('smart-incentive-pct'), { target: { value: '25' } });
+      await save();
+
+      expect(screen.getByText(labels.smartIncentive.errors.PCT_MAX(20))).toBeInTheDocument();
+      expect(props.onSaved).not.toHaveBeenCalled();
+    });
+
+    it('explains the offer when the host switches it on, then saves the percentage they type', async () => {
+      const { sent, mock } = recordingSave();
+      const offPod = pod({ pod_type: 'PAID', pod_amount: 499, smart_incentive_enabled: false, smart_incentive_pct: 0 });
+      const { props } = dialog([limitsMock(), programmeMock(), cleanCheck, mock], offPod);
+      await settle();
+      await settle();
+      expect(screen.queryByTestId('smart-incentive-pct')).not.toBeInTheDocument();
+
+      fireEvent.click(switchInput());
+      // The explainer opens first, quoting the programme's own delay rather than the default.
+      const explainer = await screen.findByTestId('smart-incentive-info');
+      expect(within(explainer).getByText(labels.smartIncentive.info.what(30))).toBeInTheDocument();
+      fireEvent.click(within(explainer).getByTestId('smart-incentive-info-close'));
+      fireEvent.change(screen.getByTestId('smart-incentive-pct'), { target: { value: '12' } });
+      await save();
+
+      expect(props.onSaved).toHaveBeenCalledTimes(1);
+      expect(sent[0]).toMatchObject({ smart_incentive_enabled: true, smart_incentive_pct: 12 });
+    });
+
+    it('hides the offer on a free pod and switches it off on save', async () => {
+      const { sent, mock } = recordingSave();
+      const freePod = pod({ pod_type: 'FREE', pod_amount: 0, smart_incentive_enabled: false, smart_incentive_pct: 0 });
+      const { props } = dialog([limitsMock(), programmeMock(), cleanCheck, mock], freePod);
+      await settle();
+      await settle();
+
+      expect(screen.queryByTestId('smart-incentive-field')).not.toBeInTheDocument();
+
+      await save();
+
+      expect(props.onSaved).toHaveBeenCalledTimes(1);
+      expect(sent[0]).toMatchObject({ smart_incentive_enabled: false, smart_incentive_pct: 0 });
+    });
+
+    // Switched off by Loyalty, the offer is not the host's to change — but it is
+    // still theirs, and applies again the moment the programme is back on.
+    it('hides the offer while Loyalty has the programme off, and saves it back unchanged', async () => {
+      const { sent, mock } = recordingSave();
+      const { props } = dialog([limitsMock(), programmeMock({ enabled: false }), cleanCheck, mock], offerPod);
+      await settle();
+      await settle();
+
+      expect(screen.queryByTestId('smart-incentive-field')).not.toBeInTheDocument();
+
+      await save();
+
+      expect(props.onSaved).toHaveBeenCalledTimes(1);
+      expect(sent[0]).toMatchObject({ smart_incentive_enabled: true, smart_incentive_pct: 15 });
+    });
+
+    // A narrow list must never switch a host's real offer off on an unrelated save.
+    it('neither shows nor sends the offer when the list that opened the dialog never selected it', async () => {
+      const { sent, mock } = recordingSave();
+      const { props } = dialog([limitsMock(), programmeMock(), cleanCheck, mock], pod({ pod_type: 'PAID', pod_amount: 499 }));
+      await settle();
+      await settle();
+
+      expect(screen.queryByTestId('smart-incentive-field')).not.toBeInTheDocument();
+
+      await save();
+
+      expect(props.onSaved).toHaveBeenCalledTimes(1);
+      expect(sent[0]).not.toHaveProperty('smart_incentive_enabled');
+      expect(sent[0]).not.toHaveProperty('smart_incentive_pct');
     });
   });
 });

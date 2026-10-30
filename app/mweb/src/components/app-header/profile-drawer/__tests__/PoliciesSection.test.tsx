@@ -97,9 +97,9 @@ describe('PoliciesSection', () => {
     expect(terms).toBeInTheDocument();
 
     fireEvent.click(privacy);
-    expect(mockNavigate).toHaveBeenCalledWith('/policies/privacy', { replace: true });
+    expect(mockNavigate).toHaveBeenCalledWith('/policies/privacy');
 
     fireEvent.click(terms);
-    expect(mockNavigate).toHaveBeenCalledWith('/policies/terms', { replace: true });
+    expect(mockNavigate).toHaveBeenCalledWith('/policies/terms');
   });
 });

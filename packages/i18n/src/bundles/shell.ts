@@ -773,10 +773,14 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       eventTickets: 'Event Tickets',
       faqs: 'FAQs',
       faqSubmissions: 'FAQ Submissions',
+      tutorials: 'Learnings',
+      tutorialVideos: 'Videos',
+      tutorialTopics: 'Topics',
       featureFlags: 'Feature Flags',
       fields: 'Fields',
       finance: 'Finance',
       fragments: 'Fragments',
+      freeArrangements: 'Free Arrangements',
       fulfilment: 'Fulfilment',
       funnelRetention: 'Funnel & Retention',
       generateCards: 'Generate Cards',
@@ -893,6 +897,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       regionStructure: 'Region Structure',
       reminders: 'Reminders',
       ugcMonitoring: 'UGC Monitoring',
+      healthAppeals: 'Account Health Appeals',
       blocked: 'Blocked',
       reportedProblems: 'Reported Problems',
       roles: 'Roles',
@@ -904,6 +909,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       settingsAndRewards: 'Settings & Rewards',
       shortLinks: 'Short Links',
       slack: 'Slack',
+      smartIncentive: 'Smart Incentive',
       socialAccounts: 'Social Accounts',
       socialCalendar: 'Social Calendar',
       somethingForYou: 'Something for you',
@@ -1975,6 +1981,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       offerModelPerGuest: 'Per guest',
       offerModelPerHour: 'Per hour',
       offerModelFlat: 'Flat price',
+      offerModelFree: 'Free venue',
       offerRateLabel: 'Amount you offer (₹)',
       offerModelRequired: 'Pick how you will pay the venue',
       offerRateRequired: 'Enter the amount you offer the venue',
@@ -2063,6 +2070,33 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       errorPctMin: 'Discount must be a whole number of at least 1%',
       errorPctMax: 'Discount can’t be more than {max}%',
       errorPctNotIncreasing: 'Needs a bigger discount than the row above',
+    },
+    /**
+     * The Smart Incentive editor and its explainer in the portals (the host's
+     * Edit Pod dialog), rendered through `shellSmartIncentiveLabels` in
+     * @duncit/utils. Word-for-word identical to the editor keys of
+     * `mweb.smartIncentive`.
+     */
+    smartIncentive: {
+      title: 'Smart Incentive',
+      switchLabel: 'Offer a discount to members who are still deciding',
+      hint: 'Members who stay on your pod page without booking get a one-time offer. The discount comes out of your earnings.',
+      pctLabel: 'Discount %',
+      maxHint: 'Up to {max}% off',
+      pricePreview: 'With the offer, a ticket costs {price}',
+      learnMore: 'How it works',
+      errorRequired: 'Enter the discount',
+      errorPctMin: 'Discount must be a whole number of at least 1%',
+      errorPctMax: 'Discount can’t be more than {max}%',
+      infoTitle: 'What is Smart Incentive?',
+      infoWhat:
+        'When a member stays on your pod page for {seconds} seconds without booking, they see a one-time offer: book now and get your discount.',
+      infoWho: 'Only members who see the offer get the discount. Everyone else pays your full ticket price.',
+      infoCut:
+        'The discount comes out of your share: your payout is worked out on what members actually pay, so each discounted booking earns you less.',
+      infoChange:
+        'You can change the discount or switch it off anytime by editing the pod. Switching it off withdraws offers members have not used yet.',
+      gotIt: 'Got it',
     },
     /**
      * Staff chat — the panel every console renders in its header.

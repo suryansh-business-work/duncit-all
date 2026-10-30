@@ -36,6 +36,19 @@ export const PublicAppSettingsDocument = gql(`
   }
 `);
 
+/** Loyalty > Smart Incentive's settings — whether the programme runs, the
+ * dwell before a pod page's offer and the biggest discount a host may choose.
+ * Any signed-in account reads them; the host's editors are capped by them. */
+export const SmartIncentiveSettingsDocument = gql(`
+  query MobileSmartIncentiveSettings {
+    smartIncentiveSettings {
+      enabled
+      delay_seconds
+      max_discount_pct
+    }
+  }
+`);
+
 /** Public feature flags (e.g. `is_product_visible`) seeded server-side and read
  * by every client to gate optional surfaces. Mirrors mWeb's useFeatureFlag. */
 export const PublicFeatureFlagsDocument = gql(`

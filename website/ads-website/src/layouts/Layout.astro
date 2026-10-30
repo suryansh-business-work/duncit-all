@@ -2,18 +2,20 @@
 interface Props {
   title: string;
   description?: string;
+  noindex?: boolean;
 }
 
 import { siteContent, siteUrls } from '../config/site-config';
 import { fetchBranding } from '../lib/site-data';
 import SiteMeta from '@duncit/brand/SiteMeta.astro';
+import SiteStructuredData from '@duncit/brand/SiteStructuredData.astro';
 import GoogleAnalytics from '@duncit/brand/GoogleAnalytics.astro';
 import ConsentBanner from '@duncit/brand/ConsentBanner.astro';
 import ScrollReveal from '@duncit/brand/ScrollReveal.astro';
 import '../styles/global.css';
 
 const siteConfig = await siteContent();
-const { title, description = siteConfig.brand.description } = Astro.props;
+const { title, description = siteConfig.brand.description, noindex = false } = Astro.props;
 const branding = await fetchBranding();
 const favicon = branding.website_favicon_url || '/favicon.svg';
 ---
@@ -31,7 +33,16 @@ const favicon = branding.website_favicon_url || '/favicon.svg';
       url={`${siteConfig.siteUrl.replace(/\/+$/, '')}${Astro.url.pathname}`}
       siteName={branding.app_name}
       imageUrl={branding.website_header_logo_url || null}
+      noindex={noindex}
     />
+    {Astro.url.pathname === '/' && (
+      <SiteStructuredData
+        branding={branding}
+        siteUrl={siteConfig.siteUrl}
+        organizationUrl={siteUrls.mainSiteUrl}
+        siteName={siteConfig.brand.name}
+      />
+    )}
     <link rel="icon" href={favicon} />
     <script is:inline>
       // Runs before the first paint so the page never flashes one theme and

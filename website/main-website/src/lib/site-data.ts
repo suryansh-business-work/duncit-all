@@ -9,13 +9,13 @@ import { GRIEVANCE_OFFICER_SDL } from '@duncit/utils';
 import { urlConfigs } from '../config/url-configs';
 
 /** Build-time GraphQL helpers for the static site. Every call degrades to a
- * safe fallback so an unreachable API can never break a deploy — the site
- * simply renders its bundled defaults. */
+ * safe fallback so an unreachable API can never break a deploy; the site
+ * renders its bundled defaults instead. */
 
 /**
  * How long the build waits for the API before giving up on one call.
  *
- * "Unreachable" is instant — the connection is refused and the fallback renders.
+ * "Unreachable" is instant: the connection is refused and the fallback renders.
  * "Slow" is not: a fetch with no signal waits forever, and a build that waits
  * forever is a CI job cancelled at its 15-minute timeout with no error to read.
  * That is what happened to the main website twice.
@@ -25,8 +25,8 @@ const FETCH_TIMEOUT_MS = 20_000;
 /**
  * One request per distinct query for the whole build.
  *
- * Every page asks for the same branding, and a static build renders many pages
- * — so without this the same POST goes out dozens of times. Each one is another
+ * Every page asks for the same branding, and a static build renders many pages,
+ * so without this the same POST goes out dozens of times. Each one is another
  * chance to hit the timeout above, and none of them can return anything new:
  * a build is a single moment in time.
  */
@@ -83,7 +83,7 @@ const BRANDING_FALLBACK: SiteBranding = {
   ios_app_url: '',
 };
 
-/** Admin-managed branding (Website Logos section) — baked in at build time. */
+/** Admin-managed branding (Website Logos section), baked in at build time. */
 export async function fetchBranding(): Promise<SiteBranding> {
   return resolveSiteBranding(await gqlFetch<SiteBrandingData>(SITE_BRANDING_QUERY), BRANDING_FALLBACK);
 }
@@ -94,7 +94,7 @@ export interface SitePolicy {
   title: string;
 }
 
-/** Active policies from the Legal portal — drives the Policy Hub everywhere. */
+/** Active policies from the Legal portal. Drives the Policy Hub everywhere. */
 export async function fetchPolicies(): Promise<SitePolicy[]> {
   const data = await gqlFetch<{ publicPolicies: SitePolicy[] }>(`
     query WebsitePolicies {
@@ -108,6 +108,24 @@ export async function fetchPolicies(): Promise<SitePolicy[]> {
   return data?.publicPolicies ?? [];
 }
 
+export interface SiteBlogPost {
+  slug: string;
+  published_at: string | null;
+}
+
+/** Published blog posts, with only what the sitemap needs to list them. */
+export async function fetchBlogPosts(): Promise<SiteBlogPost[]> {
+  const data = await gqlFetch<{ publicWebsiteContent: SiteBlogPost[] | null }>(`
+    query WebsiteBlogSitemap {
+      publicWebsiteContent(type: BLOG) {
+        slug
+        published_at
+      }
+    }
+  `);
+  return data?.publicWebsiteContent ?? [];
+}
+
 /** The Grievance Officer the Legal portal publishes. Blank until they fill it in. */
 export interface SiteGrievanceOfficer {
   name: string;
@@ -119,8 +137,8 @@ export interface SiteGrievanceOfficer {
 export async function fetchGrievanceOfficer(): Promise<SiteGrievanceOfficer | null> {
   const data = await gqlFetch<{ grievanceOfficer: SiteGrievanceOfficer }>(GRIEVANCE_OFFICER_SDL);
   const officer = data?.grievanceOfficer;
-  // A row exists from the first save, so "published" means the name is filled
-  // in — not that the record is there.
+  // A row exists from the first save, so the record being there is not enough:
+  // "published" means the name is filled in.
   return officer?.name ? officer : null;
 }
 export interface SiteNavLink {

@@ -16,7 +16,7 @@ interface PurchaseActionsProps {
   onSubscribe: () => void;
 }
 
-/** Add to Cart (the big brand-red pill), Buy now, and — when on — Subscribe & save. */
+/** Add to Cart (the big brand-red pill), Buy now, and (when on) Subscribe & save. */
 export function PurchaseActions({ productId, variantId, qty, onSubscribe }: Readonly<PurchaseActionsProps>) {
   const { t } = useStoreT();
   const navigate = useNavigate();

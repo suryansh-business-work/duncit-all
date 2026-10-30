@@ -77,6 +77,9 @@ export const POD_DETAILS = gql`
         min_tickets
         discount_pct
       }
+      # Whether to ask for the viewer's Smart Incentive at all — the offer
+      # itself (its %, delay and lock) is podSmartIncentive's, per member.
+      smart_incentive_enabled
       products_enabled
       product_requests {
         product_id

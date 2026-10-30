@@ -49,9 +49,9 @@ export default function App() {
             {data.error}
           </Alert>
         )}
-        {/* One gate for the whole board: a half-drawn banner over an empty chart
-            over three grey blocks was three different loading states pretending
-            to be a page. */}
+        {/* One loading gate for the whole board. A half-drawn banner, an empty
+            chart and three grey blocks used to be three separate loading states
+            shown at once. */}
         {data.loading && <StatusBoardSkeleton />}
         {!data.loading && (
           <>

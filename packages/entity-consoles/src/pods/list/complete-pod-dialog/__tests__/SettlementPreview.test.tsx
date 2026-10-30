@@ -133,6 +133,19 @@ describe('SettlementPreview', () => {
     expect(billLine('paid-guests')).toBe('Guests the venue is paid for9 (at least 8)');
   });
 
+  // A free venue is owed nothing: its terms read "Free venue", and the dialog is told so it asks for a bill only with extras.
+  it('states a free venue as such and tells the dialog the venue was free', async () => {
+    const onFreeVenue = vi.fn();
+    renderWithProviders(
+      <SettlementPreview podId="pod-1" venueBillAmount={0} venueExtraAmount={0} hostUserId="u1" onFreeVenue={onFreeVenue} />,
+      { mocks: [previewMock({ venue_agreed_model: 'FREE', venue_agreed_rate: 0 })] },
+    );
+    await screen.findByRole('button', { name: 'Host Earning' });
+    expect(screen.getByTestId('settlement-agreed-terms').textContent).toBe('Agreed termsFree venue');
+    expect(onFreeVenue).toHaveBeenLastCalledWith(true);
+    expect(onFreeVenue).toHaveBeenCalledWith(false);
+  });
+
   it('states no agreed terms when the settlement carries a model but no rate', async () => {
     renderWithProviders(<SettlementPreview podId="pod-1" venueBillAmount={0} venueExtraAmount={0} hostUserId="u1" />, {
       mocks: [previewMock({ venue_agreed_model: 'FLAT', venue_agreed_rate: null })],

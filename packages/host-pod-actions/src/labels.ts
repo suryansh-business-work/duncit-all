@@ -16,11 +16,14 @@
 import { mwebSpotsLabels, shellSpotsLabels, type SpotsStepperLabels } from '@duncit/ui';
 import {
   POD_SCAN_LEAD_MINUTES,
+  mwebSmartIncentiveLabels,
   mwebTicketDiscountLabels,
   mwebVenueBillLabels,
+  shellSmartIncentiveLabels,
   shellTicketDiscountLabels,
   shellVenueBillLabels,
   venueOfferTermsLine,
+  type SmartIncentiveLabels,
   type TicketDiscountLabels,
   type VenueBillLabels,
 } from '@duncit/utils';
@@ -136,6 +139,8 @@ export interface HostPodActionLabels {
   spotsIncreaseOnly: string;
   /** The multi-ticket discount editor in the edit dialog — @duncit/utils' own words. */
   ticketDiscount: TicketDiscountLabels;
+  /** The Smart Incentive editor and its explainer in the edit dialog — @duncit/utils' own words. */
+  smartIncentive: SmartIncentiveLabels;
   /** The pod-row menu and the dialogs it opens. */
   menuTooltip: string;
   scanTickets: string;
@@ -185,6 +190,8 @@ export interface HostPodActionLabels {
   offerModelPerGuest: string;
   offerModelPerHour: string;
   offerModelFlat: string;
+  /** Asking the venue for the window free — no amount, accepted or declined, never countered. */
+  offerModelFree: string;
   offerRateLabel: string;
   offerModelRequired: string;
   offerRateRequired: string;
@@ -338,6 +345,7 @@ export function mwebHostPodLabels(t: HostPodTranslate): HostPodActionLabels {
     spotsFreeHint: (min, taken) => t('mweb.hostPodEdit.spotsFreeHint', { vars: { min, taken } }),
     spotsIncreaseOnly: t('mweb.hostPodEdit.spotsIncreaseOnly'),
     ticketDiscount: mwebTicketDiscountLabels(t),
+    smartIncentive: mwebSmartIncentiveLabels(t),
     menuTooltip: t('mweb.hostPodActions.menuTooltip'),
     scanTickets: t('mweb.hostPodActions.scanTickets'),
     scanClosed: t('mweb.hostPodActions.scanClosed'),
@@ -375,6 +383,7 @@ export function mwebHostPodLabels(t: HostPodTranslate): HostPodActionLabels {
     offerModelPerGuest: t('mweb.hostPodActions.offerModelPerGuest'),
     offerModelPerHour: t('mweb.hostPodActions.offerModelPerHour'),
     offerModelFlat: t('mweb.hostPodActions.offerModelFlat'),
+    offerModelFree: t('mweb.hostPodActions.offerModelFree'),
     offerRateLabel: t('mweb.hostPodActions.offerRateLabel'),
     offerModelRequired: t('mweb.hostPodActions.offerModelRequired'),
     offerRateRequired: t('mweb.hostPodActions.offerRateRequired'),
@@ -487,6 +496,7 @@ export function shellHostPodLabels(t: HostPodTranslate): HostPodActionLabels {
     spotsFreeHint: (min, taken) => t('shell.hostPodEdit.spotsFreeHint', { vars: { min, taken } }),
     spotsIncreaseOnly: t('shell.hostPodEdit.spotsIncreaseOnly'),
     ticketDiscount: shellTicketDiscountLabels(t),
+    smartIncentive: shellSmartIncentiveLabels(t),
     menuTooltip: t('shell.hostPodActions.menuTooltip'),
     scanTickets: t('shell.hostPodActions.scanTickets'),
     scanClosed: t('shell.hostPodActions.scanClosed'),
@@ -524,6 +534,7 @@ export function shellHostPodLabels(t: HostPodTranslate): HostPodActionLabels {
     offerModelPerGuest: t('shell.hostPodActions.offerModelPerGuest'),
     offerModelPerHour: t('shell.hostPodActions.offerModelPerHour'),
     offerModelFlat: t('shell.hostPodActions.offerModelFlat'),
+    offerModelFree: t('shell.hostPodActions.offerModelFree'),
     offerRateLabel: t('shell.hostPodActions.offerRateLabel'),
     offerModelRequired: t('shell.hostPodActions.offerModelRequired'),
     offerRateRequired: t('shell.hostPodActions.offerRateRequired'),

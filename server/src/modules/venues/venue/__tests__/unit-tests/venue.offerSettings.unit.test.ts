@@ -10,6 +10,7 @@ jest.mock('@modules/platform/settings/settings.service', () => ({
 import { settingsService } from '@modules/platform/settings/settings.service';
 import {
   VENUE_OFFER_SETTINGS_MAX,
+  assertOfferMeetsMinBusiness,
   cleanMinBusiness,
   effectiveOfferSettings,
   normalizeOfferSettingsInput,
@@ -167,5 +168,42 @@ describe('requestOfferDefaults', () => {
     await requestOfferDefaults(ctx);
     await requestOfferDefaults(other);
     expect(defaults).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('assertOfferMeetsMinBusiness', () => {
+  const rows = [
+    { model: 'PER_GUEST' as const, amount: 200 },
+    { model: 'FLAT' as const, amount: 5000 },
+  ];
+  const refusal = (fn: () => void) => {
+    try {
+      fn();
+    } catch (e) {
+      return (e as { extensions?: Record<string, unknown> }).extensions;
+    }
+    return null;
+  };
+
+  it('accepts a rate at or above the amount on its own basis', () => {
+    expect(() => assertOfferMeetsMinBusiness(rows, 'PER_GUEST', 200)).not.toThrow();
+    expect(() => assertOfferMeetsMinBusiness(rows, 'FLAT', 6000)).not.toThrow();
+  });
+
+  it('refuses a rate below it, naming the amount and the basis', () => {
+    expect(refusal(() => assertOfferMeetsMinBusiness(rows, 'PER_GUEST', 199))).toMatchObject({
+      code: 'BAD_USER_INPUT',
+      reason: 'BELOW_MIN_BUSINESS',
+      field: 'venue_offer_rate',
+      min: 200,
+      model: 'PER_GUEST',
+    });
+    expect(refusal(() => assertOfferMeetsMinBusiness(rows, 'FLAT', null))).toMatchObject({ reason: 'BELOW_MIN_BUSINESS', min: 5000 });
+  });
+
+  it('holds back nothing on a basis with no amount, a free ask or a venue that named none', () => {
+    expect(() => assertOfferMeetsMinBusiness(rows, 'PER_HOUR', 1)).not.toThrow();
+    expect(() => assertOfferMeetsMinBusiness(rows, 'FREE', 0)).not.toThrow();
+    expect(() => assertOfferMeetsMinBusiness(undefined, 'PER_GUEST', 1)).not.toThrow();
   });
 });

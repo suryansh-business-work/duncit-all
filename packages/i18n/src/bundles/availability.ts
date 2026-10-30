@@ -643,11 +643,11 @@ export const AVAILABILITY_BUNDLE: NestedCatalogue = {
         venue: 'Venue: {left} of {of} left',
         host: 'Host: {left} of {of} left',
       },
-      // The business a venue hopes one booking brings — a guide hosts see on Create Pod, never a rule.
+      // The least a venue takes from one booking, per basis — Create Pod refuses an offer below it.
       minBusiness: {
         title: 'Business you expect per booking',
         intro:
-          'Roughly what one booking should bring you. Hosts see it once they pick your venue — it is a guide for their offer, not a rule.',
+          'The least one booking must bring you. Hosts see it on Create Pod, and an offer below the amount for the way they pay cannot be sent.',
         basis: 'Basis',
         amount: 'Amount (₹)',
         perGuest: 'Per guest',
@@ -663,9 +663,11 @@ export const AVAILABILITY_BUNDLE: NestedCatalogue = {
         amountInvalid: 'Enter an amount above 0, up to {max}',
         duplicate: 'List each basis once',
         notSet: 'Not set yet',
-        // On Create Pod, once a venue is picked.
-        createPodTitle: 'This venue usually expects',
-        createPodHint: 'A guide from the venue — your offer can be different.',
+        // On Create Pod's offer step, above the offer.
+        createPodTitle: 'Minimum business for this venue',
+        createPodHint: 'Your offer must be at least the amount for the way you pay.',
+        // Under the amount field when the offer is below the venue's amount.
+        offerBelow: 'This venue takes at least {min} — raise your offer to continue',
       },
       // The host's ask beside the price, on Create Pod and a new offer (mWeb,
       // the Partners console and the app): what the venue should provide, a

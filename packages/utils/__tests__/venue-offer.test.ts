@@ -46,6 +46,8 @@ import {
   venueOfferStatusKey,
   venueOfferTermsText,
   venueMinBusinessLines,
+  venueOfferFloor,
+  offerBelowFloor,
   type VenueOfferSource,
 } from '../src/venue-offer';
 
@@ -211,6 +213,39 @@ describe('offerCountersLeft / mayCounter', () => {
     expect(mayCounter(usage, 'VENUE')).toBe(false);
     expect(mayCounter({ counters_per_side: 0 }, 'HOST')).toBe(false);
     expect(mayCounter({}, 'VENUE')).toBe(true);
+  });
+});
+
+describe('venueOfferFloor / offerBelowFloor', () => {
+  const t = (key: string, opts?: { vars?: Record<string, string | number> }) => `${key}:${opts?.vars?.amount ?? ''}`;
+  const money = (rupees: number) => `₹${rupees}`;
+  const rows = [
+    { model: 'PER_GUEST', amount: 200 },
+    { model: 'PER_HOUR', amount: 0 },
+  ];
+
+  it("is the venue's amount on the basis the host offers on, written as it reads", () => {
+    expect(venueOfferFloor(rows, 'PER_GUEST', t, money)).toEqual({
+      min: 200,
+      text: 'availability.offers.minBusiness.perGuestAmount:₹200',
+    });
+  });
+
+  it('holds nothing back on a basis the venue named no amount for, a free ask or no basis yet', () => {
+    expect(venueOfferFloor(rows, 'PER_HOUR', t, money)).toBeNull();
+    expect(venueOfferFloor(rows, 'FLAT', t, money)).toBeNull();
+    expect(venueOfferFloor(rows, 'FREE', t, money)).toBeNull();
+    expect(venueOfferFloor(rows, '', t, money)).toBeNull();
+    expect(venueOfferFloor(null, 'PER_GUEST', t, money)).toBeNull();
+  });
+
+  it('refuses a rate below the floor and accepts one at or above it', () => {
+    const floor = venueOfferFloor(rows, 'PER_GUEST', t, money);
+    expect(offerBelowFloor(floor, '199')).toBe(true);
+    expect(offerBelowFloor(floor, '')).toBe(true);
+    expect(offerBelowFloor(floor, 200)).toBe(false);
+    expect(offerBelowFloor(floor, '250')).toBe(false);
+    expect(offerBelowFloor(null, '1')).toBe(false);
   });
 });
 

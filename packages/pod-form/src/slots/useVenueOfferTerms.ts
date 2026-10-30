@@ -6,7 +6,7 @@ import { offerGuestFloor, type VenueMinBusinessRow } from '@duncit/utils';
  * The venue's own bounds on an offer: how many guests its whole space holds,
  * the fewest guests it takes an offer for (its setting, else the platform's
  * default — the server resolves it), and the business it hopes a booking
- * brings (a guide shown beside the offer, never a rule). The venues each portal hands
+ * brings (the least an offer may be on each basis). The venues each portal hands
  * the form are its own list and need not carry either, so the form asks for
  * the one venue it is offering to.
  */

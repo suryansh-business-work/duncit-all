@@ -11,9 +11,9 @@ interface Props {
 }
 
 /**
- * What the picked venue usually expects from one booking — "₹200 per guest ·
- * ₹400 per hour" — shown on Create Pod once a venue is chosen, as a guide for
- * the host's offer (never a rule). Nothing when the venue named none.
+ * The picked venue's minimum business — "₹200 per guest · ₹400 per hour" —
+ * at the top of Create Pod's offer step: an offer below the amount on the basis
+ * the host pays on cannot be sent. Nothing when the venue named none.
  */
 export default function VenueMinBusinessNote({ rows, money, testId }: Readonly<Props>) {
   const { t } = useTranslation();

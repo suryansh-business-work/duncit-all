@@ -433,7 +433,7 @@ describe('WhenWhereSection (offer terms)', () => {
     });
     renderWW(termsData({ platform_fee_pct: 10, gst_pct: 18, currency_symbol: '₹' }), WINDOW);
     expect(screen.getByTestId('pod-form-venue-min-business')).toHaveTextContent(
-      /^This venue usually expects: ₹200\.00 per guest · ₹5,000\.00 per booking — A guide from the venue — your offer can be different\.$/,
+      /^Minimum business for this venue: ₹200\.00 per guest · ₹5,000\.00 per booking — Your offer must be at least the amount for the way you pay\.$/,
     );
   });
 
@@ -442,7 +442,7 @@ describe('WhenWhereSection (offer terms)', () => {
       terms: termsQuery({ id: 'v1', capacity: 40, offer_min_guests: 0, offer_min_business: [{ model: 'PER_HOUR', amount: 400 }] }),
     });
     renderWW(termsData(), WINDOW);
-    expect(screen.getByTestId('pod-form-venue-min-business')).toHaveTextContent(/^This venue usually expects: 400\.00 per hour — /);
+    expect(screen.getByTestId('pod-form-venue-min-business')).toHaveTextContent(/^Minimum business for this venue: 400\.00 per hour — /);
   });
 
   it('says nothing of what the venue expects when it names no amount it can show', () => {

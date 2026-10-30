@@ -7,7 +7,7 @@ import type { Translate } from './translate';
  * fewest guests a host may offer to book for, the hours either side has to
  * answer a move, and the business the venue hopes each booking brings — at
  * least one amount, one per basis (per guest, per hour, per booking). The
- * amounts are a guide hosts see on Create Pod, never a rule. One rule for the
+ * amounts are the least a host may offer on each basis (Create Pod enforces it). One rule for the
  * Partners console, mWeb and the native app (rules 27 + 56), with the same
  * `venueSettings.offers.*` copy.
  */

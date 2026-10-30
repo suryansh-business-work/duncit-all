@@ -124,7 +124,7 @@ describe('VenueMinBusinessNote', () => {
     expect(container).toBeEmptyDOMElement();
   });
 
-  it("lists what the venue usually expects, in the pickers' order and the surface's money, as a guide", () => {
+  it("lists the venue's minimum business, in the pickers' order and the surface's money, as the offer's floor", () => {
     const rows = [
       { model: 'PER_HOUR', amount: 400 },
       { model: 'PER_GUEST', amount: 200 },
@@ -132,8 +132,8 @@ describe('VenueMinBusinessNote', () => {
     ];
     render(<VenueMinBusinessNote rows={rows} money={money} testId="create-pod-min-business" />);
     const note = within(screen.getByTestId('create-pod-min-business'));
-    expect(note.getByText('This venue usually expects')).toBeInTheDocument();
+    expect(note.getByText('Minimum business for this venue')).toBeInTheDocument();
     expect(note.getAllByRole('listitem').map((item) => item.textContent)).toEqual(['Rs 200 per guest', 'Rs 400 per hour']);
-    expect(note.getByText(/A guide from the venue — your offer can be different\./)).toBeInTheDocument();
+    expect(note.getByText(/Your offer must be at least the amount for the way you pay\./)).toBeInTheDocument();
   });
 });

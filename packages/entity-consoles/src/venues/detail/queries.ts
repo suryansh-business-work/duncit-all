@@ -262,7 +262,7 @@ export interface VenueSettings {
 export interface VenueOfferSettings {
   min_guests: number;
   response_hours: number;
-  /** One amount per basis (a guide hosts see, never a rule); absent on an older record. */
+  /** One amount per basis (the least a host may offer on it); absent on an older record. */
   min_business?: { model: string; amount: number }[] | null;
 }
 

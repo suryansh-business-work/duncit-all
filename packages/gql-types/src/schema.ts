@@ -44425,7 +44425,7 @@ export type Venue = {
   lng?: Maybe<Scalars['Float']['output']>;
   locality: Scalars['String']['output'];
   location_id?: Maybe<Scalars['ID']['output']>;
-  /** The business the venue hopes each booking brings (a guide Create Pod shows once it is picked; never enforced). */
+  /** The least the venue takes per booking on each pricing basis (Create Pod's offer step shows it; an offer below it is refused). */
   offer_min_business: Array<VenueMinBusiness>;
   /** The fewest guests a host's booking offer may be for: the venue's own setting, else the platform default. */
   offer_min_guests: Scalars['Int']['output'];
@@ -45369,7 +45369,7 @@ export type VenueLeadTablePage = {
   total: Scalars['Int']['output'];
 };
 
-/** Roughly the business a venue hopes one booking brings on one pricing basis (rupees). A guide for hosts, never enforced. */
+/** The least a venue takes from one booking on one pricing basis (rupees). A host's offer below it is refused (BELOW_MIN_BUSINESS). */
 export type VenueMinBusiness = {
   __typename?: 'VenueMinBusiness';
   amount: Scalars['Float']['output'];
@@ -45463,7 +45463,7 @@ export type VenueOfferQuoteResult = {
 /** A venue's own terms for hosts' booking offers. 0 = the platform's default (Admin settings). */
 export type VenueOfferSettings = {
   __typename?: 'VenueOfferSettings';
-  /** The business the venue hopes for, one per pricing basis (per guest, per hour, per booking). */
+  /** The least the venue takes, one per pricing basis (per guest, per hour, per booking). */
   min_business: Array<VenueMinBusiness>;
   /** The fewest guests a host may offer to book for. */
   min_guests: Scalars['Int']['output'];

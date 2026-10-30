@@ -129,11 +129,11 @@ export const freeVenueOfferDemo = defineDemo<{ offer: OfferTerms; podIsFree: boo
   ),
 });
 
-/** What a picked venue usually expects from one booking, as Create Pod shows it. */
+/** The least a picked venue takes from one booking, as Create Pod's offer step shows it. */
 export const venueMinBusinessDemo = defineDemo<{ rows: VenueMinBusinessRow[] }>({
   id: 'venue-min-business',
-  title: 'Booking offers: the business a venue hopes each booking brings',
-  note: 'The venue lists one amount per basis in its Booking offers settings. Remove every row and nothing is drawn; a basis this client does not know is left out.',
+  title: 'Booking offers: the least a venue takes per booking',
+  note: 'The venue lists one amount per basis in its Booking offers settings; a host offer below the amount on its basis is refused. Remove every row and nothing is drawn; a basis this client does not know is left out.',
   mock: {
     rows: [
       { model: 'PER_GUEST', amount: 200 },

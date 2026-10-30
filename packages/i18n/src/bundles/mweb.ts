@@ -2431,6 +2431,9 @@ export const MWEB_BUNDLE: NestedCatalogue = {
         'Where and what are you playing — location, category and the club it belongs to.',
       step3Subtitle: 'Pick a partner venue and lock in your date & time from its calendar.',
       step4Subtitle: 'Decide how much to charge, then review and publish your pod.',
+      // The offer step a physical pod walks between Venue & Slot and Pricing.
+      stepOfferTitle: 'Offer for Venue',
+      stepOfferSubtitle: 'Say how you will pay the venue and what you need from it.',
       back: 'Back',
       next: 'Next',
       createPod: 'Create Pod',

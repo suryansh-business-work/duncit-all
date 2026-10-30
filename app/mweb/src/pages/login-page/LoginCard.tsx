@@ -5,7 +5,6 @@ import AuthScreenFrame from '../../components/AuthScreenFrame';
 import { type LoginSubmitValues } from '../../forms/login';
 import { useTranslation } from '../../i18n/useTranslation';
 import LoginOtpStep from './LoginOtpStep';
-import LoginPodPreview from './LoginPodPreview';
 import type { OtpLogin } from './useOtpLogin';
 import LoginMethodStep from './LoginMethodStep';
 import LoginPasswordStep from './LoginPasswordStep';
@@ -55,8 +54,6 @@ export default function LoginCard({
   return (
     <AuthScreenFrame center>
       <Stack data-testid="login-screen" spacing={3}>
-        {/* The pod they were heading to, when the pod page sent them here. */}
-        <LoginPodPreview />
         <AuthHeading
           title={headingTitle}
           accent={headingAccent}

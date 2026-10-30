@@ -17,7 +17,6 @@ import { FreeVenueNote } from '../../FreeVenueNote';
 import type { FreePodVenueNotice, SpotsBounds } from '@duncit/utils';
 
 import { VenueOfferPicker } from './VenueOfferPicker';
-import type { VenueQuoteState } from './VenueQuoteCard';
 import { VenueSpaceCard } from './VenueSpaceCard';
 import { spaceSlots, venueMapQuery, venueSpaces, type VenueSpace } from './venueSpaces';
 
@@ -26,8 +25,6 @@ interface Props {
   venues: CreatePodVenue[];
   /** Ids of the venues that match the selected club — the venue picker is scoped to these. */
   clubVenueIds: Set<string>;
-  /** The server's quote for the picked window (the stepper owns it). */
-  venueQuote: VenueQuoteState;
   currencySymbol: string;
   /** A Pod Request's venue — always offered, whatever club or city is picked. */
   pinnedVenueId?: string;
@@ -43,15 +40,14 @@ interface Props {
 
 const DIRTY = { shouldDirty: true, shouldValidate: true } as const;
 
-/** Step 3 — pick a venue partner in the pod's city and send it an offer for a
- * window (physical), or meeting details + schedule (virtual). A Pod Request's
- * pod keeps the slot that request holds. The offered window sets the pod's
- * date/time. mWeb twin. */
+/** Step 3 — pick a venue partner in the pod's city, its space, the guests and
+ * the window to offer it (physical), or meeting details + schedule (virtual). A
+ * Pod Request's pod keeps the slot that request holds. The offered window sets
+ * the pod's date/time; the offer itself is Step 4 (VenueOfferStep). mWeb twin. */
 export function VenueSlotStep({
   form,
   venues,
   clubVenueIds,
-  venueQuote,
   currencySymbol,
   pinnedVenueId,
   venueNotice,
@@ -165,7 +161,6 @@ export function VenueSlotStep({
           form={form}
           venueId={selectedVenue.id}
           spaceLabel={selectedSpace.label}
-          quote={venueQuote}
           currencySymbol={currencySymbol}
           spots={spots}
           minGuests={offerMinGuests}

@@ -7,10 +7,10 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 
 /**
- * "This venue usually expects": the business the picked venue hopes one
- * booking brings — "₹200 per guest", "₹5,000 per booking" — as a guide for the
- * host's offer, never a rule. Nothing when the venue names none. mWeb twin:
- * VenueMinBusinessNote.
+ * The picked venue's minimum business — "₹200 per guest", "₹5,000 per
+ * booking" — at the top of the offer step: an offer below the amount on the
+ * basis the host pays on cannot be sent. Nothing when the venue names none.
+ * mWeb twin: VenueMinBusinessNote.
  */
 export function VenueMinBusinessNote({
   rows,

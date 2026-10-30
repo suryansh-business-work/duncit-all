@@ -1,12 +1,13 @@
 import { formResolver } from '../../../utils/form-resolver';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { adjacentCreatePodStep, shownCreatePodStep, venueOfferFloor } from '@duncit/utils';
 
 import { useTranslation } from '@/hooks/useTranslation';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 import { useSmartIncentiveSettings } from '@/hooks/useSmartIncentiveSettings';
+import { offerMoney } from '@/components/venue-offer/offer-format';
 import {
-  STEP_TITLE_KEYS,
   hostCategoryKeyOf,
   makeCreatePodSchema,
   serializeDraft,
@@ -24,6 +25,7 @@ type CreatePodFormArgs = Pick<
   | 'hostCategories'
   | 'onSaveDraft'
   | 'clubAdmin'
+  | 'venues'
 >;
 
 /** The stepper's form, step/busy/error state, and the host's rolling autosave. */
@@ -34,6 +36,7 @@ export function useCreatePodForm({
   hostCategories,
   onSaveDraft,
   clubAdmin,
+  venues,
 }: CreatePodFormArgs) {
   const { t } = useTranslation();
   // Step 4 shows the Smart Incentive only while Loyalty's programme is known to
@@ -43,9 +46,19 @@ export function useCreatePodForm({
   const smartIncentiveMaxPct = smartIncentive.enabled ? smartIncentive.maxPct : null;
   // The schema cannot call `t` at module scope, so it is built here from the
   // reader's own catalogue — the validation messages are copy like any other.
+  // An offer below the picked venue's business amount on its basis is held on
+  // the offer step; the server refuses it too (BELOW_MIN_BUSINESS).
   const schema = useMemo(
-    () => makeCreatePodSchema(t, smartIncentiveMaxPct),
-    [t, smartIncentiveMaxPct],
+    () =>
+      makeCreatePodSchema(t, smartIncentiveMaxPct, (values) =>
+        venueOfferFloor(
+          venues.find((venue) => venue.id === values.venue_id)?.offer_min_business,
+          values.venue_offer_model,
+          t,
+          offerMoney,
+        ),
+      ),
+    [t, smartIncentiveMaxPct, venues],
   );
   const form = useForm<CreatePodFormValues, any, CreatePodFormValues>({
     resolver: formResolver<CreatePodFormValues>(schema),
@@ -54,7 +67,8 @@ export function useCreatePodForm({
   });
   const showProducts = useFeatureFlag('is_product_visible');
 
-  const [step, setStep] = useState(Math.min(initialStep, STEP_TITLE_KEYS.length - 1));
+  // A draft saved on a step this pod no longer walks resumes on the next one.
+  const [step, setStep] = useState(() => shownCreatePodStep(initialStep, initialValues));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [blocked, setBlocked] = useState<BlockedViolation[]>([]);
@@ -115,8 +129,10 @@ export function useCreatePodForm({
     // categories and so let a category-less host straight through. A free
     // venue or a free pod adds its justification to the step that shows it.
     if (!(await form.trigger(stepFieldsFor(step, form.getValues())))) return;
-    goTo(step + 1);
+    // A pod that sends no venue offer passes over the offer step.
+    goTo(adjacentCreatePodStep(step, 1, form.getValues()));
   };
+  const back = () => goTo(adjacentCreatePodStep(step, -1, form.getValues()));
 
   return {
     t,
@@ -136,6 +152,7 @@ export function useCreatePodForm({
     persist,
     goTo,
     next,
+    back,
   };
 }
 

@@ -246,6 +246,10 @@ export const podTypeDefs = /* GraphQL */ `
     ticket_discount_enabled: Boolean!
     "The multi-ticket discount tiers, ascending. Empty when the discount is off; one ticket always pays full price."
     ticket_discount_tiers: [PodTicketDiscountTier!]!
+    "The host offers members who stay on the pod page without booking a one-time discount (Smart Incentive). Always false on a free or zero-priced pod."
+    smart_incentive_enabled: Boolean!
+    "Percent off the ticket money that offer gives (after any multi-ticket discount); 0 when switched off."
+    smart_incentive_pct: Int!
     is_active: Boolean!
     """
     An admin took this pod off every member-facing surface. Not a cancellation:
@@ -434,6 +438,10 @@ export const podTypeDefs = /* GraphQL */ `
     "Offer a multi-ticket discount. Ignored (stored off) on a free or zero-priced pod."
     ticket_discount_enabled: Boolean
     ticket_discount_tiers: [PodTicketDiscountTierInput!]
+    "Offer a Smart Incentive. Ignored (stored off) on a free or zero-priced pod."
+    smart_incentive_enabled: Boolean
+    "Whole percent, 1 up to Loyalty's maximum. Required when smart_incentive_enabled is true."
+    smart_incentive_pct: Int
     is_active: Boolean
   }
 
@@ -481,6 +489,9 @@ export const podTypeDefs = /* GraphQL */ `
     "Offer a multi-ticket discount. Cleared when the pod becomes free or zero-priced."
     ticket_discount_enabled: Boolean
     ticket_discount_tiers: [PodTicketDiscountTierInput!]
+    "Offer a Smart Incentive — omit both fields to leave it alone. Cleared when the pod becomes free or zero-priced."
+    smart_incentive_enabled: Boolean
+    smart_incentive_pct: Int
     is_active: Boolean
   }
 
@@ -534,6 +545,9 @@ export const podTypeDefs = /* GraphQL */ `
     "Offer a multi-ticket discount — omit both discount fields to leave it alone."
     ticket_discount_enabled: Boolean
     ticket_discount_tiers: [PodTicketDiscountTierInput!]
+    "Offer a Smart Incentive — omit both fields to leave it alone."
+    smart_incentive_enabled: Boolean
+    smart_incentive_pct: Int
   }
 
   "Full edit + resubmission of a venue-rejected (DECLINED) pod. Booking state, hosts and club stay server-managed."
@@ -572,6 +586,9 @@ export const podTypeDefs = /* GraphQL */ `
     "Offer a multi-ticket discount. Cleared when the pod becomes free or zero-priced."
     ticket_discount_enabled: Boolean
     ticket_discount_tiers: [PodTicketDiscountTierInput!]
+    "Offer a Smart Incentive — omit both fields to leave it alone. Cleared when the pod becomes free or zero-priced."
+    smart_incentive_enabled: Boolean
+    smart_incentive_pct: Int
   }
 
   "A free pod, a pod whose venue was asked for free, or both — as Duncit audits it (Pods console > Free Arrangements)."

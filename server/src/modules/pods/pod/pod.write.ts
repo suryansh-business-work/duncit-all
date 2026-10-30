@@ -59,6 +59,7 @@ import {
   applyPodEditCore,
   applyRerouteState,
   applyResubmitPhysicalVenue,
+  applySmartIncentiveForUpdate,
   applyTicketDiscountForUpdate,
   claimRerouteSlot,
   holdOrBookForResubmit,
@@ -66,6 +67,7 @@ import {
   HOST_RESUBMIT_BLOCKED_FIELDS,
   meetingFieldsForCreate,
   prepareSlotReroute,
+  smartIncentiveForCreate,
   snapshotBooking,
   ticketDiscountForCreate,
 } from './pod.edit';
@@ -148,6 +150,7 @@ export const podWriteMethods = {
       source: audit?.source ?? 'ADMIN',
     });
     const ticketDiscount = await ticketDiscountForCreate(input);
+    const smartIncentive = await smartIncentiveForCreate(input);
 
     const { slotDoc, needsVenueApproval } = await resolveSlotForCreate(
       input,
@@ -245,6 +248,7 @@ export const podWriteMethods = {
         product_requests: productRequests,
         product_cost_total: productRequests.reduce((sum, item) => sum + item.total_cost, 0),
         ...ticketDiscount,
+        ...smartIncentive,
         // A pod awaiting the venue's answer stays offline until it is accepted.
         is_active: venueState.pending ? false : input.is_active ?? true,
         venue_approval_status: venueState.approval,
@@ -556,8 +560,10 @@ export const podWriteMethods = {
       doc.no_of_spots = Math.floor(Number(input.no_of_spots) || 0);
     }
     // The host may set or change the multi-ticket discount on a live pod; it is
-    // judged on the spots just applied above.
+    // judged on the spots just applied above. Likewise the Smart Incentive —
+    // an offer a member already unlocked keeps its frozen percentage.
     await applyTicketDiscountForUpdate(doc, input);
+    await applySmartIncentiveForUpdate(doc, input);
     await doc.save();
     await podAuditService.record({ pod: doc, action: 'UPDATE', source: 'HOST', actorUserId: userId, before });
 

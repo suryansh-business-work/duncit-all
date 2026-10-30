@@ -60,6 +60,10 @@ export interface InvoiceData {
   ticket_discount_amount?: number;
   /** Tickets the discount covered — the booking's seats. */
   ticket_discount_tickets?: number;
+  // The member's Smart Incentive, frozen on the payment like the discount
+  // above and printed beside it. Optional the same way; zero prints nothing.
+  smart_incentive_pct?: number;
+  smart_incentive_amount?: number;
   // Dynamic branding pulled from Finance → Invoice Management. All optional so
   // older callers keep working; the generator renders only what is provided.
   invoice_label?: string;
@@ -155,6 +159,17 @@ function ticketDiscountRow(
   const pct = Number(data.ticket_discount_pct) || 0;
   const tickets = Number(data.ticket_discount_tickets) || 0;
   return { label: `Multi-ticket discount (${pct}% on ${tickets} tickets)`, value: `- ${fmt(amount)}` };
+}
+
+/** The Smart Incentive's totals row, or null when the payment had none. */
+function smartIncentiveRow(
+  data: InvoiceData,
+  fmt: (n: number) => string
+): { label: string; value: string } | null {
+  const amount = Math.max(0, Number(data.smart_incentive_amount) || 0);
+  if (amount <= 0) return null;
+  const pct = Number(data.smart_incentive_pct) || 0;
+  return { label: `Smart Incentive (${pct}% off)`, value: `- ${fmt(amount)}` };
 }
 
 /** The brand header band across the top of the page: logo mark, business name and the invoice label. */
@@ -273,8 +288,10 @@ export function drawInvoice(
   };
   // Above the tax lines on purpose: the discount came off the ticket price
   // before GST was worked out, so the block reads discount → taxable → GST → paid.
-  const discountRow = ticketDiscountRow(data, fmt);
-  if (discountRow) totalsRow(discountRow.label, discountRow.value);
+  // Same for the Smart Incentive, in the order checkout took them off.
+  for (const row of [ticketDiscountRow(data, fmt), smartIncentiveRow(data, fmt)]) {
+    if (row) totalsRow(row.label, row.value);
+  }
   totalsRow('Taxable value', fmt(data.subtotal));
   totalsRow(`GST (${data.gst_pct}%)`, fmt(data.gst_amount));
   // After the taxes, before the total: taxable + GST + round off = total paid.

@@ -39,6 +39,8 @@ const TRACKED_FIELDS = [
   'pod_hosts_id',
   'ticket_discount_enabled',
   'ticket_discount_tiers',
+  'smart_incentive_enabled',
+  'smart_incentive_pct',
   'free_justification',
   'venue_free_justification',
 ] as const;

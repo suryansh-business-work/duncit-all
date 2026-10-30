@@ -338,6 +338,12 @@ export const financeTypeDefs = /* GraphQL */ `
     """
     ticket_discount_total: Float!
     """
+    Smart Incentive discounts given across this pod's successful bookings. They
+    come off the ticket money the same way, so collected_total is already lower
+    by this much — the host funds them, since settlement runs on what was collected.
+    """
+    smart_incentive_total: Float!
+    """
     Money handed back to buyers on this pod. A cancelled pod refunds every
     booking, so collected_total is 0 for it — this is what explains that zero
     rather than leaving it looking like missing money.

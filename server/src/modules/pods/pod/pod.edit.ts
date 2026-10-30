@@ -14,6 +14,8 @@ import {
 } from './pod.ticketDiscount';
 import { venueSlotService } from '@modules/venues/venueSlot/venueSlot.service';
 import { settingsService } from '@modules/platform/settings/settings.service';
+import { smartIncentiveSettingsService } from '@modules/engagement/smartIncentive/smartIncentive.settings.service';
+import { assertSmartIncentivePct } from '@modules/engagement/smartIncentive/smartIncentive.rules';
 import type { PodAuditSource } from '@modules/pods/podAudit/podAudit.model';
 import { logs } from '@observability/log';
 import {
@@ -180,6 +182,68 @@ export async function applyTicketDiscountForUpdate(doc: any, input: any) {
   doc.ticket_discount_enabled = true;
 }
 
+type PodSmartIncentiveFields = {
+  smart_incentive_enabled: boolean;
+  smart_incentive_pct: number;
+};
+
+/** What a create or edit input may say about the Smart Incentive, and the price it depends on. */
+type SmartIncentiveInput = {
+  smart_incentive_enabled?: boolean | null;
+  smart_incentive_pct?: number | null;
+  pod_type?: PodType | null;
+  pod_amount?: number | null;
+};
+
+/** The loaded pod an edit judges and writes the Smart Incentive on. */
+type SmartIncentiveDoc = PodSmartIncentiveFields & { pod_type: PodType; pod_amount?: number | null };
+
+const SMART_INCENTIVE_OFF: PodSmartIncentiveFields = { smart_incentive_enabled: false, smart_incentive_pct: 0 };
+
+/**
+ * The Smart Incentive a new pod is written with: off (0%) on a free or
+ * zero-priced pod or when not asked for, otherwise the host's percentage
+ * checked against Loyalty > Smart Incentive's maximum. Stored even while the
+ * programme is switched off — it applies again the moment it is back on.
+ */
+export async function smartIncentiveForCreate(input: SmartIncentiveInput): Promise<PodSmartIncentiveFields> {
+  if (!input.smart_incentive_enabled || !input.pod_type || !podHasTicketPrice(input.pod_type, input.pod_amount)) {
+    return SMART_INCENTIVE_OFF;
+  }
+  const { max_discount_pct } = await smartIncentiveSettingsService.get();
+  return {
+    smart_incentive_enabled: true,
+    smart_incentive_pct: assertSmartIncentivePct(input.smart_incentive_pct, max_discount_pct),
+  };
+}
+
+/**
+ * Re-applies the Smart Incentive after an edit has written the pod's type and
+ * price onto `doc`, the same way as the multi-ticket discount above:
+ *
+ * - Neither the incentive nor type/price in the input: nothing to do.
+ * - Switched off, or the pod is now free / zero-priced: cleared.
+ * - A percentage that differs from the stored one (or the incentive being
+ *   switched on): checked against Loyalty's current maximum.
+ * - The stored percentage left as it is: kept, so lowering the maximum never
+ *   blocks an unrelated edit to a pod that already offers more.
+ */
+export async function applySmartIncentiveForUpdate(doc: SmartIncentiveDoc, input: SmartIncentiveInput) {
+  const touched = input.smart_incentive_enabled !== undefined || input.smart_incentive_pct !== undefined;
+  const priceTouched = input.pod_type !== undefined || input.pod_amount !== undefined;
+  if (!touched && !priceTouched) return;
+  const enabled = input.smart_incentive_enabled ?? doc.smart_incentive_enabled;
+  if (!enabled || !podHasTicketPrice(doc.pod_type, doc.pod_amount)) {
+    Object.assign(doc, SMART_INCENTIVE_OFF);
+    return;
+  }
+  const next = input.smart_incentive_pct ?? doc.smart_incentive_pct;
+  if (doc.smart_incentive_enabled && Number(next) === Number(doc.smart_incentive_pct)) return;
+  const { max_discount_pct } = await smartIncentiveSettingsService.get();
+  doc.smart_incentive_pct = assertSmartIncentivePct(next, max_discount_pct);
+  doc.smart_incentive_enabled = true;
+}
+
 /** Meeting details are normalized on a virtual pod and cleared on a physical one. */
 function applyMeetingFieldsForUpdate(doc: any, input: any, nextMode: PodMode) {
   if (nextMode === 'VIRTUAL') {
@@ -285,8 +349,9 @@ export async function applyPodEditCore(doc: any, input: any) {
   for (const f of fields) {
     if (input[f] !== undefined) doc[f] = input[f];
   }
-  // After the loop: the discount is judged on the type, price and spots it wrote.
+  // After the loop: the discounts are judged on the type, price and spots it wrote.
   await applyTicketDiscountForUpdate(doc, input);
+  await applySmartIncentiveForUpdate(doc, input);
   applyMeetingFieldsForUpdate(doc, input, nextMode);
   applyDatesForUpdate(doc, input);
 }

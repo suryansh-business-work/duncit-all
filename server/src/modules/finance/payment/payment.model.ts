@@ -102,6 +102,13 @@ export interface IPayment extends Document {
   ticket_discount_amount: number;
   /** The percentage of the tier that produced `ticket_discount_amount` (0 when none). */
   ticket_discount_pct: number;
+  /** The member's unlocked Smart Incentive, frozen at checkout: rupees taken off
+   * the ticket money AFTER the multi-ticket discount and before the coupon,
+   * coins and GST, so `total` is already net of it — host-funded by
+   * construction, exactly like the multi-ticket discount. 0 when none applied. */
+  smart_incentive_amount: number;
+  /** The offer's percentage that produced `smart_incentive_amount` (0 when none). */
+  smart_incentive_pct: number;
   status: PaymentStatus;
   gateway: string;
   gateway_ref: string | null;
@@ -193,6 +200,8 @@ const paymentSchema = new Schema<IPayment>(
     coins_redeemed: { type: Number, default: 0, min: 0 },
     ticket_discount_amount: { type: Number, default: 0, min: 0 },
     ticket_discount_pct: { type: Number, default: 0, min: 0, max: 99 },
+    smart_incentive_amount: { type: Number, default: 0, min: 0 },
+    smart_incentive_pct: { type: Number, default: 0, min: 0, max: 90 },
     status: { type: String, enum: ['PENDING', 'SUCCESS', 'FAILED', 'REFUNDED'], default: 'PENDING' },
     gateway: { type: String, default: 'DUMMY' },
     gateway_ref: { type: String, default: null },
@@ -244,6 +253,14 @@ paymentSchema.index(
 paymentSchema.index(
   { created_at: -1 },
   { name: 'round_off_created_at', partialFilterExpression: { round_off: { $gt: 0 } } }
+);
+
+// Loyalty > Smart Incentive's conversions: only the bookings an unlocked offer
+// priced, by month. PARTIAL like the round-off index above, and for the same
+// reason — they are a slice of every payment and the dashboard filters on it.
+paymentSchema.index(
+  { created_at: -1 },
+  { name: 'smart_incentive_created_at', partialFilterExpression: { smart_incentive_amount: { $gt: 0 } } }
 );
 
 // The dates of one multi-date booking of a (now retired) recurring pod, found

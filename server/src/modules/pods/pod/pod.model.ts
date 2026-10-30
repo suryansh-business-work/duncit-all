@@ -227,6 +227,12 @@ export interface IPod extends Document {
   ticket_discount_enabled: boolean;
   /** Strictly increasing in both tickets and discount; empty when switched off. */
   ticket_discount_tiers: IPodTicketDiscountTier[];
+  /** The host offers members who linger on the pod page without booking a
+   * one-time discount (Loyalty > Smart Incentive). Always false (with 0%) on a
+   * FREE or zero-priced pod. Rules: engagement/smartIncentive. */
+  smart_incentive_enabled: boolean;
+  /** Percent off the ticket money the offer gives; 0 when switched off. */
+  smart_incentive_pct: number;
   liked_user_ids: Types.ObjectId[];
   comments: IPodComment[];
   completed_at?: Date | null;
@@ -407,6 +413,8 @@ const podSchema = new Schema<IPod>(
     product_cost_total: { type: Number, default: 0, min: 0 },
     ticket_discount_enabled: { type: Boolean, default: false },
     ticket_discount_tiers: { type: [ticketDiscountTierSchema], default: [] },
+    smart_incentive_enabled: { type: Boolean, default: false },
+    smart_incentive_pct: { type: Number, default: 0, min: 0, max: 90 },
     liked_user_ids: [{ type: Schema.Types.ObjectId, ref: 'User', default: [] }],
     comments: { type: [commentSchema], default: [] },
     completed_at: { type: Date, default: null, index: true },
@@ -447,6 +455,12 @@ podSchema.index({ deleted_at: 1, is_active: 1, pod_date_time: -1 });
 // which ORs host and attendee membership — each side needs its own index.
 podSchema.index({ pod_hosts_id: 1, pod_date_time: -1 });
 podSchema.index({ pod_attendees: 1 });
+// Loyalty > Smart Incentive's dashboard reads only the opted-in pods. PARTIAL:
+// they are a slice of every pod, and the dashboard's filter is this predicate.
+podSchema.index(
+  { smart_incentive_enabled: 1 },
+  { name: 'smart_incentive_opted_in', partialFilterExpression: { smart_incentive_enabled: true } }
+);
 
 // Soft-delete: every read automatically excludes deleted pods (deleted_at set),
 // so discovery/listing/metrics never surface a deleted pod. Callers that must

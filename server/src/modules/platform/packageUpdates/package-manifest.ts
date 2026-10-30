@@ -3555,6 +3555,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
       { name: "@duncit/forms", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/logs", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/media-picker", range: "workspace:*", kind: "dependencies" },
+      { name: "@duncit/regex", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/rich-text", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/shell", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/table", range: "workspace:*", kind: "dependencies" },

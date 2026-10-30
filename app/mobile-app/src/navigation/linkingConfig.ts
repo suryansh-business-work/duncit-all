@@ -143,6 +143,7 @@ export const linkingConfig: NonNullable<LinkingOptions<RootStackParamList>['conf
     DuncitCoin: 'duncit-coin',
     HappeningNearby: { path: 'happening-nearby', parse: { initialIndex: Number } },
     Faqs: 'faqs',
+    Tutorials: 'learnings',
     Badges: 'badges',
     TourGuide: 'tour-guide',
     PodPlans: 'pod-plans',

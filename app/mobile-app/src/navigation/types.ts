@@ -169,6 +169,8 @@ export type RootStackParamList = {
   Referral: undefined;
   DuncitCoin: undefined;
   Faqs: undefined;
+  /** Filters ride as the same query names mWeb uses (q, topic, lang) plus v, a tutorial to open on. */
+  Tutorials: { q?: string; topic?: string; lang?: string; v?: string } | undefined;
   Badges: undefined;
   TourGuide: undefined;
   PodPlans: undefined;

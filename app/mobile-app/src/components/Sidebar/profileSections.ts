@@ -27,6 +27,7 @@ export const MENU_DESTINATIONS: Readonly<Record<ProfileMenuKey, Destination>> = 
   support: { route: 'Support', icon: 'support-agent' },
   help: { route: 'Support', icon: 'support-agent' },
   faqs: { route: 'Faqs', icon: 'help-outline' },
+  tutorials: { route: 'Tutorials', icon: 'ondemand-video' },
   leaderboard: { route: 'Leaderboard', icon: 'emoji-events' },
   badges: { route: 'Badges', icon: 'military-tech' },
   gigs: { route: 'GigJobs', icon: 'work-outline' },

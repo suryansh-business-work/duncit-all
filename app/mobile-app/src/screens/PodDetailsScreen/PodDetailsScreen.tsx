@@ -178,6 +178,7 @@ export function PodDetailsScreen() {
           viewerPhoto={viewerPhoto}
           setCommentDelta={setCommentDelta}
           locationPrompt={locationPrompt}
+          currency={finance.currency}
         />
       ) : null}
     </YStack>

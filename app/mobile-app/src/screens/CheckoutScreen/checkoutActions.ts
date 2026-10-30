@@ -14,8 +14,9 @@ export function checkoutActions(s: CheckoutState) {
     s.setApplyingCoupon(true);
     s.setCouponError(null);
     try {
-      // Priced on the post-tier ticket money, exactly as the server evaluates it.
-      const preview = await checkout.previewCoupon(code, s.ticket.net);
+      // Priced on the ticket money left after the tier and the unlocked Smart
+      // Incentive, exactly as the server evaluates it.
+      const preview = await checkout.previewCoupon(code, s.incentive.net);
       if (preview?.ok) s.setCoupon(preview);
       else {
         s.setCoupon(null);

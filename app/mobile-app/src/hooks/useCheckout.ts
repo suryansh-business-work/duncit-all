@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { RentalSelection } from '@duncit/utils';
 import type { ResultOf } from '@graphql-typed-document-node/core';
+import { logs } from '@duncit/logs';
 import {
   classifyConfirmedPayment,
   confirmPaymentAfterTransportFailure,
@@ -17,6 +18,7 @@ import {
   MobilePublicFinanceDocument,
   MobileVerifyRazorpayDocument,
 } from '@/graphql/checkout';
+import { PodSmartIncentiveDocument } from '@/graphql/details';
 import type { CheckoutBillingInput } from '@/generated/graphql/graphql';
 import { graphqlRequest } from '@/services/graphql.client';
 import type { CheckoutContact, CheckoutFormValues, CheckoutMainAddress } from '@/forms/checkout';
@@ -33,6 +35,10 @@ export type { CouponPreview } from '@/hooks/checkoutRequests';
 
 export type FinanceSettings = ResultOf<typeof MobilePublicFinanceDocument>['publicFinanceSettings'];
 export type CheckoutPod = ResultOf<typeof MobileCheckoutPodDocument>['pod'];
+/** The buyer's Smart Incentive on the pod; null when there is none to price. */
+export type CheckoutSmartIncentive = ResultOf<
+  typeof PodSmartIncentiveDocument
+>['podSmartIncentive'];
 export type CheckoutMe = ResultOf<typeof MobileCheckoutMeDocument>['me'];
 export type CheckoutPayment = ResultOf<typeof MobileDummyCheckoutDocument>['dummyCheckout'];
 export type RazorpayOrder = ResultOf<
@@ -55,6 +61,27 @@ export type VerifiedPayment = ResultOf<
 >['verifyRazorpayPayment'];
 
 const CHECKOUT_URL = 'duncit-mobile://checkout';
+
+/**
+ * The pod being booked and, when its host offers one, the buyer's Smart
+ * Incentive on it — read together, so the bill (and a coupon priced on it)
+ * never starts from a price the offer is about to change. A failed offer read
+ * is logged and prices the booking without it; the server re-prices with the
+ * offer the buyer unlocked either way.
+ */
+async function loadCheckoutPod(
+  podId: string,
+): Promise<{ pod: CheckoutPod; smartIncentive: CheckoutSmartIncentive }> {
+  const { pod } = await graphqlRequest(MobileCheckoutPodDocument, { id: podId }, { auth: true });
+  if (!pod?.smart_incentive_enabled) return { pod, smartIncentive: null };
+  const smartIncentive = await graphqlRequest(PodSmartIncentiveDocument, { podId }, { auth: true })
+    .then((data) => data.podSmartIncentive ?? null)
+    .catch((error: unknown) => {
+      logs.mobileApp.warn('checkout', 'smartIncentive', { pod_id: podId, error });
+      return null;
+    });
+  return { pod, smartIncentive };
+}
 
 /**
  * Verify the Razorpay signature — and, when THAT call dies in transport rather
@@ -187,6 +214,7 @@ export function buildCheckoutBilling(
 export function useCheckout(podId: string, seats = 1) {
   const [finance, setFinance] = useState<FinanceSettings | null>(null);
   const [pod, setPod] = useState<CheckoutPod>(null);
+  const [smartIncentive, setSmartIncentive] = useState<CheckoutSmartIncentive>(null);
   // The buyer's contact and main address are the user info already in the
   // store — a checkout visit does not ask for the account again (mWeb twin).
   const me: CheckoutMe = useMeStore((s) => s.data?.me ?? null);
@@ -207,9 +235,11 @@ export function useCheckout(podId: string, seats = 1) {
         .then((d) => active && setAvailableCoupons(d.availableCouponsForPod))
         .catch(() => undefined),
       podId
-        ? graphqlRequest(MobileCheckoutPodDocument, { id: podId }, { auth: true }).then(
-            (d) => active && setPod(d.pod),
-          )
+        ? loadCheckoutPod(podId).then((loaded) => {
+            if (!active) return;
+            setPod(loaded.pod);
+            setSmartIncentive(loaded.smartIncentive);
+          })
         : Promise.resolve(),
     ])
       .catch(() => undefined)
@@ -290,6 +320,7 @@ export function useCheckout(podId: string, seats = 1) {
   return {
     finance,
     pod,
+    smartIncentive,
     me,
     initialValues,
     availableCoupons,

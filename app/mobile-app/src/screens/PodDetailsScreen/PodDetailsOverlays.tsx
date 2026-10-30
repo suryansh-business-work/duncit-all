@@ -4,6 +4,8 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { PodBookingBar } from '@/components/details/PodBookingBar';
 import { PodCommentsSheet } from '@/components/details/pod-comments';
+import { SmartIncentiveOfferDialog } from '@/components/details/SmartIncentiveOfferDialog';
+import { useSmartIncentiveOffer } from '@/components/details/useSmartIncentiveOffer';
 import { LocationMismatchDialog } from '@/components/LocationMismatchDialog';
 import type { PodDetail, PodMembershipState, usePodDetails } from '@/hooks/useDetails';
 import type { useLocationMismatch } from '@/hooks/useLocationMismatch';
@@ -35,6 +37,8 @@ interface PodDetailsOverlaysProps {
   viewerPhoto: PodDetailsData['viewerPhoto'];
   setCommentDelta: Dispatch<SetStateAction<number>>;
   locationPrompt: ReturnType<typeof useLocationMismatch>;
+  /** The admin's currency symbol, for the Smart Incentive popup's prices. */
+  currency: string;
 }
 
 /** The booking bar and every sheet/dialog floating over the loaded pod. */
@@ -52,6 +56,7 @@ export function PodDetailsOverlays({
   viewerPhoto,
   setCommentDelta,
   locationPrompt,
+  currency,
 }: Readonly<PodDetailsOverlaysProps>) {
   // A free pod with items to rent is paid for: the rentals go through checkout.
   const { picks } = usePodRentalPicks(pod.id);
@@ -64,6 +69,22 @@ export function PodDetailsOverlays({
         if (await clash.check([pod.id])) handler();
       })(),
     );
+  const onCheckout = guard(
+    freeJoin
+      ? () => fireAndForget(actions.onJoinFree())
+      : () => navigation.navigate('Checkout', { podId: pod.id, seats: actions.seats }),
+  );
+  // Counted down only for a signed-in viewer still deciding on a paid pod that
+  // offers it — the same facts the booking bar shows its Book button on.
+  const offer = useSmartIncentiveOffer(
+    pod.id,
+    !!viewerId &&
+      !!pod.smart_incentive_enabled &&
+      !isFree &&
+      !isPodHost &&
+      !membershipState?.is_member &&
+      !membershipState?.backout_in_process,
+  );
   return (
     <>
       <PodBookingBar
@@ -73,12 +94,9 @@ export function PodDetailsOverlays({
         isHost={isPodHost}
         membershipState={membershipState}
         seats={actions.seats}
+        smartIncentivePct={offer.unlockedPct}
         onSeatsChange={actions.setSeats}
-        onCheckout={guard(
-          freeJoin
-            ? () => fireAndForget(actions.onJoinFree())
-            : () => navigation.navigate('Checkout', { podId: pod.id, seats: actions.seats }),
-        )}
+        onCheckout={onCheckout}
         onBackout={() => actions.setBackoutOpen(true)}
         onKeepSpot={actions.openKeepSpot}
         onCancelSpot={() => actions.setCancelSpotOpen(true)}
@@ -98,6 +116,18 @@ export function PodDetailsOverlays({
           setCommentDelta((prev) => prev + delta);
           useExploreStore.getState().bumpComment(pod.id, delta);
         }}
+      />
+      <SmartIncentiveOfferDialog
+        open={offer.dialogOpen}
+        pct={offer.unlockedPct}
+        podAmount={pod.pod_amount}
+        currency={currency}
+        onBook={() => {
+          // Closed first: the clash check may open its own dialog next.
+          offer.closeDialog();
+          onCheckout();
+        }}
+        onClose={offer.closeDialog}
       />
       <BookingClashDialog
         guard={clash}

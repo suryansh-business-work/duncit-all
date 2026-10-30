@@ -207,6 +207,63 @@ export const e2eRunTypeDefs = gql`
   }
 
   """
+  How one scenario ended. SKIPPED is a test a failed hook blocked: it never
+  ran. PENDING is an it.skip somebody wrote.
+  """
+  enum E2eScenarioState {
+    PASSED
+    FAILED
+    PENDING
+    SKIPPED
+  }
+
+  "One it() of one run, as Cypress counted it."
+  type E2eScenarioResult {
+    id: ID!
+    "The leg that ran it, e.g. accounts."
+    suite: String!
+    "The Cypress project, e.g. mweb, partners-app, support, mobile-app."
+    project: String!
+    "The spec file, relative to the project."
+    spec: String!
+    "The describe blocks, then the test's own title."
+    title_path: [String!]!
+    title: String!
+    state: E2eScenarioState!
+    duration_ms: Int
+    "The error as Cypress printed it, cut to 4,000 characters. Empty unless FAILED."
+    error: String!
+  }
+
+  type E2eScenarioResultTablePage {
+    rows: [E2eScenarioResult!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
+  input E2eScenarioResultInput {
+    project: String
+    spec: String!
+    "0 for the first test a spec titles this way, 1 for the second, and so on."
+    ordinal: Int
+    title_path: [String!]!
+    state: E2eScenarioState!
+    duration_ms: Float
+    error: String
+  }
+
+  input ReportE2eScenariosInput {
+    dispatch_id: String
+    workflow_run_id: String
+    suite: String!
+    "Drop the leg's earlier rows first. The first chunk of a report sends it."
+    reset: Boolean
+    "At most 500."
+    scenarios: [E2eScenarioResultInput!]!
+  }
+
+  """
   The nightly schedule and the identity the suite runs as.
 
   time_of_day is wall-clock time in the platform's configured timezone, not the
@@ -547,6 +604,10 @@ export const e2eRunTypeDefs = gql`
   extend type Query {
     "Every e2e run, newest first (Tech portal E2E Tests table)."
     e2eRunsTable(query: TableQueryInput): E2eRunTablePage!
+    "One e2e run, or null when it does not exist."
+    e2eRun(id: ID!): E2eRun
+    "Every scenario one run held. Filter on project, spec, title, state; search titles, spec and error."
+    e2eScenarioResultsTable(run_id: ID!, query: TableQueryInput): E2eScenarioResultTablePage!
     e2eRunSettings: E2eRunSettings!
     "The suites a run can be asked for."
     e2eSuiteCatalogue: [E2eSuite!]!
@@ -604,6 +665,12 @@ export const e2eRunTypeDefs = gql`
     matrix and the final gate all write to ONE row rather than twenty.
     """
     reportE2eRun(input: ReportE2eRunInput!): E2eRun!
+    """
+    CI only: a chunk of one leg's scenarios, upserted, so a retried chunk
+    writes the same rows again. Tech/Super admin only. Answers how many were
+    written.
+    """
+    reportE2eScenarios(input: ReportE2eScenariosInput!): Int!
     """
     Reserve a place in Slack for one suite's recording. Tech/Super admin only.
 

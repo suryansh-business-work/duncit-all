@@ -2,6 +2,7 @@ import type { GraphQLContext } from '@context';
 import { requireRole, TESTS_MANAGER } from '@middleware/rbac';
 import type { TableQueryInput } from '@utils/table-query';
 import { e2eRunService } from './e2eRun.service';
+import { e2eScenarioService, type ReportE2eScenariosInput } from './e2eRun.scenarios';
 import { purgeE2eRunData } from './e2eRun.purge';
 import { latestRunAccountCode } from './e2eRun.codes';
 import { trafficKeyForRun } from './e2eRun.traffic';
@@ -20,6 +21,18 @@ export const e2eRunResolvers = {
     e2eRunsTable: (_p: unknown, args: { query?: TableQueryInput | null }, ctx: GraphQLContext) => {
       requireRole(ctx, E2E_CONSOLE);
       return e2eRunService.table(args.query);
+    },
+    e2eRun: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, E2E_CONSOLE);
+      return e2eRunService.byId(args.id);
+    },
+    e2eScenarioResultsTable: (
+      _p: unknown,
+      args: { run_id: string; query?: TableQueryInput | null },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, E2E_CONSOLE);
+      return e2eScenarioService.table(args.run_id, args.query);
     },
     e2eRunSettings: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       requireRole(ctx, E2E_CONSOLE);
@@ -66,6 +79,10 @@ export const e2eRunResolvers = {
     reportE2eRun: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
       const user = requireRole(ctx, E2E_MANAGE);
       return e2eRunService.report(args.input, user.email ?? user.id);
+    },
+    reportE2eScenarios: (_p: unknown, args: { input: ReportE2eScenariosInput }, ctx: GraphQLContext) => {
+      requireRole(ctx, E2E_MANAGE);
+      return e2eScenarioService.report(args.input);
     },
     e2eVideoUploadAuth: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
       requireRole(ctx, E2E_MANAGE);

@@ -9,6 +9,7 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
+import { Link as RouterLink } from 'react-router';
 import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 import ScenarioClipsList from './ScenarioClipsList';
@@ -107,7 +108,10 @@ export default function RunDetailsDialog({ run, onClose }: Readonly<Props>) {
           <ScenarioClipsList clips={run.scenario_videos} />
         </Stack>
       </DialogContent>
-      <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end', p: 2 }}>
+      <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end', flexWrap: 'wrap', gap: 1, p: 2 }}>
+        <DuncitButton component={RouterLink} to={`/e2e/runs/${run.id}/scenarios`} variant="outlined">
+          {t('tech.e2eScenarios.open')}
+        </DuncitButton>
         {run.workflow_run_url && (
           <Link
             href={run.workflow_run_url}

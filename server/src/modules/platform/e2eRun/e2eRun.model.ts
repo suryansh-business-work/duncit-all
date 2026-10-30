@@ -1,4 +1,4 @@
-import { Schema, model, type Document } from 'mongoose';
+import { Schema, model, type Document, type Types } from 'mongoose';
 
 /**
  * QUEUED is the portal's (or the scheduler's) doing: a run started from here
@@ -288,6 +288,67 @@ e2eRunSchema.index({ workflow_run_id: 1 });
 e2eRunSchema.index({ dispatch_id: 1 }, { sparse: true });
 
 export const E2eRunModel = model<IE2eRun>('E2eRun', e2eRunSchema);
+
+/**
+ * How one scenario ended, in Cypress's terms. SKIPPED is a test a failed hook
+ * blocked — it never ran, which is a different fact from PENDING (an `it.skip`
+ * somebody wrote) and from PASSED.
+ */
+export type E2eScenarioState = 'PASSED' | 'FAILED' | 'PENDING' | 'SKIPPED';
+export const E2E_SCENARIO_STATES: readonly E2eScenarioState[] = ['PASSED', 'FAILED', 'PENDING', 'SKIPPED'];
+
+/**
+ * One `it()` of one run — every scenario the run held, not only the ones that
+ * were recorded on video. Its own collection rather than an array on the run:
+ * a sweep holds two thousand of them, and the runs table must not carry them.
+ */
+export interface IE2eScenarioResult extends Document {
+  run_id: Types.ObjectId;
+  /**
+   * suite + project + spec + title path + ordinal, hashed. The same in every
+   * run, so a re-sent chunk replaces its rows and two runs line up.
+   */
+  case_key: string;
+  /** The leg that ran it — a `results[].key`, e.g. `accounts`. */
+  suite: string;
+  /** The Cypress project, e.g. `mweb`, `partners-app`, `support`, `mobile-app`. */
+  project: string;
+  /** The spec file, relative to the project. */
+  spec: string;
+  /** The describe blocks, then the test's own title. */
+  title_path: string[];
+  /** The test's own title — the last entry of title_path. */
+  title: string;
+  state: E2eScenarioState;
+  duration_ms: number | null;
+  /** The error as Cypress printed it. Empty unless FAILED. */
+  error: string;
+}
+
+const e2eScenarioResultSchema = new Schema<IE2eScenarioResult>(
+  {
+    run_id: { type: Schema.Types.ObjectId, required: true },
+    case_key: { type: String, required: true },
+    suite: { type: String, required: true },
+    project: { type: String, default: '' },
+    spec: { type: String, required: true },
+    title_path: { type: [String], default: [] },
+    title: { type: String, default: '' },
+    state: { type: String, enum: E2E_SCENARIO_STATES, required: true },
+    duration_ms: { type: Number, default: null },
+    error: { type: String, default: '' },
+  },
+  { versionKey: false }
+);
+
+// The write key: a re-sent chunk replaces the same rows instead of adding more.
+e2eScenarioResultSchema.index({ run_id: 1, case_key: 1 }, { unique: true });
+// A leg's reset, and the table's default order.
+e2eScenarioResultSchema.index({ run_id: 1, suite: 1 });
+e2eScenarioResultSchema.index({ run_id: 1, project: 1, spec: 1 });
+e2eScenarioResultSchema.index({ run_id: 1, state: 1 });
+
+export const E2eScenarioResultModel = model<IE2eScenarioResult>('E2eScenarioResult', e2eScenarioResultSchema);
 
 /**
  * The schedule and the identity the suite runs as, as a singleton.

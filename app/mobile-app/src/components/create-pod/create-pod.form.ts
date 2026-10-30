@@ -6,12 +6,14 @@ import {
   type FreeJustificationValues,
 } from '@duncit/forms/schemas';
 import {
+  DEFAULT_SMART_INCENTIVE_MAX_PCT,
   isFreePod,
   isFreeVenueOfferModel,
   isHostOfferModel,
   isMeetingPlatform,
   isVideoUrl,
   offerRateOf,
+  smartIncentiveInput,
   ticketDiscountInput,
   venueOfferInput,
   venueOfferPriceInput,
@@ -23,6 +25,11 @@ import { CategoryMediaType, type PodMode, type PodType } from '@/generated/graph
 import { fallbackT, type Translate } from '@/i18n/fallback';
 import { appFormatter } from '@/utils/app-formatter';
 import { blankCreatePodForm, type CreatePodFormValues } from './create-pod.types';
+import {
+  hydrateSmartIncentive,
+  refineSmartIncentive,
+  smartIncentiveSchemaShape,
+} from './smart-incentive.form';
 import {
   hydrateTicketDiscount,
   refineTicketDiscount,
@@ -247,7 +254,8 @@ function refineTicketPrice(values: CreatePodFormValues, ctx: z.RefinementCtx, t:
   }
 }
 
-/** A FREE pod, or one priced at ₹0, never carries a multi-ticket discount. mWeb twin. */
+/** A FREE pod, or one priced at ₹0, never carries a multi-ticket discount or a
+ * Smart Incentive. mWeb twin. */
 export const isFreeTicket = (
   values: Pick<CreatePodFormValues, 'pod_type' | 'pod_amount_text'>,
 ): boolean => values.pod_type === 'FREE' || (Number(values.pod_amount_text) || 0) <= 0;
@@ -301,8 +309,15 @@ function refinePublish(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Tra
  *
  * The messages are copy, so they come from the shared catalogue (rule 38): the
  * stepper passes its live `t`, and the export below resolves against the
- * bundled English for callers that parse the schema outside React. */
-export function makeCreatePodSchema(t: Translate = fallbackT) {
+ * bundled English for callers that parse the schema outside React.
+ *
+ * `smartIncentiveMaxPct` is Loyalty > Smart Incentive's `max_discount_pct`, or
+ * null while the programme is not known to be on — Step 4 hides the editor
+ * then, so the percentage is not checked (see `refineSmartIncentive`). */
+export function makeCreatePodSchema(
+  t: Translate = fallbackT,
+  smartIncentiveMaxPct: number | null = DEFAULT_SMART_INCENTIVE_MAX_PCT,
+) {
   return z
     .object({
       location_id: z.string().min(1, t('mweb.createPod.validation.locationRequired')),
@@ -385,6 +400,7 @@ export function makeCreatePodSchema(t: Translate = fallbackT) {
         )
         .max(10),
       ...ticketDiscountSchemaShape,
+      ...smartIncentiveSchemaShape,
       payment_terms: z.string().max(4000),
       agreed_to_terms: z.boolean(),
       // Shape only — checked below whenever the venue offer or the pod is free.
@@ -406,6 +422,16 @@ export function makeCreatePodSchema(t: Translate = fallbackT) {
         },
         ctx,
         t,
+      );
+      refineSmartIncentive(
+        {
+          smart_incentive_enabled: values.smart_incentive_enabled,
+          smart_incentive_pct: values.smart_incentive_pct,
+          free: isFreeTicket(values),
+        },
+        ctx,
+        t,
+        smartIncentiveMaxPct,
       );
       refinePublish(values, ctx, t);
     });
@@ -450,6 +476,8 @@ export const STEP_FIELDS: (keyof CreatePodFormValues)[][] = [
     'place_charges',
     'ticket_discount_enabled',
     'ticket_discount_tiers',
+    'smart_incentive_enabled',
+    'smart_incentive_pct',
     'payment_terms',
     'products_enabled',
     'product_requests',
@@ -570,8 +598,19 @@ const podFreeJustificationOf = (values: CreatePodFormValues) => {
   return justification ? { free_justification: justification } : {};
 };
 
-/** Maps validated form values onto the server's CreatePodInput. */
-export function buildCreatePodInput(values: CreatePodFormValues) {
+/** The pod's Smart Incentive as CreatePodInput takes it — off at 0% for a free
+ * pod, a switched-off incentive, or one the host could not see. */
+const podSmartIncentiveOf = (values: CreatePodFormValues, smartIncentiveOn: boolean) =>
+  smartIncentiveInput(values, isFreeTicket(values) || !smartIncentiveOn);
+
+/**
+ * Maps validated form values onto the server's CreatePodInput.
+ *
+ * `smartIncentiveOn` is false while Loyalty's programme is not known to be on:
+ * Step 4 hides the editor then, so a value carried in from a draft or a Host
+ * Again copy is sent switched off rather than published unseen. mWeb twin.
+ */
+export function buildCreatePodInput(values: CreatePodFormValues, { smartIncentiveOn = true } = {}) {
   const virtual = values.pod_mode === 'VIRTUAL';
   const start = parseDateTimeText(values.pod_date_time_text);
   if (!start) throw new Error('Invalid start date/time');
@@ -618,6 +657,7 @@ export function buildCreatePodInput(values: CreatePodFormValues) {
     place_charges: values.place_charges,
     // Off with no tiers for a free pod, whatever a stale draft still holds.
     ...ticketDiscountInput(values, isFreeTicket(values)),
+    ...podSmartIncentiveOf(values, smartIncentiveOn),
     // Derived, not chosen: the "Attach products" switch is gone, so a pod's shop
     // is open exactly when it carries products. Guarding on the rows rather than
     // the flag also means a stale draft that still holds `products_enabled: true`
@@ -697,8 +737,9 @@ export function hydrateDraft(payload: string): CreatePodFormValues {
     };
     // Old drafts may carry retired pod types — coerce onto FREE/PAID.
     values.pod_type = normalizePodType(values.pod_type);
-    // …and the discount tiers may be missing or half-typed.
-    return { ...values, ...hydrateTicketDiscount(values) };
+    // …and the discount tiers may be missing or half-typed, and the Smart
+    // Incentive missing altogether (a draft from before it existed).
+    return { ...values, ...hydrateTicketDiscount(values), ...hydrateSmartIncentive(values) };
   } catch {
     return blankCreatePodForm;
   }

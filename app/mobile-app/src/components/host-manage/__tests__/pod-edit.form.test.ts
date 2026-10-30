@@ -15,6 +15,8 @@ const valid = {
   no_of_spots_text: '12',
   ticket_discount_enabled: false,
   ticket_discount_tiers: [],
+  smart_incentive_enabled: false,
+  smart_incentive_pct: '',
 };
 
 const issuesOf = (values: typeof valid) => {
@@ -75,6 +77,8 @@ describe('podEditInitialValues', () => {
       media_text: 'https://cdn/a.jpg\nhttps://cdn/b.mp4',
       ticket_discount_enabled: false,
       ticket_discount_tiers: [],
+      smart_incentive_enabled: false,
+      smart_incentive_pct: '',
     });
   });
 

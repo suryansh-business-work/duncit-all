@@ -1,4 +1,5 @@
 import { format } from 'date-fns';
+import { smartIncentiveFormValues } from '@duncit/utils';
 
 import { normalizePodType } from './create-pod.form';
 import { blankCreatePodForm, type CreatePodFormValues } from './create-pod.types';
@@ -33,6 +34,8 @@ export interface EditablePod {
   product_requests: readonly { product_id: string; quantity: number }[];
   ticket_discount_enabled?: boolean | null;
   ticket_discount_tiers?: readonly { min_tickets: number; discount_pct: number }[] | null;
+  smart_incentive_enabled?: boolean | null;
+  smart_incentive_pct?: number | null;
 }
 
 /**
@@ -90,6 +93,8 @@ export function podToCreatePodForm(
       min_tickets: tier.min_tickets,
       discount_pct: tier.discount_pct,
     })),
+    // Carried through, or a Club Admin save would switch the host's offer off.
+    ...smartIncentiveFormValues(pod),
     payment_terms: pod.payment_terms ?? '',
   };
 }

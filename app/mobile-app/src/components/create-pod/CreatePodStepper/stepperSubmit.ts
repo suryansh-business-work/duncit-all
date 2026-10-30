@@ -51,7 +51,9 @@ export function buildStepperSubmit({ clubAdmin, onModerate, onPublish, state }: 
       return;
     }
     const id = await persist(step);
-    await onPublish(id, buildCreatePodInput(values));
+    // A Smart Incentive the host could not see (the programme is not known to
+    // be on) is published switched off, never as the draft or copy held it.
+    await onPublish(id, buildCreatePodInput(values, { smartIncentiveOn: state.smartIncentiveOn }));
   };
 
   /**

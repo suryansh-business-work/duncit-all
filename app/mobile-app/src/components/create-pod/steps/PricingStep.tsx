@@ -7,6 +7,7 @@ import { SurfaceCard } from '@/components/SurfaceCard';
 import { useTranslation } from '@/hooks/useTranslation';
 import { FREE_JUSTIFICATION_NAMES, FreeArrangementFields } from '../free-arrangement';
 import { PlaceChargesField } from '../PlaceChargesField';
+import { PodSmartIncentiveCard } from '../PodSmartIncentiveCard';
 import { PodTicketDiscountCard } from '../PodTicketDiscountCard';
 import { PodTypeCards } from '../PodTypeCards';
 import {
@@ -119,6 +120,8 @@ export function PricingStep({
         </SurfaceCard>
       ) : null}
       {isFree ? null : <PodTicketDiscountCard form={form} currency={finance.currency_symbol} />}
+      {/* Renders nothing while Loyalty has the programme switched off. */}
+      {isFree ? null : <PodSmartIncentiveCard form={form} currency={finance.currency_symbol} />}
       {/* Payment terms describe refunds and charges a free pod does not have. */}
       {isFree ? null : (
         <SurfaceCard testID="pricing-step-payment-terms-card">

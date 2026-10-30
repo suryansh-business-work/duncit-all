@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 
 import { useTranslation } from '@/hooks/useTranslation';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
+import { useSmartIncentiveSettings } from '@/hooks/useSmartIncentiveSettings';
 import {
   STEP_TITLE_KEYS,
   hostCategoryKeyOf,
@@ -35,9 +36,17 @@ export function useCreatePodForm({
   clubAdmin,
 }: CreatePodFormArgs) {
   const { t } = useTranslation();
+  // Step 4 shows the Smart Incentive only while Loyalty's programme is known to
+  // be on; only then is its percentage checked (a null maximum skips it) and
+  // published as the form holds it. mWeb twin: useCreatePodSchema.
+  const smartIncentive = useSmartIncentiveSettings();
+  const smartIncentiveMaxPct = smartIncentive.enabled ? smartIncentive.maxPct : null;
   // The schema cannot call `t` at module scope, so it is built here from the
   // reader's own catalogue — the validation messages are copy like any other.
-  const schema = useMemo(() => makeCreatePodSchema(t), [t]);
+  const schema = useMemo(
+    () => makeCreatePodSchema(t, smartIncentiveMaxPct),
+    [t, smartIncentiveMaxPct],
+  );
   const form = useForm<CreatePodFormValues, any, CreatePodFormValues>({
     resolver: formResolver<CreatePodFormValues>(schema),
     defaultValues: initialValues,
@@ -113,6 +122,7 @@ export function useCreatePodForm({
     t,
     form,
     showProducts,
+    smartIncentiveOn: smartIncentive.enabled,
     step,
     setStep,
     busy,

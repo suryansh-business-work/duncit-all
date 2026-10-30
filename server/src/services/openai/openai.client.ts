@@ -13,7 +13,10 @@ import { isAiFeatureEnabled } from '@modules/ai/aiFeature/aiFeature.guard';
  * reconstruct them. A call written around this funnel spends real money and
  * appears nowhere in the AI portal, which is the failure this exists to stop.
  *
- * Credentials come from the Tech-portal OPENAI env entry, as before. The result
+ * Credentials come from the Tech-portal OPENAI env entry, as before — except a
+ * model named `gemini-…` (set per prompt in the AI Library), which goes to
+ * Google's OpenAI-compatible endpoint with the GEMINI entry's key, so a feature
+ * can run on Gemini's free tier and still be counted here. The result
  * is a discriminated union rather than a thrown error, because the call sites
  * disagree on what a failure means — moderation fails open, the admin tools
  * raise a GraphQL error, the changelog falls back to a mechanical one — and
@@ -51,6 +54,7 @@ export type OpenAiChatResult =
   | { ok: false; code: OpenAiFailureCode; status: number; message: string; model: string };
 
 const DEFAULT_MODEL = 'gpt-4o-mini';
+const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta/openai';
 const PREVIEW_LIMIT = 2000;
 
 interface OpenAiUsagePayload {
@@ -96,13 +100,20 @@ function requestPreview(messages: OpenAiMessage[]): string {
 
 /* --------------------------------- config ------------------------------- */
 
+const isGeminiModel = (model?: string): model is string => Boolean(model?.trim().toLowerCase().startsWith('gemini-'));
+
 async function resolveConfig(pinnedModel?: string) {
+  if (isGeminiModel(pinnedModel)) {
+    const apiKey = await getRuntimeEnvValue('GEMINI_API_KEY');
+    return { provider: 'Gemini', apiKey: apiKey.trim(), base: GEMINI_BASE, model: pinnedModel.trim() };
+  }
   const [apiKey, baseUrl, envModel] = await Promise.all([
     getRuntimeEnvValue('OPENAI_API_KEY'),
     getRuntimeEnvValue('OPENAI_BASE_URL'),
     getRuntimeEnvValue('OPENAI_MODEL'),
   ]);
   return {
+    provider: 'OpenAI',
     apiKey: apiKey.trim(),
     base: (baseUrl.trim() || 'https://api.openai.com/v1').replace(/\/$/, ''),
     model: pinnedModel || envModel.trim() || DEFAULT_MODEL,
@@ -173,7 +184,7 @@ async function readError(res: Response): Promise<string> {
 /** POST the chat completion, or describe why it never happened. */
 export async function openaiChat(req: OpenAiChatRequest): Promise<OpenAiChatResult> {
   const startedAt = Date.now();
-  const { apiKey, base, model } = await resolveConfig(req.model);
+  const { provider, apiKey, base, model } = await resolveConfig(req.model);
 
   // The AI Features switch. Off takes the same refused-call path as a missing
   // key, so every call site falls back exactly as it already does for that.
@@ -184,7 +195,7 @@ export async function openaiChat(req: OpenAiChatRequest): Promise<OpenAiChatResu
   }
 
   if (!apiKey) {
-    const message = 'OpenAI is not configured. Set the OPENAI API key in the Tech portal.';
+    const message = `${provider} is not configured. Set the ${provider.toUpperCase()} API key in the Tech portal.`;
     record({ req, model, status: 'SKIPPED', httpStatus: 0, error: message, startedAt });
     return { ok: false, code: 'NOT_CONFIGURED', status: 0, message, model };
   }
@@ -198,8 +209,8 @@ export async function openaiChat(req: OpenAiChatRequest): Promise<OpenAiChatResu
     });
   } catch (err) {
     const detail = describeFetchFailure(err);
-    const fallback = err instanceof Error ? err.message : 'OpenAI request failed';
-    const message = detail ? `OpenAI is unreachable (${detail})` : fallback;
+    const fallback = err instanceof Error ? err.message : `${provider} request failed`;
+    const message = detail ? `${provider} is unreachable (${detail})` : fallback;
     record({ req, model, status: 'FAILED', httpStatus: 0, error: message, startedAt });
     return { ok: false, code: 'NETWORK', status: 0, message, model };
   }

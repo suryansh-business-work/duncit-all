@@ -9167,6 +9167,7 @@ export type EnvCategory =
   | 'OPENAI'
   | 'PEXELS'
   | 'RAZORPAY'
+  | 'SERPER'
   | 'SERVAM'
   | 'SHIPROCKET'
   | 'SLACK'
@@ -11581,6 +11582,108 @@ export type HostUpdatePodInput = {
   /** Offer a multi-ticket discount — omit both discount fields to leave it alone. */
   ticket_discount_enabled?: InputMaybe<Scalars['Boolean']['input']>;
   ticket_discount_tiers?: InputMaybe<Array<PodTicketDiscountTierInput>>;
+};
+
+/** A public Instagram business or creator profile found by a lead search. */
+export type IgLead = {
+  __typename?: 'IgLead';
+  bio: Scalars['String']['output'];
+  created_at?: Maybe<Scalars['String']['output']>;
+  /** The AI's draft of the next message, and which step it is for. */
+  draft: Scalars['String']['output'];
+  draft_step?: Maybe<Scalars['Int']['output']>;
+  /** Emails and phones the profile published in its bio or Google's snippet of it. */
+  emails: Array<Scalars['String']['output']>;
+  fit_reason: Scalars['String']['output'];
+  /** 0-100 against the brief it was found for; null when it could not be scored. */
+  fit_score?: Maybe<Scalars['Int']['output']>;
+  followers?: Maybe<Scalars['Int']['output']>;
+  id: Scalars['ID']['output'];
+  last_contacted_at?: Maybe<Scalars['String']['output']>;
+  media_count?: Maybe<Scalars['Int']['output']>;
+  messages: Array<IgLeadMessage>;
+  name: Scalars['String']['output'];
+  next_follow_up_at?: Maybe<Scalars['String']['output']>;
+  phones: Array<Scalars['String']['output']>;
+  profile_picture_url: Scalars['String']['output'];
+  profile_url: Scalars['String']['output'];
+  replied_at?: Maybe<Scalars['String']['output']>;
+  status: IgLeadStatus;
+  username: Scalars['String']['output'];
+  website: Scalars['String']['output'];
+};
+
+/** One DM the marketer sent. Step 0 is the opener; 1, 2 … are the follow-ups. */
+export type IgLeadMessage = {
+  __typename?: 'IgLeadMessage';
+  sent_at?: Maybe<Scalars['String']['output']>;
+  step: Scalars['Int']['output'];
+  text: Scalars['String']['output'];
+};
+
+/** One run of a brief: the searches the AI planned and how many profiles came of it. */
+export type IgLeadSearch = {
+  __typename?: 'IgLeadSearch';
+  added: Scalars['Int']['output'];
+  brief: Scalars['String']['output'];
+  created_at?: Maybe<Scalars['String']['output']>;
+  error: Scalars['String']['output'];
+  finished_at?: Maybe<Scalars['String']['output']>;
+  found: Scalars['Int']['output'];
+  id: Scalars['ID']['output'];
+  max_results: Scalars['Int']['output'];
+  queries: Array<Scalars['String']['output']>;
+  skipped: Scalars['Int']['output'];
+  status: IgLeadSearchStatus;
+  summary: Scalars['String']['output'];
+};
+
+export type IgLeadSearchInput = {
+  /** The kind of leads wanted, in the marketer's own words. */
+  brief: Scalars['String']['input'];
+  max_results?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type IgLeadSearchStatus =
+  | 'DONE'
+  | 'FAILED'
+  | 'RUNNING';
+
+export type IgLeadSettings = {
+  __typename?: 'IgLeadSettings';
+  daily_send_limit: Scalars['Int']['output'];
+  follow_up_gap_days: Scalars['Int']['output'];
+  /** Whether an Instagram business account is connected in Social Accounts. */
+  instagram_ready: Scalars['Boolean']['output'];
+  max_follow_ups: Scalars['Int']['output'];
+  /** What Duncit is offering these leads; every DM is written around it. */
+  pitch: Scalars['String']['output'];
+  sent_today: Scalars['Int']['output'];
+  /** Whether a Serper key is set (Tech → Environment Variables, or these settings). */
+  serper_ready: Scalars['Boolean']['output'];
+};
+
+export type IgLeadSettingsInput = {
+  daily_send_limit: Scalars['Int']['input'];
+  follow_up_gap_days: Scalars['Int']['input'];
+  max_follow_ups: Scalars['Int']['input'];
+  pitch: Scalars['String']['input'];
+};
+
+/** Where the conversation with an Instagram lead stands. */
+export type IgLeadStatus =
+  | 'CONTACTED'
+  | 'CONVERTED'
+  | 'LOST'
+  | 'NEW'
+  | 'REPLIED';
+
+export type IgLeadTablePage = {
+  __typename?: 'IgLeadTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<IgLead>;
+  total: Scalars['Int']['output'];
 };
 
 /**
@@ -14524,6 +14627,7 @@ export type Mutation = {
   deleteHostLead: Scalars['Boolean']['output'];
   /** Onboarding: permanently remove a host request record. */
   deleteHostRequest: Scalars['Boolean']['output'];
+  deleteIgLead: Scalars['Boolean']['output'];
   deleteInterview: Scalars['Boolean']['output'];
   deleteInventoryProduct: Scalars['Boolean']['output'];
   deleteJobApplication: Scalars['Boolean']['output'];
@@ -14654,6 +14758,8 @@ export type Mutation = {
    * Tech/Super admin only.
    */
   downloadIosSigningFile: IosSigningFile;
+  /** Have the AI draft the lead's next DM (opener or follow-up). */
+  draftIgLeadMessage: IgLead;
   dummyCheckout: Payment;
   /** Gift card purchase via the dummy gateway. */
   dummyGiftCardCheckout: Payment;
@@ -14939,6 +15045,8 @@ export type Mutation = {
   markBouncerCallbackContacted: BouncerCallbackRequest;
   /** Marks a pod or club room read up to now (on open, and while it stays open). */
   markChatRead: Scalars['Boolean']['output'];
+  /** Record a DM the marketer is sending from Instagram; schedules the next follow-up. */
+  markIgLeadSent: IgLead;
   markNotificationRead: Scalars['Boolean']['output'];
   /** The goods are back (handed in at the venue, or the courier scan never came). */
   markPodShopReturnReceived: PodShopReturn;
@@ -15677,6 +15785,7 @@ export type Mutation = {
   setHostDeductions: Scalars['Boolean']['output'];
   /** Admin-only: a host's monthly Pod Request limit to venues (null = the default of 10). */
   setHostVenueRequestLimit: Host;
+  setIgLeadStatus: IgLead;
   /** Staff: temporarily deactivate/reactivate any catalogue product (reversible is_active flip; archive/restore own the ARCHIVED lifecycle). */
   setInventoryProductActive: InventoryProduct;
   /**
@@ -15835,6 +15944,8 @@ export type Mutation = {
    * password does not belong there.
    */
   startE2eRun: E2eRunStart;
+  /** Start a lead search in the background; poll igLeadSearches for its progress. */
+  startIgLeadSearch: IgLeadSearch;
   /**
    * Scan every pod, club, venue, user, product and brand record for the
    * ImageKit files it uses, and copy each file used by exactly one record into
@@ -16263,6 +16374,7 @@ export type Mutation = {
   updateGraphqlMonitorSettings: GraphqlMonitorSettings;
   updateGrievanceStatus: GrievanceTicket;
   updateHostLead: HostLead;
+  updateIgLeadSettings: IgLeadSettings;
   updateInterview: Interview;
   updateInventoryProduct: InventoryProduct;
   updateJobApplicationStatus: JobApplication;
@@ -18067,6 +18179,11 @@ export type MutationDeleteHostRequestArgs = {
 };
 
 
+export type MutationDeleteIgLeadArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationDeleteInterviewArgs = {
   interview_doc_id: Scalars['ID']['input'];
 };
@@ -18479,6 +18596,11 @@ export type MutationDismissMeetingArgs = {
 export type MutationDownloadIosSigningFileArgs = {
   id: Scalars['ID']['input'];
   kind: IosSigningFileKind;
+};
+
+
+export type MutationDraftIgLeadMessageArgs = {
+  id: Scalars['ID']['input'];
 };
 
 
@@ -18920,6 +19042,12 @@ export type MutationMarkBouncerCallbackContactedArgs = {
 export type MutationMarkChatReadArgs = {
   id: Scalars['ID']['input'];
   kind: ChatRoomKind;
+};
+
+
+export type MutationMarkIgLeadSentArgs = {
+  id: Scalars['ID']['input'];
+  text: Scalars['String']['input'];
 };
 
 
@@ -20352,6 +20480,12 @@ export type MutationSetHostVenueRequestLimitArgs = {
 };
 
 
+export type MutationSetIgLeadStatusArgs = {
+  id: Scalars['ID']['input'];
+  status: IgLeadStatus;
+};
+
+
 export type MutationSetInventoryProductActiveArgs = {
   active: Scalars['Boolean']['input'];
   product_doc_id: Scalars['ID']['input'];
@@ -20699,6 +20833,11 @@ export type MutationStartCrmPortalCallArgs = {
 
 export type MutationStartE2eRunArgs = {
   input: StartE2eRunInput;
+};
+
+
+export type MutationStartIgLeadSearchArgs = {
+  input: IgLeadSearchInput;
 };
 
 
@@ -21941,6 +22080,11 @@ export type MutationUpdateGrievanceStatusArgs = {
 export type MutationUpdateHostLeadArgs = {
   id: Scalars['ID']['input'];
   input: HostLeadInput;
+};
+
+
+export type MutationUpdateIgLeadSettingsArgs = {
+  input: IgLeadSettingsInput;
 };
 
 
@@ -28698,6 +28842,11 @@ export type Query = {
   hosts: Array<Host>;
   /** Admin/onboarding table page over all hosts (shared table engine). */
   hostsTable: HostTablePage;
+  /** The latest lead searches, newest first. */
+  igLeadSearches: Array<IgLeadSearch>;
+  igLeadSettings: IgLeadSettings;
+  /** Instagram leads, server-paged. due: true keeps only those with a follow-up due now. */
+  igLeadsTable: IgLeadTablePage;
   interview?: Maybe<Interview>;
   interviews: Array<Interview>;
   inventoryActivityLogs: Array<InventoryActivityLog>;
@@ -31627,6 +31776,12 @@ export type QueryHostsArgs = {
 
 
 export type QueryHostsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryIgLeadsTableArgs = {
+  due?: InputMaybe<Scalars['Boolean']['input']>;
   query?: InputMaybe<TableQueryInput>;
 };
 

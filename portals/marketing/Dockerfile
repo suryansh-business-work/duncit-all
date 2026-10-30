@@ -88,6 +88,9 @@ COPY portals/marketing ./portals/marketing
 # it from that console's source), so that src folder is part of this build. Its
 # package.json is copied above, so its dependencies are installed.
 COPY portals/analytics/src ./portals/analytics/src
+# Instagram Leads › Settings mounts the Tech console's Environment Variables
+# editor for the Serper key, from that console's source the same way.
+COPY portals/tech/src ./portals/tech/src
 RUN pnpm --filter marketing build
 
 # --- runner ---

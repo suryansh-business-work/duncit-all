@@ -912,6 +912,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       smartIncentive: 'Smart Incentive',
       socialAccounts: 'Social Accounts',
       socialCalendar: 'Social Calendar',
+      instagramLeads: 'Instagram Leads',
       somethingForYou: 'Something for you',
       sosAlerts: 'SOS Alerts',
       startupDashboard: 'Startup Dashboard',

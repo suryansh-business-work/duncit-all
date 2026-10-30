@@ -14,6 +14,7 @@ import {
   googlePlayConnection,
   msg91Connection,
   razorpayConnection,
+  serperConnection,
   shiprocketConnection,
   slackConnection,
   socialAppsConnection,
@@ -211,6 +212,7 @@ const ENV_PROBES: Partial<Record<EnvCategory, (str: ConfigStr) => Promise<TestRe
   CLOUDFLARE: cloudflareConnection,
   SOCIAL_APPS: socialAppsConnection,
   TRUECALLER: truecallerConnection,
+  SERPER: serperConnection,
 };
 
 /** Probe a category's credentials against its upstream API. Pure fetch. */

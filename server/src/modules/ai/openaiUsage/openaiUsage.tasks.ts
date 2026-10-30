@@ -167,6 +167,24 @@ export const OPENAI_TASKS = {
     description: 'Generates post ideas from a brief and the best recent posts.',
     when_off: MARKETING_ERROR,
   },
+  'marketing.ig_lead_plan': {
+    label: 'Instagram lead search plan',
+    module: 'Marketing',
+    description: 'Turns a marketer’s description of the leads they want into Google searches for Instagram profiles.',
+    when_off: 'Finding Instagram leads fails with an error saying AI is unavailable; nothing is searched.',
+  },
+  'marketing.ig_lead_score': {
+    label: 'Instagram lead scoring',
+    module: 'Marketing',
+    description: 'Scores each Instagram profile a search found against the brief, with the reason.',
+    when_off: 'Leads are still added, unscored, with no fit reason.',
+  },
+  'marketing.ig_lead_message': {
+    label: 'Instagram lead DM draft',
+    module: 'Marketing',
+    description: 'Drafts the opening DM or the next follow-up for one Instagram lead.',
+    when_off: MARKETING_ERROR,
+  },
   'platform.release_notes': {
     label: 'Release changelog',
     module: 'Platform',

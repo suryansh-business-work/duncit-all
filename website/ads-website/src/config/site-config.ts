@@ -281,8 +281,9 @@ const build = (t: SiteTranslate) => ({
      * one in, and it names what is being agreed to. */
     consent: t('website.ads.newsletter.consent'),
     consentLinkLabel: t('website.brand.newsletter.consentLink'),
-    /** Where the subscription came from, for the CRM's own reporting. */
-    source: 'ADS_WEBSITE_FOOTER',
+    /** A NewsletterSource the API accepts; every site footer is WEBSITE_FOOTER.
+     * ADS_WEBSITE_FOOTER was never in the enum, so every subscription was refused. */
+    source: 'WEBSITE_FOOTER',
   },
   notFound: {
     heading: t('website.ads.notFound.heading'),

@@ -6,7 +6,7 @@ import { MAX_SCREENSHOTS, MAX_SCREENSHOT_BYTES } from './report-issue.types';
  * The screenshots a reporter attaches, held outside the form.
  *
  * They are read into base64 here, in the browser, and travel inside the
- * mutation — the form has no session behind it, and handing an anonymous
+ * mutation. The form has no session behind it, and handing an anonymous
  * visitor an upload credential is a far bigger door than this needs open.
  */
 export interface ScreenshotDraft extends StatusReportImageInput {

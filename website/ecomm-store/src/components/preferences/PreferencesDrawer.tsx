@@ -19,7 +19,7 @@ const PAPER_SX = { width: 'min(100vw, 400px)', borderRadius: 0 } as const;
 
 /**
  * The display & accessibility sidebar: colour mode, text size, link and motion
- * choices, festive animation, cookies and installing the app. A modal drawer —
+ * choices, festive animation, cookies and installing the app. A modal drawer:
  * focus stays inside, Escape and the close button both close it.
  */
 export function PreferencesDrawer({ open, restoreFocus, onClose }: Readonly<PreferencesDrawerProps>) {

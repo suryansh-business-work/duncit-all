@@ -2,13 +2,13 @@
 
 /* The palette is declared as tokens and REDEFINED for dark mode below, so a
    theme switch recolours every utility built from them (bg-surface, text-ink,
-   border-line …) instead of asking each component to know about themes. */
+   border-line ...) instead of asking each component to know about themes. */
 @theme {
   --color-primary: #ff5757;
   --color-primary-dark: #d92d2d;
   --color-primary-light: #ffe5e5;
   /* Primary as TEXT (kickers, prices) on cream/surface: the coral itself is
-     only ~3:1 on white, so small type takes this deeper step (≥4.5:1). */
+     only ~3:1 on white, so small type takes this deeper step (>=4.5:1). */
   --color-primary-strong: #c4262a;
   --color-accent: #ff9f45;
   --color-accent-light: #ffe9d4;
@@ -17,13 +17,13 @@
   --color-cream: #faf6f0;
   /* Cards and panels: white on the light theme, a lifted slate on the dark. */
   --color-surface: #ffffff;
-  /* Hairlines — a token rather than black/5, which cannot invert. */
+  /* Hairlines: a token rather than black/5, which cannot invert. */
   --color-line: rgba(22, 19, 26, 0.08);
-  /* Ink that sits ON a dark photograph or the frame — the hero copy over its
+  /* Ink that sits ON a dark photograph or the frame, like the hero copy over its
      scrim. It holds in both themes because what is behind it does not invert. */
   --color-on-primary: #ffffff;
   /* Ink on the coral and orange fills (buttons, the CTA panel, live slots).
-     Those fills do not invert, so neither does this: ≥4.5:1 on both. */
+     Those fills do not invert, so neither does this: >=4.5:1 on both. */
   --color-on-accent: #16131a;
   /* The dark matte the rounded panels sit on (hero, the "why" band), and the
      type that reads on it. Dark/light respectively in either theme. */
@@ -74,7 +74,7 @@
     color: var(--color-ink);
     -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
-    /* Theme changes fade rather than snap — the whole page is repainting. */
+    /* Theme changes fade rather than snap, since the whole page is repainting. */
     transition: background-color 200ms ease, color 200ms ease;
   }
   h1, h2, h3, h4 {
@@ -99,7 +99,7 @@
   }
 }
 
-/* The floating top bar's frosted surface — built from the tokens, so it
+/* The floating top bar's frosted surface, built from the tokens, so it
    inverts with the theme. */
 @utility glass {
   background: color-mix(in srgb, var(--color-surface) 74%, transparent);
@@ -139,8 +139,8 @@
   }
 }
 
-/* Once a revealed card has arrived, hovering it should answer at once — not
-   wait out the reveal's slower curve and its stagger delay. */
+/* Once a revealed card has arrived, hovering it should answer at once instead
+   of waiting out the reveal's slower curve and its stagger delay. */
 .reveal-ready .lift[data-reveal].is-revealed {
   transition:
     transform 500ms var(--ease-smooth),

@@ -14,7 +14,7 @@ import { ShelfHeading } from './ShelfHeading';
 import { ShelfView } from './ShelfView';
 import { useShelfFilters } from './useShelfFilters';
 
-/** /pet/:slug — everything for one kind of pet, its aisles one tap away, the other pets too. */
+/** /pet/:slug: everything for one kind of pet, its aisles one tap away, the other pets too. */
 export function PetTypePage() {
   const { t } = useStoreT();
   const { slug = '' } = useParams();

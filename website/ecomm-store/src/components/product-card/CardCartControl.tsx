@@ -18,7 +18,7 @@ const NOTICE_CENTRED = { top: '50%', transform: 'translate(-50%, -50%)' } as con
 /** The quantity pill stretched to the card's width: bin/minus left, count centred, plus right. */
 const FULL_WIDTH_PILL = { display: 'flex', width: '100%', height: 44, borderRadius: T.radius.pill, justifyContent: 'space-between', px: 0.5 } as const;
 
-/** The cart line holding exactly what the card shows — for a product with options, the variant it prices. */
+/** The cart line holding exactly what the card shows; for a product with options, the variant it prices. */
 function useCardLine(product: StoreProductCard) {
   const { cart } = useCart();
   return cart?.lines.find((line) => line.product_id === product.id && line.variant_id === product.lead_variant_id);
@@ -27,7 +27,7 @@ function useCardLine(product: StoreProductCard) {
 /**
  * The card's full-width cart control: "Add to cart" until the product is in
  * the cart, then the bin / count / "+" pill stepping that line in place. The
- * cart drawer stays shut — the notice over the photo is the feedback. Held
+ * cart drawer stays shut; the notice over the photo is the feedback. Held
  * `busy` while a change is in flight so a double tap cannot add two. Swapping
  * one control for the other hands keyboard focus across instead of dropping
  * it. Out of stock: a disabled "Out of stock" button.
@@ -64,7 +64,7 @@ export function CardCartControl({ product }: Readonly<{ product: StoreProductCar
     // Adding the first unit or taking the last away swaps the control under the focus.
     handOff.current = !line || next === 0;
     try {
-      // Both report their own failure (toast) and resolve false — then nothing swaps.
+      // Both report their own failure (toast) and resolve false, and then nothing swaps.
       const done = line
         ? await setQty(product.id, product.lead_variant_id, next)
         : await addToCart(product.id, product.lead_variant_id, next, { openDrawer: false });

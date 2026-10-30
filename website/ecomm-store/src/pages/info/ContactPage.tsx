@@ -37,7 +37,7 @@ function Channel({ icon, title, value, href, position }: Readonly<ChannelProps>)
   );
 }
 
-/** /contact — every way to reach support the operator has filled in, and a ticket form. */
+/** /contact: every way to reach support the operator has filled in, and a ticket form. */
 export function ContactPage() {
   const { t } = useStoreT();
   const s = useStoreSettings();

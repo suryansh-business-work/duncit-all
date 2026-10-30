@@ -4,7 +4,7 @@ import type { StoreSubscriptionMode } from '../../graphql/autoship';
 
 type Translate = (key: string) => string;
 
-/** How often and how an Autoship runs — shared by "Subscribe & save" and its edit form. */
+/** How often and how an Autoship runs, shared by "Subscribe & save" and its edit form. */
 export const makePlanShape = (t: Translate, frequencies: number[]) => ({
   frequency_weeks: z
     .number()

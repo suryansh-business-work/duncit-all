@@ -99,8 +99,8 @@ function GallerySlider({ images, title }: Readonly<ProductGalleryProps>) {
 
 /**
  * The product's photos in a plain rectangular frame. A single photo shows on
- * its own with no controls. A new photo set — a variant with its own photos was
- * picked — mounts a fresh slider, so it opens on that variant's first photo.
+ * its own with no controls. A new photo set (a variant with its own photos was
+ * picked) mounts a fresh slider, so it opens on that variant's first photo.
  */
 export function ProductGallery({ images, title }: Readonly<ProductGalleryProps>) {
   if (images.length > 1) return <GallerySlider key={images.join('\n')} images={images} title={title} />;

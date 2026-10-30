@@ -1,7 +1,7 @@
 ---
 // The grievance page's left column: who reviews a grievance (the officer
 // block we are required to publish, filled in by the Legal portal) and the
-// escalation ladder — support first, grievance after — before the form, so a
+// escalation ladder (support first, grievance after) before the form, so a
 // visitor reads it before typing. The ladder hides with the form once a
 // grievance lands (`data-grievance-ladder`, see the grievance-form widget).
 import { grievanceEscalationCopy } from '@duncit/i18n';
@@ -21,7 +21,7 @@ const officerRows = officer
   : [];
 
 // The same three steps and the same warning the two apps render, from the
-// shared builder — a visitor told one thing here and another in the app has
+// shared builder. A visitor told one thing here and another in the app has
 // a fair argument that they were misled.
 const escalation = grievanceEscalationCopy(t);
 ---

@@ -17,7 +17,7 @@ export interface PetTileData {
 
 /**
  * One tinted tile, the whole card a single link: words top-left, the picture
- * on the right, and a round arrow bottom-right (decoration — the card is the
+ * on the right, and a round arrow bottom-right (decoration; the card is the
  * control).
  */
 export function PetTile({ tile, position }: Readonly<{ tile: PetTileData; position: number }>) {

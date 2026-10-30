@@ -9,7 +9,7 @@ export interface ReportIssueValues {
   message: string;
   /**
    * What the visitor typed into the human check. The TOKEN that goes with it
-   * is not here on purpose — nobody types it, and a form reset must not throw
+   * is not here on purpose: nobody types it, and a form reset must not throw
    * away a challenge that is still good.
    */
   captcha_answer: string;
@@ -25,7 +25,7 @@ export interface ImpactOption {
  *
  * Written out rather than composed from the enum (`status.impact.${value}`)
  * on purpose: the localization gate reads literal keys, and a key it cannot
- * see is a key nothing seeds into Localization — so the dropdown would render
+ * see is a key nothing seeds into Localization, so the dropdown would render
  * raw `status.impact.SLOW` text in every language including the default.
  */
 export const IMPACT_OPTIONS: readonly ImpactOption[] = [
@@ -37,7 +37,7 @@ export const IMPACT_OPTIONS: readonly ImpactOption[] = [
   { value: 'OTHER', labelKey: 'status.impact.other' },
 ];
 
-/** Empty service key means "not sure" — the server keeps it that way. */
+/** Empty service key means "not sure", and the server keeps it that way. */
 export const REPORT_DEFAULTS: ReportIssueValues = {
   service_key: '',
   impact: 'CANNOT_ACCESS',

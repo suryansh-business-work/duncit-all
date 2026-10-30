@@ -7,7 +7,7 @@ import { emailRule, phoneRule } from '../../../lib/validation';
 
 type Translate = (key: string) => string;
 
-/** Step one: where the code goes — an email address, or a mobile number. */
+/** Step one: where the code goes, an email address or a mobile number. */
 export const makeOtpRequestSchema = (t: Translate, channel: LoginChannel) =>
   z.object({
     contact: channel === 'EMAIL' ? emailRule(t) : phoneRule(t),

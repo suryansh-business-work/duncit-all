@@ -8,7 +8,7 @@ import type { SectionProps } from './types';
 const MAX_DESKTOP_COLUMNS = 5;
 
 /**
- * USP_STRIP — why buy here: one rounded strip, each point an icon on a 48px
+ * USP_STRIP (why buy here): one rounded strip, each point an icon on a 48px
  * plate with its title and line. Two columns on a phone; on a desktop one row
  * of up to five, split by hairline dividers.
  */

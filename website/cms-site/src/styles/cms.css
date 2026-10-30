@@ -1,5 +1,5 @@
 /*
- * The renderer's own styles: only the markup the CMS generates itself — the
+ * The renderer's own styles: only the markup the CMS generates itself, the
  * default collection list/detail and pagination. Pages designed in the editor
  * carry their own css. Every value reads a design token first, so a site's
  * design system restyles these too; the fallbacks keep an unstyled site legible.

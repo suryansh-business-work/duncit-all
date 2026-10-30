@@ -71,7 +71,7 @@ export default function ReportIssueForm({
       return;
     }
     // A spent code cannot be reused, right or wrong, so the next attempt needs
-    // a new one — and the field it was typed into is cleared with it.
+    // a new one, and the field it was typed into is cleared with it.
     captcha.reload();
     resetField('captcha_answer');
     const code = captchaErrorCode(outcome.errors);

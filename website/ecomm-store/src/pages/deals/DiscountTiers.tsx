@@ -20,7 +20,7 @@ const chipSx = (selected: boolean) => ({
   '&:hover, &.Mui-focusVisible': { bgcolor: selected ? T.navBar : T.surface },
 });
 
-/** "All deals", "10%+ off", … — toggles (aria-pressed) that set `?min=` in the URL. */
+/** "All deals", "10%+ off" and so on: toggles (aria-pressed) that set `?min=` in the URL. */
 export function DiscountTiers({ tiers, min, onChange }: Readonly<DiscountTiersProps>) {
   const { t } = useStoreT();
   if (tiers.length === 0) return null;

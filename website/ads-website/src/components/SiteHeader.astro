@@ -17,7 +17,7 @@ const { nav } = siteConfig;
 const branding = await fetchBranding();
 
 // The bar is a frosted pill in every state, so it reads the same over the
-// banner photograph and over the cream page — no transparent phase to get
+// banner photograph and over the cream page, with no transparent phase to get
 // wrong. Over a banner it takes no layout space; elsewhere it is sticky.
 const position = overlay ? 'fixed inset-x-0 top-0' : 'sticky top-0';
 ---
@@ -97,8 +97,8 @@ const position = overlay ? 'fixed inset-x-0 top-0' : 'sticky top-0';
 </style>
 
 <script>
-  // Keeps `at-top` on the header for the shadow above — the CMS widget
-  // @duncit/brand/widgets/site-header (it also wires the theme button).
+  // The CMS widget @duncit/brand/widgets/site-header keeps `at-top` on the
+  // header for the shadow above (it also wires the theme button).
   import { mount } from '@duncit/brand/widgets/site-header';
 
   for (const root of document.querySelectorAll<HTMLElement>('[data-cms-widget="site-header"]')) mount(root);

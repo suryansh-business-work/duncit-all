@@ -9,7 +9,7 @@ function initialMode(): ColorMode {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored === 'light' || stored === 'dark') return stored;
   } catch {
-    /* storage unavailable (private mode) — fall through to system preference */
+    /* storage unavailable (private mode), so fall through to system preference */
   }
   return globalThis.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
@@ -23,7 +23,7 @@ export function useColorMode(): { mode: ColorMode; toggleMode: () => void } {
       try {
         localStorage.setItem(STORAGE_KEY, next);
       } catch {
-        /* storage unavailable — the toggle still works for this session */
+        /* storage unavailable; the toggle still works for this session */
       }
       return next;
     });

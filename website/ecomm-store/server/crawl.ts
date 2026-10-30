@@ -24,7 +24,7 @@ const entry = (loc: string, lastmod?: string | null): string => {
   return `<url><loc>${escapeXml(loc)}</loc>${modified}</url>`;
 };
 
-/** /sitemap.xml — every shelf, brand, page and product the API lists, as absolute URLs. */
+/** /sitemap.xml: every shelf, brand, page and product the API lists, as absolute URLs. */
 export async function sitemapXml(): Promise<string> {
   const data = await askApi<{ storeSitemap: { kind: SitemapKind; slug: string; updated_at: string | null }[] }>(SEO_SITEMAP);
   const fixed = FIXED_PATHS.map((path) => entry(`${SITE_URL}${path}`));
@@ -40,7 +40,7 @@ export async function sitemapXml(): Promise<string> {
   ].join('\n');
 }
 
-/** /robots.txt — crawl the shop, not the private pages; the sitemap is here. */
+/** /robots.txt: crawl the shop but not the private pages, and find the sitemap here. */
 export function robotsTxt(): string {
   const sitemap = ['Sitemap:', `${SITE_URL}/sitemap.xml`].join(' ');
   return ['User-agent: *', 'Allow: /', 'Disallow: /account', 'Disallow: /checkout', 'Disallow: /cart', 'Disallow: /track', sitemap, ''].join('\n');

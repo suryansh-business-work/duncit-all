@@ -10,7 +10,7 @@ interface PlanFieldsProps<T extends FieldValues> {
   control: Control<T>;
 }
 
-/** "Every N weeks" and "order it for me (COD) / remind me" — the two choices of a plan. */
+/** The two choices of a plan: "Every N weeks" and "order it for me (COD) / remind me". */
 export function AutoshipPlanFields<T extends FieldValues>({ control }: Readonly<PlanFieldsProps<T>>) {
   const { t } = useStoreT();
   const settings = useStoreSettings();

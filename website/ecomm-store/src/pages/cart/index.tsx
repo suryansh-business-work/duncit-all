@@ -6,7 +6,7 @@ import { CartSummary } from '../../components/cart/CartSummary';
 import { usePageSeo } from '../../lib/usePageSeo';
 import { useStoreT } from '../../i18n';
 
-/** /cart — the lines on the left, totals and checkout on the right (below on a phone). */
+/** /cart: the lines on the left, totals and checkout on the right (below on a phone). */
 export function CartPage() {
   const { t } = useStoreT();
   const { cart } = useCart();

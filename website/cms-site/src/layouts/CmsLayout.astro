@@ -1,7 +1,7 @@
 ---
 /**
  * The document every CMS page is served in: the site's design system and
- * custom code around the composed page. Order in <head> is deliberate — the
+ * custom code around the composed page. Order in <head> is deliberate: the
  * site's base css first, then tokens, then the page's own css, then custom css,
  * so the most specific author always wins.
  */
@@ -27,7 +27,7 @@ interface Props {
   graphqlUrl: string;
   t: SiteTranslate;
   /** Only the design system around the content: no analytics, consent banner,
-   * skip link or site/page code — a block drawn for the portal's designer. */
+   * skip link or site/page code. Used for a block drawn for the portal's designer. */
   bare?: boolean;
 }
 
@@ -64,7 +64,7 @@ const js = bare ? [] : [site.custom_js, pageJs].filter(Boolean).map(scriptSafe);
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <script is:inline>
       // The visitor's light/dark choice, applied before the first paint so the
-      // page never flashes one theme and settles on another — the same key and
+      // page never flashes one theme and settles on another. Same key and
       // light-first default as the hand-built sites' layouts.
       (() => {
         try {
@@ -97,7 +97,7 @@ const js = bare ? [] : [site.custom_js, pageJs].filter(Boolean).map(scriptSafe);
       import { mountWidgets } from '../scripts/widgets';
       mountWidgets(document);
       // Every light/dark button on the page (a site's top bar as well as its
-      // menu drawer) — the page's own scripts are not part of a CMS snapshot.
+      // menu drawer). The page's own scripts are not part of a CMS snapshot.
       wireThemeToggle(document);
     </script>
     {!bare && <ScrollReveal />}

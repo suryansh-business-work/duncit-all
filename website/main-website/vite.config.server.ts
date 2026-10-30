@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 
 /**
- * Builds the site's HTML server (server/main.ts) into dist-server/main.mjs — a
+ * Builds the site's HTML server (server/main.ts) into dist-server/main.mjs, a
  * single self-contained Node bundle the Docker runner starts directly, so the
  * image ships no node_modules. `noExternal: true` inlines @duncit/brand's meta
  * builder and the site's own short-code pattern, which is what keeps ONE

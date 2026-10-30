@@ -14,7 +14,7 @@ export interface InstallState {
   canPrompt: boolean;
   /** Already running as an installed app. */
   installed: boolean;
-  /** iOS Safari: no prompt exists, only Share › Add to Home Screen. */
+  /** iOS Safari: no prompt exists, only Share > Add to Home Screen. */
   iosHint: boolean;
 }
 
@@ -82,7 +82,7 @@ const subscribe = (listener: () => void) => {
 /** The live install offer, for the preferences panel. */
 export const useInstallState = (): InstallState => useSyncExternalStore(subscribe, () => state, () => state);
 
-/** Register the offline service worker — production builds only. */
+/** Register the offline service worker (production builds only). */
 export function registerServiceWorker(): void {
   if (!import.meta.env.PROD || typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return;
   window.addEventListener('load', () => {

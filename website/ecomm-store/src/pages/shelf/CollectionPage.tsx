@@ -11,7 +11,7 @@ import { NotFoundContent } from '../info/NotFoundPage';
 import { ShelfHeading } from './ShelfHeading';
 import { ShelfView } from './ShelfView';
 
-/** /collections/:slug — a curated set, with its banner. */
+/** /collections/:slug: a curated set, with its banner. */
 export function CollectionPage() {
   const { t } = useStoreT();
   const { slug = '' } = useParams();

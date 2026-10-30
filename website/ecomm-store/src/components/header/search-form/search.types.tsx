@@ -6,7 +6,7 @@ export const searchSchema = z.object({
 
 export type SearchValues = z.infer<typeof searchSchema>;
 
-/** One row of the type-ahead list: a product, an aisle, a brand, or "search for …". */
+/** One row of the type-ahead list: a product, an aisle, a brand, or "search for ...". */
 export type SuggestOption =
   | { kind: 'product'; id: string; label: string; to: string; image: string }
   | { kind: 'category'; id: string; label: string; to: string }

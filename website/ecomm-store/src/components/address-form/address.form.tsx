@@ -30,7 +30,7 @@ const FIELDS: FieldSpec[] = [
 ];
 
 /**
- * The address inputs, for any form that carries the address fields — checkout,
+ * The address inputs, for any form that carries the address fields: checkout,
  * the address book and Autoship all render these same eight boxes.
  */
 export function AddressFields<T extends FieldValues>({ control }: Readonly<AddressFieldsProps<T>>) {

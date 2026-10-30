@@ -17,7 +17,7 @@ export default defineConfig({
     // The @duncit/* workspace packages ship TypeScript source, not built JS.
     // A static site never notices (everything is bundled at build time); a
     // server render would hand them to Node's own loader, which cannot read
-    // them — so they are bundled into the server build too.
+    // them, so they are bundled into the server build too.
     ssr: { noExternal: [/^@duncit\//] },
   },
 });

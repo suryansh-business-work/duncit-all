@@ -24,8 +24,8 @@ function initialSelection(product: StoreProduct): Selection {
 export type ValueState = 'available' | 'out-of-stock' | 'impossible';
 
 /**
- * The shopper's option choices, the variant they add up to, and — for each
- * value on screen — whether picking it leads to a real variant, and whether
+ * The shopper's option choices, the variant they add up to, and, for each
+ * value on screen, whether picking it leads to a real variant, and whether
  * that variant is in stock.
  */
 export function useVariantSelection(product: StoreProduct) {

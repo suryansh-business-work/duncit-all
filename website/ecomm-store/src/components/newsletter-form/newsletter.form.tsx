@@ -26,7 +26,7 @@ export function NewsletterForm({ source }: Readonly<{ source: 'WEBSITE_FOOTER' |
   const { signedIn } = useStoreSession();
   const [outcome, setOutcome] = useState<Outcome | null>(null);
   const schema = useMemo(() => makeNewsletterSchema(t, !signedIn), [t, signedIn]);
-  // The shared human check — the same server-drawn code every public site uses.
+  // The shared human check: the same server-drawn code every public site uses.
   const captcha = useCaptcha(GRAPHQL_URL);
   const [subscribe] = useMutation(SUBSCRIBE_NEWSLETTER);
   const { control, handleSubmit, reset, formState } = useForm<NewsletterValues>({

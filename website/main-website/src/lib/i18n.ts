@@ -8,7 +8,7 @@ import {
 import { urlConfigs } from '../config/url-configs';
 
 /**
- * Website localization — the SAME @duncit/i18n parser, the same admin data and
+ * Website localization uses the SAME @duncit/i18n parser, the same admin data and
  * the same key structure as the apps and portals (CLAUDE.md rule 38). There is
  * no website-only localization.
  *
@@ -16,7 +16,7 @@ import { urlConfigs } from '../config/url-configs';
  * one implementation (rule 40); this module only pins it to this site's API URL.
  */
 
-/** The website's LOCAL FALLBACK bundle — held in @duncit/i18n with every other
+/** The website's LOCAL FALLBACK bundle, held in @duncit/i18n with every other
  * surface's, and baked into this static build. Add a key to the shared bundle
  * AND in Admin > Localization > Translations before using it. */
 export const WEBSITE_FALLBACK: NestedCatalogue = SHARED_FALLBACK;

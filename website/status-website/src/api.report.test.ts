@@ -1,11 +1,11 @@
 /**
  * Filing a problem report, and reading the localization the page renders in.
  *
- * `submitStatusReport` returns its errors instead of throwing them, and that is
- * the whole design: one of them is routine. A mistyped verification code is
- * answered by the captcha widget itself, not by the form's failure banner, so
- * the caller has to be able to tell the two apart — which it cannot do if the
- * transport threw.
+ * `submitStatusReport` returns its errors instead of throwing them, because
+ * one of them is routine. A mistyped verification code is answered by the
+ * captcha widget itself rather than the form's failure banner, so the caller
+ * has to be able to tell the two apart, which it cannot do if the transport
+ * threw.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fetchLocales, fetchTranslations, submitStatusReport } from './api';
@@ -51,8 +51,8 @@ describe('submitStatusReport', () => {
     const [url, init] = fetchMock.mock.calls[0]!;
     expect(url).toBe(`${SERVER_BASE}/graphql`);
     // Unauthenticated by design: the visitor this exists for may be the one who
-    // cannot sign in anywhere. The identity headers name the SURFACE, not a
-    // person — they are what rate limiting and the audit trail read.
+    // cannot sign in anywhere. The identity headers name the surface rather
+    // than a person; rate limiting and the audit trail read them.
     expect((init as RequestInit).headers).toEqual({
       'content-type': 'application/json',
       'x-duncit-surface': 'WEBSITE',

@@ -77,9 +77,9 @@ const favicon = branding.website_favicon_url || '/favicon.svg';
     // the API and records the visit; ordinary traffic costs one no-op call.
     // Only with marketing consent is the click remembered (consent banner).
     import { startWebShortLinkAttribution } from '@duncit/utils';
-    // siteUrls, not siteContent(): this runs in the BROWSER, where there is no
-    // build-time catalogue to await — and the attribution call wants a URL, not
-    // a word.
+    // siteUrls instead of siteContent(): this runs in the BROWSER, where there
+    // is no build-time catalogue to await, and the attribution call only needs
+    // a URL.
     import { siteUrls } from '../config/site-config';
     startWebShortLinkAttribution(siteUrls.graphqlUrl.replace('/graphql', '')).catch((error) =>
       console.warn('Attribution did not start', error)

@@ -4,8 +4,8 @@
  * A page per policy is built from the Legal portal's list, but a policy can be
  * published, renamed or retired long after that build. The HTML server
  * (server/main.ts) therefore answers every /policy/<slug> against the LIVE
- * policy and, for one published since the build, serves the reader page below
- * — a copy of the page with no policy baked in, which loads its text by the
+ * policy and, for one published since the build, serves the reader page below:
+ * a copy of the page with no policy baked in, which loads its text by the
  * slug in the address like every other policy page does.
  */
 

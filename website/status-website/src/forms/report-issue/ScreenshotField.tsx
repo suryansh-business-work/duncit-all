@@ -18,8 +18,8 @@ interface Props {
  * Attach a picture of what went wrong.
  *
  * A screenshot carries the error text, the address bar and the state of the
- * page in one go — three things a person in a hurry does not type out, and the
- * three an engineer opens the report hoping to find.
+ * page in one go. A person in a hurry does not type those out, and they are
+ * what an engineer opens the report hoping to find.
  */
 export default function ScreenshotField({
   shots,

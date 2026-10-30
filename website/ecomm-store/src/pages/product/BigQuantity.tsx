@@ -17,7 +17,7 @@ interface BigQuantityProps {
   discountPct: number;
 }
 
-/** The mock's big "02" between round −/+ buttons, over a dark price pill. */
+/** The mock's big "02" between round -/+ buttons, over a dark price pill. */
 export function BigQuantity({ value, min, max, onChange, price, mrp, discountPct }: Readonly<BigQuantityProps>) {
   const { t } = useStoreT();
   const money = useMoney();

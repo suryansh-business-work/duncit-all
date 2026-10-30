@@ -20,7 +20,7 @@ export function PageBody({ html }: Readonly<{ html: string }>) {
   );
 }
 
-/** One of the store's own pages, by slug — the not-found body when there is no such page. */
+/** One of the store's own pages, by slug, or the not-found body when there is no such page. */
 export function StorePageView({ slug }: Readonly<{ slug: string }>) {
   const { t } = useStoreT();
   const { data, loading, error } = useQuery(STORE_PAGE, { variables: { slug } });

@@ -23,7 +23,7 @@ const STEP_KEYS: Record<(typeof STEPS)[number], string> = {
   review: 'ecommStore.checkout.step.review',
 };
 
-/** /checkout — contact, address, payment and review, one step at a time. */
+/** /checkout: contact, address, payment and review, one step at a time. */
 export function CheckoutPage() {
   const { t } = useStoreT();
   const { cart, loading } = useCart();

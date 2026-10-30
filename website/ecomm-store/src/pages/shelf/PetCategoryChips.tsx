@@ -9,7 +9,7 @@ interface PetCategoryChipsProps {
   categories: StoreCategoryTile[];
   /** The slug of the aisle in force; '' when every aisle shows. */
   selected: string;
-  /** Toggle an aisle — the same slug again clears it. */
+  /** Toggle an aisle. The same slug again clears it. */
   onSelect: (slug: string) => void;
 }
 

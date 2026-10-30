@@ -3,7 +3,7 @@ import { CAPTCHA_BUNDLE, ECOMM_STORE_BUNDLE, flattenCatalogue, mergeCatalogues }
 
 /**
  * The storefront's bundled copy: its own `ecommStore` namespace plus the shared
- * captcha words its newsletter form shows. Renders before — and without — the
+ * captcha words its newsletter form shows. Renders before (and without) the
  * Localization API.
  */
 export const STORE_FALLBACK = mergeCatalogues(

@@ -21,7 +21,7 @@ function KeyedOrder({ orderNo, orderKey }: Readonly<{ orderNo: string; orderKey:
   return <OrderDetail order={data.storeOrder} orderKey={orderKey} canAct />;
 }
 
-/** /track — the guest's link (order + key), or a lookup by order number and contact. */
+/** /track: the guest's link (order + key), or a lookup by order number and contact. */
 export function TrackPage() {
   const { t } = useStoreT();
   const [params] = useSearchParams();

@@ -8,7 +8,7 @@ import { STORE_PRODUCTS_BY_IDS, STORE_RELATED } from '../../graphql/catalog';
 import { readRecentlyViewed } from '../../lib/recentlyViewed';
 import { useStoreT } from '../../i18n';
 
-/** "You may also like" — the server's related picks for this product. */
+/** "You may also like": the server's related picks for this product. */
 export function RelatedProducts({ productId }: Readonly<{ productId: string }>) {
   const { t } = useStoreT();
   const { data } = useQuery(STORE_RELATED, { variables: { product_id: productId, limit: 12 } });

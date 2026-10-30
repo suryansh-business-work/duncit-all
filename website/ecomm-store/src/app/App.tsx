@@ -55,8 +55,8 @@ export function App() {
         <SessionProvider>
           <StoreLocale>
             <ColorModeProvider>
-              {/* The floor under every wait on the server — the settings load,
-                  a shelf, a checkout — before any page draws its own loader. */}
+              {/* The floor under every wait on the server (the settings load,
+                  a shelf, a checkout) before any page draws its own loader. */}
               <RequestProgressBar />
               <ConfirmProvider>
                 <NotifyProvider>

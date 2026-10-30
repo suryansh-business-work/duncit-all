@@ -15,7 +15,7 @@ import { STORE_CART } from '../../graphql/cart';
 import { paths } from '../../lib/paths';
 import { useStoreT } from '../../i18n';
 
-/** Pause/resume, skip, order now and cancel — each tells the shopper how it went. */
+/** Pause/resume, skip, order now and cancel. Each tells the shopper how it went. */
 export function useSubscriptionActions(subscription: StoreSubscription) {
   const { t } = useStoreT();
   const navigate = useNavigate();

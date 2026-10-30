@@ -285,7 +285,7 @@ const build = (t: SiteTranslate) => ({
         field: 'club_admin_amount',
         takeHomeLabel: t('website.earn.calculator.clubAdminTakeHome'),
         /** The share this role is paid on. Zero means the platform has not set
-         * one; the panel says that instead of showing a zero amount as if it were news. */
+         * one; the panel says that instead of showing Rs 0 as if it were news. */
         rateField: 'club_admin_pct',
         // The club admin's money is per pod and then multiplied by how many
         // pods the club runs. The rows show that sum being made.
@@ -318,7 +318,7 @@ const build = (t: SiteTranslate) => ({
     /** Shown instead of a confident figure when the pod cannot pay this role. */
     shortfallNote: t('website.earn.calculator.shortfallNote'),
     /** A club admin is paid a share Duncit sets; at 0% there is nothing to
-     * estimate, and a cheerful zero amount would be worse than saying so. */
+     * estimate, and a cheerful Rs 0 would be worse than saying so. */
     noShareNote: t('website.earn.calculator.noShareNote'),
     disclaimer: t('website.earn.calculator.disclaimer'),
     fields: [
@@ -429,7 +429,7 @@ const build = (t: SiteTranslate) => ({
     builtFor: t('website.earn.footer.builtFor'),
     /** Font Awesome brand marks; every one leaves the site, so SmartLink gives
      * them the new tab and the accessible name. The account names are proper
-     * nouns and stay as they are — a translator has nothing to do with them. */
+     * nouns and stay as they are, so they skip the translator. */
     social: [
       { icon: 'fa-instagram', label: 'Instagram', href: 'https://www.instagram.com/duncit_app/' },
       { icon: 'fa-linkedin-in', label: 'LinkedIn', href: 'https://linkedin.com/company/duncit' },

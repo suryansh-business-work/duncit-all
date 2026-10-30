@@ -13,7 +13,7 @@ import { paths } from '../../lib/paths';
 import { usePageSeo } from '../../lib/usePageSeo';
 import { useStoreT } from '../../i18n';
 
-/** /wishlist — saved products; a guest's live in this browser's cart token. */
+/** /wishlist: saved products; a guest's live in this browser's cart token. */
 export function WishlistPage() {
   const { t } = useStoreT();
   const { cartToken } = useCart();

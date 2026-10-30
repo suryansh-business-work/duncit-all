@@ -1,5 +1,5 @@
 ---
-// Footer — links managed from the Website portal (Navigation → EARNWITH) and
+// Footer: links managed from the Website portal (Navigation > EARNWITH) and
 // the Policy Hub from the Legal portal; branding assets from Admin. The
 // configured groups are the fallback the portal overrides.
 import { siteContent } from '../config/site-config';
@@ -33,9 +33,9 @@ const [branding, portalGroups, policies] = await Promise.all([
   fetchPolicies(),
 ]);
 
-// The portal wins per GROUP, not all-or-nothing. It carries two groups today,
-// and an all-or-nothing fallback meant the site's own five collapsed to those
-// two — a thinner footer than either source describes. Anything the portal
+// The portal wins per GROUP. It carries two groups today, and an
+// all-or-nothing fallback meant the site's own five collapsed to those two,
+// a thinner footer than either source describes. Anything the portal
 // names is its own; the rest come from here.
 const portalLabels = new Set(portalGroups.map((group) => group.label.toLowerCase()));
 const navGroups = [
@@ -58,8 +58,8 @@ const year = new Date().getFullYear();
 <!-- The footer is a panel on the dark matte in both themes; frame-scope hands
      the shared newsletter, policy strip and social links the dark palette. -->
 <footer class="frame-scope mx-2 overflow-hidden rounded-t-[2rem] bg-frame text-ink sm:mx-4 sm:rounded-t-panel">
-  <!-- Brand and the one thing we ask for, side by side: the address field is
-       the footer's job, not a strip bolted above it. -->
+  <!-- Brand and the one thing we ask for, side by side: the address field
+       belongs inside the footer instead of a strip bolted above it. -->
   <div class="mx-auto grid max-w-6xl items-start gap-10 px-5 pt-24 pb-12 sm:pt-28 lg:grid-cols-[1fr_1.1fr]" data-reveal>
     <div>
       <!-- The footer is where the brand signs off, so it is the one place the
@@ -116,7 +116,7 @@ const year = new Date().getFullYear();
 
     <PolicyStrip policies={policies} baseUrl={mainSiteUrl} class="mt-10" />
 
-    <!-- The brand name, huge and outlined: a sign-off, not a word to read. -->
+    <!-- The brand name, huge and outlined: a decorative sign-off. -->
     <p class="footer-wordmark mt-14 text-center font-head font-extrabold" aria-hidden="true">{branding.app_name}</p>
   </div>
 

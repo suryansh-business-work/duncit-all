@@ -42,7 +42,7 @@ function toOptions(found: StoreSuggest | undefined, q: string, searchLabel: stri
 }
 
 interface SearchFormProps {
-  /** Called after navigating away — the mobile drawer closes itself. */
+  /** Called after navigating away (the mobile drawer closes itself). */
   onDone?: () => void;
   id: string;
 }

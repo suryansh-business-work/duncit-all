@@ -19,7 +19,7 @@ const SLIDES = [
 
 const BOT_AGENT = /bot|crawl|spider|slurp|preview|lighthouse|headless/i;
 
-/** First visit to the home page only — never for a crawler, never on a deep link. */
+/** First visit to the home page only. Not for a crawler or on a deep link. */
 function shouldShow(pathname: string): boolean {
   if (pathname !== '/') return false;
   if (readStored(STORAGE_KEYS.onboarded)) return false;

@@ -6,7 +6,7 @@ import { CtaPill } from './CtaPill';
 import type { SectionProps } from './types';
 
 /**
- * PAGE_INTRO — a heading block on the hero wash: the first item's eyebrow over
+ * PAGE_INTRO, a heading block on the hero wash: the first item's eyebrow over
  * the title, the subtitle, its button and picture. When it opens a page with
  * no title of its own (Deals) its title is that page's h1; otherwise an h2.
  */

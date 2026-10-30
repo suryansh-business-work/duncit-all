@@ -3,7 +3,7 @@
 
    The widgets inject their own utility strings; these rules are deliberately
    UNLAYERED so they win over those utilities without touching the package.
-   Only tokens — both themes recolour everything here. */
+   Only tokens, so both themes recolour everything here. */
 
 /* ---------- Form fields ---------- */
 .form-label {

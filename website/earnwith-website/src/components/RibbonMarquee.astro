@@ -13,9 +13,9 @@ interface Props {
 
 const { tilt = 10, seconds = 40 } = Astro.props;
 
-// The marquee runs forever by scrolling exactly half the track and resetting —
-// the copies land where the previous ones were, so the reset is invisible.
-// FOUR copies, not two: half a two-copy track is barely a desktop width, and a
+// The marquee runs forever by scrolling exactly half the track and resetting.
+// The copies land where the previous ones were, so the reset is invisible.
+// There are FOUR copies because half a two-copy track is barely a desktop width, and a
 // track narrower than the band would run out and show the gap it resets across.
 const words = siteConfig.hero.ribbon;
 const copies = [0, 1, 2, 3];
@@ -62,7 +62,7 @@ const copies = [0, 1, 2, 3];
     margin-inline-start: -6%;
     padding: 1.1rem 0;
     /* The AA pink: the words on it are large, white, and must read in both
-       themes — the band does not invert. */
+       themes, because the band does not invert. */
     background: linear-gradient(180deg, var(--color-primary-fill) 0%, var(--color-primary-dark) 100%);
     transform: rotateX(var(--ribbon-tilt)) rotate(-1.5deg);
     transform-style: preserve-3d;
@@ -93,7 +93,7 @@ const copies = [0, 1, 2, 3];
     color: var(--color-frame);
   }
 
-  /* Exactly half the track — the second pair of copies has arrived where the
+  /* Exactly half the track: the second pair of copies has arrived where the
      first started, so the reset is invisible. */
   @keyframes ribbon-marquee {
     from {

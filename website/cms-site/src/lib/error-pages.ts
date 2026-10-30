@@ -7,7 +7,7 @@ import { errorPage } from './cms-api';
  * They are needed exactly when they cannot be fetched: a 503 means the CMS API
  * is unreachable, a 500 that rendering just failed. So every successful visit
  * refreshes a site's copies in the background (at most every few minutes), and
- * the failure paths read the last good copy — or fall back to the built-in page.
+ * the failure paths read the last good copy, or fall back to the built-in page.
  */
 const REFRESH_AFTER_MS = 5 * 60 * 1000;
 const KEPT_CODES = [500, 503] as const;

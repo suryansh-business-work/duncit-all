@@ -37,7 +37,7 @@ function ProfileCard() {
   );
 }
 
-/** /account — the profile card, then every account page as a list row. */
+/** /account: the profile card, then every account page as a list row. */
 export function ProfilePage() {
   const { t } = useStoreT();
   return (

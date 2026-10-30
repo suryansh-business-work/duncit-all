@@ -12,7 +12,7 @@ import type { SectionProps } from './types';
 const AMOUNT_TOKEN = '{amount}';
 
 /**
- * FREE_DELIVERY — the "Free delivery above ₹X" strip with its pill, where the
+ * FREE_DELIVERY: the "Free delivery above ₹X" strip with its pill, where the
  * operator placed it. A title replaces the built-in line ({amount} becomes the
  * threshold); the first item's label and link replace "Shop now". Hidden when
  * delivery is never free.

@@ -5,7 +5,7 @@ interface RhfSelectProps<T extends FieldValues> {
   control: Control<T>;
   name: Path<T>;
   label: string;
-  /** Operator-written choices (cancel and return reasons) — shown as they are written. */
+  /** Operator-written choices (cancel and return reasons), shown as they are written. */
   options: string[];
 }
 

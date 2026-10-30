@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { SHORT_CODE_PATTERN, trimSlashes } from './short-link';
 
-/** The REAL trim the HTML server uses, not a copy of it — a second definition
+/** The REAL trim the HTML server uses, not a copy of it. A second definition
  * here would let the two drift on exactly the input this pair exists to read. */
 const isCode = (pathname: string) => SHORT_CODE_PATTERN.test(trimSlashes(pathname));
 
@@ -22,7 +22,7 @@ describe('trimSlashes', () => {
   /*
     The reason it is a walk and not a regex. A trailing-slash regex on this
     input makes a backtracking engine retry the run from every position, and
-    the caller is handed the RAW request path — so an anonymous GET would pick
+    the caller is handed the RAW request path, so an anonymous GET would pick
     the length. One pass here, whatever arrives.
   */
   it('stays fast on the input a backtracking regex chokes on', () => {

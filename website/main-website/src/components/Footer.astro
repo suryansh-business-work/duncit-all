@@ -1,7 +1,7 @@
 ---
 // Shared footer used across all pages. Link columns come from the Website
 // portal (Navigation manager) and the Policy Hub strip from the Legal portal's
-// active policies — both baked in at build time with localized fallbacks.
+// active policies, both baked in at build time with localized fallbacks.
 import { fetchBranding, fetchNavGroups, fetchPolicies } from '../lib/site-data';
 import { navFallback } from '../lib/nav-fallback';
 import { getTranslator } from '../lib/i18n';
@@ -60,7 +60,7 @@ const year = new Date().getFullYear();
               {column.links.map((link) => (
                 <li>
                   {/* The Navigation manager can point a column at another
-                      Duncit surface — SmartLink decides from the URL. */}
+                      Duncit surface; SmartLink decides from the URL. */}
                   <SmartLink href={link.url} label={link.label} class="inline-flex min-h-9 items-center transition hover:text-primary-ink">
                     {link.label}
                   </SmartLink>

@@ -37,7 +37,7 @@ function BuiltInPolicy({ policy }: Readonly<{ policy: Policy }>) {
   );
 }
 
-/** /pages/:slug — shipping, returns, terms and about, or any page the operator wrote. */
+/** /pages/:slug: shipping, returns, terms and about, or any page the operator wrote. */
 export function PolicyPage() {
   const { slug = '' } = useParams();
   const policy = Object.hasOwn(POLICIES, slug) ? POLICIES[slug] : undefined;

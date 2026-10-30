@@ -17,7 +17,7 @@ interface ShelfHeadingProps {
   description?: string;
   banner?: string;
   crumbs?: Crumb[];
-  /** Extra content under the title — sub-category chips. */
+  /** Extra content under the title, such as sub-category chips. */
   children?: ReactNode;
   /** Only the trail: the page draws its own title (a product page). */
   breadcrumbsOnly?: boolean;

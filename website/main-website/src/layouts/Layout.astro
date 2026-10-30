@@ -23,7 +23,7 @@ const {
   noindex = false,
 } = Astro.props;
 
-// Admin-managed favicon (Branding → Website Logos), baked in at build time.
+// Admin-managed favicon (Branding > Website Logos), baked in at build time.
 const branding = await fetchBranding();
 const favicon = branding.website_favicon_url || '/duncit-logo.svg';
 ---

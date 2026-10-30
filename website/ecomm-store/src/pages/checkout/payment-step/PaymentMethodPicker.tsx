@@ -21,7 +21,7 @@ interface PickerProps {
   onChange: (method: StoreCheckoutMethod) => void;
 }
 
-/** Pay online, or Cash on Delivery — with the reason when COD is not on offer. */
+/** Pay online, or Cash on Delivery, with the reason when COD is not on offer. */
 export function PaymentMethodPicker({ quote, method, onChange }: Readonly<PickerProps>) {
   const { t } = useStoreT();
   const money = useMoney();

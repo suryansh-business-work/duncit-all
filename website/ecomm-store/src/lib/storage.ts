@@ -1,7 +1,7 @@
 /**
  * localStorage that never throws. Private windows, blocked site data and
  * storage quotas all make the accessor itself throw, and a shopper must still
- * be able to browse and buy when that happens — so every read and write here
+ * be able to browse and buy when that happens, so every read and write here
  * degrades to "nothing stored".
  */
 export function readStored(key: string): string | null {

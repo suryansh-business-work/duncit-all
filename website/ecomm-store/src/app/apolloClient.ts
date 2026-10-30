@@ -25,8 +25,8 @@ export function createStoreClient(): ApolloClient {
     };
   });
   return new ApolloClient({
-    // `trackingFetch` counts the requests in flight — what the top progress bar
-    // in `App` reads, so every wait on the server shows without each page opting in.
+    // `trackingFetch` counts the requests in flight. The top progress bar
+    // in `App` reads that count, so every wait on the server shows without each page opting in.
     link: auth.concat(new HttpLink({ uri: GRAPHQL_URL, fetch: trackingFetch })),
     cache: new InMemoryCache({
       typePolicies: {

@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 
 /**
- * Builds the store's HTML server (server/main.ts) into dist-server/main.mjs — a
+ * Builds the store's HTML server (server/main.ts) into dist-server/main.mjs, a
  * single self-contained Node bundle the Docker runner starts directly, so the
  * image ships no node_modules. It serves the built SPA and writes each product,
  * category and collection page's own title, description, social card and

@@ -4,8 +4,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
  * Most of site-config is a content manifest, but the top of it is not: three
  * URLs each fall back to a local target or a production one depending on the
  * environment, and `siteContent()` memoises a single translator fetch for the
- * whole build. Those are the parts a wrong answer would actually break — the
- * file's own comment is about environments leaking into each other — so they
+ * whole build. Those are the parts a wrong answer would break (the
+ * file's own comment is about environments leaking into each other), so they
  * are what this covers.
  */
 
@@ -87,7 +87,7 @@ describe('siteContent', () => {
     const { siteContent } = await import('./site-config');
     const content = await siteContent();
 
-    // Signing up to advertise IS opening the portal — if these ever diverge
+    // Signing up to advertise IS opening the portal. If these ever diverge
     // from portalUrl, a dev build starts linking people at production.
     expect(content.nav.login.href).toBe('https://ads-portal.duncit.com');
     expect(content.nav.signup.href).toBe('https://ads-portal.duncit.com');

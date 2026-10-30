@@ -4,7 +4,7 @@ import { useStoreSettings } from '../../app/providers/StoreSettingsProvider';
 import { SmartLink } from '../SmartLink';
 
 /**
- * The operator's one-line strip above the header — free delivery, a sale, a
+ * The operator's one-line strip above the header: free delivery, a sale, a
  * notice. While an occasion is on, its own line takes the strip regardless of
  * the announcement switch; being a notice rather than a promotion, it carries
  * no link.

@@ -14,7 +14,7 @@ interface ContactFormProps {
   onDone: (contact: CheckoutContact) => void;
 }
 
-/** Name, email and mobile for the order — prefilled from the account when signed in. */
+/** Name, email and mobile for the order, prefilled from the account when signed in. */
 export function ContactForm({ initial, onDone }: Readonly<ContactFormProps>) {
   const { t } = useStoreT();
   const schema = useMemo(() => makeContactSchema(t), [t]);

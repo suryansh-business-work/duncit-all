@@ -9,7 +9,7 @@ import { useStoreT } from '../../i18n';
 import { OrderDetail } from '../order-detail';
 import { AccountLayout } from './AccountLayout';
 
-/** /account/orders/:orderNo — one of the signed-in buyer's orders. */
+/** /account/orders/:orderNo: one of the signed-in buyer's orders. */
 export function AccountOrderPage() {
   const { t } = useStoreT();
   const { orderNo = '' } = useParams();

@@ -7,7 +7,7 @@ import { STORE_FALLBACK_ICONS } from '../fallback-icons';
 
 /**
  * The store's logo from settings. A blank field or a URL that fails at request
- * time both fall back to the bundled mark (rule 39) — the `onError` flag is
+ * time both fall back to the bundled mark (rule 39). The `onError` flag is
  * what catches a 404, which never arrives as an empty string.
  */
 export function StoreLogo({ height = 40 }: Readonly<{ height?: number }>) {

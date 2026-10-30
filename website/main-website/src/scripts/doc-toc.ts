@@ -1,6 +1,6 @@
 /**
  * The DocToc side nav (components/page/DocToc.astro). Its document's text
- * arrives after the page loads — a widget swaps the skeleton for it — so the
+ * arrives after the page loads (a widget swaps the skeleton for it), so the
  * list is rebuilt whenever the target's children change, and the section in
  * view is marked `aria-current` as the reader scrolls.
  */

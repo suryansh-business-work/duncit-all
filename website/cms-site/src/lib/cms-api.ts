@@ -9,7 +9,7 @@ import type { CmsRenderResult, CmsSitemapUrl } from '@duncit/gql-types';
 /** Server-side address of the API (inside the deploy network it is internal). */
 export const graphqlUrl = (): string => process.env.GRAPHQL_URL || import.meta.env.PUBLIC_GRAPHQL_URL || '';
 
-/** The address a visitor's browser calls — forms, newsletter, widgets. */
+/** The address a visitor's browser calls (forms, newsletter, widgets). */
 export const publicGraphqlUrl = (): string => import.meta.env.PUBLIC_GRAPHQL_URL || process.env.PUBLIC_GRAPHQL_URL || graphqlUrl();
 
 const TIMEOUT_MS = 8000;

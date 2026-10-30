@@ -4,11 +4,11 @@ import { WIDGET_LOADERS } from '@duncit/brand/widgets';
  * Brings a page's interactive widgets to life. A page carries the widget's
  * markup (written in the editor, styled by the site's design system) with a
  * `data-cms-widget` marker; its behaviour lives in @duncit/brand and is
- * loaded only when the page actually contains it.
+ * loaded only when the page contains it.
  */
 export function mountWidgets(root: ParentNode): void {
-  // The API a widget calls is THIS deployment's, not whatever a page was built
-  // or migrated with — the renderer stamps it on <html>.
+  // The API a widget calls is this deployment's, not whatever a page was built
+  // or migrated with. The renderer stamps it on <html>.
   const graphqlUrl = document.documentElement.dataset.graphqlUrl ?? '';
   const byName = new Map<string, HTMLElement[]>();
   for (const element of root.querySelectorAll<HTMLElement>('[data-cms-widget]')) {

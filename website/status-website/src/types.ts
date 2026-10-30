@@ -146,7 +146,7 @@ export interface Branding {
   primary_color?: string;
 }
 
-/** What the reporter is seeing — mirrors the server's StatusReportImpact enum. */
+/** What the reporter is seeing. Mirrors the server's StatusReportImpact enum. */
 export type StatusReportImpact =
   | 'CANNOT_ACCESS'
   | 'ERRORS'
@@ -155,7 +155,7 @@ export type StatusReportImpact =
   | 'PAYMENT'
   | 'OTHER';
 
-/** One screenshot, carried inside the mutation — the server does the upload. */
+/** One screenshot, carried inside the mutation; the server does the upload. */
 export interface StatusReportImageInput {
   file_name: string;
   data: string;

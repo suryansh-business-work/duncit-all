@@ -27,7 +27,7 @@ const chipSx = (selected: boolean) => ({
   flexShrink: 0,
 });
 
-/** Pet types as pill chips — a round photo and the name; the chosen one goes dark. */
+/** Pet types as pill chips (a round photo and the name); the chosen one goes dark. */
 export function PetTypeChips({ pets, selectedSlug, onSelect, label }: Readonly<PetTypeChipsProps>) {
   return (
     <Stack component="ul" direction="row" spacing={1} aria-label={label} sx={{ listStyle: 'none', p: 0, m: 0, overflowX: 'auto', pb: 0.5 }}>

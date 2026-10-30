@@ -37,7 +37,7 @@ interface ContentResponse {
 }
 
 export async function loadContentList(root: HTMLElement): Promise<void> {
-  // Handed over by the markup — a module script cannot read Astro frontmatter.
+  // Handed over by the markup, since a module script cannot read Astro frontmatter.
   const copy: ListCopy = JSON.parse(root.dataset.copy ?? '{}');
   try {
     const response = await fetch(root.dataset.graphqlUrl ?? '', {

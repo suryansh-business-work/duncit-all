@@ -10,8 +10,8 @@ type Phase = 'closed' | 'editing' | 'sent';
 /**
  * "Report a problem" on the public status page.
  *
- * The probes above answer one question — is the host returning an HTTP status —
- * and most of what actually goes wrong is invisible to that. This is the other
+ * The probes above answer one question (is the host returning an HTTP status?),
+ * and most of what goes wrong is invisible to that. This is the other
  * half of the page: the reports land in the Tech portal beside the telemetry
  * the machines write, so a broken sign-in is visible there before enough
  * people give up to bend a graph.

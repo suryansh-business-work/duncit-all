@@ -2,7 +2,7 @@ import { gql, type TypedDocumentNode } from '@apollo/client';
 
 import type { NoVars } from './types';
 
-/** An order read by its number — plus, for a guest, the key their checkout handed back. */
+/** An order read by its number, plus, for a guest, the key their checkout handed back. */
 export interface OrderKeyVars {
   order_no: string;
   access_key?: string;

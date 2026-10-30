@@ -40,7 +40,7 @@ function BannerWords({ item }: Readonly<{ item: StoreSectionItem }>) {
   );
 }
 
-/** PROMO_BANNERS — "Offers & banners": rounded pictures that link somewhere, words on a scrim. */
+/** PROMO_BANNERS, "Offers & banners": rounded pictures that link somewhere, words on a scrim. */
 export function PromoBannersSection({ section }: Readonly<SectionProps>) {
   const { t } = useStoreT();
   if (section.items.length === 0) return null;

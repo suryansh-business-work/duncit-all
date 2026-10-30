@@ -52,7 +52,7 @@ function NavLink({ to, label, active }: Readonly<{ to: string; label: string; ac
 
 /**
  * The desktop nav row: the red "Shop by pet" pill, then the operator's links
- * (Settings) — or, when it set none, the top aisles, Deals and Brands.
+ * (Settings), or the top aisles, Deals and Brands when it set none.
  */
 export function NavRow() {
   const { t } = useStoreT();

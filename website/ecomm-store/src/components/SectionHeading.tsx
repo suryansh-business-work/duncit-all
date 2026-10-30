@@ -13,7 +13,7 @@ interface SectionHeadingProps {
   id?: string;
 }
 
-/** A section's bold title and muted line, with an optional "View all →" on the right. */
+/** A section's bold title and muted line, with an optional "View all" link on the right. */
 export function SectionHeading({ title, subtitle, viewAll, id }: Readonly<SectionHeadingProps>) {
   const { t } = useStoreT();
   return (

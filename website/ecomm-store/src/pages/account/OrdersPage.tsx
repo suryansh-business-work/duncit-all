@@ -41,7 +41,7 @@ function OrderRow({ order }: Readonly<{ order: StoreOrder }>) {
   );
 }
 
-/** /account/orders — every store order, newest first. */
+/** /account/orders: every store order, newest first. */
 export function OrdersPage() {
   const { t } = useStoreT();
   const { data, loading } = useQuery(MY_ORDERS, { fetchPolicy: 'cache-and-network' });

@@ -2,7 +2,7 @@
  * What the report form refuses before it costs a round trip.
  *
  * The server re-validates every one of these, so nothing here is the security
- * boundary — what it buys is that a visitor who is already having a bad day
+ * boundary. What it buys is that a visitor who is already having a bad day
  * hears about a typo immediately rather than after a request that may itself
  * be the thing that is broken.
  */
@@ -65,8 +65,8 @@ describe('buildReportSchema', () => {
   });
 
   /**
-   * The page address is optional — a visitor who cannot reach the site at all
-   * has none to give — but a value that is there has to be one somebody can
+   * The page address is optional (a visitor who cannot reach the site at all
+   * has none to give), but a value that is there has to be one somebody can
    * open.
    */
   it('takes a web address or nothing, and nothing else', () => {
@@ -87,7 +87,7 @@ describe('buildReportSchema', () => {
   });
 
   it('asks that the human check was answered, without judging the answer', () => {
-    // Whether it is the RIGHT answer is the server's to say — this half only
+    // Whether it is the right answer is the server's to say; this half only
     // catches an empty box.
     expect(messageFor({ ...VALID, captcha_answer: '  ' }, 'captcha_answer')).toBe(
       'captcha.required',

@@ -15,7 +15,7 @@ import SmartLink from './SmartLink.astro';
 const { t } = await getTranslator();
 
 // The Navigation manager owns the labels when it answers, and its groups are
-// stored in English — so the icon for a PORTAL group is still looked up by its
+// stored in English, so the icon for a PORTAL group is still looked up by its
 // English label. A FALLBACK group carries its own icon instead.
 const GROUP_ICONS: Record<string, string> = {
   About: 'fa-circle-info',
@@ -113,7 +113,7 @@ const iconButton = 'inline-flex h-11 w-11 items-center justify-center rounded-fu
             {section.links.map((link) => (
               <li>
                 {/* The Navigation manager can point an entry at another Duncit
-                    surface — SmartLink decides from the URL. */}
+                    surface; SmartLink decides from the URL. */}
                 <SmartLink
                   href={link.href}
                   label={link.label}

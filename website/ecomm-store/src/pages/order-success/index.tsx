@@ -44,7 +44,7 @@ function GuestTrackCard({ result }: Readonly<{ result: StoreOrderConfirmation }>
   );
 }
 
-/** /order/success — what was ordered, how it was paid, and where to follow it. */
+/** /order/success: what was ordered, how it was paid, and where to follow it. */
 export function OrderSuccessPage() {
   const { t } = useStoreT();
   const [params] = useSearchParams();

@@ -6,7 +6,7 @@ type NationalTheme = Extract<
   'INDEPENDENCE_DAY' | 'REPUBLIC_DAY' | 'GANDHI_JAYANTI' | 'CHILDRENS_DAY' | 'WOMENS_DAY' | 'YOGA_DAY' | 'EARTH_DAY'
 >;
 
-/** Saffron, white and India green — the tricolour particles both national days share. */
+/** Saffron, white and India green: the tricolour particles both national days share. */
 const TRICOLOUR = ['#FF9933', '#FFFFFF', '#138808'] as const;
 
 export const NATIONAL_LOOKS: Record<NationalTheme, OccasionLook> = {

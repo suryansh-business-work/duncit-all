@@ -43,7 +43,7 @@ function SubscriptionList() {
   );
 }
 
-/** /autoship — "Subscriptions: manage your autoship deliveries". */
+/** /autoship, titled "Subscriptions: manage your autoship deliveries". */
 export function AutoshipPage() {
   const { t } = useStoreT();
   const { autoship_enabled: enabled } = useStoreSettings();

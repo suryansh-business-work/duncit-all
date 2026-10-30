@@ -2,7 +2,7 @@
 
 /* The palette is declared as tokens and REDEFINED for dark mode below, so a
    theme switch recolours every utility built from them (bg-surface, text-ink,
-   border-line …) instead of asking each component to know about themes.
+   border-line ...) instead of asking each component to know about themes.
 
    `ink` and `cream` are an inverting PAIR: ink is the text, cream is the panel
    it sits on, and they swap together. Anything that must stay light on a
@@ -12,7 +12,7 @@
   --color-primary: #ff5757;
   --color-primary-dark: #c4262a;
   /* The brand red as TEXT on a panel. Small type in plain primary falls under
-     4.5:1 on cream, and primary-dark does on the dark panels — so the shade
+     4.5:1 on cream, and primary-dark does on the dark panels, so the shade
      moves with the theme. */
   --color-primary-ink: #c4262a;
   --color-secondary: #5865f2;
@@ -26,10 +26,10 @@
      dark. Hairlines get a token too, because black/8 cannot invert. */
   --color-surface: #ffffff;
   --color-line: rgba(22, 19, 26, 0.08);
-  /* Ink that sits ON a filled or dark surface — the primary button, the hero
+  /* Ink that sits ON a filled or dark surface: the primary button, the hero
      photograph. A token so no component writes `#fff` itself. Never moves. */
   --color-on-primary: #ffffff;
-  /* Text on a block whose colour does NOT invert — the yellow bands and
+  /* Text on a block whose colour does NOT invert: the yellow bands and
      stickers stay yellow in the dark, so `ink` on them would vanish. */
   --color-on-accent: #16131a;
   /* The matte the rounded panels sit in. It reads as a frame in both themes,
@@ -116,7 +116,7 @@
       scroll-behavior: auto;
     }
     /* Entrances, the marquee, the bobbing cards: someone who asked for less
-       motion gets the end state, not the journey. */
+       motion gets the end state without the animation. */
     *,
     *::before,
     *::after {

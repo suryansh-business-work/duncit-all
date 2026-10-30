@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /**
  * Serves the hand-built sites' own static files (logos, favicons, the home
- * reel) from the CMS renderer at /legacy/<site>/…, which is where the
+ * reel) from the CMS renderer at /legacy/<site>/..., which is where the
  * migration points migrated pages. Copied at dev/build time rather than
- * committed twice: each file keeps ONE home, in its legacy site's public/.
+ * committed twice: each file keeps one home, in its legacy site's public/.
  * New images go through the Website portal's ImageKit picker instead.
  */
 import { cpSync, existsSync, mkdirSync, rmSync } from 'node:fs';

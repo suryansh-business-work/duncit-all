@@ -1,4 +1,4 @@
-// Self-hosted Nunito — replaces the Google Fonts <link> in index.html.
+// Self-hosted Nunito; replaces the Google Fonts <link> in index.html.
 import '@fontsource/nunito/400.css';
 import '@fontsource/nunito/600.css';
 import '@fontsource/nunito/700.css';
@@ -25,10 +25,10 @@ startWebShortLinkAttribution(SERVER_BASE).catch((error) =>
   console.warn('Attribution did not start', error)
 );
 
-// The GA4 tag set for this website in Tech → Google Analytics, if any.
+// The GA4 tag set for this website in Tech > Google Analytics, if any.
 loadGoogleAnalytics(`${SERVER_BASE}/graphql`, 'STATUS');
 
-// The tracking-consent banner — GA and attribution above wait for its answer.
+// The tracking-consent banner. GA and attribution above wait for its answer.
 mountConsentBanner(consentBannerCopy(siteT), { policyUrl: `${MAIN_SITE_URL}/policies` });
 
 const rootElement = document.getElementById('root');

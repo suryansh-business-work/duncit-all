@@ -9,8 +9,8 @@ const INTERVAL_MS = 6000;
  * Carousel state: which slide shows, and whether it advances on its own.
  * Autoplay never starts for someone who asked for reduced motion, stops while
  * the pointer or keyboard focus is inside, and can be paused outright
- * (WCAG 2.2.2). An explicit Play runs even with the pointer or focus inside —
- * the button is inside the carousel, so it would otherwise seem dead — and an
+ * (WCAG 2.2.2). An explicit Play runs even with the pointer or focus inside
+ * (the button is inside the carousel, so it would otherwise seem dead), and an
  * explicit Pause always stops it.
  */
 export function useCarousel(count: number) {

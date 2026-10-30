@@ -1181,6 +1181,25 @@ export {
   type ReelFeedEntry,
 } from './reel-feed';
 export {
+  formatTutorialDuration,
+  hasTutorialFilters,
+  hasWatchedEnough,
+  parseTutorialFilters,
+  TUTORIAL_COMMENT_MAX,
+  TUTORIAL_FILTER_PARAMS,
+  TUTORIAL_LANGUAGE_OPTIONS,
+  TUTORIAL_LANGUAGES,
+  TUTORIAL_PAGE_SIZE,
+  TUTORIAL_WATCHED_RATIO,
+  TUTORIALS_PATH,
+  tutorialFeedVariables,
+  tutorialFilterParams,
+  tutorialShareUrl,
+  withFocusedFirst,
+  type TutorialFilters,
+  type TutorialLanguageCode,
+} from './tutorials';
+export {
   allZero,
   buildEarningsBars,
   buildParticipantTrend,

@@ -13,7 +13,7 @@ interface SlideViewProps {
 }
 
 /**
- * One hero slide: a large rounded card on the hero gradient — the words and
+ * One hero slide: a large rounded card on the hero gradient, with the words and
  * call to action on the left, the picture on the right (under the words, in
  * its phone crop, on a phone). The page's one h1 lives elsewhere, so a slide's
  * title is an h2 at display size.

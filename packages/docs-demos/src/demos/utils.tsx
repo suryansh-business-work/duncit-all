@@ -22,6 +22,7 @@ import { cartReminderDemos } from './utils/cart-reminder';
 import { fitScaleDemos } from './utils/fit-scale';
 import { gigJobsDemos } from './utils/gig-jobs';
 import { profileMenuDemos } from './utils/profile-menu';
+import { tutorialsDemos } from './utils/tutorials';
 import { chatRoomDemos } from './utils/chat-rooms';
 import { venuePriceRulesDemos } from './utils/venue-price-rules';
 import { venueBookingDemos } from './utils/venue-booking';
@@ -49,6 +50,7 @@ export default defineDemos('utils', [
   ...fitScaleDemos,
   ...gigJobsDemos,
   ...profileMenuDemos,
+  ...tutorialsDemos,
   ...chatRoomDemos,
   ...venuePriceRulesDemos,
   ...venueBookingDemos,

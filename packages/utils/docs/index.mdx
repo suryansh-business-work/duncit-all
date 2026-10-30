@@ -146,6 +146,23 @@ exports:
   - 'shouldExtendReelFeed'
   - 'isReelPreloaded'
   - 'REEL_PRELOAD_DISTANCE'
+  - 'TUTORIALS_PATH'
+  - 'TUTORIAL_LANGUAGES'
+  - 'TUTORIAL_LANGUAGE_OPTIONS'
+  - 'TUTORIAL_WATCHED_RATIO'
+  - 'TUTORIAL_COMMENT_MAX'
+  - 'TUTORIAL_PAGE_SIZE'
+  - 'TUTORIAL_FILTER_PARAMS'
+  - 'TutorialFilters'
+  - 'TutorialLanguageCode'
+  - 'hasWatchedEnough'
+  - 'parseTutorialFilters'
+  - 'tutorialFilterParams'
+  - 'tutorialFeedVariables'
+  - 'hasTutorialFilters'
+  - 'tutorialShareUrl'
+  - 'formatTutorialDuration'
+  - 'withFocusedFirst'
   - 'coverImageUrl'
   - 'podPhase'
   - 'canCompletePod'
@@ -1366,6 +1383,33 @@ if (shouldExtendReelFeed(activeIndex, reels.length)) setCycles((count) => count 
 | `shouldExtendReelFeed` | `(activeIndex, length) => boolean` | — | True once the reel on screen is within the preload distance of the end. |
 | `isReelPreloaded` | `(index, activeIndex) => boolean` | — | Whether a reel should be buffering — the ones within `REEL_PRELOAD_DISTANCE` either side. |
 | `REEL_PRELOAD_DISTANCE` | `2` | — | Reels kept loading ahead of and behind the one on screen. |
+
+### Tutorials — `tutorials`
+
+The Tutorials page (mWeb `/tutorials`, the native `Tutorials` screen) reads its
+filters from the URL — `q`, `topic`, `lang` and `v` (a tutorial to bring to the
+front, which is what a shared link carries). A video counts as watched once 90%
+of it has played, or when it ends; both apps call `markTutorialWatched` once at
+that point and the server keeps it idempotent.
+
+```ts
+const filters = parseTutorialFilters((name) => searchParams.get(name));
+const variables = tutorialFeedVariables(filters, page);
+if (hasWatchedEnough(video.currentTime, video.duration)) markWatched();
+```
+
+| Export | Signature | Returns | Notes |
+| --- | --- | --- | --- |
+| `parseTutorialFilters` | `(read: (name) => unknown) => TutorialFilters` | — | Unknown languages are dropped; every value is trimmed. |
+| `tutorialFilterParams` | `(filters) => Record<string, string>` | — | Only the set filters, so a clean feed has a clean URL. |
+| `tutorialFeedVariables` | `(filters, page?) => variables` | — | The `tutorials` query variables, empty filters sent as null. |
+| `hasTutorialFilters` | `(filters) => boolean` | — | Whether search, topic or language narrows the feed. |
+| `hasWatchedEnough` | `(position, duration) => boolean` | — | True at `TUTORIAL_WATCHED_RATIO` (0.9); a zero or unknown duration never counts. |
+| `tutorialShareUrl` | `(origin, id) => string` | — | `<origin>/tutorials?v=<id>`. |
+| `formatTutorialDuration` | `(seconds) => string` | — | `2:05`; an hour or more reads `1:02:05`. |
+| `withFocusedFirst` | `(rows, focusId) => rows` | — | Moves the shared tutorial to the front of its page. |
+| `TUTORIAL_LANGUAGE_OPTIONS` | `{ value, labelKey }[]` | — | The English / Hindi toggle; labels are `mweb.tutorials.*` keys. |
+| `TUTORIAL_COMMENT_MAX` | `500` | — | Same limit the server enforces. |
 
 ### Pod phase — the Home rails
 

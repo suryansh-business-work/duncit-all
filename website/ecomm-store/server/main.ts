@@ -41,7 +41,8 @@ const ROOT_OPEN = '<div id="root">';
 function withRootText(html: string, head: PageHead): string {
   const body = head.summary || head.meta.description;
   const text = `<main><h1>${escapeXml(head.meta.title)}</h1><p>${escapeXml(body)}</p></main>`;
-  return html.replace(ROOT_OPEN, `${ROOT_OPEN}\n      ${text}`);
+  // A function, so a `$` in the page's own words is never read as a replacement pattern.
+  return html.replace(ROOT_OPEN, () => `${ROOT_OPEN}\n      ${text}`);
 }
 
 /** The SPA shell with this path's head written in; the plain shell (200) if the API cannot say. */

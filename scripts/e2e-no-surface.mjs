@@ -116,10 +116,15 @@ const NO_E2E_SURFACE = new Map([
   ['@duncit/dashboard', 'library — the GridStack dashboard is rendered end-to-end by every portal home'],
   ['@duncit/dialogs-native', 'framework-free sheet sizing + keyboard contract, no DOM — consumed by the native app'],
   ['@duncit/docs-demos', 'library — the runnable package demos are rendered end-to-end by the tech portal'],
+  ['@duncit/gig-jobs', 'library — the gig board, gig page and post form are rendered end-to-end by mWeb + partners-app'],
   ['@duncit/pod-details', 'library — the pod detail view is rendered end-to-end by admin + partners-app'],
   ['@duncit/pod-product-picker', 'library — the Add a Product dialog is rendered end-to-end by mWeb Create a Pod'],
   ['@duncit/rich-text', 'library — the rich-text input is rendered end-to-end by the portal forms'],
   ['@duncit/tabs', 'library — DuncitTabs is rendered end-to-end by every portal + mWeb tab strip'],
+  [
+    '@duncit/venue-rentals',
+    'library — the rentals board is rendered end-to-end by mWeb, partners-app and the finance + venues consoles',
+  ],
   [
     '@duncit/user-core',
     'framework-free session core, no DOM — driven end-to-end by every portal login spec, mWeb and the app',

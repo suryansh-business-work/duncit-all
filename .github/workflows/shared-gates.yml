@@ -105,6 +105,13 @@ jobs:
       - name: Contrast tokens
         run: node scripts/verify-contrast.mjs
 
+      # The E2E workflow only runs nightly, so a new package whose `e2e` no-op
+      # is missing from scripts/e2e-no-surface.mjs used to be found there, by a
+      # red sweep, days later. The audit runs every no-op, so it fails here, on
+      # the push that adds the package.
+      - name: Every workspace declares an honest e2e script
+        run: node scripts/verify-e2e-scripts.mjs
+
   # ---------------------------------------------------------------------------
   # The shared packages hold the code every surface depends on, and until now no
   # CI job ran their suites at all — apps-ci, portals-ci and websites-ci are each

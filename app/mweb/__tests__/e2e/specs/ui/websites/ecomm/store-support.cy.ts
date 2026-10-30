@@ -1,6 +1,13 @@
 /// <reference types="cypress" />
 import type { Translator } from '@duncit/i18n';
-import { storeCopy, storeSettings, useStoreDesktop, visitSite } from '../../../../support/ui-websites';
+import {
+  expectNeverSent,
+  guardMutation,
+  storeCopy,
+  storeSettings,
+  useStoreDesktop,
+  visitSite,
+} from '../../../../support/ui-websites';
 
 /**
  * The pet store contact page's support ticket form (src/pages/info/
@@ -25,17 +32,13 @@ describe('UI Pet store · Support', () => {
 
   beforeEach(() => {
     useStoreDesktop();
-    cy.intercept({ method: 'POST', url: String(Cypress.env('GRAPHQL_URL')) }, (req) => {
-      if ((req.body as { operationName?: string })?.operationName === 'EcommStoreCreateSupportTicket') {
-        req.alias = 'ticket';
-        req.reply({ forceNetworkError: true });
-      }
-    });
+    guardMutation('EcommStoreCreateSupportTicket', 'ticket');
   });
 
-  const expectNoTicket = () => {
-    cy.get('@ticket.all').should('have.length', 0);
-  };
+  // Counted by the guard: an alias set inside a handler only exists once a
+  // request carries it, so `cy.get('@ticket.all')` threw exactly when the form
+  // correctly sent nothing.
+  const expectNoTicket = () => expectNeverSent('ticket');
 
   it('SUP-01 sending the empty form names every required field and raises nothing', () => {
     visitSite('ecomm', '/contact');

@@ -1,6 +1,7 @@
 /// <reference types="cypress" />
 import type { Translator } from '@duncit/i18n';
 import {
+  CENTER_SCROLL,
   emulateReducedMotion,
   expectInViewport,
   expectNewTab,
@@ -17,11 +18,12 @@ import {
 
 /**
  * duncit.com home (website/main-website/src/pages/index.astro): the hero reel and
- * its two account CTAs into mWeb, the download band (@duncit/brand AppDownload),
- * the Duncit network cards, the earn showcase, and the slide-out menu with the
- * persisted theme toggle (SiteNav.astro + @duncit/brand/widgets/site-nav).
+ * its two account CTAs into mWeb, the top bar's Get the app chip (TopBar.astro),
+ * the download band (@duncit/brand AppDownload), the Duncit network cards, the
+ * earn showcase, and the slide-out menu with the persisted theme toggle
+ * (SiteNav.astro + @duncit/brand/widgets/site-nav).
  */
-describe('UI duncit.com · Home', () => {
+describe('UI duncit.com · Home', CENTER_SCROLL, () => {
   let t: Translator['t'];
   let branding: SiteBranding;
 
@@ -51,7 +53,10 @@ describe('UI duncit.com · Home', () => {
     cy.get('h1').first().should('contain.text', t('website.main.home.headingLine1'));
     cy.get(`a[href="${linkUrl('mweb', '/register')}"]`).should('contain.text', t('website.main.home.join'));
     cy.get(`a[href="${linkUrl('mweb', '/login')}"]`).should('contain.text', t('website.main.home.signIn'));
-    cy.get('section nav a[href="#download"]').should('contain.text', t('website.main.home.getApp')).click();
+    cy.get(`nav[aria-label="${t('website.main.nav.primary')}"] a[href="/#download"]`)
+      .should('contain.text', t('website.main.home.getApp'))
+      .click();
+    cy.location('pathname').should('eq', '/');
     cy.location('hash').should('eq', '#download');
     cy.get('#download').should(expectInViewport);
   });
@@ -70,10 +75,11 @@ describe('UI duncit.com · Home', () => {
     it('HOME-04 a visitor who asked for less motion gets the paused poster frame, not the reel', () => {
       emulateReducedMotion(true);
       visitSite('main');
-      cy.get('video#heroReel')
-        .should('not.have.attr', 'autoplay')
-        .and('have.attr', 'poster', '/media/duncit-reel-poster.jpg')
-        .should(($video) => expect(($video[0] as HTMLVideoElement).paused, 'reel paused').to.eq(true));
+      // Separate assertions: a one-argument `have.attr` hands on the attribute's
+      // value, so chaining after `not.have.attr` would assert on undefined.
+      cy.get('video#heroReel').should('not.have.attr', 'autoplay');
+      cy.get('video#heroReel').should('have.attr', 'poster', '/media/duncit-reel-poster.jpg');
+      cy.get('video#heroReel').should(($video) => expect(($video[0] as HTMLVideoElement).paused, 'reel paused').to.eq(true));
     });
   });
 
@@ -94,7 +100,12 @@ describe('UI duncit.com · Home', () => {
       { name: t('website.main.download.googlePlayName'), url: branding.android_app_url },
       { name: t('website.main.download.appStoreName'), url: branding.ios_app_url },
     ];
-    cy.get('[data-cms-block="app-download"] .app-store').should('have.length', 2);
+    // The two stores, plus the web door into mWeb that needs no install.
+    cy.get('[data-cms-block="app-download"] .app-store').should('have.length', stores.length + 1);
+    cy.get('[data-cms-block="app-download"] .app-store.is-web').then(($web) => {
+      expectNewTab($web, linkUrl('mweb'));
+      expect($web.find('.app-store-name').text()).to.eq(t('website.brand.appDownload.webName'));
+    });
     for (const store of stores) {
       cy.contains('[data-cms-block="app-download"] .app-store', store.name).then(($tile) => {
         if (store.url) {
@@ -143,7 +154,7 @@ describe('UI duncit.com · Home', () => {
       cy.get('#siteNav').should('have.attr', 'aria-hidden', 'true');
       cy.get('[data-nav-toggle]').first().click();
       cy.get('#siteNav').should('have.attr', 'aria-hidden', 'false');
-      for (const group of [...groups, t('website.footer.policyHub')]) cy.get('#siteNav h4').should('contain.text', group);
+      for (const group of [...groups, t('website.footer.policyHub')]) cy.get('#siteNav p[id^="nav-group-"]').should('contain.text', group);
       cy.get('#siteNav a[href="/policies"]').should('contain.text', t('website.footer.allPolicies'));
       cy.get('#siteNav [data-nav-close]').click();
       cy.get('#siteNav').should('have.attr', 'aria-hidden', 'true');

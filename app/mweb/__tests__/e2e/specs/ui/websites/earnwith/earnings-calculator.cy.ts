@@ -1,6 +1,6 @@
 /// <reference types="cypress" />
 import type { Translator } from '@duncit/i18n';
-import { blockQuery, interceptQuery, visitSite, websiteCopy } from '../../../../support/ui-websites';
+import { blockQuery, expectNeverSent, interceptQuery, visitSite, websiteCopy } from '../../../../support/ui-websites';
 
 /**
  * The earnwith earnings calculator (#calculator, EarningsCalculator.astro +
@@ -118,7 +118,7 @@ describe('UI Earn With website · Earnings calculator', () => {
       cy.get(`${CALC} [data-out="pods"]`).should('readText', '20');
       cy.get(`${CALC} [data-earn-takehome]`).should('readText', money(w.host_receives * 20));
       expectRows(HOST_ROWS, w, 20, 'host_receives');
-      cy.get('@again.all').should('have.length', 0);
+      expectNeverSent('again');
     });
   });
 
@@ -137,7 +137,7 @@ describe('UI Earn With website · Earnings calculator', () => {
         cy.get(`${CALC} [data-earn-takehome]`).should('readText', '—');
         cy.get(`${CALC} [data-earn-note]`).should('readText', t('website.earn.calculator.noShareNote'));
       }
-      cy.get('@again.all').should('have.length', 0);
+      expectNeverSent('again');
     });
   });
 
@@ -181,6 +181,9 @@ describe('UI Earn With website · Earnings calculator', () => {
 
   it('CALC-09 when jsPDF cannot load, the note says the PDF could not be prepared and the button resets', () => {
     cy.intercept('https://cdnjs.cloudflare.com/ajax/libs/jspdf/**', { forceNetworkError: true });
+    // CALC-08 has just fetched jsPDF, and cdnjs lets the browser keep it: a
+    // script served from the browser cache never reaches the intercept above.
+    cy.wrap(Cypress.automation('remote:debugger:protocol', { command: 'Network.clearBrowserCache' }), { log: false });
     openCalculator();
     cy.get(`${CALC} [data-earn-takehome]`).should('not.have.text', '—');
     cy.get(`${CALC} [data-print-estimate]`).click();

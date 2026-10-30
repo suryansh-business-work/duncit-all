@@ -20,7 +20,7 @@ import {
  * The partners footer (website/partners-website/src/components/SiteFooter.astro):
  * blurb, branding support email, PARTNERS FOOTER navigation (or its fallback),
  * the policy strip to duncit.com and the newsletter card with no consent box
- * (source PARTNERS_WEBSITE_FOOTER). Nothing is subscribed: the one submit sends
+ * (source WEBSITE_FOOTER). Nothing is subscribed: the one submit sends
  * a code that cannot match, which the server refuses before storing anything.
  */
 
@@ -79,7 +79,7 @@ describe('UI Partners website · Footer and newsletter', () => {
     interceptQuery('subscribeNewsletter', 'subscribe');
     cy.get(`${CARD} button[type="submit"]`).click();
     cy.wait('@subscribe').then(({ request, response }) => {
-      expect(request.body.variables.input.source).to.eq('PARTNERS_WEBSITE_FOOTER');
+      expect(request.body.variables.input.source).to.eq('WEBSITE_FOOTER');
       expect(response?.body?.errors?.[0]?.extensions?.code).to.eq('CAPTCHA_WRONG');
     });
     cy.get(`${CARD} [data-captcha-error]`).should('readText', CAPTCHA_FALLBACK_COPY.wrong);

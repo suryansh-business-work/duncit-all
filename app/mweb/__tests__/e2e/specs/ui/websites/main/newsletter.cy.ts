@@ -2,6 +2,7 @@
 import { CAPTCHA_FALLBACK_COPY, type Translator } from '@duncit/i18n';
 import {
   captchaToken,
+  CENTER_SCROLL,
   expectNeverSent,
   guardMutation,
   interceptQuery,
@@ -11,8 +12,8 @@ import {
 } from '../../../../support/ui-websites';
 
 /**
- * The duncit.com footer newsletter row (@duncit/brand NewsletterSignup.astro,
- * variant "inline", source WEBSITE_FOOTER) and its deferred captcha
+ * The duncit.com footer newsletter card (@duncit/brand NewsletterSignup.astro,
+ * variant "card", source WEBSITE_FOOTER) and its deferred captcha
  * (@duncit/captcha Captcha.astro). No scenario here subscribes a real address:
  * the server checks the captcha before anything else (captcha.guard.ts
  * requireHuman), so a wrong or forged code stores nothing and mails no one.
@@ -22,7 +23,7 @@ import {
 const ROOT = 'footer [data-newsletter-root]';
 const ADDRESS = 'e2e-newsletter@example.com';
 
-describe('UI duncit.com · Newsletter', () => {
+describe('UI duncit.com · Newsletter', CENTER_SCROLL, () => {
   let t: Translator['t'];
 
   before(() => {

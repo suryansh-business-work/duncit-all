@@ -48,7 +48,9 @@ const GUARDED_PATHS = [
   '/host/wallet',
   '/venues/manage',
   '/venues/settings',
-  '/venues/availability',
+  // The Venue Pricing Module; the old /venues/availability redirects here
+  // (partnerRoutes.tsx) before any guard runs, so the guard is asked for this path.
+  '/venues/pricing',
   '/venues/options',
   '/clubs/manage',
   '/shop',

@@ -31,6 +31,9 @@ describe('UI Status website · Problem report', () => {
     cy.contains('form label', label).invoke('attr', 'for').then((id) => cy.get(`[id="${id}"]`));
   const helper = (label: string) =>
     cy.contains('form label', label).invoke('attr', 'for').then((id) => cy.get(`[id="${id}-helper-text"]`));
+  /** An MUI select: since MUI 9 its label is a <div>, not a <label>, and names the combobox through aria-labelledby. */
+  const select = (label: string) =>
+    cy.contains('form [id$="-label"]', label).invoke('attr', 'id').then((id) => cy.get(`form [role="combobox"][aria-labelledby="${id}"]`));
 
   const openForm = () => {
     visitSite('status');
@@ -47,7 +50,8 @@ describe('UI Status website · Problem report', () => {
 
   it('REP-01 the button opens the form with service, impact, contact, page, message, screenshots and the captcha', () => {
     openForm();
-    for (const key of ['service', 'impact', 'name', 'email', 'pageUrl', 'message']) cy.contains('form label', t(`status.report.${key}`)).should('exist');
+    for (const key of ['service', 'impact']) select(t(`status.report.${key}`)).should('exist');
+    for (const key of ['name', 'email', 'pageUrl', 'message']) cy.contains('form label', t(`status.report.${key}`)).should('exist');
     cy.get('form').should('contain.text', t('status.report.screenshots')).and('contain.text', captcha.title);
     cy.get(`form img[alt="${captcha.imageAlt}"]`).should('have.attr', 'src').and('match', /^data:image\//);
   });

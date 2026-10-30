@@ -47,6 +47,9 @@ describe('UI Status website · Service board', () => {
   });
 
   const rowButton = (name: string) => cy.get(`[aria-label="Show status and details for ${name}"]`);
+  /** An MUI select: since MUI 9 its label is a <div>, not a <label>, and names the combobox through aria-labelledby. */
+  const select = (label: string) =>
+    cy.contains('[id$="-label"]', label).invoke('attr', 'id').then((id) => cy.get(`[role="combobox"][aria-labelledby="${id}"]`));
 
   /** OverallStatusBanner.tsx deriveOverallStatus, in words. */
   const bannerMessage = (): string => {
@@ -150,10 +153,10 @@ describe('UI Status website · Service board', () => {
     cy.get('[aria-label^="Show status and details for "]').should('have.length', searched.length);
     cy.get(search).clear();
 
-    cy.contains('label', t('status.board.group')).parent().find('[role="combobox"]').click();
+    select(t('status.board.group')).click();
     cy.contains('[role="option"]', firstGroup.title).click();
     cy.get('[aria-label^="Show status and details for "]').should('have.length', firstGroup.items.length);
-    cy.contains('label', t('status.board.group')).parent().find('[role="combobox"]').click();
+    select(t('status.board.group')).click();
     cy.contains('[role="option"]', t('status.board.allGroups')).click();
 
     cy.contains('button', t('status.board.issues')).click();

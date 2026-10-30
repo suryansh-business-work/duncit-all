@@ -1,6 +1,8 @@
 /// <reference types="cypress" />
 import type { Translator } from '@duncit/i18n';
 import {
+  CENTER_SCROLL,
+  ctaBandLine,
   expectNeverSent,
   guardMutation,
   interceptQuery,
@@ -13,8 +15,9 @@ import {
 /**
  * duncit.com/careers (website/main-website/src/pages/careers.astro +
  * components/WebsiteContentList.astro, variant "jobs"): open roles live from
- * the Website portal's CAREERS content and the Apply dialog. No application is
- * ever sent — every submit here is one the browser's validation must stop, and
+ * the Website portal's CAREERS content and the Apply dialog (@duncit/brand
+ * CareersApply.astro + widgets/careers-apply). No application is ever sent:
+ * every submit here is one the form's validity check must stop, and
  * submitJobApplication is refused at the network as a guard in case it does not.
  */
 
@@ -26,9 +29,9 @@ interface Role {
 }
 
 const CAREERS = `query E2eCareers { publicWebsiteContent(type: CAREERS) { id title category summary } }`;
-const DIALOG = 'dialog#applyDialog';
+const DIALOG = 'dialog[data-cms-widget="careers-apply"]';
 
-describe('UI duncit.com · Careers', () => {
+describe('UI duncit.com · Careers', CENTER_SCROLL, () => {
   let t: Translator['t'];
   let branding: SiteBranding;
 
@@ -43,7 +46,8 @@ describe('UI duncit.com · Careers', () => {
 
   it('CAR-01 the no-role paragraph always links the support email', () => {
     visitSite('main', '/careers');
-    cy.contains('main h2', t('website.main.careers.noRoleHeading')).next('p').find(`a[href="mailto:${branding.support_email}"]`)
+    ctaBandLine(t('website.main.careers.noRoleHeading'))
+      .find(`a[href="mailto:${branding.support_email}"]`)
       .should('readText', branding.support_email);
   });
 
@@ -79,12 +83,12 @@ describe('UI duncit.com · Careers', () => {
       const [role] = roles;
       visitSite('main', '/careers');
       openApply(role);
-      cy.get(`${DIALOG} #applyRoleTitle`).should('readText', role.title);
-      cy.get(`${DIALOG} p`).first().should('readText', t('website.main.contentList.applyFor'));
+      cy.get(`${DIALOG} [data-apply-role-title]`).should('readText', role.title);
+      cy.get(`${DIALOG} .apply-eyebrow`).should('readText', t('website.brand.apply.applyFor'));
       for (const name of ['name', 'email', 'phone', 'resume_url', 'portfolio_url', 'cover_note']) {
         cy.get(`${DIALOG} [name="${name}"]`).should('have.value', '');
       }
-      cy.get('#applyFeedback').should('have.class', 'hidden');
+      cy.get(`${DIALOG} [data-form-error]`).should('have.class', 'hidden');
     });
 
     it('CAR-04 the browser refuses a malformed phone and a resume that is not a URL, and nothing is sent', () => {
@@ -125,7 +129,7 @@ describe('UI duncit.com · Careers', () => {
       guardMutation('submitJobApplication', 'apply');
       visitSite('main', '/careers');
       openApply(role);
-      cy.get(`${DIALOG} [data-apply-close]`).should('have.attr', 'aria-label', t('website.main.contentList.close')).click();
+      cy.get(`${DIALOG} [data-apply-close]`).should('have.attr', 'aria-label', t('website.brand.apply.close')).click();
       cy.get(DIALOG).should('not.have.attr', 'open');
       expectNeverSent('apply');
     });

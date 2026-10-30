@@ -7,6 +7,7 @@ import {
   linkUrl,
   siteBranding,
   siteUrl,
+  squish,
   useDesktop,
   visitSite,
   websiteCopy,
@@ -14,12 +15,15 @@ import {
 } from '../../../../support/ui-websites';
 
 /**
- * partners.duncit.com landing (website/partners-website/src/pages/index.astro +
- * components/SiteHeader.astro): the venue and host CTAs into the Partners app,
- * the header brand mark and Log in, the proof stats, and the #ways / #download
- * anchors. Partner Brand (partners-app.duncit.com/ecomm-brand) is a separate
- * product and is not touched here.
+ * partners.duncit.com landing (website/partners-website/src/pages/index.astro,
+ * components/home/Hero.astro, components/home/PartnerPaths.astro and
+ * components/SiteHeader.astro): the join and login CTAs into the Partners app,
+ * the hero proof points, the header brand mark and Log in, and the #ways /
+ * #download anchors. Partner Brand (partners-app.duncit.com/ecomm-brand) is a
+ * separate product and is not touched here.
  */
+const HERO = 'section[aria-labelledby="hero-heading"]';
+
 describe('UI Partners website · Landing', () => {
   let t: Translator['t'];
   let branding: SiteBranding;
@@ -40,33 +44,35 @@ describe('UI Partners website · Landing', () => {
     });
   });
 
-  it('PART-02 the hero offers the venue and host CTAs into the Partners app, beside the three proof stats', () => {
+  it('PART-02 the hero offers Become a partner and Partner login into the Partners app, above its three proof points', () => {
     visitSite('partners');
-    cy.get('h1').should('readText', t('website.partners.hero.heading'));
-    cy.contains('[data-hero-copy] a', t('website.partners.hero.venueCta')).should('have.attr', 'href', linkUrl('partnersApp', '/register-venue'));
-    cy.contains('[data-hero-copy] a', t('website.partners.hero.hostCta')).should('have.attr', 'href', linkUrl('partnersApp', '/become-host'));
-    const stats = [
-      { value: '24h', label: t('website.partners.ways.statReview') },
-      { value: '0', label: t('website.partners.ways.statFee') },
-      { value: '2', label: t('website.partners.ways.statPaths') },
-    ];
-    for (const stat of stats) cy.contains('[data-hero-card] div', stat.label).parent().should('contain.text', stat.value);
+    cy.get(`${HERO} h1`).should('readText', `${t('website.partners.hero.headingLead')} ${t('website.partners.hero.headingAccent')}`);
+    cy.contains(`${HERO} a`, t('website.partners.nav.join')).should('have.attr', 'href', linkUrl('partnersApp', '/register-venue'));
+    cy.contains(`${HERO} a`, t('website.partners.nav.login')).should('have.attr', 'href', linkUrl('partnersApp'));
+    // landing.ts `proof`: the three marquee points, read out as text under the buttons.
+    const proof = ['verified', 'console', 'payouts'].map((key) => t(`website.partners.marquee.${key}`));
+    cy.get(`${HERO} ul > li`).should(($items) => {
+      expect([...$items].map((item) => squish(item.textContent ?? '')), 'proof points').to.deep.eq(proof);
+    });
   });
 
   it('PART-03 the brand mark goes to duncit.com and Log in to the Partners app', () => {
     visitSite('partners');
-    cy.get('header a.partner-brand').should('have.attr', 'href', linkUrl('mainSite')).and('have.attr', 'aria-label', t('website.partners.nav.brandAria'));
-    cy.get('header a.partner-login').should('have.attr', 'href', linkUrl('partnersApp'));
+    cy.get(`header a[aria-label="${t('website.partners.nav.brandAria')}"]`).should('have.attr', 'href', linkUrl('mainSite'));
+    cy.contains('header a', t('website.partners.nav.login')).should('have.attr', 'href', linkUrl('partnersApp'));
   });
 
-  it('PART-04 How it works scrolls to the three ways to partner, and Get the app to #download', () => {
+  it('PART-04 How it works scrolls to the three partner paths and their console card, and Get the app to #download', () => {
     useDesktop();
     visitSite('partners');
-    cy.contains('header a.partner-link', t('website.partners.nav.how')).should('have.attr', 'href', '#ways').click();
+    cy.contains('header nav a', t('website.partners.nav.how')).should('have.attr', 'href', '/#ways').click();
     cy.get('#ways').should(expectInViewport);
-    cy.get('#ways article').should('have.length', 3);
-    for (const key of ['venueTitle', 'hostTitle', 'earningsTitle']) cy.get('#ways h3').should('contain.text', t(`website.partners.ways.${key}`));
-    cy.contains('header a.partner-link', t('website.partners.nav.getApp')).should('have.attr', 'href', '#download').click();
+    const cards = ['venueName', 'clubName', 'brandName', 'consoleName'];
+    cy.get('#ways article').should('have.length', cards.length);
+    cards.forEach((key, index) => {
+      cy.get('#ways article').eq(index).find('h3').should('readText', t(`website.partners.ways.${key}`));
+    });
+    cy.contains('header nav a', t('website.partners.nav.getApp')).should('have.attr', 'href', '/#download').click();
     cy.get('#download').should(expectInViewport);
   });
 

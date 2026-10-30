@@ -105,9 +105,36 @@ export const useDesktop = (): void => {
   cy.viewport(1280, 900);
 };
 
+/**
+ * Suite config for a site whose header stays on screen as the page scrolls.
+ * duncit.com's top bar (TopBar.astro) is a sticky pill in a zero-height
+ * wrapper: Cypress's default scroll puts the target at the very top, under the
+ * pill, and the click or keystroke fails as covered (a zero-height wrapper
+ * leaves Cypress nothing to scroll past). Centring the target keeps it clear
+ * of the bar and of the floating Earn pill at the bottom edge.
+ */
+export const CENTER_SCROLL: Cypress.SuiteConfigOverrides = { scrollBehavior: 'center' };
+
 /* ------------------------------------------------------------------ */
 /* Waiting on the browser's own requests                               */
 /* ------------------------------------------------------------------ */
+
+/**
+ * How many requests each alias set by interceptQuery / guardMutation has
+ * claimed in the running test. Cypress registers an alias given inside a
+ * handler (`req.alias`) only once a request carries it, so `cy.get('@x.all')`
+ * cannot report zero: with nothing sent it fails with "could not find a
+ * registered alias". expectNeverSent reads this count instead.
+ */
+const claimed = new Map<string, number>();
+
+Cypress.on('test:before:run', () => {
+  claimed.clear();
+});
+
+const claim = (alias: string): void => {
+  claimed.set(alias, (claimed.get(alias) ?? 0) + 1);
+};
 
 /**
  * Alias the browser's next GraphQL request whose document contains `fragment`.
@@ -115,11 +142,15 @@ export const useDesktop = (): void => {
  * `cy.interceptOperation` cannot see them.
  */
 export function interceptQuery(fragment: string, alias: string): void {
+  claimed.set(alias, 0);
   cy.intercept({ method: 'POST', url: String(Cypress.env('GRAPHQL_URL')) }, (req) => {
     const body = req.body as { query?: string } | undefined;
     // Newer intercepts run first (Cypress ≥7): a later interceptQuery for the same
     // document claims the request, and the older one leaves its alias alone.
-    if (!req.alias && typeof body?.query === 'string' && body.query.includes(fragment)) req.alias = alias;
+    if (!req.alias && typeof body?.query === 'string' && body.query.includes(fragment)) {
+      req.alias = alias;
+      claim(alias);
+    }
   });
 }
 
@@ -418,6 +449,22 @@ export const metaContent = (doc: Document, selector: string): string | null =>
   doc.querySelector(selector)?.getAttribute('content') ?? null;
 
 /**
+ * The served page is duncit.com's branded 404 (website/main-website/src/pages/
+ * 404.astro): its only heading reads 404 and it asks crawlers not to index it.
+ */
+export function expectMainSite404(doc: Document, what: string): void {
+  expect(doc.querySelector('main h1')?.textContent?.replaceAll(/\s+/g, ''), `${what} serves the 404 page`).to.eq('404');
+  expect(metaContent(doc, 'meta[name="robots"]'), `${what} is noindex`).to.eq('noindex');
+}
+
+/**
+ * The line of a duncit.com call-out band (components/page/CtaBand.astro),
+ * found by the band's heading: its prose, without the action pills beside it.
+ */
+export const ctaBandLine = (heading: string): Cypress.Chainable<JQuery<HTMLElement>> =>
+  cy.contains('main section h2', heading).siblings('.cta-copy');
+
+/**
  * The SiteMeta block every Astro page carries (@duncit/brand/site-meta.ts):
  * title (with " | <site>" unless it names itself), description, canonical, OG.
  */
@@ -449,17 +496,23 @@ export function expectInViewport($el: JQuery<HTMLElement>): void {
  * one through, nothing reaches staging and the zero-count assertion fails.
  */
 export function guardMutation(fragment: string, alias: string): void {
+  claimed.set(alias, 0);
   cy.intercept({ method: 'POST', url: String(Cypress.env('GRAPHQL_URL')) }, (req) => {
     const body = req.body as { query?: string } | undefined;
     if (typeof body?.query === 'string' && body.query.includes(fragment)) {
       req.alias = alias;
+      claim(alias);
       req.reply({ forceNetworkError: true });
     }
   });
 }
 
+/** No request has been sent under `alias` (set by guardMutation or interceptQuery in this test). */
 export const expectNeverSent = (alias: string): void => {
-  cy.get(`@${alias}.all`).should('have.length', 0);
+  cy.wrap(alias, { log: false }).should((name) => {
+    expect(claimed.has(name), `@${name} is watched in this test`).to.eq(true);
+    expect(claimed.get(name), `requests sent as @${name}`).to.eq(0);
+  });
 };
 
 /** Ask Chrome to report `prefers-reduced-motion: reduce` (or clear it). Chrome only — CI runs --browser chrome. */

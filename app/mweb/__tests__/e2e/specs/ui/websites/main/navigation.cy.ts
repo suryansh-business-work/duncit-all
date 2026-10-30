@@ -1,6 +1,7 @@
 /// <reference types="cypress" />
 import type { Translator } from '@duncit/i18n';
 import {
+  CENTER_SCROLL,
   requirePolicies,
   siteBranding,
   siteNav,
@@ -27,7 +28,7 @@ interface FooterLink {
 
 const EXTERNAL = /^https?:\/\//i;
 
-describe('UI duncit.com · Navigation', () => {
+describe('UI duncit.com · Navigation', CENTER_SCROLL, () => {
   let t: Translator['t'];
   let branding: SiteBranding;
   let policies: SitePolicy[];
@@ -111,7 +112,7 @@ describe('UI duncit.com · Navigation', () => {
 
   it('NAV-05 the copyright line reads © <app name> <year> | All Rights Reserved', () => {
     visitSite('main');
-    cy.contains('footer span', `© ${branding.app_name}`)
+    cy.contains('footer div', `© ${branding.app_name}`)
       .invoke('text')
       .then((text) => {
         expect(squish(text)).to.eq(`© ${branding.app_name} ${new Date().getFullYear()} | ${t('website.footer.rights')}`);

@@ -24,7 +24,6 @@
  */
 import { startClusterJob } from '@utils/clusterJob';
 import { getUrlConfigs } from '@config/url-configs';
-import { ClubModel } from '@modules/clubs/club/club.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { loadPodClubSlugMap } from '@modules/pods/pod/pod.service';
@@ -539,7 +538,7 @@ async function noticeReplacementNotFound(now: number, cutoff: Date, mwebUrl: str
 }
 
 /* ------------------------------------------------------------------ *
- * 5-8. The feedback asks — user, host, venue, club admin.
+ * 5-6. The feedback asks — marked guests and a marked host, once each.
  * ------------------------------------------------------------------ */
 
 /** All four feedback templates take the same values in the same order. */
@@ -596,69 +595,12 @@ const guestsOf = (pod: SweptPod) =>
   pod.pod_attendees.map(String).filter((id) => id !== firstHostId(pod));
 
 /**
- * Only guests the host marked present are asked to rate — a booking is not
- * attendance. The rating form and its submit already refuse anyone else
- * (`assertAttended`), so a link sent to a no-show is a message, and a bill,
- * for a form that will only tell them they cannot answer it.
+ * The feedback ask goes only to people marked present at the pod — a booking,
+ * a venue or a club role is not attendance — and each of them gets ONE ask:
+ * the host's template if they hosted, the guest's otherwise. The venue owner
+ * and club admins are no longer asked; one person holding host, venue and
+ * admin roles used to get three messages (and three bills) about one pod.
  */
-async function askAttendeesForFeedback(pods: SweptPod[], mwebUrl: string) {
-  const marked = await markedUserIdsByPod(pods.map((pod) => pod._id));
-  const attendedGuests = (pod: SweptPod) =>
-    guestsOf(pod).filter((id) => marked.get(String(pod._id))?.has(id) ?? false);
-  const users = await waUsers(pods.flatMap(attendedGuests));
-  await sweepSend(
-    pods.flatMap((pod) =>
-      attendedGuests(pod).map((id) => feedbackAsk('USER_POD_FEEDBACK', pod, users.get(id), mwebUrl))
-    )
-  );
-}
-
-async function askHostsForFeedback(pods: SweptPod[], mwebUrl: string) {
-  const users = await waUsers(pods.map(firstHostId));
-  await sweepSend(
-    pods.map((pod) => feedbackAsk('HOST_POD_FEEDBACK', pod, users.get(firstHostId(pod)), mwebUrl))
-  );
-}
-
-async function askVenuesForFeedback(pods: SweptPod[], mwebUrl: string) {
-  const venueIds = pods.map((pod) => pod.venue_id).filter(Boolean);
-  if (venueIds.length === 0) return;
-  const venues = await VenueModel.find({ _id: { $in: venueIds } })
-    .select('owner_user_id')
-    .lean();
-  const ownerByVenue = new Map(
-    venues.map((venue: any) => [String(venue._id), String(venue.owner_user_id)])
-  );
-  const users = await waUsers([...ownerByVenue.values()]);
-  await sweepSend(
-    pods.flatMap((pod) => {
-      const owner = users.get(ownerByVenue.get(String(pod.venue_id)) ?? '');
-      return owner ? [feedbackAsk('VENUE_POD_FEEDBACK', pod, owner, mwebUrl)] : [];
-    })
-  );
-}
-
-/** A club can have several admins and every one of them ran the club that ran
- * the pod, so every one of them is asked. */
-async function askClubAdminsForFeedback(pods: SweptPod[], mwebUrl: string) {
-  const clubIds = pods.map((pod) => pod.club_id).filter(Boolean);
-  if (clubIds.length === 0) return;
-  const clubs = await ClubModel.find({ _id: { $in: clubIds } })
-    .select('admin_user_ids')
-    .lean();
-  const adminsByClub = new Map(
-    clubs.map((club: any) => [String(club._id), (club.admin_user_ids ?? []).map(String)])
-  );
-  const users = await waUsers([...adminsByClub.values()].flat());
-  await sweepSend(
-    pods.flatMap((pod) =>
-      (adminsByClub.get(String(pod.club_id)) ?? []).map((adminId: string) =>
-        feedbackAsk('CLUB_ADMIN_FEEDBACK', pod, users.get(adminId), mwebUrl)
-      )
-    )
-  );
-}
-
 async function requestPodFeedback(
   now: number,
   cutoff: Date,
@@ -667,10 +609,21 @@ async function requestPodFeedback(
 ) {
   const pods = await endedPods(now, cutoff, clocks.pod_feedback_delay_hours);
   if (pods.length === 0) return;
-  await askAttendeesForFeedback(pods, mwebUrl);
-  await askHostsForFeedback(pods, mwebUrl);
-  await askVenuesForFeedback(pods, mwebUrl);
-  await askClubAdminsForFeedback(pods, mwebUrl);
+  const marked = await markedUserIdsByPod(pods.map((pod) => pod._id));
+  const isMarked = (pod: SweptPod, id: string) => marked.get(String(pod._id))?.has(id) ?? false;
+  const attendedGuests = (pod: SweptPod) => guestsOf(pod).filter((id) => isMarked(pod, id));
+  const hostAttended = (pod: SweptPod) => isMarked(pod, firstHostId(pod));
+  const users = await waUsers(
+    pods.flatMap((pod) => [...attendedGuests(pod), ...(hostAttended(pod) ? [firstHostId(pod)] : [])])
+  );
+  await sweepSend(
+    pods.flatMap((pod) => [
+      ...attendedGuests(pod).map((id) => feedbackAsk('USER_POD_FEEDBACK', pod, users.get(id), mwebUrl)),
+      ...(hostAttended(pod)
+        ? [feedbackAsk('HOST_POD_FEEDBACK', pod, users.get(firstHostId(pod)), mwebUrl)]
+        : []),
+    ])
+  );
 }
 
 /* ------------------------------------------------------------------ */

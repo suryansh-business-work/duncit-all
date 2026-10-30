@@ -1379,7 +1379,7 @@ export const WEBSITE_SERVER_FLOWS: readonly CatalogueFlow[] = [
         steps: [
           ['Create a pod with attendees starting in 23.5 hours and wait a tick', 'Each attendee gets USER_POD_REMINDER on WhatsApp and the matching reminder email'],
           ['Wait for the next tick', 'No duplicate reminder is sent; the send log unique index rejects the repeat'],
-          ['Let the pod end and wait 1 hour plus a tick', 'Attendees get USER_POD_FEEDBACK, the host HOST_POD_FEEDBACK, the venue owner VENUE_POD_FEEDBACK and each club admin CLUB_ADMIN_FEEDBACK'],
+          ['Let the pod end and wait 1 hour plus a tick', 'Only people marked present are asked, once each: guests get USER_POD_FEEDBACK, a marked host HOST_POD_FEEDBACK; unmarked bookers, the venue owner and club admins get nothing'],
         ],
       },
       {

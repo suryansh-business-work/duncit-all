@@ -1,5 +1,6 @@
 import { JSX } from 'react';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutlined';
+import OndemandVideoIcon from '@mui/icons-material/OndemandVideo';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
@@ -66,6 +67,7 @@ const ICONS: Record<ProfileIconKey, JSX.Element> = {
   ideas: <LightbulbIcon />,
   plans: <CategoryIcon />,
   faqs: <HelpOutlineIcon />,
+  tutorials: <OndemandVideoIcon />,
   badges: <MilitaryTechIcon />,
   tour: <ExploreIcon />,
   shop: <StorefrontIcon />,

@@ -186,7 +186,7 @@ describe('profileMenuSections', () => {
         items: ['shop', 'cart', 'food-orders', 'gift-cards-buy', 'gift-cards-redeem', 'orders', 'addresses', 'rentals'],
       },
       { id: 'account', items: ['account', 'saved', 'contacts', 'verification', 'tour', 'plans'] },
-      { id: 'support', items: ['help', 'faqs'] },
+      { id: 'support', items: ['help', 'faqs', 'tutorials'] },
     ]);
   });
 
@@ -196,7 +196,7 @@ describe('profileMenuSections', () => {
       { id: 'work', items: ['gigs', 'referral'] },
       { id: 'shopping', items: ['food-orders', 'rentals'] },
       { id: 'account', items: ['account', 'saved', 'contacts', 'verification'] },
-      { id: 'support', items: ['help', 'faqs'] },
+      { id: 'support', items: ['help', 'faqs', 'tutorials'] },
     ]);
   });
 

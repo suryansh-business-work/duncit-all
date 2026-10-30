@@ -1,5 +1,6 @@
 import { Navigate, Route } from 'react-router';
-import { AccountHealthPage, AllTicketsPage, BadgesPage, BookingPage, CallbackPage, CommPreferencePage, DuncitCoinPage, FaqsPage, FeedbackPage, GiftCardCheckoutPage, GiftCardClaimPage, GiftCardRedeemPage, GiftCardsPage, GrievancePage, LeaderboardPage, LiveTicketsPage, MailPreferencePage, MembershipPage, PodHistoryDetailsPage, PodHistoryPage, PodIdeasPage, PodPlansPage, PolicyPage, PrivacyPage, ReferralPage, SignupReferralPage, SignupSurveyPage, SmsPreferencePage, SosPage, SupportChatPage, SupportHubPage, SupportTicketsPage, TicketDetailPage, VenueHealthPage, WhatsAppPreferencePage } from './lazyPages';
+import { AccountHealthPage, AllTicketsPage, BadgesPage, BookingPage, CallbackPage, CommPreferencePage, DuncitCoinPage, FaqsPage, FeedbackPage, LearningsPage, GiftCardCheckoutPage, GiftCardClaimPage, GiftCardRedeemPage, GiftCardsPage, GrievancePage, LeaderboardPage, LiveTicketsPage, MailPreferencePage, MembershipPage, PodHistoryDetailsPage, PodHistoryPage, PodIdeasPage, PodPlansPage, PolicyPage, PrivacyPage, ReferralPage, SignupReferralPage, SignupSurveyPage, SmsPreferencePage, SosPage, SupportChatPage, SupportHubPage, SupportTicketsPage, TicketDetailPage, VenueHealthPage, WhatsAppPreferencePage } from './lazyPages';
+import { TUTORIALS_PATH } from '@duncit/utils';
 import { withAuth } from './routeGuards';
 
 /** Rewards, support and account-settings routes. */
@@ -7,6 +8,7 @@ export function accountRoutes() {
   return (
     <>
         <Route path="/faqs" element={withAuth(<FaqsPage />)} />
+        <Route path={TUTORIALS_PATH} element={withAuth(<LearningsPage />)} />
         <Route path="/badges" element={withAuth(<BadgesPage />)} />
         <Route path="/policies/:slug" element={withAuth(<PolicyPage />)} />
         <Route path="/pod-ideas" element={withAuth(<PodIdeasPage />)} />

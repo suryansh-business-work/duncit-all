@@ -23,6 +23,7 @@ export type ProfileMenuKey =
   | 'support'
   | 'help'
   | 'faqs'
+  | 'tutorials'
   | 'leaderboard'
   | 'badges'
   | 'gigs'
@@ -111,6 +112,7 @@ export const PROFILE_MENU_ITEMS: Readonly<Record<ProfileMenuKey, ProfileMenuItem
   support: { key: 'support', labelKey: 'mweb.sidebar.helpSupport' },
   help: { key: 'help', labelKey: 'mweb.sidebar.help' },
   faqs: { key: 'faqs', labelKey: 'mweb.sidebar.faqs' },
+  tutorials: { key: 'tutorials', labelKey: 'mweb.sidebar.tutorials' },
   leaderboard: {
     key: 'leaderboard',
     labelKey: 'mweb.leaderboard.sidebarLabel',
@@ -188,6 +190,7 @@ export const QUICK_ACCESS_CATALOGUE: readonly ProfileMenuKey[] = [
   'leaderboard',
   'badges',
   'faqs',
+  'tutorials',
   'food-orders',
   'shop',
   'cart',
@@ -321,7 +324,7 @@ export const PROFILE_MENU_SECTIONS: readonly ProfileMenuSectionDef[] = [
     titleKey: 'mweb.sidebar.sectionAccount',
     items: ['account', 'saved', 'contacts', 'verification', 'tour', 'plans'],
   },
-  { id: 'support', titleKey: 'mweb.sidebar.sectionSupport', items: ['help', 'faqs'] },
+  { id: 'support', titleKey: 'mweb.sidebar.sectionSupport', items: ['help', 'faqs', 'tutorials'] },
 ];
 
 export interface ProfileMenuSection {

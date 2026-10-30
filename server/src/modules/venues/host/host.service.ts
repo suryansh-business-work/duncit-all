@@ -28,6 +28,12 @@ interface AccountProfileSource {
   profile?: { dob?: Date | string | null; address?: AddressParts | null } | null;
 }
 
+/** What a Portal Access HOST grant copies onto a new host record. */
+interface GrantedHostAccount {
+  auth?: { email?: string | null; phone?: { extension?: string | null; number?: string | null } | null } | null;
+  profile?: { first_name?: string | null; last_name?: string | null } | null;
+}
+
 const fail = (code: string, message: string): never => {
   throw new GraphQLError(message, { extensions: { code } });
 };
@@ -646,6 +652,34 @@ export const hostService = {
       await h.save();
     }
     return true;
+  },
+
+  /**
+   * The grant half of `revokeApprovalForUser`: a Super Admin handing out HOST
+   * from Portal Access is the approval. Without this the person held the role
+   * (so the app showed them host tools) but had no host record — missing from
+   * Onboarded Hosts, and with nowhere to keep host_categories, so Create-a-Pod
+   * said "Assigned after host onboarding". Creates the record from the account
+   * when there is none, re-approves one that is not approved, and leaves an
+   * approved host alone. No welcome here: notifyPartnerAccessGranted sends it.
+   */
+  async ensureApprovedForUser(userId: string) {
+    if (!Types.ObjectId.isValid(userId)) return;
+    const h = await getOrCreate(userId);
+    if (h.status === 'APPROVED') return;
+    if (!h.full_name || !h.email || !h.phone) {
+      const u = await UserModel.findById(userId)
+        .select('profile.first_name profile.last_name auth.email auth.phone')
+        .lean<GrantedHostAccount>();
+      const name = [u?.profile?.first_name, u?.profile?.last_name].filter(Boolean).join(' ').trim();
+      if (!h.full_name && name) h.full_name = name;
+      if (!h.email && u?.auth?.email) h.email = u.auth.email;
+      if (!h.phone) h.phone = u ? userContactNumber(u) ?? '' : '';
+    }
+    h.status = 'APPROVED';
+    h.approved_at = new Date();
+    h.reviewer_notes = 'Approved — host access was granted.';
+    await h.save();
   },
 
   /** Draft a host shell from an approved onboarding-meeting request so it shows

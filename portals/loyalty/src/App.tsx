@@ -9,6 +9,7 @@ import {
   CoinTransactionsPage,
 } from './pages/duncit-coin';
 import { ReferralDashboardPage, ReferralHistoryPage, ReferralSettingsPage } from './pages/referrals';
+import { SmartIncentiveDashboardPage, SmartIncentiveSettingsPage } from './pages/smart-incentive';
 import {
   GiftCardCardsPage,
   GiftCardDashboardPage,
@@ -52,6 +53,9 @@ export default function App() {
       <Route path="/referrals/dashboard" element={authed(<ReferralDashboardPage />)} />
       <Route path="/referrals/history" element={authed(<ReferralHistoryPage />)} />
       <Route path="/referrals/settings" element={authed(<ReferralSettingsPage />)} />
+
+      <Route path="/smart-incentive/dashboard" element={authed(<SmartIncentiveDashboardPage />)} />
+      <Route path="/smart-incentive/settings" element={authed(<SmartIncentiveSettingsPage />)} />
 
       <Route path="/gift-cards/virtual/dashboard" element={authed(<GiftCardDashboardPage />)} />
       <Route path="/gift-cards/virtual/cards" element={authed(<GiftCardCardsPage cardPath={virtualCardPath} />)} />

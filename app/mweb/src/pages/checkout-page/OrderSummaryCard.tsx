@@ -11,7 +11,7 @@ import CoinSummaryRows from './CoinSummaryRows';
 import { exclusiveOfGstBill, isVideoMedia, round2, videoSourceUrl, type CoinCheckoutSummary } from '@duncit/utils';
 import { formatDateTime } from '../../utils/dateFormat';
 
-/** One line of money taken off the bill — the multi-ticket tier, a coupon, redeemed coins. */
+/** One line of money taken off the bill — the multi-ticket tier, the Smart Incentive, a coupon, redeemed coins. */
 export interface CheckoutDiscount {
   key: string;
   label: string;

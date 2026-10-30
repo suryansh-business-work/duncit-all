@@ -22,6 +22,7 @@ import LocationClubStep from '../steps/LocationClubStep';
 import VenueSlotStep from '../steps/VenueSlotStep';
 import PricingStep from '../steps/PricingStep';
 import { useFeatureFlag } from '../../../../hooks/useFeatureFlag';
+import { useSmartIncentiveSettings } from '../../../../utils/smartIncentive';
 import type { CreatePodStepperProps } from './types';
 import { useCreatePodForm } from './useCreatePodForm';
 import { useStepperFormSync } from './useStepperFormSync';
@@ -53,6 +54,9 @@ export default function CreatePodStepper({
   // Products are a flag-gated section inside the Pricing step (not a step of
   // their own), so the step list never changes shape.
   const showProducts = useFeatureFlag('is_product_visible');
+  // Step 4 shows the Smart Incentive only while Loyalty has it on; publish
+  // sends it the same way, so nothing unseen is published.
+  const smartIncentiveOn = useSmartIncentiveSettings().enabled;
 
   const [step, setStep] = useState(Math.min(initialStep, STEP_TITLE_KEYS.length - 1));
   const [busy, setBusy] = useState(false);
@@ -110,7 +114,7 @@ export default function CreatePodStepper({
         return;
       }
       const id = await persist(step);
-      await onPublish(id, buildCreatePodInput(values));
+      await onPublish(id, buildCreatePodInput(values, { smartIncentiveOn }));
     } catch (e) {
       // Two pods may share a title — the server gives the second one a link of
       // its own — so nothing here is the title's fault any more. Whatever did

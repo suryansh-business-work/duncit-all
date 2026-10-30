@@ -1,4 +1,11 @@
-import { freeJustificationInput, isVideoUrl, mediaTypeForUrl, ticketDiscountInput, venueOfferInput } from '@duncit/utils';
+import {
+  freeJustificationInput,
+  isVideoUrl,
+  mediaTypeForUrl,
+  smartIncentiveInput,
+  ticketDiscountInput,
+  venueOfferInput,
+} from '@duncit/utils';
 import { isFreePodType, type CreatePodFormValues } from './create-pod.types';
 
 const splitLines = (text: string) =>
@@ -36,8 +43,14 @@ export const venueOfferOf = (values: CreatePodFormValues) =>
     freeJustification: freeJustificationOf(values),
   });
 
-/** Maps the validated form values onto the server's CreatePodInput. */
-export function buildCreatePodInput(values: CreatePodFormValues) {
+/**
+ * Maps the validated form values onto the server's CreatePodInput.
+ *
+ * `smartIncentiveOn` is false while Loyalty's programme is not known to be on:
+ * Step 4 hides the editor then, so a value carried in from a draft or a Host
+ * Again copy is sent switched off rather than published unseen.
+ */
+export function buildCreatePodInput(values: CreatePodFormValues, { smartIncentiveOn = true } = {}) {
   const virtual = values.pod_mode === 'VIRTUAL';
   return {
     pod_title: values.pod_title.trim(),
@@ -80,6 +93,8 @@ export function buildCreatePodInput(values: CreatePodFormValues) {
     place_charges: values.place_charges,
     // A FREE pod or a switched-off offer always sends the cleared pair.
     ...ticketDiscountInput(values, isFreePodType(values.pod_type)),
+    // Likewise the Smart Incentive: off at 0%, else the typed % as a number.
+    ...smartIncentiveInput(values, isFreePodType(values.pod_type) || !smartIncentiveOn),
     // Derived, not chosen: the "Attach products" switch is gone, so a pod's shop
     // is open exactly when it carries products. Guarding on the rows rather than
     // the flag also means a stale draft that still holds `products_enabled: true`

@@ -108,6 +108,10 @@ export interface CreatePodFormValues extends FreeJustificationValues {
   place_charges: PodPlaceCharge[];
   ticket_discount_enabled: boolean;
   ticket_discount_tiers: TicketDiscountTier[];
+  /** Smart Incentive: a one-time offer to members still deciding, off by default. */
+  smart_incentive_enabled: boolean;
+  /** The discount as typed ('' until typed) — `smartIncentiveInput` sends it as a number. */
+  smart_incentive_pct: string;
   payment_terms: string;
   /** Client-side publish gate — host must accept the Organizer Terms (last step). */
   agreed_to_terms: boolean;
@@ -151,6 +155,8 @@ export const blankCreatePodForm: CreatePodFormValues = {
   place_charges: [],
   ticket_discount_enabled: false,
   ticket_discount_tiers: [],
+  smart_incentive_enabled: false,
+  smart_incentive_pct: '',
   payment_terms: '',
   agreed_to_terms: false,
   partner_request_id: '',

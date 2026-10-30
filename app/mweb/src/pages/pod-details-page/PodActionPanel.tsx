@@ -9,6 +9,7 @@ import ReferralRefillPanel from './ReferralRefillPanel';
 import { BarLabel, BarNotice } from './BarLabel';
 import { ctaButtonSx } from './buttonSx';
 import SeatPicker from './SeatPicker';
+import type { SmartIncentiveOffer } from './useSmartIncentiveOffer';
 import { useTranslation } from '../../i18n/useTranslation';
 
 /** The booking bar's inputs — the sticky bar passes them straight through. */
@@ -17,6 +18,8 @@ export interface PodActionPanelProps {
   isFree: boolean;
   isHost: boolean;
   priceFormat: (n: number) => string;
+  /** The member's Smart Incentive — once unlocked, the price shown has it taken off. */
+  smartIncentive?: SmartIncentiveOffer | null;
   membershipState: any;
   joining: boolean;
   backingOut: boolean;
@@ -46,6 +49,7 @@ export default function PodActionPanel({
   isFree,
   isHost,
   priceFormat,
+  smartIncentive = null,
   membershipState,
   joining,
   backingOut,
@@ -155,7 +159,7 @@ export default function PodActionPanel({
 
   return (
     <Stack direction="row" spacing={1.5} data-testid="pod-action-panel" sx={{ alignItems: 'center', pl: 1 }}>
-      <BookingPriceLabel pod={pod} isFree={isFree} seats={seats} priceFormat={priceFormat} />
+      <BookingPriceLabel pod={pod} isFree={isFree} seats={seats} priceFormat={priceFormat} offer={smartIncentive} />
       <SeatPicker
         value={seats}
         onChange={onSeatsChange}

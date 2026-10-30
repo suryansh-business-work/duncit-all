@@ -36,12 +36,14 @@ const HOST_PODS = gql`
       pod_type
       pod_mode
       no_of_spots
-      # Seeds the Edit Pod sheet's multi-ticket discount with what is stored.
+      # Seeds the Edit Pod sheet's multi-ticket discount and Smart Incentive with what is stored.
       ticket_discount_enabled
       ticket_discount_tiers {
         min_tickets
         discount_pct
       }
+      smart_incentive_enabled
+      smart_incentive_pct
       seats_taken
       location_id
       venue_id

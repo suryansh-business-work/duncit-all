@@ -5,6 +5,7 @@ import { useEntityPageMeta } from '../../app/pageMeta';
 import { useLocationMismatch } from '../../hooks/useLocationMismatch';
 import { usePodDetailActions } from '../pod-details-page/usePodDetailActions';
 import { usePodProductSelection } from '../pod-details-page/usePodProductSelection';
+import { useSmartIncentiveOffer } from '../pod-details-page/useSmartIncentiveOffer';
 import {
   JOIN_POD_MEETING,
   POD_DETAILS,
@@ -90,6 +91,14 @@ export function usePodDetailsData({ clubSlug, podSlug, referralFromUrl, navigate
     refetch,
     navigate,
   });
+  // Who is looking — read here, above the page's early returns, because the
+  // Smart Incentive offer below needs them as much as the page does.
+  const isFree = pod?.pod_type === 'FREE';
+  const isPodHost = (pod?.pod_hosts_id ?? []).includes(data?.me?.user_id);
+  const membershipState = data?.podMembershipState;
+  // The two statuses the server's ALREADY_BOOKED check refuses a second checkout for.
+  const joined = Boolean(membershipState?.is_member || membershipState?.backout_in_process);
+  const smartIncentive = useSmartIncentiveOffer({ pod, isFree, isHost: isPodHost, joined });
 
   // The link comes back from a write that may have just marked this member
   // present, so the pod is re-read behind it — not awaited, so the tab opens
@@ -114,5 +123,9 @@ export function usePodDetailsData({ clubSlug, podSlug, referralFromUrl, navigate
     locationPrompt,
     productSelection,
     actions,
+    isFree,
+    isPodHost,
+    joined,
+    smartIncentive,
   };
 }

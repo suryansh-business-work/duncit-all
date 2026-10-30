@@ -30016,6 +30016,8 @@ export type Query = {
   telemetryLogsExport: Array<TelemetryLog>;
   telemetryLogsTable: TelemetryLogTablePage;
   telemetrySettings: TelemetrySettings;
+  /** Every unit, E2E and stress run that is queued or going right now, with how long each should take. Read-only. */
+  testsLiveRuns: TestsLiveRuns;
   /** The confidence score, coverage, scenario coverage and the latest of every kind of run. */
   testsOverview: TestsOverview;
   testsSettings: TestsSettings;
@@ -41871,6 +41873,41 @@ export type TestsE2eSummary = {
   suites_failed: Scalars['Int']['output'];
   tests: Scalars['Int']['output'];
   workflow_run_url?: Maybe<Scalars['String']['output']>;
+};
+
+/** A run that is queued or going right now, and what the console needs to draw how far along it is. */
+export type TestsLiveRun = {
+  __typename?: 'TestsLiveRun';
+  /** How long it should take, in seconds: a stress run's own plan, or the median of the last finished runs of the same shape. Null when there is nothing to go by. */
+  expected_seconds?: Maybe<Scalars['Int']['output']>;
+  kind: TestsLiveRunKind;
+  /** True when expected_seconds is the run's own plan, false when it is estimated from earlier runs. */
+  planned: Scalars['Boolean']['output'];
+  /** The branch the run tests. */
+  ref: Scalars['String']['output'];
+  run_id: Scalars['ID']['output'];
+  /** The run's permanent id, e.g. DUN-E2E-000071. */
+  run_no: Scalars['String']['output'];
+  /** What the run says it is doing now, in the runner's own words. Null when it does not say. */
+  stage?: Maybe<Scalars['String']['output']>;
+  /** When a runner picked it up. Null while it is still queued. */
+  started_at?: Maybe<Scalars['String']['output']>;
+  /** QUEUED or RUNNING; a stress run can also be STOPPING. */
+  status: Scalars['String']['output'];
+};
+
+/** Which kind of testing a live run belongs to. */
+export type TestsLiveRunKind =
+  | 'E2E'
+  | 'STRESS'
+  | 'UNIT';
+
+/** Every live run, and the server's clock to measure them against. */
+export type TestsLiveRuns = {
+  __typename?: 'TestsLiveRuns';
+  runs: Array<TestsLiveRun>;
+  /** The server's time when it answered, so elapsed time does not depend on the viewer's clock. */
+  server_now: Scalars['String']['output'];
 };
 
 /** The manual test board at a glance. */

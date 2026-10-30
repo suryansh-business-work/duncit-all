@@ -1,6 +1,7 @@
 import type { GraphQLContext } from '@context';
 import { requireRole, TESTS_MANAGER } from '@middleware/rbac';
 import { testsOverview } from './testsOverview.service';
+import { liveTestRuns } from './testsOverview.live';
 import { getTestsSettings, updateTestsSettings, type TestsSettingsInput } from './testsOverview.settings';
 
 /** The Tests console's own staff; Tech keeps read access to the dashboard it used to host half of. */
@@ -14,6 +15,14 @@ export const testsOverviewResolvers = {
     testsOverview: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       requireRole(ctx, TESTS_READ);
       return testsOverview();
+    },
+    testsLiveRuns: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      requireRole(ctx, TESTS_READ);
+      const { runs, server_now } = await liveTestRuns();
+      return {
+        runs: runs.map((run) => ({ ...run, started_at: iso(run.started_at) })),
+        server_now: server_now.toISOString(),
+      };
     },
     testsSettings: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       requireRole(ctx, TESTS_MANAGE);

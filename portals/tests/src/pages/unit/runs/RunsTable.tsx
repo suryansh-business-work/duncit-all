@@ -38,7 +38,12 @@ export default function RunsTable({ fetchRows, refetchRef, onRowClick }: Readonl
         width: 130,
         type: 'enum',
         options: optionsOf(labels.runStatus),
-        cellRenderer: makeStatusCell<UnitRunRow>(labels.runStatus, (r) => r.status, (r) => r.error_message),
+        cellRenderer: makeStatusCell<UnitRunRow>(
+          labels.runStatus,
+          (r) => r.status,
+          (r) => r.error_message,
+          (r) => r.id
+        ),
         valueGetter: (r) => labels.runStatus[r.status],
       },
       {

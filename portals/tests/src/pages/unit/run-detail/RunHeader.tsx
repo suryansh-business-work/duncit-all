@@ -7,6 +7,7 @@ import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 import { useDateFormat } from '@duncit/app-settings';
 import { EM_DASH } from '@duncit/table';
+import LiveRunPanel from '../../../components/live-runs/LiveRunPanel';
 import StatusChip from '../components/StatusChip';
 import { shortSha } from '../format';
 import { useUnitLabels } from '../labels';
@@ -40,7 +41,7 @@ export default function RunHeader({ run }: Readonly<{ run: UnitRunDetail }>) {
             <Typography variant="h5" component="h1" sx={{ fontWeight: 800 }}>
               {run.run_no}
             </Typography>
-            <StatusChip status={run.status} label={labels.runStatus[run.status]} />
+            <StatusChip status={run.status} label={labels.runStatus[run.status]} runId={run.id} />
           </Stack>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
             {t('testsUnit.detail.subtitle', {
@@ -74,6 +75,7 @@ export default function RunHeader({ run }: Readonly<{ run: UnitRunDetail }>) {
       </Stack>
       {run.status === 'QUEUED' && <Alert severity="info">{t('testsUnit.detail.queuedHint')}</Alert>}
       {run.status === 'RUNNING' && <Alert severity="info">{t('testsUnit.detail.runningHint')}</Alert>}
+      <LiveRunPanel kind="UNIT" runId={run.id} runNo={run.run_no} />
       {run.error_message && (
         <Alert severity={run.status === 'CANCELLED' ? 'warning' : 'error'}>{run.error_message}</Alert>
       )}

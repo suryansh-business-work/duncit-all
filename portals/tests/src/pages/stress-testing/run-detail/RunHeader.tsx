@@ -6,6 +6,7 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import StopCircleIcon from '@mui/icons-material/StopCircle';
 import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
+import LiveRunPanel from '../../../components/live-runs/LiveRunPanel';
 import { EnvironmentChip, RunStatusChip } from '../components/RunStatusChip';
 import { isLiveRun, type StressRun } from '../queries';
 
@@ -35,7 +36,7 @@ export default function RunHeader({ run, onStop, onDownload }: Readonly<Props>) 
             <Typography variant="h5" component="h1" sx={{ fontWeight: 800 }}>
               {run.run_no}
             </Typography>
-            <RunStatusChip status={run.status} />
+            <RunStatusChip status={run.status} runId={run.id} />
             <EnvironmentChip environment={run.environment} />
           </Stack>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
@@ -61,6 +62,7 @@ export default function RunHeader({ run, onStop, onDownload }: Readonly<Props>) 
         </Stack>
       </Stack>
       {run.status === 'QUEUED' && <Alert severity="info">{t('tech.stress.queuedHint')}</Alert>}
+      <LiveRunPanel kind="STRESS" runId={run.id} runNo={run.run_no} />
       {endReason && <Alert severity={endSeverity}>{endReason}</Alert>}
     </Stack>
   );

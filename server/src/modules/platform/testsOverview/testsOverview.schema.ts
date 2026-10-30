@@ -177,10 +177,46 @@ export const testsOverviewTypeDefs = gql`
     regression_penalty: Int!
   }
 
+  "Which kind of testing a live run belongs to."
+  enum TestsLiveRunKind {
+    UNIT
+    E2E
+    STRESS
+  }
+
+  "A run that is queued or going right now, and what the console needs to draw how far along it is."
+  type TestsLiveRun {
+    kind: TestsLiveRunKind!
+    run_id: ID!
+    "The run's permanent id, e.g. DUN-E2E-000071."
+    run_no: String!
+    "QUEUED or RUNNING; a stress run can also be STOPPING."
+    status: String!
+    "The branch the run tests."
+    ref: String!
+    "What the run says it is doing now, in the runner's own words. Null when it does not say."
+    stage: String
+    "When a runner picked it up. Null while it is still queued."
+    started_at: String
+    "How long it should take, in seconds: a stress run's own plan, or the median of the last finished runs of the same shape. Null when there is nothing to go by."
+    expected_seconds: Int
+    "True when expected_seconds is the run's own plan, false when it is estimated from earlier runs."
+    planned: Boolean!
+  }
+
+  "Every live run, and the server's clock to measure them against."
+  type TestsLiveRuns {
+    runs: [TestsLiveRun!]!
+    "The server's time when it answered, so elapsed time does not depend on the viewer's clock."
+    server_now: String!
+  }
+
   extend type Query {
     "The confidence score, coverage, scenario coverage and the latest of every kind of run."
     testsOverview: TestsOverview!
     testsSettings: TestsSettings!
+    "Every unit, E2E and stress run that is queued or going right now, with how long each should take. Read-only."
+    testsLiveRuns: TestsLiveRuns!
   }
 
   extend type Mutation {

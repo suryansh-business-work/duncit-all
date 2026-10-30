@@ -2,8 +2,8 @@ import type { NestedCatalogue } from '../catalogue';
 
 /**
  * The Tests console (tests.duncit.com): its dashboard — the confidence score,
- * coverage, scenario coverage and the latest of every kind of run — and its
- * Settings page.
+ * coverage, scenario coverage and the latest of every kind of run — its
+ * Settings page, and the live progress of every run shown above each page.
  *
  * A namespace of its own because nothing else renders this copy. Unit and
  * regression copy is `testsUnit`, the manual board's is `testsManual`; the
@@ -17,6 +17,26 @@ export const TESTS_BUNDLE: NestedCatalogue = {
       openNamed: 'Open {name}',
       noData: 'No data yet',
       percent: '{value}%',
+    },
+    live: {
+      title: 'Running now',
+      kind: {
+        UNIT: 'Unit tests',
+        E2E: 'End-to-end tests',
+        STRESS: 'Stress test',
+      },
+      subtitle: '{run} · {ref}',
+      progressLabel: '{kind} {run} progress',
+      chip: '{status} · {percent}%',
+      queued: 'Waiting for a runner',
+      starting: 'Starting',
+      stopping: 'Stopping',
+      left: 'About {minutes} min left',
+      lessThanMinute: 'Less than a minute left',
+      overdue: 'Taking longer than usual',
+      noEstimate: 'Running for {minutes} min · no earlier run to estimate from',
+      planned: "From the run's own plan",
+      estimated: 'Estimated from recent runs',
     },
     dashboard: {
       title: 'Testing dashboard',

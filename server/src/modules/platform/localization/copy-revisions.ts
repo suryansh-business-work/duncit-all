@@ -377,4 +377,19 @@ export const COPY_REVISIONS: Readonly<Record<string, readonly string[]>> = {
   "support.tutorials.statsLoadFailed": ["Couldn't load tutorial stats."],
   "support.tutorialTopics.title": ["Tutorial topics"],
   "support.tutorialTopics.subtitle": ["The topics members filter tutorials by. A topic with tutorials cannot be deleted."],
+  // App Store review (5.1.1): the date of birth became optional at signup and an
+  // "I confirm I’m 18 or older" tick replaced it, so no line may still ask for it.
+  "mweb.login.googleNotFoundDetail": [
+    "We will carry this Google sign-in into the next steps — you only need to add your WhatsApp number and date of birth. Nothing is created until you finish.",
+  ],
+  "mweb.login.appleNotFoundDetail": [
+    "We will carry this Apple sign-in into the next steps — you only need to add your WhatsApp number and date of birth. Nothing is created until you finish.",
+  ],
+  "mweb.signupSteps.whoSubtitleBirthDate": ["Your name, your date of birth, and a referral code if you have one."],
+  "mweb.signupSteps.detailsSubtitle": [
+    "Google doesn’t share your WhatsApp number or your date of birth, so tell us here. Your sign-up code goes to that number.",
+  ],
+  "mweb.signupSteps.appleDetailsSubtitle": [
+    "Apple doesn’t share your WhatsApp number or your date of birth, so tell us here. Your sign-up code goes to that number.",
+  ],
 };

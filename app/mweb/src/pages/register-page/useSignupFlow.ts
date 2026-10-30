@@ -40,6 +40,24 @@ function splitName(name: string): { first_name: string; last_name?: string } {
   return { first_name: first ?? '', last_name: rest.length ? rest.join(' ') : undefined };
 }
 
+/** What either door's age question answered. */
+interface SignupAge {
+  dob: string;
+  ageConfirmed: boolean;
+}
+
+/**
+ * The age as the signup mutations take it. The birthday is optional, so a blank
+ * one is left OUT ('' is not a date); 'YYYY-MM-DD' parses as UTC midnight, so
+ * the day picked is the day stored whatever the device's zone.
+ */
+function ageInput({ dob, ageConfirmed }: SignupAge) {
+  return {
+    ...(dob ? { dob: new Date(dob).toISOString() } : {}),
+    age_confirmed: ageConfirmed,
+  };
+}
+
 /**
  * Joining Duncit, both doors — the side effects. What signup is HOLDING is the
  * shared reducer's; what it DOES is this file's.
@@ -108,8 +126,8 @@ export function useSignupFlow(linkedCode: string) {
   const submitDetails = async (values: GoogleSignupValues) => {
     const shortcut = truecallerDetailsShortcut(truecallerProof, values, flow.pendingGoogle);
     if (shortcut) {
-      const { google, number, dob, token } = shortcut;
-      await createWith(() => createFromGoogle(google, number, dob, token));
+      const { google, number, dob, ageConfirmed, token } = shortcut;
+      await createWith(() => createFromGoogle(google, number, { dob, ageConfirmed }, token));
       return;
     }
     dispatch({ type: 'DETAILS_GIVEN', values });
@@ -129,9 +147,7 @@ export function useSignupFlow(linkedCode: string) {
           whatsapp_is_mobile: values.whatsappIsMobile,
           whatsapp_token: whatsappToken,
           password: values.password,
-          // 'YYYY-MM-DD' parses as UTC midnight, so the day picked is the day
-          // stored whatever the device's zone.
-          dob: new Date(values.dob).toISOString(),
+          ...ageInput(values),
           ...(code ? { referral_code: code } : {}),
           accepted_policy_ids: values.acceptedPolicyIds,
           accepted_policy_surface: ACCEPTANCE_SURFACE,
@@ -145,7 +161,7 @@ export function useSignupFlow(linkedCode: string) {
   const createFromGoogle = async (
     google: SignupGoogleCredential,
     number: SignupNumber,
-    dob: string,
+    age: SignupAge,
     whatsappToken: string,
   ) => {
     const input = {
@@ -154,8 +170,8 @@ export function useSignupFlow(linkedCode: string) {
       phone_extension: number.extension,
       whatsapp_is_mobile: number.alsoMobile,
       whatsapp_token: whatsappToken,
-      // The provider carried no birthday; the step beside the number asked it.
-      dob: new Date(dob).toISOString(),
+      // The provider carried no age; the step beside the number asked it.
+      ...ageInput(age),
       accepted_policy_ids: google.policyIds,
       accepted_policy_surface: ACCEPTANCE_SURFACE,
     };
@@ -178,10 +194,11 @@ export function useSignupFlow(linkedCode: string) {
    * step itself knows nothing about either.
    */
   const createAccount = async (whatsappToken: string) => {
-    const { pendingGoogle, pendingForm, verifying, googleDob } = flow;
+    const { pendingGoogle, pendingForm, verifying, googleDob, googleAgeConfirmed } = flow;
     await createWith(async () => {
       if (pendingGoogle && verifying && googleDob !== null) {
-        return createFromGoogle(pendingGoogle, verifying, googleDob, whatsappToken);
+        const age = { dob: googleDob, ageConfirmed: googleAgeConfirmed };
+        return createFromGoogle(pendingGoogle, verifying, age, whatsappToken);
       }
       return pendingForm ? createFromForm(pendingForm, whatsappToken) : undefined;
     });

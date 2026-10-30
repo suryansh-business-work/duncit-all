@@ -19,7 +19,12 @@ import type { GoogleSignupValues } from '@duncit/forms/schemas';
 
 import { signupDefaults, type SignupFormValues } from '@/forms/signup';
 import { useTranslation } from '@/hooks/useTranslation';
-import { register, signupWithApple, signupWithGoogle } from '@/services/auth.service';
+import {
+  register,
+  signupWithApple,
+  signupWithGoogle,
+  type SignupAge,
+} from '@/services/auth.service';
 import { useAuthStore } from '@/stores/auth.store';
 import { toErrorMessage } from '@/utils/errors';
 
@@ -91,9 +96,9 @@ export function useSignupFlow() {
   const submitDetails = async (values: GoogleSignupValues) => {
     const shortcut = truecallerDetailsShortcut(truecallerProof, values, flow.pendingGoogle);
     if (shortcut) {
-      const { google, number, dob, token } = shortcut;
+      const { google, number, dob, ageConfirmed, token } = shortcut;
       await createWith(async () => {
-        const result = await createFromGoogle(google, number, dob, token);
+        const result = await createFromGoogle(google, number, { dob, ageConfirmed }, token);
         authenticate(result.token, result.surveyCompleted, true);
       });
       return;
@@ -106,6 +111,7 @@ export function useSignupFlow() {
       {
         name: values.name,
         dob: values.dob,
+        ageConfirmed: values.ageConfirmed,
         email: values.email,
         phoneNumber: values.phoneNumber,
         phoneExtension: values.phoneExtension,
@@ -121,7 +127,7 @@ export function useSignupFlow() {
   const createFromGoogle = (
     google: SignupGoogleCredential,
     number: SignupNumber,
-    dob: string,
+    age: SignupAge,
     whatsappToken: string,
   ) => {
     const proven = {
@@ -133,9 +139,9 @@ export function useSignupFlow() {
     // Apple's token names nobody: the name is the one Apple shared, or the one
     // the details step asked.
     if (google.provider === 'APPLE') {
-      return signupWithApple(google.idToken, google.name ?? '', [...google.policyIds], proven, dob);
+      return signupWithApple(google.idToken, google.name ?? '', [...google.policyIds], proven, age);
     }
-    return signupWithGoogle(google.idToken, [...google.policyIds], proven, dob);
+    return signupWithGoogle(google.idToken, [...google.policyIds], proven, age);
   };
 
   const detailsProvider: SocialProvider = flow.pendingGoogle?.provider ?? 'GOOGLE';
@@ -149,10 +155,11 @@ export function useSignupFlow() {
    * form to have asked it, hence the extra prompt on that door alone.
    */
   const createAccount = async (whatsappToken: string) => {
-    const { pendingGoogle, pendingForm, verifying, googleDob } = flow;
+    const { pendingGoogle, pendingForm, verifying, googleDob, googleAgeConfirmed } = flow;
     await createWith(async () => {
       if (pendingGoogle && verifying && googleDob !== null) {
-        const result = await createFromGoogle(pendingGoogle, verifying, googleDob, whatsappToken);
+        const age = { dob: googleDob, ageConfirmed: googleAgeConfirmed };
+        const result = await createFromGoogle(pendingGoogle, verifying, age, whatsappToken);
         authenticate(result.token, result.surveyCompleted, true);
         return;
       }

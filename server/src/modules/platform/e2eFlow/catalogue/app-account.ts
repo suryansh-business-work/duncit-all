@@ -13,7 +13,7 @@ export const APP_ACCOUNT_FLOWS: readonly CatalogueFlow[] = [
           'A new visitor completes all four steps and lands on the interest survey with a live session.',
         steps: [
           ['Open /register while signed out (native: tap "Create an account" on the sign-in screen)', 'The "Join Duncit." screen shows a Google button, an "OR EMAIL" divider, a 4-segment step bar titled "About you" and a "Continue" button'],
-          ['Enter a valid Name, pick a Date of birth at least the admin minimum age ago, leave Referral code empty, tap "Continue"', 'Step 2 "How we reach you" shows Code (+91), WhatsApp number, a ticked "This is also my mobile number" box and Email'],
+          ['Enter a valid Name, leave Date of birth empty (it is optional), tick "I confirm I’m 18 or older", leave Referral code empty, tap "Continue"', 'Step 2 "How we reach you" shows Code (+91), WhatsApp number, a ticked "This is also my mobile number" box and Email'],
           ['Enter a WhatsApp number and an email that are not on any account and wait for the check', '"Checking availability…" shows briefly and then clears; "Continue" is enabled'],
           ['Tap "Continue"', 'Step 3 "Your password" shows Password, Confirm Password and the "I have read and accept the Duncit policies" checkbox; the main button reads "Create account"'],
           ['Enter a valid password twice, tick the policy checkbox and press "Accept all" in the dialog', 'The dialog closes and the checkbox is ticked with no hint under it'],
@@ -26,7 +26,7 @@ export const APP_ACCOUNT_FLOWS: readonly CatalogueFlow[] = [
         name: 'Step 1 About you validation',
         description: 'Inline Zod errors on the first step; Continue only validates this step.',
         steps: [
-          ['On /register tap "Continue" with every box empty', 'Inline errors "Name is required" and "Date of birth is required" show and the step does not change'],
+          ['On /register tap "Continue" with every box empty', 'Inline errors "Name is required" and "Please confirm you’re 18 or older to join Duncit" (the configured age) show, Date of birth shows no error, and the step does not change'],
           ['Enter a one-letter name and blur', '"Name must be at least 2 characters" shows under Name'],
           ['Enter a name containing digits or symbols, e.g. "Riya_99"', '"Name can use letters, spaces, apostrophes and periods only" shows'],
           ['Type a half-finished date of birth into the date box', '"Enter a valid date of birth" shows'],
@@ -35,14 +35,16 @@ export const APP_ACCOUNT_FLOWS: readonly CatalogueFlow[] = [
         ],
       },
       {
-        name: 'Minimum age gate on date of birth',
+        name: 'Minimum age gate: the age tick and the optional date of birth',
         description:
-          'The joining age comes from Admin settings (default 18) and is enforced by the picker, the form and the server.',
+          'The joining age comes from Admin settings (default 18). The "I confirm I’m 18 or older" tick is required; a date of birth is optional, and when given it is enforced by the picker, the form and the server.',
         steps: [
-          ['Open the Date of birth picker on step 1', 'The picker opens on the year view; days after today minus the minimum age cannot be selected; helper text reads "You must be at least 18 years old" (the configured number)'],
+          ['Open the Date of birth picker on step 1', 'The picker opens on the year view; days after today minus the minimum age cannot be selected; helper text reads "Optional. If you add it, you must be at least 18 years old" (the configured number)'],
           ['Type a date that makes the person younger than the minimum age and tap "Continue"', '"You must be at least 18 years old to join Duncit" shows and step 1 stays open'],
           ['Change the Admin minimum signup age and reload /register', 'The helper text and the refusal quote the new number'],
           ['Send the register mutation directly with an under-age dob', 'The server refuses with "You must be at least {years} years old to join Duncit" and no account is created'],
+          ['Send the register mutation directly with no dob and age_confirmed false', 'The server refuses with "Please confirm you’re {years} or older to join Duncit" and no account is created'],
+          ['Send the register mutation with no dob and age_confirmed true', 'The account is created with no date of birth on its profile'],
         ],
       },
       {
@@ -135,11 +137,11 @@ export const APP_ACCOUNT_FLOWS: readonly CatalogueFlow[] = [
       {
         name: 'Sign up with Google',
         description:
-          'Google proves the email only, so the flow asks policies, WhatsApp number and date of birth, then a WhatsApp code, before signupWithGoogle creates the account.',
+          'Google proves the email only, so the flow asks policies, WhatsApp number and the age tick (date of birth optional), then a WhatsApp code, before signupWithGoogle creates the account.',
         steps: [
           ['On /register press the Google button and choose a Google account with no Duncit account', 'The "Policies you need to accept" dialog opens with the text that Google has confirmed who you are but the account is not created yet'],
-          ['Press "Accept all"', 'The step bar title changes to "A few details" with WhatsApp number, "This is also my mobile number" and Date of birth, and a "Send code" button'],
-          ['Enter an unused WhatsApp number and a valid date of birth, tap "Send code"', 'The Verify WhatsApp step opens and a code is sent to that number'],
+          ['Press "Accept all"', 'The step bar title changes to "A few details" with WhatsApp number, "This is also my mobile number", Date of birth (optional), "I confirm I’m 18 or older" and a "Send code" button'],
+          ['Enter an unused WhatsApp number, tick "I confirm I’m 18 or older", tap "Send code"', 'The Verify WhatsApp step opens and a code is sent to that number'],
           ['Enter the test code shown by the stubbed OTP and tap "Verify number"', 'The account is created with the Google email verified and the app lands on /signup-referral (native: referral prompt screen)'],
         ],
       },

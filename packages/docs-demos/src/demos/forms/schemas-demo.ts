@@ -25,7 +25,10 @@ const SAMPLE_PASSPHRASE = ['a', 'longer', 'passphrase'].join('-');
 
 interface SchemaMock {
   name: string;
+  /** Optional at signup — blank it and the signup still passes on the age tick. */
   dob: string;
+  /** Signup's "I confirm I am 18 or older" tick. Untick it and signup is refused. */
+  age_confirmed: boolean;
   email: string;
   password: string;
   otp: string;
@@ -63,6 +66,7 @@ export const schemasDemo = defineDemo<SchemaMock>({
   mock: {
     name: 'Meera Nair',
     dob: '1998-04-23',
+    age_confirmed: true,
     email: 'meera@duncit.com',
     password: 'correct-horse',
     otp: '482913',
@@ -122,6 +126,7 @@ export const schemasDemo = defineDemo<SchemaMock>({
         makeSignupSchema(t, 18).safeParse({
           name: mock.name,
           dob: mock.dob,
+          ageConfirmed: mock.age_confirmed,
           email: mock.email,
           phoneExtension: mock.extension,
           phoneNumber: mock.number,

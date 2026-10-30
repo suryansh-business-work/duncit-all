@@ -47,7 +47,7 @@ export const SIGNUP_STEP_COUNT = SIGNUP_STEPS.length;
  * VERIFY holds none: the code is checked by the server, not by the form.
  */
 export const SIGNUP_STEP_FIELDS: Record<SignupStep, readonly string[]> = {
-  WHO: ['name', 'dob', 'referralCode'],
+  WHO: ['name', 'dob', 'ageConfirmed', 'referralCode'],
   CONTACT: ['phoneExtension', 'phoneNumber', 'whatsappIsMobile', 'email'],
   SECURITY: ['password', 'confirmPassword', 'acceptedPolicyIds'],
   VERIFY: [],

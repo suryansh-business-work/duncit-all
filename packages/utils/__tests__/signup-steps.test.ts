@@ -45,7 +45,7 @@ describe('the step order', () => {
 
 describe('which step owns which boxes', () => {
   it('gives every step its own fields', () => {
-    expect(SIGNUP_STEP_FIELDS.WHO).toEqual(['name', 'dob', 'referralCode']);
+    expect(SIGNUP_STEP_FIELDS.WHO).toEqual(['name', 'dob', 'ageConfirmed', 'referralCode']);
     expect(SIGNUP_STEP_FIELDS.CONTACT).toEqual([
       'phoneExtension',
       'phoneNumber',

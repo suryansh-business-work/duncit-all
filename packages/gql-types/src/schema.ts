@@ -1865,8 +1865,16 @@ export type AppleAuthInput = {
 export type AppleSignupInput = {
   accepted_policy_ids?: InputMaybe<Array<Scalars['ID']['input']>>;
   accepted_policy_surface?: InputMaybe<PolicyAcceptanceSurface>;
+  /**
+   * The signup form's "I confirm I'm 18 or older" tick (18 being Admin's
+   * minimum joining age). Required when no date of birth is sent; a birthday,
+   * when there is one, is checked against the same age instead. Builds that
+   * predate the tick always send a birthday, so they never need it.
+   */
+  age_confirmed?: InputMaybe<Scalars['Boolean']['input']>;
   city?: InputMaybe<Scalars['String']['input']>;
-  dob: Scalars['String']['input'];
+  /** Optional, as on the other doors. */
+  dob?: InputMaybe<Scalars['String']['input']>;
   first_name: Scalars['String']['input'];
   id_token: Scalars['String']['input'];
   last_name?: InputMaybe<Scalars['String']['input']>;
@@ -10653,13 +10661,20 @@ export type GoogleSignupInput = {
   accepted_policy_ids?: InputMaybe<Array<Scalars['ID']['input']>>;
   /** Which app they accepted in. Recorded on every acceptance row. */
   accepted_policy_surface?: InputMaybe<PolicyAcceptanceSurface>;
+  /**
+   * The signup form's "I confirm I'm 18 or older" tick (18 being Admin's
+   * minimum joining age). Required when no date of birth is sent; a birthday,
+   * when there is one, is checked against the same age instead. Builds that
+   * predate the tick always send a birthday, so they never need it.
+   */
+  age_confirmed?: InputMaybe<Scalars['Boolean']['input']>;
   city?: InputMaybe<Scalars['String']['input']>;
   /**
-   * Date of birth. A Google credential carries no birthday, so the client asks
-   * for it on the same step as the number — and it is as required as it is on
-   * the email door, because the joining age is checked against it.
+   * Date of birth. Optional, as on the email door: a Google credential carries
+   * no birthday, so the client asks for the age tick on the same step as the
+   * number and offers the birthday beside it.
    */
-  dob: Scalars['String']['input'];
+  dob?: InputMaybe<Scalars['String']['input']>;
   id_token: Scalars['String']['input'];
   /** The signup form's marketing box. Marketing email and WhatsApp start OFF unless it is ticked (GDPR opt-in). */
   marketing_opt_in?: InputMaybe<Scalars['Boolean']['input']>;
@@ -35050,8 +35065,16 @@ export type RegisterInput = {
   accepted_policy_ids?: InputMaybe<Array<Scalars['ID']['input']>>;
   /** Which app they accepted in. Recorded on every acceptance row. */
   accepted_policy_surface?: InputMaybe<PolicyAcceptanceSurface>;
+  /**
+   * The signup form's "I confirm I'm 18 or older" tick (18 being Admin's
+   * minimum joining age). Required when no date of birth is sent; a birthday,
+   * when there is one, is checked against the same age instead. Builds that
+   * predate the tick always send a birthday, so they never need it.
+   */
+  age_confirmed?: InputMaybe<Scalars['Boolean']['input']>;
   city?: InputMaybe<Scalars['String']['input']>;
-  dob: Scalars['String']['input'];
+  /** Date of birth. Optional — the age tick below is what signup needs; a birthday given here must clear the minimum age. */
+  dob?: InputMaybe<Scalars['String']['input']>;
   email: Scalars['String']['input'];
   first_name: Scalars['String']['input'];
   last_name?: InputMaybe<Scalars['String']['input']>;

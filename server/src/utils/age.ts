@@ -38,6 +38,11 @@ export function dobMinAgeMessage(minAgeYears: number): string {
   return `You must be at least ${minAgeYears} years old to join Duncit`;
 }
 
+/** A signup with neither a birthday nor the age tick — the clients' words. */
+export function ageConfirmRequiredMessage(minAgeYears: number): string {
+  return `Please confirm you’re ${minAgeYears} or older to join Duncit`;
+}
+
 /** Strict ISO date (YYYY-MM-DD) or ISO instant — nothing else. */
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}(?:[T ].*)?$/;
 
@@ -134,4 +139,32 @@ export async function assertEligibleDob(
       extensions: { code: "BAD_USER_INPUT" },
     });
   }
+}
+
+/**
+ * The signup age gate, for every door that creates an account.
+ *
+ * The date of birth is optional (App Store 5.1.1: signup may not demand data
+ * the app can work without), so the age is proved one of two ways. A birthday,
+ * when given, must clear the minimum — `assertEligibleDob`. Without one, the
+ * person must have ticked "I confirm I'm N or older". The tick is not asked of
+ * a request that carries a birthday: builds that predate it always send one.
+ */
+export async function assertSignupAge(
+  dob: unknown,
+  ageConfirmed: unknown,
+): Promise<void> {
+  if (dob !== null && dob !== undefined && dob !== "") {
+    await assertEligibleDob(dob);
+    return;
+  }
+  if (ageConfirmed === true) return;
+  const { GraphQLError } = await import("graphql");
+  const { settingsService } = await import(
+    "@modules/platform/settings/settings.service"
+  );
+  const minAge = await settingsService.getMinSignupAge();
+  throw new GraphQLError(ageConfirmRequiredMessage(minAge), {
+    extensions: { code: "BAD_USER_INPUT" },
+  });
 }

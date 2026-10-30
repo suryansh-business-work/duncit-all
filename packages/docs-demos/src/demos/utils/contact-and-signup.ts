@@ -142,6 +142,7 @@ export const contactAndSignupDemos: PackageDemo[] = [
         phoneNumber: '9845012345',
         whatsappIsMobile: true,
         dob: '1998-04-23',
+        ageConfirmed: true,
       },
     },
     compute: (mock) => {

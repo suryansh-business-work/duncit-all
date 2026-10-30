@@ -19,6 +19,7 @@ const ELIGIBLE_DOB = toIsoDay(latestEligibleDob(18));
 const valid = {
   name: 'Riya Sharma',
   dob: ELIGIBLE_DOB,
+  ageConfirmed: true,
   email: 'riya@duncit.com',
   phoneExtension: '+91',
   phoneNumber: '9845012345',
@@ -43,6 +44,7 @@ describe('the one signup contract', () => {
   it('exposes empty defaults with the market dial code', () => {
     expect(signupDefaults.name).toBe('');
     expect(signupDefaults.dob).toBe('');
+    expect(signupDefaults.ageConfirmed).toBe(false);
     expect(signupDefaults.phoneExtension).toBe('+91');
     expect(signupDefaults.acceptedPolicyIds).toEqual([]);
   });
@@ -72,12 +74,21 @@ describe('the name rule the two surfaces used to disagree on', () => {
   });
 });
 
-describe('the date of birth', () => {
-  it('requires one', () => {
-    expect(errorsOf({ ...valid, dob: '' })).toContain('mweb.signup.validation.dobRequired');
+describe('the joining age', () => {
+  it('lets the date of birth stay empty when the age is confirmed', () => {
+    expect(schema.safeParse({ ...valid, dob: '' }).success).toBe(true);
   });
 
-  it('wants a real calendar day, as YYYY-MM-DD', () => {
+  it('refuses an unticked age confirmation, with or without a birthday, and names the age', () => {
+    expect(errorsOf({ ...valid, ageConfirmed: false })).toEqual([
+      'mweb.signup.validation.ageConfirmRequired:{"years":18}',
+    ]);
+    expect(errorsOf({ ...valid, dob: '', ageConfirmed: false })).toEqual([
+      'mweb.signup.validation.ageConfirmRequired:{"years":18}',
+    ]);
+  });
+
+  it('wants a real calendar day, as YYYY-MM-DD, when one is given', () => {
     expect(errorsOf({ ...valid, dob: '23/04/1998' })).toContain(
       'mweb.signup.validation.dobInvalid',
     );
@@ -100,25 +111,33 @@ describe('the date of birth', () => {
 });
 
 describe("the Google door's own step", () => {
-  it('asks the number row and the date of birth together, and refuses without either', () => {
+  it('asks the number row and the age tick together, and refuses without either', () => {
     const google = makeGoogleSignupSchema(t, 18);
     const withNumber = { ...googleSignupDefaults, phoneNumber: '9845012345' };
+    expect(googleSignupDefaults.ageConfirmed).toBe(false);
     expect(google.safeParse(withNumber).success).toBe(false);
-    expect(google.safeParse({ ...withNumber, dob: ELIGIBLE_DOB }).success).toBe(true);
-    expect(google.safeParse({ ...googleSignupDefaults, dob: ELIGIBLE_DOB }).success).toBe(false);
+    expect(google.safeParse({ ...withNumber, ageConfirmed: true }).success).toBe(true);
+    expect(
+      google.safeParse({ ...withNumber, ageConfirmed: true, dob: ELIGIBLE_DOB }).success,
+    ).toBe(true);
+    expect(google.safeParse({ ...googleSignupDefaults, ageConfirmed: true }).success).toBe(false);
   });
 
   it('falls back to the shared minimum age when none is given', () => {
     const relaxed = makeGoogleSignupSchema(t);
     expect(
-      relaxed.safeParse({ ...googleSignupDefaults, phoneNumber: '9845012345', dob: '1990-04-23' })
-        .success,
+      relaxed.safeParse({
+        ...googleSignupDefaults,
+        phoneNumber: '9845012345',
+        dob: '1990-04-23',
+        ageConfirmed: true,
+      }).success,
     ).toBe(true);
   });
 
   it('asks the name too when Apple carried none, with the email form’s own rule', () => {
     const apple = makeGoogleSignupSchema(t, 18, true);
-    const filled = { ...googleSignupDefaults, phoneNumber: '9845012345', dob: ELIGIBLE_DOB };
+    const filled = { ...googleSignupDefaults, phoneNumber: '9845012345', ageConfirmed: true };
 
     const blank = apple.safeParse(filled);
     expect(blank.success).toBe(false);

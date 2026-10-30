@@ -784,15 +784,19 @@ const schema = makeSignupSchema(t, minAge, requiredPolicyIds);
 
 schema.safeParse({ ...values, name: '' });   // nameRequired
 schema.safeParse({ ...values, name: 'A' });  // nameMin
-schema.safeParse({ ...values, dob: '' });           // dobRequired
+schema.safeParse({ ...values, ageConfirmed: false }); // ageConfirmRequired — names the minimum
+schema.safeParse({ ...values, dob: '' });           // passes — the birthday is optional
 schema.safeParse({ ...values, dob: '23/04/98' });   // dobInvalid — a 'YYYY-MM-DD' calendar day
 schema.safeParse({ ...values, dob: '2015-04-23' }); // dobMinAge — names the admin's minimum
 ```
 
-The date of birth is a FULL calendar day, held as 'YYYY-MM-DD' exactly as both pickers emit
-it, and gated by `isEligibleDob` from `@duncit/datetime` — so the form, the profile editor and
-the server all gate on one calendar. A birth year was tried and taken out again: it cannot say
-whether this year's birthday has happened yet, so it had to round in the applicant's favour.
+The joining age is asked as a REQUIRED tick — "I confirm I am N or older", N being the admin's
+minimum — and an OPTIONAL date of birth. The App Store refuses a signup that demands personal
+data the app can work without, and the app only needs the age. When a birthday is given it is
+still a FULL calendar day, held as 'YYYY-MM-DD' exactly as both pickers emit it, and gated by
+`isEligibleDob` from `@duncit/datetime` — so the form, the profile editor and the server all
+gate on one calendar. A birth year was tried and taken out again: it cannot say whether this
+year's birthday has happened yet, so it had to round in the applicant's favour.
 
 ### The WhatsApp row, asked at two doors
 
@@ -805,9 +809,10 @@ account.
 It is its own schema because two doors ask for it. The email form asks as step two —
 `makeSignupSchema` spreads this schema's `.shape` in, so the row cannot change for one door and
 not the other. Google hands back a credential with no form attached, so it asks on a step of
-its own: `makeGoogleSignupSchema(t, minAge)` is that step — the same row plus the date of
-birth, because a Google credential carries no birthday either — asked before `signupWithGoogle`
-is called, since that mutation needs the number, the code that proved it, and the date of birth.
+its own: `makeGoogleSignupSchema(t, minAge)` is that step — the same row plus the age tick and
+the optional date of birth, because a Google credential carries no age either — asked before
+`signupWithGoogle` is called, since that mutation needs the number, the code that proved it,
+and the age tick (or a birthday that clears the minimum).
 
 ```ts
 const schema = makeWhatsappNumberSchema(t);
@@ -817,13 +822,13 @@ schema.safeParse({ ...whatsappNumberDefaults, phoneNumber: '9845012345' }); // p
 
 const google = makeGoogleSignupSchema(t, 18);
 
-google.safeParse({ ...googleSignupDefaults, phoneNumber: '9845012345' }); // dobRequired
-google.safeParse({ ...googleSignupDefaults, phoneNumber: '9845012345', dob: '1998-04-23' }); // passes
+google.safeParse({ ...googleSignupDefaults, phoneNumber: '9845012345' }); // ageConfirmRequired
+google.safeParse({ ...googleSignupDefaults, phoneNumber: '9845012345', ageConfirmed: true }); // passes
 
 // Apple rides the same step. Apple shares a name only on the first authorisation, so when
 // the credential carried none the third argument makes the name a real question.
 const apple = makeGoogleSignupSchema(t, 18, true);
-apple.safeParse({ ...googleSignupDefaults, phoneNumber: '9845012345', dob: '1998-04-23' }); // nameRequired
+apple.safeParse({ ...googleSignupDefaults, phoneNumber: '9845012345', ageConfirmed: true }); // nameRequired
 ```
 
 Whether the number is already on another account is the server's answer, checked twice: before

@@ -685,7 +685,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       googleNotFoundBody:
         'We could not find a Duncit account for {email}. Would you like to create one?',
       googleNotFoundDetail:
-        'We will carry this Google sign-in into the next steps — you only need to add your WhatsApp number and date of birth. Nothing is created until you finish.',
+        'We will carry this Google sign-in into the next steps — you only need to add your WhatsApp number and confirm your age. Nothing is created until you finish.',
       googleNotFoundAction: 'Create my account',
       googleNotFoundDismiss: 'Not now',
       // The consent step. An email/password account whose address matches a
@@ -704,7 +704,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       // The same invite and consent step, when the door was Apple. The title,
       // body, actions and "Not now" above are the provider-free half.
       appleNotFoundDetail:
-        'We will carry this Apple sign-in into the next steps — you only need to add your WhatsApp number and date of birth. Nothing is created until you finish.',
+        'We will carry this Apple sign-in into the next steps — you only need to add your WhatsApp number and confirm your age. Nothing is created until you finish.',
       appleLinkConsentTitle: 'Also sign in with Apple?',
       appleLinkConsentBody:
         'You registered {email} with an email and password. Allow Apple to sign you in to this same account?',
@@ -736,6 +736,12 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       // mWeb only — MUI X's picker carries a helper line under the box; the
       // native field says it through its validation message instead.
       dobHint: 'You must be at least {years} years old',
+      // Both surfaces — the birthday is optional at signup and in the profile
+      // editor, so the line under the box says so before it states the rule.
+      dobOptionalHint: 'Optional. If you add it, you must be at least {years} years old',
+      // The tick that replaced the required birthday (App Store 5.1.1): the age
+      // is what signup needs, and {years} is the admin’s minimum joining age.
+      ageConfirmLabel: 'I confirm I’m {years} or older',
       // Native only — its date of birth is typed as well as picked. The shape
       // comes from the admin's configured date pattern, never a literal.
       dobPlaceholder: '{format}',
@@ -760,7 +766,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
         nameMin: 'Name must be at least 2 characters',
         nameTooLong: 'Name is too long',
         confirmRequired: 'Please confirm your password',
-        dobRequired: 'Date of birth is required',
+        ageConfirmRequired: 'Please confirm you’re {years} or older to join Duncit',
         dobInvalid: 'Enter a valid date of birth',
         dobFormat: 'Use the format {format}',
         dobMinAge: 'You must be at least {years} years old to join Duncit',
@@ -777,7 +783,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
     // buildSignupStepperLabels in @duncit/utils, so both apps read one set.
     signupSteps: {
       whoTitle: 'About you',
-      whoSubtitleBirthDate: 'Your name, your date of birth, and a referral code if you have one.',
+      whoSubtitleBirthDate: 'Your name, your age, and a referral code if you have one.',
       contactTitle: 'How we reach you',
       contactSubtitle: 'Your WhatsApp number and email address.',
       securityTitle: 'Your password',
@@ -799,10 +805,10 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       testCode: 'Test code: {code}',
       // The Google door has no form behind it, so it asks on a step of its own
       // for the two things a Google account never tells us: the WhatsApp number
-      // a code can be sent to, and the date of birth the joining age is checked on.
+      // a code can be sent to, and the joining age (a tick; the birthday is optional).
       detailsTitle: 'A few details',
-      detailsSubtitle: 'Google doesn’t share your WhatsApp number or your date of birth, so tell us here. Your sign-up code goes to that number.',
-      appleDetailsSubtitle: 'Apple doesn’t share your WhatsApp number or your date of birth, so tell us here. Your sign-up code goes to that number.',
+      detailsSubtitle: 'Google doesn’t share your WhatsApp number, so tell us here — your sign-up code goes to that number. Confirm your age too; your date of birth is optional.',
+      appleDetailsSubtitle: 'Apple doesn’t share your WhatsApp number, so tell us here — your sign-up code goes to that number. Confirm your age too; your date of birth is optional.',
       truecallerVerified: 'Your number is verified with Truecaller. Finish your details — no WhatsApp code needed for this number.',
       sameAsMobile: 'This is also my mobile number',
       sameAsMobileHint: 'Untick if your mobile number is different — we will leave the phone number on your profile blank.',

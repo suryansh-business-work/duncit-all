@@ -34,7 +34,7 @@ describe('auth validators — the signup contract', () => {
     expect(value.whatsapp_is_mobile).toBe(true);
   });
 
-  it('still requires first_name, email, password and dob', async () => {
+  it('still requires first_name, email and password', async () => {
     await expect(
       registerSchema.parseAsync({ email: 'x@duncit.com', password: 'StrongPass123' })
     ).rejects.toThrow();
@@ -77,19 +77,28 @@ describe('auth validators — the signup contract', () => {
   });
 
   /*
-    Google proves an email address and nothing else — not a number, and not a
-    birthday. The minimum-age gate needs one, and which door somebody came
-    through cannot decide whether the platform knows how old they are.
+    The birthday is optional on every door (App Store 5.1.1): the shape check
+    lets it be left out, and the resolver's age gate asks for the "I confirm
+    I'm 18 or older" tick in its place.
   */
-  it('refuses a Google signup with no date of birth', async () => {
+  it('lets either door leave the date of birth out', async () => {
+    const google = await googleSignupSchema.parseAsync({
+      id_token: 'a'.repeat(24),
+      phone_number: '9876543210',
+      phone_extension: '+91',
+      whatsapp_token: 'wa-proof-token-value',
+    });
+    expect(google.dob).toBeUndefined();
+    const { dob, ...withoutDob } = registration;
+    expect((await registerSchema.parseAsync(withoutDob)).dob).toBeUndefined();
+    expect((await registerSchema.parseAsync({ ...withoutDob, dob: null })).dob).toBeNull();
+  });
+
+  it('still refuses a date of birth that is not a past date', async () => {
     await expect(
-      googleSignupSchema.parseAsync({
-        id_token: 'a'.repeat(24),
-        phone_number: '9876543210',
-        phone_extension: '+91',
-        whatsapp_token: 'wa-proof-token-value',
-      })
-    ).rejects.toThrow(/dob/i);
+      registerSchema.parseAsync({ ...registration, dob: new Date(Date.now() + 86_400_000 * 30) }),
+    ).rejects.toThrow(/past/i);
+    await expect(registerSchema.parseAsync({ ...registration, dob: 'not a date' })).rejects.toThrow();
   });
 
   it('refuses a Google signup carrying only the id_token', async () => {

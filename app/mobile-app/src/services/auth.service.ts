@@ -28,10 +28,16 @@ import {
 import { graphqlRequest } from './graphql.client';
 import { setAuthToken, clearAuthToken } from './auth-token';
 
-export interface SignupValues {
-  name: string;
-  /** YYYY-MM-DD; the server stores a full date. */
+/** What either signup door's age question answered. */
+export interface SignupAge {
+  /** YYYY-MM-DD, or blank — the birthday is optional (App Store 5.1.1). */
   dob: string;
+  /** The "I confirm I'm 18 or older" tick. */
+  ageConfirmed: boolean;
+}
+
+export interface SignupValues extends SignupAge {
+  name: string;
   email: string;
   /** The WhatsApp number — digits only, without the dial code. Unique. */
   phoneNumber: string;
@@ -80,6 +86,12 @@ export function dobToIso(dob: string): string {
   return new Date(Date.UTC(year ?? 0, (month ?? 1) - 1, day ?? 1)).toISOString();
 }
 
+/** The age as the signup mutations take it. A blank birthday is left OUT —
+ * '' is not a date — and the tick goes with it either way. */
+export function ageInput({ dob, ageConfirmed }: SignupAge) {
+  return { ...(dob ? { dob: dobToIso(dob) } : {}), age_confirmed: ageConfirmed };
+}
+
 export async function register(values: SignupValues, whatsappToken: string): Promise<AuthOutcome> {
   const { first_name, last_name } = splitName(values.name);
   const referralCode = (values.referralCode ?? '').trim().toUpperCase();
@@ -93,7 +105,7 @@ export async function register(values: SignupValues, whatsappToken: string): Pro
       whatsapp_is_mobile: values.whatsappIsMobile,
       whatsapp_token: whatsappToken,
       password: values.password,
-      dob: dobToIso(values.dob),
+      ...ageInput(values),
       // Omitted rather than sent empty: the server treats a present-but-blank
       // code the same way, and an absent field says what happened more plainly.
       ...(referralCode ? { referral_code: referralCode } : {}),
@@ -283,8 +295,8 @@ export async function signupWithGoogle(
   idToken: string,
   acceptedPolicyIds: string[],
   proven: ProvenNumber,
-  /** YYYY-MM-DD, asked on the same step as the number — Google carries no birthday. */
-  dob: string,
+  /** Asked on the same step as the number — Google carries no age. */
+  age: SignupAge,
 ): Promise<AuthOutcome> {
   const data = await graphqlRequest(SignupWithGoogleDocument, {
     input: {
@@ -293,7 +305,7 @@ export async function signupWithGoogle(
       phone_extension: proven.extension.trim(),
       whatsapp_is_mobile: proven.alsoMobile,
       whatsapp_token: proven.whatsappToken,
-      dob: dobToIso(dob),
+      ...ageInput(age),
       accepted_policy_ids: acceptedPolicyIds,
       accepted_policy_surface: PolicyAcceptanceSurface.App,
     },
@@ -360,8 +372,8 @@ export async function signupWithApple(
   name: string,
   acceptedPolicyIds: string[],
   proven: ProvenNumber,
-  /** YYYY-MM-DD, asked on the same step as the number — Apple carries no birthday. */
-  dob: string,
+  /** Asked on the same step as the number — Apple carries no age. */
+  age: SignupAge,
 ): Promise<AuthOutcome> {
   const data = await graphqlRequest(SignupWithAppleDocument, {
     input: {
@@ -371,7 +383,7 @@ export async function signupWithApple(
       phone_extension: proven.extension.trim(),
       whatsapp_is_mobile: proven.alsoMobile,
       whatsapp_token: proven.whatsappToken,
-      dob: dobToIso(dob),
+      ...ageInput(age),
       accepted_policy_ids: acceptedPolicyIds,
       accepted_policy_surface: PolicyAcceptanceSurface.App,
     },

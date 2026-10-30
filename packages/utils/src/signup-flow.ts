@@ -39,13 +39,16 @@ export interface SignupNumberFields {
 }
 
 /**
- * What the Google door's own step answers: the number row, and the date of
- * birth — the two things a Google credential never carries. The email form
- * asked both on its first two steps; Google has to ask them here.
+ * What the Google door's own step answers: the number row, and the joining age
+ * — the two things a Google credential never carries. The email form asked both
+ * on its first two steps; Google has to ask them here.
  */
 export interface SignupGoogleDetails extends SignupNumberFields {
-  /** A 'YYYY-MM-DD' calendar day, exactly as the form field holds it. */
+  /** A 'YYYY-MM-DD' calendar day, exactly as the form field holds it — or blank,
+   * because the birthday is optional. */
   dob: string;
+  /** The "I confirm I am N or older" tick. The account is made only with it. */
+  ageConfirmed: boolean;
   /**
    * The name, when the step had to ask it — an Apple credential that carried
    * none. Blank otherwise.
@@ -82,6 +85,8 @@ export interface SignupFlowState<TForm extends SignupNumberFields> {
   /** The date of birth the Google door was told — the form door's sits in
    * `pendingForm`, and a Google credential never carries one. */
   googleDob: string | null;
+  /** Whether the Google door's step ticked the age confirmation, beside it. */
+  googleAgeConfirmed: boolean;
   pendingForm: TForm | null;
   pendingGoogle: SignupGoogleCredential | null;
 }
@@ -104,6 +109,7 @@ export function initialSignupFlowState<
     askingNumber: false,
     verifying: null,
     googleDob: null,
+    googleAgeConfirmed: false,
     pendingForm: null,
     pendingGoogle: null,
   };
@@ -162,6 +168,7 @@ export function signupFlowReducer<TForm extends SignupNumberFields>(
         askingNumber: false,
         verifying: signupNumberOf(action.values),
         googleDob: action.values.dob,
+        googleAgeConfirmed: action.values.ageConfirmed,
         pendingGoogle: withAskedName(state.pendingGoogle, action.values.name),
       };
     default:

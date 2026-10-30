@@ -16,6 +16,7 @@ import {
   type GoogleSignupValues,
 } from '@duncit/forms/schemas';
 import DobDateField from '../../components/DobDateField';
+import RhfCheckbox from '../../forms/components/RhfCheckbox';
 import RhfTextField from '../../forms/components/RhfTextField';
 import { startIcon } from '../../forms/register/fieldProps';
 import WhatsappNumberFields from '../../forms/register/WhatsappNumberFields';
@@ -105,7 +106,13 @@ export default function GoogleDetailsStep({ provider, askName, onSubmit }: Reado
           names={WHATSAPP_NUMBER_NAMES}
           phoneStatus={phoneStatus}
         />
-        <DobDateField control={control} minAge={minAge} required />
+        <DobDateField control={control} minAge={minAge} />
+        <RhfCheckbox
+          control={control}
+          name="ageConfirmed"
+          label={t('mweb.signup.ageConfirmLabel', { vars: { years: minAge } })}
+          data-testid="signup-age-confirm"
+        />
         <DuncitButton
           type="submit"
           variant="contained"

@@ -110,7 +110,9 @@ export interface TruecallerDetailsShortcut {
   token: string;
   google: SignupGoogleCredential;
   number: SignupNumber;
+  /** Blank when the optional birthday was left out. */
   dob: string;
+  ageConfirmed: boolean;
 }
 
 /**
@@ -131,5 +133,6 @@ export function truecallerDetailsShortcut(
     google: name ? { ...google, name } : google,
     number: signupNumberOf(values),
     dob: values.dob,
+    ageConfirmed: values.ageConfirmed,
   };
 }

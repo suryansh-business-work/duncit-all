@@ -1275,16 +1275,16 @@ export const APP_GAP_FLOWS: readonly CatalogueFlow[] = [
       {
         name: 'Sign up and sign in with Apple',
         description:
-          'The Apple door mirrors Google: signupWithApple creates the account only after the policy dialog, a WhatsApp number, a date of birth and the WhatsApp code; loginWithApple signs in an already-linked account. The Apple button renders only once Tech holds a Services ID and Return URL.',
+          'The Apple door mirrors Google: signupWithApple creates the account only after the policy dialog, a WhatsApp number, the age tick (date of birth optional) and the WhatsApp code; loginWithApple signs in an already-linked account. The Apple button renders only once Tech holds a Services ID and Return URL.',
         steps: [
           ['Clear the Apple Services ID or Return URL in the Tech portal and open /register', 'No Apple button is drawn at all (the round row shows Google only)'],
           ['Restore the Apple keys, open /register and press the round Apple button (accessible name "Sign up with Apple", caption "Apple") with an Apple ID Duncit has never seen', 'While the id_token is spent the button reads "Connecting to Apple…", then the "Policies you need to accept" dialog opens'],
-          ['Press "Accept all"', 'The step "A few details" shows "Apple doesn’t share your WhatsApp number or your date of birth, so tell us here. Your sign-up code goes to that number." with WhatsApp number, "This is also my mobile number", Date of birth and "Send code"'],
-          ['Enter an unused WhatsApp number and a valid date of birth, tap "Send code", type the test code and tap "Verify number"', 'signupWithApple creates the account with the Apple email verified and apple_id linked, and the app lands on /signup-referral'],
+          ['Press "Accept all"', 'The step "A few details" shows "Apple doesn’t share your WhatsApp number, so tell us here — your sign-up code goes to that number. Confirm your age too; your date of birth is optional." with WhatsApp number, "This is also my mobile number", Date of birth (optional), "I confirm I’m 18 or older" and "Send code"'],
+          ['Enter an unused WhatsApp number, tick "I confirm I’m 18 or older", tap "Send code", type the test code and tap "Verify number"', 'signupWithApple creates the account with the Apple email verified and apple_id linked, and the app lands on /signup-referral'],
           ['Close the Apple popup without choosing an Apple ID', 'Nothing is shown — a cancel is silent; any other Apple failure shows "Apple sign-in failed. Please try again."'],
           ['Press the Apple button on /register with an Apple ID that already has a Duncit account', 'The dialog "You’re already on Duncit" says "<email> already has a Duncit account. Shall we log you in instead?" with "Log me in" and "Cancel"'],
           ['Sign out, open /login and press the Apple button ("Sign in with Apple") with the linked Apple ID', 'loginWithApple returns a session, the app opens Home and last_login_provider is APPLE'],
-          ['On /login use an Apple ID that is linked to nobody and whose email holds no account', 'Server answers "User is not in our system. Please sign up first." (APPLE_ACCOUNT_NOT_FOUND) and the "No Duncit account yet" dialog shows "We will carry this Apple sign-in into the next steps — you only need to add your WhatsApp number and date of birth. Nothing is created until you finish."'],
+          ['On /login use an Apple ID that is linked to nobody and whose email holds no account', 'Server answers "User is not in our system. Please sign up first." (APPLE_ACCOUNT_NOT_FOUND) and the "No Duncit account yet" dialog shows "We will carry this Apple sign-in into the next steps — you only need to add your WhatsApp number and confirm your age. Nothing is created until you finish."'],
         ],
       },
     ],

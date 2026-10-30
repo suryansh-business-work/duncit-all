@@ -119,11 +119,16 @@ export function DobDateField<T extends FieldValues>({
           <MaterialIcons name="event" size={20} color={ink} />
         </XStack>
       </XStack>
+      {/* Signup and the profile editor both leave the birthday optional. */}
       {error ? (
         <Text testID="dob-error" role="alert" fontSize={12} color="$danger">
           {error}
         </Text>
-      ) : null}
+      ) : (
+        <Text testID="dob-hint" fontSize={12} color="$muted">
+          {t('mweb.signup.dobOptionalHint', { vars: { years: minAge } })}
+        </Text>
+      )}
 
       <Modal visible={open} transparent animationType="fade" onRequestClose={closeSheet}>
         <ModalThemeScope>

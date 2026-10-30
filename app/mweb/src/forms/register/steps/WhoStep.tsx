@@ -2,6 +2,7 @@ import { Stack } from '@mui/material';
 import CardGiftcardOutlinedIcon from '@mui/icons-material/CardGiftcardOutlined';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutlined';
 import type { Control } from 'react-hook-form';
+import RhfCheckbox from '../../components/RhfCheckbox';
 import RhfTextField from '../../components/RhfTextField';
 import DobDateField from '../../../components/DobDateField';
 import { useTranslation } from '../../../i18n/useTranslation';
@@ -15,7 +16,9 @@ interface Props {
 }
 
 /**
- * Step one — who you are: name, date of birth, and a friend's code.
+ * Step one — who you are: name, the age tick (with an optional date of birth),
+ * and a friend's code. The birthday is optional because the App Store refuses
+ * a signup that demands data the app can work without; the tick is the age.
  *
  * The referral code sits here rather than at the end because this is the step
  * a shared link lands on with the code already filled in; asking for it three
@@ -39,7 +42,13 @@ export default function WhoStep({ control, minAge }: Readonly<Props>) {
           input: startIcon(<PersonOutlineIcon fontSize="small" />),
         }}
       />
-      <DobDateField control={control} minAge={minAge} required />
+      <DobDateField control={control} minAge={minAge} />
+      <RhfCheckbox
+        control={control}
+        name="ageConfirmed"
+        label={t('mweb.signup.ageConfirmLabel', { vars: { years: minAge } })}
+        data-testid="signup-age-confirm"
+      />
       <RhfTextField
         control={control}
         name="referralCode"

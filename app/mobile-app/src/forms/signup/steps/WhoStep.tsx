@@ -3,6 +3,7 @@ import type { Control } from 'react-hook-form';
 
 import { FormTextField } from '@/components/FormTextField';
 import { DobDateField } from '@/forms/account-edit/DobDateField';
+import { FormCheckbox } from '@/forms/components/FormCheckbox';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { SignupFormValues } from '../signup.types';
 
@@ -12,8 +13,10 @@ interface Props {
 }
 
 /**
- * Step one — who you are: name, date of birth, and a friend's code. Tamagui twin
- * of mWeb's <WhoStep/>.
+ * Step one — who you are: name, the age tick (with an optional date of birth),
+ * and a friend's code. Tamagui twin of mWeb's <WhoStep/>. The birthday is
+ * optional because the App Store refuses a signup that demands data the app can
+ * work without; the tick is the age.
  *
  * The referral code sits here rather than at the end because this is the step
  * a shared link lands on with the code already filled in.
@@ -33,6 +36,12 @@ export function WhoStep({ control, minAge }: Readonly<Props>) {
         required
       />
       <DobDateField control={control} minAge={minAge} />
+      <FormCheckbox
+        control={control}
+        name="ageConfirmed"
+        label={t('mweb.signup.ageConfirmLabel', { vars: { years: minAge } })}
+        testID="signup-age-confirm"
+      />
       <FormTextField
         control={control}
         name="referralCode"

@@ -117,7 +117,12 @@ export default function QuickActionGrid({ tiles, badgeCounts, onEdit, onNavigate
           {t('mweb.sidebar.edit')}
         </Link>
       </Box>
-      <Box data-testid="sidebar-quick-grid" sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1.25 }}>
+      {/* Square tiles, three to a row on a phone; on a wider sidebar (desktop)
+          all six share one row, or three columns would blow each tile up. */}
+      <Box
+        data-testid="sidebar-quick-grid"
+        sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(3, 1fr)', sm: 'repeat(6, 1fr)' }, gap: 1.25 }}
+      >
         {tiles.map((tile) => (
           <QuickTile key={tile.key} tile={tile} badgeCount={badgeCounts?.[tile.key]} onNavigate={onNavigate} />
         ))}

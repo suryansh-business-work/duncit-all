@@ -64,6 +64,7 @@ function cleanScenario(suite: string, s: E2eScenarioInput) {
     suite,
     project,
     spec,
+    spec_key: `${project}/${spec}`,
     title_path: titlePath,
     title: titlePath.at(-1) ?? '',
     state: s.state,

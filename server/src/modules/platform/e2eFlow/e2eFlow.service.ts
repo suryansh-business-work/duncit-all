@@ -4,6 +4,7 @@ import { logs } from '@observability/log';
 import { validate } from '@utils/validate';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { E2eFlowModel, type IE2eFlow, type IE2eSubFlow } from './e2eFlow.model';
+import { flowRunStats, specsForFlow } from './e2eFlow.stats';
 import {
   e2eFlowSchema,
   e2eReviewSchema,
@@ -46,10 +47,17 @@ const pub = (doc: IE2eFlow) => ({
   sub_flow_count: doc.sub_flows?.length ?? 0,
   looks_good_count: (doc.sub_flows ?? []).filter((sub) => sub.review_status === 'LOOKS_GOOD')
     .length,
+  specs: specsForFlow(doc.name),
   created_by: doc.created_by ?? '',
   created_at: iso(doc.created_at),
   updated_at: iso(doc.updated_at),
 });
+
+/** The rows with their run counts, read in one pass for the whole page. */
+async function withRunStats(docs: readonly IE2eFlow[]) {
+  const stats = await flowRunStats(docs.map((doc) => doc.name));
+  return docs.map((doc) => ({ ...pub(doc), run_stats: stats.get(doc.name) ?? null }));
+}
 
 function notFound(what: string): never {
   throw new GraphQLError(`${what} not found`, { extensions: { code: 'NOT_FOUND' } });
@@ -72,7 +80,7 @@ export const e2eFlowService = {
       input,
       FLOW_TABLE_CONFIG
     );
-    return { rows: docs.map(pub), total, page, page_size };
+    return { rows: await withRunStats(docs), total, page, page_size };
   },
 
   async get(id: string) {

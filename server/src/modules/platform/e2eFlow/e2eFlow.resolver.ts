@@ -2,6 +2,7 @@ import type { GraphQLContext } from '@context';
 import { requireRole, TESTS_MANAGER } from '@middleware/rbac';
 import type { TableQueryInput } from '@utils/table-query';
 import { e2eFlowService } from './e2eFlow.service';
+import { flowRunStats, type E2eFlowRunStats } from './e2eFlow.stats';
 
 // Flows are documented beside the e2e runs, by the same people who run them —
 // in the Tests console now (they moved from Tech, whose managers keep access).
@@ -9,7 +10,15 @@ const E2E_MANAGE = ['SUPER_ADMIN', 'TECH_MANAGER', TESTS_MANAGER];
 
 type SubFlowArgs = { flow_id: string; sub_flow_id: string };
 
+type FlowParent = { name: string; run_stats?: E2eFlowRunStats | null };
+
 export const e2eFlowResolvers = {
+  E2eFlow: {
+    // The table reads every row's counts in one pass; a single flow — its page,
+    // or a mutation's answer — reads its own, so the cache is never handed null.
+    run_stats: async (parent: FlowParent) =>
+      parent.run_stats === undefined ? ((await flowRunStats([parent.name])).get(parent.name) ?? null) : parent.run_stats,
+  },
   Query: {
     e2eFlowsTable: (_p: unknown, args: { query?: TableQueryInput | null }, ctx: GraphQLContext) => {
       requireRole(ctx, E2E_MANAGE);

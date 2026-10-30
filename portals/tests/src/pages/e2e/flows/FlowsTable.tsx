@@ -7,7 +7,7 @@ import {
   type DuncitColumn,
   type TableFetch,
 } from '@duncit/table';
-import { getRowId, namedActions, renderNameCell } from './cells';
+import { getRowId, namedActions, renderFailedCell, renderNameCell, renderPassedCell, runCountText } from './cells';
 import type { E2eFlowRow } from './queries';
 
 interface Props {
@@ -60,6 +60,37 @@ export default function FlowsTable({
         sortable: false,
         filterable: false,
         valueGetter: (row) => `${row.looks_good_count} / ${row.sub_flow_count}`,
+      },
+      // How the flow's specs did across the recorded E2E runs — counted per
+      // page at read time from the scenario rows, so not sortable either.
+      {
+        field: 'run_stats_runs',
+        headerName: t('tech.e2eFlows.colRuns'),
+        width: 100,
+        type: 'number',
+        sortable: false,
+        filterable: false,
+        valueGetter: (row) => runCountText(row, (stats) => stats.runs),
+      },
+      {
+        field: 'run_stats_passed',
+        headerName: t('tech.e2eFlows.colPassed'),
+        width: 110,
+        type: 'number',
+        sortable: false,
+        filterable: false,
+        cellRenderer: renderPassedCell,
+        valueGetter: (row) => runCountText(row, (stats) => stats.passed),
+      },
+      {
+        field: 'run_stats_failed',
+        headerName: t('tech.e2eFlows.colFailed'),
+        width: 110,
+        type: 'number',
+        sortable: false,
+        filterable: false,
+        cellRenderer: renderFailedCell,
+        valueGetter: (row) => runCountText(row, (stats) => stats.failed),
       },
       dateColumn<E2eFlowRow>({
         field: 'updated_at',

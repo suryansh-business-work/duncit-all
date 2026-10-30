@@ -1,0 +1,11 @@
+{
+  "sites": [
+    { "id": "main", "host": "duncit.com", "product": "Main website", "source": "website/main-website" },
+    { "id": "earnwith", "host": "earnwith.duncit.com", "product": "Earn with Duncit", "source": "website/earnwith-website", "singlePage": true },
+    { "id": "partners", "host": "partners.duncit.com", "product": "Partners website", "source": "website/partners-website", "singlePage": true },
+    { "id": "ads", "host": "ads.duncit.com", "product": "Ads website", "source": "website/ads-website", "singlePage": true },
+    { "id": "status", "host": "status.duncit.com", "product": "Status page (Vite SPA)", "source": "website/status-website", "singlePage": true, "expectOrganization": false },
+    { "id": "ecomm", "host": "ecomm.duncit.com", "product": "E-commerce pet store — SEPARATE product, fix only inside website/ecomm-store", "source": "website/ecomm-store" },
+    { "id": "mweb", "host": "mweb.duncit.com", "product": "mWeb app (public pod/club/profile pages are SSR)", "source": "app/mweb", "singlePage": true, "expectOrganization": false }
+  ]
+}

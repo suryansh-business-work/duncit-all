@@ -246,6 +246,21 @@ exports:
   - 'TicketDiscountLabels'
   - 'TicketDiscountLimits'
   - 'TicketDiscountTranslate'
+  - 'smartIncentiveFor'
+  - 'smartIncentivePctIssue'
+  - 'smartIncentiveInput'
+  - 'smartIncentiveFormValues'
+  - 'DEFAULT_SMART_INCENTIVE_MAX_PCT'
+  - 'DEFAULT_SMART_INCENTIVE_DELAY_SECONDS'
+  - 'SmartIncentiveQuote'
+  - 'SmartIncentivePctIssue'
+  - 'SmartIncentiveValues'
+  - 'mwebSmartIncentiveLabels'
+  - 'shellSmartIncentiveLabels'
+  - 'SmartIncentiveLabels'
+  - 'SmartIncentiveInfoLabels'
+  - 'SmartIncentiveTranslate'
+  - 'SmartIncentiveFieldProps'
   - 'buildEarningsStatement'
   - 'formatStatementMoney'
   - 'buildEarningsSplit'
@@ -1229,6 +1244,36 @@ ticketDiscountTierIssues({
 
 const labels = mwebTicketDiscountLabels(t);
 labels.errors.PCT_MAX({ maxPct: 50, maxTickets: 11, maxTiers: 10 })   // 'Discount can’t be more than 50%'
+```
+
+### Smart Incentive — `smart-incentive` + `smart-incentive-copy` + `smart-incentive-field`
+
+| Export | Signature | Meaning |
+| --- | --- | --- |
+| `smartIncentiveFor` | `(ticketNet: number, pct: number \| null \| undefined) => SmartIncentiveQuote` | `{ pct, amount, net }` — the member's unlocked offer taken off the ticket money AFTER the multi-ticket discount (the two compound). All 0 off when there is no whole, positive offer. |
+| `smartIncentivePctIssue` | `(value: unknown, maxPct: number) => SmartIncentivePctIssue \| null` | `REQUIRED`, `PCT_MIN` (not a whole 1% or more) or `PCT_MAX` for the % a host typed; `null` when it can be saved. |
+| `smartIncentiveInput` | `(values: SmartIncentiveValues, free: boolean) => { smart_incentive_enabled; smart_incentive_pct }` | The mutation input: off at 0% on a free pod or a switched-off incentive, the typed % as a number otherwise. |
+| `smartIncentiveFormValues` | `(pod) => SmartIncentiveValues` | A stored pod as the forms hold it — the % as text, empty when off. |
+| `DEFAULT_SMART_INCENTIVE_MAX_PCT` / `DEFAULT_SMART_INCENTIVE_DELAY_SECONDS` | `20` / `15` | Server-twin defaults, used only while `smartIncentiveSettings` loads. |
+| `mwebSmartIncentiveLabels` / `shellSmartIncentiveLabels` | `(t: SmartIncentiveTranslate) => SmartIncentiveLabels` | Every word the host's editor and its explainer render — `mweb.smartIncentive.*` and `shell.smartIncentive.*`, word-for-word identical; `errors[code](maxPct)` words each issue. |
+| `SmartIncentiveFieldProps` | type | The contract the MUI editor in `@duncit/ui` and its Tamagui twin in the native app both render against. |
+
+A host switches Smart Incentive on for a pod and picks a percentage up to Loyalty's maximum. A member
+who stays on that pod page without booking for Loyalty's delay unlocks the offer, and checkout takes it
+off the ticket money on its own — after the multi-ticket discount, before the coupon, Duncit Coins and
+GST. The server keeps its own twin in `server/src/modules/engagement/smartIncentive/smartIncentive.rules.ts`,
+prices the charge with it and freezes it on the Payment; this copy only previews it:
+
+```ts
+const tier = ticketDiscountFor(499, 4, pod);              // net 1596.8 after the 20% tier
+smartIncentiveFor(tier.net, 10)
+// { pct: 10, amount: 159.68, net: 1437.12 }
+
+smartIncentivePctIssue('25', 20)                           // 'PCT_MAX'
+smartIncentiveInput({ smart_incentive_enabled: true, smart_incentive_pct: '12' }, false)
+// { smart_incentive_enabled: true, smart_incentive_pct: 12 }
+
+mwebSmartIncentiveLabels(t).errors.PCT_MAX(20)             // 'Discount can’t be more than 20%'
 ```
 
 ### Coin ledger rows — `coin-ledger`

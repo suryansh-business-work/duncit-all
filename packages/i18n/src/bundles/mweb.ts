@@ -2363,6 +2363,39 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       errorPctMax: 'Discount can’t be more than {max}%',
       errorPctNotIncreasing: 'Needs a bigger discount than the row above',
     },
+    // Smart Incentive, on mWeb and native alike. The member's offer on a pod
+    // page and its checkout lines, then the host's editor in Create Pod and
+    // Edit Pod — the editor keys are rendered through `mwebSmartIncentiveLabels`
+    // in @duncit/utils and are word-for-word identical to `shell.smartIncentive`.
+    smartIncentive: {
+      offerTitle: 'Get {pct}% off this pod',
+      offerBody: 'Book now and your tickets cost {pct}% less. The discount is applied automatically at checkout.',
+      offerPrice: '{price} per ticket instead of {fullPrice}',
+      offerBook: 'Book now',
+      offerLater: 'Maybe later',
+      unlockedNote: '{pct}% offer applied',
+      checkoutLine: 'Smart Incentive ({pct}% off)',
+      checkoutSaved: 'Smart Incentive',
+      title: 'Smart Incentive',
+      switchLabel: 'Offer a discount to members who are still deciding',
+      hint: 'Members who stay on your pod page without booking get a one-time offer. The discount comes out of your earnings.',
+      pctLabel: 'Discount %',
+      maxHint: 'Up to {max}% off',
+      pricePreview: 'With the offer, a ticket costs {price}',
+      learnMore: 'How it works',
+      errorRequired: 'Enter the discount',
+      errorPctMin: 'Discount must be a whole number of at least 1%',
+      errorPctMax: 'Discount can’t be more than {max}%',
+      infoTitle: 'What is Smart Incentive?',
+      infoWhat:
+        'When a member stays on your pod page for {seconds} seconds without booking, they see a one-time offer: book now and get your discount.',
+      infoWho: 'Only members who see the offer get the discount. Everyone else pays your full ticket price.',
+      infoCut:
+        'The discount comes out of your share: your payout is worked out on what members actually pay, so each discounted booking earns you less.',
+      infoChange:
+        'You can change the discount or switch it off anytime by editing the pod. Switching it off withdraws offers members have not used yet.',
+      gotIt: 'Got it',
+    },
     // Creating a pod — the host's 4-step stepper (Basics → Location/Category/
     // Club → Venue & Slot → Pricing & Publish), its fields, its cover picker
     // and its pricing panel. mWeb and the native app render the SAME journey

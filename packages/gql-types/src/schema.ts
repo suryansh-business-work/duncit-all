@@ -4211,6 +4211,10 @@ export type CheckoutQuote = {
   platform_fee_pct: Scalars['Float']['output'];
   /** What that rounding added (0 when the amount was already whole). Inside total, outside subtotal and gst_amount. */
   round_off: Scalars['Float']['output'];
+  /** The caller's unlocked Smart Incentive taken off the ticket money (0 when none applies). */
+  smart_incentive_amount: Scalars['Float']['output'];
+  /** Percentage of that Smart Incentive (0 when none). */
+  smart_incentive_pct: Scalars['Int']['output'];
   subtotal: Scalars['Float']['output'];
   /** Multi-ticket discount taken off the ticket price for the quoted seats (0 when no tier applies). */
   ticket_discount_amount: Scalars['Float']['output'];
@@ -6604,6 +6608,10 @@ export type CreatePodInput = {
   product_requests?: InputMaybe<Array<PodProductRequestInput>>;
   products_enabled?: InputMaybe<Scalars['Boolean']['input']>;
   reel_url?: InputMaybe<Scalars['String']['input']>;
+  /** Offer a Smart Incentive. Ignored (stored off) on a free or zero-priced pod. */
+  smart_incentive_enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Whole percent, 1 up to Loyalty's maximum. Required when smart_incentive_enabled is true. */
+  smart_incentive_pct?: InputMaybe<Scalars['Int']['input']>;
   /** The sub-category the host picked in step 2. Required to enforce the co-host cap. */
   sub_category_id?: InputMaybe<Scalars['ID']['input']>;
   /** Offer a multi-ticket discount. Ignored (stored off) on a free or zero-priced pod. */
@@ -11414,6 +11422,9 @@ export type HostResubmitPodInput = {
   product_requests?: InputMaybe<Array<PodProductRequestInput>>;
   products_enabled?: InputMaybe<Scalars['Boolean']['input']>;
   reel_url?: InputMaybe<Scalars['String']['input']>;
+  /** Offer a Smart Incentive — omit both fields to leave it alone. Cleared when the pod becomes free or zero-priced. */
+  smart_incentive_enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  smart_incentive_pct?: InputMaybe<Scalars['Int']['input']>;
   /** Offer a multi-ticket discount. Cleared when the pod becomes free or zero-priced. */
   ticket_discount_enabled?: InputMaybe<Scalars['Boolean']['input']>;
   ticket_discount_tiers?: InputMaybe<Array<PodTicketDiscountTierInput>>;
@@ -11501,6 +11512,9 @@ export type HostUpdatePodInput = {
   pod_images_and_videos: Array<PodMediaInput>;
   pod_title: Scalars['String']['input'];
   reel_url?: InputMaybe<Scalars['String']['input']>;
+  /** Offer a Smart Incentive — omit both fields to leave it alone. */
+  smart_incentive_enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  smart_incentive_pct?: InputMaybe<Scalars['Int']['input']>;
   /** Offer a multi-ticket discount — omit both discount fields to leave it alone. */
   ticket_discount_enabled?: InputMaybe<Scalars['Boolean']['input']>;
   ticket_discount_tiers?: InputMaybe<Array<PodTicketDiscountTierInput>>;
@@ -16082,6 +16096,8 @@ export type Mutation = {
   unfollowClub: User;
   unfollowPod: User;
   unfollowUser: User;
+  /** The pod page showed the offer: unlock it for the signed-in member. Idempotent; refused when the pod offers them none. */
+  unlockSmartIncentive: PodSmartIncentive;
   unmuteChat: ChatMuteState;
   unpublishCmsPage: CmsPage;
   unsubscribeAllByToken: MailPreference;
@@ -16239,6 +16255,8 @@ export type Mutation = {
   /** Rename a link, re-point it, or change its link-preview card. */
   updateShortLink: ShortLink;
   updateShortLinkPolicy: ShortLinkPolicy;
+  /** Loyalty: switch the programme, its delay and the biggest discount a host may offer. */
+  updateSmartIncentiveSettings: SmartIncentiveSettings;
   updateSomethingForYouItem: SomethingForYouItem;
   /**
    * Triage one report: its state, the note, and any images the operator added.
@@ -21443,6 +21461,11 @@ export type MutationUnfollowUserArgs = {
 };
 
 
+export type MutationUnlockSmartIncentiveArgs = {
+  pod_id: Scalars['ID']['input'];
+};
+
+
 export type MutationUnmuteChatArgs = {
   id: Scalars['ID']['input'];
   kind: ChatRoomKind;
@@ -22106,6 +22129,11 @@ export type MutationUpdateShortLinkArgs = {
 
 export type MutationUpdateShortLinkPolicyArgs = {
   input: ShortLinkPolicyInput;
+};
+
+
+export type MutationUpdateSmartIncentiveSettingsArgs = {
+  input: SmartIncentiveSettingsInput;
 };
 
 
@@ -23450,6 +23478,10 @@ export type Payment = {
   rental_lines: Array<PaymentRentalLine>;
   /** What rounding the bill UP to a whole rupee added (0 ≤ x < 1; 0 when it was already whole or the payment predates the rule). Already inside total; never taxable and never part of a fee, commission or settlement. */
   round_off: Scalars['Float']['output'];
+  /** The member's unlocked Smart Incentive, frozen at checkout: rupees taken off the ticket money after the multi-ticket discount and before the coupon and coins (host-funded). 0 when none applied. */
+  smart_incentive_amount: Scalars['Float']['output'];
+  /** Percentage of the Smart Incentive that applied (0 when none). */
+  smart_incentive_pct: Scalars['Int']['output'];
   status: PaymentStatus;
   subtotal: Scalars['Float']['output'];
   target_type: PaymentTargetType;
@@ -23855,6 +23887,8 @@ export type PaymentTotals = {
   fee: Scalars['Float']['output'];
   gross: Scalars['Float']['output'];
   gst: Scalars['Float']['output'];
+  /** Smart Incentive discounts given on the matching payments — already off gross. */
+  smart_incentive_total: Scalars['Float']['output'];
   /** Multi-ticket discounts given on the matching payments — already off gross. */
   ticket_discount_total: Scalars['Float']['output'];
 };
@@ -24320,6 +24354,10 @@ export type Pod = {
   series_role?: Maybe<PodSeriesRole>;
   /** @deprecated Recurring pods are retired; always null. */
   series_total?: Maybe<Scalars['Int']['output']>;
+  /** The host offers members who stay on the pod page without booking a one-time discount (Smart Incentive). Always false on a free or zero-priced pod. */
+  smart_incentive_enabled: Scalars['Boolean']['output'];
+  /** Percent off the ticket money that offer gives (after any multi-ticket discount); 0 when switched off. */
+  smart_incentive_pct: Scalars['Int']['output'];
   /** Whether one booking of several seats gets a tiered discount on its tickets. Always false on a free or zero-priced pod. */
   ticket_discount_enabled: Scalars['Boolean']['output'];
   /** The multi-ticket discount tiers, ascending. Empty when the discount is off; one ticket always pays full price. */
@@ -25575,6 +25613,12 @@ export type PodFinanceBreakdown = {
   refunded_total: Scalars['Float']['output'];
   settlement_status: PodSettlementStatus;
   /**
+   * Smart Incentive discounts given across this pod's successful bookings. They
+   * come off the ticket money the same way, so collected_total is already lower
+   * by this much — the host funds them, since settlement runs on what was collected.
+   */
+  smart_incentive_total: Scalars['Float']['output'];
+  /**
    * Multi-ticket discounts given across this pod's successful bookings. Like
    * coins, they come off the ticket price before GST, so collected_total is
    * already lower by this much — stated so the gap is explainable.
@@ -26658,6 +26702,18 @@ export type PodShopSliderMediaInput = {
   subheading?: InputMaybe<Scalars['String']['input']>;
   type?: InputMaybe<CategoryMediaType>;
   url: Scalars['String']['input'];
+};
+
+/** A pod page's Smart Incentive for the signed-in member. */
+export type PodSmartIncentive = {
+  __typename?: 'PodSmartIncentive';
+  /** Seconds on the pod page before the offer shows (Loyalty > Smart Incentive > Settings). */
+  delay_seconds: Scalars['Int']['output'];
+  /** Percent off the ticket money, after any multi-ticket discount. Frozen once unlocked. */
+  discount_pct: Scalars['Int']['output'];
+  pod_id: Scalars['ID']['output'];
+  /** True once the offer was shown: checkout takes it off on its own. */
+  unlocked: Scalars['Boolean']['output'];
 };
 
 /** One filled Backout seat on a pod — who released the spot and who took it. */
@@ -29172,6 +29228,12 @@ export type Query = {
   podSettlementPreview: PodSettlement;
   /** Products team: every return (optionally one brand's). Partner: their own brands' returns. */
   podShopReturnsTable: PodShopReturnTablePage;
+  /**
+   * The signed-in member's Smart Incentive on one pod. Null when there is
+   * nothing to offer them: the programme is off, the pod does not offer it or
+   * can no longer be booked, or they host it or already hold a seat.
+   */
+  podSmartIncentive?: Maybe<PodSmartIncentive>;
   /** Every filled Backout seat of a pod — struck-through attendee rows (public). */
   podSpotFills: Array<PodSpotFill>;
   /** The range this pod may be resized within. Host, the pod's club admin, or an admin. */
@@ -29496,6 +29558,10 @@ export type Query = {
   slackConfigured: Scalars['Boolean']['output'];
   /** What the bot token is allowed to do, and where to change it. */
   slackPermissions: SlackPermissions;
+  /** Loyalty > Smart Incentive > Dashboard. 'months' bounds the monthly series (default 12, max 36). */
+  smartIncentiveAdminStats: SmartIncentiveAdminStats;
+  /** The programme's settings. Any signed-in account reads them: a host's Create Pod form is capped by max_discount_pct. */
+  smartIncentiveSettings: SmartIncentiveSettings;
   socialAccounts: Array<SocialAccount>;
   socialAnalytics: SocialAnalytics;
   /** Everything dated in [from, to): posts written here and posts read from the networks. */
@@ -32622,6 +32688,11 @@ export type QueryPodShopReturnsTableArgs = {
 };
 
 
+export type QueryPodSmartIncentiveArgs = {
+  pod_id: Scalars['ID']['input'];
+};
+
+
 export type QueryPodSpotFillsArgs = {
   pod_doc_id: Scalars['ID']['input'];
 };
@@ -33138,6 +33209,11 @@ export type QuerySignupContactAvailabilityArgs = {
 export type QuerySlackChannelHistoryArgs = {
   channel: Scalars['ID']['input'];
   limit?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QuerySmartIncentiveAdminStatsArgs = {
+  months?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -36632,6 +36708,84 @@ export type SlotTemplatePerDayPrice = {
 export type SlotTemplatePerDayPriceInput = {
   price: Scalars['Int']['input'];
   weekday: Scalars['Int']['input'];
+};
+
+/** Loyalty > Smart Incentive > Dashboard. Totals are all-time; 'monthly' covers the chosen window. */
+export type SmartIncentiveAdminStats = {
+  __typename?: 'SmartIncentiveAdminStats';
+  /** The average discount across opted-in pods (one decimal). */
+  avg_discount_pct: Scalars['Float']['output'];
+  /** Bookings paid with an unlocked offer. */
+  bookings: Scalars['Int']['output'];
+  /** bookings / offers_shown, as a percentage (one decimal). */
+  conversion_pct: Scalars['Float']['output'];
+  delay_seconds: Scalars['Int']['output'];
+  /** What those bookings took off ticket money, GST included — funded by the hosts. */
+  discount_given: Scalars['Float']['output'];
+  discount_split: Array<SmartIncentiveDiscountShare>;
+  enabled: Scalars['Boolean']['output'];
+  /** Hosts who switched the incentive on for at least one pod (cancelled pods left out). */
+  hosts_opted_in: Scalars['Int']['output'];
+  max_discount_pct: Scalars['Int']['output'];
+  monthly: Array<SmartIncentiveMonthBucket>;
+  /** Offers the pod pages have shown — one per member per pod. */
+  offers_shown: Scalars['Int']['output'];
+  pods_opted_in: Scalars['Int']['output'];
+  top_hosts: Array<SmartIncentiveTopHost>;
+  /** Opted-in pods that have not started yet. */
+  upcoming_pods: Scalars['Int']['output'];
+};
+
+/** How many opted-in pods offer one discount percentage. */
+export type SmartIncentiveDiscountShare = {
+  __typename?: 'SmartIncentiveDiscountShare';
+  discount_pct: Scalars['Int']['output'];
+  pods: Scalars['Int']['output'];
+};
+
+/** One calendar month (UTC) of the programme. */
+export type SmartIncentiveMonthBucket = {
+  __typename?: 'SmartIncentiveMonthBucket';
+  /** Bookings paid with an unlocked offer that month. */
+  bookings: Scalars['Int']['output'];
+  /** What those bookings took off ticket money, GST included. */
+  discount: Scalars['Float']['output'];
+  /** 'YYYY-MM'. */
+  month: Scalars['String']['output'];
+  /** Offers the pod pages showed that month. */
+  offers: Scalars['Int']['output'];
+};
+
+export type SmartIncentiveSettings = {
+  __typename?: 'SmartIncentiveSettings';
+  /** Seconds a member stays on a pod page before the offer shows. */
+  delay_seconds: Scalars['Int']['output'];
+  /** The programme's switch. Off: no pod page offers anything and checkout applies no unlocked offer. */
+  enabled: Scalars['Boolean']['output'];
+  /** The biggest discount a host may choose when switching it on for a pod. */
+  max_discount_pct: Scalars['Int']['output'];
+  updated_at: Scalars['String']['output'];
+};
+
+/** Loyalty > Smart Incentive > Settings. Every field is optional; an omitted one is left alone. */
+export type SmartIncentiveSettingsInput = {
+  /** Whole seconds, 5 to 300. */
+  delay_seconds?: InputMaybe<Scalars['Int']['input']>;
+  enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Whole percent, 1 to 90. Pods already above a lowered ceiling keep their discount until edited. */
+  max_discount_pct?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type SmartIncentiveTopHost = {
+  __typename?: 'SmartIncentiveTopHost';
+  avg_discount_pct: Scalars['Float']['output'];
+  bookings: Scalars['Int']['output'];
+  discount_given: Scalars['Float']['output'];
+  email: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  /** Pods this host switched the incentive on for. */
+  pods: Scalars['Int']['output'];
+  user_id: Scalars['ID']['output'];
 };
 
 export type SocialAccount = {
@@ -43277,6 +43431,9 @@ export type UpdatePodInput = {
   product_requests?: InputMaybe<Array<PodProductRequestInput>>;
   products_enabled?: InputMaybe<Scalars['Boolean']['input']>;
   reel_url?: InputMaybe<Scalars['String']['input']>;
+  /** Offer a Smart Incentive — omit both fields to leave it alone. Cleared when the pod becomes free or zero-priced. */
+  smart_incentive_enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  smart_incentive_pct?: InputMaybe<Scalars['Int']['input']>;
   /** Offer a multi-ticket discount. Cleared when the pod becomes free or zero-priced. */
   ticket_discount_enabled?: InputMaybe<Scalars['Boolean']['input']>;
   ticket_discount_tiers?: InputMaybe<Array<PodTicketDiscountTierInput>>;

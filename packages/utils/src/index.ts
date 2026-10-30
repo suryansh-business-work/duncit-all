@@ -667,6 +667,25 @@ export type {
   TicketDiscountTierErrors,
 } from './pod-ticket-discount-field';
 export {
+  DEFAULT_SMART_INCENTIVE_DELAY_SECONDS,
+  DEFAULT_SMART_INCENTIVE_MAX_PCT,
+  smartIncentiveFor,
+  smartIncentiveFormValues,
+  smartIncentiveInput,
+  smartIncentivePctIssue,
+  type SmartIncentivePctIssue,
+  type SmartIncentiveQuote,
+  type SmartIncentiveValues,
+} from './smart-incentive';
+export {
+  mwebSmartIncentiveLabels,
+  shellSmartIncentiveLabels,
+  type SmartIncentiveInfoLabels,
+  type SmartIncentiveLabels,
+  type SmartIncentiveTranslate,
+} from './smart-incentive-copy';
+export type { SmartIncentiveFieldProps } from './smart-incentive-field';
+export {
   HOST_FREE_SPOT_NOTE,
   SPOTS_HARD_MAX,
   attendeeSeatCount,

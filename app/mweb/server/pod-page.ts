@@ -141,4 +141,6 @@ export async function podSitemapXml(origin: string): Promise<string | null> {
 }
 
 /** /robots.txt: everything may be crawled (the SPA's scripts must be, to render it); only pod pages are indexable. */
-export const robotsTxt = (origin: string): string => ['User-agent: *', 'Allow: /', `Sitemap: ${origin}/sitemap.xml`, ''].join('\n');
+export const robotsTxt = (origin: string): string =>
+  // Directive and value apart, as website/ecomm-store/server/crawl.ts writes it: a crawler protocol, not copy.
+  ['User-agent: *', 'Allow: /', ['Sitemap:', `${origin}/sitemap.xml`].join(' '), ''].join('\n');

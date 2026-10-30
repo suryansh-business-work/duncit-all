@@ -20,7 +20,11 @@ export function TutorialCommentForm({ onSubmit }: Readonly<Props>) {
   const { t } = useTranslation();
   const schema = useMemo(() => makeTutorialCommentSchema(t), [t]);
   const [failed, setFailed] = useState(false);
-  const { control, handleSubmit, reset, formState } = useForm<TutorialCommentValues, unknown, TutorialCommentValues>({
+  const { control, handleSubmit, reset, formState } = useForm<
+    TutorialCommentValues,
+    unknown,
+    TutorialCommentValues
+  >({
     resolver: formResolver<TutorialCommentValues>(schema),
     defaultValues: { text: '' },
   });
@@ -36,7 +40,13 @@ export function TutorialCommentForm({ onSubmit }: Readonly<Props>) {
   });
 
   return (
-    <YStack gap={6} paddingHorizontal={16} paddingVertical={10} borderTopWidth={1} borderColor="$borderColor">
+    <YStack
+      gap={6}
+      paddingHorizontal={16}
+      paddingVertical={10}
+      borderTopWidth={1}
+      borderColor="$borderColor"
+    >
       <XStack gap={8} alignItems="flex-end">
         <YStack flex={1}>
           <FormTextField

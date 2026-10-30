@@ -64,7 +64,12 @@ export function TutorialCommentsSheet({ tutorialId, onClose, onCountChange }: Re
         <Text role="alert" color="$danger">
           {t('mweb.tutorials.commentsLoadFailed')}
         </Text>
-        <DuncitButton testID="tutorial-comments-retry" label={t('mweb.tutorials.retry')} onPress={comments.retry} variant="ghost" />
+        <DuncitButton
+          testID="tutorial-comments-retry"
+          label={t('mweb.tutorials.retry')}
+          onPress={comments.retry}
+          variant="ghost"
+        />
       </YStack>
     );
   } else if (comments.rows.length === 0) {
@@ -85,7 +90,9 @@ export function TutorialCommentsSheet({ tutorialId, onClose, onCountChange }: Re
         }}
         onEndReachedThreshold={0.5}
         ListFooterComponent={comments.loading ? <Spinner color="$primary" /> : null}
-        renderItem={({ item }) => <TutorialCommentRow comment={item} onRequestDelete={() => setDeleteTarget(item)} />}
+        renderItem={({ item }) => (
+          <TutorialCommentRow comment={item} onRequestDelete={() => setDeleteTarget(item)} />
+        )}
       />
     );
   }
@@ -108,9 +115,24 @@ export function TutorialCommentsSheet({ tutorialId, onClose, onCountChange }: Re
               backgroundColor="$color"
               opacity={0.5}
             />
-            <YStack position="absolute" left={0} right={0} bottom={0} height="72%" backgroundColor="$surface" borderTopLeftRadius={28} borderTopRightRadius={28}>
+            <YStack
+              position="absolute"
+              left={0}
+              right={0}
+              bottom={0}
+              height="72%"
+              backgroundColor="$surface"
+              borderTopLeftRadius={28}
+              borderTopRightRadius={28}
+            >
               <ModalSafeArea edges={['bottom']} style={{ flex: 1 }}>
-                <XStack alignItems="center" justifyContent="space-between" paddingHorizontal={16} paddingTop={16} paddingBottom={8}>
+                <XStack
+                  alignItems="center"
+                  justifyContent="space-between"
+                  paddingHorizontal={16}
+                  paddingTop={16}
+                  paddingBottom={8}
+                >
                   <Text role="heading" fontSize={17} fontWeight="600" color="$color">
                     {t('mweb.tutorials.commentsTitle')}
                   </Text>

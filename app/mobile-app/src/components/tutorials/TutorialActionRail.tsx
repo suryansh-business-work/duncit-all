@@ -18,7 +18,14 @@ interface RailButtonProps {
   onPress: () => void;
 }
 
-function RailButton({ icon, label, count, active = false, testID, onPress }: Readonly<RailButtonProps>) {
+function RailButton({
+  icon,
+  label,
+  count,
+  active = false,
+  testID,
+  onPress,
+}: Readonly<RailButtonProps>) {
   const { color, accent } = useThemeColors();
   return (
     <YStack alignItems="center" gap={2}>
@@ -59,7 +66,14 @@ interface Props {
 }
 
 /** The right-hand action column on a tutorial: like, comments, share, sound. */
-export function TutorialActionRail({ item, soundOn, onLike, onComment, onShare, onToggleSound }: Readonly<Props>) {
+export function TutorialActionRail({
+  item,
+  soundOn,
+  onLike,
+  onComment,
+  onShare,
+  onToggleSound,
+}: Readonly<Props>) {
   const { t } = useTranslation();
   return (
     <YStack gap={16} alignItems="center">
@@ -78,7 +92,12 @@ export function TutorialActionRail({ item, soundOn, onLike, onComment, onShare, 
         count={item.comment_count}
         onPress={onComment}
       />
-      <RailButton testID={`tutorial-share-${item.id}`} icon="share" label={t('mweb.tutorials.share')} onPress={onShare} />
+      <RailButton
+        testID={`tutorial-share-${item.id}`}
+        icon="share"
+        label={t('mweb.tutorials.share')}
+        onPress={onShare}
+      />
       <RailButton
         testID={`tutorial-sound-${item.id}`}
         icon={soundOn ? 'volume-up' : 'volume-off'}

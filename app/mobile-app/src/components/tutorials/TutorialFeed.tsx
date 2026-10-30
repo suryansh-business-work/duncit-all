@@ -1,5 +1,10 @@
 import { useMemo, useRef, useState } from 'react';
-import { FlatList, useWindowDimensions, type LayoutChangeEvent, type ViewToken } from 'react-native';
+import {
+  FlatList,
+  useWindowDimensions,
+  type LayoutChangeEvent,
+  type ViewToken,
+} from 'react-native';
 import { Spinner, YStack } from 'tamagui';
 import { useIsFocused } from '@react-navigation/native';
 import { REEL_PRELOAD_DISTANCE, withFocusedFirst } from '@duncit/utils';
@@ -24,14 +29,27 @@ interface Props {
  * it measures its own height, keeps the current card ±2 mounted, and plays only
  * the visible card while the screen is focused.
  */
-export function TutorialFeed({ rows, topics, focusId, loadingMore, onEndReached, onLike, onComment, onShare, onWatched }: Readonly<Props>) {
+export function TutorialFeed({
+  rows,
+  topics,
+  focusId,
+  loadingMore,
+  onEndReached,
+  onLike,
+  onComment,
+  onShare,
+  onWatched,
+}: Readonly<Props>) {
   const { width } = useWindowDimensions();
   const [height, setHeight] = useState(0);
   const [activeIndex, setActiveIndex] = useState(0);
   const [soundOn, setSoundOn] = useState(true);
   const focused = useIsFocused();
   const ordered = useMemo(() => withFocusedFirst(rows, focusId), [rows, focusId]);
-  const topicLabels = useMemo(() => new Map(topics.map((topic) => [topic.key, topic.label])), [topics]);
+  const topicLabels = useMemo(
+    () => new Map(topics.map((topic) => [topic.key, topic.label])),
+    [topics],
+  );
 
   const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 60 }).current;
   const onViewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewToken[] }) => {

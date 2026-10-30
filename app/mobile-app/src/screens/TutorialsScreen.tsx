@@ -54,7 +54,8 @@ export function TutorialsScreen() {
 
   const changeFilters = (next: Partial<TutorialFilters>) =>
     navigation.setParams(routeParamsFor({ ...filters, ...next, focus: '' }));
-  const clearFilters = () => navigation.setParams(routeParamsFor({ search: '', topic: '', language: '', focus: '' }));
+  const clearFilters = () =>
+    navigation.setParams(routeParamsFor({ search: '', topic: '', language: '', focus: '' }));
 
   let body: ReactNode;
   if (feed.loading) {
@@ -113,11 +114,24 @@ export function TutorialsScreen() {
     <StackScreen title={t('mweb.tutorials.title')} testID="tutorials-screen">
       <TutorialFilterBar filters={filters} topics={topics} onChange={changeFilters} />
       {actions.notice ? (
-        <YStack marginHorizontal={16} marginBottom={8} padding={10} borderRadius={12} backgroundColor="$soft" gap={6}>
+        <YStack
+          marginHorizontal={16}
+          marginBottom={8}
+          padding={10}
+          borderRadius={12}
+          backgroundColor="$soft"
+          gap={6}
+        >
           <Text role="alert" fontSize={13} color="$danger">
             {actions.notice}
           </Text>
-          <DuncitButton testID="tutorials-notice-dismiss" label={t('mweb.tutorials.close')} onPress={actions.clearNotice} variant="ghost" size="sm" />
+          <DuncitButton
+            testID="tutorials-notice-dismiss"
+            label={t('mweb.tutorials.close')}
+            onPress={actions.clearNotice}
+            variant="ghost"
+            size="sm"
+          />
         </YStack>
       ) : null}
       <YStack flex={1}>{body}</YStack>

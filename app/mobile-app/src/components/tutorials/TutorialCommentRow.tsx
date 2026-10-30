@@ -19,11 +19,23 @@ export function TutorialCommentRow({ comment, onRequestDelete }: Readonly<Props>
   const name = comment.author?.full_name || t('mweb.tutorials.member');
   const photo = comment.author?.profile_photo;
   return (
-    <XStack gap={10} paddingVertical={10} alignItems="flex-start" testID={`tutorial-comment-${comment.id}`}>
+    <XStack
+      gap={10}
+      paddingVertical={10}
+      alignItems="flex-start"
+      testID={`tutorial-comment-${comment.id}`}
+    >
       {photo ? (
         <AppImage source={{ uri: photo }} style={{ width: 32, height: 32, borderRadius: 16 }} />
       ) : (
-        <YStack width={32} height={32} borderRadius={16} backgroundColor="$soft" alignItems="center" justifyContent="center">
+        <YStack
+          width={32}
+          height={32}
+          borderRadius={16}
+          backgroundColor="$soft"
+          alignItems="center"
+          justifyContent="center"
+        >
           <MaterialIcons name="person" size={18} color={muted} />
         </YStack>
       )}

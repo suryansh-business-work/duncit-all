@@ -3,7 +3,11 @@ import { ScrollView } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Input, Text, XStack, YStack } from 'tamagui';
 import { PRESS_STYLE } from '@duncit/buttons-native';
-import { TUTORIAL_LANGUAGE_OPTIONS, type TutorialFilters, type TutorialLanguageCode } from '@duncit/utils';
+import {
+  TUTORIAL_LANGUAGE_OPTIONS,
+  type TutorialFilters,
+  type TutorialLanguageCode,
+} from '@duncit/utils';
 
 import { PillTabs, type PillTab } from '@/components/PillTabs';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
@@ -24,7 +28,12 @@ interface Props {
   onChange: (next: Partial<TutorialFilters>) => void;
 }
 
-function TopicChip({ label, selected, testID, onPress }: Readonly<{ label: string; selected: boolean; testID: string; onPress: () => void }>) {
+function TopicChip({
+  label,
+  selected,
+  testID,
+  onPress,
+}: Readonly<{ label: string; selected: boolean; testID: string; onPress: () => void }>) {
   return (
     <XStack
       testID={testID}
@@ -68,7 +77,14 @@ export function TutorialFilterBar({ filters, topics, onChange }: Readonly<Props>
 
   return (
     <YStack gap={8} paddingBottom={8}>
-      <XStack marginHorizontal={16} alignItems="center" gap={8} borderRadius={999} backgroundColor="$soft" paddingHorizontal={14}>
+      <XStack
+        marginHorizontal={16}
+        alignItems="center"
+        gap={8}
+        borderRadius={999}
+        backgroundColor="$soft"
+        paddingHorizontal={14}
+      >
         <MaterialIcons name="search" size={20} color={muted} />
         <Input
           testID="tutorials-search"
@@ -99,9 +115,18 @@ export function TutorialFilterBar({ filters, topics, onChange }: Readonly<Props>
           </XStack>
         ) : null}
       </XStack>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingHorizontal: 16 }}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ gap: 8, paddingHorizontal: 16 }}
+      >
         <XStack gap={8} role="tablist" aria-label={t('mweb.tutorials.topicsLabel')}>
-          <TopicChip label={t('mweb.tutorials.allTopics')} selected={!filters.topic} testID="tutorials-topic-all" onPress={() => onChange({ topic: '' })} />
+          <TopicChip
+            label={t('mweb.tutorials.allTopics')}
+            selected={!filters.topic}
+            testID="tutorials-topic-all"
+            onPress={() => onChange({ topic: '' })}
+          />
           {topics.map((topic) => (
             <TopicChip
               key={topic.id}

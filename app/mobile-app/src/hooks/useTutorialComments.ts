@@ -8,7 +8,9 @@ import {
 } from '@/graphql/tutorials';
 import { graphqlRequest } from '@/services/graphql.client';
 
-export type TutorialCommentItem = ResultOf<typeof MobileTutorialCommentsDocument>['tutorialComments']['rows'][number];
+export type TutorialCommentItem = ResultOf<
+  typeof MobileTutorialCommentsDocument
+>['tutorialComments']['rows'][number];
 
 interface CommentsState {
   rows: TutorialCommentItem[];
@@ -27,7 +29,11 @@ export function useTutorialComments(tutorialId: string) {
 
   const load = useCallback(
     async (page: number) => {
-      const data = await graphqlRequest(MobileTutorialCommentsDocument, { tutorial_id: tutorialId, page }, { auth: true });
+      const data = await graphqlRequest(
+        MobileTutorialCommentsDocument,
+        { tutorial_id: tutorialId, page },
+        { auth: true },
+      );
       return data.tutorialComments;
     },
     [tutorialId],
@@ -38,7 +44,14 @@ export function useTutorialComments(tutorialId: string) {
     setState(EMPTY);
     load(1)
       .then((result) => {
-        if (live) setState({ rows: result.rows, page: result.page, hasMore: result.has_more, loading: false, failed: false });
+        if (live)
+          setState({
+            rows: result.rows,
+            page: result.page,
+            hasMore: result.has_more,
+            loading: false,
+            failed: false,
+          });
       })
       .catch(() => {
         if (live) setState({ ...EMPTY, loading: false, failed: true });
@@ -54,7 +67,10 @@ export function useTutorialComments(tutorialId: string) {
     try {
       const result = await load(state.page + 1);
       setState((current) => ({
-        rows: [...current.rows, ...result.rows.filter((row) => !current.rows.some((have) => have.id === row.id))],
+        rows: [
+          ...current.rows,
+          ...result.rows.filter((row) => !current.rows.some((have) => have.id === row.id)),
+        ],
         page: result.page,
         hasMore: result.has_more,
         loading: false,
@@ -68,7 +84,11 @@ export function useTutorialComments(tutorialId: string) {
   /** Throws when the server refuses, so the form can say so. */
   const add = useCallback(
     async (text: string) => {
-      const data = await graphqlRequest(MobileAddTutorialCommentDocument, { tutorial_id: tutorialId, text }, { auth: true });
+      const data = await graphqlRequest(
+        MobileAddTutorialCommentDocument,
+        { tutorial_id: tutorialId, text },
+        { auth: true },
+      );
       setState((current) => ({ ...current, rows: [data.addTutorialComment, ...current.rows] }));
     },
     [tutorialId],
@@ -76,9 +96,16 @@ export function useTutorialComments(tutorialId: string) {
 
   /** Throws when the server refuses; returns whether a comment was removed. */
   const remove = useCallback(async (commentId: string) => {
-    const data = await graphqlRequest(MobileDeleteMyTutorialCommentDocument, { comment_id: commentId }, { auth: true });
+    const data = await graphqlRequest(
+      MobileDeleteMyTutorialCommentDocument,
+      { comment_id: commentId },
+      { auth: true },
+    );
     if (data.deleteMyTutorialComment) {
-      setState((current) => ({ ...current, rows: current.rows.filter((row) => row.id !== commentId) }));
+      setState((current) => ({
+        ...current,
+        rows: current.rows.filter((row) => row.id !== commentId),
+      }));
     }
     return data.deleteMyTutorialComment;
   }, []);

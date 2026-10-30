@@ -63,7 +63,12 @@ export function TutorialReel({
   const meta = [topicLabel, formatTutorialDuration(item.duration_sec)].filter(Boolean).join(' · ');
   return (
     <Theme name="dark">
-      <YStack width={width} height={height} backgroundColor="$background" testID={`tutorial-reel-${item.id}`}>
+      <YStack
+        width={width}
+        height={height}
+        backgroundColor="$background"
+        testID={`tutorial-reel-${item.id}`}
+      >
         <TutorialVideo
           url={item.video_url}
           isActive={isActive}
@@ -72,7 +77,16 @@ export function TutorialReel({
           testID={`tutorial-video-${item.id}`}
           onWatched={onWatched}
         />
-        <XStack position="absolute" left={0} right={0} bottom={0} padding={16} paddingBottom={28} gap={12} alignItems="flex-end">
+        <XStack
+          position="absolute"
+          left={0}
+          right={0}
+          bottom={0}
+          padding={16}
+          paddingBottom={28}
+          gap={12}
+          alignItems="flex-end"
+        >
           <YStack flex={1} gap={6}>
             {item.watched_by_me ? <WatchedBadge /> : null}
             <Text role="heading" fontSize={18} fontWeight="700" color="$color" numberOfLines={2}>

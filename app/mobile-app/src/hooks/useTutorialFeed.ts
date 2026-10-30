@@ -18,7 +18,14 @@ interface FeedState {
   failed: boolean;
 }
 
-const INITIAL: FeedState = { rows: [], page: 0, hasMore: false, loading: true, loadingMore: false, failed: false };
+const INITIAL: FeedState = {
+  rows: [],
+  page: 0,
+  hasMore: false,
+  loading: true,
+  loadingMore: false,
+  failed: false,
+};
 
 const fetchPage = (filters: TutorialFilters, page: number) => {
   const vars = tutorialFeedVariables(filters, page);
@@ -47,7 +54,14 @@ export function useTutorialFeed(filters: TutorialFilters) {
     fetchPage({ search, topic, language, focus: '' }, 1)
       .then((page) => {
         if (generation.current !== mine) return;
-        setState({ rows: page.rows, page: page.page, hasMore: page.has_more, loading: false, loadingMore: false, failed: false });
+        setState({
+          rows: page.rows,
+          page: page.page,
+          hasMore: page.has_more,
+          loading: false,
+          loadingMore: false,
+          failed: false,
+        });
       })
       .catch(() => {
         if (generation.current === mine) setState({ ...INITIAL, loading: false, failed: true });
@@ -63,14 +77,18 @@ export function useTutorialFeed(filters: TutorialFilters) {
         if (generation.current !== mine) return;
         setState((current) => ({
           ...current,
-          rows: [...current.rows, ...page.rows.filter((row) => !current.rows.some((have) => have.id === row.id))],
+          rows: [
+            ...current.rows,
+            ...page.rows.filter((row) => !current.rows.some((have) => have.id === row.id)),
+          ],
           page: page.page,
           hasMore: page.has_more,
           loadingMore: false,
         }));
       })
       .catch(() => {
-        if (generation.current === mine) setState((current) => ({ ...current, loadingMore: false }));
+        if (generation.current === mine)
+          setState((current) => ({ ...current, loadingMore: false }));
       });
   }, [state.hasMore, state.loadingMore, state.loading, state.page, search, topic, language]);
 

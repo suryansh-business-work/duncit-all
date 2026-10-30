@@ -285,8 +285,31 @@ describe('accepting and rejecting', () => {
   });
 });
 
+describe('chat with the host', () => {
+  it('shows no chat button when the app passes no chat link (the Partners console)', () => {
+    renderCard(makeRequest());
+    expect(screen.queryByTestId('booking-request-chat-slot-1')).not.toBeInTheDocument();
+  });
+
+  it("opens the request's pod chat under the app's own label", () => {
+    const onOpen = vi.fn();
+    withApollo([], <OfferRequestCard request={makeRequest()} onDone={vi.fn()} chat={{ label: 'Chat with host', onOpen }} />);
+    const button = screen.getByTestId('booking-request-chat-slot-1');
+    expect(button).toHaveTextContent('Chat with host');
+    fireEvent.click(button);
+    expect(onOpen).toHaveBeenCalledWith('pod-1');
+  });
+});
+
 describe('VenueOfferInbox', () => {
   const listMock = (rows: BookingRequestRow[], seen: Vars[] = []) => mockOf(VENUE_BOOKING_REQUESTS, () => ({ data: { venueSlotRequests: rows } }), seen);
+
+  it('hands the chat link to every request it lists', async () => {
+    const onOpen = vi.fn();
+    withApollo([listMock([makeRequest()])], <VenueOfferInbox venueId="venue-1" chat={{ label: 'Chat with host', onOpen }} />);
+    fireEvent.click(await screen.findByTestId('booking-request-chat-slot-1'));
+    expect(onOpen).toHaveBeenCalledWith('pod-1');
+  });
 
   it("lists one venue's requests", async () => {
     const seen: Vars[] = [];

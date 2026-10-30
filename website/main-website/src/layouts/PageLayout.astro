@@ -72,7 +72,7 @@ const last = words[words.length - 1];
           )
         }
         <h1 data-reveal data-page-heading class="headline mt-5 max-w-4xl text-[2.75rem] text-white sm:text-6xl lg:text-[5.25rem]">
-          {lead && <Fragment>{lead} </Fragment>}<span class={accentClass}>{last}</span>
+          {lead && <Fragment>{lead}{' '}</Fragment>}<span class={accentClass}>{last}</span>
         </h1>
         {intro && <p data-reveal class="mt-5 max-w-2xl text-lg leading-relaxed text-white/85 sm:text-xl">{intro}</p>}
       </div>

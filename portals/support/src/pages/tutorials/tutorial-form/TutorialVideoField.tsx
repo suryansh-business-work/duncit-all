@@ -1,13 +1,10 @@
-import { useId, useRef, useState, type ChangeEvent } from 'react';
-import { Box, FormHelperText, LinearProgress, Stack, Typography } from '@mui/material';
+import { useId, useState } from 'react';
+import { Box, FormHelperText, Stack, Typography } from '@mui/material';
 import VideoFileIcon from '@mui/icons-material/VideoFileOutlined';
 import { DuncitButton } from '@duncit/buttons';
-import { MB, useImagekitDirectUpload, useUploadCaps } from '@duncit/media-picker';
-import { logs } from '@duncit/logs';
+import { MediaPickerDialog } from '@duncit/media-picker';
 import { formatTutorialDuration } from '@duncit/utils';
 import { useTranslation } from '@duncit/shell';
-
-const log = logs.portal.support;
 
 interface Props {
   value: string;
@@ -18,46 +15,15 @@ interface Props {
   onDuration: (seconds: number) => void;
 }
 
-const toMb = (bytes: number) => (bytes / MB).toFixed(1);
-
-type Translate = ReturnType<typeof useTranslation>['t'];
-
-/** Why a picked file cannot be uploaded (not a video, over the admin's cap), or null when it can. */
-function videoRefusal(file: File, maxBytes: number, t: Translate): string | null {
-  if (!file.type.startsWith('video/')) return t('support.tutorials.notVideo');
-  if (file.size <= maxBytes) return null;
-  return t('support.tutorials.videoTooLarge', { vars: { size: toMb(file.size), max: toMb(maxBytes) } });
-}
-
-/** Pick a tutorial video, refuse it in the browser when it is over the admin's
- * cap, otherwise stream it to ImageKit with a real byte-progress bar. The
- * preview's metadata fills the tutorial's length. */
+/** Pick a tutorial video through the shared upload dialog, which applies the
+ * admin's video cap and streams the file to ImageKit with byte progress. The
+ * preview's metadata fills the tutorial's length. Device only: a how-to is a
+ * recording of the app, never a stock clip. */
 export default function TutorialVideoField({ value, durationSec, error, onUploaded, onDuration }: Readonly<Props>) {
   const { t } = useTranslation();
-  const inputRef = useRef<HTMLInputElement>(null);
   const helperId = useId();
-  const { maxVideoBytes } = useUploadCaps('PORTALS');
-  const { upload, uploading } = useImagekitDirectUpload();
-  const [progress, setProgress] = useState(0);
-  const [problem, setProblem] = useState<string | null>(null);
+  const [open, setOpen] = useState(false);
 
-  const onPick = async (event: ChangeEvent<HTMLInputElement>) => {
-    const [file] = Array.from(event.target.files ?? []);
-    event.target.value = '';
-    if (!file) return;
-    const refusal = videoRefusal(file, maxVideoBytes, t);
-    setProblem(refusal);
-    if (refusal) return;
-    setProgress(0);
-    try {
-      onUploaded(await upload(file, '/support/tutorials', setProgress));
-    } catch (err) {
-      log.error('Tutorials', 'TutorialVideoField', { error: err, msg: 'tutorial video upload failed' });
-      setProblem(t('support.tutorials.uploadFailed'));
-    }
-  };
-
-  const message = problem ?? error;
   const hint = value && durationSec > 0
     ? t('support.tutorials.uploadedDuration', { vars: { duration: formatTutorialDuration(durationSec) } })
     : t('support.tutorials.videoHint');
@@ -83,37 +49,31 @@ export default function TutorialVideoField({ value, durationSec, error, onUpload
           sx={{ width: 140, aspectRatio: '9 / 16', borderRadius: 1, bgcolor: 'grey.900', objectFit: 'cover' }}
         />
       )}
-      <input
-        ref={inputRef}
-        type="file"
-        accept="video/*"
-        hidden
-        onChange={(event) => {
-          onPick(event).catch((cause) => log.error('Tutorials', 'TutorialVideoField', { error: cause, msg: 'pick failed' }));
-        }}
-      />
       <Box>
         <DuncitButton
           variant="outlined"
           startIcon={<VideoFileIcon />}
-          disabled={uploading}
           aria-describedby={helperId}
-          onClick={() => inputRef.current?.click()}
+          onClick={() => setOpen(true)}
         >
           {value ? t('support.tutorials.replaceVideo') : t('support.tutorials.chooseVideo')}
         </DuncitButton>
       </Box>
-      {uploading && (
-        <Stack spacing={0.5}>
-          <LinearProgress variant="determinate" value={progress} aria-label={t('support.tutorials.fieldVideo')} />
-          <Typography variant="caption" role="status">
-            {t('support.tutorials.uploading', { vars: { pct: progress } })}
-          </Typography>
-        </Stack>
-      )}
-      <FormHelperText id={helperId} error={!!message} role={message ? 'alert' : undefined}>
-        {message ?? hint}
+      <FormHelperText id={helperId} error={!!error} role={error ? 'alert' : undefined}>
+        {error ?? hint}
       </FormHelperText>
+      <MediaPickerDialog
+        open={open}
+        onClose={() => setOpen(false)}
+        onPicked={(url) => {
+          onUploaded(url);
+          setOpen(false);
+        }}
+        accept="video/*"
+        deviceOnly
+        folder="/support/tutorials"
+        title={t('support.tutorials.fieldVideo')}
+      />
     </Stack>
   );
 }

@@ -3,9 +3,9 @@ import { Controller, useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, MenuItem, Stack } from '@mui/material';
 import { RhfTextField } from '@duncit/forms';
-import { SingleImageUploadField } from '@duncit/media-picker';
 import { useTranslation } from '@duncit/shell';
 import FormDialogActions from '../../../components/FormDialogActions';
+import TutorialThumbnailField from './TutorialThumbnailField';
 import TutorialVideoField from './TutorialVideoField';
 import {
   TUTORIAL_DESCRIPTION_MAX,
@@ -65,12 +65,7 @@ export default function TutorialForm({
           control={control}
           name="thumbnail_url"
           render={({ field }) => (
-            <SingleImageUploadField
-              value={field.value}
-              onChange={field.onChange}
-              folder="/support/tutorials/thumbnails"
-              label={t('support.tutorials.fieldThumbnail')}
-            />
+            <TutorialThumbnailField value={field.value} onChange={field.onChange} />
           )}
         />
         <RhfTextField

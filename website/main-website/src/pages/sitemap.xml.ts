@@ -3,6 +3,7 @@ import { buildSitemapXml, routesFromPageFiles, SITEMAP_HEADERS } from '@duncit/b
 import { urlConfigs } from '../config/url-configs';
 import { fetchBlogPosts, fetchPolicies } from '../lib/site-data';
 import { policyPagePath } from '../lib/policy-page';
+import { blogPostPath } from '../lib/blog-path';
 
 /**
  * Every indexable address, each exactly as its page names itself canonical:
@@ -17,7 +18,7 @@ export const GET: APIRoute = async () => {
     ...pages.map((path) => ({ loc: `${origin}${path}` })),
     ...policies.map((policy) => ({ loc: `${origin}${policyPagePath(policy.slug)}` })),
     ...posts.map((post) => ({
-      loc: `${origin}/blog/post?slug=${encodeURIComponent(post.slug)}`,
+      loc: `${origin}${blogPostPath(post.slug)}`,
       lastmod: post.published_at,
     })),
   ];

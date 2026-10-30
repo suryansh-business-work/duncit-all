@@ -98,11 +98,15 @@ Commit on `staging` only (separate commits per concern), push, open/refresh the 
 `main`, and monitor every check until green (rules 2, 4, 83). After the staging deploy,
 re-run the audit with `--env staging` and report before/after scores per site.
 
-## Known open items (from the 2026-10-30 baseline)
+## State after the 2026-10-30 pass
 
-- ecomm.duncit.com and mweb.duncit.com home pages are client-rendered (≈0 words in server
-  HTML) and soft-404 unknown paths — larger SSR work; ask before starting.
-- status.duncit.com is a Vite SPA without canonical/sitemap — low value to index; leave
-  unless asked.
-- Blog posts live at `/blog/post?slug=` (query URLs). Path URLs (`/blog/<slug>`) would
-  rank better; needs a route + redirect plan — propose, don't silently change.
+- Done: robots/sitemap/JSON-LD on all Astro sites; 404s noindex; partners real 404.
+- Done: blog posts at `/blog/<slug>` (`src/lib/blog-path.ts`), old `?slug=` → 301,
+  unknown post → 404.
+- Done: ecomm server answers unknown addresses and gone products/shelves with 404 +
+  noindex (`src/app/route-paths.ts` is the one route list), and writes each page's
+  h1 + summary into `#root` for crawlers that do not run JS. The rest of the body is
+  still client-rendered (Googlebot renders it); full SSR is a rewrite — ask first.
+- Open: mweb.duncit.com is the app (CSR, no robots.txt). Indexing it is a product
+  decision — ask before changing.
+- Open: status.duncit.com is a Vite SPA without canonical/sitemap — low value to index.

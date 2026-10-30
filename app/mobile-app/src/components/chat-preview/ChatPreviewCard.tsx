@@ -5,6 +5,7 @@ import { chatPreviewAction, type ChatPreviewKind } from '@duncit/utils';
 import { DuncitButton } from '@/components/DuncitButton';
 import { SurfaceCard } from '@/components/SurfaceCard/SurfaceCard';
 import { useChatPreview } from '@/hooks/useChatPreview';
+import { useRefetchOnFocus } from '@/hooks/useRefetchOnFocus';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 
@@ -39,6 +40,9 @@ export function ChatPreviewCard({
   const { t } = useTranslation();
   const { onPrimary } = useThemeColors();
   const chat = useChatPreview(kind, id, reloadKey);
+  // The details screen stays mounted under the chat room: coming back must
+  // show what was said there without a manual refresh.
+  useRefetchOnFocus(chat.retry, 'ChatPreview');
 
   const action = chatPreviewAction(kind, !!chat.preview?.is_member);
   const lockedHint = kind === 'POD' ? t('mweb.chat.podChatLocked') : t('mweb.chatRoom.joinToChat');

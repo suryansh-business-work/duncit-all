@@ -1,6 +1,7 @@
 import type { SiteMetaInput } from '@duncit/brand/site-meta';
 import { ECOMM_STORE_BUNDLE, flattenCatalogue } from '@duncit/i18n';
 
+import { isStorePath } from '../src/app/route-paths';
 import { firstFilled } from '../src/lib/text';
 
 import { askApi } from './api';
@@ -27,6 +28,8 @@ export interface PageHead {
   structured: unknown[];
   /** The occasion's favicon while one is on, else the store's; '' when it has none. */
   favicon: string;
+  /** No such page: an unknown address, or a product/shelf/brand/page that is gone. Served as a 404. */
+  notFound?: boolean;
 }
 
 /** The storefront's own titles, read from the copy it ships so the head says what the page says. */
@@ -188,6 +191,12 @@ function routedHead(s: SeoSettings, kind: RouteKind, slug: string, path: string)
 
 const withoutTrailingSlash = (path: string): string => (path.length > 1 && path.endsWith('/') ? path.slice(0, -1) : path);
 
+/** The store's own head, marked as no page: kept out of search and answered with a 404. */
+function notFoundHead(s: SeoSettings, path: string): PageHead {
+  const head = baseHead(s, path, copy('ecommStore.notFound.title'));
+  return { ...head, meta: { ...head.meta, noindex: true }, notFound: true };
+}
+
 /** The head for a path, or null when the API could not be asked (serve the plain page). */
 export async function headFor(path: string): Promise<PageHead | null> {
   const s = await settings();
@@ -198,7 +207,7 @@ export async function headFor(path: string): Promise<PageHead | null> {
     const match = route.pattern.exec(path);
     if (!match) continue;
     const slug = decodeURIComponent(match[1] ?? '');
-    return (await routedHead(s, route.kind, slug, path)) ?? baseHead(s, path);
+    return (await routedHead(s, route.kind, slug, path)) ?? notFoundHead(s, path);
   }
-  return baseHead(s, path);
+  return isStorePath(path) ? baseHead(s, path) : notFoundHead(s, path);
 }

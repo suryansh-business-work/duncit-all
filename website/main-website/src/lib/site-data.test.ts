@@ -21,7 +21,7 @@ const fetchMock = vi.fn();
  * request per distinct query however many pages ask for it. Left in place
  * between tests it does the same thing to the suite: only the first call per
  * query reaches `fetch`, and every later test reads the first one's answer
- * instead of its own. Resetting the registry is what makes each case actually
+ * instead of its own. Resetting the registry is what makes each case
  * exercise the code it names.
  */
 beforeEach(async () => {
@@ -135,8 +135,8 @@ describe('fetchGrievanceOfficer', () => {
 
   /**
    * A row exists from the Legal portal's first save, so the record being there
-   * is not the same as the officer being published — the name is what says
-   * somebody has actually been appointed.
+   * is not the same as the officer being published. The name is what says
+   * somebody has been appointed.
    */
   it('treats a row with no name as nobody appointed yet', async () => {
     fetchMock.mockResolvedValue(
@@ -156,8 +156,8 @@ describe('fetchGrievanceOfficer', () => {
 describe('the build-time request cache', () => {
   /**
    * A static build renders many pages and every one of them asks for the same
-   * branding. Without this they would each POST again — more chances to hit
-   * the fetch timeout, and none of them able to return anything new, because a
+   * branding. Without this they would each POST again, each one another chance
+   * to hit the fetch timeout, and none of them able to return anything new, because a
    * build is a single moment in time.
    */
   it('asks once per distinct query however many pages want the answer', async () => {

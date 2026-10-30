@@ -6,13 +6,13 @@ import { PORT } from './config';
 import { escapeXml, robotsTxt, sitemapXml } from './crawl';
 import { distFile, indexHtml, sendBody, sendServiceWorker, sendStatic } from './files';
 import { manifestJson } from './manifest';
-import { headFor } from './pages';
+import { headFor, type PageHead } from './pages';
 import { jsonLdTag } from './structured';
 
 /**
  * ecomm.duncit.com's HTML server. It serves the built storefront and, for the
- * pages a crawler or a link preview reads — home, a product, a category, a
- * collection, a pet, a brand, a page — writes that page's own title,
+ * pages a crawler or a link preview reads (home, a product, a category, a
+ * collection, a pet, a brand, a page), writes that page's own title,
  * description, social card, JSON-LD and favicon into the head before the HTML
  * leaves. A crawler never runs the SPA's JavaScript, so without this every
  * shared link would look the same.
@@ -31,16 +31,28 @@ function faviconTag(url: string): string {
   return `<link rel="icon" href="${escapeXml(url)}"${typeAttr}>`;
 }
 
-/** The SPA shell with this path's head written in; the plain shell if the API cannot say. */
-async function renderPage(path: string): Promise<string> {
+const ROOT_OPEN = '<div id="root">';
+
+/**
+ * The page's heading and summary inside #root, under the boot loader. A crawler
+ * that does not run JavaScript reads them; React replaces them on mount with
+ * the same title and text, drawn properly.
+ */
+function withRootText(html: string, head: PageHead): string {
+  const text = `<main><h1>${escapeXml(head.meta.title)}</h1><p>${escapeXml(head.meta.description)}</p></main>`;
+  return html.replace(ROOT_OPEN, `${ROOT_OPEN}\n      ${text}`);
+}
+
+/** The SPA shell with this path's head written in; the plain shell (200) if the API cannot say. */
+async function renderPage(path: string): Promise<{ html: string; status: number }> {
   const html = indexHtml();
   try {
     const head = await headFor(path);
-    if (!head) return html;
+    if (!head) return { html, status: 200 };
     const tags = [buildSiteMetaTags(head.meta), ...head.structured.map(jsonLdTag), faviconTag(head.favicon)].filter(Boolean).join('\n    ');
-    return injectSiteMeta(html, tags);
+    return { html: withRootText(injectSiteMeta(html, tags), head), status: head.notFound ? 404 : 200 };
   } catch {
-    return html;
+    return { html, status: 200 };
   }
 }
 
@@ -68,7 +80,8 @@ async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> 
     res.end();
     return;
   }
-  sendBody(req, res, await renderPage(path), HTML_TYPE, NO_CACHE);
+  const page = await renderPage(path);
+  sendBody(req, res, page.html, HTML_TYPE, NO_CACHE, {}, page.status);
 }
 
 const server = createServer((req, res) => {

@@ -103,6 +103,8 @@ export default function ChatComposer({ disabled, onSend, onTyping }: Readonly<Pr
         <TextField
           size="small"
           fullWidth
+          multiline
+          maxRows={4}
           data-testid="support-chat-input"
           placeholder={t('mweb.supportChat.typeAMessage')}
           value={text}

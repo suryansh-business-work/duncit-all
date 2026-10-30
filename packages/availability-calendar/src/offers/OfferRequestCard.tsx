@@ -1,4 +1,6 @@
 import { Alert, Card, CardContent, Divider, Stack, Typography } from '@mui/material';
+import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutlineRounded';
+import { DuncitButton } from '@duncit/buttons';
 import { useDateFormat, useTranslation } from '@duncit/app-settings';
 import { slotSpanLabel } from '@duncit/slots';
 import { currentOfferTerms } from '@duncit/utils';
@@ -25,7 +27,17 @@ function Detail({ label, value }: Readonly<{ label: string; value: string }>) {
  * venue's minimum to the pod's spots), the terms on the table with what they
  * ask of the venue and until when to answer, how it went so far, and the answers.
  */
-export default function OfferRequestCard({ request, onDone }: Readonly<{ request: BookingRequestRow; onDone: () => unknown }>) {
+/** A way into the pod's venue chat with its host; the host app names and routes it. */
+export interface OfferChatLink {
+  label: string;
+  onOpen: (podId: string) => void;
+}
+
+export default function OfferRequestCard({
+  request,
+  onDone,
+  chat,
+}: Readonly<{ request: BookingRequestRow; onDone: () => unknown; chat?: OfferChatLink }>) {
   const { t } = useTranslation();
   const fmt = useDateFormat({ timeZoneAware: true });
   const { offer } = request;
@@ -53,6 +65,19 @@ export default function OfferRequestCard({ request, onDone }: Readonly<{ request
             <Detail label={t('availability.offers.contact')} value={[request.host_email, request.host_phone].filter(Boolean).join(' · ') || '—'} />
             {guests.length > 0 && <Detail label={t('availability.offers.guestsLabel')} value={guests.filter(Boolean).join(' · ')} />}
           </Stack>
+          {chat && (
+            <Stack direction="row">
+              <DuncitButton
+                size="small"
+                variant="outlined"
+                startIcon={<ChatBubbleOutlineIcon />}
+                onClick={() => chat.onOpen(request.pod_id)}
+                data-testid={`booking-request-chat-${request.slot_id}`}
+              >
+                {chat.label}
+              </DuncitButton>
+            </Stack>
+          )}
           <Divider />
           {offer ? (
             <>

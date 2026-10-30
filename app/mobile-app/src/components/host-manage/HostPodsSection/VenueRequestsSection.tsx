@@ -1,5 +1,5 @@
 import { Spinner, YStack } from 'tamagui';
-import { coverImageUrl } from '@duncit/utils';
+import { coverImageUrl, hasVenueChat } from '@duncit/utils';
 
 import type { HostPod } from '@/hooks/useHostPods';
 import { EmptyLine } from '@/components/host-manage/HostRowParts';
@@ -9,6 +9,7 @@ import { formatDateTime } from '@/utils/date-format';
 import { podTypeLabel } from '@/utils/pod-format';
 import { useTranslation } from '@/hooks/useTranslation';
 import { isVenueRejected, VENUE_REJECTED_NOTE, venueOfferChip } from '@/utils/venue-approval';
+import { VenueRequestReach } from './VenueRequestReach';
 import { VenueRequestRow } from './VenueRequestRow';
 
 /** The old two-line empty copy — kept exported for existing importers; the
@@ -84,6 +85,7 @@ export function VenueRequestsSection({
           t('mweb.venueOffer.status.countered'),
         )}
         rejectedNote={isVenueRejected(pod.venue_approval_status) ? VENUE_REJECTED_NOTE : null}
+        footer={hasVenueChat(pod) ? <VenueRequestReach podId={pod.id} /> : null}
         onOpen={() => onOpen(pod)}
         onActions={() => onActions(pod)}
       />

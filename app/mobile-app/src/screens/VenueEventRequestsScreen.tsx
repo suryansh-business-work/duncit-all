@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { YStack } from 'tamagui';
 
 import { PillTabs, type PillTab } from '@/components/PillTabs';
@@ -9,6 +11,7 @@ import { SlotRequestHistoryList } from '@/components/venue-event-requests/SlotRe
 import { SlotRequestQueue } from '@/components/venue-slot-requests/SlotRequestQueue';
 import { useSlotRequestHistory } from '@/hooks/useSlotRequestHistory';
 import { useTranslation } from '@/hooks/useTranslation';
+import type { RootStackParamList } from '@/navigation/types';
 
 type InboxTab = 'bookings' | 'requests' | 'history';
 
@@ -42,6 +45,7 @@ function HistoryTab() {
 export function VenueEventRequestsScreen() {
   const { t } = useTranslation();
   const [tab, setTab] = useState<InboxTab>('bookings');
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   return (
     <StackScreen title={t('availability.eventInbox.title')} testID="venue-event-requests-screen">
@@ -53,7 +57,12 @@ export function VenueEventRequestsScreen() {
         testIDPrefix="venue-event-requests-tab"
       />
       <RefreshScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
-        {tab === 'bookings' && <SlotRequestQueue onDecided={() => undefined} />}
+        {tab === 'bookings' && (
+          <SlotRequestQueue
+            onDecided={() => undefined}
+            onChat={(podId) => navigation.navigate('VenueChat', { podId })}
+          />
+        )}
         {tab === 'requests' && <EventRequestsTab />}
         {tab === 'history' && <HistoryTab />}
       </RefreshScrollView>

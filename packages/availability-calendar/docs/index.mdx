@@ -725,6 +725,18 @@ app (which draws its own Tamagui rows) says the same.
 <VenueOfferInbox venueId={selectedVenueId ?? null} onAnswered={refreshCounts} />
 ```
 
+Pass `chat={{ label, onOpen }}` to put a button on every request that opens the pod's venue chat
+with its host (`onOpen` gets the request's `pod_id`). The app names and routes it, so the package
+holds no app route; mWeb passes its "Chat with host" copy and `venueChatPath`. The Partners console
+leaves it out and shows no button.
+
+```tsx
+<VenueOfferInbox
+  venueId={venueId}
+  chat={{ label: t('mweb.venueChat.chatWithHost'), onOpen: (podId) => navigate(venueChatPath(podId)) }}
+/>
+```
+
 ## Localization
 
 Every sentence here is an `availability.*` key from `packages/i18n/src/bundles/availability.ts`

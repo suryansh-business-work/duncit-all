@@ -62,7 +62,8 @@ describe('SlotRequestCard', () => {
     expect(screen.getByText('This pod is free')).toBeOnTheScreen();
     expect(screen.queryByText('Slot price')).toBeNull();
     // The host's contact stays on the card, and the decision stays open.
-    expect(screen.getByText('meera@duncit.com · 9000000001')).toBeOnTheScreen();
+    expect(screen.getByTestId('slot-request-slot-1-phone')).toHaveTextContent('9000000001');
+    expect(screen.getByTestId('slot-request-slot-1-email')).toHaveTextContent('meera@duncit.com');
     fireEvent.press(screen.getByTestId('slot-request-slot-1-accept'));
     expect(
       screen.getByText(/^“Sunday Badminton” goes live at Indiranagar Courts on .+\.$/),

@@ -9,6 +9,8 @@ import { useTranslation } from '@/hooks/useTranslation';
 interface Props {
   /** Called after any decision, so the answered history below re-reads too. */
   onDecided: () => void;
+  /** Opens a request's venue chat with its host. */
+  onChat?: (podId: string) => void;
 }
 
 /**
@@ -19,7 +21,7 @@ interface Props {
  * moment the venue says yes, so neither answer is a tap to make by accident:
  * each card opens its own sheet for it.
  */
-export function SlotRequestQueue({ onDecided }: Readonly<Props>) {
+export function SlotRequestQueue({ onDecided, onChat }: Readonly<Props>) {
   const { t } = useTranslation();
   const slots = useVenueSlotRequests(onDecided);
   const { answers } = slots;
@@ -70,7 +72,7 @@ export function SlotRequestQueue({ onDecided }: Readonly<Props>) {
       )}
 
       {slots.requests.map((request) => (
-        <SlotRequestCard key={request.slot_id} request={request} answers={answers} />
+        <SlotRequestCard key={request.slot_id} request={request} answers={answers} onChat={onChat} />
       ))}
     </YStack>
   );

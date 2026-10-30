@@ -1,7 +1,9 @@
 import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router';
 import { useQuery } from '@apollo/client/react';
 import { Stack } from '@mui/material';
 import { VenueOfferInbox } from '@duncit/availability-calendar';
+import { venueChatPath } from '@duncit/utils';
 import PillChips from '../../components/club-admin/PillChips';
 import { ALL_VENUES, MY_VENUES } from './queries';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -15,6 +17,7 @@ import { useSelectedVenue } from '../../hooks/useSelectedVenue';
  */
 export default function VenueSlotRequestsPage() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   // null until the owner taps a chip: the page opens on the venue the Venue
   // Options page selected, and "All venues" stays one tap away.
   const [chosenId, setChosenId] = useState<string | null>(null);
@@ -46,7 +49,12 @@ export default function VenueSlotRequestsPage() {
         />
       )}
       {/* Wait for the venue list, or the inbox would read every venue's requests first and then the selected one's. */}
-      {!(venuesQuery.loading && !venuesQuery.data) && <VenueOfferInbox venueId={venueId === ALL_VENUES ? null : venueId} />}
+      {!(venuesQuery.loading && !venuesQuery.data) && (
+        <VenueOfferInbox
+          venueId={venueId === ALL_VENUES ? null : venueId}
+          chat={{ label: t('mweb.venueChat.chatWithHost'), onOpen: (podId) => navigate(venueChatPath(podId)) }}
+        />
+      )}
     </Stack>
   );
 }

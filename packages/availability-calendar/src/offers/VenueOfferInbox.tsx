@@ -1,7 +1,7 @@
 import { useQuery } from '@apollo/client/react';
 import { Alert, Skeleton, Stack, Typography } from '@mui/material';
 import { useTranslation } from '@duncit/app-settings';
-import OfferRequestCard from './OfferRequestCard';
+import OfferRequestCard, { type OfferChatLink } from './OfferRequestCard';
 import { VENUE_BOOKING_REQUESTS, type BookingRequestRow } from './queries';
 
 interface Props {
@@ -9,6 +9,8 @@ interface Props {
   venueId: string | null;
   /** Called after any answer, so a page's other lists (history, counts) re-read too. */
   onAnswered?: () => unknown;
+  /** Puts a "chat with the host" button on every request; left out (Partners console), none. */
+  chat?: OfferChatLink;
 }
 
 /**
@@ -16,7 +18,7 @@ interface Props {
  * the price they offer — answered with Accept, Counter or Reject. One inbox for
  * the Partners console and mWeb; the native app draws the same rows itself.
  */
-export default function VenueOfferInbox({ venueId, onAnswered }: Readonly<Props>) {
+export default function VenueOfferInbox({ venueId, onAnswered, chat }: Readonly<Props>) {
   const { t } = useTranslation();
   const { data, loading, error, refetch } = useQuery<{ venueSlotRequests: BookingRequestRow[] }>(VENUE_BOOKING_REQUESTS, {
     variables: { venue_id: venueId },
@@ -37,7 +39,7 @@ export default function VenueOfferInbox({ venueId, onAnswered }: Readonly<Props>
       {loading && !data && <Skeleton variant="rounded" height={160} aria-label={t('availability.offers.loading')} />}
       {!loading && !error && requests.length === 0 && <Alert severity="info">{t('availability.offers.empty')}</Alert>}
       {requests.map((request) => (
-        <OfferRequestCard key={request.slot_id} request={request} onDone={answered} />
+        <OfferRequestCard key={request.slot_id} request={request} onDone={answered} chat={chat} />
       ))}
     </Stack>
   );

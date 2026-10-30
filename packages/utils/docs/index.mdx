@@ -1384,9 +1384,9 @@ if (shouldExtendReelFeed(activeIndex, reels.length)) setCycles((count) => count 
 | `isReelPreloaded` | `(index, activeIndex) => boolean` | — | Whether a reel should be buffering — the ones within `REEL_PRELOAD_DISTANCE` either side. |
 | `REEL_PRELOAD_DISTANCE` | `2` | — | Reels kept loading ahead of and behind the one on screen. |
 
-### Tutorials — `tutorials`
+### Learnings (tutorials) — `tutorials`
 
-The Tutorials page (mWeb `/tutorials`, the native `Tutorials` screen) reads its
+The Learnings page (mWeb `/learnings`, the native `Tutorials` screen at linking path `learnings`; code keeps the tutorial name) reads its
 filters from the URL — `q`, `topic`, `lang` and `v` (a tutorial to bring to the
 front, which is what a shared link carries). A video counts as watched once 90%
 of it has played, or when it ends; both apps call `markTutorialWatched` once at
@@ -1405,7 +1405,7 @@ if (hasWatchedEnough(video.currentTime, video.duration)) markWatched();
 | `tutorialFeedVariables` | `(filters, page?) => variables` | — | The `tutorials` query variables, empty filters sent as null. |
 | `hasTutorialFilters` | `(filters) => boolean` | — | Whether search, topic or language narrows the feed. |
 | `hasWatchedEnough` | `(position, duration) => boolean` | — | True at `TUTORIAL_WATCHED_RATIO` (0.9); a zero or unknown duration never counts. |
-| `tutorialShareUrl` | `(origin, id) => string` | — | `<origin>/tutorials?v=<id>`. |
+| `tutorialShareUrl` | `(origin, id) => string` | — | `<origin>/learnings?v=<id>`. |
 | `formatTutorialDuration` | `(seconds) => string` | — | `2:05`; an hour or more reads `1:02:05`. |
 | `withFocusedFirst` | `(rows, focusId) => rows` | — | Moves the shared tutorial to the front of its page. |
 | `TUTORIAL_LANGUAGE_OPTIONS` | `{ value, labelKey }[]` | — | The English / Hindi toggle; labels are `mweb.tutorials.*` keys. |

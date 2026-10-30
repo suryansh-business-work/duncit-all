@@ -47,12 +47,12 @@ export const appConfig = {
     },
     {
       // A group header, not a link: the videos members watch from the app's
-      // Tutorials menu, and the topics they filter them by.
-      label: 'Tutorials', labelKey: 'shell.nav.tutorials',
+      // Learnings menu (code name: tutorials), and the topics they filter them by.
+      label: 'Learnings', labelKey: 'shell.nav.tutorials',
       icon: 'movie',
       children: [
-        { label: 'Videos', labelKey: 'shell.nav.tutorialVideos', to: '/tutorials', icon: 'movie' },
-        { label: 'Topics', labelKey: 'shell.nav.tutorialTopics', to: '/tutorials/topics', icon: 'flag' },
+        { label: 'Videos', labelKey: 'shell.nav.tutorialVideos', to: '/learnings', icon: 'movie' },
+        { label: 'Topics', labelKey: 'shell.nav.tutorialTopics', to: '/learnings/topics', icon: 'flag' },
       ],
     },
     { label: 'Mail Automation', labelKey: 'shell.nav.mailAutomation', to: '/mail-automation', icon: 'markEmailRead' },

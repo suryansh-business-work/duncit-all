@@ -5,8 +5,8 @@
  * disagree about when a video counts as watched or what a link opens.
  */
 
-/** The page both apps open (mWeb path; native's linking path is `tutorials`). */
-export const TUTORIALS_PATH = '/tutorials';
+/** The page both apps open (mWeb path; native's linking path is `learnings`). The product calls the feature "Learnings"; code keeps the tutorial name. */
+export const TUTORIALS_PATH = '/learnings';
 
 /** Languages a tutorial is recorded in. Mirrors the server TutorialLanguage enum. */
 export const TUTORIAL_LANGUAGES = ['en', 'hi'] as const;
@@ -113,6 +113,7 @@ export function formatTutorialDuration(totalSeconds: number): string {
 export function withFocusedFirst<T extends { id: string }>(rows: readonly T[], focusId: string): T[] {
   if (!focusId) return [...rows];
   const index = rows.findIndex((row) => row.id === focusId);
-  if (index <= 0) return [...rows];
-  return [rows[index], ...rows.slice(0, index), ...rows.slice(index + 1)];
+  const focused = rows[index];
+  if (index <= 0 || focused === undefined) return [...rows];
+  return [focused, ...rows.slice(0, index), ...rows.slice(index + 1)];
 }

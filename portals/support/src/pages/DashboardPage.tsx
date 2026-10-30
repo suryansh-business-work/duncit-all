@@ -156,7 +156,7 @@ export default function DashboardPage() {
             count={tutorials.data?.tutorialStats.total_views ?? 0}
             icon={<OndemandVideoIcon fontSize="large" />}
             color="secondary.main"
-            to="/tutorials"
+            to="/learnings"
           />
         ),
       },

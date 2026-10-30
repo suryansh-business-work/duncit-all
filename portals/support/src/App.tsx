@@ -49,8 +49,8 @@ export default function App() {
         <Route path="/faqs" element={authed(<FaqsPage />)} />
         <Route path="/faqs/submissions" element={authed(<FaqSubmissionsPage />)} />
         <Route path="/partners/faqs" element={authed(<PartnerFaqsPage />)} />
-        <Route path="/tutorials" element={authed(<TutorialsPage />)} />
-        <Route path="/tutorials/topics" element={authed(<TutorialTopicsPage />)} />
+        <Route path="/learnings" element={authed(<TutorialsPage />)} />
+        <Route path="/learnings/topics" element={authed(<TutorialTopicsPage />)} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       {/* Without this, every notify() in the portal is a silent no-op — it only

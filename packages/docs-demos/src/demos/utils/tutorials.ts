@@ -23,7 +23,7 @@ interface TutorialsMock {
 export const tutorialsDemos: PackageDemo[] = [
   defineDemo<TutorialsMock>({
     id: 'tutorials',
-    title: 'tutorials — the Tutorials feed filters, the watched rule and the share link',
+    title: 'tutorials — the Learnings feed filters, the watched rule and the share link',
     note:
       'query is the URL both apps read the filters from: change lang to "fr" and it is ignored, add v=<id> and that tutorial moves to the front of the page. position/duration is the watched rule — it flips to true at 90% of the video, and a zero duration never counts (the player\'s ended event covers it).',
     mock: {

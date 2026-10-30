@@ -773,7 +773,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       eventTickets: 'Event Tickets',
       faqs: 'FAQs',
       faqSubmissions: 'FAQ Submissions',
-      tutorials: 'Tutorials',
+      tutorials: 'Learnings',
       tutorialVideos: 'Videos',
       tutorialTopics: 'Topics',
       featureFlags: 'Feature Flags',

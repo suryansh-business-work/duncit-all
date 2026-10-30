@@ -14778,6 +14778,7 @@ export const SHIPPED_CLIENT_KEYS: Record<string, string> = {
   "mweb.sidebar.refreshing": "Refreshing your menu",
   "mweb.sidebar.sectionAccount": "Account & Preferences",
   "mweb.sidebar.sectionExplore": "Explore & Community",
+  "mweb.sidebar.sectionLoyalty": "Loyalty",
   "mweb.sidebar.sectionShopping": "Shopping & Orders",
   "mweb.sidebar.sectionSupport": "Support & Legal",
   "mweb.sidebar.sectionWork": "Work & Earnings",

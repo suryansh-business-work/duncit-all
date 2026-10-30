@@ -205,8 +205,14 @@ describe('MenuPanel', () => {
     flagValue = true;
     renderPanel();
     expect(screen.getByTestId('sidebar-section-shopping-subtitle')).toHaveTextContent(
-      'Pod Shop, Cart, Food, Gift Cards, My Product Order History, Address Book, My Rented Items'
+      'Pod Shop, Cart, Food, My Product Order History, Address Book, My Rented Items'
     );
+    expect(screen.getByTestId('sidebar-section-loyalty-subtitle')).toHaveTextContent(
+      'Duncit Coin, Gift Cards, Refer & Earn'
+    );
+    expand('loyalty');
+    fireEvent.click(screen.getByTestId('sidebar-item-duncit-coin'));
+    expect(mockNavigate).toHaveBeenCalledWith('/duncit-coin');
     expand('work');
     expect(screen.getByTestId('sidebar-item-membership')).toHaveTextContent('Coming soon');
     fireEvent.click(screen.getByTestId('sidebar-item-membership'));

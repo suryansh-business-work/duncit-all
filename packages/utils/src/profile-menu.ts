@@ -28,6 +28,7 @@ export type ProfileMenuKey =
   | 'badges'
   | 'gigs'
   | 'referral'
+  | 'duncit-coin'
   | 'membership'
   | 'shop'
   | 'cart'
@@ -122,6 +123,7 @@ export const PROFILE_MENU_ITEMS: Readonly<Record<ProfileMenuKey, ProfileMenuItem
   badges: { key: 'badges', labelKey: 'mweb.badges.sidebarLabel' },
   gigs: { key: 'gigs', labelKey: 'gigJobs.nav.label' },
   referral: { key: 'referral', labelKey: 'mweb.referral.title' },
+  'duncit-coin': { key: 'duncit-coin', labelKey: 'mweb.coin.title' },
   membership: {
     key: 'membership',
     labelKey: 'mweb.membership.sidebarLabel',
@@ -300,7 +302,7 @@ export function parseStoredQuickAccess(raw: string | null | undefined, flags: Pr
 
 // ── Section cards ───────────────────────────────────────────────────────────
 
-export type ProfileMenuSectionId = 'explore' | 'work' | 'shopping' | 'account' | 'support';
+export type ProfileMenuSectionId = 'explore' | 'work' | 'loyalty' | 'shopping' | 'account' | 'support';
 
 export interface ProfileMenuSectionDef {
   id: ProfileMenuSectionId;
@@ -313,11 +315,18 @@ export interface ProfileMenuSectionDef {
  * at the end of their section. */
 export const PROFILE_MENU_SECTIONS: readonly ProfileMenuSectionDef[] = [
   { id: 'explore', titleKey: 'mweb.sidebar.sectionExplore', items: ['ideas', 'leaderboard', 'badges'] },
-  { id: 'work', titleKey: 'mweb.sidebar.sectionWork', items: ['gigs', 'referral', 'membership'] },
+  { id: 'work', titleKey: 'mweb.sidebar.sectionWork', items: ['gigs', 'membership'] },
+  // Everything a member earns or spends as a reward, in one card: the coin
+  // wallet, gift cards and referrals (the Loyalty console's three areas).
+  {
+    id: 'loyalty',
+    titleKey: 'mweb.sidebar.sectionLoyalty',
+    items: ['duncit-coin', 'gift-cards-buy', 'gift-cards-redeem', 'referral'],
+  },
   {
     id: 'shopping',
     titleKey: 'mweb.sidebar.sectionShopping',
-    items: ['shop', 'cart', 'food-orders', 'gift-cards-buy', 'gift-cards-redeem', 'orders', 'addresses', 'rentals'],
+    items: ['shop', 'cart', 'food-orders', 'orders', 'addresses', 'rentals'],
   },
   {
     id: 'account',

@@ -32,6 +32,7 @@ export const MENU_DESTINATIONS: Readonly<Record<ProfileMenuKey, Destination>> = 
   badges: { route: 'Badges', icon: 'military-tech' },
   gigs: { route: 'GigJobs', icon: 'work-outline' },
   referral: { route: 'Referral', icon: 'card-giftcard' },
+  'duncit-coin': { route: 'DuncitCoin', icon: 'monetization-on' },
   membership: { route: 'Membership', icon: 'card-membership' },
   shop: { route: 'Shop', icon: 'storefront' },
   cart: { route: 'Cart', icon: 'shopping-cart' },
@@ -53,13 +54,14 @@ export const MENU_DESTINATIONS: Readonly<Record<ProfileMenuKey, Destination>> = 
 export const SECTION_ICONS: Readonly<Record<ProfileMenuSectionId, IconName>> = {
   explore: 'explore',
   work: 'work-outline',
+  loyalty: 'loyalty',
   shopping: 'shopping-bag',
   account: 'manage-accounts',
   support: 'support-agent',
 };
 
-/** The Duncit Coin card's destination and glyph. Shown in User mode only. */
-export const COIN_DESTINATION: Destination = { route: 'DuncitCoin', icon: 'monetization-on' };
+/** The Duncit Coin card's destination and glyph (the Loyalty row's own). Shown in User mode only. */
+export const COIN_DESTINATION: Destination = MENU_DESTINATIONS['duncit-coin'];
 
 /** One menu destination, translated and ready to draw. */
 export interface MenuEntry {

@@ -5026,6 +5026,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       // The collapsible section cards.
       sectionExplore: 'Explore & Community',
       sectionWork: 'Work & Earnings',
+      sectionLoyalty: 'Loyalty',
       sectionShopping: 'Shopping & Orders',
       sectionAccount: 'Account & Preferences',
       sectionSupport: 'Support & Legal',

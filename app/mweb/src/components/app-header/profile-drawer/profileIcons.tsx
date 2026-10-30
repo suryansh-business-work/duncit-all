@@ -48,6 +48,7 @@ import WarehouseIcon from '@mui/icons-material/Warehouse';
 import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
 import WorkOutlineIcon from '@mui/icons-material/WorkOutlineOutlined';
 import ShoppingBagIcon from '@mui/icons-material/ShoppingBag';
+import LoyaltyIcon from '@mui/icons-material/Loyalty';
 import type { ProfileIconKey } from './profileSections';
 
 const ICONS: Record<ProfileIconKey, JSX.Element> = {
@@ -119,6 +120,7 @@ const ICONS: Record<ProfileIconKey, JSX.Element> = {
   // The account menu's section cards (native: explore / shopping-bag).
   explore: <ExploreIcon />,
   shopping: <ShoppingBagIcon />,
+  loyalty: <LoyaltyIcon />,
 };
 
 export function profileIcon(key: ProfileIconKey): JSX.Element {

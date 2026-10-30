@@ -38,7 +38,8 @@ describe('FreeArrangementFields', () => {
     fireEvent.press(screen.getByTestId('t-free-more-details'));
     expect(screen.getByText(DETAILS_TITLE)).toBeOnTheScreen();
     expect(screen.getByText(/Free bookings cannot be countered or bargained/)).toBeOnTheScreen();
-    fireEvent.press(screen.getByTestId('t-free-policy-dialog-close'));
+    // The header X is DuncitDialog's `-close`; the footer button is the dialog's own.
+    fireEvent.press(screen.getByTestId('t-free-policy-dialog-done'));
     expect(screen.queryByText(DETAILS_TITLE)).toBeNull();
   });
 

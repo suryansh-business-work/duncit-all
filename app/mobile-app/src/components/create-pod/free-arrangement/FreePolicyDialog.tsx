@@ -34,7 +34,7 @@ export function FreePolicyDialog({ open, onClose, testID }: Readonly<Props>) {
       variant="center"
       footer={
         <DuncitButton
-          testID={`${testID}-close`}
+          testID={`${testID}-done`}
           label={close}
           onPress={onClose}
           variant="outline"

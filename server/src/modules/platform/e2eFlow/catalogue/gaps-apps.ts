@@ -1317,11 +1317,13 @@ export const APP_GAP_FLOWS: readonly CatalogueFlow[] = [
       {
         name: 'Block and unblock a profile',
         description:
-          'blockUser cuts every follow edge and open follow request between the two both ways and hides each one\'s posts and stories from the other; unblockUser lifts the block but does not restore the follows. The blocker gets a confirmation; the blocked member is never told.',
+          'blockUser cuts every follow edge and open follow request between the two both ways and hides each one\'s posts, stories and comments from the other in every feed at once; unblockUser lifts the block but does not restore the follows. The blocker gets a confirmation, Legal is alerted to review the account, and the blocked member is never told.',
         steps: [
           ['As USER A who follows and is followed by USER B, open /u/<B handle> and tap the 3-dot "Profile options" button', 'The menu shows "Block" (in red) and "Report profile"; the button is absent on your own profile'],
           ['Tap "Block"', 'A confirm "Block <name>?" says "They will not be able to follow you or see your posts and stories, and you will not see theirs. Any follow between you is removed. They will not be told."'],
           ['Confirm with "Block"', 'Toast "<name> is blocked"; the profile shows "You blocked this account. Their posts and stories are hidden from you, and they cannot see yours." and the follow buttons disappear; both follow edges are gone'],
+          ['Go back to the Following feed, the story rail and a club story rail without refreshing', 'None of B\'s posts or stories show, B\'s comments are gone from every post, and a link to one of B\'s posts opens as not found'],
+          ['Check the Legal desk', 'Legal managers get the "A member blocked an account" email and the Slack legal channel a message naming both account ids'],
           ['As USER B open /u/<A handle> and tap Follow', 'Server refuses "You cannot follow this account" (FORBIDDEN) and A\'s posts are hidden'],
           ['Call blockUser with your own user id, then with a malformed id', '"You cannot block yourself" and "Invalid user" (BAD_USER_INPUT)'],
           ['As A open the menu again and tap "Unblock", then confirm', 'The confirm reads "Unblock <name>?" / "They will be able to see your public posts and follow you again. Follows removed by the block do not come back." and the toast reads "<name> is unblocked"'],

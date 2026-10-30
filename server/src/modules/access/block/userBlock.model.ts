@@ -60,6 +60,24 @@ export async function isBlockedEitherWay(a: string | null | undefined, b: string
   return !!hit;
 }
 
+/**
+ * Every account `viewerId` is cut off from right now — the ones they blocked
+ * and the ones that blocked them, the same "either way" as above — in one
+ * indexed query, so a whole feed can leave them out (App Store 1.2: a blocked
+ * member's content leaves the blocker's feed at once). Empty when signed out.
+ */
+export async function blockedUserIdsFor(viewerId: string | null | undefined): Promise<Types.ObjectId[]> {
+  if (!viewerId || !Types.ObjectId.isValid(viewerId)) return [];
+  const me = new Types.ObjectId(viewerId);
+  const rows = await UserBlockModel.find({
+    unblocked_at: null,
+    $or: [{ blocker_id: me }, { blocked_id: me }],
+  })
+    .select('blocker_id blocked_id')
+    .lean<Pick<IUserBlock, 'blocker_id' | 'blocked_id'>[]>();
+  return rows.map((row) => (row.blocker_id.equals(me) ? row.blocked_id : row.blocker_id));
+}
+
 /** Has `blockerId` blocked `blockedId` (one direction only)? */
 export async function hasBlocked(blockerId: string | null | undefined, blockedId: string) {
   if (!blockerId || !Types.ObjectId.isValid(blockerId) || !Types.ObjectId.isValid(blockedId)) return false;

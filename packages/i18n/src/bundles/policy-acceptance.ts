@@ -28,15 +28,17 @@ export const POLICY_ACCEPTANCE_BUNDLE: NestedCatalogue = {
     // The Zod message when the form is submitted without it.
     required: 'Accept every policy before creating your account',
     dialogTitle: 'Policies you need to accept',
+    // Every intro carries the zero-tolerance line: the App Store (1.2) wants
+    // it agreed to before an account exists, on every door.
     dialogIntro:
-      'These apply to your account from the moment it exists. Read each one and accept it — you can open any of them again later from your profile.',
+      'These apply to your account from the moment it exists. Read each one and accept it — you can open any of them again later from your profile. Duncit has zero tolerance for objectionable content and abusive users — you can report content or block a member at any time.',
     // The same dialog after Google has returned. The account does NOT exist
     // yet, and saying so is the whole point: nothing has been created in the
     // reader's name while they are still deciding.
     googleIntro:
-      'Google has confirmed who you are, but your account is not created yet. Accept each policy below and we will finish signing you up.',
+      'Google has confirmed who you are, but your account is not created yet. Accept each policy below and we will finish signing you up. Duncit has zero tolerance for objectionable content and abusive users — you can report content or block a member at any time.',
     appleIntro:
-      'Apple has confirmed who you are, but your account is not created yet. Accept each policy below and we will finish signing you up.',
+      'Apple has confirmed who you are, but your account is not created yet. Accept each policy below and we will finish signing you up. Duncit has zero tolerance for objectionable content and abusive users — you can report content or block a member at any time.',
     readAction: 'Read',
     acceptAll: 'Accept all',
     // Shown while the submit button is disabled, so the button explains itself

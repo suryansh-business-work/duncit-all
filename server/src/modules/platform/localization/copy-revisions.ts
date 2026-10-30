@@ -392,4 +392,15 @@ export const COPY_REVISIONS: Readonly<Record<string, readonly string[]>> = {
   "mweb.signupSteps.appleDetailsSubtitle": [
     "Apple doesn’t share your WhatsApp number or your date of birth, so tell us here. Your sign-up code goes to that number.",
   ],
+  // App Store review (1.2): the policy dialog every signup door shows now says
+  // Duncit has zero tolerance for objectionable content and abusive users.
+  "policyAcceptance.dialogIntro": [
+    "These apply to your account from the moment it exists. Read each one and accept it — you can open any of them again later from your profile.",
+  ],
+  "policyAcceptance.googleIntro": [
+    "Google has confirmed who you are, but your account is not created yet. Accept each policy below and we will finish signing you up.",
+  ],
+  "policyAcceptance.appleIntro": [
+    "Apple has confirmed who you are, but your account is not created yet. Accept each policy below and we will finish signing you up.",
+  ],
 };

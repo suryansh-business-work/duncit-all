@@ -3,6 +3,7 @@ import { Types } from 'mongoose';
 import { PostModel, type IPost } from './post.model';
 import { ClubFollowerModel, UserRelationshipModel } from '@modules/access/user/relations';
 import { ClubModel } from '@modules/clubs/club/club.model';
+import { blockedUserIdsFor } from '@modules/access/block/userBlock.model';
 import {
   notifySocialActivity,
   type SocialAction,
@@ -12,7 +13,10 @@ import { validateMediaUrl } from '@utils/media';
 
 const STORY_TTL_MS = 24 * 60 * 60 * 1000;
 
-const toPub = (p: IPost, viewerId?: string | null) => ({
+/** Whether an author is one the viewer is cut off from by a block. */
+type IsBlocked = (authorId: unknown) => boolean;
+
+const toPub = (p: IPost, viewerId?: string | null, isBlocked?: IsBlocked) => ({
   id: String(p._id),
   author_id: String(p.author_id),
   club_id: p.club_id ? String(p.club_id) : null,
@@ -26,8 +30,7 @@ const toPub = (p: IPost, viewerId?: string | null) => ({
   liked_by_me: viewerId
     ? (p.likes || []).some((x) => String(x) === viewerId)
     : false,
-  comments: (p.comments || [])
-    .slice()
+  comments: visibleComments(p, isBlocked)
     .sort((a, b) => a.created_at.getTime() - b.created_at.getTime())
     .map((c) => ({
       id: String(c._id),
@@ -35,7 +38,7 @@ const toPub = (p: IPost, viewerId?: string | null) => ({
       text: c.text,
       created_at: c.created_at.toISOString(),
     })),
-  comments_count: p.comments?.length || 0,
+  comments_count: visibleComments(p, isBlocked).length,
   seen_by_me: viewerId
     ? (p.views || []).some((v) => String(v.user_id) === viewerId)
     : false,
@@ -43,6 +46,25 @@ const toPub = (p: IPost, viewerId?: string | null) => ({
   created_at: p.created_at.toISOString(),
   updated_at: p.updated_at.toISOString(),
 });
+
+/** A post's comments, less those written by anyone the viewer is cut off from. */
+function visibleComments(p: IPost, isBlocked?: IsBlocked) {
+  return (p.comments || []).filter((c) => !isBlocked?.(c.author_id));
+}
+
+/**
+ * The accounts a block cuts the viewer off from, either way: `ids` narrows a
+ * feed query, `has` drops their comments from what is left. A blocked member's
+ * content must leave the blocker's feed the moment they block (App Store 1.2).
+ */
+async function blockedFor(viewerId?: string | null) {
+  const ids = await blockedUserIdsFor(viewerId);
+  const set = new Set(ids.map(String));
+  return { ids, has: (authorId: unknown) => set.has(String(authorId)) };
+}
+
+/** The author clause that leaves those accounts out — nothing when there are none. */
+const notBy = (ids: readonly Types.ObjectId[]) => (ids.length ? { author_id: { $nin: ids } } : {});
 
 function assertId(id: string, label = 'id') {
   if (!Types.ObjectId.isValid(id))
@@ -107,12 +129,12 @@ export const postService = {
   async list(authorId: string | null | undefined, viewerId?: string | null) {
     // Permanent profile posts only — stories never surface on the profile grid.
     const q: any = { kind: { $ne: 'STORY' } };
-    if (authorId) {
-      assertId(authorId, 'author_id');
-      q.author_id = new Types.ObjectId(authorId);
-    }
+    if (authorId) assertId(authorId, 'author_id');
+    const blocked = await blockedFor(viewerId);
+    // One author's grid is already refused across a block by the resolver.
+    Object.assign(q, authorId ? { author_id: new Types.ObjectId(authorId) } : notBy(blocked.ids));
     const docs = await PostModel.find(q).sort({ created_at: -1 });
-    return docs.map((d) => toPub(d, viewerId));
+    return docs.map((d) => toPub(d, viewerId, blocked.has));
   },
 
   async listStories(authorId: string | null | undefined, viewerId?: string | null) {
@@ -120,13 +142,12 @@ export const postService = {
     // purges old docs lazily, so we also filter by expires_at to hide them
     // immediately once the 24h window closes.
     const q: any = { kind: 'STORY', expires_at: { $gt: new Date() } };
-    if (authorId) {
-      assertId(authorId, 'author_id');
-      q.author_id = new Types.ObjectId(authorId);
-    }
+    if (authorId) assertId(authorId, 'author_id');
+    const blocked = await blockedFor(viewerId);
+    Object.assign(q, authorId ? { author_id: new Types.ObjectId(authorId) } : notBy(blocked.ids));
     // Lean: every home load reads the rail, and toPub only reads plain fields.
     const docs = await PostModel.find(q).sort({ created_at: -1 }).lean<IPost[]>();
-    return docs.map((d) => toPub(d, viewerId));
+    return docs.map((d) => toPub(d, viewerId, blocked.has));
   },
 
   /**
@@ -139,6 +160,9 @@ export const postService = {
    */
   async followingFeed(viewerId: string, source: 'PEOPLE' | 'CLUBS', limit = 60) {
     const oid = new Types.ObjectId(viewerId);
+    // A block cuts the follow both ways, but a post a blocked member left on a
+    // club the viewer follows is still theirs — so the block is applied here too.
+    const blocked = await blockedFor(viewerId);
     // $ne also matches legacy docs written before `kind` existed — those are posts.
     const postsOnly = { kind: { $ne: 'STORY' } };
     let q: Record<string, unknown>;
@@ -154,12 +178,12 @@ export const postService = {
       const hiddenIds = new Set(hidden.map((c) => String(c._id)));
       const clubIds = followed.filter((id: unknown) => !hiddenIds.has(String(id)));
       if (clubIds.length === 0) return [];
-      q = { club_id: { $in: clubIds }, ...postsOnly };
+      q = { club_id: { $in: clubIds }, ...postsOnly, ...notBy(blocked.ids) };
     } else {
       const follows = await UserRelationshipModel.find({ follower_id: oid })
         .select('following_id')
         .lean();
-      const userIds = follows.map((f: any) => f.following_id);
+      const userIds = follows.map((f: any) => f.following_id).filter((id: unknown) => !blocked.has(id));
       if (userIds.length === 0) return [];
       // Club-scoped content belongs to the Clubs feed, not the People feed.
       q = { author_id: { $in: userIds }, club_id: null, ...postsOnly };
@@ -167,24 +191,29 @@ export const postService = {
     const docs = await PostModel.find(q)
       .sort({ created_at: -1 })
       .limit(Math.min(Math.max(limit, 1), 100));
-    return docs.map((d) => toPub(d, viewerId));
+    return docs.map((d) => toPub(d, viewerId, blocked.has));
   },
 
   async listClubStories(clubId: string, viewerId?: string | null) {
     assertId(clubId, 'club_id');
+    const blocked = await blockedFor(viewerId);
     const docs = await PostModel.find({
       kind: 'STORY',
       club_id: new Types.ObjectId(clubId),
       expires_at: { $gt: new Date() },
+      ...notBy(blocked.ids),
     }).sort({ created_at: -1 });
-    return docs.map((d) => toPub(d, viewerId));
+    return docs.map((d) => toPub(d, viewerId, blocked.has));
   },
 
   async getById(id: string, viewerId?: string | null) {
     assertId(id);
     const doc = await PostModel.findById(id);
-    if (isExpiredStory(doc)) return null;
-    return doc ? toPub(doc, viewerId) : null;
+    if (!doc || isExpiredStory(doc)) return null;
+    // Opened by link across a block, either way, it is as gone as from the feed.
+    const blocked = await blockedFor(viewerId);
+    if (blocked.has(doc.author_id)) return null;
+    return toPub(doc, viewerId, blocked.has);
   },
 
   /**

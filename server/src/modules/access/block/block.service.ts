@@ -12,6 +12,7 @@ import { userService } from '@modules/access/user/user.service';
 import { userDisplayMap } from '@modules/access/user/user.display';
 import { UserBlockModel, type IUserBlock } from './userBlock.model';
 import { notifyBlockConfirmed } from './block.notify';
+import { alertStaff } from '@services/notify/staffAlert';
 
 function fail(code: string, msg: string): never {
   throw new GraphQLError(msg, { extensions: { code } });
@@ -94,6 +95,20 @@ export const blockService = {
       // WhatsApp round trips do not hold up the block.
       notifyBlockConfirmed(blockerId, targetId, now).catch((error: unknown) => {
         logs.server.error('block.service', 'notify-failed', { error, blockerId });
+      });
+      // A block is a member saying someone was abusive, so Legal hears of it as
+      // it happens to review that account (App Store 1.2) — ids only, the
+      // names live on the Blocked accounts table. Not awaited, like the notice.
+      alertStaff({
+        desk: 'LEGAL',
+        title: 'A member blocked an account',
+        lines: [
+          `Blocked account: ${targetId}`,
+          `Blocked by: ${blockerId}`,
+          'Review it in Legal > UGC Monitoring > Blocked accounts',
+        ],
+      }).catch((error: unknown) => {
+        logs.server.error('block.service', 'staff-alert-failed', { error, blockerId });
       });
     }
     return true;

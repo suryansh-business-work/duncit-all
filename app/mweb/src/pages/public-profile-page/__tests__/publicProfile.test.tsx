@@ -17,9 +17,11 @@ const h = vi.hoisted(() => ({
   confirm: vi.fn(),
   notify: vi.fn(),
   meta: vi.fn(),
+  // A block drops the cached feeds so they refetch without the blocked member.
+  client: { cache: { evict: vi.fn(), gc: vi.fn() } },
 }));
 
-vi.mock('@apollo/client/react', async (orig) => ({ ...(await orig<object>()), useQuery: h.useQuery, useMutation: h.useMutation }));
+vi.mock('@apollo/client/react', async (orig) => ({ ...(await orig<object>()), useQuery: h.useQuery, useMutation: h.useMutation, useApolloClient: () => h.client }));
 vi.mock('@duncit/dialogs', async (orig) => ({ ...(await orig<object>()), useConfirm: () => h.confirm }));
 vi.mock('../../../components/notify', () => ({ notify: h.notify, notifySuccess: vi.fn(), notifyError: vi.fn() }));
 vi.mock('../../../app/pageMeta', () => ({ useEntityPageMeta: h.meta }));
@@ -226,6 +228,11 @@ describe('ProfileActionsMenu and useProfileBlock', () => {
     expect(h.confirm).toHaveBeenCalledWith(expect.objectContaining({ destructive: true }));
     await waitFor(() => expect(h.notify).toHaveBeenCalledWith(expect.any(String), 'success'));
     expect(onChanged).toHaveBeenCalledTimes(1);
+    // Every feed that can hold their posts is dropped from the cache, to refetch without them.
+    for (const fieldName of ['posts', 'stories', 'followingFeed', 'clubStories', 'post']) {
+      expect(h.client.cache.evict).toHaveBeenCalledWith({ id: 'ROOT_QUERY', fieldName });
+    }
+    expect(h.client.cache.gc).toHaveBeenCalled();
   });
 
   it('offers Unblock for a blocked member, without a destructive confirm', async () => {

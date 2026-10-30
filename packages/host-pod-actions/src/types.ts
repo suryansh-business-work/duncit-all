@@ -38,6 +38,14 @@ export interface HostPodTarget {
    * clear a host's tiers on an unrelated title edit.
    */
   ticket_discount_tiers?: readonly TicketDiscountTier[] | null;
+  /**
+   * The pod's Smart Incentive as stored. Undefined when the list that fed the
+   * dialog did not select it: the edit then neither shows nor sends it, so a
+   * narrow list can never switch a host's offer off on an unrelated save.
+   */
+  smart_incentive_enabled?: boolean | null;
+  /** The offer's whole percentage — 0 while it is off. */
+  smart_incentive_pct?: number | null;
 }
 
 /** The range a live pod may be resized within — one definition, in @duncit/utils. */

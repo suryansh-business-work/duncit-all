@@ -19,6 +19,7 @@ exports:
   - 'PodCancelDialog'
   - 'PodEditDialog'
   - 'podEditTicketDiscount'
+  - 'podEditSmartIncentive'
   - 'PodResubmitDialog'
   - 'VenueOfferPrefill'
   - 'TicketScanDialog'
@@ -136,7 +137,8 @@ const { menuHandlers, dialogs } = useHostPodActions(() => refetch());
 
 `menuHandlers` also decides which edit a pod gets: a venue-**DECLINED** pod opens the full
 `PodResubmitDialog` (a new venue, a window from its `venueOfferCalendar` and an offer — how the venue is paid and how much (or free), what the host needs from it, the spots from its minimum — sent as `venue_offer`; same pod reused, and the venue accepts, rejects or counters it — a free one it only accepts or declines); every other pod opens the narrow
-`PodEditDialog` — title, description, media, the pod's capacity and its multi-ticket discount.
+`PodEditDialog` — title, description, media, the pod's capacity, its multi-ticket discount and its
+Smart Incentive.
 
 ### The rows are their own file
 
@@ -283,12 +285,60 @@ buildHostUpdateInput(values, { includeSpots: true, ticketDiscount: discount });
 | Export | Signature | Meaning |
 | --- | --- | --- |
 | `podEditTicketDiscount` | `(pod: HostPodTarget \| null, maxPct: number) => PodEditTicketDiscount \| null` | `{ free, maxPct, stored }` for the dialog; `null` when the pod carries no tiers to edit. |
-| `buildPodEditSchema` | `(labels, ticketDiscount?: PodEditTicketDiscount \| null)` | Adds the tier `superRefine` when a discount context is given. |
-| `buildHostUpdateInput` | `(values, { includeSpots?, ticketDiscount? })` | Spreads `ticketDiscountInput(values, free)` when a discount context is given. |
+| `buildPodEditSchema` | `(labels, ticketDiscount?: PodEditTicketDiscount \| null, smartIncentive?: PodEditSmartIncentive \| null)` | Adds the tier and the Smart Incentive `superRefine` steps for each context given. |
+| `buildHostUpdateInput` | `(values, { includeSpots?, ticketDiscount?, smartIncentive? })` | Spreads `ticketDiscountInput(values, free)` / `smartIncentiveInput(values, free)` for each context given. |
 | `PodEditFormInput` | type | The form's raw values — what a `Control` over the edit form holds. |
 
-`PodResubmitDialog` does not carry the discount: a venue-rejected resubmission changes the venue,
-the window, the venue's terms and the copy, never the ticket price.
+### The Smart Incentive, after the pod is live
+
+A host may offer members who stay on the pod page without booking a one-time discount: the popup
+unlocks it for that member, and checkout takes it off the ticket money after the multi-ticket
+discount and before the coupon, Duncit Coins and GST — host-funded, since settlement runs on what
+was collected. `PodEditDialog` lets the host switch it on or off and change the percentage on a
+live pod by rendering `@duncit/ui`'s shared `SmartIncentiveField` (the switch, the percentage, what
+a ticket then costs, and the explainer that opens when it is switched on) through
+`PodSmartIncentiveField`. The percentage rule is `@duncit/utils`' `smartIncentivePctIssue`, beside
+the server's twin that re-checks every write. Payments freeze the percentage they were sold at, so
+a change never re-prices a booking already made.
+
+- The section is **hidden on a free pod**, and the input then sends `smart_incentive_enabled: false`
+  with `smart_incentive_pct: 0`.
+- It is also hidden while **Loyalty > Smart Incentive** has the programme switched off, and until
+  its settings answer (`smartIncentiveSettings`, read cache-first). Hidden, the stored offer still
+  travels back unchanged on save, so it applies again the moment the programme is back on.
+- The highest percentage is the programme's `max_discount_pct`; the explainer quotes its
+  `delay_seconds`.
+- An **untouched** offer is not re-validated, exactly as the server skips it: Loyalty lowering the
+  maximum must not stop a host fixing a typo in their title. Change the percentage, or switch the
+  offer on, and it is checked.
+- The list that opens the dialog must select `smart_incentive_enabled` and `smart_incentive_pct`
+  beside `pod_type` and `pod_amount`. If it does not, `podEditSmartIncentive` answers `null` and the
+  dialog neither shows nor sends the offer.
+
+```ts
+import {
+  buildHostUpdateInput,
+  buildPodEditSchema,
+  podEditInitialValues,
+  podEditSmartIncentive,
+} from '@duncit/host-pod-actions';
+
+// pod: { …, pod_type: 'PAID', pod_amount: 499, smart_incentive_enabled: true, smart_incentive_pct: 10 }
+const incentive = podEditSmartIncentive(pod, { enabled: true, maxPct: 20, delaySeconds: 15 });
+const values = { ...podEditInitialValues(pod), smart_incentive_pct: '15' }; // the field holds text
+
+buildPodEditSchema(labels, discount, incentive).safeParse(values); // 15% is checked against the 20% cap
+buildHostUpdateInput(values, { includeSpots: true, ticketDiscount: discount, smartIncentive: incentive });
+// → { …, smart_incentive_enabled: true, smart_incentive_pct: 15 }
+```
+
+| Export | Signature | Meaning |
+| --- | --- | --- |
+| `podEditSmartIncentive` | `(pod: HostPodTarget \| null, programme: SmartIncentiveProgramme) => PodEditSmartIncentive \| null` | `{ free, programme, stored }` for the dialog; `null` when the list never selected the pod's offer. |
+| `SmartIncentiveProgramme` | type | `{ enabled, maxPct, delaySeconds }` — Loyalty's switch, `max_discount_pct` and `delay_seconds`. |
+
+`PodResubmitDialog` carries neither the discount nor the Smart Incentive: a venue-rejected
+resubmission changes the venue, the window, the venue's terms and the copy, never the ticket price.
 
 ## Resubmitting: a new offer to a venue
 

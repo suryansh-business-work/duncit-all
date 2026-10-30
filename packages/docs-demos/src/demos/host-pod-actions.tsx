@@ -7,18 +7,27 @@ import {
   buildHostUpdateInput,
   buildPodCompleteSchema,
   buildPodEditSchema,
+  podEditSmartIncentive,
   podEditTicketDiscount,
 } from '@duncit/host-pod-actions';
-import { buildPodMediaLabels, podFeedbackPath, podMediaLink, podMediaPath } from '@duncit/utils';
+import {
+  DEFAULT_SMART_INCENTIVE_DELAY_SECONDS,
+  buildPodMediaLabels,
+  podFeedbackPath,
+  podMediaLink,
+  podMediaPath,
+} from '@duncit/utils';
 import { defineDemo, defineDemos } from '../types';
 import { resubmitDemo } from './host-pod-actions/resubmit-demo';
 
 type PodEditMock = typeof blankPodEditValues & {
   /** `publicAppSettings.ticket_discount_max_pct` — the admin's cap on any tier. */
   ticket_discount_max_pct: number;
+  /** Loyalty > Smart Incentive's `max_discount_pct` — the biggest offer a host may choose. */
+  smart_incentive_max_pct: number;
 };
 
-/** The live pod the host opened: ₹499 a ticket, stored with ONE tier (2+ tickets, 10% off). */
+/** The live pod the host opened: ₹499 a ticket, stored with ONE tier (2+ tickets, 10% off) and a 10% Smart Incentive. */
 const LIVE_POD = {
   id: 'DUN-POD-4821',
   pod_title: 'Sunday Badminton Doubles',
@@ -27,6 +36,8 @@ const LIVE_POD = {
   no_of_spots: 12,
   ticket_discount_enabled: true,
   ticket_discount_tiers: [{ min_tickets: 2, discount_pct: 10 }],
+  smart_incentive_enabled: true,
+  smart_incentive_pct: 10,
 };
 
 export default defineDemos('host-pod-actions', [
@@ -34,7 +45,7 @@ export default defineDemos('host-pod-actions', [
     id: 'edit',
     title: 'What a host may change on a live pod',
     note:
-      'Empty media_text and it refuses: a pod with no image is a pod nobody joins. The host has added a 4+ tickets tier — type 5 into its discount_pct and it goes red (every tier must give more than the one above); drop no_of_spots to 4 and it is out of reach (3 payable seats). Put the tiers back to exactly what the pod stores and nothing is re-checked, so a lowered admin cap never blocks a title fix.',
+      'Empty media_text and it refuses: a pod with no image is a pod nobody joins. The host has added a 4+ tickets tier — type 5 into its discount_pct and it goes red (every tier must give more than the one above); drop no_of_spots to 4 and it is out of reach (3 payable seats). Put the tiers back to exactly what the pod stores and nothing is re-checked, so a lowered admin cap never blocks a title fix. The host is also raising the Smart Incentive from 10% to 15%: type 25 into smart_incentive_pct and it goes red (Loyalty caps it at smart_incentive_max_pct). Drop smart_incentive_max_pct to 5 and put the percentage back to 10, what the pod stores, and nothing is re-checked; switch smart_incentive_enabled off and the server receives 0%.',
     mock: {
       ...blankPodEditValues,
       pod_title: 'Sunday Badminton Doubles',
@@ -48,12 +59,21 @@ export default defineDemos('host-pod-actions', [
         { min_tickets: 4, discount_pct: 20 },
       ],
       ticket_discount_max_pct: 50,
+      smart_incentive_enabled: true,
+      smart_incentive_pct: '15',
+      smart_incentive_max_pct: 20,
     },
     compute: (mock) => {
       const discount = podEditTicketDiscount(LIVE_POD, mock.ticket_discount_max_pct);
+      const incentive = podEditSmartIncentive(LIVE_POD, {
+        enabled: true,
+        maxPct: mock.smart_incentive_max_pct,
+        delaySeconds: DEFAULT_SMART_INCENTIVE_DELAY_SECONDS,
+      });
       // The messages come from the catalogue, so the schema takes the same
       // labels the dialog renders — the key itself stands in for a translator.
-      const parsed = buildPodEditSchema(buildLabels((key) => key, 'mweb'), discount).safeParse(mock);
+      const labels = buildLabels((key) => key, 'mweb');
+      const parsed = buildPodEditSchema(labels, discount, incentive).safeParse(mock);
       return {
         Valid: parsed.success,
         Errors: parsed.success
@@ -64,6 +84,7 @@ export default defineDemos('host-pod-actions', [
         'What the server receives': buildHostUpdateInput(mock, {
           includeSpots: true,
           ticketDiscount: discount,
+          smartIncentive: incentive,
         }),
         'Cancellation reasons offered': POD_DELETE_REASON_SUBJECTS,
       };

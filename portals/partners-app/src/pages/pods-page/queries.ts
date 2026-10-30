@@ -74,6 +74,9 @@ export interface PartnerPodRow {
   /** The live multi-ticket offer — seeds the host's Edit Pod sheet. */
   ticket_discount_enabled?: boolean | null;
   ticket_discount_tiers?: { min_tickets: number; discount_pct: number }[] | null;
+  /** The live Smart Incentive — seeds the same sheet. */
+  smart_incentive_enabled?: boolean | null;
+  smart_incentive_pct?: number | null;
   pod_attendees?: string[] | null;
   /** Seats held — attendees plus every extra seat a multi-seat booking bought. */
   seats_taken?: number | null;
@@ -109,6 +112,8 @@ const PARTNER_POD_ROW_FIELDS = gql`
     no_of_spots
     ticket_discount_enabled
     ticket_discount_tiers { min_tickets discount_pct }
+    smart_incentive_enabled
+    smart_incentive_pct
     pod_attendees
     seats_taken
     attendance { attended_seats booked_seats recorded }

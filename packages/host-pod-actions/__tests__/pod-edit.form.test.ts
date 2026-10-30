@@ -29,6 +29,8 @@ const values = (over: Partial<typeof blankPodEditValues> = {}) => ({
   no_of_spots: 8,
   ticket_discount_enabled: false,
   ticket_discount_tiers: [],
+  smart_incentive_enabled: false,
+  smart_incentive_pct: '',
   ...over,
 });
 
@@ -105,6 +107,31 @@ describe('buildPodEditSchema with a discount context', () => {
   });
 });
 
+describe('buildPodEditSchema with a Smart Incentive context', () => {
+  const programme = { enabled: true, maxPct: 20, delaySeconds: 15 };
+  const stored = { smart_incentive_enabled: true, smart_incentive_pct: '15' };
+  const withIncentive = buildPodEditSchema(labels, null, { free: false, programme, stored });
+
+  it("pins a percentage above Loyalty's maximum on the percentage field", () => {
+    const result = withIncentive.safeParse(values({ ...stored, smart_incentive_pct: '25' }));
+
+    expect(result.success).toBe(false);
+    expect(result.error?.issues.map((i) => [i.path.join('.'), i.message])).toEqual([
+      ['smart_incentive_pct', labels.smartIncentive.errors.PCT_MAX(20)],
+    ]);
+  });
+
+  it('does not re-check an offer the host left untouched', () => {
+    const lowered = buildPodEditSchema(labels, null, { free: false, programme: { ...programme, maxPct: 10 }, stored });
+    expect(lowered.safeParse(values(stored)).success).toBe(true);
+  });
+
+  // Without a context the dialog shows no offer, so there is none to check.
+  it('leaves the offer alone when the dialog has no Smart Incentive context', () => {
+    expect(schema.safeParse(values({ smart_incentive_enabled: true, smart_incentive_pct: '' })).success).toBe(true);
+  });
+});
+
 describe('buildHostUpdateInput', () => {
   it('trims the text and splits the gallery into typed media', () => {
     expect(
@@ -157,6 +184,33 @@ describe('buildHostUpdateInput', () => {
       ticket_discount_tiers: [],
     });
   });
+
+  // A narrow list that never selected the offer must not switch it off on a title edit.
+  it('leaves the Smart Incentive out when the dialog had no context for it', () => {
+    const offered = values({ smart_incentive_enabled: true, smart_incentive_pct: '12' });
+    const input = buildHostUpdateInput(offered, { smartIncentive: null });
+
+    expect(input).not.toHaveProperty('smart_incentive_enabled');
+    expect(input).not.toHaveProperty('smart_incentive_pct');
+  });
+
+  it('sends the typed Smart Incentive as a whole number on a paid pod, and switches it off on a free one', () => {
+    const offered = values({ smart_incentive_enabled: true, smart_incentive_pct: '12' });
+    const paid = {
+      free: false,
+      programme: { enabled: true, maxPct: 20, delaySeconds: 15 },
+      stored: { smart_incentive_enabled: false, smart_incentive_pct: '' },
+    };
+
+    expect(buildHostUpdateInput(offered, { smartIncentive: paid })).toMatchObject({
+      smart_incentive_enabled: true,
+      smart_incentive_pct: 12,
+    });
+    expect(buildHostUpdateInput(offered, { smartIncentive: { ...paid, free: true } })).toMatchObject({
+      smart_incentive_enabled: false,
+      smart_incentive_pct: 0,
+    });
+  });
 });
 
 describe('buildPodEditModerationInput', () => {
@@ -189,7 +243,16 @@ describe('podEditInitialValues', () => {
       no_of_spots: 8,
       ticket_discount_enabled: false,
       ticket_discount_tiers: [],
+      smart_incentive_enabled: false,
+      smart_incentive_pct: '',
     });
+  });
+
+  // The field holds the percentage as typed text, so the stored number is seeded as one.
+  it('prefills a stored Smart Incentive as the percentage the host typed', () => {
+    const pod = { pod_title: 'Sunday Badminton', smart_incentive_enabled: true, smart_incentive_pct: 15 } as HostPodTarget;
+
+    expect(podEditInitialValues(pod)).toMatchObject({ smart_incentive_enabled: true, smart_incentive_pct: '15' });
   });
 
   // Apollo's `__typename` rides on every tier the list selected; sent back inside

@@ -1,18 +1,20 @@
 /**
  * Social Accounts against a real database: connecting (OAuth handshake →
- * stored accounts), syncing, disconnecting, and the posts / comments tables and
- * post detail. The provider APIs, OAuth state signing, the sync, and every AI
- * call are mocked — no network.
+ * stored accounts, sealed tokens, a default owner), syncing, disconnecting
+ * (with the network told to forget the token), owners and teams, and the
+ * posts / comments tables and post detail. The provider APIs, OAuth state
+ * signing, the sync, and every AI call are mocked — no network.
  */
 jest.mock('@modules/crm/marketing/social/providers', () => {
-  const connector = () => ({ authorizeUrl: jest.fn(), connect: jest.fn() });
+  // Threads and LinkedIn have no revoke endpoint, as in the real connectors.
+  const connector = (revokes = true) => ({ authorizeUrl: jest.fn(), connect: jest.fn(), ...(revokes ? { revoke: jest.fn() } : {}) });
   return {
     CONNECTORS: {
       INSTAGRAM: connector(),
       FACEBOOK: connector(),
-      THREADS: connector(),
+      THREADS: connector(false),
       YOUTUBE: connector(),
-      LINKEDIN: connector(),
+      LINKEDIN: connector(false),
       X: connector(),
     },
   };
@@ -26,7 +28,11 @@ jest.mock('@modules/crm/marketing/social/social.oauth', () => ({
   readConnectState: jest.fn(),
   startConnect: jest.fn(),
 }));
-jest.mock('@modules/crm/marketing/social/social.sync', () => ({ syncSocialAccount: jest.fn() }));
+// Only the sync itself is faked: handleOf and freshHandle are the real ones, so a sealed token is proven to open.
+jest.mock('@modules/crm/marketing/social/social.sync', () => ({
+  ...jest.requireActual('@modules/crm/marketing/social/social.sync'),
+  syncSocialAccount: jest.fn(),
+}));
 jest.mock('@modules/crm/marketing/social/social.ai', () => ({ analyzePendingComments: jest.fn() }));
 jest.mock('@modules/crm/marketing/social/social.analytics', () => ({
   sentimentCounts: jest.fn(),
@@ -40,10 +46,12 @@ jest.mock('@modules/crm/marketing/social/social.insights', () => ({
 
 import { Types } from 'mongoose';
 import { logs } from '@observability/log';
+import { UserModel } from '@modules/access/user/user.model';
 import { CONNECTORS } from '../../providers';
 import { providerReadiness, socialCredentials } from '../../social.credentials';
 import { readConnectState, startConnect } from '../../social.oauth';
-import { syncSocialAccount } from '../../social.sync';
+import { freshHandle, syncSocialAccount, type AccountWithTokens } from '../../social.sync';
+import { isSealed, openToken } from '../../social.tokens';
 import { analyzePendingComments } from '../../social.ai';
 import { sentimentCounts, socialAnalytics } from '../../social.analytics';
 import { accountAverage, analyzePost, periodInsights } from '../../social.insights';
@@ -100,6 +108,21 @@ const discovered = (external_id: string, over: Record<string, unknown> = {}) => 
   ...over,
 });
 
+let userSeq = 0;
+/** A staff member who can own an account. */
+const user = (first: string, over: Record<string, unknown> = {}) => {
+  userSeq += 1;
+  return UserModel.create({
+    auth: { email: `${first.toLowerCase()}${userSeq}@duncit.com` },
+    profile: { first_name: first, last_name: 'Staff' },
+    metadata: { status: 'ACTIVE', role_keys: ['MARKETING_MANAGER'] },
+    ...over,
+  });
+};
+
+/** The stored row with its tokens, as a reader loads it. */
+const rawAccount = (id: string) => SocialAccountModel.findById(id).select('+access_token +refresh_token').lean<AccountWithTokens>();
+
 beforeEach(() => {
   for (const fn of [socialCredentials, readConnectState, startConnect, syncSocialAccount, sentimentCounts, accountAverage, analyzePost]) {
     m(fn).mockReset();
@@ -107,6 +130,7 @@ beforeEach(() => {
   for (const c of Object.values(CONNECTORS)) {
     m(c.authorizeUrl).mockReset();
     m(c.connect).mockReset();
+    if (c.revoke) m(c.revoke).mockReset().mockResolvedValue(undefined);
   }
   m(syncSocialAccount).mockResolvedValue(undefined);
 });
@@ -146,6 +170,13 @@ describe('accounts', () => {
       last_error: '',
       last_synced_at: '2026-03-01T00:00:00.000Z',
       token_expires_at: null,
+      token_expires_in_days: null,
+      owner_user_id: null,
+      owner_name: null,
+      team_user_ids: [],
+      health_checked_at: null,
+      health_ok: null,
+      health_message: '',
     });
     expect(list[0].id).toBe(String(li._id));
     expect(list[0].created_at).toEqual(expect.stringMatching(/^\d{4}-/));
@@ -154,7 +185,87 @@ describe('accounts', () => {
   it('fills defaults for a legacy row missing optional fields', async () => {
     await SocialAccountModel.collection.insertOne({ provider: 'X', platform: 'X', external_id: 'legacy', status: 'ERROR' });
     const [row] = await svc.accounts();
-    expect(row).toMatchObject({ name: '', handle: '', avatar_url: '', profile_url: '', followers: 0, last_error: '', created_at: null });
+    expect(row).toMatchObject({
+      name: '',
+      handle: '',
+      avatar_url: '',
+      profile_url: '',
+      followers: 0,
+      last_error: '',
+      created_at: null,
+      owner_user_id: null,
+      owner_name: null,
+      team_user_ids: [],
+      health_ok: null,
+      health_message: '',
+    });
+  });
+
+  it('names each owner in one lookup, and counts the days a token has left', async () => {
+    const asha = await user('Asha');
+    const ravi = await user('Ravi', { profile: { first_name: 'Ravi' } });
+    const gone = new Types.ObjectId();
+    const inFiveDays = new Date(Date.now() + 5 * 86_400_000 - 60_000);
+    await account('X', { name: 'A', owner_user_id: asha._id, token_expires_at: inFiveDays, team_user_ids: [ravi._id, gone] });
+    await account('X', { name: 'B', owner_user_id: ravi._id, health_ok: false, health_message: 'X: rate limited', health_checked_at: new Date('2026-03-02T00:00:00Z') });
+    await account('X', { name: 'C', owner_user_id: gone, token_expires_at: new Date(Date.now() - 3_600_000) });
+    const find = jest.spyOn(UserModel, 'find');
+
+    const list = await svc.accounts();
+    expect(find).toHaveBeenCalledTimes(1);
+    expect(list.map((a) => [a.name, a.owner_name, a.token_expires_in_days])).toEqual([
+      ['A', 'Asha Staff', 5],
+      ['B', 'Ravi', null],
+      // An owner who no longer exists is an id without a name, not an error.
+      ['C', null, 0],
+    ]);
+    expect(list[0].team_user_ids).toEqual([String(ravi._id), String(gone)]);
+    expect(list[1]).toMatchObject({ health_ok: false, health_message: 'X: rate limited', health_checked_at: '2026-03-02T00:00:00.000Z' });
+    expect(list[2].owner_user_id).toBe(String(gone));
+    find.mockRestore();
+  });
+});
+
+describe('setOwner', () => {
+  it('assigns an owner and a team, dropping blanks and repeats, and clears them again', async () => {
+    const x = await account('X');
+    const asha = await user('Asha');
+    const ravi = await user('Ravi');
+    const ashaId = String(asha._id);
+    const raviId = String(ravi._id);
+
+    const out = await svc.setOwner(String(x._id), ashaId, [raviId, ' ', raviId, ashaId]);
+    expect(out).toMatchObject({ id: String(x._id), owner_user_id: ashaId, owner_name: 'Asha Staff', team_user_ids: [raviId, ashaId] });
+
+    const cleared = await svc.setOwner(String(x._id), null, null);
+    expect(cleared).toMatchObject({ owner_user_id: null, owner_name: null, team_user_ids: [] });
+    expect((await SocialAccountModel.findById(x._id).lean())?.owner_user_id).toBeNull();
+  });
+
+  it('refuses an owner or team member who is not a real, living user', async () => {
+    const x = await account('X');
+    const asha = await user('Asha');
+    const deleted = await user('Gone', { metadata: { status: 'ACTIVE', role_keys: ['USER'], deleted_at: new Date() } });
+    const unknown = new Types.ObjectId().toHexString();
+    const notFound = { extensions: { code: 'BAD_USER_INPUT' } };
+
+    await expect(svc.setOwner(String(x._id), unknown, [])).rejects.toMatchObject({ message: 'The owner is not a known user', ...notFound });
+    await expect(svc.setOwner(String(x._id), 'not-an-id', [])).rejects.toMatchObject(notFound);
+    await expect(svc.setOwner(String(x._id), String(deleted._id), [])).rejects.toMatchObject(notFound);
+    await expect(svc.setOwner(String(x._id), String(asha._id), [unknown])).rejects.toMatchObject({
+      message: 'A team member is not a known user',
+      ...notFound,
+    });
+    await expect(svc.setOwner(String(x._id), String(asha._id), ['bad'])).rejects.toMatchObject(notFound);
+    expect((await SocialAccountModel.findById(x._id).lean())?.owner_user_id).toBeNull();
+  });
+
+  it('reports an unknown account after the users checked out', async () => {
+    const asha = await user('Asha');
+    await expect(svc.setOwner(new Types.ObjectId().toHexString(), String(asha._id), [])).rejects.toMatchObject({
+      message: 'Social account not found',
+      extensions: { code: 'NOT_FOUND' },
+    });
   });
 });
 
@@ -192,7 +303,14 @@ describe('completeConnect', () => {
   });
 
   it('stores what the handshake found, refreshes a reconnected account in place, and starts the first sync', async () => {
-    const existing = await account('X', { external_id: 'x-1', status: 'EXPIRED', last_error: 'token expired' });
+    const existing = await account('X', {
+      external_id: 'x-1',
+      status: 'EXPIRED',
+      last_error: 'token expired',
+      health_ok: false,
+      health_message: 'X: expired',
+      alerted_at: new Date(),
+    });
     m(readConnectState).mockReturnValue(state);
     m(socialCredentials).mockResolvedValue(CREDS);
     m(CONNECTORS.X.connect).mockResolvedValue([discovered('x-1'), discovered('x-2')]);
@@ -206,17 +324,54 @@ describe('completeConnect', () => {
     expect(stored[0]).toMatchObject({
       provider: 'X',
       name: 'Name x-1',
-      access_token: 'at-x-1',
-      refresh_token: 'rt',
       token_expires_at: null,
       scopes: ['tweet.read'],
       status: 'CONNECTED',
       last_error: '',
+      // A fresh token starts the health line and the reminders over.
+      health_ok: null,
+      health_message: '',
+      alerted_at: null,
     });
     expect(String(stored[1].connected_by)).toBe(USER);
     expect(m(syncSocialAccount).mock.calls.map((c) => c[0]).sort((a, b) => a.localeCompare(b))).toEqual(
       stored.map((s) => String(s._id)).sort((a, b) => a.localeCompare(b))
     );
+  });
+
+  it('writes the tokens sealed, and a reader opens them', async () => {
+    m(readConnectState).mockReturnValue(state);
+    m(socialCredentials).mockResolvedValue(CREDS);
+    m(CONNECTORS.X.connect).mockResolvedValue([discovered('x-1')]);
+    await svc.completeConnect('c', 's');
+
+    const raw = await SocialAccountModel.collection.findOne({ external_id: 'x-1' });
+    expect(raw?.access_token).toMatch(/^enc:v1:/);
+    expect(raw?.refresh_token).toMatch(/^enc:v1:/);
+    expect(raw?.access_token).not.toContain('at-x-1');
+    expect(isSealed(raw?.access_token)).toBe(true);
+    expect(openToken(raw?.access_token)).toBe('at-x-1');
+
+    const doc = await rawAccount(String(raw?._id));
+    const handle = await freshHandle(doc as AccountWithTokens, { profile: jest.fn(), posts: jest.fn(), comments: jest.fn() }, CREDS);
+    expect(handle).toMatchObject({ access_token: 'at-x-1', refresh_token: 'rt', external_id: 'x-1' });
+  });
+
+  it('makes the connector the owner of a new account, and leaves an existing owner alone', async () => {
+    const owner = await user('Asha');
+    await account('X', { external_id: 'x-1', owner_user_id: owner._id });
+    await account('X', { external_id: 'x-2', owner_user_id: null });
+    m(readConnectState).mockReturnValue(state);
+    m(socialCredentials).mockResolvedValue(CREDS);
+    m(CONNECTORS.X.connect).mockResolvedValue([discovered('x-1'), discovered('x-2'), discovered('x-3')]);
+
+    await svc.completeConnect('c', 's');
+    const owners = await SocialAccountModel.find().sort({ external_id: 1 }).select('external_id owner_user_id connected_by').lean();
+    expect(owners.map((o) => [o.external_id, String(o.owner_user_id), String(o.connected_by)])).toEqual([
+      ['x-1', String(owner._id), USER],
+      ['x-2', USER, USER],
+      ['x-3', USER, USER],
+    ]);
   });
 
   it('logs a failed first sync without failing the connect', async () => {
@@ -290,6 +445,45 @@ describe('sync / disconnect', () => {
       expect(await (model as typeof SocialPostModel).countDocuments({ account_id: otherId })).toBe(1);
     }
     await expect(svc.disconnect(xId)).rejects.toThrow('Social account not found');
+  });
+
+  it('asks the network to forget the token before removing the account', async () => {
+    m(socialCredentials).mockResolvedValue(CREDS);
+    const x = await account('X', { access_token: 'AT', refresh_token: 'RT', handle: 'duncit' });
+    expect(await svc.disconnect(String(x._id))).toBe(true);
+    expect(CONNECTORS.X.revoke).toHaveBeenCalledTimes(1);
+    expect(CONNECTORS.X.revoke).toHaveBeenCalledWith(
+      { provider: 'X', platform: 'X', external_id: x.external_id, handle: 'duncit', access_token: 'AT', refresh_token: 'RT', meta: {} },
+      CREDS
+    );
+    expect(await SocialAccountModel.countDocuments()).toBe(0);
+  });
+
+  it('removes the account even when the network refuses the revoke, and logs the refusal', async () => {
+    const warn = jest.spyOn(logs.server, 'warn').mockImplementation(() => undefined as never);
+    m(socialCredentials).mockResolvedValue(CREDS);
+    m(CONNECTORS.X.revoke).mockRejectedValue(new Error('X: invalid_request'));
+    const x = await account('X');
+    expect(await svc.disconnect(String(x._id))).toBe(true);
+    expect(await SocialAccountModel.countDocuments()).toBe(0);
+    expect(warn).toHaveBeenCalledWith('social-accounts', 'revoke', {
+      error: expect.any(Error),
+      account_id: String(x._id),
+      msg: 'token revoke refused; removing the account anyway',
+    });
+    warn.mockRestore();
+  });
+
+  it('skips the revoke when the network has no endpoint for it, or its app is no longer set up', async () => {
+    m(socialCredentials).mockResolvedValue(null);
+    const x = await account('X');
+    expect(await svc.disconnect(String(x._id))).toBe(true);
+    expect(CONNECTORS.X.revoke).not.toHaveBeenCalled();
+
+    m(socialCredentials).mockResolvedValue(CREDS);
+    const li = await account('LINKEDIN');
+    expect(await svc.disconnect(String(li._id))).toBe(true);
+    expect(await SocialAccountModel.countDocuments()).toBe(0);
   });
 });
 

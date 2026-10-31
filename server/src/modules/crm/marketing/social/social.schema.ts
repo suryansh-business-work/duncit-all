@@ -80,9 +80,20 @@ export const socialTypeDefs = gql`
     last_error: String
     last_synced_at: String
     token_expires_at: String
+    "Whole days until the token lapses (0 or less: lapsed); null for a token that does not expire."
+    token_expires_in_days: Int
     created_at: String
     "Comments the AI flagged that nobody has reviewed yet."
     flagged_open: Int!
+    "Who answers for the account and gets its expiry reminders; defaults to whoever connected it."
+    owner_user_id: ID
+    owner_name: String
+    "The others who look after the account."
+    team_user_ids: [ID!]!
+    "The daily health check: when it last ran, whether the token still worked, and what the network said when it did not."
+    health_checked_at: String
+    health_ok: Boolean
+    health_message: String
   }
 
   type SocialPost {
@@ -271,8 +282,10 @@ export const socialTypeDefs = gql`
     socialConnectUrl(provider: SocialProvider!, return_to: SocialConnectReturn!): String!
     "Read the account now instead of waiting for the scheduler."
     syncSocialAccount(id: ID!): SocialAccount!
-    "Remove the account, its tokens and everything read from it."
+    "Remove the account, its tokens and everything read from it; the network is asked to forget the token too."
     disconnectSocialAccount(id: ID!): Boolean!
+    "Who answers for the account. A null owner clears it; every id must be a real user."
+    setSocialAccountOwner(id: ID!, owner_user_id: ID, team_user_ids: [ID!]): SocialAccount!
     "Run the AI over every comment still waiting for a verdict."
     analyzeSocialComments: SocialAnalysisResult!
     reviewSocialComment(id: ID!, status: SocialReviewStatus!): SocialComment!

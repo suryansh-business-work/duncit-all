@@ -1,6 +1,6 @@
 import type { ProbeOutcome, SocialAppCredentials, SocialConnector, SocialTokens } from '../social.types';
 import { PROBE_CODE, SocialApiError, count, expiresAt, postForm, probeClient, socialJson, withQuery } from './http';
-import { INSTAGRAM_GRAPH, INSTAGRAM_SERVICE, graphGet } from './meta';
+import { INSTAGRAM_GRAPH, INSTAGRAM_SERVICE, graphDelete, graphGet } from './meta';
 
 /**
  * The Instagram app, through "Instagram API with Instagram Login": the person
@@ -149,5 +149,10 @@ export const instagramConnector: SocialConnector = {
         meta: {},
       },
     ];
+  },
+
+  /** De-authorise the app for the signed-in Instagram account; best effort, as Meta documents it loosely for Instagram Login. */
+  async revoke(account, creds) {
+    await graphDelete(creds.version, '/me/permissions', account.access_token, INSTAGRAM_GRAPH);
   },
 };

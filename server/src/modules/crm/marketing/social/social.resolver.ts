@@ -54,6 +54,14 @@ export const socialResolvers = {
       requireRole(ctx, ROLES);
       return socialService.disconnect(args.id);
     },
+    setSocialAccountOwner: (
+      _p: unknown,
+      args: { id: string; owner_user_id?: string | null; team_user_ids?: string[] | null },
+      ctx: Ctx
+    ) => {
+      requireRole(ctx, ROLES);
+      return socialService.setOwner(args.id, args.owner_user_id, args.team_user_ids);
+    },
     analyzeSocialComments: (_p: unknown, _a: unknown, ctx: Ctx) => {
       requireRole(ctx, ROLES);
       return socialService.analyze();

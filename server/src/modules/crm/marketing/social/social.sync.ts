@@ -10,6 +10,7 @@ import {
 import { READERS } from './providers';
 import { SocialApiError } from './providers/http';
 import { socialCredentials } from './social.credentials';
+import { openToken, sealToken } from './social.tokens';
 import { analyzePendingComments } from './social.ai';
 import type {
   FetchedComment,
@@ -45,13 +46,14 @@ export const SYNC_EVERY_MS = 3 * 60 * 60_000;
 
 export type AccountWithTokens = SocialAccountDoc & { access_token: string; refresh_token: string };
 
-const handleOf = (doc: AccountWithTokens): SocialAccountHandle => ({
+/** The stored account as a reader sees it — the one place its tokens are opened. */
+export const handleOf = (doc: AccountWithTokens): SocialAccountHandle => ({
   provider: doc.provider,
   platform: doc.platform,
   external_id: doc.external_id,
   handle: doc.handle ?? '',
-  access_token: doc.access_token ?? '',
-  refresh_token: doc.refresh_token ?? '',
+  access_token: openToken(doc.access_token),
+  refresh_token: openToken(doc.refresh_token),
   meta: (doc.meta ?? {}) as Record<string, string>,
 });
 
@@ -70,8 +72,8 @@ export async function freshHandle(doc: AccountWithTokens, reader: SocialReader, 
     { _id: doc._id },
     {
       $set: {
-        access_token: tokens.access_token,
-        refresh_token: tokens.refresh_token,
+        access_token: sealToken(tokens.access_token),
+        refresh_token: sealToken(tokens.refresh_token),
         token_expires_at: tokens.expires_at,
       },
     }

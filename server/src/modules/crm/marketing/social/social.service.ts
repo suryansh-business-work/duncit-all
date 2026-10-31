@@ -1,6 +1,7 @@
 import { GraphQLError } from 'graphql';
 import { isValidObjectId } from 'mongoose';
 import { logs } from '@observability/log';
+import { UserModel } from '@modules/access/user/user.model';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import {
   SocialAccountModel,
@@ -11,7 +12,9 @@ import {
 import { CONNECTORS } from './providers';
 import { providerReadiness, socialCredentials, socialRedirectUri } from './social.credentials';
 import { readConnectState, startConnect } from './social.oauth';
-import { syncSocialAccount } from './social.sync';
+import { handleOf, syncSocialAccount, type AccountWithTokens } from './social.sync';
+import { sealToken } from './social.tokens';
+import { tokenExpiresInDays } from './social.health';
 import { analyzePendingComments } from './social.ai';
 import { sentimentCounts, socialAnalytics } from './social.analytics';
 import { accountAverage, analyzePost, periodInsights } from './social.insights';
@@ -24,6 +27,10 @@ const iso = (value: unknown) => (value instanceof Date ? value.toISOString() : n
 
 function notFound(what: string): never {
   throw new GraphQLError(`${what} not found`, { extensions: { code: 'NOT_FOUND' } });
+}
+
+function badInput(message: string): never {
+  throw new GraphQLError(message, { extensions: { code: 'BAD_USER_INPUT' } });
 }
 
 /** Allowlists for the shared table engine (DUNCIT TABLE CONTRACT v1). */
@@ -66,22 +73,58 @@ const COMMENT_TABLE: TableEntityConfig = {
   defaultSort: { published_at: -1 },
 };
 
-const pubAccount = (o: any, flaggedOpen: number) => ({
-  id: String(o._id),
-  provider: o.provider,
-  platform: o.platform,
-  name: o.name ?? '',
-  handle: o.handle ?? '',
-  avatar_url: o.avatar_url ?? '',
-  profile_url: o.profile_url ?? '',
-  followers: o.followers ?? 0,
-  status: o.status,
-  last_error: o.last_error ?? '',
-  last_synced_at: iso(o.last_synced_at),
-  token_expires_at: iso(o.token_expires_at),
-  created_at: iso(o.created_at),
-  flagged_open: flaggedOpen,
-});
+const idOrNull = (value: unknown) => (value ? String(value) : null);
+
+const pubAccount = (o: any, flaggedOpen: number, ownerNames: Map<string, string>) => {
+  const ownerId = idOrNull(o.owner_user_id);
+  return {
+    id: String(o._id),
+    provider: o.provider,
+    platform: o.platform,
+    name: o.name ?? '',
+    handle: o.handle ?? '',
+    avatar_url: o.avatar_url ?? '',
+    profile_url: o.profile_url ?? '',
+    followers: o.followers ?? 0,
+    status: o.status,
+    last_error: o.last_error ?? '',
+    last_synced_at: iso(o.last_synced_at),
+    token_expires_at: iso(o.token_expires_at),
+    token_expires_in_days: tokenExpiresInDays(o.token_expires_at ?? null),
+    created_at: iso(o.created_at),
+    flagged_open: flaggedOpen,
+    owner_user_id: ownerId,
+    owner_name: ownerId ? ownerNames.get(ownerId) ?? null : null,
+    team_user_ids: ((o.team_user_ids ?? []) as unknown[]).map(String),
+    health_checked_at: iso(o.health_checked_at),
+    health_ok: typeof o.health_ok === 'boolean' ? o.health_ok : null,
+    health_message: o.health_message ?? '',
+  };
+};
+
+interface OwnerRef {
+  owner_user_id?: unknown;
+}
+
+/** Each owner's full name, in one lookup for however many accounts point at them. */
+async function ownerNamesOf(docs: OwnerRef[]): Promise<Map<string, string>> {
+  const ids = [...new Set(docs.map((doc) => idOrNull(doc.owner_user_id)).filter((id): id is string => id !== null))];
+  if (ids.length === 0) return new Map();
+  const users = await UserModel.find({ _id: { $in: ids } })
+    .select('profile.first_name profile.last_name')
+    .lean<Array<{ _id: unknown; profile?: { first_name?: string; last_name?: string } }>>();
+  return new Map(
+    users.map((user) => [String(user._id), [user.profile?.first_name, user.profile?.last_name].filter(Boolean).join(' ')])
+  );
+}
+
+/** True when every id names a living user. */
+async function allUsersExist(ids: string[]): Promise<boolean> {
+  if (ids.length === 0) return true;
+  if (!ids.every((id) => isValidObjectId(id))) return false;
+  const found = await UserModel.countDocuments({ _id: { $in: ids }, 'metadata.deleted_at': null });
+  return found === ids.length;
+}
 
 interface AccountFacts {
   name: string;
@@ -176,7 +219,12 @@ async function commentContext(docs: any[]) {
   return { names, posts: postMap };
 }
 
-/** Store what a handshake found. Reconnecting an account refreshes its tokens in place. */
+/**
+ * Store what a handshake found. Reconnecting an account refreshes its tokens
+ * in place; the tokens are sealed before they are written. Whoever connects
+ * becomes the owner unless somebody already is — a reconnect by a colleague
+ * must not quietly take an account away from the person looking after it.
+ */
 async function saveDiscovered(provider: SocialProvider, accounts: DiscoveredAccount[], userId: string): Promise<string[]> {
   const ids: string[] = [];
   for (const account of accounts) {
@@ -187,18 +235,24 @@ async function saveDiscovered(provider: SocialProvider, accounts: DiscoveredAcco
         $set: {
           ...profile,
           provider,
-          access_token: tokens.access_token,
-          refresh_token: tokens.refresh_token,
+          access_token: sealToken(tokens.access_token),
+          refresh_token: sealToken(tokens.refresh_token),
           token_expires_at: tokens.expires_at,
           scopes: tokens.scopes,
           status: 'CONNECTED',
           last_error: '',
           connected_by: userId,
+          // A fresh token is a fresh start for the health line and the reminders.
+          health_ok: null,
+          health_message: '',
+          alerted_at: null,
         },
       },
       { upsert: true, returnDocument: 'after', projection: { _id: 1 } }
     );
-    if (doc) ids.push(String(doc._id));
+    if (!doc) continue;
+    await SocialAccountModel.updateOne({ _id: doc._id, owner_user_id: null }, { $set: { owner_user_id: userId } });
+    ids.push(String(doc._id));
   }
   return ids;
 }
@@ -206,8 +260,28 @@ async function saveDiscovered(provider: SocialProvider, accounts: DiscoveredAcco
 async function account(id: string) {
   const doc = await SocialAccountModel.findById(id).lean();
   if (!doc) notFound('Social account');
-  const open = await SocialCommentModel.countDocuments({ account_id: id, ai_status: 'FLAGGED', review_status: 'OPEN' });
-  return pubAccount(doc, open);
+  const [open, owners] = await Promise.all([
+    SocialCommentModel.countDocuments({ account_id: id, ai_status: 'FLAGGED', review_status: 'OPEN' }),
+    ownerNamesOf([doc]),
+  ]);
+  return pubAccount(doc, open, owners);
+}
+
+/**
+ * Tell the network to forget the token, before the row goes. Best effort: a
+ * network that refuses (or has no revoke endpoint) is logged, and the account
+ * is removed here regardless — the marketer asked for it gone.
+ */
+async function revokeAtNetwork(doc: AccountWithTokens): Promise<void> {
+  const connector = CONNECTORS[doc.provider];
+  if (!connector.revoke) return;
+  try {
+    const creds = await socialCredentials(doc.provider);
+    if (!creds) return;
+    await connector.revoke(handleOf(doc), creds);
+  } catch (error) {
+    logs.server.warn('social-accounts', 'revoke', { error, account_id: String(doc._id), msg: 'token revoke refused; removing the account anyway' });
+  }
 }
 
 export const socialService = {
@@ -218,7 +292,19 @@ export const socialService = {
       SocialAccountModel.find().sort({ platform: 1, name: 1 }).lean(),
       flaggedOpenByAccount(),
     ]);
-    return docs.map((doc) => pubAccount(doc, flagged.get(String(doc._id)) ?? 0));
+    const owners = await ownerNamesOf(docs);
+    return docs.map((doc) => pubAccount(doc, flagged.get(String(doc._id)) ?? 0, owners));
+  },
+
+  /** Who answers for the account. Both lists are checked against real users: an owner who does not exist gets no reminder. */
+  async setOwner(id: string, ownerUserId: string | null | undefined, teamUserIds: string[] | null | undefined) {
+    const owner = ownerUserId?.trim() || null;
+    const team = [...new Set((teamUserIds ?? []).map((userId) => userId.trim()).filter(Boolean))];
+    if (owner && !(await allUsersExist([owner]))) badInput('The owner is not a known user');
+    if (!(await allUsersExist(team))) badInput('A team member is not a known user');
+    const updated = await SocialAccountModel.updateOne({ _id: id }, { $set: { owner_user_id: owner, team_user_ids: team } });
+    if (updated.matchedCount === 0) notFound('Social account');
+    return account(id);
   },
 
   /** The one callback URL every network's app registers — shown on the settings page beside each app. */
@@ -261,10 +347,13 @@ export const socialService = {
     return account(id);
   },
 
-  /** Removes the account with everything read from it; the tokens go with the row. */
+  /** Removes the account with everything read from it; the tokens go with the row, and the network is told to forget them. */
   async disconnect(id: string): Promise<boolean> {
-    const doc = await SocialAccountModel.findByIdAndDelete(id);
+    const doc = await SocialAccountModel.findById(id).select('+access_token +refresh_token').lean<AccountWithTokens>();
     if (!doc) notFound('Social account');
+    await revokeAtNetwork(doc);
+    const removed = await SocialAccountModel.deleteOne({ _id: id });
+    if (removed.deletedCount === 0) notFound('Social account');
     await Promise.all([
       SocialPostModel.deleteMany({ account_id: id }),
       SocialCommentModel.deleteMany({ account_id: id }),

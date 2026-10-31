@@ -1,5 +1,6 @@
 import { SocialAccountModel } from '../social/social.model';
 import { socialCredentials } from '../social/social.credentials';
+import { openToken } from '../social/social.tokens';
 import { FACEBOOK_GRAPH, INSTAGRAM_GRAPH, graphGet } from '../social/providers/meta';
 import { SocialApiError } from '../social/providers/http';
 import type { SocialProvider } from '../social/social.types';
@@ -54,7 +55,9 @@ export async function discoveryReader(): Promise<DiscoveryReader | null> {
   if (!account?.access_token) return null;
   const creds = await socialCredentials(account.provider);
   if (!creds) return null;
-  const { external_id: igUserId, access_token: token } = account;
+  const igUserId = account.external_id;
+  // Stored sealed (social.tokens.ts); opened here, for this reader only.
+  const token = openToken(account.access_token);
   const base = account.provider === 'INSTAGRAM' ? INSTAGRAM_GRAPH : FACEBOOK_GRAPH;
   return {
     async read(username) {

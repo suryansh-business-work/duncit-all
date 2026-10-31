@@ -131,10 +131,16 @@ export interface PostRef {
   permalink: string;
 }
 
-/** The OAuth half of a provider: the consent screen and the code exchange. */
+/** The OAuth half of a provider: the consent screen, the code exchange, and letting go. */
 export interface SocialConnector {
   authorizeUrl(input: { creds: SocialAppCredentials; state: string; challenge: string }): string;
   connect(input: { code: string; creds: SocialAppCredentials; verifier: string }): Promise<DiscoveredAccount[]>;
+  /**
+   * Tell the network the token is no longer wanted, so a disconnect here is a
+   * disconnect there too. Only for networks that document a revoke endpoint;
+   * best effort — a refusal is logged, never a reason to keep the account.
+   */
+  revoke?(account: SocialAccountHandle, creds: SocialAppCredentials): Promise<void>;
 }
 
 /** What a post carries to every network it goes to. */

@@ -15,7 +15,9 @@ const timestamps = { createdAt: 'created_at', updatedAt: 'updated_at' } as const
  * One connected account — a Page, a channel, a profile.
  *
  * Tokens are `select: false`: nothing reads them unless it asks by name, so a
- * list or a GraphQL projection can never carry one out of the server.
+ * list or a GraphQL projection can never carry one out of the server. They are
+ * also sealed (social.tokens.ts) before they are written, so a dump of the
+ * collection holds ciphertext, not credentials.
  */
 const accountSchema = new Schema(
   {
@@ -36,6 +38,18 @@ const accountSchema = new Schema(
     last_error: { type: String, default: '' },
     last_synced_at: { type: Date, default: null, index: true },
     connected_by: { type: Schema.Types.ObjectId, ref: 'User', default: null },
+    // Who answers for the account: the owner gets the expiry reminders and is
+    // the one expected to reconnect; the team are the others who look after it.
+    owner_user_id: { type: Schema.Types.ObjectId, ref: 'User', default: null, index: true },
+    team_user_ids: { type: [Schema.Types.ObjectId], ref: 'User', default: [] },
+    // The daily health check: a light read of the profile, and what it said.
+    // `health_ok` is null until the first check has run.
+    health_checked_at: { type: Date, default: null },
+    health_ok: { type: Boolean, default: null },
+    health_message: { type: String, default: '' },
+    // When the owner was last emailed about this account's token, so a
+    // check that runs twice in a day does not send two reminders.
+    alerted_at: { type: Date, default: null },
   },
   { timestamps }
 );

@@ -57,6 +57,11 @@ export function graphPost<T>(
   return postForm<T>(serviceOf(base), graphUrl(version, path, base), { ...params, access_token: token });
 }
 
+/** Graph DELETE with the token as a query parameter. */
+export function graphDelete<T>(version: string, path: string, token: string, base = FACEBOOK_GRAPH): Promise<T> {
+  return socialJson<T>(serviceOf(base), withQuery(graphUrl(version, path, base), { access_token: token }), { method: 'DELETE' });
+}
+
 /**
  * Facebook issues an APP token for the ID and secret alone, so this is a real
  * check of the pair — and the app's name comes back to show which app it is.
@@ -158,6 +163,16 @@ export const facebookConnector: SocialConnector = {
       limit: '100',
     });
     return (pages.data ?? []).map(facebookAccount);
+  },
+
+  /**
+   * De-authorise the app for the account the token belongs to. Permissions are
+   * revoked per USER, and the stored token is a Page token, so `/me` is the
+   * most the Graph can be asked for — Meta may refuse, which the caller treats
+   * as best effort.
+   */
+  async revoke(account, creds) {
+    await graphDelete(creds.version, '/me/permissions', account.access_token);
   },
 };
 /** The connector's name while the app served Instagram too. */

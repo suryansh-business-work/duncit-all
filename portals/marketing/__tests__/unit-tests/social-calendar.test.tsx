@@ -103,6 +103,12 @@ describe('calendar-grid', () => {
     expect(monthTitle('2026-09')).toBe('September 2026');
   });
 
+  it('names no month for a month that is not a real one, instead of throwing', () => {
+    expect(monthTitle('')).toBe('');
+    expect(monthTitle('2026-13')).toBe('');
+    expect(monthTitle('soon')).toBe('');
+  });
+
   it('names weekdays, day numbers and days', () => {
     expect(weekdayNames(['2026-08-31', '2026-09-01'])).toEqual(['Mon', 'Tue']);
     expect(mondayFirstWeekdays()).toEqual(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']);

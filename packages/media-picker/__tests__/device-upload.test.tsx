@@ -17,7 +17,7 @@ import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, fireEvent, render, renderHook } from '@testing-library/react';
 import { createRef } from 'react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 
 import DeviceUploadTab from '../src/DeviceUploadTab';
 import ImageCropStep from '../src/ImageCropStep';
@@ -339,8 +339,15 @@ describe('useDeviceUpload', () => {
     expect(result.current.cropKey).toBe('COVER');
   });
 
+  // The file only clears mocks between tests, so this spy restores itself —
+  // otherwise every later hook would see admin settings it never asked for.
+  const withAdminSettings = () => {
+    const spy = vi.spyOn(settingsModule, 'useUploadSettings').mockReturnValue(SETTINGS);
+    onTestFinished(() => spy.mockRestore());
+  };
+
   it('crops to the locked preset over the reader and the admin default while it is enabled', async () => {
-    vi.spyOn(settingsModule, 'useUploadSettings').mockReturnValue(SETTINGS);
+    withAdminSettings();
     const { result } = hook({ lockedCropKey: 'COVER' });
     await settle();
 
@@ -353,7 +360,7 @@ describe('useDeviceUpload', () => {
   });
 
   it('lets the lock go when the admin disabled that preset', async () => {
-    vi.spyOn(settingsModule, 'useUploadSettings').mockReturnValue(SETTINGS);
+    withAdminSettings();
     const { result } = hook({ lockedCropKey: 'DISABLED' });
     await settle();
 

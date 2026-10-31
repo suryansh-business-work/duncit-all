@@ -1,129 +1,107 @@
 import { useEffect } from 'react';
-import { gql } from '@apollo/client';
+import { gql, type TypedDocumentNode } from '@apollo/client';
 import { useMutation } from '@apollo/client/react';
-import { consentAllows } from '@duncit/utils';
-import { useWebConsent } from './useWebConsent';
-
-type EventType = 'PAGE_VIEW' | 'IMPRESSION' | 'CLICK';
+import type { MutationRecordAppEventsArgs } from '@duncit/gql-types';
+import { screenNameFromPath, type ElementRef } from '@duncit/user-core';
+import { connectProductAnalytics, productTracker } from './productAnalytics';
 
 interface Args {
-  enabled: boolean;
+  /** The route with its query string. */
   path: string;
   superCategory: string;
 }
 
-const RECORD_APP_EVENT = gql`
-  mutation RecordAppEvent($input: RecordAppEventInput!) {
-    recordAppEvent(input: $input)
+const RECORD_APP_EVENTS: TypedDocumentNode<{ recordAppEvents: number }, MutationRecordAppEventsArgs> = gql`
+  mutation RecordAppEvents($events: [AppEventInput!]!) {
+    recordAppEvents(events: $events)
   }
 `;
 
-// Core-only tracking. To keep request volume low we send:
-//   - one PAGE_VIEW per route change,
-//   - a CLICK only when a real interactive control was clicked,
-//   - an IMPRESSION only for elements explicitly opted in via
-//     [data-track-impression].
-// We deliberately do NOT track raw clicks on non-interactive areas, touch
-// events, auto-impressions on every link/button, or rescan the DOM on every
-// mutation — that was firing dozens of RecordAppEvent calls per interaction.
-const clickSelector = 'a, button, [role="button"]';
+// What is tracked, and what is not:
+//   - app_open once per tab, app_background / app_foreground as the tab hides and shows,
+//   - one screen_view per route (ids in the path become `:id`),
+//   - an element_click only when a real control was pressed (links, buttons, tabs, menu items),
+//   - an element_impression only for elements opted in with [data-track-impression].
+// Never raw clicks on non-interactive areas, touches, or a DOM rescan on every mutation.
+// Signed out too: a visitor is tracked by the device id, and only with analytics consent.
+const clickSelector = 'a, button, [role="button"], [role="tab"], [role="menuitem"], [role="link"]';
 const impressionSelector = '[data-track-impression]';
 
-function textFor(target: Element) {
-  return (target.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 240);
-}
+const textFor = (target: Element) => (target.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 240);
 
-function describeTarget(target: Element | null) {
-  if (!target) return {};
-  const anchor = target.closest('a') as HTMLAnchorElement | null;
+/** The control as the Analytics console names it: its test id, its accessible name, its kind. */
+export function elementOf(control: Element): ElementRef {
+  const text = textFor(control);
+  const role = control.getAttribute('role');
+  const tag = control.tagName.toLowerCase();
   return {
-    target_tag: target.tagName.toLowerCase(),
-    target_text: textFor(target),
-    target_label:
-      target.getAttribute('aria-label') ||
-      target.getAttribute('title') ||
-      target.getAttribute('placeholder') ||
-      '',
-    target_role: target.getAttribute('role') || '',
-    target_href: anchor?.href || '',
+    id: control.getAttribute('data-testid') || control.getAttribute('data-track-impression') || control.id || undefined,
+    name: control.getAttribute('aria-label') || control.getAttribute('title') || text,
+    type: role || (tag === 'a' ? 'link' : tag),
+    text,
+    href: control.closest('a')?.href,
   };
 }
 
-function metadataJson(extra: Record<string, unknown>) {
-  return JSON.stringify({
-    viewport: `${globalThis.window.innerWidth}x${globalThis.window.innerHeight}`,
-    referrer: document.referrer || '',
-    ...extra,
-  });
-}
+export function useClickstreamTracking({ path, superCategory }: Args) {
+  const [record] = useMutation(RECORD_APP_EVENTS);
 
-export function useClickstreamTracking({ enabled: wanted, path, superCategory }: Args) {
-  const [recordEvent] = useMutation<any>(RECORD_APP_EVENT);
-  // Clickstream is usage analytics: nothing is sent without the visitor's
-  // consent, and it starts the moment they give it.
-  const consent = useWebConsent();
-  const enabled = wanted && consentAllows(consent, 'analytics');
-
-  const send = (eventType: EventType, target: Element | null, extra: Record<string, unknown> = {}) => {
-    if (!enabled || !localStorage.getItem('token')) return;
-    recordEvent({
-      variables: {
-        input: {
-          event_type: eventType,
-          client_event_id: `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
-          path,
-          route: globalThis.window.location.pathname,
-          title: document.title,
-          super_category_slug: superCategory || null,
-          metadata_json: metadataJson(extra),
-          occurred_at: new Date().toISOString(),
-          ...describeTarget(target),
-        },
-      },
-    }).catch(() => {});
-  };
-
-  // Core: one PAGE_VIEW per route. No target: describing <body> read the whole
-  // page's textContent (and ran a regex over it) on the main thread right after
-  // every navigation, only to store its first 240 characters. Path and title
-  // already say which page this was.
   useEffect(() => {
-    if (!enabled) return;
-    send('PAGE_VIEW', null, { source: 'route_change' });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enabled, path, superCategory]);
+    connectProductAnalytics((events) => record({ variables: { events } }));
+  }, [record]);
 
-  // CLICK only for real interactive controls (buttons / links / role=button).
+  // The tab opened, and every time it hides or shows again.
   useEffect(() => {
-    if (!enabled) return;
+    const tracker = productTracker();
+    tracker.open();
+    const onVisibility = () => {
+      if (document.visibilityState === 'hidden') tracker.background();
+      else tracker.foreground();
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility);
+      tracker.stop();
+    };
+  }, []);
+
+  // One screen_view per route.
+  useEffect(() => {
+    const pathname = path.split('?')[0];
+    productTracker().screen(screenNameFromPath(pathname), {
+      path,
+      title: document.title,
+      superCategorySlug: superCategory || null,
+    });
+  }, [path, superCategory]);
+
+  // A click only on a real control.
+  useEffect(() => {
     const onClick = (event: MouseEvent) => {
       const control = event.target instanceof Element ? event.target.closest(clickSelector) : null;
-      if (!control) return; // ignore non-interactive clicks
-      send('CLICK', control, { pointer: 'mouse' });
+      if (control) productTracker().click(elementOf(control));
     };
     document.addEventListener('click', onClick, true);
     return () => document.removeEventListener('click', onClick, true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enabled, path, superCategory]);
+  }, []);
 
-  // IMPRESSION only for elements explicitly opted in with [data-track-impression].
+  // An impression only for elements opted in, once each, re-scanned per route.
   useEffect(() => {
-    if (!enabled || typeof IntersectionObserver === 'undefined') return;
+    if (typeof IntersectionObserver === 'undefined') return undefined;
     const targets = document.querySelectorAll(impressionSelector);
-    if (targets.length === 0) return;
+    if (targets.length === 0) return undefined;
     const seen = new WeakSet<Element>();
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (!entry.isIntersecting || seen.has(entry.target)) return;
           seen.add(entry.target);
-          send('IMPRESSION', entry.target, { source: 'element_visible' });
+          productTracker().track('element_impression', { element: elementOf(entry.target) });
         });
       },
       { threshold: 0.6 },
     );
     targets.forEach((node) => observer.observe(node));
     return () => observer.disconnect();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enabled, path, superCategory]);
+  }, [path]);
 }

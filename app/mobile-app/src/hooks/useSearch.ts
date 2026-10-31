@@ -8,6 +8,7 @@ import {
   SearchSuggestionsDocument,
 } from '@/graphql/search';
 import { graphqlRequest } from '@/services/graphql.client';
+import { trackProductEvent } from '@/services/product-analytics';
 import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 export type SearchClubResult = ResultOf<
@@ -61,6 +62,15 @@ export function useSearchDiscovery(query: string, categoryId: string) {
           setState({
             happening: data.searchDiscovery.happening,
             moreClubs: data.searchDiscovery.more_clubs,
+          });
+          // The query is redacted by the tracker; a zero here is a search that found nothing.
+          trackProductEvent('search_performed', {
+            properties: {
+              query: trimmed,
+              category_id: categoryId || null,
+              results:
+                data.searchDiscovery.happening.length + data.searchDiscovery.more_clubs.length,
+            },
           });
           setLoading(false);
         })

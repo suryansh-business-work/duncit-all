@@ -9,11 +9,6 @@
       "count": 1
     }
   },
-  "app/mweb/src/app/useClickstreamTracking.ts": {
-    "no-restricted-syntax": {
-      "count": 1
-    }
-  },
   "app/mweb/src/components/AuthLogo.tsx": {
     "no-restricted-syntax": {
       "count": 1

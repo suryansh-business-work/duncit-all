@@ -1,8 +1,9 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useQuery } from '@apollo/client/react';
 import { activeCategories, groupCategoriesBySuper } from '@duncit/utils';
 import { makeCategoryMatcher } from '../../utils/category-match';
 import { SEARCH_DISCOVERY, SEARCH_CATEGORIES } from './queries';
+import { trackProductEvent } from '../../app/productAnalytics';
 
 export interface SearchCategory {
   id: string;
@@ -24,6 +25,21 @@ export function useSearchDiscovery(query: string, categoryId: string) {
     fetchPolicy: 'cache-and-network',
   });
   const result = data?.searchDiscovery;
+  // One search_performed per query answered by the server — not again for the cached answer
+  // shown first, nor on a re-render. The tracker redacts the query.
+  const reported = useRef('');
+  useEffect(() => {
+    const key = JSON.stringify([query, categoryId]);
+    if (!active || loading || !result || reported.current === key) return;
+    reported.current = key;
+    trackProductEvent('search_performed', {
+      properties: {
+        query,
+        category_id: categoryId || null,
+        results: (result.happening?.length ?? 0) + (result.more_clubs?.length ?? 0),
+      },
+    });
+  }, [active, loading, result, query, categoryId]);
   return {
     happening: useMemo(() => result?.happening ?? [], [result]),
     moreClubs: useMemo(() => result?.more_clubs ?? [], [result]),

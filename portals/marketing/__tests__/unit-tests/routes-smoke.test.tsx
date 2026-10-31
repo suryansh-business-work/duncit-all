@@ -83,6 +83,8 @@ const ROUTES = [
   '/tasks',
   '/approvals',
   '/activity',
+  '/leads',
+  '/leads?stage=QUALIFIED&pipeline=VENUE',
   '/audience',
   '/audience/new',
   '/audience/smoke-id',
@@ -101,6 +103,7 @@ const ROUTES = [
   '/settings/integrations',
   '/studio/reels',
   '/studio/reels/smoke-id',
+  '/automation/agents',
   // Old addresses that redirect, query string included.
   '/social-accounts?connected=LINKEDIN&count=1',
   '/social-calendar',

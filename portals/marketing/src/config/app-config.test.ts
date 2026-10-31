@@ -41,7 +41,9 @@ describe('Marketing sidebar', () => {
       '/social/accounts',
       '/publish/calendar',
       '/studio/reels',
+      '/leads',
       '/leads/instagram',
+      '/automation/agents',
       '/campaigns/email',
       '/audience',
       '/notifications',
@@ -91,12 +93,23 @@ describe('Marketing sidebar', () => {
       'shell.nav.publishing',
       'shell.nav.create',
       'shell.nav.leads',
+      'shell.nav.automation',
       'shell.nav.campaigns',
       'shell.nav.analytics',
       'shell.nav.settings',
       'shell.nav.ads',
     ]);
     for (const header of headers) expect(header.to).toBeUndefined();
+  });
+
+  it('puts Automation — the agents — right after Leads, on the AI icon', () => {
+    const automation = MARKETING_NAV[5];
+    expect(MARKETING_NAV[4].labelKey).toBe('shell.nav.leads');
+    expect(automation.labelKey).toBe('shell.nav.automation');
+    expect(automation.icon).toBe('ai');
+    expect(automation.children).toEqual([{ label: 'shell.nav.agents', labelKey: 'shell.nav.agents', to: '/automation/agents', icon: 'ai' }]);
+    // Everyone with a seat reaches the page; the page itself goes read-only for an editor.
+    expect(buildNav(['MARKETING_EDITOR'])).toContain(automation);
   });
 
   it('shows Settings to a marketing manager or super admin and to nobody else', () => {

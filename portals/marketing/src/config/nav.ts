@@ -28,7 +28,14 @@ const PUBLISHING = group('shell.nav.publishing', 'calendar', [leaf('shell.nav.ca
 // What is made here before it is published: reels cut by chat from Drive footage.
 const CREATE = group('shell.nav.create', 'movie', [leaf('shell.nav.reelStudio', '/studio/reels', 'movie')]);
 
-const LEADS = group('shell.nav.leads', 'handshake', [leaf('shell.nav.instagramLeads', '/leads/instagram', 'handshake')]);
+// The one pipeline every source feeds comes first; the Instagram search is one way into it.
+const LEADS = group('shell.nav.leads', 'handshake', [
+  leaf('shell.nav.allLeads', '/leads', 'handshake'),
+  leaf('shell.nav.instagramLeads', '/leads/instagram', 'handshake'),
+]);
+
+// What runs on its own: the agents that plan with Claude and act through code.
+const AUTOMATION = group('shell.nav.automation', 'ai', [leaf('shell.nav.agents', '/automation/agents', 'ai')]);
 
 // Everything that is sent, published or promoted, and the audience it goes to.
 const CAMPAIGNS = group('shell.nav.campaigns', 'campaign', [
@@ -61,7 +68,7 @@ const MANAGER_ROLES = new Set(['SUPER_ADMIN', 'MARKETING_MANAGER']);
 const APPROVALS_PATH = '/approvals';
 
 /** The full sidebar, as a marketing manager sees it. */
-export const MARKETING_NAV: readonly AppNavItem[] = [OVERVIEW, SOCIAL, PUBLISHING, CREATE, LEADS, CAMPAIGNS, ANALYTICS, SETTINGS];
+export const MARKETING_NAV: readonly AppNavItem[] = [OVERVIEW, SOCIAL, PUBLISHING, CREATE, LEADS, AUTOMATION, CAMPAIGNS, ANALYTICS, SETTINGS];
 
 /** The sidebar for one person: sections their roles cannot act on are left out, not greyed. */
 export function buildNav(roles: readonly string[]): AppNavItem[] {

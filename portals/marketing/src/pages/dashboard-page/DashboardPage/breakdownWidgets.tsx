@@ -1,6 +1,6 @@
 import type { DashboardWidget } from '@duncit/dashboard';
 import type { useTranslation } from '@duncit/app-settings';
-import { formatINR } from '@duncit/utils';
+import { formatMoney } from '@duncit/utils';
 import BreakdownCard from '../../short-links-page/detail/BreakdownCard';
 import { PLATFORM_LABEL } from '../../social-accounts-page/copy';
 import { LEAD_STATUS_LABEL } from '../../instagram-leads-page/copy';
@@ -95,7 +95,7 @@ export function buildBreakdownWidgets({ board, t }: Readonly<Deps>): DashboardWi
       <BreakdownCard
         title={
           runs.spend > 0
-            ? t('marketing.dashboard.automationWithSpend', { vars: { spend: formatINR(runs.spend) } })
+            ? t('marketing.dashboard.automationWithSpend', { vars: { spend: formatMoney(runs.spend, { symbol: '$', decimals: 2 }) } })
             : t('marketing.dashboard.automation')
         }
         rows={automationRows(runs, t)}

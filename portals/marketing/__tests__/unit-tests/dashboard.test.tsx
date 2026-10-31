@@ -225,7 +225,7 @@ describe('DashboardPage', () => {
     expect(screen.getByText('Threads')).toBeInTheDocument();
     expect(screen.getByText('Leads by stage')).toBeInTheDocument();
     expect(screen.getByText('Contacted')).toBeInTheDocument();
-    expect(screen.getByText('Automation · ₹412 AI spend')).toBeInTheDocument();
+    expect(screen.getByText('Automation · $412.00 AI spend')).toBeInTheDocument();
     expect(screen.getByText('Awaiting approval')).toBeInTheDocument();
     // A state with nothing in it draws no bar.
     expect(screen.queryByText('Running now')).not.toBeInTheDocument();

@@ -19,7 +19,9 @@ import AppPopupsPage from './pages/app-popups-page/AppPopupsPage';
 import StatusPage from './pages/status-page/StatusPage';
 import SocialAccountsPage from './pages/social-accounts-page';
 import SocialCalendarPage from './pages/social-calendar-page';
+import LeadsPage from './pages/leads-page';
 import InstagramLeadsPage from './pages/instagram-leads-page';
+import AgentsPage from './pages/agents-page';
 import OccasionsPage from './pages/occasions-page';
 import OccasionThemeEditorPage from './pages/occasions-page/editor';
 import AdsApprovalsPage from './pages/ads-approvals-page/AdsApprovalsPage';
@@ -64,8 +66,11 @@ export default function App() {
         <Route path="/studio/reels" element={authed(<ReelProjectsPage />)} />
         <Route path="/studio/reels/:projectId" element={authed(<ReelStudioPage />)} />
         {/* Leads */}
+        <Route path="/leads" element={authed(<LeadsPage />)} />
         <Route path="/leads/instagram" element={authed(<InstagramLeadsPage />)} />
         <Route path="/instagram-leads" element={<Redirect to="/leads/instagram" />} />
+        {/* Automation: the agents that plan with Claude and act through code */}
+        <Route path="/automation/agents" element={authed(<AgentsPage />)} />
         {/* Campaigns and the channels they go out on */}
         <Route path="/audience" element={authed(<AudienceListsPage />)} />
         <Route path="/audience/new" element={authed(<CreateAudienceListPage />)} />

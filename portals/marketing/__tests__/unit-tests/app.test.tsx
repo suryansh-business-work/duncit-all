@@ -62,9 +62,11 @@ vi.mock('../../src/pages/social-accounts-page', async () => {
 vi.mock('../../src/pages/social-calendar-page', () => ({
   default: () => <div>social-calendar-page</div>,
 }));
+vi.mock('../../src/pages/leads-page', () => ({ default: () => <div>leads-page</div> }));
 vi.mock('../../src/pages/instagram-leads-page', () => ({
   default: () => <div>instagram-leads-page</div>,
 }));
+vi.mock('../../src/pages/agents-page', () => ({ default: () => <div>agents-page</div> }));
 vi.mock('../../src/pages/activity-page', () => ({ default: () => <div>activity-page</div> }));
 vi.mock('../../src/pages/approvals-page', () => ({ default: () => <div>approvals-page</div> }));
 vi.mock('../../src/pages/tasks-page', () => ({ default: () => <div>tasks-page</div> }));
@@ -99,7 +101,9 @@ describe('App routing', () => {
     ['/publish/calendar', 'social-calendar-page'],
     ['/studio/reels', 'reel-projects-page'],
     ['/studio/reels/DUN-REEL-1', 'reel-studio-page:DUN-REEL-1'],
+    ['/leads', 'leads-page'],
     ['/leads/instagram', 'instagram-leads-page'],
+    ['/automation/agents', 'agents-page'],
     ['/settings/integrations', 'integrations-page'],
   ])('renders %s behind auth', (path, text) => {
     setToken('tok');

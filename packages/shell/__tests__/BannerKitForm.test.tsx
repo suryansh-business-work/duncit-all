@@ -84,7 +84,7 @@ describe('BannerKitForm', () => {
     const { onSave } = renderForm();
     expect(screen.getByTestId('banner-kit-instagram')).toHaveValue('cafe.blue');
     expect(screen.getByTestId('banner-kit-tagline')).toHaveValue('Games every Friday');
-    expect(screen.getByRole('checkbox', { name: 'Allow collab posts' })).toBeChecked();
+    expect(screen.getByRole('switch', { name: 'Allow collab posts' })).toBeChecked();
     expect(captions('photos')).toEqual(['Rooftop', 'Bar']);
     expect(screen.getByText('2 of 12')).toBeInTheDocument();
     // A venue has no past-event photos.
@@ -111,7 +111,7 @@ describe('BannerKitForm', () => {
   it('sends what was edited: a new logo, the collab switch off, a bio and a cleared colour', async () => {
     const { onSave } = renderForm();
     fireEvent.click(screen.getByTestId('banner-kit-logo-upload'));
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Allow collab posts' }));
+    fireEvent.click(screen.getByRole('switch', { name: 'Allow collab posts' }));
     await userEvent.type(screen.getByTestId('banner-kit-bio'), 'Since 2019.');
     fireEvent.click(screen.getByRole('button', { name: 'Clear' }));
     expect(screen.getByRole('button', { name: 'Clear' })).toBeDisabled();

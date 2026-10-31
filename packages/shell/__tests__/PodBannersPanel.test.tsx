@@ -87,7 +87,7 @@ describe('PodBannersPanel', () => {
   it('shows a spinner on the first read and the reason a read failed', () => {
     pods(undefined, { loading: true });
     const { rerender } = render(<PodBannersPanel filter={{ field: 'venue_id', value: 'v1' }} />);
-    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    expect(screen.getByRole('status')).toBeInTheDocument();
 
     pods(undefined, { error: new Error('Network down') });
     rerender(<PodBannersPanel filter={{ field: 'venue_id', value: 'v1' }} />);

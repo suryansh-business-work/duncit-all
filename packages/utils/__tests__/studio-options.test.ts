@@ -179,8 +179,12 @@ describe('studioOptionsFor', () => {
     const consoleKeys = studioOptionsFor('HOST', ['HOST'], { autoPods: true, console: true }).map((o) => o.key);
     expect(consoleKeys).not.toContain('share');
     expect(consoleKeys).not.toContain('categories');
-    // Only the app-only screens go — every other host option stays in the console.
-    expect(consoleKeys).toEqual(inApp.filter((key) => key !== 'share' && key !== 'categories'));
+    // The app-only screens go, and the console gains its own banner pages — every other host option stays.
+    expect(consoleKeys).toEqual(expect.arrayContaining(['banner-kit', 'banners']));
+    expect(inApp).not.toContain('banner-kit');
+    expect(consoleKeys.filter((key) => key !== 'banner-kit' && key !== 'banners')).toEqual(
+      inApp.filter((key) => key !== 'share' && key !== 'categories'),
+    );
     // The flag still applies on top of the console filter.
     expect(studioOptionsFor('HOST', ['HOST'], { autoPods: false, console: true }).map((o) => o.key)).not.toContain('auto-pods');
   });

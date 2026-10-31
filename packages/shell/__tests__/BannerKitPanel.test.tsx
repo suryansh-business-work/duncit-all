@@ -108,7 +108,7 @@ describe('BannerKitPanel', () => {
   it('shows a spinner while the first read is in flight', () => {
     answer(undefined, { loading: true });
     render(<BannerKitPanel entity="VENUE" mode="owner" id="v1" />);
-    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    expect(screen.getByRole('status')).toBeInTheDocument();
     expect(screen.queryByTestId('kit-form')).not.toBeInTheDocument();
   });
 

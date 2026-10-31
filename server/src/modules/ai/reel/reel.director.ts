@@ -102,8 +102,8 @@ async function pictureParts(assets: readonly ReelAsset[]): Promise<Array<Record<
   );
 }
 
-/** The model's answer as an object, or null when it is not one. */
-function parseAnswer(content: string): Record<string, unknown> | null {
+/** The model's answer as an object, or null when it is not one. The production line reads its answers the same way. */
+export function parseAnswer(content: string): Record<string, unknown> | null {
   try {
     const parsed: unknown = JSON.parse(content);
     return typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)

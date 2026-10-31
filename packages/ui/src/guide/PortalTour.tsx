@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { Box, Paper, Popper, Stack, Typography, alpha, type Theme } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '../i18n/useTranslation';
@@ -37,13 +37,22 @@ interface OpenTourProps {
 }
 
 function OpenTour({ steps, onClose, startAt }: Readonly<OpenTourProps>) {
-  const [resolved] = useState(() => resolveTourSteps(steps, startAt));
+  // Resolved ONCE, after the first commit: the anchors are usually siblings
+  // rendered in the same tree, so looking for them during render — before
+  // they are in the DOM — would find none and close the tour at once.
+  const [resolved, setResolved] = useState<ResolvedTourStep[] | null>(null);
   const [position, setPosition] = useState(0);
-  const current: ResolvedTourStep | undefined = resolved[position];
+  const current: ResolvedTourStep | undefined = resolved?.[position];
+  // What the tour opened with: a step list rebuilt on a parent's render must not restart it.
+  const opened = useRef({ steps, startAt });
+
+  useLayoutEffect(() => {
+    setResolved(resolveTourSteps(opened.current.steps, opened.current.startAt));
+  }, []);
 
   useEffect(() => {
-    if (!current) onClose(false);
-  }, [current, onClose]);
+    if (resolved && !current) onClose(false);
+  }, [resolved, current, onClose]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -60,7 +69,7 @@ function OpenTour({ steps, onClose, startAt }: Readonly<OpenTourProps>) {
       key={current.index}
       current={current}
       position={position}
-      total={resolved.length}
+      total={resolved?.length ?? 0}
       onBack={() => setPosition(position - 1)}
       onNext={() => setPosition(position + 1)}
       onClose={onClose}

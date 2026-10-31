@@ -204,6 +204,18 @@ export const OPENAI_TASKS = {
     description: 'Drafts the words of one step of an outreach sequence (email, WhatsApp or DM) on Claude.',
     when_off: MARKETING_ERROR,
   },
+  'marketing.pod_promo': {
+    label: 'Pod promotion caption',
+    module: 'Marketing',
+    description: 'Writes the Instagram caption and hashtags of a pod promotion post on Claude (Publishing › Pod promotions).',
+    when_off: 'The built-in caption template is used: the pod title, day, time, place, price, description and the booking link.',
+  },
+  'marketing.pod_promo_banner': {
+    label: 'Pod promotion banner words',
+    module: 'Marketing',
+    description: 'Writes the words on a pod promotion carousel and picks its look on Claude (Publishing › Pod promotions).',
+    when_off: 'The banners use the built-in wording and the look picked from the pod category.',
+  },
   'platform.release_notes': {
     label: 'Release changelog',
     module: 'Platform',

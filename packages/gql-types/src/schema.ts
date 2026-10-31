@@ -3028,6 +3028,60 @@ export type BankPayoutMethod =
   | 'NEFT'
   | 'UPI';
 
+/**
+ * What a venue's or a host's pod banners are made from. A kit nobody has saved
+ * yet reads as prefilled from what is already on file (a venue's cover and
+ * gallery, a host's photo); nothing is stored until the first save.
+ */
+export type BannerKit = {
+  __typename?: 'BannerKit';
+  /** At most 400 characters. */
+  bio: Scalars['String']['output'];
+  /** A colour like #1a2b3c, or empty for the banner's own colours. */
+  brand_color: Scalars['String']['output'];
+  /** Whether Duncit may invite instagram_handle as a collaborator on the pod's Instagram post. */
+  collab_opt_in: Scalars['Boolean']['output'];
+  /** A host's past events; at most 12. */
+  event_photos: Array<BannerKitPhoto>;
+  /** Lowercase, without the @ or the instagram.com address. */
+  instagram_handle: Scalars['String']['output'];
+  logo_url: Scalars['String']['output'];
+  /** A venue's space, or a host's portraits; at most 12. */
+  photos: Array<BannerKitPhoto>;
+  /** Photos already on file (media library only) that the kit can use with one click. */
+  suggested_photos: Array<Scalars['String']['output']>;
+  /** At most 80 characters. */
+  tagline: Scalars['String']['output'];
+};
+
+/** Every field is optional: a field left out keeps its saved value. */
+export type BannerKitInput = {
+  bio?: InputMaybe<Scalars['String']['input']>;
+  brand_color?: InputMaybe<Scalars['String']['input']>;
+  collab_opt_in?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Replaces the whole list, in this order. */
+  event_photos?: InputMaybe<Array<BannerKitPhotoInput>>;
+  /** A handle, an @handle or an instagram.com link; empty removes it. */
+  instagram_handle?: InputMaybe<Scalars['String']['input']>;
+  /** A media library address, or empty to remove it. */
+  logo_url?: InputMaybe<Scalars['String']['input']>;
+  /** Replaces the whole list, in this order. */
+  photos?: InputMaybe<Array<BannerKitPhotoInput>>;
+  tagline?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** One photo of a banner kit, with the line shown under it on a slide. */
+export type BannerKitPhoto = {
+  __typename?: 'BannerKitPhoto';
+  caption: Scalars['String']['output'];
+  url: Scalars['String']['output'];
+};
+
+export type BannerKitPhotoInput = {
+  caption?: InputMaybe<Scalars['String']['input']>;
+  url: Scalars['String']['input'];
+};
+
 /** Structured billing block snapshotted on a payment (drives the invoice bill-to). */
 export type BillingDetails = {
   __typename?: 'BillingDetails';
@@ -11204,6 +11258,7 @@ export type Host = {
   account_profile?: Maybe<HostAccountProfile>;
   approved_at?: Maybe<Scalars['String']['output']>;
   bank_account: BankAccountVerification;
+  banner_kit: BannerKit;
   created_at: Scalars['String']['output'];
   dob?: Maybe<Scalars['String']['output']>;
   email: Scalars['String']['output'];
@@ -14219,6 +14274,7 @@ export type MarketingRunWorkflow =
   | 'ORCHESTRATOR'
   | 'OTHER'
   | 'OUTREACH'
+  | 'POD_PROMO'
   | 'REEL'
   | 'SOCIAL_HEALTH'
   | 'SOCIAL_PUBLISH'
@@ -15143,6 +15199,8 @@ export type Mutation = {
   cancelPodForChange: PodChangeRequest;
   /** Sender: withdraw before it is answered. */
   cancelPodPartnerRequest: PodPartnerRequest;
+  /** Cancel a promotion that has not gone out (managers); its waiting post is removed. */
+  cancelPodPromo: PodPromo;
   /** Venue owner / venues console: cancel a paid order and refund it in full. */
   cancelVenueFoodOrder: VenueFoodOrder;
   /** Call off a scheduled send before it runs. */
@@ -15361,6 +15419,12 @@ export type Mutation = {
   createPodExpense: PodExpense;
   createPodIdea: PodIdea;
   createPodPlan: PodPlan;
+  /**
+   * Promote one pod now (managers): make its tracking link, banner, caption and
+   * post, as the planner would. A pod whose promotion was cancelled, skipped
+   * or failed is promoted again; one already scheduled or published is refused.
+   */
+  createPodPromo: PodPromo;
   createPolicy: Policy;
   createPost: Post;
   /** Ops: create/retry the ShipRocket shipment for a SHIP order. */
@@ -15734,6 +15798,12 @@ export type Mutation = {
   generateMeetingLink: MeetingLinkResult;
   /** Loyalty: mint a batch of printed cards. */
   generatePhysicalGiftCards: PhysicalGiftCardBatch;
+  /**
+   * Make the banner carousel for one pod from its own data, its venue and its
+   * host, and upload it. Nothing is scheduled. style and size default to the
+   * pod's category style and the settings' banner style.
+   */
+  generatePodBanners: PodBannerSet;
   /** Concepts for a reel from a brief (1-10, five when not given). One marketing run, its cost on it. */
   generateReelIdeas: ReelIdeas;
   /** A scene-by-scene script for a chosen concept, for a reel of length_s seconds. */
@@ -16013,6 +16083,8 @@ export type Mutation = {
   pinStaffMessage: StaffMessage;
   /** Public: place a food order at a venue and open its payment. No sign-in needed. */
   placeVenueFoodOrder: VenueFoodOrderPlacement;
+  /** Render the carousel and write the caption for one pod, without scheduling a post. */
+  previewPodPromo: PodPromoPreview;
   /**
    * Finance-only: process one part of the refund for a Spot Filled Backout
    * request. Without a part, every outstanding part is processed in order.
@@ -16155,6 +16227,10 @@ export type Mutation = {
   refundPayment: Payment;
   /** Goods checked: back in stock, and the buyer refunded through Razorpay. */
   refundPodShopReturn: PodShopReturn;
+  /** Render one slide of a pod's carousel again. */
+  regeneratePodBannerSlide: PodBannerSlide;
+  /** Render a fresh carousel from the pod as it is now and put it on the waiting post (managers). */
+  regeneratePodPromoBanner: PodPromo;
   register: AuthPayload;
   /** Register the location with ShipRocket so SHIP orders can pick up from it. */
   registerBrandPickupWithShiprocket: BrandPickupLocation;
@@ -16618,6 +16694,14 @@ export type Mutation = {
   saveTeamStructure: TeamStructure;
   /** Saves one site's Earn section and pill. */
   saveWebsiteEarnSection: WebsiteEarnSection;
+  /**
+   * Promote one pod in one call (managers), choosing what the planner would
+   * otherwise decide: at (ISO 8601, defaults to the settings' slot),
+   * account_ids (defaults to the settings' accounts), collaborators (Instagram
+   * usernames, defaults to the venue and host that opted in; at most 3) and
+   * style (defaults to the pod's category style).
+   */
+  schedulePodPromo: PodPromo;
   seedSuperAdmin: SeedAdminResult;
   /** Send a WhatsApp template campaign message through AiSensy. */
   sendAisensyCampaign: AisensySendResult;
@@ -17332,6 +17416,8 @@ export type Mutation = {
   updateGigJob: GigJob;
   updateGraphqlMonitorSettings: GraphqlMonitorSettings;
   updateGrievanceStatus: GrievanceTicket;
+  /** Save a host's banner kit: the host themself, or a Hosts console editor. */
+  updateHostBannerKit: Host;
   updateHostLead: HostLead;
   updateIgLeadSettings: IgLeadSettings;
   updateInterview: Interview;
@@ -17378,6 +17464,8 @@ export type Mutation = {
   updatePodExpense: PodExpense;
   updatePodIdea: PodIdea;
   updatePodPlan: PodPlan;
+  /** Save the pod promotion settings (managers). */
+  updatePodPromoSettings: PodPromoSettings;
   /** Replace the global Pod Shop slider media (managed from the products portal). */
   updatePodShopSlider: Array<PodShopSliderMedia>;
   updatePolicy: Policy;
@@ -17425,6 +17513,8 @@ export type Mutation = {
   updateUnitTestSettings: UnitTestSettings;
   updateUploadSettings: UploadSetting;
   updateUser: User;
+  /** Save a venue's banner kit: its owner, or a Venues console editor. */
+  updateVenueBannerKit: Venue;
   /** Venue owner / venues console: edit a food coupon. */
   updateVenueFoodCoupon: VenueFoodCoupon;
   updateVenueLead: VenueLead;
@@ -18167,6 +18257,11 @@ export type MutationCancelPodPartnerRequestArgs = {
 };
 
 
+export type MutationCancelPodPromoArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationCancelVenueFoodOrderArgs = {
   order_id: Scalars['ID']['input'];
   reason: Scalars['String']['input'];
@@ -18709,6 +18804,11 @@ export type MutationCreatePodIdeaArgs = {
 
 export type MutationCreatePodPlanArgs = {
   input: PodPlanInput;
+};
+
+
+export type MutationCreatePodPromoArgs = {
+  pod_id: Scalars['ID']['input'];
 };
 
 
@@ -19859,6 +19959,13 @@ export type MutationGeneratePhysicalGiftCardsArgs = {
 };
 
 
+export type MutationGeneratePodBannersArgs = {
+  pod_id: Scalars['ID']['input'];
+  size?: InputMaybe<PodPromoBannerStyle>;
+  style?: InputMaybe<PodBannerStyle>;
+};
+
+
 export type MutationGenerateReelIdeasArgs = {
   brief: Scalars['String']['input'];
   count?: InputMaybe<Scalars['Int']['input']>;
@@ -20269,6 +20376,13 @@ export type MutationPlaceVenueFoodOrderArgs = {
 };
 
 
+export type MutationPreviewPodPromoArgs = {
+  pod_id: Scalars['ID']['input'];
+  size?: InputMaybe<PodPromoBannerStyle>;
+  style?: InputMaybe<PodBannerStyle>;
+};
+
+
 export type MutationProcessBackoutRefundArgs = {
   id: Scalars['ID']['input'];
   part?: InputMaybe<BackoutRefundPart>;
@@ -20516,6 +20630,20 @@ export type MutationRefundPaymentArgs = {
 
 export type MutationRefundPodShopReturnArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type MutationRegeneratePodBannerSlideArgs = {
+  kind: PodBannerSlideKind;
+  pod_id: Scalars['ID']['input'];
+  size?: InputMaybe<PodPromoBannerStyle>;
+  style?: InputMaybe<PodBannerStyle>;
+};
+
+
+export type MutationRegeneratePodPromoBannerArgs = {
+  id: Scalars['ID']['input'];
+  style?: InputMaybe<PodBannerStyle>;
 };
 
 
@@ -21338,6 +21466,15 @@ export type MutationSaveTeamStructureArgs = {
 
 export type MutationSaveWebsiteEarnSectionArgs = {
   input: WebsiteEarnSectionInput;
+};
+
+
+export type MutationSchedulePodPromoArgs = {
+  account_ids?: InputMaybe<Array<Scalars['ID']['input']>>;
+  at?: InputMaybe<Scalars['String']['input']>;
+  collaborators?: InputMaybe<Array<Scalars['String']['input']>>;
+  pod_id: Scalars['ID']['input'];
+  style?: InputMaybe<PodBannerStyle>;
 };
 
 
@@ -23290,6 +23427,12 @@ export type MutationUpdateGrievanceStatusArgs = {
 };
 
 
+export type MutationUpdateHostBannerKitArgs = {
+  host_id: Scalars['ID']['input'];
+  input: BannerKitInput;
+};
+
+
 export type MutationUpdateHostLeadArgs = {
   id: Scalars['ID']['input'];
   input: HostLeadInput;
@@ -23493,6 +23636,11 @@ export type MutationUpdatePodPlanArgs = {
 };
 
 
+export type MutationUpdatePodPromoSettingsArgs = {
+  input: PodPromoSettingsInput;
+};
+
+
 export type MutationUpdatePodShopSliderArgs = {
   input: Array<PodShopSliderMediaInput>;
 };
@@ -23663,6 +23811,12 @@ export type MutationUpdateUploadSettingsArgs = {
 export type MutationUpdateUserArgs = {
   input: UpdateUserInput;
   user_id: Scalars['ID']['input'];
+};
+
+
+export type MutationUpdateVenueBannerKitArgs = {
+  input: BannerKitInput;
+  venue_id: Scalars['ID']['input'];
 };
 
 
@@ -26572,6 +26726,54 @@ export type PodAuditSource =
   | 'SYSTEM'
   | 'VENUE_OWNER';
 
+/** A carousel made for one pod: its slides in posting order. */
+export type PodBannerSet = {
+  __typename?: 'PodBannerSet';
+  /** True when Claude wrote the slide copy; false for the built-in template. */
+  ai_copy: Scalars['Boolean']['output'];
+  pod_id: Scalars['ID']['output'];
+  /** The POD_PROMO marketing run that recorded the generation, a step per slide. */
+  run_id: Scalars['String']['output'];
+  size: PodPromoBannerStyle;
+  slides: Array<PodBannerSlide>;
+  style: PodBannerStyle;
+};
+
+export type PodBannerSlide = {
+  __typename?: 'PodBannerSlide';
+  kind: PodBannerSlideKind;
+  /** The rendered JPEG on the CDN. */
+  url: Scalars['String']['output'];
+};
+
+/**
+ * One slide of the carousel, in posting order. COVER: title, date, time,
+ * place, price and a Book now pill. DETAILS: what the pod is and what is
+ * included. HOST: the host's photo, name and line (skipped without host data).
+ * VENUE: the venue's photo, name and address (skipped without venue data).
+ * BOOK: the fee, the tracking link and its QR code.
+ */
+export type PodBannerSlideKind =
+  | 'BOOK'
+  | 'COVER'
+  | 'DETAILS'
+  | 'HOST'
+  | 'VENUE';
+
+/**
+ * The look of a pod's banner carousel. FESTIVE_BOLD: bright red and yellow,
+ * chunky display type. ELEGANT_SERIF: cream background, maroon serif.
+ * SPORT_NIGHT: dark maroon, condensed type over a darkened photo.
+ * PLAYFUL_PASTEL: pink, rounded type. CALM_WELLNESS: warm photo under a dark
+ * wash, light serif. Picked from the pod's category when not given.
+ */
+export type PodBannerStyle =
+  | 'CALM_WELLNESS'
+  | 'ELEGANT_SERIF'
+  | 'FESTIVE_BOLD'
+  | 'PLAYFUL_PASTEL'
+  | 'SPORT_NIGHT';
+
 /** A pod the caller is already JOINED on whose time overlaps a pod they are about to book. */
 export type PodBookingClash = {
   __typename?: 'PodBookingClash';
@@ -28217,6 +28419,222 @@ export type PodProductRequest = {
 export type PodProductRequestInput = {
   product_id: Scalars['ID']['input'];
   quantity: Scalars['Int']['input'];
+};
+
+/** One pod promotion: its banner, caption, tracking link, scheduled post and figures. */
+export type PodPromo = {
+  __typename?: 'PodPromo';
+  /** True when Claude wrote the caption; false for the built-in template. */
+  ai_caption: Scalars['Boolean']['output'];
+  banner_style: PodPromoBannerStyle;
+  /** The cover slide, for thumbnails. */
+  banner_url: Scalars['String']['output'];
+  caption: Scalars['String']['output'];
+  city_id?: Maybe<Scalars['ID']['output']>;
+  city_name: Scalars['String']['output'];
+  club_id?: Maybe<Scalars['ID']['output']>;
+  club_name: Scalars['String']['output'];
+  /** Instagram usernames invited as collaborators on the post (venue and host, when they opted in). */
+  collaborators: Array<Scalars['String']['output']>;
+  created_at?: Maybe<Scalars['String']['output']>;
+  error: Scalars['String']['output'];
+  figures: PodPromoFigures;
+  hashtags: Array<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  /** The first network link of the published post. */
+  permalink: Scalars['String']['output'];
+  /** The pod document id. */
+  pod_id: Scalars['ID']['output'];
+  /** When the pod starts, ISO 8601. */
+  pod_start: Scalars['String']['output'];
+  pod_title: Scalars['String']['output'];
+  /** The pod page the tracking link sends people to. */
+  pod_url: Scalars['String']['output'];
+  /** The post's own status: DRAFT, PENDING_APPROVAL, SCHEDULED, PUBLISHING, PUBLISHED, PARTIAL or FAILED. */
+  post_status: Scalars['String']['output'];
+  published_at?: Maybe<Scalars['String']['output']>;
+  /** The marketing run that made it. */
+  run_id: Scalars['String']['output'];
+  scheduled_at?: Maybe<Scalars['String']['output']>;
+  /** The post in Publishing (Calendar, Queue, Approvals). */
+  scheduled_post_id?: Maybe<Scalars['ID']['output']>;
+  short_code: Scalars['String']['output'];
+  short_link_id?: Maybe<Scalars['ID']['output']>;
+  /** Every slide of the carousel in posting order. */
+  slides: Array<PodBannerSlide>;
+  source: PodPromoSource;
+  status: PodPromoStatus;
+  style: PodBannerStyle;
+  /** The short link in the post, e.g. https://duncit.com/aB3xY9Zq. */
+  tracking_url: Scalars['String']['output'];
+  updated_at?: Maybe<Scalars['String']['output']>;
+  utm_campaign: Scalars['String']['output'];
+};
+
+/** The banner shape: PORTRAIT is 1080x1350 (Instagram feed portrait), SQUARE is 1080x1080. */
+export type PodPromoBannerStyle =
+  | 'PORTRAIT'
+  | 'SQUARE';
+
+/** An upcoming pod that can be promoted, for the pod picker. */
+export type PodPromoCandidate = {
+  __typename?: 'PodPromoCandidate';
+  club_name: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  /** The status of the promotion this pod already has, if any. */
+  promo_status?: Maybe<PodPromoStatus>;
+  starts_at: Scalars['String']['output'];
+  title: Scalars['String']['output'];
+};
+
+/**
+ * What one promotion brought in, read from its tracking link. clicks counts
+ * every visit, unique_visitors distinct visitors. signups, pod_views and
+ * checkouts are the journey steps those visitors reached. bookings are
+ * visitors who joined this pod after clicking (paid and free); paid_bookings
+ * the ones that paid. payments and revenue (INR) are the purchases credited
+ * to the link by last-touch attribution within 30 days. likes, comments and
+ * engagement come from the published post once the network is synced.
+ */
+export type PodPromoFigures = {
+  __typename?: 'PodPromoFigures';
+  bookings: Scalars['Int']['output'];
+  checkouts: Scalars['Int']['output'];
+  clicks: Scalars['Int']['output'];
+  comments: Scalars['Int']['output'];
+  engagement: Scalars['Int']['output'];
+  likes: Scalars['Int']['output'];
+  paid_bookings: Scalars['Int']['output'];
+  payments: Scalars['Int']['output'];
+  pod_views: Scalars['Int']['output'];
+  revenue: Scalars['Float']['output'];
+  signups: Scalars['Int']['output'];
+  unique_visitors: Scalars['Int']['output'];
+  /** When these figures were last read. */
+  updated_at?: Maybe<Scalars['String']['output']>;
+};
+
+/** A banner and caption made for a pod without scheduling anything. */
+export type PodPromoPreview = {
+  __typename?: 'PodPromoPreview';
+  ai_caption: Scalars['Boolean']['output'];
+  banner_style: PodPromoBannerStyle;
+  banner_url: Scalars['String']['output'];
+  caption: Scalars['String']['output'];
+  collaborators: Array<Scalars['String']['output']>;
+  hashtags: Array<Scalars['String']['output']>;
+  /** Why the planner would not promote this pod on its own; empty when it would. */
+  ineligible_reason: Scalars['String']['output'];
+  pod_id: Scalars['ID']['output'];
+  pod_title: Scalars['String']['output'];
+  /** When the post would go out with the current settings; null when the pod is too close to promote. */
+  scheduled_at?: Maybe<Scalars['String']['output']>;
+  slides: Array<PodBannerSlide>;
+  style: PodBannerStyle;
+};
+
+/** Which pods are promoted by price: every pod, only paid pods, or only free pods. */
+export type PodPromoPriceFilter =
+  | 'ALL'
+  | 'FREE'
+  | 'PAID';
+
+/**
+ * The automatic pod promotion settings (one document). Every upcoming,
+ * published, public pod that passes the filters gets a banner made from its
+ * own data and a post scheduled days_before days ahead of its start, at
+ * post_hour in the admin time zone, with a tracking short link to its page.
+ */
+export type PodPromoSettings = {
+  __typename?: 'PodPromoSettings';
+  /** The connected social accounts the post goes to. */
+  account_ids: Array<Scalars['ID']['output']>;
+  banner_style: PodPromoBannerStyle;
+  /** Only pods whose club is in these categories (main or sub); empty means every category. */
+  category_ids: Array<Scalars['ID']['output']>;
+  /** Only pods in these cities (Location ids); empty means every city. */
+  city_ids: Array<Scalars['ID']['output']>;
+  /** Only pods of these clubs; empty means every club. */
+  club_ids: Array<Scalars['ID']['output']>;
+  /** The call to action on the banner; empty uses the default wording. */
+  cta_text: Scalars['String']['output'];
+  /** Days before the pod starts that the post goes out (1 to 30). */
+  days_before: Scalars['Int']['output'];
+  enabled: Scalars['Boolean']['output'];
+  /** A pod starting sooner than this many days from now is never promoted. */
+  min_days_until_start: Scalars['Int']['output'];
+  /** When true, each post waits for a manager on Approvals before it goes out. */
+  needs_approval: Scalars['Boolean']['output'];
+  /** Hour of the day the post goes out, 0 to 23, in time_zone. */
+  post_hour: Scalars['Int']['output'];
+  price_filter: PodPromoPriceFilter;
+  /** The admin time zone post_hour is read in (Admin > Settings). */
+  time_zone: Scalars['String']['output'];
+  updated_at?: Maybe<Scalars['String']['output']>;
+  /** Who last saved the settings; scheduled posts are filed under this person. */
+  updated_by_name: Scalars['String']['output'];
+  /** utm_campaign of every tracking link is this prefix, a dash and the pod short id. */
+  utm_prefix: Scalars['String']['output'];
+};
+
+export type PodPromoSettingsInput = {
+  account_ids: Array<Scalars['ID']['input']>;
+  banner_style: PodPromoBannerStyle;
+  category_ids: Array<Scalars['ID']['input']>;
+  city_ids: Array<Scalars['ID']['input']>;
+  club_ids: Array<Scalars['ID']['input']>;
+  cta_text: Scalars['String']['input'];
+  days_before: Scalars['Int']['input'];
+  enabled: Scalars['Boolean']['input'];
+  min_days_until_start: Scalars['Int']['input'];
+  needs_approval: Scalars['Boolean']['input'];
+  post_hour: Scalars['Int']['input'];
+  price_filter: PodPromoPriceFilter;
+  utm_prefix: Scalars['String']['input'];
+};
+
+/** AUTO when the planner made it; MANUAL when a person pressed Promote now. */
+export type PodPromoSource =
+  | 'AUTO'
+  | 'MANUAL';
+
+/**
+ * Where one pod promotion stands. PLANNED: claimed, nothing made yet.
+ * BANNER_READY: the banner and tracking link exist, the post does not.
+ * SCHEDULED: the post is written and waits (for its time, or for a manager on
+ * Approvals). PUBLISHED: it went out. SKIPPED: the pod was too close to its
+ * start to promote. FAILED: a step failed; error says which, and the planner
+ * tries again a few times. CANCELLED: the pod was cancelled or unlisted, or a
+ * person cancelled the promotion; its waiting post was removed.
+ */
+export type PodPromoStatus =
+  | 'BANNER_READY'
+  | 'CANCELLED'
+  | 'FAILED'
+  | 'PLANNED'
+  | 'PUBLISHED'
+  | 'SCHEDULED'
+  | 'SKIPPED';
+
+/** Totals across every promotion. */
+export type PodPromoSummary = {
+  __typename?: 'PodPromoSummary';
+  bookings: Scalars['Int']['output'];
+  clicks: Scalars['Int']['output'];
+  failed: Scalars['Int']['output'];
+  payments: Scalars['Int']['output'];
+  planned: Scalars['Int']['output'];
+  published: Scalars['Int']['output'];
+  revenue: Scalars['Float']['output'];
+  scheduled: Scalars['Int']['output'];
+};
+
+export type PodPromoTablePage = {
+  __typename?: 'PodPromoTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<PodPromo>;
+  total: Scalars['Int']['output'];
 };
 
 /** What a guest can rent for one pod. */
@@ -31528,6 +31946,19 @@ export type Query = {
   podPaymentReleasesTable: PodPaymentReleaseTablePage;
   podPlans: Array<PodPlan>;
   podPlansTable: PodPlanTablePage;
+  /** One promotion, with its figures read fresh from the tracking link. */
+  podPromo: PodPromo;
+  /** Upcoming, published, public pods to pick from, soonest first; search matches the title. */
+  podPromoCandidates: Array<PodPromoCandidate>;
+  /** The automatic pod promotion settings. */
+  podPromoSettings: PodPromoSettings;
+  /** Totals across every promotion. */
+  podPromoSummary: PodPromoSummary;
+  /**
+   * Every pod promotion, newest pod first. Filters: status, source, club_id,
+   * city_id, scheduled_at, pod_start; search matches the pod title and club.
+   */
+  podPromosTable: PodPromoTablePage;
   /** Anyone: what the pod's venue rents out, and how much is left for this pod. */
   podRentals: PodRentalCatalogue;
   /** What revoking this pod's cancellation would cost, and whether it is allowed. */
@@ -35112,6 +35543,21 @@ export type QueryPodPaymentReleasesTableArgs = {
 
 
 export type QueryPodPlansTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryPodPromoArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryPodPromoCandidatesArgs = {
+  search?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type QueryPodPromosTableArgs = {
   query?: InputMaybe<TableQueryInput>;
 };
 
@@ -40032,6 +40478,8 @@ export type SocialScheduledPost = {
   __typename?: 'SocialScheduledPost';
   /** The marketing run that waits for (or recorded) the decision. */
   approval_run_id?: Maybe<Scalars['String']['output']>;
+  /** Instagram usernames invited as collaborators; the other networks ignore them. */
+  collaborators: Array<Scalars['String']['output']>;
   created_at?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   idea_id?: Maybe<Scalars['String']['output']>;
@@ -40042,6 +40490,8 @@ export type SocialScheduledPost = {
   media_url?: Maybe<Scalars['String']['output']>;
   /** A reviewer must say yes before it goes out. */
   needs_approval: Scalars['Boolean']['output'];
+  /** The pod promotion this post was made for; empty for any other post. */
+  pod_id?: Maybe<Scalars['String']['output']>;
   published_at?: Maybe<Scalars['String']['output']>;
   /** The Reel Studio project the posted reel was cut in; empty for any other post. */
   reel_project_id?: Maybe<Scalars['String']['output']>;
@@ -40056,6 +40506,8 @@ export type SocialScheduledPost = {
 
 export type SocialScheduledPostInput = {
   account_ids: Array<Scalars['ID']['input']>;
+  /** Instagram usernames to invite as collaborators, at most 3 (the Instagram API limit); only Instagram uses them. */
+  collaborators?: InputMaybe<Array<Scalars['String']['input']>>;
   /** The idea this post was written from; it is marked USED. */
   idea_id?: InputMaybe<Scalars['ID']['input']>;
   /** Every piece of media in order; when given it replaces media_url/media_type. */
@@ -40066,6 +40518,8 @@ export type SocialScheduledPostInput = {
   mode: SocialPublishMode;
   /** With SCHEDULE or NOW, parks the post as PENDING_APPROVAL and opens an approval run. */
   needs_approval?: InputMaybe<Scalars['Boolean']['input']>;
+  /** The pod this post promotes (Publishing › Pod promotions). */
+  pod_id?: InputMaybe<Scalars['ID']['input']>;
   /** The Reel Studio project this reel was cut in, so the studio can read the post's numbers back. */
   reel_project_id?: InputMaybe<Scalars['ID']['input']>;
   /** Required for SCHEDULE; optional on a DRAFT (it then shows on the calendar). */
@@ -47126,6 +47580,7 @@ export type Venue = {
   amenities: Array<Scalars['String']['output']>;
   approved_at?: Maybe<Scalars['String']['output']>;
   bank_account: BankAccountVerification;
+  banner_kit: BannerKit;
   capacity: Scalars['Int']['output'];
   capacity_items: Array<VenueCapacityItem>;
   city: Scalars['String']['output'];

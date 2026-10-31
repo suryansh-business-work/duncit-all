@@ -152,6 +152,8 @@ export const MODULE_CATEGORY: Record<ModuleName, McpCategoryKey | null> = {
   venueChatTypeDefs: 'venues',
 
   hostTypeDefs: 'hosts',
+  // A venue's and a host's banner kit — edited with the record it sits on.
+  bannerKitTypeDefs: 'venues',
   hostRequestTypeDefs: 'hosts',
 
   financeTypeDefs: 'finance',
@@ -283,6 +285,7 @@ export const MODULE_CATEGORY: Record<ModuleName, McpCategoryKey | null> = {
   // Outreach › Sequences: multi-step outreach to leads, stopped by a reply or an opt-out.
   outreachTypeDefs: 'marketing',
   occasionTypeDefs: 'marketing',
+  podPromoTypeDefs: 'marketing',
   marketingRunTypeDefs: 'marketing',
   marketingAnalyticsTypeDefs: 'marketing',
   // Automation › Agents: the code-defined agents, their schedules and Run now.

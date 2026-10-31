@@ -26,6 +26,7 @@ export const marketingRunTypeDefs = gql`
     AGENT
     ORCHESTRATOR
     CAMPAIGN
+    POD_PROMO
     OTHER
   }
 

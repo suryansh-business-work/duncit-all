@@ -38,6 +38,18 @@ const bankFields = (prefix: string): DiffField[] => [
   { path: `${prefix}.upi_id`, label: 'UPI ID' },
 ];
 
+/** The banner kit pod banners are made from — the same eight fields on a venue and on a host. */
+const bannerKitFields: DiffField[] = [
+  { path: 'banner_kit.logo_url', label: 'Banner Kit Logo' },
+  { path: 'banner_kit.instagram_handle', label: 'Banner Kit Instagram Handle' },
+  { path: 'banner_kit.collab_opt_in', label: 'Banner Kit Collab Posts Allowed' },
+  { path: 'banner_kit.photos', label: 'Banner Kit Photos', ordered: true },
+  { path: 'banner_kit.event_photos', label: 'Banner Kit Event Photos', ordered: true },
+  { path: 'banner_kit.tagline', label: 'Banner Kit Tagline' },
+  { path: 'banner_kit.bio', label: 'Banner Kit Bio' },
+  { path: 'banner_kit.brand_color', label: 'Banner Kit Brand Colour' },
+];
+
 /** Review trail — every application-shaped entity carries the same four. */
 const reviewFields: DiffField[] = [
   { path: 'reviewer_notes', label: 'Reviewer Notes' },
@@ -86,6 +98,7 @@ const VENUE_FIELDS: readonly DiffField[] = [
   { path: 'cover_image_url', label: 'Cover Image' },
   { path: 'gallery', label: 'Gallery', ordered: true },
   { path: 'videos', label: 'Videos', ordered: true },
+  ...bannerKitFields,
 
   // Where it is
   { path: 'location_id', label: 'Location' },
@@ -158,6 +171,7 @@ const HOST_FIELDS: readonly DiffField[] = [
   ...bankFields('bank_account'),
   { path: 'host_categories', label: 'Operating Categories', ordered: true },
   { path: 'tags', label: 'Tags' },
+  ...bannerKitFields,
   { path: 'step_completed', label: 'Steps Completed' },
   { path: 'status', label: 'Status' },
   { path: 'is_active', label: 'Active' },

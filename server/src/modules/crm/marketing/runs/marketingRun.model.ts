@@ -36,6 +36,7 @@ export const RUN_WORKFLOWS = [
   'AGENT',
   'ORCHESTRATOR',
   'CAMPAIGN',
+  'POD_PROMO',
   'OTHER',
 ] as const;
 export type MarketingRunWorkflow = (typeof RUN_WORKFLOWS)[number];

@@ -28,6 +28,7 @@ import { startGraphqlMonitorFlusher } from '@modules/platform/graphqlMonitor/gra
 import { startMailAutomationScheduler } from '@modules/platform/mailAutomation/mailAutomation.poller';
 import { startSocialAccountsScheduler } from '@modules/crm/marketing/social/social.scheduler';
 import { startMarketingAgentScheduler } from '@modules/crm/marketing/agents/agent.scheduler';
+import { startPodPromoScheduler } from '@modules/crm/marketing/podPromo/podPromo.planner';
 import { startShortLinkRetentionScheduler } from '@modules/crm/marketing/shortLink.retention';
 import { startAnalyticsRetentionScheduler } from '@modules/platform/analytics/analytics.retention';
 import { startContactInviteRetentionScheduler } from '@modules/access/contacts/contacts.retention';
@@ -708,6 +709,11 @@ async function bootstrap() {
   // Marketing agents: every fifteen minutes, run the enabled agents whose
   // time has come as one orchestrator run with a child run per agent.
   startMarketingAgentScheduler();
+
+  // Pod promotions: every fifteen minutes, make the carousel, tracking link and
+  // scheduled post for each upcoming pod the settings select, and keep waiting
+  // posts in step with their pods.
+  startPodPromoScheduler();
 
   // Short links: delete every recorded click past the retention window an
   // admin set in Marketing > External Links > Privacy. A stated window that

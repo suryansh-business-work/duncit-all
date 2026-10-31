@@ -2138,6 +2138,75 @@ export const STAFF_GAP_FLOWS: readonly CatalogueFlow[] = [
     ],
   },
   {
+    name: 'Marketing: Pod promotions',
+    description:
+      'marketing /publish/pod-promos: for every upcoming, published, public pod that passes the settings filters, the planner (every 15 minutes, one POD_PROMO run per pass with a step per pod) makes a tracking short link to the pod page, renders a banner from the pod (PORTRAIT 1080x1350 or SQUARE 1080x1080), writes a caption and schedules a post days_before days ahead of the start at post_hour in the admin time zone; a cancelled, hidden or rescheduled pod cancels or moves its waiting post. Read SUPER_ADMIN, CITY_ADMIN, MARKETING_MANAGER, MARKETING_EDITOR, MARKETING_READER; settings, Promote now, Make a new banner and Cancel SUPER_ADMIN and MARKETING_MANAGER; editors can preview (podPromo.resolver.ts).',
+    sub_flows: [
+      {
+        name: 'Settings, preview and promote now',
+        description:
+          'updatePodPromoSettings saves the schedule, accounts, approval, filters, banner shape, call to action and campaign prefix; previewPodPromo renders a banner and caption without scheduling; createPodPromo promotes one pod at once.',
+        steps: [
+          [
+            'As a MARKETING_EDITOR open /publish/pod-promos',
+            'The settings show read-only with "Only marketing managers can change these settings."; no Save settings, Promote now, Make a new banner or Cancel promotion',
+          ],
+          [
+            'As a manager switch Promote pods automatically on with no account picked',
+            'Error "Pick at least one account before switching promotions on." under Post to and Save settings stays disabled',
+          ],
+          [
+            'Set Days before the pod to 31, or a campaign prefix of "Pod Promo"',
+            'Errors "Enter a number from 1 to 30." and "Use lowercase letters, digits and single dashes."',
+          ],
+          [
+            'Pick an Instagram account, 3 days, 18:00 and Save settings',
+            'Toast "Promotion settings saved" and "Scheduled posts are filed under <name>, who last saved these settings."',
+          ],
+          [
+            'Press Preview for a pod and pick an upcoming pod',
+            'The banner shows the pod photo, title, date and time in the admin format, place and price (or Free) with the call to action; the caption and "With the current settings this posts <when>." show',
+          ],
+          [
+            'Press Promote now',
+            'Toast "<title> is being promoted"; the pod appears in the table as Scheduled with its banner thumbnail; the post sits on /publish/calendar and, with approval on, on /approvals',
+          ],
+          [
+            'Pick the same pod again in the preview',
+            'Its row shows Scheduled and the button reads "Already promoted" (disabled)',
+          ],
+        ],
+      },
+      {
+        name: 'Tracking, re-banner and cancel',
+        description:
+          'Each promotion carries a short link (utm_campaign <prefix>-<pod short id>); podPromo(id) reads clicks, unique visitors, signups, bookings of this pod after a click, payments and revenue attributed to the link, and the post likes and comments once synced.',
+        steps: [
+          [
+            'Open a promotion row',
+            'The drawer shows the banner, the caption, the tracking link with Copy link (Copied once copied), the funnel Clicked > Signed up > Booked this pod > Paid with revenue, and links to the calendar and the pod page',
+          ],
+          [
+            'Follow the tracking link, sign up and book the pod',
+            'Reopening the drawer counts the click, the signup and the booking; a paid booking adds a payment and its amount to revenue',
+          ],
+          [
+            'Press Make a new banner',
+            'Toast "A new banner is on the post" and the banner refreshes',
+          ],
+          [
+            'Press Cancel promotion and confirm',
+            'Toast "Promotion cancelled"; the row shows Cancelled and the waiting post is gone from the calendar',
+          ],
+          [
+            'Cancel the pod itself, or move its start, before the post goes out',
+            'On the next pass the promotion turns Cancelled (post removed), or its post moves to the new days-before slot with a new banner',
+          ],
+        ],
+      },
+    ],
+  },
+  {
     name: 'Marketing: All leads',
     description:
       'marketing /leads over the one lead pipeline (marketing_leads): every lead from every source — the Instagram search (fed as the last step of its LEAD_SEARCH run and by the boot migration migrateIgLeadsToPipeline), a lead typed in, a CSV import (a LEAD_IMPORT run) — deduplicated on write by phone (last ten digits), email, website host or Instagram handle, worked through stage, owner and notes, and promoted one way into the CRM through its own create functions. Read/write SUPER_ADMIN, CITY_ADMIN, MARKETING_MANAGER, MARKETING_EDITOR; promote SUPER_ADMIN and MARKETING_MANAGER; the owner picker reads audienceListOwners, so it shows for SUPER_ADMIN, CITY_ADMIN and MARKETING_MANAGER only (marketingLead.resolver.ts).',

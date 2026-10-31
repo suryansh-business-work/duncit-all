@@ -47,7 +47,7 @@ describe('Native · 02 sign in', () => {
     expectLogin();
     cy.byTestId('continue-with-password').should('have.text', 'Continue with Password');
     cy.byTestId('continue-with-otp').should('have.text', 'Continue with OTP');
-    cy.byTestId('go-signup').should('have.text', 'Create one');
+    cy.byTestId('go-signup').should('have.text', 'Create an account');
   });
 
   it('SI-02 an empty Log me in asks for the email and the password', () => {

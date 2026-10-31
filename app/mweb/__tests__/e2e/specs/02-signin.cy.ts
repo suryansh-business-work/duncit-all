@@ -50,7 +50,7 @@ describe('02 Sign in', () => {
       cy.byTestId('login-screen').should('exist');
       cy.byTestId('continue-with-password').should('contain.text', 'Continue with Password');
       cy.byTestId('continue-with-otp').should('contain.text', 'Continue with OTP');
-      cy.byTestId('go-signup').should('have.text', 'Create one').and('have.attr', 'href', '/register');
+      cy.byTestId('go-signup').should('have.text', 'Create an account').and('have.attr', 'href', '/register');
     });
 
     it('SI-02 an empty Log me in asks for the email and the password', () => {

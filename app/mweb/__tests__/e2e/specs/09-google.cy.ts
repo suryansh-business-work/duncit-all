@@ -60,7 +60,7 @@ describe('09 Google sign-up and sign-in', () => {
     mintGoogleCredential(googleEmail).then((credential) => {
       standInForGoogle();
       openSignedOut('/login');
-      cy.byTestId('go-signup').should('have.text', 'Create one').click();
+      cy.byTestId('go-signup').should('have.text', 'Create an account').click();
       cy.location('pathname').should('eq', '/register');
       onSignupStep(1);
       handGoogleCredential(credential);

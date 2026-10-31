@@ -837,6 +837,8 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       newsletterSubmission: 'Newsletter Submission',
       newsroom: 'Newsroom',
       notifications: 'Notifications',
+      // Marketing > Occasions — the festive looks every Duncit app wears.
+      occasions: 'Occasions',
       onboardedClubAdmins: 'Onboarded Club Admins',
       onboardedECommerceBrands: 'Onboarded E-Commerce Brands',
       onboardedHosts: 'Onboarded Hosts',

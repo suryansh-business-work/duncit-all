@@ -54,6 +54,8 @@ COPY packages/user-context/package.json ./packages/user-context/
 COPY packages/logs/package.json ./packages/logs/
 COPY packages/shell/package.json ./packages/shell/
 COPY packages/fallback-icons/package.json ./packages/fallback-icons/
+COPY packages/regex/package.json ./packages/regex/
+COPY packages/auth-tokens/package.json ./packages/auth-tokens/
 COPY packages/geo/package.json ./packages/geo/
 COPY packages/breadcrumb/package.json ./packages/breadcrumb/
 COPY packages/theme/package.json ./packages/theme/

@@ -47,6 +47,10 @@ export const appConfig = {
     // it sits at the front of the apps' status rail until it expires or is
     // switched off, so nothing about it is a dispatch.
     { label: 'Status', labelKey: 'shell.nav.status', to: '/status', icon: 'newspaper' },
+    // Its own section: a festive look is worn by every app at once — the
+    // looks, what is live, the dates that switch them, and the festive icons
+    // and store looks — so nothing about it is a campaign or a send.
+    { label: 'Occasions', labelKey: 'shell.nav.occasions', to: '/occasions', icon: 'celebration' },
     // Its own section, not a child of Campaigns: a short link is just as often
     // made for an ad, a poster or a partner as for a campaign.
     { label: 'Short Links', labelKey: 'shell.nav.shortLinks', to: '/short-links', icon: 'link' },

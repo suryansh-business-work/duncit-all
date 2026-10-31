@@ -857,6 +857,13 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       // What is made before it is published — Reel Studio lives here.
       create: 'Create',
       accounts: 'Accounts',
+      inbox: 'Inbox',
+      // Marketing › Analytics, the pages built on the window aggregates.
+      analyticsOverview: 'Overview',
+      analyticsSocial: 'Social',
+      analyticsContent: 'Content & Reels',
+      analyticsFunnel: 'Leads & Funnel',
+      analyticsAutomation: 'Automation',
       // Members' phone-book syncs and the invites sent from them — counts only.
       memberContacts: 'Member contacts',
       onboardedClubAdmins: 'Onboarded Club Admins',
@@ -934,6 +941,8 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       smartIncentive: 'Smart Incentive',
       allLeads: 'All leads',
       instagramLeads: 'Instagram Leads',
+      outreach: 'Outreach',
+      sequences: 'Sequences',
       somethingForYou: 'Something for you',
       sosAlerts: 'SOS Alerts',
       startupDashboard: 'Startup Dashboard',

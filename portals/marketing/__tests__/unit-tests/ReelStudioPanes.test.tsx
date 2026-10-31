@@ -598,7 +598,7 @@ describe('StudioToolbar', () => {
   it('summarises the reel, says how the checks stand and where the cover is, and opens every tool', () => {
     const handlers = tools();
     const reel = project({ duration_ms: 84_000, cover_at_ms: 3000, spec: specOf([scene({}), scene({ id: 's2' })]) });
-    const { rerender } = renderWithProviders(
+    const { unmount } = renderWithProviders(
       <StudioToolbar project={reel} checks={[{ name: 'length', pass: true, detail: '' }, { name: 'sound', pass: false, detail: 'Silent' }]} settingCover={false} {...handlers} />
     );
     expect(screen.getByTestId('reel-studio-summary')).toHaveTextContent('1:24');
@@ -612,7 +612,9 @@ describe('StudioToolbar', () => {
     for (const kind of ['validate', 'variants', 'history', 'analytics']) fireEvent.click(screen.getByTestId(`reel-studio-${kind}`));
     expect(handlers.onTool.mock.calls.map(([kind]) => kind)).toEqual(['validate', 'variants', 'history', 'analytics']);
 
-    rerender(<StudioToolbar project={reel} checks={[{ name: 'length', pass: true, detail: '' }]} settingCover={false} {...handlers} />);
+    // rerender would drop the router the toolbar's links need, so the passing reel is drawn afresh.
+    unmount();
+    renderWithProviders(<StudioToolbar project={reel} checks={[{ name: 'length', pass: true, detail: '' }]} settingCover={false} {...handlers} />);
     expect(screen.getByTestId('reel-checks-chip')).toHaveTextContent('All checks pass');
   });
 });

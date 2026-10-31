@@ -15,10 +15,10 @@ import {
   updateMarketingAgentMock,
 } from '../mocks';
 
-const userCtx = vi.hoisted(() => ({ roles: ['MARKETING_MANAGER'] as string[] }));
+const userCtx = vi.hoisted(() => ({ roles: ['MARKETING_MANAGER'] as string[], signedIn: true }));
 vi.mock('@duncit/user-context', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@duncit/user-context')>()),
-  useUserData: () => ({ user: { user_id: 'u1', roles: userCtx.roles } }),
+  useUserData: () => ({ user: userCtx.signedIn ? { user_id: 'u1', roles: userCtx.roles } : null }),
 }));
 const dialogsMock = vi.hoisted(() => ({ notify: vi.fn() }));
 vi.mock('@duncit/dialogs', async (importOriginal) => ({
@@ -38,6 +38,7 @@ const ALL = [makeAgent(), makeCommunityWatch(), makeAccountDoctor()];
 
 beforeEach(() => {
   userCtx.roles = ['MARKETING_MANAGER'];
+  userCtx.signedIn = true;
   localStorage.setItem(...TOUR_SEEN);
 });
 
@@ -83,7 +84,9 @@ describe('AgentsPage', () => {
     expect(screen.getByTestId('agents-none-enabled')).toHaveTextContent('No agent is switched on yet');
     expect(screen.queryByTestId('agents-read-only')).not.toBeInTheDocument();
     expect(screen.getAllByTestId('agent-run-now')).toHaveLength(3);
-    expect(screen.getAllByRole('checkbox', { name: /Switch .* on or off/ })).toHaveLength(3);
+    expect(screen.getAllByRole('switch', { name: /Switch .* on or off/ })).toHaveLength(3);
+    // The agent's name is filled into the label, not left as a placeholder.
+    expect(screen.getByRole('switch', { name: 'Switch Account doctor on or off' })).not.toBeChecked();
   });
 
   it('falls back to the server’s own words for an agent it has no copy for', async () => {
@@ -113,12 +116,20 @@ describe('AgentsPage', () => {
     userCtx.roles = ['MARKETING_EDITOR'];
     renderPage([marketingAgentsMock([makeAgent({ enabled: true }), makeAccountDoctor()])]);
     expect(await screen.findByTestId('agents-read-only')).toHaveTextContent('You can read the agents but not change or run them; ask a marketing manager.');
-    expect(screen.queryByRole('checkbox', { name: /Switch .* on or off/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('switch', { name: /Switch .* on or off/ })).not.toBeInTheDocument();
     expect(screen.getByTestId('agent-state-CONTENT_PLANNER')).toHaveTextContent('On');
     expect(screen.getByTestId('agent-state-ACCOUNT_DOCTOR')).toHaveTextContent('Off');
     expect(screen.queryByTestId('agent-run-now')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Save' })).not.toBeInTheDocument();
     expect(screen.getByLabelText(/^Brief/)).toBeDisabled();
+  });
+
+  it('treats a user who has not loaded yet as one who can only read', async () => {
+    userCtx.signedIn = false;
+    renderPage([marketingAgentsMock([makeAccountDoctor()])]);
+    expect(await screen.findByTestId('agents-read-only')).toBeInTheDocument();
+    expect(screen.queryByRole('switch')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('agent-run-now')).not.toBeInTheDocument();
   });
 
   it('switches an agent on, says so, and reads the list again', async () => {
@@ -129,20 +140,20 @@ describe('AgentsPage', () => {
       marketingAgentsMock([on]),
     ]);
     const toggle = await screen.findByTestId('agent-switch-ACCOUNT_DOCTOR');
-    expect(within(toggle).getByRole('checkbox')).not.toBeChecked();
+    expect(within(toggle).getByRole('switch')).not.toBeChecked();
     expect(screen.getByTestId('agents-none-enabled')).toBeInTheDocument();
-    fireEvent.click(within(toggle).getByRole('checkbox'));
+    fireEvent.click(within(toggle).getByRole('switch'));
     await waitFor(() => expect(dialogsMock.notify).toHaveBeenCalledWith('Agent saved.', 'success'));
-    await waitFor(() => expect(within(screen.getByTestId('agent-switch-ACCOUNT_DOCTOR')).getByRole('checkbox')).toBeChecked());
+    await waitFor(() => expect(within(screen.getByTestId('agent-switch-ACCOUNT_DOCTOR')).getByRole('switch')).toBeChecked());
     expect(screen.queryByTestId('agents-none-enabled')).not.toBeInTheDocument();
     expect(screen.getByTestId('agent-next-run')).toHaveTextContent('fmt:2026-11-03T01:30:00.000Z');
   });
 
   it('reports a save the server refused', async () => {
     renderPage([marketingAgentsMock([makeAccountDoctor()]), updateMarketingAgentErrorMock('ACCOUNT_DOCTOR', { enabled: true }, 'The schedule is not valid')]);
-    fireEvent.click(within(await screen.findByTestId('agent-switch-ACCOUNT_DOCTOR')).getByRole('checkbox'));
+    fireEvent.click(within(await screen.findByTestId('agent-switch-ACCOUNT_DOCTOR')).getByRole('switch'));
     await waitFor(() => expect(dialogsMock.notify).toHaveBeenCalledWith('The schedule is not valid', 'error'));
-    expect(within(screen.getByTestId('agent-switch-ACCOUNT_DOCTOR')).getByRole('checkbox')).not.toBeChecked();
+    expect(within(screen.getByTestId('agent-switch-ACCOUNT_DOCTOR')).getByRole('switch')).not.toBeChecked();
   });
 
   it('saves the form through the same mutation, schedule and params together for the planner', async () => {

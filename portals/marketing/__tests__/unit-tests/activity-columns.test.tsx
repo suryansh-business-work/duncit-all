@@ -152,6 +152,7 @@ describe('getRunColumns', () => {
       { value: 'SOCIAL_PUBLISH', label: 'Social post' },
       { value: 'SOCIAL_SYNC', label: 'Social sync' },
       { value: 'SOCIAL_HEALTH', label: 'Account health check' },
+      { value: 'INBOX_REPLY', label: 'Inbox reply' },
       { value: 'REEL', label: 'Reel' },
       { value: 'LEAD_SEARCH', label: 'Lead search' },
       { value: 'LEAD_IMPORT', label: 'Lead import' },

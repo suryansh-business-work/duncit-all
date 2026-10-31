@@ -93,6 +93,20 @@ describe('ReelScriptForm', () => {
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
+  it('says so when the writer led with a hook too long for the timeline, until a shorter one is picked', async () => {
+    const onSubmit = vi.fn();
+    renderWithProviders(<ReelScriptForm script={reelScript({ hooks: ['x'.repeat(221), 'Short and sharp'] })} submitting={false} onSubmit={onSubmit} />);
+    const hooks = screen.getByTestId('reel-script-hooks');
+    expect(hooks).toHaveTextContent('The first thing said or shown — what stops the scroll.');
+    fireEvent.submit(screen.getByTestId('reel-script-form'));
+    await waitFor(() => expect(hooks).toHaveTextContent('Write between 1 and 220 characters'));
+    expect(onSubmit).not.toHaveBeenCalled();
+
+    fireEvent.click(within(screen.getByTestId('reel-script-hook-2')).getByRole('radio'));
+    await waitFor(() => expect(hooks).toHaveTextContent('The first thing said or shown — what stops the scroll.'));
+    expect(hooks).not.toHaveTextContent('Write between 1 and 220 characters');
+  });
+
   it('converts between the script and the form both ways', () => {
     const form = scriptToForm(reelScript({ hooks: [] }));
     expect(form).toEqual({ hook: '', scenes: [{ text: 'Sundays start here', shot: 'Court at sunrise', duration_s: 3, asset_query: 'pickleball sunrise' }], cta: 'Book your spot' });
@@ -156,6 +170,14 @@ describe('ReelVariantsForm', () => {
     );
   });
 
+  it('has no Save: Enter in a field neither reloads the page nor hands a caption on', () => {
+    const onUse = vi.fn();
+    renderWithProviders(<ReelVariantsForm variants={[reelVariant()]} onUse={onUse} />);
+    // fireEvent answers false when the form cancelled the browser’s own submit.
+    expect(fireEvent.submit(screen.getByTestId('reel-variants-form'))).toBe(false);
+    expect(onUse).not.toHaveBeenCalled();
+  });
+
   it('refuses a title past the limit, and takes a fresh generation in', async () => {
     const onUse = vi.fn();
     const { rerender } = renderWithProviders(<ReelVariantsForm variants={[reelVariant()]} onUse={onUse} />);
@@ -213,8 +235,24 @@ describe('ReelSettingsForm', () => {
     type('reel-settings-primary-color', 'orange');
     await waitFor(() => expect(screen.getByTestId('reel-settings-primary-color')).toHaveAttribute('aria-invalid', 'true'));
     expect(onChange).not.toHaveBeenCalled();
+    // Nothing reaches the reel while one field is wrong, however good the rest is.
     type('reel-settings-voiceover-volume', '40');
-    await waitFor(() => expect(onChange).toHaveBeenLastCalledWith(expect.objectContaining({ voiceover_volume: 0.4 })));
+    await waitFor(() => expect(screen.getByTestId('reel-settings-voiceover-volume')).toHaveValue(40));
+    expect(onChange).not.toHaveBeenCalled();
+    type('reel-settings-primary-color', '#00aa00');
+    await waitFor(() =>
+      expect(onChange).toHaveBeenLastCalledWith({
+        settings: expect.objectContaining({ brand: expect.objectContaining({ primary_color: '#00AA00' }) }),
+        voiceover_volume: 0.4,
+      })
+    );
+  });
+
+  it('applies as it goes, so Enter in a field never reloads the page', () => {
+    const onChange = vi.fn();
+    renderWithProviders(<ReelSettingsForm spec={reelSpec()} pictures={[]} onChange={onChange} />);
+    expect(fireEvent.submit(screen.getByTestId('reel-settings-form'))).toBe(false);
+    expect(onChange).not.toHaveBeenCalled();
   });
 
   it('converts a spec to the form and back', () => {

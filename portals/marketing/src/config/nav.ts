@@ -21,7 +21,10 @@ const OVERVIEW = group('shell.nav.overview', 'dashboard', [
   leaf('shell.nav.activity', '/activity', 'timeline'),
 ]);
 
-const SOCIAL = group('shell.nav.socialMedia', 'hub', [leaf('shell.nav.accounts', '/social/accounts', 'hub')]);
+const SOCIAL = group('shell.nav.socialMedia', 'hub', [
+  leaf('shell.nav.accounts', '/social/accounts', 'hub'),
+  leaf('shell.nav.inbox', '/social/inbox', 'forum'),
+]);
 
 const PUBLISHING = group('shell.nav.publishing', 'calendar', [leaf('shell.nav.calendar', '/publish/calendar', 'calendar')]);
 
@@ -33,6 +36,9 @@ const LEADS = group('shell.nav.leads', 'handshake', [
   leaf('shell.nav.allLeads', '/leads', 'handshake'),
   leaf('shell.nav.instagramLeads', '/leads/instagram', 'handshake'),
 ]);
+
+// Reaching the leads: sequences of emails, WhatsApp messages and hand-sent DMs.
+const OUTREACH = group('shell.nav.outreach', 'forum', [leaf('shell.nav.sequences', '/outreach/sequences', 'forum')]);
 
 // What runs on its own: the agents that plan with Claude and act through code.
 const AUTOMATION = group('shell.nav.automation', 'ai', [leaf('shell.nav.agents', '/automation/agents', 'ai')]);
@@ -57,6 +63,12 @@ const CAMPAIGNS = group('shell.nav.campaigns', 'campaign', [
 ]);
 
 const ANALYTICS = group('shell.nav.analytics', 'analytics', [
+  // Windowed reads of what marketing did: the headline, then each area.
+  leaf('shell.nav.analyticsOverview', '/analytics/overview', 'analytics'),
+  leaf('shell.nav.analyticsSocial', '/analytics/social', 'hub'),
+  leaf('shell.nav.analyticsContent', '/analytics/content', 'movie'),
+  leaf('shell.nav.analyticsFunnel', '/analytics/funnel', 'handshake'),
+  leaf('shell.nav.analyticsAutomation', '/analytics/automation', 'ai'),
   // Members' phone-book syncs and the invites sent from them — counts only.
   leaf('shell.nav.memberContacts', '/analytics/contacts', 'contacts'),
 ]);
@@ -68,7 +80,7 @@ const MANAGER_ROLES = new Set(['SUPER_ADMIN', 'MARKETING_MANAGER']);
 const APPROVALS_PATH = '/approvals';
 
 /** The full sidebar, as a marketing manager sees it. */
-export const MARKETING_NAV: readonly AppNavItem[] = [OVERVIEW, SOCIAL, PUBLISHING, CREATE, LEADS, AUTOMATION, CAMPAIGNS, ANALYTICS, SETTINGS];
+export const MARKETING_NAV: readonly AppNavItem[] = [OVERVIEW, SOCIAL, PUBLISHING, CREATE, LEADS, OUTREACH, AUTOMATION, CAMPAIGNS, ANALYTICS, SETTINGS];
 
 /** The sidebar for one person: sections their roles cannot act on are left out, not greyed. */
 export function buildNav(roles: readonly string[]): AppNavItem[] {

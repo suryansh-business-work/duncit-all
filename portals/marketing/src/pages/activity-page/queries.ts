@@ -14,6 +14,7 @@ export type MarketingRunWorkflow =
   | 'SOCIAL_PUBLISH'
   | 'SOCIAL_SYNC'
   | 'SOCIAL_HEALTH'
+  | 'INBOX_REPLY'
   | 'REEL'
   | 'LEAD_SEARCH'
   | 'LEAD_IMPORT'

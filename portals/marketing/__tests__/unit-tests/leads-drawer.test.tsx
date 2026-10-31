@@ -250,4 +250,13 @@ describe('LeadTimeline', () => {
     expect(items[1]).toHaveTextContent('Meera · fmt:2026-10-31T09:00:00.000Z');
     expect(items[2]).toHaveTextContent('Added from INSTAGRAM');
   });
+
+  it('names an entry a sequence left as Outreach', () => {
+    renderWithProviders(
+      <LeadTimeline entries={[makeTimelineEntry({ kind: 'OUTREACH', text: 'Email "Hello" sent by Venue intro', by_name: 'System' })]} />,
+    );
+    const [item] = screen.getAllByRole('listitem');
+    expect(item).toHaveTextContent('Outreach');
+    expect(item).toHaveTextContent('Email "Hello" sent by Venue intro');
+  });
 });

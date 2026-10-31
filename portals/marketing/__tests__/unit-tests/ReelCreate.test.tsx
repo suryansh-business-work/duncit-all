@@ -132,7 +132,8 @@ describe('CreatePanel — the whole flow', () => {
 
     fireEvent.click(screen.getByTestId('reel-offer-subtitles'));
     expect(await screen.findByTestId('reel-subtitles-form')).toBeInTheDocument();
-    expect(screen.queryByTestId('reel-voiceover-form')).not.toBeInTheDocument();
+    // Opening subtitles folds the voiceover away; it leaves once its transition ends.
+    await waitFor(() => expect(screen.queryByTestId('reel-voiceover-form')).not.toBeInTheDocument());
     fireEvent.submit(screen.getByTestId('reel-subtitles-form'));
     await waitFor(() =>
       expect(mutationOf(GENERATE_REEL_SUBTITLES)).toHaveBeenCalledWith({ variables: { project_id: PROJECT_ID, asset_id: 'v1', language: 'en-IN' } })
@@ -389,6 +390,15 @@ describe('ApplyStep and AfterApply', () => {
     expect(screen.getByTestId('reel-voiceover-form')).toBeInTheDocument();
     fireEvent.click(screen.getByTestId('reel-offer-voiceover'));
     expect(screen.getByTestId('reel-offer-voiceover')).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  it('says why the subtitles could not be written', async () => {
+    mutationOf(GENERATE_REEL_SUBTITLES).mockRejectedValueOnce(failure);
+    renderWithProviders(<AfterApply project={project()} script={reelScript()} />);
+    fireEvent.click(screen.getByTestId('reel-offer-subtitles'));
+    fireEvent.submit(await screen.findByTestId('reel-subtitles-form'));
+    await waitFor(() => expect(notifyError).toHaveBeenCalledWith('The server refused.'));
+    expect(mutationOf(GENERATE_REEL_SUBTITLES)).toHaveBeenCalledWith({ variables: { project_id: PROJECT_ID, asset_id: 'v1', language: 'en-IN' } });
   });
 
   it('offers subtitles from generated speech and clips with sound only', () => {

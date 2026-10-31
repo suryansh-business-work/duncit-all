@@ -160,7 +160,8 @@ describe('VariantsDialog', () => {
     await waitFor(() => expect(mutationOf(GENERATE_REEL_VARIANTS)).toHaveBeenCalledWith({ variables: { project_id: PROJECT_ID, platforms: ['INSTAGRAM', 'YOUTUBE'] } }));
 
     fireEvent.click(screen.getByTestId('reel-variant-use-INSTAGRAM'));
-    await waitFor(() => expect(onUse).toHaveBeenCalledWith(reelVariant()));
+    // The row as the form holds it: the four fields, without the server's __typename.
+    await waitFor(() => expect(onUse).toHaveBeenCalledWith({ platform: 'INSTAGRAM', title: 'Sunday jam', caption: 'Sundays at HSR', hashtags: ['pickleball', 'hsr'] }));
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
@@ -243,7 +244,7 @@ describe('AnalyticsDrawer', () => {
   it('waits for the numbers, says when they could not be read, and says when there is nothing to show', async () => {
     answerQuery(REEL_ANALYTICS, { loading: true });
     const { unmount } = renderWithProviders(<AnalyticsDrawer open onClose={vi.fn()} projectId={PROJECT_ID} />);
-    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    expect(screen.getByRole('status', { name: 'Loading…' })).toBeInTheDocument();
     unmount();
 
     answerQuery(REEL_ANALYTICS, { error: new Error('Analytics is not connected') });

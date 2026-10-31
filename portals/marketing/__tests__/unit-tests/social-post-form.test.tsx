@@ -299,7 +299,7 @@ describe('socialPostSchema', () => {
 });
 
 describe('toSocialPostInput', () => {
-  it('sends the media rows in order with only their two fields, the approval flag and the idea', () => {
+  it('sends the media rows in order with only their two fields, the approval flag, the idea and the reel it came from', () => {
     const rows = [{ __typename: 'SocialPostMedia', ...VIDEO }, IMAGE];
     expect(
       toSocialPostInput(
@@ -311,6 +311,7 @@ describe('toSocialPostInput', () => {
           needs_approval: true,
         }),
         'idea1',
+        'reel1',
       ),
     ).toEqual({
       text: 'Run club',
@@ -320,10 +321,11 @@ describe('toSocialPostInput', () => {
       scheduled_at: '2026-09-20T10:00:00.000Z',
       idea_id: 'idea1',
       needs_approval: true,
+      reel_project_id: 'reel1',
     });
   });
 
-  it('sends an empty list, and nulls for no time and no idea', () => {
+  it('sends an empty list, and nulls for no time, no idea and no reel', () => {
     expect(toSocialPostInput(blankSocialPostValues({ text: 'Hi', mode: 'DRAFT' }), null)).toEqual({
       text: 'Hi',
       media: [],
@@ -332,6 +334,7 @@ describe('toSocialPostInput', () => {
       scheduled_at: null,
       idea_id: null,
       needs_approval: false,
+      reel_project_id: null,
     });
   });
 });

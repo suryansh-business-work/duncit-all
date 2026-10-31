@@ -5,6 +5,11 @@ import { CouponDetailPage, CouponsPage } from '@duncit/coupons';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/dashboard-page/DashboardPage';
 import ContactsDashboardPage from './pages/contacts-page';
+import AnalyticsOverviewPage from './pages/analytics-overview-page';
+import AnalyticsSocialPage from './pages/analytics-social-page';
+import AnalyticsContentPage from './pages/analytics-content-page';
+import AnalyticsFunnelPage from './pages/analytics-funnel-page';
+import AnalyticsAutomationPage from './pages/analytics-automation-page';
 import AudienceListsPage from './pages/target-audience-page/AudienceListsPage';
 import CreateAudienceListPage from './pages/target-audience-page/CreateAudienceListPage';
 import AudienceListDetailPage from './pages/target-audience-page/AudienceListDetailPage';
@@ -19,8 +24,10 @@ import AppPopupsPage from './pages/app-popups-page/AppPopupsPage';
 import StatusPage from './pages/status-page/StatusPage';
 import SocialAccountsPage from './pages/social-accounts-page';
 import SocialCalendarPage from './pages/social-calendar-page';
+import InboxPage from './pages/inbox-page';
 import LeadsPage from './pages/leads-page';
 import InstagramLeadsPage from './pages/instagram-leads-page';
+import OutreachPage from './pages/outreach-page';
 import AgentsPage from './pages/agents-page';
 import OccasionsPage from './pages/occasions-page';
 import OccasionThemeEditorPage from './pages/occasions-page/editor';
@@ -58,6 +65,7 @@ export default function App() {
         <Route path="/activity" element={authed(<ActivityPage />)} />
         {/* Social media */}
         <Route path="/social/accounts" element={authed(<SocialAccountsPage />)} />
+        <Route path="/social/inbox" element={authed(<InboxPage />)} />
         <Route path="/social-accounts" element={<Redirect to="/social/accounts" />} />
         {/* Publishing */}
         <Route path="/publish/calendar" element={authed(<SocialCalendarPage />)} />
@@ -69,6 +77,8 @@ export default function App() {
         <Route path="/leads" element={authed(<LeadsPage />)} />
         <Route path="/leads/instagram" element={authed(<InstagramLeadsPage />)} />
         <Route path="/instagram-leads" element={<Redirect to="/leads/instagram" />} />
+        {/* Outreach: multi-step sequences to the leads */}
+        <Route path="/outreach/sequences" element={authed(<OutreachPage />)} />
         {/* Automation: the agents that plan with Claude and act through code */}
         <Route path="/automation/agents" element={authed(<AgentsPage />)} />
         {/* Campaigns and the channels they go out on */}
@@ -96,6 +106,11 @@ export default function App() {
         <Route path="/live-ads" element={authed(<LiveAdsPage />)} />
         <Route path="/ads-settings" element={authed(<AdsSettingsPage />)} />
         {/* Analytics */}
+        <Route path="/analytics/overview" element={authed(<AnalyticsOverviewPage />)} />
+        <Route path="/analytics/social" element={authed(<AnalyticsSocialPage />)} />
+        <Route path="/analytics/content" element={authed(<AnalyticsContentPage />)} />
+        <Route path="/analytics/funnel" element={authed(<AnalyticsFunnelPage />)} />
+        <Route path="/analytics/automation" element={authed(<AnalyticsAutomationPage />)} />
         <Route path="/analytics/contacts" element={authed(<ContactsDashboardPage />)} />
         <Route path="/contacts" element={<Redirect to="/analytics/contacts" />} />
         {/* Settings */}

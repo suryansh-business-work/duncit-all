@@ -166,7 +166,7 @@ describe('StockTab', () => {
   };
 
   it('searches in the reel’s orientation, lists each file with its licence, and adds one to the reel', async () => {
-    answerQuery(REEL_MEDIA_SEARCH, { data: { reelMediaSearch: reelStockPage([reelStockItem(), reelStockItem({ id: 'px-2', provider_id: 'pexels:2', kind: 'IMAGE', duration_ms: 0 })], true) } });
+    answerQuery(REEL_MEDIA_SEARCH, { data: { reelMediaSearch: reelStockPage([reelStockItem(), reelStockItem({ id: 'px-2', provider_id: 'pexels:2', kind: 'IMAGE', duration_ms: 0 }), reelStockItem({ id: 'px-3', provider_id: 'pexels:3', attribution: '' })], true) } });
     const studio = actions();
     renderWithProviders(<StockTab project={reelProject({ spec: reelSpec({ aspect: 'SQUARE' }), assets: [reelAsset({ provider_id: 'pexels:2', source: 'STOCK' })] })} actions={studio} />);
     expect(screen.getByTestId('reel-stock-search')).toBeDisabled();
@@ -176,6 +176,9 @@ describe('StockTab', () => {
     expect(queryOptions.get(REEL_MEDIA_SEARCH)?.variables).toEqual({ query: 'sunset court', kind: 'VIDEO', orientation: 'SQUARE', page: 1 });
     expect(screen.getByTestId('reel-stock-item-px-1')).toHaveTextContent('Pexels Licence · Ana Ruiz');
     expect(screen.getByTestId('reel-stock-item-px-1')).toHaveTextContent('0:12');
+    // Each add button names its file: by its credit, or by its provider id when it has none.
+    expect(screen.getByTestId('reel-stock-add-px-1')).toHaveAccessibleName('Add Ana Ruiz to the reel');
+    expect(screen.getByTestId('reel-stock-add-px-3')).toHaveAccessibleName('Add pexels:3 to the reel');
     // Already in the reel: a tick, not an add button.
     expect(screen.queryByTestId('reel-stock-add-px-2')).not.toBeInTheDocument();
 
@@ -207,7 +210,7 @@ describe('StockTab', () => {
     answerQuery(REEL_MEDIA_SEARCH, { loading: true });
     renderWithProviders(<StockTab project={reelProject()} actions={actions()} />);
     searchFor('x');
-    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    expect(screen.getByRole('status', { name: 'Loading…' })).toBeInTheDocument();
     expect(screen.queryByTestId('reel-stock-more')).not.toBeInTheDocument();
   });
 
@@ -301,10 +304,36 @@ describe('UploadTab and useReelUploads', () => {
     await waitFor(() => expect(screen.getByTestId('reel-upload-pick')).toBeEnabled());
   });
 
-  it('does nothing for an empty pick', () => {
+  it('says the file is going into the reel once it is up, with a bar that has no end yet', async () => {
+    picker.upload.mockResolvedValue('https://ik.imagekit.io/x.mp4');
+    let added: (ok: boolean) => void = () => undefined;
+    const studio = actions();
+    vi.mocked(studio.addUploads).mockImplementation(() => new Promise<boolean>((resolve) => (added = resolve)));
+    renderWithProviders(<UploadTab actions={studio} />);
+    pickFiles(file('clip.mp4', 'video/mp4'));
+    await waitFor(() => expect(screen.getByTestId('reel-upload-row-u1')).toHaveAttribute('data-phase', 'adding'));
+    expect(screen.getByTestId('reel-upload-row-u1')).toHaveTextContent('Adding to the reel…');
+    expect(screen.getByRole('progressbar', { name: 'Upload progress for clip.mp4' })).not.toHaveAttribute('aria-valuenow');
+    expect(screen.getByTestId('reel-upload-pick')).toBeDisabled();
+    await act(async () => added(true));
+    expect(screen.getByTestId('reel-upload-row-u1')).toHaveAttribute('data-phase', 'done');
+  });
+
+  it('opens the device picker from Choose files', () => {
+    renderWithProviders(<UploadTab actions={actions()} />);
+    const opened = vi.fn();
+    screen.getByTestId('reel-upload-input').addEventListener('click', opened);
+    fireEvent.click(screen.getByTestId('reel-upload-pick'));
+    expect(opened).toHaveBeenCalledTimes(1);
+  });
+
+  it('does nothing for an empty or a cancelled pick', () => {
     renderWithProviders(<UploadTab actions={actions()} />);
     pickFiles();
     expect(screen.getByTestId('reel-upload-empty')).toBeInTheDocument();
+    fireEvent.change(screen.getByTestId('reel-upload-input'), { target: { files: null } });
+    expect(screen.getByTestId('reel-upload-empty')).toBeInTheDocument();
+    expect(picker.upload).not.toHaveBeenCalled();
   });
 
   it('reads a failed upload without words as its own failure', async () => {

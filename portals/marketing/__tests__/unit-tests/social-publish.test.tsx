@@ -529,6 +529,7 @@ describe('ComposerDialog', () => {
     scheduled_at: '2026-09-20T10:00:00.000Z',
     idea_id: null,
     needs_approval: false,
+    reel_project_id: null,
     ...over,
   });
   const mediaBox = (dialog: HTMLElement) => within(dialog).getByRole('textbox', { name: t('marketing.social.postMedia') });
@@ -568,6 +569,18 @@ describe('ComposerDialog', () => {
     expect(create.result).toHaveBeenCalledTimes(1);
   });
 
+  it('links a post written from a reel to that reel', async () => {
+    const onClose = vi.fn();
+    const create = createMock(draftInput({ text: 'Jam night recap', reel_project_id: 'DUN-REEL-1' }));
+    renderWithProviders(
+      <ComposerDialog request={{ ...opened, text: 'Jam night recap', reel_project_id: 'DUN-REEL-1' }} accounts={accounts} onClose={onClose} />,
+      { mocks: [create.mock] },
+    );
+    fireEvent.click(within(screen.getByRole('dialog', { name: t('marketing.social.createPost') })).getByTestId('social-post-draft'));
+    await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
+    expect(create.result).toHaveBeenCalledTimes(1);
+  });
+
   it('starts from a calendar day with only its time and still asks for something to post', async () => {
     renderWithProviders(<ComposerDialog request={{ scheduled_at: '2026-09-20T10:00:00.000Z' }} accounts={accounts} onClose={vi.fn()} />);
     const dialog = screen.getByRole('dialog', { name: t('marketing.social.createPost') });
@@ -582,7 +595,7 @@ describe('ComposerDialog', () => {
     const post = makeSocialScheduledPost({ idea_id: 'i3', text: 'Edited copy', scheduled_at: null });
     const update = updateMock(
       'sp1',
-      { text: 'Edited copy', media: [], account_ids: ['sa1'], mode: 'NOW', scheduled_at: null, idea_id: 'i3', needs_approval: false },
+      { text: 'Edited copy', media: [], account_ids: ['sa1'], mode: 'NOW', scheduled_at: null, idea_id: 'i3', needs_approval: false, reel_project_id: null },
       { ...post, status: 'PUBLISHING' },
     );
     renderWithProviders(<ComposerDialog request={{ post, idea_id: 'ignored' }} accounts={accounts} onClose={onClose} />, { mocks: [update.mock] });
@@ -607,6 +620,7 @@ describe('ComposerDialog', () => {
       scheduled_at: '2026-09-20T10:00:00.000Z',
       idea_id: 'i5',
       needs_approval: false,
+      reel_project_id: null,
     });
     renderWithProviders(<ComposerDialog request={{ post, idea_id: 'i5' }} accounts={accounts} onClose={onClose} />, { mocks: [update.mock] });
     const dialog = screen.getByRole('dialog', { name: t('marketing.social.editPost') });
@@ -624,7 +638,7 @@ describe('ComposerDialog', () => {
     const post = makeSocialScheduledPost();
     const update = updateMock(
       'sp1',
-      { text: 'Run club this Sunday', media: [], account_ids: ['sa1'], mode: 'SCHEDULE', scheduled_at: '2026-09-20T10:00:00.000Z', idea_id: null, needs_approval: true },
+      { text: 'Run club this Sunday', media: [], account_ids: ['sa1'], mode: 'SCHEDULE', scheduled_at: '2026-09-20T10:00:00.000Z', idea_id: null, needs_approval: true, reel_project_id: null },
       { ...post, status: 'PENDING_APPROVAL', needs_approval: true, approval_run_id: 'run1' },
     );
     renderWithProviders(<ComposerDialog request={{ post }} accounts={accounts} onClose={onClose} />, { mocks: [update.mock] });
@@ -644,7 +658,7 @@ describe('ComposerDialog', () => {
     const post = makeSocialScheduledPost({ status: 'PENDING_APPROVAL', needs_approval: true, media: CAROUSEL, media_url: IMAGE_URL, media_type: 'IMAGE' });
     const update = updateMock(
       'sp1',
-      { text: 'Run club this Sunday', media: CAROUSEL, account_ids: ['sa1'], mode: 'DRAFT', scheduled_at: '2026-09-20T10:00:00.000Z', idea_id: null, needs_approval: true },
+      { text: 'Run club this Sunday', media: CAROUSEL, account_ids: ['sa1'], mode: 'DRAFT', scheduled_at: '2026-09-20T10:00:00.000Z', idea_id: null, needs_approval: true, reel_project_id: null },
       { ...post, status: 'DRAFT' },
     );
     renderWithProviders(<ComposerDialog request={{ post }} accounts={accounts} onClose={onClose} />, { mocks: [update.mock] });

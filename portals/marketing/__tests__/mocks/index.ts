@@ -21,3 +21,6 @@ export * from './social.mock';
 export * from './runs.mock';
 export * from './leads.mock';
 export * from './agents.mock';
+export * from './outreach.mock';
+export * from './inbox.mock';
+export * from './analytics.mock';

@@ -39,10 +39,12 @@ describe('Marketing sidebar', () => {
       '/approvals',
       '/activity',
       '/social/accounts',
+      '/social/inbox',
       '/publish/calendar',
       '/studio/reels',
       '/leads',
       '/leads/instagram',
+      '/outreach/sequences',
       '/automation/agents',
       '/campaigns/email',
       '/audience',
@@ -57,6 +59,11 @@ describe('Marketing sidebar', () => {
       '/ads-approvals',
       '/live-ads',
       '/ads-settings',
+      '/analytics/overview',
+      '/analytics/social',
+      '/analytics/content',
+      '/analytics/funnel',
+      '/analytics/automation',
       '/analytics/contacts',
       '/settings/integrations',
     ]);
@@ -93,6 +100,7 @@ describe('Marketing sidebar', () => {
       'shell.nav.publishing',
       'shell.nav.create',
       'shell.nav.leads',
+      'shell.nav.outreach',
       'shell.nav.automation',
       'shell.nav.campaigns',
       'shell.nav.analytics',
@@ -102,9 +110,21 @@ describe('Marketing sidebar', () => {
     for (const header of headers) expect(header.to).toBeUndefined();
   });
 
-  it('puts Automation — the agents — right after Leads, on the AI icon', () => {
-    const automation = MARKETING_NAV[5];
+  it('puts Outreach — the sequences — right after Leads, open to every seat', () => {
+    const outreach = MARKETING_NAV[5];
     expect(MARKETING_NAV[4].labelKey).toBe('shell.nav.leads');
+    expect(outreach.labelKey).toBe('shell.nav.outreach');
+    expect(outreach.icon).toBe('forum');
+    expect(outreach.children).toEqual([
+      { label: 'shell.nav.sequences', labelKey: 'shell.nav.sequences', to: '/outreach/sequences', icon: 'forum' },
+    ]);
+    // An editor reaches the page too; what they may do there is gated on the page and the server.
+    expect(buildNav(['MARKETING_EDITOR'])).toContain(outreach);
+  });
+
+  it('puts Automation — the agents — right after Outreach, on the AI icon', () => {
+    const automation = MARKETING_NAV[6];
+    expect(MARKETING_NAV[5].labelKey).toBe('shell.nav.outreach');
     expect(automation.labelKey).toBe('shell.nav.automation');
     expect(automation.icon).toBe('ai');
     expect(automation.children).toEqual([{ label: 'shell.nav.agents', labelKey: 'shell.nav.agents', to: '/automation/agents', icon: 'ai' }]);

@@ -1,6 +1,7 @@
 import { askApi } from './api';
 import { SITE_URL } from './config';
 import { SEO_SITEMAP, type SitemapKind } from './documents';
+import { seoSettings } from './pages';
 
 const XML_ESCAPES: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' };
 
@@ -24,18 +25,24 @@ const entry = (loc: string, lastmod?: string | null): string => {
   return `<url><loc>${escapeXml(loc)}</loc>${modified}</url>`;
 };
 
-/** /sitemap.xml: every shelf, brand, page and product the API lists, as absolute URLs. */
-export async function sitemapXml(): Promise<string> {
+/** Every shelf, brand, page and product the API lists, after the fixed pages. */
+async function storeEntries(): Promise<string[]> {
   const data = await askApi<{ storeSitemap: { kind: SitemapKind; slug: string; updated_at: string | null }[] }>(SEO_SITEMAP);
   const fixed = FIXED_PATHS.map((path) => entry(`${SITE_URL}${path}`));
   const catalogue = (data?.storeSitemap ?? []).map((row) =>
     entry(`${SITE_URL}${PREFIX[row.kind]}${encodeURIComponent(row.slug)}`, row.updated_at),
   );
+  return [...fixed, ...catalogue];
+}
+
+/** /sitemap.xml: the store's pages as absolute URLs; none while it is switched off, when each one is a noindex "opening soon". */
+export async function sitemapXml(): Promise<string> {
+  const settings = await seoSettings();
+  const entries = settings?.store_enabled === false ? [] : await storeEntries();
   return [
     '<?xml version="1.0" encoding="UTF-8"?>',
     '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
-    ...fixed,
-    ...catalogue,
+    ...entries,
     '</urlset>',
   ].join('\n');
 }

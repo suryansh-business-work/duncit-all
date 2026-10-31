@@ -1,6 +1,6 @@
 import { buildOrganizationJsonLd, buildWebSiteJsonLd } from '@duncit/brand/seo';
 import type { SiteMetaInput } from '@duncit/brand/site-meta';
-import { ECOMM_STORE_BUNDLE, flattenCatalogue } from '@duncit/i18n';
+import { ECOMM_STORE_BUNDLE, flattenCatalogue, interpolate } from '@duncit/i18n';
 
 import { isStorePath } from '../src/app/route-paths';
 import { firstFilled } from '../src/lib/text';
@@ -88,7 +88,7 @@ function homeHead(s: SeoSettings): PageHead {
   return { ...head, structured: [organization, buildWebSiteJsonLd({ name: s.store_name, url, organizationUrl: url })] };
 }
 
-async function settings(): Promise<SeoSettings | null> {
+export async function seoSettings(): Promise<SeoSettings | null> {
   const data = await askApi<{ storeSettings: SeoSettings }>(SEO_SETTINGS);
   return data?.storeSettings ?? null;
 }
@@ -223,10 +223,22 @@ function notFoundHead(s: SeoSettings, path: string): PageHead {
   return { ...head, meta: { ...head.meta, noindex: true }, notFound: true };
 }
 
+/**
+ * A switched-off store draws its "opening soon" page on every route, so the
+ * head says that rather than the product or shelf behind it, and keeps the
+ * page out of search until the store opens.
+ */
+function closedHead(s: SeoSettings, path: string): PageHead {
+  const head = baseHead(s, path, copy('ecommStore.closed.title'));
+  const description = clip(interpolate(copy('ecommStore.closed.body'), { name: s.store_name }));
+  return { ...head, meta: { ...head.meta, description, noindex: true } };
+}
+
 /** The head for a path, or null when the API could not be asked (serve the plain page). */
 export async function headFor(path: string): Promise<PageHead | null> {
-  const s = await settings();
+  const s = await seoSettings();
   if (!s) return null;
+  if (!s.store_enabled) return closedHead(s, path);
   if (path === '/') return homeHead(s);
   const fixedKey = lookup(FIXED_TITLES, withoutTrailingSlash(path));
   if (fixedKey) return baseHead(s, path, copy(fixedKey));

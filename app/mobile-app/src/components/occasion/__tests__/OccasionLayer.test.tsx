@@ -5,7 +5,7 @@ import { logs } from '@duncit/logs';
 import { useAppActive } from '@/hooks/useAppActive';
 import type { OccasionLook } from '@/hooks/useOccasionLook';
 import { useReduceMotion } from '@/hooks/useReduceMotion';
-import { getItem, setItem } from '@/services/secure-storage';
+import { getItem, removeItem, setItem } from '@/services/secure-storage';
 import { renderWithProviders } from '@/utils/test-utils';
 import { OccasionLayer } from '../OccasionLayer';
 
@@ -37,6 +37,7 @@ const mockedReduce = jest.mocked(useReduceMotion);
 const mockedActive = jest.mocked(useAppActive);
 const mockedGet = jest.mocked(getItem);
 const mockedSet = jest.mocked(setItem);
+const mockedRemove = jest.mocked(removeItem);
 
 const look = (key: string, overrides: Partial<OccasionLook> = {}): OccasionLook => ({
   key,
@@ -68,6 +69,7 @@ beforeEach(() => {
   mockedActive.mockReturnValue(true);
   mockedGet.mockResolvedValue(null);
   mockedSet.mockResolvedValue(undefined);
+  mockedRemove.mockResolvedValue(undefined);
 });
 
 describe('OccasionLayer', () => {
@@ -97,6 +99,7 @@ describe('OccasionLayer', () => {
 
     fireEvent.press(screen.getByTestId('occasion-pause'));
     expect(lastRunning()).toBe(true);
+    expect(mockedRemove).toHaveBeenCalledWith('duncit.occasion.paused.diwali');
   });
 
   it('stays paused for a look the viewer paused before', async () => {

@@ -13,7 +13,7 @@ export type MarketingLeadStage = (typeof LEAD_STAGES)[number];
 export const LEAD_SOURCES = ['INSTAGRAM', 'GOOGLE_PLACES', 'WEB_SEARCH', 'IMPORT', 'MANUAL'] as const;
 export type MarketingLeadSource = (typeof LEAD_SOURCES)[number];
 
-export const LEAD_TIMELINE_KINDS = ['CREATED', 'STAGE', 'OWNER', 'NOTE', 'PROMOTED', 'IMPORTED', 'SOURCE'] as const;
+export const LEAD_TIMELINE_KINDS = ['CREATED', 'STAGE', 'OWNER', 'NOTE', 'PROMOTED', 'IMPORTED', 'SOURCE', 'OUTREACH'] as const;
 export type MarketingLeadTimelineKind = (typeof LEAD_TIMELINE_KINDS)[number];
 
 /** The CRM records a lead can become. Each has its own collection and its own create function in crm.service. */

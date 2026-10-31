@@ -72,6 +72,10 @@ const leadSchema = new Schema(
 
 leadSchema.index({ stage: 1, created_at: -1 });
 leadSchema.index({ pipeline: 1, stage: 1 });
+// Marketing › Analytics: the leads created in a window, the stage changes made in one and the leads promoted in one.
+leadSchema.index({ created_at: -1 });
+leadSchema.index({ 'timeline.at': -1 });
+leadSchema.index({ 'crm_ref.promoted_at': -1 });
 
 export type MarketingLeadDoc = InferSchemaType<typeof leadSchema> & { _id: unknown; created_at?: Date; updated_at?: Date };
 export type MarketingLeadNote = InferSchemaType<typeof noteSchema>;

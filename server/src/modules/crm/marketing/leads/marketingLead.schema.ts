@@ -39,6 +39,8 @@ export const marketingLeadTypeDefs = gql`
     PROMOTED
     IMPORTED
     SOURCE
+    "A step an Outreach sequence sent, or the reply that stopped it."
+    OUTREACH
   }
 
   "The CRM record a lead can become: a venue lead, a host lead or an ecomm (seller) lead."

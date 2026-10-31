@@ -4,6 +4,7 @@ import { whatsappPreferenceService } from '@modules/platform/whatsapp/whatsapp.p
 import { resumeWithReply, startRun } from './automation.engine';
 import { hasKeywords, matchesKeywords } from './automation.vars';
 import { scalarText, str } from './automation.graph';
+import { noteOutreachReply } from '@modules/crm/marketing/outreach/outreach.inbound';
 
 /**
  * Where a message from outside enters the automation.
@@ -91,9 +92,10 @@ function matchingFlows(flows: LeanFlow[], trigger: string, text: string, extra: 
 
 export async function inboundWhatsapp(message: InboundWhatsapp): Promise<{ resumed: number; started: number }> {
   // STOP / START is a preference change, never the opening of a flow.
-  if (await whatsappPreferenceService.applyReplyKeyword(message.from, message.text)) {
-    return { resumed: 0, started: 0 };
-  }
+  const keyword = await whatsappPreferenceService.applyReplyKeyword(message.from, message.text);
+  // An outreach lead writing back, or opting out (read from the preference just applied), stops its sequences.
+  await noteOutreachReply('WHATSAPP', message.from);
+  if (keyword) return { resumed: 0, started: 0 };
   const waiting = await AutomationRunModel.findOne({
     status: 'WAITING_REPLY',
     mode: 'LIVE',
@@ -132,6 +134,7 @@ export interface InboundEmail {
 
 export async function inboundEmail(message: InboundEmail): Promise<{ started: number }> {
   const mailbox = message.mailbox.toLowerCase();
+  await noteOutreachReply('EMAIL', message.fromEmail);
   const flows = await AutomationFlowModel.find({ channel: 'EMAIL', status: 'ACTIVE' }).lean<LeanFlow[]>();
   const haystack = `${message.subject}\n${message.text}`;
   const chosen = matchingFlows(flows, 'INBOUND_EMAIL', haystack, (data) => str(data.mailbox).toLowerCase() === mailbox);

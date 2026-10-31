@@ -5,7 +5,7 @@ import { isTrustedMediaUrl } from '@utils/url';
 import { SocialAccountModel, SocialPostModel } from './social.model';
 import { SocialIdeaModel, SocialScheduledPostModel } from './social.publish.model';
 import { publishProblems } from './social.rules';
-import { publishNow } from './social.publisher';
+import { publishNow, requeueFailed } from './social.publisher';
 import type { PublishContent, SocialMediaType, SocialPublishStatus } from './social.types';
 
 /**
@@ -126,8 +126,8 @@ async function loadPost(id: string) {
 }
 
 /** Off in the background: the marketer gets the post back as PUBLISHING and the list follows it. */
-function sendInBackground(id: string) {
-  publishNow(id).catch((error: unknown) => {
+function sendInBackground(id: string, userId: string) {
+  publishNow(id, userId).catch((error: unknown) => {
     logs.server.error('social-publish', 'publishNow', { error, post_id: id, msg: 'publish now failed' });
   });
 }
@@ -161,7 +161,7 @@ export const socialPublishService = {
       updated_by: userId,
     });
     await markIdeaUsed(input.idea_id);
-    if (input.mode === 'NOW') sendInBackground(doc.id);
+    if (input.mode === 'NOW') sendInBackground(doc.id, userId);
     return (await pubMany([doc.toObject()]))[0];
   },
 
@@ -172,7 +172,7 @@ export const socialPublishService = {
     const targets = await buildTargets(input, content);
     doc.set({ ...content, ...timingFor(input), targets, updated_by: userId });
     await doc.save();
-    if (input.mode === 'NOW') sendInBackground(id);
+    if (input.mode === 'NOW') sendInBackground(id, userId);
     return (await pubMany([doc.toObject()]))[0];
   },
 
@@ -185,30 +185,22 @@ export const socialPublishService = {
   },
 
   /** Send a waiting post now instead of at its time. */
-  async shareNow(id: string) {
+  async shareNow(id: string, userId: string) {
     const doc = await loadPost(id);
     if (doc.status !== 'SCHEDULED') badInput('Only a scheduled post can be shared now.');
     doc.scheduled_at = new Date();
     await doc.save();
-    sendInBackground(id);
+    sendInBackground(id, userId);
     return (await pubMany([doc.toObject()]))[0];
   },
 
   /** Queue the failed targets again; the ones already out are left alone. */
-  async retry(id: string) {
+  async retry(id: string, userId: string) {
     const doc = await loadPost(id);
     if (!RETRYABLE.has(doc.status)) badInput('Only a post that failed somewhere can be retried.');
-    for (const target of doc.targets) {
-      if (target.status === 'FAILED') {
-        target.status = 'PENDING';
-        target.error = '';
-      }
-    }
-    doc.status = 'SCHEDULED';
-    doc.scheduled_at = new Date();
-    await doc.save();
-    sendInBackground(id);
-    return (await pubMany([doc.toObject()]))[0];
+    await requeueFailed(id);
+    sendInBackground(id, userId);
+    return (await pubMany([(await loadPost(id)).toObject()]))[0];
   },
 
   /**

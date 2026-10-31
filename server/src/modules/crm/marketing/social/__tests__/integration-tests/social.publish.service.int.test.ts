@@ -1,9 +1,13 @@
 /**
  * The composer's side of social publishing against a real database: the
  * draft / schedule / now rules, every edit path, retries and the calendar.
- * Only the network send (publishNow) is mocked — it runs in the background.
+ * Only the network send (publishNow) is mocked — it runs in the background;
+ * the requeue a retry does is the publisher's real one.
  */
-jest.mock('@modules/crm/marketing/social/social.publisher', () => ({ publishNow: jest.fn() }));
+jest.mock('@modules/crm/marketing/social/social.publisher', () => ({
+  ...jest.requireActual('@modules/crm/marketing/social/social.publisher'),
+  publishNow: jest.fn(),
+}));
 
 import { Types } from 'mongoose';
 import { logs } from '@observability/log';
@@ -154,7 +158,7 @@ describe('create — scheduling checks', () => {
     const out = await svc.create(input({ mode: 'NOW', account_ids: [String(fb._id)], media_url: IMAGE, media_type: 'VIDEO' }), USER);
     expect(out).toMatchObject({ status: 'SCHEDULED', media_type: 'VIDEO' });
     expect(new Date(out.scheduled_at as string).getTime()).toBeGreaterThanOrEqual(before);
-    expect(send).toHaveBeenCalledWith(out.id);
+    expect(send).toHaveBeenCalledWith(out.id, USER);
     for (let i = 0; i < 200 && error.mock.calls.length === 0; i += 1) await new Promise((r) => setTimeout(r, 5));
     expect(error).toHaveBeenCalledWith('social-publish', 'publishNow', {
       error: expect.any(Error),
@@ -210,7 +214,7 @@ describe('update', () => {
     const x = await account('X');
     const p = await post({ status: 'SCHEDULED', scheduled_at: new Date('2030-01-01') });
     await svc.update(String(p._id), input({ mode: 'NOW', account_ids: [String(x._id)] }), USER);
-    expect(send).toHaveBeenCalledWith(String(p._id));
+    expect(send).toHaveBeenCalledWith(String(p._id), USER);
   });
 
   it.each(['PUBLISHING', 'PUBLISHED', 'PARTIAL', 'FAILED'])('refuses to edit a %s post', async (status) => {
@@ -233,12 +237,12 @@ describe('remove / shareNow / retry', () => {
   it('shares a scheduled post now', async () => {
     const p = await post({ status: 'SCHEDULED', scheduled_at: new Date('2030-01-01') });
     const before = Date.now();
-    const out = await svc.shareNow(String(p._id));
+    const out = await svc.shareNow(String(p._id), USER);
     expect(new Date(out.scheduled_at as string).getTime()).toBeGreaterThanOrEqual(before);
-    expect(send).toHaveBeenCalledWith(String(p._id));
+    expect(send).toHaveBeenCalledWith(String(p._id), USER);
 
     const draft = await post({ status: 'DRAFT' });
-    await expect(svc.shareNow(String(draft._id))).rejects.toThrow('Only a scheduled post can be shared now.');
+    await expect(svc.shareNow(String(draft._id), USER)).rejects.toThrow('Only a scheduled post can be shared now.');
   });
 
   it('requeues only the failed targets of a partial post', async () => {
@@ -249,18 +253,18 @@ describe('remove / shareNow / retry', () => {
         { account_id: GONE_B, platform: 'LINKEDIN', status: 'FAILED', error: 'token expired' },
       ],
     });
-    const out = await svc.retry(String(p._id));
+    const out = await svc.retry(String(p._id), USER);
     expect(out.status).toBe('SCHEDULED');
     expect(out.targets.map((t) => [t.status, t.error, t.permalink])).toEqual([
       ['PUBLISHED', '', 'https://x.com/1'],
       ['PENDING', '', ''],
     ]);
-    expect(send).toHaveBeenCalledWith(String(p._id));
+    expect(send).toHaveBeenCalledWith(String(p._id), USER);
   });
 
   it.each(['DRAFT', 'SCHEDULED', 'PUBLISHED'])('refuses to retry a %s post', async (status) => {
     const p = await post({ status });
-    await expect(svc.retry(String(p._id))).rejects.toThrow('Only a post that failed somewhere can be retried.');
+    await expect(svc.retry(String(p._id), USER)).rejects.toThrow('Only a post that failed somewhere can be retried.');
     expect(send).not.toHaveBeenCalled();
   });
 });

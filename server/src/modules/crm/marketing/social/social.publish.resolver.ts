@@ -43,12 +43,12 @@ export const socialPublishResolvers = {
       return socialPublishService.remove(args.id);
     },
     shareScheduledSocialPostNow: (_p: unknown, args: IdArgs, ctx: Ctx) => {
-      requireRole(ctx, ROLES);
-      return socialPublishService.shareNow(args.id);
+      const user = requireRole(ctx, ROLES);
+      return socialPublishService.shareNow(args.id, user.id);
     },
     retryScheduledSocialPost: (_p: unknown, args: IdArgs, ctx: Ctx) => {
-      requireRole(ctx, ROLES);
-      return socialPublishService.retry(args.id);
+      const user = requireRole(ctx, ROLES);
+      return socialPublishService.retry(args.id, user.id);
     },
     generateSocialIdeas: (_p: unknown, args: { input: SocialIdeasInput }, ctx: Ctx) => {
       const user = requireRole(ctx, ROLES);

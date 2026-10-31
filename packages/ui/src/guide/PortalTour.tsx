@@ -62,14 +62,14 @@ function OpenTour({ steps, onClose, startAt }: Readonly<OpenTourProps>) {
     return () => document.removeEventListener('keydown', onKey);
   }, [onClose]);
 
-  if (!current) return null;
+  if (!resolved || !current) return null;
   return (
     <TourStepCard
       // A new key per step remounts the card, which re-measures and re-focuses it.
       key={current.index}
       current={current}
       position={position}
-      total={resolved?.length ?? 0}
+      total={resolved.length}
       onBack={() => setPosition(position - 1)}
       onNext={() => setPosition(position + 1)}
       onClose={onClose}

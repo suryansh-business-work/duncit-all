@@ -6,11 +6,21 @@
  */
 jest.mock('@modules/crm/marketing/social/providers', () => {
   const connector = () => ({ authorizeUrl: jest.fn(), connect: jest.fn() });
-  return { CONNECTORS: { LINKEDIN: connector(), META: connector(), X: connector(), YOUTUBE: connector() } };
+  return {
+    CONNECTORS: {
+      INSTAGRAM: connector(),
+      FACEBOOK: connector(),
+      THREADS: connector(),
+      YOUTUBE: connector(),
+      LINKEDIN: connector(),
+      X: connector(),
+    },
+  };
 });
 jest.mock('@modules/crm/marketing/social/social.credentials', () => ({
   providerReadiness: jest.fn(),
   socialCredentials: jest.fn(),
+  socialRedirectUri: jest.fn(),
 }));
 jest.mock('@modules/crm/marketing/social/social.oauth', () => ({
   readConnectState: jest.fn(),
@@ -51,7 +61,7 @@ const CREDS = { clientId: 'id', clientSecret: 'secret', redirectUri: 'https://ap
 
 const account = (platform: string, over: Record<string, unknown> = {}) =>
   SocialAccountModel.create({
-    provider: platform === 'FACEBOOK' || platform === 'INSTAGRAM' ? 'META' : platform,
+    provider: platform,
     platform,
     external_id: `${platform}-${new Types.ObjectId().toHexString()}`,
     name: `Duncit ${platform}`,

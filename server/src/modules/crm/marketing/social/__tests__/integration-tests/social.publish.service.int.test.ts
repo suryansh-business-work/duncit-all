@@ -22,7 +22,7 @@ const GONE_B = new Types.ObjectId().toHexString();
 
 const account = (platform: string, over: Record<string, unknown> = {}) =>
   SocialAccountModel.create({
-    provider: platform === 'FACEBOOK' || platform === 'INSTAGRAM' ? 'META' : platform,
+    provider: platform,
     platform,
     external_id: `${platform}-${new Types.ObjectId().toHexString()}`,
     name: `Duncit ${platform}`,

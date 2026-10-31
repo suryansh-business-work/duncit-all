@@ -431,8 +431,13 @@ export const notificationService = {
     return true;
   },
 
-  async deletePushSubscription(endpoint: string) {
-    await PushSubscriptionModel.deleteOne({ endpoint });
+  /**
+   * Unregister one of the caller's own browsers. Scoped to the owner, so knowing
+   * somebody else's endpoint does not switch their push off; true either way,
+   * so the answer does not say whether another account holds it.
+   */
+  async deletePushSubscription(userId: string, endpoint: string) {
+    await PushSubscriptionModel.deleteOne({ endpoint, user_id: new Types.ObjectId(userId) });
     return true;
   },
 
@@ -448,8 +453,9 @@ export const notificationService = {
     return true;
   },
 
-  async deleteExpoPushToken(token: string) {
-    await ExpoPushTokenModel.deleteOne({ token: (token || '').trim() });
+  /** Unregister one of the caller's own devices — owner-scoped like deletePushSubscription. */
+  async deleteExpoPushToken(userId: string, token: string) {
+    await ExpoPushTokenModel.deleteOne({ token: (token || '').trim(), user_id: new Types.ObjectId(userId) });
     return true;
   },
 

@@ -1,6 +1,11 @@
 import { Types } from 'mongoose';
 import { notificationService } from '../../notification.service';
-import { NotificationModel, UserNotificationModel } from '../../notification.model';
+import {
+  ExpoPushTokenModel,
+  NotificationModel,
+  PushSubscriptionModel,
+  UserNotificationModel,
+} from '../../notification.model';
 
 describe('notificationService integration', () => {
   it('listForUser drops deleted and content-less notifications', async () => {
@@ -88,13 +93,31 @@ describe('notificationService integration', () => {
     expect(page2.page_size).toBe(1);
   });
 
-  it('saves and deletes a push subscription', async () => {
-    const userId = new Types.ObjectId().toString();
-    await notificationService.savePushSubscription(userId, {
-      endpoint: 'https://push/endpoint-1',
-      p256dh: 'key',
-      auth: 'auth',
-    });
-    expect(await notificationService.deletePushSubscription('https://push/endpoint-1')).toBeDefined();
+  it('lets the owner delete their push subscription, and nobody else', async () => {
+    const owner = new Types.ObjectId().toString();
+    const stranger = new Types.ObjectId().toString();
+    const endpoint = 'https://push/endpoint-1';
+    await notificationService.savePushSubscription(owner, { endpoint, p256dh: 'key', auth: 'auth' });
+
+    // A stranger who knows the endpoint gets the same answer but changes nothing.
+    expect(await notificationService.deletePushSubscription(stranger, endpoint)).toBe(true);
+    expect(await PushSubscriptionModel.countDocuments({ endpoint })).toBe(1);
+
+    expect(await notificationService.deletePushSubscription(owner, endpoint)).toBe(true);
+    expect(await PushSubscriptionModel.countDocuments({ endpoint })).toBe(0);
+  });
+
+  it('lets the owner delete their Expo push token, and nobody else', async () => {
+    const owner = new Types.ObjectId().toString();
+    const stranger = new Types.ObjectId().toString();
+    const token = 'ExponentPushToken[abc]';
+    await notificationService.saveExpoPushToken(owner, token, 'android');
+
+    expect(await notificationService.deleteExpoPushToken(stranger, token)).toBe(true);
+    expect(await ExpoPushTokenModel.countDocuments({ token })).toBe(1);
+
+    // The token is trimmed the same way it was saved.
+    expect(await notificationService.deleteExpoPushToken(owner, `  ${token} `)).toBe(true);
+    expect(await ExpoPushTokenModel.countDocuments({ token })).toBe(0);
   });
 });

@@ -1940,8 +1940,47 @@ export const STAFF_GAP_FLOWS: readonly CatalogueFlow[] = [
   {
     name: 'Marketing: Social Calendar',
     description:
-      'marketing /publish/calendar (old /social-calendar redirects): the Social Accounts publishing calendar on its own page — compose, schedule, share now, retry and delete posts across connected accounts. AI ideas live on Social Accounts > Ideas.',
+      'marketing /publish/calendar (old /social-calendar redirects): the publishing calendar by month, week or day — compose a post with one or many media (a carousel where the network takes one), schedule, publish now, send for approval, share now, retry and delete across connected accounts. AI ideas live on Social Accounts > Ideas. A MARKETING_EDITOR writes and schedules too, but every send is parked for a manager (social.publish.resolver.ts).',
     sub_flows: [
+      {
+        name: 'Carousel posts, approval and the week and day views',
+        description:
+          'A post carries an ordered media list (SocialScheduledPostInput.media); PUBLISH_RULES caps it per network (Instagram 10, Facebook 10 images only, Threads 20, LinkedIn 20 images, X 4 images, YouTube one video). needs_approval parks the post as PENDING_APPROVAL and opens an approval run; the decision on /approvals schedules it or sends it back to Draft with the note.',
+        steps: [
+          [
+            'Pick three images and Instagram, Facebook and Threads, then Schedule',
+            'The platform checks show "3 / 10 media" per network; the post goes out as one carousel on each; the calendar item and the card show "3 media"',
+          ],
+          [
+            'Add a video as the second item with Facebook picked',
+            'Error "Facebook takes one video on its own, not in a carousel" on the media field; X or LinkedIn with a video says the network cannot take video',
+          ],
+          [
+            'Pick five images with X among the targets',
+            'Error "X takes at most 4 media"',
+          ],
+          [
+            'Switch on Needs approval and press Send for approval',
+            'Toast says the post was sent for approval; it sits in the Awaiting approval list with an "Open approvals" link, and an AWAITING_APPROVAL run "Approve \"<text>\" for N networks" appears on /approvals',
+          ],
+          [
+            'Approve the run on /approvals',
+            'The post becomes SCHEDULED and goes out at its time; its publish run hangs under the approval run (parent) in Activity',
+          ],
+          [
+            'Request changes with a note instead',
+            'The post returns to Drafts with "Sent back: <note>" on its card and in the composer; submitting it again clears the note',
+          ],
+          [
+            'Schedule a post with a MARKETING_EDITOR token without asking for approval',
+            'It is parked for approval anyway; shareScheduledSocialPostNow with that token answers FORBIDDEN "Access Denied"',
+          ],
+          [
+            'Switch the calendar to Week, then Day, and press next',
+            'Week shows the seven days of the current week and steps a week at a time; Day shows one day’s agenda with its "+" (none for a past day) and steps a day; Month is unchanged',
+          ],
+        ],
+      },
       {
         name: 'Schedule, edit, retry and share-now a social post',
         description:

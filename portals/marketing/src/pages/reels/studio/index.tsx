@@ -13,8 +13,10 @@ import { REEL_PROJECT } from '../queries';
 import type { ReelProject } from '../types';
 import ChatPanel from './chat/ChatPanel';
 import ExportDialog from './export/ExportDialog';
+import ReelComposer from './export/ReelComposer';
 import InspectorPanel from './inspector/InspectorPanel';
 import { useReelExport } from './export/useReelExport';
+import { useReelPost } from './export/useReelPost';
 import PreviewPane from './preview/PreviewPane';
 import SourcesPanel from './sources/SourcesPanel';
 import StudioSidePanel, { type SideTab } from './StudioSidePanel';
@@ -31,7 +33,7 @@ export default function ReelStudioPage() {
     skip: !projectId,
     fetchPolicy: 'cache-and-network',
   });
-  if (!projectId) return <Navigate to="/reels" replace />;
+  if (!projectId) return <Navigate to="/studio/reels" replace />;
   const project = data?.reelProject ?? null;
 
   return (
@@ -80,6 +82,7 @@ function Studio({ project }: Readonly<{ project: ReelProject }>) {
   const editor = useSpecEditor(project);
   const live = useMemo(() => ({ ...project, spec: editor.spec }), [project, editor.spec]);
   const exporter = useReelExport(live);
+  const poster = useReelPost(project.name, exporter.state.phase === 'rendered');
   const [player, setPlayer] = useState<PlayerRef | null>(null);
   const [selection, setSelection] = useState<ReelSelection | null>(null);
   const tabItems = useMemo(
@@ -135,7 +138,8 @@ function Studio({ project }: Readonly<{ project: ReelProject }>) {
         onClose={() => setDetailsOpen(false)}
         onSubmit={saveDetails}
       />
-      <ExportDialog exporter={exporter} />
+      <ExportDialog exporter={exporter} poster={poster} />
+      {poster.composer && <ReelComposer request={poster.composer} onClose={poster.closeComposer} />}
     </FillViewport>
   );
 }

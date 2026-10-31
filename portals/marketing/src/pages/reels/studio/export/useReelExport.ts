@@ -13,6 +13,8 @@ export type ExportState =
   | { phase: 'idle' }
   | { phase: 'downloading'; progress: number }
   | { phase: 'rendering'; progress: number }
+  /** Rendered and waiting on the operator: save it, or post it to social. */
+  | { phase: 'rendered'; file: File }
   | { phase: 'failed'; message: string };
 
 const IDLE: ExportState = { phase: 'idle' };
@@ -20,6 +22,7 @@ const IDLE: ExportState = { phase: 'idle' };
 /** H.264 in an MP4: the one pairing every platform a reel is posted to accepts. */
 const CONTAINER = 'mp4';
 const VIDEO_CODEC = 'h264';
+const MIME_TYPE = 'video/mp4';
 
 /** What the operator reads when an export fails. */
 function failureMessage(error: unknown, t: (key: string, options?: { vars?: Record<string, string> }) => string): string {
@@ -36,7 +39,8 @@ function fileNameOf(name: string): string {
 }
 
 /**
- * Renders the reel to an MP4 in this browser tab and saves it.
+ * Renders the reel to an MP4 in this browser tab and holds it for the operator
+ * to save, or to post to social.
  *
  * No server takes part: Remotion's web renderer draws the SAME composition the
  * player shows, frame by frame, and encodes it with the browser's own video
@@ -94,16 +98,15 @@ export function useReelExport(project: ReelProject) {
         licenseKey: remotionLicenseKey,
         onProgress: ({ progress }) => setState({ phase: 'rendering', progress }),
       }).finally(local.release);
-      downloadBlob(await result.getBlob(), fileNameOf(name));
-      setState(IDLE);
-      notifySuccess(t('ai.reels.export.done'));
+      const blob = await result.getBlob();
+      setState({ phase: 'rendered', file: new File([blob], fileNameOf(name), { type: MIME_TYPE }) });
     } catch (error) {
       // Cancelling is the operator's own choice, not something to report back to them.
       if (controller.signal.aborted) {
         setState(IDLE);
         return;
       }
-      logs.portal.ai.error('reels', 'export', { error });
+      logs.portal.marketing.error('reels', 'export', { error });
       setState({ phase: 'failed', message: failureMessage(error, t) });
     }
   }, [project, t]);
@@ -111,7 +114,15 @@ export function useReelExport(project: ReelProject) {
   const cancel = useCallback(() => abortRef.current?.abort(), []);
   const dismiss = useCallback(() => setState(IDLE), []);
 
-  return { state, start, cancel, dismiss };
+  /** Saves the rendered file to the operator's computer and closes the export. */
+  const save = useCallback(() => {
+    if (state.phase !== 'rendered') return;
+    downloadBlob(state.file, state.file.name);
+    setState(IDLE);
+    notifySuccess(t('ai.reels.export.done'));
+  }, [state, t]);
+
+  return { state, start, cancel, dismiss, save };
 }
 
 export type ReelExport = ReturnType<typeof useReelExport>;

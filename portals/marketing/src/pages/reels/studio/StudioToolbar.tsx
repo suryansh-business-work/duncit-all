@@ -23,7 +23,7 @@ export default function StudioToolbar({ project, onEditDetails, onExport }: Read
       title={project.name}
       titleVariant="h6"
       titleNoWrap
-      backTo="/reels"
+      backTo="/studio/reels"
       backAriaLabel={t('ai.reels.studio.back')}
       sx={{ px: 2, py: 1.25 }}
       actions={

@@ -84,3 +84,13 @@ describe('writes', () => {
     expect(svc.updateAppSettings).not.toHaveBeenCalled();
   });
 });
+
+describe('festive app icons', () => {
+  it('are run by marketing from Marketing → Occasions, which gives them nothing else of the branding', async () => {
+    const marketing = makeContext({ id: 'k1', roles: ['MARKETING_MANAGER'] });
+
+    await M.updateOccasionalIcons({}, { input: [] }, marketing);
+    expect(svc.updateOccasionalIcons).toHaveBeenCalledWith([]);
+    await expect(M.updateBranding({}, { input: {} }, marketing)).rejects.toThrow(/access denied/i);
+  });
+});

@@ -92,6 +92,7 @@ import {
 } from '@modules/content/emailLog/emailLog.service';
 import { rbacService } from '@modules/access/role/rbac.service';
 import { settingsService } from '@modules/platform/settings/settings.service';
+import { occasionService } from '@modules/crm/marketing/occasions/occasion.service';
 import { telemetryService } from '@modules/platform/telemetry/telemetry.service';
 import { buildTelemetryFeedRouter } from '@modules/platform/telemetry/telemetry.router';
 import { buildAiPromptFeedRouter } from '@modules/ai/prompt/prompt.router';
@@ -256,6 +257,11 @@ async function bootstrap() {
     if (result.pincodes_moved > 0) logs.server.info('bootstrap', 'storeServiceablePincodes', result);
   });
   await safeSeed('settings', () => settingsService.seedDefaults());
+  // Marketing → Occasions: ship any built-in festival look the database does not have yet.
+  await safeSeed('occasions', async () => {
+    const added = await occasionService.seedBuiltins();
+    if (added > 0) logs.server.info('bootstrap', 'occasionLooks', { added });
+  });
   await safeSeed('settingsCaches', () => settingsService.refreshDerivedCaches());
   // Telemetry: seed the singleton, prime the log-funnel runtime flags, then wire
   // the DB-persist handler so selected-level logs start recording.

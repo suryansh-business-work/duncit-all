@@ -14156,6 +14156,8 @@ export type Mutation = {
    */
   archiveContract: Contract;
   archiveInventoryProduct: InventoryProduct;
+  /** Hide a look from the catalogue (or bring it back). The pinned live look cannot be archived. */
+  archiveOccasionTheme: OccasionTheme;
   /**
    * Ask a bot a question. Every link in the reply is checked against the
    * navigation map and resolved for the caller's own environment, so the answer
@@ -14675,6 +14677,8 @@ export type Mutation = {
   deleteMyProductListing: Scalars['Boolean']['output'];
   deleteMyTutorialComment: Scalars['Boolean']['output'];
   deleteNotification: Scalars['Boolean']['output'];
+  /** Delete a look someone made. Built-in looks are archived instead. */
+  deleteOccasionTheme: Scalars['Boolean']['output'];
   deleteOfficialStatus: Scalars['Boolean']['output'];
   /** Partner: delete a saved connection. Refused while a brand uses it. */
   deletePartnerIntegration: Scalars['Boolean']['output'];
@@ -14788,6 +14792,8 @@ export type Mutation = {
   duplicateChallengeToolPreset: ChallengeToolPreset;
   duplicateCmsPage: CmsPage;
   duplicateInventoryProduct: InventoryProduct;
+  /** Copy a look under a new name, to adapt it without touching the original. */
+  duplicateOccasionTheme: OccasionTheme;
   /**
    * Reserve a place in Slack for one suite's recording. Tech/Super admin only.
    *
@@ -15514,6 +15520,8 @@ export type Mutation = {
    * Subject, fragment and footer sentence are left as they are.
    */
   resetEmailTemplate: EmailTemplate;
+  /** Put a built-in look back the way Duncit shipped it (its schedule is kept). */
+  resetOccasionTheme: OccasionTheme;
   /** Deprecated: code + new password in one call. Use completePasswordReset. */
   resetPasswordWithOtp: Scalars['Boolean']['output'];
   /**
@@ -15675,6 +15683,8 @@ export type Mutation = {
   saveMyAddress: UserAddress;
   /** Create/update a pickup address on one of the caller's OWN brands (owner_kind/brand_id are forced server-side). */
   saveMyBrandPickupLocation: BrandPickupLocation;
+  /** Design a look: no key creates one, a key changes that one (only the fields sent). An agent asked to design a festival sends a full OccasionThemeInput here. */
+  saveOccasionTheme: OccasionTheme;
   /** Partner: add (omit id) or update a saved connection and check it against the vendor right away. */
   savePartnerIntegration: PartnerIntegration;
   savePodDraft: PodDraft;
@@ -15842,6 +15852,10 @@ export type Mutation = {
   /** Change the signed-in account's @handle. Rejects a taken or reserved one. */
   setMyUsername: User;
   setMyWhatsappPreference: WaPreference;
+  /** Switch what every Duncit app wears: the house look, one pinned look, or the schedule. Takes effect on the next app load. */
+  setOccasionLive: OccasionSettings;
+  /** Set the dates a look goes live by itself (used while the live mode is SCHEDULE). */
+  setOccasionSchedule: OccasionTheme;
   /** Host: tick or untick one task/checkpoint for a competitor (a reason is needed after the end). */
   setPodChallengeItem: PodChallenge;
   setPodChallengeRoster: PodChallenge;
@@ -16068,6 +16082,8 @@ export type Mutation = {
   /** Create (no id) or update a STORE-scoped coupon. */
   storeSaveCoupon: Coupon;
   storeSaveFacet: StoreFacet;
+  /** Replace the ecomm store's festive windows (Marketing → Occasions → Ecomm store). Up to 24; each needs a name and an end after its start. */
+  storeSaveOccasions: Array<StoreOccasion>;
   storeSavePage: StoreAdminPage;
   storeSavePetType: StoreAdminPetType;
   /** Create (no id) or update an ecomm product. DRAFT saves what is filled in; PUBLISHED first checks it can be sold, then puts it on the store. */
@@ -16425,7 +16441,7 @@ export type Mutation = {
   updateMyProductSettings: InventoryProduct;
   updateMyProfile: User;
   updateMyProfileVisibility: User;
-  /** Replace the occasional-icon windows (admin Branding). */
+  /** Replace the occasional-icon windows (Marketing → Occasions → App icons). */
   updateOccasionalIcons: Array<OccasionalIcon>;
   updateOfficialStatus: OfficialStatus;
   updateOnboardingIntro: OnboardingIntro;
@@ -16996,6 +17012,12 @@ export type MutationArchiveContractArgs = {
 
 export type MutationArchiveInventoryProductArgs = {
   product_doc_id: Scalars['ID']['input'];
+};
+
+
+export type MutationArchiveOccasionThemeArgs = {
+  archived: Scalars['Boolean']['input'];
+  key: Scalars['String']['input'];
 };
 
 
@@ -18306,6 +18328,11 @@ export type MutationDeleteNotificationArgs = {
 };
 
 
+export type MutationDeleteOccasionThemeArgs = {
+  key: Scalars['String']['input'];
+};
+
+
 export type MutationDeleteOfficialStatusArgs = {
   status_doc_id: Scalars['ID']['input'];
 };
@@ -18663,6 +18690,12 @@ export type MutationDuplicateCmsPageArgs = {
 
 export type MutationDuplicateInventoryProductArgs = {
   product_doc_id: Scalars['ID']['input'];
+};
+
+
+export type MutationDuplicateOccasionThemeArgs = {
+  key: Scalars['String']['input'];
+  name: Scalars['String']['input'];
 };
 
 
@@ -19815,6 +19848,11 @@ export type MutationResetEmailTemplateArgs = {
 };
 
 
+export type MutationResetOccasionThemeArgs = {
+  key: Scalars['String']['input'];
+};
+
+
 export type MutationResetPasswordWithOtpArgs = {
   input: ResetPasswordInput;
 };
@@ -20151,6 +20189,12 @@ export type MutationSaveMyBrandPickupLocationArgs = {
   brand_doc_id: Scalars['ID']['input'];
   id?: InputMaybe<Scalars['ID']['input']>;
   input: BrandPickupLocationInput;
+};
+
+
+export type MutationSaveOccasionThemeArgs = {
+  input: OccasionThemeInput;
+  key?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -20581,6 +20625,17 @@ export type MutationSetMyUsernameArgs = {
 export type MutationSetMyWhatsappPreferenceArgs = {
   category: Scalars['String']['input'];
   enabled: Scalars['Boolean']['input'];
+};
+
+
+export type MutationSetOccasionLiveArgs = {
+  input: OccasionLiveInput;
+};
+
+
+export type MutationSetOccasionScheduleArgs = {
+  input: OccasionScheduleInput;
+  key: Scalars['String']['input'];
 };
 
 
@@ -21186,6 +21241,11 @@ export type MutationStoreSaveCouponArgs = {
 export type MutationStoreSaveFacetArgs = {
   id?: InputMaybe<Scalars['ID']['input']>;
   input: StoreFacetInput;
+};
+
+
+export type MutationStoreSaveOccasionsArgs = {
+  input: Array<StoreOccasionInput>;
 };
 
 
@@ -22956,6 +23016,350 @@ export type NotificationTablePage = {
   page_size: Scalars['Int']['output'];
   rows: Array<Notification>;
   total: Scalars['Int']['output'];
+};
+
+/** What a flyer draws: a built-in picture, CUSTOM (its own custom_layers) or IMAGE (an uploaded transparent PNG/GIF at image_url). Built-ins face right. */
+export type OccasionArtwork =
+  | 'CUSTOM'
+  /** A striped hot-air balloon. */
+  | 'HOT_AIR_BALLOON'
+  | 'IMAGE'
+  /** A four-colour patang with a bow-tied tail. */
+  | 'KITE'
+  /** Santa in his sleigh behind two reindeer, the lead one red-nosed. */
+  | 'SANTA_SLEIGH'
+  /** A bright star; give it a trail_color and it streaks across. */
+  | 'SHOOTING_STAR'
+  /** A witch on a broomstick with her cat. */
+  | 'WITCH_BROOM';
+
+/** AUTO wears the look in whichever mode the viewer chose; LIGHT or DARK pins one (Halloween pins DARK). */
+export type OccasionColorMode =
+  | 'AUTO'
+  | 'DARK'
+  | 'LIGHT';
+
+export type OccasionDirection =
+  | 'LTR'
+  | 'RTL';
+
+/** Bursts of glowing, streaking sparks in the upper half of the screen. */
+export type OccasionFireworks = {
+  __typename?: 'OccasionFireworks';
+  /** 1-60. */
+  bursts_per_minute: Scalars['Float']['output'];
+  colors: Array<Scalars['String']['output']>;
+  enabled: Scalars['Boolean']['output'];
+  /** Burst radius in px (20-300). */
+  radius: Scalars['Float']['output'];
+  /** Sparks per burst (6-60). */
+  sparks: Scalars['Int']['output'];
+};
+
+export type OccasionFireworksInput = {
+  bursts_per_minute?: InputMaybe<Scalars['Float']['input']>;
+  colors?: InputMaybe<Array<Scalars['String']['input']>>;
+  enabled: Scalars['Boolean']['input'];
+  radius?: InputMaybe<Scalars['Float']['input']>;
+  sparks?: InputMaybe<Scalars['Int']['input']>;
+};
+
+/** Artwork that crosses the screen every so often — Santa's sleigh, a witch, a kite — with a soft shadow and an optional sparkle trail. */
+export type OccasionFlyer = {
+  __typename?: 'OccasionFlyer';
+  altitude_max: Scalars['Float']['output'];
+  /** The band it crosses in, as % of the screen height from the top (0-90). Each pass picks its own height inside it. */
+  altitude_min: Scalars['Float']['output'];
+  artwork: OccasionArtwork;
+  /** Pixels of gentle up-and-down while it flies (0-60). */
+  bob: Scalars['Float']['output'];
+  /** For CUSTOM: layers drawn facing right in a 240x120 box. */
+  custom_layers: Array<OccasionVectorLayer>;
+  direction: OccasionDirection;
+  /** Seconds to cross the screen (2-60). */
+  duration: Scalars['Float']['output'];
+  /** For IMAGE: an https link to a transparent PNG or GIF. */
+  image_url: Scalars['String']['output'];
+  /** Seconds from one pass's start to the next (never shorter than duration, at most 600). */
+  interval: Scalars['Float']['output'];
+  /** Drawn width in px (24-480). */
+  size: Scalars['Float']['output'];
+  /** Hex colour of the sparkle dust behind it; '' for none. */
+  trail_color: Scalars['String']['output'];
+};
+
+export type OccasionFlyerInput = {
+  altitude_max?: InputMaybe<Scalars['Float']['input']>;
+  altitude_min?: InputMaybe<Scalars['Float']['input']>;
+  artwork: OccasionArtwork;
+  bob?: InputMaybe<Scalars['Float']['input']>;
+  custom_layers?: InputMaybe<Array<OccasionVectorLayerInput>>;
+  direction?: InputMaybe<OccasionDirection>;
+  duration?: InputMaybe<Scalars['Float']['input']>;
+  image_url?: InputMaybe<Scalars['String']['input']>;
+  interval?: InputMaybe<Scalars['Float']['input']>;
+  size?: InputMaybe<Scalars['Float']['input']>;
+  trail_color?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type OccasionGarland = {
+  __typename?: 'OccasionGarland';
+  /** Bulb / flag / flower colours cycled along the string; empty uses the style's own. */
+  colors: Array<Scalars['String']['output']>;
+  style: OccasionGarlandStyle;
+};
+
+export type OccasionGarlandInput = {
+  colors?: InputMaybe<Array<Scalars['String']['input']>>;
+  style: OccasionGarlandStyle;
+};
+
+/** Decoration hung along the top edge: STRING_LIGHTS (twinkling bulbs), BUNTING (triangle flags), MARIGOLD (a toran with mango leaves), SPIDER_WEB (webs in both corners and a spider), ICICLES (a snow cap with icicles). */
+export type OccasionGarlandStyle =
+  | 'BUNTING'
+  | 'ICICLES'
+  | 'MARIGOLD'
+  | 'NONE'
+  | 'SPIDER_WEB'
+  | 'STRING_LIGHTS';
+
+/** What the apps wear right now. */
+export type OccasionLive = {
+  __typename?: 'OccasionLive';
+  mode: OccasionLiveMode;
+  /** When the scheduled look may next change (a window opens or closes), so an open app knows when to look again. */
+  next_change_at?: Maybe<Scalars['String']['output']>;
+  source: OccasionLiveSource;
+  /** Null = the house look. */
+  theme?: Maybe<OccasionTheme>;
+};
+
+export type OccasionLiveInput = {
+  /** Required for MANUAL: the key of a look that is not archived. */
+  manual_key?: InputMaybe<Scalars['String']['input']>;
+  mode: OccasionLiveMode;
+};
+
+/** NORMAL = the apps' own house look; MANUAL = one look pinned (manual_key); SCHEDULE = whichever look's date window is open, else the house look. */
+export type OccasionLiveMode =
+  | 'MANUAL'
+  | 'NORMAL'
+  | 'SCHEDULE';
+
+/** Why the live look is on: pinned, opened by its schedule, a preview link, or NONE (the house look). */
+export type OccasionLiveSource =
+  | 'MANUAL'
+  | 'NONE'
+  | 'PREVIEW'
+  | 'SCHEDULE';
+
+/** How a particle layer moves: FALL from the top (snow, petals), RISE from the bottom (diyas, hearts), DRIFT across from the left (bats, kites), TWINKLE in place with a pulsing glow (stars, sparks). */
+export type OccasionMotion =
+  | 'DRIFT'
+  | 'FALL'
+  | 'RISE'
+  | 'TWINKLE';
+
+export type OccasionOverlay = {
+  __typename?: 'OccasionOverlay';
+  color: Scalars['String']['output'];
+  /** 0-1 at its strongest point. */
+  opacity: Scalars['Float']['output'];
+  style: OccasionOverlayStyle;
+};
+
+export type OccasionOverlayInput = {
+  color?: InputMaybe<Scalars['String']['input']>;
+  opacity?: InputMaybe<Scalars['Float']['input']>;
+  style: OccasionOverlayStyle;
+};
+
+/** A wash over the whole screen: VIGNETTE darkens the edges (spooky, night), GLOW_TOP fades a colour down from the top (warm festive glow), FOG drifts soft banks along the bottom. */
+export type OccasionOverlayStyle =
+  | 'FOG'
+  | 'GLOW_TOP'
+  | 'NONE'
+  | 'VIGNETTE';
+
+/** A swarm of small marks — snow, petals, sparks, bats, confetti. Near marks are drawn bigger, faster and brighter than far ones, and falling ones tumble in 3D. */
+export type OccasionParticleLayer = {
+  __typename?: 'OccasionParticleLayer';
+  /** Hex fills, one picked per mark. */
+  colors: Array<Scalars['String']['output']>;
+  /** Marks on a 1440px-wide desktop (0-160); a phone gets fewer, never under 45%. */
+  count: Scalars['Int']['output'];
+  /** Extra marks as SVG path data in a 24x24 box centred on (12, 12). */
+  custom_paths: Array<Scalars['String']['output']>;
+  motion: OccasionMotion;
+  /** 0.05-1. */
+  opacity: Scalars['Float']['output'];
+  shapes: Array<OccasionShape>;
+  size_max: Scalars['Float']['output'];
+  /** Mark size range in px (2-120). */
+  size_min: Scalars['Float']['output'];
+  /** Pixels per second (1-600). For TWINKLE, how quick the pulse is. */
+  speed: Scalars['Float']['output'];
+};
+
+export type OccasionParticleLayerInput = {
+  colors: Array<Scalars['String']['input']>;
+  count?: InputMaybe<Scalars['Int']['input']>;
+  custom_paths?: InputMaybe<Array<Scalars['String']['input']>>;
+  motion: OccasionMotion;
+  opacity?: InputMaybe<Scalars['Float']['input']>;
+  shapes?: InputMaybe<Array<OccasionShape>>;
+  size_max?: InputMaybe<Scalars['Float']['input']>;
+  size_min?: InputMaybe<Scalars['Float']['input']>;
+  speed?: InputMaybe<Scalars['Float']['input']>;
+};
+
+/** Where a look sits in the Marketing catalogue. */
+export type OccasionRegion =
+  | 'CUSTOM'
+  | 'GLOBAL'
+  | 'INDIAN'
+  | 'NATIONAL'
+  | 'WESTERN';
+
+export type OccasionScheduleInput = {
+  ends_at?: InputMaybe<Scalars['String']['input']>;
+  /** On only with both dates set and the end after the start. */
+  schedule_enabled: Scalars['Boolean']['input'];
+  sort_order?: InputMaybe<Scalars['Int']['input']>;
+  starts_at?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type OccasionSettings = {
+  __typename?: 'OccasionSettings';
+  /** The pinned look's key while mode is MANUAL. */
+  manual_key: Scalars['String']['output'];
+  mode: OccasionLiveMode;
+  updated_at?: Maybe<Scalars['String']['output']>;
+};
+
+/**
+ * A built-in mark a particle layer draws (each is a small vector picture in a
+ * 24x24 box). DIYA is a lit oil lamp, MODAK the sweet, CHAKRA the Ashoka
+ * Chakra, MARIGOLD a marigold bloom; the rest are what they say. For anything
+ * else, give the layer custom_paths.
+ */
+export type OccasionShape =
+  | 'BALLOON'
+  | 'BAT'
+  | 'BELL'
+  | 'CANDY_CANE'
+  | 'CHAKRA'
+  | 'CIRCLE'
+  | 'CONFETTI'
+  | 'DIYA'
+  | 'DROP'
+  | 'EGG'
+  | 'FEATHER'
+  | 'FLAME'
+  | 'GHOST'
+  | 'GIFT'
+  | 'HEART'
+  | 'KITE'
+  | 'LANTERN'
+  | 'LEAF'
+  | 'MARIGOLD'
+  | 'MODAK'
+  | 'MOON'
+  | 'ORNAMENT'
+  | 'PETAL'
+  | 'PUMPKIN'
+  | 'RING'
+  | 'SNOWFLAKE'
+  | 'SPARK'
+  | 'STAR'
+  | 'SUN'
+  | 'TREE';
+
+/**
+ * A festive look for the Duncit apps (mWeb and the native app), managed in
+ * Marketing → Occasions. Its colour tokens repaint every screen; its
+ * decoration plays over them (with a pause control, and still under reduced
+ * motion). Built-in festivals ship ready; anything else is designed here.
+ */
+export type OccasionTheme = {
+  __typename?: 'OccasionTheme';
+  color_mode: OccasionColorMode;
+  description: Scalars['String']['output'];
+  ends_at?: Maybe<Scalars['String']['output']>;
+  fireworks: OccasionFireworks;
+  flyers: Array<OccasionFlyer>;
+  garland: OccasionGarland;
+  /** A short festive line the apps show once a session (max 80 characters); '' shows none. */
+  greeting: Scalars['String']['output'];
+  is_archived: Scalars['Boolean']['output'];
+  /** Shipped with Duncit: can be edited, archived or reset, not deleted. */
+  is_builtin: Scalars['Boolean']['output'];
+  /** Stable, URL-safe id, e.g. christmas, diwali. */
+  key: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  overlays: Array<OccasionOverlay>;
+  palette_dark: ThemeModeTokens;
+  /**
+   * The app's colour tokens this look overrides in light mode; '' keeps the
+   * app's own. Keep it readable: onPrimary on primary, onAccent on accent,
+   * ink and muted on bg/surface/soft all need 4.5:1 contrast.
+   */
+  palette_light: ThemeModeTokens;
+  particles: Array<OccasionParticleLayer>;
+  region: OccasionRegion;
+  schedule_enabled: Scalars['Boolean']['output'];
+  /** Higher wins when two windows overlap. */
+  sort_order: Scalars['Int']['output'];
+  /** The window this look goes live in by itself while the live mode is SCHEDULE (ISO dates). */
+  starts_at?: Maybe<Scalars['String']['output']>;
+  updated_at?: Maybe<Scalars['String']['output']>;
+};
+
+/**
+ * A look's design. On a new look, name is required and the rest default to
+ * the house look with no decoration. On an existing look only the fields sent
+ * change — send just particles to change just the particles.
+ */
+export type OccasionThemeInput = {
+  color_mode?: InputMaybe<OccasionColorMode>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  fireworks?: InputMaybe<OccasionFireworksInput>;
+  /** Up to 3. */
+  flyers?: InputMaybe<Array<OccasionFlyerInput>>;
+  garland?: InputMaybe<OccasionGarlandInput>;
+  greeting?: InputMaybe<Scalars['String']['input']>;
+  /** For a new look only: its id. Blank makes one from the name. */
+  key?: InputMaybe<Scalars['String']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  /** Up to 3, painted in order. */
+  overlays?: InputMaybe<Array<OccasionOverlayInput>>;
+  palette_dark?: InputMaybe<ThemeModeTokensInput>;
+  palette_light?: InputMaybe<ThemeModeTokensInput>;
+  /** Up to 4 layers. */
+  particles?: InputMaybe<Array<OccasionParticleLayerInput>>;
+  region?: InputMaybe<OccasionRegion>;
+};
+
+/** One piece of a vector artwork: SVG path data painted with a fill and/or an outline, offset by (x, y) inside the artwork's box. */
+export type OccasionVectorLayer = {
+  __typename?: 'OccasionVectorLayer';
+  /** Hex, or '' for no fill. */
+  fill: Scalars['String']['output'];
+  path: Scalars['String']['output'];
+  /** Hex, or '' for no outline. */
+  stroke: Scalars['String']['output'];
+  stroke_width: Scalars['Float']['output'];
+  x: Scalars['Float']['output'];
+  y: Scalars['Float']['output'];
+};
+
+export type OccasionVectorLayerInput = {
+  fill?: InputMaybe<Scalars['String']['input']>;
+  path: Scalars['String']['input'];
+  stroke?: InputMaybe<Scalars['String']['input']>;
+  stroke_width?: InputMaybe<Scalars['Float']['input']>;
+  x?: InputMaybe<Scalars['Float']['input']>;
+  y?: InputMaybe<Scalars['Float']['input']>;
 };
 
 /**
@@ -29302,6 +29706,12 @@ export type Query = {
   newsletterSubscribersTable: NewsletterSubscriberTablePage;
   notifications: Array<Notification>;
   notificationsTable: NotificationTablePage;
+  /** The look the Duncit apps wear right now (public — the apps read it before sign-in). preview = a look's key shows that look instead, for Marketing's preview link. */
+  occasionLive: OccasionLive;
+  occasionSettings: OccasionSettings;
+  occasionTheme?: Maybe<OccasionTheme>;
+  /** Marketing → Occasions: every look, built-in festivals first. */
+  occasionThemes: Array<OccasionTheme>;
   /**
    * The live Duncit statuses for the apps' rail, newest first: every GLOBAL one,
    * plus the ones published to the city the viewer is browsing.
@@ -29914,6 +30324,8 @@ export type Query = {
   /** The signed-in buyer's Autoship subscriptions. */
   storeMySubscriptions: Array<StoreSubscription>;
   storeNavigation: StoreNavigation;
+  /** The ecomm store's festive windows, managed in Marketing → Occasions (store operators and marketing). */
+  storeOccasions: Array<StoreOccasion>;
   storeOrder: StoreOrder;
   storeOrderConfirmation: StorePlaceOrderResult;
   storeOrderReturns: Array<StoreReturn>;
@@ -32517,6 +32929,21 @@ export type QueryNotificationsArgs = {
 
 export type QueryNotificationsTableArgs = {
   query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryOccasionLiveArgs = {
+  preview?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type QueryOccasionThemeArgs = {
+  key: Scalars['String']['input'];
+};
+
+
+export type QueryOccasionThemesArgs = {
+  include_archived?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 

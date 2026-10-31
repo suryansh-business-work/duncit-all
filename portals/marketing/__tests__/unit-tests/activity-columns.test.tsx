@@ -154,6 +154,7 @@ describe('getRunColumns', () => {
       { value: 'SOCIAL_HEALTH', label: 'Account health check' },
       { value: 'REEL', label: 'Reel' },
       { value: 'LEAD_SEARCH', label: 'Lead search' },
+      { value: 'LEAD_IMPORT', label: 'Lead import' },
       { value: 'OUTREACH', label: 'Outreach' },
       { value: 'AGENT', label: 'AI agent' },
       { value: 'ORCHESTRATOR', label: 'Orchestrator' },

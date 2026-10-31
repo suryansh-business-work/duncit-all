@@ -613,6 +613,7 @@ jobs:
           DUNCIT_RELEASE_TOKEN: ${{ secrets.DUNCIT_RELEASE_TOKEN_STAGING }}
           E2E_STAMP: ${{ steps.identity.outputs.e2e_stamp }}
           E2E_SIGNUP_EMAIL: ${{ steps.identity.outputs.e2e_signup_email }}
+          E2E_PHONE: ${{ steps.identity.outputs.e2e_phone }}
           E2E_REQUIRE_FREE_PHONE: '1'
         run: node scripts/e2e-purge.mjs
 

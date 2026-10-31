@@ -545,6 +545,13 @@ export const e2eRunTypeDefs = gql`
     next signup.
     """
     signup_email: String!
+    """
+    The run phone, as the runner was handed it. Optional; without it this
+    server's own E2E settings are read, and a server a run only drives (staging,
+    when the run reports to production) may have no phone configured, so no
+    earlier run's account could be cleared off the number.
+    """
+    phone: String
   }
 
   type E2ePurgedCollection {

@@ -28488,6 +28488,13 @@ export type PurgeE2eRunDataInput = {
   /** Ignored. The run account is signup_email; kept so an older runner's call still parses. */
   login_email?: InputMaybe<Scalars['String']['input']>;
   /**
+   * The run phone, as the runner was handed it. Optional; without it this
+   * server's own E2E settings are read, and a server a run only drives (staging,
+   * when the run reports to production) may have no phone configured, so no
+   * earlier run's account could be cleared off the number.
+   */
+  phone?: InputMaybe<Scalars['String']['input']>;
+  /**
    * The run account. Every account whose address carries this one's stamp is
    * removed outright, with everything that points at it, together with its
    * one-time codes — which is what frees the address and the phone for the

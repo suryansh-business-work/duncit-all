@@ -16,7 +16,7 @@ import { ShortLinkModel } from '@modules/crm/marketing/shortLink.model';
 import { maskEmail } from '@modules/platform/envEntry/envAccess.service';
 import { e2eOverrides } from './e2eRun.mute';
 import { forgetRunAccountCodes } from './e2eRun.codes';
-import { stampTime, type RunAccountMatcher } from './e2eRun.identity';
+import { stampTime } from './e2eRun.identity';
 
 /**
  * Removing the run account.
@@ -48,6 +48,12 @@ export interface PurgeE2eRunDataInput {
   signup_email: string;
   /** Ignored: the run account is `signup_email`. */
   login_email?: string | null;
+  /**
+   * The run phone, as the runner was handed it. Preferred over this server's
+   * own E2E settings, which describe no identity at all on a server that a run
+   * only drives (its identity comes from the server it REPORTS to).
+   */
+  phone?: string | null;
 }
 
 interface PurgedCollection {
@@ -71,6 +77,22 @@ function stampedAccountsFilter(email: string, stamp: string): RegExp {
     throw badInput('The address does not carry the run stamp, so it is not this run’s account.');
   }
   return new RegExp(`^${escapeRe(local)}(?:-[a-z0-9-]{1,40})?@${escapeRe(domain)}$`, 'i');
+}
+
+/**
+ * Every run's address, from THIS run's: its stamp swapped for any stamp
+ * (`admin+301020262320@…` → `admin+<12 digits>@…`, `-suffix` allowed). Built
+ * from the address the runner was handed, never from this server's own E2E
+ * settings, for the same reason the phone is passed in. Only called after
+ * stampedAccountsFilter has proved the address carries the stamp.
+ */
+function anyRunAddress(email: string, stamp: string): RegExp {
+  const at = email.lastIndexOf('@');
+  const local = email.slice(0, at);
+  const cut = local.indexOf(stamp);
+  const before = escapeRe(local.slice(0, cut));
+  const after = escapeRe(local.slice(cut + stamp.length));
+  return new RegExp(String.raw`^${before}\d{12}${after}(?:-[a-z0-9-]{1,40})?@${escapeRe(email.slice(at + 1))}$`, 'i');
 }
 
 /**
@@ -104,17 +126,17 @@ interface PhoneHolders {
  * touched, only named, masked, so the operator can move the run to another
  * phone. Both fields a number can live in are read, as signup reads them.
  */
-async function runPhoneHolders(account: RunAccountMatcher | null, stamp: string, now: number): Promise<PhoneHolders> {
-  if (!account?.phone) return { stale: [], heldBy: null };
+async function runPhoneHolders(runAddress: RegExp, phone: string, stamp: string, now: number): Promise<PhoneHolders> {
+  if (!phone) return { stale: [], heldBy: null };
   const holders = await UserModel.find(
-    { $or: [{ 'auth.phone.number': account.phone }, { 'communication.whatsapp.number': account.phone }] },
+    { $or: [{ 'auth.phone.number': phone }, { 'communication.whatsapp.number': phone }] },
     { 'auth.email': 1 }
   ).lean();
   const stale: Types.ObjectId[] = [];
   let heldBy: string | null = null;
   for (const holder of holders) {
     const email = holder.auth?.email ?? '';
-    const runStamp = account.email.test(email) ? STAMP_IN_ADDRESS.exec(email)?.[1] : undefined;
+    const runStamp = runAddress.test(email) ? STAMP_IN_ADDRESS.exec(email)?.[1] : undefined;
     // This run's own account is the stamped sweep's to remove.
     if (runStamp === stamp) continue;
     const startedAt = runStamp ? stampTime(runStamp) : null;
@@ -224,15 +246,15 @@ export async function purgeE2eRunData(input: PurgeE2eRunDataInput) {
   }
 
   const addresses = stampedAccountsFilter(email, stamp);
+  const phone = clean(input?.phone).replaceAll(/\D/g, '') || account?.phone || '';
   const stamped = await UserModel.find({ 'auth.email': addresses }, { _id: 1 }).lean();
-  const holders = await runPhoneHolders(account, stamp, Date.now());
+  const holders = await runPhoneHolders(anyRunAddress(email, stamp), phone, stamp, Date.now());
   const accounts = [...stamped.map((found) => found._id), ...holders.stale];
   const fixtures = await purgeRunFixtures(accounts, stamp);
   for (const id of accounts) {
     await purgeAccount(String(id));
   }
 
-  const phone = account?.phone ?? '';
   const records: PurgedCollection[] = [
     ...fixtures,
     await purgeChallenges(addresses, phone),
@@ -244,6 +266,7 @@ export async function purgeE2eRunData(input: PurgeE2eRunDataInput) {
     stamp,
     accounts: accounts.length,
     earlier_run_accounts: holders.stale.length,
+    phone_checked: Boolean(phone),
     phone_held: Boolean(holders.heldBy),
     records,
   });

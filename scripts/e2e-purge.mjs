@@ -22,6 +22,11 @@
  *   E2E_STAMP / E2E_SIGNUP_EMAIL   the run identity, as the leg
  *                         fetched it. Absent means no identity was configured,
  *                         so nothing was created and there is nothing to do.
+ *   E2E_PHONE             the run phone (falls back to CYPRESS_E2E_PHONE, which
+ *                         the leg exports for Cypress). Passed rather than left
+ *                         to the server: the identity comes from the server the
+ *                         run REPORTS to, and the one it drives may have no
+ *                         phone in its own E2E settings.
  *   E2E_REQUIRE_FREE_PHONE  "1" before signup: the server also clears an EARLIER
  *                         run's account off the run phone, and if anything else
  *                         still holds it (a real account, or a run still going)
@@ -64,9 +69,10 @@ try {
   const { gql, resolveToken } = createCiClient({ url, retryWindowMs: RETRY_WINDOW_MS });
   const token = await resolveToken();
   if (!token) throw new Error(MISSING_CREDENTIALS);
+  const phone = env('E2E_PHONE') || env('CYPRESS_E2E_PHONE');
   const data = await gql(
     PURGE_MUTATION,
-    { input: { stamp, signup_email: signup } },
+    { input: { stamp, signup_email: signup, ...(phone ? { phone } : {}) } },
     token
   );
   const report = data.purgeE2eRunData;

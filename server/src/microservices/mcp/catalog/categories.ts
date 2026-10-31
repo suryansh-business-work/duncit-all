@@ -278,6 +278,7 @@ export const MODULE_CATEGORY: Record<ModuleName, McpCategoryKey | null> = {
   socialPublishTypeDefs: 'marketing',
   igLeadTypeDefs: 'marketing',
   occasionTypeDefs: 'marketing',
+  marketingRunTypeDefs: 'marketing',
 
   analyticsTypeDefs: 'analytics',
   entityAnalyticsTypeDefs: 'analytics',

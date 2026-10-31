@@ -28,6 +28,7 @@ export const RUN_WORKFLOWS = [
   'SOCIAL_PUBLISH',
   'SOCIAL_SYNC',
   'SOCIAL_HEALTH',
+  'INBOX_REPLY',
   'REEL',
   'LEAD_SEARCH',
   'LEAD_IMPORT',
@@ -142,6 +143,10 @@ const runSchema = new Schema(
 runSchema.index({ status: 1, created_at: -1 });
 runSchema.index({ workflow: 1, created_at: -1 });
 runSchema.index({ 'actor.id': 1, created_at: -1 });
+// Marketing › Analytics reads every run started in a window, whatever its workflow or status.
+runSchema.index({ created_at: -1 });
+// …and the approvals decided in one.
+runSchema.index({ 'approval.decided_at': -1 });
 
 export type MarketingRunDoc = InferSchemaType<typeof runSchema> & { _id: unknown };
 export type MarketingRunStep = InferSchemaType<typeof stepSchema>;

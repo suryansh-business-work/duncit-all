@@ -1,3 +1,4 @@
+import type { PipelineStage } from 'mongoose';
 import { SocialPostModel } from '@modules/crm/marketing/social/social.model';
 import { SocialScheduledPostModel } from '@modules/crm/marketing/social/social.publish.model';
 import type { SocialPlatform } from '@modules/crm/marketing/social/social.types';
@@ -55,6 +56,24 @@ const iso = (value: Date | null | undefined): string | null => (value ? value.to
 const count = (value: number | null | undefined): number => (typeof value === 'number' && Number.isFinite(value) ? value : 0);
 
 /**
+ * An aggregation stage for a pipeline already unwound to `$targets`: the one
+ * synced SocialPost that target became, as `synced` (empty until the account
+ * sync has read it back), carrying only the asked fields.
+ */
+export const syncedPostLookup = (fields: readonly string[]): PipelineStage.Lookup => ({
+  $lookup: {
+    from: SocialPostModel.collection.name,
+    let: { account: '$targets.account_id', external: '$targets.external_id' },
+    pipeline: [
+      { $match: { $expr: { $and: [{ $eq: ['$account_id', '$$account'] }, { $eq: ['$external_id', '$$external'] }] } } },
+      { $limit: 1 },
+      { $project: { _id: 0, ...Object.fromEntries(fields.map((field) => [field, 1])) } },
+    ],
+    as: 'synced',
+  },
+});
+
+/**
  * The list's figures for every reel at once — one aggregation, however long
  * the list: the posts stamped with these reels, unwound to their PUBLISHED
  * targets, each joined to the synced post by account and network id, summed
@@ -66,18 +85,7 @@ export async function listFiguresOf(projectIds: readonly string[]): Promise<Map<
     { $match: { reel_project_id: { $in: [...projectIds] } } },
     { $unwind: '$targets' },
     { $match: { 'targets.status': 'PUBLISHED' } },
-    {
-      $lookup: {
-        from: SocialPostModel.collection.name,
-        let: { account: '$targets.account_id', external: '$targets.external_id' },
-        pipeline: [
-          { $match: { $expr: { $and: [{ $eq: ['$account_id', '$$account'] }, { $eq: ['$external_id', '$$external'] }] } } },
-          { $limit: 1 },
-          { $project: { _id: 0, views: 1 } },
-        ],
-        as: 'synced',
-      },
-    },
+    syncedPostLookup(['views']),
     {
       $group: {
         _id: '$reel_project_id',

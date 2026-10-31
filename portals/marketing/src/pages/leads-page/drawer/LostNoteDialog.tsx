@@ -40,7 +40,6 @@ export default function LostNoteDialog({ open, busy, onClose, onConfirm }: Reado
       <DialogTitle id={titleId}>{t('marketing.leads.lostTitle')}</DialogTitle>
       <DialogContent>
         <TextField
-          autoFocus
           fullWidth
           multiline
           minRows={2}

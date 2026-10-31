@@ -35,7 +35,7 @@ export default function NewLeadForm({ busy, onSubmit, onCancel }: Readonly<NewLe
   return (
     <form noValidate onSubmit={submit} data-testid="new-lead-form">
       <Stack spacing={2} sx={{ pt: 1 }}>
-        <RhfTextField control={control} name="name" label={t('marketing.leads.name')} hint={t('marketing.leads.nameHint')} autoFocus fullWidth />
+        <RhfTextField control={control} name="name" label={t('marketing.leads.name')} hint={t('marketing.leads.nameHint')} fullWidth />
         <RhfTextField control={control} name="company" label={t('marketing.leads.company')} hint={t('marketing.leads.companyHint')} fullWidth />
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
           {select('pipeline', t('marketing.leads.pipeline'), PIPELINES, PIPELINE_LABEL)}

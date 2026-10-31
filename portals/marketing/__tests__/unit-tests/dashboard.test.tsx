@@ -30,6 +30,9 @@ const renderDashboard = (mocks = [marketingDashboardMock()]) =>
         <Route path="/campaigns/email" element={<div>campaigns-page</div>} />
         <Route path="/ads-approvals" element={<div>ads-approvals</div>} />
         <Route path="/live-ads" element={<div>live-ads</div>} />
+        <Route path="/social/accounts" element={<div>accounts-page</div>} />
+        <Route path="/publish/calendar" element={<div>calendar-page</div>} />
+        <Route path="/leads/instagram" element={<div>leads-page</div>} />
       </>
     ),
   });
@@ -198,5 +201,66 @@ describe('DashboardPage', () => {
   it('surfaces a dashboard that could not be loaded', async () => {
     renderDashboard([marketingDashboardMock({}, { failWith: 'Access Denied' })]);
     expect(await screen.findByText(/Access Denied/)).toBeInTheDocument();
+  });
+  it('shows what social, publishing and the lead search did', async () => {
+    renderDashboard();
+    expect(await screen.findByText('5,600')).toBeInTheDocument();
+    expect(screen.getByText('24 posts · 41,000 views')).toBeInTheDocument();
+    expect(screen.getByText('1 need attention')).toBeInTheDocument();
+    expect(screen.getByText('4 scheduled · 1 failed')).toBeInTheDocument();
+    expect(screen.getByText('37')).toBeInTheDocument();
+    expect(screen.getByText('12 scored 70 or more')).toBeInTheDocument();
+  });
+
+  it('says every account is healthy when none needs a look', async () => {
+    renderDashboard([marketingDashboardMock({ social: { ...makeMarketingDashboard().social, attention: 0 } })]);
+    expect(await screen.findByText('Every account is healthy')).toBeInTheDocument();
+  });
+
+  it('breaks engagement down by network and leads by stage, and prices the automation', async () => {
+    renderDashboard();
+    expect(await screen.findByText('Engagement by network')).toBeInTheDocument();
+    // Instagram is both a click source and a network; the codes became labels.
+    expect(screen.getAllByText('Instagram')).toHaveLength(2);
+    expect(screen.getByText('Threads')).toBeInTheDocument();
+    expect(screen.getByText('Leads by stage')).toBeInTheDocument();
+    expect(screen.getByText('Contacted')).toBeInTheDocument();
+    expect(screen.getByText('Automation · ₹412 AI spend')).toBeInTheDocument();
+    expect(screen.getByText('Awaiting approval')).toBeInTheDocument();
+    // A state with nothing in it draws no bar.
+    expect(screen.queryByText('Running now')).not.toBeInTheDocument();
+  });
+
+  it('says so when nothing has been synced, found or run yet', async () => {
+    const empty = makeMarketingDashboard();
+    renderDashboard([
+      marketingDashboardMock({
+        social: { ...empty.social, by_platform: [] },
+        leads: { ...empty.leads, by_status: [] },
+        runs: { awaiting_approval: 0, running: 0, completed: 0, failed: 0, spend: 0 },
+      }),
+    ]);
+    expect(await screen.findByText('No engagement recorded yet.')).toBeInTheDocument();
+    expect(screen.getByText('No leads found yet.')).toBeInTheDocument();
+    expect(screen.getByText('Nothing has run yet.')).toBeInTheDocument();
+    expect(screen.getByText('Automation')).toBeInTheDocument();
+  });
+
+  it('opens the accounts page from the connected-accounts tile', async () => {
+    renderDashboard();
+    fireEvent.click(await screen.findByText('Connected accounts'));
+    expect(await screen.findByText('accounts-page')).toBeInTheDocument();
+  });
+
+  it('opens the calendar from the published-posts tile', async () => {
+    renderDashboard();
+    fireEvent.click(await screen.findByText('Posts published'));
+    expect(await screen.findByText('calendar-page')).toBeInTheDocument();
+  });
+
+  it('opens the lead search from the leads tile', async () => {
+    renderDashboard();
+    fireEvent.click(await screen.findByText('Leads found'));
+    expect(await screen.findByText('leads-page')).toBeInTheDocument();
   });
 });

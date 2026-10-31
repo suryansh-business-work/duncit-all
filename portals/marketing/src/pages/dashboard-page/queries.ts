@@ -58,6 +58,36 @@ export const MARKETING_DASHBOARD = gql`
         live
         pending
       }
+      social {
+        connected
+        attention
+        posts
+        engagement
+        views
+        by_platform {
+          label
+          count
+        }
+        published
+        upcoming
+        failed
+      }
+      leads {
+        found
+        qualified
+        qualified_score
+        by_status {
+          label
+          count
+        }
+      }
+      runs {
+        awaiting_approval
+        running
+        completed
+        failed
+        spend
+      }
     }
   }
 `;
@@ -113,4 +143,17 @@ export interface MarketingDashboard {
   };
   audience: { lists: number };
   ads: { live: number; pending: number };
+  social: {
+    connected: number;
+    attention: number;
+    posts: number;
+    engagement: number;
+    views: number;
+    by_platform: DashboardPoint[];
+    published: number;
+    upcoming: number;
+    failed: number;
+  };
+  leads: { found: number; qualified: number; qualified_score: number; by_status: DashboardPoint[] };
+  runs: { awaiting_approval: number; running: number; completed: number; failed: number; spend: number };
 }

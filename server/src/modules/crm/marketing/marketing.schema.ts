@@ -339,6 +339,46 @@ export const marketingTypeDefs = /* GraphQL */ `
     pending: Int!
   }
 
+  type MarketingDashboardSocial {
+    "Accounts whose token still works."
+    connected: Int!
+    "Accounts that expired or errored and need reconnecting."
+    attention: Int!
+    "Posts the networks reported in the window, across every account."
+    posts: Int!
+    engagement: Int!
+    views: Int!
+    "Engagement per network, busiest first; a network with none is left out."
+    by_platform: [MarketingDashboardPoint!]!
+    "Posts written here that went out in the window, even to only some of their networks."
+    published: Int!
+    "Posts waiting for their slot."
+    upcoming: Int!
+    "Posts that failed on at least one network and need a look."
+    failed: Int!
+  }
+
+  type MarketingDashboardLeads {
+    "Leads the searches turned up in the window."
+    found: Int!
+    "Of those, the ones the AI scored at or above qualified_score."
+    qualified: Int!
+    qualified_score: Int!
+    "The whole pipeline by stage, in pipeline order; an empty stage is left out."
+    by_status: [MarketingDashboardPoint!]!
+  }
+
+  type MarketingDashboardRuns {
+    awaiting_approval: Int!
+    running: Int!
+    "Runs started in the window that completed."
+    completed: Int!
+    "Runs that failed, or only partly completed, in the window."
+    failed: Int!
+    "What the AI steps of the window's runs cost, in rupees."
+    spend: Float!
+  }
+
   "Everything the Marketing console opens on, in one round trip."
   type MarketingDashboard {
     "The window the activity figures cover, in days."
@@ -347,6 +387,9 @@ export const marketingTypeDefs = /* GraphQL */ `
     campaigns: MarketingDashboardCampaigns!
     audience: MarketingDashboardAudience!
     ads: MarketingDashboardAds!
+    social: MarketingDashboardSocial!
+    leads: MarketingDashboardLeads!
+    runs: MarketingDashboardRuns!
   }
 
   extend type Query {

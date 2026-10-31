@@ -291,7 +291,13 @@ export const PORTAL_PAGES: readonly NavigationPage[] = [
 
   // ---- Marketing (marketing) ------------------------------------------
   { surface: 'marketing', path: '/', label: 'Dashboard',
-    description: 'Read last-N-days link clicks, revenue from links, emails delivered and live ads as clickable KPI tiles, then drill into a clicks-over-time chart, top links, recent campaign performance, click sources, countries and a what-is-set-up summary on a draggable widget grid.' },
+    description: 'Read last-N-days link clicks, revenue from links, emails delivered, live ads, connected social accounts, engagement, posts published and leads found as clickable KPI tiles, then drill into a clicks-over-time chart, top links, recent campaign performance, click sources, countries, a what-is-set-up summary, engagement by network, the lead pipeline by stage and the automation runs with their AI spend, on a draggable widget grid.' },
+  { surface: 'marketing', path: '/tasks', label: 'My Tasks', group: 'Overview',
+    description: 'The signed-in marketer\'s own open automation runs and the approvals waiting on them, with the counts the team leads with.' },
+  { surface: 'marketing', path: '/approvals', label: 'Approvals', group: 'Overview',
+    description: 'Automation runs waiting for a person: approve, reject or ask for changes with a note, and see what each run plans to do before it does it.' },
+  { surface: 'marketing', path: '/activity', label: 'Activity', group: 'Overview',
+    description: 'The marketing run log: every publish, sync, health check, lead search, reel, outreach and agent run with its steps, API calls, cost and outcome; filter by workflow, status, trigger or who started it; cancel a running run or retry a failed one.' },
   { surface: 'marketing', path: '/social/accounts', label: 'Social Accounts', group: 'Social media',
     description: 'Connect Instagram, Facebook, Threads, YouTube, LinkedIn and X accounts (each through its own app), sync them, read their posts and comments, see analytics, watch AI-flagged comments and get post ideas.' },
   { surface: 'marketing', path: '/publish/calendar', label: 'Calendar', group: 'Publishing',

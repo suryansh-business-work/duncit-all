@@ -1,4 +1,4 @@
-import { addDays, addHours, addMonths, endOfMonth, endOfWeek, format, parse, startOfMonth, startOfWeek } from 'date-fns';
+import { addDays, addHours, addMonths, endOfMonth, endOfWeek, format, isValid, parse, startOfMonth, startOfWeek } from 'date-fns';
 
 /**
  * A month as the calendar draws it: whole weeks, Monday first, the days of
@@ -52,7 +52,11 @@ export function shift(unit: CalendarUnit, anchor: string, by: number): string {
 
 export const shiftMonth = (month: string, by: number) => format(addMonths(monthDate(month), by), 'yyyy-MM');
 
-export const monthTitle = (month: string) => format(monthDate(month), 'MMMM yyyy');
+/** The month's name, or nothing for a month that is not a real 'yyyy-MM', rather than throwing mid-render. */
+export const monthTitle = (month: string) => {
+  const date = monthDate(month);
+  return isValid(date) ? format(date, 'MMMM yyyy') : '';
+};
 
 export const weekdayNames = (week: readonly string[]) => week.map((day) => format(dayDate(day), 'EEE'));
 

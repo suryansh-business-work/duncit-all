@@ -19,7 +19,11 @@ interface PreviewProps {
  */
 export function ImportPreview({ rows, mapping }: Readonly<PreviewProps>) {
   const { t } = useTranslation();
-  const mapped = IMPORT_FIELDS.filter((field) => mapping[field] !== null);
+  // Each mapped field with the column it reads; an unmapped field has no column in the preview.
+  const mapped = IMPORT_FIELDS.flatMap((field) => {
+    const column = mapping[field];
+    return column === null ? [] : [{ field, column }];
+  });
   const bad = badRows(rows, mapping, t);
   return (
     <Stack spacing={1} data-testid="import-preview">
@@ -27,7 +31,7 @@ export function ImportPreview({ rows, mapping }: Readonly<PreviewProps>) {
       <Table size="small" aria-label={t('marketing.leads.previewTitle')}>
         <TableHead>
           <TableRow>
-            {mapped.map((field) => (
+            {mapped.map(({ field }) => (
               <TableCell key={field}>{t(FIELD_LABEL[field])}</TableCell>
             ))}
           </TableRow>
@@ -35,8 +39,8 @@ export function ImportPreview({ rows, mapping }: Readonly<PreviewProps>) {
         <TableBody>
           {rows.slice(0, PREVIEW_ROWS).map((row, index) => (
             <TableRow key={`row-${index}`}>
-              {mapped.map((field) => (
-                <TableCell key={field}>{row[mapping[field] ?? -1] ?? ''}</TableCell>
+              {mapped.map(({ field, column }) => (
+                <TableCell key={field}>{row[column] ?? ''}</TableCell>
               ))}
             </TableRow>
           ))}

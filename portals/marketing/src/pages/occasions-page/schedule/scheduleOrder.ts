@@ -45,13 +45,16 @@ export interface ScheduleRow {
  * ended, then the looks still waiting for dates (by name).
  */
 export function scheduleRows(looks: readonly OccasionTheme[], now: Date): ScheduleRow[] {
-  const rows = looks.filter((look) => !look.is_archived).map((look) => ({ look, state: windowState(look, now) }));
-  rows.sort((a, b) => {
+  // The times are read once per look; only an unscheduled look lacks them, and it is ordered by name.
+  const timed = looks
+    .filter((look) => !look.is_archived)
+    .map((look) => ({ look, state: windowState(look, now), start: ms(look.starts_at) ?? 0, end: ms(look.ends_at) ?? 0 }));
+  timed.sort((a, b) => {
     const byState = RANK[a.state] - RANK[b.state];
     if (byState !== 0) return byState;
     if (a.state === 'UNSCHEDULED') return a.look.name.localeCompare(b.look.name);
-    if (a.state === 'ENDED') return (ms(b.look.ends_at) ?? 0) - (ms(a.look.ends_at) ?? 0);
-    return (ms(a.look.starts_at) ?? 0) - (ms(b.look.starts_at) ?? 0);
+    if (a.state === 'ENDED') return b.end - a.end;
+    return a.start - b.start;
   });
-  return rows;
+  return timed.map(({ look, state }) => ({ look, state }));
 }

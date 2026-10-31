@@ -8,7 +8,7 @@ import { parseApiError } from '@duncit/utils';
 import { useTranslation } from '@duncit/app-settings';
 import { IMPORT_MARKETING_LEADS, type MarketingLeadImportResult, type MarketingLeadPipeline } from '../queries';
 import { toServerMapping } from './importMapping';
-import { useCsvFile } from './useCsvFile';
+import { useCsvFile, type CsvFileState } from './useCsvFile';
 import ImportMappingFields from './ImportMappingFields';
 import { ImportOutcome, ImportPreview } from './ImportPreview';
 
@@ -38,10 +38,9 @@ export default function ImportCsvDialog({ open, onClose, onImported }: Readonly<
     onClose();
   };
 
-  const submit = async () => {
-    if (!file) return;
+  const submit = async (picked: CsvFileState) => {
     try {
-      const { data } = await run({ variables: { rows: file.rows, mapping: toServerMapping(mapping, pipeline) } });
+      const { data } = await run({ variables: { rows: picked.rows, mapping: toServerMapping(mapping, pipeline) } });
       if (!data) return;
       setResult(data.importMarketingLeads);
       onImported();
@@ -85,7 +84,7 @@ export default function ImportCsvDialog({ open, onClose, onImported }: Readonly<
           {t('shell.common.close')}
         </DuncitButton>
         {!result && (
-          <DuncitButton variant="contained" onClick={submit} loading={loading} disabled={!file || mapping.name === null} data-testid="import-submit">
+          <DuncitButton variant="contained" onClick={file ? () => submit(file) : undefined} loading={loading} disabled={!file || mapping.name === null} data-testid="import-submit">
             {t('marketing.leads.importRun', { vars: { count: file?.rows.length ?? 0 } })}
           </DuncitButton>
         )}

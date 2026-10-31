@@ -8,7 +8,7 @@
 export interface EventQueue<T> {
   /** Adds an item; sends a batch at once when one is full. */
   push(item: T): void;
-  /** Sends up to one batch; resolves when it has been answered. */
+  /** Sends everything queued, a batch at a time; resolves once the last batch has been answered or a send has failed. */
   flush(): Promise<void>;
   size(): number;
 }
@@ -27,22 +27,32 @@ export function createEventQueue<T>({ send, maxBatch = 20, maxQueued = 200 }: Ev
     if (items.length > maxQueued) items = items.slice(items.length - maxQueued);
   };
 
-  const sendBatch = async () => {
-    const batch = items.slice(0, maxBatch);
-    items = items.slice(batch.length);
-    try {
-      await send(batch);
-    } catch {
-      // Not lost: back in front of anything queued since, for the next flush.
-      items = [...batch, ...items];
-      keepNewest();
+  /**
+   * Everything queued, a batch at a time, until the queue is empty or a send
+   * fails. An item pushed while a batch is out is sent right after it rather
+   * than waiting for the next flush — which is what "sends a batch the moment
+   * one is full" has to mean when the full batch arrives during a send. A
+   * failed batch ends the run; it is the next flush's to retry.
+   */
+  const drain = async () => {
+    while (items.length > 0) {
+      const batch = items.slice(0, maxBatch);
+      items = items.slice(batch.length);
+      try {
+        await send(batch);
+      } catch {
+        // Not lost: back in front of anything queued since, for the next flush.
+        items = [...batch, ...items];
+        keepNewest();
+        return;
+      }
     }
   };
 
   const flush = (): Promise<void> => {
     if (inFlight) return inFlight;
     if (items.length === 0) return Promise.resolve();
-    inFlight = sendBatch().finally(() => {
+    inFlight = drain().finally(() => {
       inFlight = null;
     });
     return inFlight;

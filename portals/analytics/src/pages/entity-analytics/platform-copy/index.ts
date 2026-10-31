@@ -21,6 +21,7 @@ import { APP_RELEASES_COPY } from './app-releases';
 import { LOGS_COPY } from './logs';
 import { WHATSAPP_COSTS_COPY } from './whatsapp-costs';
 import { OPENAI_COSTS_COPY } from './openai-costs';
+import { PRODUCT_COPY } from './product';
 import type { PageCopy } from './types';
 
 /**
@@ -54,6 +55,7 @@ const PAGES: readonly PageCopy[] = [
   LOGS_COPY,
   WHATSAPP_COSTS_COPY,
   OPENAI_COSTS_COPY,
+  PRODUCT_COPY,
 ];
 
 const merged = <K extends keyof PageCopy>(part: K): PageCopy[K] =>

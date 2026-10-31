@@ -5,6 +5,7 @@ import EntityAnalyticsPage from './pages/entity-analytics/EntityAnalyticsPage';
 import { ANALYTICS_PAGES } from './pages/entity-analytics/pages';
 import AnalyticsMailsPage from './pages/analytics-mails/AnalyticsMailsPage';
 import AnalyticsAlertsPage from './pages/analytics-alerts/AnalyticsAlertsPage';
+import { PRODUCT_ROUTES } from './pages/product/routes';
 import { runtime } from './runtime';
 
 const authed = createAuthed({
@@ -21,6 +22,7 @@ const SIGNED_IN: ReadonlyArray<{ path: string; element: ReactElement }> = [
   { path: '/profile', element: <ProfilePage /> },
   { path: '/settings/analytics-mails', element: <AnalyticsMailsPage /> },
   { path: '/settings/alerts', element: <AnalyticsAlertsPage /> },
+  ...PRODUCT_ROUTES,
   ...ANALYTICS_PAGES.map((page) => ({
     path: page.path,
     element: <EntityAnalyticsPage key={page.path} page={page} />,

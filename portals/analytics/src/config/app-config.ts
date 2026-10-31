@@ -44,6 +44,21 @@ export const appConfig = {
       ],
     },
     {
+      // How the app itself is used — screens, presses, sessions, funnels — from its own events.
+      label: 'Product', labelKey: 'shell.nav.product',
+      icon: 'analytics',
+      children: [
+        { label: 'Overview', labelKey: 'shell.nav.productOverview', to: '/product/overview', icon: 'dashboard' },
+        { label: 'Screens', labelKey: 'shell.nav.productScreens', to: '/product/screens', icon: 'widgets' },
+        { label: 'Clickstream', labelKey: 'shell.nav.productClickstream', to: '/product/clickstream', icon: 'insights' },
+        { label: 'Funnels', labelKey: 'shell.nav.productFunnels', to: '/product/funnels', icon: 'compare' },
+        { label: 'Retention', labelKey: 'shell.nav.productRetention', to: '/product/retention', icon: 'callback' },
+        { label: 'Sessions', labelKey: 'shell.nav.productSessions', to: '/product/sessions', icon: 'timeline' },
+        { label: 'User Analytics', labelKey: 'shell.nav.productUsers', to: '/product/users', icon: 'user-search' },
+        { label: 'Events Explorer', labelKey: 'shell.nav.productEvents', to: '/product/events', icon: 'article' },
+      ],
+    },
+    {
       label: 'Growth', labelKey: 'shell.nav.growth',
       icon: 'timeline',
       children: [

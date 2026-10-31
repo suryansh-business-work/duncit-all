@@ -3,7 +3,7 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { useTranslation } from '@duncit/app-settings';
 import { DuncitButton } from '@duncit/buttons';
 import PeriodControls from './PeriodControls';
-import { CitySelect, CompareSelect } from './FilterSelects';
+import { CitySelect, CompareSelect, PlatformSelect } from './FilterSelects';
 import type { PeriodState } from './period-state';
 
 interface Props {
@@ -13,18 +13,30 @@ interface Props {
   periodless?: boolean;
   /** Pages whose every number has a place can be narrowed to one city. */
   cityFilter?: boolean;
+  /** Pages read from the app's own events can be narrowed to one platform. */
+  platformFilter?: boolean;
   /** The console this page's numbers come from. */
   detailsUrl?: string | null;
 }
 
 /** A dashboard's header controls: the period, the comparison, the city, and the jump to the console behind it. */
-export default function PageControls({ value, onChange, periodless, cityFilter, detailsUrl }: Readonly<Props>) {
+export default function PageControls({
+  value,
+  onChange,
+  periodless,
+  cityFilter,
+  platformFilter,
+  detailsUrl,
+}: Readonly<Props>) {
   const { t } = useTranslation();
   return (
     <Stack direction={{ xs: 'column', lg: 'row' }} spacing={1} sx={{ alignItems: { lg: 'center' }, flexWrap: 'wrap' }}>
       {!periodless && <PeriodControls value={value} onChange={onChange} />}
       {!periodless && <CompareSelect value={value.compare} onChange={(compare) => onChange({ ...value, compare })} />}
       {cityFilter && <CitySelect value={value.city} onChange={(city) => onChange({ ...value, city })} />}
+      {platformFilter && (
+        <PlatformSelect value={value.platform} onChange={(platform) => onChange({ ...value, platform })} />
+      )}
       {detailsUrl && (
         <DuncitButton
           size="small"

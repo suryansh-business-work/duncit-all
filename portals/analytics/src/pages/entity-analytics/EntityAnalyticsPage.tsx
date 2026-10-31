@@ -37,6 +37,7 @@ export default function EntityAnalyticsPage({ page }: Readonly<{ page: Analytics
       onChange={setPeriod}
       periodless={page.periodless}
       cityFilter={page.cityFilter}
+      platformFilter={page.platformFilter}
       detailsUrl={board?.details_url}
     />
   );

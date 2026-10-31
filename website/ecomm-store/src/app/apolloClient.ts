@@ -23,7 +23,7 @@ interface StoreClientOptions {
  * After hydration, cache-and-network queries would at once re-ask what the
  * server just answered; this long, they read the handed-over cache instead.
  */
-const SSR_FORCE_FETCH_DELAY_MS = 100;
+export const SSR_FORCE_FETCH_DELAY_MS = 100;
 
 export function createStoreClient({ initialState, ssrUri }: StoreClientOptions = {}): ApolloClient {
   const identity = clientIdentityHeaders('WEBSITE', APP_KEY);

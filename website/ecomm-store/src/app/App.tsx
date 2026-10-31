@@ -1,4 +1,4 @@
-import { useEffect, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import type { ApolloClient } from '@apollo/client';
 import { ApolloProvider } from '@apollo/client/react';
 import { GoogleOAuthProvider } from '@react-oauth/google';
@@ -9,7 +9,8 @@ import { RequestProgressBar } from '@duncit/ui';
 import { GOOGLE_CLIENT_ID } from '../config/env';
 import { STORE_FALLBACK } from '../i18n';
 import { StoreClosedPage } from '../pages/closed/StoreClosedPage';
-import { endHydration } from '../lib/hydration';
+import { endHydration, startsFromServer } from '../lib/hydration';
+import { fetchFullCopyAfterHydration } from './ssr-copy';
 import { CartProvider } from './providers/CartProvider';
 import { ColorModeProvider } from './providers/ColorModeProvider';
 import { OccasionThemeProvider } from './providers/OccasionThemeProvider';
@@ -18,10 +19,10 @@ import { StoreSettingsProvider, useStoreSettings } from './providers/StoreSettin
 import { WishlistProvider } from './providers/WishlistProvider';
 
 /** The account's saved language wins over the browser's. */
-function StoreLocale({ children }: Readonly<{ children: ReactNode }>) {
+function StoreLocale({ onKeyRead, children }: Readonly<{ onKeyRead?: (key: string) => void; children: ReactNode }>) {
   const { me } = useStoreSession();
   return (
-    <LocaleProvider fallback={STORE_FALLBACK} userLocale={me?.locale ?? null}>
+    <LocaleProvider fallback={STORE_FALLBACK} userLocale={me?.locale ?? null} onKeyRead={onKeyRead}>
       {children}
     </LocaleProvider>
   );
@@ -48,17 +49,23 @@ interface AppProps {
   client: ApolloClient;
   /** The router: the browser's in main.tsx, a static one in entry-server.tsx. */
   children: ReactNode;
+  /** Server only: told each copy key the page reads, so the page carries just those. */
+  onCopyKey?: (key: string) => void;
 }
 
-export function App({ client, children }: Readonly<AppProps>) {
+export function App({ client, children, onCopyKey }: Readonly<AppProps>) {
+  const [fromServer] = useState(startsFromServer);
   // A parent's effect runs after every child's, so by now each provider has
   // swapped the server's defaults for what this browser remembers.
-  useEffect(endHydration, []);
+  useEffect(() => {
+    endHydration();
+    return fromServer ? fetchFullCopyAfterHydration(client) : undefined;
+  }, [client, fromServer]);
   return (
     <ApolloProvider client={client}>
       <WithGoogle>
         <SessionProvider>
-          <StoreLocale>
+          <StoreLocale onKeyRead={onCopyKey}>
             <ColorModeProvider>
               {/* The floor under every wait on the server (the settings load,
                   a shelf, a checkout) before any page draws its own loader. */}

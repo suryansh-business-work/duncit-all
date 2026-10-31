@@ -6,6 +6,7 @@ import { App } from './app/App';
 import { createStoreClient } from './app/apolloClient';
 import { NOT_FOUND_ROUTE_ID, preloadPage, storeRoutes } from './app/router';
 import type { StoreSsrInput, StoreSsrOutput } from './app/ssr-contract';
+import { withPageCopyOnly } from './app/ssr-copy';
 
 const handler = createStaticHandler(storeRoutes);
 
@@ -27,9 +28,14 @@ export async function render(input: StoreSsrInput): Promise<StoreSsrOutput> {
   // No route here has a loader, so the handler never answers with a redirect; treat one as a miss.
   if (context instanceof Response) throw new Error(`Unexpected router response ${context.status}`);
   const router = createStaticRouter(handler.dataRoutes, context);
+  // The copy keys the page reads: only those catalogue rows travel with it.
+  const copyKeys = new Set<string>();
+  const recordCopyKey = (key: string) => {
+    copyKeys.add(key);
+  };
   const { result } = await prerenderStatic({
     tree: (
-      <App client={client}>
+      <App client={client} onCopyKey={recordCopyKey}>
         <StaticRouterProvider router={router} context={context} hydrate={false} />
       </App>
     ),
@@ -44,7 +50,7 @@ export async function render(input: StoreSsrInput): Promise<StoreSsrOutput> {
   const notFound = context.matches.some((match) => match.route.id === NOT_FOUND_ROUTE_ID);
   return {
     html: result,
-    state: { apollo: client.extract() as Record<string, unknown> },
+    state: { apollo: withPageCopyOnly(client.extract() as Record<string, unknown>, copyKeys) },
     status: notFound ? 404 : 200,
   };
 }

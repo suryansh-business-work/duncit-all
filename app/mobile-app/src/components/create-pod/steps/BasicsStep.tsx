@@ -8,6 +8,7 @@ import { MediaUploadField } from '../MediaUploadField';
 import {
   DETAILS_EXTRA_FIELDS,
   MAX_COVER_IMAGES,
+  POD_COVER_CROP_KEY,
   anyFieldFailed,
   coverCategoryName,
   detailsExtrasFilled,
@@ -79,6 +80,7 @@ export function BasicsStep({ form, hostCategories }: Readonly<Props>) {
               required
               subCategoryName={subCategoryName}
               maxImages={MAX_COVER_IMAGES}
+              cropKey={POD_COVER_CROP_KEY}
             />
           )}
         />

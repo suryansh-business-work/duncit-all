@@ -12,6 +12,8 @@ interface Props {
   presets: UploadCropPreset[];
   /** Selected preset key — NO_CROP (or any 0×0 preset) hides the cropper. */
   selectedKey: string;
+  /** The caller fixed the preset: no menu while that preset can crop. */
+  locked?: boolean;
   /** Preset whose aspect best matches the source image (suggested chip). */
   suggestedKey: string | null;
   onSelectKey: (key: string) => void;
@@ -28,6 +30,7 @@ export default function ImageCropStep({
   previewUrl,
   presets,
   selectedKey,
+  locked = false,
   suggestedKey,
   onSelectKey,
   onCropComplete,
@@ -67,6 +70,7 @@ export default function ImageCropStep({
         width: '100%',
         maxWidth: 480
       }}>
+      {!(locked && active) && (
       <TextField
         select
         fullWidth
@@ -94,6 +98,7 @@ export default function ImageCropStep({
           </MenuItem>
         ))}
       </TextField>
+      )}
 
       {active ? (
         <>

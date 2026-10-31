@@ -11,6 +11,16 @@
 export const MAX_COVER_IMAGES = 5;
 
 /**
+ * The Upload Settings crop preset a pod cover is cut to (1920×1080).
+ *
+ * Every surface draws the cover with object-fit: cover in its own frame: feed
+ * cards are about 2:1, club rails 1.6:1, the detail hero 1.28:1, the website
+ * rail 4:3 and link previews 1.91:1. 16:9 sits in the middle of that range, so
+ * each frame trims the least and the subject stays in view everywhere.
+ */
+export const POD_COVER_CROP_KEY = 'RATIO_16_9';
+
+/**
  * A pod is a group activity, and its cover is a wide banner. A raw
  * sub-category ("Badminton") returns close-up equipment shots; adding the
  * people terms returns the rooms full of people that actually read as a pod.

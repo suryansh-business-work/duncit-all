@@ -33,6 +33,8 @@ interface Props {
   error?: string | null;
   onConfirm: (result: CropResult) => void;
   onCancel: () => void;
+  /** Preset every image is cut to (a pod cover's shape); hides the chips. */
+  lockedCropKey?: string;
 }
 
 /**
@@ -51,6 +53,7 @@ export function MediaCropDialog({
   error,
   onConfirm,
   onCancel,
+  lockedCropKey,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const { onPrimary } = useThemeColors();
@@ -70,8 +73,13 @@ export function MediaCropDialog({
   const options = optionsFor(presets);
   const isImage = media.kind === 'image';
   const suggestedKey = isImage ? suggestPresetKey(media.width, media.height, presets) : null;
+  // A locked preset only applies while the admin still offers it; otherwise the
+  // chips come back so the upload is never stuck.
+  const locked = options.some((o) => o.key === lockedCropKey && o.width > 0);
   const selectedKey =
-    pickedKey ?? initialKey(options, suggestedKey, settings?.default_crop_key ?? NO_CROP_KEY);
+    locked && lockedCropKey
+      ? lockedCropKey
+      : (pickedKey ?? initialKey(options, suggestedKey, settings?.default_crop_key ?? NO_CROP_KEY));
   const setSelectedKey = setPickedKey;
   // The croppable preset the user is on — undefined for No Crop or a video, in
   // which cases the upload keeps the source frame (server compresses only).
@@ -127,7 +135,7 @@ export function MediaCropDialog({
                   Output {activePreset.width}×{activePreset.height}px
                 </Text>
               ) : null}
-              {isImage ? (
+              {isImage && !locked ? (
                 <CropPresetChips
                   options={options}
                   selectedKey={selectedKey}

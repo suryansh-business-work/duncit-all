@@ -33,6 +33,7 @@ export default function MediaPickerDialog({
   orientation,
   deviceOnly = false,
   detectDuplicates = false,
+  cropKey,
 }: Readonly<MediaPickerDialogProps>) {
   const { t } = useTranslation();
   const onPhone = useMediaQuery((theme: Theme) => theme.breakpoints.down('sm'));
@@ -89,6 +90,7 @@ export default function MediaPickerDialog({
     // just sent or the same file could be sent twice.
     clearAfterUpload: multi,
     detectDuplicates,
+    lockedCropKey: cropKey,
     setError,
   });
 

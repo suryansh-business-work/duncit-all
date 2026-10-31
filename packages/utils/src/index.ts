@@ -857,6 +857,7 @@ export {
 } from './earnings-split';
 export {
   MAX_COVER_IMAGES,
+  POD_COVER_CROP_KEY,
   addToSelection,
   coverCategoryName,
   coverSearchTerm,

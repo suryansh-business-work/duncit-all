@@ -43,6 +43,8 @@ interface Props {
   maxImages?: number;
   /** The picker sheet's heading — a field that is not pod media names itself. */
   pickerTitle?: string;
+  /** Crop preset every library image is cut to; the pod cover passes its shape. */
+  cropKey?: string;
 }
 
 /** Pod media — upload from the library into a thumbnail list (URLs serialize
@@ -58,6 +60,7 @@ export function MediaUploadField({
   maxImages,
   deviceOnly = false,
   pickerTitle,
+  cropKey,
 }: Readonly<Props>) {
   const { muted, primary } = useThemeColors();
   const { t } = useTranslation();
@@ -148,6 +151,7 @@ export function MediaUploadField({
         error={upload.error}
         onConfirm={upload.confirm}
         onCancel={upload.cancel}
+        lockedCropKey={cropKey}
       />
     </YStack>
   );

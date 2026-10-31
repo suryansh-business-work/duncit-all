@@ -10,7 +10,7 @@
     "dev:main": "cross-env VITE_GRAPHQL_URL=https://server.duncit.com/graphql vite",
     "dev:staging": "cross-env VITE_GRAPHQL_URL=https://staging.server.duncit.com/graphql vite",
     "dev:local": "cross-env VITE_GRAPHQL_URL=http://localhost:2001/graphql vite",
-    "build": "tsc -b && vite build && vite build --config vite.config.server.ts && node ../../scripts/verify-fallback-icons.mjs src/fallback-icons",
+    "build": "tsc -b && vite build && vite build --config vite.config.server.ts && vite build --config vite.config.ssr.ts && node ../../scripts/verify-fallback-icons.mjs src/fallback-icons",
     "preview": "vite preview",
     "typecheck": "tsc -b --noEmit && tsc --noEmit -p tsconfig.server.json",
     "start": "node dist-server/main.mjs",

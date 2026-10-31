@@ -4,6 +4,7 @@ import PauseRoundedIcon from '@mui/icons-material/PauseRounded';
 import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
 
 import { useColorMode } from '../../app/providers/ColorModeProvider';
+import { useBrowserState } from '../../lib/hydration';
 import { useStoreT } from '../../i18n';
 import { DESKTOP_UP, STORE_TOKENS as T } from '../../theme/tokens';
 import { CircleButton } from '../CircleButton';
@@ -50,7 +51,9 @@ function PauseCelebration({ playing }: Readonly<{ playing: boolean }>) {
  */
 export function FestiveLayer() {
   const { look, canAnimate, effectsOn } = useOccasion();
-  if (!look || !canAnimate) return null;
+  // Animation only ever runs in a browser, so it is never part of the server's HTML.
+  const [inBrowser] = useBrowserState(() => true, false);
+  if (!inBrowser || !look || !canAnimate) return null;
   return (
     <>
       {effectsOn ? (

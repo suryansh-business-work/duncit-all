@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react';
-import { RouterProvider } from 'react-router';
+import { useEffect, type ReactNode } from 'react';
+import type { ApolloClient } from '@apollo/client';
 import { ApolloProvider } from '@apollo/client/react';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { LocaleProvider } from '@duncit/app-settings';
@@ -9,16 +9,13 @@ import { RequestProgressBar } from '@duncit/ui';
 import { GOOGLE_CLIENT_ID } from '../config/env';
 import { STORE_FALLBACK } from '../i18n';
 import { StoreClosedPage } from '../pages/closed/StoreClosedPage';
-import { createStoreClient } from './apolloClient';
+import { endHydration } from '../lib/hydration';
 import { CartProvider } from './providers/CartProvider';
 import { ColorModeProvider } from './providers/ColorModeProvider';
 import { OccasionThemeProvider } from './providers/OccasionThemeProvider';
 import { SessionProvider, useStoreSession } from './providers/SessionProvider';
 import { StoreSettingsProvider, useStoreSettings } from './providers/StoreSettingsProvider';
 import { WishlistProvider } from './providers/WishlistProvider';
-import { router } from './router';
-
-const client = createStoreClient();
 
 /** The account's saved language wins over the browser's. */
 function StoreLocale({ children }: Readonly<{ children: ReactNode }>) {
@@ -31,14 +28,12 @@ function StoreLocale({ children }: Readonly<{ children: ReactNode }>) {
 }
 
 /** A switched-off store shows its "opening soon" page on every route. */
-function StoreGate() {
+function StoreGate({ children }: Readonly<{ children: ReactNode }>) {
   const { store_enabled: open } = useStoreSettings();
   if (!open) return <StoreClosedPage />;
   return (
     <CartProvider>
-      <WishlistProvider>
-        <RouterProvider router={router} />
-      </WishlistProvider>
+      <WishlistProvider>{children}</WishlistProvider>
     </CartProvider>
   );
 }
@@ -48,7 +43,17 @@ function WithGoogle({ children }: Readonly<{ children: ReactNode }>) {
   return <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>{children}</GoogleOAuthProvider>;
 }
 
-export function App() {
+interface AppProps {
+  /** One per page view in the browser, one per request on the server. */
+  client: ApolloClient;
+  /** The router: the browser's in main.tsx, a static one in entry-server.tsx. */
+  children: ReactNode;
+}
+
+export function App({ client, children }: Readonly<AppProps>) {
+  // A parent's effect runs after every child's, so by now each provider has
+  // swapped the server's defaults for what this browser remembers.
+  useEffect(endHydration, []);
   return (
     <ApolloProvider client={client}>
       <WithGoogle>
@@ -62,7 +67,7 @@ export function App() {
                 <NotifyProvider>
                   <StoreSettingsProvider>
                     <OccasionThemeProvider>
-                      <StoreGate />
+                      <StoreGate>{children}</StoreGate>
                     </OccasionThemeProvider>
                   </StoreSettingsProvider>
                 </NotifyProvider>

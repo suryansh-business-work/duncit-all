@@ -1,6 +1,7 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { CssBaseline, ThemeProvider, useMediaQuery } from '@mui/material';
+import { createContext, useCallback, useContext, useEffect, useMemo, type ReactNode } from 'react';
+import { CssBaseline, ThemeProvider } from '@mui/material';
 
+import { useBrowserState, useDeviceMedia } from '../../lib/hydration';
 import { DEFAULT_PREFERENCES, readPreferences, savePreferences, type StorePreferences } from '../../lib/preferences';
 import { buildStoreTheme, type StoreThemePrefs } from '../../theme/storeTheme';
 import { STORE_PALETTES, type StoreColorMode } from '../../theme/tokens';
@@ -30,14 +31,21 @@ const ColorModeContext = createContext<ColorModeValue>({
  * counts as the shopper asking for it.
  */
 export function ColorModeProvider({ children }: Readonly<{ children: ReactNode }>) {
-  const [prefs, setPrefs] = useState<StorePreferences>(readPreferences);
-  const deviceDark = useMediaQuery('(prefers-color-scheme: dark)', { noSsr: true });
-  const deviceStill = useMediaQuery('(prefers-reduced-motion: reduce)', { noSsr: true });
+  // The server draws the default look; a hydrating render must too, then the
+  // shopper's own choices and the device's settings apply right after.
+  const [prefs, setPrefs] = useBrowserState<StorePreferences>(readPreferences, DEFAULT_PREFERENCES);
+  const deviceDark = useDeviceMedia('(prefers-color-scheme: dark)');
+  const deviceStill = useDeviceMedia('(prefers-reduced-motion: reduce)');
   const deviceMode: StoreColorMode = deviceDark ? 'dark' : 'light';
   const mode: StoreColorMode = prefs.color === 'system' ? deviceMode : prefs.color;
 
-  useEffect(() => savePreferences(prefs), [prefs]);
-  const updatePrefs = useCallback((patch: Partial<StorePreferences>) => setPrefs((prev) => ({ ...prev, ...patch })), []);
+  // The defaults object itself is the server's placeholder (or what an
+  // unreadable storage gave back); saving it would overwrite the shopper's
+  // choices before hydration has read them.
+  useEffect(() => {
+    if (prefs !== DEFAULT_PREFERENCES) savePreferences(prefs);
+  }, [prefs]);
+  const updatePrefs = useCallback((patch: Partial<StorePreferences>) => setPrefs((prev) => ({ ...prev, ...patch })), [setPrefs]);
   const toggle = useCallback(() => updatePrefs({ color: mode === 'light' ? 'dark' : 'light' }), [mode, updatePrefs]);
 
   const themePrefs = useMemo<StoreThemePrefs>(

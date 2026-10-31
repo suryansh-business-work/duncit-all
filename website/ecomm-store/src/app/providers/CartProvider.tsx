@@ -5,6 +5,7 @@ import { parseApiError } from '@duncit/utils';
 
 import { ADD_TO_CART, APPLY_COUPON, SET_CART_QTY, STORE_CART, type StoreCart } from '../../graphql/cart';
 import { getCartToken } from '../../lib/cartToken';
+import { useBrowserState } from '../../lib/hydration';
 import { useStoreT } from '../../i18n';
 
 interface AddToCartOptions {
@@ -34,10 +35,11 @@ const CartContext = createContext<CartValue | null>(null);
 export function CartProvider({ children }: Readonly<{ children: ReactNode }>) {
   const { t } = useStoreT();
   const client = useApolloClient();
-  const cartToken = getCartToken();
+  // No token on the server: one minted there would be every visitor's cart.
+  const [cartToken] = useBrowserState(getCartToken, '');
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [announcement, setAnnouncement] = useState('');
-  const { data, loading } = useQuery(STORE_CART, { variables: { cart_token: cartToken } });
+  const { data, loading } = useQuery(STORE_CART, { variables: { cart_token: cartToken }, skip: !cartToken });
 
   const replaceCart = useCallback(
     (next: StoreCart) => {

@@ -1,4 +1,5 @@
 import { E2eScenarioResultModel } from '@modules/platform/e2eRun/e2eRun.model';
+import { E2eFlowModel } from './e2eFlow.model';
 import { E2E_FLOW_SPEC_LINKS } from './catalogue/spec-links';
 
 /** How a flow's specs did across the E2E runs still on record. */
@@ -16,6 +17,16 @@ const LINKS = new Map(Object.entries(E2E_FLOW_SPEC_LINKS).map(([flow, specs]) =>
 
 /** The spec files that test a flow, matched by name; empty when nothing does yet. */
 export const specsForFlow = (name: string): readonly string[] => LINKS.get(nameKey(name)) ?? [];
+
+/**
+ * The ids of every flow at least one live spec tests. The links are code
+ * (catalogue/spec-links.ts), not a stored field, so "automated" is worked out
+ * here over the flow names — a few hundred short strings.
+ */
+export async function automatedFlowIds(): Promise<{ all: number; automated: unknown[] }> {
+  const flows = await E2eFlowModel.find({}, { name: 1 }).lean();
+  return { all: flows.length, automated: flows.filter((f) => specsForFlow(f.name).length > 0).map((f) => f._id) };
+}
 
 /** Not passed: a failure, or a scenario a failed hook kept from running. */
 const NOT_PASSED = ['FAILED', 'SKIPPED'];

@@ -29053,7 +29053,7 @@ export type Query = {
   dnsZone: DnsZone;
   /** One flow with its sub flows, or null when it does not exist. Tech/Super admin only. */
   e2eFlow?: Maybe<E2eFlow>;
-  /** Every documented flow (Tech portal E2E Flows table). Tech/Super admin only. */
+  /** Every documented flow (Tests portal E2E Flows table). Filter on automated (is_true / is_false) for the flows a live spec does or does not test yet. Tech/Super admin only. */
   e2eFlowsTable: E2eFlowTablePage;
   /**
    * A credential the Google sign-in mutations accept in place of Google's own,
@@ -42414,7 +42414,7 @@ export type TestsRegressionSummary = {
   status: Scalars['String']['output'];
 };
 
-/** How much of the E2E flow catalogue a person has reviewed as ready to automate. */
+/** How much of the E2E flow catalogue a person has reviewed as ready to automate, and how much a live spec already tests. */
 export type TestsScenarioCoverage = {
   __typename?: 'TestsScenarioCoverage';
   flows: Scalars['Int']['output'];
@@ -42856,6 +42856,10 @@ export type TriggerStressRunInput = {
   journeys: Array<Scalars['String']['input']>;
   ramp_down_seconds: Scalars['Int']['input'];
   ramp_up_seconds: Scalars['Int']['input'];
+  /** Flows at least one live Cypress spec tests (e2eFlow/catalogue/spec-links.ts). */
+  automated: Scalars['Int']['output'];
+  /** automated / flows as 0-100; null when the catalogue is empty. */
+  automated_pct?: Maybe<Scalars['Float']['output']>;
   runners: Scalars['Int']['input'];
   think_time_ms: Scalars['Int']['input'];
   virtual_users: Scalars['Int']['input'];

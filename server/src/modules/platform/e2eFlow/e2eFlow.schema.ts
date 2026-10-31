@@ -84,7 +84,7 @@ export const e2eFlowTypeDefs = gql`
   }
 
   extend type Query {
-    "Every documented flow (Tech portal E2E Flows table). Tech/Super admin only."
+    "Every documented flow (Tests portal E2E Flows table). Filter on automated (is_true / is_false) for the flows a live spec does or does not test yet. Tech/Super admin only."
     e2eFlowsTable(query: TableQueryInput): E2eFlowTablePage!
     "One flow with its sub flows, or null when it does not exist. Tech/Super admin only."
     e2eFlow(id: ID!): E2eFlow

@@ -71,6 +71,18 @@ describe('E2E flows list', () => {
     expect(await screen.findByText('flow detail page')).toBeInTheDocument();
   });
 
+  it('marks whether a live spec tests each flow', async () => {
+    ops.tableRows = [
+      flowRow(),
+      flowRow({ id: 'fl2', name: 'Pod Checkout', specs: ['mweb/pods/checkout.cy.ts'] }),
+    ];
+    mountList();
+    const untested = (await screen.findByText('User Authentication')).closest('[role="row"]') as HTMLElement;
+    const tested = screen.getByText('Pod Checkout').closest('[role="row"]') as HTMLElement;
+    expect(within(untested).getByText('No')).toBeInTheDocument();
+    expect(within(tested).getByText('Yes')).toBeInTheDocument();
+  });
+
   it('creates a flow and rejects a one-character name', async () => {
     mountList();
     await screen.findByText('User Authentication');

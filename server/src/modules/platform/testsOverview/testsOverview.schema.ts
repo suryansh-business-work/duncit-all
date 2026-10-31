@@ -98,9 +98,13 @@ export const testsOverviewTypeDefs = gql`
     ended_at: String
   }
 
-  "How much of the E2E flow catalogue a person has reviewed as ready to automate."
+  "How much of the E2E flow catalogue a person has reviewed as ready to automate, and how much a live spec already tests."
   type TestsScenarioCoverage {
     flows: Int!
+    "Flows at least one live Cypress spec tests (e2eFlow/catalogue/spec-links.ts)."
+    automated: Int!
+    "automated / flows as 0-100; null when the catalogue is empty."
+    automated_pct: Float
     sub_flows: Int!
     looks_good: Int!
     needs_review: Int!

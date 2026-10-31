@@ -54,8 +54,15 @@ export interface OpenAiChatRequest {
 /** `DISABLED` — the feature (task) is switched off in AI portal > AI Features. */
 export type OpenAiFailureCode = 'NOT_CONFIGURED' | 'DISABLED' | 'NETWORK' | 'UPSTREAM' | 'EMPTY';
 
+/** What the call burned, in OpenAI's names whichever provider answered; zeros when the provider sent none. */
+export interface OpenAiUsage {
+  prompt_tokens: number;
+  completion_tokens: number;
+  total_tokens: number;
+}
+
 export type OpenAiChatResult =
-  | { ok: true; content: string; model: string }
+  | { ok: true; content: string; model: string; usage: OpenAiUsage }
   | { ok: false; code: OpenAiFailureCode; status: number; message: string; model: string };
 
 const DEFAULT_MODEL = 'gpt-4o-mini';
@@ -73,6 +80,13 @@ interface OpenAiChatPayload {
   usage?: OpenAiUsagePayload;
   error?: { message?: string };
 }
+
+/** The provider's usage, whole, so a caller recording cost never reads an absent field. */
+const usageOf = (payload?: OpenAiUsagePayload): OpenAiUsage => ({
+  prompt_tokens: payload?.prompt_tokens ?? 0,
+  completion_tokens: payload?.completion_tokens ?? 0,
+  total_tokens: payload?.total_tokens ?? 0,
+});
 
 /* -------------------------------- previews ------------------------------ */
 
@@ -199,7 +213,7 @@ async function claudeChat(req: OpenAiChatRequest, apiKey: string, model: string,
     return { ok: false, code: out.code, status: out.status, message: out.message, model };
   }
   record({ req, model, status: 'SUCCESS', httpStatus: out.status, usage: out.usage, response: out.content, startedAt });
-  return { ok: true, content: out.content, model };
+  return { ok: true, content: out.content, model, usage: usageOf(out.usage) };
 }
 
 /** POST the chat completion, or describe why it never happened. */
@@ -268,5 +282,5 @@ export async function openaiChat(req: OpenAiChatRequest): Promise<OpenAiChatResu
       model,
     };
   }
-  return { ok: true, content, model };
+  return { ok: true, content, model, usage: usageOf(json.usage) };
 }

@@ -73,8 +73,16 @@ export interface RunContext {
   id: string;
   step<T>(key: string, label: string, work: () => Promise<T>, options?: StepOptions<T>): Promise<T>;
   api(entry: ApiEntry): Promise<void>;
-  cost(delta: { tokens_in?: number; tokens_out?: number; amount?: number }): Promise<void>;
+  cost(delta: CostDelta): Promise<void>;
   cancelled(): Promise<boolean>;
+}
+
+/** Tokens and money to add to the run; `currency` names the money's unit when it is not the row's default. */
+export interface CostDelta {
+  tokens_in?: number;
+  tokens_out?: number;
+  amount?: number;
+  currency?: string;
 }
 
 export interface StepOptions<T> {
@@ -201,7 +209,7 @@ export const pubRun = (o: MarketingRunDoc) => {
       tokens_in: o.cost?.tokens_in ?? 0,
       tokens_out: o.cost?.tokens_out ?? 0,
       amount: o.cost?.amount ?? 0,
-      currency: o.cost?.currency ?? 'INR',
+      currency: o.cost?.currency ?? 'USD',
     },
     parent_run_id: o.parent_run_id ?? '',
     cancel_requested: !!o.cancel_requested,
@@ -271,10 +279,13 @@ export async function logApi(runId: string, entry: ApiEntry): Promise<void> {
   );
 }
 
-export async function addCost(runId: string, delta: { tokens_in?: number; tokens_out?: number; amount?: number }): Promise<void> {
+export async function addCost(runId: string, delta: CostDelta): Promise<void> {
   await MarketingRunModel.updateOne(
     { _id: runId },
-    { $inc: { 'cost.tokens_in': delta.tokens_in ?? 0, 'cost.tokens_out': delta.tokens_out ?? 0, 'cost.amount': delta.amount ?? 0 } }
+    {
+      $inc: { 'cost.tokens_in': delta.tokens_in ?? 0, 'cost.tokens_out': delta.tokens_out ?? 0, 'cost.amount': delta.amount ?? 0 },
+      ...(delta.currency ? { $set: { 'cost.currency': delta.currency } } : {}),
+    }
   );
 }
 
@@ -448,7 +459,7 @@ export async function runFigures(since: Date) {
     running,
     failed,
     completed: finished[0]?.completed ?? 0,
-    // Rupees. Each step's cost is already rounded; their sum is not.
+    // US dollars, the AI rate card's unit. Each step's cost is already rounded; their sum is not.
     spend: Math.round((finished[0]?.spend ?? 0) * 100) / 100,
   };
 }

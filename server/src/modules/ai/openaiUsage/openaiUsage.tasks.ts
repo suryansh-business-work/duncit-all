@@ -185,6 +185,13 @@ export const OPENAI_TASKS = {
     description: 'Drafts the opening DM or the next follow-up for one Instagram lead.',
     when_off: MARKETING_ERROR,
   },
+  'marketing.agent_plan': {
+    label: 'Marketing agent plan',
+    module: 'Marketing',
+    description:
+      'The plan a marketing agent (Automation › Agents) asks Claude for on each run: which tools to call, with what, and why.',
+    when_off: 'Every agent run fails at its first step, recorded on Activity as "switched off"; nothing is planned or posted.',
+  },
   'platform.release_notes': {
     label: 'Release changelog',
     module: 'Platform',
@@ -250,6 +257,30 @@ export const OPENAI_TASKS = {
     module: 'Reel Studio',
     description: 'Turns a chat instruction into an edit of a Reel Studio project.',
     when_off: 'The studio chat replies that the AI feature is switched off; the project is not changed.',
+  },
+  'reels.ideas': {
+    label: 'Reel ideas',
+    module: 'Marketing',
+    description: 'Suggests reel concepts — title, hook and angle — from a brief in Reel Studio.',
+    when_off: 'Create with AI fails at its first step with an error saying AI is unavailable; the run records it.',
+  },
+  'reels.script': {
+    label: 'Reel script',
+    module: 'Marketing',
+    description: 'Writes a reel script — hooks, scenes with shot notes and a closing line — from a chosen concept.',
+    when_off: 'Create with AI fails at its first step with an error saying AI is unavailable; the run records it.',
+  },
+  'reels.variants': {
+    label: 'Reel captions per network',
+    module: 'Marketing',
+    description: 'Writes the caption, hashtags and title for a reel on each network it is going to, within that network’s limits.',
+    when_off: MARKETING_ERROR,
+  },
+  'reels.recommend': {
+    label: 'Next reel recommendation',
+    module: 'Marketing',
+    description: 'Reads a posted reel’s numbers against the account’s recent posts and recommends what to make next.',
+    when_off: MARKETING_ERROR,
   },
 } as const satisfies Record<string, OpenAiTaskMeta>;
 

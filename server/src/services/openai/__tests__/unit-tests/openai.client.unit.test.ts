@@ -157,7 +157,12 @@ describe('openaiChat — when the feature is on', () => {
 
     const result = await openaiChat(request({ temperature: 0, max_tokens: 50, json: true }));
 
-    expect(result).toEqual({ ok: true, content: '{"ok":true}', model: 'gpt-4.1-mini' });
+    expect(result).toEqual({
+      ok: true,
+      content: '{"ok":true}',
+      model: 'gpt-4.1-mini',
+      usage: { prompt_tokens: 12, completion_tokens: 3, total_tokens: 15 },
+    });
     const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
     expect(url).toBe('https://proxy.example/v1/chat/completions');
     expect(JSON.parse(String(init.body))).toEqual({
@@ -252,6 +257,22 @@ describe('openaiChat — when the feature is on', () => {
 
     await expect(openaiChat(request())).resolves.toMatchObject({ ok: true, content: 'hi' });
   });
+
+  // A caller that records cost (the marketing agents) reads the usage off the answer; a provider
+  // that sent no usage block, or a partial one, must still hand back every field as a number.
+  it('answers a success with whole usage even when the provider sent none or only some of it', async () => {
+    fetchMock.mockResolvedValueOnce(respond(200, { choices: [{ message: { content: 'hi' } }] }));
+    await expect(openaiChat(request())).resolves.toMatchObject({
+      ok: true,
+      usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 },
+    });
+
+    fetchMock.mockResolvedValueOnce(respond(200, { choices: [{ message: { content: 'hi' } }], usage: { total_tokens: 7 } }));
+    await expect(openaiChat(request())).resolves.toMatchObject({
+      ok: true,
+      usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 7 },
+    });
+  });
 });
 
 describe('openaiChat — a claude- model', () => {
@@ -261,7 +282,12 @@ describe('openaiChat — a claude- model', () => {
 
     const result = await openaiChat(request({ model: 'claude-opus-5-5', json: true, max_tokens: 300, temperature: 0.2 }));
 
-    expect(result).toEqual({ ok: true, content: '{"ok":true}', model: 'claude-opus-5-5' });
+    expect(result).toEqual({
+      ok: true,
+      content: '{"ok":true}',
+      model: 'claude-opus-5-5',
+      usage: { prompt_tokens: 12, completion_tokens: 5, total_tokens: 17 },
+    });
     expect(fetchMock).not.toHaveBeenCalled();
     // The temperature is not passed on: Claude's current models refuse sampling parameters.
     expect(claude).toHaveBeenCalledWith({ apiKey: 'sk-ant', model: 'claude-opus-5-5', messages: request().messages, max_tokens: 300, json: true });

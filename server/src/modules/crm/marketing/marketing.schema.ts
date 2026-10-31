@@ -375,7 +375,7 @@ export const marketingTypeDefs = /* GraphQL */ `
     completed: Int!
     "Runs that failed, or only partly completed, in the window."
     failed: Int!
-    "What the AI steps of the window's runs cost, in rupees."
+    "What the AI steps of the window's runs cost, in US dollars — the AI portal's rate card prices every model in dollars."
     spend: Float!
   }
 

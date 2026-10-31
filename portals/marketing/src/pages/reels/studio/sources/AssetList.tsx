@@ -3,6 +3,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import { DuncitIconButton } from '@duncit/buttons';
 import { useConfirm } from '@duncit/dialogs';
 import { useTranslation, type Translate } from '@duncit/shell';
+import { SOURCE_LABEL } from '../../editor/labels';
 import { formatReelDuration } from '../../format';
 import type { ReelAsset, ReelAssetKind } from '../../types';
 import MediaThumb from '../MediaThumb';
@@ -21,10 +22,13 @@ function kindLabel(kind: ReelAssetKind, t: Translate): string {
   return t('ai.reels.sources.kindImage');
 }
 
-function assetMeta(asset: ReelAsset, t: Translate): string {
+/** Kind, length, where it came from — and, for stock, the licence and the credit it carries. */
+export function assetMeta(asset: ReelAsset, t: Translate): string {
   const parts = [kindLabel(asset.kind, t)];
   if (asset.duration_ms > 0) parts.push(formatReelDuration(asset.duration_ms));
-  if (asset.source === 'UPLOAD') parts.push(t('ai.reels.sources.fromChat'));
+  if (asset.source !== 'DRIVE') parts.push(t(SOURCE_LABEL[asset.source]));
+  if (asset.licence) parts.push(asset.licence);
+  if (asset.attribution) parts.push(asset.attribution);
   return parts.join(' · ');
 }
 
@@ -61,6 +65,7 @@ export default function AssetList({ assets, usedAssetIds, onRemove }: Readonly<P
     <List dense disablePadding aria-label={t('ai.reels.sources.assetsLabel')} data-testid="reel-assets">
       {assets.map((asset) => {
         const removeLabel = t('ai.reels.sources.removeFile', { vars: { name: asset.name } });
+        const meta = assetMeta(asset, t);
         return (
           <ListItem
             key={asset.id}
@@ -77,7 +82,9 @@ export default function AssetList({ assets, usedAssetIds, onRemove }: Readonly<P
             }
           >
             <MediaThumb kind={asset.kind} src={asset.thumbnail_url} />
-            <ListItemText primary={asset.name} secondary={assetMeta(asset, t)} slotProps={TEXT_SLOTS} />
+            <Tooltip title={meta}>
+              <ListItemText primary={asset.name} secondary={meta} slotProps={TEXT_SLOTS} />
+            </Tooltip>
           </ListItem>
         );
       })}

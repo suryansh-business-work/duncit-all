@@ -1,14 +1,20 @@
 import { useMemo } from 'react';
-import { useQuery } from '@apollo/client/react';
-import { Alert, Box, Divider, Link, Stack, Typography } from '@mui/material';
-import AddLinkIcon from '@mui/icons-material/AddLink';
-import { DuncitButton } from '@duncit/buttons';
+import { Box, Divider, Stack, Typography } from '@mui/material';
+import { DuncitTabs, tabPanelProps, useTabParam } from '@duncit/tabs';
 import { useTranslation } from '@duncit/shell';
-import { REEL_DRIVE_STATUS } from '../../queries';
-import type { ReelDriveStatus, ReelProject } from '../../types';
+import type { ReelProject } from '../../types';
 import type { ReelActions } from '../useReelActions';
 import AssetList from './AssetList';
-import DriveBrowser from './DriveBrowser';
+import DriveTab from './DriveTab';
+import StockTab from './StockTab';
+import UploadTab from './UploadTab';
+import VoiceTab from './VoiceTab';
+
+export type SourceTab = 'drive' | 'stock' | 'upload' | 'voice';
+
+/** Its own query key: the side panel owns `selectedtab`. */
+export const SOURCE_TAB_PARAM = 'sources';
+const ID_PREFIX = 'reel-sources';
 
 interface Props {
   project: ReelProject;
@@ -17,61 +23,25 @@ interface Props {
   onEditDetails: () => void;
 }
 
-/** A pane heading: the name of the section, and one line saying what it is for. */
-function PaneHeading({ id, title, hint }: Readonly<{ id: string; title: string; hint: string }>) {
-  return (
-    <Box sx={{ px: 2, pt: 1.5, pb: 1 }}>
-      <Typography id={id} variant="subtitle2" component="h2" sx={{ fontWeight: 700 }}>
-        {title}
-      </Typography>
-      <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>
-        {hint}
-      </Typography>
-    </Box>
-  );
-}
-
-/** What stands between the operator and their folder, when something does. */
-function DriveNotice({ status, hasFolder, onEditDetails }: Readonly<{ status: ReelDriveStatus | null; hasFolder: boolean; onEditDetails: () => void }>) {
-  const { t } = useTranslation();
-  if (status && !status.configured) {
-    return (
-      <Alert severity="warning" sx={{ m: 1.5 }} data-testid="reel-drive-not-configured">
-        {t('ai.reels.sources.driveNotConfigured')}
-      </Alert>
-    );
-  }
-  if (hasFolder) return null;
-  return (
-    <Stack spacing={1} sx={{ p: 2, alignItems: 'flex-start' }} data-testid="reel-drive-no-folder">
-      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-        {t('ai.reels.sources.noFolder')}
-      </Typography>
-      <DuncitButton size="small" variant="outlined" startIcon={<AddLinkIcon />} onClick={onEditDetails} data-testid="reel-drive-add-link">
-        {t('ai.reels.sources.addFolderLink')}
-      </DuncitButton>
-    </Stack>
-  );
-}
-
 /**
- * The left pane: where the footage comes from, and what the reel holds.
- *
- * Two lists on purpose. Drive is the shelf — everything that could be used —
- * and "In this reel" is what was taken off it. The editor only ever sees the
- * second, so a 400-file shoot costs nothing until a clip is actually picked.
+ * The left pane: what the reel holds, and the four shelves it is filled from —
+ * the Drive folder, stock footage, the operator's own files, and generated
+ * voice. The editor only ever sees what is in the reel, so a shelf of
+ * hundreds of files costs nothing until something is taken off it.
  */
 export default function SourcesPanel({ project, actions, onEditDetails }: Readonly<Props>) {
   const { t } = useTranslation();
-  const statusQuery = useQuery<{ reelDriveStatus: ReelDriveStatus }>(REEL_DRIVE_STATUS, { fetchPolicy: 'cache-first' });
-  const status = statusQuery.data?.reelDriveStatus ?? null;
-  const hasFolder = project.drive_folder_id !== '';
-  const canBrowse = hasFolder && status?.configured === true;
-
-  const heldFileIds = useMemo(
-    () => new Set(project.assets.flatMap((asset) => (asset.drive_file_id ? [asset.drive_file_id] : []))),
-    [project.assets]
+  const items = useMemo(
+    () => [
+      { value: 'drive' as const, label: t('ai.reels.sources.driveTitle'), testId: 'reel-sources-tab-drive' },
+      { value: 'stock' as const, label: t('ai.reels.sources.tabStock'), testId: 'reel-sources-tab-stock' },
+      { value: 'upload' as const, label: t('ai.reels.sources.tabUpload'), testId: 'reel-sources-tab-upload' },
+      { value: 'voice' as const, label: t('ai.reels.sources.tabVoice'), testId: 'reel-sources-tab-voice' },
+    ],
+    [t]
   );
+  const tabs = useTabParam<SourceTab>({ items, fallback: 'drive', param: SOURCE_TAB_PARAM });
+
   const usedAssetIds = useMemo(() => {
     const used = new Set<string>();
     for (const scene of project.spec.scenes) {
@@ -79,33 +49,32 @@ export default function SourcesPanel({ project, actions, onEditDetails }: Readon
       for (const overlay of scene.overlays) used.add(overlay.asset_id);
     }
     if (project.spec.music) used.add(project.spec.music.asset_id);
+    if (project.spec.voiceover) used.add(project.spec.voiceover.asset_id);
+    if (project.spec.brand.watermark_asset_id) used.add(project.spec.brand.watermark_asset_id);
     return used;
   }, [project.spec]);
 
   return (
-    <Stack component="section" aria-labelledby="reel-sources-assets-title" sx={{ height: '100%', minHeight: 0 }} data-testid="reel-sources-panel">
-      <PaneHeading
-        id="reel-sources-assets-title"
-        title={t('ai.reels.sources.assetsTitle', { vars: { count: project.assets.length } })}
-        hint={t('ai.reels.sources.assetsHint')}
-      />
+    <Stack component="section" aria-labelledby="reel-sources-assets-title" sx={{ height: '100%', minHeight: 0 }} data-tour="studio-sources" data-testid="reel-sources-panel">
+      <Box sx={{ px: 2, pt: 1.5, pb: 1 }}>
+        <Typography id="reel-sources-assets-title" variant="subtitle2" component="h2" sx={{ fontWeight: 700 }}>
+          {t('ai.reels.sources.assetsTitle', { vars: { count: project.assets.length } })}
+        </Typography>
+        <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>
+          {t('ai.reels.sources.assetsHint')}
+        </Typography>
+      </Box>
       <Box sx={{ maxHeight: '38%', overflowY: 'auto', flexShrink: 0 }}>
         <AssetList assets={project.assets} usedAssetIds={usedAssetIds} onRemove={actions.removeAsset} />
       </Box>
       <Divider />
-      <PaneHeading id="reel-sources-drive-title" title={t('ai.reels.sources.driveTitle')} hint={t('ai.reels.sources.driveHint')} />
-      {status?.configured && (
-        <Typography variant="caption" sx={{ color: 'text.secondary', px: 2, pb: 1, overflowWrap: 'anywhere' }} data-testid="reel-drive-share-hint">
-          {t('ai.reels.sources.shareWith', { vars: { email: status.service_account_email } })}{' '}
-          {hasFolder && (
-            <Link component="button" type="button" variant="caption" onClick={onEditDetails}>
-              {t('ai.reels.sources.changeFolder')}
-            </Link>
-          )}
-        </Typography>
-      )}
-      <DriveNotice status={status} hasFolder={hasFolder} onEditDetails={onEditDetails} />
-      {canBrowse && <DriveBrowser rootFolderId={project.drive_folder_id} heldFileIds={heldFileIds} onAdd={actions.addDriveFiles} />}
+      <DuncitTabs {...tabs} idPrefix={ID_PREFIX} variant="fullWidth" aria-label={t('ai.reels.sources.tabsLabel')} />
+      <Stack {...tabPanelProps(ID_PREFIX, tabs.value)} sx={{ flex: 1, minHeight: 0 }}>
+        {tabs.value === 'drive' && <DriveTab project={project} actions={actions} onEditDetails={onEditDetails} />}
+        {tabs.value === 'stock' && <StockTab project={project} actions={actions} />}
+        {tabs.value === 'upload' && <UploadTab actions={actions} />}
+        {tabs.value === 'voice' && <VoiceTab project={project} />}
+      </Stack>
     </Stack>
   );
 }

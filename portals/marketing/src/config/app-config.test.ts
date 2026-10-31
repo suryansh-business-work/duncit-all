@@ -108,7 +108,7 @@ describe('Marketing sidebar', () => {
   });
 
   it('leaves Approvals out for an editor, whose sends wait on a manager, and keeps the rest of Overview', () => {
-    const overviewOf = (nav: ReturnType<typeof buildNav>) => nav.find((item) => item.labelKey === 'shell.nav.overview');
+    const overviewOf = (nav: ReadonlyArray<ReturnType<typeof buildNav>[number]>) => nav.find((item) => item.labelKey === 'shell.nav.overview');
     const editorLeaves = overviewOf(buildNav(['MARKETING_EDITOR']))?.children?.map((child) => child.to);
     expect(editorLeaves).toEqual(['/', '/tasks', '/activity']);
     expect(overviewOf(buildNav(['MARKETING_MANAGER']))?.children?.map((child) => child.to)).toContain('/approvals');

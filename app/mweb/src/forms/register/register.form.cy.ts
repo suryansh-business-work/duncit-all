@@ -14,6 +14,7 @@ const valid = {
   password: 'longenough',
   confirmPassword: 'longenough',
   dob: ELIGIBLE_DOB,
+  ageConfirmed: true,
   referralCode: '',
   acceptedPolicyIds: [],
   marketingOptIn: false,
@@ -26,6 +27,8 @@ describe('registerSchema', () => {
   it('exposes empty defaults', () => {
     expect(registerDefaults.dob).toBe('');
     expect(registerDefaults.name).toBe('');
+    // The age tick starts unticked: the person has to state it themselves.
+    expect(registerDefaults.ageConfirmed).toBe(false);
   });
 
   it('accepts a fully valid register payload', () => {
@@ -77,10 +80,20 @@ describe('registerSchema', () => {
     expect(firstError(result)).toMatch(/match/i);
   });
 
-  it('rejects an empty date of birth', () => {
-    expect(firstError(registerSchema.safeParse({ ...valid, dob: '' }))).toMatch(
-      /date of birth is required/i,
-    );
+  it('accepts an empty date of birth, since the age tick states the age', () => {
+    expect(registerSchema.safeParse({ ...valid, dob: '' }).success).toBe(true);
+  });
+
+  it('rejects a signup that has not ticked the minimum-age confirmation', () => {
+    const result = registerSchema.safeParse({ ...valid, ageConfirmed: false });
+    expect(result.success).toBe(false);
+    expect(firstError(result)).toMatch(/confirm you.re \d+ or older/i);
+  });
+
+  it('rejects an unticked age confirmation even when no date of birth is given', () => {
+    const result = registerSchema.safeParse({ ...valid, dob: '', ageConfirmed: false });
+    expect(result.success).toBe(false);
+    expect(firstError(result)).toMatch(/or older/i);
   });
 
   it('rejects anything that is not a real YYYY-MM-DD day', () => {

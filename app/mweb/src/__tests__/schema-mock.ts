@@ -295,7 +295,12 @@ function scalarValue(typeName: string, fieldName: string, idSeed: string): unkno
   if (name === 'time_zone' || name === 'timezone') return 'Asia/Kolkata';
   if (name === 'date_format') return 'dd MMM yyyy';
   if (name === 'time_format') return 'hh:mm a';
-  if (name.endsWith('_at') || name.includes('date') || name.includes('time')) return ISO;
+  // A timestamp is spelled `created_at` on most types and `createdAt` on a few
+  // (chat lines). The server always sends either as an ISO string, so the mock
+  // must too — the literal 'createdAt' it used to fall through to is a value
+  // no real response carries.
+  const isTimestamp = name.endsWith('_at') || /[a-z]At$/.test(fieldName);
+  if (isTimestamp || name.includes('date') || name.includes('time')) return ISO;
   if (name.includes('email')) return 'smoke@duncit.com';
   if (name.includes('url') || name.includes('image') || name.includes('photo') || name.includes('avatar')) {
     return 'https://cdn.duncit.com/smoke.jpg';

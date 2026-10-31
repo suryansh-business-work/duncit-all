@@ -177,14 +177,14 @@ describe('MenuPanel', () => {
 
   it('renders the policies section only when policies exist', () => {
     renderPanel({ publicPolicies: policies });
-    expect(screen.getByTestId('sidebar-section-support-subtitle')).toHaveTextContent('Help, FAQs, Policies');
+    expect(screen.getByTestId('sidebar-section-support-subtitle')).toHaveTextContent('Help, FAQs, Learnings, Policies');
     expand('support');
     expect(screen.getByText('Policies')).toBeInTheDocument();
   });
 
   it('omits the policies section when there are no policies', () => {
     renderPanel({ publicPolicies: [] });
-    expect(screen.getByTestId('sidebar-section-support-subtitle')).toHaveTextContent(/^Help, FAQs$/);
+    expect(screen.getByTestId('sidebar-section-support-subtitle')).toHaveTextContent(/^Help, FAQs, Learnings$/);
     expand('support');
     expect(screen.queryByText('Policies')).not.toBeInTheDocument();
   });

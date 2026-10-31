@@ -8,6 +8,7 @@ import { publishContent, publishProblems } from './social.rules';
 import { postTitle, publishNow, requeueFailed } from './social.publisher';
 import type { PublishContent, PublishMedia, SocialMediaType, SocialPublishStatus } from './social.types';
 import { cancelRun, startRun, userActor } from '../runs/marketingRun.service';
+import { normalizeCollaborators } from './social.collaborators';
 
 /**
  * The composer's side of publishing: create, edit, delete, retry, and the
@@ -35,6 +36,10 @@ export interface ScheduledPostInput {
   idea_id?: string | null;
   /** The Reel Studio project this reel was cut in; the studio reads the post's numbers back through it. */
   reel_project_id?: string | null;
+  /** The pod a Pod promotion made this post for. */
+  pod_id?: string | null;
+  /** Instagram usernames to invite; dropped when no Instagram account is picked. */
+  collaborators?: string[] | null;
   /** With SCHEDULE or NOW, parks the post as PENDING_APPROVAL and opens an approval run. */
   needs_approval?: boolean | null;
 }
@@ -79,6 +84,19 @@ function reelLinkOf(input: ScheduledPostInput): string {
   const id = (input.reel_project_id ?? '').trim();
   if (id && !isValidObjectId(id)) badInput('That reel link is not valid.');
   return id;
+}
+
+/** The pod this post promotes, checked like the reel link. */
+function podLinkOf(input: ScheduledPostInput): string {
+  const id = (input.pod_id ?? '').trim();
+  if (id && !isValidObjectId(id)) badInput('That pod link is not valid.');
+  return id;
+}
+
+/** Collaborators only travel to Instagram; with no Instagram target they are dropped rather than kept unseen. */
+function collaboratorsFor(input: ScheduledPostInput, targets: { platform: string }[]): string[] {
+  const handles = normalizeCollaborators(input.collaborators);
+  return targets.some((target) => target.platform === 'INSTAGRAM') ? handles : [];
 }
 
 /** The targets, checked — every account must exist, and (unless a draft) be able to take this post. */
@@ -128,6 +146,8 @@ const pub = (o: any, names: Map<string, string>) => ({
   published_at: iso(o.published_at),
   idea_id: o.idea_id ?? '',
   reel_project_id: o.reel_project_id ?? '',
+  pod_id: o.pod_id ?? '',
+  collaborators: o.collaborators ?? [],
   needs_approval: !!o.needs_approval,
   review_note: o.review_note ?? '',
   approval_run_id: o.approval_run_id ?? '',
@@ -228,6 +248,8 @@ export const socialPublishService = {
       targets,
       idea_id: input.idea_id ?? '',
       reel_project_id,
+      pod_id: podLinkOf(input),
+      collaborators: collaboratorsFor(input, targets),
       needs_approval: !!input.needs_approval,
       review_note: '',
       created_by: userId,
@@ -258,6 +280,9 @@ export const socialPublishService = {
       ...timing,
       targets,
       reel_project_id,
+      // An edit from the composer does not carry the pod link; it keeps the one it had.
+      pod_id: input.pod_id === undefined ? doc.pod_id : podLinkOf(input),
+      collaborators: collaboratorsFor(input, targets),
       needs_approval: !!input.needs_approval,
       ...(input.mode === 'DRAFT' ? {} : { review_note: '' }),
       ...(waiting ? { approval_run_id: '' } : {}),

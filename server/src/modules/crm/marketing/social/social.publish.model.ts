@@ -56,6 +56,10 @@ const scheduledPostSchema = new Schema(
     idea_id: { type: String, default: '' },
     /** The Reel Studio project the posted reel was cut in; its analytics read back through this. */
     reel_project_id: { type: String, default: '', index: true },
+    /** The pod a Pod promotion made this post for; its tracking figures read back through it. */
+    pod_id: { type: String, default: '', index: true },
+    /** Instagram usernames invited as collaborators (Instagram only, at most 3). */
+    collaborators: { type: [String], default: [] },
     /** A reviewer must say yes before it goes out; once they have, it stays true as the record of that. */
     needs_approval: { type: Boolean, default: false },
     /** Why the reviewer sent it back; shown to the author on the draft. */

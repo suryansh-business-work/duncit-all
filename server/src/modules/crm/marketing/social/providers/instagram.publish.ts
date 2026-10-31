@@ -65,14 +65,24 @@ function itemFields(item: PublishMedia): Record<string, string> {
     : { image_url: jpegSourceUrl(item.url) };
 }
 
+/**
+ * The collaborators field of a feed post, reel or carousel container: a JSON
+ * list of usernames. Absent when there are none, so a plain post is sent
+ * exactly as before.
+ */
+export function collaboratorFields(content: PublishContent): Record<string, string> {
+  const names = content.collaborators ?? [];
+  return names.length > 0 ? { collaborators: JSON.stringify(names) } : {};
+}
+
 export const instagramPublisher: SocialPublisher = {
   async publish(account, content, creds) {
     const graph: Graph = { version: creds.version, token: account.access_token, base: graphBase(account), ig: account.external_id };
     const make = (fields: Record<string, string>) => container(graph, fields);
     const creation =
       content.media.length > 1
-        ? await carouselContainer(content.media.map(itemFields), { caption: content.text }, make)
-        : await make({ ...singleFields(content), caption: content.text });
+        ? await carouselContainer(content.media.map(itemFields), { caption: content.text, ...collaboratorFields(content) }, make)
+        : await make({ ...singleFields(content), caption: content.text, ...collaboratorFields(content) });
     const published = await graphPost<{ id: string }>(graph.version, `/${graph.ig}/media_publish`, graph.token, { creation_id: creation }, graph.base);
     const post = await graphGet<{ permalink?: string }>(graph.version, `/${published.id}`, graph.token, { fields: 'permalink' }, graph.base);
     return { external_id: published.id, permalink: post.permalink ?? '' };

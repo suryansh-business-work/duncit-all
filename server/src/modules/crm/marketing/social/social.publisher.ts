@@ -49,6 +49,8 @@ interface ClaimedPost {
   media?: PublishMedia[];
   media_url: string;
   media_type: SocialMediaType | null;
+  /** Absent on a post stored before collaborations. */
+  collaborators?: string[];
   published_at: Date | null;
   targets: Target[];
   /** The approval run this post waited on, '' when it needed none. */
@@ -135,7 +137,7 @@ function publishStep(run: RunContext, target: Target, content: PublishContent, n
 }
 
 async function publishClaimed(post: ClaimedPost, run: RunContext): Promise<void> {
-  const content = publishContent(post.text, mediaOf(post));
+  const content = { ...publishContent(post.text, mediaOf(post)), collaborators: post.collaborators ?? [] };
   const names = await accountLabels(post.targets);
   const targets: Target[] = [];
   for (const target of post.targets) {

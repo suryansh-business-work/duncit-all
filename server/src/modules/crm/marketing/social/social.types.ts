@@ -183,6 +183,8 @@ export interface PublishContent {
   /** '' for a text-only post. */
   media_url: string;
   media_type: SocialMediaType | null;
+  /** Instagram usernames invited as collaborators; only Instagram uses them (social.rules maxCollaborators). */
+  collaborators?: string[];
 }
 
 export interface PublishResult {

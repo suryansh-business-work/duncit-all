@@ -127,7 +127,9 @@ const DARK_SLOT: BurstPaint = {
 /** A disc of radius r centred on (x, y), as path data. */
 function disc(x: number, y: number, r: number): string {
   'worklet';
-  return ['M', x - r, y, 'a', r, r, 0, 1, 0, r * 2, 0, 'a', r, r, 0, 1, 0, -r * 2, 0, 'z '].join(' ');
+  return ['M', x - r, y, 'a', r, r, 0, 1, 0, r * 2, 0, 'a', r, r, 0, 1, 0, -r * 2, 0, 'z '].join(
+    ' ',
+  );
 }
 
 /**
@@ -154,7 +156,15 @@ export function burstPaint(
   let r = 0;
   let alpha = 0;
   for (const spark of burstSparksW(burst, fireworks, t)) {
-    streaks += ['M', spark.tail_x + dx, spark.tail_y + dy, 'L', spark.x + dx, spark.y + dy, ''].join(' ');
+    streaks += [
+      'M',
+      spark.tail_x + dx,
+      spark.tail_y + dy,
+      'L',
+      spark.x + dx,
+      spark.y + dy,
+      '',
+    ].join(' ');
     halos += disc(spark.x + dx, spark.y + dy, spark.r * 2.4);
     cores += disc(spark.x + dx, spark.y + dy, spark.r);
     r = spark.r;

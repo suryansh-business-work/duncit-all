@@ -68,10 +68,12 @@ describe('OccasionEffects', () => {
   it('paints over the viewport, hidden from assistive technology, and stops its loop when it unmounts', () => {
     const { unmount } = render(<OccasionEffects decoration={CHRISTMAS} />);
     const canvas = screen.getByTestId('occasion-effects');
+    const frame = screen.getByTestId('occasion-effects-frame');
 
     expect(canvas.tagName).toBe('CANVAS');
-    expect(canvas).toHaveAttribute('aria-hidden', 'true');
-    expect(canvas).toHaveStyle({ position: 'fixed', pointerEvents: 'none' });
+    expect(frame).toContainElement(canvas);
+    expect(frame).toHaveAttribute('aria-hidden', 'true');
+    expect(frame).toHaveStyle({ position: 'fixed', pointerEvents: 'none' });
     expect(runOccasionCanvas).toHaveBeenCalledWith(canvas, CHRISTMAS, { contained: false, still: false, stillAt: undefined });
 
     unmount();
@@ -81,7 +83,7 @@ describe('OccasionEffects', () => {
   it('fills its parent box for a preview and can show one still instant', () => {
     render(<OccasionEffects decoration={CHRISTMAS} contained still stillAt={4} />);
 
-    expect(screen.getByTestId('occasion-effects')).toHaveStyle({ position: 'absolute' });
+    expect(screen.getByTestId('occasion-effects-frame')).toHaveStyle({ position: 'absolute' });
     expect(lastCanvasOptions()).toEqual({ contained: true, still: true, stillAt: 4 });
   });
 });

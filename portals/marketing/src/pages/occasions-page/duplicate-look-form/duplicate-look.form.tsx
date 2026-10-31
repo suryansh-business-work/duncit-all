@@ -40,7 +40,7 @@ function DuplicateBody({ look, titleId, onClose, onSubmit }: Readonly<BodyProps>
         <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
           {t('marketing.occasions.duplicate.hint')}
         </Typography>
-        <RhfTextField control={control} name="name" label={t('marketing.occasions.form.name')} required autoFocus />
+        <RhfTextField control={control} name="name" label={t('marketing.occasions.form.name')} required />
       </DialogContent>
       <DialogActions>
         <DuncitButton onClick={onClose}>{t('shell.common.cancel')}</DuncitButton>

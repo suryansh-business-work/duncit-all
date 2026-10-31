@@ -20,8 +20,8 @@ const DEFAULT_Z = 1150;
 
 /**
  * A look's decoration — snow, fireworks, Santa crossing, the garland — on one
- * canvas over the page. Purely decorative: hidden from assistive technology
- * and transparent to every tap and click.
+ * canvas over the page. Purely decorative: its frame is hidden from assistive
+ * technology and transparent to every tap and click.
  */
 export function OccasionEffects({ decoration, contained = false, still = false, stillAt, zIndex = DEFAULT_Z }: Readonly<OccasionEffectsProps>) {
   const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null);
@@ -33,19 +33,11 @@ export function OccasionEffects({ decoration, contained = false, still = false, 
 
   return (
     <Box
-      component="canvas"
-      ref={setCanvas}
       aria-hidden
-      data-testid="occasion-effects"
-      sx={{
-        position: contained ? 'absolute' : 'fixed',
-        inset: 0,
-        width: '100%',
-        height: '100%',
-        display: 'block',
-        pointerEvents: 'none',
-        zIndex,
-      }}
-    />
+      data-testid="occasion-effects-frame"
+      sx={{ position: contained ? 'absolute' : 'fixed', inset: 0, pointerEvents: 'none', zIndex }}
+    >
+      <canvas ref={setCanvas} data-testid="occasion-effects" style={{ display: 'block', width: '100%', height: '100%' }} />
+    </Box>
   );
 }

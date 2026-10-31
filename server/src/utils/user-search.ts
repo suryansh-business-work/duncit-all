@@ -37,13 +37,13 @@ const regexMatch = (input: unknown, regex: string) => ({
 export function userSearchFilter(term: string | null | undefined): Record<string, unknown> | null {
   const needle = (term ?? '').trim();
   if (needle.length < USER_SEARCH_MIN_LENGTH) return null;
-  const pattern = escapeRegExp(needle);
-  const rx = new RegExp(pattern, 'i');
+  const escaped = escapeRegExp(needle);
+  const rx = new RegExp(escaped, 'i');
   const or: Record<string, unknown>[] = [
     { 'auth.email': rx },
     { 'profile.first_name': rx },
     { 'profile.last_name': rx },
-    regexMatch(FULL_NAME, pattern),
+    regexMatch(FULL_NAME, escaped),
   ];
   const digits = needle.replaceAll(/\D/g, '');
   if (digits.length >= PHONE_MIN_DIGITS) or.push(regexMatch(FULL_PHONE, digits));

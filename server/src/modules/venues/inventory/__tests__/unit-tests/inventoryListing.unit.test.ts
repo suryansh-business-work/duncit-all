@@ -866,7 +866,7 @@ describe('inventoryService.reviewProductListing', () => {
     );
     expect(notifyCreate).toHaveBeenCalledWith(
       expect.objectContaining({
-        title: 'Product approved 🎉',
+        title: 'Product approved',
         body: 'Duncit Tee is approved and can now be stocked into pods.',
       })
     );

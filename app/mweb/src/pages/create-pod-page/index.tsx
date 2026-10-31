@@ -48,6 +48,7 @@ export default function CreatePodPage() {
   // Sub-categories carry the admin-set minimum pax; the stepper looks the pod's
   // up by the selected club's `category_id`.
   const subCategories = options.data?.subCategories ?? [];
+  const categoryIcons = [...subCategories, ...(options.data?.parentCategories ?? [])];
   // publicVenues are already APPROVED; keep only active venue partners.
   const venues = (options.data?.publicVenues ?? []).filter((venue: any) => venue.is_active !== false);
   const hostCategories = options.data?.myHost?.host_categories ?? [];
@@ -109,6 +110,7 @@ export default function CreatePodPage() {
           venues={venues}
           products={products}
           subCategories={subCategories}
+          categoryIcons={categoryIcons}
           hostCategories={hostCategories}
           viewerUserId={viewerUserId}
           pinnedVenueId={prefill.pinnedVenueId}

@@ -7,18 +7,18 @@ import { useTranslation } from '../../../i18n/useTranslation';
 interface Props {
   /** The step's place among the steps this pod walks (0-based). */
   step: number;
-  /** How many steps this pod walks — five, or four without a venue offer. */
+  /** How many steps the pod walks. */
   total: number;
   title: string;
-  /** Accepted for existing callers, no longer drawn — the step title stands alone. */
+  /** One line under the title saying what the step asks. */
   subtitle?: string;
 }
 
 /** Per-step hero: one slim pill per step (done and current in green), then the
- * step title with the "AI monitoring" chip (opens the guidelines dialog). The
- * "Step n of N" sentence is the progress bar's accessible name, not a caption.
- * Native twin: StepHeader. */
-export default function StepHero({ step, total, title }: Readonly<Props>) {
+ * step title with the "AI monitoring" chip (opens the guidelines dialog) and
+ * the line under it. The "Step n of N" sentence is the progress bar's
+ * accessible name, not a caption. Native twin: StepHeader. */
+export default function StepHero({ step, total, title, subtitle }: Readonly<Props>) {
   const [guideOpen, setGuideOpen] = useState(false);
   const { t } = useTranslation();
   const counter = t('mweb.createPod.stepCounter', { vars: { step: step + 1, total } });
@@ -52,6 +52,11 @@ export default function StepHero({ step, total, title }: Readonly<Props>) {
         </Typography>
         <AiMonitorChip onClick={() => setGuideOpen(true)} />
       </Stack>
+      {subtitle && (
+        <Typography data-testid="create-pod-step-subtitle" variant="body2" sx={{ color: 'text.secondary', mt: -1 }}>
+          {subtitle}
+        </Typography>
+      )}
       <PodGuidelinesDialog open={guideOpen} onClose={() => setGuideOpen(false)} />
     </Stack>
   );

@@ -1,4 +1,6 @@
 /** The catalogue entities the host Create Pod stepper picks from. */
+import type { CreatePodCategoryIconSource, CreatePodCategorySource } from '@duncit/utils';
+
 /** One shape for mWeb and the native app (@duncit/utils). */
 export type { CreatePodClub } from '@duncit/utils';
 
@@ -67,14 +69,7 @@ export interface CreatePodSlot {
 }
 
 /** One of the host's onboarded categories — the host picks which one the pod is for. */
-export interface CreatePodHostCategory {
-  super_category_id?: string | null;
-  category_id?: string | null;
-  sub_category_id?: string | null;
-  super_category_name: string;
-  category_name: string;
-  sub_category_name: string;
-}
+export type CreatePodHostCategory = CreatePodCategorySource;
 
 /** One flagged issue returned by the AI + rules moderation preflight. */
 export interface PodModerationViolation {
@@ -95,4 +90,8 @@ export interface PodModerationResult {
 export interface CreatePodSubCategory {
   id: string;
   min_pax: number;
+  icon?: string | null;
 }
+
+/** A category's admin-set icon (image URL, MUI icon name or emoji) — the What step's tiles. */
+export type CreatePodCategoryIcon = CreatePodCategoryIconSource;

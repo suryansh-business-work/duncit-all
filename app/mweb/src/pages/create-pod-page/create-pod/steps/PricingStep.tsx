@@ -1,134 +1,49 @@
-import { Controller } from 'react-hook-form';
-import { Box, Stack, TextField } from '@mui/material';
+import { Stack, Typography } from '@mui/material';
 import { FreeArrangementFields } from '@duncit/forms';
-import { PodProductsField } from '@duncit/pod-product-picker';
-import { SpotsStepper, mwebSpotsLabels } from '@duncit/ui';
-import PlaceChargesField from '../fields/PlaceChargesField';
-import SmartIncentiveStepField from '../fields/SmartIncentiveStepField';
-import TicketDiscountStepField from '../fields/TicketDiscountStepField';
 import PricePanel, { FreePodNote, TicketPriceField, type EarningsPreview } from '../price-panel';
 import PodTypeCards from '../PodTypeCards';
-import TermsAgreement from '../TermsAgreement';
+import MoneyMoreOptions from './MoneyMoreOptions';
 import { useTranslation } from '../../../../i18n/useTranslation';
 import { SURFACE_SX } from '../../../../theme';
-import type { FreePodVenueNotice, SpotsBounds } from '@duncit/utils';
-import { FREE_JUSTIFICATION_NAMES, type CreatePodForm, type CreatePodProduct } from '../create-pod.types';
+import type { FreePodVenueNotice } from '@duncit/utils';
+import { FREE_JUSTIFICATION_NAMES, offersFreeVenue, type CreatePodForm, type CreatePodProduct } from '../create-pod.types';
 
 interface Props {
   form: CreatePodForm;
   products: CreatePodProduct[];
   showProducts: boolean;
   preview: EarningsPreview;
-  /** The range the host may size this pod within (sub-category min → venue capacity). */
-  spots: SpotsBounds;
   /** What a free pod's host is told about the picked slot's venue charges. */
   venueNotice: FreePodVenueNotice;
 }
 
-/** Step 4 — Free/Paid cards, spots stepper, optional products and the Organizer
- * Terms publish gate. A PAID pod adds the ticket price, its multi-ticket
- * discount and Smart Incentive, and the slot-cost / GST / earnings panel; a
- * FREE pod has none of them — no amount and no calculation — and reads a short
- * note instead, with Duncit's free policy, why it is free and the host's
- * acceptance (the same fields a free venue asks on the venue step, so they
- * arrive filled). */
-export default function PricingStep({ form, products, showProducts, preview, spots, venueNotice }: Readonly<Props>) {
-  const { control, register, watch, setValue } = form;
+/** Money's ticket — Free/Paid cards and the price, then the slot-cost / GST /
+ * earnings panel; a FREE pod has no amount and no calculation and reads a short
+ * note instead, with why it is free. That is asked once on Money: beside a free
+ * venue offer when there is one, else here. The optional extras follow, folded
+ * (MoneyMoreOptions). */
+export default function PricingStep({ form, products, showProducts, preview, venueNotice }: Readonly<Props>) {
+  const { control, watch } = form;
   const { t } = useTranslation();
   const isFree = watch('pod_type') === 'FREE';
-  const isPhysical = watch('pod_mode') === 'PHYSICAL';
-  // An instant booking's spots are its guests, picked with the booking on the
-  // venue step — shown here, not changed here, so the quote always matches.
-  const setOnVenueStep = isPhysical && !watch('partner_request_id');
-  const baseLabels = mwebSpotsLabels(t);
-  const spotsLabels = setOnVenueStep ? { ...baseLabels, fixedHint: t('mweb.createPod.spotsSetOnVenueStep') } : baseLabels;
-  const boundsHint = spots.slidable
-    ? t('mweb.createPod.spotsBoundsHint', { vars: { min: spots.min, max: spots.max } })
-    : undefined;
+  const askedWithOffer = offersFreeVenue({
+    pod_type: watch('pod_type'),
+    pod_mode: watch('pod_mode'),
+    venue_slot_id: watch('venue_slot_id'),
+    partner_request_id: watch('partner_request_id'),
+    venue_offer_model: watch('venue_offer_model'),
+  });
 
   return (
     <Stack data-testid="create-pod-pricing-step" spacing={2}>
       <Stack spacing={2} sx={{ ...SURFACE_SX, p: 2 }}>
+        <Typography variant="subtitle2" component="h3">{t('mweb.createPod.ticketTitle')}</Typography>
         <PodTypeCards form={form} />
-        {isFree && <FreeArrangementFields control={control} names={FREE_JUSTIFICATION_NAMES} t={t} idPrefix="create-pod-pricing" />}
+        {isFree && !askedWithOffer && <FreeArrangementFields control={control} names={FREE_JUSTIFICATION_NAMES} t={t} idPrefix="create-pod-pricing" />}
         {!isFree && <TicketPriceField form={form} preview={preview} />}
-        <Controller
-          control={control}
-          name="no_of_spots"
-          render={({ field, fieldState }) => (
-            <SpotsStepper
-              labels={spotsLabels}
-              value={Number(field.value) || 0}
-              onChange={field.onChange}
-              error={fieldState.error?.message}
-              min={spots.min}
-              max={spots.max}
-              slidable={spots.slidable && !setOnVenueStep}
-              boundsHint={boundsHint}
-              // Fixed when booked with the venue, or the venue leaves no room to choose.
-              readOnly={setOnVenueStep || (isPhysical && !spots.slidable)}
-            />
-          )}
-        />
       </Stack>
-      {!isFree && <TicketDiscountStepField form={form} />}
-      {/* Renders nothing while Loyalty has the programme switched off. */}
-      {!isFree && <SmartIncentiveStepField form={form} />}
       {isFree ? <FreePodNote venueNotice={venueNotice} /> : <PricePanel preview={preview} />}
-      {/* Payment terms describe refunds and charges a free pod does not have. */}
-      {!isFree && (
-        <Box sx={{ ...SURFACE_SX, p: 2 }}>
-          <TextField
-            data-testid="payment_terms"
-            label={t('mweb.createPod.paymentTerms')}
-            fullWidth
-            multiline
-            minRows={3}
-            helperText={t('mweb.createPod.paymentTermsHint')}
-            {...register('payment_terms')}
-            slotProps={{ htmlInput: { 'data-testid': 'payment_terms-input' } }}
-          />
-        </Box>
-      )}
-      {isPhysical && (
-        <Box sx={{ ...SURFACE_SX, p: 2 }}>
-          <Controller
-            control={control}
-            name="place_charges"
-            render={({ field }) => (
-              <PlaceChargesField
-                value={field.value}
-                onChange={field.onChange}
-                helperText={t('mweb.createPod.placeChargesHint')}
-              />
-            )}
-          />
-        </Box>
-      )}
-      {showProducts && (
-        // The "Attach products to this pod" switch is gone: attaching IS adding
-        // a product, so `products_enabled` is derived from the row list on
-        // submit rather than toggled here. `products` arrives already filtered
-        // to the pod's club category, and the field says so when it is empty.
-        <Box sx={{ ...SURFACE_SX, p: 2 }}>
-          <Controller
-            control={control}
-            name="product_requests"
-            render={({ field, fieldState }) => (
-              <PodProductsField
-                value={field.value}
-                onChange={(next) => {
-                  field.onChange(next);
-                  setValue('products_enabled', next.length > 0);
-                }}
-                products={products}
-                error={fieldState.error?.message}
-              />
-            )}
-          />
-        </Box>
-      )}
-      <TermsAgreement form={form} />
+      <MoneyMoreOptions form={form} products={products} showProducts={showProducts} />
     </Stack>
   );
 }

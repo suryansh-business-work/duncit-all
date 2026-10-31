@@ -60,9 +60,14 @@ describe('BasicsStep', () => {
     expect(screen.getByPlaceholderText('e.g. Downtown Runners Club')).toBeInTheDocument();
     expect(screen.getByText(/What is this pod about\? \(3–120 characters\)/)).toBeInTheDocument();
     expect(screen.getByText(/Tell people what to expect/)).toBeInTheDocument();
-    // Cover media + offers + hashtags + optional settings + reel all mount.
+    // Cover media + offers show; hashtags, optional settings and the reel are
+    // folded under More options until it opens.
     expect(screen.getByText(/Cover image \(at least one image\)/)).toBeInTheDocument();
     expect(screen.getByText('What this pod offers')).toBeInTheDocument();
+    const more = screen.getByTestId('create-pod-details-more-toggle');
+    expect(more).toHaveAttribute('aria-expanded', 'false');
+    fireEvent.click(more);
+    expect(more).toHaveAttribute('aria-expanded', 'true');
     expect(screen.getByLabelText('Hashtags')).toBeInTheDocument();
     expect(screen.getByTestId('create-pod-optional-settings')).toHaveTextContent('Additional Info');
     expect(screen.getByRole('button', { name: /Pod Reel/ })).toBeInTheDocument();
@@ -96,6 +101,7 @@ describe('BasicsStep', () => {
 
   it('adds a hashtag chip and serializes it back into the form', () => {
     renderStep();
+    fireEvent.click(screen.getByTestId('create-pod-details-more-toggle'));
     const tagInput = screen.getByPlaceholderText('Type a tag and press Enter');
     fireEvent.change(tagInput, { target: { value: 'run' } });
     fireEvent.keyDown(tagInput, { key: 'Enter' });

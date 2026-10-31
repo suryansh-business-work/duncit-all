@@ -1,5 +1,6 @@
 import type { buildCreatePodInput, buildModerationInput, serializeDraft } from '../create-pod.form';
 import type {
+  CreatePodCategoryIcon,
   CreatePodClub,
   CreatePodFormValues,
   CreatePodHostCategory,
@@ -22,6 +23,8 @@ export interface CreatePodStepperProps {
   products: CreatePodProduct[];
   /** SUB-level categories with their admin-set minimum pax. */
   subCategories: CreatePodSubCategory[];
+  /** SUB- and CATEGORY-level icons, for the What step's category tiles. */
+  categoryIcons?: CreatePodCategoryIcon[];
   hostCategories: CreatePodHostCategory[];
   viewerUserId: string;
   onSaveDraft: (draftId: string | null, payload: DraftPayload) => Promise<string>;

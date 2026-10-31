@@ -7,6 +7,7 @@ import SuggestedPricesDialog from '../create-pod/price-panel/SuggestedPricesDial
 import SuggestedPricesTable from '../create-pod/price-panel/SuggestedPricesTable';
 import TicketPriceField from '../create-pod/price-panel/TicketPriceField';
 import PricingStep from '../create-pod/steps/PricingStep';
+import PodSpotsField from '../create-pod/steps/PodSpotsField';
 import { podTypes } from '../create-pod/create-pod.types';
 import { buildCreatePodInput } from '../create-pod/create-pod.payload';
 import { blankCreatePodForm, type CreatePodFormValues } from '../create-pod/create-pod.types';
@@ -155,7 +156,7 @@ describe('TicketPriceField', () => {
 });
 
 describe('PricingStep', () => {
-  const step = (values: Partial<CreatePodFormValues> = {}, props: { showProducts?: boolean; spots?: object } = {}) =>
+  const step = (values: Partial<CreatePodFormValues> = {}, props: { showProducts?: boolean } = {}) =>
     render(
       <Harness values={values}>
         {(form) => (
@@ -165,7 +166,6 @@ describe('PricingStep', () => {
               products={[]}
               showProducts={props.showProducts ?? false}
               preview={preview()}
-              spots={(props.spots ?? { min: 2, max: 10, slidable: true }) as never}
               venueNotice={{} as never}
             />
             <output data-testid="state">{JSON.stringify([form.watch('products_enabled'), form.watch('no_of_spots')])}</output>
@@ -173,6 +173,8 @@ describe('PricingStep', () => {
         )}
       </Harness>
     );
+  const spotsField = (values: Partial<CreatePodFormValues>, spots: object = { min: 2, max: 10, slidable: true }) =>
+    render(<Harness values={values}>{(form) => <PodSpotsField form={form} spots={spots as never} />}</Harness>);
 
   it('shows the price, discount, panel, payment terms and charges for a paid physical pod', () => {
     step({ pod_type: 'PAID', pod_mode: 'PHYSICAL' });
@@ -193,25 +195,33 @@ describe('PricingStep', () => {
     expect(screen.queryByTestId('place-charges-field')).not.toBeInTheDocument();
   });
 
-  it('locks the spots to the venue booking, with a hint where it is set', () => {
+  it('leaves the spots to Where & when — Money sizes nothing', () => {
     step({ pod_mode: 'PHYSICAL', partner_request_id: '' });
-    expect(screen.getByTestId('spots')).toHaveAttribute('data-readonly', 'true');
-    expect(screen.getByTestId('spots')).toHaveAttribute('data-slidable', 'false');
-    expect(screen.getByTestId('spots')).toHaveAttribute('data-fixed', fallbackT('mweb.createPod.spotsSetOnVenueStep'));
-    expect(screen.getByTestId('spots')).toHaveAttribute('data-hint', fallbackT('mweb.createPod.spotsBoundsHint', { vars: { min: 2, max: 10 } }));
+    expect(screen.queryByTestId('spots')).not.toBeInTheDocument();
   });
 
   it('lets a pod request or a virtual pod size its own spots, locking only when the range has no room', () => {
-    const { unmount } = step({ pod_mode: 'PHYSICAL', partner_request_id: 'req1' });
+    const { unmount } = spotsField({ pod_mode: 'PHYSICAL', partner_request_id: 'req1' });
     expect(screen.getByTestId('spots')).toHaveAttribute('data-readonly', 'false');
     expect(screen.getByTestId('spots')).toHaveAttribute('data-slidable', 'true');
+    expect(screen.getByTestId('spots')).toHaveAttribute('data-hint', fallbackT('mweb.createPod.spotsBoundsHint', { vars: { min: 2, max: 10 } }));
     unmount();
-    const virtual = step({ pod_mode: 'VIRTUAL' });
+    const virtual = spotsField({ pod_mode: 'VIRTUAL' });
     expect(screen.getByTestId('spots')).toHaveAttribute('data-readonly', 'false');
     virtual.unmount();
-    step({ pod_mode: 'PHYSICAL', partner_request_id: 'req1' }, { spots: { min: 4, max: 4, slidable: false } });
+    spotsField({ pod_mode: 'PHYSICAL', partner_request_id: 'req1' }, { min: 4, max: 4, slidable: false });
     expect(screen.getByTestId('spots')).toHaveAttribute('data-readonly', 'true');
     expect(screen.getByTestId('spots')).toHaveAttribute('data-hint', '');
+  });
+
+  it('folds the optional extras under More options, and opens them when one is already filled', () => {
+    const { unmount } = step({ pod_type: 'PAID', pod_mode: 'PHYSICAL' });
+    expect(screen.getByTestId('create-pod-money-more-toggle')).toHaveAttribute('aria-expanded', 'false');
+    fireEvent.click(screen.getByTestId('create-pod-money-more-toggle'));
+    expect(screen.getByTestId('create-pod-money-more-toggle')).toHaveAttribute('aria-expanded', 'true');
+    unmount();
+    step({ pod_type: 'PAID', pod_mode: 'PHYSICAL', payment_terms: 'No refunds.' });
+    expect(screen.getByTestId('create-pod-money-more-toggle')).toHaveAttribute('aria-expanded', 'true');
   });
 
   it('attaches products by adding one, and derives the switch from the rows', async () => {
@@ -225,14 +235,20 @@ describe('PricingStep', () => {
 });
 
 describe('PricingStep validation', () => {
-  it('passes the spots and products validation messages to their fields', async () => {
+  it('passes the spots and products validation messages to their fields, holding More options open', async () => {
     render(
       <Harness values={{ pod_mode: 'VIRTUAL' }} errors={{ no_of_spots: 'Too few spots', product_requests: 'Fix the products' }}>
-        {(form) => <PricingStep form={form} products={[]} showProducts preview={preview()} spots={{ min: 2, max: 10, slidable: true } as never} venueNotice={{} as never} />}
+        {(form) => (
+          <>
+            <PodSpotsField form={form} spots={{ min: 2, max: 10, slidable: true } as never} />
+            <PricingStep form={form} products={[]} showProducts preview={preview()} venueNotice={{} as never} />
+          </>
+        )}
       </Harness>
     );
     await waitFor(() => expect(h.spotProps?.error).toBe('Too few spots'));
     await waitFor(() => expect(screen.getByTestId('products')).toHaveAttribute('data-error', 'Fix the products'));
+    expect(screen.getByTestId('create-pod-money-more-toggle')).toHaveAttribute('aria-expanded', 'true');
   });
 });
 

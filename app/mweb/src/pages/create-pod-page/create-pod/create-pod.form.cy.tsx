@@ -239,17 +239,11 @@ describe('createPodSchema', () => {
     expect(createPodSchema.safeParse(valid({ agreed_to_terms: true })).success).toBe(true);
   });
 
-  it('exposes one field group and title per step (5 steps, the offer between venue and pricing)', () => {
+  it('exposes one field group and title per step (4 steps, the offer on Money with the ticket)', () => {
     expect(STEP_FIELDS).toHaveLength(STEP_TITLES.length);
-    // The club step comes first, so its title leads.
-    expect(STEP_TITLES).toEqual([
-      'Location, Category & Club',
-      'Pod Basics',
-      'Venue & Slot',
-      'Offer for Venue',
-      'Pricing & Publish',
-    ]);
-    expect(STEP_FIELDS[3]).toEqual(['venue_offer_model', 'venue_offer_rate', 'venue_offer_offerings', 'venue_offer_note']);
+    expect(STEP_TITLES).toEqual(['What', 'Where & when', 'Money', 'Details']);
+    expect(STEP_FIELDS[2]).toEqual(expect.arrayContaining(['venue_offer_model', 'venue_offer_rate', 'pod_type', 'pod_amount']));
+    expect(STEP_FIELDS[3]).toContain('agreed_to_terms');
   });
 });
 

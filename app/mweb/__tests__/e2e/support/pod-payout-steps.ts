@@ -179,22 +179,16 @@ export function createPodThroughStepper(world: Readonly<PayoutWorld>, title: str
   cy.wait('@CreatePodOptions');
   cy.byTestId('create-pod-stepper').should('be.visible');
   answerConsent();
+  // What: the host's one category is picked for them.
   cy.byTestId(`create-pod-category-${world.path.superCategory.id}|${world.path.sub.id}`).should('exist');
+  nextStep();
+
+  // Where & when: the locality and club, then the club's venue and its time.
+  cy.byTestId('create-pod-where-step').should('exist');
   cy.byTestId('create-pod-locality').find('input').click();
   cy.byTestId(`create-pod-locality-option-${world.location.zone}`).click();
   cy.byTestId('create-pod-club').find('input').click();
   cy.byTestId(`create-pod-club-option-${world.club.id}`).click();
-  nextStep();
-
-  cy.byTestId('create-pod-basics-step').should('exist');
-  cy.byTestId('pod_title-input').type(title);
-  cy.byTestId('pod_description-input').type('A guided evening session with every seat scanned in at the door.', { delay: 0 });
-  cy.byTestId('create-pod-offers-input-field').type('Coaching{enter}');
-  cy.fixture('avatar.jpg', null).as('photo');
-  attachThroughPicker(runPhoto(stamp, 'cover'));
-  nextStep();
-
-  cy.byTestId('create-pod-venue-slot-step').should('exist');
   cy.byTestId(`create-pod-venue-${world.venue.id}`).click();
   cy.byTestId('venue_space_label').find('[role="combobox"]').click();
   cy.byTestId(`venue-space-option-${SPACE_LABEL}`).click();
@@ -202,8 +196,16 @@ export function createPodThroughStepper(world: Readonly<PayoutWorld>, title: str
   cy.byTestId('create-pod-venue-approval-note').should('be.visible');
   nextStep();
 
-  cy.byTestId('create-pod-pricing-step').should('exist');
+  cy.byTestId('create-pod-money-step').should('exist');
   cy.byTestId('create-pod-ticket-price-input').type(String(TICKET_PRICE));
+  nextStep();
+
+  cy.byTestId('create-pod-details-step').should('exist');
+  cy.byTestId('pod_title-input').type(title);
+  cy.byTestId('pod_description-input').type('A guided evening session with every seat scanned in at the door.', { delay: 0 });
+  cy.byTestId('create-pod-offers-input-field').type('Coaching{enter}');
+  cy.fixture('avatar.jpg', null).as('photo');
+  attachThroughPicker(runPhoto(stamp, 'cover'));
   cy.byTestId('create-pod-terms-checkbox').find('input').check();
   cy.interceptOperation('PublishPodDraft');
   nextStep();

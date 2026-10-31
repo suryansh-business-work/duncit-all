@@ -69,6 +69,12 @@ export const CREATE_POD_OPTIONS = gql`
     subCategories: categories(filter: { level: SUB }) {
       id
       min_pax
+      icon
+    }
+    # The category tiles on What fall back to the parent category's icon.
+    parentCategories: categories(filter: { level: CATEGORY }) {
+      id
+      icon
     }
     availablePodProducts {
       ...PodPickerProductFields

@@ -85,24 +85,42 @@ describe('HostCategoryField', () => {
     { super_category_id: 's1', category_id: 'c2', sub_category_id: null, super_category_name: 'Sports', category_name: 'Ball', sub_category_name: '' },
   ];
 
-  it('lists the host categories as paths, picks one and resets the club, venue and slot', async () => {
+  it('lists the host categories as tiles under their parent, picks one and resets the club, venue and slot', async () => {
+    const icon = 'https://cdn.example.com/badminton.png';
     render(
       <Harness values={{ club_id: 'club', venue_id: 'ven', venue_slot_id: 'slot' }}>
         {(form) => (
           <>
-            <HostCategoryField form={form} hostCategories={categories} />
+            <HostCategoryField form={form} hostCategories={categories} categoryIcons={[{ id: 'u1', icon }]} />
             <output data-testid="state">{JSON.stringify([form.watch('host_category_key'), form.watch('club_id'), form.watch('venue_id'), form.watch('venue_slot_id')])}</output>
           </>
         )}
       </Harness>
     );
-    expect(screen.getByText('Sports › Racquet › Badminton')).toBeInTheDocument();
-    expect(screen.getByText('Sports › Ball')).toBeInTheDocument();
     const key = hostCategoryKeyOf(categories[0]);
-    fireEvent.click(screen.getByTestId(`create-pod-category-${key}`));
+    const tile = screen.getByTestId(`create-pod-category-${key}`);
+    // A sub-category reads under its category; a category-level pick under its super.
+    expect(tile).toHaveTextContent('BadmintonRacquet');
+    expect(screen.getByTestId(`create-pod-category-${hostCategoryKeyOf(categories[1])}`)).toHaveTextContent('BallSports');
+    // Its own admin icon, not a drawn stand-in.
+    expect(tile.querySelector('img')).toHaveAttribute('src', icon);
+    // One super-category, so nothing to narrow.
+    expect(screen.queryByTestId('create-pod-category-super')).not.toBeInTheDocument();
+    fireEvent.click(tile);
     await waitFor(() => expect(JSON.parse(screen.getByTestId('state').textContent ?? '[]')).toEqual([key, '', '', '']));
-    expect(screen.getByTestId(`create-pod-category-${key}`)).toHaveClass('MuiChip-colorPrimary');
-    expect(screen.getByTestId(`create-pod-category-${hostCategoryKeyOf(categories[1])}`)).not.toHaveClass('MuiChip-colorPrimary');
+    expect(tile).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByTestId(`create-pod-category-${hostCategoryKeyOf(categories[1])}`)).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  it('narrows the tiles to one super-category when the host is onboarded under two', () => {
+    const pet = { super_category_id: 's2', category_id: 'c3', sub_category_id: 'u3', super_category_name: 'For Your Pet', category_name: 'Grooming', sub_category_name: 'Dog Grooming' };
+    render(<Harness>{(form) => <HostCategoryField form={form} hostCategories={[...categories, pet]} />}</Harness>);
+    expect(screen.getByText('Badminton')).toBeInTheDocument();
+    expect(screen.queryByText('Dog Grooming')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('create-pod-category-super-s2'));
+    expect(screen.getByText('Dog Grooming')).toBeInTheDocument();
+    expect(screen.queryByText('Badminton')).not.toBeInTheDocument();
+    expect(screen.getByTestId('create-pod-category-super-s2')).toHaveAttribute('aria-pressed', 'true');
   });
 
   it('says the host has no onboarded categories, and shows the validation message', async () => {

@@ -94,7 +94,7 @@ interface Seen {
   slotPrice: number | null;
 }
 
-/** The real Step 4 fed by the stepper's real selections hook, so the money
+/** The real Money ticket fed by the stepper's real selections hook, so the money
  * state, the earnings query and the venue note are all the production wiring. */
 function Harness({ initial, seen }: Readonly<{ initial: CreatePodFormValues; seen: Seen[] }>) {
   const form = useForm<CreatePodFormValues, any, CreatePodFormValues>({
@@ -116,7 +116,6 @@ function Harness({ initial, seen }: Readonly<{ initial: CreatePodFormValues; see
       products={[]}
       showProducts={false}
       preview={selections.preview}
-      spots={selections.spots}
       venueNotice={selections.venueNotice}
     />
   );

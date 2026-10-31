@@ -84,7 +84,8 @@ describe('CreatePodPage Host Again', () => {
     page();
     expect(screen.getByTestId('host-again')).toHaveAttribute('data-title', 'Sunday Run');
     expect(screen.getByTestId('host-again')).toHaveAttribute('data-city', '');
-    expect(h.stepper?.initialStep).toBe(1);
+    // The server numbers a Host Again copy in the five-step stepper: its Basics (1) is now Details (3).
+    expect(h.stepper?.initialStep).toBe(3);
   });
 
   it('names the copied pod city when it is not the header city', () => {

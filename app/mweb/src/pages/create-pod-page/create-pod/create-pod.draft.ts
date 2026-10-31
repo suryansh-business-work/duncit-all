@@ -1,9 +1,11 @@
+import { CREATE_POD_STEPPER_VERSION } from '@duncit/utils';
 import { blankCreatePodForm, type CreatePodFormValues } from './create-pod.types';
 
-/** Serialises the live form state for a server draft (Dates -> ISO strings). */
+/** Serialises the live form state for a server draft (Dates -> ISO strings).
+ * `stepper` says which stepper's numbers `step` uses (resumeCreatePodStep). */
 export function serializeDraft(values: CreatePodFormValues, step: number) {
   return {
-    payload: JSON.stringify(values),
+    payload: JSON.stringify({ ...values, stepper: CREATE_POD_STEPPER_VERSION }),
     pod_title: values.pod_title.trim(),
     pod_mode: values.pod_mode,
     step,

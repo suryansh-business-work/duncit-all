@@ -7,8 +7,10 @@ interface Props {
   isFirst: boolean;
   isLast: boolean;
   busy: boolean;
-  /** Step-4 pricing rules failed — Create Pod stays disabled until they clear. */
+  /** Money's pricing rules failed — Create Pod stays disabled until they clear. */
   submitDisabled?: boolean;
+  /** Names the next step on the Next button ("Next: Money"); plain "Next" without it. */
+  nextLabel?: string;
   onBack: () => void;
   onNext: () => void;
   onSubmit: () => void;
@@ -24,13 +26,14 @@ export default function StepFooterBar({
   isLast,
   busy,
   submitDisabled = false,
+  nextLabel,
   onBack,
   onNext,
   onSubmit,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const lastLabel = busy ? t('mweb.createPod.creating') : t('mweb.createPod.createPod');
-  const primaryLabel = isLast ? lastLabel : t('mweb.createPod.next');
+  const primaryLabel = isLast ? lastLabel : (nextLabel ?? t('mweb.createPod.next'));
   const primaryDisabled = busy || (isLast && submitDisabled);
   return (
     <Box

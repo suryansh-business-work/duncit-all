@@ -284,12 +284,14 @@ function PricingHarness({
       showProducts={false}
       finance={finance}
       pricing={pricing}
-      spots={{ min: 0, max: 10000, slidable: false }}
       venueNotice={venueNotice}
       forClubAdmin={forClubAdmin}
     />
   );
 }
+
+/** Money's extras are folded until the host opens them. */
+const openMoneyMore = () => fireEvent.press(screen.getByTestId('create-pod-money-more-toggle'));
 
 const paidPod = {
   pod_type: 'PAID' as const,
@@ -299,7 +301,7 @@ const paidPod = {
   no_of_spots_text: '2',
 };
 
-describe('Step 4 zero-earnings guard', () => {
+describe('Money zero-earnings guard', () => {
   it('explains a ₹0 payout under the ticket price field', () => {
     mockedEarnings.mockReturnValue({
       projection: brokeProjection,
@@ -323,7 +325,7 @@ describe('Step 4 zero-earnings guard', () => {
   });
 });
 
-describe('Step 4 venue-price guard', () => {
+describe('Money venue-price guard', () => {
   it('turns Venue Charges red and says why the pod cannot cover the slot', () => {
     mockedEarnings.mockReturnValue({
       projection: brokeProjection,
@@ -347,7 +349,7 @@ describe('Step 4 venue-price guard', () => {
   });
 });
 
-describe('Step 4 for a free physical pod', () => {
+describe('Money for a free physical pod', () => {
   const freePod = { ...paidPod, pod_type: 'FREE' as const, pod_amount_text: '0' };
 
   it('shows no amount, no suggested prices and no earnings — only the free note', () => {
@@ -362,8 +364,28 @@ describe('Step 4 for a free physical pod', () => {
     );
     expect(screen.getByTestId('create-pod-free-note-header-title')).toHaveProp('role', 'heading');
     expect(screen.queryByTestId('create-pod-free-note-venue')).toBeNull();
-    // Payment terms describe refunds and charges a free pod does not have.
+    // Payment terms describe refunds and charges a free pod does not have; a
+    // physical pod still lists its place charges among the extras.
+    openMoneyMore();
+    expect(screen.getByTestId('pricing-step-place-charges-card')).toBeOnTheScreen();
     expect(screen.queryByTestId('pricing-step-payment-terms-card')).toBeNull();
+  });
+
+  it('asks why the pod is free under the ticket when no free venue offer asks it', () => {
+    renderWithProviders(<PricingHarness initial={freePod} />);
+    expect(screen.getByTestId('create-pod-pod-free-arrangement')).toBeOnTheScreen();
+  });
+
+  it('leaves the question to the free venue offer above, which already asks it', () => {
+    renderWithProviders(<PricingHarness initial={{ ...freePod, venue_offer_model: 'FREE' }} />);
+    expect(screen.queryByTestId('create-pod-pod-free-arrangement')).toBeNull();
+  });
+
+  it('asks it under the ticket for a held slot, which sends no offer whatever model a draft holds', () => {
+    renderWithProviders(
+      <PricingHarness initial={{ ...freePod, venue_slot_id: 'slot-1', venue_offer_model: 'FREE' }} />,
+    );
+    expect(screen.getByTestId('create-pod-pod-free-arrangement')).toBeOnTheScreen();
   });
 
   it('words the venue note for the host when a club admin creates the pod', () => {
@@ -394,7 +416,33 @@ describe('Step 4 for a free physical pod', () => {
     expect(screen.getByTestId('suggested-price-link')).toBeOnTheScreen();
     expect(screen.getByTestId('create-pod-price-panel')).toBeOnTheScreen();
     expect(screen.queryByTestId('create-pod-free-note')).toBeNull();
+    expect(screen.queryByTestId('create-pod-pod-free-arrangement')).toBeNull();
+    openMoneyMore();
     expect(screen.getByTestId('pricing-step-payment-terms-card')).toBeOnTheScreen();
+  });
+});
+
+describe('Money more options', () => {
+  it('folds the extras until the host opens them', () => {
+    renderWithProviders(<PricingHarness initial={paidPod} />);
+    expect(screen.getByTestId('create-pod-money-more-toggle')).toHaveProp('aria-expanded', false);
+    expect(screen.queryByTestId('pricing-step-payment-terms-card')).toBeNull();
+    openMoneyMore();
+    expect(screen.getByTestId('create-pod-money-more-toggle')).toHaveProp('aria-expanded', true);
+    expect(screen.getByTestId('pricing-step-place-charges-card')).toBeOnTheScreen();
+  });
+
+  it('opens on arrival when an extra is already filled', () => {
+    renderWithProviders(<PricingHarness initial={{ ...paidPod, payment_terms: 'No refunds' }} />);
+    expect(screen.getByTestId('create-pod-money-more-toggle')).toHaveProp('aria-expanded', true);
+    expect(screen.getByTestId('pricing-step-payment-terms-card')).toBeOnTheScreen();
+  });
+
+  it('has nothing to offer a free virtual pod without products', () => {
+    renderWithProviders(
+      <PricingHarness initial={{ ...paidPod, pod_mode: 'VIRTUAL', pod_type: 'FREE', pod_amount_text: '0' }} />,
+    );
+    expect(screen.queryByTestId('create-pod-money-more')).toBeNull();
   });
 });
 
@@ -488,7 +536,7 @@ describe('Suggested Ticket Prices', () => {
   });
 });
 
-describe('Step 4 products — category empty state', () => {
+describe('Money products — category empty state', () => {
   // `products` reaches this step already filtered to the pod's club category
   // (CreatePodStepper -> filterProductsForClub), so an empty list means the
   // category has nothing to attach — not that the catalogue is empty.
@@ -498,7 +546,7 @@ describe('Step 4 products — category empty state', () => {
         defaultValues: { ...blankCreatePodForm, ...paidPod, products_enabled: true },
       }),
     );
-    return renderWithProviders(
+    const view = renderWithProviders(
       <PricingStep
         form={result.current}
         products={products as never}
@@ -514,15 +562,18 @@ describe('Step 4 products — category empty state', () => {
             isVenueShortfall: false,
           } as never
         }
-        spots={{ min: 0, max: 10000, slidable: false }}
         venueNotice="NONE"
       />,
     );
+    // No product is attached yet, so the extras arrive folded.
+    openMoneyMore();
+    return view;
   };
 
   it('tells the host when the pod category has no attachable products', () => {
     mockedEarnings.mockReturnValue({ projection: null, waterfall: null, isLoading: false });
     renderProducts([]);
+    expect(screen.getByTestId('pricing-step-products-card')).toBeOnTheScreen();
     expect(screen.getByTestId('products-empty-category')).toHaveTextContent(
       'No products available for this category.',
     );
@@ -545,7 +596,8 @@ describe('Create Pod button gating', () => {
     renderWithProviders(
       <CreatePodStepper
         initialValues={{ ...blankCreatePodForm, ...paidPod }}
-        initialStep={4}
+        // Details, the last step — Money's guard holds Create Pod there.
+        initialStep={3}
         initialDraftId={null}
         clubs={[]}
         locations={[]}
@@ -569,7 +621,7 @@ describe('Create Pod button gating', () => {
       isLoading: false,
     });
     setup();
-    await screen.findByTestId('create-pod-price-panel');
+    await screen.findByTestId('create-pod-details-step');
     expect(screen.getByTestId('create-pod-submit')).toBeDisabled();
   });
 
@@ -581,7 +633,7 @@ describe('Create Pod button gating', () => {
       isLoading: false,
     });
     setup();
-    await screen.findByTestId('create-pod-price-panel');
+    await screen.findByTestId('create-pod-details-step');
     expect(screen.getByTestId('create-pod-submit')).not.toBeDisabled();
   });
 });

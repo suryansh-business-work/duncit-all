@@ -1,4 +1,5 @@
 import { format } from 'date-fns';
+import { CREATE_POD_STEPPER_VERSION, resumeCreatePodStep } from '@duncit/utils';
 
 import {
   STEP_FIELDS,
@@ -88,28 +89,36 @@ describe('parseDateTimeText', () => {
 });
 
 describe('createPodSchema', () => {
-  it('accepts a valid physical pod and exposes a field group per step (5 steps)', () => {
+  it('accepts a valid physical pod and exposes a field group per step (4 steps)', () => {
     expect(createPodSchema.safeParse(valid()).success).toBe(true);
     expect(STEP_FIELDS).toHaveLength(STEP_TITLES.length);
-    expect(STEP_TITLES).toEqual([
-      'Location, Category & Club',
-      'Pod Basics',
-      'Venue & Slot',
-      'Offer for Venue',
-      'Pricing & Publish',
-    ]);
-    // The offer's terms are validated on their own step, not with the window.
-    expect(STEP_FIELDS[2]).not.toContain('venue_offer_rate');
-    expect(STEP_FIELDS[2]).toEqual(
-      expect.arrayContaining(['venue_id', 'venue_space_label', 'pod_end_date_time_text']),
+    expect(STEP_TITLES).toEqual(['What', 'Where & when', 'Money', 'Details']);
+    expect(STEP_FIELDS[0]).toEqual(['host_category_key', 'pod_mode']);
+    // Where & when holds the window and the guests; the offer's terms wait for Money.
+    expect(STEP_FIELDS[1]).not.toContain('venue_offer_rate');
+    expect(STEP_FIELDS[1]).toEqual(
+      expect.arrayContaining([
+        'club_id',
+        'venue_id',
+        'venue_space_label',
+        'pod_end_date_time_text',
+        'no_of_spots_text',
+      ]),
     );
-    expect(STEP_FIELDS[3]).toEqual([
-      'venue_offer_model',
-      'venue_offer_rate',
-      'venue_offer_offerings',
-      'venue_offer_note',
-    ]);
-    expect(STEP_FIELDS[4]).toContain('pod_amount_text');
+    // Money: the venue offer first, then the ticket and its extras.
+    expect(STEP_FIELDS[2]).toEqual(
+      expect.arrayContaining([
+        'venue_offer_model',
+        'venue_offer_rate',
+        'venue_offer_offerings',
+        'venue_offer_note',
+        'pod_amount_text',
+        'payment_terms',
+      ]),
+    );
+    // Details closes on the content and the Organizer Terms.
+    expect(STEP_FIELDS[3]).toEqual(expect.arrayContaining(['pod_title', 'media_text', 'agreed_to_terms']));
+    expect(STEP_FIELDS[3]).not.toContain('pod_amount_text');
   });
 
   it('requires title, club, description, a venue and a booked window for physical pods', () => {
@@ -414,24 +423,29 @@ describe('createPodSchema — free pods and free venues', () => {
 
 describe('stepFieldsFor', () => {
   const free = ['free_reason', 'free_details', 'free_accepted'];
-  const venueStep = STEP_FIELDS[2] ?? [];
-  const offerStep = STEP_FIELDS[3] ?? [];
-  const pricingStep = STEP_FIELDS[4] ?? [];
+  const whereStep = STEP_FIELDS[1] ?? [];
+  const moneyStep = STEP_FIELDS[2] ?? [];
+  const detailsStep = STEP_FIELDS[3] ?? [];
 
-  it('validates the justification on the step that shows it', () => {
-    // The offer step for a free venue offer…
-    expect(stepFieldsFor(3, valid(freeVenueOffer))).toEqual([...offerStep, ...free]);
-    // …the pricing step for a free pod.
-    expect(stepFieldsFor(4, valid({ pod_type: 'FREE' }))).toEqual([...pricingStep, ...free]);
+  it('validates the justification on Money, which shows it', () => {
+    // Beside a free venue offer…
+    expect(stepFieldsFor(2, valid(freeVenueOffer))).toEqual([...moneyStep, ...free]);
+    // …under a free pod…
+    expect(stepFieldsFor(2, valid({ pod_type: 'FREE' }))).toEqual([...moneyStep, ...free]);
+    // …and once only when both are free.
+    expect(stepFieldsFor(2, valid({ ...freeVenueOffer, pod_type: 'FREE' }))).toEqual([...moneyStep, ...free]);
+  });
+
+  it('asks Money for nothing extra when neither the venue nor the pod is free', () => {
+    expect(stepFieldsFor(2, valid())).toEqual(moneyStep);
+    // A held slot sends no offer, so a stale FREE model there is not a free venue.
+    expect(stepFieldsFor(2, valid({ venue_offer_model: 'FREE' }))).toEqual(moneyStep);
   });
 
   it('never blocks a step that does not draw the fields', () => {
-    // The venue step no longer draws the free-venue fields.
-    expect(stepFieldsFor(2, valid(freeVenueOffer))).toEqual(venueStep);
-    // A pod made free on the pricing step leaves the offer step as it was.
-    expect(stepFieldsFor(3, valid({ pod_type: 'FREE' }))).toEqual(offerStep);
-    expect(stepFieldsFor(4, valid(freeVenueOffer))).toEqual(pricingStep);
     expect(stepFieldsFor(0, valid({ pod_type: 'FREE' }))).toEqual(STEP_FIELDS[0]);
+    expect(stepFieldsFor(1, valid(freeVenueOffer))).toEqual(whereStep);
+    expect(stepFieldsFor(3, valid({ ...freeVenueOffer, pod_type: 'FREE' }))).toEqual(detailsStep);
     expect(stepFieldsFor(9, valid())).toEqual([]);
   });
 });
@@ -677,6 +691,14 @@ describe('draft serialize/hydrate', () => {
     expect(draft.step).toBe(3);
     expect(hydrateDraft(draft.payload).what_this_pod_offers).toEqual(['A']);
     expect(hydrateDraft('not-json')).toEqual(blankCreatePodForm);
+  });
+
+  it('stamps the four-step stepper on the payload, so the draft reopens on the step it was left on', () => {
+    const draft = serializeDraft(valid(), 2);
+    expect(JSON.parse(draft.payload)).toEqual(expect.objectContaining({ stepper: CREATE_POD_STEPPER_VERSION }));
+    // Money stays Money — the five-step remap is only for payloads without the stamp.
+    expect(resumeCreatePodStep(draft.step, draft.payload)).toBe(2);
+    expect(resumeCreatePodStep(2, JSON.stringify(valid()))).toBe(1);
   });
 
   it('coerces a retired pod type from an old draft onto the FREE/PAID pair', () => {

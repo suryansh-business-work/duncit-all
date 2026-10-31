@@ -6,7 +6,9 @@ import {
   type FreeJustificationValues,
 } from '@duncit/forms/schemas';
 import {
-  CREATE_POD_OFFER_STEP,
+  CREATE_POD_MONEY_STEP,
+  CREATE_POD_STEPPER_VERSION,
+  CREATE_POD_WHERE_STEP,
   DEFAULT_SMART_INCENTIVE_MAX_PCT,
   isFreePod,
   isFreeVenueOfferModel,
@@ -473,10 +475,40 @@ export function makeCreatePodSchema(
  * outside React. */
 export const createPodSchema = makeCreatePodSchema();
 
-/** Fields validated when leaving each stepper step (index aligned with STEP_TITLES). */
+/** Fields validated when leaving each stepper step (index aligned with STEP_TITLES):
+ * What → Where & when → Money → Details. mWeb twin: create-pod.steps.ts. */
 export const STEP_FIELDS: (keyof CreatePodFormValues)[][] = [
-  // Step 1 picks the category, then the locality and the club it narrows to.
-  ['host_category_key', 'location_id', 'locality', 'pod_mode', 'club_id'],
+  ['host_category_key', 'pod_mode'],
+  [
+    'location_id',
+    'locality',
+    'club_id',
+    'venue_id',
+    'venue_slot_id',
+    'meeting_platform',
+    'meeting_url',
+    'meeting_notes',
+    'venue_space_label',
+    'pod_date_time_text',
+    'pod_end_date_time_text',
+    'no_of_spots_text',
+  ],
+  [
+    'venue_offer_model',
+    'venue_offer_rate',
+    'venue_offer_offerings',
+    'venue_offer_note',
+    'pod_type',
+    'pod_amount_text',
+    'place_charges',
+    'ticket_discount_enabled',
+    'ticket_discount_tiers',
+    'smart_incentive_enabled',
+    'smart_incentive_pct',
+    'payment_terms',
+    'products_enabled',
+    'product_requests',
+  ],
   [
     'pod_title',
     'pod_description',
@@ -486,36 +518,10 @@ export const STEP_FIELDS: (keyof CreatePodFormValues)[][] = [
     'pod_info',
     'what_this_pod_offers',
     'available_perks',
-  ],
-  [
-    'venue_id',
-    'venue_slot_id',
-    'meeting_platform',
-    'meeting_url',
-    'meeting_notes',
-    'venue_space_label',
-    'pod_date_time_text',
-    'pod_end_date_time_text',
-  ],
-  // Offer for Venue — walked only by a pod that sends one (`createPodStepShown`).
-  ['venue_offer_model', 'venue_offer_rate', 'venue_offer_offerings', 'venue_offer_note'],
-  [
-    'pod_type',
-    'pod_amount_text',
-    'no_of_spots_text',
-    'place_charges',
-    'ticket_discount_enabled',
-    'ticket_discount_tiers',
-    'smart_incentive_enabled',
-    'smart_incentive_pct',
-    'payment_terms',
-    'products_enabled',
-    'product_requests',
     'agreed_to_terms',
   ],
 ];
 
-const PRICING_STEP_INDEX = 4;
 const FREE_JUSTIFICATION_FIELDS: (keyof CreatePodFormValues)[] = [
   'free_reason',
   'free_details',
@@ -524,9 +530,9 @@ const FREE_JUSTIFICATION_FIELDS: (keyof CreatePodFormValues)[] = [
 
 /**
  * The fields leaving `step` validates: its STEP_FIELDS, plus the free
- * justification on the step that shows it — the offer step for a free venue
- * offer, the pricing step for a free pod. A pod made free on the pricing step
- * never blocks the offer step, which does not draw those fields. mWeb twin.
+ * justification while Money draws it — beside a free venue offer or under a
+ * free pod, one set of fields for both. Never on another step, which does not
+ * draw those fields. mWeb twin.
  */
 export function stepFieldsFor(
   step: number,
@@ -537,54 +543,45 @@ export function stepFieldsFor(
 ): (keyof CreatePodFormValues)[] {
   const fields = STEP_FIELDS[step] ?? [];
   const showsFree =
-    (step === CREATE_POD_OFFER_STEP && sendsFreeVenueOffer(values)) ||
-    (step === PRICING_STEP_INDEX && isFreePod(values.pod_type));
+    step === CREATE_POD_MONEY_STEP && (sendsFreeVenueOffer(values) || isFreePod(values.pod_type));
   return showsFree ? [...fields, ...FREE_JUSTIFICATION_FIELDS] : fields;
 }
 
-/** Catalogue keys for the five step titles, in step order (a pod that sends no
- * venue offer skips "Offer for Venue" — `createPodStepShown`). Components translate
+/** Catalogue keys for the four step titles, in step order. Components translate
  * these with their own `t`; the arrays below are the English resolution for
- * callers outside the stepper (the Host Management draft cards). The club step
- * now comes first, so its `step2*` keys lead: the keys keep their names because
- * every locale's translation is stored against them. */
+ * callers outside the stepper (the Host Management draft cards). */
 export const STEP_TITLE_KEYS = [
-  'mweb.createPod.step2Title',
-  'mweb.createPod.step1Title',
-  'mweb.createPod.step3Title',
-  'mweb.createPod.stepOfferTitle',
-  'mweb.createPod.step4Title',
+  'mweb.createPod.flowWhatTitle',
+  'mweb.createPod.flowWhereTitle',
+  'mweb.createPod.flowMoneyTitle',
+  'mweb.createPod.flowDetailsTitle',
 ];
 
 /** One-line intro under each step title — mirrors the mWeb stepper. */
 export const STEP_SUBTITLE_KEYS = [
-  'mweb.createPod.step2Subtitle',
-  'mweb.createPod.step1Subtitle',
-  'mweb.createPod.step3Subtitle',
-  'mweb.createPod.stepOfferSubtitle',
-  'mweb.createPod.step4Subtitle',
+  'mweb.createPod.flowWhatSubtitle',
+  'mweb.createPod.flowWhereSubtitle',
+  'mweb.createPod.flowMoneySubtitle',
+  'mweb.createPod.flowDetailsSubtitle',
 ];
 
 /**
- * Step 3 is a different step for a virtual pod.
- *
- * The arrays stay flat and mode-blind because other readers (the Host
- * Management draft cards) index them by step alone and have no pod mode to
- * hand. The branch lives here, where the caller does have one — a virtual pod
- * has no venue to pick, so "Venue & Slot" describes a screen it never shows.
- * mWeb twin: create-pod.form.tsx.
+ * A virtual pod has no venue to pick, so its second step is its meeting. The
+ * arrays stay flat and mode-blind because other readers (the Host Management
+ * draft cards) index them by step alone and have no pod mode to hand.
+ * mWeb twin: create-pod.steps.ts.
  */
-const VIRTUAL_STEP_INDEX = 2;
-
 export const stepTitleKey = (step: number, podMode?: string | null): string =>
-  step === VIRTUAL_STEP_INDEX && podMode === 'VIRTUAL'
+  step === CREATE_POD_WHERE_STEP && podMode === 'VIRTUAL'
     ? 'mweb.createPod.step3TitleVirtual'
     : (STEP_TITLE_KEYS[step] ?? '');
 
-export const stepSubtitleKey = (step: number, podMode?: string | null): string =>
-  step === VIRTUAL_STEP_INDEX && podMode === 'VIRTUAL'
-    ? 'mweb.createPod.step3SubtitleVirtual'
-    : (STEP_SUBTITLE_KEYS[step] ?? '');
+/** The intro under a step's title. Money without a venue offer is only the ticket. */
+export function stepSubtitleKey(step: number, podMode?: string | null, sendsOffer = true): string {
+  if (step === CREATE_POD_WHERE_STEP && podMode === 'VIRTUAL') return 'mweb.createPod.step3SubtitleVirtual';
+  if (step === CREATE_POD_MONEY_STEP && !sendsOffer) return 'mweb.createPod.flowMoneySubtitleTicket';
+  return STEP_SUBTITLE_KEYS[step] ?? '';
+}
 
 export const STEP_TITLES = STEP_TITLE_KEYS.map((key) => fallbackT(key));
 
@@ -744,10 +741,11 @@ export const POD_GUIDELINE_RULE_KEYS = [
   'mweb.createPod.guidelinesRule6',
 ];
 
-/** Serialises the live form state for a server draft. */
+/** Serialises the live form state for a server draft. `stepper` says which
+ * stepper's numbers `step` uses (resumeCreatePodStep). */
 export function serializeDraft(values: CreatePodFormValues, step: number) {
   return {
-    payload: JSON.stringify(values),
+    payload: JSON.stringify({ ...values, stepper: CREATE_POD_STEPPER_VERSION }),
     pod_title: values.pod_title.trim(),
     pod_mode: values.pod_mode,
     step,

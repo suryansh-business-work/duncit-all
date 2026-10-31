@@ -1,7 +1,13 @@
 /** Option lists + form value shape for the host Create Pod stepper. */
 import type { UseFormReturn } from 'react-hook-form';
 import { freeJustificationDefaults, type FreeJustificationValues } from '@duncit/forms/schemas';
-import type { CreatePodClub, PodPickerProduct, TicketDiscountTier } from '@duncit/utils';
+import type {
+  CreatePodCategoryIconSource,
+  CreatePodCategorySource,
+  CreatePodClub,
+  PodPickerProduct,
+  TicketDiscountTier,
+} from '@duncit/utils';
 
 import type { CreatePodInput } from '@/generated/graphql/graphql';
 import { fallbackT } from '@/i18n/fallback';
@@ -204,14 +210,7 @@ export interface CreatePodSlot {
 }
 
 /** One of the host's onboarded categories — the host picks which one the pod is for. */
-export interface CreatePodHostCategory {
-  super_category_id?: string | null;
-  category_id?: string | null;
-  sub_category_id?: string | null;
-  super_category_name: string;
-  category_name: string;
-  sub_category_name: string;
-}
+export type CreatePodHostCategory = CreatePodCategorySource;
 
 /** Finance settings that feed the pricing panel (public query). */
 export interface CreatePodFinance {
@@ -225,7 +224,11 @@ export interface CreatePodFinance {
 export interface CreatePodSubCategory {
   id: string;
   min_pax: number;
+  icon?: string | null;
 }
+
+/** A category's admin-set icon (image URL, icon name or emoji) — the What step's tiles. */
+export type CreatePodCategoryIcon = CreatePodCategoryIconSource;
 
 /** The catalogue row Step 4's product picker renders. Aliased to the shared
  * shape so the fields the query selects (image, brand, description, stock) and

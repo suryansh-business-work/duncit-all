@@ -46,61 +46,7 @@ type NumberSetting =
   | 'return_window_days'
   | 'autoship_discount_pct';
 
-/** A festive look the storefront ships: its own colours and light animation. NONE keeps the house look. */
-export type StoreOccasionTheme =
-  | 'NONE'
-  | 'DIWALI'
-  | 'HOLI'
-  | 'DUSSEHRA'
-  | 'NAVRATRI'
-  | 'DURGA_PUJA'
-  | 'GANESH_CHATURTHI'
-  | 'JANMASHTAMI'
-  | 'MAKAR_SANKRANTI'
-  | 'LOHRI'
-  | 'PONGAL'
-  | 'ONAM'
-  | 'RAKSHA_BANDHAN'
-  | 'KARWA_CHAUTH'
-  | 'BAISAKHI'
-  | 'GURU_NANAK_JAYANTI'
-  | 'EID'
-  | 'CHRISTMAS'
-  | 'HALLOWEEN'
-  | 'NEW_YEAR'
-  | 'VALENTINES_DAY'
-  | 'EASTER'
-  | 'FRIENDSHIP_DAY'
-  | 'MOTHERS_DAY'
-  | 'FATHERS_DAY'
-  | 'APRIL_FOOLS'
-  | 'INDEPENDENCE_DAY'
-  | 'REPUBLIC_DAY'
-  | 'GANDHI_JAYANTI'
-  | 'CHILDRENS_DAY'
-  | 'WOMENS_DAY'
-  | 'YOGA_DAY'
-  | 'EARTH_DAY'
-  | 'CHHATH_PUJA';
 
-/** A festive window: while it is open the store swaps its logo, favicon and background and wears its theme. */
-export interface StoreOccasion {
-  slug: string;
-  label: string;
-  theme: StoreOccasionTheme;
-  effects_enabled: boolean;
-  /** Shown above the home banner, e.g. "Happy Diwali". */
-  greeting: string;
-  starts_at: string;
-  ends_at: string;
-  logo_url: string;
-  favicon_url: string;
-  background_url: string;
-  background_color: string;
-  announcement_text: string;
-  is_active: boolean;
-  sort_order: number;
-}
 
 /** A link in the store's header or footer: a same-site path or an https:// address. */
 export interface StoreNavLink {
@@ -108,7 +54,7 @@ export interface StoreNavLink {
   link: string;
 }
 
-/** The store's own settings — identity, checkout rules, shipping, returns, autoship, SEO, pages and occasions. */
+/** The store's own settings — identity, checkout rules, shipping, returns, autoship, SEO and pages. */
 export type StoreSettings = Record<TextSetting, string> &
   Record<FlagSetting, boolean> &
   Record<NumberSetting, number> & {
@@ -122,7 +68,6 @@ export type StoreSettings = Record<TextSetting, string> &
     footer_links: StoreNavLink[];
     /** The accepted payment methods the store footer shows. */
     payment_badges: { label: string; image_url: string }[];
-    occasions: StoreOccasion[];
   };
 
 const SETTINGS_FIELDS = `
@@ -181,22 +126,6 @@ const SETTINGS_FIELDS = `
   payment_badges {
     label
     image_url
-  }
-  occasions {
-    slug
-    label
-    theme
-    effects_enabled
-    greeting
-    starts_at
-    ends_at
-    logo_url
-    favicon_url
-    background_url
-    background_color
-    announcement_text
-    is_active
-    sort_order
   }
   updated_at
 `;

@@ -2,12 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { argumentsAt, fieldsAt, operationOf, variablesOf } from '../../../__tests__/gql-contract';
 import {
   BRANDING,
-  OCCASIONAL_ICONS,
   UPDATE_BRANDING,
-  UPDATE_OCCASIONAL_ICONS,
   emptyBrandingForm,
   type BrandingFormState,
-  type OccasionalIconRow,
   type PlatformAssetFields,
   type PlatformPrefix,
 } from '../queries';
@@ -21,17 +18,6 @@ const PLATFORM_ASSET_SUFFIXES = Object.keys({
   splash_url: 0,
   splash_type: 0,
 } satisfies Record<keyof PlatformAssetFields, number>);
-
-const OCCASIONAL_ICON_ROW_FIELDS = Object.keys({
-  slug: 0,
-  label: 0,
-  starts_at: 0,
-  ends_at: 0,
-  icon_url: 0,
-  fallback_icon: 0,
-  is_active: 0,
-  sort_order: 0,
-} satisfies Record<keyof OccasionalIconRow, number>);
 
 const formKeys = Object.keys(emptyBrandingForm) as (keyof BrandingFormState)[];
 
@@ -84,43 +70,6 @@ describe('UPDATE_BRANDING', () => {
 
   it('returns exactly what the query returns, so the saved form rehydrates', () => {
     expect(fieldsAt(UPDATE_BRANDING, 'updateBranding')).toEqual(fieldsAt(BRANDING, 'branding'));
-  });
-});
-
-describe('OCCASIONAL_ICONS', () => {
-  it('reads the icons through branding and is named for its refetch', () => {
-    expect(operationOf(OCCASIONAL_ICONS)).toEqual({ name: 'OccasionalIcons', type: 'query' });
-    expect(variablesOf(OCCASIONAL_ICONS)).toEqual({});
-    expect(fieldsAt(OCCASIONAL_ICONS)).toEqual(['branding']);
-    expect(fieldsAt(OCCASIONAL_ICONS, 'branding')).toEqual(['occasional_icons']);
-  });
-
-  it('selects every OccasionalIconRow field, including the bundled fallback name', () => {
-    const selected = fieldsAt(OCCASIONAL_ICONS, 'branding', 'occasional_icons');
-    for (const field of OCCASIONAL_ICON_ROW_FIELDS) {
-      expect(selected).toContain(field);
-    }
-    expect(selected).toContain('fallback_icon');
-  });
-
-  it('does not drag the whole branding document along with the icons', () => {
-    expect(fieldsAt(OCCASIONAL_ICONS, 'branding')).not.toContain('app_name');
-  });
-});
-
-describe('UPDATE_OCCASIONAL_ICONS', () => {
-  it('replaces the whole list in one call', () => {
-    expect(operationOf(UPDATE_OCCASIONAL_ICONS)).toEqual({
-      name: 'UpdateOccasionalIcons',
-      type: 'mutation',
-    });
-    expect(variablesOf(UPDATE_OCCASIONAL_ICONS)).toEqual({ input: '[OccasionalIconInput!]!' });
-  });
-
-  it('returns the same row shape the query does', () => {
-    expect(fieldsAt(UPDATE_OCCASIONAL_ICONS, 'updateOccasionalIcons')).toEqual(
-      fieldsAt(OCCASIONAL_ICONS, 'branding', 'occasional_icons'),
-    );
   });
 });
 

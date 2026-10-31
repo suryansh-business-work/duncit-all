@@ -12,7 +12,6 @@ import LegalLinksSection from './LegalLinksSection';
 import PlatformAssetsSection from './PlatformAssetsSection';
 import WebsiteAssetsSection from './WebsiteAssetsSection';
 import FontsSection from './FontsSection';
-import OccasionalIconsSection from './OccasionalIconsSection';
 import { PLATFORM_SECTIONS } from './sizeGuides';
 import {
   BRANDING,
@@ -144,12 +143,6 @@ export default function BrandingPage() {
           <WebsiteAssetsSection form={form} setForm={setForm} />
         </BrandingAccordion>
 
-        <BrandingAccordion
-          title={t('admin.branding.occasional')}
-          subtitle={t('admin.branding.occasionalHint')}
-        >
-          <OccasionalIconsSection />
-        </BrandingAccordion>
 
         <BrandingAccordion
           title={t('admin.branding.fonts')}

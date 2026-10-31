@@ -132,6 +132,36 @@ describe('the pod shop slider and the occasion icons', () => {
     ]);
   });
 
+  it('keeps an https button link and an in-app path', async () => {
+    const slider = await service.updatePodShopSlider([
+      { url: 'https://img/a.jpg', cta_url: 'https://duncit.com/offers' },
+      { url: 'https://img/b.jpg', cta_url: '/shop/brand/acme' },
+    ]);
+    expect(slider.map((s: { cta_url: string }) => s.cta_url)).toEqual(['https://duncit.com/offers', '/shop/brand/acme']);
+  });
+
+  it.each([
+    ['a script link', 'javascript:alert(1)'],
+    ['a data link', 'data:text/html,<b>x</b>'],
+    ['a protocol-relative host', '//evil.example/shop'],
+    ['a bare word', 'shop'],
+  ])('refuses %s as a button link and keeps the slider as it was', async (_label, cta) => {
+    await service.updatePodShopSlider([{ url: 'https://img/kept.jpg', cta_url: '/shop' }]);
+
+    await expect(service.updatePodShopSlider([{ url: 'https://img/new.jpg', cta_url: cta }])).rejects.toMatchObject({
+      message: expect.stringMatching(/in-app path/),
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+    const branding = await service.getBranding();
+    expect(branding.pod_shop_slider.map((s: { url: string }) => s.url)).toEqual(['https://img/kept.jpg']);
+  });
+
+  it('refuses slide media that is not a web address', async () => {
+    await expect(service.updatePodShopSlider([{ url: 'javascript:alert(1)' }])).rejects.toMatchObject({
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  });
+
   it('keeps a window with a usable slug and dates, defaults the rest, and drops a blank slug or a reversed range', async () => {
     const icons = await service.updateOccasionalIcons([
       { slug: ' Diwali ', starts_at: '2026-10-20T00:00:00Z', ends_at: '2026-10-25T00:00:00Z' },

@@ -46,7 +46,12 @@ export function CategorySuperFilter({ options, value, onChange }: Readonly<Props
             backgroundColor={selected ? '$primary' : 'transparent'}
             pressStyle={PRESS_STYLE.control}
           >
-            <Text fontSize={13} fontWeight="600" color={selected ? '$onPrimary' : '$color'} numberOfLines={1}>
+            <Text
+              fontSize={13}
+              fontWeight="600"
+              color={selected ? '$onPrimary' : '$color'}
+              numberOfLines={1}
+            >
               {option.name}
             </Text>
           </XStack>

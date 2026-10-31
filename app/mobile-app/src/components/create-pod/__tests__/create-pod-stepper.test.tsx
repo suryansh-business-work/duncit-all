@@ -725,7 +725,10 @@ describe('CreatePodStepper', () => {
       ),
     ).toBeOnTheScreen();
     // A host under two super-categories sees the tiles of one at a time.
-    expect(screen.getByTestId('create-pod-category-super-sc-sports')).toHaveProp('aria-checked', true);
+    expect(screen.getByTestId('create-pod-category-super-sc-sports')).toHaveProp(
+      'aria-checked',
+      true,
+    );
     expect(screen.queryByTestId('create-pod-category-sc-games|')).toBeNull();
     press('create-pod-category-super-sc-games');
     expect(screen.getByTestId('create-pod-category-sc-games|')).toBeOnTheScreen();

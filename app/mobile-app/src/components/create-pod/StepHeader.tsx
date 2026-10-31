@@ -31,7 +31,9 @@ export function StepHeader({ step, podMode, sendsOffer }: Readonly<Props>) {
       <XStack
         testID="create-pod-progress"
         role="progressbar"
-        aria-label={t('mweb.createPod.stepCounter', { vars: { step: step + 1, total: CREATE_POD_STEP_COUNT } })}
+        aria-label={t('mweb.createPod.stepCounter', {
+          vars: { step: step + 1, total: CREATE_POD_STEP_COUNT },
+        })}
         gap={6}
       >
         {STEPS.map((index) => (

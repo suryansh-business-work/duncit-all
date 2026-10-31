@@ -383,7 +383,9 @@ describe('Money for a free physical pod', () => {
 
   it('asks it under the ticket for a held slot, which sends no offer whatever model a draft holds', () => {
     renderWithProviders(
-      <PricingHarness initial={{ ...freePod, venue_slot_id: 'slot-1', venue_offer_model: 'FREE' }} />,
+      <PricingHarness
+        initial={{ ...freePod, venue_slot_id: 'slot-1', venue_offer_model: 'FREE' }}
+      />,
     );
     expect(screen.getByTestId('create-pod-pod-free-arrangement')).toBeOnTheScreen();
   });
@@ -440,7 +442,9 @@ describe('Money more options', () => {
 
   it('has nothing to offer a free virtual pod without products', () => {
     renderWithProviders(
-      <PricingHarness initial={{ ...paidPod, pod_mode: 'VIRTUAL', pod_type: 'FREE', pod_amount_text: '0' }} />,
+      <PricingHarness
+        initial={{ ...paidPod, pod_mode: 'VIRTUAL', pod_type: 'FREE', pod_amount_text: '0' }}
+      />,
     );
     expect(screen.queryByTestId('create-pod-money-more')).toBeNull();
   });

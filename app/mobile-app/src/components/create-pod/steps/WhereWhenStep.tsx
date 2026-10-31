@@ -1,7 +1,12 @@
 import { YStack } from 'tamagui';
 import type { FreePodVenueNotice, SpotsBounds } from '@duncit/utils';
 
-import type { CreatePodClub, CreatePodForm, CreatePodLocation, CreatePodVenue } from '../create-pod.types';
+import type {
+  CreatePodClub,
+  CreatePodForm,
+  CreatePodLocation,
+  CreatePodVenue,
+} from '../create-pod.types';
 import { LocationClubStep } from './LocationClubStep';
 import { PodSpotsField } from './PodSpotsField';
 import { VenueSlotStep } from './VenueSlotStep';
@@ -48,7 +53,13 @@ export function WhereWhenStep({
   const guestsWithOffer = physical && !form.watch('partner_request_id');
   return (
     <YStack gap={16} testID="create-pod-where-step">
-      <LocationClubStep form={form} clubs={clubs} cityClubs={cityClubs} locations={locations} pinnedClub={pinnedClub} />
+      <LocationClubStep
+        form={form}
+        clubs={clubs}
+        cityClubs={cityClubs}
+        locations={locations}
+        pinnedClub={pinnedClub}
+      />
       {hasClub || !physical ? (
         <VenueSlotStep
           form={form}

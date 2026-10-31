@@ -21,8 +21,18 @@ interface Props {
 /** Money's optional extras: early-bird prices, Smart Incentive and payment
  * terms (a paid pod only), place charges (a physical pod only) and products.
  * Folded unless one is filled, held open while one fails validation. mWeb twin. */
-export function MoneyMoreOptions({ form, products, showProducts, currencySymbol }: Readonly<Props>) {
-  const { control, watch, setValue, formState: { errors } } = form;
+export function MoneyMoreOptions({
+  form,
+  products,
+  showProducts,
+  currencySymbol,
+}: Readonly<Props>) {
+  const {
+    control,
+    watch,
+    setValue,
+    formState: { errors },
+  } = form;
   const { t } = useTranslation();
   const paid = watch('pod_type') !== 'FREE';
   const isPhysical = watch('pod_mode') === 'PHYSICAL';
@@ -32,14 +42,24 @@ export function MoneyMoreOptions({ form, products, showProducts, currencySymbol 
   const failed = anyFieldFailed(errors, MONEY_EXTRA_FIELDS);
 
   return (
-    <MoreOptionsSection testID="create-pod-money-more" hint={t('mweb.createPod.moreOptionsMoneyHint')} defaultOpen={filled} forceOpen={failed}>
+    <MoreOptionsSection
+      testID="create-pod-money-more"
+      hint={t('mweb.createPod.moreOptionsMoneyHint')}
+      defaultOpen={filled}
+      forceOpen={failed}
+    >
       {paid ? <PodTicketDiscountCard form={form} currency={currencySymbol} /> : null}
       {/* Renders nothing while Loyalty has the programme switched off. */}
       {paid ? <PodSmartIncentiveCard form={form} currency={currencySymbol} /> : null}
       {/* Payment terms describe refunds and charges a free pod does not have. */}
       {paid ? (
         <SurfaceCard testID="pricing-step-payment-terms-card">
-          <FormTextField control={control} name="payment_terms" label={t('mweb.createPod.paymentTerms')} multiline />
+          <FormTextField
+            control={control}
+            name="payment_terms"
+            label={t('mweb.createPod.paymentTerms')}
+            multiline
+          />
         </SurfaceCard>
       ) : null}
       {isPhysical ? (
@@ -47,7 +67,9 @@ export function MoneyMoreOptions({ form, products, showProducts, currencySymbol 
           <Controller
             control={control}
             name="place_charges"
-            render={({ field }) => <PlaceChargesField value={field.value} onChange={field.onChange} />}
+            render={({ field }) => (
+              <PlaceChargesField value={field.value} onChange={field.onChange} />
+            )}
           />
         </SurfaceCard>
       ) : null}

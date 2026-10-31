@@ -139,7 +139,9 @@ export function CreatePodStepper({
       onEditWhen={() => state.goTo(CREATE_POD_WHERE_STEP)}
       showTerms={!clubAdmin}
       assignHosts={
-        clubAdmin ? <AssignHostsField hosts={hosts} onChange={setHosts} search={clubAdmin.searchHosts} /> : null
+        clubAdmin ? (
+          <AssignHostsField hosts={hosts} onChange={setHosts} search={clubAdmin.searchHosts} />
+        ) : null
       }
     />,
   ];

@@ -30,11 +30,15 @@ export function PodSummaryCard({ form, venues, currencySymbol, onEdit }: Readonl
   const venue = venues.find((entry) => entry.id === form.watch('venue_id'));
   const amount = Number(form.watch('pod_amount_text')) || 0;
   const price =
-    form.watch('pod_type') === 'FREE' ? t('mweb.createPod.summaryFree') : formatMoney(amount, { symbol: currencySymbol });
+    form.watch('pod_type') === 'FREE'
+      ? t('mweb.createPod.summaryFree')
+      : formatMoney(amount, { symbol: currencySymbol });
   const when = [formatDateTime(start), end ? formatTime(end) : ''].filter(Boolean).join(' – ');
   const what = [
     venue?.venue_name ?? form.watch('meeting_platform'),
-    t('mweb.createPod.summaryGuests', { vars: { count: Number(form.watch('no_of_spots_text')) || 0 } }),
+    t('mweb.createPod.summaryGuests', {
+      vars: { count: Number(form.watch('no_of_spots_text')) || 0 },
+    }),
     price,
   ]
     .filter(Boolean)
@@ -43,7 +47,14 @@ export function PodSummaryCard({ form, venues, currencySymbol, onEdit }: Readonl
   return (
     <SurfaceCard testID="create-pod-summary">
       <XStack alignItems="center" gap={12}>
-        <YStack width={40} height={40} borderRadius={20} backgroundColor="$soft" alignItems="center" justifyContent="center">
+        <YStack
+          width={40}
+          height={40}
+          borderRadius={20}
+          backgroundColor="$soft"
+          alignItems="center"
+          justifyContent="center"
+        >
           <MaterialIcons name="event" size={20} color={primary} />
         </YStack>
         <YStack flex={1} gap={2}>

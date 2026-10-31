@@ -30,7 +30,11 @@ interface Props {
  * this pod offers" list. Hashtags, more info, perks and the optional Pod Reel
  * wait under More options. mWeb twin. */
 export function BasicsStep({ form, hostCategories }: Readonly<Props>) {
-  const { control, watch, formState: { errors } } = form;
+  const {
+    control,
+    watch,
+    formState: { errors },
+  } = form;
   const { t } = useTranslation();
   // Read once, not watched: it only decides how More options first opens.
   const extrasFilled = detailsExtrasFilled(form.getValues());

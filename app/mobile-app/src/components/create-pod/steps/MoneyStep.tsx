@@ -3,7 +3,12 @@ import type { FreePodVenueNotice } from '@duncit/utils';
 
 import { SurfaceCard } from '@/components/SurfaceCard';
 import type { PodPricingState } from '../price-panel';
-import type { CreatePodFinance, CreatePodForm, CreatePodProduct, CreatePodVenue } from '../create-pod.types';
+import type {
+  CreatePodFinance,
+  CreatePodForm,
+  CreatePodProduct,
+  CreatePodVenue,
+} from '../create-pod.types';
 import { PricingStep } from './PricingStep';
 import { VenueOfferStep } from './VenueOfferStep';
 import type { VenueQuoteState } from './VenueSlotStep/VenueQuoteCard';
@@ -40,7 +45,12 @@ export function MoneyStep({
     <YStack gap={16} testID="create-pod-money-step">
       {sendsOffer ? (
         <SurfaceCard>
-          <VenueOfferStep form={form} venues={venues} quote={quote} currencySymbol={finance.currency_symbol} />
+          <VenueOfferStep
+            form={form}
+            venues={venues}
+            quote={quote}
+            currencySymbol={finance.currency_symbol}
+          />
         </SurfaceCard>
       ) : null}
       <PricingStep

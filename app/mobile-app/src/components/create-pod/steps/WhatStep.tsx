@@ -2,7 +2,11 @@ import { YStack } from 'tamagui';
 
 import { SurfaceCard } from '@/components/SurfaceCard';
 import { TourAnchor } from '@/tours/TourAnchor';
-import type { CreatePodCategoryIcon, CreatePodForm, CreatePodHostCategory } from '../create-pod.types';
+import type {
+  CreatePodCategoryIcon,
+  CreatePodForm,
+  CreatePodHostCategory,
+} from '../create-pod.types';
 import { HostCategoryField } from './HostCategoryField';
 import { PodModeField } from './PodModeField';
 
@@ -22,7 +26,11 @@ export function WhatStep({ form, hostCategories, categoryIcons, pinnedClub }: Re
       {pinnedClub ? null : (
         <TourAnchor tour="create-pod" anchor="create-pod-club">
           <SurfaceCard>
-            <HostCategoryField form={form} hostCategories={hostCategories} categoryIcons={categoryIcons} />
+            <HostCategoryField
+              form={form}
+              hostCategories={hostCategories}
+              categoryIcons={categoryIcons}
+            />
           </SurfaceCard>
         </TourAnchor>
       )}

@@ -578,8 +578,10 @@ export const stepTitleKey = (step: number, podMode?: string | null): string =>
 
 /** The intro under a step's title. Money without a venue offer is only the ticket. */
 export function stepSubtitleKey(step: number, podMode?: string | null, sendsOffer = true): string {
-  if (step === CREATE_POD_WHERE_STEP && podMode === 'VIRTUAL') return 'mweb.createPod.step3SubtitleVirtual';
-  if (step === CREATE_POD_MONEY_STEP && !sendsOffer) return 'mweb.createPod.flowMoneySubtitleTicket';
+  if (step === CREATE_POD_WHERE_STEP && podMode === 'VIRTUAL')
+    return 'mweb.createPod.step3SubtitleVirtual';
+  if (step === CREATE_POD_MONEY_STEP && !sendsOffer)
+    return 'mweb.createPod.flowMoneySubtitleTicket';
   return STEP_SUBTITLE_KEYS[step] ?? '';
 }
 

@@ -1,11 +1,20 @@
 import { useMemo, useState } from 'react';
 import { Text, XStack, YStack } from 'tamagui';
-import { categoriesForSuper, categoryIconLookup, createPodSuperOptions, superCategoryIdOf } from '@duncit/utils';
+import {
+  categoriesForSuper,
+  categoryIconLookup,
+  createPodSuperOptions,
+  superCategoryIdOf,
+} from '@duncit/utils';
 
 import { FieldLabel } from '@/components/Field';
 import { useTranslation } from '@/hooks/useTranslation';
 import { hostCategoryKeyOf } from '../create-pod.form';
-import type { CreatePodCategoryIcon, CreatePodForm, CreatePodHostCategory } from '../create-pod.types';
+import type {
+  CreatePodCategoryIcon,
+  CreatePodForm,
+  CreatePodHostCategory,
+} from '../create-pod.types';
 import { CategorySuperFilter } from './CategorySuperFilter';
 import { CategoryTile } from './CategoryTile';
 
@@ -22,7 +31,8 @@ interface Props {
 /** `items` in rows of COLUMNS, so every tile in a row shares its width. */
 function rowsOf<T>(items: readonly T[]): T[][] {
   const rows: T[][] = [];
-  for (let index = 0; index < items.length; index += COLUMNS) rows.push(items.slice(index, index + COLUMNS));
+  for (let index = 0; index < items.length; index += COLUMNS)
+    rows.push(items.slice(index, index + COLUMNS));
   return rows;
 }
 
@@ -30,14 +40,20 @@ function rowsOf<T>(items: readonly T[]): T[][] {
  * categories this pod is for, as tiles with each category's own icon. A host
  * onboarded under both "For You" and "For Your Pet" narrows the tiles to one.
  * Changing it resets the club/venue/slot picks. mWeb twin. */
-export function HostCategoryField({ form, hostCategories, categoryIcons = NO_ICONS }: Readonly<Props>) {
+export function HostCategoryField({
+  form,
+  hostCategories,
+  categoryIcons = NO_ICONS,
+}: Readonly<Props>) {
   const { setValue, watch, formState } = form;
   const { t } = useTranslation();
   const selectedKey = watch('host_category_key');
   const supers = useMemo(() => createPodSuperOptions(hostCategories), [hostCategories]);
   const iconOf = useMemo(() => categoryIconLookup(categoryIcons), [categoryIcons]);
   const selected = hostCategories.find((category) => hostCategoryKeyOf(category) === selectedKey);
-  const [superId, setSuperId] = useState(() => (selected ? superCategoryIdOf(selected) : (supers[0]?.id ?? '')));
+  const [superId, setSuperId] = useState(() =>
+    selected ? superCategoryIdOf(selected) : (supers[0]?.id ?? ''),
+  );
   const shown = categoriesForSuper(hostCategories, supers.length, superId);
   const error = formState.errors.host_category_key?.message;
 
@@ -53,9 +69,13 @@ export function HostCategoryField({ form, hostCategories, categoryIcons = NO_ICO
     <YStack gap={12} testID="create-pod-category">
       <YStack gap={2}>
         <FieldLabel label={t('mweb.createPod.categoryLabel')} required />
-        <Text fontSize={12} color="$muted">{t('mweb.createPod.categoryHint')}</Text>
+        <Text fontSize={12} color="$muted">
+          {t('mweb.createPod.categoryHint')}
+        </Text>
       </YStack>
-      {supers.length > 1 ? <CategorySuperFilter options={supers} value={superId} onChange={setSuperId} /> : null}
+      {supers.length > 1 ? (
+        <CategorySuperFilter options={supers} value={superId} onChange={setSuperId} />
+      ) : null}
       {hostCategories.length === 0 ? (
         <Text testID="create-pod-category-empty" fontSize={13} color="$muted">
           {t('mweb.createPod.categoryEmpty')}

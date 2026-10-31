@@ -19,7 +19,13 @@ interface Props {
 
 /** A step's optional extras folded under one row, so the step shows only what
  * every pod needs. The form keeps a folded field's value. mWeb twin. */
-export function MoreOptionsSection({ testID, hint, defaultOpen = false, forceOpen = false, children }: Readonly<Props>) {
+export function MoreOptionsSection({
+  testID,
+  hint,
+  defaultOpen = false,
+  forceOpen = false,
+  children,
+}: Readonly<Props>) {
   const [open, setOpen] = useState(defaultOpen);
   const { t } = useTranslation();
   const { muted } = useThemeColors();

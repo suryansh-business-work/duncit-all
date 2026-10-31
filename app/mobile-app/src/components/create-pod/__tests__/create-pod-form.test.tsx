@@ -117,7 +117,9 @@ describe('createPodSchema', () => {
       ]),
     );
     // Details closes on the content and the Organizer Terms.
-    expect(STEP_FIELDS[3]).toEqual(expect.arrayContaining(['pod_title', 'media_text', 'agreed_to_terms']));
+    expect(STEP_FIELDS[3]).toEqual(
+      expect.arrayContaining(['pod_title', 'media_text', 'agreed_to_terms']),
+    );
     expect(STEP_FIELDS[3]).not.toContain('pod_amount_text');
   });
 
@@ -433,7 +435,10 @@ describe('stepFieldsFor', () => {
     // …under a free pod…
     expect(stepFieldsFor(2, valid({ pod_type: 'FREE' }))).toEqual([...moneyStep, ...free]);
     // …and once only when both are free.
-    expect(stepFieldsFor(2, valid({ ...freeVenueOffer, pod_type: 'FREE' }))).toEqual([...moneyStep, ...free]);
+    expect(stepFieldsFor(2, valid({ ...freeVenueOffer, pod_type: 'FREE' }))).toEqual([
+      ...moneyStep,
+      ...free,
+    ]);
   });
 
   it('asks Money for nothing extra when neither the venue nor the pod is free', () => {
@@ -695,7 +700,9 @@ describe('draft serialize/hydrate', () => {
 
   it('stamps the four-step stepper on the payload, so the draft reopens on the step it was left on', () => {
     const draft = serializeDraft(valid(), 2);
-    expect(JSON.parse(draft.payload)).toEqual(expect.objectContaining({ stepper: CREATE_POD_STEPPER_VERSION }));
+    expect(JSON.parse(draft.payload)).toEqual(
+      expect.objectContaining({ stepper: CREATE_POD_STEPPER_VERSION }),
+    );
     // Money stays Money — the five-step remap is only for payloads without the stamp.
     expect(resumeCreatePodStep(draft.step, draft.payload)).toBe(2);
     expect(resumeCreatePodStep(2, JSON.stringify(valid()))).toBe(1);

@@ -77,7 +77,11 @@ export function PricingStep({
         )}
         {!isFree && pricing.zeroEarnings ? <ZeroEarningsNotice /> : null}
         {isFree && !askedWithOffer ? (
-          <FreeArrangementFields control={control} names={FREE_JUSTIFICATION_NAMES} testIDPrefix="create-pod-pod" />
+          <FreeArrangementFields
+            control={control}
+            names={FREE_JUSTIFICATION_NAMES}
+            testIDPrefix="create-pod-pod"
+          />
         ) : null}
       </SurfaceCard>
       {isFree ? (
@@ -85,7 +89,12 @@ export function PricingStep({
       ) : (
         <PricePanel finance={finance} pricing={pricing} />
       )}
-      <MoneyMoreOptions form={form} products={products} showProducts={showProducts} currencySymbol={finance.currency_symbol} />
+      <MoneyMoreOptions
+        form={form}
+        products={products}
+        showProducts={showProducts}
+        currencySymbol={finance.currency_symbol}
+      />
       {isFree ? null : (
         <SuggestedPricesModal
           open={suggestionsOpen}

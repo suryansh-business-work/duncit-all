@@ -32,7 +32,12 @@ export function DetailsStep({
 }: Readonly<Props>) {
   return (
     <YStack gap={16} testID="create-pod-details-step">
-      <PodSummaryCard form={form} venues={venues} currencySymbol={currencySymbol} onEdit={onEditWhen} />
+      <PodSummaryCard
+        form={form}
+        venues={venues}
+        currencySymbol={currencySymbol}
+        onEdit={onEditWhen}
+      />
       <BasicsStep form={form} hostCategories={hostCategories} />
       {assignHosts}
       {showTerms ? <TermsAgreement form={form} /> : null}

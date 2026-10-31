@@ -59,5 +59,7 @@ const payloadStepper = (payload: string | null | undefined): unknown => {
 export function resumeCreatePodStep(step: number | null | undefined, payload: string | null | undefined): number {
   if (payloadStepper(payload) === CREATE_POD_STEPPER_VERSION) return clampCreatePodStep(step);
   const fiveStep = Math.min(Math.max(0, wholeStep(step)), FIVE_STEP_TO_STEP.length - 1);
-  return FIVE_STEP_TO_STEP[fiveStep] ?? 0;
+  // The clamp above keeps the index inside the table, so there is no missing
+  // entry to fall back from — the same proven read as signup-steps.
+  return FIVE_STEP_TO_STEP[fiveStep]!;
 }

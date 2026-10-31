@@ -5,7 +5,7 @@ import { marketingRunService, userActor } from './marketingRun.service';
 import type { MarketingRunDecision } from './marketingRun.model';
 
 /** The marketing console reads its runs; a reader seat reads them too. */
-const READ = ['SUPER_ADMIN', 'CITY_ADMIN', 'MARKETING_MANAGER', 'MARKETING_READER'];
+const READ = ['SUPER_ADMIN', 'CITY_ADMIN', 'MARKETING_MANAGER', 'MARKETING_EDITOR', 'MARKETING_READER'];
 /** Deciding, stopping and retrying runs is a manager's call. */
 const ACT = ['SUPER_ADMIN', 'MARKETING_MANAGER'];
 

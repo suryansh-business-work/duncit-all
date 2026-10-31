@@ -6,6 +6,8 @@ import { audienceService } from './audience.service';
 import { audienceListService } from './audienceList.service';
 
 const ADMIN_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN', 'MARKETING_MANAGER'];
+/** The dashboard is the one page an editor opens on too. */
+const DASHBOARD_ROLES = [...ADMIN_ROLES, 'MARKETING_EDITOR'];
 // A WhatsApp send in the Communications console picks one of these lists, and
 // the WhatsApp log (there and in the Logs console) names the one a send used.
 const AUDIENCE_READ = [...ADMIN_ROLES, 'COMMUNICATIONS_MANAGER', LOGS_READER];
@@ -13,7 +15,7 @@ const AUDIENCE_READ = [...ADMIN_ROLES, 'COMMUNICATIONS_MANAGER', LOGS_READER];
 export const marketingResolvers = {
   Query: {
     marketingDashboard: (_p: unknown, args: { days?: number | null }, ctx: GraphQLContext) => {
-      requireRole(ctx, ADMIN_ROLES);
+      requireRole(ctx, DASHBOARD_ROLES);
       return marketingDashboardService.overview(args.days ?? 30);
     },
     audienceTable: (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {

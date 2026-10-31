@@ -20,7 +20,7 @@ export const appConfig = {
   loginImage:
     import.meta.env.VITE_LOGIN_IMAGE ||
     'https://images.pexels.com/photos/7693745/pexels-photo-7693745.jpeg',
-  requiredRoles: parseEnvRoles(import.meta.env.VITE_REQUIRED_ROLES, ['MARKETING_MANAGER']),
+  requiredRoles: parseEnvRoles(import.meta.env.VITE_REQUIRED_ROLES, ['MARKETING_MANAGER', 'MARKETING_EDITOR']),
   tokenKey: 'marketing_token',
   colorModeKey: 'marketing_color_mode',
   // Duncit's brand red; the theme corrects it for AA contrast wherever it is used as text.

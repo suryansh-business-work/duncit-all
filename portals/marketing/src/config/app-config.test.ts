@@ -19,6 +19,7 @@ describe('Duncit Marketing app config', () => {
 
   it('gates on the MARKETING_MANAGER role by default', () => {
     expect(appConfig.requiredRoles).toContain('MARKETING_MANAGER');
+    expect(appConfig.requiredRoles).toContain('MARKETING_EDITOR');
   });
 
   it('wears the brand red as its accent', () => {
@@ -39,6 +40,7 @@ describe('Marketing sidebar', () => {
       '/activity',
       '/social/accounts',
       '/publish/calendar',
+      '/studio/reels',
       '/leads/instagram',
       '/campaigns/email',
       '/audience',
@@ -55,6 +57,16 @@ describe('Marketing sidebar', () => {
       '/ads-settings',
       '/analytics/contacts',
       '/settings/integrations',
+    ]);
+  });
+
+  it('puts Create — the reel studio — right after Publishing, as a section of its own', () => {
+    expect(MARKETING_NAV[2].labelKey).toBe('shell.nav.publishing');
+    const create = MARKETING_NAV[3];
+    expect(create.labelKey).toBe('shell.nav.create');
+    expect(create.icon).toBe('movie');
+    expect(create.children).toEqual([
+      { label: 'shell.nav.reelStudio', labelKey: 'shell.nav.reelStudio', to: '/studio/reels', icon: 'movie' },
     ]);
   });
 
@@ -77,6 +89,7 @@ describe('Marketing sidebar', () => {
       'shell.nav.overview',
       'shell.nav.socialMedia',
       'shell.nav.publishing',
+      'shell.nav.create',
       'shell.nav.leads',
       'shell.nav.campaigns',
       'shell.nav.analytics',

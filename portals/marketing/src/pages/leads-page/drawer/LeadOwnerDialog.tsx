@@ -6,10 +6,12 @@ import { parseApiError } from '@duncit/utils';
 import { useTranslation } from '@duncit/app-settings';
 import { AUDIENCE_LIST_OWNERS } from '../../target-audience-page/queries';
 import { ownerLabel, type OwnerOption } from '../../target-audience-page/audience-list-form/audience-list.types';
-import type { MarketingLeadDetail } from '../queries';
 
 interface Props {
-  lead: MarketingLeadDetail;
+  /** Who has it now; null for nobody. */
+  ownerUserId: string | null;
+  /** The question the dialog asks — a lead's by default; the Inbox asks about a comment. */
+  title?: string;
   busy: boolean;
   onClose: () => void;
   /** True when the owner was saved — only then does the dialog close. */
@@ -22,10 +24,10 @@ interface Props {
  * owner who has since lost access shows as blank and is kept until somebody
  * picks another.
  */
-export default function LeadOwnerDialog({ lead, busy, onClose, onSave }: Readonly<Props>) {
+export default function LeadOwnerDialog({ ownerUserId, title, busy, onClose, onSave }: Readonly<Props>) {
   const { t } = useTranslation();
   const titleId = useId();
-  const [ownerId, setOwnerId] = useState<string | null>(lead.owner_user_id);
+  const [ownerId, setOwnerId] = useState<string | null>(ownerUserId);
   const { data, loading, error } = useQuery<{ audienceListOwners: OwnerOption[] }>(AUDIENCE_LIST_OWNERS);
   const options = data?.audienceListOwners ?? [];
 
@@ -35,7 +37,7 @@ export default function LeadOwnerDialog({ lead, busy, onClose, onSave }: Readonl
 
   return (
     <Dialog open onClose={onClose} fullWidth maxWidth="sm" aria-labelledby={titleId} data-testid="lead-owner-dialog">
-      <DialogTitle id={titleId}>{t('marketing.leads.ownerTitle')}</DialogTitle>
+      <DialogTitle id={titleId}>{title ?? t('marketing.leads.ownerTitle')}</DialogTitle>
       <DialogContent>
         {error && <Alert severity="error">{parseApiError(error)}</Alert>}
         <Autocomplete<OwnerOption>

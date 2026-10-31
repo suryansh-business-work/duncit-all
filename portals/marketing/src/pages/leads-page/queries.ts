@@ -5,7 +5,7 @@ export type MarketingLeadPipeline = 'VENUE' | 'HOST' | 'BRAND' | 'INFLUENCER' | 
 /** Where the conversation stands. CONVERTED and LOST are final. */
 export type MarketingLeadStage = 'NEW' | 'CONTACTED' | 'REPLIED' | 'QUALIFIED' | 'CONVERTED' | 'LOST';
 export type MarketingLeadSource = 'INSTAGRAM' | 'GOOGLE_PLACES' | 'WEB_SEARCH' | 'IMPORT' | 'MANUAL';
-export type MarketingLeadTimelineKind = 'CREATED' | 'STAGE' | 'OWNER' | 'NOTE' | 'PROMOTED' | 'IMPORTED' | 'SOURCE';
+export type MarketingLeadTimelineKind = 'CREATED' | 'STAGE' | 'OWNER' | 'NOTE' | 'PROMOTED' | 'IMPORTED' | 'SOURCE' | 'OUTREACH';
 /** The CRM record a lead can become. */
 export type MarketingLeadCrmKind = 'VENUE' | 'HOST' | 'ECOMM';
 export type MarketingLeadImportOutcome = 'ADDED' | 'MERGED' | 'SKIPPED';

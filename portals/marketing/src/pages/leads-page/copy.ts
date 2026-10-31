@@ -76,6 +76,7 @@ export const TIMELINE_LABEL: Record<MarketingLeadTimelineKind, string> = {
   PROMOTED: 'marketing.leads.timelinePromoted',
   IMPORTED: 'marketing.leads.timelineImported',
   SOURCE: 'marketing.leads.timelineSource',
+  OUTREACH: 'marketing.leads.timelineOutreach',
 };
 
 /** The bounds the form holds a lead to — the server's own (marketingLead.types LEAD_LIMITS). */

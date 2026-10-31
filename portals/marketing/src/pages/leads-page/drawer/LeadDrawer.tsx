@@ -86,7 +86,7 @@ export default function LeadDrawer({ leadId, onClose, onChanged }: Readonly<Prop
             <Divider />
             <LeadNotes notes={lead.notes} busy={actions.busy} onAdd={actions.addNote} />
             <LeadTimeline entries={lead.timeline} />
-            {dialog === 'owner' && <LeadOwnerDialog lead={lead} busy={actions.busy} onClose={closeDialog} onSave={actions.assignOwner} />}
+            {dialog === 'owner' && <LeadOwnerDialog ownerUserId={lead.owner_user_id} busy={actions.busy} onClose={closeDialog} onSave={actions.assignOwner} />}
             {dialog === 'promote' && <PromoteDialog lead={lead} busy={actions.busy} onClose={closeDialog} onPromote={actions.promote} />}
           </>
         )}

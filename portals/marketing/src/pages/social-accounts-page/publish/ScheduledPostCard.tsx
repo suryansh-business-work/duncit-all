@@ -78,6 +78,11 @@ export default function ScheduledPostCard({ post, onEdit, onRemoved }: Readonly<
                 <TargetChip key={target.account_id} target={target} label={`${target.account_name} · ${t(TARGET_STATUS_LABEL[target.status])}`} />
               ))}
             </Stack>
+            {post.collaborators.length > 0 && (
+              <Typography variant="caption" component="p" sx={{ color: 'text.secondary', mt: 0.5 }} data-testid="social-post-collaborators-line">
+                {t('marketing.social.withCollaborators', { vars: { handles: post.collaborators.map((handle) => `@${handle}`).join(', ') } })}
+              </Typography>
+            )}
             {failures.map((target) => (
               <Typography key={target.account_id} variant="caption" component="p" sx={{ color: 'error.main', mt: 0.5 }}>
                 {`${target.account_name}: ${target.error}`}

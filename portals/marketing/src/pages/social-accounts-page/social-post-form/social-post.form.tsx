@@ -7,6 +7,7 @@ import SendIcon from '@mui/icons-material/Send';
 import { DuncitButton } from '@duncit/buttons';
 import { RhfTextField } from '@duncit/forms';
 import { useTranslation } from '@duncit/app-settings';
+import CollaboratorsField from '../../../components/CollaboratorsField';
 import DateTimeField from '../../../components/DateTimeField';
 import type { SocialPublishMode } from '../publish.queries';
 import AccountPicker from './AccountPicker';
@@ -29,14 +30,21 @@ export default function SocialPostForm({ accounts, initial, errorMessage, review
     resolver: zodResolver(schema) as unknown as Resolver<SocialPostFormValues, any, SocialPostFormValues>,
     mode: 'onChange',
   });
-  const [chosen, text, media, needsApproval] = useWatch({ control, name: ['account_ids', 'text', 'media', 'needs_approval'] });
+  const [chosen, text, media, needsApproval, collaborators] = useWatch({
+    control,
+    name: ['account_ids', 'text', 'media', 'needs_approval', 'collaborators'],
+  });
   const platforms = useMemo(() => {
     const ids = new Set(chosen);
     return [...new Set(accounts.filter((account) => ids.has(account.id)).map((account) => account.platform))];
   }, [accounts, chosen]);
 
+  // Only Instagram takes collaborators; the field shows, and is sent, only when it is picked.
+  const toInstagram = platforms.includes('INSTAGRAM');
+
   const submitAs = async (mode: SocialPublishMode) => {
     setValue('mode', mode);
+    if (!toInstagram) setValue('collaborators', []);
     await handleSubmit(onSubmit)();
   };
 
@@ -58,8 +66,24 @@ export default function SocialPostForm({ accounts, initial, errorMessage, review
           minRows={5}
           maxRows={14}
         />
-        <PlatformChecks platforms={platforms} text={text} mediaCount={media.length} />
+        <PlatformChecks platforms={platforms} text={text} mediaCount={media.length} collaboratorCount={toInstagram ? collaborators.length : 0} />
         <PostMediaField control={control} />
+        {toInstagram && (
+          <Controller
+            control={control}
+            name="collaborators"
+            render={({ field, fieldState }) => (
+              <CollaboratorsField
+                value={field.value}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                inputRef={field.ref}
+                error={fieldState.error?.message}
+                testId="social-post-collaborators"
+              />
+            )}
+          />
+        )}
         <Controller
           control={control}
           name="scheduled_at"

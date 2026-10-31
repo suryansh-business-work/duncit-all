@@ -26,7 +26,11 @@ const SOCIAL = group('shell.nav.socialMedia', 'hub', [
   leaf('shell.nav.inbox', '/social/inbox', 'forum'),
 ]);
 
-const PUBLISHING = group('shell.nav.publishing', 'calendar', [leaf('shell.nav.calendar', '/publish/calendar', 'calendar')]);
+// The calendar of every post, then the pods promoted on it automatically.
+const PUBLISHING = group('shell.nav.publishing', 'calendar', [
+  leaf('shell.nav.calendar', '/publish/calendar', 'calendar'),
+  leaf('shell.nav.podPromos', '/publish/pod-promos', 'campaign'),
+]);
 
 // What is made here before it is published: reels cut by chat from Drive footage.
 const CREATE = group('shell.nav.create', 'movie', [leaf('shell.nav.reelStudio', '/studio/reels', 'movie')]);

@@ -110,6 +110,7 @@ const ROUTES = [
   '/studio/reels',
   '/studio/reels/smoke-id',
   '/automation/agents',
+  '/publish/pod-promos',
   '/outreach/sequences',
   '/outreach/sequences?selectedtab=enrollments&sequence=smoke-id',
   '/outreach/sequences?selectedtab=tasks',

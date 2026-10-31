@@ -41,6 +41,7 @@ describe('Marketing sidebar', () => {
       '/social/accounts',
       '/social/inbox',
       '/publish/calendar',
+      '/publish/pod-promos',
       '/studio/reels',
       '/leads',
       '/leads/instagram',

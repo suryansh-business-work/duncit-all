@@ -67,6 +67,7 @@ vi.mock('../../src/pages/social-accounts-page', async () => {
 vi.mock('../../src/pages/social-calendar-page', () => ({
   default: () => <div>social-calendar-page</div>,
 }));
+vi.mock('../../src/pages/pod-promos-page', () => ({ default: () => <div>pod-promos-page</div> }));
 vi.mock('../../src/pages/leads-page', () => ({ default: () => <div>leads-page</div> }));
 vi.mock('../../src/pages/instagram-leads-page', () => ({
   default: () => <div>instagram-leads-page</div>,
@@ -112,6 +113,7 @@ describe('App routing', () => {
     ['/social/accounts', 'social-accounts-page'],
     ['/social/inbox', 'inbox-page'],
     ['/publish/calendar', 'social-calendar-page'],
+    ['/publish/pod-promos', 'pod-promos-page'],
     ['/studio/reels', 'reel-projects-page'],
     ['/studio/reels/DUN-REEL-1', 'reel-studio-page:DUN-REEL-1'],
     ['/leads', 'leads-page'],

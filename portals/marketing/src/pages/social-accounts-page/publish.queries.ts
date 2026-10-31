@@ -40,6 +40,8 @@ export interface SocialScheduledPost {
   /** Why a reviewer sent it back — shown to the author on the draft. */
   review_note: string | null;
   approval_run_id: string | null;
+  /** Instagram usernames invited as collaborators. */
+  collaborators: string[];
   targets: SocialPublishTarget[];
 }
 
@@ -82,6 +84,8 @@ export interface SocialScheduledPostInput {
   needs_approval: boolean;
   /** The Reel Studio project the post was made from, when it was. */
   reel_project_id?: string | null;
+  /** Instagram usernames to invite as collaborators (Instagram takes at most 3). */
+  collaborators: string[];
 }
 
 const SCHEDULED_POST_FIELDS = gql`
@@ -101,6 +105,7 @@ const SCHEDULED_POST_FIELDS = gql`
     needs_approval
     review_note
     approval_run_id
+    collaborators
     targets {
       account_id
       account_name

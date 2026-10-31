@@ -4,6 +4,7 @@ import type { Translate } from '@duncit/shell';
 import { PLATFORM_LABEL } from '../copy';
 import type { SocialAccount } from '../queries';
 import type { SocialPostMedia, SocialPublishMode, SocialScheduledPost, SocialScheduledPostInput } from '../publish.queries';
+import { collaboratorsSchema } from '../../../components/collaborators';
 import { platformProblems } from './publish-rules';
 
 /** A minute of grace, matching the server, so "now-ish" is not refused as the past. */
@@ -20,6 +21,8 @@ export interface SocialPostFormValues {
   mode: SocialPublishMode;
   /** Park the post for a manager instead of sending it straight out. */
   needs_approval: boolean;
+  /** Instagram usernames invited as collaborators; only sent when an Instagram account is picked. */
+  collaborators: string[];
 }
 
 export const blankSocialPostValues = (initial?: Partial<SocialPostFormValues>): SocialPostFormValues => ({
@@ -29,6 +32,7 @@ export const blankSocialPostValues = (initial?: Partial<SocialPostFormValues>): 
   scheduled_at: '',
   mode: 'SCHEDULE',
   needs_approval: false,
+  collaborators: [],
   ...initial,
 });
 
@@ -84,6 +88,7 @@ export const socialPostSchema = (t: Translate, accounts: SocialAccount[]) =>
       scheduled_at: z.string(),
       mode: z.enum(['DRAFT', 'SCHEDULE', 'NOW']),
       needs_approval: z.boolean(),
+      collaborators: collaboratorsSchema(t),
     })
     .superRefine((values, ctx) => {
       if (!values.text.trim() && values.media.length === 0) {
@@ -108,6 +113,7 @@ export function toSocialPostInput(values: SocialPostFormValues, ideaId: string |
     idea_id: ideaId,
     needs_approval: values.needs_approval,
     reel_project_id: reelProjectId,
+    collaborators: values.collaborators,
   };
 }
 

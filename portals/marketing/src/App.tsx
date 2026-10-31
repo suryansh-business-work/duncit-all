@@ -24,6 +24,7 @@ import AppPopupsPage from './pages/app-popups-page/AppPopupsPage';
 import StatusPage from './pages/status-page/StatusPage';
 import SocialAccountsPage from './pages/social-accounts-page';
 import SocialCalendarPage from './pages/social-calendar-page';
+import PodPromosPage from './pages/pod-promos-page';
 import InboxPage from './pages/inbox-page';
 import LeadsPage from './pages/leads-page';
 import InstagramLeadsPage from './pages/instagram-leads-page';
@@ -69,6 +70,7 @@ export default function App() {
         <Route path="/social-accounts" element={<Redirect to="/social/accounts" />} />
         {/* Publishing */}
         <Route path="/publish/calendar" element={authed(<SocialCalendarPage />)} />
+        <Route path="/publish/pod-promos" element={authed(<PodPromosPage />)} />
         <Route path="/social-calendar" element={<Redirect to="/publish/calendar" />} />
         {/* Create: Reel Studio — the studio itself is fetched when a reel is opened */}
         <Route path="/studio/reels" element={authed(<ReelProjectsPage />)} />

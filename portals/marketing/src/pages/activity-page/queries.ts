@@ -22,6 +22,7 @@ export type MarketingRunWorkflow =
   | 'AGENT'
   | 'ORCHESTRATOR'
   | 'CAMPAIGN'
+  | 'POD_PROMO'
   | 'OTHER';
 export type MarketingRunTrigger = 'USER' | 'SCHEDULE' | 'WEBHOOK' | 'AGENT' | 'SYSTEM';
 export type MarketingRunActorKind = 'USER' | 'AGENT' | 'SYSTEM';

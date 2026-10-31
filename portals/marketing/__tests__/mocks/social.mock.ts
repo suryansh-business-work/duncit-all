@@ -173,6 +173,7 @@ export const makeSocialScheduledPost = (over: Partial<SocialScheduledPost> = {})
   needs_approval: false,
   review_note: null,
   approval_run_id: null,
+  collaborators: [],
   targets: [makeSocialPublishTarget()],
   ...over,
 });

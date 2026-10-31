@@ -24,3 +24,4 @@ export * from './agents.mock';
 export * from './outreach.mock';
 export * from './inbox.mock';
 export * from './analytics.mock';
+export * from './podPromo.mock';

@@ -10,6 +10,8 @@ interface Props {
   text: string;
   /** How many media items are picked; the count shows against each limit once it is a carousel. */
   mediaCount: number;
+  /** How many collaborators are invited; shown against the cap of each network that has them. */
+  collaboratorCount?: number;
 }
 
 /**
@@ -17,7 +19,7 @@ interface Props {
  * the one that bites, and it should show while typing, not on submit. Once
  * more than one item is picked, the media count joins it the same way.
  */
-export default function PlatformChecks({ platforms, text, mediaCount }: Readonly<Props>) {
+export default function PlatformChecks({ platforms, text, mediaCount, collaboratorCount = 0 }: Readonly<Props>) {
   const { t, locale } = useTranslation();
   if (platforms.length === 0) return null;
   const length = textLength(text);
@@ -50,6 +52,19 @@ export default function PlatformChecks({ platforms, text, mediaCount }: Readonly
               icon={icon}
               label={t('marketing.social.mediaCountLimit', { vars: { network, used: mediaCount, limit: rules.maxMedia } })}
               data-testid={`social-post-media-limit-${platform}`}
+            />,
+          );
+        }
+        if (collaboratorCount > 0 && rules.maxCollaborators > 0) {
+          chips.push(
+            <Chip
+              key={`${platform}-collaborators`}
+              size="small"
+              variant="outlined"
+              color={collaboratorCount > rules.maxCollaborators ? 'error' : 'default'}
+              icon={icon}
+              label={t('marketing.social.collaboratorCountLimit', { vars: { network, used: collaboratorCount, limit: rules.maxCollaborators } })}
+              data-testid={`social-post-collaborator-limit-${platform}`}
             />,
           );
         }

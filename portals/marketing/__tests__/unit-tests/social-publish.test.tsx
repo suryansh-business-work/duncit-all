@@ -190,6 +190,16 @@ describe('ScheduledPostCard', () => {
     expect(screen.queryByText(/Add a call to action/)).not.toBeInTheDocument();
   });
 
+  it('names the Instagram collaborators a post invites, and says nothing when it has none', () => {
+    const { unmount } = renderWithProviders(<ScheduledPostCard post={makeSocialScheduledPost({ collaborators: ['blue.cafe', 'asha_runs'] })} onEdit={vi.fn()} />);
+    expect(screen.getByTestId('social-post-collaborators-line')).toHaveTextContent(
+      t('marketing.social.withCollaborators', { vars: { handles: '@blue.cafe, @asha_runs' } }),
+    );
+    unmount();
+    renderWithProviders(<ScheduledPostCard post={makeSocialScheduledPost()} onEdit={vi.fn()} />);
+    expect(screen.queryByTestId('social-post-collaborators-line')).not.toBeInTheDocument();
+  });
+
   it('lists why each failed network failed and offers a retry, but not targets that failed without a reason', () => {
     const post = makeSocialScheduledPost({
       status: 'PARTIAL',
@@ -530,6 +540,7 @@ describe('ComposerDialog', () => {
     idea_id: null,
     needs_approval: false,
     reel_project_id: null,
+    collaborators: [],
     ...over,
   });
   const mediaBox = (dialog: HTMLElement) => within(dialog).getByRole('textbox', { name: t('marketing.social.postMedia') });
@@ -595,7 +606,7 @@ describe('ComposerDialog', () => {
     const post = makeSocialScheduledPost({ idea_id: 'i3', text: 'Edited copy', scheduled_at: null });
     const update = updateMock(
       'sp1',
-      { text: 'Edited copy', media: [], account_ids: ['sa1'], mode: 'NOW', scheduled_at: null, idea_id: 'i3', needs_approval: false, reel_project_id: null },
+      { text: 'Edited copy', media: [], account_ids: ['sa1'], mode: 'NOW', scheduled_at: null, idea_id: 'i3', needs_approval: false, reel_project_id: null, collaborators: [] },
       { ...post, status: 'PUBLISHING' },
     );
     renderWithProviders(<ComposerDialog request={{ post, idea_id: 'ignored' }} accounts={accounts} onClose={onClose} />, { mocks: [update.mock] });
@@ -621,6 +632,7 @@ describe('ComposerDialog', () => {
       idea_id: 'i5',
       needs_approval: false,
       reel_project_id: null,
+      collaborators: [],
     });
     renderWithProviders(<ComposerDialog request={{ post, idea_id: 'i5' }} accounts={accounts} onClose={onClose} />, { mocks: [update.mock] });
     const dialog = screen.getByRole('dialog', { name: t('marketing.social.editPost') });
@@ -638,7 +650,7 @@ describe('ComposerDialog', () => {
     const post = makeSocialScheduledPost();
     const update = updateMock(
       'sp1',
-      { text: 'Run club this Sunday', media: [], account_ids: ['sa1'], mode: 'SCHEDULE', scheduled_at: '2026-09-20T10:00:00.000Z', idea_id: null, needs_approval: true, reel_project_id: null },
+      { text: 'Run club this Sunday', media: [], account_ids: ['sa1'], mode: 'SCHEDULE', scheduled_at: '2026-09-20T10:00:00.000Z', idea_id: null, needs_approval: true, reel_project_id: null, collaborators: [] },
       { ...post, status: 'PENDING_APPROVAL', needs_approval: true, approval_run_id: 'run1' },
     );
     renderWithProviders(<ComposerDialog request={{ post }} accounts={accounts} onClose={onClose} />, { mocks: [update.mock] });
@@ -658,7 +670,7 @@ describe('ComposerDialog', () => {
     const post = makeSocialScheduledPost({ status: 'PENDING_APPROVAL', needs_approval: true, media: CAROUSEL, media_url: IMAGE_URL, media_type: 'IMAGE' });
     const update = updateMock(
       'sp1',
-      { text: 'Run club this Sunday', media: CAROUSEL, account_ids: ['sa1'], mode: 'DRAFT', scheduled_at: '2026-09-20T10:00:00.000Z', idea_id: null, needs_approval: true, reel_project_id: null },
+      { text: 'Run club this Sunday', media: CAROUSEL, account_ids: ['sa1'], mode: 'DRAFT', scheduled_at: '2026-09-20T10:00:00.000Z', idea_id: null, needs_approval: true, reel_project_id: null, collaborators: [] },
       { ...post, status: 'DRAFT' },
     );
     renderWithProviders(<ComposerDialog request={{ post }} accounts={accounts} onClose={onClose} />, { mocks: [update.mock] });

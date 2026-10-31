@@ -15,15 +15,21 @@ export interface PlatformRules {
   maxMedia: number;
   /** Whether a video may sit among several items — false means a carousel is images only. */
   carouselVideo: boolean;
+  /**
+   * How many accounts may be invited as collaborators on one post. Only
+   * Instagram has them: its Content Publishing API takes up to 3 usernames on a
+   * feed image, a reel or a carousel. 0 means the network has none.
+   */
+  maxCollaborators: number;
 }
 
 export const PUBLISH_RULES: Record<SocialPlatform, PlatformRules> = {
-  INSTAGRAM: { maxText: 2200, media: ['IMAGE', 'VIDEO'], mediaRequired: true, textRequired: false, maxMedia: 10, carouselVideo: true },
-  FACEBOOK: { maxText: 63_206, media: ['IMAGE', 'VIDEO'], mediaRequired: false, textRequired: false, maxMedia: 10, carouselVideo: false },
-  THREADS: { maxText: 500, media: ['IMAGE', 'VIDEO'], mediaRequired: false, textRequired: false, maxMedia: 20, carouselVideo: true },
-  YOUTUBE: { maxText: 5000, media: ['VIDEO'], mediaRequired: true, textRequired: true, maxMedia: 1, carouselVideo: false },
-  LINKEDIN: { maxText: 3000, media: ['IMAGE'], mediaRequired: false, textRequired: true, maxMedia: 20, carouselVideo: false },
-  X: { maxText: 280, media: ['IMAGE'], mediaRequired: false, textRequired: false, maxMedia: 4, carouselVideo: false },
+  INSTAGRAM: { maxText: 2200, media: ['IMAGE', 'VIDEO'], mediaRequired: true, textRequired: false, maxMedia: 10, carouselVideo: true, maxCollaborators: 3 },
+  FACEBOOK: { maxText: 63_206, media: ['IMAGE', 'VIDEO'], mediaRequired: false, textRequired: false, maxMedia: 10, carouselVideo: false, maxCollaborators: 0 },
+  THREADS: { maxText: 500, media: ['IMAGE', 'VIDEO'], mediaRequired: false, textRequired: false, maxMedia: 20, carouselVideo: true, maxCollaborators: 0 },
+  YOUTUBE: { maxText: 5000, media: ['VIDEO'], mediaRequired: true, textRequired: true, maxMedia: 1, carouselVideo: false, maxCollaborators: 0 },
+  LINKEDIN: { maxText: 3000, media: ['IMAGE'], mediaRequired: false, textRequired: true, maxMedia: 20, carouselVideo: false, maxCollaborators: 0 },
+  X: { maxText: 280, media: ['IMAGE'], mediaRequired: false, textRequired: false, maxMedia: 4, carouselVideo: false, maxCollaborators: 0 },
 };
 
 /** Characters as a person counts them — an emoji is one, not two UTF-16 units. */

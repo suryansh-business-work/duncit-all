@@ -54,6 +54,11 @@ describe('publish-rules', () => {
     expect('Run 🏃').toHaveLength(6);
   });
 
+  it('allows collaborators on Instagram alone, at most 3 as its API does', () => {
+    expect(PUBLISH_RULES.INSTAGRAM.maxCollaborators).toBe(3);
+    expect(Object.values(PUBLISH_RULES).filter((rules) => rules.maxCollaborators > 0)).toHaveLength(1);
+  });
+
   it('carries the carousel limits of the server table', () => {
     expect(PUBLISH_RULES.INSTAGRAM).toMatchObject({ maxMedia: 10, carouselVideo: true });
     expect(PUBLISH_RULES.FACEBOOK).toMatchObject({ maxMedia: 10, carouselVideo: false });
@@ -147,6 +152,7 @@ describe('blankSocialPostValues', () => {
       scheduled_at: '',
       mode: 'SCHEDULE',
       needs_approval: false,
+      collaborators: [],
     });
   });
 
@@ -158,6 +164,7 @@ describe('blankSocialPostValues', () => {
       scheduled_at: '',
       mode: 'DRAFT',
       needs_approval: true,
+      collaborators: [],
     });
   });
 });
@@ -289,6 +296,16 @@ describe('socialPostSchema', () => {
     ]);
   });
 
+  it('holds collaborators to the Instagram cap and the username shape', () => {
+    expect(issues({ mode: 'DRAFT', text: 'Hi', collaborators: ['a', 'b', 'c'] })).toEqual([]);
+    expect(issues({ mode: 'DRAFT', text: 'Hi', collaborators: ['a', 'b', 'c', 'd'] })).toEqual([
+      { path: 'collaborators', message: t('marketing.social.collaboratorsTooMany', { vars: { max: 3 } }) },
+    ]);
+    expect(issues({ mode: 'DRAFT', text: 'Hi', collaborators: ['run-club'] })).toEqual([
+      { path: 'collaborators', message: t('marketing.social.collaboratorInvalid') },
+    ]);
+  });
+
   it('refuses a media row whose kind is not one the server knows', () => {
     const result = socialPostSchema(t, accounts).safeParse(
       blankSocialPostValues({ mode: 'DRAFT', text: 'Hi', media: [{ url: IMAGE_URL, type: 'GIF' as 'IMAGE' }] }),
@@ -309,6 +326,7 @@ describe('toSocialPostInput', () => {
           account_ids: ['sa1', 'x1'],
           scheduled_at: '2026-09-20T10:00:00.000Z',
           needs_approval: true,
+          collaborators: ['blue.cafe'],
         }),
         'idea1',
         'reel1',
@@ -322,6 +340,7 @@ describe('toSocialPostInput', () => {
       idea_id: 'idea1',
       needs_approval: true,
       reel_project_id: 'reel1',
+      collaborators: ['blue.cafe'],
     });
   });
 
@@ -335,6 +354,7 @@ describe('toSocialPostInput', () => {
       idea_id: null,
       needs_approval: false,
       reel_project_id: null,
+      collaborators: [],
     });
   });
 });
@@ -375,6 +395,7 @@ describe('SocialPostForm', () => {
       scheduled_at: '',
       mode: 'DRAFT',
       needs_approval: false,
+      collaborators: [],
     });
   });
 
@@ -482,6 +503,44 @@ describe('SocialPostForm', () => {
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
+  it('offers collaborators only once an Instagram account is picked, and sends them', async () => {
+    const { onSubmit } = renderForm({ text: 'Collab', media: [IMAGE] });
+    expect(screen.queryByTestId('social-post-collaborators')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Duncit Gram' }));
+    const field = await screen.findByTestId('social-post-collaborators');
+    expect(within(field).getByText(t('marketing.social.collaboratorsHint', { vars: { max: 3 } }))).toBeInTheDocument();
+    const input = within(field).getByRole('combobox');
+    fireEvent.change(input, { target: { value: '@Blue.Cafe' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    const gram = t('marketing.social.platformInstagram');
+    expect(await screen.findByTestId('social-post-collaborator-limit-INSTAGRAM')).toHaveTextContent(
+      t('marketing.social.collaboratorCountLimit', { vars: { network: gram, used: 1, limit: 3 } }),
+    );
+    fireEvent.click(screen.getByTestId('social-post-now'));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(onSubmit.mock.calls[0][0]).toMatchObject({ account_ids: ['ig1'], collaborators: ['blue.cafe'] });
+  });
+
+  it('drops collaborators once no Instagram account is left, so other networks never get them', async () => {
+    const { onSubmit } = renderForm({ text: 'Was a collab', account_ids: ['ig1'], collaborators: ['blue.cafe'] });
+    expect(screen.getByTestId('social-post-collaborators')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Duncit Gram' }));
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Duncit Pages' }));
+    expect(screen.queryByTestId('social-post-collaborators')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('social-post-collaborator-limit-LINKEDIN')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('social-post-now'));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(onSubmit.mock.calls[0][0]).toMatchObject({ account_ids: ['sa1'], collaborators: [] });
+  });
+
+  it('refuses a fourth collaborator and colours the Instagram count', async () => {
+    const { onSubmit } = renderForm({ text: 'Too many', media: [IMAGE], account_ids: ['ig1'], collaborators: ['a', 'b', 'c', 'd'] });
+    expect(screen.getByTestId('social-post-collaborator-limit-INSTAGRAM').className).toMatch(/colorError/);
+    fireEvent.click(screen.getByTestId('social-post-now'));
+    expect(await screen.findByText(t('marketing.social.collaboratorsTooMany', { vars: { max: 3 } }))).toBeInTheDocument();
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
   it('publishes now without asking for a time', async () => {
     const { onSubmit } = renderForm({ text: 'Live now', account_ids: ['sa1'], media: [IMAGE] });
     fireEvent.click(screen.getByTestId('social-post-now'));
@@ -493,6 +552,7 @@ describe('SocialPostForm', () => {
       scheduled_at: '',
       mode: 'NOW',
       needs_approval: false,
+      collaborators: [],
     });
   });
 

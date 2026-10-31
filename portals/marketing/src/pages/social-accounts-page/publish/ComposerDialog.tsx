@@ -55,6 +55,7 @@ function initialValues(request: ComposerRequest) {
       media: postMedia(post),
       scheduled_at: post.scheduled_at ?? '',
       needs_approval: post.needs_approval,
+      collaborators: post.collaborators,
     });
   }
   // Only what the request carries: an idea brings text, a calendar day brings a time, and a

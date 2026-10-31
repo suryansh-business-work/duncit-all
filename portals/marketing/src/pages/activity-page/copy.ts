@@ -26,6 +26,7 @@ export const WORKFLOWS: readonly MarketingRunWorkflow[] = [
   'AGENT',
   'ORCHESTRATOR',
   'CAMPAIGN',
+  'POD_PROMO',
   'OTHER',
 ];
 
@@ -41,6 +42,7 @@ export const WORKFLOW_LABEL: Record<MarketingRunWorkflow, string> = {
   AGENT: 'marketing.runs.workflowAgent',
   ORCHESTRATOR: 'marketing.runs.workflowOrchestrator',
   CAMPAIGN: 'marketing.runs.workflowCampaign',
+  POD_PROMO: 'marketing.runs.workflowPodPromo',
   OTHER: 'marketing.runs.workflowOther',
 };
 

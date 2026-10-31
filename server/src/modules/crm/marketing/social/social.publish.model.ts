@@ -69,6 +69,8 @@ const scheduledPostSchema = new Schema(
 );
 // The publisher's claim query: the oldest due post still waiting.
 scheduledPostSchema.index({ status: 1, scheduled_at: 1 });
+// The dashboard and Marketing › Analytics count what went out in a window.
+scheduledPostSchema.index({ status: 1, published_at: -1 });
 
 /** An AI-suggested post, kept so the team can pick it up later — Buffer's Ideas board. */
 const ideaSchema = new Schema(

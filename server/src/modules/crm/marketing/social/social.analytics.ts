@@ -68,7 +68,7 @@ function engagementSeries(days: string[], posts: PostNumbers[]) {
  * snapshot — including one taken before the period — so a day without a sync
  * is not a dip. Null until any account has a count.
  */
-async function followerSeries(days: string[], accountIds: string[]): Promise<(number | null)[]> {
+export async function followerSeries(days: string[], accountIds: string[]): Promise<(number | null)[]> {
   const first = days[0];
   const [before, inside] = await Promise.all([
     SocialAccountSnapshotModel.aggregate<{ _id: string; followers: number }>([

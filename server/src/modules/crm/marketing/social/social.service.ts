@@ -160,7 +160,33 @@ const pubPost = (o: any, accounts: Map<string, AccountFacts>) => {
   };
 };
 
-const pubComment = (o: any, accounts: Map<string, AccountFacts>, posts: Map<string, { text: string; permalink: string }>) => ({
+interface StoredReply {
+  at?: unknown;
+  by_user_id?: string | null;
+  by_name?: string | null;
+  text?: string | null;
+  external_id?: string | null;
+  ok?: boolean | null;
+  error?: string | null;
+}
+
+const pubReply = (r: StoredReply) => ({
+  at: iso(r.at),
+  by_user_id: r.by_user_id ?? '',
+  by_name: r.by_name ?? '',
+  text: r.text ?? '',
+  external_id: r.external_id ?? '',
+  ok: !!r.ok,
+  error: r.error ?? '',
+});
+
+/** A comment for the API; `people` names whoever it is assigned to (the Inbox), and is empty elsewhere. */
+export const pubComment = (
+  o: any,
+  accounts: Map<string, AccountFacts>,
+  posts: Map<string, { text: string; permalink: string }>,
+  people: Map<string, string> = new Map()
+) => ({
   id: String(o._id),
   account_id: o.account_id,
   account_name: accounts.get(o.account_id)?.name ?? '',
@@ -182,17 +208,25 @@ const pubComment = (o: any, accounts: Map<string, AccountFacts>, posts: Map<stri
   ai_analyzed_at: iso(o.ai_analyzed_at),
   review_status: o.review_status,
   reviewed_at: iso(o.reviewed_at),
+  // A comment stored before the Inbox existed reads as its review said until the boot move fills it.
+  status: o.status ?? (o.review_status === 'REVIEWED' ? 'DONE' : 'OPEN'),
+  assigned_user_id: idOrNull(o.assigned_user_id),
+  assigned_name: o.assigned_user_id ? people.get(String(o.assigned_user_id)) ?? null : null,
+  replies: ((o.replies ?? []) as StoredReply[]).map(pubReply),
+  last_activity_at: iso(o.last_activity_at),
 });
 
-async function commentContext(docs: any[]) {
-  const [names, posts] = await Promise.all([
+/** What a page of comments points at — accounts, posts and assignees — in one lookup each. */
+export async function commentContext(docs: any[]) {
+  const [names, posts, people] = await Promise.all([
     accountFacts(docs.map((doc) => doc.account_id)),
     SocialPostModel.find({ _id: { $in: [...new Set(docs.map((doc) => doc.post_id))] } })
       .select('text permalink')
       .lean(),
+    ownerNamesOf(docs.map((doc) => ({ owner_user_id: doc.assigned_user_id }))),
   ]);
   const postMap = new Map(posts.map((post) => [String(post._id), { text: post.text ?? '', permalink: post.permalink ?? '' }]));
-  return { names, posts: postMap };
+  return { names, posts: postMap, people };
 }
 
 /**
@@ -385,7 +419,16 @@ export const socialService = {
     const reviewed = status === 'REVIEWED';
     const doc = await SocialCommentModel.findByIdAndUpdate(
       id,
-      { $set: { review_status: status, reviewed_by: reviewed ? userId : null, reviewed_at: reviewed ? new Date() : null } },
+      {
+        $set: {
+          review_status: status,
+          reviewed_by: reviewed ? userId : null,
+          reviewed_at: reviewed ? new Date() : null,
+          // The Inbox follows: reviewed here is dealt with there, reopened is open again.
+          status: reviewed ? 'DONE' : 'OPEN',
+          last_activity_at: new Date(),
+        },
+      },
       { returnDocument: 'after' }
     ).lean();
     if (!doc) notFound('Comment');

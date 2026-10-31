@@ -621,11 +621,13 @@ describe('commentsTable / review', () => {
 
     const reviewed = await svc.review(String(c._id), 'REVIEWED', USER);
     expect(reviewed.review_status).toBe('REVIEWED');
+    // The Inbox follows the review: reviewed is DONE there, reopened is OPEN again.
+    expect(reviewed).toMatchObject({ status: 'DONE', last_activity_at: expect.stringMatching(/^\d{4}-/) });
     expect(reviewed.reviewed_at).toEqual(expect.stringMatching(/^\d{4}-/));
     expect(String((await SocialCommentModel.findById(c._id).lean())?.reviewed_by)).toBe(USER);
 
     const reopened = await svc.review(String(c._id), 'OPEN', USER);
-    expect(reopened).toMatchObject({ review_status: 'OPEN', reviewed_at: null });
+    expect(reopened).toMatchObject({ review_status: 'OPEN', reviewed_at: null, status: 'OPEN' });
     expect((await SocialCommentModel.findById(c._id).lean())?.reviewed_by).toBeNull();
   });
 

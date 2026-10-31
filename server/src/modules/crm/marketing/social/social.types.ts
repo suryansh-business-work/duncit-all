@@ -36,6 +36,18 @@ export const SOCIAL_REVIEW_STATUSES = ['OPEN', 'REVIEWED'] as const;
 export type SocialReviewStatus = (typeof SOCIAL_REVIEW_STATUSES)[number];
 
 /**
+ * Where a comment stands in the Inbox: waiting for somebody, answered on the
+ * network, dealt with without a reply, or junk. `review_status` is kept in
+ * step (OPEN stays OPEN, the rest are REVIEWED) for the Monitoring tab.
+ */
+export const SOCIAL_INBOX_STATUSES = ['OPEN', 'REPLIED', 'DONE', 'SPAM'] as const;
+export type SocialInboxStatus = (typeof SOCIAL_INBOX_STATUSES)[number];
+
+/** The slices of the Inbox its summary cards open. */
+export const SOCIAL_INBOX_VIEWS = ['OPEN', 'FLAGGED', 'UNASSIGNED', 'MINE', 'ALL'] as const;
+export type SocialInboxView = (typeof SOCIAL_INBOX_VIEWS)[number];
+
+/**
  * A post written in Duncit: a draft, waiting for a reviewer's yes, waiting for
  * its time, going out, or out.
  */
@@ -198,4 +210,15 @@ export interface SocialReader {
   profile(account: SocialAccountHandle, creds: SocialAppCredentials): Promise<FetchedProfile>;
   posts(account: SocialAccountHandle, creds: SocialAppCredentials): Promise<FetchedPost[]>;
   comments(account: SocialAccountHandle, post: PostRef, creds: SocialAppCredentials): Promise<FetchedComment[]>;
+}
+
+/** What a reply is posted under: the comment's and its post's ids on the network. */
+export interface ReplyTarget {
+  comment_id: string;
+  post_id: string;
+}
+
+/** The answering half of a platform — only for networks whose granted scopes allow it. */
+export interface SocialReplier {
+  reply(account: SocialAccountHandle, target: ReplyTarget, text: string, creds: SocialAppCredentials): Promise<{ external_id: string }>;
 }

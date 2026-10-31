@@ -95,8 +95,14 @@ describe('OccasionGreeting', () => {
     render(<OccasionGreeting text="Happy Diwali!" onClose={onClose} />);
 
     expect(screen.getByRole('status')).toHaveTextContent('Happy Diwali!');
+    // Two steps: the close only commits when the first act ends, and only then
+    // does the exit transition start its own timer.
     act(() => {
-      vi.advanceTimersByTime(6000 + 500);
+      vi.advanceTimersByTime(6000);
+    });
+    expect(onClose).not.toHaveBeenCalled();
+    act(() => {
+      vi.advanceTimersByTime(500);
     });
     expect(onClose).toHaveBeenCalledTimes(1);
   });

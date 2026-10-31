@@ -3,6 +3,7 @@ import { notifySuccess } from '@duncit/dialogs';
 import { logs } from '@duncit/logs';
 import { useTranslation } from '@duncit/shell';
 import { downloadBlob } from '@duncit/utils';
+import { frameOf } from '../../composition/aspect';
 import { ReelComposition } from '../../composition/ReelComposition';
 import { reelDurationInFrames, sceneTimings } from '../../composition/timing';
 import { remotionLicenseKey } from '../../license';
@@ -60,6 +61,7 @@ export function useReelExport(project: ReelProject) {
 
   const start = useCallback(async () => {
     const { spec, assets, name } = project;
+    const frame = frameOf(spec);
     const controller = new AbortController();
     abortRef.current = controller;
     setState({ phase: 'rendering', progress: 0 });
@@ -68,8 +70,8 @@ export function useReelExport(project: ReelProject) {
       const support = await canRenderMediaOnWeb({
         container: CONTAINER,
         videoCodec: VIDEO_CODEC,
-        width: spec.width,
-        height: spec.height,
+        width: frame.width,
+        height: frame.height,
       });
       if (!support.canRender) {
         const reason = support.issues.find((issue) => issue.severity === 'error')?.message;
@@ -85,8 +87,8 @@ export function useReelExport(project: ReelProject) {
         composition: {
           id: 'reel',
           component: ReelComposition,
-          width: spec.width,
-          height: spec.height,
+          width: frame.width,
+          height: frame.height,
           fps: spec.fps,
           durationInFrames: reelDurationInFrames(sceneTimings(spec)),
           defaultProps: inputProps,

@@ -5,9 +5,12 @@ import { TransitionSeries, linearTiming, type TransitionPresentation } from '@re
 import { fade } from '@remotion/transitions/fade';
 import { slide } from '@remotion/transitions/slide';
 import { wipe } from '@remotion/transitions/wipe';
-import type { ReelAsset, ReelSpec, ReelTransition } from '@duncit/gql-types';
-import { SceneLayer, type AssetLookup } from './SceneLayer';
+import type { ReelTransition } from '@duncit/gql-types';
+import type { ReelAsset, ReelSpec } from '../types';
+import { SceneLayer, type AssetLookup, type SceneLook } from './SceneLayer';
 import { msToFrames, sceneTimings, type SceneTiming } from './timing';
+import { VoiceoverTrack } from './VoiceoverTrack';
+import { WatermarkLayer } from './WatermarkLayer';
 
 /**
  * The reel, drawn from its spec.
@@ -32,7 +35,7 @@ const PRESENTATIONS: Record<Exclude<ReelTransition, 'NONE'>, () => AnyPresentati
 };
 
 /** A scene and, when it does not simply cut in, the transition that brings it. */
-function sceneElements({ scene, frames, transitionFrames }: SceneTiming, assets: AssetLookup): ReactElement[] {
+function sceneElements({ scene, frames, transitionFrames }: SceneTiming, assets: AssetLookup, look: SceneLook): ReactElement[] {
   const elements: ReactElement[] = [];
   if (scene.transition !== 'NONE' && transitionFrames > 0) {
     elements.push(
@@ -45,7 +48,7 @@ function sceneElements({ scene, frames, transitionFrames }: SceneTiming, assets:
   }
   elements.push(
     <TransitionSeries.Sequence key={scene.id} durationInFrames={frames}>
-      <SceneLayer scene={scene} frames={frames} assets={assets} />
+      <SceneLayer scene={scene} frames={frames} assets={assets} look={look} />
     </TransitionSeries.Sequence>
   );
   return elements;
@@ -56,10 +59,13 @@ export function ReelComposition({ spec, assets }: Readonly<ReelCompositionProps>
   const byId = useMemo<AssetLookup>(() => new Map(assets.map((asset) => [asset.id, asset])), [assets]);
   const timings = useMemo(() => sceneTimings(spec), [spec]);
   const music = spec.music ? byId.get(spec.music.asset_id) : undefined;
+  // The reel's look is read once here and handed down, so a scene never has to know the spec.
+  const look = useMemo<SceneLook>(() => ({ captions: spec.captions.style, accent: spec.brand.primary_color }), [spec.captions.style, spec.brand.primary_color]);
 
   return (
     <AbsoluteFill style={{ backgroundColor: spec.background }}>
-      <TransitionSeries>{timings.flatMap((timing) => sceneElements(timing, byId))}</TransitionSeries>
+      <TransitionSeries>{timings.flatMap((timing) => sceneElements(timing, byId, look))}</TransitionSeries>
+      <WatermarkLayer brand={spec.brand} asset={byId.get(spec.brand.watermark_asset_id)} />
       {spec.music && music && (
         <Audio
           src={music.url}
@@ -68,6 +74,7 @@ export function ReelComposition({ spec, assets }: Readonly<ReelCompositionProps>
           loop
         />
       )}
+      {spec.voiceover && <VoiceoverTrack voiceover={spec.voiceover} asset={byId.get(spec.voiceover.asset_id)} />}
     </AbsoluteFill>
   );
 }

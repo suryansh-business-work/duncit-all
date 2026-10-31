@@ -7,6 +7,7 @@ import type {
   ReelTextStyle,
   ReelTransition,
 } from '@duncit/gql-types';
+import type { ReelAspect, ReelAssetSource, ReelCaptionStyle } from '../types';
 
 /**
  * The copy key each option of the inspector's selects reads as. Written out
@@ -61,6 +62,26 @@ export const CORNER_LABEL: Readonly<Record<ReelCorner, string>> = {
   BOTTOM_LEFT: 'ai.reels.editor.cornerBottomLeft',
   BOTTOM_RIGHT: 'ai.reels.editor.cornerBottomRight',
   CENTER: 'ai.reels.editor.cornerCenter',
+};
+
+export const ASPECT_LABEL: Readonly<Record<ReelAspect, string>> = {
+  PORTRAIT: 'ai.reels.settings.aspectPortrait',
+  SQUARE: 'ai.reels.settings.aspectSquare',
+  LANDSCAPE: 'ai.reels.settings.aspectLandscape',
+};
+
+export const CAPTION_STYLE_LABEL: Readonly<Record<ReelCaptionStyle, string>> = {
+  PLAIN: 'ai.reels.settings.captionsPlain',
+  BOX: 'ai.reels.settings.captionsBox',
+  HIGHLIGHT: 'ai.reels.settings.captionsHighlight',
+};
+
+/** Where a file came from, as the footage list says it. */
+export const SOURCE_LABEL: Readonly<Record<ReelAssetSource, string>> = {
+  DRIVE: 'ai.reels.sources.fromDrive',
+  UPLOAD: 'ai.reels.sources.fromUpload',
+  STOCK: 'ai.reels.sources.fromStock',
+  GENERATED: 'ai.reels.sources.fromGenerated',
 };
 
 /** A select's options, in the order the labels are written. */

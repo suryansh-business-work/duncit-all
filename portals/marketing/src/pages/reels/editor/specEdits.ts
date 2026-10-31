@@ -1,4 +1,5 @@
-import type { ReelAsset, ReelMusic, ReelOverlay, ReelScene, ReelSpec, ReelText } from '@duncit/gql-types';
+import { frameOf } from '../composition/aspect';
+import type { ReelAsset, ReelMusic, ReelOverlay, ReelScene, ReelSpec, ReelText, ReelVoiceover } from '../types';
 import { DEFAULT_SCENE_MS, REEL_EDIT_LIMITS } from './limits';
 
 /**
@@ -194,3 +195,17 @@ export const setMusic = (spec: ReelSpec, assetId: string | null): ReelSpec => ({
 
 export const updateMusic = (spec: ReelSpec, patch: Partial<ReelMusic>): ReelSpec =>
   spec.music ? { ...spec, music: { ...spec.music, ...patch } } : spec;
+
+/** The reel-level look: its frame, how its words are drawn, and the brand on it. */
+export type ReelSettingsPatch = Partial<Pick<ReelSpec, 'aspect' | 'captions' | 'brand'>>;
+
+/** A new aspect also sets the stored frame, so a spec saved mid-edit never disagrees with itself. */
+export const updateSettings = (spec: ReelSpec, patch: ReelSettingsPatch): ReelSpec => ({
+  ...spec,
+  ...patch,
+  ...(patch.aspect ? frameOf({ ...spec, aspect: patch.aspect }) : {}),
+});
+
+/** Changes the voiceover's volume; a reel without one has nothing to change. */
+export const updateVoiceover = (spec: ReelSpec, patch: Partial<ReelVoiceover>): ReelSpec =>
+  spec.voiceover ? { ...spec, voiceover: { ...spec.voiceover, ...patch } } : spec;

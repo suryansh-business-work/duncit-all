@@ -1,23 +1,22 @@
 import type { CSSProperties } from 'react';
 import { AbsoluteFill, Img, Sequence, interpolate, useCurrentFrame, useVideoConfig } from 'remotion';
 import { Video } from '@remotion/media';
-import type { ReelAsset, ReelCorner, ReelOverlay, ReelScene } from '@duncit/gql-types';
+import type { ReelAsset, ReelCaptionStyle, ReelOverlay, ReelScene } from '../types';
+import { CORNER } from './corners';
 import { motionTransform } from './motion';
 import { TextLayer } from './TextLayer';
 import { msToFrames, windowFrames } from './timing';
 
 export type AssetLookup = ReadonlyMap<string, ReelAsset>;
 
-const FILL: CSSProperties = { width: '100%', height: '100%' };
+/** What every scene draws its words with: the reel's caption style and brand colour. */
+export interface SceneLook {
+  captions: ReelCaptionStyle;
+  /** The brand's primary colour; empty for none. */
+  accent: string;
+}
 
-/** Where an overlay sits. The insets match the text bands, so a logo never lands under the reel's own buttons. */
-const CORNER: Record<ReelCorner, CSSProperties> = {
-  TOP_LEFT: { top: '6%', left: '6%' },
-  TOP_RIGHT: { top: '6%', right: '6%' },
-  BOTTOM_LEFT: { bottom: '10%', left: '6%' },
-  BOTTOM_RIGHT: { bottom: '10%', right: '6%' },
-  CENTER: { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' },
-};
+const FILL: CSSProperties = { width: '100%', height: '100%' };
 
 /**
  * The clip or picture a scene shows.
@@ -62,10 +61,11 @@ interface Props {
   /** How long the scene is on screen. */
   frames: number;
   assets: AssetLookup;
+  look: SceneLook;
 }
 
 /** One scene: its background, its footage with the scene's drift, then overlays and text on top. */
-export function SceneLayer({ scene, frames, assets }: Readonly<Props>) {
+export function SceneLayer({ scene, frames, assets, look }: Readonly<Props>) {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const asset = assets.get(scene.asset_id);
@@ -90,11 +90,14 @@ export function SceneLayer({ scene, frames, assets }: Readonly<Props>) {
           </Sequence>
         );
       })}
-      {scene.texts.map((text) => (
-        <Sequence key={text.id} layout="none" {...windowFrames(text.start_ms, text.duration_ms, frames, fps)}>
-          <TextLayer text={text} />
-        </Sequence>
-      ))}
+      {scene.texts.map((text) => {
+        const window = windowFrames(text.start_ms, text.duration_ms, frames, fps);
+        return (
+          <Sequence key={text.id} layout="none" {...window}>
+            <TextLayer text={text} frames={window.durationInFrames} captions={look.captions} accent={look.accent} />
+          </Sequence>
+        );
+      })}
     </AbsoluteFill>
   );
 }

@@ -19,24 +19,33 @@ const IDLE: PostState = { phase: 'idle' };
 /** Megabytes, to one decimal, the way the too-large message reads them. */
 const megabytes = (bytes: number): string => (bytes / MB).toFixed(1);
 
+/** What the composer opens with, besides the uploaded file. */
+export interface PostSource {
+  /** The reel the post is made from — the post remembers it. */
+  projectId: string;
+  /** The words the composer starts with: a chosen variant's caption, or the reel's name. */
+  caption: string;
+}
+
 /**
  * Hands a rendered reel to the social composer.
  *
  * The MP4 goes to ImageKit first — the networks fetch a post's media by URL and
  * the composer carries URLs, not files — through the same direct upload every
  * portal uses, under the PORTALS caps the admin set, with its real byte
- * progress. Then the composer opens on the reel's name and that URL, and the
- * operator picks the accounts, the caption and the time there.
+ * progress. Then the composer opens on the caption, that URL and the reel's
+ * id, and the operator picks the accounts and the time there.
  *
  * `ready` says a rendered reel is waiting: the caps are asked for then, not on
  * every visit to the studio (see useUploadSettings on why that matters).
  */
-export function useReelPost(reelName: string, ready: boolean) {
+export function useReelPost(source: PostSource, ready: boolean) {
   const { t } = useTranslation();
   const client = useApolloClient();
   const caps = useUploadCaps('PORTALS', { skip: !ready });
   const [state, setState] = useState<PostState>(IDLE);
   const [composer, setComposer] = useState<ComposerRequest | null>(null);
+  const { projectId, caption } = source;
 
   /** Uploads the file and opens the composer on it; answers true once it is open. */
   const post = useCallback(
@@ -57,7 +66,7 @@ export function useReelPost(reelName: string, ready: boolean) {
           'PORTALS'
         );
         setState(IDLE);
-        setComposer({ text: reelName, media_url: url });
+        setComposer({ text: caption, media_url: url, reel_project_id: projectId });
         return true;
       } catch (error) {
         logs.portal.marketing.error('reels', 'post', { error });
@@ -65,7 +74,7 @@ export function useReelPost(reelName: string, ready: boolean) {
         return false;
       }
     },
-    [caps.maxVideoBytes, client, reelName, t]
+    [caps.maxVideoBytes, caption, client, projectId, t]
   );
 
   const dismiss = useCallback(() => setState(IDLE), []);

@@ -2,6 +2,7 @@ import { useCallback, useMemo, type ReactNode } from 'react';
 import { Stack, Typography } from '@mui/material';
 import TuneIcon from '@mui/icons-material/Tune';
 import type { ReelMusic, ReelOverlay, ReelScene, ReelText } from '@duncit/gql-types';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 import { ReelMusicForm } from '../../../../forms/reel-music';
 import { ReelOverlayForm } from '../../../../forms/reel-overlay';
@@ -11,41 +12,41 @@ import { resolveSelection, type ReelSelection } from '../../editor/layout';
 import { maxSceneMs, updateMusic, updateOverlay, updateScene, updateText } from '../../editor/specEdits';
 import type { SpecEditor } from '../../editor/useSpecEditor';
 import type { ReelAsset, ReelSpec } from '../../types';
+import ReelSettingsSection from './ReelSettingsSection';
 
 interface Props {
   spec: ReelSpec;
   assets: readonly ReelAsset[];
   selection: ReelSelection | null;
   apply: SpecEditor['apply'];
+  /** Clears the selection, which brings the reel's own settings back. */
+  onDeselect: () => void;
 }
 
-function Section({ title, children }: Readonly<{ title: string; children: ReactNode }>) {
+function Section({ title, onDeselect, children }: Readonly<{ title: string; onDeselect: () => void; children: ReactNode }>) {
+  const { t } = useTranslation();
   return (
     <Stack spacing={1.5} sx={{ p: 2 }} data-testid="reel-inspector">
-      <Typography variant="subtitle1" component="h2" sx={{ fontWeight: 600 }}>
-        {title}
-      </Typography>
+      <Stack direction="row" sx={{ alignItems: 'center', gap: 1 }}>
+        <Typography variant="subtitle1" component="h2" sx={{ fontWeight: 600, flex: 1 }}>
+          {title}
+        </Typography>
+        <DuncitButton size="small" variant="text" startIcon={<TuneIcon />} onClick={onDeselect} data-testid="reel-inspector-settings">
+          {t('ai.reels.settings.open')}
+        </DuncitButton>
+      </Stack>
       {children}
     </Stack>
   );
 }
 
-function EmptyInspector() {
-  const { t } = useTranslation();
-  return (
-    <Stack spacing={1} sx={{ p: 3, alignItems: 'center', textAlign: 'center', color: 'text.secondary' }} data-testid="reel-inspector-empty">
-      <TuneIcon sx={{ fontSize: 40 }} aria-hidden />
-      <Typography variant="body2">{t('ai.reels.editor.inspectorEmpty')}</Typography>
-    </Stack>
-  );
-}
-
 /**
- * The Edit tab: the item selected on the timeline, as a form. Every valid change
- * lands on the reel as it is typed, through the same `apply` the timeline uses,
- * so it is undoable and saved like any other edit.
+ * The Edit tab: the item selected on the timeline, as a form — or, with
+ * nothing selected, the reel's own settings. Every valid change lands on the
+ * reel as it is typed, through the same `apply` the timeline uses, so it is
+ * undoable and saved like any other edit.
  */
-export default function InspectorPanel({ spec, assets, selection, apply }: Readonly<Props>) {
+export default function InspectorPanel({ spec, assets, selection, apply, onDeselect }: Readonly<Props>) {
   const { t } = useTranslation();
   const byId = useMemo(() => new Map(assets.map((asset) => [asset.id, asset])), [assets]);
   const footage = useMemo(
@@ -67,11 +68,11 @@ export default function InspectorPanel({ spec, assets, selection, apply }: Reado
   const onMusic = useCallback((patch: Partial<ReelMusic>) => apply((s) => updateMusic(s, patch)), [apply]);
 
   const resolved = resolveSelection(spec, selection);
-  if (!resolved) return <EmptyInspector />;
+  if (!resolved) return <ReelSettingsSection spec={spec} assets={assets} apply={apply} />;
 
   if (resolved.kind === 'music') {
     return (
-      <Section title={t('ai.reels.editor.musicTitle')}>
+      <Section title={t('ai.reels.editor.musicTitle')} onDeselect={onDeselect}>
         <ReelMusicForm music={resolved.music} onChange={onMusic} />
       </Section>
     );
@@ -82,7 +83,7 @@ export default function InspectorPanel({ spec, assets, selection, apply }: Reado
 
   if (resolved.kind === 'text') {
     return (
-      <Section title={t('ai.reels.editor.textTitle')}>
+      <Section title={t('ai.reels.editor.textTitle')} onDeselect={onDeselect}>
         <ReelTextForm key={resolved.text.id} text={resolved.text} sceneSeconds={sceneSeconds} onChange={onText} />
       </Section>
     );
@@ -90,7 +91,7 @@ export default function InspectorPanel({ spec, assets, selection, apply }: Reado
 
   if (resolved.kind === 'overlay') {
     return (
-      <Section title={t('ai.reels.editor.overlayTitle')}>
+      <Section title={t('ai.reels.editor.overlayTitle')} onDeselect={onDeselect}>
         <ReelOverlayForm key={resolved.overlay.id} overlay={resolved.overlay} sceneSeconds={sceneSeconds} onChange={onOverlay} />
       </Section>
     );
@@ -98,7 +99,7 @@ export default function InspectorPanel({ spec, assets, selection, apply }: Reado
 
   const asset = byId.get(scene.asset_id);
   return (
-    <Section title={t('ai.reels.editor.sceneTitle', { vars: { number: index + 1 } })}>
+    <Section title={t('ai.reels.editor.sceneTitle', { vars: { number: index + 1 } })} onDeselect={onDeselect}>
       <ReelSceneForm
         key={scene.id}
         scene={scene}

@@ -1,5 +1,9 @@
 import { z } from 'zod';
 import {
+  BANNER_KIT_LIMITS,
+  makeBannerKitSchema,
+  normalizeInstagramHandle,
+  type BannerKitValues,
   makeWithdrawSchema,
   buildWithdrawInput,
   blankWithdrawValues,
@@ -140,6 +144,36 @@ export default defineDemos('forms', [
           : result.error.issues.map((i) => `${i.path.join('.')} — ${i.message}`),
         'Sent as VenueSettingsInput.cancellation': result.success ? toPolicyInput(mock, t) : null,
         'Cancelling outside every band': 'free — a band charges only INSIDE its window',
+      };
+    },
+  }),
+
+  defineDemo<BannerKitValues>({
+    id: 'banner-kit',
+    title: "A venue's banner kit, as every portal checks it before the server does",
+    note:
+      'The pasted profile link is stored as the handle (lowercase, no @ and no instagram.com around it). The colour is refused: the banner renderer paints #rrggbb, never the #rgb short form. Change it to #1a2b3c and the kit parses; add a 13th photo and the list is refused at its limit.',
+    mock: {
+      logo_url: 'https://ik.imagekit.io/duncit/venues/blue-door/logo.png',
+      instagram_handle: 'https://www.instagram.com/Blue.Door.Cafe/',
+      collab_opt_in: true,
+      photos: [
+        { url: 'https://ik.imagekit.io/duncit/venues/blue-door/room.jpg', caption: 'The back room' },
+        { url: 'https://ik.imagekit.io/duncit/venues/blue-door/bar.jpg', caption: 'Coffee bar' },
+      ],
+      event_photos: [],
+      tagline: 'Board games every Friday',
+      bio: 'A small cafe with forty seats and a garden.',
+      brand_color: '#abc',
+    },
+    compute: (mock) => {
+      const t = (key: string) => key;
+      const result = makeBannerKitSchema(t).safeParse(mock);
+      return {
+        Verdict: result.success ? 'accepted' : result.error.issues.map((i) => `${i.path.join('.')} — ${i.message}`),
+        'Stored handle': normalizeInstagramHandle(mock.instagram_handle),
+        Limits: BANNER_KIT_LIMITS,
+        'Photos left': BANNER_KIT_LIMITS.photos - mock.photos.length,
       };
     },
   }),

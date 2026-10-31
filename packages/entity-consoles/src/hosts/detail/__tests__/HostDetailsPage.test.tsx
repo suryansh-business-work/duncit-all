@@ -7,7 +7,7 @@ import { renderWithProviders } from '../../../../__tests__/testkit';
 import { HOST_DETAIL, HOST_PODS_TABLE, type HostPodRow } from '../../queries';
 import { hostDetailMock, hostPayload } from '../../__tests__/host-response';
 import { LocationProbe } from '../../__tests__/table-stand-in';
-import HostDetailsPage from '../HostDetailsPage';
+import HostDetailsPage, { type HostDetailsPageProps } from '../HostDetailsPage';
 
 // Each server table the page opens gets its own fetcher, keyed by the result
 // field it reads, so a tab can be checked for asking the RIGHT table.
@@ -53,13 +53,18 @@ const pods: HostPodRow[] = [
   },
 ];
 
-function renderPage(mocks: MockedResponse[], path = `/hosts/${HOST_ID}`, backTo?: string) {
+function renderPage(
+  mocks: MockedResponse[],
+  path = `/hosts/${HOST_ID}`,
+  backTo?: string,
+  extraTabs?: HostDetailsPageProps['extraTabs'],
+) {
   return renderWithProviders(<></>, {
     mocks,
     initialEntries: [path],
     routes: (
       <>
-        <Route path="/hosts/:hostId" element={<HostDetailsPage backTo={backTo} />} />
+        <Route path="/hosts/:hostId" element={<HostDetailsPage backTo={backTo} extraTabs={extraTabs} />} />
         <Route path="/hosts/record/view" element={<HostDetailsPage />} />
         <Route path="/hosts/:hostId/edit" element={<LocationProbe />} />
         <Route path="/pods/:podId" element={<LocationProbe />} />
@@ -120,6 +125,29 @@ describe('HostDetailsPage', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'open pod-4822' }));
     expect(screen.getByTestId('pathname')).toHaveTextContent('/pods/pod-4822');
+  });
+
+  it('adds the console’s own tab after the record’s, built from the loaded host, and draws it when opened', async () => {
+    const extraTabs = vi.fn((host: { id: string; full_name: string }) => [
+      { value: 'bannerKit', label: 'Banner kit', render: () => <div>{`Kit of ${host.full_name}`}</div> },
+    ]);
+    renderPage([hostDetailMock(HOST_ID, hostPayload())], `/hosts/${HOST_ID}`, undefined, extraTabs);
+    await screen.findByRole('heading', { name: 'Ananya Iyer' });
+
+    const tabs = screen.getAllByRole('tab').map((tab) => tab.textContent);
+    expect(tabs).toEqual(['Overview', 'Pods', 'Change Logs', 'Banner kit']);
+    expect(screen.queryByText('Kit of Ananya Iyer')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Banner kit' }));
+    expect(await screen.findByText('Kit of Ananya Iyer')).toBeInTheDocument();
+    expect(screen.queryByText('Who they are')).not.toBeInTheDocument();
+    expect(extraTabs).toHaveBeenCalledWith(expect.objectContaining({ full_name: 'Ananya Iyer' }));
+  });
+
+  it('opens straight on an extra tab named in the URL once the host is in', async () => {
+    const extraTabs = () => [{ value: 'banners', label: 'Banners', render: () => <div>Banners panel</div> }];
+    renderPage([hostDetailMock(HOST_ID, hostPayload())], `/hosts/${HOST_ID}?selectedtab=banners`, undefined, extraTabs);
+    expect(await screen.findByText('Banners panel')).toBeInTheDocument();
   });
 
   it('Change Logs shows this host’s own history', async () => {

@@ -4,7 +4,8 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     globals: false,
-    include: ['__tests__/**/*.test.{ts,tsx}'],
+    // The forms' schema suites sit beside them as *.form.cy.tsx (the form structure rule).
+    include: ['__tests__/**/*.test.{ts,tsx}', 'src/**/*.form.cy.{ts,tsx}'],
     setupFiles: ['./__tests__/setup.ts'],
     // Vitest's 5s default is sized for a unit test. This suite mounts the whole
     // portal chrome and the staff-chat surfaces — MessageThread's unseen-pill

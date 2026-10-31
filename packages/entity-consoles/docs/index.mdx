@@ -290,6 +290,11 @@ import { HostDetailsPage, HostEditorPage, HostsPage } from '@duncit/entity-conso
 <Route path="/hosts/:hostId/edit" element={authed(<HostEditorPage />)} />
 ```
 
+Like `VenueDetailsPage`, `HostDetailsPage` takes `extraTabs?: (host) => { value, label, render }[]`
+for tabs the mounting console adds after the record's own (selected through the URL like the
+rest). The Hosts console adds the host's Banner kit and Banners there (`@duncit/shell`
+`BannerKitPanel` / `PodBannersPanel`); the clubs console, which only reads hosts, adds none.
+
 Two things about a host save are worth knowing before touching it:
 
 - **The commission is not on the host record.** It lives on the host's USER

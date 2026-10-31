@@ -9,33 +9,47 @@ import { useTranslation } from '@duncit/shell';
 import ChangeLogsSection from '../../shared/change-logs';
 import { useRecordEditPath } from '../../shared/recordPaths';
 import { HOST_DETAIL, type HostDetail } from '../queries';
+import type { VenueDetailsExtraTab } from '../../venues/detail/VenueDetailsPage';
 import HostSummaryCard from './HostSummaryCard';
 import HostOverviewTab from './HostOverviewTab';
 import HostPodsTab from './HostPodsTab';
 
 /** Hosts → one host: the whole record, the pods they run, and its history. */
-type HostTab = 'overview' | 'pods' | 'changeLogs';
 type Translate = ReturnType<typeof useTranslation>['t'];
 
-const hostTabs = (t: Translate): DuncitTabItem<HostTab>[] => [
-  { value: 'overview', label: t('directory.hostEditor.tabOverview'), testId: 'host-tab-overview' },
-  { value: 'pods', label: t('directory.hostEditor.tabPods'), testId: 'host-tab-pods' },
-  { value: 'changeLogs', label: t('directory.changeLogs.tab'), testId: 'host-tab-changeLogs' },
+/** `host-tab-<value>` — how an end-to-end suite picks a tab. */
+const hostTab = (value: string, label: string): DuncitTabItem<string> => ({ value, label, testId: `host-tab-${value}` });
+
+const hostTabs = (t: Translate): DuncitTabItem<string>[] => [
+  hostTab('overview', t('directory.hostEditor.tabOverview')),
+  hostTab('pods', t('directory.hostEditor.tabPods')),
+  hostTab('changeLogs', t('directory.changeLogs.tab')),
 ];
 
-/** Where Back goes: the hosts list, or — when the clubs console opens a club's
- * host — that club. */
-export default function HostDetailsPage({ backTo = '/hosts' }: Readonly<{ backTo?: string }>) {
+export interface HostDetailsPageProps {
+  /** Where Back goes: the hosts list, or — when the clubs console opens a club's host — that club. */
+  backTo?: string;
+  /** The console's own tabs for this host, after the record's (the Hosts console's banner kit). */
+  extraTabs?: (host: HostDetail) => VenueDetailsExtraTab[];
+}
+
+export default function HostDetailsPage({ backTo = '/hosts', extraTabs }: Readonly<HostDetailsPageProps>) {
   const { t } = useTranslation();
   const { hostId = '' } = useParams<{ hostId: string }>();
   const editPath = useRecordEditPath();
-  const tabs = useTabParam<HostTab>({ items: hostTabs(t), fallback: 'overview' });
   const { data, loading, error } = useQuery<{ host: HostDetail | null }>(HOST_DETAIL, {
     variables: { host_doc_id: hostId },
     fetchPolicy: 'cache-and-network',
     skip: !hostId,
   });
   const host = data?.host;
+  const extra = host && extraTabs ? extraTabs(host) : [];
+  // The URL may name an extra tab before the host is in; it resolves once the tab exists.
+  const tabs = useTabParam<string>({
+    items: [...hostTabs(t), ...extra.map(({ value, label }) => hostTab(value, label))],
+    fallback: 'overview',
+  });
+  const openExtra = extra.find((tab) => tab.value === tabs.value);
 
   return (
     <QueryGuard
@@ -83,6 +97,7 @@ export default function HostDetailsPage({ backTo = '/hosts' }: Readonly<{ backTo
                 tableId="hosts-console-change-logs"
               />
             )}
+            {openExtra?.render()}
           </Stack>
         )
       }

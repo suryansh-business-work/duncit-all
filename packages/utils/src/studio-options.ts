@@ -158,6 +158,10 @@ export const STUDIO_OPTION_LIST: Readonly<Record<PartnerStudioMode, readonly Stu
     { key: 'settings', labelKey: 'mweb.studioOptions.venueSettings', hintKey: 'mweb.studioOptions.venueSettingsHint', icon: 'settings', path: '/venues/settings', route: 'VenueSettings', portal: '/venues/settings' },
     { key: 'earnings', labelKey: 'mweb.studioOptions.venueEarnings', hintKey: 'mweb.studioOptions.venueEarningsHint', icon: 'earnings', path: '/venues/earnings', route: 'VenueEarnings', portal: '/venues/earnings' },
     { key: 'publish', labelKey: 'mweb.studioOptions.publishVenue', hintKey: 'mweb.studioOptions.publishVenueHint', icon: 'publish', path: '/venues/publish', route: 'VenuePublish', portal: '/venues/publish' },
+    // What the venue's pod banners on Instagram are made from, and making them
+    // for its next pods (@duncit/shell BannerKitPanel / PodBannersPanel).
+    { key: 'banner-kit', labelKey: 'mweb.studioOptions.bannerKit', hintKey: 'mweb.studioOptions.venueBannerKitHint', icon: 'publish', portal: '/venues/banner-kit', consoleOnly: true },
+    { key: 'banners', labelKey: 'mweb.studioOptions.banners', hintKey: 'mweb.studioOptions.bannersHint', icon: 'publish', portal: '/venues/banners', consoleOnly: true },
     // The venue's food desk — its dashboard, menu, order board and coupons.
     // All four are one shared set (@duncit/venue-food on the web, Tamagui twins
     // in the app). `group` nests them under one Food heading in the console sidebar.
@@ -188,6 +192,8 @@ export const STUDIO_OPTION_LIST: Readonly<Record<PartnerStudioMode, readonly Stu
     { key: 'nearby', labelKey: 'mweb.studioOptions.nearbyVenues', hintKey: 'mweb.studioOptions.nearbyVenuesHint', icon: 'nearby', path: '/host/nearby-venues', route: 'NearbyVenues', portal: '/host/nearby-venues' },
     { key: 'change-requests', labelKey: 'mweb.studioOptions.changeRequests', hintKey: 'mweb.studioOptions.changeRequestsHint', icon: 'change', path: '/change-requests', route: 'ChangeRequests', portal: '/host/change-requests' },
     { key: 'publish', labelKey: 'mweb.studioOptions.publishHost', hintKey: 'mweb.studioOptions.publishHostHint', icon: 'publish', path: '/host/publish', route: 'HostPublish', portal: '/host/publish' },
+    { key: 'banner-kit', labelKey: 'mweb.studioOptions.bannerKit', hintKey: 'mweb.studioOptions.hostBannerKitHint', icon: 'publish', portal: '/host/banner-kit', consoleOnly: true },
+    { key: 'banners', labelKey: 'mweb.studioOptions.banners', hintKey: 'mweb.studioOptions.bannersHint', icon: 'publish', portal: '/host/banners', consoleOnly: true },
     // Kept off Your Pods so that page lists pods only. App screens; the console
     // shows the same payouts on its host dashboard.
     { key: 'share', labelKey: 'mweb.studioOptions.hostShare', hintKey: 'mweb.studioOptions.hostShareHint', icon: 'earnings', path: '/host/share', route: 'HostShare', portal: '/host/dashboard', appOnly: true },

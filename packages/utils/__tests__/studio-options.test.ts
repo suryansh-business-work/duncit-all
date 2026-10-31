@@ -27,6 +27,8 @@ describe('STUDIO_OPTION_LIST', () => {
       'settings',
       'earnings',
       'publish',
+      'banner-kit',
+      'banners',
       'food-dashboard',
       'food-menu',
       'food-orders',
@@ -125,6 +127,19 @@ describe('STUDIO_OPTION_LIST', () => {
     expect(setup.every((option) => option.consoleOnly)).toBe(true);
   });
 
+  it('opens Banner kit and Banners in the Partner console, for a venue and a host, under the shared copy', () => {
+    for (const [mode, root] of [['VENUE', '/venues'], ['HOST', '/host']] as const) {
+      const banner = STUDIO_OPTION_LIST[mode].filter((option) => ['banner-kit', 'banners'].includes(option.key));
+      expect(banner.map(({ labelKey, portal, consoleOnly }) => ({ labelKey, portal, consoleOnly }))).toEqual([
+        { labelKey: 'mweb.studioOptions.bannerKit', portal: `${root}/banner-kit`, consoleOnly: true },
+        { labelKey: 'mweb.studioOptions.banners', portal: `${root}/banners`, consoleOnly: true },
+      ]);
+    }
+    // A venue's kit is its space; a host's is themself — each says so in its hint.
+    expect(STUDIO_OPTION_LIST.VENUE.find((option) => option.key === 'banner-kit')?.hintKey).toBe('mweb.studioOptions.venueBannerKitHint');
+    expect(STUDIO_OPTION_LIST.HOST.find((option) => option.key === 'banner-kit')?.hintKey).toBe('mweb.studioOptions.hostBannerKitHint');
+  });
+
   it('lets a brand work its orders and ShipRocket warehouses in the app as well as the console', () => {
     const inApp = STUDIO_OPTION_LIST.ECOMM.filter((option) => ['orders', 'warehouses'].includes(option.key));
     expect(inApp.map(({ path, route, portal }) => ({ path, route, portal }))).toEqual([
@@ -173,7 +188,7 @@ describe('studioOptionsFor', () => {
   it('lists the console-only venue pages in the Partner console only', () => {
     const consoleKeys = studioOptionsFor('VENUE', ['VENUE_OWNER'], { autoPods: true, console: true }).map((o) => o.key);
     const inApp = studioOptionsFor('VENUE', ['VENUE_OWNER'], { autoPods: true }).map((o) => o.key);
-    for (const key of ['calendar', 'type-capacity', 'amenities', 'leaves', 'fees', 'price-rules', 'food-settings']) {
+    for (const key of ['calendar', 'type-capacity', 'amenities', 'leaves', 'fees', 'price-rules', 'food-settings', 'banner-kit', 'banners']) {
       expect(consoleKeys).toContain(key);
       expect(inApp).not.toContain(key);
     }
@@ -234,6 +249,8 @@ describe('studioOptionGroups', () => {
       'settings',
       'earnings',
       'publish',
+      'banner-kit',
+      'banners',
       'rented-items',
       'pods',
       'chat',

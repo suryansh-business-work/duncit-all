@@ -268,6 +268,19 @@ export const SOCIAL_HANDLE = /^[A-Za-z0-9._-]{1,100}$/;
 export const isSocialHandle = (v) => SOCIAL_HANDLE.test(v);
 
 /**
+ * An Instagram username as Instagram allows it — `duncit.events`, `run_club` —
+ * without the `@`: letters, digits, `_` and `.`, 1–30 characters, never
+ * starting or ending on a dot and never two dots in a row. Stricter than
+ * {@link SOCIAL_HANDLE}, which also takes hyphens and 100 characters; this is
+ * the shape the Instagram API accepts for a post's collaborators. A dot is only
+ * taken when a non-dot follows it, so the pattern needs no backtracking.
+ */
+export const INSTAGRAM_HANDLE = /^[A-Za-z0-9_](?:[A-Za-z0-9_]|\.(?=[A-Za-z0-9_])){0,29}$/;
+
+/** Instagram username check. Strip a leading `@` first. */
+export const isInstagramHandle = (v) => INSTAGRAM_HANDLE.test(v);
+
+/**
  * A handle made of lowercase letters, digits and inner underscores, 3–30
  * characters — `run_club`, `asha_rao2` — for products whose handles use `_`
  * where {@link USERNAME} uses `-` (Duncit Lite). It starts and ends with a

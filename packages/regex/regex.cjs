@@ -162,6 +162,9 @@ const SVG_PATH_DATA = /^[MmLlHhVvCcSsQqTtAaZz\d\s.,eE+-]+$/;
 /** A social-network handle such as `duncit.events`, without the `@`. See regex.mjs. */
 const SOCIAL_HANDLE = /^[A-Za-z0-9._-]{1,100}$/;
 
+/** An Instagram username without the `@` — 1–30 letters, digits, `_` and inner single dots. See regex.mjs. */
+const INSTAGRAM_HANDLE = /^[A-Za-z0-9_](?:[A-Za-z0-9_]|\.(?=[A-Za-z0-9_])){0,29}$/;
+
 /** A 3–30 character handle of lowercase letters, digits and inner underscores — `run_club`. See regex.mjs. */
 const UNDERSCORE_HANDLE = /^[a-z0-9][a-z0-9_]{1,28}[a-z0-9]$/;
 
@@ -209,6 +212,7 @@ module.exports = {
   HEX_COLOR,
   SVG_PATH_DATA,
   SOCIAL_HANDLE,
+  INSTAGRAM_HANDLE,
   UNDERSCORE_HANDLE,
   SITE_PATH,
   CSS_VARIABLE,
@@ -237,6 +241,7 @@ module.exports = {
   isHexColor: (v) => HEX_COLOR.test(v),
   isSvgPathData: (v) => SVG_PATH_DATA.test(v),
   isSocialHandle: (v) => SOCIAL_HANDLE.test(v),
+  isInstagramHandle: (v) => INSTAGRAM_HANDLE.test(v),
   isUnderscoreHandle: (v) => UNDERSCORE_HANDLE.test(v),
   isSitePath: (v) => SITE_PATH.test(v),
   isCssVariable: (v) => CSS_VARIABLE.test(v),

@@ -54,6 +54,8 @@ const scheduledPostSchema = new Schema(
     targets: { type: [targetSchema], default: [] },
     /** The AI idea this post was written from, if any. */
     idea_id: { type: String, default: '' },
+    /** The Reel Studio project the posted reel was cut in; its analytics read back through this. */
+    reel_project_id: { type: String, default: '', index: true },
     /** A reviewer must say yes before it goes out; once they have, it stays true as the record of that. */
     needs_approval: { type: Boolean, default: false },
     /** Why the reviewer sent it back; shown to the author on the draft. */

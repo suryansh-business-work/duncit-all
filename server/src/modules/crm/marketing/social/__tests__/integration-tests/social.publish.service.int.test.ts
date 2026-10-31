@@ -565,3 +565,32 @@ describe('calendar', () => {
     ]);
   });
 });
+
+describe('the reel a post carries', () => {
+  const REEL = new Types.ObjectId().toHexString();
+
+  it('keeps the Reel Studio project on the post, through create and update, and reads it back', async () => {
+    const created = await svc.create(input({ reel_project_id: ` ${REEL} ` }), USER);
+    expect(created.reel_project_id).toBe(REEL);
+    expect((await SocialScheduledPostModel.findById(created.id).lean())?.reel_project_id).toBe(REEL);
+    expect((await svc.get(created.id)).reel_project_id).toBe(REEL);
+
+    const other = new Types.ObjectId().toHexString();
+    expect((await svc.update(created.id, input({ reel_project_id: other }), USER)).reel_project_id).toBe(other);
+    // An edit that no longer names a reel lets go of it.
+    expect((await svc.update(created.id, input({}), USER)).reel_project_id).toBe('');
+  });
+
+  it('is empty on a post that carries no reel, including one stored before the field existed', async () => {
+    const plain = await svc.create(input({}), USER);
+    expect(plain.reel_project_id).toBe('');
+    const legacy = await post({ text: 'legacy', status: 'DRAFT' });
+    await SocialScheduledPostModel.collection.updateOne({ _id: legacy._id }, { $unset: { reel_project_id: '' } });
+    expect((await svc.get(String(legacy._id))).reel_project_id).toBe('');
+  });
+
+  it('refuses a reel link that cannot be a project id, saving nothing', async () => {
+    await expect(svc.create(input({ reel_project_id: 'not-an-id' }), USER)).rejects.toThrow('That reel link is not valid.');
+    await expect(SocialScheduledPostModel.countDocuments()).resolves.toBe(0);
+  });
+});

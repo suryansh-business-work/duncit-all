@@ -86,6 +86,8 @@ export const socialPublishTypeDefs = gql`
     scheduled_at: String
     published_at: String
     idea_id: String
+    "The Reel Studio project the posted reel was cut in; empty for any other post."
+    reel_project_id: String
     "A reviewer must say yes before it goes out."
     needs_approval: Boolean!
     "Why the reviewer sent it back; shown to the author on the draft."
@@ -143,6 +145,8 @@ export const socialPublishTypeDefs = gql`
     scheduled_at: String
     "The idea this post was written from; it is marked USED."
     idea_id: ID
+    "The Reel Studio project this reel was cut in, so the studio can read the post's numbers back."
+    reel_project_id: ID
     "With SCHEDULE or NOW, parks the post as PENDING_APPROVAL and opens an approval run."
     needs_approval: Boolean
   }

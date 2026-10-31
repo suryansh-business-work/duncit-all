@@ -33,6 +33,8 @@ export interface ScheduledPostInput {
   mode: SocialPublishMode;
   scheduled_at?: string | null;
   idea_id?: string | null;
+  /** The Reel Studio project this reel was cut in; the studio reads the post's numbers back through it. */
+  reel_project_id?: string | null;
   /** With SCHEDULE or NOW, parks the post as PENDING_APPROVAL and opens an approval run. */
   needs_approval?: boolean | null;
 }
@@ -71,6 +73,13 @@ function mediaOf(input: ScheduledPostInput): PublishMedia[] {
 }
 
 const toContent = (input: ScheduledPostInput): PublishContent => publishContent(input.text.trim(), mediaOf(input));
+
+/** The reel this post carries, checked — a link to a reel that cannot exist would never read back. */
+function reelLinkOf(input: ScheduledPostInput): string {
+  const id = (input.reel_project_id ?? '').trim();
+  if (id && !isValidObjectId(id)) badInput('That reel link is not valid.');
+  return id;
+}
 
 /** The targets, checked — every account must exist, and (unless a draft) be able to take this post. */
 async function buildTargets(input: ScheduledPostInput, content: PublishContent) {
@@ -118,6 +127,7 @@ const pub = (o: any, names: Map<string, string>) => ({
   scheduled_at: iso(o.scheduled_at),
   published_at: iso(o.published_at),
   idea_id: o.idea_id ?? '',
+  reel_project_id: o.reel_project_id ?? '',
   needs_approval: !!o.needs_approval,
   review_note: o.review_note ?? '',
   approval_run_id: o.approval_run_id ?? '',
@@ -209,6 +219,7 @@ export const socialPublishService = {
 
   async create(input: ScheduledPostInput, userId: string) {
     const content = toContent(input);
+    const reel_project_id = reelLinkOf(input);
     const targets = await buildTargets(input, content);
     const timing = timingFor(input);
     const doc = await SocialScheduledPostModel.create({
@@ -216,6 +227,7 @@ export const socialPublishService = {
       ...timing,
       targets,
       idea_id: input.idea_id ?? '',
+      reel_project_id,
       needs_approval: !!input.needs_approval,
       review_note: '',
       created_by: userId,
@@ -236,6 +248,7 @@ export const socialPublishService = {
     const doc = await loadPost(id);
     if (!EDITABLE.has(doc.status)) badInput('Only a draft, a scheduled post or one waiting for approval can be edited.');
     const content = toContent(input);
+    const reel_project_id = reelLinkOf(input);
     const targets = await buildTargets(input, content);
     const timing = timingFor(input);
     const waiting = doc.status === 'PENDING_APPROVAL';
@@ -244,6 +257,7 @@ export const socialPublishService = {
       ...content,
       ...timing,
       targets,
+      reel_project_id,
       needs_approval: !!input.needs_approval,
       ...(input.mode === 'DRAFT' ? {} : { review_note: '' }),
       ...(waiting ? { approval_run_id: '' } : {}),

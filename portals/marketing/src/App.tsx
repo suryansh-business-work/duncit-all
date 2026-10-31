@@ -26,6 +26,9 @@ import AdsApprovalsPage from './pages/ads-approvals-page/AdsApprovalsPage';
 import LiveAdsPage from './pages/live-ads-page/LiveAdsPage';
 import AdsSettingsPage from './pages/ads-settings-page/AdsSettingsPage';
 import IntegrationsPage from './pages/settings-page/IntegrationsPage';
+import ActivityPage from './pages/activity-page';
+import ApprovalsPage from './pages/approvals-page';
+import TasksPage from './pages/tasks-page';
 import AppShell from './components/AppShell';
 import Redirect from './components/Redirect';
 import { getToken } from './lib/session';
@@ -45,6 +48,10 @@ export default function App() {
         <Route path="/profile" element={authed(<ProfilePage />)} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/" element={authed(<DashboardPage />)} />
+        {/* Overview: what is waiting on a person, and the record of every run */}
+        <Route path="/tasks" element={authed(<TasksPage />)} />
+        <Route path="/approvals" element={authed(<ApprovalsPage />)} />
+        <Route path="/activity" element={authed(<ActivityPage />)} />
         {/* Social media */}
         <Route path="/social/accounts" element={authed(<SocialAccountsPage />)} />
         <Route path="/social-accounts" element={<Redirect to="/social/accounts" />} />

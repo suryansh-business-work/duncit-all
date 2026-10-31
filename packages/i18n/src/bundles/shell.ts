@@ -652,6 +652,8 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       appPopups: 'App Popups',
       appReleases: 'App Releases',
       approvals: 'Approvals',
+      activity: 'Activity',
+      myTasks: 'My Tasks',
       authentication: 'Authentication',
       automation: 'Automation',
       autoPods: 'Auto Pods',

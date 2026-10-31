@@ -13,7 +13,13 @@ import type { AppNavItem } from '@duncit/shell';
 const leaf = (key: string, to: string, icon: string): AppNavItem => ({ label: key, labelKey: key, to, icon });
 const group = (key: string, icon: string, children: AppNavItem[]): AppNavItem => ({ label: key, labelKey: key, icon, children });
 
-const OVERVIEW = leaf('shell.nav.dashboard', '/', 'dashboard');
+// The dashboard, then what is waiting on a person, then the record of every run.
+const OVERVIEW = group('shell.nav.overview', 'dashboard', [
+  leaf('shell.nav.dashboard', '/', 'dashboard'),
+  leaf('shell.nav.myTasks', '/tasks', 'survey'),
+  leaf('shell.nav.approvals', '/approvals', 'rule'),
+  leaf('shell.nav.activity', '/activity', 'timeline'),
+]);
 
 const SOCIAL = group('shell.nav.socialMedia', 'hub', [leaf('shell.nav.accounts', '/social/accounts', 'hub')]);
 

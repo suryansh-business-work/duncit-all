@@ -34,6 +34,9 @@ describe('Marketing sidebar', () => {
   it('reaches every page, under the section that owns it', () => {
     expect(destinations(MARKETING_NAV)).toEqual([
       '/',
+      '/tasks',
+      '/approvals',
+      '/activity',
       '/social/accounts',
       '/publish/calendar',
       '/leads/instagram',
@@ -71,6 +74,7 @@ describe('Marketing sidebar', () => {
   it('leaves every group header without a route of its own', () => {
     const headers = [...groups(MARKETING_NAV), ...groups(MARKETING_NAV.flatMap((item) => item.children ?? []))];
     expect(headers.map((g) => g.labelKey)).toEqual([
+      'shell.nav.overview',
       'shell.nav.socialMedia',
       'shell.nav.publishing',
       'shell.nav.leads',

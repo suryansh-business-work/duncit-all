@@ -13344,7 +13344,10 @@ export type MarketingDashboard = {
   campaigns: MarketingDashboardCampaigns;
   /** The window the activity figures cover, in days. */
   days: Scalars['Int']['output'];
+  leads: MarketingDashboardLeads;
   links: MarketingDashboardLinks;
+  runs: MarketingDashboardRuns;
+  social: MarketingDashboardSocial;
 };
 
 export type MarketingDashboardAds = {
@@ -13375,6 +13378,17 @@ export type MarketingDashboardDaily = {
   __typename?: 'MarketingDashboardDaily';
   count: Scalars['Int']['output'];
   date: Scalars['String']['output'];
+};
+
+export type MarketingDashboardLeads = {
+  __typename?: 'MarketingDashboardLeads';
+  /** The whole pipeline by stage, in pipeline order; an empty stage is left out. */
+  by_status: Array<MarketingDashboardPoint>;
+  /** Leads the searches turned up in the window. */
+  found: Scalars['Int']['output'];
+  /** Of those, the ones the AI scored at or above qualified_score. */
+  qualified: Scalars['Int']['output'];
+  qualified_score: Scalars['Int']['output'];
 };
 
 export type MarketingDashboardLinks = {
@@ -13410,6 +13424,38 @@ export type MarketingDashboardRecentCampaign = {
   sent_at?: Maybe<Scalars['String']['output']>;
 };
 
+export type MarketingDashboardRuns = {
+  __typename?: 'MarketingDashboardRuns';
+  awaiting_approval: Scalars['Int']['output'];
+  /** Runs started in the window that completed. */
+  completed: Scalars['Int']['output'];
+  /** Runs that failed, or only partly completed, in the window. */
+  failed: Scalars['Int']['output'];
+  running: Scalars['Int']['output'];
+  /** What the AI steps of the window's runs cost, in rupees. */
+  spend: Scalars['Float']['output'];
+};
+
+export type MarketingDashboardSocial = {
+  __typename?: 'MarketingDashboardSocial';
+  /** Accounts that expired or errored and need reconnecting. */
+  attention: Scalars['Int']['output'];
+  /** Engagement per network, busiest first; a network with none is left out. */
+  by_platform: Array<MarketingDashboardPoint>;
+  /** Accounts whose token still works. */
+  connected: Scalars['Int']['output'];
+  engagement: Scalars['Int']['output'];
+  /** Posts that failed on at least one network and need a look. */
+  failed: Scalars['Int']['output'];
+  /** Posts the networks reported in the window, across every account. */
+  posts: Scalars['Int']['output'];
+  /** Posts written here that went out in the window, even to only some of their networks. */
+  published: Scalars['Int']['output'];
+  /** Posts waiting for their slot. */
+  upcoming: Scalars['Int']['output'];
+  views: Scalars['Int']['output'];
+};
+
 export type MarketingDashboardTopLink = {
   __typename?: 'MarketingDashboardTopLink';
   clicks: Scalars['Int']['output'];
@@ -13418,6 +13464,167 @@ export type MarketingDashboardTopLink = {
   label: Scalars['String']['output'];
   revenue: Scalars['Float']['output'];
 };
+
+export type MarketingRun = {
+  __typename?: 'MarketingRun';
+  actor: MarketingRunActor;
+  api_log: Array<MarketingRunApiEntry>;
+  approval: MarketingRunApproval;
+  /** Whether Retry is offered: the run failed (or partly) and its workflow knows how to run again. */
+  can_retry: Scalars['Boolean']['output'];
+  cancel_requested: Scalars['Boolean']['output'];
+  cost: MarketingRunCost;
+  created_at?: Maybe<Scalars['String']['output']>;
+  error: Scalars['String']['output'];
+  finished_at?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  links: MarketingRunLinks;
+  name: Scalars['String']['output'];
+  /** The orchestrator run this one belongs to, or empty. */
+  parent_run_id: Scalars['String']['output'];
+  retries: Scalars['Int']['output'];
+  started_at?: Maybe<Scalars['String']['output']>;
+  status: MarketingRunStatus;
+  steps: Array<MarketingRunStep>;
+  trigger: MarketingRunTrigger;
+  updated_at?: Maybe<Scalars['String']['output']>;
+  workflow: MarketingRunWorkflow;
+};
+
+export type MarketingRunActor = {
+  __typename?: 'MarketingRunActor';
+  email: Scalars['String']['output'];
+  /** A user id, an agent key, or empty for the system. */
+  id: Scalars['String']['output'];
+  kind: MarketingRunActorKind;
+  name: Scalars['String']['output'];
+};
+
+export type MarketingRunActorKind =
+  | 'AGENT'
+  | 'SYSTEM'
+  | 'USER';
+
+/** One call to an outside service as the run saw it — never a token, never a full body. */
+export type MarketingRunApiEntry = {
+  __typename?: 'MarketingRunApiEntry';
+  at?: Maybe<Scalars['String']['output']>;
+  method: Scalars['String']['output'];
+  ms: Scalars['Int']['output'];
+  service: Scalars['String']['output'];
+  status: Scalars['Int']['output'];
+  summary: Scalars['String']['output'];
+  url: Scalars['String']['output'];
+};
+
+export type MarketingRunApproval = {
+  __typename?: 'MarketingRunApproval';
+  decided_at?: Maybe<Scalars['String']['output']>;
+  decided_by: Scalars['String']['output'];
+  decided_by_name: Scalars['String']['output'];
+  decision?: Maybe<MarketingRunDecision>;
+  note: Scalars['String']['output'];
+  requested_at?: Maybe<Scalars['String']['output']>;
+  required: Scalars['Boolean']['output'];
+};
+
+export type MarketingRunCost = {
+  __typename?: 'MarketingRunCost';
+  amount: Scalars['Float']['output'];
+  currency: Scalars['String']['output'];
+  tokens_in: Scalars['Int']['output'];
+  tokens_out: Scalars['Int']['output'];
+};
+
+/** APPROVED lets the run continue; the other two stop it, with a note. */
+export type MarketingRunDecision =
+  | 'APPROVED'
+  | 'CHANGES_REQUESTED'
+  | 'REJECTED';
+
+/** What the run touched, each an id or empty. */
+export type MarketingRunLinks = {
+  __typename?: 'MarketingRunLinks';
+  account_id: Scalars['String']['output'];
+  agent_key: Scalars['String']['output'];
+  campaign_id: Scalars['String']['output'];
+  lead_id: Scalars['String']['output'];
+  post_id: Scalars['String']['output'];
+  reel_id: Scalars['String']['output'];
+};
+
+/** PENDING and RUNNING are in flight; AWAITING_APPROVAL waits on a person; the rest are final. */
+export type MarketingRunStatus =
+  | 'AWAITING_APPROVAL'
+  | 'CANCELLED'
+  | 'COMPLETED'
+  | 'FAILED'
+  | 'PARTIAL'
+  | 'PENDING'
+  | 'RUNNING';
+
+/** One step of a run: what it did, with what, and how it went. */
+export type MarketingRunStep = {
+  __typename?: 'MarketingRunStep';
+  error: Scalars['String']['output'];
+  finished_at?: Maybe<Scalars['String']['output']>;
+  input_summary: Scalars['String']['output'];
+  key: Scalars['String']['output'];
+  label: Scalars['String']['output'];
+  ms: Scalars['Int']['output'];
+  output_summary: Scalars['String']['output'];
+  started_at?: Maybe<Scalars['String']['output']>;
+  status: MarketingRunStepStatus;
+  /** The tool or operation behind the step, when there is one. */
+  tool: Scalars['String']['output'];
+};
+
+export type MarketingRunStepStatus =
+  | 'FAILED'
+  | 'OK'
+  | 'PENDING'
+  | 'RUNNING'
+  | 'SKIPPED'
+  | 'WAITING';
+
+/** The numbers the dashboard and My Tasks lead with. */
+export type MarketingRunSummary = {
+  __typename?: 'MarketingRunSummary';
+  awaiting_approval: Scalars['Int']['output'];
+  /** Runs that failed or partly completed in the last seven days. */
+  failed_7d: Scalars['Int']['output'];
+  /** The caller's own runs still in flight. */
+  mine_open: Scalars['Int']['output'];
+  running: Scalars['Int']['output'];
+};
+
+export type MarketingRunTablePage = {
+  __typename?: 'MarketingRunTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<MarketingRun>;
+  total: Scalars['Int']['output'];
+};
+
+export type MarketingRunTrigger =
+  | 'AGENT'
+  | 'SCHEDULE'
+  | 'SYSTEM'
+  | 'USER'
+  | 'WEBHOOK';
+
+/** What kind of work a run is. */
+export type MarketingRunWorkflow =
+  | 'AGENT'
+  | 'CAMPAIGN'
+  | 'LEAD_SEARCH'
+  | 'ORCHESTRATOR'
+  | 'OTHER'
+  | 'OUTREACH'
+  | 'REEL'
+  | 'SOCIAL_HEALTH'
+  | 'SOCIAL_PUBLISH'
+  | 'SOCIAL_SYNC';
 
 export type McpAuthorizationDecision = {
   __typename?: 'McpAuthorizationDecision';
@@ -14298,6 +14505,8 @@ export type Mutation = {
    * On a free pod backoutPod does the same thing, for installed app builds.
    */
   cancelFreeSpot: PodMember;
+  /** Stop a run: at once if it has not started, after its current step if it is running. */
+  cancelMarketingRun: MarketingRun;
   /** Onboarding staff cancel a meeting with a reason — the applicant is emailed and asked to fill the survey again. */
   cancelMeeting: OnboardingMeeting;
   /**
@@ -14585,6 +14794,8 @@ export type Mutation = {
    * leaves something the stale sweep can clean. SUPER_ADMIN only.
    */
   dbBackupUploadAuth: DbBackupUploadPass;
+  /** Decide a run that is waiting for approval. A note is required unless it is approved. */
+  decideMarketingRun: MarketingRun;
   /** Onboarding staff approve or deny a DONE meeting themselves — approval drafts the onboarded host/venue/seller (or grants the club-admin role). No admin round-trip. */
   decideMeeting: OnboardingMeeting;
   /** Owner declines a pending booking request — the slot frees up again. round: the offer round read. */
@@ -14813,7 +15024,7 @@ export type Mutation = {
   disconnectGoogleAccount: ConnectedAccounts;
   /** Tech portal only: forget the mailbox. Tickets it already opened stay. */
   disconnectMailAutomationAccount: Scalars['Boolean']['output'];
-  /** Remove the account, its tokens and everything read from it. */
+  /** Remove the account, its tokens and everything read from it; the network is asked to forget the token too. */
   disconnectSocialAccount: Scalars['Boolean']['output'];
   /** Record that the signed-in user closed this popup, so it never returns. */
   dismissAppPopup: Scalars['Boolean']['output'];
@@ -15623,6 +15834,8 @@ export type Mutation = {
   restoreReelVersion: ReelProject;
   /** Answer a test run that is waiting for the contact, or let it time out. */
   resumeAutomationTest: AutomationRun;
+  /** Run a failed or partly completed run again, through its own workflow. */
+  retryMarketingRun: MarketingRun;
   /**
    * Re-run the checkout work that did not land, and answer with the fresh audit.
    *
@@ -15932,6 +16145,8 @@ export type Mutation = {
   setRateLimitRuleEnabled: RateLimitRule;
   /** Retire or revive a link without deleting its click history. */
   setShortLinkActive: ShortLink;
+  /** Who answers for the account. A null owner clears it; every id must be a real user. */
+  setSocialAccountOwner: SocialAccount;
   setSocialIdeaStatus: SocialIdea;
   /** Keep the reviewer's message on an issue and write the advice again with it. */
   setStoreIssueReviewerMessage: StoreReleaseIssue;
@@ -17220,6 +17435,11 @@ export type MutationCancelFreeSpotArgs = {
 };
 
 
+export type MutationCancelMarketingRunArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationCancelMeetingArgs = {
   id: Scalars['ID']['input'];
   reason: Scalars['String']['input'];
@@ -17972,6 +18192,13 @@ export type MutationCrmVerifyEmailsBulkArgs = {
 
 export type MutationDbBackupUploadAuthArgs = {
   fileName: Scalars['String']['input'];
+};
+
+
+export type MutationDecideMarketingRunArgs = {
+  decision: MarketingRunDecision;
+  id: Scalars['ID']['input'];
+  note?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -20008,6 +20235,11 @@ export type MutationResumeAutomationTestArgs = {
 };
 
 
+export type MutationRetryMarketingRunArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationRetryPaymentStepsArgs = {
   payment_doc_id: Scalars['ID']['input'];
   step_keys?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -20771,6 +21003,13 @@ export type MutationSetRateLimitRuleEnabledArgs = {
 export type MutationSetShortLinkActiveArgs = {
   id: Scalars['ID']['input'];
   is_active: Scalars['Boolean']['input'];
+};
+
+
+export type MutationSetSocialAccountOwnerArgs = {
+  id: Scalars['ID']['input'];
+  owner_user_id?: InputMaybe<Scalars['ID']['input']>;
+  team_user_ids?: InputMaybe<Array<Scalars['ID']['input']>>;
 };
 
 
@@ -29740,6 +29979,10 @@ export type Query = {
   marketingCampaigns: Array<MarketingCampaign>;
   marketingCampaignsTable: MarketingCampaignTablePage;
   marketingDashboard: MarketingDashboard;
+  marketingRun: MarketingRun;
+  marketingRunSummary: MarketingRunSummary;
+  /** Every run, newest first; filter by workflow, status, trigger, actor or what it touched. */
+  marketingRunsTable: MarketingRunTablePage;
   /** Approved products of one external brand — the e-commerce marketplace list. */
   marketplaceBrandProducts: Array<InventoryProduct>;
   /** Server-side table sibling of marketplaceBrandProducts (shared table engine). */
@@ -32835,6 +33078,16 @@ export type QueryMarketingCampaignsTableArgs = {
 
 export type QueryMarketingDashboardArgs = {
   days?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryMarketingRunArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryMarketingRunsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
 };
 
 
@@ -37971,16 +38224,27 @@ export type SocialAccount = {
   flagged_open: Scalars['Int']['output'];
   followers: Scalars['Int']['output'];
   handle?: Maybe<Scalars['String']['output']>;
+  /** The daily health check: when it last ran, whether the token still worked, and what the network said when it did not. */
+  health_checked_at?: Maybe<Scalars['String']['output']>;
+  health_message?: Maybe<Scalars['String']['output']>;
+  health_ok?: Maybe<Scalars['Boolean']['output']>;
   id: Scalars['ID']['output'];
   /** Why the last sync failed; empty when it did not. */
   last_error?: Maybe<Scalars['String']['output']>;
   last_synced_at?: Maybe<Scalars['String']['output']>;
   name: Scalars['String']['output'];
+  owner_name?: Maybe<Scalars['String']['output']>;
+  /** Who answers for the account and gets its expiry reminders; defaults to whoever connected it. */
+  owner_user_id?: Maybe<Scalars['ID']['output']>;
   platform: SocialPlatform;
   profile_url?: Maybe<Scalars['String']['output']>;
   provider: SocialProvider;
   status: SocialAccountStatus;
+  /** The others who look after the account. */
+  team_user_ids: Array<Scalars['ID']['output']>;
   token_expires_at?: Maybe<Scalars['String']['output']>;
+  /** Whole days until the token lapses (0 or less: lapsed); null for a token that does not expire. */
+  token_expires_in_days?: Maybe<Scalars['Int']['output']>;
 };
 
 export type SocialAccountEngagement = {

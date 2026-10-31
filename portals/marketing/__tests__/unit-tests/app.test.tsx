@@ -65,6 +65,9 @@ vi.mock('../../src/pages/social-calendar-page', () => ({
 vi.mock('../../src/pages/instagram-leads-page', () => ({
   default: () => <div>instagram-leads-page</div>,
 }));
+vi.mock('../../src/pages/activity-page', () => ({ default: () => <div>activity-page</div> }));
+vi.mock('../../src/pages/approvals-page', () => ({ default: () => <div>approvals-page</div> }));
+vi.mock('../../src/pages/tasks-page', () => ({ default: () => <div>tasks-page</div> }));
 
 afterEach(() => {
   clearToken();
@@ -73,6 +76,9 @@ afterEach(() => {
 describe('App routing', () => {
   it.each([
     ['/', 'welcome-page'],
+    ['/tasks', 'tasks-page'],
+    ['/approvals', 'approvals-page'],
+    ['/activity', 'activity-page'],
     ['/profile', 'profile-page'],
     ['/analytics/contacts', 'contacts-page'],
     ['/audience', 'audience-lists-page'],

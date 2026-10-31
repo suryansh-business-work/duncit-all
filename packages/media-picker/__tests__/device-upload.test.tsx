@@ -28,6 +28,7 @@ import { useDeviceUpload } from '../src/useDeviceUpload';
 import * as uploadModule from '../src/upload';
 import * as directUploadModule from '../src/useImagekitDirectUpload';
 import * as compressionModule from '../src/videoCompression';
+import * as settingsModule from '../src/useUploadSettings';
 import type { UploadCropPreset, UploadSettings } from '../src/types';
 
 const testTheme = createTheme();
@@ -225,6 +226,19 @@ describe('ImageCropStep', () => {
   it('renders with no presets configured at all', () => {
     expect(step({ presets: [] }).container).toBeDefined();
   });
+
+  it('hides the preset menu when the caller locked a preset that can crop', () => {
+    const { container } = step({ selectedKey: 'COVER', locked: true });
+
+    expect(container.querySelector('[role="combobox"]')).toBeNull();
+    expect(container.textContent).toContain('Output 1600×900px');
+  });
+
+  it('keeps the menu when the locked preset cannot crop, so the reader is never stuck', () => {
+    const { container } = step({ selectedKey: 'NO_CROP', locked: true });
+
+    expect(container.querySelector('[role="combobox"]')).not.toBeNull();
+  });
 });
 
 describe('FileDetails', () => {
@@ -323,6 +337,28 @@ describe('useDeviceUpload', () => {
     });
 
     expect(result.current.cropKey).toBe('COVER');
+  });
+
+  it('crops to the locked preset over the reader and the admin default while it is enabled', async () => {
+    vi.spyOn(settingsModule, 'useUploadSettings').mockReturnValue(SETTINGS);
+    const { result } = hook({ lockedCropKey: 'COVER' });
+    await settle();
+
+    act(() => {
+      result.current.setCropKey('SQUARE');
+    });
+
+    expect(result.current.cropKey).toBe('COVER');
+    expect(result.current.cropLocked).toBe(true);
+  });
+
+  it('lets the lock go when the admin disabled that preset', async () => {
+    vi.spyOn(settingsModule, 'useUploadSettings').mockReturnValue(SETTINGS);
+    const { result } = hook({ lockedCropKey: 'DISABLED' });
+    await settle();
+
+    expect(result.current.cropKey).toBe('NO_CROP');
+    expect(result.current.cropLocked).toBe(false);
   });
 
   it('holds the picked file and builds a preview for it', async () => {

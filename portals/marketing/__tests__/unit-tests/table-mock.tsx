@@ -33,6 +33,15 @@ export function useApolloTableFetch(): () => Promise<{ rows: unknown[]; total: n
 export const tableById = (id: string): HTMLElement =>
   document.querySelector(`[data-table-id="${id}"]`) as HTMLElement;
 
+/** Filters an in-memory list — the pages hand it rows and a search function. */
+export const clientTableFetch =
+  <Row,>(rows: readonly Row[], searchOf: (row: Row) => string) =>
+  async (query: { search?: string }) => {
+    const term = String(query?.search ?? '').toLowerCase();
+    const matched = term ? rows.filter((row) => searchOf(row).toLowerCase().includes(term)) : rows;
+    return { rows: [...matched], total: matched.length };
+  };
+
 /** Build a `fetchRows` that always resolves the given rows (component specs). */
 export const fetchRowsFrom =
   <T,>(rows: T[]) => async (): Promise<{ rows: T[]; total: number }> => ({
@@ -118,22 +127,25 @@ interface MockTableProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onRowClick?: (row: any) => void;
   emptyText?: string;
+  /** When given, a search box is rendered and what is typed reaches `fetchRows` as `search`. */
+  searchPlaceholder?: string;
   toolbarActions?: ReactNode;
   refetchRef?: { current: (() => void) | null };
 }
 
 export function DuncitTable(props: Readonly<MockTableProps>) {
-  const { tableId, columns, fetchRows, getRowId, onRowClick, emptyText, toolbarActions, refetchRef } =
+  const { tableId, columns, fetchRows, getRowId, onRowClick, emptyText, searchPlaceholder, toolbarActions, refetchRef } =
     props;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [rows, setRows] = useState<any[]>([]);
+  const [search, setSearch] = useState('');
 
-  const load = () => {
-    Promise.resolve(fetchRows({})).then((res) => setRows(res?.rows ?? [])).catch(() => setRows([]));
+  const load = (term = search) => {
+    Promise.resolve(fetchRows({ search: term })).then((res) => setRows(res?.rows ?? [])).catch(() => setRows([]));
   };
 
   useEffect(() => {
-    if (refetchRef) refetchRef.current = load;
+    if (refetchRef) refetchRef.current = () => load();
     load();
     // Mount-only: fetchRows identity is unstable across renders in the pages.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -142,6 +154,18 @@ export function DuncitTable(props: Readonly<MockTableProps>) {
   return (
     <div data-testid="duncit-table" data-table-id={tableId}>
       <div data-testid="table-toolbar">{toolbarActions}</div>
+      {/* A real search box, so a table's own search function is exercised rather than assumed. */}
+      {searchPlaceholder ? (
+        <input
+          aria-label="table-search"
+          placeholder={searchPlaceholder}
+          value={search}
+          onChange={(event) => {
+            setSearch(event.target.value);
+            load(event.target.value);
+          }}
+        />
+      ) : null}
       {rows.length === 0 && <div data-testid="table-empty">{emptyText}</div>}
       {rows.map((row, index) => (
         <div key={getRowId ? getRowId(row) : String(index)} data-testid="table-row">

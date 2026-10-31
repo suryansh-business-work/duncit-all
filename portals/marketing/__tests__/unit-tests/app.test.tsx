@@ -68,6 +68,12 @@ vi.mock('../../src/pages/instagram-leads-page', () => ({
 vi.mock('../../src/pages/activity-page', () => ({ default: () => <div>activity-page</div> }));
 vi.mock('../../src/pages/approvals-page', () => ({ default: () => <div>approvals-page</div> }));
 vi.mock('../../src/pages/tasks-page', () => ({ default: () => <div>tasks-page</div> }));
+vi.mock('../../src/pages/reels/projects-list', () => ({ default: () => <div>reel-projects-page</div> }));
+// The studio route mounts the lazy wrapper; the reel it opens is read off the path.
+vi.mock('../../src/pages/reels/studio/lazy', async () => {
+  const { useParams } = await import('react-router');
+  return { default: () => <div>reel-studio-page:{useParams().projectId}</div> };
+});
 
 afterEach(() => {
   clearToken();
@@ -91,6 +97,8 @@ describe('App routing', () => {
     ['/ads-settings', 'ads-settings-page'],
     ['/social/accounts', 'social-accounts-page'],
     ['/publish/calendar', 'social-calendar-page'],
+    ['/studio/reels', 'reel-projects-page'],
+    ['/studio/reels/DUN-REEL-1', 'reel-studio-page:DUN-REEL-1'],
     ['/leads/instagram', 'instagram-leads-page'],
     ['/settings/integrations', 'integrations-page'],
   ])('renders %s behind auth', (path, text) => {

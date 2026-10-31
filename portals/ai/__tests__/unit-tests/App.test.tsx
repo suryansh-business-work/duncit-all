@@ -16,6 +16,10 @@ vi.mock('../../src/pages/ai-features/detail', async () => {
   const { useParams } = await import('react-router');
   return { default: () => <div>AI FEATURE {useParams().key}</div> };
 });
+vi.mock('../../src/pages/reels-moved', async () => {
+  const { useParams } = await import('react-router');
+  return { default: () => <div>REELS MOVED {useParams().projectId ?? '-'}</div> };
+});
 vi.mock('@duncit/shell', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@duncit/shell')>()),
   ProfilePage: () => <div>PROFILE PAGE</div>,
@@ -74,5 +78,21 @@ describe('App routing', () => {
     setToken('tok');
     renderWithProviders(<App />, { initialEntries: ['/nope'] });
     expect(screen.getByText('WELCOME PAGE')).toBeInTheDocument();
+  });
+
+  // Reel Studio moved to the Marketing console; its old addresses say so,
+  // and a link to one reel still names that reel.
+  it.each([
+    ['/reels', 'REELS MOVED -'],
+    ['/reels/DUN-REEL-1', 'REELS MOVED DUN-REEL-1'],
+  ])('keeps the old Reel Studio address %s behind auth, pointing at the move', (path, text) => {
+    setToken('tok');
+    renderWithProviders(<App />, { initialEntries: [path] });
+    expect(screen.getByText(text)).toBeInTheDocument();
+  });
+
+  it('keeps the old Reel Studio address behind the login', () => {
+    renderWithProviders(<App />, { initialEntries: ['/reels'] });
+    expect(screen.getByText('LOGIN PAGE')).toBeInTheDocument();
   });
 });

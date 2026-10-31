@@ -9,6 +9,7 @@ import ChatPanel from '../../src/pages/reels/studio/chat/ChatPanel';
 import ChatTranscript from '../../src/pages/reels/studio/chat/ChatTranscript';
 import ExportDialog from '../../src/pages/reels/studio/export/ExportDialog';
 import type { ReelExport } from '../../src/pages/reels/studio/export/useReelExport';
+import type { ReelPost } from '../../src/pages/reels/studio/export/useReelPost';
 import MediaThumb from '../../src/pages/reels/studio/MediaThumb';
 import PreviewPane from '../../src/pages/reels/studio/preview/PreviewPane';
 import AssetList from '../../src/pages/reels/studio/sources/AssetList';
@@ -18,14 +19,14 @@ import StudioToolbar from '../../src/pages/reels/studio/StudioToolbar';
 import type { ReelActions } from '../../src/pages/reels/studio/useReelActions';
 import type { ReelAsset, ReelDriveEntry, ReelMessage, ReelProject, ReelScene } from '../../src/pages/reels/types';
 import { renderWithProviders } from '../testkit';
-import { answerQuery, resetApollo } from './reel-apollo-mock';
+import { answerQuery, resetApollo } from '../mocks/reel-apollo-mock';
 
 const confirm = vi.hoisted(() => vi.fn());
 const player = vi.hoisted(() => ({ seekTo: vi.fn(), props: {} as Record<string, unknown> }));
 
 vi.mock('@apollo/client/react', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@apollo/client/react')>()),
-  ...(await import('./reel-apollo-mock')).hooks,
+  ...(await import('../mocks/reel-apollo-mock')).hooks,
 }));
 
 vi.mock('@duncit/dialogs', async (importOriginal) => ({
@@ -451,35 +452,100 @@ describe('ExportDialog', () => {
     start: vi.fn(async () => undefined),
     cancel: vi.fn(),
     dismiss: vi.fn(),
+    save: vi.fn(),
   });
+  const poster = (state: ReelPost['state'] = { phase: 'idle' }, posted = true): ReelPost => ({
+    state,
+    post: vi.fn(async () => posted),
+    dismiss: vi.fn(),
+    composer: null,
+    closeComposer: vi.fn(),
+  });
+  const file = new File(['mp4'], 'jam-night-recap.mp4', { type: 'video/mp4' });
+  const mount = (render: ReelExport, posting: ReelPost = poster()) =>
+    renderWithProviders(<ExportDialog exporter={render} poster={posting} />);
 
   it('is not there while nothing is exporting', () => {
-    renderWithProviders(<ExportDialog exporter={exporter({ phase: 'idle' })} />);
+    mount(exporter({ phase: 'idle' }));
     expect(screen.queryByTestId('reel-export-dialog')).not.toBeInTheDocument();
   });
 
   it('shows how far the render has got, and can be cancelled', () => {
     const running = exporter({ phase: 'rendering', progress: 0.426 });
-    renderWithProviders(<ExportDialog exporter={running} />);
+    mount(running);
     expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '43');
+    expect(screen.getByRole('status')).toHaveTextContent('43% rendered');
     fireEvent.click(screen.getByTestId('reel-export-cancel'));
     expect(running.cancel).toHaveBeenCalledTimes(1);
   });
 
   it('says the footage is downloading before any frame is drawn', () => {
-    renderWithProviders(<ExportDialog exporter={exporter({ phase: 'downloading', progress: 0.5 })} />);
+    mount(exporter({ phase: 'downloading', progress: 0.5 }));
     expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '50');
     expect(screen.getByRole('status')).toHaveTextContent('Downloading the footage — 50%');
   });
 
   it('says why a render failed, and offers to try again or close', () => {
     const failed = exporter({ phase: 'failed', message: 'This browser cannot encode H.264.' });
-    renderWithProviders(<ExportDialog exporter={failed} />);
-    expect(screen.getByTestId('reel-export-error')).toHaveTextContent('This browser cannot encode H.264.');
+    mount(failed);
+    expect(screen.getByTestId('reel-export-error')).toHaveTextContent('The reel could not be exported: This browser cannot encode H.264.');
     fireEvent.click(screen.getByTestId('reel-export-retry'));
     expect(failed.start).toHaveBeenCalledTimes(1);
     fireEvent.click(screen.getByTestId('reel-export-close'));
     expect(failed.dismiss).toHaveBeenCalledTimes(1);
+  });
+
+  it('offers a rendered reel to save, to post to social, or to leave', () => {
+    const ready = exporter({ phase: 'rendered', file });
+    mount(ready);
+    expect(screen.getByRole('dialog')).toHaveTextContent('Your reel is ready');
+    expect(screen.getByTestId('reel-export-ready')).toBeInTheDocument();
+    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('reel-export-save'));
+    expect(ready.save).toHaveBeenCalledTimes(1);
+    fireEvent.click(screen.getByTestId('reel-export-close'));
+    expect(ready.dismiss).toHaveBeenCalledTimes(1);
+  });
+
+  it('hands the rendered file to the poster, and closes once the composer is open', async () => {
+    const ready = exporter({ phase: 'rendered', file });
+    const posting = poster();
+    mount(ready, posting);
+    fireEvent.click(screen.getByTestId('reel-export-post'));
+    expect(posting.post).toHaveBeenCalledWith(file);
+    await waitFor(() => expect(ready.dismiss).toHaveBeenCalledTimes(1));
+  });
+
+  it('stays open when the post did not go through', async () => {
+    const ready = exporter({ phase: 'rendered', file });
+    const posting = poster({ phase: 'idle' }, false);
+    mount(ready, posting);
+    fireEvent.click(screen.getByTestId('reel-export-post'));
+    await waitFor(() => expect(posting.post).toHaveBeenCalledTimes(1));
+    expect(ready.dismiss).not.toHaveBeenCalled();
+  });
+
+  it('shows the upload in the same bar, with no way to cancel it', () => {
+    mount(exporter({ phase: 'rendered', file }), poster({ phase: 'uploading', progress: 0.5 }));
+    expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '50');
+    expect(screen.getByRole('progressbar')).toHaveAccessibleName('Upload progress');
+    expect(screen.getByRole('status')).toHaveTextContent('Uploading the reel — 50%');
+    expect(screen.queryByTestId('reel-export-cancel')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('reel-export-post')).not.toBeInTheDocument();
+  });
+
+  it('says why a post failed, keeps the rendered reel, and can try the upload again', () => {
+    const ready = exporter({ phase: 'rendered', file });
+    const posting = poster({ phase: 'failed', message: 'Upload is not available right now' });
+    mount(ready, posting);
+    expect(screen.getByTestId('reel-export-error')).toHaveTextContent('The reel could not be posted: Upload is not available right now');
+    fireEvent.click(screen.getByTestId('reel-export-retry'));
+    expect(posting.post).toHaveBeenCalledWith(file);
+    expect(ready.start).not.toHaveBeenCalled();
+    // Close goes back to the rendered reel, not out of the export: it can still be saved.
+    fireEvent.click(screen.getByTestId('reel-export-close'));
+    expect(posting.dismiss).toHaveBeenCalledTimes(1);
+    expect(ready.dismiss).not.toHaveBeenCalled();
   });
 });
 

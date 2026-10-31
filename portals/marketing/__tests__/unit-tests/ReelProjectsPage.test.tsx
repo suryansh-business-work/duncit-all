@@ -7,13 +7,13 @@ import ReelProjectsPage from '../../src/pages/reels/projects-list';
 import { CREATE_REEL_PROJECT, DELETE_REEL_PROJECT, REEL_PROJECTS } from '../../src/pages/reels/queries';
 import type { ReelProjectSummary } from '../../src/pages/reels/types';
 import { renderWithProviders } from '../testkit';
-import { answerQuery, mutationOf, resetApollo, setMutationBusy } from './reel-apollo-mock';
+import { answerQuery, mutationOf, resetApollo, setMutationBusy } from '../mocks/reel-apollo-mock';
 
 const confirm = vi.hoisted(() => vi.fn());
 
 vi.mock('@apollo/client/react', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@apollo/client/react')>()),
-  ...(await import('./reel-apollo-mock')).hooks,
+  ...(await import('../mocks/reel-apollo-mock')).hooks,
 }));
 
 vi.mock('@duncit/dialogs', async (importOriginal) => ({
@@ -77,11 +77,11 @@ const REELS = [reel({}), reel({ id: 'DUN-REEL-2', name: 'Pottery workshop teaser
 
 const mount = () =>
   renderWithProviders(<ReelProjectsPage />, {
-    initialEntries: ['/reels'],
+    initialEntries: ['/studio/reels'],
     routes: (
       <>
-        <Route path="/reels" element={<ReelProjectsPage />} />
-        <Route path="/reels/:projectId" element={<div data-testid="studio-route" />} />
+        <Route path="/studio/reels" element={<ReelProjectsPage />} />
+        <Route path="/studio/reels/:projectId" element={<div data-testid="studio-route" />} />
       </>
     ),
   });
@@ -138,7 +138,7 @@ describe('ReelProjectsPage — the list', () => {
   });
 
   it.each([
-    ['its row', async () => fireEvent.click((await rows())[0])],
+    ['its row', async () => fireEvent.click(await screen.findByText('rowclick-0'))],
     ['its open button', async () => fireEvent.click(await screen.findByTestId('open-DUN-REEL-1'))],
   ])('opens a reel in the studio from %s', async (_label, press) => {
     answerQuery(REEL_PROJECTS, { data: { reelProjects: REELS } });

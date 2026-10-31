@@ -8,13 +8,14 @@ import ReelStudioPage from '../../src/pages/reels/studio';
 import LazyReelStudioPage from '../../src/pages/reels/studio/lazy';
 import type { ReelProject } from '../../src/pages/reels/types';
 import { renderWithProviders } from '../testkit';
-import { answerQuery, mutationOf, queryOptions, resetApollo } from './reel-apollo-mock';
+import { answerQuery, mutationOf, queryOptions, resetApollo } from '../mocks/reel-apollo-mock';
 
 const renderer = vi.hoisted(() => ({ canRenderMediaOnWeb: vi.fn(), renderMediaOnWeb: vi.fn() }));
+const upload = vi.hoisted(() => vi.fn());
 
 vi.mock('@apollo/client/react', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@apollo/client/react')>()),
-  ...(await import('./reel-apollo-mock')).hooks,
+  ...(await import('../mocks/reel-apollo-mock')).hooks,
 }));
 
 vi.mock('@duncit/dialogs', async (importOriginal) => ({
@@ -26,7 +27,7 @@ vi.mock('@duncit/dialogs', async (importOriginal) => ({
 
 vi.mock('@duncit/logs', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@duncit/logs')>();
-  return { ...actual, logs: { ...actual.logs, portal: { ...actual.logs.portal, ai: { error: vi.fn() } } } };
+  return { ...actual, logs: { ...actual.logs, portal: { ...actual.logs.portal, marketing: { error: vi.fn() } } } };
 });
 
 vi.mock('@remotion/player', () => ({ Player: () => <div data-testid="reel-player" /> }));
@@ -35,6 +36,22 @@ vi.mock('../../src/pages/reels/composition/ReelComposition', () => ({ ReelCompos
 vi.mock('@duncit/media-picker', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@duncit/media-picker')>()),
   default: () => null,
+  directUploadToImagekit: upload,
+}));
+
+/** The calendar's composer, as what it was opened with. */
+vi.mock('../../src/pages/social-accounts-page/publish/ComposerDialog', () => ({
+  default: ({ request, accounts, onClose }: { request: { text?: string; media_url?: string }; accounts: unknown[]; onClose: () => void }) => (
+    <div data-testid="reel-composer">
+      <span data-testid="reel-composer-text">{request.text}</span>
+      <span data-testid="reel-composer-media">{request.media_url}</span>
+      <span data-testid="reel-composer-accounts">{accounts.length}</span>
+      <button type="button" data-testid="reel-composer-close" onClick={onClose} />
+    </div>
+  ),
+}));
+vi.mock('../../src/pages/social-accounts-page/useSocialSetup', () => ({
+  useSocialSetup: () => ({ accounts: [{ id: 'acc-1' }, { id: 'acc-2' }], providers: [], loading: false, error: undefined, reload: vi.fn() }),
 }));
 
 const FOLDER_URL = 'https://drive.google.com/drive/folders/1AbCdEfGhIjKlMnOp';
@@ -59,14 +76,14 @@ const project = (over: Partial<ReelProject> = {}): ReelProject =>
     ...over,
   }) as unknown as ReelProject;
 
-const mount = (page = <ReelStudioPage />, entry = '/reels/DUN-REEL-1') =>
+const mount = (page = <ReelStudioPage />, entry = '/studio/reels/DUN-REEL-1') =>
   renderWithProviders(page, {
     initialEntries: [entry],
     routes: (
       <>
-        <Route path="/reels" element={<div data-testid="list-route" />} />
-        <Route path="/reels/:projectId" element={page} />
-        <Route path="/studio" element={page} />
+        <Route path="/studio/reels" element={<div data-testid="list-route" />} />
+        <Route path="/studio/reels/:projectId" element={page} />
+        <Route path="/studio/reels-none" element={page} />
       </>
     ),
   });
@@ -75,6 +92,7 @@ beforeEach(() => {
   resetApollo();
   renderer.canRenderMediaOnWeb.mockReset();
   renderer.renderMediaOnWeb.mockReset();
+  upload.mockReset();
   vi.mocked(notifyError).mockClear();
   answerQuery(AI_PROMPTS, { data: { aiPrompts: [] } });
   answerQuery(REEL_DRIVE_STATUS, { data: { reelDriveStatus: { configured: true, service_account_email: 'reels@duncit-drive.iam.gserviceaccount.com' } } });
@@ -82,7 +100,7 @@ beforeEach(() => {
 
 describe('ReelStudioPage — which reel', () => {
   it('goes back to the list when the address names no reel', () => {
-    mount(undefined, '/studio');
+    mount(undefined, '/studio/reels-none');
     expect(screen.getByTestId('list-route')).toBeInTheDocument();
     expect(queryOptions.get(REEL_PROJECT)?.skip).toBe(true);
   });
@@ -181,6 +199,51 @@ describe('ReelStudioPage — the studio', () => {
     expect(await screen.findByTestId('reel-export-error')).toHaveTextContent('No H.264 encoder.');
     fireEvent.click(screen.getByTestId('reel-export-close'));
     await waitFor(() => expect(screen.queryByTestId('reel-export-dialog')).not.toBeInTheDocument());
+  });
+
+  it('posts a rendered reel to social: uploads it, then opens the composer on it without leaving the studio', async () => {
+    renderer.canRenderMediaOnWeb.mockResolvedValue({ canRender: true, issues: [] });
+    renderer.renderMediaOnWeb.mockResolvedValue({ getBlob: async () => new Blob(['mp4']) });
+    upload.mockImplementation(async (_client: unknown, _file: File, _folder: string, onProgress: (pct: number) => void) => {
+      onProgress(40);
+      return 'https://ik.imagekit.io/duncit/marketing/reels/jam-night-recap.mp4';
+    });
+    mount();
+    fireEvent.click(screen.getByTestId('reel-studio-export'));
+    expect(await screen.findByTestId('reel-export-ready')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId('reel-export-post'));
+    expect(await screen.findByTestId('reel-composer')).toBeInTheDocument();
+    expect(upload).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ name: 'jam-night-recap.mp4', type: 'video/mp4' }),
+      '/marketing/reels',
+      expect.any(Function),
+      'PORTALS'
+    );
+    // The export is over; the composer carries the reel's name, the uploaded file and the calendar's accounts.
+    expect(screen.queryByTestId('reel-export-dialog')).not.toBeInTheDocument();
+    expect(screen.getByTestId('reel-composer-text')).toHaveTextContent('Jam night recap');
+    expect(screen.getByTestId('reel-composer-media')).toHaveTextContent('https://ik.imagekit.io/duncit/marketing/reels/jam-night-recap.mp4');
+    expect(screen.getByTestId('reel-composer-accounts')).toHaveTextContent('2');
+    expect(screen.getByTestId('reel-studio')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId('reel-composer-close'));
+    await waitFor(() => expect(screen.queryByTestId('reel-composer')).not.toBeInTheDocument());
+  });
+
+  it('keeps the rendered reel when the upload fails, so it can still be saved', async () => {
+    renderer.canRenderMediaOnWeb.mockResolvedValue({ canRender: true, issues: [] });
+    renderer.renderMediaOnWeb.mockResolvedValue({ getBlob: async () => new Blob(['mp4']) });
+    upload.mockRejectedValue(new Error('Upload is not available right now'));
+    mount();
+    fireEvent.click(screen.getByTestId('reel-studio-export'));
+    fireEvent.click(await screen.findByTestId('reel-export-post'));
+    expect(await screen.findByTestId('reel-export-error')).toHaveTextContent('The reel could not be posted: Upload is not available right now');
+    expect(screen.queryByTestId('reel-composer')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId('reel-export-close'));
+    expect(await screen.findByTestId('reel-export-save')).toBeInTheDocument();
   });
 });
 

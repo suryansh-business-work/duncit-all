@@ -11,11 +11,11 @@ import InspectorPanel from '../../src/pages/reels/studio/inspector/InspectorPane
 import TimelinePanel from '../../src/pages/reels/studio/timeline/TimelinePanel';
 import type { ReelProject } from '../../src/pages/reels/types';
 import { renderWithProviders } from '../testkit';
-import { mutationOf, resetApollo } from './reel-apollo-mock';
+import { mutationOf, resetApollo } from '../mocks/reel-apollo-mock';
 
 vi.mock('@apollo/client/react', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@apollo/client/react')>()),
-  ...(await import('./reel-apollo-mock')).hooks,
+  ...(await import('../mocks/reel-apollo-mock')).hooks,
 }));
 
 vi.mock('@duncit/dialogs', async (importOriginal) => ({
@@ -26,7 +26,7 @@ vi.mock('@duncit/dialogs', async (importOriginal) => ({
 
 vi.mock('@duncit/logs', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@duncit/logs')>();
-  return { ...actual, logs: { ...actual.logs, portal: { ...actual.logs.portal, ai: { error: vi.fn() } } } };
+  return { ...actual, logs: { ...actual.logs, portal: { ...actual.logs.portal, marketing: { error: vi.fn() } } } };
 });
 
 const video = { id: 'a1', kind: 'VIDEO', name: 'jam.mp4', url: 'https://server.duncit.com/reels/media/t1', thumbnail_url: '', duration_ms: 6000 } as ReelAsset;

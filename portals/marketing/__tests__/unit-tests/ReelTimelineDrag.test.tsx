@@ -9,11 +9,11 @@ import { useSpecEditor } from '../../src/pages/reels/editor/useSpecEditor';
 import TimelinePanel from '../../src/pages/reels/studio/timeline/TimelinePanel';
 import type { ReelProject } from '../../src/pages/reels/types';
 import { renderWithProviders } from '../testkit';
-import { mutationOf, resetApollo } from './reel-apollo-mock';
+import { mutationOf, resetApollo } from '../mocks/reel-apollo-mock';
 
 vi.mock('@apollo/client/react', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@apollo/client/react')>()),
-  ...(await import('./reel-apollo-mock')).hooks,
+  ...(await import('../mocks/reel-apollo-mock')).hooks,
 }));
 
 vi.mock('@duncit/dialogs', async (importOriginal) => ({

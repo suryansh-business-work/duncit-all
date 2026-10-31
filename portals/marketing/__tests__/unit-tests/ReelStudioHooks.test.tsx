@@ -17,14 +17,14 @@ import { useReelExport } from '../../src/pages/reels/studio/export/useReelExport
 import { useDriveFolder } from '../../src/pages/reels/studio/sources/useDriveFolder';
 import { useReelActions } from '../../src/pages/reels/studio/useReelActions';
 import type { ReelDriveEntry, ReelProject } from '../../src/pages/reels/types';
-import { answerQuery, mutationOf, queryOptions, resetApollo } from './reel-apollo-mock';
+import { answerQuery, mutationOf, queryOptions, resetApollo } from '../mocks/reel-apollo-mock';
 
 const confirm = vi.hoisted(() => vi.fn());
 const renderer = vi.hoisted(() => ({ canRenderMediaOnWeb: vi.fn(), renderMediaOnWeb: vi.fn() }));
 
 vi.mock('@apollo/client/react', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@apollo/client/react')>()),
-  ...(await import('./reel-apollo-mock')).hooks,
+  ...(await import('../mocks/reel-apollo-mock')).hooks,
 }));
 
 vi.mock('@duncit/dialogs', async (importOriginal) => ({
@@ -41,7 +41,7 @@ vi.mock('@duncit/utils', async (importOriginal) => ({
 
 vi.mock('@duncit/logs', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@duncit/logs')>();
-  return { ...actual, logs: { ...actual.logs, portal: { ...actual.logs.portal, ai: { error: vi.fn() } } } };
+  return { ...actual, logs: { ...actual.logs, portal: { ...actual.logs.portal, marketing: { error: vi.fn() } } } };
 });
 
 vi.mock('@remotion/web-renderer', () => renderer);
@@ -314,7 +314,7 @@ describe('useReelExport', () => {
   const canRender = { canRender: true, issues: [] };
   const rendered = { getBlob: async () => new Blob(['mp4']) };
 
-  it('renders the reel in the browser and saves it under the reel’s name', async () => {
+  it('renders the reel in the browser and holds it as an MP4 under the reel’s name', async () => {
     renderer.canRenderMediaOnWeb.mockResolvedValue(canRender);
     renderer.renderMediaOnWeb.mockImplementation(async ({ onProgress }: { onProgress: (state: { progress: number }) => void }) => {
       onProgress({ progress: 0.5 });
@@ -334,7 +334,29 @@ describe('useReelExport', () => {
         videoCodec: 'h264',
       })
     );
-    expect(downloadBlob).toHaveBeenCalledWith(expect.any(Blob), 'jam-night-recap-2.mp4');
+    // Nothing is downloaded on its own: the operator chooses to save or to post.
+    expect(downloadBlob).not.toHaveBeenCalled();
+    expect(notifySuccess).not.toHaveBeenCalled();
+    const { state } = result.current;
+    expect(state.phase).toBe('rendered');
+    if (state.phase !== 'rendered') throw new Error('expected a rendered reel');
+    expect(state.file).toBeInstanceOf(File);
+    expect(state.file.name).toBe('jam-night-recap-2.mp4');
+    expect(state.file.type).toBe('video/mp4');
+  });
+
+  it('saves the rendered reel to the operator’s computer and closes', async () => {
+    renderer.canRenderMediaOnWeb.mockResolvedValue(canRender);
+    renderer.renderMediaOnWeb.mockResolvedValue(rendered);
+    const { result } = renderHook(() => useReelExport(project));
+    // Nothing to save yet: a no-op, not a download of nothing.
+    act(() => result.current.save());
+    expect(downloadBlob).not.toHaveBeenCalled();
+
+    await act(() => result.current.start());
+    act(() => result.current.save());
+
+    expect(downloadBlob).toHaveBeenCalledWith(expect.any(File), 'jam-night-recap-2.mp4');
     expect(notifySuccess).toHaveBeenCalledTimes(1);
     expect(result.current.state).toEqual({ phase: 'idle' });
   });
@@ -367,7 +389,7 @@ describe('useReelExport', () => {
     renderer.renderMediaOnWeb.mockResolvedValue(rendered);
     const { result } = renderHook(() => useReelExport({ ...project, name: '—' }));
     await act(() => result.current.start());
-    expect(downloadBlob).toHaveBeenCalledWith(expect.any(Blob), 'reel.mp4');
+    expect(result.current.state).toMatchObject({ phase: 'rendered', file: expect.objectContaining({ name: 'reel.mp4' }) });
   });
 
   it.each([

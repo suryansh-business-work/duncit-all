@@ -12,13 +12,17 @@ import TimelinePanel from '../../src/pages/reels/studio/timeline/TimelinePanel';
 import { tickSeconds } from '../../src/pages/reels/studio/timeline/geometry';
 import { useTimelineActions } from '../../src/pages/reels/studio/timeline/useTimelineActions';
 import type { ReelProject } from '../../src/pages/reels/types';
+import { allFallbackEntries, createTranslator } from '@duncit/app-settings';
 import { renderWithProviders } from '../testkit';
-import { mutationOf, resetApollo } from './reel-apollo-mock';
-import { en } from './automation-fixtures';
+import { mutationOf, resetApollo } from '../mocks/reel-apollo-mock';
+
+const { t: shipped } = createTranslator({ locale: 'en-IN', fallback: allFallbackEntries() });
+/** The shipped English copy for a key, so a test asserts what the operator reads. */
+const en = (key: string, vars: Record<string, string | number> = {}) => shipped(key, { vars });
 
 vi.mock('@apollo/client/react', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@apollo/client/react')>()),
-  ...(await import('./reel-apollo-mock')).hooks,
+  ...(await import('../mocks/reel-apollo-mock')).hooks,
 }));
 
 vi.mock('@duncit/dialogs', async (importOriginal) => ({

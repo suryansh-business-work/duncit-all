@@ -11,7 +11,7 @@ import { vi, type Mock } from 'vitest';
  * Here a test names the document and hands back the data or the failure.
  *
  * Wire it in with:
- *   vi.mock('@apollo/client/react', async (io) => ({ ...(await io()), ...(await import('./reel-apollo-mock')).hooks }));
+ *   vi.mock('@apollo/client/react', async (io) => ({ ...(await io()), ...(await import('../mocks/reel-apollo-mock')).hooks }));
  */
 
 interface QueryAnswer {

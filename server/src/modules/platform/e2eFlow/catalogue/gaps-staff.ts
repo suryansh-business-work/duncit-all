@@ -1828,6 +1828,116 @@ export const STAFF_GAP_FLOWS: readonly CatalogueFlow[] = [
     ],
   },
   {
+    name: 'Marketing: Activity, Approvals and My Tasks',
+    description:
+      'marketing /activity, /approvals and /tasks over the marketing run log (marketing_runs): every publish, sync, health check, lead search, reel, outreach and agent run is a MarketingRun with a step per stage, its API calls, its AI cost and, when a person must say yes first, its approval. Read roles SUPER_ADMIN, CITY_ADMIN, MARKETING_MANAGER, MARKETING_READER; decide/cancel/retry SUPER_ADMIN and MARKETING_MANAGER (marketingRun.resolver.ts).',
+    sub_flows: [
+      {
+        name: 'Follow a run on Activity',
+        description:
+          'The table lists runs newest first (marketingRunsTable) with a drawer per run (marketingRun); the URL can pin a status, a workflow or "mine".',
+        steps: [
+          [
+            'Open /activity',
+            'Header "Activity" with its intro and a first-run tour; a status legend above a table with Name, Workflow, Status, Actor, Trigger, Started, Finished and Duration',
+          ],
+          [
+            'Start an Instagram lead search and come back',
+            'A LEAD_SEARCH run for the brief appears, and its drawer shows the steps Plan the searches, Search Google, Read the profiles, Score the fit and Save the leads, each with its timing and a one-line summary',
+          ],
+          [
+            'Let a scheduled social post go out',
+            'A SOCIAL_PUBLISH run "Publish \"<text>\" to N networks" appears with one step per network (INSTAGRAM · <account> …); a network that refused is a FAILED step with its reason and the run ends PARTIAL',
+          ],
+          [
+            'Open /activity?status=FAILED, then /activity?workflow=SOCIAL_PUBLISH',
+            'The table is pinned to that status or workflow and says so',
+          ],
+          [
+            'Open /activity?mine=1 before the signed-in person is known',
+            'A progress bar, not everyone’s runs; then only runs whose actor is the signed-in person',
+          ],
+          [
+            'Open a run whose body threw',
+            'The drawer shows status FAILED, the error in red, the steps that did finish, and the API calls it logged',
+          ],
+        ],
+      },
+      {
+        name: 'Retry and cancel a run',
+        description:
+          'retryMarketingRun re-runs a FAILED or PARTIAL run through its workflow’s handler under the same row; cancelMarketingRun stops a waiting run at once and flags a running one.',
+        steps: [
+          [
+            'Open a PARTIAL SOCIAL_PUBLISH run and press Retry',
+            'A success toast; the run goes PENDING with retries 1, only the targets that failed are sent again, and the same row ends COMPLETED with every step OK',
+          ],
+          [
+            'Open a FAILED run of a workflow that has no way to run again (e.g. OTHER)',
+            'No Retry button; calling retryMarketingRun on it answers "This kind of run cannot be retried from here."',
+          ],
+          [
+            'Press Retry on a run whose post has nothing left to send',
+            'The run goes FAILED again with "The post has nothing left to retry."',
+          ],
+          [
+            'Press Cancel on a PENDING run and confirm',
+            'The run is CANCELLED at once with finished_at set',
+          ],
+          [
+            'Press Cancel on a RUNNING run',
+            'The run stays RUNNING with "Stop requested" shown; it ends CANCELLED when its workflow next checks; cancelling it again answers that it already finished once it has',
+          ],
+        ],
+      },
+      {
+        name: 'Approve, reject or ask for changes',
+        description:
+          'A run started with approval_required waits as AWAITING_APPROVAL; decideMarketingRun(APPROVED | REJECTED | CHANGES_REQUESTED, note) decides it — a note is required unless approving.',
+        steps: [
+          [
+            'Open /approvals',
+            'Header "Approvals" with cards Awaiting approval, Running now and Failed this week (which links to /activity?status=FAILED), a card pointing at the ad request queue (/ads-approvals), and the table pinned to AWAITING_APPROVAL',
+          ],
+          [
+            'Open a waiting run and press Approve',
+            'The workflow carries on (a post sent for approval is scheduled and goes out at its time, hanging under the approval run as its parent) and the run leaves the list',
+          ],
+          [
+            'Press Reject or Request changes with the note empty',
+            'Error "a note is required" and nothing changes',
+          ],
+          [
+            'Press Request changes with a note',
+            'The run is CANCELLED with the decision, who decided and the note; a post sent for approval returns to Draft carrying the note',
+          ],
+          [
+            'Decide a run that is not waiting',
+            'Error that the run is not waiting for a decision',
+          ],
+          [
+            'Call decideMarketingRun with a MARKETING_READER token',
+            'FORBIDDEN "Access Denied" — readers see the log, managers decide',
+          ],
+        ],
+      },
+      {
+        name: 'My Tasks',
+        description: 'marketingRunSummary and the signed-in person’s own open runs.',
+        steps: [
+          [
+            'Open /tasks',
+            'Header "My Tasks" with cards that lead to /approvals, /activity?mine=1 and /activity?status=FAILED, and the table pinned to the signed-in person’s PENDING, RUNNING and AWAITING_APPROVAL runs',
+          ],
+          [
+            'Open /tasks with nothing open',
+            'The table’s empty text says there is nothing waiting on you',
+          ],
+        ],
+      },
+    ],
+  },
+  {
     name: 'Marketing: Social Calendar',
     description:
       'marketing /publish/calendar (old /social-calendar redirects): the Social Accounts publishing calendar on its own page — compose, schedule, share now, retry and delete posts across connected accounts. AI ideas live on Social Accounts > Ideas.',

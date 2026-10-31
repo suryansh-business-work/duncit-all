@@ -79,7 +79,8 @@ describe('PlansPanel — the tier table', () => {
     await rowsShown(2);
 
     const access = rowOf('Access');
-    expect(within(access).getByText('₹1,499')).toBeInTheDocument();
+    // The grid stub also prints each valueGetter result; assert the rendered price cell.
+    expect(within(access).getByText('₹1,499', { ignore: '[data-testid="value-price_label"]' })).toBeInTheDocument();
     expect(within(access).getByText('Most popular')).toBeInTheDocument();
     expect(within(access).getByTestId('value-is_active')).toHaveTextContent('Active');
 

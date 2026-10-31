@@ -33,6 +33,7 @@ describe('Duncit Legal app config', () => {
       '/policy-acceptance-logs',
       '/contracts',
       '/ugc-monitoring',
+      '/account-health-appeals',
       '/grievance/tickets',
       '/grievance/info',
     ]);

@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { Theme } from 'tamagui';
 
-import { useThemeStore } from '@/stores/theme.store';
+import { useEffectiveScheme } from '@/hooks/useEffectiveScheme';
 
 /**
  * Re-applies the active Tamagui theme inside a React Native `<Modal>`. On native
@@ -11,6 +11,6 @@ import { useThemeStore } from '@/stores/theme.store';
  * font would otherwise fall back to browser defaults.
  */
 export function ModalThemeScope({ children }: Readonly<{ children: ReactNode }>) {
-  const scheme = useThemeStore((s) => s.scheme);
+  const scheme = useEffectiveScheme();
   return <Theme name={scheme}>{children}</Theme>;
 }

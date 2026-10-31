@@ -2,14 +2,14 @@ import type { ReactNode } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import { auth, dark, light } from '@duncit/auth-tokens';
 
-import { useThemeStore } from '@/stores/theme.store';
+import { useEffectiveScheme } from '@/hooks/useEffectiveScheme';
 
 /**
  * Elevated, rounded gradient card hosting the auth form. Mirrors mWeb's auth
  * surface (gradient + border + soft shadow) using the shared card-gradient tokens.
  */
 export function AuthCard({ children, testID }: Readonly<{ children: ReactNode; testID?: string }>) {
-  const isDark = useThemeStore((s) => s.scheme) === 'dark';
+  const isDark = useEffectiveScheme() === 'dark';
   const colors = isDark ? auth.cardGradient.dark : auth.cardGradient.light;
 
   return (

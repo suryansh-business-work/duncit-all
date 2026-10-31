@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { Theme } from 'tamagui';
 import { typography } from '@duncit/auth-tokens';
 
-import { useThemeStore } from '@/stores/theme.store';
+import { useEffectiveScheme } from '@/hooks/useEffectiveScheme';
 
 /**
  * A React Native `<Modal>` portals its content to `document.body` on
@@ -12,7 +12,7 @@ import { useThemeStore } from '@/stores/theme.store';
  * modal's own (absolutely positioned) layout untouched.
  */
 export function ModalThemeScope({ children }: Readonly<{ children: ReactNode }>) {
-  const scheme = useThemeStore((s) => s.scheme);
+  const scheme = useEffectiveScheme();
   return (
     <Theme name={scheme}>
       <div style={{ display: 'contents', fontFamily: typography.fontFamily }}>{children}</div>

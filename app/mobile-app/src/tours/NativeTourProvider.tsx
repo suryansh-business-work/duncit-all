@@ -3,7 +3,7 @@ import { TourGuideProvider, useTourGuideController } from 'rn-tourguide';
 
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 import { useMe } from '@/hooks/useMe';
-import { useThemeStore } from '@/stores/theme.store';
+import { useEffectiveScheme } from '@/hooks/useEffectiveScheme';
 import { useToursStore } from '@/stores/tours.store';
 import { fireAndForget } from '@/utils/fire-and-forget';
 import { TourCard } from './TourCard';
@@ -132,7 +132,7 @@ function TourRunner() {
  * rather than by selector — see TourAnchor for how an anchor becomes that number.
  */
 export function NativeTourProvider({ children }: Readonly<{ children: ReactNode }>) {
-  const scheme = useThemeStore((s) => s.scheme);
+  const scheme = useEffectiveScheme();
   // The kill switch: with `tour_guide` off the runner never mounts, so nothing
   // can open an overlay — the Tour Guide row is hidden, but the screen is still
   // registered and reachable by deep link.

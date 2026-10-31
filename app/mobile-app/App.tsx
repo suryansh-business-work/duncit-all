@@ -1,9 +1,5 @@
-import { useEffect, useMemo } from 'react';
-import {
-  DefaultTheme,
-  NavigationContainer,
-  type Theme as NavTheme,
-} from '@react-navigation/native';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { NavigationContainer } from '@react-navigation/native';
 import { Platform } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -21,8 +17,8 @@ import { RootNavigator } from '@/navigation/RootNavigator';
 import { NativeTourProvider } from '@/tours/NativeTourProvider';
 import { SplashOverlay } from '@/components/SplashOverlay';
 import { ForceUpdateGate } from '@/components/ForceUpdateGate';
-import { APP_BG } from '@/components/AppBackground';
 import { AppPopup } from '@/components/AppPopup';
+import { OccasionLayer } from '@/components/occasion';
 import { ConsentHost } from '@/components/consent';
 import { ExitConfirmGate } from '@/components/ExitConfirmGate';
 import { linking } from '@/navigation/linking';
@@ -32,6 +28,7 @@ import {
 } from '@/services/short-link-attribution';
 import { navigationRef } from '@/navigation/navigationRef';
 import { useUserInfoSession } from '@/hooks/useUserInfoSession';
+import { useOccasionAppearance } from '@/hooks/useOccasionAppearance';
 import { loadWebFonts } from '@/services/web-fonts';
 import { useAuthStore } from '@/stores/auth.store';
 import { useAppVersionStore } from '@/stores/app-version.store';
@@ -44,13 +41,6 @@ import config, { LOCAL_PALETTES, createBrandConfig } from './tamagui.config';
 import { configureLogs, httpTransport, detectEnvironment } from '@duncit/logs';
 import { resolveThemeTokens } from '@duncit/utils';
 import { config as appConfig } from '@/constants/config';
-
-// Base navigator background = the app ground, so there's no white
-// flash between/behind screens. Each screen paints the same ground itself.
-const navThemeFor = (dark: boolean): NavTheme => ({
-  ...DefaultTheme,
-  colors: { ...DefaultTheme.colors, background: dark ? APP_BG.dark : APP_BG.light },
-});
 
 // Inject the brand web font (Quicksand) on web; no-op on native. Runs once at
 // module load so the stylesheet is requested before first paint.
@@ -110,11 +100,17 @@ export default function App() {
   // Branding → Theme tokens: the bundled palettes (same reference) unless the
   // admin switched the source to Server. Native twin of mWeb's useThemeTokens.
   const branding = brandingData?.branding;
-  const palettes = useMemo(() => resolveThemeTokens(LOCAL_PALETTES, branding), [branding]);
+  const brandPalettes = useMemo(() => resolveThemeTokens(LOCAL_PALETTES, branding), [branding]);
+  // Marketing → Occasions: the live festive look's colours over those (same
+  // reference without a look) and the mode it may pin (Halloween is a night).
+  const { look, palettes, mode, navTheme } = useOccasionAppearance(brandPalettes, scheme);
   const tamaguiConfig = useMemo(() => {
     const isBundled = !brandFont && palettes === LOCAL_PALETTES;
     return isBundled ? config : createBrandConfig(brandFont, palettes);
   }, [brandFont, palettes]);
+  // The look's greeting waits for the boot splash to lift, so nobody misses it.
+  const [splashDone, setSplashDone] = useState(false);
+  const onSplashDone = useCallback(() => setSplashDone(true), []);
 
   // Web build: swap the favicon to the admin-configured one once branding loads.
   useEffect(() => {
@@ -155,19 +151,19 @@ export default function App() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <TamaguiProvider config={tamaguiConfig} defaultTheme={scheme}>
-        <Theme name={scheme}>
+      <TamaguiProvider config={tamaguiConfig} defaultTheme={mode}>
+        <Theme name={mode}>
           <SafeAreaProvider>
             <ErrorBoundary scope="root">
               <OfflineBanner />
               <YStack flex={1}>
                 <NavigationContainer
                   ref={navigationRef}
-                  theme={navThemeFor(scheme === 'dark')}
+                  theme={navTheme}
                   linking={linking}
                   onStateChange={reportJourneyForCurrentRoute}
                 >
-                  <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
+                  <StatusBar style={mode === 'dark' ? 'light' : 'dark'} />
                   {/* Inside NavigationContainer so a tour survives the
                       navigation that takes the user to its screen. */}
                   <NativeTourProvider>
@@ -176,7 +172,10 @@ export default function App() {
                   {/* Over every screen: a message in a room that is not open. */}
                   <ChatNewBanner />
                 </NavigationContainer>
-                <SplashOverlay />
+                {/* The festive look over every screen, under the splash and
+                    gates; touches pass through all but its own buttons. */}
+                <OccasionLayer look={look} greet={splashDone} />
+                <SplashOverlay onDone={onSplashDone} />
                 {/* Below the update gate on purpose: a blocked build must see
                     the store prompt, not a campaign image over it. */}
                 <AppPopup />

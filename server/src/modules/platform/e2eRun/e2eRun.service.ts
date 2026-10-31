@@ -40,8 +40,9 @@ import {
   type IE2eSuiteResult,
 } from './e2eRun.model';
 import { E2E_SUITES, currentSuites, normaliseSuites, suitesInput } from './e2eRun.suites';
-import { buildIdentity, type E2eIdentity } from './e2eRun.identity';
+import { buildIdentity, runAccountMatcher, type E2eIdentity, type E2eIdentitySeed } from './e2eRun.identity';
 import { forgetMuteCache } from './e2eRun.mute';
+import { strangerOnRunPhone } from './e2eRun.purge';
 import { openRowFor } from './e2eRun.lookup';
 import { e2eScenarioService } from './e2eRun.scenarios';
 import { regressionReportService } from '@modules/platform/regressionReport/regressionReport.service';
@@ -175,6 +176,41 @@ async function settingsDoc(): Promise<IE2eRunSettings> {
     { $setOnInsert: { key: E2E_SETTINGS_KEY } },
     { new: true, upsert: true, setDefaultsOnInsert: true }
   ).exec() as Promise<IE2eRunSettings>;
+}
+
+/** The run account a save describes, and whether it makes this server an e2e target. */
+interface IdentitySave extends E2eIdentitySeed {
+  otp_bypass: boolean;
+}
+
+/**
+ * Refuse a run phone that a real member holds on this server.
+ *
+ * The run signs up on the server whose settings hold one-time codes for it,
+ * and signup refuses a number any account already has. A run account on it —
+ * this run's, or an earlier run's the purge clears — is fine; anyone else
+ * blocks every signup of every run, so the number is refused here, where it is
+ * typed, rather than by the next run's preflight. Asked only when the save
+ * switches the codes on or changes the identity: a save that only touches the
+ * schedule is not held hostage to a number saved earlier.
+ */
+async function assertRunPhoneFree(previous: IE2eRunSettings, next: IdentitySave): Promise<void> {
+  if (!next.otp_bypass) return;
+  const unchanged =
+    previous.otp_bypass &&
+    previous.identity_phone === next.identity_phone &&
+    previous.email_prefix === next.email_prefix &&
+    previous.email_domain === next.email_domain;
+  if (unchanged) return;
+  const heldBy = await strangerOnRunPhone(
+    runAccountMatcher(next)?.email ?? null,
+    next.identity_phone.replaceAll(/\D/g, '')
+  );
+  if (!heldBy) return;
+  throw badInput(
+    `The run phone is registered to ${heldBy} on this server, which is not a run account, so no run could sign up ` +
+      'with it here. Take the number off that account, or save a number no account on this server holds.'
+  );
 }
 
 const scheduleOf = (doc: IE2eRunSettings): CronSchedule => ({
@@ -743,6 +779,13 @@ export const e2eRunService = {
     if (keepLast < 1) throw badInput('Keep at least one run.');
     const ref = str(input.ref);
     if (!ref) throw badInput('Pick a branch for scheduled runs.');
+    const identity: IdentitySave = {
+      email_prefix: str(input.email_prefix),
+      email_domain: str(input.email_domain).replace(/^@/, ''),
+      identity_phone: str(input.identity_phone),
+      password: '',
+      otp_bypass: Boolean(input.otp_bypass),
+    };
     const set: Record<string, unknown> = {
       enabled: Boolean(input.enabled),
       frequency: input.frequency,
@@ -751,11 +794,11 @@ export const e2eRunService = {
       ref,
       suites: normaliseSuitesOrThrow(input.suites),
       keep_last: keepLast,
-      email_prefix: str(input.email_prefix),
-      email_domain: str(input.email_domain).replace(/^@/, ''),
-      identity_phone: str(input.identity_phone),
+      email_prefix: identity.email_prefix,
+      email_domain: identity.email_domain,
+      identity_phone: identity.identity_phone,
       mute_communications: Boolean(input.mute_communications),
-      otp_bypass: Boolean(input.otp_bypass),
+      otp_bypass: identity.otp_bypass,
       record_videos: Boolean(input.record_videos),
     };
     // Absent leaves the saved password alone. The form cannot read it back, so
@@ -769,6 +812,7 @@ export const e2eRunService = {
     // at two in the afternoon starts a forty-minute run at two in the
     // afternoon. Every later window still catches up normally.
     if (set.enabled && !previous.enabled) set.last_run_at = new Date();
+    await assertRunPhoneFree(previous, identity);
     // The channel is NOT part of this document. It lives on the SLACK env
     // entry beside the bot token, so every channel the platform posts to is
     // configured in one place and the Environment page can show it. Written

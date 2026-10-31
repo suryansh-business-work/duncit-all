@@ -113,8 +113,9 @@ const copy = JSON.stringify(podRailCopy((key) => t(key)));
     scroll-snap-type: x mandatory;
     scroll-padding: 0 1rem;
     padding: 0.25rem 1rem 1rem;
-    /* Every card keeps its own height instead of stretching to the tallest. */
-    align-items: flex-start;
+    /* Every card stretches to the tallest. The cover is a fixed 4:3, so only
+     * the text (an optional place line) can differ, and the row stays even. */
+    align-items: stretch;
     scrollbar-width: none;
   }
   .pod-rail-track::-webkit-scrollbar {
@@ -143,14 +144,15 @@ const copy = JSON.stringify(podRailCopy((key) => t(key)));
     overflow: hidden;
     background: var(--color-line);
   }
-  /* Out of flow so a tall poster can't grow the cover; contain shows the whole
-   * picture without cropping or stretching it. */
+  /* Out of flow so a tall poster can't grow the cover; cover fills the whole
+   * 4:3 frame, so every picture is the same height with no bars around it. */
   .pod-rail-img {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
-    object-fit: contain;
+    object-fit: cover;
+    object-position: center;
     display: block;
   }
   .pod-rail-price {

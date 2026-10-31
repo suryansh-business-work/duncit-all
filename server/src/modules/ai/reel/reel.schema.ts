@@ -114,7 +114,7 @@ export const reelTypeDefs = gql`
     size_bytes: Float!
     "STOCK: the library's licence line; empty for Drive, an upload or generated sound."
     licence: String!
-    "STOCK: the credit the library asks for, e.g. \\"Photo by X on Pexels\\"."
+    "STOCK: the credit the library asks for, e.g. 'Photo by X on Pexels'."
     attribution: String!
     "STOCK: the library's own id for it."
     provider_id: String!

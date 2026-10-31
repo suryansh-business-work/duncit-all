@@ -32,9 +32,9 @@ import {
 export default function ReelChatForm({ busy, savedPrompts, onSend }: Readonly<ReelChatFormProps>) {
   const { t } = useTranslation();
   const schema = useMemo(() => buildReelChatSchema(t), [t]);
-  const { control, handleSubmit, reset, setValue, setFocus, formState } = useForm<ReelChatFormValues, any, ReelChatFormValues>({
+  const { control, handleSubmit, reset, setValue, setFocus, formState } = useForm<ReelChatFormValues, unknown, ReelChatFormValues>({
     defaultValues: reelChatInitialValues,
-    resolver: zodResolver(schema) as unknown as Resolver<ReelChatFormValues, any, ReelChatFormValues>,
+    resolver: zodResolver(schema) as unknown as Resolver<ReelChatFormValues, unknown, ReelChatFormValues>,
     mode: 'onChange',
   });
   const text = useWatch({ control, name: 'text' });

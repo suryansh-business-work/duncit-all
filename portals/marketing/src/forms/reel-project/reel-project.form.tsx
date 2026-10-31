@@ -24,9 +24,9 @@ export default function ReelProjectForm({
   const schema = useMemo(() => buildReelProjectSchema(t), [t]);
   const editing = initialValues !== undefined;
   const startValues = initialValues ?? reelProjectInitialValues;
-  const { control, handleSubmit, reset, formState } = useForm<ReelProjectFormValues, any, ReelProjectFormValues>({
+  const { control, handleSubmit, reset, formState } = useForm<ReelProjectFormValues, unknown, ReelProjectFormValues>({
     defaultValues: startValues,
-    resolver: zodResolver(schema) as unknown as Resolver<ReelProjectFormValues, any, ReelProjectFormValues>,
+    resolver: zodResolver(schema) as unknown as Resolver<ReelProjectFormValues, unknown, ReelProjectFormValues>,
     mode: 'onChange',
   });
 

@@ -11,9 +11,9 @@ import { buildReelPromptSchema, type ReelPromptFormProps, type ReelPromptFormVal
 export default function ReelPromptForm({ open, content, submitting, onClose, onSubmit }: Readonly<ReelPromptFormProps>) {
   const { t } = useTranslation();
   const schema = useMemo(() => buildReelPromptSchema(t), [t]);
-  const { control, handleSubmit, reset, formState } = useForm<ReelPromptFormValues, any, ReelPromptFormValues>({
+  const { control, handleSubmit, reset, formState } = useForm<ReelPromptFormValues, unknown, ReelPromptFormValues>({
     defaultValues: { name: '', content },
-    resolver: zodResolver(schema) as unknown as Resolver<ReelPromptFormValues, any, ReelPromptFormValues>,
+    resolver: zodResolver(schema) as unknown as Resolver<ReelPromptFormValues, unknown, ReelPromptFormValues>,
     mode: 'onChange',
   });
 

@@ -24,6 +24,7 @@ import { TicketDiscountDemo, type TicketDiscountMock } from './ui/TicketDiscount
 import { smartIncentiveDemo } from './ui/SmartIncentiveDemo';
 import { LoaderDemo, type LoaderMock } from './ui/LoaderDemo';
 import { MuiIconPickerDemo, type MuiIconPickerMock } from './ui/MuiIconPickerDemo';
+import { CHRISTMAS_MOCK, OccasionDemo, type OccasionMock } from './ui/OccasionDemo';
 
 interface ErrorFallbackMock {
   reference: string;
@@ -165,6 +166,15 @@ export default defineDemos('ui', [
       'Click the field: the list opens with a preview of every icon. Type "soccer" or "music note" and it narrows, exact name first. Pick one and the hint names it with the glyph in front; paste an emoji and that is kept as typed. Change icon in the mock to start from another value.',
     mock: { icon: 'SportsSoccer', label: 'Icon', hint: 'Pick a Material icon, or paste an emoji.' },
     render: (mock) => <MuiIconPickerDemo mock={mock} />,
+  }),
+
+  defineDemo<OccasionMock>({
+    id: 'occasion-effects',
+    title: 'OccasionEffects — a festive look from Marketing → Occasions',
+    note:
+      'Christmas as it ships: layered snow with depth, Santa crossing with a sparkle trail, fairy lights and a frosty glow. Swap the flyer artwork for WITCH_BROOM, the garland for SPIDER_WEB or MARIGOLD, switch fireworks on, or set still to freeze one frame.',
+    mock: CHRISTMAS_MOCK,
+    render: (mock) => <OccasionDemo mock={mock} />,
   }),
 
   defineDemo<ChartFrameMock>({

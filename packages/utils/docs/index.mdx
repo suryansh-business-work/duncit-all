@@ -27,6 +27,39 @@ exports:
   - 'runPassword'
   - 'applyTokenOverrides'
   - 'resolveThemeTokens'
+  - 'colorWithAlpha'
+  - 'hasOccasionDecoration'
+  - 'isOccasionAnimated'
+  - 'occasionColorMode'
+  - 'occasionPalettes'
+  - 'occasionRandom'
+  - 'hash01'
+  - 'pickColor'
+  - 'cycleColor'
+  - 'OCCASION_SHAPES'
+  - 'OCCASION_SHAPE_PATHS'
+  - 'isOccasionShape'
+  - 'occasionLayerPaths'
+  - 'OCCASION_ARTWORKS'
+  - 'OCCASION_ARTWORK_NAMES'
+  - 'CUSTOM_ARTWORK_BOX'
+  - 'isOccasionArtwork'
+  - 'occasionArtwork'
+  - 'GARLAND_DEFAULT_COLORS'
+  - 'GARLAND_DEPTH'
+  - 'garlandMarks'
+  - 'twinkleAlpha'
+  - 'particleCountFor'
+  - 'seedParticles'
+  - 'particlePeriod'
+  - 'particlePose'
+  - 'flyerCycle'
+  - 'flyerPose'
+  - 'flyerTrail'
+  - 'fireworkBursts'
+  - 'burstSparks'
+  - 'occasionScene'
+  - 'occasionFrame'
   - 'fitScale'
   - 'fitSize'
   - 'PROFILE_MENU_ITEMS'
@@ -3455,6 +3488,36 @@ activeCategories([
 ]);
 // [{ id: 'cat-running', ... }]
 ```
+
+## Occasion looks — festive skins as data
+
+`occasion-*.ts` is the engine behind Marketing → Occasions: a festival look (Christmas, Diwali,
+Halloween…) is a record on the server — colour-token overrides per mode plus decoration — and every
+surface turns the same record into the same picture. Nothing here touches the DOM or React, so mWeb
+(canvas, via `@duncit/ui` `OccasionLayer`), the portal preview and the native app (reanimated + SVG)
+all read it.
+
+- **Colours** — `occasionPalettes(palettes, look)` writes the look's tokens over the app's (same
+  reference without a look); `occasionColorMode(mode, look)` honours a look that pins a mode.
+- **Marks** — particle layers FALL, RISE, DRIFT or TWINKLE. Each particle has a nearness `z`
+  (near = bigger, faster, brighter: parallax depth) and a 3D tumble (`flip`); its pose is a pure
+  function of time, so any instant can be drawn and a stalled tab never jumps.
+- **Flyers** — built-in vector artwork (Santa's sleigh, a witch, a kite, a hot-air balloon, a
+  shooting star), the look's own vector layers, or an uploaded image, crossing now and then with a
+  sparkle trail.
+- **Fireworks, atmosphere, garland** — glowing streaking bursts; vignette / top glow / drifting fog;
+  string lights, bunting, a marigold toran, corner spider webs or icicles along the top edge.
+
+```ts
+import { occasionFrame, occasionScene, occasionPalettes } from '@duncit/utils';
+
+const scene = occasionScene(look, innerWidth, innerHeight); // seed swarms, place the garland
+const ops = occasionFrame(scene, seconds); // overlays → particles → fireworks → flyers → garland
+// ops: { op: 'mark' | 'art' | 'image' | 'dot' | 'radial' | 'linear', … } — a renderer paints them.
+```
+
+Shape and artwork names are a server enum too (`server/src/modules/crm/marketing/occasions`); a name
+this build does not know is skipped, never thrown on.
 
 ## Theme tokens — bundled, or the admin's
 

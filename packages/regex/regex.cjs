@@ -147,6 +147,17 @@ const USERNAME = /^(?=.{3,30}$)[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 /** A URL slug such as `summer-meetups-2026`. See regex.mjs for the full note. */
 const URL_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+/**
+ * A hex colour as design data stores it: `#rgb` or `#rrggbb` (case-insensitive).
+ * No alpha form — a festive look fades colours itself — and no named colours.
+ */
+const HEX_COLOR = /^#(?:[\da-fA-F]{3}|[\da-fA-F]{6})$/;
+/**
+ * SVG path data (the `d` attribute): only path commands, numbers, signs,
+ * exponents, separators and whitespace — nothing a renderer could fetch or run.
+ * One character class, so it is linear.
+ */
+const SVG_PATH_DATA = /^[MmLlHhVvCcSsQqTtAaZz\d\s.,eE+-]+$/;
 
 /** A social-network handle such as `duncit.events`, without the `@`. See regex.mjs. */
 const SOCIAL_HANDLE = /^[A-Za-z0-9._-]{1,100}$/;
@@ -195,6 +206,8 @@ module.exports = {
   HOSTNAME_LABEL,
   USERNAME,
   URL_SLUG,
+  HEX_COLOR,
+  SVG_PATH_DATA,
   SOCIAL_HANDLE,
   UNDERSCORE_HANDLE,
   SITE_PATH,
@@ -221,6 +234,8 @@ module.exports = {
   isPhysicalGiftCardPasscode: (v) => PHYSICAL_GIFT_CARD_PASSCODE.test(toDigits(v)),
   isUsername: (v) => USERNAME.test(v),
   isUrlSlug: (v) => URL_SLUG.test(v),
+  isHexColor: (v) => HEX_COLOR.test(v),
+  isSvgPathData: (v) => SVG_PATH_DATA.test(v),
   isSocialHandle: (v) => SOCIAL_HANDLE.test(v),
   isUnderscoreHandle: (v) => UNDERSCORE_HANDLE.test(v),
   isSitePath: (v) => SITE_PATH.test(v),

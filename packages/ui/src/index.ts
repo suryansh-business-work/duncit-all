@@ -87,3 +87,11 @@ export type { ScrollRailProps } from './ScrollRail';
 export { DuncitErrorBoundary, ErrorFallback } from './error-boundary';
 export type { BoundaryLogger, DuncitErrorBoundaryProps, ErrorFallbackProps } from './error-boundary';
 export { playMessagePing } from './sounds';
+export { OccasionBoundary, OccasionEffects, OccasionGreeting, OccasionLayer, runOccasionCanvas } from './occasion';
+export type {
+  OccasionBoundaryProps,
+  OccasionCanvasOptions,
+  OccasionEffectsProps,
+  OccasionGreetingProps,
+  OccasionLayerProps,
+} from './occasion';

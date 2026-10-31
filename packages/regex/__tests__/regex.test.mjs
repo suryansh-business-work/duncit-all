@@ -37,6 +37,10 @@ import {
   UPI_ID,
   URL_SLUG,
   isUrlSlug,
+  HEX_COLOR,
+  isHexColor,
+  SVG_PATH_DATA,
+  isSvgPathData,
   SOCIAL_HANDLE,
   isSocialHandle,
   UNDERSCORE_HANDLE,
@@ -416,6 +420,36 @@ describe('isHostname', () => {
     expect(isHostname(null)).toBe(false);
     expect(isHostname(undefined)).toBe(false);
     expect(isHostname('')).toBe(false);
+  });
+});
+
+describe('HEX_COLOR / isHexColor', () => {
+  it('accepts three- and six-digit hex in either case', () => {
+    for (const color of ['#fff', '#FFD54F', '#1b6b3a', '#A0b']) {
+      expect(isHexColor(color)).toBe(true);
+      expect(HEX_COLOR.test(color)).toBe(true);
+    }
+  });
+
+  it('rejects alpha forms, missing hashes, wrong lengths, named and functional colours', () => {
+    for (const color of ['', 'fff', '#ffff', '#ffd54', '#FFD54F80', '#ggg', 'red', 'rgb(1,2,3)', ' #fff']) {
+      expect(isHexColor(color)).toBe(false);
+    }
+  });
+});
+
+describe('SVG_PATH_DATA / isSvgPathData', () => {
+  it('accepts path data with every command, decimals, signs, exponents and separators', () => {
+    for (const path of ['M12 2l2.2 7.8L22 12z', 'M0,0 C1 2 3 4 5 6 S7 8 9 10 Q1 1 2 2 T3 3 A1 1 0 1 0 2 2 H4 V5 Z', 'M1e-3 -2.5E+2h.5v-.5']) {
+      expect(isSvgPathData(path)).toBe(true);
+      expect(SVG_PATH_DATA.test(path)).toBe(true);
+    }
+  });
+
+  it('rejects anything that is not path data — markup, urls, words, an empty string', () => {
+    for (const path of ['', 'M0 0<script>', 'url(#a)', 'M0 0;fill:red', 'hello', 'M0 0 "x"']) {
+      expect(isSvgPathData(path)).toBe(false);
+    }
   });
 });
 

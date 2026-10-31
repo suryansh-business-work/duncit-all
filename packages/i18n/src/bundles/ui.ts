@@ -125,5 +125,14 @@ export const UI_BUNDLE: NestedCatalogue = {
       reportFailed: 'The report could not be sent. Try again in a moment.',
       reference: 'Reference: {id}',
     },
+    /**
+     * The festive look Marketing → Occasions puts over mWeb: the control that
+     * stops its animation (WCAG 2.2.2) and the close button on its greeting.
+     */
+    occasion: {
+      pause: 'Pause the celebration',
+      play: 'Play the celebration',
+      dismiss: 'Dismiss greeting',
+    },
   },
 };

@@ -959,8 +959,8 @@ async function bootstrap() {
   // AI portal automation: where AiSensy posts each incoming WhatsApp message.
   app.use('/automation', buildAutomationRouter());
 
-  // AI portal Reel Studio: Drive footage streamed to the player. No session —
-  // the signed token in the path is the credential. See reel.router.ts.
+  // Marketing portal Reel Studio: Drive footage streamed to the player. No
+  // session — the signed token in the path is the credential. See reel.router.ts.
   app.use('/reels', buildReelRouter());
 
   // LinkedIn / Meta / X / Google's OAuth redirect after a marketer connects a

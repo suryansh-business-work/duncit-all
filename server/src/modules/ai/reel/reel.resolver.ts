@@ -2,8 +2,12 @@ import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
 import { reelService, type ReelActor, type ReelMessageInput, type ReelProjectInput } from './reel.service';
 
-/** The AI portal owns Reel Studio. Nothing here is read by another console. */
-const REEL_ROLES = ['SUPER_ADMIN', 'AI_MANAGER'];
+/**
+ * Reel Studio lives in the Marketing console, where a finished reel is posted
+ * from; the AI console keeps its access because the director and its prompts
+ * are tuned there.
+ */
+const REEL_ROLES = ['SUPER_ADMIN', 'MARKETING_MANAGER', 'MARKETING_EDITOR', 'AI_MANAGER'];
 
 function actorOf(ctx: GraphQLContext): ReelActor {
   const user = requireRole(ctx, REEL_ROLES);

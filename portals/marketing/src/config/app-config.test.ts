@@ -106,4 +106,13 @@ describe('Marketing sidebar', () => {
     expect(buildNav(['MARKETING_READER'])).not.toContain(settings);
     expect(buildNav([])).toHaveLength(MARKETING_NAV.length - 1);
   });
+
+  it('leaves Approvals out for an editor, whose sends wait on a manager, and keeps the rest of Overview', () => {
+    const overviewOf = (nav: ReturnType<typeof buildNav>) => nav.find((item) => item.labelKey === 'shell.nav.overview');
+    const editorLeaves = overviewOf(buildNav(['MARKETING_EDITOR']))?.children?.map((child) => child.to);
+    expect(editorLeaves).toEqual(['/', '/tasks', '/activity']);
+    expect(overviewOf(buildNav(['MARKETING_MANAGER']))?.children?.map((child) => child.to)).toContain('/approvals');
+    // The shared list itself is never trimmed.
+    expect(overviewOf(MARKETING_NAV)?.children?.map((child) => child.to)).toContain('/approvals');
+  });
 });

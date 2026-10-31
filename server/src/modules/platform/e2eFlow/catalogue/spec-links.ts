@@ -131,7 +131,6 @@ export const E2E_FLOW_SPEC_LINKS: Readonly<Record<string, readonly string[]>> = 
   'AI: Automation flows': ['mweb/__tests__/e2e/specs/api/other/ai-automation-inbound-webhook.cy.ts', 'mweb/__tests__/e2e/specs/api/staff/ai-console.cy.ts'],
   'AI: OpenAI Dashboard': ['mweb/__tests__/e2e/specs/api/staff/ai-console.cy.ts'],
   'AI: OpenAI Logs': ['mweb/__tests__/e2e/specs/api/staff/ai-console.cy.ts'],
-  'AI: Reel Studio': ['mweb/__tests__/e2e/specs/api/other/reel-studio-media.cy.ts', 'mweb/__tests__/e2e/specs/api/staff/ai-console.cy.ts'],
   'AI: Welcome page': ['mweb/__tests__/e2e/specs/api/staff/ai-console.cy.ts'],
   'Analytics: Access': ['mweb/__tests__/e2e/specs/api/staff/analytics-console.cy.ts', 'mweb/__tests__/e2e/specs/api/staff/authorization.cy.ts'],
   'Analytics: Alerts': [
@@ -652,6 +651,7 @@ export const E2E_FLOW_SPEC_LINKS: Readonly<Record<string, readonly string[]>> = 
   'Marketing: Mail Preferences analytics': ['mweb/__tests__/e2e/specs/api/staff/marketing-mail-preferences.cy.ts'],
   'Marketing: Notifications': ['mweb/__tests__/e2e/specs/api/staff/marketing-notifications-popups.cy.ts'],
   'Marketing: Occasions': ['mweb/__tests__/e2e/specs/api/staff/marketing-occasions.cy.ts'],
+  'Marketing: Reel Studio': ['mweb/__tests__/e2e/specs/api/other/reel-studio-media.cy.ts', 'mweb/__tests__/e2e/specs/api/staff/ai-console.cy.ts'],
   'Marketing: Short Links': [
     'mweb/__tests__/e2e/specs/api/staff/short-links.cy.ts',
   ],

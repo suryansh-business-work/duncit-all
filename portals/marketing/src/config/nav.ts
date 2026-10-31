@@ -25,6 +25,9 @@ const SOCIAL = group('shell.nav.socialMedia', 'hub', [leaf('shell.nav.accounts',
 
 const PUBLISHING = group('shell.nav.publishing', 'calendar', [leaf('shell.nav.calendar', '/publish/calendar', 'calendar')]);
 
+// What is made here before it is published: reels cut by chat from Drive footage.
+const CREATE = group('shell.nav.create', 'movie', [leaf('shell.nav.reelStudio', '/studio/reels', 'movie')]);
+
 const LEADS = group('shell.nav.leads', 'handshake', [leaf('shell.nav.instagramLeads', '/leads/instagram', 'handshake')]);
 
 // Everything that is sent, published or promoted, and the audience it goes to.
@@ -53,14 +56,18 @@ const ANALYTICS = group('shell.nav.analytics', 'analytics', [
 
 const SETTINGS = group('shell.nav.settings', 'settings', [leaf('shell.nav.integrations', '/settings/integrations', 'tune')]);
 
-/** The roles that reach Settings — keys and app credentials are a manager's to change. */
-const SETTINGS_ROLES = new Set(['SUPER_ADMIN', 'MARKETING_MANAGER']);
+/** The roles that reach Settings and Approvals — keys, app credentials and decisions are a manager's. */
+const MANAGER_ROLES = new Set(['SUPER_ADMIN', 'MARKETING_MANAGER']);
+const APPROVALS_PATH = '/approvals';
 
 /** The full sidebar, as a marketing manager sees it. */
-export const MARKETING_NAV: readonly AppNavItem[] = [OVERVIEW, SOCIAL, PUBLISHING, LEADS, CAMPAIGNS, ANALYTICS, SETTINGS];
+export const MARKETING_NAV: readonly AppNavItem[] = [OVERVIEW, SOCIAL, PUBLISHING, CREATE, LEADS, CAMPAIGNS, ANALYTICS, SETTINGS];
 
 /** The sidebar for one person: sections their roles cannot act on are left out, not greyed. */
 export function buildNav(roles: readonly string[]): AppNavItem[] {
-  const canSettings = roles.some((role) => SETTINGS_ROLES.has(role));
-  return MARKETING_NAV.filter((item) => item !== SETTINGS || canSettings);
+  if (roles.some((role) => MANAGER_ROLES.has(role))) return [...MARKETING_NAV];
+  // An editor's sends wait on a manager, so the queue of decisions is not theirs to open.
+  return MARKETING_NAV.filter((item) => item !== SETTINGS).map((item) =>
+    item === OVERVIEW ? { ...item, children: item.children?.filter((child) => child.to !== APPROVALS_PATH) } : item,
+  );
 }

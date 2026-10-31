@@ -853,6 +853,8 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       // Marketing's sidebar sections, grouped by what a marketer is doing.
       socialMedia: 'Social media',
       publishing: 'Publishing',
+      // What is made before it is published — Reel Studio lives here.
+      create: 'Create',
       accounts: 'Accounts',
       // Members' phone-book syncs and the invites sent from them — counts only.
       memberContacts: 'Member contacts',

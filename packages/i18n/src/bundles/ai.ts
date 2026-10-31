@@ -825,6 +825,21 @@ export const AI_BUNDLE: NestedCatalogue = {
         failed: 'The export failed',
         failedWith: 'The reel could not be exported: {reason}',
         retry: 'Try again',
+        // Rendered: save the file, or hand it to the social composer.
+        ready: 'Your reel is ready',
+        readyHint: 'Save the MP4 to your computer, or post it to the connected social accounts.',
+        postToSocial: 'Post to social',
+        uploadProgressLabel: 'Upload progress',
+        uploading: 'Uploading the reel — {percent}%',
+        uploadFailed: 'The reel could not be uploaded',
+        postFailedWith: 'The reel could not be posted: {reason}',
+        tooLarge: 'This reel is {size} MB and uploads are capped at {max} MB. Shorten it and export again.',
+      },
+      // The AI console's page at the old address: the studio now lives in Marketing.
+      moved: {
+        title: 'Reel Studio has moved',
+        body: 'Reels are now made in the Marketing console, beside the social calendar they are posted from. Every reel and its footage is there.',
+        open: 'Open Reel Studio',
       },
       // The timeline editor: tracks under the preview, an Edit tab beside the chat.
       editor: {

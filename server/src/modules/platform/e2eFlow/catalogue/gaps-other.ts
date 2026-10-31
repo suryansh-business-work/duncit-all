@@ -385,21 +385,34 @@ export const OTHER_GAP_FLOWS: readonly CatalogueFlow[] = [
     ],
   },
   {
-    name: 'AI: Reel Studio',
-    description: 'AI portal /reels and /reels/:projectId: reel projects built from Google Drive footage with an AI director. REEL_ROLES = SUPER_ADMIN, AI_MANAGER.',
+    name: 'Marketing: Reel Studio',
+    description: 'Marketing portal /studio/reels and /studio/reels/:projectId: reel projects built from Google Drive footage with an AI director on Claude, exported in the browser and posted to social from the studio. REEL_ROLES = SUPER_ADMIN, MARKETING_MANAGER, AI_MANAGER. The AI portal keeps /reels as a page that points here.',
     sub_flows: [
       {
         name: 'Create a reel project, add Drive footage, chat and save spec',
         description:
           'createReelProject, addReelDriveAssets, sendReelMessage and saveReelSpec persist; restoreReelVersion puts back the spec an earlier reply produced.',
         steps: [
-          ['As AI_MANAGER open /reels and create a project', 'createReelProject returns it and the studio opens at /reels/<id>'],
+          ['As MARKETING_MANAGER open /studio/reels and create a project', 'createReelProject returns it and the studio opens at /studio/reels/<id>'],
           ['Pick clips from the connected Drive folder', 'addReelDriveAssets attaches them to the project with thumbnails'],
           ['Send a chat message asking for a cut', 'sendReelMessage returns the reply with a spec version'],
           ['Edit the timeline', 'saveReelSpec saves the new spec_json'],
           ['Restore an earlier reply\'s version', 'restoreReelVersion returns the project with that spec'],
           ['Restore a reply that carried no spec', '"That reply has no version of the reel to put back."'],
           ['Call createReelProject with a USER token', '"Access Denied" (FORBIDDEN)'],
+          ['Call reelProjects with an AI_MANAGER token', 'The list, the same as for a MARKETING_MANAGER'],
+        ],
+      },
+      {
+        name: 'Export a reel and post it to social from the studio',
+        description:
+          'The MP4 is rendered in the browser; "Post to social" uploads it to ImageKit under /marketing/reels (getImagekitAuth ticket, the PORTALS upload caps) and opens the social composer on the reel’s name and the uploaded video, without leaving the studio.',
+        steps: [
+          ['Press Export MP4 on a reel with scenes', 'The export dialog shows the footage downloading, then the render progress, then "Your reel is ready"'],
+          ['Press Save', 'The MP4 downloads under the reel’s name and the dialog closes'],
+          ['Press Post to social', 'The upload progress shows, then the composer opens with the reel’s name as the text and the uploaded MP4 as its media'],
+          ['Post a reel larger than the PORTALS video cap', 'The dialog says the reel is too large and nothing is uploaded'],
+          ['Upload fails (ticket refused or network error)', 'The dialog shows the failure with Try again and Close; the rendered reel can still be saved'],
         ],
       },
     ],

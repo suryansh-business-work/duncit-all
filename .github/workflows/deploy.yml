@@ -1389,7 +1389,6 @@ jobs:
               --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
               --build-arg VITE_REQUIRED_ROLES=AI_MANAGER \
               --build-arg VITE_GOOGLE_CLIENT_ID=${{ env.BUILD_GOOGLE_CLIENT_ID }} \
-              --build-arg VITE_REMOTION_LICENSE_KEY=${{ secrets.REMOTION_LICENSE_KEY }} \
               --cache-from type=gha,scope=duncit-ai${{ env.SCOPE_SUFFIX }} \
               --cache-to   type=gha,scope=duncit-ai${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
@@ -1462,8 +1461,9 @@ jobs:
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-marketing:${{ env.IMAGE_TAG }} \
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-marketing:${{ env.SHA_TAG }} \
               --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
-              --build-arg VITE_REQUIRED_ROLES=MARKETING_MANAGER \
+              --build-arg VITE_REQUIRED_ROLES=MARKETING_MANAGER,MARKETING_EDITOR \
               --build-arg VITE_GOOGLE_CLIENT_ID=${{ env.BUILD_GOOGLE_CLIENT_ID }} \
+              --build-arg VITE_REMOTION_LICENSE_KEY=${{ secrets.REMOTION_LICENSE_KEY }} \
               --cache-from type=gha,scope=duncit-marketing${{ env.SCOPE_SUFFIX }} \
               --cache-to   type=gha,scope=duncit-marketing${{ env.SCOPE_SUFFIX }},mode=max \
               --push .

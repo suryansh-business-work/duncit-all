@@ -47,13 +47,25 @@ describe('reelResolvers — who may call them', () => {
     expect(() => call(makeContext())).toThrow();
   });
 
-  it.each(CALLS)('%s refuses a role outside the AI portal', (_name, call) => {
+  it.each(CALLS)('%s refuses a role outside the Marketing and AI consoles', (_name, call) => {
     expect(() => call(makeContext({ roles: ['FINANCE_MANAGER'] }))).toThrow('Access Denied');
   });
 
   it('lets a super admin in', () => {
     Query.reelProjects(null, {}, makeContext({ roles: ['SUPER_ADMIN'] }));
     expect(service.list).toHaveBeenCalledTimes(1);
+  });
+
+  // The studio lives in the Marketing console; the AI console keeps its access.
+  it.each(['MARKETING_MANAGER', 'MARKETING_EDITOR', 'AI_MANAGER'])('lets a %s in', (role) => {
+    Query.reelProjects(null, {}, makeContext({ roles: [role] }));
+    expect(service.list).toHaveBeenCalledTimes(1);
+  });
+
+  it('acts for a marketing manager by their own id and email', () => {
+    const marketer = makeContext({ id: 'user-7', email: 'marketing@duncit.com', roles: ['MARKETING_MANAGER'] });
+    Mutation.createReelProject(null, { input: INPUT }, marketer);
+    expect(service.create).toHaveBeenCalledWith(INPUT, { id: 'user-7', email: 'marketing@duncit.com' });
   });
 });
 

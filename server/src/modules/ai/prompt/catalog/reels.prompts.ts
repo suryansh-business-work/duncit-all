@@ -5,16 +5,25 @@ const { REELS } = PROMPT_CATEGORIES;
 const USAGE = [
   {
     file: 'server/src/modules/ai/reel/reel.director.ts',
-    surface: 'AI · Reel Studio',
+    surface: 'Marketing · Reel Studio',
     trigger: 'An operator sends a message in a reel’s chat',
   },
 ] as const;
 
 /**
- * The editor behind AI → Reel Studio. The contract it describes is the one
- * `reel.edit.ts` enforces: whatever the model returns is sanitized against it,
- * so a body edited in the portal can loosen the STYLE of an edit but never
- * produce a reel the player cannot draw.
+ * The director runs on Claude: the whole edit comes back as one JSON document
+ * with the footage's preview frames in the request, and the Claude transport
+ * (services/anthropic) carries both. The row seeded from the earlier default
+ * is moved along by `superseded_models`; a model an operator picked stays.
+ */
+const DIRECTOR_MODEL = 'claude-opus-5-5';
+const EARLIER_DIRECTOR_MODELS = ['gpt-4o'] as const;
+
+/**
+ * The editor behind Marketing → Create → Reel Studio. The contract it
+ * describes is the one `reel.edit.ts` enforces: whatever the model returns is
+ * sanitized against it, so a body edited in the portal can loosen the STYLE of
+ * an edit but never produce a reel the player cannot draw.
  */
 export const REELS_PROMPTS = [
   {
@@ -24,7 +33,8 @@ export const REELS_PROMPTS = [
     category: REELS,
     role: 'SYSTEM',
     tasks: ['reels.director'],
-    target_model: 'gpt-4o',
+    target_model: DIRECTOR_MODEL,
+    superseded_models: EARLIER_DIRECTOR_MODELS,
     variables: [],
     usage: USAGE,
     content: [
@@ -63,7 +73,8 @@ export const REELS_PROMPTS = [
     category: REELS,
     role: 'USER',
     tasks: ['reels.director'],
-    target_model: 'gpt-4o',
+    target_model: DIRECTOR_MODEL,
+    superseded_models: EARLIER_DIRECTOR_MODELS,
     variables: [
       required(
         'assets',

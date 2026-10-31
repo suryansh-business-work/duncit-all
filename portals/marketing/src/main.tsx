@@ -1,6 +1,7 @@
 import { mountPortal } from '@duncit/shell';
 import { createSessionUserLoader } from '@duncit/user-context';
 import {
+  AI_BUNDLE,
   ANALYTICS_BUNDLE,
   flattenCatalogue,
   MAIL_PREFERENCE_BUNDLE,
@@ -31,6 +32,9 @@ mountPortal({
     // Instagram Leads › Settings edits the Serper key with the Tech console's
     // own Environment Variables editor, which reads `tech.*`.
     ...flattenCatalogue(TECH_BUNDLE),
+    // Reel Studio moved here from the AI console and kept its `ai.reels.*`
+    // keys, so the copy every deployment already translated still resolves.
+    ...flattenCatalogue(AI_BUNDLE),
   },
   loadUser: createSessionUserLoader(apolloClient),
   children: <App />,

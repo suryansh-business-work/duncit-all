@@ -2557,21 +2557,6 @@
       "count": 2
     }
   },
-  "portals/ai/src/forms/reel-chat/reel-chat.form.tsx": {
-    "no-restricted-syntax": {
-      "count": 2
-    }
-  },
-  "portals/ai/src/forms/reel-project/reel-project.form.tsx": {
-    "no-restricted-syntax": {
-      "count": 2
-    }
-  },
-  "portals/ai/src/forms/reel-prompt/reel-prompt.form.tsx": {
-    "no-restricted-syntax": {
-      "count": 2
-    }
-  },
   "portals/ai/src/pages/ai-monitoring/settings/index.tsx": {
     "no-restricted-syntax": {
       "count": 1

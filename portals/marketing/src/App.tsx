@@ -29,6 +29,8 @@ import IntegrationsPage from './pages/settings-page/IntegrationsPage';
 import ActivityPage from './pages/activity-page';
 import ApprovalsPage from './pages/approvals-page';
 import TasksPage from './pages/tasks-page';
+import ReelProjectsPage from './pages/reels/projects-list';
+import ReelStudioPage from './pages/reels/studio/lazy';
 import AppShell from './components/AppShell';
 import Redirect from './components/Redirect';
 import { getToken } from './lib/session';
@@ -58,6 +60,9 @@ export default function App() {
         {/* Publishing */}
         <Route path="/publish/calendar" element={authed(<SocialCalendarPage />)} />
         <Route path="/social-calendar" element={<Redirect to="/publish/calendar" />} />
+        {/* Create: Reel Studio — the studio itself is fetched when a reel is opened */}
+        <Route path="/studio/reels" element={authed(<ReelProjectsPage />)} />
+        <Route path="/studio/reels/:projectId" element={authed(<ReelStudioPage />)} />
         {/* Leads */}
         <Route path="/leads/instagram" element={authed(<InstagramLeadsPage />)} />
         <Route path="/instagram-leads" element={<Redirect to="/leads/instagram" />} />

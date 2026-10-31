@@ -12,6 +12,7 @@ const captured = vi.hoisted(() => ({ options: null as unknown }));
 const stubs = vi.hoisted(() => ({
   EventRequestsPage: () => null,
   HostDetailsPage: () => null,
+  HostRecordPage: () => null,
   HostEditorPage: () => null,
   HostsPage: () => null,
 }));
@@ -28,6 +29,7 @@ vi.mock('@duncit/entity-consoles', () => ({
 vi.mock('@duncit/logs', () => ({ logs: { portal: { hosts: 'hosts-logs' } } }));
 vi.mock('@duncit/shell', () => ({ EventRequestsPage: stubs.EventRequestsPage }));
 vi.mock('../../src/config/app-config', () => ({ appConfig: { key: 'hosts' } }));
+vi.mock('../../src/HostRecordPage', () => ({ default: stubs.HostRecordPage }));
 
 interface NavEntry {
   label: string;
@@ -79,6 +81,11 @@ describe('Hosts console mount', () => {
     expect(page?.type).toBe(stubs.EventRequestsPage);
     // "console" is every host's requests; "owner" is the partner's own only.
     expect(page?.props).toEqual({ targetType: 'HOST', scope: 'console' });
+  });
+
+  it('opens a host as the console record page, with its banner kit tabs', () => {
+    const route = routesOf(options).find(([path]) => path === '/hosts/:hostId');
+    expect(route?.[1].guarded.type).toBe(stubs.HostRecordPage);
   });
 
   it('keeps every route behind the sign-in gate', () => {

@@ -217,9 +217,9 @@ const VENUE_NAV_CATEGORIES: readonly NavCategory[] = [
     label: 'Venues',
     labelKey: 'shell.nav.venues',
     icon: 'storefront',
-    keys: ['venues', 'type-capacity', 'amenities', 'leaves', 'fees', 'price-rules', 'settings', 'publish', 'verification'],
+    keys: ['venues', 'type-capacity', 'amenities', 'leaves', 'fees', 'price-rules', 'settings', 'publish', 'banner-kit', 'verification'],
   },
-  { label: 'Pods', labelKey: 'shell.nav.pods', icon: 'community', keys: ['pods', 'chat', 'rented-items'] },
+  { label: 'Pods', labelKey: 'shell.nav.pods', icon: 'community', keys: ['pods', 'chat', 'rented-items', 'banners'] },
   { label: 'Requests', labelKey: 'shell.nav.requests', icon: 'host-request', keys: ['slot-requests', 'pod-requests', 'change-requests', 'auto-pods', 'nearby'] },
   { label: 'Finance', labelKey: 'shell.nav.finance', icon: 'payments', keys: ['earnings', 'withdrawal'] },
 ];

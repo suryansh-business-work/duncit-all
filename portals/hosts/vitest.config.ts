@@ -4,7 +4,7 @@ import { defineConfig } from 'vitest/config';
 // main.tsx only mounts the portal and is outside Sonar's coverage scope too.
 export default defineConfig({
   test: {
-    include: ['__tests__/unit-tests/**/*.test.ts'],
+    include: ['__tests__/unit-tests/**/*.test.{ts,tsx}'],
     coverage: {
       provider: 'v8',
       reportOnFailure: true,

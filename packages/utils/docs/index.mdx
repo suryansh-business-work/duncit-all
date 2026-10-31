@@ -1537,6 +1537,32 @@ app share these derivations and keep their own MUI / Tamagui rows (rules 27 + 40
 | `draftHoursLeft` | `(draft, now = Date.now()) => number` | Whole hours left, floored at 0. `0` means the last hour, not "already gone". |
 | `splitDraftsByExpiry` | `(drafts, now = Date.now()) => { expiring, rest }` | `expiring` soonest-first; `rest` keeps the server order. |
 
+### Create Pod steps
+
+Create Pod walks four steps on both surfaces: **What** (category, mode) →
+**Where & when** (locality, club, venue and slot, or a virtual meeting) →
+**Money** (the venue offer, when the pod sends one, and the ticket) → **Details**.
+Every pod walks all four. A draft payload carries `stepper: CREATE_POD_STEPPER_VERSION`;
+one without it was saved by the old five-step stepper, and `resumeCreatePodStep`
+opens it on the step that now holds its screen (Location & Club → What, Basics →
+Details, Venue & Slot → Where & when, Offer and Pricing → Money). Host Again
+copies are numbered the five-step way by the server, and resume the same way.
+
+| Export | Signature | Meaning |
+| --- | --- | --- |
+| `CREATE_POD_STEP_COUNT` | `number` | 4. |
+| `CREATE_POD_WHERE_STEP` / `CREATE_POD_MONEY_STEP` | `number` | 1 / 2 — the steps the virtual title and the free justification key off. |
+| `CREATE_POD_STEPPER_VERSION` | `number` | 2 — written into every draft payload as `stepper`. |
+| `createPodSendsOffer` | `(scope) => boolean` | Physical, no Pod Request and no held slot: Money shows the venue offer. |
+| `clampCreatePodStep` | `(step) => number` | `step` held to 0..3; a non-number reads as 0. |
+| `resumeCreatePodStep` | `(step, payload) => number` | The step a stored draft reopens on, mapping a five-step draft's step. |
+| `createPodSuperOptions` | `(categories) => { id, name }[]` | The host's super-categories ("For You", "For Your Pet"), once each, in order. What shows the filter only when there are two. |
+| `categoriesForSuper` | `(categories, superCount, superId) => categories` | The picked super's tiles, or all of them when there is nothing to narrow. |
+| `categoryTileName` / `categoryTileGroup` | `(category) => string` | A tile's name (most specific level) and the level above it. |
+| `categoryIconLookup` | `(icons) => (category) => string` | A tile's admin icon: its own level's, else its parent category's, else `''`. |
+| `moneyExtrasFilled` / `detailsExtrasFilled` | `(values) => boolean` | Whether a step's folded More options opens on arrival (an extra is already set). |
+| `MONEY_EXTRA_FIELDS` / `DETAILS_EXTRA_FIELDS` + `anyFieldFailed` | `(errors, fields) => boolean` | Holds a More options open while one of its fields has a validation error. |
+
 ### Host Studio sections
 
 A hosted pod's VENUE-APPROVAL state, not its clock, decides which of Host

@@ -5,8 +5,8 @@ import { CreatePodStepper } from '@/components/create-pod/CreatePodStepper';
 import { blankCreatePodForm } from '@/components/create-pod/create-pod.types';
 import { renderWithProviders } from '@/utils/test-utils';
 
-// Products are a flag-gated section inside the Pricing step; default the flag
-// on so the end-to-end flows exercise it. The off path has its own test.
+// Products are a flag-gated section under Money's More options; default the
+// flag on so the end-to-end flows exercise it. The off path has its own test.
 const mockFeatureFlag = jest.fn().mockReturnValue(true);
 jest.mock('@/hooks/useFeatureFlag', () => ({
   useFeatureFlag: (key: string, fallback?: boolean) => mockFeatureFlag(key, fallback),
@@ -145,7 +145,7 @@ beforeEach(() => {
 
 const clubs = [
   // Same city (l1) + the host's super category → shown. Carries the auto-matched
-  // venues that scope the venue picker on step 3 (v9 is dropped by the city filter).
+  // venues that scope the venue picker on Where & when (v9 is dropped by the city filter).
   {
     id: 'c1',
     club_name: 'Runners',
@@ -231,16 +231,22 @@ const press = (testID: string) => fireEvent.press(screen.getByTestId(testID));
 const typedAt = (hours: number) =>
   format(new Date(Date.now() + hours * 3_600_000), 'dd MM yyyy hh:mm a');
 
-// Step 1 (Location, Category & Club): the sole host category is auto-selected,
-// so picking the mode and a club is all that is left.
-async function pickClub(mode: 'PHYSICAL' | 'VIRTUAL' = 'PHYSICAL') {
-  await screen.findByTestId('create-pod-club-c1');
+// What: the sole host category is auto-selected, so the mode is all that is
+// left. Next opens Where & when, which starts on the club.
+async function toWhere(mode: 'PHYSICAL' | 'VIRTUAL' = 'PHYSICAL') {
+  await screen.findByTestId('create-pod-mode-PHYSICAL');
   if (mode === 'VIRTUAL') press('create-pod-mode-VIRTUAL');
-  press('create-pod-club-c1');
   press('create-pod-submit');
+  await screen.findByTestId('create-pod-where-step');
 }
 
-// Fills step 2 (Basics) with valid values.
+// Where & when's club, which opens its venues (physical) or the meeting (virtual).
+async function pickClub(mode: 'PHYSICAL' | 'VIRTUAL' = 'PHYSICAL') {
+  await toWhere(mode);
+  press('create-pod-club-c1');
+}
+
+// Fills Details with valid values.
 async function fillBasics() {
   await screen.findByTestId('field-pod_title');
   fireEvent.changeText(screen.getByTestId('field-pod_title'), 'Sunday community hike');
@@ -261,8 +267,8 @@ async function fillBasics() {
   await screen.findByTestId('create-pod-offers-chip-Guided trail');
 }
 
-// Step 3 for a physical pod: venue → space (capacity) → a start and an end
-// the venue is open for.
+// Where & when for a physical pod: venue → space (capacity) → a start and an
+// end the venue is open for.
 async function pickWindow() {
   await screen.findByTestId('create-pod-venue-v1');
   press('create-pod-venue-v1');
@@ -274,7 +280,7 @@ async function pickWindow() {
   press(endChip);
 }
 
-// Step 4 (Offer for Venue): how the host pays it, then the server's quote.
+// Money's offer for the venue: how the host pays it, then the server's quote.
 async function offerFlat() {
   await screen.findByTestId('create-pod-offer-step');
   press('create-pod-offer-model-FLAT');
@@ -284,15 +290,11 @@ async function offerFlat() {
   await screen.findByTestId('create-pod-venue-quote');
 }
 
-// Drives the flow up to the Pricing step for either mode.
-async function fillToPricing(mode: 'PHYSICAL' | 'VIRTUAL') {
+// Drives the flow to Money for either mode, leaving the ticket as it starts.
+async function fillToMoney(mode: 'PHYSICAL' | 'VIRTUAL') {
   await pickClub(mode);
-  await fillBasics();
-  press('create-pod-submit');
   if (mode === 'PHYSICAL') {
     await pickWindow();
-    press('create-pod-submit');
-    await offerFlat();
   } else {
     await screen.findByTestId('field-meeting_url');
     // The platform is picked from the shared list, and a virtual pod has no
@@ -303,13 +305,26 @@ async function fillToPricing(mode: 'PHYSICAL' | 'VIRTUAL') {
     fireEvent.changeText(screen.getByTestId('field-pod_end_date_time_text'), typedAt(26));
   }
   press('create-pod-submit');
+  if (mode === 'PHYSICAL') await offerFlat();
   // Both cards are offered for either mode; a new pod starts on Paid.
   await screen.findByTestId('create-pod-paid');
-  // The Ticket Price field ships blank and gates Create Pod, so a paid pod is
-  // only publishable once the host types a price.
-  fireEvent.changeText(screen.getByTestId('field-pod_amount_text'), '500');
-  // Accept the Organizer Terms gate so the final publish validates.
+}
+
+// Money → Details: the content, then the Organizer Terms gate, so the final
+// publish validates.
+async function fillDetails() {
+  press('create-pod-submit');
+  await fillBasics();
   press('create-pod-terms');
+}
+
+// Drives the flow to a publishable Details for either mode.
+async function fillToDetails(mode: 'PHYSICAL' | 'VIRTUAL') {
+  await fillToMoney(mode);
+  // The Ticket Price field ships blank, and Money holds a paid pod until the
+  // host types a price.
+  fireEvent.changeText(screen.getByTestId('field-pod_amount_text'), '500');
+  await fillDetails();
 }
 
 // Says why the pod (or the venue) is free and accepts Duncit's free policy.
@@ -318,13 +333,13 @@ function justifyFree(prefix: string) {
   press(`${prefix}-free-accept`);
 }
 
-// A physical pod that offers its venue walks five steps; a virtual pod skips
-// the offer step and walks four.
-const expectStep = (step: number, total = 5) =>
-  expect(screen.getByTestId('create-pod-progress')).toHaveProp(
-    'aria-label',
-    `Step ${step} of ${total}`,
-  );
+// Every pod walks the same four steps; one that sends its venue no offer just
+// shows none on Money.
+const expectStep = (step: number) =>
+  expect(screen.getByTestId('create-pod-progress')).toHaveProp('aria-label', `Step ${step} of 4`);
+
+const stepTitle = () => screen.getByTestId('create-pod-step-title');
+const stepSubtitle = () => screen.getByTestId('create-pod-step-subtitle');
 
 describe('CreatePodStepper', () => {
   it('walks a physical pod end to end: slot booking sets the window, then publishes', async () => {

@@ -53,9 +53,13 @@ export const linkedinPublisher: SocialPublisher = {
       lifecycleState: 'PUBLISHED',
       isReshareDisabledByAuthor: false,
     };
-    if (content.media_type === 'IMAGE') {
-      post.content = { media: { id: await uploadImage(account, creds.version, content.media_url) } };
+    // Every picture is uploaded first; one is the post's media, two or more its multiImage.
+    const images: { id: string }[] = [];
+    for (const item of content.media.filter((m) => m.type === 'IMAGE')) {
+      images.push({ id: await uploadImage(account, creds.version, item.url) });
     }
+    if (images.length === 1) post.content = { media: images[0] };
+    if (images.length > 1) post.content = { multiImage: { images } };
     const { headers } = await postJson(
       LINKEDIN_SERVICE,
       `${LINKEDIN_API}/posts`,

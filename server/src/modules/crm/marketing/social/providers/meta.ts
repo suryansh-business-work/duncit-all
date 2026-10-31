@@ -57,6 +57,22 @@ export function graphPost<T>(
   return postForm<T>(serviceOf(base), graphUrl(version, path, base), { ...params, access_token: token });
 }
 
+/**
+ * A carousel on a Meta-shaped publishing API (Instagram, Threads): one
+ * container per item, each marked a carousel item and waited for in turn,
+ * then the parent container naming them all. `make` creates one container
+ * and hands back its id once the network has it ready.
+ */
+export async function carouselContainer(
+  items: readonly Record<string, string>[],
+  parent: Record<string, string>,
+  make: (fields: Record<string, string>) => Promise<string>
+): Promise<string> {
+  const children: string[] = [];
+  for (const item of items) children.push(await make({ ...item, is_carousel_item: 'true' }));
+  return make({ media_type: 'CAROUSEL', children: children.join(','), ...parent });
+}
+
 /** Graph DELETE with the token as a query parameter. */
 export function graphDelete<T>(version: string, path: string, token: string, base = FACEBOOK_GRAPH): Promise<T> {
   return socialJson<T>(serviceOf(base), withQuery(graphUrl(version, path, base), { access_token: token }), { method: 'DELETE' });

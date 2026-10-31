@@ -2,8 +2,10 @@ import gql from 'graphql-tag';
 
 /** Marketing → Social Accounts → Publish and Ideas: Buffer's composer, queue, calendar and ideas board. */
 export const socialPublishTypeDefs = gql`
+  "PENDING_APPROVAL waits for a reviewer's yes before it is SCHEDULED."
   enum SocialPublishStatus {
     DRAFT
+    PENDING_APPROVAL
     SCHEDULED
     PUBLISHING
     PUBLISHED
@@ -29,10 +31,12 @@ export const socialPublishTypeDefs = gql`
     NOW
   }
 
+  "APPROVALS is every post waiting for a decision, soonest scheduled first."
   enum SocialQueueView {
     QUEUE
     DRAFTS
     SENT
+    APPROVALS
   }
 
   "PLANNED was written in Duncit; PUBLISHED was read back from a network."
@@ -64,15 +68,30 @@ export const socialPublishTypeDefs = gql`
     published_at: String
   }
 
+  "One picture or clip of a post, in the order they show."
+  type SocialPostMedia {
+    url: String!
+    type: SocialMediaType!
+  }
+
   type SocialScheduledPost {
     id: ID!
     text: String!
+    "Every piece of media in order; two or more make a carousel."
+    media: [SocialPostMedia!]!
+    "The first piece of media, for readers of one."
     media_url: String
     media_type: SocialMediaType
     status: SocialPublishStatus!
     scheduled_at: String
     published_at: String
     idea_id: String
+    "A reviewer must say yes before it goes out."
+    needs_approval: Boolean!
+    "Why the reviewer sent it back; shown to the author on the draft."
+    review_note: String
+    "The marketing run that waits for (or recorded) the decision."
+    approval_run_id: String
     targets: [SocialPublishTarget!]!
     created_at: String
     updated_at: String
@@ -85,6 +104,7 @@ export const socialPublishTypeDefs = gql`
     status: SocialPublishStatus!
     text: String!
     media_url: String
+    media_count: Int!
     permalink: String
     platforms: [SocialPlatform!]!
     account_names: [String!]!
@@ -105,8 +125,16 @@ export const socialPublishTypeDefs = gql`
     created_at: String
   }
 
+  input SocialPostMediaInput {
+    url: String!
+    type: SocialMediaType!
+  }
+
   input SocialScheduledPostInput {
     text: String!
+    "Every piece of media in order; when given it replaces media_url/media_type."
+    media: [SocialPostMediaInput!]
+    "One piece of media, for callers that send one."
     media_url: String
     media_type: SocialMediaType
     account_ids: [ID!]!
@@ -115,6 +143,8 @@ export const socialPublishTypeDefs = gql`
     scheduled_at: String
     "The idea this post was written from; it is marked USED."
     idea_id: ID
+    "With SCHEDULE or NOW, parks the post as PENDING_APPROVAL and opens an approval run."
+    needs_approval: Boolean
   }
 
   input SocialIdeasInput {

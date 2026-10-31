@@ -1,8 +1,10 @@
 /**
  * The composer's side of social publishing against a real database: the
- * draft / schedule / now rules, every edit path, retries and the calendar.
- * Only the network send (publishNow) is mocked — it runs in the background;
- * the requeue a retry does is the publisher's real one.
+ * draft / schedule / now rules, carousels, the approval round-trip with the
+ * marketing run log, every edit path, retries and the calendar. Only the
+ * network send (publishNow) is mocked — it runs in the background; the
+ * requeue a retry does is the publisher's real one, and the approval runs
+ * are real rows.
  */
 jest.mock('@modules/crm/marketing/social/social.publisher', () => ({
   ...jest.requireActual('@modules/crm/marketing/social/social.publisher'),
@@ -11,14 +13,20 @@ jest.mock('@modules/crm/marketing/social/social.publisher', () => ({
 
 import { Types } from 'mongoose';
 import { logs } from '@observability/log';
+import { UserModel } from '@modules/access/user/user.model';
 import { publishNow } from '../../social.publisher';
 import { SocialAccountModel, SocialPostModel } from '../../social.model';
 import { SocialIdeaModel, SocialScheduledPostModel } from '../../social.publish.model';
 import { socialPublishService as svc, type ScheduledPostInput } from '../../social.publish.service';
+import type { PublishMedia } from '../../social.types';
+import { MarketingRunModel } from '../../../runs/marketingRun.model';
 
 const send = publishNow as jest.Mock;
 const USER = new Types.ObjectId().toHexString();
 const IMAGE = 'https://ik.imagekit.io/duncit/post.jpg';
+const VIDEO = 'https://ik.imagekit.io/duncit/clip.mp4';
+const PICTURE: PublishMedia = { url: IMAGE, type: 'IMAGE' };
+const CLIP: PublishMedia = { url: VIDEO, type: 'VIDEO' };
 const MINUTE = 60_000;
 // Valid ids that match no stored account — names fall back to ''.
 const GONE_A = new Types.ObjectId().toHexString();
@@ -82,6 +90,72 @@ describe('create — drafts', () => {
     expect((await SocialIdeaModel.findById(idea._id).lean())?.status).toBe('USED');
 
     await expect(svc.create(input({ idea_id: 'not-an-id' }), USER)).resolves.toMatchObject({ idea_id: 'not-an-id' });
+  });
+});
+
+describe('create — media', () => {
+  it('keeps every piece in order, with the first doubled as media_url / media_type', async () => {
+    const ig = await account('INSTAGRAM');
+    const media = [PICTURE, CLIP];
+    const out = await svc.create(input({ mode: 'SCHEDULE', scheduled_at: future(), account_ids: [String(ig._id)], media }), USER);
+    expect(out).toMatchObject({ media, media_url: IMAGE, media_type: 'IMAGE', status: 'SCHEDULED' });
+    const saved = await SocialScheduledPostModel.findById(out.id).lean();
+    expect(saved?.media).toEqual(media);
+    expect([saved?.media_url, saved?.media_type]).toEqual([IMAGE, 'IMAGE']);
+  });
+
+  it('lets the list replace the one-piece fields an older caller also sent', async () => {
+    const out = await svc.create(input({ media: [CLIP], media_url: IMAGE, media_type: 'IMAGE' }), USER);
+    expect(out).toMatchObject({ media: [CLIP], media_url: VIDEO, media_type: 'VIDEO' });
+  });
+
+  it('reads a one-piece media_url as a list of one, trimmed, an image unless told otherwise', async () => {
+    const out = await svc.create(input({ media_url: ` ${IMAGE} ` }), USER);
+    expect(out).toMatchObject({ media: [PICTURE], media_url: IMAGE, media_type: 'IMAGE' });
+    const clip = await svc.create(input({ media_url: VIDEO, media_type: 'VIDEO' }), USER);
+    expect(clip).toMatchObject({ media: [CLIP], media_url: VIDEO, media_type: 'VIDEO' });
+  });
+
+  it('drops blank entries, and reads an empty list as no media at all', async () => {
+    const out = await svc.create(input({ media: [{ url: '   ', type: 'IMAGE' }], media_url: IMAGE }), USER);
+    expect(out).toMatchObject({ media: [], media_url: '', media_type: null });
+  });
+
+  it('refuses a list when any piece is not from Duncit’s own media', async () => {
+    const x = await account('X');
+    const media: PublishMedia[] = [PICTURE, { url: 'https://evil.example/x.jpg', type: 'IMAGE' }];
+    await expect(svc.create(input({ mode: 'SCHEDULE', scheduled_at: future(), account_ids: [String(x._id)], media }), USER)).rejects.toThrow(
+      'Pick the image or video with the media picker — only Duncit’s own media can be posted.'
+    );
+    expect(await SocialScheduledPostModel.countDocuments()).toBe(0);
+  });
+
+  const five = Array.from({ length: 5 }, (_, i): PublishMedia => ({ url: `${IMAGE}?v=${i}`, type: 'IMAGE' }));
+  it.each([
+    ['five pictures for X', 'X', five, 'X takes at most 4 media'],
+    ['a video inside a Facebook carousel', 'FACEBOOK', [PICTURE, CLIP], 'Facebook takes one video on its own, not in a carousel'],
+    ['a LinkedIn video', 'LINKEDIN', [CLIP], 'LinkedIn cannot take video from Duncit yet'],
+    ['a video among X pictures', 'X', [PICTURE, CLIP], 'X cannot take video from Duncit yet'],
+    ['two YouTube videos', 'YOUTUBE', [CLIP, CLIP], 'YouTube takes at most 1 media'],
+  ])('refuses %s', async (_label, platform, media, message) => {
+    const acct = await account(platform);
+    await expect(svc.create(input({ mode: 'SCHEDULE', scheduled_at: future(), account_ids: [String(acct._id)], media }), USER)).rejects.toThrow(
+      `${message}.`
+    );
+    expect(await SocialScheduledPostModel.countDocuments()).toBe(0);
+  });
+
+  it('takes a carousel every chosen network allows', async () => {
+    const th = await account('THREADS');
+    const fb = await account('FACEBOOK');
+    const li = await account('LINKEDIN');
+    const media = [PICTURE, { url: `${IMAGE}?v=2`, type: 'IMAGE' as const }];
+    const out = await svc.create(
+      input({ mode: 'SCHEDULE', scheduled_at: future(), account_ids: [String(th._id), String(fb._id), String(li._id)], media }),
+      USER
+    );
+    expect(out.status).toBe('SCHEDULED');
+    expect(out.media).toEqual(media);
   });
 });
 
@@ -180,6 +254,8 @@ describe('list / get', () => {
     await post({ status: 'PUBLISHED' });
     await post({ status: 'PARTIAL' });
     await post({ status: 'FAILED' });
+    const waitingLater = await post({ status: 'PENDING_APPROVAL', scheduled_at: new Date('2030-02-02'), needs_approval: true });
+    const waitingSooner = await post({ status: 'PENDING_APPROVAL', scheduled_at: new Date('2030-02-01'), needs_approval: true });
 
     const queue = await svc.list('QUEUE');
     expect(queue.map((p) => p.id)).toEqual([String(sooner._id), String(later._id)]);
@@ -187,6 +263,24 @@ describe('list / get', () => {
     expect(queue[1].targets[0].account_name).toBe('Duncit X');
     expect((await svc.list('DRAFTS')).map((p) => p.status)).toEqual(['DRAFT']);
     expect((await svc.list('SENT')).map((p) => p.status).sort((a, b) => a.localeCompare(b))).toEqual(['FAILED', 'PARTIAL', 'PUBLISHED']);
+    const approvals = await svc.list('APPROVALS');
+    expect(approvals.map((p) => [p.id, p.status, p.needs_approval])).toEqual([
+      [String(waitingSooner._id), 'PENDING_APPROVAL', true],
+      [String(waitingLater._id), 'PENDING_APPROVAL', true],
+    ]);
+  });
+
+  it('shows a post’s media list, approval fields and their blanks', async () => {
+    const p = await post({ media: [PICTURE, CLIP], media_url: IMAGE, media_type: 'IMAGE', review_note: 'Shorter, please' });
+    expect(await svc.get(String(p._id))).toMatchObject({
+      media: [PICTURE, CLIP],
+      media_url: IMAGE,
+      needs_approval: false,
+      review_note: 'Shorter, please',
+      approval_run_id: '',
+    });
+    const bare = await post({});
+    expect(await svc.get(String(bare._id))).toMatchObject({ media: [], needs_approval: false, review_note: '', approval_run_id: '' });
   });
 
   it('reads one post, and reports a bad or unknown id as not found', async () => {
@@ -219,7 +313,145 @@ describe('update', () => {
 
   it.each(['PUBLISHING', 'PUBLISHED', 'PARTIAL', 'FAILED'])('refuses to edit a %s post', async (status) => {
     const p = await post({ status });
-    await expect(svc.update(String(p._id), input({}), USER)).rejects.toThrow('Only a draft or a scheduled post can be edited.');
+    await expect(svc.update(String(p._id), input({}), USER)).rejects.toThrow(
+      'Only a draft, a scheduled post or one waiting for approval can be edited.'
+    );
+  });
+});
+
+describe('approval', () => {
+  const run = (id: string) => MarketingRunModel.findById(id).lean();
+  const waiting = (over: Partial<ScheduledPostInput> = {}) =>
+    input({ mode: 'SCHEDULE', scheduled_at: future(), needs_approval: true, text: 'Big launch', ...over });
+
+  beforeEach(async () => {
+    await UserModel.collection.insertOne({
+      _id: new Types.ObjectId(USER),
+      profile: { first_name: 'Asha', last_name: 'Rao' },
+      auth: { email: 'asha@duncit.test' },
+    });
+  });
+
+  it('parks a checked post as waiting and opens a run in the author’s name, without sending', async () => {
+    const ig = await account('INSTAGRAM');
+    const fb = await account('FACEBOOK');
+    const at = future();
+    const out = await svc.create(waiting({ scheduled_at: at, account_ids: [String(ig._id), String(fb._id)], media: [PICTURE] }), USER);
+    expect(out).toMatchObject({ status: 'PENDING_APPROVAL', needs_approval: true, review_note: '', scheduled_at: at });
+    expect(out.approval_run_id).toMatch(/^[a-f\d]{24}$/);
+    expect(send).not.toHaveBeenCalled();
+    expect(await run(out.approval_run_id)).toMatchObject({
+      workflow: 'SOCIAL_PUBLISH',
+      status: 'AWAITING_APPROVAL',
+      trigger: 'USER',
+      name: 'Approve "Big launch" for 2 networks',
+      links: { post_id: out.id },
+      actor: { kind: 'USER', id: USER, name: 'Asha Rao', email: 'asha@duncit.test' },
+      approval: { required: true, decision: null },
+      parent_run_id: '',
+    });
+    expect((await run(out.approval_run_id))?.approval?.requested_at).toBeInstanceOf(Date);
+  });
+
+  it('names one network in the singular, and a post of media alone "Media post"', async () => {
+    const ig = await account('INSTAGRAM');
+    const out = await svc.create(waiting({ text: '  ', account_ids: [String(ig._id)], media: [PICTURE] }), USER);
+    expect((await run(out.approval_run_id))?.name).toBe('Approve "Media post" for 1 network');
+  });
+
+  it('a NOW post that needs approval waits too, timed for now, and is not sent', async () => {
+    const x = await account('X');
+    const before = Date.now();
+    const out = await svc.create(waiting({ mode: 'NOW', scheduled_at: null, account_ids: [String(x._id)] }), USER);
+    expect(out.status).toBe('PENDING_APPROVAL');
+    expect(new Date(out.scheduled_at as string).getTime()).toBeGreaterThanOrEqual(before);
+    expect(send).not.toHaveBeenCalled();
+    expect(await MarketingRunModel.countDocuments({ status: 'AWAITING_APPROVAL', 'links.post_id': out.id })).toBe(1);
+  });
+
+  it('runs every check before parking a post, and opens no run when one fails', async () => {
+    const yt = await account('YOUTUBE');
+    const x = await account('X');
+    await expect(svc.create(waiting({ account_ids: [String(yt._id)] }), USER)).rejects.toThrow('YouTube needs video media.');
+    const past = new Date(Date.now() - 5 * MINUTE).toISOString();
+    await expect(svc.create(waiting({ scheduled_at: past, account_ids: [String(x._id)] }), USER)).rejects.toThrow(
+      'Pick a time in the future to schedule this post.'
+    );
+    expect(await MarketingRunModel.countDocuments()).toBe(0);
+    expect(await SocialScheduledPostModel.countDocuments()).toBe(0);
+  });
+
+  it('a draft remembers the flag but opens no run', async () => {
+    const out = await svc.create(input({ needs_approval: true }), USER);
+    expect(out).toMatchObject({ status: 'DRAFT', needs_approval: true, approval_run_id: '' });
+    expect(await MarketingRunModel.countDocuments()).toBe(0);
+  });
+
+  it('editing a waiting post cancels its run and opens a fresh one', async () => {
+    const x = await account('X');
+    const first = await svc.create(waiting({ account_ids: [String(x._id)], text: 'v1' }), USER);
+    const out = await svc.update(first.id, waiting({ account_ids: [String(x._id)], text: 'v2' }), USER);
+    expect(out).toMatchObject({ status: 'PENDING_APPROVAL', text: 'v2', needs_approval: true });
+    expect(out.approval_run_id).not.toBe(first.approval_run_id);
+    expect(await run(first.approval_run_id)).toMatchObject({ status: 'CANCELLED', cancel_requested: true });
+    expect(await run(out.approval_run_id)).toMatchObject({ status: 'AWAITING_APPROVAL', name: 'Approve "v2" for 1 network' });
+    expect(send).not.toHaveBeenCalled();
+  });
+
+  it('editing a waiting post without the flag makes it a plain scheduled post, and NOW sends it', async () => {
+    const x = await account('X');
+    const first = await svc.create(waiting({ account_ids: [String(x._id)] }), USER);
+    const at = future();
+    const out = await svc.update(first.id, input({ mode: 'SCHEDULE', scheduled_at: at, account_ids: [String(x._id)] }), USER);
+    expect(out).toMatchObject({ status: 'SCHEDULED', scheduled_at: at, needs_approval: false, approval_run_id: '' });
+    expect(await run(first.approval_run_id)).toMatchObject({ status: 'CANCELLED' });
+    expect(send).not.toHaveBeenCalled();
+
+    const second = await svc.create(waiting({ account_ids: [String(x._id)] }), USER);
+    const sent = await svc.update(second.id, input({ mode: 'NOW', account_ids: [String(x._id)] }), USER);
+    expect(sent).toMatchObject({ status: 'SCHEDULED', approval_run_id: '' });
+    expect(send).toHaveBeenCalledWith(second.id, USER);
+    expect(await MarketingRunModel.countDocuments({ status: 'AWAITING_APPROVAL' })).toBe(0);
+  });
+
+  it('a reviewer’s note stays on the draft until the post is submitted again', async () => {
+    const x = await account('X');
+    const p = await post({ status: 'DRAFT', review_note: 'Tone it down', needs_approval: true });
+    const kept = await svc.update(String(p._id), input({ text: 'softer' }), USER);
+    expect(kept).toMatchObject({ status: 'DRAFT', review_note: 'Tone it down', needs_approval: false });
+    const again = await svc.update(String(p._id), waiting({ text: 'softer', account_ids: [String(x._id)] }), USER);
+    expect(again).toMatchObject({ status: 'PENDING_APPROVAL', review_note: '' });
+  });
+
+  it('copes with a run already closed from the Approval Centre when the post is edited', async () => {
+    const warn = jest.spyOn(logs.server, 'warn').mockImplementation(() => undefined as never);
+    const x = await account('X');
+    const first = await svc.create(waiting({ account_ids: [String(x._id)] }), USER);
+    await MarketingRunModel.updateOne({ _id: first.approval_run_id }, { $set: { status: 'CANCELLED', finished_at: new Date() } });
+    const out = await svc.update(first.id, input({ mode: 'DRAFT', text: 'later' }), USER);
+    expect(out).toMatchObject({ status: 'DRAFT', approval_run_id: '' });
+    expect(warn).toHaveBeenCalledWith(
+      'social-publish',
+      'closeApproval',
+      expect.objectContaining({ run_id: first.approval_run_id, post_id: first.id, msg: 'the approval run was already closed' })
+    );
+    warn.mockRestore();
+  });
+
+  it('deleting a waiting post cancels its run', async () => {
+    const x = await account('X');
+    const out = await svc.create(waiting({ account_ids: [String(x._id)] }), USER);
+    expect(await svc.remove(out.id)).toBe(true);
+    expect(await SocialScheduledPostModel.countDocuments()).toBe(0);
+    expect(await run(out.approval_run_id)).toMatchObject({ status: 'CANCELLED', cancel_requested: true });
+  });
+
+  it('a waiting post cannot be shared now or retried', async () => {
+    const x = await account('X');
+    const out = await svc.create(waiting({ account_ids: [String(x._id)] }), USER);
+    await expect(svc.shareNow(out.id, USER)).rejects.toThrow('Only a scheduled post can be shared now.');
+    await expect(svc.retry(out.id, USER)).rejects.toThrow('Only a post that failed somewhere can be retried.');
+    expect(send).not.toHaveBeenCalled();
   });
 });
 
@@ -296,10 +528,15 @@ describe('calendar', () => {
       ],
     });
     await post({ text: 'planned', status: 'DRAFT', scheduled_at: new Date('2026-03-10T00:00:00Z') });
+    await post({ text: 'carousel', status: 'PENDING_APPROVAL', scheduled_at: new Date('2026-03-11T00:00:00Z'), media: [PICTURE, CLIP], media_url: IMAGE });
+    // Stored before carousels: its one piece lives in media_url alone.
+    const legacy = await post({ text: 'legacy', status: 'SCHEDULED', scheduled_at: new Date('2026-03-12T00:00:00Z'), media_url: IMAGE });
+    await SocialScheduledPostModel.collection.updateOne({ _id: legacy._id }, { $unset: { media: '' } });
     await post({ text: 'outside', status: 'SCHEDULED', scheduled_at: new Date('2026-05-01T00:00:00Z') });
     const base = { account_id: xId, platform: 'X' };
     await SocialPostModel.create({ ...base, external_id: 'tw-1', published_at: new Date('2026-03-05T00:00:00Z') });
     await SocialPostModel.create({ ...base, external_id: 'tw-9', text: 'organic', permalink: 'https://x.com/9', engagement: 12, published_at: new Date('2026-03-20T00:00:00Z') });
+    await SocialPostModel.create({ ...base, external_id: 'tw-10', text: 'with picture', media_url: IMAGE, published_at: new Date('2026-03-22T00:00:00Z') });
     await SocialPostModel.collection.insertOne({ account_id: GONE_A, platform: 'X', external_id: 'tw-8', published_at: new Date('2026-03-21T00:00:00Z') });
     await SocialPostModel.create({ ...base, external_id: 'tw-old', published_at: new Date('2026-01-01T00:00:00Z') });
 
@@ -316,12 +553,15 @@ describe('calendar', () => {
       account_names: ['Duncit X', ''],
       engagement: null,
     });
-    expect(planned.find((i) => i.text === 'planned')).toMatchObject({ at: '2026-03-10T00:00:00.000Z', permalink: '', platforms: [] });
-    expect(planned).toHaveLength(2);
+    expect(planned.find((i) => i.text === 'planned')).toMatchObject({ at: '2026-03-10T00:00:00.000Z', permalink: '', platforms: [], media_count: 0 });
+    expect(planned.find((i) => i.text === 'carousel')).toMatchObject({ status: 'PENDING_APPROVAL', media_url: IMAGE, media_count: 2 });
+    expect(planned.find((i) => i.text === 'legacy')).toMatchObject({ media_url: IMAGE, media_count: 1 });
+    expect(planned).toHaveLength(4);
 
     expect(synced).toEqual([
-      expect.objectContaining({ text: 'organic', at: '2026-03-20T00:00:00.000Z', permalink: 'https://x.com/9', account_names: ['Duncit X'], engagement: 12, status: 'PUBLISHED' }),
-      expect.objectContaining({ text: '', media_url: '', permalink: '', account_names: [''], engagement: 0 }),
+      expect.objectContaining({ text: 'organic', at: '2026-03-20T00:00:00.000Z', permalink: 'https://x.com/9', account_names: ['Duncit X'], engagement: 12, status: 'PUBLISHED', media_count: 0 }),
+      expect.objectContaining({ text: '', media_url: '', permalink: '', account_names: [''], engagement: 0, media_count: 0 }),
+      expect.objectContaining({ text: 'with picture', media_url: IMAGE, media_count: 1 }),
     ]);
   });
 });

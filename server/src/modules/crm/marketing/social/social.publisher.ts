@@ -6,9 +6,10 @@ import { PUBLISHERS, READERS } from './providers';
 import { SocialApiError } from './providers/http';
 import { socialCredentials } from './social.credentials';
 import { freshHandle, syncSocialAccount, type AccountWithTokens } from './social.sync';
-import { publishProblems } from './social.rules';
-import type { PublishContent, SocialMediaType, SocialPublishStatus, SocialTargetStatus } from './social.types';
-import { continueRun, registerRunHandlers, userActor, withRun, type RunActor, type RunContext } from '../runs/marketingRun.service';
+import { publishContent, publishProblems } from './social.rules';
+import type { PublishContent, PublishMedia, SocialMediaType, SocialPublishStatus, SocialTargetStatus } from './social.types';
+import type { MarketingRunDecision, MarketingRunDoc } from '../runs/marketingRun.model';
+import { continueRun, finishRun, registerRunHandlers, userActor, withRun, type RunActor, type RunContext } from '../runs/marketingRun.service';
 
 /**
  * Sending a Duncit post out — the half of Buffer that runs on a clock.
@@ -21,7 +22,10 @@ import { continueRun, registerRunHandlers, userActor, withRun, type RunActor, ty
  *
  * Every send is one run in the marketing run log, one step per network, so
  * the Activity page shows what went out where, and a failed run can be
- * retried from there under the same row.
+ * retried from there under the same row. A post that needed approval was
+ * parked PENDING_APPROVAL by the composer under an approval run; the
+ * reviewer's decision (handled here too) puts it in the queue, and its
+ * publish run then hangs under that approval run.
  */
 const MAX_PER_TICK = 20;
 /** Longer than the slowest publish (an Instagram Reel waits up to five minutes). */
@@ -41,15 +45,37 @@ interface Target {
 interface ClaimedPost {
   _id: unknown;
   text: string;
+  /** Absent on a post stored before carousels came; its one piece is in media_url then. */
+  media?: PublishMedia[];
   media_url: string;
   media_type: SocialMediaType | null;
   published_at: Date | null;
   targets: Target[];
+  /** The approval run this post waited on, '' when it needed none. */
+  approval_run_id?: string;
+}
+
+/** What a decision handler needs of the post a run waited on. */
+interface WaitingPost {
+  _id: unknown;
+  status: SocialPublishStatus;
+  scheduled_at: Date | null;
+  approval_run_id?: string;
 }
 
 type Outcome = Pick<Target, 'status' | 'external_id' | 'permalink' | 'error' | 'published_at'>;
 
 const failed = (error: string): Outcome => ({ status: 'FAILED', external_id: '', permalink: '', error, published_at: null });
+
+/** The first sixty characters of a post on one line, as a run names it; a post of media alone is "Media post". */
+export const postTitle = (text: string) => text.replaceAll(/\s+/g, ' ').trim().slice(0, 60) || 'Media post';
+
+/** The post's media: its list, or — for a post stored before carousels — the one piece in media_url. */
+function mediaOf(post: ClaimedPost): PublishMedia[] {
+  if (post.media && post.media.length > 0) return post.media;
+  if (!post.media_url) return [];
+  return [{ url: post.media_url, type: post.media_type ?? 'IMAGE' }];
+}
 
 async function publishTarget(target: Target, content: PublishContent): Promise<Outcome> {
   const doc = await SocialAccountModel.findById(target.account_id).select('+access_token +refresh_token').lean<AccountWithTokens>();
@@ -109,7 +135,7 @@ function publishStep(run: RunContext, target: Target, content: PublishContent, n
 }
 
 async function publishClaimed(post: ClaimedPost, run: RunContext): Promise<void> {
-  const content: PublishContent = { text: post.text, media_url: post.media_url, media_type: post.media_type };
+  const content = publishContent(post.text, mediaOf(post));
   const names = await accountLabels(post.targets);
   const targets: Target[] = [];
   for (const target of post.targets) {
@@ -144,14 +170,23 @@ async function recordCrash(post: ClaimedPost, error: unknown) {
 
 const runName = (post: ClaimedPost) => {
   const pending = post.targets.filter((t) => t.status === 'PENDING').length;
-  const text = post.text.replaceAll(/\s+/g, ' ').trim().slice(0, 60) || 'Media post';
-  return `Publish "${text}" to ${pending} network${pending === 1 ? '' : 's'}`;
+  return `Publish "${postTitle(post.text)}" to ${pending} network${pending === 1 ? '' : 's'}`;
 };
 
-/** A claimed post goes out under a new run; a crash fails the run and whatever had not been sent. */
+/**
+ * A claimed post goes out under a new run — beneath its approval run, when it
+ * had one — and a crash fails the run and whatever had not been sent.
+ */
 async function publishAsRun(post: ClaimedPost, trigger: 'SCHEDULE' | 'USER', actor?: RunActor): Promise<void> {
   await withRun(
-    { workflow: 'SOCIAL_PUBLISH', name: runName(post), trigger, actor, links: { post_id: String(post._id) } },
+    {
+      workflow: 'SOCIAL_PUBLISH',
+      name: runName(post),
+      trigger,
+      actor,
+      links: { post_id: String(post._id) },
+      parent_run_id: post.approval_run_id || undefined,
+    },
     (run) => publishClaimed(post, run)
   ).catch((error: unknown) => recordCrash(post, error));
 }
@@ -186,16 +221,56 @@ export async function requeueFailed(id: string): Promise<boolean> {
   return result.matchedCount === 1;
 }
 
-// Retry from the Activity page: the same run carries on, so its history stays in one row.
-registerRunHandlers('SOCIAL_PUBLISH', {
-  retry: async (run) => {
-    const id = run.links?.post_id ?? '';
-    if (!(await requeueFailed(id))) throw new Error('The post has nothing left to retry.');
-    const post = await claim({ _id: id });
-    if (!post) throw new Error('The post is already going out.');
-    await continueRun(String(run._id), (ctx) => publishClaimed(post, ctx)).catch((error: unknown) => recordCrash(post, error));
-  },
-});
+/** Retry from the Activity page: the same run carries on, so its history stays in one row. */
+async function retry(run: MarketingRunDoc): Promise<void> {
+  const id = run.links?.post_id ?? '';
+  if (!(await requeueFailed(id))) throw new Error('The post has nothing left to retry.');
+  const post = await claim({ _id: id });
+  if (!post) throw new Error('The post is already going out.');
+  await continueRun(String(run._id), (ctx) => publishClaimed(post, ctx)).catch((error: unknown) => recordCrash(post, error));
+}
+
+/**
+ * A reviewer's word on a post parked PENDING_APPROVAL. Yes puts it in the
+ * queue under the same run — the scheduler sends it within a minute, or at
+ * its time. No, or changes asked for, sends it back to Drafts with the
+ * reviewer's note; decideRun has already closed that run. A post that has
+ * moved on since (edited, deleted, re-submitted under a newer run) is left
+ * alone — and a yes that finds one is closed as cancelled, since decideRun
+ * had reopened the run for the work that will not happen.
+ */
+async function onDecision(run: MarketingRunDoc, decision: MarketingRunDecision): Promise<void> {
+  const runId = String(run._id);
+  const id = run.links?.post_id ?? '';
+  const post = isValidObjectId(id)
+    ? await SocialScheduledPostModel.findById(id).select('status scheduled_at approval_run_id').lean<WaitingPost>()
+    : null;
+  if (!post || post.status !== 'PENDING_APPROVAL' || post.approval_run_id !== runId) {
+    logs.server.warn('social-publisher', 'onDecision', { run_id: runId, post_id: id, decision, msg: 'the decided post is no longer waiting on this run' });
+    if (decision === 'APPROVED') await finishRun(runId, 'CANCELLED', 'The post is no longer waiting for this approval.');
+    return;
+  }
+  const waiting = { _id: post._id, status: 'PENDING_APPROVAL' };
+  if (decision !== 'APPROVED') {
+    await SocialScheduledPostModel.updateOne(waiting, { $set: { status: 'DRAFT', review_note: run.approval?.note ?? '' } });
+    return;
+  }
+  await continueRun(runId, (ctx) =>
+    ctx.step(
+      'approve',
+      'Approved',
+      async () => {
+        const at = new Date(Math.max(post.scheduled_at?.getTime() ?? 0, Date.now()));
+        await SocialScheduledPostModel.updateOne(waiting, { $set: { status: 'SCHEDULED', scheduled_at: at } });
+        return `scheduled for ${at.toISOString()}`;
+      },
+      { summarize: (summary) => summary }
+    )
+  );
+}
+
+// One registration carries both: a later call would replace, not add to, the first.
+registerRunHandlers('SOCIAL_PUBLISH', { retry, onDecision });
 
 /**
  * A post left PUBLISHING by a restart. Its unsent targets are marked failed —

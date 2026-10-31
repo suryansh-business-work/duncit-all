@@ -35,8 +35,19 @@ export type SocialSeverity = (typeof SOCIAL_SEVERITIES)[number];
 export const SOCIAL_REVIEW_STATUSES = ['OPEN', 'REVIEWED'] as const;
 export type SocialReviewStatus = (typeof SOCIAL_REVIEW_STATUSES)[number];
 
-/** A post written in Duncit: a draft, waiting for its time, going out, or out. */
-export const SOCIAL_PUBLISH_STATUSES = ['DRAFT', 'SCHEDULED', 'PUBLISHING', 'PUBLISHED', 'PARTIAL', 'FAILED'] as const;
+/**
+ * A post written in Duncit: a draft, waiting for a reviewer's yes, waiting for
+ * its time, going out, or out.
+ */
+export const SOCIAL_PUBLISH_STATUSES = [
+  'DRAFT',
+  'PENDING_APPROVAL',
+  'SCHEDULED',
+  'PUBLISHING',
+  'PUBLISHED',
+  'PARTIAL',
+  'FAILED',
+] as const;
 export type SocialPublishStatus = (typeof SOCIAL_PUBLISH_STATUSES)[number];
 
 /** One network a post is going to — each succeeds or fails on its own. */
@@ -143,9 +154,20 @@ export interface SocialConnector {
   revoke?(account: SocialAccountHandle, creds: SocialAppCredentials): Promise<void>;
 }
 
-/** What a post carries to every network it goes to. */
+/** One picture or clip of a post, by the CDN address the networks fetch it from. */
+export interface PublishMedia {
+  url: string;
+  type: SocialMediaType;
+}
+
+/**
+ * What a post carries to every network it goes to. One item is a plain post;
+ * two or more are a carousel. `media_url` / `media_type` are the first item
+ * (or ''/null), so a reader that only knows one piece of media still works.
+ */
 export interface PublishContent {
   text: string;
+  media: PublishMedia[];
   /** '' for a text-only post. */
   media_url: string;
   media_type: SocialMediaType | null;

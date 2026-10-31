@@ -1,6 +1,7 @@
 import { outboundFetch } from '@utils/outboundFetch';
 import { probeThreadsApp, threadsConnector, threadsReader } from '../../providers/threads';
 import { threadsPublisher } from '../../providers/threads.publish';
+import { publishContent } from '../../social.rules';
 import type { PublishContent, SocialAccountHandle, SocialAppCredentials } from '../../social.types';
 
 jest.mock('@utils/outboundFetch', () => ({ outboundFetch: jest.fn() }));
@@ -326,8 +327,11 @@ describe('probeThreadsApp', () => {
 });
 
 describe('threadsPublisher', () => {
-  const text: PublishContent = { text: 'Hello', media_url: '', media_type: null };
+  const text: PublishContent = { text: 'Hello', media: [], media_url: '', media_type: null };
+  const PICTURE = 'https://ik.imagekit.io/duncit/a.png';
+  const CLIP = 'https://ik.imagekit.io/duncit/a.mp4';
   const permalink = 'https://www.threads.net/@duncit/post/post-1';
+  const pathsCalled = () => calls().map((call) => new URL(call[1]).pathname);
   const finish = () => {
     answer({ id: 'post-1' });
     answer({ permalink });
@@ -369,7 +373,7 @@ describe('threadsPublisher', () => {
     answer({ id: 'c1' });
     answer({ status: 'FINISHED' });
     finish();
-    const result = threadsPublisher.publish(account, { text: 'Hello', media_url: '', media_type: 'IMAGE' }, creds);
+    const result = threadsPublisher.publish(account, { text: 'Hello', media: [], media_url: '', media_type: 'IMAGE' }, creds);
     await expect(result).resolves.toEqual({ external_id: 'post-1', permalink });
     expect(formOf(0)).toEqual({ media_type: 'TEXT', text: 'Hello', access_token: 'tok' });
     expect(jest.getTimerCount()).toBe(0);
@@ -380,8 +384,8 @@ describe('threadsPublisher', () => {
     answer({ id: 'c2' });
     answer({ status: 'FINISHED' });
     finish();
-    await threadsPublisher.publish(account, { text: 'Pic', media_url: 'https://ik.imagekit.io/duncit/a.png', media_type: 'IMAGE' }, creds);
-    expect(formOf(0)).toEqual({ media_type: 'IMAGE', image_url: 'https://ik.imagekit.io/duncit/a.png?tr=f-jpg', text: 'Pic', access_token: 'tok' });
+    await threadsPublisher.publish(account, publishContent('Pic', [{ url: PICTURE, type: 'IMAGE' }]), creds);
+    expect(formOf(0)).toEqual({ media_type: 'IMAGE', image_url: `${PICTURE}?tr=f-jpg`, text: 'Pic', access_token: 'tok' });
   });
 
   it('makes a VIDEO container from the untouched original of an uploaded clip', async () => {
@@ -389,9 +393,66 @@ describe('threadsPublisher', () => {
     answer({ status: 'FINISHED' });
     answer({ id: 'post-3' });
     answer({});
-    const result = await threadsPublisher.publish(account, { text: '', media_url: 'https://ik.imagekit.io/duncit/a.mp4', media_type: 'VIDEO' }, creds);
-    expect(formOf(0)).toEqual({ media_type: 'VIDEO', video_url: 'https://ik.imagekit.io/duncit/a.mp4?tr=orig-true', text: '', access_token: 'tok' });
+    const result = await threadsPublisher.publish(account, publishContent('', [{ url: CLIP, type: 'VIDEO' }]), creds);
+    expect(formOf(0)).toEqual({ media_type: 'VIDEO', video_url: `${CLIP}?tr=orig-true`, text: '', access_token: 'tok' });
     expect(result).toEqual({ external_id: 'post-3', permalink: '' });
+  });
+
+  it('publishes two or more pieces as a carousel: one container each, waited for in turn, then the carousel naming them', async () => {
+    answer({ id: 'c1' });
+    answer({ status: 'FINISHED' });
+    answer({ id: 'c2' });
+    answer({ status: 'IN_PROGRESS' });
+    answer({ status: 'FINISHED' });
+    answer({ id: 'c3' });
+    answer({ status: 'FINISHED' });
+    finish();
+    const carousel = publishContent('Two looks', [
+      { url: PICTURE, type: 'IMAGE' },
+      { url: CLIP, type: 'VIDEO' },
+    ]);
+
+    const attempt = threadsPublisher.publish(account, carousel, creds);
+    await jest.advanceTimersByTimeAsync(5_000);
+    await expect(attempt).resolves.toEqual({ external_id: 'post-1', permalink });
+
+    expect(pathsCalled()).toEqual([
+      '/v1.0/77/threads',
+      '/v1.0/c1',
+      '/v1.0/77/threads',
+      '/v1.0/c2',
+      '/v1.0/c2',
+      '/v1.0/77/threads',
+      '/v1.0/c3',
+      '/v1.0/77/threads_publish',
+      '/v1.0/post-1',
+    ]);
+    // Each child is marked a carousel item and carries no text; only the parent does.
+    expect(formOf(0)).toEqual({ media_type: 'IMAGE', image_url: `${PICTURE}?tr=f-jpg`, is_carousel_item: 'true', access_token: 'tok' });
+    expect(formOf(2)).toEqual({ media_type: 'VIDEO', video_url: `${CLIP}?tr=orig-true`, is_carousel_item: 'true', access_token: 'tok' });
+    expect(queryOf(3)).toEqual({ fields: 'status,error_message', access_token: 'tok' });
+    expect(formOf(5)).toEqual({ media_type: 'CAROUSEL', children: 'c1,c2', text: 'Two looks', access_token: 'tok' });
+    expect(formOf(7)).toEqual({ creation_id: 'c3', access_token: 'tok' });
+    expect(queryOf(8)).toEqual({ fields: 'permalink', access_token: 'tok' });
+    expect(fetchMock).toHaveBeenCalledTimes(9);
+  });
+
+  it('stops a carousel at the first piece Threads cannot process, making nothing after it', async () => {
+    answer({ id: 'c1' });
+    answer({ status: 'FINISHED' });
+    answer({ id: 'c2' });
+    answer({ status: 'ERROR', error_message: 'Video too long' });
+    const carousel = publishContent('Two looks', [
+      { url: PICTURE, type: 'IMAGE' },
+      { url: CLIP, type: 'VIDEO' },
+    ]);
+    await expect(threadsPublisher.publish(account, carousel, creds)).rejects.toMatchObject({
+      name: 'SocialApiError',
+      status: 422,
+      message: 'Threads: Threads could not process the post (Video too long)',
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(4);
+    expect(pathsCalled().some((path) => path.endsWith('/threads_publish'))).toBe(false);
   });
 
   it.each([

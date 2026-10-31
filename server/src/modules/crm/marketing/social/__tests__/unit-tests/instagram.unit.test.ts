@@ -21,6 +21,7 @@ import {
 } from '../../providers/instagram';
 import { instagramPublisher } from '../../providers/instagram.publish';
 import { FACEBOOK_GRAPH, INSTAGRAM_GRAPH } from '../../providers/meta';
+import { publishContent } from '../../social.rules';
 
 const mockFetch = outboundFetch as jest.Mock;
 
@@ -395,8 +396,16 @@ describe('instagramReader mapping', () => {
 
 describe('instagramPublisher', () => {
   const IMAGE = 'https://ik.imagekit.io/duncit/posts/a.png';
+  const IMAGE_2 = 'https://ik.imagekit.io/duncit/posts/b.png';
   const VIDEO = 'https://ik.imagekit.io/duncit/posts/reel.mp4';
   const PERMALINK = 'https://www.instagram.com/p/abc/';
+  const image = (text: string) => publishContent(text, [{ url: IMAGE, type: 'IMAGE' }]);
+  const video = (text: string) => publishContent(text, [{ url: VIDEO, type: 'VIDEO' }]);
+  const carousel = publishContent('Three looks', [
+    { url: IMAGE, type: 'IMAGE' },
+    { url: VIDEO, type: 'VIDEO' },
+    { url: IMAGE_2, type: 'IMAGE' },
+  ]);
 
   /** Route each Graph call by its path; the container's status comes from `states`, in order, the last one repeating. */
   const arrange = (states: Array<Record<string, string>>, post: Record<string, string> = { permalink: PERMALINK }) => {
@@ -410,10 +419,25 @@ describe('instagramPublisher', () => {
     });
   };
   const polls = () => mockFetch.mock.calls.filter((call) => new URL(call[1]).pathname.endsWith('/container-1')).length;
+  const paths = () => mockFetch.mock.calls.map((call) => new URL(call[1]).pathname);
+
+  /** Containers numbered in the order they are made; each one's state comes from `stateOf` its number. */
+  const arrangeMany = (stateOf: (container: number) => Record<string, string>) => {
+    let made = 0;
+    mockFetch.mockImplementation(async (_service: string, url: string) => {
+      const { pathname } = new URL(url);
+      if (pathname.endsWith('/media')) return reply({ id: `c-${++made}` });
+      const container = /\/c-(\d+)$/.exec(pathname);
+      if (container) return reply(stateOf(Number(container[1])));
+      if (pathname.endsWith('/media_publish')) return reply({ id: 'media-9' });
+      return reply({ permalink: PERMALINK });
+    });
+    return () => made;
+  };
 
   it('publishes an image through graph.instagram.com for an account from Instagram Login', async () => {
     arrange([{ status_code: 'FINISHED' }]);
-    const out = await instagramPublisher.publish(viaInstagram, { text: 'Hello', media_url: IMAGE, media_type: 'IMAGE' }, CREDS);
+    const out = await instagramPublisher.publish(viaInstagram, image('Hello'), CREDS);
     expect(out).toEqual({ external_id: 'media-9', permalink: PERMALINK });
     expect(at(0).endpoint).toBe(`${INSTAGRAM_GRAPH}/v21.0/1784140/media`);
     expect(initOf(0)?.method).toBe('POST');
@@ -428,7 +452,7 @@ describe('instagramPublisher', () => {
 
   it('publishes a Reel through graph.facebook.com for an account connected through Facebook, waiting out the transcode', async () => {
     arrange([{ status_code: 'IN_PROGRESS' }, { status_code: 'FINISHED' }]);
-    const pending = settle(instagramPublisher.publish(viaFacebook, { text: 'Reel', media_url: VIDEO, media_type: 'VIDEO' }, CREDS));
+    const pending = settle(instagramPublisher.publish(viaFacebook, video('Reel'), CREDS));
     await jest.advanceTimersByTimeAsync(5_000);
     expect(await pending).toEqual({ value: { external_id: 'media-9', permalink: PERMALINK } });
     // The stored file untouched: a re-encode on delivery is metered and buys nothing.
@@ -438,9 +462,73 @@ describe('instagramPublisher', () => {
     expect(mockFetch.mock.calls.map((call) => call[0])).toEqual(Array(5).fill('Facebook'));
   });
 
+  it('publishes two or more pieces as a carousel: one container each, then the carousel naming them', async () => {
+    const made = arrangeMany(() => ({ status_code: 'FINISHED' }));
+    const out = await instagramPublisher.publish(viaInstagram, carousel, CREDS);
+    expect(out).toEqual({ external_id: 'media-9', permalink: PERMALINK });
+    expect(paths()).toEqual([
+      '/v21.0/1784140/media',
+      '/v21.0/c-1',
+      '/v21.0/1784140/media',
+      '/v21.0/c-2',
+      '/v21.0/1784140/media',
+      '/v21.0/c-3',
+      '/v21.0/1784140/media',
+      '/v21.0/c-4',
+      '/v21.0/1784140/media_publish',
+      '/v21.0/media-9',
+    ]);
+    // Each child is marked a carousel item and carries no caption; a video inside is a VIDEO, not a Reel.
+    expect(formOf(0)).toEqual({ image_url: `${IMAGE}?tr=f-jpg`, is_carousel_item: 'true', access_token: 'instagram-tok' });
+    expect(formOf(2)).toEqual({ media_type: 'VIDEO', video_url: `${VIDEO}?tr=orig-true`, is_carousel_item: 'true', access_token: 'instagram-tok' });
+    expect(formOf(4)).toEqual({ image_url: `${IMAGE_2}?tr=f-jpg`, is_carousel_item: 'true', access_token: 'instagram-tok' });
+    expect(formOf(6)).toEqual({ media_type: 'CAROUSEL', children: 'c-1,c-2,c-3', caption: 'Three looks', access_token: 'instagram-tok' });
+    expect(formOf(8)).toEqual({ creation_id: 'c-4', access_token: 'instagram-tok' });
+    expect(at(9)).toEqual({ endpoint: `${INSTAGRAM_GRAPH}/v21.0/media-9`, params: { fields: 'permalink', access_token: 'instagram-tok' } });
+    expect(made()).toBe(4);
+    expect(mockFetch.mock.calls.map((call) => new URL(call[1]).origin)).toEqual(Array(10).fill(INSTAGRAM_GRAPH));
+  });
+
+  it('waits out each piece of a carousel in turn before making the next', async () => {
+    // The second piece is still transcoding on its first look, ready five seconds later.
+    let polled = 0;
+    const made = arrangeMany((container) => (container === 2 && polled++ === 0 ? { status_code: 'IN_PROGRESS' } : { status_code: 'FINISHED' }));
+    const pending = settle(instagramPublisher.publish(viaInstagram, carousel, CREDS));
+    await jest.advanceTimersByTimeAsync(5_000);
+    expect(await pending).toEqual({ value: { external_id: 'media-9', permalink: PERMALINK } });
+    // The third container is only asked for once the second is ready.
+    expect(paths()).toEqual([
+      '/v21.0/1784140/media',
+      '/v21.0/c-1',
+      '/v21.0/1784140/media',
+      '/v21.0/c-2',
+      '/v21.0/c-2',
+      '/v21.0/1784140/media',
+      '/v21.0/c-3',
+      '/v21.0/1784140/media',
+      '/v21.0/c-4',
+      '/v21.0/1784140/media_publish',
+      '/v21.0/media-9',
+    ]);
+    expect(made()).toBe(4);
+  });
+
+  it('stops a carousel at the first piece Instagram cannot process, making nothing after it', async () => {
+    const made = arrangeMany((container): Record<string, string> =>
+      container === 2 ? { status_code: 'ERROR', status: 'Video too long' } : { status_code: 'FINISHED' }
+    );
+    await expect(instagramPublisher.publish(viaInstagram, carousel, CREDS)).rejects.toMatchObject({
+      name: 'SocialApiError',
+      status: 422,
+      message: 'Instagram: Instagram could not process the media (Video too long)',
+    });
+    expect(made()).toBe(2);
+    expect(paths().some((path) => path.endsWith('/media_publish'))).toBe(false);
+  });
+
   it("gives up with Instagram's own words when the media fails, without publishing", async () => {
     arrange([{ status_code: 'ERROR', status: 'Media upload failed: unsupported format' }]);
-    await expect(instagramPublisher.publish(viaInstagram, { text: '', media_url: IMAGE, media_type: 'IMAGE' }, CREDS)).rejects.toMatchObject({
+    await expect(instagramPublisher.publish(viaInstagram, image(''), CREDS)).rejects.toMatchObject({
       name: 'SocialApiError',
       status: 422,
       expired: false,
@@ -451,7 +539,7 @@ describe('instagramPublisher', () => {
 
   it('names the state when an expired container comes with no words', async () => {
     arrange([{ status_code: 'EXPIRED' }]);
-    await expect(instagramPublisher.publish(viaInstagram, { text: '', media_url: IMAGE, media_type: 'IMAGE' }, CREDS)).rejects.toMatchObject({
+    await expect(instagramPublisher.publish(viaInstagram, image(''), CREDS)).rejects.toMatchObject({
       status: 422,
       message: 'Instagram: Instagram could not process the media (EXPIRED)',
     });
@@ -459,7 +547,7 @@ describe('instagramPublisher', () => {
 
   it('stops after five minutes of polling', async () => {
     arrange([{ status_code: 'IN_PROGRESS' }]);
-    const pending = settle(instagramPublisher.publish(viaInstagram, { text: '', media_url: VIDEO, media_type: 'VIDEO' }, CREDS));
+    const pending = settle(instagramPublisher.publish(viaInstagram, video(''), CREDS));
     await jest.advanceTimersByTimeAsync(60 * 5_000 + 1);
     const outcome = await pending;
     expect(outcome).toHaveProperty('error');
@@ -474,7 +562,7 @@ describe('instagramPublisher', () => {
 
   it('reports no permalink when Graph sends none', async () => {
     arrange([{ status_code: 'FINISHED' }], {});
-    await expect(instagramPublisher.publish(viaInstagram, { text: 'x', media_url: IMAGE, media_type: 'IMAGE' }, CREDS)).resolves.toEqual({
+    await expect(instagramPublisher.publish(viaInstagram, image('x'), CREDS)).resolves.toEqual({
       external_id: 'media-9',
       permalink: '',
     });

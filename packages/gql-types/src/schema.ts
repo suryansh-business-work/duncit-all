@@ -38323,6 +38323,7 @@ export type SocialCalendarItem = {
   engagement?: Maybe<Scalars['Int']['output']>;
   id: Scalars['ID']['output'];
   kind: SocialCalendarKind;
+  media_count: Scalars['Int']['output'];
   media_url?: Maybe<Scalars['String']['output']>;
   permalink?: Maybe<Scalars['String']['output']>;
   platforms: Array<SocialPlatform>;
@@ -38487,6 +38488,18 @@ export type SocialPostDetail = {
   sentiment: SocialSentimentSummary;
 };
 
+/** One picture or clip of a post, in the order they show. */
+export type SocialPostMedia = {
+  __typename?: 'SocialPostMedia';
+  type: SocialMediaType;
+  url: Scalars['String']['output'];
+};
+
+export type SocialPostMediaInput = {
+  type: SocialMediaType;
+  url: Scalars['String']['input'];
+};
+
 export type SocialPostTablePage = {
   __typename?: 'SocialPostTablePage';
   page: Scalars['Int']['output'];
@@ -38519,10 +38532,12 @@ export type SocialPublishMode =
   | 'NOW'
   | 'SCHEDULE';
 
+/** PENDING_APPROVAL waits for a reviewer's yes before it is SCHEDULED. */
 export type SocialPublishStatus =
   | 'DRAFT'
   | 'FAILED'
   | 'PARTIAL'
+  | 'PENDING_APPROVAL'
   | 'PUBLISHED'
   | 'PUBLISHING'
   | 'SCHEDULED';
@@ -38539,7 +38554,9 @@ export type SocialPublishTarget = {
   status: SocialTargetStatus;
 };
 
+/** APPROVALS is every post waiting for a decision, soonest scheduled first. */
 export type SocialQueueView =
+  | 'APPROVALS'
   | 'DRAFTS'
   | 'QUEUE'
   | 'SENT';
@@ -38550,12 +38567,21 @@ export type SocialReviewStatus =
 
 export type SocialScheduledPost = {
   __typename?: 'SocialScheduledPost';
+  /** The marketing run that waits for (or recorded) the decision. */
+  approval_run_id?: Maybe<Scalars['String']['output']>;
   created_at?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   idea_id?: Maybe<Scalars['String']['output']>;
+  /** Every piece of media in order; two or more make a carousel. */
+  media: Array<SocialPostMedia>;
   media_type?: Maybe<SocialMediaType>;
+  /** The first piece of media, for readers of one. */
   media_url?: Maybe<Scalars['String']['output']>;
+  /** A reviewer must say yes before it goes out. */
+  needs_approval: Scalars['Boolean']['output'];
   published_at?: Maybe<Scalars['String']['output']>;
+  /** Why the reviewer sent it back; shown to the author on the draft. */
+  review_note?: Maybe<Scalars['String']['output']>;
   scheduled_at?: Maybe<Scalars['String']['output']>;
   status: SocialPublishStatus;
   targets: Array<SocialPublishTarget>;
@@ -38567,9 +38593,14 @@ export type SocialScheduledPostInput = {
   account_ids: Array<Scalars['ID']['input']>;
   /** The idea this post was written from; it is marked USED. */
   idea_id?: InputMaybe<Scalars['ID']['input']>;
+  /** Every piece of media in order; when given it replaces media_url/media_type. */
+  media?: InputMaybe<Array<SocialPostMediaInput>>;
   media_type?: InputMaybe<SocialMediaType>;
+  /** One piece of media, for callers that send one. */
   media_url?: InputMaybe<Scalars['String']['input']>;
   mode: SocialPublishMode;
+  /** With SCHEDULE or NOW, parks the post as PENDING_APPROVAL and opens an approval run. */
+  needs_approval?: InputMaybe<Scalars['Boolean']['input']>;
   /** Required for SCHEDULE; optional on a DRAFT (it then shows on the calendar). */
   scheduled_at?: InputMaybe<Scalars['String']['input']>;
   text: Scalars['String']['input'];

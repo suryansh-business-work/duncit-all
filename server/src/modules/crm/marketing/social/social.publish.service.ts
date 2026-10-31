@@ -4,43 +4,53 @@ import { logs } from '@observability/log';
 import { isTrustedMediaUrl } from '@utils/url';
 import { SocialAccountModel, SocialPostModel } from './social.model';
 import { SocialIdeaModel, SocialScheduledPostModel } from './social.publish.model';
-import { publishProblems } from './social.rules';
-import { publishNow, requeueFailed } from './social.publisher';
-import type { PublishContent, SocialMediaType, SocialPublishStatus } from './social.types';
+import { publishContent, publishProblems } from './social.rules';
+import { postTitle, publishNow, requeueFailed } from './social.publisher';
+import type { PublishContent, PublishMedia, SocialMediaType, SocialPublishStatus } from './social.types';
+import { cancelRun, startRun, userActor } from '../runs/marketingRun.service';
 
 /**
  * The composer's side of publishing: create, edit, delete, retry, and the
- * Queue / Drafts / Sent lists and the calendar that show them.
+ * Queue / Drafts / Sent / Approvals lists and the calendar that show them.
  *
  * A draft is allowed to be wrong — half-written, no accounts yet, media a
  * network would refuse. Anything scheduled or sent now is checked against
  * every target's rules first, so a post does not fail at 9am for a reason
- * that was knowable when it was written.
+ * that was knowable when it was written. A post that needs approval passes
+ * the same checks, then waits as PENDING_APPROVAL under a run in the
+ * marketing run log until a reviewer decides (see social.publisher).
  */
 export type SocialPublishMode = 'DRAFT' | 'SCHEDULE' | 'NOW';
-export type SocialQueueView = 'QUEUE' | 'DRAFTS' | 'SENT';
+export type SocialQueueView = 'QUEUE' | 'DRAFTS' | 'SENT' | 'APPROVALS';
 
 export interface ScheduledPostInput {
   text: string;
+  /** Every piece of media in order; when given it replaces media_url / media_type. */
+  media?: { url: string; type: SocialMediaType }[] | null;
   media_url?: string | null;
   media_type?: SocialMediaType | null;
   account_ids: string[];
   mode: SocialPublishMode;
   scheduled_at?: string | null;
   idea_id?: string | null;
+  /** With SCHEDULE or NOW, parks the post as PENDING_APPROVAL and opens an approval run. */
+  needs_approval?: boolean | null;
 }
+
+type PostDoc = InstanceType<typeof SocialScheduledPostModel>;
 
 /** A minute of grace, so "schedule for now" typed a few seconds late is not refused. */
 const PAST_GRACE_MS = 60_000;
 const LIST_LIMIT = 200;
 const CALENDAR_LIMIT = 1000;
-const EDITABLE = new Set<string>(['DRAFT', 'SCHEDULED']);
+const EDITABLE = new Set<string>(['DRAFT', 'PENDING_APPROVAL', 'SCHEDULED']);
 const RETRYABLE = new Set<string>(['FAILED', 'PARTIAL']);
 
 const VIEWS: Record<SocialQueueView, { filter: Record<string, unknown>; sort: Record<string, 1 | -1> }> = {
   QUEUE: { filter: { status: { $in: ['SCHEDULED', 'PUBLISHING'] } }, sort: { scheduled_at: 1 } },
   DRAFTS: { filter: { status: 'DRAFT' }, sort: { updated_at: -1 } },
   SENT: { filter: { status: { $in: ['PUBLISHED', 'PARTIAL', 'FAILED'] } }, sort: { updated_at: -1 } },
+  APPROVALS: { filter: { status: 'PENDING_APPROVAL' }, sort: { scheduled_at: 1 } },
 };
 
 const iso = (value: unknown) => (value instanceof Date ? value.toISOString() : null);
@@ -53,17 +63,21 @@ function notFound(): never {
   throw new GraphQLError('Post not found', { extensions: { code: 'NOT_FOUND' } });
 }
 
-function toContent(input: ScheduledPostInput): PublishContent {
+/** The media as given: the list when there is one, else the one piece older callers send. */
+function mediaOf(input: ScheduledPostInput): PublishMedia[] {
+  if (input.media) return input.media.map((item) => ({ url: item.url.trim(), type: item.type })).filter((item) => item.url);
   const media_url = (input.media_url ?? '').trim();
-  return { text: input.text.trim(), media_url, media_type: media_url ? input.media_type ?? 'IMAGE' : null };
+  return media_url ? [{ url: media_url, type: input.media_type ?? 'IMAGE' }] : [];
 }
+
+const toContent = (input: ScheduledPostInput): PublishContent => publishContent(input.text.trim(), mediaOf(input));
 
 /** The targets, checked — every account must exist, and (unless a draft) be able to take this post. */
 async function buildTargets(input: ScheduledPostInput, content: PublishContent) {
   const ids = [...new Set(input.account_ids)];
   if (input.mode !== 'DRAFT' && ids.length === 0) badInput('Pick at least one account to post to.');
   // The server downloads the media for some networks, so it must come from our CDN or a stock library.
-  if (content.media_url && !isTrustedMediaUrl(content.media_url)) {
+  if (content.media.some((item) => !isTrustedMediaUrl(item.url))) {
     badInput('Pick the image or video with the media picker — only Duncit’s own media can be posted.');
   }
   if (!ids.every((id) => isValidObjectId(id))) badInput('One of the chosen accounts is not valid.');
@@ -82,9 +96,11 @@ function timingFor(input: ScheduledPostInput): { status: SocialPublishStatus; sc
   const at = input.scheduled_at ? new Date(input.scheduled_at) : null;
   if (at && Number.isNaN(at.getTime())) badInput('That date and time could not be read.');
   if (input.mode === 'DRAFT') return { status: 'DRAFT', scheduled_at: at };
-  if (input.mode === 'NOW') return { status: 'SCHEDULED', scheduled_at: new Date() };
+  // A post that must be approved waits, at the time it would otherwise go out.
+  const status: SocialPublishStatus = input.needs_approval ? 'PENDING_APPROVAL' : 'SCHEDULED';
+  if (input.mode === 'NOW') return { status, scheduled_at: new Date() };
   if (!at || at.getTime() < Date.now() - PAST_GRACE_MS) badInput('Pick a time in the future to schedule this post.');
-  return { status: 'SCHEDULED', scheduled_at: at };
+  return { status, scheduled_at: at };
 }
 
 async function accountNames(ids: string[]): Promise<Map<string, string>> {
@@ -95,12 +111,16 @@ async function accountNames(ids: string[]): Promise<Map<string, string>> {
 const pub = (o: any, names: Map<string, string>) => ({
   id: String(o._id),
   text: o.text ?? '',
+  media: (o.media ?? []).map((m: PublishMedia) => ({ url: m.url, type: m.type })),
   media_url: o.media_url ?? '',
   media_type: o.media_type ?? null,
   status: o.status,
   scheduled_at: iso(o.scheduled_at),
   published_at: iso(o.published_at),
   idea_id: o.idea_id ?? '',
+  needs_approval: !!o.needs_approval,
+  review_note: o.review_note ?? '',
+  approval_run_id: o.approval_run_id ?? '',
   created_at: iso(o.created_at),
   updated_at: iso(o.updated_at),
   targets: (o.targets ?? []).map((t: any) => ({
@@ -132,6 +152,45 @@ function sendInBackground(id: string, userId: string) {
   });
 }
 
+/** Open the run a reviewer decides on, in the person's name; its id is kept on the post. */
+async function openApproval(doc: PostDoc, userId: string): Promise<string> {
+  const count = doc.targets.length;
+  return startRun({
+    workflow: 'SOCIAL_PUBLISH',
+    name: `Approve "${postTitle(doc.text)}" for ${count} network${count === 1 ? '' : 's'}`,
+    trigger: 'USER',
+    actor: await userActor({ id: userId }),
+    links: { post_id: String(doc._id) },
+    approval_required: true,
+  });
+}
+
+/**
+ * Close the run a post was waiting on because the post moved on. A run
+ * already decided or cancelled from the Approval Centre is left as it is —
+ * the post's new state wins, and the decision handler ignores a run the post
+ * no longer waits on.
+ */
+async function closeApproval(runId: string, postId: string): Promise<void> {
+  if (!runId) return;
+  try {
+    await cancelRun(runId);
+  } catch (error) {
+    if (!(error instanceof GraphQLError)) throw error;
+    logs.server.warn('social-publish', 'closeApproval', { error, run_id: runId, post_id: postId, msg: 'the approval run was already closed' });
+  }
+}
+
+/** After a post is written: open its approval run, or send it now — never both. */
+async function dispatch(doc: PostDoc, input: ScheduledPostInput, userId: string): Promise<void> {
+  if (doc.status === 'PENDING_APPROVAL') {
+    doc.approval_run_id = await openApproval(doc, userId);
+    await doc.save();
+    return;
+  }
+  if (input.mode === 'NOW') sendInBackground(doc.id, userId);
+}
+
 async function markIdeaUsed(ideaId?: string | null) {
   if (ideaId && isValidObjectId(ideaId)) await SocialIdeaModel.updateOne({ _id: ideaId }, { $set: { status: 'USED' } });
 }
@@ -157,22 +216,41 @@ export const socialPublishService = {
       ...timing,
       targets,
       idea_id: input.idea_id ?? '',
+      needs_approval: !!input.needs_approval,
+      review_note: '',
       created_by: userId,
       updated_by: userId,
     });
     await markIdeaUsed(input.idea_id);
-    if (input.mode === 'NOW') sendInBackground(doc.id, userId);
+    await dispatch(doc, input, userId);
     return (await pubMany([doc.toObject()]))[0];
   },
 
+  /**
+   * Rewrite a post that has not gone out. One waiting for approval leaves
+   * that run behind: it waits again under a fresh run if it still needs
+   * approval, or becomes a plain scheduled post or draft if not. A reviewer's
+   * note stays on a draft until the post is submitted again.
+   */
   async update(id: string, input: ScheduledPostInput, userId: string) {
     const doc = await loadPost(id);
-    if (!EDITABLE.has(doc.status)) badInput('Only a draft or a scheduled post can be edited.');
+    if (!EDITABLE.has(doc.status)) badInput('Only a draft, a scheduled post or one waiting for approval can be edited.');
     const content = toContent(input);
     const targets = await buildTargets(input, content);
-    doc.set({ ...content, ...timingFor(input), targets, updated_by: userId });
+    const timing = timingFor(input);
+    const waiting = doc.status === 'PENDING_APPROVAL';
+    if (waiting) await closeApproval(doc.approval_run_id, id);
+    doc.set({
+      ...content,
+      ...timing,
+      targets,
+      needs_approval: !!input.needs_approval,
+      ...(input.mode === 'DRAFT' ? {} : { review_note: '' }),
+      ...(waiting ? { approval_run_id: '' } : {}),
+      updated_by: userId,
+    });
     await doc.save();
-    if (input.mode === 'NOW') sendInBackground(id, userId);
+    await dispatch(doc, input, userId);
     return (await pubMany([doc.toObject()]))[0];
   },
 
@@ -180,6 +258,7 @@ export const socialPublishService = {
   async remove(id: string): Promise<boolean> {
     const doc = await loadPost(id);
     if (doc.status === 'PUBLISHING') badInput('This post is going out right now — wait for it to finish.');
+    if (doc.status === 'PENDING_APPROVAL') await closeApproval(doc.approval_run_id, id);
     await doc.deleteOne();
     return true;
   },
@@ -226,6 +305,8 @@ export const socialPublishService = {
       status: post.status,
       text: post.text ?? '',
       media_url: post.media_url ?? '',
+      // A post stored before carousels has no list; its one piece is in media_url.
+      media_count: (post.media ?? []).length || (post.media_url ? 1 : 0),
       permalink: post.targets.find((t) => t.permalink)?.permalink ?? '',
       platforms: post.targets.map((t) => t.platform),
       account_names: post.targets.map((t) => names.get(t.account_id) ?? ''),
@@ -240,6 +321,7 @@ export const socialPublishService = {
         status: 'PUBLISHED',
         text: post.text ?? '',
         media_url: post.media_url ?? '',
+        media_count: post.media_url ? 1 : 0,
         permalink: post.permalink ?? '',
         platforms: [post.platform],
         account_names: [names.get(post.account_id) ?? ''],

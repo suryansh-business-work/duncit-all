@@ -17,7 +17,7 @@ export function useProjectActions(refetch: () => void) {
   const [createProject, { loading: creating }] = useMutation<{ createReelProject: { id: string } }>(CREATE_REEL_PROJECT);
   const [deleteProject] = useMutation<{ deleteReelProject: boolean }>(DELETE_REEL_PROJECT);
 
-  const open = useCallback((project: ReelProjectSummary) => navigate(`/reels/${project.id}`), [navigate]);
+  const open = useCallback((project: ReelProjectSummary) => navigate(`/studio/reels/${project.id}`), [navigate]);
 
   const create = useCallback(
     async (values: ReelProjectFormValues) => {
@@ -26,7 +26,7 @@ export function useProjectActions(refetch: () => void) {
         const id = result.data?.createReelProject.id;
         notifySuccess(t('ai.reels.list.created'));
         setCreateOpen(false);
-        if (id) navigate(`/reels/${id}`);
+        if (id) navigate(`/studio/reels/${id}`);
       } catch (error) {
         notifyError(parseApiError(error, t('ai.reels.list.saveFailed')));
       }

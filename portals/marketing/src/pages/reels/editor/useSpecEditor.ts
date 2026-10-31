@@ -59,7 +59,7 @@ export function useSpecEditor(project: ReelProject) {
     } catch (error) {
       setSaveState('failed');
       notifyError(parseApiError(error, t('ai.reels.editor.saveFailed')));
-      logs.portal.ai.error('reels', 'saveSpec', { error, project_id: project.id });
+      logs.portal.marketing.error('reels', 'saveSpec', { error, project_id: project.id });
     } finally {
       inFlight.current -= 1;
     }

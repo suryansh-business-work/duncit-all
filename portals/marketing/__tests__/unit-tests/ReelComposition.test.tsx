@@ -1,10 +1,13 @@
 import type { CSSProperties, ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
-import type { ReelAsset, ReelOverlay, ReelScene, ReelSpec, ReelText } from '@duncit/gql-types';
+import type { ReelOverlay, ReelScene, ReelText } from '@duncit/gql-types';
 import { ReelComposition } from '../../src/pages/reels/composition/ReelComposition';
-import { SceneLayer } from '../../src/pages/reels/composition/SceneLayer';
+import { SceneLayer, type SceneLook } from '../../src/pages/reels/composition/SceneLayer';
 import { TextLayer } from '../../src/pages/reels/composition/TextLayer';
+import { VoiceoverTrack } from '../../src/pages/reels/composition/VoiceoverTrack';
+import { WatermarkLayer } from '../../src/pages/reels/composition/WatermarkLayer';
+import type { ReelAsset, ReelSpec } from '../../src/pages/reels/types';
 
 /** The frame the composition is "on" — Remotion's clock, set by each test. */
 const clock = vi.hoisted(() => ({ frame: 0 }));
@@ -94,11 +97,27 @@ const scene = (over: Partial<ReelScene> = {}): ReelScene =>
     ...over,
   }) as ReelScene;
 
-const spec = (over: Partial<ReelSpec> = {}): ReelSpec =>
-  ({ fps: 30, width: 1080, height: 1920, background: '#000000', scenes: [], music: null, ...over }) as ReelSpec;
+const BRAND = { watermark_asset_id: '', watermark_corner: 'TOP_RIGHT', watermark_width_pct: 18, primary_color: '' } as const;
 
-const ASSETS = [asset('clip', 'VIDEO'), asset('logo', 'IMAGE'), asset('song', 'AUDIO')];
+const spec = (over: Partial<ReelSpec> = {}): ReelSpec =>
+  ({
+    fps: 30,
+    width: 1080,
+    height: 1920,
+    aspect: 'PORTRAIT',
+    background: '#000000',
+    scenes: [],
+    music: null,
+    voiceover: null,
+    brand: BRAND,
+    captions: { style: 'PLAIN' },
+    ...over,
+  }) as ReelSpec;
+
+const ASSETS = [asset('clip', 'VIDEO'), asset('logo', 'IMAGE'), asset('song', 'AUDIO'), asset('voice', 'AUDIO')];
 const LOOKUP = new Map(ASSETS.map((item) => [item.id, item]));
+/** The reel's look as a scene receives it: plain captions, no brand colour. */
+const LOOK: SceneLook = { captions: 'PLAIN', accent: '' };
 
 const propsOf = (element: HTMLElement) => JSON.parse(element.dataset.props ?? '{}');
 
@@ -162,7 +181,7 @@ describe('ReelComposition', () => {
 
 describe('SceneLayer', () => {
   it('shows a colour card as its background alone', () => {
-    render(<SceneLayer scene={scene()} frames={60} assets={LOOKUP} />);
+    render(<SceneLayer scene={scene()} frames={60} assets={LOOKUP} look={LOOK} />);
     expect(screen.getByTestId('fill')).toHaveStyle({ backgroundColor: '#101010' });
     expect(screen.queryByTestId('video')).not.toBeInTheDocument();
     expect(screen.queryByTestId('picture')).not.toBeInTheDocument();
@@ -174,6 +193,7 @@ describe('SceneLayer', () => {
         scene={scene({ asset_id: 'clip', trim_start_ms: 4000, volume: 0.5, playback_rate: 2, fit: 'CONTAIN' })}
         frames={60}
         assets={LOOKUP}
+        look={LOOK}
       />
     );
     expect(propsOf(screen.getByTestId('video'))).toMatchObject({
@@ -187,12 +207,12 @@ describe('SceneLayer', () => {
   });
 
   it('mutes a clip whose volume is zero', () => {
-    render(<SceneLayer scene={scene({ asset_id: 'clip', volume: 0 })} frames={60} assets={LOOKUP} />);
+    render(<SceneLayer scene={scene({ asset_id: 'clip', volume: 0 })} frames={60} assets={LOOKUP} look={LOOK} />);
     expect(propsOf(screen.getByTestId('video'))).toMatchObject({ muted: true, objectFit: 'cover' });
   });
 
   it('shows a picture fetched with CORS, so the exporter can read the frame back', () => {
-    render(<SceneLayer scene={scene({ asset_id: 'logo' })} frames={60} assets={LOOKUP} />);
+    render(<SceneLayer scene={scene({ asset_id: 'logo' })} frames={60} assets={LOOKUP} look={LOOK} />);
     const picture = screen.getByTestId('picture');
     expect(picture).toHaveAttribute('src', 'https://server.duncit.com/reels/media/logo');
     expect(picture).toHaveAttribute('crossorigin', 'anonymous');
@@ -201,7 +221,7 @@ describe('SceneLayer', () => {
 
   it('drifts the footage as the scene plays', () => {
     clock.frame = 59;
-    render(<SceneLayer scene={scene({ asset_id: 'logo', motion: 'ZOOM_IN' })} frames={60} assets={LOOKUP} />);
+    render(<SceneLayer scene={scene({ asset_id: 'logo', motion: 'ZOOM_IN' })} frames={60} assets={LOOKUP} look={LOOK} />);
     expect(screen.getAllByTestId('fill')[1]).toHaveStyle({ transform: 'scale(1.15)' });
   });
 
@@ -216,6 +236,7 @@ describe('SceneLayer', () => {
         })}
         frames={60}
         assets={LOOKUP}
+        look={LOOK}
       />
     );
     const windows = screen.getAllByTestId('window');
@@ -230,6 +251,7 @@ describe('SceneLayer', () => {
         scene={scene({ texts: [text({ start_ms: 1000 }), text({ id: 't2', text: 'Friday 8 PM', duration_ms: 500 })] })}
         frames={60}
         assets={LOOKUP}
+        look={LOOK}
       />
     );
     const windows = screen.getAllByTestId('window');
@@ -243,8 +265,8 @@ describe('SceneLayer', () => {
 
 describe('TextLayer', () => {
   it('writes the words in their style and place, with an edge to stay readable over footage', () => {
-    render(<TextLayer text={text({ style: 'TITLE', position: 'TOP', color: '#FFEE00' })} />);
-    expect(screen.getByTestId('fill')).toHaveStyle({ justifyContent: 'flex-start', paddingTop: '12%' });
+    render(<TextLayer text={text({ style: 'TITLE', position: 'TOP', color: '#FFEE00' })} frames={60} captions="PLAIN" accent="" />);
+    expect(screen.getByTestId('fill')).toHaveStyle({ justifyContent: 'flex-start', paddingTop: '15%' });
     // The element's own style: jsdom's computed style does not carry text-shadow faithfully.
     const { style } = screen.getByText('Jam night');
     expect(style.fontSize).toBe('92px');
@@ -254,7 +276,7 @@ describe('TextLayer', () => {
   });
 
   it('puts a pill behind the words when the text has a background', () => {
-    render(<TextLayer text={text({ background: '#D92D2D' })} />);
+    render(<TextLayer text={text({ background: '#D92D2D' })} frames={60} captions="PLAIN" accent="" />);
     const { style } = screen.getByText('Jam night');
     expect(style.backgroundColor).toBe('rgb(217, 45, 45)');
     expect(style.padding).toBe('18px 34px');
@@ -263,14 +285,111 @@ describe('TextLayer', () => {
 
   it('types the words out a frame at a time', () => {
     clock.frame = 3;
-    render(<TextLayer text={text({ animation: 'TYPEWRITER' })} />);
+    render(<TextLayer text={text({ animation: 'TYPEWRITER' })} frames={60} captions="PLAIN" accent="" />);
     expect(screen.getByText('Ja')).toBeInTheDocument();
     expect(screen.queryByText('Jam night')).not.toBeInTheDocument();
   });
 
   it('fades the words in', () => {
     clock.frame = 6;
-    render(<TextLayer text={text({ animation: 'FADE' })} />);
+    render(<TextLayer text={text({ animation: 'FADE' })} frames={60} captions="PLAIN" accent="" />);
     expect(screen.getByText('Jam night')).toHaveStyle({ opacity: '0.5' });
+  });
+
+  it('puts BOX captions on a pill in the brand colour, inked to read on it', () => {
+    render(<TextLayer text={text({ color: '#FFFFFF' })} frames={60} captions="BOX" accent="#FFEE00" />);
+    const { style } = screen.getByText('Jam night');
+    expect(style.backgroundColor).toBe('rgb(255, 238, 0)');
+    // The text keeps its own ink; only a pill in that same colour swaps it.
+    expect(style.color).toBe('rgb(255, 255, 255)');
+    expect(style.textShadow).toBe('none');
+  });
+
+  it('inks a BOX caption in the contrasting colour when the pill would be the text’s own colour', () => {
+    render(<TextLayer text={text({ color: '#FFFFFF' })} frames={60} captions="BOX" accent="" />);
+    const { style } = screen.getByText('Jam night');
+    expect(style.backgroundColor).toBe('rgb(255, 255, 255)');
+    expect(style.color).toBe('rgb(0, 0, 0)');
+  });
+
+  it('emphasises one word at a time across the caption’s stay, in HIGHLIGHT style', () => {
+    clock.frame = 30;
+    render(<TextLayer text={text({ text: 'Sundays at HSR go go' })} frames={60} captions="HIGHLIGHT" accent="#FF5A1F" />);
+    // Five words over 60 frames: frame 30 is the third word.
+    const current = screen.getByTestId('reel-highlight');
+    expect(current).toHaveTextContent('HSR');
+    expect(current.style.backgroundColor).toBe('rgb(255, 90, 31)');
+    expect(current.style.color).toBe('rgb(255, 255, 255)');
+    // The repeated word is drawn twice, each its own span.
+    expect(screen.getAllByText(/^go\s?$/)).toHaveLength(2);
+  });
+
+  it('highlights the words typed so far when the caption is also a typewriter', () => {
+    clock.frame = 3;
+    render(<TextLayer text={text({ text: 'Jam night', animation: 'TYPEWRITER' })} frames={60} captions="HIGHLIGHT" accent="" />);
+    expect(screen.getByTestId('reel-highlight')).toHaveTextContent('Ja');
+  });
+});
+
+describe('WatermarkLayer', () => {
+  const brand = { ...BRAND, watermark_asset_id: 'logo', watermark_corner: 'BOTTOM_LEFT' as const, watermark_width_pct: 25 };
+
+  it('pins the brand’s mark to its corner at its width, fetched with CORS', () => {
+    render(<WatermarkLayer brand={brand} asset={LOOKUP.get('logo')} />);
+    const mark = screen.getByTestId('picture');
+    expect(mark).toHaveAttribute('crossorigin', 'anonymous');
+    expect(mark).toHaveStyle({ width: '25%', bottom: '10%', left: '6%' });
+  });
+
+  it('draws nothing without a mark, or when its picture has left the reel', () => {
+    const { rerender } = render(<WatermarkLayer brand={BRAND} asset={LOOKUP.get('logo')} />);
+    expect(screen.queryByTestId('picture')).not.toBeInTheDocument();
+    rerender(<WatermarkLayer brand={brand} asset={undefined} />);
+    expect(screen.queryByTestId('picture')).not.toBeInTheDocument();
+  });
+});
+
+describe('VoiceoverTrack', () => {
+  it('plays the speech once, at its volume', () => {
+    render(<VoiceoverTrack voiceover={{ asset_id: 'voice', volume: 0.9 }} asset={LOOKUP.get('voice')} />);
+    expect(propsOf(screen.getByTestId('music'))).toEqual({ src: 'https://server.duncit.com/reels/media/voice', volume: 0.9 });
+  });
+
+  it('is silent when the speech file has left the reel', () => {
+    render(<VoiceoverTrack voiceover={{ asset_id: 'gone', volume: 1 }} asset={undefined} />);
+    expect(screen.queryByTestId('music')).not.toBeInTheDocument();
+  });
+});
+
+describe('ReelComposition — brand and voice', () => {
+  it('draws the watermark over every scene and the voiceover under the reel', () => {
+    render(
+      <ReelComposition
+        spec={spec({
+          scenes: [scene({ id: 'a' })],
+          brand: { ...BRAND, watermark_asset_id: 'logo' },
+          voiceover: { asset_id: 'voice', volume: 0.7 },
+          music: { asset_id: 'song', volume: 0.3, trim_start_ms: 0 },
+        })}
+        assets={ASSETS}
+      />
+    );
+    expect(screen.getByTestId('picture')).toHaveStyle({ width: '18%', top: '6%', right: '6%' });
+    const tracks = screen.getAllByTestId('music').map(propsOf);
+    expect(tracks).toEqual([
+      { src: 'https://server.duncit.com/reels/media/song', trimBefore: 0, volume: 0.3, loop: true },
+      { src: 'https://server.duncit.com/reels/media/voice', volume: 0.7 },
+    ]);
+  });
+
+  it('hands every scene the reel’s caption style and brand colour', () => {
+    clock.frame = 0;
+    render(
+      <ReelComposition
+        spec={spec({ scenes: [scene({ id: 'a', texts: [text()] })], brand: { ...BRAND, primary_color: '#FF5A1F' }, captions: { style: 'BOX' } })}
+        assets={ASSETS}
+      />
+    );
+    expect(screen.getByText('Jam night').style.backgroundColor).toBe('rgb(255, 90, 31)');
   });
 });

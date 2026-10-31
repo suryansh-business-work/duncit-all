@@ -23,6 +23,12 @@ vi.mock('@duncit/dialogs', async (importOriginal) => ({
   useConfirm: () => confirm,
 }));
 
+/** The signed-in marketer, for the guide kit's per-user tour record. */
+vi.mock('@duncit/user-context', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@duncit/user-context')>()),
+  useUserData: () => ({ user: { user_id: 'u1' } }),
+}));
+
 interface ActionOptions {
   onEdit: (row: ReelProjectSummary) => void;
   onDelete: (row: ReelProjectSummary) => void;
@@ -67,13 +73,29 @@ const reel = (over: Partial<ReelProjectSummary>): ReelProjectSummary =>
     asset_count: 4,
     scene_count: 3,
     duration_ms: 84_000,
+    cover_url: 'https://server.duncit.com/reels/cover/1',
+    last_check_pass: true,
+    posts_count: 2,
+    views: 12_400,
     created_by: 'reels@duncit.com',
     created_at: '2026-10-01T10:00:00.000Z',
     updated_at: '2026-10-01T12:00:00.000Z',
     ...over,
   }) as ReelProjectSummary;
 
-const REELS = [reel({}), reel({ id: 'DUN-REEL-2', name: 'Pottery workshop teaser', created_by: 'studio@duncit.com', duration_ms: 0 })];
+const REELS = [
+  reel({}),
+  reel({
+    id: 'DUN-REEL-2',
+    name: 'Pottery workshop teaser',
+    created_by: 'studio@duncit.com',
+    duration_ms: 0,
+    cover_url: '',
+    last_check_pass: null,
+    posts_count: 0,
+    views: 0,
+  }),
+];
 
 const mount = () =>
   renderWithProviders(<ReelProjectsPage />, {
@@ -93,21 +115,46 @@ beforeEach(() => {
   confirm.mockReset();
   vi.mocked(notifyError).mockClear();
   vi.mocked(notifySuccess).mockClear();
+  // The list's tour has been seen: it does not open over the table under test.
+  localStorage.setItem('duncit.tours.completed.u1', '["marketing.reels"]');
 });
 
 describe('ReelProjectsPage — the list', () => {
-  it('lists every reel with its footage, scenes and length', async () => {
+  it('lists every reel with its cover, length, last check, posts and views', async () => {
     answerQuery(REEL_PROJECTS, { data: { reelProjects: REELS } });
     mount();
     const [first, second] = await rows();
     expect(first).toHaveTextContent('Jam night recap');
-    expect(first.querySelector('[data-testid="cell-asset_count"]')).toHaveTextContent('4');
-    expect(first.querySelector('[data-testid="cell-scene_count"]')).toHaveTextContent('3');
+    expect(first.querySelector('[data-testid="cell-cover"] img')).toHaveAttribute('src', 'https://server.duncit.com/reels/cover/1');
     expect(first.querySelector('[data-testid="cell-duration_ms"]')).toHaveTextContent('1:24');
-    expect(first.querySelector('[data-testid="cell-created_by"]')).toHaveTextContent('reels@duncit.com');
-    // A reel with nothing in it yet is exactly zero seconds long.
+    expect(first.querySelector('[data-testid="cell-last_check_pass"]')).toHaveTextContent('Checks pass');
+    expect(first.querySelector('[data-testid="cell-posts_count"]')).toHaveTextContent('2');
+    expect(first.querySelector('[data-testid="cell-views"]')).toHaveTextContent('12,400');
+    // A reel with nothing in it yet: zero seconds long, no cover, no check run, nothing posted.
     expect(second.querySelector('[data-testid="cell-duration_ms"]')).toHaveTextContent('0:00');
+    expect(second.querySelector('[data-testid="cell-cover"] img')).toBeNull();
+    expect(second.querySelector('[data-testid="reel-check-none-DUN-REEL-2"]')).toHaveTextContent('—');
+    expect(second.querySelector('[data-testid="cell-views"]')).toHaveTextContent('0');
     expect(screen.getByTestId('open-DUN-REEL-1')).toHaveAccessibleName(/Jam night recap/);
+  });
+
+  it('flags a reel whose last check found something', async () => {
+    answerQuery(REEL_PROJECTS, { data: { reelProjects: [reel({ last_check_pass: false })] } });
+    mount();
+    const [first] = await rows();
+    expect(first.querySelector('[data-testid="cell-last_check_pass"]')).toHaveTextContent('Needs attention');
+  });
+
+  it('opens with the intro and starts the tour over the button and the table', async () => {
+    answerQuery(REEL_PROJECTS, { data: { reelProjects: REELS } });
+    mount();
+    await rows();
+    expect(screen.getByTestId('page-intro')).toBeInTheDocument();
+    expect(screen.queryByTestId('portal-tour')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Start tour' }));
+    expect(screen.getByRole('dialog')).toHaveTextContent('New reel');
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    expect(screen.getByRole('dialog')).toHaveTextContent('Your reels');
   });
 
   it('searches by name, by who made it and by its Drive folder', async () => {

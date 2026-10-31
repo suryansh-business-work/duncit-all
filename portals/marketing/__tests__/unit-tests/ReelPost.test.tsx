@@ -30,8 +30,24 @@ vi.mock('@duncit/logs', async (importOriginal) => {
 
 /** The calendar's composer, as what it was opened with. */
 vi.mock('../../src/pages/social-accounts-page/publish/ComposerDialog', () => ({
-  default: ({ request, accounts, onClose }: { request: { text?: string; media_url?: string }; accounts: unknown[]; onClose: () => void }) => (
-    <button type="button" data-testid="composer" data-text={request.text} data-media={request.media_url} data-accounts={accounts.length} onClick={onClose} />
+  default: ({
+    request,
+    accounts,
+    onClose,
+  }: {
+    request: { text?: string; media_url?: string; reel_project_id?: string };
+    accounts: unknown[];
+    onClose: () => void;
+  }) => (
+    <button
+      type="button"
+      data-testid="composer"
+      data-text={request.text}
+      data-media={request.media_url}
+      data-reel={request.reel_project_id}
+      data-accounts={accounts.length}
+      onClick={onClose}
+    />
   ),
 }));
 vi.mock('../../src/pages/social-accounts-page/useSocialSetup', () => ({
@@ -41,6 +57,8 @@ vi.mock('../../src/pages/social-accounts-page/useSocialSetup', () => ({
 const upload = vi.mocked(directUploadToImagekit);
 const file = (bytes: number, name = 'jam-night-recap.mp4') => new File([new Uint8Array(bytes)], name, { type: 'video/mp4' });
 const URL_UPLOADED = 'https://ik.imagekit.io/duncit/marketing/reels/jam-night-recap.mp4';
+/** What the post is made from: the reel, and the caption it opens with. */
+const SOURCE = { projectId: 'DUN-REEL-1', caption: 'Jam night recap' };
 
 beforeEach(() => {
   upload.mockReset();
@@ -54,7 +72,7 @@ describe('useReelPost', () => {
       onProgress?.(40);
       return URL_UPLOADED;
     });
-    const { result } = renderHook(() => useReelPost('Jam night recap', true));
+    const { result } = renderHook(() => useReelPost(SOURCE, true));
     expect(result.current.state).toEqual({ phase: 'idle' });
     expect(result.current.composer).toBeNull();
 
@@ -67,7 +85,8 @@ describe('useReelPost', () => {
     expect(upload).toHaveBeenCalledWith(client, expect.objectContaining({ name: 'jam-night-recap.mp4' }), REEL_UPLOAD_FOLDER, expect.any(Function), 'PORTALS');
     expect(REEL_UPLOAD_FOLDER).toBe('/marketing/reels');
     expect(result.current.state).toEqual({ phase: 'idle' });
-    expect(result.current.composer).toEqual({ text: 'Jam night recap', media_url: URL_UPLOADED });
+    // The composer opens on the caption, the uploaded file and the reel it came from.
+    expect(result.current.composer).toEqual({ text: 'Jam night recap', media_url: URL_UPLOADED, reel_project_id: 'DUN-REEL-1' });
 
     act(() => result.current.closeComposer());
     expect(result.current.composer).toBeNull();
@@ -82,7 +101,7 @@ describe('useReelPost', () => {
         finish = resolve;
       });
     });
-    const { result } = renderHook(() => useReelPost('Jam night recap', true));
+    const { result } = renderHook(() => useReelPost(SOURCE, true));
     let done: Promise<boolean> = Promise.resolve(false);
     act(() => {
       done = result.current.post(file(10));
@@ -98,7 +117,7 @@ describe('useReelPost', () => {
   });
 
   it('refuses a reel over the surface’s video cap without uploading a byte', async () => {
-    const { result } = renderHook(() => useReelPost('Jam night recap', true));
+    const { result } = renderHook(() => useReelPost(SOURCE, true));
     let posted = true;
     await act(async () => {
       posted = await result.current.post(file(3 * MB));
@@ -112,7 +131,7 @@ describe('useReelPost', () => {
 
   it('says why the upload failed, logs it, and can be dismissed back to the rendered reel', async () => {
     upload.mockRejectedValue(new Error('Upload is not available right now'));
-    const { result } = renderHook(() => useReelPost('Jam night recap', true));
+    const { result } = renderHook(() => useReelPost(SOURCE, true));
     let posted = true;
     await act(async () => {
       posted = await result.current.post(file(10));
@@ -128,7 +147,7 @@ describe('useReelPost', () => {
 
   it('falls back to its own words when the failure carries none', async () => {
     upload.mockRejectedValue({});
-    const { result } = renderHook(() => useReelPost('Jam night recap', true));
+    const { result } = renderHook(() => useReelPost(SOURCE, true));
     await act(async () => {
       await result.current.post(file(10));
     });
@@ -136,9 +155,9 @@ describe('useReelPost', () => {
   });
 
   it('asks for the upload caps only once a reel is rendered', () => {
-    renderHook(() => useReelPost('Jam night recap', false));
+    renderHook(() => useReelPost(SOURCE, false));
     expect(useUploadCaps).toHaveBeenLastCalledWith('PORTALS', { skip: true });
-    renderHook(() => useReelPost('Jam night recap', true));
+    renderHook(() => useReelPost(SOURCE, true));
     expect(useUploadCaps).toHaveBeenLastCalledWith('PORTALS', { skip: false });
   });
 });
@@ -186,10 +205,11 @@ describe('exportView', () => {
 describe('ReelComposer', () => {
   it('opens the calendar’s composer on the request with the connected accounts', () => {
     const onClose = vi.fn();
-    renderWithProviders(<ReelComposer request={{ text: 'Jam night recap', media_url: URL_UPLOADED }} onClose={onClose} />);
+    renderWithProviders(<ReelComposer request={{ text: 'Jam night recap', media_url: URL_UPLOADED, reel_project_id: 'DUN-REEL-1' }} onClose={onClose} />);
     const composer = screen.getByTestId('composer');
     expect(composer).toHaveAttribute('data-text', 'Jam night recap');
     expect(composer).toHaveAttribute('data-media', URL_UPLOADED);
+    expect(composer).toHaveAttribute('data-reel', 'DUN-REEL-1');
     expect(composer).toHaveAttribute('data-accounts', '3');
     composer.click();
     expect(onClose).toHaveBeenCalledTimes(1);

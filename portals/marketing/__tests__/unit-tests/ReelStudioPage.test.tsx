@@ -2,13 +2,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { Route } from 'react-router';
 import { AI_PROMPTS } from '@duncit/ai-prompts';
-import { notifyError } from '@duncit/dialogs';
-import { REEL_DRIVE_STATUS, REEL_PROJECT, UPDATE_REEL_PROJECT } from '../../src/pages/reels/queries';
+import { notifyError, notifySuccess } from '@duncit/dialogs';
+import { REEL_ANALYTICS, REEL_DRIVE_STATUS, REEL_PROJECT, SET_REEL_COVER, UPDATE_REEL_PROJECT } from '../../src/pages/reels/queries';
 import ReelStudioPage from '../../src/pages/reels/studio';
 import LazyReelStudioPage from '../../src/pages/reels/studio/lazy';
 import type { ReelProject } from '../../src/pages/reels/types';
 import { renderWithProviders } from '../testkit';
-import { answerQuery, mutationOf, queryOptions, resetApollo } from '../mocks/reel-apollo-mock';
+import { answerQuery, mutationOf, queryOptions, reelAnalytics, reelProject, reelScene, reelSpec, resetApollo } from '../mocks/reel-apollo-mock';
 
 const renderer = vi.hoisted(() => ({ canRenderMediaOnWeb: vi.fn(), renderMediaOnWeb: vi.fn() }));
 const upload = vi.hoisted(() => vi.fn());
@@ -30,6 +30,12 @@ vi.mock('@duncit/logs', async (importOriginal) => {
   return { ...actual, logs: { ...actual.logs, portal: { ...actual.logs.portal, marketing: { error: vi.fn() } } } };
 });
 
+/** The signed-in marketer, for the guide kit's per-user tour record. */
+vi.mock('@duncit/user-context', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@duncit/user-context')>()),
+  useUserData: () => ({ user: { user_id: 'u1' } }),
+}));
+
 vi.mock('@remotion/player', () => ({ Player: () => <div data-testid="reel-player" /> }));
 vi.mock('@remotion/web-renderer', () => renderer);
 vi.mock('../../src/pages/reels/composition/ReelComposition', () => ({ ReelComposition: () => null }));
@@ -41,10 +47,19 @@ vi.mock('@duncit/media-picker', async (importOriginal) => ({
 
 /** The calendar's composer, as what it was opened with. */
 vi.mock('../../src/pages/social-accounts-page/publish/ComposerDialog', () => ({
-  default: ({ request, accounts, onClose }: { request: { text?: string; media_url?: string }; accounts: unknown[]; onClose: () => void }) => (
+  default: ({
+    request,
+    accounts,
+    onClose,
+  }: {
+    request: { text?: string; media_url?: string; reel_project_id?: string };
+    accounts: unknown[];
+    onClose: () => void;
+  }) => (
     <div data-testid="reel-composer">
       <span data-testid="reel-composer-text">{request.text}</span>
       <span data-testid="reel-composer-media">{request.media_url}</span>
+      <span data-testid="reel-composer-reel">{request.reel_project_id}</span>
       <span data-testid="reel-composer-accounts">{accounts.length}</span>
       <button type="button" data-testid="reel-composer-close" onClick={onClose} />
     </div>
@@ -57,24 +72,7 @@ vi.mock('../../src/pages/social-accounts-page/useSocialSetup', () => ({
 const FOLDER_URL = 'https://drive.google.com/drive/folders/1AbCdEfGhIjKlMnOp';
 
 const project = (over: Partial<ReelProject> = {}): ReelProject =>
-  ({
-    id: 'DUN-REEL-1',
-    name: 'Jam night recap',
-    drive_url: '',
-    drive_folder_id: '',
-    duration_ms: 2000,
-    assets: [],
-    messages: [],
-    spec: {
-      fps: 30,
-      width: 1080,
-      height: 1920,
-      background: '#000000',
-      music: null,
-      scenes: [{ id: 's1', asset_id: '', duration_ms: 2000, transition_ms: 0, transition: 'NONE', overlays: [], texts: [] }],
-    },
-    ...over,
-  }) as unknown as ReelProject;
+  reelProject({ duration_ms: 2000, spec: reelSpec({ scenes: [reelScene({ id: 's1', asset_id: '' })] }), ...over });
 
 const mount = (page = <ReelStudioPage />, entry = '/studio/reels/DUN-REEL-1') =>
   renderWithProviders(page, {
@@ -94,6 +92,9 @@ beforeEach(() => {
   renderer.renderMediaOnWeb.mockReset();
   upload.mockReset();
   vi.mocked(notifyError).mockClear();
+  vi.mocked(notifySuccess).mockClear();
+  // The studio's tour has been seen: it does not open over the panes under test.
+  localStorage.setItem('duncit.tours.completed.u1', '["marketing.reelStudio"]');
   answerQuery(AI_PROMPTS, { data: { aiPrompts: [] } });
   answerQuery(REEL_DRIVE_STATUS, { data: { reelDriveStatus: { configured: true, service_account_email: 'reels@duncit-drive.iam.gserviceaccount.com' } } });
 });
@@ -138,24 +139,43 @@ describe('ReelStudioPage — the studio', () => {
     answerQuery(REEL_PROJECT, { data: { reelProject: project() } });
   });
 
-  it('lays out footage, the reel and the conversation on one screen', () => {
+  it('lays out footage, the reel, the conversation and the intro on one screen', () => {
     mount();
     expect(screen.getByTestId('reel-sources-panel')).toBeInTheDocument();
     expect(screen.getByTestId('reel-preview-pane')).toBeInTheDocument();
     expect(screen.getByTestId('reel-chat-panel')).toBeInTheDocument();
     expect(screen.getByTestId('reel-player')).toBeInTheDocument();
+    expect(screen.getByTestId('page-intro')).toBeInTheDocument();
+    expect(screen.queryByTestId('portal-tour')).not.toBeInTheDocument();
   });
 
-  it('puts the timeline under the panes, and opens a selected scene in the Edit tab', () => {
-    answerQuery(REEL_PROJECT, { data: { reelProject: project() } });
+  it('opens the tour from the intro and walks its anchors', () => {
+    mount();
+    fireEvent.click(screen.getByRole('button', { name: 'Start tour' }));
+    expect(screen.getByTestId('portal-tour')).toBeInTheDocument();
+    expect(screen.getByRole('dialog')).toHaveTextContent('Chat, Create, Edit');
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    expect(screen.getByRole('dialog')).toHaveTextContent('Sources');
+  });
+
+  it('offers Chat, Create and Edit on the right, and opens a selected scene in Edit', () => {
     mount();
     expect(screen.getByTestId('reel-timeline')).toBeInTheDocument();
-    expect(screen.getByTestId('reel-chat-panel')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Create' }));
+    expect(screen.getByTestId('reel-create-panel')).toBeInTheDocument();
+    expect(screen.queryByTestId('reel-chat-panel')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Edit' }));
+    // Nothing selected: the reel's own settings.
+    expect(screen.getByTestId('reel-settings-section')).toBeInTheDocument();
 
     fireEvent.click(screen.getByTestId('reel-timeline-scene-s1'));
-    expect(screen.queryByTestId('reel-chat-panel')).not.toBeInTheDocument();
     expect(screen.getByTestId('reel-scene-form')).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Edit' })).toHaveAttribute('aria-selected', 'true');
+    // Back to the reel's settings from the item's own heading.
+    fireEvent.click(screen.getByTestId('reel-inspector-settings'));
+    expect(screen.getByTestId('reel-settings-section')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('tab', { name: 'Chat' }));
     expect(screen.getByTestId('reel-chat-panel')).toBeInTheDocument();
@@ -192,6 +212,38 @@ describe('ReelStudioPage — the studio', () => {
     await waitFor(() => expect(screen.queryByTestId('reel-project-form')).not.toBeInTheDocument());
   });
 
+  it('makes the frame under the playhead the cover', async () => {
+    mount();
+    fireEvent.click(screen.getByTestId('reel-studio-cover'));
+    await waitFor(() => expect(mutationOf(SET_REEL_COVER)).toHaveBeenCalledWith({ variables: { project_id: 'DUN-REEL-1', at_ms: 0 } }));
+    expect(notifySuccess).toHaveBeenCalledTimes(1);
+  });
+
+  it('opens each tool from the toolbar and closes it again', async () => {
+    answerQuery(REEL_ANALYTICS, { data: { reelAnalytics: reelAnalytics() } });
+    mount();
+    fireEvent.click(screen.getByTestId('reel-studio-validate'));
+    expect(await screen.findByTestId('reel-validate-dialog')).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('reel-validate-close'));
+    await waitFor(() => expect(screen.queryByTestId('reel-validate-dialog')).not.toBeInTheDocument());
+
+    fireEvent.click(screen.getByTestId('reel-studio-variants'));
+    expect(await screen.findByTestId('reel-variants-dialog')).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('reel-variants-close'));
+    await waitFor(() => expect(screen.queryByTestId('reel-variants-dialog')).not.toBeInTheDocument());
+
+    fireEvent.click(screen.getByTestId('reel-studio-history'));
+    expect(await screen.findByTestId('reel-history-drawer')).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('reel-history-close'));
+    await waitFor(() => expect(screen.queryByTestId('reel-history-drawer')).not.toBeInTheDocument());
+
+    fireEvent.click(screen.getByTestId('reel-studio-analytics'));
+    expect(await screen.findByTestId('reel-analytics-drawer')).toBeInTheDocument();
+    expect(screen.getByTestId('reel-analytics-views')).toHaveTextContent('1,200');
+    fireEvent.click(screen.getByTestId('reel-analytics-close'));
+    await waitFor(() => expect(screen.queryByTestId('reel-analytics-drawer')).not.toBeInTheDocument());
+  });
+
   it('exports from the toolbar, and shows the dialog when the browser cannot encode the file', async () => {
     renderer.canRenderMediaOnWeb.mockResolvedValue({ canRender: false, issues: [{ severity: 'error', message: 'No H.264 encoder.' }] });
     mount();
@@ -201,7 +253,7 @@ describe('ReelStudioPage — the studio', () => {
     await waitFor(() => expect(screen.queryByTestId('reel-export-dialog')).not.toBeInTheDocument());
   });
 
-  it('posts a rendered reel to social: uploads it, then opens the composer on it without leaving the studio', async () => {
+  it('posts a rendered reel to social: uploads it, then opens the composer on it and the reel’s id', async () => {
     renderer.canRenderMediaOnWeb.mockResolvedValue({ canRender: true, issues: [] });
     renderer.renderMediaOnWeb.mockResolvedValue({ getBlob: async () => new Blob(['mp4']) });
     upload.mockImplementation(async (_client: unknown, _file: File, _folder: string, onProgress: (pct: number) => void) => {
@@ -221,10 +273,11 @@ describe('ReelStudioPage — the studio', () => {
       expect.any(Function),
       'PORTALS'
     );
-    // The export is over; the composer carries the reel's name, the uploaded file and the calendar's accounts.
+    // The export is over; the composer carries the reel's name, the uploaded file, the reel's id and the calendar's accounts.
     expect(screen.queryByTestId('reel-export-dialog')).not.toBeInTheDocument();
     expect(screen.getByTestId('reel-composer-text')).toHaveTextContent('Jam night recap');
     expect(screen.getByTestId('reel-composer-media')).toHaveTextContent('https://ik.imagekit.io/duncit/marketing/reels/jam-night-recap.mp4');
+    expect(screen.getByTestId('reel-composer-reel')).toHaveTextContent('DUN-REEL-1');
     expect(screen.getByTestId('reel-composer-accounts')).toHaveTextContent('2');
     expect(screen.getByTestId('reel-studio')).toBeInTheDocument();
 

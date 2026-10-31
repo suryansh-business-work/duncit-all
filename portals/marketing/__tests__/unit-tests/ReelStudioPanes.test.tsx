@@ -80,17 +80,43 @@ const project = (over: Partial<ReelProject> = {}): ReelProject =>
     duration_ms: 0,
     assets: [],
     messages: [],
-    spec: { fps: 30, width: 1080, height: 1920, background: '#000000', music: null, scenes: [] },
+    spec: specOf([]),
+    variants: [],
+    checks: [],
+    posts: [],
+    cover_at_ms: null,
     ...over,
   }) as ReelProject;
+
+/** A spec with the reel-level settings every pane now reads. */
+function specOf(scenes: ReelScene[], music: ReelProject['spec']['music'] = null): ReelProject['spec'] {
+  return {
+    fps: 30,
+    width: 1080,
+    height: 1920,
+    aspect: 'PORTRAIT',
+    background: '#000000',
+    music,
+    voiceover: null,
+    brand: { watermark_asset_id: '', watermark_corner: 'TOP_RIGHT', watermark_width_pct: 18, primary_color: '' },
+    captions: { style: 'PLAIN' },
+    scenes,
+  } as ReelProject['spec'];
+}
 
 const actions = (): ReelActions => ({
   addDriveFiles: vi.fn(async () => undefined),
   adding: false,
+  addStockItems: vi.fn(async () => true),
+  addingStock: false,
+  addUploads: vi.fn(async () => true),
+  addingUploads: false,
   removeAsset: vi.fn(async () => undefined),
   restoreVersion: vi.fn(async () => undefined),
   saveDetails: vi.fn(async () => true),
   saving: false,
+  setCover: vi.fn(async () => undefined),
+  settingCover: false,
 });
 
 const entry = (over: Partial<ReelDriveEntry>): ReelDriveEntry =>
@@ -287,14 +313,10 @@ describe('SourcesPanel', () => {
         project={project({
           drive_folder_id: 'root',
           assets: [asset({}), asset({ id: 'logo', kind: 'IMAGE', source: 'UPLOAD', drive_file_id: '', name: 'logo.png' }), asset({ id: 'song', kind: 'AUDIO', name: 'theme.mp3' })],
-          spec: {
-            fps: 30,
-            width: 1080,
-            height: 1920,
-            background: '#000000',
-            music: { asset_id: 'song', volume: 0.6, trim_start_ms: 0 },
-            scenes: [scene({ overlays: [{ id: 'o1', asset_id: 'logo' }] as never }), scene({ id: 's2', asset_id: '' })],
-          } as ReelProject['spec'],
+          spec: specOf(
+            [scene({ overlays: [{ id: 'o1', asset_id: 'logo' }] as never }), scene({ id: 's2', asset_id: '' })],
+            { asset_id: 'song', volume: 0.6, trim_start_ms: 0 } as ReelProject['spec']['music']
+          ),
         })}
         actions={studio}
         onEditDetails={onEditDetails}
@@ -421,14 +443,7 @@ describe('PreviewPane', () => {
   });
 
   it('plays the reel and hands the mounted player to the studio', () => {
-    const spec = {
-      fps: 30,
-      width: 1080,
-      height: 1920,
-      background: '#101010',
-      music: null,
-      scenes: [scene({}), scene({ id: 's2', asset_id: '', transition: 'FADE', transition_ms: 500 })],
-    } as ReelProject['spec'];
+    const spec = { ...specOf([scene({}), scene({ id: 's2', asset_id: '', transition: 'FADE', transition_ms: 500 })]), background: '#101010' };
     const onPlayer = vi.fn();
     renderWithProviders(<PreviewPane project={project({ assets: [asset({})], spec })} onPlayer={onPlayer} />);
 
@@ -443,6 +458,21 @@ describe('PreviewPane', () => {
 
     // The timeline follows and moves the playhead through this handle.
     expect(onPlayer).toHaveBeenCalledWith(expect.objectContaining({ seekTo: player.seekTo }));
+  });
+
+  it('draws the frame the reel’s aspect asks for, and the safe-zone guides on request', () => {
+    const spec = { ...specOf([scene({})]), aspect: 'LANDSCAPE' as const };
+    renderWithProviders(<PreviewPane project={project({ assets: [asset({})], spec })} />);
+    expect(player.props).toMatchObject({ compositionWidth: 1920, compositionHeight: 1080 });
+
+    expect(screen.queryByTestId('reel-safe-zones')).not.toBeInTheDocument();
+    const toggle = screen.getByTestId('reel-safe-zones-toggle');
+    fireEvent.click(toggle);
+    expect(toggle).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByTestId('reel-safe-zone-top')).toHaveStyle({ height: '15%' });
+    expect(screen.getByTestId('reel-safe-zone-bottom')).toHaveStyle({ height: '20%' });
+    fireEvent.click(toggle);
+    expect(screen.queryByTestId('reel-safe-zones')).not.toBeInTheDocument();
   });
 });
 
@@ -550,26 +580,39 @@ describe('ExportDialog', () => {
 });
 
 describe('StudioToolbar', () => {
-  it('names the reel and will not export one with nothing in it', () => {
-    const onEditDetails = vi.fn();
-    renderWithProviders(<StudioToolbar project={project()} onEditDetails={onEditDetails} onExport={vi.fn()} />);
+  const tools = () => ({ onEditDetails: vi.fn(), onTool: vi.fn(), onCover: vi.fn(), onExport: vi.fn(async () => undefined) });
+
+  it('names the reel and will not export, validate or cover one with nothing in it', () => {
+    const handlers = tools();
+    renderWithProviders(<StudioToolbar project={project()} checks={[]} settingCover={false} {...handlers} />);
     expect(screen.getByText('Jam night recap')).toBeInTheDocument();
     expect(screen.getByTestId('reel-studio-export')).toBeDisabled();
+    expect(screen.getByTestId('reel-studio-validate')).toBeDisabled();
+    expect(screen.getByTestId('reel-studio-cover')).toBeDisabled();
+    expect(screen.queryByTestId('reel-checks-chip')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('reel-cover-chip')).not.toBeInTheDocument();
     fireEvent.click(screen.getByTestId('reel-studio-edit-details'));
-    expect(onEditDetails).toHaveBeenCalledTimes(1);
+    expect(handlers.onEditDetails).toHaveBeenCalledTimes(1);
   });
 
-  it('summarises the reel and exports it', () => {
-    const onExport = vi.fn(async () => undefined);
-    renderWithProviders(
-      <StudioToolbar
-        project={project({ duration_ms: 84_000, spec: { scenes: [scene({}), scene({ id: 's2' })] } as ReelProject['spec'] })}
-        onEditDetails={vi.fn()}
-        onExport={onExport}
-      />
+  it('summarises the reel, says how the checks stand and where the cover is, and opens every tool', () => {
+    const handlers = tools();
+    const reel = project({ duration_ms: 84_000, cover_at_ms: 3000, spec: specOf([scene({}), scene({ id: 's2' })]) });
+    const { rerender } = renderWithProviders(
+      <StudioToolbar project={reel} checks={[{ name: 'length', pass: true, detail: '' }, { name: 'sound', pass: false, detail: 'Silent' }]} settingCover={false} {...handlers} />
     );
     expect(screen.getByTestId('reel-studio-summary')).toHaveTextContent('1:24');
+    expect(screen.getByTestId('reel-checks-chip')).toHaveTextContent('1 check needs attention');
+    expect(screen.getByTestId('reel-cover-chip')).toHaveTextContent('0:03');
+
     fireEvent.click(screen.getByTestId('reel-studio-export'));
-    expect(onExport).toHaveBeenCalledTimes(1);
+    expect(handlers.onExport).toHaveBeenCalledTimes(1);
+    fireEvent.click(screen.getByTestId('reel-studio-cover'));
+    expect(handlers.onCover).toHaveBeenCalledTimes(1);
+    for (const kind of ['validate', 'variants', 'history', 'analytics']) fireEvent.click(screen.getByTestId(`reel-studio-${kind}`));
+    expect(handlers.onTool.mock.calls.map(([kind]) => kind)).toEqual(['validate', 'variants', 'history', 'analytics']);
+
+    rerender(<StudioToolbar project={reel} checks={[{ name: 'length', pass: true, detail: '' }]} settingCover={false} {...handlers} />);
+    expect(screen.getByTestId('reel-checks-chip')).toHaveTextContent('All checks pass');
   });
 });

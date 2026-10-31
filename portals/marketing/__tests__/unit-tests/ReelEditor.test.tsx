@@ -51,7 +51,18 @@ const scene = (id: string, duration_ms: number, extra: Partial<ReelScene> = {}):
 });
 
 const specOf = (scenes: ReelScene[]): ReelSpec =>
-  ({ fps: 30, width: 1080, height: 1920, background: '#000000', music: null, scenes }) as ReelSpec;
+  ({
+    fps: 30,
+    width: 1080,
+    height: 1920,
+    aspect: 'PORTRAIT',
+    background: '#000000',
+    music: null,
+    voiceover: null,
+    brand: { watermark_asset_id: '', watermark_corner: 'TOP_RIGHT', watermark_width_pct: 18, primary_color: '' },
+    captions: { style: 'PLAIN' },
+    scenes,
+  }) as ReelSpec;
 
 const projectOf = (spec: ReelSpec): ReelProject => ({ id: 'reel-1', name: 'Jam night recap', assets: [video, logo, song], spec }) as unknown as ReelProject;
 
@@ -179,7 +190,7 @@ function Editor({ project, player = null }: Readonly<{ project: ReelProject; pla
   return (
     <>
       <TimelinePanel assets={project.assets} player={player} selection={selection} onSelect={setSelection} editor={editor} />
-      <InspectorPanel spec={editor.spec} assets={project.assets} selection={selection} apply={editor.apply} />
+      <InspectorPanel spec={editor.spec} assets={project.assets} selection={selection} apply={editor.apply} onDeselect={() => setSelection(null)} />
     </>
   );
 }
@@ -193,7 +204,8 @@ describe('TimelinePanel + InspectorPanel', () => {
   it('draws every scene to scale and opens the selected one in the inspector', () => {
     echoSave();
     renderWithProviders(<Editor project={twoScenes()} />);
-    expect(screen.getByTestId('reel-inspector-empty')).toBeInTheDocument();
+    // Nothing selected: the reel's own settings fill the inspector.
+    expect(screen.getByTestId('reel-settings-section')).toBeInTheDocument();
     expect(screen.getByTestId('reel-timeline-scene-s1')).toHaveAccessibleName('Scene 1, 0:03');
     expect(screen.getByTestId('reel-timeline-scene-s2')).toHaveTextContent('Colour card');
 

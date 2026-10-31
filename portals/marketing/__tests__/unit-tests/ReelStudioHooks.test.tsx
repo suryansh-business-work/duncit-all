@@ -5,10 +5,13 @@ import { notifyError, notifySuccess } from '@duncit/dialogs';
 import { downloadBlob } from '@duncit/utils';
 import {
   ADD_REEL_DRIVE_ASSETS,
+  ADD_REEL_STOCK_ASSETS,
+  ADD_REEL_UPLOAD_ASSETS,
   REEL_DRIVE_FOLDER,
   REMOVE_REEL_ASSET,
   RESTORE_REEL_VERSION,
   SEND_REEL_MESSAGE,
+  SET_REEL_COVER,
   UPDATE_REEL_PROJECT,
 } from '../../src/pages/reels/queries';
 import { useReelChat } from '../../src/pages/reels/studio/chat/useReelChat';
@@ -115,6 +118,63 @@ describe('useReelActions', () => {
     expect(saved).toBe(false);
     expect(notifyError).toHaveBeenCalledTimes(4);
     expect(notifyError).toHaveBeenLastCalledWith('The server refused.');
+    expect(notifySuccess).not.toHaveBeenCalled();
+  });
+
+  const stock = {
+    provider_id: 'pexels:1',
+    kind: 'VIDEO' as const,
+    url: 'https://videos.pexels.com/1.mp4',
+    preview_url: 'https://images.pexels.com/1.jpg',
+    name: 'Ana Ruiz',
+    width: 1080,
+    height: 1920,
+    duration_ms: 12_000,
+    licence: 'Pexels Licence',
+    attribution: 'Ana Ruiz',
+  };
+  const upload = { url: 'https://ik.imagekit.io/duncit/marketing/reels/uploads/clip.mp4', name: 'clip.mp4', width: 1080, height: 1920, size_bytes: 2048 };
+
+  it('adds stock files and uploads to the reel, answering true', async () => {
+    const actions = mount();
+    let added: boolean[] = [];
+    await act(async () => {
+      added = [await actions.current.addStockItems([stock]), await actions.current.addUploads([upload])];
+    });
+    expect(added).toEqual([true, true]);
+    expect(mutationOf(ADD_REEL_STOCK_ASSETS)).toHaveBeenCalledWith({ variables: { project_id: PROJECT_ID, items: [stock] } });
+    expect(mutationOf(ADD_REEL_UPLOAD_ASSETS)).toHaveBeenCalledWith({ variables: { project_id: PROJECT_ID, uploads: [upload] } });
+    expect(notifyError).not.toHaveBeenCalled();
+  });
+
+  it('answers false and says why when a stock file or an upload is refused', async () => {
+    mutationOf(ADD_REEL_STOCK_ASSETS).mockRejectedValue(failure);
+    mutationOf(ADD_REEL_UPLOAD_ASSETS).mockRejectedValue({});
+    const actions = mount();
+    let added: boolean[] = [];
+    await act(async () => {
+      added = [await actions.current.addStockItems([stock]), await actions.current.addUploads([upload])];
+    });
+    expect(added).toEqual([false, false]);
+    expect(notifyError).toHaveBeenNthCalledWith(1, 'The server refused.');
+    // A refusal that carries no words falls back to the upload's own.
+    expect(notifyError).toHaveBeenNthCalledWith(2, 'The uploaded file could not be added to the reel');
+  });
+
+  it('makes the frame under the playhead the cover, rounded to a whole millisecond and never before the start', async () => {
+    const actions = mount();
+    await act(() => actions.current.setCover(1234.6));
+    expect(mutationOf(SET_REEL_COVER)).toHaveBeenCalledWith({ variables: { project_id: PROJECT_ID, at_ms: 1235 } });
+    await act(() => actions.current.setCover(-40));
+    expect(mutationOf(SET_REEL_COVER)).toHaveBeenLastCalledWith({ variables: { project_id: PROJECT_ID, at_ms: 0 } });
+    expect(notifySuccess).toHaveBeenCalledTimes(2);
+  });
+
+  it('says why when the cover could not be set', async () => {
+    mutationOf(SET_REEL_COVER).mockRejectedValue(failure);
+    const actions = mount();
+    await act(() => actions.current.setCover(500));
+    expect(notifyError).toHaveBeenCalledWith('The server refused.');
     expect(notifySuccess).not.toHaveBeenCalled();
   });
 });

@@ -60,7 +60,18 @@ const scene = (id: string, duration_ms: number, extra: Partial<ReelScene> = {}):
   }) as ReelScene;
 
 const specOf = (scenes: ReelScene[], music: ReelSpec['music'] = null): ReelSpec =>
-  ({ fps: 30, width: 1080, height: 1920, background: '#000000', music, scenes }) as ReelSpec;
+  ({
+    fps: 30,
+    width: 1080,
+    height: 1920,
+    aspect: 'PORTRAIT',
+    background: '#000000',
+    music,
+    voiceover: null,
+    brand: { watermark_asset_id: '', watermark_corner: 'TOP_RIGHT', watermark_width_pct: 18, primary_color: '' },
+    captions: { style: 'PLAIN' },
+    scenes,
+  }) as ReelSpec;
 
 beforeEach(() => {
   resetApollo();
@@ -192,7 +203,7 @@ function Editor({ project, player = null }: Readonly<{ project: ReelProject; pla
   return (
     <>
       <TimelinePanel assets={project.assets} player={player} selection={selection} onSelect={setSelection} editor={editor} />
-      <InspectorPanel spec={editor.spec} assets={project.assets} selection={selection} apply={editor.apply} />
+      <InspectorPanel spec={editor.spec} assets={project.assets} selection={selection} apply={editor.apply} onDeselect={() => setSelection(null)} />
     </>
   );
 }

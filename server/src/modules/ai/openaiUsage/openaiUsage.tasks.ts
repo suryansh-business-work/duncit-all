@@ -192,6 +192,18 @@ export const OPENAI_TASKS = {
       'The plan a marketing agent (Automation › Agents) asks Claude for on each run: which tools to call, with what, and why.',
     when_off: 'Every agent run fails at its first step, recorded on Activity as "switched off"; nothing is planned or posted.',
   },
+  'marketing.inbox_reply': {
+    label: 'Inbox reply draft',
+    module: 'Marketing',
+    description: 'Drafts an answer to one comment in Social › Inbox with Claude; a person edits it and presses Send — nothing is sent on its own.',
+    when_off: 'Suggest reply shows an error saying AI is unavailable; replies can still be written and sent by hand.',
+  },
+  'marketing.outreach_draft': {
+    label: 'Outreach step draft',
+    module: 'Marketing',
+    description: 'Drafts the words of one step of an outreach sequence (email, WhatsApp or DM) on Claude.',
+    when_off: MARKETING_ERROR,
+  },
   'platform.release_notes': {
     label: 'Release changelog',
     module: 'Platform',

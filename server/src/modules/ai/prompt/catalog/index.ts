@@ -8,6 +8,8 @@ import { MARKETING_PROMPTS } from './marketing.prompts';
 import { IG_LEAD_PROMPTS } from './igLeads.prompts';
 import { REELS_PROMPTS } from './reels.prompts';
 import { AGENT_PROMPTS } from './agents.prompts';
+import { OUTREACH_PROMPTS } from './outreach.prompts';
+import { INBOX_PROMPTS } from './inbox.prompts';
 
 /**
  * Every CODE prompt the product runs on — the "Code Inside Prompt" half of the
@@ -33,6 +35,8 @@ export const CODE_PROMPTS: readonly InAppPromptDef[] = [
   ...IG_LEAD_PROMPTS,
   ...REELS_PROMPTS,
   ...AGENT_PROMPTS,
+  ...OUTREACH_PROMPTS,
+  ...INBOX_PROMPTS,
 ];
 
 export const CODE_PROMPT_BY_KEY = new Map(CODE_PROMPTS.map((p) => [p.key, p]));

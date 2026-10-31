@@ -62,6 +62,7 @@ import { EMAIL_ASSETS_PATH } from '@services/email/catalogue/icons';
 import { buildGmailOAuthRouter } from '@modules/platform/mailAutomation/mailAutomation.router';
 import { buildAutomationRouter } from '@modules/ai/automation/automation.router';
 import { startAutomationScheduler } from '@modules/ai/automation/automation.scheduler';
+import { startOutreachScheduler } from '@modules/crm/marketing/outreach/outreach.runner';
 import { buildReelRouter } from '@modules/ai/reel/reel.router';
 import { buildSocialOAuthRouter } from '@modules/crm/marketing/social/social.router';
 import { buildAppleRelayRouter } from '@modules/access/auth/apple.relay';
@@ -469,6 +470,12 @@ async function bootstrap() {
     const { migrateSocialApps } = await import('@modules/crm/marketing/social/social.migration');
     await migrateSocialApps();
   });
+  // Comments stored before Social › Inbox get its status (a reviewed one is DONE)
+  // and a last-activity time. A no-op once every comment has a status.
+  await safeSeed('socialInbox', async () => {
+    const { migrateSocialInbox } = await import('@modules/crm/marketing/social/social.inbox');
+    await migrateSocialInbox();
+  });
   // Builds the share-key unique index that makes an automatically minted share
   // link one per thing shared. Without it two people sharing the same pod at
   // the same moment each get their own link, and neither carries the pod's
@@ -690,6 +697,8 @@ async function bootstrap() {
 
   // AI portal automation: wake runs whose delay is up, time out unanswered waits.
   startAutomationScheduler();
+  // Marketing › Outreach: walk due sequence enrollments every five minutes.
+  startOutreachScheduler();
 
   // Social Accounts (Marketing): re-read each connected Page, channel and
   // profile every few hours — posts, numbers, new comments — and send the new

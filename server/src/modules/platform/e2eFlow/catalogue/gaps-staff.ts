@@ -1828,6 +1828,29 @@ export const STAFF_GAP_FLOWS: readonly CatalogueFlow[] = [
     ],
   },
   {
+    name: 'Marketing: Inbox',
+    description:
+      'marketing /social/inbox over the social comments (social_comments): one queue of every comment from every connected account with the AI verdict, an Inbox status (OPEN, REPLIED, DONE, SPAM — review_status kept in step), an assignee and the replies sent. socialInboxTable (view OPEN, FLAGGED, UNASSIGNED, MINE or ALL), socialInboxSummary, socialReplyCapabilities, assignSocialComment, setSocialCommentStatus, suggestSocialReply (Claude, an INBOX_REPLY run, never sent on its own) and replyToSocialComment (an INBOX_REPLY run; Facebook and Instagram-through-a-Page-token are refused NOT_CONFIGURED naming the permission). Roles SUPER_ADMIN, CITY_ADMIN, MARKETING_MANAGER, MARKETING_EDITOR (social.inbox.resolver.ts).',
+    sub_flows: [
+      {
+        name: 'Triage, assign and answer a comment',
+        description:
+          'The cards pin ?view=; a row opens the drawer; Suggest reply fills the box with a draft the person edits; Send posts it on the network and marks the comment Replied; every reply and draft is a run on Activity.',
+        steps: [
+          ['Open /social/inbox', 'Header "Inbox" with its intro and tour; cards Open, Flagged, Unassigned, Mine; a table with Comment, Network, Account, Author, Sentiment, Severity, Status, Assignee, Posted'],
+          ['Press the Flagged card', 'The URL is /social/inbox?view=FLAGGED and only open comments the AI flagged are listed'],
+          ['Open a comment and press "Assign to me"', 'Toast "Assignee saved."; the Assignee reads your name and the Mine card counts it'],
+          ['Press "Suggest reply"', 'Toast "Draft ready. Edit it, then press Send."; the Reply box holds the draft; Activity shows an Inbox reply run "Suggest a reply to …"'],
+          ['Press Send with an empty box', '"Write the reply first." under the box; nothing is sent'],
+          ['Edit the draft and press Send on an Instagram, Threads, YouTube, LinkedIn or X comment', 'Toast "Reply sent."; the reply appears under Replies; the status chip reads Replied; Activity shows "Reply to <author> on <network>" with one step'],
+          ['Open a Facebook comment', 'Send is disabled and its info tip says replying needs the pages_manage_engagement permission, which this integration does not have yet'],
+          ['Press "Mark spam", then "Reopen"', 'Toast "Status saved." each time; the comment leaves the open views and comes back'],
+          ['As a CLUB_ADMIN call socialInboxTable', 'FORBIDDEN "Access Denied"'],
+        ],
+      },
+    ],
+  },
+  {
     name: 'Marketing: Activity, Approvals and My Tasks',
     description:
       'marketing /activity, /approvals and /tasks over the marketing run log (marketing_runs): every publish, sync, health check, lead search, reel, outreach and agent run is a MarketingRun with a step per stage, its API calls, its AI cost and, when a person must say yes first, its approval. Read roles SUPER_ADMIN, CITY_ADMIN, MARKETING_MANAGER, MARKETING_READER; decide/cancel/retry SUPER_ADMIN and MARKETING_MANAGER (marketingRun.resolver.ts).',
@@ -2001,6 +2024,35 @@ export const STAFF_GAP_FLOWS: readonly CatalogueFlow[] = [
     ],
   },
   {
+    name: 'Marketing: Analytics',
+    description:
+      'marketing /analytics/overview, /social, /content, /funnel and /automation: each page reads one window (7, 30 or 90 days or a custom From and To, in the admin zone, kept in the URL as from, to and platforms) from marketingAnalyticsOverview/Social/Content/Funnel/Automation. Read by SUPER_ADMIN, CITY_ADMIN, MARKETING_MANAGER, MARKETING_EDITOR and MARKETING_READER (marketingAnalytics.resolver.ts).',
+    sub_flows: [
+      {
+        name: 'Pick a window and networks',
+        description: 'The filter bar rewrites the URL; every figure is re-read for the new window.',
+        steps: [
+          ['Open /analytics/overview as a MARKETING_READER', 'Header "Analytics overview" with the window under it, the intro, 30 days pressed, and the headline tiles: followers, engagement rate, Duncit posts, reels posted, new leads, converted, promoted, runs, success rate, AI cost, link clicks, paid clicks and link revenue'],
+          ['Press 7 days', 'The address gains from and to for the last seven days and every tile is re-read'],
+          ['Set From after To', 'To moves to the same day; the server never sees a window that ends before it starts'],
+          ['On /analytics/social pick Instagram under Networks', 'platforms=INSTAGRAM is in the address; only Instagram accounts and posts are counted'],
+          ['Call marketingAnalyticsSocial with to before from, or 367 days', '"The window ends before it starts." / "Pick at most 366 days." (BAD_USER_INPUT)'],
+        ],
+      },
+      {
+        name: 'Read each page',
+        description: 'Every number is an aggregation over the synced rows; an empty window shows one empty state.',
+        steps: [
+          ['Open /analytics/social', 'Followers, follower growth, posts, views, engagement and engagement rate; engagement and views per day; a bar per network; growth per account; the ten best posts with a link to each'],
+          ['Open /analytics/content', 'Published from Duncit against read from networks, reels made, posted and their views, the best weekday and hour; bars by format, most viewed reels, by weekday and by hour'],
+          ['Open /analytics/funnel and pick the Venue pipeline', 'pipeline=VENUE in the address; new leads, converted and promoted; new leads per day; the funnel with each step conversion; leads by source; the median hours in each stage'],
+          ['Open /analytics/automation', 'Runs, success rate, AI cost in dollars, tokens, approvals waiting and the median decision time; runs and cost per day; bars by workflow, by outcome and per agent'],
+          ['Open any page as a USER, or over a window with nothing in it', 'access denied for the USER; the empty window shows "Nothing in this window yet"'],
+        ],
+      },
+    ],
+  },
+  {
     name: 'Marketing: Social Calendar',
     description:
       'marketing /publish/calendar (old /social-calendar redirects): the publishing calendar by month, week or day — compose a post with one or many media (a carousel where the network takes one), schedule, publish now, send for approval, share now, retry and delete across connected accounts. AI ideas live on Social Accounts > Ideas. A MARKETING_EDITOR writes and schedules too, but every send is parked for a manager (social.publish.resolver.ts).',
@@ -2155,6 +2207,45 @@ export const STAFF_GAP_FLOWS: readonly CatalogueFlow[] = [
           ['Open an Influencer or General lead', 'Promote is disabled with "Only Venue, Host, Brand and Advertiser leads can be promoted."'],
           ['Promote a Venue lead whose phone a CRM venue lead already has', 'The CRM\'s refusal "A venue lead with this phone number already exists" is shown; the lead stays unpromoted and can be promoted once the clash is fixed'],
           ['Promote with a MARKETING_EDITOR token', 'Access Denied'],
+        ],
+      },
+    ],
+  },
+  {
+    name: 'Marketing: Outreach sequences',
+    description:
+      'marketing /outreach/sequences over outreach_sequences, outreach_enrollments, outreach_sends and outreach_tasks: a sequence is an ordered list of EMAIL, WHATSAPP (an AiSensy campaign the Communications portal lists; sent only when AiSensy reports its template APPROVED), DM_TASK (a hand-sent Instagram DM) and WAIT steps; leads are enrolled once per sequence (unique sequence+lead); a five-minute tick on the scheduler leader sends due steps outside quiet hours and within the daily limit, claiming each (enrollment, step) under a unique index before sending, and records the tick as one OUTREACH run with a step per send. Read SUPER_ADMIN, CITY_ADMIN, MARKETING_MANAGER, MARKETING_EDITOR; activate, enroll, pause, resume and remove SUPER_ADMIN and MARKETING_MANAGER (outreach.resolver.ts).',
+    sub_flows: [
+      {
+        name: 'Build and switch on a sequence',
+        description: 'saveOutreachSequence validates every step; setOutreachSequenceActive re-checks them before going live.',
+        steps: [
+          ['Open /outreach/sequences as a manager', 'Header, intro and a first-run tour; tabs Sequences, Enrollments and DM tasks'],
+          ['Create a sequence: Email, Wait 3 days, WhatsApp, DM task; save', 'The card lists the four steps, sends today 0 against the daily limit, and is Off'],
+          ['Save a sequence that ends with a wait, or a WhatsApp step naming a campaign the Communications portal does not list', 'Refused: "A sequence cannot end with a wait." / "<name> is not a WhatsApp campaign the Communications portal lists."'],
+          ['As a MARKETING_EDITOR edit an active sequence, or press its switch', 'Saving is refused (only a manager can change a live sequence) and no switch is offered'],
+        ],
+      },
+      {
+        name: 'Enroll leads and watch them walk',
+        description: 'enrollLeads takes open leads (not converted or lost) of the sequence pipeline; the tick sends step 1 and folds waits into next_at.',
+        steps: [
+          ['Press Enroll leads, filter by stage New', 'The live count matches; Enroll reports enrolled, already in and not taken'],
+          ['Enroll the same leads again', 'They are counted as already in; no second enrollment'],
+          ['Wait for a tick outside quiet hours', 'Each lead gets the email (with the unsubscribe line); the lead moves New to Contacted with an Outreach entry; the enrollment waits 3 days; Activity shows an OUTREACH run with one step per send'],
+          ['Set the daily limit to 1 with two leads due', 'One send this tick; the other waits until tomorrow'],
+          ['Tick inside quiet hours', 'Nothing is sent and no run is recorded'],
+          ['Use a campaign whose template is not approved', 'The enrollment is Failed with the reason; Resume retries that step once it is approved'],
+        ],
+      },
+      {
+        name: 'Replies, opt-outs and DM tasks',
+        description: 'The WhatsApp webhook and the connected Gmail inbound door call the outreach reply hook after STOP/START is applied.',
+        steps: [
+          ['The lead replies on WhatsApp or email', 'Its enrollments become Replied (when stop on reply is on), open DM tasks are cancelled, and the lead moves to Replied with an Outreach history entry'],
+          ['The lead replies STOP on WhatsApp, or unsubscribes from marketing email', 'Its enrollments become Opted out; nothing more is sent'],
+          ['A DM task step falls due', 'A task with the DM text and Open on Instagram appears under DM tasks; nothing is sent automatically'],
+          ['Press Mark done', 'The task closes and the walk carries on from the next step'],
         ],
       },
     ],

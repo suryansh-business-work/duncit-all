@@ -13279,6 +13279,337 @@ export type MarketingAgentScheduleInput = {
   weekday?: InputMaybe<Scalars['Int']['input']>;
 };
 
+export type MarketingAnalyticsAccountGrowth = {
+  __typename?: 'MarketingAnalyticsAccountGrowth';
+  account_id: Scalars['ID']['output'];
+  followers: Scalars['Int']['output'];
+  /** The last count on or before the last day. */
+  followers_end: Scalars['Int']['output'];
+  /** The last count on or before the first day, or the account's first count inside the window. */
+  followers_start: Scalars['Int']['output'];
+  growth: Scalars['Int']['output'];
+  name: Scalars['String']['output'];
+  platform: SocialPlatform;
+};
+
+export type MarketingAnalyticsAgent = {
+  __typename?: 'MarketingAnalyticsAgent';
+  agent_key: Scalars['String']['output'];
+  completed: Scalars['Int']['output'];
+  cost: Scalars['Float']['output'];
+  failed: Scalars['Int']['output'];
+  partial: Scalars['Int']['output'];
+  runs: Scalars['Int']['output'];
+  success_rate: Scalars['Float']['output'];
+  tokens: Scalars['Int']['output'];
+};
+
+export type MarketingAnalyticsApprovals = {
+  __typename?: 'MarketingAnalyticsApprovals';
+  by_decision: Array<MarketingAnalyticsCount>;
+  /** Runs decided in the window. */
+  decided: Scalars['Int']['output'];
+  /** The median time from a run asking to a person deciding, in minutes. */
+  median_decision_minutes: Scalars['Float']['output'];
+  /** Runs waiting on a person right now, whenever they asked. */
+  waiting: Scalars['Int']['output'];
+};
+
+export type MarketingAnalyticsAutomation = {
+  __typename?: 'MarketingAnalyticsAutomation';
+  agents: Array<MarketingAnalyticsAgent>;
+  approvals: MarketingAnalyticsApprovals;
+  by_status: Array<MarketingAnalyticsCount>;
+  by_workflow: Array<MarketingAnalyticsWorkflow>;
+  completed: Scalars['Int']['output'];
+  cost: Scalars['Float']['output'];
+  daily: MarketingAnalyticsRunDaily;
+  failed: Scalars['Int']['output'];
+  partial: Scalars['Int']['output'];
+  /** Runs started in the window. */
+  runs: Scalars['Int']['output'];
+  success_rate: Scalars['Float']['output'];
+  tokens: Scalars['Int']['output'];
+  window: MarketingAnalyticsWindow;
+};
+
+export type MarketingAnalyticsContent = {
+  __typename?: 'MarketingAnalyticsContent';
+  /** The best hour of the day; null when nothing was posted. */
+  best_hour?: Maybe<Scalars['Int']['output']>;
+  /** Index into by_weekday of the best weekday; null when nothing was posted. */
+  best_weekday?: Maybe<Scalars['Int']['output']>;
+  /** Average engagement per post by hour of the day, 0 to 23, in the admin's zone. */
+  by_hour: Array<Scalars['Float']['output']>;
+  /** Average engagement per post by weekday, Monday first, in the admin's zone. */
+  by_weekday: Array<Scalars['Float']['output']>;
+  formats: Array<MarketingAnalyticsFormat>;
+  /** Posts written in Duncit that went out in the window, even to only some of their networks. */
+  from_duncit: Scalars['Int']['output'];
+  /** Posts the networks reported for the window, Duncit's included once synced. */
+  from_networks: Scalars['Int']['output'];
+  reel_engagement: Scalars['Int']['output'];
+  reel_views: Scalars['Int']['output'];
+  /** Reel Studio projects started in the window. */
+  reels_made: Scalars['Int']['output'];
+  /** Reels that went out in the window. */
+  reels_posted: Scalars['Int']['output'];
+  /** The most viewed reels of the window, at most ten. */
+  top_reels: Array<MarketingAnalyticsReel>;
+  window: MarketingAnalyticsWindow;
+};
+
+/** A count for one code — a stage, a source, a status, a decision. */
+export type MarketingAnalyticsCount = {
+  __typename?: 'MarketingAnalyticsCount';
+  count: Scalars['Int']['output'];
+  key: Scalars['String']['output'];
+};
+
+export type MarketingAnalyticsFormat = {
+  __typename?: 'MarketingAnalyticsFormat';
+  engagement: Scalars['Int']['output'];
+  format: MarketingAnalyticsPostFormat;
+  /** The networks those posts reached. */
+  networks: Scalars['Int']['output'];
+  /** Duncit posts of this format that went out in the window. */
+  posts: Scalars['Int']['output'];
+  views: Scalars['Int']['output'];
+};
+
+export type MarketingAnalyticsFunnel = {
+  __typename?: 'MarketingAnalyticsFunnel';
+  by_source: Array<MarketingAnalyticsCount>;
+  /** Where the window's new leads stand now. */
+  by_stage: Array<MarketingAnalyticsCount>;
+  /** Leads moved to CONVERTED in the window. */
+  converted: Scalars['Int']['output'];
+  /** New leads per day. */
+  daily_new: Array<Scalars['Int']['output']>;
+  funnel: Array<MarketingAnalyticsFunnelStep>;
+  /** Leads created in the window. */
+  new_leads: Scalars['Int']['output'];
+  /** The pipeline the figures are for; null for every pipeline. */
+  pipeline?: Maybe<MarketingLeadPipeline>;
+  /** Leads handed to the CRM in the window. */
+  promoted: Scalars['Int']['output'];
+  promoted_by_kind: Array<MarketingAnalyticsCount>;
+  time_in_stage: Array<MarketingAnalyticsStageTime>;
+  transitions: Array<MarketingAnalyticsTransition>;
+  window: MarketingAnalyticsWindow;
+};
+
+export type MarketingAnalyticsFunnelStep = {
+  __typename?: 'MarketingAnalyticsFunnelStep';
+  /** Reached as a percentage of the step before; the first step is the whole cohort. */
+  conversion: Scalars['Float']['output'];
+  /** Leads created in the window that ever got this far. */
+  reached: Scalars['Int']['output'];
+  stage: MarketingLeadStage;
+};
+
+/** The window an analytics page reads. Days are calendar days in the admin's zone, both included. */
+export type MarketingAnalyticsInput = {
+  /** The first day, yyyy-MM-dd. */
+  from: Scalars['String']['input'];
+  /** The networks to count; empty or left out means every network. Ignored by figures that have no network. */
+  platforms?: InputMaybe<Array<SocialPlatform>>;
+  /** The last day, yyyy-MM-dd. At most 366 days after from. */
+  to: Scalars['String']['input'];
+};
+
+export type MarketingAnalyticsNetwork = {
+  __typename?: 'MarketingAnalyticsNetwork';
+  comments: Scalars['Int']['output'];
+  engagement: Scalars['Int']['output'];
+  /** Average engagement per post as a percentage of the network's followers. */
+  engagement_rate: Scalars['Float']['output'];
+  /** Followers now, across the network's accounts. */
+  followers: Scalars['Int']['output'];
+  likes: Scalars['Int']['output'];
+  platform: SocialPlatform;
+  posts: Scalars['Int']['output'];
+  shares: Scalars['Int']['output'];
+  /** Views (reach) the network reported; 0 where it reports none. */
+  views: Scalars['Int']['output'];
+};
+
+export type MarketingAnalyticsOverview = {
+  __typename?: 'MarketingAnalyticsOverview';
+  automation: MarketingAnalyticsOverviewAutomation;
+  content: MarketingAnalyticsOverviewContent;
+  daily: MarketingAnalyticsOverviewDaily;
+  funnel: MarketingAnalyticsOverviewFunnel;
+  links: MarketingAnalyticsOverviewLinks;
+  social: MarketingAnalyticsOverviewSocial;
+  window: MarketingAnalyticsWindow;
+};
+
+export type MarketingAnalyticsOverviewAutomation = {
+  __typename?: 'MarketingAnalyticsOverviewAutomation';
+  /** US dollars. */
+  cost: Scalars['Float']['output'];
+  runs: Scalars['Int']['output'];
+  success_rate: Scalars['Float']['output'];
+  tokens: Scalars['Int']['output'];
+};
+
+export type MarketingAnalyticsOverviewContent = {
+  __typename?: 'MarketingAnalyticsOverviewContent';
+  from_duncit: Scalars['Int']['output'];
+  from_networks: Scalars['Int']['output'];
+  reel_views: Scalars['Int']['output'];
+  reels_made: Scalars['Int']['output'];
+  reels_posted: Scalars['Int']['output'];
+};
+
+export type MarketingAnalyticsOverviewDaily = {
+  __typename?: 'MarketingAnalyticsOverviewDaily';
+  clicks: Array<Scalars['Int']['output']>;
+  engagement: Array<Scalars['Int']['output']>;
+  new_leads: Array<Scalars['Int']['output']>;
+};
+
+export type MarketingAnalyticsOverviewFunnel = {
+  __typename?: 'MarketingAnalyticsOverviewFunnel';
+  converted: Scalars['Int']['output'];
+  new_leads: Scalars['Int']['output'];
+  promoted: Scalars['Int']['output'];
+};
+
+export type MarketingAnalyticsOverviewLinks = {
+  __typename?: 'MarketingAnalyticsOverviewLinks';
+  clicks: Scalars['Int']['output'];
+  conversion_rate: Scalars['Float']['output'];
+  /** Clicks a payment was attributed to. */
+  conversions: Scalars['Int']['output'];
+  /** Attributed payments, in rupees. */
+  revenue: Scalars['Float']['output'];
+};
+
+export type MarketingAnalyticsOverviewSocial = {
+  __typename?: 'MarketingAnalyticsOverviewSocial';
+  engagement: Scalars['Int']['output'];
+  engagement_rate: Scalars['Float']['output'];
+  follower_growth: Scalars['Int']['output'];
+  followers: Scalars['Int']['output'];
+  posts: Scalars['Int']['output'];
+  views: Scalars['Int']['output'];
+};
+
+/** How a Duncit post was made: two or more pieces of media, one clip, one picture, or none. */
+export type MarketingAnalyticsPostFormat =
+  | 'CAROUSEL'
+  | 'SINGLE'
+  | 'TEXT'
+  | 'VIDEO';
+
+export type MarketingAnalyticsReel = {
+  __typename?: 'MarketingAnalyticsReel';
+  engagement: Scalars['Int']['output'];
+  /** The Reel Studio project id. */
+  id: Scalars['ID']['output'];
+  /** Empty when the project was deleted after it was posted. */
+  name: Scalars['String']['output'];
+  networks: Scalars['Int']['output'];
+  views: Scalars['Int']['output'];
+};
+
+export type MarketingAnalyticsRunDaily = {
+  __typename?: 'MarketingAnalyticsRunDaily';
+  /** US dollars. */
+  cost: Array<Scalars['Float']['output']>;
+  runs: Array<Scalars['Int']['output']>;
+  tokens: Array<Scalars['Int']['output']>;
+};
+
+export type MarketingAnalyticsSocial = {
+  __typename?: 'MarketingAnalyticsSocial';
+  accounts: Array<MarketingAnalyticsAccountGrowth>;
+  comments: Scalars['Int']['output'];
+  daily: MarketingAnalyticsSocialDaily;
+  engagement: Scalars['Int']['output'];
+  /** Average engagement per post as a percentage of followers — the Social Accounts tab's definition. */
+  engagement_rate: Scalars['Float']['output'];
+  /** Followers gained (or lost, below 0) over the window, summed across accounts. */
+  follower_growth: Scalars['Int']['output'];
+  followers: Scalars['Int']['output'];
+  likes: Scalars['Int']['output'];
+  networks: Array<MarketingAnalyticsNetwork>;
+  posts: Scalars['Int']['output'];
+  shares: Scalars['Int']['output'];
+  /** The window's ten best posts by engagement. */
+  top_posts: Array<MarketingAnalyticsTopPost>;
+  views: Scalars['Int']['output'];
+  window: MarketingAnalyticsWindow;
+};
+
+export type MarketingAnalyticsSocialDaily = {
+  __typename?: 'MarketingAnalyticsSocialDaily';
+  engagement: Array<Scalars['Int']['output']>;
+  /** The day's average engagement per post as a percentage of that day's followers. */
+  engagement_rate: Array<Scalars['Float']['output']>;
+  /** Total followers each day, carried forward from the last count; null before any account was counted. */
+  followers: Array<Maybe<Scalars['Int']['output']>>;
+  /** Posts the networks reported as published that day. */
+  posts: Array<Scalars['Int']['output']>;
+  views: Array<Scalars['Int']['output']>;
+};
+
+export type MarketingAnalyticsStageTime = {
+  __typename?: 'MarketingAnalyticsStageTime';
+  /** The median time a lead sat in the stage before it moved, in hours. */
+  median_hours: Scalars['Float']['output'];
+  /** Stage changes out of this stage made in the window. */
+  moves: Scalars['Int']['output'];
+  stage: MarketingLeadStage;
+};
+
+export type MarketingAnalyticsTopPost = {
+  __typename?: 'MarketingAnalyticsTopPost';
+  account_name: Scalars['String']['output'];
+  engagement: Scalars['Int']['output'];
+  id: Scalars['ID']['output'];
+  permalink: Scalars['String']['output'];
+  platform: SocialPlatform;
+  published_at: Scalars['String']['output'];
+  text: Scalars['String']['output'];
+  views: Scalars['Int']['output'];
+};
+
+export type MarketingAnalyticsTransition = {
+  __typename?: 'MarketingAnalyticsTransition';
+  /** Stage changes from one stage to the other made in the window. */
+  count: Scalars['Int']['output'];
+  from: Scalars['String']['output'];
+  /** Their share of every change out of the same stage in the window, as a percentage. */
+  share: Scalars['Float']['output'];
+  to: Scalars['String']['output'];
+};
+
+export type MarketingAnalyticsWindow = {
+  __typename?: 'MarketingAnalyticsWindow';
+  /** Every day of the window, oldest first; each per-day list is in this order. */
+  days: Array<Scalars['String']['output']>;
+  from: Scalars['String']['output'];
+  to: Scalars['String']['output'];
+};
+
+export type MarketingAnalyticsWorkflow = {
+  __typename?: 'MarketingAnalyticsWorkflow';
+  completed: Scalars['Int']['output'];
+  /** What the AI steps cost, in US dollars. */
+  cost: Scalars['Float']['output'];
+  failed: Scalars['Int']['output'];
+  partial: Scalars['Int']['output'];
+  runs: Scalars['Int']['output'];
+  /** Completed as a percentage of the runs that finished (completed, partly completed or failed). */
+  success_rate: Scalars['Float']['output'];
+  /** AI tokens in and out. */
+  tokens: Scalars['Int']['output'];
+  workflow: MarketingRunWorkflow;
+};
+
 export type MarketingCampaign = {
   __typename?: 'MarketingCampaign';
   audience: MarketingCampaignAudience;
@@ -13716,6 +14047,8 @@ export type MarketingLeadTimelineKind =
   | 'CREATED'
   | 'IMPORTED'
   | 'NOTE'
+  /** A step an Outreach sequence sent, or the reply that stopped it. */
+  | 'OUTREACH'
   | 'OWNER'
   | 'PROMOTED'
   | 'SOURCE'
@@ -13880,6 +14213,7 @@ export type MarketingRunTrigger =
 export type MarketingRunWorkflow =
   | 'AGENT'
   | 'CAMPAIGN'
+  | 'INBOX_REPLY'
   | 'LEAD_IMPORT'
   | 'LEAD_SEARCH'
   | 'ORCHESTRATOR'
@@ -14699,6 +15033,8 @@ export type Mutation = {
   assignClubAdminClubs: ClubAdminProfile;
   /** Give the lead to a person (a living user), or to nobody with null. */
   assignMarketingLeadOwner: MarketingLead;
+  /** Hand the comment to a person; a null user_id hands it back to nobody. */
+  assignSocialComment: SocialComment;
   assignTicket: Ticket;
   assignUserRoles: User;
   /**
@@ -14890,6 +15226,8 @@ export type Mutation = {
    * restore from it.
    */
   completeDbBackupUpload: DbBackup;
+  /** Say the DM was sent; the lead's walk carries on from the next step. */
+  completeOutreachTask: OutreachTask;
   /**
    * Step three: spend the grant and set the new password.
    *
@@ -15320,6 +15658,8 @@ export type Mutation = {
   downloadIosSigningFile: IosSigningFile;
   /** Have the AI draft the lead's next DM (opener or follow-up). */
   draftIgLeadMessage: IgLead;
+  /** Claude drafts the step's text, for one lead when lead_id is given. Nothing is saved. */
+  draftSequenceStep: OutreachDraft;
   dummyCheckout: Payment;
   /** Gift card purchase via the dummy gateway. */
   dummyGiftCardCheckout: Payment;
@@ -15362,6 +15702,8 @@ export type Mutation = {
   emailVenueLeadContact: LeadContactActionResult;
   /** Auth-required: prove the scan with a code from the app, and turn it on. */
   enableTwoFactor: TwoFactorEnableResult;
+  /** Enroll the given leads, or every lead matching the filter. A lead already in the sequence is left as it is. Managers only. */
+  enrollLeads: OutreachEnrollResult;
   /** Erase every recorded click for one link. The link and its lifetime count stay. */
   eraseShortLinkClicks: Scalars['Int']['output'];
   expressGigInterest: GigJob;
@@ -15663,6 +16005,7 @@ export type Mutation = {
   notifyPolicyAcceptedUsers: Scalars['Int']['output'];
   /** Admin: offer the place to one matching partner. Nothing on the pod moves yet. */
   offerPodChange: PodChangeRequest;
+  pauseEnrollment: OutreachEnrollment;
   permanentlyDeleteInventoryProduct: Scalars['Boolean']['output'];
   /** Host: draw one competitor at random on the server, or reset the draw. */
   pickPodChallengeRandom: PodChallenge;
@@ -15848,6 +16191,8 @@ export type Mutation = {
   /** Primary host withdraws an invite / removes a co-host. */
   removeCoHost: Pod;
   removeCrmEmailTemplateImage: CrmEmailTemplate;
+  /** Take the lead out of the sequence; what was sent stays on record. */
+  removeEnrollment: Scalars['Boolean']['output'];
   removeExpenseRefund: Expense;
   /** Onboarding staff remove a holiday / leave day. */
   removeMeetingHoliday: Scalars['Boolean']['output'];
@@ -15870,6 +16215,8 @@ export type Mutation = {
   reorderManualTestColumns: Array<ManualTestColumn>;
   /** Seller reply to a review of their own product (single reply). */
   replyToProductReview: ProductReview;
+  /** Answer the comment on its network. Refused with NOT_CONFIGURED, naming the permission, where the connection cannot reply. */
+  replyToSocialComment: SocialComment;
   replyToTicket: Ticket;
   /**
    * Record a CI build (and, once it finishes, announce it on the platform's
@@ -16130,6 +16477,8 @@ export type Mutation = {
   restoreReelVersion: ReelProject;
   /** Answer a test run that is waiting for the contact, or let it time out. */
   resumeAutomationTest: AutomationRun;
+  /** Carry on a paused enrollment, or retry the step a failed one stopped on. */
+  resumeEnrollment: OutreachEnrollment;
   /** Run a failed or partly completed run again, through its own workflow. */
   retryMarketingRun: MarketingRun;
   /**
@@ -16246,6 +16595,8 @@ export type Mutation = {
   saveMyBrandPickupLocation: BrandPickupLocation;
   /** Design a look: no key creates one, a key changes that one (only the fields sent). An agent asked to design a festival sends a full OccasionThemeInput here. */
   saveOccasionTheme: OccasionTheme;
+  /** Create (no id) or edit a sequence. A Marketing Editor may only save one that is not active. */
+  saveOutreachSequence: OutreachSequence;
   /** Partner: add (omit id) or update a saved connection and check it against the vendor right away. */
   savePartnerIntegration: PartnerIntegration;
   savePodDraft: PodDraft;
@@ -16419,6 +16770,8 @@ export type Mutation = {
   setOccasionLive: OccasionSettings;
   /** Set the dates a look goes live by itself (used while the live mode is SCHEDULE). */
   setOccasionSchedule: OccasionTheme;
+  /** Switch a sequence on or off. Managers only; switching on re-checks every step. */
+  setOutreachSequenceActive: OutreachSequence;
   /** Host: tick or untick one task/checkpoint for a competitor (a reason is needed after the end). */
   setPodChallengeItem: PodChallenge;
   setPodChallengeRoster: PodChallenge;
@@ -16449,6 +16802,7 @@ export type Mutation = {
   setShortLinkActive: ShortLink;
   /** Who answers for the account. A null owner clears it; every id must be a real user. */
   setSocialAccountOwner: SocialAccount;
+  setSocialCommentStatus: SocialComment;
   setSocialIdeaStatus: SocialIdea;
   /** Keep the reviewer's message on an issue and write the advice again with it. */
   setStoreIssueReviewerMessage: StoreReleaseIssue;
@@ -16773,6 +17127,8 @@ export type Mutation = {
    */
   subscribeMembershipNews: MembershipNewsSubscriber;
   subscribeNewsletter: NewsletterSubscribeResult;
+  /** Ask Claude for a draft reply. Nothing is sent: the person edits it and presses Send. */
+  suggestSocialReply: SocialReplySuggestion;
   /** Support agents can create a user account on a caller's behalf. */
   supportCreateUser: User;
   /** Products portal: check the next batch of a brand's pincodes against ShipRocket from its own warehouse. */
@@ -17634,6 +17990,12 @@ export type MutationAssignMarketingLeadOwnerArgs = {
 };
 
 
+export type MutationAssignSocialCommentArgs = {
+  id: Scalars['ID']['input'];
+  user_id?: InputMaybe<Scalars['ID']['input']>;
+};
+
+
 export type MutationAssignTicketArgs = {
   assignee_id?: InputMaybe<Scalars['ID']['input']>;
   ticket_id: Scalars['ID']['input'];
@@ -17930,6 +18292,12 @@ export type MutationClubWithdrawAutoPodArgs = {
 
 export type MutationCompleteDbBackupUploadArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type MutationCompleteOutreachTaskArgs = {
+  id: Scalars['ID']['input'];
+  note?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -19270,6 +19638,13 @@ export type MutationDraftIgLeadMessageArgs = {
 };
 
 
+export type MutationDraftSequenceStepArgs = {
+  lead_id?: InputMaybe<Scalars['ID']['input']>;
+  sequence_id: Scalars['ID']['input'];
+  step_index: Scalars['Int']['input'];
+};
+
+
 export type MutationDummyCheckoutArgs = {
   input: DummyCheckoutInput;
 };
@@ -19406,6 +19781,13 @@ export type MutationEmailVenueLeadContactArgs = {
 
 export type MutationEnableTwoFactorArgs = {
   code: Scalars['String']['input'];
+};
+
+
+export type MutationEnrollLeadsArgs = {
+  filter?: InputMaybe<OutreachLeadFilter>;
+  lead_ids?: InputMaybe<Array<Scalars['ID']['input']>>;
+  sequence_id: Scalars['ID']['input'];
 };
 
 
@@ -19860,6 +20242,11 @@ export type MutationOfferPodChangeArgs = {
 };
 
 
+export type MutationPauseEnrollmentArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationPermanentlyDeleteInventoryProductArgs = {
   product_doc_id: Scalars['ID']['input'];
 };
@@ -20231,6 +20618,11 @@ export type MutationRemoveCrmEmailTemplateImageArgs = {
 };
 
 
+export type MutationRemoveEnrollmentArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationRemoveExpenseRefundArgs = {
   expense_doc_id: Scalars['ID']['input'];
   refund_id: Scalars['String']['input'];
@@ -20307,6 +20699,12 @@ export type MutationReorderManualTestColumnsArgs = {
 export type MutationReplyToProductReviewArgs = {
   reply: Scalars['String']['input'];
   review_id: Scalars['ID']['input'];
+};
+
+
+export type MutationReplyToSocialCommentArgs = {
+  id: Scalars['ID']['input'];
+  text: Scalars['String']['input'];
 };
 
 
@@ -20630,6 +21028,11 @@ export type MutationResumeAutomationTestArgs = {
 };
 
 
+export type MutationResumeEnrollmentArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationRetryMarketingRunArgs = {
   id: Scalars['ID']['input'];
 };
@@ -20882,6 +21285,12 @@ export type MutationSaveMyBrandPickupLocationArgs = {
 export type MutationSaveOccasionThemeArgs = {
   input: OccasionThemeInput;
   key?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type MutationSaveOutreachSequenceArgs = {
+  id?: InputMaybe<Scalars['ID']['input']>;
+  input: OutreachSequenceInput;
 };
 
 
@@ -21333,6 +21742,12 @@ export type MutationSetOccasionScheduleArgs = {
 };
 
 
+export type MutationSetOutreachSequenceActiveArgs = {
+  active: Scalars['Boolean']['input'];
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationSetPodChallengeItemArgs = {
   competitor_id: Scalars['String']['input'];
   done: Scalars['Boolean']['input'];
@@ -21423,6 +21838,12 @@ export type MutationSetSocialAccountOwnerArgs = {
   id: Scalars['ID']['input'];
   owner_user_id?: InputMaybe<Scalars['ID']['input']>;
   team_user_ids?: InputMaybe<Array<Scalars['ID']['input']>>;
+};
+
+
+export type MutationSetSocialCommentStatusArgs = {
+  id: Scalars['ID']['input'];
+  status: SocialInboxStatus;
 };
 
 
@@ -22259,6 +22680,11 @@ export type MutationSubscribeLocationLaunchArgs = {
 
 export type MutationSubscribeNewsletterArgs = {
   input: SubscribeNewsletterInput;
+};
+
+
+export type MutationSuggestSocialReplyArgs = {
+  id: Scalars['ID']['input'];
 };
 
 
@@ -24555,6 +24981,207 @@ export type OtpRequestResult = {
   ok: Scalars['Boolean']['output'];
   /** Password-reset only: false when the email is not a registered account (no OTP is sent). */
   registered?: Maybe<Scalars['Boolean']['output']>;
+};
+
+export type OutreachDraft = {
+  __typename?: 'OutreachDraft';
+  body: Scalars['String']['output'];
+  subject: Scalars['String']['output'];
+};
+
+export type OutreachEnrollResult = {
+  __typename?: 'OutreachEnrollResult';
+  /** Leads already in the sequence; left as they were. */
+  already: Scalars['Int']['output'];
+  /** Leads enrolled now. */
+  enrolled: Scalars['Int']['output'];
+  /** Leads the sequence does not take: another pipeline, converted or lost, or not found. */
+  skipped: Scalars['Int']['output'];
+};
+
+export type OutreachEnrollment = {
+  __typename?: 'OutreachEnrollment';
+  created_at?: Maybe<Scalars['String']['output']>;
+  error: Scalars['String']['output'];
+  history: Array<OutreachHistoryEntry>;
+  id: Scalars['ID']['output'];
+  lead_company: Scalars['String']['output'];
+  lead_id: Scalars['ID']['output'];
+  lead_name: Scalars['String']['output'];
+  /** When the next step falls due; null while a DM task is open or the enrollment is not ACTIVE. */
+  next_at?: Maybe<Scalars['String']['output']>;
+  sequence_id: Scalars['ID']['output'];
+  sequence_name: Scalars['String']['output'];
+  status: OutreachEnrollmentStatus;
+  step_count: Scalars['Int']['output'];
+  /** The step that runs next. */
+  step_index: Scalars['Int']['output'];
+  updated_at?: Maybe<Scalars['String']['output']>;
+};
+
+/** ACTIVE walks on; PAUSED waits for a manager; REPLIED, OPTED_OUT and DONE are over; FAILED stopped on a send that did not go. */
+export type OutreachEnrollmentStatus =
+  | 'ACTIVE'
+  | 'DONE'
+  | 'FAILED'
+  | 'OPTED_OUT'
+  | 'PAUSED'
+  | 'REPLIED';
+
+export type OutreachEnrollmentTablePage = {
+  __typename?: 'OutreachEnrollmentTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<OutreachEnrollment>;
+  total: Scalars['Int']['output'];
+};
+
+export type OutreachHistoryEntry = {
+  __typename?: 'OutreachHistoryEntry';
+  at?: Maybe<Scalars['String']['output']>;
+  kind: OutreachHistoryKind;
+  /** The step it happened on; -1 when it was not about a step. */
+  step_index: Scalars['Int']['output'];
+  text: Scalars['String']['output'];
+};
+
+export type OutreachHistoryKind =
+  | 'DONE'
+  | 'ENROLLED'
+  | 'FAILED'
+  | 'OPTED_OUT'
+  | 'PAUSED'
+  | 'REPLIED'
+  | 'RESUMED'
+  | 'SENT'
+  | 'SKIPPED'
+  | 'TASK'
+  | 'TASK_DONE';
+
+/** Which leads an enroll by filter takes; every field narrows. */
+export type OutreachLeadFilter = {
+  city?: InputMaybe<Scalars['String']['input']>;
+  pipeline?: InputMaybe<MarketingLeadPipeline>;
+  stage?: InputMaybe<MarketingLeadStage>;
+};
+
+export type OutreachSequence = {
+  __typename?: 'OutreachSequence';
+  active: Scalars['Boolean']['output'];
+  counts: OutreachSequenceCounts;
+  created_at?: Maybe<Scalars['String']['output']>;
+  created_by: Scalars['String']['output'];
+  /** Sends and DM tasks a day across the sequence, on the admin's clock. */
+  daily_limit: Scalars['Int']['output'];
+  description: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  /** Only leads of this pipeline may be enrolled; null takes any. */
+  pipeline?: Maybe<MarketingLeadPipeline>;
+  quiet_end_hour: Scalars['Int']['output'];
+  /** Nothing goes out from this hour until quiet_end_hour, in the admin's time zone; equal hours mean no quiet window. */
+  quiet_start_hour: Scalars['Int']['output'];
+  /** Sends and DM tasks made today, against daily_limit. */
+  sent_today: Scalars['Int']['output'];
+  steps: Array<OutreachStep>;
+  stop_on_reply: Scalars['Boolean']['output'];
+  updated_at?: Maybe<Scalars['String']['output']>;
+  updated_by: Scalars['String']['output'];
+};
+
+/** How many enrollments sit in each state. */
+export type OutreachSequenceCounts = {
+  __typename?: 'OutreachSequenceCounts';
+  active: Scalars['Int']['output'];
+  done: Scalars['Int']['output'];
+  failed: Scalars['Int']['output'];
+  opted_out: Scalars['Int']['output'];
+  paused: Scalars['Int']['output'];
+  replied: Scalars['Int']['output'];
+  total: Scalars['Int']['output'];
+};
+
+export type OutreachSequenceInput = {
+  daily_limit: Scalars['Int']['input'];
+  description?: InputMaybe<Scalars['String']['input']>;
+  name: Scalars['String']['input'];
+  pipeline?: InputMaybe<MarketingLeadPipeline>;
+  quiet_end_hour?: InputMaybe<Scalars['Int']['input']>;
+  quiet_start_hour?: InputMaybe<Scalars['Int']['input']>;
+  steps: Array<OutreachStepInput>;
+  stop_on_reply?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+export type OutreachStep = {
+  __typename?: 'OutreachStep';
+  /** The email text or the DM; {name} and {company} are filled per lead. */
+  body: Scalars['String']['output'];
+  kind: OutreachStepKind;
+  /** EMAIL only. */
+  subject: Scalars['String']['output'];
+  /** WHATSAPP only: the template's values, in order; {name} and {company} are filled per lead. */
+  wa_params: Array<Scalars['String']['output']>;
+  /** WHATSAPP only: the AiSensy campaign name picked from the Communications portal's list. */
+  wa_template_key: Scalars['String']['output'];
+  /** WAIT only: days before the next step. */
+  wait_days: Scalars['Int']['output'];
+};
+
+export type OutreachStepInput = {
+  body?: InputMaybe<Scalars['String']['input']>;
+  kind: OutreachStepKind;
+  subject?: InputMaybe<Scalars['String']['input']>;
+  wa_params?: InputMaybe<Array<Scalars['String']['input']>>;
+  wa_template_key?: InputMaybe<Scalars['String']['input']>;
+  wait_days?: InputMaybe<Scalars['Int']['input']>;
+};
+
+/** EMAIL and WHATSAPP send on their own; DM_TASK asks a person to send a DM by hand; WAIT holds the next step for wait_days. */
+export type OutreachStepKind =
+  | 'DM_TASK'
+  | 'EMAIL'
+  | 'WAIT'
+  | 'WHATSAPP';
+
+/** A DM a person sends by hand, then marks done here. Nothing is sent for them. */
+export type OutreachTask = {
+  __typename?: 'OutreachTask';
+  created_at?: Maybe<Scalars['String']['output']>;
+  done_at?: Maybe<Scalars['String']['output']>;
+  done_by_name: Scalars['String']['output'];
+  enrollment_id: Scalars['ID']['output'];
+  id: Scalars['ID']['output'];
+  lead_id: Scalars['ID']['output'];
+  lead_instagram_handle: Scalars['String']['output'];
+  lead_instagram_url: Scalars['String']['output'];
+  lead_name: Scalars['String']['output'];
+  owner_name?: Maybe<Scalars['String']['output']>;
+  owner_user_id?: Maybe<Scalars['String']['output']>;
+  sequence_id: Scalars['ID']['output'];
+  sequence_name: Scalars['String']['output'];
+  status: OutreachTaskStatus;
+  step_index: Scalars['Int']['output'];
+  /** The DM to send, with the lead's name and company filled in. */
+  text: Scalars['String']['output'];
+};
+
+export type OutreachTaskStatus =
+  | 'CANCELLED'
+  | 'DONE'
+  | 'OPEN';
+
+/** An AiSensy campaign from the Communications portal's list, with whether its template is approved. Only an approved one can be sent. */
+export type OutreachWaTemplate = {
+  __typename?: 'OutreachWaTemplate';
+  approved: Scalars['Boolean']['output'];
+  body: Scalars['String']['output'];
+  description: Scalars['String']['output'];
+  key: Scalars['String']['output'];
+  /** How many values the template takes; 0 when it could not be read. */
+  param_count: Scalars['Int']['output'];
+  /** AiSensy's own status for the template; empty when it could not be read. */
+  status: Scalars['String']['output'];
+  template_name: Scalars['String']['output'];
 };
 
 /** How a unit is packed for the courier. */
@@ -30398,6 +31025,16 @@ export type Query = {
   manualTestSurfaces: Array<ManualTestSurface>;
   /** Every agent, with its switch, schedule, params and last run. */
   marketingAgents: Array<MarketingAgent>;
+  /** Runs by workflow and outcome, AI tokens and cost, approvals and agent runs. */
+  marketingAnalyticsAutomation: MarketingAnalyticsAutomation;
+  /** What was published from Duncit, by format; the reels and how they did; when posts do best. */
+  marketingAnalyticsContent: MarketingAnalyticsContent;
+  /** Leads by source and stage, the funnel, stage changes and time in stage, and leads promoted to the CRM. */
+  marketingAnalyticsFunnel: MarketingAnalyticsFunnel;
+  /** The headline of every analytics page, and what the short links earned, for one window. */
+  marketingAnalyticsOverview: MarketingAnalyticsOverview;
+  /** Followers, posts, reach and engagement per network and per day, and the best posts. */
+  marketingAnalyticsSocial: MarketingAnalyticsSocial;
   /** One campaign in full, including its rendered HTML — powers the View dialog. */
   marketingCampaign: MarketingCampaign;
   marketingCampaignPreviewCards: Array<MarketingCampaignPreviewCard>;
@@ -30747,6 +31384,17 @@ export type Query = {
   openAiUsageLog?: Maybe<OpenAiUsageLog>;
   /** Pass task to read one AI feature's calls only (the AI Features logs page). */
   openAiUsageLogsTable: OpenAiUsageLogTablePage;
+  /** How many leads an enroll with this filter would take into the sequence now. */
+  outreachEnrollCount: Scalars['Int']['output'];
+  /** Enrollments, newest first; filter by sequence_id, lead_id or status; search the lead's name or company. */
+  outreachEnrollmentsTable: OutreachEnrollmentTablePage;
+  outreachSequence: OutreachSequence;
+  /** Every sequence, newest first, with its enrollment counts. */
+  outreachSequences: Array<OutreachSequence>;
+  /** The open DM tasks, oldest first. */
+  outreachTasks: Array<OutreachTask>;
+  /** The WhatsApp campaigns a step may pick, approved ones first. */
+  outreachWaTemplates: Array<OutreachWaTemplate>;
   partnerDashboard: PartnerDashboard;
   partnerEcommStats: PartnerEcommStats;
   /** Admin Partners list — users holding a partner-portal role (Host / Venue Partner / Product Seller / Club Admin). */
@@ -31269,11 +31917,15 @@ export type Query = {
   socialCalendar: Array<SocialCalendarItem>;
   socialCommentsTable: SocialCommentTablePage;
   socialIdeas: Array<SocialIdea>;
+  socialInboxSummary: SocialInboxSummary;
+  /** Every comment from every connected account, newest first; view pins a summary card's slice. */
+  socialInboxTable: SocialCommentTablePage;
   socialPost: SocialPostDetail;
   socialPostsTable: SocialPostTablePage;
   socialProviders: Array<SocialProviderStatus>;
   /** The one redirect (callback) URL every network's app must list — shown on the settings page. */
   socialRedirectUri: Scalars['String']['output'];
+  socialReplyCapabilities: Array<SocialReplyCapability>;
   socialScheduledPost: SocialScheduledPost;
   socialScheduledPosts: Array<SocialScheduledPost>;
   /**
@@ -33503,6 +34155,32 @@ export type QueryManualTestLabelsArgs = {
 };
 
 
+export type QueryMarketingAnalyticsAutomationArgs = {
+  input: MarketingAnalyticsInput;
+};
+
+
+export type QueryMarketingAnalyticsContentArgs = {
+  input: MarketingAnalyticsInput;
+};
+
+
+export type QueryMarketingAnalyticsFunnelArgs = {
+  input: MarketingAnalyticsInput;
+  pipeline?: InputMaybe<MarketingLeadPipeline>;
+};
+
+
+export type QueryMarketingAnalyticsOverviewArgs = {
+  input: MarketingAnalyticsInput;
+};
+
+
+export type QueryMarketingAnalyticsSocialArgs = {
+  input: MarketingAnalyticsInput;
+};
+
+
 export type QueryMarketingCampaignArgs = {
   campaign_id: Scalars['ID']['input'];
 };
@@ -34054,6 +34732,22 @@ export type QueryOpenAiUsageLogArgs = {
 export type QueryOpenAiUsageLogsTableArgs = {
   query?: InputMaybe<TableQueryInput>;
   task?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type QueryOutreachEnrollCountArgs = {
+  filter?: InputMaybe<OutreachLeadFilter>;
+  sequence_id: Scalars['ID']['input'];
+};
+
+
+export type QueryOutreachEnrollmentsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryOutreachSequenceArgs = {
+  id: Scalars['ID']['input'];
 };
 
 
@@ -35104,6 +35798,12 @@ export type QuerySocialCommentsTableArgs = {
 
 export type QuerySocialIdeasArgs = {
   status?: InputMaybe<SocialIdeaStatus>;
+};
+
+
+export type QuerySocialInboxTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+  view?: InputMaybe<SocialInboxView>;
 };
 
 
@@ -39044,9 +39744,13 @@ export type SocialComment = {
   ai_sentiment?: Maybe<SocialSentiment>;
   ai_severity?: Maybe<SocialSeverity>;
   ai_status: SocialAiStatus;
+  assigned_name?: Maybe<Scalars['String']['output']>;
+  /** Who is working the comment; null when nobody is. */
+  assigned_user_id?: Maybe<Scalars['ID']['output']>;
   author_handle?: Maybe<Scalars['String']['output']>;
   author_name?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
+  last_activity_at?: Maybe<Scalars['String']['output']>;
   likes: Scalars['Int']['output'];
   permalink?: Maybe<Scalars['String']['output']>;
   platform: SocialPlatform;
@@ -39054,8 +39758,25 @@ export type SocialComment = {
   post_permalink?: Maybe<Scalars['String']['output']>;
   post_text?: Maybe<Scalars['String']['output']>;
   published_at?: Maybe<Scalars['String']['output']>;
+  /** Every reply sent from the Inbox, oldest first. */
+  replies: Array<SocialCommentReply>;
   review_status: SocialReviewStatus;
   reviewed_at?: Maybe<Scalars['String']['output']>;
+  status: SocialInboxStatus;
+  text: Scalars['String']['output'];
+};
+
+/** One answer sent from the Inbox, kept whether the network took it or refused it. */
+export type SocialCommentReply = {
+  __typename?: 'SocialCommentReply';
+  at?: Maybe<Scalars['String']['output']>;
+  by_name: Scalars['String']['output'];
+  by_user_id: Scalars['String']['output'];
+  /** Why the network refused it; empty when it did not. */
+  error: Scalars['String']['output'];
+  /** The reply's id on the network; empty when it was refused. */
+  external_id: Scalars['String']['output'];
+  ok: Scalars['Boolean']['output'];
   text: Scalars['String']['output'];
 };
 
@@ -39104,6 +39825,32 @@ export type SocialIdeasInput = {
   /** Empty means the networks Duncit has accounts on. */
   platforms?: InputMaybe<Array<SocialPlatform>>;
 };
+
+/** Where a comment stands in the Inbox: waiting, answered on the network, dealt with without a reply, or junk. */
+export type SocialInboxStatus =
+  | 'DONE'
+  | 'OPEN'
+  | 'REPLIED'
+  | 'SPAM';
+
+export type SocialInboxSummary = {
+  __typename?: 'SocialInboxSummary';
+  /** Open comments the AI flagged. */
+  flagged: Scalars['Int']['output'];
+  /** Open comments assigned to the person asking. */
+  mine: Scalars['Int']['output'];
+  open: Scalars['Int']['output'];
+  /** Open comments nobody is working. */
+  unassigned: Scalars['Int']['output'];
+};
+
+/** The slice of the Inbox a summary card opens: open, open and flagged, open and nobody's, open and mine, or everything. */
+export type SocialInboxView =
+  | 'ALL'
+  | 'FLAGGED'
+  | 'MINE'
+  | 'OPEN'
+  | 'UNASSIGNED';
 
 export type SocialInsights = {
   __typename?: 'SocialInsights';
@@ -39258,6 +40005,24 @@ export type SocialQueueView =
   | 'DRAFTS'
   | 'QUEUE'
   | 'SENT';
+
+/** Whether this integration can answer comments on a network, and the permission it would need when it cannot. */
+export type SocialReplyCapability = {
+  __typename?: 'SocialReplyCapability';
+  can_reply: Scalars['Boolean']['output'];
+  /** The longest reply the network takes. */
+  max_length: Scalars['Int']['output'];
+  missing_permission?: Maybe<Scalars['String']['output']>;
+  platform: SocialPlatform;
+};
+
+/** A drafted reply for a person to edit; never sent on its own. */
+export type SocialReplySuggestion = {
+  __typename?: 'SocialReplySuggestion';
+  /** The INBOX_REPLY run that drafted it, on Activity. */
+  run_id: Scalars['ID']['output'];
+  text: Scalars['String']['output'];
+};
 
 export type SocialReviewStatus =
   | 'OPEN'

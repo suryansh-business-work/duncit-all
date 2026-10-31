@@ -275,11 +275,16 @@ export const MODULE_CATEGORY: Record<ModuleName, McpCategoryKey | null> = {
   shortLinkTypeDefs: 'marketing',
   socialTypeDefs: 'marketing',
   socialPublishTypeDefs: 'marketing',
+  // Social › Inbox: triage, assign and answer comments where the network allows.
+  socialInboxTypeDefs: 'marketing',
   igLeadTypeDefs: 'marketing',
   // The one lead pipeline every source feeds, and its hand-over to the CRM.
   marketingLeadTypeDefs: 'marketing',
+  // Outreach › Sequences: multi-step outreach to leads, stopped by a reply or an opt-out.
+  outreachTypeDefs: 'marketing',
   occasionTypeDefs: 'marketing',
   marketingRunTypeDefs: 'marketing',
+  marketingAnalyticsTypeDefs: 'marketing',
   // Automation › Agents: the code-defined agents, their schedules and Run now.
   marketingAgentTypeDefs: 'marketing',
   // Reel Studio: reels cut from Drive footage, posted from the Marketing console.

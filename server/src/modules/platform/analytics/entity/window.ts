@@ -30,6 +30,8 @@ export interface AnalyticsWindow {
   compare: AnalyticsCompare;
   /** A location id the page is narrowed to, on the pages that can be; null for every city. */
   city: string | null;
+  /** The platform the Product page is narrowed to (ios, android, web, mweb); null or absent for every platform. */
+  platform?: string | null;
   granularity: AnalyticsGranularity;
   zone: string;
   /** Every bucket in the window, oldest first — a chart's x axis, gaps included. */
@@ -44,6 +46,7 @@ export interface PeriodRequest {
   to?: string | null;
   compare?: AnalyticsCompare | null;
   city?: string | null;
+  platform?: string | null;
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -119,6 +122,7 @@ export function resolvePeriod(request: PeriodRequest = {}, now = new Date()): An
     prevTo: lastYear ? subYears(to, 1) : from,
     compare,
     city: request.city || null,
+    platform: request.platform || null,
     granularity,
     zone,
     buckets: bucketsBetween(from, to, zone, granularity),

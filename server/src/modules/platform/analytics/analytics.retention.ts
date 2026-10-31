@@ -1,7 +1,7 @@
 /**
  * The retention limit on usage analytics (GDPR storage limitation).
  *
- * Clickstream events and daily-active pings used to be kept forever. They are
+ * Clickstream events, their sessions and daily-active pings used to be kept forever. They are
  * now kept for 13 months — long enough to compare a month with the same month
  * last year, which is the longest comparison the dashboards draw — and swept
  * once a day, the same shape as the short-link click sweep.
@@ -16,6 +16,7 @@ import { logs } from '@observability/log';
 import { startClusterJob } from '@utils/clusterJob';
 import { ActiveUserPingModel } from './activeUser.model';
 import { AppEventModel } from './appEvent.model';
+import { AppSessionModel } from './appSession.model';
 
 export const ANALYTICS_RETENTION_DAYS = 395;
 
@@ -27,12 +28,14 @@ const ymd = (d: Date) => d.toISOString().slice(0, 10);
 
 export async function purgeExpiredAnalytics(now: Date = new Date()): Promise<number> {
   const cutoff = new Date(now.getTime() - ANALYTICS_RETENTION_DAYS * DAY_MS);
-  const [events, pings] = await Promise.all([
+  const [events, sessions, pings] = await Promise.all([
     AppEventModel.deleteMany({ occurred_at: { $lt: cutoff } }),
+    // A session goes with its last event.
+    AppSessionModel.deleteMany({ ended_at: { $lt: cutoff } }),
     // Pings are keyed by a YYYY-MM-DD string, which sorts like the date it is.
     ActiveUserPingModel.deleteMany({ date_ymd: { $lt: ymd(cutoff) } }),
   ]);
-  return events.deletedCount + pings.deletedCount;
+  return events.deletedCount + sessions.deletedCount + pings.deletedCount;
 }
 
 async function sweep(): Promise<void> {

@@ -35,6 +35,8 @@ export const entityAnalyticsTypeDefs = /* GraphQL */ `
     OPENAI_COSTS
     "Members' phone-book syncs and the invites sent from them — counts only (Marketing > Contacts)."
     CONTACTS
+    "How the app is used — people, sessions, screens and retention, from the app's own events (Analytics > Product)."
+    PRODUCT
   }
 
   "What kind of number a value is, so the console formats it."
@@ -80,6 +82,8 @@ export const entityAnalyticsTypeDefs = /* GraphQL */ `
     previous_to: String!
     "The location the page was narrowed to; null for every city."
     city: ID
+    "The platform the page was narrowed to (ios, android, web, mweb); null for every platform."
+    platform: String
   }
 
   "A city a page can be narrowed to."
@@ -188,6 +192,8 @@ export const entityAnalyticsTypeDefs = /* GraphQL */ `
       to: String
       compare: AnalyticsCompare
       city: ID
+      "Narrows the Product page to one platform: ios, android, web or mweb."
+      platform: String
     ): EntityAnalytics!
     "The cities an Analytics page can be narrowed to."
     analyticsCities: [AnalyticsCity!]!

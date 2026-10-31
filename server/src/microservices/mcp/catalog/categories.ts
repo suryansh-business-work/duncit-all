@@ -281,6 +281,7 @@ export const MODULE_CATEGORY: Record<ModuleName, McpCategoryKey | null> = {
 
   analyticsTypeDefs: 'analytics',
   entityAnalyticsTypeDefs: 'analytics',
+  productAnalyticsTypeDefs: 'analytics',
   analyticsMailTypeDefs: 'analytics',
   analyticsAlertTypeDefs: 'analytics',
   googleAnalyticsTypeDefs: 'analytics',

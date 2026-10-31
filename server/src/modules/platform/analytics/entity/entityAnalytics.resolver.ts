@@ -7,7 +7,7 @@ import type { AnalyticsEntity } from './shapes';
 import type { PeriodRequest } from './window';
 
 /** The Analytics console's staff, plus the admins who can open every console. */
-const ANALYTICS_ROLES = ['SUPER_ADMIN', 'ANALYTICS_MANAGER'];
+export const ANALYTICS_ROLES = ['SUPER_ADMIN', 'ANALYTICS_MANAGER'];
 
 /**
  * SonarQube is also Tests → Code Quality → SonarQube. Tech's staff keep reading

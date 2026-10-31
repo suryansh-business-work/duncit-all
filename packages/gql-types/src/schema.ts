@@ -1047,6 +1047,8 @@ export type AnalyticsEntity =
   /** The Duncit Pet Store (ecomm.duncit.com). */
   | 'PET_STORE'
   | 'PODS'
+  /** How the app is used — people, sessions, screens and retention, from the app's own events (Analytics > Product). */
+  | 'PRODUCT'
   | 'REVENUE'
   | 'REWARDS'
   | 'SERVER'
@@ -1193,6 +1195,8 @@ export type AnalyticsPeriod = {
   days: Scalars['Int']['output'];
   from: Scalars['String']['output'];
   granularity: AnalyticsGranularity;
+  /** The platform the page was narrowed to (ios, android, web, mweb); null for every platform. */
+  platform?: Maybe<Scalars['String']['output']>;
   /** The comparison period the previous values were read over. */
   previous_from: Scalars['String']['output'];
   previous_to: Scalars['String']['output'];
@@ -1278,6 +1282,8 @@ export type AppAnalyticsEvent = {
 
 export type AppAnalyticsEventType =
   | 'CLICK'
+  /** A named product event that is neither a view nor a click (app_open, search_performed); event_name says which. */
+  | 'EVENT'
   | 'IMPRESSION'
   | 'PAGE_VIEW'
   | 'TOUCH';
@@ -1618,6 +1624,42 @@ export type AppBuildUploadAuth = {
   ticket: Scalars['String']['output'];
   /** POST the artifact here as multipart form-data, with the ticket in the query string. */
   upload_url: Scalars['String']['output'];
+};
+
+/**
+ * One product-analytics event from mWeb or the native app. event_name follows the snake_case
+ * taxonomy (screen_view, element_click, app_open, app_background, search_performed, …).
+ * On a screen_view, duration_ms is the foreground time spent on previous_screen; on an
+ * app_background it is the time spent on screen_name. Text is redacted again on the server.
+ */
+export type AppEventInput = {
+  app_version?: InputMaybe<Scalars['String']['input']>;
+  /** Made on the device; a batch resent with the same ids stores nothing twice. */
+  client_event_id: Scalars['String']['input'];
+  /** phone, tablet or desktop. */
+  device_type?: InputMaybe<Scalars['String']['input']>;
+  duration_ms?: InputMaybe<Scalars['Int']['input']>;
+  element_id?: InputMaybe<Scalars['String']['input']>;
+  element_name?: InputMaybe<Scalars['String']['input']>;
+  element_text?: InputMaybe<Scalars['String']['input']>;
+  element_type?: InputMaybe<Scalars['String']['input']>;
+  event_name: Scalars['String']['input'];
+  /** ISO 8601, by the device's clock. */
+  occurred_at: Scalars['String']['input'];
+  os_version?: InputMaybe<Scalars['String']['input']>;
+  path?: InputMaybe<Scalars['String']['input']>;
+  /** ios, android, web (the native app's web build) or mweb. */
+  platform?: InputMaybe<Scalars['String']['input']>;
+  pod_id?: InputMaybe<Scalars['ID']['input']>;
+  previous_screen?: InputMaybe<Scalars['String']['input']>;
+  /** A flat JSON object of extra properties; sensitive names are dropped and text is redacted. */
+  properties_json?: InputMaybe<Scalars['String']['input']>;
+  screen_name?: InputMaybe<Scalars['String']['input']>;
+  /** The app session: a new one after 30 minutes without activity. */
+  session_id: Scalars['String']['input'];
+  super_category_slug?: InputMaybe<Scalars['String']['input']>;
+  target_href?: InputMaybe<Scalars['String']['input']>;
+  title?: InputMaybe<Scalars['String']['input']>;
 };
 
 /**
@@ -15219,6 +15261,8 @@ export type Mutation = {
   reconcileWhatsappScenarios: WaScenarioBoard;
   recordActivePing: Scalars['Boolean']['output'];
   recordAppEvent: Scalars['Boolean']['output'];
+  /** Stores a batch of up to 50 product-analytics events; answers how many were new. Needs the analytics consent; works signed out. */
+  recordAppEvents: Scalars['Int']['output'];
   recordInventoryStockMovement: InventoryProduct;
   /** Signed in. Marks one slide watched, so its ring stops showing as unseen. */
   recordOfficialStatusView: Scalars['Boolean']['output'];
@@ -19377,6 +19421,11 @@ export type MutationRecordActivePingArgs = {
 
 export type MutationRecordAppEventArgs = {
   input: RecordAppEventInput;
+};
+
+
+export type MutationRecordAppEventsArgs = {
+  events: Array<AppEventInput>;
 };
 
 
@@ -27899,6 +27948,19 @@ export type ProductAnalytics = {
   variants: Array<ProductVariantStat>;
 };
 
+/**
+ * What a Product analytics read covers: a preset length ending now (days, 7-365) or a calendar
+ * range (from-to, yyyy-MM-dd in the admin zone, inclusive), optionally narrowed to one platform
+ * (ios, android, web, mweb) and one app version.
+ */
+export type ProductAnalyticsFilter = {
+  app_version?: InputMaybe<Scalars['String']['input']>;
+  days?: InputMaybe<Scalars['Int']['input']>;
+  from?: InputMaybe<Scalars['String']['input']>;
+  platform?: InputMaybe<Scalars['String']['input']>;
+  to?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type ProductAnalyticsLocation = {
   __typename?: 'ProductAnalyticsLocation';
   location: Scalars['String']['output'];
@@ -27986,6 +28048,127 @@ export type ProductCheckoutInput = {
   /** Delivery address, required when any product ships. */
   shipping_address?: InputMaybe<OrderShippingAddressInput>;
 };
+
+/** Who a cohort is made of: people first seen in the app in the period, or members who signed up in it. */
+export type ProductCohortBasis =
+  | 'FIRST_SEEN'
+  | 'SIGNED_UP';
+
+export type ProductCohortRow = {
+  __typename?: 'ProductCohortRow';
+  /** The cohort's first day (yyyy-MM-dd) — a Monday for week cohorts. */
+  cohort: Scalars['String']['output'];
+  /** % retained per offset; null where that day or week has not come yet. */
+  retained: Array<Maybe<Scalars['Float']['output']>>;
+  size: Scalars['Int']['output'];
+};
+
+/** A named count: a screen, an element, a platform, an event name. */
+export type ProductCount = {
+  __typename?: 'ProductCount';
+  count: Scalars['Int']['output'];
+  key: Scalars['String']['output'];
+};
+
+export type ProductElementDetail = {
+  __typename?: 'ProductElementDetail';
+  buckets: Array<Scalars['String']['output']>;
+  clicks: Scalars['Int']['output'];
+  clicks_series: Array<Scalars['Int']['output']>;
+  key: Scalars['String']['output'];
+  platforms: Array<ProductCount>;
+  screen_name: Scalars['String']['output'];
+  users_series: Array<Scalars['Int']['output']>;
+};
+
+/**
+ * One element pressed in the period, on one screen. ctr = clicks ÷ views of that screen in the
+ * same period, as a percentage (null when the screen has no views). repeat_clicks = clicks − unique_users.
+ */
+export type ProductElementRow = {
+  __typename?: 'ProductElementRow';
+  clicks: Scalars['Int']['output'];
+  ctr?: Maybe<Scalars['Float']['output']>;
+  element_id: Scalars['String']['output'];
+  element_name: Scalars['String']['output'];
+  element_type: Scalars['String']['output'];
+  key: Scalars['String']['output'];
+  repeat_clicks: Scalars['Int']['output'];
+  screen_name: Scalars['String']['output'];
+  screen_views: Scalars['Int']['output'];
+  unique_users: Scalars['Int']['output'];
+};
+
+export type ProductElementTablePage = {
+  __typename?: 'ProductElementTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<ProductElementRow>;
+  total: Scalars['Int']['output'];
+};
+
+/** One stored event. Rows from before the taxonomy are named after their kind (screen_view, element_click). */
+export type ProductEvent = {
+  __typename?: 'ProductEvent';
+  app_version: Scalars['String']['output'];
+  device_id: Scalars['String']['output'];
+  duration_ms?: Maybe<Scalars['Float']['output']>;
+  element_id: Scalars['String']['output'];
+  element_name: Scalars['String']['output'];
+  element_text: Scalars['String']['output'];
+  element_type: Scalars['String']['output'];
+  event_name: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  occurred_at: Scalars['String']['output'];
+  path: Scalars['String']['output'];
+  platform: Scalars['String']['output'];
+  previous_screen: Scalars['String']['output'];
+  properties_json: Scalars['String']['output'];
+  screen_name: Scalars['String']['output'];
+  session_id: Scalars['String']['output'];
+  user_id?: Maybe<Scalars['ID']['output']>;
+};
+
+export type ProductEventTablePage = {
+  __typename?: 'ProductEventTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<ProductEvent>;
+  total: Scalars['Int']['output'];
+};
+
+export type ProductFunnel = {
+  __typename?: 'ProductFunnel';
+  steps: Array<ProductFunnelStep>;
+  /** True when a step had more occurrences than one read takes, so its counts are a floor. */
+  truncated: Scalars['Boolean']['output'];
+  /** Each person has this many days from entering the funnel to finish it. */
+  window_days: Scalars['Int']['output'];
+};
+
+export type ProductFunnelStep = {
+  __typename?: 'ProductFunnelStep';
+  conversion_from_previous?: Maybe<Scalars['Float']['output']>;
+  conversion_from_start?: Maybe<Scalars['Float']['output']>;
+  dropped: Scalars['Int']['output'];
+  entered: Scalars['Int']['output'];
+  kind: ProductFunnelStepKind;
+  median_ms_from_previous?: Maybe<Scalars['Float']['output']>;
+  value: Scalars['String']['output'];
+};
+
+export type ProductFunnelStepInput = {
+  kind: ProductFunnelStepKind;
+  /** The event name, screen name, element id or label, or a ProductOutcome. */
+  value: Scalars['String']['input'];
+};
+
+/** What a funnel step matches: an event name, a screen view, an element press, or a server-confirmed outcome. */
+export type ProductFunnelStepKind =
+  | 'ELEMENT'
+  | 'EVENT'
+  | 'OUTCOME'
+  | 'SCREEN';
 
 export type ProductListingDeliveryTarget =
   | 'HOST'
@@ -28124,6 +28307,15 @@ export type ProductOrderTablePage = {
   total: Scalars['Int']['output'];
 };
 
+/** Outcomes read from the records that are the outcome — a Payment with paid_at, a PodMember — never from a click. */
+export type ProductOutcome =
+  | 'PAYMENT_FAILED'
+  | 'PAYMENT_REFUNDED'
+  | 'PAYMENT_SUCCEEDED'
+  | 'POD_CREATED'
+  | 'POD_JOINED'
+  | 'SIGNED_UP';
+
 export type ProductOwnership =
   | 'BRAND'
   | 'DUNCIT';
@@ -28141,6 +28333,17 @@ export type ProductPodOption = {
   pod_title: Scalars['String']['output'];
   product_name: Scalars['String']['output'];
   unit_cost: Scalars['Float']['output'];
+};
+
+export type ProductRetention = {
+  __typename?: 'ProductRetention';
+  /** Each offset over every cohort that has reached it, weighted by size. */
+  average: Array<Maybe<Scalars['Float']['output']>>;
+  basis: ProductCohortBasis;
+  granularity: AnalyticsGranularity;
+  /** Days (D1, D3, D7, D14, D30) for day cohorts; weeks 1-8 for week cohorts. */
+  offsets: Array<Scalars['Int']['output']>;
+  rows: Array<ProductCohortRow>;
 };
 
 export type ProductReview = {
@@ -28167,6 +28370,85 @@ export type ProductReviewSummary = {
   product_id: Scalars['ID']['output'];
   /** Count of reviews per star, index 0 = 1★ … index 4 = 5★. */
   star_counts: Array<Scalars['Int']['output']>;
+  total: Scalars['Int']['output'];
+};
+
+export type ProductScreenDetail = {
+  __typename?: 'ProductScreenDetail';
+  avg_time_ms?: Maybe<Scalars['Float']['output']>;
+  /** The first calendar day (yyyy-MM-dd) of every bucket, oldest first. */
+  buckets: Array<Scalars['String']['output']>;
+  /** The elements pressed most on this screen. */
+  elements: Array<ProductCount>;
+  next_screens: Array<ProductCount>;
+  platforms: Array<ProductCount>;
+  /** Where people came from; an empty key is the start of a session. */
+  previous_screens: Array<ProductCount>;
+  screen_name: Scalars['String']['output'];
+  users_series: Array<Scalars['Int']['output']>;
+  views: Scalars['Int']['output'];
+  views_series: Array<Scalars['Int']['output']>;
+};
+
+/**
+ * One screen of the period. unique_users counts members, plus devices nobody signed in on.
+ * avg_time_ms is foreground time per view (null when none was reported); exit_rate is the share
+ * of views that ended a session; bounce_rate the share of sessions that began here and saw nothing else.
+ */
+export type ProductScreenRow = {
+  __typename?: 'ProductScreenRow';
+  avg_time_ms?: Maybe<Scalars['Float']['output']>;
+  bounce_rate: Scalars['Float']['output'];
+  entries: Scalars['Int']['output'];
+  exit_rate: Scalars['Float']['output'];
+  exits: Scalars['Int']['output'];
+  screen_name: Scalars['String']['output'];
+  total_time_ms: Scalars['Float']['output'];
+  unique_users: Scalars['Int']['output'];
+  views: Scalars['Int']['output'];
+};
+
+export type ProductScreenTablePage = {
+  __typename?: 'ProductScreenTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<ProductScreenRow>;
+  total: Scalars['Int']['output'];
+};
+
+/** One app session: cut on the device after 30 minutes without activity; it lasts from its first event to its last. */
+export type ProductSession = {
+  __typename?: 'ProductSession';
+  app_version: Scalars['String']['output'];
+  clicks: Scalars['Int']['output'];
+  device_id: Scalars['String']['output'];
+  device_type: Scalars['String']['output'];
+  duration_ms: Scalars['Float']['output'];
+  ended_at: Scalars['String']['output'];
+  entry_screen: Scalars['String']['output'];
+  events: Scalars['Int']['output'];
+  exit_screen: Scalars['String']['output'];
+  os_version: Scalars['String']['output'];
+  platform: Scalars['String']['output'];
+  screen_views: Scalars['Int']['output'];
+  session_id: Scalars['ID']['output'];
+  started_at: Scalars['String']['output'];
+  user_id?: Maybe<Scalars['ID']['output']>;
+  user_name?: Maybe<Scalars['String']['output']>;
+};
+
+export type ProductSessionDetail = {
+  __typename?: 'ProductSessionDetail';
+  /** The session's events, oldest first (at most 1000). */
+  events: Array<ProductEvent>;
+  session: ProductSession;
+};
+
+export type ProductSessionTablePage = {
+  __typename?: 'ProductSessionTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<ProductSession>;
   total: Scalars['Int']['output'];
 };
 
@@ -28199,10 +28481,58 @@ export type ProductShippingQuoteLine = {
   warehouse_id: Scalars['ID']['output'];
 };
 
+/** One entry of a member's timeline. CLIENT is what the app recorded; SERVER is a record (a payment, a booking). */
+export type ProductTimelineEntry = {
+  __typename?: 'ProductTimelineEntry';
+  at: Scalars['String']['output'];
+  event_name: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  label: Scalars['String']['output'];
+  platform: Scalars['String']['output'];
+  properties_json: Scalars['String']['output'];
+  screen_name: Scalars['String']['output'];
+  session_id?: Maybe<Scalars['String']['output']>;
+  source: Scalars['String']['output'];
+};
+
 export type ProductType =
   | 'CONSUMABLE'
   | 'EQUIPMENT'
   | 'MERCHANDISE';
+
+/** A member found by the User analytics search; the contact is masked. */
+export type ProductUserHit = {
+  __typename?: 'ProductUserHit';
+  contact?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+  user_id: Scalars['ID']['output'];
+};
+
+export type ProductUserProfile = {
+  __typename?: 'ProductUserProfile';
+  app_version?: Maybe<Scalars['String']['output']>;
+  city?: Maybe<Scalars['String']['output']>;
+  /** The country of the member's latest short-link click, when they followed one. */
+  country?: Maybe<Scalars['String']['output']>;
+  events: Scalars['Int']['output'];
+  /** How many different screens the member has opened. */
+  features_used: Scalars['Int']['output'];
+  first_seen_at?: Maybe<Scalars['String']['output']>;
+  /** utm_source / utm_campaign of the first and the latest short link the member followed. */
+  first_touch?: Maybe<Scalars['String']['output']>;
+  last_seen_at?: Maybe<Scalars['String']['output']>;
+  last_touch?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+  payments_completed: Scalars['Int']['output'];
+  platform?: Maybe<Scalars['String']['output']>;
+  pods_created: Scalars['Int']['output'];
+  pods_joined: Scalars['Int']['output'];
+  registered_at?: Maybe<Scalars['String']['output']>;
+  screen_views: Scalars['Int']['output'];
+  sessions: Scalars['Int']['output'];
+  top_features: Array<ProductCount>;
+  user_id: Scalars['ID']['output'];
+};
 
 export type ProductVariant = {
   __typename?: 'ProductVariant';
@@ -29961,6 +30291,15 @@ export type Query = {
   previewVenueFoodCoupon: VenueFoodCouponPreview;
   /** Public: the apps read it to time the cart nudge. */
   productCartSettings: ProductCartSettings;
+  productElement: ProductElementDetail;
+  /** Every element pressed in the period, per screen, as a table. */
+  productElementsTable: ProductElementTablePage;
+  /** The event names stored in the period, most frequent first. */
+  productEventNames: Array<ProductCount>;
+  /** Events of the period. */
+  productEventsTable: ProductEventTablePage;
+  /** A funnel of 2-8 ordered steps; window_days (1-30, default 7) is how long a person has to finish it. */
+  productFunnel: ProductFunnel;
   productListingRequests: Array<InventoryProduct>;
   /** Server-side table sibling of productListingRequests (shared table engine). */
   productListingRequestsTable: InventoryProductTablePage;
@@ -29969,10 +30308,24 @@ export type Query = {
   /** Ops: all pod-placed product orders (Products portal). */
   productOrders: Array<ProductOrder>;
   productOrdersTable: ProductOrderTablePage;
+  /** Cohort retention; DAY cohorts are read by week for periods over 62 days. */
+  productRetention: ProductRetention;
   productReviewSummary: ProductReviewSummary;
   productReviews: Array<ProductReview>;
+  productScreen: ProductScreenDetail;
+  /** The screens viewed in the period, most viewed first. */
+  productScreenNames: Array<ProductCount>;
+  /** Every screen viewed in the period, as a table. */
+  productScreensTable: ProductScreenTablePage;
+  productSession?: Maybe<ProductSessionDetail>;
+  /** Sessions that began in the period. */
+  productSessionsTable: ProductSessionTablePage;
   /** Live ShipRocket delivery estimate for a product cart (preview only; the charged amount is recomputed server-side at checkout). */
   productShippingQuote: ProductShippingQuote;
+  productUser: ProductUserProfile;
+  productUserSearch: Array<ProductUserHit>;
+  /** A member's timeline, newest first; pass the last entry's at as before for the next page. */
+  productUserTimeline: Array<ProductTimelineEntry>;
   /** The same prices, public, for the advertising site's cost calculator. */
   publicAdRateCard: AdRateCard;
   publicAppSettings: PublicAppSettings;
@@ -31839,6 +32192,7 @@ export type QueryEntityAnalyticsArgs = {
   days?: InputMaybe<Scalars['Int']['input']>;
   entity: AnalyticsEntity;
   from?: InputMaybe<Scalars['String']['input']>;
+  platform?: InputMaybe<Scalars['String']['input']>;
   to?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -33538,6 +33892,37 @@ export type QueryPreviewVenueFoodCouponArgs = {
 };
 
 
+export type QueryProductElementArgs = {
+  filter?: InputMaybe<ProductAnalyticsFilter>;
+  key: Scalars['String']['input'];
+  screen_name: Scalars['String']['input'];
+};
+
+
+export type QueryProductElementsTableArgs = {
+  filter?: InputMaybe<ProductAnalyticsFilter>;
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryProductEventNamesArgs = {
+  filter?: InputMaybe<ProductAnalyticsFilter>;
+};
+
+
+export type QueryProductEventsTableArgs = {
+  filter?: InputMaybe<ProductAnalyticsFilter>;
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryProductFunnelArgs = {
+  filter?: InputMaybe<ProductAnalyticsFilter>;
+  steps: Array<ProductFunnelStepInput>;
+  window_days?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
 export type QueryProductListingRequestsArgs = {
   status?: InputMaybe<ProductListingReviewStatus>;
 };
@@ -33568,6 +33953,13 @@ export type QueryProductOrdersTableArgs = {
 };
 
 
+export type QueryProductRetentionArgs = {
+  basis: ProductCohortBasis;
+  filter?: InputMaybe<ProductAnalyticsFilter>;
+  granularity?: InputMaybe<AnalyticsGranularity>;
+};
+
+
 export type QueryProductReviewSummaryArgs = {
   product_id: Scalars['ID']['input'];
 };
@@ -33578,8 +33970,55 @@ export type QueryProductReviewsArgs = {
 };
 
 
+export type QueryProductScreenArgs = {
+  filter?: InputMaybe<ProductAnalyticsFilter>;
+  screen_name: Scalars['String']['input'];
+};
+
+
+export type QueryProductScreenNamesArgs = {
+  filter?: InputMaybe<ProductAnalyticsFilter>;
+};
+
+
+export type QueryProductScreensTableArgs = {
+  filter?: InputMaybe<ProductAnalyticsFilter>;
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryProductSessionArgs = {
+  session_id: Scalars['ID']['input'];
+};
+
+
+export type QueryProductSessionsTableArgs = {
+  filter?: InputMaybe<ProductAnalyticsFilter>;
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
 export type QueryProductShippingQuoteArgs = {
   input: ProductShippingQuoteInput;
+};
+
+
+export type QueryProductUserArgs = {
+  user_id: Scalars['ID']['input'];
+};
+
+
+export type QueryProductUserSearchArgs = {
+  search: Scalars['String']['input'];
+};
+
+
+export type QueryProductUserTimelineArgs = {
+  before?: InputMaybe<Scalars['String']['input']>;
+  event_names?: InputMaybe<Array<Scalars['String']['input']>>;
+  from?: InputMaybe<Scalars['String']['input']>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  user_id: Scalars['ID']['input'];
 };
 
 
@@ -42417,6 +42856,10 @@ export type TestsRegressionSummary = {
 /** How much of the E2E flow catalogue a person has reviewed as ready to automate, and how much a live spec already tests. */
 export type TestsScenarioCoverage = {
   __typename?: 'TestsScenarioCoverage';
+  /** Flows at least one live Cypress spec tests (e2eFlow/catalogue/spec-links.ts). */
+  automated: Scalars['Int']['output'];
+  /** automated / flows as 0-100; null when the catalogue is empty. */
+  automated_pct?: Maybe<Scalars['Float']['output']>;
   flows: Scalars['Int']['output'];
   looks_good: Scalars['Int']['output'];
   needs_review: Scalars['Int']['output'];
@@ -42856,10 +43299,6 @@ export type TriggerStressRunInput = {
   journeys: Array<Scalars['String']['input']>;
   ramp_down_seconds: Scalars['Int']['input'];
   ramp_up_seconds: Scalars['Int']['input'];
-  /** Flows at least one live Cypress spec tests (e2eFlow/catalogue/spec-links.ts). */
-  automated: Scalars['Int']['output'];
-  /** automated / flows as 0-100; null when the catalogue is empty. */
-  automated_pct?: Maybe<Scalars['Float']['output']>;
   runners: Scalars['Int']['input'];
   think_time_ms: Scalars['Int']['input'];
   virtual_users: Scalars['Int']['input'];

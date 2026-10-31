@@ -57,6 +57,79 @@ beforeEach(() => {
   photos.mockResolvedValue({ photos: [], next_page: null });
 });
 
+describe('reelProjects — the list', () => {
+  const ACCOUNT = new Types.ObjectId().toHexString();
+  const WHEN = new Date('2026-10-21T10:00:00Z');
+  const CLIP = 'https://ik.imagekit.io/duncit/reels/clip.mp4';
+  const target = (platform: string, external_id: string, status = 'PUBLISHED') => ({ account_id: ACCOUNT, platform, status, external_id, permalink: '', published_at: WHEN });
+
+  it('carries the cover, the last validation and the posted numbers for every reel, read in one aggregation', async () => {
+    const covered = await newReel('Covered');
+    await ReelProjectModel.updateOne(
+      { _id: covered.id },
+      {
+        $set: {
+          assets: [asset('p1', 'IMAGE', 'poster.png'), { ...asset('v1', 'VIDEO', 'clip.mp4', 10_000), url: CLIP }],
+          spec: { ...emptySpec(), scenes: [{ asset_id: 'p1', duration_ms: 2000 }, { asset_id: 'v1', duration_ms: 3000, transition: 'FADE' }] },
+          cover_at_ms: 1600,
+          checks: [{ name: 'sound', pass: true, detail: '' }, { name: 'hook', pass: false, detail: '' }],
+        },
+      }
+    );
+    const first = await newReel('First frame');
+    await ReelProjectModel.updateOne(
+      { _id: first.id },
+      {
+        $set: {
+          assets: [{ id: 'd1', kind: 'VIDEO', source: 'DRIVE', name: 'shoot.mov', drive_file_id: 'drive-1', duration_ms: 8000 }],
+          spec: { ...emptySpec(), scenes: [card('A card first'), { asset_id: 'd1', duration_ms: 3000 }] },
+          checks: [{ name: 'sound', pass: true, detail: '' }],
+        },
+      }
+    );
+    const empty = await newReel('Empty');
+    await SocialScheduledPostModel.create({ text: 'r', status: 'PARTIAL', reel_project_id: covered.id, targets: [target('INSTAGRAM', 'ig-1'), target('X', 'tw-1'), { ...target('THREADS', '', 'FAILED'), error: 'refused' }] });
+    await SocialScheduledPostModel.create({ text: 'again', status: 'PUBLISHED', reel_project_id: covered.id, targets: [target('FACEBOOK', 'fb-1')] });
+    await SocialScheduledPostModel.create({ text: 'other reel', status: 'PUBLISHED', reel_project_id: first.id, targets: [target('INSTAGRAM', 'ig-9')] });
+    await SocialPostModel.create({ account_id: ACCOUNT, platform: 'INSTAGRAM', external_id: 'ig-1', published_at: WHEN, views: 500, engagement: 13 });
+    await SocialPostModel.create({ account_id: ACCOUNT, platform: 'X', external_id: 'tw-1', published_at: WHEN, views: null, engagement: 7 });
+    await SocialPostModel.create({ account_id: ACCOUNT, platform: 'INSTAGRAM', external_id: 'ig-9', published_at: WHEN, views: 40 });
+    const aggregate = jest.spyOn(SocialScheduledPostModel, 'aggregate');
+
+    const list = await reelService.list();
+
+    expect(aggregate).toHaveBeenCalledTimes(1);
+    const byName = Object.fromEntries(list.map((row) => [row.name, row]));
+    // 1.6 s is inside the second scene, which arrives half a second early on its fade: the clip's frame.
+    // Three networks reached (the refused one is not a post); the X network reports no views and Facebook is not synced yet.
+    expect(byName.Covered).toMatchObject({ cover_url: CLIP, last_check_pass: false, posts_count: 3, views: 500, scene_count: 2 });
+    // No cover chosen and a card first: the first scene with footage, a Drive frame being a signed link.
+    expect(byName['First frame']).toMatchObject({ cover_url: 'thumb:drive-1', last_check_pass: true, posts_count: 1, views: 40 });
+    expect(byName.Empty).toMatchObject({ id: empty.id, cover_url: '', last_check_pass: null, posts_count: 0, views: 0 });
+    aggregate.mockRestore();
+  });
+
+  it('shows the first frame of a reel whose cover moment is before the fade, and nothing for a reel of cards', async () => {
+    const reel = await newReel('Early cover');
+    await ReelProjectModel.updateOne(
+      { _id: reel.id },
+      { $set: { assets: [asset('p1', 'IMAGE', 'poster.png'), { ...asset('v1', 'VIDEO', 'clip.mp4', 10_000), url: CLIP }], spec: { ...emptySpec(), scenes: [{ asset_id: 'p1', duration_ms: 2000 }, { asset_id: 'v1', duration_ms: 3000, transition: 'FADE' }] }, cover_at_ms: 1400 } }
+    );
+    const cards = await newReel('Cards');
+    await ReelProjectModel.updateOne({ _id: cards.id }, { $set: { spec: { ...emptySpec(), scenes: [card('One'), card('Two')] }, cover_at_ms: 3000 } });
+    const byName = Object.fromEntries((await reelService.list()).map((row) => [row.name, row]));
+    expect(byName['Early cover'].cover_url).toBe(POSTER);
+    expect(byName.Cards).toMatchObject({ cover_url: '', scene_count: 2 });
+  });
+
+  it('asks nothing of the posts when there are no reels', async () => {
+    const aggregate = jest.spyOn(SocialScheduledPostModel, 'aggregate');
+    await expect(reelService.list()).resolves.toEqual([]);
+    expect(aggregate).not.toHaveBeenCalled();
+    aggregate.mockRestore();
+  });
+});
+
 describe('generateReelIdeas', () => {
   it('asks Claude with the brief and the footage, returns the concepts with ids, and records one REEL run with its priced cost', async () => {
     await OpenAiModelPriceModel.create({ model: 'claude-test', input_per_1m: 2, output_per_1m: 10 });

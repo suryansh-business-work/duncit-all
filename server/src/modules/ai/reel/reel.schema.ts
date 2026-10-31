@@ -283,6 +283,14 @@ export const reelTypeDefs = gql`
     asset_count: Int!
     scene_count: Int!
     duration_ms: Int!
+    "The frame the list shows: the footage under the chosen cover moment, else the first scene with footage, else empty."
+    cover_url: String!
+    "Null until the reel has been validated; then true when every check passed."
+    last_check_pass: Boolean
+    "How many networks a post carrying this reel reached."
+    posts_count: Int!
+    "Views summed from the synced posts; a network not synced yet counts 0."
+    views: Int!
     created_by: String!
     created_at: String
     updated_at: String

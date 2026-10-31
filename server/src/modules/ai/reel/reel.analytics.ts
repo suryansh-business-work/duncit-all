@@ -45,8 +45,50 @@ interface PublishedTarget {
   published_at: Date | null;
 }
 
+/** What the studio list shows per reel: networks reached and views read back. */
+export interface ReelListFigures {
+  posts_count: number;
+  views: number;
+}
+
 const iso = (value: Date | null | undefined): string | null => (value ? value.toISOString() : null);
 const count = (value: number | null | undefined): number => (typeof value === 'number' && Number.isFinite(value) ? value : 0);
+
+/**
+ * The list's figures for every reel at once — one aggregation, however long
+ * the list: the posts stamped with these reels, unwound to their PUBLISHED
+ * targets, each joined to the synced post by account and network id, summed
+ * per reel. A reel with no row here was never posted.
+ */
+export async function listFiguresOf(projectIds: readonly string[]): Promise<Map<string, ReelListFigures>> {
+  if (projectIds.length === 0) return new Map();
+  const rows = await SocialScheduledPostModel.aggregate<{ _id: string; posts_count: number; views: number }>([
+    { $match: { reel_project_id: { $in: [...projectIds] } } },
+    { $unwind: '$targets' },
+    { $match: { 'targets.status': 'PUBLISHED' } },
+    {
+      $lookup: {
+        from: SocialPostModel.collection.name,
+        let: { account: '$targets.account_id', external: '$targets.external_id' },
+        pipeline: [
+          { $match: { $expr: { $and: [{ $eq: ['$account_id', '$$account'] }, { $eq: ['$external_id', '$$external'] }] } } },
+          { $limit: 1 },
+          { $project: { _id: 0, views: 1 } },
+        ],
+        as: 'synced',
+      },
+    },
+    {
+      $group: {
+        _id: '$reel_project_id',
+        posts_count: { $sum: 1 },
+        // No synced row, or a network that reports no views: 0, never missing.
+        views: { $sum: { $ifNull: [{ $arrayElemAt: ['$synced.views', 0] }, 0] } },
+      },
+    },
+  ]);
+  return new Map(rows.map((row) => [row._id, { posts_count: count(row.posts_count), views: count(row.views) }]));
+}
 
 /** Every network a post carrying this reel reached, oldest post first. */
 async function publishedTargets(projectId: string): Promise<PublishedTarget[]> {

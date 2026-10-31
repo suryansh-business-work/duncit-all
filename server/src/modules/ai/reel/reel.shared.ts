@@ -4,8 +4,8 @@ import mongoose from 'mongoose';
 import { userActor, withRun, type RunContext } from '@modules/crm/marketing/runs/marketingRun.service';
 import { reelMediaLinks, type ReelMediaLinks } from './reel.media';
 import { ReelProjectModel, type IReelProject, type ReelAsset, type ReelMessage } from './reel.model';
-import { sanitizeSpec, specDurationMs } from './reel.edit';
-import { postLinksOf } from './reel.analytics';
+import { sanitizeSpec, specDurationMs, type ReelScene, type ReelSpec } from './reel.edit';
+import { postLinksOf, type ReelListFigures } from './reel.analytics';
 
 /**
  * What every part of Reel Studio shares: how a project is loaded, how it is
@@ -31,9 +31,14 @@ export interface ReelActor {
 
 /* --------------------------------- shaping ------------------------------- */
 
+/** The preview frame of an asset: Drive's, signed, or the file itself; a sound file has none. */
+function thumbnailOf(asset: ReelAsset, links: ReelMediaLinks): string {
+  if (asset.kind === 'AUDIO') return '';
+  return asset.source === 'DRIVE' ? links.thumbnail(asset.drive_file_id) : asset.url;
+}
+
 function pubAsset(asset: ReelAsset, links: ReelMediaLinks) {
   const drive = asset.source === 'DRIVE';
-  const thumbnail = drive ? links.thumbnail(asset.drive_file_id) : asset.url;
   return {
     id: asset.id,
     kind: asset.kind,
@@ -42,7 +47,7 @@ function pubAsset(asset: ReelAsset, links: ReelMediaLinks) {
     mime_type: asset.mime_type,
     drive_file_id: asset.drive_file_id,
     url: drive ? links.media(asset.drive_file_id) : asset.url,
-    thumbnail_url: asset.kind === 'AUDIO' ? '' : thumbnail,
+    thumbnail_url: thumbnailOf(asset, links),
     duration_ms: asset.duration_ms,
     width: asset.width,
     height: asset.height,
@@ -93,8 +98,35 @@ export async function toPub(doc: IReelProject) {
 
 export type PubReelProject = Awaited<ReturnType<typeof toPub>>;
 
-export function toSummary(doc: IReelProject) {
+/** The scene playing at a moment of the reel; each scene arrives early by the overlap of its transition. */
+function sceneAt(spec: ReelSpec, atMs: number): ReelScene | undefined {
+  let start = 0;
+  let playing: ReelScene | undefined;
+  for (const [index, scene] of spec.scenes.entries()) {
+    if (index > 0) start += spec.scenes[index - 1].duration_ms - scene.transition_ms;
+    if (atMs < start) break;
+    playing = scene;
+  }
+  return playing;
+}
+
+/**
+ * The frame the list shows for a reel: the footage under the chosen cover
+ * moment, else the first scene that has footage (a colour card has no frame
+ * to show), else nothing.
+ */
+function coverUrl(doc: IReelProject, spec: ReelSpec, links: ReelMediaLinks): string {
+  const byId = new Map(doc.assets.map((asset) => [asset.id, asset]));
+  const chosen = doc.cover_at_ms == null ? undefined : sceneAt(spec, doc.cover_at_ms);
+  const scene = chosen && byId.has(chosen.asset_id) ? chosen : spec.scenes.find((item) => byId.has(item.asset_id));
+  const asset = scene ? byId.get(scene.asset_id) : undefined;
+  return asset ? thumbnailOf(asset, links) : '';
+}
+
+/** A reel as the list shows it; `figures` is what the posts it went out in add up to, absent when it never went out. */
+export function toSummary(doc: IReelProject, links: ReelMediaLinks, figures?: ReelListFigures) {
   const spec = sanitizeSpec(doc.spec, doc.assets);
+  const checks = doc.checks ?? [];
   return {
     id: String(doc._id),
     name: doc.name,
@@ -102,6 +134,10 @@ export function toSummary(doc: IReelProject) {
     asset_count: doc.assets.length,
     scene_count: spec.scenes.length,
     duration_ms: specDurationMs(spec),
+    cover_url: coverUrl(doc, spec, links),
+    last_check_pass: checks.length === 0 ? null : checks.every((check) => check.pass),
+    posts_count: figures?.posts_count ?? 0,
+    views: figures?.views ?? 0,
     created_by: doc.created_by,
     created_at: iso(doc.created_at),
     updated_at: iso(doc.updated_at),

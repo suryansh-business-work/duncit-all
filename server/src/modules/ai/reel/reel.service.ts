@@ -8,7 +8,7 @@ import { reelMediaLinks } from './reel.media';
 import { ReelProjectModel, type IReelProject, type ReelAsset, type ReelMessage } from './reel.model';
 import { emptySpec, sanitizeSpec, specDurationMs, type ReelAspect } from './reel.edit';
 import { assertRoom, badInput, load, notFound, shortId, str, toPub, toSummary, type ReelActor } from './reel.shared';
-import { analyticsOf } from './reel.analytics';
+import { analyticsOf, listFiguresOf } from './reel.analytics';
 import { reelChecks } from './reel.checks';
 import { newStockAssets, searchReelMedia, uploadAsset, type ReelStockAssetInput, type ReelUploadInput } from './reel.stock';
 import { generateReelIdeas, generateReelScript, generateReelVariants, recommendNextReel, type ReelConceptInput } from './reel.ai';
@@ -105,9 +105,11 @@ async function addAssets(doc: IReelProject, assets: ReelAsset[], actor: ReelActo
 /* --------------------------------- service ------------------------------- */
 
 export const reelService = {
+  /** Every reel, newest edit first, with the list's figures read for all of them in one go. */
   async list() {
     const docs = await ReelProjectModel.find().select('-messages').sort({ updated_at: -1 }).limit(500);
-    return docs.map(toSummary);
+    const [links, figures] = await Promise.all([reelMediaLinks(), listFiguresOf(docs.map((doc) => String(doc._id)))]);
+    return docs.map((doc) => toSummary(doc, links, figures.get(String(doc._id))));
   },
 
   async get(id: string) {

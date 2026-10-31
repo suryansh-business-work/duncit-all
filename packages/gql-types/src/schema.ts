@@ -36751,14 +36751,22 @@ export type ReelProjectInput = {
 export type ReelProjectSummary = {
   __typename?: 'ReelProjectSummary';
   asset_count: Scalars['Int']['output'];
+  /** The frame the list shows: the footage under the chosen cover moment, else the first scene with footage, else empty. */
+  cover_url: Scalars['String']['output'];
   created_at?: Maybe<Scalars['String']['output']>;
   created_by: Scalars['String']['output'];
   drive_url: Scalars['String']['output'];
   duration_ms: Scalars['Int']['output'];
   id: Scalars['ID']['output'];
+  /** Null until the reel has been validated; then true when every check passed. */
+  last_check_pass?: Maybe<Scalars['Boolean']['output']>;
   name: Scalars['String']['output'];
+  /** How many networks a post carrying this reel reached. */
+  posts_count: Scalars['Int']['output'];
   scene_count: Scalars['Int']['output'];
   updated_at?: Maybe<Scalars['String']['output']>;
+  /** Views summed from the synced posts; a network not synced yet counts 0. */
+  views: Scalars['Int']['output'];
 };
 
 export type ReelRecommendation = {

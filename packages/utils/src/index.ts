@@ -1593,6 +1593,73 @@ export {
   type ThemeTokenSettings,
   type ThemeTokenSource,
 } from './theme-tokens';
+// Occasion looks (Marketing → Occasions): the festive design contract and the
+// renderer-agnostic engine mWeb, the native app and the portal preview share.
+export {
+  colorWithAlpha,
+  hasOccasionDecoration,
+  isOccasionAnimated,
+  occasionColorMode,
+  occasionPalettes,
+  type OccasionColorMode,
+  type OccasionDecoration,
+  type OccasionDesign,
+  type OccasionDirection,
+  type OccasionFireworks,
+  type OccasionFlyer,
+  type OccasionGarland,
+  type OccasionGarlandStyle,
+  type OccasionMotion,
+  type OccasionOverlay,
+  type OccasionOverlayStyle,
+  type OccasionPalette,
+  type OccasionParticleLayer,
+  type OccasionVectorLayer,
+} from './occasion-design';
+export { FALLBACK_MARK_COLOR, cycleColor, hash01, occasionRandom, pickColor } from './occasion-random';
+export { OCCASION_SHAPES, OCCASION_SHAPE_PATHS, isOccasionShape, occasionLayerPaths, type OccasionShape } from './occasion-shapes';
+export {
+  CUSTOM_ARTWORK_BOX,
+  OCCASION_ARTWORKS,
+  OCCASION_ARTWORK_NAMES,
+  isOccasionArtwork,
+  occasionArtwork,
+  type OccasionArtwork,
+  type OccasionArtworkName,
+} from './occasion-artwork';
+export { GARLAND_DEFAULT_COLORS, GARLAND_DEPTH, garlandMarks, twinkleAlpha, type OccasionMark } from './occasion-garland';
+export {
+  BURST_LIFE,
+  FLYER_FIRST_PASS,
+  MAX_PARTICLES,
+  burstSparks,
+  fireworkBursts,
+  flyerCycle,
+  flyerPose,
+  flyerTrail,
+  particleCountFor,
+  particlePeriod,
+  particlePose,
+  seedParticles,
+  type FireworkBurst,
+  type FlyerPose,
+  type MarkPose,
+  type OccasionParticle,
+  type Spark,
+  type TrailDot,
+} from './occasion-motion';
+export {
+  occasionFrame,
+  occasionScene,
+  type ArtOp,
+  type DotOp,
+  type ImageOp,
+  type LinearOp,
+  type MarkOp,
+  type OccasionDrawOp,
+  type OccasionScene,
+  type RadialOp,
+} from './occasion-frame';
 export {
   BRAND_CONSENT_POLICY_SLUG,
   BRAND_WIZARD_STEPS,
@@ -1824,6 +1891,9 @@ export {
   venueOfferStatusKey,
   venueOfferTermsText,
   venueMinBusinessLines,
+  venueOfferFloor,
+  offerBelowFloor,
+  type VenueOfferFloor,
   type OfferCalendar,
   type OfferCalendarLimits,
   type OfferCounterUsage,
@@ -1838,6 +1908,16 @@ export {
   type VenueMinBusinessRow,
 } from './venue-offer';
 export { MY_BOOKING_CLASHES_SDL, uniqueClashingPods, type PodBookingClash } from './pod-booking-clash';
+export {
+  CREATE_POD_OFFER_STEP,
+  CREATE_POD_STEP_COUNT,
+  adjacentCreatePodStep,
+  createPodSendsOffer,
+  createPodStepShown,
+  shownCreatePodStep,
+  shownCreatePodSteps,
+  type CreatePodStepScope,
+} from './create-pod-steps';
 export {
   CHAT_PREVIEW_PAGE,
   chatPreviewAction,

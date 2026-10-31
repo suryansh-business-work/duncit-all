@@ -27,7 +27,7 @@ interface Props {
 const STATUSES: StressRunStatus[] = ['QUEUED', 'RUNNING', 'STOPPING', 'COMPLETED', 'ABORTED', 'FAILED'];
 
 const getRowId = (row: StressRun) => row.id;
-const renderStatus = (row: StressRun) => <RunStatusChip status={row.status} />;
+const renderStatus = (row: StressRun) => <RunStatusChip status={row.status} runId={row.id} />;
 const renderEnvironment = (row: StressRun) => <EnvironmentChip environment={row.environment} />;
 
 /** The load a run asked for, e.g. "300 users · 4 bots · 2 runners". */

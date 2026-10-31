@@ -9,6 +9,7 @@ import { BackHeader, QueryGuard } from '@duncit/ui';
 import { useTranslation } from '@duncit/shell';
 import { notifyError, notifySuccess, useConfirm } from '@duncit/dialogs';
 import FlowDialog from '../FlowDialog';
+import FlowSpecs from './FlowSpecs';
 import SubFlowDialog from './SubFlowDialog';
 import SubFlowsTable from './SubFlowsTable';
 import {
@@ -91,6 +92,7 @@ export default function E2eFlowDetailPage() {
                   {flow.description}
                 </Typography>
               )}
+              <FlowSpecs flow={flow} />
               <SubFlowsTable
                 subFlows={flow.sub_flows}
                 toolbarActions={

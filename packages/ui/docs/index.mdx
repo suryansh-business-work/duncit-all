@@ -25,6 +25,11 @@ consumers:
   - 'portals/tech'
   - 'portals/website-app'
 exports:
+  - 'OccasionLayer'
+  - 'OccasionEffects'
+  - 'OccasionGreeting'
+  - 'OccasionBoundary'
+  - 'runOccasionCanvas'
   - 'EarningsSplitView'
   - 'EarningsSplitViewProps'
   - 'VenueBillSummary'
@@ -1214,3 +1219,27 @@ It draws no copy and formats no dates itself: the surface passes its `labels` (e
   showVenue
 />
 ```
+
+## `OccasionLayer` — the festive look over mWeb
+
+Marketing → Occasions decides which festival look the apps wear; mWeb mounts `OccasionLayer` once
+(inside its theme provider) with that look. It paints the decoration on one transparent canvas that
+never takes a tap (`OccasionEffects`), owes WCAG 2.2.2 a pause control for anything that moves
+longer than five seconds (remembered per look), shows the look's greeting once a session, and under
+reduced motion shows the decoration still with nothing to pause. A crash inside it is logged through
+`onError` and the decoration disappears (`OccasionBoundary`); the page carries on.
+
+```tsx
+import { OccasionEffects, OccasionLayer } from '@duncit/ui';
+
+<OccasionLayer design={look} bottomOffset={88} onError={(error, where) => log.warn('occasion', where, { error })} />
+
+// A preview inside a positioned box (the portal's phone frame), frozen at 4s so a flyer shows:
+<Box sx={{ position: 'relative', height: 420 }}>
+  <OccasionEffects decoration={look} contained still stillAt={4} />
+</Box>
+```
+
+`runOccasionCanvas(canvas, decoration, options)` is the loop under it: sized to the window or its
+parent box, at most 2× density, re-laid-out on resize, paused while the tab is hidden. The engine it
+draws is `@duncit/utils` `occasionScene` / `occasionFrame`.

@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { useEffect, type ReactNode } from 'react';
 
 import VenueOfferPicker from '../create-pod/steps/VenueOfferPicker';
+import VenueOfferStep from '../create-pod/steps/VenueOfferStep';
 import { blankCreatePodForm, type CreatePodFormValues } from '../create-pod/create-pod.types';
 import { fallbackT } from '../../../i18n/fallback';
 
@@ -69,7 +70,15 @@ describe('VenueOfferPicker', () => {
     picker();
     expect(screen.getByTestId('slot-calendar')).toHaveAttribute('data-selected', '');
     expect(screen.queryByTestId('create-pod-booking-end')).not.toBeInTheDocument();
-    expect(screen.getByTestId('quote-card')).toBeInTheDocument();
+    expect(screen.getByTestId('guest-fields')).toBeInTheDocument();
+  });
+
+  it('leaves the terms, the ask and the quote to the offer step', () => {
+    picker({ venue_offer_model: 'FREE' });
+    expect(screen.queryByTestId('terms-fields')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('ask-fields')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('quote-card')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('create-pod-venue-free-arrangement')).not.toBeInTheDocument();
   });
 
   it('picks a start, taking the first end the calendar offers as the window', async () => {
@@ -121,3 +130,37 @@ describe('VenueOfferPicker', () => {
   });
 });
 
+
+describe('VenueOfferStep', () => {
+  const VENUES = [{ id: 'v1', venue_name: 'Court House', offer_min_business: [{ model: 'PER_GUEST', amount: 200 }] }];
+  const offerStep = (values: Partial<CreatePodFormValues> = {}) =>
+    render(
+      <Harness values={{ pod_mode: 'PHYSICAL', venue_id: 'v1', ...values }}>
+        {(form) => <VenueOfferStep form={form} venues={VENUES} />}
+      </Harness>
+    );
+
+  it('holds the venue minimum, the terms, the ask and the quote — and no calendar', () => {
+    offerStep({ venue_offer_model: 'PER_GUEST' });
+    const step = screen.getByTestId('create-pod-offer-step');
+    expect(within(step).getByTestId('create-pod-venue-min-business')).toBeInTheDocument();
+    expect(within(step).getByTestId('terms-fields')).toBeInTheDocument();
+    expect(within(step).getByTestId('ask-fields')).toBeInTheDocument();
+    expect(within(step).getByTestId('quote-card')).toBeInTheDocument();
+    expect(screen.queryByTestId('slot-calendar')).not.toBeInTheDocument();
+    // A priced offer asks no free-venue justification.
+    expect(screen.queryByTestId('create-pod-venue-free-arrangement')).not.toBeInTheDocument();
+  });
+
+  it('asks why the venue is free, beside the offer, when the host asks for it free', () => {
+    offerStep({ venue_offer_model: 'FREE' });
+    expect(screen.getByTestId('create-pod-venue-free-arrangement')).toBeInTheDocument();
+    expect(screen.getByTestId('create-pod-venue-free-accept')).toBeInTheDocument();
+  });
+
+  it('shows no minimum for a venue that is not in the list', () => {
+    offerStep({ venue_id: 'gone' });
+    expect(screen.queryByTestId('create-pod-venue-min-business')).not.toBeInTheDocument();
+    expect(screen.getByTestId('terms-fields')).toBeInTheDocument();
+  });
+});

@@ -3,6 +3,7 @@ import { captchaCopy, grievanceEscalationCopy, grievanceTicketFieldCopy, type Ca
 import { GRIEVANCE_OFFICER_SDL } from '@duncit/utils';
 import {
   captchaToken,
+  CENTER_SCROLL,
   expectNeverSent,
   guardMutation,
   interceptQuery,
@@ -39,7 +40,7 @@ function fillGrievance(): void {
   cy.get(`${FORM} textarea[name="description"]`).type('An end-to-end check of the grievance form.');
 }
 
-describe('UI duncit.com · Grievance', () => {
+describe('UI duncit.com · Grievance', CENTER_SCROLL, () => {
   let t: Translator['t'];
   let captcha: CaptchaCopy;
   let officer: Officer | null;

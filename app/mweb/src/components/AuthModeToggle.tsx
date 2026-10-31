@@ -85,6 +85,8 @@ export default function AuthModeToggle() {
   const colorMode = useColorMode();
   const isDark = colorMode.mode === 'dark';
   const noop = () => undefined;
+  // A festive look pins the mode (Halloween is a night): there is nothing to pick.
+  if (colorMode.locked) return null;
   const pickLight = isDark ? colorMode.toggle : noop;
   const pickDark = isDark ? noop : colorMode.toggle;
 

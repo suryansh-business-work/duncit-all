@@ -1509,7 +1509,7 @@ export const ADMIN_FLOWS: readonly CatalogueFlow[] = [
   },
   {
     name: 'Admin: Branding',
-    description: 'Platform branding at /branding read live by every app: identity, theme tokens, platform assets, login background, legal links, website assets and app version gate, occasional icons and fonts (writes SUPER_ADMIN and TECH_MANAGER).',
+    description: 'Platform branding at /branding read live by every app: identity, theme tokens, platform assets, login background, legal links, website assets and app version gate, and fonts (writes SUPER_ADMIN and TECH_MANAGER). Festive app icons moved to Marketing → Occasions.',
     sub_flows: [
       {
         name: 'Edit brand identity',
@@ -1576,27 +1576,6 @@ export const ADMIN_FLOWS: readonly CatalogueFlow[] = [
           ['Open "Website Logos (marketing sites)"', 'Header logo, Footer logo, Favicon, Android app URL (Google Play), iOS app URL (App Store) and "Minimum supported app version" (placeholder "e.g. 1.50.0")'],
           ['Read the minimum version helper', 'It warns older builds are force-updated and to raise it only after the release is live in the stores'],
           ['Fill the Play Store link, set 1.50.0 and Save Branding', 'Snackbar "Branding saved"; mobile builds below 1.50.0 are blocked by the force-update gate'],
-        ],
-      },
-      {
-        name: 'Schedule an occasional icon',
-        description: 'Festive windows with their own Save.',
-        steps: [
-          ['Open "Occasional Icons" with none configured', 'Info alert "No occasions yet — add one to schedule a festive icon."'],
-          ['Click "Add occasion" and type slug "diwali"', 'Helper "Matches a bundled app icon — used offline, no network needed."'],
-          ['Type slug "eid"', 'Helper "No bundled app icon for this slug; the app will load the URL below."'],
-          ['Set Label, Starts at and Ends at (MUI date-time pickers), an icon, Fallback icon, Active and Priority', 'Priority helper "Higher wins on overlap"; the Active label toggles Active/Paused'],
-          ['Click the section Save', 'Snackbar "Occasional icons saved"; apps show the icon while the app clock is inside the window'],
-        ],
-      },
-      {
-        name: 'Occasional icon validation',
-        description: 'Invalid rows are dropped on save.',
-        steps: [
-          ['Clear the slug of a row', 'The slug field turns red'],
-          ['Set Ends at before Starts at', 'Helper "Ends before it starts — this row will be dropped."'],
-          ['Click Save with a row missing its slug or dates', 'Snackbar "Occasional icons saved"; after reload that row is gone'],
-          ['Click the remove icon (tooltip "Remove occasion") and Save', 'The occasion is deleted'],
         ],
       },
       {

@@ -2,6 +2,8 @@
 import type { Translator } from '@duncit/i18n';
 import {
   blockQuery,
+  CENTER_SCROLL,
+  expectMainSite404,
   fetchHtml,
   interceptQuery,
   linkUrl,
@@ -25,15 +27,21 @@ import {
 
 const POLICY_TEXT = `query E2ePolicyText($slug: String!) { policyBySlug(slug: $slug) { title content } }`;
 
-/** server/page-meta.ts plainText: an author's rich text as the one line a card shows. */
+/** server/page-meta.ts MAX_DESCRIPTION: what a search snippet shows before it cuts the line itself. */
+const MAX_DESCRIPTION = 160;
+
+/** server/page-meta.ts plainText: an author's rich text as the one line a card shows, cut on a whole word. */
 function plainText(value: string | null): string | null {
   if (!value) return null;
   const text = value.replaceAll(/<[^>]*>?/g, ' ').replaceAll(/\s+/g, ' ').trim();
   if (!text) return null;
-  return text.length <= 300 ? text : `${text.slice(0, 299)}…`;
+  if (text.length <= MAX_DESCRIPTION) return text;
+  const cut = text.slice(0, MAX_DESCRIPTION - 1);
+  const lastSpace = cut.lastIndexOf(' ');
+  return `${lastSpace > 0 ? cut.slice(0, lastSpace) : cut}…`;
 }
 
-describe('UI duncit.com · Legal policies', () => {
+describe('UI duncit.com · Legal policies', CENTER_SCROLL, () => {
   let t: Translator['t'];
   let branding: SiteBranding;
   let policies: SitePolicy[];
@@ -117,7 +125,8 @@ describe('UI duncit.com · Legal policies', () => {
     cy.title().should('eq', `${policy.title} — Duncit`);
     cy.get('[data-cms-widget="policy-reader"] .skeleton').should('not.exist');
     cy.get('[data-cms-widget="policy-reader"]').invoke('text').should('not.be.empty');
-    cy.contains('a[href="/policies"]', 'All policies').click();
+    // The page's own back link; the closed menu drawer and the footer strip carry one too.
+    cy.contains('main a[href="/policies"]', t('website.footer.allPolicies')).click();
     cy.location('pathname').should('eq', '/policies');
   });
 
@@ -142,7 +151,7 @@ describe('UI duncit.com · Legal policies', () => {
     for (const path of ['/policy/e2e-no-such-policy', '/policy/_reader', '/policy/Not_A_Valid_Slug']) {
       fetchHtml(siteUrl('main', path)).then(({ status, doc }) => {
         expect(status, path).to.eq(404);
-        expect(doc.getElementById('four04')?.textContent?.replaceAll(/\s+/g, ''), `${path} serves the 404 page`).to.eq('404');
+        expectMainSite404(doc, path);
       });
     }
   });

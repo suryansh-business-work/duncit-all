@@ -11,6 +11,11 @@ export interface SeoSettings {
   og_image_url: string;
   store_enabled: boolean;
   favicon_url: string;
+  /** The store's identity for the home page's Organization JSON-LD. */
+  logo_url: string;
+  support_email: string;
+  support_phone: string;
+  social_links: { url: string }[];
   /** The festive window open right now; its favicon replaces the store's while it lasts. */
   active_occasion: { favicon_url: string } | null;
 }
@@ -25,6 +30,10 @@ export const SEO_SETTINGS = /* GraphQL */ `
       og_image_url
       store_enabled
       favicon_url
+      logo_url
+      support_email
+      support_phone
+      social_links { url }
       active_occasion { favicon_url }
     }
   }

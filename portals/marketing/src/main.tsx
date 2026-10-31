@@ -5,6 +5,7 @@ import {
   flattenCatalogue,
   MAIL_PREFERENCE_BUNDLE,
   MARKETING_BUNDLE,
+  TECH_BUNDLE,
 } from '@duncit/app-settings';
 import { logs } from '@duncit/logs';
 import { urlConfigs } from './config/url-configs';
@@ -27,6 +28,9 @@ mountPortal({
     ...flattenCatalogue(MAIL_PREFERENCE_BUNDLE),
     // Contacts is the Analytics console's Contacts page.
     ...flattenCatalogue(ANALYTICS_BUNDLE),
+    // Instagram Leads › Settings edits the Serper key with the Tech console's
+    // own Environment Variables editor, which reads `tech.*`.
+    ...flattenCatalogue(TECH_BUNDLE),
   },
   loadUser: createSessionUserLoader(apolloClient),
   children: <App />,

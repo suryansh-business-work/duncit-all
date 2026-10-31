@@ -8,7 +8,9 @@ import {
   formatStatementMoney,
   isFreeVenueOfferModel,
   isHostOfferModel,
+  offerBelowFloor,
   venueMinBusinessLines,
+  venueOfferFloor,
   venueOfferInput,
   type VenueQuote,
 } from '@duncit/utils';
@@ -34,8 +36,9 @@ interface QuoteAnswer {
  * a free venue (no amount; why it is free and the free policy accepted instead,
  * and the venue accepts or declines it), with a line on how the picked option
  * pays — the amount, and what they need
- * from the venue (one point per line) with an optional note. What the venue
- * usually expects from a booking shows beside it as a guide. The
+ * from the venue (one point per line) with an optional note. The venue's
+ * minimum business shows beside it, and an amount below the one on the picked
+ * basis is flagged on the field (the server refuses it: BELOW_MIN_BUSINESS). The
  * server prices the offer (the venue's charges and Duncit's commission on top)
  * at the pod's spots and at the venue's minimum guests, or says why it cannot
  * be sent; the points and the note never re-price it. The venue accepts,
@@ -71,7 +74,14 @@ export default function OfferTermsField({ venueId }: Readonly<{ venueId: string 
   const currency = finance?.currency_symbol ?? '';
   const modelHelp = isHostOfferModel(model) ? t(PODFORM_OFFER_HELP_KEY[model]) : t('podForm.offer.modelHint');
   const freeVenue = isFreeVenueOfferModel(model);
-  const expects = venueMinBusinessLines(minBusiness, t, (value) => formatStatementMoney(value, currency));
+  const money = (value: number) => formatStatementMoney(value, currency);
+  const expects = venueMinBusinessLines(minBusiness, t, money);
+  const floor = venueOfferFloor(minBusiness, model, t, money);
+  // Only once an amount is typed: a blank field keeps its own "required" rule.
+  const belowFloor = floor && String(rate ?? '').trim() !== '' && offerBelowFloor(floor, rate) ? floor : null;
+  const rateHelp = belowFloor
+    ? t('availability.offers.minBusiness.offerBelow', { vars: { min: belowFloor.text } })
+    : t('podForm.offer.rateHint');
 
   return (
     <Stack spacing={2} data-testid="pod-form-offer-terms">
@@ -115,8 +125,8 @@ export default function OfferTermsField({ venueId }: Readonly<{ venueId: string 
                 htmlInput: { inputMode: 'numeric' },
                 input: { startAdornment: <InputAdornment position="start">{currency}</InputAdornment> },
               }}
-              error={!!errors.venue_offer_rate}
-              helperText={errors.venue_offer_rate?.message || t('podForm.offer.rateHint')}
+              error={!!errors.venue_offer_rate || !!belowFloor}
+              helperText={errors.venue_offer_rate?.message || rateHelp}
             />
           )}
         />

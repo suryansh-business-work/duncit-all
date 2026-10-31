@@ -68,14 +68,15 @@ describe('UI Ads website · Landing', () => {
     useDesktop();
     visitSite('ads');
     for (const anchor of anchors()) {
-      cy.contains('header a.nav-link', anchor.label).should('have.attr', 'href', anchor.href).click();
+      cy.contains('header nav a', anchor.label).should('have.attr', 'href', anchor.href).click();
       cy.get(anchor.href).should(expectInViewport);
     }
   });
 
   it('ADS-04 the hero primary CTA opens the Ads console in a new tab; the secondary scrolls to the calculator', () => {
     visitSite('ads');
-    cy.get('h1').should('readText', t('website.ads.hero.heading'));
+    // Hero.astro renders the h1 as a lead and an accented half, one sentence.
+    cy.get('h1').should('readText', `${t('website.ads.hero.headingLead')} ${t('website.ads.hero.headingAccent')}`);
     cy.contains('main section a', t('website.ads.hero.primaryCta')).then(($cta) => expectNewTab($cta, linkUrl('adsPortal')));
     cy.contains('main section a', t('website.ads.hero.secondaryCta')).should('have.attr', 'href', '#calculator').click();
     cy.get('#calculator').should(expectInViewport);
@@ -93,7 +94,7 @@ describe('UI Ads website · Landing', () => {
 
   it('ADS-06 at phone width the drawer lists the anchors plus Sign up and Log in into the Ads console', () => {
     visitSite('ads');
-    cy.get('header a.nav-link').first().should('not.be.visible');
+    cy.get(`header nav a[href="${anchors()[0].href}"]`).should('not.be.visible');
     cy.get('[data-site-menu-open]').should('have.attr', 'aria-expanded', 'false').click();
     cy.get('#siteMenuDrawer').should('have.attr', 'aria-hidden', 'false');
     cy.get('[data-site-menu-open]').should('have.attr', 'aria-expanded', 'true');

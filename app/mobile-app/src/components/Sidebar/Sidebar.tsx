@@ -13,6 +13,7 @@ import { usePublicPolicies } from '@/hooks/usePolicies';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useThemeStore } from '@/stores/theme.store';
+import { useEffectiveScheme, useSchemeLocked } from '@/hooks/useEffectiveScheme';
 import { useAutoPodCounts } from '@/hooks/useAutoPodCounts';
 import { useStudioModeStore } from '@/stores/studio-mode.store';
 import { STUDIO_LABEL, availableModes, resolveMode, studioSwitchRoute } from '@/utils/studio-mode';
@@ -67,7 +68,8 @@ export function Sidebar({ onClose }: Readonly<{ onClose: () => void }>) {
   const effectiveMode = resolveMode(studioMode, roles, studioAccess);
   const canSwitch = availableModes(roles, studioAccess).length > 1;
   const logout = useLogout();
-  const scheme = useThemeStore((s) => s.scheme);
+  const scheme = useEffectiveScheme();
+  const themeLocked = useSchemeLocked();
   const toggleTheme = useThemeStore((s) => s.toggle);
 
   const [switchOpen, setSwitchOpen] = useState(false);
@@ -152,6 +154,7 @@ export function Sidebar({ onClose }: Readonly<{ onClose: () => void }>) {
             modeLabel={STUDIO_LABEL[effectiveMode]}
             onSwitch={openSwitch}
             dark={scheme === 'dark'}
+            themeLocked={themeLocked}
             onToggleTheme={toggleTheme}
             policies={policiesData?.publicPolicies ?? []}
             policiesLoading={policiesLoading}

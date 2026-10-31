@@ -3,6 +3,7 @@ import {
   buildCreatePodInput,
   createPodSchema,
   hydrateDraft,
+  makeCreatePodSchema,
   serializeDraft,
   STEP_FIELDS,
   STEP_TITLES,
@@ -50,6 +51,20 @@ const issuesOf = (values: CreatePodFormValues) => {
 describe('createPodSchema', () => {
   it('accepts a valid physical pod', () => {
     expect(createPodSchema.safeParse(valid()).success).toBe(true);
+  });
+
+  it("holds an offer below the venue's business amount on its basis at the rate field", () => {
+    const floored = makeCreatePodSchema(undefined, undefined, undefined, () => ({ min: 300, text: '₹300 per guest' }));
+    const below = floored.safeParse(valid({ venue_offer_rate: '299' }));
+    expect(below.success).toBe(false);
+    const issue = below.error?.issues.find((entry) => entry.path.join('.') === 'venue_offer_rate');
+    expect(issue?.message).toBe('This venue takes at least ₹300 per guest — raise your offer to continue');
+    expect(floored.safeParse(valid({ venue_offer_rate: '300' })).success).toBe(true);
+    // A blank rate keeps its own message rather than the floor's.
+    const blank = floored.safeParse(valid({ venue_offer_rate: '' }));
+    expect(blank.error?.issues.find((entry) => entry.path.join('.') === 'venue_offer_rate')?.message).toBe(
+      'Enter the amount you offer the venue',
+    );
   });
 
   it('requires title, club and description', () => {
@@ -224,15 +239,17 @@ describe('createPodSchema', () => {
     expect(createPodSchema.safeParse(valid({ agreed_to_terms: true })).success).toBe(true);
   });
 
-  it('exposes one field group and title per step (4 steps)', () => {
+  it('exposes one field group and title per step (5 steps, the offer between venue and pricing)', () => {
     expect(STEP_FIELDS).toHaveLength(STEP_TITLES.length);
     // The club step comes first, so its title leads.
     expect(STEP_TITLES).toEqual([
       'Location, Category & Club',
       'Pod Basics',
       'Venue & Slot',
+      'Offer for Venue',
       'Pricing & Publish',
     ]);
+    expect(STEP_FIELDS[3]).toEqual(['venue_offer_model', 'venue_offer_rate', 'venue_offer_offerings', 'venue_offer_note']);
   });
 });
 

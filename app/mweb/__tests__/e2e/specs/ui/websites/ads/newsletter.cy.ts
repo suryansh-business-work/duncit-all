@@ -20,7 +20,7 @@ import {
  * The ads footer (website/ads-website/src/components/SiteFooter.astro): portal
  * ADS FOOTER groups plus the bundled groups whose label the portal does not
  * use, the policy strip pointing at duncit.com, and the consent newsletter card
- * (source ADS_WEBSITE_FOOTER). Nothing is subscribed — every submit here is one
+ * (source WEBSITE_FOOTER). Nothing is subscribed — every submit here is one
  * the form must refuse, with subscribeNewsletter blocked as a guard.
  */
 
@@ -64,9 +64,20 @@ describe('UI Ads website · Footer and newsletter', () => {
     cy.get(`footer a[href="mailto:${branding.support_email}"]`).should('contain.text', branding.support_email);
   });
 
-  it('FOOT-02 the footer Earn with Duncit link points at earnwith', () => {
+  it('FOOT-02 the bundled Duncit group links Earn with Duncit to earnwith, and a portal group of that name replaces it whole', () => {
+    const duncit = t('website.ads.footer.duncitGroup');
+    const portalGroup = portal.filter((link) => (link.group_label || 'More').toLowerCase() === duncit.toLowerCase());
     visitSite('ads');
-    cy.contains('footer a', t('website.ads.footer.earnWithDuncit')).then(($a) => expectNewTab($a, linkUrl('earnwith')));
+    if (portalGroup.length === 0) {
+      cy.contains(`footer nav[aria-label="${duncit}"] a`, t('website.ads.footer.earnWithDuncit')).then(($a) => expectNewTab($a, linkUrl('earnwith')));
+    } else {
+      // SiteFooter.astro: the portal wins per group, so the bundled Earn with
+      // Duncit link is gone unless the portal's own group lists it.
+      const label = portalGroup[0].group_label || 'More';
+      cy.get(`footer nav[aria-label="${label}"] a`).should(($links) => {
+        expect([...$links].map((a) => a.getAttribute('href')), `${label} group links`).to.deep.eq(portalGroup.map((link) => link.url));
+      });
+    }
   });
 
   it('FOOT-03 the policy strip opens each duncit.com policy page in a new tab', () => {

@@ -2,6 +2,9 @@
 import type { Translator } from '@duncit/i18n';
 import {
   blockQuery,
+  CENTER_SCROLL,
+  ctaBandLine,
+  expectMainSite404,
   fetchHtml,
   interceptQuery,
   metaContent,
@@ -13,11 +16,15 @@ import {
 } from '../../../../support/ui-websites';
 
 /**
- * duncit.com/blog (WebsiteContentList "cards"), /blog/post?slug= (pages/blog/
+ * duncit.com/blog (WebsiteContentList "cards"), /blog/<slug> (pages/blog/
  * post.astro: body + Suggested, Related and Archive, plus the per-request card
- * server/page-meta.ts blogPostMeta writes) and /newsroom (variant "news"), all
- * read live from the Website portal's content.
+ * server/page-meta.ts blogPostMeta writes; the old /blog/post?slug= address
+ * redirects there) and /newsroom (variant "news"), all read live from the
+ * Website portal's content.
  */
+
+/** src/lib/blog-path.ts blogPostPath: where a post lives. */
+const postPath = (slug: string): string => `/blog/${encodeURIComponent(slug)}`;
 
 interface Post {
   id: string;
@@ -41,7 +48,7 @@ const monthLabel = (iso: string): { key: string; label: string } => {
   return { key, label };
 };
 
-describe('UI duncit.com · Blog and newsroom', () => {
+describe('UI duncit.com · Blog and newsroom', CENTER_SCROLL, () => {
   let t: Translator['t'];
   let branding: SiteBranding;
 
@@ -64,16 +71,16 @@ describe('UI duncit.com · Blog and newsroom', () => {
       });
     });
 
-    it('BLOG-01 /blog shows one card per published post, each opening /blog/post?slug=<slug>', () => {
+    it('BLOG-01 /blog shows one card per published post, each opening /blog/<slug>', () => {
       interceptQuery('publicWebsiteContent', 'blog');
       visitSite('main', '/blog');
       cy.wait('@blog');
-      cy.get('[data-website-content-list] a[href^="/blog/post?slug="]').should('have.length', posts.length);
+      cy.get('[data-website-content-list] a[href^="/blog/"]').should('have.length', posts.length);
       for (const post of posts) {
-        cy.get(`[data-website-content-list] a[href="/blog/post?slug=${encodeURIComponent(post.slug)}"]`).should('contain.text', post.title);
+        cy.get(`[data-website-content-list] a[href="${postPath(post.slug)}"]`).should('contain.text', post.title);
       }
-      cy.get(`[data-website-content-list] a[href="/blog/post?slug=${encodeURIComponent(posts[0].slug)}"]`).click();
-      cy.location('search').should('eq', `?slug=${encodeURIComponent(posts[0].slug)}`);
+      cy.get(`[data-website-content-list] a[href="${postPath(posts[0].slug)}"]`).click();
+      cy.location('pathname').should('eq', postPath(posts[0].slug));
     });
 
     it('BLOG-02 a post retitles the page and lists Suggested, Related and a newest-first Archive from the same posts', () => {
@@ -116,13 +123,14 @@ describe('UI duncit.com · Blog and newsroom', () => {
       });
     });
 
-    it('BLOG-04 an unknown slug says the post could not be found and keeps the blog card', () => {
-      visitSite('main', '/blog/post?slug=e2e-no-such-post');
-      cy.get('#postBody').should('readText', t('website.main.blogPost.notFound'));
-      fetchHtml(siteUrl('main', '/blog/post?slug=e2e-no-such-post')).then(({ status, doc }) => {
-        expect(status).to.eq(200);
-        expect(metaContent(doc, 'meta[property="og:type"]')).to.eq('website');
+    it('BLOG-04 an unknown slug is a real 404 with the site 404 page, and its old ?slug= address lands there too', () => {
+      fetchHtml(siteUrl('main', postPath('e2e-no-such-post'))).then(({ status, doc }) => {
+        expect(status).to.eq(404);
+        expectMainSite404(doc, postPath('e2e-no-such-post'));
       });
+      visitSite('main', '/blog/post?slug=e2e-no-such-post', { failOnStatusCode: false });
+      cy.location('pathname').should('eq', postPath('e2e-no-such-post'));
+      cy.contains('main p', t('website.main.notFound.text')).should('exist');
     });
 
     it('BLOG-05 /blog/post with no slug goes back to /blog', () => {
@@ -162,6 +170,8 @@ describe('UI duncit.com · Blog and newsroom', () => {
 
   it('NEWS-02 the press paragraph links the support email', () => {
     visitSite('main', '/newsroom');
-    cy.get(`main a[href="mailto:${branding.support_email}"]`).should('readText', branding.support_email);
+    ctaBandLine(t('website.main.newsroom.press'))
+      .find(`a[href="mailto:${branding.support_email}"]`)
+      .should('readText', branding.support_email);
   });
 });

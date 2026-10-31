@@ -84,11 +84,14 @@ function pageFindings(url, page, isHome) {
   if (!page.description) add('High', 'On-Page', 'Missing meta description');
   else if (page.description.length < 70 || page.description.length > 170)
     add('Low', 'On-Page', 'Meta description outside 70–160 chars', `${page.description.length} chars`);
-  if (!page.robots?.includes('noindex')) {
+  // A noindex page is out of search on purpose: its canonical, heading and word count rank nothing.
+  // Title, description and og:image still feed link previews, so those are checked on every page.
+  const indexable = !page.robots?.includes('noindex');
+  if (indexable) {
     if (!page.canonical) add('High', 'Technical', 'Missing canonical');
     else if (!/^https:\/\//.test(page.canonical)) add('High', 'Technical', 'Canonical not absolute https', page.canonical);
   }
-  if (page.h1 === 0) add('Medium', 'On-Page', 'No <h1> in server HTML');
+  if (indexable && page.h1 === 0) add('Medium', 'On-Page', 'No <h1> in server HTML');
   if (page.h1 > 1) add('Low', 'On-Page', 'Multiple <h1>', String(page.h1));
   if (!page.lang) add('Medium', 'Technical', 'Missing <html lang>');
   if (!page.viewport) add('High', 'Technical', 'Missing viewport meta');
@@ -96,7 +99,7 @@ function pageFindings(url, page, isHome) {
   if (page.imgsMissingAlt) add('Medium', 'Images', 'Images without alt attribute', `${page.imgsMissingAlt} img`);
   if (page.jsonLdTypes.includes('INVALID_JSON')) add('High', 'Schema', 'Invalid JSON-LD block');
   if (isHome && !page.jsonLdTypes.includes('Organization')) add('Medium', 'Schema', 'Home page has no Organization JSON-LD');
-  if (page.words < 50) add('High', 'Technical', 'Almost no text in server HTML (client-rendered?)', `${page.words} words`);
+  if (indexable && page.words < 50) add('High', 'Technical', 'Almost no text in server HTML (client-rendered?)', `${page.words} words`);
   return f;
 }
 
@@ -131,7 +134,9 @@ async function auditSite(site) {
     urls = [...sitemap.body.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => decode(m[1]));
     if (!urls.length) add('High', 'Technical', 'sitemap.xml lists no URLs');
   }
-  const targets = [...new Set([`${origin}/`, ...urls.map((u) => u.replace(/^https:\/\/[^/]+/, origin))])].slice(0, maxPages);
+  const listed = new Set(urls.map((u) => u.replace(/^https:\/\/[^/]+/, origin)));
+  // The home page is always audited, listed or not.
+  const targets = [...new Set([`${origin}/`, ...listed])].slice(0, maxPages);
 
   const titles = new Map();
   for (const url of targets) {
@@ -143,7 +148,7 @@ async function auditSite(site) {
     const page = inspectHtml(res.body);
     result.pages.push({ url, ...page });
     findings.push(...pageFindings(url, page, url === `${origin}/` && site.expectOrganization !== false));
-    if (page.robots?.includes('noindex')) add('High', 'Technical', 'Sitemap lists a noindex page', '', url);
+    if (listed.has(url) && page.robots?.includes('noindex')) add('High', 'Technical', 'Sitemap lists a noindex page', '', url);
     if (page.canonical && page.canonical.replace(/^https:\/\/[^/]+/, origin) !== url)
       add('Medium', 'Technical', 'Sitemap URL is not its own canonical', page.canonical, url);
     if (page.title) titles.set(page.title, [...(titles.get(page.title) ?? []), url]);
@@ -151,8 +156,11 @@ async function auditSite(site) {
   for (const [title, list] of titles) if (list.length > 1) add('Medium', 'On-Page', 'Duplicate title', `"${title}" on ${list.length} pages`, list[0]);
 
   const missing = await get(`${origin}/__seo-audit-missing-page__`);
-  if (missing.status === 200) add('High', 'Technical', 'Unknown path answers 200 (soft 404)');
-  else if (missing.status === 404 && !/name="robots"[^>]+noindex/i.test(missing.body))
+  const missingNoindex = /name="robots"[^>]+noindex/i.test(missing.body);
+  // Search engines drop a noindex page rather than calling it a soft 404; a real 404 is still cleaner.
+  if (missing.status === 200 && missingNoindex) add('Low', 'Technical', 'Unknown path answers 200 (noindex, so not indexed)');
+  else if (missing.status === 200) add('High', 'Technical', 'Unknown path answers 200 (soft 404)');
+  else if (missing.status === 404 && !missingNoindex)
     add('Low', 'Technical', '404 page has no noindex');
   return result;
 }

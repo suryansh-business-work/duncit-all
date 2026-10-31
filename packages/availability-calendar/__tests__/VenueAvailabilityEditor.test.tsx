@@ -9,6 +9,7 @@ import {
   endOfMonth,
   endOfWeek,
   format,
+  isSameMonth,
   set as setTimeOnDate,
   startOfDay,
   startOfMonth,
@@ -48,7 +49,10 @@ vi.mock('@mui/x-date-pickers/TimePicker', () => ({
 
 const VENUE_ID = 'venue-1';
 const NOW = new Date();
-const HOLIDAY = format(addDays(NOW, 1), 'yyyy-MM-dd');
+// A day on the month the calendar opens on: tomorrow, except on a month's last
+// day, when tomorrow is next month and the month grid never draws it.
+const HOLIDAY_DAY = isSameMonth(addDays(NOW, 1), NOW) ? addDays(NOW, 1) : addDays(NOW, -1);
+const HOLIDAY = format(HOLIDAY_DAY, 'yyyy-MM-dd');
 
 const venue = (over: Partial<EditorVenue> = {}): EditorVenue => ({
   id: VENUE_ID,

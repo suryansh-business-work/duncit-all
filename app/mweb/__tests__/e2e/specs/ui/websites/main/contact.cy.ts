@@ -3,6 +3,7 @@ import { captchaCopy, type CaptchaCopy, type Translator } from '@duncit/i18n';
 import {
   blockQuery,
   captchaToken,
+  CENTER_SCROLL,
   expectNeverSent,
   guardMutation,
   interceptQuery,
@@ -30,7 +31,7 @@ function fillMessage(): void {
   cy.get(`${FORM} textarea[name="message"]`).type('An end-to-end check of the contact form.');
 }
 
-describe('UI duncit.com · Contact', () => {
+describe('UI duncit.com · Contact', CENTER_SCROLL, () => {
   let t: Translator['t'];
   let captcha: CaptchaCopy;
   let branding: SiteBranding;

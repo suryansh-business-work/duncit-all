@@ -1,10 +1,12 @@
 import { Text, YStack } from 'tamagui';
+import { shownCreatePodSteps } from '@duncit/utils';
 
 import { TourAnchor } from '@/tours/TourAnchor';
 import { STEP_TITLE_KEYS } from '../create-pod.form';
 import { BasicsStep } from '../steps/BasicsStep';
 import { LocationClubStep } from '../steps/LocationClubStep';
 import { VenueSlotStep } from '../steps/VenueSlotStep';
+import { VenueOfferStep } from '../steps/VenueOfferStep';
 import { PricingStep } from '../steps/PricingStep';
 import { AiMonitorOverlay } from '../AiMonitorOverlay';
 import { AssignHostsField } from '../AssignHostsField';
@@ -16,8 +18,9 @@ import type { CreatePodStepperProps } from './types';
 import { useCreatePodForm } from './useCreatePodForm';
 import { useCreatePodScope } from './useCreatePodScope';
 
-/** 4-step host Create Pod stepper (mobile twin of mWeb): Category/Locality/Club
- * → Basics → Venue & Slot → Pricing. Per-step validation gates
+/** Host Create Pod stepper (mobile twin of mWeb): Category/Locality/Club →
+ * Basics → Venue & Slot → Offer for Venue → Pricing; a pod that sends no venue
+ * offer (virtual, or a Pod Request's) skips the offer step. Per-step validation gates
  * Next; tapping "Create Pod" runs the AI + rules moderation preflight and only
  * publishes when the content is clean. */
 export function CreatePodStepper({
@@ -45,6 +48,7 @@ export function CreatePodStepper({
     hostCategories,
     onSaveDraft,
     clubAdmin,
+    venues,
   });
   const { t, form, showProducts, step, busy, error, blocked, hosts, setHosts } = state;
   const isLast = step === STEP_TITLE_KEYS.length - 1;
@@ -97,13 +101,19 @@ export function CreatePodStepper({
       form={form}
       venues={venues}
       clubVenueIds={clubVenueIds}
-      venueQuote={venueQuote}
       currencySymbol={finance.currency_symbol}
       pinnedVenueId={pinnedVenueId}
       venueNotice={venueNotice}
       forClubAdmin={!!clubAdmin}
       spots={spots}
       offerMinGuests={offerMinGuests}
+    />,
+    <VenueOfferStep
+      key="offer"
+      form={form}
+      venues={venues}
+      quote={venueQuote}
+      currencySymbol={finance.currency_symbol}
     />,
     <PricingStep
       key="pricing"
@@ -124,7 +134,15 @@ export function CreatePodStepper({
       {/* ONE page at a time, so every tour step lives on the page the host lands
           on — the header's step pills let the walkthrough explain the journey. */}
       <TourAnchor tour="create-pod" anchor="create-pod-steps">
-        <StepHeader step={step} podMode={podMode} />
+        <StepHeader
+          step={step}
+          podMode={podMode}
+          shownSteps={shownCreatePodSteps({
+            pod_mode: podMode,
+            partner_request_id: form.watch('partner_request_id'),
+            venue_slot_id: form.watch('venue_slot_id'),
+          })}
+        />
       </TourAnchor>
       {steps[step]}
       {clubAdmin && step === 1 ? (
@@ -146,7 +164,7 @@ export function CreatePodStepper({
         <StepperActions
           showBack={step > 0}
           backLabel={t('mweb.createPod.back')}
-          onBack={() => state.goTo(step - 1)}
+          onBack={state.back}
           isLast={isLast}
           submitLabel={submitLabel}
           nextLabel={t('mweb.createPod.next')}

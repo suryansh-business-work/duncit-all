@@ -829,6 +829,25 @@ export async function cloudflareConnection(str: EnvConfigReader): Promise<EnvCon
  */
 export const socialAppsConnection = probeSocialApps;
 
+/**
+ * Serper: the account read answers the key and the credit left without
+ * spending a search — the free allowance is a one-off, so a test must not
+ * eat into it.
+ */
+export async function serperConnection(str: EnvConfigReader): Promise<EnvConnectionResult> {
+  const key = str('api_key').trim();
+  if (!key) return { ok: false, message: 'API key is required', details: [] };
+  try {
+    const res = await fetchJson('https://google.serper.dev/account', { headers: { 'X-API-KEY': key } });
+    if (res.status === 401 || res.status === 403) return { ok: false, message: `Serper rejected the key (HTTP ${res.status})`, details: [] };
+    if (!res.ok) return { ok: false, message: `Serper answered HTTP ${res.status}`, details: [] };
+    const balance = typeof res.data.balance === 'number' ? res.data.balance : null;
+    return { ok: true, message: 'Serper accepted the key', details: balance === null ? [] : [`${balance} search credits left.`] };
+  } catch (err) {
+    return { ok: false, message: errText(err), details: [] };
+  }
+}
+
 // --- Dispatch ---------------------------------------------------------------
 
 /**
@@ -853,6 +872,7 @@ const CONNECTION_CHECKS = {
   SOCIAL_APPS: socialAppsConnection,
   TRUECALLER: truecallerConnection,
   GOOGLE_OAUTH: googleOAuthConnection,
+  SERPER: serperConnection,
 } as const;
 
 export type ConnectionTestable = keyof typeof CONNECTION_CHECKS;

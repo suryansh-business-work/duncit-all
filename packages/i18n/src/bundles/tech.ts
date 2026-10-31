@@ -988,6 +988,16 @@ export const TECH_BUNDLE: NestedCatalogue = {
       stepsTooMany: 'A sub flow can have at most {max} steps.',
       colReview: 'Review',
       colLooksGood: 'Looks good',
+      // How a flow's linked specs (e2eFlow/catalogue/spec-links.ts) did across
+      // the recorded runs. A dash means no spec tests the flow yet.
+      colRuns: 'Runs',
+      colPassed: 'Passed',
+      colFailed: 'Failed',
+      notAutomated: 'No automated test covers this flow yet, so it has no runs to count.',
+      testedBy: 'Tested by {count} spec files',
+      runsCount: 'Runs: {count}',
+      passedCount: 'Passed: {count}',
+      failedCount: 'Failed: {count}',
       reviewNotReviewed: 'Not reviewed',
       reviewNeedsReview: 'Needs review again',
       reviewLooksGood: 'Looks good',

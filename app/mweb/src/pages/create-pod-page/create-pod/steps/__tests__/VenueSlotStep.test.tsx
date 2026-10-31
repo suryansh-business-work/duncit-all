@@ -249,33 +249,26 @@ describe('VenueSlotStep — a free pod on a priced slot', () => {
   });
 });
 
-// What a venue hopes one booking brings is a guide for the host's offer, never a rule.
-describe('VenueSlotStep — what the venue usually expects', () => {
-  const NOTE = 'create-pod-venue-min-business';
-
-  it('shows the picked venue’s amounts, per guest before per hour, with what they are for', async () => {
-    const { getByTestId } = step({ values: { pod_mode: 'PHYSICAL', venue_id: 'venue-2' } });
+// The venue's minimum business and the offer itself live on the next step
+// (VenueOfferStep — VenueOfferAsk.test.tsx); this step stops at the window.
+describe('VenueSlotStep — the offer is the next step', () => {
+  it('does not show the venue’s minimum business, even for a venue that named amounts', async () => {
+    const { container, queryByTestId } = step({ values: { pod_mode: 'PHYSICAL', venue_id: 'venue-2' } });
     await settle();
 
-    const note = getByTestId(NOTE);
-    expect(note).toHaveTextContent('This venue usually expects');
-    expect([...note.querySelectorAll('li')].map((item) => item.textContent)).toEqual(['₹200.00 per guest', '₹400.00 per hour']);
-    expect(note).toHaveTextContent('A guide from the venue — your offer can be different.');
-    expect(note).not.toHaveTextContent('per booking');
+    expect(container.textContent).toContain('Indiranagar Courts');
+    expect(queryByTestId('create-pod-venue-min-business')).toBeNull();
   });
 
-  it('says nothing for a venue that named no amounts', async () => {
-    const { queryByTestId } = step({ values: { pod_mode: 'PHYSICAL', venue_id: 'venue-1' } });
+  it('asks for no offer terms, ask or quote with a venue and space picked', async () => {
+    const { queryByTestId } = step({
+      values: { pod_mode: 'PHYSICAL', venue_id: 'venue-2', venue_space_label: 'Whole venue' },
+    });
     await settle();
 
-    expect(queryByTestId(NOTE)).toBeNull();
-  });
-
-  it('waits for a venue to be picked', async () => {
-    const { queryByTestId } = step({ values: { pod_mode: 'PHYSICAL' } });
-    await settle();
-
-    expect(queryByTestId(NOTE)).toBeNull();
+    expect(queryByTestId('create-pod-offer-ask')).toBeNull();
+    expect(queryByTestId('create-pod-venue-quote')).toBeNull();
+    expect(queryByTestId('create-pod-offer-step')).toBeNull();
   });
 });
 

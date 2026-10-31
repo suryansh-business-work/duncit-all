@@ -19,8 +19,8 @@ interface Props {
  * The business a venue hopes each booking brings, as rows — a basis (per guest,
  * per hour, per booking) and an amount — at least one, each basis once (the
  * rules are `makeBookingOffersSchema`'s). Rows are added up to one per basis and
- * removed down to one. Hosts see these once they pick the venue on Create Pod:
- * a guide for their offer, never a rule. The Partners console and mWeb draw
+ * removed down to one. Hosts see these on Create Pod's offer step, and an offer
+ * below the amount on its basis cannot be sent. The Partners console and mWeb draw
  * these; the native app has its Tamagui twin.
  */
 export default function MinBusinessFields({ control, idPrefix, disabled = false }: Readonly<Props>) {

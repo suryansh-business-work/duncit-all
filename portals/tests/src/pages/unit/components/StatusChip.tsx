@@ -1,4 +1,5 @@
-import { Chip, CircularProgress, Tooltip } from '@mui/material';
+import { Chip, Tooltip } from '@mui/material';
+import { useLiveChip } from '../../../components/live-runs/useLiveChip';
 
 type ChipColor = 'success' | 'error' | 'info' | 'warning' | 'default';
 
@@ -29,18 +30,21 @@ interface Props {
   label: string;
   /** Shown on hover — the reason behind a red or cancelled status. */
   tooltip?: string;
+  /** The unit run this status belongs to, so a live one shows how far along it is. */
+  runId?: string;
 }
 
-/** A status as a chip; a live run spins. */
-export default function StatusChip({ status, label, tooltip }: Readonly<Props>) {
+/** A status as a chip; a live run spins, or fills with its progress when it is a known run. */
+export default function StatusChip({ status, label, tooltip, runId }: Readonly<Props>) {
   const live = LIVE.has(status);
+  const liveChip = useLiveChip('UNIT', live ? (runId ?? null) : null, label);
   const chip = (
     <Chip
       size="small"
       variant={live ? 'outlined' : 'filled'}
       color={STATUS_COLOR[status] ?? 'default'}
-      icon={live ? <CircularProgress size={12} thickness={6} color="inherit" aria-hidden /> : undefined}
-      label={label}
+      icon={live ? liveChip.icon : undefined}
+      label={live ? liveChip.label : label}
     />
   );
   if (!tooltip) return chip;
@@ -54,11 +58,14 @@ export default function StatusChip({ status, label, tooltip }: Readonly<Props>) 
 export function makeStatusCell<T>(
   labels: Readonly<Record<string, string>>,
   statusOf: (row: T) => string,
-  tooltipOf?: (row: T) => string
+  tooltipOf?: (row: T) => string,
+  runIdOf?: (row: T) => string
 ) {
   const renderStatus = (row: T) => {
     const status = statusOf(row);
-    return <StatusChip status={status} label={labels[status] ?? status} tooltip={tooltipOf?.(row)} />;
+    return (
+      <StatusChip status={status} label={labels[status] ?? status} tooltip={tooltipOf?.(row)} runId={runIdOf?.(row)} />
+    );
   };
   return renderStatus;
 }

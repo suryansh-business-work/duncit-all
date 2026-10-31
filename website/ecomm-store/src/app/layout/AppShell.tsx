@@ -1,4 +1,4 @@
-import { Suspense, useRef } from 'react';
+import { Suspense, useRef, useState } from 'react';
 import { Outlet, ScrollRestoration, useLocation } from 'react-router';
 import { Box, Container, Link } from '@mui/material';
 import { Loader, mergeSx, useRouteFocus } from '@duncit/ui';
@@ -10,6 +10,7 @@ import { SignInDialog } from '../../components/auth/SignInDialog';
 import { PreferencesProvider } from '../../components/preferences';
 import { StoreErrorBoundary } from '../../components/StoreErrorBoundary';
 import { visuallyHidden } from '../../lib/a11y';
+import { startsFromServer } from '../../lib/hydration';
 import { useStoreT } from '../../i18n';
 import { useCart } from '../providers/CartProvider';
 import { useWishlist } from '../providers/WishlistProvider';
@@ -61,6 +62,19 @@ export function AppShell() {
   const mainRef = useRef<HTMLElement>(null);
   useRouteFocus(mainRef);
   const isHome = pathname === '/';
+  // A server-rendered page is drawn without a Suspense boundary round it: React
+  // hydrates a boundary's content in a pass after the shell, and by then the
+  // shopper's own theme may have changed it. Later pages load inside the
+  // router's transitions, which keep the current page up meanwhile; a page the
+  // browser draws from scratch still gets the loader.
+  const [withBoundary] = useState(() => !startsFromServer());
+  const page = (
+    <Container maxWidth="lg" sx={{ py: { xs: 1, md: 3 } }}>
+      <StoreErrorBoundary resetKey={pathname}>
+        <Outlet />
+      </StoreErrorBoundary>
+    </Container>
+  );
   return (
     <PreferencesProvider>
       <Box sx={mergeSx(ROOT_SX, backgroundSx)}>
@@ -70,13 +84,7 @@ export function AppShell() {
         <Header />
         {isHome ? null : <MobileTopBar />}
         <Box component="main" id={MAIN_ID} ref={mainRef} tabIndex={-1} sx={{ outline: 'none', flexGrow: 1, minHeight: '60vh' }}>
-          <Suspense fallback={<Loader label={t('ecommStore.common.loading')} />}>
-            <Container maxWidth="lg" sx={{ py: { xs: 1, md: 3 } }}>
-              <StoreErrorBoundary resetKey={pathname}>
-                <Outlet />
-              </StoreErrorBoundary>
-            </Container>
-          </Suspense>
+          {withBoundary ? <Suspense fallback={<Loader label={t('ecommStore.common.loading')} />}>{page}</Suspense> : page}
         </Box>
         <Footer />
         <BottomNav />

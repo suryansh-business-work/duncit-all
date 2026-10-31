@@ -6,7 +6,9 @@ import { PORT } from './config';
 import { escapeXml, robotsTxt, sitemapXml } from './crawl';
 import { distFile, indexHtml, sendBody, sendServiceWorker, sendStatic } from './files';
 import { manifestJson } from './manifest';
+import { isServerRenderedPath } from '../src/app/route-paths';
 import { headFor, type PageHead } from './pages';
+import { injectApp, renderStorePage } from './ssr';
 import { jsonLdTag } from './structured';
 
 /**
@@ -39,18 +41,29 @@ const ROOT_OPEN = '<div id="root">';
  * the same title and text, drawn properly.
  */
 function withRootText(html: string, head: PageHead): string {
-  const text = `<main><h1>${escapeXml(head.meta.title)}</h1><p>${escapeXml(head.meta.description)}</p></main>`;
-  return html.replace(ROOT_OPEN, `${ROOT_OPEN}\n      ${text}`);
+  const body = head.summary || head.meta.description;
+  const text = `<main><h1>${escapeXml(head.meta.title)}</h1><p>${escapeXml(body)}</p></main>`;
+  // A function, so a `$` in the page's own words is never read as a replacement pattern.
+  return html.replace(ROOT_OPEN, () => `${ROOT_OPEN}\n      ${text}`);
 }
 
-/** The SPA shell with this path's head written in; the plain shell (200) if the API cannot say. */
-async function renderPage(path: string): Promise<{ html: string; status: number }> {
+/**
+ * The page with this path's head written in. A public page is rendered on the
+ * server in full; the others, a gone page, or a render that fails or is too
+ * slow get the shell with the heading and summary under the boot loader.
+ * The plain shell (200) if the API cannot say.
+ */
+async function renderPage(path: string, url: string): Promise<{ html: string; status: number }> {
   const html = indexHtml();
   try {
     const head = await headFor(path);
     if (!head) return { html, status: 200 };
     const tags = [buildSiteMetaTags(head.meta), ...head.structured.map(jsonLdTag), faviconTag(head.favicon)].filter(Boolean).join('\n    ');
-    return { html: withRootText(injectSiteMeta(html, tags), head), status: head.notFound ? 404 : 200 };
+    const page = injectSiteMeta(html, tags);
+    const status = head.notFound ? 404 : 200;
+    const rendered = !head.notFound && isServerRenderedPath(path) ? await renderStorePage(url) : null;
+    if (rendered) return { html: injectApp(page, rendered), status: Math.max(status, rendered.status) };
+    return { html: withRootText(page, head), status };
   } catch {
     return { html, status: 200 };
   }
@@ -80,7 +93,7 @@ async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> 
     res.end();
     return;
   }
-  const page = await renderPage(path);
+  const page = await renderPage(path, req.url ?? path);
   sendBody(req, res, page.html, HTML_TYPE, NO_CACHE, {}, page.status);
 }
 

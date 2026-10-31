@@ -1,9 +1,19 @@
 import { z } from 'zod';
 import { addFreeJustificationIssues, makeVenueOfferAskSchema } from '@duncit/forms/schemas';
-import { isFreeVenueOfferModel, isHostOfferModel, isMeetingPlatform, offerRateOf } from '@duncit/utils';
+import {
+  isFreeVenueOfferModel,
+  isHostOfferModel,
+  isMeetingPlatform,
+  offerBelowFloor,
+  offerRateOf,
+  type VenueOfferFloor,
+} from '@duncit/utils';
 import type { Translate } from '../../../i18n/fallback';
 import { hasImageLine } from './create-pod.payload';
 import { POD_TYPE_VALUES, needsFreeJustification, type CreatePodFormValues } from './create-pod.types';
+
+/** The picked venue's floor on the offer's basis, or null when there is none. */
+export type OfferFloorOf = (values: CreatePodFormValues) => VenueOfferFloor | null;
 
 /** What the host asks of the venue beside the price — the shared rules
  * (`makeVenueOfferAskSchema`: at least one point, each and the note within the
@@ -20,13 +30,21 @@ function refineOfferAsk(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Tr
 }
 
 /** The host's offer to the venue: how they pay it, how much (nothing for a free
- * venue, whose window and ask are still required), and what they ask of it. */
-function refineVenueOffer(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Translate) {
+ * venue, whose window and ask are still required; never below the venue's own
+ * amount on that basis), and what they ask of it. Native twin. */
+function refineVenueOffer(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Translate, offerFloor: OfferFloorOf) {
   if (!isHostOfferModel(values.venue_offer_model)) {
     ctx.addIssue({ code: 'custom', path: ['venue_offer_model'], message: t('mweb.createPod.validation.offerModelRequired') });
   }
+  const floor = offerFloor(values);
   if (!isFreeVenueOfferModel(values.venue_offer_model) && offerRateOf(values.venue_offer_rate) <= 0) {
     ctx.addIssue({ code: 'custom', path: ['venue_offer_rate'], message: t('mweb.createPod.validation.offerRateRequired') });
+  } else if (floor && offerBelowFloor(floor, values.venue_offer_rate)) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['venue_offer_rate'],
+      message: t('availability.offers.minBusiness.offerBelow', { vars: { min: floor.text } }),
+    });
   }
   refineOfferAsk(values, ctx, t);
 }
@@ -34,7 +52,7 @@ function refineVenueOffer(values: CreatePodFormValues, ctx: z.RefinementCtx, t: 
 /** A physical pod's time at the venue: a Pod Request books the slot it holds;
  * every other pod sends the venue an offer for a window (a slot id an older
  * draft still carries books as before). Native twin. */
-function refineVenueTime(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Translate) {
+function refineVenueTime(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Translate, offerFloor: OfferFloorOf) {
   if (values.venue_slot_id) return;
   if (values.partner_request_id) {
     ctx.addIssue({ code: 'custom', path: ['venue_slot_id'], message: t('mweb.createPod.validation.slotRequired') });
@@ -43,13 +61,18 @@ function refineVenueTime(values: CreatePodFormValues, ctx: z.RefinementCtx, t: T
   if (!values.pod_end_date_time) {
     ctx.addIssue({ code: 'custom', path: ['pod_date_time'], message: t('mweb.createPod.validation.bookingRequired') });
   }
-  refineVenueOffer(values, ctx, t);
+  refineVenueOffer(values, ctx, t, offerFloor);
 }
 
 /** Physical pods need a venue, a space/capacity and a booked time; virtual pods
  * need a valid meeting link. Extracted from the schema's superRefine to keep it
  * under the cognitive-complexity limit. */
-export function refineVenueOrMeeting(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Translate) {
+export function refineVenueOrMeeting(
+  values: CreatePodFormValues,
+  ctx: z.RefinementCtx,
+  t: Translate,
+  offerFloor: OfferFloorOf = () => null
+) {
   if (values.pod_mode === 'PHYSICAL') {
     if (!values.venue_id) {
       ctx.addIssue({ code: 'custom', path: ['venue_id'], message: t('mweb.createPod.validation.venueRequired') });
@@ -57,7 +80,7 @@ export function refineVenueOrMeeting(values: CreatePodFormValues, ctx: z.Refinem
       // A space (capacity) is chosen after the venue and gates the booking pickers.
       ctx.addIssue({ code: 'custom', path: ['venue_space_label'], message: t('mweb.createPod.validation.spaceRequired') });
     }
-    refineVenueTime(values, ctx, t);
+    refineVenueTime(values, ctx, t, offerFloor);
   } else if (values.pod_mode === 'VIRTUAL') {
     // Picked from the shared list, not typed: the pod page decodes codes, so
     // free text rendered back as "Google meet". Native twin.

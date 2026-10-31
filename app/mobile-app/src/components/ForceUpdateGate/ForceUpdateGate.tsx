@@ -8,7 +8,7 @@ import { PrimaryButton } from '@/components/PrimaryButton';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 import { useAppVersionStore } from '@/stores/app-version.store';
 import { useFeatureFlagsStore } from '@/stores/feature-flags.store';
-import { useThemeStore } from '@/stores/theme.store';
+import { useEffectiveScheme } from '@/hooks/useEffectiveScheme';
 import { appVersion } from '@/utils/app-version';
 import { isOutdated } from '@/utils/semver';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -47,10 +47,10 @@ const FORCE_APP_UPDATE_FLAG = 'force_app_update';
  */
 export function ForceUpdateGate() {
   const { t } = useTranslation();
-  // Colours are selected from the SAME scheme source AppBackground uses
-  // (`useThemeStore`), not Tamagui `$color` tokens — the two can desync for a
+  // Colours are selected from the app's scheme (the viewer's, or the one a live
+  // festive look pins), not Tamagui `$color` tokens — the two can desync for a
   // root-level overlay, which rendered the text invisible on the light backdrop.
-  const scheme = useThemeStore((s) => s.scheme);
+  const scheme = useEffectiveScheme();
   const tokens = scheme === 'dark' ? dark : light;
   const info = useAppVersionStore((s) => s.data)?.appVersionInfo;
   // The kill-switch. `true` is the fallback so a database that predates the

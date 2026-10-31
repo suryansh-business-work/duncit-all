@@ -11,7 +11,8 @@ import { storeOrderService } from './store.order.service';
 import { storeReturnService } from './store.return.service';
 import { storeDashboardService } from './store.dashboard.service';
 import { storeAutoshipService } from './store.autoship.service';
-import { requireStoreAdmin, iso } from './store.shared';
+import { requireRole } from '@middleware/rbac';
+import { requireStoreAdmin, iso, STORE_ADMIN_ROLES } from './store.shared';
 
 /**
  * The ecomm portal's resolvers. Every field is gated here, before it reaches a
@@ -27,6 +28,19 @@ const admin =
   <A extends Args>(run: (args: A, ctx: Ctx) => unknown) =>
   (_p: unknown, args: A, ctx: Ctx) => {
     requireStoreAdmin(ctx);
+    return run(args, ctx);
+  };
+
+/**
+ * The store's festive windows moved to Marketing → Occasions: marketing runs
+ * them with the apps' festive looks, and the store's operators keep access.
+ */
+const STORE_OCCASION_ROLES = [...STORE_ADMIN_ROLES, 'CITY_ADMIN', 'MARKETING_MANAGER'];
+
+const occasions =
+  <A extends Args>(run: (args: A, ctx: Ctx) => unknown) =>
+  (_p: unknown, args: A, ctx: Ctx) => {
+    requireRole(ctx, STORE_OCCASION_ROLES);
     return run(args, ctx);
   };
 
@@ -46,6 +60,7 @@ const settingsOut = (s: IStoreSettings | null) => {
 
 export const storeAdminResolvers = {
   Query: {
+    storeOccasions: occasions(async () => (await storeAdminMerchService.occasions()).map(occasionOut)),
     storeAdminSettings: admin(async () => settingsOut(await storeAdminMerchService.settings())),
     storeAdminPetTypes: admin(() => storeAdminMerchService.petTypes()),
     storeAdminCategories: admin(() => storeAdminMerchService.categories()),
@@ -81,6 +96,7 @@ export const storeAdminResolvers = {
   },
   Mutation: {
     storeSaveSettings: admin(async (a, ctx) => settingsOut(await storeAdminMerchService.saveSettings(ctx, a.input))),
+    storeSaveOccasions: occasions(async (a, ctx) => (await storeAdminMerchService.saveOccasions(ctx, a.input)).map(occasionOut)),
     storeSavePetType: admin((a) => storeAdminMerchService.savePetType(a.id, a.input)),
     storeDeletePetType: admin((a) => storeAdminMerchService.deletePetType(a.id)),
     storeReorderPetTypes: admin((a) => storeAdminMerchService.reorderPetTypes(a.ids)),

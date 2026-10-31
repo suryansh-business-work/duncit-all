@@ -5,6 +5,7 @@ import { SUPPORT_PROMPTS } from './support.prompts';
 import { CRM_PROMPTS } from './crm.prompts';
 import { PLATFORM_PROMPTS } from './platform.prompts';
 import { MARKETING_PROMPTS } from './marketing.prompts';
+import { IG_LEAD_PROMPTS } from './igLeads.prompts';
 import { REELS_PROMPTS } from './reels.prompts';
 
 /**
@@ -28,6 +29,7 @@ export const CODE_PROMPTS: readonly InAppPromptDef[] = [
   ...CRM_PROMPTS,
   ...PLATFORM_PROMPTS,
   ...MARKETING_PROMPTS,
+  ...IG_LEAD_PROMPTS,
   ...REELS_PROMPTS,
 ];
 

@@ -4,7 +4,7 @@ import { type MockedResponse } from '@apollo/client/testing';
 import { MockedProvider } from '@apollo/client/testing/react';
 import { MemoryRouter } from 'react-router';
 import BrandingPage from '../index';
-import { BRANDING, OCCASIONAL_ICONS, UPDATE_BRANDING } from '../queries';
+import { BRANDING, UPDATE_BRANDING } from '../queries';
 import { emptyThemeTokens } from '../theme-tokens/tokenRows';
 
 /**
@@ -78,11 +78,6 @@ const brandingQuery: MockedResponse = {
   result: { data: { branding } },
 };
 
-const iconsQuery: MockedResponse = {
-  request: { query: OCCASIONAL_ICONS },
-  maxUsageCount: 5,
-  result: { data: { branding: { __typename: 'Branding', occasional_icons: [] } } },
-};
 
 // FontsSection's tab strip keeps its selection in the URL via useTabParam
 // (@duncit/tabs), which needs a Router in scope even though this page never
@@ -106,7 +101,7 @@ const captureSave = (sent: { variables?: Record<string, unknown> }): MockedRespo
 
 describe('BrandingPage — query states', () => {
   it('shows a spinner and no form while the first load is in flight', () => {
-    renderPage([brandingQuery, iconsQuery]);
+    renderPage([brandingQuery]);
     expect(screen.getByTestId('loader')).toBeInTheDocument();
     expect(screen.queryByLabelText('App name')).not.toBeInTheDocument();
   });
@@ -114,13 +109,12 @@ describe('BrandingPage — query states', () => {
   it('surfaces a failed branding query', async () => {
     renderPage([
       { request: { query: BRANDING }, error: new Error('Branding service unavailable') },
-      iconsQuery,
     ]);
     expect(await screen.findByText('Branding service unavailable')).toBeInTheDocument();
   });
 
   it('fills the form from the server and falls blank fields back to defaults', async () => {
-    renderPage([brandingQuery, iconsQuery]);
+    renderPage([brandingQuery]);
     expect(await screen.findByLabelText('App name')).toHaveValue('Duncit');
     expect(screen.getByLabelText('Home header tagline')).toHaveValue('Your city, tonight');
     expect(screen.getByLabelText('Support email')).toHaveValue('help@duncit.com');
@@ -128,8 +122,9 @@ describe('BrandingPage — query states', () => {
     expect(screen.getByLabelText('Primary color')).toHaveValue('#1976d2');
   });
 
-  it('renders an accordion for identity, every platform, the websites, occasions and fonts', async () => {
-    renderPage([brandingQuery, iconsQuery]);
+  // Festive icons moved to Marketing → Occasions, so Branding no longer has a section for them.
+  it('renders an accordion for identity, every platform, the websites and fonts', async () => {
+    renderPage([brandingQuery]);
     await screen.findByLabelText('App name');
     const titles = [
       'Identity',
@@ -137,7 +132,6 @@ describe('BrandingPage — query states', () => {
       'Mobile App (Android / iOS / native web)',
       'Portals (admin / crm / tech / …)',
       'Website Logos (marketing sites)',
-      'Occasional Icons',
       'Fonts',
     ];
     titles.forEach((title) => expect(screen.getByText(title)).toBeInTheDocument());
@@ -147,7 +141,7 @@ describe('BrandingPage — query states', () => {
 describe('BrandingPage — saving', () => {
   it('sends every editable field and drops the read-only ones', async () => {
     const sent: { variables?: Record<string, unknown> } = {};
-    renderPage([brandingQuery, iconsQuery, captureSave(sent)]);
+    renderPage([brandingQuery, captureSave(sent)]);
     await screen.findByLabelText('App name');
 
     fireEvent.click(screen.getByRole('button', { name: 'Save Branding' }));
@@ -168,7 +162,7 @@ describe('BrandingPage — saving', () => {
 
   it('sends the edited values rather than the ones the query returned', async () => {
     const sent: { variables?: Record<string, unknown> } = {};
-    renderPage([brandingQuery, iconsQuery, captureSave(sent)]);
+    renderPage([brandingQuery, captureSave(sent)]);
     await screen.findByLabelText('App name');
 
     fireEvent.change(screen.getByLabelText('App name'), { target: { value: 'Duncit Live' } });
@@ -186,7 +180,7 @@ describe('BrandingPage — saving', () => {
 
   it('dismisses the saved toast on Escape', async () => {
     const sent: { variables?: Record<string, unknown> } = {};
-    renderPage([brandingQuery, iconsQuery, captureSave(sent)]);
+    renderPage([brandingQuery, captureSave(sent)]);
     await screen.findByLabelText('App name');
 
     fireEvent.click(screen.getByRole('button', { name: 'Save Branding' }));
@@ -200,7 +194,6 @@ describe('BrandingPage — saving', () => {
   it('shows the mutation error and leaves the button usable', async () => {
     renderPage([
       brandingQuery,
-      iconsQuery,
       {
         request: { query: UPDATE_BRANDING, variables: () => true },
         error: new Error('primary_color must be a hex value'),

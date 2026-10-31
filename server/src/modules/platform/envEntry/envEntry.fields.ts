@@ -81,7 +81,7 @@ export const CATEGORY_FIELDS: Record<EnvCategory, EnvFieldDef[]> = {
     { name: 'api_key', label: 'API Key', secret: true, hint: 'sk-proj-... or sk-...' },
   ],
   GEMINI: [
-    { name: 'model', label: 'Model (default gemini-1.5-flash)', hint: 'e.g. gemini-1.5-flash' },
+    { name: 'model', label: 'Model (default gemini-1.5-flash)', hint: 'e.g. gemini-2.5-flash — any AI Library prompt whose model starts with gemini- runs on this key' },
     { name: 'api_key', label: 'API Key', secret: true, hint: 'AIzaSy... (39 chars)' },
   ],
   SERVAM: [
@@ -411,6 +411,9 @@ export const CATEGORY_FIELDS: Record<EnvCategory, EnvFieldDef[]> = {
     },
     { name: 'region', label: 'Region', hint: 'noneu (India and the rest of the world) or eu — blank means noneu' },
   ],
+  // Google results through serper.dev, for Marketing → Instagram Leads'
+  // profile discovery. Its free credit is a one-off allowance, not monthly.
+  SERPER: [{ name: 'api_key', label: 'API Key', secret: true, hint: 'serper.dev → API Key (40 hex characters)' }],
 };
 
 /** How each category is named in the Tech portal and on the Analytics console. */
@@ -440,6 +443,7 @@ export const CATEGORY_LABELS: Record<EnvCategory, string> = {
   CLOUDFLARE: 'Cloudflare (DNS)',
   SOCIAL_APPS: 'Social apps',
   TRUECALLER: 'Truecaller (one-tap phone sign-in)',
+  SERPER: 'Serper (Google search)',
 };
 
 /** One line under each category's title in the Tech portal: what the keys power. */
@@ -469,6 +473,7 @@ export const CATEGORY_DESCRIPTIONS: Record<EnvCategory, string> = {
   CLOUDFLARE: 'Domain and DNS records at Cloudflare',
   SOCIAL_APPS: 'LinkedIn, Meta, X and YouTube publishing',
   TRUECALLER: 'One-tap phone sign-in',
+  SERPER: 'Finds Instagram profiles for Marketing → Instagram Leads',
 };
 
 /**
@@ -503,7 +508,7 @@ export const CATEGORY_GROUPS: readonly {
     key: 'MEDIA',
     label: 'Media, maps & content',
     description: 'Uploads, stock media, maps and social publishing',
-    categories: ['IMAGEKIT', 'PEXELS', 'GOOGLE_MAPS', 'GOOGLE_DRIVE', 'SOCIAL_APPS'],
+    categories: ['IMAGEKIT', 'PEXELS', 'GOOGLE_MAPS', 'GOOGLE_DRIVE', 'SOCIAL_APPS', 'SERPER'],
   },
   {
     key: 'COMMERCE',
@@ -574,6 +579,7 @@ export const CATEGORY_DOCS: Record<EnvCategory, string> = {
   CLOUDFLARE: 'https://dash.cloudflare.com/profile/api-tokens',
   SOCIAL_APPS: 'https://developers.facebook.com/apps/',
   TRUECALLER: 'https://sdk-console-noneu.truecaller.com/',
+  SERPER: 'https://serper.dev/api-key',
 };
 
 /**
@@ -624,6 +630,7 @@ export const ENV_KEY_MAP: Record<string, { category: EnvCategory; field: string 
   OPENAI_API_KEY: { category: 'OPENAI', field: 'api_key' },
   OPENAI_BASE_URL: { category: 'OPENAI', field: 'base_url' },
   OPENAI_MODEL: { category: 'OPENAI', field: 'model' },
+  GEMINI_API_KEY: { category: 'GEMINI', field: 'api_key' },
   SERVAM_AI_API_KEY: { category: 'SERVAM', field: 'api_key' },
   SERVAM_AI_BASE_URL: { category: 'SERVAM', field: 'base_url' },
   SERVAM_AI_TTS_MODEL: { category: 'SERVAM', field: 'tts_model' },
@@ -697,6 +704,7 @@ export const ENV_KEY_MAP: Record<string, { category: EnvCategory; field: string 
   TRUECALLER_IOS_APP_LINK: { category: 'TRUECALLER', field: 'ios_app_link' },
   TRUECALLER_PARTNER_NAME: { category: 'TRUECALLER', field: 'partner_name' },
   TRUECALLER_REGION: { category: 'TRUECALLER', field: 'region' },
+  SERPER_API_KEY: { category: 'SERPER', field: 'api_key' },
   SOCIAL_X_CLIENT_ID: { category: 'SOCIAL_APPS', field: 'x_client_id' },
   SOCIAL_X_CLIENT_SECRET: { category: 'SOCIAL_APPS', field: 'x_client_secret' },
   SOCIAL_YOUTUBE_CLIENT_ID: { category: 'SOCIAL_APPS', field: 'youtube_client_id' },

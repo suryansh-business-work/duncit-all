@@ -15,6 +15,7 @@ import BugReportIcon from '@mui/icons-material/BugReport';
 import CalculateIcon from '@mui/icons-material/Calculate';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import CampaignIcon from '@mui/icons-material/Campaign';
+import CelebrationRoundedIcon from '@mui/icons-material/CelebrationRounded';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import CodeIcon from '@mui/icons-material/Code';
 import CompareArrowsIcon from '@mui/icons-material/CompareArrows';
@@ -95,6 +96,7 @@ const ICONS: Record<string, ComponentType<SvgIconProps>> = {
   calendar: CalendarMonthIcon,
   callback: PhoneCallbackIcon,
   campaign: CampaignIcon,
+  celebration: CelebrationRoundedIcon,
   challenge: EmojiEventsIcon,
   chat: ForumIcon,
   code: CodeIcon,

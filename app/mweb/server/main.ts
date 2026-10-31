@@ -15,7 +15,8 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { gzipSync } from 'node:zlib';
 import { resolvePageMeta, type PageMeta } from './page-meta';
-import { buildMetaBlock, injectMetaBlock } from './render-html';
+import { buildMetaBlock, injectMetaBlock, injectRootText } from './render-html';
+import { podSitemapXml, robotsTxt } from './pod-page';
 import { acceptsGzip, serveStatic, setSecurityHeaders } from './static-files';
 import { getTranslator } from './i18n';
 
@@ -58,6 +59,9 @@ async function pageMeta(path: string): Promise<PageMeta> {
       // Nothing was resolved, so the requested path is all there is to
       // point at — the renderer falls back to it.
       canonicalPath: null,
+      indexable: false,
+      notFound: false,
+      pod: null,
     };
   }
 }
@@ -65,18 +69,43 @@ async function pageMeta(path: string): Promise<PageMeta> {
 async function servePage(req: IncomingMessage, res: ServerResponse, path: string): Promise<void> {
   const meta = await pageMeta(path);
   const block = buildMetaBlock(meta, requestOrigin(req), path);
-  const html = injectMetaBlock(INDEX_HTML, block);
+  const html = injectRootText(injectMetaBlock(INDEX_HTML, block), meta);
   const gzip = acceptsGzip(req);
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.setHeader('Cache-Control', 'no-cache');
   res.setHeader('Vary', 'Accept-Encoding');
   if (gzip) res.setHeader('Content-Encoding', 'gzip');
-  res.writeHead(200);
+  // A pod that is not public answers 404 — the SPA still loads and says so.
+  res.writeHead(meta.notFound ? 404 : 200);
   if (req.method === 'HEAD') {
     res.end();
     return;
   }
   res.end(gzip ? gzipSync(Buffer.from(html)) : html);
+}
+
+function sendText(req: IncomingMessage, res: ServerResponse, body: string, type: string): void {
+  res.writeHead(200, { 'Content-Type': type, 'Cache-Control': 'public, max-age=3600' });
+  res.end(req.method === 'HEAD' ? undefined : body);
+}
+
+/** robots.txt and the pod sitemap; false when the path is neither. */
+async function serveCrawlerFile(req: IncomingMessage, res: ServerResponse, path: string): Promise<boolean> {
+  const origin = requestOrigin(req);
+  if (path === '/robots.txt') {
+    sendText(req, res, robotsTxt(origin), 'text/plain; charset=utf-8');
+    return true;
+  }
+  if (path !== '/sitemap.xml') return false;
+  const xml = await podSitemapXml(origin);
+  if (xml === null) {
+    // The API is unreachable: say so, rather than hand a crawler an empty list.
+    res.writeHead(503, { 'Retry-After': '300' });
+    res.end();
+    return true;
+  }
+  sendText(req, res, xml, 'application/xml; charset=utf-8');
+  return true;
 }
 
 async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> {
@@ -86,6 +115,7 @@ async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> 
     return;
   }
   const path = safePathname(req.url ?? '/');
+  if (await serveCrawlerFile(req, res, path)) return;
   if (serveStatic(req, res, DIST_DIR, path)) return;
   await servePage(req, res, path);
 }

@@ -54,6 +54,8 @@ COPY packages/user-context/package.json ./packages/user-context/
 COPY packages/logs/package.json ./packages/logs/
 COPY packages/shell/package.json ./packages/shell/
 COPY packages/fallback-icons/package.json ./packages/fallback-icons/
+COPY packages/regex/package.json ./packages/regex/
+COPY packages/auth-tokens/package.json ./packages/auth-tokens/
 COPY packages/geo/package.json ./packages/geo/
 COPY packages/breadcrumb/package.json ./packages/breadcrumb/
 COPY packages/theme/package.json ./packages/theme/
@@ -88,6 +90,9 @@ COPY portals/marketing ./portals/marketing
 # it from that console's source), so that src folder is part of this build. Its
 # package.json is copied above, so its dependencies are installed.
 COPY portals/analytics/src ./portals/analytics/src
+# Instagram Leads › Settings mounts the Tech console's Environment Variables
+# editor for the Serper key, from that console's source the same way.
+COPY portals/tech/src ./portals/tech/src
 RUN pnpm --filter marketing build
 
 # --- runner ---

@@ -850,21 +850,7 @@ changeRequests: {
       fontsHint: 'Google Font per platform — Mobile App, mWeb and the Portals pick it up live.',
       mobileApp: 'Mobile App',
       portals: 'Portals',
-      occasional: 'Occasional Icons',
-      occasionalHint: 'Festive icon windows that swap the apps’ icons by date — has its own Save.',
-      occasionalSaved: 'Occasional icons saved',
-      occasionalEmpty: 'No occasions yet — add one to schedule a festive icon.',
-      removeOccasion: 'Remove occasion',
-      occasionLabel: 'Label',
-      startsAt: 'Starts at',
-      endsAt: 'Ends at',
-      priority: 'Priority',
-      priorityHint: 'Higher wins on overlap',
-      occasionIcon: 'Icon (used by mWeb, portals and any app without bundled art)',
-      fallbackIcon: 'Fallback icon',
-      fallbackHint: 'Bundled artwork each app renders if the icon above is blank or fails to load.',
       iconHint: 'Square transparent PNG/SVG, ~96×96px — shown full-bleed, no background.',
-      iconHintShort: 'Square transparent PNG/SVG, ~96×96px.',
       primaryColorHint:
         'Button and call-to-action colour of mWeb and the app. Fills the Primary row of both Theme tokens tables — applied only while Theme tokens is set to Server.',
       themeTokens: 'Theme tokens (mWeb + app)',
@@ -1038,10 +1024,6 @@ changeRequests: {
       statusFailed: 'Failed',
     },
 
-    policies: {
-      slug: 'Slug',
-    },
-
     settings: {
       title: 'Settings',
       timeTitle: 'Time zone &amp; source',
@@ -1074,7 +1056,6 @@ changeRequests: {
         'Typed as {format}. Every date box — signup, profile, create-a-pod — takes the month in digits and no weekday, so the pattern above is what a date is SHOWN as, not what anyone has to spell.',
       minAge: 'Minimum age (years)',
       minAgeTitle: 'Minimum age to use the app',
-      adminsOnly: 'Shown to admins only.',
     },
 
     /*

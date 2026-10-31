@@ -1,4 +1,5 @@
 import type { PageMeta } from './page-meta';
+import { podEventLd, podRootHtml } from './pod-page';
 
 const META_START = '<!-- meta:start -->';
 const META_END = '<!-- meta:end -->';
@@ -63,7 +64,22 @@ export function buildMetaBlock(meta: PageMeta, origin: string, path: string): st
       `<meta name="twitter:image" content="${image}" />`
     );
   }
+  // Only a pod's page is for search; the rest of the app is reached by signing in.
+  if (!meta.indexable) tags.push('<meta name="robots" content="noindex" />');
+  if (meta.pod) {
+    const json = JSON.stringify(podEventLd(meta.pod, origin)).replaceAll('<', String.raw`<`);
+    tags.push(`<script type="application/ld+json">${json}</script>`);
+  }
   return tags.join('\n    ');
+}
+
+const ROOT_OPEN = '<div id="root">';
+
+/** A pod page's own text inside #root, under the boot loader; React replaces it on mount. */
+export function injectRootText(html: string, meta: PageMeta): string {
+  const pod = meta.pod;
+  // A function, so a `$` in the pod's own words is never read as a replacement pattern.
+  return pod ? html.replace(ROOT_OPEN, () => `${ROOT_OPEN}\n      ${podRootHtml(pod)}`) : html;
 }
 
 /**

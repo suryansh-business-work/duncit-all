@@ -117,7 +117,9 @@ describe('buildModerationInput', () => {
 
 describe('stepForField', () => {
   it('maps a known field to its step and an unknown field to 0', () => {
-    expect(stepForField('pod_type')).toBe(3);
+    // Step 4 (index 3) is Offer for Venue, so pricing is the fifth step.
+    expect(stepForField('pod_type')).toBe(4);
+    expect(stepForField('venue_offer_rate')).toBe(3);
     expect(stepForField('venue_id')).toBe(2);
     expect(stepForField('__nope__' as never)).toBe(0);
   });

@@ -896,6 +896,8 @@ export const storeAdminTypeDefs = /* GraphQL */ `
   }
 
   extend type Query {
+    "The ecomm store's festive windows, managed in Marketing → Occasions (store operators and marketing)."
+    storeOccasions: [StoreOccasion!]!
     storeAdminSettings: StoreSettings!
     storeAdminPetTypes: [StoreAdminPetType!]!
     storeAdminCategories: [StoreAdminCategory!]!
@@ -1004,6 +1006,8 @@ export const storeAdminTypeDefs = /* GraphQL */ `
     "Apply a packaging CSV, matched by product or variant SKU."
     storeImportPackaging(rows: [StorePackagingImportRow!]!): StorePackagingImportResult!
     storeSaveSettings(input: StoreSettingsInput!): StoreSettings!
+    "Replace the ecomm store's festive windows (Marketing → Occasions → Ecomm store). Up to 24; each needs a name and an end after its start."
+    storeSaveOccasions(input: [StoreOccasionInput!]!): [StoreOccasion!]!
     storeSavePetType(id: ID, input: StorePetTypeInput!): StoreAdminPetType!
     storeDeletePetType(id: ID!): Boolean!
     storeReorderPetTypes(ids: [ID!]!): Boolean!

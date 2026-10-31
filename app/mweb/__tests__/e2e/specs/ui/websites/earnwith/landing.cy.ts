@@ -16,8 +16,9 @@ import {
 
 /**
  * earnwith.duncit.com landing (website/earnwith-website): hero CTAs into mWeb,
- * the header links to duncit.com and mWeb sign-in / sign-up, and the four earn
- * paths handing off to the mWeb partner surveys (config/site-config.ts).
+ * the header links to duncit.com and mWeb sign-in / sign-up, and the five earn
+ * paths handing off to their mWeb journeys (config/site-config.ts `paths`,
+ * components/EarnPaths.astro).
  */
 describe('UI Earn With website · Landing', () => {
   let t: Translator['t'];
@@ -46,7 +47,8 @@ describe('UI Earn With website · Landing', () => {
 
   it('EARN-02 the hero primary CTA opens mWeb /earn in a new tab; the secondary scrolls to the paths', () => {
     visitSite('earnwith');
-    cy.get('h1').should('readText', t('website.earn.hero.heading'));
+    // Hero.astro renders the h1 as a lead and an accented half, one sentence.
+    cy.get('h1').should('readText', `${t('website.earn.hero.headingLead')} ${t('website.earn.hero.headingAccent')}`);
     cy.contains('main section a', t('website.earn.hero.primaryCta')).then(($a) => expectNewTab($a, linkUrl('mweb', '/earn')));
     cy.contains('main section a', t('website.earn.hero.secondaryCta')).should('have.attr', 'href', '#paths').click();
     cy.get('#paths').should(expectInViewport);
@@ -60,26 +62,32 @@ describe('UI Earn With website · Landing', () => {
       { label: t('website.earn.nav.resources'), href: linkUrl('mainSite', '/safety/resources') },
       { label: t('website.earn.nav.blog'), href: linkUrl('mainSite', '/blog') },
     ];
-    for (const link of outward) cy.contains('header a.nav-link', link.label).then(($a) => expectNewTab($a, link.href));
-    cy.contains('header a.nav-link', t('website.earn.nav.howItWorks')).should('have.attr', 'href', '#how').and('not.have.attr', 'target');
+    for (const link of outward) cy.contains('header nav a', link.label).then(($a) => expectNewTab($a, link.href));
+    cy.contains('header nav a', t('website.earn.nav.howItWorks')).should('have.attr', 'href', '#how').and('not.have.attr', 'target');
     cy.contains('header a', t('website.earn.nav.login')).then(($a) => expectNewTab($a, linkUrl('mweb', '/login')));
     cy.contains('header a', t('website.earn.nav.signup')).then(($a) => expectNewTab($a, linkUrl('mweb', '/register')));
   });
 
-  it('EARN-04 the four earn paths each hand off to their mWeb survey', () => {
+  it('EARN-04 the five earn paths each hand off to their mWeb journey', () => {
+    // Four survey gates, and the gig path's self-serve freelancer profile.
     const paths = [
-      { title: t('website.earn.paths.venueTitle'), cta: t('website.earn.paths.venueCta'), href: linkUrl('mweb', '/survey/venue') },
-      { title: t('website.earn.paths.hostTitle'), cta: t('website.earn.paths.hostCta'), href: linkUrl('mweb', '/survey/host') },
-      { title: t('website.earn.paths.clubTitle'), cta: t('website.earn.paths.clubCta'), href: linkUrl('mweb', '/survey/club_admin') },
-      { title: t('website.earn.paths.brandTitle'), cta: t('website.earn.paths.brandCta'), href: linkUrl('mweb', '/survey/ecomm') },
+      { key: 'venue', href: linkUrl('mweb', '/survey/venue') },
+      { key: 'host', href: linkUrl('mweb', '/survey/host') },
+      { key: 'club', href: linkUrl('mweb', '/survey/club_admin') },
+      { key: 'brand', href: linkUrl('mweb', '/survey/ecomm') },
+      { key: 'gig', href: linkUrl('mweb', '/earn/freelancer') },
     ];
+    const slides = '#paths [data-paths-track] > div';
     visitSite('earnwith');
-    cy.get('#paths article').should('have.length', paths.length);
+    cy.get(slides).should('have.length', paths.length);
     paths.forEach((path, index) => {
-      cy.get('#paths article').eq(index).within(() => {
-        cy.get('h3').should('readText', path.title);
+      // EarnPaths.astro: each card is one link, carrying its title and its CTA.
+      cy.get(slides).eq(index).within(() => {
+        cy.get('a')
+          .should('contain.text', t(`website.earn.paths.${path.key}Title`))
+          .and('contain.text', t(`website.earn.paths.${path.key}Cta`))
+          .then(($a) => expectNewTab($a, path.href));
         cy.get('img').should('have.attr', 'alt').and('not.be.empty');
-        cy.contains('a', path.cta).then(($a) => expectNewTab($a, path.href));
       });
     });
   });
@@ -87,6 +95,8 @@ describe('UI Earn With website · Landing', () => {
   it('EARN-05 with no screenshots configured the screenshots section is not rendered at all', () => {
     visitSite('earnwith');
     cy.get('main').should('not.contain.text', t('website.earn.screenshots.heading'));
-    cy.get('main figure').should('not.exist');
+    // A screenshot card is a captioned figure (EarningsShots.astro); the CTA
+    // band's photograph is a figure too, but carries no caption.
+    cy.get('main figure:has(figcaption)').should('not.exist');
   });
 });

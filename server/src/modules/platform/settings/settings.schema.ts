@@ -559,7 +559,7 @@ export const settingsTypeDefs = gql`
     updateBranding(input: UpdateBrandingInput!): Branding!
     "Replace the global Pod Shop slider media (managed from the products portal)."
     updatePodShopSlider(input: [PodShopSliderMediaInput!]!): [PodShopSliderMedia!]!
-    "Replace the occasional-icon windows (admin Branding)."
+    "Replace the occasional-icon windows (Marketing → Occasions → App icons)."
     updateOccasionalIcons(input: [OccasionalIconInput!]!): [OccasionalIcon!]!
   }
 `;

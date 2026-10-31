@@ -315,6 +315,8 @@ export interface IE2eScenarioResult extends Document {
   project: string;
   /** The spec file, relative to the project. */
   spec: string;
+  /** `<project>/<spec>` — what the flow catalogue links a flow to (e2eFlow/catalogue/spec-links.ts). */
+  spec_key: string;
   /** The describe blocks, then the test's own title. */
   title_path: string[];
   /** The test's own title — the last entry of title_path. */
@@ -332,6 +334,7 @@ const e2eScenarioResultSchema = new Schema<IE2eScenarioResult>(
     suite: { type: String, required: true },
     project: { type: String, default: '' },
     spec: { type: String, required: true },
+    spec_key: { type: String, default: '' },
     title_path: { type: [String], default: [] },
     title: { type: String, default: '' },
     state: { type: String, enum: E2E_SCENARIO_STATES, required: true },
@@ -347,6 +350,8 @@ e2eScenarioResultSchema.index({ run_id: 1, case_key: 1 }, { unique: true });
 e2eScenarioResultSchema.index({ run_id: 1, suite: 1 });
 e2eScenarioResultSchema.index({ run_id: 1, project: 1, spec: 1 });
 e2eScenarioResultSchema.index({ run_id: 1, state: 1 });
+// The Flows table's per-flow run counts read every run of a handful of specs.
+e2eScenarioResultSchema.index({ spec_key: 1, run_id: 1 });
 
 export const E2eScenarioResultModel = model<IE2eScenarioResult>('E2eScenarioResult', e2eScenarioResultSchema);
 

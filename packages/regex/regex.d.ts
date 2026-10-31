@@ -117,6 +117,14 @@ export function isUsername(value: string): boolean;
 export const URL_SLUG: RegExp;
 /** Slug shape check. Lower-case before calling it — the pattern is strict. */
 export function isUrlSlug(value: string): boolean;
+/** A hex colour: `#rgb` or `#rrggbb`, case-insensitive. */
+export const HEX_COLOR: RegExp;
+/** Hex colour check. */
+export function isHexColor(value: string): boolean;
+/** SVG path data: only path commands, numbers and separators. */
+export const SVG_PATH_DATA: RegExp;
+/** Path-data shape check. */
+export function isSvgPathData(value: string): boolean;
 /**
  * A social-network handle such as `duncit.events`, stored without the `@` or
  * the site's address: letters, digits, `.`, `_` and `-`, 1–100 characters.

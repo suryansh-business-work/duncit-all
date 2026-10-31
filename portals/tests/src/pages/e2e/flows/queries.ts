@@ -18,12 +18,23 @@ export interface E2eSubFlow {
   reviewed_at: string | null;
 }
 
+/** How a flow's linked specs did across the E2E runs on record. */
+export interface E2eFlowRunStats {
+  runs: number;
+  passed: number;
+  failed: number;
+}
+
 export interface E2eFlowRow {
   id: string;
   name: string;
   description: string;
   sub_flow_count: number;
   looks_good_count: number;
+  /** The Cypress spec files that test it, as project/spec. */
+  specs: string[];
+  /** Null when no spec tests it yet. */
+  run_stats: E2eFlowRunStats | null;
   created_by: string;
   created_at: string | null;
   updated_at: string | null;
@@ -39,6 +50,12 @@ const ROW_FIELDS = `
   description
   sub_flow_count
   looks_good_count
+  specs
+  run_stats {
+    runs
+    passed
+    failed
+  }
   created_by
   created_at
   updated_at

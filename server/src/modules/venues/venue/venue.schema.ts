@@ -292,7 +292,7 @@ export const venueTypeDefs = /* GraphQL */ `
     refund_tiers: [VenueCancellationRefundTier!]!
   }
 
-  "Roughly the business a venue hopes one booking brings on one pricing basis (rupees). A guide for hosts, never enforced."
+  "The least a venue takes from one booking on one pricing basis (rupees). A host's offer below it is refused (BELOW_MIN_BUSINESS)."
   type VenueMinBusiness {
     "PER_GUEST (per guest), PER_HOUR (per hour) or FLAT (per booking)."
     model: VenueOfferModel!
@@ -310,7 +310,7 @@ export const venueTypeDefs = /* GraphQL */ `
     min_guests: Int!
     "Hours either side has to answer an offer or a counter before it expires."
     response_hours: Int!
-    "The business the venue hopes for, one per pricing basis (per guest, per hour, per booking)."
+    "The least the venue takes, one per pricing basis (per guest, per hour, per booking)."
     min_business: [VenueMinBusiness!]!
   }
 
@@ -395,7 +395,7 @@ export const venueTypeDefs = /* GraphQL */ `
     offer_min_guests: Int!
     "Hours either side has to answer a booking offer or counter: the venue's own setting, else the platform default."
     offer_response_hours: Int!
-    "The business the venue hopes each booking brings (a guide Create Pod shows once it is picked; never enforced)."
+    "The least the venue takes per booking on each pricing basis (Create Pod's offer step shows it; an offer below it is refused)."
     offer_min_business: [VenueMinBusiness!]!
     capacity_items: [VenueCapacityItem!]!
     "The venue serves food. On publicVenue the menu is empty unless this is on."

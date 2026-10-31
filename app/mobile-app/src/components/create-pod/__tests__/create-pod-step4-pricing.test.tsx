@@ -545,7 +545,7 @@ describe('Create Pod button gating', () => {
     renderWithProviders(
       <CreatePodStepper
         initialValues={{ ...blankCreatePodForm, ...paidPod }}
-        initialStep={3}
+        initialStep={4}
         initialDraftId={null}
         clubs={[]}
         locations={[]}

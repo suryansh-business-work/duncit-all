@@ -1,6 +1,9 @@
 /// <reference types="cypress" />
 import type { Translator } from '@duncit/i18n';
 import {
+  CENTER_SCROLL,
+  ctaBandLine,
+  expectMainSite404,
   expectSiteMeta,
   fetchHtml,
   linkUrl,
@@ -20,7 +23,10 @@ import {
 /** Every PageLayout page heads itself "<heading> — Duncit" and builds its card from that. */
 const pageTitle = (heading: string): string => `${heading} — Duncit`;
 
-describe('UI duncit.com · Static content', () => {
+/** Astro builds each page as a directory, so a page names itself canonical with the trailing slash (the sitemap lists the same). */
+const canonicalOf = (path: string): string => linkUrl('mainSite', `${path}/`);
+
+describe('UI duncit.com · Static content', CENTER_SCROLL, () => {
   let t: Translator['t'];
   let branding: SiteBranding;
 
@@ -35,13 +41,18 @@ describe('UI duncit.com · Static content', () => {
 
   it('STC-01 About renders its eyebrow, heading, intro and the why, beliefs, going and team sections', () => {
     visitSite('main', '/about');
-    cy.get('[data-page-eyebrow]').should('contain.text', t('website.main.about.eyebrow'));
+    // PageLayout.astro: the eyebrow badge sits right before the heading, the intro right after it.
+    cy.get('[data-page-heading]').prev('span').should('readText', t('website.main.about.eyebrow'));
     cy.get('[data-page-heading]').should('readText', t('website.main.about.heading'));
-    cy.get('[data-page-intro]').should('readText', t('website.main.about.intro'));
+    cy.get('[data-page-heading]').next('p').should('readText', t('website.main.about.intro'));
     for (const key of ['whyHeading', 'believeHeading', 'goingHeading', 'teamHeading']) {
       cy.get('article h2').should('contain.text', t(`website.main.about.${key}`));
     }
-    cy.get('article li').should('have.length', 4);
+    cy.contains('article h2', t('website.main.about.believeHeading')).closest('section').find('ul > li').as('beliefs');
+    cy.get('@beliefs').should('have.length', 4);
+    for (let belief = 1; belief <= 4; belief += 1) {
+      cy.get('@beliefs').eq(belief - 1).find('h3').should('readText', t(`website.main.about.believe${belief}Label`));
+    }
   });
 
   it('STC-02 the download link in the About text opens /#download', () => {
@@ -57,7 +68,7 @@ describe('UI duncit.com · Static content', () => {
     cy.contains('article a', t('website.main.community.rulesLink')).should('have.attr', 'href', '/guidelines').click();
     cy.location('pathname').should('eq', '/guidelines');
     for (let rule = 1; rule <= 6; rule += 1) {
-      cy.get('article h2').should('contain.text', t(`website.main.guidelines.rule${rule}Heading`));
+      cy.get('article h3').should('contain.text', t(`website.main.guidelines.rule${rule}Heading`));
     }
     cy.get(`article a[href="mailto:${branding.support_email}"]`).should('exist');
   });
@@ -74,7 +85,7 @@ describe('UI duncit.com · Static content', () => {
         expect(status, page.path).to.eq(200);
         const heading = t(`website.main.${page.ns}.heading`);
         expect(doc.querySelector('[data-page-heading]')?.textContent?.replaceAll(/\s+/g, ' ').trim()).to.eq(heading);
-        expectSiteMeta(doc, { title: pageTitle(heading), siteName: branding.app_name, canonical: linkUrl('mainSite', page.path) });
+        expectSiteMeta(doc, { title: pageTitle(heading), siteName: branding.app_name, canonical: canonicalOf(page.path) });
       });
     }
   });
@@ -83,7 +94,9 @@ describe('UI duncit.com · Static content', () => {
     visitSite('main', '/safety/advice');
     cy.contains('article a', t('website.main.safetyAdvice.helpLink')).should('have.attr', 'href', '/safety/resources').click();
     cy.location('pathname').should('eq', '/safety/resources');
-    cy.get(`article a[href="mailto:${branding.support_email}"]`).should('readText', branding.support_email);
+    ctaBandLine(t('website.main.safetyResources.supportHeading'))
+      .find(`a[href="mailto:${branding.support_email}"]`)
+      .should('readText', branding.support_email);
   });
 
   it('STC-06 Careers carries a canonical, og:site_name from branding and its own card', () => {
@@ -91,16 +104,22 @@ describe('UI duncit.com · Static content', () => {
       expectSiteMeta(doc, {
         title: pageTitle(t('website.main.careers.heading')),
         siteName: branding.app_name,
-        canonical: linkUrl('mainSite', '/careers'),
+        canonical: canonicalOf('/careers'),
       });
     });
   });
 
   it('STC-07 an unknown path is a real 404 with the branded page, whose buttons go home and to help', () => {
-    fetchHtml(siteUrl('main', '/nope/nowhere')).then(({ status }) => expect(status).to.eq(404));
+    fetchHtml(siteUrl('main', '/nope/nowhere')).then(({ status, doc }) => {
+      expect(status).to.eq(404);
+      expectMainSite404(doc, '/nope/nowhere');
+    });
     visitSite('main', '/nope/nowhere', { failOnStatusCode: false });
-    cy.get('h1#four04').invoke('text').should('match', /^\s*404\s*$/);
-    cy.get('[data-float-sticker]').should('have.length.at.least', 4);
+    cy.get('main h1').invoke('text').should('match', /^\s*404\s*$/);
+    // The stickers floating round the 404; two more join them from `sm` up.
+    for (const sticker of ['lost', 'offMap', 'tryAgain', 'weGotYou']) {
+      cy.contains('main span[aria-hidden="true"]', t(`website.main.notFound.${sticker}`)).should('be.visible');
+    }
     cy.contains('p', t('website.main.notFound.text')).should('exist');
     cy.contains('a[href="/"]', t('website.main.notFound.takeMeHome')).should('exist');
     cy.contains('a[href="/help"]', t('website.main.notFound.getHelp')).click();

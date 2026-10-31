@@ -117,7 +117,13 @@ describe('Partner onboarding (plain member)', () => {
     const account = runAccount();
     activeSurvey(HOST, path).then((survey) => {
       meetingPrereqs(HOST).then((prereqs) => {
-        cy.interceptOperation('RequestMeeting');
+        // Counted, not aliased: an alias set inside a handler only exists once
+        // a request carries it, so `@RequestMeeting.all` threw exactly when no
+        // booking was sent — the case this scenario asserts.
+        let meetingRequests = 0;
+        cy.intercept({ method: 'POST', url: String(Cypress.env('GRAPHQL_URL')) }, (req) => {
+          if ((req.body as { operationName?: string } | undefined)?.operationName === 'RequestMeeting') meetingRequests += 1;
+        });
         openEarn();
         enterGate(HOST);
         pickPath(path);
@@ -152,7 +158,7 @@ describe('Partner onboarding (plain member)', () => {
         if (prereqs.fullName) cy.byTestId('meeting-name').should('have.value', prereqs.fullName).and('be.disabled');
         cy.byTestId('primary-action').should('have.text', 'Book this slot').click();
         cy.byTestId('meeting-form-error').should('have.text', 'Pick an available slot.');
-        cy.get('@RequestMeeting.all').should('have.length', 0);
+        cy.wrap(null).should(() => expect(meetingRequests, 'RequestMeeting requests sent').to.eq(0));
         cy.byTestId('gate-thanks').should('not.exist');
       });
     });

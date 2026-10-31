@@ -42,6 +42,7 @@ const SDL_CATEGORIES = [
   'CLOUDFLARE',
   'SOCIAL_APPS',
   'TRUECALLER',
+  'SERPER',
 ];
 
 if (SDL_CATEGORIES.join(',') !== ENV_CATEGORIES.join(',')) {
@@ -78,6 +79,7 @@ export const envEntryTypeDefs = gql`
     CLOUDFLARE
     SOCIAL_APPS
     TRUECALLER
+    SERPER
   }
 
   type EnvConfigPair {

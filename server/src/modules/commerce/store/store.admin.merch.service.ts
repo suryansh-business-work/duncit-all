@@ -7,6 +7,7 @@ import {
   STORE_OCCASION_THEMES,
   StoreSettingsModel,
   type IStoreOccasion,
+  type IStoreSettings,
   type StoreOccasionTheme,
 } from './storeSettings.model';
 import { StorePageModel } from './storePage.model';
@@ -266,6 +267,11 @@ const SETTINGS_FLAGS = [
   'autoship_enabled',
 ] as const;
 
+/** The festive windows off a settings document, as plain objects. */
+function plainOccasions(settings: IStoreSettings | null): IStoreOccasion[] {
+  return settings?.toObject<IStoreSettings>().occasions ?? [];
+}
+
 /** A CSS hex colour, the one form the storefront paints without parsing. */
 const HEX_COLOUR = /^#(?:[\da-f]{3}|[\da-f]{6})$/i;
 
@@ -427,6 +433,23 @@ export const storeAdminMerchService = {
       { $set: { ...patch, updated_by_id: ctx.user?.id ?? null } },
       { new: true, runValidators: true }
     );
+  },
+
+  /** The store's festive windows. Managed from Marketing → Occasions, alongside the apps' looks. */
+  async occasions(): Promise<IStoreOccasion[]> {
+    const settings = await getStoreSettings();
+    return plainOccasions(settings);
+  },
+
+  /** Replace the store's festive windows, checked exactly as a full settings save checks them. */
+  async saveOccasions(ctx: GraphQLContext, input: Doc[]): Promise<IStoreOccasion[]> {
+    await getStoreSettings();
+    const saved = await StoreSettingsModel.findOneAndUpdate(
+      { singleton_key: 'store' },
+      { $set: { occasions: occasionsOf(input), updated_by_id: ctx.user?.id ?? null } },
+      { new: true, runValidators: true }
+    );
+    return plainOccasions(saved);
   },
 
   /** The Tech portal's Razorpay accounts, default first — names and a key hint, no secrets. */

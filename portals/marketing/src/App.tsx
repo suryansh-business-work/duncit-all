@@ -19,6 +19,9 @@ import AppPopupsPage from './pages/app-popups-page/AppPopupsPage';
 import StatusPage from './pages/status-page/StatusPage';
 import SocialAccountsPage from './pages/social-accounts-page';
 import SocialCalendarPage from './pages/social-calendar-page';
+import InstagramLeadsPage from './pages/instagram-leads-page';
+import OccasionsPage from './pages/occasions-page';
+import OccasionThemeEditorPage from './pages/occasions-page/editor';
 import AdsApprovalsPage from './pages/ads-approvals-page/AdsApprovalsPage';
 import LiveAdsPage from './pages/live-ads-page/LiveAdsPage';
 import AdsSettingsPage from './pages/ads-settings-page/AdsSettingsPage';
@@ -54,6 +57,10 @@ export default function App() {
         <Route path="/external-links/:linkId" element={authed(<ShortLinkDetailPage />)} />
         <Route path="/social-accounts" element={authed(<SocialAccountsPage />)} />
         <Route path="/social-calendar" element={authed(<SocialCalendarPage />)} />
+        <Route path="/instagram-leads" element={authed(<InstagramLeadsPage />)} />
+        <Route path="/occasions" element={authed(<OccasionsPage />)} />
+        <Route path="/occasions/themes/new" element={authed(<OccasionThemeEditorPage />)} />
+        <Route path="/occasions/themes/:key" element={authed(<OccasionThemeEditorPage />)} />
         <Route path="/notifications" element={authed(<NotificationsPage />)} />
         <Route path="/app-popups" element={authed(<AppPopupsPage />)} />
         <Route path="/status" element={authed(<StatusPage />)} />

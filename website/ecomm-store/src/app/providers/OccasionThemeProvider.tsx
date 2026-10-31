@@ -1,8 +1,9 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import { GlobalStyles } from '@mui/material';
 import { ThemeProvider } from '@mui/material/styles';
 
 import { FestiveLayer, OccasionContext, type OccasionValue } from '../../components/festive';
+import { useBrowserState } from '../../lib/hydration';
 import { storeLog } from '../../lib/log';
 import { isFestiveTheme, lookFor, type FestiveTheme } from '../../theme/occasions';
 import { buildStoreTheme } from '../../theme/storeTheme';
@@ -45,7 +46,8 @@ function readPreview(): FestiveTheme | null {
 export function OccasionThemeProvider({ children }: Readonly<{ children: ReactNode }>) {
   const { active_occasion: occasion } = useStoreSettings();
   const { mode, prefs, themePrefs } = useColorMode();
-  const [preview] = useState(readPreview);
+  // A preview lives in the URL and this tab's storage, so it is read after hydration.
+  const [preview] = useBrowserState(readPreview, null);
   const theme = preview ?? occasion?.theme ?? 'NONE';
   const look = lookFor(theme);
 

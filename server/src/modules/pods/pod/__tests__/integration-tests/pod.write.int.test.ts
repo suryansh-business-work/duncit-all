@@ -19,8 +19,12 @@ import { logs } from '@observability/log';
 const IMG = { url: 'https://cdn.example.com/pod.jpg', type: 'IMAGE' };
 const DAY_MS = 86_400_000;
 
+// Unique but letters only: a hex ObjectId sometimes carries a run of ten
+// digits, which the moderation phone rule rightly refuses in a title.
+const uniqueWord = () => new Types.ObjectId().toString().replaceAll(/\d/g, (d) => 'ghijklmnop'[Number(d)]);
+
 const virtualInput = (hostId: Types.ObjectId, over: Record<string, unknown> = {}) => ({
-  pod_title: `Virtual pod ${new Types.ObjectId().toString()}`,
+  pod_title: `Virtual pod ${uniqueWord()}`,
   club_id: String(new Types.ObjectId()),
   pod_hosts_id: [String(hostId)],
   pod_mode: 'VIRTUAL',

@@ -5,6 +5,7 @@ import { BUTTON_SIZES, PRESS_STYLE, TOUCH_TARGET } from '@duncit/buttons-native'
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useThemeStore } from '@/stores/theme.store';
+import { useEffectiveScheme, useSchemeLocked } from '@/hooks/useEffectiveScheme';
 
 /*
   Compact: a step under the small button — it is a preference at the foot of
@@ -89,12 +90,15 @@ function ModeSegment({
  */
 export function AuthModeToggle() {
   const { t } = useTranslation();
-  const scheme = useThemeStore((s) => s.scheme);
+  const scheme = useEffectiveScheme();
+  const locked = useSchemeLocked();
   const toggle = useThemeStore((s) => s.toggle);
   const { muted, primary } = useThemeColors();
   const isDark = scheme === 'dark';
   const pickLight = isDark ? toggle : () => undefined;
   const pickDark = isDark ? () => undefined : toggle;
+  // A festive look pins the mode (Halloween is a night): there is nothing to pick.
+  if (locked) return null;
 
   return (
     <XStack

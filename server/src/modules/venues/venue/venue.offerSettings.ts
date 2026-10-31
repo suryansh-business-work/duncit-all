@@ -6,9 +6,11 @@
  * default" (Admin settings), so a venue that never opened the page still has
  * both.
  *
- * The business amounts are a guide, never a rule: each says roughly what the
- * venue hopes to earn per guest, per hour or per booking, and Create Pod shows
- * them once the venue is picked. Nothing refuses an offer below them.
+ * The business amounts are the venue's floor: each is the least it takes per
+ * guest, per hour or per booking. Create Pod shows them on its offer step, and
+ * a host's offer below the amount on its own basis is refused
+ * (`assertOfferMeetsMinBusiness`). A basis the venue named no amount for, and a
+ * free ask, have no floor.
  */
 import { GraphQLError } from 'graphql';
 import { settingsService } from '@modules/platform/settings/settings.service';
@@ -25,7 +27,7 @@ export interface IVenueOfferSettings {
   min_guests: number;
   /** Hours to answer an offer or counter. 0 = the platform default. */
   response_hours: number;
-  /** The business the venue hopes for, one per pricing basis. A guide only. */
+  /** The least the venue takes, one per pricing basis. */
   min_business: IVenueMinBusiness[];
 }
 
@@ -54,6 +56,26 @@ export const toOfferSettingsPub = (s?: Partial<IVenueOfferSettings> | null): IVe
 });
 
 const refuse = (message: string) => new GraphQLError(message, { extensions: { code: 'BAD_USER_INPUT', field: 'min_business' } });
+
+/**
+ * A host's opening offer meets the venue's amount on the basis it pays on, or
+ * BELOW_MIN_BUSINESS. A basis with no amount, and a free ask, pass. Client twin:
+ * `venueOfferFloor` in @duncit/utils.
+ */
+export function assertOfferMeetsMinBusiness(
+  rows: ReadonlyArray<Partial<IVenueMinBusiness>> | null | undefined,
+  model: unknown,
+  rate: unknown
+): void {
+  if (!isModel(model)) return;
+  const floor = toMinBusinessPub(rows).find((row) => row.model === model);
+  if (!floor) return;
+  const offered = Number(rate);
+  if (Number.isFinite(offered) && offered >= floor.amount) return;
+  throw new GraphQLError(`This venue takes offers of at least ${floor.amount} on this basis — raise your offer`, {
+    extensions: { code: 'BAD_USER_INPUT', reason: 'BELOW_MIN_BUSINESS', field: 'venue_offer_rate', min: floor.amount, model },
+  });
+}
 
 /**
  * The business amounts an owner (or staff) sends: at least one, one per pricing

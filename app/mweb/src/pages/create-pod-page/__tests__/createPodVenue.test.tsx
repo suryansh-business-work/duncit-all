@@ -138,7 +138,8 @@ describe('VenueSlotStep', () => {
   it('shows the venue type and capacity, the offer picker once a space is chosen, the contact card and the map', () => {
     step({ venue_id: 'v1', venue_space_label: '' });
     expect(screen.getByTestId('create-pod-venue-capacity')).toHaveTextContent(`Cafe · ${fallbackT('mweb.createPod.totalCapacity', { vars: { count: 40 } })}`);
-    expect(screen.getByTestId('min-business')).toBeInTheDocument();
+    // The venue's minimum business heads the next step (Offer for Venue), not this one.
+    expect(screen.queryByTestId('min-business')).not.toBeInTheDocument();
     expect(screen.getByTestId('contact-card')).toBeInTheDocument();
     expect(screen.getByTestId('map')).toHaveAttribute('data-title', 'Court One');
     expect(screen.queryByTestId('offer-picker')).not.toBeInTheDocument();

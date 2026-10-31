@@ -4,6 +4,7 @@ import { useApolloClient, useQuery } from '@apollo/client/react';
 import { STORE_ME, type StoreMe } from '../../graphql/account';
 import { MERGE_GUEST } from '../../graphql/cart';
 import { getCartToken } from '../../lib/cartToken';
+import { useBrowserState } from '../../lib/hydration';
 import { storeLog } from '../../lib/log';
 import { STORAGE_KEYS, readStored, removeStored, writeStored } from '../../lib/storage';
 
@@ -24,7 +25,8 @@ const SessionContext = createContext<SessionValue | null>(null);
 
 export function SessionProvider({ children }: Readonly<{ children: ReactNode }>) {
   const client = useApolloClient();
-  const [token, setToken] = useState<string | null>(() => readStored(STORAGE_KEYS.token));
+  // Signed out on the server's page; the stored session is picked up right after hydration.
+  const [token, setToken] = useBrowserState<string | null>(() => readStored(STORAGE_KEYS.token), null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const { data, loading } = useQuery(STORE_ME, {
     skip: !token,
@@ -38,7 +40,7 @@ export function SessionProvider({ children }: Readonly<{ children: ReactNode }>)
       removeStored(STORAGE_KEYS.token);
       setToken(null);
     }
-  }, [token, loading, data]);
+  }, [token, loading, data, setToken]);
 
   const completeSignIn = useCallback(
     async (next: string) => {
@@ -52,14 +54,14 @@ export function SessionProvider({ children }: Readonly<{ children: ReactNode }>)
       }
       await client.resetStore();
     },
-    [client],
+    [client, setToken],
   );
 
   const signOut = useCallback(async () => {
     removeStored(STORAGE_KEYS.token);
     setToken(null);
     await client.resetStore();
-  }, [client]);
+  }, [client, setToken]);
 
   const openSignIn = useCallback(() => setDialogOpen(true), []);
   const closeSignIn = useCallback(() => setDialogOpen(false), []);

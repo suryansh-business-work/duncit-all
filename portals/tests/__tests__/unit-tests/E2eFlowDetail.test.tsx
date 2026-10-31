@@ -22,6 +22,8 @@ const flowRow = (over: Partial<E2eFlowRow> = {}): E2eFlowRow => ({
   description: 'Sign up, login and logout',
   sub_flow_count: 2,
   looks_good_count: 1,
+  specs: [],
+  run_stats: null,
   created_by: 'ops@example.test',
   created_at: '2026-01-01T10:00:00.000Z',
   updated_at: '2026-01-02T10:00:00.000Z',

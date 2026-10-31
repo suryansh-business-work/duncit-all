@@ -94,8 +94,8 @@ function MinBusinessRow({ control, index, taken, removable, onRemove }: Readonly
 /**
  * "Business you expect per booking": at least one amount, each on its own
  * basis — per guest, per hour or per booking — added and removed as rows. Hosts
- * see them on Create Pod once they pick the venue, as a guide for their offer,
- * never a rule. One rule with mWeb and the Partners console
+ * see them on Create Pod's offer step, and an offer below the amount on its
+ * basis cannot be sent. One rule with mWeb and the Partners console
  * (`makeBookingOffersSchema`).
  */
 export function MinBusinessRows({ control }: Readonly<{ control: Control<BookingOffersValues> }>) {

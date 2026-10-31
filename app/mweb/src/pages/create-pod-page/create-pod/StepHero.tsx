@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { Box, Stack, Typography } from '@mui/material';
 import AiMonitorChip from './AiMonitorChip';
 import PodGuidelinesDialog from './PodGuidelinesDialog';
-import { STEP_TITLE_KEYS } from './create-pod.form';
 import { useTranslation } from '../../../i18n/useTranslation';
 
 interface Props {
+  /** The step's place among the steps this pod walks (0-based). */
   step: number;
+  /** How many steps this pod walks — five, or four without a venue offer. */
   total: number;
   title: string;
   /** Accepted for existing callers, no longer drawn — the step title stands alone. */
@@ -33,9 +34,9 @@ export default function StepHero({ step, total, title }: Readonly<Props>) {
         aria-valuemax={total}
         aria-valuenow={step + 1}
       >
-        {STEP_TITLE_KEYS.map((key, index) => (
+        {Array.from({ length: total }, (_, index) => (
           <Box
-            key={key}
+            key={index}
             sx={{
               flex: 1,
               height: 5,

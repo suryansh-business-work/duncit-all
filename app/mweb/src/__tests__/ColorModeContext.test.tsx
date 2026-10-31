@@ -3,6 +3,7 @@ import { MockedProvider } from '@apollo/client/testing/react';
 import { fireEvent, render, screen, act } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ColorModeProvider, useColorMode } from '../ColorModeContext';
+import { OCCASION_LIVE } from '../hooks/useOccasionLive';
 
 const STORAGE_KEY = 'mweb_color_mode';
 
@@ -122,5 +123,63 @@ describe('useColorMode default context', () => {
       fireEvent.click(screen.getByText('set-dark'));
     });
     expect(screen.getByTestId('mode')).toHaveTextContent('light');
+  });
+});
+
+describe('ColorModeProvider with a festive look', () => {
+  const TOKEN_KEYS = ['bg', 'surface', 'soft', 'ink', 'muted', 'border', 'inputBorder', 'primary', 'primaryHover', 'primaryActive', 'onPrimary', 'accent', 'onAccent', 'brand', 'success', 'warning', 'error', 'info', 'onSemantic'];
+  const palette = (primary: string) => ({ __typename: 'ThemeModeTokens', ...Object.fromEntries(TOKEN_KEYS.map((key) => [key, ''])), primary });
+
+  const look = (colorMode: 'AUTO' | 'DARK') => ({
+    __typename: 'OccasionTheme',
+    key: 'halloween',
+    name: 'Halloween',
+    color_mode: colorMode,
+    greeting: '',
+    palette_light: palette('#FF7518'),
+    palette_dark: palette('#FF7518'),
+    particles: [],
+    flyers: [],
+    fireworks: { __typename: 'OccasionFireworks', enabled: false, colors: [], bursts_per_minute: 12, sparks: 28, radius: 90 },
+    overlays: [],
+    garland: { __typename: 'OccasionGarland', style: 'NONE', colors: [] },
+  });
+
+  function LockProbe() {
+    const { mode, locked } = useColorMode();
+    return <span data-testid="lock">{`${mode}:${locked ? 'locked' : 'free'}`}</span>;
+  }
+
+  const renderWithLook = (theme: ReturnType<typeof look> | null) =>
+    render(
+      <MockedProvider
+        mocks={[
+          {
+            request: { query: OCCASION_LIVE, variables: { preview: null } },
+            result: { data: { occasionLive: { __typename: 'OccasionLive', next_change_at: null, theme } } },
+          },
+        ]}
+      >
+        <ColorModeProvider>
+          <LockProbe />
+        </ColorModeProvider>
+      </MockedProvider>
+    );
+
+  it('wears a look that pins dark mode whatever the viewer saved, and locks the toggles', async () => {
+    localStorage.setItem(STORAGE_KEY, 'light');
+    renderWithLook(look('DARK'));
+
+    expect(await screen.findByText('dark:locked')).toBeInTheDocument();
+  });
+
+  it("keeps the viewer's own mode, unlocked, for a look that leaves the mode to them", async () => {
+    localStorage.setItem(STORAGE_KEY, 'light');
+    renderWithLook(look('AUTO'));
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+    expect(screen.getByTestId('lock')).toHaveTextContent('light:free');
   });
 });

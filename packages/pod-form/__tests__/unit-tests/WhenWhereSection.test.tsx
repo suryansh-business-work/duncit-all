@@ -433,7 +433,7 @@ describe('WhenWhereSection (offer terms)', () => {
     });
     renderWW(termsData({ platform_fee_pct: 10, gst_pct: 18, currency_symbol: '₹' }), WINDOW);
     expect(screen.getByTestId('pod-form-venue-min-business')).toHaveTextContent(
-      /^This venue usually expects: ₹200\.00 per guest · ₹5,000\.00 per booking — A guide from the venue — your offer can be different\.$/,
+      /^Minimum business for this venue: ₹200\.00 per guest · ₹5,000\.00 per booking — Your offer must be at least the amount for the way you pay\.$/,
     );
   });
 
@@ -442,7 +442,34 @@ describe('WhenWhereSection (offer terms)', () => {
       terms: termsQuery({ id: 'v1', capacity: 40, offer_min_guests: 0, offer_min_business: [{ model: 'PER_HOUR', amount: 400 }] }),
     });
     renderWW(termsData(), WINDOW);
-    expect(screen.getByTestId('pod-form-venue-min-business')).toHaveTextContent(/^This venue usually expects: 400\.00 per hour — /);
+    expect(screen.getByTestId('pod-form-venue-min-business')).toHaveTextContent(/^Minimum business for this venue: 400\.00 per hour — /);
+  });
+
+  // The minimum on the picked basis is a rule, not a guide: an amount below it
+  // is flagged on the field (the server refuses it as BELOW_MIN_BUSINESS).
+  const floorTerms = () =>
+    termsQuery({ id: 'v1', capacity: 40, offer_min_guests: 0, offer_min_business: [{ model: 'PER_GUEST', amount: 200 }] });
+
+  it('flags an amount below the minimum on the picked basis, on the amount field', () => {
+    routeQueries({ terms: floorTerms() });
+    renderWW(termsData(), { ...WINDOW, venue_offer_model: 'PER_GUEST', venue_offer_rate: '150' });
+    expect(screen.getByLabelText(/Amount you offer/)).toHaveAttribute('aria-invalid', 'true');
+    expect(screen.getByText('This venue takes at least 200.00 per guest — raise your offer to continue')).toBeInTheDocument();
+  });
+
+  it('takes an amount at the minimum, keeping the usual hint', () => {
+    routeQueries({ terms: floorTerms() });
+    renderWW(termsData(), { ...WINDOW, venue_offer_model: 'PER_GUEST', venue_offer_rate: '200' });
+    expect(screen.getByLabelText(/Amount you offer/)).toHaveAttribute('aria-invalid', 'false');
+    expect(screen.getByText("The venue's price rules, fees and GST are added on top, with Duncit's fee.")).toBeInTheDocument();
+  });
+
+  it('flags nothing before an amount is typed — the empty field keeps its own required rule', () => {
+    routeQueries({ terms: floorTerms() });
+    // No rate value at all (the Harness's blank form would otherwise give '').
+    renderWW(termsData(), { ...WINDOW, venue_offer_model: 'PER_GUEST', venue_offer_rate: undefined });
+    expect(screen.getByLabelText(/Amount you offer/)).toHaveAttribute('aria-invalid', 'false');
+    expect(screen.queryByText(/raise your offer to continue/)).not.toBeInTheDocument();
   });
 
   it('says nothing of what the venue expects when it names no amount it can show', () => {

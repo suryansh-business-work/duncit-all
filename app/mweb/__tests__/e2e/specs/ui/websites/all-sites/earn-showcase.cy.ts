@@ -5,7 +5,9 @@ import { linkUrl, visitSite, websiteCopy, type SiteKey } from '../../../../suppo
 /**
  * The "Earn with Duncit" showcase (@duncit/brand EarnShowcase.astro) on every
  * home page except earnwith's own: its words, a decorative photo wall hidden
- * from screen readers, and one CTA to earnwith.duncit.com.
+ * from screen readers, and one CTA to earnwith.duncit.com. The section also
+ * holds the floating Earn pill (EarnPill.astro), whose link only jumps back to
+ * the section itself.
  */
 
 const ROOT = 'section[data-earn-showcase]';
@@ -29,7 +31,17 @@ describe('UI Websites · Earn showcase', () => {
       cy.get(`${ROOT} .earn-eyebrow`).should('readText', t('website.brand.earnShowcase.eyebrow'));
       cy.get(`${ROOT} .earn-text`).should('readText', t('website.brand.earnShowcase.text'));
       cy.get(`${ROOT} .earn-wall`).should('have.attr', 'aria-hidden', 'true');
-      cy.get(`${ROOT} a`).should('have.length', 1).and('have.attr', 'href', linkUrl('earnwith')).and('contain.text', t('website.brand.earnShowcase.cta'));
+      cy.get(`${ROOT} a[data-earn-cta]`)
+        .should('have.length', 1)
+        .and('have.attr', 'href', linkUrl('earnwith'))
+        .and('contain.text', t('website.brand.earnShowcase.cta'));
+      // Every other link in the section is the Earn pill's jump to this section, so the CTA is the only way out.
+      cy.get(ROOT).then(($section) => {
+        const self = `#${$section.attr('id') ?? ''}`;
+        $section.find('a').not('[data-earn-cta]').each((_, link) => {
+          expect(link.getAttribute('href'), 'Earn pill link').to.eq(self);
+        });
+      });
     });
   }
 

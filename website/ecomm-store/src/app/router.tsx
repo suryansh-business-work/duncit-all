@@ -1,12 +1,32 @@
 import { lazy, type ComponentType } from 'react';
-import { createBrowserRouter } from 'react-router';
+import { matchRoutes, type RouteObject } from 'react-router';
 
 import { AppShell } from './layout/AppShell';
 import { STORE_PATHS } from './route-paths';
 
-/** Route-level code splitting: each page's code loads the first time it is visited. */
-const page = <T extends Record<string, unknown>>(load: () => Promise<T>, name: keyof T) =>
-  lazy(async () => ({ default: (await load())[name] as ComponentType }));
+type PageComponent = ComponentType & { preload: () => Promise<unknown> };
+
+/**
+ * Route-level code splitting: each page's code loads the first time it is
+ * visited. Once loaded, the page renders straight away instead of through
+ * `lazy`, which suspends at least once — so preloading the page a
+ * server-rendered address shows lets the browser hydrate it in one pass,
+ * before any remembered setting changes what the page looks like.
+ */
+const page = <T extends Record<string, unknown>>(load: () => Promise<T>, name: keyof T): PageComponent => {
+  let loaded: ComponentType | null = null;
+  const preload = () =>
+    load().then((module) => {
+      loaded = module[name] as ComponentType;
+      return loaded;
+    });
+  const Lazy = lazy(async () => ({ default: await preload() }));
+  function Page() {
+    const Loaded = loaded;
+    return Loaded ? <Loaded /> : <Lazy />;
+  }
+  return Object.assign(Page, { preload });
+};
 
 const HomePage = page(() => import('../pages/home'), 'HomePage');
 const ShopPage = page(() => import('../pages/shelf/ShelfPages'), 'ShopPage');
@@ -34,35 +54,59 @@ const PolicyPage = page(() => import('../pages/info/PolicyPage'), 'PolicyPage');
 const ContactPage = page(() => import('../pages/info/ContactPage'), 'ContactPage');
 const NotFoundPage = page(() => import('../pages/info/NotFoundPage'), 'NotFoundPage');
 
-export const router = createBrowserRouter([
+interface PageHandle {
+  preload: () => Promise<unknown>;
+}
+
+const pageRoute = (path: string, Page: PageComponent): RouteObject => ({
+  path,
+  element: <Page />,
+  handle: { preload: Page.preload } satisfies PageHandle,
+});
+
+/** The route id of the catch-all, so the server can answer it with a 404. */
+export const NOT_FOUND_ROUTE_ID = 'not-found';
+
+/**
+ * Every store page. The browser builds its router from these in main.tsx and
+ * the server its static one in entry-server.tsx; building a browser router
+ * here, at import, would touch `window` on the server.
+ */
+export const storeRoutes: RouteObject[] = [
   {
     element: <AppShell />,
     children: [
-      { path: STORE_PATHS.home, element: <HomePage /> },
-      { path: STORE_PATHS.shop, element: <ShopPage /> },
-      { path: STORE_PATHS.search, element: <SearchPage /> },
-      { path: STORE_PATHS.deals, element: <DealsPage /> },
-      { path: STORE_PATHS.petType, element: <PetTypePage /> },
-      { path: STORE_PATHS.category, element: <CategoryPage /> },
-      { path: STORE_PATHS.collection, element: <CollectionPage /> },
-      { path: STORE_PATHS.brands, element: <BrandsPage /> },
-      { path: STORE_PATHS.brand, element: <BrandPage /> },
-      { path: STORE_PATHS.product, element: <ProductPage /> },
-      { path: STORE_PATHS.cart, element: <CartPage /> },
-      { path: STORE_PATHS.checkout, element: <CheckoutPage /> },
-      { path: STORE_PATHS.orderSuccess, element: <OrderSuccessPage /> },
-      { path: STORE_PATHS.account, element: <AccountPage /> },
-      { path: STORE_PATHS.orders, element: <OrdersPage /> },
-      { path: STORE_PATHS.order, element: <AccountOrderPage /> },
-      { path: STORE_PATHS.addresses, element: <AddressesPage /> },
-      { path: STORE_PATHS.returns, element: <ReturnsPage /> },
-      { path: STORE_PATHS.petProfile, element: <PetProfilePage /> },
-      { path: STORE_PATHS.autoship, element: <AutoshipPage /> },
-      { path: STORE_PATHS.wishlist, element: <WishlistPage /> },
-      { path: STORE_PATHS.track, element: <TrackPage /> },
-      { path: STORE_PATHS.page, element: <PolicyPage /> },
-      { path: STORE_PATHS.contact, element: <ContactPage /> },
-      { path: '*', element: <NotFoundPage /> },
+      pageRoute(STORE_PATHS.home, HomePage),
+      pageRoute(STORE_PATHS.shop, ShopPage),
+      pageRoute(STORE_PATHS.search, SearchPage),
+      pageRoute(STORE_PATHS.deals, DealsPage),
+      pageRoute(STORE_PATHS.petType, PetTypePage),
+      pageRoute(STORE_PATHS.category, CategoryPage),
+      pageRoute(STORE_PATHS.collection, CollectionPage),
+      pageRoute(STORE_PATHS.brands, BrandsPage),
+      pageRoute(STORE_PATHS.brand, BrandPage),
+      pageRoute(STORE_PATHS.product, ProductPage),
+      pageRoute(STORE_PATHS.cart, CartPage),
+      pageRoute(STORE_PATHS.checkout, CheckoutPage),
+      pageRoute(STORE_PATHS.orderSuccess, OrderSuccessPage),
+      pageRoute(STORE_PATHS.account, AccountPage),
+      pageRoute(STORE_PATHS.orders, OrdersPage),
+      pageRoute(STORE_PATHS.order, AccountOrderPage),
+      pageRoute(STORE_PATHS.addresses, AddressesPage),
+      pageRoute(STORE_PATHS.returns, ReturnsPage),
+      pageRoute(STORE_PATHS.petProfile, PetProfilePage),
+      pageRoute(STORE_PATHS.autoship, AutoshipPage),
+      pageRoute(STORE_PATHS.wishlist, WishlistPage),
+      pageRoute(STORE_PATHS.track, TrackPage),
+      pageRoute(STORE_PATHS.page, PolicyPage),
+      pageRoute(STORE_PATHS.contact, ContactPage),
+      { ...pageRoute('*', NotFoundPage), id: NOT_FOUND_ROUTE_ID },
     ],
   },
-]);
+];
+
+/** Load the code of the page at this address, so hydrating it never waits on a chunk. */
+export async function preloadPage(pathname: string): Promise<void> {
+  const matches = matchRoutes(storeRoutes, pathname) ?? [];
+  await Promise.all(matches.map((match) => (match.route.handle as PageHandle | undefined)?.preload()));
+}

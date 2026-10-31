@@ -212,7 +212,7 @@ describe('createPodSeed and the draft', () => {
   it('resumes a stored form on its step, clamped into the stepper, and keeps its own city', () => {
     const seed = createPodSeed({ payload: payload({ location_id: 'own' }), step: 99 }, { location_id: 'header' });
     expect(seed.values.location_id).toBe('own');
-    expect(seed.step).toBe(3);
+    expect(seed.step).toBe(4);
     expect(createPodSeed({ payload: payload({ location_id: 'own' }), step: -4 }, {}).step).toBe(0);
     expect(createPodSeed({ payload: payload({ location_id: 'own' }) }, {}).step).toBe(0);
     expect(createPodSeed({ payload: payload({ location_id: 'own' }), step: null }, {}).step).toBe(0);
@@ -249,14 +249,18 @@ describe('stepper step helpers', () => {
     expect(stepTitleKey(2, 'PHYSICAL')).toBe('mweb.createPod.step3Title');
     expect(stepSubtitleKey(2)).toBe('mweb.createPod.step3Subtitle');
     expect(stepTitleKey(1, 'VIRTUAL')).toBe('mweb.createPod.step1Title');
-    expect(stepSubtitleKey(3, 'VIRTUAL')).toBe('mweb.createPod.step4Subtitle');
+    expect(stepTitleKey(3, 'PHYSICAL')).toBe('mweb.createPod.stepOfferTitle');
+    expect(stepSubtitleKey(3, 'VIRTUAL')).toBe('mweb.createPod.stepOfferSubtitle');
+    expect(stepSubtitleKey(4, 'VIRTUAL')).toBe('mweb.createPod.step4Subtitle');
   });
 
   it('places a field on its step, and an unknown field on the first step', () => {
     expect(stepForField('club_id')).toBe(0);
     expect(stepForField('pod_title')).toBe(1);
     expect(stepForField('pod_date_time')).toBe(2);
-    expect(stepForField('agreed_to_terms')).toBe(3);
+    expect(stepForField('venue_offer_rate')).toBe(3);
+    expect(stepForField('venue_offer_offerings')).toBe(3);
+    expect(stepForField('agreed_to_terms')).toBe(4);
     expect(stepForField('nope' as never)).toBe(0);
   });
 });

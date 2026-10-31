@@ -4,6 +4,7 @@ import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 import { Text } from 'tamagui';
 
 import { VenueSlotStep } from '@/components/create-pod/steps/VenueSlotStep';
+import { VenueOfferStep } from '@/components/create-pod/steps/VenueOfferStep';
 import { PricingStep } from '@/components/create-pod/steps/PricingStep';
 import { SlotPicker } from '@/components/create-pod/SlotPicker';
 import { VenueContactCard } from '@/components/create-pod/VenueContactCard';
@@ -116,13 +117,11 @@ function VenueSlotHarness({
   venues = [venue],
   clubVenueIds = new Set(venues.map((item) => item.id)),
   pinnedVenueId,
-  venueQuote = noQuote,
 }: Readonly<{
   initial: Partial<CreatePodFormValues>;
   venues?: CreatePodVenue[];
   clubVenueIds?: Set<string>;
   pinnedVenueId?: string;
-  venueQuote?: VenueQuoteState;
 }>) {
   const form = useForm<CreatePodFormValues, any, CreatePodFormValues>({
     defaultValues: { ...blankCreatePodForm, ...initial },
@@ -133,7 +132,6 @@ function VenueSlotHarness({
         form={form}
         venues={venues}
         clubVenueIds={clubVenueIds}
-        venueQuote={venueQuote}
         currencySymbol="₹"
         pinnedVenueId={pinnedVenueId}
         venueNotice="NONE"
@@ -144,6 +142,23 @@ function VenueSlotHarness({
       <Text testID="readout-end">{form.watch('pod_end_date_time_text')}</Text>
     </>
   );
+}
+
+/** Step 4 — Offer for Venue: the picked venue's minimum business, the terms,
+ * the ask and the server's quote (the stepper owns the quote). */
+function OfferHarness({
+  initial = {},
+  venues = [venue],
+  quote = noQuote,
+}: Readonly<{
+  initial?: Partial<CreatePodFormValues>;
+  venues?: CreatePodVenue[];
+  quote?: VenueQuoteState;
+}>) {
+  const form = useForm<CreatePodFormValues, any, CreatePodFormValues>({
+    defaultValues: { ...blankCreatePodForm, ...instantVenue, ...initial },
+  });
+  return <VenueOfferStep form={form} venues={venues} quote={quote} currencySymbol="₹" />;
 }
 
 /** Routes the offer calendar read by operation name; anything else (the app
@@ -196,7 +211,6 @@ function SpaceErrorHarness() {
         form={form}
         venues={[venue]}
         clubVenueIds={new Set(['v1'])}
-        venueQuote={{ quote: null, loading: false, error: null }}
         currencySymbol="₹"
         venueNotice="NONE"
         spots={SPOTS}
@@ -232,7 +246,6 @@ function SpaceHarness({ venues }: Readonly<{ venues: CreatePodVenue[] }>) {
         form={form}
         venues={venues}
         clubVenueIds={new Set(venues.map((item) => item.id))}
-        venueQuote={{ quote: null, loading: false, error: null }}
         currencySymbol="₹"
         venueNotice="NONE"
         spots={SPOTS}
@@ -264,28 +277,16 @@ describe('VenueSlotStep', () => {
     await waitFor(() => expect(screen.getByTestId('spots-readout')).toHaveTextContent('120'));
   });
 
-  it('shows what the picked venue usually expects per booking — a guide, only when it names any', () => {
+  it("leaves the venue's minimum business to the offer step", () => {
     const expecting: CreatePodVenue = {
       ...venue,
       capacity: 75,
-      offer_min_business: [
-        { model: 'FLAT', amount: 5000 },
-        { model: 'PER_GUEST', amount: 200 },
-      ],
+      offer_min_business: [{ model: 'PER_GUEST', amount: 200 }],
     };
-    const { unmount } = renderWithProviders(<SpaceHarness venues={[expecting]} />);
-    const note = screen.getByTestId('create-pod-venue-min-business');
-    expect(note).toHaveTextContent(/This venue usually expects/);
-    // In the pickers' order: per guest before per booking.
-    expect(screen.getByText('₹200 per guest')).toBeOnTheScreen();
-    expect(screen.getByText('₹5,000 per booking')).toBeOnTheScreen();
-    expect(note).toHaveTextContent(/A guide from the venue — your offer can be different./);
-    unmount();
-
-    renderWithProviders(
-      <SpaceHarness venues={[{ ...venue, capacity: 75, offer_min_business: [] }]} />,
-    );
+    renderWithProviders(<SpaceHarness venues={[expecting]} />);
+    expect(screen.getByTestId('create-pod-venue-capacity')).toBeOnTheScreen();
     expect(screen.queryByTestId('create-pod-venue-min-business')).toBeNull();
+    expect(screen.queryByText('₹200 per guest')).toBeNull();
   });
 
   it('offers the whole venue when only a total capacity is set', async () => {
@@ -465,35 +466,21 @@ describe('VenueSlotStep', () => {
     expect(await screen.findByTestId('slot-calendar-empty')).toBeOnTheScreen();
   });
 
-  it('asks how the host pays the venue, and reads no slot list for an offer', async () => {
+  it('picks the window for an offer here, leaving its terms to the next step, and reads no slot list', async () => {
     routeBookingReads();
     renderWithProviders(<VenueSlotHarness initial={instantVenue} />);
     expect(await screen.findByTestId('create-pod-offer-intro')).toBeOnTheScreen();
-    expect(screen.getByTestId('create-pod-offer-model-PER_GUEST')).toBeOnTheScreen();
-    expect(screen.getByTestId('create-pod-offer-model-FLAT')).toBeOnTheScreen();
-    expect(screen.getByTestId('field-venue_offer_rate')).toBeOnTheScreen();
+    expect(screen.getByTestId('create-pod-venue-offer')).toBeOnTheScreen();
+    // How the host pays, the amount, the ask and the quote are the offer step's.
+    expect(screen.queryByTestId('create-pod-offer-terms')).toBeNull();
+    expect(screen.queryByTestId('create-pod-offer-model-PER_GUEST')).toBeNull();
+    expect(screen.queryByTestId('field-venue_offer_rate')).toBeNull();
+    expect(screen.queryByTestId('offer-ask-fields')).toBeNull();
+    expect(screen.queryByTestId('create-pod-venue-quote')).toBeNull();
     const askedForSlots = mockGraphqlRequest.mock.calls.some(([doc]) =>
       JSON.stringify(doc).includes('venueAvailableSlots'),
     );
     expect(askedForSlots).toBe(false);
-  });
-
-  it('offers a free venue last, which asks no amount and shows the free policy', async () => {
-    routeBookingReads();
-    renderWithProviders(<VenueSlotHarness initial={instantVenue} />);
-    await screen.findByTestId('create-pod-offer-intro');
-    expect(screen.queryByTestId('create-pod-venue-free-arrangement')).toBeNull();
-    fireEvent.press(screen.getByTestId('create-pod-offer-model-FREE'));
-    expect(screen.getByTestId('create-pod-offer-model-FREE')).toHaveProp('aria-checked', true);
-    expect(screen.getByTestId('create-pod-offer-model-hint')).toHaveTextContent(
-      /accepts or declines/,
-    );
-    expect(screen.queryByTestId('field-venue_offer_rate')).toBeNull();
-    expect(screen.getByTestId('create-pod-venue-free-arrangement')).toBeOnTheScreen();
-    // Back to a priced option: the amount returns and the policy goes.
-    fireEvent.press(screen.getByTestId('create-pod-offer-model-PER_HOUR'));
-    expect(screen.getByTestId('field-venue_offer_rate')).toBeOnTheScreen();
-    expect(screen.queryByTestId('create-pod-venue-free-arrangement')).toBeNull();
   });
 
   it("says so when the venue's calendar fails to load", async () => {
@@ -545,68 +532,6 @@ describe('VenueSlotStep', () => {
     expect(screen.getByTestId('readout-start')).toHaveTextContent(/^$/);
   });
 
-  it("shows the server's quote for the offer, read-only", async () => {
-    routeBookingReads();
-    const quote: NonNullable<VenueQuoteState['quote']> = {
-      model: VenuePricingModel.PerHour,
-      rate: 500,
-      pax: 0,
-      hours: 2,
-      base: 1000,
-      rules: [],
-      min_spend_top_up: 0,
-      cleaning_fee: 0,
-      pet_fee: 0,
-      gst_pct: 18,
-      taxes: 180,
-      platform_fee_pct: 5,
-      platform_fee: 59,
-      venue_payout: 1180,
-      total: 1239,
-      deposit: 0,
-    };
-    renderWithProviders(
-      <VenueSlotHarness
-        initial={instantVenue}
-        venueQuote={{ quote, loading: false, error: null }}
-      />,
-    );
-    const card = await screen.findByTestId('create-pod-venue-quote');
-    expect(card).toHaveTextContent(/Your offer, priced/);
-    expect(card).toHaveTextContent(/1,239/);
-  });
-
-  it('says why an offer cannot be sent instead of a price', async () => {
-    routeBookingReads();
-    renderWithProviders(
-      <VenueSlotHarness
-        initial={instantVenue}
-        venueQuote={{
-          quote: null,
-          message: 'The venue is closed then',
-          loading: false,
-          error: null,
-        }}
-      />,
-    );
-    expect(await screen.findByTestId('create-pod-offer-problem')).toHaveTextContent(
-      'The venue is closed then',
-    );
-    expect(screen.queryByTestId('create-pod-venue-quote')).toBeNull();
-  });
-
-  it('surfaces a failed quote instead of a price', async () => {
-    routeBookingReads();
-    renderWithProviders(
-      <VenueSlotHarness
-        initial={instantVenue}
-        venueQuote={{ quote: null, loading: false, error: new Error('Venue is closed then') }}
-      />,
-    );
-    expect(await screen.findByTestId('create-pod-quote-error')).toBeOnTheScreen();
-    expect(screen.queryByTestId('create-pod-venue-quote')).toBeNull();
-  });
-
   it('renders meeting fields (and no slot picker) for virtual pods', () => {
     renderWithProviders(<VenueSlotHarness initial={{ pod_mode: 'VIRTUAL' }} />);
     expect(screen.getByTestId('field-meeting_url')).toBeOnTheScreen();
@@ -631,6 +556,118 @@ describe('VenueSlotStep', () => {
       />,
     );
     expect(screen.getByTestId('pod-duration')).toBeOnTheScreen();
+  });
+});
+
+describe('VenueOfferStep', () => {
+  it("leads with the picked venue's minimum business, then the terms, the ask and the quote", () => {
+    const expecting: CreatePodVenue = {
+      ...venue,
+      offer_min_business: [
+        { model: 'FLAT', amount: 5000 },
+        { model: 'PER_GUEST', amount: 200 },
+      ],
+    };
+    renderWithProviders(<OfferHarness venues={[expecting]} />);
+    const note = screen.getByTestId('create-pod-venue-min-business');
+    expect(note).toHaveTextContent(/Minimum business for this venue/);
+    // In the pickers' order: per guest before per booking.
+    expect(screen.getByText('₹200 per guest')).toBeOnTheScreen();
+    expect(screen.getByText('₹5,000 per booking')).toBeOnTheScreen();
+    expect(note).toHaveTextContent(/Your offer must be at least the amount for the way you pay./);
+    // The note sits at the top of the step, above the offer's terms.
+    expect(screen.getByTestId('create-pod-offer-step')).toHaveTextContent(
+      /Minimum business for this venue.*Your offer to the venue.*How you pay the venue/,
+    );
+    expect(screen.getByTestId('create-pod-offer-terms')).toBeOnTheScreen();
+    expect(screen.getByTestId('offer-ask-fields')).toBeOnTheScreen();
+  });
+
+  it('shows no minimum business when the venue names none, or no venue is picked', () => {
+    const { unmount } = renderWithProviders(
+      <OfferHarness venues={[{ ...venue, offer_min_business: [] }]} />,
+    );
+    expect(screen.queryByTestId('create-pod-venue-min-business')).toBeNull();
+    expect(screen.getByTestId('create-pod-offer-terms')).toBeOnTheScreen();
+    unmount();
+
+    renderWithProviders(
+      <OfferHarness
+        initial={{ venue_id: 'gone' }}
+        venues={[{ ...venue, offer_min_business: [{ model: 'FLAT', amount: 5000 }] }]}
+      />,
+    );
+    expect(screen.queryByTestId('create-pod-venue-min-business')).toBeNull();
+  });
+
+  it('asks how the host pays the venue and how much', () => {
+    renderWithProviders(<OfferHarness />);
+    expect(screen.getByTestId('create-pod-offer-model-PER_GUEST')).toBeOnTheScreen();
+    expect(screen.getByTestId('create-pod-offer-model-FLAT')).toBeOnTheScreen();
+    expect(screen.getByTestId('field-venue_offer_rate')).toBeOnTheScreen();
+  });
+
+  it('offers a free venue last, which asks no amount and shows the free policy', () => {
+    renderWithProviders(<OfferHarness />);
+    expect(screen.queryByTestId('create-pod-venue-free-arrangement')).toBeNull();
+    fireEvent.press(screen.getByTestId('create-pod-offer-model-FREE'));
+    expect(screen.getByTestId('create-pod-offer-model-FREE')).toHaveProp('aria-checked', true);
+    expect(screen.getByTestId('create-pod-offer-model-hint')).toHaveTextContent(
+      /accepts or declines/,
+    );
+    expect(screen.queryByTestId('field-venue_offer_rate')).toBeNull();
+    expect(screen.getByTestId('create-pod-venue-free-arrangement')).toBeOnTheScreen();
+    // Back to a priced option: the amount returns and the policy goes.
+    fireEvent.press(screen.getByTestId('create-pod-offer-model-PER_HOUR'));
+    expect(screen.getByTestId('field-venue_offer_rate')).toBeOnTheScreen();
+    expect(screen.queryByTestId('create-pod-venue-free-arrangement')).toBeNull();
+  });
+
+  it("shows the server's quote for the offer, read-only", () => {
+    const quote: NonNullable<VenueQuoteState['quote']> = {
+      model: VenuePricingModel.PerHour,
+      rate: 500,
+      pax: 0,
+      hours: 2,
+      base: 1000,
+      rules: [],
+      min_spend_top_up: 0,
+      cleaning_fee: 0,
+      pet_fee: 0,
+      gst_pct: 18,
+      taxes: 180,
+      platform_fee_pct: 5,
+      platform_fee: 59,
+      venue_payout: 1180,
+      total: 1239,
+      deposit: 0,
+    };
+    renderWithProviders(<OfferHarness quote={{ quote, loading: false, error: null }} />);
+    const card = screen.getByTestId('create-pod-venue-quote');
+    expect(card).toHaveTextContent(/Your offer, priced/);
+    expect(card).toHaveTextContent(/1,239/);
+  });
+
+  it('says why an offer cannot be sent instead of a price', () => {
+    renderWithProviders(
+      <OfferHarness
+        quote={{ quote: null, message: 'The venue is closed then', loading: false, error: null }}
+      />,
+    );
+    expect(screen.getByTestId('create-pod-offer-problem')).toHaveTextContent(
+      'The venue is closed then',
+    );
+    expect(screen.queryByTestId('create-pod-venue-quote')).toBeNull();
+  });
+
+  it('surfaces a failed quote instead of a price', () => {
+    renderWithProviders(
+      <OfferHarness
+        quote={{ quote: null, loading: false, error: new Error('Venue is closed then') }}
+      />,
+    );
+    expect(screen.getByTestId('create-pod-quote-error')).toBeOnTheScreen();
+    expect(screen.queryByTestId('create-pod-venue-quote')).toBeNull();
   });
 });
 

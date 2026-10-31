@@ -3672,4 +3672,71 @@ export const STAFF_GAP_FLOWS: readonly CatalogueFlow[] = [
       },
     ],
   },
+  {
+    name: 'Marketing: Occasions',
+    description:
+      'marketing /occasions with tabs Live, Looks, Schedule, App icons and Ecomm store: the festive look every Duncit app (mWeb and native) wears. A look is data (OccasionTheme): colour tokens per mode plus particles, flyers, fireworks, atmosphere and a garland. 33 built-in festivals are seeded once. Server roles SUPER_ADMIN, CITY_ADMIN, MARKETING_MANAGER (occasion.resolver.ts); occasionLive is public.',
+    sub_flows: [
+      {
+        name: 'Pin a festive look and go back to normal',
+        description: 'setOccasionLive switches every app at its next load; NORMAL is the house look.',
+        steps: [
+          ['Open Live with the mode on Normal', 'The live card says the apps wear the house look'],
+          ['Pin Christmas and confirm', 'occasionLive answers source MANUAL with the christmas look; mWeb repaints green and red, snow falls in depth, Santa crosses with a gold trail, fairy lights twinkle along the top'],
+          ['Pin Halloween', 'mWeb turns dark whatever the viewer chose, the dark-mode switch is disabled and the auth toggle hidden; bats drift, ghosts fade, a witch flies right to left, fog and corner webs show'],
+          ['Set the mode back to Normal and confirm', 'Every app returns to its house look on the next load'],
+        ],
+      },
+      {
+        name: 'Schedule looks by date',
+        description: 'Windows only count while the live mode is Automatic (SCHEDULE); the server resolves them on the application clock.',
+        steps: [
+          ['Give Diwali a window that contains now, switch its schedule on, and set the mode to Automatic', 'occasionLive answers source SCHEDULE with diwali and next_change_at at the window end'],
+          ['Give New Year an overlapping window with a higher priority', 'New Year wins while both are open'],
+          ['Save a window whose end is before its start', 'Error "The look must end after it starts"'],
+          ['Switch a schedule on without dates', 'Error "Set when the look starts and ends before switching its schedule on"'],
+        ],
+      },
+      {
+        name: 'Design a look',
+        description: 'saveOccasionTheme creates (no key) or changes a look; only the fields sent change. Built-ins can be edited, archived and reset; custom looks can be deleted.',
+        steps: [
+          ['Create a look with a name, colours, a falling particle layer and a garland, and save', 'It appears under Custom in Looks with its preview'],
+          ['Send a particle colour that is not hex', 'Error naming the layer: "is not a hex colour like #FFD54F"'],
+          ['Send custom path data containing anything but SVG path commands', 'Error "path data may only hold SVG path commands and numbers"'],
+          ['Archive the pinned live look', 'Error "This look is live right now. Switch the apps to another look first."'],
+          ['Reset an edited built-in look', 'It is back the way Duncit shipped it; its schedule is kept'],
+        ],
+      },
+      {
+        name: 'Preview and pause on mWeb',
+        description: 'occasionLive(preview) shows any look without changing it for anyone else.',
+        steps: [
+          ['Open mWeb with ?occasion=diwali', 'mWeb wears Diwali for this browser session whatever is live; ?occasion=none ends the preview'],
+          ['Press the pause button at the bottom left', 'The decoration freezes and stays frozen for this look on the next visit'],
+          ['Turn on reduced motion in the OS', 'The decoration shows still and there is no pause button'],
+        ],
+      },
+      {
+        name: 'Festive app icons',
+        description: 'Moved from Admin › Branding. updateOccasionalIcons replaces the windows that swap the native app icons.',
+        steps: [
+          ['Open App icons with none configured', 'Info "No festive icons yet. Add one to schedule it."'],
+          ['Add one with key "diwali"', 'Hint "The app ships its own art for this key, so it shows offline and instantly."'],
+          ['Type key "eid"', 'Hint "The app has no art of its own for this key, so it loads the icon below."'],
+          ['Set the end before the start', 'Error "It must end after it starts." and Save stays blocked'],
+          ['Fill dates, an icon and a fallback icon and save', 'Toast "Festive icons saved."'],
+        ],
+      },
+      {
+        name: 'Ecomm store occasions',
+        description: 'Moved from the ecomm portal Settings. storeSaveOccasions replaces the store\'s festive windows; ecomm.duncit.com only, not the apps or partner-brand shops.',
+        steps: [
+          ['Add an occasion with a name, dates and the Diwali look, and save', 'Toast "Store occasions saved."; the store wears it while the window is open'],
+          ['Enter a background colour that is not hex', 'Error "Enter a hex colour, such as #FFF4E5."'],
+          ['Click Preview on store', 'ecomm.duncit.com opens in a new tab wearing that look'],
+        ],
+      },
+    ],
+  },
 ];

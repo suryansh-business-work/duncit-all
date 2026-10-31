@@ -6,17 +6,20 @@ import {
   type FreeJustificationValues,
 } from '@duncit/forms/schemas';
 import {
+  CREATE_POD_OFFER_STEP,
   DEFAULT_SMART_INCENTIVE_MAX_PCT,
   isFreePod,
   isFreeVenueOfferModel,
   isHostOfferModel,
   isMeetingPlatform,
   isVideoUrl,
+  offerBelowFloor,
   offerRateOf,
   smartIncentiveInput,
   ticketDiscountInput,
   venueOfferInput,
   venueOfferPriceInput,
+  type VenueOfferFloor,
   type VenueOfferSource,
 } from '@duncit/utils';
 
@@ -68,9 +71,17 @@ const splitMediaLines = (text: string) =>
 export const hasImageLine = (mediaText: string) =>
   splitMediaLines(mediaText).some((url) => !isVideoUrl(url));
 
+/** The picked venue's floor on the offer's basis, or null when there is none. */
+export type OfferFloorOf = (values: CreatePodFormValues) => VenueOfferFloor | null;
+
 /** Physical pods must book a venue, a space (capacity) and a time there: a
  * Pod Request's held slot, or an offer to the venue for a window. */
-function refineVenue(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Translate) {
+function refineVenue(
+  values: CreatePodFormValues,
+  ctx: z.RefinementCtx,
+  t: Translate,
+  offerFloor: OfferFloorOf,
+) {
   if (values.pod_mode === 'PHYSICAL' && !values.venue_id) {
     ctx.addIssue({
       code: 'custom',
@@ -87,7 +98,7 @@ function refineVenue(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Trans
       message: t('mweb.createPod.validation.spaceRequired'),
     });
   }
-  if (values.pod_mode === 'PHYSICAL') refineVenueTime(values, ctx, t);
+  if (values.pod_mode === 'PHYSICAL') refineVenueTime(values, ctx, t, offerFloor);
 }
 
 /** What the host asks of the venue beside the price — the shared rules
@@ -105,8 +116,14 @@ function refineOfferAsk(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Tr
 }
 
 /** The host's offer to the venue: how they pay it (or that it is free), how
- * much, and what they ask of it. A free venue asks no amount. mWeb twin. */
-function refineVenueOffer(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Translate) {
+ * much — never below the venue's own amount on that basis — and what they ask
+ * of it. A free venue asks no amount. mWeb twin. */
+function refineVenueOffer(
+  values: CreatePodFormValues,
+  ctx: z.RefinementCtx,
+  t: Translate,
+  offerFloor: OfferFloorOf,
+) {
   if (!isHostOfferModel(values.venue_offer_model)) {
     ctx.addIssue({
       code: 'custom',
@@ -114,6 +131,7 @@ function refineVenueOffer(values: CreatePodFormValues, ctx: z.RefinementCtx, t: 
       message: t('mweb.createPod.validation.offerModelRequired'),
     });
   }
+  const floor = offerFloor(values);
   if (
     !isFreeVenueOfferModel(values.venue_offer_model) &&
     offerRateOf(values.venue_offer_rate) <= 0
@@ -123,13 +141,24 @@ function refineVenueOffer(values: CreatePodFormValues, ctx: z.RefinementCtx, t: 
       path: ['venue_offer_rate'],
       message: t('mweb.createPod.validation.offerRateRequired'),
     });
+  } else if (floor && offerBelowFloor(floor, values.venue_offer_rate)) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['venue_offer_rate'],
+      message: t('availability.offers.minBusiness.offerBelow', { vars: { min: floor.text } }),
+    });
   }
   refineOfferAsk(values, ctx, t);
 }
 
 /** A held slot books as before; a Pod Request must keep its slot; every other
  * physical pod needs its whole window and its offer to the venue. mWeb twin. */
-function refineVenueTime(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Translate) {
+function refineVenueTime(
+  values: CreatePodFormValues,
+  ctx: z.RefinementCtx,
+  t: Translate,
+  offerFloor: OfferFloorOf,
+) {
   if (values.venue_slot_id) return;
   if (values.partner_request_id) {
     ctx.addIssue({
@@ -146,7 +175,7 @@ function refineVenueTime(values: CreatePodFormValues, ctx: z.RefinementCtx, t: T
       message: t('mweb.createPod.validation.bookingRequired'),
     });
   }
-  refineVenueOffer(values, ctx, t);
+  refineVenueOffer(values, ctx, t, offerFloor);
 }
 
 /** Virtual pods must carry a valid meeting link. */
@@ -313,10 +342,13 @@ function refinePublish(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Tra
  *
  * `smartIncentiveMaxPct` is Loyalty > Smart Incentive's `max_discount_pct`, or
  * null while the programme is not known to be on — Step 4 hides the editor
- * then, so the percentage is not checked (see `refineSmartIncentive`). */
+ * then, so the percentage is not checked (see `refineSmartIncentive`).
+ * `offerFloor` is the picked venue's business amount on the offer's basis: an
+ * offer below it cannot leave the offer step. */
 export function makeCreatePodSchema(
   t: Translate = fallbackT,
   smartIncentiveMaxPct: number | null = DEFAULT_SMART_INCENTIVE_MAX_PCT,
+  offerFloor: OfferFloorOf = () => null,
 ) {
   return z
     .object({
@@ -407,7 +439,7 @@ export function makeCreatePodSchema(
       ...freeJustificationFields,
     })
     .superRefine((values, ctx) => {
-      refineVenue(values, ctx, t);
+      refineVenue(values, ctx, t, offerFloor);
       refineMeeting(values, ctx, t);
       refineSchedule(values, ctx, t);
       refinePodType(values, ctx, t);
@@ -462,13 +494,11 @@ export const STEP_FIELDS: (keyof CreatePodFormValues)[][] = [
     'meeting_url',
     'meeting_notes',
     'venue_space_label',
-    'venue_offer_model',
-    'venue_offer_rate',
-    'venue_offer_offerings',
-    'venue_offer_note',
     'pod_date_time_text',
     'pod_end_date_time_text',
   ],
+  // Offer for Venue — walked only by a pod that sends one (`createPodStepShown`).
+  ['venue_offer_model', 'venue_offer_rate', 'venue_offer_offerings', 'venue_offer_note'],
   [
     'pod_type',
     'pod_amount_text',
@@ -485,8 +515,7 @@ export const STEP_FIELDS: (keyof CreatePodFormValues)[][] = [
   ],
 ];
 
-const VENUE_STEP_INDEX = 2;
-const PRICING_STEP_INDEX = 3;
+const PRICING_STEP_INDEX = 4;
 const FREE_JUSTIFICATION_FIELDS: (keyof CreatePodFormValues)[] = [
   'free_reason',
   'free_details',
@@ -495,9 +524,9 @@ const FREE_JUSTIFICATION_FIELDS: (keyof CreatePodFormValues)[] = [
 
 /**
  * The fields leaving `step` validates: its STEP_FIELDS, plus the free
- * justification on the step that shows it — the venue step for a free venue
+ * justification on the step that shows it — the offer step for a free venue
  * offer, the pricing step for a free pod. A pod made free on the pricing step
- * never blocks the venue step, which does not draw the fields. mWeb twin.
+ * never blocks the offer step, which does not draw those fields. mWeb twin.
  */
 export function stepFieldsFor(
   step: number,
@@ -508,12 +537,13 @@ export function stepFieldsFor(
 ): (keyof CreatePodFormValues)[] {
   const fields = STEP_FIELDS[step] ?? [];
   const showsFree =
-    (step === VENUE_STEP_INDEX && sendsFreeVenueOffer(values)) ||
+    (step === CREATE_POD_OFFER_STEP && sendsFreeVenueOffer(values)) ||
     (step === PRICING_STEP_INDEX && isFreePod(values.pod_type));
   return showsFree ? [...fields, ...FREE_JUSTIFICATION_FIELDS] : fields;
 }
 
-/** Catalogue keys for the four step titles, in step order. Components translate
+/** Catalogue keys for the five step titles, in step order (a pod that sends no
+ * venue offer skips "Offer for Venue" — `createPodStepShown`). Components translate
  * these with their own `t`; the arrays below are the English resolution for
  * callers outside the stepper (the Host Management draft cards). The club step
  * now comes first, so its `step2*` keys lead: the keys keep their names because
@@ -522,6 +552,7 @@ export const STEP_TITLE_KEYS = [
   'mweb.createPod.step2Title',
   'mweb.createPod.step1Title',
   'mweb.createPod.step3Title',
+  'mweb.createPod.stepOfferTitle',
   'mweb.createPod.step4Title',
 ];
 
@@ -530,6 +561,7 @@ export const STEP_SUBTITLE_KEYS = [
   'mweb.createPod.step2Subtitle',
   'mweb.createPod.step1Subtitle',
   'mweb.createPod.step3Subtitle',
+  'mweb.createPod.stepOfferSubtitle',
   'mweb.createPod.step4Subtitle',
 ];
 

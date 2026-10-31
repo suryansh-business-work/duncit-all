@@ -35,6 +35,8 @@ exports:
   - 'HOSTNAME_LABEL'
   - 'USERNAME'
   - 'URL_SLUG'
+  - 'HEX_COLOR'
+  - 'SVG_PATH_DATA'
   - 'SOCIAL_HANDLE'
   - 'UNDERSCORE_HANDLE'
   - 'SITE_PATH'
@@ -51,6 +53,8 @@ exports:
   - 'isUsername'
   - 'isHostname'
   - 'isUrlSlug'
+  - 'isHexColor'
+  - 'isSvgPathData'
   - 'isSocialHandle'
   - 'isUnderscoreHandle'
   - 'isSitePath'
@@ -207,6 +211,8 @@ above holds for everything you can import.
 | `GA_MEASUREMENT_ID` | `/^G-[A-Z\d]{6,16}$/` | — | a GA4 measurement id — `G-V0CTVZFGM0` |
 | `USERNAME` | `/^(?=.{3,30}$)[a-z0-9]+(?:-[a-z0-9]+)*$/` | `isUsername` | a Duncit @handle — `suryansh-srivastava-7k2f` |
 | `URL_SLUG` | `/^[a-z0-9]+(?:-[a-z0-9]+)*$/` | `isUrlSlug` | a page or post slug — `summer-meetups-2026` |
+| `HEX_COLOR` | `/^#(?:[\da-fA-F]{3}\|[\da-fA-F]{6})$/` | `isHexColor` | a colour in design data — `#FFD54F`, `#fa0`; no alpha, no named colours (Marketing → Occasions) |
+| `SVG_PATH_DATA` | `/^[MmLlHhVvCcSsQqTtAaZz\d\s.,eE+-]+$/` | `isSvgPathData` | an SVG path's `d` — `M12 2l2.2 7.8z`; a custom festive mark or flyer layer |
 | `SOCIAL_HANDLE` | `/^[A-Za-z0-9._-]{1,100}$/` | `isSocialHandle` | a social-network handle without the `@` — `duncit.events`; a pasted link is refused |
 | `UNDERSCORE_HANDLE` | `/^[a-z0-9][a-z0-9_]{1,28}[a-z0-9]$/` | `isUnderscoreHandle` | a 3–30 character handle with inner underscores — `run_club` (Duncit Lite) |
 | `SITE_PATH` | `/^\/(?:[a-z0-9]+(?:[-/][a-z0-9]+)*)?$/` | `isSitePath` | a website page path — `/`, `/safety/tools`; no trailing slash |

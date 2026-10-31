@@ -237,6 +237,25 @@ export const URL_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 export const isUrlSlug = (v) => URL_SLUG.test(v);
 
 /**
+ * A hex colour as design data stores it: `#rgb` or `#rrggbb` (case-insensitive).
+ * No alpha form — a festive look fades colours itself — and no named colours.
+ */
+export const HEX_COLOR = /^#(?:[\da-fA-F]{3}|[\da-fA-F]{6})$/;
+
+/** Hex colour check. */
+export const isHexColor = (v) => HEX_COLOR.test(v);
+
+/**
+ * SVG path data (the `d` attribute): only path commands, numbers, signs,
+ * exponents, separators and whitespace — nothing a renderer could fetch or run.
+ * One character class, so it is linear.
+ */
+export const SVG_PATH_DATA = /^[MmLlHhVvCcSsQqTtAaZz\d\s.,eE+-]+$/;
+
+/** Path-data shape check (it does not prove the path draws anything). */
+export const isSvgPathData = (v) => SVG_PATH_DATA.test(v);
+
+/**
  * A social-network handle as a profile stores it — `duncit.events`,
  * `run_club-delhi` — with the leading `@` and the site's own address already
  * dropped (the client shows them as fixed prefixes). Letters, digits, `.`, `_`

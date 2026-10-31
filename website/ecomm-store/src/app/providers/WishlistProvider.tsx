@@ -5,6 +5,7 @@ import { parseApiError } from '@duncit/utils';
 
 import { STORE_WISHLIST_IDS, TOGGLE_WISHLIST } from '../../graphql/catalog';
 import { getCartToken } from '../../lib/cartToken';
+import { useBrowserState } from '../../lib/hydration';
 import { useStoreT } from '../../i18n';
 
 interface WishlistValue {
@@ -20,10 +21,12 @@ const WishlistContext = createContext<WishlistValue | null>(null);
 export function WishlistProvider({ children }: Readonly<{ children: ReactNode }>) {
   const { t } = useStoreT();
   const client = useApolloClient();
-  const cartToken = getCartToken();
+  // The same browser cart token as the cart, read after hydration for the same reason.
+  const [cartToken] = useBrowserState(getCartToken, '');
   const [announcement, setAnnouncement] = useState('');
   const { data } = useQuery(STORE_WISHLIST_IDS, {
     variables: { cart_token: cartToken },
+    skip: !cartToken,
   });
   const ids = useMemo(() => new Set(data?.storeWishlistIds ?? []), [data]);
 

@@ -1418,7 +1418,7 @@ export const PARTNER_GAP_FLOWS_A: readonly CatalogueFlow[] = [
         name: 'Store settings (incl. closing the store) and autoship terms',
         description: 'StoreSaveSettings saves one tab at a time; turning "Store open" off makes ecomm.duncit.com show its "Opening soon" page. Autoship terms are the Autoship tab of Settings (discount up to 50%, rhythms in weeks); /autoship lists plans (no StoreAutoshipTerms operation exists). Restore the settings after the run.',
         steps: [
-          ['Open Settings', 'Tabs General, Checkout, Shipping, Returns, Pages, Occasions, Autoship'],
+          ['Open Settings', 'Tabs General, Checkout, Shipping, Returns, Autoship, SEO, Pages (store occasions are in Marketing → Occasions)'],
           ['On General switch "Store open" off and save', 'Toast "Saved"; ecomm.duncit.com shows "Opening soon"'],
           ['Switch it back on and save', 'The store front loads normally'],
           ['On Autoship set the discount to 60 and save', 'Error "The autoship discount can be at most 50%"'],

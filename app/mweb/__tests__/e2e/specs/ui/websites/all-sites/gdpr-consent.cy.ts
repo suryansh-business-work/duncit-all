@@ -1,6 +1,13 @@
 /// <reference types="cypress" />
 import { createTranslator, type Translator } from '@duncit/i18n';
-import { visitSite, websiteCopy, WEBSITE_FALLBACK_FLAT, type SiteKey } from '../../../../support/ui-websites';
+import {
+  expectNeverSent,
+  interceptQuery,
+  visitSite,
+  websiteCopy,
+  WEBSITE_FALLBACK_FLAT,
+  type SiteKey,
+} from '../../../../support/ui-websites';
 
 /**
  * The tracking-consent banner every website mounts (@duncit/brand/consent-banner.ts:
@@ -51,16 +58,14 @@ describe('UI Websites · GDPR consent', () => {
   });
 
   it('GDPR-02 Reject all stores a no to both, closes the banner and never asks for the analytics tag', () => {
-    cy.intercept({ method: 'POST', url: String(Cypress.env('GRAPHQL_URL')) }, (req) => {
-      if (String((req.body as { query?: string })?.query ?? '').includes('googleAnalyticsTag')) req.alias = 'gaTag';
-    });
+    interceptQuery('googleAnalyticsTag', 'gaTag');
     visitSite('main', '/', { consent: 'none' });
     cy.contains(`${BANNER} button`, t('privacy.banner.rejectAll')).click();
     cy.get(BANNER).should('not.be.visible');
     readChoice().should('deep.include', { analytics: false, marketing: false });
     cy.reload();
     cy.get(BANNER).should('not.be.visible');
-    cy.get('@gaTag.all').should('have.length', 0);
+    expectNeverSent('gaTag');
     cy.get('script[src*="googletagmanager.com/gtag/js"]').should('not.exist');
   });
 

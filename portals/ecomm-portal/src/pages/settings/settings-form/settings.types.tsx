@@ -7,7 +7,7 @@ import type { StoreSettings } from '../queries';
 export type { StoreSettings };
 
 /** The settings tabs, in the order the strip shows them. */
-export type SettingsTab = 'general' | 'checkout' | 'shipping' | 'returns' | 'autoship' | 'seo' | 'pages' | 'occasions';
+export type SettingsTab = 'general' | 'checkout' | 'shipping' | 'returns' | 'autoship' | 'seo' | 'pages';
 
 /**
  * One tab of the settings page: its own schema, the slice of the settings it

@@ -32,6 +32,8 @@ const seed = (subFlows: E2eSubFlow[] = [subFlow()], flow: Partial<E2eFlow> = {})
           description: 'Sign up, login and logout',
           sub_flow_count: subFlows.length,
           looks_good_count: 0,
+          specs: [],
+          run_stats: null,
           created_by: 'ops@example.test',
           created_at: '2026-01-01T10:00:00.000Z',
           updated_at: '2026-01-02T10:00:00.000Z',

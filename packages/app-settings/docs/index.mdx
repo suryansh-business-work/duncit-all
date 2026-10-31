@@ -318,12 +318,26 @@ Pass the bundle. Calling `useTranslation()` bare outside a provider renders raw 
 | `LocaleProvider` | `fallback` | `FlatCatalogue` | yes | — | The surface's bundled catalogue. |
 | | `userLocale` | `string \| null` | no | — | The signed-in account's saved language; wins over a local choice. |
 | | `onLocaleChange` | `(code: string) => void` | no | — | Wire to the `setMyLocale` mutation to persist server-side. |
+| | `onKeyRead` | `(key: string) => void` | no | — | Called with every key `t` or `has` is asked for. For server renders; see below. |
 | | `children` | `ReactNode` | yes | — | |
 | `AppLocaleProvider` | `fallback` | `FlatCatalogue` | yes | — | Same, but reads `userLocale` from `useUserData()`. |
 | | `children` | `ReactNode` | yes | — | Must sit inside a `UserProvider`. |
 
 Locale precedence: local override → `userLocale` → `localStorage['duncit_locale']` →
 `navigator.language` → the platform default.
+
+`publicTranslations` is every key in the product (about 29,000 rows, 3 MB). A server render
+that hands its Apollo cache to the browser should not inline all of it in every page. Record
+the keys the render reads and keep only those rows (plus their `.one` / `.other` plural rows);
+the ecomm store does this in `website/ecomm-store/src/app/ssr-copy.ts`:
+
+```tsx
+const used = new Set<string>();
+<LocaleProvider fallback={STORE_FALLBACK} onKeyRead={(key) => used.add(key)}>
+  <Page />
+</LocaleProvider>
+// after rendering the closed store: used.has('ecommStore.closed.title') === true
+```
 
 ### Operations
 

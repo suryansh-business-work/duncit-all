@@ -262,8 +262,8 @@ async function fillBasics() {
 }
 
 // Step 3 for a physical pod: venue → space (capacity) → a start and an end
-// the venue is open for → how the host pays it, then the server's quote.
-async function bookSlot() {
+// the venue is open for.
+async function pickWindow() {
   await screen.findByTestId('create-pod-venue-v1');
   press('create-pod-venue-v1');
   // The space (capacity) selector gates the booking calendar — pick the whole venue.
@@ -272,6 +272,11 @@ async function bookSlot() {
   press(slotTile);
   await screen.findByTestId(endChip);
   press(endChip);
+}
+
+// Step 4 (Offer for Venue): how the host pays it, then the server's quote.
+async function offerFlat() {
+  await screen.findByTestId('create-pod-offer-step');
   press('create-pod-offer-model-FLAT');
   fireEvent.changeText(screen.getByTestId('field-venue_offer_rate'), '400');
   // What the host needs from the venue is required beside the price.
@@ -285,7 +290,9 @@ async function fillToPricing(mode: 'PHYSICAL' | 'VIRTUAL') {
   await fillBasics();
   press('create-pod-submit');
   if (mode === 'PHYSICAL') {
-    await bookSlot();
+    await pickWindow();
+    press('create-pod-submit');
+    await offerFlat();
   } else {
     await screen.findByTestId('field-meeting_url');
     // The platform is picked from the shared list, and a virtual pod has no
@@ -311,8 +318,13 @@ function justifyFree(prefix: string) {
   press(`${prefix}-free-accept`);
 }
 
-const expectStep = (step: number) =>
-  expect(screen.getByTestId('create-pod-progress')).toHaveProp('aria-label', `Step ${step} of 4`);
+// A physical pod that offers its venue walks five steps; a virtual pod skips
+// the offer step and walks four.
+const expectStep = (step: number, total = 5) =>
+  expect(screen.getByTestId('create-pod-progress')).toHaveProp(
+    'aria-label',
+    `Step ${step} of ${total}`,
+  );
 
 describe('CreatePodStepper', () => {
   it('walks a physical pod end to end: slot booking sets the window, then publishes', async () => {
@@ -344,11 +356,12 @@ describe('CreatePodStepper', () => {
     // space (capacity) selector gates the slots, and picking a slot books it.
     await screen.findByTestId('create-pod-venue-v1');
     expect(screen.queryByTestId('create-pod-venue-v9')).toBeNull();
-    await bookSlot();
-    // An offer to the venue: the server's quote for it, the contact card and
-    // the window picked. The venue answers it once the pod is sent.
+    await pickWindow();
+    expectStep(3);
+    // The window offered to the venue, the contact card and the duration; how
+    // the host pays the venue is the next step's.
     expect(screen.getByTestId('create-pod-offer-intro')).toBeOnTheScreen();
-    expect(screen.getByTestId('create-pod-venue-quote')).toHaveTextContent(/496/);
+    expect(screen.queryByTestId('create-pod-offer-terms')).toBeNull();
     // A paid pod pays the venue through Duncit — no settle-it-yourself note.
     expect(screen.queryByTestId('create-pod-free-venue-note')).toBeNull();
     expect(screen.getByTestId('create-pod-venue-contact')).toBeOnTheScreen();
@@ -361,10 +374,18 @@ describe('CreatePodStepper', () => {
     expect(await screen.findByTestId(slotTile)).toHaveProp('aria-pressed', true);
     press('create-pod-submit');
 
-    // Step 4: pricing + products + price panel. Both cards are offered to a
+    // Step 4: the offer for the venue and the server's quote for it. The venue
+    // answers it once the pod is sent.
+    await offerFlat();
+    expectStep(4);
+    expect(screen.getByTestId('create-pod-step-title')).toHaveTextContent('Offer for Venue');
+    expect(screen.getByTestId('create-pod-venue-quote')).toHaveTextContent(/496/);
+    press('create-pod-submit');
+
+    // Step 5: pricing + products + price panel. Both cards are offered to a
     // physical pod and Paid is preselected, with its full calculation.
     await screen.findByTestId('create-pod-paid');
-    expectStep(4);
+    expectStep(5);
     expect(screen.getByTestId('create-pod-free')).toHaveProp('aria-checked', false);
     expect(screen.getByTestId('create-pod-paid')).toHaveProp('aria-checked', true);
     expect(screen.getByTestId('create-pod-price-panel')).toBeOnTheScreen();
@@ -415,6 +436,10 @@ describe('CreatePodStepper', () => {
   it('publishes a virtual pod (no venue, no slot, no place charges)', async () => {
     const { onPublish } = setup();
     await fillToPricing('VIRTUAL');
+    // A virtual pod sends no venue offer: the meeting step leads straight to
+    // Pricing, the last of its four steps.
+    expectStep(4, 4);
+    expect(screen.queryByTestId('create-pod-offer-step')).toBeNull();
     expect(screen.queryByTestId('charge-add')).toBeNull();
     press('create-pod-submit');
     await waitFor(() => expect(onPublish).toHaveBeenCalled());
@@ -431,13 +456,11 @@ describe('CreatePodStepper', () => {
     await pickClub();
     await fillBasics();
     press('create-pod-submit');
-    await screen.findByTestId('create-pod-venue-v1');
-    press('create-pod-venue-v1');
-    press('create-pod-space-Whole venue');
-    await screen.findByTestId(slotTile);
-    press(slotTile);
-    await screen.findByTestId(endChip);
-    press(endChip);
+    await pickWindow();
+    // The free venue is asked for on the offer step, not beside the window.
+    expect(screen.queryByTestId('create-pod-offer-model-FREE')).toBeNull();
+    press('create-pod-submit');
+    await screen.findByTestId('create-pod-offer-step');
     press('create-pod-offer-model-FREE');
     // Free names no amount: the rate goes, and the free policy takes its place.
     expect(screen.queryByTestId('field-venue_offer_rate')).toBeNull();
@@ -447,11 +470,12 @@ describe('CreatePodStepper', () => {
     expect(await screen.findByTestId('create-pod-venue-quote-free')).toHaveTextContent(
       /the venue is paid nothing for this booking/,
     );
-    // The venue step holds until the host says why it is free and accepts the policy.
+    // The offer step holds until the host says why it is free and accepts the policy.
     press('create-pod-submit');
     expect(await screen.findByTestId('create-pod-venue-free-reason-error')).toHaveTextContent(
       'Pick why this is free',
     );
+    expectStep(4);
     expect(screen.queryByTestId('create-pod-paid')).toBeNull();
     justifyFree('create-pod-venue');
     press('create-pod-submit');
@@ -526,9 +550,11 @@ describe('CreatePodStepper', () => {
     press('create-pod-free');
 
     // Back to step 1 and flip to Physical — a physical pod may be free, so the
-    // pick survives the switch (the club pick is cleared with the mode).
+    // pick survives the switch (the club pick is cleared with the mode). A
+    // virtual pod has no offer step, so Back from Pricing is its meeting step.
     press('create-pod-back');
     await screen.findByTestId('field-meeting_url');
+    expectStep(3, 4);
     press('create-pod-back');
     await screen.findByTestId('field-pod_title');
     press('create-pod-back');
@@ -540,15 +566,18 @@ describe('CreatePodStepper', () => {
     await screen.findByTestId('field-pod_title');
     press('create-pod-submit');
 
-    // Step 3: a slot quoted at ₹496 at a partner's venue (owner-1, not the viewer).
-    await bookSlot();
+    // Step 3: a window at a partner's venue (owner-1, not the viewer), then
+    // Step 4: the offer, quoted at ₹496.
+    await pickWindow();
     const venueNote = screen.getByTestId('create-pod-free-venue-note');
     expect(venueNote).toHaveTextContent(/settle the venue's charges with the venue directly/);
     expect(venueNote).not.toHaveTextContent(/asked not to confirm the slot/);
     expect(venueNote).toHaveProp('role', 'status');
     press('create-pod-submit');
+    await offerFlat();
+    press('create-pod-submit');
 
-    // Step 4: still free — no amount, no panel, and the note repeats the venue part.
+    // Step 5: still free — no amount, no panel, and the note repeats the venue part.
     await screen.findByTestId('create-pod-free');
     expect(screen.getByTestId('create-pod-free')).toHaveProp('aria-checked', true);
     expect(screen.queryByTestId('field-pod_amount_text')).toBeNull();
@@ -593,12 +622,12 @@ describe('CreatePodStepper', () => {
     expect(screen.queryByTestId('create-pod-free-note-venue')).toBeNull();
   });
 
-  // Step 4 only offers products in the pod's category, so a row carried in from
+  // Pricing only offers products in the pod's category, so a row carried in from
   // a draft (or from a club the host has since changed) must be dropped — left
   // in place it renders blank and the publish dies on the server category gate.
   it('drops a picked product the pod category no longer offers', async () => {
     setup({
-      initialStep: 3,
+      initialStep: 4,
       initialValues: {
         ...initialValues,
         club_id: 'c1',
@@ -881,7 +910,8 @@ describe('CreatePodStepper', () => {
         'Pick a date and time the venue is free',
       ),
     );
-    expect(screen.queryByTestId('create-pod-paid')).toBeNull();
+    expectStep(3);
+    expect(screen.queryByTestId('create-pod-offer-step')).toBeNull();
   });
 
   it('says why the server will not take an offer, and holds the host until terms are given', async () => {
@@ -900,18 +930,14 @@ describe('CreatePodStepper', () => {
     await pickClub();
     await fillBasics();
     press('create-pod-submit');
-    await screen.findByTestId('create-pod-venue-v1');
-    press('create-pod-venue-v1');
-    press('create-pod-space-Whole venue');
-    await screen.findByTestId(slotTile);
-    press(slotTile);
-    await screen.findByTestId(endChip);
-    press(endChip);
-    // No pricing option or amount yet: validation holds the host on step 3.
+    await pickWindow();
+    press('create-pod-submit');
+    await screen.findByTestId('create-pod-offer-step');
+    // No pricing option or amount yet: validation holds the host on the offer step.
     await act(async () => {
       press('create-pod-submit');
     });
-    expectStep(3);
+    expectStep(4);
     expect(screen.queryByTestId('create-pod-paid')).toBeNull();
     press('create-pod-offer-model-FLAT');
     fireEvent.changeText(screen.getByTestId('field-venue_offer_rate'), '900');
@@ -971,8 +997,23 @@ describe('CreatePodStepper', () => {
     expect(await screen.findByTestId('create-pod-submit-spinner')).toBeOnTheScreen();
   });
 
-  it('resumes at the provided step and clamps out-of-range drafts', () => {
-    setup({ initialStep: 3, initialValues: { ...initialValues, pod_title: 'Resumed' } });
+  it('resumes at the provided step', () => {
+    setup({ initialStep: 4, initialValues: { ...initialValues, pod_title: 'Resumed' } });
+    expectStep(5);
+    expect(screen.getByTestId('create-pod-paid')).toBeOnTheScreen();
+  });
+
+  it('resumes a physical draft saved on the offer step there', () => {
+    setup({ initialStep: 3, initialValues: { ...initialValues, pod_mode: 'PHYSICAL' } });
+    expectStep(4);
+    expect(screen.getByTestId('create-pod-offer-step')).toBeOnTheScreen();
+  });
+
+  it('resumes a draft on a step the pod does not walk at the next one', () => {
+    // A virtual pod sends no venue offer, so its draft lands on Pricing.
+    setup({ initialStep: 3, initialValues: { ...initialValues, pod_mode: 'VIRTUAL' } });
+    expectStep(4, 4);
+    expect(screen.queryByTestId('create-pod-offer-step')).toBeNull();
     expect(screen.getByTestId('create-pod-paid')).toBeOnTheScreen();
   });
 
@@ -987,7 +1028,7 @@ describe('CreatePodStepper', () => {
         product_requests: [{ product_id: 'p1', quantity: 2 }],
       },
     });
-    expectStep(4);
+    expectStep(5);
     expect(screen.getByTestId('create-pod-paid')).toBeOnTheScreen();
     expect(screen.queryByTestId('pricing-step-products-card')).toBeNull();
     expect(screen.queryByTestId('product-add')).toBeNull();
@@ -1003,7 +1044,7 @@ describe('CreatePodStepper', () => {
   it('clears orphaned product requests even when the toggle was off', () => {
     mockFeatureFlag.mockReturnValue(false);
     setup({
-      initialStep: 3,
+      initialStep: 4,
       initialValues: {
         ...initialValues,
         products_enabled: false,
@@ -1073,6 +1114,8 @@ describe('CreatePodStepper — a venue minimum', () => {
     press(slotTile);
     await screen.findByTestId(endChip);
     press(endChip);
+    press('create-pod-submit');
+    await screen.findByTestId('create-pod-offer-step');
     press('create-pod-offer-model-PER_GUEST');
     // Once picked, the option says how it pays the venue.
     expect(screen.getByText(/A minimum order value per person/)).toBeOnTheScreen();
@@ -1119,28 +1162,61 @@ describe('CreatePodStepper — a venue minimum', () => {
     );
   });
 
-  it('holds the host on step 3 until they say what they need from the venue', async () => {
+  it('holds the host on the offer step until they say what they need from the venue', async () => {
     setup();
     await pickClub();
     await fillBasics();
     press('create-pod-submit');
-    await screen.findByTestId('create-pod-venue-v1');
-    press('create-pod-venue-v1');
-    press('create-pod-space-Whole venue');
-    await screen.findByTestId(slotTile);
-    press(slotTile);
-    await screen.findByTestId(endChip);
-    press(endChip);
+    await pickWindow();
+    // No minimum is named for a venue without one.
+    expect(screen.queryByTestId('create-pod-venue-minimum')).toBeNull();
+    press('create-pod-submit');
+    await screen.findByTestId('create-pod-offer-step');
     press('create-pod-offer-model-FLAT');
     fireEvent.changeText(screen.getByTestId('field-venue_offer_rate'), '400');
     await act(async () => {
       press('create-pod-submit');
     });
-    expectStep(3);
+    expectStep(4);
     expect(
       await screen.findByText('Add at least one thing you need from the venue'),
     ).toBeOnTheScreen();
-    // No minimum is named for a venue without one.
-    expect(screen.queryByTestId('create-pod-venue-minimum')).toBeNull();
+    // …and a venue that names no minimum business shows none.
+    expect(screen.queryByTestId('create-pod-venue-min-business')).toBeNull();
+  });
+
+  it("holds an offer below the venue's minimum business for the way the host pays", async () => {
+    const flooredVenue = {
+      ...venues[0],
+      offer_min_business: [{ model: 'PER_GUEST', amount: 200 }],
+    };
+    setup({ venues: [flooredVenue] });
+    await pickClub();
+    await fillBasics();
+    press('create-pod-submit');
+    await pickWindow();
+    // The minimum business is the offer step's, not the venue step's.
+    expect(screen.queryByTestId('create-pod-venue-min-business')).toBeNull();
+    press('create-pod-submit');
+    await screen.findByTestId('create-pod-offer-step');
+    expect(screen.getByTestId('create-pod-venue-min-business')).toHaveTextContent(/₹200 per guest/);
+    press('create-pod-offer-model-PER_GUEST');
+    fireEvent.changeText(screen.getByTestId('field-venue_offer_rate'), '150');
+    fireEvent.changeText(screen.getByTestId('field-venue_offer_offerings'), 'A projector');
+    await act(async () => {
+      press('create-pod-submit');
+    });
+    expectStep(4);
+    expect(
+      await screen.findByText(
+        'This venue takes at least ₹200 per guest — raise your offer to continue',
+      ),
+    ).toBeOnTheScreen();
+    expect(screen.queryByTestId('create-pod-paid')).toBeNull();
+    // Raised to the minimum, the offer leaves the step.
+    fireEvent.changeText(screen.getByTestId('field-venue_offer_rate'), '200');
+    press('create-pod-submit');
+    await screen.findByTestId('create-pod-paid');
+    expectStep(5);
   });
 });

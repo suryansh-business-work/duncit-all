@@ -27,6 +27,16 @@ export const e2eFlowTypeDefs = gql`
     reviewed_at: String
   }
 
+  "How a flow's linked specs did across the E2E runs still on record."
+  type E2eFlowRunStats {
+    "Runs in which at least one of its specs ran."
+    runs: Int!
+    "Runs in which every scenario of its specs passed."
+    passed: Int!
+    "Runs in which any scenario of its specs failed or never ran."
+    failed: Int!
+  }
+
   """
   A main flow the Tech team documents for the e2e suite, e.g. User
   Authentication. Tech > E2E Tests > Flows.
@@ -39,6 +49,10 @@ export const e2eFlowTypeDefs = gql`
     sub_flow_count: Int!
     "How many of its sub flows are marked LOOKS_GOOD."
     looks_good_count: Int!
+    "The live Cypress spec files that test it, as project/spec (e2eFlow/catalogue/spec-links.ts)."
+    specs: [String!]!
+    "Its runs, passes and failures from those specs' scenarios. Null when no spec tests it yet."
+    run_stats: E2eFlowRunStats
     "The portal account that added it; system for the flows seeded from the codebase."
     created_by: String!
     created_at: String

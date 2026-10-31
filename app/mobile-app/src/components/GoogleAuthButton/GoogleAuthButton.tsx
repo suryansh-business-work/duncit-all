@@ -6,7 +6,7 @@ import { Spinner, Text, XStack } from 'tamagui';
 
 import { useTranslation } from '@/hooks/useTranslation';
 import { useConfigStore } from '@/stores/config.store';
-import { useThemeStore } from '@/stores/theme.store';
+import { useEffectiveScheme } from '@/hooks/useEffectiveScheme';
 import { auth } from '@duncit/auth-tokens';
 import { BUTTON_SIZES, PRESS_STYLE } from '@duncit/buttons-native';
 
@@ -58,7 +58,7 @@ export function GoogleAuthButton({
   variant = 'pill',
 }: Readonly<GoogleAuthButtonProps>) {
   const { t } = useTranslation();
-  const scheme = useThemeStore((s) => s.scheme);
+  const scheme = useEffectiveScheme();
   const googleClientId = useConfigStore((s) => s.googleClientId);
   const googleAndroidClientId = useConfigStore((s) => s.googleAndroidClientId);
   const googleIosClientId = useConfigStore((s) => s.googleIosClientId);

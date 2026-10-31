@@ -68,10 +68,11 @@ const year = new Date().getFullYear();
     </div>
 
     <!-- This site had no way to keep in touch at all. Same form as the others,
-         same CRM, tagged with where it came from. -->
+         same CRM, same WEBSITE_FOOTER source: PARTNERS_WEBSITE_FOOTER was never a
+         NewsletterSource, so the API refused every subscription. -->
     <SharedNewsletter
       graphqlUrl={urlConfigs.graphqlUrl}
-      source="PARTNERS_WEBSITE_FOOTER"
+      source="WEBSITE_FOOTER"
       heading={t('website.partners.footer.newsletterHeading')}
       text={t('website.partners.footer.newsletterText')}
       t={t}

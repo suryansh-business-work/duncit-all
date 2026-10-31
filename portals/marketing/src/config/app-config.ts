@@ -47,6 +47,10 @@ export const appConfig = {
     // it sits at the front of the apps' status rail until it expires or is
     // switched off, so nothing about it is a dispatch.
     { label: 'Status', labelKey: 'shell.nav.status', to: '/status', icon: 'newspaper' },
+    // Its own section: a festive look is worn by every app at once — the
+    // looks, what is live, the dates that switch them, and the festive icons
+    // and store looks — so nothing about it is a campaign or a send.
+    { label: 'Occasions', labelKey: 'shell.nav.occasions', to: '/occasions', icon: 'celebration' },
     // Its own section, not a child of Campaigns: a short link is just as often
     // made for an ad, a poster or a partner as for a campaign.
     { label: 'Short Links', labelKey: 'shell.nav.shortLinks', to: '/short-links', icon: 'link' },
@@ -60,6 +64,9 @@ export const appConfig = {
     // The same publishing calendar as Social Accounts › Publish, on its own
     // page: planning posts is a daily job, connecting accounts a one-off.
     { label: 'Social Calendar', labelKey: 'shell.nav.socialCalendar', to: '/social-calendar', icon: 'calendar' },
+    // Outreach, not publishing: business profiles found from a brief and
+    // worked one DM at a time, so it is its own page beside the social ones.
+    { label: 'Instagram Leads', labelKey: 'shell.nav.instagramLeads', to: '/instagram-leads', icon: 'handshake' },
     // A discount code is a promotion, so it belongs to whoever runs promotions.
     // It sits beside Campaigns rather than inside one: a code is as likely to be
     // handed out at an event or printed on a poster as it is to be emailed.

@@ -111,7 +111,7 @@ describe('useCreatePod', () => {
     const { result } = renderHook(() => useCreatePod('d9'));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.initialValues.pod_title).toBe('Resumed');
-    expect(result.current.initialStep).toBe(3);
+    expect(result.current.initialStep).toBe(4);
     expect(result.current.initialDraftId).toBe('d9');
   });
 

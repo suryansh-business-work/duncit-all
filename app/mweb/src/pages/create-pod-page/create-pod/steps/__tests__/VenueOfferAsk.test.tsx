@@ -1,7 +1,8 @@
 /**
- * Step 3's offer beside its price: what the host needs from the venue (one
- * point per line) and a note, the venue's minimum guests, and the offer priced
- * at both ends of the guests.
+ * Step 4 — Offer for Venue (VenueOfferStep): the venue's minimum business at
+ * the top, how the host pays, what they need from the venue (one point per
+ * line) and a note, and the offer priced at both ends of the guests. Step 3's
+ * picker (VenueOfferPicker) keeps only the guests and the window.
  *
  * Two rules matter most. The live quote is asked with everything that moves
  * the price and none of the ask, so typing the points never re-prices the
@@ -10,6 +11,7 @@
  * amount.
  */
 import '@testing-library/jest-dom/vitest';
+import type { ReactElement } from 'react';
 import { type MockedResponse } from '@apollo/client/testing';
 import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
@@ -21,10 +23,11 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { formatStatementMoney, type VenueQuote } from '@duncit/utils';
 
 import { fallbackT } from '../../../../../i18n/fallback';
-import { blankCreatePodForm, type CreatePodFormValues } from '../../create-pod.types';
+import { blankCreatePodForm, type CreatePodFormValues, type CreatePodVenue } from '../../create-pod.types';
 import { VENUE_OFFER_QUOTE } from '../../venueOffer';
 import BookingGuestFields from '../BookingGuestFields';
 import VenueOfferPicker from '../VenueOfferPicker';
+import VenueOfferStep from '../VenueOfferStep';
 import VenueQuoteCard from '../VenueQuoteCard';
 
 const theme = createTheme();
@@ -103,39 +106,65 @@ function quoteMock(sent: Record<string, unknown>[], quoteMin: VenueQuote | null 
   };
 }
 
-function Picker({ values, minGuests }: Readonly<{ values?: Partial<CreatePodFormValues>; minGuests?: number }>) {
-  const form = useForm<CreatePodFormValues, unknown, CreatePodFormValues>({
-    defaultValues: {
-      ...blankCreatePodForm,
-      venue_id: 'venue-1',
-      venue_space_label: 'Whole venue',
-      pod_date_time: START,
-      pod_end_date_time: END,
-      no_of_spots: 20,
-      venue_offer_model: 'PER_GUEST',
-      venue_offer_rate: '300',
-      ...values,
-    },
+const VENUES: CreatePodVenue[] = [
+  {
+    id: 'venue-1',
+    venue_name: 'Indiranagar Courts',
+    location_id: 'loc-1',
+    // Stored in any order, with a basis left at 0 — the note reads it in the pickers' order, 0 left out.
+    offer_min_business: [
+      { model: 'PER_HOUR', amount: 400 },
+      { model: 'FLAT', amount: 0 },
+      { model: 'PER_GUEST', amount: 200 },
+    ],
+  },
+  { id: 'venue-2', venue_name: 'Unpriced Hall', location_id: 'loc-1' },
+];
+
+const OFFER_VALUES: Partial<CreatePodFormValues> = {
+  venue_id: 'venue-1',
+  venue_space_label: 'Whole venue',
+  pod_date_time: START,
+  pod_end_date_time: END,
+  no_of_spots: 20,
+  venue_offer_model: 'PER_GUEST',
+  venue_offer_rate: '300',
+};
+
+function useOfferForm(values?: Partial<CreatePodFormValues>) {
+  return useForm<CreatePodFormValues, unknown, CreatePodFormValues>({
+    defaultValues: { ...blankCreatePodForm, ...OFFER_VALUES, ...values },
   });
+}
+
+function OfferStep({ values }: Readonly<{ values?: Partial<CreatePodFormValues> }>) {
+  const form = useOfferForm(values);
+  return <VenueOfferStep form={form} venues={VENUES} />;
+}
+
+function Picker({ minGuests }: Readonly<{ minGuests?: number }>) {
+  const form = useOfferForm();
   return <VenueOfferPicker form={form} venueId="venue-1" spaceLabel="Whole venue" spots={SPOTS} minGuests={minGuests} />;
 }
 
-const renderPicker = (mocks: MockedResponse[], props: Parameters<typeof Picker>[0] = {}) =>
+const withProviders = (mocks: MockedResponse[], ui: ReactElement) =>
   render(
     <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <ThemeProvider theme={theme}>
-        <LocalizationProvider dateAdapter={AdapterDateFns}>
-          <Picker {...props} />
-        </LocalizationProvider>
+        <LocalizationProvider dateAdapter={AdapterDateFns}>{ui}</LocalizationProvider>
       </ThemeProvider>
     </MockedProvider>,
   );
 
-describe('VenueOfferPicker — the ask', () => {
+const renderStep = (mocks: MockedResponse[], props: Parameters<typeof OfferStep>[0] = {}) =>
+  withProviders(mocks, <OfferStep {...props} />);
+
+describe('VenueOfferStep — the ask', () => {
   it('asks what the host needs from the venue (required) and for an optional note', async () => {
-    renderPicker([]);
+    renderStep([]);
     await settle();
 
+    expect(screen.getByTestId('create-pod-offer-step')).toBeInTheDocument();
     expect(screen.getByTestId('create-pod-offer-ask')).toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: /What you need from the venue \*/ })).toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: 'Request from the venue (optional)' })).toBeInTheDocument();
@@ -144,7 +173,7 @@ describe('VenueOfferPicker — the ask', () => {
   });
 
   it('says how the picked pricing option pays the venue — per guest is a minimum order value per person', async () => {
-    renderPicker([]);
+    renderStep([]);
     await settle();
 
     expect(screen.getByText(fallbackT('mweb.createPod.offer.help.perGuest'))).toBeInTheDocument();
@@ -152,7 +181,7 @@ describe('VenueOfferPicker — the ask', () => {
   });
 
   it('keeps the general hint until an option is picked', async () => {
-    renderPicker([], { values: { venue_offer_model: '' } });
+    renderStep([], { values: { venue_offer_model: '' } });
     await settle();
 
     expect(screen.getByText(fallbackT('mweb.createPod.offer.modelHint'))).toBeInTheDocument();
@@ -160,7 +189,7 @@ describe('VenueOfferPicker — the ask', () => {
 
   it('prices the offer without the points or the note, and typing them asks for no new price', async () => {
     const sent: Record<string, unknown>[] = [];
-    renderPicker([quoteMock(sent)]);
+    renderStep([quoteMock(sent)]);
     await debounce();
     await settle();
     const asked = sent.length;
@@ -181,9 +210,9 @@ describe('VenueOfferPicker — the ask', () => {
   });
 });
 
-describe('VenueOfferPicker — the price as a range', () => {
+describe('VenueOfferStep — the price as a range', () => {
   it("reads what the venue receives and what the pod pays from the venue's minimum to the spots", async () => {
-    renderPicker([quoteMock([])], { minGuests: 8 });
+    renderStep([quoteMock([])]);
     await debounce();
     await settle();
 
@@ -195,22 +224,55 @@ describe('VenueOfferPicker — the price as a range', () => {
     expect(screen.getByTestId('create-pod-venue-quote-total')).toHaveTextContent(money(6600));
   });
 
-  it('says the venue minimum under the spots', async () => {
-    renderPicker([quoteMock([])], { minGuests: 8 });
-    await settle();
-
-    expect(screen.getByTestId('create-pod-venue-minimum')).toHaveTextContent(
-      'This venue takes bookings for at least 8 guests.',
-    );
-  });
-
   it('reads one amount when the server prices no minimum below the spots', async () => {
-    renderPicker([quoteMock([], null)]);
+    renderStep([quoteMock([], null)]);
     await debounce();
     await settle();
 
     expect(screen.getByTestId('create-pod-venue-quote-total')).toHaveTextContent(money(6600));
     expect(screen.queryByTestId('create-pod-quote-range')).not.toBeInTheDocument();
+  });
+});
+
+// The venue's minimum business heads the offer step: an offer below the amount
+// for the way the host pays cannot leave it (the schema) and the server refuses it.
+describe('VenueOfferStep — the venue’s minimum business', () => {
+  const NOTE = 'create-pod-venue-min-business';
+
+  it('shows the picked venue’s amounts first, per guest before per hour, as the floor for the offer', async () => {
+    renderStep([]);
+    await settle();
+
+    const note = screen.getByTestId(NOTE);
+    expect(note).toHaveTextContent(fallbackT('availability.offers.minBusiness.createPodTitle'));
+    expect([...note.querySelectorAll('li')].map((item) => item.textContent)).toEqual(['₹200.00 per guest', '₹400.00 per hour']);
+    expect(note).toHaveTextContent(fallbackT('availability.offers.minBusiness.createPodHint'));
+    expect(note).not.toHaveTextContent('per booking');
+    // Above the offer itself, so the host reads the floor before typing an amount.
+    expect(note.compareDocumentPosition(screen.getByTestId('create-pod-offer-ask')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('says nothing for a venue that named no amounts', async () => {
+    renderStep([], { values: { venue_id: 'venue-2' } });
+    await settle();
+
+    expect(screen.queryByTestId(NOTE)).toBeNull();
+    expect(screen.getByTestId('create-pod-offer-ask')).toBeInTheDocument();
+  });
+});
+
+describe('VenueOfferPicker — guests and the window only', () => {
+  it('keeps the intro and the guests, and leaves the offer terms, ask and quote to the offer step', async () => {
+    withProviders([], <Picker minGuests={8} />);
+    await settle();
+
+    expect(screen.getByTestId('create-pod-offer-intro')).toBeInTheDocument();
+    expect(screen.getByTestId('create-pod-venue-minimum')).toHaveTextContent(
+      'This venue takes bookings for at least 8 guests.',
+    );
+    expect(screen.queryByTestId('create-pod-offer-ask')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('create-pod-venue-quote')).not.toBeInTheDocument();
+    expect(screen.queryByText(fallbackT('mweb.createPod.offer.help.perGuest'))).not.toBeInTheDocument();
   });
 });
 

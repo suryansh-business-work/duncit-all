@@ -28,6 +28,8 @@ export interface SidebarSectionsProps {
   modeLabel: string;
   onSwitch: () => void;
   dark: boolean;
+  /** A festive look pins the mode right now, so the switch has nothing to change. */
+  themeLocked?: boolean;
   onToggleTheme: () => void;
   policies: PolicyLink[];
   policiesLoading: boolean;
@@ -48,6 +50,7 @@ export function SidebarSections({
   modeLabel,
   onSwitch,
   dark,
+  themeLocked = false,
   onToggleTheme,
   policies,
   policiesLoading,
@@ -81,6 +84,7 @@ export function SidebarSections({
               testID="sidebar-theme-switch"
               aria-label={t('mweb.sidebar.toggleDarkMode')}
               value={dark}
+              disabled={themeLocked}
               onValueChange={onToggleTheme}
             />
           }

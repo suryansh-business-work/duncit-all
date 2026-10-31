@@ -7878,6 +7878,10 @@ export type E2eFlow = {
   /** How many of its sub flows are marked LOOKS_GOOD. */
   looks_good_count: Scalars['Int']['output'];
   name: Scalars['String']['output'];
+  /** Its runs, passes and failures from those specs' scenarios. Null when no spec tests it yet. */
+  run_stats?: Maybe<E2eFlowRunStats>;
+  /** The live Cypress spec files that test it, as project/spec (e2eFlow/catalogue/spec-links.ts). */
+  specs: Array<Scalars['String']['output']>;
   sub_flow_count: Scalars['Int']['output'];
   sub_flows: Array<E2eSubFlow>;
   updated_at?: Maybe<Scalars['String']['output']>;
@@ -7886,6 +7890,17 @@ export type E2eFlow = {
 export type E2eFlowInput = {
   description?: InputMaybe<Scalars['String']['input']>;
   name: Scalars['String']['input'];
+};
+
+/** How a flow's linked specs did across the E2E runs still on record. */
+export type E2eFlowRunStats = {
+  __typename?: 'E2eFlowRunStats';
+  /** Runs in which any scenario of its specs failed or never ran. */
+  failed: Scalars['Int']['output'];
+  /** Runs in which every scenario of its specs passed. */
+  passed: Scalars['Int']['output'];
+  /** Runs in which at least one of its specs ran. */
+  runs: Scalars['Int']['output'];
 };
 
 /** One step of a sub flow: what the person does, and what should happen. */
@@ -7921,8 +7936,10 @@ export type E2eOneTimeCode = {
 
 export type E2ePurgeReport = {
   __typename?: 'E2ePurgeReport';
-  /** How many accounts were removed — the run account and any address it derived. */
+  /** How many accounts were removed — the run account, any address it derived, and earlier runs' accounts left on the run phone. */
   accounts_deleted: Scalars['Int']['output'];
+  /** Who else holds the run phone, masked (ad***@duncit.com): a real account, or a run still going. Never removed. Null when the phone is free for this run's signup. */
+  phone_held_by?: Maybe<Scalars['String']['output']>;
   /** Per collection, what else was removed: one-time codes and the run's uploads. */
   records: Array<E2ePurgedCollection>;
 };
@@ -9167,6 +9184,7 @@ export type EnvCategory =
   | 'OPENAI'
   | 'PEXELS'
   | 'RAZORPAY'
+  | 'SERPER'
   | 'SERVAM'
   | 'SHIPROCKET'
   | 'SLACK'
@@ -11581,6 +11599,108 @@ export type HostUpdatePodInput = {
   /** Offer a multi-ticket discount — omit both discount fields to leave it alone. */
   ticket_discount_enabled?: InputMaybe<Scalars['Boolean']['input']>;
   ticket_discount_tiers?: InputMaybe<Array<PodTicketDiscountTierInput>>;
+};
+
+/** A public Instagram business or creator profile found by a lead search. */
+export type IgLead = {
+  __typename?: 'IgLead';
+  bio: Scalars['String']['output'];
+  created_at?: Maybe<Scalars['String']['output']>;
+  /** The AI's draft of the next message, and which step it is for. */
+  draft: Scalars['String']['output'];
+  draft_step?: Maybe<Scalars['Int']['output']>;
+  /** Emails and phones the profile published in its bio or Google's snippet of it. */
+  emails: Array<Scalars['String']['output']>;
+  fit_reason: Scalars['String']['output'];
+  /** 0-100 against the brief it was found for; null when it could not be scored. */
+  fit_score?: Maybe<Scalars['Int']['output']>;
+  followers?: Maybe<Scalars['Int']['output']>;
+  id: Scalars['ID']['output'];
+  last_contacted_at?: Maybe<Scalars['String']['output']>;
+  media_count?: Maybe<Scalars['Int']['output']>;
+  messages: Array<IgLeadMessage>;
+  name: Scalars['String']['output'];
+  next_follow_up_at?: Maybe<Scalars['String']['output']>;
+  phones: Array<Scalars['String']['output']>;
+  profile_picture_url: Scalars['String']['output'];
+  profile_url: Scalars['String']['output'];
+  replied_at?: Maybe<Scalars['String']['output']>;
+  status: IgLeadStatus;
+  username: Scalars['String']['output'];
+  website: Scalars['String']['output'];
+};
+
+/** One DM the marketer sent. Step 0 is the opener; 1, 2 … are the follow-ups. */
+export type IgLeadMessage = {
+  __typename?: 'IgLeadMessage';
+  sent_at?: Maybe<Scalars['String']['output']>;
+  step: Scalars['Int']['output'];
+  text: Scalars['String']['output'];
+};
+
+/** One run of a brief: the searches the AI planned and how many profiles came of it. */
+export type IgLeadSearch = {
+  __typename?: 'IgLeadSearch';
+  added: Scalars['Int']['output'];
+  brief: Scalars['String']['output'];
+  created_at?: Maybe<Scalars['String']['output']>;
+  error: Scalars['String']['output'];
+  finished_at?: Maybe<Scalars['String']['output']>;
+  found: Scalars['Int']['output'];
+  id: Scalars['ID']['output'];
+  max_results: Scalars['Int']['output'];
+  queries: Array<Scalars['String']['output']>;
+  skipped: Scalars['Int']['output'];
+  status: IgLeadSearchStatus;
+  summary: Scalars['String']['output'];
+};
+
+export type IgLeadSearchInput = {
+  /** The kind of leads wanted, in the marketer's own words. */
+  brief: Scalars['String']['input'];
+  max_results?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type IgLeadSearchStatus =
+  | 'DONE'
+  | 'FAILED'
+  | 'RUNNING';
+
+export type IgLeadSettings = {
+  __typename?: 'IgLeadSettings';
+  daily_send_limit: Scalars['Int']['output'];
+  follow_up_gap_days: Scalars['Int']['output'];
+  /** Whether an Instagram business account is connected in Social Accounts. */
+  instagram_ready: Scalars['Boolean']['output'];
+  max_follow_ups: Scalars['Int']['output'];
+  /** What Duncit is offering these leads; every DM is written around it. */
+  pitch: Scalars['String']['output'];
+  sent_today: Scalars['Int']['output'];
+  /** Whether a Serper key is set (Tech → Environment Variables, or these settings). */
+  serper_ready: Scalars['Boolean']['output'];
+};
+
+export type IgLeadSettingsInput = {
+  daily_send_limit: Scalars['Int']['input'];
+  follow_up_gap_days: Scalars['Int']['input'];
+  max_follow_ups: Scalars['Int']['input'];
+  pitch: Scalars['String']['input'];
+};
+
+/** Where the conversation with an Instagram lead stands. */
+export type IgLeadStatus =
+  | 'CONTACTED'
+  | 'CONVERTED'
+  | 'LOST'
+  | 'NEW'
+  | 'REPLIED';
+
+export type IgLeadTablePage = {
+  __typename?: 'IgLeadTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<IgLead>;
+  total: Scalars['Int']['output'];
 };
 
 /**
@@ -14036,6 +14156,8 @@ export type Mutation = {
    */
   archiveContract: Contract;
   archiveInventoryProduct: InventoryProduct;
+  /** Hide a look from the catalogue (or bring it back). The pinned live look cannot be archived. */
+  archiveOccasionTheme: OccasionTheme;
   /**
    * Ask a bot a question. Every link in the reply is checked against the
    * navigation map and resolved for the caller's own environment, so the answer
@@ -14524,6 +14646,7 @@ export type Mutation = {
   deleteHostLead: Scalars['Boolean']['output'];
   /** Onboarding: permanently remove a host request record. */
   deleteHostRequest: Scalars['Boolean']['output'];
+  deleteIgLead: Scalars['Boolean']['output'];
   deleteInterview: Scalars['Boolean']['output'];
   deleteInventoryProduct: Scalars['Boolean']['output'];
   deleteJobApplication: Scalars['Boolean']['output'];
@@ -14554,6 +14677,8 @@ export type Mutation = {
   deleteMyProductListing: Scalars['Boolean']['output'];
   deleteMyTutorialComment: Scalars['Boolean']['output'];
   deleteNotification: Scalars['Boolean']['output'];
+  /** Delete a look someone made. Built-in looks are archived instead. */
+  deleteOccasionTheme: Scalars['Boolean']['output'];
   deleteOfficialStatus: Scalars['Boolean']['output'];
   /** Partner: delete a saved connection. Refused while a brand uses it. */
   deletePartnerIntegration: Scalars['Boolean']['output'];
@@ -14654,6 +14779,8 @@ export type Mutation = {
    * Tech/Super admin only.
    */
   downloadIosSigningFile: IosSigningFile;
+  /** Have the AI draft the lead's next DM (opener or follow-up). */
+  draftIgLeadMessage: IgLead;
   dummyCheckout: Payment;
   /** Gift card purchase via the dummy gateway. */
   dummyGiftCardCheckout: Payment;
@@ -14665,6 +14792,8 @@ export type Mutation = {
   duplicateChallengeToolPreset: ChallengeToolPreset;
   duplicateCmsPage: CmsPage;
   duplicateInventoryProduct: InventoryProduct;
+  /** Copy a look under a new name, to adapt it without touching the original. */
+  duplicateOccasionTheme: OccasionTheme;
   /**
    * Reserve a place in Slack for one suite's recording. Tech/Super admin only.
    *
@@ -14939,6 +15068,8 @@ export type Mutation = {
   markBouncerCallbackContacted: BouncerCallbackRequest;
   /** Marks a pod or club room read up to now (on open, and while it stays open). */
   markChatRead: Scalars['Boolean']['output'];
+  /** Record a DM the marketer is sending from Instagram; schedules the next follow-up. */
+  markIgLeadSent: IgLead;
   markNotificationRead: Scalars['Boolean']['output'];
   /** The goods are back (handed in at the venue, or the courier scan never came). */
   markPodShopReturnReceived: PodShopReturn;
@@ -15031,8 +15162,11 @@ export type Mutation = {
    * Deletes every account whose email carries the run's stamp, with everything
    * that points at it (the same trace the account-deletion console walks), and
    * every record the sign-in account created with the run's marker in its
-   * title or subject. Called by the live leg after Cypress, whether the suite
-   * passed or failed — a failed run leaves the most data behind.
+   * title or subject. Also removes an EARLIER run's account still holding the
+   * run phone (a run address stamped more than six hours ago), and names —
+   * masked, never removed — any other account on that phone. Called by the
+   * live leg before signup to free the phone, and after Cypress whether the
+   * suite passed or failed — a failed run leaves the most data behind.
    */
   purgeE2eRunData: E2ePurgeReport;
   /** Drop a URL from ImageKit's CDN cache, after replacing what sits behind it. */
@@ -15386,6 +15520,8 @@ export type Mutation = {
    * Subject, fragment and footer sentence are left as they are.
    */
   resetEmailTemplate: EmailTemplate;
+  /** Put a built-in look back the way Duncit shipped it (its schedule is kept). */
+  resetOccasionTheme: OccasionTheme;
   /** Deprecated: code + new password in one call. Use completePasswordReset. */
   resetPasswordWithOtp: Scalars['Boolean']['output'];
   /**
@@ -15547,6 +15683,8 @@ export type Mutation = {
   saveMyAddress: UserAddress;
   /** Create/update a pickup address on one of the caller's OWN brands (owner_kind/brand_id are forced server-side). */
   saveMyBrandPickupLocation: BrandPickupLocation;
+  /** Design a look: no key creates one, a key changes that one (only the fields sent). An agent asked to design a festival sends a full OccasionThemeInput here. */
+  saveOccasionTheme: OccasionTheme;
   /** Partner: add (omit id) or update a saved connection and check it against the vendor right away. */
   savePartnerIntegration: PartnerIntegration;
   savePodDraft: PodDraft;
@@ -15677,6 +15815,7 @@ export type Mutation = {
   setHostDeductions: Scalars['Boolean']['output'];
   /** Admin-only: a host's monthly Pod Request limit to venues (null = the default of 10). */
   setHostVenueRequestLimit: Host;
+  setIgLeadStatus: IgLead;
   /** Staff: temporarily deactivate/reactivate any catalogue product (reversible is_active flip; archive/restore own the ARCHIVED lifecycle). */
   setInventoryProductActive: InventoryProduct;
   /**
@@ -15713,6 +15852,10 @@ export type Mutation = {
   /** Change the signed-in account's @handle. Rejects a taken or reserved one. */
   setMyUsername: User;
   setMyWhatsappPreference: WaPreference;
+  /** Switch what every Duncit app wears: the house look, one pinned look, or the schedule. Takes effect on the next app load. */
+  setOccasionLive: OccasionSettings;
+  /** Set the dates a look goes live by itself (used while the live mode is SCHEDULE). */
+  setOccasionSchedule: OccasionTheme;
   /** Host: tick or untick one task/checkpoint for a competitor (a reason is needed after the end). */
   setPodChallengeItem: PodChallenge;
   setPodChallengeRoster: PodChallenge;
@@ -15835,6 +15978,8 @@ export type Mutation = {
    * password does not belong there.
    */
   startE2eRun: E2eRunStart;
+  /** Start a lead search in the background; poll igLeadSearches for its progress. */
+  startIgLeadSearch: IgLeadSearch;
   /**
    * Scan every pod, club, venue, user, product and brand record for the
    * ImageKit files it uses, and copy each file used by exactly one record into
@@ -15937,6 +16082,8 @@ export type Mutation = {
   /** Create (no id) or update a STORE-scoped coupon. */
   storeSaveCoupon: Coupon;
   storeSaveFacet: StoreFacet;
+  /** Replace the ecomm store's festive windows (Marketing → Occasions → Ecomm store). Up to 24; each needs a name and an end after its start. */
+  storeSaveOccasions: Array<StoreOccasion>;
   storeSavePage: StoreAdminPage;
   storeSavePetType: StoreAdminPetType;
   /** Create (no id) or update an ecomm product. DRAFT saves what is filled in; PUBLISHED first checks it can be sold, then puts it on the store. */
@@ -16263,6 +16410,7 @@ export type Mutation = {
   updateGraphqlMonitorSettings: GraphqlMonitorSettings;
   updateGrievanceStatus: GrievanceTicket;
   updateHostLead: HostLead;
+  updateIgLeadSettings: IgLeadSettings;
   updateInterview: Interview;
   updateInventoryProduct: InventoryProduct;
   updateJobApplicationStatus: JobApplication;
@@ -16293,7 +16441,7 @@ export type Mutation = {
   updateMyProductSettings: InventoryProduct;
   updateMyProfile: User;
   updateMyProfileVisibility: User;
-  /** Replace the occasional-icon windows (admin Branding). */
+  /** Replace the occasional-icon windows (Marketing → Occasions → App icons). */
   updateOccasionalIcons: Array<OccasionalIcon>;
   updateOfficialStatus: OfficialStatus;
   updateOnboardingIntro: OnboardingIntro;
@@ -16864,6 +17012,12 @@ export type MutationArchiveContractArgs = {
 
 export type MutationArchiveInventoryProductArgs = {
   product_doc_id: Scalars['ID']['input'];
+};
+
+
+export type MutationArchiveOccasionThemeArgs = {
+  archived: Scalars['Boolean']['input'];
+  key: Scalars['String']['input'];
 };
 
 
@@ -18067,6 +18221,11 @@ export type MutationDeleteHostRequestArgs = {
 };
 
 
+export type MutationDeleteIgLeadArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationDeleteInterviewArgs = {
   interview_doc_id: Scalars['ID']['input'];
 };
@@ -18166,6 +18325,11 @@ export type MutationDeleteMyTutorialCommentArgs = {
 
 export type MutationDeleteNotificationArgs = {
   notification_doc_id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteOccasionThemeArgs = {
+  key: Scalars['String']['input'];
 };
 
 
@@ -18482,6 +18646,11 @@ export type MutationDownloadIosSigningFileArgs = {
 };
 
 
+export type MutationDraftIgLeadMessageArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationDummyCheckoutArgs = {
   input: DummyCheckoutInput;
 };
@@ -18521,6 +18690,12 @@ export type MutationDuplicateCmsPageArgs = {
 
 export type MutationDuplicateInventoryProductArgs = {
   product_doc_id: Scalars['ID']['input'];
+};
+
+
+export type MutationDuplicateOccasionThemeArgs = {
+  key: Scalars['String']['input'];
+  name: Scalars['String']['input'];
 };
 
 
@@ -18920,6 +19095,12 @@ export type MutationMarkBouncerCallbackContactedArgs = {
 export type MutationMarkChatReadArgs = {
   id: Scalars['ID']['input'];
   kind: ChatRoomKind;
+};
+
+
+export type MutationMarkIgLeadSentArgs = {
+  id: Scalars['ID']['input'];
+  text: Scalars['String']['input'];
 };
 
 
@@ -19667,6 +19848,11 @@ export type MutationResetEmailTemplateArgs = {
 };
 
 
+export type MutationResetOccasionThemeArgs = {
+  key: Scalars['String']['input'];
+};
+
+
 export type MutationResetPasswordWithOtpArgs = {
   input: ResetPasswordInput;
 };
@@ -20003,6 +20189,12 @@ export type MutationSaveMyBrandPickupLocationArgs = {
   brand_doc_id: Scalars['ID']['input'];
   id?: InputMaybe<Scalars['ID']['input']>;
   input: BrandPickupLocationInput;
+};
+
+
+export type MutationSaveOccasionThemeArgs = {
+  input: OccasionThemeInput;
+  key?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -20352,6 +20544,12 @@ export type MutationSetHostVenueRequestLimitArgs = {
 };
 
 
+export type MutationSetIgLeadStatusArgs = {
+  id: Scalars['ID']['input'];
+  status: IgLeadStatus;
+};
+
+
 export type MutationSetInventoryProductActiveArgs = {
   active: Scalars['Boolean']['input'];
   product_doc_id: Scalars['ID']['input'];
@@ -20427,6 +20625,17 @@ export type MutationSetMyUsernameArgs = {
 export type MutationSetMyWhatsappPreferenceArgs = {
   category: Scalars['String']['input'];
   enabled: Scalars['Boolean']['input'];
+};
+
+
+export type MutationSetOccasionLiveArgs = {
+  input: OccasionLiveInput;
+};
+
+
+export type MutationSetOccasionScheduleArgs = {
+  input: OccasionScheduleInput;
+  key: Scalars['String']['input'];
 };
 
 
@@ -20699,6 +20908,11 @@ export type MutationStartCrmPortalCallArgs = {
 
 export type MutationStartE2eRunArgs = {
   input: StartE2eRunInput;
+};
+
+
+export type MutationStartIgLeadSearchArgs = {
+  input: IgLeadSearchInput;
 };
 
 
@@ -21027,6 +21241,11 @@ export type MutationStoreSaveCouponArgs = {
 export type MutationStoreSaveFacetArgs = {
   id?: InputMaybe<Scalars['ID']['input']>;
   input: StoreFacetInput;
+};
+
+
+export type MutationStoreSaveOccasionsArgs = {
+  input: Array<StoreOccasionInput>;
 };
 
 
@@ -21944,6 +22163,11 @@ export type MutationUpdateHostLeadArgs = {
 };
 
 
+export type MutationUpdateIgLeadSettingsArgs = {
+  input: IgLeadSettingsInput;
+};
+
+
 export type MutationUpdateInterviewArgs = {
   input: UpdateInterviewInput;
   interview_doc_id: Scalars['ID']['input'];
@@ -22792,6 +23016,350 @@ export type NotificationTablePage = {
   page_size: Scalars['Int']['output'];
   rows: Array<Notification>;
   total: Scalars['Int']['output'];
+};
+
+/** What a flyer draws: a built-in picture, CUSTOM (its own custom_layers) or IMAGE (an uploaded transparent PNG/GIF at image_url). Built-ins face right. */
+export type OccasionArtwork =
+  | 'CUSTOM'
+  /** A striped hot-air balloon. */
+  | 'HOT_AIR_BALLOON'
+  | 'IMAGE'
+  /** A four-colour patang with a bow-tied tail. */
+  | 'KITE'
+  /** Santa in his sleigh behind two reindeer, the lead one red-nosed. */
+  | 'SANTA_SLEIGH'
+  /** A bright star; give it a trail_color and it streaks across. */
+  | 'SHOOTING_STAR'
+  /** A witch on a broomstick with her cat. */
+  | 'WITCH_BROOM';
+
+/** AUTO wears the look in whichever mode the viewer chose; LIGHT or DARK pins one (Halloween pins DARK). */
+export type OccasionColorMode =
+  | 'AUTO'
+  | 'DARK'
+  | 'LIGHT';
+
+export type OccasionDirection =
+  | 'LTR'
+  | 'RTL';
+
+/** Bursts of glowing, streaking sparks in the upper half of the screen. */
+export type OccasionFireworks = {
+  __typename?: 'OccasionFireworks';
+  /** 1-60. */
+  bursts_per_minute: Scalars['Float']['output'];
+  colors: Array<Scalars['String']['output']>;
+  enabled: Scalars['Boolean']['output'];
+  /** Burst radius in px (20-300). */
+  radius: Scalars['Float']['output'];
+  /** Sparks per burst (6-60). */
+  sparks: Scalars['Int']['output'];
+};
+
+export type OccasionFireworksInput = {
+  bursts_per_minute?: InputMaybe<Scalars['Float']['input']>;
+  colors?: InputMaybe<Array<Scalars['String']['input']>>;
+  enabled: Scalars['Boolean']['input'];
+  radius?: InputMaybe<Scalars['Float']['input']>;
+  sparks?: InputMaybe<Scalars['Int']['input']>;
+};
+
+/** Artwork that crosses the screen every so often — Santa's sleigh, a witch, a kite — with a soft shadow and an optional sparkle trail. */
+export type OccasionFlyer = {
+  __typename?: 'OccasionFlyer';
+  altitude_max: Scalars['Float']['output'];
+  /** The band it crosses in, as % of the screen height from the top (0-90). Each pass picks its own height inside it. */
+  altitude_min: Scalars['Float']['output'];
+  artwork: OccasionArtwork;
+  /** Pixels of gentle up-and-down while it flies (0-60). */
+  bob: Scalars['Float']['output'];
+  /** For CUSTOM: layers drawn facing right in a 240x120 box. */
+  custom_layers: Array<OccasionVectorLayer>;
+  direction: OccasionDirection;
+  /** Seconds to cross the screen (2-60). */
+  duration: Scalars['Float']['output'];
+  /** For IMAGE: an https link to a transparent PNG or GIF. */
+  image_url: Scalars['String']['output'];
+  /** Seconds from one pass's start to the next (never shorter than duration, at most 600). */
+  interval: Scalars['Float']['output'];
+  /** Drawn width in px (24-480). */
+  size: Scalars['Float']['output'];
+  /** Hex colour of the sparkle dust behind it; '' for none. */
+  trail_color: Scalars['String']['output'];
+};
+
+export type OccasionFlyerInput = {
+  altitude_max?: InputMaybe<Scalars['Float']['input']>;
+  altitude_min?: InputMaybe<Scalars['Float']['input']>;
+  artwork: OccasionArtwork;
+  bob?: InputMaybe<Scalars['Float']['input']>;
+  custom_layers?: InputMaybe<Array<OccasionVectorLayerInput>>;
+  direction?: InputMaybe<OccasionDirection>;
+  duration?: InputMaybe<Scalars['Float']['input']>;
+  image_url?: InputMaybe<Scalars['String']['input']>;
+  interval?: InputMaybe<Scalars['Float']['input']>;
+  size?: InputMaybe<Scalars['Float']['input']>;
+  trail_color?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type OccasionGarland = {
+  __typename?: 'OccasionGarland';
+  /** Bulb / flag / flower colours cycled along the string; empty uses the style's own. */
+  colors: Array<Scalars['String']['output']>;
+  style: OccasionGarlandStyle;
+};
+
+export type OccasionGarlandInput = {
+  colors?: InputMaybe<Array<Scalars['String']['input']>>;
+  style: OccasionGarlandStyle;
+};
+
+/** Decoration hung along the top edge: STRING_LIGHTS (twinkling bulbs), BUNTING (triangle flags), MARIGOLD (a toran with mango leaves), SPIDER_WEB (webs in both corners and a spider), ICICLES (a snow cap with icicles). */
+export type OccasionGarlandStyle =
+  | 'BUNTING'
+  | 'ICICLES'
+  | 'MARIGOLD'
+  | 'NONE'
+  | 'SPIDER_WEB'
+  | 'STRING_LIGHTS';
+
+/** What the apps wear right now. */
+export type OccasionLive = {
+  __typename?: 'OccasionLive';
+  mode: OccasionLiveMode;
+  /** When the scheduled look may next change (a window opens or closes), so an open app knows when to look again. */
+  next_change_at?: Maybe<Scalars['String']['output']>;
+  source: OccasionLiveSource;
+  /** Null = the house look. */
+  theme?: Maybe<OccasionTheme>;
+};
+
+export type OccasionLiveInput = {
+  /** Required for MANUAL: the key of a look that is not archived. */
+  manual_key?: InputMaybe<Scalars['String']['input']>;
+  mode: OccasionLiveMode;
+};
+
+/** NORMAL = the apps' own house look; MANUAL = one look pinned (manual_key); SCHEDULE = whichever look's date window is open, else the house look. */
+export type OccasionLiveMode =
+  | 'MANUAL'
+  | 'NORMAL'
+  | 'SCHEDULE';
+
+/** Why the live look is on: pinned, opened by its schedule, a preview link, or NONE (the house look). */
+export type OccasionLiveSource =
+  | 'MANUAL'
+  | 'NONE'
+  | 'PREVIEW'
+  | 'SCHEDULE';
+
+/** How a particle layer moves: FALL from the top (snow, petals), RISE from the bottom (diyas, hearts), DRIFT across from the left (bats, kites), TWINKLE in place with a pulsing glow (stars, sparks). */
+export type OccasionMotion =
+  | 'DRIFT'
+  | 'FALL'
+  | 'RISE'
+  | 'TWINKLE';
+
+export type OccasionOverlay = {
+  __typename?: 'OccasionOverlay';
+  color: Scalars['String']['output'];
+  /** 0-1 at its strongest point. */
+  opacity: Scalars['Float']['output'];
+  style: OccasionOverlayStyle;
+};
+
+export type OccasionOverlayInput = {
+  color?: InputMaybe<Scalars['String']['input']>;
+  opacity?: InputMaybe<Scalars['Float']['input']>;
+  style: OccasionOverlayStyle;
+};
+
+/** A wash over the whole screen: VIGNETTE darkens the edges (spooky, night), GLOW_TOP fades a colour down from the top (warm festive glow), FOG drifts soft banks along the bottom. */
+export type OccasionOverlayStyle =
+  | 'FOG'
+  | 'GLOW_TOP'
+  | 'NONE'
+  | 'VIGNETTE';
+
+/** A swarm of small marks — snow, petals, sparks, bats, confetti. Near marks are drawn bigger, faster and brighter than far ones, and falling ones tumble in 3D. */
+export type OccasionParticleLayer = {
+  __typename?: 'OccasionParticleLayer';
+  /** Hex fills, one picked per mark. */
+  colors: Array<Scalars['String']['output']>;
+  /** Marks on a 1440px-wide desktop (0-160); a phone gets fewer, never under 45%. */
+  count: Scalars['Int']['output'];
+  /** Extra marks as SVG path data in a 24x24 box centred on (12, 12). */
+  custom_paths: Array<Scalars['String']['output']>;
+  motion: OccasionMotion;
+  /** 0.05-1. */
+  opacity: Scalars['Float']['output'];
+  shapes: Array<OccasionShape>;
+  size_max: Scalars['Float']['output'];
+  /** Mark size range in px (2-120). */
+  size_min: Scalars['Float']['output'];
+  /** Pixels per second (1-600). For TWINKLE, how quick the pulse is. */
+  speed: Scalars['Float']['output'];
+};
+
+export type OccasionParticleLayerInput = {
+  colors: Array<Scalars['String']['input']>;
+  count?: InputMaybe<Scalars['Int']['input']>;
+  custom_paths?: InputMaybe<Array<Scalars['String']['input']>>;
+  motion: OccasionMotion;
+  opacity?: InputMaybe<Scalars['Float']['input']>;
+  shapes?: InputMaybe<Array<OccasionShape>>;
+  size_max?: InputMaybe<Scalars['Float']['input']>;
+  size_min?: InputMaybe<Scalars['Float']['input']>;
+  speed?: InputMaybe<Scalars['Float']['input']>;
+};
+
+/** Where a look sits in the Marketing catalogue. */
+export type OccasionRegion =
+  | 'CUSTOM'
+  | 'GLOBAL'
+  | 'INDIAN'
+  | 'NATIONAL'
+  | 'WESTERN';
+
+export type OccasionScheduleInput = {
+  ends_at?: InputMaybe<Scalars['String']['input']>;
+  /** On only with both dates set and the end after the start. */
+  schedule_enabled: Scalars['Boolean']['input'];
+  sort_order?: InputMaybe<Scalars['Int']['input']>;
+  starts_at?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type OccasionSettings = {
+  __typename?: 'OccasionSettings';
+  /** The pinned look's key while mode is MANUAL. */
+  manual_key: Scalars['String']['output'];
+  mode: OccasionLiveMode;
+  updated_at?: Maybe<Scalars['String']['output']>;
+};
+
+/**
+ * A built-in mark a particle layer draws (each is a small vector picture in a
+ * 24x24 box). DIYA is a lit oil lamp, MODAK the sweet, CHAKRA the Ashoka
+ * Chakra, MARIGOLD a marigold bloom; the rest are what they say. For anything
+ * else, give the layer custom_paths.
+ */
+export type OccasionShape =
+  | 'BALLOON'
+  | 'BAT'
+  | 'BELL'
+  | 'CANDY_CANE'
+  | 'CHAKRA'
+  | 'CIRCLE'
+  | 'CONFETTI'
+  | 'DIYA'
+  | 'DROP'
+  | 'EGG'
+  | 'FEATHER'
+  | 'FLAME'
+  | 'GHOST'
+  | 'GIFT'
+  | 'HEART'
+  | 'KITE'
+  | 'LANTERN'
+  | 'LEAF'
+  | 'MARIGOLD'
+  | 'MODAK'
+  | 'MOON'
+  | 'ORNAMENT'
+  | 'PETAL'
+  | 'PUMPKIN'
+  | 'RING'
+  | 'SNOWFLAKE'
+  | 'SPARK'
+  | 'STAR'
+  | 'SUN'
+  | 'TREE';
+
+/**
+ * A festive look for the Duncit apps (mWeb and the native app), managed in
+ * Marketing → Occasions. Its colour tokens repaint every screen; its
+ * decoration plays over them (with a pause control, and still under reduced
+ * motion). Built-in festivals ship ready; anything else is designed here.
+ */
+export type OccasionTheme = {
+  __typename?: 'OccasionTheme';
+  color_mode: OccasionColorMode;
+  description: Scalars['String']['output'];
+  ends_at?: Maybe<Scalars['String']['output']>;
+  fireworks: OccasionFireworks;
+  flyers: Array<OccasionFlyer>;
+  garland: OccasionGarland;
+  /** A short festive line the apps show once a session (max 80 characters); '' shows none. */
+  greeting: Scalars['String']['output'];
+  is_archived: Scalars['Boolean']['output'];
+  /** Shipped with Duncit: can be edited, archived or reset, not deleted. */
+  is_builtin: Scalars['Boolean']['output'];
+  /** Stable, URL-safe id, e.g. christmas, diwali. */
+  key: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  overlays: Array<OccasionOverlay>;
+  palette_dark: ThemeModeTokens;
+  /**
+   * The app's colour tokens this look overrides in light mode; '' keeps the
+   * app's own. Keep it readable: onPrimary on primary, onAccent on accent,
+   * ink and muted on bg/surface/soft all need 4.5:1 contrast.
+   */
+  palette_light: ThemeModeTokens;
+  particles: Array<OccasionParticleLayer>;
+  region: OccasionRegion;
+  schedule_enabled: Scalars['Boolean']['output'];
+  /** Higher wins when two windows overlap. */
+  sort_order: Scalars['Int']['output'];
+  /** The window this look goes live in by itself while the live mode is SCHEDULE (ISO dates). */
+  starts_at?: Maybe<Scalars['String']['output']>;
+  updated_at?: Maybe<Scalars['String']['output']>;
+};
+
+/**
+ * A look's design. On a new look, name is required and the rest default to
+ * the house look with no decoration. On an existing look only the fields sent
+ * change — send just particles to change just the particles.
+ */
+export type OccasionThemeInput = {
+  color_mode?: InputMaybe<OccasionColorMode>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  fireworks?: InputMaybe<OccasionFireworksInput>;
+  /** Up to 3. */
+  flyers?: InputMaybe<Array<OccasionFlyerInput>>;
+  garland?: InputMaybe<OccasionGarlandInput>;
+  greeting?: InputMaybe<Scalars['String']['input']>;
+  /** For a new look only: its id. Blank makes one from the name. */
+  key?: InputMaybe<Scalars['String']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  /** Up to 3, painted in order. */
+  overlays?: InputMaybe<Array<OccasionOverlayInput>>;
+  palette_dark?: InputMaybe<ThemeModeTokensInput>;
+  palette_light?: InputMaybe<ThemeModeTokensInput>;
+  /** Up to 4 layers. */
+  particles?: InputMaybe<Array<OccasionParticleLayerInput>>;
+  region?: InputMaybe<OccasionRegion>;
+};
+
+/** One piece of a vector artwork: SVG path data painted with a fill and/or an outline, offset by (x, y) inside the artwork's box. */
+export type OccasionVectorLayer = {
+  __typename?: 'OccasionVectorLayer';
+  /** Hex, or '' for no fill. */
+  fill: Scalars['String']['output'];
+  path: Scalars['String']['output'];
+  /** Hex, or '' for no outline. */
+  stroke: Scalars['String']['output'];
+  stroke_width: Scalars['Float']['output'];
+  x: Scalars['Float']['output'];
+  y: Scalars['Float']['output'];
+};
+
+export type OccasionVectorLayerInput = {
+  fill?: InputMaybe<Scalars['String']['input']>;
+  path: Scalars['String']['input'];
+  stroke?: InputMaybe<Scalars['String']['input']>;
+  stroke_width?: InputMaybe<Scalars['Float']['input']>;
+  x?: InputMaybe<Scalars['Float']['input']>;
+  y?: InputMaybe<Scalars['Float']['input']>;
 };
 
 /**
@@ -27920,6 +28488,13 @@ export type PurgeE2eRunDataInput = {
   /** Ignored. The run account is signup_email; kept so an older runner's call still parses. */
   login_email?: InputMaybe<Scalars['String']['input']>;
   /**
+   * The run phone, as the runner was handed it. Optional; without it this
+   * server's own E2E settings are read, and a server a run only drives (staging,
+   * when the run reports to production) may have no phone configured, so no
+   * earlier run's account could be cleared off the number.
+   */
+  phone?: InputMaybe<Scalars['String']['input']>;
+  /**
    * The run account. Every account whose address carries this one's stamp is
    * removed outright, with everything that points at it, together with its
    * one-time codes — which is what frees the address and the phone for the
@@ -28698,6 +29273,11 @@ export type Query = {
   hosts: Array<Host>;
   /** Admin/onboarding table page over all hosts (shared table engine). */
   hostsTable: HostTablePage;
+  /** The latest lead searches, newest first. */
+  igLeadSearches: Array<IgLeadSearch>;
+  igLeadSettings: IgLeadSettings;
+  /** Instagram leads, server-paged. due: true keeps only those with a follow-up due now. */
+  igLeadsTable: IgLeadTablePage;
   interview?: Maybe<Interview>;
   interviews: Array<Interview>;
   inventoryActivityLogs: Array<InventoryActivityLog>;
@@ -29133,6 +29713,12 @@ export type Query = {
   newsletterSubscribersTable: NewsletterSubscriberTablePage;
   notifications: Array<Notification>;
   notificationsTable: NotificationTablePage;
+  /** The look the Duncit apps wear right now (public — the apps read it before sign-in). preview = a look's key shows that look instead, for Marketing's preview link. */
+  occasionLive: OccasionLive;
+  occasionSettings: OccasionSettings;
+  occasionTheme?: Maybe<OccasionTheme>;
+  /** Marketing → Occasions: every look, built-in festivals first. */
+  occasionThemes: Array<OccasionTheme>;
   /**
    * The live Duncit statuses for the apps' rail, newest first: every GLOBAL one,
    * plus the ones published to the city the viewer is browsing.
@@ -29745,6 +30331,8 @@ export type Query = {
   /** The signed-in buyer's Autoship subscriptions. */
   storeMySubscriptions: Array<StoreSubscription>;
   storeNavigation: StoreNavigation;
+  /** The ecomm store's festive windows, managed in Marketing → Occasions (store operators and marketing). */
+  storeOccasions: Array<StoreOccasion>;
   storeOrder: StoreOrder;
   storeOrderConfirmation: StorePlaceOrderResult;
   storeOrderReturns: Array<StoreReturn>;
@@ -29867,6 +30455,8 @@ export type Query = {
   telemetryLogsExport: Array<TelemetryLog>;
   telemetryLogsTable: TelemetryLogTablePage;
   telemetrySettings: TelemetrySettings;
+  /** Every unit, E2E and stress run that is queued or going right now, with how long each should take. Read-only. */
+  testsLiveRuns: TestsLiveRuns;
   /** The confidence score, coverage, scenario coverage and the latest of every kind of run. */
   testsOverview: TestsOverview;
   testsSettings: TestsSettings;
@@ -30076,6 +30666,10 @@ export type Query = {
   websiteEarnSections: Array<WebsiteEarnSection>;
   websiteNav: Array<WebsiteNavItem>;
   websiteNavTable: WebsiteNavItemTablePage;
+  /** Public: one pod's page for crawlers, by its club and pod slugs; null when there is no such public pod. */
+  websitePodPage?: Maybe<WebsitePodPage>;
+  /** Public: every pod page still to come, for mWeb's sitemap.xml. */
+  websitePodSitemap: Array<WebsitePodSitemapEntry>;
   websiteReelSettings: WebsiteReelSettings;
   websiteReelsTable: WebsiteReelTablePage;
   /**
@@ -31631,6 +32225,12 @@ export type QueryHostsTableArgs = {
 };
 
 
+export type QueryIgLeadsTableArgs = {
+  due?: InputMaybe<Scalars['Boolean']['input']>;
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
 export type QueryInterviewArgs = {
   interview_doc_id: Scalars['ID']['input'];
 };
@@ -32336,6 +32936,21 @@ export type QueryNotificationsArgs = {
 
 export type QueryNotificationsTableArgs = {
   query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryOccasionLiveArgs = {
+  preview?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type QueryOccasionThemeArgs = {
+  key: Scalars['String']['input'];
+};
+
+
+export type QueryOccasionThemesArgs = {
+  include_archived?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 
@@ -34280,6 +34895,12 @@ export type QueryWebsiteNavArgs = {
 
 export type QueryWebsiteNavTableArgs = {
   query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryWebsitePodPageArgs = {
+  club_slug: Scalars['String']['input'];
+  pod_slug: Scalars['String']['input'];
 };
 
 
@@ -41718,6 +42339,41 @@ export type TestsE2eSummary = {
   workflow_run_url?: Maybe<Scalars['String']['output']>;
 };
 
+/** A run that is queued or going right now, and what the console needs to draw how far along it is. */
+export type TestsLiveRun = {
+  __typename?: 'TestsLiveRun';
+  /** How long it should take, in seconds: a stress run's own plan, or the median of the last finished runs of the same shape. Null when there is nothing to go by. */
+  expected_seconds?: Maybe<Scalars['Int']['output']>;
+  kind: TestsLiveRunKind;
+  /** True when expected_seconds is the run's own plan, false when it is estimated from earlier runs. */
+  planned: Scalars['Boolean']['output'];
+  /** The branch the run tests. */
+  ref: Scalars['String']['output'];
+  run_id: Scalars['ID']['output'];
+  /** The run's permanent id, e.g. DUN-E2E-000071. */
+  run_no: Scalars['String']['output'];
+  /** What the run says it is doing now, in the runner's own words. Null when it does not say. */
+  stage?: Maybe<Scalars['String']['output']>;
+  /** When a runner picked it up. Null while it is still queued. */
+  started_at?: Maybe<Scalars['String']['output']>;
+  /** QUEUED or RUNNING; a stress run can also be STOPPING. */
+  status: Scalars['String']['output'];
+};
+
+/** Which kind of testing a live run belongs to. */
+export type TestsLiveRunKind =
+  | 'E2E'
+  | 'STRESS'
+  | 'UNIT';
+
+/** Every live run, and the server's clock to measure them against. */
+export type TestsLiveRuns = {
+  __typename?: 'TestsLiveRuns';
+  runs: Array<TestsLiveRun>;
+  /** The server's time when it answered, so elapsed time does not depend on the viewer's clock. */
+  server_now: Scalars['String']['output'];
+};
+
 /** The manual test board at a glance. */
 export type TestsManualSummary = {
   __typename?: 'TestsManualSummary';
@@ -44270,7 +44926,7 @@ export type Venue = {
   lng?: Maybe<Scalars['Float']['output']>;
   locality: Scalars['String']['output'];
   location_id?: Maybe<Scalars['ID']['output']>;
-  /** The business the venue hopes each booking brings (a guide Create Pod shows once it is picked; never enforced). */
+  /** The least the venue takes per booking on each pricing basis (Create Pod's offer step shows it; an offer below it is refused). */
   offer_min_business: Array<VenueMinBusiness>;
   /** The fewest guests a host's booking offer may be for: the venue's own setting, else the platform default. */
   offer_min_guests: Scalars['Int']['output'];
@@ -45214,7 +45870,7 @@ export type VenueLeadTablePage = {
   total: Scalars['Int']['output'];
 };
 
-/** Roughly the business a venue hopes one booking brings on one pricing basis (rupees). A guide for hosts, never enforced. */
+/** The least a venue takes from one booking on one pricing basis (rupees). A host's offer below it is refused (BELOW_MIN_BUSINESS). */
 export type VenueMinBusiness = {
   __typename?: 'VenueMinBusiness';
   amount: Scalars['Float']['output'];
@@ -45308,7 +45964,7 @@ export type VenueOfferQuoteResult = {
 /** A venue's own terms for hosts' booking offers. 0 = the platform's default (Admin settings). */
 export type VenueOfferSettings = {
   __typename?: 'VenueOfferSettings';
-  /** The business the venue hopes for, one per pricing basis (per guest, per hour, per booking). */
+  /** The least the venue takes, one per pricing basis (per guest, per hour, per booking). */
   min_business: Array<VenueMinBusiness>;
   /** The fewest guests a host may offer to book for. */
   min_guests: Scalars['Int']['output'];
@@ -46846,6 +47502,39 @@ export type WebsitePod = {
   pod_title: Scalars['String']['output'];
   pod_type: Scalars['String']['output'];
   zone_name?: Maybe<Scalars['String']['output']>;
+};
+
+/**
+ * One pod's page as a search engine reads it: what mWeb's HTML server writes
+ * under the heading and into the page's schema.org Event. Only what the pod
+ * page shows any visitor — venue name and area, never an address line.
+ */
+export type WebsitePodPage = {
+  __typename?: 'WebsitePodPage';
+  canonical_path: Scalars['String']['output'];
+  city?: Maybe<Scalars['String']['output']>;
+  club_name: Scalars['String']['output'];
+  club_slug: Scalars['String']['output'];
+  country_code?: Maybe<Scalars['String']['output']>;
+  currency: Scalars['String']['output'];
+  description: Scalars['String']['output'];
+  end?: Maybe<Scalars['String']['output']>;
+  image_urls: Array<Scalars['String']['output']>;
+  locality?: Maybe<Scalars['String']['output']>;
+  price: Scalars['Float']['output'];
+  region?: Maybe<Scalars['String']['output']>;
+  sold_out: Scalars['Boolean']['output'];
+  start: Scalars['String']['output'];
+  title: Scalars['String']['output'];
+  venue_name?: Maybe<Scalars['String']['output']>;
+  virtual: Scalars['Boolean']['output'];
+};
+
+/** One pod page for mWeb's sitemap.xml. */
+export type WebsitePodSitemapEntry = {
+  __typename?: 'WebsitePodSitemapEntry';
+  path: Scalars['String']['output'];
+  updated_at?: Maybe<Scalars['String']['output']>;
 };
 
 /** A reel in a marketing website's home-page Reel Slider, managed from the Website portal. */

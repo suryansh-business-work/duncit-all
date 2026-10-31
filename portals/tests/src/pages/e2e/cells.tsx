@@ -1,7 +1,8 @@
-import { Chip, CircularProgress, Stack, Tooltip, Typography } from '@mui/material';
+import { Chip, Stack, Tooltip, Typography } from '@mui/material';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import { DuncitIconButton } from '@duncit/buttons';
+import { useLiveChip } from '../../components/live-runs/useLiveChip';
 import {
   isLive,
   isStaleRunning,
@@ -49,11 +50,12 @@ export const makeTriggerOptions = (labels: Record<E2eRunTrigger, string>) => [
 export const getRowId = (row: E2eRunRow) => row.id;
 
 /**
- * The live run's own cell: a spinner while the workflow goes, and how long it
- * has been going, so the table answers "is it nearly done?" without anybody
- * opening GitHub.
+ * The live run's own cell: a ring filling with the run's progress (a spinner
+ * until there is a number), and how long it has been going, so the table
+ * answers "is it nearly done?" without anybody opening GitHub.
  */
 function LiveChip({ row, labels }: Readonly<{ row: E2eRunRow; labels: StatusLabels }>) {
+  const live = useLiveChip('E2E', row.id, labels[row.status]);
   if (isStaleRunning(row)) {
     return (
       <Tooltip title={labels.stale}>
@@ -68,8 +70,8 @@ function LiveChip({ row, labels }: Readonly<{ row: E2eRunRow; labels: StatusLabe
         size="small"
         color="info"
         variant="outlined"
-        icon={<CircularProgress size={12} thickness={6} color="inherit" />}
-        label={labels[row.status]}
+        icon={live.icon}
+        label={live.label}
       />
     </Tooltip>
   );

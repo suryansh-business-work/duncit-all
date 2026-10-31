@@ -200,6 +200,34 @@ export function venueMinBusinessLines(
   });
 }
 
+/** The least a host may offer on one basis, and how it reads ("₹200 per guest"). */
+export interface VenueOfferFloor {
+  min: number;
+  text: string;
+}
+
+/**
+ * The venue's own business amount on the basis the host offers on — the least
+ * the offer's rate may be — or null when nothing holds it back: the venue named
+ * no amount for that basis, or the host asks for the venue free (the venue
+ * then only accepts or declines). Server twin: `assertOfferMeetsMinBusiness`.
+ */
+export function venueOfferFloor(
+  rows: readonly VenueMinBusinessRow[] | null | undefined,
+  model: string | null | undefined,
+  t: (key: string, opts?: { vars?: Record<string, string | number> }) => string,
+  money: (rupees: number) => string
+): VenueOfferFloor | null {
+  if (!isVenueOfferModel(model)) return null;
+  const row = (rows ?? []).find((entry) => entry.model === model);
+  if (!row || !(row.amount > 0)) return null;
+  return { min: row.amount, text: t(VENUE_MIN_BUSINESS_KEY[model].amount, { vars: { amount: money(row.amount) } }) };
+}
+
+/** Whether a typed rate is below the venue's floor; never without one. */
+export const offerBelowFloor = (floor: VenueOfferFloor | null, rate: string | number | null | undefined): boolean =>
+  floor !== null && offerRateOf(rate) < floor.min;
+
 /** Whether the host now has the venue's counter to accept or reject. */
 export const hostMayAnswerCounter = (offer: { status?: string | null; awaiting?: string | null } | null | undefined): boolean =>
   offer?.status === 'COUNTERED' && offer.awaiting === 'HOST';

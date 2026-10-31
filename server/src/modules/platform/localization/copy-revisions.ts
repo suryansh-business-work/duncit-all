@@ -13,6 +13,12 @@
  * An applied entry matches nothing on the next boot, so entries never need pruning.
  */
 export const COPY_REVISIONS: Readonly<Record<string, readonly string[]>> = {
+  // A venue's business amount became the least an offer may be, not a guide.
+  "availability.offers.minBusiness.intro": [
+    "Roughly what one booking should bring you. Hosts see it once they pick your venue — it is a guide for their offer, not a rule.",
+  ],
+  "availability.offers.minBusiness.createPodTitle": ["This venue usually expects"],
+  "availability.offers.minBusiness.createPodHint": ["A guide from the venue — your offer can be different."],
   // The login landing redesign (hero, chips, round provider buttons).
   "mweb.login.titleAccent": ["back."],
   "mweb.login.subtitle": ["Pick up where you left off and find pods around you."],

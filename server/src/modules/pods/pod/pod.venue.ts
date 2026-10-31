@@ -11,6 +11,7 @@ import { UserModel } from '@modules/access/user/user.model';
 import { ClubModel } from '@modules/clubs/club/club.model';
 import { LocationModel } from '@modules/platform/location/location.model';
 import { VenueModel } from '@modules/venues/venue/venue.model';
+import { assertOfferMeetsMinBusiness } from '@modules/venues/venue/venue.offerSettings';
 import { venueService } from '@modules/venues/venue/venue.service';
 import { VenueSlotModel } from '@modules/venues/venueSlot/venueSlot.model';
 import { notifyFreeSlotBooked, venueSlotService } from '@modules/venues/venueSlot/venueSlot.service';
@@ -442,11 +443,13 @@ export async function resolveSlotForCreate(
  * What a new offer asks beside its price: the venue's own minimum (never the
  * client's — it comes from the venue), the points the host needs from it and a
  * note. A client that sends points must send at least one; a build from before
- * points sends none and is not refused for it.
+ * points sends none and is not refused for it. The rate must meet the venue's
+ * business amount on its basis (BELOW_MIN_BUSINESS).
  */
 async function openingAsk(venueId: string, offer: VenueOfferRequest, pax: number) {
   const venue = await VenueModel.findById(venueId).select('capacity capacity_items settings.offers').lean();
   if (!venue) throw new GraphQLError('Select a venue', { extensions: { code: 'BAD_USER_INPUT' } });
+  assertOfferMeetsMinBusiness(venue.settings?.offers?.min_business, offer.model, offer.rate);
   const [{ openingMinimum }, ask] = await Promise.all([
     import('@modules/venues/venueOffer/venueOffer.service'),
     import('@modules/venues/venueOffer/venueOffer.ask'),

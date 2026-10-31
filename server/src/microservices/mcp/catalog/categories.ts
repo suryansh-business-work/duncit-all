@@ -39,7 +39,7 @@ export const MCP_CATEGORIES = [
   { key: 'crm', label: 'CRM', description: 'Leads, communication logs, call prompts, email verification, reminders, surveys and WhatsApp leads.' },
   { key: 'onboarding', label: 'Onboarding', description: 'Onboarding meetings, intros and lead surveys.' },
   { key: 'communications', label: 'Communications', description: 'Email templates and logs, mail automation, WhatsApp templates and campaigns, SMS and Slack.' },
-  { key: 'marketing', label: 'Marketing', description: 'Marketing, short links and social publishing.' },
+  { key: 'marketing', label: 'Marketing', description: 'Marketing, short links, social publishing and Instagram lead search and outreach.' },
   { key: 'analytics', label: 'Analytics', description: 'Product and entity analytics, analytics mails, alerts and Google Analytics.' },
   { key: 'logs', label: 'Logs & monitoring', description: 'Telemetry, status reports and the GraphQL monitor.' },
   { key: 'tech', label: 'Tech & infrastructure', description: 'Server info, packages, backups, DNS, SSL, ports, Cloudflare, app builds and releases and rate limits.' },
@@ -276,6 +276,8 @@ export const MODULE_CATEGORY: Record<ModuleName, McpCategoryKey | null> = {
   shortLinkTypeDefs: 'marketing',
   socialTypeDefs: 'marketing',
   socialPublishTypeDefs: 'marketing',
+  igLeadTypeDefs: 'marketing',
+  occasionTypeDefs: 'marketing',
 
   analyticsTypeDefs: 'analytics',
   entityAnalyticsTypeDefs: 'analytics',

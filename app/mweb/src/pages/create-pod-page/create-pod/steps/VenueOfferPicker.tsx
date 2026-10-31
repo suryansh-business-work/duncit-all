@@ -1,26 +1,14 @@
 import { useMemo } from 'react';
-import { Alert, MenuItem, Stack, TextField, Typography } from '@mui/material';
-import { FreeArrangementFields, VenueOfferAskFields } from '@duncit/forms';
+import { Alert, MenuItem, Stack, TextField } from '@mui/material';
 import { buildSlotLabels } from '@duncit/slots';
 import { SlotCalendar } from '@duncit/slots/mui';
-import {
-  VENUE_OFFER_ASK_LIMITS,
-  bookingCalendarProps,
-  formatStatementMoney,
-  isFreeVenueOfferModel,
-  type BookingTile,
-  type SpotsBounds,
-} from '@duncit/utils';
-import { requiredLabel } from '../../../../forms/components/requiredLabel';
+import { bookingCalendarProps, formatStatementMoney, type BookingTile, type SpotsBounds } from '@duncit/utils';
 import { usePricing } from '../../../../hooks/usePricing';
 import { useDateFormat } from '../../../../utils/dateFormat';
 import { useTranslation } from '../../../../i18n/useTranslation';
-import { FREE_JUSTIFICATION_NAMES, type CreatePodForm } from '../create-pod.types';
-import { useOfferQuote } from '../useOfferQuote';
+import type { CreatePodForm } from '../create-pod.types';
 import BookingGuestFields from './BookingGuestFields';
-import OfferTermsFields from './OfferTermsFields';
 import { useOfferCalendar } from './useOfferCalendar';
-import VenueQuoteCard from './VenueQuoteCard';
 
 interface Props {
   form: CreatePodForm;
@@ -36,24 +24,19 @@ interface Props {
 const DIRTY = { shouldDirty: true, shouldValidate: true } as const;
 
 /**
- * Offer the venue a booking: a start and an end inside its opening hours (days
- * it is shut, or times already booked, cannot be picked), the guests from the
- * venue's minimum, how the host will pay it with an amount, and what they need
- * from the venue. The window becomes the pod's window, the server prices the
- * offer below at both ends of the guests, and the venue accepts, rejects or
- * counters it once the pod is sent. Asking for the venue free adds Duncit's free
- * policy, why it is free and the host's acceptance; the venue then only accepts
- * or declines. Native twin: VenueOfferPicker.
+ * The booking the host will offer the venue: the guests from the venue's
+ * minimum, and a start and an end inside its opening hours (days it is shut, or
+ * times already booked, cannot be picked). The window becomes the pod's window.
+ * How the host pays for it, and what they ask of the venue, follow on the next
+ * step (VenueOfferStep). Native twin: VenueOfferPicker.
  */
 export default function VenueOfferPicker({ form, venueId, spaceLabel, spots, minGuests = 0 }: Readonly<Props>) {
   const { t } = useTranslation();
   const fmt = useDateFormat();
   const { currency } = usePricing();
   const calendar = useOfferCalendar(venueId, spaceLabel);
-  const quote = useOfferQuote(form);
   const start = form.watch('pod_date_time');
   const end = form.watch('pod_end_date_time');
-  const freeVenue = isFreeVenueOfferModel(form.watch('venue_offer_model'));
   const startIso = start ? start.toISOString() : null;
   const endIso = end ? end.toISOString() : '';
   const labels = useMemo(
@@ -116,31 +99,6 @@ export default function VenueOfferPicker({ form, venueId, spaceLabel, spots, min
           ))}
         </TextField>
       )}
-      <Typography variant="subtitle2" component="h3">{t('mweb.createPod.offer.title')}</Typography>
-      <OfferTermsFields form={form} />
-      {freeVenue && (
-        <FreeArrangementFields control={form.control} names={FREE_JUSTIFICATION_NAMES} t={t} idPrefix="create-pod-venue" />
-      )}
-      <VenueOfferAskFields
-        control={form.control}
-        offeringsName="venue_offer_offerings"
-        noteName="venue_offer_note"
-        idPrefix="create-pod"
-        labels={{
-          offerings: requiredLabel(t('availability.offers.ask.offeringsLabel'), true),
-          offeringsHint: t('availability.offers.ask.offeringsHint'),
-          note: t('availability.offers.ask.noteLabel'),
-          noteHint: t('availability.offers.ask.noteHint', { vars: { max: VENUE_OFFER_ASK_LIMITS.note } }),
-        }}
-      />
-      <VenueQuoteCard
-        quote={quote.quote}
-        quoteMin={quote.quoteMin}
-        message={quote.message}
-        loading={quote.loading}
-        error={quote.error}
-        free={freeVenue}
-      />
     </Stack>
   );
 }

@@ -6,6 +6,7 @@ import {
   buildCreatePodInput,
   createPodSchema,
   hydrateDraft,
+  makeCreatePodSchema,
   parseDateTimeText,
   serializeDraft,
   stepFieldsFor,
@@ -87,15 +88,28 @@ describe('parseDateTimeText', () => {
 });
 
 describe('createPodSchema', () => {
-  it('accepts a valid physical pod and exposes a field group per step (4 steps)', () => {
+  it('accepts a valid physical pod and exposes a field group per step (5 steps)', () => {
     expect(createPodSchema.safeParse(valid()).success).toBe(true);
     expect(STEP_FIELDS).toHaveLength(STEP_TITLES.length);
     expect(STEP_TITLES).toEqual([
       'Location, Category & Club',
       'Pod Basics',
       'Venue & Slot',
+      'Offer for Venue',
       'Pricing & Publish',
     ]);
+    // The offer's terms are validated on their own step, not with the window.
+    expect(STEP_FIELDS[2]).not.toContain('venue_offer_rate');
+    expect(STEP_FIELDS[2]).toEqual(
+      expect.arrayContaining(['venue_id', 'venue_space_label', 'pod_end_date_time_text']),
+    );
+    expect(STEP_FIELDS[3]).toEqual([
+      'venue_offer_model',
+      'venue_offer_rate',
+      'venue_offer_offerings',
+      'venue_offer_note',
+    ]);
+    expect(STEP_FIELDS[4]).toContain('pod_amount_text');
   });
 
   it('requires title, club, description, a venue and a booked window for physical pods', () => {
@@ -162,6 +176,42 @@ describe('createPodSchema', () => {
     ).toContain('venue_offer_model');
     // A held slot carries no offer, so neither field is asked for.
     expect(issuesOf(valid())).not.toContain('venue_offer_model');
+  });
+
+  it("holds an offer below the venue's minimum business on its basis", () => {
+    const offer = {
+      venue_slot_id: '',
+      pod_end_date_time_text: futureEndText,
+      venue_offer_model: 'PER_GUEST',
+      venue_offer_offerings: 'A projector',
+    };
+    // The floor applies only to the basis the venue named an amount for.
+    const floored = makeCreatePodSchema(undefined, undefined, (values) =>
+      values.venue_offer_model === 'PER_GUEST' ? { min: 200, text: '₹200 per guest' } : null,
+    );
+    const rateMessage = (over: Partial<CreatePodFormValues>) => {
+      const result = floored.safeParse(valid({ ...offer, ...over }));
+      return result.success
+        ? undefined
+        : result.error.issues.find((issue) => issue.path[0] === 'venue_offer_rate')?.message;
+    };
+    expect(rateMessage({ venue_offer_rate: '150' })).toBe(
+      'This venue takes at least ₹200 per guest — raise your offer to continue',
+    );
+    // At the floor, or above it, the offer goes through.
+    expect(floored.safeParse(valid({ ...offer, venue_offer_rate: '200' })).success).toBe(true);
+    expect(floored.safeParse(valid({ ...offer, venue_offer_rate: '350' })).success).toBe(true);
+    // A blank amount still asks for one rather than quoting the floor.
+    expect(rateMessage({ venue_offer_rate: '' })).toBe('Enter the amount you offer the venue');
+    // Another basis the venue named no amount for is not held back.
+    expect(
+      floored.safeParse(valid({ ...offer, venue_offer_model: 'FLAT', venue_offer_rate: '50' }))
+        .success,
+    ).toBe(true);
+    // A held slot sends no offer, so no floor is checked.
+    expect(
+      floored.safeParse(valid({ venue_offer_model: 'PER_GUEST', venue_offer_rate: '1' })).success,
+    ).toBe(true);
   });
 
   it("still requires a Pod Request's held slot", () => {
@@ -365,19 +415,22 @@ describe('createPodSchema — free pods and free venues', () => {
 describe('stepFieldsFor', () => {
   const free = ['free_reason', 'free_details', 'free_accepted'];
   const venueStep = STEP_FIELDS[2] ?? [];
-  const pricingStep = STEP_FIELDS[3] ?? [];
+  const offerStep = STEP_FIELDS[3] ?? [];
+  const pricingStep = STEP_FIELDS[4] ?? [];
 
   it('validates the justification on the step that shows it', () => {
-    // The venue step for a free venue offer…
-    expect(stepFieldsFor(2, valid(freeVenueOffer))).toEqual([...venueStep, ...free]);
+    // The offer step for a free venue offer…
+    expect(stepFieldsFor(3, valid(freeVenueOffer))).toEqual([...offerStep, ...free]);
     // …the pricing step for a free pod.
-    expect(stepFieldsFor(3, valid({ pod_type: 'FREE' }))).toEqual([...pricingStep, ...free]);
+    expect(stepFieldsFor(4, valid({ pod_type: 'FREE' }))).toEqual([...pricingStep, ...free]);
   });
 
   it('never blocks a step that does not draw the fields', () => {
-    // A pod made free on the pricing step leaves the venue step as it was.
-    expect(stepFieldsFor(2, valid({ pod_type: 'FREE' }))).toEqual(venueStep);
-    expect(stepFieldsFor(3, valid(freeVenueOffer))).toEqual(pricingStep);
+    // The venue step no longer draws the free-venue fields.
+    expect(stepFieldsFor(2, valid(freeVenueOffer))).toEqual(venueStep);
+    // A pod made free on the pricing step leaves the offer step as it was.
+    expect(stepFieldsFor(3, valid({ pod_type: 'FREE' }))).toEqual(offerStep);
+    expect(stepFieldsFor(4, valid(freeVenueOffer))).toEqual(pricingStep);
     expect(stepFieldsFor(0, valid({ pod_type: 'FREE' }))).toEqual(STEP_FIELDS[0]);
     expect(stepFieldsFor(9, valid())).toEqual([]);
   });

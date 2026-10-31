@@ -3,6 +3,7 @@ import { captchaCopy, type CaptchaCopy, type Translator } from '@duncit/i18n';
 import {
   blockQuery,
   captchaToken,
+  CENTER_SCROLL,
   expectInViewport,
   expectNeverSent,
   guardMutation,
@@ -31,7 +32,7 @@ const FAQ_GROUPS = `query E2eFaqGroups { publicFaqGroups { super_category { name
 const LIST = '#faqGroups';
 const ASK = 'form#askFaqForm';
 
-describe('UI duncit.com · FAQ and Help Center', () => {
+describe('UI duncit.com · FAQ and Help Center', CENTER_SCROLL, () => {
   let t: Translator['t'];
   let captcha: CaptchaCopy;
   let branding: SiteBranding;

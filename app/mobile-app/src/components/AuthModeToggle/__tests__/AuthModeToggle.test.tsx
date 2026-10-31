@@ -3,6 +3,7 @@ import { fireEvent, screen } from '@testing-library/react-native';
 import { TOUCH_TARGET } from '@duncit/buttons-native';
 
 import { AuthModeToggle } from '@/components/AuthModeToggle';
+import { useOccasionStore, type OccasionLiveData } from '@/stores/occasion.store';
 import { renderWithProviders } from '@/utils/test-utils';
 
 let mockScheme: 'light' | 'dark' = 'light';
@@ -64,5 +65,18 @@ describe('AuthModeToggle', () => {
       expect(hitSlop.top).toBe(hitSlop.bottom);
       expect(minHeight + hitSlop.top + hitSlop.bottom).toBeGreaterThanOrEqual(TOUCH_TARGET);
     }
+  });
+});
+
+describe('AuthModeToggle while a festive look pins the mode', () => {
+  it('steps aside, since there is no mode left to pick', () => {
+    useOccasionStore.setState({
+      data: { occasionLive: { theme: { color_mode: 'DARK' } } } as unknown as OccasionLiveData,
+    });
+
+    renderWithProviders(<AuthModeToggle />);
+    expect(screen.queryByTestId('auth-mode-toggle')).toBeNull();
+
+    useOccasionStore.setState({ data: undefined });
   });
 });

@@ -3,7 +3,7 @@ import { PROMPT_CATEGORIES, optional, required, type InAppPromptDef } from '../p
 const { MARKETING } = PROMPT_CATEGORIES;
 
 /** Who Duncit is, said once so every marketing prompt judges and writes from the same brief. */
-const BRAND =
+export const BRAND =
   'Duncit is a platform for real-world social events ("pods") in Indian cities: people — and their pets — meeting in person around sport, games, food, walks and hobbies, to make friends and beat loneliness. Its voice is warm, local, inclusive and never salesy.';
 
 const USAGE_FILE = 'server/src/modules/crm/marketing/social/social.insights.ts';

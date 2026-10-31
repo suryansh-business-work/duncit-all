@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@apollo/client/react';
-import { createTranslator, resolveLocale, type FlatCatalogue, type Locale } from '@duncit/i18n';
+import { createTranslator, resolveLocale, type FlatCatalogue, type Locale, type Translator } from '@duncit/i18n';
 import { LocaleContext } from './context';
 import { PUBLIC_LOCALES, PUBLIC_TRANSLATIONS } from './queries';
 import { persistLocale, storedLocale } from './storage';
@@ -12,7 +12,27 @@ interface ProviderProps {
   userLocale?: string | null;
   /** Persist the choice server-side (wire to the setMyLocale mutation). */
   onLocaleChange?: (code: string) => void;
+  /**
+   * Told every key a component looks up. A server render uses it to send the
+   * page only the copy it drew, not the whole catalogue.
+   */
+  onKeyRead?: (key: string) => void;
   children: React.ReactNode;
+}
+
+/** The translator's lookups, each one reported to `onKeyRead` first. */
+function reportingLookups(translator: Translator, onKeyRead?: (key: string) => void): Pick<Translator, 't' | 'has'> {
+  if (!onKeyRead) return translator;
+  return {
+    t: (key, options) => {
+      onKeyRead(key);
+      return translator.t(key, options);
+    },
+    has: (key) => {
+      onKeyRead(key);
+      return translator.has(key);
+    },
+  };
 }
 
 /**
@@ -27,6 +47,7 @@ export function LocaleProvider({
   fallback,
   userLocale,
   onLocaleChange,
+  onKeyRead,
   children,
 }: Readonly<ProviderProps>) {
   const [override, setOverride] = useState<string | null>(null);
@@ -56,6 +77,7 @@ export function LocaleProvider({
     () => createTranslator({ locale: code, isRtl: active?.is_rtl === true, fallback, server }),
     [code, active?.is_rtl, fallback, server],
   );
+  const lookups = useMemo(() => reportingLookups(translator, onKeyRead), [translator, onKeyRead]);
 
   // Tell the DOCUMENT what language it is in. `dir` is what actually flips the
   // layout for a right-to-left locale — an admin can mark a locale RTL, and
@@ -79,14 +101,14 @@ export function LocaleProvider({
 
   const value = useMemo(
     () => ({
-      t: translator.t,
-      has: translator.has,
+      t: lookups.t,
+      has: lookups.has,
       locale: translator.locale,
       isRtl: translator.isRtl,
       locales,
       setLocale,
     }),
-    [translator, locales, setLocale],
+    [lookups, translator, locales, setLocale],
   );
 
   return <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>;

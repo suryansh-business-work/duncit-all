@@ -1,4 +1,5 @@
-import { ButtonBase, Stack, Typography } from '@mui/material';
+import { ButtonBase, Stack, Tooltip, Typography } from '@mui/material';
+import CollectionsOutlinedIcon from '@mui/icons-material/CollectionsOutlined';
 import { useDateFormat, useTranslation } from '@duncit/app-settings';
 import PlatformIcon from '../PlatformIcon';
 import { PUBLISH_STATUS_LABEL } from '../copy';
@@ -7,6 +8,7 @@ import type { SocialCalendarItem, SocialPublishStatus } from '../publish.queries
 /** The stripe down an entry's edge — paired with the status in its accessible name, never colour alone. */
 const STRIPE: Record<SocialPublishStatus, string> = {
   DRAFT: 'text.disabled',
+  PENDING_APPROVAL: 'info.main',
   SCHEDULED: 'info.main',
   PUBLISHING: 'warning.main',
   PUBLISHED: 'success.main',
@@ -19,15 +21,16 @@ interface Props {
   onOpen: (item: SocialCalendarItem) => void;
 }
 
-/** One post on a calendar day: time, networks and the start of the text. */
+/** One post on a calendar day: time, networks, how many items a carousel has, and the start of the text. */
 export default function CalendarItemButton({ item, onOpen }: Readonly<Props>) {
   const { t } = useTranslation();
   const { formatTime } = useDateFormat({ timeZoneAware: true });
   const time = formatTime(item.at);
   const status = t(PUBLISH_STATUS_LABEL[item.status]);
-  const label = `${time} · ${status} · ${item.account_names.join(', ')}: ${item.text}`;
+  const carousel = item.media_count > 1 ? ` · ${t('marketing.social.mediaCount', { count: item.media_count })}` : '';
+  const label = `${time} · ${status}${carousel} · ${item.account_names.join(', ')}: ${item.text}`;
 
-  return (
+  const button = (
     <ButtonBase
       onClick={() => onOpen(item)}
       aria-label={label}
@@ -54,11 +57,25 @@ export default function CalendarItemButton({ item, onOpen }: Readonly<Props>) {
           {item.platforms.map((platform) => (
             <PlatformIcon key={platform} platform={platform} sx={{ fontSize: 14, color: 'text.secondary' }} />
           ))}
+          {item.media_count > 1 && (
+            <Stack direction="row" spacing={0.25} sx={{ alignItems: 'center', ml: 'auto', color: 'text.secondary' }} data-testid="social-calendar-item-media">
+              <CollectionsOutlinedIcon sx={{ fontSize: 14 }} aria-hidden />
+              <Typography variant="caption">{item.media_count}</Typography>
+            </Stack>
+          )}
         </Stack>
         <Typography variant="caption" noWrap sx={{ color: 'text.secondary' }}>
           {item.text}
         </Typography>
       </Stack>
     </ButtonBase>
+  );
+
+  if (item.status !== 'PENDING_APPROVAL') return button;
+  // A description, not a name: the button keeps its own label and the tip explains the stripe.
+  return (
+    <Tooltip title={t('marketing.social.awaitingApprovalTip')} describeChild>
+      {button}
+    </Tooltip>
   );
 }

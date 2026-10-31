@@ -4,7 +4,16 @@ import { GraphQLError } from 'graphql';
 import type { MockedResponse } from '@apollo/client/testing';
 import { allFallbackEntries, createTranslator } from '@duncit/app-settings';
 import { renderWithProviders } from '../testkit';
-import { makeSocialAccount } from '../mocks';
+import {
+  gqlSocialScheduledPost,
+  makeSocialAccount,
+  makeSocialCalendarItem,
+  makeSocialPublishTarget,
+  makeSocialScheduledPost,
+  socialCalendarMock,
+  socialScheduledPostMock,
+  socialScheduledPostsMock,
+} from '../mocks';
 
 // The admin-zone clock: a fixed "now", a day key read off the ISO instant and
 // a readable stamp, so dates in the cards and the calendar are deterministic.
@@ -26,19 +35,20 @@ vi.mock('@duncit/dialogs', async (importOriginal) => ({
   notify: dialogsMock.notify,
 }));
 
+vi.mock('@duncit/media-picker', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@duncit/media-picker')>()),
+  MediaListField: (await import('../mocks/media-list-field.mock')).MediaListFieldStub,
+}));
+
 import {
   CREATE_SCHEDULED_SOCIAL_POST,
   DELETE_SCHEDULED_SOCIAL_POST,
   RETRY_SCHEDULED_SOCIAL_POST,
   SHARE_SCHEDULED_SOCIAL_POST_NOW,
-  SOCIAL_CALENDAR,
   SOCIAL_SCHEDULED_POST,
   SOCIAL_SCHEDULED_POSTS,
   UPDATE_SCHEDULED_SOCIAL_POST,
-  type SocialCalendarItem,
-  type SocialPublishTarget,
-  type SocialQueueView,
-  type SocialScheduledPost,
+  type SocialPostMedia,
   type SocialScheduledPostInput,
 } from '../../src/pages/social-accounts-page/publish.queries';
 import { gridRange, monthWeeks } from '../../src/pages/social-accounts-page/publish/calendar-grid';
@@ -50,6 +60,15 @@ import ComposerDialog from '../../src/pages/social-accounts-page/publish/Compose
 
 const { t } = createTranslator({ locale: 'en-IN', fallback: allFallbackEntries() });
 
+const IMAGE_URL = 'https://ik.imagekit.io/duncit/run.jpg';
+const VIDEO_URL = 'https://ik.imagekit.io/duncit/run.mp4';
+const SECOND_URL = 'https://ik.imagekit.io/duncit/run-2.jpg';
+const CAROUSEL: SocialPostMedia[] = [
+  { url: IMAGE_URL, type: 'IMAGE' },
+  { url: VIDEO_URL, type: 'VIDEO' },
+  { url: SECOND_URL, type: 'IMAGE' },
+];
+
 beforeEach(() => {
   dialogsMock.confirm.mockReset();
   dialogsMock.notify.mockReset();
@@ -60,47 +79,7 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
-const makeTarget = (over: Partial<SocialPublishTarget> = {}): SocialPublishTarget => ({
-  account_id: 'sa1',
-  account_name: 'Duncit Pages',
-  platform: 'LINKEDIN',
-  status: 'PENDING',
-  permalink: null,
-  error: null,
-  published_at: null,
-  ...over,
-});
-
-const makePost = (over: Partial<SocialScheduledPost> = {}): SocialScheduledPost => ({
-  id: 'sp1',
-  text: 'Run club this Sunday',
-  media_url: null,
-  media_type: null,
-  status: 'SCHEDULED',
-  scheduled_at: '2026-09-20T10:00:00.000Z',
-  published_at: null,
-  idea_id: null,
-  targets: [makeTarget()],
-  ...over,
-});
-
-const gqlPost = (post: SocialScheduledPost) => ({
-  __typename: 'SocialScheduledPost',
-  ...post,
-  targets: post.targets.map((target) => ({ __typename: 'SocialPublishTarget', ...target })),
-});
-
 const rejection = (message: string) => ({ result: { errors: [new GraphQLError(message)] } });
-
-const postsMock = (view: SocialQueueView, posts: SocialScheduledPost[]): MockedResponse => ({
-  request: { query: SOCIAL_SCHEDULED_POSTS, variables: { view } },
-  result: { data: { socialScheduledPosts: posts.map(gqlPost) } },
-});
-
-const postMock = (post: SocialScheduledPost): MockedResponse => ({
-  request: { query: SOCIAL_SCHEDULED_POST, variables: { id: post.id } },
-  result: { data: { socialScheduledPost: gqlPost(post) } },
-});
 
 const idMutation = (query: MockedResponse['request']['query'], id: string, field: string, value: unknown) => {
   const result = vi.fn(() => ({ data: { [field]: value } }));
@@ -110,7 +89,7 @@ const idMutation = (query: MockedResponse['request']['query'], id: string, field
 describe('ScheduledPostCard', () => {
   it('shows when a scheduled post goes out, its text, each target and the actions a scheduled post has', () => {
     const onEdit = vi.fn();
-    const post = makePost();
+    const post = makeSocialScheduledPost();
     renderWithProviders(<ScheduledPostCard post={post} onEdit={onEdit} />);
     const card = screen.getByTestId('social-scheduled-sp1');
     expect(within(card).getByText(t('marketing.social.publishScheduled'))).toBeInTheDocument();
@@ -119,6 +98,8 @@ describe('ScheduledPostCard', () => {
     expect(within(card).getByText('Duncit Pages · Waiting')).toBeInTheDocument();
     expect(within(card).queryByRole('link')).not.toBeInTheDocument();
     expect(card.querySelector('img')).toBeNull();
+    expect(within(card).queryByTestId('social-media-count')).not.toBeInTheDocument();
+    expect(within(card).queryByTestId('social-post-review-note')).not.toBeInTheDocument();
     expect(within(card).queryByRole('button', { name: t('marketing.social.retryFailed') })).not.toBeInTheDocument();
 
     fireEvent.click(within(card).getByRole('button', { name: t('shell.common.edit') }));
@@ -127,13 +108,13 @@ describe('ScheduledPostCard', () => {
     expect(within(card).getByRole('button', { name: t('shell.common.delete') })).toBeInTheDocument();
   });
 
-  it('says when a sent post went out and links each network it landed on', () => {
-    const post = makePost({
+  it('says when a sent post went out, shows the single picture of a post written before carousels, and links each network it landed on', () => {
+    const post = makeSocialScheduledPost({
       status: 'PUBLISHED',
       published_at: '2026-09-14T18:30:00.000Z',
-      media_url: 'https://ik.imagekit.io/duncit/run.jpg',
+      media_url: IMAGE_URL,
       media_type: 'IMAGE',
-      targets: [makeTarget({ status: 'PUBLISHED', permalink: 'https://www.linkedin.com/feed/update/1' })],
+      targets: [makeSocialPublishTarget({ status: 'PUBLISHED', permalink: 'https://www.linkedin.com/feed/update/1' })],
     });
     renderWithProviders(<ScheduledPostCard post={post} onEdit={vi.fn()} />);
     const card = screen.getByTestId('social-scheduled-sp1');
@@ -143,17 +124,29 @@ describe('ScheduledPostCard', () => {
     expect(link).toHaveAttribute('target', '_blank');
     expect(link).toHaveAttribute('rel', 'noopener noreferrer');
     expect(within(link).getByText('Duncit Pages · Posted')).toBeInTheDocument();
-    expect(card.querySelector('img')).toHaveAttribute('src', 'https://ik.imagekit.io/duncit/run.jpg');
+    expect(card.querySelector('img')).toHaveAttribute('src', IMAGE_URL);
+    expect(within(card).queryByTestId('social-media-count')).not.toBeInTheDocument();
     // A sent post can only be deleted — not edited, shared again or retried.
     expect(within(card).getAllByRole('button').map((button) => button.textContent)).toEqual([t('shell.common.delete')]);
   });
 
+  it('shows a carousel by its first item with a count of the rest', () => {
+    const post = makeSocialScheduledPost({ media: CAROUSEL, media_url: IMAGE_URL, media_type: 'IMAGE' });
+    renderWithProviders(<ScheduledPostCard post={post} onEdit={vi.fn()} />);
+    const card = screen.getByTestId('social-scheduled-sp1');
+    expect(card.querySelectorAll('img')).toHaveLength(1);
+    expect(card.querySelector('img')).toHaveAttribute('src', IMAGE_URL);
+    expect(within(card).getByTestId('social-media-count')).toHaveTextContent(t('marketing.social.mediaCount', { count: 3 }));
+    expect(within(card).queryByTestId('social-media-strip')).not.toBeInTheDocument();
+  });
+
   it('marks a video with an icon, an undated draft as such, and empty text with a dash', () => {
-    const post = makePost({
+    const post = makeSocialScheduledPost({
       status: 'DRAFT',
       scheduled_at: null,
       text: '',
-      media_url: 'https://ik.imagekit.io/duncit/run.mp4',
+      media: [{ url: VIDEO_URL, type: 'VIDEO' }],
+      media_url: VIDEO_URL,
       media_type: 'VIDEO',
     });
     renderWithProviders(<ScheduledPostCard post={post} onEdit={vi.fn()} />);
@@ -161,18 +154,49 @@ describe('ScheduledPostCard', () => {
     expect(within(card).getByText(t('marketing.social.noDateYet'))).toBeInTheDocument();
     expect(within(card).getByText('—')).toBeInTheDocument();
     expect(card.querySelector('img')).toBeNull();
+    expect(within(card).getByTestId('social-media-video')).toBeInTheDocument();
     expect(within(card).getByTestId('VideocamOutlinedIcon')).toBeInTheDocument();
     expect(within(card).getByRole('button', { name: t('shell.common.edit') })).toBeInTheDocument();
     expect(within(card).queryByRole('button', { name: t('marketing.social.shareNow') })).not.toBeInTheDocument();
   });
 
+  it('parks a post awaiting approval: its own chip, a way to the Approvals page, edit but no share', () => {
+    const onEdit = vi.fn();
+    const post = makeSocialScheduledPost({ status: 'PENDING_APPROVAL', needs_approval: true, approval_run_id: 'run9' });
+    renderWithProviders(<ScheduledPostCard post={post} onEdit={onEdit} />);
+    const card = screen.getByTestId('social-scheduled-sp1');
+    expect(within(card).getByText(t('marketing.social.publishPendingApproval'))).toBeInTheDocument();
+    const open = within(card).getByTestId('social-open-approvals');
+    expect(open).toHaveAttribute('href', '/approvals');
+    expect(open).toHaveTextContent(t('marketing.social.openApprovals'));
+    expect(within(card).queryByRole('button', { name: t('marketing.social.shareNow') })).not.toBeInTheDocument();
+    expect(within(card).queryByRole('button', { name: t('marketing.social.retryFailed') })).not.toBeInTheDocument();
+    expect(within(card).getByRole('button', { name: t('shell.common.delete') })).toBeInTheDocument();
+    fireEvent.click(within(card).getByRole('button', { name: t('shell.common.edit') }));
+    expect(onEdit).toHaveBeenCalledWith(post);
+  });
+
+  it('shows the reviewer’s note on a draft that came back, and not once the post is on its way again', () => {
+    const { unmount } = renderWithProviders(
+      <ScheduledPostCard post={makeSocialScheduledPost({ status: 'DRAFT', review_note: 'Add a call to action' })} onEdit={vi.fn()} />,
+    );
+    const note = screen.getByTestId('social-post-review-note');
+    expect(note).toHaveTextContent(t('marketing.social.sentBack', { vars: { note: 'Add a call to action' } }));
+    expect(note.className).toMatch(/Warning/);
+    unmount();
+
+    renderWithProviders(<ScheduledPostCard post={makeSocialScheduledPost({ status: 'SCHEDULED', review_note: 'Add a call to action' })} onEdit={vi.fn()} />);
+    expect(screen.queryByTestId('social-post-review-note')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Add a call to action/)).not.toBeInTheDocument();
+  });
+
   it('lists why each failed network failed and offers a retry, but not targets that failed without a reason', () => {
-    const post = makePost({
+    const post = makeSocialScheduledPost({
       status: 'PARTIAL',
       targets: [
-        makeTarget({ status: 'PUBLISHED' }),
-        makeTarget({ account_id: 'sa2', account_name: 'Duncit X', platform: 'X', status: 'FAILED', error: 'Text too long' }),
-        makeTarget({ account_id: 'sa3', account_name: 'Duncit FB', platform: 'FACEBOOK', status: 'FAILED', error: null }),
+        makeSocialPublishTarget({ status: 'PUBLISHED' }),
+        makeSocialPublishTarget({ account_id: 'sa2', account_name: 'Duncit X', platform: 'X', status: 'FAILED', error: 'Text too long' }),
+        makeSocialPublishTarget({ account_id: 'sa3', account_name: 'Duncit FB', platform: 'FACEBOOK', status: 'FAILED', error: null }),
       ],
     });
     renderWithProviders(<ScheduledPostCard post={post} onEdit={vi.fn()} />);
@@ -185,20 +209,25 @@ describe('ScheduledPostCard', () => {
   });
 
   it('offers nothing to press while a post is going out', () => {
-    renderWithProviders(<ScheduledPostCard post={makePost({ status: 'PUBLISHING' })} onEdit={vi.fn()} />);
+    renderWithProviders(<ScheduledPostCard post={makeSocialScheduledPost({ status: 'PUBLISHING' })} onEdit={vi.fn()} />);
     expect(within(screen.getByTestId('social-scheduled-sp1')).queryAllByRole('button')).toHaveLength(0);
   });
 
   it('shares a scheduled post now and says it is sending', async () => {
-    const share = idMutation(SHARE_SCHEDULED_SOCIAL_POST_NOW, 'sp1', 'shareScheduledSocialPostNow', gqlPost(makePost({ status: 'PUBLISHING' })));
-    renderWithProviders(<ScheduledPostCard post={makePost()} onEdit={vi.fn()} />, { mocks: [share.mock] });
+    const share = idMutation(
+      SHARE_SCHEDULED_SOCIAL_POST_NOW,
+      'sp1',
+      'shareScheduledSocialPostNow',
+      gqlSocialScheduledPost(makeSocialScheduledPost({ status: 'PUBLISHING' })),
+    );
+    renderWithProviders(<ScheduledPostCard post={makeSocialScheduledPost()} onEdit={vi.fn()} />, { mocks: [share.mock] });
     fireEvent.click(screen.getByRole('button', { name: t('marketing.social.shareNow') }));
     await waitFor(() => expect(dialogsMock.notify).toHaveBeenCalledWith(t('marketing.social.publishingNow'), 'success'));
     expect(share.result).toHaveBeenCalledTimes(1);
   });
 
   it('retries a failed post and reports the server refusing it', async () => {
-    renderWithProviders(<ScheduledPostCard post={makePost({ status: 'FAILED' })} onEdit={vi.fn()} />, {
+    renderWithProviders(<ScheduledPostCard post={makeSocialScheduledPost({ status: 'FAILED' })} onEdit={vi.fn()} />, {
       mocks: [{ request: { query: RETRY_SCHEDULED_SOCIAL_POST, variables: { id: 'sp1' } }, ...rejection('Account needs reconnecting') }],
     });
     fireEvent.click(screen.getByRole('button', { name: t('marketing.social.retryFailed') }));
@@ -207,8 +236,13 @@ describe('ScheduledPostCard', () => {
   });
 
   it('retries a failed post and says it is retrying', async () => {
-    const retry = idMutation(RETRY_SCHEDULED_SOCIAL_POST, 'sp1', 'retryScheduledSocialPost', gqlPost(makePost({ status: 'PUBLISHING' })));
-    renderWithProviders(<ScheduledPostCard post={makePost({ status: 'FAILED' })} onEdit={vi.fn()} />, { mocks: [retry.mock] });
+    const retry = idMutation(
+      RETRY_SCHEDULED_SOCIAL_POST,
+      'sp1',
+      'retryScheduledSocialPost',
+      gqlSocialScheduledPost(makeSocialScheduledPost({ status: 'PUBLISHING' })),
+    );
+    renderWithProviders(<ScheduledPostCard post={makeSocialScheduledPost({ status: 'FAILED' })} onEdit={vi.fn()} />, { mocks: [retry.mock] });
     fireEvent.click(screen.getByRole('button', { name: t('marketing.social.retryFailed') }));
     await waitFor(() => expect(dialogsMock.notify).toHaveBeenCalledWith(t('marketing.social.retrying'), 'success'));
     expect(retry.result).toHaveBeenCalledTimes(1);
@@ -218,7 +252,7 @@ describe('ScheduledPostCard', () => {
     dialogsMock.confirm.mockResolvedValue(false);
     const remove = idMutation(DELETE_SCHEDULED_SOCIAL_POST, 'sp1', 'deleteScheduledSocialPost', true);
     const onRemoved = vi.fn();
-    renderWithProviders(<ScheduledPostCard post={makePost()} onEdit={vi.fn()} onRemoved={onRemoved} />, { mocks: [remove.mock] });
+    renderWithProviders(<ScheduledPostCard post={makeSocialScheduledPost()} onEdit={vi.fn()} onRemoved={onRemoved} />, { mocks: [remove.mock] });
     fireEvent.click(screen.getByRole('button', { name: t('shell.common.delete') }));
     await waitFor(() =>
       expect(dialogsMock.confirm).toHaveBeenCalledWith({
@@ -239,7 +273,7 @@ describe('ScheduledPostCard', () => {
     dialogsMock.confirm.mockResolvedValue(true);
     const remove = idMutation(DELETE_SCHEDULED_SOCIAL_POST, 'sp1', 'deleteScheduledSocialPost', true);
     const onRemoved = vi.fn();
-    renderWithProviders(<ScheduledPostCard post={makePost()} onEdit={vi.fn()} onRemoved={onRemoved} />, { mocks: [remove.mock] });
+    renderWithProviders(<ScheduledPostCard post={makeSocialScheduledPost()} onEdit={vi.fn()} onRemoved={onRemoved} />, { mocks: [remove.mock] });
     fireEvent.click(screen.getByRole('button', { name: t('shell.common.delete') }));
     await waitFor(() => expect(onRemoved).toHaveBeenCalledTimes(1));
     expect(remove.result).toHaveBeenCalledTimes(1);
@@ -249,7 +283,7 @@ describe('ScheduledPostCard', () => {
   it('keeps the card when the delete fails, and reports why', async () => {
     dialogsMock.confirm.mockResolvedValue(true);
     const onRemoved = vi.fn();
-    renderWithProviders(<ScheduledPostCard post={makePost()} onEdit={vi.fn()} onRemoved={onRemoved} />, {
+    renderWithProviders(<ScheduledPostCard post={makeSocialScheduledPost()} onEdit={vi.fn()} onRemoved={onRemoved} />, {
       mocks: [{ request: { query: DELETE_SCHEDULED_SOCIAL_POST, variables: { id: 'sp1' } }, ...rejection('Already sent') }],
     });
     fireEvent.click(screen.getByRole('button', { name: t('shell.common.delete') }));
@@ -260,7 +294,7 @@ describe('ScheduledPostCard', () => {
   it('deletes from a list card that has no dialog to close', async () => {
     dialogsMock.confirm.mockResolvedValue(true);
     const remove = idMutation(DELETE_SCHEDULED_SOCIAL_POST, 'sp1', 'deleteScheduledSocialPost', true);
-    renderWithProviders(<ScheduledPostCard post={makePost()} onEdit={vi.fn()} />, { mocks: [remove.mock] });
+    renderWithProviders(<ScheduledPostCard post={makeSocialScheduledPost()} onEdit={vi.fn()} />, { mocks: [remove.mock] });
     fireEvent.click(screen.getByRole('button', { name: t('shell.common.delete') }));
     await waitFor(() => expect(dialogsMock.notify).toHaveBeenCalledWith(t('marketing.social.postDeleted'), 'success'));
     expect(remove.result).toHaveBeenCalledTimes(1);
@@ -270,9 +304,9 @@ describe('ScheduledPostCard', () => {
 describe('QueueList', () => {
   it('shows a progress bar while the list loads, then a card per post', async () => {
     const onEdit = vi.fn();
-    const first = makePost();
-    const second = makePost({ id: 'sp2', text: 'Monsoon pods' });
-    renderWithProviders(<QueueList view="QUEUE" onEdit={onEdit} />, { mocks: [postsMock('QUEUE', [first, second])] });
+    const first = makeSocialScheduledPost();
+    const second = makeSocialScheduledPost({ id: 'sp2', text: 'Monsoon pods' });
+    renderWithProviders(<QueueList view="QUEUE" onEdit={onEdit} />, { mocks: [socialScheduledPostsMock('QUEUE', [first, second])] });
     expect(screen.getByRole('progressbar')).toBeInTheDocument();
     const list = await screen.findByTestId('social-queue-queue');
     expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
@@ -282,14 +316,30 @@ describe('QueueList', () => {
     expect(onEdit).toHaveBeenCalledWith(expect.objectContaining({ id: 'sp2', text: 'Monsoon pods' }));
   });
 
+  it('lists the posts waiting for a manager, with their media', async () => {
+    const parked = makeSocialScheduledPost({ id: 'pa1', status: 'PENDING_APPROVAL', needs_approval: true, media: CAROUSEL, media_url: IMAGE_URL, media_type: 'IMAGE' });
+    renderWithProviders(<QueueList view="APPROVALS" onEdit={vi.fn()} />, { mocks: [socialScheduledPostsMock('APPROVALS', [parked])] });
+    const list = await screen.findByTestId('social-queue-approvals');
+    const card = within(list).getByTestId('social-scheduled-pa1');
+    expect(within(card).getByText(t('marketing.social.publishPendingApproval'))).toBeInTheDocument();
+    expect(within(card).getByTestId('social-media-count')).toHaveTextContent(t('marketing.social.mediaCount', { count: 3 }));
+    expect(within(card).getByTestId('social-open-approvals')).toHaveAttribute('href', '/approvals');
+  });
+
   it.each([
     ['QUEUE', 'marketing.social.emptyQueue'],
+    ['APPROVALS', 'marketing.social.emptyApprovals'],
     ['DRAFTS', 'marketing.social.emptyDrafts'],
     ['SENT', 'marketing.social.emptySent'],
   ] as const)('tells the marketer when the %s list is empty', async (view, key) => {
-    renderWithProviders(<QueueList view={view} onEdit={vi.fn()} />, { mocks: [postsMock(view, [])] });
-    expect(await screen.findByText(t(key))).toBeInTheDocument();
+    renderWithProviders(<QueueList view={view} onEdit={vi.fn()} />, { mocks: [socialScheduledPostsMock(view, [])] });
+    const empty = await screen.findByTestId(`social-queue-empty-${view.toLowerCase()}`);
+    expect(empty).toHaveAccessibleName(t(key));
     expect(screen.queryByTestId(`social-queue-${view.toLowerCase()}`)).not.toBeInTheDocument();
+    const body = within(empty).queryByText(t('marketing.social.emptyApprovalsBody'));
+    // Only the approvals list explains how a post gets there.
+    if (view === 'APPROVALS') expect(body).toBeInTheDocument();
+    else expect(body).not.toBeInTheDocument();
   });
 
   it('shows the server error when the list cannot load', async () => {
@@ -301,8 +351,10 @@ describe('QueueList', () => {
 
   it('follows a post that is going out until it lands, then stops asking', async () => {
     vi.useFakeTimers();
-    const sending = vi.fn(() => ({ data: { socialScheduledPosts: [gqlPost(makePost({ status: 'PUBLISHING' }))] } }));
-    const landed = vi.fn(() => ({ data: { socialScheduledPosts: [gqlPost(makePost({ status: 'PUBLISHED', published_at: '2026-09-15T08:00:05.000Z' }))] } }));
+    const sending = vi.fn(() => ({ data: { socialScheduledPosts: [gqlSocialScheduledPost(makeSocialScheduledPost({ status: 'PUBLISHING' }))] } }));
+    const landed = vi.fn(() => ({
+      data: { socialScheduledPosts: [gqlSocialScheduledPost(makeSocialScheduledPost({ status: 'PUBLISHED', published_at: '2026-09-15T08:00:05.000Z' }))] },
+    }));
     renderWithProviders(<QueueList view="QUEUE" onEdit={vi.fn()} />, {
       mocks: [
         { request: { query: SOCIAL_SCHEDULED_POSTS, variables: { view: 'QUEUE' } }, result: sending },
@@ -333,24 +385,39 @@ describe('PlannedPostDialog', () => {
   });
 
   it('loads the picked post into a card and hands it to the composer on Edit', async () => {
-    const post = makePost();
+    const post = makeSocialScheduledPost();
     const onEdit = vi.fn();
     const onClose = vi.fn();
-    renderWithProviders(<PlannedPostDialog postId="sp1" onEdit={onEdit} onClose={onClose} />, { mocks: [postMock(post)] });
+    renderWithProviders(<PlannedPostDialog postId="sp1" onEdit={onEdit} onClose={onClose} />, { mocks: [socialScheduledPostMock(post)] });
     const dialog = screen.getByRole('dialog', { name: t('marketing.social.plannedPost') });
     expect(within(dialog).getByRole('progressbar')).toBeInTheDocument();
     const card = await within(dialog).findByTestId('social-scheduled-sp1');
     expect(within(dialog).queryByRole('progressbar')).not.toBeInTheDocument();
+    expect(within(dialog).queryByTestId('social-media-strip')).not.toBeInTheDocument();
     fireEvent.click(within(card).getByRole('button', { name: t('shell.common.edit') }));
     expect(onClose).toHaveBeenCalledTimes(1);
     expect(onEdit).toHaveBeenCalledWith(expect.objectContaining({ id: 'sp1', text: 'Run club this Sunday' }));
+  });
+
+  it('shows every item of a carousel under its card, in order', async () => {
+    const post = makeSocialScheduledPost({ media: CAROUSEL, media_url: IMAGE_URL, media_type: 'IMAGE' });
+    renderWithProviders(<PlannedPostDialog postId="sp1" onEdit={vi.fn()} onClose={vi.fn()} />, { mocks: [socialScheduledPostMock(post)] });
+    const strip = await screen.findByTestId('social-media-strip');
+    expect(strip).toHaveAccessibleName(t('marketing.social.mediaStripLabel'));
+    const items = within(strip).getAllByRole('listitem');
+    expect(items).toHaveLength(3);
+    expect(items[0].querySelector('img')).toHaveAttribute('src', IMAGE_URL);
+    expect(within(items[1]).getByTestId('social-media-video')).toBeInTheDocument();
+    expect(items[2].querySelector('img')).toHaveAttribute('src', SECOND_URL);
   });
 
   it('closes after the post is deleted, and from its Close button', async () => {
     dialogsMock.confirm.mockResolvedValue(true);
     const remove = idMutation(DELETE_SCHEDULED_SOCIAL_POST, 'sp1', 'deleteScheduledSocialPost', true);
     const onClose = vi.fn();
-    renderWithProviders(<PlannedPostDialog postId="sp1" onEdit={vi.fn()} onClose={onClose} />, { mocks: [postMock(makePost()), remove.mock] });
+    renderWithProviders(<PlannedPostDialog postId="sp1" onEdit={vi.fn()} onClose={onClose} />, {
+      mocks: [socialScheduledPostMock(makeSocialScheduledPost()), remove.mock],
+    });
     const card = await screen.findByTestId('social-scheduled-sp1');
     fireEvent.click(screen.getByRole('button', { name: t('shell.common.close') }));
     expect(onClose).toHaveBeenCalledTimes(1);
@@ -369,28 +436,11 @@ describe('PlannedPostDialog', () => {
 });
 
 describe('PublishTab', () => {
-  const calendarItem = (over: Partial<SocialCalendarItem>): SocialCalendarItem => ({
-    id: 'c1',
-    kind: 'PLANNED',
-    at: '2026-09-17T10:00:00.000Z',
-    status: 'SCHEDULED',
-    text: 'Run club recap',
-    media_url: null,
-    permalink: null,
-    platforms: ['LINKEDIN'],
-    account_names: ['Duncit Pages'],
-    engagement: null,
-    ...over,
-  });
-
-  const calendarMock = (items: SocialCalendarItem[]): MockedResponse => ({
-    request: { query: SOCIAL_CALENDAR, variables: gridRange(monthWeeks('2026-09')) },
-    result: { data: { socialCalendar: items.map((item) => ({ __typename: 'SocialCalendarItem', ...item })) } },
-  });
+  const september = (items = [makeSocialCalendarItem()]) => socialCalendarMock(gridRange(monthWeeks('2026-09')), items);
 
   it('opens on the calendar and starts a blank post or one dated on a picked day', async () => {
     const onCompose = vi.fn();
-    renderWithProviders(<PublishTab onCompose={onCompose} onOpenPost={vi.fn()} />, { mocks: [calendarMock([])] });
+    renderWithProviders(<PublishTab onCompose={onCompose} onOpenPost={vi.fn()} />, { mocks: [september([])] });
     expect(screen.getByTestId('social-calendar')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: t('marketing.social.viewCalendar') })).toHaveAttribute('aria-pressed', 'true');
 
@@ -406,8 +456,8 @@ describe('PublishTab', () => {
     const onOpenPost = vi.fn();
     renderWithProviders(<PublishTab onCompose={onCompose} onOpenPost={onOpenPost} />, {
       mocks: [
-        calendarMock([calendarItem({}), calendarItem({ id: 'np1', kind: 'PUBLISHED', status: 'PUBLISHED', at: '2026-09-10T09:00:00.000Z' })]),
-        postMock(makePost({ id: 'c1' })),
+        september([makeSocialCalendarItem(), makeSocialCalendarItem({ id: 'np1', kind: 'PUBLISHED', status: 'PUBLISHED', at: '2026-09-10T09:00:00.000Z' })]),
+        socialScheduledPostMock(makeSocialScheduledPost({ id: 'c1' })),
       ],
     });
     fireEvent.click(await screen.findByTestId('social-calendar-item-np1'));
@@ -423,15 +473,16 @@ describe('PublishTab', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
 
-  it('switches to a list, keeps it when the pressed view is pressed again, and edits from it', async () => {
+  it('offers the calendar and the four lists, switches to a list, keeps it when pressed again, and edits from it', async () => {
     const onCompose = vi.fn();
     renderWithProviders(<PublishTab onCompose={onCompose} onOpenPost={vi.fn()} />, {
-      mocks: [calendarMock([]), postsMock('DRAFTS', [makePost({ id: 'd1', status: 'DRAFT' })])],
+      mocks: [september([]), socialScheduledPostsMock('DRAFTS', [makeSocialScheduledPost({ id: 'd1', status: 'DRAFT' })])],
     });
     const group = screen.getByRole('group', { name: t('marketing.social.publishView') });
     expect(within(group).getAllByRole('button').map((button) => button.textContent)).toEqual([
       t('marketing.social.viewCalendar'),
       t('marketing.social.viewQueue'),
+      t('marketing.social.viewApprovals'),
       t('marketing.social.viewDrafts'),
       t('marketing.social.viewSent'),
     ]);
@@ -447,34 +498,48 @@ describe('PublishTab', () => {
     fireEvent.click(within(list).getByRole('button', { name: t('shell.common.edit') }));
     expect(onCompose).toHaveBeenCalledWith({ post: expect.objectContaining({ id: 'd1', status: 'DRAFT' }) });
   });
+
+  it('opens the list of posts awaiting approval', async () => {
+    renderWithProviders(<PublishTab onCompose={vi.fn()} onOpenPost={vi.fn()} />, {
+      mocks: [september([]), socialScheduledPostsMock('APPROVALS', [makeSocialScheduledPost({ id: 'pa1', status: 'PENDING_APPROVAL', needs_approval: true })])],
+    });
+    fireEvent.click(screen.getByRole('button', { name: t('marketing.social.viewApprovals') }));
+    const list = await screen.findByTestId('social-queue-approvals');
+    expect(within(list).getByTestId('social-scheduled-pa1')).toBeInTheDocument();
+  });
 });
 
 describe('ComposerDialog', () => {
   const accounts = [makeSocialAccount()];
   const createMock = (input: SocialScheduledPostInput) => {
-    const result = vi.fn(() => ({ data: { createScheduledSocialPost: gqlPost(makePost({ id: 'new1', status: 'DRAFT' })) } }));
+    const result = vi.fn(() => ({ data: { createScheduledSocialPost: gqlSocialScheduledPost(makeSocialScheduledPost({ id: 'new1', status: 'DRAFT' })) } }));
     return { result, mock: { request: { query: CREATE_SCHEDULED_SOCIAL_POST, variables: { input } }, result } as MockedResponse };
   };
-  // A new post opened with every field it carries; a request missing media_url or
-  // scheduled_at currently fails validation (reported as a source bug).
-  const opened = { text: 'Fresh idea', media_url: 'https://ik.imagekit.io/duncit/run.jpg', scheduled_at: '2026-09-20T10:00:00.000Z' };
+  const updateMock = (id: string, input: SocialScheduledPostInput, returned = makeSocialScheduledPost({ id })) => {
+    const result = vi.fn(() => ({ data: { updateScheduledSocialPost: gqlSocialScheduledPost(returned) } }));
+    return { result, mock: { request: { query: UPDATE_SCHEDULED_SOCIAL_POST, variables: { id, input } }, result } as MockedResponse };
+  };
+  /** A new post opened with everything a request can carry: an idea's text and picture, and a day's time. */
+  const opened = { text: 'Fresh idea', media_url: IMAGE_URL, scheduled_at: '2026-09-20T10:00:00.000Z' };
   const draftInput = (over: Partial<SocialScheduledPostInput> = {}): SocialScheduledPostInput => ({
     text: 'Fresh idea',
-    media_url: 'https://ik.imagekit.io/duncit/run.jpg',
-    media_type: 'IMAGE',
+    media: [{ url: IMAGE_URL, type: 'IMAGE' }],
     account_ids: [],
     mode: 'DRAFT',
     scheduled_at: '2026-09-20T10:00:00.000Z',
     idea_id: null,
+    needs_approval: false,
     ...over,
   });
+  const mediaBox = (dialog: HTMLElement) => within(dialog).getByRole('textbox', { name: t('marketing.social.postMedia') });
+  const approval = (dialog: HTMLElement) => within(dialog).getByRole('switch', { name: t('marketing.social.needsApproval') });
 
   it('renders nothing while there is no request', () => {
     renderWithProviders(<ComposerDialog request={null} accounts={accounts} onClose={vi.fn()} />);
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
-  it('starts a new post from what it was opened with and saves it as a draft linked to the idea', async () => {
+  it('starts a new post from what it was opened with — the idea’s picture as its first item — and saves it as a draft linked to the idea', async () => {
     const onClose = vi.fn();
     const create = createMock(draftInput({ idea_id: 'i7' }));
     renderWithProviders(
@@ -483,58 +548,126 @@ describe('ComposerDialog', () => {
     );
     const dialog = screen.getByRole('dialog', { name: t('marketing.social.createPost') });
     expect(within(dialog).getByRole('textbox', { name: t('marketing.social.postText') })).toHaveValue('Fresh idea');
+    expect(mediaBox(dialog)).toHaveValue(IMAGE_URL);
+    expect(approval(dialog)).not.toBeChecked();
+    expect(within(dialog).queryByTestId('social-post-sent-back')).not.toBeInTheDocument();
     fireEvent.click(within(dialog).getByTestId('social-post-draft'));
     await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
     expect(create.result).toHaveBeenCalledTimes(1);
     expect(dialogsMock.notify).toHaveBeenCalledWith(t('marketing.social.draftSaved'), 'success');
   });
 
+  it('starts from an idea that brings only text, with no media and no time', async () => {
+    const onClose = vi.fn();
+    const create = createMock(draftInput({ text: 'Plain idea', media: [], scheduled_at: null, idea_id: 'i9' }));
+    renderWithProviders(<ComposerDialog request={{ text: 'Plain idea', idea_id: 'i9' }} accounts={accounts} onClose={onClose} />, { mocks: [create.mock] });
+    const dialog = screen.getByRole('dialog', { name: t('marketing.social.createPost') });
+    expect(mediaBox(dialog)).toHaveValue('');
+    fireEvent.click(within(dialog).getByTestId('social-post-draft'));
+    await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
+    expect(create.result).toHaveBeenCalledTimes(1);
+  });
+
+  it('starts from a calendar day with only its time and still asks for something to post', async () => {
+    renderWithProviders(<ComposerDialog request={{ scheduled_at: '2026-09-20T10:00:00.000Z' }} accounts={accounts} onClose={vi.fn()} />);
+    const dialog = screen.getByRole('dialog', { name: t('marketing.social.createPost') });
+    expect(within(dialog).getByRole('textbox', { name: t('marketing.social.postText') })).toHaveValue('');
+    fireEvent.click(within(dialog).getByTestId('social-post-draft'));
+    expect(await within(dialog).findByText(t('marketing.social.writeSomething'))).toBeInTheDocument();
+    expect(dialogsMock.notify).not.toHaveBeenCalled();
+  });
+
   it('edits an existing post with its own accounts, sends it now and keeps its idea', async () => {
     const onClose = vi.fn();
-    const post = makePost({ idea_id: 'i3', text: 'Edited copy', scheduled_at: null });
-    const input: SocialScheduledPostInput = {
-      text: 'Edited copy',
-      media_url: null,
-      media_type: null,
-      account_ids: ['sa1'],
-      mode: 'NOW',
-      scheduled_at: null,
-      idea_id: 'i3',
-    };
-    const update = vi.fn(() => ({ data: { updateScheduledSocialPost: gqlPost({ ...post, status: 'PUBLISHING' }) } }));
-    renderWithProviders(<ComposerDialog request={{ post, idea_id: 'ignored' }} accounts={accounts} onClose={onClose} />, {
-      mocks: [{ request: { query: UPDATE_SCHEDULED_SOCIAL_POST, variables: { id: 'sp1', input } }, result: update }],
-    });
+    const post = makeSocialScheduledPost({ idea_id: 'i3', text: 'Edited copy', scheduled_at: null });
+    const update = updateMock(
+      'sp1',
+      { text: 'Edited copy', media: [], account_ids: ['sa1'], mode: 'NOW', scheduled_at: null, idea_id: 'i3', needs_approval: false },
+      { ...post, status: 'PUBLISHING' },
+    );
+    renderWithProviders(<ComposerDialog request={{ post, idea_id: 'ignored' }} accounts={accounts} onClose={onClose} />, { mocks: [update.mock] });
     const dialog = screen.getByRole('dialog', { name: t('marketing.social.editPost') });
     expect(within(dialog).getByRole('checkbox', { name: 'Duncit Pages' })).toBeChecked();
     fireEvent.click(within(dialog).getByTestId('social-post-now'));
     await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
-    expect(update).toHaveBeenCalledTimes(1);
+    expect(update.result).toHaveBeenCalledTimes(1);
     expect(dialogsMock.notify).toHaveBeenCalledWith(t('marketing.social.publishingNow'), 'success');
   });
 
-  it('schedules an edited post at its own time, falling back to the opened idea', async () => {
+  it('schedules a post written before carousels by its single URL, falling back to the opened idea', async () => {
     vi.useFakeTimers({ toFake: ['Date'] });
     vi.setSystemTime(new Date('2026-09-15T08:00:00.000Z'));
     const onClose = vi.fn();
-    const post = makePost({ media_url: 'https://ik.imagekit.io/duncit/run.jpg', media_type: 'IMAGE' });
-    const input: SocialScheduledPostInput = {
+    const post = makeSocialScheduledPost({ media_url: IMAGE_URL, media_type: 'IMAGE' });
+    const update = updateMock('sp1', {
       text: 'Run club this Sunday',
-      media_url: 'https://ik.imagekit.io/duncit/run.jpg',
-      media_type: 'IMAGE',
+      media: [{ url: IMAGE_URL, type: 'IMAGE' }],
       account_ids: ['sa1'],
       mode: 'SCHEDULE',
       scheduled_at: '2026-09-20T10:00:00.000Z',
       idea_id: 'i5',
-    };
-    const update = vi.fn(() => ({ data: { updateScheduledSocialPost: gqlPost(post) } }));
-    renderWithProviders(<ComposerDialog request={{ post, idea_id: 'i5' }} accounts={accounts} onClose={onClose} />, {
-      mocks: [{ request: { query: UPDATE_SCHEDULED_SOCIAL_POST, variables: { id: 'sp1', input } }, result: update }],
+      needs_approval: false,
     });
+    renderWithProviders(<ComposerDialog request={{ post, idea_id: 'i5' }} accounts={accounts} onClose={onClose} />, { mocks: [update.mock] });
+    const dialog = screen.getByRole('dialog', { name: t('marketing.social.editPost') });
+    expect(mediaBox(dialog)).toHaveValue(IMAGE_URL);
     fireEvent.click(screen.getByTestId('social-post-schedule'));
     await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
-    expect(update).toHaveBeenCalledTimes(1);
+    expect(update.result).toHaveBeenCalledTimes(1);
     expect(dialogsMock.notify).toHaveBeenCalledWith(t('marketing.social.postScheduled'), 'success');
+  });
+
+  it('sends a scheduled post for approval and says so', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-09-15T08:00:00.000Z'));
+    const onClose = vi.fn();
+    const post = makeSocialScheduledPost();
+    const update = updateMock(
+      'sp1',
+      { text: 'Run club this Sunday', media: [], account_ids: ['sa1'], mode: 'SCHEDULE', scheduled_at: '2026-09-20T10:00:00.000Z', idea_id: null, needs_approval: true },
+      { ...post, status: 'PENDING_APPROVAL', needs_approval: true, approval_run_id: 'run1' },
+    );
+    renderWithProviders(<ComposerDialog request={{ post }} accounts={accounts} onClose={onClose} />, { mocks: [update.mock] });
+    const dialog = screen.getByRole('dialog', { name: t('marketing.social.editPost') });
+    fireEvent.click(approval(dialog));
+    const schedule = within(dialog).getByTestId('social-post-schedule');
+    expect(schedule).toHaveTextContent(t('marketing.social.sendForApproval'));
+    fireEvent.click(schedule);
+    await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
+    expect(update.result).toHaveBeenCalledTimes(1);
+    expect(dialogsMock.notify).toHaveBeenCalledWith(t('marketing.social.sentForApproval'), 'success');
+    expect(dialogsMock.notify).not.toHaveBeenCalledWith(t('marketing.social.postScheduled'), 'success');
+  });
+
+  it('opens a parked carousel with every item and its approval flag, and a draft of it is only a draft', async () => {
+    const onClose = vi.fn();
+    const post = makeSocialScheduledPost({ status: 'PENDING_APPROVAL', needs_approval: true, media: CAROUSEL, media_url: IMAGE_URL, media_type: 'IMAGE' });
+    const update = updateMock(
+      'sp1',
+      { text: 'Run club this Sunday', media: CAROUSEL, account_ids: ['sa1'], mode: 'DRAFT', scheduled_at: '2026-09-20T10:00:00.000Z', idea_id: null, needs_approval: true },
+      { ...post, status: 'DRAFT' },
+    );
+    renderWithProviders(<ComposerDialog request={{ post }} accounts={accounts} onClose={onClose} />, { mocks: [update.mock] });
+    const dialog = screen.getByRole('dialog', { name: t('marketing.social.editPost') });
+    expect(mediaBox(dialog)).toHaveValue(`${IMAGE_URL}\n${VIDEO_URL}\n${SECOND_URL}`);
+    expect(approval(dialog)).toBeChecked();
+    fireEvent.click(within(dialog).getByTestId('social-post-draft'));
+    await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
+    expect(update.result).toHaveBeenCalledTimes(1);
+    expect(dialogsMock.notify).toHaveBeenCalledWith(t('marketing.social.draftSaved'), 'success');
+  });
+
+  it('shows the reviewer’s note on a draft that came back, and not on a post that is on its way', () => {
+    const { unmount } = renderWithProviders(
+      <ComposerDialog request={{ post: makeSocialScheduledPost({ status: 'DRAFT', review_note: 'Shorter, please' }) }} accounts={accounts} onClose={vi.fn()} />,
+    );
+    expect(screen.getByTestId('social-post-sent-back')).toHaveTextContent(t('marketing.social.sentBack', { vars: { note: 'Shorter, please' } }));
+    unmount();
+
+    renderWithProviders(
+      <ComposerDialog request={{ post: makeSocialScheduledPost({ status: 'SCHEDULED', review_note: 'Shorter, please' }) }} accounts={accounts} onClose={vi.fn()} />,
+    );
+    expect(screen.queryByTestId('social-post-sent-back')).not.toBeInTheDocument();
   });
 
   it('keeps the composer open with the server error when saving fails, and clears it on cancel', async () => {

@@ -98,6 +98,7 @@ export const CATEGORY_LABEL: Record<string, string> = {
 
 export const PUBLISH_STATUS_LABEL: Record<SocialPublishStatus, string> = {
   DRAFT: 'marketing.social.publishDraft',
+  PENDING_APPROVAL: 'marketing.social.publishPendingApproval',
   SCHEDULED: 'marketing.social.publishScheduled',
   PUBLISHING: 'marketing.social.publishPublishing',
   PUBLISHED: 'marketing.social.publishPublished',
@@ -107,6 +108,7 @@ export const PUBLISH_STATUS_LABEL: Record<SocialPublishStatus, string> = {
 
 export const PUBLISH_STATUS_COLORS = {
   DRAFT: 'default',
+  PENDING_APPROVAL: 'info',
   SCHEDULED: 'info',
   PUBLISHING: 'warning',
   PUBLISHED: 'success',
@@ -124,6 +126,7 @@ export const TARGET_STATUS_COLORS = { PENDING: 'default', PUBLISHED: 'success', 
 
 export const QUEUE_VIEW_LABEL: Record<SocialQueueView, string> = {
   QUEUE: 'marketing.social.viewQueue',
+  APPROVALS: 'marketing.social.viewApprovals',
   DRAFTS: 'marketing.social.viewDrafts',
   SENT: 'marketing.social.viewSent',
 };

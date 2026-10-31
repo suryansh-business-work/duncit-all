@@ -58,6 +58,7 @@ const publishedItem: SocialCalendarItem = {
   status: 'PUBLISHED',
   text: 'Sunday run recap',
   media_url: null,
+  media_count: 0,
   permalink: null,
   platforms: ['LINKEDIN'],
   account_names: ['Duncit Pages'],

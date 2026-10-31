@@ -12,6 +12,15 @@ import {
   type SocialInsights,
   type SocialProvider,
 } from '../../src/pages/social-accounts-page/queries';
+import {
+  SOCIAL_CALENDAR,
+  SOCIAL_SCHEDULED_POST,
+  SOCIAL_SCHEDULED_POSTS,
+  type SocialCalendarItem,
+  type SocialPublishTarget,
+  type SocialQueueView,
+  type SocialScheduledPost,
+} from '../../src/pages/social-accounts-page/publish.queries';
 
 export const makeSocialAccount = (over: Partial<SocialAccount> = {}): SocialAccount => ({
   id: 'sa1',
@@ -135,4 +144,74 @@ export const makeSocialAnalytics = (over: Partial<SocialAnalytics> = {}): Social
   top_posts: [],
   sentiment: { positive: 6, neutral: 4, negative: 2, flagged: 1, pending: 0 },
   ...over,
+});
+
+// --- Publishing: posts written in Duncit, and the calendar ----------------------
+
+export const makeSocialPublishTarget = (over: Partial<SocialPublishTarget> = {}): SocialPublishTarget => ({
+  account_id: 'sa1',
+  account_name: 'Duncit Pages',
+  platform: 'LINKEDIN',
+  status: 'PENDING',
+  permalink: null,
+  error: null,
+  published_at: null,
+  ...over,
+});
+
+/** A scheduled post with no media; pass `media` (and the matching `media_url`) for a carousel. */
+export const makeSocialScheduledPost = (over: Partial<SocialScheduledPost> = {}): SocialScheduledPost => ({
+  id: 'sp1',
+  text: 'Run club this Sunday',
+  media_url: null,
+  media_type: null,
+  media: [],
+  status: 'SCHEDULED',
+  scheduled_at: '2026-09-20T10:00:00.000Z',
+  published_at: null,
+  idea_id: null,
+  needs_approval: false,
+  review_note: null,
+  approval_run_id: null,
+  targets: [makeSocialPublishTarget()],
+  ...over,
+});
+
+/** The post as the server returns it: `__typename` on it, its media rows and its targets. */
+export const gqlSocialScheduledPost = (post: SocialScheduledPost) => ({
+  __typename: 'SocialScheduledPost',
+  ...post,
+  media: post.media.map((item) => ({ __typename: 'SocialPostMedia', ...item })),
+  targets: post.targets.map((target) => ({ __typename: 'SocialPublishTarget', ...target })),
+});
+
+export const socialScheduledPostsMock = (view: SocialQueueView, posts: SocialScheduledPost[]): MockedResponse => ({
+  request: { query: SOCIAL_SCHEDULED_POSTS, variables: { view } },
+  result: { data: { socialScheduledPosts: posts.map(gqlSocialScheduledPost) } },
+});
+
+export const socialScheduledPostMock = (post: SocialScheduledPost): MockedResponse => ({
+  request: { query: SOCIAL_SCHEDULED_POST, variables: { id: post.id } },
+  result: { data: { socialScheduledPost: gqlSocialScheduledPost(post) } },
+});
+
+export const makeSocialCalendarItem = (over: Partial<SocialCalendarItem> = {}): SocialCalendarItem => ({
+  id: 'c1',
+  kind: 'PLANNED',
+  at: '2026-09-17T10:00:00.000Z',
+  status: 'SCHEDULED',
+  text: 'Run club recap',
+  media_url: null,
+  media_count: 0,
+  permalink: null,
+  platforms: ['LINKEDIN'],
+  account_names: ['Duncit Pages'],
+  engagement: null,
+  ...over,
+});
+
+/** The calendar query for exactly the range the view asks for (see `gridRange`). */
+export const socialCalendarMock = (range: { from: string; to: string }, items: SocialCalendarItem[]): MockedResponse => ({
+  request: { query: SOCIAL_CALENDAR, variables: range },
+  result: { data: { socialCalendar: items.map((item) => ({ __typename: 'SocialCalendarItem', ...item })) } },
 });

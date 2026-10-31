@@ -11,6 +11,9 @@ const DAY = 'yyyy-MM-dd';
 /** When a post created from a future day's "+" is pencilled in for. */
 const DEFAULT_HOUR = 10;
 
+/** How much of the calendar is on screen at once. */
+export type CalendarUnit = 'MONTH' | 'WEEK' | 'DAY';
+
 const dayDate = (day: string) => parse(day, DAY, new Date());
 const monthDate = (month: string) => dayDate(`${month}-01`);
 
@@ -22,6 +25,29 @@ export function monthWeeks(month: string): string[][] {
     weeks.push(Array.from({ length: 7 }, (_, offset) => format(addDays(day, offset), DAY)));
   }
   return weeks;
+}
+
+/** The seven days, Monday first, of the week that holds `day` — across a month end if it must. */
+export function weekRange(day: string): string[] {
+  const monday = startOfWeek(dayDate(day), WEEK);
+  return Array.from({ length: 7 }, (_, offset) => format(addDays(monday, offset), DAY));
+}
+
+/** One day, in the same rows-of-days shape the grid and its query take. */
+export const dayRange = (day: string): string[] => [day];
+
+/** The rows the calendar draws for a unit around `anchor`: the month's weeks, the one week, or the one day. */
+export function unitWeeks(unit: CalendarUnit, anchor: string): string[][] {
+  if (unit === 'MONTH') return monthWeeks(anchor.slice(0, 7));
+  if (unit === 'WEEK') return [weekRange(anchor)];
+  return [dayRange(anchor)];
+}
+
+/** The anchor moved by `by` of the unit; a month step keeps the day of the month where the next month has it. */
+export function shift(unit: CalendarUnit, anchor: string, by: number): string {
+  const date = dayDate(anchor);
+  if (unit === 'MONTH') return format(addMonths(date, by), DAY);
+  return format(addDays(date, unit === 'WEEK' ? by * 7 : by), DAY);
 }
 
 export const shiftMonth = (month: string, by: number) => format(addMonths(monthDate(month), by), 'yyyy-MM');

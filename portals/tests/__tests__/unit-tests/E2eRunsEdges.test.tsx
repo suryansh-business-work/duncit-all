@@ -97,8 +97,10 @@ describe('e2e run cells', () => {
     vi.setSystemTime(new Date('2026-01-01T12:00:00.000Z'));
     const renderStatus = makeRenderStatus(statusLabels);
 
+    // The ring is decorative (aria-hidden): the chip's own label says Running.
     const live = render(renderStatus(e2eRun({ status: 'RUNNING', created_at: '2026-01-01T11:50:00.000Z', stage: 'Cypress' })));
-    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    expect(screen.getByRole('progressbar', { hidden: true })).toBeInTheDocument();
+    expect(screen.getByText('Running')).toBeInTheDocument();
     live.unmount();
 
     const queued = render(renderStatus(e2eRun({ status: 'QUEUED', created_at: '2026-01-01T11:50:00.000Z', stage: '' })));
@@ -107,7 +109,7 @@ describe('e2e run cells', () => {
 
     const stale = render(renderStatus(e2eRun({ status: 'RUNNING', created_at: '2026-01-01T08:00:00.000Z' })));
     expect(stale.container.querySelector('.MuiChip-root')).toHaveClass('MuiChip-colorWarning');
-    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+    expect(screen.queryByRole('progressbar', { hidden: true })).not.toBeInTheDocument();
   });
 
   it('shows who started a run and how, with a dash for nobody', () => {

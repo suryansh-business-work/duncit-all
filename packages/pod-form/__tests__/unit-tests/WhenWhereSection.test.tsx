@@ -466,7 +466,8 @@ describe('WhenWhereSection (offer terms)', () => {
 
   it('flags nothing before an amount is typed — the empty field keeps its own required rule', () => {
     routeQueries({ terms: floorTerms() });
-    renderWW(termsData(), { ...WINDOW, venue_offer_model: 'PER_GUEST', venue_offer_rate: '' });
+    // No rate value at all (the Harness's blank form would otherwise give '').
+    renderWW(termsData(), { ...WINDOW, venue_offer_model: 'PER_GUEST', venue_offer_rate: undefined });
     expect(screen.getByLabelText(/Amount you offer/)).toHaveAttribute('aria-invalid', 'false');
     expect(screen.queryByText(/raise your offer to continue/)).not.toBeInTheDocument();
   });

@@ -271,13 +271,13 @@ describe('AppShell adapter', () => {
     setToken('tok');
     renderShell();
     expect(navKeys()).not.toContain('shell.nav.settings');
-    expect(navKeys()).toContain('shell.nav.dashboard');
+    expect(navKeys()).toContain('shell.nav.overview');
   });
 
   it('builds the narrowest sidebar while the user is still unknown', () => {
     userCtxMock.value = { user: null, loading: true, logout: vi.fn() };
     renderShell();
     expect(navKeys()).not.toContain('shell.nav.settings');
-    expect(navKeys()).toContain('shell.nav.dashboard');
+    expect(navKeys()).toContain('shell.nav.overview');
   });
 });

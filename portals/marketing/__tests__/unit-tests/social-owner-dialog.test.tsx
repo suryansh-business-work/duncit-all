@@ -32,8 +32,8 @@ const renderDialog = (account: SocialAccount, mocks: MockedResponse[]) => {
   return { onClose, onSaved };
 };
 
-const ownerInput = () => screen.getByLabelText('Owner');
-const teamInput = () => screen.getByLabelText('Team');
+const ownerInput = () => screen.getByRole('combobox', { name: 'Owner' });
+const teamInput = () => screen.getByRole('combobox', { name: 'Team' });
 
 /** Opens the picker and presses the named person. */
 const pick = async (input: HTMLElement, name: string) => {

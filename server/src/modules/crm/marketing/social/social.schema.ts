@@ -8,21 +8,24 @@ export const socialTypeDefs = gql`
     CALENDAR
   }
 
-  "The app a marketer connects through. META covers Facebook Pages and Instagram Business."
+  "The app a marketer connects through — one app per network. An Instagram account connected through Facebook before Instagram had its own app keeps provider FACEBOOK."
   enum SocialProvider {
-    LINKEDIN
-    META
-    X
+    INSTAGRAM
+    FACEBOOK
+    THREADS
     YOUTUBE
+    LINKEDIN
+    X
   }
 
   "The network an account lives on."
   enum SocialPlatform {
-    LINKEDIN
-    FACEBOOK
     INSTAGRAM
-    X
+    FACEBOOK
+    THREADS
     YOUTUBE
+    LINKEDIN
+    X
   }
 
   "EXPIRED needs a person to reconnect; ERROR is retried on the next sync."
@@ -55,10 +58,12 @@ export const socialTypeDefs = gql`
     REVIEWED
   }
 
-  "Whether Tech has set up this provider's app under Environment Variables › Social apps."
+  "Whether this network's app is set up under Marketing › Settings › Integrations (one entry per network)."
   type SocialProviderStatus {
     provider: SocialProvider!
     configured: Boolean!
+    "The environment category the app's entry lives in, for the settings page's link."
+    category: String!
   }
 
   type SocialAccount {
@@ -252,6 +257,8 @@ export const socialTypeDefs = gql`
 
   extend type Query {
     socialProviders: [SocialProviderStatus!]!
+    "The one redirect (callback) URL every network's app must list — shown on the settings page."
+    socialRedirectUri: String!
     socialAccounts: [SocialAccount!]!
     socialAnalytics(input: SocialAnalyticsInput!): SocialAnalytics!
     socialPostsTable(query: TableQueryInput): SocialPostTablePage!

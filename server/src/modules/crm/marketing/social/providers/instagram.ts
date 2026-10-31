@@ -1,11 +1,31 @@
-import type { FetchedComment, FetchedPost, SocialReader } from '../social.types';
-import { count } from './http';
-import { graphGet, graphTime } from './meta';
+import type { FetchedComment, FetchedPost, SocialAccountHandle, SocialReader } from '../social.types';
+import { SocialApiError, count } from './http';
+import { refreshInstagramToken } from './instagram.auth';
+import { FACEBOOK_GRAPH, INSTAGRAM_GRAPH, INSTAGRAM_SERVICE, graphGet, graphTime } from './meta';
+
+export { INSTAGRAM_SERVICE } from './meta';
+export { INSTAGRAM_SCOPES, instagramConnector, probeInstagramApp, refreshInstagramToken } from './instagram.auth';
 
 /**
- * An Instagram Business account, read through the Graph API with the token of
- * the Facebook Page it is linked to — there is no separate Instagram login.
+ * An Instagram professional account. Which Graph host answers for it depends
+ * on the app it was connected through: Instagram Login hands out a token only
+ * graph.instagram.com honours, while an account connected through Facebook
+ * before Instagram had its own app holds a Page token, which only
+ * graph.facebook.com does — that account keeps provider FACEBOOK and reads
+ * exactly as it always did.
  */
+export const graphBase = (account: SocialAccountHandle): string =>
+  account.provider === 'FACEBOOK' ? FACEBOOK_GRAPH : INSTAGRAM_GRAPH;
+
+const PROFILE_FIELDS = 'username,name,profile_picture_url,followers_count';
+
+interface InstagramProfile {
+  username?: string;
+  name?: string;
+  profile_picture_url?: string;
+  followers_count?: number;
+}
+
 interface InstagramMedia {
   id: string;
   caption?: string;
@@ -27,15 +47,19 @@ interface InstagramComment {
 }
 
 export const instagramReader: SocialReader = {
+  /** Only a token from Instagram Login renews; a Page token never expires, so one that has needs a person. */
+  async refresh(account) {
+    if (account.provider === 'FACEBOOK') {
+      throw new SocialApiError(INSTAGRAM_SERVICE, 401, 'the Page token has expired — reconnect this account', true);
+    }
+    return refreshInstagramToken(account.access_token);
+  },
+
   async profile(account, creds) {
-    const profile = await graphGet<{
-      username?: string;
-      name?: string;
-      profile_picture_url?: string;
-      followers_count?: number;
-    }>(creds.version, `/${account.external_id}`, account.access_token, {
-      fields: 'username,name,profile_picture_url,followers_count',
-    });
+    const base = graphBase(account);
+    // Instagram Login reads the signed-in account as `me`; a Page token names it by id.
+    const path = base === INSTAGRAM_GRAPH ? '/me' : `/${account.external_id}`;
+    const profile = await graphGet<InstagramProfile>(creds.version, path, account.access_token, { fields: PROFILE_FIELDS }, base);
     const username = profile.username ?? account.handle;
     return {
       name: profile.name || username,
@@ -46,10 +70,16 @@ export const instagramReader: SocialReader = {
   },
 
   async posts(account, creds): Promise<FetchedPost[]> {
-    const res = await graphGet<{ data?: InstagramMedia[] }>(creds.version, `/${account.external_id}/media`, account.access_token, {
-      fields: 'id,caption,media_type,media_url,thumbnail_url,permalink,timestamp,like_count,comments_count',
-      limit: '50',
-    });
+    const res = await graphGet<{ data?: InstagramMedia[] }>(
+      creds.version,
+      `/${account.external_id}/media`,
+      account.access_token,
+      {
+        fields: 'id,caption,media_type,media_url,thumbnail_url,permalink,timestamp,like_count,comments_count',
+        limit: '50',
+      },
+      graphBase(account)
+    );
     return (res.data ?? []).map((media) => ({
       external_id: media.id,
       text: media.caption ?? '',
@@ -65,10 +95,13 @@ export const instagramReader: SocialReader = {
   },
 
   async comments(account, post, creds): Promise<FetchedComment[]> {
-    const res = await graphGet<{ data?: InstagramComment[] }>(creds.version, `/${post.external_id}/comments`, account.access_token, {
-      fields: 'id,text,username,timestamp,like_count',
-      limit: '50',
-    });
+    const res = await graphGet<{ data?: InstagramComment[] }>(
+      creds.version,
+      `/${post.external_id}/comments`,
+      account.access_token,
+      { fields: 'id,text,username,timestamp,like_count', limit: '50' },
+      graphBase(account)
+    );
     return (res.data ?? []).map((comment) => ({
       external_id: comment.id,
       author_name: comment.username ?? '',

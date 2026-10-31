@@ -9,7 +9,7 @@ import {
 } from './social.model';
 import { READERS } from './providers';
 import { SocialApiError } from './providers/http';
-import { PROVIDER_OF, socialCredentials } from './social.credentials';
+import { socialCredentials } from './social.credentials';
 import { analyzePendingComments } from './social.ai';
 import type {
   FetchedComment,
@@ -31,13 +31,22 @@ const DAY_MS = 86_400_000;
 const COMMENT_WINDOW_DAYS = 30;
 /** …and for at most this many of them, newest first — each is one API call. */
 const COMMENT_POSTS = 10;
+/** A token with a refresh token is renewed minutes before it lapses. */
 const REFRESH_MARGIN_MS = 5 * 60_000;
+/**
+ * Instagram and Threads hand out 60-day tokens that are renewed from the
+ * access token itself (no refresh token), any time after they are a day old.
+ * A margin of days, not minutes, so a renewal cannot be missed between syncs.
+ */
+const LONG_LIVED_MARGIN_MS = 7 * DAY_MS;
+const RENEWS_FROM_ACCESS_TOKEN = new Set<string>(['INSTAGRAM', 'THREADS']);
 /** How long an account waits between scheduled syncs. */
 export const SYNC_EVERY_MS = 3 * 60 * 60_000;
 
 export type AccountWithTokens = SocialAccountDoc & { access_token: string; refresh_token: string };
 
 const handleOf = (doc: AccountWithTokens): SocialAccountHandle => ({
+  provider: doc.provider,
   platform: doc.platform,
   external_id: doc.external_id,
   handle: doc.handle ?? '',
@@ -46,12 +55,14 @@ const handleOf = (doc: AccountWithTokens): SocialAccountHandle => ({
   meta: (doc.meta ?? {}) as Record<string, string>,
 });
 
-/** The account's handle with a token good for the next few minutes. */
+/** The account's handle with a token good for the next few minutes (or weeks, for a long-lived one). */
 export async function freshHandle(doc: AccountWithTokens, reader: SocialReader, creds: SocialAppCredentials) {
   const handle = handleOf(doc);
   const expires = doc.token_expires_at ? new Date(doc.token_expires_at).getTime() : 0;
-  if (!expires || expires - REFRESH_MARGIN_MS > Date.now()) return handle;
-  if (!reader.refresh || !handle.refresh_token) {
+  const renewsFromAccessToken = RENEWS_FROM_ACCESS_TOKEN.has(doc.provider);
+  const margin = renewsFromAccessToken ? LONG_LIVED_MARGIN_MS : REFRESH_MARGIN_MS;
+  if (!expires || expires - margin > Date.now()) return handle;
+  if (!reader.refresh || (!handle.refresh_token && !renewsFromAccessToken)) {
     throw new SocialApiError(doc.platform, 401, 'the access token has expired — reconnect this account', true);
   }
   const tokens = await reader.refresh(handle, creds);
@@ -140,9 +151,9 @@ export async function syncSocialAccount(accountId: string): Promise<void> {
   const doc = await SocialAccountModel.findById(accountId).select('+access_token +refresh_token').lean<AccountWithTokens>();
   if (!doc) return;
   try {
-    const creds = await socialCredentials(PROVIDER_OF[doc.platform]);
+    const creds = await socialCredentials(doc.provider);
     if (!creds) {
-      throw new Error('This network’s app is not set up yet — Tech adds it under Environment Variables › Social apps.');
+      throw new Error('This network’s app is not set up yet — add it under Marketing › Settings › Integrations.');
     }
     const reader = READERS[doc.platform];
     const handle = await freshHandle(doc, reader, creds);

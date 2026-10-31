@@ -18,11 +18,12 @@ interface PlatformRules {
 }
 
 export const PUBLISH_RULES: Record<SocialPlatform, PlatformRules> = {
-  LINKEDIN: { label: 'LinkedIn', maxText: 3000, media: ['IMAGE'], mediaRequired: false, textRequired: true },
-  FACEBOOK: { label: 'Facebook', maxText: 63_206, media: ['IMAGE', 'VIDEO'], mediaRequired: false, textRequired: false },
   INSTAGRAM: { label: 'Instagram', maxText: 2200, media: ['IMAGE', 'VIDEO'], mediaRequired: true, textRequired: false },
-  X: { label: 'X', maxText: 280, media: ['IMAGE'], mediaRequired: false, textRequired: false },
+  FACEBOOK: { label: 'Facebook', maxText: 63_206, media: ['IMAGE', 'VIDEO'], mediaRequired: false, textRequired: false },
+  THREADS: { label: 'Threads', maxText: 500, media: ['IMAGE', 'VIDEO'], mediaRequired: false, textRequired: false },
   YOUTUBE: { label: 'YouTube', maxText: 5000, media: ['VIDEO'], mediaRequired: true, textRequired: true },
+  LINKEDIN: { label: 'LinkedIn', maxText: 3000, media: ['IMAGE'], mediaRequired: false, textRequired: true },
+  X: { label: 'X', maxText: 280, media: ['IMAGE'], mediaRequired: false, textRequired: false },
 };
 
 /** Characters as a person counts them — an emoji is one, not two UTF-16 units. */

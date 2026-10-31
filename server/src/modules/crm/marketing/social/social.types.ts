@@ -2,19 +2,21 @@
  * Marketing → Social Accounts: the vocabulary every file in this module shares.
  *
  * A PROVIDER is the app a marketer connects through; a PLATFORM is the network
- * an account lives on. They differ only for Meta, where one Facebook login
- * hands back both the Facebook Pages and the Instagram Business accounts
- * behind them.
+ * an account lives on. Every network has its own app: Instagram, Facebook and
+ * Threads are three separate apps with three separate credential entries,
+ * never one shared Meta app. The two words still differ for one case — an
+ * Instagram account connected through Facebook before Instagram had its own
+ * app keeps provider FACEBOOK (its token is a Page token) on platform INSTAGRAM.
  */
 
-export const SOCIAL_PROVIDERS = ['LINKEDIN', 'META', 'X', 'YOUTUBE'] as const;
+export const SOCIAL_PROVIDERS = ['INSTAGRAM', 'FACEBOOK', 'THREADS', 'YOUTUBE', 'LINKEDIN', 'X'] as const;
 export type SocialProvider = (typeof SOCIAL_PROVIDERS)[number];
 
 /** The Marketing page the OAuth callback lands the marketer back on — the one they pressed Connect from. */
 export const SOCIAL_CONNECT_RETURNS = ['ACCOUNTS', 'CALENDAR'] as const;
 export type SocialConnectReturn = (typeof SOCIAL_CONNECT_RETURNS)[number];
 
-export const SOCIAL_PLATFORMS =['LINKEDIN', 'FACEBOOK', 'INSTAGRAM', 'X', 'YOUTUBE'] as const;
+export const SOCIAL_PLATFORMS = ['INSTAGRAM', 'FACEBOOK', 'THREADS', 'YOUTUBE', 'LINKEDIN', 'X'] as const;
 export type SocialPlatform = (typeof SOCIAL_PLATFORMS)[number];
 
 /** EXPIRED needs a person to reconnect; ERROR is retried on the next sync. */
@@ -50,12 +52,12 @@ export type SocialIdeaStatus = (typeof SOCIAL_IDEA_STATUSES)[number];
 export const SOCIAL_IDEA_FORMATS = ['TEXT', 'IMAGE', 'VIDEO'] as const;
 export type SocialIdeaFormat = (typeof SOCIAL_IDEA_FORMATS)[number];
 
-/** One provider app, as Tech configured it under Environment Variables → Social apps. */
+/** One network's app, as configured under Marketing → Settings → Integrations (one entry per network). */
 export interface SocialAppCredentials {
   clientId: string;
   clientSecret: string;
   redirectUri: string;
-  /** LinkedIn's `LinkedIn-Version` header or Meta's Graph version; '' for the others. */
+  /** LinkedIn's `LinkedIn-Version` header or a Meta app's Graph version; '' for the others. */
   version: string;
 }
 
@@ -83,6 +85,8 @@ export interface DiscoveredAccount {
 
 /** What a reader needs of a stored account — its tokens included. */
 export interface SocialAccountHandle {
+  /** The app the token came from; an Instagram reader picks its Graph host from it. */
+  provider: SocialProvider;
   platform: SocialPlatform;
   external_id: string;
   handle: string;

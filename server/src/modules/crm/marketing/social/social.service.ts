@@ -9,7 +9,7 @@ import {
   SocialPostModel,
 } from './social.model';
 import { CONNECTORS } from './providers';
-import { providerReadiness, socialCredentials } from './social.credentials';
+import { providerReadiness, socialCredentials, socialRedirectUri } from './social.credentials';
 import { readConnectState, startConnect } from './social.oauth';
 import { syncSocialAccount } from './social.sync';
 import { analyzePendingComments } from './social.ai';
@@ -221,11 +221,14 @@ export const socialService = {
     return docs.map((doc) => pubAccount(doc, flagged.get(String(doc._id)) ?? 0));
   },
 
+  /** The one callback URL every network's app registers — shown on the settings page beside each app. */
+  redirectUri: socialRedirectUri,
+
   /** The provider's consent screen, for the button the marketer just pressed. */
   async connectUrl(provider: SocialProvider, userId: string, returnTo: SocialConnectReturn): Promise<string> {
     const creds = await socialCredentials(provider);
     if (!creds) {
-      throw new GraphQLError('This network is not set up yet — Tech adds it under Environment Variables › Social apps.', {
+      throw new GraphQLError('This network is not set up yet — add its app under Marketing › Settings › Integrations.', {
         extensions: { code: 'SOCIAL_APP_NOT_CONFIGURED' },
       });
     }
@@ -238,7 +241,7 @@ export const socialService = {
     const parsed = readConnectState(state);
     if (!parsed) throw new Error('This connect link has expired or did not start here. Press Connect again.');
     const creds = await socialCredentials(parsed.provider);
-    if (!creds) throw new Error('This network is not set up yet — Tech adds it under Environment Variables › Social apps.');
+    if (!creds) throw new Error('This network is not set up yet — add its app under Marketing › Settings › Integrations.');
     const found = await CONNECTORS[parsed.provider].connect({ code, creds, verifier: parsed.verifier });
     const ids = await saveDiscovered(parsed.provider, found, parsed.userId);
     // In the background: the marketer is being sent back to the page now, and

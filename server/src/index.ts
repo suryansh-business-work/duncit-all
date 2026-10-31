@@ -455,6 +455,14 @@ async function bootstrap() {
   // TWIN of shortLink.destination.ts's host rule; change one, change the other.
   const FIRST_PARTY_URL =
     '^https?://(([a-z0-9-]+[.])*duncit[.]com|play[.]google[.]com|apps[.]apple[.]com)([/:?#]|$)';
+  // The old single "Social apps" entry and the old shared Meta app become one
+  // entry per network and provider FACEBOOK on the accounts it connected. A
+  // no-op once done; it must run before the social scheduler's first sync so
+  // every account resolves its credentials by its own provider.
+  await safeSeed('socialApps', async () => {
+    const { migrateSocialApps } = await import('@modules/crm/marketing/social/social.migration');
+    await migrateSocialApps();
+  });
   // Builds the share-key unique index that makes an automatically minted share
   // link one per thing shared. Without it two people sharing the same pod at
   // the same moment each get their own link, and neither carries the pod's

@@ -27,7 +27,7 @@ import {
   cloudflareVerifyToken,
   cloudflareZone,
 } from '@modules/platform/cloudflare/cloudflare.gateway';
-import { probeSocialApps } from '@modules/crm/marketing/social/social.probe';
+import { probeSocialApp } from '@modules/crm/marketing/social/social.probe';
 import { googleOAuthConnection } from './googleOAuth.probe';
 import {
   resolveShiprocketBase,
@@ -823,11 +823,41 @@ export async function cloudflareConnection(str: EnvConfigReader): Promise<EnvCon
 }
 
 /**
- * Social apps: every provider app with both keys is put in front of its
- * provider. It lives with the social module, which owns the four providers;
- * this file only dispatches to it.
+ * Social apps: each network's entry is put in front of its own provider. The
+ * probes live with the social module, which owns the providers; this file only
+ * dispatches to them, one per category.
  */
-export const socialAppsConnection = probeSocialApps;
+export const socialInstagramConnection = probeSocialApp('INSTAGRAM');
+export const socialFacebookConnection = probeSocialApp('FACEBOOK');
+export const socialThreadsConnection = probeSocialApp('THREADS');
+export const socialYouTubeConnection = probeSocialApp('YOUTUBE');
+export const socialLinkedInConnection = probeSocialApp('LINKEDIN');
+export const socialXConnection = probeSocialApp('X');
+
+/**
+ * Anthropic: the models list answers the key without spending a token. A 401
+ * is a bad key; anything else 2xx proves it.
+ */
+export async function anthropicConnection(str: EnvConfigReader): Promise<EnvConnectionResult> {
+  const key = str('api_key').trim();
+  if (!key) return { ok: false, message: 'API key is required', details: [] };
+  try {
+    const res = await fetchJson('https://api.anthropic.com/v1/models?limit=100', {
+      headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01' },
+    });
+    if (res.status === 401 || res.status === 403) return { ok: false, message: `Anthropic rejected the key (HTTP ${res.status})`, details: [] };
+    if (!res.ok) return { ok: false, message: `Anthropic answered HTTP ${res.status}`, details: [] };
+    const models: string[] = Array.isArray(res.data?.data) ? res.data.data.map((m: { id?: string }) => m.id ?? '').filter(Boolean) : [];
+    const model = str('model').trim();
+    const details = models.length > 0 ? [`${models.length} models available.`] : [];
+    if (model && models.length > 0 && !models.includes(model)) {
+      details.push(`The default model ${model} is not in the list this key can use.`);
+    }
+    return { ok: true, message: 'Anthropic accepted the key', details };
+  } catch (err) {
+    return { ok: false, message: errText(err), details: [] };
+  }
+}
 
 /**
  * Serper: the account read answers the key and the credit left without
@@ -869,10 +899,16 @@ const CONNECTION_CHECKS = {
   SONARQUBE: sonarqubeConnection,
   GODADDY: godaddyConnection,
   CLOUDFLARE: cloudflareConnection,
-  SOCIAL_APPS: socialAppsConnection,
+  SOCIAL_INSTAGRAM: socialInstagramConnection,
+  SOCIAL_FACEBOOK: socialFacebookConnection,
+  SOCIAL_THREADS: socialThreadsConnection,
+  SOCIAL_YOUTUBE: socialYouTubeConnection,
+  SOCIAL_LINKEDIN: socialLinkedInConnection,
+  SOCIAL_X: socialXConnection,
   TRUECALLER: truecallerConnection,
   GOOGLE_OAUTH: googleOAuthConnection,
   SERPER: serperConnection,
+  ANTHROPIC: anthropicConnection,
 } as const;
 
 export type ConnectionTestable = keyof typeof CONNECTION_CHECKS;

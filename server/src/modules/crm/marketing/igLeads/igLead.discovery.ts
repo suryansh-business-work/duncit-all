@@ -1,7 +1,8 @@
 import { SocialAccountModel } from '../social/social.model';
 import { socialCredentials } from '../social/social.credentials';
-import { graphGet } from '../social/providers/meta';
+import { FACEBOOK_GRAPH, INSTAGRAM_GRAPH, graphGet } from '../social/providers/meta';
 import { SocialApiError } from '../social/providers/http';
+import type { SocialProvider } from '../social/social.types';
 import type { DiscoveredProfile } from './igLead.types';
 
 /**
@@ -40,22 +41,31 @@ export interface DiscoveryReader {
   read: (username: string) => Promise<DiscoveredProfile | null>;
 }
 
-/** A reader bound to the first connected Instagram account, or null when there is none. */
+/**
+ * A reader bound to the first connected Instagram account, or null when there
+ * is none. The account's own app answers: an account connected with Instagram
+ * login reads through graph.instagram.com, one connected through Facebook
+ * earlier keeps reading through graph.facebook.com on its Page token.
+ */
 export async function discoveryReader(): Promise<DiscoveryReader | null> {
-  const [account, creds] = await Promise.all([
-    SocialAccountModel.findOne({ platform: 'INSTAGRAM', status: 'CONNECTED' })
-      .select('+access_token external_id')
-      .lean<{ external_id: string; access_token?: string }>(),
-    socialCredentials('META'),
-  ]);
-  if (!account?.access_token || !creds) return null;
+  const account = await SocialAccountModel.findOne({ platform: 'INSTAGRAM', status: 'CONNECTED' })
+    .select('+access_token external_id provider')
+    .lean<{ external_id: string; access_token?: string; provider: SocialProvider }>();
+  if (!account?.access_token) return null;
+  const creds = await socialCredentials(account.provider);
+  if (!creds) return null;
   const { external_id: igUserId, access_token: token } = account;
+  const base = account.provider === 'INSTAGRAM' ? INSTAGRAM_GRAPH : FACEBOOK_GRAPH;
   return {
     async read(username) {
       try {
-        const res = await graphGet<Discovery>(creds.version, `/${igUserId}`, token, {
-          fields: `business_discovery.username(${username}){${FIELDS}}`,
-        });
+        const res = await graphGet<Discovery>(
+          creds.version,
+          `/${igUserId}`,
+          token,
+          { fields: `business_discovery.username(${username}){${FIELDS}}` },
+          base
+        );
         const found = res.business_discovery;
         if (!found) return null;
         return {

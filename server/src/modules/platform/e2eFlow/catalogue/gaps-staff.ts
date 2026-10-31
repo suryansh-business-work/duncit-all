@@ -1792,7 +1792,7 @@ export const STAFF_GAP_FLOWS: readonly CatalogueFlow[] = [
   {
     name: 'Marketing: Social Accounts',
     description:
-      'marketing /social-accounts with tabs Accounts, Publish, Posts, Analytics, Monitoring and Ideas: LinkedIn, Facebook + Instagram, X and YouTube accounts connected by OAuth. Server roles SUPER_ADMIN, CITY_ADMIN, MARKETING_MANAGER (social.resolver.ts).',
+      'marketing /social/accounts (old /social-accounts redirects) with tabs Accounts, Publish, Posts, Analytics, Monitoring and Ideas: Instagram, Facebook, Threads, YouTube, LinkedIn and X accounts, each connected by OAuth through its own app set up under Settings › Integrations. Server roles SUPER_ADMIN, CITY_ADMIN, MARKETING_MANAGER (social.resolver.ts).',
     sub_flows: [
       {
         name: 'Connect, sync and disconnect a social account',
@@ -1800,8 +1800,8 @@ export const STAFF_GAP_FLOWS: readonly CatalogueFlow[] = [
           'Connect calls socialConnectUrl and sends the marketer to the provider consent screen; the callback lands back with the outcome. Sync now (syncSocialAccount) pulls the account; Disconnect (disconnectSocialAccount) removes it and its posts, comments and history from Duncit.',
         steps: [
           [
-            'Open /social-accounts with a provider not configured in Tech',
-            'Its card says "Not set up yet — Tech adds it under Environment Variables › Social apps."',
+            'Open /social/accounts with a network whose app is not set up under Settings › Integrations',
+            'Its card says "Not set up yet — add this network’s app under Settings › Integrations." with an Open Integrations link',
           ],
           [
             'On LinkedIn press "Connect" and approve on the provider',
@@ -1830,7 +1830,7 @@ export const STAFF_GAP_FLOWS: readonly CatalogueFlow[] = [
   {
     name: 'Marketing: Social Calendar',
     description:
-      'marketing /social-calendar: the Social Accounts publishing calendar on its own page — compose, schedule, share now, retry and delete posts across connected accounts. AI ideas live on Social Accounts > Ideas.',
+      'marketing /publish/calendar (old /social-calendar redirects): the Social Accounts publishing calendar on its own page — compose, schedule, share now, retry and delete posts across connected accounts. AI ideas live on Social Accounts > Ideas.',
     sub_flows: [
       {
         name: 'Schedule, edit, retry and share-now a social post',
@@ -1838,7 +1838,7 @@ export const STAFF_GAP_FLOWS: readonly CatalogueFlow[] = [
           'createScheduledSocialPost puts a post on its date, updateScheduledSocialPost edits it, shareScheduledSocialPostNow sends it at once and retryScheduledSocialPost re-sends to the networks that failed; ideas come from generateSocialIdeas on the Social Accounts Ideas tab.',
         steps: [
           [
-            'Open /social-calendar with no account connected',
+            'Open /publish/calendar with no account connected',
             'Info "No social account is connected yet. Connect Instagram, Facebook or LinkedIn to start posting." with "Connect accounts"',
           ],
           [

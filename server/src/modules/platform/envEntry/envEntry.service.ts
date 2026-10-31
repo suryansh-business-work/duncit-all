@@ -5,6 +5,7 @@ import { recordTest } from './envTestLog.service';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import {
   aisensyConnection,
+  anthropicConnection,
   appleSignInConnection,
   appStoreConnectConnection,
   githubConnection,
@@ -17,7 +18,12 @@ import {
   serperConnection,
   shiprocketConnection,
   slackConnection,
-  socialAppsConnection,
+  socialFacebookConnection,
+  socialInstagramConnection,
+  socialLinkedInConnection,
+  socialThreadsConnection,
+  socialXConnection,
+  socialYouTubeConnection,
   truecallerConnection,
   type EnvConfigReader,
 } from './envEntry.connection';
@@ -210,9 +216,15 @@ const ENV_PROBES: Partial<Record<EnvCategory, (str: ConfigStr) => Promise<TestRe
   APP_STORE_CONNECT: appStoreConnectConnection,
   GODADDY: godaddyConnection,
   CLOUDFLARE: cloudflareConnection,
-  SOCIAL_APPS: socialAppsConnection,
+  SOCIAL_INSTAGRAM: socialInstagramConnection,
+  SOCIAL_FACEBOOK: socialFacebookConnection,
+  SOCIAL_THREADS: socialThreadsConnection,
+  SOCIAL_YOUTUBE: socialYouTubeConnection,
+  SOCIAL_LINKEDIN: socialLinkedInConnection,
+  SOCIAL_X: socialXConnection,
   TRUECALLER: truecallerConnection,
   SERPER: serperConnection,
+  ANTHROPIC: anthropicConnection,
 };
 
 /** Probe a category's credentials against its upstream API. Pure fetch. */

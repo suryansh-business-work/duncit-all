@@ -3,7 +3,7 @@ import { SocialAccountModel } from './social.model';
 import { SocialScheduledPostModel } from './social.publish.model';
 import { PUBLISHERS, READERS } from './providers';
 import { SocialApiError } from './providers/http';
-import { PROVIDER_OF, socialCredentials } from './social.credentials';
+import { socialCredentials } from './social.credentials';
 import { freshHandle, syncSocialAccount, type AccountWithTokens } from './social.sync';
 import { publishProblems } from './social.rules';
 import type { PublishContent, SocialMediaType, SocialPublishStatus, SocialTargetStatus } from './social.types';
@@ -51,8 +51,8 @@ async function publishTarget(target: Target, content: PublishContent): Promise<O
   if (doc.status === 'EXPIRED') return failed('This account needs reconnecting in Social Accounts.');
   const problems = publishProblems(doc.platform, content);
   if (problems.length > 0) return failed(problems.join('; '));
-  const creds = await socialCredentials(PROVIDER_OF[doc.platform]);
-  if (!creds) return failed('This network’s app is not set up yet — Tech adds it under Environment Variables › Social apps.');
+  const creds = await socialCredentials(doc.provider);
+  if (!creds) return failed('This network’s app is not set up yet — add it under Marketing › Settings › Integrations.');
   try {
     const handle = await freshHandle(doc, READERS[doc.platform], creds);
     const result = await PUBLISHERS[doc.platform].publish(handle, content, creds);

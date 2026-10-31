@@ -16,6 +16,10 @@ export const socialResolvers = {
       requireRole(ctx, ROLES);
       return socialService.providers();
     },
+    socialRedirectUri: (_p: unknown, _a: unknown, ctx: Ctx) => {
+      requireRole(ctx, ROLES);
+      return socialService.redirectUri();
+    },
     socialAccounts: (_p: unknown, _a: unknown, ctx: Ctx) => {
       requireRole(ctx, ROLES);
       return socialService.accounts();

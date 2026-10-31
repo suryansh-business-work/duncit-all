@@ -22,14 +22,26 @@ const TECH_MANAGE = ['SUPER_ADMIN', 'TECH_MANAGER'];
  * The categories another console manages, each role confined to its own. The
  * Communications console owns the OTP channel, so its MSG91 Settings page reads
  * and edits MSG91 entries; the Tests console's SonarQube Settings page reads and
- * edits SONARQUBE entries; Marketing's Instagram Leads settings edit the SERPER
- * key its lead search runs on — and none reaches any other category: every other
- * secret stays Tech's. Someone holding several of these roles gets the union.
+ * edits SONARQUBE entries; Marketing → Settings → Integrations edits the social
+ * apps (one entry per network), the SERPER key its research and lead search run
+ * on, and the ANTHROPIC key its agents reason with — and none reaches any other
+ * category: every other secret stays Tech's. Someone holding several of these
+ * roles gets the union.
  */
+const MARKETING_CATEGORIES: readonly EnvCategory[] = [
+  'SOCIAL_INSTAGRAM',
+  'SOCIAL_FACEBOOK',
+  'SOCIAL_THREADS',
+  'SOCIAL_YOUTUBE',
+  'SOCIAL_LINKEDIN',
+  'SOCIAL_X',
+  'SERPER',
+  'ANTHROPIC',
+];
 const CONFINED_MANAGE: ReadonlyMap<string, readonly EnvCategory[]> = new Map<string, readonly EnvCategory[]>([
   ['COMMUNICATIONS_MANAGER', ['MSG91']],
   [TESTS_MANAGER, ['SONARQUBE']],
-  ['MARKETING_MANAGER', ['SERPER']],
+  ['MARKETING_MANAGER', MARKETING_CATEGORIES],
 ]);
 /** The Logs console mounts the MSG91 page too, and only reads. */
 const CONFINED_READ: ReadonlyMap<string, readonly EnvCategory[]> = new Map<string, readonly EnvCategory[]>([

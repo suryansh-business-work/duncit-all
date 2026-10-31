@@ -1134,9 +1134,9 @@ export const OTHER_GAP_FLOWS: readonly CatalogueFlow[] = [
         description:
           'The callback redirects to the Marketing page fixed by the signed state (never an open redirect): connected=<provider>&count=<n> on success, social_error=<reason> otherwise.',
         steps: [
-          ['Approve a connection on the network', 'Redirect to <marketing>/social-accounts?connected=<PROVIDER>&count=<n>; the accounts are listed and first sync starts'],
+          ['Approve a connection on the network', 'Redirect to <marketing>/social/accounts?connected=<PROVIDER>&count=<n>; the accounts are listed and first sync starts'],
           ['Press Cancel on the network', 'Redirect with social_error=access_denied (or the network\'s error)'],
-          ['GET /social/callback?code=x&state=<forged>', 'Redirect to /social-accounts with social_error "This connect link has expired or did not start here. Press Connect again."'],
+          ['GET /social/callback?code=x&state=<forged>', 'Redirect to /social/accounts with social_error "This connect link has expired or did not start here. Press Connect again."'],
           ['GET /social/callback with no code', 'Redirect with social_error=missing_code'],
         ],
       },

@@ -19,7 +19,9 @@ interface Props {
 /** What stands between the operator and their folder, when something does. */
 function DriveNotice({ status, hasFolder, onEditDetails }: Readonly<{ status: ReelDriveStatus | null; hasFolder: boolean; onEditDetails: () => void }>) {
   const { t } = useTranslation();
-  if (status && !status.configured) {
+  // Nothing until the status is known, so a reel never flashes the wrong advice.
+  if (!status) return null;
+  if (!status.configured) {
     return (
       <Alert severity="warning" sx={{ m: 1.5 }} data-testid="reel-drive-not-configured">
         {t('ai.reels.sources.driveNotConfigured')}

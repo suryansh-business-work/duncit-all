@@ -28,7 +28,7 @@ export default function ReelVoiceoverForm({ initialText = '', languages, default
   });
 
   return (
-    <Stack component="form" spacing={1.5} noValidate onSubmit={handleSubmit(onSubmit)} data-testid="reel-voiceover-form">
+    <Stack component="form" spacing={1.5} noValidate onSubmit={handleSubmit((values) => onSubmit(values))} data-testid="reel-voiceover-form">
       <RhfTextField
         control={control}
         name="text"

@@ -33,7 +33,7 @@ export default function ReelBriefForm({ initialValues, submitting, onSubmit }: R
   );
 
   return (
-    <Stack component="form" spacing={1.5} noValidate onSubmit={handleSubmit(onSubmit)} data-testid="reel-brief-form">
+    <Stack component="form" spacing={1.5} noValidate onSubmit={handleSubmit((values) => onSubmit(values))} data-testid="reel-brief-form">
       <RhfTextField
         control={control}
         name="topic"

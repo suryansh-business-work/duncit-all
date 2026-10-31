@@ -33,9 +33,9 @@ function CheckList({ checks }: Readonly<{ checks: readonly ReelCheck[] }>) {
           <ListItem key={check.name} sx={{ alignItems: 'flex-start', px: 0 }} data-testid={`reel-check-${check.name}`} data-pass={check.pass}>
             <ListItemIcon sx={{ minWidth: 32, mt: 0.25 }}>
               {check.pass ? (
-                <CheckCircleOutlineIcon color="success" fontSize="small" role="img" aria-label={t('ai.reels.validate.pass')} />
+                <CheckCircleOutlineIcon color="success" fontSize="small" titleAccess={t('ai.reels.validate.pass')} />
               ) : (
-                <ErrorOutlineIcon color="error" fontSize="small" role="img" aria-label={t('ai.reels.validate.fail')} />
+                <ErrorOutlineIcon color="error" fontSize="small" titleAccess={t('ai.reels.validate.fail')} />
               )}
             </ListItemIcon>
             <ListItemText primary={check.name} secondary={check.detail} slotProps={{ secondary: { sx: { wordBreak: 'break-word' } } }} />

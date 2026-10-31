@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useImagekitDirectUpload, useUploadCaps } from '@duncit/media-picker';
 import { useTranslation } from '@duncit/shell';
 import { parseApiError } from '@duncit/utils';
@@ -11,7 +11,7 @@ export const REEL_UPLOADS_FOLDER = '/marketing/reels/uploads';
 export type UploadPhase = 'queued' | 'uploading' | 'adding' | 'done' | 'failed';
 
 export interface UploadRow {
-  /** Unique within this session; a file picked twice is two rows. */
+  /** Unique within this list; a file picked twice is two rows. */
   id: string;
   name: string;
   phase: UploadPhase;
@@ -20,8 +20,6 @@ export interface UploadRow {
   /** Why it failed, in the operator's words. */
   message: string;
 }
-
-let nextRow = 0;
 
 /**
  * Device uploads, one file after another: checked against the admin's caps,
@@ -34,6 +32,7 @@ export function useReelUploads(addUploads: (uploads: ReelUploadInput[]) => Promi
   const caps = useUploadCaps('PORTALS');
   const { upload } = useImagekitDirectUpload();
   const [rows, setRows] = useState<UploadRow[]>([]);
+  const nextRow = useRef(0);
 
   const patch = useCallback((id: string, change: Partial<UploadRow>) => {
     setRows((held) => held.map((row) => (row.id === id ? { ...row, ...change } : row)));
@@ -62,7 +61,7 @@ export function useReelUploads(addUploads: (uploads: ReelUploadInput[]) => Promi
   /** Queues the picked files and uploads them in order. */
   const add = useCallback(
     async (files: readonly File[]) => {
-      const queued = files.map((file) => ({ file, row: { id: `u${(nextRow += 1)}`, name: file.name, phase: 'queued' as const, progress: 0, message: '' } }));
+      const queued = files.map((file) => ({ file, row: { id: `u${(nextRow.current += 1)}`, name: file.name, phase: 'queued' as const, progress: 0, message: '' } }));
       setRows((held) => [...held, ...queued.map((item) => item.row)]);
       for (const item of queued) await uploadOne(item.row, item.file);
     },

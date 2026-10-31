@@ -27,7 +27,7 @@ export default function ReelSubtitlesForm({ sources, languages, defaultLanguage,
   }
 
   return (
-    <Stack component="form" spacing={1.5} noValidate onSubmit={handleSubmit(onSubmit)} data-testid="reel-subtitles-form">
+    <Stack component="form" spacing={1.5} noValidate onSubmit={handleSubmit((values) => onSubmit(values))} data-testid="reel-subtitles-form">
       <RhfSelectField control={control} name="asset_id" label={t('ai.reels.voice.fieldSubtitlesSource')} options={sources} />
       <RhfSelectField control={control} name="language" label={t('ai.reels.voice.fieldLanguage')} options={languages} />
       <DuncitButton

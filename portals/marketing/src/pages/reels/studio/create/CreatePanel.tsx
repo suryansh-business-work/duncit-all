@@ -78,13 +78,18 @@ export default function CreatePanel({ project }: Readonly<Props>) {
               <StepLabel>{t(STEP_LABEL[step])}</StepLabel>
             )}
             <StepContent>
-              {flow.error !== '' && (
-                <Alert severity="error" sx={{ mb: 1.5 }} data-testid="reel-create-error">
-                  {flow.error}
-                </Alert>
+              {/* Only the open step draws the flow; a step still folding away stays empty instead of showing the new step's form twice. */}
+              {step === flow.step && (
+                <>
+                  {flow.error !== '' && (
+                    <Alert severity="error" sx={{ mb: 1.5 }} data-testid="reel-create-error">
+                      {flow.error}
+                    </Alert>
+                  )}
+                  <StepBody flow={flow} project={project} />
+                  <RunProgress runId={flow.runId} working={flow.busy} onAbandon={flow.abandon} />
+                </>
               )}
-              <StepBody flow={flow} project={project} />
-              <RunProgress runId={flow.runId} working={flow.busy} onAbandon={flow.abandon} />
             </StepContent>
           </Step>
         ))}

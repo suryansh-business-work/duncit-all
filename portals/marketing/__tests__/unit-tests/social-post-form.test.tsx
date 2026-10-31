@@ -29,7 +29,7 @@ afterEach(() => {
 
 const linkedin = makeSocialAccount();
 const xAccount = makeSocialAccount({ id: 'x1', provider: 'X', platform: 'X', name: 'Duncit X' });
-const instagram = makeSocialAccount({ id: 'ig1', provider: 'META', platform: 'INSTAGRAM', name: 'Duncit Gram' });
+const instagram = makeSocialAccount({ id: 'ig1', provider: 'INSTAGRAM', platform: 'INSTAGRAM', name: 'Duncit Gram' });
 const youtube = makeSocialAccount({ id: 'yt1', provider: 'YOUTUBE', platform: 'YOUTUBE', name: 'Duncit TV' });
 
 describe('publish-rules', () => {
@@ -167,7 +167,7 @@ describe('socialPostSchema', () => {
 
   it('checks each chosen network once and ignores accounts not chosen or unknown', () => {
     const gram = t('marketing.social.platformInstagram');
-    const second = makeSocialAccount({ id: 'ig2', provider: 'META', platform: 'INSTAGRAM', name: 'Pets Gram' });
+    const second = makeSocialAccount({ id: 'ig2', provider: 'INSTAGRAM', platform: 'INSTAGRAM', name: 'Pets Gram' });
     const result = socialPostSchema(t, [...accounts, second]).safeParse(
       blankSocialPostValues({ mode: 'NOW', text: 'Hi', account_ids: ['ig1', 'ig2', 'ghost'] }),
     );

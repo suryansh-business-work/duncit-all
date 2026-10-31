@@ -34,9 +34,10 @@ const socialTabs = (t: Translate): DuncitTabItem<Tab>[] => [
  * channels, write and schedule posts to them, see every post and how it did,
  * watch the comments, and get AI ideas and analysis.
  *
- * The network apps' keys are never asked for here — Tech keeps them under
- * Environment Variables › Social apps, and a network without one says so.
- * The composer and the post detail live at page level, so any tab can open them.
+ * The network apps' keys are never asked for here — they live under Settings ›
+ * Integrations, one entry per network, and a network without one says so and
+ * links there. The composer and the post detail live at page level, so any tab
+ * can open them.
  */
 export default function SocialAccountsPage() {
   const { t } = useTranslation();

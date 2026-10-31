@@ -46,6 +46,25 @@ vi.mock('../../src/pages/live-ads-page/LiveAdsPage', () => ({
 vi.mock('../../src/pages/ads-settings-page/AdsSettingsPage', () => ({
   default: () => <div>ads-settings-page</div>,
 }));
+vi.mock('../../src/pages/settings-page/IntegrationsPage', () => ({
+  default: () => <div>integrations-page</div>,
+}));
+// Shows where it landed, so a redirect can be seen to keep the query string.
+vi.mock('../../src/pages/social-accounts-page', async () => {
+  const { useLocation } = await import('react-router');
+  return {
+    default: () => {
+      const { search } = useLocation();
+      return <div>social-accounts-page{search}</div>;
+    },
+  };
+});
+vi.mock('../../src/pages/social-calendar-page', () => ({
+  default: () => <div>social-calendar-page</div>,
+}));
+vi.mock('../../src/pages/instagram-leads-page', () => ({
+  default: () => <div>instagram-leads-page</div>,
+}));
 
 afterEach(() => {
   clearToken();
@@ -55,7 +74,7 @@ describe('App routing', () => {
   it.each([
     ['/', 'welcome-page'],
     ['/profile', 'profile-page'],
-    ['/contacts', 'contacts-page'],
+    ['/analytics/contacts', 'contacts-page'],
     ['/audience', 'audience-lists-page'],
     ['/audience/new', 'create-audience-list-page'],
     ['/audience/l1', 'audience-list-detail-page'],
@@ -64,6 +83,10 @@ describe('App routing', () => {
     ['/ads-approvals', 'ads-approvals-page'],
     ['/live-ads', 'live-ads-page'],
     ['/ads-settings', 'ads-settings-page'],
+    ['/social/accounts', 'social-accounts-page'],
+    ['/publish/calendar', 'social-calendar-page'],
+    ['/leads/instagram', 'instagram-leads-page'],
+    ['/settings/integrations', 'integrations-page'],
   ])('renders %s behind auth', (path, text) => {
     setToken('tok');
     renderWithProviders(<App />, { initialEntries: [path] });
@@ -90,5 +113,23 @@ describe('App routing', () => {
     setToken('tok');
     renderWithProviders(<App />, { initialEntries: ['/does-not-exist'] });
     expect(screen.getByText('welcome-page')).toBeInTheDocument();
+  });
+
+  it.each([
+    ['/social-accounts', 'social-accounts-page'],
+    ['/social-calendar', 'social-calendar-page'],
+    ['/instagram-leads', 'instagram-leads-page'],
+    ['/contacts', 'contacts-page'],
+  ])('sends the old address %s to the page that moved', (path, text) => {
+    setToken('tok');
+    renderWithProviders(<App />, { initialEntries: [path] });
+    expect(screen.getByText(text)).toBeInTheDocument();
+  });
+
+  // The OAuth callback still lands on the old address; what it carries must survive the move.
+  it('keeps the query string when an old address redirects', () => {
+    setToken('tok');
+    renderWithProviders(<App />, { initialEntries: ['/social-accounts?connected=LINKEDIN&count=2'] });
+    expect(screen.getByText('social-accounts-page?connected=LINKEDIN&count=2')).toBeInTheDocument();
   });
 });

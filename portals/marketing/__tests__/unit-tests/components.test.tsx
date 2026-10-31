@@ -292,4 +292,21 @@ describe('AppShell adapter', () => {
     expect(screen.getByTestId('loading')).toHaveTextContent('true');
     expect(screen.getByTestId('has-user')).toHaveTextContent('none');
   });
+
+  const navKeys = () => (shellProbe.props.nav as { labelKey: string }[]).map((item) => item.labelKey);
+
+  it('builds the sidebar for the signed-in roles: a manager sees Settings', () => {
+    userCtxMock.value = { user: { first_name: 'Alex', roles: ['MARKETING_MANAGER'] }, loading: false, logout: vi.fn() };
+    setToken('tok');
+    renderShell();
+    expect(navKeys()).toContain('shell.nav.settings');
+  });
+
+  it('leaves Settings out for a role that cannot change keys, and while the user is unknown', () => {
+    userCtxMock.value = { user: { first_name: 'Sam', roles: ['MARKETING_READER'] }, loading: false, logout: vi.fn() };
+    setToken('tok');
+    renderShell();
+    expect(navKeys()).not.toContain('shell.nav.settings');
+    expect(navKeys()).toContain('shell.nav.dashboard');
+  });
 });

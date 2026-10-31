@@ -1,9 +1,10 @@
 import { gql } from '@apollo/client';
 
-export type SocialProvider = 'LINKEDIN' | 'META' | 'X' | 'YOUTUBE';
+/** One app per network; an Instagram account connected through Facebook earlier keeps provider FACEBOOK. */
+export type SocialProvider = 'INSTAGRAM' | 'FACEBOOK' | 'THREADS' | 'YOUTUBE' | 'LINKEDIN' | 'X';
 /** The page the OAuth callback brings the marketer back to — the one they pressed Connect on. */
 export type SocialConnectReturn = 'ACCOUNTS' | 'CALENDAR';
-export type SocialPlatform = 'LINKEDIN' | 'FACEBOOK' | 'INSTAGRAM' | 'X' | 'YOUTUBE';
+export type SocialPlatform = 'INSTAGRAM' | 'FACEBOOK' | 'THREADS' | 'YOUTUBE' | 'LINKEDIN' | 'X';
 export type SocialAccountStatus = 'CONNECTED' | 'EXPIRED' | 'ERROR';
 export type SocialAiStatus = 'PENDING' | 'CLEAN' | 'FLAGGED';
 export type SocialSentiment = 'POSITIVE' | 'NEUTRAL' | 'NEGATIVE';
@@ -13,6 +14,8 @@ export type SocialReviewStatus = 'OPEN' | 'REVIEWED';
 export interface SocialProviderStatus {
   provider: SocialProvider;
   configured: boolean;
+  /** The environment category the app's entry lives in — the Settings › Integrations tab to open. */
+  category: string;
 }
 
 export interface SocialAccount {
@@ -157,6 +160,7 @@ export const SOCIAL_SETUP = gql`
     socialProviders {
       provider
       configured
+      category
     }
     socialAccounts {
       ...SocialAccountFields

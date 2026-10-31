@@ -79,6 +79,13 @@ const ROUTES = [
   '/ads-approvals',
   '/live-ads',
   '/ads-settings',
+  '/analytics/contacts',
+  '/settings/integrations',
+  // Old addresses that redirect, query string included.
+  '/social-accounts?connected=LINKEDIN&count=1',
+  '/social-calendar',
+  '/instagram-leads',
+  '/contacts',
 ];
 
 /** `link` swaps what answers the page: nothing, or the schema-shaped mock. */

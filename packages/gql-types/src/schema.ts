@@ -9210,6 +9210,7 @@ export type EnvAttemptSettingsInput = {
 
 export type EnvCategory =
   | 'AISENSY'
+  | 'ANTHROPIC'
   | 'APPLE_SIGNIN'
   | 'APP_STORE_CONNECT'
   | 'CLOUDFLARE'
@@ -9230,7 +9231,12 @@ export type EnvCategory =
   | 'SERVAM'
   | 'SHIPROCKET'
   | 'SLACK'
-  | 'SOCIAL_APPS'
+  | 'SOCIAL_FACEBOOK'
+  | 'SOCIAL_INSTAGRAM'
+  | 'SOCIAL_LINKEDIN'
+  | 'SOCIAL_THREADS'
+  | 'SOCIAL_X'
+  | 'SOCIAL_YOUTUBE'
   | 'SONARQUBE'
   | 'TRUECALLER'
   | 'TURN'
@@ -30588,6 +30594,8 @@ export type Query = {
   socialPost: SocialPostDetail;
   socialPostsTable: SocialPostTablePage;
   socialProviders: Array<SocialProviderStatus>;
+  /** The one redirect (callback) URL every network's app must list — shown on the settings page. */
+  socialRedirectUri: Scalars['String']['output'];
   socialScheduledPost: SocialScheduledPost;
   socialScheduledPosts: Array<SocialScheduledPost>;
   /**
@@ -38152,6 +38160,7 @@ export type SocialPlatform =
   | 'FACEBOOK'
   | 'INSTAGRAM'
   | 'LINKEDIN'
+  | 'THREADS'
   | 'X'
   | 'YOUTUBE';
 
@@ -38222,16 +38231,20 @@ export type SocialPostTablePage = {
   total: Scalars['Int']['output'];
 };
 
-/** The app a marketer connects through. META covers Facebook Pages and Instagram Business. */
+/** The app a marketer connects through — one app per network. An Instagram account connected through Facebook before Instagram had its own app keeps provider FACEBOOK. */
 export type SocialProvider =
+  | 'FACEBOOK'
+  | 'INSTAGRAM'
   | 'LINKEDIN'
-  | 'META'
+  | 'THREADS'
   | 'X'
   | 'YOUTUBE';
 
-/** Whether Tech has set up this provider's app under Environment Variables › Social apps. */
+/** Whether this network's app is set up under Marketing › Settings › Integrations (one entry per network). */
 export type SocialProviderStatus = {
   __typename?: 'SocialProviderStatus';
+  /** The environment category the app's entry lives in, for the settings page's link. */
+  category: Scalars['String']['output'];
   configured: Scalars['Boolean']['output'];
   provider: SocialProvider;
 };

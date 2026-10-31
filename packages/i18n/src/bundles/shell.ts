@@ -848,6 +848,12 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       notifications: 'Notifications',
       // Marketing > Occasions — the festive looks every Duncit app wears.
       occasions: 'Occasions',
+      // Marketing's sidebar sections, grouped by what a marketer is doing.
+      socialMedia: 'Social media',
+      publishing: 'Publishing',
+      accounts: 'Accounts',
+      // Members' phone-book syncs and the invites sent from them — counts only.
+      memberContacts: 'Member contacts',
       onboardedClubAdmins: 'Onboarded Club Admins',
       onboardedECommerceBrands: 'Onboarded E-Commerce Brands',
       onboardedHosts: 'Onboarded Hosts',
@@ -921,8 +927,6 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       shortLinks: 'Short Links',
       slack: 'Slack',
       smartIncentive: 'Smart Incentive',
-      socialAccounts: 'Social Accounts',
-      socialCalendar: 'Social Calendar',
       instagramLeads: 'Instagram Leads',
       somethingForYou: 'Something for you',
       sosAlerts: 'SOS Alerts',

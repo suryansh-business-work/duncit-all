@@ -11,7 +11,7 @@ const { t } = createTranslator({ locale: 'en-IN', fallback: allFallbackEntries()
 
 const linkedin = makeSocialAccount();
 const x = makeSocialAccount({ id: 'sa2', provider: 'X', platform: 'X', name: 'Duncit X' });
-const expired = makeSocialAccount({ id: 'sa3', provider: 'META', platform: 'FACEBOOK', name: 'Duncit FB', status: 'EXPIRED' });
+const expired = makeSocialAccount({ id: 'sa3', provider: 'FACEBOOK', platform: 'FACEBOOK', name: 'Duncit FB', status: 'EXPIRED' });
 
 // AccountPicker is driven by the real composer form it lives in, so the
 // react-hook-form wiring (value, validation message) is the production one.

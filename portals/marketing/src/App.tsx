@@ -25,11 +25,19 @@ import OccasionThemeEditorPage from './pages/occasions-page/editor';
 import AdsApprovalsPage from './pages/ads-approvals-page/AdsApprovalsPage';
 import LiveAdsPage from './pages/live-ads-page/LiveAdsPage';
 import AdsSettingsPage from './pages/ads-settings-page/AdsSettingsPage';
+import IntegrationsPage from './pages/settings-page/IntegrationsPage';
 import AppShell from './components/AppShell';
+import Redirect from './components/Redirect';
 import { getToken } from './lib/session';
 
 const authed = createAuthed({ getToken, wrap: (el) => <AppShell>{el}</AppShell> });
 
+/**
+ * The route table. Pages live under the section that owns them (Social,
+ * Publishing, Leads, Campaigns, Analytics, Settings); the old flat addresses
+ * redirect, query string included, so bookmarks and the OAuth callback keep
+ * landing.
+ */
 export default function App() {
   return (
     <>
@@ -37,16 +45,22 @@ export default function App() {
         <Route path="/profile" element={authed(<ProfilePage />)} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/" element={authed(<DashboardPage />)} />
-        <Route path="/contacts" element={authed(<ContactsDashboardPage />)} />
+        {/* Social media */}
+        <Route path="/social/accounts" element={authed(<SocialAccountsPage />)} />
+        <Route path="/social-accounts" element={<Redirect to="/social/accounts" />} />
+        {/* Publishing */}
+        <Route path="/publish/calendar" element={authed(<SocialCalendarPage />)} />
+        <Route path="/social-calendar" element={<Redirect to="/publish/calendar" />} />
+        {/* Leads */}
+        <Route path="/leads/instagram" element={authed(<InstagramLeadsPage />)} />
+        <Route path="/instagram-leads" element={<Redirect to="/leads/instagram" />} />
+        {/* Campaigns and the channels they go out on */}
         <Route path="/audience" element={authed(<AudienceListsPage />)} />
         <Route path="/audience/new" element={authed(<CreateAudienceListPage />)} />
         <Route path="/audience/:listId" element={authed(<AudienceListDetailPage />)} />
         <Route path="/campaigns/email" element={authed(<MarketingCampaignsPage />)} />
         <Route path="/campaigns/email/new" element={authed(<CreateCampaignPage />)} />
-        <Route
-          path="/campaigns/mail-preferences"
-          element={authed(<MailPreferenceAnalyticsPage />)}
-        />
+        <Route path="/campaigns/mail-preferences" element={authed(<MailPreferenceAnalyticsPage />)} />
         <Route path="/coupons" element={authed(<CouponsPage />)} />
         <Route path="/coupons/:couponId" element={authed(<CouponDetailPage />)} />
         <Route path="/short-links" element={authed(<ShortLinksPage />)} />
@@ -55,9 +69,6 @@ export default function App() {
         {/* The same detail page: an external link's analytics are the same
             analytics, and it reads which list to go Back to off the path. */}
         <Route path="/external-links/:linkId" element={authed(<ShortLinkDetailPage />)} />
-        <Route path="/social-accounts" element={authed(<SocialAccountsPage />)} />
-        <Route path="/social-calendar" element={authed(<SocialCalendarPage />)} />
-        <Route path="/instagram-leads" element={authed(<InstagramLeadsPage />)} />
         <Route path="/occasions" element={authed(<OccasionsPage />)} />
         <Route path="/occasions/themes/new" element={authed(<OccasionThemeEditorPage />)} />
         <Route path="/occasions/themes/:key" element={authed(<OccasionThemeEditorPage />)} />
@@ -67,6 +78,11 @@ export default function App() {
         <Route path="/ads-approvals" element={authed(<AdsApprovalsPage />)} />
         <Route path="/live-ads" element={authed(<LiveAdsPage />)} />
         <Route path="/ads-settings" element={authed(<AdsSettingsPage />)} />
+        {/* Analytics */}
+        <Route path="/analytics/contacts" element={authed(<ContactsDashboardPage />)} />
+        <Route path="/contacts" element={<Redirect to="/analytics/contacts" />} />
+        {/* Settings */}
+        <Route path="/settings/integrations" element={authed(<IntegrationsPage />)} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <NotifyHost />

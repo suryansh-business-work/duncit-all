@@ -4,6 +4,7 @@
  * via `VITE_REQUIRED_ROLES` so access control stays dynamic.
  */
 import { parseEnvRoles, type AppConfig } from '@duncit/shell';
+import { MARKETING_NAV } from './nav';
 
 export const appConfig = {
   key: 'marketing',
@@ -22,64 +23,9 @@ export const appConfig = {
   requiredRoles: parseEnvRoles(import.meta.env.VITE_REQUIRED_ROLES, ['MARKETING_MANAGER']),
   tokenKey: 'marketing_token',
   colorModeKey: 'marketing_color_mode',
-  accent: { light: '#fda4af', main: '#e11d48', hover: '#be123c', active: '#9f1239' },
-  nav: [
-    { label: 'Dashboard', labelKey: 'shell.nav.dashboard', to: '/', icon: 'dashboard' },
-    // Members' phone-book syncs and the invites sent from them — counts only.
-    { label: 'Contacts', labelKey: 'shell.nav.contacts', to: '/contacts', icon: 'contacts' },
-    { label: 'Target Audience', labelKey: 'shell.nav.targetAudience', to: '/audience', icon: 'personSearch' },
-    {
-      // Everything you send lives here: email and push are two ways of
-      // reaching the same audience, not two separate parts of the console.
-      label: 'Campaigns', labelKey: 'shell.nav.campaigns',
-      icon: 'contactMail',
-      children: [
-        { label: 'Email', labelKey: 'shell.nav.email', to: '/campaigns/email', icon: 'email' },
-        { label: 'Notifications', labelKey: 'shell.nav.notifications', to: '/notifications', icon: 'notifications' },
-        { label: 'App Popups', labelKey: 'shell.nav.appPopups', to: '/app-popups', icon: 'image' },
-        // Under Campaigns, not under a reporting section: an opt-out is what a
-        // campaign costs, and the number is only useful next to the send that
-        // caused it.
-        { label: 'Mail Preferences', labelKey: 'shell.nav.mailPreferences', to: '/campaigns/mail-preferences', icon: 'markEmailRead' },
-      ],
-    },
-    // Beside Campaigns rather than inside it: a status is published, not sent —
-    // it sits at the front of the apps' status rail until it expires or is
-    // switched off, so nothing about it is a dispatch.
-    { label: 'Status', labelKey: 'shell.nav.status', to: '/status', icon: 'newspaper' },
-    // Its own section: a festive look is worn by every app at once — the
-    // looks, what is live, the dates that switch them, and the festive icons
-    // and store looks — so nothing about it is a campaign or a send.
-    { label: 'Occasions', labelKey: 'shell.nav.occasions', to: '/occasions', icon: 'celebration' },
-    // Its own section, not a child of Campaigns: a short link is just as often
-    // made for an ad, a poster or a partner as for a campaign.
-    { label: 'Short Links', labelKey: 'shell.nav.shortLinks', to: '/short-links', icon: 'link' },
-    // Beside Short Links rather than inside it: a link to somebody else's page
-    // is a different thing to approve and a different thing to keep data
-    // about, even though it is the same duncit.com/<code> underneath.
-    { label: 'External Links', labelKey: 'shell.nav.externalLinks', to: '/external-links', icon: 'language' },
-    // Its own section: the accounts are connected once and then watched —
-    // how posts perform and what people say under them — not sent to.
-    { label: 'Social Accounts', labelKey: 'shell.nav.socialAccounts', to: '/social-accounts', icon: 'hub' },
-    // The same publishing calendar as Social Accounts › Publish, on its own
-    // page: planning posts is a daily job, connecting accounts a one-off.
-    { label: 'Social Calendar', labelKey: 'shell.nav.socialCalendar', to: '/social-calendar', icon: 'calendar' },
-    // Outreach, not publishing: business profiles found from a brief and
-    // worked one DM at a time, so it is its own page beside the social ones.
-    { label: 'Instagram Leads', labelKey: 'shell.nav.instagramLeads', to: '/instagram-leads', icon: 'handshake' },
-    // A discount code is a promotion, so it belongs to whoever runs promotions.
-    // It sits beside Campaigns rather than inside one: a code is as likely to be
-    // handed out at an event or printed on a poster as it is to be emailed.
-    { label: 'Coupons', labelKey: 'shell.nav.coupons', to: '/coupons', icon: 'percent' },
-    {
-      label: 'Ads', labelKey: 'shell.nav.ads',
-      icon: 'campaign',
-      children: [
-        { label: 'Ads Approval', labelKey: 'shell.nav.adsApproval', to: '/ads-approvals', icon: 'campaign' },
-        { label: 'Live Ads', labelKey: 'shell.nav.liveAds', to: '/live-ads', icon: 'insights' },
-        { label: 'Ads Settings', labelKey: 'shell.nav.adsSettings', to: '/ads-settings', icon: 'settings' },
-      ],
-    },
-  ],
+  // Duncit's brand red; the theme corrects it for AA contrast wherever it is used as text.
+  accent: { light: '#fecaca', main: '#f82c2e', hover: '#d91f21', active: '#b51719' },
+  // The manager's full sidebar; AppShell narrows it per role with buildNav().
+  nav: [...MARKETING_NAV],
   modules: [],
 } satisfies AppConfig;

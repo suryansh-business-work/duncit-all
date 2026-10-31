@@ -142,30 +142,56 @@ const cardHandlers = () => ({
 });
 
 describe('ProviderCard', () => {
-  it('explains who sets a network up instead of offering a button that would fail', () => {
-    renderWithProviders(<ProviderCard provider="LINKEDIN" configured={false} accounts={[]} {...cardHandlers()} />);
+  it('explains where a network is set up, with a link there, instead of offering a button that would fail', () => {
+    renderWithProviders(
+      <ProviderCard
+        provider="LINKEDIN"
+        configured={false}
+        accounts={[]}
+        settingsTo="/settings/integrations?selectedtab=SOCIAL_LINKEDIN"
+        {...cardHandlers()}
+      />,
+    );
     expect(screen.getByRole('region', { name: 'LinkedIn' })).toBeInTheDocument();
     expect(screen.getByText('Adds: LinkedIn Pages')).toBeInTheDocument();
     expect(screen.getByTestId('social-not-set-up-linkedin')).toHaveTextContent(
-      'Not set up yet — Tech adds it under Environment Variables › Social apps.',
+      'Not set up yet — add this network’s app under Settings › Integrations. Open Integrations',
+    );
+    expect(screen.getByTestId('social-open-settings-linkedin')).toHaveAttribute(
+      'href',
+      '/settings/integrations?selectedtab=SOCIAL_LINKEDIN',
     );
     expect(screen.queryByTestId('social-connect-linkedin')).not.toBeInTheDocument();
     expect(screen.queryByText('No account connected yet.')).not.toBeInTheDocument();
   });
 
+  it('leaves the link out when no settings tab is known for the network', () => {
+    renderWithProviders(<ProviderCard provider="THREADS" configured={false} accounts={[]} {...cardHandlers()} />);
+    expect(screen.getByTestId('social-not-set-up-threads')).toHaveTextContent(
+      'Not set up yet — add this network’s app under Settings › Integrations.',
+    );
+    expect(screen.queryByTestId('social-open-settings-threads')).not.toBeInTheDocument();
+  });
+
   it('invites the first connection of a configured network', () => {
     const handlers = cardHandlers();
-    renderWithProviders(<ProviderCard provider="META" configured accounts={[]} {...handlers} />);
-    const card = screen.getByTestId('social-provider-meta');
-    expect(within(card).getByTestId('FacebookIcon')).toBeInTheDocument();
+    renderWithProviders(<ProviderCard provider="INSTAGRAM" configured accounts={[]} {...handlers} />);
+    const card = screen.getByTestId('social-provider-instagram');
     expect(within(card).getByTestId('InstagramIcon')).toBeInTheDocument();
+    expect(within(card).queryByTestId('FacebookIcon')).not.toBeInTheDocument();
+    expect(screen.getByText('Adds: Instagram professional account (business or creator)')).toBeInTheDocument();
     expect(screen.getByText('No account connected yet.')).toBeInTheDocument();
-    expect(screen.queryByTestId('social-not-set-up-meta')).not.toBeInTheDocument();
-    const connect = screen.getByTestId('social-connect-meta');
+    expect(screen.queryByTestId('social-not-set-up-instagram')).not.toBeInTheDocument();
+    const connect = screen.getByTestId('social-connect-instagram');
     expect(connect).toHaveTextContent(/^Connect$/);
     expect(connect).toHaveClass('MuiButton-contained');
     fireEvent.click(connect);
-    expect(handlers.onConnect).toHaveBeenCalledWith('META');
+    expect(handlers.onConnect).toHaveBeenCalledWith('INSTAGRAM');
+  });
+
+  it('draws the Threads mark for a Threads profile', () => {
+    renderWithProviders(<ProviderCard provider="THREADS" configured accounts={[]} {...cardHandlers()} />);
+    expect(within(screen.getByTestId('social-provider-threads')).getByTestId('AlternateEmailIcon')).toBeInTheDocument();
   });
 
   it('lists connected accounts and reconnects through the same provider', () => {
@@ -196,10 +222,12 @@ describe('ProviderCard', () => {
 });
 
 const PROVIDER_STATUS: SocialProviderStatus[] = [
-  { provider: 'LINKEDIN', configured: true },
-  { provider: 'META', configured: false },
-  { provider: 'X', configured: true },
-  { provider: 'YOUTUBE', configured: false },
+  { provider: 'INSTAGRAM', configured: false, category: 'SOCIAL_INSTAGRAM' },
+  { provider: 'FACEBOOK', configured: false, category: 'SOCIAL_FACEBOOK' },
+  { provider: 'THREADS', configured: false, category: 'SOCIAL_THREADS' },
+  { provider: 'YOUTUBE', configured: false, category: 'SOCIAL_YOUTUBE' },
+  { provider: 'LINKEDIN', configured: true, category: 'SOCIAL_LINKEDIN' },
+  { provider: 'X', configured: true, category: 'SOCIAL_X' },
 ];
 
 const renderTab = (accounts: SocialAccount[], mocks: MockedResponse[] = []) => {
@@ -219,23 +247,31 @@ describe('AccountsTab', () => {
     ]);
     const cards = screen.getAllByTestId(/^social-provider-/);
     expect(cards.map((card) => card.dataset.testid)).toEqual([
-      'social-provider-linkedin',
-      'social-provider-meta',
-      'social-provider-x',
+      'social-provider-instagram',
+      'social-provider-facebook',
+      'social-provider-threads',
       'social-provider-youtube',
+      'social-provider-linkedin',
+      'social-provider-x',
     ]);
-    expect(within(cards[0]).getByText('Duncit Pages')).toBeInTheDocument();
-    expect(within(cards[0]).queryByText('Duncit TV')).not.toBeInTheDocument();
+    expect(within(cards[4]).getByText('Duncit Pages')).toBeInTheDocument();
+    expect(within(cards[4]).queryByText('Duncit TV')).not.toBeInTheDocument();
     expect(within(cards[3]).getByText('Duncit TV')).toBeInTheDocument();
     expect(screen.getByTestId('social-connect-linkedin')).toBeInTheDocument();
-    expect(screen.getByTestId('social-not-set-up-meta')).toBeInTheDocument();
+    expect(screen.getByTestId('social-not-set-up-instagram')).toBeInTheDocument();
     expect(screen.getByTestId('social-connect-x')).toBeInTheDocument();
     expect(screen.getByTestId('social-not-set-up-youtube')).toBeInTheDocument();
+    // Each card links to its own network's tab on the Integrations page.
+    expect(screen.getByTestId('social-open-settings-youtube')).toHaveAttribute(
+      'href',
+      '/settings/integrations?selectedtab=SOCIAL_YOUTUBE',
+    );
   });
 
-  it('treats every network as not set up when the provider list is empty', () => {
+  it('treats every network as not set up when the provider list is empty, linking to Integrations as a whole', () => {
     renderWithProviders(<AccountsTab providers={[]} accounts={[]} onChanged={vi.fn()} returnTo="CALENDAR" narrow />);
-    expect(screen.getAllByText('Not set up yet — Tech adds it under Environment Variables › Social apps.')).toHaveLength(4);
+    expect(screen.getAllByText(/^Not set up yet — add this network’s app under Settings › Integrations\./)).toHaveLength(6);
+    expect(screen.getByTestId('social-open-settings-threads')).toHaveAttribute('href', '/settings/integrations');
     expect(screen.queryByTestId(/^social-connect-/)).not.toBeInTheDocument();
   });
 

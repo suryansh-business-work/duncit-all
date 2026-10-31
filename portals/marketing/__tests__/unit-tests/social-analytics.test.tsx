@@ -47,7 +47,7 @@ const chart = (label: string) => {
 
 const account = (id: string, name: string): SocialAccount => ({
   id,
-  provider: 'META',
+  provider: 'FACEBOOK',
   platform: 'FACEBOOK',
   name,
   handle: null,

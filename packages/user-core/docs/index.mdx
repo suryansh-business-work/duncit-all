@@ -1,6 +1,6 @@
 ---
 name: '@duncit/user-core'
-summary: 'The session shape, the shared `me` selection, the device/DUID helpers and the real-time contract — framework-free, so the native app, mWeb and all 17 portals read one account.'
+summary: 'The session shape, the shared `me` selection, the device/DUID helpers, the product-analytics tracker and the real-time contract — framework-free, so the native app, mWeb and all 17 portals read one account.'
 category: 'platform'
 zeroDeps: true
 frameworkFree: true
@@ -36,6 +36,15 @@ exports:
   - 'releaseSessionRevoked'
   - 'SURFACE_HEADER'
   - 'APP_HEADER'
+  - 'PRODUCT_EVENTS'
+  - 'SESSION_TIMEOUT_MS'
+  - 'createProductTracker'
+  - 'createSessionClock'
+  - 'createEventQueue'
+  - 'redactText'
+  - 'screenNameFromPath'
+  - 'isIdSegment'
+  - 'deviceTypeForWidth'
 ---
 
 Everything about "who is using this, on what" that does not depend on React,
@@ -120,6 +129,45 @@ one device. Two consequences worth knowing:
 `makeDevice` fills every field with a string, never `undefined`. This object is
 attached to bug reports and log frames, and an `undefined` model silently
 vanishes from the JSON.
+
+## Product analytics
+
+```ts
+import { createProductTracker, deviceTypeForWidth, screenNameFromPath } from '@duncit/user-core';
+
+const tracker = createProductTracker({
+  platform: 'mweb',
+  appVersion: __APP_VERSION__,
+  deviceType: deviceTypeForWidth(window.innerWidth),
+  allowed: () => consentAllows(consent, 'analytics'),
+  send: (events) => client.mutate({ mutation: RECORD_APP_EVENTS, variables: { events } }),
+});
+
+tracker.open();
+tracker.screen(screenNameFromPath(location.pathname), { path: location.pathname, title: document.title });
+tracker.click({ id: 'pod-join', name: 'Join pod', type: 'button' });
+tracker.track('search_performed', { properties: { query, results: hits.length } });
+```
+
+The one tracker mWeb and the native app run, feeding Analytics > Product. It owns
+everything that has to behave the same on every surface:
+
+- **Sessions** are cut on the device: a new one at launch and after
+  `SESSION_TIMEOUT_MS` (30 minutes) without activity. Every event carries the id.
+- **Screens** form a sequence: each `screen_view` names the screen before it and
+  the foreground time spent there; `background()` closes the time on the screen
+  on top, and time in the background never counts.
+- **Batching**: events leave 20 at a time, at most 10 seconds after they happen,
+  and at once when the app goes to the background. A failed batch is retried
+  (the server drops ids it already holds); an offline queue keeps its newest 200.
+- **Consent** is read at every event — nothing is queued without the analytics
+  choice.
+- **Redaction**: element text, titles and string properties go through
+  `redactText` (emails and runs of 4+ digits masked). The server repeats it.
+
+`screenNameFromPath` turns mWeb paths into screen names (`/pods/:id/join`), so
+every pod is one screen; native screens are their route names. The taxonomy is
+`PRODUCT_EVENTS` — snake_case names the server accepts without a schema change.
 
 ## Surface
 

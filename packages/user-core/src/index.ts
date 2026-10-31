@@ -40,3 +40,13 @@ export type {
   SessionStatus,
   SessionUser,
 } from './types';
+export { PRODUCT_EVENTS, SESSION_TIMEOUT_MS, deviceTypeForWidth } from './analytics/taxonomy';
+export type { ProductEventName, ProductEventPayload, ProductPlatform, ProductProperties } from './analytics/taxonomy';
+export { createSessionClock } from './analytics/session';
+export type { SessionClock } from './analytics/session';
+export { createEventQueue } from './analytics/queue';
+export type { EventQueue } from './analytics/queue';
+export { redactText } from './analytics/redact';
+export { isIdSegment, screenNameFromPath } from './analytics/screen';
+export { createProductTracker } from './analytics/tracker';
+export type { ElementRef, EventContext, ProductTracker, TrackerOptions } from './analytics/tracker';

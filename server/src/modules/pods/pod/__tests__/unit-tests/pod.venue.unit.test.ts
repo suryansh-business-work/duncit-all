@@ -42,6 +42,10 @@ jest.mock('@config/url-configs', () => ({ getUrlConfigs: jest.fn() }));
 jest.mock('@modules/engagement/notification/notification.service', () => ({
   notificationService: { create: jest.fn() },
 }));
+// pod.venue reaches venue.offerSettings for its pure minimum-business check;
+// that module also imports the settings service, whose model cannot build
+// beside the model mocks above. Nothing here reads platform settings.
+jest.mock('@modules/platform/settings/settings.service', () => ({ settingsService: {} }));
 
 import { Types } from 'mongoose';
 import {

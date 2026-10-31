@@ -43,7 +43,8 @@ describe('MinBusinessFields', () => {
   it('lists each amount on its basis, and adds the next basis not listed until all three are', () => {
     const { section } = renderRows([{ model: 'PER_GUEST', amount: '200' }]);
     expect(section.getByRole('heading', { name: 'Business you expect per booking' })).toBeInTheDocument();
-    expect(section.getByText(/Hosts see it once they pick your venue/)).toBeInTheDocument();
+    // The hint says where hosts meet the amount, and that a lower offer is refused.
+    expect(section.getByText(/Hosts see it on Create Pod, and an offer below the amount .* cannot be sent/)).toBeInTheDocument();
     expect(bases(section)).toEqual(['Per guest']);
     expect(section.getByLabelText('Amount (₹)')).toHaveValue(200);
 

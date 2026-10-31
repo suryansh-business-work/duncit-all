@@ -445,6 +445,32 @@ describe('WhenWhereSection (offer terms)', () => {
     expect(screen.getByTestId('pod-form-venue-min-business')).toHaveTextContent(/^Minimum business for this venue: 400\.00 per hour — /);
   });
 
+  // The minimum on the picked basis is a rule, not a guide: an amount below it
+  // is flagged on the field (the server refuses it as BELOW_MIN_BUSINESS).
+  const floorTerms = () =>
+    termsQuery({ id: 'v1', capacity: 40, offer_min_guests: 0, offer_min_business: [{ model: 'PER_GUEST', amount: 200 }] });
+
+  it('flags an amount below the minimum on the picked basis, on the amount field', () => {
+    routeQueries({ terms: floorTerms() });
+    renderWW(termsData(), { ...WINDOW, venue_offer_model: 'PER_GUEST', venue_offer_rate: '150' });
+    expect(screen.getByLabelText(/Amount you offer/)).toHaveAttribute('aria-invalid', 'true');
+    expect(screen.getByText('This venue takes at least 200.00 per guest — raise your offer to continue')).toBeInTheDocument();
+  });
+
+  it('takes an amount at the minimum, keeping the usual hint', () => {
+    routeQueries({ terms: floorTerms() });
+    renderWW(termsData(), { ...WINDOW, venue_offer_model: 'PER_GUEST', venue_offer_rate: '200' });
+    expect(screen.getByLabelText(/Amount you offer/)).toHaveAttribute('aria-invalid', 'false');
+    expect(screen.getByText("The venue's price rules, fees and GST are added on top, with Duncit's fee.")).toBeInTheDocument();
+  });
+
+  it('flags nothing before an amount is typed — the empty field keeps its own required rule', () => {
+    routeQueries({ terms: floorTerms() });
+    renderWW(termsData(), { ...WINDOW, venue_offer_model: 'PER_GUEST', venue_offer_rate: '' });
+    expect(screen.getByLabelText(/Amount you offer/)).toHaveAttribute('aria-invalid', 'false');
+    expect(screen.queryByText(/raise your offer to continue/)).not.toBeInTheDocument();
+  });
+
   it('says nothing of what the venue expects when it names no amount it can show', () => {
     routeQueries({
       terms: termsQuery({ id: 'v1', capacity: 40, offer_min_guests: 8, offer_min_business: [{ model: 'PER_GUEST', amount: 0 }] }),

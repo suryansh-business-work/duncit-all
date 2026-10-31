@@ -601,12 +601,10 @@ describe('CreatePodStepper', () => {
     expect(screen.getByTestId('create-pod-club-c1')).toHaveProp('aria-checked', false);
     press('create-pod-club-c1');
 
-    // Where & when: a window at a partner's venue (owner-1, not the viewer).
+    // Where & when: a window at a partner's venue (owner-1, not the viewer). The
+    // venue is priced by the quote on Money, so there is nothing to settle yet.
     await pickWindow();
-    const venueNote = screen.getByTestId('create-pod-free-venue-note');
-    expect(venueNote).toHaveTextContent(/settle the venue's charges with the venue directly/);
-    expect(venueNote).not.toHaveTextContent(/asked not to confirm the slot/);
-    expect(venueNote).toHaveProp('role', 'status');
+    expect(screen.queryByTestId('create-pod-free-venue-note')).toBeNull();
     press('create-pod-submit');
 
     // Money: the offer, quoted at ₹496, then the ticket — still free: no

@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react-native';
+import { fireEvent, screen } from '@testing-library/react-native';
 import { useForm } from 'react-hook-form';
 
 import { BasicsStep } from '@/components/create-pod/steps/BasicsStep';
@@ -39,10 +39,13 @@ function Harness({ initial = {} }: Readonly<{ initial?: Partial<CreatePodFormVal
 }
 
 describe('BasicsStep', () => {
-  it('opens on the title and nudges for a reel', () => {
+  it('opens on the title, and nudges for a reel once More options is unfolded', () => {
     renderWithProviders(<Harness />);
 
     expect(screen.getByTestId('field-pod_title')).toBeOnTheScreen();
+    // The reel sits under More options, folded while nothing in it is filled.
+    expect(screen.queryByTestId('create-pod-reel-engagement')).toBeNull();
+    fireEvent.press(screen.getByTestId('create-pod-details-more-toggle'));
     expect(screen.getByTestId('create-pod-reel-engagement')).toBeOnTheScreen();
   });
 

@@ -3,9 +3,11 @@ import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import type { MockedResponse } from '@apollo/client/testing';
 import { renderWithProviders } from '../testkit';
 import {
+  audienceListOwnersMock,
   disconnectSocialAccountErrorMock,
   disconnectSocialAccountMock,
   makeSocialAccount,
+  setSocialAccountOwnerMock,
   socialConnectUrlErrorMock,
   socialConnectUrlMock,
   syncSocialAccountErrorMock,
@@ -39,6 +41,7 @@ afterEach(() => {
 const rowHandlers = () => ({
   onSync: vi.fn().mockResolvedValue(undefined),
   onReconnect: vi.fn().mockResolvedValue(undefined),
+  onSetOwner: vi.fn(),
   onDisconnect: vi.fn(),
 });
 
@@ -51,6 +54,80 @@ describe('AccountRow', () => {
     expect(within(row).getByText('@duncit · Followers: 1,200 · Not synced yet')).toBeInTheDocument();
     expect(within(row).queryByRole('status')).not.toBeInTheDocument();
     expect(within(row).queryByText(/to review/)).not.toBeInTheDocument();
+    // Never health-checked, no owner, a token that does not expire: nothing more to say.
+    expect(within(row).getByTestId('social-owner-line-sa1')).toHaveTextContent('No owner');
+    expect(within(row).queryByTestId('social-health-line')).not.toBeInTheDocument();
+    expect(within(row).queryByTestId('social-expiry-chip')).not.toBeInTheDocument();
+  });
+
+  it('names the owner', () => {
+    renderWithProviders(<AccountRow account={makeSocialAccount({ owner_user_id: 'u1', owner_name: 'Asha Rao' })} {...rowHandlers()} />);
+    expect(screen.getByTestId('social-owner-line-sa1')).toHaveTextContent('Owner: Asha Rao');
+  });
+
+  it('says there is no owner when the owner id points at nobody with a name', () => {
+    renderWithProviders(<AccountRow account={makeSocialAccount({ owner_user_id: 'gone', owner_name: null })} {...rowHandlers()} />);
+    expect(screen.getByTestId('social-owner-line-sa1')).toHaveTextContent('No owner');
+  });
+
+  it('opens the owner picker for the account it belongs to', () => {
+    const handlers = rowHandlers();
+    const account = makeSocialAccount();
+    renderWithProviders(<AccountRow account={account} {...handlers} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Set owner for Duncit Pages' }));
+    expect(handlers.onSetOwner).toHaveBeenCalledWith(account);
+    expect(screen.getByTestId('social-owner-sa1')).toBeInTheDocument();
+  });
+
+  it.each([
+    [8, null],
+    [30, null],
+    [7, 'Expires in 7 days'],
+    [2, 'Expires in 2 days'],
+    [1, 'Expires in 1 day'],
+  ])('with %s days left, the expiry chip reads %s', (days, label) => {
+    renderWithProviders(<AccountRow account={makeSocialAccount({ token_expires_in_days: days })} {...rowHandlers()} />);
+    const chip = screen.queryByTestId('social-expiry-chip');
+    if (label === null) {
+      expect(chip).not.toBeInTheDocument();
+    } else {
+      expect(chip).toHaveTextContent(label);
+      expect(chip).toHaveClass('MuiChip-colorWarning');
+    }
+  });
+
+  it.each([0, -3])('with %s days left, the chip says the token has expired', (days) => {
+    renderWithProviders(<AccountRow account={makeSocialAccount({ token_expires_in_days: days })} {...rowHandlers()} />);
+    const chip = screen.getByTestId('social-expiry-chip');
+    expect(chip).toHaveTextContent('Token expired');
+    expect(chip).toHaveClass('MuiChip-colorError');
+  });
+
+  it('says when the health check last ran, and what the network said when it was not happy', () => {
+    const { rerender } = renderWithProviders(
+      <AccountRow
+        account={makeSocialAccount({ health_checked_at: '2026-10-30T09:00:00.000Z', health_ok: true, health_message: '' })}
+        {...rowHandlers()}
+      />,
+    );
+    expect(screen.getByTestId('social-health-line')).toHaveTextContent(/^Checked fmt:2026-10-30T09:00:00.000Z$/);
+
+    rerender(
+      <AccountRow
+        account={makeSocialAccount({ health_checked_at: '2026-10-30T09:00:00.000Z', health_ok: false, health_message: 'X: rate limited' })}
+        {...rowHandlers()}
+      />,
+    );
+    expect(screen.getByTestId('social-health-line')).toHaveTextContent('Checked fmt:2026-10-30T09:00:00.000Z · X: rate limited');
+
+    // A failed check with no words from the network still says when it ran.
+    rerender(
+      <AccountRow
+        account={makeSocialAccount({ health_checked_at: '2026-10-30T09:00:00.000Z', health_ok: false, health_message: null })}
+        {...rowHandlers()}
+      />,
+    );
+    expect(screen.getByTestId('social-health-line')).toHaveTextContent(/^Checked fmt:2026-10-30T09:00:00.000Z$/);
   });
 
   it('drops a missing handle and names when the account last synced', () => {
@@ -138,6 +215,7 @@ describe('AccountRow', () => {
 const cardHandlers = () => ({
   onConnect: vi.fn().mockResolvedValue(undefined),
   onSync: vi.fn().mockResolvedValue(undefined),
+  onSetOwner: vi.fn(),
   onDisconnect: vi.fn(),
 });
 
@@ -208,6 +286,8 @@ describe('ProviderCard', () => {
     expect(handlers.onConnect).toHaveBeenCalledWith('X');
     fireEvent.click(screen.getByTestId('social-sync-x1'));
     expect(handlers.onSync).toHaveBeenCalledWith(live);
+    fireEvent.click(screen.getByTestId('social-owner-x1'));
+    expect(handlers.onSetOwner).toHaveBeenCalledWith(live);
     fireEvent.click(screen.getByTestId('social-disconnect-x2'));
     expect(handlers.onDisconnect).toHaveBeenCalledWith(expired);
   });
@@ -372,6 +452,35 @@ describe('AccountsTab', () => {
       const onChanged = renderTab([account]);
       fireEvent.click(screen.getByTestId('social-disconnect-sa1'));
       fireEvent.click(screen.getByTestId('confirm-dialog-cancel'));
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+      expect(onChanged).not.toHaveBeenCalled();
+      expect(dialogsMock.notify).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('set owner', () => {
+    const account = makeSocialAccount();
+
+    it('opens the owner picker for the account, refreshes the list once saved, and closes', async () => {
+      const saved = { ...account, owner_user_id: 'boss', owner_name: 'Ravi Boss' };
+      const onChanged = renderTab(
+        [account],
+        [audienceListOwnersMock, setSocialAccountOwnerMock({ id: 'sa1', owner_user_id: 'boss', team_user_ids: [] }, saved)],
+      );
+      fireEvent.click(screen.getByTestId('social-owner-sa1'));
+      const dialog = await screen.findByRole('dialog', { name: 'Set owner for Duncit Pages' });
+      fireEvent.mouseDown(within(dialog).getByLabelText('Owner'));
+      fireEvent.click(await screen.findByText('Ravi Boss'));
+      fireEvent.click(within(dialog).getByTestId('social-owner-save'));
+      await waitFor(() => expect(dialogsMock.notify).toHaveBeenCalledWith('Owner updated for Duncit Pages', 'success'));
+      expect(onChanged).toHaveBeenCalledTimes(1);
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    });
+
+    it('closes the picker without saving', async () => {
+      const onChanged = renderTab([account], [audienceListOwnersMock]);
+      fireEvent.click(screen.getByTestId('social-owner-sa1'));
+      fireEvent.click(await screen.findByTestId('social-owner-cancel'));
       await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
       expect(onChanged).not.toHaveBeenCalled();
       expect(dialogsMock.notify).not.toHaveBeenCalled();

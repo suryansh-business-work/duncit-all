@@ -2,6 +2,7 @@ import type { MockedResponse } from '@apollo/client/testing';
 import { GraphQLError } from 'graphql';
 import {
   DISCONNECT_SOCIAL_ACCOUNT,
+  SET_SOCIAL_ACCOUNT_OWNER,
   SOCIAL_CONNECT_URL,
   SOCIAL_INSIGHTS,
   SYNC_SOCIAL_ACCOUNT,
@@ -24,8 +25,27 @@ export const makeSocialAccount = (over: Partial<SocialAccount> = {}): SocialAcco
   status: 'CONNECTED',
   last_error: null,
   last_synced_at: null,
+  token_expires_in_days: null,
   flagged_open: 0,
+  owner_user_id: null,
+  owner_name: null,
+  team_user_ids: [],
+  health_checked_at: null,
+  health_ok: null,
+  health_message: null,
   ...over,
+});
+
+type OwnerVariables = { id: string; owner_user_id: string | null; team_user_ids: string[] };
+
+export const setSocialAccountOwnerMock = (variables: OwnerVariables, account: SocialAccount): MockedResponse => ({
+  request: { query: SET_SOCIAL_ACCOUNT_OWNER, variables },
+  result: { data: { setSocialAccountOwner: { __typename: 'SocialAccount', ...account } } },
+});
+
+export const setSocialAccountOwnerErrorMock = (variables: OwnerVariables, message: string): MockedResponse => ({
+  request: { query: SET_SOCIAL_ACCOUNT_OWNER, variables },
+  ...socialRejection(message),
 });
 
 const socialRejection = (message: string) => ({ result: { errors: [new GraphQLError(message)] } });

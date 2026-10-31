@@ -16,6 +16,7 @@ interface Props {
   settingsTo?: string;
   onConnect: (provider: SocialProvider) => Promise<void>;
   onSync: (account: SocialAccount) => Promise<void>;
+  onSetOwner: (account: SocialAccount) => void;
   onDisconnect: (account: SocialAccount) => void;
 }
 
@@ -31,6 +32,7 @@ export default function ProviderCard({
   settingsTo,
   onConnect,
   onSync,
+  onSetOwner,
   onDisconnect,
 }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -93,7 +95,14 @@ export default function ProviderCard({
         {accounts.length > 0 && (
           <Stack divider={<Divider flexItem />} sx={{ mt: 1 }}>
             {accounts.map((account) => (
-              <AccountRow key={account.id} account={account} onSync={onSync} onReconnect={connect} onDisconnect={onDisconnect} />
+              <AccountRow
+                key={account.id}
+                account={account}
+                onSync={onSync}
+                onReconnect={connect}
+                onSetOwner={onSetOwner}
+                onDisconnect={onDisconnect}
+              />
             ))}
           </Stack>
         )}

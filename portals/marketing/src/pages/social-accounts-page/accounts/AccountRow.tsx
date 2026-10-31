@@ -1,5 +1,6 @@
 import { Avatar, Box, Chip, Stack, Tooltip, Typography } from '@mui/material';
 import LinkOffIcon from '@mui/icons-material/LinkOff';
+import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import SyncIcon from '@mui/icons-material/Sync';
 import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
@@ -8,16 +9,18 @@ import { useDateFormat, useTranslation } from '@duncit/app-settings';
 import PlatformIcon from '../PlatformIcon';
 import { STATUS_COLORS, STATUS_LABEL } from '../copy';
 import type { SocialAccount } from '../queries';
+import { ExpiryChip, HealthLine } from './AccountHealth';
 
 interface Props {
   account: SocialAccount;
   onSync: (account: SocialAccount) => Promise<void>;
   onReconnect: () => Promise<void>;
+  onSetOwner: (account: SocialAccount) => void;
   onDisconnect: (account: SocialAccount) => void;
 }
 
-/** One connected Page, channel or profile: who it is, how it is doing, and what can be done to it. */
-export default function AccountRow({ account, onSync, onReconnect, onDisconnect }: Readonly<Props>) {
+/** One connected Page, channel or profile: who it is, who answers for it, how it is doing, and what can be done to it. */
+export default function AccountRow({ account, onSync, onReconnect, onSetOwner, onDisconnect }: Readonly<Props>) {
   const { t, locale } = useTranslation();
   const { formatDateTime } = useDateFormat();
   const expired = account.status === 'EXPIRED';
@@ -29,6 +32,9 @@ export default function AccountRow({ account, onSync, onReconnect, onDisconnect 
     `${t('marketing.social.followers')}: ${account.followers.toLocaleString(locale)}`,
     synced,
   ].filter(Boolean);
+  const owner = account.owner_name
+    ? t('marketing.social.owner', { vars: { name: account.owner_name } })
+    : t('marketing.social.noOwner');
 
   return (
     <Stack
@@ -47,6 +53,7 @@ export default function AccountRow({ account, onSync, onReconnect, onDisconnect 
             {account.name}
           </Typography>
           <StatusChip status={account.status} colorMap={STATUS_COLORS} label={t(STATUS_LABEL[account.status])} />
+          <ExpiryChip days={account.token_expires_in_days} />
           {account.flagged_open > 0 && (
             <Chip size="small" color="error" variant="outlined" label={t('marketing.social.toReview', { count: account.flagged_open })} />
           )}
@@ -54,6 +61,10 @@ export default function AccountRow({ account, onSync, onReconnect, onDisconnect 
         <Typography variant="caption" component="p" sx={{ color: 'text.secondary' }}>
           {facts.join(' · ')}
         </Typography>
+        <Typography variant="caption" component="p" sx={{ color: 'text.secondary' }} data-testid={`social-owner-line-${account.id}`}>
+          {owner}
+        </Typography>
+        <HealthLine account={account} />
         {account.status !== 'CONNECTED' && account.last_error && (
           <Typography variant="caption" component="p" sx={{ color: 'error.main' }} role="status">
             {account.last_error}
@@ -77,6 +88,11 @@ export default function AccountRow({ account, onSync, onReconnect, onDisconnect 
           </DuncitButton>
         )}
         {/* The tooltip IS the accessible name (MUI writes it onto the child), so it names the account. */}
+        <Tooltip title={t('marketing.social.setOwnerOf', { vars: { name: account.name } })}>
+          <DuncitIconButton size="small" onClick={() => onSetOwner(account)} data-testid={`social-owner-${account.id}`}>
+            <ManageAccountsIcon fontSize="small" />
+          </DuncitIconButton>
+        </Tooltip>
         {account.profile_url && (
           <Tooltip title={t('marketing.social.openProfileOf', { vars: { name: account.name } })}>
             <DuncitIconButton

@@ -97,7 +97,7 @@ export const socialPostSchema = (t: Translate, accounts: SocialAccount[]) =>
       addPlatformIssues(values, ctx, t, accounts);
     });
 
-export function toSocialPostInput(values: SocialPostFormValues, ideaId: string | null): SocialScheduledPostInput {
+export function toSocialPostInput(values: SocialPostFormValues, ideaId: string | null, reelProjectId: string | null = null): SocialScheduledPostInput {
   return {
     text: values.text,
     // Only the two fields the input takes — a row read back from the server also carries __typename.
@@ -107,6 +107,7 @@ export function toSocialPostInput(values: SocialPostFormValues, ideaId: string |
     scheduled_at: values.scheduled_at || null,
     idea_id: ideaId,
     needs_approval: values.needs_approval,
+    reel_project_id: reelProjectId,
   };
 }
 

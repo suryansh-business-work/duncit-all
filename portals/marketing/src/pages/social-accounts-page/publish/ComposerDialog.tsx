@@ -32,6 +32,8 @@ export interface ComposerRequest {
   media_url?: string;
   scheduled_at?: string;
   idea_id?: string;
+  /** The reel the post is made from, when it came from Reel Studio; the post remembers it. */
+  reel_project_id?: string;
 }
 
 const DONE: Record<SocialPublishMode, string> = {
@@ -86,7 +88,7 @@ export default function ComposerDialog({ request, accounts, onClose }: Readonly<
   const submit = async (values: SocialPostFormValues) => {
     setError(null);
     const post = request?.post;
-    const input = toSocialPostInput(values, post?.idea_id || request?.idea_id || null);
+    const input = toSocialPostInput(values, post?.idea_id || request?.idea_id || null, request?.reel_project_id ?? null);
     try {
       if (post) await updateMut({ variables: { id: post.id, input } });
       else await createMut({ variables: { input } });

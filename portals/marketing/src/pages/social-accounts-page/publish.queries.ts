@@ -80,6 +80,8 @@ export interface SocialScheduledPostInput {
   idea_id: string | null;
   /** With SCHEDULE or NOW the server parks the post as PENDING_APPROVAL for a manager. */
   needs_approval: boolean;
+  /** The Reel Studio project the post was made from, when it was. */
+  reel_project_id?: string | null;
 }
 
 const SCHEDULED_POST_FIELDS = gql`

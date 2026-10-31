@@ -30,6 +30,7 @@ export const RUN_WORKFLOWS = [
   'SOCIAL_HEALTH',
   'REEL',
   'LEAD_SEARCH',
+  'LEAD_IMPORT',
   'OUTREACH',
   'AGENT',
   'ORCHESTRATOR',
@@ -127,7 +128,7 @@ const runSchema = new Schema(
       tokens_in: { type: Number, default: 0 },
       tokens_out: { type: Number, default: 0 },
       amount: { type: Number, default: 0 },
-      currency: { type: String, default: 'INR' },
+      currency: { type: String, default: 'USD' },
     },
     /** The orchestrator run this one is a part of, when it is. */
     parent_run_id: { type: String, default: '', index: true },

@@ -276,8 +276,12 @@ export const MODULE_CATEGORY: Record<ModuleName, McpCategoryKey | null> = {
   socialTypeDefs: 'marketing',
   socialPublishTypeDefs: 'marketing',
   igLeadTypeDefs: 'marketing',
+  // The one lead pipeline every source feeds, and its hand-over to the CRM.
+  marketingLeadTypeDefs: 'marketing',
   occasionTypeDefs: 'marketing',
   marketingRunTypeDefs: 'marketing',
+  // Automation › Agents: the code-defined agents, their schedules and Run now.
+  marketingAgentTypeDefs: 'marketing',
   // Reel Studio: reels cut from Drive footage, posted from the Marketing console.
   reelTypeDefs: 'marketing',
 

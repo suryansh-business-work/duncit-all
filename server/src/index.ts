@@ -27,6 +27,7 @@ import { graphqlMonitorPlugin } from '@modules/platform/graphqlMonitor/graphqlMo
 import { startGraphqlMonitorFlusher } from '@modules/platform/graphqlMonitor/graphqlMonitor.flusher';
 import { startMailAutomationScheduler } from '@modules/platform/mailAutomation/mailAutomation.poller';
 import { startSocialAccountsScheduler } from '@modules/crm/marketing/social/social.scheduler';
+import { startMarketingAgentScheduler } from '@modules/crm/marketing/agents/agent.scheduler';
 import { startShortLinkRetentionScheduler } from '@modules/crm/marketing/shortLink.retention';
 import { startAnalyticsRetentionScheduler } from '@modules/platform/analytics/analytics.retention';
 import { startContactInviteRetentionScheduler } from '@modules/access/contacts/contacts.retention';
@@ -367,6 +368,11 @@ async function bootstrap() {
     await websiteNavService.seedDefaults();
   });
   await safeSeed('marketing', () => marketingService.resumeSchedules());
+  // Every Instagram lead saved before the one lead pipeline existed gets a pipeline lead, once.
+  await safeSeed('marketingLeadsPipeline', async () => {
+    const { migrateIgLeadsToPipeline } = await import('@modules/crm/marketing/leads/marketingLead.pipeline');
+    await migrateIgLeadsToPipeline();
+  });
   await safeSeed('waCampaigns', async () => {
     const { waCampaignService } = await import('@modules/crm/marketing/waCampaign.service');
     await waCampaignService.resumeSchedules();
@@ -689,6 +695,10 @@ async function bootstrap() {
   // profile every few hours — posts, numbers, new comments — and send the new
   // comments through the AI review.
   startSocialAccountsScheduler();
+
+  // Marketing agents: every fifteen minutes, run the enabled agents whose
+  // time has come as one orchestrator run with a child run per agent.
+  startMarketingAgentScheduler();
 
   // Short links: delete every recorded click past the retention window an
   // admin set in Marketing > External Links > Privacy. A stated window that

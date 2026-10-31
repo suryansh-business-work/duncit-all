@@ -8,6 +8,7 @@ import { discoveryReader, type DiscoveryReader } from './igLead.discovery';
 import { extractEmails, extractPhones } from './igLead.contacts';
 import { SEARCH_LIMITS, type DiscoveredProfile, type SearchPlan } from './igLead.types';
 import { userActor, withRun } from '../runs/marketingRun.service';
+import { feedIgLeadsToPipeline } from '../leads/marketingLead.pipeline';
 
 /**
  * One run of a brief, in the background: the AI plans the Google searches,
@@ -165,6 +166,17 @@ async function searchAsRun(searchId: string, brief: string, maxResults: number, 
             })
           ),
         { summarize: (count) => `${count} added` }
+      );
+      // Every profile saved joins the one lead pipeline, keyed on its handle.
+      await run.step(
+        'pipeline',
+        'Add to the lead pipeline',
+        () =>
+          feedIgLeadsToPipeline(
+            profiles.map((profile) => profile.username),
+            userId
+          ),
+        { summarize: (fed) => `${fed.added} added, ${fed.merged} merged` }
       );
       await IgLeadSearchModel.updateOne(
         { _id: searchId },

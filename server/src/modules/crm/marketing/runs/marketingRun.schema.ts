@@ -20,6 +20,7 @@ export const marketingRunTypeDefs = gql`
     SOCIAL_HEALTH
     REEL
     LEAD_SEARCH
+    LEAD_IMPORT
     OUTREACH
     AGENT
     ORCHESTRATOR

@@ -1938,6 +1938,69 @@ export const STAFF_GAP_FLOWS: readonly CatalogueFlow[] = [
     ],
   },
   {
+    name: 'Marketing: Automation agents',
+    description:
+      'marketing /automation/agents: three code-defined agents — Content planner, Community watch, Account doctor — each planned by Claude (one JSON plan of up to ten tool calls) and run through code, every run an AGENT row on Activity with a step per action; an orchestrator runs the enabled ones on their schedules as child runs of an ORCHESTRATOR row. Read roles SUPER_ADMIN, CITY_ADMIN, MARKETING_MANAGER, MARKETING_EDITOR; update and run SUPER_ADMIN and MARKETING_MANAGER (agent.resolver.ts).',
+    sub_flows: [
+      {
+        name: 'Switch on and schedule an agent',
+        description: 'updateMarketingAgent validates the schedule and the params and books next_run_at on the admin clock.',
+        steps: [
+          [
+            'Open /automation/agents as a manager',
+            'Header "Agents" with its intro and a first-run tour; one card per agent with its switch, schedule fields, the Content planner’s brief, networks and posts-per-week form, Save, Run now, the last run and the next run',
+          ],
+          [
+            'On Content planner, set Every week, Monday, 9, a brief and 3 posts a week, switch it on and Save',
+            'A success toast; the card shows the next run as the coming Monday 09:00 in the configured zone, and marketingAgents returns enabled true with that schedule',
+          ],
+          [
+            'Save with 0 posts a week, or an hour of 24',
+            'The form refuses before submit; sent straight to updateMarketingAgent the answer is "The settings are not valid" / "The schedule is not valid" (BAD_USER_INPUT)',
+          ],
+          ['Open /automation/agents as a MARKETING_EDITOR', 'The cards are read-only: no switch, no Save, no Run now; calling runMarketingAgent answers access denied'],
+        ],
+      },
+      {
+        name: 'Run an agent now and follow it',
+        description: 'runMarketingAgent opens an AGENT run as the signed-in person and answers with its id at once; the plan, the actions and the report land on Activity.',
+        steps: [
+          [
+            'Press Run now on Account doctor',
+            'A toast says the run started; the card’s last run shows the run’s status and "Open last run" leads to /activity?workflow=AGENT where the run has steps Plan with Claude, one per planned action, and Report',
+          ],
+          [
+            'Run Content planner with two connected accounts',
+            'Every post it creates is PENDING_APPROVAL on /approvals with a future time, text-only where the network takes it and a draft for Instagram and YouTube; nothing is published',
+          ],
+          [
+            'Run Community watch',
+            'Its report says how many comments were reviewed and flagged, and that no reply was sent because the Meta reply permission is not held',
+          ],
+          [
+            'Switch the Marketing agent plan feature off in the AI portal and press Run now',
+            'The run is FAILED at "Plan with Claude" with the switched-off message; nothing else ran',
+          ],
+          [
+            'Edit the Content planner prompt in the AI Library so it names a tool the agent may not use',
+            'That action is a FAILED step ("may not use …"), the rest run, and the run ends PARTIAL',
+          ],
+        ],
+      },
+      {
+        name: 'The orchestrator',
+        description: 'Every fifteen minutes on the scheduler leader: the enabled agents whose next_run_at has passed, as child runs of one ORCHESTRATOR run.',
+        steps: [
+          [
+            'Enable an agent with a time in the past and wait for the tick',
+            'Activity shows "Orchestrator: 1 agent due" with a step per agent, and an AGENT run with that parent_run_id; the card’s next run moves to the next slot',
+          ],
+          ['Wait for a tick with nothing due', 'No orchestrator run is recorded'],
+        ],
+      },
+    ],
+  },
+  {
     name: 'Marketing: Social Calendar',
     description:
       'marketing /publish/calendar (old /social-calendar redirects): the publishing calendar by month, week or day — compose a post with one or many media (a carousel where the network takes one), schedule, publish now, send for approval, share now, retry and delete across connected accounts. AI ideas live on Social Accounts > Ideas. A MARKETING_EDITOR writes and schedules too, but every send is parked for a manager (social.publish.resolver.ts).',
@@ -2018,6 +2081,80 @@ export const STAFF_GAP_FLOWS: readonly CatalogueFlow[] = [
             'On Social Accounts > Ideas press "Generate ideas"',
             'Toast "<N> new ideas are ready" and idea cards appear with "Use this idea"',
           ],
+        ],
+      },
+    ],
+  },
+  {
+    name: 'Marketing: All leads',
+    description:
+      'marketing /leads over the one lead pipeline (marketing_leads): every lead from every source — the Instagram search (fed as the last step of its LEAD_SEARCH run and by the boot migration migrateIgLeadsToPipeline), a lead typed in, a CSV import (a LEAD_IMPORT run) — deduplicated on write by phone (last ten digits), email, website host or Instagram handle, worked through stage, owner and notes, and promoted one way into the CRM through its own create functions. Read/write SUPER_ADMIN, CITY_ADMIN, MARKETING_MANAGER, MARKETING_EDITOR; promote SUPER_ADMIN and MARKETING_MANAGER; the owner picker reads audienceListOwners, so it shows for SUPER_ADMIN, CITY_ADMIN and MARKETING_MANAGER only (marketingLead.resolver.ts).',
+    sub_flows: [
+      {
+        name: 'Read the pipeline and open a lead',
+        description:
+          'marketingLeadSummary feeds one card per stage; marketingLeadsTable pages the leads with pipeline, stage, source, owner, city, score and has_crm_ref filters and a search over name, company, contacts, website, handle and city; marketingLead loads the drawer. The URL can pin a stage or a pipeline.',
+        steps: [
+          [
+            'Open /leads',
+            'Header "All leads" with its intro and a first-run tour; a card for All leads and one per stage (New, Contacted, Replied, Qualified, Converted, Lost); a table with Lead, Pipeline, Stage, Source, Fit, Owner, City and Updated; New lead and Import CSV beside the search',
+          ],
+          ['Press the Qualified card, or open /leads?stage=QUALIFIED&pipeline=VENUE', 'The table is pinned to that stage (and pipeline); a value that names nothing is ignored'],
+          [
+            'Open a row',
+            'A drawer with the stage chip, company, pipeline, source, city, fit (score/100 with its reason, or "Not scored"), owner, tags; the contacts as tel:, mailto:, website and @handle links; one "Move to <stage>" button per other stage; Notes with an Add note box; History newest first',
+          ],
+          ['Run an Instagram lead search, then open /leads', 'Each profile it saved is a lead with source Instagram, pipeline General, its fit score, published contacts and handle; its run on Activity ends with the step "Add to the lead pipeline"'],
+        ],
+      },
+      {
+        name: 'Work a lead: stage, owner, notes',
+        description:
+          'setMarketingLeadStage records "<from> → <to>" on the timeline and refuses LOST without a note (the note is kept on the lead); assignMarketingLeadOwner needs a living user; addMarketingLeadNote keeps who wrote it.',
+        steps: [
+          ['Press "Move to Contacted"', 'Toast "Moved to Contacted."; the chip and the card counts follow; History gains "Stage · NEW → CONTACTED" under the person\'s name'],
+          ['Press "Move to Lost" and confirm without a reason', 'Dialog "Mark this lead as lost?" says "Say why the lead was lost." and stays open'],
+          ['Give a reason and press Mark lost', 'The lead is Lost, the reason is the newest note, and History reads "CONTACTED → LOST: <reason>"'],
+          ['As a manager press Change beside Owner, pick a person, Save', 'Toast "Owner saved."; the owner shows in the drawer and the Owner column; History gains "Assigned to <name>"'],
+          ['As a MARKETING_EDITOR open the same lead', 'No Change beside Owner and no Promote to CRM; stage buttons and notes still work'],
+          ['Press Add note with an empty box', '"Write the note first." under the box; a note over 2000 characters says so'],
+          ['Write a note and press Add note', 'Toast "Note added."; the note tops the list with the writer and time, and History gains a Note entry'],
+        ],
+      },
+      {
+        name: 'Add a lead by hand, with dedupe',
+        description:
+          'createMarketingLead goes through the same upsert every source uses: a lead sharing a phone (last ten digits), email, website host or handle with one already here fills that row\'s gaps and gets a "Seen again from MANUAL" timeline entry instead of a second row; the dialog says so.',
+        steps: [
+          ['Press New lead and submit the empty form', '"Give the lead a name." under Name; a bad email, phone (6-15 digits), website or handle says so under its field'],
+          ['Fill a name, pick a pipeline, add a phone, press Add lead', 'Toast "Lead added."; the dialog closes; the drawer opens on the new lead with source "Entered by hand"'],
+          ['Add another lead with the same phone written as +91 and spaces', 'Toast "That lead was already here. The details were added to it."; the drawer opens on the existing lead, whose History ends "Seen again · Seen again from MANUAL"'],
+          ['Edit a lead (updateMarketingLead) to a phone another lead holds', 'Refused: "Another lead already has that phone, email, website or handle."'],
+        ],
+      },
+      {
+        name: 'Import a CSV',
+        description:
+          'The page parses the file, guesses which column holds what from the header, shows the first rows and the rows that will be skipped (no name, bad email/phone/website/handle), then importMarketingLeads(rows, mapping) adds or merges every usable row and reports each one; the import is a LEAD_IMPORT run with steps "Check the rows" and "Add or merge the leads".',
+        steps: [
+          ['Press Import CSV and pick a .xlsx', '"Pick a .csv file."'],
+          ['Pick a CSV with a header and three rows, one with phone "12"', '"3 rows found in <file>."; Name, Email and Phone are mapped from the header; the preview shows the rows; "1 rows will be skipped · Row 3 · "12" is not a phone number"'],
+          ['Pick a pipeline and press "Import 3 rows"', '"<n> added, <m> merged, 1 skipped." with the skipped row and its reason, and a link "See the run on Activity" to /activity?workflow=LEAD_IMPORT; the table and cards reload'],
+          ['Open the run on Activity', 'Workflow "Lead import", steps Check the rows ("2 usable, 1 skipped") and Add or merge the leads ("<n> added, <m> merged")'],
+        ],
+      },
+      {
+        name: 'Promote a lead to the CRM',
+        description:
+          'promoteMarketingLeadToCrm(id, kind) makes the CRM record through crmService.createVenueLead / createHostLead / createEcommLead (so the CRM\'s own phone-uniqueness rule applies), stores crm_ref on the lead, adds a PROMOTED timeline entry, and refuses a second promotion, a kind the pipeline does not fit (VENUE→VENUE, HOST→HOST, BRAND/ADVERTISER→ECOMM; INFLUENCER and GENERAL cannot be promoted) and a venue lead without a city. The row is claimed before the record is made, so two clicks make one record.',
+        steps: [
+          ['As a manager open a Venue lead with a city and press Promote to CRM', 'Dialog "Promote to the CRM" with Becomes preset to "venue lead"'],
+          ['Confirm', 'Toast "Promoted. Sales can see the venue lead in the CRM now."; the drawer shows "In the CRM as a venue lead." with "Open in CRM" leading to the CRM portal\'s /venue-leads/<id>/view; History gains "Promoted"'],
+          ['Press Promote again', 'The button is gone; the API refuses with "This lead was already promoted to a VENUE lead."'],
+          ['Open a Host lead and pick "ecomm lead" in Becomes', 'Refused: "A HOST lead becomes a HOST lead in the CRM, not ECOMM."'],
+          ['Open an Influencer or General lead', 'Promote is disabled with "Only Venue, Host, Brand and Advertiser leads can be promoted."'],
+          ['Promote a Venue lead whose phone a CRM venue lead already has', 'The CRM\'s refusal "A venue lead with this phone number already exists" is shown; the lead stays unpromoted and can be promoted once the clash is fixed'],
+          ['Promote with a MARKETING_EDITOR token', 'Access Denied'],
         ],
       },
     ],

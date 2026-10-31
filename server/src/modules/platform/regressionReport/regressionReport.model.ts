@@ -3,8 +3,8 @@ import { Schema, model, type Document, type Types } from 'mongoose';
 /**
  * What changed between a finished run and the run before it.
  *
- * One report per run, for unit runs (test by test) and E2E runs (suite by
- * suite). The baseline is the previous finished run of the same kind on the
+ * One report per run, for unit runs (test by test) and E2E runs (scenario by
+ * scenario; suite by suite for runs that reported no scenarios). The baseline is the previous finished run of the same kind on the
  * same branch — and, for unit runs, of the same workflow, because sonar.yml
  * and coverage.yml run different sets of workspaces.
  *
@@ -174,7 +174,7 @@ regressionReportSchema.index({ kind: 1, state: 1, created_at: -1 });
 
 export const RegressionReportModel = model<IRegressionReport>('RegressionReport', regressionReportSchema);
 
-/** One test (unit) that landed in a bucket. */
+/** One test that landed in a bucket: a unit test, or an E2E scenario (workspace = suite, file = project/spec). */
 export interface IRegressionItem extends Document {
   report_id: Types.ObjectId;
   bucket: RegressionBucket;

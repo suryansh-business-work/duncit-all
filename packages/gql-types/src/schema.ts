@@ -30109,7 +30109,7 @@ export type Query = {
    */
   regionPodPayments: PaymentTablePage;
   regressionReport?: Maybe<RegressionReport>;
-  /** A unit report's tests, one bucket at a time (filter on bucket). */
+  /** A report's tests or E2E scenarios, one bucket at a time (filter on bucket). */
   regressionReportItemsTable: RegressionItemTablePage;
   /** Every regression report, newest first. Filter on kind, status, branch. Tests/Tech managers. */
   regressionReportsTable: RegressionReportTablePage;
@@ -35859,7 +35859,7 @@ export type RegressionCoverageDelta = {
   workspace: Scalars['String']['output'];
 };
 
-/** One unit test in a bucket. */
+/** One test in a bucket: a unit test, or an E2E scenario (workspace is its suite, file its project/spec). */
 export type RegressionItem = {
   __typename?: 'RegressionItem';
   bucket: RegressionBucket;
@@ -35880,7 +35880,7 @@ export type RegressionItemTablePage = {
   total: Scalars['Int']['output'];
 };
 
-/** What a regression report compares: unit runs test by test, E2E runs suite by suite. */
+/** What a regression report compares: unit runs test by test, E2E runs scenario by scenario (suite by suite for runs that reported no scenarios). */
 export type RegressionKind =
   | 'E2E'
   | 'UNIT';
@@ -35904,7 +35904,7 @@ export type RegressionReport = {
   /** The run this report is about. */
   run_id: Scalars['ID']['output'];
   run_no: Scalars['String']['output'];
-  /** Workspaces left out because one of the runs has no results for them. */
+  /** Workspaces (unit) or suites (E2E) left out because one of the runs has no results for them. */
   skipped_workspaces: Array<Scalars['String']['output']>;
   status: RegressionStatus;
   /** E2E only: every suite in either run. */

@@ -9,6 +9,7 @@ import {
   type UnitTestCaseStatus,
 } from '@modules/platform/unitTestRun/unitTestRun.model';
 import { pctOf } from '@modules/platform/unitTestRun/unitTestRun.public';
+import type { E2eScenarioState } from '@modules/platform/e2eRun/e2eRun.model';
 import type {
   IRegressionCounts,
   IRegressionCoverageDelta,
@@ -60,8 +61,15 @@ export interface UnitComparison {
 
 type RunForCompare = Pick<IUnitTestRun, 'workspaces' | 'coverage'> & { _id: Types.ObjectId };
 
-/** Which bucket a test lands in, or null when nothing worth reporting changed. */
-export function classify(before: UnitTestCaseStatus | undefined, after: UnitTestCaseStatus): RegressionBucket | null {
+/**
+ * Which bucket a test lands in, or null when nothing worth reporting changed.
+ * Shared with the E2E scenario comparison: only PASSED and FAILED are judged,
+ * so a skipped, todo or pending test never moves a bucket.
+ */
+export function classify(
+  before: UnitTestCaseStatus | E2eScenarioState | undefined,
+  after: UnitTestCaseStatus | E2eScenarioState
+): RegressionBucket | null {
   if (before === undefined) return after === 'FAILED' ? 'NEW_FAILING' : 'NEW_TESTS';
   if (before === 'PASSED' && after === 'FAILED') return 'REGRESSED';
   if (before === 'FAILED' && after === 'PASSED') return 'FIXED';
@@ -123,7 +131,7 @@ function coverageDeltas(run: RunForCompare, base: RunForCompare): IRegressionCov
 }
 
 /** Collects bucket items up to each cap, counting every one. */
-class BucketCollector {
+export class BucketCollector {
   readonly counts: IRegressionCounts = {
     regressed: 0,
     fixed: 0,

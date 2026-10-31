@@ -45,6 +45,9 @@ export const E2E_FLOW_SPEC_LINKS: Readonly<Record<string, readonly string[]>> = 
   'Admin: Hub & Navigation': [
     'support/__tests__/e2e/specs/admin/hub-navigation.cy.ts',
   ],
+  'Admin: Localization Auto-translate': ['mweb/__tests__/e2e/specs/api/staff/localization-console.cy.ts'],
+  'Admin: Localization Locales': ['mweb/__tests__/e2e/specs/api/staff/localization-console.cy.ts', 'mweb/__tests__/e2e/specs/api/staff/read-vs-write.cy.ts'],
+  'Admin: Localization Translations': ['mweb/__tests__/e2e/specs/api/staff/localization-console.cy.ts', 'mweb/__tests__/e2e/specs/api/staff/read-vs-write.cy.ts'],
   'Admin: Locations': [
     'support/__tests__/e2e/specs/admin/locations.cy.ts',
   ],
@@ -95,9 +98,11 @@ export const E2E_FLOW_SPEC_LINKS: Readonly<Record<string, readonly string[]>> = 
   'Admin: User Interests, Badges & Surveys': [
     'support/__tests__/e2e/specs/admin/user-interests-badges-surveys.cy.ts',
   ],
+  'Admin: User Payments, Coins & Shop Orders': ['mweb/__tests__/e2e/specs/api/staff/user-payments-and-shop-orders.cy.ts'],
   'Admin: User Profile & Account Status': [
     'support/__tests__/e2e/specs/admin/user-profile-account-status.cy.ts',
   ],
+  'Admin: User Roles & Host Categories': ['mweb/__tests__/e2e/specs/api/staff/user-roles-and-host-categories.cy.ts'],
   'Admin: User Verification Review': [
     'support/__tests__/e2e/specs/admin/user-verification-review.cy.ts',
   ],
@@ -107,6 +112,10 @@ export const E2E_FLOW_SPEC_LINKS: Readonly<Record<string, readonly string[]>> = 
     'support/__tests__/e2e/specs/admin/users-dashboard.cy.ts',
     'support/__tests__/e2e/specs/admin/users.cy.ts',
   ],
+  'Ads Portal: Ad request details': ['mweb/__tests__/e2e/specs/api/staff/ads-portal.cy.ts'],
+  'Ads Portal: Create Ad': ['mweb/__tests__/e2e/specs/api/staff/ads-portal.cy.ts'],
+  'Ads Portal: Dashboard': ['mweb/__tests__/e2e/specs/api/staff/ads-portal.cy.ts', 'mweb/__tests__/e2e/specs/api/staff/ads.cy.ts'],
+  'Ads Portal: My Ads': ['mweb/__tests__/e2e/specs/api/staff/ads-portal.cy.ts'],
   'Ads Website: Footer and newsletter': [
     'mweb/__tests__/e2e/specs/ui/websites/ads/newsletter.cy.ts',
   ],
@@ -116,12 +125,22 @@ export const E2E_FLOW_SPEC_LINKS: Readonly<Record<string, readonly string[]>> = 
   'Ads Website: Placements and campaign calculator': [
     'mweb/__tests__/e2e/specs/ui/websites/ads/rate-card-calculator.cy.ts',
   ],
+  'AI: AI Library': ['mweb/__tests__/e2e/specs/api/other/ai-prompts.cy.ts', 'mweb/__tests__/e2e/specs/api/staff/ai-console.cy.ts'],
+  'AI: AI Monitoring logs': ['mweb/__tests__/e2e/specs/api/staff/ai-console.cy.ts'],
+  'AI: AI Monitoring settings': ['mweb/__tests__/e2e/specs/api/staff/ai-console.cy.ts'],
+  'AI: Automation flows': ['mweb/__tests__/e2e/specs/api/other/ai-automation-inbound-webhook.cy.ts', 'mweb/__tests__/e2e/specs/api/staff/ai-console.cy.ts'],
+  'AI: OpenAI Dashboard': ['mweb/__tests__/e2e/specs/api/staff/ai-console.cy.ts'],
+  'AI: OpenAI Logs': ['mweb/__tests__/e2e/specs/api/staff/ai-console.cy.ts'],
+  'AI: Reel Studio': ['mweb/__tests__/e2e/specs/api/other/reel-studio-media.cy.ts', 'mweb/__tests__/e2e/specs/api/staff/ai-console.cy.ts'],
+  'AI: Welcome page': ['mweb/__tests__/e2e/specs/api/staff/ai-console.cy.ts'],
+  'Analytics: Access': ['mweb/__tests__/e2e/specs/api/staff/analytics-console.cy.ts', 'mweb/__tests__/e2e/specs/api/staff/authorization.cy.ts'],
   'Analytics: Alerts': [
     'mweb/__tests__/e2e/specs/api/staff/alerts.cy.ts',
   ],
   'Analytics: Analytics Mails': [
     'mweb/__tests__/e2e/specs/api/staff/analytics-mails.cy.ts',
   ],
+  'Analytics: Dashboards': ['mweb/__tests__/e2e/specs/api/staff/analytics-console.cy.ts'],
   'App: Account Deletion': [
     'mobile-app/__tests__/e2e/specs/08-delete.cy.ts',
     'mweb/__tests__/e2e/specs/08-delete.cy.ts',
@@ -130,6 +149,9 @@ export const E2E_FLOW_SPEC_LINKS: Readonly<Record<string, readonly string[]>> = 
   'App: Address Book': [
     'mweb/__tests__/e2e/specs/ui/account/address-book.cy.ts',
   ],
+  'App: App popups & Something for you': ['mweb/__tests__/e2e/specs/api/apps/app-popups-something-for-you.cy.ts'],
+  'App: Attendance & Visited - Attendee View': ['mweb/__tests__/e2e/specs/api/apps/attendance-attendee.cy.ts'],
+  'App: Backout & Refunds': ['mweb/__tests__/e2e/specs/api/apps/backout-refusals.cy.ts', 'mweb/__tests__/e2e/specs/api/apps/bookings.cy.ts', 'mweb/__tests__/e2e/specs/api/apps/free-physical-pods.cy.ts'],
   'App: Badges': [
     'mweb/__tests__/e2e/specs/ui/account/badges.cy.ts',
   ],
@@ -152,12 +174,20 @@ export const E2E_FLOW_SPEC_LINKS: Readonly<Record<string, readonly string[]>> = 
   'App: Communication Preferences': [
     'mweb/__tests__/e2e/specs/ui/account/communication-preferences.cy.ts',
   ],
+  'App: Contact Details Change': ['mobile-app/__tests__/e2e/specs/04-profile.cy.ts', 'mweb/__tests__/e2e/specs/04-profile.cy.ts'],
+  'App: Contacts invite': ['mweb/__tests__/e2e/specs/api/apps/contacts-on-duncit.cy.ts'],
   'App: Duncit Coins wallet': [
     'mweb/__tests__/e2e/specs/api/apps/duncit-coins.cy.ts',
   ],
+  'App: Duncit Lite - Calendars and Profile': ['mweb/__tests__/e2e/specs/api/apps/duncit-lite.cy.ts'],
+  'App: Duncit Lite - Discovery': ['mweb/__tests__/e2e/specs/api/apps/duncit-lite.cy.ts'],
+  'App: Duncit Lite - Hosting': ['mweb/__tests__/e2e/specs/api/apps/duncit-lite.cy.ts'],
+  'App: Duncit Lite - Registration': ['mweb/__tests__/e2e/specs/api/apps/duncit-lite.cy.ts'],
+  'App: Duncit Lite - Sign In': ['mweb/__tests__/e2e/specs/api/apps/duncit-lite.cy.ts'],
   'App: Earn with Duncit': [
     'mweb/__tests__/e2e/specs/ui/earn/partner-onboarding.cy.ts',
   ],
+  'App: Error Boundaries': ['mweb/__tests__/e2e/specs/ui/account/error-boundaries.cy.ts'],
   'App: Explore reels': [
     'mweb/__tests__/e2e/specs/ui/discovery/explore-reels.cy.ts',
   ],
@@ -167,13 +197,16 @@ export const E2E_FLOW_SPEC_LINKS: Readonly<Record<string, readonly string[]>> = 
   'App: Following feed': [
     'mweb/__tests__/e2e/specs/ui/social/following-feed.cy.ts',
   ],
+  'App: Force Update and App Version': ['mweb/__tests__/e2e/specs/ui/account/app-version.cy.ts'],
   'App: Gift cards': [
     'mweb/__tests__/e2e/specs/ui/commerce/gift-cards-2.cy.ts',
     'mweb/__tests__/e2e/specs/ui/commerce/gift-cards-3.cy.ts',
   ],
+  'App: Help Center and FAQs': ['mobile-app/__tests__/e2e/specs/06-support.cy.ts', 'mweb/__tests__/e2e/specs/06-support.cy.ts'],
   'App: Host - Attendance Board & Scanning': [
     'mweb/__tests__/e2e/specs/api/apps/host-attendance.cy.ts',
   ],
+  'App: Host - Auto Pods': ['mweb/__tests__/e2e/specs/api/apps/auto-pods-member.cy.ts', 'partners-app/__tests__/e2e/specs/ui/auto-pods-2.cy.ts'],
   'App: Host - Cancel Pod': [
     'mweb/__tests__/e2e/specs/api/apps/host-cancel-pod.cy.ts',
   ],
@@ -197,9 +230,11 @@ export const E2E_FLOW_SPEC_LINKS: Readonly<Record<string, readonly string[]>> = 
   'App: Live Pod Challenges': [
     'mweb/__tests__/e2e/specs/api/apps/live-pod-challenges.cy.ts',
   ],
+  'App: Live Support Chat': ['mobile-app/__tests__/e2e/specs/06-support.cy.ts', 'mweb/__tests__/e2e/specs/06-support.cy.ts'],
   'App: Membership (coming soon)': [
     'mweb/__tests__/e2e/specs/ui/account/membership.cy.ts',
   ],
+  'App: Notification Permission': ['mweb/__tests__/e2e/specs/api/apps/notification-permission.cy.ts'],
   'App: Notifications inbox': [
     'mweb/__tests__/e2e/specs/ui/account/notifications.cy.ts',
   ],
@@ -217,6 +252,7 @@ export const E2E_FLOW_SPEC_LINKS: Readonly<Record<string, readonly string[]>> = 
     'mobile-app/__tests__/e2e/specs/03-forgot-password.cy.ts',
     'mweb/__tests__/e2e/specs/03-forgot-password.cy.ts',
   ],
+  'App: Pod and Club Locality Chips': ['mweb/__tests__/e2e/specs/ui/discovery/discovery.cy.ts', 'mweb/__tests__/e2e/specs/ui/discovery/locality-chips.cy.ts'],
   'App: Pod Booking & Checkout': [
     'mweb/__tests__/e2e/specs/api/apps/free-physical-pods.cy.ts',
     'mweb/__tests__/e2e/specs/ui/pods/free-physical-pods.cy.ts',
@@ -273,6 +309,7 @@ export const E2E_FLOW_SPEC_LINKS: Readonly<Record<string, readonly string[]>> = 
     'mweb/__tests__/e2e/specs/api/apps/privacy-gdpr.cy.ts',
     'mweb/__tests__/e2e/specs/ui/account/privacy-gdpr.cy.ts',
   ],
+  'App: Product checkout & payment': ['mweb/__tests__/e2e/specs/api/apps/product-checkout-validation.cy.ts', 'mweb/__tests__/e2e/specs/ui/commerce/cart.cy.ts'],
   'App: Product details & reviews': [
     'mweb/__tests__/e2e/specs/ui/commerce/product-details.cy.ts',
   ],
@@ -299,6 +336,7 @@ export const E2E_FLOW_SPEC_LINKS: Readonly<Record<string, readonly string[]>> = 
   'App: Refer & Earn': [
     'mweb/__tests__/e2e/specs/api/apps/referrals.cy.ts',
   ],
+  'App: Report a Problem and Grievance': ['mobile-app/__tests__/e2e/specs/06-support.cy.ts', 'mweb/__tests__/e2e/specs/06-support.cy.ts'],
   'App: Report Content': [
     'mweb/__tests__/e2e/specs/api/apps/social-safety.cy.ts',
   ],
@@ -329,6 +367,7 @@ export const E2E_FLOW_SPEC_LINKS: Readonly<Record<string, readonly string[]>> = 
     'mweb/__tests__/e2e/specs/01-signup.cy.ts',
     'mweb/__tests__/e2e/specs/09-google.cy.ts',
   ],
+  'App: SOS and Callback': ['mobile-app/__tests__/e2e/specs/06-support.cy.ts', 'mweb/__tests__/e2e/specs/06-support.cy.ts'],
   'App: Stories': [
     'mweb/__tests__/e2e/specs/ui/social/social-stories.cy.ts',
   ],
@@ -344,6 +383,7 @@ export const E2E_FLOW_SPEC_LINKS: Readonly<Record<string, readonly string[]>> = 
   'App: Tour Guide': [
     'mweb/__tests__/e2e/specs/ui/account/tour-guide.cy.ts',
   ],
+  'App: Venue Auto Pods': ['mweb/__tests__/e2e/specs/api/apps/auto-pods-member.cy.ts'],
   'App: Venue Earnings': [
     'mweb/__tests__/e2e/specs/api/apps/venue-earnings.cy.ts',
   ],
@@ -354,6 +394,8 @@ export const E2E_FLOW_SPEC_LINKS: Readonly<Record<string, readonly string[]>> = 
     'mweb/__tests__/e2e/specs/api/apps/venue-food-ordering.cy.ts',
     'mweb/__tests__/e2e/specs/ui/venues/venue-food-ordering.cy.ts',
   ],
+  'App: Venue Pricing Module': ['mweb/__tests__/e2e/specs/api/fixtures/venue-pricing.cy.ts'],
+  'App: Venue Settings - Cancellation Policy': ['mweb/__tests__/e2e/specs/api/fixtures/venue-settings.cy.ts', 'mweb/__tests__/e2e/specs/api/partners/venue-cancellation-policy.cy.ts'],
   'App: Venue Slot Requests': [
     'mweb/__tests__/e2e/specs/11-venue-offer.cy.ts',
     'mweb/__tests__/e2e/specs/api/apps/venue-slot-requests.cy.ts',
@@ -364,6 +406,12 @@ export const E2E_FLOW_SPEC_LINKS: Readonly<Record<string, readonly string[]>> = 
   'App: Verification': [
     'mweb/__tests__/e2e/specs/ui/account/verification.cy.ts',
   ],
+  'App: Workshop & Event Requests': ['mweb/__tests__/e2e/specs/api/apps/venue-slot-requests.cy.ts', 'mweb/__tests__/e2e/specs/api/fixtures/venue-event-requests.cy.ts'],
+  'Challenges: Challenge management': ['mweb/__tests__/e2e/specs/api/staff/challenges-console.cy.ts'],
+  'Challenges: Dashboard': ['mweb/__tests__/e2e/specs/api/staff/challenges-console.cy.ts'],
+  'Challenges: Leaderboard boards': ['mweb/__tests__/e2e/specs/api/staff/challenges-console.cy.ts'],
+  'Challenges: Points Ledger': ['mweb/__tests__/e2e/specs/api/staff/challenges-console.cy.ts'],
+  'Challenges: Settings and rewards': ['mweb/__tests__/e2e/specs/api/staff/challenges-console.cy.ts'],
   'Club Admins: Access & Dashboard': [
     'mweb/__tests__/e2e/specs/api/partners/club-admins-console-access.cy.ts',
   ],
@@ -374,12 +422,14 @@ export const E2E_FLOW_SPEC_LINKS: Readonly<Record<string, readonly string[]>> = 
     'mweb/__tests__/e2e/specs/api/partners/club-admin-directory.cy.ts',
     'support/__tests__/e2e/specs/club-admins/club-admin-directory.cy.ts',
   ],
+  'Clubs: Access & Dashboard': ['support/__tests__/e2e/specs/clubs/club-directory.cy.ts'],
   'Clubs: Club Editor': [
     'support/__tests__/e2e/specs/clubs/club-editor.cy.ts',
   ],
   'Clubs: Club List': [
     'support/__tests__/e2e/specs/clubs/club-directory.cy.ts',
   ],
+  'Clubs: Club Record': ['support/__tests__/e2e/specs/clubs/club-directory.cy.ts'],
   'Clubs: Requests for Club Admins': [
     'support/__tests__/e2e/specs/clubs/club-slot-requests.cy.ts',
   ],
@@ -403,6 +453,7 @@ export const E2E_FLOW_SPEC_LINKS: Readonly<Record<string, readonly string[]>> = 
   'CRM: Data catalogues': [
     'support/__tests__/e2e/specs/crm/data-catalogues.cy.ts',
   ],
+  'CRM: Dynamic Fields': ['mweb/__tests__/e2e/specs/api/staff/crm-reminders-dynamic-fields.cy.ts'],
   'CRM: Ecomm Leads': [
     'support/__tests__/e2e/specs/crm/ecomm-leads.cy.ts',
   ],
@@ -412,12 +463,19 @@ export const E2E_FLOW_SPEC_LINKS: Readonly<Record<string, readonly string[]>> = 
   'CRM: Host Leads': [
     'support/__tests__/e2e/specs/crm/host-leads.cy.ts',
   ],
+  'CRM: Lead calls and emails': ['mweb/__tests__/e2e/specs/api/staff/access-and-dashboard.cy.ts', 'mweb/__tests__/e2e/specs/api/staff/read-vs-write.cy.ts'],
+  'CRM: Lead survey, website, reminders and logs': ['mweb/__tests__/e2e/specs/api/staff/crm-lead-tabs.cy.ts', 'mweb/__tests__/e2e/specs/api/staff/crm-reminders-dynamic-fields.cy.ts'],
+  'CRM: Reminders': ['mweb/__tests__/e2e/specs/api/staff/crm-reminders-dynamic-fields.cy.ts'],
   'CRM: Venue Leads': [
     'support/__tests__/e2e/specs/crm/venue-leads.cy.ts',
   ],
+  'CRM: WhatsApp Lead Generator': ['mweb/__tests__/e2e/specs/api/staff/crm-whatsapp-lead-generator.cy.ts'],
   'CRM: WhatsApp Leads': [
     'support/__tests__/e2e/specs/crm/whatsapp-leads.cy.ts',
   ],
+  'Developers: API keys': ['mweb/__tests__/e2e/specs/api/other/api-authorization.cy.ts'],
+  'Developers: API reference and Try-It': ['mweb/__tests__/e2e/specs/api/other/venue-public-api.cy.ts'],
+  'Developers: Dashboard': ['mweb/__tests__/e2e/specs/api/staff/console-login-gates.cy.ts'],
   'Earn With Website: Earnings calculator': [
     'mweb/__tests__/e2e/specs/ui/websites/earnwith/earnings-calculator.cy.ts',
   ],
@@ -432,6 +490,13 @@ export const E2E_FLOW_SPEC_LINKS: Readonly<Record<string, readonly string[]>> = 
     'mweb/__tests__/e2e/specs/api/staff/ecomm-store-console-access.cy.ts',
     'support/__tests__/e2e/specs/ecomm-portal/store-access.cy.ts',
   ],
+  'Ecomm Portal: Catalogue': ['mweb/__tests__/e2e/specs/api/partners/store-console-catalogue-marketing.cy.ts'],
+  'Ecomm Portal: Marketing': ['mweb/__tests__/e2e/specs/api/partners/store-console-catalogue-marketing.cy.ts'],
+  'Ecomm Portal: Orders & Shipping': ['mweb/__tests__/e2e/specs/api/partners/store-console-orders-returns.cy.ts'],
+  'Ecomm Portal: Returns, Reviews & Customers': ['mweb/__tests__/e2e/specs/api/partners/store-console-orders-returns.cy.ts', 'mweb/__tests__/e2e/specs/api/partners/store-admin-access.cy.ts'],
+  'Ecomm Portal: Settings & Access': ['mweb/__tests__/e2e/specs/api/partners/store-console-settings.cy.ts', 'mweb/__tests__/e2e/specs/api/partners/store-admin-access.cy.ts'],
+  'Ecomm Store: Account': ['mweb/__tests__/e2e/specs/api/partners/store-shopper-account.cy.ts', 'mweb/__tests__/e2e/specs/ui/account/address-book.cy.ts'],
+  'Ecomm Store: Autoship': ['mweb/__tests__/e2e/specs/api/partners/store-subscriptions.cy.ts', 'mweb/__tests__/e2e/specs/api/partners/store-shopper-isolation.cy.ts'],
   'Ecomm Store: Browsing & Search': [
     'mweb/__tests__/e2e/specs/ui/websites/ecomm/store-browsing.cy.ts',
     'mweb/__tests__/e2e/specs/ui/websites/ecomm/store-product.cy.ts',
@@ -450,6 +515,9 @@ export const E2E_FLOW_SPEC_LINKS: Readonly<Record<string, readonly string[]>> = 
   'Ecomm Store: Orders & Returns': [
     'mweb/__tests__/e2e/specs/ui/websites/ecomm/store-track.cy.ts',
   ],
+  'Ecomm Store: Shopper Access & Privacy': ['mweb/__tests__/e2e/specs/api/partners/store-shopper-privacy.cy.ts', 'mweb/__tests__/e2e/specs/api/partners/store-shopper-isolation.cy.ts'],
+  'Employee: Console access and dashboard': ['mweb/__tests__/e2e/specs/api/other/api-authorization.cy.ts', 'mweb/__tests__/e2e/specs/api/staff/workplace-consoles-access.cy.ts'],
+  'Employee: My Expenses': ['mweb/__tests__/e2e/specs/api/staff/workplace-consoles-access.cy.ts'],
   'Finance: Access and dashboards': [
     'mweb/__tests__/e2e/specs/api/staff/access-and-dashboards.cy.ts',
     'mweb/__tests__/e2e/specs/api/staff/authorization.cy.ts',
@@ -525,6 +593,7 @@ export const E2E_FLOW_SPEC_LINKS: Readonly<Record<string, readonly string[]>> = 
   'Hosts: Host List & Record': [
     'support/__tests__/e2e/specs/hosts/host-directory.cy.ts',
   ],
+  'HR: Console access and dashboard': ['mweb/__tests__/e2e/specs/api/staff/workplace-consoles-access.cy.ts'],
   'Legal: Access and dashboard': [
     'mweb/__tests__/e2e/specs/api/staff/access-and-dashboard.cy.ts',
     'mweb/__tests__/e2e/specs/api/staff/legal-console-access.cy.ts',
@@ -551,6 +620,7 @@ export const E2E_FLOW_SPEC_LINKS: Readonly<Record<string, readonly string[]>> = 
   'Legal: UGC Monitoring': [
     'support/__tests__/e2e/specs/legal/ugc-monitoring.cy.ts',
   ],
+  'Localization: Access': ['mweb/__tests__/e2e/specs/api/staff/console-login-gates.cy.ts'],
   'Logs: Access': [
     'mweb/__tests__/e2e/specs/api/staff/logs-console-access.cy.ts',
     'support/__tests__/e2e/specs/logs/console-access.cy.ts',
@@ -572,27 +642,39 @@ export const E2E_FLOW_SPEC_LINKS: Readonly<Record<string, readonly string[]>> = 
   'Marketing: Ads': [
     'mweb/__tests__/e2e/specs/api/staff/ads.cy.ts',
   ],
+  'Marketing: App Popups': ['mweb/__tests__/e2e/specs/api/staff/marketing-notifications-popups.cy.ts'],
   'Marketing: Coupons': [
     'mweb/__tests__/e2e/specs/api/staff/coupons.cy.ts',
   ],
   'Marketing: Email campaigns': [
     'mweb/__tests__/e2e/specs/api/staff/ownership-move.cy.ts',
   ],
+  'Marketing: Mail Preferences analytics': ['mweb/__tests__/e2e/specs/api/staff/marketing-mail-preferences.cy.ts'],
+  'Marketing: Notifications': ['mweb/__tests__/e2e/specs/api/staff/marketing-notifications-popups.cy.ts'],
+  'Marketing: Occasions': ['mweb/__tests__/e2e/specs/api/staff/marketing-occasions.cy.ts'],
   'Marketing: Short Links': [
     'mweb/__tests__/e2e/specs/api/staff/short-links.cy.ts',
   ],
+  'Marketing: Social Accounts': ['mweb/__tests__/e2e/specs/api/staff/marketing-social.cy.ts'],
+  'Marketing: Social Calendar': ['mweb/__tests__/e2e/specs/api/staff/marketing-social.cy.ts'],
+  'Marketing: Status': ['mweb/__tests__/e2e/specs/api/staff/marketing-status-audience.cy.ts'],
+  'Marketing: Target Audience': ['mweb/__tests__/e2e/specs/api/staff/marketing-status-audience.cy.ts'],
+  'Marketing: WhatsApp campaigns': ['mweb/__tests__/e2e/specs/api/staff/ownership-move.cy.ts', 'mweb/__tests__/e2e/specs/api/staff/whatsapp-send-counts.cy.ts', 'support/__tests__/e2e/specs/communications/whatsapp-campaigns.cy.ts'],
   'Onboarding: Dashboard': [
     'support/__tests__/e2e/specs/onboarding/onboarding-dashboard.cy.ts',
   ],
   'Onboarding: Host Additional Requests': [
     'support/__tests__/e2e/specs/onboarding/host-requests.cy.ts',
   ],
+  'Onboarding: Host Edit Form': ['support/__tests__/e2e/specs/onboarding/host-edit-form.cy.ts'],
+  'Onboarding: Meeting Availability': ['support/__tests__/e2e/specs/onboarding/onboarding-meetings.cy.ts'],
   'Onboarding: Meeting Calendar': [
     'support/__tests__/e2e/specs/onboarding/onboarding-meetings.cy.ts',
   ],
   'Onboarding: Meeting Decisions': [
     'support/__tests__/e2e/specs/onboarding/applicant-approval.cy.ts',
   ],
+  'Onboarding: Meeting Schedule Queues': ['mweb/__tests__/e2e/specs/api/partners/onboarding-console-pages.cy.ts', 'mweb/__tests__/e2e/specs/api/partners/onboarding-intro-meetings.cy.ts', 'support/__tests__/e2e/specs/onboarding/onboarding-meetings.cy.ts'],
   'Onboarding: Onboarded Club Admins': [
     'support/__tests__/e2e/specs/onboarding/club-admin-review.cy.ts',
   ],
@@ -606,11 +688,13 @@ export const E2E_FLOW_SPEC_LINKS: Readonly<Record<string, readonly string[]>> = 
   'Onboarding: Onboarded Venues': [
     'support/__tests__/e2e/specs/onboarding/venue-review.cy.ts',
   ],
+  'Onboarding: Onboarding Settings': ['mweb/__tests__/e2e/specs/api/partners/onboarding-intro-meetings.cy.ts', 'support/__tests__/e2e/specs/onboarding/onboarding-settings.cy.ts'],
   'Onboarding: Portal Navigation & Product Flag': [
     'mweb/__tests__/e2e/specs/api/partners/onboarding-console-pages.cy.ts',
     'mweb/__tests__/e2e/specs/api/staff/onboarding-console-access.cy.ts',
     'support/__tests__/e2e/specs/onboarding/access-and-navigation.cy.ts',
   ],
+  'Onboarding: Scheduling Meetings': ['mweb/__tests__/e2e/specs/api/partners/onboarding-intro-meetings.cy.ts', 'support/__tests__/e2e/specs/onboarding/onboarding-meetings.cy.ts'],
   'Onboarding: Settings': [
     'support/__tests__/e2e/specs/onboarding/onboarding-settings.cy.ts',
   ],
@@ -618,15 +702,20 @@ export const E2E_FLOW_SPEC_LINKS: Readonly<Record<string, readonly string[]>> = 
     'mweb/__tests__/e2e/specs/api/partners/onboarding-surveys.cy.ts',
     'support/__tests__/e2e/specs/onboarding/onboarding-surveys.cy.ts',
   ],
+  'Onboarding: Surveys Hub & Lists': ['mweb/__tests__/e2e/specs/api/partners/onboarding-surveys.cy.ts', 'support/__tests__/e2e/specs/onboarding/onboarding-surveys.cy.ts'],
   'Partners Website: Footer and newsletter': [
     'mweb/__tests__/e2e/specs/ui/websites/partners/newsletter.cy.ts',
   ],
   'Partners Website: Landing page': [
     'mweb/__tests__/e2e/specs/ui/websites/partners/landing.cy.ts',
   ],
+  'Partners: Brand Deletion': ['mweb/__tests__/e2e/specs/api/partners/brand-orders-returns-deletion.cy.ts', 'mweb/__tests__/e2e/specs/api/partners/brand-studio-access.cy.ts'],
+  'Partners: Brand Integrations': ['mweb/__tests__/e2e/specs/api/partners/brand-orders-returns-deletion.cy.ts', 'mweb/__tests__/e2e/specs/api/partners/brand-studio-access.cy.ts'],
+  'Partners: Brand Orders': ['mweb/__tests__/e2e/specs/api/partners/brand-orders-returns-deletion.cy.ts', 'mweb/__tests__/e2e/specs/api/partners/brand-studio-access.cy.ts'],
   'Partners: Brand Orders & Returns': [
     'mweb/__tests__/e2e/specs/api/partners/store-shopper-isolation.cy.ts',
   ],
+  'Partners: Brand Returns': ['mweb/__tests__/e2e/specs/api/partners/brand-orders-returns-deletion.cy.ts', 'mweb/__tests__/e2e/specs/api/partners/brand-studio-access.cy.ts'],
   'Partners: Brand Settings & Warehouses': [
     'partners-app/__tests__/e2e/specs/ui/brand-warehouses.cy.ts',
   ],
@@ -634,6 +723,7 @@ export const E2E_FLOW_SPEC_LINKS: Readonly<Record<string, readonly string[]>> = 
     'mweb/__tests__/e2e/specs/api/partners/change-requests.cy.ts',
     'partners-app/__tests__/e2e/specs/ui/change-requests.cy.ts',
   ],
+  'Partners: Club Admin Auto Pods': ['mweb/__tests__/e2e/specs/api/partners/auto-pod-enrolment.cy.ts', 'partners-app/__tests__/e2e/specs/ui/auto-pods-2.cy.ts', 'partners-app/__tests__/e2e/specs/ui/club-pods.cy.ts'],
   'Partners: Club Admin Club Pods': [
     'partners-app/__tests__/e2e/specs/ui/club-pods.cy.ts',
   ],
@@ -647,6 +737,8 @@ export const E2E_FLOW_SPEC_LINKS: Readonly<Record<string, readonly string[]>> = 
   'Partners: Club Admin Mark Attendance': [
     'partners-app/__tests__/e2e/specs/ui/attendance.cy.ts',
   ],
+  'Partners: Club Admin Pod Details': ['partners-app/__tests__/e2e/specs/ui/attendance.cy.ts', 'partners-app/__tests__/e2e/specs/ui/club-pods.cy.ts'],
+  'Partners: Club Admin Pod Editor': ['mweb/__tests__/e2e/specs/api/fixtures/club-admin.cy.ts', 'partners-app/__tests__/e2e/specs/ui/club-pods.cy.ts'],
   'Partners: Club Admin Pod Monitoring': [
     'partners-app/__tests__/e2e/specs/ui/pod-monitoring.cy.ts',
   ],
@@ -692,12 +784,14 @@ export const E2E_FLOW_SPEC_LINKS: Readonly<Record<string, readonly string[]>> = 
   'Partners: Policies': [
     'partners-app/__tests__/e2e/specs/ui/legal-policies.cy.ts',
   ],
+  'Partners: Product Details & Reviews': ['mweb/__tests__/e2e/specs/api/partners/brand-product-settings-reviews.cy.ts', 'mweb/__tests__/e2e/specs/api/partners/brand-products.cy.ts', 'partners-app/__tests__/e2e/specs/ui/brand-products.cy.ts'],
   'Partners: Product Listing Editor': [
     'partners-app/__tests__/e2e/specs/ui/brand-products.cy.ts',
   ],
   'Partners: Product Listings': [
     'mweb/__tests__/e2e/specs/api/partners/brand-products.cy.ts',
   ],
+  'Partners: Product Settings': ['mweb/__tests__/e2e/specs/api/partners/brand-product-settings-reviews.cy.ts', 'partners-app/__tests__/e2e/specs/ui/brand-products.cy.ts'],
   'Partners: Profile': [
     'partners-app/__tests__/e2e/specs/02-profile.cy.ts',
   ],
@@ -705,6 +799,8 @@ export const E2E_FLOW_SPEC_LINKS: Readonly<Record<string, readonly string[]>> = 
     'mweb/__tests__/e2e/specs/api/partners/publish-page.cy.ts',
     'partners-app/__tests__/e2e/specs/ui/publish-page.cy.ts',
   ],
+  'Partners: Recurring Availability': ['mweb/__tests__/e2e/specs/api/fixtures/venue-availability.cy.ts', 'mweb/__tests__/e2e/specs/api/fixtures/venue-slot-templates.cy.ts', 'partners-app/__tests__/e2e/specs/ui/venue-availability-1.cy.ts'],
+  'Partners: Slot Decision Page': ['mweb/__tests__/e2e/specs/api/apps/venue-slot-requests.cy.ts', 'mweb/__tests__/e2e/specs/api/partners/venue-slot-requests.cy.ts', 'partners-app/__tests__/e2e/specs/ui/venue-slot-requests-1.cy.ts'],
   'Partners: Slot Requests': [
     'mweb/__tests__/e2e/specs/api/partners/club-slot-requests.cy.ts',
     'mweb/__tests__/e2e/specs/api/partners/venue-slot-requests.cy.ts',
@@ -716,6 +812,7 @@ export const E2E_FLOW_SPEC_LINKS: Readonly<Record<string, readonly string[]>> = 
   'Partners: Support': [
     'partners-app/__tests__/e2e/specs/ui/partner-support.cy.ts',
   ],
+  'Partners: Venue Auto Pods': ['mweb/__tests__/e2e/specs/api/partners/auto-pod-enrolment.cy.ts', 'partners-app/__tests__/e2e/specs/ui/access-navigation-1.cy.ts', 'partners-app/__tests__/e2e/specs/ui/venue-earnings-auto-pods.cy.ts'],
   'Partners: Venue Availability': [
     'mweb/__tests__/e2e/specs/api/fixtures/venue-availability.cy.ts',
     'mweb/__tests__/e2e/specs/api/partners/venue-availability.cy.ts',
@@ -724,6 +821,7 @@ export const E2E_FLOW_SPEC_LINKS: Readonly<Record<string, readonly string[]>> = 
   'Partners: Venue Dashboard': [
     'partners-app/__tests__/e2e/specs/ui/venue-dashboard-1.cy.ts',
   ],
+  'Partners: Venue Earnings': ['mweb/__tests__/e2e/specs/api/apps/venue-earnings.cy.ts', 'partners-app/__tests__/e2e/specs/ui/venue-earnings-auto-pods.cy.ts'],
   'Partners: Venue Food': [
     'mweb/__tests__/e2e/specs/api/fixtures/venue-food.cy.ts',
     'mweb/__tests__/e2e/specs/api/partners/venue-food.cy.ts',
@@ -741,6 +839,7 @@ export const E2E_FLOW_SPEC_LINKS: Readonly<Record<string, readonly string[]>> = 
   'Partners: Venue Food Orders': [
     'partners-app/__tests__/e2e/specs/ui/venue-food-orders.cy.ts',
   ],
+  'Partners: Venue Management': ['partners-app/__tests__/e2e/specs/ui/venue-registration-1.cy.ts'],
   'Partners: Venue Owner Access': [
     'mweb/__tests__/e2e/specs/api/partners/venue-studio-access.cy.ts',
   ],
@@ -777,6 +876,7 @@ export const E2E_FLOW_SPEC_LINKS: Readonly<Record<string, readonly string[]>> = 
     'mweb/__tests__/e2e/specs/api/partners/pods-console-pages.cy.ts',
     'support/__tests__/e2e/specs/pods/pod-admin.cy.ts',
   ],
+  'Pods Portal: Auto Pod Editor & Details': ['mweb/__tests__/e2e/specs/api/partners/auto-pod-enrolment.cy.ts', 'support/__tests__/e2e/specs/pods/auto-pods.cy.ts'],
   'Pods Portal: Auto Pods': [
     'support/__tests__/e2e/specs/pods/auto-pods.cy.ts',
   ],
@@ -786,9 +886,8 @@ export const E2E_FLOW_SPEC_LINKS: Readonly<Record<string, readonly string[]>> = 
   'Pods Portal: Complete a Pod': [
     'mweb/__tests__/e2e/specs/api/partners/pod-completion-payouts.cy.ts',
   ],
-  'Pods Portal: Pod Details': [
-    'support/__tests__/e2e/specs/pods/attendance.cy.ts',
-  ],
+  'Pods Portal: Event Tickets': ['mweb/__tests__/e2e/specs/api/partners/event-tickets.cy.ts', 'mweb/__tests__/e2e/specs/api/partners/pods-console-pages.cy.ts', 'support/__tests__/e2e/specs/pods/attendance.cy.ts'],
+  'Pods Portal: Pod Editor': ['support/__tests__/e2e/specs/pods/pod-admin.cy.ts'],
   'Pods Portal: Pod Ideas': [
     'mweb/__tests__/e2e/specs/api/partners/pod-ideas-moderation.cy.ts',
     'support/__tests__/e2e/specs/03-pods-portal.cy.ts',
@@ -862,6 +961,7 @@ export const E2E_FLOW_SPEC_LINKS: Readonly<Record<string, readonly string[]>> = 
     'support/__tests__/e2e/specs/shell/sign-in.cy.ts',
     'support/__tests__/e2e/specs/shell/two-factor-authenticator.cy.ts',
   ],
+  'Portal Shell: Staff calls': ['mweb/__tests__/e2e/specs/api/staff/staff-calls.cy.ts'],
   'Portal Shell: Staff chat': [
     'support/__tests__/e2e/specs/shell/staff-chat.cy.ts',
   ],
@@ -876,30 +976,58 @@ export const E2E_FLOW_SPEC_LINKS: Readonly<Record<string, readonly string[]>> = 
   'Products: Access & Product Visibility': [
     'support/__tests__/e2e/specs/products/access-and-navigation.cy.ts',
   ],
+  'Products: Brands Review': ['mweb/__tests__/e2e/specs/api/partners/products-brand-desk.cy.ts', 'mweb/__tests__/e2e/specs/api/partners/products-console.cy.ts'],
+  'Products: Cart Settings': ['mweb/__tests__/e2e/specs/api/partners/products-shop-settings.cy.ts'],
+  'Products: Catalog Brands': ['mweb/__tests__/e2e/specs/api/partners/products-brand-desk.cy.ts'],
+  'Products: Catalogue Deletion': ['mweb/__tests__/e2e/specs/api/partners/products-catalogue-deletion.cy.ts'],
+  'Products: Dashboard': ['mweb/__tests__/e2e/specs/api/partners/products-catalogue-editor.cy.ts'],
+  'Products: Deletion Requests': ['mweb/__tests__/e2e/specs/api/partners/products-catalogue-deletion.cy.ts'],
   'Products: Duncit Products': [
     'mweb/__tests__/e2e/specs/api/partners/products-console.cy.ts',
   ],
+  'Products: Ecomm Requests': ['mweb/__tests__/e2e/specs/api/partners/products-requests-warehouses.cy.ts'],
+  'Products: Orders & Fulfilment': ['mweb/__tests__/e2e/specs/api/partners/products-orders-returns.cy.ts'],
+  'Products: Pickup Locations': ['mweb/__tests__/e2e/specs/api/partners/products-requests-warehouses.cy.ts'],
+  'Products: Pod Shop Returns': ['mweb/__tests__/e2e/specs/api/partners/products-orders-returns.cy.ts'],
+  'Products: Pod Shop Slider': ['mweb/__tests__/e2e/specs/api/partners/products-shop-settings.cy.ts'],
+  'Products: Product Editor': ['mweb/__tests__/e2e/specs/api/partners/products-catalogue-editor.cy.ts'],
+  'Products: Product Returns': ['mweb/__tests__/e2e/specs/api/partners/products-orders-returns.cy.ts'],
+  'Products: Products Reviews': ['mweb/__tests__/e2e/specs/api/partners/products-catalogue-editor.cy.ts'],
+  'Products: Warehouse Approval': ['mweb/__tests__/e2e/specs/api/partners/products-requests-warehouses.cy.ts'],
+  'Regional Club Admin: Club Admins': ['mweb/__tests__/e2e/specs/api/partners/region-console.cy.ts', 'mweb/__tests__/e2e/specs/api/partners/region-members-and-pods.cy.ts'],
+  'Regional Club Admin: Pod Detail': ['mweb/__tests__/e2e/specs/api/partners/region-members-and-pods.cy.ts'],
   'Regional Club Admin: Region Structure': [
     'mweb/__tests__/e2e/specs/api/partners/region-console.cy.ts',
   ],
+  'Server: Account deletion sweep': ['mweb/__tests__/e2e/specs/api/other/account-deletion-sweep.cy.ts', 'mweb/__tests__/e2e/specs/08-delete.cy.ts'],
   'Server: AI automation inbound webhook and scheduler': [
     'mweb/__tests__/e2e/specs/api/other/ai-automation-inbound-webhook.cy.ts',
   ],
+  'Server: Analytics report mails and alerts': ['mweb/__tests__/e2e/specs/api/staff/analytics-mails.cy.ts'],
+  'Server: App version sync and force update': ['mweb/__tests__/e2e/specs/api/other/app-version-sync.cy.ts'],
+  'Server: Database backup and E2E schedules': ['mweb/__tests__/e2e/specs/api/other/db-backup-download.cy.ts', 'mweb/__tests__/e2e/specs/api/staff/access-and-role-gates.cy.ts'],
+  'Server: Duncit Coin expiry': ['mweb/__tests__/e2e/specs/api/other/coin-expiry-ledger.cy.ts'],
+  'Server: Email sending and localization': ['mweb/__tests__/e2e/specs/api/other/email-log-outcomes.cy.ts'],
   'Server: GraphQL hardening': [
     'mweb/__tests__/e2e/specs/api/other/graphql-hardening.cy.ts',
   ],
   'Server: Health, logs ingest and API root': [
     'mweb/__tests__/e2e/specs/api/other/health-log-ingest-sse.cy.ts',
   ],
+  'Server: Mail automation (Gmail)': ['mweb/__tests__/e2e/specs/api/other/oauth-callbacks.cy.ts'],
   'Server: Payment reconciliation': [
     'mweb/__tests__/e2e/specs/api/other/payments-finalize.cy.ts',
   ],
+  'Server: Pod auto-cancel': ['mweb/__tests__/e2e/specs/api/other/pod-cancellation-risk.cy.ts'],
+  'Server: Pod cancellation risk alerts': ['mweb/__tests__/e2e/specs/api/other/pod-cancellation-risk.cy.ts'],
+  'Server: Pod draft cleanup': ['mweb/__tests__/e2e/specs/api/other/pod-draft-retention.cy.ts'],
   'Server: Public form intake and captcha': [
     'mweb/__tests__/e2e/specs/api/other/public-forms-captcha.cy.ts',
   ],
   'Server: Push and web push notifications': [
     'mweb/__tests__/e2e/specs/api/other/notification-sse.cy.ts',
   ],
+  'Server: Scheduled marketing campaigns': ['mweb/__tests__/e2e/specs/api/other/campaign-tracking.cy.ts'],
   'Server: ShipRocket webhook': [
     'mweb/__tests__/e2e/specs/api/other/shiprocket-webhook.cy.ts',
   ],
@@ -910,6 +1038,7 @@ export const E2E_FLOW_SPEC_LINKS: Readonly<Record<string, readonly string[]>> = 
     'mweb/__tests__/e2e/specs/api/other/reel-studio-media.cy.ts',
     'mweb/__tests__/e2e/specs/api/other/signed-feeds.cy.ts',
   ],
+  'Server: Social accounts sync, publishing and OAuth': ['mweb/__tests__/e2e/specs/api/other/oauth-callbacks.cy.ts'],
   'Server: Status probes and status API': [
     'mweb/__tests__/e2e/specs/api/other/status-probes.cy.ts',
   ],
@@ -923,6 +1052,7 @@ export const E2E_FLOW_SPEC_LINKS: Readonly<Record<string, readonly string[]>> = 
   'Server: Venue partner public API': [
     'mweb/__tests__/e2e/specs/api/other/venue-public-api.cy.ts',
   ],
+  'Status Website: Filters': ['mweb/__tests__/e2e/specs/ui/websites/status/service-board.cy.ts'],
   'Status Website: Report a problem': [
     'mweb/__tests__/e2e/specs/ui/websites/status/problem-report.cy.ts',
   ],
@@ -954,6 +1084,7 @@ export const E2E_FLOW_SPEC_LINKS: Readonly<Record<string, readonly string[]>> = 
   'Support: FAQs': [
     'support/__tests__/e2e/specs/support/faqs.cy.ts',
   ],
+  'Support: Mail Automation': ['mweb/__tests__/e2e/specs/api/staff/read-vs-write.cy.ts', 'mweb/__tests__/e2e/specs/api/staff/support-mail-automation.cy.ts'],
   'Support: Reported Problems': [
     'support/__tests__/e2e/specs/01-support-portal.cy.ts',
     'support/__tests__/e2e/specs/support/reported-problems.cy.ts',
@@ -965,29 +1096,50 @@ export const E2E_FLOW_SPEC_LINKS: Readonly<Record<string, readonly string[]>> = 
     'support/__tests__/e2e/specs/01-support-portal.cy.ts',
     'support/__tests__/e2e/specs/support/tickets.cy.ts',
   ],
+  'Targets: Console access and dashboard': ['mweb/__tests__/e2e/specs/api/staff/workplace-consoles-access.cy.ts'],
   'Tech: Access and role gates': [
     'mweb/__tests__/e2e/specs/api/staff/access-and-role-gates.cy.ts',
     'mweb/__tests__/e2e/specs/api/staff/tech-console-access.cy.ts',
   ],
+  'Tech: Account Deletions': ['mweb/__tests__/e2e/specs/api/staff/tech-releases-and-accounts.cy.ts'],
+  'Tech: App Builds': ['mweb/__tests__/e2e/specs/api/staff/tech-releases-and-accounts.cy.ts'],
+  'Tech: Authentication': ['mweb/__tests__/e2e/specs/api/staff/tech-platform-controls.cy.ts'],
+  'Tech: Data Clone': ['mweb/__tests__/e2e/specs/api/staff/tech-infrastructure.cy.ts'],
+  'Tech: Database': ['mweb/__tests__/e2e/specs/api/staff/tech-infrastructure.cy.ts'],
   'Tech: Database Backups': [
     'mweb/__tests__/e2e/specs/api/other/db-backup-download.cy.ts',
   ],
+  'Tech: Domain and DNS': ['mweb/__tests__/e2e/specs/api/staff/tech-infrastructure.cy.ts', 'mweb/__tests__/e2e/specs/api/staff/access-and-role-gates.cy.ts'],
+  'Tech: E2E Flows': ['mweb/__tests__/e2e/specs/api/staff/tests-console-gates.cy.ts'],
   'Tech: E2E Runs': [
     'mweb/__tests__/e2e/specs/api/staff/e2e-testing-api-access.cy.ts',
   ],
+  'Tech: E2E Settings': ['mweb/__tests__/e2e/specs/api/staff/tests-console-gates.cy.ts', 'mweb/__tests__/e2e/specs/api/staff/e2e-testing-api-access.cy.ts'],
   'Tech: Emails': [
     'support/__tests__/e2e/specs/communications/emails.cy.ts',
   ],
   'Tech: Environment Variables': [
     'mweb/__tests__/e2e/specs/api/staff/environment-variables.cy.ts',
   ],
+  'Tech: Feature Flags': ['mweb/__tests__/e2e/specs/api/staff/tech-platform-controls.cy.ts'],
+  'Tech: Google Analytics': ['mweb/__tests__/e2e/specs/api/staff/tech-platform-controls.cy.ts', 'mweb/__tests__/e2e/specs/ui/websites/all-sites/google-analytics.cy.ts'],
+  'Tech: GraphQL Monitor': ['mweb/__tests__/e2e/specs/api/staff/tests-console-gates.cy.ts'],
+  'Tech: Maintenance': ['mweb/__tests__/e2e/specs/api/staff/portal-app-settings.cy.ts'],
   'Tech: MSG91 OTP': [
     'support/__tests__/e2e/specs/communications/msg91-otp.cy.ts',
   ],
+  'Tech: Package Updates': ['mweb/__tests__/e2e/specs/api/staff/tech-releases-and-accounts.cy.ts', 'mweb/__tests__/e2e/specs/api/staff/access-and-role-gates.cy.ts'],
+  'Tech: Rate Limiting': ['mweb/__tests__/e2e/specs/api/staff/tech-platform-controls.cy.ts'],
+  'Tech: Security': ['mweb/__tests__/e2e/specs/api/staff/tech-infrastructure.cy.ts'],
+  'Tech: Server': ['mweb/__tests__/e2e/specs/api/staff/tech-infrastructure.cy.ts', 'mweb/__tests__/e2e/specs/api/staff/access-and-role-gates.cy.ts', 'mweb/__tests__/e2e/specs/api/staff/tech-console-access.cy.ts'],
+  'Tech: Slack': ['mweb/__tests__/e2e/specs/api/staff/tech-platform-controls.cy.ts'],
+  'Tech: Status Reports': ['mweb/__tests__/e2e/specs/api/staff/tech-releases-and-accounts.cy.ts'],
+  'Tech: Stress Testing': ['mweb/__tests__/e2e/specs/api/staff/tests-console-gates.cy.ts', 'mweb/__tests__/e2e/specs/api/staff/access-and-role-gates.cy.ts'],
   'Tech: Table API': [
     'mweb/__tests__/e2e/specs/api/other/table-get-api.cy.ts',
     'mweb/__tests__/e2e/specs/api/staff/table-api.cy.ts',
   ],
+  'Tech: Telemetry': ['mweb/__tests__/e2e/specs/api/staff/tests-console-gates.cy.ts', 'mweb/__tests__/e2e/specs/api/staff/logs-console.cy.ts', 'mweb/__tests__/e2e/specs/api/staff/delete-all.cy.ts', 'mweb/__tests__/e2e/specs/api/other/signed-feeds.cy.ts'],
   'Venues: Access & Dashboard': [
     'mweb/__tests__/e2e/specs/api/partners/venues-console-access.cy.ts',
   ],
@@ -1002,6 +1154,14 @@ export const E2E_FLOW_SPEC_LINKS: Readonly<Record<string, readonly string[]>> = 
   'Venues: Venue List': [
     'support/__tests__/e2e/specs/venues/venue-directory.cy.ts',
   ],
+  'Venues: Venue Record': ['support/__tests__/e2e/specs/venues/venue-directory.cy.ts', 'support/__tests__/e2e/specs/venues/venue-food-admin.cy.ts'],
+  'Website Portal: Career, Newsroom and Blog content': ['mweb/__tests__/e2e/specs/api/staff/website-content-navigation.cy.ts', 'mweb/__tests__/e2e/specs/api/staff/website-portal.cy.ts'],
+  'Website Portal: Contact submissions': ['mweb/__tests__/e2e/specs/api/staff/website-portal.cy.ts'],
+  'Website Portal: Dashboard': ['mweb/__tests__/e2e/specs/api/staff/website-portal.cy.ts'],
+  'Website Portal: Job applications': ['mweb/__tests__/e2e/specs/api/staff/website-portal.cy.ts'],
+  'Website Portal: Newsletter subscribers': ['mweb/__tests__/e2e/specs/api/staff/website-portal.cy.ts'],
+  'Website Portal: Website navigation': ['mweb/__tests__/e2e/specs/api/staff/website-content-navigation.cy.ts'],
+  'Website Portal: Website reels': ['mweb/__tests__/e2e/specs/api/staff/website-reels.cy.ts', 'mweb/__tests__/e2e/specs/ui/websites/all-sites/reel-slider.cy.ts'],
   'Website Portal: Websites CMS': [
     'mweb/__tests__/e2e/specs/api/other/websites-cms-dns.cy.ts',
   ],
@@ -1031,6 +1191,7 @@ export const E2E_FLOW_SPEC_LINKS: Readonly<Record<string, readonly string[]>> = 
     'mweb/__tests__/e2e/specs/ui/websites/all-sites/reel-slider.cy.ts',
     'mweb/__tests__/e2e/specs/ui/websites/main/home.cy.ts',
   ],
+  'Website: Localization': ['mweb/__tests__/e2e/specs/ui/websites/main/home.cy.ts'],
   'Website: Navigation and footer': [
     'mweb/__tests__/e2e/specs/ui/websites/main/navigation.cy.ts',
   ],
@@ -1040,6 +1201,7 @@ export const E2E_FLOW_SPEC_LINKS: Readonly<Record<string, readonly string[]>> = 
   'Website: Policies': [
     'mweb/__tests__/e2e/specs/ui/websites/main/legal-policies.cy.ts',
   ],
+  'Website: Short link hop and meta cards': ['mweb/__tests__/e2e/specs/ui/websites/main/blog-newsroom.cy.ts', 'mweb/__tests__/e2e/specs/ui/websites/main/html-server.cy.ts'],
   'Website: Tracking consent and analytics': [
     'mweb/__tests__/e2e/specs/ui/websites/all-sites/gdpr-consent.cy.ts',
     'mweb/__tests__/e2e/specs/ui/websites/all-sites/google-analytics.cy.ts',

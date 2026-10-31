@@ -91,6 +91,7 @@
     "docs:emails": "ts-node -r tsconfig-paths/register --transpile-only scripts/generate-email-doc.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^1.3.0",
     "@apollo/server": "^5.5.1",
     "@as-integrations/express5": "^1.1.2",
     "@astrojs/compiler-rs": "0.5.1",

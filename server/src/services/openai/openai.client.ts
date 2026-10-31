@@ -3,6 +3,7 @@ import { describeFetchFailure } from '@utils/outboundFetch';
 import { OPENAI_TASKS, type OpenAiTaskKey } from '@modules/ai/openaiUsage/openaiUsage.tasks';
 import { openAiUsageService } from '@modules/ai/openaiUsage/openaiUsage.service';
 import { isAiFeatureEnabled } from '@modules/ai/aiFeature/aiFeature.guard';
+import { claudeMessages, isClaudeModel } from '@services/anthropic/anthropic.client';
 
 /**
  * The ONE place the product talks to OpenAI.
@@ -16,7 +17,11 @@ import { isAiFeatureEnabled } from '@modules/ai/aiFeature/aiFeature.guard';
  * Credentials come from the Tech-portal OPENAI env entry, as before — except a
  * model named `gemini-…` (set per prompt in the AI Library), which goes to
  * Google's OpenAI-compatible endpoint with the GEMINI entry's key, so a feature
- * can run on Gemini's free tier and still be counted here. The result
+ * can run on Gemini's free tier and still be counted here, and a model named
+ * `claude-…`, which goes to Anthropic with the ANTHROPIC entry's key through
+ * the Claude transport (services/anthropic) — same switch, same usage row,
+ * same failure codes; only the temperature is dropped, which Claude's current
+ * models refuse. The result
  * is a discriminated union rather than a thrown error, because the call sites
  * disagree on what a failure means — moderation fails open, the admin tools
  * raise a GraphQL error, the changelog falls back to a mechanical one — and
@@ -100,12 +105,17 @@ function requestPreview(messages: OpenAiMessage[]): string {
 
 /* --------------------------------- config ------------------------------- */
 
-const isGeminiModel = (model?: string): model is string => Boolean(model?.trim().toLowerCase().startsWith('gemini-'));
+const isGeminiModel = (model: string): boolean => model.toLowerCase().startsWith('gemini-');
 
 async function resolveConfig(pinnedModel?: string) {
-  if (isGeminiModel(pinnedModel)) {
+  const pinned = pinnedModel?.trim() ?? '';
+  if (isGeminiModel(pinned)) {
     const apiKey = await getRuntimeEnvValue('GEMINI_API_KEY');
-    return { provider: 'Gemini', apiKey: apiKey.trim(), base: GEMINI_BASE, model: pinnedModel.trim() };
+    return { provider: 'Gemini', apiKey: apiKey.trim(), base: GEMINI_BASE, model: pinned };
+  }
+  if (isClaudeModel(pinned)) {
+    const apiKey = await getRuntimeEnvValue('ANTHROPIC_API_KEY');
+    return { provider: 'Anthropic', apiKey: apiKey.trim(), base: '', model: pinned };
   }
   const [apiKey, baseUrl, envModel] = await Promise.all([
     getRuntimeEnvValue('OPENAI_API_KEY'),
@@ -181,6 +191,17 @@ async function readError(res: Response): Promise<string> {
   }
 }
 
+/** The same funnel on Claude's wire: the transport answers, the usage row is written here. */
+async function claudeChat(req: OpenAiChatRequest, apiKey: string, model: string, startedAt: number): Promise<OpenAiChatResult> {
+  const out = await claudeMessages({ apiKey, model, messages: req.messages, max_tokens: req.max_tokens, json: req.json });
+  if (!out.ok) {
+    record({ req, model, status: 'FAILED', httpStatus: out.status, usage: out.usage, error: out.message, startedAt });
+    return { ok: false, code: out.code, status: out.status, message: out.message, model };
+  }
+  record({ req, model, status: 'SUCCESS', httpStatus: out.status, usage: out.usage, response: out.content, startedAt });
+  return { ok: true, content: out.content, model };
+}
+
 /** POST the chat completion, or describe why it never happened. */
 export async function openaiChat(req: OpenAiChatRequest): Promise<OpenAiChatResult> {
   const startedAt = Date.now();
@@ -199,6 +220,8 @@ export async function openaiChat(req: OpenAiChatRequest): Promise<OpenAiChatResu
     record({ req, model, status: 'SKIPPED', httpStatus: 0, error: message, startedAt });
     return { ok: false, code: 'NOT_CONFIGURED', status: 0, message, model };
   }
+
+  if (provider === 'Anthropic') return claudeChat(req, apiKey, model, startedAt);
 
   let res: Response;
   try {

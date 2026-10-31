@@ -115,6 +115,7 @@ export default function MenuPanel({
             setSwitchOpen(true);
           }}
           dark={isDark}
+          themeLocked={colorMode.locked}
           onToggleTheme={colorMode.toggle}
           publicPolicies={publicPolicies}
           policiesLoading={policiesLoading}

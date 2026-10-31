@@ -25,6 +25,8 @@ export interface MenuSectionsProps {
   modeLabel: string;
   onSwitch: () => void;
   dark: boolean;
+  /** A festive look pins the mode right now, so the switch has nothing to change. */
+  themeLocked?: boolean;
   onToggleTheme: () => void;
   publicPolicies: { id: string; slug: string; title: string }[];
   policiesLoading: boolean;
@@ -46,6 +48,7 @@ export default function MenuSections({
   modeLabel,
   onSwitch,
   dark,
+  themeLocked = false,
   onToggleTheme,
   publicPolicies,
   policiesLoading,
@@ -79,6 +82,7 @@ export default function MenuSections({
             <Switch
               data-testid="sidebar-theme-switch"
               checked={dark}
+              disabled={themeLocked}
               onChange={onToggleTheme}
               slotProps={{
                 input: { 'aria-label': t('mweb.sidebar.toggleDarkMode'), ...testIdProps('sidebar-theme-switch-input') },

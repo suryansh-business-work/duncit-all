@@ -3447,6 +3447,9 @@ importers:
       '@duncit/buttons':
         specifier: workspace:*
         version: link:../buttons
+      '@duncit/tours':
+        specifier: workspace:*
+        version: link:../tours
       '@duncit/utils':
         specifier: workspace:*
         version: link:../utils

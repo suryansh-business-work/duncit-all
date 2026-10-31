@@ -1881,6 +1881,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     dependencies: [
       { name: "@duncit/app-settings", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/buttons", range: "workspace:*", kind: "dependencies" },
+      { name: "@duncit/tours", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/utils", range: "workspace:*", kind: "dependencies" },
       { name: "@mui/icons-material", range: "^9.4.0", kind: "devDependencies" },
       { name: "@mui/material", range: "^9.4.0", kind: "devDependencies" },

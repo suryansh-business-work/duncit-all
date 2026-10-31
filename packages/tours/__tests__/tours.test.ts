@@ -208,3 +208,25 @@ describe('shouldAutoStartHomeTour', () => {
     expect(shouldAutoStartHomeTour(['home'], true)).toBe(false);
   });
 });
+
+// A portal page's first-run tour (`useFirstRunTour` in @duncit/ui) keeps its own
+// id in the same per-user list, so the helpers take any string, not only the
+// registry's closed TourId.
+describe('completion state with a portal tour id', () => {
+  it('round-trips a plain string id beside the registry ones', () => {
+    const completed = readCompletedTours(serializeCompletedTours(['home', 'finance.payouts']));
+    expect(completed).toEqual(['home', 'finance.payouts']);
+    expect(isTourCompleted(completed, 'finance.payouts')).toBe(true);
+    expect(isTourCompleted(completed, 'crm.leads')).toBe(false);
+    expect(markTourCompleted(completed, 'crm.leads')).toEqual(['home', 'finance.payouts', 'crm.leads']);
+    expect(markTourCompleted(completed, 'finance.payouts')).toEqual(['home', 'finance.payouts']);
+  });
+
+  it('keeps a list typed as TourId[] at that type', () => {
+    const before: TourId[] = ['home'];
+    const after: TourId[] = markTourCompleted(before, 'club');
+    const read: TourId[] = readCompletedTours(serializeCompletedTours(after));
+    expect(read).toEqual(['home', 'club']);
+    expect(shouldAutoStartHomeTour(['finance.payouts'], true)).toBe(true);
+  });
+});

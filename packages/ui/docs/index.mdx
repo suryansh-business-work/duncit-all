@@ -102,6 +102,11 @@ exports:
   - 'SidebarFilter'
   - 'SidebarOption'
   - 'countBadge'
+  - 'PageIntro'
+  - 'HelpTip'
+  - 'EmptyState'
+  - 'PortalTour'
+  - 'useFirstRunTour'
 ---
 
 import Preview from '@docs/components/Preview.astro';
@@ -1243,3 +1248,59 @@ import { OccasionEffects, OccasionLayer } from '@duncit/ui';
 `runOccasionCanvas(canvas, decoration, options)` is the loop under it: sized to the window or its
 parent box, at most 2× density, re-laid-out on resize, paused while the tab is hidden. The engine it
 draws is `@duncit/utils` `occasionScene` / `occasionFrame`.
+
+## Guide kit — `PageIntro`, `HelpTip`, `EmptyState`, `PortalTour`
+
+Every console page explains itself the same way, with the same four pieces.
+
+- **`PageIntro`** sits under the page header: one line on what the page is for and, folded under a
+  "How this works" heading, the numbered steps a person takes there. The fold is remembered per page
+  in `localStorage` under `duncit.guide.<id>` (or `storageKey`): a first visit opens the steps, and a
+  person who folded them stays folded. Every read and write tolerates a blocked store. Pass
+  `onStartTour` and a "Start tour" button appears.
+- **`HelpTip`** is the info glyph beside a heading or a field label — a small icon button whose
+  sentence opens on hover, on keyboard focus and on the first tap. Its accessible name is the
+  button's own ("More about this", or `label`); the sentence becomes its description while open.
+  MUI's `Tooltip` would otherwise rename the button after its sentence, which is why the component
+  sets `describeChild` and never the tooltip's `aria-label`.
+- **`EmptyState`** is what a list, table or panel draws when it holds nothing yet: a glyph on a soft
+  tile, a bold title, a line on what fills it, and the action that does (plus a quieter
+  `secondaryAction`). It is a `section` named by its title — a landmark, not a live region.
+- **`PortalTour`** is a spotlight tour over the page's own elements, with no dependency. Tag each
+  element `data-tour="<anchor>"` and hand the tour its steps: it darkens everything but the current
+  element and anchors a card to it with Back / Next / Done and Skip. Escape skips, focus moves to each
+  card (`role="dialog"`, not modal), steps whose element is missing are left out, and a tour with
+  nothing to show closes itself as not completed. Nothing moves, so reduced motion needs no switch.
+  `useFirstRunTour(tourId, userId)` opens it once per user through the same per-user completion list
+  `@duncit/tours` keeps for mWeb; skipped counts as shown.
+
+```tsx
+import InboxOutlinedIcon from '@mui/icons-material/InboxOutlined';
+import { DuncitButton } from '@duncit/buttons';
+import { EmptyState, HelpTip, PageHeader, PageIntro, PortalTour, useFirstRunTour } from '@duncit/ui';
+
+const tour = useFirstRunTour('finance.payouts', me.user_id);
+
+<PageHeader title={<>Payouts <HelpTip title={t('finance.payouts.help')} /></>} />
+<PageIntro
+  id="finance-payouts"
+  summary={t('finance.payouts.intro')}
+  steps={[t('finance.payouts.step1'), t('finance.payouts.step2'), t('finance.payouts.step3')]}
+  onStartTour={tour.start}
+/>
+<Box data-tour="payouts-table">…</Box>
+<PortalTour
+  open={tour.open}
+  onClose={tour.close}
+  steps={[{ anchor: 'payouts-table', title: t('finance.payouts.tour.table'), body: t('finance.payouts.tour.tableBody') }]}
+/>
+<EmptyState
+  icon={<InboxOutlinedIcon />}
+  title={t('finance.payouts.empty')}
+  body={t('finance.payouts.emptyBody')}
+  action={<DuncitButton variant="contained">{t('finance.payouts.pickCycle')}</DuncitButton>}
+/>
+```
+
+The kit's own words are `ui.guide.*`; the step counter is `ui.guide.stepOf` with `{current}` and
+`{total}`. Everything you pass in is yours to localize.

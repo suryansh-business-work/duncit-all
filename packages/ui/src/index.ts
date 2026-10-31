@@ -95,3 +95,12 @@ export type {
   OccasionGreetingProps,
   OccasionLayerProps,
 } from './occasion';
+export { EmptyState, HelpTip, PageIntro, PortalTour, useFirstRunTour } from './guide';
+export type {
+  EmptyStateProps,
+  FirstRunTour,
+  HelpTipProps,
+  PageIntroProps,
+  PortalTourProps,
+  PortalTourStep,
+} from './guide';

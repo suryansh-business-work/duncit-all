@@ -19,6 +19,8 @@ export default function AgentForm({ agent, readOnly, busy, onSubmit }: Readonly<
     resolver: zodResolver(agentFormSchema(t)) as Resolver<AgentFormValues, unknown, AgentFormOutput>,
     mode: 'onChange',
   });
+  // Read both now: react-hook-form only tracks a formState flag that was read while rendering, and `!isValid || …` would skip isDirty until validation lands.
+  const { isValid, isDirty } = formState;
   const weekly = watch('every') === 'WEEK';
 
   // What the server last answered — after a save, or a toggle elsewhere on the card — is the baseline, not a pending edit.
@@ -118,7 +120,7 @@ export default function AgentForm({ agent, readOnly, busy, onSubmit }: Readonly<
         )}
 
         {readOnly ? null : (
-          <FormActionsRow busy={busy} disabled={!formState.isValid || !formState.isDirty} submitLabel={t('marketing.agents.save')} />
+          <FormActionsRow busy={busy} disabled={!isValid || !isDirty} submitLabel={t('marketing.agents.save')} />
         )}
       </Grid>
     </form>

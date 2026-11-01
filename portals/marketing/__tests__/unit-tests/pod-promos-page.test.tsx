@@ -25,11 +25,15 @@ vi.mock('@duncit/user-context', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@duncit/user-context')>()),
   useUserData: () => ({ user: { user_id: 'u1', roles: userCtx.roles } }),
 }));
-const dialogsMock = vi.hoisted(() => ({ notify: vi.fn() }));
+const dialogsMock = vi.hoisted(() => ({ notify: vi.fn(), confirm: vi.fn() }));
 vi.mock('@duncit/dialogs', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@duncit/dialogs')>()),
   notify: dialogsMock.notify,
+  useConfirm: () => dialogsMock.confirm,
 }));
+
+/** The pod cell draws the title twice in the table stand-in (its value and its renderer); the renderer's line is what a person reads. */
+const podTitleInTable = () => within(screen.getByTestId('duncit-table')).findByText('Sunset Run', { selector: 'p' });
 vi.mock('@duncit/app-settings', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@duncit/app-settings')>()),
   useDateFormat: () => ({ formatDateTime: (d: Date) => `fmt:${d.toISOString()}` }),
@@ -66,7 +70,7 @@ describe('PodPromosPage', () => {
     expect(within(screen.getByTestId('promo-card-revenue')).getByText(formatINR(24990))).toBeInTheDocument();
     expect(await screen.findByTestId('promo-settings-form')).toBeInTheDocument();
     expect(screen.getByText('Scheduled posts are filed under Asha Rao, who last saved these settings.')).toBeInTheDocument();
-    expect(await screen.findByText('Sunset Run')).toBeInTheDocument();
+    expect(await podTitleInTable()).toBeInTheDocument();
     expect(screen.queryByTestId('portal-tour')).not.toBeInTheDocument();
   });
 
@@ -141,7 +145,7 @@ describe('PodPromosPage', () => {
     fireEvent.click(await screen.findByTestId('pod-candidate-pod1'));
     fireEvent.click(await screen.findByRole('button', { name: 'Promote now' }));
     await waitFor(() => expect(dialogsMock.notify).toHaveBeenCalledWith('Sunset Run is being promoted', 'success'));
-    expect(await within(screen.getByTestId('duncit-table')).findByText('Sunset Run')).toBeInTheDocument();
+    expect(await podTitleInTable()).toBeInTheDocument();
   });
 
   it('makes banners from the header and re-reads the table once they are scheduled', async () => {
@@ -163,7 +167,7 @@ describe('PodPromosPage', () => {
     await waitFor(() => expect(within(section).getByTestId('form-actions-row-submit')).toBeEnabled());
     fireEvent.click(within(section).getByTestId('form-actions-row-submit'));
     await waitFor(() => expect(dialogsMock.notify).toHaveBeenCalledWith('Sunset Run is being promoted', 'success'));
-    expect(await within(screen.getByTestId('duncit-table')).findByText('Sunset Run')).toBeInTheDocument();
+    expect(await podTitleInTable()).toBeInTheDocument();
     await waitFor(() => expect(screen.queryByRole('dialog', { name: /Banners for/ })).not.toBeInTheDocument());
   });
 

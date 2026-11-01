@@ -96,7 +96,11 @@ describe('PromoSettingsForm', () => {
     const accounts = within(screen.getByTestId('promo-accounts')).getByRole('combobox');
     fireEvent.mouseDown(accounts);
     fireEvent.click(await screen.findByRole('option', { name: 'Duncit Pages (FACEBOOK)' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Save settings' }));
+    expect(within(screen.getByTestId('promo-accounts')).getByText('Duncit Pages (FACEBOOK)')).toBeInTheDocument();
+    const save = screen.getByRole('button', { name: 'Save settings' });
+    // The button turns on once the async validation has answered.
+    await waitFor(() => expect(save).toBeEnabled());
+    fireEvent.click(save);
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
     expect(onSubmit.mock.calls[0][0].account_ids).toEqual(['acc1', 'acc2']);
   });

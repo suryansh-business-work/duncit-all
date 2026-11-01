@@ -41,7 +41,7 @@ export function RhfImage<T extends FieldValues>({ control, name, label, hint, fo
       name={name}
       render={({ field: { value, onChange }, fieldState }) => (
         <Stack spacing={0.5}>
-          <MediaPickerField label={label} value={String(value ?? '')} onChange={onChange} folder={folder} accept="image/*" helperText={hint} />
+          <MediaPickerField label={label} value={String(value)} onChange={onChange} folder={folder} accept="image/*" helperText={hint} />
           {fieldState.error && <FormHelperText error>{fieldState.error.message}</FormHelperText>}
         </Stack>
       )}

@@ -7,14 +7,14 @@ import AutomationFlowsPage from '../../src/pages/automation/flows-list';
 import { AUTOMATION_FLOWS, DELETE_FLOW, DUPLICATE_FLOW, SAVE_FLOW } from '../../src/pages/automation/queries';
 import type { AutomationFlow } from '../../src/pages/automation/types';
 import { renderWithProviders } from '../testkit';
-import { answerQuery, mutationOf, queryOptions, resetApollo, setMutationBusy } from './reel-apollo-mock';
+import { answerQuery, mutationOf, queryOptions, resetApollo, setMutationBusy } from '../hooks-mock';
 import { en, flow } from './automation-fixtures';
 
 const confirm = vi.hoisted(() => vi.fn());
 
 vi.mock('@apollo/client/react', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@apollo/client/react')>()),
-  ...(await import('./reel-apollo-mock')).hooks,
+  ...(await import('../hooks-mock')).hooks,
 }));
 
 vi.mock('@duncit/dialogs', async (importOriginal) => ({

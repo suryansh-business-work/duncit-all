@@ -11,12 +11,12 @@ import {
   SET_FLOW_STATUS,
 } from '../../src/pages/automation/queries';
 import { renderWithProviders } from '../testkit';
-import { answerQuery, mutationOf, resetApollo, setMutationBusy } from './reel-apollo-mock';
+import { answerQuery, mutationOf, resetApollo, setMutationBusy } from '../hooks-mock';
 import { OPTIONS, en, flow } from './automation-fixtures';
 
 vi.mock('@apollo/client/react', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@apollo/client/react')>()),
-  ...(await import('./reel-apollo-mock')).hooks,
+  ...(await import('../hooks-mock')).hooks,
 }));
 
 vi.mock('@duncit/dialogs', async (importOriginal) => ({

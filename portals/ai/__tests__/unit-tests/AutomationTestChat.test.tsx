@@ -11,12 +11,12 @@ import { useTestRun } from '../../src/pages/automation/test-chat/useTestRun';
 import { RESUME_TEST, START_TEST } from '../../src/pages/automation/queries';
 import type { AutomationChannel, AutomationRun, RunMessage, StepStatus } from '../../src/pages/automation/types';
 import { renderWithProviders } from '../testkit';
-import { mutationOf, resetApollo } from './reel-apollo-mock';
+import { mutationOf, resetApollo } from '../hooks-mock';
 import { en, node, run } from './automation-fixtures';
 
 vi.mock('@apollo/client/react', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@apollo/client/react')>()),
-  ...(await import('./reel-apollo-mock')).hooks,
+  ...(await import('../hooks-mock')).hooks,
 }));
 
 vi.mock('@duncit/dialogs', async (importOriginal) => ({

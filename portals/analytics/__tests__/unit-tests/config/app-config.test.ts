@@ -30,6 +30,7 @@ describe('Analytics console app config', () => {
     const appConfig = await loadConfig();
     expect(appConfig.nav.map((group) => group.label)).toEqual([
       'Business',
+      'Product',
       'Growth',
       'Support',
       'Tech',
@@ -54,13 +55,29 @@ describe('Analytics console app config', () => {
     ]);
   });
 
+  it('files the product dashboards under Product, right after Business', async () => {
+    const appConfig = await loadConfig();
+    const product = appConfig.nav.find((group) => group.label === 'Product');
+    expect(product?.labelKey).toBe('shell.nav.product');
+    expect(product?.children.map((item) => item.to)).toEqual([
+      '/product/overview',
+      '/product/screens',
+      '/product/clickstream',
+      '/product/funnels',
+      '/product/retention',
+      '/product/sessions',
+      '/product/users',
+      '/product/events',
+    ]);
+  });
+
   it('lists every dashboard route exactly once', async () => {
     const appConfig = await loadConfig();
     const routes = appConfig.nav.flatMap((group) => group.children.map((item) => item.to));
-    expect(routes).toHaveLength(31);
+    expect(routes).toHaveLength(39);
     expect(new Set(routes).size).toBe(routes.length);
     expect(routes).toEqual(
-      expect.arrayContaining(['/growth/funnel', '/support/legal', '/tech/logs', '/settings/alerts']),
+      expect.arrayContaining(['/product/overview', '/growth/funnel', '/support/legal', '/tech/logs', '/settings/alerts']),
     );
   });
 

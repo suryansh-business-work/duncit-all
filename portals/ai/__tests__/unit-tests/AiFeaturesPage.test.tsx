@@ -13,13 +13,13 @@ import {
   type AiFeature,
 } from '../../src/pages/ai-features/queries';
 import { renderWithProviders } from '../testkit';
-import { answerQuery, mutationOf, queryOptions, resetApollo } from './reel-apollo-mock';
+import { answerQuery, mutationOf, queryOptions, resetApollo } from '../hooks-mock';
 
 const confirm = vi.hoisted(() => vi.fn());
 
 vi.mock('@apollo/client/react', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@apollo/client/react')>()),
-  ...(await import('./reel-apollo-mock')).hooks,
+  ...(await import('../hooks-mock')).hooks,
 }));
 
 vi.mock('@duncit/dialogs', async (importOriginal) => ({

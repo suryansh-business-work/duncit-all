@@ -83,8 +83,8 @@ const setupMock = (accounts = [makeSocialAccount()]): MockedResponse => ({
   result: {
     data: {
       socialProviders: [
-        { __typename: 'SocialProviderStatus', provider: 'LINKEDIN', configured: true },
-        { __typename: 'SocialProviderStatus', provider: 'X', configured: false },
+        { __typename: 'SocialProviderStatus', provider: 'LINKEDIN', configured: true, category: 'SOCIAL_LINKEDIN' },
+        { __typename: 'SocialProviderStatus', provider: 'X', configured: false, category: 'SOCIAL_X' },
       ],
       socialAccounts: accounts.map((a) => ({ __typename: 'SocialAccount', ...a })),
     },
@@ -181,7 +181,7 @@ describe('useConnectResult', () => {
   });
 
   it('warns when the network connected but returned no account', async () => {
-    const onConnected = run('?connected=META&count=0');
+    const onConnected = run('?connected=FACEBOOK&count=0');
     await waitFor(() => expect(onConnected).toHaveBeenCalledTimes(1));
     expect(lastToast()?.[1]).toBe('warning');
     expect(lastToast()?.[0]).toContain('no account came back');

@@ -70,6 +70,9 @@ const ROUTES = [
   '/openai/logs',
   '/monitoring',
   '/monitoring/settings',
+  // Reel Studio's old addresses: a page that points at the Marketing console.
+  '/reels',
+  '/reels/smoke-id',
 ];
 
 /** `link` swaps what answers the page: nothing, or the schema-shaped mock. */

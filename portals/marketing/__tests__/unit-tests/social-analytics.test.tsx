@@ -47,7 +47,7 @@ const chart = (label: string) => {
 
 const account = (id: string, name: string): SocialAccount => ({
   id,
-  provider: 'META',
+  provider: 'FACEBOOK',
   platform: 'FACEBOOK',
   name,
   handle: null,
@@ -57,7 +57,14 @@ const account = (id: string, name: string): SocialAccount => ({
   status: 'CONNECTED',
   last_error: null,
   last_synced_at: null,
+  token_expires_in_days: null,
   flagged_open: 0,
+  owner_user_id: null,
+  owner_name: null,
+  team_user_ids: [],
+  health_checked_at: null,
+  health_ok: null,
+  health_message: null,
 });
 
 const makeAnalytics = (overrides: Partial<SocialAnalytics> = {}): SocialAnalytics => ({

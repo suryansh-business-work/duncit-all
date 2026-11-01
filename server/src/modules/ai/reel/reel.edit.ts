@@ -17,8 +17,27 @@ import type { ReelAsset } from './reel.model';
  */
 
 export const REEL_FPS = 30;
+/** The PORTRAIT frame — what a reel is unless its aspect says otherwise. */
 export const REEL_WIDTH = 1080;
 export const REEL_HEIGHT = 1920;
+
+export const REEL_ASPECTS = ['PORTRAIT', 'SQUARE', 'LANDSCAPE'] as const;
+export type ReelAspect = (typeof REEL_ASPECTS)[number];
+
+const FRAMES: Record<ReelAspect, { width: number; height: number }> = {
+  PORTRAIT: { width: REEL_WIDTH, height: REEL_HEIGHT },
+  SQUARE: { width: 1080, height: 1080 },
+  LANDSCAPE: { width: 1920, height: 1080 },
+};
+
+/** The frame an aspect is drawn in. The spec's width and height are always these, never what came in. */
+export const reelFrame = (aspect: ReelAspect): { width: number; height: number } => ({ ...FRAMES[aspect] });
+
+export const REEL_CAPTION_STYLES = ['PLAIN', 'BOX', 'HIGHLIGHT'] as const;
+export type ReelCaptionStyle = (typeof REEL_CAPTION_STYLES)[number];
+
+/** How wide the brand watermark may be, as a share of the frame; past half the frame it is a scene, not a mark. */
+export const WATERMARK_WIDTH_PCT = { min: 5, max: 50, fallback: 18 } as const;
 
 export const REEL_LIMITS = {
   maxScenes: 40,
@@ -92,13 +111,37 @@ export interface ReelMusic {
   trim_start_ms: number;
 }
 
+/** A spoken track played under the whole reel, from its start. */
+export interface ReelVoiceover {
+  asset_id: string;
+  volume: number;
+}
+
+export interface ReelBrand {
+  /** An IMAGE asset drawn on every scene; '' for none. */
+  watermark_asset_id: string;
+  watermark_corner: (typeof REEL_CORNERS)[number];
+  /** Width as a share of the frame. */
+  watermark_width_pct: number;
+  /** The brand's colour for pills and highlights; '' for none. */
+  primary_color: string;
+}
+
+export interface ReelCaptions {
+  style: ReelCaptionStyle;
+}
+
 export interface ReelSpec {
   fps: number;
   width: number;
   height: number;
+  aspect: ReelAspect;
   background: string;
   scenes: ReelScene[];
   music: ReelMusic | null;
+  voiceover: ReelVoiceover | null;
+  brand: ReelBrand;
+  captions: ReelCaptions;
 }
 
 const BLACK = '#000000';
@@ -285,9 +328,43 @@ function sanitizeMusic(raw: unknown, assets: AssetMap): ReelMusic | null {
   };
 }
 
+/** A spoken track must be a sound file the project holds; anything else is no voiceover. */
+function sanitizeVoiceover(raw: unknown, assets: AssetMap): ReelVoiceover | null {
+  const item = record(raw);
+  const assetId = words(item?.asset_id, 80);
+  if (!item || assets.get(assetId)?.kind !== 'AUDIO') return null;
+  return { asset_id: assetId, volume: num(item.volume, 0, 1, 1) };
+}
+
+/** The brand mark, with a watermark only when it names a picture the project holds. */
+function sanitizeBrand(raw: unknown, assets: AssetMap): ReelBrand {
+  const item = record(raw) ?? {};
+  const wanted = words(item.watermark_asset_id, 80);
+  return {
+    watermark_asset_id: assets.get(wanted)?.kind === 'IMAGE' ? wanted : '',
+    watermark_corner: oneOf(item.watermark_corner, REEL_CORNERS, 'BOTTOM_RIGHT'),
+    watermark_width_pct: num(item.watermark_width_pct, WATERMARK_WIDTH_PCT.min, WATERMARK_WIDTH_PCT.max, WATERMARK_WIDTH_PCT.fallback),
+    primary_color: hex(item.primary_color, ''),
+  };
+}
+
+const sanitizeCaptions = (raw: unknown): ReelCaptions => ({
+  style: oneOf(record(raw)?.style, REEL_CAPTION_STYLES, 'PLAIN'),
+});
+
 /** A reel with nothing in it yet — what a new project starts as. */
 export function emptySpec(): ReelSpec {
-  return { fps: REEL_FPS, width: REEL_WIDTH, height: REEL_HEIGHT, background: BLACK, scenes: [], music: null };
+  return {
+    fps: REEL_FPS,
+    ...reelFrame('PORTRAIT'),
+    aspect: 'PORTRAIT',
+    background: BLACK,
+    scenes: [],
+    music: null,
+    voiceover: null,
+    brand: sanitizeBrand(null, new Map()),
+    captions: sanitizeCaptions(null),
+  };
 }
 
 /**
@@ -302,11 +379,17 @@ export function sanitizeSpec(raw: unknown, assets: readonly ReelAsset[]): ReelSp
   const scenes = list(item.scenes)
     .slice(0, REEL_LIMITS.maxScenes)
     .flatMap((scene) => sanitizeScene(scene, byId, taken) ?? []);
+  const aspect = oneOf(item.aspect, REEL_ASPECTS, 'PORTRAIT');
   return {
     ...emptySpec(),
+    ...reelFrame(aspect),
+    aspect,
     background: hex(item.background, BLACK),
     scenes: withTransitions(withinTotal(scenes)),
     music: sanitizeMusic(item.music, byId),
+    voiceover: sanitizeVoiceover(item.voiceover, byId),
+    brand: sanitizeBrand(item.brand, byId),
+    captions: sanitizeCaptions(item.captions),
   };
 }
 

@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { Box } from '@mui/material';
 import { ConfirmDialog } from '@duncit/dialogs';
 import { useTranslation } from '@duncit/app-settings';
+import { integrationsPath } from '../../../lib/routes';
 import { PROVIDERS } from '../copy';
 import type { SocialAccount, SocialConnectReturn, SocialProviderStatus } from '../queries';
+import OwnerDialog from './OwnerDialog';
 import ProviderCard from './ProviderCard';
 import { useSocialAccountActions } from './useSocialAccountActions';
 
@@ -23,7 +25,8 @@ export default function AccountsTab({ providers, accounts, onChanged, returnTo, 
   const actions = useSocialAccountActions(onChanged, returnTo);
   const columns = narrow ? '1fr' : { xs: '1fr', lg: '1fr 1fr' };
   const [leaving, setLeaving] = useState<SocialAccount | null>(null);
-  const configured = new Set(providers.filter((p) => p.configured).map((p) => p.provider));
+  const [owning, setOwning] = useState<SocialAccount | null>(null);
+  const status = new Map(providers.map((p) => [p.provider, p]));
 
   const confirmDisconnect = async (account: SocialAccount) => {
     if (await actions.disconnect(account)) setLeaving(null);
@@ -36,16 +39,19 @@ export default function AccountsTab({ providers, accounts, onChanged, returnTo, 
           <ProviderCard
             key={provider}
             provider={provider}
-            configured={configured.has(provider)}
+            configured={status.get(provider)?.configured ?? false}
+            settingsTo={integrationsPath(status.get(provider)?.category)}
             accounts={accounts.filter((account) => account.provider === provider)}
             onConnect={actions.connect}
             onSync={actions.sync}
+            onSetOwner={setOwning}
             onDisconnect={setLeaving}
           />
         ))}
       </Box>
 
-      {/* Rendered only once an account is picked, so confirming needs no null guard. */}
+      {/* Each dialog is rendered only once an account is picked, so it mounts fresh for that account and needs no null guard. */}
+      {owning && <OwnerDialog account={owning} onClose={() => setOwning(null)} onSaved={onChanged} />}
       {leaving && (
         <ConfirmDialog
           open

@@ -12,9 +12,26 @@ export interface PlacedSeat {
 }
 
 /**
+ * Whether `childId` may move under `parentId`: another seat, not already its
+ * manager, and not one of its own reports. The server refuses that loop, so
+ * the chart never offers it.
+ */
+export function canReparent(nodes: readonly TeamNode[], childId: string, parentId: string): boolean {
+  const parentOf = new Map(nodes.map((n) => [n.id, n.parent_id]));
+  if (childId === parentId || parentOf.get(childId) === parentId) return false;
+  let cursor = parentOf.get(parentId);
+  for (let hops = 0; cursor && hops < nodes.length; hops += 1) {
+    if (cursor === childId) return false;
+    cursor = parentOf.get(cursor);
+  }
+  return true;
+}
+
+/**
  * Top-down tidy tree: leaves take the next free column and a parent centres
- * over its children. Seats are never dragged, so the picture is always a pure
- * function of the tree and two people looking at it see the same chart.
+ * over its children. A dragged seat springs back to its slot unless it is
+ * dropped on a new manager, so the picture is always a pure function of the
+ * tree and two people looking at it see the same chart.
  * Iterative, so a deep chain cannot overflow the stack.
  */
 export function layoutSeats(nodes: readonly TeamNode[]): PlacedSeat[] {

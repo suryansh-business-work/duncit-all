@@ -9,6 +9,8 @@ import {
   type ButtonVariant,
 } from '@duncit/buttons-native';
 
+import { trackPress } from '@/services/product-analytics';
+
 const SHADOW_OFFSET = { width: 0, height: 8 };
 
 export interface DuncitButtonProps {
@@ -71,6 +73,11 @@ export function DuncitButton({
   const spec = buttonSpec({ variant, tone, size, disabled, loading, fullWidth });
   // `sm` draws 36 tall; the touchable area still reaches the 44pt target.
   const hitSlop = Math.max(0, (TOUCH_TARGET - spec.height) / 2);
+  // Every press is a product-analytics click, named by the test id and the label people see.
+  const press = () => {
+    trackPress({ id: testID, name: label, type: 'button' });
+    onPress();
+  };
   const pressed = spec.interactive
     ? { ...PRESS_STYLE[spec.intent], backgroundColor: spec.pressBackgroundColor }
     : undefined;
@@ -89,7 +96,7 @@ export function DuncitButton({
       tabIndex={0}
       hitSlop={hitSlop}
       disabled={!spec.interactive}
-      onPress={spec.interactive ? onPress : undefined}
+      onPress={spec.interactive ? press : undefined}
       alignItems="center"
       justifyContent="center"
       gap={spec.gap}

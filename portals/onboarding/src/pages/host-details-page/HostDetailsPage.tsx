@@ -6,6 +6,7 @@ import { BackHeader, QueryGuard } from '@duncit/ui';
 import PodsTable from '../../components/pods-table/PodsTable';
 import { PODS_TABLE, type PodRow } from '../../components/pods-table/queries';
 import { useDateFormat, useTranslation } from '@duncit/app-settings';
+import { BannerKitPanel, PodBannersPanel } from '@duncit/shell';
 import { HOST_DETAILS } from '../hosts-page/queries';
 
 const catPath = (c: { super_category_name: string; category_name: string; sub_category_name: string }) =>
@@ -88,6 +89,10 @@ export default function HostDetailsPage() {
               emptyText={t('onboarding.hostDetails.noPodsForThisHostYet')}
             />
           </Stack>
+
+          {/* What the host's pod banners are made from, and making them for the pods they run next. */}
+          <BannerKitPanel entity="HOST" mode="console" id={host.id} />
+          <PodBannersPanel filter={{ field: 'host_user_id', value: hostUserId }} />
         </Stack>
       )}
     </QueryGuard>

@@ -16,6 +16,20 @@ const SERVER_SRC = path.resolve(__dirname, '../../..');
 const SKIP_DIRS = new Set(['node_modules', 'dist', 'build', '__tests__']);
 
 /**
+ * Patterns composed only from module-private constants: no caller's value can
+ * reach them, and escaping would break them, because they are regex SOURCE on
+ * purpose. Each is keyed by file and exact statement, not by line, so routing
+ * any other value into a RegExp in these files still fails the guard.
+ *  - guard/patterns.ts: `sequence()` is not exported and is only called at
+ *    module load with literal word lists and literal gaps.
+ *  - portMap/nginx.parse.ts: TOKEN_KINDS is a literal array of String.raw tokens.
+ */
+const CONSTANT_PATTERNS = new Set([
+  "microservices/mcp/guard/patterns.ts -> return new RegExp(body, 'i');",
+  "modules/platform/portMap/nginx.parse.ts -> const TOKEN = new RegExp(TOKEN_KINDS.join('|'), 'g');",
+]);
+
+/**
  * Every `new RegExp(...)` in `source`, as the whole line it sits on.
  *
  * The line — not a parsed argument — is deliberate. The escaping idiom in this
@@ -127,9 +141,10 @@ describe('no RegExp is built from unescaped input', () => {
   it('has no unescaped construction anywhere in server/src', () => {
     const offenders: string[] = [];
     for (const file of files) {
+      const relative = path.relative(SERVER_SRC, file).split(path.sep).join('/');
       for (const { line, text } of regexLines(readFileSync(file, 'utf8'))) {
-        if (!isSafeLine(text)) {
-          offenders.push(`${path.relative(SERVER_SRC, file)}:${line} -> ${text}`);
+        if (!isSafeLine(text) && !CONSTANT_PATTERNS.has(`${relative} -> ${text}`)) {
+          offenders.push(`${relative}:${line} -> ${text}`);
         }
       }
     }

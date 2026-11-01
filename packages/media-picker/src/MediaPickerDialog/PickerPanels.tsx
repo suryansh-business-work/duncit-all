@@ -60,6 +60,7 @@ export default function PickerPanels({
           stage={device.stage}
           settings={device.settings}
           cropKey={device.cropKey}
+          cropLocked={device.cropLocked}
           onSelectCropKey={device.setCropKey}
           onCropComplete={device.setCropRect}
           onPickFile={device.onPickFile}

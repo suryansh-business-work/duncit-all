@@ -1,7 +1,7 @@
 import gql from 'graphql-tag';
 
 export const regressionReportTypeDefs = gql`
-  "What a regression report compares: unit runs test by test, E2E runs suite by suite."
+  "What a regression report compares: unit runs test by test, E2E runs scenario by scenario (suite by suite for runs that reported no scenarios)."
   enum RegressionKind {
     UNIT
     E2E
@@ -92,7 +92,7 @@ export const regressionReportTypeDefs = gql`
     truncated: Boolean!
     "True once retention removed the item lists; the counts remain."
     items_purged: Boolean!
-    "Workspaces left out because one of the runs has no results for them."
+    "Workspaces (unit) or suites (E2E) left out because one of the runs has no results for them."
     skipped_workspaces: [String!]!
     coverage_total: RegressionCoverageDelta
     coverage_workspaces: [RegressionCoverageDelta!]!
@@ -108,7 +108,7 @@ export const regressionReportTypeDefs = gql`
     page_size: Int!
   }
 
-  "One unit test in a bucket."
+  "One test in a bucket: a unit test, or an E2E scenario (workspace is its suite, file its project/spec)."
   type RegressionItem {
     id: ID!
     bucket: RegressionBucket!
@@ -131,7 +131,7 @@ export const regressionReportTypeDefs = gql`
     "Every regression report, newest first. Filter on kind, status, branch. Tests/Tech managers."
     regressionReportsTable(query: TableQueryInput): RegressionReportTablePage!
     regressionReport(id: ID!): RegressionReport
-    "A unit report's tests, one bucket at a time (filter on bucket)."
+    "A report's tests or E2E scenarios, one bucket at a time (filter on bucket)."
     regressionReportItemsTable(report_id: ID!, query: TableQueryInput): RegressionItemTablePage!
   }
 `;

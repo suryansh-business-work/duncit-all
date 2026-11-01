@@ -104,15 +104,30 @@ describe('useCreatePod', () => {
     expect(result.current.isHost).toBe(false);
   });
 
-  it('hydrates and clamps a resumed draft', async () => {
+  it('hydrates a resumed draft, opening an old five-step draft on the step that now holds its screen', async () => {
     mockRequest.mockResolvedValueOnce(options).mockResolvedValueOnce({
       myPodDraft: { id: 'd9', step: 99, payload: JSON.stringify({ pod_title: 'Resumed' }) },
     });
     const { result } = renderHook(() => useCreatePod('d9'));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.initialValues.pod_title).toBe('Resumed');
-    expect(result.current.initialStep).toBe(4);
+    // No stepper version in the payload: a five-step draft, held to its last screen (Pricing), which is Money now.
+    expect(result.current.initialStep).toBe(2);
     expect(result.current.initialDraftId).toBe('d9');
+  });
+
+  it('clamps a draft this stepper saved to the last of its four steps', async () => {
+    mockRequest.mockResolvedValueOnce(options).mockResolvedValueOnce({
+      myPodDraft: {
+        id: 'd10',
+        step: 99,
+        payload: JSON.stringify({ stepper: 2, pod_title: 'Resumed' }),
+      },
+    });
+    const { result } = renderHook(() => useCreatePod('d10'));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.initialStep).toBe(3);
+    expect(result.current.initialDraftId).toBe('d10');
   });
 
   it('ignores a missing draft and floors a negative step', async () => {

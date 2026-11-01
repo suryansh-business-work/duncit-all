@@ -12,6 +12,8 @@ export interface SeatData extends Record<string, unknown> {
   currency: string;
   /** Null on a public view, which cannot edit. */
   onAddChild: ((parentId: string) => void) | null;
+  /** True while another seat is dragged over this one and would move under it on release. */
+  dropTarget?: boolean;
 }
 
 export const KIND_TONE: Record<NodeKind, 'primary' | 'secondary' | 'success' | 'warning'> = {
@@ -27,9 +29,10 @@ export const KIND_TONE: Record<NodeKind, 'primary' | 'secondary' | 'success' | '
  */
 export default function SeatCard({ data, selected }: NodeProps) {
   const { t } = useTranslation();
-  const { node, currency, onAddChild } = data as SeatData;
+  const { node, currency, onAddChild, dropTarget } = data as SeatData;
   const tone = KIND_TONE[node.kind];
   const vacant = node.status === 'VACANT';
+  const accent = dropTarget ? 'info.main' : `${tone}.main`;
 
   return (
     <Box
@@ -38,11 +41,11 @@ export default function SeatCard({ data, selected }: NodeProps) {
         minHeight: SEAT_HEIGHT,
         px: 1.5,
         py: 1,
-        bgcolor: 'background.paper',
+        bgcolor: dropTarget ? 'action.selected' : 'background.paper',
         border: 2,
         borderStyle: vacant || node.status === 'OPTIONAL' ? 'dashed' : 'solid',
-        borderColor: selected ? 'text.primary' : `${tone}.main`,
-        boxShadow: selected ? 4 : 1,
+        borderColor: selected ? 'text.primary' : accent,
+        boxShadow: selected || dropTarget ? 4 : 1,
       }}
     >
       <Handle type="target" position={Position.Top} />

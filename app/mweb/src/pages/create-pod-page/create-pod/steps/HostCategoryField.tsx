@@ -1,26 +1,31 @@
-import { Box, Chip, FormHelperText, Stack, Typography } from '@mui/material';
+import { useMemo, useState } from 'react';
+import { Box, FormHelperText, Stack, Typography } from '@mui/material';
+import { categoryIconLookup, clubCountsByCategory, createPodCategoryLevels, superCategoryIdOf } from '@duncit/utils';
 import { requiredLabel } from '../../../../forms/components/requiredLabel';
 import { hostCategoryKeyOf } from '../create-pod.form';
 import { useTranslation } from '../../../../i18n/useTranslation';
-import type { CreatePodForm, CreatePodHostCategory } from '../create-pod.types';
-
-/** A 36px choice pill — green when picked, the soft fill when not (native's
- * ChipSelectField). `minHeight` pins it against the coarse-pointer 44px rule. */
-const CHOICE_CHIP_SX = { height: 36, minHeight: 36, px: 0.75 } as const;
-
-const categoryPath = (category: CreatePodHostCategory) =>
-  [category.super_category_name, category.category_name, category.sub_category_name]
-    .filter(Boolean)
-    .join(' › ');
+import type { CreatePodCategoryIcon, CreatePodClub, CreatePodForm, CreatePodHostCategory } from '../create-pod.types';
+import CategoryChipRow from './CategoryChipRow';
+import CategorySuperFilter from './CategorySuperFilter';
+import CategoryTile from './CategoryTile';
 
 interface Props {
   form: CreatePodForm;
+  /** Every sub-category the host is granted (Super > Category > Sub). */
   hostCategories: CreatePodHostCategory[];
+  /** SUB- and CATEGORY-level icons; a chip shows its own level's, else its parent's. */
+  categoryIcons?: CreatePodCategoryIcon[];
+  /** Every club, so each chip can say how many it has where the pod would run. */
+  clubs: CreatePodClub[];
 }
 
-/** Step-1 category picker — the host chooses which of their onboarded categories
- * this pod is for. Changing it resets the club/venue/slot picks. */
-export default function HostCategoryField({ form, hostCategories }: Readonly<Props>) {
+const NO_ICONS: CreatePodCategoryIcon[] = [];
+
+/** What's category picker: the host narrows by Super, then Category, and picks
+ * one of their granted sub-categories from a sideways-scrolling chip row. A chip
+ * with no club where the pod would run is disabled. Changing it resets the
+ * club/venue/slot picks. Native twin. */
+export default function HostCategoryField({ form, hostCategories, categoryIcons = NO_ICONS, clubs }: Readonly<Props>) {
   const {
     setValue,
     watch,
@@ -28,6 +33,15 @@ export default function HostCategoryField({ form, hostCategories }: Readonly<Pro
   } = form;
   const { t } = useTranslation();
   const selectedKey = watch('host_category_key');
+  const locationId = watch('location_id');
+  const podMode = watch('pod_mode');
+  const iconOf = useMemo(() => categoryIconLookup(categoryIcons), [categoryIcons]);
+  const counts = useMemo(() => clubCountsByCategory(clubs, hostCategories, { locationId, podMode }), [clubs, hostCategories, locationId, podMode]);
+  const [pick, setPick] = useState(() => {
+    const selected = hostCategories.find((category) => hostCategoryKeyOf(category) === selectedKey);
+    return { superId: selected ? superCategoryIdOf(selected) : '', categoryId: selected?.category_id ?? '' };
+  });
+  const levels = createPodCategoryLevels(hostCategories, pick);
 
   const pickCategory = (key: string) => {
     setValue('host_category_key', key, { shouldDirty: true, shouldValidate: true });
@@ -38,41 +52,54 @@ export default function HostCategoryField({ form, hostCategories }: Readonly<Pro
   };
 
   return (
-    <Box>
-      <Typography variant="subtitle2" component="div">
-        {requiredLabel(t('mweb.createPod.categoryLabel'), true)}
-      </Typography>
-      <Typography
-        variant="caption"
-        data-testid="create-pod-category-hint"
-        sx={{
-          color: "text.secondary",
-          display: "block"
-        }}>
-        {t('mweb.createPod.categoryHint')}
-      </Typography>
-      <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 1, mt: 1 }}>
-        {hostCategories.length > 0 ? (
-          hostCategories.map((category) => {
-            const key = hostCategoryKeyOf(category);
-            const selected = key === selectedKey;
-            return (
-              <Chip
-                key={key}
-                label={categoryPath(category)}
-                color={selected ? 'primary' : 'default'}
-                variant="filled"
-                onClick={() => pickCategory(key)}
-                data-testid={`create-pod-category-${key}`}
-                sx={CHOICE_CHIP_SX}
-              />
-            );
-          })
-        ) : (
-          <Chip label={t('mweb.createPod.categoryEmpty')} variant="filled" data-testid="create-pod-category-empty" sx={CHOICE_CHIP_SX} />
-        )}
-      </Stack>
+    <Stack spacing={1.25}>
+      <Box>
+        <Typography variant="subtitle2" component="div">
+          {requiredLabel(t('mweb.createPod.categoryLabel'), true)}
+        </Typography>
+        <Typography variant="caption" data-testid="create-pod-category-hint" sx={{ color: 'text.secondary', display: 'block' }}>
+          {t('mweb.createPod.categoryHint')}
+        </Typography>
+      </Box>
+      {hostCategories.length > 0 ? (
+        <>
+          <CategorySuperFilter
+            options={levels.supers}
+            value={levels.superId}
+            onChange={(superId) => setPick({ superId, categoryId: '' })}
+            label={t('mweb.createPod.categoryFor')}
+            testId="create-pod-category-super"
+          />
+          <CategorySuperFilter
+            options={levels.groups}
+            value={levels.categoryId}
+            onChange={(categoryId) => setPick({ superId: levels.superId, categoryId })}
+            label={t('mweb.createPod.categoryGroup')}
+            testId="create-pod-category-group"
+          />
+          <CategoryChipRow label={t('mweb.createPod.categoryLabel')} testId="create-pod-category-subs">
+            {levels.subs.map((category) => {
+              const key = hostCategoryKeyOf(category);
+              return (
+                <CategoryTile
+                  key={key}
+                  category={category}
+                  icon={iconOf(category)}
+                  selected={key === selectedKey}
+                  clubCount={counts.get(key) ?? 0}
+                  testId={`create-pod-category-${key}`}
+                  onPick={() => pickCategory(key)}
+                />
+              );
+            })}
+          </CategoryChipRow>
+        </>
+      ) : (
+        <Typography data-testid="create-pod-category-empty" variant="body2" sx={{ color: 'text.secondary' }}>
+          {t('mweb.createPod.categoryEmpty')}
+        </Typography>
+      )}
       {errors.host_category_key && <FormHelperText error>{errors.host_category_key.message}</FormHelperText>}
-    </Box>
+    </Stack>
   );
 }

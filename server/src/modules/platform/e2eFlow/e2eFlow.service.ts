@@ -4,7 +4,7 @@ import { logs } from '@observability/log';
 import { validate } from '@utils/validate';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { E2eFlowModel, type IE2eFlow, type IE2eSubFlow } from './e2eFlow.model';
-import { flowRunStats, specsForFlow } from './e2eFlow.stats';
+import { automatedFlowIds, flowRunStats, specsForFlow } from './e2eFlow.stats';
 import {
   e2eFlowSchema,
   e2eReviewSchema,
@@ -59,6 +59,23 @@ async function withRunStats(docs: readonly IE2eFlow[]) {
   return docs.map((doc) => ({ ...pub(doc), run_stats: stats.get(doc.name) ?? null }));
 }
 
+/**
+ * The table's "Automated" filter (is_true / is_false). Whether a flow is
+ * automated comes from the spec links in code, not a stored field, so the
+ * filter turns into an id match here and is taken out of the generic query.
+ */
+const AUTOMATED = 'automated';
+
+const withoutAutomated = (input?: TableQueryInput | null): TableQueryInput | null | undefined =>
+  input?.filters ? { ...input, filters: input.filters.filter((f) => f.field !== AUTOMATED) } : input;
+
+async function automatedBase(input?: TableQueryInput | null): Promise<Record<string, unknown>> {
+  const filter = input?.filters?.find((f) => f.field === AUTOMATED);
+  if (filter?.op !== 'is_true' && filter?.op !== 'is_false') return {};
+  const { automated } = await automatedFlowIds();
+  return { _id: filter.op === 'is_true' ? { $in: automated } : { $nin: automated } };
+}
+
 function notFound(what: string): never {
   throw new GraphQLError(`${what} not found`, { extensions: { code: 'NOT_FOUND' } });
 }
@@ -76,8 +93,8 @@ export const e2eFlowService = {
   async table(input?: TableQueryInput | null) {
     const { docs, total, page, page_size } = await runTableQuery<IE2eFlow>(
       E2eFlowModel,
-      {},
-      input,
+      await automatedBase(input),
+      withoutAutomated(input),
       FLOW_TABLE_CONFIG
     );
     return { rows: await withRunStats(docs), total, page, page_size };

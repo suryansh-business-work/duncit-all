@@ -12,11 +12,15 @@ import {
 import '@xyflow/react/dist/style.css';
 import { Box, useTheme } from '@mui/material';
 import SeatCard, { KIND_TONE, type SeatData } from './SeatCard';
-import { layoutSeats } from './layout';
+import { canReparent, layoutSeats } from './layout';
+import { useSeatDrag } from './useSeatDrag';
 import type { TeamNode } from './types';
 
 /** One stable map, module scope — see SeatCard. */
 const NODE_TYPES = { seat: SeatCard };
+
+/** Pixels a press may wander and still count as a click: a hand on a mouse or trackpad always moves a little. */
+const CLICK_SLOP = 4;
 
 interface Props {
   nodes: TeamNode[];
@@ -25,7 +29,7 @@ interface Props {
   onSelect: (id: string | null) => void;
   /** Absent on the public view: the chart is then read-only. */
   onAddChild?: (parentId: string) => void;
-  /** Drag from one seat's bottom handle to another's top handle to re-parent it. */
+  /** Drop a seat on another, or drag from one seat's bottom handle to another's top handle, to re-parent it. */
   onReparent?: (childId: string, parentId: string) => void;
 }
 
@@ -33,18 +37,22 @@ function SeatCanvasInner({ nodes, currency, selectedId, onSelect, onAddChild, on
   const theme = useTheme();
   const editable = Boolean(onReparent);
 
-  const flowNodes = useMemo<Node<SeatData>[]>(() => {
+  const laidOut = useMemo<Node<SeatData>[]>(() => {
     const at = new Map(layoutSeats(nodes).map((p) => [p.id, p]));
     return nodes.map((node) => ({
       id: node.id,
       type: 'seat',
       position: { x: at.get(node.id)?.x ?? 0, y: at.get(node.id)?.y ?? 0 },
-      draggable: false,
+      // A press on a card is about that card and never pans the canvas; without
+      // this a click that moved a pixel or two became a pan and was swallowed.
+      className: 'nopan',
+      draggable: editable,
       connectable: editable,
       selected: node.id === selectedId,
       data: { node, currency, onAddChild: onAddChild ?? null },
     }));
   }, [nodes, currency, selectedId, onAddChild, editable]);
+  const drag = useSeatDrag(laidOut, nodes, onReparent);
 
   const flowEdges = useMemo<Edge[]>(() => {
     const present = new Set(nodes.map((n) => n.id));
@@ -67,11 +75,18 @@ function SeatCanvasInner({ nodes, currency, selectedId, onSelect, onAddChild, on
 
   return (
     <ReactFlow
-      nodes={flowNodes}
+      nodes={drag.nodes}
       edges={flowEdges}
       nodeTypes={NODE_TYPES}
-      nodesDraggable={false}
+      nodesDraggable={editable}
       nodesConnectable={editable}
+      selectNodesOnDrag={false}
+      nodeDragThreshold={CLICK_SLOP}
+      nodeClickDistance={CLICK_SLOP}
+      onNodesChange={drag.onNodesChange}
+      onNodeDrag={drag.onNodeDrag}
+      onNodeDragStop={drag.onNodeDragStop}
+      isValidConnection={(connection) => canReparent(nodes, connection.target, connection.source)}
       onConnect={handleConnect}
       onNodeClick={(_event, node) => onSelect(node.id)}
       onPaneClick={() => onSelect(null)}

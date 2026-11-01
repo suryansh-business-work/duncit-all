@@ -23,7 +23,7 @@ export const TESTS_OVERVIEW = gql`
       coverage_trend { run_id finished_at lines branches }
       e2e { run_id run_no status ref finished_at tests passed failed skipped suites suites_failed workflow_run_url }
       stress { run_id run_no status terminated grade ended_at }
-      scenario { flows sub_flows looks_good needs_review not_reviewed pct }
+      scenario { flows automated automated_pct sub_flows looks_good needs_review not_reviewed pct }
       regressions { report_id kind status regressed fixed new_failing created_at }
       manual {
         total open_bugs pass_rate executed_last_7_days

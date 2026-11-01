@@ -1,14 +1,11 @@
 import { useState } from 'react';
-import { Controller } from 'react-hook-form';
-import { YStack } from 'tamagui';
+import { Text, YStack } from 'tamagui';
+import { createPodSendsOffer, isFreeVenueOfferModel, type FreePodVenueNotice } from '@duncit/utils';
 
 import { FormTextField } from '@/components/FormTextField';
 import { SurfaceCard } from '@/components/SurfaceCard';
 import { useTranslation } from '@/hooks/useTranslation';
 import { FREE_JUSTIFICATION_NAMES, FreeArrangementFields } from '../free-arrangement';
-import { PlaceChargesField } from '../PlaceChargesField';
-import { PodSmartIncentiveCard } from '../PodSmartIncentiveCard';
-import { PodTicketDiscountCard } from '../PodTicketDiscountCard';
 import { PodTypeCards } from '../PodTypeCards';
 import {
   FreePodNote,
@@ -18,61 +15,54 @@ import {
   ZeroEarningsNotice,
   type PodPricingState,
 } from '../price-panel';
-import { PodProductsField } from '../product-picker';
-import { SpotsStepper } from '../SpotsStepper';
-import { TermsAgreement } from '../TermsAgreement';
-import type { FreePodVenueNotice, SpotsBounds } from '@duncit/utils';
 import type { CreatePodFinance, CreatePodForm, CreatePodProduct } from '../create-pod.types';
+import { MoneyMoreOptions } from './MoneyMoreOptions';
 
 interface Props {
   form: CreatePodForm;
   products: CreatePodProduct[];
   showProducts: boolean;
   finance: CreatePodFinance;
-  /** Step 4's shared money state, owned by the stepper (it gates Create Pod). */
+  /** Money's shared state, owned by the stepper (it gates Create Pod). */
   pricing: PodPricingState;
-  /** The range the host may size this pod within (sub-category min → venue capacity). */
-  spots: SpotsBounds;
   /** What a free pod's host is told about the picked slot's venue charges. */
   venueNotice: FreePodVenueNotice;
-  /** Off in Club Admin mode — the Organizer Terms are the host's undertaking. */
-  showTerms?: boolean;
   /** A club admin is creating the pod for a host — the venue note speaks of the host. */
   forClubAdmin?: boolean;
 }
 
-/** Step 4 — Free/Paid cards, spots stepper, optional products and the Organizer
- * Terms gate. A PAID pod adds the ticket price (with its suggested-price helper
- * and zero-earnings guard), its multi-ticket discount and the slot-cost / GST /
- * earnings panel; a FREE pod has none of them — no amount and no calculation —
- * and reads a short note instead, then says why it is free and accepts Duncit's
- * free policy (the same fields a free venue fills on step 3). mWeb twin. */
+/** Money's ticket — Free/Paid cards and the price (with its suggested-price
+ * helper and zero-earnings guard), then the slot-cost / GST / earnings panel; a
+ * FREE pod has no amount and no calculation and reads a short note instead,
+ * with why it is free. That is asked once on Money: beside a free venue offer
+ * when there is one, else here. The optional extras follow, folded. mWeb twin. */
 export function PricingStep({
   form,
   products,
   showProducts,
   finance,
   pricing,
-  spots,
   venueNotice,
-  showTerms = true,
   forClubAdmin = false,
 }: Readonly<Props>) {
-  const { control, watch, setValue } = form;
+  const { control, watch } = form;
   const { t } = useTranslation();
-  const boundsHint = spots.slidable
-    ? t('mweb.createPod.spotsBoundsHint', { vars: { min: spots.min, max: spots.max } })
-    : undefined;
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
-  const isPhysical = watch('pod_mode') === 'PHYSICAL';
-  // An instant booking's spots are its guests, picked with the booking on the
-  // venue step — shown here, not changed here, so the quote always matches.
-  const setOnVenueStep = isPhysical && !watch('partner_request_id');
   const isFree = watch('pod_type') === 'FREE';
+  // The offer section asks it already when it shows a free venue (VenueOfferStep).
+  const askedWithOffer =
+    createPodSendsOffer({
+      pod_mode: watch('pod_mode'),
+      partner_request_id: watch('partner_request_id'),
+      venue_slot_id: watch('venue_slot_id'),
+    }) && isFreeVenueOfferModel(watch('venue_offer_model'));
 
   return (
     <YStack testID="pricing-step" gap={16}>
       <SurfaceCard testID="pricing-step-price-card" gap={16}>
+        <Text fontSize={14} fontWeight="700" color="$color">
+          {t('mweb.createPod.ticketTitle')}
+        </Text>
         <PodTypeCards form={form} />
         {isFree ? null : (
           <FormTextField
@@ -86,89 +76,25 @@ export function PricingStep({
           />
         )}
         {!isFree && pricing.zeroEarnings ? <ZeroEarningsNotice /> : null}
-        <Controller
-          control={control}
-          name="no_of_spots_text"
-          render={({ field, fieldState }) => (
-            <SpotsStepper
-              value={field.value}
-              onChange={field.onChange}
-              error={fieldState.error?.message}
-              min={spots.min}
-              max={spots.max}
-              slidable={spots.slidable && !setOnVenueStep}
-              boundsHint={boundsHint}
-              // Fixed when booked with the venue, or the venue leaves no room to choose.
-              readOnly={setOnVenueStep || (isPhysical && !spots.slidable)}
-              fixedHint={setOnVenueStep ? t('mweb.createPod.spotsSetOnVenueStep') : undefined}
-            />
-          )}
-        />
+        {isFree && !askedWithOffer ? (
+          <FreeArrangementFields
+            control={control}
+            names={FREE_JUSTIFICATION_NAMES}
+            testIDPrefix="create-pod-pod"
+          />
+        ) : null}
       </SurfaceCard>
       {isFree ? (
         <FreePodNote venueNotice={venueNotice} forClubAdmin={forClubAdmin} />
       ) : (
         <PricePanel finance={finance} pricing={pricing} />
       )}
-      {isFree ? (
-        <SurfaceCard testID="pricing-step-free-card">
-          <FreeArrangementFields
-            control={control}
-            names={FREE_JUSTIFICATION_NAMES}
-            testIDPrefix="create-pod-pod"
-          />
-        </SurfaceCard>
-      ) : null}
-      {isFree ? null : <PodTicketDiscountCard form={form} currency={finance.currency_symbol} />}
-      {/* Renders nothing while Loyalty has the programme switched off. */}
-      {isFree ? null : <PodSmartIncentiveCard form={form} currency={finance.currency_symbol} />}
-      {/* Payment terms describe refunds and charges a free pod does not have. */}
-      {isFree ? null : (
-        <SurfaceCard testID="pricing-step-payment-terms-card">
-          <FormTextField
-            control={control}
-            name="payment_terms"
-            label={t('mweb.createPod.paymentTerms')}
-            multiline
-          />
-        </SurfaceCard>
-      )}
-      {isPhysical ? (
-        <SurfaceCard testID="pricing-step-place-charges-card">
-          <Controller
-            control={control}
-            name="place_charges"
-            render={({ field }) => (
-              <PlaceChargesField value={field.value} onChange={field.onChange} />
-            )}
-          />
-        </SurfaceCard>
-      ) : null}
-      {showProducts ? (
-        // The "Attach products to this pod" checkbox is gone: attaching IS
-        // adding a product, so `products_enabled` is derived from the row list
-        // on submit rather than toggled here. `products` arrives already
-        // filtered to the pod's club category, and the field says so when it is
-        // empty. mWeb twin (rule 27).
-        <SurfaceCard testID="pricing-step-products-card">
-          <Controller
-            control={control}
-            name="product_requests"
-            render={({ field, fieldState }) => (
-              <PodProductsField
-                value={field.value}
-                onChange={(next) => {
-                  field.onChange(next);
-                  setValue('products_enabled', next.length > 0);
-                }}
-                products={products}
-                error={fieldState.error?.message}
-              />
-            )}
-          />
-        </SurfaceCard>
-      ) : null}
-      {showTerms ? <TermsAgreement form={form} /> : null}
+      <MoneyMoreOptions
+        form={form}
+        products={products}
+        showProducts={showProducts}
+        currencySymbol={finance.currency_symbol}
+      />
       {isFree ? null : (
         <SuggestedPricesModal
           open={suggestionsOpen}

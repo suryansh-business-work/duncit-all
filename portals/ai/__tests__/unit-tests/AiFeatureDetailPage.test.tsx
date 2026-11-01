@@ -6,7 +6,7 @@ import AiFeatureDetailPage from '../../src/pages/ai-features/detail';
 import { AI_FEATURE_ONE, SET_AI_FEATURE_ENABLED, type AiFeature } from '../../src/pages/ai-features/queries';
 import { OPENAI_LOGS_TABLE, type OpenAiLogRow } from '../../src/pages/openai-logs/queries';
 import { renderWithProviders } from '../testkit';
-import { answerQuery, mutationOf, queryOptions, resetApollo } from './reel-apollo-mock';
+import { answerQuery, mutationOf, queryOptions, resetApollo } from '../hooks-mock';
 
 const { confirm, fetchLogs, useApolloTableFetch } = vi.hoisted(() => {
   const fetchLogs = vi.fn();
@@ -19,7 +19,7 @@ const { confirm, fetchLogs, useApolloTableFetch } = vi.hoisted(() => {
 
 vi.mock('@apollo/client/react', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@apollo/client/react')>()),
-  ...(await import('./reel-apollo-mock')).hooks,
+  ...(await import('../hooks-mock')).hooks,
 }));
 
 vi.mock('@duncit/dialogs', async (importOriginal) => ({

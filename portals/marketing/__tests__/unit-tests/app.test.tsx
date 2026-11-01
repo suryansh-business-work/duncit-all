@@ -19,6 +19,11 @@ vi.mock('../../src/pages/LoginPage', () => ({ default: () => <div>login-page</di
 vi.mock('../../src/pages/dashboard-page/DashboardPage', () => ({
   default: () => <div>welcome-page</div>,
 }));
+vi.mock('../../src/pages/analytics-overview-page', () => ({ default: () => <div>analytics-overview-page</div> }));
+vi.mock('../../src/pages/analytics-social-page', () => ({ default: () => <div>analytics-social-page</div> }));
+vi.mock('../../src/pages/analytics-content-page', () => ({ default: () => <div>analytics-content-page</div> }));
+vi.mock('../../src/pages/analytics-funnel-page', () => ({ default: () => <div>analytics-funnel-page</div> }));
+vi.mock('../../src/pages/analytics-automation-page', () => ({ default: () => <div>analytics-automation-page</div> }));
 vi.mock('../../src/pages/contacts-page', () => ({
   default: () => <div>contacts-page</div>,
 }));
@@ -46,6 +51,39 @@ vi.mock('../../src/pages/live-ads-page/LiveAdsPage', () => ({
 vi.mock('../../src/pages/ads-settings-page/AdsSettingsPage', () => ({
   default: () => <div>ads-settings-page</div>,
 }));
+vi.mock('../../src/pages/settings-page/IntegrationsPage', () => ({
+  default: () => <div>integrations-page</div>,
+}));
+// Shows where it landed, so a redirect can be seen to keep the query string.
+vi.mock('../../src/pages/social-accounts-page', async () => {
+  const { useLocation } = await import('react-router');
+  return {
+    default: () => {
+      const { search } = useLocation();
+      return <div>social-accounts-page{search}</div>;
+    },
+  };
+});
+vi.mock('../../src/pages/social-calendar-page', () => ({
+  default: () => <div>social-calendar-page</div>,
+}));
+vi.mock('../../src/pages/pod-promos-page', () => ({ default: () => <div>pod-promos-page</div> }));
+vi.mock('../../src/pages/leads-page', () => ({ default: () => <div>leads-page</div> }));
+vi.mock('../../src/pages/instagram-leads-page', () => ({
+  default: () => <div>instagram-leads-page</div>,
+}));
+vi.mock('../../src/pages/outreach-page', () => ({ default: () => <div>outreach-page</div> }));
+vi.mock('../../src/pages/agents-page', () => ({ default: () => <div>agents-page</div> }));
+vi.mock('../../src/pages/activity-page', () => ({ default: () => <div>activity-page</div> }));
+vi.mock('../../src/pages/inbox-page', () => ({ default: () => <div>inbox-page</div> }));
+vi.mock('../../src/pages/approvals-page', () => ({ default: () => <div>approvals-page</div> }));
+vi.mock('../../src/pages/tasks-page', () => ({ default: () => <div>tasks-page</div> }));
+vi.mock('../../src/pages/reels/projects-list', () => ({ default: () => <div>reel-projects-page</div> }));
+// The studio route mounts the lazy wrapper; the reel it opens is read off the path.
+vi.mock('../../src/pages/reels/studio/lazy', async () => {
+  const { useParams } = await import('react-router');
+  return { default: () => <div>reel-studio-page:{useParams().projectId}</div> };
+});
 
 afterEach(() => {
   clearToken();
@@ -54,8 +92,16 @@ afterEach(() => {
 describe('App routing', () => {
   it.each([
     ['/', 'welcome-page'],
+    ['/tasks', 'tasks-page'],
+    ['/approvals', 'approvals-page'],
+    ['/activity', 'activity-page'],
     ['/profile', 'profile-page'],
-    ['/contacts', 'contacts-page'],
+    ['/analytics/overview', 'analytics-overview-page'],
+    ['/analytics/social', 'analytics-social-page'],
+    ['/analytics/content', 'analytics-content-page'],
+    ['/analytics/funnel', 'analytics-funnel-page'],
+    ['/analytics/automation', 'analytics-automation-page'],
+    ['/analytics/contacts', 'contacts-page'],
     ['/audience', 'audience-lists-page'],
     ['/audience/new', 'create-audience-list-page'],
     ['/audience/l1', 'audience-list-detail-page'],
@@ -64,6 +110,17 @@ describe('App routing', () => {
     ['/ads-approvals', 'ads-approvals-page'],
     ['/live-ads', 'live-ads-page'],
     ['/ads-settings', 'ads-settings-page'],
+    ['/social/accounts', 'social-accounts-page'],
+    ['/social/inbox', 'inbox-page'],
+    ['/publish/calendar', 'social-calendar-page'],
+    ['/publish/pod-promos', 'pod-promos-page'],
+    ['/studio/reels', 'reel-projects-page'],
+    ['/studio/reels/DUN-REEL-1', 'reel-studio-page:DUN-REEL-1'],
+    ['/leads', 'leads-page'],
+    ['/leads/instagram', 'instagram-leads-page'],
+    ['/outreach/sequences', 'outreach-page'],
+    ['/automation/agents', 'agents-page'],
+    ['/settings/integrations', 'integrations-page'],
   ])('renders %s behind auth', (path, text) => {
     setToken('tok');
     renderWithProviders(<App />, { initialEntries: [path] });
@@ -90,5 +147,23 @@ describe('App routing', () => {
     setToken('tok');
     renderWithProviders(<App />, { initialEntries: ['/does-not-exist'] });
     expect(screen.getByText('welcome-page')).toBeInTheDocument();
+  });
+
+  it.each([
+    ['/social-accounts', 'social-accounts-page'],
+    ['/social-calendar', 'social-calendar-page'],
+    ['/instagram-leads', 'instagram-leads-page'],
+    ['/contacts', 'contacts-page'],
+  ])('sends the old address %s to the page that moved', (path, text) => {
+    setToken('tok');
+    renderWithProviders(<App />, { initialEntries: [path] });
+    expect(screen.getByText(text)).toBeInTheDocument();
+  });
+
+  // The OAuth callback still lands on the old address; what it carries must survive the move.
+  it('keeps the query string when an old address redirects', () => {
+    setToken('tok');
+    renderWithProviders(<App />, { initialEntries: ['/social-accounts?connected=LINKEDIN&count=2'] });
+    expect(screen.getByText('social-accounts-page?connected=LINKEDIN&count=2')).toBeInTheDocument();
   });
 });

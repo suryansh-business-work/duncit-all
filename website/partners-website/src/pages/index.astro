@@ -21,7 +21,8 @@ const { t } = await getSiteTranslator(urlConfigs.graphqlUrl);
     <main class="mt-3 sm:mt-4">
       <Hero />
       <!-- Upcoming pods, live from the API, right under the banner; each opens on mWeb. -->
-      <PodRail graphqlUrl={urlConfigs.graphqlUrl} mwebUrl={urlConfigs.mwebUrl} t={t} />
+      <!-- On its own cream panel: the frame never inverts, so ink text straight on it vanished in the light theme. -->
+      <PodRail graphqlUrl={urlConfigs.graphqlUrl} mwebUrl={urlConfigs.mwebUrl} t={t} class="mt-3 overflow-hidden rounded-[2rem] bg-cream sm:rounded-[2.75rem]" />
 
       <!-- Reels second, straight after the hero (hidden when there are none),
            then the Earn section the Website portal can move into a slot below. -->

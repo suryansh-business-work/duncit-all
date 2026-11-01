@@ -54,3 +54,37 @@ export function CitySelect({
     </TextField>
   );
 }
+
+/** The platforms an event can come from, with the words for each. */
+export const PLATFORM_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [
+  { value: 'android', label: 'analytics.product.platform.android' },
+  { value: 'ios', label: 'analytics.product.platform.ios' },
+  { value: 'web', label: 'analytics.product.platform.web' },
+  { value: 'mweb', label: 'analytics.product.platform.mweb' },
+];
+
+/** One platform, or all of them — on the pages read from the app's own events. */
+export function PlatformSelect({
+  value,
+  onChange,
+}: Readonly<{ value: string | null; onChange: (next: string | null) => void }>) {
+  const { t } = useTranslation();
+  return (
+    <TextField
+      select
+      size="small"
+      label={t('analytics.product.filter.platform')}
+      value={value ?? ALL}
+      onChange={(event) => onChange(event.target.value || null)}
+      sx={{ minWidth: 180 }}
+      slotProps={{ htmlInput: { 'data-testid': 'analytics-platform' } }}
+    >
+      <MenuItem value={ALL}>{t('analytics.product.filter.allPlatforms')}</MenuItem>
+      {PLATFORM_OPTIONS.map((option) => (
+        <MenuItem key={option.value} value={option.value}>
+          {t(option.label)}
+        </MenuItem>
+      ))}
+    </TextField>
+  );
+}

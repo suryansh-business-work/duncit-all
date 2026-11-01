@@ -36,7 +36,7 @@ export const PORTAL_ROLE_REQUIREMENTS: Record<string, readonly string[]> = {
   hr: ['HR_MANAGER'],
   legal: ['LEGAL_MANAGER'],
   logs: ['LOGS_MANAGER'],
-  marketing: ['MARKETING_MANAGER'],
+  marketing: ['MARKETING_MANAGER', 'MARKETING_EDITOR'],
   onboarding: ['ONBOARDING_MANAGER'],
   products: ['PRODUCTS_MANAGER'],
   'regional-club-admin': ['REGIONAL_CLUB_ADMIN'],

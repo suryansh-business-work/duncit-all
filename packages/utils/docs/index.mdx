@@ -604,6 +604,7 @@ exports:
   - 'podRowStatus'
   - 'canOpenPodAttendance'
   - 'clubAdminVenueOptions'
+  - 'clubCountsByCategory'
   - 'filterClubs'
   - 'hostCategoryKeyOf'
   - 'venueSpaces'
@@ -1537,6 +1538,36 @@ app share these derivations and keep their own MUI / Tamagui rows (rules 27 + 40
 | `draftHoursLeft` | `(draft, now = Date.now()) => number` | Whole hours left, floored at 0. `0` means the last hour, not "already gone". |
 | `splitDraftsByExpiry` | `(drafts, now = Date.now()) => { expiring, rest }` | `expiring` soonest-first; `rest` keeps the server order. |
 
+### Create Pod steps
+
+Create Pod walks four steps on both surfaces: **What** (category, mode) →
+**Where & when** (locality, club, venue and slot, or a virtual meeting) →
+**Money** (the venue offer, when the pod sends one, and the ticket) → **Details**.
+Every pod walks all four. A draft payload carries `stepper: CREATE_POD_STEPPER_VERSION`;
+one without it was saved by the old five-step stepper, and `resumeCreatePodStep`
+opens it on the step that now holds its screen (Location & Club → What, Basics →
+Details, Venue & Slot → Where & when, Offer and Pricing → Money). Host Again
+copies are numbered the five-step way by the server, and resume the same way.
+
+| Export | Signature | Meaning |
+| --- | --- | --- |
+| `CREATE_POD_STEP_COUNT` | `number` | 4. |
+| `CREATE_POD_WHERE_STEP` / `CREATE_POD_MONEY_STEP` | `number` | 1 / 2 — the steps the virtual title and the free justification key off. |
+| `CREATE_POD_STEPPER_VERSION` | `number` | 2 — written into every draft payload as `stepper`. |
+| `createPodSendsOffer` | `(scope) => boolean` | Physical, no Pod Request and no held slot: Money shows the venue offer. |
+| `clampCreatePodStep` | `(step) => number` | `step` held to 0..3; a non-number reads as 0. |
+| `resumeCreatePodStep` | `(step, payload) => number` | The step a stored draft reopens on, mapping a five-step draft's step. |
+| `createPodSuperOptions` | `(categories) => { id, name }[]` | The host's super-categories ("For You", "For Your Pet"), once each, in order. What's first picker row, always shown. |
+| `createPodCatalogRows` | `(supers, categories, subs) => categories` | One row per active sub whose Category and Super are active too, in Category Management order. |
+| `createPodGrantedRows` | `(catalog, granted) => categories` | The catalog rows a host is granted: a Sub grant opens that sub, a Category or Super grant every sub beneath it. With no catalog the grants pass through. |
+| `createPodGroupOptions` / `categoriesForGroup` | `(categories, superId)` / `(categories, categoryId)` | A super's categories once each (What's second row), and one category's subs. |
+| `createPodCategoryLevels` | `(categories, { superId, categoryId }) => { supers, superId, groups, categoryId, subs }` | What the three-level picker shows for a pick; a level whose pick is gone falls back to its first option. |
+| `categoriesForSuper` | `(categories, superCount, superId) => categories` | The picked super's tiles, or all of them when there is nothing to narrow. |
+| `categoryTileName` / `categoryTileGroup` | `(category) => string` | A tile's name (most specific level) and the level above it. |
+| `categoryIconLookup` | `(icons) => (category) => string` | A tile's admin icon: its own level's, else its parent category's, else `''`. |
+| `moneyExtrasFilled` / `detailsExtrasFilled` | `(values) => boolean` | Whether a step's folded More options opens on arrival (an extra is already set). |
+| `MONEY_EXTRA_FIELDS` / `DETAILS_EXTRA_FIELDS` + `anyFieldFailed` | `(errors, fields) => boolean` | Holds a More options open while one of its fields has a validation error. |
+
 ### Host Studio sections
 
 A hosted pod's VENUE-APPROVAL state, not its clock, decides which of Host
@@ -2000,6 +2031,7 @@ Nothing here touches React or a date library.
 | `canOpenPodAttendance` | `(pod) => boolean` | Only an `ACTIVE` or `COMPLETED` pod offers the attendance board; a draft, a venue-blocked or a cancelled pod has no door to have stood at. |
 | `clubAdminVenueOptions` | `(publicVenues, owned, club) => T[]` | The venues a Club Admin may book a pod into: the public list (plus their own, so a venue-owning admin keeps theirs), narrowed to the club's `meetup_venues_id` **only when it has any**. An empty link list means "never attached", not "may use none" — reading it as a whitelist is what made the portals' picker dead. A venue with no `status` came from `publicVenues`, which the server already filtered, so it counts as bookable. |
 | `filterClubs` | `(clubs, { hostCategories, selectedCategoryKey, locationId, locality, podMode }) => C[]` | The clubs Create Pod offers: the selected host category (Super + Sub) — or all of the host's categories when none is picked — then, for a physical pod, the city and (optionally) the locality. mWeb and native read this one rule. |
+| `clubCountsByCategory` | `(clubs, categories, { locationId, podMode }) => Map<key, number>` | Each category's clubs where the pod would run (the city, or anywhere when virtual), matched as `filterClubs` matches. What's chips show it and lock a sub with none. |
 | `hostCategoryKeyOf` | `(category) => string` | `super_id\|sub_id` — the key the category picker and `filterClubs` both match on. |
 | `podRowStatusLabel` / `podRowStatusOptions` | `(status, t)` / `(t)` | The chip's words, and the filter's rows ("All statuses" first, then `POD_ROW_STATUS_ORDER`). |
 | `POD_ROW_STATUS_COLORS` | `Record<PodRowStatus, StatusTone>` | The chip's tone — `default` / `info` / `success` / `warning` / `error`, which MUI's `Chip` takes as-is. |

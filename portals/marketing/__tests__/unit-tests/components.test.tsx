@@ -83,28 +83,16 @@ vi.mock('@duncit/user-context', async (importOriginal) => ({
 }));
 
 // Spread the real shell (keeps ColorModeProvider for renderWithProviders) and
-// replace only the chrome with a probe that surfaces the adapter's props.
+// replace only the chrome with a probe that surfaces the adapter's props. The
+// session gate and sign-out live in PortalAppShell and are the shell's to test.
 const shellProbe = vi.hoisted(() => ({ props: null as any }));
 vi.mock('@duncit/shell', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@duncit/shell')>();
   return {
     ...actual,
-    AppShell: (props: Record<string, any>) => {
+    PortalAppShell: (props: Record<string, any>) => {
       shellProbe.props = props;
-      return (
-        <div data-testid="shell">
-          <span data-testid="loading">{String(props.loading)}</span>
-          <span data-testid="has-access">{String(props.hasAccess)}</span>
-          <span data-testid="has-user">{props.user ? props.user.first_name : 'none'}</span>
-          <button type="button" onClick={props.onLogout}>
-            logout
-          </button>
-          <button type="button" onClick={props.onDenied}>
-            denied
-          </button>
-          {props.children as ReactNode}
-        </div>
-      );
+      return <div data-testid="shell">{props.children as ReactNode}</div>;
     },
   };
 });
@@ -254,42 +242,42 @@ describe('AppShell adapter', () => {
       ),
     });
 
-  it('passes access + user through and logs out via navigate', () => {
-    const logout = vi.fn();
-    userCtxMock.value = {
-      user: { first_name: 'Alex', roles: ['MARKETING_MANAGER'] },
-      loading: false,
-      logout,
-    };
+  const navKeys = () => (shellProbe.props.nav as { labelKey: string }[]).map((item) => item.labelKey);
+
+  it('hands the shell this portal’s config, session gate, token clearer and profile route', () => {
+    userCtxMock.value = { user: { first_name: 'Alex', roles: ['MARKETING_MANAGER'] }, loading: false, logout: vi.fn() };
     setToken('tok');
     renderShell();
-    expect(screen.getByTestId('has-access')).toHaveTextContent('true');
-    expect(screen.getByTestId('has-user')).toHaveTextContent('Alex');
     expect(screen.getByText('child-content')).toBeInTheDocument();
-
-    fireEvent.click(screen.getByText('logout'));
+    expect(shellProbe.props.config.key).toBe('marketing');
+    expect(shellProbe.props.profileTo).toBe('/profile');
+    // The real session helpers, not copies: the gate answers for the portal's roles…
+    expect(shellProbe.props.hasAppAccess(['MARKETING_MANAGER'])).toBe(true);
+    expect(shellProbe.props.hasAppAccess(['USER'])).toBe(false);
+    // …and clearing drops the token the shell would sign out with.
+    shellProbe.props.clearToken();
     expect(getToken()).toBeNull();
-    expect(logout).toHaveBeenCalledTimes(1);
-    expect(screen.getByText('LOGIN ROUTE')).toBeInTheDocument();
   });
 
-  it('clears the token on access-denied', () => {
-    userCtxMock.value = {
-      user: { first_name: 'Alex', roles: ['MARKETING_MANAGER'] },
-      loading: false,
-      logout: vi.fn(),
-    };
+  it('builds the sidebar for the signed-in roles: a manager sees Settings', () => {
+    userCtxMock.value = { user: { first_name: 'Alex', roles: ['MARKETING_MANAGER'] }, loading: false, logout: vi.fn() };
     setToken('tok');
     renderShell();
-    fireEvent.click(screen.getByText('denied'));
-    expect(getToken()).toBeNull();
+    expect(navKeys()).toContain('shell.nav.settings');
   });
 
-  it('reports undefined access while there is no user', () => {
+  it('leaves Settings out for a role that cannot change keys', () => {
+    userCtxMock.value = { user: { first_name: 'Sam', roles: ['MARKETING_READER'] }, loading: false, logout: vi.fn() };
+    setToken('tok');
+    renderShell();
+    expect(navKeys()).not.toContain('shell.nav.settings');
+    expect(navKeys()).toContain('shell.nav.overview');
+  });
+
+  it('builds the narrowest sidebar while the user is still unknown', () => {
     userCtxMock.value = { user: null, loading: true, logout: vi.fn() };
     renderShell();
-    expect(screen.getByTestId('has-access')).toHaveTextContent('undefined');
-    expect(screen.getByTestId('loading')).toHaveTextContent('true');
-    expect(screen.getByTestId('has-user')).toHaveTextContent('none');
+    expect(navKeys()).not.toContain('shell.nav.settings');
+    expect(navKeys()).toContain('shell.nav.overview');
   });
 });

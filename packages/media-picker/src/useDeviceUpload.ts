@@ -31,6 +31,8 @@ interface Args extends FilePolicy {
   clearAfterUpload?: boolean;
   /** Hash the picked file and hand it back via `onPicked`'s second argument. */
   detectDuplicates?: boolean;
+  /** Preset the caller requires; it wins over the admin default and the menu. */
+  lockedCropKey?: string;
   setError: (msg: string | null) => void;
 }
 
@@ -46,6 +48,7 @@ export function useDeviceUpload({
   onClose,
   clearAfterUpload,
   detectDuplicates,
+  lockedCropKey,
   setError,
 }: Args) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -60,7 +63,13 @@ export function useDeviceUpload({
 
   const client = useApolloClient();
   const settings = useUploadSettings(surface, { skip: !open });
-  const cropKey = cropKeyOverride ?? settings?.default_crop_key ?? 'NO_CROP';
+  // A locked preset only applies while the admin still offers it; otherwise the
+  // menu comes back so the upload is never stuck on a preset that cannot crop.
+  const lockApplies = croppablePresets(settings?.crop_presets ?? []).some(
+    (p) => p.key === lockedCropKey,
+  );
+  const lockedKey = lockApplies ? lockedCropKey : undefined;
+  const cropKey = lockedKey ?? cropKeyOverride ?? settings?.default_crop_key ?? 'NO_CROP';
 
   useEffect(() => {
     if (!open) return;
@@ -184,6 +193,7 @@ export function useDeviceUpload({
     stage,
     settings,
     cropKey,
+    cropLocked: lockApplies,
     setCropKey: setCropKeyOverride,
     setCropRect,
     onPickFile,

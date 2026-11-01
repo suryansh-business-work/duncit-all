@@ -8,6 +8,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   clubAdminVenueOptions,
+  clubCountsByCategory,
   filterClubs,
   hostCategoryKeyOf,
   type BookableVenue,
@@ -117,5 +118,40 @@ describe('filterClubs', () => {
   it('skips the city and locality filter for a virtual pod', () => {
     const virtual = opts({ podMode: 'VIRTUAL', locationId: 'mum', locality: 'Bandra' });
     expect(clubIds(filterClubs(clubs, virtual))).toEqual(['c-1', 'c-3']);
+  });
+});
+
+describe('clubCountsByCategory', () => {
+  const clubs: CreatePodClub[] = [
+    { id: 'c-1', club_name: 'Run A', super_category_id: 's-1', category_id: 'sub-1', location_id: 'blr' },
+    { id: 'c-2', club_name: 'Run B', super_category_id: 's-1', category_id: 'sub-1', location_id: 'blr' },
+    { id: 'c-3', club_name: 'Swim', super_category_id: 's-1', category_id: 'sub-2', location_id: 'del' },
+    { id: 'c-4', club_name: 'Chess', super_category_id: 's-2', category_id: 'sub-9', location_id: 'blr' },
+  ];
+  const run = { super_category_id: 's-1', sub_category_id: 'sub-1' };
+  const swim = { super_category_id: 's-1', sub_category_id: 'sub-2' };
+  const dance = { super_category_id: 's-1', sub_category_id: 'sub-3' };
+  const sportsWhole = { super_category_id: 's-1', sub_category_id: null };
+
+  it("counts each category's clubs in the pod's city, zero where it has none", () => {
+    const counts = clubCountsByCategory(clubs, [run, swim, dance], { locationId: 'blr', podMode: 'PHYSICAL' });
+    expect([...counts]).toEqual([
+      ['s-1|sub-1', 2],
+      ['s-1|sub-2', 0],
+      ['s-1|sub-3', 0],
+    ]);
+  });
+
+  it('counts every city for a virtual pod, and every club of a Super-only category', () => {
+    const counts = clubCountsByCategory(clubs, [swim, sportsWhole], { locationId: 'blr', podMode: 'VIRTUAL' });
+    expect(counts.get('s-1|sub-2')).toBe(1);
+    expect(counts.get('s-1|')).toBe(3);
+    // A physical pod with no city picked yet is not narrowed by place either.
+    expect(clubCountsByCategory(clubs, [swim], { locationId: '', podMode: 'PHYSICAL' }).get('s-1|sub-2')).toBe(1);
+  });
+
+  it('has nothing to count without categories or clubs', () => {
+    expect(clubCountsByCategory(clubs, [], { locationId: 'blr', podMode: 'PHYSICAL' }).size).toBe(0);
+    expect(clubCountsByCategory([], [run], { locationId: 'blr', podMode: 'PHYSICAL' }).get('s-1|sub-1')).toBe(0);
   });
 });

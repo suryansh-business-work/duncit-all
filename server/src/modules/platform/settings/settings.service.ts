@@ -451,6 +451,18 @@ const assertLegalUrl = (label: string, value?: string | null) => {
   });
 };
 
+/**
+ * A slide's button opens a web address in a new tab or an in-app path
+ * (/shop/...). Anything else — javascript:, data:, a protocol-relative //host —
+ * is refused rather than stored and rendered as a link.
+ */
+const assertSlideCtaUrl = (value: string) => {
+  if (!value || /^https?:\/\/\S+$/i.test(value) || /^\/(?!\/)\S*$/.test(value)) return;
+  throw new GraphQLError("Slide button link must be an https:// address or an in-app path starting with /", {
+    extensions: { code: "BAD_USER_INPUT" },
+  });
+};
+
 const brandingToPub = (doc: any) => ({
   app_name: doc.app_name ?? "Duncit",
   logo_url: doc.logo_url ?? "",
@@ -1290,6 +1302,10 @@ export const settingsService = {
       cta_label: (m.cta_label ?? "").trim(),
       cta_url: (m.cta_url ?? "").trim(),
     }));
+    for (const m of media) {
+      assertLegalUrl("Slide media", m.url);
+      assertSlideCtaUrl(m.cta_url);
+    }
     const doc = await BrandingModel.findOneAndUpdate(
       { singleton_key: "branding" },
       { $set: { pod_shop_slider: media } },

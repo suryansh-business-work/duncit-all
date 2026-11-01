@@ -1,4 +1,5 @@
-import { Alert, Card, CardContent, Divider, Stack, Typography } from '@mui/material';
+import { Alert, Card, CardContent, Divider, Link, Stack, Typography } from '@mui/material';
+import { Link as RouterLink } from 'react-router';
 import AddLinkIcon from '@mui/icons-material/AddLink';
 import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/app-settings';
@@ -11,17 +12,29 @@ interface Props {
   provider: SocialProvider;
   configured: boolean;
   accounts: SocialAccount[];
+  /** Where this network's app is set up — the Settings › Integrations tab for it. */
+  settingsTo?: string;
   onConnect: (provider: SocialProvider) => Promise<void>;
   onSync: (account: SocialAccount) => Promise<void>;
+  onSetOwner: (account: SocialAccount) => void;
   onDisconnect: (account: SocialAccount) => void;
 }
 
 /**
  * One network: what connecting it adds, and the accounts it already brought
- * in. Until Tech has set its app up there is nothing to press — the card says
- * who can fix that and where, instead of offering a button that would fail.
+ * in. Until its app is set up there is nothing to press — the card says where
+ * that happens and links there, instead of offering a button that would fail.
  */
-export default function ProviderCard({ provider, configured, accounts, onConnect, onSync, onDisconnect }: Readonly<Props>) {
+export default function ProviderCard({
+  provider,
+  configured,
+  accounts,
+  settingsTo,
+  onConnect,
+  onSync,
+  onSetOwner,
+  onDisconnect,
+}: Readonly<Props>) {
   const { t } = useTranslation();
   const titleId = `social-provider-title-${provider.toLowerCase()}`;
   const connect = () => onConnect(provider);
@@ -62,6 +75,14 @@ export default function ProviderCard({ provider, configured, accounts, onConnect
         {configured ? null : (
           <Alert severity="info" variant="outlined" sx={{ mt: 2 }} data-testid={`social-not-set-up-${provider.toLowerCase()}`}>
             {t('marketing.social.notSetUp')}
+            {settingsTo && (
+              <>
+                {' '}
+                <Link component={RouterLink} to={settingsTo} data-testid={`social-open-settings-${provider.toLowerCase()}`}>
+                  {t('marketing.social.openSettings')}
+                </Link>
+              </>
+            )}
           </Alert>
         )}
 
@@ -74,7 +95,14 @@ export default function ProviderCard({ provider, configured, accounts, onConnect
         {accounts.length > 0 && (
           <Stack divider={<Divider flexItem />} sx={{ mt: 1 }}>
             {accounts.map((account) => (
-              <AccountRow key={account.id} account={account} onSync={onSync} onReconnect={connect} onDisconnect={onDisconnect} />
+              <AccountRow
+                key={account.id}
+                account={account}
+                onSync={onSync}
+                onReconnect={connect}
+                onSetOwner={onSetOwner}
+                onDisconnect={onDisconnect}
+              />
             ))}
           </Stack>
         )}

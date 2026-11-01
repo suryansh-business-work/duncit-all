@@ -194,11 +194,12 @@ describe('getPostColumns', () => {
       { value: 'sa2', label: 'Duncit Pets' },
     ]);
     expect(optionsOf(columns[2])).toEqual([
-      { value: 'LINKEDIN', label: 'LinkedIn' },
-      { value: 'FACEBOOK', label: 'Facebook' },
       { value: 'INSTAGRAM', label: 'Instagram' },
-      { value: 'X', label: 'X' },
+      { value: 'FACEBOOK', label: 'Facebook' },
+      { value: 'THREADS', label: 'Threads' },
       { value: 'YOUTUBE', label: 'YouTube' },
+      { value: 'LINKEDIN', label: 'LinkedIn' },
+      { value: 'X', label: 'X' },
     ]);
     expect(columns[3].headerName).toBe('Published');
   });

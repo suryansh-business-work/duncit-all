@@ -39,10 +39,15 @@ vi.mock('@duncit/venue-food', () => ({
 vi.mock('@duncit/venue-rentals', () => ({ VenueRentalDesk: () => null }));
 vi.mock('@duncit/buttons', () => ({ DuncitButton: () => null }));
 vi.mock('@duncit/logs', () => ({ logs: { portal: { venues: 'venues-logger' } } }));
-vi.mock('@duncit/shell', () => ({ useTranslation: () => ({ t: (key: string) => `t:${key}` }) }));
+vi.mock('@duncit/shell', () => ({
+  useTranslation: () => ({ t: (key: string) => `t:${key}` }),
+  BannerKitPanel: () => null,
+  PodBannersPanel: () => null,
+}));
 
 import { VenueFoodCoupons, VenueFoodDashboard, VenueFoodMenu, VenueFoodOrders } from '@duncit/venue-food';
 import { VenueRentalDesk } from '@duncit/venue-rentals';
+import { BannerKitPanel, PodBannersPanel } from '@duncit/shell';
 import VenueRecordPage from '../../src/VenueRecordPage';
 
 const tabsFor = (venue: Venue): ExtraTab[] => {
@@ -68,19 +73,34 @@ beforeEach(() => {
 describe('VenueRecordPage', () => {
   it('gives a venue that serves no food only the menu, where food is switched on, and the rental desk', () => {
     const tabs = tabsFor({ id: 'v1', offers_food: false });
-    expect(tabs.map((tab) => tab.value)).toEqual(['foodMenu', 'rentedItems']);
-    expect(tabs.map((tab) => tab.label)).toEqual(['t:venueFoodOwner.menu.title', 't:venueRentals.items.pageTitle']);
+    expect(tabs.map((tab) => tab.value)).toEqual(['foodMenu', 'rentedItems', 'bannerKit', 'banners']);
+    expect(tabs.map((tab) => tab.label)).toEqual([
+      't:venueFoodOwner.menu.title',
+      't:venueRentals.items.pageTitle',
+      't:shell.bannerKit.title',
+      't:shell.podBanners.title',
+    ]);
   });
 
   it('adds the food dashboard, order board and coupons for a venue that serves food, in that order', () => {
     const tabs = tabsFor({ id: 'v1', offers_food: true });
-    expect(tabs.map((tab) => tab.value)).toEqual(['foodMenu', 'foodDashboard', 'foodOrders', 'foodCoupons', 'rentedItems']);
+    expect(tabs.map((tab) => tab.value)).toEqual([
+      'foodMenu',
+      'foodDashboard',
+      'foodOrders',
+      'foodCoupons',
+      'rentedItems',
+      'bannerKit',
+      'banners',
+    ]);
     expect(tabs.map((tab) => tab.label)).toEqual([
       't:venueFoodOwner.menu.title',
       't:venueFoodOwner.dashboard.title',
       't:venueFoodOwner.orders.title',
       't:venueFoodOwner.coupons.title',
       't:venueRentals.items.pageTitle',
+      't:shell.bannerKit.title',
+      't:shell.podBanners.title',
     ]);
   });
 
@@ -133,9 +153,24 @@ describe('VenueRecordPage', () => {
 
   it('opens the rental desk as an admin for the venue', () => {
     const tabs = tabsFor({ id: 'v3', offers_food: false });
-    const rentals = elementOf(tabs.at(-1) as ExtraTab);
+    const rentals = elementOf(tabs.find((tab) => tab.value === 'rentedItems') as ExtraTab);
     expect(rentals.type).toBe(VenueRentalDesk);
     expect(rentals.key).toBe('v3');
     expect(rentals.props).toMatchObject({ venueId: 'v3', surface: 'venues', mode: 'admin' });
+  });
+
+  it("opens the venue's banner kit as the console's record, and its Banners on the venue's pods", () => {
+    const tabs = tabsFor({ id: 'v5', offers_food: false });
+    const byValue = new Map(tabs.map((tab) => [tab.value, elementOf(tab)]));
+
+    const kit = byValue.get('bannerKit');
+    expect(kit?.type).toBe(BannerKitPanel);
+    expect(kit?.key).toBe('v5');
+    expect(kit?.props).toEqual({ entity: 'VENUE', mode: 'console', id: 'v5' });
+
+    const banners = byValue.get('banners');
+    expect(banners?.type).toBe(PodBannersPanel);
+    expect(banners?.key).toBe('v5');
+    expect(banners?.props).toEqual({ filter: { field: 'venue_id', value: 'v5' } });
   });
 });

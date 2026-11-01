@@ -100,6 +100,11 @@ export interface MediaPickerDialogProps {
    * compare files against each other (covers, galleries, avatars, …).
    */
   detectDuplicates?: boolean;
+  /**
+   * Crop preset every device image is cut to (a pod cover's shape). The preset
+   * menu is hidden while it applies; without it the admin default is preselected.
+   */
+  cropKey?: string;
 }
 
 export type Orientation = 'landscape' | 'portrait' | 'square' | '';

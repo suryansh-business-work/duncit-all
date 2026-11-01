@@ -18,6 +18,7 @@ import {
   type SocketLike,
 } from '@duncit/user-core';
 import { defineDemo, defineDemos } from '../types';
+import { productTrackerDemo } from './user-core-analytics';
 
 /** The `me` payload exactly as the server answers it. */
 interface MeMock {
@@ -176,4 +177,5 @@ export default defineDemos('user-core', [
       };
     },
   }),
+  productTrackerDemo,
 ]);

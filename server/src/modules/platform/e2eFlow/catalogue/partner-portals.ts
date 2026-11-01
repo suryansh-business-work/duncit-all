@@ -6374,4 +6374,79 @@ export const PARTNER_PORTAL_FLOWS: readonly CatalogueFlow[] = [
       },
     ],
   },
+  {
+    name: 'Partners: Banner Kit & Banners',
+    description:
+      'Venue Options and Host Options > Banner Kit (/venues/banner-kit, /host/banner-kit) and Banners (/venues/banners, /host/banners): what a partner\'s pod banners on Instagram are made from, and making a pod\'s carousel from it.',
+    sub_flows: [
+      {
+        name: 'Fill a venue banner kit',
+        description: 'The venue owner fills the kit of the venue picked in the venue switcher; a venue that never saved one opens prefilled from its cover and gallery.',
+        steps: [
+          ['Sign in to partners-app.duncit.com as a VENUE_OWNER and open Venue Options > Banner Kit', 'The "Banner Kit" page renders with the venue picker and a "Banner kit" card; the photo list is prefilled from the venue cover and gallery and the preview reads "The venue"'],
+          ['Upload a logo and type "https://www.instagram.com/Blue.Door/" as the Instagram handle', 'The preview shows the logo and "@blue.door"'],
+          ['Hover the info icon beside "Allow collab posts"', 'The tip says Duncit will invite this account as a collaborator on the pod\'s Instagram post'],
+          ['Click "Add photos", pick two images, caption one "The back room" and move it up', 'The photo appears first with its caption, and the count reads "<n> of 12"'],
+          ['Type a tagline, a bio and "#ff6600" as the brand colour, then Save', '"Banner kit saved" shows; after a reload the handle reads "blue.door", the colour "#ff6600" and the photos keep their order and captions'],
+          ['Clear the photos, then click "Use suggested photos"', 'The list fills with the venue\'s cover and gallery photos from the media library'],
+        ],
+      },
+      {
+        name: 'Banner kit refusals',
+        description: 'The form and the server refuse the same things.',
+        steps: [
+          ['Type "cafe blue" as the Instagram handle and Save', '"Enter the Instagram handle, for example duncit.events" shows under the field and nothing is saved'],
+          ['Type "#abc" as the brand colour and Save', '"The brand colour must look like #1a2b3c" shows and nothing is saved'],
+          ['Add photos until the list has 12', '"Add photos" is disabled'],
+          ['As another venue owner, send updateVenueBannerKit for this venue', 'The server answers FORBIDDEN "Not your venue"'],
+        ],
+      },
+      {
+        name: 'Fill a host banner kit',
+        description: 'A host fills their own kit; it has past event photos as well.',
+        steps: [
+          ['Sign in as a HOST and open Host Options > Banner Kit', 'The "Banner kit" card renders with "Your photos" and "Past event photos"; the preview reads "Meet your host"'],
+          ['Add a portrait and two event photos with captions, switch "Allow collab posts" off and Save', '"Banner kit saved"; after a reload the switch stays off and the event photos keep their captions'],
+        ],
+      },
+      {
+        name: 'Make banners for an upcoming pod',
+        description: 'Banners lists the partner\'s upcoming pods, soonest first, and renders a pod\'s carousel on request.',
+        steps: [
+          ['As the venue owner open Venue Options > Banners', 'The "Banners" card lists the venue\'s upcoming pods with their date and time, or "No upcoming pods yet."'],
+          ['Click "Make banners" on a pod', 'The button shows it is working, then "Banners ready"; the slides appear with "Download slide 1", "Download slide 2"…'],
+          ['Click "Download slide 1"', 'The slide image opens or downloads from the media library'],
+          ['Click "Make again"', 'A fresh set of slides replaces the old one'],
+          ['As a host open Host Options > Banners and make banners for a pod they run', 'The same flow, listing only the pods the host runs'],
+        ],
+      },
+    ],
+  },
+  {
+    name: 'Venues, Hosts & Onboarding: Record Banner Kit',
+    description:
+      'The Banner kit and Banners tabs of a venue record (venues.duncit.com and Onboarding > Onboarded Venues) and a host record (hosts.duncit.com and Onboarding > Onboarded Hosts).',
+    sub_flows: [
+      {
+        name: 'Staff edit a venue banner kit',
+        description: 'A Venues console editor or the onboarding desk edits any venue\'s kit; the change log records it.',
+        steps: [
+          ['As ALL_VENUES_ACCESS or ONBOARDING_MANAGER open /venues/<venueId>?selectedtab=bannerKit', 'The "Banner kit" card renders with the venue\'s kit'],
+          ['Change the tagline and Save', '"Banner kit saved"'],
+          ['Open the Change Logs tab', 'A "Banner Kit Tagline" row shows the old and new tagline and who changed it'],
+          ['Open the Banners tab and make banners for an upcoming pod', 'The slides appear with their download links'],
+        ],
+      },
+      {
+        name: 'Staff edit a host banner kit',
+        description: 'A Hosts console editor or the onboarding desk edits any host\'s kit.',
+        steps: [
+          ['As ALL_HOSTS_ACCESS open /hosts/<hostId> and click the "Banner kit" tab', 'The host\'s kit renders, prefilled from their profile photo when they never saved one'],
+          ['Add an event photo and Save', '"Banner kit saved"'],
+          ['In Onboarding open /hosts/<hostId>', 'The Banner kit and Banners cards render below the host\'s pods'],
+          ['As a role that cannot edit hosts (ALL_VENUES_ACCESS only), send updateHostBannerKit', 'The server answers FORBIDDEN'],
+        ],
+      },
+    ],
+  },
 ];

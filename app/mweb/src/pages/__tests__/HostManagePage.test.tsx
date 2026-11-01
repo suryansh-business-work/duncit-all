@@ -73,12 +73,15 @@ const HOST_PODS = gql`
         min_tickets
         discount_pct
       }
+      smart_incentive_enabled
+      smart_incentive_pct
       seats_taken
       location_id
       venue_id
       zone_name
       place_label
       venue_approval_status
+      venue_offer_status
       is_active
       created_at
     }

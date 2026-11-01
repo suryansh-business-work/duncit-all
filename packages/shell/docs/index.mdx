@@ -69,6 +69,8 @@ exports:
   - 'useBackgroundJobs'
   - 'BrandLogsPanel'
   - 'EventRequestsPage'
+  - 'BannerKitPanel'
+  - 'PodBannersPanel'
   - 'renderChangeLogField'
   - 'renderChangeLogOld'
   - 'renderChangeLogNew'
@@ -225,6 +227,38 @@ import { EventRequestsPage } from '@duncit/shell';
 | `EventRequestsPage` | `{ targetType: 'HOST' \| 'VENUE'; scope: 'owner' \| 'console'; renderActions?: (row, refresh) => ReactNode; hideHeader?: boolean }` | Open / Accepted / Offer sent / Rejected / Fulfilled / Dismissed / Total tiles (a warning line if they fail), then a `DuncitTable`, newest first: Venue or Host (hidden on a host's own list), Requested by, Note, Status (enum filter), Your answer (the offered window, its frozen price and the owner's note), Requested, Closed, and Mark fulfilled / Dismiss on an OPEN row — or `renderActions` in their place. A pod going live closes open requests on its own. | `owner` → `myReceivedEventRequestsTable` + `myReceivedEventRequestCounts`; `console` → `eventRequestsTable` + `eventRequestCounts` (Venues / Hosts console readers); both close a row with `updateEventRequestStatus`. |
 
 Copy lives under `publicPage.eventRequests.*`, already in the shell fallback.
+
+### Banner kit and Banners
+
+A venue's or a host's banner kit is what their pods' Instagram carousel banners are made from:
+a logo, the Instagram handle Duncit invites as a collaborator on the pod's post (with an "Allow
+collab posts" switch), photos (a venue's space, a host's portraits), a host's past-event photos,
+a tagline, a bio and a brand colour. `BannerKitPanel` reads and saves it; `PodBannersPanel` lists
+the partner's upcoming pods with Make banners and shows the slides with download links. Both are
+mounted by the Partners console (the partner's own), and the Venues, Hosts and Onboarding consoles
+(the record):
+
+```tsx
+import { BannerKitPanel, PodBannersPanel } from '@duncit/shell';
+
+// Partners console, the owner's venue picked in Venue Options:
+<BannerKitPanel entity="VENUE" mode="owner" id={venue.id} />
+<PodBannersPanel filter={{ field: 'venue_id', value: venue.id }} />
+// Partners console, the signed-in host (their own profile, no id):
+<BannerKitPanel entity="HOST" mode="owner" />
+<PodBannersPanel filter={{ field: 'host_user_id', value: host.user_id }} />
+// Hosts console record:
+<BannerKitPanel entity="HOST" mode="console" id={host.id} />
+```
+
+| Export | Props | What it renders | Server operations |
+|---|---|---|---|
+| `BannerKitPanel` | `{ entity: 'VENUE' \| 'HOST'; mode: 'owner' \| 'console'; id?: string }` | A "Banner kit" card: logo upload, Instagram handle (a pasted profile link is accepted) + Allow collab posts with a help tip, photos with captions (add from the media picker, move up / down, remove, Use suggested photos), past-event photos for a host, tagline, bio, brand colour, and a live static preview of the "The venue" / "Meet your host" slide. Rules come from `makeBannerKitSchema` (`@duncit/forms/schemas`). | Reads `myVenue` / `venue` / `myHost` / `host` → `banner_kit`; saves with `updateVenueBannerKit` / `updateHostBannerKit`. The server allows the owner (or the host themself) and the Venues / Hosts console editors. |
+| `PodBannersPanel` | `{ filter: { field: 'venue_id' \| 'host_user_id'; value: string } }` | A "Banners" card: the next 25 upcoming pods, soonest first, each with Make banners; once made, every slide with a Download link and Make again. A refusal shows on the pod and is logged. | `podsTable(lifecycle: UPCOMING)` filtered to the partner; `generatePodBanners(pod_id)` (the marketing banner engine). |
+
+A kit nobody has saved reads as prefilled from what is on file (a venue's cover and gallery, a
+host's photo); `suggested_photos` offers those again with one click. Copy lives under
+`shell.bannerKit.*` and `shell.podBanners.*`.
 
 The Field and Old / New value cells are exported as `renderChangeLogField`, `renderChangeLogOld` and
 `renderChangeLogNew` (typed on `ChangeLogValueRow`), and `@duncit/entity-consoles` draws its directory

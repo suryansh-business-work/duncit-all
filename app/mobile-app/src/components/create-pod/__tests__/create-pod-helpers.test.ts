@@ -117,10 +117,13 @@ describe('buildModerationInput', () => {
 
 describe('stepForField', () => {
   it('maps a known field to its step and an unknown field to 0', () => {
-    // Step 4 (index 3) is Offer for Venue, so pricing is the fifth step.
-    expect(stepForField('pod_type')).toBe(4);
-    expect(stepForField('venue_offer_rate')).toBe(3);
-    expect(stepForField('venue_id')).toBe(2);
+    // What (0) → Where & when (1) → Money (2, the venue offer and the ticket) → Details (3).
+    expect(stepForField('pod_mode')).toBe(0);
+    expect(stepForField('venue_id')).toBe(1);
+    expect(stepForField('no_of_spots_text')).toBe(1);
+    expect(stepForField('venue_offer_rate')).toBe(2);
+    expect(stepForField('pod_type')).toBe(2);
+    expect(stepForField('pod_title')).toBe(3);
     expect(stepForField('__nope__' as never)).toBe(0);
   });
 });

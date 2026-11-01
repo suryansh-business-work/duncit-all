@@ -43,6 +43,8 @@ interface Props {
   deviceOnly?: boolean;
   /** The picker dialog's heading — a field that is not pod media names itself. */
   pickerTitle?: string;
+  /** Crop preset every device image is cut to; the pod cover passes its shape. */
+  cropKey?: string;
 }
 
 /** Pod media — a dashed upload dropzone (empty state) that opens the shared
@@ -60,6 +62,7 @@ export default function MediaUrlsField({
   maxImages,
   deviceOnly = false,
   pickerTitle,
+  cropKey,
 }: Readonly<Props>) {
   const [pickerOpen, setPickerOpen] = useState(false);
   const { t } = useTranslation();
@@ -176,6 +179,7 @@ export default function MediaUrlsField({
         orientation="landscape"
         max={slotsLeft}
         deviceOnly={deviceOnly}
+        cropKey={cropKey}
         onPicked={addUrl}
         onPickedMany={addUrls}
       />

@@ -75,6 +75,14 @@ export interface InAppPromptDef {
   tasks: readonly OpenAiTaskKey[];
   /** Model the call site pins, or '' when it uses the configured default. */
   target_model: string;
+  /**
+   * Models this prompt USED to pin. `target_model` is operator-owned after the
+   * first seed, so a catalogue that merely changes it would never reach a row
+   * already in the library. A seeded row still on one of these has never been
+   * retargeted by a person, so the seed moves it to the current default; a row
+   * on any other model was chosen deliberately and is left alone.
+   */
+  superseded_models?: readonly string[];
   variables: readonly PromptVariableDef[];
   usage: readonly PromptUsageSite[];
   content: string;

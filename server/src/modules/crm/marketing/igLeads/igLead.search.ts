@@ -7,6 +7,8 @@ import { searchProfiles, serperReady, type ProfileHit } from './igLead.serper';
 import { discoveryReader, type DiscoveryReader } from './igLead.discovery';
 import { extractEmails, extractPhones } from './igLead.contacts';
 import { SEARCH_LIMITS, type DiscoveredProfile, type SearchPlan } from './igLead.types';
+import { userActor, withRun } from '../runs/marketingRun.service';
+import { feedIgLeadsToPipeline } from '../leads/marketingLead.pipeline';
 
 /**
  * One run of a brief, in the background: the AI plans the Google searches,
@@ -117,34 +119,76 @@ async function saveLeads(docs: Record<string, unknown>[]): Promise<number> {
   }
 }
 
+/** The search as one recorded run: every stage is a step the Activity timeline can show. */
+async function searchAsRun(searchId: string, brief: string, maxResults: number, reader: DiscoveryReader, userId: string) {
+  const actor = await userActor({ id: userId });
+  await withRun(
+    { workflow: 'LEAD_SEARCH', name: `Find Instagram leads: ${brief.slice(0, 80)}`, trigger: 'USER', actor, links: { lead_id: searchId } },
+    async (run) => {
+      const plan = await run.step('plan', 'Plan the searches', () => planSearch(brief, searchId), {
+        tool: 'marketing.ig_lead_plan',
+        input_summary: brief.slice(0, 200),
+        summarize: (p) => p.queries.join(' | '),
+      });
+      await IgLeadSearchModel.updateOne({ _id: searchId }, { summary: plan.summary, queries: plan.queries });
+      const hits = await run.step('search', 'Search Google', () => collectHits(plan.queries), {
+        tool: 'serper',
+        summarize: (found) => `${found.size} profiles found`,
+      });
+      const known = new Set<string>(await IgLeadModel.distinct('username', { username: { $in: [...hits.keys()] } }));
+      const fresh = [...hits.keys()].filter((username) => !known.has(username)).slice(0, maxResults);
+      const profiles = await run.step('read', 'Read the profiles', async () => (await readProfiles(fresh, reader)).filter(inRange(plan)), {
+        tool: 'instagram.business_discovery',
+        input_summary: `${fresh.length} new of ${hits.size}`,
+        summarize: (read) => `${read.length} readable and in range`,
+      });
+      const scores = await run.step('score', 'Score the fit', () => scoreProfiles(brief, profiles, searchId), {
+        tool: 'marketing.ig_lead_score',
+        summarize: (scored) => `${scored.size} scored`,
+      });
+      const added = await run.step(
+        'save',
+        'Save the leads',
+        () =>
+          saveLeads(
+            profiles.map((profile) => {
+              const publicText = `${profile.bio}\n${hits.get(profile.username) ?? ''}`;
+              const score = scores.get(profile.username);
+              return {
+                ...profile,
+                emails: extractEmails(publicText),
+                phones: extractPhones(publicText),
+                fit_score: score?.score ?? null,
+                fit_reason: score?.reason ?? '',
+                search_id: searchId,
+                created_by: userId,
+              };
+            })
+          ),
+        { summarize: (count) => `${count} added` }
+      );
+      // Every profile saved joins the one lead pipeline, keyed on its handle.
+      await run.step(
+        'pipeline',
+        'Add to the lead pipeline',
+        () =>
+          feedIgLeadsToPipeline(
+            profiles.map((profile) => profile.username),
+            userId
+          ),
+        { summarize: (fed) => `${fed.added} added, ${fed.merged} merged` }
+      );
+      await IgLeadSearchModel.updateOne(
+        { _id: searchId },
+        { status: 'DONE', found: hits.size, added, skipped: hits.size - added, finished_at: new Date() }
+      );
+    }
+  );
+}
+
 async function runSearch(searchId: string, brief: string, maxResults: number, reader: DiscoveryReader, userId: string) {
   try {
-    const plan = await planSearch(brief, searchId);
-    await IgLeadSearchModel.updateOne({ _id: searchId }, { summary: plan.summary, queries: plan.queries });
-    const hits = await collectHits(plan.queries);
-    const known = new Set<string>(await IgLeadModel.distinct('username', { username: { $in: [...hits.keys()] } }));
-    const fresh = [...hits.keys()].filter((username) => !known.has(username)).slice(0, maxResults);
-    const profiles = (await readProfiles(fresh, reader)).filter(inRange(plan));
-    const scores = await scoreProfiles(brief, profiles, searchId);
-    const added = await saveLeads(
-      profiles.map((profile) => {
-        const publicText = `${profile.bio}\n${hits.get(profile.username) ?? ''}`;
-        const score = scores.get(profile.username);
-        return {
-          ...profile,
-          emails: extractEmails(publicText),
-          phones: extractPhones(publicText),
-          fit_score: score?.score ?? null,
-          fit_reason: score?.reason ?? '',
-          search_id: searchId,
-          created_by: userId,
-        };
-      })
-    );
-    await IgLeadSearchModel.updateOne(
-      { _id: searchId },
-      { status: 'DONE', found: hits.size, added, skipped: hits.size - added, finished_at: new Date() }
-    );
+    await searchAsRun(searchId, brief, maxResults, reader, userId);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     logs.server.error(LOG, 'search', { error, search_id: searchId, msg: 'lead search failed' });
@@ -170,7 +214,7 @@ export async function startSearch(input: StartSearchInput, userId: string) {
     refuse(`Describe the leads in ${briefLimits.min}-${briefLimits.max} characters.`, 'BAD_USER_INPUT');
   }
   const maxResults = Math.min(limits.max, Math.max(limits.min, Math.round(input.max_results ?? limits.default)));
-  if (!(await serperReady())) refuse('Serper is not configured. Add the SERPER API key in the Tech portal.', 'NOT_CONFIGURED');
+  if (!(await serperReady())) refuse('Serper is not configured. Add the Serper API key under Marketing › Settings › Integrations.', 'NOT_CONFIGURED');
   const reader = await discoveryReader();
   if (!reader) refuse('Connect an Instagram business account in Social Accounts first — profiles are read through it.', 'NOT_CONFIGURED');
   await expireStaleSearches();

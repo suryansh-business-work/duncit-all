@@ -47,6 +47,7 @@ import VenueFoodOrdersPage from './pages/venue-food-orders-page/VenueFoodOrdersP
 import VenueFoodCouponsPage from './pages/venue-food-coupons-page/VenueFoodCouponsPage';
 import VenueRentedItemsPage from './pages/venue-rented-items-page/VenueRentedItemsPage';
 import { venueSetupRoutes } from './pages/venue-setup/venueSetupRoutes';
+import { bannerRoutes } from './pages/banner-kit-page/bannerRoutes';
 import HostPublishPage from './pages/publish-page/HostPublishPage';
 import {
   ClubsHub,
@@ -110,6 +111,7 @@ export default function App() {
       <Route path="/venues/auto-pods" element={authed(<VenueRequestsHub />)} />
       <Route path="/venues/settings" element={authed(<VenuesHub />)} />
       {venueSetupRoutes(authed)}
+      {bannerRoutes(authed)}
       <Route path="/venues/earnings" element={authed(<VenueEarningsPage />)} />
       <Route path="/venues/publish" element={authed(<VenuePublishPage />)} />
       <Route path="/venues/food-dashboard" element={authed(<VenueFoodDashboardPage />)} />

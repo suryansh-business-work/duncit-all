@@ -5,9 +5,17 @@ import { FormTextField } from '@/components/FormTextField';
 import { SurfaceCard } from '@/components/SurfaceCard';
 import { HashtagChipsField } from '../HashtagChipsField';
 import { MediaUploadField } from '../MediaUploadField';
-import { MAX_COVER_IMAGES, coverCategoryName } from '@duncit/utils';
+import {
+  DETAILS_EXTRA_FIELDS,
+  MAX_COVER_IMAGES,
+  POD_COVER_CROP_KEY,
+  anyFieldFailed,
+  coverCategoryName,
+  detailsExtrasFilled,
+} from '@duncit/utils';
 import { hostCategoryKeyOf } from '../create-pod.form';
 import { ChipArrayField } from '../ChipArrayField';
+import { MoreOptionsSection } from '../MoreOptionsSection';
 import { OptionalSettingsCards } from '../OptionalSettingsCards';
 import { ReelEngagementNotice } from '../ReelEngagementNotice';
 import { ReelUploadField } from '../ReelUploadField';
@@ -19,11 +27,19 @@ interface Props {
   hostCategories: CreatePodHostCategory[];
 }
 
-/** Step 2 — Pod Basics: title, description, cover media, hashtags and the
- * required "what this pod offers" list, with optional extras (info, perks). */
+/** Details' fields — title, description, cover media and the required "what
+ * this pod offers" list. Hashtags, more info, perks and the optional Pod Reel
+ * wait under More options. mWeb twin. */
 export function BasicsStep({ form, hostCategories }: Readonly<Props>) {
-  const { control, watch } = form;
+  const {
+    control,
+    watch,
+    formState: { errors },
+  } = form;
   const { t } = useTranslation();
+  // Read once, not watched: it only decides how More options first opens.
+  const extrasFilled = detailsExtrasFilled(form.getValues());
+  const extrasFailed = anyFieldFailed(errors, DETAILS_EXTRA_FIELDS);
   // The host picked the category on step 1, and the server already
   // denormalised its name onto the host record — so the cover picker can open on
   // a search for it without another query. `coverCategoryName` falls back to the
@@ -64,6 +80,7 @@ export function BasicsStep({ form, hostCategories }: Readonly<Props>) {
               required
               subCategoryName={subCategoryName}
               maxImages={MAX_COVER_IMAGES}
+              cropKey={POD_COVER_CROP_KEY}
             />
           )}
         />
@@ -84,21 +101,30 @@ export function BasicsStep({ form, hostCategories }: Readonly<Props>) {
             />
           )}
         />
-        <HashtagChipsField form={form} />
       </SurfaceCard>
-      <OptionalSettingsCards form={form} />
-      <Controller
-        control={control}
-        name="reel_url"
-        render={({ field }) => (
-          // The nudge reads from outside the collapsed card, so it lives beside
-          // the field rather than inside it, and clears once a reel is added.
-          <YStack gap={16}>
-            {field.value ? null : <ReelEngagementNotice />}
-            <ReelUploadField value={field.value} onChange={field.onChange} />
-          </YStack>
-        )}
-      />
+      <MoreOptionsSection
+        testID="create-pod-details-more"
+        hint={t('mweb.createPod.moreOptionsDetailsHint')}
+        defaultOpen={extrasFilled}
+        forceOpen={extrasFailed}
+      >
+        <SurfaceCard>
+          <HashtagChipsField form={form} />
+        </SurfaceCard>
+        <OptionalSettingsCards form={form} />
+        <Controller
+          control={control}
+          name="reel_url"
+          render={({ field }) => (
+            // The nudge reads from outside the collapsed card, so it lives beside
+            // the field rather than inside it, and clears once a reel is added.
+            <YStack gap={16}>
+              {field.value ? null : <ReelEngagementNotice />}
+              <ReelUploadField value={field.value} onChange={field.onChange} />
+            </YStack>
+          )}
+        />
+      </MoreOptionsSection>
     </YStack>
   );
 }

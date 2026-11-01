@@ -2,19 +2,21 @@
  * Marketing → Social Accounts: the vocabulary every file in this module shares.
  *
  * A PROVIDER is the app a marketer connects through; a PLATFORM is the network
- * an account lives on. They differ only for Meta, where one Facebook login
- * hands back both the Facebook Pages and the Instagram Business accounts
- * behind them.
+ * an account lives on. Every network has its own app: Instagram, Facebook and
+ * Threads are three separate apps with three separate credential entries,
+ * never one shared Meta app. The two words still differ for one case — an
+ * Instagram account connected through Facebook before Instagram had its own
+ * app keeps provider FACEBOOK (its token is a Page token) on platform INSTAGRAM.
  */
 
-export const SOCIAL_PROVIDERS = ['LINKEDIN', 'META', 'X', 'YOUTUBE'] as const;
+export const SOCIAL_PROVIDERS = ['INSTAGRAM', 'FACEBOOK', 'THREADS', 'YOUTUBE', 'LINKEDIN', 'X'] as const;
 export type SocialProvider = (typeof SOCIAL_PROVIDERS)[number];
 
 /** The Marketing page the OAuth callback lands the marketer back on — the one they pressed Connect from. */
 export const SOCIAL_CONNECT_RETURNS = ['ACCOUNTS', 'CALENDAR'] as const;
 export type SocialConnectReturn = (typeof SOCIAL_CONNECT_RETURNS)[number];
 
-export const SOCIAL_PLATFORMS =['LINKEDIN', 'FACEBOOK', 'INSTAGRAM', 'X', 'YOUTUBE'] as const;
+export const SOCIAL_PLATFORMS = ['INSTAGRAM', 'FACEBOOK', 'THREADS', 'YOUTUBE', 'LINKEDIN', 'X'] as const;
 export type SocialPlatform = (typeof SOCIAL_PLATFORMS)[number];
 
 /** EXPIRED needs a person to reconnect; ERROR is retried on the next sync. */
@@ -33,8 +35,31 @@ export type SocialSeverity = (typeof SOCIAL_SEVERITIES)[number];
 export const SOCIAL_REVIEW_STATUSES = ['OPEN', 'REVIEWED'] as const;
 export type SocialReviewStatus = (typeof SOCIAL_REVIEW_STATUSES)[number];
 
-/** A post written in Duncit: a draft, waiting for its time, going out, or out. */
-export const SOCIAL_PUBLISH_STATUSES = ['DRAFT', 'SCHEDULED', 'PUBLISHING', 'PUBLISHED', 'PARTIAL', 'FAILED'] as const;
+/**
+ * Where a comment stands in the Inbox: waiting for somebody, answered on the
+ * network, dealt with without a reply, or junk. `review_status` is kept in
+ * step (OPEN stays OPEN, the rest are REVIEWED) for the Monitoring tab.
+ */
+export const SOCIAL_INBOX_STATUSES = ['OPEN', 'REPLIED', 'DONE', 'SPAM'] as const;
+export type SocialInboxStatus = (typeof SOCIAL_INBOX_STATUSES)[number];
+
+/** The slices of the Inbox its summary cards open. */
+export const SOCIAL_INBOX_VIEWS = ['OPEN', 'FLAGGED', 'UNASSIGNED', 'MINE', 'ALL'] as const;
+export type SocialInboxView = (typeof SOCIAL_INBOX_VIEWS)[number];
+
+/**
+ * A post written in Duncit: a draft, waiting for a reviewer's yes, waiting for
+ * its time, going out, or out.
+ */
+export const SOCIAL_PUBLISH_STATUSES = [
+  'DRAFT',
+  'PENDING_APPROVAL',
+  'SCHEDULED',
+  'PUBLISHING',
+  'PUBLISHED',
+  'PARTIAL',
+  'FAILED',
+] as const;
 export type SocialPublishStatus = (typeof SOCIAL_PUBLISH_STATUSES)[number];
 
 /** One network a post is going to — each succeeds or fails on its own. */
@@ -50,12 +75,12 @@ export type SocialIdeaStatus = (typeof SOCIAL_IDEA_STATUSES)[number];
 export const SOCIAL_IDEA_FORMATS = ['TEXT', 'IMAGE', 'VIDEO'] as const;
 export type SocialIdeaFormat = (typeof SOCIAL_IDEA_FORMATS)[number];
 
-/** One provider app, as Tech configured it under Environment Variables → Social apps. */
+/** One network's app, as configured under Marketing → Settings → Integrations (one entry per network). */
 export interface SocialAppCredentials {
   clientId: string;
   clientSecret: string;
   redirectUri: string;
-  /** LinkedIn's `LinkedIn-Version` header or Meta's Graph version; '' for the others. */
+  /** LinkedIn's `LinkedIn-Version` header or a Meta app's Graph version; '' for the others. */
   version: string;
 }
 
@@ -83,6 +108,8 @@ export interface DiscoveredAccount {
 
 /** What a reader needs of a stored account — its tokens included. */
 export interface SocialAccountHandle {
+  /** The app the token came from; an Instagram reader picks its Graph host from it. */
+  provider: SocialProvider;
   platform: SocialPlatform;
   external_id: string;
   handle: string;
@@ -127,18 +154,37 @@ export interface PostRef {
   permalink: string;
 }
 
-/** The OAuth half of a provider: the consent screen and the code exchange. */
+/** The OAuth half of a provider: the consent screen, the code exchange, and letting go. */
 export interface SocialConnector {
   authorizeUrl(input: { creds: SocialAppCredentials; state: string; challenge: string }): string;
   connect(input: { code: string; creds: SocialAppCredentials; verifier: string }): Promise<DiscoveredAccount[]>;
+  /**
+   * Tell the network the token is no longer wanted, so a disconnect here is a
+   * disconnect there too. Only for networks that document a revoke endpoint;
+   * best effort — a refusal is logged, never a reason to keep the account.
+   */
+  revoke?(account: SocialAccountHandle, creds: SocialAppCredentials): Promise<void>;
 }
 
-/** What a post carries to every network it goes to. */
+/** One picture or clip of a post, by the CDN address the networks fetch it from. */
+export interface PublishMedia {
+  url: string;
+  type: SocialMediaType;
+}
+
+/**
+ * What a post carries to every network it goes to. One item is a plain post;
+ * two or more are a carousel. `media_url` / `media_type` are the first item
+ * (or ''/null), so a reader that only knows one piece of media still works.
+ */
 export interface PublishContent {
   text: string;
+  media: PublishMedia[];
   /** '' for a text-only post. */
   media_url: string;
   media_type: SocialMediaType | null;
+  /** Instagram usernames invited as collaborators; only Instagram uses them (social.rules maxCollaborators). */
+  collaborators?: string[];
 }
 
 export interface PublishResult {
@@ -166,4 +212,15 @@ export interface SocialReader {
   profile(account: SocialAccountHandle, creds: SocialAppCredentials): Promise<FetchedProfile>;
   posts(account: SocialAccountHandle, creds: SocialAppCredentials): Promise<FetchedPost[]>;
   comments(account: SocialAccountHandle, post: PostRef, creds: SocialAppCredentials): Promise<FetchedComment[]>;
+}
+
+/** What a reply is posted under: the comment's and its post's ids on the network. */
+export interface ReplyTarget {
+  comment_id: string;
+  post_id: string;
+}
+
+/** The answering half of a platform — only for networks whose granted scopes allow it. */
+export interface SocialReplier {
+  reply(account: SocialAccountHandle, target: ReplyTarget, text: string, creds: SocialAppCredentials): Promise<{ external_id: string }>;
 }

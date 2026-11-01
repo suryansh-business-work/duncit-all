@@ -7,11 +7,11 @@ import { DuncitDashboard, type DashboardWidget } from '@duncit/dashboard';
 import { useDateFormat, useTranslation } from '@duncit/app-settings';
 import { parseApiError } from '@duncit/utils';
 import ClicksOverTime from '../../short-links-page/detail/ClicksOverTime';
-import BreakdownCard from '../../short-links-page/detail/BreakdownCard';
 import TopLinksCard from '../TopLinksCard';
 import CampaignPerformanceCard from '../CampaignPerformanceCard';
 import { MARKETING_DASHBOARD, type MarketingDashboard } from '../queries';
 import { buildKpiWidgets } from './kpiWidgets';
+import { buildBreakdownWidgets } from './breakdownWidgets';
 
 type Translate = ReturnType<typeof useTranslation>['t'];
 
@@ -34,7 +34,7 @@ export default function DashboardPage() {
 
   const widgets = useMemo<DashboardWidget[]>(() => {
     if (!board) return [];
-    const { links, campaigns, audience } = board;
+    const { links, campaigns } = board;
 
     return [
       ...buildKpiWidgets({ board, t, go }),
@@ -43,7 +43,7 @@ export default function DashboardPage() {
         bare: true,
         // Fixed-height plot in a non-stretching card — h5 leaves a void.
         fitContent: true,
-        defaultLayout: { x: 0, y: 2, w: 12, h: 5 },
+        defaultLayout: { x: 0, y: 4, w: 12, h: 5 },
         minW: 4,
         minH: 4,
         content: <ClicksOverTime daily={links.daily} formatDate={formatDate} days={board.days} />,
@@ -52,7 +52,7 @@ export default function DashboardPage() {
         id: 'top-links',
         bare: true,
         fitContent: true,
-        defaultLayout: { x: 0, y: 7, w: 6, h: 6 },
+        defaultLayout: { x: 0, y: 9, w: 6, h: 6 },
         minW: 3,
         // minH floors the measured height — keep it low or empty states pin a void.
         minH: 2,
@@ -62,7 +62,7 @@ export default function DashboardPage() {
         id: 'campaign-performance',
         bare: true,
         fitContent: true,
-        defaultLayout: { x: 6, y: 7, w: 6, h: 6 },
+        defaultLayout: { x: 6, y: 9, w: 6, h: 6 },
         minW: 3,
         minH: 2,
         content: (
@@ -73,50 +73,7 @@ export default function DashboardPage() {
           />
         ),
       },
-      {
-        id: 'click-sources',
-        bare: true,
-        defaultLayout: { x: 0, y: 13, w: 4, h: 5 },
-        minW: 3,
-        minH: 3,
-        content: (
-          <BreakdownCard
-            title={t('marketing.dashboard.whereClicksCameFrom')}
-            rows={links.platforms}
-            emptyText={t('marketing.dashboard.noClicksRecordedYet')}
-          />
-        ),
-      },
-      {
-        id: 'click-countries',
-        bare: true,
-        defaultLayout: { x: 4, y: 13, w: 4, h: 5 },
-        minW: 3,
-        minH: 3,
-        content: (
-          <BreakdownCard title={t('marketing.common.countries')} rows={links.countries} emptyText={t('marketing.dashboard.noClicksRecordedYet')} />
-        ),
-      },
-      {
-        id: 'setup-summary',
-        bare: true,
-        defaultLayout: { x: 8, y: 13, w: 4, h: 5 },
-        minW: 3,
-        minH: 3,
-        content: (
-          <BreakdownCard
-            title={t('marketing.dashboard.whatIsSetUp')}
-            rows={[
-              { label: t('marketing.dashboard.activeShortLinks'), count: links.active },
-              { label: t('marketing.dashboard.shortLinksInTotal'), count: links.total },
-              { label: t('marketing.dashboard.savedAudienceLists'), count: audience.lists },
-              { label: t('marketing.dashboard.campaignsScheduled'), count: campaigns.scheduled },
-              { label: t('marketing.dashboard.campaignsFailed'), count: campaigns.failed },
-            ]}
-            emptyText={t('marketing.dashboard.nothingSetUpYet')}
-          />
-        ),
-      },
+      ...buildBreakdownWidgets({ board, t }),
     ];
   }, [board, go, navigate, formatDate, formatDateTime]);
 

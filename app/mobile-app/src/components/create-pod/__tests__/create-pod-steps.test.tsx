@@ -144,7 +144,7 @@ function VenueSlotHarness({
   );
 }
 
-/** Step 4 — Offer for Venue: the picked venue's minimum business, the terms,
+/** Money's offer for the venue: the picked venue's minimum business, the terms,
  * the ask and the server's quote (the stepper owns the quote). */
 function OfferHarness({
   initial = {},
@@ -277,7 +277,7 @@ describe('VenueSlotStep', () => {
     await waitFor(() => expect(screen.getByTestId('spots-readout')).toHaveTextContent('120'));
   });
 
-  it("leaves the venue's minimum business to the offer step", () => {
+  it("leaves the venue's minimum business to Money's offer", () => {
     const expecting: CreatePodVenue = {
       ...venue,
       capacity: 75,
@@ -466,12 +466,12 @@ describe('VenueSlotStep', () => {
     expect(await screen.findByTestId('slot-calendar-empty')).toBeOnTheScreen();
   });
 
-  it('picks the window for an offer here, leaving its terms to the next step, and reads no slot list', async () => {
+  it('picks the window for an offer here, leaving its terms to Money, and reads no slot list', async () => {
     routeBookingReads();
     renderWithProviders(<VenueSlotHarness initial={instantVenue} />);
     expect(await screen.findByTestId('create-pod-offer-intro')).toBeOnTheScreen();
     expect(screen.getByTestId('create-pod-venue-offer')).toBeOnTheScreen();
-    // How the host pays, the amount, the ask and the quote are the offer step's.
+    // How the host pays, the amount, the ask and the quote are Money's.
     expect(screen.queryByTestId('create-pod-offer-terms')).toBeNull();
     expect(screen.queryByTestId('create-pod-offer-model-PER_GUEST')).toBeNull();
     expect(screen.queryByTestId('field-venue_offer_rate')).toBeNull();
@@ -671,7 +671,7 @@ describe('VenueOfferStep', () => {
   });
 });
 
-// The stepper owns Step 4's money state (it gates Create Pod), so the harnesses
+// The stepper owns Money's pricing state (it gates Create Pod), so the harnesses
 // derive it the same way the real container does.
 function PricingHarness({ initial }: Readonly<{ initial: Partial<CreatePodFormValues> }>) {
   const form = useForm<CreatePodFormValues, any, CreatePodFormValues>({
@@ -692,7 +692,6 @@ function PricingHarness({ initial }: Readonly<{ initial: Partial<CreatePodFormVa
       showProducts={false}
       finance={finance}
       pricing={pricing}
-      spots={{ min: 0, max: 10000, slidable: false }}
       venueNotice="NONE"
     />
   );
@@ -711,9 +710,13 @@ function PriceHarness({
 describe('PricingStep', () => {
   it('hides the products section when gated off and place charges for virtual pods', () => {
     renderWithProviders(<PricingHarness initial={{ pod_mode: 'VIRTUAL' }} />);
-    expect(screen.queryByTestId('products-enabled-toggle')).toBeNull();
-    expect(screen.queryByTestId('charge-add')).toBeNull();
     expect(screen.getByTestId('create-pod-price-panel')).toBeOnTheScreen();
+    // The extras are folded until opened; open, a paid pod still has its terms.
+    fireEvent.press(screen.getByTestId('create-pod-money-more-toggle'));
+    expect(screen.getByTestId('pricing-step-payment-terms-card')).toBeOnTheScreen();
+    expect(screen.queryByTestId('pricing-step-products-card')).toBeNull();
+    expect(screen.queryByTestId('pricing-step-place-charges-card')).toBeNull();
+    expect(screen.queryByTestId('charge-add')).toBeNull();
   });
 
   it('passes the picked venue + slot price to the earnings preview (physical)', () => {

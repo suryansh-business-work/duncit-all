@@ -101,7 +101,7 @@ describe('IdeaGenerateForm', () => {
     const onSubmit = vi.fn().mockResolvedValue(undefined);
     renderWithProviders(<IdeaGenerateForm onSubmit={onSubmit} />);
     const group = screen.getByRole('group', { name: t('marketing.social.ideaNetworks') });
-    expect(within(group).getAllByRole('checkbox')).toHaveLength(5);
+    expect(within(group).getAllByRole('checkbox')).toHaveLength(6);
 
     const instagram = screen.getByRole('checkbox', { name: 'Instagram' });
     const linkedin = screen.getByRole('checkbox', { name: 'LinkedIn' });

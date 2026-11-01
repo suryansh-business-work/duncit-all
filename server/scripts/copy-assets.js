@@ -14,7 +14,7 @@ function copyBrandAssets(folder) {
   const dest = path.join(__dirname, '..', 'dist', 'services', '_assets', folder);
   if (!fs.existsSync(src)) return;
   fs.mkdirSync(dest, { recursive: true });
-  const files = fs.readdirSync(src).filter((f) => /\.(png|jpe?g|svg|woff|txt)$/i.test(f));
+  const files = fs.readdirSync(src).filter((f) => /\.(png|jpe?g|svg|woff|ttf|txt)$/i.test(f));
   for (const file of files) {
     fs.copyFileSync(path.join(src, file), path.join(dest, file));
   }
@@ -24,3 +24,6 @@ function copyBrandAssets(folder) {
 copyBrandAssets('');
 // The email icons, served at /email-assets (services/email/emailAssets.router.ts).
 copyBrandAssets('email-icons');
+// The pod banner typefaces (OFL, licences beside them), read by
+// modules/crm/marketing/podPromo/banner/banner.fonts.ts.
+copyBrandAssets('fonts');

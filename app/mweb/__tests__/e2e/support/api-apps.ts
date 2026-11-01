@@ -25,6 +25,21 @@ export function expectAnswer(field: string, body: GqlBody, expected: unknown): v
   expect(body.data?.[field], field).to.deep.equal(expected);
 }
 
+/**
+ * The server's schema validation (`validate` in server/src/utils/validate.ts)
+ * refused the input: BAD_USER_INPUT "Validation failed", every message in
+ * `messages` among its field errors, and `field` carries no data.
+ */
+export function expectInvalid(field: string, body: GqlBody, messages: readonly string[]): void {
+  const [error] = body.errors ?? [];
+  expect(error, `${field} must answer with an error`).to.exist;
+  expect(error.extensions?.code, `${field} error code`).to.equal('BAD_USER_INPUT');
+  expect(error.message, `${field} error message`).to.equal('Validation failed');
+  const fieldErrors = (error.extensions as { errors?: string[] } | undefined)?.errors ?? [];
+  expect(fieldErrors, `${field} field errors`).to.include.members([...messages]);
+  expect(body.data?.[field] ?? null, `${field} must return no data`).to.be.null;
+}
+
 /** A run-owned label for anything a spec writes or sends as free text. */
 export const marked = (surface: string): string => runMarker(runAccount().stamp, surface);
 

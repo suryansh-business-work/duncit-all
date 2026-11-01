@@ -38,6 +38,7 @@ exports:
   - 'HEX_COLOR'
   - 'SVG_PATH_DATA'
   - 'SOCIAL_HANDLE'
+  - 'INSTAGRAM_HANDLE'
   - 'UNDERSCORE_HANDLE'
   - 'SITE_PATH'
   - 'CSS_VARIABLE'
@@ -56,6 +57,7 @@ exports:
   - 'isHexColor'
   - 'isSvgPathData'
   - 'isSocialHandle'
+  - 'isInstagramHandle'
   - 'isUnderscoreHandle'
   - 'isSitePath'
   - 'isCssVariable'
@@ -214,6 +216,7 @@ above holds for everything you can import.
 | `HEX_COLOR` | `/^#(?:[\da-fA-F]{3}\|[\da-fA-F]{6})$/` | `isHexColor` | a colour in design data — `#FFD54F`, `#fa0`; no alpha, no named colours (Marketing → Occasions) |
 | `SVG_PATH_DATA` | `/^[MmLlHhVvCcSsQqTtAaZz\d\s.,eE+-]+$/` | `isSvgPathData` | an SVG path's `d` — `M12 2l2.2 7.8z`; a custom festive mark or flyer layer |
 | `SOCIAL_HANDLE` | `/^[A-Za-z0-9._-]{1,100}$/` | `isSocialHandle` | a social-network handle without the `@` — `duncit.events`; a pasted link is refused |
+| `INSTAGRAM_HANDLE` | `/^[A-Za-z0-9_](?:[A-Za-z0-9_]\|\.(?=[A-Za-z0-9_])){0,29}$/` | `isInstagramHandle` | an Instagram username without the `@` — `duncit.events`; no hyphen, no edge or doubled dot (Marketing composer collaborators, Pod promotions) |
 | `UNDERSCORE_HANDLE` | `/^[a-z0-9][a-z0-9_]{1,28}[a-z0-9]$/` | `isUnderscoreHandle` | a 3–30 character handle with inner underscores — `run_club` (Duncit Lite) |
 | `SITE_PATH` | `/^\/(?:[a-z0-9]+(?:[-/][a-z0-9]+)*)?$/` | `isSitePath` | a website page path — `/`, `/safety/tools`; no trailing slash |
 | `CSS_VARIABLE` | `/^--[a-z0-9-]{1,60}$/` | `isCssVariable` | a design token name — `--color-primary` |

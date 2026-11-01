@@ -1389,7 +1389,6 @@ jobs:
               --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
               --build-arg VITE_REQUIRED_ROLES=AI_MANAGER \
               --build-arg VITE_GOOGLE_CLIENT_ID=${{ env.BUILD_GOOGLE_CLIENT_ID }} \
-              --build-arg VITE_REMOTION_LICENSE_KEY=${{ secrets.REMOTION_LICENSE_KEY }} \
               --cache-from type=gha,scope=duncit-ai${{ env.SCOPE_SUFFIX }} \
               --cache-to   type=gha,scope=duncit-ai${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
@@ -1462,8 +1461,9 @@ jobs:
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-marketing:${{ env.IMAGE_TAG }} \
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-marketing:${{ env.SHA_TAG }} \
               --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
-              --build-arg VITE_REQUIRED_ROLES=MARKETING_MANAGER \
+              --build-arg VITE_REQUIRED_ROLES=MARKETING_MANAGER,MARKETING_EDITOR \
               --build-arg VITE_GOOGLE_CLIENT_ID=${{ env.BUILD_GOOGLE_CLIENT_ID }} \
+              --build-arg VITE_REMOTION_LICENSE_KEY=${{ secrets.REMOTION_LICENSE_KEY }} \
               --cache-from type=gha,scope=duncit-marketing${{ env.SCOPE_SUFFIX }} \
               --cache-to   type=gha,scope=duncit-marketing${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
@@ -2497,6 +2497,9 @@ jobs:
           # its own database. The production stack already has it as MONGO_URI.
           PROD_MONGO_URI:        ${{ secrets.MONGO_URI }}
           JWT_SECRET:            ${{ github.ref_name == 'staging' && secrets.STAGING_JWT_SECRET || secrets.JWT_SECRET }}
+          # Seals social-network tokens at rest (32 bytes, base64 or hex). Unset:
+          # the server derives a key from JWT_SECRET and warns once at boot.
+          SOCIAL_TOKEN_KEY:      ${{ github.ref_name == 'staging' && secrets.STAGING_SOCIAL_TOKEN_KEY || secrets.SOCIAL_TOKEN_KEY }}
           OPENWA_API_MASTER_KEY: ${{ github.ref_name == 'staging' && secrets.STAGING_OPENWA_API_MASTER_KEY || secrets.OPENWA_API_MASTER_KEY }}
           STAGING_SUPER_ADMIN_PASSWORD: ${{ secrets.STAGING_SUPER_ADMIN_PASSWORD }}
           # Duncit Lite's OWN database. With no LITE_MONGO_URI secret it uses
@@ -2548,6 +2551,7 @@ jobs:
           LITE_MCP_SECRET=${LITE_MCP_SECRET}
           MONGO_URI=${MONGO_URI}
           JWT_SECRET=${JWT_SECRET}
+          SOCIAL_TOKEN_KEY=${SOCIAL_TOKEN_KEY}
           OPENWA_API_MASTER_KEY=${OPENWA_API_MASTER_KEY}
           APP_VERSION=${APP_VERSION}
           MWEB_BASE_URL=${{ env.MWEB_URL }}

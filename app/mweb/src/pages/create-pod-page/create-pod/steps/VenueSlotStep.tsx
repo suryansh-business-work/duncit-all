@@ -32,10 +32,11 @@ interface Props {
   offerMinGuests?: number;
 }
 
-/** Step 3 — pick a venue partner in the pod's city (card rail), its space, the
- * guests and the window to offer it (physical), or meeting details + schedule
- * (virtual). A Pod Request's pod keeps the slot that request holds. The offered
- * window sets the pod's date/time; the offer itself is Step 4 (VenueOfferStep). */
+/** Where & when's venue part — pick a venue partner in the pod's city (card
+ * rail), its space, the guests and the window to offer it (physical), or meeting
+ * details + schedule (virtual). A Pod Request's pod keeps the slot that request
+ * holds. The offered window sets the pod's date/time; the offer itself is on
+ * Money (VenueOfferStep). */
 export default function VenueSlotStep({ form, venues, clubVenueIds, venueNotice, spots, offerMinGuests = 0 }: Readonly<Props>) {
   const {
     control,

@@ -4,6 +4,11 @@ import { ShortLinkClickModel } from './shortLinkClick.model';
 import { MarketingCampaignModel } from './marketing.model';
 import { AudienceListModel } from './audienceList.model';
 import { AdRequestModel } from '@modules/ads/ads.model';
+import { SocialAccountModel, SocialPostModel } from './social/social.model';
+import { SocialScheduledPostModel } from './social/social.publish.model';
+import { IgLeadModel } from './igLeads/igLead.model';
+import { IG_LEAD_STATUSES } from './igLeads/igLead.types';
+import { runFigures } from './runs/marketingRun.service';
 
 const DAY_MS = 86_400_000;
 
@@ -166,18 +171,82 @@ async function campaignSection(since: Date) {
   };
 }
 
+/** A lead the AI scored at or above this is worth a marketer's time. */
+const QUALIFIED_SCORE = 70;
+
+/** What the networks did in the window, and whether every account still talks to us. */
+async function socialSection(since: Date, now: Date) {
+  const [connected, attention, totals, byPlatform, published, upcoming, failed] = await Promise.all([
+    SocialAccountModel.countDocuments({ status: 'CONNECTED' }),
+    // Expired or errored, or still connected but failing its daily health check.
+    SocialAccountModel.countDocuments({ $or: [{ status: { $in: ['EXPIRED', 'ERROR'] } }, { health_ok: false }] }),
+    SocialPostModel.aggregate<{ posts: number; engagement: number; views: number }>([
+      { $match: { published_at: { $gte: since } } },
+      {
+        $group: {
+          _id: null,
+          posts: { $sum: 1 },
+          engagement: { $sum: '$engagement' },
+          // Views are null where a network does not report them.
+          views: { $sum: { $ifNull: ['$views', 0] } },
+        },
+      },
+    ]).exec(),
+    SocialPostModel.aggregate<{ _id: string; count: number }>([
+      { $match: { published_at: { $gte: since } } },
+      { $group: { _id: '$platform', count: { $sum: '$engagement' } } },
+      { $sort: { count: -1, _id: 1 } },
+    ]).exec(),
+    // A post written here counts once it went out, even to only some of its networks.
+    SocialScheduledPostModel.countDocuments({ status: { $in: ['PUBLISHED', 'PARTIAL'] }, published_at: { $gte: since } }),
+    SocialScheduledPostModel.countDocuments({ status: 'SCHEDULED', scheduled_at: { $gte: now } }),
+    SocialScheduledPostModel.countDocuments({ status: { $in: ['FAILED', 'PARTIAL'] } }),
+  ]);
+  return {
+    connected,
+    attention,
+    posts: totals[0]?.posts ?? 0,
+    engagement: totals[0]?.engagement ?? 0,
+    views: totals[0]?.views ?? 0,
+    // A network with no engagement has no bar to draw.
+    by_platform: byPlatform.filter((row) => row.count > 0).map((row) => ({ label: row._id, count: row.count })),
+    published,
+    upcoming,
+    failed,
+  };
+}
+
+/** Leads found in the window, and the whole pipeline by stage. */
+async function leadSection(since: Date) {
+  const [found, qualified, byStatus] = await Promise.all([
+    IgLeadModel.countDocuments({ created_at: { $gte: since } }),
+    IgLeadModel.countDocuments({ created_at: { $gte: since }, fit_score: { $gte: QUALIFIED_SCORE } }),
+    IgLeadModel.aggregate<{ _id: string; count: number }>([{ $group: { _id: '$status', count: { $sum: 1 } } }]).exec(),
+  ]);
+  const counts = new Map(byStatus.map((row) => [row._id, row.count]));
+  return {
+    found,
+    qualified,
+    qualified_score: QUALIFIED_SCORE,
+    // Pipeline order, not size order — the stages read left to right.
+    by_status: IG_LEAD_STATUSES.map((status) => ({ label: status, count: counts.get(status) ?? 0 })).filter((row) => row.count > 0),
+  };
+}
+
+
 export const marketingDashboardService = {
   /**
    * Everything the Marketing console opens on, in one round trip.
    *
    * Windowed to `days` for the activity figures (clicks, campaigns sent) and
-   * unwindowed for the standing ones (active links, pending ads) — "how many
+   * unwindowed for the standing ones (active links, pending ads, connected
+   * accounts, the lead pipeline) — "how many
    * links are live" is not a question about the last 30 days.
    */
   async overview(days = 30, now = new Date()) {
     const since = new Date(now.getTime() - days * DAY_MS);
 
-    const [links, campaigns, top, activeLinks, totalLinks, lists, liveAds, pendingAds] =
+    const [links, campaigns, top, activeLinks, totalLinks, lists, liveAds, pendingAds, social, leads, runs] =
       await Promise.all([
         linkSection(since),
         campaignSection(since),
@@ -195,6 +264,9 @@ export const marketingDashboardService = {
           end_at: { $gt: now },
         }),
         AdRequestModel.countDocuments({ status: 'PENDING' }),
+        socialSection(since, now),
+        leadSection(since),
+        runFigures(since),
       ]);
 
     return {
@@ -203,6 +275,9 @@ export const marketingDashboardService = {
       campaigns,
       audience: { lists },
       ads: { live: liveAds, pending: pendingAds },
+      social,
+      leads,
+      runs,
     };
   },
 };

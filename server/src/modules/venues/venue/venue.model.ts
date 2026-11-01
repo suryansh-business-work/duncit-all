@@ -7,6 +7,7 @@ import {
 } from '@modules/finance/finance/bankAccount';
 import { nextEntityNo } from '@modules/venues/entityIdCounter';
 import { attachEntityAudit } from '@modules/platform/entityAudit/entityAudit.attach';
+import { bannerKitSchema, blankBannerKit, type IBannerKit } from '@modules/venues/bannerKit/bannerKit.model';
 import {
   VENUE_FOOD_DIETS,
   VENUE_FOOD_DISCOUNT_MAX_PCT,
@@ -231,6 +232,8 @@ export interface IVenue extends Document {
   gallery: string[];
   /** Venue videos: uploaded clips or YouTube links. Absent on a venue saved before videos existed. */
   videos?: string[];
+  /** What the venue's pod banners are made from. Absent on a venue saved before kits existed. */
+  banner_kit?: IBannerKit;
   location_id?: Types.ObjectId | null;
   country: string;
   country_code: string;
@@ -472,6 +475,7 @@ const venueSchema = new Schema<IVenue>(
     cover_image_url: { type: String, default: '' },
     gallery: { type: [String], default: [] },
     videos: { type: [String], default: [] },
+    banner_kit: { type: bannerKitSchema, default: blankBannerKit },
     location_id: { type: Schema.Types.ObjectId, ref: 'Location', default: null, index: true },
     country: { type: String, default: 'India', trim: true },
     country_code: { type: String, default: 'IN', uppercase: true, trim: true },

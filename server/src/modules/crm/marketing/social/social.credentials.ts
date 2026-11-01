@@ -1,55 +1,81 @@
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
 import { getUrlConfigs } from '@config/url-configs';
+import type { EnvCategory } from '@modules/platform/envEntry/envEntry.model';
 import { trimTrailingSlash } from '@utils/url';
-import {
-  SOCIAL_PROVIDERS,
-  type SocialAppCredentials,
-  type SocialPlatform,
-  type SocialProvider,
-} from './social.types';
+import { SOCIAL_PROVIDERS, type SocialAppCredentials, type SocialProvider } from './social.types';
 
 /**
- * The provider apps live in Tech → Environment Variables → Social apps, never
- * `.env`, and are read fresh on every use so a key Tech saves works on the
- * next click with no restart.
+ * Every network's app has its own credential entry — Marketing → Settings →
+ * Integrations keeps one per network (Instagram, Facebook and Threads are three
+ * entries, never one Meta app), and the keys are read fresh on every use so a
+ * key saved there works on the next click with no restart.
  */
 interface AppFields {
-  /** How Tech and Marketing name the app. */
+  /** How the settings page and the Social Accounts page name the app. */
   label: string;
+  /** The environment category the entry lives in. */
+  category: EnvCategory;
   id: string;
   secret: string;
   version?: { field: string; fallback: string };
 }
 
 /**
- * The SOCIAL_APPS config fields per provider. The runtime env key is always
- * `SOCIAL_` + the field in capitals (see ENV_KEY_MAP), so this one table
- * serves both the running app and Tech's connection test.
+ * The config fields per provider. The runtime env key is always
+ * `SOCIAL_<PROVIDER>_<FIELD>` in capitals (see ENV_KEY_MAP), so this one table
+ * serves both the running app and the settings page's connection test.
  */
 export const APP_FIELDS: Record<SocialProvider, AppFields> = {
-  // LinkedIn sunsets an API version about a year after release; Tech bumps it
-  // from the portal rather than waiting on a deploy.
+  INSTAGRAM: {
+    label: 'Instagram',
+    category: 'SOCIAL_INSTAGRAM',
+    id: 'app_id',
+    secret: 'app_secret',
+    version: { field: 'graph_version', fallback: 'v23.0' },
+  },
+  FACEBOOK: {
+    label: 'Facebook',
+    category: 'SOCIAL_FACEBOOK',
+    id: 'app_id',
+    secret: 'app_secret',
+    version: { field: 'graph_version', fallback: 'v23.0' },
+  },
+  THREADS: {
+    label: 'Threads',
+    category: 'SOCIAL_THREADS',
+    id: 'app_id',
+    secret: 'app_secret',
+    version: { field: 'graph_version', fallback: 'v1.0' },
+  },
+  YOUTUBE: { label: 'YouTube', category: 'SOCIAL_YOUTUBE', id: 'client_id', secret: 'client_secret' },
+  // LinkedIn sunsets an API version about a year after release; it is bumped
+  // from the settings page rather than waiting on a deploy.
   LINKEDIN: {
     label: 'LinkedIn',
-    id: 'linkedin_client_id',
-    secret: 'linkedin_client_secret',
-    version: { field: 'linkedin_api_version', fallback: '202509' },
+    category: 'SOCIAL_LINKEDIN',
+    id: 'client_id',
+    secret: 'client_secret',
+    version: { field: 'api_version', fallback: '202509' },
   },
-  META: {
-    label: 'Facebook + Instagram',
-    id: 'meta_app_id',
-    secret: 'meta_app_secret',
-    version: { field: 'meta_graph_version', fallback: 'v23.0' },
-  },
-  X: { label: 'X', id: 'x_client_id', secret: 'x_client_secret' },
-  YOUTUBE: { label: 'YouTube', id: 'youtube_client_id', secret: 'youtube_client_secret' },
+  X: { label: 'X', category: 'SOCIAL_X', id: 'client_id', secret: 'client_secret' },
 };
+
+/** The environment categories the social apps live in, one per network. */
+export const SOCIAL_ENV_CATEGORIES: readonly EnvCategory[] = SOCIAL_PROVIDERS.map((provider) => APP_FIELDS[provider].category);
+
+/** The provider whose app an environment category holds, or null for any other category. */
+export function providerOfCategory(category: string): SocialProvider | null {
+  return SOCIAL_PROVIDERS.find((provider) => APP_FIELDS[provider].category === category) ?? null;
+}
+
+/** The runtime env key one provider's config field resolves through. */
+export const socialEnvKey = (provider: SocialProvider, field: string) => `SOCIAL_${provider}_${field.toUpperCase()}`;
 
 type FieldReader = (field: string) => string | Promise<string>;
 
 /**
- * Where every provider sends the browser back. ONE address for all four, so
- * Tech registers the same URL in each developer console; the signed `state`
+ * Where every provider sends the browser back. ONE address for all of them,
+ * so the same URL is registered in each developer console; the signed `state`
  * says which provider is answering.
  */
 export async function socialRedirectUri(): Promise<string> {
@@ -57,7 +83,7 @@ export async function socialRedirectUri(): Promise<string> {
   return `${trimTrailingSlash(serverUrl)}/social/callback`;
 }
 
-/** A provider's app from any source of the SOCIAL_APPS fields; null until both keys are there. */
+/** A provider's app from any source of its config fields; null until both keys are there. */
 export async function credentialsFrom(
   provider: SocialProvider,
   read: FieldReader,
@@ -73,27 +99,19 @@ export async function credentialsFrom(
   return { clientId, clientSecret, redirectUri, version: version || fields.version?.fallback || '' };
 }
 
-/** A provider's app as the running server uses it — the active default Social apps entry. */
+/** A provider's app as the running server uses it — the active default entry of its category. */
 export async function socialCredentials(provider: SocialProvider): Promise<SocialAppCredentials | null> {
   const redirectUri = await socialRedirectUri();
-  return credentialsFrom(provider, (field) => getRuntimeEnvValue(`SOCIAL_${field.toUpperCase()}`), redirectUri);
+  return credentialsFrom(provider, (field) => getRuntimeEnvValue(socialEnvKey(provider, field)), redirectUri);
 }
 
-/** Which providers Marketing can offer a Connect button for right now. */
-export async function providerReadiness(): Promise<{ provider: SocialProvider; configured: boolean }[]> {
+/** Which providers Marketing can offer a Connect button for right now, and where each one's app is set up. */
+export async function providerReadiness(): Promise<{ provider: SocialProvider; configured: boolean; category: EnvCategory }[]> {
   return Promise.all(
     SOCIAL_PROVIDERS.map(async (provider) => ({
       provider,
       configured: (await socialCredentials(provider)) !== null,
+      category: APP_FIELDS[provider].category,
     }))
   );
 }
-
-/** The provider app a platform's account was connected through. */
-export const PROVIDER_OF: Record<SocialPlatform, SocialProvider> = {
-  LINKEDIN: 'LINKEDIN',
-  FACEBOOK: 'META',
-  INSTAGRAM: 'META',
-  X: 'X',
-  YOUTUBE: 'YOUTUBE',
-};

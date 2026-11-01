@@ -1,5 +1,6 @@
 import { E2eRunModel } from '@modules/platform/e2eRun/e2eRun.model';
 import { E2eFlowModel } from '@modules/platform/e2eFlow/e2eFlow.model';
+import { automatedFlowIds } from '@modules/platform/e2eFlow/e2eFlow.stats';
 import { StressRunModel, type StressVerdictGrade } from '@modules/platform/stressTest/stressTest.model';
 import { pct } from './testsOverview.score';
 
@@ -30,10 +31,11 @@ export async function latestE2e() {
 /**
  * Scenario coverage: how much of the E2E flow catalogue — every journey the
  * codebase has, sub flow by sub flow — a person has reviewed as LOOKS_GOOD
- * (ready to be an automated test).
+ * (ready to be an automated test) — and how many flows a live spec already
+ * tests.
  */
 export async function scenarioCoverage() {
-  const [row] = await E2eFlowModel.aggregate<{
+  const reviews = E2eFlowModel.aggregate<{
     flows: number;
     sub_flows: number;
     looks_good: number;
@@ -54,9 +56,13 @@ export async function scenarioCoverage() {
       },
     },
   ]);
+  const [flowIds, [row]] = await Promise.all([automatedFlowIds(), reviews]);
   const totals = row ?? { flows: 0, sub_flows: 0, looks_good: 0, needs_review: 0 };
+  const automated = flowIds.automated.length;
   return {
     flows: totals.flows,
+    automated,
+    automated_pct: pct(automated, flowIds.all),
     sub_flows: totals.sub_flows,
     looks_good: totals.looks_good,
     needs_review: totals.needs_review,

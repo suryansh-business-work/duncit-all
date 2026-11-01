@@ -385,21 +385,95 @@ export const OTHER_GAP_FLOWS: readonly CatalogueFlow[] = [
     ],
   },
   {
-    name: 'AI: Reel Studio',
-    description: 'AI portal /reels and /reels/:projectId: reel projects built from Google Drive footage with an AI director. REEL_ROLES = SUPER_ADMIN, AI_MANAGER.',
+    name: 'Marketing: Reel Studio',
+    description: 'Marketing portal /studio/reels and /studio/reels/:projectId: reel projects built from Google Drive footage, Pexels stock and media-store uploads with an AI production line on Claude (ideas → script → storyboard), a Sarvam voiceover and subtitles, per-network validation and captions, exported in the browser, posted to social from the studio and read back as analytics. Every AI step is a REEL marketing run with its cost. REEL_ROLES = SUPER_ADMIN, MARKETING_MANAGER, MARKETING_EDITOR, AI_MANAGER. The AI portal keeps /reels as a page that points here.',
     sub_flows: [
+      {
+        name: 'Create with AI: ideas, script and storyboard',
+        description:
+          'generateReelIdeas, generateReelScript and applyReelStoryboard each run inside a REEL marketing run (workflow REEL, links.reel_id = the project) with one step per AI call and the funnel’s tokens as the run’s cost; the storyboard lays one scene per script scene on matching footage, stock (auto_media) or a colour card and saves it like a chat reply.',
+        steps: [
+          ['As MARKETING_MANAGER open a reel and ask for ideas from a brief', 'generateReelIdeas returns run_id and 5 concepts (title, hook, angle, why); Automation › Activity shows a REEL run "Reel ideas for …" with a step "ideas" and tokens on its cost'],
+          ['Ask for 12 concepts', 'At most 10 come back'],
+          ['Pick a concept and ask for a 20 second script', 'generateReelScript returns hooks, scenes (text, shot, duration_ms, asset_query) and cta; scene durations are within 500–60000 ms'],
+          ['Ask for a 3 second script', 'BAD_USER_INPUT "A reel runs 5 to 180 seconds."'],
+          ['Apply the storyboard with auto_media off on a reel whose footage names match the queries', 'applyReelStoryboard returns the reel with one scene per script scene on the matched clips, the first scene carrying hooks[0] when it had no text and the last the cta; messages end with "Storyboard applied" (restorable)'],
+          ['Apply the storyboard with auto_media on for a scene nothing matches', 'The first portrait Pexels result is added as a STOCK asset (licence and attribution set) and the scene plays it; the run shows a "stock" step with a Pexels entry in its API log'],
+          ['Apply the storyboard with auto_media off for a scene nothing matches', 'The scene is a colour card (asset_id "") with the line as a TITLE text'],
+          ['Switch reels.ideas off under AI › AI Features and ask for ideas', 'The call fails with AI_UNAVAILABLE and the REEL run is FAILED with the reason on its "ideas" step'],
+          ['Call generateReelIdeas with a USER token', '"Access Denied" (FORBIDDEN)'],
+        ],
+      },
+      {
+        name: 'Stock and uploaded media',
+        description:
+          'reelMediaSearch lists Pexels photos or videos (portrait unless asked otherwise) with licence and attribution; addReelStockAssets keeps picked items as STOCK assets by their Pexels CDN address; addReelUploadAssets adds media-store files with the kind read off the address.',
+        steps: [
+          ['Search "dog park" photos', 'reelMediaSearch returns items with kind IMAGE, a CDN url, preview_url, width/height, licence "Pexels License…" and attribution "Photo by … on Pexels"; has_more follows next_page'],
+          ['Search "dog park" videos', 'Items are VIDEO with duration_ms and an MP4 url no larger than 1920 on its long side'],
+          ['Search with kind AUDIO', 'BAD_USER_INPUT "The stock library has pictures and clips, not sound."'],
+          ['Add two picked items, then the same two again', 'addReelStockAssets adds them once as STOCK assets with licence, attribution and provider_id; the second call adds nothing'],
+          ['Add a stock item whose url is not on pexels.com', 'BAD_USER_INPUT "…must come from the stock library…"'],
+          ['Add an ImageKit .mp4 and a .png through addReelUploadAssets', 'A VIDEO asset (mime video/mp4) and an IMAGE asset (image/png), source UPLOAD'],
+          ['Add a file from another host', 'BAD_USER_INPUT "An attached file did not come from the media store."'],
+          ['Search stock with PEXELS_API_KEY unset', 'CONFIG_ERROR "Pexels is not configured"'],
+        ],
+      },
+      {
+        name: 'Voiceover and subtitles',
+        description:
+          'generateReelVoiceover speaks the text with Sarvam TTS, uploads the WAV to ImageKit under /marketing/reels/voice, keeps it as a GENERATED AUDIO asset with duration_ms read off the WAV header and sets spec.voiceover to it at volume 1; generateReelSubtitles transcribes an asset with timestamps and lays CAPTION texts on the scenes that play it, at most 6 per scene by merging cues.',
+        steps: [
+          ['Ask for a voiceover of a short line', 'The reel comes back with a new AUDIO asset (source GENERATED, mime audio/wav, duration_ms > 0) and spec.voiceover = { asset_id, volume: 1 }; the REEL run shows steps tts, upload and spec with a Sarvam entry in its API log'],
+          ['Ask for a voiceover of 1600 characters', 'BAD_USER_INPUT "…at most 1500 characters…"'],
+          ['Ask for a voiceover with SERVAM_AI_API_KEY unset', 'UPSTREAM_ERROR "Servam AI is not configured…"; the run’s tts step is FAILED'],
+          ['Ask for subtitles from the voiceover asset', 'Each scene under the voiceover gains CAPTION texts timed from its start; a scene that already had 2 titles gets at most 4 captions, merged'],
+          ['Ask for subtitles from a video asset placed with trim_start_ms 2000', 'Cues before 2 s are left out and the rest start 2 s earlier on the scene'],
+          ['Ask for subtitles from a picture', 'BAD_USER_INPUT "A picture has no sound to transcribe."'],
+          ['Ask for subtitles from a sound file no scene plays', 'BAD_USER_INPUT "No scene plays that sound yet…"'],
+        ],
+      },
+      {
+        name: 'Validate, variants, cover and analytics',
+        description:
+          'validateReel checks length per network (Instagram/Facebook/Threads 90 s, YouTube 60 s, LinkedIn 10 min, X 140 s), portrait aspect for Instagram/YouTube/Threads, sound, text limits, a hook in the first scene and the brand watermark, and keeps the result as the project’s checks; generateReelVariants writes caption, hashtags and title per network within PUBLISH_RULES.maxText; setReelCover picks the cover frame; a post sent from the composer with reel_project_id links back, and reelAnalytics sums the synced SocialPost numbers of its published targets.',
+        steps: [
+          ['Validate a 100 s portrait reel for INSTAGRAM and LINKEDIN', 'duration:INSTAGRAM fails ("…over the 90.0s…"), duration:LINKEDIN passes, aspect:INSTAGRAM passes; the project’s checks now hold the result'],
+          ['Validate a square reel with no music, no voiceover and muted clips for YOUTUBE', 'aspect:YOUTUBE fails and sound fails'],
+          ['Validate a reel whose first scene lasts 1 s', 'hook fails ("…give the hook at least 1.5s")'],
+          ['Validate a reel with brand.watermark_asset_id set to a picture of the project', 'watermark passes naming the picture and corner'],
+          ['Validate with no platforms', 'BAD_USER_INPUT "Pick at least one network…"'],
+          ['Ask for variants for X and INSTAGRAM', 'generateReelVariants stores one variant per network; the X caption plus its hashtags is within 280 characters; hashtags start with # and repeat none'],
+          ['Set the cover at 2500 ms on a 5 s reel, then at 9000 ms', 'cover_at_ms becomes 2500; the second call is BAD_USER_INPUT "Pick a moment between 0 and 5000 ms."'],
+          ['Post the exported reel from the composer with reel_project_id, let it publish, then sync the account', 'ReelProject.posts lists the published target with its permalink; reelAnalytics sums views, likes, comments, shares and engagement from the synced SocialPost rows; an unsynced target counts as zeros'],
+          ['Ask what to make next', 'recommendNextReel returns run_id and up to 5 recommendations (title, why, evidence); the REEL run shows steps numbers and recommend'],
+        ],
+      },
       {
         name: 'Create a reel project, add Drive footage, chat and save spec',
         description:
           'createReelProject, addReelDriveAssets, sendReelMessage and saveReelSpec persist; restoreReelVersion puts back the spec an earlier reply produced.',
         steps: [
-          ['As AI_MANAGER open /reels and create a project', 'createReelProject returns it and the studio opens at /reels/<id>'],
+          ['As MARKETING_MANAGER open /studio/reels and create a project', 'createReelProject returns it and the studio opens at /studio/reels/<id>'],
           ['Pick clips from the connected Drive folder', 'addReelDriveAssets attaches them to the project with thumbnails'],
           ['Send a chat message asking for a cut', 'sendReelMessage returns the reply with a spec version'],
           ['Edit the timeline', 'saveReelSpec saves the new spec_json'],
           ['Restore an earlier reply\'s version', 'restoreReelVersion returns the project with that spec'],
           ['Restore a reply that carried no spec', '"That reply has no version of the reel to put back."'],
           ['Call createReelProject with a USER token', '"Access Denied" (FORBIDDEN)'],
+          ['Call reelProjects with an AI_MANAGER token', 'The list, the same as for a MARKETING_MANAGER'],
+        ],
+      },
+      {
+        name: 'Export a reel and post it to social from the studio',
+        description:
+          'The MP4 is rendered in the browser; "Post to social" uploads it to ImageKit under /marketing/reels (getImagekitAuth ticket, the PORTALS upload caps) and opens the social composer on the reel’s name and the uploaded video, without leaving the studio.',
+        steps: [
+          ['Press Export MP4 on a reel with scenes', 'The export dialog shows the footage downloading, then the render progress, then "Your reel is ready"'],
+          ['Press Save', 'The MP4 downloads under the reel’s name and the dialog closes'],
+          ['Press Post to social', 'The upload progress shows, then the composer opens with the reel’s name as the text and the uploaded MP4 as its media'],
+          ['Post a reel larger than the PORTALS video cap', 'The dialog says the reel is too large and nothing is uploaded'],
+          ['Upload fails (ticket refused or network error)', 'The dialog shows the failure with Try again and Close; the rendered reel can still be saved'],
         ],
       },
     ],
@@ -1134,9 +1208,9 @@ export const OTHER_GAP_FLOWS: readonly CatalogueFlow[] = [
         description:
           'The callback redirects to the Marketing page fixed by the signed state (never an open redirect): connected=<provider>&count=<n> on success, social_error=<reason> otherwise.',
         steps: [
-          ['Approve a connection on the network', 'Redirect to <marketing>/social-accounts?connected=<PROVIDER>&count=<n>; the accounts are listed and first sync starts'],
+          ['Approve a connection on the network', 'Redirect to <marketing>/social/accounts?connected=<PROVIDER>&count=<n>; the accounts are listed and first sync starts'],
           ['Press Cancel on the network', 'Redirect with social_error=access_denied (or the network\'s error)'],
-          ['GET /social/callback?code=x&state=<forged>', 'Redirect to /social-accounts with social_error "This connect link has expired or did not start here. Press Connect again."'],
+          ['GET /social/callback?code=x&state=<forged>', 'Redirect to /social/accounts with social_error "This connect link has expired or did not start here. Press Connect again."'],
           ['GET /social/callback with no code', 'Redirect with social_error=missing_code'],
         ],
       },

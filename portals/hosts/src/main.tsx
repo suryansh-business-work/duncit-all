@@ -1,6 +1,5 @@
 import { Route } from 'react-router';
 import {
-  HostDetailsPage,
   HostEditorPage,
   HostsPage,
   mountDirectoryPortal,
@@ -9,6 +8,7 @@ import {
 import { logs } from '@duncit/logs';
 import { EventRequestsPage } from '@duncit/shell';
 import { appConfig } from './config/app-config';
+import HostRecordPage from './HostRecordPage';
 
 /**
  * The hosts console.
@@ -36,7 +36,7 @@ mountDirectoryPortal({
         <Route path="/hosts/new" element={authed(<HostEditorPage />)} />
         <Route path="/hosts" element={authed(<HostsPage />)} />
         <Route path="/event-requests" element={authed(<EventRequestsPage targetType="HOST" scope="console" />)} />
-        <Route path="/hosts/:hostId" element={authed(<HostDetailsPage />)} />
+        <Route path="/hosts/:hostId" element={authed(<HostRecordPage />)} />
         <Route path="/hosts/:hostId/edit" element={authed(<HostEditorPage />)} />
       </>
     ),

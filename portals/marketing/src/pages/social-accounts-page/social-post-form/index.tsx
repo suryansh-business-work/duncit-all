@@ -1,6 +1,9 @@
 export { default as SocialPostForm } from './social-post.form';
 export {
   blankSocialPostValues,
+  mediaFromUrl,
+  postMedia,
+  sentBackNote,
   socialPostSchema,
   toSocialPostInput,
   type SocialPostFormProps,

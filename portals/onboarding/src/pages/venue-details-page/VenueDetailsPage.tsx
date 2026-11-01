@@ -7,15 +7,19 @@ import { VENUE_DETAILS, type AdminVenueDetails } from './queries';
 import VenueOverviewCard from './VenueOverviewCard';
 import VenuePodsTab from './VenuePodsTab';
 import { useTranslation } from '@duncit/app-settings';
+import { BannerKitPanel, PodBannersPanel } from '@duncit/shell';
 
 // Slot Availability + Account Health are not applicable to onboarded venue
 // details and are intentionally not shown here.
-type VenueTab = 'overview' | 'pods';
+type VenueTab = 'overview' | 'pods' | 'bannerKit' | 'banners';
 type Translate = ReturnType<typeof useTranslation>['t'];
 
 const venueTabs = (t: Translate): DuncitTabItem<VenueTab>[] => [
   { value: 'overview', label: t('onboarding.venueDetails.overview'), testId: 'venue-details-tab-overview' },
   { value: 'pods', label: t('shell.nav.pods'), testId: 'venue-details-tab-pods' },
+  // What the venue's pod banners are made from, and making them for its next pods.
+  { value: 'bannerKit', label: t('shell.bannerKit.title'), testId: 'venue-details-tab-bannerKit' },
+  { value: 'banners', label: t('shell.podBanners.title'), testId: 'venue-details-tab-banners' },
 ];
 
 export default function VenueDetailsPage() {
@@ -62,6 +66,10 @@ export default function VenueDetailsPage() {
               {tab === 'overview' && <VenueOverviewCard venue={venue} />}
 
               {tab === 'pods' && <VenuePodsTab venueId={venue.id} />}
+
+              {tab === 'bannerKit' && <BannerKitPanel entity="VENUE" mode="console" id={venue.id} />}
+
+              {tab === 'banners' && <PodBannersPanel filter={{ field: 'venue_id', value: venue.id }} />}
             </Box>
           </Stack>
         );

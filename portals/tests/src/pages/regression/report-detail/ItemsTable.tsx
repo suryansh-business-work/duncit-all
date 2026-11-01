@@ -11,6 +11,8 @@ import { REGRESSION_ITEMS_TABLE, type RegressionItemRow } from '../queries';
 interface Props {
   reportId: string;
   bucket: RegressionBucket;
+  /** E2E reports hold scenarios, grouped by suite rather than workspace. */
+  isE2e: boolean;
   /** The bucket's name, for the table's accessible label. */
   label: string;
 }
@@ -18,7 +20,7 @@ interface Props {
 const getRowId = (row: RegressionItemRow) => row.id;
 
 /** One bucket's tests, read from the server, one row per test; a row opens its failure. */
-export default function ItemsTable({ reportId, bucket, label }: Readonly<Props>) {
+export default function ItemsTable({ reportId, bucket, isE2e, label }: Readonly<Props>) {
   const { t } = useTranslation();
   const client = useApolloClient();
   const [open, setOpen] = useState<RegressionItemRow | null>(null);
@@ -34,7 +36,13 @@ export default function ItemsTable({ reportId, bucket, label }: Readonly<Props>)
 
   const columns = useMemo<DuncitColumn<RegressionItemRow>[]>(
     () => [
-      { field: 'workspace', headerName: t('testsUnit.col.workspace'), width: 170, type: 'text', valueGetter: (r) => r.workspace },
+      {
+        field: 'workspace',
+        headerName: isE2e ? t('testsUnit.regression.col.suite') : t('testsUnit.col.workspace'),
+        width: 170,
+        type: 'text',
+        valueGetter: (r) => r.workspace,
+      },
       { field: 'file', headerName: t('testsUnit.col.file'), minWidth: 260, flex: 1, type: 'text', valueGetter: (r) => r.file },
       { field: 'full_name', headerName: t('testsUnit.col.test'), minWidth: 300, flex: 2, type: 'text', valueGetter: (r) => r.full_name },
       {
@@ -48,7 +56,7 @@ export default function ItemsTable({ reportId, bucket, label }: Readonly<Props>)
         valueGetter: (r) => (r.failure_message ? firstLine(r.failure_message) : EM_DASH),
       },
     ],
-    [t]
+    [t, isE2e]
   );
 
   return (

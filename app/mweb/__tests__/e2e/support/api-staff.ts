@@ -1,5 +1,5 @@
 import type { E2eStaffRole } from '@duncit/utils';
-import { ACCESS_DENIED, expectRefused, revokeRunRoles, signInRunAs, type Refusal } from './access-steps';
+import { ACCESS_DENIED, expectRefused, revokeRunRoles, signInRunAs, SIGNED_OUT, type Refusal } from './access-steps';
 import { NO_ID } from './staff-operations';
 
 /**
@@ -109,6 +109,18 @@ export function expectCallsRefused(token: string, calls: readonly StaffCall[], e
   calls.forEach((c) => {
     cy.gqlRaw(c.query, c.variables ?? {}, { token }).then((body) => expectRefused(c.field, body, expected));
   });
+}
+
+/**
+ * Every call is refused to a signed-out caller and to `memberToken`, a plain
+ * member's. Call it outside `asRole`: the server reads roles from the account,
+ * so a member token used while a role is granted would carry that role.
+ */
+export function expectOutsidersRefused(memberToken: string, calls: readonly StaffCall[]): void {
+  calls.forEach((c) => {
+    cy.gqlRaw(c.query, c.variables ?? {}, { token: null }).then((body) => expectRefused(c.field, body, SIGNED_OUT));
+  });
+  expectCallsRefused(memberToken, calls);
 }
 
 /** Each role in turn is refused every call. */

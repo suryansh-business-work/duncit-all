@@ -73,7 +73,6 @@
 60. **Edge Cases:** Consider relevant null/undefined, empty, duplicate, timeout, retry, pagination, timezone, permission, network-failure, and stale-data scenarios.
 61. **Commit Discipline:** Keep unrelated tasks in separate commits with clear, task-specific commit messages.
 62. **Staging Only:** Push changes only to `staging`; do not create or push to any other branch.
-63. **Testing — Temporarily Paused:** Do not write new tests or run local unit, integration, or E2E tests unless explicitly requested.
 64. **E-commerce vs Partner Brand:** `https://ecomm.duncit.com` and `https://partners-app.duncit.com/ecomm-brand` are separate products; never mix their logic, data, UI, or business rules.
 65. **WhatsApp:** Always use the Communications Portal to create or manage WhatsApp templates and campaigns.
 66. **Finance:** Work on Finance functionality with extremely deep analysis and research. Understand financial flows, business rules, calculations, data integrity, edge cases, dependencies, security, auditability, and backward compatibility before making changes.

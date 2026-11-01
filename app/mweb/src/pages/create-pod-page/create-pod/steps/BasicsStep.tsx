@@ -2,12 +2,13 @@ import { Controller } from 'react-hook-form';
 import { Box, Stack, TextField } from '@mui/material';
 import HashtagChipsField from '../fields/HashtagChipsField';
 import MediaUrlsField from '../fields/MediaUrlsField';
-import { MAX_COVER_IMAGES, coverCategoryName } from '@duncit/utils';
+import { DETAILS_EXTRA_FIELDS, MAX_COVER_IMAGES, POD_COVER_CROP_KEY, anyFieldFailed, coverCategoryName, detailsExtrasFilled } from '@duncit/utils';
 import { hostCategoryKeyOf } from '../create-pod.form';
 import PodReelAccordion from '../fields/PodReelAccordion';
 import ReelEngagementNotice from '../fields/ReelEngagementNotice';
 import ChipArrayField from '../fields/ChipArrayField';
 import OptionalSettingsCards from '../OptionalSettingsCards';
+import MoreOptionsSection from '../MoreOptionsSection';
 import { requiredLabel } from '../../../../forms/components/requiredLabel';
 import { useTranslation } from '../../../../i18n/useTranslation';
 import { SURFACE_SX } from '../../../../theme';
@@ -18,9 +19,9 @@ interface Props {
   hostCategories: CreatePodHostCategory[];
 }
 
-/** Step 2 — Pod Basics: title, description, cover media, hashtags and the
- * required "what this pod offers" list, with optional extras (info, perks)
- * and an optional Pod Reel video that shows in Explore while the pod is live. */
+/** Details' fields — title, description, cover media and the required "what
+ * this pod offers" list. Hashtags, more info, perks and the optional Pod Reel
+ * (it shows in Explore while the pod is live) wait under More options. */
 export default function BasicsStep({ form, hostCategories }: Readonly<Props>) {
   const {
     register,
@@ -28,6 +29,9 @@ export default function BasicsStep({ form, hostCategories }: Readonly<Props>) {
     watch,
     formState: { errors },
   } = form;
+  // Read once, not watched: it only decides how More options first opens.
+  const extrasFilled = detailsExtrasFilled(form.getValues());
+  const extrasFailed = anyFieldFailed(errors, DETAILS_EXTRA_FIELDS);
   const { t } = useTranslation();
 
   // The host picked the category on step 1, and the server already
@@ -80,11 +84,12 @@ export default function BasicsStep({ form, hostCategories }: Readonly<Props>) {
               error={fieldState.error?.message}
               subCategoryName={subCategoryName}
               maxImages={MAX_COVER_IMAGES}
+              cropKey={POD_COVER_CROP_KEY}
             />
           )}
         />
       </Box>
-      <Stack spacing={2} sx={{ ...SURFACE_SX, p: 2 }}>
+      <Box sx={{ ...SURFACE_SX, p: 2 }}>
         <Controller
           control={control}
           name="what_this_pod_offers"
@@ -100,11 +105,15 @@ export default function BasicsStep({ form, hostCategories }: Readonly<Props>) {
             />
           )}
         />
-        <HashtagChipsField form={form} />
-      </Stack>
-      <OptionalSettingsCards form={form} />
-      {!hasReel && <ReelEngagementNotice />}
-      <PodReelAccordion form={form} />
+      </Box>
+      <MoreOptionsSection testId="create-pod-details-more" hint={t('mweb.createPod.moreOptionsDetailsHint')} defaultOpen={extrasFilled} forceOpen={extrasFailed}>
+        <Box sx={{ ...SURFACE_SX, p: 2 }}>
+          <HashtagChipsField form={form} />
+        </Box>
+        <OptionalSettingsCards form={form} />
+        {!hasReel && <ReelEngagementNotice />}
+        <PodReelAccordion form={form} />
+      </MoreOptionsSection>
     </Stack>
   );
 }

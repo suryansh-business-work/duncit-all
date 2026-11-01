@@ -1047,6 +1047,8 @@ export type AnalyticsEntity =
   /** The Duncit Pet Store (ecomm.duncit.com). */
   | 'PET_STORE'
   | 'PODS'
+  /** How the app is used — people, sessions, screens and retention, from the app's own events (Analytics > Product). */
+  | 'PRODUCT'
   | 'REVENUE'
   | 'REWARDS'
   | 'SERVER'
@@ -1193,6 +1195,8 @@ export type AnalyticsPeriod = {
   days: Scalars['Int']['output'];
   from: Scalars['String']['output'];
   granularity: AnalyticsGranularity;
+  /** The platform the page was narrowed to (ios, android, web, mweb); null for every platform. */
+  platform?: Maybe<Scalars['String']['output']>;
   /** The comparison period the previous values were read over. */
   previous_from: Scalars['String']['output'];
   previous_to: Scalars['String']['output'];
@@ -1278,6 +1282,8 @@ export type AppAnalyticsEvent = {
 
 export type AppAnalyticsEventType =
   | 'CLICK'
+  /** A named product event that is neither a view nor a click (app_open, search_performed); event_name says which. */
+  | 'EVENT'
   | 'IMPRESSION'
   | 'PAGE_VIEW'
   | 'TOUCH';
@@ -1618,6 +1624,42 @@ export type AppBuildUploadAuth = {
   ticket: Scalars['String']['output'];
   /** POST the artifact here as multipart form-data, with the ticket in the query string. */
   upload_url: Scalars['String']['output'];
+};
+
+/**
+ * One product-analytics event from mWeb or the native app. event_name follows the snake_case
+ * taxonomy (screen_view, element_click, app_open, app_background, search_performed, …).
+ * On a screen_view, duration_ms is the foreground time spent on previous_screen; on an
+ * app_background it is the time spent on screen_name. Text is redacted again on the server.
+ */
+export type AppEventInput = {
+  app_version?: InputMaybe<Scalars['String']['input']>;
+  /** Made on the device; a batch resent with the same ids stores nothing twice. */
+  client_event_id: Scalars['String']['input'];
+  /** phone, tablet or desktop. */
+  device_type?: InputMaybe<Scalars['String']['input']>;
+  duration_ms?: InputMaybe<Scalars['Int']['input']>;
+  element_id?: InputMaybe<Scalars['String']['input']>;
+  element_name?: InputMaybe<Scalars['String']['input']>;
+  element_text?: InputMaybe<Scalars['String']['input']>;
+  element_type?: InputMaybe<Scalars['String']['input']>;
+  event_name: Scalars['String']['input'];
+  /** ISO 8601, by the device's clock. */
+  occurred_at: Scalars['String']['input'];
+  os_version?: InputMaybe<Scalars['String']['input']>;
+  path?: InputMaybe<Scalars['String']['input']>;
+  /** ios, android, web (the native app's web build) or mweb. */
+  platform?: InputMaybe<Scalars['String']['input']>;
+  pod_id?: InputMaybe<Scalars['ID']['input']>;
+  previous_screen?: InputMaybe<Scalars['String']['input']>;
+  /** A flat JSON object of extra properties; sensitive names are dropped and text is redacted. */
+  properties_json?: InputMaybe<Scalars['String']['input']>;
+  screen_name?: InputMaybe<Scalars['String']['input']>;
+  /** The app session: a new one after 30 minutes without activity. */
+  session_id: Scalars['String']['input'];
+  super_category_slug?: InputMaybe<Scalars['String']['input']>;
+  target_href?: InputMaybe<Scalars['String']['input']>;
+  title?: InputMaybe<Scalars['String']['input']>;
 };
 
 /**
@@ -2985,6 +3027,60 @@ export type BankPayoutMethod =
   | 'IMPS'
   | 'NEFT'
   | 'UPI';
+
+/**
+ * What a venue's or a host's pod banners are made from. A kit nobody has saved
+ * yet reads as prefilled from what is already on file (a venue's cover and
+ * gallery, a host's photo); nothing is stored until the first save.
+ */
+export type BannerKit = {
+  __typename?: 'BannerKit';
+  /** At most 400 characters. */
+  bio: Scalars['String']['output'];
+  /** A colour like #1a2b3c, or empty for the banner's own colours. */
+  brand_color: Scalars['String']['output'];
+  /** Whether Duncit may invite instagram_handle as a collaborator on the pod's Instagram post. */
+  collab_opt_in: Scalars['Boolean']['output'];
+  /** A host's past events; at most 12. */
+  event_photos: Array<BannerKitPhoto>;
+  /** Lowercase, without the @ or the instagram.com address. */
+  instagram_handle: Scalars['String']['output'];
+  logo_url: Scalars['String']['output'];
+  /** A venue's space, or a host's portraits; at most 12. */
+  photos: Array<BannerKitPhoto>;
+  /** Photos already on file (media library only) that the kit can use with one click. */
+  suggested_photos: Array<Scalars['String']['output']>;
+  /** At most 80 characters. */
+  tagline: Scalars['String']['output'];
+};
+
+/** Every field is optional: a field left out keeps its saved value. */
+export type BannerKitInput = {
+  bio?: InputMaybe<Scalars['String']['input']>;
+  brand_color?: InputMaybe<Scalars['String']['input']>;
+  collab_opt_in?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Replaces the whole list, in this order. */
+  event_photos?: InputMaybe<Array<BannerKitPhotoInput>>;
+  /** A handle, an @handle or an instagram.com link; empty removes it. */
+  instagram_handle?: InputMaybe<Scalars['String']['input']>;
+  /** A media library address, or empty to remove it. */
+  logo_url?: InputMaybe<Scalars['String']['input']>;
+  /** Replaces the whole list, in this order. */
+  photos?: InputMaybe<Array<BannerKitPhotoInput>>;
+  tagline?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** One photo of a banner kit, with the line shown under it on a slide. */
+export type BannerKitPhoto = {
+  __typename?: 'BannerKitPhoto';
+  caption: Scalars['String']['output'];
+  url: Scalars['String']['output'];
+};
+
+export type BannerKitPhotoInput = {
+  caption?: InputMaybe<Scalars['String']['input']>;
+  url: Scalars['String']['input'];
+};
 
 /** Structured billing block snapshotted on a payment (drives the invoice bill-to). */
 export type BillingDetails = {
@@ -9168,6 +9264,7 @@ export type EnvAttemptSettingsInput = {
 
 export type EnvCategory =
   | 'AISENSY'
+  | 'ANTHROPIC'
   | 'APPLE_SIGNIN'
   | 'APP_STORE_CONNECT'
   | 'CLOUDFLARE'
@@ -9188,7 +9285,12 @@ export type EnvCategory =
   | 'SERVAM'
   | 'SHIPROCKET'
   | 'SLACK'
-  | 'SOCIAL_APPS'
+  | 'SOCIAL_FACEBOOK'
+  | 'SOCIAL_INSTAGRAM'
+  | 'SOCIAL_LINKEDIN'
+  | 'SOCIAL_THREADS'
+  | 'SOCIAL_X'
+  | 'SOCIAL_YOUTUBE'
   | 'SONARQUBE'
   | 'TRUECALLER'
   | 'TURN'
@@ -11156,6 +11258,7 @@ export type Host = {
   account_profile?: Maybe<HostAccountProfile>;
   approved_at?: Maybe<Scalars['String']['output']>;
   bank_account: BankAccountVerification;
+  banner_kit: BannerKit;
   created_at: Scalars['String']['output'];
   dob?: Maybe<Scalars['String']['output']>;
   email: Scalars['String']['output'];
@@ -13166,6 +13269,402 @@ export type MarkRentalBookingInput = {
   outcome: RentalMarkOutcome;
 };
 
+export type MarketingAgent = {
+  __typename?: 'MarketingAgent';
+  description: Scalars['String']['output'];
+  enabled: Scalars['Boolean']['output'];
+  /** Whether the agent reads params at all — the console shows the form only when it does. */
+  has_params: Scalars['Boolean']['output'];
+  key: MarketingAgentKey;
+  last_run_at?: Maybe<Scalars['String']['output']>;
+  /** The marketing run the last run was recorded as, or empty. */
+  last_run_id: Scalars['String']['output'];
+  last_run_status?: Maybe<MarketingRunStatus>;
+  name: Scalars['String']['output'];
+  /** Whether what it produces waits for a person on Approvals before anything goes out. */
+  needs_approval: Scalars['Boolean']['output'];
+  /** When the orchestrator will next run it; null while it is switched off. */
+  next_run_at?: Maybe<Scalars['String']['output']>;
+  params: MarketingAgentParams;
+  schedule: MarketingAgentSchedule;
+  /** The only tools its plan may call. */
+  tools: Array<Scalars['String']['output']>;
+  updated_at?: Maybe<Scalars['String']['output']>;
+};
+
+export type MarketingAgentCadence =
+  | 'DAY'
+  | 'WEEK';
+
+/** The agents the Marketing console ships; each is defined in code and switched on from the console. */
+export type MarketingAgentKey =
+  | 'ACCOUNT_DOCTOR'
+  | 'COMMUNITY_WATCH'
+  | 'CONTENT_PLANNER';
+
+/** What an agent is told. Only an agent with has_params reads these. */
+export type MarketingAgentParams = {
+  __typename?: 'MarketingAgentParams';
+  brief: Scalars['String']['output'];
+  /** Empty means every connected network. */
+  networks: Array<SocialPlatform>;
+  posts_per_week: Scalars['Int']['output'];
+};
+
+export type MarketingAgentParamsInput = {
+  brief?: InputMaybe<Scalars['String']['input']>;
+  networks?: InputMaybe<Array<SocialPlatform>>;
+  posts_per_week?: InputMaybe<Scalars['Int']['input']>;
+};
+
+/** When an agent runs, on the admin-configured clock (Settings › time zone). */
+export type MarketingAgentSchedule = {
+  __typename?: 'MarketingAgentSchedule';
+  every: MarketingAgentCadence;
+  /** 0–23. */
+  hour: Scalars['Int']['output'];
+  /** 0 Sunday … 6 Saturday; read for WEEK only. */
+  weekday: Scalars['Int']['output'];
+};
+
+export type MarketingAgentScheduleInput = {
+  every: MarketingAgentCadence;
+  hour: Scalars['Int']['input'];
+  /** Required in effect for WEEK; ignored for DAY. */
+  weekday?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type MarketingAnalyticsAccountGrowth = {
+  __typename?: 'MarketingAnalyticsAccountGrowth';
+  account_id: Scalars['ID']['output'];
+  followers: Scalars['Int']['output'];
+  /** The last count on or before the last day. */
+  followers_end: Scalars['Int']['output'];
+  /** The last count on or before the first day, or the account's first count inside the window. */
+  followers_start: Scalars['Int']['output'];
+  growth: Scalars['Int']['output'];
+  name: Scalars['String']['output'];
+  platform: SocialPlatform;
+};
+
+export type MarketingAnalyticsAgent = {
+  __typename?: 'MarketingAnalyticsAgent';
+  agent_key: Scalars['String']['output'];
+  completed: Scalars['Int']['output'];
+  cost: Scalars['Float']['output'];
+  failed: Scalars['Int']['output'];
+  partial: Scalars['Int']['output'];
+  runs: Scalars['Int']['output'];
+  success_rate: Scalars['Float']['output'];
+  tokens: Scalars['Int']['output'];
+};
+
+export type MarketingAnalyticsApprovals = {
+  __typename?: 'MarketingAnalyticsApprovals';
+  by_decision: Array<MarketingAnalyticsCount>;
+  /** Runs decided in the window. */
+  decided: Scalars['Int']['output'];
+  /** The median time from a run asking to a person deciding, in minutes. */
+  median_decision_minutes: Scalars['Float']['output'];
+  /** Runs waiting on a person right now, whenever they asked. */
+  waiting: Scalars['Int']['output'];
+};
+
+export type MarketingAnalyticsAutomation = {
+  __typename?: 'MarketingAnalyticsAutomation';
+  agents: Array<MarketingAnalyticsAgent>;
+  approvals: MarketingAnalyticsApprovals;
+  by_status: Array<MarketingAnalyticsCount>;
+  by_workflow: Array<MarketingAnalyticsWorkflow>;
+  completed: Scalars['Int']['output'];
+  cost: Scalars['Float']['output'];
+  daily: MarketingAnalyticsRunDaily;
+  failed: Scalars['Int']['output'];
+  partial: Scalars['Int']['output'];
+  /** Runs started in the window. */
+  runs: Scalars['Int']['output'];
+  success_rate: Scalars['Float']['output'];
+  tokens: Scalars['Int']['output'];
+  window: MarketingAnalyticsWindow;
+};
+
+export type MarketingAnalyticsContent = {
+  __typename?: 'MarketingAnalyticsContent';
+  /** The best hour of the day; null when nothing was posted. */
+  best_hour?: Maybe<Scalars['Int']['output']>;
+  /** Index into by_weekday of the best weekday; null when nothing was posted. */
+  best_weekday?: Maybe<Scalars['Int']['output']>;
+  /** Average engagement per post by hour of the day, 0 to 23, in the admin's zone. */
+  by_hour: Array<Scalars['Float']['output']>;
+  /** Average engagement per post by weekday, Monday first, in the admin's zone. */
+  by_weekday: Array<Scalars['Float']['output']>;
+  formats: Array<MarketingAnalyticsFormat>;
+  /** Posts written in Duncit that went out in the window, even to only some of their networks. */
+  from_duncit: Scalars['Int']['output'];
+  /** Posts the networks reported for the window, Duncit's included once synced. */
+  from_networks: Scalars['Int']['output'];
+  reel_engagement: Scalars['Int']['output'];
+  reel_views: Scalars['Int']['output'];
+  /** Reel Studio projects started in the window. */
+  reels_made: Scalars['Int']['output'];
+  /** Reels that went out in the window. */
+  reels_posted: Scalars['Int']['output'];
+  /** The most viewed reels of the window, at most ten. */
+  top_reels: Array<MarketingAnalyticsReel>;
+  window: MarketingAnalyticsWindow;
+};
+
+/** A count for one code — a stage, a source, a status, a decision. */
+export type MarketingAnalyticsCount = {
+  __typename?: 'MarketingAnalyticsCount';
+  count: Scalars['Int']['output'];
+  key: Scalars['String']['output'];
+};
+
+export type MarketingAnalyticsFormat = {
+  __typename?: 'MarketingAnalyticsFormat';
+  engagement: Scalars['Int']['output'];
+  format: MarketingAnalyticsPostFormat;
+  /** The networks those posts reached. */
+  networks: Scalars['Int']['output'];
+  /** Duncit posts of this format that went out in the window. */
+  posts: Scalars['Int']['output'];
+  views: Scalars['Int']['output'];
+};
+
+export type MarketingAnalyticsFunnel = {
+  __typename?: 'MarketingAnalyticsFunnel';
+  by_source: Array<MarketingAnalyticsCount>;
+  /** Where the window's new leads stand now. */
+  by_stage: Array<MarketingAnalyticsCount>;
+  /** Leads moved to CONVERTED in the window. */
+  converted: Scalars['Int']['output'];
+  /** New leads per day. */
+  daily_new: Array<Scalars['Int']['output']>;
+  funnel: Array<MarketingAnalyticsFunnelStep>;
+  /** Leads created in the window. */
+  new_leads: Scalars['Int']['output'];
+  /** The pipeline the figures are for; null for every pipeline. */
+  pipeline?: Maybe<MarketingLeadPipeline>;
+  /** Leads handed to the CRM in the window. */
+  promoted: Scalars['Int']['output'];
+  promoted_by_kind: Array<MarketingAnalyticsCount>;
+  time_in_stage: Array<MarketingAnalyticsStageTime>;
+  transitions: Array<MarketingAnalyticsTransition>;
+  window: MarketingAnalyticsWindow;
+};
+
+export type MarketingAnalyticsFunnelStep = {
+  __typename?: 'MarketingAnalyticsFunnelStep';
+  /** Reached as a percentage of the step before; the first step is the whole cohort. */
+  conversion: Scalars['Float']['output'];
+  /** Leads created in the window that ever got this far. */
+  reached: Scalars['Int']['output'];
+  stage: MarketingLeadStage;
+};
+
+/** The window an analytics page reads. Days are calendar days in the admin's zone, both included. */
+export type MarketingAnalyticsInput = {
+  /** The first day, yyyy-MM-dd. */
+  from: Scalars['String']['input'];
+  /** The networks to count; empty or left out means every network. Ignored by figures that have no network. */
+  platforms?: InputMaybe<Array<SocialPlatform>>;
+  /** The last day, yyyy-MM-dd. At most 366 days after from. */
+  to: Scalars['String']['input'];
+};
+
+export type MarketingAnalyticsNetwork = {
+  __typename?: 'MarketingAnalyticsNetwork';
+  comments: Scalars['Int']['output'];
+  engagement: Scalars['Int']['output'];
+  /** Average engagement per post as a percentage of the network's followers. */
+  engagement_rate: Scalars['Float']['output'];
+  /** Followers now, across the network's accounts. */
+  followers: Scalars['Int']['output'];
+  likes: Scalars['Int']['output'];
+  platform: SocialPlatform;
+  posts: Scalars['Int']['output'];
+  shares: Scalars['Int']['output'];
+  /** Views (reach) the network reported; 0 where it reports none. */
+  views: Scalars['Int']['output'];
+};
+
+export type MarketingAnalyticsOverview = {
+  __typename?: 'MarketingAnalyticsOverview';
+  automation: MarketingAnalyticsOverviewAutomation;
+  content: MarketingAnalyticsOverviewContent;
+  daily: MarketingAnalyticsOverviewDaily;
+  funnel: MarketingAnalyticsOverviewFunnel;
+  links: MarketingAnalyticsOverviewLinks;
+  social: MarketingAnalyticsOverviewSocial;
+  window: MarketingAnalyticsWindow;
+};
+
+export type MarketingAnalyticsOverviewAutomation = {
+  __typename?: 'MarketingAnalyticsOverviewAutomation';
+  /** US dollars. */
+  cost: Scalars['Float']['output'];
+  runs: Scalars['Int']['output'];
+  success_rate: Scalars['Float']['output'];
+  tokens: Scalars['Int']['output'];
+};
+
+export type MarketingAnalyticsOverviewContent = {
+  __typename?: 'MarketingAnalyticsOverviewContent';
+  from_duncit: Scalars['Int']['output'];
+  from_networks: Scalars['Int']['output'];
+  reel_views: Scalars['Int']['output'];
+  reels_made: Scalars['Int']['output'];
+  reels_posted: Scalars['Int']['output'];
+};
+
+export type MarketingAnalyticsOverviewDaily = {
+  __typename?: 'MarketingAnalyticsOverviewDaily';
+  clicks: Array<Scalars['Int']['output']>;
+  engagement: Array<Scalars['Int']['output']>;
+  new_leads: Array<Scalars['Int']['output']>;
+};
+
+export type MarketingAnalyticsOverviewFunnel = {
+  __typename?: 'MarketingAnalyticsOverviewFunnel';
+  converted: Scalars['Int']['output'];
+  new_leads: Scalars['Int']['output'];
+  promoted: Scalars['Int']['output'];
+};
+
+export type MarketingAnalyticsOverviewLinks = {
+  __typename?: 'MarketingAnalyticsOverviewLinks';
+  clicks: Scalars['Int']['output'];
+  conversion_rate: Scalars['Float']['output'];
+  /** Clicks a payment was attributed to. */
+  conversions: Scalars['Int']['output'];
+  /** Attributed payments, in rupees. */
+  revenue: Scalars['Float']['output'];
+};
+
+export type MarketingAnalyticsOverviewSocial = {
+  __typename?: 'MarketingAnalyticsOverviewSocial';
+  engagement: Scalars['Int']['output'];
+  engagement_rate: Scalars['Float']['output'];
+  follower_growth: Scalars['Int']['output'];
+  followers: Scalars['Int']['output'];
+  posts: Scalars['Int']['output'];
+  views: Scalars['Int']['output'];
+};
+
+/** How a Duncit post was made: two or more pieces of media, one clip, one picture, or none. */
+export type MarketingAnalyticsPostFormat =
+  | 'CAROUSEL'
+  | 'SINGLE'
+  | 'TEXT'
+  | 'VIDEO';
+
+export type MarketingAnalyticsReel = {
+  __typename?: 'MarketingAnalyticsReel';
+  engagement: Scalars['Int']['output'];
+  /** The Reel Studio project id. */
+  id: Scalars['ID']['output'];
+  /** Empty when the project was deleted after it was posted. */
+  name: Scalars['String']['output'];
+  networks: Scalars['Int']['output'];
+  views: Scalars['Int']['output'];
+};
+
+export type MarketingAnalyticsRunDaily = {
+  __typename?: 'MarketingAnalyticsRunDaily';
+  /** US dollars. */
+  cost: Array<Scalars['Float']['output']>;
+  runs: Array<Scalars['Int']['output']>;
+  tokens: Array<Scalars['Int']['output']>;
+};
+
+export type MarketingAnalyticsSocial = {
+  __typename?: 'MarketingAnalyticsSocial';
+  accounts: Array<MarketingAnalyticsAccountGrowth>;
+  comments: Scalars['Int']['output'];
+  daily: MarketingAnalyticsSocialDaily;
+  engagement: Scalars['Int']['output'];
+  /** Average engagement per post as a percentage of followers — the Social Accounts tab's definition. */
+  engagement_rate: Scalars['Float']['output'];
+  /** Followers gained (or lost, below 0) over the window, summed across accounts. */
+  follower_growth: Scalars['Int']['output'];
+  followers: Scalars['Int']['output'];
+  likes: Scalars['Int']['output'];
+  networks: Array<MarketingAnalyticsNetwork>;
+  posts: Scalars['Int']['output'];
+  shares: Scalars['Int']['output'];
+  /** The window's ten best posts by engagement. */
+  top_posts: Array<MarketingAnalyticsTopPost>;
+  views: Scalars['Int']['output'];
+  window: MarketingAnalyticsWindow;
+};
+
+export type MarketingAnalyticsSocialDaily = {
+  __typename?: 'MarketingAnalyticsSocialDaily';
+  engagement: Array<Scalars['Int']['output']>;
+  /** The day's average engagement per post as a percentage of that day's followers. */
+  engagement_rate: Array<Scalars['Float']['output']>;
+  /** Total followers each day, carried forward from the last count; null before any account was counted. */
+  followers: Array<Maybe<Scalars['Int']['output']>>;
+  /** Posts the networks reported as published that day. */
+  posts: Array<Scalars['Int']['output']>;
+  views: Array<Scalars['Int']['output']>;
+};
+
+export type MarketingAnalyticsStageTime = {
+  __typename?: 'MarketingAnalyticsStageTime';
+  /** The median time a lead sat in the stage before it moved, in hours. */
+  median_hours: Scalars['Float']['output'];
+  /** Stage changes out of this stage made in the window. */
+  moves: Scalars['Int']['output'];
+  stage: MarketingLeadStage;
+};
+
+export type MarketingAnalyticsTopPost = {
+  __typename?: 'MarketingAnalyticsTopPost';
+  account_name: Scalars['String']['output'];
+  engagement: Scalars['Int']['output'];
+  id: Scalars['ID']['output'];
+  permalink: Scalars['String']['output'];
+  platform: SocialPlatform;
+  published_at: Scalars['String']['output'];
+  text: Scalars['String']['output'];
+  views: Scalars['Int']['output'];
+};
+
+export type MarketingAnalyticsTransition = {
+  __typename?: 'MarketingAnalyticsTransition';
+  /** Stage changes from one stage to the other made in the window. */
+  count: Scalars['Int']['output'];
+  from: Scalars['String']['output'];
+  /** Their share of every change out of the same stage in the window, as a percentage. */
+  share: Scalars['Float']['output'];
+  to: Scalars['String']['output'];
+};
+
+export type MarketingAnalyticsWindow = {
+  __typename?: 'MarketingAnalyticsWindow';
+  /** Every day of the window, oldest first; each per-day list is in this order. */
+  days: Array<Scalars['String']['output']>;
+  from: Scalars['String']['output'];
+  to: Scalars['String']['output'];
+};
+
+export type MarketingAnalyticsWorkflow = {
+  __typename?: 'MarketingAnalyticsWorkflow';
+  completed: Scalars['Int']['output'];
+  /** What the AI steps cost, in US dollars. */
+  cost: Scalars['Float']['output'];
+  failed: Scalars['Int']['output'];
+  partial: Scalars['Int']['output'];
+  runs: Scalars['Int']['output'];
+  /** Completed as a percentage of the runs that finished (completed, partly completed or failed). */
+  success_rate: Scalars['Float']['output'];
+  /** AI tokens in and out. */
+  tokens: Scalars['Int']['output'];
+  workflow: MarketingRunWorkflow;
+};
+
 export type MarketingCampaign = {
   __typename?: 'MarketingCampaign';
   audience: MarketingCampaignAudience;
@@ -13296,7 +13795,10 @@ export type MarketingDashboard = {
   campaigns: MarketingDashboardCampaigns;
   /** The window the activity figures cover, in days. */
   days: Scalars['Int']['output'];
+  leads: MarketingDashboardLeads;
   links: MarketingDashboardLinks;
+  runs: MarketingDashboardRuns;
+  social: MarketingDashboardSocial;
 };
 
 export type MarketingDashboardAds = {
@@ -13327,6 +13829,17 @@ export type MarketingDashboardDaily = {
   __typename?: 'MarketingDashboardDaily';
   count: Scalars['Int']['output'];
   date: Scalars['String']['output'];
+};
+
+export type MarketingDashboardLeads = {
+  __typename?: 'MarketingDashboardLeads';
+  /** The whole pipeline by stage, in pipeline order; an empty stage is left out. */
+  by_status: Array<MarketingDashboardPoint>;
+  /** Leads the searches turned up in the window. */
+  found: Scalars['Int']['output'];
+  /** Of those, the ones the AI scored at or above qualified_score. */
+  qualified: Scalars['Int']['output'];
+  qualified_score: Scalars['Int']['output'];
 };
 
 export type MarketingDashboardLinks = {
@@ -13362,6 +13875,38 @@ export type MarketingDashboardRecentCampaign = {
   sent_at?: Maybe<Scalars['String']['output']>;
 };
 
+export type MarketingDashboardRuns = {
+  __typename?: 'MarketingDashboardRuns';
+  awaiting_approval: Scalars['Int']['output'];
+  /** Runs started in the window that completed. */
+  completed: Scalars['Int']['output'];
+  /** Runs that failed, or only partly completed, in the window. */
+  failed: Scalars['Int']['output'];
+  running: Scalars['Int']['output'];
+  /** What the AI steps of the window's runs cost, in US dollars — the AI portal's rate card prices every model in dollars. */
+  spend: Scalars['Float']['output'];
+};
+
+export type MarketingDashboardSocial = {
+  __typename?: 'MarketingDashboardSocial';
+  /** Accounts that expired or errored and need reconnecting. */
+  attention: Scalars['Int']['output'];
+  /** Engagement per network, busiest first; a network with none is left out. */
+  by_platform: Array<MarketingDashboardPoint>;
+  /** Accounts whose token still works. */
+  connected: Scalars['Int']['output'];
+  engagement: Scalars['Int']['output'];
+  /** Posts that failed on at least one network and need a look. */
+  failed: Scalars['Int']['output'];
+  /** Posts the networks reported in the window, across every account. */
+  posts: Scalars['Int']['output'];
+  /** Posts written here that went out in the window, even to only some of their networks. */
+  published: Scalars['Int']['output'];
+  /** Posts waiting for their slot. */
+  upcoming: Scalars['Int']['output'];
+  views: Scalars['Int']['output'];
+};
+
 export type MarketingDashboardTopLink = {
   __typename?: 'MarketingDashboardTopLink';
   clicks: Scalars['Int']['output'];
@@ -13370,6 +13915,370 @@ export type MarketingDashboardTopLink = {
   label: Scalars['String']['output'];
   revenue: Scalars['Float']['output'];
 };
+
+export type MarketingLead = {
+  __typename?: 'MarketingLead';
+  city: Scalars['String']['output'];
+  company: Scalars['String']['output'];
+  created_at?: Maybe<Scalars['String']['output']>;
+  created_by?: Maybe<Scalars['String']['output']>;
+  /** Set once the lead has been handed to the CRM; a lead is promoted once. */
+  crm_ref?: Maybe<MarketingLeadCrmRef>;
+  emails: Array<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  instagram_handle: Scalars['String']['output'];
+  instagram_url: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  notes: Array<MarketingLeadNote>;
+  owner_name?: Maybe<Scalars['String']['output']>;
+  owner_user_id?: Maybe<Scalars['String']['output']>;
+  /** Digits only, dial code included when the source gave one. */
+  phones: Array<Scalars['String']['output']>;
+  pipeline: MarketingLeadPipeline;
+  /** 0-100 for how well the lead fits what it was found for; null when nobody scored it. */
+  score?: Maybe<Scalars['Int']['output']>;
+  score_reason: Scalars['String']['output'];
+  source: MarketingLeadSource;
+  source_ref: MarketingLeadSourceRef;
+  stage: MarketingLeadStage;
+  tags: Array<Scalars['String']['output']>;
+  timeline: Array<MarketingLeadTimelineEntry>;
+  updated_at?: Maybe<Scalars['String']['output']>;
+  website: Scalars['String']['output'];
+};
+
+/** The CRM record a lead can become: a venue lead, a host lead or an ecomm (seller) lead. */
+export type MarketingLeadCrmKind =
+  | 'ECOMM'
+  | 'HOST'
+  | 'VENUE';
+
+/** The CRM record the lead became, once promoted. */
+export type MarketingLeadCrmRef = {
+  __typename?: 'MarketingLeadCrmRef';
+  id: Scalars['String']['output'];
+  kind: MarketingLeadCrmKind;
+  promoted_at?: Maybe<Scalars['String']['output']>;
+  promoted_by: Scalars['String']['output'];
+};
+
+/** Which column of the file holds which field; leave a field out when the file has no such column. */
+export type MarketingLeadImportMapping = {
+  city?: InputMaybe<Scalars['Int']['input']>;
+  company?: InputMaybe<Scalars['Int']['input']>;
+  email?: InputMaybe<Scalars['Int']['input']>;
+  instagram_handle?: InputMaybe<Scalars['Int']['input']>;
+  name: Scalars['Int']['input'];
+  phone?: InputMaybe<Scalars['Int']['input']>;
+  /** The pipeline every imported lead joins; GENERAL when not given. */
+  pipeline?: InputMaybe<MarketingLeadPipeline>;
+  tags?: InputMaybe<Scalars['Int']['input']>;
+  website?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type MarketingLeadImportOutcome =
+  | 'ADDED'
+  | 'MERGED'
+  | 'SKIPPED';
+
+export type MarketingLeadImportResult = {
+  __typename?: 'MarketingLeadImportResult';
+  added: Scalars['Int']['output'];
+  merged: Scalars['Int']['output'];
+  rows: Array<MarketingLeadImportRowResult>;
+  /** The run the import was recorded as, on Activity. */
+  run_id: Scalars['String']['output'];
+  skipped: Scalars['Int']['output'];
+};
+
+export type MarketingLeadImportRowResult = {
+  __typename?: 'MarketingLeadImportRowResult';
+  lead_id: Scalars['String']['output'];
+  outcome: MarketingLeadImportOutcome;
+  /** Why the row was skipped; empty when it was not. */
+  reason: Scalars['String']['output'];
+  /** 1-based, as the rows are counted in the file. */
+  row: Scalars['Int']['output'];
+};
+
+export type MarketingLeadInput = {
+  city?: InputMaybe<Scalars['String']['input']>;
+  company?: InputMaybe<Scalars['String']['input']>;
+  emails?: InputMaybe<Array<Scalars['String']['input']>>;
+  instagram_handle?: InputMaybe<Scalars['String']['input']>;
+  name: Scalars['String']['input'];
+  phones?: InputMaybe<Array<Scalars['String']['input']>>;
+  pipeline?: InputMaybe<MarketingLeadPipeline>;
+  score?: InputMaybe<Scalars['Int']['input']>;
+  score_reason?: InputMaybe<Scalars['String']['input']>;
+  /** Only read on create; defaults to MANUAL. */
+  source?: InputMaybe<MarketingLeadSource>;
+  /** Only read on create; a lead's stage is moved with setMarketingLeadStage. */
+  stage?: InputMaybe<MarketingLeadStage>;
+  tags?: InputMaybe<Array<Scalars['String']['input']>>;
+  website?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type MarketingLeadNote = {
+  __typename?: 'MarketingLeadNote';
+  at?: Maybe<Scalars['String']['output']>;
+  by_name: Scalars['String']['output'];
+  by_user_id?: Maybe<Scalars['String']['output']>;
+  text: Scalars['String']['output'];
+};
+
+/** What the lead is to Duncit — which team's pitch fits it. */
+export type MarketingLeadPipeline =
+  | 'ADVERTISER'
+  | 'BRAND'
+  | 'GENERAL'
+  | 'HOST'
+  | 'INFLUENCER'
+  | 'VENUE';
+
+export type MarketingLeadPipelineCount = {
+  __typename?: 'MarketingLeadPipelineCount';
+  count: Scalars['Int']['output'];
+  pipeline: MarketingLeadPipeline;
+};
+
+/** Where the lead first came from. */
+export type MarketingLeadSource =
+  | 'GOOGLE_PLACES'
+  | 'IMPORT'
+  | 'INSTAGRAM'
+  | 'MANUAL'
+  | 'WEB_SEARCH';
+
+/** Where the lead came from, by id: the Instagram lead, the search or the import run. */
+export type MarketingLeadSourceRef = {
+  __typename?: 'MarketingLeadSourceRef';
+  ig_lead_id: Scalars['String']['output'];
+  import_id: Scalars['String']['output'];
+  search_id: Scalars['String']['output'];
+};
+
+/** Where the conversation stands. CONVERTED and LOST are final. */
+export type MarketingLeadStage =
+  | 'CONTACTED'
+  | 'CONVERTED'
+  | 'LOST'
+  | 'NEW'
+  | 'QUALIFIED'
+  | 'REPLIED';
+
+export type MarketingLeadStageCount = {
+  __typename?: 'MarketingLeadStageCount';
+  count: Scalars['Int']['output'];
+  stage: MarketingLeadStage;
+};
+
+/** How many leads sit at each stage and in each pipeline. */
+export type MarketingLeadSummary = {
+  __typename?: 'MarketingLeadSummary';
+  pipelines: Array<MarketingLeadPipelineCount>;
+  stages: Array<MarketingLeadStageCount>;
+  total: Scalars['Int']['output'];
+};
+
+export type MarketingLeadTablePage = {
+  __typename?: 'MarketingLeadTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<MarketingLead>;
+  total: Scalars['Int']['output'];
+};
+
+/** One thing that happened to the lead, in the order it happened. */
+export type MarketingLeadTimelineEntry = {
+  __typename?: 'MarketingLeadTimelineEntry';
+  at?: Maybe<Scalars['String']['output']>;
+  by_name: Scalars['String']['output'];
+  kind: MarketingLeadTimelineKind;
+  text: Scalars['String']['output'];
+};
+
+export type MarketingLeadTimelineKind =
+  | 'CREATED'
+  | 'IMPORTED'
+  | 'NOTE'
+  /** A step an Outreach sequence sent, or the reply that stopped it. */
+  | 'OUTREACH'
+  | 'OWNER'
+  | 'PROMOTED'
+  | 'SOURCE'
+  | 'STAGE';
+
+/** A lead as written or merged: merged is true when it matched a lead already here and updated that one instead. */
+export type MarketingLeadUpsert = {
+  __typename?: 'MarketingLeadUpsert';
+  lead: MarketingLead;
+  merged: Scalars['Boolean']['output'];
+};
+
+export type MarketingRun = {
+  __typename?: 'MarketingRun';
+  actor: MarketingRunActor;
+  api_log: Array<MarketingRunApiEntry>;
+  approval: MarketingRunApproval;
+  /** Whether Retry is offered: the run failed (or partly) and its workflow knows how to run again. */
+  can_retry: Scalars['Boolean']['output'];
+  cancel_requested: Scalars['Boolean']['output'];
+  cost: MarketingRunCost;
+  created_at?: Maybe<Scalars['String']['output']>;
+  error: Scalars['String']['output'];
+  finished_at?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  links: MarketingRunLinks;
+  name: Scalars['String']['output'];
+  /** The orchestrator run this one belongs to, or empty. */
+  parent_run_id: Scalars['String']['output'];
+  retries: Scalars['Int']['output'];
+  started_at?: Maybe<Scalars['String']['output']>;
+  status: MarketingRunStatus;
+  steps: Array<MarketingRunStep>;
+  trigger: MarketingRunTrigger;
+  updated_at?: Maybe<Scalars['String']['output']>;
+  workflow: MarketingRunWorkflow;
+};
+
+export type MarketingRunActor = {
+  __typename?: 'MarketingRunActor';
+  email: Scalars['String']['output'];
+  /** A user id, an agent key, or empty for the system. */
+  id: Scalars['String']['output'];
+  kind: MarketingRunActorKind;
+  name: Scalars['String']['output'];
+};
+
+export type MarketingRunActorKind =
+  | 'AGENT'
+  | 'SYSTEM'
+  | 'USER';
+
+/** One call to an outside service as the run saw it — never a token, never a full body. */
+export type MarketingRunApiEntry = {
+  __typename?: 'MarketingRunApiEntry';
+  at?: Maybe<Scalars['String']['output']>;
+  method: Scalars['String']['output'];
+  ms: Scalars['Int']['output'];
+  service: Scalars['String']['output'];
+  status: Scalars['Int']['output'];
+  summary: Scalars['String']['output'];
+  url: Scalars['String']['output'];
+};
+
+export type MarketingRunApproval = {
+  __typename?: 'MarketingRunApproval';
+  decided_at?: Maybe<Scalars['String']['output']>;
+  decided_by: Scalars['String']['output'];
+  decided_by_name: Scalars['String']['output'];
+  decision?: Maybe<MarketingRunDecision>;
+  note: Scalars['String']['output'];
+  requested_at?: Maybe<Scalars['String']['output']>;
+  required: Scalars['Boolean']['output'];
+};
+
+export type MarketingRunCost = {
+  __typename?: 'MarketingRunCost';
+  amount: Scalars['Float']['output'];
+  currency: Scalars['String']['output'];
+  tokens_in: Scalars['Int']['output'];
+  tokens_out: Scalars['Int']['output'];
+};
+
+/** APPROVED lets the run continue; the other two stop it, with a note. */
+export type MarketingRunDecision =
+  | 'APPROVED'
+  | 'CHANGES_REQUESTED'
+  | 'REJECTED';
+
+/** What the run touched, each an id or empty. */
+export type MarketingRunLinks = {
+  __typename?: 'MarketingRunLinks';
+  account_id: Scalars['String']['output'];
+  agent_key: Scalars['String']['output'];
+  campaign_id: Scalars['String']['output'];
+  lead_id: Scalars['String']['output'];
+  post_id: Scalars['String']['output'];
+  reel_id: Scalars['String']['output'];
+};
+
+/** PENDING and RUNNING are in flight; AWAITING_APPROVAL waits on a person; the rest are final. */
+export type MarketingRunStatus =
+  | 'AWAITING_APPROVAL'
+  | 'CANCELLED'
+  | 'COMPLETED'
+  | 'FAILED'
+  | 'PARTIAL'
+  | 'PENDING'
+  | 'RUNNING';
+
+/** One step of a run: what it did, with what, and how it went. */
+export type MarketingRunStep = {
+  __typename?: 'MarketingRunStep';
+  error: Scalars['String']['output'];
+  finished_at?: Maybe<Scalars['String']['output']>;
+  input_summary: Scalars['String']['output'];
+  key: Scalars['String']['output'];
+  label: Scalars['String']['output'];
+  ms: Scalars['Int']['output'];
+  output_summary: Scalars['String']['output'];
+  started_at?: Maybe<Scalars['String']['output']>;
+  status: MarketingRunStepStatus;
+  /** The tool or operation behind the step, when there is one. */
+  tool: Scalars['String']['output'];
+};
+
+export type MarketingRunStepStatus =
+  | 'FAILED'
+  | 'OK'
+  | 'PENDING'
+  | 'RUNNING'
+  | 'SKIPPED'
+  | 'WAITING';
+
+/** The numbers the dashboard and My Tasks lead with. */
+export type MarketingRunSummary = {
+  __typename?: 'MarketingRunSummary';
+  awaiting_approval: Scalars['Int']['output'];
+  /** Runs that failed or partly completed in the last seven days. */
+  failed_7d: Scalars['Int']['output'];
+  /** The caller's own runs still in flight. */
+  mine_open: Scalars['Int']['output'];
+  running: Scalars['Int']['output'];
+};
+
+export type MarketingRunTablePage = {
+  __typename?: 'MarketingRunTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<MarketingRun>;
+  total: Scalars['Int']['output'];
+};
+
+export type MarketingRunTrigger =
+  | 'AGENT'
+  | 'SCHEDULE'
+  | 'SYSTEM'
+  | 'USER'
+  | 'WEBHOOK';
+
+/** What kind of work a run is. */
+export type MarketingRunWorkflow =
+  | 'AGENT'
+  | 'CAMPAIGN'
+  | 'INBOX_REPLY'
+  | 'LEAD_IMPORT'
+  | 'LEAD_SEARCH'
+  | 'ORCHESTRATOR'
+  | 'OTHER'
+  | 'OUTREACH'
+  | 'POD_PROMO'
+  | 'REEL'
+  | 'SOCIAL_HEALTH'
+  | 'SOCIAL_PUBLISH'
+  | 'SOCIAL_SYNC';
 
 export type McpAuthorizationDecision = {
   __typename?: 'McpAuthorizationDecision';
@@ -14034,6 +14943,7 @@ export type Mutation = {
   addDnsRecord: Scalars['Boolean']['output'];
   addExpenseRefund: Expense;
   addManualCaseComment: ManualTestComment;
+  addMarketingLeadNote: MarketingLead;
   /** Onboarding staff add (or update) a holiday / leave day. */
   addMeetingHoliday: MeetingHoliday;
   addPodComment: PodComment;
@@ -14044,6 +14954,10 @@ export type Mutation = {
   addPostComment: Post;
   /** Add Drive files to a reel's footage. Files it already holds are skipped. */
   addReelDriveAssets: ReelProject;
+  /** Add stock photos or videos as the library listed them. Items the reel already holds are skipped. */
+  addReelStockAssets: ReelProject;
+  /** Add pictures, clips or sound files from the media store; the kind is read off the address. */
+  addReelUploadAssets: ReelProject;
   /** Refused for somebody who is not a Club Admin, or is already in a region. */
   addRegionClubAdmin: Region;
   addTutorialComment: TutorialComment;
@@ -14124,6 +15038,13 @@ export type Mutation = {
   appealHealthAdjustment: HealthAppealReceipt;
   /** Carry out a dry run's findings without scanning again. */
   applyMediaOrganizerRun: BackgroundJob;
+  /**
+   * Lay a script on the timeline, one scene per script scene: footage whose name
+   * matches the scene's asset_query, else — with auto_media — the first portrait
+   * stock result for it (added as a STOCK asset), else a colour card with the
+   * line as its title. Saved like a chat edit, so it can be put back.
+   */
+  applyReelStoryboard: ReelProject;
   /** Redeem someone's referral code (once per account, not your own). */
   applyReferralCode: MyReferral;
   /** Approve the Club Admin — the table reads Active from here on. */
@@ -14166,6 +15087,10 @@ export type Mutation = {
   askBotChat: AskBotReply;
   /** Replace the set of clubs this admin runs. Other admins of those clubs are untouched. */
   assignClubAdminClubs: ClubAdminProfile;
+  /** Give the lead to a person (a living user), or to nobody with null. */
+  assignMarketingLeadOwner: MarketingLead;
+  /** Hand the comment to a person; a null user_id hands it back to nobody. */
+  assignSocialComment: SocialComment;
   assignTicket: Ticket;
   assignUserRoles: User;
   /**
@@ -14250,6 +15175,8 @@ export type Mutation = {
    * On a free pod backoutPod does the same thing, for installed app builds.
    */
   cancelFreeSpot: PodMember;
+  /** Stop a run: at once if it has not started, after its current step if it is running. */
+  cancelMarketingRun: MarketingRun;
   /** Onboarding staff cancel a meeting with a reason — the applicant is emailed and asked to fill the survey again. */
   cancelMeeting: OnboardingMeeting;
   /**
@@ -14272,6 +15199,8 @@ export type Mutation = {
   cancelPodForChange: PodChangeRequest;
   /** Sender: withdraw before it is answered. */
   cancelPodPartnerRequest: PodPartnerRequest;
+  /** Cancel a promotion that has not gone out (managers); its waiting post is removed. */
+  cancelPodPromo: PodPromo;
   /** Venue owner / venues console: cancel a paid order and refund it in full. */
   cancelVenueFoodOrder: VenueFoodOrder;
   /** Call off a scheduled send before it runs. */
@@ -14355,6 +15284,8 @@ export type Mutation = {
    * restore from it.
    */
   completeDbBackupUpload: DbBackup;
+  /** Say the DM was sent; the lead's walk carries on from the next step. */
+  completeOutreachTask: OutreachTask;
   /**
    * Step three: spend the grant and set the new password.
    *
@@ -14474,6 +15405,8 @@ export type Mutation = {
   /** Add a column at the right end of the board. */
   createManualTestColumn: ManualTestColumn;
   createMarketingCampaign: MarketingCampaign;
+  /** Add a lead by hand. One matching a known lead by phone, email, website or handle merges into it. */
+  createMarketingLead: MarketingLeadUpsert;
   createMembershipBenefit: MembershipBenefit;
   createMembershipPlan: MembershipPlan;
   createNotification: Notification;
@@ -14486,6 +15419,12 @@ export type Mutation = {
   createPodExpense: PodExpense;
   createPodIdea: PodIdea;
   createPodPlan: PodPlan;
+  /**
+   * Promote one pod now (managers): make its tracking link, banner, caption and
+   * post, as the planner would. A pod whose promotion was cancelled, skipped
+   * or failed is promoted again; one already scheduled or published is refused.
+   */
+  createPodPromo: PodPromo;
   createPolicy: Policy;
   createPost: Post;
   /** Ops: create/retry the ShipRocket shipment for a SHIP order. */
@@ -14537,6 +15476,8 @@ export type Mutation = {
    * leaves something the stale sweep can clean. SUPER_ADMIN only.
    */
   dbBackupUploadAuth: DbBackupUploadPass;
+  /** Decide a run that is waiting for approval. A note is required unless it is approved. */
+  decideMarketingRun: MarketingRun;
   /** Onboarding staff approve or deny a DONE meeting themselves — approval drafts the onboarded host/venue/seller (or grants the club-admin role). No admin round-trip. */
   decideMeeting: OnboardingMeeting;
   /** Owner declines a pending booking request — the slot frees up again. round: the offer round read. */
@@ -14765,7 +15706,7 @@ export type Mutation = {
   disconnectGoogleAccount: ConnectedAccounts;
   /** Tech portal only: forget the mailbox. Tickets it already opened stay. */
   disconnectMailAutomationAccount: Scalars['Boolean']['output'];
-  /** Remove the account, its tokens and everything read from it. */
+  /** Remove the account, its tokens and everything read from it; the network is asked to forget the token too. */
   disconnectSocialAccount: Scalars['Boolean']['output'];
   /** Record that the signed-in user closed this popup, so it never returns. */
   dismissAppPopup: Scalars['Boolean']['output'];
@@ -14781,6 +15722,8 @@ export type Mutation = {
   downloadIosSigningFile: IosSigningFile;
   /** Have the AI draft the lead's next DM (opener or follow-up). */
   draftIgLeadMessage: IgLead;
+  /** Claude drafts the step's text, for one lead when lead_id is given. Nothing is saved. */
+  draftSequenceStep: OutreachDraft;
   dummyCheckout: Payment;
   /** Gift card purchase via the dummy gateway. */
   dummyGiftCardCheckout: Payment;
@@ -14823,6 +15766,8 @@ export type Mutation = {
   emailVenueLeadContact: LeadContactActionResult;
   /** Auth-required: prove the scan with a code from the app, and turn it on. */
   enableTwoFactor: TwoFactorEnableResult;
+  /** Enroll the given leads, or every lead matching the filter. A lead already in the sequence is left as it is. Managers only. */
+  enrollLeads: OutreachEnrollResult;
   /** Erase every recorded click for one link. The link and its lifetime count stay. */
   eraseShortLinkClicks: Scalars['Int']['output'];
   expressGigInterest: GigJob;
@@ -14853,6 +15798,22 @@ export type Mutation = {
   generateMeetingLink: MeetingLinkResult;
   /** Loyalty: mint a batch of printed cards. */
   generatePhysicalGiftCards: PhysicalGiftCardBatch;
+  /**
+   * Make the banner carousel for one pod from its own data, its venue and its
+   * host, and upload it. Nothing is scheduled. style and size default to the
+   * pod's category style and the settings' banner style.
+   */
+  generatePodBanners: PodBannerSet;
+  /** Concepts for a reel from a brief (1-10, five when not given). One marketing run, its cost on it. */
+  generateReelIdeas: ReelIdeas;
+  /** A scene-by-scene script for a chosen concept, for a reel of length_s seconds. */
+  generateReelScript: ReelScript;
+  /** Transcribe a sound or video asset with timing and lay the lines as CAPTION texts on the scenes that play it. */
+  generateReelSubtitles: ReelProject;
+  /** Write the caption, hashtags and title for each network, within its ceiling; kept on the project. */
+  generateReelVariants: ReelProject;
+  /** Speak text with Sarvam, keep it as a GENERATED sound asset, and play it under the reel. */
+  generateReelVoiceover: ReelProject;
   generateSocialIdeas: Array<SocialIdea>;
   /** Ask OpenAI for the verdict on a finished run — capacity, bottlenecks, upgrades. Replaces an earlier verdict. */
   generateStressVerdict: StressRun;
@@ -14935,6 +15896,8 @@ export type Mutation = {
    * the file only carries whether the feature is on, never the seeding itself.
    */
   importFeatureFlags: FeatureFlagImportResult;
+  /** Rows of cells from a file (header row removed) become leads; bad rows are reported by number. Recorded as a LEAD_IMPORT run. */
+  importMarketingLeads: MarketingLeadImportResult;
   /**
    * Server-side import of a remote image (e.g. a Pexels stock photo) into our
    * own ImageKit account. Returns the final ImageKit URL.
@@ -15112,6 +16075,7 @@ export type Mutation = {
   notifyPolicyAcceptedUsers: Scalars['Int']['output'];
   /** Admin: offer the place to one matching partner. Nothing on the pod moves yet. */
   offerPodChange: PodChangeRequest;
+  pauseEnrollment: OutreachEnrollment;
   permanentlyDeleteInventoryProduct: Scalars['Boolean']['output'];
   /** Host: draw one competitor at random on the server, or reset the draw. */
   pickPodChallengeRandom: PodChallenge;
@@ -15119,6 +16083,8 @@ export type Mutation = {
   pinStaffMessage: StaffMessage;
   /** Public: place a food order at a venue and open its payment. No sign-in needed. */
   placeVenueFoodOrder: VenueFoodOrderPlacement;
+  /** Render the carousel and write the caption for one pod, without scheduling a post. */
+  previewPodPromo: PodPromoPreview;
   /**
    * Finance-only: process one part of the refund for a Spot Filled Backout
    * request. Without a part, every outstanding part is processed in order.
@@ -15126,6 +16092,8 @@ export type Mutation = {
   processBackoutRefund: BackoutRefundRequest;
   /** Ops: one PDF (label, invoice or manifest) for the given orders, as a file to print or save. */
   productOrderShipmentFile: ShipmentFile;
+  /** Hand the lead to sales as a CRM record of the given kind. Once only; the kind must fit the pipeline. */
+  promoteMarketingLeadToCrm: MarketingLead;
   /** Receiver: propose a window, the guests and the price terms; the time is held until the sender answers. */
   proposePodPartnerWindow: PodPartnerRequest;
   /** Create at AiSensy what a drafted scenario is missing: its template, or — once Meta approved it — its campaign. The row's provision_step says which. */
@@ -15213,12 +16181,16 @@ export type Mutation = {
   recheckBrandIntegration: BrandIntegrationStatus;
   /** Partner: check a saved connection again; every brand using it takes the new result. */
   recheckPartnerIntegration: PartnerIntegration;
+  /** What to make next, from this reel's numbers and the account's recent posts. */
+  recommendNextReel: ReelRecommendations;
   /** Re-sync a non-terminal call's status from Twilio (fallback when the async callback is missed). */
   reconcileCrmCall: CrmAiCallResult;
   /** Re-read AiSensy and cache each template's category, which sets the rate. */
   reconcileWhatsappScenarios: WaScenarioBoard;
   recordActivePing: Scalars['Boolean']['output'];
   recordAppEvent: Scalars['Boolean']['output'];
+  /** Stores a batch of up to 50 product-analytics events; answers how many were new. Needs the analytics consent; works signed out. */
+  recordAppEvents: Scalars['Int']['output'];
   recordInventoryStockMovement: InventoryProduct;
   /** Signed in. Marks one slide watched, so its ring stops showing as unseen. */
   recordOfficialStatusView: Scalars['Boolean']['output'];
@@ -15255,6 +16227,10 @@ export type Mutation = {
   refundPayment: Payment;
   /** Goods checked: back in stock, and the buyer refunded through Razorpay. */
   refundPodShopReturn: PodShopReturn;
+  /** Render one slide of a pod's carousel again. */
+  regeneratePodBannerSlide: PodBannerSlide;
+  /** Render a fresh carousel from the pod as it is now and put it on the waiting post (managers). */
+  regeneratePodPromoBanner: PodPromo;
   register: AuthPayload;
   /** Register the location with ShipRocket so SHIP orders can pick up from it. */
   registerBrandPickupWithShiprocket: BrandPickupLocation;
@@ -15291,6 +16267,8 @@ export type Mutation = {
   /** Primary host withdraws an invite / removes a co-host. */
   removeCoHost: Pod;
   removeCrmEmailTemplateImage: CrmEmailTemplate;
+  /** Take the lead out of the sequence; what was sent stays on record. */
+  removeEnrollment: Scalars['Boolean']['output'];
   removeExpenseRefund: Expense;
   /** Onboarding staff remove a holiday / leave day. */
   removeMeetingHoliday: Scalars['Boolean']['output'];
@@ -15313,6 +16291,8 @@ export type Mutation = {
   reorderManualTestColumns: Array<ManualTestColumn>;
   /** Seller reply to a review of their own product (single reply). */
   replyToProductReview: ProductReview;
+  /** Answer the comment on its network. Refused with NOT_CONFIGURED, naming the permission, where the connection cannot reply. */
+  replyToSocialComment: SocialComment;
   replyToTicket: Ticket;
   /**
    * Record a CI build (and, once it finishes, announce it on the platform's
@@ -15573,6 +16553,10 @@ export type Mutation = {
   restoreReelVersion: ReelProject;
   /** Answer a test run that is waiting for the contact, or let it time out. */
   resumeAutomationTest: AutomationRun;
+  /** Carry on a paused enrollment, or retry the step a failed one stopped on. */
+  resumeEnrollment: OutreachEnrollment;
+  /** Run a failed or partly completed run again, through its own workflow. */
+  retryMarketingRun: MarketingRun;
   /**
    * Re-run the checkout work that did not land, and answer with the fresh audit.
    *
@@ -15650,6 +16634,8 @@ export type Mutation = {
    * the server, so closing the browser cannot interrupt it. SUPER_ADMIN only.
    */
   runDbBackup: DbBackup;
+  /** Run one agent now, as the signed-in person. Answers with the marketing run's id; the work goes on in the background. */
+  runMarketingAgent: Scalars['ID']['output'];
   /** Create or update a flow. A draft may be incomplete; the returned issues say what is left. */
   saveAutomationFlow: AutomationFlow;
   saveBrandPickupLocation: BrandPickupLocation;
@@ -15685,6 +16671,8 @@ export type Mutation = {
   saveMyBrandPickupLocation: BrandPickupLocation;
   /** Design a look: no key creates one, a key changes that one (only the fields sent). An agent asked to design a festival sends a full OccasionThemeInput here. */
   saveOccasionTheme: OccasionTheme;
+  /** Create (no id) or edit a sequence. A Marketing Editor may only save one that is not active. */
+  saveOutreachSequence: OutreachSequence;
   /** Partner: add (omit id) or update a saved connection and check it against the vendor right away. */
   savePartnerIntegration: PartnerIntegration;
   savePodDraft: PodDraft;
@@ -15706,6 +16694,14 @@ export type Mutation = {
   saveTeamStructure: TeamStructure;
   /** Saves one site's Earn section and pill. */
   saveWebsiteEarnSection: WebsiteEarnSection;
+  /**
+   * Promote one pod in one call (managers), choosing what the planner would
+   * otherwise decide: at (ISO 8601, defaults to the settings' slot),
+   * account_ids (defaults to the settings' accounts), collaborators (Instagram
+   * usernames, defaults to the venue and host that opted in; at most 3) and
+   * style (defaults to the pod's category style).
+   */
+  schedulePodPromo: PodPromo;
   seedSuperAdmin: SeedAdminResult;
   /** Send a WhatsApp template campaign message through AiSensy. */
   sendAisensyCampaign: AisensySendResult;
@@ -15828,6 +16824,8 @@ export type Mutation = {
   setLegalDocumentActive: LegalDocument;
   /** The same two actions from an unsubscribe link, with no sign-in. */
   setMailPreferenceByToken: MailPreference;
+  /** Move the lead to a stage. LOST needs a note; any note given is kept on the lead. */
+  setMarketingLeadStage: MarketingLead;
   /** Partner: enable or disable an own-brand pickup address. Disabling is refused while products ship from it or while it is the primary one. */
   setMyBrandPickupLocationActive: BrandPickupLocation;
   /** Partner: temporarily deactivate/reactivate an OWN brand — same reversible hide as setEcommBrandActive; placed orders are unaffected. */
@@ -15856,6 +16854,8 @@ export type Mutation = {
   setOccasionLive: OccasionSettings;
   /** Set the dates a look goes live by itself (used while the live mode is SCHEDULE). */
   setOccasionSchedule: OccasionTheme;
+  /** Switch a sequence on or off. Managers only; switching on re-checks every step. */
+  setOutreachSequenceActive: OutreachSequence;
   /** Host: tick or untick one task/checkpoint for a competitor (a reason is needed after the end). */
   setPodChallengeItem: PodChallenge;
   setPodChallengeRoster: PodChallenge;
@@ -15880,8 +16880,13 @@ export type Mutation = {
   /** Ops: switch an order between SHIP and PICKUP. */
   setProductOrderFulfilmentMethod: ProductOrder;
   setRateLimitRuleEnabled: RateLimitRule;
+  /** Pick the frame the cover is taken from, in milliseconds from the start. */
+  setReelCover: ReelProject;
   /** Retire or revive a link without deleting its click history. */
   setShortLinkActive: ShortLink;
+  /** Who answers for the account. A null owner clears it; every id must be a real user. */
+  setSocialAccountOwner: SocialAccount;
+  setSocialCommentStatus: SocialComment;
   setSocialIdeaStatus: SocialIdea;
   /** Keep the reviewer's message on an issue and write the advice again with it. */
   setStoreIssueReviewerMessage: StoreReleaseIssue;
@@ -16206,6 +17211,8 @@ export type Mutation = {
    */
   subscribeMembershipNews: MembershipNewsSubscriber;
   subscribeNewsletter: NewsletterSubscribeResult;
+  /** Ask Claude for a draft reply. Nothing is sent: the person edits it and presses Send. */
+  suggestSocialReply: SocialReplySuggestion;
   /** Support agents can create a user account on a caller's behalf. */
   supportCreateUser: User;
   /** Products portal: check the next batch of a brand's pincodes against ShipRocket from its own warehouse. */
@@ -16409,6 +17416,8 @@ export type Mutation = {
   updateGigJob: GigJob;
   updateGraphqlMonitorSettings: GraphqlMonitorSettings;
   updateGrievanceStatus: GrievanceTicket;
+  /** Save a host's banner kit: the host themself, or a Hosts console editor. */
+  updateHostBannerKit: Host;
   updateHostLead: HostLead;
   updateIgLeadSettings: IgLeadSettings;
   updateInterview: Interview;
@@ -16425,6 +17434,10 @@ export type Mutation = {
    */
   updateManualCase: ManualTestCase;
   updateManualTestColumn: ManualTestColumn;
+  /** Switch, reschedule or reconfigure one agent. */
+  updateMarketingAgent: MarketingAgent;
+  /** Edit a lead. A phone, email, website or handle another lead already has is refused. */
+  updateMarketingLead: MarketingLead;
   /** MCP managers only. */
   updateMcpSettings: McpSettings;
   /** Tags, and the focus rectangle a smart crop uses. */
@@ -16451,6 +17464,8 @@ export type Mutation = {
   updatePodExpense: PodExpense;
   updatePodIdea: PodIdea;
   updatePodPlan: PodPlan;
+  /** Save the pod promotion settings (managers). */
+  updatePodPromoSettings: PodPromoSettings;
   /** Replace the global Pod Shop slider media (managed from the products portal). */
   updatePodShopSlider: Array<PodShopSliderMedia>;
   updatePolicy: Policy;
@@ -16498,6 +17513,8 @@ export type Mutation = {
   updateUnitTestSettings: UnitTestSettings;
   updateUploadSettings: UploadSetting;
   updateUser: User;
+  /** Save a venue's banner kit: its owner, or a Venues console editor. */
+  updateVenueBannerKit: Venue;
   /** Venue owner / venues console: edit a food coupon. */
   updateVenueFoodCoupon: VenueFoodCoupon;
   updateVenueLead: VenueLead;
@@ -16694,6 +17711,12 @@ export type MutationAddManualCaseCommentArgs = {
 };
 
 
+export type MutationAddMarketingLeadNoteArgs = {
+  id: Scalars['ID']['input'];
+  text: Scalars['String']['input'];
+};
+
+
 export type MutationAddMeetingHolidayArgs = {
   input: AddMeetingHolidayInput;
 };
@@ -16732,6 +17755,18 @@ export type MutationAddPostCommentArgs = {
 export type MutationAddReelDriveAssetsArgs = {
   file_ids: Array<Scalars['ID']['input']>;
   project_id: Scalars['ID']['input'];
+};
+
+
+export type MutationAddReelStockAssetsArgs = {
+  items: Array<ReelStockAssetInput>;
+  project_id: Scalars['ID']['input'];
+};
+
+
+export type MutationAddReelUploadAssetsArgs = {
+  project_id: Scalars['ID']['input'];
+  uploads: Array<ReelUploadInput>;
 };
 
 
@@ -16932,6 +17967,13 @@ export type MutationApplyMediaOrganizerRunArgs = {
 };
 
 
+export type MutationApplyReelStoryboardArgs = {
+  auto_media?: InputMaybe<Scalars['Boolean']['input']>;
+  project_id: Scalars['ID']['input'];
+  script: ReelScriptInput;
+};
+
+
 export type MutationApplyReferralCodeArgs = {
   code: Scalars['String']['input'];
 };
@@ -17029,6 +18071,18 @@ export type MutationAskBotChatArgs = {
 export type MutationAssignClubAdminClubsArgs = {
   club_ids: Array<Scalars['ID']['input']>;
   id: Scalars['ID']['input'];
+};
+
+
+export type MutationAssignMarketingLeadOwnerArgs = {
+  id: Scalars['ID']['input'];
+  owner_user_id?: InputMaybe<Scalars['ID']['input']>;
+};
+
+
+export type MutationAssignSocialCommentArgs = {
+  id: Scalars['ID']['input'];
+  user_id?: InputMaybe<Scalars['ID']['input']>;
 };
 
 
@@ -17170,6 +18224,11 @@ export type MutationCancelFreeSpotArgs = {
 };
 
 
+export type MutationCancelMarketingRunArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationCancelMeetingArgs = {
   id: Scalars['ID']['input'];
   reason: Scalars['String']['input'];
@@ -17194,6 +18253,11 @@ export type MutationCancelPodForChangeArgs = {
 
 
 export type MutationCancelPodPartnerRequestArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationCancelPodPromoArgs = {
   id: Scalars['ID']['input'];
 };
 
@@ -17323,6 +18387,12 @@ export type MutationClubWithdrawAutoPodArgs = {
 
 export type MutationCompleteDbBackupUploadArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type MutationCompleteOutreachTaskArgs = {
+  id: Scalars['ID']['input'];
+  note?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -17671,6 +18741,11 @@ export type MutationCreateMarketingCampaignArgs = {
 };
 
 
+export type MutationCreateMarketingLeadArgs = {
+  input: MarketingLeadInput;
+};
+
+
 export type MutationCreateMembershipBenefitArgs = {
   input: MembershipBenefitInput;
 };
@@ -17729,6 +18804,11 @@ export type MutationCreatePodIdeaArgs = {
 
 export type MutationCreatePodPlanArgs = {
   input: PodPlanInput;
+};
+
+
+export type MutationCreatePodPromoArgs = {
+  pod_id: Scalars['ID']['input'];
 };
 
 
@@ -17922,6 +19002,13 @@ export type MutationCrmVerifyEmailsBulkArgs = {
 
 export type MutationDbBackupUploadAuthArgs = {
   fileName: Scalars['String']['input'];
+};
+
+
+export type MutationDecideMarketingRunArgs = {
+  decision: MarketingRunDecision;
+  id: Scalars['ID']['input'];
+  note?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -18651,6 +19738,13 @@ export type MutationDraftIgLeadMessageArgs = {
 };
 
 
+export type MutationDraftSequenceStepArgs = {
+  lead_id?: InputMaybe<Scalars['ID']['input']>;
+  sequence_id: Scalars['ID']['input'];
+  step_index: Scalars['Int']['input'];
+};
+
+
 export type MutationDummyCheckoutArgs = {
   input: DummyCheckoutInput;
 };
@@ -18790,6 +19884,13 @@ export type MutationEnableTwoFactorArgs = {
 };
 
 
+export type MutationEnrollLeadsArgs = {
+  filter?: InputMaybe<OutreachLeadFilter>;
+  lead_ids?: InputMaybe<Array<Scalars['ID']['input']>>;
+  sequence_id: Scalars['ID']['input'];
+};
+
+
 export type MutationEraseShortLinkClicksArgs = {
   id: Scalars['ID']['input'];
 };
@@ -18855,6 +19956,49 @@ export type MutationGenerateMeetingLinkArgs = {
 
 export type MutationGeneratePhysicalGiftCardsArgs = {
   input: GeneratePhysicalGiftCardsInput;
+};
+
+
+export type MutationGeneratePodBannersArgs = {
+  pod_id: Scalars['ID']['input'];
+  size?: InputMaybe<PodPromoBannerStyle>;
+  style?: InputMaybe<PodBannerStyle>;
+};
+
+
+export type MutationGenerateReelIdeasArgs = {
+  brief: Scalars['String']['input'];
+  count?: InputMaybe<Scalars['Int']['input']>;
+  project_id: Scalars['ID']['input'];
+};
+
+
+export type MutationGenerateReelScriptArgs = {
+  concept: ReelConceptInput;
+  length_s: Scalars['Int']['input'];
+  project_id: Scalars['ID']['input'];
+  tone?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type MutationGenerateReelSubtitlesArgs = {
+  asset_id: Scalars['ID']['input'];
+  language?: InputMaybe<Scalars['String']['input']>;
+  project_id: Scalars['ID']['input'];
+};
+
+
+export type MutationGenerateReelVariantsArgs = {
+  platforms: Array<SocialPlatform>;
+  project_id: Scalars['ID']['input'];
+};
+
+
+export type MutationGenerateReelVoiceoverArgs = {
+  language?: InputMaybe<Scalars['String']['input']>;
+  project_id: Scalars['ID']['input'];
+  text: Scalars['String']['input'];
+  voice?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -18956,6 +20100,12 @@ export type MutationImportEnvEntriesArgs = {
 
 export type MutationImportFeatureFlagsArgs = {
   flags: Array<ImportFeatureFlagInput>;
+};
+
+
+export type MutationImportMarketingLeadsArgs = {
+  mapping: MarketingLeadImportMapping;
+  rows: Array<Array<Scalars['String']['input']>>;
 };
 
 
@@ -19199,6 +20349,11 @@ export type MutationOfferPodChangeArgs = {
 };
 
 
+export type MutationPauseEnrollmentArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationPermanentlyDeleteInventoryProductArgs = {
   product_doc_id: Scalars['ID']['input'];
 };
@@ -19221,6 +20376,13 @@ export type MutationPlaceVenueFoodOrderArgs = {
 };
 
 
+export type MutationPreviewPodPromoArgs = {
+  pod_id: Scalars['ID']['input'];
+  size?: InputMaybe<PodPromoBannerStyle>;
+  style?: InputMaybe<PodBannerStyle>;
+};
+
+
 export type MutationProcessBackoutRefundArgs = {
   id: Scalars['ID']['input'];
   part?: InputMaybe<BackoutRefundPart>;
@@ -19230,6 +20392,12 @@ export type MutationProcessBackoutRefundArgs = {
 export type MutationProductOrderShipmentFileArgs = {
   ids: Array<Scalars['ID']['input']>;
   kind: ShipmentDocumentKind;
+};
+
+
+export type MutationPromoteMarketingLeadToCrmArgs = {
+  id: Scalars['ID']['input'];
+  kind: MarketingLeadCrmKind;
 };
 
 
@@ -19365,6 +20533,11 @@ export type MutationRecheckPartnerIntegrationArgs = {
 };
 
 
+export type MutationRecommendNextReelArgs = {
+  project_id: Scalars['ID']['input'];
+};
+
+
 export type MutationReconcileCrmCallArgs = {
   log_id: Scalars['ID']['input'];
 };
@@ -19377,6 +20550,11 @@ export type MutationRecordActivePingArgs = {
 
 export type MutationRecordAppEventArgs = {
   input: RecordAppEventInput;
+};
+
+
+export type MutationRecordAppEventsArgs = {
+  events: Array<AppEventInput>;
 };
 
 
@@ -19452,6 +20630,20 @@ export type MutationRefundPaymentArgs = {
 
 export type MutationRefundPodShopReturnArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type MutationRegeneratePodBannerSlideArgs = {
+  kind: PodBannerSlideKind;
+  pod_id: Scalars['ID']['input'];
+  size?: InputMaybe<PodPromoBannerStyle>;
+  style?: InputMaybe<PodBannerStyle>;
+};
+
+
+export type MutationRegeneratePodPromoBannerArgs = {
+  id: Scalars['ID']['input'];
+  style?: InputMaybe<PodBannerStyle>;
 };
 
 
@@ -19554,6 +20746,11 @@ export type MutationRemoveCrmEmailTemplateImageArgs = {
 };
 
 
+export type MutationRemoveEnrollmentArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationRemoveExpenseRefundArgs = {
   expense_doc_id: Scalars['ID']['input'];
   refund_id: Scalars['String']['input'];
@@ -19630,6 +20827,12 @@ export type MutationReorderManualTestColumnsArgs = {
 export type MutationReplyToProductReviewArgs = {
   reply: Scalars['String']['input'];
   review_id: Scalars['ID']['input'];
+};
+
+
+export type MutationReplyToSocialCommentArgs = {
+  id: Scalars['ID']['input'];
+  text: Scalars['String']['input'];
 };
 
 
@@ -19953,6 +21156,16 @@ export type MutationResumeAutomationTestArgs = {
 };
 
 
+export type MutationResumeEnrollmentArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationRetryMarketingRunArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationRetryPaymentStepsArgs = {
   payment_doc_id: Scalars['ID']['input'];
   step_keys?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -20099,6 +21312,11 @@ export type MutationRollbackMediaOrganizerRunArgs = {
 };
 
 
+export type MutationRunMarketingAgentArgs = {
+  key: MarketingAgentKey;
+};
+
+
 export type MutationSaveAutomationFlowArgs = {
   input: SaveAutomationFlowInput;
 };
@@ -20198,6 +21416,12 @@ export type MutationSaveOccasionThemeArgs = {
 };
 
 
+export type MutationSaveOutreachSequenceArgs = {
+  id?: InputMaybe<Scalars['ID']['input']>;
+  input: OutreachSequenceInput;
+};
+
+
 export type MutationSavePartnerIntegrationArgs = {
   id?: InputMaybe<Scalars['ID']['input']>;
   input: PartnerIntegrationInput;
@@ -20242,6 +21466,15 @@ export type MutationSaveTeamStructureArgs = {
 
 export type MutationSaveWebsiteEarnSectionArgs = {
   input: WebsiteEarnSectionInput;
+};
+
+
+export type MutationSchedulePodPromoArgs = {
+  account_ids?: InputMaybe<Array<Scalars['ID']['input']>>;
+  at?: InputMaybe<Scalars['String']['input']>;
+  collaborators?: InputMaybe<Array<Scalars['String']['input']>>;
+  pod_id: Scalars['ID']['input'];
+  style?: InputMaybe<PodBannerStyle>;
 };
 
 
@@ -20570,6 +21803,13 @@ export type MutationSetMailPreferenceByTokenArgs = {
 };
 
 
+export type MutationSetMarketingLeadStageArgs = {
+  id: Scalars['ID']['input'];
+  note?: InputMaybe<Scalars['String']['input']>;
+  stage: MarketingLeadStage;
+};
+
+
 export type MutationSetMyBrandPickupLocationActiveArgs = {
   active: Scalars['Boolean']['input'];
   brand_doc_id: Scalars['ID']['input'];
@@ -20636,6 +21876,12 @@ export type MutationSetOccasionLiveArgs = {
 export type MutationSetOccasionScheduleArgs = {
   input: OccasionScheduleInput;
   key: Scalars['String']['input'];
+};
+
+
+export type MutationSetOutreachSequenceActiveArgs = {
+  active: Scalars['Boolean']['input'];
+  id: Scalars['ID']['input'];
 };
 
 
@@ -20713,9 +21959,28 @@ export type MutationSetRateLimitRuleEnabledArgs = {
 };
 
 
+export type MutationSetReelCoverArgs = {
+  at_ms: Scalars['Int']['input'];
+  project_id: Scalars['ID']['input'];
+};
+
+
 export type MutationSetShortLinkActiveArgs = {
   id: Scalars['ID']['input'];
   is_active: Scalars['Boolean']['input'];
+};
+
+
+export type MutationSetSocialAccountOwnerArgs = {
+  id: Scalars['ID']['input'];
+  owner_user_id?: InputMaybe<Scalars['ID']['input']>;
+  team_user_ids?: InputMaybe<Array<Scalars['ID']['input']>>;
+};
+
+
+export type MutationSetSocialCommentStatusArgs = {
+  id: Scalars['ID']['input'];
+  status: SocialInboxStatus;
 };
 
 
@@ -21555,6 +22820,11 @@ export type MutationSubscribeNewsletterArgs = {
 };
 
 
+export type MutationSuggestSocialReplyArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationSupportCreateUserArgs = {
   input: SupportCreateUserInput;
 };
@@ -22157,6 +23427,12 @@ export type MutationUpdateGrievanceStatusArgs = {
 };
 
 
+export type MutationUpdateHostBannerKitArgs = {
+  host_id: Scalars['ID']['input'];
+  input: BannerKitInput;
+};
+
+
 export type MutationUpdateHostLeadArgs = {
   id: Scalars['ID']['input'];
   input: HostLeadInput;
@@ -22218,6 +23494,18 @@ export type MutationUpdateManualCaseArgs = {
 export type MutationUpdateManualTestColumnArgs = {
   id: Scalars['ID']['input'];
   input: ManualTestColumnInput;
+};
+
+
+export type MutationUpdateMarketingAgentArgs = {
+  input: UpdateMarketingAgentInput;
+  key: MarketingAgentKey;
+};
+
+
+export type MutationUpdateMarketingLeadArgs = {
+  id: Scalars['ID']['input'];
+  input: MarketingLeadInput;
 };
 
 
@@ -22345,6 +23633,11 @@ export type MutationUpdatePodIdeaArgs = {
 export type MutationUpdatePodPlanArgs = {
   input: PodPlanUpdateInput;
   plan_id: Scalars['ID']['input'];
+};
+
+
+export type MutationUpdatePodPromoSettingsArgs = {
+  input: PodPromoSettingsInput;
 };
 
 
@@ -22518,6 +23811,12 @@ export type MutationUpdateUploadSettingsArgs = {
 export type MutationUpdateUserArgs = {
   input: UpdateUserInput;
   user_id: Scalars['ID']['input'];
+};
+
+
+export type MutationUpdateVenueBannerKitArgs = {
+  input: BannerKitInput;
+  venue_id: Scalars['ID']['input'];
 };
 
 
@@ -23836,6 +25135,207 @@ export type OtpRequestResult = {
   ok: Scalars['Boolean']['output'];
   /** Password-reset only: false when the email is not a registered account (no OTP is sent). */
   registered?: Maybe<Scalars['Boolean']['output']>;
+};
+
+export type OutreachDraft = {
+  __typename?: 'OutreachDraft';
+  body: Scalars['String']['output'];
+  subject: Scalars['String']['output'];
+};
+
+export type OutreachEnrollResult = {
+  __typename?: 'OutreachEnrollResult';
+  /** Leads already in the sequence; left as they were. */
+  already: Scalars['Int']['output'];
+  /** Leads enrolled now. */
+  enrolled: Scalars['Int']['output'];
+  /** Leads the sequence does not take: another pipeline, converted or lost, or not found. */
+  skipped: Scalars['Int']['output'];
+};
+
+export type OutreachEnrollment = {
+  __typename?: 'OutreachEnrollment';
+  created_at?: Maybe<Scalars['String']['output']>;
+  error: Scalars['String']['output'];
+  history: Array<OutreachHistoryEntry>;
+  id: Scalars['ID']['output'];
+  lead_company: Scalars['String']['output'];
+  lead_id: Scalars['ID']['output'];
+  lead_name: Scalars['String']['output'];
+  /** When the next step falls due; null while a DM task is open or the enrollment is not ACTIVE. */
+  next_at?: Maybe<Scalars['String']['output']>;
+  sequence_id: Scalars['ID']['output'];
+  sequence_name: Scalars['String']['output'];
+  status: OutreachEnrollmentStatus;
+  step_count: Scalars['Int']['output'];
+  /** The step that runs next. */
+  step_index: Scalars['Int']['output'];
+  updated_at?: Maybe<Scalars['String']['output']>;
+};
+
+/** ACTIVE walks on; PAUSED waits for a manager; REPLIED, OPTED_OUT and DONE are over; FAILED stopped on a send that did not go. */
+export type OutreachEnrollmentStatus =
+  | 'ACTIVE'
+  | 'DONE'
+  | 'FAILED'
+  | 'OPTED_OUT'
+  | 'PAUSED'
+  | 'REPLIED';
+
+export type OutreachEnrollmentTablePage = {
+  __typename?: 'OutreachEnrollmentTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<OutreachEnrollment>;
+  total: Scalars['Int']['output'];
+};
+
+export type OutreachHistoryEntry = {
+  __typename?: 'OutreachHistoryEntry';
+  at?: Maybe<Scalars['String']['output']>;
+  kind: OutreachHistoryKind;
+  /** The step it happened on; -1 when it was not about a step. */
+  step_index: Scalars['Int']['output'];
+  text: Scalars['String']['output'];
+};
+
+export type OutreachHistoryKind =
+  | 'DONE'
+  | 'ENROLLED'
+  | 'FAILED'
+  | 'OPTED_OUT'
+  | 'PAUSED'
+  | 'REPLIED'
+  | 'RESUMED'
+  | 'SENT'
+  | 'SKIPPED'
+  | 'TASK'
+  | 'TASK_DONE';
+
+/** Which leads an enroll by filter takes; every field narrows. */
+export type OutreachLeadFilter = {
+  city?: InputMaybe<Scalars['String']['input']>;
+  pipeline?: InputMaybe<MarketingLeadPipeline>;
+  stage?: InputMaybe<MarketingLeadStage>;
+};
+
+export type OutreachSequence = {
+  __typename?: 'OutreachSequence';
+  active: Scalars['Boolean']['output'];
+  counts: OutreachSequenceCounts;
+  created_at?: Maybe<Scalars['String']['output']>;
+  created_by: Scalars['String']['output'];
+  /** Sends and DM tasks a day across the sequence, on the admin's clock. */
+  daily_limit: Scalars['Int']['output'];
+  description: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  /** Only leads of this pipeline may be enrolled; null takes any. */
+  pipeline?: Maybe<MarketingLeadPipeline>;
+  quiet_end_hour: Scalars['Int']['output'];
+  /** Nothing goes out from this hour until quiet_end_hour, in the admin's time zone; equal hours mean no quiet window. */
+  quiet_start_hour: Scalars['Int']['output'];
+  /** Sends and DM tasks made today, against daily_limit. */
+  sent_today: Scalars['Int']['output'];
+  steps: Array<OutreachStep>;
+  stop_on_reply: Scalars['Boolean']['output'];
+  updated_at?: Maybe<Scalars['String']['output']>;
+  updated_by: Scalars['String']['output'];
+};
+
+/** How many enrollments sit in each state. */
+export type OutreachSequenceCounts = {
+  __typename?: 'OutreachSequenceCounts';
+  active: Scalars['Int']['output'];
+  done: Scalars['Int']['output'];
+  failed: Scalars['Int']['output'];
+  opted_out: Scalars['Int']['output'];
+  paused: Scalars['Int']['output'];
+  replied: Scalars['Int']['output'];
+  total: Scalars['Int']['output'];
+};
+
+export type OutreachSequenceInput = {
+  daily_limit: Scalars['Int']['input'];
+  description?: InputMaybe<Scalars['String']['input']>;
+  name: Scalars['String']['input'];
+  pipeline?: InputMaybe<MarketingLeadPipeline>;
+  quiet_end_hour?: InputMaybe<Scalars['Int']['input']>;
+  quiet_start_hour?: InputMaybe<Scalars['Int']['input']>;
+  steps: Array<OutreachStepInput>;
+  stop_on_reply?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+export type OutreachStep = {
+  __typename?: 'OutreachStep';
+  /** The email text or the DM; {name} and {company} are filled per lead. */
+  body: Scalars['String']['output'];
+  kind: OutreachStepKind;
+  /** EMAIL only. */
+  subject: Scalars['String']['output'];
+  /** WHATSAPP only: the template's values, in order; {name} and {company} are filled per lead. */
+  wa_params: Array<Scalars['String']['output']>;
+  /** WHATSAPP only: the AiSensy campaign name picked from the Communications portal's list. */
+  wa_template_key: Scalars['String']['output'];
+  /** WAIT only: days before the next step. */
+  wait_days: Scalars['Int']['output'];
+};
+
+export type OutreachStepInput = {
+  body?: InputMaybe<Scalars['String']['input']>;
+  kind: OutreachStepKind;
+  subject?: InputMaybe<Scalars['String']['input']>;
+  wa_params?: InputMaybe<Array<Scalars['String']['input']>>;
+  wa_template_key?: InputMaybe<Scalars['String']['input']>;
+  wait_days?: InputMaybe<Scalars['Int']['input']>;
+};
+
+/** EMAIL and WHATSAPP send on their own; DM_TASK asks a person to send a DM by hand; WAIT holds the next step for wait_days. */
+export type OutreachStepKind =
+  | 'DM_TASK'
+  | 'EMAIL'
+  | 'WAIT'
+  | 'WHATSAPP';
+
+/** A DM a person sends by hand, then marks done here. Nothing is sent for them. */
+export type OutreachTask = {
+  __typename?: 'OutreachTask';
+  created_at?: Maybe<Scalars['String']['output']>;
+  done_at?: Maybe<Scalars['String']['output']>;
+  done_by_name: Scalars['String']['output'];
+  enrollment_id: Scalars['ID']['output'];
+  id: Scalars['ID']['output'];
+  lead_id: Scalars['ID']['output'];
+  lead_instagram_handle: Scalars['String']['output'];
+  lead_instagram_url: Scalars['String']['output'];
+  lead_name: Scalars['String']['output'];
+  owner_name?: Maybe<Scalars['String']['output']>;
+  owner_user_id?: Maybe<Scalars['String']['output']>;
+  sequence_id: Scalars['ID']['output'];
+  sequence_name: Scalars['String']['output'];
+  status: OutreachTaskStatus;
+  step_index: Scalars['Int']['output'];
+  /** The DM to send, with the lead's name and company filled in. */
+  text: Scalars['String']['output'];
+};
+
+export type OutreachTaskStatus =
+  | 'CANCELLED'
+  | 'DONE'
+  | 'OPEN';
+
+/** An AiSensy campaign from the Communications portal's list, with whether its template is approved. Only an approved one can be sent. */
+export type OutreachWaTemplate = {
+  __typename?: 'OutreachWaTemplate';
+  approved: Scalars['Boolean']['output'];
+  body: Scalars['String']['output'];
+  description: Scalars['String']['output'];
+  key: Scalars['String']['output'];
+  /** How many values the template takes; 0 when it could not be read. */
+  param_count: Scalars['Int']['output'];
+  /** AiSensy's own status for the template; empty when it could not be read. */
+  status: Scalars['String']['output'];
+  template_name: Scalars['String']['output'];
 };
 
 /** How a unit is packed for the courier. */
@@ -25225,6 +26725,54 @@ export type PodAuditSource =
   | 'HOST'
   | 'SYSTEM'
   | 'VENUE_OWNER';
+
+/** A carousel made for one pod: its slides in posting order. */
+export type PodBannerSet = {
+  __typename?: 'PodBannerSet';
+  /** True when Claude wrote the slide copy; false for the built-in template. */
+  ai_copy: Scalars['Boolean']['output'];
+  pod_id: Scalars['ID']['output'];
+  /** The POD_PROMO marketing run that recorded the generation, a step per slide. */
+  run_id: Scalars['String']['output'];
+  size: PodPromoBannerStyle;
+  slides: Array<PodBannerSlide>;
+  style: PodBannerStyle;
+};
+
+export type PodBannerSlide = {
+  __typename?: 'PodBannerSlide';
+  kind: PodBannerSlideKind;
+  /** The rendered JPEG on the CDN. */
+  url: Scalars['String']['output'];
+};
+
+/**
+ * One slide of the carousel, in posting order. COVER: title, date, time,
+ * place, price and a Book now pill. DETAILS: what the pod is and what is
+ * included. HOST: the host's photo, name and line (skipped without host data).
+ * VENUE: the venue's photo, name and address (skipped without venue data).
+ * BOOK: the fee, the tracking link and its QR code.
+ */
+export type PodBannerSlideKind =
+  | 'BOOK'
+  | 'COVER'
+  | 'DETAILS'
+  | 'HOST'
+  | 'VENUE';
+
+/**
+ * The look of a pod's banner carousel. FESTIVE_BOLD: bright red and yellow,
+ * chunky display type. ELEGANT_SERIF: cream background, maroon serif.
+ * SPORT_NIGHT: dark maroon, condensed type over a darkened photo.
+ * PLAYFUL_PASTEL: pink, rounded type. CALM_WELLNESS: warm photo under a dark
+ * wash, light serif. Picked from the pod's category when not given.
+ */
+export type PodBannerStyle =
+  | 'CALM_WELLNESS'
+  | 'ELEGANT_SERIF'
+  | 'FESTIVE_BOLD'
+  | 'PLAYFUL_PASTEL'
+  | 'SPORT_NIGHT';
 
 /** A pod the caller is already JOINED on whose time overlaps a pod they are about to book. */
 export type PodBookingClash = {
@@ -26873,6 +28421,222 @@ export type PodProductRequestInput = {
   quantity: Scalars['Int']['input'];
 };
 
+/** One pod promotion: its banner, caption, tracking link, scheduled post and figures. */
+export type PodPromo = {
+  __typename?: 'PodPromo';
+  /** True when Claude wrote the caption; false for the built-in template. */
+  ai_caption: Scalars['Boolean']['output'];
+  banner_style: PodPromoBannerStyle;
+  /** The cover slide, for thumbnails. */
+  banner_url: Scalars['String']['output'];
+  caption: Scalars['String']['output'];
+  city_id?: Maybe<Scalars['ID']['output']>;
+  city_name: Scalars['String']['output'];
+  club_id?: Maybe<Scalars['ID']['output']>;
+  club_name: Scalars['String']['output'];
+  /** Instagram usernames invited as collaborators on the post (venue and host, when they opted in). */
+  collaborators: Array<Scalars['String']['output']>;
+  created_at?: Maybe<Scalars['String']['output']>;
+  error: Scalars['String']['output'];
+  figures: PodPromoFigures;
+  hashtags: Array<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  /** The first network link of the published post. */
+  permalink: Scalars['String']['output'];
+  /** The pod document id. */
+  pod_id: Scalars['ID']['output'];
+  /** When the pod starts, ISO 8601. */
+  pod_start: Scalars['String']['output'];
+  pod_title: Scalars['String']['output'];
+  /** The pod page the tracking link sends people to. */
+  pod_url: Scalars['String']['output'];
+  /** The post's own status: DRAFT, PENDING_APPROVAL, SCHEDULED, PUBLISHING, PUBLISHED, PARTIAL or FAILED. */
+  post_status: Scalars['String']['output'];
+  published_at?: Maybe<Scalars['String']['output']>;
+  /** The marketing run that made it. */
+  run_id: Scalars['String']['output'];
+  scheduled_at?: Maybe<Scalars['String']['output']>;
+  /** The post in Publishing (Calendar, Queue, Approvals). */
+  scheduled_post_id?: Maybe<Scalars['ID']['output']>;
+  short_code: Scalars['String']['output'];
+  short_link_id?: Maybe<Scalars['ID']['output']>;
+  /** Every slide of the carousel in posting order. */
+  slides: Array<PodBannerSlide>;
+  source: PodPromoSource;
+  status: PodPromoStatus;
+  style: PodBannerStyle;
+  /** The short link in the post, e.g. https://duncit.com/aB3xY9Zq. */
+  tracking_url: Scalars['String']['output'];
+  updated_at?: Maybe<Scalars['String']['output']>;
+  utm_campaign: Scalars['String']['output'];
+};
+
+/** The banner shape: PORTRAIT is 1080x1350 (Instagram feed portrait), SQUARE is 1080x1080. */
+export type PodPromoBannerStyle =
+  | 'PORTRAIT'
+  | 'SQUARE';
+
+/** An upcoming pod that can be promoted, for the pod picker. */
+export type PodPromoCandidate = {
+  __typename?: 'PodPromoCandidate';
+  club_name: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  /** The status of the promotion this pod already has, if any. */
+  promo_status?: Maybe<PodPromoStatus>;
+  starts_at: Scalars['String']['output'];
+  title: Scalars['String']['output'];
+};
+
+/**
+ * What one promotion brought in, read from its tracking link. clicks counts
+ * every visit, unique_visitors distinct visitors. signups, pod_views and
+ * checkouts are the journey steps those visitors reached. bookings are
+ * visitors who joined this pod after clicking (paid and free); paid_bookings
+ * the ones that paid. payments and revenue (INR) are the purchases credited
+ * to the link by last-touch attribution within 30 days. likes, comments and
+ * engagement come from the published post once the network is synced.
+ */
+export type PodPromoFigures = {
+  __typename?: 'PodPromoFigures';
+  bookings: Scalars['Int']['output'];
+  checkouts: Scalars['Int']['output'];
+  clicks: Scalars['Int']['output'];
+  comments: Scalars['Int']['output'];
+  engagement: Scalars['Int']['output'];
+  likes: Scalars['Int']['output'];
+  paid_bookings: Scalars['Int']['output'];
+  payments: Scalars['Int']['output'];
+  pod_views: Scalars['Int']['output'];
+  revenue: Scalars['Float']['output'];
+  signups: Scalars['Int']['output'];
+  unique_visitors: Scalars['Int']['output'];
+  /** When these figures were last read. */
+  updated_at?: Maybe<Scalars['String']['output']>;
+};
+
+/** A banner and caption made for a pod without scheduling anything. */
+export type PodPromoPreview = {
+  __typename?: 'PodPromoPreview';
+  ai_caption: Scalars['Boolean']['output'];
+  banner_style: PodPromoBannerStyle;
+  banner_url: Scalars['String']['output'];
+  caption: Scalars['String']['output'];
+  collaborators: Array<Scalars['String']['output']>;
+  hashtags: Array<Scalars['String']['output']>;
+  /** Why the planner would not promote this pod on its own; empty when it would. */
+  ineligible_reason: Scalars['String']['output'];
+  pod_id: Scalars['ID']['output'];
+  pod_title: Scalars['String']['output'];
+  /** When the post would go out with the current settings; null when the pod is too close to promote. */
+  scheduled_at?: Maybe<Scalars['String']['output']>;
+  slides: Array<PodBannerSlide>;
+  style: PodBannerStyle;
+};
+
+/** Which pods are promoted by price: every pod, only paid pods, or only free pods. */
+export type PodPromoPriceFilter =
+  | 'ALL'
+  | 'FREE'
+  | 'PAID';
+
+/**
+ * The automatic pod promotion settings (one document). Every upcoming,
+ * published, public pod that passes the filters gets a banner made from its
+ * own data and a post scheduled days_before days ahead of its start, at
+ * post_hour in the admin time zone, with a tracking short link to its page.
+ */
+export type PodPromoSettings = {
+  __typename?: 'PodPromoSettings';
+  /** The connected social accounts the post goes to. */
+  account_ids: Array<Scalars['ID']['output']>;
+  banner_style: PodPromoBannerStyle;
+  /** Only pods whose club is in these categories (main or sub); empty means every category. */
+  category_ids: Array<Scalars['ID']['output']>;
+  /** Only pods in these cities (Location ids); empty means every city. */
+  city_ids: Array<Scalars['ID']['output']>;
+  /** Only pods of these clubs; empty means every club. */
+  club_ids: Array<Scalars['ID']['output']>;
+  /** The call to action on the banner; empty uses the default wording. */
+  cta_text: Scalars['String']['output'];
+  /** Days before the pod starts that the post goes out (1 to 30). */
+  days_before: Scalars['Int']['output'];
+  enabled: Scalars['Boolean']['output'];
+  /** A pod starting sooner than this many days from now is never promoted. */
+  min_days_until_start: Scalars['Int']['output'];
+  /** When true, each post waits for a manager on Approvals before it goes out. */
+  needs_approval: Scalars['Boolean']['output'];
+  /** Hour of the day the post goes out, 0 to 23, in time_zone. */
+  post_hour: Scalars['Int']['output'];
+  price_filter: PodPromoPriceFilter;
+  /** The admin time zone post_hour is read in (Admin > Settings). */
+  time_zone: Scalars['String']['output'];
+  updated_at?: Maybe<Scalars['String']['output']>;
+  /** Who last saved the settings; scheduled posts are filed under this person. */
+  updated_by_name: Scalars['String']['output'];
+  /** utm_campaign of every tracking link is this prefix, a dash and the pod short id. */
+  utm_prefix: Scalars['String']['output'];
+};
+
+export type PodPromoSettingsInput = {
+  account_ids: Array<Scalars['ID']['input']>;
+  banner_style: PodPromoBannerStyle;
+  category_ids: Array<Scalars['ID']['input']>;
+  city_ids: Array<Scalars['ID']['input']>;
+  club_ids: Array<Scalars['ID']['input']>;
+  cta_text: Scalars['String']['input'];
+  days_before: Scalars['Int']['input'];
+  enabled: Scalars['Boolean']['input'];
+  min_days_until_start: Scalars['Int']['input'];
+  needs_approval: Scalars['Boolean']['input'];
+  post_hour: Scalars['Int']['input'];
+  price_filter: PodPromoPriceFilter;
+  utm_prefix: Scalars['String']['input'];
+};
+
+/** AUTO when the planner made it; MANUAL when a person pressed Promote now. */
+export type PodPromoSource =
+  | 'AUTO'
+  | 'MANUAL';
+
+/**
+ * Where one pod promotion stands. PLANNED: claimed, nothing made yet.
+ * BANNER_READY: the banner and tracking link exist, the post does not.
+ * SCHEDULED: the post is written and waits (for its time, or for a manager on
+ * Approvals). PUBLISHED: it went out. SKIPPED: the pod was too close to its
+ * start to promote. FAILED: a step failed; error says which, and the planner
+ * tries again a few times. CANCELLED: the pod was cancelled or unlisted, or a
+ * person cancelled the promotion; its waiting post was removed.
+ */
+export type PodPromoStatus =
+  | 'BANNER_READY'
+  | 'CANCELLED'
+  | 'FAILED'
+  | 'PLANNED'
+  | 'PUBLISHED'
+  | 'SCHEDULED'
+  | 'SKIPPED';
+
+/** Totals across every promotion. */
+export type PodPromoSummary = {
+  __typename?: 'PodPromoSummary';
+  bookings: Scalars['Int']['output'];
+  clicks: Scalars['Int']['output'];
+  failed: Scalars['Int']['output'];
+  payments: Scalars['Int']['output'];
+  planned: Scalars['Int']['output'];
+  published: Scalars['Int']['output'];
+  revenue: Scalars['Float']['output'];
+  scheduled: Scalars['Int']['output'];
+};
+
+export type PodPromoTablePage = {
+  __typename?: 'PodPromoTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<PodPromo>;
+  total: Scalars['Int']['output'];
+};
+
 /** What a guest can rent for one pod. */
 export type PodRentalCatalogue = {
   __typename?: 'PodRentalCatalogue';
@@ -27899,6 +29663,19 @@ export type ProductAnalytics = {
   variants: Array<ProductVariantStat>;
 };
 
+/**
+ * What a Product analytics read covers: a preset length ending now (days, 7-365) or a calendar
+ * range (from-to, yyyy-MM-dd in the admin zone, inclusive), optionally narrowed to one platform
+ * (ios, android, web, mweb) and one app version.
+ */
+export type ProductAnalyticsFilter = {
+  app_version?: InputMaybe<Scalars['String']['input']>;
+  days?: InputMaybe<Scalars['Int']['input']>;
+  from?: InputMaybe<Scalars['String']['input']>;
+  platform?: InputMaybe<Scalars['String']['input']>;
+  to?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type ProductAnalyticsLocation = {
   __typename?: 'ProductAnalyticsLocation';
   location: Scalars['String']['output'];
@@ -27986,6 +29763,127 @@ export type ProductCheckoutInput = {
   /** Delivery address, required when any product ships. */
   shipping_address?: InputMaybe<OrderShippingAddressInput>;
 };
+
+/** Who a cohort is made of: people first seen in the app in the period, or members who signed up in it. */
+export type ProductCohortBasis =
+  | 'FIRST_SEEN'
+  | 'SIGNED_UP';
+
+export type ProductCohortRow = {
+  __typename?: 'ProductCohortRow';
+  /** The cohort's first day (yyyy-MM-dd) — a Monday for week cohorts. */
+  cohort: Scalars['String']['output'];
+  /** % retained per offset; null where that day or week has not come yet. */
+  retained: Array<Maybe<Scalars['Float']['output']>>;
+  size: Scalars['Int']['output'];
+};
+
+/** A named count: a screen, an element, a platform, an event name. */
+export type ProductCount = {
+  __typename?: 'ProductCount';
+  count: Scalars['Int']['output'];
+  key: Scalars['String']['output'];
+};
+
+export type ProductElementDetail = {
+  __typename?: 'ProductElementDetail';
+  buckets: Array<Scalars['String']['output']>;
+  clicks: Scalars['Int']['output'];
+  clicks_series: Array<Scalars['Int']['output']>;
+  key: Scalars['String']['output'];
+  platforms: Array<ProductCount>;
+  screen_name: Scalars['String']['output'];
+  users_series: Array<Scalars['Int']['output']>;
+};
+
+/**
+ * One element pressed in the period, on one screen. ctr = clicks ÷ views of that screen in the
+ * same period, as a percentage (null when the screen has no views). repeat_clicks = clicks − unique_users.
+ */
+export type ProductElementRow = {
+  __typename?: 'ProductElementRow';
+  clicks: Scalars['Int']['output'];
+  ctr?: Maybe<Scalars['Float']['output']>;
+  element_id: Scalars['String']['output'];
+  element_name: Scalars['String']['output'];
+  element_type: Scalars['String']['output'];
+  key: Scalars['String']['output'];
+  repeat_clicks: Scalars['Int']['output'];
+  screen_name: Scalars['String']['output'];
+  screen_views: Scalars['Int']['output'];
+  unique_users: Scalars['Int']['output'];
+};
+
+export type ProductElementTablePage = {
+  __typename?: 'ProductElementTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<ProductElementRow>;
+  total: Scalars['Int']['output'];
+};
+
+/** One stored event. Rows from before the taxonomy are named after their kind (screen_view, element_click). */
+export type ProductEvent = {
+  __typename?: 'ProductEvent';
+  app_version: Scalars['String']['output'];
+  device_id: Scalars['String']['output'];
+  duration_ms?: Maybe<Scalars['Float']['output']>;
+  element_id: Scalars['String']['output'];
+  element_name: Scalars['String']['output'];
+  element_text: Scalars['String']['output'];
+  element_type: Scalars['String']['output'];
+  event_name: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  occurred_at: Scalars['String']['output'];
+  path: Scalars['String']['output'];
+  platform: Scalars['String']['output'];
+  previous_screen: Scalars['String']['output'];
+  properties_json: Scalars['String']['output'];
+  screen_name: Scalars['String']['output'];
+  session_id: Scalars['String']['output'];
+  user_id?: Maybe<Scalars['ID']['output']>;
+};
+
+export type ProductEventTablePage = {
+  __typename?: 'ProductEventTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<ProductEvent>;
+  total: Scalars['Int']['output'];
+};
+
+export type ProductFunnel = {
+  __typename?: 'ProductFunnel';
+  steps: Array<ProductFunnelStep>;
+  /** True when a step had more occurrences than one read takes, so its counts are a floor. */
+  truncated: Scalars['Boolean']['output'];
+  /** Each person has this many days from entering the funnel to finish it. */
+  window_days: Scalars['Int']['output'];
+};
+
+export type ProductFunnelStep = {
+  __typename?: 'ProductFunnelStep';
+  conversion_from_previous?: Maybe<Scalars['Float']['output']>;
+  conversion_from_start?: Maybe<Scalars['Float']['output']>;
+  dropped: Scalars['Int']['output'];
+  entered: Scalars['Int']['output'];
+  kind: ProductFunnelStepKind;
+  median_ms_from_previous?: Maybe<Scalars['Float']['output']>;
+  value: Scalars['String']['output'];
+};
+
+export type ProductFunnelStepInput = {
+  kind: ProductFunnelStepKind;
+  /** The event name, screen name, element id or label, or a ProductOutcome. */
+  value: Scalars['String']['input'];
+};
+
+/** What a funnel step matches: an event name, a screen view, an element press, or a server-confirmed outcome. */
+export type ProductFunnelStepKind =
+  | 'ELEMENT'
+  | 'EVENT'
+  | 'OUTCOME'
+  | 'SCREEN';
 
 export type ProductListingDeliveryTarget =
   | 'HOST'
@@ -28124,6 +30022,15 @@ export type ProductOrderTablePage = {
   total: Scalars['Int']['output'];
 };
 
+/** Outcomes read from the records that are the outcome — a Payment with paid_at, a PodMember — never from a click. */
+export type ProductOutcome =
+  | 'PAYMENT_FAILED'
+  | 'PAYMENT_REFUNDED'
+  | 'PAYMENT_SUCCEEDED'
+  | 'POD_CREATED'
+  | 'POD_JOINED'
+  | 'SIGNED_UP';
+
 export type ProductOwnership =
   | 'BRAND'
   | 'DUNCIT';
@@ -28141,6 +30048,17 @@ export type ProductPodOption = {
   pod_title: Scalars['String']['output'];
   product_name: Scalars['String']['output'];
   unit_cost: Scalars['Float']['output'];
+};
+
+export type ProductRetention = {
+  __typename?: 'ProductRetention';
+  /** Each offset over every cohort that has reached it, weighted by size. */
+  average: Array<Maybe<Scalars['Float']['output']>>;
+  basis: ProductCohortBasis;
+  granularity: AnalyticsGranularity;
+  /** Days (D1, D3, D7, D14, D30) for day cohorts; weeks 1-8 for week cohorts. */
+  offsets: Array<Scalars['Int']['output']>;
+  rows: Array<ProductCohortRow>;
 };
 
 export type ProductReview = {
@@ -28167,6 +30085,85 @@ export type ProductReviewSummary = {
   product_id: Scalars['ID']['output'];
   /** Count of reviews per star, index 0 = 1★ … index 4 = 5★. */
   star_counts: Array<Scalars['Int']['output']>;
+  total: Scalars['Int']['output'];
+};
+
+export type ProductScreenDetail = {
+  __typename?: 'ProductScreenDetail';
+  avg_time_ms?: Maybe<Scalars['Float']['output']>;
+  /** The first calendar day (yyyy-MM-dd) of every bucket, oldest first. */
+  buckets: Array<Scalars['String']['output']>;
+  /** The elements pressed most on this screen. */
+  elements: Array<ProductCount>;
+  next_screens: Array<ProductCount>;
+  platforms: Array<ProductCount>;
+  /** Where people came from; an empty key is the start of a session. */
+  previous_screens: Array<ProductCount>;
+  screen_name: Scalars['String']['output'];
+  users_series: Array<Scalars['Int']['output']>;
+  views: Scalars['Int']['output'];
+  views_series: Array<Scalars['Int']['output']>;
+};
+
+/**
+ * One screen of the period. unique_users counts members, plus devices nobody signed in on.
+ * avg_time_ms is foreground time per view (null when none was reported); exit_rate is the share
+ * of views that ended a session; bounce_rate the share of sessions that began here and saw nothing else.
+ */
+export type ProductScreenRow = {
+  __typename?: 'ProductScreenRow';
+  avg_time_ms?: Maybe<Scalars['Float']['output']>;
+  bounce_rate: Scalars['Float']['output'];
+  entries: Scalars['Int']['output'];
+  exit_rate: Scalars['Float']['output'];
+  exits: Scalars['Int']['output'];
+  screen_name: Scalars['String']['output'];
+  total_time_ms: Scalars['Float']['output'];
+  unique_users: Scalars['Int']['output'];
+  views: Scalars['Int']['output'];
+};
+
+export type ProductScreenTablePage = {
+  __typename?: 'ProductScreenTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<ProductScreenRow>;
+  total: Scalars['Int']['output'];
+};
+
+/** One app session: cut on the device after 30 minutes without activity; it lasts from its first event to its last. */
+export type ProductSession = {
+  __typename?: 'ProductSession';
+  app_version: Scalars['String']['output'];
+  clicks: Scalars['Int']['output'];
+  device_id: Scalars['String']['output'];
+  device_type: Scalars['String']['output'];
+  duration_ms: Scalars['Float']['output'];
+  ended_at: Scalars['String']['output'];
+  entry_screen: Scalars['String']['output'];
+  events: Scalars['Int']['output'];
+  exit_screen: Scalars['String']['output'];
+  os_version: Scalars['String']['output'];
+  platform: Scalars['String']['output'];
+  screen_views: Scalars['Int']['output'];
+  session_id: Scalars['ID']['output'];
+  started_at: Scalars['String']['output'];
+  user_id?: Maybe<Scalars['ID']['output']>;
+  user_name?: Maybe<Scalars['String']['output']>;
+};
+
+export type ProductSessionDetail = {
+  __typename?: 'ProductSessionDetail';
+  /** The session's events, oldest first (at most 1000). */
+  events: Array<ProductEvent>;
+  session: ProductSession;
+};
+
+export type ProductSessionTablePage = {
+  __typename?: 'ProductSessionTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<ProductSession>;
   total: Scalars['Int']['output'];
 };
 
@@ -28199,10 +30196,58 @@ export type ProductShippingQuoteLine = {
   warehouse_id: Scalars['ID']['output'];
 };
 
+/** One entry of a member's timeline. CLIENT is what the app recorded; SERVER is a record (a payment, a booking). */
+export type ProductTimelineEntry = {
+  __typename?: 'ProductTimelineEntry';
+  at: Scalars['String']['output'];
+  event_name: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  label: Scalars['String']['output'];
+  platform: Scalars['String']['output'];
+  properties_json: Scalars['String']['output'];
+  screen_name: Scalars['String']['output'];
+  session_id?: Maybe<Scalars['String']['output']>;
+  source: Scalars['String']['output'];
+};
+
 export type ProductType =
   | 'CONSUMABLE'
   | 'EQUIPMENT'
   | 'MERCHANDISE';
+
+/** A member found by the User analytics search; the contact is masked. */
+export type ProductUserHit = {
+  __typename?: 'ProductUserHit';
+  contact?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+  user_id: Scalars['ID']['output'];
+};
+
+export type ProductUserProfile = {
+  __typename?: 'ProductUserProfile';
+  app_version?: Maybe<Scalars['String']['output']>;
+  city?: Maybe<Scalars['String']['output']>;
+  /** The country of the member's latest short-link click, when they followed one. */
+  country?: Maybe<Scalars['String']['output']>;
+  events: Scalars['Int']['output'];
+  /** How many different screens the member has opened. */
+  features_used: Scalars['Int']['output'];
+  first_seen_at?: Maybe<Scalars['String']['output']>;
+  /** utm_source / utm_campaign of the first and the latest short link the member followed. */
+  first_touch?: Maybe<Scalars['String']['output']>;
+  last_seen_at?: Maybe<Scalars['String']['output']>;
+  last_touch?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+  payments_completed: Scalars['Int']['output'];
+  platform?: Maybe<Scalars['String']['output']>;
+  pods_created: Scalars['Int']['output'];
+  pods_joined: Scalars['Int']['output'];
+  registered_at?: Maybe<Scalars['String']['output']>;
+  screen_views: Scalars['Int']['output'];
+  sessions: Scalars['Int']['output'];
+  top_features: Array<ProductCount>;
+  user_id: Scalars['ID']['output'];
+};
 
 export type ProductVariant = {
   __typename?: 'ProductVariant';
@@ -29053,7 +31098,7 @@ export type Query = {
   dnsZone: DnsZone;
   /** One flow with its sub flows, or null when it does not exist. Tech/Super admin only. */
   e2eFlow?: Maybe<E2eFlow>;
-  /** Every documented flow (Tech portal E2E Flows table). Tech/Super admin only. */
+  /** Every documented flow (Tests portal E2E Flows table). Filter on automated (is_true / is_false) for the flows a live spec does or does not test yet. Tech/Super admin only. */
   e2eFlowsTable: E2eFlowTablePage;
   /**
    * A credential the Google sign-in mutations accept in place of Google's own,
@@ -29396,6 +31441,18 @@ export type Query = {
   manualTestLabels: Array<Scalars['String']['output']>;
   /** The consoles and apps a case can be about. */
   manualTestSurfaces: Array<ManualTestSurface>;
+  /** Every agent, with its switch, schedule, params and last run. */
+  marketingAgents: Array<MarketingAgent>;
+  /** Runs by workflow and outcome, AI tokens and cost, approvals and agent runs. */
+  marketingAnalyticsAutomation: MarketingAnalyticsAutomation;
+  /** What was published from Duncit, by format; the reels and how they did; when posts do best. */
+  marketingAnalyticsContent: MarketingAnalyticsContent;
+  /** Leads by source and stage, the funnel, stage changes and time in stage, and leads promoted to the CRM. */
+  marketingAnalyticsFunnel: MarketingAnalyticsFunnel;
+  /** The headline of every analytics page, and what the short links earned, for one window. */
+  marketingAnalyticsOverview: MarketingAnalyticsOverview;
+  /** Followers, posts, reach and engagement per network and per day, and the best posts. */
+  marketingAnalyticsSocial: MarketingAnalyticsSocial;
   /** One campaign in full, including its rendered HTML — powers the View dialog. */
   marketingCampaign: MarketingCampaign;
   marketingCampaignPreviewCards: Array<MarketingCampaignPreviewCard>;
@@ -29404,6 +31461,14 @@ export type Query = {
   marketingCampaigns: Array<MarketingCampaign>;
   marketingCampaignsTable: MarketingCampaignTablePage;
   marketingDashboard: MarketingDashboard;
+  marketingLead: MarketingLead;
+  marketingLeadSummary: MarketingLeadSummary;
+  /** Every lead, newest first; filter by pipeline, stage, source, owner, city, score, dates or has_crm_ref; search name, company, contacts, website, handle or city. */
+  marketingLeadsTable: MarketingLeadTablePage;
+  marketingRun: MarketingRun;
+  marketingRunSummary: MarketingRunSummary;
+  /** Every run, newest first; filter by workflow, status, trigger, actor or what it touched. */
+  marketingRunsTable: MarketingRunTablePage;
   /** Approved products of one external brand — the e-commerce marketplace list. */
   marketplaceBrandProducts: Array<InventoryProduct>;
   /** Server-side table sibling of marketplaceBrandProducts (shared table engine). */
@@ -29737,6 +31802,17 @@ export type Query = {
   openAiUsageLog?: Maybe<OpenAiUsageLog>;
   /** Pass task to read one AI feature's calls only (the AI Features logs page). */
   openAiUsageLogsTable: OpenAiUsageLogTablePage;
+  /** How many leads an enroll with this filter would take into the sequence now. */
+  outreachEnrollCount: Scalars['Int']['output'];
+  /** Enrollments, newest first; filter by sequence_id, lead_id or status; search the lead's name or company. */
+  outreachEnrollmentsTable: OutreachEnrollmentTablePage;
+  outreachSequence: OutreachSequence;
+  /** Every sequence, newest first, with its enrollment counts. */
+  outreachSequences: Array<OutreachSequence>;
+  /** The open DM tasks, oldest first. */
+  outreachTasks: Array<OutreachTask>;
+  /** The WhatsApp campaigns a step may pick, approved ones first. */
+  outreachWaTemplates: Array<OutreachWaTemplate>;
   partnerDashboard: PartnerDashboard;
   partnerEcommStats: PartnerEcommStats;
   /** Admin Partners list — users holding a partner-portal role (Host / Venue Partner / Product Seller / Club Admin). */
@@ -29870,6 +31946,19 @@ export type Query = {
   podPaymentReleasesTable: PodPaymentReleaseTablePage;
   podPlans: Array<PodPlan>;
   podPlansTable: PodPlanTablePage;
+  /** One promotion, with its figures read fresh from the tracking link. */
+  podPromo: PodPromo;
+  /** Upcoming, published, public pods to pick from, soonest first; search matches the title. */
+  podPromoCandidates: Array<PodPromoCandidate>;
+  /** The automatic pod promotion settings. */
+  podPromoSettings: PodPromoSettings;
+  /** Totals across every promotion. */
+  podPromoSummary: PodPromoSummary;
+  /**
+   * Every pod promotion, newest pod first. Filters: status, source, club_id,
+   * city_id, scheduled_at, pod_start; search matches the pod title and club.
+   */
+  podPromosTable: PodPromoTablePage;
   /** Anyone: what the pod's venue rents out, and how much is left for this pod. */
   podRentals: PodRentalCatalogue;
   /** What revoking this pod's cancellation would cost, and whether it is allowed. */
@@ -29961,6 +32050,15 @@ export type Query = {
   previewVenueFoodCoupon: VenueFoodCouponPreview;
   /** Public: the apps read it to time the cart nudge. */
   productCartSettings: ProductCartSettings;
+  productElement: ProductElementDetail;
+  /** Every element pressed in the period, per screen, as a table. */
+  productElementsTable: ProductElementTablePage;
+  /** The event names stored in the period, most frequent first. */
+  productEventNames: Array<ProductCount>;
+  /** Events of the period. */
+  productEventsTable: ProductEventTablePage;
+  /** A funnel of 2-8 ordered steps; window_days (1-30, default 7) is how long a person has to finish it. */
+  productFunnel: ProductFunnel;
   productListingRequests: Array<InventoryProduct>;
   /** Server-side table sibling of productListingRequests (shared table engine). */
   productListingRequestsTable: InventoryProductTablePage;
@@ -29969,10 +32067,24 @@ export type Query = {
   /** Ops: all pod-placed product orders (Products portal). */
   productOrders: Array<ProductOrder>;
   productOrdersTable: ProductOrderTablePage;
+  /** Cohort retention; DAY cohorts are read by week for periods over 62 days. */
+  productRetention: ProductRetention;
   productReviewSummary: ProductReviewSummary;
   productReviews: Array<ProductReview>;
+  productScreen: ProductScreenDetail;
+  /** The screens viewed in the period, most viewed first. */
+  productScreenNames: Array<ProductCount>;
+  /** Every screen viewed in the period, as a table. */
+  productScreensTable: ProductScreenTablePage;
+  productSession?: Maybe<ProductSessionDetail>;
+  /** Sessions that began in the period. */
+  productSessionsTable: ProductSessionTablePage;
   /** Live ShipRocket delivery estimate for a product cart (preview only; the charged amount is recomputed server-side at checkout). */
   productShippingQuote: ProductShippingQuote;
+  productUser: ProductUserProfile;
+  productUserSearch: Array<ProductUserHit>;
+  /** A member's timeline, newest first; pass the last entry's at as before for the next page. */
+  productUserTimeline: Array<ProductTimelineEntry>;
   /** The same prices, public, for the advertising site's cost calculator. */
   publicAdRateCard: AdRateCard;
   publicAppSettings: PublicAppSettings;
@@ -30052,9 +32164,13 @@ export type Query = {
    * @deprecated Recurring pods are retired.
    */
   recurringCheckoutQuote: RecurringCheckoutQuote;
+  /** How the reel did everywhere it was posted from the composer, summed. */
+  reelAnalytics: ReelAnalytics;
   /** The videos, pictures, sound files and sub-folders of a Drive folder. folder is a link or a folder id. */
   reelDriveFolder: ReelDriveFolder;
   reelDriveStatus: ReelDriveStatus;
+  /** Stock photos or videos from Pexels for a reel; portrait unless another orientation is asked for. Pages start at 1. */
+  reelMediaSearch: ReelMediaPage;
   reelProject?: Maybe<ReelProject>;
   reelProjects: Array<ReelProjectSummary>;
   /** Loyalty > Refer & Earn > Dashboard. 'months' bounds the monthly series (default 12, max 36). */
@@ -30109,7 +32225,7 @@ export type Query = {
    */
   regionPodPayments: PaymentTablePage;
   regressionReport?: Maybe<RegressionReport>;
-  /** A unit report's tests, one bucket at a time (filter on bucket). */
+  /** A report's tests or E2E scenarios, one bucket at a time (filter on bucket). */
   regressionReportItemsTable: RegressionItemTablePage;
   /** Every regression report, newest first. Filter on kind, status, branch. Tests/Tech managers. */
   regressionReportsTable: RegressionReportTablePage;
@@ -30232,9 +32348,15 @@ export type Query = {
   socialCalendar: Array<SocialCalendarItem>;
   socialCommentsTable: SocialCommentTablePage;
   socialIdeas: Array<SocialIdea>;
+  socialInboxSummary: SocialInboxSummary;
+  /** Every comment from every connected account, newest first; view pins a summary card's slice. */
+  socialInboxTable: SocialCommentTablePage;
   socialPost: SocialPostDetail;
   socialPostsTable: SocialPostTablePage;
   socialProviders: Array<SocialProviderStatus>;
+  /** The one redirect (callback) URL every network's app must list — shown on the settings page. */
+  socialRedirectUri: Scalars['String']['output'];
+  socialReplyCapabilities: Array<SocialReplyCapability>;
   socialScheduledPost: SocialScheduledPost;
   socialScheduledPosts: Array<SocialScheduledPost>;
   /**
@@ -30542,6 +32664,13 @@ export type Query = {
   usernameAvailability: UsernameAvailability;
   users: Array<User>;
   usersTable: UserTablePage;
+  /**
+   * Check a reel against the networks it is going to: length within each
+   * network's reel limit, a portrait frame where the network wants one, sound,
+   * on-screen text within the limits, a hook in the first scene, and the brand
+   * watermark. The result is also kept on the project as its checks.
+   */
+  validateReel: Array<ReelCheck>;
   venue?: Maybe<Venue>;
   /**
    * Offers this venue owner may still accept, plus the ones they accepted.
@@ -31839,6 +33968,7 @@ export type QueryEntityAnalyticsArgs = {
   days?: InputMaybe<Scalars['Int']['input']>;
   entity: AnalyticsEntity;
   from?: InputMaybe<Scalars['String']['input']>;
+  platform?: InputMaybe<Scalars['String']['input']>;
   to?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -32456,6 +34586,32 @@ export type QueryManualTestLabelsArgs = {
 };
 
 
+export type QueryMarketingAnalyticsAutomationArgs = {
+  input: MarketingAnalyticsInput;
+};
+
+
+export type QueryMarketingAnalyticsContentArgs = {
+  input: MarketingAnalyticsInput;
+};
+
+
+export type QueryMarketingAnalyticsFunnelArgs = {
+  input: MarketingAnalyticsInput;
+  pipeline?: InputMaybe<MarketingLeadPipeline>;
+};
+
+
+export type QueryMarketingAnalyticsOverviewArgs = {
+  input: MarketingAnalyticsInput;
+};
+
+
+export type QueryMarketingAnalyticsSocialArgs = {
+  input: MarketingAnalyticsInput;
+};
+
+
 export type QueryMarketingCampaignArgs = {
   campaign_id: Scalars['ID']['input'];
 };
@@ -32473,6 +34629,26 @@ export type QueryMarketingCampaignsTableArgs = {
 
 export type QueryMarketingDashboardArgs = {
   days?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryMarketingLeadArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryMarketingLeadsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryMarketingRunArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryMarketingRunsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
 };
 
 
@@ -32990,6 +35166,22 @@ export type QueryOpenAiUsageLogsTableArgs = {
 };
 
 
+export type QueryOutreachEnrollCountArgs = {
+  filter?: InputMaybe<OutreachLeadFilter>;
+  sequence_id: Scalars['ID']['input'];
+};
+
+
+export type QueryOutreachEnrollmentsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryOutreachSequenceArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type QueryPartnerDashboardArgs = {
   from: Scalars['String']['input'];
   to: Scalars['String']['input'];
@@ -33355,6 +35547,21 @@ export type QueryPodPlansTableArgs = {
 };
 
 
+export type QueryPodPromoArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryPodPromoCandidatesArgs = {
+  search?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type QueryPodPromosTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
 export type QueryPodRentalsArgs = {
   pod_id: Scalars['ID']['input'];
 };
@@ -33538,6 +35745,37 @@ export type QueryPreviewVenueFoodCouponArgs = {
 };
 
 
+export type QueryProductElementArgs = {
+  filter?: InputMaybe<ProductAnalyticsFilter>;
+  key: Scalars['String']['input'];
+  screen_name: Scalars['String']['input'];
+};
+
+
+export type QueryProductElementsTableArgs = {
+  filter?: InputMaybe<ProductAnalyticsFilter>;
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryProductEventNamesArgs = {
+  filter?: InputMaybe<ProductAnalyticsFilter>;
+};
+
+
+export type QueryProductEventsTableArgs = {
+  filter?: InputMaybe<ProductAnalyticsFilter>;
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryProductFunnelArgs = {
+  filter?: InputMaybe<ProductAnalyticsFilter>;
+  steps: Array<ProductFunnelStepInput>;
+  window_days?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
 export type QueryProductListingRequestsArgs = {
   status?: InputMaybe<ProductListingReviewStatus>;
 };
@@ -33568,6 +35806,13 @@ export type QueryProductOrdersTableArgs = {
 };
 
 
+export type QueryProductRetentionArgs = {
+  basis: ProductCohortBasis;
+  filter?: InputMaybe<ProductAnalyticsFilter>;
+  granularity?: InputMaybe<AnalyticsGranularity>;
+};
+
+
 export type QueryProductReviewSummaryArgs = {
   product_id: Scalars['ID']['input'];
 };
@@ -33578,8 +35823,55 @@ export type QueryProductReviewsArgs = {
 };
 
 
+export type QueryProductScreenArgs = {
+  filter?: InputMaybe<ProductAnalyticsFilter>;
+  screen_name: Scalars['String']['input'];
+};
+
+
+export type QueryProductScreenNamesArgs = {
+  filter?: InputMaybe<ProductAnalyticsFilter>;
+};
+
+
+export type QueryProductScreensTableArgs = {
+  filter?: InputMaybe<ProductAnalyticsFilter>;
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryProductSessionArgs = {
+  session_id: Scalars['ID']['input'];
+};
+
+
+export type QueryProductSessionsTableArgs = {
+  filter?: InputMaybe<ProductAnalyticsFilter>;
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
 export type QueryProductShippingQuoteArgs = {
   input: ProductShippingQuoteInput;
+};
+
+
+export type QueryProductUserArgs = {
+  user_id: Scalars['ID']['input'];
+};
+
+
+export type QueryProductUserSearchArgs = {
+  search: Scalars['String']['input'];
+};
+
+
+export type QueryProductUserTimelineArgs = {
+  before?: InputMaybe<Scalars['String']['input']>;
+  event_names?: InputMaybe<Array<Scalars['String']['input']>>;
+  from?: InputMaybe<Scalars['String']['input']>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  user_id: Scalars['ID']['input'];
 };
 
 
@@ -33679,8 +35971,21 @@ export type QueryRecurringCheckoutQuoteArgs = {
 };
 
 
+export type QueryReelAnalyticsArgs = {
+  project_id: Scalars['ID']['input'];
+};
+
+
 export type QueryReelDriveFolderArgs = {
   folder: Scalars['String']['input'];
+};
+
+
+export type QueryReelMediaSearchArgs = {
+  kind: ReelAssetKind;
+  orientation?: InputMaybe<ReelAspect>;
+  page?: InputMaybe<Scalars['Int']['input']>;
+  query: Scalars['String']['input'];
 };
 
 
@@ -33939,6 +36244,12 @@ export type QuerySocialCommentsTableArgs = {
 
 export type QuerySocialIdeasArgs = {
   status?: InputMaybe<SocialIdeaStatus>;
+};
+
+
+export type QuerySocialInboxTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+  view?: InputMaybe<SocialInboxView>;
 };
 
 
@@ -34606,6 +36917,12 @@ export type QueryUsersArgs = {
 
 export type QueryUsersTableArgs = {
   query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryValidateReelArgs = {
+  platforms: Array<SocialPlatform>;
+  project_id: Scalars['ID']['input'];
 };
 
 
@@ -35282,18 +37599,53 @@ export type RecurringCheckoutQuoteInput = {
   selected_rentals?: InputMaybe<Array<CheckoutRentalSelectionInput>>;
 };
 
+export type ReelAnalytics = {
+  __typename?: 'ReelAnalytics';
+  comments: Scalars['Int']['output'];
+  engagement: Scalars['Int']['output'];
+  likes: Scalars['Int']['output'];
+  posts: Array<ReelAnalyticsPost>;
+  shares: Scalars['Int']['output'];
+  views: Scalars['Int']['output'];
+};
+
+/** How the reel did on one network — the synced post's numbers, or zeros until the next sync reads them. */
+export type ReelAnalyticsPost = {
+  __typename?: 'ReelAnalyticsPost';
+  comments: Scalars['Int']['output'];
+  engagement: Scalars['Int']['output'];
+  likes: Scalars['Int']['output'];
+  permalink: Scalars['String']['output'];
+  platform: SocialPlatform;
+  published_at?: Maybe<Scalars['String']['output']>;
+  shares: Scalars['Int']['output'];
+  views: Scalars['Int']['output'];
+};
+
+/** The frame: 1080x1920, 1080x1080 or 1920x1080. */
+export type ReelAspect =
+  | 'LANDSCAPE'
+  | 'PORTRAIT'
+  | 'SQUARE';
+
 /** One clip, picture or sound file a reel can use. */
 export type ReelAsset = {
   __typename?: 'ReelAsset';
-  /** DRIVE: the Drive file this is, so the folder browser can tell what the reel already holds. Empty for an upload. */
+  /** STOCK: the credit the library asks for, e.g. 'Photo by X on Pexels'. */
+  attribution: Scalars['String']['output'];
+  /** DRIVE: the Drive file this is, so the folder browser can tell what the reel already holds. Empty for the rest. */
   drive_file_id: Scalars['String']['output'];
-  /** 0 when Drive has not finished measuring the file. */
+  /** 0 when Drive has not finished measuring the file, or nobody has. */
   duration_ms: Scalars['Int']['output'];
   height: Scalars['Int']['output'];
   id: Scalars['ID']['output'];
   kind: ReelAssetKind;
+  /** STOCK: the library's licence line; empty for Drive, an upload or generated sound. */
+  licence: Scalars['String']['output'];
   mime_type: Scalars['String']['output'];
   name: Scalars['String']['output'];
+  /** STOCK: the library's own id for it. */
+  provider_id: Scalars['String']['output'];
   size_bytes: Scalars['Float']['output'];
   source: ReelAssetSource;
   /** A preview frame; empty for a sound file. */
@@ -35311,8 +37663,62 @@ export type ReelAssetKind =
 export type ReelAssetSource =
   /** Footage read from the project's Google Drive folder. */
   | 'DRIVE'
-  /** A picture attached in the chat. */
+  /** Sound made here — a voiceover. */
+  | 'GENERATED'
+  /** A Pexels photo or video, kept by its CDN address with its licence line. */
+  | 'STOCK'
+  /** A picture or clip from the media store — attached in the chat or picked from the library. */
   | 'UPLOAD';
+
+/** The brand mark on every scene. */
+export type ReelBrand = {
+  __typename?: 'ReelBrand';
+  /** #RRGGBB for pills and highlights; empty for none. */
+  primary_color: Scalars['String']['output'];
+  /** An IMAGE asset of the project; empty for no watermark. */
+  watermark_asset_id: Scalars['String']['output'];
+  watermark_corner: ReelCorner;
+  /** Width as a share of the frame, 5-50. */
+  watermark_width_pct: Scalars['Float']['output'];
+};
+
+/** How CAPTION texts are drawn: words alone, on a pill, or lit word by word. */
+export type ReelCaptionStyle =
+  | 'BOX'
+  | 'HIGHLIGHT'
+  | 'PLAIN';
+
+export type ReelCaptions = {
+  __typename?: 'ReelCaptions';
+  style: ReelCaptionStyle;
+};
+
+/** One line of the last validation. */
+export type ReelCheck = {
+  __typename?: 'ReelCheck';
+  detail: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  pass: Scalars['Boolean']['output'];
+};
+
+/** A concept for a reel, as Create with AI suggests it. */
+export type ReelConcept = {
+  __typename?: 'ReelConcept';
+  /** The one idea the reel carries and the shots it needs. */
+  angle: Scalars['String']['output'];
+  /** The first line on screen or spoken. */
+  hook: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  title: Scalars['String']['output'];
+  /** Who it is for and why they would share it. */
+  why: Scalars['String']['output'];
+};
+
+export type ReelConceptInput = {
+  angle: Scalars['String']['input'];
+  hook: Scalars['String']['input'];
+  title: Scalars['String']['input'];
+};
 
 export type ReelCorner =
   | 'BOTTOM_LEFT'
@@ -35362,6 +37768,37 @@ export type ReelFit =
   | 'CONTAIN'
   /** Fill the frame, cropping the edges. */
   | 'COVER';
+
+export type ReelIdeas = {
+  __typename?: 'ReelIdeas';
+  concepts: Array<ReelConcept>;
+  /** The marketing run that recorded the call and its cost. */
+  run_id: Scalars['ID']['output'];
+};
+
+/** One stock photo or video as the library lists it. */
+export type ReelMediaItem = {
+  __typename?: 'ReelMediaItem';
+  attribution: Scalars['String']['output'];
+  /** 0 for a photo. */
+  duration_ms: Scalars['Int']['output'];
+  height: Scalars['Int']['output'];
+  id: Scalars['ID']['output'];
+  kind: ReelAssetKind;
+  licence: Scalars['String']['output'];
+  /** A small picture for the picker. */
+  preview_url: Scalars['String']['output'];
+  provider_id: Scalars['String']['output'];
+  /** The file the reel would use, on the library's CDN. */
+  url: Scalars['String']['output'];
+  width: Scalars['Int']['output'];
+};
+
+export type ReelMediaPage = {
+  __typename?: 'ReelMediaPage';
+  has_more: Scalars['Boolean']['output'];
+  items: Array<ReelMediaItem>;
+};
 
 export type ReelMessage = {
   __typename?: 'ReelMessage';
@@ -35416,10 +37853,23 @@ export type ReelOverlay = {
   width_pct: Scalars['Int']['output'];
 };
 
+/** A network the reel was posted to from the composer. */
+export type ReelPostLink = {
+  __typename?: 'ReelPostLink';
+  permalink: Scalars['String']['output'];
+  platform: SocialPlatform;
+  post_id: Scalars['ID']['output'];
+  published_at?: Maybe<Scalars['String']['output']>;
+};
+
 /** A reel: its Drive folder, its footage, the conversation and the edit. */
 export type ReelProject = {
   __typename?: 'ReelProject';
   assets: Array<ReelAsset>;
+  /** The last validation, check by check; empty until validated. */
+  checks: Array<ReelCheck>;
+  /** Where in the reel the cover frame is taken; null for the first frame. */
+  cover_at_ms?: Maybe<Scalars['Int']['output']>;
   created_at?: Maybe<Scalars['String']['output']>;
   created_by: Scalars['String']['output'];
   drive_folder_id: Scalars['String']['output'];
@@ -35429,8 +37879,12 @@ export type ReelProject = {
   id: Scalars['ID']['output'];
   messages: Array<ReelMessage>;
   name: Scalars['String']['output'];
+  /** Every network a post carrying this reel reached. */
+  posts: Array<ReelPostLink>;
   spec: ReelSpec;
   updated_at?: Maybe<Scalars['String']['output']>;
+  /** The caption, hashtags and title written per network; empty until generated. */
+  variants: Array<ReelVariant>;
 };
 
 export type ReelProjectInput = {
@@ -35443,14 +37897,36 @@ export type ReelProjectInput = {
 export type ReelProjectSummary = {
   __typename?: 'ReelProjectSummary';
   asset_count: Scalars['Int']['output'];
+  /** The frame the list shows: the footage under the chosen cover moment, else the first scene with footage, else empty. */
+  cover_url: Scalars['String']['output'];
   created_at?: Maybe<Scalars['String']['output']>;
   created_by: Scalars['String']['output'];
   drive_url: Scalars['String']['output'];
   duration_ms: Scalars['Int']['output'];
   id: Scalars['ID']['output'];
+  /** Null until the reel has been validated; then true when every check passed. */
+  last_check_pass?: Maybe<Scalars['Boolean']['output']>;
   name: Scalars['String']['output'];
+  /** How many networks a post carrying this reel reached. */
+  posts_count: Scalars['Int']['output'];
   scene_count: Scalars['Int']['output'];
   updated_at?: Maybe<Scalars['String']['output']>;
+  /** Views summed from the synced posts; a network not synced yet counts 0. */
+  views: Scalars['Int']['output'];
+};
+
+export type ReelRecommendation = {
+  __typename?: 'ReelRecommendation';
+  /** The figures it rests on. */
+  evidence: Scalars['String']['output'];
+  title: Scalars['String']['output'];
+  why: Scalars['String']['output'];
+};
+
+export type ReelRecommendations = {
+  __typename?: 'ReelRecommendations';
+  recommendations: Array<ReelRecommendation>;
+  run_id: Scalars['ID']['output'];
 };
 
 export type ReelScene = {
@@ -35474,6 +37950,38 @@ export type ReelScene = {
   volume: Scalars['Float']['output'];
 };
 
+export type ReelScript = {
+  __typename?: 'ReelScript';
+  /** The closing line. */
+  cta: Scalars['String']['output'];
+  /** Alternative opening lines; the first is the writer's pick. */
+  hooks: Array<Scalars['String']['output']>;
+  run_id: Scalars['ID']['output'];
+  scenes: Array<ReelScriptScene>;
+};
+
+export type ReelScriptInput = {
+  cta: Scalars['String']['input'];
+  hooks: Array<Scalars['String']['input']>;
+  scenes: Array<ReelScriptSceneInput>;
+};
+
+/** One scene of a script: the line on screen, the shot, how long, and the words a stock search would use for it. */
+export type ReelScriptScene = {
+  __typename?: 'ReelScriptScene';
+  asset_query: Scalars['String']['output'];
+  duration_ms: Scalars['Int']['output'];
+  shot: Scalars['String']['output'];
+  text: Scalars['String']['output'];
+};
+
+export type ReelScriptSceneInput = {
+  asset_query: Scalars['String']['input'];
+  duration_ms: Scalars['Int']['input'];
+  shot: Scalars['String']['input'];
+  text: Scalars['String']['input'];
+};
+
 /**
  * The reel's edit, as data. The portal draws exactly this with Remotion; the
  * server sanitizes it on every write and every read, so each field is always
@@ -35481,12 +37989,32 @@ export type ReelScene = {
  */
 export type ReelSpec = {
   __typename?: 'ReelSpec';
+  aspect: ReelAspect;
   background: Scalars['String']['output'];
+  brand: ReelBrand;
+  captions: ReelCaptions;
   fps: Scalars['Int']['output'];
   height: Scalars['Int']['output'];
   music?: Maybe<ReelMusic>;
   scenes: Array<ReelScene>;
+  voiceover?: Maybe<ReelVoiceover>;
+  /** Always the frame of aspect. */
   width: Scalars['Int']['output'];
+};
+
+/** A stock photo or video as reelMediaSearch listed it, with its licence. */
+export type ReelStockAssetInput = {
+  attribution: Scalars['String']['input'];
+  duration_ms?: InputMaybe<Scalars['Int']['input']>;
+  height?: InputMaybe<Scalars['Int']['input']>;
+  kind: ReelAssetKind;
+  licence: Scalars['String']['input'];
+  name: Scalars['String']['input'];
+  preview_url?: InputMaybe<Scalars['String']['input']>;
+  provider_id: Scalars['String']['input'];
+  /** On the library's CDN. */
+  url: Scalars['String']['input'];
+  width?: InputMaybe<Scalars['Int']['input']>;
 };
 
 /** Words on top of a scene. Times are milliseconds from the start of that scene. */
@@ -35528,13 +38056,29 @@ export type ReelTransition =
   | 'SLIDE'
   | 'WIPE';
 
-/** A picture already uploaded to the media store, attached to a chat message. */
+/** A picture or clip already uploaded to the media store. */
 export type ReelUploadInput = {
   height?: InputMaybe<Scalars['Int']['input']>;
   name: Scalars['String']['input'];
   size_bytes?: InputMaybe<Scalars['Float']['input']>;
   url: Scalars['String']['input'];
   width?: InputMaybe<Scalars['Int']['input']>;
+};
+
+/** The words that go with the reel on one network, written within that network's ceiling. */
+export type ReelVariant = {
+  __typename?: 'ReelVariant';
+  caption: Scalars['String']['output'];
+  hashtags: Array<Scalars['String']['output']>;
+  platform: SocialPlatform;
+  title: Scalars['String']['output'];
+};
+
+/** A spoken track played under the whole reel, from its start. */
+export type ReelVoiceover = {
+  __typename?: 'ReelVoiceover';
+  asset_id: Scalars['ID']['output'];
+  volume: Scalars['Float']['output'];
 };
 
 /** Loyalty > Refer & Earn > Dashboard. Totals are all-time; 'monthly' covers the chosen window. */
@@ -35859,7 +38403,7 @@ export type RegressionCoverageDelta = {
   workspace: Scalars['String']['output'];
 };
 
-/** One unit test in a bucket. */
+/** One test in a bucket: a unit test, or an E2E scenario (workspace is its suite, file its project/spec). */
 export type RegressionItem = {
   __typename?: 'RegressionItem';
   bucket: RegressionBucket;
@@ -35880,7 +38424,7 @@ export type RegressionItemTablePage = {
   total: Scalars['Int']['output'];
 };
 
-/** What a regression report compares: unit runs test by test, E2E runs suite by suite. */
+/** What a regression report compares: unit runs test by test, E2E runs scenario by scenario (suite by suite for runs that reported no scenarios). */
 export type RegressionKind =
   | 'E2E'
   | 'UNIT';
@@ -35904,7 +38448,7 @@ export type RegressionReport = {
   /** The run this report is about. */
   run_id: Scalars['ID']['output'];
   run_no: Scalars['String']['output'];
-  /** Workspaces left out because one of the runs has no results for them. */
+  /** Workspaces (unit) or suites (E2E) left out because one of the runs has no results for them. */
   skipped_workspaces: Array<Scalars['String']['output']>;
   status: RegressionStatus;
   /** E2E only: every suite in either run. */
@@ -37524,16 +40068,27 @@ export type SocialAccount = {
   flagged_open: Scalars['Int']['output'];
   followers: Scalars['Int']['output'];
   handle?: Maybe<Scalars['String']['output']>;
+  /** The daily health check: when it last ran, whether the token still worked, and what the network said when it did not. */
+  health_checked_at?: Maybe<Scalars['String']['output']>;
+  health_message?: Maybe<Scalars['String']['output']>;
+  health_ok?: Maybe<Scalars['Boolean']['output']>;
   id: Scalars['ID']['output'];
   /** Why the last sync failed; empty when it did not. */
   last_error?: Maybe<Scalars['String']['output']>;
   last_synced_at?: Maybe<Scalars['String']['output']>;
   name: Scalars['String']['output'];
+  owner_name?: Maybe<Scalars['String']['output']>;
+  /** Who answers for the account and gets its expiry reminders; defaults to whoever connected it. */
+  owner_user_id?: Maybe<Scalars['ID']['output']>;
   platform: SocialPlatform;
   profile_url?: Maybe<Scalars['String']['output']>;
   provider: SocialProvider;
   status: SocialAccountStatus;
+  /** The others who look after the account. */
+  team_user_ids: Array<Scalars['ID']['output']>;
   token_expires_at?: Maybe<Scalars['String']['output']>;
+  /** Whole days until the token lapses (0 or less: lapsed); null for a token that does not expire. */
+  token_expires_in_days?: Maybe<Scalars['Int']['output']>;
 };
 
 export type SocialAccountEngagement = {
@@ -37612,6 +40167,7 @@ export type SocialCalendarItem = {
   engagement?: Maybe<Scalars['Int']['output']>;
   id: Scalars['ID']['output'];
   kind: SocialCalendarKind;
+  media_count: Scalars['Int']['output'];
   media_url?: Maybe<Scalars['String']['output']>;
   permalink?: Maybe<Scalars['String']['output']>;
   platforms: Array<SocialPlatform>;
@@ -37634,9 +40190,13 @@ export type SocialComment = {
   ai_sentiment?: Maybe<SocialSentiment>;
   ai_severity?: Maybe<SocialSeverity>;
   ai_status: SocialAiStatus;
+  assigned_name?: Maybe<Scalars['String']['output']>;
+  /** Who is working the comment; null when nobody is. */
+  assigned_user_id?: Maybe<Scalars['ID']['output']>;
   author_handle?: Maybe<Scalars['String']['output']>;
   author_name?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
+  last_activity_at?: Maybe<Scalars['String']['output']>;
   likes: Scalars['Int']['output'];
   permalink?: Maybe<Scalars['String']['output']>;
   platform: SocialPlatform;
@@ -37644,8 +40204,25 @@ export type SocialComment = {
   post_permalink?: Maybe<Scalars['String']['output']>;
   post_text?: Maybe<Scalars['String']['output']>;
   published_at?: Maybe<Scalars['String']['output']>;
+  /** Every reply sent from the Inbox, oldest first. */
+  replies: Array<SocialCommentReply>;
   review_status: SocialReviewStatus;
   reviewed_at?: Maybe<Scalars['String']['output']>;
+  status: SocialInboxStatus;
+  text: Scalars['String']['output'];
+};
+
+/** One answer sent from the Inbox, kept whether the network took it or refused it. */
+export type SocialCommentReply = {
+  __typename?: 'SocialCommentReply';
+  at?: Maybe<Scalars['String']['output']>;
+  by_name: Scalars['String']['output'];
+  by_user_id: Scalars['String']['output'];
+  /** Why the network refused it; empty when it did not. */
+  error: Scalars['String']['output'];
+  /** The reply's id on the network; empty when it was refused. */
+  external_id: Scalars['String']['output'];
+  ok: Scalars['Boolean']['output'];
   text: Scalars['String']['output'];
 };
 
@@ -37695,6 +40272,32 @@ export type SocialIdeasInput = {
   platforms?: InputMaybe<Array<SocialPlatform>>;
 };
 
+/** Where a comment stands in the Inbox: waiting, answered on the network, dealt with without a reply, or junk. */
+export type SocialInboxStatus =
+  | 'DONE'
+  | 'OPEN'
+  | 'REPLIED'
+  | 'SPAM';
+
+export type SocialInboxSummary = {
+  __typename?: 'SocialInboxSummary';
+  /** Open comments the AI flagged. */
+  flagged: Scalars['Int']['output'];
+  /** Open comments assigned to the person asking. */
+  mine: Scalars['Int']['output'];
+  open: Scalars['Int']['output'];
+  /** Open comments nobody is working. */
+  unassigned: Scalars['Int']['output'];
+};
+
+/** The slice of the Inbox a summary card opens: open, open and flagged, open and nobody's, open and mine, or everything. */
+export type SocialInboxView =
+  | 'ALL'
+  | 'FLAGGED'
+  | 'MINE'
+  | 'OPEN'
+  | 'UNASSIGNED';
+
 export type SocialInsights = {
   __typename?: 'SocialInsights';
   best_times: Array<Scalars['String']['output']>;
@@ -37713,6 +40316,7 @@ export type SocialPlatform =
   | 'FACEBOOK'
   | 'INSTAGRAM'
   | 'LINKEDIN'
+  | 'THREADS'
   | 'X'
   | 'YOUTUBE';
 
@@ -37775,6 +40379,18 @@ export type SocialPostDetail = {
   sentiment: SocialSentimentSummary;
 };
 
+/** One picture or clip of a post, in the order they show. */
+export type SocialPostMedia = {
+  __typename?: 'SocialPostMedia';
+  type: SocialMediaType;
+  url: Scalars['String']['output'];
+};
+
+export type SocialPostMediaInput = {
+  type: SocialMediaType;
+  url: Scalars['String']['input'];
+};
+
 export type SocialPostTablePage = {
   __typename?: 'SocialPostTablePage';
   page: Scalars['Int']['output'];
@@ -37783,16 +40399,20 @@ export type SocialPostTablePage = {
   total: Scalars['Int']['output'];
 };
 
-/** The app a marketer connects through. META covers Facebook Pages and Instagram Business. */
+/** The app a marketer connects through — one app per network. An Instagram account connected through Facebook before Instagram had its own app keeps provider FACEBOOK. */
 export type SocialProvider =
+  | 'FACEBOOK'
+  | 'INSTAGRAM'
   | 'LINKEDIN'
-  | 'META'
+  | 'THREADS'
   | 'X'
   | 'YOUTUBE';
 
-/** Whether Tech has set up this provider's app under Environment Variables › Social apps. */
+/** Whether this network's app is set up under Marketing › Settings › Integrations (one entry per network). */
 export type SocialProviderStatus = {
   __typename?: 'SocialProviderStatus';
+  /** The environment category the app's entry lives in, for the settings page's link. */
+  category: Scalars['String']['output'];
   configured: Scalars['Boolean']['output'];
   provider: SocialProvider;
 };
@@ -37803,10 +40423,12 @@ export type SocialPublishMode =
   | 'NOW'
   | 'SCHEDULE';
 
+/** PENDING_APPROVAL waits for a reviewer's yes before it is SCHEDULED. */
 export type SocialPublishStatus =
   | 'DRAFT'
   | 'FAILED'
   | 'PARTIAL'
+  | 'PENDING_APPROVAL'
   | 'PUBLISHED'
   | 'PUBLISHING'
   | 'SCHEDULED';
@@ -37823,10 +40445,30 @@ export type SocialPublishTarget = {
   status: SocialTargetStatus;
 };
 
+/** APPROVALS is every post waiting for a decision, soonest scheduled first. */
 export type SocialQueueView =
+  | 'APPROVALS'
   | 'DRAFTS'
   | 'QUEUE'
   | 'SENT';
+
+/** Whether this integration can answer comments on a network, and the permission it would need when it cannot. */
+export type SocialReplyCapability = {
+  __typename?: 'SocialReplyCapability';
+  can_reply: Scalars['Boolean']['output'];
+  /** The longest reply the network takes. */
+  max_length: Scalars['Int']['output'];
+  missing_permission?: Maybe<Scalars['String']['output']>;
+  platform: SocialPlatform;
+};
+
+/** A drafted reply for a person to edit; never sent on its own. */
+export type SocialReplySuggestion = {
+  __typename?: 'SocialReplySuggestion';
+  /** The INBOX_REPLY run that drafted it, on Activity. */
+  run_id: Scalars['ID']['output'];
+  text: Scalars['String']['output'];
+};
 
 export type SocialReviewStatus =
   | 'OPEN'
@@ -37834,12 +40476,27 @@ export type SocialReviewStatus =
 
 export type SocialScheduledPost = {
   __typename?: 'SocialScheduledPost';
+  /** The marketing run that waits for (or recorded) the decision. */
+  approval_run_id?: Maybe<Scalars['String']['output']>;
+  /** Instagram usernames invited as collaborators; the other networks ignore them. */
+  collaborators: Array<Scalars['String']['output']>;
   created_at?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   idea_id?: Maybe<Scalars['String']['output']>;
+  /** Every piece of media in order; two or more make a carousel. */
+  media: Array<SocialPostMedia>;
   media_type?: Maybe<SocialMediaType>;
+  /** The first piece of media, for readers of one. */
   media_url?: Maybe<Scalars['String']['output']>;
+  /** A reviewer must say yes before it goes out. */
+  needs_approval: Scalars['Boolean']['output'];
+  /** The pod promotion this post was made for; empty for any other post. */
+  pod_id?: Maybe<Scalars['String']['output']>;
   published_at?: Maybe<Scalars['String']['output']>;
+  /** The Reel Studio project the posted reel was cut in; empty for any other post. */
+  reel_project_id?: Maybe<Scalars['String']['output']>;
+  /** Why the reviewer sent it back; shown to the author on the draft. */
+  review_note?: Maybe<Scalars['String']['output']>;
   scheduled_at?: Maybe<Scalars['String']['output']>;
   status: SocialPublishStatus;
   targets: Array<SocialPublishTarget>;
@@ -37849,11 +40506,22 @@ export type SocialScheduledPost = {
 
 export type SocialScheduledPostInput = {
   account_ids: Array<Scalars['ID']['input']>;
+  /** Instagram usernames to invite as collaborators, at most 3 (the Instagram API limit); only Instagram uses them. */
+  collaborators?: InputMaybe<Array<Scalars['String']['input']>>;
   /** The idea this post was written from; it is marked USED. */
   idea_id?: InputMaybe<Scalars['ID']['input']>;
+  /** Every piece of media in order; when given it replaces media_url/media_type. */
+  media?: InputMaybe<Array<SocialPostMediaInput>>;
   media_type?: InputMaybe<SocialMediaType>;
+  /** One piece of media, for callers that send one. */
   media_url?: InputMaybe<Scalars['String']['input']>;
   mode: SocialPublishMode;
+  /** With SCHEDULE or NOW, parks the post as PENDING_APPROVAL and opens an approval run. */
+  needs_approval?: InputMaybe<Scalars['Boolean']['input']>;
+  /** The pod this post promotes (Publishing › Pod promotions). */
+  pod_id?: InputMaybe<Scalars['ID']['input']>;
+  /** The Reel Studio project this reel was cut in, so the studio can read the post's numbers back. */
+  reel_project_id?: InputMaybe<Scalars['ID']['input']>;
   /** Required for SCHEDULE; optional on a DRAFT (it then shows on the calendar). */
   scheduled_at?: InputMaybe<Scalars['String']['input']>;
   text: Scalars['String']['input'];
@@ -42414,9 +45082,13 @@ export type TestsRegressionSummary = {
   status: Scalars['String']['output'];
 };
 
-/** How much of the E2E flow catalogue a person has reviewed as ready to automate. */
+/** How much of the E2E flow catalogue a person has reviewed as ready to automate, and how much a live spec already tests. */
 export type TestsScenarioCoverage = {
   __typename?: 'TestsScenarioCoverage';
+  /** Flows at least one live Cypress spec tests (e2eFlow/catalogue/spec-links.ts). */
+  automated: Scalars['Int']['output'];
+  /** automated / flows as 0-100; null when the catalogue is empty. */
+  automated_pct?: Maybe<Scalars['Float']['output']>;
   flows: Scalars['Int']['output'];
   looks_good: Scalars['Int']['output'];
   needs_review: Scalars['Int']['output'];
@@ -44123,6 +46795,13 @@ export type UpdateLocationInput = {
   whatsapp_group_url?: InputMaybe<Scalars['String']['input']>;
 };
 
+/** Every field is optional: what is left out keeps its saved value. */
+export type UpdateMarketingAgentInput = {
+  enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  params?: InputMaybe<MarketingAgentParamsInput>;
+  schedule?: InputMaybe<MarketingAgentScheduleInput>;
+};
+
 export type UpdateMeetingInput = {
   meeting_link?: InputMaybe<Scalars['String']['input']>;
   notes?: InputMaybe<Scalars['String']['input']>;
@@ -44901,6 +47580,7 @@ export type Venue = {
   amenities: Array<Scalars['String']['output']>;
   approved_at?: Maybe<Scalars['String']['output']>;
   bank_account: BankAccountVerification;
+  banner_kit: BannerKit;
   capacity: Scalars['Int']['output'];
   capacity_items: Array<VenueCapacityItem>;
   city: Scalars['String']['output'];

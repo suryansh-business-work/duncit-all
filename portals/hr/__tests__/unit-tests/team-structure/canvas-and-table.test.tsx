@@ -58,7 +58,7 @@ describe('SeatCanvas', () => {
     expect(screen.getAllByTestId(/^node-/)).toHaveLength(2);
     expect(flow.props.edges).toEqual([expect.objectContaining({ id: 'root-child', source: 'root', target: 'child', type: 'smoothstep' })]);
     expect(Number(screen.getByTestId('node-child').dataset.y)).toBeGreaterThan(Number(screen.getByTestId('node-root').dataset.y));
-    expect(flow.props.nodesDraggable).toBe(false);
+    expect(flow.props.nodesDraggable).toBe(true);
   });
 
   it('draws no edge for a seat whose parent is not on the chart', () => {
@@ -102,6 +102,7 @@ describe('SeatCanvas', () => {
   it('is read-only without handlers: nothing connects, no + buttons, a connect does nothing', () => {
     render(<SeatCanvas nodes={chart} currency="INR" selectedId={null} onSelect={() => undefined} />);
     expect(flow.props.nodesConnectable).toBe(false);
+    expect(flow.props.nodesDraggable).toBe(false);
     expect(screen.queryByRole('button', { name: /addUnder/ })).not.toBeInTheDocument();
     expect(screen.getByTestId('node-root').dataset.connectable).toBe('false');
     fireEvent.click(screen.getByText('connect'));

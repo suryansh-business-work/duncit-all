@@ -133,6 +133,14 @@ export const SOCIAL_HANDLE: RegExp;
 /** Social handle shape check. Strip a leading `@` first. */
 export function isSocialHandle(value: string): boolean;
 /**
+ * An Instagram username without the `@`: letters, digits, `_` and `.`, 1–30
+ * characters, no leading, trailing or doubled dot — what the Instagram API
+ * accepts as a post collaborator.
+ */
+export const INSTAGRAM_HANDLE: RegExp;
+/** Instagram username check. Strip a leading `@` first. */
+export function isInstagramHandle(value: string): boolean;
+/**
  * A handle of lowercase letters, digits and inner underscores, 3–30 characters,
  * starting and ending with a letter or digit — `run_club`.
  */

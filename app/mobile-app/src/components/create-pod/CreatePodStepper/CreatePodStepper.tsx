@@ -1,13 +1,12 @@
 import { Text, YStack } from 'tamagui';
-import { shownCreatePodSteps } from '@duncit/utils';
+import { CREATE_POD_STEP_COUNT, CREATE_POD_WHERE_STEP, createPodSendsOffer } from '@duncit/utils';
 
 import { TourAnchor } from '@/tours/TourAnchor';
-import { STEP_TITLE_KEYS } from '../create-pod.form';
-import { BasicsStep } from '../steps/BasicsStep';
-import { LocationClubStep } from '../steps/LocationClubStep';
-import { VenueSlotStep } from '../steps/VenueSlotStep';
-import { VenueOfferStep } from '../steps/VenueOfferStep';
-import { PricingStep } from '../steps/PricingStep';
+import { stepTitleKey } from '../create-pod.form';
+import { WhatStep } from '../steps/WhatStep';
+import { WhereWhenStep } from '../steps/WhereWhenStep';
+import { MoneyStep } from '../steps/MoneyStep';
+import { DetailsStep } from '../steps/DetailsStep';
 import { AiMonitorOverlay } from '../AiMonitorOverlay';
 import { AssignHostsField } from '../AssignHostsField';
 import { StepperActions } from '../StepperActions';
@@ -18,11 +17,11 @@ import type { CreatePodStepperProps } from './types';
 import { useCreatePodForm } from './useCreatePodForm';
 import { useCreatePodScope } from './useCreatePodScope';
 
-/** Host Create Pod stepper (mobile twin of mWeb): Category/Locality/Club →
- * Basics → Venue & Slot → Offer for Venue → Pricing; a pod that sends no venue
- * offer (virtual, or a Pod Request's) skips the offer step. Per-step validation gates
- * Next; tapping "Create Pod" runs the AI + rules moderation preflight and only
- * publishes when the content is clean. */
+/** Host Create Pod stepper (mobile twin of mWeb): What (category, mode) →
+ * Where & when (locality, club, venue and slot, or a virtual meeting) → Money
+ * (the venue offer, when the pod sends one, and the ticket) → Details.
+ * Per-step validation gates Next; tapping "Create Pod" runs the AI + rules
+ * moderation preflight and only publishes when the content is clean. */
 export function CreatePodStepper({
   initialValues,
   initialStep,
@@ -32,6 +31,7 @@ export function CreatePodStepper({
   venues,
   products,
   subCategories,
+  categoryIcons,
   hostCategories,
   viewerUserId,
   pinnedVenueId,
@@ -51,7 +51,7 @@ export function CreatePodStepper({
     venues,
   });
   const { t, form, showProducts, step, busy, error, blocked, hosts, setHosts } = state;
-  const isLast = step === STEP_TITLE_KEYS.length - 1;
+  const isLast = step === CREATE_POD_STEP_COUNT - 1;
   const hostSubmitLabel = busy ? t('mweb.createPod.creating') : t('mweb.createPod.createPod');
   let submitLabel = hostSubmitLabel;
   if (clubAdmin) submitLabel = busy ? clubAdmin.busyLabel : clubAdmin.submitLabel;
@@ -84,48 +84,66 @@ export function CreatePodStepper({
     venues,
     viewerUserId,
   });
+  const pinnedClub = clubAdmin?.club ?? null;
+  const sendsOffer = createPodSendsOffer({
+    pod_mode: podMode,
+    partner_request_id: form.watch('partner_request_id'),
+    venue_slot_id: form.watch('venue_slot_id'),
+  });
+  const nextLabel = isLast
+    ? t('mweb.createPod.next')
+    : t('mweb.createPod.nextTo', { vars: { step: t(stepTitleKey(step + 1, podMode)) } });
 
   const steps = [
-    <LocationClubStep
-      key="location"
+    <WhatStep
+      key="what"
       form={form}
       hostCategories={hostCategories}
+      categoryIcons={categoryIcons}
+      clubs={clubs}
+      pinnedClub={!!pinnedClub}
+    />,
+    <WhereWhenStep
+      key="where"
+      form={form}
       clubs={clubsForLocation}
       cityClubs={clubsInCity}
       locations={locations}
-      pinnedClub={clubAdmin?.club ?? null}
-    />,
-    <BasicsStep key="basics" form={form} hostCategories={hostCategories} />,
-    <VenueSlotStep
-      key="venue"
-      form={form}
       venues={venues}
       clubVenueIds={clubVenueIds}
       currencySymbol={finance.currency_symbol}
       pinnedVenueId={pinnedVenueId}
       venueNotice={venueNotice}
-      forClubAdmin={!!clubAdmin}
       spots={spots}
       offerMinGuests={offerMinGuests}
+      pinnedClub={pinnedClub}
     />,
-    <VenueOfferStep
-      key="offer"
+    <MoneyStep
+      key="money"
       form={form}
       venues={venues}
+      sendsOffer={sendsOffer}
       quote={venueQuote}
-      currencySymbol={finance.currency_symbol}
-    />,
-    <PricingStep
-      key="pricing"
-      form={form}
       products={availableProducts}
       showProducts={showProducts}
       finance={finance}
       pricing={pricing}
-      spots={spots}
       venueNotice={venueNotice}
-      showTerms={!clubAdmin}
       forClubAdmin={!!clubAdmin}
+    />,
+    <DetailsStep
+      key="details"
+      form={form}
+      hostCategories={hostCategories}
+      venues={venues}
+      currencySymbol={finance.currency_symbol}
+      onEditWhen={() => state.goTo(CREATE_POD_WHERE_STEP)}
+      showTerms={!clubAdmin}
+      assignHosts={
+        clubAdmin ? (
+          <AssignHostsField hosts={hosts} onChange={setHosts} search={clubAdmin.searchHosts} />
+        ) : null
+      }
     />,
   ];
 
@@ -134,20 +152,9 @@ export function CreatePodStepper({
       {/* ONE page at a time, so every tour step lives on the page the host lands
           on — the header's step pills let the walkthrough explain the journey. */}
       <TourAnchor tour="create-pod" anchor="create-pod-steps">
-        <StepHeader
-          step={step}
-          podMode={podMode}
-          shownSteps={shownCreatePodSteps({
-            pod_mode: podMode,
-            partner_request_id: form.watch('partner_request_id'),
-            venue_slot_id: form.watch('venue_slot_id'),
-          })}
-        />
+        <StepHeader step={step} podMode={podMode} sendsOffer={sendsOffer} />
       </TourAnchor>
       {steps[step]}
-      {clubAdmin && step === 1 ? (
-        <AssignHostsField hosts={hosts} onChange={setHosts} search={clubAdmin.searchHosts} />
-      ) : null}
       {error ? (
         <Text role="alert" testID="create-pod-error" fontSize={12.5} color="$danger">
           {error}
@@ -167,7 +174,7 @@ export function CreatePodStepper({
           onBack={state.back}
           isLast={isLast}
           submitLabel={submitLabel}
-          nextLabel={t('mweb.createPod.next')}
+          nextLabel={nextLabel}
           busy={busy}
           submitDisabled={isLast && pricing.blocked}
           onSubmit={submit}

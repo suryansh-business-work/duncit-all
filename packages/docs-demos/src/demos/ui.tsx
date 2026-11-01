@@ -25,6 +25,7 @@ import { smartIncentiveDemo } from './ui/SmartIncentiveDemo';
 import { LoaderDemo, type LoaderMock } from './ui/LoaderDemo';
 import { MuiIconPickerDemo, type MuiIconPickerMock } from './ui/MuiIconPickerDemo';
 import { CHRISTMAS_MOCK, OccasionDemo, type OccasionMock } from './ui/OccasionDemo';
+import { guideKitDemo } from './ui/GuideKitDemo';
 
 interface ErrorFallbackMock {
   reference: string;
@@ -219,4 +220,5 @@ export default defineDemos('ui', [
       />
     ),
   }),
+  guideKitDemo,
 ]);

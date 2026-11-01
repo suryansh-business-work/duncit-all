@@ -50,7 +50,7 @@ export {
 
 // ---- the hosts console ---------------------------------------------------
 export { default as HostsPage } from './hosts/list/HostsPage';
-export { default as HostDetailsPage } from './hosts/detail/HostDetailsPage';
+export { default as HostDetailsPage, type HostDetailsPageProps } from './hosts/detail/HostDetailsPage';
 export { default as HostEditorPage } from './hosts/editor';
 export {
   blankHostValues,

@@ -16,6 +16,7 @@ import { MemoryRouter } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import LocationClubStep from '../LocationClubStep';
+import PodModeField from '../PodModeField';
 import {
   blankCreatePodForm,
   type CreatePodClub,
@@ -83,8 +84,13 @@ function Harness({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // The pod mode is picked on What, beside the category; it is rendered here
+  // because the club list it scopes is this card's.
   return (
-    <LocationClubStep form={form} hostCategories={[]} clubs={CLUBS} cityClubs={CLUBS} locations={LOCATIONS} />
+    <>
+      <PodModeField form={form} />
+      <LocationClubStep form={form} clubs={CLUBS} cityClubs={CLUBS} locations={LOCATIONS} />
+    </>
   );
 }
 

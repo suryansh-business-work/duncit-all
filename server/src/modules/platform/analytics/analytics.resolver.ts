@@ -2,7 +2,7 @@ import type { GraphQLContext } from '@context';
 import { readScope, requireAuth, requireRole } from '@middleware/rbac';
 import { validate } from '@utils/validate';
 import { analyticsService } from './analytics.service';
-import { recordAppEventSchema } from './analytics.validator';
+import { recordAppEventSchema, recordAppEventsSchema } from './analytics.validator';
 
 const ADMIN_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN'];
 
@@ -64,6 +64,18 @@ export const analyticsResolvers = {
       return analyticsService.recordAppEvent({
         input,
         user_id: user.id,
+        device_id: ctx.device_id ?? null,
+      });
+    },
+    // The product-analytics batch from mWeb and the native app. A visitor who
+    // has not signed in is tracked by their device id; without the analytics
+    // consent nothing is stored and the answer is 0.
+    recordAppEvents: async (_p: unknown, args: { events: unknown }, ctx: GraphQLContext) => {
+      if (!ctx.consent.analytics) return 0;
+      const events = await validate(recordAppEventsSchema, args.events);
+      return analyticsService.recordProductEvents({
+        events,
+        user_id: ctx.user?.id ?? null,
         device_id: ctx.device_id ?? null,
       });
     },

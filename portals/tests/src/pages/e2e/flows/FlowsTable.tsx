@@ -61,6 +61,16 @@ export default function FlowsTable({
         filterable: false,
         valueGetter: (row) => `${row.looks_good_count} / ${row.sub_flow_count}`,
       },
+      {
+        // Whether a live spec tests the flow. The server works it out from the
+        // spec links (it is not a stored field), so it filters but does not sort.
+        field: 'automated',
+        headerName: t('tech.e2eFlows.colAutomated'),
+        width: 120,
+        type: 'boolean',
+        sortable: false,
+        valueGetter: (row) => (row.specs.length > 0 ? t('shell.common.yes') : t('shell.common.no')),
+      },
       // How the flow's specs did across the recorded E2E runs — counted per
       // page at read time from the scenario rows, so not sortable either.
       {

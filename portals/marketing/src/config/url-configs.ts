@@ -27,11 +27,19 @@ const mwebFallback = (): string => {
   return isStagingApi ? 'https://staging.mweb.duncit.com' : 'https://mweb.duncit.com';
 };
 
+/** The CRM portal — where a promoted lead is worked by sales from then on. */
+const crmFallback = (): string => {
+  if (isDevelopment) return 'http://localhost:2007';
+  return isStagingApi ? 'https://staging.crm.duncit.com' : 'https://crm.duncit.com';
+};
+
 export const urlConfigs = {
   isDevelopment,
   graphqlUrl,
   /** The member web app — where Occasions previews a look (`/?occasion=<key>`). */
   mwebUrl: withoutTrailingSlash(import.meta.env.VITE_MWEB_URL || mwebFallback()),
+  /** The CRM portal — the Leads page links a promoted lead to its record there. */
+  crmUrl: withoutTrailingSlash(import.meta.env.VITE_CRM_URL || crmFallback()),
   /** The ecomm storefront (it has no staging host) — where the Ecomm Store tab previews its looks. */
   storeUrl: withoutTrailingSlash(import.meta.env.VITE_STORE_URL || 'https://ecomm.duncit.com'),
 };

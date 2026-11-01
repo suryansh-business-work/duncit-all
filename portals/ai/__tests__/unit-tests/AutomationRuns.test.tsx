@@ -5,12 +5,12 @@ import RunsPanel from '../../src/pages/automation/runs/RunsPanel';
 import RunContactDialog from '../../src/pages/automation/builder/RunContactDialog';
 import { AUTOMATION_RUNS, CANCEL_RUN, START_RUN } from '../../src/pages/automation/queries';
 import { renderWithProviders } from '../testkit';
-import { answerQuery, mutationOf, resetApollo } from './reel-apollo-mock';
+import { answerQuery, mutationOf, resetApollo } from '../hooks-mock';
 import { en, run } from './automation-fixtures';
 
 vi.mock('@apollo/client/react', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@apollo/client/react')>()),
-  ...(await import('./reel-apollo-mock')).hooks,
+  ...(await import('../hooks-mock')).hooks,
 }));
 
 vi.mock('@duncit/dialogs', async (importOriginal) => ({

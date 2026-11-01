@@ -54,6 +54,9 @@ export default defineConfig({
       STATUS_SITE_URL: process.env.CYPRESS_STATUS_SITE_URL || 'http://localhost:2019',
       ECOMM_STORE_URL: process.env.CYPRESS_ECOMM_STORE_URL || 'http://localhost:2039',
       CMS_SITE_URL: process.env.CYPRESS_CMS_SITE_URL || 'http://localhost:2043',
+      // Duncit Lite's own server (its /graphql and /ics routes) — staging's, as
+      // deploy.yml sets LITE_URL; specs/api/apps/duncit-lite.cy.ts calls it.
+      LITE_URL: process.env.CYPRESS_LITE_URL || 'https://staging.lite.duncit.com',
       // A hostname a staging CMS site answers on (Website portal > Sites > domains).
       // Left blank, the cms-site spec's published-site scenarios fail in before() and say so.
       CMS_SITE_HOST: process.env.CYPRESS_CMS_SITE_HOST || '',

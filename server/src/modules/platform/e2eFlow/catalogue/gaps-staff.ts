@@ -1792,7 +1792,7 @@ export const STAFF_GAP_FLOWS: readonly CatalogueFlow[] = [
   {
     name: 'Marketing: Social Accounts',
     description:
-      'marketing /social-accounts with tabs Accounts, Publish, Posts, Analytics, Monitoring and Ideas: LinkedIn, Facebook + Instagram, X and YouTube accounts connected by OAuth. Server roles SUPER_ADMIN, CITY_ADMIN, MARKETING_MANAGER (social.resolver.ts).',
+      'marketing /social/accounts (old /social-accounts redirects) with tabs Accounts, Publish, Posts, Analytics, Monitoring and Ideas: Instagram, Facebook, Threads, YouTube, LinkedIn and X accounts, each connected by OAuth through its own app set up under Settings › Integrations. Server roles SUPER_ADMIN, CITY_ADMIN, MARKETING_MANAGER (social.resolver.ts).',
     sub_flows: [
       {
         name: 'Connect, sync and disconnect a social account',
@@ -1800,8 +1800,8 @@ export const STAFF_GAP_FLOWS: readonly CatalogueFlow[] = [
           'Connect calls socialConnectUrl and sends the marketer to the provider consent screen; the callback lands back with the outcome. Sync now (syncSocialAccount) pulls the account; Disconnect (disconnectSocialAccount) removes it and its posts, comments and history from Duncit.',
         steps: [
           [
-            'Open /social-accounts with a provider not configured in Tech',
-            'Its card says "Not set up yet — Tech adds it under Environment Variables › Social apps."',
+            'Open /social/accounts with a network whose app is not set up under Settings › Integrations',
+            'Its card says "Not set up yet — add this network’s app under Settings › Integrations." with an Open Integrations link',
           ],
           [
             'On LinkedIn press "Connect" and approve on the provider',
@@ -1828,17 +1828,281 @@ export const STAFF_GAP_FLOWS: readonly CatalogueFlow[] = [
     ],
   },
   {
+    name: 'Marketing: Inbox',
+    description:
+      'marketing /social/inbox over the social comments (social_comments): one queue of every comment from every connected account with the AI verdict, an Inbox status (OPEN, REPLIED, DONE, SPAM — review_status kept in step), an assignee and the replies sent. socialInboxTable (view OPEN, FLAGGED, UNASSIGNED, MINE or ALL), socialInboxSummary, socialReplyCapabilities, assignSocialComment, setSocialCommentStatus, suggestSocialReply (Claude, an INBOX_REPLY run, never sent on its own) and replyToSocialComment (an INBOX_REPLY run; Facebook and Instagram-through-a-Page-token are refused NOT_CONFIGURED naming the permission). Roles SUPER_ADMIN, CITY_ADMIN, MARKETING_MANAGER, MARKETING_EDITOR (social.inbox.resolver.ts).',
+    sub_flows: [
+      {
+        name: 'Triage, assign and answer a comment',
+        description:
+          'The cards pin ?view=; a row opens the drawer; Suggest reply fills the box with a draft the person edits; Send posts it on the network and marks the comment Replied; every reply and draft is a run on Activity.',
+        steps: [
+          ['Open /social/inbox', 'Header "Inbox" with its intro and tour; cards Open, Flagged, Unassigned, Mine; a table with Comment, Network, Account, Author, Sentiment, Severity, Status, Assignee, Posted'],
+          ['Press the Flagged card', 'The URL is /social/inbox?view=FLAGGED and only open comments the AI flagged are listed'],
+          ['Open a comment and press "Assign to me"', 'Toast "Assignee saved."; the Assignee reads your name and the Mine card counts it'],
+          ['Press "Suggest reply"', 'Toast "Draft ready. Edit it, then press Send."; the Reply box holds the draft; Activity shows an Inbox reply run "Suggest a reply to …"'],
+          ['Press Send with an empty box', '"Write the reply first." under the box; nothing is sent'],
+          ['Edit the draft and press Send on an Instagram, Threads, YouTube, LinkedIn or X comment', 'Toast "Reply sent."; the reply appears under Replies; the status chip reads Replied; Activity shows "Reply to <author> on <network>" with one step'],
+          ['Open a Facebook comment', 'Send is disabled and its info tip says replying needs the pages_manage_engagement permission, which this integration does not have yet'],
+          ['Press "Mark spam", then "Reopen"', 'Toast "Status saved." each time; the comment leaves the open views and comes back'],
+          ['As a CLUB_ADMIN call socialInboxTable', 'FORBIDDEN "Access Denied"'],
+        ],
+      },
+    ],
+  },
+  {
+    name: 'Marketing: Activity, Approvals and My Tasks',
+    description:
+      'marketing /activity, /approvals and /tasks over the marketing run log (marketing_runs): every publish, sync, health check, lead search, reel, outreach and agent run is a MarketingRun with a step per stage, its API calls, its AI cost and, when a person must say yes first, its approval. Read roles SUPER_ADMIN, CITY_ADMIN, MARKETING_MANAGER, MARKETING_READER; decide/cancel/retry SUPER_ADMIN and MARKETING_MANAGER (marketingRun.resolver.ts).',
+    sub_flows: [
+      {
+        name: 'Follow a run on Activity',
+        description:
+          'The table lists runs newest first (marketingRunsTable) with a drawer per run (marketingRun); the URL can pin a status, a workflow or "mine".',
+        steps: [
+          [
+            'Open /activity',
+            'Header "Activity" with its intro and a first-run tour; a status legend above a table with Name, Workflow, Status, Actor, Trigger, Started, Finished and Duration',
+          ],
+          [
+            'Start an Instagram lead search and come back',
+            'A LEAD_SEARCH run for the brief appears, and its drawer shows the steps Plan the searches, Search Google, Read the profiles, Score the fit and Save the leads, each with its timing and a one-line summary',
+          ],
+          [
+            'Let a scheduled social post go out',
+            'A SOCIAL_PUBLISH run "Publish \"<text>\" to N networks" appears with one step per network (INSTAGRAM · <account> …); a network that refused is a FAILED step with its reason and the run ends PARTIAL',
+          ],
+          [
+            'Open /activity?status=FAILED, then /activity?workflow=SOCIAL_PUBLISH',
+            'The table is pinned to that status or workflow and says so',
+          ],
+          [
+            'Open /activity?mine=1 before the signed-in person is known',
+            'A progress bar, not everyone’s runs; then only runs whose actor is the signed-in person',
+          ],
+          [
+            'Open a run whose body threw',
+            'The drawer shows status FAILED, the error in red, the steps that did finish, and the API calls it logged',
+          ],
+        ],
+      },
+      {
+        name: 'Retry and cancel a run',
+        description:
+          'retryMarketingRun re-runs a FAILED or PARTIAL run through its workflow’s handler under the same row; cancelMarketingRun stops a waiting run at once and flags a running one.',
+        steps: [
+          [
+            'Open a PARTIAL SOCIAL_PUBLISH run and press Retry',
+            'A success toast; the run goes PENDING with retries 1, only the targets that failed are sent again, and the same row ends COMPLETED with every step OK',
+          ],
+          [
+            'Open a FAILED run of a workflow that has no way to run again (e.g. OTHER)',
+            'No Retry button; calling retryMarketingRun on it answers "This kind of run cannot be retried from here."',
+          ],
+          [
+            'Press Retry on a run whose post has nothing left to send',
+            'The run goes FAILED again with "The post has nothing left to retry."',
+          ],
+          [
+            'Press Cancel on a PENDING run and confirm',
+            'The run is CANCELLED at once with finished_at set',
+          ],
+          [
+            'Press Cancel on a RUNNING run',
+            'The run stays RUNNING with "Stop requested" shown; it ends CANCELLED when its workflow next checks; cancelling it again answers that it already finished once it has',
+          ],
+        ],
+      },
+      {
+        name: 'Approve, reject or ask for changes',
+        description:
+          'A run started with approval_required waits as AWAITING_APPROVAL; decideMarketingRun(APPROVED | REJECTED | CHANGES_REQUESTED, note) decides it — a note is required unless approving.',
+        steps: [
+          [
+            'Open /approvals',
+            'Header "Approvals" with cards Awaiting approval, Running now and Failed this week (which links to /activity?status=FAILED), a card pointing at the ad request queue (/ads-approvals), and the table pinned to AWAITING_APPROVAL',
+          ],
+          [
+            'Open a waiting run and press Approve',
+            'The workflow carries on (a post sent for approval is scheduled and goes out at its time, hanging under the approval run as its parent) and the run leaves the list',
+          ],
+          [
+            'Press Reject or Request changes with the note empty',
+            'Error "a note is required" and nothing changes',
+          ],
+          [
+            'Press Request changes with a note',
+            'The run is CANCELLED with the decision, who decided and the note; a post sent for approval returns to Draft carrying the note',
+          ],
+          [
+            'Decide a run that is not waiting',
+            'Error that the run is not waiting for a decision',
+          ],
+          [
+            'Call decideMarketingRun with a MARKETING_READER token',
+            'FORBIDDEN "Access Denied" — readers see the log, managers decide',
+          ],
+        ],
+      },
+      {
+        name: 'My Tasks',
+        description: 'marketingRunSummary and the signed-in person’s own open runs.',
+        steps: [
+          [
+            'Open /tasks',
+            'Header "My Tasks" with cards that lead to /approvals, /activity?mine=1 and /activity?status=FAILED, and the table pinned to the signed-in person’s PENDING, RUNNING and AWAITING_APPROVAL runs',
+          ],
+          [
+            'Open /tasks with nothing open',
+            'The table’s empty text says there is nothing waiting on you',
+          ],
+        ],
+      },
+    ],
+  },
+  {
+    name: 'Marketing: Automation agents',
+    description:
+      'marketing /automation/agents: three code-defined agents — Content planner, Community watch, Account doctor — each planned by Claude (one JSON plan of up to ten tool calls) and run through code, every run an AGENT row on Activity with a step per action; an orchestrator runs the enabled ones on their schedules as child runs of an ORCHESTRATOR row. Read roles SUPER_ADMIN, CITY_ADMIN, MARKETING_MANAGER, MARKETING_EDITOR; update and run SUPER_ADMIN and MARKETING_MANAGER (agent.resolver.ts).',
+    sub_flows: [
+      {
+        name: 'Switch on and schedule an agent',
+        description: 'updateMarketingAgent validates the schedule and the params and books next_run_at on the admin clock.',
+        steps: [
+          [
+            'Open /automation/agents as a manager',
+            'Header "Agents" with its intro and a first-run tour; one card per agent with its switch, schedule fields, the Content planner’s brief, networks and posts-per-week form, Save, Run now, the last run and the next run',
+          ],
+          [
+            'On Content planner, set Every week, Monday, 9, a brief and 3 posts a week, switch it on and Save',
+            'A success toast; the card shows the next run as the coming Monday 09:00 in the configured zone, and marketingAgents returns enabled true with that schedule',
+          ],
+          [
+            'Save with 0 posts a week, or an hour of 24',
+            'The form refuses before submit; sent straight to updateMarketingAgent the answer is "The settings are not valid" / "The schedule is not valid" (BAD_USER_INPUT)',
+          ],
+          ['Open /automation/agents as a MARKETING_EDITOR', 'The cards are read-only: no switch, no Save, no Run now; calling runMarketingAgent answers access denied'],
+        ],
+      },
+      {
+        name: 'Run an agent now and follow it',
+        description: 'runMarketingAgent opens an AGENT run as the signed-in person and answers with its id at once; the plan, the actions and the report land on Activity.',
+        steps: [
+          [
+            'Press Run now on Account doctor',
+            'A toast says the run started; the card’s last run shows the run’s status and "Open last run" leads to /activity?workflow=AGENT where the run has steps Plan with Claude, one per planned action, and Report',
+          ],
+          [
+            'Run Content planner with two connected accounts',
+            'Every post it creates is PENDING_APPROVAL on /approvals with a future time, text-only where the network takes it and a draft for Instagram and YouTube; nothing is published',
+          ],
+          [
+            'Run Community watch',
+            'Its report says how many comments were reviewed and flagged, and that no reply was sent because the Meta reply permission is not held',
+          ],
+          [
+            'Switch the Marketing agent plan feature off in the AI portal and press Run now',
+            'The run is FAILED at "Plan with Claude" with the switched-off message; nothing else ran',
+          ],
+          [
+            'Edit the Content planner prompt in the AI Library so it names a tool the agent may not use',
+            'That action is a FAILED step ("may not use …"), the rest run, and the run ends PARTIAL',
+          ],
+        ],
+      },
+      {
+        name: 'The orchestrator',
+        description: 'Every fifteen minutes on the scheduler leader: the enabled agents whose next_run_at has passed, as child runs of one ORCHESTRATOR run.',
+        steps: [
+          [
+            'Enable an agent with a time in the past and wait for the tick',
+            'Activity shows "Orchestrator: 1 agent due" with a step per agent, and an AGENT run with that parent_run_id; the card’s next run moves to the next slot',
+          ],
+          ['Wait for a tick with nothing due', 'No orchestrator run is recorded'],
+        ],
+      },
+    ],
+  },
+  {
+    name: 'Marketing: Analytics',
+    description:
+      'marketing /analytics/overview, /social, /content, /funnel and /automation: each page reads one window (7, 30 or 90 days or a custom From and To, in the admin zone, kept in the URL as from, to and platforms) from marketingAnalyticsOverview/Social/Content/Funnel/Automation. Read by SUPER_ADMIN, CITY_ADMIN, MARKETING_MANAGER, MARKETING_EDITOR and MARKETING_READER (marketingAnalytics.resolver.ts).',
+    sub_flows: [
+      {
+        name: 'Pick a window and networks',
+        description: 'The filter bar rewrites the URL; every figure is re-read for the new window.',
+        steps: [
+          ['Open /analytics/overview as a MARKETING_READER', 'Header "Analytics overview" with the window under it, the intro, 30 days pressed, and the headline tiles: followers, engagement rate, Duncit posts, reels posted, new leads, converted, promoted, runs, success rate, AI cost, link clicks, paid clicks and link revenue'],
+          ['Press 7 days', 'The address gains from and to for the last seven days and every tile is re-read'],
+          ['Set From after To', 'To moves to the same day; the server never sees a window that ends before it starts'],
+          ['On /analytics/social pick Instagram under Networks', 'platforms=INSTAGRAM is in the address; only Instagram accounts and posts are counted'],
+          ['Call marketingAnalyticsSocial with to before from, or 367 days', '"The window ends before it starts." / "Pick at most 366 days." (BAD_USER_INPUT)'],
+        ],
+      },
+      {
+        name: 'Read each page',
+        description: 'Every number is an aggregation over the synced rows; an empty window shows one empty state.',
+        steps: [
+          ['Open /analytics/social', 'Followers, follower growth, posts, views, engagement and engagement rate; engagement and views per day; a bar per network; growth per account; the ten best posts with a link to each'],
+          ['Open /analytics/content', 'Published from Duncit against read from networks, reels made, posted and their views, the best weekday and hour; bars by format, most viewed reels, by weekday and by hour'],
+          ['Open /analytics/funnel and pick the Venue pipeline', 'pipeline=VENUE in the address; new leads, converted and promoted; new leads per day; the funnel with each step conversion; leads by source; the median hours in each stage'],
+          ['Open /analytics/automation', 'Runs, success rate, AI cost in dollars, tokens, approvals waiting and the median decision time; runs and cost per day; bars by workflow, by outcome and per agent'],
+          ['Open any page as a USER, or over a window with nothing in it', 'access denied for the USER; the empty window shows "Nothing in this window yet"'],
+        ],
+      },
+    ],
+  },
+  {
     name: 'Marketing: Social Calendar',
     description:
-      'marketing /social-calendar: the Social Accounts publishing calendar on its own page — compose, schedule, share now, retry and delete posts across connected accounts. AI ideas live on Social Accounts > Ideas.',
+      'marketing /publish/calendar (old /social-calendar redirects): the publishing calendar by month, week or day — compose a post with one or many media (a carousel where the network takes one), schedule, publish now, send for approval, share now, retry and delete across connected accounts. AI ideas live on Social Accounts > Ideas. A MARKETING_EDITOR writes and schedules too, but every send is parked for a manager (social.publish.resolver.ts).',
     sub_flows: [
+      {
+        name: 'Carousel posts, approval and the week and day views',
+        description:
+          'A post carries an ordered media list (SocialScheduledPostInput.media); PUBLISH_RULES caps it per network (Instagram 10, Facebook 10 images only, Threads 20, LinkedIn 20 images, X 4 images, YouTube one video). needs_approval parks the post as PENDING_APPROVAL and opens an approval run; the decision on /approvals schedules it or sends it back to Draft with the note.',
+        steps: [
+          [
+            'Pick three images and Instagram, Facebook and Threads, then Schedule',
+            'The platform checks show "3 / 10 media" per network; the post goes out as one carousel on each; the calendar item and the card show "3 media"',
+          ],
+          [
+            'Add a video as the second item with Facebook picked',
+            'Error "Facebook takes one video on its own, not in a carousel" on the media field; X or LinkedIn with a video says the network cannot take video',
+          ],
+          [
+            'Pick five images with X among the targets',
+            'Error "X takes at most 4 media"',
+          ],
+          [
+            'Switch on Needs approval and press Send for approval',
+            'Toast says the post was sent for approval; it sits in the Awaiting approval list with an "Open approvals" link, and an AWAITING_APPROVAL run "Approve \"<text>\" for N networks" appears on /approvals',
+          ],
+          [
+            'Approve the run on /approvals',
+            'The post becomes SCHEDULED and goes out at its time; its publish run hangs under the approval run (parent) in Activity',
+          ],
+          [
+            'Request changes with a note instead',
+            'The post returns to Drafts with "Sent back: <note>" on its card and in the composer; submitting it again clears the note',
+          ],
+          [
+            'Schedule a post with a MARKETING_EDITOR token without asking for approval',
+            'It is parked for approval anyway; shareScheduledSocialPostNow with that token answers FORBIDDEN "Access Denied"',
+          ],
+          [
+            'Switch the calendar to Week, then Day, and press next',
+            'Week shows the seven days of the current week and steps a week at a time; Day shows one day’s agenda with its "+" (none for a past day) and steps a day; Month is unchanged',
+          ],
+        ],
+      },
       {
         name: 'Schedule, edit, retry and share-now a social post',
         description:
           'createScheduledSocialPost puts a post on its date, updateScheduledSocialPost edits it, shareScheduledSocialPostNow sends it at once and retryScheduledSocialPost re-sends to the networks that failed; ideas come from generateSocialIdeas on the Social Accounts Ideas tab.',
         steps: [
           [
-            'Open /social-calendar with no account connected',
+            'Open /publish/calendar with no account connected',
             'Info "No social account is connected yet. Connect Instagram, Facebook or LinkedIn to start posting." with "Connect accounts"',
           ],
           [
@@ -1869,6 +2133,188 @@ export const STAFF_GAP_FLOWS: readonly CatalogueFlow[] = [
             'On Social Accounts > Ideas press "Generate ideas"',
             'Toast "<N> new ideas are ready" and idea cards appear with "Use this idea"',
           ],
+        ],
+      },
+    ],
+  },
+  {
+    name: 'Marketing: Pod promotions',
+    description:
+      'marketing /publish/pod-promos: for every upcoming, published, public pod that passes the settings filters, the planner (every 15 minutes, one POD_PROMO run per pass with a step per pod) makes a tracking short link to the pod page, renders a banner from the pod (PORTRAIT 1080x1350 or SQUARE 1080x1080), writes a caption and schedules a post days_before days ahead of the start at post_hour in the admin time zone; a cancelled, hidden or rescheduled pod cancels or moves its waiting post. Read SUPER_ADMIN, CITY_ADMIN, MARKETING_MANAGER, MARKETING_EDITOR, MARKETING_READER; settings, Promote now, Make a new banner and Cancel SUPER_ADMIN and MARKETING_MANAGER; editors can preview (podPromo.resolver.ts).',
+    sub_flows: [
+      {
+        name: 'Settings, preview and promote now',
+        description:
+          'updatePodPromoSettings saves the schedule, accounts, approval, filters, banner shape, call to action and campaign prefix; previewPodPromo renders a banner and caption without scheduling; createPodPromo promotes one pod at once.',
+        steps: [
+          [
+            'As a MARKETING_EDITOR open /publish/pod-promos',
+            'The settings show read-only with "Only marketing managers can change these settings."; no Save settings, Promote now, Make a new banner or Cancel promotion',
+          ],
+          [
+            'As a manager switch Promote pods automatically on with no account picked',
+            'Error "Pick at least one account before switching promotions on." under Post to and Save settings stays disabled',
+          ],
+          [
+            'Set Days before the pod to 31, or a campaign prefix of "Pod Promo"',
+            'Errors "Enter a number from 1 to 30." and "Use lowercase letters, digits and single dashes."',
+          ],
+          [
+            'Pick an Instagram account, 3 days, 18:00 and Save settings',
+            'Toast "Promotion settings saved" and "Scheduled posts are filed under <name>, who last saved these settings."',
+          ],
+          [
+            'Press Preview for a pod and pick an upcoming pod',
+            'The banner shows the pod photo, title, date and time in the admin format, place and price (or Free) with the call to action; the caption and "With the current settings this posts <when>." show',
+          ],
+          [
+            'Press Promote now',
+            'Toast "<title> is being promoted"; the pod appears in the table as Scheduled with its banner thumbnail; the post sits on /publish/calendar and, with approval on, on /approvals',
+          ],
+          [
+            'Pick the same pod again in the preview',
+            'Its row shows Scheduled and the button reads "Already promoted" (disabled)',
+          ],
+        ],
+      },
+      {
+        name: 'Tracking, re-banner and cancel',
+        description:
+          'Each promotion carries a short link (utm_campaign <prefix>-<pod short id>); podPromo(id) reads clicks, unique visitors, signups, bookings of this pod after a click, payments and revenue attributed to the link, and the post likes and comments once synced.',
+        steps: [
+          [
+            'Open a promotion row',
+            'The drawer shows the banner, the caption, the tracking link with Copy link (Copied once copied), the funnel Clicked > Signed up > Booked this pod > Paid with revenue, and links to the calendar and the pod page',
+          ],
+          [
+            'Follow the tracking link, sign up and book the pod',
+            'Reopening the drawer counts the click, the signup and the booking; a paid booking adds a payment and its amount to revenue',
+          ],
+          [
+            'Press Make a new banner',
+            'Toast "A new banner is on the post" and the banner refreshes',
+          ],
+          [
+            'Press Cancel promotion and confirm',
+            'Toast "Promotion cancelled"; the row shows Cancelled and the waiting post is gone from the calendar',
+          ],
+          [
+            'Cancel the pod itself, or move its start, before the post goes out',
+            'On the next pass the promotion turns Cancelled (post removed), or its post moves to the new days-before slot with a new banner',
+          ],
+        ],
+      },
+    ],
+  },
+  {
+    name: 'Marketing: All leads',
+    description:
+      'marketing /leads over the one lead pipeline (marketing_leads): every lead from every source — the Instagram search (fed as the last step of its LEAD_SEARCH run and by the boot migration migrateIgLeadsToPipeline), a lead typed in, a CSV import (a LEAD_IMPORT run) — deduplicated on write by phone (last ten digits), email, website host or Instagram handle, worked through stage, owner and notes, and promoted one way into the CRM through its own create functions. Read/write SUPER_ADMIN, CITY_ADMIN, MARKETING_MANAGER, MARKETING_EDITOR; promote SUPER_ADMIN and MARKETING_MANAGER; the owner picker reads audienceListOwners, so it shows for SUPER_ADMIN, CITY_ADMIN and MARKETING_MANAGER only (marketingLead.resolver.ts).',
+    sub_flows: [
+      {
+        name: 'Read the pipeline and open a lead',
+        description:
+          'marketingLeadSummary feeds one card per stage; marketingLeadsTable pages the leads with pipeline, stage, source, owner, city, score and has_crm_ref filters and a search over name, company, contacts, website, handle and city; marketingLead loads the drawer. The URL can pin a stage or a pipeline.',
+        steps: [
+          [
+            'Open /leads',
+            'Header "All leads" with its intro and a first-run tour; a card for All leads and one per stage (New, Contacted, Replied, Qualified, Converted, Lost); a table with Lead, Pipeline, Stage, Source, Fit, Owner, City and Updated; New lead and Import CSV beside the search',
+          ],
+          ['Press the Qualified card, or open /leads?stage=QUALIFIED&pipeline=VENUE', 'The table is pinned to that stage (and pipeline); a value that names nothing is ignored'],
+          [
+            'Open a row',
+            'A drawer with the stage chip, company, pipeline, source, city, fit (score/100 with its reason, or "Not scored"), owner, tags; the contacts as tel:, mailto:, website and @handle links; one "Move to <stage>" button per other stage; Notes with an Add note box; History newest first',
+          ],
+          ['Run an Instagram lead search, then open /leads', 'Each profile it saved is a lead with source Instagram, pipeline General, its fit score, published contacts and handle; its run on Activity ends with the step "Add to the lead pipeline"'],
+        ],
+      },
+      {
+        name: 'Work a lead: stage, owner, notes',
+        description:
+          'setMarketingLeadStage records "<from> → <to>" on the timeline and refuses LOST without a note (the note is kept on the lead); assignMarketingLeadOwner needs a living user; addMarketingLeadNote keeps who wrote it.',
+        steps: [
+          ['Press "Move to Contacted"', 'Toast "Moved to Contacted."; the chip and the card counts follow; History gains "Stage · NEW → CONTACTED" under the person\'s name'],
+          ['Press "Move to Lost" and confirm without a reason', 'Dialog "Mark this lead as lost?" says "Say why the lead was lost." and stays open'],
+          ['Give a reason and press Mark lost', 'The lead is Lost, the reason is the newest note, and History reads "CONTACTED → LOST: <reason>"'],
+          ['As a manager press Change beside Owner, pick a person, Save', 'Toast "Owner saved."; the owner shows in the drawer and the Owner column; History gains "Assigned to <name>"'],
+          ['As a MARKETING_EDITOR open the same lead', 'No Change beside Owner and no Promote to CRM; stage buttons and notes still work'],
+          ['Press Add note with an empty box', '"Write the note first." under the box; a note over 2000 characters says so'],
+          ['Write a note and press Add note', 'Toast "Note added."; the note tops the list with the writer and time, and History gains a Note entry'],
+        ],
+      },
+      {
+        name: 'Add a lead by hand, with dedupe',
+        description:
+          'createMarketingLead goes through the same upsert every source uses: a lead sharing a phone (last ten digits), email, website host or handle with one already here fills that row\'s gaps and gets a "Seen again from MANUAL" timeline entry instead of a second row; the dialog says so.',
+        steps: [
+          ['Press New lead and submit the empty form', '"Give the lead a name." under Name; a bad email, phone (6-15 digits), website or handle says so under its field'],
+          ['Fill a name, pick a pipeline, add a phone, press Add lead', 'Toast "Lead added."; the dialog closes; the drawer opens on the new lead with source "Entered by hand"'],
+          ['Add another lead with the same phone written as +91 and spaces', 'Toast "That lead was already here. The details were added to it."; the drawer opens on the existing lead, whose History ends "Seen again · Seen again from MANUAL"'],
+          ['Edit a lead (updateMarketingLead) to a phone another lead holds', 'Refused: "Another lead already has that phone, email, website or handle."'],
+        ],
+      },
+      {
+        name: 'Import a CSV',
+        description:
+          'The page parses the file, guesses which column holds what from the header, shows the first rows and the rows that will be skipped (no name, bad email/phone/website/handle), then importMarketingLeads(rows, mapping) adds or merges every usable row and reports each one; the import is a LEAD_IMPORT run with steps "Check the rows" and "Add or merge the leads".',
+        steps: [
+          ['Press Import CSV and pick a .xlsx', '"Pick a .csv file."'],
+          ['Pick a CSV with a header and three rows, one with phone "12"', '"3 rows found in <file>."; Name, Email and Phone are mapped from the header; the preview shows the rows; "1 rows will be skipped · Row 3 · "12" is not a phone number"'],
+          ['Pick a pipeline and press "Import 3 rows"', '"<n> added, <m> merged, 1 skipped." with the skipped row and its reason, and a link "See the run on Activity" to /activity?workflow=LEAD_IMPORT; the table and cards reload'],
+          ['Open the run on Activity', 'Workflow "Lead import", steps Check the rows ("2 usable, 1 skipped") and Add or merge the leads ("<n> added, <m> merged")'],
+        ],
+      },
+      {
+        name: 'Promote a lead to the CRM',
+        description:
+          'promoteMarketingLeadToCrm(id, kind) makes the CRM record through crmService.createVenueLead / createHostLead / createEcommLead (so the CRM\'s own phone-uniqueness rule applies), stores crm_ref on the lead, adds a PROMOTED timeline entry, and refuses a second promotion, a kind the pipeline does not fit (VENUE→VENUE, HOST→HOST, BRAND/ADVERTISER→ECOMM; INFLUENCER and GENERAL cannot be promoted) and a venue lead without a city. The row is claimed before the record is made, so two clicks make one record.',
+        steps: [
+          ['As a manager open a Venue lead with a city and press Promote to CRM', 'Dialog "Promote to the CRM" with Becomes preset to "venue lead"'],
+          ['Confirm', 'Toast "Promoted. Sales can see the venue lead in the CRM now."; the drawer shows "In the CRM as a venue lead." with "Open in CRM" leading to the CRM portal\'s /venue-leads/<id>/view; History gains "Promoted"'],
+          ['Press Promote again', 'The button is gone; the API refuses with "This lead was already promoted to a VENUE lead."'],
+          ['Open a Host lead and pick "ecomm lead" in Becomes', 'Refused: "A HOST lead becomes a HOST lead in the CRM, not ECOMM."'],
+          ['Open an Influencer or General lead', 'Promote is disabled with "Only Venue, Host, Brand and Advertiser leads can be promoted."'],
+          ['Promote a Venue lead whose phone a CRM venue lead already has', 'The CRM\'s refusal "A venue lead with this phone number already exists" is shown; the lead stays unpromoted and can be promoted once the clash is fixed'],
+          ['Promote with a MARKETING_EDITOR token', 'Access Denied'],
+        ],
+      },
+    ],
+  },
+  {
+    name: 'Marketing: Outreach sequences',
+    description:
+      'marketing /outreach/sequences over outreach_sequences, outreach_enrollments, outreach_sends and outreach_tasks: a sequence is an ordered list of EMAIL, WHATSAPP (an AiSensy campaign the Communications portal lists; sent only when AiSensy reports its template APPROVED), DM_TASK (a hand-sent Instagram DM) and WAIT steps; leads are enrolled once per sequence (unique sequence+lead); a five-minute tick on the scheduler leader sends due steps outside quiet hours and within the daily limit, claiming each (enrollment, step) under a unique index before sending, and records the tick as one OUTREACH run with a step per send. Read SUPER_ADMIN, CITY_ADMIN, MARKETING_MANAGER, MARKETING_EDITOR; activate, enroll, pause, resume and remove SUPER_ADMIN and MARKETING_MANAGER (outreach.resolver.ts).',
+    sub_flows: [
+      {
+        name: 'Build and switch on a sequence',
+        description: 'saveOutreachSequence validates every step; setOutreachSequenceActive re-checks them before going live.',
+        steps: [
+          ['Open /outreach/sequences as a manager', 'Header, intro and a first-run tour; tabs Sequences, Enrollments and DM tasks'],
+          ['Create a sequence: Email, Wait 3 days, WhatsApp, DM task; save', 'The card lists the four steps, sends today 0 against the daily limit, and is Off'],
+          ['Save a sequence that ends with a wait, or a WhatsApp step naming a campaign the Communications portal does not list', 'Refused: "A sequence cannot end with a wait." / "<name> is not a WhatsApp campaign the Communications portal lists."'],
+          ['As a MARKETING_EDITOR edit an active sequence, or press its switch', 'Saving is refused (only a manager can change a live sequence) and no switch is offered'],
+        ],
+      },
+      {
+        name: 'Enroll leads and watch them walk',
+        description: 'enrollLeads takes open leads (not converted or lost) of the sequence pipeline; the tick sends step 1 and folds waits into next_at.',
+        steps: [
+          ['Press Enroll leads, filter by stage New', 'The live count matches; Enroll reports enrolled, already in and not taken'],
+          ['Enroll the same leads again', 'They are counted as already in; no second enrollment'],
+          ['Wait for a tick outside quiet hours', 'Each lead gets the email (with the unsubscribe line); the lead moves New to Contacted with an Outreach entry; the enrollment waits 3 days; Activity shows an OUTREACH run with one step per send'],
+          ['Set the daily limit to 1 with two leads due', 'One send this tick; the other waits until tomorrow'],
+          ['Tick inside quiet hours', 'Nothing is sent and no run is recorded'],
+          ['Use a campaign whose template is not approved', 'The enrollment is Failed with the reason; Resume retries that step once it is approved'],
+        ],
+      },
+      {
+        name: 'Replies, opt-outs and DM tasks',
+        description: 'The WhatsApp webhook and the connected Gmail inbound door call the outreach reply hook after STOP/START is applied.',
+        steps: [
+          ['The lead replies on WhatsApp or email', 'Its enrollments become Replied (when stop on reply is on), open DM tasks are cancelled, and the lead moves to Replied with an Outreach history entry'],
+          ['The lead replies STOP on WhatsApp, or unsubscribes from marketing email', 'Its enrollments become Opted out; nothing more is sent'],
+          ['A DM task step falls due', 'A task with the DM text and Open on Instagram appears under DM tasks; nothing is sent automatically'],
+          ['Press Mark done', 'The task closes and the walk carries on from the next step'],
         ],
       },
     ],

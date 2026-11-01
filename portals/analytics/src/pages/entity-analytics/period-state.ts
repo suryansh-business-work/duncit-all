@@ -12,12 +12,20 @@ export interface PeriodState {
   range: { from: string; to: string } | null;
   compare: AnalyticsCompare;
   city: string | null;
+  /** On the Product pages, one platform (ios, android, web, mweb); null for every one. */
+  platform: string | null;
 }
 
-export const initialPeriod = (): PeriodState => ({ days: DEFAULT_PERIOD, range: null, compare: 'PREVIOUS', city: null });
+export const initialPeriod = (): PeriodState => ({
+  days: DEFAULT_PERIOD,
+  range: null,
+  compare: 'PREVIOUS',
+  city: null,
+  platform: null,
+});
 
 /** The state as the `entityAnalytics` query's arguments. */
 export function periodVariables(state: PeriodState): Omit<QueryEntityAnalyticsArgs, 'entity'> {
-  const shared = { compare: state.compare, city: state.city };
+  const shared = { compare: state.compare, city: state.city, platform: state.platform };
   return state.range ? { ...shared, from: state.range.from, to: state.range.to } : { ...shared, days: state.days };
 }

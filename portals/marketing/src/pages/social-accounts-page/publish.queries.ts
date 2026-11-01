@@ -1,13 +1,19 @@
 import { gql } from '@apollo/client';
 import type { SocialPlatform } from './queries';
 
-export type SocialPublishStatus = 'DRAFT' | 'SCHEDULED' | 'PUBLISHING' | 'PUBLISHED' | 'PARTIAL' | 'FAILED';
+export type SocialPublishStatus = 'DRAFT' | 'PENDING_APPROVAL' | 'SCHEDULED' | 'PUBLISHING' | 'PUBLISHED' | 'PARTIAL' | 'FAILED';
 export type SocialTargetStatus = 'PENDING' | 'PUBLISHED' | 'FAILED';
 export type SocialMediaType = 'IMAGE' | 'VIDEO';
 export type SocialPublishMode = 'DRAFT' | 'SCHEDULE' | 'NOW';
-export type SocialQueueView = 'QUEUE' | 'DRAFTS' | 'SENT';
+export type SocialQueueView = 'QUEUE' | 'APPROVALS' | 'DRAFTS' | 'SENT';
 export type SocialIdeaStatus = 'NEW' | 'USED' | 'DISMISSED';
 export type SocialIdeaFormat = 'TEXT' | 'IMAGE' | 'VIDEO';
+
+/** One item of a post's media, in the order it is shown — a carousel is several. */
+export interface SocialPostMedia {
+  url: string;
+  type: SocialMediaType;
+}
 
 export interface SocialPublishTarget {
   account_id: string;
@@ -22,12 +28,20 @@ export interface SocialPublishTarget {
 export interface SocialScheduledPost {
   id: string;
   text: string;
+  /** The first media item, kept for posts written before carousels. */
   media_url: string | null;
   media_type: SocialMediaType | null;
+  media: SocialPostMedia[];
   status: SocialPublishStatus;
   scheduled_at: string | null;
   published_at: string | null;
   idea_id: string | null;
+  needs_approval: boolean;
+  /** Why a reviewer sent it back — shown to the author on the draft. */
+  review_note: string | null;
+  approval_run_id: string | null;
+  /** Instagram usernames invited as collaborators. */
+  collaborators: string[];
   targets: SocialPublishTarget[];
 }
 
@@ -38,6 +52,7 @@ export interface SocialCalendarItem {
   status: SocialPublishStatus;
   text: string;
   media_url: string | null;
+  media_count: number;
   permalink: string | null;
   platforms: SocialPlatform[];
   account_names: string[];
@@ -59,12 +74,18 @@ export interface SocialIdea {
 
 export interface SocialScheduledPostInput {
   text: string;
-  media_url: string | null;
-  media_type: SocialMediaType | null;
+  /** Replaces media_url / media_type on the server; the first item fills them. */
+  media: SocialPostMedia[];
   account_ids: string[];
   mode: SocialPublishMode;
   scheduled_at: string | null;
   idea_id: string | null;
+  /** With SCHEDULE or NOW the server parks the post as PENDING_APPROVAL for a manager. */
+  needs_approval: boolean;
+  /** The Reel Studio project the post was made from, when it was. */
+  reel_project_id?: string | null;
+  /** Instagram usernames to invite as collaborators (Instagram takes at most 3). */
+  collaborators: string[];
 }
 
 const SCHEDULED_POST_FIELDS = gql`
@@ -73,10 +94,18 @@ const SCHEDULED_POST_FIELDS = gql`
     text
     media_url
     media_type
+    media {
+      url
+      type
+    }
     status
     scheduled_at
     published_at
     idea_id
+    needs_approval
+    review_note
+    approval_run_id
+    collaborators
     targets {
       account_id
       account_name
@@ -131,6 +160,7 @@ export const SOCIAL_CALENDAR = gql`
       status
       text
       media_url
+      media_count
       permalink
       platforms
       account_names

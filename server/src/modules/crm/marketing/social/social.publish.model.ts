@@ -24,13 +24,27 @@ const targetSchema = new Schema(
   { _id: false }
 );
 
+/** One picture or clip of a post, in the order they show. */
+const mediaSchema = new Schema(
+  {
+    url: { type: String, required: true },
+    type: { type: String, enum: SOCIAL_MEDIA_TYPES, required: true },
+  },
+  { _id: false }
+);
+
 /**
- * A post written in Duncit — Buffer's queue item. One text and one piece of
- * media go to every target; the post's status is the sum of its targets'.
+ * A post written in Duncit — Buffer's queue item. One text and its media go
+ * to every target; the post's status is the sum of its targets'.
+ *
+ * `media` is every piece in order (two or more make a carousel); `media_url`
+ * and `media_type` are always written as its first item, so the calendar, the
+ * syncs and every reader of one piece of media keep working.
  */
 const scheduledPostSchema = new Schema(
   {
     text: { type: String, default: '' },
+    media: { type: [mediaSchema], default: [] },
     media_url: { type: String, default: '' },
     media_type: { type: String, enum: [...SOCIAL_MEDIA_TYPES, null], default: null },
     status: { type: String, enum: SOCIAL_PUBLISH_STATUSES, default: 'DRAFT', index: true },
@@ -40,6 +54,18 @@ const scheduledPostSchema = new Schema(
     targets: { type: [targetSchema], default: [] },
     /** The AI idea this post was written from, if any. */
     idea_id: { type: String, default: '' },
+    /** The Reel Studio project the posted reel was cut in; its analytics read back through this. */
+    reel_project_id: { type: String, default: '', index: true },
+    /** The pod a Pod promotion made this post for; its tracking figures read back through it. */
+    pod_id: { type: String, default: '', index: true },
+    /** Instagram usernames invited as collaborators (Instagram only, at most 3). */
+    collaborators: { type: [String], default: [] },
+    /** A reviewer must say yes before it goes out; once they have, it stays true as the record of that. */
+    needs_approval: { type: Boolean, default: false },
+    /** Why the reviewer sent it back; shown to the author on the draft. */
+    review_note: { type: String, default: '' },
+    /** The marketing run that waited for the decision; the publish run hangs under it. */
+    approval_run_id: { type: String, default: '' },
     created_by: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     updated_by: { type: Schema.Types.ObjectId, ref: 'User', default: null },
   },
@@ -47,6 +73,8 @@ const scheduledPostSchema = new Schema(
 );
 // The publisher's claim query: the oldest due post still waiting.
 scheduledPostSchema.index({ status: 1, scheduled_at: 1 });
+// The dashboard and Marketing › Analytics count what went out in a window.
+scheduledPostSchema.index({ status: 1, published_at: -1 });
 
 /** An AI-suggested post, kept so the team can pick it up later — Buffer's Ideas board. */
 const ideaSchema = new Schema(

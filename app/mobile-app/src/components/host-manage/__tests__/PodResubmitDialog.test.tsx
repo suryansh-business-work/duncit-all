@@ -49,7 +49,7 @@ const TILE = `slot-tile-${START}`;
 
 /** The picked venue's calendar: one start, closing two hours later (none until a venue is picked). */
 const calendar =
-  (over: Partial<{ loading: boolean }> = {}) =>
+  (over: Partial<{ loading: boolean; tiles: unknown[] }> = {}) =>
   (venueId: string) => ({
     loading: false,
     failed: false,
@@ -166,7 +166,8 @@ describe('PodResubmitDialog', () => {
   });
 
   it('shows the calendar loading for a picked venue', async () => {
-    mockUseOfferCalendar.mockImplementation(calendar({ loading: true }));
+    // While the read is in flight the hook has no calendar yet, so no tiles (as useOfferCalendar does).
+    mockUseOfferCalendar.mockImplementation(calendar({ loading: true, tiles: [] }));
     renderWithProviders(<PodResubmitDialog pod={pod} onClose={jest.fn()} onSaved={jest.fn()} />);
     await waitFor(() => expect(screen.getByTestId('resubmit-venue-v1')).toBeOnTheScreen());
     fireEvent.press(screen.getByTestId('resubmit-venue-v1'));

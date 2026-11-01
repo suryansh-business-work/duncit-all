@@ -331,7 +331,23 @@ describe('pod settlement (engine v2: venue slot price off the pool, host keeps t
     const host = await seedHost();
     const venue = await seedVenue(host._id);
     const pod = await seedPod(host._id, venue._id);
-    const billOnly = { slot_price: 0, slot_linked: false, bill: 450, slot_included: false, amount: 450 };
+    const billOnly = {
+      slot_price: 0,
+      pricing_mode: 'FLAT',
+      pax: 0,
+      overtime_hours: 0,
+      overtime_amount: 0,
+      slot_linked: false,
+      bill: 450,
+      slot_included: false,
+      amount: 450,
+      // No slot: no snapshot (so no commission on top), no minimum, no extras, no agreed terms.
+      commission_on_top: null,
+      min_guests: 0,
+      extra: 0,
+      agreed_model: null,
+      agreed_rate: null,
+    };
     expect(await venueChargeForPod(pod, 450)).toEqual(billOnly);
     expect(await venueChargeForPod(pod, 450, false)).toEqual(billOnly);
     expect(await venueChargeForPod(pod, 450, true)).toEqual(billOnly);

@@ -7,9 +7,15 @@ import { ShortLinkClickModel } from '../../shortLinkClick.model';
 import { MarketingCampaignModel } from '../../marketing.model';
 import { AudienceListModel } from '../../audienceList.model';
 import { AdRequestModel } from '@modules/ads/ads.model';
+import { SocialAccountModel, SocialPostModel } from '../../social/social.model';
+import { SocialScheduledPostModel } from '../../social/social.publish.model';
+import { IgLeadModel } from '../../igLeads/igLead.model';
+import { MarketingRunModel } from '../../runs/marketingRun.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { Types } from 'mongoose';
 import { makeContext } from '@test/harness';
+
+const DAY_MS = 86_400_000;
 
 const MJML = '<mjml><mj-body><mj-text>Hello there</mj-text></mj-body></mjml>';
 const ANDROID =
@@ -70,6 +76,9 @@ describe('marketingDashboardService.overview', () => {
     expect(board.campaigns.click_rate).toBe(0);
     expect(board.links.top).toEqual([]);
     expect(board.campaigns.recent).toEqual([]);
+    expect(board.social).toMatchObject({ connected: 0, attention: 0, posts: 0, engagement: 0, by_platform: [], published: 0, upcoming: 0, failed: 0 });
+    expect(board.leads).toEqual({ found: 0, qualified: 0, qualified_score: 70, by_status: [] });
+    expect(board.runs).toEqual({ awaiting_approval: 0, running: 0, completed: 0, failed: 0, spend: 0 });
   });
 
   it('totals clicks, visitors, conversions and revenue from the links', async () => {
@@ -221,6 +230,80 @@ describe('marketingDashboardService.overview', () => {
     const board = await marketingDashboardService.overview(90);
     expect(board.days).toBe(90);
     expect(board.links.total_clicks).toBe(1);
+  });
+  it('counts healthy accounts, the window’s engagement by network, and the publishing queue', async () => {
+    let n = 0;
+    const account = (over: Record<string, unknown>) =>
+      SocialAccountModel.create({ provider: 'INSTAGRAM', platform: 'INSTAGRAM', external_id: `ig-${++n}`, ...over });
+    await account({ status: 'CONNECTED' });
+    // Still connected, but yesterday's health check could not read the profile.
+    await account({ status: 'CONNECTED', health_ok: false, health_message: 'Profile read failed' });
+    await account({ status: 'EXPIRED' });
+    const post = (over: Record<string, unknown>) =>
+      SocialPostModel.create({
+        account_id: 'acc-1',
+        platform: 'INSTAGRAM',
+        external_id: `p-${++n}`,
+        published_at: new Date(),
+        engagement: 10,
+        views: 100,
+        ...over,
+      });
+    await post({});
+    await post({ platform: 'THREADS', engagement: 25, views: null });
+    // Zero engagement draws no bar, and last quarter's post is outside the window.
+    await post({ platform: 'FACEBOOK', engagement: 0 });
+    await post({ published_at: new Date(Date.now() - 60 * DAY_MS), engagement: 999 });
+    const queued = (over: Record<string, unknown>) => SocialScheduledPostModel.create({ text: 'hello', ...over });
+    await queued({ status: 'PUBLISHED', published_at: new Date() });
+    await queued({ status: 'PARTIAL', published_at: new Date() });
+    await queued({ status: 'PUBLISHED', published_at: new Date(Date.now() - 60 * DAY_MS) });
+    await queued({ status: 'SCHEDULED', scheduled_at: new Date(Date.now() + DAY_MS) });
+    // Overdue is the publisher's problem, not an upcoming post.
+    await queued({ status: 'SCHEDULED', scheduled_at: new Date(Date.now() - DAY_MS) });
+    await queued({ status: 'FAILED' });
+
+    const { social } = await marketingDashboardService.overview();
+    expect(social).toMatchObject({ connected: 2, attention: 2, posts: 3, engagement: 35, views: 200, published: 2, upcoming: 1, failed: 2 });
+    expect(social.by_platform).toEqual([
+      { label: 'THREADS', count: 25 },
+      { label: 'INSTAGRAM', count: 10 },
+    ]);
+  });
+
+  it('counts the leads a window found, the qualified ones, and the pipeline by stage', async () => {
+    let n = 0;
+    const lead = (over: Record<string, unknown>) => IgLeadModel.create({ username: `cafe_${++n}`, ...over });
+    await lead({ fit_score: 90 });
+    await lead({ fit_score: 70, status: 'CONTACTED' });
+    await lead({ fit_score: 40, status: 'CONTACTED' });
+    await lead({ fit_score: null });
+    const old = await lead({ fit_score: 95, status: 'CONVERTED' });
+    // Found last quarter: still in the pipeline, not in this window's count.
+    await IgLeadModel.collection.updateOne({ _id: old._id }, { $set: { created_at: new Date(Date.now() - 60 * DAY_MS) } });
+
+    const { leads } = await marketingDashboardService.overview();
+    expect(leads).toMatchObject({ found: 4, qualified: 2, qualified_score: 70 });
+    expect(leads.by_status).toEqual([
+      { label: 'NEW', count: 2 },
+      { label: 'CONTACTED', count: 2 },
+      { label: 'CONVERTED', count: 1 },
+    ]);
+  });
+
+  it('counts automation runs and what the window’s AI steps cost', async () => {
+    const run = (over: Record<string, unknown>) => MarketingRunModel.create({ workflow: 'SOCIAL_PUBLISH', name: 'Publish', ...over });
+    await run({ status: 'AWAITING_APPROVAL' });
+    await run({ status: 'RUNNING' });
+    await run({ status: 'PENDING' });
+    await run({ status: 'COMPLETED', finished_at: new Date(), cost: { amount: 1.25 } });
+    await run({ status: 'FAILED', finished_at: new Date() });
+    await run({ status: 'PARTIAL', finished_at: new Date(), cost: { amount: 0.5 } });
+    const old = await run({ status: 'FAILED', finished_at: new Date(Date.now() - 60 * DAY_MS), cost: { amount: 100 } });
+    await MarketingRunModel.collection.updateOne({ _id: old._id }, { $set: { created_at: new Date(Date.now() - 60 * DAY_MS) } });
+
+    const { runs } = await marketingDashboardService.overview();
+    expect(runs).toEqual({ awaiting_approval: 1, running: 2, completed: 1, failed: 2, spend: 1.75 });
   });
 });
 

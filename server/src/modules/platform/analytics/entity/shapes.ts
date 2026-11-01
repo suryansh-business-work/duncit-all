@@ -40,7 +40,8 @@ export type AnalyticsEntity =
   | 'LOGS'
   | 'WHATSAPP_COSTS'
   | 'OPENAI_COSTS'
-  | 'CONTACTS';
+  | 'CONTACTS'
+  | 'PRODUCT';
 /**
  * BYTES is a size, DURATION is milliseconds, GRADE is SonarQube's 1-5 rating
  * (1 is A), USD is an amount in US dollars (what OpenAI bills in, while

@@ -3,6 +3,7 @@ import type { ReactElement } from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MockedProvider } from '@apollo/client/testing/react';
 import { gql } from '@apollo/client';
+import { MemoryRouter } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 const navigate = vi.fn();
@@ -73,9 +74,11 @@ const chatMock = (rooms: unknown[], supers: unknown[] = [{ id: 's1', slug: 'spor
 const setup = (mocks: unknown[], ui: ReactElement) =>
   render(
     <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks as never}>
-      <DuncitLocalizationProvider>
-        {ui}
-      </DuncitLocalizationProvider>
+      <MemoryRouter>
+        <DuncitLocalizationProvider>
+          {ui}
+        </DuncitLocalizationProvider>
+      </MemoryRouter>
     </MockedProvider>,
   );
 

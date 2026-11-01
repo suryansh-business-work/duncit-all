@@ -134,7 +134,9 @@ describe('CreatePodPage', () => {
     renderPage([optionsMock(baseOptions()), draftMock('d1')], '/create-pod/d1');
     expect(await screen.findByTestId('stepper')).toBeInTheDocument();
     expect(screen.getByTestId('draft-id')).toHaveTextContent('d1');
-    expect(screen.getByTestId('step')).toHaveTextContent('2');
+    // A draft with no stepper version is a five-step one: its Venue & Slot (2)
+    // now lives on Where & when (1).
+    expect(screen.getByTestId('step')).toHaveTextContent('1');
     // hydrateDraft stub sets location_id to 'from-draft'
     expect(screen.getByTestId('location')).toHaveTextContent('from-draft');
   });

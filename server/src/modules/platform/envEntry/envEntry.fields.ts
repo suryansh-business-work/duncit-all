@@ -348,40 +348,66 @@ export const CATEGORY_FIELDS: Record<EnvCategory, EnvFieldDef[]> = {
     { name: 'account_id', label: 'Account ID', hint: 'dash.cloudflare.com → Account Home → Account ID, in the right-hand column' },
     { name: 'domain', label: 'Domain', hint: 'The zone to move, e.g. duncit.com — the same domain as the GoDaddy entry' },
   ],
-  // The apps Marketing → Social Accounts connects through. One entry holds all
-  // four, so the Marketing page can say exactly which network is missing. Every
+  // The apps Marketing → Social Accounts connects through — ONE ENTRY PER
+  // NETWORK, edited from Marketing → Settings → Integrations. Instagram,
+  // Facebook and Threads are three apps with three entries, never one shared
+  // Meta app, so each network is set up, tested and rotated on its own. Every
   // app registers the SAME redirect URL: <server URL>/social/callback.
-  SOCIAL_APPS: [
+  SOCIAL_INSTAGRAM: [
     {
-      name: 'linkedin_client_id',
-      label: 'LinkedIn Client ID',
-      hint: 'linkedin.com/developers/apps → your app → Auth. Needs the Community Management API product (read and post as company Pages)',
+      name: 'app_id',
+      label: 'Instagram App ID',
+      hint: 'developers.facebook.com/apps → your app → Instagram → API setup with Instagram login → Instagram app ID (not the Facebook App ID)',
     },
-    { name: 'linkedin_client_secret', label: 'LinkedIn Client Secret', secret: true, hint: 'Same Auth tab, beside the Client ID' },
+    { name: 'app_secret', label: 'Instagram App Secret', secret: true, hint: 'Same page → Instagram app secret' },
+    { name: 'graph_version', label: 'Graph API Version (optional)', hint: 'e.g. v23.0; default v23.0' },
+  ],
+  SOCIAL_FACEBOOK: [
     {
-      name: 'linkedin_api_version',
-      label: 'LinkedIn API Version (optional)',
-      hint: 'YYYYMM, e.g. 202509 — LinkedIn retires a version after a year; default 202509',
+      name: 'app_id',
+      label: 'Facebook App ID',
+      hint: 'developers.facebook.com/apps → your Business app → App settings → Basic. Add Facebook Login for Business; posting to Pages needs pages_manage_posts approved',
     },
+    { name: 'app_secret', label: 'Facebook App Secret', secret: true, hint: 'App settings → Basic → App secret' },
+    { name: 'graph_version', label: 'Graph API Version (optional)', hint: 'e.g. v23.0; default v23.0' },
+  ],
+  SOCIAL_THREADS: [
     {
-      name: 'meta_app_id',
-      label: 'Meta App ID (Facebook + Instagram)',
-      hint: 'developers.facebook.com/apps → your Business app → App settings → Basic. Add Facebook Login for Business and the Instagram Graph API; posting needs pages_manage_posts and instagram_content_publish approved',
+      name: 'app_id',
+      label: 'Threads App ID',
+      hint: 'developers.facebook.com/apps → your app → Threads API → Settings → Threads App ID. Posting needs threads_content_publish',
     },
-    { name: 'meta_app_secret', label: 'Meta App Secret', secret: true, hint: 'App settings → Basic → App secret' },
-    { name: 'meta_graph_version', label: 'Meta Graph API Version (optional)', hint: 'e.g. v23.0; default v23.0' },
+    { name: 'app_secret', label: 'Threads App Secret', secret: true, hint: 'Same page → Threads App Secret' },
+    { name: 'graph_version', label: 'Threads API Version (optional)', hint: 'e.g. v1.0; default v1.0' },
+  ],
+  SOCIAL_YOUTUBE: [
     {
-      name: 'x_client_id',
-      label: 'X OAuth 2.0 Client ID',
-      hint: 'developer.x.com → your project app → Keys and tokens → OAuth 2.0 Client ID. User authentication: Read and write, Type of App: Web App (confidential client)',
-    },
-    { name: 'x_client_secret', label: 'X OAuth 2.0 Client Secret', secret: true, hint: 'Shown once, beside the Client ID' },
-    {
-      name: 'youtube_client_id',
+      name: 'client_id',
       label: 'YouTube (Google) OAuth Client ID',
       hint: 'console.cloud.google.com → Credentials → OAuth client (Web). Enable the YouTube Data API v3 on the project',
     },
-    { name: 'youtube_client_secret', label: 'YouTube (Google) OAuth Client Secret', secret: true, hint: 'GOCSPX-…' },
+    { name: 'client_secret', label: 'YouTube (Google) OAuth Client Secret', secret: true, hint: 'GOCSPX-…' },
+  ],
+  SOCIAL_LINKEDIN: [
+    {
+      name: 'client_id',
+      label: 'LinkedIn Client ID',
+      hint: 'linkedin.com/developers/apps → your app → Auth. Needs the Community Management API product (read and post as company Pages)',
+    },
+    { name: 'client_secret', label: 'LinkedIn Client Secret', secret: true, hint: 'Same Auth tab, beside the Client ID' },
+    {
+      name: 'api_version',
+      label: 'LinkedIn API Version (optional)',
+      hint: 'YYYYMM, e.g. 202509 — LinkedIn retires a version after a year; default 202509',
+    },
+  ],
+  SOCIAL_X: [
+    {
+      name: 'client_id',
+      label: 'X OAuth 2.0 Client ID',
+      hint: 'developer.x.com → your project app → Keys and tokens → OAuth 2.0 Client ID. User authentication: Read and write, Type of App: Web App (confidential client)',
+    },
+    { name: 'client_secret', label: 'X OAuth 2.0 Client Secret', secret: true, hint: 'Shown once, beside the Client ID' },
   ],
   // One-tap phone sign-in. Truecaller proves the SIM the person is holding, so
   // a verified number stands in for the WhatsApp code on login and signup.
@@ -414,6 +440,12 @@ export const CATEGORY_FIELDS: Record<EnvCategory, EnvFieldDef[]> = {
   // Google results through serper.dev, for Marketing → Instagram Leads'
   // profile discovery. Its free credit is a one-off allowance, not monthly.
   SERPER: [{ name: 'api_key', label: 'API Key', secret: true, hint: 'serper.dev → API Key (40 hex characters)' }],
+  // Claude models: the Reel Studio director and the marketing agents reason on
+  // them. Any AI Library prompt whose model starts with `claude-` is routed here.
+  ANTHROPIC: [
+    { name: 'api_key', label: 'API Key', secret: true, hint: 'console.anthropic.com → API keys (sk-ant-…)' },
+    { name: 'model', label: 'Default model (optional)', hint: 'e.g. claude-opus-5-5; a prompt in the AI Library may name its own' },
+  ],
 };
 
 /** How each category is named in the Tech portal and on the Analytics console. */
@@ -441,9 +473,15 @@ export const CATEGORY_LABELS: Record<EnvCategory, string> = {
   SONARQUBE: 'SonarQube (code analysis)',
   GODADDY: 'GoDaddy (DNS)',
   CLOUDFLARE: 'Cloudflare (DNS)',
-  SOCIAL_APPS: 'Social apps',
+  SOCIAL_INSTAGRAM: 'Instagram app',
+  SOCIAL_FACEBOOK: 'Facebook app',
+  SOCIAL_THREADS: 'Threads app',
+  SOCIAL_YOUTUBE: 'YouTube app',
+  SOCIAL_LINKEDIN: 'LinkedIn app',
+  SOCIAL_X: 'X app',
   TRUECALLER: 'Truecaller (one-tap phone sign-in)',
   SERPER: 'Serper (Google search)',
+  ANTHROPIC: 'Anthropic (Claude)',
 };
 
 /** One line under each category's title in the Tech portal: what the keys power. */
@@ -471,9 +509,15 @@ export const CATEGORY_DESCRIPTIONS: Record<EnvCategory, string> = {
   SONARQUBE: 'Code quality and security analysis',
   GODADDY: 'Domain and DNS records at GoDaddy',
   CLOUDFLARE: 'Domain and DNS records at Cloudflare',
-  SOCIAL_APPS: 'LinkedIn, Meta, X and YouTube publishing',
+  SOCIAL_INSTAGRAM: 'Connect Instagram accounts; read posts and comments; publish posts and reels',
+  SOCIAL_FACEBOOK: 'Connect Facebook Pages; read posts and comments; publish to Pages',
+  SOCIAL_THREADS: 'Connect Threads accounts; read posts and replies; publish threads',
+  SOCIAL_YOUTUBE: 'Connect YouTube channels; read videos and comments; upload videos',
+  SOCIAL_LINKEDIN: 'Connect LinkedIn Pages; read posts and comments; publish posts',
+  SOCIAL_X: 'Connect X profiles; read posts and replies; publish posts',
   TRUECALLER: 'One-tap phone sign-in',
-  SERPER: 'Finds Instagram profiles for Marketing → Instagram Leads',
+  SERPER: 'Google search results for Marketing research and lead discovery',
+  ANTHROPIC: 'Claude models behind Reel Studio and the marketing agents',
 };
 
 /**
@@ -502,13 +546,22 @@ export const CATEGORY_GROUPS: readonly {
     key: 'AI',
     label: 'AI models',
     description: 'Text, voice and generation models',
-    categories: ['OPENAI', 'GEMINI', 'SERVAM'],
+    categories: ['OPENAI', 'GEMINI', 'ANTHROPIC', 'SERVAM'],
   },
   {
     key: 'MEDIA',
     label: 'Media, maps & content',
-    description: 'Uploads, stock media, maps and social publishing',
-    categories: ['IMAGEKIT', 'PEXELS', 'GOOGLE_MAPS', 'GOOGLE_DRIVE', 'SOCIAL_APPS', 'SERPER'],
+    description: 'Uploads, stock media, maps and footage',
+    categories: ['IMAGEKIT', 'PEXELS', 'GOOGLE_MAPS', 'GOOGLE_DRIVE'],
+  },
+  {
+    // The Marketing console's own keys: edited from Marketing → Settings →
+    // Integrations (a marketing manager reaches only these), listed here too so
+    // Tech sees the whole picture.
+    key: 'MARKETING',
+    label: 'Marketing & social',
+    description: 'One app per social network, and search for research and leads',
+    categories: ['SOCIAL_INSTAGRAM', 'SOCIAL_FACEBOOK', 'SOCIAL_THREADS', 'SOCIAL_YOUTUBE', 'SOCIAL_LINKEDIN', 'SOCIAL_X', 'SERPER'],
   },
   {
     key: 'COMMERCE',
@@ -577,9 +630,15 @@ export const CATEGORY_DOCS: Record<EnvCategory, string> = {
   SONARQUBE: 'https://docs.sonarsource.com/sonarqube-community-build/user-guide/managing-tokens/',
   GODADDY: 'https://developer.godaddy.com/keys',
   CLOUDFLARE: 'https://dash.cloudflare.com/profile/api-tokens',
-  SOCIAL_APPS: 'https://developers.facebook.com/apps/',
+  SOCIAL_INSTAGRAM: 'https://developers.facebook.com/apps/',
+  SOCIAL_FACEBOOK: 'https://developers.facebook.com/apps/',
+  SOCIAL_THREADS: 'https://developers.facebook.com/apps/',
+  SOCIAL_YOUTUBE: 'https://console.cloud.google.com/apis/credentials',
+  SOCIAL_LINKEDIN: 'https://www.linkedin.com/developers/apps',
+  SOCIAL_X: 'https://developer.x.com/en/portal/dashboard',
   TRUECALLER: 'https://sdk-console-noneu.truecaller.com/',
   SERPER: 'https://serper.dev/api-key',
+  ANTHROPIC: 'https://console.anthropic.com/settings/keys',
 };
 
 /**
@@ -594,6 +653,13 @@ export const CATEGORY_API_DOCS: Partial<Record<EnvCategory, string>> = {
   GODADDY: 'https://developer.godaddy.com/doc/endpoint/domains',
   CLOUDFLARE: 'https://developers.cloudflare.com/api/resources/dns/subresources/records/',
   TRUECALLER: 'https://docs.truecaller.com/truecaller-sdk/',
+  SOCIAL_INSTAGRAM: 'https://developers.facebook.com/docs/instagram-platform/instagram-api-with-instagram-login/',
+  SOCIAL_FACEBOOK: 'https://developers.facebook.com/docs/pages-api/',
+  SOCIAL_THREADS: 'https://developers.facebook.com/docs/threads/',
+  SOCIAL_YOUTUBE: 'https://developers.google.com/youtube/v3/guides/uploading_a_video',
+  SOCIAL_LINKEDIN: 'https://learn.microsoft.com/en-us/linkedin/marketing/community-management/shares/posts-api',
+  SOCIAL_X: 'https://docs.x.com/x-api/posts/creation-of-a-post',
+  ANTHROPIC: 'https://platform.claude.com/docs/en/api/overview',
 };
 
 const secretSet = new Set<string>();
@@ -693,22 +759,32 @@ export const ENV_KEY_MAP: Record<string, { category: EnvCategory; field: string 
   CLOUDFLARE_API_TOKEN: { category: 'CLOUDFLARE', field: 'api_token' },
   CLOUDFLARE_ACCOUNT_ID: { category: 'CLOUDFLARE', field: 'account_id' },
   CLOUDFLARE_DOMAIN: { category: 'CLOUDFLARE', field: 'domain' },
-  SOCIAL_LINKEDIN_CLIENT_ID: { category: 'SOCIAL_APPS', field: 'linkedin_client_id' },
-  SOCIAL_LINKEDIN_CLIENT_SECRET: { category: 'SOCIAL_APPS', field: 'linkedin_client_secret' },
-  SOCIAL_LINKEDIN_API_VERSION: { category: 'SOCIAL_APPS', field: 'linkedin_api_version' },
-  SOCIAL_META_APP_ID: { category: 'SOCIAL_APPS', field: 'meta_app_id' },
-  SOCIAL_META_APP_SECRET: { category: 'SOCIAL_APPS', field: 'meta_app_secret' },
-  SOCIAL_META_GRAPH_VERSION: { category: 'SOCIAL_APPS', field: 'meta_graph_version' },
+  // Social apps: `SOCIAL_<PROVIDER>_<FIELD>`, one category per network (see
+  // social.credentials.ts, which derives the key from the same two parts).
+  SOCIAL_INSTAGRAM_APP_ID: { category: 'SOCIAL_INSTAGRAM', field: 'app_id' },
+  SOCIAL_INSTAGRAM_APP_SECRET: { category: 'SOCIAL_INSTAGRAM', field: 'app_secret' },
+  SOCIAL_INSTAGRAM_GRAPH_VERSION: { category: 'SOCIAL_INSTAGRAM', field: 'graph_version' },
+  SOCIAL_FACEBOOK_APP_ID: { category: 'SOCIAL_FACEBOOK', field: 'app_id' },
+  SOCIAL_FACEBOOK_APP_SECRET: { category: 'SOCIAL_FACEBOOK', field: 'app_secret' },
+  SOCIAL_FACEBOOK_GRAPH_VERSION: { category: 'SOCIAL_FACEBOOK', field: 'graph_version' },
+  SOCIAL_THREADS_APP_ID: { category: 'SOCIAL_THREADS', field: 'app_id' },
+  SOCIAL_THREADS_APP_SECRET: { category: 'SOCIAL_THREADS', field: 'app_secret' },
+  SOCIAL_THREADS_GRAPH_VERSION: { category: 'SOCIAL_THREADS', field: 'graph_version' },
+  SOCIAL_YOUTUBE_CLIENT_ID: { category: 'SOCIAL_YOUTUBE', field: 'client_id' },
+  SOCIAL_YOUTUBE_CLIENT_SECRET: { category: 'SOCIAL_YOUTUBE', field: 'client_secret' },
+  SOCIAL_LINKEDIN_CLIENT_ID: { category: 'SOCIAL_LINKEDIN', field: 'client_id' },
+  SOCIAL_LINKEDIN_CLIENT_SECRET: { category: 'SOCIAL_LINKEDIN', field: 'client_secret' },
+  SOCIAL_LINKEDIN_API_VERSION: { category: 'SOCIAL_LINKEDIN', field: 'api_version' },
+  SOCIAL_X_CLIENT_ID: { category: 'SOCIAL_X', field: 'client_id' },
+  SOCIAL_X_CLIENT_SECRET: { category: 'SOCIAL_X', field: 'client_secret' },
   TRUECALLER_ANDROID_CLIENT_ID: { category: 'TRUECALLER', field: 'android_client_id' },
   TRUECALLER_APP_KEY: { category: 'TRUECALLER', field: 'app_key' },
   TRUECALLER_IOS_APP_LINK: { category: 'TRUECALLER', field: 'ios_app_link' },
   TRUECALLER_PARTNER_NAME: { category: 'TRUECALLER', field: 'partner_name' },
   TRUECALLER_REGION: { category: 'TRUECALLER', field: 'region' },
   SERPER_API_KEY: { category: 'SERPER', field: 'api_key' },
-  SOCIAL_X_CLIENT_ID: { category: 'SOCIAL_APPS', field: 'x_client_id' },
-  SOCIAL_X_CLIENT_SECRET: { category: 'SOCIAL_APPS', field: 'x_client_secret' },
-  SOCIAL_YOUTUBE_CLIENT_ID: { category: 'SOCIAL_APPS', field: 'youtube_client_id' },
-  SOCIAL_YOUTUBE_CLIENT_SECRET: { category: 'SOCIAL_APPS', field: 'youtube_client_secret' },
+  ANTHROPIC_API_KEY: { category: 'ANTHROPIC', field: 'api_key' },
+  ANTHROPIC_MODEL: { category: 'ANTHROPIC', field: 'model' },
 };
 
 export function maskSecret(value: string) {

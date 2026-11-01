@@ -58,6 +58,21 @@ vi.mock('../../src/components/AppShell', () => ({
   default: ({ children }: { children: ReactNode }) => <div data-testid="app-shell">{children}</div>,
 }));
 
+/**
+ * Reel Studio draws with Remotion, which jsdom cannot host: the player needs a
+ * real video element and canvas, and `@remotion/media` pulls in a decoder
+ * through a path Node's resolver refuses (see module-load.test.ts). Both are
+ * stood in for so the studio's OWN screen — panes, timeline, dialogs — is what
+ * mounts here, which is what this suite is for.
+ */
+vi.mock('@remotion/player', () => ({ Player: () => <div data-testid="reel-player" /> }));
+vi.mock('@remotion/media', () => ({ Video: () => null, Audio: () => null }));
+// The in-tab encoder: jsdom has no WebCodecs, which is the answer a real browser without them gives.
+vi.mock('@remotion/web-renderer', () => ({
+  canRenderMediaOnWeb: async () => ({ canRender: false, issues: [] }),
+  renderMediaOnWeb: vi.fn(),
+}));
+
 import App from '../../src/App';
 import { clearToken, setToken } from '../../src/lib/session';
 
@@ -65,6 +80,12 @@ const ROUTES = [
   '/profile',
   '/login',
   '/',
+  '/tasks',
+  '/approvals',
+  '/activity',
+  '/social/inbox',
+  '/leads',
+  '/leads?stage=QUALIFIED&pipeline=VENUE',
   '/audience',
   '/audience/new',
   '/audience/smoke-id',
@@ -79,6 +100,25 @@ const ROUTES = [
   '/ads-approvals',
   '/live-ads',
   '/ads-settings',
+  '/analytics/overview',
+  '/analytics/social',
+  '/analytics/content',
+  '/analytics/funnel',
+  '/analytics/automation',
+  '/analytics/contacts',
+  '/settings/integrations',
+  '/studio/reels',
+  '/studio/reels/smoke-id',
+  '/automation/agents',
+  '/publish/pod-promos',
+  '/outreach/sequences',
+  '/outreach/sequences?selectedtab=enrollments&sequence=smoke-id',
+  '/outreach/sequences?selectedtab=tasks',
+  // Old addresses that redirect, query string included.
+  '/social-accounts?connected=LINKEDIN&count=1',
+  '/social-calendar',
+  '/instagram-leads',
+  '/contacts',
 ];
 
 /** `link` swaps what answers the page: nothing, or the schema-shaped mock. */

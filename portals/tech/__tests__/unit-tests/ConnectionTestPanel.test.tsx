@@ -121,7 +121,23 @@ describe('ConnectionTestPanel', () => {
 });
 
 describe('TestDrawer routing to the connection panel', () => {
-  it.each(['SLACK', 'SHIPROCKET', 'RAZORPAY', 'AISENSY', 'GITHUB', 'GOOGLE_PLAY', 'SONARQUBE', 'SOCIAL_APPS'])(
+  it.each([
+    'SLACK',
+    'SHIPROCKET',
+    'RAZORPAY',
+    'AISENSY',
+    'GITHUB',
+    'GOOGLE_PLAY',
+    'SONARQUBE',
+    'SOCIAL_INSTAGRAM',
+    'SOCIAL_FACEBOOK',
+    'SOCIAL_THREADS',
+    'SOCIAL_YOUTUBE',
+    'SOCIAL_LINKEDIN',
+    'SOCIAL_X',
+    'SERPER',
+    'ANTHROPIC',
+  ])(
     'opens the connection panel for %s',
     (category) => {
       render(<TestDrawer entry={entry(category)} onClose={vi.fn()} onTested={vi.fn()} />);

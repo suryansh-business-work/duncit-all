@@ -409,4 +409,16 @@ export const COPY_REVISIONS: Readonly<Record<string, readonly string[]>> = {
   "policyAcceptance.appleIntro": [
     "Apple has confirmed who you are, but your account is not created yet. Accept each policy below and we will finish signing you up.",
   ],
+  // The social apps moved out of Tech's Environment Variables into Marketing's
+  // own Settings › Integrations page, one entry per network.
+  "marketing.social.notSetUp": ["Not set up yet — Tech adds it under Environment Variables › Social apps."],
+  // The Agents page shipped its placeholders in double braces, which the
+  // translator never fills, so people read "{{hour}}:00".
+  "marketing.agents.briefTooLong": ["Keep the brief under {{max}} characters."],
+  "marketing.agents.enabledLabel": ["Switch {{name}} on or off"],
+  "marketing.agents.hourOption": ["{{hour}}:00"],
+  "marketing.agents.postsPerWeekHint": [
+    "How many posts the planner creates each run, spread across the week ({{max}} at most).",
+  ],
+  "marketing.agents.postsTooMany": ["At most {{max}} posts a week."],
 };

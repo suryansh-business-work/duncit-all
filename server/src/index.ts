@@ -27,6 +27,8 @@ import { graphqlMonitorPlugin } from '@modules/platform/graphqlMonitor/graphqlMo
 import { startGraphqlMonitorFlusher } from '@modules/platform/graphqlMonitor/graphqlMonitor.flusher';
 import { startMailAutomationScheduler } from '@modules/platform/mailAutomation/mailAutomation.poller';
 import { startSocialAccountsScheduler } from '@modules/crm/marketing/social/social.scheduler';
+import { startMarketingAgentScheduler } from '@modules/crm/marketing/agents/agent.scheduler';
+import { startPodPromoScheduler } from '@modules/crm/marketing/podPromo/podPromo.planner';
 import { startShortLinkRetentionScheduler } from '@modules/crm/marketing/shortLink.retention';
 import { startAnalyticsRetentionScheduler } from '@modules/platform/analytics/analytics.retention';
 import { startContactInviteRetentionScheduler } from '@modules/access/contacts/contacts.retention';
@@ -61,6 +63,7 @@ import { EMAIL_ASSETS_PATH } from '@services/email/catalogue/icons';
 import { buildGmailOAuthRouter } from '@modules/platform/mailAutomation/mailAutomation.router';
 import { buildAutomationRouter } from '@modules/ai/automation/automation.router';
 import { startAutomationScheduler } from '@modules/ai/automation/automation.scheduler';
+import { startOutreachScheduler } from '@modules/crm/marketing/outreach/outreach.runner';
 import { buildReelRouter } from '@modules/ai/reel/reel.router';
 import { buildSocialOAuthRouter } from '@modules/crm/marketing/social/social.router';
 import { buildAppleRelayRouter } from '@modules/access/auth/apple.relay';
@@ -367,6 +370,11 @@ async function bootstrap() {
     await websiteNavService.seedDefaults();
   });
   await safeSeed('marketing', () => marketingService.resumeSchedules());
+  // Every Instagram lead saved before the one lead pipeline existed gets a pipeline lead, once.
+  await safeSeed('marketingLeadsPipeline', async () => {
+    const { migrateIgLeadsToPipeline } = await import('@modules/crm/marketing/leads/marketingLead.pipeline');
+    await migrateIgLeadsToPipeline();
+  });
   await safeSeed('waCampaigns', async () => {
     const { waCampaignService } = await import('@modules/crm/marketing/waCampaign.service');
     await waCampaignService.resumeSchedules();
@@ -455,6 +463,20 @@ async function bootstrap() {
   // TWIN of shortLink.destination.ts's host rule; change one, change the other.
   const FIRST_PARTY_URL =
     '^https?://(([a-z0-9-]+[.])*duncit[.]com|play[.]google[.]com|apps[.]apple[.]com)([/:?#]|$)';
+  // The old single "Social apps" entry and the old shared Meta app become one
+  // entry per network and provider FACEBOOK on the accounts it connected. A
+  // no-op once done; it must run before the social scheduler's first sync so
+  // every account resolves its credentials by its own provider.
+  await safeSeed('socialApps', async () => {
+    const { migrateSocialApps } = await import('@modules/crm/marketing/social/social.migration');
+    await migrateSocialApps();
+  });
+  // Comments stored before Social › Inbox get its status (a reviewed one is DONE)
+  // and a last-activity time. A no-op once every comment has a status.
+  await safeSeed('socialInbox', async () => {
+    const { migrateSocialInbox } = await import('@modules/crm/marketing/social/social.inbox');
+    await migrateSocialInbox();
+  });
   // Builds the share-key unique index that makes an automatically minted share
   // link one per thing shared. Without it two people sharing the same pod at
   // the same moment each get their own link, and neither carries the pod's
@@ -676,11 +698,22 @@ async function bootstrap() {
 
   // AI portal automation: wake runs whose delay is up, time out unanswered waits.
   startAutomationScheduler();
+  // Marketing › Outreach: walk due sequence enrollments every five minutes.
+  startOutreachScheduler();
 
   // Social Accounts (Marketing): re-read each connected Page, channel and
   // profile every few hours — posts, numbers, new comments — and send the new
   // comments through the AI review.
   startSocialAccountsScheduler();
+
+  // Marketing agents: every fifteen minutes, run the enabled agents whose
+  // time has come as one orchestrator run with a child run per agent.
+  startMarketingAgentScheduler();
+
+  // Pod promotions: every fifteen minutes, make the carousel, tracking link and
+  // scheduled post for each upcoming pod the settings select, and keep waiting
+  // posts in step with their pods.
+  startPodPromoScheduler();
 
   // Short links: delete every recorded click past the retention window an
   // admin set in Marketing > External Links > Privacy. A stated window that
@@ -951,8 +984,8 @@ async function bootstrap() {
   // AI portal automation: where AiSensy posts each incoming WhatsApp message.
   app.use('/automation', buildAutomationRouter());
 
-  // AI portal Reel Studio: Drive footage streamed to the player. No session —
-  // the signed token in the path is the credential. See reel.router.ts.
+  // Marketing portal Reel Studio: Drive footage streamed to the player. No
+  // session — the signed token in the path is the credential. See reel.router.ts.
   app.use('/reels', buildReelRouter());
 
   // LinkedIn / Meta / X / Google's OAuth redirect after a marketer connects a

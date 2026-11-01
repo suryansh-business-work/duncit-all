@@ -33,10 +33,12 @@ jest.mock('@modules/platform/dns/godaddy.gateway', () => ({
   godaddyDomain: jest.fn(),
   godaddyRecords: jest.fn(),
 }));
-jest.mock('@modules/crm/marketing/social/social.probe', () => ({
-  ...jest.requireActual('@modules/crm/marketing/social/social.probe'),
-  probeSocialApps: jest.fn(),
-}));
+// The factory runs at import time (one check per network is built then), so
+// the probe it returns is created inside the mock and read back through it.
+jest.mock('@modules/crm/marketing/social/social.probe', () => {
+  const probe = jest.fn();
+  return { probeSocialApp: jest.fn(() => probe), __probe: probe };
+});
 
 import {
   aisensyConnection,
@@ -51,7 +53,7 @@ import {
   runEnvConnectionCheck,
   shiprocketConnection,
   slackConnection,
-  socialAppsConnection,
+  anthropicConnection,
   sonarqubeConnection,
   truecallerConnection,
 } from '../../envEntry.connection';
@@ -62,7 +64,12 @@ import { msg91WidgetAnalytics } from '@modules/platform/msg91/msg91.gateway';
 import { APPLE_TOKEN_URL, appleClientSecret } from '@modules/access/auth/auth.apple';
 import { sonarGet } from '@utils/sonarqube';
 import { godaddyDomain, godaddyRecords } from '@modules/platform/dns/godaddy.gateway';
-import { probeSocialApps } from '@modules/crm/marketing/social/social.probe';
+import * as socialProbeModule from '@modules/crm/marketing/social/social.probe';
+
+const { probeSocialApp } = socialProbeModule;
+const socialProbe = (socialProbeModule as unknown as { __probe: jest.Mock }).__probe;
+// Read before the first test runs: clearMocks wipes the calls made at import time.
+const builtSocialChecks: unknown[] = (probeSocialApp as jest.Mock).mock.calls.map(([provider]) => provider);
 
 /** The entry's fields, read the way the checks read them. */
 const entry = (fields: Record<string, string>) => (name: string) => fields[name] ?? '';
@@ -93,6 +100,38 @@ beforeEach(() => {
 
 afterEach(() => {
   delete (global as any).fetch;
+});
+
+describe('anthropicConnection', () => {
+  it('asks for the key first', async () => {
+    expect(await anthropicConnection(entry({}))).toEqual({ ok: false, message: 'API key is required', details: [] });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('sends the key the way Anthropic takes it and counts the models it can use', async () => {
+    respond(200, { data: [{ id: 'claude-opus-5-5' }, { id: 'claude-haiku-5-5' }] });
+    const res = await anthropicConnection(entry({ api_key: 'sk-ant-1', model: 'claude-opus-5-5' }));
+    expect(res).toEqual({ ok: true, message: 'Anthropic accepted the key', details: ['2 models available.'] });
+    expect(fetchMock.mock.calls[0][0]).toBe('https://api.anthropic.com/v1/models?limit=100');
+    expect(lastInit().headers['x-api-key']).toBe('sk-ant-1');
+    expect(lastInit().headers['anthropic-version']).toBe('2023-06-01');
+  });
+
+  it('warns when the default model is not one the key can use', async () => {
+    respond(200, { data: [{ id: 'claude-haiku-5-5' }] });
+    const res = await anthropicConnection(entry({ api_key: 'sk-ant-1', model: 'claude-opus-5-5' }));
+    expect(res.ok).toBe(true);
+    expect(res.details).toEqual(['1 models available.', 'The default model claude-opus-5-5 is not in the list this key can use.']);
+  });
+
+  it('reports a rejected key and any other failure', async () => {
+    respond(401, { error: { message: 'invalid x-api-key' } });
+    expect(await anthropicConnection(entry({ api_key: 'bad' }))).toEqual({ ok: false, message: 'Anthropic rejected the key (HTTP 401)', details: [] });
+    respond(500, {});
+    expect(await anthropicConnection(entry({ api_key: 'k' }))).toEqual({ ok: false, message: 'Anthropic answered HTTP 500', details: [] });
+    fetchMock.mockRejectedValueOnce(new Error('offline'));
+    expect((await anthropicConnection(entry({ api_key: 'k' }))).ok).toBe(false);
+  });
 });
 
 describe('slackConnection', () => {
@@ -726,7 +765,9 @@ describe('godaddyConnection', () => {
 describe('runEnvConnectionCheck', () => {
   it('knows which categories have a check', () => {
     expect(isConnectionTestable('GITHUB')).toBe(true);
-    expect(isConnectionTestable('SOCIAL_APPS')).toBe(true);
+    expect(isConnectionTestable('SOCIAL_THREADS')).toBe(true);
+    expect(isConnectionTestable('ANTHROPIC')).toBe(true);
+    expect(isConnectionTestable('SOCIAL_APPS')).toBe(false);
     expect(isConnectionTestable('EMAIL')).toBe(false);
   });
 
@@ -743,13 +784,19 @@ describe('runEnvConnectionCheck', () => {
     expect(res.message).toBe('AiSensy accepted a WhatsApp test message for 919000000000');
   });
 
-  it('runs the social-apps probe it re-exports', async () => {
-    expect(socialAppsConnection).toBe(probeSocialApps);
-    (probeSocialApps as jest.Mock).mockResolvedValue({ ok: true, message: 'All apps answered', details: [] });
-    const str = entry({});
-    expect(await runEnvConnectionCheck('SOCIAL_APPS', str)).toEqual({ ok: true, message: 'All apps answered', details: [] });
-    expect(probeSocialApps).toHaveBeenCalledWith(str);
+  it('builds one check per social network, each from its own provider probe', () => {
+    expect(builtSocialChecks).toEqual(['INSTAGRAM', 'FACEBOOK', 'THREADS', 'YOUTUBE', 'LINKEDIN', 'X']);
   });
+
+  it.each(['SOCIAL_INSTAGRAM', 'SOCIAL_FACEBOOK', 'SOCIAL_THREADS', 'SOCIAL_YOUTUBE', 'SOCIAL_LINKEDIN', 'SOCIAL_X'])(
+    'hands %s to the network probe with the entry being tested',
+    async (category) => {
+      socialProbe.mockResolvedValue({ ok: true, message: 'accepted', details: ['callback'] });
+      const str = entry({ app_id: 'id', app_secret: 's' });
+      expect(await runEnvConnectionCheck(category as never, str)).toEqual({ ok: true, message: 'accepted', details: ['callback'] });
+      expect(socialProbe).toHaveBeenCalledWith(str);
+    },
+  );
 
   it.each(['AbortError', 'TimeoutError'])('turns a %s into a time-out result', async (name) => {
     fetchMock.mockRejectedValueOnce(Object.assign(new Error('aborted'), { name }));

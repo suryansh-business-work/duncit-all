@@ -23,6 +23,18 @@ describe('OPENAI_TASKS as the AI Features registry', () => {
   });
 });
 
+describe('the Reel Studio production line', () => {
+  it.each(['reels.ideas', 'reels.script', 'reels.variants', 'reels.recommend'] as const)('%s is a Marketing feature with its own switch', (key) => {
+    expect(isOpenAiTaskKey(key)).toBe(true);
+    expect(OPENAI_TASKS[key].module).toBe('Marketing');
+    expect(openAiTaskOptions().find((option) => option.key === key)).toEqual({ key, label: OPENAI_TASKS[key].label, module: 'Marketing' });
+  });
+
+  it('keeps the chat editor where it was', () => {
+    expect(OPENAI_TASKS['reels.director'].module).toBe('Reel Studio');
+  });
+});
+
 describe('isOpenAiTaskKey', () => {
   it('accepts every catalogue key', () => {
     expect(OPENAI_TASK_KEYS.every((key) => isOpenAiTaskKey(key))).toBe(true);

@@ -37,6 +37,8 @@ export default function LinkPrivacyForm({
     mode: 'onChange',
   });
 
+  // Read both now: react-hook-form only tracks a formState flag that was read while rendering, and `!isValid || …` would skip isDirty until validation lands.
+  const { isValid, isDirty } = formState;
   const submit = handleSubmit((values) => onSubmit(values));
   const retentionHint = t('marketing.externalLinks.keepClicksHint', {
     vars: { min: String(MIN_RETENTION_DAYS), max: String(MAX_RETENTION_DAYS) },
@@ -98,7 +100,7 @@ export default function LinkPrivacyForm({
         <FormActionsRow
           errorMessage={errorMessage}
           busy={busy}
-          disabled={!formState.isValid || !formState.isDirty}
+          disabled={!isValid || !isDirty}
           submitLabel={t('marketing.externalLinks.savePrivacy')}
         />
       </Grid>

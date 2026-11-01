@@ -33,7 +33,9 @@ const setupMock = (accounts: SocialAccount[]): MockedResponse => ({
   request: { query: SOCIAL_SETUP },
   result: {
     data: {
-      socialProviders: [{ __typename: 'SocialProviderStatus', provider: 'LINKEDIN', configured: true }],
+      socialProviders: [
+        { __typename: 'SocialProviderStatus', provider: 'LINKEDIN', configured: true, category: 'SOCIAL_LINKEDIN' },
+      ],
       socialAccounts: accounts.map((account) => ({ __typename: 'SocialAccount', ...account })),
     },
   },
@@ -56,6 +58,7 @@ const publishedItem: SocialCalendarItem = {
   status: 'PUBLISHED',
   text: 'Sunday run recap',
   media_url: null,
+  media_count: 0,
   permalink: null,
   platforms: ['LINKEDIN'],
   account_names: ['Duncit Pages'],

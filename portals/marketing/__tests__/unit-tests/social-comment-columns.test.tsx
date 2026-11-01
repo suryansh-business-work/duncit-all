@@ -134,7 +134,7 @@ describe('getCommentColumns', () => {
     expect(col('ai_severity').options?.map((o) => o.label)).toEqual(['High', 'Medium', 'Low']);
     expect(col('ai_sentiment').options?.map((o) => o.value)).toEqual(['NEGATIVE', 'NEUTRAL', 'POSITIVE']);
     expect(col('account_id').options).toEqual([{ value: 'a1', label: 'Duncit India' }]);
-    expect(col('platform').options).toHaveLength(5);
+    expect(col('platform').options).toHaveLength(6);
     expect(col('review_status').options).toEqual([
       { value: 'OPEN', label: 'Open' },
       { value: 'REVIEWED', label: 'Reviewed' },

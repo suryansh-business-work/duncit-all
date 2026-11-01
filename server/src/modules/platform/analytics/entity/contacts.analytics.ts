@@ -37,7 +37,7 @@ import { contactMembers } from './contacts.members';
  * contacts.data.ts for the data-protection line this page keeps.
  */
 
-const PAGE = consoleLink('marketing', '/contacts');
+const PAGE = consoleLink('marketing', '/analytics/contacts');
 /** The WhatsApp log, narrowed to the invite campaign — the rows behind every invite number. */
 const INVITE_LOG = consoleLink('communications', '/whatsapp?selectedtab=logs&wacampaign=contact_invite');
 

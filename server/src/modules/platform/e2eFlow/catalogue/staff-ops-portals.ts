@@ -2502,7 +2502,7 @@ export const STAFF_OPS_PORTAL_FLOWS: readonly CatalogueFlow[] = [
         steps: [
           ['Sign in to marketing.duncit.com with an account lacking MARKETING_MANAGER', 'The shell refuses access and no marketing page renders'],
           ['Call reviewAdRequest with a CITY_ADMIN token', 'FORBIDDEN — ad review allows only SUPER_ADMIN and MARKETING_MANAGER'],
-          ['Sign in with a MARKETING_MANAGER account', 'The Dashboard opens with nav Target Audience, Campaigns (Email, WhatsApp, Notifications, App Popups, Mail Preferences), Short Links, Coupons, Ads'],
+          ['Sign in with a MARKETING_MANAGER account', 'The Dashboard opens with the grouped nav Overview (Dashboard, My Tasks, Approvals, Activity), Social media (Accounts), Publishing (Calendar), Leads (Instagram Leads), Campaigns (Email, Target Audience, Notifications, App Popups, Status, Mail Preferences, Occasions, Coupons, Short Links, External Links, Ads), Analytics (Member contacts) and Settings (Integrations); Settings is hidden from anyone without SUPER_ADMIN or MARKETING_MANAGER'],
         ],
       },
       {
@@ -2510,9 +2510,12 @@ export const STAFF_OPS_PORTAL_FLOWS: readonly CatalogueFlow[] = [
         description: 'KPI tiles and breakdown cards.',
         steps: [
           ['Open /', 'Header "Dashboard" with subtitle "Marketing at a glance · last N days"'],
-          ['Look at the KPI tiles', 'Tiles for Emails delivered, Link clicks, Revenue from links and Live ads show numbers'],
+          ['Look at the KPI tiles', 'Two rows of tiles: Link clicks, Revenue from links, Emails delivered and Live ads, then Connected accounts ("N need attention" or "Every account is healthy"), Engagement ("N posts · N views"), Posts published ("N scheduled · N failed") and Leads found ("N scored 70 or more")'],
           ['Check "Where clicks came from" with no link traffic', 'Empty text "No clicks recorded yet."'],
           ['Read "What is set up"', 'Counts for Active short links, Short links in total, Saved audience lists, Campaigns scheduled and Campaigns failed'],
+          ['Read "Engagement by network", "Leads by stage" and "Automation"', 'Engagement per connected network (empty text "No engagement recorded yet."), the lead pipeline by stage in pipeline order ("No leads found yet."), and the automation runs waiting, running, completed and failed in the window — the Automation title carries the AI spend in dollars, the unit of the AI rate card ("Automation · $N AI spend") when any was spent, and reads "Nothing has run yet." when none ran'],
+          ['Click Connected accounts, Posts published or Leads found', 'Navigates to /social/accounts, /publish/calendar or /leads/instagram'],
+          ['Count an account that failed its daily health check', 'It is still a connected account, and it is counted under "need attention" beside the expired ones'],
           ['Click a link in the top links card', 'Navigates to /short-links/:linkId'],
         ],
       },

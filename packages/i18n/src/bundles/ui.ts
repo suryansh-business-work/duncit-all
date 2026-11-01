@@ -134,5 +134,23 @@ export const UI_BUNDLE: NestedCatalogue = {
       play: 'Play the celebration',
       dismiss: 'Dismiss greeting',
     },
+    /**
+     * The guide kit every portal explains its pages with: the intro block and
+     * its steps, the help tooltip beside a heading and the first-run spotlight
+     * tour's controls. One set of words, since the same components render in
+     * all seventeen portals (rule 40).
+     */
+    guide: {
+      helpTipLabel: 'More about this',
+      howThisWorks: 'How this works',
+      showSteps: 'Show steps',
+      hideSteps: 'Hide steps',
+      startTour: 'Start tour',
+      stepOf: 'Step {current} of {total}',
+      back: 'Back',
+      next: 'Next',
+      done: 'Done',
+      skip: 'Skip tour',
+    },
   },
 };

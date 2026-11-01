@@ -2,6 +2,7 @@ import { Schema, model, type InferSchemaType } from 'mongoose';
 import {
   SOCIAL_ACCOUNT_STATUSES,
   SOCIAL_AI_STATUSES,
+  SOCIAL_INBOX_STATUSES,
   SOCIAL_PLATFORMS,
   SOCIAL_PROVIDERS,
   SOCIAL_REVIEW_STATUSES,
@@ -15,7 +16,9 @@ const timestamps = { createdAt: 'created_at', updatedAt: 'updated_at' } as const
  * One connected account — a Page, a channel, a profile.
  *
  * Tokens are `select: false`: nothing reads them unless it asks by name, so a
- * list or a GraphQL projection can never carry one out of the server.
+ * list or a GraphQL projection can never carry one out of the server. They are
+ * also sealed (social.tokens.ts) before they are written, so a dump of the
+ * collection holds ciphertext, not credentials.
  */
 const accountSchema = new Schema(
   {
@@ -36,6 +39,18 @@ const accountSchema = new Schema(
     last_error: { type: String, default: '' },
     last_synced_at: { type: Date, default: null, index: true },
     connected_by: { type: Schema.Types.ObjectId, ref: 'User', default: null },
+    // Who answers for the account: the owner gets the expiry reminders and is
+    // the one expected to reconnect; the team are the others who look after it.
+    owner_user_id: { type: Schema.Types.ObjectId, ref: 'User', default: null, index: true },
+    team_user_ids: { type: [Schema.Types.ObjectId], ref: 'User', default: [] },
+    // The daily health check: a light read of the profile, and what it said.
+    // `health_ok` is null until the first check has run.
+    health_checked_at: { type: Date, default: null },
+    health_ok: { type: Boolean, default: null },
+    health_message: { type: String, default: '' },
+    // When the owner was last emailed about this account's token, so a
+    // check that runs twice in a day does not send two reminders.
+    alerted_at: { type: Date, default: null },
   },
   { timestamps }
 );
@@ -94,6 +109,20 @@ postSchema.index({ account_id: 1, external_id: 1 }, { unique: true });
 // The analytics windows and the calendar read by publish time across accounts.
 postSchema.index({ account_id: 1, published_at: -1 });
 
+/** One answer sent from the Inbox — kept whether the network took it or refused it. */
+const replySchema = new Schema(
+  {
+    at: { type: Date, default: Date.now },
+    by_user_id: { type: String, default: '' },
+    by_name: { type: String, default: '' },
+    text: { type: String, default: '' },
+    external_id: { type: String, default: '' },
+    ok: { type: Boolean, default: false },
+    error: { type: String, default: '' },
+  },
+  { _id: false }
+);
+
 /**
  * A comment, with the AI's read of it and whether a marketer has dealt with it.
  * The AI fields are written once, when the comment is analysed — a later sync
@@ -120,6 +149,13 @@ const commentSchema = new Schema(
     review_status: { type: String, enum: SOCIAL_REVIEW_STATUSES, default: 'OPEN', index: true },
     reviewed_by: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     reviewed_at: { type: Date, default: null },
+    // The Inbox: where the comment stands, who is on it, and what was said back.
+    status: { type: String, enum: SOCIAL_INBOX_STATUSES, default: 'OPEN', index: true },
+    assigned_user_id: { type: Schema.Types.ObjectId, ref: 'User', default: null, index: true },
+    replies: { type: [replySchema], default: [] },
+    last_activity_at: { type: Date, default: null },
+    // Set while a reply is being sent, so a double press cannot post it twice.
+    reply_lock_at: { type: Date, default: null },
   },
   { timestamps }
 );

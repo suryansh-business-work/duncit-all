@@ -15,15 +15,22 @@ jest.mock('@modules/ai/openaiUsage/openaiUsage.service', () => ({
   openAiUsageService: { recordUsage: jest.fn() },
 }));
 
+jest.mock('@services/anthropic/anthropic.client', () => ({
+  ...jest.requireActual('@services/anthropic/anthropic.client'),
+  claudeMessages: jest.fn(),
+}));
+
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
 import { isAiFeatureEnabled } from '@modules/ai/aiFeature/aiFeature.guard';
 import { openAiUsageService } from '@modules/ai/openaiUsage/openaiUsage.service';
 import { OPENAI_TASKS } from '@modules/ai/openaiUsage/openaiUsage.tasks';
 import { openaiChat, type OpenAiChatRequest } from '../../openai.client';
+import { claudeMessages } from '@services/anthropic/anthropic.client';
 
 const env = getRuntimeEnvValue as unknown as jest.Mock;
 const featureOn = isAiFeatureEnabled as unknown as jest.Mock;
 const recordUsage = openAiUsageService.recordUsage as unknown as jest.Mock;
+const claude = claudeMessages as unknown as jest.Mock;
 const realFetch = globalThis.fetch;
 let fetchMock: jest.Mock;
 
@@ -57,6 +64,7 @@ beforeEach(() => {
   configure({ OPENAI_API_KEY: 'sk-test' });
   featureOn.mockResolvedValue(true);
   recordUsage.mockResolvedValue(undefined);
+  claude.mockReset();
   fetchMock = jest.fn();
   globalThis.fetch = fetchMock as unknown as typeof fetch;
 });
@@ -149,7 +157,12 @@ describe('openaiChat — when the feature is on', () => {
 
     const result = await openaiChat(request({ temperature: 0, max_tokens: 50, json: true }));
 
-    expect(result).toEqual({ ok: true, content: '{"ok":true}', model: 'gpt-4.1-mini' });
+    expect(result).toEqual({
+      ok: true,
+      content: '{"ok":true}',
+      model: 'gpt-4.1-mini',
+      usage: { prompt_tokens: 12, completion_tokens: 3, total_tokens: 15 },
+    });
     const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
     expect(url).toBe('https://proxy.example/v1/chat/completions');
     expect(JSON.parse(String(init.body))).toEqual({
@@ -243,5 +256,85 @@ describe('openaiChat — when the feature is on', () => {
     fetchMock.mockResolvedValue(respond(200, { choices: [{ message: { content: 'hi' } }] }));
 
     await expect(openaiChat(request())).resolves.toMatchObject({ ok: true, content: 'hi' });
+  });
+
+  // A caller that records cost (the marketing agents) reads the usage off the answer; a provider
+  // that sent no usage block, or a partial one, must still hand back every field as a number.
+  it('answers a success with whole usage even when the provider sent none or only some of it', async () => {
+    fetchMock.mockResolvedValueOnce(respond(200, { choices: [{ message: { content: 'hi' } }] }));
+    await expect(openaiChat(request())).resolves.toMatchObject({
+      ok: true,
+      usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 },
+    });
+
+    fetchMock.mockResolvedValueOnce(respond(200, { choices: [{ message: { content: 'hi' } }], usage: { total_tokens: 7 } }));
+    await expect(openaiChat(request())).resolves.toMatchObject({
+      ok: true,
+      usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 7 },
+    });
+  });
+});
+
+describe('openaiChat — a claude- model', () => {
+  it('goes to Anthropic with the ANTHROPIC key, never to fetch, and records the mapped tokens', async () => {
+    configure({ OPENAI_API_KEY: 'sk-test', ANTHROPIC_API_KEY: ' sk-ant ' });
+    claude.mockResolvedValue({ ok: true, status: 200, content: '{"ok":true}', usage: { prompt_tokens: 12, completion_tokens: 5, total_tokens: 17 } });
+
+    const result = await openaiChat(request({ model: 'claude-opus-5-5', json: true, max_tokens: 300, temperature: 0.2 }));
+
+    expect(result).toEqual({
+      ok: true,
+      content: '{"ok":true}',
+      model: 'claude-opus-5-5',
+      usage: { prompt_tokens: 12, completion_tokens: 5, total_tokens: 17 },
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
+    // The temperature is not passed on: Claude's current models refuse sampling parameters.
+    expect(claude).toHaveBeenCalledWith({ apiKey: 'sk-ant', model: 'claude-opus-5-5', messages: request().messages, max_tokens: 300, json: true });
+    expect(recorded()).toMatchObject({
+      task: 'moderation.pod',
+      model: 'claude-opus-5-5',
+      status: 'SUCCESS',
+      http_status: 200,
+      prompt_tokens: 12,
+      completion_tokens: 5,
+      total_tokens: 17,
+      response_preview: '{"ok":true}',
+    });
+  });
+
+  it('reports NOT_CONFIGURED naming Anthropic when its key is missing, without calling it', async () => {
+    configure({ OPENAI_API_KEY: 'sk-test' });
+
+    const result = await openaiChat(request({ model: 'claude-haiku-5-5' }));
+
+    expect(result).toMatchObject({ ok: false, code: 'NOT_CONFIGURED', model: 'claude-haiku-5-5' });
+    expect((result as { message: string }).message).toContain('ANTHROPIC');
+    expect(claude).not.toHaveBeenCalled();
+    expect(recorded()).toMatchObject({ status: 'SKIPPED', model: 'claude-haiku-5-5' });
+  });
+
+  it('passes a Claude failure through with its code and status, and records it FAILED with the tokens it burned', async () => {
+    configure({ ANTHROPIC_API_KEY: 'sk-ant' });
+    claude.mockResolvedValue({
+      ok: false,
+      code: 'EMPTY',
+      status: 200,
+      message: 'Claude declined this request (cyber).',
+      usage: { prompt_tokens: 9, completion_tokens: 0, total_tokens: 9 },
+    });
+
+    const result = await openaiChat(request({ model: 'claude-opus-5-5' }));
+
+    expect(result).toEqual({ ok: false, code: 'EMPTY', status: 200, message: 'Claude declined this request (cyber).', model: 'claude-opus-5-5' });
+    expect(recorded()).toMatchObject({ status: 'FAILED', http_status: 200, total_tokens: 9, error_message: 'Claude declined this request (cyber).' });
+  });
+
+  it('still honours the AI Features switch before reaching Claude', async () => {
+    configure({ ANTHROPIC_API_KEY: 'sk-ant' });
+    featureOn.mockResolvedValue(false);
+
+    expect(await openaiChat(request({ model: 'claude-opus-5-5' }))).toMatchObject({ code: 'DISABLED', model: 'claude-opus-5-5' });
+    expect(claude).not.toHaveBeenCalled();
   });
 });

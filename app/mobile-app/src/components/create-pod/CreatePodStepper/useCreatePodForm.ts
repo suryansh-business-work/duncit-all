@@ -1,7 +1,7 @@
 import { formResolver } from '../../../utils/form-resolver';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { adjacentCreatePodStep, shownCreatePodStep, venueOfferFloor } from '@duncit/utils';
+import { clampCreatePodStep, venueOfferFloor } from '@duncit/utils';
 
 import { useTranslation } from '@/hooks/useTranslation';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
@@ -39,7 +39,7 @@ export function useCreatePodForm({
   venues,
 }: CreatePodFormArgs) {
   const { t } = useTranslation();
-  // Step 4 shows the Smart Incentive only while Loyalty's programme is known to
+  // Money shows the Smart Incentive only while Loyalty's programme is known to
   // be on; only then is its percentage checked (a null maximum skips it) and
   // published as the form holds it. mWeb twin: useCreatePodSchema.
   const smartIncentive = useSmartIncentiveSettings();
@@ -47,7 +47,7 @@ export function useCreatePodForm({
   // The schema cannot call `t` at module scope, so it is built here from the
   // reader's own catalogue — the validation messages are copy like any other.
   // An offer below the picked venue's business amount on its basis is held on
-  // the offer step; the server refuses it too (BELOW_MIN_BUSINESS).
+  // Money; the server refuses it too (BELOW_MIN_BUSINESS).
   const schema = useMemo(
     () =>
       makeCreatePodSchema(t, smartIncentiveMaxPct, (values) =>
@@ -67,8 +67,7 @@ export function useCreatePodForm({
   });
   const showProducts = useFeatureFlag('is_product_visible');
 
-  // A draft saved on a step this pod no longer walks resumes on the next one.
-  const [step, setStep] = useState(() => shownCreatePodStep(initialStep, initialValues));
+  const [step, setStep] = useState(() => clampCreatePodStep(initialStep));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [blocked, setBlocked] = useState<BlockedViolation[]>([]);
@@ -129,10 +128,9 @@ export function useCreatePodForm({
     // categories and so let a category-less host straight through. A free
     // venue or a free pod adds its justification to the step that shows it.
     if (!(await form.trigger(stepFieldsFor(step, form.getValues())))) return;
-    // A pod that sends no venue offer passes over the offer step.
-    goTo(adjacentCreatePodStep(step, 1, form.getValues()));
+    goTo(clampCreatePodStep(step + 1));
   };
-  const back = () => goTo(adjacentCreatePodStep(step, -1, form.getValues()));
+  const back = () => goTo(clampCreatePodStep(step - 1));
 
   return {
     t,

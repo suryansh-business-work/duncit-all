@@ -47,7 +47,7 @@ export default function OccasionThemeEditorPage() {
 
   const save = async (values: OccasionThemeFormValues, apply: boolean) => {
     setServerError(null);
-    if (apply && !(await confirmLive('MANUAL', { key: key ?? '', name: values.name }))) return;
+    if (apply && !(await confirmLive('MANUAL', { key: key ?? '', name: values.name.trim() }))) return;
     try {
       const result = await saveMut({ variables: { key: key ?? null, input: toThemeInput(values) } });
       const saved = result.data?.saveOccasionTheme;

@@ -53,6 +53,31 @@ export const makeMarketingDashboard = (
   },
   audience: { lists: 4 },
   ads: { live: 3, pending: 2 },
+  social: {
+    connected: 3,
+    attention: 1,
+    posts: 24,
+    engagement: 5600,
+    views: 41000,
+    by_platform: [
+      { label: 'INSTAGRAM', count: 4200 },
+      { label: 'THREADS', count: 1400 },
+    ],
+    published: 9,
+    upcoming: 4,
+    failed: 1,
+  },
+  leads: {
+    found: 37,
+    qualified: 12,
+    qualified_score: 70,
+    by_status: [
+      { label: 'NEW', count: 30 },
+      { label: 'CONTACTED', count: 5 },
+      { label: 'CONVERTED', count: 2 },
+    ],
+  },
+  runs: { awaiting_approval: 2, running: 0, completed: 18, failed: 3, spend: 412 },
   ...over,
 });
 
@@ -77,6 +102,17 @@ const typed = (board: MarketingDashboard) => ({
   },
   audience: { __typename: 'MarketingDashboardAudience', ...board.audience },
   ads: { __typename: 'MarketingDashboardAds', ...board.ads },
+  social: {
+    __typename: 'MarketingDashboardSocial',
+    ...board.social,
+    by_platform: board.social.by_platform.map((p) => ({ __typename: 'MarketingDashboardPoint', ...p })),
+  },
+  leads: {
+    __typename: 'MarketingDashboardLeads',
+    ...board.leads,
+    by_status: board.leads.by_status.map((p) => ({ __typename: 'MarketingDashboardPoint', ...p })),
+  },
+  runs: { __typename: 'MarketingDashboardRuns', ...board.runs },
 });
 
 export const marketingDashboardMock = (

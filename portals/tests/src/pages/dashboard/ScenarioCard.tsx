@@ -35,6 +35,11 @@ export default function ScenarioCard({ scenario }: Props) {
               vars: { flows: String(scenario.flows), subFlows: String(total) },
             })}
           </Typography>
+          <Meter
+            label={t('tests.dashboard.scenario.automated')}
+            value={scenario.automated_pct}
+            caption={`${scenario.automated} / ${scenario.flows}`}
+          />
           {rows.map((row) => (
             <Meter
               key={row.key}

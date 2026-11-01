@@ -32,6 +32,7 @@ export const YOUTUBE_SERVICE = 'YouTube';
 const SERVICE = YOUTUBE_SERVICE;
 const API = 'https://www.googleapis.com/youtube/v3';
 const TOKEN_URL = 'https://oauth2.googleapis.com/token';
+const REVOKE_URL = 'https://oauth2.googleapis.com/revoke';
 
 /** Google judges the client before the code: `invalid_client` means the keys, `invalid_grant` means the (fake) code. */
 export async function probeYouTubeApp(creds: SocialAppCredentials): Promise<ProbeOutcome> {
@@ -153,6 +154,15 @@ export const youtubeConnector: SocialConnector = {
       mine: 'true',
     });
     return (res.items ?? []).map((channel) => channelAccount(channel, tokens));
+  },
+
+  /** Google revokes the whole grant from either token; the refresh token is the one that outlives the hour. */
+  async revoke(account) {
+    const token = account.refresh_token || account.access_token;
+    await socialJson<unknown>(SERVICE, withQuery(REVOKE_URL, { token }), {
+      method: 'POST',
+      headers: { 'content-type': 'application/x-www-form-urlencoded' },
+    });
   },
 };
 

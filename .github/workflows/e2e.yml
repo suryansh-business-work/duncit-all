@@ -588,15 +588,19 @@ jobs:
           } >> "$GITHUB_ENV"
 
       # Every spec's first command asks staging for the run's traffic key with
-      # the staging token. Checked here, before an hour of installs and builds,
-      # so a missing secret is one sentence on the suite row rather than two
-      # thousand scenarios dying in their setup hooks.
-      - name: Check the staging release token
+      # the staging token, and every code the suite reads is held only for the
+      # account staging's OWN E2E settings name. Both checked here, before an
+      # hour of installs and builds, so a missing secret or an identity staging
+      # does not know is one sentence on the suite row rather than two thousand
+      # scenarios dying in their setup hooks.
+      - name: Check the staging release token and E2E settings
         id: staging_token
         env:
           E2E_APP_GRAPHQL_URL: ${{ env.E2E_LIVE_GRAPHQL_URL }}
           DUNCIT_RELEASE_TOKEN: ${{ secrets.DUNCIT_RELEASE_TOKEN_STAGING }}
           E2E_STAMP: ${{ steps.identity.outputs.e2e_stamp }}
+          E2E_SIGNUP_EMAIL: ${{ steps.identity.outputs.e2e_signup_email }}
+          E2E_PHONE: ${{ steps.identity.outputs.e2e_phone }}
         run: node scripts/e2e-check-token.mjs
 
       # Every run signs up with a fresh, stamped address but the SAME phone. A
@@ -902,10 +906,12 @@ jobs:
 
       # Rule 1: the Cypress steps above may not fail the job on their own (the
       # purge and the native run must still happen), so this is where a red
-      # scenario anywhere turns the job red.
+      # scenario anywhere turns the job red. Not when a preflight above already
+      # stopped the leg: every suite was skipped, not failed, and the
+      # preflight's one sentence is the verdict.
       - name: Decide the verdict
         id: verdict
-        if: always()
+        if: always() && steps.free_phone.outcome == 'success'
         run: |
           failed=""
           for step in \

@@ -301,6 +301,11 @@ export const aiPromptService = {
    * existing one keeps its (possibly edited) body and target model while its
    * catalogue-owned metadata is refreshed. Runs on every boot — same contract as
    * the other seedDefaults.
+   *
+   * The one exception on the model: a row still pinned to a model the catalogue
+   * has since moved on from (`superseded_models`) was never retargeted by a
+   * person, so it follows the catalogue to the new default. Any other model on
+   * the row was an operator's choice and stays.
    */
   async seedDefaults() {
     // Rows written before `kind` existed carry the old `is_system` flag. Two
@@ -326,6 +331,9 @@ export const aiPromptService = {
         existing.set('tasks', def.tasks);
         existing.set('usage', def.usage);
         existing.is_active = true;
+        if (def.superseded_models?.includes((existing.target_model ?? '').trim())) {
+          existing.target_model = def.target_model;
+        }
         await existing.save();
         continue;
       }

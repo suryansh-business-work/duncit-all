@@ -1,11 +1,9 @@
-import { useState } from 'react';
 import { useWindowDimensions } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 import type { SuperCategoryGroup } from '@duncit/utils';
 
 import { PressScale } from '@/animations/PressScale';
-import { AppImage } from '@/components/AppImage';
+import { CategoryMark } from '@/components/CategoryMark';
 import { SectionHeader } from '@/components/SectionHeader';
 import { SurfaceCard } from '@/components/SurfaceCard';
 import type { SearchCategory } from '@/hooks/useSearch';
@@ -23,35 +21,6 @@ const SIDE_PADDING = 16;
  * circle so an admin's category image reads at a glance (mWeb twin: CategoryActions). */
 const TILE_CIRCLE = 64;
 const TILE_MARK = 44;
-
-interface MarkProps {
-  testID: string;
-  icon?: string | null;
-  size: number;
-  tint: string;
-}
-
-/** A category `icon`: the admin's image for a URL, an emoji for a short string,
- * else a MaterialIcons glyph (mWeb twin: renderSuperCategoryMark). */
-function CategoryMark({ testID, icon, size, tint }: Readonly<MarkProps>) {
-  const [failed, setFailed] = useState(false);
-  const value = (icon ?? '').trim();
-  if (value.startsWith('http') && !failed) {
-    return (
-      <AppImage
-        testID={`${testID}-image`}
-        source={{ uri: value }}
-        style={{ width: size, height: size }}
-        resizeMode="contain"
-        onError={() => setFailed(true)}
-      />
-    );
-  }
-  if (value.length > 0 && value.length <= 2) {
-    return <Text fontSize={size}>{value}</Text>;
-  }
-  return <MaterialIcons name="interests" size={size} color={tint} />;
-}
 
 interface TileProps {
   category: SearchCategory;

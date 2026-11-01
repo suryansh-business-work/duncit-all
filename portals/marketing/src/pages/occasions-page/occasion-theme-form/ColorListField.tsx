@@ -40,10 +40,23 @@ interface ChipsProps {
 function ColorChips({ colors, onChange, seed }: Readonly<ChipsProps>) {
   const { t } = useTranslation();
   const { keys, drop } = useEntryKeys(colors.length);
-  const set = (at: number, hex: string) => onChange(colors.map((color, i) => (i === at ? hex : color)));
+  // The form re-renders after a change, not during it, so two quick clicks
+  // would both start from the same list and the second would undo the first.
+  // Each change starts from the last list written instead.
+  const latest = useRef(colors);
+  latest.current = colors;
+  const commit = (next: string[]) => {
+    latest.current = next;
+    onChange(next);
+  };
+  const set = (at: number, hex: string) => commit(latest.current.map((color, i) => (i === at ? hex : color)));
   const remove = (at: number) => {
     drop(at);
-    onChange(colors.filter((_, i) => i !== at));
+    commit(latest.current.filter((_, i) => i !== at));
+  };
+  const add = () => {
+    const now = latest.current;
+    if (now.length < LIMITS.colors) commit([...now, now.at(-1) ?? seed]);
   };
 
   return (
@@ -71,7 +84,7 @@ function ColorChips({ colors, onChange, seed }: Readonly<ChipsProps>) {
         size="small"
         startIcon={<AddRoundedIcon />}
         disabled={colors.length >= LIMITS.colors}
-        onClick={() => onChange([...colors, colors.at(-1) ?? seed])}
+        onClick={add}
       >
         {t('marketing.occasions.form.addColor')}
       </DuncitButton>
@@ -87,7 +100,8 @@ export default function ColorListField<T extends FieldValues>({ control, name, l
       control={control}
       name={name}
       render={({ field: { value, onChange }, fieldState }) => {
-        const message = fieldState.error?.message ?? fieldState.error?.root?.message;
+        // The list's own error is the one with a message; entry errors alone leave the hint in place.
+        const message = fieldState.error?.message;
         return (
           <Stack spacing={0.75} role="group" aria-labelledby={labelId}>
             <Typography id={labelId} variant="body2" sx={{ fontWeight: 600 }}>

@@ -12,7 +12,7 @@ import PlannedPostDialog from './PlannedPostDialog';
 import { suggestedTime } from './calendar-grid';
 
 type View = 'CALENDAR' | SocialQueueView;
-const LISTS: readonly SocialQueueView[] = ['QUEUE', 'DRAFTS', 'SENT'];
+const LISTS: readonly SocialQueueView[] = ['QUEUE', 'APPROVALS', 'DRAFTS', 'SENT'];
 
 interface Props {
   onCompose: (request: ComposerRequest) => void;
@@ -21,9 +21,9 @@ interface Props {
 }
 
 /**
- * Buffer's publishing half: the calendar, and the Queue / Drafts / Sent
- * lists, with one Create post button above all four. The calendar opens on
- * today's month and a day's "+" starts a post dated that day.
+ * Buffer's publishing half: the calendar, and the Queue / Awaiting approval /
+ * Drafts / Sent lists, with one Create post button above all five. The
+ * calendar opens on today's month and a day's "+" starts a post dated that day.
  */
 export default function PublishTab({ onCompose, onOpenPost }: Readonly<Props>) {
   const { t } = useTranslation();

@@ -88,11 +88,10 @@ export default function ThemesTab() {
         <RegionGroup key={group.region} region={group.region} looks={group.looks} liveKey={liveKey} mode={mode} {...handlers} />
       ))}
       <PreviewDialog look={previewing} onClose={() => setPreviewing(null)} />
-      <DuplicateLookForm
-        look={copying}
-        onClose={() => setCopying(null)}
-        onSubmit={(name) => (copying ? actions.duplicate(copying, name) : Promise.resolve(false))}
-      />
+      {/* Mounted only while a look is being copied, so the submit always has that look. */}
+      {copying && (
+        <DuplicateLookForm look={copying} onClose={() => setCopying(null)} onSubmit={(name) => actions.duplicate(copying, name)} />
+      )}
     </Stack>
   );
 }

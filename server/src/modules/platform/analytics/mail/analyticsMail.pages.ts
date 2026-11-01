@@ -22,6 +22,7 @@ export const ANALYTICS_MAIL_PAGES: Readonly<Record<AnalyticsEntity, { path: stri
   REWARDS: { path: '/rewards', copy: 'rewards' },
   SHOP: { path: '/shop', copy: 'shop' },
   PET_STORE: { path: '/pet-store', copy: 'petStore' },
+  PRODUCT: { path: '/product/overview', copy: 'product' },
   FUNNEL: { path: '/growth/funnel', copy: 'funnel' },
   MARKETING: { path: '/growth/marketing', copy: 'marketing' },
   CONTACTS: { path: '/growth/contacts', copy: 'contacts' },

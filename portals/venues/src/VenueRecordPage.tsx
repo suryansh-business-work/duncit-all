@@ -8,7 +8,7 @@ import {
 } from '@duncit/entity-consoles';
 import { DuncitButton } from '@duncit/buttons';
 import { logs } from '@duncit/logs';
-import { useTranslation } from '@duncit/shell';
+import { BannerKitPanel, PodBannersPanel, useTranslation } from '@duncit/shell';
 import {
   VenueFoodCoupons,
   VenueFoodDashboard,
@@ -85,6 +85,17 @@ export default function VenueRecordPage() {
         value: 'rentedItems',
         label: t('venueRentals.items.pageTitle'),
         render: () => <VenueRentalDesk key={venue.id} venueId={venue.id} surface={SURFACE} mode="admin" />,
+      },
+      // What the venue's pod banners are made from, and making them for its next pods.
+      {
+        value: 'bannerKit',
+        label: t('shell.bannerKit.title'),
+        render: () => <BannerKitPanel key={venue.id} entity="VENUE" mode="console" id={venue.id} />,
+      },
+      {
+        value: 'banners',
+        label: t('shell.podBanners.title'),
+        render: () => <PodBannersPanel key={venue.id} filter={{ field: 'venue_id', value: venue.id }} />,
       },
     ],
     [t, canGovern],

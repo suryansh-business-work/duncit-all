@@ -46,6 +46,7 @@ import { notifyEach } from '@services/notify/notify.service';
 import { alertBankAccountChanged, bankAccountChanged } from '@modules/finance/finance/bankAccount.notify';
 import { getUrlConfigs } from '@config/url-configs';
 import { normalizeOfferSettingsInput, toOfferSettingsPub } from './venue.offerSettings';
+import { toStoredBannerKit } from '@modules/venues/bannerKit/bannerKit.pub';
 import {
   VENUE_FOOD_INPUT_KEYS,
   buildVenueFoodPatch,
@@ -347,6 +348,8 @@ const toPub = (v: IVenue) => ({
   cover_image_url: v.cover_image_url ?? '',
   gallery: v.gallery ?? [],
   videos: v.videos ?? [],
+  // The stored kit; `Venue.banner_kit` resolves the prefill and suggestions from it.
+  banner_kit: toStoredBannerKit(v.banner_kit),
   location_id: v.location_id ? String(v.location_id) : null,
   country: v.country ?? 'India',
   country_code: v.country_code ?? 'IN',

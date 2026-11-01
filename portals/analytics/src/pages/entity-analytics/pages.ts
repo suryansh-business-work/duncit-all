@@ -15,6 +15,8 @@ export interface AnalyticsPageSpec {
   periodless?: boolean;
   /** True for a page whose every number has a place, so it can be narrowed to one city. */
   cityFilter?: boolean;
+  /** True for a page read from the app's own events, so it can be narrowed to one platform. */
+  platformFilter?: boolean;
   /** A translation key for a standing note above the grid — what the page deliberately does not show. */
   note?: string;
 }
@@ -80,6 +82,20 @@ export const USERS_PAGE: AnalyticsPageSpec = {
   title: 'analytics.page.users.title',
   subtitle: 'analytics.page.users.subtitle',
   dashboardId: 'analytics.users',
+};
+
+/**
+ * How the app is used — people, sessions, screens and retention, from its own
+ * events. The rest of the Product group (Screens, Funnels…) are their own pages.
+ */
+export const PRODUCT_PAGE: AnalyticsPageSpec = {
+  path: '/product/overview',
+  entity: 'PRODUCT',
+  title: 'analytics.page.product.title',
+  subtitle: 'analytics.page.product.subtitle',
+  dashboardId: 'analytics.product',
+  platformFilter: true,
+  note: 'analytics.page.product.note',
 };
 
 /** The console's dashboards, in sidebar order. The first is where `/` lands. */
@@ -150,6 +166,7 @@ export const ANALYTICS_PAGES: readonly AnalyticsPageSpec[] = [
     subtitle: 'analytics.page.petStore.subtitle',
     dashboardId: 'analytics.petStore',
   },
+  PRODUCT_PAGE,
   {
     path: '/growth/funnel',
     entity: 'FUNNEL',

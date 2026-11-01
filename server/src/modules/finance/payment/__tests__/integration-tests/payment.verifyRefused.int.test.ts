@@ -37,6 +37,7 @@ import { podSeatsTaken } from '@modules/pods/pod/pod.seats';
 import { PodMemberModel } from '@modules/pods/podMember/podMember.model';
 import { TicketModel } from '@modules/pods/ticket/ticket.model';
 import { PaymentModel } from '../../payment.model';
+import { paymentFinalizer } from '../../payment.finalize';
 import { paymentService } from '../../payment.service';
 import { startPaymentReconciler } from '../../payment.reconciler';
 
@@ -263,12 +264,20 @@ describe('a repeat verify of a payment that already settled', () => {
       razorpay_signature: 'sig',
     };
     mockVerify.mockResolvedValue(true);
+    // The verify hands the follow-up work (emails, brand notices, the chat welcome)
+    // off without awaiting it; it is caught here so it cannot outlive the test.
+    const followUp = jest.spyOn(paymentFinalizer, 'runSideEffects');
 
     const first = await paymentService.verifyRazorpayCheckout(verify, String(user._id));
     const again = await paymentService.verifyRazorpayCheckout(verify, String(user._id));
+    await Promise.allSettled(followUp.mock.results.map((result) => result.value));
 
     expect(first).toMatchObject({ status: 'SUCCESS', gateway_ref: 'pay_TAPPED1' });
     expect(again).toMatchObject({ id: first.id, status: 'SUCCESS', gateway_ref: 'pay_TAPPED1', invoice_no: first.invoice_no });
+    // Only the real verify starts the follow-up; the repeat answers from what is stored.
+    expect(followUp).toHaveBeenCalledTimes(1);
+    expect(followUp).toHaveBeenCalledWith(sheet.payment_doc_id);
+    followUp.mockRestore();
     expect(await PodMemberModel.countDocuments({ pod_id: pod._id })).toBe(1);
     expect((await PaymentModel.findById(sheet.payment_doc_id).lean())?.finalize_attempts).toBe(1);
   });

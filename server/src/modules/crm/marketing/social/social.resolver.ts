@@ -6,34 +6,41 @@ import type { SocialAnalyticsInput } from './social.analytics';
 import type { SocialConnectReturn, SocialProvider, SocialReviewStatus } from './social.types';
 
 /** Same gate as the rest of the marketing console. */
+/** Who connects accounts, changes their owners and reads the app's callback URL. */
 const ROLES = ['SUPER_ADMIN', 'CITY_ADMIN', 'MARKETING_MANAGER'];
+/** An editor reads the accounts and their posts, syncs them and works the comments. */
+const EDITOR_ROLES = [...ROLES, 'MARKETING_EDITOR'];
 
 type Ctx = GraphQLContext;
 
 export const socialResolvers = {
   Query: {
     socialProviders: (_p: unknown, _a: unknown, ctx: Ctx) => {
-      requireRole(ctx, ROLES);
+      requireRole(ctx, EDITOR_ROLES);
       return socialService.providers();
     },
-    socialAccounts: (_p: unknown, _a: unknown, ctx: Ctx) => {
+    socialRedirectUri: (_p: unknown, _a: unknown, ctx: Ctx) => {
       requireRole(ctx, ROLES);
+      return socialService.redirectUri();
+    },
+    socialAccounts: (_p: unknown, _a: unknown, ctx: Ctx) => {
+      requireRole(ctx, EDITOR_ROLES);
       return socialService.accounts();
     },
     socialAnalytics: (_p: unknown, args: { input: SocialAnalyticsInput }, ctx: Ctx) => {
-      requireRole(ctx, ROLES);
+      requireRole(ctx, EDITOR_ROLES);
       return socialService.analytics(args.input);
     },
     socialPostsTable: (_p: unknown, args: { query?: TableQueryInput | null }, ctx: Ctx) => {
-      requireRole(ctx, ROLES);
+      requireRole(ctx, EDITOR_ROLES);
       return socialService.postsTable(args.query);
     },
     socialCommentsTable: (_p: unknown, args: { query?: TableQueryInput | null }, ctx: Ctx) => {
-      requireRole(ctx, ROLES);
+      requireRole(ctx, EDITOR_ROLES);
       return socialService.commentsTable(args.query);
     },
     socialPost: (_p: unknown, args: { id: string }, ctx: Ctx) => {
-      requireRole(ctx, ROLES);
+      requireRole(ctx, EDITOR_ROLES);
       return socialService.postDetail(args.id);
     },
   },
@@ -43,27 +50,35 @@ export const socialResolvers = {
       return socialService.connectUrl(args.provider, user.id, args.return_to);
     },
     syncSocialAccount: (_p: unknown, args: { id: string }, ctx: Ctx) => {
-      requireRole(ctx, ROLES);
+      requireRole(ctx, EDITOR_ROLES);
       return socialService.sync(args.id);
     },
     disconnectSocialAccount: (_p: unknown, args: { id: string }, ctx: Ctx) => {
       requireRole(ctx, ROLES);
       return socialService.disconnect(args.id);
     },
-    analyzeSocialComments: (_p: unknown, _a: unknown, ctx: Ctx) => {
+    setSocialAccountOwner: (
+      _p: unknown,
+      args: { id: string; owner_user_id?: string | null; team_user_ids?: string[] | null },
+      ctx: Ctx
+    ) => {
       requireRole(ctx, ROLES);
+      return socialService.setOwner(args.id, args.owner_user_id, args.team_user_ids);
+    },
+    analyzeSocialComments: (_p: unknown, _a: unknown, ctx: Ctx) => {
+      requireRole(ctx, EDITOR_ROLES);
       return socialService.analyze();
     },
     reviewSocialComment: (_p: unknown, args: { id: string; status: SocialReviewStatus }, ctx: Ctx) => {
-      const user = requireRole(ctx, ROLES);
+      const user = requireRole(ctx, EDITOR_ROLES);
       return socialService.review(args.id, args.status, user.id);
     },
     analyzeSocialPost: (_p: unknown, args: { id: string }, ctx: Ctx) => {
-      requireRole(ctx, ROLES);
+      requireRole(ctx, EDITOR_ROLES);
       return socialService.analyzePost(args.id);
     },
     socialInsights: (_p: unknown, args: { input: SocialAnalyticsInput }, ctx: Ctx) => {
-      requireRole(ctx, ROLES);
+      requireRole(ctx, EDITOR_ROLES);
       return socialService.insights(args.input);
     },
   },

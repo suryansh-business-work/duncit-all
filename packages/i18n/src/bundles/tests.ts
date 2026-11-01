@@ -91,6 +91,7 @@ export const TESTS_BUNDLE: NestedCatalogue = {
         looksGood: 'Looks good',
         needsReview: 'Needs review',
         notReviewed: 'Not reviewed',
+        automated: 'Flows a spec tests',
         empty: 'The E2E flow catalogue is empty.',
         open: 'Open flows',
       },

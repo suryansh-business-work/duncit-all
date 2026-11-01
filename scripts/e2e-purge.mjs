@@ -83,8 +83,9 @@ try {
   }
   if (report.phone_held_by) {
     const reason =
-      `The run phone is registered to ${report.phone_held_by} on ${url}, which is not an earlier run's account, ` +
-      'so the run cannot sign up. Remove that account, or set another phone in Tests → E2E → Settings.';
+      `The run phone is registered to ${report.phone_held_by} on ${url}, which is not a run account, so the run ` +
+      'cannot sign up. Take the number off that account, or choose a number no account there holds and save it as ' +
+      'the run phone in Tests → E2E → Settings on both the server the run reports to and the one it drives.';
     if (env('E2E_REQUIRE_FREE_PHONE') === '1') failWith(reason);
     console.log(`⚠ ${reason}`);
   }

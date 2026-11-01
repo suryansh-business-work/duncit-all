@@ -27,21 +27,20 @@ export default function LeadDrawer({ lead, onClose, onChanged }: Readonly<Props>
   const [statusMut, { loading: saving }] = useMutation<{ setIgLeadStatus: IgLead }>(SET_IG_LEAD_STATUS);
   const [deleteMut] = useMutation(DELETE_IG_LEAD);
 
-  const setStatus = async (status: IgLeadStatus) => {
-    if (!lead) return;
+  // The buttons exist only while a lead is open, so each hands in the lead it acts on.
+  const setStatus = async (current: IgLead, status: IgLeadStatus) => {
     try {
-      const { data } = await statusMut({ variables: { id: lead.id, status } });
+      const { data } = await statusMut({ variables: { id: current.id, status } });
       if (data) onChanged(data.setIgLeadStatus);
     } catch (err) {
       notify(parseApiError(err), 'error');
     }
   };
 
-  const remove = async () => {
-    if (!lead) return;
-    if (!(await confirm({ title: t('marketing.igLeads.deleteTitle'), message: `@${lead.username}`, destructive: true }))) return;
+  const remove = async (current: IgLead) => {
+    if (!(await confirm({ title: t('marketing.igLeads.deleteTitle'), message: `@${current.username}`, destructive: true }))) return;
     try {
-      await deleteMut({ variables: { id: lead.id } });
+      await deleteMut({ variables: { id: current.id } });
       onChanged(null);
     } catch (err) {
       notify(parseApiError(err), 'error');
@@ -67,7 +66,7 @@ export default function LeadDrawer({ lead, onClose, onChanged }: Readonly<Props>
               </Typography>
             </Box>
             <Tooltip title={t('marketing.igLeads.deleteLead')}>
-              <DuncitIconButton onClick={remove}>
+              <DuncitIconButton onClick={() => remove(lead)}>
                 <DeleteOutlinedIcon />
               </DuncitIconButton>
             </Tooltip>
@@ -81,20 +80,20 @@ export default function LeadDrawer({ lead, onClose, onChanged }: Readonly<Props>
           <LeadProfile lead={lead} />
 
           {closed ? (
-            <DuncitButton variant="outlined" disabled={saving} onClick={() => setStatus(reopenTo)}>
+            <DuncitButton variant="outlined" disabled={saving} onClick={() => setStatus(lead, reopenTo)}>
               {t('marketing.igLeads.reopen')}
             </DuncitButton>
           ) : (
             <>
               <LeadComposer lead={lead} onChanged={onChanged} />
               <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap' }}>
-                <DuncitButton variant="outlined" color="success" disabled={saving} onClick={() => setStatus('REPLIED')}>
+                <DuncitButton variant="outlined" color="success" disabled={saving} onClick={() => setStatus(lead, 'REPLIED')}>
                   {t('marketing.igLeads.markReplied')}
                 </DuncitButton>
-                <DuncitButton variant="outlined" disabled={saving} onClick={() => setStatus('CONVERTED')}>
+                <DuncitButton variant="outlined" disabled={saving} onClick={() => setStatus(lead, 'CONVERTED')}>
                   {t('marketing.igLeads.markConverted')}
                 </DuncitButton>
-                <DuncitButton variant="outlined" color="error" disabled={saving} onClick={() => setStatus('LOST')}>
+                <DuncitButton variant="outlined" color="error" disabled={saving} onClick={() => setStatus(lead, 'LOST')}>
                   {t('marketing.igLeads.markLost')}
                 </DuncitButton>
               </Stack>

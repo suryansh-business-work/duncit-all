@@ -30,7 +30,7 @@ export const MCP_CATEGORIES = [
   { key: 'engagement', label: 'Engagement', description: 'Member referral codes, leaderboard, membership, badges and posts.' },
   { key: 'challenges', label: 'Challenges', description: 'Challenges, challenge tools and pod challenges.' },
   { key: 'gig-jobs', label: 'Gig jobs', description: 'Gigs, freelancers and their interests.' },
-  { key: 'ai', label: 'AI', description: 'AI features, the prompt library, usage, monitoring, automations, reels and the Agent.' },
+  { key: 'ai', label: 'AI', description: 'AI features, the prompt library, usage, monitoring, automations and the Agent.' },
   { key: 'website', label: 'Website & CMS', description: 'Website content, navigation, reels, CMS pages, public pages and newsletter.' },
   { key: 'hr', label: 'HR', description: 'Job applications and the team structure (seats, salary, share links).' },
   { key: 'legal', label: 'Legal', description: 'Policies, acceptances, legal documents, contracts, grievances and account health appeals.' },
@@ -39,7 +39,7 @@ export const MCP_CATEGORIES = [
   { key: 'crm', label: 'CRM', description: 'Leads, communication logs, call prompts, email verification, reminders, surveys and WhatsApp leads.' },
   { key: 'onboarding', label: 'Onboarding', description: 'Onboarding meetings, intros and lead surveys.' },
   { key: 'communications', label: 'Communications', description: 'Email templates and logs, mail automation, WhatsApp templates and campaigns, SMS and Slack.' },
-  { key: 'marketing', label: 'Marketing', description: 'Marketing, short links, social publishing and Instagram lead search and outreach.' },
+  { key: 'marketing', label: 'Marketing', description: 'Marketing, short links, social publishing, Reel Studio and Instagram lead search and outreach.' },
   { key: 'analytics', label: 'Analytics', description: 'Product and entity analytics, analytics mails, alerts and Google Analytics.' },
   { key: 'logs', label: 'Logs & monitoring', description: 'Telemetry, status reports and the GraphQL monitor.' },
   { key: 'tech', label: 'Tech & infrastructure', description: 'Server info, packages, backups, DNS, SSL, ports, Cloudflare, app builds and releases and rate limits.' },
@@ -152,6 +152,8 @@ export const MODULE_CATEGORY: Record<ModuleName, McpCategoryKey | null> = {
   venueChatTypeDefs: 'venues',
 
   hostTypeDefs: 'hosts',
+  // A venue's and a host's banner kit — edited with the record it sits on.
+  bannerKitTypeDefs: 'venues',
   hostRequestTypeDefs: 'hosts',
 
   financeTypeDefs: 'finance',
@@ -211,7 +213,6 @@ export const MODULE_CATEGORY: Record<ModuleName, McpCategoryKey | null> = {
   aiFeatureTypeDefs: 'ai',
   aiMonitoringTypeDefs: 'ai',
   automationTypeDefs: 'ai',
-  reelTypeDefs: 'ai',
 
   websiteContentTypeDefs: 'website',
   somethingForYouTypeDefs: 'website',
@@ -276,11 +277,25 @@ export const MODULE_CATEGORY: Record<ModuleName, McpCategoryKey | null> = {
   shortLinkTypeDefs: 'marketing',
   socialTypeDefs: 'marketing',
   socialPublishTypeDefs: 'marketing',
+  // Social › Inbox: triage, assign and answer comments where the network allows.
+  socialInboxTypeDefs: 'marketing',
   igLeadTypeDefs: 'marketing',
+  // The one lead pipeline every source feeds, and its hand-over to the CRM.
+  marketingLeadTypeDefs: 'marketing',
+  // Outreach › Sequences: multi-step outreach to leads, stopped by a reply or an opt-out.
+  outreachTypeDefs: 'marketing',
   occasionTypeDefs: 'marketing',
+  podPromoTypeDefs: 'marketing',
+  marketingRunTypeDefs: 'marketing',
+  marketingAnalyticsTypeDefs: 'marketing',
+  // Automation › Agents: the code-defined agents, their schedules and Run now.
+  marketingAgentTypeDefs: 'marketing',
+  // Reel Studio: reels cut from Drive footage, posted from the Marketing console.
+  reelTypeDefs: 'marketing',
 
   analyticsTypeDefs: 'analytics',
   entityAnalyticsTypeDefs: 'analytics',
+  productAnalyticsTypeDefs: 'analytics',
   analyticsMailTypeDefs: 'analytics',
   analyticsAlertTypeDefs: 'analytics',
   googleAnalyticsTypeDefs: 'analytics',

@@ -1,11 +1,12 @@
 import { useRef, useState } from 'react';
 
 import { Alert, Box, Stack } from '@mui/material';
-import { adjacentCreatePodStep, shownCreatePodStep, shownCreatePodSteps } from '@duncit/utils';
+import { CREATE_POD_STEP_COUNT, CREATE_POD_WHERE_STEP, clampCreatePodStep, createPodSendsOffer } from '@duncit/utils';
 import {
   MODERATION_FIELD_MAP,
   STEP_TITLE_KEYS,
   stepTitleKey,
+  stepSubtitleKey,
   buildCreatePodInput,
   buildModerationInput,
   serializeDraft,
@@ -18,11 +19,10 @@ import StepHero from '../StepHero';
 import StepFooterBar from '../StepFooterBar';
 import { ModerationBlockedDialog, type BlockedViolation } from '@duncit/ui';
 import type { PodModerationViolation } from '../create-pod.types';
-import BasicsStep from '../steps/BasicsStep';
-import LocationClubStep from '../steps/LocationClubStep';
-import VenueSlotStep from '../steps/VenueSlotStep';
-import VenueOfferStep from '../steps/VenueOfferStep';
-import PricingStep from '../steps/PricingStep';
+import WhatStep from '../steps/WhatStep';
+import WhereWhenStep from '../steps/WhereWhenStep';
+import MoneyStep from '../steps/MoneyStep';
+import DetailsStep from '../steps/DetailsStep';
 import { useFeatureFlag } from '../../../../hooks/useFeatureFlag';
 import { useSmartIncentiveSettings } from '../../../../utils/smartIncentive';
 import type { CreatePodStepperProps } from './types';
@@ -31,11 +31,11 @@ import { useStepperFormSync } from './useStepperFormSync';
 import { useDraftAutosave } from './useDraftAutosave';
 import { useStepperSelections } from './useStepperSelections';
 
-/** Host Create Pod stepper: Category/Locality/Club → Basics → Venue & Slot
- * (from the venue partner's availability calendar) → Offer for Venue →
- * Pricing. A pod that sends no venue offer (virtual, or a Pod Request's) skips
- * the offer step, so it walks four. Per-step validation gates Next, the draft
- * autosaves on a timer + every step change, and the last step publishes. */
+/** Host Create Pod stepper: What (category, mode) → Where & when (locality,
+ * club, venue and slot from the venue partner's availability calendar, or a
+ * virtual meeting) → Money (the venue offer, when the pod sends one, and the
+ * ticket) → Details. Per-step validation gates Next, the draft autosaves on a
+ * timer + every step change, and the last step publishes. */
 export default function CreatePodStepper({
   initialValues,
   initialStep,
@@ -45,6 +45,7 @@ export default function CreatePodStepper({
   venues,
   products,
   subCategories,
+  categoryIcons,
   hostCategories,
   viewerUserId,
   pinnedVenueId,
@@ -57,12 +58,11 @@ export default function CreatePodStepper({
   // Products are a flag-gated section inside the Pricing step (not a step of
   // their own), so the step list never changes shape.
   const showProducts = useFeatureFlag('is_product_visible');
-  // Step 4 shows the Smart Incentive only while Loyalty has it on; publish
+  // Money shows the Smart Incentive only while Loyalty has it on; publish
   // sends it the same way, so nothing unseen is published.
   const smartIncentiveOn = useSmartIncentiveSettings().enabled;
 
-  // A draft saved on a step this pod no longer walks resumes on the next one.
-  const [step, setStep] = useState(() => shownCreatePodStep(initialStep, initialValues));
+  const [step, setStep] = useState(() => clampCreatePodStep(initialStep));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [blocked, setBlocked] = useState<BlockedViolation[]>([]);
@@ -84,9 +84,7 @@ export default function CreatePodStepper({
   };
   const next = async () => {
     if (!(await form.trigger(stepFieldsFor(step, form.getValues())))) return;
-    // The category, locality and club are the FIRST step — a host should not
-    // fill a whole pod out and only then be told to pick them.
-    goTo(adjacentCreatePodStep(step, 1, form.getValues()));
+    goTo(clampCreatePodStep(step + 1));
   };
 
   // Map each flagged violation to its form field + step, set an inline error, and
@@ -136,27 +134,19 @@ export default function CreatePodStepper({
 
   const { podMode, clubsInCity, clubsForLocation, clubVenueIds, availableProducts, spots, offerMinGuests, preview, venueNotice } =
     useStepperSelections(form, { clubs, hostCategories, products, subCategories, venues, viewerUserId, pinnedVenueId });
-  // One progress pill per step this pod walks.
-  const shownSteps = shownCreatePodSteps({
+  const sendsOffer = createPodSendsOffer({
     pod_mode: podMode,
     partner_request_id: form.watch('partner_request_id'),
     venue_slot_id: form.watch('venue_slot_id'),
   });
 
   const steps = [
-    <LocationClubStep
-      key="location"
-      form={form}
-      hostCategories={hostCategories}
-      clubs={clubsForLocation}
-      cityClubs={clubsInCity}
-      locations={locations}
-    />,
-    <BasicsStep key="basics" form={form} hostCategories={hostCategories} />,
-    <VenueSlotStep key="venue" form={form} venues={venues} clubVenueIds={clubVenueIds} venueNotice={venueNotice} spots={spots} offerMinGuests={offerMinGuests} />,
-    <VenueOfferStep key="offer" form={form} venues={venues} />,
-    <PricingStep key="pricing" form={form} products={availableProducts} showProducts={showProducts} preview={preview} spots={spots} venueNotice={venueNotice} />,
+    <WhatStep key="what" form={form} hostCategories={hostCategories} categoryIcons={categoryIcons} clubs={clubs} />,
+    <WhereWhenStep key="where" form={form} clubs={clubsForLocation} cityClubs={clubsInCity} locations={locations} venues={venues} clubVenueIds={clubVenueIds} venueNotice={venueNotice} spots={spots} offerMinGuests={offerMinGuests} />,
+    <MoneyStep key="money" form={form} venues={venues} sendsOffer={sendsOffer} products={availableProducts} showProducts={showProducts} preview={preview} venueNotice={venueNotice} />,
+    <DetailsStep key="details" form={form} hostCategories={hostCategories} venues={venues} onEditWhen={() => goTo(CREATE_POD_WHERE_STEP)} />,
   ];
+  const nextLabel = isLast ? undefined : t('mweb.createPod.nextTo', { vars: { step: t(stepTitleKey(step + 1, podMode)) } });
 
   return (
     <Stack data-testid="create-pod-stepper" spacing={2.5}>
@@ -164,7 +154,7 @@ export default function CreatePodStepper({
           the page the host lands on. The hero's step pills are what lets the
           walkthrough explain the step-by-step journey. */}
       <Box data-tour="create-pod-steps">
-        <StepHero step={Math.max(0, shownSteps.indexOf(step))} total={shownSteps.length} title={t(stepTitleKey(step, podMode))} />
+        <StepHero step={step} total={CREATE_POD_STEP_COUNT} title={t(stepTitleKey(step, podMode))} subtitle={t(stepSubtitleKey(step, podMode, sendsOffer))} />
       </Box>
       {steps[step]}
       {error && <Alert data-testid="create-pod-error" severity="error">{error}</Alert>}
@@ -176,7 +166,8 @@ export default function CreatePodStepper({
           isLast={isLast}
           busy={busy}
           submitDisabled={preview.blocked}
-          onBack={() => goTo(adjacentCreatePodStep(step, -1, form.getValues()))}
+          nextLabel={nextLabel}
+          onBack={() => goTo(clampCreatePodStep(step - 1))}
           onNext={() => {
             next().catch(() => undefined);
           }}

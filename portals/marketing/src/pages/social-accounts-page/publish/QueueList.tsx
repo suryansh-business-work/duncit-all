@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useQuery } from '@apollo/client/react';
 import { Alert, LinearProgress, Stack } from '@mui/material';
+import { EmptyState } from '@duncit/ui';
 import { parseApiError } from '@duncit/utils';
 import { useTranslation } from '@duncit/app-settings';
 import { SOCIAL_SCHEDULED_POSTS, type SocialQueueView, type SocialScheduledPost } from '../publish.queries';
@@ -11,6 +12,7 @@ const FOLLOW_MS = 5_000;
 
 const EMPTY: Record<SocialQueueView, string> = {
   QUEUE: 'marketing.social.emptyQueue',
+  APPROVALS: 'marketing.social.emptyApprovals',
   DRAFTS: 'marketing.social.emptyDrafts',
   SENT: 'marketing.social.emptySent',
 };
@@ -20,7 +22,7 @@ interface Props {
   onEdit: (post: SocialScheduledPost) => void;
 }
 
-/** Buffer's Queue, Drafts and Sent: the posts written here, soonest (or newest) first. */
+/** Buffer's Queue, Awaiting approval, Drafts and Sent: the posts written here, soonest (or newest) first. */
 export default function QueueList({ view, onEdit }: Readonly<Props>) {
   const { t } = useTranslation();
   const { data, loading, error, startPolling, stopPolling } = useQuery<{ socialScheduledPosts: SocialScheduledPost[] }>(
@@ -40,9 +42,12 @@ export default function QueueList({ view, onEdit }: Readonly<Props>) {
   if (error) return <Alert severity="error">{parseApiError(error)}</Alert>;
   if (posts.length === 0) {
     return (
-      <Alert severity="info" variant="outlined">
-        {t(EMPTY[view])}
-      </Alert>
+      <EmptyState
+        compact
+        title={t(EMPTY[view])}
+        body={view === 'APPROVALS' ? t('marketing.social.emptyApprovalsBody') : undefined}
+        data-testid={`social-queue-empty-${view.toLowerCase()}`}
+      />
     );
   }
   return (

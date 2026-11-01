@@ -7,7 +7,7 @@ import type { IgLeadSettingsInput } from './igLead.outreach';
 import type { IgLeadStatus } from './igLead.types';
 
 /** Same gate as the rest of the marketing console. */
-const ROLES = ['SUPER_ADMIN', 'CITY_ADMIN', 'MARKETING_MANAGER'];
+const ROLES = ['SUPER_ADMIN', 'CITY_ADMIN', 'MARKETING_MANAGER', 'MARKETING_EDITOR'];
 
 type Ctx = GraphQLContext;
 

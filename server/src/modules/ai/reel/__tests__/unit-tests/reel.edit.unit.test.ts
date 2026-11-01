@@ -1,5 +1,5 @@
 import type { ReelAsset } from '../../reel.model';
-import { REEL_LIMITS, emptySpec, sanitizeSpec, specDurationMs } from '../../reel.edit';
+import { REEL_HEIGHT, REEL_LIMITS, REEL_WIDTH, WATERMARK_WIDTH_PCT, emptySpec, reelFrame, sanitizeSpec, specDurationMs } from '../../reel.edit';
 
 const asset = (id: string, kind: ReelAsset['kind'], duration_ms = 0): ReelAsset => ({
   id,
@@ -13,6 +13,9 @@ const asset = (id: string, kind: ReelAsset['kind'], duration_ms = 0): ReelAsset 
   width: 1080,
   height: 1920,
   size_bytes: 1,
+  licence: '',
+  attribution: '',
+  provider_id: '',
   added_at: new Date('2026-10-01T00:00:00Z'),
 });
 
@@ -27,8 +30,39 @@ const ASSETS = [
 const one = (scene: Record<string, unknown>) => sanitizeSpec({ scenes: [scene] }, ASSETS).scenes[0];
 
 describe('emptySpec', () => {
-  it('is a portrait reel with nothing in it', () => {
-    expect(emptySpec()).toEqual({ fps: 30, width: 1080, height: 1920, background: '#000000', scenes: [], music: null });
+  it('is a portrait reel with nothing in it — no sound, no mark, plain captions', () => {
+    expect(emptySpec()).toEqual({
+      fps: 30,
+      width: 1080,
+      height: 1920,
+      aspect: 'PORTRAIT',
+      background: '#000000',
+      scenes: [],
+      music: null,
+      voiceover: null,
+      brand: { watermark_asset_id: '', watermark_corner: 'BOTTOM_RIGHT', watermark_width_pct: WATERMARK_WIDTH_PCT.fallback, primary_color: '' },
+      captions: { style: 'PLAIN' },
+    });
+  });
+});
+
+describe('reelFrame', () => {
+  it.each([
+    ['PORTRAIT', 1080, 1920],
+    ['SQUARE', 1080, 1080],
+    ['LANDSCAPE', 1920, 1080],
+  ] as const)('%s is %ix%i', (aspect, width, height) => {
+    expect(reelFrame(aspect)).toEqual({ width, height });
+  });
+
+  it('keeps the portrait constants as the default frame', () => {
+    expect(reelFrame('PORTRAIT')).toEqual({ width: REEL_WIDTH, height: REEL_HEIGHT });
+  });
+
+  it('hands out a copy, so a caller cannot change the frame for everyone', () => {
+    const frame = reelFrame('SQUARE');
+    frame.width = 1;
+    expect(reelFrame('SQUARE').width).toBe(1080);
   });
 });
 
@@ -235,5 +269,56 @@ describe('sanitizeSpec — transitions, music and background', () => {
   it('keeps a valid background and replaces anything else', () => {
     expect(sanitizeSpec({ background: '#0f0f0f' }, ASSETS).background).toBe('#0F0F0F');
     expect(sanitizeSpec({ background: 'black' }, ASSETS).background).toBe('#000000');
+  });
+});
+
+describe('sanitizeSpec — aspect, voiceover, brand and captions', () => {
+  it('draws the frame from the aspect, never from the width and height that came in', () => {
+    expect(sanitizeSpec({ aspect: 'landscape', width: 10, height: 10 }, ASSETS)).toMatchObject({ aspect: 'LANDSCAPE', width: 1920, height: 1080 });
+    expect(sanitizeSpec({ aspect: 'SQUARE' }, ASSETS)).toMatchObject({ aspect: 'SQUARE', width: 1080, height: 1080 });
+    expect(sanitizeSpec({ aspect: 'wide', width: 4000 }, ASSETS)).toMatchObject({ aspect: 'PORTRAIT', width: 1080, height: 1920 });
+  });
+
+  it('plays only a sound file of the project as the voiceover, at full volume unless told otherwise', () => {
+    expect(sanitizeSpec({ voiceover: { asset_id: 'song' } }, ASSETS).voiceover).toEqual({ asset_id: 'song', volume: 1 });
+    expect(sanitizeSpec({ voiceover: { asset_id: 'song', volume: '0.4' } }, ASSETS).voiceover).toEqual({ asset_id: 'song', volume: 0.4 });
+    expect(sanitizeSpec({ voiceover: { asset_id: 'song', volume: 7 } }, ASSETS).voiceover).toEqual({ asset_id: 'song', volume: 1 });
+    expect(sanitizeSpec({ voiceover: { asset_id: 'clip' } }, ASSETS).voiceover).toBeNull();
+    expect(sanitizeSpec({ voiceover: { asset_id: 'missing' } }, ASSETS).voiceover).toBeNull();
+    expect(sanitizeSpec({ voiceover: 'song' }, ASSETS).voiceover).toBeNull();
+  });
+
+  it('keeps a watermark only when it names a picture the project holds', () => {
+    expect(sanitizeSpec({ brand: { watermark_asset_id: 'logo', watermark_corner: 'top_left', watermark_width_pct: 30, primary_color: '#ff8800' } }, ASSETS).brand).toEqual({
+      watermark_asset_id: 'logo',
+      watermark_corner: 'TOP_LEFT',
+      watermark_width_pct: 30,
+      primary_color: '#FF8800',
+    });
+    expect(sanitizeSpec({ brand: { watermark_asset_id: 'clip' } }, ASSETS).brand.watermark_asset_id).toBe('');
+    expect(sanitizeSpec({ brand: { watermark_asset_id: 'nobody' } }, ASSETS).brand.watermark_asset_id).toBe('');
+  });
+
+  it('keeps the watermark between a twentieth and half of the frame, and drops a colour that is not #RRGGBB', () => {
+    const brand = (over: Record<string, unknown>) => sanitizeSpec({ brand: { watermark_asset_id: 'logo', ...over } }, ASSETS).brand;
+    expect(brand({ watermark_width_pct: 1 }).watermark_width_pct).toBe(WATERMARK_WIDTH_PCT.min);
+    expect(brand({ watermark_width_pct: 90 }).watermark_width_pct).toBe(WATERMARK_WIDTH_PCT.max);
+    expect(brand({ watermark_width_pct: 'wide' }).watermark_width_pct).toBe(WATERMARK_WIDTH_PCT.fallback);
+    expect(brand({ watermark_corner: 'middle' }).watermark_corner).toBe('BOTTOM_RIGHT');
+    expect(brand({ primary_color: 'orange' }).primary_color).toBe('');
+  });
+
+  it('fills the brand and captions with defaults when a stored spec predates them', () => {
+    const spec = sanitizeSpec({ scenes: [{ duration_ms: 1000 }] }, ASSETS);
+    expect(spec.brand).toEqual(emptySpec().brand);
+    expect(spec.captions).toEqual({ style: 'PLAIN' });
+    expect(spec.voiceover).toBeNull();
+  });
+
+  it('accepts a caption style in any case and replaces an unknown one', () => {
+    expect(sanitizeSpec({ captions: { style: 'highlight' } }, ASSETS).captions).toEqual({ style: 'HIGHLIGHT' });
+    expect(sanitizeSpec({ captions: { style: 'BOX' } }, ASSETS).captions).toEqual({ style: 'BOX' });
+    expect(sanitizeSpec({ captions: { style: 'neon' } }, ASSETS).captions).toEqual({ style: 'PLAIN' });
+    expect(sanitizeSpec({ captions: 'BOX' }, ASSETS).captions).toEqual({ style: 'PLAIN' });
   });
 });

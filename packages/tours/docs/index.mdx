@@ -90,7 +90,7 @@ section arriving mid-walkthrough would otherwise renumber every step behind it.
 
 ```js
 tourStorageKey('66f1a2…')          // 'duncit.tours.completed.66f1a2…'
-readCompletedTours(raw)            // TourId[] — never throws
+readCompletedTours(raw)            // string[] — TourId[] where the caller's list is typed so; never throws
 markTourCompleted(completed, 'home')
 shouldAutoStartHomeTour(completed, isFirstSignup)
 ```

@@ -1,7 +1,8 @@
 import { Types } from 'mongoose';
 import { ActiveUserPingModel } from './activeUser.model';
 import { AppEventModel, type IAppEvent } from './appEvent.model';
-import type { RecordAppEventDTO } from './analytics.validator';
+import type { ProductEventDTO, RecordAppEventDTO } from './analytics.validator';
+import { ingestProductEvents } from './analytics.ingest';
 import { CategoryModel } from '@modules/pods/category/category.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { ClubModel } from '@modules/clubs/club/club.model';
@@ -131,6 +132,24 @@ export const analyticsService = {
     });
     await recordActiveDay({ device_id: deviceId, user_id: args.user_id, super_category_slug: slug });
     return true;
+  },
+
+  /** A batch of product-analytics events (mWeb, the native app); answers how many were new. */
+  async recordProductEvents(args: {
+    events: readonly ProductEventDTO[];
+    user_id: string | null;
+    device_id: string | null;
+  }): Promise<number> {
+    const { stored, latest } = await ingestProductEvents(args);
+    // The app was in use today: the same daily-active row a route ping writes.
+    if (latest) {
+      await recordActiveDay({
+        device_id: latest.device_id,
+        user_id: args.user_id,
+        super_category_slug: latest.super_category_slug,
+      });
+    }
+    return stored;
   },
 
   async stats(args: {

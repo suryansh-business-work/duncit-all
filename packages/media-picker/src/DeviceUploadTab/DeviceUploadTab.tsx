@@ -22,6 +22,8 @@ interface Props {
   stage: UploadStage;
   settings: UploadSettings | null;
   cropKey: string;
+  /** The caller fixed the preset — no menu to change it. */
+  cropLocked?: boolean;
   onSelectCropKey: (key: string) => void;
   onCropComplete: (rect: CropRect | null) => void;
   onPickFile: (e: ChangeEvent<HTMLInputElement>) => void;
@@ -37,6 +39,7 @@ export default function DeviceUploadTab({
   stage,
   settings,
   cropKey,
+  cropLocked = false,
   onSelectCropKey,
   onCropComplete,
   onPickFile,
@@ -105,6 +108,7 @@ export default function DeviceUploadTab({
           previewUrl={previewUrl}
           presets={settings?.crop_presets ?? []}
           selectedKey={cropKey}
+          locked={cropLocked}
           suggestedKey={suggestedKey}
           onSelectKey={onSelectCropKey}
           onCropComplete={onCropComplete}

@@ -38,8 +38,17 @@ export const ENTITY_ANALYTICS: TypedDocumentNode<
     $to: String
     $compare: AnalyticsCompare
     $city: ID
+    $platform: String
   ) {
-    entityAnalytics(entity: $entity, days: $days, from: $from, to: $to, compare: $compare, city: $city) {
+    entityAnalytics(
+      entity: $entity
+      days: $days
+      from: $from
+      to: $to
+      compare: $compare
+      city: $city
+      platform: $platform
+    ) {
       entity
       details_url
       period {
@@ -51,6 +60,7 @@ export const ENTITY_ANALYTICS: TypedDocumentNode<
         previous_from
         previous_to
         city
+        platform
       }
       kpis {
         key

@@ -7,8 +7,8 @@ import { readConnectState } from './social.oauth';
 import type { SocialConnectReturn } from './social.types';
 
 const RETURN_PATH: Record<SocialConnectReturn, string> = {
-  ACCOUNTS: '/social-accounts',
-  CALENDAR: '/social-calendar',
+  ACCOUNTS: '/social/accounts',
+  CALENDAR: '/publish/calendar',
 };
 
 /**

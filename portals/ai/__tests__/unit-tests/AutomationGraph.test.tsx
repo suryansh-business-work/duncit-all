@@ -8,12 +8,12 @@ import { AUTOMATION_FLOW, AUTOMATION_OPTIONS } from '../../src/pages/automation/
 import { DRAG_KIND } from '../../src/pages/automation/builder/FlowCanvas';
 import type { AutomationFlow } from '../../src/pages/automation/types';
 import { renderWithProviders } from '../testkit';
-import { answerQuery, resetApollo } from './reel-apollo-mock';
+import { answerQuery, resetApollo } from '../hooks-mock';
 import { OPTIONS, en, flow } from './automation-fixtures';
 
 vi.mock('@apollo/client/react', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@apollo/client/react')>()),
-  ...(await import('./reel-apollo-mock')).hooks,
+  ...(await import('../hooks-mock')).hooks,
 }));
 
 const BRANCHING = flow({

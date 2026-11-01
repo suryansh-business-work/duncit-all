@@ -13,6 +13,7 @@ import {
 } from './regressionReport.model';
 import { compareUnitRuns, findUnitBase } from './regressionReport.unit';
 import { compareE2eRuns, findE2eBase, isFinishedE2e, loadE2eRun } from './regressionReport.e2e';
+import { compareE2eScenarios, hasScenarios } from './regressionReport.scenarios';
 import { pubItem, pubReport } from './regressionReport.public';
 
 /**
@@ -162,26 +163,39 @@ async function buildE2e(runId: string): Promise<void> {
   const report = await claimBuild('E2E', run._id);
   if (!report) return;
   try {
-    const result = compareE2eRuns(run, base);
+    const bySuite = compareE2eRuns(run, base);
+    // Scenario by scenario when both runs reported their scenarios; runs from
+    // before that only have suite counts, so those reports stay suite by suite.
+    const byScenario =
+      (await hasScenarios(run._id)) && (await hasScenarios(base._id)) ? await compareE2eScenarios(run, base) : null;
+    const counts = byScenario?.counts ?? bySuite.counts;
+    const items = byScenario?.items ?? [];
+    await RegressionItemModel.deleteMany({ report_id: report._id });
+    if (items.length > 0) {
+      await RegressionItemModel.insertMany(
+        items.map((item) => ({ ...item, report_id: report._id })),
+        { ordered: false }
+      );
+    }
     await RegressionReportModel.updateOne(
       { _id: report._id },
       {
         $set: {
           state: 'READY',
           building_since: null,
-          status: hasRegression(result.counts) ? 'REGRESSED' : 'CLEAN',
+          status: hasRegression(counts) ? 'REGRESSED' : 'CLEAN',
           run_no: run.run_no,
           base_run_id: base._id,
           base_run_no: base.run_no,
           branch: run.ref,
           workflow: '',
-          counts: result.counts,
-          items_kept: 0,
-          truncated: false,
-          skipped_workspaces: [],
+          counts,
+          items_kept: items.length,
+          truncated: byScenario?.truncated ?? false,
+          skipped_workspaces: byScenario?.skipped_suites ?? [],
           coverage_total: null,
           coverage_workspaces: [],
-          suites: result.suites,
+          suites: bySuite.suites,
           items_purged: false,
         },
       }

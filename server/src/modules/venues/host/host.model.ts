@@ -6,6 +6,7 @@ import {
 } from '@modules/finance/finance/bankAccount';
 import { nextEntityNo } from '@modules/venues/entityIdCounter';
 import { attachEntityAudit } from '@modules/platform/entityAudit/entityAudit.attach';
+import { bannerKitSchema, blankBannerKit, type IBannerKit } from '@modules/venues/bannerKit/bannerKit.model';
 
 export type HostStatus = 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'REJECTED';
 
@@ -40,6 +41,8 @@ export interface IHost extends Document {
   // Categories this host is approved to operate in. Seeded from approved Host
   // Requests (one entry per HOSTREQ) and backfilled from historical HostLeads.
   host_categories: IHostCategory[];
+  /** What the host's pod banners are made from. Absent on a host saved before kits existed. */
+  banner_kit?: IBannerKit;
   // Step 4: Confirmation handled by submit
   step_completed: number;
   status: HostStatus;
@@ -83,6 +86,7 @@ const hostSchema = new Schema<IHost>(
     bank_account: { type: bankAccountSchema, default: blankBankAccount },
     tags: { type: [String], default: [] },
     host_categories: { type: [hostCategorySchema], default: [] },
+    banner_kit: { type: bannerKitSchema, default: blankBannerKit },
     step_completed: { type: Number, default: 0, min: 0, max: 4 },
     status: { type: String, enum: ['DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED'], default: 'DRAFT' },
     is_active: { type: Boolean, default: true },

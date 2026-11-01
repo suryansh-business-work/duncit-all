@@ -26,6 +26,8 @@ export class SocialApiError extends Error {
 type ErrorBody = {
   error?: string | { message?: string; code?: number };
   error_description?: string;
+  /** The Instagram and Threads token endpoints answer `{error_type, code, error_message}`. */
+  error_message?: string;
   message?: string;
   detail?: string;
   title?: string;
@@ -39,6 +41,7 @@ function reasonOf(body: ErrorBody): string {
   return (
     nested ||
     body.error_description ||
+    body.error_message ||
     body.message ||
     body.detail ||
     body.errors?.[0]?.message ||
@@ -107,7 +110,8 @@ export async function probeClient(
 ): Promise<{ accepted: boolean; detail: string }> {
   const res = await fetch(url, { ...init, signal: AbortSignal.timeout(PROBE_TIMEOUT_MS) });
   const body = (await res.json().catch(() => ({}))) as ErrorBody;
-  const error = typeof body.error === 'string' ? body.error : '';
+  // OAuth providers put the code in `error`; Instagram and Threads put the words in `error_message`.
+  const error = typeof body.error === 'string' ? body.error : body.error_message ?? '';
   if (res.ok) return { accepted: true, detail: '' };
   return { accepted: !clientRejected(res.status, error), detail: reasonOf(body) || `HTTP ${res.status}` };
 }

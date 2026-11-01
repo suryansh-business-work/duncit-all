@@ -91,6 +91,35 @@ describe('system prompts (the AI features run on the library)', () => {
     expect(edited!.content).toBe('Edited body.');
   });
 
+  // The Reel Studio director moved from GPT-4o to Claude. `target_model` is
+  // operator-owned after the first seed, so the catalogue names the model it
+  // left behind: a row still on it follows, a row an operator retargeted stays.
+  it('moves a seeded row off a superseded model and leaves an operator’s choice alone', async () => {
+    const DIRECTOR_KEY = 'reels.director';
+    const def = SYSTEM_PROMPT_BY_KEY.get(DIRECTOR_KEY)!;
+    expect(def.superseded_models).toContain('gpt-4o');
+    expect(def.target_model).not.toBe('gpt-4o');
+
+    await aiPromptService.seedDefaults();
+    const seeded = (await aiPromptService.list({ kind: 'CODE' })).find((p) => p!.key === DIRECTOR_KEY)!;
+    expect(seeded.target_model).toBe(def.target_model);
+
+    // A deployment seeded under the earlier catalogue still carries the old model.
+    await aiPromptService.update(seeded.id, { target_model: 'gpt-4o' });
+    await aiPromptService.seedDefaults();
+    expect((await aiPromptService.getByKey(DIRECTOR_KEY))!.target_model).toBe(def.target_model);
+
+    // A model a person picked is theirs, however many boots follow.
+    await aiPromptService.update(seeded.id, { target_model: 'gpt-4o-mini' });
+    await aiPromptService.seedDefaults();
+    expect((await aiPromptService.getByKey(DIRECTOR_KEY))!.target_model).toBe('gpt-4o-mini');
+
+    // Cleared to "the configured default" is a choice too.
+    await aiPromptService.update(seeded.id, { target_model: '' });
+    await aiPromptService.seedDefaults();
+    expect((await aiPromptService.getByKey(DIRECTOR_KEY))!.target_model).toBe('');
+  });
+
   it('resets a system prompt back to its shipped default', async () => {
     await aiPromptService.seedDefaults();
     const scan = (await aiPromptService.list({ kind: 'CODE' })).find((p) => p!.key === IMAGE_SCAN_KEY)!;

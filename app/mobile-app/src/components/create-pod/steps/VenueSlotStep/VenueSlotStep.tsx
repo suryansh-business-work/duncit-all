@@ -40,10 +40,11 @@ interface Props {
 
 const DIRTY = { shouldDirty: true, shouldValidate: true } as const;
 
-/** Step 3 — pick a venue partner in the pod's city, its space, the guests and
- * the window to offer it (physical), or meeting details + schedule (virtual). A
- * Pod Request's pod keeps the slot that request holds. The offered window sets
- * the pod's date/time; the offer itself is Step 4 (VenueOfferStep). mWeb twin. */
+/** Where & when's venue part — pick a venue partner in the pod's city, its
+ * space, the guests and the window to offer it (physical), or meeting details +
+ * schedule (virtual). A Pod Request's pod keeps the slot that request holds. The
+ * offered window sets the pod's date/time; the offer itself is on Money
+ * (VenueOfferStep). mWeb twin. */
 export function VenueSlotStep({
   form,
   venues,

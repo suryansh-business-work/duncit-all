@@ -1,59 +1,71 @@
 import { useState } from 'react';
 import { Text, XStack, YStack } from 'tamagui';
+import { CREATE_POD_STEP_COUNT } from '@duncit/utils';
 
 import { useTranslation } from '@/hooks/useTranslation';
-import { stepTitleKey } from './create-pod.form';
+import { stepSubtitleKey, stepTitleKey } from './create-pod.form';
 import { AiMonitorChip } from './AiMonitorChip';
 import { PodGuidelinesDialog } from './PodGuidelinesDialog';
 
 interface Props {
   step: number;
-  /** Step 3 is "Meeting Time & Medium" for a virtual pod, not "Venue & Slot". */
+  /** Where & when is "Meeting Time & Medium" for a virtual pod. */
   podMode?: string | null;
-  /** The steps this pod walks, in order — five, or four without a venue offer. */
-  shownSteps: readonly number[];
+  /** Money without a venue offer is only the ticket, and its line says so. */
+  sendsOffer: boolean;
 }
 
+const STEPS = Array.from({ length: CREATE_POD_STEP_COUNT }, (_, index) => index);
+
 /** The stepper header: one slim pill per step (done/current in green), the step
- * title and the "AI monitoring" chip (opens the guidelines dialog). The step
- * counter is the progress bar's accessible name rather than a caption. */
-export function StepHeader({ step, podMode, shownSteps }: Readonly<Props>) {
+ * title with the "AI monitoring" chip (opens the guidelines dialog), and the
+ * line under it. The step counter is the progress bar's accessible name rather
+ * than a caption. mWeb twin: StepHero. */
+export function StepHeader({ step, podMode, sendsOffer }: Readonly<Props>) {
   const [guideOpen, setGuideOpen] = useState(false);
   const { t } = useTranslation();
-  const total = shownSteps.length;
-  const position = Math.max(0, shownSteps.indexOf(step));
   const titleKey = stepTitleKey(step, podMode);
+  const subtitleKey = stepSubtitleKey(step, podMode, sendsOffer);
   return (
     <YStack gap={14}>
       <XStack
         testID="create-pod-progress"
         role="progressbar"
-        aria-label={t('mweb.createPod.stepCounter', { vars: { step: position + 1, total } })}
+        aria-label={t('mweb.createPod.stepCounter', {
+          vars: { step: step + 1, total: CREATE_POD_STEP_COUNT },
+        })}
         gap={6}
       >
-        {shownSteps.map((shown, index) => (
+        {STEPS.map((index) => (
           <YStack
-            key={shown}
+            key={index}
             flex={1}
             height={5}
             borderRadius={999}
-            backgroundColor={index <= position ? '$primary' : '$soft'}
+            backgroundColor={index <= step ? '$primary' : '$soft'}
           />
         ))}
       </XStack>
-      <XStack alignItems="center" justifyContent="space-between" gap={8}>
-        <Text
-          testID="create-pod-step-title"
-          role="heading"
-          flex={1}
-          fontSize={20}
-          fontWeight="600"
-          color="$color"
-        >
-          {titleKey ? t(titleKey) : ''}
-        </Text>
-        <AiMonitorChip onPress={() => setGuideOpen(true)} />
-      </XStack>
+      <YStack gap={4}>
+        <XStack alignItems="center" justifyContent="space-between" gap={8}>
+          <Text
+            testID="create-pod-step-title"
+            role="heading"
+            flex={1}
+            fontSize={20}
+            fontWeight="600"
+            color="$color"
+          >
+            {titleKey ? t(titleKey) : ''}
+          </Text>
+          <AiMonitorChip onPress={() => setGuideOpen(true)} />
+        </XStack>
+        {subtitleKey ? (
+          <Text testID="create-pod-step-subtitle" fontSize={13} color="$muted">
+            {t(subtitleKey)}
+          </Text>
+        ) : null}
+      </YStack>
       <PodGuidelinesDialog open={guideOpen} onClose={() => setGuideOpen(false)} />
     </YStack>
   );

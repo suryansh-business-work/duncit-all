@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { ResultOf } from '@graphql-typed-document-node/core';
 import { logs } from '@duncit/logs';
+import { createPodCatalogRows, createPodGrantedRows, resumeCreatePodStep } from '@duncit/utils';
 
 import {
   CreatePodOptionsDocument,
@@ -11,7 +12,6 @@ import {
   SavePodDraftDocument,
 } from '@/graphql/create-pod';
 import {
-  STEP_TITLES,
   blankCreatePodForm,
   buildCreatePodInput,
   buildModerationInput,
@@ -29,8 +29,6 @@ type OptionsData = ResultOf<typeof CreatePodOptionsDocument>;
 export type HostAgainPrefill = ResultOf<typeof HostAgainPrefillDocument>['hostAgainPrefill'];
 export type CreatePodClub = OptionsData['clubs'][number];
 export type CreatePodVenue = OptionsData['publicVenues'][number];
-
-const clampStep = (step: number) => Math.min(Math.max(step, 0), STEP_TITLES.length - 1);
 
 /** Fallbacks keep the pricing panel rendering while settings load. */
 const blankFinance = { platform_fee_pct: 0, gst_pct: 0, currency_symbol: '₹' };
@@ -114,7 +112,8 @@ export function useCreatePod(draftId?: string, partnerRequestId = '', hostAgainP
       setInitialValues({ ...values, location_id: values.location_id || fallbackLocationId });
       // A draft started from a Pod Request keeps that venue on offer too.
       setPinnedVenueId(values.partner_request_id ? values.venue_id : undefined);
-      setInitialStep(clampStep(stored.step));
+      // A draft the old five-step stepper saved opens on the step that now holds its screen.
+      setInitialStep(resumeCreatePodStep(stored.step, stored.payload));
       setResolvedDraftId(id);
     };
     loadCreatePodData(draftId, partnerRequestId, hostAgainPodId)
@@ -188,7 +187,17 @@ export function useCreatePod(draftId?: string, partnerRequestId = '', hostAgainP
     products: data?.availablePodProducts ?? [],
     // SUB categories carry the admin-set minimum pax that floors the spots slider.
     subCategories: data?.subCategories ?? [],
-    hostCategories: data?.myHost?.host_categories ?? [],
+    // What's category tiles: a sub-category's icon, else its parent's.
+    categoryIcons: [...(data?.subCategories ?? []), ...(data?.parentCategories ?? [])],
+    // Every active sub the host is granted: a whole Category (or Super) grant opens each sub beneath it.
+    hostCategories: createPodGrantedRows(
+      createPodCatalogRows(
+        data?.superCategories ?? [],
+        data?.parentCategories ?? [],
+        data?.subCategories ?? [],
+      ),
+      data?.myHost?.host_categories ?? [],
+    ),
     finance: data?.publicFinanceSettings ?? blankFinance,
     isLoading,
     initialValues,

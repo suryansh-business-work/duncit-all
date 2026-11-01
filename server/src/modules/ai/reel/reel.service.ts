@@ -1,23 +1,24 @@
-import { randomUUID } from 'node:crypto';
-import { GraphQLError } from 'graphql';
 import mongoose from 'mongoose';
 import { logs } from '@observability/log';
 import { isTrustedMediaUrl } from '@utils/url';
+import type { SocialPlatform } from '@modules/crm/marketing/social/social.types';
 import { directReel, type DirectorTurn } from './reel.director';
 import { driveAccountEmail, driveFile, driveFolder, parseDriveFolderId, type DriveEntry } from './reel.drive';
-import { reelMediaLinks, type ReelMediaLinks } from './reel.media';
+import { reelMediaLinks } from './reel.media';
 import { ReelProjectModel, type IReelProject, type ReelAsset, type ReelMessage } from './reel.model';
-import { emptySpec, sanitizeSpec, specDurationMs } from './reel.edit';
+import { emptySpec, sanitizeSpec, specDurationMs, type ReelAspect } from './reel.edit';
+import { assertRoom, badInput, load, notFound, shortId, str, toPub, toSummary, type ReelActor } from './reel.shared';
+import { analyticsOf, listFiguresOf } from './reel.analytics';
+import { reelChecks } from './reel.checks';
+import { newStockAssets, searchReelMedia, uploadAsset, type ReelStockAssetInput, type ReelUploadInput } from './reel.stock';
+import { generateReelIdeas, generateReelScript, generateReelVariants, recommendNextReel, type ReelConceptInput } from './reel.ai';
+import { applyReelStoryboard, type ReelScriptInput } from './reel.storyboard';
+import { generateReelSubtitles, generateReelVoiceover } from './reel.voice';
+import type { ReelAssetKind } from './reel.model';
 
-const badInput = (message: string) => new GraphQLError(message, { extensions: { code: 'BAD_USER_INPUT' } });
-const notFound = () => new GraphQLError('That reel no longer exists.', { extensions: { code: 'NOT_FOUND' } });
+export type { ReelActor } from './reel.shared';
+export type { ReelUploadInput } from './reel.stock';
 
-const str = (value: string | null | undefined): string => (value ?? '').trim();
-const iso = (value: Date | null | undefined): string | null => (value ? value.toISOString() : null);
-const shortId = (): string => randomUUID().slice(0, 8);
-
-/** A reel is a handful of clips; past this the model's context and the picker both stop being useful. */
-const MAX_ASSETS = 60;
 const MAX_UPLOADS_PER_MESSAGE = 6;
 const MAX_MESSAGE_LENGTH = 2000;
 /** The transcript kept per reel. Older turns fall off; the edit they produced is already in the spec. */
@@ -28,98 +29,13 @@ export interface ReelProjectInput {
   drive_url?: string | null;
 }
 
-export interface ReelUploadInput {
-  url: string;
-  name: string;
-  width?: number | null;
-  height?: number | null;
-  size_bytes?: number | null;
-}
-
 export interface ReelMessageInput {
   project_id: string;
   text: string;
   uploads?: ReelUploadInput[] | null;
 }
 
-export interface ReelActor {
-  id: string;
-  email: string;
-}
-
-/* --------------------------------- shaping ------------------------------- */
-
-function pubAsset(asset: ReelAsset, links: ReelMediaLinks) {
-  const drive = asset.source === 'DRIVE';
-  const thumbnail = drive ? links.thumbnail(asset.drive_file_id) : asset.url;
-  return {
-    id: asset.id,
-    kind: asset.kind,
-    source: asset.source,
-    name: asset.name,
-    mime_type: asset.mime_type,
-    drive_file_id: asset.drive_file_id,
-    url: drive ? links.media(asset.drive_file_id) : asset.url,
-    thumbnail_url: asset.kind === 'AUDIO' ? '' : thumbnail,
-    duration_ms: asset.duration_ms,
-    width: asset.width,
-    height: asset.height,
-    size_bytes: asset.size_bytes,
-  };
-}
-
-const pubMessage = (message: ReelMessage) => ({
-  id: message.id,
-  role: message.role,
-  text: message.text,
-  asset_ids: message.asset_ids,
-  restorable: message.role === 'ASSISTANT' && message.spec != null,
-  failed: message.failed,
-  at: message.at.toISOString(),
-});
-
-/** A reel as the studio reads it, every Drive link freshly signed. */
-async function toPub(doc: IReelProject) {
-  const links = await reelMediaLinks();
-  const spec = sanitizeSpec(doc.spec, doc.assets);
-  return {
-    id: String(doc._id),
-    name: doc.name,
-    drive_url: doc.drive_url,
-    drive_folder_id: doc.drive_folder_id,
-    assets: doc.assets.map((asset) => pubAsset(asset, links)),
-    spec,
-    duration_ms: specDurationMs(spec),
-    messages: doc.messages.map(pubMessage),
-    created_by: doc.created_by,
-    created_at: iso(doc.created_at),
-    updated_at: iso(doc.updated_at),
-  };
-}
-
-function toSummary(doc: IReelProject) {
-  const spec = sanitizeSpec(doc.spec, doc.assets);
-  return {
-    id: String(doc._id),
-    name: doc.name,
-    drive_url: doc.drive_url,
-    asset_count: doc.assets.length,
-    scene_count: spec.scenes.length,
-    duration_ms: specDurationMs(spec),
-    created_by: doc.created_by,
-    created_at: iso(doc.created_at),
-    updated_at: iso(doc.updated_at),
-  };
-}
-
 /* --------------------------------- helpers ------------------------------- */
-
-async function load(id: string): Promise<IReelProject> {
-  if (!mongoose.isValidObjectId(id)) throw notFound();
-  const doc = await ReelProjectModel.findById(id);
-  if (!doc) throw notFound();
-  return doc;
-}
 
 /** The name and Drive folder a create or an edit asked for, checked. */
 function projectFields(input: ReelProjectInput) {
@@ -146,9 +62,13 @@ const fromDrive = (entry: DriveEntry, kind: ReelAsset['kind']): ReelAsset => ({
   width: entry.width,
   height: entry.height,
   size_bytes: entry.size_bytes,
+  licence: '',
+  attribution: '',
+  provider_id: '',
   added_at: new Date(),
 });
 
+/** A picture attached in the chat — always a picture, whatever its address says. */
 function fromUpload(upload: ReelUploadInput): ReelAsset {
   const url = str(upload.url);
   // Only what the media store itself served: an arbitrary address here would be
@@ -166,22 +86,30 @@ function fromUpload(upload: ReelUploadInput): ReelAsset {
     width: Math.max(0, Math.round(upload.width ?? 0)),
     height: Math.max(0, Math.round(upload.height ?? 0)),
     size_bytes: Math.max(0, Math.round(upload.size_bytes ?? 0)),
+    licence: '',
+    attribution: '',
+    provider_id: '',
     added_at: new Date(),
   };
 }
 
-function assertRoom(doc: IReelProject, adding: number): void {
-  if (doc.assets.length + adding > MAX_ASSETS) {
-    throw badInput(`A reel holds at most ${MAX_ASSETS} clips and pictures. Remove some before adding more.`);
-  }
+/** Add footage the operator picked and hand the reel back. */
+async function addAssets(doc: IReelProject, assets: ReelAsset[], actor: ReelActor) {
+  assertRoom(doc, assets.length);
+  doc.assets.push(...assets);
+  doc.updated_by = actor.email;
+  await doc.save();
+  return toPub(doc);
 }
 
 /* --------------------------------- service ------------------------------- */
 
 export const reelService = {
+  /** Every reel, newest edit first, with the list's figures read for all of them in one go. */
   async list() {
     const docs = await ReelProjectModel.find().select('-messages').sort({ updated_at: -1 }).limit(500);
-    return docs.map(toSummary);
+    const [links, figures] = await Promise.all([reelMediaLinks(), listFiguresOf(docs.map((doc) => String(doc._id)))]);
+    return docs.map((doc) => toSummary(doc, links, figures.get(String(doc._id))));
   },
 
   async get(id: string) {
@@ -239,13 +167,25 @@ export const reelService = {
     const wanted = [...new Set(fileIds.map(str))].filter((id) => id && !held.has(id));
     assertRoom(doc, wanted.length);
     const entries = await Promise.all(wanted.map((id) => driveFile(id)));
-    for (const entry of entries) {
-      // A folder, or a file kind the studio cannot play, is skipped rather than refused.
-      if (entry && entry.kind !== 'FOLDER') doc.assets.push(fromDrive(entry, entry.kind));
-    }
-    doc.updated_by = actor.email;
-    await doc.save();
-    return toPub(doc);
+    // A folder, or a file kind the studio cannot play, is skipped rather than refused.
+    const assets = entries.flatMap((entry) => (entry && entry.kind !== 'FOLDER' ? [fromDrive(entry, entry.kind)] : []));
+    return addAssets(doc, assets, actor);
+  },
+
+  /** Stock the operator picked from the media search; items the reel already holds are skipped. */
+  async addStockAssets(projectId: string, items: ReelStockAssetInput[], actor: ReelActor) {
+    const doc = await load(projectId);
+    return addAssets(doc, newStockAssets(doc, items), actor);
+  },
+
+  /** Pictures, clips and sound files already in the media store. */
+  async addUploadAssets(projectId: string, uploads: ReelUploadInput[], actor: ReelActor) {
+    const doc = await load(projectId);
+    return addAssets(doc, uploads.map(uploadAsset), actor);
+  },
+
+  mediaSearch(input: { query: string; kind: ReelAssetKind; orientation?: ReelAspect | null; page?: number | null }) {
+    return searchReelMedia(input);
   },
 
   async removeAsset(projectId: string, assetId: string, actor: ReelActor) {
@@ -361,4 +301,40 @@ export const reelService = {
     await doc.save();
     return toPub(doc);
   },
+
+  /* ----------------------------- production line ---------------------------- */
+
+  generateIdeas: generateReelIdeas,
+  generateScript: generateReelScript,
+  applyStoryboard: applyReelStoryboard,
+  generateVoiceover: generateReelVoiceover,
+  generateSubtitles: generateReelSubtitles,
+  generateVariants: generateReelVariants,
+  recommendNext: recommendNextReel,
+
+  /** The checks for these networks, kept on the project as its last validation. */
+  async validate(projectId: string, platforms: SocialPlatform[]) {
+    if (platforms.length === 0) throw badInput('Pick at least one network to check against.');
+    const doc = await load(projectId);
+    const checks = reelChecks(sanitizeSpec(doc.spec, doc.assets), doc.assets, platforms);
+    await ReelProjectModel.updateOne({ _id: doc._id }, { $set: { checks } });
+    return checks;
+  },
+
+  async analytics(projectId: string) {
+    await load(projectId);
+    return analyticsOf(projectId);
+  },
+
+  /** The frame the cover is taken from, anywhere inside the reel. */
+  async setCover(projectId: string, atMs: number, actor: ReelActor) {
+    const doc = await load(projectId);
+    const total = specDurationMs(sanitizeSpec(doc.spec, doc.assets));
+    if (!Number.isFinite(atMs) || atMs < 0 || atMs > total) throw badInput(`Pick a moment between 0 and ${total} ms.`);
+    const updated = await ReelProjectModel.findByIdAndUpdate(doc._id, { $set: { cover_at_ms: Math.round(atMs), updated_by: actor.email } }, { new: true });
+    if (!updated) throw notFound();
+    return toPub(updated);
+  },
 };
+
+export type { ReelConceptInput, ReelScriptInput, ReelStockAssetInput };

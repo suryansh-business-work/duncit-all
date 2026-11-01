@@ -12,6 +12,7 @@
   "dependencies": {
     "@duncit/app-settings": "workspace:*",
     "@duncit/buttons": "workspace:*",
+    "@duncit/tours": "workspace:*",
     "@duncit/utils": "workspace:*"
   },
   "peerDependencies": {

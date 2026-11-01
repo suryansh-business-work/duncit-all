@@ -77,8 +77,8 @@ export default function App() {
   useDynamicFavicon(faviconUrl);
 
   useActivePing(location.pathname, superCategory);
+  // Product analytics for every visitor, signed in or not (consent-gated inside).
   useClickstreamTracking({
-    enabled: isAuthed,
     path: `${location.pathname}${location.search}`,
     superCategory,
   });

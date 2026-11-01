@@ -102,10 +102,9 @@ describe('HostDraftsCard', () => {
     expect(screen.getByText('Sunday Football')).toBeInTheDocument();
     expect(screen.getByText('Untitled pod')).toBeInTheDocument();
 
-    // The club step comes first: step=0 => Step 1/5 · Location, Category & Club,
-    // step=1 => Step 2/5 · Pod Basics
-    expect(screen.getByText(/Step 2\/5 · Pod Basics/)).toBeInTheDocument();
-    expect(screen.getByText(/Step 1\/5 · Location, Category & Club/)).toBeInTheDocument();
+    // step=0 => Step 1/4 · What, step=1 => Step 2/4 · Where & when
+    expect(screen.getByText(/Step 2\/4 · Where & when/)).toBeInTheDocument();
+    expect(screen.getByText(/Step 1\/4 · What/)).toBeInTheDocument();
 
     // continue links point at the draft route
     const links = screen.getAllByRole('link', { name: 'Continue' });

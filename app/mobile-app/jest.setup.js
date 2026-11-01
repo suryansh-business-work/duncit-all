@@ -91,6 +91,16 @@ jest.mock('@/services/short-link-attribution', () => ({
   initShortLinkAttribution: jest.fn(() => () => undefined),
 }));
 
+// Product analytics is fire-and-forget plumbing every DuncitButton press and
+// navigation change touches; suites must not build the tracker or reach the
+// network through it.
+jest.mock('@/services/product-analytics', () => ({
+  trackCurrentScreen: jest.fn(),
+  trackPress: jest.fn(),
+  trackProductEvent: jest.fn(),
+  startProductAnalytics: jest.fn(() => () => undefined),
+}));
+
 jest.mock('@/navigation/navigationRef', () => ({
   navigationRef: {
     isReady: () => false,

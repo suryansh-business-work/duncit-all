@@ -22,10 +22,9 @@ import { OccasionLayer } from '@/components/occasion';
 import { ConsentHost } from '@/components/consent';
 import { ExitConfirmGate } from '@/components/ExitConfirmGate';
 import { linking } from '@/navigation/linking';
-import {
-  initShortLinkAttribution,
-  reportJourneyForCurrentRoute,
-} from '@/services/short-link-attribution';
+import { initShortLinkAttribution } from '@/services/short-link-attribution';
+import { startProductAnalytics, trackCurrentScreen } from '@/services/product-analytics';
+import { onRouteChange } from '@/navigation/onRouteChange';
 import { navigationRef } from '@/navigation/navigationRef';
 import { useUserInfoSession } from '@/hooks/useUserInfoSession';
 import { useOccasionAppearance } from '@/hooks/useOccasionAppearance';
@@ -146,6 +145,8 @@ export default function App() {
   // received while running. The subscription outlives renders; unsubscribed on
   // teardown.
   useEffect(() => initShortLinkAttribution(), []);
+  // Product analytics: app_open, background / foreground, and every screen below.
+  useEffect(() => startProductAnalytics(), []);
 
   if (!ready) return null;
 
@@ -161,7 +162,8 @@ export default function App() {
                   ref={navigationRef}
                   theme={navTheme}
                   linking={linking}
-                  onStateChange={reportJourneyForCurrentRoute}
+                  onReady={trackCurrentScreen}
+                  onStateChange={onRouteChange}
                 >
                   <StatusBar style={mode === 'dark' ? 'light' : 'dark'} />
                   {/* Inside NavigationContainer so a tour survives the

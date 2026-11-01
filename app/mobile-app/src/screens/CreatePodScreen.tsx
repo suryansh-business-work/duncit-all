@@ -35,6 +35,7 @@ export function CreatePodScreen() {
     products,
 
     subCategories,
+    categoryIcons,
     hostCategories,
     finance,
     isLoading,
@@ -116,6 +117,7 @@ export function CreatePodScreen() {
               venues={venues}
               products={products}
               subCategories={subCategories}
+              categoryIcons={categoryIcons}
               hostCategories={hostCategories}
               viewerUserId={viewerUserId}
               pinnedVenueId={pinnedVenueId}

@@ -21,31 +21,37 @@ import type {
  * gate can see that each one is used.
  */
 
-export const PROVIDERS: readonly SocialProvider[] = ['LINKEDIN', 'META', 'X', 'YOUTUBE'];
+/** One app per network, in the order the page lists them. */
+export const PROVIDERS: readonly SocialProvider[] = ['INSTAGRAM', 'FACEBOOK', 'THREADS', 'YOUTUBE', 'LINKEDIN', 'X'];
 
 export const PROVIDER_LABEL: Record<SocialProvider, string> = {
-  LINKEDIN: 'marketing.social.providerLinkedin',
-  META: 'marketing.social.providerMeta',
-  X: 'marketing.social.providerX',
+  INSTAGRAM: 'marketing.social.providerInstagram',
+  FACEBOOK: 'marketing.social.providerFacebook',
+  THREADS: 'marketing.social.providerThreads',
   YOUTUBE: 'marketing.social.providerYoutube',
+  LINKEDIN: 'marketing.social.providerLinkedin',
+  X: 'marketing.social.providerX',
 };
 
-/** What connecting the provider adds — Meta brings two kinds of account. */
+/** What connecting the provider adds. */
 export const PROVIDER_ADDS: Record<SocialProvider, string> = {
-  LINKEDIN: 'marketing.social.addsLinkedin',
-  META: 'marketing.social.addsMeta',
-  X: 'marketing.social.addsX',
+  INSTAGRAM: 'marketing.social.addsInstagram',
+  FACEBOOK: 'marketing.social.addsFacebook',
+  THREADS: 'marketing.social.addsThreads',
   YOUTUBE: 'marketing.social.addsYoutube',
+  LINKEDIN: 'marketing.social.addsLinkedin',
+  X: 'marketing.social.addsX',
 };
 
-export const PLATFORMS: readonly SocialPlatform[] = ['LINKEDIN', 'FACEBOOK', 'INSTAGRAM', 'X', 'YOUTUBE'];
+export const PLATFORMS: readonly SocialPlatform[] = ['INSTAGRAM', 'FACEBOOK', 'THREADS', 'YOUTUBE', 'LINKEDIN', 'X'];
 
 export const PLATFORM_LABEL: Record<SocialPlatform, string> = {
-  LINKEDIN: 'marketing.social.platformLinkedin',
-  FACEBOOK: 'marketing.social.platformFacebook',
   INSTAGRAM: 'marketing.social.platformInstagram',
-  X: 'marketing.social.platformX',
+  FACEBOOK: 'marketing.social.platformFacebook',
+  THREADS: 'marketing.social.platformThreads',
   YOUTUBE: 'marketing.social.platformYoutube',
+  LINKEDIN: 'marketing.social.platformLinkedin',
+  X: 'marketing.social.platformX',
 };
 
 export const STATUS_LABEL: Record<SocialAccountStatus, string> = {
@@ -92,6 +98,7 @@ export const CATEGORY_LABEL: Record<string, string> = {
 
 export const PUBLISH_STATUS_LABEL: Record<SocialPublishStatus, string> = {
   DRAFT: 'marketing.social.publishDraft',
+  PENDING_APPROVAL: 'marketing.social.publishPendingApproval',
   SCHEDULED: 'marketing.social.publishScheduled',
   PUBLISHING: 'marketing.social.publishPublishing',
   PUBLISHED: 'marketing.social.publishPublished',
@@ -101,6 +108,7 @@ export const PUBLISH_STATUS_LABEL: Record<SocialPublishStatus, string> = {
 
 export const PUBLISH_STATUS_COLORS = {
   DRAFT: 'default',
+  PENDING_APPROVAL: 'info',
   SCHEDULED: 'info',
   PUBLISHING: 'warning',
   PUBLISHED: 'success',
@@ -118,6 +126,7 @@ export const TARGET_STATUS_COLORS = { PENDING: 'default', PUBLISHED: 'success', 
 
 export const QUEUE_VIEW_LABEL: Record<SocialQueueView, string> = {
   QUEUE: 'marketing.social.viewQueue',
+  APPROVALS: 'marketing.social.viewApprovals',
   DRAFTS: 'marketing.social.viewDrafts',
   SENT: 'marketing.social.viewSent',
 };
@@ -134,12 +143,14 @@ export const IDEA_FORMAT_LABEL: Record<SocialIdeaFormat, string> = {
   VIDEO: 'marketing.social.formatVideo',
 };
 
-/** The networks a provider's connection brings in. */
+/** The network a provider's connection brings in — one each, now that every network has its own app. */
 export const PROVIDER_PLATFORMS: Record<SocialProvider, readonly SocialPlatform[]> = {
-  LINKEDIN: ['LINKEDIN'],
-  META: ['FACEBOOK', 'INSTAGRAM'],
-  X: ['X'],
+  INSTAGRAM: ['INSTAGRAM'],
+  FACEBOOK: ['FACEBOOK'],
+  THREADS: ['THREADS'],
   YOUTUBE: ['YOUTUBE'],
+  LINKEDIN: ['LINKEDIN'],
+  X: ['X'],
 };
 
 export const STATUS_COLORS = { CONNECTED: 'success', EXPIRED: 'warning', ERROR: 'error' } as const;

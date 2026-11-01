@@ -4,6 +4,7 @@ import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { useForm } from 'react-hook-form';
 import type { ReactNode } from 'react';
 import { z } from 'zod';
+import { CREATE_POD_STEPPER_VERSION } from '@duncit/utils';
 
 import HostAgainNotice from '../HostAgainNotice';
 import { useCreatePodPublish } from '../useCreatePodPublish';
@@ -210,12 +211,22 @@ describe('createPodSeed and the draft', () => {
   });
 
   it('resumes a stored form on its step, clamped into the stepper, and keeps its own city', () => {
-    const seed = createPodSeed({ payload: payload({ location_id: 'own' }), step: 99 }, { location_id: 'header' });
+    const current = (over: Partial<CreatePodFormValues>) =>
+      JSON.stringify({ ...JSON.parse(payload(over)), stepper: CREATE_POD_STEPPER_VERSION });
+    const seed = createPodSeed({ payload: current({ location_id: 'own' }), step: 99 }, { location_id: 'header' });
     expect(seed.values.location_id).toBe('own');
-    expect(seed.step).toBe(4);
-    expect(createPodSeed({ payload: payload({ location_id: 'own' }), step: -4 }, {}).step).toBe(0);
+    expect(seed.step).toBe(3);
+    expect(createPodSeed({ payload: current({}), step: 1 }, {}).step).toBe(1);
+    expect(createPodSeed({ payload: current({}), step: -4 }, {}).step).toBe(0);
     expect(createPodSeed({ payload: payload({ location_id: 'own' }) }, {}).step).toBe(0);
     expect(createPodSeed({ payload: payload({ location_id: 'own' }), step: null }, {}).step).toBe(0);
+  });
+
+  it('opens a five-step draft or Host Again copy on the step that now holds its screen', () => {
+    // Basics → Details, Venue & Slot → Where & when, Pricing → Money.
+    expect(createPodSeed({ payload: payload({}), step: 1 }, {}).step).toBe(3);
+    expect(createPodSeed({ payload: payload({}), step: 2 }, {}).step).toBe(1);
+    expect(createPodSeed({ payload: payload({}), step: 4 }, {}).step).toBe(2);
   });
 
   it('opens a stored form whose city is gone in the header city, or blank when there is none', () => {
@@ -235,32 +246,38 @@ describe('createPodSeed and the draft', () => {
     expect(hydrateDraft(payload({ pod_end_date_time: new Date('2026-07-01T12:00:00.000Z') as never })).pod_end_date_time?.toISOString()).toBe('2026-07-01T12:00:00.000Z');
   });
 
-  it('serialises the draft with the trimmed title and the step', () => {
+  it('serialises the draft with the trimmed title, the step and the stepper it numbers', () => {
     const out = serializeDraft({ ...blankCreatePodForm, pod_title: '  Run  ' }, 2);
     expect(out).toMatchObject({ pod_title: 'Run', step: 2, pod_mode: 'PHYSICAL' });
-    expect(JSON.parse(out.payload).pod_title).toBe('  Run  ');
+    expect(JSON.parse(out.payload)).toMatchObject({ pod_title: '  Run  ', stepper: CREATE_POD_STEPPER_VERSION });
   });
 });
 
 describe('stepper step helpers', () => {
-  it('names the venue step differently for a virtual pod, and only that step', () => {
-    expect(stepTitleKey(2, 'VIRTUAL')).toBe('mweb.createPod.step3TitleVirtual');
-    expect(stepSubtitleKey(2, 'VIRTUAL')).toBe('mweb.createPod.step3SubtitleVirtual');
-    expect(stepTitleKey(2, 'PHYSICAL')).toBe('mweb.createPod.step3Title');
-    expect(stepSubtitleKey(2)).toBe('mweb.createPod.step3Subtitle');
-    expect(stepTitleKey(1, 'VIRTUAL')).toBe('mweb.createPod.step1Title');
-    expect(stepTitleKey(3, 'PHYSICAL')).toBe('mweb.createPod.stepOfferTitle');
-    expect(stepSubtitleKey(3, 'VIRTUAL')).toBe('mweb.createPod.stepOfferSubtitle');
-    expect(stepSubtitleKey(4, 'VIRTUAL')).toBe('mweb.createPod.step4Subtitle');
+  it('names Where & when differently for a virtual pod, and only that step', () => {
+    expect(stepTitleKey(1, 'VIRTUAL')).toBe('mweb.createPod.step3TitleVirtual');
+    expect(stepSubtitleKey(1, 'VIRTUAL')).toBe('mweb.createPod.step3SubtitleVirtual');
+    expect(stepTitleKey(1, 'PHYSICAL')).toBe('mweb.createPod.flowWhereTitle');
+    expect(stepSubtitleKey(1)).toBe('mweb.createPod.flowWhereSubtitle');
+    expect(stepTitleKey(0, 'VIRTUAL')).toBe('mweb.createPod.flowWhatTitle');
+    expect(stepTitleKey(3, 'VIRTUAL')).toBe('mweb.createPod.flowDetailsTitle');
+  });
+
+  it('says Money is only the ticket when the pod sends its venue no offer', () => {
+    expect(stepSubtitleKey(2, 'PHYSICAL', true)).toBe('mweb.createPod.flowMoneySubtitle');
+    expect(stepSubtitleKey(2, 'VIRTUAL', false)).toBe('mweb.createPod.flowMoneySubtitleTicket');
+    expect(stepSubtitleKey(3, 'VIRTUAL', false)).toBe('mweb.createPod.flowDetailsSubtitle');
   });
 
   it('places a field on its step, and an unknown field on the first step', () => {
-    expect(stepForField('club_id')).toBe(0);
-    expect(stepForField('pod_title')).toBe(1);
-    expect(stepForField('pod_date_time')).toBe(2);
-    expect(stepForField('venue_offer_rate')).toBe(3);
-    expect(stepForField('venue_offer_offerings')).toBe(3);
-    expect(stepForField('agreed_to_terms')).toBe(4);
+    expect(stepForField('host_category_key')).toBe(0);
+    expect(stepForField('club_id')).toBe(1);
+    expect(stepForField('pod_date_time')).toBe(1);
+    expect(stepForField('no_of_spots')).toBe(1);
+    expect(stepForField('venue_offer_rate')).toBe(2);
+    expect(stepForField('pod_amount')).toBe(2);
+    expect(stepForField('pod_title')).toBe(3);
+    expect(stepForField('agreed_to_terms')).toBe(3);
     expect(stepForField('nope' as never)).toBe(0);
   });
 });

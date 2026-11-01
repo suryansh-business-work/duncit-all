@@ -1,9 +1,10 @@
 import { gql } from '@apollo/client';
 
-export type SocialProvider = 'LINKEDIN' | 'META' | 'X' | 'YOUTUBE';
+/** One app per network; an Instagram account connected through Facebook earlier keeps provider FACEBOOK. */
+export type SocialProvider = 'INSTAGRAM' | 'FACEBOOK' | 'THREADS' | 'YOUTUBE' | 'LINKEDIN' | 'X';
 /** The page the OAuth callback brings the marketer back to — the one they pressed Connect on. */
 export type SocialConnectReturn = 'ACCOUNTS' | 'CALENDAR';
-export type SocialPlatform = 'LINKEDIN' | 'FACEBOOK' | 'INSTAGRAM' | 'X' | 'YOUTUBE';
+export type SocialPlatform = 'INSTAGRAM' | 'FACEBOOK' | 'THREADS' | 'YOUTUBE' | 'LINKEDIN' | 'X';
 export type SocialAccountStatus = 'CONNECTED' | 'EXPIRED' | 'ERROR';
 export type SocialAiStatus = 'PENDING' | 'CLEAN' | 'FLAGGED';
 export type SocialSentiment = 'POSITIVE' | 'NEUTRAL' | 'NEGATIVE';
@@ -13,6 +14,8 @@ export type SocialReviewStatus = 'OPEN' | 'REVIEWED';
 export interface SocialProviderStatus {
   provider: SocialProvider;
   configured: boolean;
+  /** The environment category the app's entry lives in — the Settings › Integrations tab to open. */
+  category: string;
 }
 
 export interface SocialAccount {
@@ -27,7 +30,17 @@ export interface SocialAccount {
   status: SocialAccountStatus;
   last_error: string | null;
   last_synced_at: string | null;
+  /** Whole days until the token lapses (0 or less: lapsed); null for a token that does not expire. */
+  token_expires_in_days: number | null;
   flagged_open: number;
+  /** Who answers for the account and gets its expiry reminders. */
+  owner_user_id: string | null;
+  owner_name: string | null;
+  team_user_ids: string[];
+  /** The daily health check: when it last ran and what it found. `health_ok` is null until it has. */
+  health_checked_at: string | null;
+  health_ok: boolean | null;
+  health_message: string | null;
 }
 
 export interface SocialPostRow {
@@ -147,7 +160,14 @@ const ACCOUNT_FIELDS = gql`
     status
     last_error
     last_synced_at
+    token_expires_in_days
     flagged_open
+    owner_user_id
+    owner_name
+    team_user_ids
+    health_checked_at
+    health_ok
+    health_message
   }
 `;
 
@@ -157,6 +177,7 @@ export const SOCIAL_SETUP = gql`
     socialProviders {
       provider
       configured
+      category
     }
     socialAccounts {
       ...SocialAccountFields
@@ -184,6 +205,15 @@ export const DISCONNECT_SOCIAL_ACCOUNT = gql`
   mutation DisconnectSocialAccount($id: ID!) {
     disconnectSocialAccount(id: $id)
   }
+`;
+
+export const SET_SOCIAL_ACCOUNT_OWNER = gql`
+  mutation SetSocialAccountOwner($id: ID!, $owner_user_id: ID, $team_user_ids: [ID!]) {
+    setSocialAccountOwner(id: $id, owner_user_id: $owner_user_id, team_user_ids: $team_user_ids) {
+      ...SocialAccountFields
+    }
+  }
+  ${ACCOUNT_FIELDS}
 `;
 
 export const SOCIAL_ANALYTICS = gql`

@@ -12,40 +12,58 @@ import ItemsTable from './ItemsTable';
 import CoverageDeltaTable from './CoverageDeltaTable';
 import SuitesTable from './SuitesTable';
 
-type UnitTab = RegressionBucket | 'COVERAGE';
+type ReportTab = RegressionBucket | 'COVERAGE' | 'SUITES';
 const TABS_ID = 'regression-report';
 
-/** A unit report's buckets, one tab each (in the URL), and the coverage change per workspace. */
-function UnitBuckets({ report }: Readonly<{ report: RegressionReportDetail }>) {
+/**
+ * A report's buckets, one tab each (in the URL), then the unit report's
+ * coverage change per workspace or the E2E report's suites side by side.
+ */
+function ReportBuckets({ report }: Readonly<{ report: RegressionReportDetail }>) {
   const { t } = useTranslation();
   const labels = useRegressionLabels();
-  const items: DuncitTabItem<UnitTab>[] = [
+  const isUnit = report.kind === 'UNIT';
+  const items: DuncitTabItem<ReportTab>[] = [
     ...BUCKET_COUNTS.map(({ bucket, field }) => ({
       value: bucket,
       label: t('testsUnit.regression.tabCount', { vars: { label: labels.bucket[bucket], count: report.counts[field] } }),
       searchText: labels.bucket[bucket],
     })),
-    { value: 'COVERAGE', label: t('testsUnit.regression.coverageTitle') },
+    isUnit
+      ? { value: 'COVERAGE', label: t('testsUnit.regression.coverageTitle') }
+      : { value: 'SUITES', label: t('testsUnit.regression.suitesTitle') },
   ];
-  const tabs = useTabParam<UnitTab>({ items, fallback: 'REGRESSED' });
+  const tabs = useTabParam<ReportTab>({ items, fallback: 'REGRESSED' });
+  let panel;
+  if (tabs.value === 'COVERAGE') {
+    panel = <CoverageDeltaTable rows={report.coverage_workspaces} />;
+  } else if (tabs.value === 'SUITES') {
+    panel = <SuitesTable suites={report.suites} />;
+  } else {
+    panel = (
+      <ItemsTable
+        key={tabs.value}
+        reportId={report.id}
+        bucket={tabs.value}
+        isE2e={!isUnit}
+        label={labels.bucket[tabs.value]}
+      />
+    );
+  }
   return (
     <Box>
       <DuncitTabs {...tabs} idPrefix={TABS_ID} variant="scrollable" allowScrollButtonsMobile />
       <Box {...tabPanelProps(TABS_ID, tabs.value)} sx={{ pt: 2 }}>
-        {tabs.value === 'COVERAGE' ? (
-          <CoverageDeltaTable rows={report.coverage_workspaces} />
-        ) : (
-          <ItemsTable key={tabs.value} reportId={report.id} bucket={tabs.value} label={labels.bucket[tabs.value]} />
-        )}
+        {panel}
       </Box>
     </Box>
   );
 }
 
 /**
- * One regression report: the two runs compared, every bucket's count, and —
- * for a unit report — the tests in each bucket; for an E2E report, every
- * suite side by side.
+ * One regression report: the two runs compared, every bucket's count, the
+ * tests (unit) or scenarios (E2E) in each bucket, and the coverage change or
+ * the suites side by side.
  */
 export default function RegressionReportDetailPage() {
   const { t } = useTranslation();
@@ -67,7 +85,7 @@ export default function RegressionReportDetailPage() {
       {report && (
         <Stack spacing={2.5}>
           <ReportHeader report={report} />
-          {report.kind === 'UNIT' ? <UnitBuckets report={report} /> : <SuitesTable suites={report.suites} />}
+          <ReportBuckets report={report} />
         </Stack>
       )}
     </QueryGuard>

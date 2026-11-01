@@ -92,6 +92,17 @@ export {
   type EventRequestScope,
   type EventRequestTarget,
 } from './event-requests';
+// Banner kit + Banners — what a venue's or a host's pod banners are made from,
+// and making a pod's Instagram carousel from it (Partners, Venues, Hosts, Onboarding).
+export {
+  BannerKitPanel,
+  PodBannersPanel,
+  type BannerKitEntity,
+  type BannerKitMode,
+  type BannerKitPanelProps,
+  type BannerPod,
+  type PodBannersPanelProps,
+} from './banner-kit';
 export { AuthSplitLayout, type AuthSplitLayoutProps } from './chrome/AuthSplitLayout';
 export type { ShellUser } from './chrome/user-display';
 

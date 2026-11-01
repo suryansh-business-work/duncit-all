@@ -10,6 +10,8 @@ export const analyticsTypeDefs = /* GraphQL */ `
     IMPRESSION
     CLICK
     TOUCH
+    "A named product event that is neither a view nor a click (app_open, search_performed); event_name says which."
+    EVENT
   }
 
   type ActiveUserBucket {
@@ -80,6 +82,42 @@ export const analyticsTypeDefs = /* GraphQL */ `
     occurred_at: String
   }
 
+  """
+  One product-analytics event from mWeb or the native app. event_name follows the snake_case
+  taxonomy (screen_view, element_click, app_open, app_background, search_performed, …).
+  On a screen_view, duration_ms is the foreground time spent on previous_screen; on an
+  app_background it is the time spent on screen_name. Text is redacted again on the server.
+  """
+  input AppEventInput {
+    event_name: String!
+    "Made on the device; a batch resent with the same ids stores nothing twice."
+    client_event_id: String!
+    "The app session: a new one after 30 minutes without activity."
+    session_id: String!
+    "ISO 8601, by the device's clock."
+    occurred_at: String!
+    "ios, android, web (the native app's web build) or mweb."
+    platform: String
+    app_version: String
+    os_version: String
+    "phone, tablet or desktop."
+    device_type: String
+    screen_name: String
+    previous_screen: String
+    path: String
+    title: String
+    element_id: String
+    element_type: String
+    element_name: String
+    element_text: String
+    target_href: String
+    duration_ms: Int
+    super_category_slug: String
+    pod_id: ID
+    "A flat JSON object of extra properties; sensitive names are dropped and text is redacted."
+    properties_json: String
+  }
+
   type SuperCategoryCount {
     super_category_slug: String
     super_category_name: String
@@ -119,6 +157,8 @@ export const analyticsTypeDefs = /* GraphQL */ `
   extend type Mutation {
     recordActivePing(super_category_slug: String): Boolean!
     recordAppEvent(input: RecordAppEventInput!): Boolean!
+    "Stores a batch of up to 50 product-analytics events; answers how many were new. Needs the analytics consent; works signed out."
+    recordAppEvents(events: [AppEventInput!]!): Int!
     deleteUserActivityDay(user_id: ID!, date: String!): Boolean!
     deleteUserActivityYear(user_id: ID!, year: Int!): Boolean!
   }

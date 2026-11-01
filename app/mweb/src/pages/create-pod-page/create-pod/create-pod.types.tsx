@@ -13,6 +13,7 @@ export type {
   PodModerationViolation,
   PodModerationResult,
   CreatePodSubCategory,
+  CreatePodCategoryIcon,
 } from './create-pod.entities';
 
 export const podTypes = (t: Translate) => [

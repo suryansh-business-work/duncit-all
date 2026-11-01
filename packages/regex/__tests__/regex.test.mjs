@@ -43,6 +43,8 @@ import {
   isSvgPathData,
   SOCIAL_HANDLE,
   isSocialHandle,
+  INSTAGRAM_HANDLE,
+  isInstagramHandle,
   UNDERSCORE_HANDLE,
   isUnderscoreHandle,
   SITE_PATH,
@@ -480,6 +482,25 @@ describe('SOCIAL_HANDLE / isSocialHandle', () => {
     for (const handle of ['', '@duncit', 'instagram.com/duncit', 'https://x.com/duncit', 'two words', 'a?b', 'x'.repeat(101)]) {
       expect(isSocialHandle(handle)).toBe(false);
     }
+  });
+});
+
+describe('INSTAGRAM_HANDLE / isInstagramHandle', () => {
+  it('accepts letters, digits, underscores and inner single dots, 1 to 30 long', () => {
+    for (const handle of ['a', '_', 'duncit.events', 'run_club', 'Mixed.Case_42', 'a.b.c', 'x'.repeat(30)]) {
+      expect(isInstagramHandle(handle)).toBe(true);
+      expect(INSTAGRAM_HANDLE.test(handle)).toBe(true);
+    }
+  });
+
+  it('rejects an empty value, an @, hyphens, edge or doubled dots, spaces, links and anything over 30', () => {
+    for (const handle of ['', '@duncit', 'run-club', '.duncit', 'duncit.', 'dun..cit', 'two words', 'instagram.com/duncit', 'x'.repeat(31)]) {
+      expect(isInstagramHandle(handle)).toBe(false);
+    }
+  });
+
+  it('answers a long run of dots and letters without backtracking blow-up', () => {
+    expect(isInstagramHandle(`${'a.'.repeat(5000)}!`)).toBe(false);
   });
 });
 

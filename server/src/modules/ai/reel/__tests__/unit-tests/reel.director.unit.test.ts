@@ -28,6 +28,9 @@ const asset = (over: Partial<ReelAsset>): ReelAsset => ({
   width: 1080,
   height: 1920,
   size_bytes: 1,
+  licence: '',
+  attribution: '',
+  provider_id: '',
   added_at: new Date('2026-10-01T10:00:00Z'),
   ...over,
 });

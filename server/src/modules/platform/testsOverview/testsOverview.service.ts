@@ -28,7 +28,7 @@ export async function testsOverview() {
     settle('e2e', latestE2e, { run: null, passRate: null }),
     settle('stress', latestStress, { run: null, health: null }),
     settle('scenario', scenarioCoverage, {
-      flows: 0, sub_flows: 0, looks_good: 0, needs_review: 0, not_reviewed: 0, pct: null,
+      flows: 0, automated: 0, automated_pct: null, sub_flows: 0, looks_good: 0, needs_review: 0, not_reviewed: 0, pct: null,
     }),
     settle('regression', readRegressions, { reports: [], regressed: null }),
     settle('manual', readManual, { summary: null, passRate: null }),

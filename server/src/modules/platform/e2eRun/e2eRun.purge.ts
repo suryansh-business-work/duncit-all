@@ -113,6 +113,31 @@ interface PhoneHolders {
   heldBy: string | null;
 }
 
+/** Every account on a number, read as signup reads it: both fields a number can live in. */
+const accountsOnPhone = (phone: string) =>
+  UserModel.find(
+    { $or: [{ 'auth.phone.number': phone }, { 'communication.whatsapp.number': phone }] },
+    { 'auth.email': 1 }
+  ).lean();
+
+/**
+ * Who holds the run phone and is no run account at all — masked, or null.
+ *
+ * Asked as the settings that make this server an e2e target are saved: a
+ * number a real member here holds blocks every signup, and is better refused
+ * on the settings page, where it is fixed, than by the next run's preflight. A
+ * run account on the number — this run's, or an earlier run's that the purge
+ * clears — is not a stranger. With no run address configured, everyone is.
+ */
+export async function strangerOnRunPhone(runAddress: RegExp | null, phone: string): Promise<string | null> {
+  if (!phone) return null;
+  for (const holder of await accountsOnPhone(phone)) {
+    const email = holder.auth?.email ?? '';
+    if (!runAddress?.test(email)) return maskEmail(email);
+  }
+  return null;
+}
+
 /**
  * Who else holds the run phone.
  *
@@ -128,10 +153,7 @@ interface PhoneHolders {
  */
 async function runPhoneHolders(runAddress: RegExp, phone: string, stamp: string, now: number): Promise<PhoneHolders> {
   if (!phone) return { stale: [], heldBy: null };
-  const holders = await UserModel.find(
-    { $or: [{ 'auth.phone.number': phone }, { 'communication.whatsapp.number': phone }] },
-    { 'auth.email': 1 }
-  ).lean();
+  const holders = await accountsOnPhone(phone);
   const stale: Types.ObjectId[] = [];
   let heldBy: string | null = null;
   for (const holder of holders) {

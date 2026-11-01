@@ -44,8 +44,14 @@ function Panel({ entry }: Readonly<{ entry: EnvEntry }>) {
     case 'GITHUB':
     case 'GOOGLE_PLAY':
     case 'SONARQUBE':
-    case 'SOCIAL_APPS':
+    case 'SOCIAL_INSTAGRAM':
+    case 'SOCIAL_FACEBOOK':
+    case 'SOCIAL_THREADS':
+    case 'SOCIAL_YOUTUBE':
+    case 'SOCIAL_LINKEDIN':
+    case 'SOCIAL_X':
     case 'SERPER':
+    case 'ANTHROPIC':
       return <ConnectionTestPanel entry={entry} />;
     // Its own panel: the widget is four calls that wait on a person between
     // them, and the connection check above is only the first of them.

@@ -17,6 +17,7 @@ import { notifyEvent } from '@services/notify/notify.service';
 import { alertBankAccountChanged, bankAccountChanged } from '@modules/finance/finance/bankAccount.notify';
 import { getUrlConfigs } from '@config/url-configs';
 import { userContactNumber } from '@utils/contact';
+import { toStoredBannerKit } from '@modules/venues/bannerKit/bannerKit.pub';
 
 type AddressParts = Partial<
   Record<'line1' | 'line2' | 'landmark' | 'city' | 'state' | 'pincode', string | number | null>
@@ -201,6 +202,8 @@ const toPub = (h: IHost) => ({
     sub_category_name: c.sub_category_name ?? '',
     request_no: c.request_no ?? '',
   })),
+  // The stored kit; `Host.banner_kit` resolves the prefill and suggestions from it.
+  banner_kit: toStoredBannerKit(h.banner_kit),
   step_completed: h.step_completed ?? 0,
   status: h.status,
   is_active: h.is_active ?? true,

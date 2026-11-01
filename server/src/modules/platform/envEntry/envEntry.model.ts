@@ -32,9 +32,17 @@ export const ENV_CATEGORIES = [
   'SONARQUBE',
   'GODADDY',
   'CLOUDFLARE',
-  'SOCIAL_APPS',
+  // One entry per network, never one shared Meta app: Marketing → Settings →
+  // Integrations edits these, and each is tested against its own provider.
+  'SOCIAL_INSTAGRAM',
+  'SOCIAL_FACEBOOK',
+  'SOCIAL_THREADS',
+  'SOCIAL_YOUTUBE',
+  'SOCIAL_LINKEDIN',
+  'SOCIAL_X',
   'TRUECALLER',
   'SERPER',
+  'ANTHROPIC',
 ] as const;
 export type EnvCategory = (typeof ENV_CATEGORIES)[number];
 

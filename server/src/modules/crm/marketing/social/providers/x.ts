@@ -23,6 +23,7 @@ const SERVICE = X_SERVICE;
 export const X_API = 'https://api.x.com/2';
 const API = X_API;
 const TOKEN_URL = `${API}/oauth2/token`;
+const REVOKE_URL = `${API}/oauth2/revoke`;
 /** Read the timeline and replies; post, with media. */
 const SCOPES = ['tweet.read', 'tweet.write', 'users.read', 'media.write', 'offline.access'];
 
@@ -142,6 +143,16 @@ export const xConnector: SocialConnector = {
         meta: {},
       },
     ];
+  },
+
+  /** Revoking the access token ends the grant, refresh token included. */
+  async revoke(account, creds) {
+    await postForm<unknown>(
+      SERVICE,
+      REVOKE_URL,
+      { token: account.access_token, token_type_hint: 'access_token', client_id: creds.clientId },
+      { Authorization: basicAuth(creds) }
+    );
   },
 };
 

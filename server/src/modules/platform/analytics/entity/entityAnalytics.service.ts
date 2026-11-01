@@ -29,6 +29,7 @@ import { logsAnalytics } from './logs.analytics';
 import { whatsappCostAnalytics } from './whatsappCosts.analytics';
 import { openaiCostAnalytics } from './openaiCosts.analytics';
 import { contactsAnalytics } from './contacts.analytics';
+import { productAnalytics } from './product.analytics';
 import type { Environment } from '@modules/ai/askBot/askBot.links';
 import { analyticsTargetService } from '../goals/analyticsTarget.service';
 import { consoleLink, resolveLinks, serverEnvironment, type ConsoleLink } from './links';
@@ -68,6 +69,7 @@ const LOADERS: Record<
   WHATSAPP_COSTS: whatsappCostAnalytics,
   OPENAI_COSTS: openaiCostAnalytics,
   CONTACTS: contactsAnalytics,
+  PRODUCT: productAnalytics,
 };
 
 /**
@@ -92,6 +94,10 @@ const PAGE_LINKS: Partial<Record<AnalyticsEntity, ConsoleLink>> = {
 /** The pages whose every number can be narrowed to one city (see city.ts). */
 export const CITY_ENTITIES: ReadonlySet<AnalyticsEntity> = new Set<AnalyticsEntity>(['PODS', 'CLUBS']);
 
+/** The pages that can be narrowed to one platform — the ones read from the app's own events. */
+const PLATFORMS = new Set(['ios', 'android', 'web', 'mweb']);
+export const PLATFORM_ENTITIES: ReadonlySet<AnalyticsEntity> = new Set<AnalyticsEntity>(['PRODUCT']);
+
 export const entityAnalyticsService = {
   /** One page, its links built for `environment` — the reader's, or this server's for a mail. */
   async load(
@@ -102,7 +108,9 @@ export const entityAnalyticsService = {
   ) {
     // A city asked of a page that cannot narrow to one is dropped, so the period never claims a filter it did not apply.
     const city = CITY_ENTITIES.has(entity) ? request.city : null;
-    const window = resolvePeriod({ ...request, city });
+    const platform =
+      PLATFORM_ENTITIES.has(entity) && request.platform && PLATFORMS.has(request.platform) ? request.platform : null;
+    const window = resolvePeriod({ ...request, city, platform });
     const [loaded, goals] = await Promise.all([LOADERS[entity](window, scope), analyticsTargetService.goalsFor(entity)]);
     const pageLink = PAGE_LINKS[entity];
     const sections = pageLink ? linkEverything(loaded, pageLink) : loaded;
@@ -118,6 +126,7 @@ export const entityAnalyticsService = {
         previous_from: window.prevFrom.toISOString(),
         previous_to: window.prevTo.toISOString(),
         city: window.city,
+        platform: window.platform ?? null,
       },
       ...linked,
       kpis: analyticsTargetService.withTargets(linked.kpis, goals, window.days),

@@ -9,11 +9,6 @@
       "count": 1
     }
   },
-  "app/mweb/src/app/useClickstreamTracking.ts": {
-    "no-restricted-syntax": {
-      "count": 1
-    }
-  },
   "app/mweb/src/components/AuthLogo.tsx": {
     "no-restricted-syntax": {
       "count": 1
@@ -2558,21 +2553,6 @@
     }
   },
   "portals/ai/src/forms/automation-flow/automation-flow.form.tsx": {
-    "no-restricted-syntax": {
-      "count": 2
-    }
-  },
-  "portals/ai/src/forms/reel-chat/reel-chat.form.tsx": {
-    "no-restricted-syntax": {
-      "count": 2
-    }
-  },
-  "portals/ai/src/forms/reel-project/reel-project.form.tsx": {
-    "no-restricted-syntax": {
-      "count": 2
-    }
-  },
-  "portals/ai/src/forms/reel-prompt/reel-prompt.form.tsx": {
     "no-restricted-syntax": {
       "count": 2
     }

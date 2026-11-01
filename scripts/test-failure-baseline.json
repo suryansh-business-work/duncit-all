@@ -64,10 +64,6 @@
   "logs-portal": [
     "__tests__/unit-tests/app-config.test.ts"
   ],
-  "marketing": [
-    "__tests__/unit-tests/short-link-detail.test.tsx",
-    "__tests__/unit-tests/short-link-funnel.test.tsx"
-  ],
   "mobile-app": [
     "src/__tests__/module-load.test.ts",
     "src/animations/__tests__/animations.test.tsx",

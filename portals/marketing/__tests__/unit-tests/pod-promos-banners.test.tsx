@@ -29,6 +29,7 @@ import MakeBannersDialog, { type BannerPod } from '../../src/pages/pod-promos-pa
 import SlideStrip from '../../src/pages/pod-promos-page/banners/SlideStrip';
 import { replaceSlide } from '../../src/pages/pod-promos-page/banners/SlideGrid';
 import { themeVariable } from '../../src/pages/pod-promos-page/banners/BannerThemeSelect';
+import { GENERATE_POD_BANNERS } from '../../src/pages/pod-promos-page/banner.queries';
 
 afterEach(() => {
   vi.clearAllMocks();
@@ -94,6 +95,33 @@ describe('MakeBannersDialog', () => {
     await pickOption(/Banner look/, 'Automatic, from the pod category');
     fireEvent.click(screen.getByTestId('banner-generate'));
     expect(await screen.findByTestId('banner-slide-grid')).toBeInTheDocument();
+  });
+
+  it('sends no size once it is set back to the settings default', async () => {
+    renderDialog([generatePodBannersMock('pod1')], { canManage: false });
+    await pickOption(/Banner size/, 'Square (1080 × 1080)');
+    await pickOption(/Banner size/, 'As in the settings');
+    expect(screen.getByRole('combobox', { name: /Banner size/ })).toHaveTextContent('As in the settings');
+    // The mock answers only for size: null, so the grid shows only if no size was sent.
+    fireEvent.click(screen.getByTestId('banner-generate'));
+    expect(await screen.findByTestId('banner-slide-grid')).toBeInTheDocument();
+  });
+
+  it('draws no slides and offers no schedule when the server answers with nothing', async () => {
+    const empty: MockedResponse = {
+      request: { query: GENERATE_POD_BANNERS, variables: { pod_id: 'pod1', style: null, size: null } },
+      result: { data: null },
+    };
+    renderDialog([empty, ...scheduleMocks()]);
+    const generate = screen.getByTestId('banner-generate');
+    fireEvent.click(generate);
+    // The answer is awaited first, so what follows is the state after it, not before.
+    expect(screen.getByRole('progressbar', { name: 'Making the banner' })).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByRole('progressbar', { name: 'Making the banner' })).not.toBeInTheDocument());
+    expect(generate).toBeEnabled();
+    expect(generate).toHaveTextContent('Make banners');
+    expect(screen.queryByTestId('banner-slide-grid')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('banner-schedule-section')).not.toBeInTheDocument();
   });
 
   it('re-renders one slide and swaps only that tile', async () => {
@@ -167,6 +195,24 @@ describe('MakeBannersDialog', () => {
     fireEvent.click(within(section).getByTestId('form-actions-row-submit'));
     await waitFor(() => expect(dialogsMock.notify).toHaveBeenCalledWith('Already scheduled', 'error'));
     expect(onScheduled).not.toHaveBeenCalled();
+  });
+
+  it('still schedules when the settings cannot be read, naming no time zone', async () => {
+    const { onScheduled } = renderDialog([
+      generatePodBannersMock('pod1'),
+      podPromoOptionsMock(),
+      podPromoSettingsMock(null, 'Settings are down'),
+      schedulePodPromoMock({ pod_id: 'pod1', at: null, account_ids: null, collaborators: null, style: null }),
+    ]);
+    fireEvent.click(screen.getByTestId('banner-generate'));
+    const section = await screen.findByTestId('banner-schedule-section');
+    const submit = within(section).getByTestId('form-actions-row-submit');
+    await waitFor(() => expect(submit).toBeEnabled());
+    fireEvent.click(submit);
+    await waitFor(() => expect(dialogsMock.notify).toHaveBeenCalledWith('Sunset Run is being promoted', 'success'));
+    expect(onScheduled).toHaveBeenCalledTimes(1);
+    // By now the settings read has long failed: the hint stands without a zone.
+    expect(within(section).getByText(/Leave empty to post at the time the settings give/)).not.toHaveTextContent('Asia/Kolkata');
   });
 
   it('closes from its close button', () => {

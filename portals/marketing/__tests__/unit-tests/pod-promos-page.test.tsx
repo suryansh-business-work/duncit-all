@@ -128,6 +128,8 @@ describe('PodPromosPage', () => {
     fireEvent.click(screen.getByTestId('pod-promo-open-preview'));
     expect(await screen.findByRole('dialog', { name: 'Preview a pod promotion' })).toBeInTheDocument();
     expect(await screen.findByText('No upcoming pods match.')).toBeInTheDocument();
+    fireEvent.click(within(screen.getByRole('dialog', { name: 'Preview a pod promotion' })).getByRole('button', { name: 'Close' }));
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Preview a pod promotion' })).not.toBeInTheDocument());
   });
 
   it('re-reads the table once a pod is promoted from the preview dialog', async () => {

@@ -3,7 +3,17 @@ import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import type { MockedResponse } from '@apollo/client/testing';
 import { formatINR } from '@duncit/utils';
 import { renderWithProviders } from '../testkit';
-import { cancelPodPromoMock, makePodPromo, makePodPromoFigures, podPromoMock, regeneratePodPromoBannerMock } from '../mocks';
+import {
+  cancelPodPromoMock,
+  generatePodBannersMock,
+  makePodPromo,
+  makePodPromoFigures,
+  podPromoMock,
+  podPromoOptionsMock,
+  podPromoSettingsMock,
+  regeneratePodPromoBannerMock,
+  schedulePodPromoMock,
+} from '../mocks';
 
 const dialogsMock = vi.hoisted(() => ({ notify: vi.fn(), confirm: vi.fn() }));
 vi.mock('@duncit/dialogs', async (importOriginal) => ({
@@ -149,6 +159,30 @@ describe('PromoDrawer', () => {
     expect(await screen.findByRole('dialog', { name: 'Banners for Sunset Run' })).toBeInTheDocument();
     // The pod is fixed: no picker.
     expect(screen.queryByTestId('pod-picker')).not.toBeInTheDocument();
+    fireEvent.click(within(screen.getByRole('dialog', { name: 'Banners for Sunset Run' })).getByRole('button', { name: 'Close' }));
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Banners for Sunset Run' })).not.toBeInTheDocument());
+    expect(screen.getByTestId('promo-drawer')).toBeInTheDocument();
+  });
+
+  it('closes Make banners once a manager schedules from it, and re-reads the promotion', async () => {
+    const { onChanged } = renderDrawer([
+      podPromoMock(),
+      generatePodBannersMock('pod1'),
+      podPromoOptionsMock(),
+      podPromoSettingsMock(),
+      schedulePodPromoMock({ pod_id: 'pod1', at: null, account_ids: null, collaborators: ['blue.cafe', 'asha_runs'], style: null }),
+      podPromoMock(),
+    ]);
+    fireEvent.click(await screen.findByTestId('promo-make-banners'));
+    const dialog = await screen.findByRole('dialog', { name: 'Banners for Sunset Run' });
+    fireEvent.click(within(dialog).getByTestId('banner-generate'));
+    const section = await within(dialog).findByTestId('banner-schedule-section');
+    const submit = within(section).getByTestId('form-actions-row-submit');
+    await waitFor(() => expect(submit).toBeEnabled());
+    fireEvent.click(submit);
+    await waitFor(() => expect(dialogsMock.notify).toHaveBeenCalledWith('Sunset Run is being promoted', 'success'));
+    expect(onChanged).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Banners for Sunset Run' })).not.toBeInTheDocument());
   });
 
   it('says why a new banner could not be made', async () => {

@@ -138,7 +138,7 @@ const sumTotals = (rows: readonly Totals[]): Totals =>
 function networkRows(accounts: readonly AccountRow[], byNetwork: readonly (Totals & { _id: SocialPlatform })[]) {
   const followers = new Map<SocialPlatform, number>();
   for (const account of accounts) followers.set(account.platform, (followers.get(account.platform) ?? 0) + (account.followers ?? 0));
-  const totals = new Map(byNetwork.map((row) => [row._id, row]));
+  const totals = new Map(byNetwork.map(({ _id, ...figures }) => [_id, figures]));
   const platforms = [...new Set([...followers.keys(), ...totals.keys()])].sort((a, b) => a.localeCompare(b));
   return platforms.map((platform) => {
     const row = totals.get(platform) ?? EMPTY_TOTALS;

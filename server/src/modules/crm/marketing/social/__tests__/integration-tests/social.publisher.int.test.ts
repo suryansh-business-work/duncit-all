@@ -257,13 +257,13 @@ describe('retry from the run log', () => {
 });
 
 describe('carousels', () => {
-  it('hands every piece of media to the network, the first doubled as media_url', async () => {
+  it('hands every piece of media and the collaborators to the network, the first piece doubled as media_url', async () => {
     const ig = await account('INSTAGRAM', 'Duncit Pune');
     const media: PublishMedia[] = [
       { url: IMAGE, type: 'IMAGE' },
       { url: VIDEO, type: 'VIDEO' },
     ];
-    const post = await duePost([{ account_id: String(ig._id), platform: 'INSTAGRAM' }], { media });
+    const post = await duePost([{ account_id: String(ig._id), platform: 'INSTAGRAM' }], { media, collaborators: ['duncit.pets'] });
 
     await publishDue();
 
@@ -271,19 +271,19 @@ describe('carousels', () => {
     expect(igPublish).toHaveBeenCalledTimes(1);
     const [handle, content, creds] = igPublish.mock.calls[0];
     expect(handle).toEqual({ account_id: String(ig._id), access_token: 'token' });
-    expect(content).toEqual({ text: TEXT, media, media_url: IMAGE, media_type: 'IMAGE' });
+    expect(content).toEqual({ text: TEXT, media, media_url: IMAGE, media_type: 'IMAGE', collaborators: ['duncit.pets'] });
     expect(creds).toEqual({ app_id: 'app', app_secret: 'secret' });
   });
 
-  it('a post stored before carousels still goes out with its one piece', async () => {
+  it('a post stored before carousels and collaborations still goes out with its one piece and nobody invited', async () => {
     const th = await account('THREADS', 'Duncit Threads');
     const post = await duePost([{ account_id: String(th._id), platform: 'THREADS' }], { media_type: 'VIDEO' });
-    await SocialScheduledPostModel.collection.updateOne({ _id: post._id }, { $unset: { media: '' } });
+    await SocialScheduledPostModel.collection.updateOne({ _id: post._id }, { $unset: { media: '', collaborators: '' } });
 
     await publishDue();
 
     expect((await stored(post._id))?.status).toBe('PUBLISHED');
-    expect(threadsPublish.mock.calls[0][1]).toEqual({ text: TEXT, media: [{ url: IMAGE, type: 'VIDEO' }], media_url: IMAGE, media_type: 'VIDEO' });
+    expect(threadsPublish.mock.calls[0][1]).toEqual({ text: TEXT, media: [{ url: IMAGE, type: 'VIDEO' }], media_url: IMAGE, media_type: 'VIDEO', collaborators: [] });
   });
 
   it('a network whose rules refuse the carousel fails that target without being called', async () => {

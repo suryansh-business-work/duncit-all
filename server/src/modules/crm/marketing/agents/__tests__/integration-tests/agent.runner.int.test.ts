@@ -8,7 +8,11 @@
 jest.mock('@services/openai/openai.client', () => ({ openaiChat: jest.fn() }));
 jest.mock('@services/anthropic/anthropic.client', () => ({ claudeDefaultModel: jest.fn(async () => 'claude-test') }));
 jest.mock('@modules/crm/marketing/social/social.ai', () => ({ analyzePendingComments: jest.fn() }));
-jest.mock('@modules/crm/marketing/social/social.health', () => ({ runHealthChecks: jest.fn() }));
+// Only the network-bound check is faked; the token arithmetic the accounts list reads stays real.
+jest.mock('@modules/crm/marketing/social/social.health', () => ({
+  ...jest.requireActual('@modules/crm/marketing/social/social.health'),
+  runHealthChecks: jest.fn(),
+}));
 jest.mock('@modules/crm/marketing/social/social.ideas', () => ({ socialIdeasService: { generate: jest.fn() } }));
 
 import { Types } from 'mongoose';
@@ -24,6 +28,7 @@ import { cancelRun, marketingRunService } from '../../../runs/marketingRun.servi
 import { MarketingAgentConfigModel } from '../../agent.model';
 import { agentActor, runMarketingAgent, startMarketingAgent } from '../../agent.runner';
 import { AGENTS } from '../../agent.catalog';
+import { CODE_PROMPT_BY_KEY } from '@modules/ai/prompt/catalog';
 
 const m = (fn: unknown) => fn as jest.Mock;
 const USER = new Types.ObjectId().toHexString();
@@ -80,7 +85,7 @@ describe('a run that goes to plan', () => {
     expect(analyzePendingComments).toHaveBeenCalledWith(undefined);
 
     const call = m(openaiChat).mock.calls[0][0];
-    expect(call).toMatchObject({ task: 'marketing.agent_plan', model: 'claude-test', json: true, max_tokens: 4000, detail: 'COMMUNITY_WATCH', user_id: USER });
+    expect(call).toMatchObject({ task: 'marketing.agent_plan', model: CODE_PROMPT_BY_KEY.get('agents.community_watch')?.target_model, json: true, max_tokens: 4000, detail: 'COMMUNITY_WATCH', user_id: USER });
     expect(call.messages[0].content).toContain('You are the Community watch agent');
     expect(call.messages[1].content).toContain('CONNECTED ACCOUNTS:');
   });

@@ -158,8 +158,8 @@ describe('uploadAsset', () => {
 
   it('refuses a file from elsewhere, and one whose address says nothing it can play', () => {
     expect(() => uploadAsset({ url: 'https://evil.example/clip.mp4', name: 'c' })).toThrow('media store');
-    expect(() => uploadAsset({ url: 'https://ik.imagekit.io/duncit/notes.pdf', name: 'n' })).toThrow('cannot play');
-    expect(() => uploadAsset({ url: 'https://ik.imagekit.io/duncit/noext', name: 'n' })).toThrow('cannot play');
+    expect(() => uploadAsset({ url: 'https://ik.imagekit.io/duncit/notes.pdf', name: 'n' })).toThrow('not a picture, a clip or a sound file the studio can play');
+    expect(() => uploadAsset({ url: 'https://ik.imagekit.io/duncit/noext', name: 'n' })).toThrow('not a picture, a clip or a sound file the studio can play');
   });
 });
 

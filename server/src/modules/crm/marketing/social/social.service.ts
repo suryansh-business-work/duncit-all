@@ -180,6 +180,10 @@ const pubReply = (r: StoredReply) => ({
   error: r.error ?? '',
 });
 
+/** The Inbox status the comment holds; a loaded (not lean) document fills a missing one with the schema default, which is not a status anybody set. */
+const storedStatus = (o: { status?: string | null; $isDefault?: (path: string) => boolean }): string | null | undefined =>
+  o.$isDefault?.('status') ? undefined : o.status;
+
 /** A comment for the API; `people` names whoever it is assigned to (the Inbox), and is empty elsewhere. */
 export const pubComment = (
   o: any,
@@ -209,7 +213,7 @@ export const pubComment = (
   review_status: o.review_status,
   reviewed_at: iso(o.reviewed_at),
   // A comment stored before the Inbox existed reads as its review said until the boot move fills it.
-  status: o.status ?? (o.review_status === 'REVIEWED' ? 'DONE' : 'OPEN'),
+  status: storedStatus(o) ?? (o.review_status === 'REVIEWED' ? 'DONE' : 'OPEN'),
   assigned_user_id: idOrNull(o.assigned_user_id),
   assigned_name: o.assigned_user_id ? people.get(String(o.assigned_user_id)) ?? null : null,
   replies: ((o.replies ?? []) as StoredReply[]).map(pubReply),

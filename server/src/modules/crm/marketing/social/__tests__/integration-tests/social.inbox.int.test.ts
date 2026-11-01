@@ -36,6 +36,8 @@ import type { SocialPlatform } from '../../social.types';
 const m = (fn: unknown) => fn as jest.Mock;
 const CREDS = { clientId: 'id', clientSecret: 'secret', redirectUri: 'https://api/cb', version: '202510' };
 const USAGE = { prompt_tokens: 120, completion_tokens: 30, total_tokens: 150 };
+/** Whoever is signed in where the person does not matter; a real id, as every signed-in user has. */
+const SOMEONE = { id: new Types.ObjectId().toHexString() };
 const replierMock = (platform: SocialPlatform) => m((REPLIERS[platform] as { reply: unknown }).reply);
 
 let seq = 0;
@@ -293,51 +295,51 @@ describe('replyToComment', () => {
 
   it('refuses with NOT_CONFIGURED, naming the permission, where the connection cannot reply — before anything is sent', async () => {
     const facebook = await thread('FACEBOOK');
-    await expect(replyToComment(facebook.id, 'Hi', { id: 'u' })).rejects.toMatchObject({
+    await expect(replyToComment(facebook.id, 'Hi', SOMEONE)).rejects.toMatchObject({
       message: 'Replying on FACEBOOK needs the pages_manage_engagement permission, which this connection does not have.',
       extensions: { code: 'NOT_CONFIGURED', missing_permission: 'pages_manage_engagement' },
     });
     const pageToken = await thread('INSTAGRAM', { provider: 'FACEBOOK' });
-    await expect(replyToComment(pageToken.id, 'Hi', { id: 'u' })).rejects.toMatchObject({
+    await expect(replyToComment(pageToken.id, 'Hi', SOMEONE)).rejects.toMatchObject({
       extensions: { code: 'NOT_CONFIGURED', missing_permission: 'instagram_manage_comments' },
     });
     const oldGrant = await thread('YOUTUBE', { scopes: ['https://www.googleapis.com/auth/youtube.readonly'] });
-    await expect(replyToComment(oldGrant.id, 'Hi', { id: 'u' })).rejects.toMatchObject({
+    await expect(replyToComment(oldGrant.id, 'Hi', SOMEONE)).rejects.toMatchObject({
       extensions: { code: 'NOT_CONFIGURED', missing_permission: 'https://www.googleapis.com/auth/youtube.force-ssl' },
     });
     const noApp = await thread('THREADS');
     m(socialCredentials).mockResolvedValue(null);
-    await expect(replyToComment(noApp.id, 'Hi', { id: 'u' })).rejects.toMatchObject({ extensions: { code: 'NOT_CONFIGURED' } });
+    await expect(replyToComment(noApp.id, 'Hi', SOMEONE)).rejects.toMatchObject({ extensions: { code: 'NOT_CONFIGURED' } });
     expect(replierMock('THREADS')).not.toHaveBeenCalled();
     expect(await runs()).toEqual([]);
   });
 
   it('refuses an empty or too-long reply, an expired account, and a comment or account that is not there', async () => {
     const t = await thread('X');
-    await expect(replyToComment(t.id, '   ', { id: 'u' })).rejects.toMatchObject({ message: 'Write the reply first.', extensions: { code: 'BAD_USER_INPUT' } });
-    await expect(replyToComment(t.id, 'x'.repeat(281), { id: 'u' })).rejects.toMatchObject({ message: 'A reply on X is at most 280 characters.' });
+    await expect(replyToComment(t.id, '   ', SOMEONE)).rejects.toMatchObject({ message: 'Write the reply first.', extensions: { code: 'BAD_USER_INPUT' } });
+    await expect(replyToComment(t.id, 'x'.repeat(281), SOMEONE)).rejects.toMatchObject({ message: 'A reply on X is at most 280 characters.' });
     await SocialAccountModel.updateOne({ _id: t.account._id }, { $set: { status: 'EXPIRED' } });
-    await expect(replyToComment(t.id, 'Hi', { id: 'u' })).rejects.toMatchObject({ message: expect.stringMatching(/reconnecting/) });
+    await expect(replyToComment(t.id, 'Hi', SOMEONE)).rejects.toMatchObject({ message: expect.stringMatching(/reconnecting/) });
     await SocialAccountModel.deleteOne({ _id: t.account._id });
-    await expect(replyToComment(t.id, 'Hi', { id: 'u' })).rejects.toMatchObject({ message: 'Social account not found' });
-    await expect(replyToComment('nope', 'Hi', { id: 'u' })).rejects.toMatchObject({ message: 'Comment not found', extensions: { code: 'NOT_FOUND' } });
+    await expect(replyToComment(t.id, 'Hi', SOMEONE)).rejects.toMatchObject({ message: 'Social account not found' });
+    await expect(replyToComment('nope', 'Hi', SOMEONE)).rejects.toMatchObject({ message: 'Comment not found', extensions: { code: 'NOT_FOUND' } });
     expect(replierMock('X')).not.toHaveBeenCalled();
   });
 
   it('will not send a second reply while one is going out, but a stale lock does not block', async () => {
     const t = await thread('X');
     await SocialCommentModel.updateOne({ _id: t.comment._id }, { $set: { reply_lock_at: new Date() } });
-    await expect(replyToComment(t.id, 'Hi', { id: 'u' })).rejects.toMatchObject({ extensions: { code: 'CONFLICT' } });
+    await expect(replyToComment(t.id, 'Hi', SOMEONE)).rejects.toMatchObject({ extensions: { code: 'CONFLICT' } });
     expect(replierMock('X')).not.toHaveBeenCalled();
     await SocialCommentModel.updateOne({ _id: t.comment._id }, { $set: { reply_lock_at: new Date(Date.now() - 3 * 60_000) } });
     replierMock('X').mockResolvedValue({ external_id: '7' });
-    await expect(replyToComment(t.id, 'Hi', { id: 'u' })).resolves.toMatchObject({ status: 'REPLIED' });
+    await expect(replyToComment(t.id, 'Hi', SOMEONE)).resolves.toMatchObject({ status: 'REPLIED' });
   });
 
   it('keeps a refused reply on the thread, fails the run, and marks a dead token expired', async () => {
     const t = await thread('INSTAGRAM');
     replierMock('INSTAGRAM').mockRejectedValue(new SocialApiError('Instagram', 401, 'token revoked', true));
-    await expect(replyToComment(t.id, 'Hello', { id: 'u' })).rejects.toMatchObject({
+    await expect(replyToComment(t.id, 'Hello', SOMEONE)).rejects.toMatchObject({
       message: 'The reply was not sent — Instagram: token revoked',
       extensions: { code: 'REPLY_FAILED' },
     });
@@ -351,7 +353,7 @@ describe('replyToComment', () => {
   it('leaves the account alone when the refusal is not about the token', async () => {
     const t = await thread('THREADS');
     replierMock('THREADS').mockRejectedValue('network down');
-    await expect(replyToComment(t.id, 'Hello', { id: 'u' })).rejects.toMatchObject({ message: 'The reply was not sent — network down' });
+    await expect(replyToComment(t.id, 'Hello', SOMEONE)).rejects.toMatchObject({ message: 'The reply was not sent — network down' });
     expect(await SocialAccountModel.findById(t.account._id).lean()).toMatchObject({ status: 'CONNECTED' });
   });
 });
@@ -394,18 +396,18 @@ describe('suggestReply', () => {
   it('fails as AI_UNAVAILABLE with the run named when Claude refuses or answers unreadably', async () => {
     const t = await thread('X');
     m(openaiChat).mockResolvedValue({ ok: false, code: 'DISABLED', message: 'This AI feature is switched off' });
-    await expect(suggestReply(t.id, { id: 'u' })).rejects.toMatchObject({
+    await expect(suggestReply(t.id, SOMEONE)).rejects.toMatchObject({
       message: 'This AI feature is switched off',
       extensions: { code: 'AI_UNAVAILABLE', run_id: expect.any(String) },
     });
     answer('not json');
-    await expect(suggestReply(t.id, { id: 'u' })).rejects.toMatchObject({ message: 'The AI answered in a form that could not be read — try again.' });
+    await expect(suggestReply(t.id, SOMEONE)).rejects.toMatchObject({ message: 'The AI answered in a form that could not be read — try again.' });
     expect((await runs()).map((r) => r.status)).toEqual(['FAILED', 'FAILED']);
   });
 
   it('refuses a comment that is not there', async () => {
-    await expect(suggestReply('nope', { id: 'u' })).rejects.toMatchObject({ message: 'Comment not found', extensions: { code: 'NOT_FOUND' } });
-    await expect(suggestReply(String(new Types.ObjectId()), { id: 'u' })).rejects.toMatchObject({ extensions: { code: 'NOT_FOUND' } });
+    await expect(suggestReply('nope', SOMEONE)).rejects.toMatchObject({ message: 'Comment not found', extensions: { code: 'NOT_FOUND' } });
+    await expect(suggestReply(String(new Types.ObjectId()), SOMEONE)).rejects.toMatchObject({ extensions: { code: 'NOT_FOUND' } });
     expect(openaiChat).not.toHaveBeenCalled();
   });
 

@@ -68,6 +68,8 @@ import * as socialProbeModule from '@modules/crm/marketing/social/social.probe';
 
 const { probeSocialApp } = socialProbeModule;
 const socialProbe = (socialProbeModule as unknown as { __probe: jest.Mock }).__probe;
+// Read before the first test runs: clearMocks wipes the calls made at import time.
+const builtSocialChecks: unknown[] = (probeSocialApp as jest.Mock).mock.calls.map(([provider]) => provider);
 
 /** The entry's fields, read the way the checks read them. */
 const entry = (fields: Record<string, string>) => (name: string) => fields[name] ?? '';
@@ -783,8 +785,7 @@ describe('runEnvConnectionCheck', () => {
   });
 
   it('builds one check per social network, each from its own provider probe', () => {
-    const built = (probeSocialApp as jest.Mock).mock.calls.map(([provider]) => provider);
-    expect(built).toEqual(expect.arrayContaining(['INSTAGRAM', 'FACEBOOK', 'THREADS', 'YOUTUBE', 'LINKEDIN', 'X']));
+    expect(builtSocialChecks).toEqual(['INSTAGRAM', 'FACEBOOK', 'THREADS', 'YOUTUBE', 'LINKEDIN', 'X']);
   });
 
   it.each(['SOCIAL_INSTAGRAM', 'SOCIAL_FACEBOOK', 'SOCIAL_THREADS', 'SOCIAL_YOUTUBE', 'SOCIAL_LINKEDIN', 'SOCIAL_X'])(

@@ -19,7 +19,9 @@ jest.mock('@modules/crm/marketing/social/providers', () => {
     },
   };
 });
+// The field table stays real: the env connection checks are built from it at import time.
 jest.mock('@modules/crm/marketing/social/social.credentials', () => ({
+  ...jest.requireActual('@modules/crm/marketing/social/social.credentials'),
   providerReadiness: jest.fn(),
   socialCredentials: jest.fn(),
   socialRedirectUri: jest.fn(),

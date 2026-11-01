@@ -143,7 +143,7 @@ describe('update', () => {
 
 describe('runNow', () => {
   it('starts the agent as the signed-in person, remembers the run, and answers its id at once', async () => {
-    await UserModel.create({ _id: MANAGER, auth: { email: 'meera@duncit.test', phone: '+919999999999' }, profile: { first_name: 'Meera', last_name: 'M' } });
+    await UserModel.create({ _id: MANAGER, auth: { email: 'meera@duncit.test' }, profile: { first_name: 'Meera', last_name: 'M' } });
     m(startMarketingAgent).mockResolvedValue({ run_id: 'run-9', finished: new Promise(() => undefined) });
 
     const id = await svc.runNow('ACCOUNT_DOCTOR', { id: MANAGER });

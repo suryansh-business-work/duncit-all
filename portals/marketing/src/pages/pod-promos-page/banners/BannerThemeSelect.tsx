@@ -30,7 +30,8 @@ export default function BannerThemeSelect({ value, onChange, disabled, testId }:
       disabled={disabled}
       onChange={(event) => onChange(isTheme(event.target.value) ? event.target.value : '')}
       sx={{ minWidth: 200 }}
-      slotProps={{ htmlInput: { 'data-testid': testId } }}
+      // '' is a real choice, so it shows its name rather than an empty box.
+      slotProps={{ select: { displayEmpty: true }, inputLabel: { shrink: true }, htmlInput: { 'data-testid': testId } }}
     >
       <MenuItem value="">{t('marketing.podPromo.themeAuto')}</MenuItem>
       {BANNER_THEMES.map((theme) => (

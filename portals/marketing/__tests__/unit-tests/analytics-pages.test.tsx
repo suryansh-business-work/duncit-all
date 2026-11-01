@@ -159,6 +159,16 @@ describe('Analytics › Social', () => {
     expect(within(rows[2]).getByRole('link', { name: 'Untitled post' })).toHaveAttribute('href', 'https://x.com/duncit/3');
   });
 
+  it('finds a best post by its words or by the account that posted it', async () => {
+    renderAt(<AnalyticsSocialPage />, [analyticsSocialMock()], WINDOW);
+    expect(await screen.findAllByTestId('table-row')).toHaveLength(3);
+    fireEvent.change(screen.getByLabelText('table-search'), { target: { value: 'Duncit X' } });
+    await waitFor(() => expect(screen.getAllByTestId('table-row')).toHaveLength(1));
+    expect(screen.getByRole('link', { name: 'Untitled post' })).toHaveAttribute('href', 'https://x.com/duncit/3');
+    fireEvent.change(screen.getByLabelText('table-search'), { target: { value: 'diwali' } });
+    await waitFor(() => expect(screen.getByTestId('table-row')).toHaveTextContent('Diwali pods are live'));
+  });
+
   it('shows one empty state when nothing is connected or posted', async () => {
     renderAt(<AnalyticsSocialPage />, [analyticsSocialMock({ accounts: [], posts: 0 })]);
     expect(await screen.findByTestId('analytics-empty')).toHaveTextContent('Nothing in this window yet');

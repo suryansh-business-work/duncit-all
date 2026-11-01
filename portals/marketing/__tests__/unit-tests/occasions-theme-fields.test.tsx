@@ -97,8 +97,11 @@ describe('ColorListField', () => {
     expect(within(group).getByText('#0000FF')).toBeInTheDocument();
     expect(within(group).queryByText('#00FF00')).not.toBeInTheDocument();
 
-    for (let i = 0; i < 7; i += 1) fireEvent.click(add);
+    // Clicked faster than the form re-renders: every click counts, and the
+    // eighth one past the limit adds nothing.
+    for (let i = 0; i < 8; i += 1) fireEvent.click(add);
     await waitFor(() => expect((held().colors as string[]).length).toBe(8));
+    expect(held().colors).toEqual(Array(8).fill('#0000FF'));
     expect(add).toBeDisabled();
   });
 
@@ -112,6 +115,20 @@ describe('ColorListField', () => {
     );
     fireEvent.click(screen.getByRole('button', { name: 'Remove colour 1' }));
     expect(await screen.findByText('Add at least one colour.')).toBeInTheDocument();
+  });
+
+  it('keeps the hint while only its entries are wrong, since the list itself is fine', async () => {
+    renderWithProviders(
+      <Harness
+        defaultValues={{ colors: ['zz'] }}
+        schema={z.object({ colors: z.array(z.string().refine(isHexColor, 'Bad colour')) })}
+        field={(control) => <ColorListField control={control} name="colors" label="Colours" hint="Cycled along the string." seed="#8E1B3A" />}
+      />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Add colour' }));
+    await waitFor(() => expect(held()).toEqual({ colors: ['zz', 'zz'] }));
+    const hint = await screen.findByText('Cycled along the string.');
+    await waitFor(() => expect(hint).not.toHaveClass('Mui-error'));
   });
 
   it('shows the list’s own error when its entries are wrong too', async () => {

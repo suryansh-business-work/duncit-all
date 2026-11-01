@@ -26,7 +26,8 @@ export default function BannerSizeSelect({ value, onChange, disabled }: Readonly
       disabled={disabled}
       onChange={(event) => onChange(isSize(event.target.value) ? event.target.value : '')}
       sx={{ minWidth: 180 }}
-      slotProps={{ htmlInput: { 'data-testid': 'banner-size-select' } }}
+      // '' is a real choice, so it shows its name rather than an empty box.
+      slotProps={{ select: { displayEmpty: true }, inputLabel: { shrink: true }, htmlInput: { 'data-testid': 'banner-size-select' } }}
     >
       <MenuItem value="">{t('marketing.podPromo.sizeDefault')}</MenuItem>
       {BANNER_STYLES.map((size) => (

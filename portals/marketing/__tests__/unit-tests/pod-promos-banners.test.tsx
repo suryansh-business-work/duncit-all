@@ -93,6 +93,7 @@ describe('MakeBannersDialog', () => {
     renderDialog([generatePodBannersMock('pod1')], { canManage: false });
     await pickOption(/Banner look/, 'Elegant serif');
     await pickOption(/Banner look/, 'Automatic, from the pod category');
+    expect(screen.getByRole('combobox', { name: /Banner look/ })).toHaveTextContent('Automatic, from the pod category');
     fireEvent.click(screen.getByTestId('banner-generate'));
     expect(await screen.findByTestId('banner-slide-grid')).toBeInTheDocument();
   });
@@ -213,6 +214,13 @@ describe('MakeBannersDialog', () => {
     expect(onScheduled).toHaveBeenCalledTimes(1);
     // By now the settings read has long failed: the hint stands without a zone.
     expect(within(section).getByText(/Leave empty to post at the time the settings give/)).not.toHaveTextContent('Asia/Kolkata');
+  });
+
+  it('says why the accounts to post to could not be loaded', async () => {
+    renderDialog([generatePodBannersMock('pod1'), podPromoOptionsMock('Accounts are down'), podPromoSettingsMock()]);
+    fireEvent.click(screen.getByTestId('banner-generate'));
+    const section = await screen.findByTestId('banner-schedule-section');
+    expect(await within(section).findByRole('alert')).toHaveTextContent('Accounts are down');
   });
 
   it('closes from its close button', () => {

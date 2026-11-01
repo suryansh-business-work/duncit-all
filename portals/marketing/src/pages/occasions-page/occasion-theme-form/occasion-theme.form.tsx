@@ -33,8 +33,9 @@ export default function OccasionThemeForm({ theme, onSubmit, onCancel, serverErr
     mode: 'onChange',
   });
   const busy = formState.isSubmitting;
-  // Read while rendering, so react-hook-form keeps it current: a value only read inside a click is never tracked.
-  const { isDirty } = formState;
+  // Read while rendering, so react-hook-form keeps them current: a value only read inside a click,
+  // or behind `submitCount > 0`, is never tracked (isValid would stay false after a valid save).
+  const { isDirty, isValid, submitCount } = formState;
   const save = (apply: boolean) => handleSubmit((values) => onSubmit(values, apply))();
 
   return (
@@ -62,7 +63,7 @@ export default function OccasionThemeForm({ theme, onSubmit, onCancel, serverErr
       >
         <Stack spacing={1.5}>
           {serverError && <Alert severity="error">{serverError}</Alert>}
-          {formState.submitCount > 0 && !formState.isValid && <Alert severity="warning">{t('marketing.occasions.editor.fixErrors')}</Alert>}
+          {submitCount > 0 && !isValid && <Alert severity="warning">{t('marketing.occasions.editor.fixErrors')}</Alert>}
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ justifyContent: 'flex-end' }}>
             <DuncitButton onClick={() => onCancel(isDirty)} disabled={busy}>
               {t('shell.common.cancel')}

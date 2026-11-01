@@ -29,6 +29,9 @@ vi.mock('../../src/components/MediaPickerField', () => ({
   ),
 }));
 
+// The whole editor mounts in every test — seven sections and the preview — which takes several seconds on a CI runner.
+vi.setConfig({ testTimeout: 20_000 });
+
 afterEach(() => {
   vi.clearAllMocks();
 });
@@ -265,6 +268,9 @@ describe('OccasionThemeForm — fireworks, washes, garland and preview', () => {
     renderForm(makeOccasionTheme());
     const preview = within(screen.getByTestId('occasion-editor-preview'));
     expect(previewed()).toMatchObject({ key: 'preview', name: 'Christmas', color_mode: 'AUTO', greeting: 'Merry Christmas' });
+    // The phone starts in the console's own mode, dark by default.
+    expect(screen.getByTestId('phone-preview')).toHaveAttribute('data-mode', 'dark');
+    fireEvent.click(preview.getByRole('button', { name: 'Light' }));
     expect(screen.getByTestId('phone-preview')).toHaveAttribute('data-mode', 'light');
     fireEvent.click(preview.getByRole('button', { name: 'Dark' }));
     expect(screen.getByTestId('phone-preview')).toHaveAttribute('data-mode', 'dark');

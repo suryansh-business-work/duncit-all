@@ -18,7 +18,12 @@ const open = (look: typeof DIWALI | null, onSubmit = vi.fn().mockResolvedValue(t
 };
 
 const dialog = () => screen.getByRole('dialog', { name: /^Dates for/ });
-const save = () => fireEvent.click(within(dialog()).getByRole('button', { name: 'Save' }));
+/** Save comes on once the form has checked the change, as it does for a person; only then is it pressed. */
+const save = async () => {
+  const button = within(dialog()).getByRole('button', { name: 'Save' });
+  await waitFor(() => expect(button).toBeEnabled());
+  fireEvent.click(button);
+};
 
 describe('scheduleValues / toScheduleInput', () => {
   it('reads a look with no dates as blanks, and sends blanks back as no date', () => {
@@ -56,7 +61,7 @@ describe('ScheduleForm', () => {
   it('asks for both dates before the schedule may switch a look on', async () => {
     const { onSubmit } = open(UNDATED);
     fireEvent.click(within(dialog()).getByLabelText('Switch on by schedule'));
-    save();
+    await save();
     expect(await screen.findByText('Set when the look starts.')).toBeInTheDocument();
     expect(screen.getByText('Set when the look ends.')).toBeInTheDocument();
     expect(screen.getByLabelText('Starts')).toHaveAttribute('aria-invalid', 'true');
@@ -67,7 +72,7 @@ describe('ScheduleForm', () => {
     const { onSubmit } = open(DIWALI);
     fireEvent.change(screen.getByLabelText('Ends'), { target: { value: '2026-11-01T00:00:00.000Z' } });
     expect(await screen.findByText('The end must be after the start.')).toBeInTheDocument();
-    save();
+    await save();
     await waitFor(() => expect(screen.getByLabelText('Ends')).toHaveAttribute('aria-invalid', 'true'));
     expect(onSubmit).not.toHaveBeenCalled();
   });
@@ -90,7 +95,7 @@ describe('ScheduleForm', () => {
     fireEvent.click(screen.getByLabelText('Switch on by schedule'));
     fireEvent.change(screen.getByLabelText('Starts'), { target: { value: '' } });
     fireEvent.change(screen.getByLabelText('Ends'), { target: { value: '' } });
-    save();
+    await save();
     await waitFor(() =>
       expect(onSubmit).toHaveBeenCalledWith('diwali', { starts_at: null, ends_at: null, sort_order: 10, schedule_enabled: false }),
     );
@@ -100,7 +105,7 @@ describe('ScheduleForm', () => {
   it('stays open when the save did not go through, and closes on Cancel', async () => {
     const { onSubmit, onClose } = open(DIWALI, vi.fn().mockResolvedValue(false));
     fireEvent.change(screen.getByLabelText(/^Priority/), { target: { value: '3' } });
-    save();
+    await save();
     await waitFor(() => expect(onSubmit).toHaveBeenCalledWith('diwali', expect.objectContaining({ sort_order: 3 })));
     expect(onClose).not.toHaveBeenCalled();
     fireEvent.click(within(dialog()).getByRole('button', { name: 'Cancel' }));

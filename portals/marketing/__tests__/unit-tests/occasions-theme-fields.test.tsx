@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
-import { fireEvent, screen, within } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { useForm, type Control } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -71,7 +71,7 @@ describe('ColorField', () => {
 });
 
 describe('ColorListField', () => {
-  it('adds the seed first and then a copy of the last colour, changes and removes each one, and stops at eight', () => {
+  it('adds the seed first and then a copy of the last colour, changes and removes each one, and stops at eight', async () => {
     renderWithProviders(
       <Harness
         field={(control) => <ColorListField control={control} name="colors" label="Colours" hint="Cycled along the string." seed="#8E1B3A" />}
@@ -83,20 +83,22 @@ describe('ColorListField', () => {
 
     const add = screen.getByRole('button', { name: 'Add colour' });
     fireEvent.click(add);
-    expect(held()).toEqual({ colors: ['#8E1B3A'] });
+    await waitFor(() => expect(held()).toEqual({ colors: ['#8E1B3A'] }));
     fireEvent.change(screen.getByLabelText('Colour 1'), { target: { value: '#00ff00' } });
+    // The picked colour shows on its chip before the next one is added, as a person would see it.
+    expect(await within(group).findByText('#00FF00')).toBeInTheDocument();
     fireEvent.click(add);
-    expect(held()).toEqual({ colors: ['#00FF00', '#00FF00'] });
+    await waitFor(() => expect(held()).toEqual({ colors: ['#00FF00', '#00FF00'] }));
     fireEvent.change(screen.getByLabelText('Colour 2'), { target: { value: '#0000ff' } });
-    expect(held()).toEqual({ colors: ['#00FF00', '#0000FF'] });
+    await waitFor(() => expect(held()).toEqual({ colors: ['#00FF00', '#0000FF'] }));
 
     fireEvent.click(screen.getByRole('button', { name: 'Remove colour 1' }));
-    expect(held()).toEqual({ colors: ['#0000FF'] });
+    await waitFor(() => expect(held()).toEqual({ colors: ['#0000FF'] }));
     expect(within(group).getByText('#0000FF')).toBeInTheDocument();
     expect(within(group).queryByText('#00FF00')).not.toBeInTheDocument();
 
     for (let i = 0; i < 7; i += 1) fireEvent.click(add);
-    expect((held().colors as string[]).length).toBe(8);
+    await waitFor(() => expect((held().colors as string[]).length).toBe(8));
     expect(add).toBeDisabled();
   });
 
@@ -110,6 +112,21 @@ describe('ColorListField', () => {
     );
     fireEvent.click(screen.getByRole('button', { name: 'Remove colour 1' }));
     expect(await screen.findByText('Add at least one colour.')).toBeInTheDocument();
+  });
+
+  it('shows the list’s own error when its entries are wrong too', async () => {
+    renderWithProviders(
+      <Harness
+        defaultValues={{ colors: ['zz'] }}
+        schema={z.object({ colors: z.array(z.string().refine(isHexColor, 'Bad colour')).max(1, 'Keep to one colour.') })}
+        field={(control) => <ColorListField control={control} name="colors" label="Colours" hint="Cycled along the string." seed="#8E1B3A" />}
+      />,
+    );
+    // A copy of the bad entry makes both the entries and the list wrong; the list's own message is the one shown.
+    fireEvent.click(screen.getByRole('button', { name: 'Add colour' }));
+    const message = await screen.findByText('Keep to one colour.');
+    expect(message).toHaveClass('Mui-error');
+    expect(screen.queryByText('Cycled along the string.')).not.toBeInTheDocument();
   });
 });
 

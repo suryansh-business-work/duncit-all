@@ -144,10 +144,10 @@ describe('PreviewDialog', () => {
     expect(within(dialog).getByText('Indian festivals')).toBeInTheDocument();
     expect(within(dialog).getByText('Lamps and gold')).toBeInTheDocument();
     expect(within(dialog).getByRole('img', { name: 'Preview of Diwali on a phone' })).toBeInTheDocument();
-    // The console starts in light mode, so the preview does too, and it may be switched.
-    expect(within(dialog).getByRole('button', { name: 'Light' })).toHaveAttribute('aria-pressed', 'true');
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Dark' }));
+    // The console starts in dark mode, so the preview does too, and it may be switched.
     expect(within(dialog).getByRole('button', { name: 'Dark' })).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Light' }));
+    expect(within(dialog).getByRole('button', { name: 'Light' })).toHaveAttribute('aria-pressed', 'true');
     const link = within(dialog).getByRole('link', { name: 'Open on mWeb' });
     expect(link).toHaveAttribute('href', `${urlConfigs.mwebUrl}/?occasion=diwali%202026`);
     expect(link).toHaveAttribute('target', '_blank');

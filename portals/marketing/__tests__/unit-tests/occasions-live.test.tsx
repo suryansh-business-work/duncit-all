@@ -79,6 +79,9 @@ describe('LiveHero', () => {
     expect(screen.getByText('Pinned')).toBeInTheDocument();
     expect(screen.getByText('Live mode: Pin a look')).toBeInTheDocument();
     const phone = screen.getByRole('img', { name: 'Preview of Holi on a phone' });
+    // The phone starts in the console's own mode, which is dark by default.
+    expect(phone).toHaveAttribute('data-mode', 'dark');
+    fireEvent.click(screen.getByRole('button', { name: 'Light' }));
     expect(phone).toHaveAttribute('data-mode', 'light');
     fireEvent.click(screen.getByRole('button', { name: 'Dark' }));
     expect(phone).toHaveAttribute('data-mode', 'dark');
@@ -96,6 +99,13 @@ describe('LiveHero', () => {
 });
 
 const renderTab = (mocks: MockedResponse[]) => renderWithProviders(<LiveTab />, { mocks, initialEntries: ['/occasions'] });
+
+/** Apply comes on once the form has checked the change, as it does for a person; only then is it pressed. */
+const pressApply = async () => {
+  const apply = screen.getByTestId('occasion-live-mode-save');
+  await waitFor(() => expect(apply).toBeEnabled());
+  fireEvent.click(apply);
+};
 
 const pick = async (name: string) => {
   fireEvent.mouseDown(screen.getByRole('combobox'));
@@ -127,7 +137,7 @@ describe('LiveTab', () => {
     await screen.findByText('What the apps wear');
     fireEvent.click(screen.getByRole('radio', { name: /Pin a look/ }));
     await pick('Holi');
-    fireEvent.click(screen.getByTestId('occasion-live-mode-save'));
+    await pressApply();
     await waitFor(() =>
       expect(dialogsMock.confirm).toHaveBeenCalledWith({
         title: 'Change every Duncit app?',
@@ -145,7 +155,7 @@ describe('LiveTab', () => {
     renderTab([occasionLiveMock(makeLive(), makeSettings({ mode: 'MANUAL', manual_key: 'diwali' })), occasionThemesMock([DIWALI])]);
     await screen.findByText('What the apps wear');
     fireEvent.click(screen.getByRole('radio', { name: /Automatic by schedule/ }));
-    fireEvent.click(screen.getByTestId('occasion-live-mode-save'));
+    await pressApply();
     await waitFor(() =>
       expect(dialogsMock.confirm).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -165,7 +175,7 @@ describe('LiveTab', () => {
     ]);
     await screen.findByText('What the apps wear');
     fireEvent.click(screen.getByRole('radio', { name: /^Normal/ }));
-    fireEvent.click(screen.getByTestId('occasion-live-mode-save'));
+    await pressApply();
     await waitFor(() =>
       expect(dialogsMock.confirm).toHaveBeenCalledWith(
         expect.objectContaining({ message: 'Every Duncit app goes back to its house look the next time it loads.' }),

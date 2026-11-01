@@ -160,6 +160,7 @@ describe('getRunColumns', () => {
       { value: 'AGENT', label: 'AI agent' },
       { value: 'ORCHESTRATOR', label: 'Orchestrator' },
       { value: 'CAMPAIGN', label: 'Campaign' },
+      { value: 'POD_PROMO', label: 'Pod promotion' },
       { value: 'OTHER', label: 'Other' },
     ]);
     expect(optionsOf(columns[2])?.map((option) => option.label)).toEqual([

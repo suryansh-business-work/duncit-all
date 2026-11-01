@@ -44,6 +44,11 @@ afterEach(() => {
 
 const occasion = (n: number) => within(screen.getByRole('group', { name: `Occasion ${n}` }));
 const saveButton = () => screen.getByTestId('store-occasions-save');
+/** Save comes on once the form has checked the edit, as it does for a person; only then is it pressed. */
+const pressSave = async () => {
+  await waitFor(() => expect(saveButton()).toBeEnabled());
+  fireEvent.click(saveButton());
+};
 const SALE = makeStoreOccasion();
 const HOLI = makeStoreOccasion({
   slug: 'holi',
@@ -177,7 +182,8 @@ describe('StoreOccasionsForm', () => {
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
-  it('stops adding at the most windows the editor keeps', () => {
+  // Twenty full rows take a while to mount on a CI runner.
+  it('stops adding at the most windows the editor keeps', { timeout: 20_000 }, () => {
     open(Array.from({ length: MAX_STORE_OCCASIONS }, (_, i) => makeStoreOccasion({ slug: `s-${i}`, label: `Sale ${i}` })));
     expect(screen.getByRole('button', { name: 'Add store occasion' })).toBeDisabled();
   });
@@ -194,7 +200,10 @@ describe('StoreOccasionsForm', () => {
       ),
     );
     fireEvent.change(occasion(1).getByLabelText(/^Greeting/), { target: { value: '  Shubh Deepavali  ' } });
-    fireEvent.click(saveButton());
+    // Enter in a field does not post the form; only Save does.
+    fireEvent.submit(screen.getByTestId('store-occasions-form'));
+    expect(onSubmit).not.toHaveBeenCalled();
+    await pressSave();
     await waitFor(() => expect(saveButton()).toHaveTextContent('Saving…'));
     expect(onSubmit).toHaveBeenCalledWith([{ ...SALE, greeting: 'Shubh Deepavali' }]);
     finish();
@@ -223,7 +232,7 @@ describe('StoreOccasionsTab', () => {
     const saved = [makeStoreOccasion({ sort_order: 3 })];
     renderTab([storeOccasionsMock([SALE]), saveStoreOccasionsMock(saved), storeOccasionsMock(saved)]);
     fireEvent.change(await screen.findByLabelText(/^Order/), { target: { value: '3' } });
-    fireEvent.click(saveButton());
+    await pressSave();
     await waitFor(() => expect(dialogsMock.notify).toHaveBeenCalledWith('Store occasions saved.', 'success'));
     await waitFor(() => expect(saveButton()).toBeDisabled());
     expect(screen.getByLabelText(/^Order/)).toHaveValue(3);
@@ -232,7 +241,7 @@ describe('StoreOccasionsTab', () => {
   it('reports a save the server refused', async () => {
     renderTab([storeOccasionsMock([SALE]), saveStoreOccasionsErrorMock([makeStoreOccasion({ sort_order: 4 })], 'not allowed')]);
     fireEvent.change(await screen.findByLabelText(/^Order/), { target: { value: '4' } });
-    fireEvent.click(saveButton());
+    await pressSave();
     await waitFor(() => expect(dialogsMock.notify).toHaveBeenCalledWith('not allowed', 'error'));
     expect(screen.getByLabelText(/^Order/)).toHaveValue(4);
   });

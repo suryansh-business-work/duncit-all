@@ -127,7 +127,13 @@ export const suggestSocialReplyMock = (id: string, text: string): MockedResponse
   result: { data: { suggestSocialReply: { __typename: 'SocialReplySuggestion', text, run_id: 'run1' } } },
 });
 
-export const suggestSocialReplyErrorMock = (id: string, message: string): MockedResponse => ({
+/** The call went through but brought no data back. */
+export const suggestSocialReplyNoDataMock = (id: string): MockedResponse => ({
+  request: { query: SUGGEST_SOCIAL_REPLY, variables: { id } },
+  result: { data: null },
+});
+
+export const suggestSocialReplyErrorMock =(id: string, message: string): MockedResponse => ({
   request: { query: SUGGEST_SOCIAL_REPLY, variables: { id } },
   ...rejection(message),
 });

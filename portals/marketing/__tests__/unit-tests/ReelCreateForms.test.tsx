@@ -265,8 +265,11 @@ describe('ReelSettingsForm', () => {
   });
 });
 
+// Forty scenes of fields is the heaviest render in the suite; under coverage it outruns the 5s default.
+const FORTY_SCENES_TIMEOUT_MS = 30_000;
+
 describe('ScriptSceneFields in context', () => {
-  it('caps the scenes at the timeline’s limit', () => {
+  it('caps the scenes at the timeline’s limit', { timeout: FORTY_SCENES_TIMEOUT_MS }, () => {
     const script = reelScript({ scenes: Array.from({ length: 40 }, (_item, index) => ({ text: `Scene ${index}`, shot: '', duration_ms: 1000, asset_query: '' })) });
     renderWithProviders(<ReelScriptForm script={script} submitting={false} onSubmit={vi.fn()} />);
     expect(screen.getByTestId('reel-script-add-scene')).toBeDisabled();

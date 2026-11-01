@@ -31,6 +31,11 @@ afterEach(() => {
 
 const row = (index: number) => within(screen.getByTestId(`occasion-icon-${index}`));
 const saveButton = () => screen.getByTestId('occasion-icons-save');
+/** Save comes on once the form has checked the edit, as it does for a person; only then is it pressed. */
+const pressSave = async () => {
+  await waitFor(() => expect(saveButton()).toBeEnabled());
+  fireEvent.click(saveButton());
+};
 
 describe('toIconValues / toIconInput', () => {
   it('keeps only the input fields, gives a missing fallback the festive one, and sends a clean key and ISO dates', () => {
@@ -141,7 +146,10 @@ describe('OccasionIconsForm', () => {
       ),
     );
     fireEvent.change(row(0).getByLabelText(/^Key/), { target: { value: 'Diwali-2026' } });
-    fireEvent.click(saveButton());
+    // Enter in a field does not post the form; only Save does.
+    fireEvent.submit(screen.getByTestId('occasion-icons-form'));
+    expect(onSubmit).not.toHaveBeenCalled();
+    await pressSave();
     await waitFor(() => expect(saveButton()).toHaveTextContent('Saving…'));
     expect(saveButton()).toBeDisabled();
     expect(onSubmit).toHaveBeenCalledWith([{ ...makeIcon(), slug: 'diwali-2026' }]);
@@ -171,7 +179,7 @@ describe('AppIconsTab', () => {
     const saved = [makeIcon({ sort_order: 5 })];
     renderTab([occasionIconsMock([makeIcon()]), saveOccasionIconsMock(saved), occasionIconsMock(saved)]);
     fireEvent.change(await screen.findByLabelText(/^Priority/), { target: { value: '5' } });
-    fireEvent.click(saveButton());
+    await pressSave();
     await waitFor(() => expect(dialogsMock.notify).toHaveBeenCalledWith('Festive icons saved.', 'success'));
     // The fresh form starts clean from what the server kept.
     await waitFor(() => expect(saveButton()).toBeDisabled());
@@ -181,7 +189,7 @@ describe('AppIconsTab', () => {
   it('reports a save the server refused and keeps the edit', async () => {
     renderTab([occasionIconsMock([makeIcon()]), saveOccasionIconsErrorMock([makeIcon({ sort_order: 7 })], 'not allowed')]);
     fireEvent.change(await screen.findByLabelText(/^Priority/), { target: { value: '7' } });
-    fireEvent.click(saveButton());
+    await pressSave();
     await waitFor(() => expect(dialogsMock.notify).toHaveBeenCalledWith('not allowed', 'error'));
     expect(screen.getByLabelText(/^Priority/)).toHaveValue(7);
   });

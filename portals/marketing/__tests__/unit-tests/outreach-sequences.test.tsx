@@ -61,18 +61,18 @@ describe('SequencesTab', () => {
     const on = { ...SEQ, active: true };
     renderTab([outreachSequencesMock([SEQ]), setSequenceActiveMock(SEQ, true), setSequenceActiveMock(on, false)]);
     const toggle = await screen.findByTestId('sequence-switch-seq1');
-    fireEvent.click(within(toggle).getByRole('checkbox', { name: 'Switch Venue intro on or off' }));
+    fireEvent.click(within(toggle).getByRole('switch', { name: 'Switch Venue intro on or off' }));
     await waitFor(() => expect(dialogsMock.notify).toHaveBeenCalledWith('Venue intro is on.', 'success'));
-    await waitFor(() => expect(within(screen.getByTestId('sequence-switch-seq1')).getByRole('checkbox')).toBeChecked());
-    fireEvent.click(within(screen.getByTestId('sequence-switch-seq1')).getByRole('checkbox'));
+    await waitFor(() => expect(within(screen.getByTestId('sequence-switch-seq1')).getByRole('switch')).toBeChecked());
+    fireEvent.click(within(screen.getByTestId('sequence-switch-seq1')).getByRole('switch'));
     await waitFor(() => expect(dialogsMock.notify).toHaveBeenCalledWith('Venue intro is off.', 'success'));
   });
 
   it('reports a switch the server refused', async () => {
     renderTab([outreachSequencesMock([SEQ]), setSequenceActiveErrorMock('seq1', true, 'Step 3 needs an approved template')]);
-    fireEvent.click(within(await screen.findByTestId('sequence-switch-seq1')).getByRole('checkbox'));
+    fireEvent.click(within(await screen.findByTestId('sequence-switch-seq1')).getByRole('switch'));
     await waitFor(() => expect(dialogsMock.notify).toHaveBeenCalledWith('Step 3 needs an approved template', 'error'));
-    expect(within(screen.getByTestId('sequence-switch-seq1')).getByRole('checkbox')).not.toBeChecked();
+    expect(within(screen.getByTestId('sequence-switch-seq1')).getByRole('switch')).not.toBeChecked();
   });
 
   it('edits a sequence, saves it as the form holds it and reads the list again', async () => {

@@ -168,6 +168,9 @@ describe('LeadOwnerDialog', () => {
     const dialog = screen.getByRole('dialog', { name: 'Who handles this comment?' });
     const input = within(dialog).getByRole('combobox', { name: 'Owner' });
     await waitFor(() => expect(input).toHaveValue('Asha Rao'));
+    // The clear button is hidden until the field has focus, as it is for a pointer user.
+    expect(within(dialog).queryByRole('button', { name: 'Clear' })).not.toBeInTheDocument();
+    fireEvent.focus(input);
     fireEvent.click(within(dialog).getByRole('button', { name: 'Clear' }));
     expect(input).toHaveValue('');
     fireEvent.click(within(dialog).getByTestId('lead-owner-save'));

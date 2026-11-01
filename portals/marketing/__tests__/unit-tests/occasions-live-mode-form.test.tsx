@@ -16,6 +16,11 @@ const open = (settings = makeSettings(), onSubmit = vi.fn().mockResolvedValue(tr
 };
 
 const apply = () => screen.getByTestId('occasion-live-mode-save');
+/** Apply comes on once the form has checked the change, as it does for a person; only then is it pressed. */
+const pressApply = async () => {
+  await waitFor(() => expect(apply()).toBeEnabled());
+  fireEvent.click(apply());
+};
 
 describe('liveModeValues', () => {
   it('takes the mode and the pinned look from the settings', () => {
@@ -41,8 +46,7 @@ describe('LiveModeForm', () => {
     const onSubmit = open();
     fireEvent.click(screen.getByRole('radio', { name: /Pin a look/ }));
     expect(screen.getByText('Archived looks cannot be pinned.')).toBeInTheDocument();
-    expect(apply()).toBeEnabled();
-    fireEvent.click(apply());
+    await pressApply();
     expect(await screen.findByText('Choose the look to pin.')).toBeInTheDocument();
     expect(onSubmit).not.toHaveBeenCalled();
   });
@@ -54,7 +58,10 @@ describe('LiveModeForm', () => {
     const listbox = await screen.findByRole('listbox');
     expect(within(listbox).getAllByRole('option').map((o) => o.textContent)).toEqual(['Diwali', 'Holi']);
     fireEvent.click(within(listbox).getByRole('option', { name: 'Holi' }));
-    fireEvent.click(apply());
+    // Enter in the form does not post it; only Apply does.
+    fireEvent.submit(screen.getByTestId('occasion-live-mode-form'));
+    expect(onSubmit).not.toHaveBeenCalled();
+    await pressApply();
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
     expect(onSubmit.mock.calls[0][0]).toEqual({ mode: 'MANUAL', manual_key: 'holi' });
   });
@@ -64,7 +71,7 @@ describe('LiveModeForm', () => {
     expect(screen.getByRole('combobox')).toHaveTextContent('Diwali');
     fireEvent.click(screen.getByRole('radio', { name: /^Normal/ }));
     expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
-    fireEvent.click(apply());
+    await pressApply();
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
     expect(onSubmit.mock.calls[0][0]).toEqual({ mode: 'NORMAL', manual_key: 'diwali' });
   });

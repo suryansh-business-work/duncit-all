@@ -40,7 +40,7 @@ describe('SequenceForm: the settings', () => {
     expect(screen.getByText('Sends and DM tasks a day, across the whole sequence.')).toBeInTheDocument();
     expect(screen.getByRole('combobox', { name: /^Quiet from/ })).toHaveTextContent('21:00');
     expect(screen.getByRole('combobox', { name: /^Quiet until/ })).toHaveTextContent('09:00');
-    expect(within(screen.getByTestId('sequence-stop-on-reply')).getByRole('checkbox')).toBeChecked();
+    expect(within(screen.getByTestId('sequence-stop-on-reply')).getByRole('switch')).toBeChecked();
     fireEvent.mouseDown(screen.getByRole('combobox', { name: /^Pipeline/ }));
     const options = within(screen.getByRole('listbox')).getAllByRole('option').map((option) => option.textContent);
     expect(options).toEqual(['Any pipeline', 'Venue', 'Host', 'Brand', 'Influencer', 'Advertiser', 'General']);
@@ -53,7 +53,7 @@ describe('SequenceForm: the settings', () => {
     fireEvent.change(screen.getByRole('textbox', { name: 'Name' }), { target: { value: 'Venue intro' } });
     fireEvent.change(screen.getByRole('textbox', { name: 'Subject' }), { target: { value: 'Hi {name}' } });
     fireEvent.change(screen.getByRole('textbox', { name: 'Email text' }), { target: { value: 'Hello' } });
-    fireEvent.click(within(screen.getByTestId('sequence-stop-on-reply')).getByRole('checkbox'));
+    fireEvent.click(within(screen.getByTestId('sequence-stop-on-reply')).getByRole('switch'));
     fireEvent.mouseDown(screen.getByRole('combobox', { name: /^Quiet from/ }));
     fireEvent.click(within(screen.getByRole('listbox')).getByRole('option', { name: '22:00' }));
     fireEvent.click(screen.getByTestId('sequence-submit'));

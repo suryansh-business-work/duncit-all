@@ -167,6 +167,8 @@ describe('ScheduleTab', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Edit dates for Diwali' }));
     const dialog = await screen.findByRole('dialog', { name: 'Dates for Diwali' });
     fireEvent.change(within(dialog).getByLabelText(/^Priority/), { target: { value: '20' } });
+    // Save comes on once the form has checked the change; only then is it pressed.
+    await waitFor(() => expect(within(dialog).getByRole('button', { name: 'Save' })).toBeEnabled());
     fireEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
     await waitFor(() => expect(dialogsMock.notify).toHaveBeenCalledWith('Dates saved.', 'success'));
     await waitFor(() => expect(screen.queryByTestId('occasion-schedule-form')).not.toBeInTheDocument());
@@ -182,6 +184,8 @@ describe('ScheduleTab', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Edit dates for Diwali' }));
     const dialog = await screen.findByRole('dialog', { name: 'Dates for Diwali' });
     fireEvent.change(within(dialog).getByLabelText(/^Priority/), { target: { value: '11' } });
+    // Save comes on once the form has checked the change; only then is it pressed.
+    await waitFor(() => expect(within(dialog).getByRole('button', { name: 'Save' })).toBeEnabled());
     fireEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
     await waitFor(() => expect(dialogsMock.notify).toHaveBeenCalledWith('dates clash', 'error'));
     expect(screen.getByTestId('occasion-schedule-form')).toBeInTheDocument();

@@ -153,7 +153,9 @@ describe('ThemeCard', () => {
     openMenu('Diwali');
     expect(more).toHaveAttribute('aria-expanded', 'true');
     const menu = screen.getByRole('menu');
-    expect(more).toHaveAttribute('aria-controls', menu.id);
+    // The button controls the menu's popup, which holds the list of actions.
+    const controlled = document.getElementById(more.getAttribute('aria-controls') ?? '');
+    expect(controlled).toContainElement(menu);
     expect(within(menu).getAllByRole('menuitem').map((item) => item.textContent)).toEqual(['Duplicate', 'Unarchive', 'Reset']);
 
     fireEvent.click(within(menu).getByRole('menuitem', { name: 'Reset' }));

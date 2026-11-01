@@ -343,6 +343,24 @@ describe('UploadTab and useReelUploads', () => {
     expect(result.current.rows[0]).toMatchObject({ phase: 'failed', message: 'The upload failed' });
     expect(result.current.busy).toBe(false);
   });
+
+  it('clears only the finished rows, keeping a file still on the wire', async () => {
+    let finish: (url: string) => void = () => undefined;
+    picker.upload.mockRejectedValueOnce(new Error('Upload is not available right now')).mockImplementationOnce(() => new Promise<string>((resolve) => (finish = resolve)));
+    const { result } = renderHook(() => useReelUploads(vi.fn(async () => true)));
+    let adding: Promise<void> = Promise.resolve();
+    act(() => {
+      adding = result.current.add([file('broken.mp4', 'video/mp4'), file('clip.mp4', 'video/mp4')]);
+    });
+    await waitFor(() => expect(result.current.rows.map((row) => row.phase)).toEqual(['failed', 'uploading']));
+    act(() => result.current.clearFinished());
+    expect(result.current.rows).toEqual([expect.objectContaining({ id: 'u2', name: 'clip.mp4', phase: 'uploading' })]);
+    await act(async () => {
+      finish('https://ik.imagekit.io/clip.mp4');
+      await adding;
+    });
+    expect(result.current.rows[0]).toMatchObject({ id: 'u2', phase: 'done' });
+  });
 });
 
 describe('VoiceTab', () => {

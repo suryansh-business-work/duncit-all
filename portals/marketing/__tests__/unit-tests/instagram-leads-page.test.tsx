@@ -20,10 +20,11 @@ vi.mock('@duncit/app-settings', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@duncit/app-settings')>()),
   useDateFormat: () => ({ formatDateTime: (d: Date | string) => `fmt:${String(d)}` }),
 }));
-const dialogsMock = vi.hoisted(() => ({ notify: vi.fn() }));
+const dialogsMock = vi.hoisted(() => ({ notify: vi.fn(), confirm: vi.fn() }));
 vi.mock('@duncit/dialogs', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@duncit/dialogs')>()),
   notify: dialogsMock.notify,
+  useConfirm: () => dialogsMock.confirm,
 }));
 // The Tech console's key editor and its emailed-code gate are that console's own
 // (and covered there); here they are probes that show what they were handed.
@@ -165,6 +166,16 @@ describe('FindTab', () => {
     expect(dialogsMock.notify).not.toHaveBeenCalled();
   });
 
+  it('starts nothing on Enter: only Search sends, so the page never submits away', async () => {
+    renderWithProviders(<FindTab />, { mocks: [igSearchesMock([])] });
+    await screen.findByText('No searches yet.');
+    fireEvent.change(briefBox(), { target: { value: 'Dog trainers in Bangalore' } });
+    expect(fireEvent.submit(screen.getByTestId('ig-lead-search-form'))).toBe(false);
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(dialogsMock.notify).not.toHaveBeenCalled();
+    expect(briefBox()).toHaveValue('Dog trainers in Bangalore');
+  });
+
   it('starts a search with the trimmed brief, says so, clears the brief and reads the runs again', async () => {
     const started = makeIgSearch({ id: 's2', brief: 'Dog trainers in Bangalore', status: 'DONE' });
     renderWithProviders(<FindTab />, {
@@ -229,6 +240,8 @@ describe('SettingsTab', () => {
     expect(field(/DMs per day/)).toHaveValue(20);
     expect(pitchBox()).toHaveValue('Host your sessions as Duncit pods');
     expect(screen.getByTestId('ig-lead-settings-save')).toBeDisabled();
+    // Enter in a field submits nothing; Save is the only way a change goes out.
+    expect(fireEvent.submit(screen.getByTestId('ig-lead-settings-form'))).toBe(false);
     expect(within(screen.getByTestId('env-gate')).getByTestId('env-tab')).toHaveTextContent('SERPER');
   });
 
@@ -243,6 +256,8 @@ describe('SettingsTab', () => {
     });
     fireEvent.change(field(/Follow-ups after the first message/), { target: { value: '4' } });
     fireEvent.change(pitchBox(), { target: { value: '  Pods near you  ' } });
+    // The edit lands once the resolver has read it; Save turns on only then.
+    await waitFor(() => expect(screen.getByTestId('ig-lead-settings-save')).toBeEnabled());
     fireEvent.click(screen.getByTestId('ig-lead-settings-save'));
     await waitFor(() => expect(dialogsMock.notify).toHaveBeenCalledWith('Settings saved.', 'success'));
   });
@@ -263,6 +278,7 @@ describe('SettingsTab', () => {
       mocks: [updateIgSettingsErrorMock({ max_follow_ups: 2, follow_up_gap_days: 7, daily_send_limit: 20, pitch: 'Host your sessions as Duncit pods' }, 'Only a manager can change this')],
     });
     fireEvent.change(field(/Days between messages/), { target: { value: '7' } });
+    await waitFor(() => expect(screen.getByTestId('ig-lead-settings-save')).toBeEnabled());
     fireEvent.click(screen.getByTestId('ig-lead-settings-save'));
     await waitFor(() => expect(dialogsMock.notify).toHaveBeenCalledWith('Only a manager can change this', 'error'));
   });

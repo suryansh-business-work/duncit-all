@@ -135,6 +135,8 @@ describe('LeadComposer', () => {
     expect(await screen.findByRole('heading', { level: 3, name: 'Opening message' })).toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: 'Message' })).toHaveValue('');
     expect(screen.getByRole('link', { name: 'Open Instagram chat' })).toHaveAttribute('href', 'https://ig.me/m/pawsome.blr');
+    // Enter in the box must not submit the page away: the form holds its own submit back.
+    expect(fireEvent.submit(screen.getByTestId('ig-lead-message-form'))).toBe(false);
     fireEvent.click(screen.getByTestId('ig-lead-send'));
     expect(await screen.findByText('Write the message first.')).toBeInTheDocument();
     expect(writeText).not.toHaveBeenCalled();
@@ -366,8 +368,8 @@ describe('LeadsTab', () => {
     renderWithProviders(<LeadsTab settings={makeIgSettings()} />);
     expect(screen.getByText('4 of 20 DMs sent today')).toBeInTheDocument();
     expect(await screen.findByTestId('table-empty')).toHaveTextContent('No leads yet. Start a search under Find leads.');
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Follow-ups due' }));
-    expect(screen.getByRole('checkbox', { name: 'Follow-ups due' })).toBeChecked();
+    fireEvent.click(screen.getByRole('switch', { name: 'Follow-ups due' }));
+    expect(screen.getByRole('switch', { name: 'Follow-ups due' })).toBeChecked();
     expect(screen.getByTestId('table-empty')).toHaveTextContent('No follow-ups are due right now.');
   });
 

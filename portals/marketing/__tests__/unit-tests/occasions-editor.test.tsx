@@ -121,7 +121,7 @@ describe('OccasionThemeEditorPage — a new look', () => {
 describe('OccasionThemeEditorPage — an existing look', () => {
   it('waits for the look, titles itself with its name and hands the look to the form', async () => {
     renderAt('/occasions/themes/diwali', [occasionThemeMock('diwali', diwali)]);
-    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    expect(screen.getByRole('status', { name: 'Loading…' })).toBeInTheDocument();
     expect(await screen.findByRole('heading', { name: 'Diwali' })).toBeInTheDocument();
     expect(screen.getByTestId('form-theme')).toHaveTextContent('Diwali');
   });

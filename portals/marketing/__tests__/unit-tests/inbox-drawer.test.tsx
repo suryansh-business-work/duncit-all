@@ -14,6 +14,7 @@ import {
   setSocialCommentStatusMock,
   suggestSocialReplyErrorMock,
   suggestSocialReplyMock,
+  suggestSocialReplyNoDataMock,
 } from '../mocks';
 import { SET_SOCIAL_COMMENT_STATUS, type InboxComment, type SocialReplyCapability } from '../../src/pages/inbox-page/queries';
 
@@ -200,6 +201,16 @@ describe('InboxDrawer — answering', () => {
   it('leaves the box alone when the draft comes back empty', async () => {
     renderDrawer(makeInboxComment(), [suggestSocialReplyMock('c1', '')]);
     fireEvent.click(screen.getByTestId('inbox-suggest'));
+    await waitFor(() => expect(screen.getByTestId('inbox-suggest')).not.toBeDisabled());
+    expect(box()).toHaveValue('');
+    expect(dialogsMock.notify).not.toHaveBeenCalled();
+  });
+
+  it('leaves the box alone when the call brings no draft back at all', async () => {
+    renderDrawer(makeInboxComment(), [suggestSocialReplyNoDataMock('c1')]);
+    fireEvent.click(screen.getByTestId('inbox-suggest'));
+    // Let the answer arrive before checking that nothing came of it.
+    await new Promise((resolve) => setTimeout(resolve, 20));
     await waitFor(() => expect(screen.getByTestId('inbox-suggest')).not.toBeDisabled());
     expect(box()).toHaveValue('');
     expect(dialogsMock.notify).not.toHaveBeenCalled();

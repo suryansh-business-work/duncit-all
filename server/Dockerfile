@@ -55,9 +55,13 @@ COPY packages/communication/package.json ./packages/communication/
 RUN corepack enable && corepack prepare pnpm@11.24.0 --activate
 RUN pnpm install --frozen-lockfile
 
-# Copy source and build server
+# Copy source and build server. The install above is the only one this stage
+# runs: when its layer comes from the build cache, `pnpm run` decides
+# node_modules is stale and re-installs the WHOLE workspace, which fails on the
+# package manifests this image never copies. npm runs the same script against
+# the same server/node_modules/.bin (tsc, tsc-alias) and never installs.
 COPY server ./server
-RUN pnpm --filter server build
+RUN cd server && npm run build
 
 # --- runner ---
 FROM node:24-alpine AS runner

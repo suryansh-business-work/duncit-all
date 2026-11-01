@@ -100,7 +100,8 @@ export default function ColorListField<T extends FieldValues>({ control, name, l
       control={control}
       name={name}
       render={({ field: { value, onChange }, fieldState }) => {
-        const message = fieldState.error?.message ?? fieldState.error?.root?.message;
+        // The list's own error is the one with a message; entry errors alone leave the hint in place.
+        const message = fieldState.error?.message;
         return (
           <Stack spacing={0.75} role="group" aria-labelledby={labelId}>
             <Typography id={labelId} variant="body2" sx={{ fontWeight: 600 }}>

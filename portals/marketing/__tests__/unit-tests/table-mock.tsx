@@ -127,7 +127,7 @@ interface MockTableProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onRowClick?: (row: any) => void;
   emptyText?: string;
-  /** When given, a search box is rendered and what is typed reaches `fetchRows` as `search`. */
+  /** The search box's placeholder; what is typed there reaches `fetchRows` as `search`. */
   searchPlaceholder?: string;
   toolbarActions?: ReactNode;
   refetchRef?: { current: (() => void) | null };
@@ -154,18 +154,17 @@ export function DuncitTable(props: Readonly<MockTableProps>) {
   return (
     <div data-testid="duncit-table" data-table-id={tableId}>
       <div data-testid="table-toolbar">{toolbarActions}</div>
-      {/* A real search box, so a table's own search function is exercised rather than assumed. */}
-      {searchPlaceholder ? (
-        <input
-          aria-label="table-search"
-          placeholder={searchPlaceholder}
-          value={search}
-          onChange={(event) => {
-            setSearch(event.target.value);
-            load(event.target.value);
-          }}
-        />
-      ) : null}
+      {/* A real search box, so a table's own search function is exercised rather than assumed.
+          Always there, as in production, where a missing placeholder only means the default one. */}
+      <input
+        aria-label="table-search"
+        placeholder={searchPlaceholder}
+        value={search}
+        onChange={(event) => {
+          setSearch(event.target.value);
+          load(event.target.value);
+        }}
+      />
       {rows.length === 0 && <div data-testid="table-empty">{emptyText}</div>}
       {rows.map((row, index) => (
         <div key={getRowId ? getRowId(row) : String(index)} data-testid="table-row">

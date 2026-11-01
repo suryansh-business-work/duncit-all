@@ -76,6 +76,8 @@ describe('the three-level category picker', () => {
     { id: 'groom', name: 'Pet Grooming', parent_id: 'pet', is_active: true },
     { id: 'cultural', name: 'Cultural', parent_id: 'you', is_active: false },
     { id: 'relic', name: 'Relic', parent_id: 'old', is_active: true },
+    // A category never filed under a super.
+    { id: 'loose', name: 'Loose', parent_id: null, is_active: true },
   ];
   // Listed out of tree order on purpose: the rows follow Super, then Category, then Sub order.
   const subs = [
@@ -87,6 +89,8 @@ describe('the three-level category picker', () => {
     { id: 'dance', name: 'Dance', parent_id: 'cultural', is_active: true },
     { id: 'fossil', name: 'Fossil', parent_id: 'relic', is_active: true },
     { id: 'orphan', name: 'Orphan', parent_id: 'gone', is_active: true },
+    { id: 'stray', name: 'Stray', parent_id: null, is_active: true },
+    { id: 'unfiled', name: 'Unfiled', parent_id: 'loose', is_active: true },
   ];
   const catalog = createPodCatalogRows(supers, categories, subs);
   const keys = (rows: readonly { sub_category_id?: string | null }[]) => rows.map((row) => row.sub_category_id);
@@ -131,6 +135,10 @@ describe('the three-level category picker', () => {
     ]);
     expect(createPodGroupOptions(catalog, 'missing')).toEqual([]);
     expect(keys(categoriesForGroup(catalog, 'sports'))).toEqual(['bad', 'cricket']);
+    // A Super-only grant (no catalog to expand it) carries no category: it still forms one group.
+    const wholeSuper = { ...badminton, category_id: null, sub_category_id: null, category_name: 'For You' };
+    expect(createPodGroupOptions([wholeSuper], 'you')).toEqual([{ id: '', name: 'For You' }]);
+    expect(categoriesForGroup([wholeSuper, badminton], '')).toEqual([wholeSuper]);
   });
 
   it('resolves a pick to the subs shown, falling back to the first option of a level no longer offered', () => {

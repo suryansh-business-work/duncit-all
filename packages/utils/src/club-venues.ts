@@ -124,3 +124,20 @@ export function filterClubs<C extends CreatePodClub>(clubs: readonly C[], opts: 
     return !opts.locality || (club.locality ?? '') === opts.locality;
   });
 }
+
+/** How many clubs each category key (`hostCategoryKeyOf`) has where the pod
+ * would run — the city for a physical pod, anywhere for a virtual one. The What
+ * step's chips show it, so a host never picks a category with no club to host in. */
+export function clubCountsByCategory(
+  clubs: readonly CreatePodClub[],
+  categories: readonly HostCategoryKeySource[],
+  opts: Readonly<Pick<ClubFilterOptions, 'locationId' | 'podMode'>>,
+): Map<string, number> {
+  const placed = filterClubs(clubs, { ...opts, hostCategories: [], selectedCategoryKey: '', locality: '' });
+  return new Map(
+    categories.map((category) => {
+      const key = hostCategoryKeyOf(category);
+      return [key, filterClubs(placed, { ...opts, hostCategories: [category], selectedCategoryKey: key, locality: '' }).length];
+    }),
+  );
+}

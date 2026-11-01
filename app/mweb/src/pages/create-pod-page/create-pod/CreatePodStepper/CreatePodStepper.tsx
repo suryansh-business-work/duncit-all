@@ -141,7 +141,7 @@ export default function CreatePodStepper({
   });
 
   const steps = [
-    <WhatStep key="what" form={form} hostCategories={hostCategories} categoryIcons={categoryIcons} />,
+    <WhatStep key="what" form={form} hostCategories={hostCategories} categoryIcons={categoryIcons} clubs={clubs} />,
     <WhereWhenStep key="where" form={form} clubs={clubsForLocation} cityClubs={clubsInCity} locations={locations} venues={venues} clubVenueIds={clubVenueIds} venueNotice={venueNotice} spots={spots} offerMinGuests={offerMinGuests} />,
     <MoneyStep key="money" form={form} venues={venues} sendsOffer={sendsOffer} products={availableProducts} showProducts={showProducts} preview={preview} venueNotice={venueNotice} />,
     <DetailsStep key="details" form={form} hostCategories={hostCategories} venues={venues} onEditWhen={() => goTo(CREATE_POD_WHERE_STEP)} />,

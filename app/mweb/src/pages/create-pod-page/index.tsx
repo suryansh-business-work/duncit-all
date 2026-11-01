@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from '@apollo/client/react';
 import { useNavigate, useParams } from 'react-router';
-import { clubCityName } from '@duncit/utils';
+import { clubCityName, createPodCatalogRows, createPodGrantedRows } from '@duncit/utils';
 import { Alert, Box, CircularProgress, Stack } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutlined';
 import CloseIcon from '@mui/icons-material/Close';
@@ -20,7 +20,7 @@ import { useHostAgainPrefill } from './useHostAgainPrefill';
 import HostAgainNotice from './HostAgainNotice';
 import { createPodSeed } from './createPodSeed';
 import { useCreatePodPublish } from './useCreatePodPublish';
-import type { CreatePodLocation } from './create-pod/create-pod.types';
+import type { CreatePodHostCategory, CreatePodLocation } from './create-pod/create-pod.types';
 
 /** Host-only page to create a pod via the 4-step stepper, reached from the Home
  * "+" button or by resuming a draft from Host Management (`/create-pod/:draftId`). */
@@ -51,7 +51,12 @@ export default function CreatePodPage() {
   const categoryIcons = [...subCategories, ...(options.data?.parentCategories ?? [])];
   // publicVenues are already APPROVED; keep only active venue partners.
   const venues = (options.data?.publicVenues ?? []).filter((venue: any) => venue.is_active !== false);
-  const hostCategories = options.data?.myHost?.host_categories ?? [];
+  // What lists every active sub the host is granted: a grant of a whole
+  // Category (or Super) opens each sub beneath it.
+  const hostCategories: CreatePodHostCategory[] = createPodGrantedRows(
+    createPodCatalogRows(options.data?.superCategories ?? [], options.data?.parentCategories ?? [], subCategories),
+    myHost?.host_categories ?? []
+  );
   const viewerUserId = options.data?.me?.user_id ?? '';
 
   // Arriving from a confirmed Pod Request: its venue and slot come pre-chosen.

@@ -84,14 +84,26 @@ export const CreatePodOptionsDocument = gql(`
         sub_category_name
       }
     }
+    # What lists every active sub the host is granted, under its Super and Category.
+    superCategories: categories(filter: { level: SUPER }) {
+      id
+      name
+      is_active
+    }
     subCategories: categories(filter: { level: SUB }) {
       id
+      name
+      parent_id
+      is_active
       min_pax
       icon
     }
-    # The category tiles on What fall back to the parent category's icon.
+    # The category chips on What fall back to the parent category's icon.
     parentCategories: categories(filter: { level: CATEGORY }) {
       id
+      name
+      parent_id
+      is_active
       icon
     }
     availablePodProducts {

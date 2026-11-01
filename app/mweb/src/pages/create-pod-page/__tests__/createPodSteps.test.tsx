@@ -80,56 +80,104 @@ beforeEach(() => {
 });
 
 describe('HostCategoryField', () => {
-  const categories = [
-    { super_category_id: 's1', category_id: 'c1', sub_category_id: 'u1', super_category_name: 'Sports', category_name: 'Racquet', sub_category_name: 'Badminton' },
-    { super_category_id: 's1', category_id: 'c2', sub_category_id: null, super_category_name: 'Sports', category_name: 'Ball', sub_category_name: '' },
-  ];
+  const forYou = { super_category_id: 's1', super_category_name: 'For You' };
+  const pet = { super_category_id: 's2', super_category_name: 'For Your Pet' };
+  const badminton = { ...forYou, category_id: 'c1', category_name: 'Sports', sub_category_id: 'u1', sub_category_name: 'Badminton' };
+  const cricket = { ...forYou, category_id: 'c1', category_name: 'Sports', sub_category_id: 'u2', sub_category_name: 'Cricket' };
+  const music = { ...forYou, category_id: 'c2', category_name: 'Creative', sub_category_id: 'u3', sub_category_name: 'Music' };
+  const grooming = { ...pet, category_id: 'c3', category_name: 'Grooming', sub_category_id: 'u4', sub_category_name: 'Dog Grooming' };
+  const categories = [badminton, cricket, music, grooming];
+  const club = (id: string, row: typeof badminton, location_id: string) => ({
+    id,
+    club_name: id,
+    location_id,
+    super_category_id: row.super_category_id,
+    category_id: row.sub_category_id,
+  });
+  // Two badminton clubs and a groomer in the pod's city; the only music club is elsewhere.
+  const clubs = [club('b1', badminton, 'loc1'), club('b2', badminton, 'loc1'), club('g1', grooming, 'loc1'), club('m1', music, 'loc2')];
+  const chip = (row: typeof badminton) => screen.getByTestId(`create-pod-category-${hostCategoryKeyOf(row)}`);
+  const physical = { location_id: 'loc1', pod_mode: 'PHYSICAL' as const };
 
-  it('lists the host categories as tiles under their parent, picks one and resets the club, venue and slot', async () => {
+  it('shows Super, then Category, then the category\'s subs as chips with their icon and club count; picking one resets the club, venue and slot', async () => {
     const icon = 'https://cdn.example.com/badminton.png';
     render(
-      <Harness values={{ club_id: 'club', venue_id: 'ven', venue_slot_id: 'slot' }}>
+      <Harness values={{ ...physical, club_id: 'club', venue_id: 'ven', venue_slot_id: 'slot' }}>
         {(form) => (
           <>
-            <HostCategoryField form={form} hostCategories={categories} categoryIcons={[{ id: 'u1', icon }]} />
+            <HostCategoryField form={form} hostCategories={categories} categoryIcons={[{ id: 'u1', icon }]} clubs={clubs} />
             <output data-testid="state">{JSON.stringify([form.watch('host_category_key'), form.watch('club_id'), form.watch('venue_id'), form.watch('venue_slot_id')])}</output>
           </>
         )}
       </Harness>
     );
-    const key = hostCategoryKeyOf(categories[0]);
-    const tile = screen.getByTestId(`create-pod-category-${key}`);
-    // A sub-category reads under its category; a category-level pick under its super.
-    expect(tile).toHaveTextContent('BadmintonRacquet');
-    expect(screen.getByTestId(`create-pod-category-${hostCategoryKeyOf(categories[1])}`)).toHaveTextContent('BallSports');
-    // Its own admin icon, not a drawn stand-in.
-    expect(tile.querySelector('img')).toHaveAttribute('src', icon);
-    // One super-category, so nothing to narrow.
-    expect(screen.queryByTestId('create-pod-category-super')).not.toBeInTheDocument();
-    fireEvent.click(tile);
-    await waitFor(() => expect(JSON.parse(screen.getByTestId('state').textContent ?? '[]')).toEqual([key, '', '', '']));
-    expect(tile).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getByTestId(`create-pod-category-${hostCategoryKeyOf(categories[1])}`)).toHaveAttribute('aria-pressed', 'false');
-  });
-
-  it('narrows the tiles to one super-category when the host is onboarded under two', () => {
-    const pet = { super_category_id: 's2', category_id: 'c3', sub_category_id: 'u3', super_category_name: 'For Your Pet', category_name: 'Grooming', sub_category_name: 'Dog Grooming' };
-    render(<Harness>{(form) => <HostCategoryField form={form} hostCategories={[...categories, pet]} />}</Harness>);
-    expect(screen.getByText('Badminton')).toBeInTheDocument();
+    // Every level is on screen, even with a single option, and opens on the first of each.
+    expect(screen.getByTestId('create-pod-category-super')).toHaveTextContent('For YouFor Your Pet');
+    expect(screen.getByTestId('create-pod-category-super-s1')).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByTestId('create-pod-category-group')).toHaveTextContent('SportsCreative');
+    expect(screen.getByTestId('create-pod-category-group-c1')).toHaveAttribute('aria-pressed', 'true');
+    // Only Sports' subs: Music sits under Creative, Dog Grooming under the pet super.
+    expect(screen.getByTestId('create-pod-category-subs')).toHaveTextContent(/Badminton.*Cricket/);
+    expect(screen.queryByText('Music')).not.toBeInTheDocument();
     expect(screen.queryByText('Dog Grooming')).not.toBeInTheDocument();
-    fireEvent.click(screen.getByTestId('create-pod-category-super-s2'));
-    expect(screen.getByText('Dog Grooming')).toBeInTheDocument();
-    expect(screen.queryByText('Badminton')).not.toBeInTheDocument();
-    expect(screen.getByTestId('create-pod-category-super-s2')).toHaveAttribute('aria-pressed', 'true');
+
+    const tile = chip(badminton);
+    expect(tile.querySelector('img')).toHaveAttribute('src', icon);
+    expect(tile).toHaveTextContent('Badminton2 clubs');
+    // No cricket club in this city: the chip says so and cannot be picked.
+    expect(chip(cricket)).toHaveTextContent(fallbackT('mweb.createPod.categoryNoClubs'));
+    expect(chip(cricket)).toBeDisabled();
+
+    fireEvent.click(tile);
+    await waitFor(() => expect(JSON.parse(screen.getByTestId('state').textContent ?? '[]')).toEqual([hostCategoryKeyOf(badminton), '', '', '']));
+    expect(tile).toHaveAttribute('aria-pressed', 'true');
+    expect(chip(cricket)).toHaveAttribute('aria-pressed', 'false');
   });
 
-  it('says the host has no onboarded categories, and shows the validation message', async () => {
+  it('narrows to the picked Category, and to the picked Super with its first Category', () => {
+    render(<Harness values={physical}>{(form) => <HostCategoryField form={form} hostCategories={categories} clubs={clubs} />}</Harness>);
+    fireEvent.click(screen.getByTestId('create-pod-category-group-c2'));
+    expect(screen.getByText('Music')).toBeInTheDocument();
+    expect(screen.queryByText('Badminton')).not.toBeInTheDocument();
+    // The music club is in another city.
+    expect(chip(music)).toBeDisabled();
+
+    fireEvent.click(screen.getByTestId('create-pod-category-super-s2'));
+    expect(screen.getByTestId('create-pod-category-group')).toHaveTextContent(/^Grooming$/);
+    expect(screen.getByTestId('create-pod-category-group-c3')).toHaveAttribute('aria-pressed', 'true');
+    expect(chip(grooming)).toHaveTextContent('Dog Grooming1 club');
+    expect(chip(grooming)).toBeEnabled();
+  });
+
+  it('counts clubs in every city for a virtual pod', () => {
+    render(
+      <Harness values={{ location_id: 'loc1', pod_mode: 'VIRTUAL' }}>
+        {(form) => <HostCategoryField form={form} hostCategories={categories} clubs={clubs} />}
+      </Harness>
+    );
+    fireEvent.click(screen.getByTestId('create-pod-category-group-c2'));
+    expect(chip(music)).toHaveTextContent('Music1 club');
+    expect(chip(music)).toBeEnabled();
+  });
+
+  it('opens on the Super and Category of the sub already picked', () => {
+    render(
+      <Harness values={{ ...physical, host_category_key: hostCategoryKeyOf(music) }}>
+        {(form) => <HostCategoryField form={form} hostCategories={categories} clubs={clubs} />}
+      </Harness>
+    );
+    expect(screen.getByTestId('create-pod-category-group-c2')).toHaveAttribute('aria-pressed', 'true');
+    expect(chip(music)).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('says the host has no granted categories, and shows the validation message', async () => {
     render(
       <Harness errors={{ host_category_key: { type: 'manual', message: 'Pick a category' } }}>
-        {(form) => <HostCategoryField form={form} hostCategories={[]} />}
+        {(form) => <HostCategoryField form={form} hostCategories={[]} clubs={clubs} />}
       </Harness>
     );
     expect(screen.getByTestId('create-pod-category-empty')).toHaveTextContent(fallbackT('mweb.createPod.categoryEmpty'));
+    expect(screen.queryByTestId('create-pod-category-super')).not.toBeInTheDocument();
     expect(await screen.findByText('Pick a category')).toBeInTheDocument();
   });
 });

@@ -100,6 +100,7 @@ export function CreatePodStepper({
       form={form}
       hostCategories={hostCategories}
       categoryIcons={categoryIcons}
+      clubs={clubs}
       pinnedClub={!!pinnedClub}
     />,
     <WhereWhenStep

@@ -690,6 +690,66 @@ describe('CreatePodStepper', () => {
     expect(screen.queryByTestId('create-pod-where-step')).toBeNull();
   });
 
+  it('lists granted subs under Super and Category as chips with their club count, and locks a sub with no club in the city', () => {
+    const row = (sub: string, name: string, category = 'cat-run', categoryName = 'Running') => ({
+      super_category_id: 'sc-sports',
+      category_id: category,
+      sub_category_id: sub,
+      super_category_name: 'Sports',
+      category_name: categoryName,
+      sub_category_name: name,
+    });
+    const granted = [
+      row('sub-trail', 'Trail'),
+      row('sub-road', 'Road'),
+      row('sub-chess', 'Chess', 'cat-board', 'Board'),
+    ];
+    const cityClubs = [
+      {
+        id: 't1',
+        club_name: 'Trail A',
+        location_id: 'l1',
+        super_category_id: 'sc-sports',
+        category_id: 'sub-trail',
+      },
+      {
+        id: 't2',
+        club_name: 'Trail B',
+        location_id: 'l1',
+        super_category_id: 'sc-sports',
+        category_id: 'sub-trail',
+      },
+      // Road runs only in another city.
+      {
+        id: 'r1',
+        club_name: 'Road',
+        location_id: 'l2',
+        super_category_id: 'sc-sports',
+        category_id: 'sub-road',
+      },
+    ];
+    setup({ hostCategories: granted, clubs: cityClubs });
+    expect(screen.getByTestId('create-pod-category-super-sc-sports')).toHaveProp(
+      'aria-checked',
+      true,
+    );
+    expect(screen.getByTestId('create-pod-category-group-cat-run')).toHaveProp(
+      'aria-checked',
+      true,
+    );
+    expect(screen.getByTestId('create-pod-category-sc-sports|sub-trail')).toHaveTextContent(
+      /Trail\s*2 clubs/,
+    );
+    const road = screen.getByTestId('create-pod-category-sc-sports|sub-road');
+    expect(road).toHaveTextContent(/No clubs here yet/);
+    expect(road).toHaveProp('aria-disabled', true);
+    // Board's sub stays out of view until Board is picked.
+    expect(screen.queryByTestId('create-pod-category-sc-sports|sub-chess')).toBeNull();
+    press('create-pod-category-group-cat-board');
+    expect(screen.getByTestId('create-pod-category-sc-sports|sub-chess')).toBeOnTheScreen();
+    expect(screen.queryByTestId('create-pod-category-sc-sports|sub-trail')).toBeNull();
+  });
+
   it('makes multi-category hosts pick a category before leaving What', async () => {
     const multi = [
       {

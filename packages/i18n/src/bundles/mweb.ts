@@ -2496,6 +2496,13 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       categoryLabel: 'Select Category',
       categoryHint: 'In which you want to host your session',
       categoryEmpty: 'Assigned after host onboarding',
+      // The picker's middle row (Sports, Creative) and each sub-category chip's club count.
+      categoryGroup: 'Category',
+      categoryClubs: {
+        one: '{count} club',
+        other: '{count} clubs',
+      },
+      categoryNoClubs: 'No clubs here yet',
       // The Locality dropdown: the areas of the city the header has selected,
       // each with its club count. Picking one opens the club list under it.
       localityHeading: 'Locality',

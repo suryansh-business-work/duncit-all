@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { ResultOf } from '@graphql-typed-document-node/core';
 import { logs } from '@duncit/logs';
-import { resumeCreatePodStep } from '@duncit/utils';
+import { createPodCatalogRows, createPodGrantedRows, resumeCreatePodStep } from '@duncit/utils';
 
 import {
   CreatePodOptionsDocument,
@@ -189,7 +189,15 @@ export function useCreatePod(draftId?: string, partnerRequestId = '', hostAgainP
     subCategories: data?.subCategories ?? [],
     // What's category tiles: a sub-category's icon, else its parent's.
     categoryIcons: [...(data?.subCategories ?? []), ...(data?.parentCategories ?? [])],
-    hostCategories: data?.myHost?.host_categories ?? [],
+    // Every active sub the host is granted: a whole Category (or Super) grant opens each sub beneath it.
+    hostCategories: createPodGrantedRows(
+      createPodCatalogRows(
+        data?.superCategories ?? [],
+        data?.parentCategories ?? [],
+        data?.subCategories ?? [],
+      ),
+      data?.myHost?.host_categories ?? [],
+    ),
     finance: data?.publicFinanceSettings ?? blankFinance,
     isLoading,
     initialValues,

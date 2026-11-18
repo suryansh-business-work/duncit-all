@@ -162,9 +162,12 @@ loses only the slider, not the logos and store links.
 
 `site-branding` is the shape of that build-time fetch, not a fetch: each site's own client
 sends `SITE_BRANDING_QUERY` and hands the answer to
-`resolveSiteBranding(data, fallback)`, which lays it over the site's fallback and — when
-Admin > Branding has no Android link — falls back to the server's store listing. The
-`SiteBranding` and `SiteBrandingData` types come with it.
+`resolveSiteBranding(data, fallback)`, which lays it over the site's fallback and uses
+the public Play Store and App Store listings when Admin > Branding has no store links.
+`AppDownload.astro` also supplies those listings to matching Google Play and Apple store
+buttons in CMS blocks when their URLs are empty. Explicit Admin or CMS URLs take priority.
+The `DUNCIT_ANDROID_APP_URL` and `DUNCIT_IOS_APP_URL` constants, `SiteBranding` and
+`SiteBrandingData` types come with it.
 
 ## API
 
@@ -520,7 +523,7 @@ so a migration can swap the snapshot back for the live block. `cmsBlockProps` (f
 | `newsletter` | `NewsletterSignup.astro` | `{ source, heading?, text?, placeholder?, button?, variant?, consent?, consentLinkLabel?, consentLinkHref?, captcha?, busyText?, okText?, errorText?, class? }` |
 | `reel-slider` | `ReelSlider.astro` | `{ site, eyebrow?, heading?, class? }` |
 | `earn-showcase` | `EarnShowcase.astro` | `{ href, eyebrow?, heading?, headingMuted?, text?, cta?, id?, class? }` |
-| `app-download` | `AppDownload.astro` | `{ eyebrow?, heading, headingAccent?, text?, perks?, stores: { icon, eyebrow, name, url? }[], webUrl?, soonLabel?, screenshot?, id?, class? }` — `graphqlUrl` (omitted) turns on the real-screenshot slider |
+| `app-download` | `AppDownload.astro` | `{ eyebrow?, heading, headingAccent?, text?, perks?, stores: { icon, eyebrow, name, url? }[], webUrl?, screenshot?, id?, class? }` — `graphqlUrl` (omitted) turns on the real-screenshot slider |
 | `social-links` | `SocialLinks.astro` | `{ accounts?: { icon, label, href }[], heading?, class? }` |
 | `policy-strip` | `PolicyStrip.astro` (only when it has policies) | `{ policies: { slug, title }[], baseUrl?, heading?, allLabel?, class? }` |
 

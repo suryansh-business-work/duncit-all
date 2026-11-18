@@ -14,13 +14,14 @@ import AppPhone from './AppPhone.astro';
 import { fetchAppScreenshots } from './app-screenshots';
 import { cmsBlockProps } from './cms-block';
 import { siteT, type SiteTranslate } from './site-i18n';
+import { DUNCIT_ANDROID_APP_URL, DUNCIT_IOS_APP_URL } from './site-branding';
 
 interface Store {
   /** Font Awesome brand class. */
   icon: string;
   eyebrow: string;
   name: string;
-  /** Empty renders a real "coming soon" state rather than a dead link. */
+  /** Empty store URLs use the matching public app listing when available. */
   url?: string | null;
 }
 
@@ -36,7 +37,6 @@ interface Props {
   /** The web app (mWeb). Set, it adds a third "use it in the browser" door —
    * nothing to install, so it is open on every phone the stores are not. */
   webUrl?: string | null;
-  soonLabel?: string;
   /** A real screenshot when there is one; the drawn app screen until then. */
   screenshot?: string | null;
   /**
@@ -64,7 +64,14 @@ const {
   class: className = '',
   t = siteT,
 } = Astro.props;
-const soonLabel = Astro.props.soonLabel || t('website.brand.appDownload.soon');
+const storesWithFallbacks = stores.map((store) => ({
+  ...store,
+  url: store.url || (store.icon === 'fa-google-play'
+    ? DUNCIT_ANDROID_APP_URL
+    : store.icon === 'fa-apple'
+      ? DUNCIT_IOS_APP_URL
+      : store.url),
+}));
 const slides = await fetchAppScreenshots(graphqlUrl);
 ---
 
@@ -99,7 +106,7 @@ const slides = await fetchAppScreenshots(graphqlUrl);
 
       <div class="app-download-stores">
         {
-          stores.map((store) =>
+          storesWithFallbacks.map((store) =>
             store.url ? (
               <a href={store.url} target="_blank" rel="noopener noreferrer" class="app-store is-live">
                 <i class={`fa-brands ${store.icon}`} aria-hidden="true" />
@@ -115,7 +122,6 @@ const slides = await fetchAppScreenshots(graphqlUrl);
                   <span class="app-store-eyebrow">{store.eyebrow}</span>
                   <span class="app-store-name">{store.name}</span>
                 </span>
-                <span class="app-store-soon">{soonLabel}</span>
               </span>
             )
           )
@@ -305,17 +311,5 @@ const slides = await fetchAppScreenshots(graphqlUrl);
     font-size: 1.125rem;
     font-weight: 800;
     line-height: 1.15;
-  }
-  .app-store-soon {
-    margin-left: 0.25rem;
-    padding: 0.25rem 0.625rem;
-    border-radius: 999px;
-    background: var(--color-tertiary, #ffd166);
-    font-size: 10px;
-    font-weight: 900;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    /* The yellow does not invert, so what is written on it must not either. */
-    color: #16131a;
   }
 </style>

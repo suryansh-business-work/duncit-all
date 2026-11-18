@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { SITE_BRANDING_QUERY, resolveSiteBranding, type SiteBranding } from '../src/site-branding';
+import {
+  DUNCIT_ANDROID_APP_URL,
+  DUNCIT_IOS_APP_URL,
+  SITE_BRANDING_QUERY,
+  resolveSiteBranding,
+  type SiteBranding,
+} from '../src/site-branding';
 
 const FALLBACK: SiteBranding = {
   app_name: 'Duncit',
@@ -15,7 +21,11 @@ const FALLBACK: SiteBranding = {
 describe('resolveSiteBranding', () => {
   it('lays the saved branding over the fallback', () => {
     const saved = { ...FALLBACK, app_name: 'Duncit Pets', android_app_url: 'https://play.test/admin' };
-    expect(resolveSiteBranding({ branding: saved, appVersionInfo: { android_store_url: 'https://play.test/store' } }, FALLBACK)).toEqual(saved);
+    expect(resolveSiteBranding({ branding: saved, appVersionInfo: { android_store_url: 'https://play.test/store' } }, FALLBACK)).toEqual({
+      ...saved,
+      android_app_url: 'https://play.test/admin',
+      ios_app_url: DUNCIT_IOS_APP_URL,
+    });
   });
 
   it('links the store listing when Admin left the Android link blank', () => {
@@ -23,9 +33,13 @@ describe('resolveSiteBranding', () => {
     expect(resolved.android_app_url).toBe('https://play.test/store');
   });
 
-  it('answers the fallback, with no Android link, when the API gave nothing', () => {
-    expect(resolveSiteBranding(null, FALLBACK)).toEqual(FALLBACK);
-    expect(resolveSiteBranding({ branding: FALLBACK, appVersionInfo: null }, FALLBACK).android_app_url).toBe('');
+  it('uses the public store links when the API gave no app links', () => {
+    expect(resolveSiteBranding(null, FALLBACK)).toEqual({
+      ...FALLBACK,
+      android_app_url: DUNCIT_ANDROID_APP_URL,
+      ios_app_url: DUNCIT_IOS_APP_URL,
+    });
+    expect(resolveSiteBranding({ branding: FALLBACK, appVersionInfo: null }, FALLBACK).android_app_url).toBe(DUNCIT_ANDROID_APP_URL);
   });
 });
 

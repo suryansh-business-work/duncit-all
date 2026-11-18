@@ -15,6 +15,10 @@ export interface SiteBranding {
   ios_app_url: string;
 }
 
+/** Public app listings used when a website's Admin branding has no store URL. */
+export const DUNCIT_ANDROID_APP_URL = 'https://play.google.com/store/apps/details?id=com.duncit.mobile';
+export const DUNCIT_IOS_APP_URL = 'https://apps.apple.com/in/app/duncit/id6813361552';
+
 /** What {@link SITE_BRANDING_QUERY} answers. */
 export interface SiteBrandingData {
   branding: SiteBranding;
@@ -40,11 +44,14 @@ export const SITE_BRANDING_QUERY = `
 `;
 
 /**
- * The answer laid over the site's fallback. A blank Android link in Admin >
- * Branding falls back to the server's store listing, so the download band
- * links the live app instead of saying "soon".
+ * The answer laid over the site's fallback. Blank store URLs in Admin >
+ * Branding fall back to the public listings, so download bands link the app.
  */
 export function resolveSiteBranding(data: SiteBrandingData | null, fallback: SiteBranding): SiteBranding {
   const branding = { ...fallback, ...data?.branding };
-  return { ...branding, android_app_url: branding.android_app_url || data?.appVersionInfo?.android_store_url || '' };
+  return {
+    ...branding,
+    android_app_url: branding.android_app_url || data?.appVersionInfo?.android_store_url || DUNCIT_ANDROID_APP_URL,
+    ios_app_url: branding.ios_app_url || DUNCIT_IOS_APP_URL,
+  };
 }

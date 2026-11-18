@@ -77,7 +77,6 @@ const accounts = list(props.accounts).map(record).map((a) => ({ icon: text(a.ico
     perks={list(props.perks).map(text).filter(Boolean)}
     stores={stores}
     webUrl={text(props.webUrl) || null}
-    soonLabel={text(props.soonLabel) || undefined}
     screenshot={text(props.screenshot) || null}
     graphqlUrl={serverGraphqlUrl() || graphqlUrl}
     class={text(props.class) || undefined}

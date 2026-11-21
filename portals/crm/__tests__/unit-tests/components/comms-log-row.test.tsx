@@ -81,7 +81,7 @@ describe('TranscriptWave', () => {
 
 describe('LogRow email', () => {
   it('shows the subject, status, provider and who it went to with the formatted time', () => {
-    render(<LogRow log={makeLog()} onRequestTranscript={vi.fn()} />);
+    render(<LogRow log={makeLog()} onSummarize={vi.fn()} onRequestTranscript={vi.fn()} />);
     expect(screen.getByText('Intro to Duncit')).toBeInTheDocument();
     expect(screen.getByText('SENT')).toBeInTheDocument();
     expect(screen.getByText('Main SMTP')).toBeInTheDocument();
@@ -93,7 +93,7 @@ describe('LogRow email', () => {
     render(
       <LogRow
         log={makeLog({ subject: null, contact_name: null, provider_name: null })}
-        onRequestTranscript={vi.fn()}
+        onSummarize={vi.fn()} onRequestTranscript={vi.fn()}
       />,
     );
     expect(screen.getByText('(no subject)')).toBeInTheDocument();
@@ -102,34 +102,34 @@ describe('LogRow email', () => {
   });
 
   it('shows a dash for a missing or unparsable time', () => {
-    const { rerender } = render(<LogRow log={makeLog({ created_at: null })} onRequestTranscript={vi.fn()} />);
+    const { rerender } = render(<LogRow log={makeLog({ created_at: null })} onSummarize={vi.fn()} onRequestTranscript={vi.fn()} />);
     expect(screen.getByText('Asha Rao · asha@example.com · —')).toBeInTheDocument();
-    rerender(<LogRow log={makeLog({ created_at: 'not-a-date' })} onRequestTranscript={vi.fn()} />);
+    rerender(<LogRow log={makeLog({ created_at: 'not-a-date' })} onSummarize={vi.fn()} onRequestTranscript={vi.fn()} />);
     expect(screen.getByText('Asha Rao · asha@example.com · —')).toBeInTheDocument();
   });
 
   it('surfaces the delivery error', () => {
     render(
-      <LogRow log={makeLog({ status: 'FAILED', error_message: 'Mailbox full' })} onRequestTranscript={vi.fn()} />,
+      <LogRow log={makeLog({ status: 'FAILED', error_message: 'Mailbox full' })} onSummarize={vi.fn()} onRequestTranscript={vi.fn()} />,
     );
     expect(screen.getByText('Mailbox full')).toBeInTheDocument();
     expect(screen.getByText('FAILED')).toBeInTheDocument();
   });
 
   it('renders an unknown status without a colour', () => {
-    render(<LogRow log={makeLog({ status: 'WEIRD' })} onRequestTranscript={vi.fn()} />);
+    render(<LogRow log={makeLog({ status: 'WEIRD' })} onSummarize={vi.fn()} onRequestTranscript={vi.fn()} />);
     expect(screen.getByText('WEIRD')).toBeInTheDocument();
   });
 });
 
 describe('LogRow call', () => {
   it('titles the row with the number called', () => {
-    render(<LogRow log={call()} onRequestTranscript={vi.fn()} />);
+    render(<LogRow log={call()} onSummarize={vi.fn()} onRequestTranscript={vi.fn()} />);
     expect(screen.getByText('Call to +919800000000')).toBeInTheDocument();
   });
 
   it('says there is no recording yet and offers no transcript button', () => {
-    render(<LogRow log={call()} onRequestTranscript={vi.fn()} />);
+    render(<LogRow log={call()} onSummarize={vi.fn()} onRequestTranscript={vi.fn()} />);
     expect(screen.getByText('No recording yet')).toBeInTheDocument();
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
     expect(screen.queryByRole('link')).not.toBeInTheDocument();
@@ -137,7 +137,7 @@ describe('LogRow call', () => {
 
   it('offers to fetch a transcript for a recorded call and links the recording', () => {
     const onRequest = vi.fn();
-    render(<LogRow log={call({ recording_url: 'https://rec.test/1.mp3' })} onRequestTranscript={onRequest} />);
+    render(<LogRow log={call({ recording_url: 'https://rec.test/1.mp3' })} onSummarize={vi.fn()} onRequestTranscript={onRequest} />);
     expect(screen.getByText('Transcript not requested')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /get transcript/i }));
     expect(onRequest).toHaveBeenCalledWith('log-1');
@@ -151,7 +151,7 @@ describe('LogRow call', () => {
     render(
       <LogRow
         log={call({ recording_url: 'https://rec.test/1.mp3', transcript_status: 'PENDING' })}
-        onRequestTranscript={vi.fn()}
+        onSummarize={vi.fn()} onRequestTranscript={vi.fn()}
         refreshing
       />,
     );
@@ -164,7 +164,7 @@ describe('LogRow call', () => {
     render(
       <LogRow
         log={call({ recording_url: 'https://rec.test/1.mp3', transcript_status: 'FAILED' })}
-        onRequestTranscript={onRequest}
+        onSummarize={vi.fn()} onRequestTranscript={onRequest}
       />,
     );
     expect(screen.getByText('Transcript failed')).toBeInTheDocument();
@@ -173,7 +173,7 @@ describe('LogRow call', () => {
   });
 
   it('shows a failed transcript without a recording as failed with no retry', () => {
-    render(<LogRow log={call({ transcript_status: 'FAILED' })} onRequestTranscript={vi.fn()} />);
+    render(<LogRow log={call({ transcript_status: 'FAILED' })} onSummarize={vi.fn()} onRequestTranscript={vi.fn()} />);
     expect(screen.getByText('Transcript failed')).toBeInTheDocument();
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
   });
@@ -186,19 +186,21 @@ describe('LogRow call', () => {
           transcript_status: 'READY',
           transcript: 'Hello\nThanks for calling',
         })}
-        onRequestTranscript={vi.fn()}
+        onSummarize={vi.fn()} onRequestTranscript={vi.fn()}
       />,
     );
     expect(screen.getByText(/Thanks for calling/)).toBeInTheDocument();
     expect(screen.getByTestId('GraphicEqIcon')).toBeInTheDocument();
-    expect(screen.queryByRole('button')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /transcript/i })).not.toBeInTheDocument();
+    // A ready transcript can be summarised.
+    expect(screen.getByRole('button', { name: 'Generate summary' })).toBeInTheDocument();
   });
 
   it('treats a READY status with an empty transcript as not yet available', () => {
     render(
       <LogRow
         log={call({ recording_url: 'https://rec.test/1.mp3', transcript_status: 'READY', transcript: '' })}
-        onRequestTranscript={vi.fn()}
+        onSummarize={vi.fn()} onRequestTranscript={vi.fn()}
       />,
     );
     expect(screen.getByText('Transcript not requested')).toBeInTheDocument();

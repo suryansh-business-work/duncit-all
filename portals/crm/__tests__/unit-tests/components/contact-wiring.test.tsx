@@ -4,6 +4,29 @@ import LeadContactActions from '@/components/LeadContactActions';
 import ContactsTab from '@/components/contacts-tab';
 import type { CrmContact } from '@/api/crm.types';
 import { renderWithApollo } from '../helpers/renderWithApollo';
+import { CallSessionProvider } from '@/components/call-window';
+import { CRM_CALL_SETUP } from '@/api/call.gql';
+
+vi.mock('@wavesurfer/react', () => ({ useWavesurfer: () => ({ wavesurfer: null }) }));
+
+const CALL_SETUP = {
+  request: { query: CRM_CALL_SETUP },
+  result: {
+    data: {
+      crmCallSetup: {
+        configured: true,
+        missing: [],
+        from_number: '+14155550100',
+        agent_number: '+919800000000',
+        agent_source: 'CONFIG',
+        recording_enabled: true,
+        live_transcription: true,
+        can_configure: false,
+      },
+    },
+  },
+  maxUsageCount: 5,
+};
 
 /**
  * The compose window itself (SMTP / Twilio providers, templates, rich text) is
@@ -78,13 +101,38 @@ describe('LeadContactActions', () => {
     await waitFor(() => expect(screen.queryByRole('menu')).toBeNull());
   });
 
-  it('starts a portal call from the menu', async () => {
-    renderActions();
+  const renderInApp = () =>
+    renderWithApollo(
+      <CallSessionProvider>
+        <LeadContactActions entity="ECOMM_LEAD" leadId="ecomm-1" displayName="Grand Hall" email="meera@grandhall.in" mobile="9812345678" />
+      </CallSessionProvider>,
+      [CALL_SETUP],
+    );
+
+  it('opens the call window from the menu', async () => {
+    renderInApp();
 
     fireEvent.click(screen.getByTestId('lead-call-options'));
     fireEvent.click(within(await screen.findByRole('menu')).getByRole('menuitem', { name: 'Call' }));
 
-    expect(await screen.findByRole('dialog', { name: /Call · Grand Hall/ })).toBeInTheDocument();
+    expect(await screen.findByRole('dialog', { name: 'Call · Grand Hall' })).toBeInTheDocument();
+  });
+
+  it('opens the call window from the Call button', async () => {
+    renderInApp();
+
+    fireEvent.click(screen.getByRole('button', { name: /^Call$/ }));
+
+    const win = await screen.findByRole('dialog', { name: 'Call · Grand Hall' });
+    expect(await within(win).findByText('9812345678')).toBeInTheDocument();
+  });
+
+  it('offers no portal call outside the app call window', async () => {
+    renderActions();
+
+    expect(screen.getByRole('button', { name: /^Call$/ })).toBeDisabled();
+    fireEvent.click(screen.getByTestId('lead-call-options'));
+    expect(within(await screen.findByRole('menu')).getByRole('menuitem', { name: 'Call' })).toHaveAttribute('aria-disabled', 'true');
   });
 
   it('starts an AI call from the menu', async () => {

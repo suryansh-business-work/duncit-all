@@ -37,16 +37,25 @@ afterEach(() => {
 
 describe('callStatusView', () => {
   it.each([
-    [null, 'Ready', 'default'],
-    ['INITIATED', 'Connecting…', 'info'],
-    ['RINGING', 'Ringing…', 'warning'],
-    ['IN_PROGRESS', 'In call', 'success'],
-    ['COMPLETED', 'Call over', 'default'],
-    ['NO_ANSWER', 'No answer', 'warning'],
-    ['BUSY', 'Busy', 'warning'],
-    ['FAILED', 'Failed', 'error'],
-  ] as const)('shows %s as "%s"', (status, label, tone) => {
-    expect(callStatusView(status)).toEqual({ label, tone });
+    [null, 'crm.call.statusReady', 'default'],
+    ['INITIATED', 'crm.call.statusConnecting', 'info'],
+    ['RINGING', 'crm.call.statusRinging', 'warning'],
+    ['IN_PROGRESS', 'crm.call.statusInCall', 'success'],
+    ['COMPLETED', 'crm.call.statusOver', 'default'],
+    ['NO_ANSWER', 'crm.call.statusNoAnswer', 'warning'],
+    ['BUSY', 'crm.call.statusBusy', 'warning'],
+    ['FAILED', 'crm.call.statusFailed', 'error'],
+  ] as const)('labels %s with %s', (status, labelKey, tone) => {
+    expect(callStatusView(status)).toEqual({ labelKey, tone });
+  });
+
+  it('shows a connected call on hold as on hold', () => {
+    expect(callStatusView('IN_PROGRESS', true)).toEqual({ labelKey: 'crm.call.statusOnHold', tone: 'warning' });
+    expect(callStatusView('RINGING', true).labelKey).toBe('crm.call.statusRinging');
+  });
+
+  it('treats a status it does not know as still connecting', () => {
+    expect(callStatusView('SOMETHING_NEW' as never)).toEqual({ labelKey: 'crm.call.statusConnecting', tone: 'info' });
   });
 });
 

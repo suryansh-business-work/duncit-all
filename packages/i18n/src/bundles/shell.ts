@@ -903,6 +903,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       giftCards: 'Gift Cards',
       graphqlMonitor: 'GraphQL Monitor',
       growth: 'Growth',
+      growthCalculator: 'Growth Calculator',
       marketing: 'Marketing',
       revenueFinance: 'Revenue & Finance',
       shop: 'Pod Shop',

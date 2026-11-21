@@ -11770,6 +11770,121 @@ export type GrievanceTicketTablePage = {
   total: Scalars['Int']['output'];
 };
 
+/** Who a calculation is attributed to, as they were when they saved or edited it. */
+export type GrowthActor = {
+  __typename?: 'GrowthActor';
+  email?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+  roles: Array<Scalars['String']['output']>;
+  user_id: Scalars['ID']['output'];
+};
+
+/** One saved Growth Calculator run: its inputs and outputs as a complete snapshot. */
+export type GrowthCalculation = {
+  __typename?: 'GrowthCalculation';
+  calculated_by: GrowthActor;
+  /** Whether the caller may edit or delete it: its creator, or a super admin. */
+  can_edit: Scalars['Boolean']['output'];
+  created_at: Scalars['String']['output'];
+  description: Scalars['String']['output'];
+  duplicated_from?: Maybe<Scalars['ID']['output']>;
+  formula_version: Scalars['Int']['output'];
+  id: Scalars['ID']['output'];
+  inputs: GrowthInputs;
+  last_edited_at?: Maybe<Scalars['String']['output']>;
+  last_edited_by?: Maybe<GrowthActor>;
+  per_city: GrowthPerCity;
+  per_pod: GrowthPerPod;
+  /** Bumped by every edit. Send it back as expected_revision when editing. */
+  revision: Scalars['Int']['output'];
+  title: Scalars['String']['output'];
+  totals: GrowthTotals;
+  updated_at: Scalars['String']['output'];
+};
+
+export type GrowthCalculationTablePage = {
+  __typename?: 'GrowthCalculationTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<GrowthCalculation>;
+  total: Scalars['Int']['output'];
+};
+
+/** The nine planning assumptions a Growth Calculator run is made from. */
+export type GrowthInputs = {
+  __typename?: 'GrowthInputs';
+  /** Share of host leads that become hosts, in percent. Never zero. */
+  host_conversion_pct: Scalars['Float']['output'];
+  hosts_per_venue: Scalars['Int']['output'];
+  pax_per_pod: Scalars['Int']['output'];
+  pods_per_host_per_month: Scalars['Int']['output'];
+  /** Rupees, up to two decimals. */
+  price_per_pax: Scalars['Float']['output'];
+  /** Duncit's share of a pod's value, in percent (up to two decimals). */
+  profit_margin_pct: Scalars['Float']['output'];
+  target_cities: Scalars['Int']['output'];
+  /** Share of venue leads that become venues, in percent. Never zero. */
+  venue_conversion_pct: Scalars['Float']['output'];
+  venues_per_city: Scalars['Int']['output'];
+};
+
+export type GrowthInputsInput = {
+  host_conversion_pct: Scalars['Float']['input'];
+  hosts_per_venue: Scalars['Int']['input'];
+  pax_per_pod: Scalars['Int']['input'];
+  pods_per_host_per_month: Scalars['Int']['input'];
+  price_per_pax: Scalars['Float']['input'];
+  profit_margin_pct: Scalars['Float']['input'];
+  target_cities: Scalars['Int']['input'];
+  venue_conversion_pct: Scalars['Float']['input'];
+  venues_per_city: Scalars['Int']['input'];
+};
+
+/** Every output a set of inputs produces, from the server's own copy of the formulas. */
+export type GrowthOutputs = {
+  __typename?: 'GrowthOutputs';
+  per_city: GrowthPerCity;
+  per_pod: GrowthPerPod;
+  totals: GrowthTotals;
+};
+
+export type GrowthPerCity = {
+  __typename?: 'GrowthPerCity';
+  host_leads: Scalars['Float']['output'];
+  hosts: Scalars['Float']['output'];
+  monthly_earnings: Scalars['String']['output'];
+  monthly_gmv: Scalars['String']['output'];
+  monthly_pods: Scalars['Float']['output'];
+  venue_leads: Scalars['Float']['output'];
+  venues: Scalars['Float']['output'];
+};
+
+/**
+ * Money is a fixed two-decimal rupee string ("320000.00") so it is exact at any
+ * size; counts are whole numbers carried as Float because they can pass 2^31.
+ */
+export type GrowthPerPod = {
+  __typename?: 'GrowthPerPod';
+  /** Estimated earnings before operational expenses — not net profit. */
+  earnings_per_pod: Scalars['String']['output'];
+  pod_value: Scalars['String']['output'];
+};
+
+export type GrowthTotals = {
+  __typename?: 'GrowthTotals';
+  annual_earnings: Scalars['String']['output'];
+  annual_gmv: Scalars['String']['output'];
+  cities: Scalars['Float']['output'];
+  host_leads: Scalars['Float']['output'];
+  hosts: Scalars['Float']['output'];
+  monthly_earnings: Scalars['String']['output'];
+  monthly_gmv: Scalars['String']['output'];
+  monthly_pods: Scalars['Float']['output'];
+  total_leads: Scalars['Float']['output'];
+  venue_leads: Scalars['Float']['output'];
+  venues: Scalars['Float']['output'];
+};
+
 export type HealthAdjustment = {
   __typename?: 'HealthAdjustment';
   /** Where the appeal against this deduction stands; null when nobody has appealed it. */
@@ -16228,6 +16343,8 @@ export type Mutation = {
   deleteGigCategory: Scalars['Boolean']['output'];
   /** Removes one website's tag. The website stops loading Google Analytics. */
   deleteGoogleAnalyticsSite: Scalars['Boolean']['output'];
+  /** Remove a calculation from the list (creator or super admin). The record is kept. */
+  deleteGrowthCalculation: Scalars['Boolean']['output'];
   /** Developer-only permanent delete. Re-confirm with your own email + password. Cannot be undone; blocked if the host still has live pods. */
   deleteHost: Scalars['Boolean']['output'];
   deleteHostLead: Scalars['Boolean']['output'];
@@ -16380,6 +16497,8 @@ export type Mutation = {
   duplicateChallenge: Challenge;
   duplicateChallengeToolPreset: ChallengeToolPreset;
   duplicateCmsPage: CmsPage;
+  /** A new, separate calculation from another one's inputs, attributed to the caller. */
+  duplicateGrowthCalculation: GrowthCalculation;
   duplicateInventoryProduct: InventoryProduct;
   /** Copy a look under a new name, to adapt it without touching the original. */
   duplicateOccasionTheme: OccasionTheme;
@@ -17320,6 +17439,8 @@ export type Mutation = {
   /** Sets or replaces one website's tag. */
   saveGoogleAnalyticsSite: GoogleAnalyticsSite;
   saveGrievanceOfficer: GrievanceOfficer;
+  /** Save a new calculation. The server recalculates every output from the inputs. */
+  saveGrowthCalculation: GrowthCalculation;
   saveLeadSurveyResponse: LeadSurveyEntry;
   /** Create (no id) or update (with id) one of my saved addresses. */
   saveMyAddress: UserAddress;
@@ -18099,6 +18220,8 @@ export type Mutation = {
   updateGigJob: GigJob;
   updateGraphqlMonitorSettings: GraphqlMonitorSettings;
   updateGrievanceStatus: GrievanceTicket;
+  /** Edit a calculation (creator or super admin). Creator and creation date are kept. */
+  updateGrowthCalculation: GrowthCalculation;
   /** Save a host's banner kit: the host themself, or a Hosts console editor. */
   updateHostBannerKit: Host;
   updateHostLead: HostLead;
@@ -20043,6 +20166,11 @@ export type MutationDeleteGoogleAnalyticsSiteArgs = {
 };
 
 
+export type MutationDeleteGrowthCalculationArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationDeleteHostArgs = {
   email: Scalars['String']['input'];
   host_doc_id: Scalars['ID']['input'];
@@ -20530,6 +20658,13 @@ export type MutationDuplicateChallengeToolPresetArgs = {
 export type MutationDuplicateCmsPageArgs = {
   page_id: Scalars['ID']['input'];
   path: Scalars['String']['input'];
+  title: Scalars['String']['input'];
+};
+
+
+export type MutationDuplicateGrowthCalculationArgs = {
+  client_request_id?: InputMaybe<Scalars['String']['input']>;
+  id: Scalars['ID']['input'];
   title: Scalars['String']['input'];
 };
 
@@ -22169,6 +22304,11 @@ export type MutationSaveGoogleAnalyticsSiteArgs = {
 
 export type MutationSaveGrievanceOfficerArgs = {
   input: SaveGrievanceOfficerInput;
+};
+
+
+export type MutationSaveGrowthCalculationArgs = {
+  input: SaveGrowthCalculationInput;
 };
 
 
@@ -24270,6 +24410,12 @@ export type MutationUpdateGraphqlMonitorSettingsArgs = {
 export type MutationUpdateGrievanceStatusArgs = {
   id: Scalars['ID']['input'];
   input: UpdateGrievanceStatusInput;
+};
+
+
+export type MutationUpdateGrowthCalculationArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateGrowthCalculationInput;
 };
 
 
@@ -32164,6 +32310,12 @@ export type Query = {
   grievanceStats: GrievanceStats;
   grievanceTicket?: Maybe<GrievanceTicket>;
   grievanceTicketsTable: GrievanceTicketTablePage;
+  /** Targets console: one saved calculation, with its inputs, outputs and creator. */
+  growthCalculation: GrowthCalculation;
+  /** Targets console: what a set of inputs produces, without saving anything. */
+  growthCalculationPreview: GrowthOutputs;
+  /** Targets console: every saved calculation (DUNCIT TABLE CONTRACT v1), newest first. */
+  growthCalculationsTable: GrowthCalculationTablePage;
   /**  Legal-only: every appeal against a health deduction (DUNCIT TABLE CONTRACT v1).  */
   healthAppealsTable: HealthAppealTablePage;
   host?: Maybe<Host>;
@@ -35189,6 +35341,21 @@ export type QueryGrievanceTicketArgs = {
 
 
 export type QueryGrievanceTicketsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryGrowthCalculationArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryGrowthCalculationPreviewArgs = {
+  inputs: GrowthInputsInput;
+};
+
+
+export type QueryGrowthCalculationsTableArgs = {
   query?: InputMaybe<TableQueryInput>;
 };
 
@@ -39975,6 +40142,14 @@ export type SaveGrievanceOfficerInput = {
   email: Scalars['String']['input'];
   name: Scalars['String']['input'];
   phone: Scalars['String']['input'];
+};
+
+export type SaveGrowthCalculationInput = {
+  /** One id per press of Save; a repeated press returns the record the first one made. */
+  client_request_id?: InputMaybe<Scalars['String']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  inputs: GrowthInputsInput;
+  title: Scalars['String']['input'];
 };
 
 export type SavePodCalculatorInput = {
@@ -47626,6 +47801,14 @@ export type UpdateFinanceSettingsInput = {
 export type UpdateGrievanceStatusInput = {
   resolution?: InputMaybe<Scalars['String']['input']>;
   status?: InputMaybe<GrievanceStatus>;
+};
+
+export type UpdateGrowthCalculationInput = {
+  description?: InputMaybe<Scalars['String']['input']>;
+  /** The revision the editor loaded. A record edited since is refused (CONFLICT). */
+  expected_revision: Scalars['Int']['input'];
+  inputs: GrowthInputsInput;
+  title: Scalars['String']['input'];
 };
 
 export type UpdateInterviewInput = {

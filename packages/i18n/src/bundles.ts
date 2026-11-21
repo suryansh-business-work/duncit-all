@@ -20,6 +20,7 @@ import { GRIEVANCE_BUNDLE } from './bundles/grievance';
 import { HEALTH_APPEAL_BUNDLE } from './bundles/health-appeal';
 import { LEGAL_BUNDLE } from './bundles/legal';
 import { LOCALIZATION_BUNDLE } from './bundles/localization';
+import { TARGETS_BUNDLE } from './bundles/targets';
 import { MAIL_PREFERENCE_BUNDLE } from './bundles/mail-preference';
 import { MEDIA_BUNDLE } from './bundles/media';
 import { AD_REQUEST_BUNDLE } from './bundles/ad-request';
@@ -111,6 +112,7 @@ export {
   HEALTH_APPEAL_BUNDLE,
   LEGAL_BUNDLE,
   LOCALIZATION_BUNDLE,
+  TARGETS_BUNDLE,
   MAIL_PREFERENCE_BUNDLE,
   MEDIA_BUNDLE,
   LOCATION_BUNDLE,
@@ -208,6 +210,7 @@ export const SURFACE_BUNDLES: Record<string, NestedCatalogue> = {
   healthAppeal: HEALTH_APPEAL_BUNDLE,
   legal: LEGAL_BUNDLE,
   localization: LOCALIZATION_BUNDLE,
+  targets: TARGETS_BUNDLE,
   mailPreference: MAIL_PREFERENCE_BUNDLE,
   media: MEDIA_BUNDLE,
   adRequest: AD_REQUEST_BUNDLE,

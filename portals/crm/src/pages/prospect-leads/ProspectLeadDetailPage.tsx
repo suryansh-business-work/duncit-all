@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useQuery } from '@apollo/client/react';
 import { useNavigate, useParams } from 'react-router';
 import { Avatar, Box, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
@@ -15,6 +16,9 @@ import { PriorityChip, StatusChip } from '../../components/StatusChips';
 import LeadStatTile from '../../components/LeadStatTile';
 import LeadTabs from '../../components/LeadTabs';
 import { useLeadEditorOrigin } from '../../hooks/useLeadEditorFlow';
+import AskAiDrawer from '../../components/ask-ai/AskAiDrawer';
+import AskAiButton from '../../components/ask-ai/AskAiButton';
+import { askAiLead, askAiShift } from '../../components/ask-ai/askAiLead';
 import { PROSPECT_KINDS } from './prospectKinds';
 import { buildProspectLeadTabs } from './prospectLeadTabs';
 import { kindChip, statTiles } from './prospectDetails';
@@ -26,6 +30,7 @@ export default function ProspectLeadDetailPage({ entity }: Readonly<{ entity: Pr
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const editorOrigin = useLeadEditorOrigin();
+  const [aiOpen, setAiOpen] = useState(false);
   const { data, loading, error } = useQuery<Record<string, ProspectLead | null>, { id?: string }>(kind.docs.get, {
     variables: { id },
     fetchPolicy: 'cache-and-network',
@@ -40,7 +45,7 @@ export default function ProspectLeadDetailPage({ entity }: Readonly<{ entity: Pr
   const chip = kindChip(lead);
 
   return (
-    <Stack spacing={2.5}>
+    <Stack spacing={2.5} sx={askAiShift(aiOpen)}>
       <Box>
         <BackButton onClick={() => navigate(kind.basePath)}>{t(kind.copy.back)}</BackButton>
       </Box>
@@ -76,6 +81,7 @@ export default function ProspectLeadDetailPage({ entity }: Readonly<{ entity: Pr
                 </Stack>
               )}
             </Box>
+            <AskAiButton onClick={() => setAiOpen(true)} />
             <DuncitButton
               startIcon={<EditIcon />}
               variant="contained"
@@ -101,6 +107,8 @@ export default function ProspectLeadDetailPage({ entity }: Readonly<{ entity: Pr
       </Stack>
 
       <LeadTabs tabs={buildProspectLeadTabs(entity, lead, name, t)} data-testid="prospect-lead-tabs" />
+
+      <AskAiDrawer open={aiOpen} entity={entity} lead={askAiLead(lead, name)} onClose={() => setAiOpen(false)} />
     </Stack>
   );
 }

@@ -7,6 +7,8 @@ import { VENUE_LEAD } from '../../../api/crm.gql';
 import type { VenueLead } from '../../../api/crm.types';
 import LeadTabs, { type LeadTab } from '../../../components/LeadTabs';
 import AskAiDrawer, { ASK_AI_WIDTH } from '../../../components/ask-ai/AskAiDrawer';
+import { askAiLead } from '../../../components/ask-ai/askAiLead';
+import { venueVariableValues } from '../../../config/leadVariables';
 import MatchedUserBox from '../../../components/MatchedUserBox';
 import { useTranslation } from '@duncit/shell';
 import { leadDate } from './helpers';
@@ -64,7 +66,13 @@ export default function VenueLeadDetailPage() {
       {/* ---- Tabs (non-details sections) ---- */}
       <LeadTabs tabs={tabs} data-testid="venue-lead-tabs" />
 
-      <AskAiDrawer open={aiOpen} entity="VENUE_LEAD" leadId={lead.id} leadName={lead.venue_name} onClose={() => setAiOpen(false)} />
+      <AskAiDrawer
+        open={aiOpen}
+        entity="VENUE_LEAD"
+        lead={askAiLead(lead, lead.venue_name)}
+        variableValues={venueVariableValues(lead)}
+        onClose={() => setAiOpen(false)}
+      />
     </Stack>
   );
 }

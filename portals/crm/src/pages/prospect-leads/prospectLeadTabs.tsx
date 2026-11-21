@@ -15,6 +15,7 @@ import { LeadDetailCard, LeadDetailRow } from '../../components/LeadDetailCard';
 import ContactsTab from '../../components/contacts-tab';
 import CommsLogsSection from '../../components/CommsLogsSection';
 import ManualLogsTab from '../../components/ManualLogsTab';
+import { remindersTab } from '../../components/reminders-tab/remindersTab';
 import ExternalLink from '../../components/ExternalLink';
 import DynamicValuesView from '../../components/DynamicValuesView';
 import type { LeadTab } from '../../components/LeadTabs';
@@ -115,6 +116,7 @@ export function buildProspectLeadTabs(
         </LeadDetailCard>
       ),
     },
+    remindersTab(entity, lead.id, t),
     {
       value: 'manual-logs',
       label: t('crm.common.manualLogs'),

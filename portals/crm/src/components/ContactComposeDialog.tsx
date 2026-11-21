@@ -42,6 +42,8 @@ interface Props {
   lead: BasicLead | null;
   /** Slug → value map from the full lead, used to auto-fill template variables. */
   variableValues?: Record<string, string>;
+  /** An email already written (an Ask AI draft) to review, edit and send. */
+  draft?: { to?: string | null; subject?: string | null; body_html?: string | null } | null;
   onClose: () => void;
   onResult: (message: string, ok: boolean) => void;
 }
@@ -85,7 +87,7 @@ const responseKey = (entity: EntityKind, mode: Mode) => {
   return CALL_KEYS[entity];
 };
 
-export default function ContactComposeDialog({ open, mode, entity, lead, variableValues, onClose, onResult }: Readonly<Props>) {
+export default function ContactComposeDialog({ open, mode, entity, lead, variableValues, draft, onClose, onResult }: Readonly<Props>) {
   const { t } = useTranslation();
   const [target, setTarget] = useState('');
   const [defaultSubject, setDefaultSubject] = useState('');
@@ -98,10 +100,10 @@ export default function ContactComposeDialog({ open, mode, entity, lead, variabl
   useEffect(() => {
     if (!open || !lead) return;
     setError(null);
-    setTarget(mode === 'email' ? lead.primary_email ?? '' : lead.primary_mobile ?? '');
-    setDefaultSubject(`Regarding ${lead.display_name}`);
+    setTarget(mode === 'email' ? draft?.to || lead.primary_email || '' : lead.primary_mobile ?? '');
+    setDefaultSubject(draft?.subject || `Regarding ${lead.display_name}`);
     setEmailPayload({ subject: '', body: '', valid: false, attachments: [] });
-  }, [open, mode, lead]);
+  }, [open, mode, lead, draft]);
 
   const submit = async () => {
     if (!lead) return;
@@ -168,6 +170,7 @@ export default function ContactComposeDialog({ open, mode, entity, lead, variabl
             leadEmail={target}
             variableValues={variableValues ?? {}}
             defaultSubject={defaultSubject}
+            initialBody={draft?.body_html ?? undefined}
             onChange={setEmailPayload}
           />
         )}

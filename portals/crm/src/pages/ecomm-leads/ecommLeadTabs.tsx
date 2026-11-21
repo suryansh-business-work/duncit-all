@@ -14,6 +14,7 @@ import ContactsTab from '../../components/contacts-tab';
 import ServicesGrid from '../../components/ServicesGrid';
 import CommsLogsSection from '../../components/CommsLogsSection';
 import ManualLogsTab from '../../components/ManualLogsTab';
+import { remindersTab } from '../../components/reminders-tab/remindersTab';
 import ExternalLink from '../../components/ExternalLink';
 import LeadSurveyTab from '../../components/lead-survey/LeadSurveyTab';
 import DynamicValuesView from '../../components/DynamicValuesView';
@@ -168,6 +169,7 @@ export function buildEcommLeadTabs(lead: EcommLead, t: Translate): LeadTab[] {
         </LeadDetailCard>
       ),
     },
+    remindersTab('ECOMM_LEAD', lead.id, t),
     {
       value: 'manual-logs',
       label: t('crm.common.manualLogs'),

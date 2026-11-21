@@ -8,6 +8,7 @@ import { COMMUNICATION_LOGS } from '@/api/comms.gql';
 import { LEAD_SURVEY } from '@/components/lead-survey/queries';
 import type { CrmMatchedUser, EcommLead } from '@/api/crm.types';
 import { renderWithApollo } from '../helpers/renderWithApollo';
+import { emptyAskAiThread } from '../helpers/askAiThreadMock';
 import { contact, ecommLead } from '../fixtures/leads';
 
 type DetailLead = EcommLead & { matched_user: CrmMatchedUser | null };
@@ -327,6 +328,18 @@ describe('EcommLeadDetailPage', () => {
 
     fireEvent.click(screen.getByRole('tab', { name: 'Services (2)' }));
     expect(screen.getByText('2 services tagged')).toBeInTheDocument();
+  });
+
+  it('opens Ask AI grounded in this ecomm lead', async () => {
+    renderPage([leadMock(lead()), emptyAskAiThread('ECOMM_LEAD', 'ecomm-1')]);
+    await screen.findByRole('heading', { level: 1, name: 'Kavya Iyer' });
+    expect(screen.queryByRole('complementary', { name: 'Ask AI' })).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Ask AI' }));
+
+    const drawer = within(await screen.findByRole('complementary', { name: 'Ask AI' }));
+    expect(drawer.getByText('About Kavya Iyer')).toBeInTheDocument();
+    expect(await drawer.findByText('120 tokens · 1.0 KB from 1 sources')).toBeInTheDocument();
   });
 
   it('opens the editor from the Edit button', async () => {

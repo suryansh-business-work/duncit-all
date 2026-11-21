@@ -8,6 +8,8 @@ import type { HostLead } from '../../../api/crm.types';
 import LeadTabs, { type LeadTab } from '../../../components/LeadTabs';
 import MatchedUserBox from '../../../components/MatchedUserBox';
 import AskAiDrawer, { ASK_AI_WIDTH } from '../../../components/ask-ai/AskAiDrawer';
+import { askAiLead } from '../../../components/ask-ai/askAiLead';
+import { hostVariableValues } from '../../../config/leadVariables';
 import { useTranslation } from '@duncit/shell';
 import { leadDate } from './helpers';
 import { buildHostLeadTabs } from './buildHostLeadTabs';
@@ -59,7 +61,13 @@ export default function HostLeadDetailPage() {
 
       <LeadTabs tabs={tabs} data-testid="host-lead-tabs" />
 
-      <AskAiDrawer open={aiOpen} entity="HOST_LEAD" leadId={lead.id} leadName={lead.host_name} onClose={() => setAiOpen(false)} />
+      <AskAiDrawer
+        open={aiOpen}
+        entity="HOST_LEAD"
+        lead={askAiLead(lead, lead.host_name)}
+        variableValues={hostVariableValues(lead)}
+        onClose={() => setAiOpen(false)}
+      />
     </Stack>
   );
 }

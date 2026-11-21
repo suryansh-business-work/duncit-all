@@ -20,7 +20,23 @@ interface Props {
   onDelete: (e: CalEvent) => void;
 }
 
-const ENTITY_LABEL: Record<string, string> = { VENUE_LEAD: 'Venue lead', HOST_LEAD: 'Host lead', GENERAL: 'General' };
+const ENTITY_LABEL: Record<CalEvent['entity'], string> = {
+  VENUE_LEAD: 'crm.calendar.venueLead',
+  HOST_LEAD: 'crm.calendar.hostLead',
+  ECOMM_LEAD: 'crm.calendar.ecommLead',
+  CREATOR_LEAD: 'crm.calendar.creatorLead',
+  COMMUNITY_LEAD: 'crm.calendar.communityLead',
+  GENERAL: 'crm.calendar.general',
+};
+
+/** Each lead kind's detail page. */
+const LEAD_PATH: Record<Exclude<CalEvent['entity'], 'GENERAL'>, string> = {
+  VENUE_LEAD: '/venue-leads',
+  HOST_LEAD: '/host-leads',
+  ECOMM_LEAD: '/ecomm-leads',
+  CREATOR_LEAD: '/creator-leads',
+  COMMUNITY_LEAD: '/community-leads',
+};
 
 /** Side drawer showing a calendar event's details + a jump to its lead. */
 export default function EventDrawer({ event, onClose, onEdit, onToggleDone, onDelete }: Readonly<Props>) {
@@ -32,7 +48,8 @@ export default function EventDrawer({ event, onClose, onEdit, onToggleDone, onDe
 
   // Only offered for an event that links a lead (see the button below).
   const openLead = (linked: CalEvent) => {
-    navigate(linked.entity === 'VENUE_LEAD' ? `/venue-leads/${linked.leadId}/view` : `/host-leads/${linked.leadId}/view`);
+    if (linked.entity === 'GENERAL') return;
+    navigate(`${LEAD_PATH[linked.entity]}/${linked.leadId}/view`);
     onClose();
   };
 
@@ -72,7 +89,7 @@ export default function EventDrawer({ event, onClose, onEdit, onToggleDone, onDe
               flexWrap: "wrap"
             }}>
               <Chip size="small" label={formatDateTime(event.date)} />
-              <Chip size="small" variant="outlined" label={ENTITY_LABEL[event.entity]} />
+              <Chip size="small" variant="outlined" label={t(ENTITY_LABEL[event.entity])} />
               {isReminder && <Chip size="small" color={done ? 'success' : 'default'} label={done ? 'Done' : t('crm.components.pending')} />}
             </Stack>
 
@@ -107,7 +124,7 @@ export default function EventDrawer({ event, onClose, onEdit, onToggleDone, onDe
           <Stack spacing={1} sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}>
             {event.leadId && (
               <DuncitButton variant="contained" startIcon={<OpenInNewIcon />} onClick={() => openLead(event)}>
-                Open {event.entity === 'VENUE_LEAD' ? 'venue' : 'host'} lead
+                {t('crm.calendar.openLead')}
               </DuncitButton>
             )}
             {isReminder && (

@@ -143,6 +143,39 @@ describe('ReminderFormDialog', () => {
     return { onSaved, onClose };
   };
 
+  it('starts a new reminder from an Ask AI proposal', async () => {
+    const create = vi.fn(() => ({ data: { createCrmReminder: reminder({ id: 'rem-7', title: 'Send the menu' }) } }));
+    const onSaved = vi.fn();
+    renderWithApollo(
+      <ReminderFormDialog
+        open
+        entity="ECOMM_LEAD"
+        leadId="ecomm-3"
+        reminder={null}
+        draft={{ title: 'Send the menu', due_at: DUE, notes: 'Veg options' }}
+        onClose={vi.fn()}
+        onSaved={onSaved}
+      />,
+      [
+        {
+          request: {
+            query: CREATE_CRM_REMINDER,
+            variables: { input: { entity_type: 'ECOMM_LEAD', lead_id: 'ecomm-3', title: 'Send the menu', due_at: DUE, notes: 'Veg options' } },
+          },
+          result: create,
+        },
+      ],
+    );
+
+    expect(screen.getByLabelText(/Title/)).toHaveValue('Send the menu');
+    expect(screen.getByLabelText('Due date & time')).toHaveValue(DUE);
+    expect(screen.getByLabelText('Notes')).toHaveValue('Veg options');
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    await waitFor(() => expect(onSaved).toHaveBeenCalledTimes(1));
+    expect(create).toHaveBeenCalled();
+  });
+
   it('insists on a valid due date and time', async () => {
     renderDialog();
     fireEvent.change(screen.getByLabelText(/Title/), { target: { value: 'Review venue list' } });

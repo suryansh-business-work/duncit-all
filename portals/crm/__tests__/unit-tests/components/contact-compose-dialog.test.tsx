@@ -24,17 +24,20 @@ vi.mock('@/components/compose/EmailComposeFields', () => ({
   default: ({
     leadEmail,
     defaultSubject,
+    initialBody,
     variableValues,
     onChange,
   }: {
     leadEmail: string;
     defaultSubject: string;
+    initialBody?: string;
     variableValues: Record<string, string>;
     onChange: (payload: unknown) => void;
   }) => (
     <div>
       <p data-testid="fields-email">{leadEmail}</p>
       <p data-testid="fields-subject">{defaultSubject}</p>
+      <p data-testid="fields-body">{initialBody ?? ''}</p>
       <p data-testid="fields-vars">{JSON.stringify(variableValues)}</p>
       <button
         type="button"
@@ -80,9 +83,10 @@ interface RenderOpts {
   entity?: 'VENUE_LEAD' | 'HOST_LEAD' | 'ECOMM_LEAD' | 'CREATOR_LEAD' | 'COMMUNITY_LEAD';
   leadOverride?: typeof lead | null;
   mocks?: MockedResponse[];
+  draft?: { to?: string | null; subject?: string | null; body_html?: string | null } | null;
 }
 
-function renderDialog({ mode = 'email', entity = 'VENUE_LEAD', leadOverride = lead, mocks = [] }: RenderOpts = {}) {
+function renderDialog({ mode = 'email', entity = 'VENUE_LEAD', leadOverride = lead, mocks = [], draft = null }: RenderOpts = {}) {
   const onClose = vi.fn();
   const onResult = vi.fn();
   renderWithApollo(
@@ -92,6 +96,7 @@ function renderDialog({ mode = 'email', entity = 'VENUE_LEAD', leadOverride = le
       entity={entity}
       lead={leadOverride}
       variableValues={{ city: 'Pune' }}
+      draft={draft}
       onClose={onClose}
       onResult={onResult}
     />,
@@ -103,6 +108,21 @@ function renderDialog({ mode = 'email', entity = 'VENUE_LEAD', leadOverride = le
 const send = () => screen.getByRole('button', { name: /send email|start call/i });
 
 describe('ContactComposeDialog email', () => {
+  it('opens an Ask AI draft addressed and written as drafted', () => {
+    renderDialog({ draft: { to: 'owner@grandhall.in', subject: 'Weekend rates', body_html: '<p>Hi Meera</p>' } });
+
+    expect(screen.getByLabelText('To (email)')).toHaveValue('owner@grandhall.in');
+    expect(screen.getByTestId('fields-subject')).toHaveTextContent('Weekend rates');
+    expect(screen.getByTestId('fields-body')).toHaveTextContent('<p>Hi Meera</p>');
+  });
+
+  it('falls back to the lead email and default subject for a draft without them', () => {
+    renderDialog({ draft: { to: null, subject: '', body_html: '<p>Hi</p>' } });
+
+    expect(screen.getByLabelText('To (email)')).toHaveValue('meera@grandhall.in');
+    expect(screen.getByTestId('fields-subject')).toHaveTextContent('Regarding Grand Hall');
+  });
+
   it('opens addressed to the lead with a default subject and the template variables', () => {
     renderDialog();
     expect(screen.getByRole('dialog', { name: 'Email · Grand Hall' })).toBeInTheDocument();

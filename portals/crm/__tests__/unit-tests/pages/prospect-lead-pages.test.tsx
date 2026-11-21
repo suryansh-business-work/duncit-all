@@ -21,6 +21,7 @@ import type { CommunityLead, CreatorLead } from '@/api/prospectLeads.types';
 import { creatorLeadInitialValues, fromCommunityLead, toCommunityLeadInput, toCreatorLeadInput } from '@/forms/prospect-lead';
 import { emptyContact } from '@/forms/fields/ContactsField';
 import { renderWithApollo } from '../helpers/renderWithApollo';
+import { emptyAskAiThread } from '../helpers/askAiThreadMock';
 
 const config: CrmOptionGroup = {
   venue_types: [], space_types: [], venue_event_suitability: [], week_days: [], booking_notices: [],
@@ -211,6 +212,20 @@ describe('ProspectLeadDetailPage', () => {
 
     fireEvent.click(screen.getByText('Back to Community Leads'));
     expect(screen.getByTestId('location')).toHaveTextContent(/^\/community-leads$/);
+  });
+
+  it('opens Ask AI grounded in this community lead', async () => {
+    renderWithApollo(<ProspectLeadDetailPage entity="COMMUNITY_LEAD" />, [
+      { request: { query: COMMUNITY_LEAD, variables: { id: 'cm-1' } }, result: { data: { communityLead: community } } },
+      emptyAskAiThread('COMMUNITY_LEAD', 'cm-1'),
+    ], { route: '/community-leads/cm-1/view', path: '/community-leads/:id/view' });
+    await screen.findByTestId('lead-detail-name');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Ask AI' }));
+
+    const drawer = await screen.findByRole('complementary', { name: 'Ask AI' });
+    expect(drawer).toHaveTextContent('About Pune Trail Runners');
+    expect(await screen.findByText('120 tokens · 1.0 KB from 1 sources')).toBeInTheDocument();
   });
 
   it('says so when the lead does not exist', async () => {

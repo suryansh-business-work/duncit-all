@@ -6,6 +6,7 @@ import MinimizeIcon from '@mui/icons-material/Minimize';
 import CropSquareIcon from '@mui/icons-material/CropSquare';
 import FilterNoneIcon from '@mui/icons-material/FilterNone';
 import OpenInFullIcon from '@mui/icons-material/OpenInFull';
+import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import { DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 import { FRAME, useFloatingFrame, type FrameMode, type FrameRect } from './useFloatingFrame';
@@ -58,13 +59,12 @@ export default function FloatingWindow({ title, icon, onCloseRequest, minimized,
         ...placement(mode, frame.rect),
       }}
     >
+      {/* Pointer-only drag bar; the Move window button is its keyboard equivalent. */}
       <Stack
         direction="row"
         spacing={1}
-        tabIndex={0}
-        aria-describedby={hintId}
+        role="presentation"
         onPointerDown={frame.onTitlePointerDown}
-        onKeyDown={frame.onTitleKeyDown}
         onDoubleClick={frame.toggleMaximize}
         data-testid="call-window-titlebar"
         sx={{
@@ -76,9 +76,22 @@ export default function FloatingWindow({ title, icon, onCloseRequest, minimized,
           cursor: isMax ? 'default' : 'move',
           userSelect: 'none',
           touchAction: 'none',
-          '&:focus-visible': { outline: 2, outlineColor: 'primary.contrastText', outlineOffset: -4 },
         }}
       >
+        {!isMax && (
+          <Tooltip title={t('crm.call.moveWindow')}>
+            <DuncitIconButton
+              size="small"
+              sx={{ color: 'inherit', cursor: 'move' }}
+              onKeyDown={frame.onTitleKeyDown}
+              aria-label={t('crm.call.moveWindow')}
+              aria-describedby={hintId}
+              data-testid="call-window-move"
+            >
+              <DragIndicatorIcon fontSize="small" />
+            </DuncitIconButton>
+          </Tooltip>
+        )}
         {icon}
         <Typography id={titleId} component="h2" variant="subtitle2" noWrap sx={{ fontWeight: 700, flex: 1 }}>
           {title}

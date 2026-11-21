@@ -5899,6 +5899,7 @@ export const SHIPPED_CLIENT_KEYS: Record<string, string> = {
   "crm.call.minimize": "Minimize",
   "crm.call.missingFields": "Missing: {fields}",
   "crm.call.moveHint": "Drag the title bar or use the arrow keys to move this window. Hold Shift with the arrow keys to resize it.",
+  "crm.call.moveWindow": "Move window",
   "crm.call.mute": "Mute",
   "crm.call.noAgentNumber": "No phone to ring you on. Add a phone to your profile, or ask an administrator to set the Agent Phone Number.",
   "crm.call.noNumberConfigured": "No Number Configured",

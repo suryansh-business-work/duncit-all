@@ -271,6 +271,7 @@ export const CRM_BUNDLE: NestedCatalogue = {
       minimize: 'Minimize',
       maximize: 'Maximize',
       restore: 'Restore',
+      moveWindow: 'Move window',
       moveHint: 'Drag the title bar or use the arrow keys to move this window. Hold Shift with the arrow keys to resize it.',
       fromLabel: 'Call from',
       toLabel: 'Call to',

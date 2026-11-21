@@ -24,7 +24,7 @@ export default function CloseCallDialog({ open, ending, onContinue, onEndAndClos
         <DialogContentText id="close-call-body">{t('crm.call.closeConfirmBody')}</DialogContentText>
       </DialogContent>
       <DialogActions>
-        <DuncitButton variant="contained" onClick={onContinue} autoFocus disabled={ending}>
+        <DuncitButton variant="contained" onClick={onContinue} disabled={ending}>
           {t('crm.call.continueCall')}
         </DuncitButton>
         <DuncitButton color="error" startIcon={<CallEndIcon />} onClick={onEndAndClose} disabled={ending}>

@@ -258,12 +258,25 @@ describe('call window — during the call', () => {
     expect(screen.getByTestId('call-window')).toHaveAttribute('data-mode', 'normal');
   });
 
+  it('moves with the arrow keys from the Move window button, which a maximized window does not offer', async () => {
+    await openAndStart([]);
+    const win = screen.getByTestId('call-window');
+    const before = win.style.left;
+
+    fireEvent.keyDown(screen.getByRole('button', { name: 'Move window' }), { key: 'ArrowLeft' });
+    expect(win.style.left).not.toBe(before);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Maximize' }));
+    expect(screen.queryByRole('button', { name: 'Move window' })).not.toBeInTheDocument();
+  });
+
   it('warns before closing a live call, and Continue keeps it', async () => {
     await openAndStart([]);
 
     fireEvent.click(screen.getByRole('button', { name: 'Close' }));
     const confirm = await screen.findByRole('dialog', { name: 'The call is still active' });
-    expect(within(confirm).getByRole('button', { name: 'Continue call' })).toHaveFocus();
+    // The safe choice comes first in the dialog's tab order.
+    expect(within(confirm).getAllByRole('button')[0]).toHaveTextContent('Continue call');
 
     fireEvent.click(within(confirm).getByRole('button', { name: 'Continue call' }));
 

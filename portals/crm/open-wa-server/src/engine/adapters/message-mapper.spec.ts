@@ -1,4 +1,13 @@
-import { buildIncomingMessageBase, mapWwebjsMessageType, RawMessageFields } from './message-mapper';
+import {
+  buildIncomingMessageBase,
+  mapContactFields,
+  mapWwebjsMessageType,
+  POLL_MAX_OPTIONS,
+  POLL_TEXT_MAX_LENGTH,
+  RawContactFields,
+  RawMessageFields,
+  wwebjsBody,
+} from './message-mapper';
 
 describe('buildIncomingMessageBase', () => {
   const base: RawMessageFields = {
@@ -21,6 +30,24 @@ describe('buildIncomingMessageBase', () => {
     expect(r.author).toBeUndefined();
     expect(r.contact).toBeUndefined();
     expect(r.isLidSender).toBeUndefined(); // a normal @c.us sender is not flagged
+  });
+
+  it('stamps kind from the chat JID', () => {
+    expect(buildIncomingMessageBase({ ...base, from: '12036@g.us' }).kind).toBe('group');
+  });
+
+  it('reads a renamed `$1` id when the dependency has not normalized it (#747)', () => {
+    // The live inbound path. Without this, every arriving message on a renamed build carries
+    // `id: undefined` — no dedup key, no reply target, nothing to match an ack against.
+    const r = buildIncomingMessageBase({ ...base, id: { $1: 'MSG_RENAMED' } });
+    expect(r.id).toBe('MSG_RENAMED');
+  });
+
+  it('reports an unreadable id as the empty sentinel rather than undefined', () => {
+    // `''` means "received, id unreadable" and is normalized to NULL at the persist chokepoint.
+    // `undefined` would type-lie about `IncomingMessage.id: string`.
+    const r = buildIncomingMessageBase({ ...base, id: {} });
+    expect(r.id).toBe('');
   });
 
   it('flags a 1:1 sender identified by an @lid privacy id (#263)', () => {
@@ -61,6 +88,26 @@ describe('buildIncomingMessageBase', () => {
     expect(r.contact).toBeUndefined();
   });
 
+  it('maps ephemeralDuration when present on _data', () => {
+    const r = buildIncomingMessageBase({
+      ...base,
+      _data: { ephemeralDuration: 86400 },
+    });
+    expect(r.ephemeralDuration).toBe(86400);
+  });
+
+  it('omits ephemeralDuration when absent from _data', () => {
+    expect(buildIncomingMessageBase(base).ephemeralDuration).toBeUndefined();
+  });
+
+  it('omits ephemeralDuration when ephemeralDuration is 0', () => {
+    const r = buildIncomingMessageBase({
+      ...base,
+      _data: { ephemeralDuration: 0 },
+    });
+    expect(r.ephemeralDuration).toBeUndefined();
+  });
+
   it('uses `to` as the chat for an outgoing (fromMe) message, not the account JID in `from`', () => {
     const r = buildIncomingMessageBase({ ...base, fromMe: true, from: 'me@c.us', to: 'peer@c.us' });
     expect(r.chatId).toBe('peer@c.us');
@@ -78,9 +125,106 @@ describe('buildIncomingMessageBase', () => {
     expect(r.mentionedIds).toEqual(['222@lid', '333@lid']);
   });
 
+  it('maps isForwarded and forwardingScore for a forwarded message', () => {
+    const r = buildIncomingMessageBase({ ...base, isForwarded: true, forwardingScore: 1 });
+    expect(r.isForwarded).toBe(true);
+    expect(r.forwardingScore).toBe(1);
+  });
+
+  it('omits forwardingScore when a forwarded message reports none (whatsapp-web.js defaults it to 0)', () => {
+    const r = buildIncomingMessageBase({ ...base, isForwarded: true, forwardingScore: 0 });
+    expect(r.isForwarded).toBe(true);
+    expect(r).not.toHaveProperty('forwardingScore');
+  });
+
+  it('omits the forward fields for a message that was not forwarded', () => {
+    for (const r of [
+      buildIncomingMessageBase(base),
+      buildIncomingMessageBase({ ...base, isForwarded: false, forwardingScore: 0 }),
+    ]) {
+      expect(r).not.toHaveProperty('isForwarded');
+      expect(r).not.toHaveProperty('forwardingScore');
+    }
+  });
+
   it('omits mentionedIds when absent or empty', () => {
     expect(buildIncomingMessageBase(base).mentionedIds).toBeUndefined();
     expect(buildIncomingMessageBase({ ...base, mentionedIds: [] }).mentionedIds).toBeUndefined();
+  });
+
+  it('maps an order id and its single-order token', () => {
+    const r = buildIncomingMessageBase({ ...base, type: 'order', orderId: '1000000000000001', token: 'tok' });
+    expect(r.order).toEqual({ orderId: '1000000000000001', token: 'tok' });
+    expect(r.product).toBeUndefined();
+  });
+
+  it('maps an order that arrived without a token', () => {
+    expect(buildIncomingMessageBase({ ...base, type: 'order', orderId: '1' }).order).toEqual({ orderId: '1' });
+  });
+
+  it('maps a shared product card with the fields whatsapp-web.js exposes', () => {
+    const r = buildIncomingMessageBase({
+      ...base,
+      type: 'product',
+      productId: '2000000000000002',
+      title: 'Sample',
+      description: 'A sample',
+      businessOwnerJid: '100000000000@c.us',
+    });
+    expect(r.product).toEqual({
+      productId: '2000000000000002',
+      title: 'Sample',
+      description: 'A sample',
+      businessOwnerJid: '100000000000@c.us',
+    });
+    expect(r.order).toBeUndefined();
+  });
+
+  it('yields nothing when the id that makes the message actionable is missing', () => {
+    expect(buildIncomingMessageBase({ ...base, type: 'order', token: 'tok' }).order).toBeUndefined();
+    // whatsapp-web.js exposes no catalog field, so an id-less product (a whole-catalog share included) keeps its type.
+    const product = buildIncomingMessageBase({ ...base, type: 'product', title: 'Sample' });
+    expect(product.type).toBe('product');
+    expect(product.product).toBeUndefined();
+  });
+
+  it('does not fabricate a product from a title on a non-commerce message', () => {
+    const r = buildIncomingMessageBase({ ...base, title: 'Sample', productId: '2', orderId: '1' });
+    expect(r.product).toBeUndefined();
+    expect(r.order).toBeUndefined();
+  });
+});
+
+describe('wwebjsBody', () => {
+  const card = (name: string) => `BEGIN:VCARD\nVERSION:3.0\nFN:${name}\nEND:VCARD`;
+
+  it('joins the vCards of several contacts shared together, which arrive with no body', () => {
+    const shared = { type: 'multi_vcard', body: '', vCards: [card('Ana'), card('Budi')] };
+    expect(wwebjsBody(shared)).toBe(`${card('Ana')}\n${card('Budi')}`);
+    // WhatsApp Web holds the body of such a message as null, not as an empty string.
+    expect(wwebjsBody({ ...shared, body: null as unknown as string })).toBe(`${card('Ana')}\n${card('Budi')}`);
+  });
+
+  it('leaves every other body as it is', () => {
+    expect(wwebjsBody({ type: 'vcard', body: card('Ana'), vCards: [card('Ana')] })).toBe(card('Ana'));
+    expect(wwebjsBody({ type: 'chat', body: 'hi', vCards: [] })).toBe('hi');
+    expect(wwebjsBody({ type: 'multi_vcard', body: 'kept', vCards: [card('Ana')] })).toBe('kept');
+    expect(wwebjsBody({ type: 'multi_vcard', body: '' })).toBe('');
+  });
+
+  it('reaches the message a webhook and the message list carry', () => {
+    const r = buildIncomingMessageBase({
+      id: { _serialized: 'MSG1' },
+      from: '123@c.us',
+      to: 'me@c.us',
+      body: '',
+      type: 'multi_vcard',
+      vCards: [card('Ana'), card('Budi')],
+      timestamp: 1700000000,
+      fromMe: false,
+    });
+    expect(r.type).toBe('contact');
+    expect(r.body).toBe(`${card('Ana')}\n${card('Budi')}`);
   });
 });
 
@@ -96,9 +240,184 @@ describe('mapWwebjsMessageType (engine type-token -> neutral MessageType boundar
     ['location', 'location'],
     ['vcard', 'contact'],
     ['multi_vcard', 'contact'],
+    ['call_log', 'call'],
     ['revoked', 'revoked'],
+    ['poll_creation', 'poll'],
+    ['order', 'order'],
+    ['product', 'product'],
+    // A tapped button, list row or template button: WA Web carries the chosen option's text in the
+    // body, and Baileys reports the same replies as text (#562).
+    ['buttons_response', 'text'],
+    ['list_response', 'text'],
+    ['template_button_reply', 'text'],
     ['e2e_notification', 'unknown'], // any unmapped wwebjs type
   ])('maps wwebjs type %s -> %s', (raw, expected) => {
     expect(mapWwebjsMessageType(raw)).toBe(expected);
+  });
+});
+
+describe('mapContactFields', () => {
+  const businessRaw: RawContactFields = {
+    id: { _serialized: '254571402260600@lid' },
+    number: '254571402260600',
+    name: 'Leo hermano',
+    pushname: 'leo',
+    shortName: 'Leo',
+    type: 'in',
+    isMyContact: true,
+    isWAContact: true,
+    isBusiness: true,
+    isEnterprise: false,
+    verifiedName: 'Leo Store',
+    verifiedLevel: 2,
+    isBlocked: false,
+    labels: ['L1', 'L2'],
+  };
+
+  describe('full mode (WEBHOOK_CONTACT_DETAILS opt-in)', () => {
+    it('copies the sync fields for a business contact', () => {
+      expect(mapContactFields(businessRaw, true)).toEqual({
+        id: '254571402260600@lid',
+        number: '254571402260600',
+        name: 'Leo hermano',
+        pushName: 'leo',
+        shortName: 'Leo',
+        type: 'in',
+        isMyContact: true,
+        isWAContact: true,
+        isBusiness: true,
+        isEnterprise: false,
+        verifiedName: 'Leo Store',
+        verifiedLevel: 2,
+        isBlocked: false,
+        labels: ['L1', 'L2'],
+      });
+    });
+
+    it('omits business fields and empty values for a plain personal contact', () => {
+      const r = mapContactFields(
+        {
+          id: { _serialized: '584145200715@c.us' },
+          number: '584145200715',
+          pushname: 'Ana',
+          isMyContact: false,
+          isWAContact: true,
+          isBusiness: false,
+        },
+        true,
+      );
+      expect(r).toEqual({
+        id: '584145200715@c.us',
+        number: '584145200715',
+        pushName: 'Ana',
+        isMyContact: false,
+        isWAContact: true,
+        isBusiness: false,
+      });
+      expect('verifiedName' in r).toBe(false);
+      expect('name' in r).toBe(false);
+      expect('labels' in r).toBe(false);
+    });
+
+    it('reads the id under the name a renamed WA Web build gives it', () => {
+      // WA Web 2.3000.x serializes a Wid as `$1` instead of `_serialized` (#747).
+      expect(mapContactFields({ id: { $1: '584145200715@c.us' }, number: '584145200715' }, true)).toEqual({
+        id: '584145200715@c.us',
+        number: '584145200715',
+      });
+    });
+
+    it('returns an empty object when nothing is set', () => {
+      expect(mapContactFields({}, true)).toEqual({});
+    });
+
+    it('drops an empty labels array', () => {
+      expect(mapContactFields({ labels: [] }, true)).toEqual({});
+    });
+  });
+
+  describe('minimal mode (default)', () => {
+    it('returns only name and pushName even when the contact has full data', () => {
+      expect(mapContactFields(businessRaw)).toEqual({ name: 'Leo hermano', pushName: 'leo' });
+    });
+
+    it('omits name/pushName when absent and never includes extended fields', () => {
+      expect(mapContactFields({ number: '584145200715', isBusiness: true })).toEqual({});
+    });
+  });
+});
+
+describe('poll choice metadata', () => {
+  it.each([
+    [' Park ', 'Beach'],
+    [{ name: ' Park ' }, { name: 'Beach' }],
+  ])('preserves choices from the library representation', (...pollOptions) => {
+    const mapped = buildIncomingMessageBase({
+      id: { _serialized: 'P1' },
+      from: 'a@c.us',
+      to: 'me',
+      body: 'Where?',
+      type: 'poll_creation',
+      timestamp: 100,
+      fromMe: false,
+      pollName: 'Where?',
+      pollOptions,
+      allowMultipleAnswers: true,
+    });
+    expect(mapped.poll).toEqual({ name: 'Where?', options: [' Park ', 'Beach'], allowMultipleAnswers: true });
+  });
+
+  describe('bounds', () => {
+    const poll = (over: Partial<RawMessageFields>): RawMessageFields => ({
+      id: { _serialized: 'P2' },
+      from: 'a@c.us',
+      to: 'me',
+      body: 'Where?',
+      type: 'poll_creation',
+      timestamp: 100,
+      fromMe: false,
+      pollName: 'Where?',
+      pollOptions: ['Park', 'Beach'],
+      allowMultipleAnswers: false,
+      ...over,
+    });
+
+    it('keeps a poll WhatsApp itself could send exactly as it is', () => {
+      const question = 'q'.repeat(255);
+      const options = Array.from({ length: 12 }, (_, i) => `${i}`.padEnd(100, 'o'));
+      const mapped = buildIncomingMessageBase(poll({ body: question, pollName: question, pollOptions: options }));
+      expect(mapped.poll).toEqual({ name: question, options, allowMultipleAnswers: false });
+      expect(mapped.body).toBe(question);
+    });
+
+    // The numbers are written out here, not read from the constants, so moving either by one shows up.
+    it('keeps a poll of 32 options with 1024 characters in each text whole', () => {
+      const text = (i: number) => `${i}`.padEnd(1024, 'x');
+      const pollOptions = Array.from({ length: 32 }, (_, i) => text(i));
+      const mapped = buildIncomingMessageBase(poll({ body: text(99), pollName: text(99), pollOptions }));
+      expect(mapped.poll).toEqual({ name: text(99), options: pollOptions, allowMultipleAnswers: false });
+      expect(mapped.body).toBe(text(99));
+    });
+
+    it('cuts a poll at its 33rd option and at the 1025th character of a text', () => {
+      const text = (i: number) => `${i}`.padEnd(1025, 'x');
+      const pollOptions = Array.from({ length: 33 }, (_, i) => text(i));
+      const mapped = buildIncomingMessageBase(poll({ body: text(99), pollName: text(99), pollOptions }));
+      expect(mapped.poll?.options).toEqual(pollOptions.slice(0, 32).map(option => option.slice(0, 1024)));
+      expect(mapped.poll?.name).toBe(text(99).slice(0, 1024));
+      expect(mapped.body).toBe(text(99).slice(0, 1024));
+    });
+
+    it('truncates an oversized poll, in the poll and in the body, and keeps it a poll', () => {
+      const long = 'x'.repeat(POLL_TEXT_MAX_LENGTH * 3);
+      const pollOptions = Array.from({ length: POLL_MAX_OPTIONS * 50 }, (_, i) => ({ name: `${i}${long}` }));
+      const mapped = buildIncomingMessageBase(poll({ body: long, pollName: long, pollOptions }));
+      expect(mapped.type).toBe('poll');
+      expect(mapped.poll?.options).toHaveLength(POLL_MAX_OPTIONS);
+      expect(mapped.poll?.options.every(option => option.length === POLL_TEXT_MAX_LENGTH)).toBe(true);
+      expect(mapped.poll?.options[1].startsWith('1xxx')).toBe(true);
+      expect(mapped.poll?.name).toHaveLength(POLL_TEXT_MAX_LENGTH);
+      expect(mapped.body).toHaveLength(POLL_TEXT_MAX_LENGTH);
+    });
   });
 });

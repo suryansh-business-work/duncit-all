@@ -1,4 +1,74 @@
+import { DataSource } from 'typeorm';
 import { BaileysSessionStore } from './baileys-session-store';
+import { LidMapping } from '../identity/lid-mapping.entity';
+import { LidMappingStoreService, type LidMappingStore } from '../identity/lid-mapping-store.service';
+import { withoutMergedNonContentMessage, type ContentTypeLib } from './baileys-message-mapper';
+import {
+  mergeTwinStates,
+  type ChatStateField,
+  type ChatStateStore,
+  type ChatStateValue,
+} from './baileys-chat-state-store.service';
+import { userPart } from '../identity/wa-id';
+import type { StoredChatPreview } from './baileys-stored-chat-previews.service';
+
+/** In-memory ChatStateStore for tests: remember() applies synchronously so a following read sees it. */
+class FakeChatStateStore implements ChatStateStore {
+  readonly rows = new Map<string, ChatStateValue>();
+  private clock = 1_000_000;
+  private key(s: string, c: string): string {
+    return `${s}\u0000${c}`;
+  }
+  get(s: string, c: string): ChatStateValue | undefined {
+    return this.rows.get(this.key(s, c));
+  }
+  chatIds(s: string): string[] {
+    return [...this.rows.keys()].filter(k => k.startsWith(`${s}\u0000`)).map(k => k.slice(s.length + 1));
+  }
+  remember(s: string, c: string, patch: Partial<ChatStateValue>, create = true): Promise<void> {
+    // Same bookkeeping as the real store: a new row observes only what the patch carries, and a patch
+    // that may not create one writes nothing when it only restates defaults.
+    const defaults: Partial<ChatStateValue> = { muteEndTime: null, archived: false, pinned: false };
+    const restates = (Object.keys(patch) as ChatStateField[]).every(f => patch[f] === defaults[f]);
+    if (!create && restates && !this.rows.has(this.key(s, c))) return Promise.resolve();
+    const existing = this.rows.get(this.key(s, c)) ?? {
+      muteEndTime: null,
+      archived: false,
+      pinned: false,
+      observed: [],
+    };
+    const observed = existing.observed && [
+      ...new Set([...existing.observed, ...(Object.keys(patch) as ChatStateField[])]),
+    ];
+    this.rows.set(this.key(s, c), { ...existing, ...patch, observed, updatedAt: ++this.clock });
+    return Promise.resolve();
+  }
+  reload(): Promise<void> {
+    return Promise.resolve();
+  }
+  clearSession(): Promise<void> {
+    return Promise.resolve();
+  }
+  /** Same contract as the real store: the rows merged field by field are the base, the twin rows go. */
+  fold(s: string, c: string, twins: string[], patch: Partial<ChatStateValue>, create = true): Promise<void> {
+    const found = twins.filter(t => this.rows.has(this.key(s, t)));
+    if (!found.length) return this.remember(s, c, patch, create);
+    const merged = mergeTwinStates([c, ...found].flatMap(t => this.get(s, t) ?? []));
+    const fields: ChatStateField[] = ['muteEndTime', 'archived', 'pinned', 'deletedAt'];
+    const base = merged
+      ? Object.fromEntries(fields.filter(f => !merged.observed || merged.observed.includes(f)).map(f => [f, merged[f]]))
+      : {};
+    for (const t of found) this.rows.delete(this.key(s, t));
+    return this.remember(s, c, { ...base, ...patch });
+  }
+  forget(s: string, chatIds: string[]): Promise<void> {
+    for (const c of chatIds) this.rows.delete(this.key(s, c));
+    return Promise.resolve();
+  }
+  refreshSession(): Promise<void> {
+    return Promise.resolve();
+  }
+}
 
 describe('BaileysSessionStore', () => {
   let store: BaileysSessionStore;
@@ -11,7 +81,8 @@ describe('BaileysSessionStore', () => {
     store.upsertContacts([{ id: '628111@s.whatsapp.net', name: 'Alice' }]); // partial: name added, notify kept
     const c = store.findContact('628111@s.whatsapp.net');
     expect(c).toEqual({
-      id: '628111@s.whatsapp.net',
+      id: '628111@c.us', // listing ids are emitted in the neutral dialect
+
       name: 'Alice',
       pushName: 'Al',
       number: '628111',
@@ -21,6 +92,298 @@ describe('BaileysSessionStore', () => {
     });
     expect(store.findContact('nope@s.whatsapp.net')).toBeNull();
     expect(store.listContacts()).toHaveLength(1);
+  });
+
+  it('reports no profilePicUrl for the picture-change markers Baileys stores in imgUrl', () => {
+    // A `picture` notification arrives as contacts.update with imgUrl 'changed' or 'removed', not a URL.
+    store.upsertContacts([{ id: '628111@s.whatsapp.net', notify: 'Al', imgUrl: 'http://p/x.jpg' }]);
+    store.upsertContacts([{ id: '628111@s.whatsapp.net', imgUrl: 'changed' }]);
+    store.upsertContacts([{ id: '628222@s.whatsapp.net', notify: 'Bo', imgUrl: 'removed' }]);
+    expect(store.findContact('628111@s.whatsapp.net')?.profilePicUrl).toBeUndefined();
+    expect(store.findContact('628222@s.whatsapp.net')?.profilePicUrl).toBeUndefined();
+  });
+
+  it('does not let a later history-sync row wipe a saved name with undefined', () => {
+    // Baileys history contacts always include `name: displayName || name || username || undefined`.
+    // Spreading that onto an address-book upsert that already had a name used to clear it.
+    store.upsertContacts([{ id: '628111@s.whatsapp.net', name: 'Alice', notify: 'Al' }]);
+    store.upsertContacts([{ id: '628111@s.whatsapp.net', name: undefined, notify: 'Al' }]);
+    expect(store.findContact('628111@s.whatsapp.net')).toMatchObject({ name: 'Alice', pushName: 'Al' });
+  });
+
+  it('prefers the named twin when one person occupies both a lid and a phone entry', () => {
+    // History sync and app state can key the same person twice. Only one entry carries the saved
+    // name, and answering with the other reported a saved contact as unknown.
+    store.upsertContacts([{ id: '111@lid', notify: 'Al' }]);
+    store.upsertContacts([{ id: '628111@s.whatsapp.net', lid: '111@lid', name: 'Alice' }]);
+
+    expect(store.findContact('111@lid')).toMatchObject({ name: 'Alice', isMyContact: true });
+    expect(store.findContact('628111@c.us')).toMatchObject({ name: 'Alice', isMyContact: true });
+  });
+
+  it('answers a lid lookup with the phone number when both twins carry a saved name', () => {
+    // The preference above is keyed on `name` alone, so when BOTH entries are named the queried
+    // dialect wins. For a lid query that is the lid-keyed entry, whose `number` is empty unless it
+    // is derived from the resolved id: a saved contact answered with no phone number at all.
+    store.upsertContacts([{ id: '111@lid', name: 'Alice' }]);
+    store.upsertContacts([{ id: '628111@s.whatsapp.net', lid: '111@lid', name: 'Alice' }]);
+
+    expect(store.findContact('111@lid')).toMatchObject({ id: '111@lid', name: 'Alice', number: '628111' });
+  });
+
+  it('keeps phone and LID contact identities distinct when both carry a saved name', () => {
+    // Both project to the same neutral id once the lid resolves, so listing both puts two rows
+    // sharing one id into GET /contacts.
+    store.upsertContacts([{ id: '111@lid', name: 'Alice' }]);
+    store.upsertContacts([{ id: '628111@s.whatsapp.net', lid: '111@lid', name: 'Alice' }]);
+
+    expect(store.listContacts()).toEqual([
+      expect.objectContaining({ id: '111@lid', name: 'Alice', number: '628111' }),
+      expect.objectContaining({ id: '628111@c.us', name: 'Alice', number: '628111' }),
+    ]);
+  });
+
+  it('answers for a saved lid-only contact whose lid has no mapping', () => {
+    // Projecting a contact resolves its lid through the store's OWN contacts map, and a read there
+    // moves the entry to the most-recent end. Listing over the live map therefore handed this entry
+    // back forever. A regression HANGS this file rather than failing it: the loop is synchronous, so
+    // no test timeout can interrupt it. A stuck run on this spec means the snapshot went away.
+    store.upsertContacts([{ id: '111@lid', name: 'Alice' }]);
+
+    expect(store.listContacts()).toEqual([
+      expect.objectContaining({ id: '111@lid', name: 'Alice', number: '', isMyContact: true }),
+    ]);
+  });
+
+  it('keeps each raw contact record stable when a lookup touches its LID', () => {
+    // The store is LRU-ordered, so iteration order tracks traffic: an inbound message touches the
+    // lid twin on every message. Letting order decide meant the list answered with whichever twin
+    // had been quiet, dropping a pushname the other had just learned and flipping back later.
+    store.upsertContacts([{ id: '111@lid', name: 'Alice', notify: 'Ali', imgUrl: 'http://p/a.jpg' }]);
+    store.upsertContacts([{ id: '628111@s.whatsapp.net', lid: '111@lid', name: 'Alice' }]);
+
+    const first = store.listContacts();
+    expect(first).toEqual([
+      expect.objectContaining({ id: '111@lid', name: 'Alice', pushName: 'Ali', profilePicUrl: 'http://p/a.jpg' }),
+      expect.objectContaining({ id: '628111@c.us', name: 'Alice', number: '628111', pushName: undefined }),
+    ]);
+
+    // Touch the lid twin the way an inbound message does, moving it to the recent end, and read again.
+    expect(store.findContact('111@lid')).toBeTruthy();
+    expect(store.listContacts()).toHaveLength(first.length);
+    expect(store.listContacts()).toEqual(expect.arrayContaining(first));
+  });
+
+  it('accepts a contact keyed only by lid (id omitted) and finds it by phone', () => {
+    store.upsertContacts([{ lid: '111@lid', phoneNumber: '628111@s.whatsapp.net', name: 'Ada' }]);
+    expect(store.findContact('111@lid')?.name).toBe('Ada');
+    expect(store.findContact('628111@c.us')?.name).toBe('Ada');
+    expect(store.listContacts()[0]).toMatchObject({ id: '111@lid', name: 'Ada', number: '628111' });
+  });
+
+  it('drops groups/newsletters/status from the contact map (they are not address-book entries)', () => {
+    store.upsertContacts([
+      { id: '120363-9@g.us', name: 'Team' },
+      { id: '123@newsletter', name: 'Channel' },
+      { id: 'status@broadcast' },
+      { id: '628111@s.whatsapp.net', name: 'Alice' },
+    ]);
+    expect(store.listContacts()).toHaveLength(1);
+    expect(store.findContact('120363-9@g.us')).toBeNull();
+    expect(store.findContact('628111@c.us')?.name).toBe('Alice');
+  });
+
+  it('does not promote a chat partner into the address book', () => {
+    store.upsertChats([
+      { id: '628111@s.whatsapp.net', name: 'Alice' },
+      { id: '120363-9@g.us', name: 'Team' },
+    ]);
+    expect(store.findContact('628111@c.us')).toBeNull();
+    expect(store.listContacts()).toHaveLength(0);
+    expect(store.listChats()).toHaveLength(2);
+  });
+
+  /**
+   * Baileys documents `name` as the one YOU saved and `notify` as the pushname the contact set
+   * themselves, so a contact carrying only `notify` is not in the addressbook. Reporting true for
+   * everyone told an automation that every chat partner was a saved contact.
+   */
+  it('reports isMyContact from the saved name, not for every contact seen', () => {
+    store.upsertContacts([
+      { id: '628111@s.whatsapp.net', name: 'Alice', notify: 'Al' },
+      { id: '628222@s.whatsapp.net', notify: 'Bob' },
+    ]);
+    expect(store.findContact('628111@s.whatsapp.net')?.isMyContact).toBe(true);
+    expect(store.findContact('628222@s.whatsapp.net')?.isMyContact).toBe(false);
+    // The pushname still surfaces either way; it is the addressbook claim that changed.
+    expect(store.findContact('628222@s.whatsapp.net')?.pushName).toBe('Bob');
+    expect(store.listContacts()).toEqual([expect.objectContaining({ id: '628111@c.us', name: 'Alice' })]);
+  });
+
+  describe('archived, pinned and muted state', () => {
+    // A fresh store per call: upsertChats MERGES, so reusing one store lets an absent-field case
+    // re-read a value a prior call set, and the default-to-false path would never run.
+    const chatFor = (over: Record<string, unknown>) => {
+      const s = new BaileysSessionStore();
+      s.upsertChats([{ id: '628111@s.whatsapp.net', name: 'Alice', ...over }]);
+      return s.listChats()[0];
+    };
+
+    it('maps archived, pinned and muted each from its own field', () => {
+      // No Baileys case asserted archived: true before, so `archived: c.archived ?? false` could be
+      // a constant false and stay green. Mixed values pin each flag to its own source.
+      expect(chatFor({ archived: true, pinned: 0, muteEndTime: 0 })).toMatchObject({
+        archived: true,
+        pinned: false,
+        muted: false,
+      });
+      expect(chatFor({ archived: false, pinned: 2, muteEndTime: 0 })).toMatchObject({
+        archived: false,
+        pinned: true,
+        muted: false,
+      });
+    });
+
+    it('reads a pin as a flag, though Baileys reports it as an order', () => {
+      // proto.IConversation.pinned is a NUMBER — its position among pinned chats, not a boolean.
+      expect(chatFor({ pinned: 2 }).pinned).toBe(true);
+      expect(chatFor({ pinned: 0 }).pinned).toBe(false);
+      expect(chatFor({}).pinned).toBe(false);
+    });
+
+    it('treats a mute as active only while its end time is still ahead', () => {
+      const inAnHourMs = Date.now() + 60 * 60 * 1000;
+      const anHourAgoMs = Date.now() - 60 * 60 * 1000;
+      expect(chatFor({ muteEndTime: inAnHourMs }).muted).toBe(true);
+      expect(chatFor({ muteEndTime: anHourAgoMs }).muted).toBe(false);
+      expect(chatFor({ muteEndTime: 0 }).muted).toBe(false);
+      expect(chatFor({}).muted).toBe(false);
+    });
+
+    it('reads both units: epoch ms from an app-state write and epoch seconds from history sync', () => {
+      // A chatModify({ mute }) write echoes back the epoch-MS value the gateway passed; a history-sync
+      // Conversation.muteEndTime is epoch SECONDS (like conversationTimestamp on the same record). Both
+      // must read as muted while ahead, else a synced mute reads unmuted.
+      const nowS = Math.floor(Date.now() / 1000);
+      expect(chatFor({ muteEndTime: (nowS + 3600) * 1000 }).muted).toBe(true); // ms, still ahead
+      expect(chatFor({ muteEndTime: nowS + 3600 }).muted).toBe(true); // seconds, still ahead
+      expect(chatFor({ muteEndTime: nowS - 3600 }).muted).toBe(false); // seconds, already past
+    });
+
+    it('accepts a Long, which is what the proto actually hands over', () => {
+      const asLong = { toNumber: () => Date.now() + 60 * 60 * 1000 };
+      expect(chatFor({ muteEndTime: asLong }).muted).toBe(true);
+    });
+
+    it('reads a mute set to Always (WhatsApp sends muteEndTime -1) as muted indefinitely', () => {
+      expect(chatFor({ muteEndTime: -1 })).toMatchObject({ muted: true, muteExpiration: 0 });
+    });
+  });
+
+  describe('chat-state persistence (survives a reconnect Baileys cannot resync)', () => {
+    const SID = 'sess-1';
+    const CHAT = '628111@s.whatsapp.net';
+    let fake: FakeChatStateStore;
+    beforeEach(() => {
+      fake = new FakeChatStateStore();
+    });
+    // A fresh store sharing the SAME fake models a process restart: this.chats is empty and rebuilds
+    // from history sync, but the persisted state is retained.
+    const newStore = () => new BaileysSessionStore(undefined, SID, fake);
+    const chatOn = (s: BaileysSessionStore, over: Record<string, unknown>) => {
+      s.upsertChats([{ id: CHAT, name: 'Alice', ...over }]);
+      return s.listChats()[0];
+    };
+
+    it('persists a mute and reads it back as muted', () => {
+      expect(chatOn(newStore(), { muteEndTime: Date.now() + 60 * 60 * 1000 }).muted).toBe(true);
+      expect(fake.rows.size).toBe(1);
+    });
+
+    it('a fresh process reads a mute set before the restart, though history sync omits muteEndTime', () => {
+      chatOn(newStore(), { muteEndTime: Date.now() + 60 * 60 * 1000 });
+      // Restart: this.chats is rebuilt from a history-sync record with NO muteEndTime key.
+      expect(chatOn(newStore(), { name: 'Alice' }).muted).toBe(true);
+    });
+
+    it('a live unmute (muteEndTime: null) persists and reads unmuted, across a restart', () => {
+      const s = newStore();
+      chatOn(s, { muteEndTime: Date.now() + 3_600_000 });
+      expect(chatOn(s, { muteEndTime: null }).muted).toBe(false);
+      expect(chatOn(newStore(), { name: 'Alice' }).muted).toBe(false);
+    });
+
+    it('archived and pinned persist and survive a restart', () => {
+      chatOn(newStore(), { archived: true, pinned: 2 });
+      expect(chatOn(newStore(), { name: 'Alice' })).toMatchObject({ archived: true, pinned: true });
+    });
+
+    it('a partial update lacking the keys does not clobber persisted state', () => {
+      const s = newStore();
+      chatOn(s, { muteEndTime: Date.now() + 3_600_000, archived: true });
+      expect(chatOn(s, { name: 'Renamed' })).toMatchObject({ muted: true, archived: true });
+    });
+
+    // A decoded proto.Conversation (what history sync hands over) carries archived, pinned and
+    // muteEndTime as null defaults on its PROTOTYPE, and sets an own property only for a field that
+    // was on the wire. Modelled here without importing the ESM-only WAProto.
+    const historyChat = (own: Record<string, unknown>) =>
+      Object.assign(Object.create({ archived: null, pinned: null, muteEndTime: null }) as object, {
+        id: CHAT,
+        name: 'Alice',
+        ...own,
+      }) as Record<string, unknown>;
+
+    it('a history chat that omits the fields does not reset persisted pin, archive and mute', () => {
+      chatOn(newStore(), { muteEndTime: -1, archived: true, pinned: 2 });
+      for (const s of [newStore(), newStore()]) {
+        s.upsertChats([historyChat({})]);
+        expect(s.listChats()[0]).toMatchObject({ muted: true, archived: true, pinned: true });
+      }
+      expect(fake.get(SID, CHAT)).toMatchObject({ muteEndTime: -1, archived: true, pinned: true });
+    });
+
+    it('a history chat that omits the fields writes no row for a chat never seen', () => {
+      newStore().upsertChats([historyChat({})]);
+      expect(fake.rows.size).toBe(0);
+    });
+
+    it('a history chat that carries a field on the wire still persists it', () => {
+      newStore().upsertChats([historyChat({ pinned: 5 })]);
+      expect(fake.get(SID, CHAT)).toMatchObject({ muteEndTime: null, archived: false, pinned: true });
+    });
+
+    it('normalizes a seconds-scale muteEndTime to ms on persist', () => {
+      const nowS = Math.floor(Date.now() / 1000);
+      chatOn(newStore(), { muteEndTime: nowS + 3600 });
+      expect(fake.get(SID, CHAT)?.muteEndTime).toBe((nowS + 3600) * 1000);
+      expect(chatOn(newStore(), { name: 'Alice' }).muted).toBe(true);
+    });
+
+    it('reports muteExpiration in ms when muted, absent when not, and survives a restart', () => {
+      const endMs = Date.now() + 90 * 60 * 1000;
+      expect(chatOn(newStore(), { muteEndTime: endMs })).toMatchObject({ muted: true, muteExpiration: endMs });
+      // Restart: the fresh store's this.chats has no muteEndTime, but the persisted expiry is read back.
+      expect(chatOn(newStore(), { name: 'Alice' })).toMatchObject({ muted: true, muteExpiration: endMs });
+      // An unmuted chat carries no expiry (undefined, so omitted from the JSON payload).
+      expect(chatOn(newStore(), { muteEndTime: null }).muteExpiration).toBeUndefined();
+    });
+
+    it('persists a mute set to Always as -1 and reads it back as muted indefinitely', () => {
+      expect(chatOn(newStore(), { muteEndTime: -1 })).toMatchObject({ muted: true, muteExpiration: 0 });
+      expect(fake.get(SID, CHAT)?.muteEndTime).toBe(-1);
+      expect(chatOn(newStore(), { name: 'Alice' })).toMatchObject({ muted: true, muteExpiration: 0 });
+    });
+
+    it('reads a mute Always persisted as -1000 by an earlier version as muted indefinitely', async () => {
+      await fake.remember(SID, CHAT, { muteEndTime: -1000 });
+      expect(chatOn(newStore(), { name: 'Alice' })).toMatchObject({ muted: true, muteExpiration: 0 });
+    });
+
+    it('normalizes a seconds-scale expiry to ms for muteExpiration', () => {
+      const nowS = Math.floor(Date.now() / 1000);
+      expect(chatOn(newStore(), { muteEndTime: nowS + 3600 }).muteExpiration).toBe((nowS + 3600) * 1000);
+    });
   });
 
   it('records the newest message per chat and surfaces it in getChats', () => {
@@ -38,18 +401,50 @@ describe('BaileysSessionStore', () => {
     const chats = store.listChats();
     expect(chats).toEqual([
       {
-        id: '628111@s.whatsapp.net',
+        id: '628111@c.us', // listing ids are emitted in the neutral dialect
         name: 'Alice',
         isGroup: false,
+        kind: 'individual',
         unreadCount: 2,
         timestamp: 200,
         lastMessage: 'newest',
+        archived: false,
+        pinned: false,
+        muted: false,
       },
     ]);
     expect(store.lastMessage('628111@s.whatsapp.net')).toEqual({
       key: { remoteJid: '628111@s.whatsapp.net', fromMe: false, id: 'NEW' },
       timestamp: 200,
+      jid: '628111@s.whatsapp.net',
     });
+  });
+
+  it('keeps the latest type across older messages and edits of independent raw chats', () => {
+    store.addLidMappings([{ lid: '999@lid', pn: '628111@s.whatsapp.net' }]);
+    store.upsertChats([{ id: '999@lid' }]);
+    store.recordMessage(
+      { key: { remoteJid: '999@lid', id: 'LATEST' }, message: { imageMessage: {} }, messageTimestamp: 200 },
+      'image',
+    );
+    store.recordMessage(
+      {
+        key: { remoteJid: '628111@s.whatsapp.net', id: 'OLD' },
+        message: { conversation: 'old' },
+        messageTimestamp: 100,
+      },
+      'text',
+    );
+    store.recordMessageEdit('999@lid', 'LATEST', 'new caption');
+    expect(store.listChats()[0]).toMatchObject({
+      lastMessage: 'new caption',
+      lastMessageType: 'image',
+      timestamp: 200,
+    });
+    store.recordMessageEdit('628111@c.us', 'OLD', '', 'revoked');
+    expect(store.listChats()[0].lastMessageType).toBe('image');
+    store.recordMessageEdit('999@lid', 'LATEST', '', 'revoked');
+    expect(store.listChats()[0]).toMatchObject({ lastMessage: '', lastMessageType: 'revoked', timestamp: 200 });
   });
 
   it('does not overwrite a newer last-message with an older one', () => {
@@ -66,6 +461,92 @@ describe('BaileysSessionStore', () => {
     expect(store.lastMessage('c@s.whatsapp.net')?.key.id).toBe('NEW');
   });
 
+  it('updates the chat preview only when the edited message is the current last message', () => {
+    store.upsertChats([{ id: '628111@s.whatsapp.net', name: 'Alice' }]);
+    store.recordMessage({
+      key: { remoteJid: '628111@s.whatsapp.net', id: 'LATEST' },
+      message: { conversation: 'before edit' },
+      messageTimestamp: 200,
+    });
+
+    store.recordMessageEdit('628111@c.us', 'OLDER', 'must not replace preview');
+    expect(store.listChats()[0]).toEqual(expect.objectContaining({ lastMessage: 'before edit', timestamp: 200 }));
+
+    store.recordMessageEdit('628111@c.us', 'LATEST', 'after edit');
+    expect(store.listChats()[0]).toEqual(expect.objectContaining({ lastMessage: 'after edit', timestamp: 200 }));
+  });
+
+  it.each([
+    ['its own id, once only the phone twin has a chat record', ['628111@s.whatsapp.net'], '999@lid'],
+    ['the phone twin, when both twins have a chat record', ['628111@s.whatsapp.net', '999@lid'], '628111@c.us'],
+  ])('updates a lid-filed preview when the edit arrives through %s', (_label, chats, editedVia) => {
+    store.addLidMappings([{ lid: '999@lid', pn: '628111@s.whatsapp.net' }]);
+    store.recordMessage({
+      key: { remoteJid: '999@lid', id: 'M1' },
+      message: { conversation: 'secret' },
+      messageTimestamp: 200,
+    });
+    store.upsertChats(chats.map(id => ({ id })));
+    store.recordMessageEdit(editedVia, 'M1', '');
+    expect(store.listChats().find(c => c.id === '999@lid')?.lastMessage).toBe(editedVia === '999@lid' ? '' : 'secret');
+    expect(store.listChats().find(c => c.id === '628111@c.us')?.lastMessage).toBeUndefined();
+  });
+
+  it('keeps a deleted last message cleared when a late edit of it arrives', () => {
+    store.upsertChats([{ id: '628111@s.whatsapp.net', name: 'Alice' }]);
+    store.recordMessage({
+      key: { remoteJid: '628111@s.whatsapp.net', id: 'M1' },
+      message: { conversation: 'original' },
+      messageTimestamp: 200,
+    });
+    store.recordMessageEdit('628111@c.us', 'M1', '', 'revoked');
+    store.recordMessageEdit('628111@c.us', 'M1', 'written after the delete');
+    expect(store.listChats()[0]).toMatchObject({ lastMessage: '', lastMessageType: 'revoked' });
+
+    // A repeated delete changes nothing, and a newer message still replaces the cleared preview.
+    store.recordMessageEdit('628111@c.us', 'M1', '', 'revoked');
+    expect(store.listChats()[0]).toMatchObject({ lastMessage: '', lastMessageType: 'revoked' });
+    store.recordMessage({
+      key: { remoteJid: '628111@s.whatsapp.net', id: 'M2' },
+      message: { conversation: 'newer' },
+      messageTimestamp: 300,
+    });
+    expect(store.listChats()[0]).toMatchObject({ lastMessage: 'newer' });
+  });
+
+  it('keeps a deleted lid-filed preview cleared when a late edit arrives under the phone id', () => {
+    store.addLidMappings([{ lid: '999@lid', pn: '628111@s.whatsapp.net' }]);
+    store.recordMessage({
+      key: { remoteJid: '999@lid', id: 'M1' },
+      message: { conversation: 'secret' },
+      messageTimestamp: 200,
+    });
+    store.upsertChats([{ id: '628111@s.whatsapp.net' }, { id: '999@lid' }]);
+    const accept = (): boolean => true;
+    store.recordMessageEdit('628111@c.us', 'M1', '', 'revoked', accept);
+    store.recordMessageEdit('628111@c.us', 'M1', 'written after the delete', undefined, accept);
+    expect(store.listChats().find(c => c.id === '999@lid')).toMatchObject({
+      lastMessage: '',
+      lastMessageType: 'revoked',
+    });
+  });
+
+  it('does not let a change under another phone id reach the preview of a broadcast-list message filed under a lid', () => {
+    // A received broadcast-list message previews in its sender's chat, with the list as the message's remoteJid.
+    store.recordMessage({
+      key: { remoteJid: 'list1@broadcast', participant: '111@lid', id: 'X', fromMe: false },
+      message: { conversation: 'bob broadcast text' },
+      messageTimestamp: 200,
+    });
+    store.upsertChats([{ id: '111@lid' }]);
+    // An accept that judges nothing: previewAuthor says the same for an envelope that carries no participant.
+    const accept = (): boolean => true;
+    store.recordMessageEdit('628333@s.whatsapp.net', 'X', 'text from another contact', undefined, accept);
+    store.recordMessageEdit('628333@s.whatsapp.net', 'X', '', 'revoked', accept);
+    expect(store.listChats()[0]).toMatchObject({ lastMessage: 'bob broadcast text' });
+    expect(store.listChats()[0].lastMessageType).not.toBe('revoked');
+  });
+
   it('flags a group chat by jid', () => {
     store.upsertChats([{ id: '123-456@g.us', name: 'Grp' }]);
     expect(store.listChats()[0].isGroup).toBe(true);
@@ -75,6 +556,193 @@ describe('BaileysSessionStore', () => {
     expect(store.lastMessage('unknown@s.whatsapp.net')).toBeNull();
   });
 
+  describe('getEphemeralExpiration (#473)', () => {
+    it('returns the cached disappearing-messages timer for a chat', () => {
+      store.upsertChats([{ id: '628111@s.whatsapp.net', ephemeralExpiration: 604800 }]);
+      expect(store.getEphemeralExpiration('628111@s.whatsapp.net')).toBe(604800);
+    });
+
+    it('accepts a neutral @c.us id and folds it to the engine dialect for lookup', () => {
+      store.upsertChats([{ id: '628111@s.whatsapp.net', ephemeralExpiration: 86400 }]);
+      expect(store.getEphemeralExpiration('628111@c.us')).toBe(86400);
+    });
+
+    it('returns undefined when the chat is unknown, disabled (0), or null (no forced disappear)', () => {
+      store.upsertChats([{ id: '628222@s.whatsapp.net', ephemeralExpiration: 0 }]);
+      store.upsertChats([{ id: '628333@s.whatsapp.net', ephemeralExpiration: null }]);
+      store.upsertChats([{ id: '628444@s.whatsapp.net' }]); // field absent
+      expect(store.getEphemeralExpiration('628222@s.whatsapp.net')).toBeUndefined();
+      expect(store.getEphemeralExpiration('628333@s.whatsapp.net')).toBeUndefined();
+      expect(store.getEphemeralExpiration('628444@s.whatsapp.net')).toBeUndefined();
+      expect(store.getEphemeralExpiration('nope@s.whatsapp.net')).toBeUndefined();
+    });
+
+    it('learns the timer from an inbound message ephemeralDuration without any chats.* upsert', () => {
+      // The real-world case: Chat.ephemeralExpiration is never populated, but every inbound message in
+      // a disappearing chat carries the live timer. A neutral @c.us send target must resolve it too.
+      store.recordMessage({
+        key: { remoteJid: '628111@s.whatsapp.net', fromMe: false, id: 'M1' },
+        message: { conversation: 'hi' },
+        messageTimestamp: 100,
+        ephemeralDuration: 7776000,
+      });
+      expect(store.getEphemeralExpiration('628111@s.whatsapp.net')).toBe(7776000);
+      expect(store.getEphemeralExpiration('628111@c.us')).toBe(7776000);
+    });
+
+    it('resolves a timer learned under @lid when the send targets the phone jid (#473 LID migration)', () => {
+      store.addLidMappings([{ lid: '41562515988583@lid', pn: '5491169954736@s.whatsapp.net' }]);
+      store.recordMessage({
+        key: { remoteJid: '41562515988583@lid', fromMe: false, id: 'M2' },
+        message: { conversation: 'hola' },
+        messageTimestamp: 100,
+        ephemeralDuration: 7776000,
+      });
+      // matchwa replies to the neutral phone jid OpenWA delivered on the webhook — the prior no-op case.
+      expect(store.getEphemeralExpiration('5491169954736@c.us')).toBe(7776000);
+      expect(store.getEphemeralExpiration('5491169954736@s.whatsapp.net')).toBe(7776000);
+      expect(store.getEphemeralExpiration('41562515988583@lid')).toBe(7776000);
+    });
+
+    it('ignores a non-positive ephemeralDuration and never clears a known timer', () => {
+      store.recordMessage({
+        key: { remoteJid: '628111@s.whatsapp.net', fromMe: false, id: 'M1' },
+        message: { conversation: 'hi' },
+        messageTimestamp: 100,
+        ephemeralDuration: 86400,
+      });
+      store.recordMessage({
+        key: { remoteJid: '628111@s.whatsapp.net', fromMe: false, id: 'M2' },
+        message: { conversation: 'later' },
+        messageTimestamp: 200,
+        ephemeralDuration: 0,
+      });
+      expect(store.getEphemeralExpiration('628111@s.whatsapp.net')).toBe(86400);
+    });
+
+    it('drops a message-learned timer once chats.update turns disappearing messages off', () => {
+      // Baileys reports the EPHEMERAL_SETTING change as chats.update with ephemeralExpiration null; later
+      // messages carry no expiration, so only this update can retire the timer the cache learned.
+      store.recordMessage({
+        key: { remoteJid: '628111@s.whatsapp.net', fromMe: false, id: 'M1' },
+        message: { extendedTextMessage: { text: 'hi', contextInfo: { expiration: 86400 } } },
+        messageTimestamp: 100,
+      });
+      store.upsertChats([{ id: '628111@s.whatsapp.net', ephemeralSettingTimestamp: 200, ephemeralExpiration: null }]);
+      store.recordMessage({
+        key: { remoteJid: '628111@s.whatsapp.net', fromMe: false, id: 'M2' },
+        message: { conversation: 'later' },
+        messageTimestamp: 300,
+      });
+      expect(store.getEphemeralExpiration('628111@s.whatsapp.net')).toBeUndefined();
+      expect(store.getEphemeralExpiration('628111@c.us')).toBeUndefined();
+    });
+
+    it.each([
+      ['628111@s.whatsapp.net', '628111@s.whatsapp.net'],
+      ['111@lid', '628111@s.whatsapp.net'],
+      ['628111@s.whatsapp.net', '111@lid'],
+    ])('keeps a timer the %s chat turned off when an older %s message arrives later', (chat, from) => {
+      // A reconnect flush delivers chats.update before messages.upsert, and history sync applies the chats
+      // before their messages, so a message stamped under the old timer can be recorded after the change.
+      store.addLidMappings([{ lid: '111@lid', pn: '628111@s.whatsapp.net' }]);
+      store.upsertChats([{ id: chat, ephemeralSettingTimestamp: 200, ephemeralExpiration: null }]);
+      store.recordMessage({
+        key: { remoteJid: from, fromMe: false, id: 'M1' },
+        message: { extendedTextMessage: { text: 'hi', contextInfo: { expiration: 86400 } } },
+        messageTimestamp: 100,
+      });
+      expect(store.getEphemeralExpiration('628111@c.us')).toBeUndefined();
+      expect(store.getEphemeralExpiration('111@lid')).toBeUndefined();
+      store.recordMessage({
+        key: { remoteJid: from, fromMe: false, id: 'M2' },
+        message: { extendedTextMessage: { text: 'on again', contextInfo: { expiration: 604800 } } },
+        messageTimestamp: 300,
+      });
+      expect(store.getEphemeralExpiration('628111@c.us')).toBe(604800);
+    });
+
+    it('takes a changed timer from chats.update over the one learned from messages', () => {
+      store.recordMessage({
+        key: { remoteJid: '628111@s.whatsapp.net', fromMe: false, id: 'M1' },
+        message: { extendedTextMessage: { text: 'hi', contextInfo: { expiration: 86400 } } },
+        messageTimestamp: 100,
+      });
+      store.upsertChats([{ id: '628111@s.whatsapp.net', ephemeralExpiration: 604800 }]);
+      expect(store.getEphemeralExpiration('628111@c.us')).toBe(604800);
+    });
+
+    it('applies a lid-keyed chats.update to the timer an own send cached under the phone twin', () => {
+      store.addLidMappings([{ lid: '111@lid', pn: '628111@s.whatsapp.net' }]);
+      store.upsertChats([{ id: '111@lid', ephemeralExpiration: 86400 }]);
+      store.recordMessage({
+        key: { remoteJid: '628111@s.whatsapp.net', fromMe: true, id: 'S1' },
+        message: { extendedTextMessage: { text: 'sent', contextInfo: { expiration: 86400 } } },
+        messageTimestamp: 100,
+      });
+      store.upsertChats([{ id: '111@lid', ephemeralExpiration: 604800 }]);
+      expect(store.getEphemeralExpiration('628111@c.us')).toBe(604800);
+      store.upsertChats([{ id: '111@lid', ephemeralExpiration: null }]);
+      expect(store.getEphemeralExpiration('628111@c.us')).toBeUndefined();
+      expect(store.getEphemeralExpiration('628111@s.whatsapp.net')).toBeUndefined();
+    });
+
+    it.each([
+      ['111@lid', '628111@s.whatsapp.net'],
+      ['628111@s.whatsapp.net', '111@lid'],
+    ])('clears a timer stored on the %s chat when the %s twin turns it off', (stored, updated) => {
+      store.addLidMappings([{ lid: '111@lid', pn: '628111@s.whatsapp.net' }]);
+      store.upsertChats([{ id: stored, ephemeralExpiration: 86400 }]);
+      store.upsertChats([{ id: updated, ephemeralExpiration: null }]);
+      expect(store.getEphemeralExpiration('111@lid')).toBeUndefined();
+      expect(store.getEphemeralExpiration('628111@s.whatsapp.net')).toBeUndefined();
+      expect(store.getEphemeralExpiration('628111@c.us')).toBeUndefined();
+    });
+
+    it('keeps a message-learned timer when a chat update does not carry ephemeralExpiration', () => {
+      store.recordMessage({
+        key: { remoteJid: '628111@s.whatsapp.net', fromMe: false, id: 'M1' },
+        message: { extendedTextMessage: { text: 'hi', contextInfo: { expiration: 86400 } } },
+        messageTimestamp: 100,
+      });
+      store.upsertChats([{ id: '628111@s.whatsapp.net', unreadCount: 2 }]);
+      expect(store.getEphemeralExpiration('628111@s.whatsapp.net')).toBe(86400);
+    });
+
+    it('prefers the message-learned timer over a stale Chat.ephemeralExpiration', () => {
+      store.upsertChats([{ id: '628111@s.whatsapp.net', ephemeralExpiration: 604800 }]);
+      store.recordMessage({
+        key: { remoteJid: '628111@s.whatsapp.net', fromMe: false, id: 'M1' },
+        message: { conversation: 'hi' },
+        messageTimestamp: 100,
+        ephemeralDuration: 7776000,
+      });
+      expect(store.getEphemeralExpiration('628111@s.whatsapp.net')).toBe(7776000);
+    });
+
+    it('learns the timer from contextInfo.expiration when ephemeralDuration is absent (live 1:1)', () => {
+      // WebMessageInfo.ephemeralDuration is empty on a live 1:1 upsert; the per-message expiration on the
+      // content's contextInfo is the reliable source.
+      store.recordMessage({
+        key: { remoteJid: '628111@s.whatsapp.net', fromMe: false, id: 'M1' },
+        message: { extendedTextMessage: { text: 'hi', contextInfo: { expiration: 7776000 } } },
+        messageTimestamp: 100,
+      });
+      expect(store.getEphemeralExpiration('628111@s.whatsapp.net')).toBe(7776000);
+    });
+
+    it('unwraps an ephemeralMessage envelope to read contextInfo.expiration', () => {
+      store.recordMessage({
+        key: { remoteJid: '628111@s.whatsapp.net', fromMe: false, id: 'M2' },
+        message: {
+          ephemeralMessage: { message: { extendedTextMessage: { text: 'hi', contextInfo: { expiration: 86400 } } } },
+        },
+        messageTimestamp: 100,
+      });
+      expect(store.getEphemeralExpiration('628111@c.us')).toBe(86400);
+    });
+  });
+
   it('resolves a phone jid to its user-part, a lid via lidPnMappings, and a contact phoneNumber', () => {
     expect(store.resolvePhone('628111@s.whatsapp.net')).toBe('628111');
     store.addLidMappings([{ lid: '111@lid', pn: '628999@s.whatsapp.net' }]);
@@ -82,5 +750,1883 @@ describe('BaileysSessionStore', () => {
     store.upsertContacts([{ id: '222@lid', phoneNumber: '628222@s.whatsapp.net' }]);
     expect(store.resolvePhone('222@lid')).toBe('628222');
     expect(store.resolvePhone('333@lid')).toBeNull();
+  });
+
+  it('returns the user-part of an already-neutral @c.us id (a resolved-lid sender arrives as @c.us)', () => {
+    // Once inbound ids are canonicalized, a resolved lid reaches resolvePhone as <phone>@c.us. Without
+    // this branch senderPhone regresses to null for exactly the case the feature exists to surface.
+    expect(store.resolvePhone('628111@c.us')).toBe('628111');
+    expect(store.resolvePhone('628111:5@c.us')).toBe('628111');
+  });
+
+  it('resolves a :device-suffixed lid via the device-stripped mapping', () => {
+    store.addLidMappings([{ lid: '111@lid', pn: '628999@s.whatsapp.net' }]);
+    expect(store.resolvePhone('111:7@lid')).toBe('628999');
+  });
+
+  describe('toNeutralChat contact-name resolution (#369)', () => {
+    it('keeps the chat title when Baileys supplies one (it wins over the contact)', () => {
+      store.upsertChats([{ id: '628111@s.whatsapp.net', name: 'Chat Title' }]);
+      store.upsertContacts([{ id: '628111@s.whatsapp.net', name: 'Saved Name' }]);
+      expect(store.listChats()[0].name).toBe('Chat Title');
+    });
+
+    it('falls back to the saved contact name for a titleless bare-number chat', () => {
+      store.upsertChats([{ id: '628111@s.whatsapp.net' }]); // no chat title
+      store.upsertContacts([{ id: '628111@s.whatsapp.net', name: 'Alice' }]);
+      expect(store.listChats()[0].name).toBe('Alice');
+    });
+
+    it('resolves a saved name for a @lid chat via the lid->pn mapping', () => {
+      store.upsertChats([{ id: '111@lid' }]); // titleless, lid-keyed
+      store.addLidMappings([{ lid: '111@lid', pn: '628999@s.whatsapp.net' }]);
+      store.upsertContacts([{ id: '628999@s.whatsapp.net', name: 'Carol' }]);
+      expect(store.listChats()[0]).toMatchObject({ name: 'Carol', phone: '628999' });
+    });
+
+    it('does not list a privacy id as the name when the phone is known', () => {
+      store.addLidMappings([{ lid: '111@lid', pn: '628999@s.whatsapp.net' }]);
+      store.upsertChats([{ id: '111@lid', name: '111' }]);
+      expect(store.listChats()[0]).toMatchObject({ name: '', phone: '628999' });
+    });
+
+    it('leaves a privacy id with no mapping unnamed and without a phone', () => {
+      store.upsertChats([{ id: '111@lid' }]);
+      expect(store.listChats()[0].name).toBe('');
+      expect(store.listChats()[0].phone).toBeUndefined();
+    });
+
+    it('uses pushName (notify) when no saved/verified name exists', () => {
+      store.upsertChats([{ id: '628222@s.whatsapp.net' }]);
+      store.upsertContacts([{ id: '628222@s.whatsapp.net', notify: 'Dave' }]);
+      expect(store.listChats()[0].name).toBe('Dave');
+    });
+
+    it('falls back to the raw user-part when nothing is known (last resort)', () => {
+      store.upsertChats([{ id: '628333@s.whatsapp.net' }]);
+      expect(store.listChats()[0].name).toBe('628333');
+    });
+
+    describe('a privacy-id chat the store can name', () => {
+      // The in-memory mirror of the shared table: pairs this session has not learned itself.
+      const lidTable = (pairs: Record<string, string>) => {
+        const getCached = jest.fn((lid: string) => pairs[lid]);
+        return {
+          getCached,
+          resolveLid: jest.fn((jid: string) => getCached(userPart(jid)) ?? null),
+          lidsForPhone: jest.fn(() => [] as string[]),
+          remember: jest.fn(() => Promise.resolve(true)),
+        };
+      };
+
+      it('lists the push name when the contact record holds the privacy id as its saved name', () => {
+        store.upsertChats([{ id: '111@lid', name: '111' }]);
+        store.upsertContacts([{ id: '111@lid', name: '111' }]);
+        store.upsertContacts([{ id: '111@lid', notify: 'Alice' }]);
+        expect(store.listChats()[0].name).toBe('Alice');
+      });
+
+      // A history chunk files a contact for every conversation, titled by the privacy id's digits when it has no name.
+      it.each([
+        ['saved name', { name: 'Carol' }, { name: '111' }],
+        ['verified name', { verifiedName: 'Acme Ltd' }, { verifiedName: '111@lid' }],
+        ['push name', { notify: 'Alice' }, { notify: '111' }],
+      ] as const)('keeps a held %s when a later title of the chat is only the privacy id', (_field, held, later) => {
+        const [expected] = Object.values(held);
+        store.upsertChats([{ id: '111@lid' }]);
+        store.upsertContacts([{ id: '111@lid', ...held }]);
+        store.upsertContacts([{ id: '111@lid', ...later }]);
+        expect(store.listChats()[0].name).toBe(expected);
+      });
+
+      it('takes a later real name over a held one, and a name over a held privacy id', () => {
+        store.upsertChats([{ id: '111@lid' }]);
+        store.upsertContacts([{ id: '111@lid', name: 'Carol' }]);
+        store.upsertContacts([{ id: '111@lid', name: 'Caroline' }]);
+        expect(store.listChats()[0].name).toBe('Caroline');
+        store.upsertContacts([{ id: '222@lid', name: '222' }]);
+        store.upsertContacts([{ id: '222@lid', name: 'Dan' }]);
+        store.upsertChats([{ id: '222@lid' }]);
+        expect(store.listChats().find(c => c.id === '222@lid')?.name).toBe('Dan');
+      });
+
+      it('lists the verified name before the push name when the saved name is only the privacy id', () => {
+        store.upsertChats([{ id: '111@lid' }]);
+        store.upsertContacts([{ id: '111@lid', name: '111@lid', verifiedName: 'Acme Ltd', notify: 'Alice' }]);
+        expect(store.listChats()[0].name).toBe('Acme Ltd');
+      });
+
+      it('lists the saved name, else the verified name, else the push name', () => {
+        store.upsertChats([{ id: '111@lid' }, { id: '222@lid' }, { id: '333@lid' }]);
+        store.upsertContacts([
+          { id: '111@lid', name: 'Saved', verifiedName: 'Verified', notify: 'Push' },
+          { id: '222@lid', verifiedName: 'Verified', notify: 'Push' },
+          { id: '333@lid', notify: 'Push' },
+        ]);
+        expect(Object.fromEntries(store.listChats().map(c => [c.id, c.name]))).toEqual({
+          '111@lid': 'Saved',
+          '222@lid': 'Verified',
+          '333@lid': 'Push',
+        });
+      });
+
+      it.each(['628999@s.whatsapp.net', '628999@c.us'])(
+        'lists the contact saved as %s, behind a phone only the shared table holds',
+        key => {
+          const s = new BaileysSessionStore(lidTable({ '111': '628999' }));
+          s.upsertChats([{ id: '111@lid' }]);
+          s.upsertContacts([{ id: key, name: 'Carol' }]);
+          expect(s.listChats()[0]).toMatchObject({ name: 'Carol', phone: '628999' });
+        },
+      );
+
+      it('lists the contact saved behind the phone once the session map evicted the pair the table holds', () => {
+        const before = process.env.BAILEYS_SESSION_STORE_MAX_ENTRIES;
+        process.env.BAILEYS_SESSION_STORE_MAX_ENTRIES = '1';
+        try {
+          const s = new BaileysSessionStore(lidTable({ '111': '628999', '222': '628222' }));
+          s.addLidMappings([{ lid: '111@lid', pn: '628999@s.whatsapp.net' }]);
+          s.addLidMappings([{ lid: '222@lid', pn: '628222@s.whatsapp.net' }]); // evicts the first pair
+          s.upsertContacts([{ id: '628999@s.whatsapp.net', name: 'Carol' }]); // pinned: the cap never evicts a saved name
+          s.upsertChats([{ id: '111@lid' }]);
+          expect(s.listChats()[0]).toMatchObject({ name: 'Carol', phone: '628999' });
+        } finally {
+          if (before === undefined) delete process.env.BAILEYS_SESSION_STORE_MAX_ENTRIES;
+          else process.env.BAILEYS_SESSION_STORE_MAX_ENTRIES = before;
+        }
+      });
+
+      it('lists the phone and no name for a pair only the shared table holds when no contact is saved', () => {
+        const s = new BaileysSessionStore(lidTable({ '111': '628999' }));
+        s.upsertChats([{ id: '111@lid' }]);
+        expect(s.listChats()[0]).toMatchObject({ name: '', phone: '628999' });
+      });
+
+      it('asks the shared table at most twice for a privacy-id row, naming it included', () => {
+        // Once for the keys of the chat's state and once for the phone the row lists; naming adds no read.
+        const table = lidTable({ '111': '628999' });
+        const s = new BaileysSessionStore(table);
+        s.upsertChats([{ id: '111@lid' }, { id: '222@lid' }]);
+        s.upsertContacts([{ id: '628999@s.whatsapp.net', name: 'Carol' }]);
+        expect(Object.fromEntries(s.listChats().map(c => [c.id, c.name]))).toEqual({
+          '111@lid': 'Carol',
+          '222@lid': '',
+        });
+        const asked = (lid: string) => table.getCached.mock.calls.filter(([called]) => called === lid).length;
+        expect(asked('111')).toBeLessThanOrEqual(2);
+        expect(asked('222')).toBeLessThanOrEqual(2);
+      });
+
+      describe('with the stored table', () => {
+        let db: DataSource;
+        beforeEach(async () => {
+          db = await new DataSource({
+            type: 'better-sqlite3',
+            database: ':memory:',
+            entities: [LidMapping],
+            synchronize: true,
+          }).initialize();
+        });
+        afterEach(async () => {
+          await db.destroy();
+        });
+
+        it('lists the phone and the saved contact behind it for a pair the table held at start', async () => {
+          const repo = db.getRepository(LidMapping);
+          await repo.save({ lid: '111', phone: '628999', sessionId: null, isReported: true });
+          const table = new LidMappingStoreService(repo);
+          await table.onModuleInit(); // what the boot does
+          const s = new BaileysSessionStore(table, 'sess'); // a new engine has learned no pair yet
+          s.upsertChats([{ id: '111@lid' }]);
+          s.upsertContacts([{ id: '628999@s.whatsapp.net', name: 'Carol' }]);
+          expect(s.listChats()[0]).toMatchObject({ name: 'Carol', phone: '628999' });
+        });
+      });
+
+      it.each(['111', '111@lid', ' 111 '])('lists no name for a chat titled %j, the privacy id itself', title => {
+        store.upsertChats([{ id: '111@lid', name: title }]);
+        expect(store.listChats()[0].name).toBe('');
+      });
+
+      it.each([
+        { name: '111' },
+        { name: '111@lid' },
+        { verifiedName: '111' },
+        { notify: '111' },
+        { notify: ' 111@lid ' },
+      ])('lists no name for a contact record that holds only the privacy id, as %j', record => {
+        store.upsertChats([{ id: '111@lid' }]);
+        store.upsertContacts([{ id: '111@lid', ...record }]);
+        expect(store.listChats()[0].name).toBe('');
+      });
+
+      it.each([{ name: '111' }, { verifiedName: '111@lid' }, { notify: '111' }])(
+        'lists no name for the contact behind the phone when it holds only the privacy id, as %j',
+        record => {
+          store.addLidMappings([{ lid: '111@lid', pn: '628999@s.whatsapp.net' }]);
+          store.upsertChats([{ id: '111@lid' }]);
+          store.upsertContacts([{ id: '628999@s.whatsapp.net', ...record }]);
+          expect(store.listChats()[0]).toMatchObject({ name: '', phone: '628999' });
+        },
+      );
+
+      it('lists a contact name trimmed, and takes the next name for a blank one', () => {
+        store.upsertChats([{ id: '628222@s.whatsapp.net' }]);
+        store.upsertContacts([{ id: '628222@s.whatsapp.net', name: '  ', notify: ' Dave ' }]);
+        expect(store.listChats()[0].name).toBe('Dave');
+      });
+
+      it.each([
+        ['120363111@g.us', '  Team  ', 'Team'],
+        ['120363111@g.us', '', '120363111'],
+        ['120363111@g.us', '   ', '120363111'],
+        ['628111@s.whatsapp.net', '', '628111'],
+        ['120363999@newsletter', '', '120363999'],
+      ])('lists the chat %s titled %j as %j', (id, title, listed) => {
+        store.upsertChats([{ id, name: title }]);
+        expect(store.listChats()[0].name).toBe(listed);
+      });
+
+      // A history chunk folds the chat's title into the push name, and a chat with no name is titled by the digits: a
+      // contact read and a status poster report those as no name, as the chat list does.
+      it.each([
+        ['push name', { notify: '111' }],
+        ['push name', { notify: ' 111@lid ' }],
+        ['saved name', { name: '111@lid' }],
+        ['verified name', { verifiedName: '111' }],
+      ])('stores no %s that is only the privacy id, as %j', (_what, record) => {
+        store.upsertContacts([{ id: '111@lid', ...record }]);
+        const contact = store.findContact('111@lid');
+        expect(contact).toMatchObject({ id: '111@lid', isMyContact: false });
+        expect(contact?.name).toBeUndefined();
+        expect(contact?.pushName).toBeUndefined();
+        expect(store.listContacts()).toEqual([]);
+      });
+
+      it('keeps the other names of a record that brings the privacy id in one of them', () => {
+        store.upsertContacts([{ id: '111@lid', name: '111', notify: 'Alice' }]);
+        store.upsertContacts([{ id: '111@lid', verifiedName: 'Acme Ltd', notify: '111' }]);
+        expect(store.findContact('111@lid')).toMatchObject({ name: 'Acme Ltd', pushName: 'Alice', isMyContact: false });
+      });
+
+      it('keeps the digits a phone-keyed contact brings as its push name', () => {
+        store.upsertContacts([{ id: '628111@s.whatsapp.net', lid: '111@lid', notify: '111' }]);
+        expect(store.findContact('628111@s.whatsapp.net')?.pushName).toBe('111');
+      });
+    });
+  });
+
+  describe('recordKeyLidMappings (#362)', () => {
+    it('does not pair an own-message recipient with the sender phone carried as remoteJidAlt', () => {
+      store.recordKeyLidMappings({ remoteJid: '111@lid', remoteJidAlt: '628999@s.whatsapp.net', fromMe: true });
+      expect(store.resolvePhone('111@lid')).toBeNull();
+    });
+
+    it('learns a lid->pn mapping from an inbound message key (remoteJid/remoteJidAlt)', () => {
+      store.recordKeyLidMappings({ remoteJid: '111@lid', remoteJidAlt: '628999@s.whatsapp.net' });
+      expect(store.resolvePhone('111@lid')).toBe('628999');
+    });
+
+    it('learns a group participant lid->pn mapping (participant/participantAlt)', () => {
+      store.recordKeyLidMappings({ participant: '222@lid', participantAlt: '628222@s.whatsapp.net' });
+      expect(store.resolvePhone('222@lid')).toBe('628222');
+    });
+
+    it('retains the LID identity after learning its phone for display', () => {
+      expect(store.toNeutralJid('111@lid')).toBe('111@lid'); // unknown yet
+      store.recordKeyLidMappings({ remoteJid: '111@lid', remoteJidAlt: '628111@s.whatsapp.net' });
+      expect(store.toNeutralJid('111@lid')).toBe('111@lid');
+      expect(store.resolvePhone('111@lid')).toBe('628111');
+    });
+
+    it('pairs the sender of a broadcast-list or status message with its alt, never the list id', () => {
+      store.recordKeyLidMappings({
+        remoteJid: '1700000000@broadcast',
+        remoteJidAlt: '111@lid',
+        participant: '628222@s.whatsapp.net',
+      });
+      store.recordKeyLidMappings({
+        remoteJid: 'status@broadcast',
+        remoteJidAlt: '333@lid',
+        participant: '628444@s.whatsapp.net',
+      });
+      expect(store.resolvePhone('111@lid')).toBe('628222');
+      expect(store.resolvePhone('333@lid')).toBe('628444');
+    });
+
+    it('ignores a pair whose phone side is not a user id', () => {
+      store.recordKeyLidMappings({ remoteJid: '120363@g.us', remoteJidAlt: '555@lid' });
+      expect(store.resolvePhone('555@lid')).toBeNull();
+    });
+
+    it("files a received list message's preview under the sender's chat", () => {
+      store.upsertChats([{ id: '628222@s.whatsapp.net' }]);
+      store.recordMessage({
+        key: { remoteJid: '1700000000@broadcast', participant: '628222@s.whatsapp.net', fromMe: false, id: 'L1' },
+        message: { conversation: 'offer' },
+        messageTimestamp: 100,
+      });
+      expect(store.listChats()).toEqual([
+        expect.objectContaining({ id: '628222@c.us', lastMessage: 'offer', timestamp: 100 }),
+      ]);
+      expect(store.lastInboundMessage('628222@c.us')?.key.id).toBe('L1');
+    });
+
+    it('ignores a key with no lid/pn pair', () => {
+      store.recordKeyLidMappings({});
+      store.recordKeyLidMappings({ remoteJid: '333@lid' }); // lid without an Alt counterpart
+      expect(store.resolvePhone('333@lid')).toBeNull();
+    });
+  });
+
+  describe('toNeutralJid', () => {
+    it('maps @s.whatsapp.net to @c.us and strips the device suffix', () => {
+      expect(store.toNeutralJid('628111@s.whatsapp.net')).toBe('628111@c.us');
+      expect(store.toNeutralJid('628111:12@s.whatsapp.net')).toBe('628111@c.us');
+    });
+
+    it('keeps groups as @g.us and passes status@broadcast / empty through', () => {
+      expect(store.toNeutralJid('120363-456@g.us')).toBe('120363-456@g.us');
+      expect(store.toNeutralJid('status@broadcast')).toBe('status@broadcast');
+      expect(store.toNeutralJid('')).toBe('');
+    });
+
+    it('retains the raw LID while its display phone is known', () => {
+      expect(store.toNeutralJid('111@lid')).toBe('111@lid'); // no mapping yet
+      store.addLidMappings([{ lid: '111@lid', pn: '628999@s.whatsapp.net' }]);
+      expect(store.toNeutralJid('111@lid')).toBe('111@lid');
+      expect(store.resolvePhone('111@lid')).toBe('628999');
+    });
+
+    it('is idempotent on an already-neutral @c.us id', () => {
+      expect(store.toNeutralJid('628111@c.us')).toBe('628111@c.us');
+    });
+  });
+
+  describe('neutral contact/chat ids (round-trip)', () => {
+    it('emits @c.us listing ids and accepts a neutral id back on lookup', () => {
+      store.upsertContacts([{ id: '628111@s.whatsapp.net', name: 'Alice' }]);
+      store.upsertChats([{ id: '628111@s.whatsapp.net', name: 'Alice' }]);
+      store.recordMessage({
+        key: { remoteJid: '628111@s.whatsapp.net', fromMe: false, id: 'M1' },
+        message: { conversation: 'hi' },
+        messageTimestamp: 100,
+      });
+      // listing emits the neutral dialect
+      expect(store.listContacts()[0].id).toBe('628111@c.us');
+      expect(store.listChats()[0].id).toBe('628111@c.us');
+      // and the read-back paths accept that same neutral id (folded to the engine dialect internally)
+      expect(store.findContact('628111@c.us')?.id).toBe('628111@c.us');
+      expect(store.lastMessage('628111@c.us')?.key.id).toBe('M1');
+    });
+
+    it('keeps group ids unchanged', () => {
+      store.upsertChats([{ id: '120363-9@g.us', name: 'Team' }]);
+      expect(store.listChats()[0].id).toBe('120363-9@g.us');
+    });
+  });
+
+  describe('one preview per chat across id dialects', () => {
+    const PHONE = '628111@s.whatsapp.net';
+    const LID = '484848@lid';
+    const msg = (remoteJid: string, id: string, ts: number, fromMe = false) => ({
+      key: { remoteJid, fromMe, id },
+      message: { conversation: id },
+      messageTimestamp: ts,
+    });
+
+    it('files an own send addressed as @c.us under the chat Baileys keyed by phone', () => {
+      store.upsertChats([{ id: PHONE, conversationTimestamp: 5 }]);
+      store.recordMessage(msg('628111@c.us', 'OUT', 100, true));
+      expect(store.listChats()).toEqual([
+        expect.objectContaining({ id: '628111@c.us', timestamp: 100, lastMessage: 'OUT' }),
+      ]);
+      expect(store.lastMessage('628111@c.us')).toEqual(expect.objectContaining({ jid: PHONE }));
+    });
+
+    it('files a lid-addressed send under the phone-keyed chat once the mapping is known', () => {
+      store.upsertChats([{ id: PHONE }]);
+      store.addLidMappings([{ lid: LID, pn: PHONE }]);
+      store.recordMessage(msg(LID, 'OUT', 100, true));
+      expect(store.listChats()).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ id: LID, timestamp: 100, lastMessage: 'OUT' }),
+          expect.objectContaining({ id: '628111@c.us', lastMessage: undefined }),
+        ]),
+      );
+    });
+
+    it('finds a lid-keyed chat from the @c.us id the listing publishes', () => {
+      store.upsertChats([{ id: LID }]);
+      store.recordKeyLidMappings({ remoteJid: LID, remoteJidAlt: PHONE });
+      store.recordMessage(msg(LID, 'IN', 100));
+      expect(store.listChats()[0].id).toBe(LID);
+      expect(store.lastMessage('628111@c.us')).toEqual({
+        key: { remoteJid: LID, fromMe: false, id: 'IN' },
+        timestamp: 100,
+        jid: LID,
+      });
+      store.recordMessageEdit(LID, 'IN', 'edited');
+      expect(store.listChats()[0].lastMessage).toBe('edited');
+    });
+
+    it('removes a deleted chat and its preview under every spelling, and resets and marks its chat state', () => {
+      const fake = new FakeChatStateStore();
+      const s = new BaileysSessionStore(undefined, 'sess-1', fake);
+      s.upsertChats([{ id: LID, name: 'Alice', pinned: 7 }]);
+      s.recordKeyLidMappings({ remoteJid: LID, remoteJidAlt: PHONE });
+      s.recordMessage(msg(LID, 'IN', 100));
+      s.upsertChats([{ id: '120363@g.us', name: 'Team' }]);
+      // Baileys names the deleted chat by the id its app-state index carries, here the phone twin.
+      s.removeChats([PHONE]);
+      expect(s.listChats()).toEqual([expect.objectContaining({ id: '120363@g.us' })]);
+      expect(s.lastMessage('628111@c.us')).toBeNull();
+      expect(s.lastInboundMessage('628111@c.us')).toBeNull();
+      expect([...fake.rows.keys()]).toEqual([`sess-1\u0000${PHONE}`]);
+      expect(fake.get('sess-1', PHONE)).toMatchObject({ pinned: false, deletedAt: expect.any(Number) as number });
+      expect(s.chatDeletedAt(LID)).toBe(fake.get('sess-1', PHONE)?.deletedAt);
+      // A later message re-creates the chat without the pin the deleted one carried, and the mark goes.
+      const later = Math.ceil(Date.now() / 1000) + 60;
+      s.recordMessage(msg(LID, 'NEW', later));
+      expect(s.listChats().find(c => c.id === LID)).toEqual(expect.objectContaining({ pinned: false }));
+      expect(fake.rows.size).toBe(0);
+      expect(s.chatDeletedAt('628111@c.us')).toBeNull();
+    });
+
+    it('finds the lid twin through the persisted table as well', () => {
+      const lidStore = {
+        getCached: jest.fn(() => undefined),
+        resolveLid: jest.fn(() => null),
+        lidsForPhone: jest.fn((phone: string) => (phone === '628111' ? ['484848'] : [])),
+        remember: jest.fn(() => Promise.resolve(true)),
+      };
+      const s = new BaileysSessionStore(lidStore, 'sess-1');
+      s.upsertChats([{ id: LID }]);
+      s.recordMessage(msg(LID, 'IN', 100));
+      expect(s.lastMessage('628111@c.us')?.jid).toBe(LID);
+    });
+
+    it('tracks the newest received message apart from the preview, for a read receipt', () => {
+      store.upsertChats([{ id: PHONE }]);
+      expect(store.lastInboundMessage('628111@c.us')).toBeNull();
+      store.recordMessage(msg(PHONE, 'IN', 100));
+      store.recordMessage(msg('628111@c.us', 'OUT', 200, true));
+      expect(store.lastMessage('628111@c.us')?.key.id).toBe('OUT');
+      expect(store.lastInboundMessage('628111@c.us')).toEqual({
+        key: { remoteJid: PHONE, fromMe: false, id: 'IN' },
+        timestamp: 100,
+      });
+      store.recordMessage(msg(PHONE, 'IN_OLDER', 50));
+      expect(store.lastInboundMessage(PHONE)?.key.id).toBe('IN');
+    });
+
+    describe('followsLastInbound: a message still being processed that would be the newest received', () => {
+      const pending = (over: Partial<{ chatJid: string; id: string; timestamp: number; order: number }> = {}) => ({
+        chatJid: PHONE,
+        id: 'NEW',
+        timestamp: 101,
+        order: 9,
+        ...over,
+      });
+      beforeEach(() => {
+        store.upsertChats([{ id: PHONE }]);
+        store.recordMessage(msg(PHONE, 'IN', 100));
+      });
+
+      it('is true for a message of a later second', () => {
+        expect(store.followsLastInbound('628111@c.us', [pending()])).toBe(true);
+      });
+
+      it('is true for a message of the same second that was observed later', () => {
+        expect(store.followsLastInbound('628111@c.us', [pending({ timestamp: 100, order: 9 })])).toBe(true);
+      });
+
+      it('is false for a message of the same second that was observed earlier', () => {
+        expect(store.followsLastInbound('628111@c.us', [pending({ timestamp: 100, order: 0 })])).toBe(false);
+      });
+
+      it('is false for a message of an earlier second', () => {
+        expect(store.followsLastInbound('628111@c.us', [pending({ timestamp: 99 })])).toBe(false);
+      });
+
+      it('is false for a repeat delivery of the newest message recorded', () => {
+        expect(store.followsLastInbound('628111@c.us', [pending({ id: 'IN', timestamp: 100, order: 9 })])).toBe(false);
+        expect(store.followsLastInbound('628111@c.us', [pending({ id: 'IN', timestamp: 101 })])).toBe(false);
+      });
+
+      it('is false for a message of another chat, and for none', () => {
+        expect(store.followsLastInbound('628111@c.us', [pending({ chatJid: '628222@s.whatsapp.net' })])).toBe(false);
+        expect(store.followsLastInbound('628111@c.us', [])).toBe(false);
+      });
+
+      it('is true when any one of several qualifies', () => {
+        const older = pending({ id: 'OLD', timestamp: 90 });
+        expect(store.followsLastInbound('628111@c.us', [older, pending()])).toBe(true);
+      });
+
+      it('is true for any message of the chat when none has been recorded', () => {
+        const fresh = new BaileysSessionStore();
+        expect(fresh.followsLastInbound('628111@c.us', [pending({ timestamp: 1, order: 0 })])).toBe(true);
+      });
+
+      it('finds the chat under any spelling of it', () => {
+        store.addLidMappings([{ lid: LID, pn: PHONE }]);
+        expect(store.followsLastInbound('628111@c.us', [pending({ chatJid: LID })])).toBe(true);
+        expect(store.followsLastInbound(LID, [pending({ chatJid: PHONE })])).toBe(true);
+        expect(store.followsLastInbound(PHONE, [pending({ chatJid: '628111@c.us' })])).toBe(true);
+      });
+    });
+
+    it('keeps one entry when a chat with no record yet is addressed in both dialects', () => {
+      store.recordMessage(msg('628111@c.us', 'OUT', 100, true));
+      store.recordKeyLidMappings({ remoteJid: LID, remoteJidAlt: PHONE });
+      store.recordMessage(msg(LID, 'IN', 200));
+      expect(store.lastMessage('628111@c.us')?.key.id).toBe('IN');
+      expect(store.lastMessage(LID)?.key.id).toBe('IN');
+    });
+
+    it('still finds a message filed under the lid before the mapping to the phone chat was learned', () => {
+      store.upsertChats([{ id: PHONE }]);
+      store.recordMessage(msg(LID, 'IN', 100));
+      store.addLidMappings([{ lid: LID, pn: PHONE }]);
+      for (const id of [LID, '628111@c.us']) {
+        expect(store.lastMessage(id)).toEqual({
+          key: { remoteJid: LID, fromMe: false, id: 'IN' },
+          timestamp: 100,
+          jid: PHONE,
+        });
+        expect(store.lastInboundMessage(id)?.key.id).toBe('IN');
+      }
+    });
+
+    it('prefers the newest message across twins over an older one under the chat key', () => {
+      store.upsertChats([{ id: PHONE }]);
+      store.recordMessage(msg(PHONE, 'OUT', 100, true));
+      store.recordMessage(msg(LID, 'IN', 200));
+      store.addLidMappings([{ lid: LID, pn: PHONE }]);
+      expect(store.lastMessage('628111@c.us')).toEqual(expect.objectContaining({ timestamp: 200, jid: PHONE }));
+    });
+  });
+
+  describe('one chat known under both its phone number and its lid', () => {
+    const SID = 'sess-1';
+    const PHONE = '628111@s.whatsapp.net';
+    const LID = '484848@lid';
+    const K = (c: string) => `${SID}\u0000${c}`;
+    let fake: FakeChatStateStore;
+    beforeEach(() => {
+      fake = new FakeChatStateStore();
+    });
+    const newStore = () => new BaileysSessionStore(undefined, SID, fake);
+    const flush = () => new Promise(resolve => setImmediate(resolve));
+    /** The count each row of the list carries, by the id it is listed under (the rows come in no promised order). */
+    const countsById = (s: BaileysSessionStore): Record<string, number | undefined> =>
+      Object.fromEntries(s.listChats().map(chat => [chat.id, chat.unreadCount]));
+    // A decoded proto.Conversation: the fields default to null on the prototype.
+    const historyChat = (id: string) =>
+      Object.assign(Object.create({ archived: null, pinned: null, muteEndTime: null }) as object, {
+        id,
+        name: 'Alice',
+      }) as Record<string, unknown>;
+
+    it('lists a state WhatsApp syncs under the lid on the phone row, across a restart', () => {
+      const s = newStore();
+      s.upsertChats([historyChat(PHONE)]);
+      s.addLidMappings([{ lid: LID, pn: PHONE }]);
+      s.upsertChats([
+        { id: LID, pinned: 1700000000 },
+        { id: LID, archived: true },
+        { id: LID, muteEndTime: -1 },
+      ]);
+      const expected = { id: '628111@c.us', name: 'Alice', pinned: true, archived: true, muted: true };
+      expect(s.listChats()).toEqual([expect.objectContaining(expected)]);
+      expect([...fake.rows.keys()]).toEqual([K(PHONE)]);
+
+      const restarted = newStore();
+      restarted.addLidMappings([{ lid: LID, pn: PHONE }]);
+      restarted.upsertChats([historyChat(PHONE)]);
+      expect(restarted.listChats()).toEqual([expect.objectContaining(expected)]);
+    });
+
+    it('reads a state filed under the lid before the mapping was known, and folds it on the next change', async () => {
+      const s = newStore();
+      s.upsertChats([{ id: LID, pinned: 3 }]);
+      expect([...fake.rows.keys()]).toEqual([K(LID)]);
+      s.upsertChats([{ id: PHONE, name: 'Alice' }]);
+      s.addLidMappings([{ lid: LID, pn: PHONE }]);
+      expect(s.listChats()).toEqual(
+        expect.arrayContaining([expect.objectContaining({ id: '628111@c.us', name: 'Alice', pinned: true })]),
+      );
+      await flush();
+      expect([...fake.rows.keys()]).toEqual([K(LID)]); // a listing writes nothing
+      // A later mute through either spelling folds the lid row onto the phone row.
+      s.upsertChats([{ id: LID, muteEndTime: -1 }]);
+      expect([...fake.rows.keys()]).toEqual([K(PHONE)]);
+      expect(s.listChats()[0]).toMatchObject({ pinned: true, muted: true });
+    });
+
+    it('adds no row for the unarchive a message carries, and still clears an archived chat with it', () => {
+      const s = newStore();
+      const G = '120363000000000002@g.us';
+      s.upsertChats([{ id: G, archived: true }]);
+      const message = { archived: false, readOnly: false, conversationTimestamp: 60, unreadCount: 1 };
+      s.upsertChats([
+        { id: PHONE, ...message },
+        { id: G, ...message },
+      ]);
+      expect([...fake.rows.keys()]).toEqual([K(G)]);
+      expect(fake.get(SID, G)).toMatchObject({ archived: false });
+      s.upsertChats([{ id: LID, pinned: null }]);
+      expect(fake.get(SID, LID)).toMatchObject({ pinned: false, observed: ['pinned'] });
+    });
+
+    it('finds the lid twin of one state update without indexing every mapping', () => {
+      const s = newStore();
+      s.upsertChats([{ id: LID, pinned: 3 }]);
+      s.addLidMappings([
+        { lid: LID, pn: PHONE },
+        { lid: '515151@lid', pn: '628222@s.whatsapp.net' },
+      ]);
+      const index = jest.spyOn(s as unknown as { lidsByPhone(): Map<string, string[]> }, 'lidsByPhone');
+      s.upsertChats([
+        { id: '120363000000000001@g.us', archived: false },
+        { id: PHONE, muteEndTime: -1 },
+      ]);
+      expect(index).not.toHaveBeenCalled();
+      expect([...fake.rows.keys()].sort()).toEqual([K('120363000000000001@g.us'), K(PHONE)]);
+      expect(fake.get(SID, PHONE)).toMatchObject({ pinned: true, muteEndTime: -1 });
+    });
+
+    const HOUR = 3_600_000;
+    const soon = Date.now() + HOUR;
+    const later = Date.now() + 2 * HOUR;
+
+    it.each([
+      [1000, 2000, later],
+      [2000, 1000, soon],
+    ])('lets the newer of two rows already on disk win (phone at %i, lid at %i)', async (phoneAt, lidAt, end) => {
+      fake.rows.set(K(PHONE), { muteEndTime: soon, archived: false, pinned: false, updatedAt: phoneAt });
+      fake.rows.set(K(LID), { muteEndTime: later, archived: false, pinned: false, updatedAt: lidAt });
+      const s = newStore();
+      s.addLidMappings([{ lid: LID, pn: PHONE }]);
+      s.upsertChats([historyChat(PHONE)]);
+      expect(s.listChats()[0].muteExpiration).toBe(end);
+      await flush();
+      expect([...fake.rows.keys()]).toEqual([K(PHONE), K(LID)]);
+      s.upsertChats([{ id: PHONE, archived: true }]);
+      expect([...fake.rows.keys()]).toEqual([K(PHONE)]);
+      expect(fake.get(SID, PHONE)).toMatchObject({ muteEndTime: end, archived: true });
+    });
+
+    it('keeps a pin on the older row when the newer row of the chat holds only a mute', () => {
+      const [mute, pin] = [['muteEndTime'], ['pinned']] as ChatStateField[][];
+      fake.rows.set(K(PHONE), { muteEndTime: later, archived: false, pinned: false, updatedAt: 2000, observed: mute });
+      fake.rows.set(K(LID), { muteEndTime: null, archived: false, pinned: true, updatedAt: 1000, observed: pin });
+      const s = newStore();
+      s.addLidMappings([{ lid: LID, pn: PHONE }]);
+      s.upsertChats([historyChat(PHONE)]);
+      expect(s.listChats()[0]).toMatchObject({ pinned: true, muted: true, muteExpiration: later });
+      s.upsertChats([{ id: PHONE, archived: true }]);
+      expect([...fake.rows.keys()]).toEqual([K(PHONE)]);
+      expect(fake.get(SID, PHONE)).toMatchObject({ muteEndTime: later, pinned: true, archived: true });
+    });
+
+    it('lets a later unpin synced under the unresolved lid outweigh the pin on the phone row', () => {
+      const s = newStore();
+      s.upsertChats([{ id: PHONE, pinned: 2 }]);
+      s.upsertChats([{ id: LID, pinned: 0 }]);
+      s.addLidMappings([{ lid: LID, pn: PHONE }]);
+      expect(s.listChats()).toEqual(
+        expect.arrayContaining([expect.objectContaining({ id: '628111@c.us', pinned: false })]),
+      );
+      s.upsertChats([{ id: PHONE, muteEndTime: -1 }]);
+      expect([...fake.rows.keys()]).toEqual([K(PHONE)]);
+      expect(s.listChats()[0]).toMatchObject({ pinned: false, muted: true });
+    });
+
+    it('keeps a pin on the older of two rows written before rows kept what they observed', () => {
+      fake.rows.set(K(PHONE), { muteEndTime: -1, archived: false, pinned: false, updatedAt: 2000 });
+      fake.rows.set(K(LID), { muteEndTime: null, archived: true, pinned: true, updatedAt: 1000 });
+      const s = newStore();
+      s.addLidMappings([{ lid: LID, pn: PHONE }]);
+      s.upsertChats([historyChat(PHONE)]);
+      expect(s.listChats()[0]).toMatchObject({ pinned: true, archived: true, muted: true });
+      s.upsertChats([{ id: PHONE, muteEndTime: -1 }]);
+      expect([...fake.rows.keys()]).toEqual([K(PHONE)]);
+      expect(s.listChats()[0]).toMatchObject({ pinned: true, archived: true, muted: true });
+    });
+
+    it('writes nothing while listing a chat that still has a lid twin row', () => {
+      fake.rows.set(K(LID), { muteEndTime: null, archived: true, pinned: false });
+      const s = newStore();
+      s.upsertChats([{ id: PHONE }]);
+      s.addLidMappings([{ lid: LID, pn: PHONE }]);
+      const writes = ['remember', 'fold', 'forget'].map(m => jest.spyOn(fake, m as 'remember'));
+      expect(s.listChats()[0].archived).toBe(true);
+      for (const w of writes) expect(w).not.toHaveBeenCalled();
+    });
+
+    it('reads the own lid row of a lid-keyed chat whose phone only its contact record knows', () => {
+      fake.rows.set(K(LID), { muteEndTime: null, archived: true, pinned: true });
+      const s = newStore();
+      s.upsertContacts([{ id: LID, phoneNumber: PHONE }]);
+      s.upsertChats([{ id: LID }]);
+      expect(s.listChats()).toEqual(
+        expect.arrayContaining([expect.objectContaining({ id: LID, archived: true, pinned: true })]),
+      );
+      s.upsertChats([{ id: LID, muteEndTime: -1 }]);
+      expect([...fake.rows.keys()]).toEqual([K(PHONE)]);
+      expect(s.listChats()[0]).toMatchObject({ archived: true, pinned: true, muted: true });
+    });
+
+    it.each([
+      ['a phone-keyed chat record', [PHONE]],
+      ['both chat records, the phone one first', [PHONE, LID]],
+    ])('reads, folds and forgets a lid row that only a lid-keyed contact maps, with %s', (_label, ids) => {
+      fake.rows.set(K(LID), { muteEndTime: null, archived: true, pinned: true });
+      const s = newStore();
+      s.upsertContacts([{ id: LID, phoneNumber: PHONE }]);
+      s.upsertChats(ids.map(id => ({ id })));
+      expect(s.listChats()).toEqual(
+        expect.arrayContaining([expect.objectContaining({ id: '628111@c.us', archived: true, pinned: true })]),
+      );
+      s.upsertChats([{ id: PHONE, muteEndTime: -1 }]);
+      expect([...fake.rows.keys()]).toEqual([K(PHONE)]);
+      expect(s.listChats()[0]).toMatchObject({ archived: true, pinned: true, muted: true });
+      fake.rows.set(K(LID), { muteEndTime: null, archived: true, pinned: true });
+      s.removeChats([PHONE]);
+      expect([...fake.rows.keys()]).toEqual([K(PHONE)]);
+      expect(fake.get(SID, PHONE)).toMatchObject({ archived: false, pinned: false, muteEndTime: null });
+      expect(s.listChats()).toEqual([]);
+    });
+
+    it('reads the lid record row of a merged chat once the lid mapping is evicted', () => {
+      const cap = process.env.BAILEYS_SESSION_STORE_MAX_ENTRIES;
+      process.env.BAILEYS_SESSION_STORE_MAX_ENTRIES = '2';
+      try {
+        fake.rows.set(K(LID), { muteEndTime: null, archived: false, pinned: true });
+        const s = newStore();
+        s.upsertContacts([{ id: LID, phoneNumber: PHONE, name: 'Alice' }]);
+        s.addLidMappings([
+          { lid: '1@lid', pn: '6201@s.whatsapp.net' },
+          { lid: '2@lid', pn: '6202@s.whatsapp.net' },
+        ]);
+        s.upsertChats([{ id: PHONE }, { id: LID }]);
+        expect(s.listChats()).toEqual(expect.arrayContaining([expect.objectContaining({ id: LID, pinned: true })]));
+      } finally {
+        if (cap === undefined) delete process.env.BAILEYS_SESSION_STORE_MAX_ENTRIES;
+        else process.env.BAILEYS_SESSION_STORE_MAX_ENTRIES = cap;
+      }
+    });
+
+    it.each([
+      ['the lid, with the state under the phone', LID, PHONE],
+      ['the phone, with the state under the lid', PHONE, LID],
+    ])(
+      'marks a deleted chat named by %s and forgets the twin only the mapping table pairs',
+      async (_label, deleted, row) => {
+        fake.rows.set(K(row), { muteEndTime: null, archived: false, pinned: true });
+        const lidStore = {
+          getCached: jest.fn(() => undefined),
+          resolveLid: jest.fn(() => null),
+          lidsForPhone: jest.fn(() => []),
+          findPhoneForLid: jest.fn((jid: string) => Promise.resolve(jid.startsWith('484848') ? '628111' : null)),
+          findLidsForPhone: jest.fn((phone: string) => Promise.resolve(phone === '628111' ? ['484848'] : [])),
+          remember: jest.fn(() => Promise.resolve(true)),
+        };
+        const s = new BaileysSessionStore(lidStore, SID, fake);
+        s.removeChats([deleted]);
+        await flush();
+        expect([...fake.rows.keys()]).toEqual([K(deleted)]);
+        expect(fake.get(SID, deleted)?.deletedAt).toEqual(expect.any(Number));
+        expect(s.listChats()).toEqual([]);
+      },
+    );
+
+    // What is left of the update of a message that is none of its own once its time and the message are taken out.
+    it('keeps a deleted chat deleted, with its mark, for an update that carries no time and no message', async () => {
+      const s = newStore();
+      s.upsertChats([{ id: PHONE, conversationTimestamp: 1_700_000_000 }]);
+      s.removeChats([PHONE]);
+      await flush();
+      const mark = fake.get(SID, PHONE)?.deletedAt;
+      expect(mark).toEqual(expect.any(Number));
+
+      s.upsertChats([{ id: PHONE, ephemeralExpiration: 86_400 }]);
+      await flush();
+
+      expect(s.listChats()).toEqual([]);
+      expect(fake.get(SID, PHONE)?.deletedAt).toBe(mark);
+      // A timer WhatsApp keeps across a deletion still applies.
+      expect(s.getEphemeralExpiration(PHONE)).toBe(86_400);
+    });
+
+    // The chat of a history chunk (a first sync, a history fetch) whose newest message is a pin, as the lifecycle hands it
+    // to the store once the filter took the message and its time, which is the time of the chunk, out of it.
+    describe('a history chunk whose last message is none of its own', () => {
+      const lib = {
+        getContentType: (content: object | undefined) =>
+          Object.keys(content ?? {}).find(key => key === 'conversation' || key.includes('Message')),
+        normalizeMessageContent: (content: unknown) => content,
+      } as unknown as ContentTypeLib;
+      const T = 1_700_000_100;
+      const chunk = (id: string, fromMe = false, at = T) =>
+        withoutMergedNonContentMessage(
+          {
+            id,
+            conversationTimestamp: at,
+            unreadCount: fromMe ? 0 : 1,
+            messages: [
+              {
+                message: {
+                  key: { remoteJid: id, fromMe, id: 'PIN1' },
+                  message: { pinInChatMessage: {} },
+                  messageTimestamp: at,
+                },
+              },
+            ],
+          },
+          lib,
+        );
+      const text = (remoteJid: string, ts: number) => ({
+        key: { remoteJid, fromMe: false, id: 'TEXT1' },
+        message: { conversation: 'hello' },
+        messageTimestamp: ts,
+      });
+
+      it.each([
+        ['a contact', false, 1],
+        ['the account', true, 0],
+      ])(
+        'lists a chat it alone tells of, with a pin from %s, at the time the phone gave it',
+        (_who, fromMe, unread) => {
+          const s = newStore();
+          s.upsertChats([chunk(PHONE, fromMe)]);
+          expect(s.listChats()).toEqual([
+            expect.objectContaining({ id: '628111@c.us', timestamp: T, unreadCount: unread, lastMessage: undefined }),
+          ]);
+        },
+      );
+
+      it('lists such a chat at the time of a text recorded after it, with the text, and never with the pin', () => {
+        const s = newStore();
+        s.upsertChats([chunk(PHONE)]);
+        s.recordMessage(text(PHONE, T - 50));
+        expect(s.listChats()).toEqual([expect.objectContaining({ timestamp: T - 50, lastMessage: 'hello' })]);
+      });
+
+      it('leaves the time a record of the chat holds', () => {
+        const s = newStore();
+        s.upsertChats([{ id: PHONE, conversationTimestamp: T - 500 }]);
+        s.upsertChats([chunk(PHONE)]);
+        expect(s.listChats()).toEqual([expect.objectContaining({ timestamp: T - 500 })]);
+      });
+
+      it('leaves the time a record holds under the other spelling of the chat', () => {
+        const s = newStore();
+        s.addLidMappings([{ lid: LID, pn: PHONE }]);
+        s.upsertChats([{ id: LID, conversationTimestamp: T - 500 }]);
+        s.upsertChats([chunk(PHONE)]);
+        expect(s.listChats().map(chat => chat.timestamp)).not.toContain(T);
+      });
+
+      it('leaves the time and the preview of a message the session recorded', () => {
+        const s = newStore();
+        s.recordMessage(text(PHONE, T - 500));
+        s.upsertChats([chunk(PHONE)]);
+        expect(s.listChats()).toEqual([expect.objectContaining({ timestamp: T - 500, lastMessage: 'hello' })]);
+      });
+
+      it('keeps a deleted chat deleted, with its mark, for a pin newer than the deletion', async () => {
+        const s = newStore();
+        s.upsertChats([{ id: PHONE, conversationTimestamp: T - 500 }]);
+        s.removeChats([PHONE]);
+        await flush();
+        const mark = fake.get(SID, PHONE)?.deletedAt;
+        expect(mark).toEqual(expect.any(Number));
+
+        s.upsertChats([chunk(PHONE, false, Math.floor(Date.now() / 1000) + 60)]);
+        await flush();
+
+        expect(s.listChats()).toEqual([]);
+        expect(fake.get(SID, PHONE)?.deletedAt).toBe(mark);
+      });
+
+      it('takes no time for a copy of the chat the filter returned', () => {
+        const s = newStore();
+        s.upsertChats([{ ...chunk(PHONE) }]);
+        expect(s.listChats()).toEqual([expect.objectContaining({ timestamp: 0 })]);
+      });
+    });
+
+    // What Baileys writes for a counted message, or a plain reaction to an own message, when the account unarchives on a
+    // new message: the pair alone, once the message's time and the message itself are taken out.
+    describe('the pair of an unarchiving message, for a chat this session holds no record of', () => {
+      const GROUP = '120363000000000000@g.us';
+      const UNARCHIVES = { archived: false, readOnly: false };
+
+      it.each([
+        ['a phone chat', PHONE],
+        ['a privacy-id chat', LID],
+        ['a group', GROUP],
+        ['the status chat', 'status@broadcast'],
+      ])('lists no row for %s, nor writes a state row for it', (_what, id) => {
+        const s = newStore();
+        s.upsertChats([{ id, ...UNARCHIVES }]);
+        s.upsertChats([Object.assign({ id, ...UNARCHIVES }, { conditional: () => true })]);
+        expect(s.listChats()).toEqual([]);
+        expect(fake.rows.size).toBe(0);
+      });
+
+      it.each([
+        ['an app-state unarchive, which carries no readOnly', { archived: false }],
+        ['an app-state archive', { archived: true }],
+        ['a read-only flag alone', { readOnly: false }],
+        ['the pair with a name', { ...UNARCHIVES, name: 'Alice' }],
+        ['the pair with a time', { ...UNARCHIVES, conversationTimestamp: 1_700_000_000 }],
+        ['the pair with a count', { ...UNARCHIVES, unreadCount: 1 }],
+        ['the pair of a chat the account was removed from', { archived: false, readOnly: true }],
+      ])('still lists a chat the phone told of with %s', (_what, update) => {
+        const s = newStore();
+        s.upsertChats([{ id: PHONE, ...update }]);
+        expect(s.listChats()).toEqual([expect.objectContaining({ id: '628111@c.us' })]);
+      });
+
+      // A record under the other spelling of the id would be a second row at the epoch beside the chat's own, so the pair
+      // creates none; the state it carries goes to the chat's record and its persisted row, which unarchive the chat.
+      describe.each([
+        ['a lid', LID, PHONE],
+        ['a phone', PHONE, LID],
+      ])('a chat held under %s, when the pair comes with the other spelling', (_held, held, other) => {
+        it('adds no second row', () => {
+          const s = newStore();
+          s.addLidMappings([{ lid: LID, pn: PHONE }]);
+          s.upsertChats([{ id: held, conversationTimestamp: 1_700_000_000 }]);
+          const before = s.listChats().map(chat => chat.id);
+
+          s.upsertChats([{ id: other, ...UNARCHIVES }]);
+
+          expect(before).toHaveLength(1);
+          expect(s.listChats().map(chat => chat.id)).toEqual(before);
+        });
+
+        it('still unarchives the chat that is listed', () => {
+          const s = newStore();
+          s.addLidMappings([{ lid: LID, pn: PHONE }]);
+          s.upsertChats([{ id: held, archived: true, conversationTimestamp: 1_700_000_000 }]);
+
+          s.upsertChats([{ id: other, ...UNARCHIVES }]);
+
+          const listed = s.listChats().find(chat => chat.id === held.replace('@s.whatsapp.net', '@c.us'));
+          expect(listed).toMatchObject({ archived: false });
+        });
+      });
+
+      it('unarchives a chat the session holds a record of', () => {
+        const s = newStore();
+        s.upsertChats([{ id: PHONE, archived: true, conversationTimestamp: 1_700_000_000 }]);
+        s.upsertChats([{ id: PHONE, ...UNARCHIVES }]);
+        expect(s.listChats()).toEqual([expect.objectContaining({ archived: false })]);
+        expect(fake.get(SID, PHONE)?.archived).toBe(false);
+      });
+
+      it('unarchives a chat only its persisted state is known by, as after a restart', () => {
+        fake.rows.set(K(PHONE), { muteEndTime: null, archived: true, pinned: false });
+        const s = newStore();
+        expect(s.listChats()).toEqual([expect.objectContaining({ id: '628111@c.us', archived: true })]);
+
+        s.upsertChats([{ id: PHONE, ...UNARCHIVES }]);
+
+        expect(s.listChats()).toEqual([expect.objectContaining({ id: '628111@c.us', archived: false })]);
+        expect(fake.get(SID, PHONE)?.archived).toBe(false);
+      });
+
+      it('leaves a deleted chat out of the list', async () => {
+        const s = newStore();
+        s.upsertChats([{ id: PHONE, conversationTimestamp: 1_700_000_000 }]);
+        s.removeChats([PHONE]);
+        await flush();
+
+        s.upsertChats([{ id: PHONE, ...UNARCHIVES }]);
+
+        expect(s.listChats()).toEqual([]);
+        expect(fake.get(SID, PHONE)?.deletedAt).toEqual(expect.any(Number));
+      });
+    });
+
+    // WhatsApp syncs a lid-migrated contact's pin, mute and archive under the lid while the chat can be held under its
+    // phone, and the other way round. An update that names no time and no message goes to the row the chat is listed
+    // under: a record of its own under the other spelling would be a second row at the epoch.
+    describe.each([
+      ['a lid', LID, PHONE, '484848@lid'],
+      ['a phone', PHONE, LID, '628111@c.us'],
+    ])('a chat held under %s, with a state synced under the other spelling', (_held, held, other, listed) => {
+      const T = 1_700_000_000;
+      describe.each([
+        ['with', () => newStore()],
+        ['without', () => new BaileysSessionStore()],
+      ])('%s a chat-state store', (_with, create) => {
+        it.each([
+          ['a pin', {}, { pinned: T + 100 }, { pinned: true }],
+          ['a mute', {}, { muteEndTime: -1 }, { muted: true }],
+          ['an archive', {}, { archived: true }, { archived: true }],
+          ['the unarchive pair', { archived: true }, { archived: false, readOnly: false }, { archived: false }],
+          ['a read mark', {}, { unreadCount: -1 }, { unreadCount: -1 }],
+          ['a read', { unreadCount: 3 }, { unreadCount: 0 }, { unreadCount: 0 }],
+        ])('lists %s on the one row of the chat', (_what, before, update, state) => {
+          const s = create();
+          s.addLidMappings([{ lid: LID, pn: PHONE }]);
+          s.upsertChats([{ id: held, conversationTimestamp: T, unreadCount: 0, ...before }]);
+
+          s.upsertChats([{ id: other, ...update }]);
+
+          expect(s.listChats()).toEqual([expect.objectContaining({ id: listed, timestamp: T, ...state })]);
+        });
+
+        it('applies a timer change to the one row of the chat', () => {
+          const s = create();
+          s.addLidMappings([{ lid: LID, pn: PHONE }]);
+          s.upsertChats([{ id: held, conversationTimestamp: T }]);
+
+          s.upsertChats([{ id: other, ephemeralExpiration: 86_400, ephemeralSettingTimestamp: T + 100 }]);
+
+          expect(s.listChats().map(chat => [chat.id, chat.timestamp])).toEqual([[listed, T]]);
+          expect(s.getEphemeralExpiration(held)).toBe(86_400);
+          expect(s.getEphemeralExpiration(other)).toBe(86_400);
+        });
+      });
+    });
+
+    describe('a state synced under a spelling the chat holds no record under', () => {
+      const T = 1_700_000_000;
+
+      it('goes to the most recently active record of a chat held under two spellings', () => {
+        const s = new BaileysSessionStore();
+        s.addLidMappings([{ lid: LID, pn: PHONE }]);
+        s.upsertChats([
+          { id: PHONE, conversationTimestamp: T },
+          { id: LID, conversationTimestamp: T + 100 },
+        ]);
+
+        s.upsertChats([{ id: '628111@c.us', pinned: T + 200 }]);
+
+        expect(Object.fromEntries(s.listChats().map(chat => [chat.id, chat.pinned]))).toEqual({
+          '628111@c.us': false,
+          '484848@lid': true,
+        });
+      });
+
+      it('goes to the row a recorded message lists under the other spelling', () => {
+        const s = newStore();
+        s.addLidMappings([{ lid: LID, pn: PHONE }]);
+        s.recordMessage({
+          key: { remoteJid: PHONE, fromMe: false, id: 'M1' },
+          message: { conversation: 'hi' },
+          messageTimestamp: T,
+        });
+
+        s.upsertChats([{ id: LID, muteEndTime: -1 }]);
+
+        expect(s.listChats()).toEqual([expect.objectContaining({ id: '628111@c.us', muted: true, lastMessage: 'hi' })]);
+      });
+
+      it('goes to the row a stored message lists under the other spelling, as after a restart', () => {
+        const s = newStore();
+        s.addLidMappings([{ lid: LID, pn: PHONE }]);
+        s.seedStoredPreviews([
+          { chatId: '628111@c.us', id: 'M1', fromMe: false, timestamp: T, body: 'hello', type: 'text' },
+        ]);
+
+        s.upsertChats([{ id: LID, pinned: T + 100 }]);
+
+        expect(s.listChats()).toEqual([expect.objectContaining({ id: '628111@c.us', pinned: true, timestamp: T })]);
+      });
+
+      it('goes to the row a persisted state lists, as after a restart', () => {
+        fake.rows.set(K(PHONE), { muteEndTime: null, archived: false, pinned: true });
+        const s = newStore();
+        s.addLidMappings([{ lid: LID, pn: PHONE }]);
+
+        s.upsertChats([{ id: LID, muteEndTime: -1 }]);
+
+        expect(s.listChats()).toEqual([expect.objectContaining({ id: '628111@c.us', pinned: true, muted: true })]);
+      });
+
+      it('stays on its own spelling for a phone mapped to two lids, which is no one chat', () => {
+        const s = new BaileysSessionStore();
+        s.addLidMappings([
+          { lid: LID, pn: PHONE },
+          { lid: '939393@lid', pn: PHONE },
+        ]);
+        s.upsertChats([{ id: LID, conversationTimestamp: T }]);
+
+        s.upsertChats([{ id: PHONE, pinned: T + 100 }]);
+
+        expect(Object.fromEntries(s.listChats().map(chat => [chat.id, chat.pinned]))).toEqual({
+          '484848@lid': false,
+          '628111@c.us': true,
+        });
+      });
+
+      it('lists a chat held under its lid once, with the state persisted under its phone', () => {
+        const s = newStore();
+        s.addLidMappings([{ lid: LID, pn: PHONE }]);
+        s.upsertChats([{ id: LID, conversationTimestamp: T }]);
+
+        s.upsertChats([{ id: LID, pinned: T + 100 }]);
+
+        expect([...fake.rows.keys()]).toEqual([K(PHONE)]);
+        expect(s.listChats()).toEqual([expect.objectContaining({ id: '484848@lid', pinned: true, timestamp: T })]);
+      });
+
+      it('lists one row for the state rows of both spellings of a chat it holds no record of', () => {
+        fake.rows.set(K(LID), { muteEndTime: null, archived: true, pinned: false });
+        fake.rows.set(K(PHONE), { muteEndTime: null, archived: false, pinned: true });
+        const s = newStore();
+        s.addLidMappings([{ lid: LID, pn: PHONE }]);
+
+        expect(s.listChats()).toEqual([expect.objectContaining({ pinned: true })]);
+      });
+
+      it('still lists a row of its own for an update that names a time', () => {
+        const s = newStore();
+        s.addLidMappings([{ lid: LID, pn: PHONE }]);
+        s.upsertChats([{ id: PHONE, conversationTimestamp: T }]);
+
+        s.upsertChats([{ id: LID, conversationTimestamp: T + 100, unreadCount: 1 }]);
+
+        expect(
+          s
+            .listChats()
+            .map(chat => chat.id)
+            .sort(),
+        ).toEqual(['484848@lid', '628111@c.us']);
+      });
+
+      it('still lists a chat held under neither spelling at the epoch', () => {
+        const s = newStore();
+        s.addLidMappings([{ lid: LID, pn: PHONE }]);
+
+        s.upsertChats([{ id: LID, pinned: T }]);
+
+        expect(s.listChats()).toEqual(
+          expect.arrayContaining([expect.objectContaining({ id: '484848@lid', pinned: true, timestamp: 0 })]),
+        );
+      });
+    });
+
+    it('finds the lid through the persisted mapping table as well', () => {
+      fake.rows.set(K(LID), { muteEndTime: null, archived: true, pinned: false });
+      const lidStore = {
+        getCached: jest.fn((lid: string) => (lid === '484848' ? '628111' : undefined)),
+        resolveLid: jest.fn(() => null),
+        lidsForPhone: jest.fn((phone: string) => (phone === '628111' ? ['484848'] : [])),
+        remember: jest.fn(() => Promise.resolve(true)),
+      };
+      const s = new BaileysSessionStore(lidStore, SID, fake);
+      s.upsertChats([{ id: PHONE }]);
+      expect(s.listChats()[0].archived).toBe(true);
+    });
+
+    it('writes nothing while listing a chat that has no twin row', () => {
+      const s = newStore();
+      s.upsertChats([{ id: PHONE, pinned: 2 }]);
+      s.addLidMappings([{ lid: LID, pn: PHONE }]);
+      const remember = jest.spyOn(fake, 'remember');
+      const forget = jest.spyOn(fake, 'forget');
+      s.listChats();
+      expect(remember).not.toHaveBeenCalled();
+      expect(forget).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      ['phone first', [PHONE, LID]],
+      ['lid first', [LID, PHONE]],
+    ])('keeps both raw chat records, whichever arrived first (%s)', (_order, ids) => {
+      const s = new BaileysSessionStore();
+      for (const id of ids) {
+        s.upsertChats([id === LID ? { id, name: 'Alice', unreadCount: 2, conversationTimestamp: 50 } : { id }]);
+      }
+      s.addLidMappings([{ lid: LID, pn: PHONE }]);
+      expect(s.listChats()).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ id: LID, name: 'Alice', unreadCount: 2, timestamp: 50 }),
+          expect.objectContaining({ id: '628111@c.us', unreadCount: 0, timestamp: 0 }),
+        ]),
+      );
+    });
+
+    it('takes the unread count from the more recently active of the two records', () => {
+      const s = new BaileysSessionStore();
+      s.upsertChats([
+        { id: PHONE, name: 'Alice', unreadCount: 0, conversationTimestamp: 10 },
+        { id: LID, unreadCount: 2, conversationTimestamp: 50 },
+      ]);
+      s.addLidMappings([{ lid: LID, pn: PHONE }]);
+      expect(s.listChats()).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ id: LID, unreadCount: 2, timestamp: 50 }),
+          expect.objectContaining({ id: '628111@c.us', unreadCount: 0, timestamp: 10 }),
+        ]),
+      );
+    });
+
+    it.each([
+      ['its phone', '628111@c.us'],
+      ['its lid', LID],
+    ])('sets the unread count back to zero under both records once the chat is read by %s', (_form, chatId) => {
+      const s = new BaileysSessionStore();
+      s.upsertChats([
+        { id: PHONE, name: 'Alice', unreadCount: 1, conversationTimestamp: 10 },
+        { id: LID, unreadCount: 2, conversationTimestamp: 50 },
+        { id: '628222@s.whatsapp.net', unreadCount: 3, conversationTimestamp: 60 },
+      ]);
+      s.addLidMappings([{ lid: LID, pn: PHONE }]);
+      s.clearUnread(chatId);
+      expect(s.listChats()).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ id: LID, unreadCount: 0 }),
+          expect.objectContaining({ id: '628111@c.us', unreadCount: 0 }),
+          expect.objectContaining({ id: '628222@c.us', unreadCount: 3 }),
+        ]),
+      );
+    });
+
+    it('lists no chat for a read of one it holds no record of', () => {
+      const s = new BaileysSessionStore();
+      s.clearUnread('628333@c.us');
+      expect(s.listChats()).toEqual([]);
+    });
+
+    it('leaves an unread mark set by hand to the write that undoes it', () => {
+      const s = new BaileysSessionStore();
+      s.upsertChats([{ id: PHONE, unreadCount: -1, conversationTimestamp: 10 }]);
+      expect(s.isMarkedUnread('628111@c.us')).toBe(true);
+      s.clearUnread('628111@c.us');
+      expect(s.listChats()).toEqual([expect.objectContaining({ id: '628111@c.us', unreadCount: -1 })]);
+      // The patch Baileys replays for the read mark is what clears it.
+      s.upsertChats([{ id: PHONE, unreadCount: 0 }]);
+      expect(s.isMarkedUnread('628111@c.us')).toBe(false);
+    });
+
+    it('clears a mark from every record of the chat once the write that undoes it is confirmed', () => {
+      // The mark was set while the chat was keyed by its phone; newer messages count under its lid, which
+      // is the record Baileys clears. Left on the phone record, the mark made every later read undo it again.
+      const s = new BaileysSessionStore();
+      s.upsertChats([
+        { id: PHONE, unreadCount: -1, conversationTimestamp: 10 },
+        { id: LID, unreadCount: 1, conversationTimestamp: 50 },
+      ]);
+      s.addLidMappings([{ lid: LID, pn: PHONE }]);
+      expect(s.isMarkedUnread(LID)).toBe(true);
+      s.clearUnread(LID, true);
+      expect(s.isMarkedUnread(LID)).toBe(false);
+      expect(s.isMarkedUnread('628111@c.us')).toBe(false);
+      // Only the mark: the count of a message that arrived while the write was out is not covered by it.
+      expect(countsById(s)).toEqual({ '628111@c.us': 0, [LID]: 1 });
+      s.clearUnread(LID);
+      expect(countsById(s)).toEqual({ '628111@c.us': 0, [LID]: 0 });
+    });
+
+    describe('keepUnread: the chat is listed unread again after a zero a message was counted under', () => {
+      it('counts one on the most recently active record when every record reads zero', () => {
+        const s = new BaileysSessionStore();
+        s.upsertChats([
+          { id: PHONE, unreadCount: 0, conversationTimestamp: 10 },
+          { id: LID, unreadCount: 0, conversationTimestamp: 50 },
+        ]);
+        s.addLidMappings([{ lid: LID, pn: PHONE }]);
+        s.keepUnread('628111@c.us');
+        expect(countsById(s)).toEqual({ '628111@c.us': 0, [LID]: 1 });
+      });
+
+      it('counts one on a record that lists no count yet', () => {
+        const s = new BaileysSessionStore();
+        s.upsertChats([{ id: PHONE, conversationTimestamp: 10 }]);
+        s.keepUnread(PHONE);
+        expect(countsById(s)).toEqual({ '628111@c.us': 1 });
+      });
+
+      it('leaves a chat that holds a count or a mark as it is', () => {
+        const s = new BaileysSessionStore();
+        s.upsertChats([
+          { id: PHONE, unreadCount: 0, conversationTimestamp: 10 },
+          { id: LID, unreadCount: 2, conversationTimestamp: 5 },
+        ]);
+        s.addLidMappings([{ lid: LID, pn: PHONE }]);
+        s.keepUnread(PHONE);
+        expect(countsById(s)).toEqual({ '628111@c.us': 0, [LID]: 2 });
+        const marked = new BaileysSessionStore();
+        marked.upsertChats([{ id: PHONE, unreadCount: -1, conversationTimestamp: 10 }]);
+        marked.keepUnread(PHONE);
+        expect(countsById(marked)).toEqual({ '628111@c.us': -1 });
+      });
+
+      it('lists no chat for one it holds no record of', () => {
+        const s = new BaileysSessionStore();
+        s.keepUnread('628333@c.us');
+        expect(s.listChats()).toEqual([]);
+      });
+    });
+
+    it('shows a preview filed under the lid before the mapping on the merged row, newest first', () => {
+      const s = new BaileysSessionStore();
+      const msg = (remoteJid: string, id: string, ts: number) => ({
+        key: { remoteJid, fromMe: false, id },
+        message: { conversation: id },
+        messageTimestamp: ts,
+      });
+      s.upsertChats([{ id: PHONE }]);
+      s.recordMessage(msg(LID, 'VIA_LID', 100));
+      s.addLidMappings([{ lid: LID, pn: PHONE }]);
+      expect(s.listChats()).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ id: LID, timestamp: 100, lastMessage: 'VIA_LID' }),
+          expect.objectContaining({ id: '628111@c.us', lastMessage: undefined }),
+        ]),
+      );
+      s.recordMessage(msg(PHONE, 'VIA_PHONE', 50));
+      expect(s.listChats().find(c => c.id === LID)).toMatchObject({ timestamp: 100, lastMessage: 'VIA_LID' });
+      expect(s.listChats().find(c => c.id === '628111@c.us')).toMatchObject({
+        timestamp: 50,
+        lastMessage: 'VIA_PHONE',
+      });
+    });
+
+    it('keeps distinct chats apart', () => {
+      const s = new BaileysSessionStore();
+      s.upsertChats([{ id: PHONE }, { id: '628222@s.whatsapp.net' }, { id: '999@lid' }, { id: '120363@g.us' }]);
+      s.addLidMappings([{ lid: LID, pn: PHONE }]);
+      expect(s.listChats().map(c => c.id)).toEqual(['628111@c.us', '628222@c.us', '999@lid', '120363@g.us']);
+    });
+
+    it('resets and marks the folded row when the chat is deleted under its lid', () => {
+      const s = newStore();
+      s.upsertChats([{ id: PHONE, pinned: 2 }]);
+      s.addLidMappings([{ lid: LID, pn: PHONE }]);
+      s.removeChats([LID]);
+      expect([...fake.rows.keys()]).toEqual([K(PHONE)]);
+      expect(fake.get(SID, PHONE)).toMatchObject({ pinned: false, deletedAt: expect.any(Number) as number });
+    });
+
+    it('marks each of several chats deleted at once with only its own twin rows folded in', () => {
+      const OTHER = '628222@s.whatsapp.net';
+      const OTHER_LID = '515151@lid';
+      const s = newStore();
+      s.addLidMappings([
+        { lid: LID, pn: PHONE },
+        { lid: OTHER_LID, pn: OTHER },
+      ]);
+      fake.rows.set(K(LID), { muteEndTime: null, archived: true, pinned: false });
+      fake.rows.set(K(OTHER_LID), { muteEndTime: -1, archived: false, pinned: false });
+      const fold = jest.spyOn(fake, 'fold');
+      s.removeChats([PHONE, OTHER]);
+      expect(fold.mock.calls.map(([, key, twins]) => [key, [...twins].sort()])).toEqual([
+        [PHONE, [LID]],
+        [OTHER, [OTHER_LID]],
+      ]);
+      expect([...fake.rows.keys()].sort()).toEqual([K(PHONE), K(OTHER)]);
+      expect(s.chatDeletedAt('628222@c.us')).toEqual(expect.any(Number));
+    });
+
+    it('takes no update for a deleted chat until one dated after the deletion re-creates it', () => {
+      const s = newStore();
+      s.upsertChats([{ id: PHONE, pinned: 2 }]);
+      s.removeChats([PHONE]);
+      // Baileys applies an own write locally, and a resync can bring a change from before the deletion.
+      s.upsertChats([
+        { id: PHONE, archived: true },
+        { id: PHONE, conversationTimestamp: 100, unreadCount: 1 },
+      ]);
+      expect(fake.get(SID, PHONE)).toMatchObject({ archived: false, deletedAt: expect.any(Number) as number });
+      expect(s.listChats()).toEqual([]);
+      // The update a new message brings can arrive before the message itself.
+      const later = Math.ceil(Date.now() / 1000) + 60;
+      s.upsertChats([{ id: PHONE, conversationTimestamp: later, unreadCount: 1 }]);
+      expect(fake.rows.size).toBe(0);
+      expect(s.listChats()).toEqual([
+        expect.objectContaining({ id: '628111@c.us', unreadCount: 1, timestamp: later, archived: false }),
+      ]);
+    });
+
+    it('lists a deleted chat a newer message re-creates under any spelling, and clears its mark under the lid', () => {
+      const s = newStore();
+      // Deleted while its lid was not yet mapped, so the mark sits under the lid.
+      s.removeChats([LID]);
+      expect([...fake.rows.keys()]).toEqual([K(LID)]);
+      // A mapping only this session holds is not read for every message, so this message leaves the mark.
+      s.addLidMappings([{ lid: LID, pn: PHONE }]);
+      const later = Math.ceil(Date.now() / 1000) + 60;
+      s.recordMessage({ key: { remoteJid: PHONE, fromMe: false, id: 'NEW' }, messageTimestamp: later });
+      expect([...fake.rows.keys()]).toEqual([K(LID)]);
+      // The newer message still dates the chat after the deletion.
+      expect(s.listChats()).toEqual([expect.objectContaining({ id: '628111@c.us', timestamp: later })]);
+      expect(s.chatDeletedAt('628111@c.us')).toBe(fake.get(SID, LID)?.deletedAt);
+      // One under the lid, now filed under the phone, still reads the mark the lid row holds.
+      s.recordMessage({ key: { remoteJid: LID, fromMe: false, id: 'NEXT' }, messageTimestamp: later + 1 });
+      expect(fake.rows.size).toBe(0);
+      expect(s.chatDeletedAt('628111@c.us')).toBeNull();
+    });
+
+    it('lists a chat with a persisted state after a restart, before its next message', () => {
+      fake.rows.set(K(PHONE), { muteEndTime: null, archived: false, pinned: true });
+      fake.rows.set(K('628222@s.whatsapp.net'), { muteEndTime: -1, archived: false, pinned: false });
+      fake.rows.set('other\u0000628333@s.whatsapp.net', { muteEndTime: -1, archived: false, pinned: false });
+      const s = newStore();
+      s.upsertContacts([{ id: PHONE, name: 'Alice' }]);
+      s.upsertChats([{ id: '628222@s.whatsapp.net', name: 'Bob', conversationTimestamp: 70 }]);
+      expect(s.listChats()).toEqual([
+        expect.objectContaining({ id: '628222@c.us', name: 'Bob', timestamp: 70, muted: true }),
+        expect.objectContaining({ id: '628111@c.us', name: 'Alice', timestamp: 0, pinned: true }),
+      ]);
+      s.removeChats([PHONE]);
+      expect(s.listChats().map(c => c.id)).toEqual(['628222@c.us']);
+    });
+
+    it('lists a persisted state filed under a lid once, under the phone', () => {
+      fake.rows.set(K(LID), { muteEndTime: null, archived: true, pinned: false });
+      const s = newStore();
+      s.addLidMappings([{ lid: LID, pn: PHONE }]);
+      expect(s.listChats()).toEqual([expect.objectContaining({ id: LID, archived: true })]);
+    });
+
+    it('finds the disappearing timer a lid-keyed chat record carries from the @c.us id', () => {
+      const s = new BaileysSessionStore();
+      s.upsertChats([{ id: LID, ephemeralExpiration: 86400 }]);
+      s.addLidMappings([{ lid: LID, pn: PHONE }]);
+      expect(s.getEphemeralExpiration('628111@c.us')).toBe(86400);
+    });
+  });
+
+  // A new engine starts with no chats. The newest message the gateway stored for each one is seeded before the
+  // first socket opens, so the listing has every chat it stored and a group its time and preview (#1978).
+  describe('the chats stored before a restart', () => {
+    const SID = 'sess-1';
+    const PHONE = '628111@s.whatsapp.net';
+    const LID = '484848@lid';
+    const GROUP = '120363001@g.us';
+    const T = 1_762_000_000;
+    const K = (c: string) => `${SID}\u0000${c}`;
+    let fake: FakeChatStateStore;
+    beforeEach(() => {
+      fake = new FakeChatStateStore();
+    });
+    const newStore = () => new BaileysSessionStore(undefined, SID, fake);
+    const stored = (over: Partial<StoredChatPreview> = {}): StoredChatPreview => ({
+      chatId: '628111@c.us',
+      id: 'M1',
+      fromMe: false,
+      timestamp: T,
+      body: 'hello',
+      type: 'text',
+      ...over,
+    });
+    const chat = (s: BaileysSessionStore, id: string) => s.listChats().find(c => c.id === id);
+
+    it('lists a stored 1:1 chat and gives a group its stored time and preview', () => {
+      const s = newStore();
+      s.upsertChats([{ id: GROUP, name: 'Support team' }]); // all hydrateNames knows of a group
+      expect(chat(s, GROUP)).toEqual(expect.objectContaining({ timestamp: 0, lastMessage: undefined }));
+      s.seedStoredPreviews([stored(), stored({ chatId: GROUP, id: 'G1', author: '628333@c.us', body: 'standup' })]);
+      expect(chat(s, '628111@c.us')).toEqual(
+        expect.objectContaining({ timestamp: T, lastMessage: 'hello', lastMessageType: 'text', unreadCount: 0 }),
+      );
+      expect(chat(s, GROUP)).toEqual(
+        expect.objectContaining({ name: 'Support team', timestamp: T, lastMessage: 'standup' }),
+      );
+    });
+
+    it('previews a deleted message with no text', () => {
+      const s = newStore();
+      s.seedStoredPreviews([stored({ body: undefined, type: 'revoked' })]);
+      expect(chat(s, '628111@c.us')).toEqual(expect.objectContaining({ lastMessage: '', lastMessageType: 'revoked' }));
+    });
+
+    it('keeps a chat WhatsApp deleted after its newest stored message out, and the persisted state on the rest', () => {
+      fake.rows.set(K(PHONE), { muteEndTime: null, archived: false, pinned: false, deletedAt: (T + 10) * 1000 });
+      fake.rows.set(K('628222@s.whatsapp.net'), {
+        muteEndTime: null,
+        archived: false,
+        pinned: false,
+        deletedAt: (T - 10) * 1000,
+      });
+      fake.rows.set(K('628444@s.whatsapp.net'), { muteEndTime: -1, archived: true, pinned: true });
+      const s = newStore();
+      s.seedStoredPreviews([
+        stored(),
+        stored({ chatId: '628222@c.us', id: 'M2' }),
+        stored({ chatId: '628444@c.us', id: 'M4' }),
+      ]);
+      expect(chat(s, '628111@c.us')).toBeUndefined();
+      // A message newer than the deletion re-created the chat.
+      expect(chat(s, '628222@c.us')).toEqual(expect.objectContaining({ lastMessage: 'hello' }));
+      expect(chat(s, '628444@c.us')).toEqual(
+        expect.objectContaining({ archived: true, pinned: true, muted: true, muteExpiration: 0, lastMessage: 'hello' }),
+      );
+    });
+
+    it('gives way to a live message of the same second or later, and outranks an older one', () => {
+      const s = newStore();
+      s.seedStoredPreviews([stored(), stored({ chatId: '628222@c.us', id: 'M2' })]);
+      s.recordMessage({
+        key: { remoteJid: PHONE, fromMe: false, id: 'L1' },
+        message: { conversation: 'live' },
+        messageTimestamp: T,
+      });
+      s.recordMessage({
+        key: { remoteJid: '628222@s.whatsapp.net', fromMe: false, id: 'H1' },
+        message: { conversation: 'from history' },
+        messageTimestamp: T - 60,
+      });
+      expect(chat(s, '628111@c.us')).toEqual(expect.objectContaining({ lastMessage: 'live' }));
+      expect(chat(s, '628222@c.us')).toEqual(expect.objectContaining({ lastMessage: 'hello', timestamp: T }));
+    });
+
+    it('never keys a chat write or a receipt to a stored preview', () => {
+      const s = newStore();
+      s.seedStoredPreviews([stored({ chatId: LID })]);
+      s.addLidMappings([{ lid: LID, pn: PHONE }]);
+      expect(s.lastMessage('628111@c.us')).toBeNull();
+      expect(s.lastMessage(LID)).toBeNull();
+      expect(s.lastInboundMessage(LID)).toBeNull();
+      // Nothing in memory names the chat's spelling, so the write path asks the stored lookup.
+      expect(s.chatJid('628111@c.us')).toBe(PHONE);
+    });
+
+    it('takes a delete or an edit of the stored message into the preview', () => {
+      const s = newStore();
+      s.seedStoredPreviews([stored(), stored({ chatId: '628222@c.us', id: 'M2', body: 'typo' })]);
+      s.recordMessageEdit(PHONE, 'M1', '', 'revoked');
+      s.recordMessageEdit('628222@s.whatsapp.net', 'M2', 'fixed');
+      // A delete is final.
+      s.recordMessageEdit(PHONE, 'M1', 'back again');
+      expect(chat(s, '628111@c.us')).toEqual(expect.objectContaining({ lastMessage: '', lastMessageType: 'revoked' }));
+      expect(chat(s, '628222@c.us')).toEqual(
+        expect.objectContaining({ lastMessage: 'fixed', lastMessageType: 'text' }),
+      );
+    });
+
+    it('judges an edit of a stored group message by its author, and finds a lid chat from the phone', () => {
+      const s = newStore();
+      s.seedStoredPreviews([
+        stored({ chatId: GROUP, id: 'G1', author: '628333@c.us', body: 'standup' }),
+        stored({ chatId: LID, id: 'L1', body: 'typo' }),
+      ]);
+      s.recordMessageEdit(GROUP, 'G1', 'forged', undefined, key => key.participant === '628444@s.whatsapp.net');
+      expect(chat(s, GROUP)).toEqual(expect.objectContaining({ lastMessage: 'standup' }));
+      s.recordMessageEdit(GROUP, 'G1', 'edited', undefined, key => key.participant === '628333@s.whatsapp.net');
+      expect(chat(s, GROUP)).toEqual(expect.objectContaining({ lastMessage: 'edited' }));
+      s.recordMessageEdit(PHONE, 'L1', 'fixed', undefined, key => key.remoteJid === LID);
+      expect(chat(s, LID)).toEqual(expect.objectContaining({ lastMessage: 'fixed' }));
+    });
+
+    it('drops a stored preview with the chat WhatsApp deletes', () => {
+      // No chat-state store, so no deletion mark: only the dropped preview keeps the chat out.
+      const s = new BaileysSessionStore();
+      s.seedStoredPreviews([stored(), stored({ chatId: '628222@c.us', id: 'M2' })]);
+      s.removeChats(['628111@c.us']);
+      expect(s.listChats().map(c => c.id)).toEqual(['628222@c.us']);
+    });
+
+    it.each([
+      [
+        'newest first',
+        [
+          ['628111@s.whatsapp.net', 'reply', T],
+          ['628111@c.us', 'question', T - 100],
+        ],
+      ],
+      [
+        'oldest first',
+        [
+          ['628111@c.us', 'question', T - 100],
+          ['628111@s.whatsapp.net', 'reply', T],
+        ],
+      ],
+    ] as const)('keeps the newer row of a chat stored under two spellings of its id, %s', (_order, spelled) => {
+      const s = newStore();
+      s.seedStoredPreviews(
+        spelled.map(([chatId, body, timestamp], i) => stored({ chatId, id: `M${i}`, body, timestamp })),
+      );
+      expect(s.listChats().map(c => [c.id, c.lastMessage, c.timestamp])).toEqual([['628111@c.us', 'reply', T]]);
+    });
+
+    it('keeps a contact stored under its phone and its lid as two rows, as the live listing does', () => {
+      const s = newStore();
+      s.addLidMappings([{ lid: LID, pn: PHONE }]);
+      s.seedStoredPreviews([
+        stored({ timestamp: T - 100, body: 'old' }),
+        stored({ chatId: LID, id: 'M9', body: 'new' }),
+      ]);
+      expect(s.listChats().map(c => [c.id, c.lastMessage])).toEqual([
+        ['628111@c.us', 'old'],
+        [LID, 'new'],
+      ]);
+    });
+
+    it('lists an unsaved contact by the name its stored message came with, and a group by its subject', () => {
+      const s = newStore();
+      s.upsertChats([{ id: GROUP, name: 'Support team' }]);
+      s.seedStoredPreviews([
+        stored({ name: 'Rina' }),
+        stored({ chatId: LID, id: 'M9', name: 'Budi' }),
+        stored({ chatId: '628222@c.us', id: 'M2' }),
+        stored({ chatId: GROUP, id: 'G1', author: '628333@c.us', name: 'A member' }),
+      ]);
+      expect(chat(s, '628111@c.us')?.name).toBe('Rina');
+      expect(chat(s, LID)?.name).toBe('Budi');
+      expect(chat(s, '628222@c.us')?.name).toBe('628222');
+      expect(chat(s, GROUP)?.name).toBe('Support team');
+      // Only the address book is the contact list, and a name saved there wins.
+      expect(s.listContacts()).toEqual([]);
+      s.upsertContacts([{ id: PHONE, name: 'Rina (VIP)' }]);
+      expect(chat(s, '628111@c.us')?.name).toBe('Rina (VIP)');
+    });
+
+    it('holds no more chats than BAILEYS_SESSION_STORE_MAX_ENTRIES, and gives up the oldest first', () => {
+      const before = process.env.BAILEYS_SESSION_STORE_MAX_ENTRIES;
+      process.env.BAILEYS_SESSION_STORE_MAX_ENTRIES = '2';
+      try {
+        const s = newStore();
+        s.seedStoredPreviews(
+          ['628333', '628222', '628111'].map((n, i) => stored({ chatId: `${n}@c.us`, id: n, timestamp: T - i * 10 })),
+        );
+        expect(
+          s
+            .listChats()
+            .map(c => c.id)
+            .sort(),
+        ).toEqual(['628222@c.us', '628333@c.us']);
+      } finally {
+        if (before === undefined) delete process.env.BAILEYS_SESSION_STORE_MAX_ENTRIES;
+        else process.env.BAILEYS_SESSION_STORE_MAX_ENTRIES = before;
+      }
+    });
+  });
+
+  describe('persistent lid->phone table', () => {
+    const makeFakeLidStore = () => {
+      const map = new Map<string, string | null>();
+      const getCached = jest.fn((lid: string) => map.get(lid));
+      return {
+        map,
+        getCached,
+        // Mirrors the real implementation: userPart of the JID through getCached, null on a miss.
+        resolveLid: jest.fn((jid: string) => getCached(userPart(jid)) ?? null),
+        lidsForPhone: jest.fn(() => [] as string[]),
+        remember: jest.fn((lid: string, phone: string | null) => {
+          map.set(lid, phone);
+          return Promise.resolve(true);
+        }),
+        rememberIfUnknown: jest.fn((lid: string, phone: string) => {
+          if (!map.has(lid)) map.set(lid, phone);
+          return Promise.resolve(true);
+        }),
+      };
+    };
+
+    it('writes learned mappings through to the table (bare digits + session provenance)', () => {
+      const lidStore = makeFakeLidStore();
+      const s = new BaileysSessionStore(lidStore, 'sess-1');
+      s.addLidMappings([{ lid: '111@lid', pn: '628999@s.whatsapp.net' }]);
+      s.upsertContacts([{ id: '222@lid', lid: '222@lid', phoneNumber: '628222@s.whatsapp.net' }]);
+      s.upsertContacts([{ id: '333@lid', lid: '333@lid', phoneNumber: '628333@s.whatsapp.net' }]);
+      expect(lidStore.remember).toHaveBeenCalledWith('111', '628999', 'sess-1');
+      expect(lidStore.remember).toHaveBeenCalledWith('222', '628222', 'sess-1');
+      expect(lidStore.remember).toHaveBeenCalledWith('333', '628333', 'sess-1');
+    });
+
+    it('pairs a lid and phone that arrive in separate contact updates', () => {
+      const lidStore = makeFakeLidStore();
+      const s = new BaileysSessionStore(lidStore, 'sess-1');
+      s.upsertContacts([{ id: 'c1', lid: '444@lid' }]); // lid first, no phone yet
+      expect(lidStore.remember).not.toHaveBeenCalled();
+      s.upsertContacts([{ id: 'c1', phoneNumber: '628444@s.whatsapp.net' }]); // phone arrives later
+      expect(lidStore.remember).toHaveBeenCalledWith('444', '628444', 'sess-1');
+    });
+
+    it('keeps a reconstructed contact phone as display data until an incoming phone field confirms it', () => {
+      const lidStore = makeFakeLidStore();
+      const s = new BaileysSessionStore(lidStore, 'sess-1');
+      s.upsertContacts([{ id: 'c1', phoneNumber: '628444@s.whatsapp.net' }]);
+      s.upsertContacts([{ id: 'c1', lid: '444@lid' }]);
+      expect(s.resolvePhone('444@lid')).toBe('628444');
+      expect(lidStore.rememberIfUnknown).toHaveBeenCalledWith('444', '628444', 'sess-1');
+      expect(lidStore.remember).not.toHaveBeenCalled();
+      s.upsertContacts([{ id: 'c1', phoneNumber: '628444@s.whatsapp.net' }]);
+      expect(lidStore.remember).toHaveBeenCalledWith('444', '628444', 'sess-1');
+    });
+
+    it('resolves a lid via the persistent cache when the in-session map misses', () => {
+      const lidStore = makeFakeLidStore();
+      lidStore.map.set('444', '628777'); // known only to the cross-session table
+      const s = new BaileysSessionStore(lidStore, 'sess-1');
+      expect(s.resolvePhone('444@lid')).toBe('628777');
+      expect(s.toNeutralJid('444@lid')).toBe('444@lid');
+    });
+
+    it('returns null for a cached-negative or unseen lid', () => {
+      const lidStore = makeFakeLidStore();
+      lidStore.map.set('555', null); // known-but-unresolved
+      const s = new BaileysSessionStore(lidStore, 'sess-1');
+      expect(s.resolvePhone('555@lid')).toBeNull();
+      expect(s.resolvePhone('666@lid')).toBeNull();
+    });
+  });
+
+  describe('map bounds (BAILEYS_SESSION_STORE_MAX_ENTRIES)', () => {
+    const ENV = 'BAILEYS_SESSION_STORE_MAX_ENTRIES';
+    const orig = process.env[ENV];
+    afterEach(() => {
+      if (orig === undefined) delete process.env[ENV];
+      else process.env[ENV] = orig;
+    });
+
+    const storeWithCap = (cap: string, lidStore?: LidMappingStore) => {
+      process.env[ENV] = cap;
+      return new BaileysSessionStore(lidStore);
+    };
+
+    it('evicts the oldest unsaved contact once over the cap; the miss reads as "unknown"', () => {
+      const s = storeWithCap('2');
+      s.upsertContacts([{ id: '628111@s.whatsapp.net', notify: 'A' }]);
+      s.upsertContacts([{ id: '628222@s.whatsapp.net', notify: 'B' }]);
+      s.upsertContacts([{ id: '628333@s.whatsapp.net', notify: 'C' }]);
+      expect(s.findContact('628111@s.whatsapp.net')).toBeNull(); // evicted, same as never seen
+      expect(s.findContact('628222@s.whatsapp.net')?.pushName).toBe('B');
+      expect(s.findContact('628333@s.whatsapp.net')?.pushName).toBe('C');
+    });
+
+    it('treats a read as usage: a refreshed entry survives while a stale one is evicted (LRU)', () => {
+      const s = storeWithCap('2');
+      s.upsertContacts([{ id: '628111@s.whatsapp.net', notify: 'A' }]);
+      s.upsertContacts([{ id: '628222@s.whatsapp.net', notify: 'B' }]);
+      expect(s.findContact('628111@s.whatsapp.net')?.pushName).toBe('A'); // refresh A
+      s.upsertContacts([{ id: '628333@s.whatsapp.net', notify: 'C' }]); // evicts B, not A
+      expect(s.findContact('628111@s.whatsapp.net')?.pushName).toBe('A');
+      expect(s.findContact('628222@s.whatsapp.net')).toBeNull();
+    });
+
+    it('still caches peers once the saved contacts alone fill the cap', () => {
+      // The cap governs the peer population. Measuring the whole map instead made a full address
+      // book evict each new peer in the very call that inserted it, so `GET /contacts/:id` stopped
+      // resolving anyone who is not saved, and chat titles fell back to the raw number.
+      const s = storeWithCap('2');
+      s.upsertContacts([{ id: '628111@s.whatsapp.net', name: 'Alice' }]);
+      s.upsertContacts([{ id: '628222@s.whatsapp.net', name: 'Bob' }]);
+
+      s.upsertContacts([{ id: '629001@s.whatsapp.net', notify: 'peer one' }]);
+      s.upsertContacts([{ id: '629002@s.whatsapp.net', notify: 'peer two' }]);
+
+      expect(s.findContact('629001@s.whatsapp.net')?.pushName).toBe('peer one');
+      expect(s.findContact('629002@s.whatsapp.net')?.pushName).toBe('peer two');
+      expect(s.findContact('628111@s.whatsapp.net')?.name).toBe('Alice');
+      expect(s.findContact('628222@s.whatsapp.net')?.name).toBe('Bob');
+    });
+
+    it('keeps the saved address book when unsaved peers overflow the cap', () => {
+      // The two populations share one map: a handful of contacts the account saved, and every peer
+      // seen once in a group or a broadcast. Only the second grows without limit, and it used to
+      // evict the first, emptying GET /contacts on a busy session.
+      const s = storeWithCap('3');
+      s.upsertContacts([{ id: '628111@s.whatsapp.net', name: 'Alice' }]);
+      for (let i = 0; i < 50; i++) {
+        s.upsertContacts([{ id: `62${9000 + i}@s.whatsapp.net`, notify: `peer ${i}` }]);
+      }
+      expect(s.findContact('628111@s.whatsapp.net')?.name).toBe('Alice');
+      expect(s.listContacts()).toEqual([expect.objectContaining({ name: 'Alice' })]);
+    });
+
+    it('bounds chats: listChats stays at the cap and drops the oldest conversation', () => {
+      const s = storeWithCap('2');
+      s.upsertChats([{ id: '628111@s.whatsapp.net', name: 'A' }]);
+      s.upsertChats([{ id: '628222@s.whatsapp.net', name: 'B' }]);
+      s.upsertChats([{ id: '628333@s.whatsapp.net', name: 'C' }]);
+      expect(s.listChats().map(c => c.id)).toEqual(['628222@c.us', '628333@c.us']);
+    });
+
+    it('bounds lastMessages: an evicted preview reads as the null miss callers already handle', () => {
+      const s = storeWithCap('2');
+      for (const [i, ts] of [
+        ['628111', 100],
+        ['628222', 200],
+        ['628333', 300],
+      ] as const) {
+        s.recordMessage({
+          key: { remoteJid: `${i}@s.whatsapp.net`, fromMe: false, id: `M-${i}` },
+          message: { conversation: 'hi' },
+          messageTimestamp: ts,
+        });
+      }
+      expect(s.lastMessage('628111@s.whatsapp.net')).toBeNull(); // sendSeen/markUnread/deleteChat → false
+      expect(s.lastMessage('628333@s.whatsapp.net')?.key.id).toBe('M-628333');
+    });
+
+    it('bounds lidToPn: an evicted mapping still resolves via the write-through persistent table', () => {
+      const map = new Map<string, string | null>();
+      const getCached = jest.fn((lid: string) => map.get(lid));
+      const lidStore = {
+        getCached,
+        resolveLid: jest.fn((jid: string) => getCached(userPart(jid)) ?? null),
+        lidsForPhone: jest.fn(() => [] as string[]),
+        remember: jest.fn((lid: string, phone: string | null) => {
+          map.set(lid, phone);
+          return Promise.resolve(true);
+        }),
+      };
+      const s = storeWithCap('2', lidStore);
+      s.addLidMappings([
+        { lid: '111@lid', pn: '628111@s.whatsapp.net' },
+        { lid: '222@lid', pn: '628222@s.whatsapp.net' },
+        { lid: '333@lid', pn: '628333@s.whatsapp.net' },
+      ]);
+      // 111 was evicted from memory: resolution falls through to the persisted row (getCached hit).
+      expect(s.resolvePhone('111@lid')).toBe('628111');
+      expect(lidStore.getCached).toHaveBeenCalledWith('111');
+      // 333 is still in memory: no persistent-table read needed.
+      expect(s.resolvePhone('333@lid')).toBe('628333');
+      expect(lidStore.getCached).not.toHaveBeenCalledWith('333');
+    });
+
+    it('bounds ephemeralByChat (two keys per chat): the oldest chat timer falls back to undefined', () => {
+      const s = storeWithCap('2'); // timer map allows 2 × cap = 4 keys → two chats
+      for (const i of ['628111', '628222', '628333']) {
+        s.recordMessage({
+          key: { remoteJid: `${i}@s.whatsapp.net`, fromMe: false, id: `M-${i}` },
+          message: { conversation: 'hi' },
+          messageTimestamp: 100,
+          ephemeralDuration: 86400,
+        });
+      }
+      expect(s.getEphemeralExpiration('628111@s.whatsapp.net')).toBeUndefined(); // evicted → no forced timer
+      expect(s.getEphemeralExpiration('628222@s.whatsapp.net')).toBe(86400);
+      expect(s.getEphemeralExpiration('628333@s.whatsapp.net')).toBe(86400);
+    });
+
+    it('treats 0 as unbounded (legacy behaviour)', () => {
+      const s = storeWithCap('0');
+      for (let i = 0; i < 100; i++) {
+        s.upsertContacts([{ id: `62${1000 + i}@s.whatsapp.net`, name: 'x' }]);
+      }
+      expect(s.listContacts()).toHaveLength(100);
+    });
+
+    it('falls back to the 5000 default for a garbage override', () => {
+      const s = storeWithCap('not-a-number');
+      // Unsaved peers: the cap governs exactly this population (a saved contact is pinned).
+      s.upsertContacts(Array.from({ length: 5001 }, (_, i) => ({ id: `62${100000 + i}@s.whatsapp.net`, notify: 'x' })));
+      expect(s.findContact('62100000@s.whatsapp.net')).toBeNull(); // the oldest went first
+      // Only the oldest: one entry over a 5000 cap evicts exactly one, which is what pins the default.
+      expect(s.findContact('62100001@s.whatsapp.net')).not.toBeNull();
+      expect(s.findContact('62105000@s.whatsapp.net')).not.toBeNull();
+    });
+
+    it('treats a blank override as unset, not as 0 (unbounded)', () => {
+      const s = storeWithCap('');
+      s.upsertContacts(Array.from({ length: 5001 }, (_, i) => ({ id: `62${100000 + i}@s.whatsapp.net`, notify: 'x' })));
+      expect(s.findContact('62100000@s.whatsapp.net')).toBeNull();
+      expect(s.findContact('62100001@s.whatsapp.net')).not.toBeNull();
+      expect(s.findContact('62105000@s.whatsapp.net')).not.toBeNull();
+    });
   });
 });

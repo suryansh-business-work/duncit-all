@@ -7,8 +7,15 @@ import {
   auditApi,
   infraApi,
   pluginsApi,
-  type Webhook,
+  pluginInstancesApi,
+  statsApi,
+  type CreateWebhookRequest,
+  type UpdateWebhookRequest,
+  type MessageTemplate,
   type TemplatePayload,
+  type StatsPeriod,
+  type CreateInstanceInput,
+  type UpdateInstanceInput,
 } from '../services/api';
 
 // ── Query Keys ────────────────────────────────────────────────────────
@@ -17,32 +24,49 @@ export const queryKeys = {
   sessions: ['sessions'] as const,
   sessionStats: ['sessions', 'stats'] as const,
   sessionGroups: (sessionId: string) => ['sessions', sessionId, 'groups'] as const,
+  sessionChats: (sessionId: string) => ['sessions', sessionId, 'chats'] as const,
   webhooks: ['webhooks'] as const,
   templates: (sessionId: string) => ['sessions', sessionId, 'templates'] as const,
   apiKeys: ['apiKeys'] as const,
-  logs: (params: { severity?: string; page: number; limit: number }) =>
-    ['logs', params] as const,
+  logs: (params: { severity?: string; page: number; limit: number }) => ['logs', params] as const,
   infraStatus: ['infra', 'status'] as const,
   plugins: ['plugins'] as const,
+  pluginInstances: (pluginId: string) => ['plugins', pluginId, 'instances'] as const,
   engines: ['engines'] as const,
   currentEngine: ['engines', 'current'] as const,
+  statsOverview: ['stats', 'overview'] as const,
+  statsMessages: (period: string) => ['stats', 'messages', period] as const,
 };
 
 // ── Session Queries ───────────────────────────────────────────────────
 
-export function useSessionsQuery() {
+// `refetchInterval` is for a page that shows live session state with no socket of its own; the pages that read the list
+// only to pick a session leave it out. A stale query refetches only on mount, focus or an invalidation. The poll stops
+// while its last read was refused (403): a route that refuses the key (one restricted to selected chats is refused
+// both reads) would otherwise be refused, and audited as a failed authentication, every interval. A read that
+// succeeds again, on focus or mount, starts it again. Any other failure (a proxy 502 while the gateway restarts, a
+// timeout) keeps the poll going, so the page does not stay stale with no error shown.
+const pollWhileReadable = (interval?: number) =>
+  interval === undefined
+    ? undefined
+    : (query: { state: { error: (Error & { status?: number }) | null } }) =>
+        query.state.error?.status === 403 ? false : interval;
+
+export function useSessionsQuery(refetchInterval?: number) {
   return useQuery({
     queryKey: queryKeys.sessions,
     queryFn: sessionApi.list,
     staleTime: 30_000,
+    refetchInterval: pollWhileReadable(refetchInterval),
   });
 }
 
-export function useSessionStatsQuery() {
+export function useSessionStatsQuery(refetchInterval?: number) {
   return useQuery({
     queryKey: queryKeys.sessionStats,
     queryFn: sessionApi.getStats,
     staleTime: 30_000,
+    refetchInterval: pollWhileReadable(refetchInterval),
   });
 }
 
@@ -55,11 +79,21 @@ export function useSessionGroupsQuery(sessionId: string, enabled: boolean) {
   });
 }
 
+export function useSessionChatsQuery(sessionId: string, enabled: boolean) {
+  return useQuery({
+    queryKey: queryKeys.sessionChats(sessionId),
+    queryFn: ({ signal }) => sessionApi.getChats(sessionId, signal),
+    enabled: enabled && !!sessionId,
+    staleTime: 60_000,
+  });
+}
+
 export function useStopSessionMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => sessionApi.stop(id),
-    onSuccess: () => {
+    // A failed stop can still have changed the session, so the list is re-read either way.
+    onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.sessions });
     },
   });
@@ -67,19 +101,24 @@ export function useStopSessionMutation() {
 
 // ── Webhook Queries ───────────────────────────────────────────────────
 
-export function useWebhooksQuery() {
+export function useWebhooksQuery(enabled = true) {
   return useQuery({
     queryKey: queryKeys.webhooks,
     queryFn: webhookApi.listAll,
     staleTime: 30_000,
+    enabled,
+    // Normalize `events` to an array at the data boundary so every consumer (list render + edit
+    // modal) can trust the declared string[] shape. A malformed payload then renders as no tags
+    // instead of taking down the whole SPA via events.map() in the ErrorBoundary.
+    select: webhooks => webhooks.map(w => ({ ...w, events: Array.isArray(w.events) ? w.events : [] })),
   });
 }
 
 export function useCreateWebhookMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (params: { sessionId: string; url: string; events: string[] }) =>
-      webhookApi.create(params.sessionId, { url: params.url, events: params.events }),
+    mutationFn: ({ sessionId, ...body }: CreateWebhookRequest & { sessionId: string }) =>
+      webhookApi.create(sessionId, body),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.webhooks });
     },
@@ -89,7 +128,7 @@ export function useCreateWebhookMutation() {
 export function useUpdateWebhookMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (params: { sessionId: string; id: string; data: Partial<Webhook> }) =>
+    mutationFn: (params: { sessionId: string; id: string; data: UpdateWebhookRequest }) =>
       webhookApi.update(params.sessionId, params.id, params.data),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.webhooks });
@@ -100,8 +139,7 @@ export function useUpdateWebhookMutation() {
 export function useDeleteWebhookMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (params: { sessionId: string; id: string }) =>
-      webhookApi.delete(params.sessionId, params.id),
+    mutationFn: (params: { sessionId: string; id: string }) => webhookApi.delete(params.sessionId, params.id),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.webhooks });
     },
@@ -135,7 +173,12 @@ export function useUpdateTemplateMutation() {
   return useMutation({
     mutationFn: (params: { sessionId: string; id: string; data: Partial<TemplatePayload> }) =>
       templateApi.update(params.sessionId, params.id, params.data),
-    onSuccess: (_template, params) => {
+    onSuccess: (saved, params) => {
+      // Swap the saved row into the list before the refetch lands (or fails), so reopening it in the meantime
+      // loads the stored values rather than the pre-save ones that a second save would write back.
+      queryClient.setQueryData<MessageTemplate[]>(queryKeys.templates(params.sessionId), rows =>
+        rows?.map(row => (row.id === params.id ? saved : row)),
+      );
       void queryClient.invalidateQueries({ queryKey: queryKeys.templates(params.sessionId) });
     },
   });
@@ -144,8 +187,7 @@ export function useUpdateTemplateMutation() {
 export function useDeleteTemplateMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (params: { sessionId: string; id: string }) =>
-      templateApi.delete(params.sessionId, params.id),
+    mutationFn: (params: { sessionId: string; id: string }) => templateApi.delete(params.sessionId, params.id),
     onSuccess: (_template, params) => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.templates(params.sessionId) });
     },
@@ -165,8 +207,37 @@ export function useApiKeysQuery() {
 export function useCreateApiKeyMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: { name: string; role: string; allowedIps?: string[]; allowedSessions?: string[]; expiresAt?: string }) =>
-      apiKeyApi.create(data),
+    mutationFn: (data: {
+      name: string;
+      role: string;
+      allowedIps?: string[];
+      allowedSessions?: string[];
+      allowedChats?: string[];
+      expiresAt?: string;
+    }) => apiKeyApi.create(data),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.apiKeys });
+    },
+  });
+}
+
+export function useUpdateApiKeyMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: {
+        name?: string;
+        role?: string;
+        allowedIps?: string[];
+        allowedSessions?: string[];
+        allowedChats?: string[];
+        expiresAt?: string | null;
+      };
+    }) => apiKeyApi.update(id, data),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.apiKeys });
     },
@@ -236,6 +307,56 @@ export function usePluginsQuery() {
   });
 }
 
+export function usePluginInstancesQuery(pluginId: string, enabled: boolean) {
+  return useQuery({
+    queryKey: queryKeys.pluginInstances(pluginId),
+    queryFn: () => pluginInstancesApi.list(pluginId),
+    enabled,
+    staleTime: 30_000,
+  });
+}
+
+export function useCreateInstanceMutation(pluginId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: CreateInstanceInput) => pluginInstancesApi.create(pluginId, body),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.pluginInstances(pluginId) });
+    },
+  });
+}
+
+export function useRegenerateInstanceSecretMutation(pluginId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (instanceId: string) => pluginInstancesApi.regenerateSecret(pluginId, instanceId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.pluginInstances(pluginId) });
+    },
+  });
+}
+
+export function useUpdateInstanceMutation(pluginId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (params: { instanceId: string; body: UpdateInstanceInput }) =>
+      pluginInstancesApi.update(pluginId, params.instanceId, params.body),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.pluginInstances(pluginId) });
+    },
+  });
+}
+
+export function useDeleteInstanceMutation(pluginId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (instanceId: string) => pluginInstancesApi.remove(pluginId, instanceId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.pluginInstances(pluginId) });
+    },
+  });
+}
+
 export function useEnginesQuery() {
   return useQuery({
     queryKey: queryKeys.engines,
@@ -249,5 +370,27 @@ export function useCurrentEngineQuery() {
     queryKey: queryKeys.currentEngine,
     queryFn: pluginsApi.getCurrentEngine,
     staleTime: 60_000,
+  });
+}
+
+// ── Stats Queries ─────────────────────────────────────────────────────
+// /stats/* is ADMIN-only; a non-admin key gets 403 → don't retry, let the UI fall back gracefully.
+
+export function useStatsOverviewQuery(enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.statsOverview,
+    queryFn: statsApi.getOverview,
+    staleTime: 30_000,
+    retry: false,
+    enabled,
+  });
+}
+
+export function useStatsMessagesQuery(period: StatsPeriod) {
+  return useQuery({
+    queryKey: queryKeys.statsMessages(period),
+    queryFn: () => statsApi.getMessages(period),
+    staleTime: 30_000,
+    retry: false,
   });
 }

@@ -1,11 +1,21 @@
-import * as path from 'path';
-import * as qrcode from 'qrcode';
+import { ChatLabelsUnsupportedError } from '../../common/errors/chat-labels-unsupported.error';
+import { EngineNotReadyError } from '../../common/errors/engine-not-ready.error';
+import { isChannelJid, parseWaId, toNeutralJid } from '../identity/wa-id';
 import type * as BaileysLib from '@whiskeysockets/baileys';
-import type { AnyMessageContent, MiscMessageGenerationOptions, WAMessage, WASocket } from '@whiskeysockets/baileys';
-import { buildIncomingMessageFromBaileys, mapBaileysStatus } from './baileys-message-mapper';
-import { mapBaileysGroup, mapBaileysGroupInfo } from './baileys-group-mapper';
-import type { ILogger } from '@whiskeysockets/baileys/lib/Utils/logger.js';
+import type { GroupMetadata, WASocket } from '@whiskeysockets/baileys';
+import { BaileysChannels } from './baileys-channels';
+import { BaileysCatalog } from './baileys-catalog';
+import { BaileysContacts } from './baileys-contacts';
+import { BaileysEvents, type GroupMember } from './baileys-events';
+import { BaileysGroups } from './baileys-groups';
+import { BaileysHistory, toUnixSeconds } from './baileys-history';
+import { type BaileysEngineHost } from './baileys-host';
+import { OwnSendRegistry } from './baileys-own-sends';
+import { BaileysLifecycle } from './baileys-lifecycle';
+import { BaileysMessaging, blockSvgDecoding, mapSendRefusal } from './baileys-messaging';
+import { BaileysStatus } from './baileys-status';
 import {
+  CallLinkType,
   ChatState,
   Channel,
   ChannelMessage,
@@ -16,571 +26,653 @@ import {
   EngineStatus,
   Group,
   GroupInfo,
+  GroupMemberAddMode,
+  GroupMembershipRequest,
   IncomingMessage,
   IWhatsAppEngine,
   Label,
+  CustomLinkPreview,
+  GroupJoinInfo,
+  LabelInput,
   LocationInput,
   MediaInput,
   MessageReaction,
+  MessageReceipts,
   MessageResult,
   PaginatedProducts,
+  ParticipantOperationResult,
+  PollInput,
   Product,
   ProductQueryOptions,
-  ReactionEvent,
-  RevokedMessage,
   Status,
   StatusResult,
   ChatSummary,
-  TextStatusOptions,
+  StatusPostOptions,
+  StoredChatMessageLookup,
 } from '../interfaces/whatsapp-engine.interface';
-import { loadRemoteMediaBuffer } from '../../common/media/load-remote-media';
-import { EngineNotReadyError } from '../../common/errors/engine-not-ready.error';
 import { EngineNotSupportedError } from '../../common/errors/engine-not-supported.error';
+import { EngineRefusedError } from '../../common/errors/engine-refused.error';
+import { EngineNotSentError, markNothingSent } from '../../common/errors/engine-not-sent.error';
+import { EngineTransportError } from '../../common/errors/engine-transport.error';
+import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { createLogger } from '../../common/services/logger.service';
-import { BaileysAdapterConfig, BaileysLogger } from '../types/baileys.types';
+import { BaileysAdapterConfig } from '../types/baileys.types';
+import { baileysAuthDir } from '../auth-dir-paths';
 import { BaileysSessionStore } from './baileys-session-store';
+import { inboundMediaConcurrency } from './inbound-media-cap';
+import { ConcurrencyLimiter } from '../../common/utils/concurrency-limiter';
+import { BAILEYS_QUERY_BUDGET_MS, withQueryDeadline } from './baileys-query-deadline';
 
-/** Linked-device identity shown in WhatsApp (Settings → Linked Devices). */
-const BAILEYS_BROWSER: [string, string, string] = ['OpenWA', 'Chrome', '120.0.0'];
-
-/** Fully silent logger so Baileys does not spam stdout; diagnostics flow via connection.update. */
-function createSilentLogger(): BaileysLogger {
-  const noop = (): void => {};
-  const logger: BaileysLogger = {
-    level: 'silent',
-    child: () => logger,
-    trace: noop,
-    debug: noop,
-    info: noop,
-    warn: noop,
-    error: noop,
-  };
-  return logger;
-}
+// The implementation moved with connectInner to BaileysLifecycle; it remains part of this module's
+// public surface (imported from './baileys.adapter' by the spec).
+export { createProxyAgent } from './baileys-lifecycle';
 
 export class BaileysAdapter implements IWhatsAppEngine {
-  private static readonly MAX_RECONNECT_ATTEMPTS = 5;
+  readonly contactPhoneLookupPersistence = 'seed' as const;
 
   private readonly logger = createLogger('BaileysAdapter');
+  // Bound concurrent inbound media downloads: each materialises a full decrypted buffer in heap, so an
+  // unbounded fire-and-forget loop lets a sender flood the gateway with N parallel multi-MB allocations.
+  //
+  // The QUEUE is deliberately unbounded. handleMessagesUpsert submits a whole upsert synchronously,
+  // so admission is decided before any download finishes: a queue capped at the active slots admitted
+  // a constant 2n regardless of batch size, and everything past it was re-processed with skipMedia —
+  // a 40-message upsert lost the media of 32. A parked closure holds the message, not the file, and
+  // inbound-media-cap.ts bounds what any one download may allocate, so capping the queue again needs
+  // a threshold an ordinary burst does not reach. That is its own question.
+  private readonly inboundLimiter = new ConcurrencyLimiter(inboundMediaConcurrency());
   private readonly authPath: string;
-  private readonly sessionStore = new BaileysSessionStore();
-  private sock: WASocket | null = null;
-  private status: EngineStatus = EngineStatus.DISCONNECTED;
-  private qrCode: string | null = null;
-  private phoneNumber: string | null = null;
-  private pushName: string | null = null;
+  private readonly sessionStore: BaileysSessionStore;
+  private readonly groups: BaileysGroups;
+  private readonly messaging: BaileysMessaging;
+  private readonly contacts: BaileysContacts;
+  private readonly statusOps: BaileysStatus;
+  private readonly channels: BaileysChannels;
+  private readonly catalog: BaileysCatalog;
+  private readonly history: BaileysHistory;
+  private readonly events: BaileysEvents;
+  private readonly lifecycle: BaileysLifecycle;
   private callbacks: EngineEventCallbacks = {};
-  private intentionalClose = false;
-  private connecting = false;
-  private reconnectAttempts = 0;
-  private reconnectTimer?: ReturnType<typeof setTimeout>;
-  /** Lazily loaded @whiskeysockets/baileys module (ESM-only; loaded on first connect, not at boot). */
-  private lib?: typeof BaileysLib;
-
-  private async loadLib(): Promise<typeof BaileysLib> {
-    return (this.lib ??= await import('@whiskeysockets/baileys'));
+  /** Connection-lifecycle state is owned by the lifecycle delegate; these accessors alias it by
+   *  reference so delegate host closures (and an unmodified spec poking `adapter.sock` via a cast)
+   *  keep working byte-identically — the liveCalls precedent below. */
+  private get sock(): WASocket | null {
+    return this.lifecycle.sock;
   }
+  private set sock(value: WASocket | null) {
+    this.lifecycle.sock = value;
+  }
+  /** Live-call cache handle: the map is owned by the events delegate (call events + rejectCall);
+   *  lifecycle teardown clears it so a late rejectCall() reports not-found on a dead socket. The
+   *  adapter keeps this alias for the unmodified spec, which reads `adapter.liveCalls` via a cast. */
+  private get liveCalls(): Map<string, { callFrom: string; expiresAt: number }> {
+    return this.events.liveCalls;
+  }
+
+  /** Lazily loaded @whiskeysockets/baileys module (ESM-only; loaded on first connect, not at boot). */
+  private loadLib(): Promise<typeof BaileysLib> {
+    return this.lifecycle.loadLib();
+  }
+
+  /** Ids of the messages this session sent through the API, until each one's library echo returns. */
+  private readonly ownSends = new OwnSendRegistry();
 
   constructor(private readonly config: BaileysAdapterConfig) {
     // Isolate each session's auth state under its own subdirectory of the shared auth dir.
-    this.authPath = path.join(config.authDir, config.sessionId);
-    if (config.proxyUrl) {
-      // Proxy support is gated for this slice — Baileys proxying needs an http/socks agent (a new dep).
-      this.logger.warn('Proxy configured but not supported by the baileys engine in this slice; ignoring it', {
-        action: 'baileys_proxy_unsupported',
-        sessionId: config.sessionId,
-      });
-    }
+    this.authPath = baileysAuthDir(config.authDir, config.sessionId);
+    this.sessionStore = new BaileysSessionStore(config.lidMappingStore, config.sessionId, config.chatStateStore);
+    // Constructed before messaging: the messaging delegate's own-send echo maps through
+    // events.mapMessage (and the lifecycle delegate clears that same live-call cache on teardown).
+    // One host literal for every delegate (the wwebjs-host pattern): a new cross-cutting member
+    // is added once here, not to nine per-delegate bags. Each delegate keeps its own narrow Host
+    // interface, which this literal satisfies structurally - least privilege stays enforceable.
+    const delegates: { events?: BaileysEvents } = {};
+    // A group's members: every id form each is listed under, and whether an admin.
+    const membersOf = (metadata: GroupMetadata): GroupMember[] =>
+      metadata.participants.map(participant => ({
+        ids: [participant.id, participant.lid, participant.phoneNumber].filter((jid): jid is string => !!jid),
+        admin: !!participant.admin,
+      }));
+    // From the cached metadata, or from a bounded query.
+    const readGroupMembers = async (groupId: string): Promise<GroupMember[] | null> => {
+      const sock = this.sock;
+      if (!sock) return null;
+      const query = () =>
+        withQueryDeadline(
+          sock.groupMetadata(groupId),
+          BAILEYS_QUERY_BUDGET_MS,
+          'WhatsApp did not answer the group metadata query in time',
+        );
+      return membersOf((await this.lifecycle.groupMetadata.read(groupId, query)) ?? (await query()));
+    };
+    const host: BaileysEngineHost = {
+      // Read after a delegate's awaits too, when a stop or logout may have torn the socket down since
+      // its readiness check: that is a not-ready session (409), not a null dereference (500).
+      getSocket: () => {
+        if (!this.sock) throw new EngineNotReadyError();
+        return this.sock;
+      },
+      getSocketOrNull: () => this.sock,
+      logger: this.logger,
+      toNeutralJid: jid => {
+        const ownLid = this.sock?.user?.lid;
+        if (ownLid && parseWaId(jid).kind === 'lid' && parseWaId(jid).userPart === parseWaId(ownLid).userPart) {
+          return toNeutralJid(this.normalizedSelfJid());
+        }
+        return this.sessionStore.toNeutralJid(jid);
+      },
+      normalizedSelfJid: () => this.normalizedSelfJid(),
+      loadLib: () => this.loadLib(),
+      getFetchDispatcher: () => this.lifecycle.fetchDispatcher(),
+      sessionProxyUrl: () => this.config.proxyUrl,
+      toUnixSeconds,
+      inboundLimiter: this.inboundLimiter,
+      recordKeyLidMappings: key => this.sessionStore.recordKeyLidMappings(key),
+      recordMessage: (msg, type, order?: number, withhold?: boolean) =>
+        this.sessionStore.recordMessage(msg, type, order, withhold),
+      nextMessageOrder: () => this.sessionStore.nextMessageOrder(),
+      recordMessageEdit: (
+        chatId,
+        messageId,
+        text,
+        type,
+        accept?: Parameters<BaileysSessionStore['recordMessageEdit']>[4],
+      ) => this.sessionStore.recordMessageEdit(chatId, messageId, text, type, accept),
+      putStoredMessage: msg => this.config.messageStore?.put(this.config.dbSessionId, msg),
+      updateStoredMessage: (messageId, change) =>
+        this.config.messageStore?.update(this.config.dbSessionId, messageId, change),
+      removeStoredMessage: (messageId, shouldRemove) =>
+        this.config.messageStore?.remove(this.config.dbSessionId, messageId, shouldRemove),
+      wasDeletedForEveryone: messageId => this.events.wasDeletedForEveryone(messageId),
+      markDeletedForEveryone: messageId => this.events.markDeletedForEveryone(messageId),
+      applyHistoryRevoke: (target, envelope) => this.events.applyHistoryRevoke(target, envelope),
+      pendingEditOf: (messageId, target) => this.events.pendingEditOf(messageId, target),
+      rememberOwnSend: id => this.ownSends.remember(id),
+      consumeOwnSend: id => this.ownSends.consume(id),
+      getAdmitInbound: () => this.callbacks.admitInbound,
+      getLoadedLib: () => this.lifecycle.loadedLib,
+      getOnMessage: () => this.callbacks.onMessage,
+      getOnMessageCreate: () => this.callbacks.onMessageCreate,
+      getOnMessageRevoked: () => this.callbacks.onMessageRevoked,
+      getOnMessageEdited: () => this.callbacks.onMessageEdited,
+      getOnMessageReaction: () => this.callbacks.onMessageReaction,
+      getOnMessageAck: () => this.callbacks.onMessageAck,
+      getOnMessageReceipt: () => this.callbacks.onMessageReceipt,
+      readGroupRoster: async groupId => (await readGroupMembers(groupId))?.map(member => member.ids) ?? null,
+      readGroupMembers,
+      peekGroupMembers: groupId => {
+        const cached = this.lifecycle.groupMetadata.peek(groupId);
+        return cached ? membersOf(cached) : null;
+      },
+      getOnGroupEvent: () => this.callbacks.onGroupEvent,
+      getOnEventResponse: () => this.callbacks.onEventResponse,
+      getOnPollVote: () => this.callbacks.onPollVote,
+      getOnCall: () => this.callbacks.onCall,
+      getOnPresenceUpdate: () => this.callbacks.onPresenceUpdate,
+      getOnCallOutcome: () => this.callbacks.onCallOutcome,
+      ensureReady: () => this.ensureReady(),
+      toEngineJid: jid => this.sessionStore.toEngineJid(jid),
+      chatJid: chatId => this.sessionStore.chatJid(chatId),
+      forgetGroupMetadata: groupId => this.lifecycle.groupMetadata.invalidate(groupId),
+      getEphemeralExpiration: chatId => this.sessionStore.getEphemeralExpiration(chatId),
+      getStoredMessage: messageId => this.config.messageStore?.getMessage(this.config.dbSessionId, messageId),
+      getStoredMessages: messageIds => this.config.messageStore?.getMessages(this.config.dbSessionId, messageIds),
+      recordLidMapping: (lid, pn, isReported = true) =>
+        this.sessionStore.addLidMappings([{ lid: `${lid.split('@')[0].split(':')[0]}@lid`, pn }], isReported),
+      mapMessage: (msg, contentType, opts) => this.events.mapMessage(msg, contentType, opts),
+      listContacts: () => this.sessionStore.listContacts(),
+      contactCount: () => this.sessionStore.listContacts().length,
+      findContact: contactId => this.sessionStore.findContact(contactId),
+      resolvePhone: contactId => this.sessionStore.resolvePhone(contactId),
+      findPersistedLidPhone: lid => this.config.lidMappingStore?.findPhoneForLid?.(lid) ?? Promise.resolve(null),
+      listChats: () => this.sessionStore.listChats(),
+      lastMessage: chatId => this.sessionStore.lastMessage(chatId),
+      lastInboundMessage: chatId => this.sessionStore.lastInboundMessage(chatId),
+      hasUnrecordedInbound: chatId => this.sessionStore.followsLastInbound(chatId, this.events.receivedInFlight()),
+      isMarkedUnread: chatId => this.sessionStore.isMarkedUnread(chatId),
+      clearUnread: (chatId, marks) => this.sessionStore.clearUnread(chatId, marks),
+      keepUnread: chatId => this.sessionStore.keepUnread(chatId),
+      expectReadEcho: jid => this.sessionStore.expectReadEcho(jid),
+      endReadEcho: jid => this.sessionStore.endReadEcho(jid),
+      dropReadEchoes: () => this.sessionStore.dropReadEchoes(),
+      lidOf: jid => this.sessionStore.lidOf(jid),
+      chatTwins: jid => this.sessionStore.chatTwins(jid),
+      chatDeletedAt: chatId => this.sessionStore.chatDeletedAt(chatId),
+      upsertContacts: records => this.sessionStore.upsertContacts(records),
+      upsertChats: records => this.sessionStore.upsertChats(records),
+      removeChats: ids => this.sessionStore.removeChats(ids),
+      seedStoredPreviews: rows => this.sessionStore.seedStoredPreviews(rows),
+      extractEphemeralDuration: msg => this.sessionStore.extractEphemeralDuration(msg),
+      getOnHistoryMessages: () => this.callbacks.onHistoryMessages,
+      getStoredWriteGeneration: () => this.events.getStoredWriteGeneration(),
+      authPath: this.authPath,
+      config: this.config,
+      // A getter so the events delegate exists by first read: the literal is built before the
+      // delegates are constructed, and the OLD wiring captured this.events.liveCalls eagerly -
+      // a stable readonly reference owned by BaileysEvents. The indirection defers the capture.
+      get liveCalls() {
+        // Construction order guarantees the events delegate exists before lifecycle first reads
+        // this (lifecycle is constructed last and only USES the bag during socket events).
+        return delegates.events!.liveCalls;
+      },
+      extractPhone: id => this.extractPhone(id),
+      addLidMappings: mappings => this.sessionStore.addLidMappings(mappings),
+      handleMessagesUpsert: event => this.events.handleMessagesUpsert(event),
+      handleMessagesUpdate: updates => this.events.handleMessagesUpdate(updates),
+      handleMessageReceiptUpdate: updates => this.events.handleMessageReceiptUpdate(updates),
+      logContactEvent: (event, records) => this.events.logContactEvent(event, records),
+      handleGroupParticipantsUpdate: event => this.events.handleGroupParticipantsUpdate(event),
+      handleGroupsUpdate: updates => this.events.handleGroupsUpdate(updates),
+      handleGroupsUpsert: groups => this.events.handleGroupsUpsert(groups),
+      handleGroupJoinRequest: event => this.events.handleGroupJoinRequest(event),
+      handleCallEvents: calls => this.events.handleCallEvents(calls),
+      handlePresenceUpdate: update => this.events.handlePresenceUpdate(update),
+      fenceStoredWrites: () => this.events.fenceStoredWrites(),
+      captureHistoryMessages: messages => this.history.captureHistoryMessages(messages),
+      hydrateNames: () => this.history.hydrateNames(),
+      restoreAddressbookSnapshot: () => this.history.restoreAddressbookSnapshot(),
+      getOnQRCode: () => this.callbacks.onQRCode,
+      getOnReady: () => this.callbacks.onReady,
+      getOnPushNameChanged: () => this.callbacks.onPushNameChanged,
+      getOnDisconnected: () => this.callbacks.onDisconnected,
+      getOnReconnecting: () => this.callbacks.onReconnecting,
+      getOnError: () => this.callbacks.onError,
+      getOnStateChanged: () => this.callbacks.onStateChanged,
+      getOnCredentialTeardownStarted: () => this.callbacks.onCredentialTeardownStarted,
+      getOnAccountRestriction: () => this.callbacks.onAccountRestriction,
+    };
+    delegates.events = this.events = new BaileysEvents(host);
+    this.groups = new BaileysGroups(host);
+    this.messaging = new BaileysMessaging(host);
+    this.contacts = new BaileysContacts(host);
+    this.statusOps = new BaileysStatus(host);
+    this.channels = new BaileysChannels(host);
+    this.catalog = new BaileysCatalog(host);
+    this.history = new BaileysHistory(host);
+    this.lifecycle = new BaileysLifecycle(host);
   }
 
   // ----- Lifecycle -----
 
   async initialize(callbacks: EngineEventCallbacks): Promise<void> {
     this.callbacks = callbacks;
-    this.intentionalClose = false;
-    try {
-      await this.connect();
-    } catch (err) {
-      this.setStatus(EngineStatus.FAILED);
-      this.callbacks.onError?.(err instanceof Error ? err.message : String(err));
-      throw err;
-    }
-  }
-
-  private async connect(): Promise<void> {
-    // I4: in-flight guard — skip if a connect() is already in progress.
-    if (this.connecting) {
-      return;
-    }
-    this.connecting = true;
-    try {
-      await this.connectInner();
-    } finally {
-      this.connecting = false;
-    }
-  }
-
-  private async connectInner(): Promise<void> {
-    this.setStatus(EngineStatus.INITIALIZING);
-    const b = await this.loadLib();
-    const { state, saveCreds } = await b.useMultiFileAuthState(this.authPath);
-    const { version } = await b.fetchLatestBaileysVersion();
-
-    // C2: resurrect-after-stop guard — if disconnect/logout/destroy ran during the awaits above,
-    // bail now so we don't create a live socket for a session that was intentionally stopped.
-    if (this.intentionalClose) {
-      return;
-    }
-
-    const sock = b.default({
-      auth: state,
-      version,
-      browser: BAILEYS_BROWSER,
-      printQRInTerminal: false,
-      // BaileysLogger matches ILogger exactly; cast needed because the module resolves
-      // the type through a deep import path that TypeScript does not auto-unify here.
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-      logger: createSilentLogger() as unknown as ILogger,
-    });
-    this.sock = sock;
-
-    sock.ev.on('creds.update', () => void saveCreds());
-    sock.ev.on('connection.update', update => this.handleConnectionUpdate(update));
-    sock.ev.on('messages.upsert', event => this.handleMessagesUpsert(event));
-    sock.ev.on('messages.update', updates => this.handleMessagesUpdate(updates));
-    sock.ev.on('contacts.upsert', contacts => this.sessionStore.upsertContacts(contacts));
-    sock.ev.on('contacts.update', updates => this.sessionStore.upsertContacts(updates));
-    sock.ev.on('chats.upsert', chats => this.sessionStore.upsertChats(chats));
-    sock.ev.on('chats.update', updates => this.sessionStore.upsertChats(updates));
-    sock.ev.on('messaging-history.set', history => {
-      this.sessionStore.upsertContacts(history.contacts);
-      this.sessionStore.upsertChats(history.chats);
-      // lidPnMappings is not in the installed @whiskeysockets/baileys@6.7.23 type definition but
-      // is present at runtime in later protocol versions; cast to access it safely.
-      const lidPnMappings = (history as unknown as { lidPnMappings?: { lid: string; pn: string }[] }).lidPnMappings;
-      this.sessionStore.addLidMappings(lidPnMappings ?? []);
-    });
-  }
-
-  private handleConnectionUpdate(update: {
-    connection?: string;
-    qr?: string;
-    lastDisconnect?: { error?: unknown };
-  }): void {
-    const { connection, qr, lastDisconnect } = update;
-
-    if (qr) {
-      // Baileys hands us the raw QR ref string; render it to a PNG data URL so the stored
-      // value matches the whatsapp-web.js engine's contract (the dashboard does <img src={qrCode}>).
-      void this.handleQrCode(qr);
-    }
-
-    if (connection === 'connecting') {
-      this.setStatus(EngineStatus.INITIALIZING);
-    }
-
-    if (connection === 'open') {
-      this.qrCode = null;
-      this.phoneNumber = this.extractPhone(this.sock?.user?.id);
-      this.pushName = this.sock?.user?.name ?? null;
-      // I4: reset the reconnect counter on a successful connection.
-      this.reconnectAttempts = 0;
-      this.setStatus(EngineStatus.READY);
-      this.callbacks.onReady?.(this.phoneNumber ?? '', this.pushName ?? '');
-    }
-
-    if (connection === 'close') {
-      const statusCode = (lastDisconnect?.error as { output?: { statusCode?: number } } | undefined)?.output
-        ?.statusCode;
-
-      if (this.intentionalClose) {
-        this.setStatus(EngineStatus.DISCONNECTED);
-        return;
-      }
-
-      if (statusCode === this.lib?.DisconnectReason.loggedOut) {
-        // Credentials invalidated — terminal. Re-linking requires a fresh QR/pairing.
-        this.setStatus(EngineStatus.DISCONNECTED);
-        this.callbacks.onDisconnected?.('logged out');
-        return;
-      }
-
-      // Recoverable (e.g. restartRequired right after pairing, transient drop) — reconnect with backoff.
-      // Do NOT fire onDisconnected here; this is a transient drop, not a terminal disconnect.
-      // connect() calls setStatus(INITIALIZING) which fires onStateChanged — that is the correct signal.
-      this.logger.log('Baileys connection dropped; reconnecting', { statusCode });
-
-      // I4: capped exponential backoff with in-flight timer guard.
-      if (this.reconnectAttempts >= BaileysAdapter.MAX_RECONNECT_ATTEMPTS) {
-        this.setStatus(EngineStatus.FAILED);
-        this.callbacks.onError?.(`reconnect attempts exhausted (${this.reconnectAttempts})`);
-        return;
-      }
-      this.reconnectAttempts += 1;
-      const delay = Math.min(30_000, 1_000 * 2 ** (this.reconnectAttempts - 1));
-      // Guard: if a timer is already pending, don't stack another one.
-      if (this.reconnectTimer) {
-        return;
-      }
-      this.reconnectTimer = setTimeout(() => {
-        this.reconnectTimer = undefined;
-        if (this.intentionalClose) {
-          return; // stopped while waiting — abort
-        }
-        void this.connect().catch(err => {
-          this.setStatus(EngineStatus.FAILED);
-          this.callbacks.onError?.(err instanceof Error ? err.message : String(err));
-        });
-      }, delay);
-    }
-  }
-
-  /** Render the raw Baileys QR ref to a PNG data URL, then publish it (mirrors the whatsapp-web.js engine). */
-  private async handleQrCode(qr: string): Promise<void> {
-    try {
-      this.qrCode = await qrcode.toDataURL(qr);
-      this.setStatus(EngineStatus.QR_READY);
-      this.callbacks.onQRCode?.(this.qrCode);
-    } catch (error) {
-      this.logger.error('Error generating QR code', String(error));
-    }
+    await blockSvgDecoding();
+    return this.lifecycle.initialize();
   }
 
   disconnect(): Promise<void> {
-    this.intentionalClose = true;
-    if (this.reconnectTimer) {
-      clearTimeout(this.reconnectTimer);
-      this.reconnectTimer = undefined;
-    }
-    this.sock?.end(undefined);
-    this.sock = null;
-    this.setStatus(EngineStatus.DISCONNECTED);
-    return Promise.resolve();
+    return this.lifecycle.disconnect();
   }
 
   async logout(): Promise<void> {
-    this.intentionalClose = true;
-    if (this.reconnectTimer) {
-      clearTimeout(this.reconnectTimer);
-      this.reconnectTimer = undefined;
-    }
-    try {
-      await this.sock?.logout();
-    } catch (err) {
-      this.logger.warn('Baileys logout failed; ending socket', {
-        error: err instanceof Error ? err.message : String(err),
-      });
-      this.sock?.end(undefined);
-    }
-    this.sock = null;
-    this.setStatus(EngineStatus.DISCONNECTED);
-    await this.config.messageStore?.clearSession(this.config.sessionId).catch(() => undefined);
-    // ponytail: leaves the multi-file auth dir on disk; a fresh link overwrites it. Add fs cleanup if
-    // stale creds ever block re-linking.
+    return this.lifecycle.logout();
   }
 
   destroy(): Promise<void> {
-    this.intentionalClose = true;
-    if (this.reconnectTimer) {
-      clearTimeout(this.reconnectTimer);
-      this.reconnectTimer = undefined;
-    }
-    this.sock?.end(undefined);
-    this.sock = null;
-    this.setStatus(EngineStatus.DISCONNECTED);
-    return Promise.resolve();
+    return this.lifecycle.destroy();
+  }
+
+  // Baileys has no separate Chromium process to SIGKILL (destroy() already ends the socket
+  // synchronously), so a force-destroy is just a destroy.
+  forceDestroy(): Promise<void> {
+    return this.lifecycle.forceDestroy();
   }
 
   // ----- Status -----
 
   getStatus(): EngineStatus {
-    return this.status;
+    return this.lifecycle.getStatus();
+  }
+
+  async probeLiveness(): Promise<boolean> {
+    return this.lifecycle.probeLiveness();
   }
 
   getQRCode(): string | null {
-    return this.qrCode;
+    return this.lifecycle.getQRCode();
   }
 
   async requestPairingCode(phoneNumber: string): Promise<string> {
-    if (!this.sock) {
-      throw new EngineNotReadyError('Cannot request a pairing code before the engine is initialized.');
-    }
-    return this.sock.requestPairingCode(phoneNumber);
+    return this.lifecycle.requestPairingCode(phoneNumber);
   }
 
   getPhoneNumber(): string | null {
-    return this.phoneNumber;
+    return this.lifecycle.getPhoneNumber();
   }
 
   getPushName(): string | null {
-    return this.pushName;
+    return this.lifecycle.getPushName();
   }
 
   // ----- Messaging -----
 
-  async sendTextMessage(chatId: string, text: string): Promise<MessageResult> {
-    this.ensureReady();
-    const sent = await this.sock!.sendMessage(chatId, { text });
-    if (sent) {
-      void this.config.messageStore?.put(this.config.sessionId, sent).catch(err =>
-        this.logger.warn('Failed to persist sent message to store', {
-          error: err instanceof Error ? err.message : String(err),
-        }),
-      );
-    }
-    return {
-      id: sent?.key?.id ?? '',
-      timestamp: this.toUnixSeconds(sent?.messageTimestamp),
-    };
+  async sendTextMessage(
+    chatId: string,
+    text: string,
+    mentions?: string[],
+    options?: { linkPreview?: boolean; customPreview?: CustomLinkPreview },
+  ): Promise<MessageResult> {
+    return this.messaging.sendTextMessage(chatId, text, mentions, options);
   }
 
   async checkNumberExists(number: string): Promise<boolean> {
-    return (await this.getNumberId(number)) !== null;
+    return this.messaging.checkNumberExists(number);
   }
 
   async getNumberId(number: string): Promise<string | null> {
-    this.ensureReady();
-    const results = await this.sock!.onWhatsApp(number);
-    const hit = results?.[0];
-    return hit?.exists ? hit.jid : null;
+    return this.messaging.getNumberId(number);
   }
 
   async sendChatState(chatId: string, state: ChatState): Promise<void> {
-    this.ensureReady();
-    const presence = state === 'typing' ? 'composing' : state === 'recording' ? 'recording' : 'paused';
-    await this.sock!.sendPresenceUpdate(presence, chatId);
+    return this.messaging.sendChatState(chatId, state);
+  }
+
+  async setOnlinePresence(available: boolean): Promise<void> {
+    return this.messaging.setOnlinePresence(available);
   }
 
   async sendImageMessage(chatId: string, media: MediaInput): Promise<MessageResult> {
-    this.ensureReady();
-    const { data, mimetype } = await this.resolveMediaBuffer(media);
-    return this.sendContent(chatId, { image: data, caption: media.caption, mimetype });
+    return this.messaging.sendImageMessage(chatId, media);
   }
 
   async sendVideoMessage(chatId: string, media: MediaInput): Promise<MessageResult> {
-    this.ensureReady();
-    const { data, mimetype } = await this.resolveMediaBuffer(media);
-    return this.sendContent(chatId, { video: data, caption: media.caption, mimetype });
+    return this.messaging.sendVideoMessage(chatId, media);
   }
 
   async sendAudioMessage(chatId: string, media: MediaInput): Promise<MessageResult> {
-    this.ensureReady();
-    const { data, mimetype } = await this.resolveMediaBuffer(media);
-    return this.sendContent(chatId, { audio: data, mimetype, ptt: false });
+    return this.messaging.sendAudioMessage(chatId, media);
   }
 
   async sendDocumentMessage(chatId: string, media: MediaInput): Promise<MessageResult> {
-    this.ensureReady();
-    const { data, mimetype } = await this.resolveMediaBuffer(media);
-    return this.sendContent(chatId, { document: data, mimetype, fileName: media.filename ?? 'file' });
+    return this.messaging.sendDocumentMessage(chatId, media);
   }
 
   async sendStickerMessage(chatId: string, media: MediaInput): Promise<MessageResult> {
-    this.ensureReady();
-    const { data } = await this.resolveMediaBuffer(media);
-    return this.sendContent(chatId, { sticker: data });
+    return this.messaging.sendStickerMessage(chatId, media);
   }
 
   async sendLocationMessage(chatId: string, location: LocationInput): Promise<MessageResult> {
-    this.ensureReady();
-    return this.sendContent(chatId, {
-      location: {
-        degreesLatitude: location.latitude,
-        degreesLongitude: location.longitude,
-        name: location.description,
-        address: location.address,
-      },
-    });
+    return this.messaging.sendLocationMessage(chatId, location);
   }
 
   async sendContactMessage(chatId: string, contact: ContactCard): Promise<MessageResult> {
-    this.ensureReady();
-    return this.sendContent(chatId, {
-      contacts: { displayName: contact.name, contacts: [{ vcard: this.buildVCard(contact) }] },
-    });
+    return this.messaging.sendContactMessage(chatId, contact);
   }
 
-  async replyToMessage(chatId: string, quotedMsgId: string, text: string): Promise<MessageResult> {
-    this.ensureReady();
-    const quoted = await this.requireStored(quotedMsgId);
-    return this.sendContent(chatId, { text }, { quoted });
+  async sendPollMessage(chatId: string, poll: PollInput): Promise<MessageResult> {
+    return this.messaging.sendPollMessage(chatId, poll);
+  }
+
+  async replyToMessage(chatId: string, quotedMsgId: string, text: string, mentions?: string[]): Promise<MessageResult> {
+    return this.messaging.replyToMessage(chatId, quotedMsgId, text, mentions);
   }
 
   async forwardMessage(fromChatId: string, toChatId: string, messageId: string): Promise<MessageResult> {
-    this.ensureReady();
-    const forward = await this.requireStored(messageId);
-    return this.sendContent(toChatId, { forward });
+    return this.messaging.forwardMessage(fromChatId, toChatId, messageId);
   }
 
   async reactToMessage(chatId: string, messageId: string, emoji: string): Promise<void> {
-    this.ensureReady();
-    const target = await this.requireStored(messageId);
-    await this.sock!.sendMessage(chatId, { react: { text: emoji, key: target.key } });
+    return this.messaging.reactToMessage(chatId, messageId, emoji);
   }
 
   async deleteMessage(chatId: string, messageId: string, forEveryone = true): Promise<void> {
-    this.ensureReady();
-    if (!forEveryone) {
-      // Baileys only supports revoke-for-everyone via sendMessage; delete-for-me is not implemented.
-      throw new EngineNotSupportedError('deleteMessage (delete-for-me)');
-    }
-    const target = await this.requireStored(messageId);
-    await this.sock!.sendMessage(chatId, { delete: target.key });
+    return this.messaging.deleteMessage(chatId, messageId, forEveryone);
+  }
+
+  async starMessage(chatId: string, messageId: string, star: boolean): Promise<void> {
+    return this.messaging.starMessage(chatId, messageId, star);
+  }
+
+  async pinMessage(chatId: string, messageId: string, durationSeconds: number): Promise<void> {
+    return this.messaging.pinMessage(chatId, messageId, durationSeconds);
+  }
+
+  async unpinMessage(chatId: string, messageId: string): Promise<void> {
+    return this.messaging.unpinMessage(chatId, messageId);
+  }
+
+  async clickButton(chatId: string, messageId: string, buttonId: string, text?: string): Promise<MessageResult> {
+    return this.messaging.clickButton(chatId, messageId, buttonId, text);
+  }
+
+  async editMessage(chatId: string, messageId: string, body: string, mentions?: string[]): Promise<MessageResult> {
+    return this.messaging.editMessage(chatId, messageId, body, mentions);
   }
 
   // ----- Groups -----
 
   async getGroups(): Promise<Group[]> {
-    this.ensureReady();
-    const all = await this.sock!.groupFetchAllParticipating();
-    const self = this.normalizedSelfJid();
-    return Object.values(all).map(metadata => mapBaileysGroup(metadata, self));
+    return this.groups.getGroups();
   }
 
   async getGroupInfo(groupId: string): Promise<GroupInfo | null> {
-    this.ensureReady();
-    try {
-      const metadata = await this.sock!.groupMetadata(groupId);
-      return mapBaileysGroupInfo(metadata);
-    } catch (err) {
-      this.logger.debug('groupMetadata failed; treating as not-found', {
-        groupId,
-        error: err instanceof Error ? err.message : String(err),
-      });
-      return null; // not a group / not found
-    }
+    return this.groups.getGroupInfo(groupId);
   }
 
   async createGroup(name: string, participants: string[]): Promise<Group> {
-    this.ensureReady();
-    const metadata = await this.sock!.groupCreate(name, participants);
-    return mapBaileysGroup(metadata, this.normalizedSelfJid());
+    return this.groups.createGroup(name, participants);
   }
 
-  async addParticipants(groupId: string, participants: string[]): Promise<void> {
-    this.ensureReady();
-    await this.sock!.groupParticipantsUpdate(groupId, participants, 'add');
+  async addParticipants(groupId: string, participants: string[]): Promise<ParticipantOperationResult[]> {
+    return this.groups.addParticipants(groupId, participants);
   }
 
-  async removeParticipants(groupId: string, participants: string[]): Promise<void> {
-    this.ensureReady();
-    await this.sock!.groupParticipantsUpdate(groupId, participants, 'remove');
+  async removeParticipants(groupId: string, participants: string[]): Promise<ParticipantOperationResult[]> {
+    return this.groups.removeParticipants(groupId, participants);
   }
 
-  async promoteParticipants(groupId: string, participants: string[]): Promise<void> {
-    this.ensureReady();
-    await this.sock!.groupParticipantsUpdate(groupId, participants, 'promote');
+  async promoteParticipants(groupId: string, participants: string[]): Promise<ParticipantOperationResult[]> {
+    return this.groups.promoteParticipants(groupId, participants);
   }
 
-  async demoteParticipants(groupId: string, participants: string[]): Promise<void> {
-    this.ensureReady();
-    await this.sock!.groupParticipantsUpdate(groupId, participants, 'demote');
+  async demoteParticipants(groupId: string, participants: string[]): Promise<ParticipantOperationResult[]> {
+    return this.groups.demoteParticipants(groupId, participants);
   }
 
   async leaveGroup(groupId: string): Promise<void> {
-    this.ensureReady();
-    await this.sock!.groupLeave(groupId);
+    return this.groups.leaveGroup(groupId);
   }
 
   async setGroupSubject(groupId: string, subject: string): Promise<void> {
-    this.ensureReady();
-    await this.sock!.groupUpdateSubject(groupId, subject);
+    return this.groups.setGroupSubject(groupId, subject);
   }
 
   async setGroupDescription(groupId: string, description: string): Promise<void> {
-    this.ensureReady();
-    await this.sock!.groupUpdateDescription(groupId, description);
+    return this.groups.setGroupDescription(groupId, description);
   }
 
   async getGroupInviteCode(groupId: string): Promise<string> {
-    this.ensureReady();
-    return (await this.sock!.groupInviteCode(groupId)) ?? '';
+    return this.groups.getGroupInviteCode(groupId);
   }
 
   async revokeGroupInviteCode(groupId: string): Promise<string> {
-    this.ensureReady();
-    return (await this.sock!.groupRevokeInvite(groupId)) ?? '';
+    return this.groups.revokeGroupInviteCode(groupId);
+  }
+
+  getGroupJoinInfo(inviteCode: string): Promise<GroupJoinInfo> {
+    return this.groups.getGroupJoinInfo(inviteCode);
+  }
+
+  async joinGroupViaInviteCode(inviteCode: string): Promise<string> {
+    return this.groups.joinGroupViaInviteCode(inviteCode);
+  }
+
+  async setGroupMessagesAdminsOnly(groupId: string, adminsOnly: boolean): Promise<void> {
+    return this.groups.setGroupMessagesAdminsOnly(groupId, adminsOnly);
+  }
+
+  async setGroupInfoAdminsOnly(groupId: string, adminsOnly: boolean): Promise<void> {
+    return this.groups.setGroupInfoAdminsOnly(groupId, adminsOnly);
+  }
+
+  async setGroupMemberAddMode(groupId: string, mode: GroupMemberAddMode): Promise<void> {
+    return this.groups.setGroupMemberAddMode(groupId, mode);
+  }
+
+  async setGroupPicture(groupId: string, media: MediaInput): Promise<void> {
+    return this.groups.setGroupPicture(groupId, media);
+  }
+
+  async deleteGroupPicture(groupId: string): Promise<void> {
+    return this.groups.deleteGroupPicture(groupId);
+  }
+
+  async setGroupEphemeral(groupId: string, durationSec: number): Promise<void> {
+    return this.groups.setGroupEphemeral(groupId, durationSec);
+  }
+
+  async setGroupMemberLabel(groupId: string, label: string): Promise<void> {
+    return this.groups.setGroupMemberLabel(groupId, label);
+  }
+
+  async getGroupMembershipRequests(groupId: string): Promise<GroupMembershipRequest[]> {
+    return this.groups.getGroupMembershipRequests(groupId);
+  }
+
+  async approveGroupMembershipRequests(
+    groupId: string,
+    participants?: string[],
+  ): Promise<ParticipantOperationResult[]> {
+    return this.groups.approveGroupMembershipRequests(groupId, participants);
+  }
+
+  async rejectGroupMembershipRequests(groupId: string, participants?: string[]): Promise<ParticipantOperationResult[]> {
+    return this.groups.rejectGroupMembershipRequests(groupId, participants);
   }
 
   async getProfilePicture(contactId: string): Promise<string | null> {
-    this.ensureReady();
-    try {
-      return (await this.sock!.profilePictureUrl(contactId, 'image')) ?? null;
-    } catch (err) {
-      this.logger.debug('profilePictureUrl failed; no picture or hidden', {
-        contactId,
-        error: err instanceof Error ? err.message : String(err),
-      });
-      return null; // no picture set, or hidden by privacy
-    }
+    return this.contacts.getProfilePicture(contactId);
   }
 
   async blockContact(contactId: string): Promise<void> {
-    this.ensureReady();
-    await this.sock!.updateBlockStatus(contactId, 'block');
+    return this.contacts.blockContact(contactId);
+  }
+
+  async upsertContact(contactId: string, firstName: string, lastName?: string): Promise<void> {
+    return this.contacts.upsertContact(contactId, firstName, lastName);
+  }
+
+  async deleteContact(contactId: string): Promise<void> {
+    return this.contacts.deleteContact(contactId);
   }
 
   async unblockContact(contactId: string): Promise<void> {
-    this.ensureReady();
-    await this.sock!.updateBlockStatus(contactId, 'unblock');
+    return this.contacts.unblockContact(contactId);
+  }
+
+  async getBlockedContacts(): Promise<string[]> {
+    return this.contacts.getBlockedContacts();
+  }
+
+  // ----- Profile (own account) -----
+
+  async setProfileName(name: string): Promise<void> {
+    return this.contacts.setProfileName(name);
+  }
+
+  async setProfileStatus(status: string): Promise<void> {
+    return this.contacts.setProfileStatus(status);
+  }
+
+  async deleteProfilePicture(): Promise<void> {
+    return this.contacts.deleteProfilePicture();
+  }
+
+  async setProfilePicture(media: MediaInput): Promise<void> {
+    return this.contacts.setProfilePicture(media);
   }
 
   // ----- Contacts & chats -----
 
-  // eslint-disable-next-line @typescript-eslint/require-await
   async getContacts(): Promise<Contact[]> {
-    this.ensureReady();
-    return this.sessionStore.listContacts();
+    return this.contacts.getContacts();
   }
 
-  // eslint-disable-next-line @typescript-eslint/require-await
   async getContactById(contactId: string): Promise<Contact | null> {
-    this.ensureReady();
-    return this.sessionStore.findContact(contactId);
+    return this.contacts.getContactById(contactId);
   }
 
-  // eslint-disable-next-line @typescript-eslint/require-await
   async resolveContactPhone(contactId: string): Promise<string | null> {
-    this.ensureReady();
-    return this.sessionStore.resolvePhone(contactId);
+    return this.contacts.resolveContactPhone(contactId);
   }
 
-  // eslint-disable-next-line @typescript-eslint/require-await
+  async getContactLid(number: string): Promise<string | null> {
+    return this.contacts.getContactLid(number);
+  }
+
   async getChats(): Promise<ChatSummary[]> {
-    this.ensureReady();
-    return this.sessionStore.listChats();
+    return this.contacts.getChats();
   }
 
-  async sendSeen(chatId: string): Promise<boolean> {
-    this.ensureReady();
-    const last = this.sessionStore.lastMessage(chatId);
-    if (!last) {
-      return false; // nothing known to mark read
-    }
-    await this.sock!.readMessages([last.key]);
-    return true;
+  async subscribeToPresence(chatId: string): Promise<void> {
+    return this.messaging.subscribeToPresence(chatId);
   }
 
-  async deleteChat(chatId: string): Promise<boolean> {
-    this.ensureReady();
-    const last = this.sessionStore.lastMessage(chatId);
-    if (!last) {
-      return false; // Baileys' delete needs the last message; can't synthesize it
-    }
-    await this.sock!.chatModify(
-      { delete: true, lastMessages: [{ key: last.key, messageTimestamp: last.timestamp }] },
-      chatId,
-    );
-    return true;
+  async sendSeen(
+    chatId: string,
+    messageIds?: string[],
+    authors?: ReadonlyMap<string, string>,
+    stored?: StoredChatMessageLookup,
+  ): Promise<boolean> {
+    return this.contacts.sendSeen(chatId, messageIds, authors, stored);
   }
 
-  // ----- Gated: not supported by this minimal slice (no store) -----
+  async markUnread(chatId: string, stored?: StoredChatMessageLookup): Promise<boolean> {
+    return this.contacts.markUnread(chatId, stored);
+  }
+
+  async deleteChat(chatId: string, stored?: StoredChatMessageLookup): Promise<boolean> {
+    return this.contacts.deleteChat(chatId, stored);
+  }
+
+  async muteChat(chatId: string, muteUntil: number | null): Promise<void> {
+    return this.contacts.muteChat(chatId, muteUntil);
+  }
+
+  async pinChat(chatId: string, pin: boolean): Promise<boolean> {
+    return this.contacts.pinChat(chatId, pin);
+  }
+
+  async archiveChat(chatId: string, archive: boolean, stored?: StoredChatMessageLookup): Promise<boolean> {
+    return this.contacts.archiveChat(chatId, archive, stored);
+  }
+
+  async clearChatMessages(chatId: string, stored?: StoredChatMessageLookup): Promise<boolean> {
+    return this.contacts.clearChatMessages(chatId, stored);
+  }
+
+  // ----- Gated: unsupported on Baileys (reasons inline) -----
   /* eslint-disable @typescript-eslint/no-unused-vars */
 
   getMessageReactions(_chatId: string, _messageId: string): Promise<MessageReaction[]> {
     return this.unsupported('getMessageReactions');
   }
-  getChatHistory(_chatId: string, _limit?: number, _includeMedia?: boolean): Promise<IncomingMessage[]> {
+
+  getMessageReceipts(_chatId: string, _messageId: string): Promise<MessageReceipts> {
+    return this.unsupported('getMessageReceipts');
+  }
+
+  // Baileys exposes label WRITES only — chats.d.ts has addLabel/addChatLabel/removeChatLabel
+  // and no query of any kind, and Types/Label.d.ts is types-only. Listing the chats on a label would
+  // mean maintaining an app-state cache fed by the label-association sync events, which is a
+  // separate piece of work from this one and is tracked as such.
+  getChatsByLabel(_labelId: string): Promise<ChatSummary[]> {
+    return this.unsupported('getChatsByLabel');
+  }
+
+  // No vote-send helper exists in Baileys — only decryptPollVote for RECEIVING. Sending one needs a
+  // hand-built proto.Message.PollUpdateMessage with HMAC-SHA256 vote encryption keyed by the poll
+  // creation's messageSecret.
+  votePoll(_chatId: string, _pollMessageId: string, _options: string[]): Promise<void> {
+    return this.unsupported('votePoll');
+  }
+  getChatHistory(
+    _chatId: string,
+    _limit?: number,
+    _includeMedia?: boolean,
+    _mediaMaxBytes?: number,
+    _signal?: AbortSignal,
+  ): Promise<IncomingMessage[]> {
     return this.unsupported('getChatHistory');
   }
   getLabels(): Promise<Label[]> {
@@ -592,24 +684,134 @@ export class BaileysAdapter implements IWhatsAppEngine {
   getChatLabels(_chatId: string): Promise<Label[]> {
     return this.unsupported('getChatLabels');
   }
-  addLabelToChat(_chatId: string, _labelId: string): Promise<void> {
-    return this.unsupported('addLabelToChat');
+  // WhatsApp Business only — Baileys rejects these on personal accounts. The label must already
+  // exist (use getLabels on an engine that lists them); addChatLabel/removeChatLabel associate it
+  // with a chat, they do not create/edit the label definition.
+  // Resolve to the jid the chat is keyed under first (its lid for a lid-migrated contact, the engine
+  // form for a chat the store does not know): chatModify (which both calls wrap) keys the label
+  // app-state index by the RAW jid, so any other spelling labels a phantom chat the phone never
+  // reads, reported as success.
+  /**
+   * Labels are a Business-account chat feature and WhatsApp has no concept of labelling a channel.
+   * whatsapp-web.js refuses a channel jid outright; this engine forwarded it and answered success
+   * while nothing was labelled, so the same request reported two different outcomes per engine.
+   */
+  private assertLabelable(chatId: string): void {
+    if (isChannelJid(chatId)) {
+      throw new ChatLabelsUnsupportedError('Channels do not support chat labels.');
+    }
   }
-  removeLabelFromChat(_chatId: string, _labelId: string): Promise<void> {
-    return this.unsupported('removeLabelFromChat');
+
+  async addLabelToChat(chatId: string, labelId: string): Promise<void> {
+    this.ensureReady();
+    this.assertLabelable(chatId);
+    const socket = this.sock!;
+    const jid = await this.contacts.confirmedChatJid(chatId);
+    this.ensureReady();
+    if (this.sock !== socket) throw new EngineNotReadyError();
+    await withQueryDeadline(
+      socket.addChatLabel(jid, labelId),
+      BAILEYS_QUERY_BUDGET_MS,
+      'WhatsApp did not confirm the chat label add in time',
+    );
   }
+  async removeLabelFromChat(chatId: string, labelId: string): Promise<void> {
+    this.ensureReady();
+    this.assertLabelable(chatId);
+    const socket = this.sock!;
+    const jid = await this.contacts.confirmedChatJid(chatId);
+    this.ensureReady();
+    if (this.sock !== socket) throw new EngineNotReadyError();
+    await withQueryDeadline(
+      socket.removeChatLabel(jid, labelId),
+      BAILEYS_QUERY_BUDGET_MS,
+      'WhatsApp did not confirm the chat label removal in time',
+    );
+  }
+  /**
+   * Create or update a label.
+   *
+   * WhatsApp models this as ONE app-state write — a `label_edit` patch indexed by the label id — so
+   * create and update are the same operation, distinguished only by whether the id already exists.
+   * That is why the id is caller-supplied rather than returned.
+   *
+   * The `jid` Baileys asks for is unused on this patch: `chatModifyToPatch` builds the index from
+   * `['label_edit', id]` and never reads it (Utils/chat-utils.js). The account's own jid is
+   * passed because the call demands one, not because it addresses anything.
+   */
+  async upsertLabel(label: LabelInput): Promise<void> {
+    this.ensureReady();
+    // Unset fields are passed through as undefined rather than stripped: the protobuf encoder skips
+    // a field that is `!= null` false, exactly as it skips a missing one (WAProto/index.js,
+    // LabelEditAction.encode). That does not make the write partial: the patch is an app-state SET
+    // on ['label_edit', id], which replaces the stored action whole, so an omitted name is not kept
+    // (Utils/chat-utils.js builds it with OP.SET and the receiver applies it without a merge). Colour 0
+    // is a real WhatsApp colour and survives that check — which is why it must never be tested for
+    // truthiness on the way here.
+    await withQueryDeadline(
+      this.sock!.addLabel(this.ownJidForAppState(), { id: label.id, name: label.name, color: label.color }),
+      BAILEYS_QUERY_BUDGET_MS,
+      'WhatsApp did not confirm the label save in time',
+    );
+  }
+
+  /** Delete a label. The same `label_edit` write, with the tombstone flag set. */
+  async deleteLabel(labelId: string): Promise<void> {
+    this.ensureReady();
+    await withQueryDeadline(
+      this.sock!.addLabel(this.ownJidForAppState(), { id: labelId, deleted: true }),
+      BAILEYS_QUERY_BUDGET_MS,
+      'WhatsApp did not confirm the label delete in time',
+    );
+  }
+
+  /**
+   * A jid for the label-edit app-state write, which needs one but never uses it. The account's own
+   * id is the honest choice — the write is about this account, not about a conversation.
+   */
+  private ownJidForAppState(): string {
+    return this.sock?.user?.id ?? 'status@broadcast';
+  }
+
+  createChannel(name: string, description?: string): Promise<Channel> {
+    return this.channels.createChannel(name, description);
+  }
+
+  deleteChannel(channelId: string): Promise<void> {
+    return this.channels.deleteChannel(channelId);
+  }
+
+  muteChannel(channelId: string, mute: boolean): Promise<void> {
+    return this.channels.muteChannel(channelId, mute);
+  }
+
+  demoteChannelAdmin(channelId: string, userId: string): Promise<void> {
+    return this.channels.demoteChannelAdmin(channelId, userId);
+  }
+
+  transferChannelOwnership(channelId: string, newOwnerId: string): Promise<void> {
+    return this.channels.transferChannelOwnership(channelId, newOwnerId);
+  }
+
   getSubscribedChannels(): Promise<Channel[]> {
     return this.unsupported('getSubscribedChannels');
   }
-  getChannelById(_channelId: string): Promise<Channel | null> {
-    return this.unsupported('getChannelById');
+  async getChannelById(channelId: string): Promise<Channel | null> {
+    return this.channels.getChannelById(channelId);
   }
-  subscribeToChannel(_inviteCode: string): Promise<Channel> {
-    return this.unsupported('subscribeToChannel');
+
+  async subscribeToChannel(inviteCode: string): Promise<Channel> {
+    return this.channels.subscribeToChannel(inviteCode);
   }
-  unsubscribeFromChannel(_channelId: string): Promise<void> {
-    return this.unsupported('unsubscribeFromChannel');
+
+  async unsubscribeFromChannel(channelId: string): Promise<void> {
+    return this.channels.unsubscribeFromChannel(channelId);
   }
+
+  // getChannelMessages is not wired: Baileys' newsletterFetchMessages returns the RAW query
+  // BinaryNode with no library parser, so mapping it to ChannelMessage[] needs a verified
+  // BinaryNode walk (or a live spike) that can't be validated without a WhatsApp session. Kept as a
+  // documented adapter-gap in the engine capability matrix rather than shipped as an unverified walk.
   getChannelMessages(_channelId: string, _limit?: number): Promise<ChannelMessage[]> {
     return this.unsupported('getChannelMessages');
   }
@@ -619,240 +821,79 @@ export class BaileysAdapter implements IWhatsAppEngine {
   getContactStatus(_contactId: string): Promise<Status[]> {
     return this.unsupported('getContactStatus');
   }
-  postTextStatus(_text: string, _options?: TextStatusOptions): Promise<StatusResult> {
-    return this.unsupported('postTextStatus');
+  postTextStatus(text: string, options: StatusPostOptions): Promise<StatusResult> {
+    return this.statusOps.postTextStatus(text, options);
   }
-  postImageStatus(_media: MediaInput, _caption?: string): Promise<StatusResult> {
-    return this.unsupported('postImageStatus');
+  postImageStatus(media: MediaInput, options: StatusPostOptions): Promise<StatusResult> {
+    return this.statusOps.postImageStatus(media, options);
   }
-  postVideoStatus(_media: MediaInput, _caption?: string): Promise<StatusResult> {
-    return this.unsupported('postVideoStatus');
+  postVideoStatus(media: MediaInput, options: StatusPostOptions): Promise<StatusResult> {
+    return this.statusOps.postVideoStatus(media, options);
   }
-  deleteStatus(_statusId: string): Promise<void> {
-    return this.unsupported('deleteStatus');
+
+  postVoiceStatus(media: MediaInput, options: StatusPostOptions): Promise<StatusResult> {
+    return this.statusOps.postVoiceStatus(media, options);
+  }
+  async deleteStatus(statusId: string): Promise<void> {
+    return this.statusOps.deleteStatus(statusId);
   }
   getCatalog(): Promise<Catalog | null> {
-    return this.unsupported('getCatalog');
+    return this.catalog.getCatalog();
   }
-  getProducts(_options?: ProductQueryOptions): Promise<PaginatedProducts> {
-    return this.unsupported('getProducts');
+  getProducts(options?: ProductQueryOptions): Promise<PaginatedProducts> {
+    return this.catalog.getProducts(options);
   }
-  getProduct(_productId: string): Promise<Product | null> {
-    return this.unsupported('getProduct');
+  getProduct(productId: string): Promise<Product | null> {
+    return this.catalog.getProduct(productId);
   }
-  sendProduct(_chatId: string, _productId: string, _body?: string): Promise<MessageResult> {
-    return this.unsupported('sendProduct');
+  async sendProduct(chatId: string, productId: string, body?: string): Promise<MessageResult> {
+    const sock = this.ensureReadySocket();
+    const product = await this.catalog.getProduct(productId, sock).catch((error: unknown) => {
+      this.ensureReadySocket(sock);
+      if (error instanceof EngineNotReadyError) throw markNothingSent(error);
+      // Still 403, but no longer an EngineRefusedError: the send breaker counts WhatsApp refusing a
+      // send, and a catalog read it refused says nothing about the account's send standing.
+      if (error instanceof EngineRefusedError) throw markNothingSent(new ForbiddenException(error.message));
+      // A lookup that timed out or was throttled failed before the message was handed to WhatsApp, and so did
+      // any other failure of this read: the write comes after it.
+      if (error instanceof EngineTransportError) throw new EngineNotSentError(error.message);
+      throw markNothingSent(mapSendRefusal(error));
+    });
+    this.ensureReadySocket(sock);
+    if (!product) {
+      throw markNothingSent(new NotFoundException(`Product ${productId} not found in the session catalog`));
+    }
+    return this.messaging.sendProductMessage(chatId, product, body, sock);
   }
+  // No catalog-level message primitive exists in Baileys (only the single-product {product}
+  // content), so sendCatalog stays a documented library limitation.
   sendCatalog(_chatId: string, _body?: string): Promise<MessageResult> {
     return this.unsupported('sendCatalog');
   }
   /* eslint-enable @typescript-eslint/no-unused-vars */
 
+  // ----- Events -----
+
+  createCallLink(type: CallLinkType, startTime: number): Promise<string> {
+    return this.messaging.createCallLink(type, startTime);
+  }
+
+  async rejectCall(callId: string): Promise<void> {
+    return this.events.rejectCall(callId);
+  }
+
   // ----- Helpers -----
 
-  private handleMessagesUpsert(event: { messages: WAMessage[]; type: string }): void {
-    // Only live messages ('notify'); 'append' is history sync, which this storeless slice skips.
-    if (event.type !== 'notify') {
-      return;
-    }
-    for (const msg of event.messages) {
-      if (!msg.message || !msg.key?.remoteJid) {
-        continue; // protocol/empty messages carry no neutral content
-      }
-      void this.processInboundMessage(msg);
-    }
-  }
-
-  private async processInboundMessage(msg: WAMessage): Promise<void> {
+  private ensureReadySocket(expected?: WASocket): WASocket {
     try {
-      const b = await this.loadLib();
-      const remoteJid = msg.key.remoteJid!;
-      const contentType = b.getContentType(msg.message ?? undefined);
-
-      // --- protocolMessage REVOKE: don't emit onMessage ---
-      if (contentType === 'protocolMessage') {
-        const pm = msg.message?.protocolMessage;
-        if (pm?.type === b.proto.Message.ProtocolMessage.Type.REVOKE) {
-          const from = msg.key.fromMe === true ? this.normalizedSelfJid() : remoteJid;
-          const to = msg.key.fromMe === true ? remoteJid : this.normalizedSelfJid();
-          const revoked: RevokedMessage = {
-            id: pm.key?.id ?? '',
-            chatId: remoteJid,
-            from,
-            to,
-            type: 'revoked',
-            body: '',
-            timestamp: this.toUnixSeconds(msg.messageTimestamp),
-          };
-          this.callbacks.onMessageRevoked?.(revoked);
-          return;
-        }
-        // Other protocol messages (ephemeral, history sync, etc.) — skip silently.
-        return;
-      }
-
-      // --- reactionMessage: don't emit onMessage ---
-      if (contentType === 'reactionMessage') {
-        const rm = msg.message?.reactionMessage;
-        const event: ReactionEvent = {
-          messageId: rm?.key?.id ?? '',
-          chatId: remoteJid,
-          reaction: rm?.text ?? '',
-          senderId: msg.key.participant ?? remoteJid,
-        };
-        this.callbacks.onMessageReaction?.(event);
-        return;
-      }
-
-      // --- Normal message: enrich + emit ---
-      const incoming = await this.mapMessage(msg, contentType);
-      if (msg.key.fromMe === true) {
-        this.callbacks.onMessageCreate?.(incoming);
-      } else {
-        this.callbacks.onMessage?.(incoming);
-      }
-      void this.config.messageStore?.put(this.config.sessionId, msg).catch(err =>
-        this.logger.warn('Failed to persist message to store', {
-          error: err instanceof Error ? err.message : String(err),
-        }),
-      );
-      this.sessionStore.recordMessage(msg);
-    } catch (err) {
-      this.logger.error(
-        `Unhandled error processing inbound message (id=${msg.key?.id ?? 'unknown'}); dropping`,
-        err instanceof Error ? err.message : String(err),
-      );
+      this.ensureReady();
+    } catch (error) {
+      throw markNothingSent(error);
     }
-  }
-
-  private handleMessagesUpdate(
-    updates: Array<{ key?: { id?: string | null }; update?: { status?: number | null } }>,
-  ): void {
-    for (const u of updates) {
-      const status = mapBaileysStatus(u.update?.status);
-      if (status && u.key?.id) {
-        this.callbacks.onMessageAck?.(u.key.id, status);
-      }
+    if (!this.sock || (expected && this.sock !== expected)) {
+      throw markNothingSent(new EngineNotReadyError());
     }
-  }
-
-  private async mapMessage(msg: WAMessage, contentType: string | undefined): Promise<IncomingMessage> {
-    const b = await this.loadLib();
-    const content = msg.message ?? {};
-
-    // Body: text first, then media caption as fallback.
-    const body =
-      content.conversation ??
-      content.extendedTextMessage?.text ??
-      content.imageMessage?.caption ??
-      content.videoMessage?.caption ??
-      content.documentMessage?.caption ??
-      '';
-
-    // --- location ---
-    // ILocationMessage has name/address; ILiveLocationMessage does not — use the static variant only.
-    let location: IncomingMessage['location'];
-    if (contentType === 'locationMessage' || contentType === 'liveLocationMessage') {
-      const lm = content.locationMessage ?? content.liveLocationMessage;
-      if (lm) {
-        const staticLm = content.locationMessage; // only ILocationMessage has name/address
-        location = {
-          latitude: lm.degreesLatitude ?? 0,
-          longitude: lm.degreesLongitude ?? 0,
-          description: staticLm?.name ?? undefined,
-          address: staticLm?.address ?? undefined,
-        };
-      }
-    }
-
-    // --- media (image / video / audio / document / sticker) ---
-    let media: IncomingMessage['media'];
-    const isMediaType =
-      contentType === 'imageMessage' ||
-      contentType === 'videoMessage' ||
-      contentType === 'audioMessage' ||
-      contentType === 'documentMessage' ||
-      contentType === 'documentWithCaptionMessage' ||
-      contentType === 'stickerMessage';
-    if (isMediaType) {
-      try {
-        const buf = await b.downloadMediaMessage(
-          msg,
-          'buffer',
-          {},
-          {
-            logger: createSilentLogger(),
-            reuploadRequest: this.sock!.updateMediaMessage,
-          },
-        );
-        // normalizeMessageContent unwraps documentWithCaptionMessage / viewOnceMessage /
-        // ephemeralMessage wrappers so we always reach the inner media sub-message.
-        const normalizedContent = b.normalizeMessageContent(content) ?? content;
-        const subMessage =
-          normalizedContent.imageMessage ??
-          normalizedContent.videoMessage ??
-          normalizedContent.audioMessage ??
-          normalizedContent.documentMessage ??
-          normalizedContent.stickerMessage;
-        const mimetype = subMessage?.mimetype ?? '';
-        const filename = normalizedContent.documentMessage?.fileName ?? undefined;
-        media = { mimetype, data: buf.toString('base64'), filename };
-      } catch (err) {
-        this.logger.debug('Failed to download inbound media; emitting message without media', {
-          error: err instanceof Error ? err.message : String(err),
-          msgId: msg.key.id,
-        });
-      }
-    }
-
-    // --- quoted message ---
-    let quotedMessage: IncomingMessage['quotedMessage'];
-    const subForContext =
-      content.extendedTextMessage ??
-      content.imageMessage ??
-      content.videoMessage ??
-      content.audioMessage ??
-      content.documentMessage ??
-      content.stickerMessage ??
-      content.locationMessage;
-    const contextInfo = (
-      subForContext as
-        | { contextInfo?: { stanzaId?: string | null; quotedMessage?: Record<string, unknown> | null } }
-        | undefined
-    )?.contextInfo;
-    if (contextInfo?.quotedMessage && contextInfo.stanzaId) {
-      const qm = contextInfo.quotedMessage as {
-        conversation?: string | null;
-        extendedTextMessage?: { text?: string | null } | null;
-        imageMessage?: { caption?: string | null } | null;
-        videoMessage?: { caption?: string | null } | null;
-        documentMessage?: { caption?: string | null } | null;
-      };
-      const qBody =
-        qm.conversation ??
-        qm.extendedTextMessage?.text ??
-        qm.imageMessage?.caption ??
-        qm.videoMessage?.caption ??
-        qm.documentMessage?.caption ??
-        '';
-      quotedMessage = { id: contextInfo.stanzaId, body: qBody };
-    }
-
-    return buildIncomingMessageFromBaileys({
-      id: msg.key.id ?? '',
-      remoteJid: msg.key.remoteJid!,
-      fromMe: msg.key.fromMe === true,
-      participant: msg.key.participant ?? undefined,
-      body,
-      contentType,
-      isPtt: content.audioMessage?.ptt === true,
-      timestamp: this.toUnixSeconds(msg.messageTimestamp),
-      pushName: msg.pushName ?? undefined,
-      selfJid: this.normalizedSelfJid(),
-      media,
-      location,
-      quotedMessage,
-    });
+    return this.sock;
   }
 
   private normalizedSelfJid(): string {
@@ -860,86 +901,12 @@ export class BaileysAdapter implements IWhatsAppEngine {
     return phone ? `${phone}@s.whatsapp.net` : '';
   }
 
-  /** Baileys timestamps are `number | Long`; normalize to unix seconds. */
-  private toUnixSeconds(ts: number | { toNumber(): number } | null | undefined): number {
-    if (ts == null) {
-      return Math.floor(Date.now() / 1000);
-    }
-    return typeof ts === 'number' ? ts : ts.toNumber();
-  }
-
-  /** Resolve a MediaInput's data (Buffer | base64 string | http(s) URL) to bytes + mimetype. */
-  private async resolveMediaBuffer(media: MediaInput): Promise<{ data: Buffer; mimetype: string }> {
-    if (Buffer.isBuffer(media.data)) {
-      return { data: media.data, mimetype: media.mimetype };
-    }
-    if (/^https?:\/\//i.test(media.data)) {
-      const fetched = await loadRemoteMediaBuffer(media.data);
-      // Caller's declared mimetype wins; fall back to the response content-type.
-      return { data: fetched.data, mimetype: media.mimetype || fetched.mimetype };
-    }
-    return { data: Buffer.from(media.data, 'base64'), mimetype: media.mimetype };
-  }
-
-  /** Build a minimal WhatsApp-compatible vCard from a neutral contact card. */
-  private buildVCard(contact: ContactCard): string {
-    const clean = (s: string): string => s.replace(/[\r\n]+/g, ' ');
-    const name = clean(contact.name);
-    const number = clean(contact.number);
-    const waid = number.replace(/\D/g, '');
-    return [
-      'BEGIN:VCARD',
-      'VERSION:3.0',
-      `FN:${name}`,
-      `TEL;type=CELL;type=VOICE;waid=${waid}:${number}`,
-      'END:VCARD',
-    ].join('\n');
-  }
-
-  /** Send a Baileys content object and shape the result like the other sends. */
-  private async sendContent(
-    chatId: string,
-    content: AnyMessageContent,
-    options?: MiscMessageGenerationOptions,
-  ): Promise<MessageResult> {
-    const sent = options
-      ? await this.sock!.sendMessage(chatId, content, options)
-      : await this.sock!.sendMessage(chatId, content);
-    if (sent) {
-      void this.config.messageStore?.put(this.config.sessionId, sent).catch(err =>
-        this.logger.warn('Failed to persist sent message to store', {
-          error: err instanceof Error ? err.message : String(err),
-        }),
-      );
-    }
-    return { id: sent?.key?.id ?? '', timestamp: this.toUnixSeconds(sent?.messageTimestamp) };
-  }
-
-  /** Resolve a previously-seen message from the store, or throw a clear not-found error. */
-  private async requireStored(messageId: string): Promise<WAMessage> {
-    const found = await this.config.messageStore?.getMessage(this.config.sessionId, messageId);
-    if (!found?.key) {
-      throw new Error(`Message ${messageId} not found`);
-    }
-    return found;
-  }
-
   private unsupported(method: string): Promise<any> {
     return Promise.reject(new EngineNotSupportedError(method));
   }
 
   protected ensureReady(): void {
-    if (this.status !== EngineStatus.READY || !this.sock) {
-      throw new EngineNotReadyError();
-    }
-  }
-
-  private setStatus(status: EngineStatus): void {
-    if (this.status === status) {
-      return;
-    }
-    this.status = status;
-    this.callbacks.onStateChanged?.(status);
+    this.lifecycle.ensureReady();
   }
 
   /** `628999:12@s.whatsapp.net` / `628999@s.whatsapp.net` -> `628999`. */

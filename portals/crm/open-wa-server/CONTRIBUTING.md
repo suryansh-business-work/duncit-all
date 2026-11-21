@@ -18,33 +18,57 @@ See `docs/03-system-architecture.md` for the bigger picture.
 
 ## Getting started
 
-OpenWA targets **Node.js 22+**.
+OpenWA targets **Node.js 22.19 or newer** (`engines.node`); the dashboard unit tests need **22.22.2+ on 22, 24.15+ on 24 or 26+** (jsdom). On Linux x64/arm64 hosts using glibc, source installs also need **glibc 2.34 or newer** for the shipped `better-sqlite3` prebuild, even with PostgreSQL. Use Ubuntu 22.04+, Debian 12+, RHEL 9+ or the published Docker image on an older host; `npm rebuild better-sqlite3 --build-from-source` does not replace the preferred prebuild. See [startup troubleshooting](docs/12-troubleshooting-faq.md#issue-source-install-fails-with-a-glibc_2xx-not-found-error).
 
 ```bash
-# backend
-npm install
-cp .env.example .env        # adjust as needed
-npm run start:dev           # hot-reload, default port 2785
-
-# dashboard (separate terminal)
-cd dashboard && npm install && npm run dev
+npm ci
+npm run dev   # API on 2785, dashboard (Vite) on 2886
 ```
 
+Dashboard dependencies install with the root ones (postinstall). `npm run start:dev` runs the API
+alone. Use `npm install` only when intentionally changing dependencies.
+
 Default storage is SQLite, so no external services are required to run locally.
+
+No `.env` is needed: the first boot writes `data/.env.generated` with these defaults. Create a
+`.env` only to pin values. If you copy `.env.example` for that, change its `NODE_ENV=production`
+to `NODE_ENV=development`, or the dev server runs with production behaviour (no Swagger UI,
+generic validation errors, JSON logs).
 
 ## Before opening a pull request
 
 Please make sure these pass locally:
 
+Backend:
+
 ```bash
 npm run build               # NestJS build (tsc)
+npx tsc --noEmit            # also type-checks specs, which the build excludes
 npm test                    # unit tests (Jest)
+npm run test:docs           # docs-sync specs, a separate lane `npm test` does not run
 npm run lint                # ESLint
-npm run format              # Prettier
-npm --prefix dashboard run build   # dashboard type-check + build
+npm run format              # Prettier (CI runs `format:check`)
 ```
 
-- Add or update tests for behavior changes — specs are colocated as `*.spec.ts`.
+Dashboard, where CI runs each of these as its own step:
+
+```bash
+cd dashboard
+npm run lint && npm run format:check && npm run typecheck
+npm run i18n:check && npm run build && npm run test:unit
+```
+
+If you changed a DTO, a route, or an `@ApiResponse`, also run `npm run openapi:export` and
+commit the snapshot, then `npm run openapi:check` and `npm run check:contract-shapes`. The
+hand-written SDK types are compared against the schemas and will fail CI by field name. A new
+route also needs a method in each of the five SDKs and a row in `docs/18-sdk-design.md`, or an
+entry in the unexposed list of `sdk/README.md`, which `npm run check:sdk-routes`,
+`check:sdk-coverage`, `check:sdk-events` and `check:sdk-docs` verify, as CI's lint job does
+with `npm run check:versions`.
+
+- Add or update tests for behavior changes. Backend specs are colocated as `*.spec.ts`
+  and run under Jest; dashboard tests are colocated as `*.test.ts` and run under
+  `node --test`, so a dashboard file named `*.spec.ts` is never executed.
 - Keep each PR focused on one logical change; it makes review (and credit) much easier.
 - Update `docs/` and the `CHANGELOG.md` `[Unreleased]` section when your change is
   user-visible. (Maintainers own version stamping and release cutting.)
@@ -77,6 +101,26 @@ npm --prefix dashboard run build   # dashboard type-check + build
 Use the **Bug report** or **Feature request** issue templates — the structured fields
 (version, deployment, engine, logs, reproduction) make triage much faster. For security
 vulnerabilities, see [`SECURITY.md`](SECURITY.md) — please do **not** open a public issue.
+
+### Issues vs. Discussions — pick the right channel
+
+A large share of opened issues turn out to be configuration, provider, or environment
+questions rather than defects in OpenWA. Routing them correctly upfront saves everyone
+(time to answer, time to triage, cleaner issue history). When in doubt, open a Discussion
+first — it can always be promoted to an Issue if a real defect is confirmed.
+
+| Open an **Issue** (here)                                                 | Open a **Discussion**                                                       |
+| ------------------------------------------------------------------------ | --------------------------------------------------------------------------- |
+| Reproducible defect in OpenWA code with clear steps, expected vs. actual | Setup / configuration help ("my proxy doesn't work, how do I configure X?") |
+| Crash, panic, wrong API response, regression after upgrade               | Provider-specific quirks (webshare, IPRoyal, brightdata, Twilio, etc.)      |
+| Documented behavior contradicted by actual behavior                      | "Is X possible?" / "What's the best way to Y?"                              |
+| Security issue (use `SECURITY.md` instead)                               | Hosting-platform / network / firewall questions                             |
+
+When an Issue lands in the gray zone, maintainers will label it `needs-info`,
+`not-a-bug`, or `move-to-discussions`. If after follow-up it turns out to be
+environmental or provider-side, it will be closed and we'll continue in Discussions.
+The full table and label reference live in
+[`docs/20-community-guidelines.md`](docs/20-community-guidelines.md#issue-vs-discussions).
 
 ## Code of conduct
 

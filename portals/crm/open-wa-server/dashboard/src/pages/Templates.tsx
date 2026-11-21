@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AlertTriangle, Check, Copy, Edit, FileText, Loader2, Plus, Trash2, X } from 'lucide-react';
+import { AlertCircle, Copy, FileText, Loader2, Plus, Search, Trash2 } from 'lucide-react';
 import { type MessageTemplate, type TemplatePayload } from '../services/api';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { useRole } from '../hooks/useRole';
+import { useToast } from '../hooks/useToast';
 import {
   useCreateTemplateMutation,
   useDeleteTemplateMutation,
@@ -12,7 +13,10 @@ import {
   useUpdateTemplateMutation,
 } from '../hooks/queries';
 import { PageHeader } from '../components/PageHeader';
+import { Modal } from '../components/Modal';
 import { copyToClipboard } from '../utils/clipboard';
+import { captionLength } from '../utils/bulkMedia';
+import { extractPlaceholders, PLACEHOLDER_PATTERN } from '../utils/templatePlaceholders';
 import './Templates.css';
 
 type TemplateForm = {
@@ -29,11 +33,6 @@ const emptyForm: TemplateForm = {
   footer: '',
 };
 
-function extractPlaceholders(template: TemplateForm | MessageTemplate) {
-  const source = [template.header, template.body, template.footer].filter(Boolean).join('\n');
-  return Array.from(new Set(Array.from(source.matchAll(/\{\{\s*([a-zA-Z0-9_.-]+)\s*\}\}/g), match => match[1]))).sort();
-}
-
 function toPayload(form: TemplateForm): TemplatePayload {
   return {
     name: form.name.trim(),
@@ -43,26 +42,61 @@ function toPayload(form: TemplateForm): TemplatePayload {
   };
 }
 
+// The gateway's limits (template.dto.ts), past which a production gateway answers a bare "Bad Request" naming no field.
+// The name is counted in code points, the other fields the way class-validator's MaxLength counts them.
+const NAME_MAX_LENGTH = 100;
+const BODY_MAX_LENGTH = 4096;
+const HEADER_FOOTER_MAX_LENGTH = 1024;
+
+// A preview value the operator gave for this placeholder. The gateway fills only own properties, so a placeholder named
+// like an inherited member (constructor, toString, __proto__) must not read that member.
+const ownValue = (values: Record<string, string>, key: string): string | undefined =>
+  Object.hasOwn(values, key) ? values[key] : undefined;
+
 function renderPreview(template: TemplateForm, values: Record<string, string>) {
-  return [template.header, template.body, template.footer]
-    .filter(Boolean)
-    .join('\n\n')
-    .replace(/\{\{\s*([a-zA-Z0-9_.-]+)\s*\}\}/g, (_match, key: string) => values[key] || `{{${key}}}`);
+  return (
+    [template.header, template.body, template.footer]
+      .filter(Boolean)
+      .join('\n\n')
+      // An unfilled placeholder stays as written, as the gateway leaves it.
+      .replace(
+        PLACEHOLDER_PATTERN,
+        (match, doubleKey: string | undefined, singleKey: string | undefined) =>
+          ownValue(values, doubleKey ?? singleKey!) || match,
+      )
+  );
 }
 
 export function Templates() {
   const { t } = useTranslation();
   useDocumentTitle(t('templates.title'));
   const { canWrite } = useRole();
-  const { data: sessions = [], isLoading: loadingSessions } = useSessionsQuery();
+  const { data: sessions = [], isLoading: loadingSessions, error: sessionsError } = useSessionsQuery();
+  // A failed read is not "no sessions": the gateway may simply be restarting. A failed background refetch keeps
+  // the cached list, so only a read that never produced one counts.
+  const sessionsFailed = !!sessionsError && sessions.length === 0;
   const [selectedSessionId, setSelectedSessionId] = useState('');
   const [form, setForm] = useState<TemplateForm>(emptyForm);
+  // The draft on screen now, read by a save that resolves after the operator may have moved on.
+  const formRef = useRef(form);
+  useEffect(() => {
+    formRef.current = form;
+  }, [form]);
+  // Bumped whenever the editor starts another draft (new, opened or session switched), unlike edits to the same one.
+  const draftRef = useRef(0);
   const [editingTemplate, setEditingTemplate] = useState<MessageTemplate | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<MessageTemplate | null>(null);
-  const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const toast = useToast();
   const [previewValues, setPreviewValues] = useState<Record<string, string>>({});
+  const [searchTerm, setSearchTerm] = useState('');
 
-  const { data: templates = [], isLoading: loadingTemplates } = useTemplatesQuery(selectedSessionId, !!selectedSessionId);
+  // The template list route is OPERATOR-only and the gateway records every refusal as a failed authentication,
+  // so a key that cannot write is not sent it.
+  const {
+    data: templates = [],
+    isLoading: loadingTemplates,
+    error: templatesError,
+  } = useTemplatesQuery(selectedSessionId, canWrite && !!selectedSessionId);
   const createMutation = useCreateTemplateMutation();
   const updateMutation = useUpdateTemplateMutation();
   const deleteMutation = useDeleteTemplateMutation();
@@ -70,37 +104,62 @@ export function Templates() {
   const selectedSession = sessions.find(session => session.id === selectedSessionId);
   const placeholders = useMemo(() => extractPlaceholders(form), [form]);
   const preview = useMemo(() => renderPreview(form, previewValues), [form, previewValues]);
+  const filteredTemplates = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase();
+    if (!query) return templates;
+    return templates.filter(template =>
+      [template.name, template.header, template.body, template.footer]
+        .filter(Boolean)
+        .some(value => value!.toLowerCase().includes(query)),
+    );
+  }, [searchTerm, templates]);
   const isSaving = createMutation.isPending || updateMutation.isPending;
+  // Measured on what a save sends (trimmed), each with its gateway limit.
+  const sent = toPayload(form);
+  const limits = {
+    name: [[...sent.name].length, NAME_MAX_LENGTH],
+    header: [captionLength(sent.header ?? ''), HEADER_FOOTER_MAX_LENGTH],
+    body: [captionLength(sent.body), BODY_MAX_LENGTH],
+    footer: [captionLength(sent.footer ?? ''), HEADER_FOOTER_MAX_LENGTH],
+  } as const;
+  const overLimit = Object.values(limits).some(([count, max]) => count > max);
+  const limitHint = ([count, max]: readonly [number, number]) => (
+    <span className="field-error" role="status">
+      {count > max ? t('common.fieldTooLong', { max, count }) : ''}
+    </span>
+  );
+  // The row whose update is in flight: the list shows its pre-save values until the update settles, and
+  // reopening it then would load them into the editor to be saved back. Every other row is current.
+  const updatingId = updateMutation.isPending ? updateMutation.variables?.id : undefined;
 
+  // Select the first session, and again once the selected one is gone (deleted elsewhere): a stale id
+  // matches no option, so the select would show another session while every read and write still
+  // went to the deleted one.
   useEffect(() => {
-    if (!selectedSessionId && sessions.length > 0) {
-      setSelectedSessionId(sessions[0].id);
-    }
+    if (sessions.some(session => session.id === selectedSessionId)) return;
+    const next = sessions[0]?.id ?? '';
+    if (next === selectedSessionId) return;
+    setSelectedSessionId(next);
+    draftRef.current += 1;
+    setForm(emptyForm);
+    setEditingTemplate(null);
+    setPreviewValues({});
   }, [selectedSessionId, sessions]);
 
   useEffect(() => {
-    if (!toast) return;
-    const timer = setTimeout(() => setToast(null), 4000);
-    return () => clearTimeout(timer);
-  }, [toast]);
-
-  useEffect(() => {
-    setPreviewValues(current => {
-      const next: Record<string, string> = {};
-      for (const key of placeholders) {
-        next[key] = current[key] || '';
-      }
-      return next;
-    });
+    // Built as own entries: an assignment to `__proto__` would set the prototype instead of a value.
+    setPreviewValues(current => Object.fromEntries(placeholders.map(({ key }) => [key, ownValue(current, key) || ''])));
   }, [placeholders]);
 
   const resetForm = () => {
+    draftRef.current += 1;
     setForm(emptyForm);
     setEditingTemplate(null);
     setPreviewValues({});
   };
 
   const openEdit = (template: MessageTemplate) => {
+    draftRef.current += 1;
     setEditingTemplate(template);
     setForm({
       name: template.name,
@@ -108,59 +167,69 @@ export function Templates() {
       body: template.body,
       footer: template.footer || '',
     });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // An explicit smooth ignores the CSS scroll-behavior, so the preference is asked for here.
+    const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
   };
 
   const handleSave = async () => {
     if (!selectedSessionId || !form.name.trim() || !form.body.trim()) return;
+    const savedForm = form;
+    const draft = draftRef.current;
 
     try {
+      let saved: MessageTemplate;
       if (editingTemplate) {
-        await updateMutation.mutateAsync({
+        saved = await updateMutation.mutateAsync({
           sessionId: selectedSessionId,
           id: editingTemplate.id,
           data: toPayload(form),
         });
-        setToast({ type: 'success', message: t('templates.toasts.updated') });
+        toast.success(t('templates.toasts.updated'));
       } else {
-        await createMutation.mutateAsync({
+        saved = await createMutation.mutateAsync({
           sessionId: selectedSessionId,
           data: toPayload(form),
         });
-        setToast({ type: 'success', message: t('templates.toasts.created') });
+        toast.success(t('templates.toasts.created'));
       }
-      resetForm();
+      // Edits typed into this draft while the save was in flight stay on screen; point them at the saved
+      // row so the next save updates it (a second create would fail the unique name check) and the
+      // editor header reflects the stored name.
+      if (draftRef.current === draft && formRef.current !== savedForm) setEditingTemplate(saved);
+      // Every edit, template switch and session switch replaces the form object, so a save that
+      // resolves after any of them must leave the newer draft alone.
+      if (formRef.current === savedForm) resetForm();
     } catch (err) {
-      setToast({
-        type: 'error',
-        message: t(editingTemplate ? 'templates.toasts.updateFailed' : 'templates.toasts.createFailed', {
+      toast.error(
+        t(editingTemplate ? 'templates.toasts.updateFailed' : 'templates.toasts.createFailed', {
           message: err instanceof Error ? err.message : t('common.unknownError'),
         }),
-      });
+      );
     }
   };
 
   const handleDelete = async () => {
     if (!selectedSessionId || !deleteTarget) return;
+    const draft = draftRef.current;
     try {
       await deleteMutation.mutateAsync({ sessionId: selectedSessionId, id: deleteTarget.id });
-      setToast({ type: 'success', message: t('templates.toasts.deleted') });
-      if (editingTemplate?.id === deleteTarget.id) resetForm();
-      setDeleteTarget(null);
+      toast.success(t('templates.toasts.deleted'));
+      if (draftRef.current === draft && editingTemplate?.id === deleteTarget.id) resetForm();
+      setDeleteTarget(current => (current === deleteTarget ? null : current));
     } catch (err) {
-      setToast({
-        type: 'error',
-        message: t('templates.toasts.deleteFailed', {
+      toast.error(
+        t('templates.toasts.deleteFailed', {
           message: err instanceof Error ? err.message : t('common.unknownError'),
         }),
-      });
+      );
     }
   };
 
   const copyName = async (name: string) => {
     if (await copyToClipboard(name)) {
-      setToast({ type: 'success', message: t('templates.toasts.copied') });
-    }
+      toast.success(t('templates.toasts.copied'));
+    } else toast.error(t('common.copyFailed'));
   };
 
   if (loadingSessions) {
@@ -173,29 +242,22 @@ export function Templates() {
 
   return (
     <div className="templates-page">
-      {toast && (
-        <div className={`toast ${toast.type}`}>
-          {toast.type === 'success' ? <Check size={18} /> : <AlertTriangle size={18} />}
-          <span>{toast.message}</span>
-          <button className="toast-close" onClick={() => setToast(null)} aria-label={t('common.close')}>
-            <X size={16} />
-          </button>
-        </div>
-      )}
-
       <PageHeader
         title={t('templates.title')}
         subtitle={t('templates.subtitle')}
         actions={
           <select
             className="templates-session-select"
+            aria-label={t('templates.sessionSelect')}
             value={selectedSessionId}
             onChange={event => {
               setSelectedSessionId(event.target.value);
               resetForm();
             }}
           >
-            {sessions.length === 0 && <option value="">{t('templates.noSessions')}</option>}
+            {sessions.length === 0 && (
+              <option value="">{t(sessionsFailed ? 'dashboard.loadError' : 'templates.noSessions')}</option>
+            )}
             {sessions.map(session => (
               <option key={session.id} value={session.id}>
                 {session.name}
@@ -205,115 +267,64 @@ export function Templates() {
         }
       />
 
-      {sessions.length === 0 ? (
+      {sessionsFailed ? (
+        <div className="templates-empty-page" role="alert">
+          <AlertCircle size={48} strokeWidth={1} />
+          <h3>{t('dashboard.loadError')}</h3>
+          <p>{sessionsError.message}</p>
+        </div>
+      ) : sessions.length === 0 ? (
         <div className="templates-empty-page">
           <FileText size={48} strokeWidth={1} />
           <h3>{t('templates.empty.noSessionsTitle')}</h3>
           <p>{t('templates.empty.noSessionsDesc')}</p>
         </div>
       ) : (
-        <div className="templates-grid">
-          <section className="template-editor">
-            <div className="template-editor-header">
+        <div className="templates-workspace">
+          <aside className="templates-library">
+            <div className="templates-library-header">
               <div>
-                <h2>{editingTemplate ? t('templates.editTitle') : t('templates.createTitle')}</h2>
-                <p>{selectedSession ? t('templates.sessionHint', { name: selectedSession.name }) : ''}</p>
+                <h2>{t('templates.savedTitle')}</h2>
+                <span>{t('templates.count', { count: templates.length })}</span>
               </div>
-              {editingTemplate && (
-                <button className="btn-secondary" onClick={resetForm}>
-                  {t('templates.newTemplate')}
-                </button>
-              )}
+              <button className="btn-primary templates-new-btn" onClick={resetForm} disabled={!canWrite}>
+                <Plus size={16} />
+                {t('templates.newTemplate')}
+              </button>
             </div>
 
-            <div className="template-form">
-              <div className="form-group">
-                <label>{t('common.name')}</label>
-                <input
-                  value={form.name}
-                  onChange={event => setForm({ ...form, name: event.target.value })}
-                  placeholder={t('templates.namePlaceholder')}
-                  disabled={!canWrite}
-                />
-              </div>
-
-              <div className="form-group">
-                <label>{t('templates.header')}</label>
-                <input
-                  value={form.header}
-                  onChange={event => setForm({ ...form, header: event.target.value })}
-                  placeholder={t('templates.headerPlaceholder')}
-                  disabled={!canWrite}
-                />
-              </div>
-
-              <div className="form-group">
-                <label>{t('templates.body')}</label>
-                <textarea
-                  value={form.body}
-                  onChange={event => setForm({ ...form, body: event.target.value })}
-                  placeholder={t('templates.bodyPlaceholder')}
-                  rows={8}
-                  disabled={!canWrite}
-                />
-              </div>
-
-              <div className="form-group">
-                <label>{t('templates.footer')}</label>
-                <input
-                  value={form.footer}
-                  onChange={event => setForm({ ...form, footer: event.target.value })}
-                  placeholder={t('templates.footerPlaceholder')}
-                  disabled={!canWrite}
-                />
-              </div>
-
-              <div className="template-editor-actions">
-                <button className="btn-secondary" onClick={resetForm} disabled={isSaving}>
-                  {t('common.cancel')}
-                </button>
-                <button
-                  className="btn-primary"
-                  onClick={handleSave}
-                  disabled={!canWrite || isSaving || !selectedSessionId || !form.name.trim() || !form.body.trim()}
-                >
-                  {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Plus size={18} />}
-                  {canWrite ? t(editingTemplate ? 'templates.saveChanges' : 'templates.createTemplate') : t('templates.viewOnly')}
-                </button>
-              </div>
-            </div>
-          </section>
-
-          <aside className="template-preview">
-            <h2>{t('templates.previewTitle')}</h2>
-            {placeholders.length > 0 ? (
-              <div className="placeholder-list">
-                {placeholders.map(key => (
-                  <label key={key}>
-                    <span>{`{{${key}}}`}</span>
-                    <input
-                      value={previewValues[key] || ''}
-                      onChange={event => setPreviewValues({ ...previewValues, [key]: event.target.value })}
-                      placeholder={t('templates.previewValuePlaceholder')}
-                    />
-                  </label>
-                ))}
-              </div>
-            ) : (
-              <p className="template-muted">{t('templates.noPlaceholders')}</p>
-            )}
-            <pre className="template-preview-box">{preview || t('templates.previewEmpty')}</pre>
-          </aside>
-
-          <section className="templates-list">
-            <div className="templates-list-header">
-              <h2>{t('templates.savedTitle')}</h2>
-              <span>{t('templates.count', { count: templates.length })}</span>
+            <div className="templates-search">
+              <Search size={16} />
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={event => setSearchTerm(event.target.value)}
+                placeholder={t('common.search')}
+              />
             </div>
 
-            {loadingTemplates ? (
+            {/* No session selected yet means the first-session effect has not run: the read is still to start. */}
+            {loadingTemplates || !selectedSessionId ? (
               <div className="templates-loading-inline">
                 <Loader2 className="animate-spin" size={24} />
+              </div>
+            ) : (templatesError || !canWrite) && templates.length === 0 ? (
+              // A failed read is not an empty library: a key below operator is refused here (the route is
+              // OPERATOR-only, so it is never sent), and a gateway error would otherwise read as "no templates
+              // saved". The 403 branch stays for a key whose role the page took for a writer's.
+              <div className="templates-empty-list" role="alert">
+                <AlertCircle size={40} strokeWidth={1} />
+                {!canWrite || (templatesError as { status?: number } | null)?.status === 403 ? (
+                  <>
+                    <h3>{t('templates.empty.forbiddenTitle')}</h3>
+                    <p>{t('templates.empty.forbiddenDesc')}</p>
+                  </>
+                ) : (
+                  <>
+                    <h3>{t('templates.empty.loadErrorTitle')}</h3>
+                    <p>{templatesError?.message}</p>
+                  </>
+                )}
               </div>
             ) : templates.length === 0 ? (
               <div className="templates-empty-list">
@@ -321,68 +332,201 @@ export function Templates() {
                 <h3>{t('templates.empty.title')}</h3>
                 <p>{t('templates.empty.description')}</p>
               </div>
+            ) : filteredTemplates.length === 0 ? (
+              <div className="templates-empty-list compact">
+                <Search size={32} strokeWidth={1.5} />
+                <h3>{t('templates.empty.noMatch', 'No templates match your search.')}</h3>
+              </div>
             ) : (
-              <div className="template-card-list">
-                {templates.map(template => {
+              <div className="template-list" role="list">
+                {filteredTemplates.map(template => {
                   const templatePlaceholders = extractPlaceholders(template);
+                  const isSelected = editingTemplate?.id === template.id;
                   return (
-                    <article key={template.id} className="template-card">
-                      <div className="template-card-main">
-                        <div className="template-card-title-row">
-                          <h3>{template.name}</h3>
-                          <button
-                            className="icon-btn"
-                            title={t('templates.actions.copyName')}
-                            onClick={() => void copyName(template.name)}
-                          >
-                            <Copy size={16} />
-                          </button>
-                        </div>
-                        <p>{template.body}</p>
-                        {templatePlaceholders.length > 0 && (
-                          <div className="template-placeholder-tags">
-                            {templatePlaceholders.map(key => (
-                              <span key={key}>{`{{${key}}}`}</span>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                      <div className="template-card-actions">
-                        <button className="icon-btn" title={t('common.edit')} onClick={() => openEdit(template)}>
-                          <Edit size={16} />
+                    <div
+                      key={template.id}
+                      className={`template-list-row ${canWrite ? 'deletable' : ''}`}
+                      role="listitem"
+                    >
+                      <button
+                        className={`template-list-item ${isSelected ? 'selected' : ''}`}
+                        aria-current={isSelected ? 'true' : undefined}
+                        onClick={() => openEdit(template)}
+                        disabled={template.id === updatingId}
+                        type="button"
+                      >
+                        <span className="template-list-title">{template.name}</span>
+                        <span className="template-list-body">{template.body}</span>
+                        <span className="template-list-meta">
+                          {templatePlaceholders.length > 0
+                            ? templatePlaceholders.map(({ token }) => token).join(' ')
+                            : t('templates.noPlaceholders')}
+                        </span>
+                      </button>
+                      {canWrite && (
+                        <button
+                          className="icon-btn danger template-list-delete"
+                          title={t('common.delete')}
+                          aria-label={t('common.delete')}
+                          onClick={() => setDeleteTarget({ ...template })}
+                          type="button"
+                        >
+                          <Trash2 size={14} />
                         </button>
-                        {canWrite && (
-                          <button
-                            className="icon-btn danger"
-                            title={t('common.delete')}
-                            onClick={() => setDeleteTarget(template)}
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        )}
-                      </div>
-                    </article>
+                      )}
+                    </div>
                   );
                 })}
               </div>
             )}
+          </aside>
+
+          <section className="template-editor">
+            <div className="template-editor-header">
+              <div>
+                <h2>{editingTemplate ? t('templates.editTitle') : t('templates.createTitle')}</h2>
+                <p>{selectedSession ? t('templates.sessionHint', { name: selectedSession.name }) : ''}</p>
+              </div>
+              <div className="template-header-actions">
+                {editingTemplate && (
+                  <button
+                    className="icon-btn"
+                    title={t('templates.actions.copyName')}
+                    onClick={() => void copyName(editingTemplate.name)}
+                    type="button"
+                  >
+                    <Copy size={16} />
+                  </button>
+                )}
+                {editingTemplate && canWrite && (
+                  <button
+                    className="icon-btn danger"
+                    title={t('common.delete')}
+                    onClick={() => setDeleteTarget({ ...editingTemplate })}
+                    type="button"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="template-form">
+              <div className="form-group">
+                <label htmlFor="tpl-1">{t('common.name')}</label>
+                <input
+                  type="text"
+                  id="tpl-1"
+                  value={form.name}
+                  onChange={event => setForm({ ...form, name: event.target.value })}
+                  placeholder={t('templates.namePlaceholder')}
+                  disabled={!canWrite}
+                />
+                {limitHint(limits.name)}
+              </div>
+
+              <div className="template-message-fields">
+                <div className="form-group">
+                  <label htmlFor="tpl-2">{t('templates.header')}</label>
+                  <input
+                    type="text"
+                    id="tpl-2"
+                    value={form.header}
+                    onChange={event => setForm({ ...form, header: event.target.value })}
+                    placeholder={t('templates.headerPlaceholder')}
+                    disabled={!canWrite}
+                  />
+                  {limitHint(limits.header)}
+                </div>
+
+                <div className="form-group body-field">
+                  <label htmlFor="tpl-3">{t('templates.body')}</label>
+                  <textarea
+                    id="tpl-3"
+                    value={form.body}
+                    onChange={event => setForm({ ...form, body: event.target.value })}
+                    placeholder={t('templates.bodyPlaceholder')}
+                    rows={10}
+                    disabled={!canWrite}
+                  />
+                  {limitHint(limits.body)}
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="tpl-4">{t('templates.footer')}</label>
+                  <input
+                    type="text"
+                    id="tpl-4"
+                    value={form.footer}
+                    onChange={event => setForm({ ...form, footer: event.target.value })}
+                    placeholder={t('templates.footerPlaceholder')}
+                    disabled={!canWrite}
+                  />
+                  {limitHint(limits.footer)}
+                </div>
+              </div>
+
+              <div className="template-editor-actions">
+                <button className="btn-secondary" onClick={resetForm} disabled={isSaving} type="button">
+                  {t('common.cancel')}
+                </button>
+                <button
+                  className="btn-primary"
+                  onClick={handleSave}
+                  disabled={
+                    !canWrite || isSaving || !selectedSessionId || !form.name.trim() || !form.body.trim() || overLimit
+                  }
+                  type="button"
+                >
+                  {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Plus size={18} />}
+                  {canWrite
+                    ? t(editingTemplate ? 'templates.saveChanges' : 'templates.createTemplate')
+                    : t('templates.viewOnly')}
+                </button>
+              </div>
+            </div>
           </section>
+
+          <aside className="template-preview">
+            <div className="template-preview-header">
+              <h2>{t('templates.previewTitle')}</h2>
+              <span>{placeholders.length}</span>
+            </div>
+            <div className="template-preview-message">
+              <pre>{preview || t('templates.previewEmpty')}</pre>
+            </div>
+            <div className="template-variable-panel">
+              {placeholders.length > 0 ? (
+                <div className="placeholder-list">
+                  {placeholders.map(({ key, token }) => (
+                    <label key={key}>
+                      <span>{token}</span>
+                      <input
+                        type="text"
+                        value={ownValue(previewValues, key) || ''}
+                        onChange={event => setPreviewValues({ ...previewValues, [key]: event.target.value })}
+                        placeholder={t('templates.previewValuePlaceholder')}
+                      />
+                    </label>
+                  ))}
+                </div>
+              ) : (
+                <p className="template-muted">{t('templates.noPlaceholders')}</p>
+              )}
+            </div>
+          </aside>
         </div>
       )}
 
       {deleteTarget && (
-        <div className="modal-overlay" onClick={() => setDeleteTarget(null)}>
-          <div className="modal modal-sm" onClick={event => event.stopPropagation()}>
-            <div className="modal-header">
-              <h2>{t('templates.deleteTitle')}</h2>
-              <button className="btn-icon" onClick={() => setDeleteTarget(null)}>
-                <X size={20} />
-              </button>
-            </div>
-            <div className="modal-body">
-              <p>{t('templates.deleteConfirm', { name: deleteTarget.name })}</p>
-            </div>
-            <div className="modal-footer">
+        <Modal
+          open
+          onClose={() => setDeleteTarget(null)}
+          title={t('templates.deleteTitle')}
+          className="modal-sm"
+          closeLabel={t('common.close')}
+          footer={
+            <>
               <button className="btn-secondary" onClick={() => setDeleteTarget(null)}>
                 {t('common.cancel')}
               </button>
@@ -390,9 +534,11 @@ export function Templates() {
                 {deleteMutation.isPending ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
                 {t('common.delete')}
               </button>
-            </div>
-          </div>
-        </div>
+            </>
+          }
+        >
+          <p>{t('templates.deleteConfirm', { name: deleteTarget.name })}</p>
+        </Modal>
       )}
     </div>
   );

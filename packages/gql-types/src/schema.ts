@@ -5708,6 +5708,31 @@ export type CommPreference = {
   updated_at?: Maybe<Scalars['String']['output']>;
 };
 
+export type CommsCallSentiment =
+  | 'MIXED'
+  | 'NEGATIVE'
+  | 'NEUTRAL'
+  | 'POSITIVE';
+
+export type CommsCallSpeaker =
+  | 'AGENT'
+  | 'LEAD';
+
+/** The AI read of a finished call. */
+export type CommsCallSummary = {
+  __typename?: 'CommsCallSummary';
+  error: Scalars['String']['output'];
+  follow_ups: Array<Scalars['String']['output']>;
+  generated_at?: Maybe<Scalars['String']['output']>;
+  key_points: Array<Scalars['String']['output']>;
+  outcome: Scalars['String']['output'];
+  /** The follow-up reminder created from this call, if any. */
+  reminder_id?: Maybe<Scalars['ID']['output']>;
+  sentiment?: Maybe<CommsCallSentiment>;
+  status: CommsSummaryStatus;
+  text: Scalars['String']['output'];
+};
+
 export type CommsLogEntity =
   | 'COMMUNITY_LEAD'
   | 'CREATOR_LEAD'
@@ -5793,8 +5818,27 @@ export type CommsProviderType =
   | 'SMTP'
   | 'TWILIO_CALL';
 
+export type CommsSummaryStatus =
+  | 'FAILED'
+  | 'NONE'
+  | 'PENDING'
+  | 'READY';
+
+/** One finished utterance from the live call transcription. */
+export type CommsTranscriptSegment = {
+  __typename?: 'CommsTranscriptSegment';
+  /** ISO-8601 time Twilio heard it. */
+  at?: Maybe<Scalars['String']['output']>;
+  confidence?: Maybe<Scalars['Float']['output']>;
+  seq: Scalars['Int']['output'];
+  speaker: CommsCallSpeaker;
+  text: Scalars['String']['output'];
+};
+
 export type CommunicationLog = {
   __typename?: 'CommunicationLog';
+  /** ISO-8601 time the lead picked up. */
+  answered_at?: Maybe<Scalars['String']['output']>;
   body?: Maybe<Scalars['String']['output']>;
   contact_name?: Maybe<Scalars['String']['output']>;
   contact_value: Scalars['String']['output'];
@@ -5806,13 +5850,22 @@ export type CommunicationLog = {
   entity_type: CommsLogEntity;
   error_message?: Maybe<Scalars['String']['output']>;
   external_id?: Maybe<Scalars['String']['output']>;
+  /** The Twilio caller-ID number the call was placed from. */
+  from_number?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
+  /** PORTAL or AI for calls. */
+  mode?: Maybe<Scalars['String']['output']>;
+  muted: Scalars['Boolean']['output'];
+  on_hold: Scalars['Boolean']['output'];
   provider_id?: Maybe<Scalars['ID']['output']>;
   provider_name?: Maybe<Scalars['String']['output']>;
   recording_url?: Maybe<Scalars['String']['output']>;
   status: Scalars['String']['output'];
   subject?: Maybe<Scalars['String']['output']>;
+  summary: CommsCallSummary;
   transcript?: Maybe<Scalars['String']['output']>;
+  /** Live transcription, by speaker, in the order spoken (calls only). */
+  transcript_segments: Array<CommsTranscriptSegment>;
   transcript_status: CommsLogTranscriptStatus;
   type: CommsLogType;
   updated_at?: Maybe<Scalars['String']['output']>;
@@ -7019,6 +7072,8 @@ export type CrmActivity = {
 /** Result of placing a CRM call (AI or portal/agent-bridge). */
 export type CrmAiCallResult = {
   __typename?: 'CrmAiCallResult';
+  /** Why the call was not placed (e.g. TWILIO_NOT_CONFIGURED), for the portal to act on. */
+  code?: Maybe<Scalars['String']['output']>;
   external_id?: Maybe<Scalars['String']['output']>;
   log_id?: Maybe<Scalars['ID']['output']>;
   message: Scalars['String']['output'];
@@ -7030,6 +7085,23 @@ export type CrmAiEntity =
   | 'ECOMM_LEAD'
   | 'HOST_LEAD'
   | 'VENUE_LEAD';
+
+export type CrmCallAction =
+  | 'END'
+  | 'HOLD'
+  | 'MUTE'
+  | 'RESUME'
+  | 'UNMUTE';
+
+export type CrmCallControlResult = {
+  __typename?: 'CrmCallControlResult';
+  log_id: Scalars['ID']['output'];
+  message: Scalars['String']['output'];
+  muted: Scalars['Boolean']['output'];
+  ok: Scalars['Boolean']['output'];
+  on_hold: Scalars['Boolean']['output'];
+  status?: Maybe<Scalars['String']['output']>;
+};
 
 /**
  * A reusable Static Content block for AI Calls. The agent picks one when placing
@@ -7060,6 +7132,25 @@ export type CrmCallPromptTablePage = {
   page_size: Scalars['Int']['output'];
   rows: Array<CrmCallPrompt>;
   total: Scalars['Int']['output'];
+};
+
+/** Whether CRM calls can be placed right now, and from which numbers. */
+export type CrmCallSetup = {
+  __typename?: 'CrmCallSetup';
+  /** The agent phone Twilio rings for a portal call, or null when there is none. */
+  agent_number?: Maybe<Scalars['String']['output']>;
+  /** CONFIG (TWILIO entry) or PROFILE (the agent's own profile phone). */
+  agent_source?: Maybe<Scalars['String']['output']>;
+  /** The signed-in user may change the TWILIO entry in the Tech portal. */
+  can_configure: Scalars['Boolean']['output'];
+  /** All three required TWILIO keys (account SID, auth token, phone number) are set. */
+  configured: Scalars['Boolean']['output'];
+  /** The caller-ID (Call From) number, or null when none is configured. */
+  from_number?: Maybe<Scalars['String']['output']>;
+  live_transcription: Scalars['Boolean']['output'];
+  /** Required TWILIO fields that are still empty, by their Tech portal field name. */
+  missing: Array<Scalars['String']['output']>;
+  recording_enabled: Scalars['Boolean']['output'];
 };
 
 export type CrmChatMessageInput = {
@@ -15834,6 +15925,8 @@ export type Mutation = {
   connectEmailTemplateFragments: EmailFragmentConnectResult;
   /** Auth-required: link a Google account from Profile > Connected Accounts. */
   connectGoogleAccount: ConnectedAccounts;
+  /** Mute or unmute yourself, hold or resume the lead, or end the call. Only the agent who placed the call may. */
+  controlCrmCall: CrmCallControlResult;
   /** Host: arm the buzzer for a fresh round, or disarm it. */
   controlPodChallengeBuzzer: PodChallenge;
   /** START, STOP or RESET a timer tool. */
@@ -17506,7 +17599,7 @@ export type Mutation = {
   startBulkDelete: BackgroundJob;
   /** Place an outbound AI call (Servam-driven) using a Static Content prompt and Servam voice. */
   startCrmAiCall: CrmAiCallResult;
-  /** Place a portal call: Twilio rings the agent leg (agent_number, else the user's profile phone), then bridges to the customer. */
+  /** Place a portal call: Twilio dials the lead, then rings the agent leg (agent_number, else the user's profile phone) into the same conference. */
   startCrmPortalCall: CrmAiCallResult;
   /**
    * Start a production -> staging clone and return the job immediately. The copy
@@ -17753,6 +17846,12 @@ export type Mutation = {
   subscribeNewsletter: NewsletterSubscribeResult;
   /** Ask Claude for a draft reply. Nothing is sent: the person edits it and presses Send. */
   suggestSocialReply: SocialReplySuggestion;
+  /**
+   * Generates (or regenerates) the AI summary of a CALL log from its transcript:
+   * summary, key points, sentiment, outcome and follow-ups. A suggested
+   * follow-up becomes one reminder, never two.
+   */
+  summarizeCommunicationLog: CommunicationLog;
   /** Support agents can create a user account on a caller's behalf. */
   supportCreateUser: User;
   /** Products portal: check the next batch of a brand's pincodes against ShipRocket from its own warehouse. */
@@ -19031,6 +19130,12 @@ export type MutationConnectEmailTemplateFragmentsArgs = {
 
 export type MutationConnectGoogleAccountArgs = {
   input: GoogleAuthInput;
+};
+
+
+export type MutationControlCrmCallArgs = {
+  action: CrmCallAction;
+  log_id: Scalars['ID']['input'];
 };
 
 
@@ -22818,7 +22923,8 @@ export type MutationStartBulkDeleteArgs = {
 export type MutationStartCrmAiCallArgs = {
   contact_name?: InputMaybe<Scalars['String']['input']>;
   contact_number: Scalars['String']['input'];
-  entity: CrmAiEntity;
+  entity?: InputMaybe<CrmAiEntity>;
+  entity_type?: InputMaybe<CommsLogEntity>;
   id: Scalars['ID']['input'];
   prompt_id: Scalars['ID']['input'];
   voice?: InputMaybe<Scalars['String']['input']>;
@@ -22829,7 +22935,8 @@ export type MutationStartCrmPortalCallArgs = {
   agent_number?: InputMaybe<Scalars['String']['input']>;
   contact_name?: InputMaybe<Scalars['String']['input']>;
   contact_number: Scalars['String']['input'];
-  entity: CrmAiEntity;
+  entity?: InputMaybe<CrmAiEntity>;
+  entity_type?: InputMaybe<CommsLogEntity>;
   id: Scalars['ID']['input'];
 };
 
@@ -23484,6 +23591,11 @@ export type MutationSubscribeNewsletterArgs = {
 
 
 export type MutationSuggestSocialReplyArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationSummarizeCommunicationLogArgs = {
   id: Scalars['ID']['input'];
 };
 
@@ -31738,6 +31850,7 @@ export type Query = {
   crmCallPrompt?: Maybe<CrmCallPrompt>;
   crmCallPrompts: Array<CrmCallPrompt>;
   crmCallPromptsTable: CrmCallPromptTablePage;
+  crmCallSetup: CrmCallSetup;
   crmDynamicFields: Array<CrmDynamicField>;
   /** The two AI Library prompts behind the CRM email writer (SYSTEM, then USER). */
   crmEmailAiPrompts: Array<AiPrompt>;
@@ -32262,6 +32375,8 @@ export type Query = {
   /**  Account health for the signed-in user. Always returns a record (default base = 100).  */
   myAccountHealth: HealthScore;
   myActiveBouncerSos?: Maybe<BouncerSosAlert>;
+  /** The signed-in agent's call that is still live, to restore the call window after a reload. */
+  myActiveCrmCall?: Maybe<CommunicationLog>;
   /** The signed-in advertiser's own requests (Ads portal). */
   myAdRequestsTable: AdRequestTablePage;
   /** The signed-in user's saved addresses (default first, then newest). */

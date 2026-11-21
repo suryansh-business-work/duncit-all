@@ -249,6 +249,7 @@ export const MODULE_CATEGORY: Record<ModuleName, McpCategoryKey | null> = {
   crmTypeDefs: 'crm',
   commsProviderTypeDefs: 'crm',
   communicationLogTypeDefs: 'crm',
+  crmCallTypeDefs: 'crm',
   callPromptTypeDefs: 'crm',
   emailVerificationTypeDefs: 'crm',
   serviceOfferedTypeDefs: 'crm',

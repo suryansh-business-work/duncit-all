@@ -21,6 +21,49 @@ export const communicationLogTypeDefs = gql`
     FAILED
   }
 
+  enum CommsCallSpeaker {
+    AGENT
+    LEAD
+  }
+
+  enum CommsSummaryStatus {
+    NONE
+    PENDING
+    READY
+    FAILED
+  }
+
+  enum CommsCallSentiment {
+    POSITIVE
+    NEUTRAL
+    NEGATIVE
+    MIXED
+  }
+
+  "One finished utterance from the live call transcription."
+  type CommsTranscriptSegment {
+    seq: Int!
+    speaker: CommsCallSpeaker!
+    text: String!
+    confidence: Float
+    "ISO-8601 time Twilio heard it."
+    at: String
+  }
+
+  "The AI read of a finished call."
+  type CommsCallSummary {
+    status: CommsSummaryStatus!
+    text: String!
+    key_points: [String!]!
+    sentiment: CommsCallSentiment
+    outcome: String!
+    follow_ups: [String!]!
+    "The follow-up reminder created from this call, if any."
+    reminder_id: ID
+    error: String!
+    generated_at: String
+  }
+
   type CommunicationLog {
     id: ID!
     type: CommsLogType!
@@ -39,7 +82,18 @@ export const communicationLogTypeDefs = gql`
     recording_url: String
     transcript: String
     transcript_status: CommsLogTranscriptStatus!
+    "Live transcription, by speaker, in the order spoken (calls only)."
+    transcript_segments: [CommsTranscriptSegment!]!
+    summary: CommsCallSummary!
     external_id: String
+    "The Twilio caller-ID number the call was placed from."
+    from_number: String
+    "ISO-8601 time the lead picked up."
+    answered_at: String
+    "PORTAL or AI for calls."
+    mode: String
+    muted: Boolean!
+    on_hold: Boolean!
     created_by: String
     created_at: String
     updated_at: String
@@ -77,5 +131,11 @@ export const communicationLogTypeDefs = gql`
     Returns the log with transcript_status flipped to PENDING.
     """
     requestCommunicationTranscript(id: ID!): CommunicationLog!
+    """
+    Generates (or regenerates) the AI summary of a CALL log from its transcript:
+    summary, key points, sentiment, outcome and follow-ups. A suggested
+    follow-up becomes one reminder, never two.
+    """
+    summarizeCommunicationLog(id: ID!): CommunicationLog!
   }
 `;

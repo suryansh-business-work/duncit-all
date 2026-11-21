@@ -1741,18 +1741,22 @@ export const STAFF_OPS_PORTAL_FLOWS: readonly CatalogueFlow[] = [
   },
   {
     name: 'CRM: Lead calls and emails',
-    description: 'Twilio bridged calls, AI calls, WhatsApp links and template emails from a venue or host lead detail page, recorded in the Communications tab.',
+    description: 'Twilio bridged calls, AI calls, WhatsApp links and template emails from any lead detail page (venue, host, ecomm, creator, community), recorded in the Communications tab.',
     sub_flows: [
       {
         name: 'Place a bridged call',
-        description: 'Call dialog with live status.',
+        description: 'Floating call window with setup checks, live status, controls and transcript.',
         steps: [
           ['On a lead without a mobile hover Call', 'Disabled with "No phone number on file"'],
-          ['Click Call on a lead with a mobile', 'Dialog "Call · <venue>" with CALL FROM (Twilio number) → CALL TO and "Start Call"'],
-          ['Click "Start Call" with Twilio not configured', 'Red alert "Twilio is not configured. Set the TWILIO account SID, auth token and phone number in the Tech portal."'],
-          ['With Twilio configured click "Start Call"', 'Status moves Connecting… → Ringing… → In call → Call over via live updates'],
-          ['Open the Communications tab', 'A "Portal Call" CALL log with status and a transcript chip'],
-          ['Click "Get transcript" on a recorded call', 'The transcript text appears once ready'],
+          ['Click Call on a lead with a mobile', 'Floating window "Call · <lead>" with Call from (Twilio number), Call to, Your phone and "Start Call"'],
+          ['Open it with Twilio not configured', 'Warning "Twilio is not configured" naming the missing fields, "No Number Configured", Start Call disabled; a Tech manager sees a "Configure Twilio" link to the Tech portal Twilio section'],
+          ['With Twilio configured click "Start Call"', 'Status moves Connecting… → Ringing… → In call → Call over via live updates, with a duration clock'],
+          ['Once connected click Mute, then Hold', 'The buttons turn to Unmute / Resume and the status shows "On hold"'],
+          ['Speak on the call', 'Lines appear in the Transcript panel labelled You / Contact with times; the search box filters them'],
+          ['Minimize, then Restore; Maximize, then Restore', 'The minimized bar keeps status, duration, Mute and End; Restore returns the window to its size and place'],
+          ['Click Close during the call', '"The call is still active" with Continue call (default) and End call and close'],
+          ['Open the Communications tab after the call', 'A "Portal Call" CALL log with the transcript by speaker and an AI summary (sentiment, outcome, key points, follow-ups)'],
+          ['Click "Get transcript" on a recorded call without a live transcript', 'The transcript text appears once ready, then its summary'],
         ],
       },
       {

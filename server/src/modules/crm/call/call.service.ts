@@ -1,72 +1,62 @@
-import { getRuntimeEnvValue } from '@config/runtimeEnv';
 import { communicationLogService } from '@modules/crm/communicationLog/communicationLog.service';
 import type { CommsLogEntity } from '@modules/crm/communicationLog/communicationLog.model';
 import { callPromptService } from '@modules/crm/callPrompt/callPrompt.service';
 import { servamService } from '@services/servam/servam.service';
 import { openaiService, type OpenAiChatTurn } from '@services/openai/openai.service';
-import { UserModel } from '@modules/access/user/user.model';
 import { emitCallStatus } from './call.socket';
 import { audioCache } from './audioCache';
-import { getWebhookBaseUrl } from './webhookBase';
 import { toE164, defaultDialCode, isValidPhone } from './phone';
 import { buildAiPlayGatherTwiml, buildSayHangupTwiml, mapTwilioStatus, isTerminalStatus } from './call.twiml';
+import { resolveAgentNumber, twilioApi, twilioCreds, type TwilioCreds } from './call.config';
 
 /**
- * Agent leg for portal calls: the predefined number from the Twilio config
- * (`agent_phone_number` on the TWILIO entry) is used first; the logged-in
- * user's own profile phone is the fallback. Twilio rings this number and
- * bridges it to the customer so the agent talks to the lead.
+ * Why a call was not placed, for the portal to act on (for example, a
+ * "Configure Twilio" link for TWILIO_NOT_CONFIGURED). The message stays the
+ * human-readable reason for older clients that only read it.
  */
-async function resolveAgentNumber(userId: string): Promise<string | null> {
-  const candidates: string[] = [];
-  const configured = (await getRuntimeEnvValue('TWILIO_AGENT_PHONE_NUMBER')).trim();
-  if (configured) candidates.push(toE164(configured));
-  try {
-    const u: any = await UserModel.findById(userId).lean();
-    const ph = u?.auth?.phone;
-    if (ph?.number) candidates.push(toE164(String(ph.number), String(ph.extension || '+91')));
-  } catch {
-    /* no profile phone */
-  }
-  // First *valid* number wins, so a placeholder config (+00000000) doesn't block
-  // a real profile number.
-  return candidates.find(isValidPhone) ?? candidates[0] ?? null;
-}
+export type CallErrorCode =
+  | 'TWILIO_NOT_CONFIGURED'
+  | 'NO_AGENT_NUMBER'
+  | 'INVALID_AGENT_NUMBER'
+  | 'INVALID_CONTACT_NUMBER'
+  | 'PROMPT_MISSING'
+  | 'TWILIO_REJECTED';
 
-interface TwilioCreds {
-  accountSid: string;
-  authToken: string;
-  fromNumber: string;
-  baseUrl: string;
-}
+const NOT_CONFIGURED = 'Twilio is not configured. Set the TWILIO account SID, auth token and phone number in the Tech portal.';
 
-async function twilioCreds(): Promise<TwilioCreds | null> {
-  const [accountSid, authToken, fromNumber] = await Promise.all([
-    getRuntimeEnvValue('TWILIO_ACCOUNT_SID'),
-    getRuntimeEnvValue('TWILIO_AUTH_TOKEN'),
-    getRuntimeEnvValue('TWILIO_PHONE_NUMBER'),
-  ]);
-  if (!accountSid || !authToken || !fromNumber) return null;
-  // Webhook base URL is derived internally from the server host, not env.
-  const baseUrl = await getWebhookBaseUrl();
-  return { accountSid, authToken, fromNumber, baseUrl };
-}
+const refused = (code: CallErrorCode, message: string) => ({ ok: false, message, log: null, code });
 
-async function placeCall(creds: TwilioCreds, body: URLSearchParams) {
-  const res = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${creds.accountSid}/Calls.json`, {
-    method: 'POST',
-    headers: {
-      Authorization: 'Basic ' + Buffer.from(`${creds.accountSid}:${creds.authToken}`).toString('base64'),
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body,
-  });
-  const json: any = await res.json().catch(() => ({}));
-  return { ok: res.ok, status: res.status, json };
-}
+const invalidContact = (to: string) =>
+  refused(
+    'INVALID_CONTACT_NUMBER',
+    `The customer number (${to || 'empty'}) is not a valid phone number. Fix the lead's contact mobile and try again.`
+  );
+
+const twilioMessage = (json: Record<string, unknown>) => (typeof json.message === 'string' ? json.message : '');
+
+const errorMessage = (err: unknown) => (err instanceof Error ? err.message : '');
 
 function statusCallbackEvents(body: URLSearchParams) {
   for (const e of ['initiated', 'ringing', 'answered', 'completed']) body.append('StatusCallbackEvent', e);
+}
+
+/**
+ * Hand the prepared call to Twilio. The log already exists, so a refused or
+ * failed dial is recorded as FAILED rather than silently missing from the CRM.
+ */
+async function dial(creds: TwilioCreds, body: URLSearchParams, logId: string, placedMessage: string) {
+  try {
+    const { ok, status, json } = await twilioApi(creds, '/Calls.json', body);
+    if (!ok) {
+      await communicationLogService.update(logId, { status: 'FAILED', error_message: twilioMessage(json) || 'Twilio call failed' });
+      return refused('TWILIO_REJECTED', twilioMessage(json) || `Twilio call failed (HTTP ${status})`);
+    }
+    const updated = await communicationLogService.update(logId, { external_id: String(json.sid ?? '') });
+    return { ok: true, message: placedMessage, log: updated, code: null };
+  } catch (err) {
+    await communicationLogService.update(logId, { status: 'FAILED', error_message: errorMessage(err) || 'Call failed' });
+    return refused('TWILIO_REJECTED', errorMessage(err) || 'Twilio call request failed');
+  }
 }
 
 const GOODBYE = /\b(bye|goodbye|thank you|thanks|alvida|dhanyavaad|theek hai bye)\b/i;
@@ -83,16 +73,12 @@ export const callService = {
     user_id: string;
   }) {
     const prompt = await callPromptService.resolveContext(input.prompt_id);
-    if (!prompt) return { ok: false, message: 'Selected AI prompt is missing or inactive.', log: null };
+    if (!prompt) return refused('PROMPT_MISSING', 'Selected AI prompt is missing or inactive.');
 
     const creds = await twilioCreds();
-    if (!creds) {
-      return { ok: false, message: 'Twilio is not configured. Set the TWILIO account SID, auth token and phone number in the Tech portal.', log: null };
-    }
+    if (!creds) return refused('TWILIO_NOT_CONFIGURED', NOT_CONFIGURED);
     const to = toE164(input.to, await defaultDialCode());
-    if (!isValidPhone(to)) {
-      return { ok: false, message: `The customer number (${to || 'empty'}) is not a valid phone number. Fix the lead's contact mobile and try again.`, log: null };
-    }
+    if (!isValidPhone(to)) return invalidContact(to);
 
     const log = await communicationLogService.create({
       type: 'CALL',
@@ -104,10 +90,17 @@ export const callService = {
       status: 'INITIATED',
       provider_name: 'servam',
       created_by: input.user_id,
-      metadata: { mode: 'AI', prompt_id: prompt.id, voice: input.voice ?? '', user_id: input.user_id, ai_history: [] },
+      metadata: {
+        mode: 'AI',
+        prompt_id: prompt.id,
+        voice: input.voice ?? '',
+        user_id: input.user_id,
+        from_number: creds.fromNumber,
+        ai_history: [],
+      },
     });
 
-    const qs = `logId=${log!.id}&userId=${encodeURIComponent(input.user_id)}`;
+    const qs = `logId=${log.id}&userId=${encodeURIComponent(input.user_id)}`;
     const body = new URLSearchParams({
       To: to,
       From: creds.fromNumber,
@@ -117,22 +110,14 @@ export const callService = {
       StatusCallbackMethod: 'POST',
     });
     statusCallbackEvents(body);
-
-    try {
-      const { ok, status, json } = await placeCall(creds, body);
-      if (!ok) {
-        await communicationLogService.update(log!.id, { status: 'FAILED', error_message: json?.message || 'Twilio call failed' });
-        return { ok: false, message: json?.message || `Twilio call failed (HTTP ${status})`, log: null };
-      }
-      const updated = await communicationLogService.update(log!.id, { external_id: String(json?.sid ?? '') });
-      return { ok: true, message: `AI call placed to ${to}`, log: updated ?? log };
-    } catch (err: any) {
-      await communicationLogService.update(log!.id, { status: 'FAILED', error_message: err?.message || 'Call failed' });
-      return { ok: false, message: err?.message || 'Twilio call request failed', log: null };
-    }
+    return dial(creds, body, log.id, `AI call placed to ${to}`);
   },
 
-  /** Normal portal call: Twilio dials the customer (From = config number), then bridges in the agent. Pure two-way, no AI. */
+  /**
+   * Normal portal call: Twilio dials the customer (From = config number); once
+   * they answer, both the customer and the agent's phone join one conference,
+   * which is what lets the portal mute, hold and end the call. Pure two-way, no AI.
+   */
   async startPortalCall(input: {
     entity_type: CommsLogEntity;
     entity_id: string;
@@ -142,22 +127,21 @@ export const callService = {
     user_id: string;
   }) {
     const creds = await twilioCreds();
-    if (!creds) {
-      return { ok: false, message: 'Twilio is not configured. Set the TWILIO account SID, auth token and phone number in the Tech portal.', log: null };
-    }
+    if (!creds) return refused('TWILIO_NOT_CONFIGURED', NOT_CONFIGURED);
     // Predefined Twilio-config agent number (or the agent's profile phone).
     const typed = (input.agent_number ?? '').trim();
-    const agent = typed ? toE164(typed, await defaultDialCode()) : await resolveAgentNumber(input.user_id);
+    const agent = typed ? toE164(typed, await defaultDialCode()) : (await resolveAgentNumber(input.user_id))?.number;
     if (!agent) {
-      return { ok: false, message: 'No agent number configured. Set "Agent Phone Number" on the TWILIO entry in the Tech portal.', log: null };
+      return refused('NO_AGENT_NUMBER', 'No agent number configured. Set "Agent Phone Number" on the TWILIO entry in the Tech portal.');
     }
     if (!isValidPhone(agent)) {
-      return { ok: false, message: `The configured agent number (${agent}) is not valid. Fix "Agent Phone Number" on the TWILIO entry in the Tech portal.`, log: null };
+      return refused(
+        'INVALID_AGENT_NUMBER',
+        `The configured agent number (${agent}) is not valid. Fix "Agent Phone Number" on the TWILIO entry in the Tech portal.`
+      );
     }
     const to = toE164(input.to, await defaultDialCode());
-    if (!isValidPhone(to)) {
-      return { ok: false, message: `The customer number (${to || 'empty'}) is not a valid phone number. Fix the lead's contact mobile and try again.`, log: null };
-    }
+    if (!isValidPhone(to)) return invalidContact(to);
 
     const log = await communicationLogService.create({
       type: 'CALL',
@@ -169,12 +153,12 @@ export const callService = {
       status: 'INITIATED',
       provider_name: 'twilio',
       created_by: input.user_id,
-      metadata: { mode: 'PORTAL', user_id: input.user_id },
+      metadata: { mode: 'PORTAL', bridge: 'CONFERENCE', user_id: input.user_id, from_number: creds.fromNumber, agent_number: agent },
     });
 
     // Dial the CUSTOMER first (From = config number) — the same leg the AI call
-    // uses and which is proven to ring — then bridge the agent when answered.
-    const qs = `logId=${log!.id}&userId=${encodeURIComponent(input.user_id)}`;
+    // uses and which is proven to ring — then bring the agent in when answered.
+    const qs = `logId=${log.id}&userId=${encodeURIComponent(input.user_id)}`;
     const body = new URLSearchParams({
       To: to,
       From: creds.fromNumber,
@@ -184,19 +168,7 @@ export const callService = {
       StatusCallbackMethod: 'POST',
     });
     statusCallbackEvents(body);
-
-    try {
-      const { ok, status, json } = await placeCall(creds, body);
-      if (!ok) {
-        await communicationLogService.update(log!.id, { status: 'FAILED', error_message: json?.message || 'Twilio call failed' });
-        return { ok: false, message: json?.message || `Twilio call failed (HTTP ${status})`, log: null };
-      }
-      const updated = await communicationLogService.update(log!.id, { external_id: String(json?.sid ?? '') });
-      return { ok: true, message: `Calling ${to} — you'll be bridged in when they answer`, log: updated ?? log };
-    } catch (err: any) {
-      await communicationLogService.update(log!.id, { status: 'FAILED', error_message: err?.message || 'Call failed' });
-      return { ok: false, message: err?.message || 'Twilio call request failed', log: null };
-    }
+    return dial(creds, body, log.id, `Calling ${to} — you'll be bridged in when they answer`);
   },
 
   /**
@@ -213,11 +185,8 @@ export const callService = {
     const creds = await twilioCreds();
     if (!creds) return { ok: false, message: 'Twilio not configured', status: log.status };
     try {
-      const res = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${creds.accountSid}/Calls/${sid}.json`, {
-        headers: { Authorization: 'Basic ' + Buffer.from(`${creds.accountSid}:${creds.authToken}`).toString('base64') },
-      });
-      const json: any = await res.json().catch(() => ({}));
-      if (!res.ok || !json?.status) return { ok: false, message: 'Could not fetch status', status: log.status };
+      const { ok, json } = await twilioApi(creds, `/Calls/${sid}.json`);
+      if (!ok || !json.status) return { ok: false, message: 'Could not fetch status', status: log.status };
       const applied = await this.applyStatus({
         log_id: logId,
         user_id: log.created_by ?? '',
@@ -225,8 +194,8 @@ export const callService = {
         duration_seconds: Number(json.duration || 0) || undefined,
       });
       return { ok: true, message: 'Synced', status: applied.status, terminal: applied.terminal };
-    } catch (err: any) {
-      return { ok: false, message: err?.message || 'Reconcile failed', status: log.status };
+    } catch (err) {
+      return { ok: false, message: errorMessage(err) || 'Reconcile failed', status: log.status };
     }
   },
 
@@ -275,11 +244,17 @@ export const callService = {
     mode?: 'PORTAL' | 'AI';
   }) {
     const status = mapTwilioStatus(input.twilio_status);
-    const patch: Record<string, unknown> = { status };
+    const patch: Parameters<typeof communicationLogService.update>[1] = { status };
     if (input.duration_seconds != null) patch.duration_seconds = input.duration_seconds;
     if (input.recording_url) patch.recording_url = input.recording_url;
     if (input.error_message) patch.error_message = input.error_message;
-    const updated = await communicationLogService.update(input.log_id, patch as any);
+    // The first time the lead picks up starts the call clock the portal shows,
+    // including after a reload; later polls of the same status leave it alone.
+    if (status === 'IN_PROGRESS') {
+      const meta = await communicationLogService.getMetadata(input.log_id);
+      if (meta && !meta.answered_at) patch.metadata = { answered_at: new Date().toISOString() };
+    }
+    const updated = await communicationLogService.update(input.log_id, patch);
     emitCallStatus(input.user_id, {
       log_id: input.log_id,
       external_id: updated?.external_id ?? null,
@@ -291,6 +266,7 @@ export const callService = {
       contact_value: updated?.contact_value ?? null,
       recording_url: updated?.recording_url ?? null,
       error_message: updated?.error_message ?? null,
+      answered_at: updated?.answered_at ?? null,
       mode: input.mode,
     });
     return { status, terminal: isTerminalStatus(status), log: updated };

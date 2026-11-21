@@ -515,6 +515,8 @@ export const crmTypeDefs = gql`
     log_id: ID
     external_id: String
     status: String
+    "Why the call was not placed (e.g. TWILIO_NOT_CONFIGURED), for the portal to act on."
+    code: String
   }
 
   type CrmExcelImportError {
@@ -613,16 +615,22 @@ export const crmTypeDefs = gql`
     callEcommLeadContact(id: ID!, contact_number: String!, provider_id: ID): LeadContactActionResult!
     "Place an outbound AI call (Servam-driven) using a Static Content prompt and Servam voice."
     startCrmAiCall(
-      entity: CrmAiEntity!
+      "Older clients: venue, host or ecomm. Send entity_type instead, which covers every lead kind."
+      entity: CrmAiEntity
+      "The lead kind; wins over entity when both are sent."
+      entity_type: CommsLogEntity
       id: ID!
       contact_number: String!
       prompt_id: ID!
       voice: String
       contact_name: String
     ): CrmAiCallResult!
-    "Place a portal call: Twilio rings the agent leg (agent_number, else the user's profile phone), then bridges to the customer."
+    "Place a portal call: Twilio dials the lead, then rings the agent leg (agent_number, else the user's profile phone) into the same conference."
     startCrmPortalCall(
-      entity: CrmAiEntity!
+      "Older clients: venue, host or ecomm. Send entity_type instead, which covers every lead kind."
+      entity: CrmAiEntity
+      "The lead kind; wins over entity when both are sent."
+      entity_type: CommsLogEntity
       id: ID!
       contact_number: String!
       agent_number: String

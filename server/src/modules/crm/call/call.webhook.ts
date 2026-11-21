@@ -1,16 +1,45 @@
 import { Router, type Request, type Response } from 'express';
 import express from 'express';
-import { getRuntimeEnvValue } from '@config/runtimeEnv';
 import { communicationLogService } from '@modules/crm/communicationLog/communicationLog.service';
+import { logs } from '@observability/log';
 import { callService } from './call.service';
 import { audioCache } from './audioCache';
 import { emitCallStatus } from './call.socket';
 import { getWebhookBaseUrl } from './webhookBase';
-import { buildPortalDialTwiml, buildSayHangupTwiml } from './call.twiml';
+import { buildPortalConferenceTwiml, buildSayHangupTwiml, conferenceName } from './call.twiml';
 import { requireTwilioSignature } from './twilioWebhookGuard';
+import { callMediaSettings, twilioCreds } from './call.config';
+import { addAgentToConference, endCustomerLeg } from './call.conference';
+import { handleTranscriptionEvent } from './call.transcription';
+import { summarizeCallInBackground } from './call.summary';
 
 const xml = (res: Response, body: string) => res.type('text/xml').send(body);
 const EMPTY_TWIML = '<?xml version="1.0" encoding="UTF-8"?><Response></Response>';
+
+/** Agent-leg outcomes that mean the agent never got on the call. */
+const AGENT_MISSED = new Set(['busy', 'no-answer', 'failed', 'canceled']);
+
+/**
+ * The agent's phone never joined (busy, unanswered, failed): hang the lead up
+ * instead of leaving them on hold music, and say why on the log.
+ */
+async function handleAgentLegStatus(logId: string, callStatus: string) {
+  if (!AGENT_MISSED.has(callStatus.toLowerCase())) return;
+  const creds = await twilioCreds();
+  if (creds) await endCustomerLeg(creds, logId, `The agent phone did not join the call (${callStatus}).`);
+}
+
+/** Servam transcript of the recording, then the AI summary — for calls with no live transcript. */
+function transcribeRecordingInBackground(logId: string) {
+  communicationLogService
+    .requestTranscript(logId)
+    .then((log) => {
+      if (log?.transcript_status === 'READY') summarizeCallInBackground(logId);
+    })
+    .catch((error: unknown) => {
+      logs.server.error('crm', 'call-transcript', { error, log_id: logId, msg: 'Recording transcript failed' });
+    });
+}
 
 /**
  * Twilio Voice webhooks for CRM calls (Servam-voiced). Mounted under `/twilio`.
@@ -25,24 +54,46 @@ export function buildCallWebhookRouter(): Router {
   router.use(express.urlencoded({ extended: false }));
   const signed = (route: string) => requireTwilioSignature(route, getWebhookBaseUrl);
 
-  // Portal call: the customer answered → bridge in the agent (plain Twilio
-  // <Say>, no Servam dependency, so a normal call can't fail on TTS).
+  // Portal call: the customer answered → they join the call's conference and
+  // the agent's phone is rung into it (plain Twilio <Say>, no Servam
+  // dependency, so a normal call can't fail on TTS).
   router.post('/voice/portal', signed('voice-portal'), async (req: Request, res: Response) => {
     const logId = String(req.query.logId || '').trim();
     const userId = String(req.query.userId || '').trim();
     const agent = String(req.query.agent || '').trim();
-    if (!agent) return xml(res, buildSayHangupTwiml('No agent number to connect. Goodbye.'));
-    const [base, callerId] = await Promise.all([getWebhookBaseUrl(), getRuntimeEnvValue('TWILIO_PHONE_NUMBER')]);
+    if (!agent || !logId) return xml(res, buildSayHangupTwiml('No agent number to connect. Goodbye.'));
+    const [creds, media] = await Promise.all([twilioCreds(), callMediaSettings()]);
+    if (!creds) return xml(res, buildSayHangupTwiml('Sorry, this call could not be connected. Goodbye.'));
     const qs = `logId=${logId}&userId=${encodeURIComponent(userId)}&mode=PORTAL`;
+    // Ringing the agent must not hold up the lead's TwiML; it reports its own failure.
+    addAgentToConference({ creds, logId, userId, agent }).catch((error: unknown) => {
+      logs.server.error('twilio', 'agent-leg', { error, log_id: logId, msg: 'Could not ring the agent phone' });
+    });
     return xml(
       res,
-      buildPortalDialTwiml({
-        dialTo: agent,
-        callerId: (callerId || '').trim(),
-        actionUrl: `${base}/twilio/call-status?${qs}`,
-        recordingCallbackUrl: `${base}/twilio/call-status?${qs}&kind=recording`,
+      buildPortalConferenceTwiml({
+        conference: conferenceName(logId),
+        notice: media.notice,
+        transcription: media.liveTranscription
+          ? { callbackUrl: `${creds.baseUrl}/twilio/transcription?${qs}`, language: media.language }
+          : null,
+        recordingCallbackUrl: media.record ? `${creds.baseUrl}/twilio/call-status?${qs}&kind=recording` : null,
       })
     );
+  });
+
+  // Live transcription of a portal call: one finished utterance per callback.
+  router.post('/transcription', signed('transcription'), async (req: Request, res: Response) => {
+    const logId = String(req.query.logId || '').trim();
+    const userId = String(req.query.userId || '').trim();
+    if (logId) {
+      try {
+        await handleTranscriptionEvent({ logId, userId, body: req.body ?? {} });
+      } catch (error) {
+        logs.server.error('twilio', 'transcription', { error, log_id: logId, msg: 'Could not store a transcript segment' });
+      }
+    }
+    return res.status(204).end();
   });
 
   // AI call conversation turns (Servam brain + Servam voice).
@@ -84,7 +135,14 @@ export function buildCallWebhookRouter(): Router {
       if (recordingUrl) {
         const updated = await communicationLogService.update(logId, { recording_url: recordingUrl });
         emitCallStatus(userId, { log_id: logId, status: updated?.status ?? 'COMPLETED', recording_url: recordingUrl, mode });
+        // No live transcript (switched off or failed): transcribe the recording, then summarise.
+        if (updated && !updated.transcript_segments.length) transcribeRecordingInBackground(logId);
       }
+      return xml(res, EMPTY_TWIML);
+    }
+
+    if (String(req.query.leg || '') === 'agent') {
+      await handleAgentLegStatus(logId, String(req.body.CallStatus || ''));
       return xml(res, EMPTY_TWIML);
     }
 

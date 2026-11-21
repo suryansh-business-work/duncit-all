@@ -31,6 +31,34 @@ export interface CrmCallStatusPayload {
   recording_url?: string | null;
   error_message?: string | null;
   mode?: 'PORTAL' | 'AI';
+  /** ISO time the lead picked up — the portal's call clock starts here. */
+  answered_at?: string | null;
+  muted?: boolean;
+  on_hold?: boolean;
+  /** Set when the AI summary of a finished call changed state. */
+  summary_status?: string;
+}
+
+/** One finished utterance of a live call, pushed to the agent's transcript panel. */
+export const CRM_CALL_TRANSCRIPT_EVENT = 'crm_call_transcript';
+
+export interface CrmCallTranscriptPayload {
+  log_id: string;
+  seq: number;
+  speaker: 'AGENT' | 'LEAD';
+  text: string;
+  confidence: number | null;
+  at: string | null;
+}
+
+/** Push one transcript segment to the agent who owns the call. */
+export function emitCallTranscript(userId: string, payload: CrmCallTranscriptPayload) {
+  if (!userId) return;
+  try {
+    getIo().to(crmCallUserRoom(userId)).emit(CRM_CALL_TRANSCRIPT_EVENT, payload);
+  } catch {
+    // Socket server not initialised (seed scripts / tests) — safe to skip.
+  }
 }
 
 /** Emit a call-status update to the agent who owns the call. */

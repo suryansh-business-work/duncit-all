@@ -142,6 +142,12 @@ export const OPENAI_TASKS = {
     description: 'The assistant chat on a CRM lead.',
     when_off: 'The CRM shows an error saying the AI feature is switched off.',
   },
+  'crm.call_summary': {
+    label: 'Call summary',
+    module: 'CRM',
+    description: 'Summarises a finished CRM call from its transcript: key points, sentiment, outcome and follow-ups.',
+    when_off: 'The call log shows that the summary could not be generated; the transcript and recording are still saved.',
+  },
   'crm.call_assistant': {
     label: 'Call assistant turn',
     module: 'CRM',

@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor } from '@testing-library/react-native';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react-native';
 import type { VenueHostTerms } from '@duncit/utils';
 
 import { VenueHostTermsCard } from '@/components/details/VenueHostTermsCard';
@@ -44,21 +44,15 @@ describe('VenueHostTermsCard', () => {
       { venue_ids: ['v1'] },
       { auth: true },
     );
-    expect(screen.getByTestId('venue-host-terms-minSpend')).toHaveTextContent(
-      'Minimum spend ₹5,000 per booking',
-    );
-    expect(screen.getByTestId('venue-host-terms-minBusiness-PER_HOUR')).toHaveTextContent(
-      '₹800 per hour',
-    );
-    expect(screen.getByTestId('venue-host-terms-minGuests')).toHaveTextContent(
-      'Paid for at least 8 guests',
-    );
-    expect(screen.getByTestId('venue-host-terms-cleaningFee')).toHaveTextContent(
-      'Cleaning fee ₹500',
-    );
-    expect(screen.getByTestId('venue-host-terms-deposit')).toHaveTextContent(
-      'Refundable deposit ₹2,000, settled at the venue',
-    );
+    // Each row also holds its check icon's glyph, so the line is read from its own text.
+    const line = (id: string) => within(screen.getByTestId(`venue-host-terms-${id}`));
+    expect(line('minSpend').getByText('Minimum spend ₹5,000 per booking')).toBeTruthy();
+    expect(line('minBusiness-PER_HOUR').getByText('₹800 per hour')).toBeTruthy();
+    expect(line('minGuests').getByText('Paid for at least 8 guests')).toBeTruthy();
+    expect(line('cleaningFee').getByText('Cleaning fee ₹500')).toBeTruthy();
+    expect(
+      line('deposit').getByText('Refundable deposit ₹2,000, settled at the venue'),
+    ).toBeTruthy();
     expect(screen.getByTestId('venue-host-terms-gst')).toBeTruthy();
     expect(screen.queryByTestId('venue-host-terms-petFee')).toBeNull();
 

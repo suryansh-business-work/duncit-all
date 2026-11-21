@@ -156,7 +156,7 @@ describe('CreatePodScreen', () => {
     it('resumes the draft named in the route, leaving the params as they are', () => {
       mockedUse.mockReturnValue(api());
       renderWithProviders(<CreatePodScreen />);
-      expect(mockedUse).toHaveBeenCalledWith(DRAFT_ID, undefined, undefined);
+      expect(mockedUse).toHaveBeenCalledWith(DRAFT_ID, undefined, undefined, undefined);
       expect(mockSetParams).not.toHaveBeenCalled();
     });
 
@@ -167,7 +167,7 @@ describe('CreatePodScreen', () => {
       const minted = mockedUse.mock.calls[0]?.[0];
       expect(isPodDraftId(minted)).toBe(true);
       expect(minted.slice(8)).toBe('0123abcdef45678a');
-      expect(mockedUse).toHaveBeenCalledWith(minted, undefined, 'pod-7');
+      expect(mockedUse).toHaveBeenCalledWith(minted, undefined, 'pod-7', undefined);
       expect(mockSetParams).toHaveBeenCalledWith({ draftId: minted });
     });
 

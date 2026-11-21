@@ -1801,9 +1801,22 @@ export {
   type LoadingTipKey,
 } from './loading-tips';
 export { fitScale, fitSize } from './fit-scale';
-export { startOfDayInZone } from './zone-day';
+export { dayKeyInZone, startOfDayInZone } from './zone-day';
+export {
+  DEFAULT_POD_MIN_ADVANCE_DAYS,
+  MAX_POD_MIN_ADVANCE_DAYS,
+  MIN_POD_MIN_ADVANCE_DAYS,
+  MY_POD_MIN_ADVANCE_DAYS_SDL,
+  cleanPodMinAdvanceDays,
+  meetsPodMinAdvance,
+  podMinAdvanceDaysOrNull,
+  podMinAdvanceWindow,
+  startsWithinPodMinAdvance,
+  type PodMinAdvanceWindow,
+} from './pod-min-advance';
 export {
   DEFAULT_BOOKING_STEP_MINUTES,
+  addDaysYmd,
   MAX_BOOKING_CALENDAR_DAYS,
   WHOLE_VENUE_SPACE,
   bookingCalendarProps,

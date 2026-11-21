@@ -743,6 +743,16 @@ changeRequests: {
       maxCountersLabel: 'Counters per booking (host + venue)',
       maxCountersMin: 'An even number from 2 to 20. Default 6 (3 each).',
       maxCountersInvalid: 'Enter an even number from 2 to 20 — it is split equally between the host and the venue.',
+      // How far ahead a host's new pod must be scheduled (1–30 days, default 2).
+      podCreationGroupTitle: 'Pod creation',
+      podCreationGroupDesc:
+        'Rules every host is held to when they create a pod on mWeb or the app. Pods created by Admin or a Club Admin are not affected.',
+      minAdvanceDaysTitle: 'Minimum Advance Days for Pod Creation',
+      minAdvanceDaysDesc:
+        'How many days ahead of today a host’s new pod must be scheduled, so there is time to promote it and fill it. With 5 on 10 November, the first date a host can pick is 15 November; every earlier date is disabled in the calendar. A host with their own value in the Hosts console uses that instead.',
+      minAdvanceDaysLabel: 'Days in advance',
+      minAdvanceDaysMin: 'A whole number from 1 to 30. Default 2.',
+      minAdvanceDaysInvalid: 'Enter a whole number from 1 to 30.',
 
       // The cap on every pod's multi-ticket discount tiers (1–99, default 50).
       ticketDiscountMaxPctLabel: 'Max multi-ticket discount (%)',

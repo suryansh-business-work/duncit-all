@@ -1820,6 +1820,8 @@ export type AppSettings = {
   pod_complete_timeout_hours: Scalars['Int']['output'];
   /** How many hours after a pod ends its guests, host, venue and club admins are asked how it went. 0 asks the moment it ends. */
   pod_feedback_delay_hours: Scalars['Int']['output'];
+  /** Minimum Advance Days for Pod Creation: a host's new pod must start at least this many calendar days after today (1-30). A host's own override wins over it. */
+  pod_min_advance_days: Scalars['Int']['output'];
   /** How many hours before a pod starts its attendees are reminded over email and WhatsApp. */
   pod_reminder_lead_hours: Scalars['Int']['output'];
   /** How many hours before a pod starts its guests get the short same-day reminder (where and what time). 0 switches it off. */
@@ -11273,6 +11275,8 @@ export type Host = {
   pan_number: Scalars['String']['output'];
   passport_photo_url: Scalars['String']['output'];
   phone: Scalars['String']['output'];
+  /** Admin-set Minimum Advance Days for this host's new pods (1-30); null = the platform's Pod Settings value. */
+  pod_min_advance_days_override?: Maybe<Scalars['Int']['output']>;
   police_verification_url: Scalars['String']['output'];
   rejected_at?: Maybe<Scalars['String']['output']>;
   reviewer_notes: Scalars['String']['output'];
@@ -16809,6 +16813,8 @@ export type Mutation = {
   setGigJobStatus: GigJob;
   setHostActive: Host;
   setHostDeductions: Scalars['Boolean']['output'];
+  /** Admin-only: this host's Minimum Advance Days for Pod Creation, 1-30 (null = the platform's Pod Settings value). */
+  setHostPodMinAdvanceDays: Host;
   /** Admin-only: a host's monthly Pod Request limit to venues (null = the default of 10). */
   setHostVenueRequestLimit: Host;
   setIgLeadStatus: IgLead;
@@ -21768,6 +21774,12 @@ export type MutationSetHostActiveArgs = {
 export type MutationSetHostDeductionsArgs = {
   host_commission_pct: Scalars['Float']['input'];
   user_id: Scalars['ID']['input'];
+};
+
+
+export type MutationSetHostPodMinAdvanceDaysArgs = {
+  days?: InputMaybe<Scalars['Int']['input']>;
+  host_doc_id: Scalars['ID']['input'];
 };
 
 
@@ -31686,6 +31698,8 @@ export type Query = {
   myPodDrafts: Array<PodDraft>;
   myPodIdeas: Array<PodIdea>;
   myPodMemberships: Array<PodMember>;
+  /** The caller's Minimum Advance Days for Pod Creation: their own host override from the Hosts console, else the Pod Settings value. A new pod must start on or after the day this many calendar days from today. */
+  myPodMinAdvanceDays: Scalars['Int']['output'];
   /** The caller's Pod Requests on one side (venue_id narrows a venue owner's list). */
   myPodPartnerRequests: Array<PodPartnerRequest>;
   /** The signed-in buyer's pod-shop returns. */
@@ -46287,6 +46301,8 @@ export type UpdateAppSettingsInput = {
   pod_complete_timeout_hours?: InputMaybe<Scalars['Int']['input']>;
   /** How many hours after a pod ends everyone who was there is asked how it went (0-8760). */
   pod_feedback_delay_hours?: InputMaybe<Scalars['Int']['input']>;
+  /** Minimum Advance Days for Pod Creation, 1-30 (an out-of-range number is held to the nearest end). */
+  pod_min_advance_days?: InputMaybe<Scalars['Int']['input']>;
   /** How many hours before a pod starts its attendees are reminded (1-8760). */
   pod_reminder_lead_hours?: InputMaybe<Scalars['Int']['input']>;
   /** How many hours before a pod starts its guests get the same-day reminder (0-23, 0 is off). */

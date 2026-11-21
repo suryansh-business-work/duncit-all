@@ -36,3 +36,13 @@ export function startOfDayInZone(ymd: string, timeZone: string): number {
   const wall = Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
   return wall - zoneOffsetMs(new Date(wall), timeZone);
 }
+
+/**
+ * The calendar day (`yyyy-MM-dd`) instant `ms` falls on in `timeZone` — the
+ * day an admin in that zone would call "today". An unknown zone reads as UTC,
+ * like `startOfDayInZone`.
+ */
+export function dayKeyInZone(ms: number, timeZone: string): string {
+  const at = new Date(ms);
+  return new Date(ms + zoneOffsetMs(at, timeZone)).toISOString().slice(0, 10);
+}

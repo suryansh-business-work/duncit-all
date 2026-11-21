@@ -152,6 +152,10 @@ export interface IAppSettings extends Document {
   /** Counter offers one venue booking may carry in all (Pod Settings), split
    * equally: the host and the venue may each counter half of it. Even, 2-20. */
   venue_offer_max_counters: number;
+  /** Minimum Advance Days for Pod Creation (Pod Settings): how many calendar
+   * days ahead of today a host's new pod must start, 1-30. A host's own
+   * override in the Hosts console wins over it. */
+  pod_min_advance_days: number;
   created_at: Date;
   updated_at: Date;
 }
@@ -211,6 +215,7 @@ const appSettingsSchema = new Schema<IAppSettings>(
     venue_offer_min_guests_default: { type: Number, default: 8, min: 1, max: 1000 },
     venue_offer_response_hours_default: { type: Number, default: 24, min: 1, max: 720 },
     venue_offer_max_counters: { type: Number, default: 6, min: 2, max: 20 },
+    pod_min_advance_days: { type: Number, default: 2, min: 1, max: 30 },
     // `coin_earn_pct` used to live here. It moved to CoinSettings — split into a
     // pod-join and a shop rate — where the rest of the coin payout rules are;
     // coinSettingsService.seed() carries the configured value across on the

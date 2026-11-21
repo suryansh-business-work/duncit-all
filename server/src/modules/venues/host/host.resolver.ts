@@ -148,6 +148,14 @@ export const hostResolvers = {
       requireRole(ctx, HOST_GOVERN);
       return hostService.setVenueRequestLimitOverride(args.host_doc_id, args.limit ?? null);
     },
+    setHostPodMinAdvanceDays: async (
+      _p: unknown,
+      args: { host_doc_id: string; days?: number | null },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, HOST_GOVERN);
+      return hostService.setPodMinAdvanceDaysOverride(args.host_doc_id, args.days ?? null);
+    },
     setHostActive: async (
       _p: unknown,
       args: { host_doc_id: string; active: boolean },

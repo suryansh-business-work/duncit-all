@@ -467,6 +467,9 @@ export const DIRECTORY_BUNDLE: NestedCatalogue = {
       statusApproved: 'Approved',
       statusRejected: 'Rejected',
       commissionHint: "What Duncit takes from this host's payout. 0 uses the platform default.",
+      minAdvanceDaysLabel: 'Minimum Advance Days for Pod Creation',
+      minAdvanceDaysHint: 'Leave empty to use the Pod Settings value. Takes priority over it when set.',
+      minAdvanceDaysInvalid: 'Enter a whole number from 1 to 30, or leave it empty.',
       isActive: 'Live and able to run pods',
       deactivateWarning:
         'Saving with this off pauses the host and notifies them. Pods they already run are not cancelled.',

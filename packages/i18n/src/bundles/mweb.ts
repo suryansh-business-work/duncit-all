@@ -2898,6 +2898,12 @@ export const MWEB_BUNDLE: NestedCatalogue = {
         // way the start can be wrong.
         startRequired: 'Start date/time required',
         startFuture: 'Start date/time must be in the future',
+        // Pod Settings (or the host's own override): days before which the
+        // calendar is disabled. The translator picks .one / .other from count.
+        startTooSoon: {
+          one: 'You can only create a Pod scheduled at least {count} day in advance from the current date.',
+          other: 'You can only create a Pod scheduled at least {count} days in advance from the current date.',
+        },
         endAfterStart: 'End must be after start',
         endMinDuration: 'End must be at least 30 minutes after the start',
         // A virtual pod has no slot to take its end from, and the end is what

@@ -898,5 +898,7 @@ export const podTypeDefs = /* GraphQL */ `
   extend type Query {
     "The Admin panel's Pods dashboard, in one read."
     podDashboard(days: Int): PodDashboard!
+    "The caller's Minimum Advance Days for Pod Creation: their own host override from the Hosts console, else the Pod Settings value. A new pod must start on or after the day this many calendar days from today."
+    myPodMinAdvanceDays: Int!
   }
 `;

@@ -1538,6 +1538,37 @@ app share these derivations and keep their own MUI / Tamagui rows (rules 27 + 40
 | `draftHoursLeft` | `(draft, now = Date.now()) => number` | Whole hours left, floored at 0. `0` means the last hour, not "already gone". |
 | `splitDraftsByExpiry` | `(drafts, now = Date.now()) => { expiring, rest }` | `expiring` soonest-first; `rest` keeps the server order. |
 
+### Minimum Advance Days for Pod Creation — `pod-min-advance`
+
+A host's new pod must start at least N calendar days after today, on the admin's
+time zone: today 10 Nov with N = 5 opens 15 Nov, from local midnight. N is the
+host's own override (Hosts console) when set, else Pod Settings'
+`pod_min_advance_days` (default 2, 1–30); the server resolves it as
+`myPodMinAdvanceDays`. The server refuses an earlier start
+(`reason: POD_MIN_ADVANCE`) on createPartnerPod, draft publish and a resubmit
+that moves the date; Admin, Club Admin and Auto Pods are not held to it. mWeb
+and the app start the venue offer calendar on the first allowed day, drop
+earlier Pod Request slots, block earlier days on the virtual pod picker, and
+refuse an earlier start in the schema — all from these helpers.
+
+| Export | Signature | Meaning |
+| --- | --- | --- |
+| `DEFAULT_POD_MIN_ADVANCE_DAYS` / `MIN_…` / `MAX_…` | `number` | 2, 1, 30. |
+| `cleanPodMinAdvanceDays` | `(value) => number` | Floored and held to 1–30; unset or non-numeric reads as 2. |
+| `podMinAdvanceDaysOrNull` | `(value) => number \| null` | A whole number 1–30 (typed or numeric), else `null` — the host editor's check. |
+| `podMinAdvanceWindow` | `(nowMs, timeZone, days) => { day, startMs }` | The first allowed day (`yyyy-MM-dd`) and its local midnight. |
+| `meetsPodMinAdvance` | `(startMs, window) => boolean` | Starts on or after the window. |
+| `startsWithinPodMinAdvance` | `(items, window \| null) => items` | Keeps the slots / tiles starting in the window; all of them with no window. |
+| `MY_POD_MIN_ADVANCE_DAYS_SDL` | `string` | The caller's days, for mWeb's `gql` (the app re-declares it for its codegen). |
+| `dayKeyInZone` | `(ms, timeZone) => string` | The calendar day an instant falls on in a zone. |
+| `addDaysYmd` | `(ymd, days) => string` | The day `days` after `ymd` on the plain calendar. |
+
+```ts
+const window = podMinAdvanceWindow(Date.parse('2026-11-10T08:30:00Z'), 'Asia/Kolkata', 5);
+// { day: '2026-11-15', startMs: Date.parse('2026-11-14T18:30:00Z') }
+startsWithinPodMinAdvance(slots, window); // only slots from 15 Nov on
+```
+
 ### Create Pod steps
 
 Create Pod walks four steps on both surfaces: **What** (category, mode) →

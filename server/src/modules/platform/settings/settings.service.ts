@@ -106,6 +106,12 @@ const DEFAULT_VENUE_OFFER_RESPONSE_HOURS = 24;
 const DEFAULT_VENUE_OFFER_MAX_COUNTERS = 6;
 /** The most counters a booking may be set to allow in all. */
 const VENUE_OFFER_MAX_COUNTERS_CAP = 20;
+/** Calendar days ahead of today a host's new pod must start — two, so even a
+ * new host has a weekend's notice to promote it. Twin of `@duncit/utils`
+ * DEFAULT_POD_MIN_ADVANCE_DAYS (the server has no @duncit deps). */
+const DEFAULT_POD_MIN_ADVANCE_DAYS = 2;
+/** The range an admin may set it to, platform-wide or per host. */
+export const POD_MIN_ADVANCE_DAYS_RANGE = { min: 1, max: 30 } as const;
 
 const cleanRetentionDays = (value: unknown) =>
   Math.max(1, Math.floor(Number(value)) || DEFAULT_DRAFT_RETENTION_DAYS);
@@ -227,6 +233,15 @@ const cleanVenueOfferMaxCounters = (value: unknown) => {
   return bounded - (bounded % 2);
 };
 
+/** Minimum Advance Days for Pod Creation, held to 1 – 30. An unset value is
+ * the default, not the minimum (`Number(null)` is 0). */
+export const cleanPodMinAdvanceDays = (value: unknown) => {
+  if (value === null || value === undefined || value === "") return DEFAULT_POD_MIN_ADVANCE_DAYS;
+  const n = Math.floor(Number(value));
+  if (!Number.isFinite(n)) return DEFAULT_POD_MIN_ADVANCE_DAYS;
+  return Math.min(POD_MIN_ADVANCE_DAYS_RANGE.max, Math.max(POD_MIN_ADVANCE_DAYS_RANGE.min, n));
+};
+
 // 0 is a legal value here (it disables the penalty), so the `|| DEFAULT` idiom
 // would silently turn a saved 0 back into 5.
 const cleanAutoPodCancelHealthPenalty = (value: unknown) => {
@@ -307,6 +322,7 @@ const toAppPub = (d: any) => ({
     d?.venue_offer_response_hours_default,
   ),
   venue_offer_max_counters: cleanVenueOfferMaxCounters(d?.venue_offer_max_counters),
+  pod_min_advance_days: cleanPodMinAdvanceDays(d?.pod_min_advance_days),
   updated_at: d?.updated_at?.toISOString?.() ?? "",
 });
 
@@ -716,6 +732,7 @@ type AppSettingsUpdateInput = {
   venue_offer_min_guests_default?: number;
   venue_offer_response_hours_default?: number;
   venue_offer_max_counters?: number;
+  pod_min_advance_days?: number;
 };
 
 /** Fields copied to the update as-is when the caller supplied them. */
@@ -772,6 +789,7 @@ const APP_SETTING_CLEANED_FIELDS: ReadonlyArray<
   ["venue_offer_min_guests_default", cleanVenueOfferMinGuests],
   ["venue_offer_response_hours_default", cleanVenueOfferResponseHours],
   ["venue_offer_max_counters", cleanVenueOfferMaxCounters],
+  ["pod_min_advance_days", cleanPodMinAdvanceDays],
 ];
 
 const buildAppSettingsUpdate = (input: AppSettingsUpdateInput) => {
@@ -843,6 +861,12 @@ export const settingsService = {
   async getVenueOfferCountersPerSide(): Promise<number> {
     const doc = await AppSettingsModel.findOne({ singleton_key: "app" }).select("venue_offer_max_counters").lean();
     return cleanVenueOfferMaxCounters(doc?.venue_offer_max_counters) / 2;
+  },
+
+  /** The platform's Minimum Advance Days for Pod Creation (Pod Settings) — what a host with no override of their own gets. */
+  async getPodMinAdvanceDays(): Promise<number> {
+    const doc = await AppSettingsModel.findOne({ singleton_key: "app" }).select("pod_min_advance_days").lean();
+    return cleanPodMinAdvanceDays(doc?.pod_min_advance_days);
   },
 
   async getPodCompletionSettings(): Promise<{ timeout_hours: number; reminder_hours: number }> {

@@ -88,6 +88,8 @@ export const settingsTypeDefs = gql`
     venue_offer_response_hours_default: Int!
     "Counter offers one venue booking may carry in all (2-20, even), split equally: the host and the venue may each counter half of it."
     venue_offer_max_counters: Int!
+    "Minimum Advance Days for Pod Creation: a host's new pod must start at least this many calendar days after today (1-30). A host's own override wins over it."
+    pod_min_advance_days: Int!
     updated_at: String
   }
 
@@ -220,6 +222,8 @@ export const settingsTypeDefs = gql`
     venue_offer_response_hours_default: Int
     "Counter offers per venue booking in all (2-20; an odd number rounds down), split equally between the host and the venue."
     venue_offer_max_counters: Int
+    "Minimum Advance Days for Pod Creation, 1-30 (an out-of-range number is held to the nearest end)."
+    pod_min_advance_days: Int
   }
 
   type FeatureFlag {

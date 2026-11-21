@@ -138,7 +138,8 @@ export const DEFAULT_BOOKING_STEP_MINUTES = 30;
 const MINUTE_MS = 60_000;
 const DAY_MS = 24 * 60 * MINUTE_MS;
 
-const addDaysYmd = (ymd: string, days: number): string =>
+/** The calendar day `days` after `ymd` (`yyyy-MM-dd`), on the plain calendar. */
+export const addDaysYmd = (ymd: string, days: number): string =>
   new Date(Date.parse(`${ymd}T00:00:00Z`) + days * DAY_MS).toISOString().slice(0, 10);
 
 /** The `from`/`to` days of a calendar read starting on `fromYmd` — never more than the server cap. */

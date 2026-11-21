@@ -51,6 +51,7 @@ import {
 } from './pod.products';
 import { insertPodWithFreeSlug, resolvePodSlugForCreate } from './pod.slug';
 import { freePodJustification } from './pod.free';
+import { assertPodMinAdvance } from './pod.minAdvance';
 import {
   assertRequestReadyForPod,
   markPartnerRequestPodCreated,
@@ -96,6 +97,12 @@ function venueCostForCreate(offer: { quote: { total: number } } | null, slotDoc:
   return slotDoc ? slotVenueCharge(slotDoc, { pax: spots }).total : 0;
 }
 
+/** Whether an edit's start is given and differs from the stored one. */
+function startMoves(next: unknown, current: Date | null | undefined): boolean {
+  if (next === undefined || next === null || next === '') return false;
+  return new Date(next as string | Date).getTime() !== current?.getTime();
+}
+
 /** A new pod's venue state: a slot or an offer the venue must answer keeps it offline until it does. */
 function venueStateForCreate(
   slot: { slotDoc: unknown; needsVenueApproval: boolean },
@@ -122,6 +129,8 @@ export const podWriteMethods = {
       autoPodSlot?: { slotId: string; autoPodId: string };
       autoPodId?: string;
       partnerRequestSlot?: { slotId: string; requestId: string };
+      /** A host's own pod: held to that host's Minimum Advance Days. */
+      minAdvanceHostId?: string;
     }
   ) {
     const autoPodSlot = opts?.autoPodSlot ?? null;
@@ -162,6 +171,8 @@ export const podWriteMethods = {
     const venueState = venueStateForCreate({ slotDoc, needsVenueApproval }, offer, autoPodSlot ?? partnerRequestSlot);
 
     validateFutureDates(input.pod_date_time, input.pod_end_date_time, podMode === 'VIRTUAL');
+    // After the slot / offer is resolved: either may have set the start.
+    if (opts?.minAdvanceHostId) await assertPodMinAdvance(opts.minAdvanceHostId, input.pod_date_time);
     validateMeetingDetails(podMode, input);
     const venueLocation = podMode === 'PHYSICAL'
       ? await resolveVenueLocation(input)
@@ -297,7 +308,7 @@ export const podWriteMethods = {
     return this.create(
       { ...input, pod_mode: podMode, pod_hosts_id: [userId], pod_attendees: [userId] },
       { actorUserId: userId, source: 'HOST' },
-      partnerRequestSlot ? { partnerRequestSlot } : undefined,
+      { ...(partnerRequestSlot ? { partnerRequestSlot } : {}), minAdvanceHostId: userId },
     );
   },
 
@@ -437,6 +448,11 @@ export const podWriteMethods = {
     // Without a fresh slot or offer a partner venue cannot be kept: the
     // rejected request must move to a new booking (or the host's own venue / a
     // plain location). assertPartnerVenue enforces exactly that split.
+    // A new date is a new schedule, held to the host's Minimum Advance Days;
+    // resubmitting on the date the venue already saw is not.
+    if (startMoves(input.pod_date_time, doc.pod_date_time)) {
+      await assertPodMinAdvance(userId, input.pod_date_time);
+    }
     await applyResubmitPhysicalVenue(doc, input, slotDoc, nextMode, userId, !!offer);
 
     // Same Step-4 economics guard as create, on the MERGED (input over stored)

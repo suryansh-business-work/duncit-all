@@ -14,6 +14,9 @@ cov-summary/
 .vite/
 .turbo/
 generated/
+# ...except the Targets growth formula: generated from the server formulas and
+# checked in, because `generate-growth-formula --check` (Shared Gates) diffs it.
+!portals/targets/src/lib/generated/
 _nm/
 
 # astro build cache (only the root .gitignore is used; inner workspaces inherit)

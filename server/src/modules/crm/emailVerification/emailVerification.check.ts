@@ -1,6 +1,6 @@
 import { isEmailAddress } from '@utils/email';
 import { checkEmailWithReacher, type EmailCheckResult } from './emailVerification.client';
-import { EmailVerificationModel, type EmailCheckSource } from './emailVerification.model';
+import { EmailVerificationModel, LEGACY_PORTAL, type EmailCheckSource } from './emailVerification.model';
 
 /** Who ran a check — kept on every record, which is the trail of who verified what. */
 export interface EmailCheckActor {
@@ -23,18 +23,36 @@ const MALFORMED: EmailCheckResult = {
   suggestion: '',
 };
 
+/** Where a check came from: the console it ran in, and the check it re-ran (if any). */
+export interface EmailCheckOrigin {
+  portal: string;
+  revalidatedFrom?: string | null;
+}
+
+const CRM_ORIGIN: EmailCheckOrigin = { portal: LEGACY_PORTAL };
+
 /**
- * Check one address and keep the record. Shared by the single check and the
- * bulk job's step, so both store exactly the same shape. Throws only when the
- * verifier itself could not be reached — that is not a verdict on the email.
+ * Check one address and keep the record. Shared by every console's single
+ * check, the re-run and the bulk job's step, so all of them store exactly the
+ * same shape. Throws only when the verifier itself could not be reached —
+ * that is not a verdict on the email.
  */
 export async function checkAndRecord(
   rawEmail: string,
   actor: EmailCheckActor,
   source: EmailCheckSource,
-  jobId: string | null = null
+  jobId: string | null = null,
+  origin: EmailCheckOrigin = CRM_ORIGIN
 ) {
   const email = rawEmail.trim().toLowerCase();
   const result = isEmailAddress(email) ? await checkEmailWithReacher(email) : MALFORMED;
-  return EmailVerificationModel.create({ email, ...result, source, job_id: jobId, checked_by: actor });
+  return EmailVerificationModel.create({
+    email,
+    ...result,
+    source,
+    job_id: jobId,
+    portal: origin.portal,
+    revalidated_from: origin.revalidatedFrom ?? null,
+    checked_by: actor,
+  });
 }

@@ -16,7 +16,7 @@ import type { typeDefsByModule } from '@modules/index';
 export const MCP_CATEGORIES = [
   { key: 'users', label: 'Users & access', description: 'Accounts, roles, verification, account health, approvals and portal access.' },
   { key: 'account', label: 'My account', description: "The signed-in member's own profile, preferences, privacy, blocks, contacts, addresses and notifications." },
-  { key: 'platform', label: 'Platform', description: 'Settings, locations, pop-ups, change logs, background jobs, uploads and console layout.' },
+  { key: 'platform', label: 'Platform', description: 'Settings, locations, pop-ups, change logs, background jobs, uploads, email validation and console layout.' },
   { key: 'localization', label: 'Localization', description: 'Locales and every user-facing string.' },
   { key: 'pods', label: 'Pods', description: 'Pods end to end: create, edit, join, members, attendance, tickets, change requests, auto pods, drafts, ideas, history and search.' },
   { key: 'clubs', label: 'Clubs', description: 'Clubs, regions, club admins and their slot and event requests.' },
@@ -111,6 +111,7 @@ export const MODULE_CATEGORY: Record<ModuleName, McpCategoryKey | null> = {
   linkPreviewTypeDefs: 'platform',
   uploadTypeDefs: 'platform',
   uploadSettingTypeDefs: 'platform',
+  emailValidationTypeDefs: 'platform',
 
   localizationTypeDefs: 'localization',
 

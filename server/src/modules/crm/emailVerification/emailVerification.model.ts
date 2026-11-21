@@ -8,6 +8,9 @@ import { Schema, model, type InferSchemaType, type Types } from 'mongoose';
 export const EMAIL_STATUSES = ['VERIFIED', 'RISKY', 'INVALID', 'UNKNOWN'] as const;
 export type EmailVerificationStatus = (typeof EMAIL_STATUSES)[number];
 
+/** Every check ran in the CRM until any console could run one, so a row without a portal is the CRM's. */
+export const LEGACY_PORTAL = 'crm';
+
 /** SINGLE: one address typed or clicked in the CRM; BULK: a row of an uploaded CSV. */
 export const EMAIL_CHECK_SOURCES = ['SINGLE', 'BULK'] as const;
 export type EmailCheckSource = (typeof EMAIL_CHECK_SOURCES)[number];
@@ -33,6 +36,14 @@ const emailVerificationSchema = new Schema(
     /** Reacher's "did you mean" for a likely typo, e.g. gmial.com → gmail.com. */
     suggestion: { type: String, default: '' },
     source: { type: String, enum: EMAIL_CHECK_SOURCES, required: true, index: true },
+    /**
+     * The console the check was run from (its `appConfig.key`). Rows written
+     * before checks could run outside the CRM have no value and read as
+     * {@link LEGACY_PORTAL}.
+     */
+    portal: { type: String, default: null, index: true },
+    /** A re-run of an earlier check: that check's id. The earlier row is kept — history, not an update. */
+    revalidated_from: { type: String, default: null },
     /** BULK only: the background job that checked it. */
     job_id: { type: String, default: null, index: true },
     checked_by: {

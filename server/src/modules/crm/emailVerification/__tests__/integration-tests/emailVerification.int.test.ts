@@ -5,6 +5,7 @@ import { checkEmailWithReacher, type EmailCheckResult } from '../../emailVerific
 import { EmailVerificationModel } from '../../emailVerification.model';
 import { emailVerificationService } from '../../emailVerification.service';
 import { verifyEmailWave } from '../../emailVerification.step';
+import { checkAndRecord } from '../../emailVerification.check';
 
 jest.mock('../../emailVerification.client', () => ({ checkEmailWithReacher: jest.fn() }));
 jest.mock('@modules/platform/backgroundJob/backgroundJob.runner', () => ({ scheduleJob: jest.fn() }));
@@ -115,6 +116,25 @@ describe('emailVerificationService.table', () => {
 
     const invalid = await emailVerificationService.table({ filters: [{ field: 'status', op: 'in', values: ['INVALID'] }] });
     expect(invalid.rows.map((row) => row.email)).toEqual(['second@example.com']);
+  });
+
+  it('lists only the CRM's own checks, counting the ones from before checks were stamped with a console', async () => {
+    reacher.mockResolvedValueOnce(verdict('VERIFIED')).mockResolvedValueOnce(verdict('VERIFIED'));
+    await emailVerificationService.verify(user, 'crm@example.com');
+    await checkAndRecord('finance@example.com', { id: 'f1', email: 'fin@duncit.com' }, 'SINGLE', null, { portal: 'finance' });
+    await EmailVerificationModel.collection.insertOne({
+      email: 'legacy@example.com',
+      ...verdict('RISKY'),
+      source: 'SINGLE',
+      job_id: null,
+      checked_by: { id: 'c1', email: 'crm@duncit.com' },
+      created_at: new Date('2026-10-01T00:00:00.000Z'),
+    });
+
+    const page = await emailVerificationService.table();
+
+    expect(page.rows.map((row) => row.email).sort()).toEqual(['crm@example.com', 'legacy@example.com']);
+    expect(await EmailVerificationModel.countDocuments({ email: 'crm@example.com', portal: 'crm' })).toBe(1);
   });
 });
 

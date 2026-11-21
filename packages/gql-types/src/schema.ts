@@ -1035,6 +1035,8 @@ export type AnalyticsEntity =
   | 'CONTACTS'
   | 'DATABASE'
   | 'E2E_TESTS'
+  /** Every email validation any console ran, and how the addresses turned out (Admin > Email Validations). */
+  | 'EMAIL_VALIDATIONS'
   | 'ENV_KEYS'
   | 'FUNNEL'
   | 'HOSTS'
@@ -9204,6 +9206,69 @@ export type EmailTestResult = {
   ok: Scalars['Boolean']['output'];
 };
 
+/** One validation of one address, from any console. Every one is kept. */
+export type EmailValidation = {
+  __typename?: 'EmailValidation';
+  /** Email of the staff member who ran it. */
+  checked_by: Scalars['String']['output'];
+  checks: Array<EmailValidationCheck>;
+  created_at: Scalars['String']['output'];
+  email: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  /** The console the check ran in (its portal key). */
+  portal: Scalars['String']['output'];
+  /** Set on a re-run: the validation it re-ran. */
+  revalidated_from?: Maybe<Scalars['ID']['output']>;
+  source: CrmEmailCheckSource;
+  /** The verifier's own status, kept beside the verdict. */
+  status: CrmEmailStatus;
+  /** A likely intended address when this one looks like a typo. */
+  suggestion: Scalars['String']['output'];
+  verdict: EmailValidationVerdict;
+};
+
+/** One test. passed is null when it could not run because a test before it failed. */
+export type EmailValidationCheck = {
+  __typename?: 'EmailValidationCheck';
+  key: EmailValidationCheckKey;
+  passed?: Maybe<Scalars['Boolean']['output']>;
+};
+
+/** The tests behind a verdict, in the order they run. */
+export type EmailValidationCheckKey =
+  /** The inbox is not full. */
+  | 'INBOX_HAS_SPACE'
+  /** The mailbox is not disabled. */
+  | 'MAILBOX_ENABLED'
+  /** The mail server confirmed the mailbox exists. */
+  | 'MAILBOX_EXISTS'
+  /** The domain has a mail server (MX record). */
+  | 'MAIL_SERVER'
+  /** The domain does not accept every address (catch-all). */
+  | 'NOT_CATCH_ALL'
+  /** Not a throwaway (disposable) address. */
+  | 'NOT_DISPOSABLE'
+  /** Not a shared role address such as info@ or support@. */
+  | 'NOT_ROLE_ACCOUNT'
+  /** The mail server answered over SMTP. */
+  | 'SMTP_CONNECTION'
+  /** The address is well formed. */
+  | 'SYNTAX';
+
+export type EmailValidationTablePage = {
+  __typename?: 'EmailValidationTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<EmailValidation>;
+  total: Scalars['Int']['output'];
+};
+
+/** The final word on an address. An UNKNOWN from the mail server is RISKY: neither proof it exists nor that it does not. */
+export type EmailValidationVerdict =
+  | 'INVALID'
+  | 'RISKY'
+  | 'VALID';
+
 /**
  * One out-of-pocket spend an employee is claiming back. The employee files it
  * from the Employee console; Finance decides on it from Finance > Employee
@@ -16740,6 +16805,8 @@ export type Mutation = {
   retryScheduledSocialPost: SocialScheduledPost;
   /** Re-attempt only the people this campaign did not reach. Returns immediately. */
   retryWaCampaign: WaCampaign;
+  /** Validate a logged address again. The earlier validation is kept. */
+  revalidateEmail: EmailValidation;
   /** Marketing approves (freezes cost) or rejects, with remarks. */
   reviewAdRequest: AdRequest;
   /** Products portal: check a submitted brand's credential against the vendor during review. */
@@ -17724,6 +17791,8 @@ export type Mutation = {
   upsertTranslation: Translation;
   /** Partner: pick a saved connection (one that passed its check) for a brand. */
   useBrandIntegration: BrandIntegrationStatus;
+  /** Validate one address now, from the console named by portal (its portal key). */
+  validateEmail: EmailValidation;
   /**
    * Venue enrols: accepts the offer and commits a window at its own price terms
    * (priced with its charges, Duncit's commission on top, frozen at accept).
@@ -21417,6 +21486,11 @@ export type MutationRetryWaCampaignArgs = {
 };
 
 
+export type MutationRevalidateEmailArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationReviewAdRequestArgs = {
   approve: Scalars['Boolean']['input'];
   id: Scalars['ID']['input'];
@@ -24171,6 +24245,12 @@ export type MutationUseBrandIntegrationArgs = {
   brand_doc_id: Scalars['ID']['input'];
   integration_id: Scalars['ID']['input'];
   provider: BrandIntegrationProvider;
+};
+
+
+export type MutationValidateEmailArgs = {
+  email: Scalars['String']['input'];
+  portal: Scalars['String']['input'];
 };
 
 
@@ -31418,6 +31498,8 @@ export type Query = {
    */
   emailTemplateUsage: Array<EmailTemplateUsage>;
   emailTemplates: Array<EmailTemplate>;
+  /** Admin › Email Validations › Logs: every validation every console ran. */
+  emailValidationsTable: EmailValidationTablePage;
   /** Finance: tiles across every employee's claims. */
   employeeExpenseSummary: EmployeeExpenseSummary;
   /** Finance: every employee's claims, with the employee joined on. */
@@ -34223,6 +34305,11 @@ export type QueryEmailTemplateArgs = {
 
 export type QueryEmailTemplateBySlugArgs = {
   slug: Scalars['String']['input'];
+};
+
+
+export type QueryEmailValidationsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
 };
 
 

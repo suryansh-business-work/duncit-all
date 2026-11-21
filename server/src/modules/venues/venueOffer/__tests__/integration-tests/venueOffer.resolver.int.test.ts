@@ -43,8 +43,13 @@ describe('venue offer resolvers', () => {
   it("price Create Pod's offer from the venue's own minimum, as the offer it sends will be — a free venue included", async () => {
     const offer = { start_at: 's', end_at: 'e', pax: 20, model: 'PER_GUEST', rate: 500 };
     await expect(query('venueOfferQuote')({}, { venue_id: 'venue-1', offer }, ctx)).resolves.toBe('preview');
-    // Opening offers may be FREE: the preview is asked to allow it.
-    expect(venueOfferService.preview).toHaveBeenCalledWith('venue-1', offer, undefined, true, true);
+    // Opening offers may be FREE, are priced at the venue's minimum and held to
+    // the host's terms: the preview is asked for all three.
+    expect(venueOfferService.preview).toHaveBeenCalledWith('venue-1', offer, undefined, {
+      atVenueMinimum: true,
+      allowFree: true,
+      hostTerms: true,
+    });
   });
 
   it('price a host’s counter-back for its pod', async () => {

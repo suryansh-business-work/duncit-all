@@ -449,6 +449,7 @@ describe('bargaining', () => {
     await expect(venueOfferService.counterPreview(w.ownerId, slotId, { model: 'PER_GUEST', rate: 0 })).resolves.toEqual({
       ok: false,
       message: 'Enter the amount you offer the venue',
+      reason: null,
       quote: null,
       quote_min: null,
     });

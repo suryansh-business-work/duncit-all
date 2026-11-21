@@ -287,14 +287,15 @@ describe('applyCrmEmailTheme', () => {
     expect(out).toContain('padding-left: 24px !important; padding-right: 24px !important;');
   });
 
-  it('applies a padding-only change as a head rule without touching any colour', () => {
+  it('applies a padding-only change as head extras without touching any colour', () => {
     const out = applyCrmEmailTheme(SOURCE, theme({ content_padding: 40 }));
-    const start = out.indexOf('    <mj-style>\n      h1, h2, h3');
+    // A themed email loads the web font it names — the default Inter here — before its rules.
+    const start = out.indexOf(`    <mj-font name="Inter" href="${fontFor('inter').href}" />\n    <mj-style>\n      h1, h2, h3`);
     const end = out.indexOf('</mj-style>', start) + '</mj-style>\n  '.length;
 
     expect(start).toBeGreaterThan(-1);
     expect(out.slice(start, end)).toContain('padding-left: 40px !important;');
-    // Take the added rule out again and nothing else differs.
+    // Take the added font and rule out again and nothing else differs.
     expect(out.slice(0, start) + out.slice(end)).toBe(SOURCE);
   });
 

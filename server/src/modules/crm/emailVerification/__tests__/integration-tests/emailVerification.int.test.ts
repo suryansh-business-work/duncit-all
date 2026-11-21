@@ -118,7 +118,7 @@ describe('emailVerificationService.table', () => {
     expect(invalid.rows.map((row) => row.email)).toEqual(['second@example.com']);
   });
 
-  it('lists only the CRM's own checks, counting the ones from before checks were stamped with a console', async () => {
+  it('lists only the CRM’s own checks, counting the ones from before checks were stamped with a console', async () => {
     reacher.mockResolvedValueOnce(verdict('VERIFIED')).mockResolvedValueOnce(verdict('VERIFIED'));
     await emailVerificationService.verify(user, 'crm@example.com');
     await checkAndRecord('finance@example.com', { id: 'f1', email: 'fin@duncit.com' }, 'SINGLE', null, { portal: 'finance' });

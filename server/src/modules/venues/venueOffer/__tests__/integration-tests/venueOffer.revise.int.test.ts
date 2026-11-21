@@ -199,6 +199,7 @@ describe('editPreview', () => {
     await expect(revise.editPreview(w.hostId, w.podId, { model: 'PER_GUEST', rate: 650 })).resolves.toEqual({
       ok: false,
       message: 'Only the side that made a counter can change it',
+      reason: null,
       quote: null,
       quote_min: null,
     });

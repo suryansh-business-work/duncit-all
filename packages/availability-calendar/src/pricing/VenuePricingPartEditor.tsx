@@ -70,7 +70,8 @@ export default function VenuePricingPartEditor({ venueId, part }: Readonly<Props
       await pricingModule.save(pricingWithPart(part, pricing, form.getValues()));
       notifySuccess(t('venuePricing.part.saved'));
     } catch (saveError) {
-      setError(parseApiError(saveError) || t('venuePricing.part.saveFailed'));
+      // parseApiError never returns '': its fallback is where this editor's own words go.
+      setError(parseApiError(saveError, t('venuePricing.part.saveFailed')));
       logger.warn('VenuePricingPartEditor', 'save', { error: saveError, venue_id: venueId, part });
     }
   };

@@ -198,10 +198,13 @@ describe('studioOptionsFor', () => {
   it('lists the console-only venue pages in the Partner console only', () => {
     const consoleKeys = studioOptionsFor('VENUE', ['VENUE_OWNER'], { autoPods: true, console: true }).map((o) => o.key);
     const inApp = studioOptionsFor('VENUE', ['VENUE_OWNER'], { autoPods: true }).map((o) => o.key);
-    for (const key of ['calendar', 'type-capacity', 'amenities', 'leaves', 'fees', 'price-rules', 'food-settings', 'banner-kit', 'banners']) {
+    for (const key of ['calendar', 'type-capacity', 'amenities', 'leaves', 'price-rules', 'food-settings', 'banner-kit', 'banners']) {
       expect(consoleKeys).toContain(key);
       expect(inApp).not.toContain(key);
     }
+    // Fees & Minimum Spend opens on every surface, so both lists carry it.
+    expect(consoleKeys).toContain('fees');
+    expect(inApp).toContain('fees');
     // Nothing else differs between the two lists for a venue.
     expect(inApp).toEqual(consoleKeys.filter((key) => !STUDIO_OPTION_LIST.VENUE.find((o) => o.key === key)?.consoleOnly));
   });

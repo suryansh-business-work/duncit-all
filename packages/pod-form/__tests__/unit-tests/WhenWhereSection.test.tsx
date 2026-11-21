@@ -433,7 +433,7 @@ describe('WhenWhereSection (offer terms)', () => {
     });
     renderWW(termsData({ platform_fee_pct: 10, gst_pct: 18, currency_symbol: '₹' }), WINDOW);
     expect(screen.getByTestId('pod-form-venue-min-business')).toHaveTextContent(
-      /^Minimum business for this venue: ₹200\.00 per guest · ₹5,000\.00 per booking — Your offer must be at least the amount for the way you pay\.$/,
+      /^Minimum business for this venue: ₹200\.00 per guest · ₹5,000\.00 per booking — Your offer must be at least the amount for the way you pay, and reach the minimum spend\.$/,
     );
   });
 

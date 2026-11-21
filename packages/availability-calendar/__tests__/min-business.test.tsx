@@ -135,6 +135,8 @@ describe('VenueMinBusinessNote', () => {
     const note = within(screen.getByTestId('create-pod-min-business'));
     expect(note.getByText('Minimum business for this venue')).toBeInTheDocument();
     expect(note.getAllByRole('listitem').map((item) => item.textContent)).toEqual(['Rs 200 per guest', 'Rs 400 per hour']);
-    expect(note.getByText(/Your offer must be at least the amount for the way you pay\./)).toBeInTheDocument();
+    expect(
+      note.getByText(/Your offer must be at least the amount for the way you pay, and reach the minimum spend\./),
+    ).toBeInTheDocument();
   });
 });

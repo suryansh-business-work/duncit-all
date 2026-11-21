@@ -53,6 +53,7 @@ import {
   offerAmountAtMinimum,
   offerMinSpendShortfall,
   venueMinSpendText,
+  venueMinimumLines,
   minSpendShortfallText,
   openingOfferMinSpendShortfall,
   type VenueOfferSource,
@@ -375,6 +376,34 @@ describe('venueMinBusinessLines', () => {
     expect(venueMinBusinessLines([], t, money)).toEqual([]);
     expect(venueMinBusinessLines(null, t, money)).toEqual([]);
     expect(venueMinBusinessLines(undefined, t, money)).toEqual([]);
+  });
+});
+
+describe('venueMinimumLines', () => {
+  const t = (key: string, opts?: { vars?: Record<string, string | number> }) => `${key}:${opts?.vars?.amount ?? ''}`;
+  const money = (rupees: number) => `₹${rupees}`;
+
+  it('lists the amounts per basis first, then the minimum spend', () => {
+    const rows = [
+      { model: 'FLAT', amount: 5000 },
+      { model: 'PER_GUEST', amount: 200 },
+    ];
+    expect(venueMinimumLines(rows, 8000, t, money)).toEqual([
+      'availability.offers.minBusiness.perGuestAmount:₹200',
+      'availability.offers.minBusiness.perBookingAmount:₹5000',
+      'availability.offers.minSpend.amount:₹8000',
+    ]);
+  });
+
+  it('leaves the minimum spend out when the venue named none', () => {
+    expect(venueMinimumLines([{ model: 'PER_HOUR', amount: 400 }], 0, t, money)).toEqual([
+      'availability.offers.minBusiness.perHourAmount:₹400',
+    ]);
+    expect(venueMinimumLines(null, null, t, money)).toEqual([]);
+  });
+
+  it('shows the minimum spend alone when the venue named no amounts per basis', () => {
+    expect(venueMinimumLines(undefined, 2500, t, money)).toEqual(['availability.offers.minSpend.amount:₹2500']);
   });
 });
 

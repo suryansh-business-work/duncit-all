@@ -1,4 +1,4 @@
-import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react-native';
 import { isPodDraftId, type DraftAutosaveHandle } from '@duncit/utils';
 
 import { CreatePodScreen } from '@/screens/CreatePodScreen';
@@ -200,11 +200,15 @@ describe('CreatePodScreen', () => {
     expect(screen.queryByTestId('draft-save-indicator')).toBeNull();
     const flush = jest.fn().mockResolvedValue(true);
     report({ status: 'saving', unsaved: true, flush });
-    expect(screen.getByTestId('draft-save-indicator')).toHaveTextContent('Saving…');
+    expect(
+      within(screen.getByTestId('draft-save-indicator')).getByText('Saving…'),
+    ).toBeOnTheScreen();
     report({ status: 'saved', unsaved: false, flush });
-    expect(screen.getByTestId('draft-save-indicator')).toHaveTextContent('Saved');
+    expect(within(screen.getByTestId('draft-save-indicator')).getByText('Saved')).toBeOnTheScreen();
     report({ status: 'error', unsaved: true, flush });
-    expect(screen.getByTestId('draft-save-indicator')).toHaveTextContent('Not saved — retrying');
+    expect(
+      within(screen.getByTestId('draft-save-indicator')).getByText('Not saved — retrying'),
+    ).toBeOnTheScreen();
   });
 
   describe('leaving', () => {

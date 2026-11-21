@@ -79,9 +79,15 @@ jest.mock('@/components/LocationDialog', () => {
 });
 
 // Venues are booked instantly at their own pricing: a PER_SLOT venue whose one
-// free slot (on the hour, a day out) sets the pod's whole window when picked.
+// free slot (06:00–08:00 UTC, two days out) sets the pod's whole window when
+// picked. Pinned to 06:00 UTC (11:30 IST) so the slot falls on the same calendar
+// day in UTC, IST and the runner's zone — "now + 24h" crossed midnight in IST
+// for the last 5½ hours of every UTC day and the end chip was never offered.
 const HOUR_MS = 3_600_000;
-const slotStartMs = Math.ceil((Date.now() + 24 * HOUR_MS) / HOUR_MS) * HOUR_MS;
+const slotStart = new Date();
+slotStart.setUTCDate(slotStart.getUTCDate() + 2);
+slotStart.setUTCHours(6, 0, 0, 0);
+const slotStartMs = slotStart.getTime();
 const slot = {
   start_at: new Date(slotStartMs).toISOString(),
   end_at: new Date(slotStartMs + 2 * HOUR_MS).toISOString(),
@@ -1134,13 +1140,18 @@ describe('CreatePodStepper', () => {
     });
 
     it('saves unsaved changes as the app leaves the foreground', async () => {
-      const listeners: ((state: string) => void)[] = [];
-      const spy = jest.spyOn(AppState, 'addEventListener').mockImplementation((_type, listener) => {
-        listeners.push(listener as (state: string) => void);
-        return { remove: jest.fn() };
-      });
+      // The preset's AppState is already a jest.fn: read its calls rather than
+      // replacing it (a restored spy would leave it returning undefined for
+      // every later test in this file).
+      const addListener = jest.mocked(AppState.addEventListener);
+      const before = addListener.mock.calls.length;
       const { onSaveDraft } = setup();
       press('create-pod-mode-VIRTUAL');
+      const listeners = addListener.mock.calls
+        .slice(before)
+        .filter(([type]) => type === 'change')
+        .map(([, listener]) => listener as (state: string) => void);
+      expect(listeners.length).toBeGreaterThan(0);
       await act(async () => {
         listeners.forEach((listener) => listener('background'));
       });
@@ -1148,7 +1159,6 @@ describe('CreatePodStepper', () => {
         null,
         expect.objectContaining({ pod_mode: 'VIRTUAL' }),
       );
-      spy.mockRestore();
     });
   });
 

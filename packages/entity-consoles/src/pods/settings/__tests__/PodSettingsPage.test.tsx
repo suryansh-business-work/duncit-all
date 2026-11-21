@@ -44,6 +44,7 @@ const POD_SETTINGS = gql`
       host_change_request_health_penalty
       club_admin_change_request_health_penalty
       venue_offer_max_counters
+      pod_min_advance_days
       updated_at
     }
   }
@@ -80,6 +81,7 @@ const UPDATE_POD_SETTINGS = gql`
       host_change_request_health_penalty
       club_admin_change_request_health_penalty
       venue_offer_max_counters
+      pod_min_advance_days
       updated_at
     }
   }
@@ -116,6 +118,7 @@ const SAVED: SavedPodSettings = {
   host_change_request_health_penalty: 5,
   club_admin_change_request_health_penalty: 5,
   venue_offer_max_counters: 6,
+  pod_min_advance_days: 2,
 };
 
 /** The page refetches after every save, so this mock must be reusable. */
@@ -407,5 +410,33 @@ describe('PodSettingsPage — page wiring', () => {
 
     await waitForPenalty(5);
     expect(screen.queryByTestId('pod-settings-error')).not.toBeInTheDocument();
+  });
+});
+
+describe('PodSettingsPage — Minimum Advance Days for Pod Creation', () => {
+  const LABEL = 'Days in advance';
+  const INVALID = 'Enter a whole number from 1 to 30.';
+
+  it('shows the saved days under Pod creation, refuses 0 and 31, and saves only its own field', async () => {
+    renderPage([settingsMock(), publicMock(), updateOk({ pod_min_advance_days: 5 })]);
+
+    expect(screen.getByRole('heading', { name: 'Pod creation' })).toBeInTheDocument();
+    const days = screen.getByLabelText(LABEL);
+    await waitFor(() => expect(days).toHaveValue(2));
+    expect(saveIn(days)).toBeDisabled();
+
+    for (const refused of ['0', '31', '2.5']) {
+      fireEvent.change(days, { target: { value: refused } });
+      expect(saveIn(days)).toBeDisabled();
+      expect(cardOf(days).getByText(INVALID)).toBeInTheDocument();
+    }
+
+    fireEvent.change(days, { target: { value: '5' } });
+    expect(cardOf(days).queryByText(INVALID)).toBeNull();
+    fireEvent.click(saveIn(days));
+
+    // Only `{ pod_min_advance_days: 5 }` matches the mutation mock; any other
+    // field in the input would leave the snackbar unrendered.
+    await waitForToast();
   });
 });

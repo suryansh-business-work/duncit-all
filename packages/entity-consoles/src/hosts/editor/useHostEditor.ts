@@ -5,6 +5,7 @@ import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { notifySuccess } from '@duncit/dialogs';
 import { useTranslation } from '@duncit/shell';
+import { podMinAdvanceDaysOrNull } from '@duncit/utils';
 import { podRequestOverrideInput } from '../../shared/podRequestLimit';
 import { useConsoleAccess } from '../../shared/useConsoleAccess';
 import { savedRecordPath, useRecordParentPath } from '../../shared/recordPaths';
@@ -15,6 +16,7 @@ import {
   SET_HOST_ACTIVE,
   SET_HOST_DEDUCTIONS,
   SET_HOST_VENUE_REQUEST_LIMIT,
+  SET_HOST_POD_MIN_ADVANCE_DAYS,
   type HostDetail,
 } from '../queries';
 import {
@@ -68,6 +70,7 @@ export function useHostEditor(hostId: string) {
   const [setActive] = useMutation(SET_HOST_ACTIVE);
   const [setDeductions] = useMutation(SET_HOST_DEDUCTIONS);
   const [setRequestLimit] = useMutation(SET_HOST_VENUE_REQUEST_LIMIT);
+  const [setMinAdvanceDays] = useMutation(SET_HOST_POD_MIN_ADVANCE_DAYS);
 
   /**
    * The governance writes, in order: the commission, then the live switch and
@@ -86,8 +89,22 @@ export function useHostEditor(hostId: string) {
       if (limit !== (host?.venue_requests_limit_override ?? null)) {
         await setRequestLimit({ variables: { host_doc_id: id, limit } });
       }
+      // The schema has already refused anything but '' or 1–30.
+      const days = podMinAdvanceDaysOrNull(values.pod_min_advance_days_override);
+      if (days !== (host?.pod_min_advance_days_override ?? null)) {
+        await setMinAdvanceDays({ variables: { host_doc_id: id, days } });
+      }
     },
-    [host?.is_active, host?.venue_requests_limit_override, setActive, setDeductions, setRequestLimit, t],
+    [
+      host?.is_active,
+      host?.venue_requests_limit_override,
+      host?.pod_min_advance_days_override,
+      setActive,
+      setDeductions,
+      setRequestLimit,
+      setMinAdvanceDays,
+      t,
+    ],
   );
 
   const submit = useCallback(

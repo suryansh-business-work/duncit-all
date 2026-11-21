@@ -60,6 +60,21 @@ describe('Host StatusSection', () => {
     expect(screen.getByRole('spinbutton', { name: /Maximum Venue Requests/ })).toBeDisabled();
   });
 
+  it('lets a governing admin set the host’s Minimum Advance Days, and locks it for anyone else', () => {
+    const { form } = renderStatus(true);
+    const days = screen.getByRole('spinbutton', { name: /Minimum Advance Days/ });
+    expect(days).toBeEnabled();
+    fireEvent.change(days, { target: { value: '5' } });
+    expect(form().getValues('pod_min_advance_days_override')).toBe('5');
+  });
+
+  it('shows a console-role editor the Minimum Advance Days override but disabled', () => {
+    renderStatus(false, { pod_min_advance_days_override: '9' });
+    const days = screen.getByRole('spinbutton', { name: /Minimum Advance Days/ });
+    expect(days).toBeDisabled();
+    expect(days).toHaveValue(9);
+  });
+
   it('carries the payout fields under the same section', () => {
     const { form } = renderStatus(true);
     fireEvent.change(screen.getByRole('textbox', { name: /Account holder/i }), {

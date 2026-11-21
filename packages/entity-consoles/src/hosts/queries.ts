@@ -87,6 +87,7 @@ export const HOST_DETAIL = gql`
       reviewer_notes
       host_commission_pct
       venue_requests_limit_override
+      pod_min_advance_days_override
       submitted_at
       approved_at
       rejected_at
@@ -194,6 +195,16 @@ export const SET_HOST_VENUE_REQUEST_LIMIT = gql`
   }
 `;
 
+/** Admin-only Minimum Advance Days for Pod Creation of the host; null = the Pod Settings value. */
+export const SET_HOST_POD_MIN_ADVANCE_DAYS = gql`
+  mutation HostConsolePodMinAdvanceDays($host_doc_id: ID!, $days: Int) {
+    setHostPodMinAdvanceDays(host_doc_id: $host_doc_id, days: $days) {
+      id
+      pod_min_advance_days_override
+    }
+  }
+`;
+
 export type HostStatus = 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'REJECTED';
 
 export interface HostCategory {
@@ -225,6 +236,8 @@ export interface HostRow {
 export interface HostDetail extends HostRow {
   /** Admin override of the host's monthly Pod Request cap; null = the host's own. */
   venue_requests_limit_override: number | null;
+  /** Admin override of the host's Minimum Advance Days for Pod Creation; null = the Pod Settings value. */
+  pod_min_advance_days_override: number | null;
   dob?: string | null;
   aadhar_number: string;
   pan_number: string;

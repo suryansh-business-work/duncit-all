@@ -8,13 +8,15 @@ import PodReminderSettings from './PodReminderSettings';
 import AutoPodSettings from './AutoPodSettings';
 import RequestChangeSettings from './RequestChangeSettings';
 import VenueOfferCounterSettings from './VenueOfferCounterSettings';
+import PodCreationSettings from './PodCreationSettings';
 import { POD_SETTINGS, UPDATE_POD_SETTINGS } from './queries';
 
 /**
  * Admin > Pods > Pod Settings — the platform defaults every pod is created
  * and run under.
  *
- * Five groups, each its own file: the pod's own lifecycle (drafts, backouts,
+ * Six groups, each its own file: how far ahead a host's new pod must be
+ * scheduled, the pod's own lifecycle (drafts, backouts,
  * venue cancellations, attendance verification, the auto-cancel sweep), the
  * windows the reminder sweeps fire on, the Auto Pods windows, the Request Change
  * deductions, and how far a host and a venue may bargain over a booking. The page itself is the
@@ -62,6 +64,8 @@ export default function PodSettingsPage() {
         </Alert>
       )}
 
+      <PodCreationSettings {...section} />
+      <Divider />
       <PodLifecycleSettings {...section} />
       <Divider />
       <PodReminderSettings {...section} />

@@ -5,6 +5,7 @@ import AutoPodSettings from '../AutoPodSettings';
 import PodReminderSettings from '../PodReminderSettings';
 import RequestChangeSettings from '../RequestChangeSettings';
 import VenueOfferCounterSettings from '../VenueOfferCounterSettings';
+import PodCreationSettings from '../PodCreationSettings';
 import type { PodSettingsSectionProps } from '../queries';
 
 /**
@@ -53,6 +54,11 @@ const SECTIONS: Section[] = [
     name: 'VenueOfferCounterSettings',
     Component: VenueOfferCounterSettings,
     keys: ['venue_offer_max_counters'],
+  },
+  {
+    name: 'PodCreationSettings',
+    Component: PodCreationSettings,
+    keys: ['pod_min_advance_days'],
   },
 ];
 
@@ -137,5 +143,45 @@ describe('VenueOfferCounterSettings / its own bounds', () => {
     await waitFor(() => expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled());
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
     await waitFor(() => expect(onSave).toHaveBeenLastCalledWith({ venue_offer_max_counters: 20 }));
+  });
+});
+
+// The server holds Minimum Advance Days to 1–30, so the box refuses anything else
+// instead of saving a number the admin would never see applied.
+describe('PodCreationSettings / its own bounds', () => {
+  const INVALID = 'Enter a whole number from 1 to 30.';
+  const renderDays = (onSave = vi.fn(async () => undefined)) => {
+    render(<PodCreationSettings settings={{ pod_min_advance_days: 2 }} loading={false} onSave={onSave} />);
+    return { onSave, box: screen.getByRole('spinbutton', { name: 'Days in advance' }) };
+  };
+
+  it('heads the group and states the range on the box', () => {
+    const { box } = renderDays();
+    expect(screen.getByRole('heading', { name: 'Pod creation' })).toBeInTheDocument();
+    expect(screen.getByText('Minimum Advance Days for Pod Creation')).toBeInTheDocument();
+    expect(screen.getByText('A whole number from 1 to 30. Default 2.')).toBeInTheDocument();
+    expect(box).toHaveValue(2);
+    expect(box).toHaveAttribute('min', '1');
+    expect(box).toHaveAttribute('max', '30');
+  });
+
+  it.each(['0', '31', '-1', '1.5', ''])('refuses %p and saves nothing', (value) => {
+    const { box, onSave } = renderDays();
+    fireEvent.change(box, { target: { value } });
+    expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
+    expect(screen.getByText(INVALID)).toBeInTheDocument();
+    expect(onSave).not.toHaveBeenCalled();
+  });
+
+  it('saves the lowest and the highest number of days it allows', async () => {
+    const { box, onSave } = renderDays();
+    fireEvent.change(box, { target: { value: '1' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(onSave).toHaveBeenLastCalledWith({ pod_min_advance_days: 1 }));
+
+    fireEvent.change(box, { target: { value: '30' } });
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled());
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(onSave).toHaveBeenLastCalledWith({ pod_min_advance_days: 30 }));
   });
 });

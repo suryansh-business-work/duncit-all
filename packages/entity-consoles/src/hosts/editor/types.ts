@@ -44,6 +44,8 @@ export interface HostFormValues {
   host_commission_pct: number;
   /** Admin override of the monthly Pod Request cap, as typed; '' = none. */
   venue_requests_limit_override: string;
+  /** Admin override of Minimum Advance Days for Pod Creation, as typed; '' = the Pod Settings value. */
+  pod_min_advance_days_override: string;
 }
 
 export const blankHostCategory: HostCategoryRow = {
@@ -74,4 +76,5 @@ export const blankHostValues: HostFormValues = {
   is_active: true,
   host_commission_pct: 0,
   venue_requests_limit_override: '',
+  pod_min_advance_days_override: '',
 };

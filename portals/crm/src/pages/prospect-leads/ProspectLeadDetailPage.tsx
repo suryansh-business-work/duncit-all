@@ -15,6 +15,7 @@ import type { ProspectLead } from '../../api/prospectLeads.types';
 import { PriorityChip, StatusChip } from '../../components/StatusChips';
 import LeadStatTile from '../../components/LeadStatTile';
 import LeadTabs from '../../components/LeadTabs';
+import LeadContactActions from '../../components/LeadContactActions';
 import { useLeadEditorOrigin } from '../../hooks/useLeadEditorFlow';
 import AskAiDrawer from '../../components/ask-ai/AskAiDrawer';
 import AskAiButton from '../../components/ask-ai/AskAiButton';
@@ -80,6 +81,14 @@ export default function ProspectLeadDetailPage({ entity }: Readonly<{ entity: Pr
                   ))}
                 </Stack>
               )}
+              <LeadContactActions
+                entity={entity}
+                leadId={lead.id}
+                displayName={name}
+                email={lead.contacts?.[0]?.email}
+                mobile={lead.contacts?.[0]?.mobile_number}
+                whatsapp={lead.contacts?.[0]?.whatsapp_number}
+              />
             </Box>
             <AskAiButton onClick={() => setAiOpen(true)} />
             <DuncitButton

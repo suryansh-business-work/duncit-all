@@ -31,6 +31,7 @@ import EventSuitabilityPage from './pages/data/venues/EventSuitabilityPage';
 import AppShell from './components/AppShell';
 import { ExtractionProvider, ExtractionWidget } from './pages/tools/whatsapp/extraction';
 import { EmailStatusProvider } from './components/email-status';
+import { CallSessionProvider } from './components/call-window';
 import { getToken } from './lib/session';
 
 const authed = createAuthed({
@@ -41,6 +42,7 @@ const authed = createAuthed({
 export default function App() {
   return (
     <EmailStatusProvider>
+    <CallSessionProvider>
     <ExtractionProvider>
       <Routes>
         <Route path="/profile" element={authed(<ProfilePage />)} />
@@ -88,6 +90,7 @@ export default function App() {
       </Routes>
       <ExtractionWidget />
     </ExtractionProvider>
+    </CallSessionProvider>
     </EmailStatusProvider>
   );
 }

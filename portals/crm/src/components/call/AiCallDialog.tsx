@@ -28,14 +28,10 @@ import { parseApiError } from '@duncit/utils';
 import { callStatusView } from './callStatusView';
 import CallStage from './CallStage';
 import { useTranslation } from '@duncit/shell';
+import type { CallLead } from '../call-window/callSession.types';
+import TwilioSetupNotice from '../call-window/TwilioSetupNotice';
 
-export interface AiCallLead {
-  to: string;
-  entityType: 'VENUE_LEAD' | 'HOST_LEAD';
-  entityId: string;
-  displayName: string;
-  contactName?: string;
-}
+export type AiCallLead = CallLead;
 
 interface Props {
   open: boolean;
@@ -55,6 +51,7 @@ export default function AiCallDialog({ open, lead, onClose }: Readonly<Props>) {
   const [logId, setLogId] = useState<string | null>(null);
   const [status, setStatus] = useState<CallStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [notConfigured, setNotConfigured] = useState(false);
 
   const { data, loading } = useQuery<{ crmCallPrompts: CrmCallPrompt[] }>(CRM_CALL_PROMPTS, {
     variables: { filter: { is_active: true } },
@@ -81,6 +78,7 @@ export default function AiCallDialog({ open, lead, onClose }: Readonly<Props>) {
     setLogId(null);
     setStatus(null);
     setError(null);
+    setNotConfigured(false);
   };
 
   const handleClose = () => {
@@ -94,7 +92,7 @@ export default function AiCallDialog({ open, lead, onClose }: Readonly<Props>) {
     try {
       const res = await start({
         variables: {
-          entity: lead.entityType,
+          entity_type: lead.entityType,
           id: lead.entityId,
           contact_number: lead.to,
           prompt_id: promptId,
@@ -104,7 +102,8 @@ export default function AiCallDialog({ open, lead, onClose }: Readonly<Props>) {
       });
       const payload = res.data?.startCrmAiCall;
       if (!payload?.ok) {
-        setError(payload?.message ?? 'Could not place the AI call.');
+        setNotConfigured(payload?.code === 'TWILIO_NOT_CONFIGURED');
+        setError(payload?.message ?? t('crm.call.callFailed'));
         return;
       }
       setLogId(payload.log_id ?? null);
@@ -129,12 +128,12 @@ export default function AiCallDialog({ open, lead, onClose }: Readonly<Props>) {
       </DialogTitle>
       <DialogContent>
         <Stack spacing={1.5} sx={{ mt: 0.5 }}>
-          {error && <Alert severity="error">{error}</Alert>}
+          {notConfigured ? <TwilioSetupNotice /> : error && <Alert severity="error">{error}</Alert>}
           {placed ? (
             <CallStage
               fromNumber={fromNumber}
               toNumber={lead?.to ?? ''}
-              statusLabel={callStatusView(status ?? 'INITIATED').label}
+              statusLabel={t(callStatusView(status ?? 'INITIATED').labelKey)}
               tone={callStatusView(status ?? 'INITIATED').tone}
               active={!ended}
               ai

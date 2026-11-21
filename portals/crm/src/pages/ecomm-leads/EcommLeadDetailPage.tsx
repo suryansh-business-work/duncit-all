@@ -16,6 +16,7 @@ import type { EcommLead } from '../../api/crm.types';
 import { PriorityChip, StatusChip } from '../../components/StatusChips';
 import LeadStatTile from '../../components/LeadStatTile';
 import LeadTabs from '../../components/LeadTabs';
+import LeadContactActions from '../../components/LeadContactActions';
 import MatchedUserBox, { MatchedUserChip } from '../../components/MatchedUserBox';
 import { buildEcommLeadTabs } from './ecommLeadTabs';
 import { formatDate as adminDate } from '@duncit/app-settings';
@@ -116,6 +117,14 @@ export default function EcommLeadDetailPage() {
                   ))}
                 </Stack>
               )}
+              <LeadContactActions
+                entity="ECOMM_LEAD"
+                leadId={lead.id}
+                displayName={lead.seller_name}
+                email={lead.contacts?.[0]?.email}
+                mobile={lead.contacts?.[0]?.mobile_number}
+                whatsapp={lead.contacts?.[0]?.whatsapp_number}
+              />
             </Box>
             <AskAiButton onClick={() => setAiOpen(true)} />
             <DuncitButton startIcon={<EditIcon />} variant="contained" onClick={() => navigate(`/ecomm-leads/${lead.id}`, { state: editorOrigin })}>

@@ -388,8 +388,6 @@
   "portals/communications/src/pages/whatsapp-page/wa-test-form/wa-test.form.tsx": 2,
   "portals/communications/src/pages/whatsapp-page/wa-test-form/wa-test.types.tsx": 3,
   "portals/crm/src/components/call/AiCallDialog.tsx": 1,
-  "portals/crm/src/components/call/callStatusView.ts": 6,
-  "portals/crm/src/components/call/PortalCallDialog.tsx": 1,
   "portals/crm/src/components/CommsLogsSection/index.tsx": 2,
   "portals/crm/src/components/contacts-tab/index.tsx": 1,
   "portals/crm/src/components/DynamicValuesView.tsx": 1,

@@ -5,6 +5,7 @@ import { GraphQLError } from 'graphql';
 import type { MockedResponse } from '@apollo/client/testing';
 import { renderWithApollo } from '../helpers/renderWithApollo';
 import { CALL_HOST_LEAD, CALL_VENUE_LEAD, EMAIL_ECOMM_LEAD, EMAIL_VENUE_LEAD } from '@/api/crm.gql';
+import { CALL_CRM_LEAD, EMAIL_CRM_LEAD } from '@/api/prospectLeads.gql';
 
 // Providers and the body composer have their own suites; here they are doubles
 // that report the way the real ones do, so the dialog's own logic is what runs.
@@ -76,7 +77,7 @@ const outcome = (key: string, over: Record<string, unknown> = {}) => ({
 
 interface RenderOpts {
   mode?: 'email' | 'call';
-  entity?: 'VENUE_LEAD' | 'HOST_LEAD' | 'ECOMM_LEAD';
+  entity?: 'VENUE_LEAD' | 'HOST_LEAD' | 'ECOMM_LEAD' | 'CREATOR_LEAD' | 'COMMUNITY_LEAD';
   leadOverride?: typeof lead | null;
   mocks?: MockedResponse[];
 }
@@ -353,5 +354,51 @@ describe('ContactComposeDialog lead removed while open', () => {
     await new Promise((resolve) => setTimeout(resolve, 20));
     expect(onResult).not.toHaveBeenCalled();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+});
+
+describe('ContactComposeDialog for creator and community leads', () => {
+  it('emails a creator contact through emailCrmLeadContact, naming the lead kind', async () => {
+    const { onResult } = renderDialog({
+      entity: 'CREATOR_LEAD',
+      mocks: [
+        {
+          request: {
+            query: EMAIL_CRM_LEAD,
+            variables: {
+              entity_type: 'CREATOR_LEAD',
+              id: 'lead-1',
+              provider_id: null,
+              contact_email: 'meera@grandhall.in',
+              subject: 'Custom subject',
+              body: '<p>Hi</p>',
+              attachments: [{ url: 'https://f.test/a.pdf', name: 'a.pdf' }],
+            },
+          },
+          result: outcome('emailCrmLeadContact', { message: 'Email queued' }),
+        },
+      ],
+    });
+    fireEvent.click(screen.getByText('write valid'));
+    fireEvent.click(send());
+    await waitFor(() => expect(onResult).toHaveBeenCalledWith('Email queued', true));
+  });
+
+  it('calls a community contact through callCrmLeadContact', async () => {
+    const { onResult } = renderDialog({
+      mode: 'call',
+      entity: 'COMMUNITY_LEAD',
+      mocks: [
+        {
+          request: {
+            query: CALL_CRM_LEAD,
+            variables: { entity_type: 'COMMUNITY_LEAD', id: 'lead-1', provider_id: null, contact_number: '9812345678' },
+          },
+          result: outcome('callCrmLeadContact', { ok: false, message: 'Twilio is not configured for calls' }),
+        },
+      ],
+    });
+    fireEvent.click(send());
+    await waitFor(() => expect(onResult).toHaveBeenCalledWith('Twilio is not configured for calls', false));
   });
 });

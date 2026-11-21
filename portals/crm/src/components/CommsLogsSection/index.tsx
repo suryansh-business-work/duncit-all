@@ -1,3 +1,4 @@
+import type { CrmLeadEntityType } from '../../api/crm.types';
 import { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { Alert, Box, Card, CardContent, Chip, CircularProgress, Stack, Typography } from '@mui/material';
@@ -11,7 +12,7 @@ import { useTranslation } from '@duncit/shell';
 type Filter = 'ALL' | 'EMAIL' | 'CALL';
 
 interface Props {
-  entityType: 'VENUE_LEAD' | 'HOST_LEAD' | 'ECOMM_LEAD';
+  entityType: CrmLeadEntityType;
   entityId: string;
 }
 

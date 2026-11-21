@@ -13,6 +13,8 @@ export interface DraftState {
   applies_to_venue: boolean;
   applies_to_host: boolean;
   applies_to_ecomm: boolean;
+  applies_to_creator: boolean;
+  applies_to_community: boolean;
   required: boolean;
   is_active: boolean;
 }
@@ -38,6 +40,8 @@ export const blankDraft: DraftState = {
   applies_to_venue: true,
   applies_to_host: true,
   applies_to_ecomm: false,
+  applies_to_creator: false,
+  applies_to_community: false,
   required: false,
   is_active: true,
 };
@@ -61,6 +65,8 @@ export function draftFromRow(row: CrmDynamicField): DraftState {
     applies_to_venue: row.applies_to_venue,
     applies_to_host: row.applies_to_host,
     applies_to_ecomm: row.applies_to_ecomm,
+    applies_to_creator: !!row.applies_to_creator,
+    applies_to_community: !!row.applies_to_community,
     required: row.required,
     is_active: row.is_active,
   };
@@ -78,6 +84,8 @@ export interface DynamicFieldInput {
   applies_to_venue: boolean;
   applies_to_host: boolean;
   applies_to_ecomm: boolean;
+  applies_to_creator: boolean;
+  applies_to_community: boolean;
   required: boolean;
   sort_order: number;
   is_active: boolean;
@@ -89,8 +97,14 @@ export type DraftValidation = { ok: true; input: DynamicFieldInput } | { ok: fal
 export function buildDynamicFieldInput(draft: DraftState, sortOrder: number): DraftValidation {
   const label = draft.label.trim();
   if (!label) return { ok: false, error: 'Label is required' };
-  if (!draft.applies_to_venue && !draft.applies_to_host && !draft.applies_to_ecomm) {
-    return { ok: false, error: 'Pick at least one of: applies to Venue / Host / Ecomm.' };
+  const appliesSomewhere =
+    draft.applies_to_venue ||
+    draft.applies_to_host ||
+    draft.applies_to_ecomm ||
+    draft.applies_to_creator ||
+    draft.applies_to_community;
+  if (!appliesSomewhere) {
+    return { ok: false, error: 'Pick at least one of: applies to Venue / Host / Ecomm / Creator / Community.' };
   }
   const name = draft.id ? draft.name : deriveName(draft.label);
   if (!name) return { ok: false, error: 'Label must contain letters or numbers.' };
@@ -119,6 +133,8 @@ export function buildDynamicFieldInput(draft: DraftState, sortOrder: number): Dr
       applies_to_venue: draft.applies_to_venue,
       applies_to_host: draft.applies_to_host,
       applies_to_ecomm: draft.applies_to_ecomm,
+      applies_to_creator: draft.applies_to_creator,
+      applies_to_community: draft.applies_to_community,
       required: draft.required,
       sort_order: sortOrder,
       is_active: draft.is_active,

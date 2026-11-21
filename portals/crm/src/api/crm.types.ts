@@ -14,6 +14,10 @@ export interface CrmServiceOffered {
 }
 
 export type CrmServiceKind = 'VENUE' | 'HOST' | 'ECOMM';
+/** Every CRM lead kind, as the server's `CrmEntityType` enum names it. */
+export type CrmLeadEntityType = 'VENUE_LEAD' | 'HOST_LEAD' | 'ECOMM_LEAD' | 'CREATOR_LEAD' | 'COMMUNITY_LEAD';
+/** The lead kinds served by the shared creator / community pages. */
+export type ProspectLeadEntity = 'CREATOR_LEAD' | 'COMMUNITY_LEAD';
 
 export interface CrmService {
   id: string;
@@ -79,6 +83,8 @@ export interface CrmDynamicField {
   applies_to_venue: boolean;
   applies_to_host: boolean;
   applies_to_ecomm: boolean;
+  applies_to_creator: boolean;
+  applies_to_community: boolean;
   required: boolean;
   sort_order: number;
   is_active: boolean;
@@ -253,4 +259,8 @@ export interface CrmOptionGroup {
   services_offered_options: string[];
   venue_services_offered_options: string[];
   host_services_offered_options: string[];
+  creator_platforms: string[];
+  collaboration_types: string[];
+  community_types: string[];
+  community_platforms: string[];
 }

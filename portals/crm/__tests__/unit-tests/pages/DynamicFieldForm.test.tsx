@@ -93,6 +93,10 @@ describe('DynamicFieldForm', () => {
     expect(lastPatch()).toEqual({ applies_to_host: false });
     fireEvent.click(screen.getByLabelText('Applies to Ecomm leads'));
     expect(lastPatch()).toEqual({ applies_to_ecomm: true });
+    fireEvent.click(screen.getByLabelText('Applies to Creator leads'));
+    expect(lastPatch()).toEqual({ applies_to_creator: true });
+    fireEvent.click(screen.getByLabelText('Applies to Community leads'));
+    expect(lastPatch()).toEqual({ applies_to_community: true });
     fireEvent.click(screen.getByLabelText('Required'));
     expect(lastPatch()).toEqual({ required: true });
     fireEvent.click(screen.getByLabelText('Active'));

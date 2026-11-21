@@ -127,6 +127,14 @@ export default function DynamicFieldForm({ draft, busy, onChange, onCancel, onSa
             label={t('crm.managedynamicfieldspage.appliesToEcommLeads')}
           />
           <FormControlLabel
+            control={<Checkbox checked={draft.applies_to_creator} onChange={(e) => set({ applies_to_creator: e.target.checked })} />}
+            label={t('crm.managedynamicfieldspage.appliesToCreatorLeads')}
+          />
+          <FormControlLabel
+            control={<Checkbox checked={draft.applies_to_community} onChange={(e) => set({ applies_to_community: e.target.checked })} />}
+            label={t('crm.managedynamicfieldspage.appliesToCommunityLeads')}
+          />
+          <FormControlLabel
             control={<Checkbox checked={draft.required} onChange={(e) => set({ required: e.target.checked })} />}
             label={t('crm.managedynamicfieldspage.required')}
           />

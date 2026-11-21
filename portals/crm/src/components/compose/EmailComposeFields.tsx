@@ -1,3 +1,4 @@
+import type { CrmLeadEntityType } from '../../api/crm.types';
 import { useEffect, useState } from 'react';
 import { Stack, TextField } from '@mui/material';
 import { DuncitRichTextInput } from '@duncit/rich-text';
@@ -16,7 +17,7 @@ export interface EmailPayload {
 }
 
 interface Props {
-  entity: 'VENUE_LEAD' | 'HOST_LEAD' | 'ECOMM_LEAD';
+  entity: CrmLeadEntityType;
   leadName: string;
   leadEmail: string;
   /** Slug → value map from the lead, used to auto-fill template variables. */

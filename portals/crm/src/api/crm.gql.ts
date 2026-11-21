@@ -1,9 +1,9 @@
 import { gql } from '@apollo/client';
 
-const CONTACT_FIELDS = `name role mobile_number whatsapp_number email`;
+export const CONTACT_FIELDS = `name role mobile_number whatsapp_number email`;
 const SERVICE_FIELDS = `service custom_name description`;
-const ACTIVITY_FIELDS = `type summary status target body_html body_text created_by created_at`;
-const SUPER_CATEGORY_FIELDS = `id name slug icon`;
+export const ACTIVITY_FIELDS = `type summary status target body_html body_text created_by created_at`;
+export const SUPER_CATEGORY_FIELDS = `id name slug icon`;
 const LINKED_HOST_FIELDS = `id host_name host_type city lead_status priority`;
 
 export const VENUE_LEAD_FIELDS = `
@@ -52,6 +52,7 @@ export const CRM_LEAD_CONFIG = gql`
       services_offered_options
       venue_services_offered_options
       host_services_offered_options
+      creator_platforms collaboration_types community_types community_platforms
     }
   }
 `;
@@ -169,7 +170,7 @@ export const DELETE_CRM_SERVICE = gql`
   }
 `;
 
-const DYNAMIC_FIELD_FIELDS = `id name label kind options { value label } multi placeholder default_value hint applies_to_venue applies_to_host applies_to_ecomm required sort_order is_active created_at updated_at`;
+const DYNAMIC_FIELD_FIELDS = `id name label kind options { value label } multi placeholder default_value hint applies_to_venue applies_to_host applies_to_ecomm applies_to_creator applies_to_community required sort_order is_active created_at updated_at`;
 
 export const CRM_DYNAMIC_FIELDS = gql`
   query CrmDynamicFields($entity: CrmEntityType, $include_inactive: Boolean) {

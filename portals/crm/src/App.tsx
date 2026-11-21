@@ -9,6 +9,9 @@ import HostLeadsPage from './pages/host-leads/HostLeadsPage';
 import EcommLeadsPage from './pages/ecomm-leads/EcommLeadsPage';
 import EcommLeadEditorPage from './pages/ecomm-leads/EcommLeadEditorPage';
 import EcommLeadDetailPage from './pages/ecomm-leads/EcommLeadDetailPage';
+import ProspectLeadsPage from './pages/prospect-leads/ProspectLeadsPage';
+import ProspectLeadEditorPage from './pages/prospect-leads/ProspectLeadEditorPage';
+import ProspectLeadDetailPage from './pages/prospect-leads/ProspectLeadDetailPage';
 import HostLeadEditorPage from './pages/host-leads/HostLeadEditorPage';
 import HostLeadDetailPage from './pages/host-leads/HostLeadDetailPage';
 import ManageServicesPage from './pages/ManageServicesPage';
@@ -60,6 +63,14 @@ export default function App() {
       <Route path="/ecomm-leads/new" element={authed(<EcommLeadEditorPage />)} />
       <Route path="/ecomm-leads/:id/view" element={authed(<EcommLeadDetailPage />)} />
       <Route path="/ecomm-leads/:id" element={authed(<EcommLeadEditorPage />)} />
+      <Route path="/creator-leads" element={authed(<ProspectLeadsPage entity="CREATOR_LEAD" />)} />
+      <Route path="/creator-leads/new" element={authed(<ProspectLeadEditorPage entity="CREATOR_LEAD" />)} />
+      <Route path="/creator-leads/:id/view" element={authed(<ProspectLeadDetailPage entity="CREATOR_LEAD" />)} />
+      <Route path="/creator-leads/:id" element={authed(<ProspectLeadEditorPage entity="CREATOR_LEAD" />)} />
+      <Route path="/community-leads" element={authed(<ProspectLeadsPage entity="COMMUNITY_LEAD" />)} />
+      <Route path="/community-leads/new" element={authed(<ProspectLeadEditorPage entity="COMMUNITY_LEAD" />)} />
+      <Route path="/community-leads/:id/view" element={authed(<ProspectLeadDetailPage entity="COMMUNITY_LEAD" />)} />
+      <Route path="/community-leads/:id" element={authed(<ProspectLeadEditorPage entity="COMMUNITY_LEAD" />)} />
       <Route path="/user-leads" element={authed(<UserLeadsPage />)} />
       <Route path="/user-leads/:id" element={authed(<UserLeadDetailPage />)} />
       <Route path="/tools/whatsapp" element={authed(<WhatsAppLeadGeneratorPage />)} />

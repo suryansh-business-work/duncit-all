@@ -148,6 +148,8 @@ describe('draftFromRow blanks', () => {
       applies_to_venue: false,
       applies_to_host: true,
       applies_to_ecomm: true,
+      applies_to_creator: false,
+      applies_to_community: false,
       required: false,
       sort_order: 0,
       is_active: true,
@@ -168,5 +170,44 @@ describe('buildDynamicFieldInput key derivation', () => {
       0,
     );
     expect(r.ok && r.input.name).toBe('sku_count');
+  });
+
+  it.each([
+    ['creator', { applies_to_creator: true }],
+    ['community', { applies_to_community: true }],
+  ])('accepts a %s-only field and sends its flag', (_kind, flag) => {
+    const r = buildDynamicFieldInput(
+      { ...blankDraft, label: 'Rate band', applies_to_venue: false, applies_to_host: false, ...flag },
+      0,
+    );
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.input).toMatchObject({ applies_to_ecomm: false, ...flag });
+  });
+
+  it('rejects a field that applies to no lead kind at all', () => {
+    const r = buildDynamicFieldInput({ ...blankDraft, label: 'Orphan', applies_to_venue: false, applies_to_host: false }, 0);
+    expect(r).toEqual({ ok: false, error: 'Pick at least one of: applies to Venue / Host / Ecomm / Creator / Community.' });
+  });
+
+  it('reads the creator / community flags back from a saved row', () => {
+    const savedRow = {
+      id: 'f2',
+      name: 'rate_band',
+      label: 'Rate band',
+      kind: 'text',
+      options: [],
+      multi: false,
+      placeholder: '',
+      default_value: '',
+      hint: '',
+      applies_to_venue: false,
+      applies_to_host: false,
+      applies_to_ecomm: false,
+      required: false,
+      sort_order: 0,
+      is_active: true,
+    } as unknown as CrmDynamicField;
+    const draft = draftFromRow({ ...savedRow, applies_to_creator: true, applies_to_community: false });
+    expect(draft).toMatchObject({ applies_to_creator: true, applies_to_community: false });
   });
 });

@@ -1,3 +1,4 @@
+import type { CrmLeadEntityType } from '../api/crm.types';
 import { useMemo } from 'react';
 import { useQuery } from '@apollo/client/react';
 import { Box, Stack, Typography } from '@mui/material';
@@ -7,7 +8,7 @@ import { LeadDetailRow } from './LeadDetailCard';
 import { formatDate as adminDate } from '@duncit/app-settings';
 
 interface Props {
-  entity: 'VENUE_LEAD' | 'HOST_LEAD' | 'ECOMM_LEAD';
+  entity: CrmLeadEntityType;
   /** JSON-stringified value map from the lead. */
   json: string;
 }

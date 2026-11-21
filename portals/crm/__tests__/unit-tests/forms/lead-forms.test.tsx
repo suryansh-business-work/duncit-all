@@ -29,6 +29,10 @@ const config: CrmOptionGroup = {
   services_offered_options: ['Catering'],
   venue_services_offered_options: ['Catering'],
   host_services_offered_options: ['Event Hosting'],
+  creator_platforms: ['Instagram'],
+  collaboration_types: ['Barter'],
+  community_types: ['Running Club'],
+  community_platforms: ['WhatsApp'],
 };
 
 const wrap = (ui: React.ReactElement) =>

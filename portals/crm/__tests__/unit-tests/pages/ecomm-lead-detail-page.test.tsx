@@ -69,6 +69,8 @@ const dynamicFieldsMock: MockedResponse = {
           applies_to_venue: false,
           applies_to_host: false,
           applies_to_ecomm: true,
+          applies_to_creator: false,
+          applies_to_community: false,
           required: false,
           sort_order: 0,
           is_active: true,

@@ -40,6 +40,10 @@ const emptyConfig: CrmOptionGroup = {
   services_offered_options: ['Catering', 'Other'],
   venue_services_offered_options: ['Catering', 'Other'],
   host_services_offered_options: ['Event Hosting', 'Other'],
+  creator_platforms: ['Instagram'],
+  collaboration_types: ['Barter'],
+  community_types: ['Running Club'],
+  community_platforms: ['WhatsApp'],
 };
 
 function FormHarness({ children }: Readonly<{ children: React.ReactNode }>) {

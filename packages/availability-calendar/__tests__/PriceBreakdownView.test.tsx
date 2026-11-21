@@ -22,33 +22,31 @@ describe('PriceBreakdownView', () => {
         { type: 'DATE_RANGE', label: 'Off season', mode: 'FLAT', value: -500, amount: -500 },
       ],
       rules_total: 700,
-      min_spend_top_up: 300,
       cleaning_fee: 500,
       pet_fee: 250,
-      venue_price: 7750,
+      venue_price: 7450,
       gst_pct: 18,
-      taxes: 1395,
-      venue_payout: 9145,
+      taxes: 1341,
+      venue_payout: 8791,
       platform_fee_pct: 10,
-      platform_fee: 914.5,
-      total: 10059.5,
+      platform_fee: 745,
+      total: 9536,
       deposit: 2000,
     });
     render(<PriceBreakdownView breakdown={breakdown} />);
 
-    expect(lineIds()).toEqual(['base', 'rule-0', 'rule-1', 'adjusted', 'min-spend', 'cleaning', 'pet', 'venue-price', 'gst', 'payout', 'fee', 'total', 'deposit']);
+    expect(lineIds()).toEqual(['base', 'rule-0', 'rule-1', 'adjusted', 'cleaning', 'pet', 'venue-price', 'gst', 'payout', 'fee', 'total', 'deposit']);
     expect(line('base')).toEqual({ label: '20 guests × ₹300', amount: '₹6,000' });
     expect(line('rule-0')).toEqual({ label: 'Weekend +20%', amount: '+₹1,200' });
     expect(line('rule-1')).toEqual({ label: 'Off season -₹500', amount: '-₹500' });
     expect(line('adjusted')).toEqual({ label: 'After price rules', amount: '₹6,700' });
-    expect(line('min-spend')).toEqual({ label: 'Minimum spend top-up', amount: '+₹300' });
     expect(line('cleaning')).toEqual({ label: 'Cleaning fee', amount: '+₹500' });
     expect(line('pet')).toEqual({ label: 'Pet fee', amount: '+₹250' });
-    expect(line('venue-price')).toEqual({ label: 'Venue price', amount: '₹7,750' });
-    expect(line('gst')).toEqual({ label: 'GST 18%', amount: '+₹1,395' });
-    expect(line('payout')).toEqual({ label: 'You receive', amount: '₹9,145' });
-    expect(line('fee')).toEqual({ label: "Duncit fee 10% (added on top, paid from the host's share)", amount: '₹914.50' });
-    expect(line('total')).toEqual({ label: 'Total', amount: '₹10,059.50' });
+    expect(line('venue-price')).toEqual({ label: 'Venue price', amount: '₹7,450' });
+    expect(line('gst')).toEqual({ label: 'GST 18%', amount: '+₹1,341' });
+    expect(line('payout')).toEqual({ label: 'You receive', amount: '₹8,791' });
+    expect(line('fee')).toEqual({ label: "Duncit fee 10% (added on top, paid from the host's share)", amount: '₹745' });
+    expect(line('total')).toEqual({ label: 'Total', amount: '₹9,536' });
     expect(line('deposit')).toEqual({ label: 'Refundable deposit, paid at the venue', amount: '₹2,000' });
   });
 

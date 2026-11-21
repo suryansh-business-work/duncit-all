@@ -20,7 +20,6 @@ const FREE_QUOTE: PriceBreakdown = {
   base: 0,
   rules: [],
   rules_total: 0,
-  min_spend_top_up: 0,
   cleaning_fee: 0,
   pet_fee: 0,
   venue_price: 0,
@@ -130,15 +129,18 @@ export const freeVenueOfferDemo = defineDemo<{ offer: OfferTerms; podIsFree: boo
 });
 
 /** The least a picked venue takes from one booking, as Create Pod's offer step shows it. */
-export const venueMinBusinessDemo = defineDemo<{ rows: VenueMinBusinessRow[] }>({
+export const venueMinBusinessDemo = defineDemo<{ rows: VenueMinBusinessRow[]; minSpend: number }>({
   id: 'venue-min-business',
   title: 'Booking offers: the least a venue takes per booking',
-  note: 'The venue lists one amount per basis in its Booking offers settings; a host offer below the amount on its basis is refused. Remove every row and nothing is drawn; a basis this client does not know is left out.',
+  note: 'The venue lists one amount per basis and a minimum spend per booking in Fees & Minimum Spend; a host offer below the amount on its basis, or short of the minimum spend at the fewest guests, is refused. Remove every row and set the minimum spend to 0 and nothing is drawn; a basis this client does not know is left out.',
   mock: {
     rows: [
       { model: 'PER_GUEST', amount: 200 },
       { model: 'PER_HOUR', amount: 400 },
     ],
+    minSpend: 5000,
   },
-  render: (mock) => <VenueMinBusinessNote rows={mock.rows} money={(value) => `₹${value}`} testId="demo-min-business" />,
+  render: (mock) => (
+    <VenueMinBusinessNote rows={mock.rows} minSpend={mock.minSpend} money={(value) => `₹${value}`} testId="demo-min-business" />
+  ),
 });

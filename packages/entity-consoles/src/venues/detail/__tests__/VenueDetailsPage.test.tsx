@@ -113,7 +113,7 @@ describe('VenueDetailsPage / tabs', () => {
     expect(screen.getByText('Operating hours', { selector: 'h6' })).toBeInTheDocument();
     expect(screen.getByText('Within 24h — 50% of the slot price')).toBeInTheDocument();
     // Its own minimum, Duncit's response time.
-    expect(screen.getByText('Booking offers', { selector: 'h6' })).toBeInTheDocument();
+    expect(screen.getByText('Booking offers & minimum spend', { selector: 'h6' })).toBeInTheDocument();
     expect(screen.getByText('10 guests')).toBeInTheDocument();
     expect(screen.getByText('24 hours · Duncit’s default')).toBeInTheDocument();
     // The business it hopes for, as VENUE_DETAIL reads it, in the pickers' order.

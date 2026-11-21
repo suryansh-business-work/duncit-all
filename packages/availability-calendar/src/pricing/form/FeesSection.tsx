@@ -9,21 +9,15 @@ interface Props {
   control: Control<VenuePricingFormValues>;
 }
 
-/** Minimum spend, the fees on top of the price, the refundable deposit and GST. */
+/**
+ * The fees on top of the price, the refundable deposit and GST. The minimum
+ * spend lives with the booking offers (`venueSettings.offers.min_spend`).
+ */
 export default function FeesSection({ control }: Readonly<Props>) {
   const { t } = useTranslation();
   return (
     <SectionCard title={t('venuePricing.fees.title')} subtitle={t('venuePricing.fees.subtitle')}>
       <Grid container spacing={2}>
-        <Grid size={{ xs: 12, sm: 6 }}>
-          <NumberField
-            control={control}
-            name="min_spend"
-            label={t('venuePricing.fees.minSpend')}
-            hint={t('venuePricing.fees.minSpendHint')}
-            rupee
-          />
-        </Grid>
         <Grid size={{ xs: 12, sm: 6 }}>
           <NumberField
             control={control}

@@ -13,12 +13,23 @@
  * An applied entry matches nothing on the next boot, so entries never need pruning.
  */
 export const COPY_REVISIONS: Readonly<Record<string, readonly string[]>> = {
+  // Booking offers moved into Fees & Minimum Spend and took the minimum spend in.
+  "venueSettings.offers.title": ["Booking offers"],
+  "venueSettings.offers.intro": [
+    "How hosts book your venue: the fewest guests an offer may be for, and how long you and the host each have to answer an offer or a counter before it expires. Leave a value at 0 to use Duncit’s default.",
+  ],
+  "venuePricing.fees.title": ["Fees and minimum spend"],
+  "mweb.studioOptions.venueFeesHint": ["Minimum spend, cleaning and pet fees, deposit and GST"],
+  "mweb.studioOptions.venueSettingsHint": ["Cancellation policy and booking rules"],
   // A venue's business amount became the least an offer may be, not a guide.
   "availability.offers.minBusiness.intro": [
     "Roughly what one booking should bring you. Hosts see it once they pick your venue — it is a guide for their offer, not a rule.",
   ],
   "availability.offers.minBusiness.createPodTitle": ["This venue usually expects"],
-  "availability.offers.minBusiness.createPodHint": ["A guide from the venue — your offer can be different."],
+  "availability.offers.minBusiness.createPodHint": [
+    "A guide from the venue — your offer can be different.",
+    "Your offer must be at least the amount for the way you pay.",
+  ],
   // The login landing redesign (hero, chips, round provider buttons).
   "mweb.login.titleAccent": ["back."],
   "mweb.login.subtitle": ["Pick up where you left off and find pods around you."],

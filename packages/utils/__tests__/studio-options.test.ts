@@ -124,7 +124,13 @@ describe('STUDIO_OPTION_LIST', () => {
       '/venues/price-rules',
       '/venues/food-settings',
     ]);
-    expect(setup.every((option) => option.consoleOnly)).toBe(true);
+    expect(setup.filter((option) => option.key !== 'fees').every((option) => option.consoleOnly)).toBe(true);
+  });
+
+  it('opens Fees & Minimum Spend on every surface: the console, mWeb and the app', () => {
+    const fees = STUDIO_OPTION_LIST.VENUE.find((option) => option.key === 'fees');
+    expect(fees).toMatchObject({ path: '/venues/fees', route: 'VenueFees', portal: '/venues/fees', labelKey: 'mweb.studioOptions.venueFees' });
+    expect(fees?.consoleOnly).toBeUndefined();
   });
 
   it('opens Banner kit and Banners in the Partner console, for a venue and a host, under the shared copy', () => {

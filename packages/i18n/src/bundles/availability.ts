@@ -287,8 +287,6 @@ export const AVAILABILITY_BUNDLE: NestedCatalogue = {
       removeSlot: 'Remove slot',
       noSlots: 'No slots yet — add the windows hosts can book.',
       feesTitle: 'Fees',
-      minSpend: 'Minimum spend (₹)',
-      minSpendHint: 'A booking below this is topped up to it.',
       deposit: 'Refundable deposit (₹)',
       depositHint: 'Collected at the venue — not part of the booking price.',
       cleaningFee: 'Cleaning fee (₹)',
@@ -352,7 +350,6 @@ export const AVAILABILITY_BUNDLE: NestedCatalogue = {
       },
       breakdown: {
         base: 'Base price',
-        minSpendTopUp: 'Minimum spend top-up',
         cleaningFee: 'Cleaning fee',
         petFee: 'Pet fee',
         taxes: 'GST',
@@ -665,9 +662,16 @@ export const AVAILABILITY_BUNDLE: NestedCatalogue = {
         notSet: 'Not set yet',
         // On Create Pod's offer step, above the offer.
         createPodTitle: 'Minimum business for this venue',
-        createPodHint: 'Your offer must be at least the amount for the way you pay.',
+        createPodHint: 'Your offer must be at least the amount for the way you pay, and reach the minimum spend.',
         // Under the amount field when the offer is below the venue's amount.
         offerBelow: 'This venue takes at least {min} — raise your offer to continue',
+      },
+      // The least one booking's offer must come to (Fees & Minimum Spend) — shown
+      // on Create Pod and checked there, on a host's counter and by the server.
+      minSpend: {
+        amount: 'Minimum spend {amount} per booking',
+        offerBelow:
+          'This venue’s minimum spend is {min} per booking — your offer comes to {offered}, {shortfall} short. Raise your offer to continue.',
       },
       // The host's ask beside the price, on Create Pod and a new offer (mWeb,
       // the Partners console and the app): what the venue should provide, a

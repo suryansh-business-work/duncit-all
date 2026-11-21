@@ -36,7 +36,6 @@ function linesOf(t: Translate, b: PriceBreakdown, hostReads: boolean): Line[] {
     lines.push({ id: 'adjusted', label: t('venuePricing.breakdown.afterRules'), amount: rupees(adjusted) });
   }
   const optional: [string, string, number][] = [
-    ['min-spend', t('venuePricing.breakdown.minSpendTopUp'), b.min_spend_top_up],
     ['cleaning', t('venuePricing.breakdown.cleaningFee'), b.cleaning_fee],
     ['pet', t('venuePricing.breakdown.petFee'), b.pet_fee],
   ];

@@ -269,13 +269,14 @@ describe('VenuePricingForm — price rules', () => {
 describe('VenuePricingForm — fees', () => {
   it('saves the fees, deposit and GST choice', async () => {
     const { onSubmit } = renderForm();
-    setNumber('Minimum spend', '5000');
     setNumber('Refundable deposit', '2000');
     setNumber('Cleaning fee', '500');
     setNumber('Pet fee', '300');
     fireEvent.click(screen.getByTestId('pricing-gst'));
     fireEvent.click(save());
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
-    expect(onSubmit.mock.calls[0][0]).toMatchObject({ min_spend: 5000, deposit: 2000, cleaning_fee: 500, pet_fee: 300, gst_enabled: true });
+    expect(onSubmit.mock.calls[0][0]).toMatchObject({ deposit: 2000, cleaning_fee: 500, pet_fee: 300, gst_enabled: true });
+    expect(onSubmit.mock.calls[0][0]).not.toHaveProperty('min_spend');
+    expect(screen.queryByLabelText(/Minimum spend/)).toBeNull();
   });
 });

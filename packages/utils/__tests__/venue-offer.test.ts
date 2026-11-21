@@ -48,8 +48,95 @@ import {
   venueMinBusinessLines,
   venueOfferFloor,
   offerBelowFloor,
+  offerWindowHours,
+  offerFewestGuests,
+  offerAmountAtMinimum,
+  offerMinSpendShortfall,
+  venueMinSpendText,
+  minSpendShortfallText,
+  openingOfferMinSpendShortfall,
   type VenueOfferSource,
 } from '../src/venue-offer';
+
+describe('offerWindowHours', () => {
+  it('is the window in hours, to the whole minute, as the server prices it', () => {
+    expect(offerWindowHours('2027-01-04T18:00:00+05:30', '2027-01-04T20:30:00+05:30')).toBe(2.5);
+    expect(offerWindowHours(new Date('2027-01-04T18:00:00Z'), new Date('2027-01-04T18:00:29Z'))).toBe(0);
+  });
+
+  it('is 0 for a missing, unreadable or reversed window', () => {
+    expect(offerWindowHours(null, '2027-01-04T20:00:00Z')).toBe(0);
+    expect(offerWindowHours('2027-01-04T20:00:00Z', undefined)).toBe(0);
+    expect(offerWindowHours('soon', '2027-01-04T20:00:00Z')).toBe(0);
+    expect(offerWindowHours('2027-01-04T20:00:00Z', '2027-01-04T18:00:00Z')).toBe(0);
+  });
+});
+
+describe('offerFewestGuests', () => {
+  it('is the minimum while it is below the guests booked, else the guests', () => {
+    expect(offerFewestGuests(6, 20)).toBe(6);
+    expect(offerFewestGuests(20, 20)).toBe(20);
+    expect(offerFewestGuests(25, 20)).toBe(20);
+  });
+
+  it('reads a missing or zero minimum as one guest, like the server', () => {
+    expect(offerFewestGuests(0, 20)).toBe(1);
+    expect(offerFewestGuests(null, 20)).toBe(1);
+    expect(offerFewestGuests(6.9, 20)).toBe(6);
+    expect(offerFewestGuests(6, undefined)).toBe(0);
+  });
+});
+
+describe('offerAmountAtMinimum', () => {
+  const at = { minGuests: 6, pax: 20, hours: 2.5 };
+
+  it('is the rate times the fewest guests, times the hours, or the flat price', () => {
+    expect(offerAmountAtMinimum('PER_GUEST', '500', at)).toBe(3000);
+    expect(offerAmountAtMinimum('PER_HOUR', 1200.5, at)).toBe(3001.25);
+    expect(offerAmountAtMinimum('FLAT', '4999.99', at)).toBe(4999.99);
+  });
+
+  it('is nothing for a free ask, an unknown basis or nothing typed', () => {
+    expect(offerAmountAtMinimum('FREE', 500, at)).toBe(0);
+    expect(offerAmountAtMinimum('PER_SLOT', 500, at)).toBe(0);
+    expect(offerAmountAtMinimum('PER_GUEST', '', at)).toBe(0);
+    expect(offerAmountAtMinimum('PER_HOUR', 500, { ...at, hours: Number.NaN })).toBe(0);
+  });
+});
+
+describe('offerMinSpendShortfall', () => {
+  const at = { minGuests: 6, pax: 20, hours: 2 };
+
+  it('names the minimum, what the offer comes to and the shortfall when it falls short', () => {
+    expect(offerMinSpendShortfall(5000, 'PER_GUEST', 500, at)).toEqual({ min: 5000, offered: 3000, shortfall: 2000 });
+    expect(offerMinSpendShortfall(5000, 'PER_HOUR', '2499.99', at)).toEqual({ min: 5000, offered: 4999.98, shortfall: 0.02 });
+  });
+
+  it('is null once the offer reaches it, for no minimum, or a free ask', () => {
+    expect(offerMinSpendShortfall(5000, 'PER_GUEST', 834, at)).toBeNull();
+    expect(offerMinSpendShortfall(5000, 'FLAT', 5000, at)).toBeNull();
+    expect(offerMinSpendShortfall(0, 'FLAT', 1, at)).toBeNull();
+    expect(offerMinSpendShortfall(null, 'FLAT', 1, at)).toBeNull();
+    expect(offerMinSpendShortfall(5000, 'FREE', 0, at)).toBeNull();
+  });
+});
+
+describe('venueMinSpendText / minSpendShortfallText', () => {
+  const t = (key: string, opts?: { vars?: Record<string, string | number> }) => `${key}:${JSON.stringify(opts?.vars ?? {})}`;
+  const money = (rupees: number) => `₹${rupees}`;
+
+  it("reads the venue's minimum spend, and nothing for a venue with none", () => {
+    expect(venueMinSpendText(5000, t, money)).toBe('availability.offers.minSpend.amount:{"amount":"₹5000"}');
+    expect(venueMinSpendText(0, t, money)).toBeNull();
+    expect(venueMinSpendText(undefined, t, money)).toBeNull();
+  });
+
+  it('says why an offer is refused, in money', () => {
+    expect(minSpendShortfallText({ min: 5000, offered: 3000, shortfall: 2000 }, t, money)).toBe(
+      'availability.offers.minSpend.offerBelow:{"min":"₹5000","offered":"₹3000","shortfall":"₹2000"}'
+    );
+  });
+});
 
 const source = (over: Partial<VenueOfferSource> = {}): VenueOfferSource => ({
   start: '2026-11-07T07:30:00.000Z',
@@ -630,5 +717,40 @@ describe('offer documents', () => {
     );
     expect(HOST_COUNTER_QUOTE_SDL).toContain('hostCounterQuote(pod_id: $pod_id, terms: $terms)');
     expect(HOST_COUNTER_QUOTE_SDL).toContain('quote_min {');
+  });
+});
+
+describe('openingOfferMinSpendShortfall', () => {
+  const venue = { offer_min_spend: 5000, offer_min_guests: 8, capacity: 40, capacity_items: [{ label: 'Terrace', capacity: 6 }] };
+  const offer = {
+    model: 'PER_GUEST',
+    rate: '500',
+    spots: 20,
+    spaceLabel: 'Terrace',
+    start: '2027-01-04T18:00:00+05:30',
+    end: '2027-01-04T20:00:00+05:30',
+  };
+
+  it("weighs a per-guest offer at the venue's minimum guests, capped by the picked space", () => {
+    // The terrace holds 6, so the fewest guests are 6: ₹500 × 6 = ₹3,000.
+    expect(openingOfferMinSpendShortfall(venue, offer)).toEqual({ min: 5000, offered: 3000, shortfall: 2000 });
+    // The whole venue holds 40: the venue's own 8 guests count — ₹4,000.
+    expect(openingOfferMinSpendShortfall({ ...venue, capacity_items: [] }, { ...offer, spaceLabel: 'Whole venue' })).toEqual({
+      min: 5000,
+      offered: 4000,
+      shortfall: 1000,
+    });
+  });
+
+  it('weighs an hourly offer over the picked window, and is null once it reaches the minimum', () => {
+    expect(openingOfferMinSpendShortfall(venue, { ...offer, model: 'PER_HOUR', rate: 2000 })).toEqual({ min: 5000, offered: 4000, shortfall: 1000 });
+    expect(openingOfferMinSpendShortfall(venue, { ...offer, model: 'PER_HOUR', rate: 2500 })).toBeNull();
+    expect(openingOfferMinSpendShortfall(venue, { ...offer, model: 'FLAT', rate: 5000 })).toBeNull();
+  });
+
+  it('holds nothing back before a venue is picked, for a venue with no minimum, or a free ask', () => {
+    expect(openingOfferMinSpendShortfall(null, offer)).toBeNull();
+    expect(openingOfferMinSpendShortfall({ ...venue, offer_min_spend: 0 }, offer)).toBeNull();
+    expect(openingOfferMinSpendShortfall(venue, { ...offer, model: 'FREE', rate: 0 })).toBeNull();
   });
 });

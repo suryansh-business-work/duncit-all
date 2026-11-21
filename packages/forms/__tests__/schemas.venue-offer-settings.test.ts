@@ -35,12 +35,13 @@ describe('makeBookingOffersSchema', () => {
 
   it("takes whole numbers up to the bounds, and an empty box as Duncit's default", () => {
     for (const [min, hours] of [['0', '0'], ['8', '24'], ['1000', '720'], ['', ''], [' 12 ', ' 48 ']]) {
-      expect(messagesFor({ min_guests: min, response_hours: hours, min_business: guided })).toEqual([]);
+      expect(messagesFor({ min_guests: min, response_hours: hours, min_business: guided, min_spend: '' })).toEqual([]);
     }
-    expect(schema.parse({ min_guests: ' 12 ', response_hours: ' 48 ', min_business: guided })).toEqual({
+    expect(schema.parse({ min_guests: ' 12 ', response_hours: ' 48 ', min_business: guided, min_spend: ' 4500 ' })).toEqual({
       min_guests: '12',
       response_hours: '48',
       min_business: guided,
+      min_spend: '4500',
     });
   });
 
@@ -48,13 +49,13 @@ describe('makeBookingOffersSchema', () => {
     const minInvalid = `min_guests=venueSettings.offers.minGuestsInvalid:${JSON.stringify({ max: 1000 })}`;
     const hoursInvalid = `response_hours=venueSettings.offers.responseHoursInvalid:${JSON.stringify({ max: 720 })}`;
     for (const [min, hours] of [['2.5', '1.5'], ['-1', '-3'], ['eight', 'day'], ['1001', '721']]) {
-      expect(messagesFor({ min_guests: min, response_hours: hours, min_business: guided })).toEqual([minInvalid, hoursInvalid]);
+      expect(messagesFor({ min_guests: min, response_hours: hours, min_business: guided, min_spend: '0' })).toEqual([minInvalid, hoursInvalid]);
     }
   });
 });
 
 describe('the business a venue hopes each booking brings', () => {
-  const settings = (min_business: unknown) => ({ min_guests: '0', response_hours: '0', min_business });
+  const settings = (min_business: unknown) => ({ min_guests: '0', response_hours: '0', min_business, min_spend: '0' });
 
   it('names the three bases an amount may be on', () => {
     expect(MIN_BUSINESS_MODELS).toEqual(['PER_GUEST', 'PER_HOUR', 'FLAT']);
@@ -101,6 +102,23 @@ describe('the business a venue hopes each booking brings', () => {
   });
 });
 
+describe('the minimum spend per booking', () => {
+  const settings = (min_spend: string) => ({ min_guests: '0', response_hours: '0', min_business: guided, min_spend });
+  const spendInvalid = `min_spend=venueSettings.offers.minSpendInvalid:${JSON.stringify({ max: 10_000_000 })}`;
+
+  it('takes none (empty or 0), a whole or decimal amount, up to the bound', () => {
+    for (const spend of ['', '0', '4500', '4500.75', ' 300 ', String(BOOKING_OFFER_LIMITS.amountMax)]) {
+      expect(messagesFor(settings(spend))).toEqual([]);
+    }
+  });
+
+  it('refuses a negative, a word, infinity or anything past the bound', () => {
+    for (const spend of ['-1', 'lots', 'Infinity', String(BOOKING_OFFER_LIMITS.amountMax + 1)]) {
+      expect(messagesFor(settings(spend))).toEqual([spendInvalid]);
+    }
+  });
+});
+
 describe('nextMinBusinessRow', () => {
   it('adds the first basis not listed yet, with no amount', () => {
     expect(nextMinBusinessRow([])).toEqual(amountRow('PER_GUEST', ''));
@@ -127,18 +145,25 @@ describe('toBookingOffersValues / toBookingOffersInput', () => {
       { model: 'PER_GUEST', amount: 200 },
       { model: 'FLAT', amount: 5000.5 },
     ],
+    min_spend: 4500,
   };
+
+  it('reads a venue with no minimum spend stored (older servers) as none', () => {
+    expect(toBookingOffersValues({ min_guests: 12, response_hours: 48 }).min_spend).toBe('0');
+    expect(toBookingOffersValues({ min_guests: 12, response_hours: 48, min_spend: null }).min_spend).toBe('0');
+  });
 
   it('starts from what is stored, the amounts as typed text', () => {
     expect(toBookingOffersValues(stored)).toEqual({
       min_guests: '12',
       response_hours: '48',
       min_business: [amountRow('PER_GUEST', '200'), amountRow('FLAT', '5000.5')],
+      min_spend: '4500',
     });
   });
 
   it('reads nothing stored as the default, with one empty amount row to fill', () => {
-    const fresh = { min_guests: '0', response_hours: '0', min_business: [amountRow('PER_GUEST', '')] };
+    const fresh = { min_guests: '0', response_hours: '0', min_business: [amountRow('PER_GUEST', '')], min_spend: '0' };
     expect(toBookingOffersValues(null)).toEqual(fresh);
     expect(toBookingOffersValues(undefined)).toEqual(fresh);
     // Settings saved before amounts existed (older servers), or saved with none.
@@ -153,12 +178,13 @@ describe('toBookingOffersValues / toBookingOffersInput', () => {
 
   it('sends numbers, an empty box as 0, and each amount in rupees', () => {
     expect(
-      toBookingOffersInput({ min_guests: '12', response_hours: '48', min_business: [amountRow('PER_GUEST', '200'), amountRow('FLAT', '5000.5')] })
+      toBookingOffersInput({ min_guests: '12', response_hours: '48', min_business: [amountRow('PER_GUEST', '200'), amountRow('FLAT', '5000.5')], min_spend: '4500' })
     ).toEqual(stored);
-    expect(toBookingOffersInput({ min_guests: '', response_hours: '', min_business: [amountRow('PER_HOUR', '400')] })).toEqual({
+    expect(toBookingOffersInput({ min_guests: '', response_hours: '', min_business: [amountRow('PER_HOUR', '400')], min_spend: '' })).toEqual({
       min_guests: 0,
       response_hours: 0,
       min_business: [{ model: 'PER_HOUR', amount: 400 }],
+      min_spend: 0,
     });
   });
 

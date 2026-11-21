@@ -432,7 +432,6 @@ describe('venueQuoteLines', () => {
       { type: 'DATE_RANGE', label: 'Diwali week', amount: 200 },
       { type: 'SOMETHING_NEW', amount: 50 },
     ],
-    min_spend_top_up: 0,
     cleaning_fee: 150,
     pet_fee: 0,
     gst_pct: 18,
@@ -473,9 +472,9 @@ describe('venueQuoteLines', () => {
     expect(deposit).toBe(500);
   });
 
-  it('adds the min-spend top-up and pet fee only when they apply', () => {
-    const { lines } = venueQuoteLines({ ...quote, rules: [], min_spend_top_up: 300, pet_fee: 250, cleaning_fee: 0 }, money);
-    expect(lines.map((line) => line.id)).toEqual(['base', 'min-spend', 'pets', 'taxes', 'duncit-fee']);
+  it('adds the pet fee only when it applies, and never a min-spend top-up line', () => {
+    const { lines } = venueQuoteLines({ ...quote, rules: [], pet_fee: 250, cleaning_fee: 0 }, money);
+    expect(lines.map((line) => line.id)).toEqual(['base', 'pets', 'taxes', 'duncit-fee']);
     expect(lines.find((line) => line.id === 'pets')).not.toHaveProperty('vars');
   });
 

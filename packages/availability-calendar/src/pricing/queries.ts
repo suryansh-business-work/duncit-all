@@ -10,7 +10,6 @@ const PRICING_FIELDS = `
   min_hours
   max_hours
   booking_increment_minutes
-  min_spend
   slots { start_time end_time price days_of_week }
   operating_hours { day open close }
   price_rules { type label days dates from to mode value }
@@ -34,7 +33,6 @@ export const BREAKDOWN_FIELDS = `
   base
   rules { type label mode value amount }
   rules_total
-  min_spend_top_up
   cleaning_fee
   pet_fee
   venue_price

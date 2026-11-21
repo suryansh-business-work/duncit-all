@@ -1,23 +1,26 @@
 import { Alert, AlertTitle, Box } from '@mui/material';
 import { useTranslation } from '@duncit/app-settings';
-import { venueMinBusinessLines, type VenueMinBusinessRow } from '@duncit/utils';
+import { venueMinimumLines, type VenueMinBusinessRow } from '@duncit/utils';
 
 interface Props {
   /** The picked venue's amounts (`Venue.offer_min_business`). */
   rows: readonly VenueMinBusinessRow[] | null | undefined;
+  /** The picked venue's minimum spend per booking (`Venue.offer_min_spend`, 0 = none). */
+  minSpend?: number | null;
   /** The surface's money format. */
   money: (rupees: number) => string;
   testId: string;
 }
 
 /**
- * The picked venue's minimum business — "₹200 per guest · ₹400 per hour" —
+ * The picked venue's minimums — "₹200 per guest · Minimum spend ₹5,000 per booking" —
  * at the top of Create Pod's offer step: an offer below the amount on the basis
- * the host pays on cannot be sent. Nothing when the venue named none.
+ * the host pays on, or short of the minimum spend, cannot be sent. Nothing when
+ * the venue named none.
  */
-export default function VenueMinBusinessNote({ rows, money, testId }: Readonly<Props>) {
+export default function VenueMinBusinessNote({ rows, minSpend, money, testId }: Readonly<Props>) {
   const { t } = useTranslation();
-  const lines = venueMinBusinessLines(rows, t, money);
+  const lines = venueMinimumLines(rows, minSpend, t, money);
   if (lines.length === 0) return null;
   return (
     <Alert severity="info" data-testid={testId}>

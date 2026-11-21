@@ -153,7 +153,8 @@ export const STUDIO_OPTION_LIST: Readonly<Record<PartnerStudioMode, readonly Stu
     { key: 'type-capacity', labelKey: 'mweb.studioOptions.typeCapacity', hintKey: 'mweb.studioOptions.typeCapacityHint', icon: 'venue', portal: '/venues/type-capacity', consoleOnly: true },
     { key: 'amenities', labelKey: 'mweb.studioOptions.amenities', hintKey: 'mweb.studioOptions.amenitiesHint', icon: 'settings', portal: '/venues/amenities', consoleOnly: true },
     { key: 'leaves', labelKey: 'mweb.studioOptions.leaves', hintKey: 'mweb.studioOptions.leavesHint', icon: 'calendar', portal: '/venues/leaves', consoleOnly: true },
-    { key: 'fees', labelKey: 'mweb.studioOptions.venueFees', hintKey: 'mweb.studioOptions.venueFeesHint', icon: 'earnings', portal: '/venues/fees', consoleOnly: true },
+    // Fees & Minimum Spend: booking offers, the minimum spend and the fees — on every surface.
+    { key: 'fees', labelKey: 'mweb.studioOptions.venueFees', hintKey: 'mweb.studioOptions.venueFeesHint', icon: 'earnings', path: '/venues/fees', route: 'VenueFees', portal: '/venues/fees' },
     { key: 'price-rules', labelKey: 'mweb.studioOptions.priceRules', hintKey: 'mweb.studioOptions.priceRulesHint', icon: 'availability', portal: '/venues/price-rules', consoleOnly: true },
     { key: 'settings', labelKey: 'mweb.studioOptions.venueSettings', hintKey: 'mweb.studioOptions.venueSettingsHint', icon: 'settings', path: '/venues/settings', route: 'VenueSettings', portal: '/venues/settings' },
     { key: 'earnings', labelKey: 'mweb.studioOptions.venueEarnings', hintKey: 'mweb.studioOptions.venueEarningsHint', icon: 'earnings', path: '/venues/earnings', route: 'VenueEarnings', portal: '/venues/earnings' },

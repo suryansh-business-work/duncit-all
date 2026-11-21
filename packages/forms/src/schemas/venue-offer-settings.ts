@@ -3,10 +3,11 @@ import { z } from 'zod';
 import type { Translate } from './translate';
 
 /**
- * A venue's own booking-offer settings (Venue settings > Booking offers): the
+ * A venue's own booking-offer settings (Fees & Minimum Spend > Booking offers): the
  * fewest guests a host may offer to book for, the hours either side has to
  * answer a move, and the business the venue hopes each booking brings — at
- * least one amount, one per basis (per guest, per hour, per booking). The
+ * least one amount, one per basis (per guest, per hour, per booking) — and the
+ * least one booking's offer must come to (the minimum spend, 0 = none). The
  * amounts are the least a host may offer on each basis (Create Pod enforces it). One rule for the
  * Partners console, mWeb and the native app (rules 27 + 56), with the same
  * `venueSettings.offers.*` copy.
@@ -26,6 +27,8 @@ export interface BookingOffersValues {
   min_guests: string;
   response_hours: string;
   min_business: MinBusinessRowValues[];
+  /** Rupees as typed; empty or 0 = no minimum spend. */
+  min_spend: string;
 }
 
 /** The settings as stored (`VenueSettings.offers`, `VenueOfferSettingsInput`): 0 = Duncit's platform default. */
@@ -34,6 +37,8 @@ export interface VenueOfferSettings {
   response_hours: number;
   /** Absent from older servers. */
   min_business?: readonly { model: string; amount: number }[] | null;
+  /** The least one booking's offer must come to, in rupees (0 = none). Absent from older servers. */
+  min_spend?: number | null;
 }
 
 /** The server's bounds (venue.offerSettings `VENUE_OFFER_SETTINGS_MAX`; an amount within an offer's `MAX_OFFER_RATE`). */
@@ -52,6 +57,13 @@ const isMinBusinessModel = (model: string) => (MIN_BUSINESS_MODELS as readonly s
 const isAmount = (raw: string) => {
   const n = Number(raw);
   return raw !== '' && Number.isFinite(n) && n > 0 && n <= BOOKING_OFFER_LIMITS.amountMax;
+};
+
+/** A minimum spend as typed: empty (none), or an amount from 0 up to an offer's bound. */
+const isAmountOrNone = (raw: string) => {
+  if (raw === '') return true;
+  const n = Number(raw);
+  return Number.isFinite(n) && n >= 0 && n <= BOOKING_OFFER_LIMITS.amountMax;
 };
 
 /** The business rows: at least one, a known basis each, each basis once, each amount above 0. */
@@ -92,6 +104,10 @@ export function makeBookingOffersSchema(t: Translate) {
         message: t('venueSettings.offers.responseHoursInvalid', { vars: { max: responseHoursMax } }),
       }),
     min_business: minBusinessField(t),
+    min_spend: z
+      .string()
+      .trim()
+      .refine(isAmountOrNone, t('venueSettings.offers.minSpendInvalid', { vars: { max: BOOKING_OFFER_LIMITS.amountMax } })),
   });
 }
 
@@ -111,12 +127,14 @@ export const toBookingOffersValues = (offers?: VenueOfferSettings | null): Booki
     min_guests: String(offers?.min_guests ?? 0),
     response_hours: String(offers?.response_hours ?? 0),
     min_business: rows.length > 0 ? rows : [nextMinBusinessRow([])],
+    min_spend: String(offers?.min_spend ?? 0),
   };
 };
 
 /** The validated values as `VenueSettingsInput.offers` — an empty box is 0, Duncit's default. */
-export const toBookingOffersInput = ({ min_guests, response_hours, min_business }: BookingOffersValues) => ({
+export const toBookingOffersInput = ({ min_guests, response_hours, min_business, min_spend }: BookingOffersValues) => ({
   min_guests: Number(min_guests) || 0,
   response_hours: Number(response_hours) || 0,
   min_business: min_business.map((row) => ({ model: row.model, amount: Number(row.amount) })),
+  min_spend: Number(min_spend) || 0,
 });

@@ -59,7 +59,6 @@ export function toFormValues(p: VenuePricingData | null | undefined): VenuePrici
     min_hours: p?.min_hours ?? 1,
     max_hours: p?.max_hours ?? 0,
     booking_increment_minutes: p?.booking_increment_minutes ?? 60,
-    min_spend: p?.min_spend ?? 0,
     slots: (p?.slots ?? []).map(slotValues),
     // An empty list means "the venue's usual hours" on the server.
     custom_hours: hours.length > 0,
@@ -100,7 +99,6 @@ export function toPricingInput(v: VenuePricingFormValues): VenuePricingInput {
     min_hours: v.min_hours,
     max_hours: v.max_hours,
     booking_increment_minutes: v.booking_increment_minutes,
-    min_spend: v.min_spend,
     slots: v.model === 'PER_SLOT' ? v.slots.map(slotValues) : [],
     operating_hours: v.custom_hours
       ? v.operating_hours.filter((h) => h.enabled).map(({ day, open, close }) => ({ day, open, close }))

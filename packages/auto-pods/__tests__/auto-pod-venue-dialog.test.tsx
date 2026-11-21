@@ -98,7 +98,6 @@ const breakdown = {
   base: 2000,
   rules: [],
   rules_total: 0,
-  min_spend_top_up: 0,
   cleaning_fee: 0,
   pet_fee: 0,
   venue_price: 2000,

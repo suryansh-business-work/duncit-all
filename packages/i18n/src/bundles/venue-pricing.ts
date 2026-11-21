@@ -14,6 +14,13 @@ export const VENUE_PRICING_BUNDLE: NestedCatalogue = {
     saved: 'Pricing saved. Hosts now book at these prices.',
     saveFailed: "We couldn't save the pricing. Please try again.",
     notConfigured: 'Hosts cannot book this venue until you choose a pricing model and save it.',
+    // One part of the pricing on a page of its own (Fees & Minimum Spend's fees, Price Rules).
+    part: {
+      save: 'Save',
+      saved: 'Saved.',
+      saveFailed: 'Could not save. Try again.',
+      loadFailed: 'Could not load this venue. Try again.',
+    },
     page: {
       title: 'Venue Pricing Module',
       subtitle: 'Set your own price, open dates and hours. Hosts book instantly at exactly these prices.',
@@ -69,10 +76,8 @@ export const VENUE_PRICING_BUNDLE: NestedCatalogue = {
       closedDay: 'Closed',
     },
     fees: {
-      title: 'Fees and minimum spend',
+      title: 'Fees',
       subtitle: 'Added to the price. The deposit is collected at the venue and refunded.',
-      minSpend: 'Minimum spend',
-      minSpendHint: 'A booking below this is topped up to it.',
       deposit: 'Refundable deposit',
       depositHint: 'Paid at the venue, not part of the price.',
       cleaning: 'Cleaning fee',
@@ -148,7 +153,6 @@ export const VENUE_PRICING_BUNDLE: NestedCatalogue = {
       baseSlot: 'Slot price',
       baseFlat: 'Flat price',
       afterRules: 'After price rules',
-      minSpendTopUp: 'Minimum spend top-up',
       cleaningFee: 'Cleaning fee',
       petFee: 'Pet fee',
       venuePrice: 'Venue price',

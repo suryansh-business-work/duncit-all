@@ -16679,6 +16679,13 @@ export type Mutation = {
   saveOutreachSequence: OutreachSequence;
   /** Partner: add (omit id) or update a saved connection and check it against the vendor right away. */
   savePartnerIntegration: PartnerIntegration;
+  /**
+   * Autosaves the Create Pod form. Without draft_id a new draft is created.
+   * With one — the id Create Pod mints on the device and keeps in its URL —
+   * the caller's draft is updated, or created under that id on its first save.
+   * An id that is another member's draft is NOT_FOUND; one that is not an
+   * ObjectId is BAD_USER_INPUT.
+   */
   savePodDraft: PodDraft;
   savePushSubscription: Scalars['Boolean']['output'];
   /**
@@ -47626,6 +47633,8 @@ export type Venue = {
   offer_min_business: Array<VenueMinBusiness>;
   /** The fewest guests a host's booking offer may be for: the venue's own setting, else the platform default. */
   offer_min_guests: Scalars['Int']['output'];
+  /** The least one booking's offer must come to (rupees, 0 = none). A host's offer or counter below it is refused (BELOW_MIN_SPEND). */
+  offer_min_spend: Scalars['Float']['output'];
   /** Hours either side has to answer a booking offer or counter: the venue's own setting, else the platform default. */
   offer_response_hours: Scalars['Int']['output'];
   /** The venue serves food. On publicVenue the menu is empty unless this is on. */
@@ -48655,6 +48664,8 @@ export type VenueOfferQuoteResult = {
   ok: Scalars['Boolean']['output'];
   quote?: Maybe<VenuePriceBreakdown>;
   quote_min?: Maybe<VenuePriceBreakdown>;
+  /** Why the terms cannot be sent, when the server names it: BELOW_MIN_SPEND, BELOW_MIN_BUSINESS, BELOW_VENUE_MINIMUM, … */
+  reason?: Maybe<Scalars['String']['output']>;
 };
 
 /** A venue's own terms for hosts' booking offers. 0 = the platform's default (Admin settings). */
@@ -48664,6 +48675,8 @@ export type VenueOfferSettings = {
   min_business: Array<VenueMinBusiness>;
   /** The fewest guests a host may offer to book for. */
   min_guests: Scalars['Int']['output'];
+  /** The least one booking's offer must come to, in rupees: the rate times the fewest guests, times the hours, or the flat price. 0 = none. */
+  min_spend: Scalars['Float']['output'];
   /** Hours either side has to answer an offer or a counter before it expires. */
   response_hours: Scalars['Int']['output'];
 };
@@ -48673,6 +48686,8 @@ export type VenueOfferSettingsInput = {
   min_business?: InputMaybe<Array<VenueMinBusinessInput>>;
   /** 0 = the platform default (0-1000). */
   min_guests?: InputMaybe<Scalars['Int']['input']>;
+  /** Rupees, 0 = none. Left out: unchanged. */
+  min_spend?: InputMaybe<Scalars['Float']['input']>;
   /** 0 = the platform default (0-720). */
   response_hours?: InputMaybe<Scalars['Int']['input']>;
 };
@@ -48785,6 +48800,7 @@ export type VenuePriceBreakdown = {
   deposit: Scalars['Float']['output'];
   gst_pct: Scalars['Float']['output'];
   hours: Scalars['Float']['output'];
+  /** @deprecated The minimum spend top-up is retired: an offer below the minimum spend is refused (BELOW_MIN_SPEND). Always 0. */
   min_spend_top_up: Scalars['Float']['output'];
   model: VenuePricingModel;
   pax: Scalars['Int']['output'];
@@ -48816,6 +48832,7 @@ export type VenuePricing = {
   max_pax: Scalars['Int']['output'];
   min_hours: Scalars['Float']['output'];
   min_pax: Scalars['Int']['output'];
+  /** @deprecated Moved to Venue.settings.offers.min_spend (Fees & Minimum Spend). Reads the same value. */
   min_spend: Scalars['Float']['output'];
   model?: Maybe<VenuePricingModel>;
   operating_hours: Array<DayHours>;
@@ -48835,6 +48852,7 @@ export type VenuePricingInput = {
   max_pax?: InputMaybe<Scalars['Int']['input']>;
   min_hours?: InputMaybe<Scalars['Float']['input']>;
   min_pax?: InputMaybe<Scalars['Int']['input']>;
+  /** @deprecated Ignored. Set it with updateVenueSettings offers.min_spend. */
   min_spend?: InputMaybe<Scalars['Float']['input']>;
   model?: InputMaybe<VenuePricingModel>;
   operating_hours?: InputMaybe<Array<DayHoursInput>>;
@@ -48976,7 +48994,7 @@ export type VenueSettings = {
   auto_extend: VenueAutoExtend;
   cancellation: VenueCancellationPolicy;
   holidays: Array<Scalars['String']['output']>;
-  /** Booking offers: minimum guests and response time. */
+  /** Booking offers: minimum guests, response time and the venue's minimums (Fees & Minimum Spend). */
   offers: VenueOfferSettings;
   operating_hours: VenueOperatingHours;
   rules: VenueRules;

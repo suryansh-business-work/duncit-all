@@ -27,15 +27,15 @@ export type PricingRule = Plain<PriceRule>;
 export type PricingSlotRow = Plain<PricingSlot>;
 export type PricingHoursRow = Plain<DayHours>;
 
-/** `venuePricing` exactly as PRICING_FIELDS selects it. */
-export interface VenuePricingData extends Omit<Plain<VenuePricing>, 'slots' | 'operating_hours' | 'price_rules'> {
+/** `venuePricing` exactly as PRICING_FIELDS selects it (never the deprecated `min_spend` mirror). */
+export interface VenuePricingData extends Omit<Plain<VenuePricing>, 'slots' | 'operating_hours' | 'price_rules' | 'min_spend'> {
   slots: PricingSlotRow[];
   operating_hours: PricingHoursRow[];
   price_rules: PricingRule[];
 }
 
-/** `venuePriceQuote` / a frozen offer quote, as BREAKDOWN_FIELDS selects it. */
-export interface PriceBreakdown extends Omit<Plain<VenuePriceBreakdown>, 'rules' | 'confirmed_at'> {
+/** `venuePriceQuote` / a frozen offer quote, as BREAKDOWN_FIELDS selects it (never the retired top-up). */
+export interface PriceBreakdown extends Omit<Plain<VenuePriceBreakdown>, 'rules' | 'confirmed_at' | 'min_spend_top_up'> {
   rules: Plain<AppliedPriceRule>[];
 }
 

@@ -323,7 +323,7 @@ describe('WhenWhereSection (offer terms)', () => {
     pod_date_time: new Date('2030-06-01T10:00:00.000Z'),
     pod_end_date_time: new Date('2030-06-01T12:00:00.000Z'),
   };
-  const QUOTE = { model: 'PER_GUEST', rate: 300, pax: 10, hours: 2, base: 3000, rules: [], min_spend_top_up: 0, cleaning_fee: 0, pet_fee: 0, gst_pct: 18, taxes: 540, platform_fee_pct: 10, platform_fee: 354, venue_payout: 3540, total: 3894, deposit: 0 };
+  const QUOTE = { model: 'PER_GUEST', rate: 300, pax: 10, hours: 2, base: 3000, rules: [], cleaning_fee: 0, pet_fee: 0, gst_pct: 18, taxes: 540, platform_fee_pct: 10, platform_fee: 354, venue_payout: 3540, total: 3894, deposit: 0 };
 
   it('asks how the venue is paid and how much, and prices nothing until both are set', async () => {
     const user = userEvent.setup();

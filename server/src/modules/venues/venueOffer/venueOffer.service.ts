@@ -41,6 +41,7 @@ import { postOfferLine } from './venueOffer.chat';
 import { answerDeadline, holdWindow, type PricedOffer } from './venueOffer.hold';
 import { assertCounterLeft } from './venueOffer.limits';
 import { inAppOfferNote, tellHostsOfCounter, tellVenueOfOffer } from './venueOffer.notify';
+import { assertHostMinGuestsMeetVenue, assertHostPriceMeetsVenue } from './venueOffer.minimums';
 import { frozenCharges, quoteProposal, termsProblem } from './venueOffer.quote';
 import { currentTerms, offerView } from './venueOffer.view';
 import {
@@ -54,6 +55,7 @@ import {
   type VenueOfferPrior,
   type VenueOfferProposal,
   type VenueOfferRequest,
+  type VenueOfferParty,
   type VenueOfferTerms,
 } from './venueOffer.types';
 
@@ -67,6 +69,20 @@ export interface VenueOfferMoveTerms extends VenueOfferTerms {
   offerings?: string[] | null;
   /** Photos uploaded from the mover's device; omitted = none. */
   images?: string[] | null;
+}
+
+/**
+ * How `prepare` checks an offer. A host's opening offer (Create Pod's quote,
+ * create, edit, resubmit) sets `hostTerms`; the flows whose terms the venue
+ * names itself (Auto Pods, Pod Requests, change requests) set none.
+ */
+export interface OfferCheckOptions {
+  /** Price the fewest guests at the venue's own minimum, as a host's opening offer is. */
+  atVenueMinimum?: boolean;
+  /** The offer may be FREE (a host's opening offer only). */
+  allowFree?: boolean;
+  /** The terms are the host's: held to the venue's business amount and minimum spend (venueOffer.minimums). */
+  hostTerms?: boolean;
 }
 
 function assertTerms(terms: Partial<VenueOfferTerms>, allowFree = false) {
@@ -248,7 +264,12 @@ export type PricedProposal = VenueOfferProposal & { quote_min: OfferQuote; charg
  * venue's charges as they are now. A minimum or points left out are carried
  * over from the terms being answered; the note is the mover's own.
  */
-export async function pricedMove(slot: OfferSlot, terms: VenueOfferMoveTerms, note: string | null | undefined): Promise<PricedProposal> {
+export async function pricedMove(
+  slot: OfferSlot,
+  terms: VenueOfferMoveTerms,
+  note: string | null | undefined,
+  by: VenueOfferParty
+): Promise<PricedProposal> {
   assertCounterable(slot.offer);
   assertTerms(terms);
   const offer = slot.offer;
@@ -258,6 +279,8 @@ export async function pricedMove(slot: OfferSlot, terms: VenueOfferMoveTerms, no
   const text = cleanOfferNote(note);
   const images = cleanOfferImages(terms.images);
   const venue = await loadVenue(String(slot.venue_id));
+  // A host's counter is held to the venue's minimums like their opening offer; the venue's own is its choice.
+  if (by === 'HOST') await assertHostMinGuestsMeetVenue(venue, min, offer.pax, spaceCapacity(venue, slot.space_label ?? ''));
   const priced = await pricedProposal(
     venue,
     String(slot.venue_id),
@@ -265,6 +288,7 @@ export async function pricedMove(slot: OfferSlot, terms: VenueOfferMoveTerms, no
     { start: slot.start_at, end: slot.end_at },
     { pax: offer.pax, pets: offer.pets, min }
   );
+  if (by === 'HOST') assertHostPriceMeetsVenue(venue, terms, priced.quote_min);
   return { model: terms.model, rate: terms.rate, ...priced, min_guests: min, offerings, note: text, images };
 }
 
@@ -361,26 +385,26 @@ export const venueOfferService = {
   /**
    * The offer checked and priced, before anything is written: the venue is
    * approved and open then, the guests fit the space, the terms are sound.
-   * `ignorePodId` lets a pod moving its booking ignore the booking it leaves.
-   * `atVenueMinimum` prices the fewest guests at the venue's own minimum, as a
-   * host's opening offer is; the other flows settle as before. `allowFree`
-   * lets a host's opening offer be FREE; every other flow names a price.
+   * `ignore` lets a pod moving its booking ignore the booking it leaves. See
+   * OfferCheckOptions for how a host's opening offer differs from the flows
+   * whose terms the venue names itself.
    */
-  async prepare(venueId: string, req: VenueOfferRequest, ignore?: string | HoldRef, atVenueMinimum = false, allowFree = false) {
+  async prepare(venueId: string, req: VenueOfferRequest, ignore?: string | HoldRef, opts: OfferCheckOptions = {}) {
     const venue = await loadBookableVenue(venueId);
     const fixed = freeRateFixed(req);
-    const request = atVenueMinimum ? { ...fixed, min_guests: await openingMinimum(venue, fixed) } : fixed;
-    const priced = await checkAndPrice(venue, venueId, request, { ignore, allowFree });
+    const request = opts.atVenueMinimum ? { ...fixed, min_guests: await openingMinimum(venue, fixed) } : fixed;
+    const priced = await checkAndPrice(venue, venueId, request, { ignore, allowFree: opts.allowFree });
+    if (opts.hostTerms) assertHostPriceMeetsVenue(venue, request, priced.quote_min);
     return { ...priced, ownerUserId: String(venue.owner_user_id) };
   },
 
   /** Create Pod's live price: the breakdown at both ends of the guests, or why the offer cannot be sent (never throws for that). */
-  async preview(venueId: string, req: VenueOfferRequest, ignore?: string | HoldRef, atVenueMinimum = false, allowFree = false) {
+  async preview(venueId: string, req: VenueOfferRequest, ignore?: string | HoldRef, opts: OfferCheckOptions = {}) {
     try {
-      const { quote, quote_min } = await this.prepare(venueId, req, ignore, atVenueMinimum, allowFree);
-      return { ok: true, message: null, quote: { ...quote, confirmed_at: null }, quote_min: { ...quote_min, confirmed_at: null } };
+      const { quote, quote_min } = await this.prepare(venueId, req, ignore, opts);
+      return { ok: true, message: null, reason: null, quote: { ...quote, confirmed_at: null }, quote_min: { ...quote_min, confirmed_at: null } };
     } catch (error) {
-      if (error instanceof GraphQLError) return { ok: false, message: error.message, quote: null, quote_min: null };
+      if (error instanceof GraphQLError) return refusalOf(error);
       throw error;
     }
   },
@@ -435,12 +459,12 @@ export const venueOfferService = {
 
   /** The venue's counter priced before it is sent — exactly what `counter` would freeze. Never throws for a refusal. */
   async counterPreview(userId: string, slotId: string, terms: VenueOfferMoveTerms) {
-    return previewOf(async () => pricedMove(await venueAnswering(userId, slotId), terms, ''));
+    return previewOf(async () => pricedMove(await venueAnswering(userId, slotId), terms, '', 'VENUE'));
   },
 
   /** A host's counter-back priced before it is sent. Never throws for a refusal. */
   async hostCounterPreview(userId: string, podId: string, terms: VenueOfferMoveTerms) {
-    return previewOf(async () => pricedMove(await countered(userId, podId), terms, ''));
+    return previewOf(async () => pricedMove(await countered(userId, podId), terms, '', 'HOST'));
   },
 
   /** The venue answers the host's terms with its own; the host then accepts, rejects or counters back. */
@@ -449,7 +473,7 @@ export const venueOfferService = {
     const offer = slot.offer;
     assertRound(offer, round);
     await assertCounterLeft(offer, 'VENUE');
-    const proposal = await pricedMove(slot, terms, note);
+    const proposal = await pricedMove(slot, terms, note, 'VENUE');
     const at = new Date();
     const updated = await VenueSlotModel.findOneAndUpdate(
       asRead(slot),
@@ -478,7 +502,7 @@ export const venueOfferService = {
     const offer = slot.offer;
     assertRound(offer, round);
     await assertCounterLeft(offer, 'HOST');
-    const proposal = await pricedMove(slot, terms, note);
+    const proposal = await pricedMove(slot, terms, note, 'HOST');
     const at = new Date();
     const updated = await VenueSlotModel.findOneAndUpdate(
       asRead(slot),
@@ -550,9 +574,21 @@ export function viewOf(slot: IVenueSlot) {
 export async function previewOf(price: () => Promise<PricedProposal>) {
   try {
     const priced = await price();
-    return { ok: true, message: null, quote: { ...priced.quote, confirmed_at: null }, quote_min: { ...priced.quote_min, confirmed_at: null } };
+    return {
+      ok: true,
+      message: null,
+      reason: null,
+      quote: { ...priced.quote, confirmed_at: null },
+      quote_min: { ...priced.quote_min, confirmed_at: null },
+    };
   } catch (error) {
-    if (error instanceof GraphQLError) return { ok: false, message: error.message, quote: null, quote_min: null };
+    if (error instanceof GraphQLError) return refusalOf(error);
     throw error;
   }
+}
+
+/** A refused preview: the message, and the reason when the server names one (BELOW_MIN_SPEND, …). */
+function refusalOf(error: GraphQLError) {
+  const reason = error.extensions?.reason;
+  return { ok: false, message: error.message, reason: typeof reason === 'string' ? reason : null, quote: null, quote_min: null };
 }

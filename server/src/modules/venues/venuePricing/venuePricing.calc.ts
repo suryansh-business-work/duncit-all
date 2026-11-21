@@ -3,7 +3,7 @@
  * Module preview and the booking itself all ask this one function (through
  * `venuePriceQuote` and the booking write) — a client never sends a price.
  *
- * Order: base by model → price rules → minimum-spend top-up → fees → GST on
+ * Order: base by model → price rules → fees → GST on
  * the venue price → Duncit's venue commission ON TOP. All arithmetic is on
  * integer paise, rounded half-up once per line, so the lines always add up.
  *
@@ -168,11 +168,9 @@ export function quoteVenuePrice(pricing: VenuePricing | null | undefined, req: Q
 
   const rules = applicableRules(pricing.price_rules ?? [], ymd, weekday, base.basePaise);
   const adjustedPaise = Math.max(0, base.basePaise + rules.totalPaise);
-  const minSpendPaise = toPaise(pricing.min_spend);
-  const topUpPaise = Math.max(0, minSpendPaise - adjustedPaise);
   const cleaningPaise = Math.max(0, toPaise(pricing.cleaning_fee));
   const petPaise = req.pets ? Math.max(0, toPaise(pricing.pet_fee)) : 0;
-  const venuePricePaise = adjustedPaise + topUpPaise + cleaningPaise + petPaise;
+  const venuePricePaise = adjustedPaise + cleaningPaise + petPaise;
   const gstPct = pricing.gst_enabled ? Math.max(0, Number(req.gstPct) || 0) : 0;
   const taxesPaise = pctOf(venuePricePaise, gstPct);
   const payoutPaise = venuePricePaise + taxesPaise;
@@ -190,7 +188,6 @@ export function quoteVenuePrice(pricing: VenuePricing | null | undefined, req: Q
       base: toRupees(base.basePaise),
       rules: rules.applied,
       rules_total: toRupees(rules.totalPaise),
-      min_spend_top_up: toRupees(topUpPaise),
       cleaning_fee: toRupees(cleaningPaise),
       pet_fee: toRupees(petPaise),
       venue_price: toRupees(venuePricePaise),

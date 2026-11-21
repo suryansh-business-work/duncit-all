@@ -11,7 +11,9 @@ import { settingsService } from '@modules/platform/settings/settings.service';
 import {
   VENUE_OFFER_SETTINGS_MAX,
   assertOfferMeetsMinBusiness,
+  assertOfferMeetsMinSpend,
   cleanMinBusiness,
+  cleanMinSpend,
   effectiveOfferSettings,
   normalizeOfferSettingsInput,
   requestOfferDefaults,
@@ -27,19 +29,27 @@ beforeEach(() => {
 
 describe('toOfferSettingsPub', () => {
   it('reads a venue that never set them as the defaults (0)', () => {
-    const none = { min_guests: 0, response_hours: 0, min_business: [] };
+    const none = { min_guests: 0, response_hours: 0, min_business: [], min_spend: 0 };
     expect(toOfferSettingsPub(undefined)).toEqual(none);
     expect(toOfferSettingsPub(null)).toEqual(none);
     expect(toOfferSettingsPub({})).toEqual(none);
   });
 
   it('keeps whole values and clamps the out-of-range ones', () => {
-    expect(toOfferSettingsPub({ min_guests: 12.6, response_hours: 48 })).toEqual({ min_guests: 12, response_hours: 48, min_business: [] });
+    expect(toOfferSettingsPub({ min_guests: 12.6, response_hours: 48 })).toEqual({ min_guests: 12, response_hours: 48, min_business: [], min_spend: 0 });
     expect(toOfferSettingsPub({ min_guests: -5, response_hours: 99_999 })).toEqual({
       min_guests: 0,
       response_hours: VENUE_OFFER_SETTINGS_MAX.responseHours,
       min_business: [],
+      min_spend: 0,
     });
+  });
+
+  it('reads a positive minimum spend to the paisa, and anything else as none', () => {
+    expect(toOfferSettingsPub({ min_spend: 4999.996 }).min_spend).toBe(5000);
+    for (const stored of [0, -10, Number.NaN, 'lots' as never]) {
+      expect(toOfferSettingsPub({ min_spend: stored }).min_spend).toBe(0);
+    }
   });
 
   it("reads the business amounts in the pickers' order, dropping unknown bases and non-positive amounts", () => {
@@ -57,7 +67,7 @@ describe('toOfferSettingsPub', () => {
 });
 
 describe('normalizeOfferSettingsInput', () => {
-  const base = { min_guests: 10, response_hours: 6, min_business: [{ model: 'PER_GUEST' as const, amount: 200 }] };
+  const base = { min_guests: 10, response_hours: 6, min_business: [{ model: 'PER_GUEST' as const, amount: 200 }], min_spend: 3000 };
 
   it('changes only what the edit names', () => {
     expect(normalizeOfferSettingsInput(base, { min_guests: 4 })).toEqual({ ...base, min_guests: 4 });
@@ -205,5 +215,74 @@ describe('assertOfferMeetsMinBusiness', () => {
     expect(() => assertOfferMeetsMinBusiness(rows, 'PER_HOUR', 1)).not.toThrow();
     expect(() => assertOfferMeetsMinBusiness(rows, 'FREE', 0)).not.toThrow();
     expect(() => assertOfferMeetsMinBusiness(undefined, 'PER_GUEST', 1)).not.toThrow();
+  });
+});
+
+describe('assertOfferMeetsMinSpend', () => {
+  const refusal = (fn: () => void) => {
+    try {
+      fn();
+    } catch (e) {
+      return { message: (e as Error).message, ...(e as { extensions?: Record<string, unknown> }).extensions };
+    }
+    return null;
+  };
+
+  it('accepts an offer that comes to the minimum spend or more, on every basis', () => {
+    expect(() => assertOfferMeetsMinSpend(5000, 'PER_GUEST', 5000)).not.toThrow();
+    expect(() => assertOfferMeetsMinSpend(5000, 'PER_HOUR', 7200.5)).not.toThrow();
+    expect(() => assertOfferMeetsMinSpend(5000, 'FLAT', 5000.001)).not.toThrow();
+  });
+
+  it('refuses an offer short of it, naming the minimum, what the offer comes to and the shortfall', () => {
+    expect(refusal(() => assertOfferMeetsMinSpend(5000, 'PER_GUEST', 3999.5))).toEqual({
+      message: "This venue's minimum spend is 5000 per booking — your offer comes to 3999.5, 1000.5 short. Raise your offer",
+      code: 'BAD_USER_INPUT',
+      reason: 'BELOW_MIN_SPEND',
+      field: 'venue_offer_rate',
+      min: 5000,
+      offered: 3999.5,
+      shortfall: 1000.5,
+    });
+    expect(refusal(() => assertOfferMeetsMinSpend('2500', 'FLAT', Number.NaN))).toMatchObject({ min: 2500, offered: 0, shortfall: 2500 });
+  });
+
+  it('holds back nothing for a venue with no minimum spend, or a free ask', () => {
+    expect(() => assertOfferMeetsMinSpend(0, 'PER_GUEST', 1)).not.toThrow();
+    expect(() => assertOfferMeetsMinSpend(undefined, 'FLAT', 0)).not.toThrow();
+    expect(() => assertOfferMeetsMinSpend(5000, 'FREE', 0)).not.toThrow();
+  });
+});
+
+describe('cleanMinSpend', () => {
+  it('keeps 0 (none) and a positive amount to the paisa, and a number sent as text', () => {
+    expect(cleanMinSpend(0)).toBe(0);
+    expect(cleanMinSpend(1500.004)).toBe(1500);
+    expect(cleanMinSpend('2000')).toBe(2000);
+    expect(cleanMinSpend(10_000_000)).toBe(10_000_000);
+  });
+
+  it.each([
+    ['a negative amount', -1, 'Enter a minimum spend of 0 or more'],
+    ['an amount that is not a number', 'lots', 'Enter a minimum spend of 0 or more'],
+    ["an amount past an offer's bound", 10_000_001, 'This amount is too large'],
+  ])('refuses %s, on the min_spend field', (_label, raw, message) => {
+    expect(() => cleanMinSpend(raw)).toThrow(message);
+    expect(() => cleanMinSpend(raw)).toThrow(expect.objectContaining({ extensions: expect.objectContaining({ field: 'min_spend' }) }));
+  });
+});
+
+describe('normalizeOfferSettingsInput — minimum spend', () => {
+  const base = { min_guests: 10, response_hours: 6, min_business: [{ model: 'FLAT' as const, amount: 900 }], min_spend: 3000 };
+
+  it('sets, clears and keeps the minimum spend', () => {
+    expect(normalizeOfferSettingsInput(base, { min_spend: 4500 }).min_spend).toBe(4500);
+    expect(normalizeOfferSettingsInput(base, { min_spend: 0 }).min_spend).toBe(0);
+    expect(normalizeOfferSettingsInput(base, { min_spend: null }).min_spend).toBe(3000);
+    expect(normalizeOfferSettingsInput(base, { min_guests: 4 }).min_spend).toBe(3000);
+  });
+
+  it('refuses an unsound minimum spend rather than saving it', () => {
+    expect(() => normalizeOfferSettingsInput(base, { min_spend: -5 })).toThrow('Enter a minimum spend of 0 or more');
   });
 });

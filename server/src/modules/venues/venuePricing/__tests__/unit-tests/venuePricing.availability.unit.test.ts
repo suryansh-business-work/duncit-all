@@ -20,7 +20,6 @@ const pricing: VenuePricing = {
   min_hours: 1,
   max_hours: 0,
   booking_increment_minutes: 30,
-  min_spend: 0,
   slots: [],
   operating_hours: [{ day: 6, open: '10:00', close: '22:00' }],
   price_rules: [],

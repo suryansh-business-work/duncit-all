@@ -158,7 +158,6 @@ export function cleanVenuePricing(input: unknown): VenuePricing {
     min_hours: minHours,
     max_hours: maxHours,
     booking_increment_minutes: count(raw.booking_increment_minutes ?? 60, 'Booking step', 1440),
-    min_spend: money(raw.min_spend, 'Minimum spend'),
     slots: cleanSlots(raw.slots),
     operating_hours: cleanHours(raw.operating_hours),
     price_rules: rules.map((item, i) => cleanRule(item, i)),

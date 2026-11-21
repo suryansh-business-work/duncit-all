@@ -35,7 +35,6 @@ const quoteOut = (q: VenueOffer['quote']) => ({
   base: q.base,
   rules: (q.rules ?? []).map((r) => ({ type: r.type, label: r.label, mode: r.mode, value: r.value, amount: r.amount })),
   rules_total: q.rules_total,
-  min_spend_top_up: q.min_spend_top_up,
   cleaning_fee: q.cleaning_fee,
   pet_fee: q.pet_fee,
   venue_price: q.venue_price,

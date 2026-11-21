@@ -312,6 +312,8 @@ export const venueTypeDefs = /* GraphQL */ `
     response_hours: Int!
     "The least the venue takes, one per pricing basis (per guest, per hour, per booking)."
     min_business: [VenueMinBusiness!]!
+    "The least one booking's offer must come to, in rupees: the rate times the fewest guests, times the hours, or the flat price. 0 = none."
+    min_spend: Float!
   }
 
   input VenueOfferSettingsInput {
@@ -321,10 +323,12 @@ export const venueTypeDefs = /* GraphQL */ `
     response_hours: Int
     "At least one, one per pricing basis. Left out: unchanged."
     min_business: [VenueMinBusinessInput!]
+    "Rupees, 0 = none. Left out: unchanged."
+    min_spend: Float
   }
 
   type VenueSettings {
-    "Booking offers: minimum guests and response time."
+    "Booking offers: minimum guests, response time and the venue's minimums (Fees & Minimum Spend)."
     offers: VenueOfferSettings!
     operating_hours: VenueOperatingHours!
     weekly_off_days: [Int!]!
@@ -397,6 +401,8 @@ export const venueTypeDefs = /* GraphQL */ `
     offer_response_hours: Int!
     "The least the venue takes per booking on each pricing basis (Create Pod's offer step shows it; an offer below it is refused)."
     offer_min_business: [VenueMinBusiness!]!
+    "The least one booking's offer must come to (rupees, 0 = none). A host's offer or counter below it is refused (BELOW_MIN_SPEND)."
+    offer_min_spend: Float!
     capacity_items: [VenueCapacityItem!]!
     "The venue serves food. On publicVenue the menu is empty unless this is on."
     offers_food: Boolean!

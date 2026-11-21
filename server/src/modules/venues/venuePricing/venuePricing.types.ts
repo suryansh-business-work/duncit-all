@@ -51,7 +51,6 @@ export interface VenuePricing {
   min_hours: number;
   max_hours: number;
   booking_increment_minutes: number;
-  min_spend: number;
   slots: PricingSlot[];
   operating_hours: DayHours[];
   price_rules: PriceRule[];
@@ -84,11 +83,9 @@ export interface VenuePriceBreakdown {
   base: number;
   rules: AppliedRule[];
   rules_total: number;
-  /** Added when the booking falls short of the venue's minimum spend. */
-  min_spend_top_up: number;
   cleaning_fee: number;
   pet_fee: number;
-  /** What the venue set: base + rules + top-up + fees. */
+  /** What the venue set: base + rules + fees. */
   venue_price: number;
   gst_pct: number;
   taxes: number;

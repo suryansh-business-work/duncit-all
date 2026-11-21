@@ -423,6 +423,9 @@ const venueOfferSettingsSchema = new Schema<IVenueOfferSettings>(
       type: [new Schema({ model: { type: String, required: true }, amount: { type: Number, required: true, min: 0 } }, { _id: false })],
       default: [],
     },
+    // The least one booking's offer must come to, in rupees (0 or absent = none). No default on
+    // purpose: the boot copy from the retired pricing.min_spend fills only venues without one.
+    min_spend: { type: Number, min: 0 },
   },
   { _id: false }
 );

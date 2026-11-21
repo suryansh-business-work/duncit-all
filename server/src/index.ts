@@ -254,6 +254,14 @@ async function bootstrap() {
     const result = await migratePerSlotOffers();
     if (Object.values(result).some((count) => count > 0)) logs.server.info('bootstrap', 'perSlotOffers', result);
   });
+  // The minimum spend moved into Fees & Minimum Spend (settings.offers): each
+  // venue's amount is copied once. Additive (pricing.min_spend stays for a
+  // rollback) and idempotent, so it is safe on every boot.
+  await safeSeed('venueMinSpend', async () => {
+    const { migrateVenueMinSpend } = await import('@modules/venues/venue/venue.minSpend.migration');
+    const result = await migrateVenueMinSpend();
+    if (result.venues > 0) logs.server.info('bootstrap', 'venueMinSpend', result);
+  });
   await safeSeed('storeServiceablePincodes', async () => {
     const { migrateServiceablePincodes } = await import('@modules/commerce/store/store.migration');
     const result = await migrateServiceablePincodes();

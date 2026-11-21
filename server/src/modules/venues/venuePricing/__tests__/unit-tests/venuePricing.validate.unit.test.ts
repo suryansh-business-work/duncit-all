@@ -11,7 +11,8 @@ const refuses = (input: unknown, message: RegExp) => {
 describe('cleanVenuePricing', () => {
   it('normalises a valid input and fills the defaults', () => {
     const p = cleanVenuePricing({ ...valid, blocked_dates: ['2027-01-05', '2027-01-02', '2027-01-05'] });
-    expect(p).toMatchObject({ model: 'PER_HOUR', base_rate: 500, min_spend: 0, gst_enabled: false, slots: [] });
+    expect(p).toMatchObject({ model: 'PER_HOUR', base_rate: 500, gst_enabled: false, slots: [] });
+    expect(p).not.toHaveProperty('min_spend');
     expect(p.blocked_dates).toEqual(['2027-01-02', '2027-01-05']);
   });
 

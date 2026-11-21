@@ -22,26 +22,53 @@ const {
   offer_min_guests: minGuests,
   offer_response_hours: responseHours,
   offer_min_business: minBusiness,
+  offer_min_spend: minSpend,
 } = venueResolvers.Venue;
+
+describe('saving the minimum spend (Fees & Minimum Spend)', () => {
+  it('sets, keeps across other edits, and clears it', async () => {
+    const id = await seedVenue();
+    const set = await venueService.updateSettings(ownerId, false, id, { offers: { min_spend: 4500.5 } });
+    expect(set.settings.offers.min_spend).toBe(4500.5);
+    const other = await venueService.updateSettings(ownerId, false, id, { offers: { min_guests: 8 } });
+    expect(other.settings.offers).toMatchObject({ min_guests: 8, min_spend: 4500.5 });
+    expect((await VenueModel.findById(id).lean())?.settings?.offers?.min_spend).toBe(4500.5);
+    const cleared = await venueService.updateSettings(ownerId, false, id, { offers: { min_spend: 0 } });
+    expect(cleared.settings.offers.min_spend).toBe(0);
+  });
+
+  it('refuses an unsound amount and keeps the stored one', async () => {
+    const id = await seedVenue({ offers: { min_spend: 2000 } });
+    await expect(venueService.updateSettings(ownerId, false, id, { offers: { min_spend: -1 } })).rejects.toMatchObject({
+      extensions: { code: 'BAD_USER_INPUT', field: 'min_spend' },
+    });
+    expect((await VenueModel.findById(id).lean())?.settings?.offers?.min_spend).toBe(2000);
+  });
+
+  it('resolves on a Venue for Create Pod, and as none for a venue that set none', () => {
+    expect(minSpend({ settings: { offers: { min_spend: 3200 } } })).toBe(3200);
+    expect(minSpend({})).toBe(0);
+  });
+});
 
 describe('saving booking-offer settings', () => {
   it('starts every venue on the platform defaults (0), with no business amounts', async () => {
     const id = await seedVenue();
     const venue = await venueService.updateSettings(ownerId, false, id, {});
-    expect(venue.settings.offers).toEqual({ min_guests: 0, response_hours: 0, min_business: [] });
+    expect(venue.settings.offers).toEqual({ min_guests: 0, response_hours: 0, min_business: [], min_spend: 0 });
   });
 
   it("saves the owner's minimum and response time, clamped, leaving the rest of the settings as they were", async () => {
     const id = await seedVenue({ weekly_off_days: [1] });
     const venue = await venueService.updateSettings(ownerId, false, id, { offers: { min_guests: 10, response_hours: 6 } });
-    expect(venue.settings.offers).toEqual({ min_guests: 10, response_hours: 6, min_business: [] });
+    expect(venue.settings.offers).toEqual({ min_guests: 10, response_hours: 6, min_business: [], min_spend: 0 });
     expect(venue.settings.weekly_off_days).toEqual([1]);
 
     const clamped = await venueService.updateSettings(ownerId, false, id, { offers: { min_guests: 99_999, response_hours: -5 } });
-    expect(clamped.settings.offers).toEqual({ min_guests: 1000, response_hours: 0, min_business: [] });
+    expect(clamped.settings.offers).toEqual({ min_guests: 1000, response_hours: 0, min_business: [], min_spend: 0 });
 
     const partial = await venueService.updateSettings(ownerId, false, id, { offers: { response_hours: 48 } });
-    expect(partial.settings.offers).toEqual({ min_guests: 1000, response_hours: 48, min_business: [] });
+    expect(partial.settings.offers).toEqual({ min_guests: 1000, response_hours: 48, min_business: [], min_spend: 0 });
   });
 
   it('saves the business the venue hopes for, keeps it through an edit that leaves it out, and reads it back', async () => {
@@ -56,7 +83,7 @@ describe('saving booking-offer settings', () => {
     expect(saved.settings.offers.min_business).toEqual(amounts);
 
     const edited = await venueService.updateSettings(ownerId, false, id, { offers: { min_guests: 5 } });
-    expect(edited.settings.offers).toEqual({ min_guests: 5, response_hours: 0, min_business: amounts });
+    expect(edited.settings.offers).toEqual({ min_guests: 5, response_hours: 0, min_business: amounts, min_spend: 0 });
     const stored = await VenueModel.findById(id).lean();
     expect(stored?.settings?.offers?.min_business).toEqual(amounts);
   });

@@ -1,5 +1,5 @@
 /**
- * A venue's charges (fees, minimum spend, price rules, GST, blocked dates) and
+ * A venue's charges (fees, price rules, GST, blocked dates) and
  * its booking calendar. Hosts no longer book at a price the venue set: they
  * send an offer (modules/venues/venueOffer), priced by the same calculation.
  * The helpers exported below are shared with the offer service.
@@ -16,6 +16,7 @@ import { isPricingConfigured, quoteVenuePrice } from './venuePricing.calc';
 import { dayAvailability, type BusyWindow } from './venuePricing.availability';
 import { cleanVenuePricing, PricingInputError } from './venuePricing.validate';
 import { isYmd, localInstant, localParts, ymdRange } from './venuePricing.time';
+import { toOfferSettingsPub } from '@modules/venues/venue/venue.offerSettings';
 import { venuePricingSchema } from './venuePricing.schema.model';
 import type { VenuePriceBreakdown, VenuePricing } from './venuePricing.types';
 
@@ -111,12 +112,17 @@ const PRICING_DEFAULTS: Record<string, unknown> = Object.fromEntries(
   })
 );
 
+/**
+ * Only the schema's own fields are read: a field still stored on older venues
+ * but retired from pricing (the minimum spend, now `settings.offers.min_spend`)
+ * never rides into a quote or the charges an offer freezes.
+ */
 export const pricingOf = (venue: { pricing?: unknown }): VenuePricing => {
   const raw = venue.pricing as { toObject?: () => unknown } | null | undefined;
   const stored = (typeof raw?.toObject === 'function' ? raw.toObject() : (raw ?? {})) as Record<string, unknown>;
-  const filled = { ...stored };
+  const filled: Record<string, unknown> = {};
   for (const [field, fallback] of Object.entries(PRICING_DEFAULTS)) {
-    filled[field] ??= fallback;
+    filled[field] = stored[field] ?? fallback;
   }
   return filled as unknown as VenuePricing;
 };
@@ -166,11 +172,15 @@ export const venuePricingService = {
     return venues.map((v) => ({ venue_id: String(v._id), venue_no: v.venue_no ?? null, venue_name: v.venue_name ?? '' }));
   },
 
-  /** The venue's pricing as stored — readable by anyone who can see the venue. */
-  async pricingFor(venueId: string): Promise<VenuePricing & { configured: boolean }> {
+  /**
+   * The venue's pricing as stored — readable by anyone who can see the venue.
+   * `min_spend` is the deprecated mirror of its offers' minimum spend, for app
+   * builds that still read it here.
+   */
+  async pricingFor(venueId: string): Promise<VenuePricing & { configured: boolean; min_spend: number }> {
     const venue = await loadVenue(venueId);
     const pricing = pricingOf(venue);
-    return { ...pricing, configured: isPricingConfigured(pricing) };
+    return { ...pricing, configured: isPricingConfigured(pricing), min_spend: toOfferSettingsPub(venue.settings?.offers).min_spend };
   },
 
   /** Owner (or admin) saves the venue's pricing. Existing bookings keep their snapshots. */
@@ -254,7 +264,6 @@ export const venuePricingService = {
         base: venuePrice / 100,
         rules: [],
         rules_total: 0,
-        min_spend_top_up: 0,
         cleaning_fee: 0,
         pet_fee: 0,
         venue_price: venuePrice / 100,

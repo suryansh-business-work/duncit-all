@@ -4,7 +4,7 @@
  * hour or a flat price for the window) and what the venue should provide. The two
  * sides bargain in the venue chat: whoever's move it is accepts, rejects or
  * counters, until one side accepts, one rejects or the answer runs late. The
- * venue's own charges (fees, minimum spend, price rules, GST) are added by the
+ * venue's own charges (fees, price rules, GST) are added by the
  * one venue price calculation, and Duncit's venue commission goes on top.
  */
 import type { VenuePriceBreakdown, VenuePricing } from '@modules/venues/venuePricing/venuePricing.types';
@@ -107,11 +107,12 @@ export type OfferQuote = VenuePriceBreakdown & { confirmed_at: Date };
 
 /**
  * The venue's own charges a set of terms was priced with — its price rules,
- * minimum spend, fees and GST switch. Frozen beside the quote so a per-guest
- * booking can be priced again for the people who actually came, with the
- * charges both sides saw, whatever the venue changes later.
+ * fees and GST switch. Frozen beside the quote so a per-guest booking can be
+ * priced again for the people who actually came, with the charges both sides
+ * saw, whatever the venue changes later. `min_spend` is only on charges frozen
+ * while the minimum spend still topped the bill up (see `atAgreedMinSpend`).
  */
-export type OfferCharges = VenuePricing;
+export type OfferCharges = VenuePricing & { min_spend?: number };
 
 /** One side's proposal on the table: terms, the ask, and its price at the most and the fewest guests. */
 export interface VenueOfferProposal extends VenueOfferTerms, VenueOfferAsk {

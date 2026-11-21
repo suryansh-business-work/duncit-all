@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 
 /**
  * Stand-in for @duncit/table's DuncitTable. The real AG Grid table is a shared,
@@ -17,14 +17,21 @@ export function resetTableControls(): void {
   tableControls.fetches = 0;
 }
 
-/** Answers every table read with `tableControls.rows`, counting the reads. */
-export const useApolloTableFetch =
-  <T,>(_client: unknown, _query: unknown, _key: string) =>
-  (): Promise<{ rows: T[]; total: number }> => {
-    tableControls.fetches += 1;
-    const rows = tableControls.rows as T[];
-    return Promise.resolve({ rows, total: rows.length });
-  };
+/**
+ * Answers every table read with `tableControls.rows`, counting the reads.
+ * Memoised on the same inputs as the real hook, so a re-render of the page
+ * does not hand the table a new fetcher (and a spurious extra read).
+ */
+export function useApolloTableFetch<T>(client: unknown, query: unknown, key: string) {
+  return useMemo(
+    () => (): Promise<{ rows: T[]; total: number }> => {
+      tableControls.fetches += 1;
+      const rows = tableControls.rows as T[];
+      return Promise.resolve({ rows, total: rows.length });
+    },
+    [client, query, key]
+  );
+}
 
 interface Column {
   field: string;

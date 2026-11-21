@@ -1,6 +1,9 @@
 // The table package's shared jsdom gaps (ResizeObserver, elementFromPoint),
 // imported by path: '@duncit/table' is aliased to a stub in this workspace.
 import '../../../../packages/table/src/test-setup';
+// Types for the jest-dom matchers; they are registered explicitly below, as in
+// the other consoles, because the auto-extend is unreliable under this config.
+import '@testing-library/jest-dom/vitest';
 import * as matchers from '@testing-library/jest-dom/matchers';
 import { cleanup } from '@testing-library/react';
 import { afterEach, expect } from 'vitest';

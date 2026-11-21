@@ -31,17 +31,13 @@ vi.mock('@duncit/user-context', () => ({
   useUserData: () => ({ user: { full_name: 'Asha Planner', email: 'asha@example.com' } }),
 }));
 
-let ids: string[] = [];
 beforeEach(() => {
   notifySuccess.mockClear();
   notifyError.mockClear();
-  ids = [];
   let n = 0;
   vi.spyOn(crypto, 'randomUUID').mockImplementation(() => {
     n += 1;
-    const id = `req-${n}`;
-    ids.push(id);
-    return id as ReturnType<typeof crypto.randomUUID>;
+    return `req-${n}` as ReturnType<typeof crypto.randomUUID>;
   });
 });
 
@@ -154,6 +150,8 @@ describe('saving', () => {
     await waitFor(() => expect(titleBox().value).toBe(''));
   });
 
+  // Both mocks answer only `client_request_id: 'req-1'`: a retry that minted a
+  // fresh id would match neither, fail a second time and never confirm.
   it('retries a failed save with the same request id, so the server can never write it twice', async () => {
     renderPage([saveMock('Retry', 'req-1', null, new Error('Failed to fetch')), saveMock('Retry', 'req-1', null)]);
     fireEvent.change(titleBox(), { target: { value: 'Retry' } });
@@ -162,7 +160,7 @@ describe('saving', () => {
     expect(titleBox().value).toBe('Retry');
     fireEvent.click(screen.getByTestId('save-calculation-submit'));
     await waitFor(() => expect(notifySuccess).toHaveBeenCalledWith('Calculation saved'));
-    expect(ids).toEqual(['req-1']);
+    expect(notifyError).toHaveBeenCalledTimes(1);
   });
 });
 

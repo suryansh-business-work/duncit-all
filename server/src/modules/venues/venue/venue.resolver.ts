@@ -15,6 +15,7 @@ import { CategoryModel } from '@modules/pods/category/category.model';
 import type { GraphQLContext } from '@context';
 import { hasRole, requireRole } from '@middleware/rbac';
 import { effectiveOfferSettings, requestOfferDefaults, toOfferSettingsPub, type IVenueOfferSettings } from './venue.offerSettings';
+import { venueHostTermsFor } from './venue.hostTerms';
 import {
   consoleEditors,
   consoleGovernors,
@@ -143,6 +144,8 @@ export const venueResolvers = {
     ) => venueService.publicList(args),
     publicVenue: async (_p: unknown, args: { venue_id: string }) =>
       venueService.getPublicById(args.venue_id),
+    venueHostTerms: async (_p: unknown, args: { venue_ids: string[] }, ctx: GraphQLContext) =>
+      venueHostTermsFor(uid(ctx), args.venue_ids, () => requestOfferDefaults(ctx)),
     matchingVenues: async (
       _p: unknown,
       args: { location_id: string; locality?: string; super_category_id?: string; category_id?: string },

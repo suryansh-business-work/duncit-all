@@ -3920,6 +3920,29 @@ hostAgainNoticeKeys(['CLUB_UNAVAILABLE', 'SOMETHING_NEW']).map((key) => t(key));
 // → ['The original club is no longer active. Pick another club on step 1.']
 ```
 
+## A venue for a host — `venue-host-terms`
+
+Hosts see a venue's Fees & Minimum Spend on the Venues list cards and on Venue Details, and can
+pick the venue for a new pod from there. The server's `venueHostTerms(venue_ids)` query answers
+only for an active host (the rule Create Pod enforces), so an empty answer hides both the terms
+and the button. mWeb and the app word the terms, and seed Create Pod, through the same helpers.
+
+| Export | Meaning |
+| --- | --- |
+| `VenueHostTerms` | One venue's terms as `venueHostTerms` returns them (rupees). |
+| `venueHostTermLines(terms, t, money, { compact })` | The terms as lines: minimum spend, amount per basis, fewest guests, then cleaning fee, pet fee, deposit and GST. `compact` keeps the minimums only (list cards). |
+| `venueHostTermsById(rows)` | A `Map` from venue id to its terms, for a list of cards. |
+| `PICK_VENUE_PARAM` | `pick_venue` — the search param mWeb's `/create-pod` reads the picked venue id from. |
+| `pickedVenueSeed(venue, cities, soleCategoryKey?)` | The fresh form for a picked venue: physical, the venue, its city and (when the city names it) its area; a host with one category gets it picked and opens on Where & when. |
+| `isPickedVenue(pickedVenueId, venueId)` | Whether the form is still on the picked venue — what keeps Create Pod's shortcuts on. |
+
+```ts
+venueHostTermLines(terms, t, formatMoney, { compact: true }).map((line) => line.text);
+// → ['Minimum spend ₹5,000 per booking', '₹450 per guest', 'At least 10 guests paid for']
+pickedVenueSeed(venue, locations, hostCategories.length === 1 ? keyOf(hostCategories[0]) : null);
+// → { values: { pod_mode: 'PHYSICAL', venue_id, location_id, locality }, step: 1 }
+```
+
 ## Wallet statement periods — `statement-period`
 
 The partner console, mWeb and the native app all offer "Download statement" on the wallet. This

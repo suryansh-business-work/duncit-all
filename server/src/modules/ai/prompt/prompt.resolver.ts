@@ -1,4 +1,5 @@
 import { aiPromptService, type AiPromptFilterInput, type AiPromptInput } from './prompt.service';
+import { aiLibraryDashboard } from './prompt.dashboard';
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
 
@@ -18,6 +19,10 @@ export const aiPromptResolvers = {
     aiPrompt: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, AI_RW);
       return aiPromptService.get(args.id);
+    },
+    aiLibraryDashboard: (_p: unknown, args: { range_days?: number | null }, ctx: GraphQLContext) => {
+      requireRole(ctx, AI_RW);
+      return aiLibraryDashboard(args.range_days);
     },
   },
   Mutation: {

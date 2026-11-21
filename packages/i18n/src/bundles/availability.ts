@@ -768,6 +768,25 @@ export const AVAILABILITY_BUNDLE: NestedCatalogue = {
       // Completing a pod whose venue was free: it is owed nothing, so a bill proves only extras.
       freeVenueBillHint: 'Free venue — upload its bill only if it charged extra.',
     },
+    // A venue's Fees & Minimum Spend as a host sees it on the Venues list and
+    // Venue Details (mWeb + app), with the button that starts a pod there.
+    hostTerms: {
+      hint: 'What your offer must meet, and what is added to the venue’s price.',
+      // The translator picks .one / .other from count.
+      minGuests: {
+        one: 'Paid for at least {count} guest',
+        other: 'Paid for at least {count} guests',
+      },
+      cleaningFee: 'Cleaning fee {amount}',
+      petFee: 'Pet fee {amount}, only when pets come',
+      deposit: 'Refundable deposit {amount}, settled at the venue',
+      gst: 'GST is added to the venue’s price',
+      none: 'This venue sets no minimums or extra fees.',
+      pickForPod: 'Pick This Venue for Pod',
+      // Native names the screen when the host lands on Create Pod from the button.
+      pickForPodHint: 'Opens Create Pod with this venue and a physical pod already chosen.',
+      loadFailed: 'Could not load this venue’s fees and minimum spend.',
+    },
     upcomingBookings: {
       title: 'Upcoming bookings',
       empty: 'No upcoming bookings yet.',

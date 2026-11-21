@@ -19,14 +19,26 @@ const kindOf = (o: any): PromptKind => {
   return o.key ? 'CODE' : 'AI';
 };
 
+/**
+ * Whether a code prompt's live body is still the catalogue default. Null for an
+ * AI prompt (it has no default) and for a row the catalogue no longer names.
+ */
+const matchesDefault = (kind: PromptKind, key: unknown, content: string): boolean | null => {
+  if (kind !== 'CODE' || typeof key !== 'string') return null;
+  const def = CODE_PROMPT_BY_KEY.get(key);
+  return def ? def.content === content : null;
+};
+
 /** The GraphQL/feed view of a row. Callers guard for a missing document. */
 const pub = (doc: any) => {
   const o = doc.toObject ? doc.toObject() : doc;
   const content = o.content ?? '';
+  const kind = kindOf(o);
   return {
     id: String(o._id),
     key: o.key ?? null,
-    kind: kindOf(o),
+    kind,
+    matches_default: matchesDefault(kind, o.key, content),
     role: o.role === 'USER' ? 'USER' : 'SYSTEM',
     name: o.name,
     description: o.description ?? '',

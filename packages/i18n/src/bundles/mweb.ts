@@ -2536,6 +2536,11 @@ export const MWEB_BUNDLE: NestedCatalogue = {
         categoryMissing: 'The original category is not one you can host now. Pick a category on step 1.',
         productsUnavailable: 'Some Pod Shop items from the original pod are out of stock or no longer listed, so they were left out.',
       },
+      // "Pick This Venue for Pod" on Venue Details: the venue and a physical pod come chosen.
+      pickedVenue: {
+        title: 'A physical pod at {venue}',
+        hint: 'Pick your category and club, then the space and the time to offer the venue.',
+      },
       noOptions: 'No options available.',
       podTitleLabel: 'Pod title',
       // mWeb only — the native title field carries no placeholder.

@@ -587,6 +587,10 @@ export type AiFeature = {
   /** Owning area — Moderation, CRM, Admin Tools … */
   module: Scalars['String']['output'];
   prompt_tokens: Scalars['Int']['output'];
+  /** The AI Library code prompts this feature runs on, read from the prompt catalogue. */
+  prompts: Array<AiFeaturePrompt>;
+  /** Why the feature runs on no code prompt, when it has none. */
+  prompts_note?: Maybe<Scalars['String']['output']>;
   range_days: Scalars['Int']['output'];
   /** Calls that never left — no key configured, or the feature switched off. */
   skipped_calls: Scalars['Int']['output'];
@@ -597,6 +601,124 @@ export type AiFeature = {
   updated_by_name?: Maybe<Scalars['String']['output']>;
   /** What the product does instead while this feature is switched off. */
   when_off: Scalars['String']['output'];
+};
+
+/** The AI features of one owning area, and what they used. */
+export type AiFeatureArea = {
+  __typename?: 'AiFeatureArea';
+  avg_duration_ms: Scalars['Int']['output'];
+  calls: Scalars['Int']['output'];
+  cost_usd: Scalars['Float']['output'];
+  enabled: Scalars['Int']['output'];
+  failed_calls: Scalars['Int']['output'];
+  features: Scalars['Int']['output'];
+  module: Scalars['String']['output'];
+  total_tokens: Scalars['Int']['output'];
+};
+
+/** One day of AI feature calls, in the admin's time zone. */
+export type AiFeatureDay = {
+  __typename?: 'AiFeatureDay';
+  avg_duration_ms: Scalars['Int']['output'];
+  calls: Scalars['Int']['output'];
+  cost_usd: Scalars['Float']['output'];
+  /** yyyy-MM-dd */
+  date: Scalars['String']['output'];
+  failed_calls: Scalars['Int']['output'];
+  skipped_calls: Scalars['Int']['output'];
+  total_tokens: Scalars['Int']['output'];
+};
+
+/** One AI Library code prompt an AI feature runs on. */
+export type AiFeaturePrompt = {
+  __typename?: 'AiFeaturePrompt';
+  /** False until the server has seeded the prompt into the library (it does so on boot). */
+  in_library: Scalars['Boolean']['output'];
+  /** Catalogue key of the prompt; the AI Library opens it by this key. */
+  key: Scalars['String']['output'];
+  /** False when the live body in the library differs from the code default: edited in the portal, or the default changed after it was seeded. */
+  matches_default: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+  role: AiPromptRole;
+};
+
+/**
+ * The AI Features dashboard over one range. Totals and areas are summed from
+ * `features`, so they always match the AI Features table.
+ */
+export type AiFeaturesDashboard = {
+  __typename?: 'AiFeaturesDashboard';
+  avg_duration_ms: Scalars['Int']['output'];
+  by_area: Array<AiFeatureArea>;
+  calls: Scalars['Int']['output'];
+  completion_tokens: Scalars['Int']['output'];
+  cost_usd: Scalars['Float']['output'];
+  failed_calls: Scalars['Int']['output'];
+  features: Array<AiFeature>;
+  features_enabled: Scalars['Int']['output'];
+  features_total: Scalars['Int']['output'];
+  /** Features called at least once in the range. */
+  features_used: Scalars['Int']['output'];
+  prompt_tokens: Scalars['Int']['output'];
+  range_days: Scalars['Int']['output'];
+  /** One entry per day of the range, zero-filled. */
+  series: Array<AiFeatureDay>;
+  skipped_calls: Scalars['Int']['output'];
+  total_tokens: Scalars['Int']['output'];
+  unpriced_calls: Scalars['Int']['output'];
+};
+
+/** How many prompts of each kind share one value (a category, a model). */
+export type AiLibraryCount = {
+  __typename?: 'AiLibraryCount';
+  ai: Scalars['Int']['output'];
+  code: Scalars['Int']['output'];
+  /** The shared value; an empty model means the configured default. */
+  key: Scalars['String']['output'];
+};
+
+/** The AI Library at a glance, with usage over one range (default 30 days, max 90). */
+export type AiLibraryDashboard = {
+  __typename?: 'AiLibraryDashboard';
+  active_ai_prompts: Scalars['Int']['output'];
+  ai_prompts: Scalars['Int']['output'];
+  by_category: Array<AiLibraryCount>;
+  by_model: Array<AiLibraryCount>;
+  code_prompts: Scalars['Int']['output'];
+  /** Code prompts whose live body differs from the catalogue default. */
+  edited_code_prompts: Scalars['Int']['output'];
+  features_total: Scalars['Int']['output'];
+  /** AI features that run on at least one code prompt. */
+  features_with_prompt: Scalars['Int']['output'];
+  /** Catalogue prompts the library has no row for yet; the server seeds them on boot. */
+  missing_code_prompts: Scalars['Int']['output'];
+  prompts: Array<AiLibraryPromptStat>;
+  range_days: Scalars['Int']['output'];
+  system_prompts: Scalars['Int']['output'];
+  user_prompts: Scalars['Int']['output'];
+};
+
+/** One prompt in the AI Library dashboard, with the usage of the AI features it serves. */
+export type AiLibraryPromptStat = {
+  __typename?: 'AiLibraryPromptStat';
+  /** Calls, tokens and cost of those features over the range. A feature served by two prompt pairs counts in both. */
+  calls: Scalars['Int']['output'];
+  category: Scalars['String']['output'];
+  cost_usd: Scalars['Float']['output'];
+  failed_calls: Scalars['Int']['output'];
+  /** AI feature keys this prompt runs under. */
+  features: Array<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  is_active: Scalars['Boolean']['output'];
+  key?: Maybe<Scalars['String']['output']>;
+  kind: AiPromptKind;
+  matches_default?: Maybe<Scalars['Boolean']['output']>;
+  name: Scalars['String']['output'];
+  role: AiPromptRole;
+  target_model: Scalars['String']['output'];
+  token_count: Scalars['Int']['output'];
+  total_tokens: Scalars['Int']['output'];
+  updated_at?: Maybe<Scalars['String']['output']>;
 };
 
 export type AiLocationAreasInput = {
@@ -709,6 +831,8 @@ export type AiPrompt = {
   /** Stable catalogue id of a code prompt; null for portal-authored ones. */
   key?: Maybe<Scalars['String']['output']>;
   kind: AiPromptKind;
+  /** Code prompts only: false when the live body differs from the catalogue default (edited here, or the default changed after seeding). Null for AI prompts. */
+  matches_default?: Maybe<Scalars['Boolean']['output']>;
   name: Scalars['String']['output'];
   role: AiPromptRole;
   /** Model this prompt is sent to; empty means the configured default. */
@@ -31632,6 +31756,10 @@ export type Query = {
   aiFeature: AiFeature;
   /** Every AI feature with its switch and usage. range_days defaults to 30, max 90. */
   aiFeatures: Array<AiFeature>;
+  /** Usage, cost, tokens and performance of every AI feature over the range (default 30, max 90). */
+  aiFeaturesDashboard: AiFeaturesDashboard;
+  /** Prompt counts, drift from the code defaults, and the usage of the features each prompt serves. */
+  aiLibraryDashboard: AiLibraryDashboard;
   /** Chip/dialog copy for any upload surface. Public — it is copy, and an upload field must never wait on a session to render its own safety notice. */
   aiMonitoringConfig: AiMonitoringConfig;
   /** AI Portal: full monitoring history (server-side table). */
@@ -33969,6 +34097,16 @@ export type QueryAiFeatureArgs = {
 
 
 export type QueryAiFeaturesArgs = {
+  range_days?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryAiFeaturesDashboardArgs = {
+  range_days?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryAiLibraryDashboardArgs = {
   range_days?: InputMaybe<Scalars['Int']['input']>;
 };
 

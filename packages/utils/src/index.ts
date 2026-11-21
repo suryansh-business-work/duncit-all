@@ -2163,6 +2163,18 @@ export {
   type HostAgainNoticeCode,
 } from './host-again';
 export {
+  PICK_VENUE_PARAM,
+  isPickedVenue,
+  pickedVenueSeed,
+  venueHostTermLines,
+  venueHostTermsById,
+  type PickedVenue,
+  type PickedVenueCity,
+  type PickedVenueSeed,
+  type VenueHostTermLine,
+  type VenueHostTerms,
+} from './venue-host-terms';
+export {
   CREATE_GIG_JOB_MUTATION,
   EXPRESS_GIG_INTEREST_MUTATION,
   FREELANCER_PROFILE_PATH,

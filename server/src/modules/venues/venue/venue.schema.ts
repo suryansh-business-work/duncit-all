@@ -299,6 +299,24 @@ export const venueTypeDefs = /* GraphQL */ `
     amount: Float!
   }
 
+  "A venue's Fees & Minimum Spend as a host weighs it before picking the venue for a pod (rupees)."
+  type VenueHostTerms {
+    venue_id: ID!
+    "The fewest guests an offer is paid for: the venue's own setting, else the platform default."
+    min_guests: Int!
+    "The least the venue takes on each pricing basis."
+    min_business: [VenueMinBusiness!]!
+    "The least one booking's offer must come to (0 = none)."
+    min_spend: Float!
+    cleaning_fee: Float!
+    "Charged only when the booking brings pets."
+    pet_fee: Float!
+    "Refundable, settled at the venue — never part of the price."
+    deposit: Float!
+    "GST is added to the venue's price."
+    gst_enabled: Boolean!
+  }
+
   input VenueMinBusinessInput {
     model: VenueOfferModel!
     amount: Float!
@@ -694,6 +712,8 @@ export const venueTypeDefs = /* GraphQL */ `
     publicVenues(location_id: ID, search: String, super_category_id: ID, category_id: ID, sub_category_id: ID): [Venue!]!
     "Public single-venue detail (APPROVED + active only)."
     publicVenue(venue_id: ID!): Venue
+    "Fees & Minimum Spend of the given APPROVED, active venues, in the order asked (at most 200 ids). Active hosts only — empty for anyone else."
+    venueHostTerms(venue_ids: [ID!]!): [VenueHostTerms!]!
     "APPROVED, active venues that auto-match a club by location (+ locality) + Super/Sub category on ANY of the venue's categories (admin Club form). Empty when no location is given."
     matchingVenues(location_id: ID!, locality: String, super_category_id: ID, category_id: ID): [Venue!]!
     venueRegistrationConfig: VenueRegistrationConfig!

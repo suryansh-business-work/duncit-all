@@ -257,6 +257,7 @@ describe('startPortalCall', () => {
       ok: false,
       message: expect.stringContaining('agent number (+9112) is not valid'),
       log: null,
+      code: 'INVALID_AGENT_NUMBER',
     });
     expect(logs.create).not.toHaveBeenCalled();
     expect(globalThis.fetch).not.toHaveBeenCalled();
@@ -278,7 +279,7 @@ describe('startPortalCall', () => {
 
     const result = await callService.startPortalCall(startInput() as never);
 
-    expect(result).toEqual({ ok: false, message: 'Account suspended', log: null });
+    expect(result).toEqual({ ok: false, message: 'Account suspended', log: null, code: 'TWILIO_REJECTED' });
     expect(logs.update).toHaveBeenCalledWith('log-1', { status: 'FAILED', error_message: 'Account suspended' });
   });
 
@@ -300,12 +301,110 @@ describe('startPortalCall', () => {
 
     const result = await callService.startPortalCall(startInput() as never);
 
-    expect(result).toEqual({ ok: false, message: 'socket hang up', log: null });
+    expect(result).toEqual({ ok: false, message: 'socket hang up', log: null, code: 'TWILIO_REJECTED' });
     expect(logs.update).toHaveBeenCalledWith('log-1', { status: 'FAILED', error_message: 'socket hang up' });
   });
 });
 
+describe('failures that carry no message', () => {
+  it('marks the dial FAILED with a generic reason when the error says nothing', async () => {
+    configured({ TWILIO_AGENT_PHONE_NUMBER: '+15550002222' });
+    globalThis.fetch = jest.fn(async () => {
+      throw new Error('');
+    }) as typeof globalThis.fetch;
+
+    const result = await callService.startPortalCall(startInput() as never);
+
+    expect(result).toEqual({ ok: false, message: 'Twilio call request failed', log: null, code: 'TWILIO_REJECTED' });
+    expect(logs.update).toHaveBeenCalledWith('log-1', { status: 'FAILED', error_message: 'Call failed' });
+  });
+
+  it('reports a reconcile that failed without a reason, without guessing a status', async () => {
+    logs.get.mockResolvedValue({ id: 'log-1', type: 'CALL', status: 'RINGING', external_id: 'CA1', created_by: 'u-1' });
+    globalThis.fetch = jest.fn(async () => {
+      throw new Error('');
+    }) as typeof globalThis.fetch;
+
+    await expect(callService.reconcile('log-1')).resolves.toEqual({ ok: false, message: 'Reconcile failed', status: 'RINGING' });
+  });
+});
+
+describe('portal call refusals carry a code the portal can act on', () => {
+  it('names a missing Twilio setup TWILIO_NOT_CONFIGURED, so the portal can link to the Tech portal', async () => {
+    configured({ TWILIO_ACCOUNT_SID: '' });
+
+    const result = await callService.startPortalCall(startInput() as never);
+
+    expect(result).toEqual(expect.objectContaining({ ok: false, code: 'TWILIO_NOT_CONFIGURED', log: null }));
+    expect(globalThis.fetch).not.toHaveBeenCalled();
+  });
+
+  it('names a missing agent phone NO_AGENT_NUMBER', async () => {
+    const result = await callService.startPortalCall(startInput() as never);
+
+    expect(result).toEqual(expect.objectContaining({ ok: false, code: 'NO_AGENT_NUMBER' }));
+  });
+
+  it('names a bad lead number INVALID_CONTACT_NUMBER, on the AI call too', async () => {
+    const result = await callService.startAiCall(startInput({ to: '12' }) as never);
+
+    expect(result).toEqual(expect.objectContaining({ ok: false, code: 'INVALID_CONTACT_NUMBER' }));
+  });
+
+  it('names a missing AI prompt PROMPT_MISSING', async () => {
+    prompts.resolveContext.mockResolvedValue(null);
+
+    const result = await callService.startAiCall(startInput() as never);
+
+    expect(result).toEqual(expect.objectContaining({ ok: false, code: 'PROMPT_MISSING' }));
+  });
+
+  it('records the conference bridge and both numbers on the log, so mute and hold can find the legs', async () => {
+    configured({ TWILIO_AGENT_PHONE_NUMBER: '+15550002222' });
+
+    const result = await callService.startPortalCall(startInput() as never);
+
+    expect(result).toEqual(expect.objectContaining({ ok: true, code: null }));
+    expect(logs.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        metadata: expect.objectContaining({
+          bridge: 'CONFERENCE',
+          from_number: '+15550001111',
+          agent_number: '+15550002222',
+        }),
+      })
+    );
+  });
+});
+
 describe('applyStatus', () => {
+  it('starts the call clock the first time the lead picks up', async () => {
+    logs.getMetadata.mockResolvedValue({ mode: 'PORTAL' });
+
+    await callService.applyStatus({ log_id: 'log-1', user_id: 'u-1', twilio_status: 'in-progress' });
+
+    expect(logs.update).toHaveBeenCalledWith(
+      'log-1',
+      expect.objectContaining({ status: 'IN_PROGRESS', metadata: { answered_at: expect.any(String) } })
+    );
+  });
+
+  it('starts no clock for a log whose metadata is gone', async () => {
+    logs.getMetadata.mockResolvedValue(null);
+
+    await callService.applyStatus({ log_id: 'log-1', user_id: 'u-1', twilio_status: 'in-progress' });
+
+    expect(logs.update).toHaveBeenCalledWith('log-1', { status: 'IN_PROGRESS' });
+  });
+
+  it('leaves the call clock alone on a repeated in-progress poll', async () => {
+    logs.getMetadata.mockResolvedValue({ answered_at: '2026-11-22T10:00:00.000Z' });
+
+    await callService.applyStatus({ log_id: 'log-1', user_id: 'u-1', twilio_status: 'in-progress' });
+
+    expect(logs.update).toHaveBeenCalledWith('log-1', { status: 'IN_PROGRESS' });
+  });
+
   it('maps the Twilio word to our status and pushes it to the agent live', async () => {
     const result = await callService.applyStatus({
       log_id: 'log-1',

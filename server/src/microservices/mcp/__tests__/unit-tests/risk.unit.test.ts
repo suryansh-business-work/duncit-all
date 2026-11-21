@@ -38,6 +38,11 @@ describe('needsConfirmation', () => {
     expect(needsConfirmation('MUTATION', 'creditCoins')).toBe(true);
   });
 
+  it('requires confirmation before muting, holding or hanging up a live CRM call', () => {
+    expect(needsConfirmation('MUTATION', 'controlCrmCall')).toBe(true);
+    expect(reachesOutside('MUTATION', 'controlCrmCall')).toBe(true);
+  });
+
   it('does not ask for confirmation on an ordinary create or edit', () => {
     expect(needsConfirmation('MUTATION', 'createPod')).toBe(false);
     expect(needsConfirmation('MUTATION', 'sendCampaign')).toBe(false);

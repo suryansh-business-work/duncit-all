@@ -83,13 +83,12 @@ describe('QuickViewDialog', () => {
   it('shows the prompt and its size, counts the view once, copies, and opens the details', async () => {
     const onOpenDetails = vi.fn();
     const onClose = vi.fn();
-    const { rerender } = renderInPortal(<QuickViewDialog prompt={ROW} onClose={onClose} onOpenDetails={onOpenDetails} />, eventMocks(ROW.id));
+    renderInPortal(<QuickViewDialog prompt={ROW} onClose={onClose} onOpenDetails={onOpenDetails} />, eventMocks(ROW.id));
 
     expect(screen.getByRole('dialog', { name: ROW.name })).toBeDefined();
     expect(screen.getByLabelText('Full prompt').textContent).toBe(ROW.content);
     expect(screen.getByText('≈ 42 tokens')).toBeDefined();
 
-    rerender(<QuickViewDialog prompt={ROW} onClose={onClose} onOpenDetails={onOpenDetails} />);
     fireEvent.click(screen.getByRole('button', { name: 'Copy prompt' }));
     await waitFor(() => expect(writeText).toHaveBeenCalledWith(ROW.content));
     // A refused clipboard is said out loud and counts nothing.
@@ -102,6 +101,15 @@ describe('QuickViewDialog', () => {
     expect(onOpenDetails).toHaveBeenCalledWith(ROW);
     fireEvent.click(screen.getByRole('button', { name: 'Close' }));
     expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('logs a count the server refused, and never shows it to the operator', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    renderInPortal(<QuickViewDialog prompt={ROW} onClose={vi.fn()} onOpenDetails={vi.fn()} />);
+
+    await waitFor(() => expect(warn).toHaveBeenCalledWith('[ai-prompts] could not record a prompt event', expect.anything()));
+    expect(screen.getByRole('dialog', { name: ROW.name })).toBeDefined();
+    warn.mockRestore();
   });
 
   it('renders nothing when no prompt is chosen', () => {

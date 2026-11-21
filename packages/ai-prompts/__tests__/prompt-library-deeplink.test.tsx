@@ -132,7 +132,8 @@ describe('PromptLibraryView opened from a row', () => {
   it('asks the page to put the clicked prompt in the URL, and Public share lands on the Share tab', async () => {
     const onPromptOpen = vi.fn();
     renderInPortal(<PromptLibraryView apiOrigin={API_ORIGIN} onPromptOpen={onPromptOpen} />, [listMock([POD])]);
-    fireEvent.click(await screen.findByText('Pod content safety review'));
+    await screen.findByText('Pod content safety review');
+    await rowAction('Pod content safety review', 'Open details');
     expect(onPromptOpen).toHaveBeenLastCalledWith('moderation.pod', undefined);
 
     await rowAction('Pod content safety review', 'Public share');

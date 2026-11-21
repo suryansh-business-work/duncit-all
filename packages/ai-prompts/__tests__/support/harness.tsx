@@ -56,13 +56,14 @@ export const renderInPortal = (ui: ReactElement, mocks: readonly MockedResponse[
 
 /** Opens a row's menu ("Actions for <name>") and picks one item from it, as an operator would. */
 export const rowAction = async (rowName: string, item: string) => {
-  fireEvent.click(screen.getByRole('button', { name: `Actions for ${rowName}` }));
+  // findByRole: a dialog that just closed keeps the page aria-hidden until its exit transition ends.
+  fireEvent.click(await screen.findByRole('button', { name: `Actions for ${rowName}` }));
   fireEvent.click(await screen.findByRole('menuitem', { name: item }));
 };
 
 /** The items a row's menu offers, by label. Closes the menu again. */
 export const rowMenuItems = async (rowName: string): Promise<string[]> => {
-  fireEvent.click(screen.getByRole('button', { name: `Actions for ${rowName}` }));
+  fireEvent.click(await screen.findByRole('button', { name: `Actions for ${rowName}` }));
   const items = await screen.findAllByRole('menuitem');
   const labels = items.map((item) => item.textContent ?? '');
   fireEvent.keyDown(screen.getByRole('menu'), { key: 'Escape' });

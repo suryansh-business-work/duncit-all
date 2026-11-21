@@ -55,12 +55,13 @@ describe('History', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Version 1' }));
     // Second thoughts first: Cancel runs nothing.
-    fireEvent.click(screen.getByRole('button', { name: 'Restore this version' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Restore this version' }));
     fireEvent.click(within(confirmDialog()).getByRole('button', { name: 'Cancel' }));
     await settle();
     expect(handlers.onChanged).not.toHaveBeenCalled();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Restore this version' }));
+    // The confirm's exit keeps the dialog behind it aria-hidden for a moment.
+    fireEvent.click(await screen.findByRole('button', { name: 'Restore this version' }));
     expect(within(confirmDialog()).getByText(/Copy version 1 back into the prompt/)).toBeDefined();
     fireEvent.click(within(confirmDialog()).getByRole('button', { name: 'Restore this version' }));
 
@@ -74,7 +75,7 @@ describe('History', () => {
     };
     const handlers = await open([detailMock(detailOf(ROW)), refused], 'History');
     fireEvent.click(screen.getByRole('button', { name: 'Version 1' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Restore this version' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Restore this version' }));
     fireEvent.click(within(confirmDialog()).getByRole('button', { name: 'Restore this version' }));
 
     expect(await screen.findByText(/needs \{\{navigation_map\}\}/)).toBeDefined();
@@ -160,10 +161,17 @@ describe('Share', () => {
     fireEvent.click(within(confirmDialog()).getByRole('button', { name: 'Cancel' }));
     await settle();
 
-    fireEvent.click(screen.getByRole('button', { name: 'New link' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'New link' }));
     expect(within(confirmDialog()).getByText(/stops working straight away/)).toBeDefined();
     fireEvent.click(within(confirmDialog()).getByRole('button', { name: 'New link' }));
     await settle();
+
+    // The hand-off from here is counted against the prompt, with its platform.
+    const openWindow = vi.fn();
+    vi.stubGlobal('open', openWindow);
+    fireEvent.click(await screen.findByRole('button', { name: 'Open in Claude' }));
+    await waitFor(() => expect(openWindow).toHaveBeenCalledTimes(1));
+    vi.unstubAllGlobals();
   });
 
   it('turns the link on from the switch', async () => {
@@ -175,7 +183,7 @@ describe('Share', () => {
     await open([detailMock(detailOf(ROW, { share: { ...SHARED, enabled: false } })), enable], 'Share');
     expect(screen.getByText('The public link is off.')).toBeDefined();
     expect(screen.queryByText(new RegExp(TOKEN))).toBeNull();
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Turn on the public link' }));
+    fireEvent.click(screen.getByRole('switch', { name: 'Turn on the public link' }));
     await settle();
     const errors = screen.queryAllByRole('alert').filter((alert) => alert.classList.contains('MuiAlert-colorError'));
     expect(errors).toEqual([]);
@@ -188,7 +196,7 @@ describe('Share', () => {
     };
     await open([detailMock(detailOf(ROW, { share: { ...SHARED, shared_by_name: null } })), disable], 'Share');
     expect(screen.getByText(/^Shared on /)).toBeDefined();
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Public link is on' }));
+    fireEvent.click(screen.getByRole('switch', { name: 'Public link is on' }));
     expect(await screen.findByText(/before sharing it/)).toBeDefined();
   });
 
@@ -196,7 +204,7 @@ describe('Share', () => {
     await open([detailMock(detailOf({ ...ROW, key: null }, { archived_at: '2026-11-20T00:00:00.000Z' }))], 'Share');
     expect(screen.getByText(/^Archived on /)).toBeDefined();
 
-    expect((screen.getByRole('checkbox', { name: 'Turn on the public link' }) as HTMLInputElement).disabled).toBe(true);
+    expect((screen.getByRole('switch', { name: 'Turn on the public link' }) as HTMLInputElement).disabled).toBe(true);
     expect(screen.queryByRole('button', { name: 'Copy library link' })).toBeNull();
   });
 });

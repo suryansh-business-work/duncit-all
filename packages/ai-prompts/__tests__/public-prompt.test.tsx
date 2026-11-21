@@ -99,6 +99,11 @@ describe('PublicPromptView', () => {
 
     await screen.findByRole('heading', { level: 1, name: 'Weekend planner' });
     expect(screen.queryByText('Fill in the blanks')).toBeNull();
+    // Enter in the form never reloads the page.
+    const form = document.querySelector('form') as HTMLFormElement;
+    const submit = new Event('submit', { bubbles: true, cancelable: true });
+    form.dispatchEvent(submit);
+    expect(submit.defaultPrevented).toBe(true);
     await waitFor(() => expect((screen.getByRole('button', { name: 'Copy prompt' }) as HTMLButtonElement).disabled).toBe(false));
     // The visit could not be recorded: logged, never shown to the visitor.
     await waitFor(() => expect(warn).toHaveBeenCalledWith(expect.stringContaining('could not record'), 'PUBLIC_VIEW'));

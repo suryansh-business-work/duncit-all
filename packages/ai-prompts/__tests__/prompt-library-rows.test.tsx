@@ -217,13 +217,18 @@ describe('PromptLibraryView with rows', () => {
     renderInPortal(<PromptLibraryView apiOrigin={API_ORIGIN} />, [listMock('AI', [aiRow]), archive, archivedList, unarchive]);
     await screen.findByText('Weekly digest writer');
 
+    // Second thoughts first: Cancel archives nothing.
+    await rowAction('Weekly digest writer', 'Archive');
+    fireEvent.click(await screen.findByRole('button', { name: 'Cancel' }));
+    await waitFor(() => expect(screen.queryByText(/Archive "Weekly digest writer"\?/)).toBeNull());
+
     await rowAction('Weekly digest writer', 'Archive');
     expect(await screen.findByText(/Archive "Weekly digest writer"\?/)).toBeDefined();
     fireEvent.click(screen.getByRole('button', { name: 'Archive' }));
     await settle();
     await waitFor(() => expect(screen.queryByText(/Archive "Weekly digest writer"\?/)).toBeNull());
 
-    fireEvent.click(screen.getByRole('tab', { name: 'Archived' }));
+    fireEvent.click(await screen.findByRole('tab', { name: 'Archived' }));
     await screen.findByText('Weekly digest writer');
     expect(screen.queryByText(/Public GET API/)).toBeNull();
     expect(await rowMenuItems('Weekly digest writer')).toEqual([
@@ -257,6 +262,11 @@ describe('PromptLibraryView with rows', () => {
     writeText.mockRejectedValueOnce(new Error('blocked'));
     await rowAction('Navigation Knowledge Bot', 'Copy library link');
     await settle();
+
+    await rowAction('Navigation Knowledge Bot', 'Quick view');
+    expect(await screen.findByRole('dialog', { name: 'Navigation Knowledge Bot' })).toBeDefined();
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Navigation Knowledge Bot' })).toBeNull());
 
     await rowAction('Navigation Knowledge Bot', 'Quick view');
     expect(await screen.findByRole('dialog', { name: 'Navigation Knowledge Bot' })).toBeDefined();

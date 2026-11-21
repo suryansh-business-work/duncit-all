@@ -36,12 +36,15 @@ const MIN_POD_DURATION_MS = MIN_POD_DURATION_MINUTES * 60_000;
  * `smartIncentiveMaxPct` is Loyalty > Smart Incentive's `max_discount_pct`, or
  * null while the programme is not known to be on (its editor is hidden then).
  * `offerFloor` is the picked venue's business amount on the offer's basis: an
- * offer below it cannot leave the offer step. */
+ * offer below it cannot leave the offer step. `minAdvance` is the host's
+ * Minimum Advance Days (null until known): a start before its first day is
+ * refused, as the server refuses it. */
 export function makeCreatePodSchema(
   t: Translate = fallbackT,
   ticketDiscountMaxPct = DEFAULT_TICKET_DISCOUNT_MAX_PCT,
   smartIncentiveMaxPct: number | null = DEFAULT_SMART_INCENTIVE_MAX_PCT,
   offerFloor: OfferFloorOf = () => null,
+  minAdvance: { days: number; startMs: number } | null = null,
 ) {
   return z
     .object({
@@ -135,6 +138,9 @@ export function makeCreatePodSchema(
       refineFreeJustification(values, ctx, t);
       if (values.pod_date_time.getTime() <= Date.now()) {
         ctx.addIssue({ code: 'custom', path: ['pod_date_time'], message: t('mweb.createPod.validation.startFuture') });
+      } else if (minAdvance && values.pod_date_time.getTime() < minAdvance.startMs) {
+        const message = t('mweb.createPod.validation.startTooSoon', { count: minAdvance.days });
+        ctx.addIssue({ code: 'custom', path: ['pod_date_time'], message });
       }
       // A virtual pod's window is what marks a joining member present, so it
       // needs an end — the server refuses one without. Native twin.

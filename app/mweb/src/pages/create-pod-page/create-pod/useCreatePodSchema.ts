@@ -5,6 +5,7 @@ import { useTicketDiscountMaxPct } from '../../../utils/dateFormat';
 import { useSmartIncentiveSettings } from '../../../utils/smartIncentive';
 import type { Translate } from '../../../i18n/fallback';
 import { makeCreatePodSchema } from './create-pod.form';
+import { usePodMinAdvance } from './usePodMinAdvance';
 import type { CreatePodVenue } from './create-pod.types';
 
 /**
@@ -24,16 +25,22 @@ export function useCreatePodSchema(t: Translate, venues: readonly CreatePodVenue
   const smartIncentive = useSmartIncentiveSettings();
   const { currency } = usePricing();
   const smartIncentiveMaxPct = smartIncentive.enabled ? smartIncentive.maxPct : null;
+  const minAdvance = usePodMinAdvance();
   return useMemo(
     () =>
-      makeCreatePodSchema(t, ticketDiscountMaxPct, smartIncentiveMaxPct, (values) =>
-        venueOfferFloor(
-          venues.find((venue) => venue.id === values.venue_id)?.offer_min_business,
-          values.venue_offer_model,
-          t,
-          (value) => formatStatementMoney(value, currency),
-        ),
+      makeCreatePodSchema(
+        t,
+        ticketDiscountMaxPct,
+        smartIncentiveMaxPct,
+        (values) =>
+          venueOfferFloor(
+            venues.find((venue) => venue.id === values.venue_id)?.offer_min_business,
+            values.venue_offer_model,
+            t,
+            (value) => formatStatementMoney(value, currency),
+          ),
+        minAdvance,
       ),
-    [t, ticketDiscountMaxPct, smartIncentiveMaxPct, venues, currency],
+    [t, ticketDiscountMaxPct, smartIncentiveMaxPct, venues, currency, minAdvance],
   );
 }

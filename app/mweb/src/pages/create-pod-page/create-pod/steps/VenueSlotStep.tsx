@@ -10,6 +10,8 @@ import VenueOfferPicker from './VenueOfferPicker';
 import RequestSlotPicker from './RequestSlotPicker';
 import { venueSpaces, type VenueSpace } from './venueSpaces';
 import VirtualMeetingFields from '../VirtualMeetingFields';
+import MinAdvanceNote from '../MinAdvanceNote';
+import { usePodMinAdvance } from '../usePodMinAdvance';
 import { requiredLabel } from '../../../../forms/components/requiredLabel';
 import { useTranslation } from '../../../../i18n/useTranslation';
 import { SURFACE_SX } from '../../../../theme';
@@ -45,6 +47,7 @@ export default function VenueSlotStep({ form, venues, clubVenueIds, venueNotice,
     formState: { errors },
   } = form;
   const { t } = useTranslation();
+  const minAdvance = usePodMinAdvance();
   const mode = watch('pod_mode');
   const locationId = watch('location_id');
   const venueId = watch('venue_id');
@@ -127,6 +130,7 @@ export default function VenueSlotStep({ form, venues, clubVenueIds, venueNotice,
           />
         </Stack>
       )}
+      {selectedVenue && selectedSpace && <MinAdvanceNote minAdvance={minAdvance} />}
       {selectedVenue && selectedSpace && !fromRequest && (
         <VenueOfferPicker form={form} venueId={selectedVenue.id} spaceLabel={selectedSpace.label} spots={spots} minGuests={offerMinGuests} />
       )}

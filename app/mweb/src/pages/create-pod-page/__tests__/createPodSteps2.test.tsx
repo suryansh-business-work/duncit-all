@@ -11,6 +11,9 @@ import { useOfferCalendar } from '../create-pod/steps/useOfferCalendar';
 import { blankCreatePodForm, type CreatePodFormValues } from '../create-pod/create-pod.types';
 import { fallbackT } from '../../../i18n/fallback';
 
+// The Minimum Advance Days rule has its own suite (createPodMinAdvance); here it is unknown.
+vi.mock('../create-pod/usePodMinAdvance', () => ({ usePodMinAdvance: () => null }));
+
 const h = vi.hoisted(() => ({
   calendar: { data: undefined as unknown, loading: false, error: undefined as unknown },
   calendarOpts: undefined as undefined | { skip: boolean; variables: Record<string, unknown> },

@@ -9,6 +9,8 @@ import { useTranslation } from '../../../i18n/useTranslation';
 import { SURFACE_SX } from '../../../theme';
 import { MIN_POD_DURATION_MINUTES } from './create-pod.form';
 import type { CreatePodForm } from './create-pod.types';
+import MinAdvanceNote from './MinAdvanceNote';
+import { usePodMinAdvance } from './usePodMinAdvance';
 import { testIdProps } from '../../../utils/testIdProps';
 
 /** Virtual-pod branch of Step 3: meeting platform/link/notes + start/end pickers.
@@ -21,6 +23,9 @@ export default function VirtualMeetingFields({ form }: Readonly<{ form: CreatePo
     formState: { errors },
   } = form;
   const { t } = useTranslation();
+  const minAdvance = usePodMinAdvance();
+  // Every day before the host's first allowed one is disabled in the picker.
+  const minStartDateTime = minAdvance ? new Date(Math.max(Date.now(), minAdvance.startMs)) : new Date();
   const startDateTime = watch('pod_date_time');
   const duration = formatDurationBetween(startDateTime, watch('pod_end_date_time'));
   // The end picker only opens times after the start — the first 30 minutes are
@@ -79,6 +84,7 @@ export default function VirtualMeetingFields({ form }: Readonly<{ form: CreatePo
         />
       </Stack>
       <Stack spacing={2} sx={{ ...SURFACE_SX, p: 2 }}>
+        <MinAdvanceNote minAdvance={minAdvance} />
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
           <Controller
             control={control}
@@ -88,7 +94,7 @@ export default function VirtualMeetingFields({ form }: Readonly<{ form: CreatePo
                 label={requiredLabel(t('mweb.createPod.startDateTime'), true)}
                 value={field.value}
                 onChange={field.onChange}
-                minDateTime={new Date()}
+                minDateTime={minStartDateTime}
                 slotProps={{
                   textField: {
                     fullWidth: true,

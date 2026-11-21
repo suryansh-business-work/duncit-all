@@ -131,7 +131,7 @@ export function buildAiPromptFeedRouter(): Router {
       }
       sendJson(res, 200, feedShape(prompt, varsParam(req)));
       // Counted after the answer is on its way; recording never throws.
-      void recordPromptEvent({
+      await recordPromptEvent({
         promptId: prompt.id,
         type: 'FEED_HIT',
         surface: 'FEED',

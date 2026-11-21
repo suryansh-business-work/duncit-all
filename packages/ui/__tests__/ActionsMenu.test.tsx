@@ -28,7 +28,10 @@ describe('ActionsMenu', () => {
 
     const menu = screen.getByRole('menu');
     expect(button).toHaveAttribute('aria-expanded', 'true');
-    expect(button).toHaveAttribute('aria-controls', menu.id);
+    // MUI puts the id on the menu's popover; aria-controls must name the element holding the menu.
+    const controlled = document.getElementById(button.getAttribute('aria-controls') ?? '');
+    expect(controlled).not.toBeNull();
+    expect(controlled).toContainElement(menu);
     expect(screen.getAllByRole('menuitem').map((m) => m.textContent)).toEqual(['Edit', 'Delete']);
 
     await userEvent.click(screen.getByRole('menuitem', { name: 'Edit' }));

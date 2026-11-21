@@ -1,5 +1,16 @@
 import { gql } from '@apollo/client';
 
+/** One AI Library code prompt a feature runs on (from the server's prompt catalogue). */
+export interface AiFeaturePrompt {
+  key: string;
+  name: string;
+  role: 'SYSTEM' | 'USER';
+  /** False until the server has added it to the library (it does so on boot). */
+  in_library: boolean;
+  /** False when the library's live text differs from the code default. */
+  matches_default: boolean;
+}
+
 /** One AI feature with its switch and its usage over the selected range. */
 export interface AiFeature {
   key: string;
@@ -21,6 +32,9 @@ export interface AiFeature {
   avg_duration_ms: number;
   unpriced_calls: number;
   last_called_at: string | null;
+  prompts: AiFeaturePrompt[];
+  /** Why the feature runs on no code prompt, when it has none. */
+  prompts_note: string | null;
 }
 
 const AI_FEATURE_FIELDS = gql`
@@ -44,6 +58,14 @@ const AI_FEATURE_FIELDS = gql`
     avg_duration_ms
     unpriced_calls
     last_called_at
+    prompts {
+      key
+      name
+      role
+      in_library
+      matches_default
+    }
+    prompts_note
   }
 `;
 

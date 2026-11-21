@@ -24,7 +24,7 @@ describe('Duncit AI app config', () => {
     expect(appConfig.loginImage).toContain('pexels.com');
   });
 
-  it('lists four destinations and three groups, in that order', () => {
+  it('lists two destinations and five groups, in that order', () => {
     expect(appConfig.nav.map((n) => n.label)).toEqual([
       'Welcome',
       'AI Library',
@@ -42,9 +42,13 @@ describe('Duncit AI app config', () => {
     const leaves = appConfig.nav.filter((n) => !n.children);
     const groups = appConfig.nav.filter((n) => n.children);
 
-    expect(leaves.map((n) => n.to)).toEqual(['/', '/library', '/ai-features', '/reels']);
+    expect(leaves.map((n) => n.to)).toEqual(['/', '/reels']);
     expect(groups.every((n) => n.to === undefined)).toBe(true);
     expect(groups.flatMap((n) => n.children!.map((c) => c.to))).toEqual([
+      '/library/dashboard',
+      '/library',
+      '/ai-features/dashboard',
+      '/ai-features',
       '/openai',
       '/openai/logs',
       '/monitoring',
@@ -54,10 +58,18 @@ describe('Duncit AI app config', () => {
     ]);
   });
 
-  it('puts AI Features right after the library, as a top-level destination', () => {
-    const entry = appConfig.nav.find((n) => n.to === '/ai-features');
-    expect(entry).toMatchObject({ label: 'AI Features', labelKey: 'shell.nav.aiFeatures', icon: 'tune' });
-    expect(entry && 'children' in entry).toBe(false);
+  it('gives AI Library and AI Features each a Dashboard and their own list, right after Welcome', () => {
+    const [, library, features] = appConfig.nav;
+    expect(library).toMatchObject({ label: 'AI Library', labelKey: 'shell.nav.aiLibrary', icon: 'library' });
+    expect(library.children?.map((c) => [c.labelKey, c.to])).toEqual([
+      ['shell.nav.dashboard', '/library/dashboard'],
+      ['shell.nav.library', '/library'],
+    ]);
+    expect(features).toMatchObject({ label: 'AI Features', labelKey: 'shell.nav.aiFeatures', icon: 'tune' });
+    expect(features.children?.map((c) => [c.labelKey, c.to])).toEqual([
+      ['shell.nav.dashboard', '/ai-features/dashboard'],
+      ['shell.nav.features', '/ai-features'],
+    ]);
   });
 
   it('names a localization key beside every label', () => {

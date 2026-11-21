@@ -94,9 +94,34 @@ import { apiOriginFromGraphqlUrl } from '@duncit/ai-prompts';
 <PromptLibraryView apiOrigin={apiOriginFromGraphqlUrl(urlConfigs.graphqlUrl)} />;
 ```
 
-`apiOrigin` is the only thing a surface supplies: the feed is served by the same process as
+`apiOrigin` is the only thing a surface must supply: the feed is served by the same process as
 GraphQL, so it is derived from the endpoint the portal already talks to rather than a second env
 var to get wrong between environments.
+
+### Opening one prompt from a link
+
+Two optional props let another page link straight to a prompt. The AI portal's AI Features
+table links each feature's code prompts as `/library?prompt=<key>`:
+
+```tsx
+const [params, setParams] = useSearchParams();
+
+<PromptLibraryView
+  apiOrigin={apiOrigin}
+  openPromptKey={params.get('prompt')}
+  onPromptClose={() => setParams((p) => { p.delete('prompt'); return p; }, { replace: true })}
+/>;
+```
+
+The key is looked up across both kinds (`useOpenPromptByKey`), and only an exact key match opens.
+An unknown key shows an error rather than opening a neighbour the search also found.
+
+### Edited code prompts
+
+`AiPrompt.matches_default` is `false` when a code prompt's live body differs from its catalogue
+default. That happens when someone edited it here, or when the default changed after the row was
+seeded (the boot seed never writes over an existing body). The table marks those rows **Edited**,
+and **Reset** brings them back to the default. It is `null` for AI prompts, which have no default.
 
 ## The public GET feed
 

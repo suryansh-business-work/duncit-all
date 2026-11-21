@@ -724,6 +724,8 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       aiCallPrompts: 'AI Call Prompts',
       aiFeatures: 'AI Features',
       aiLibrary: 'AI Library',
+      features: 'Features',
+      library: 'Library',
       aiMonitoring: 'AI Monitoring',
       aiMonitoringLogs: 'AI Monitoring Logs',
       aiUsage: 'AI Usage',

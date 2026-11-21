@@ -66,6 +66,8 @@ const ROUTES = [
   '/login',
   '/',
   '/library',
+  '/library/dashboard',
+  '/ai-features/dashboard',
   '/openai',
   '/openai/logs',
   '/monitoring',

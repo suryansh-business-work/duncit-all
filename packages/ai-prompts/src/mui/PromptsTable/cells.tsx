@@ -22,6 +22,11 @@ export const renderName = (p: AiPrompt, copy: PromptCopy) => (
         color={p.role === 'USER' ? 'info' : 'secondary'}
         label={copy.roles[p.role]}
       />
+      {p.matches_default === false && (
+        <Tooltip title={copy.editedHint} describeChild>
+          <Chip size="small" color="warning" variant="outlined" label={copy.edited} />
+        </Tooltip>
+      )}
     </Stack>
     {p.description && (
       <Typography variant="caption" component="div" sx={{

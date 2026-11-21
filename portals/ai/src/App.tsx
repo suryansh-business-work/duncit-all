@@ -7,6 +7,8 @@ import OpenAiDashboardPage from './pages/openai-dashboard';
 import OpenAiLogsPage from './pages/openai-logs';
 import AiFeaturesPage from './pages/ai-features';
 import AiFeatureDetailPage from './pages/ai-features/detail';
+import AiFeaturesDashboardPage from './pages/ai-features-dashboard';
+import AiLibraryDashboardPage from './pages/library-dashboard';
 import AiMonitoringLogsPage from './pages/ai-monitoring/logs';
 import AiMonitoringSettingsPage from './pages/ai-monitoring/settings';
 import AutomationFlowsPage from './pages/automation/flows-list';
@@ -24,7 +26,10 @@ export default function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/" element={authed(<WelcomePage />)} />
       <Route path="/library" element={authed(<PromptLibraryPage />)} />
+      <Route path="/library/dashboard" element={authed(<AiLibraryDashboardPage />)} />
       <Route path="/ai-features" element={authed(<AiFeaturesPage />)} />
+      {/* Before /:key; a static segment outranks a param in react-router anyway. */}
+      <Route path="/ai-features/dashboard" element={authed(<AiFeaturesDashboardPage />)} />
       <Route path="/ai-features/:key" element={authed(<AiFeatureDetailPage />)} />
       <Route path="/openai" element={authed(<OpenAiDashboardPage />)} />
       <Route path="/openai/logs" element={authed(<OpenAiLogsPage />)} />

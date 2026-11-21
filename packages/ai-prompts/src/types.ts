@@ -60,4 +60,6 @@ export interface AiPrompt {
   is_active: boolean;
   created_at?: string | null;
   updated_at?: string | null;
+  /** Code prompts: false when the live body differs from the code default. Null for AI prompts. */
+  matches_default?: boolean | null;
 }

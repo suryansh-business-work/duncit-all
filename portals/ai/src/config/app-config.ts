@@ -25,8 +25,22 @@ export const appConfig = {
   accent: { light: '#d8b4fe', main: '#9333ea', hover: '#7e22ce', active: '#6b21a8' },
   nav: [
     { label: 'Welcome', labelKey: 'shell.nav.welcome', to: '/', icon: 'dashboard' },
-    { label: 'AI Library', labelKey: 'shell.nav.aiLibrary', to: '/library', icon: 'library' },
-    { label: 'AI Features', labelKey: 'shell.nav.aiFeatures', to: '/ai-features', icon: 'tune' },
+    {
+      label: 'AI Library', labelKey: 'shell.nav.aiLibrary',
+      icon: 'library',
+      children: [
+        { label: 'Dashboard', labelKey: 'shell.nav.dashboard', to: '/library/dashboard', icon: 'analytics' },
+        { label: 'Library', labelKey: 'shell.nav.library', to: '/library', icon: 'library' },
+      ],
+    },
+    {
+      label: 'AI Features', labelKey: 'shell.nav.aiFeatures',
+      icon: 'tune',
+      children: [
+        { label: 'Dashboard', labelKey: 'shell.nav.dashboard', to: '/ai-features/dashboard', icon: 'analytics' },
+        { label: 'Features', labelKey: 'shell.nav.features', to: '/ai-features', icon: 'tune' },
+      ],
+    },
     {
       label: 'OpenAI', labelKey: 'shell.nav.openai',
       icon: 'ai',

@@ -15,10 +15,15 @@ import { PromptsTable } from '../PromptsTable';
 import { PromptDialog } from '../PromptDialog';
 import { FeedUrlBar } from '../FeedUrlBar';
 import { LibraryHeader } from './LibraryHeader';
+import { useOpenPromptByKey } from './useOpenPromptByKey';
 
 export interface PromptLibraryViewProps {
   /** Origin of the API that serves the public feed, e.g. https://server.duncit.com. */
   apiOrigin: string;
+  /** Key of a prompt to open on arrival: a link from elsewhere, `?prompt=<key>`. */
+  openPromptKey?: string | null;
+  /** Called when that prompt's dialog closes, so the page can drop the key from its URL. */
+  onPromptClose?: () => void;
 }
 
 /**
@@ -36,7 +41,7 @@ export interface PromptLibraryViewProps {
  * (`clientTableFetch`): this is configuration, a few dozen rows, and a server
  * table query for it would be machinery with nothing to do.
  */
-export function PromptLibraryView({ apiOrigin }: Readonly<PromptLibraryViewProps>) {
+export function PromptLibraryView({ apiOrigin, openPromptKey, onPromptClose }: Readonly<PromptLibraryViewProps>) {
   const copy = usePromptCopy();
   const { t } = useTranslation();
   const client = useApolloClient();
@@ -80,9 +85,15 @@ export function PromptLibraryView({ apiOrigin }: Readonly<PromptLibraryViewProps
     setEditing(null);
     setDialogOpen(true);
   };
-  const openEdit = (prompt: AiPrompt) => {
+  const openEdit = useCallback((prompt: AiPrompt) => {
     setEditing(prompt);
     setDialogOpen(true);
+  }, []);
+  const linkMissing = useCallback((key: string) => setError(t('ai.library.promptNotFound', { vars: { key } })), [t]);
+  useOpenPromptByKey(openPromptKey, openEdit, linkMissing, setError);
+  const closeDialog = () => {
+    setDialogOpen(false);
+    onPromptClose?.();
   };
 
   /** Delete and reset differ only in the mutation; the surrounding dance is one. */
@@ -146,7 +157,7 @@ export function PromptLibraryView({ apiOrigin }: Readonly<PromptLibraryViewProps
         open={dialogOpen}
         prompt={editing}
         apiOrigin={apiOrigin}
-        onClose={() => setDialogOpen(false)}
+        onClose={closeDialog}
         onSaved={() => refetchRef.current?.()}
       />
       <ConfirmDialog

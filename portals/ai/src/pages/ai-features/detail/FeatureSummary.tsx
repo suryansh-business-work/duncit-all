@@ -3,6 +3,7 @@ import { useTranslation } from '@duncit/shell';
 import { formatDateTime } from '@duncit/app-settings';
 import { usd, tokens } from '../../../lib/usd';
 import FeatureSwitch from '../FeatureSwitch';
+import FeaturePrompts from '../FeaturePrompts';
 import type { AiFeature } from '../queries';
 
 interface Props {
@@ -68,6 +69,16 @@ export default function FeatureSummary({ feature, busy, onToggle }: Readonly<Pro
           </Typography>
         )}
       </Alert>
+
+      <Paper variant="outlined" sx={{ p: 1.5 }}>
+        <Typography variant="subtitle2" component="h2">
+          {t('ai.features.promptsTitle')}
+        </Typography>
+        <Typography variant="caption" component="p" sx={{ color: 'text.secondary', mb: 1 }}>
+          {t('ai.features.promptsHint')}
+        </Typography>
+        <FeaturePrompts feature={feature} variant="list" />
+      </Paper>
 
       <Stack direction="row" useFlexGap sx={{ flexWrap: 'wrap', gap: 1.5 }}>
         <Kpi

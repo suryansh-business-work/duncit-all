@@ -1,4 +1,4 @@
-import VenuePricingPartEditor from './VenuePricingPartEditor';
+import { VenuePricingPartEditor } from '@duncit/availability-calendar';
 import VenueSetupPage from './VenueSetupPage';
 
 /** Venue Options > Price Rules: weekday surcharges, date overrides and date ranges. */

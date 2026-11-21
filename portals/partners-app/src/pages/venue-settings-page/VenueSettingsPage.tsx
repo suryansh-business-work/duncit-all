@@ -19,7 +19,6 @@ import {
   type CancellationPolicyValues,
 } from './cancellation-policy';
 import { useSelectedVenue } from '../../components/venue/useSelectedVenue';
-import { BookingOffersCard } from './booking-offers';
 import { MY_VENUES_SETTINGS, UPDATE_VENUE_CANCELLATION, type VenueSettingsVenue } from './queries';
 
 /**
@@ -128,14 +127,6 @@ export default function VenueSettingsPage() {
               </Stack>
             </CardContent>
           </Card>
-
-          <BookingOffersCard
-            venue={selected}
-            onSaved={async (saved) => {
-              setMessage(saved);
-              await refetch();
-            }}
-          />
         </>
       ) : (
         <Alert severity="info">{t('venueSettings.noVenues')}</Alert>

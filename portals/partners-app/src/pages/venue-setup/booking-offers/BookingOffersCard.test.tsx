@@ -1,26 +1,24 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import BookingOffersCard from './BookingOffersCard';
-import type { VenueSettingsVenue } from '../queries';
+import type { BookingOffersVenue } from './queries';
 import { renderWithProviders } from '../../../__tests__/render';
 import { scriptedLink, type ScriptedAnswer, type SentOperation } from '../../../__tests__/groupC-link';
 
 afterEach(cleanup);
 
-type Business = VenueSettingsVenue['settings']['offers']['min_business'];
+type Business = BookingOffersVenue['settings']['offers']['min_business'];
 
-const venue = (min_business: Business = [{ model: 'PER_GUEST', amount: 200 }]): VenueSettingsVenue => ({
+const venue = (min_business: Business = [{ model: 'PER_GUEST', amount: 200 }], min_spend = 0): BookingOffersVenue => ({
   id: 'v1',
-  venue_name: 'Court House',
-  status: 'APPROVED',
   offer_min_guests: 8,
   offer_response_hours: 24,
-  settings: { cancellation: { reschedule_only: false, tiers: [] }, offers: { min_guests: 0, response_hours: 0, min_business } },
+  settings: { offers: { min_guests: 0, response_hours: 0, min_business, min_spend } },
 });
 
 const SAVED = { updateVenueSettings: { __typename: 'Venue', id: 'v1', offer_min_guests: 8, offer_response_hours: 24 } };
 
-const mount = (stored: VenueSettingsVenue, answers: Record<string, ScriptedAnswer> = {}, sent: SentOperation[] = []) => {
+const mount = (stored: BookingOffersVenue, answers: Record<string, ScriptedAnswer> = {}, sent: SentOperation[] = []) => {
   const onSaved = vi.fn<(message: string) => Promise<void>>(async () => undefined);
   const view = renderWithProviders(<BookingOffersCard venue={stored} onSaved={onSaved} />, { link: scriptedLink(answers, sent) });
   return { ...view, onSaved };
@@ -100,9 +98,33 @@ describe('BookingOffersCard — the business the venue hopes for', () => {
             { model: 'PER_GUEST', amount: 200 },
             { model: 'PER_HOUR', amount: 400.5 },
           ],
+          min_spend: 0,
         },
       },
     });
+  });
+
+  it('opens on the stored minimum spend and saves the new one with the offers', async () => {
+    const sent: SentOperation[] = [];
+    const { onSaved } = mount(venue(undefined, 4500), { UpdateVenueOfferSettings: SAVED }, sent);
+    const spend = screen.getByLabelText('Minimum spend per booking (₹)') as HTMLInputElement;
+    expect(spend.value).toBe('4500');
+    fireEvent.change(spend, { target: { value: '6000' } });
+    await save();
+
+    await waitFor(() => expect(onSaved).toHaveBeenCalledWith('Booking offers saved.'));
+    expect(sent.find((op) => op.name === 'UpdateVenueOfferSettings')?.variables).toMatchObject({
+      input: { offers: { min_business: [{ model: 'PER_GUEST', amount: 200 }], min_spend: 6000 } },
+    });
+  });
+
+  it('refuses a negative minimum spend and sends nothing', async () => {
+    const sent: SentOperation[] = [];
+    mount(venue(), { UpdateVenueOfferSettings: SAVED }, sent);
+    fireEvent.change(screen.getByLabelText('Minimum spend per booking (₹)'), { target: { value: '-1' } });
+    await save();
+    expect(await screen.findByText(/^Enter an amount from 0 to /)).toBeTruthy();
+    expect(sent.some((op) => op.name === 'UpdateVenueOfferSettings')).toBe(false);
   });
 
   it('shows the server’s refusal in the card and reports no save', async () => {

@@ -9,15 +9,15 @@ import { useTranslation } from '@duncit/shell';
 import BookingOffersForm from './booking-offers.form';
 import { toBookingOffersInput, toBookingOffersValues } from './booking-offers.schema';
 import type { BookingOffersValues } from './booking-offers.types';
-import { UPDATE_VENUE_OFFER_SETTINGS, type VenueSettingsVenue } from '../queries';
+import { UPDATE_VENUE_OFFER_SETTINGS, type BookingOffersVenue } from './queries';
 
 interface Props {
-  venue: VenueSettingsVenue;
+  venue: BookingOffersVenue;
   /** After a save: say so and re-read the venue, whose effective values may have moved. */
   onSaved: (message: string) => Promise<unknown>;
 }
 
-/** Venue settings > Booking offers, for the venue picked on the page. */
+/** Fees & Minimum Spend > Booking offers & minimum spend, for the venue picked on the page. */
 export default function BookingOffersCard({ venue, onSaved }: Readonly<Props>) {
   const { t } = useTranslation();
   const [save, saveState] = useMutation(UPDATE_VENUE_OFFER_SETTINGS);
@@ -29,9 +29,11 @@ export default function BookingOffersCard({ venue, onSaved }: Readonly<Props>) {
   const minGuests = venue.settings.offers.min_guests;
   const responseHours = venue.settings.offers.response_hours;
   const business = JSON.stringify(venue.settings.offers.min_business ?? []);
+  const minSpend = venue.settings.offers.min_spend ?? 0;
   const initialValues = useMemo(
-    () => toBookingOffersValues({ min_guests: minGuests, response_hours: responseHours, min_business: JSON.parse(business) }),
-    [minGuests, responseHours, business],
+    () =>
+      toBookingOffersValues({ min_guests: minGuests, response_hours: responseHours, min_business: JSON.parse(business), min_spend: minSpend }),
+    [minGuests, responseHours, business, minSpend],
   );
 
   const submit = async (values: BookingOffersValues) => {

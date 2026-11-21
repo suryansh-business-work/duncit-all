@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, renderHook, waitFor } from '@testing-library/react';
-import { readImageSize, useImageUploads } from '@/lib/useImageUploads';
+import { IMAGE_SIZE_TIMEOUT_MS, readImageSize, useImageUploads } from '@/lib/useImageUploads';
 
 const { upload, MB } = vi.hoisted(() => ({ upload: vi.fn(), MB: 1024 * 1024 }));
 
@@ -69,7 +69,38 @@ afterEach(() => {
   restore('revokeObjectURL', savedRevoke);
 });
 
+/** An Image that never answers — what an environment that cannot decode images does. */
+class SilentImage {
+  onload: (() => void) | null = null;
+  onerror: (() => void) | null = null;
+  set src(_value: string) {
+    // Neither load nor error ever fires.
+  }
+}
+
 describe('readImageSize', () => {
+  it('gives up after the timeout with an unknown size, frees the URL, and ignores a late answer', async () => {
+    vi.useFakeTimers();
+    try {
+      Object.defineProperty(URL, 'createObjectURL', { value: createObjectURL, configurable: true, writable: true });
+      Object.defineProperty(URL, 'revokeObjectURL', { value: revokeObjectURL, configurable: true, writable: true });
+      vi.stubGlobal('Image', SilentImage);
+      let result: unknown = 'pending';
+      const pending = readImageSize(file('logo.png', 'image/png')).then((size) => {
+        result = size;
+      });
+
+      await vi.advanceTimersByTimeAsync(IMAGE_SIZE_TIMEOUT_MS - 1);
+      expect(result).toBe('pending');
+      await vi.advanceTimersByTimeAsync(1);
+      await pending;
+      expect(result).toEqual({ width: null, height: null });
+      expect(revokeObjectURL).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('reads the natural size and frees the object URL', async () => {
     withObjectUrls();
     outcome = { load: true, width: 1200, height: 400 };

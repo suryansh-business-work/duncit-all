@@ -22,7 +22,14 @@ interface Options {
   entityId?: string;
 }
 
-/** Natural pixel size of an image file, or nulls when the browser cannot tell (e.g. some SVGs). */
+/** How long to wait for an image to decode before uploading it without its size. */
+export const IMAGE_SIZE_TIMEOUT_MS = 3000;
+
+/**
+ * Natural pixel size of an image file, or nulls when the browser cannot tell
+ * (some SVGs, an environment that never decodes images). Never blocks an upload
+ * for longer than IMAGE_SIZE_TIMEOUT_MS.
+ */
 export function readImageSize(file: File): Promise<{ width: number | null; height: number | null }> {
   return new Promise((resolve) => {
     if (typeof URL.createObjectURL !== 'function') {
@@ -31,10 +38,15 @@ export function readImageSize(file: File): Promise<{ width: number | null; heigh
     }
     const src = URL.createObjectURL(file);
     const img = new Image();
+    let settled = false;
     const done = (width: number | null, height: number | null) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
       URL.revokeObjectURL(src);
       resolve({ width, height });
     };
+    const timer = setTimeout(() => done(null, null), IMAGE_SIZE_TIMEOUT_MS);
     img.onload = () => done(img.naturalWidth || null, img.naturalHeight || null);
     img.onerror = () => done(null, null);
     img.src = src;

@@ -7,7 +7,7 @@ import type { useTranslation } from '@duncit/shell';
 export type SettingsTab = 'assets' | 'theme' | 'prompts';
 type Translate = ReturnType<typeof useTranslation>['t'];
 
-/** The three sections of Email Templates › Settings, selected by the URL's ?tab=. */
+/** The three sections of Email Templates › Settings, selected by the URL's ?selectedtab=. */
 export const settingsTabs = (t: Translate): DuncitTabItem<SettingsTab>[] => [
   { value: 'assets', label: t('crm.emailSettings.tabAssets'), icon: <PhotoLibraryIcon fontSize="small" />, iconPosition: 'start' },
   { value: 'theme', label: t('crm.emailSettings.tabTheme'), icon: <PaletteIcon fontSize="small" />, iconPosition: 'start' },

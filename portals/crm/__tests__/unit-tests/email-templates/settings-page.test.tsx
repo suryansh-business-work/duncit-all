@@ -26,7 +26,7 @@ describe('EmailTemplateSettingsPage', () => {
   });
 
   it('opens the section the URL names', async () => {
-    renderPage([settingsMock(), themePreviewMock()], '/email-templates/settings?tab=theme');
+    renderPage([settingsMock(), themePreviewMock()], '/email-templates/settings?selectedtab=theme');
 
     expect(tab('Theme Configuration')).toHaveAttribute('aria-selected', 'true');
     expect(await screen.findByRole('button', { name: 'Save theme' })).toBeInTheDocument();
@@ -34,7 +34,7 @@ describe('EmailTemplateSettingsPage', () => {
   });
 
   it('falls back to Logos & Images for a section it does not know', async () => {
-    renderPage([settingsMock()], '/email-templates/settings?tab=billing');
+    renderPage([settingsMock()], '/email-templates/settings?selectedtab=billing');
 
     expect(tab('Logos & Images')).toHaveAttribute('aria-selected', 'true');
     expect(await screen.findByRole('heading', { name: 'Logos' })).toBeInTheDocument();
@@ -46,13 +46,13 @@ describe('EmailTemplateSettingsPage', () => {
 
     fireEvent.click(tab('Prompt Injection'));
 
-    expect(screen.getByTestId('location')).toHaveTextContent('/email-templates/settings?tab=prompts');
+    expect(screen.getByTestId('location')).toHaveTextContent('/email-templates/settings?selectedtab=prompts');
     expect(await screen.findByRole('heading', { name: 'Instructions for the AI' })).toBeInTheDocument();
     expect(tab('Prompt Injection')).toHaveAttribute('aria-selected', 'true');
   });
 
   it('shows the prompts even when the brand settings fail to load', async () => {
-    renderPage([settingsMock(new Error('Settings store offline')), promptsMock([SYSTEM_PROMPT])], '/email-templates/settings?tab=prompts');
+    renderPage([settingsMock(new Error('Settings store offline')), promptsMock([SYSTEM_PROMPT])], '/email-templates/settings?selectedtab=prompts');
 
     expect(await screen.findByRole('heading', { name: 'Instructions for the AI' })).toBeInTheDocument();
     expect(screen.queryByText('Settings store offline')).toBeNull();

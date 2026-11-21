@@ -27,6 +27,8 @@ export { QueryGuard } from './QueryGuard';
 export type { QueryGuardProps } from './QueryGuard';
 export { FormActionsRow } from './FormActionsRow';
 export type { FormActionsRowProps } from './FormActionsRow';
+export { ActionsMenu } from './ActionsMenu';
+export type { ActionsMenuItem, ActionsMenuProps } from './ActionsMenu';
 export {
   Loader,
   LoadingOverlay,

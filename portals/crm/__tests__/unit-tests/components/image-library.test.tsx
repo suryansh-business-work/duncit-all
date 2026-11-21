@@ -50,7 +50,7 @@ describe('ImageTile', () => {
   it('opens the actions menu, runs the chosen action and closes the menu', async () => {
     const { rename, remove } = renderTile();
     const trigger = screen.getByRole('button', { name: 'Actions for Brand logo' });
-    expect(trigger).toHaveAttribute('aria-expanded', 'false');
+    expect(trigger).not.toHaveAttribute('aria-expanded');
 
     fireEvent.click(trigger);
     const menu = within(await screen.findByRole('menu'));

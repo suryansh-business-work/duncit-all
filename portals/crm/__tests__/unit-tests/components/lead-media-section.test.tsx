@@ -59,6 +59,8 @@ const image = (name: string, type: string, size: number) => {
 const renderSection = (mocks: MockedResponse[]) => renderWithApollo(<LeadMediaSection entity="HOST_LEAD" leadId="host-1" />, mocks);
 
 const region = (name: 'Logos' | 'Images') => within(screen.getByRole('region', { name }));
+/** The same, once the list has loaded (the groups render after the spinner). */
+const findRegion = async (name: 'Logos' | 'Images') => within(await screen.findByRole('region', { name }));
 
 const openAction = async (tileName: string, action: string) => {
   fireEvent.click(await screen.findByRole('button', { name: `Actions for ${tileName}` }));
@@ -82,7 +84,7 @@ describe('LeadMediaSection — loading', () => {
     renderSection([listMock([])]);
 
     expect(screen.getByRole('progressbar', { name: 'Loading logos and images' })).toBeInTheDocument();
-    expect(await region('Logos').findByText('No logos yet.')).toBeInTheDocument();
+    expect(await (await findRegion('Logos')).findByText('No logos yet.')).toBeInTheDocument();
     expect(region('Logos').getByText('0 of 10')).toBeInTheDocument();
     expect(region('Images').getByText('No images yet.')).toBeInTheDocument();
     expect(region('Images').getByText('0 of 50')).toBeInTheDocument();
@@ -98,7 +100,7 @@ describe('LeadMediaSection — loading', () => {
     expect(await screen.findByText('Lead not found')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
 
-    expect(await region('Logos').findByText('Brand logo')).toBeInTheDocument();
+    expect(await (await findRegion('Logos')).findByText('Brand logo')).toBeInTheDocument();
     expect(screen.queryByText('Lead not found')).toBeNull();
   });
 
@@ -110,7 +112,7 @@ describe('LeadMediaSection — loading', () => {
       ]),
     ]);
 
-    expect(await region('Logos').findByText('Brand logo')).toBeInTheDocument();
+    expect(await (await findRegion('Logos')).findByText('Brand logo')).toBeInTheDocument();
     expect(region('Logos').getByText('PNG · 512×512 · 24 KB')).toBeInTheDocument();
     expect(region('Logos').getByText('1 of 10')).toBeInTheDocument();
     expect(region('Images').getByText('Hall front')).toBeInTheDocument();
@@ -122,7 +124,7 @@ describe('LeadMediaSection — loading', () => {
     const logos = Array.from({ length: 10 }, (_, i) => item({ id: `logo-${i}`, name: `Logo ${i}` }));
     renderSection([listMock(logos)]);
 
-    expect(await region('Logos').findByText('10 of 10')).toBeInTheDocument();
+    expect(await (await findRegion('Logos')).findByText('10 of 10')).toBeInTheDocument();
     expect(region('Logos').getByRole('button', { name: 'Upload logos' })).toBeDisabled();
     expect(region('Images').getByRole('button', { name: 'Upload images' })).toBeEnabled();
   });
@@ -157,12 +159,12 @@ describe('LeadMediaSection — upload', () => {
       },
       listMock([added]),
     ]);
-    await region('Logos').findByText('No logos yet.');
+    await (await findRegion('Logos')).findByText('No logos yet.');
 
     const file = image('new-logo.png', 'image/png', 4096);
     fireEvent.change(screen.getByTestId('lead-media-upload-LOGO'), { target: { files: [file] } });
 
-    expect(await region('Logos').findByText('new-logo.png')).toBeInTheDocument();
+    expect(await (await findRegion('Logos')).findByText('new-logo.png')).toBeInTheDocument();
     expect(upload).toHaveBeenCalledWith(file, { folder: 'crm/leads/host_lead', entityId: 'host-1', fallbackMimeType: 'image/png' });
     expect(addResult).toHaveBeenCalledTimes(1);
   });
@@ -184,7 +186,7 @@ describe('LeadMediaSection — upload', () => {
       },
       listMock([added]),
     ]);
-    await region('Images').findByText('No images yet.');
+    await (await findRegion('Images')).findByText('No images yet.');
 
     fireEvent.change(screen.getByTestId('lead-media-upload-IMAGE'), {
       target: {
@@ -194,7 +196,7 @@ describe('LeadMediaSection — upload', () => {
 
     const warning = await screen.findByText('menu.pdf: this file type is not supported here.');
     expect(screen.getByText('huge.png is over 2 MB. Compress it and try again.')).toBeInTheDocument();
-    expect(await region('Images').findByText('hall.jpg')).toBeInTheDocument();
+    expect(await (await findRegion('Images')).findByText('hall.jpg')).toBeInTheDocument();
     expect(upload).toHaveBeenCalledTimes(1);
 
     fireEvent.click(within(warning.closest('[role="alert"]') as HTMLElement).getByRole('button', { name: 'Close' }));
@@ -204,7 +206,7 @@ describe('LeadMediaSection — upload', () => {
   it('attaches nothing when every file fails to upload, and names each failure', async () => {
     upload.mockRejectedValue(new Error('ImageKit is unavailable'));
     renderSection([listMock([])]);
-    await region('Logos').findByText('No logos yet.');
+    await (await findRegion('Logos')).findByText('No logos yet.');
 
     fireEvent.change(screen.getByTestId('lead-media-upload-LOGO'), { target: { files: [image('a.png', 'image/png', 10)] } });
 
@@ -227,7 +229,7 @@ describe('LeadMediaSection — upload', () => {
         result: { errors: [new GraphQLError('This lead already has 10 logos')] },
       },
     ]);
-    await region('Logos').findByText('No logos yet.');
+    await (await findRegion('Logos')).findByText('No logos yet.');
 
     fireEvent.change(screen.getByTestId('lead-media-upload-LOGO'), { target: { files: [image('a.png', 'image/png', 10)] } });
 
@@ -269,7 +271,7 @@ describe('LeadMediaSection — item actions', () => {
       target: { files: [image('brand-v2.webp', 'image/webp', 2048)] },
     });
 
-    expect(await region('Logos').findByText('WEBP · 512×512 · 2 KB')).toBeInTheDocument();
+    expect(await (await findRegion('Logos')).findByText('WEBP · 512×512 · 2 KB')).toBeInTheDocument();
     expect(region('Logos').getByText('Brand logo')).toBeInTheDocument();
     expect(updateResult).toHaveBeenCalledTimes(1);
   });
@@ -306,7 +308,7 @@ describe('LeadMediaSection — item actions', () => {
     fireEvent.click(screen.getByTestId('media-name-submit'));
 
     await waitFor(() => expect(screen.queryByTestId('media-name-form')).toBeNull());
-    expect(await region('Logos').findByText('Primary logo')).toBeInTheDocument();
+    expect(await (await findRegion('Logos')).findByText('Primary logo')).toBeInTheDocument();
   });
 
   it('keeps the rename dialog open with the server error, and clears it on cancel', async () => {
@@ -335,7 +337,7 @@ describe('LeadMediaSection — item actions', () => {
 
     await openAction('Brand logo', 'Move to Images');
 
-    expect(await region('Images').findByText('Brand logo')).toBeInTheDocument();
+    expect(await (await findRegion('Images')).findByText('Brand logo')).toBeInTheDocument();
     expect(region('Logos').getByText('No logos yet.')).toBeInTheDocument();
   });
 
@@ -363,7 +365,7 @@ describe('LeadMediaSection — item actions', () => {
     await openAction('Brand logo', 'Delete');
     fireEvent.click(await screen.findByTestId('confirm-dialog-confirm'));
 
-    expect(await region('Logos').findByText('No logos yet.')).toBeInTheDocument();
+    expect(await (await findRegion('Logos')).findByText('No logos yet.')).toBeInTheDocument();
     expect(deleteResult).toHaveBeenCalledTimes(1);
   });
 

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import type { DocumentNode } from 'graphql';
 import type { MockedResponse } from '@apollo/client/testing';
@@ -49,8 +49,16 @@ const choose = async (name: string, action: string) => {
   await waitFor(() => expect(screen.queryByRole('menu')).toBeNull());
 };
 
+// jsdom never decodes images, so an object URL would leave the size read waiting: without one, sizes read as unknown.
+let createObjectURL: PropertyDescriptor | undefined;
 beforeEach(() => {
   media.upload.mockReset();
+  createObjectURL = Object.getOwnPropertyDescriptor(URL, 'createObjectURL');
+  Object.defineProperty(URL, 'createObjectURL', { value: undefined, configurable: true, writable: true });
+});
+afterEach(() => {
+  if (createObjectURL) Object.defineProperty(URL, 'createObjectURL', createObjectURL);
+  else delete (URL as { createObjectURL?: unknown }).createObjectURL;
 });
 
 describe('BrandAssetsPanel — shelves', () => {

@@ -1,17 +1,10 @@
-import { useState, type ReactNode } from 'react';
-import { Box, Card, ListItemIcon, ListItemText, Menu, MenuItem, Stack, Typography, type Theme } from '@mui/material';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
-import { DuncitIconButton } from '@duncit/buttons';
+import type { ReactNode } from 'react';
+import { Box, Card, Stack, Typography, type Theme } from '@mui/material';
+import { ActionsMenu, type ActionsMenuItem } from '@duncit/ui';
 import { useTranslation } from '@duncit/shell';
 
-export interface ImageTileAction {
-  key: string;
-  label: string;
-  icon: ReactNode;
-  onClick: () => void;
-  disabled?: boolean;
-  destructive?: boolean;
-}
+/** One action in a tile's menu (the shared `ActionsMenuItem`). */
+export type ImageTileAction = ActionsMenuItem;
 
 interface Props {
   url: string;
@@ -36,7 +29,6 @@ const checkerboard = (theme: Theme) => ({
 /** One uploaded image as a card: a clickable preview, its name and details, and an actions menu. */
 export default function ImageTile({ url, name, meta, fit, badge, onPreview, actions }: Readonly<Props>) {
   const { t } = useTranslation();
-  const [anchor, setAnchor] = useState<HTMLElement | null>(null);
   const label = name || t('crm.media.untitled');
 
   return (
@@ -79,32 +71,8 @@ export default function ImageTile({ url, name, meta, fit, badge, onPreview, acti
             </Typography>
           )}
         </Box>
-        <DuncitIconButton
-          size="small"
-          aria-label={t('crm.media.actionsFor', { vars: { name: label } })}
-          aria-haspopup="menu"
-          aria-expanded={Boolean(anchor)}
-          onClick={(e) => setAnchor(e.currentTarget)}
-        >
-          <MoreVertIcon fontSize="small" />
-        </DuncitIconButton>
+        <ActionsMenu buttonLabel={t('crm.media.actionsFor', { vars: { name: label } })} actions={actions} />
       </Stack>
-      <Menu anchorEl={anchor} open={Boolean(anchor)} onClose={() => setAnchor(null)}>
-        {actions.map((action) => (
-          <MenuItem
-            key={action.key}
-            disabled={action.disabled}
-            onClick={() => {
-              setAnchor(null);
-              action.onClick();
-            }}
-            sx={action.destructive ? { color: 'error.main' } : undefined}
-          >
-            <ListItemIcon sx={action.destructive ? { color: 'error.main' } : undefined}>{action.icon}</ListItemIcon>
-            <ListItemText>{action.label}</ListItemText>
-          </MenuItem>
-        ))}
-      </Menu>
     </Card>
   );
 }

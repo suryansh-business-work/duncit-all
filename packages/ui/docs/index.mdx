@@ -486,6 +486,29 @@ disagree about whether a submit in flight shows anything at all.
 | `startIcon` | `ReactNode` | no | — | Icon on the submit button. |
 | `secondaryAction` | `ReactNode` | no | — | Drawn left of submit — a Cancel button, typically. |
 
+### `ActionsMenu`
+
+A row's or a card's actions behind one "more" button: the Website CMS rows
+and the CRM's image tiles (lead Logos & Images, email brand library) each had a
+copy of this menu before it moved here. The menu closes before an action runs,
+so an action that opens a dialog gets focus back cleanly. For a `DuncitTable`
+row, keep using `actionsColumn` from `@duncit/table`.
+
+```tsx
+<ActionsMenu
+  buttonLabel={t('crm.media.actionsFor', { vars: { name } })}
+  actions={[
+    { key: 'rename', label: t('crm.media.rename'), icon: <DriveFileRenameOutlineIcon fontSize="small" />, onClick: rename },
+    { key: 'delete', label: t('shell.common.delete'), icon: <DeleteIcon fontSize="small" />, onClick: remove, destructive: true, disabled: busy },
+  ]}
+/>
+```
+
+| Prop | Type | Required | Default | Meaning |
+| --- | --- | --- | --- | --- |
+| `buttonLabel` | `string` | yes | — | The button's accessible name, already translated — name the thing ("Actions for About us"). |
+| `actions` | `ActionsMenuItem[]` | yes | — | `{ key, label, icon, onClick, destructive?, disabled?, hidden? }`. `hidden` leaves an item out; `disabled` shows it greyed; `destructive` paints label and icon in `error.main`. |
+
 ### `LanguageSelect`, `ModerationBlockedDialog` and the two helpers
 
 | Export | Signature | Notes |

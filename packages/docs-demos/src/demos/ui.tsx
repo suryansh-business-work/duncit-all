@@ -26,6 +26,7 @@ import { LoaderDemo, type LoaderMock } from './ui/LoaderDemo';
 import { MuiIconPickerDemo, type MuiIconPickerMock } from './ui/MuiIconPickerDemo';
 import { CHRISTMAS_MOCK, OccasionDemo, type OccasionMock } from './ui/OccasionDemo';
 import { guideKitDemo } from './ui/GuideKitDemo';
+import { actionsMenuDemo } from './ui/ActionsMenuDemo';
 
 interface ErrorFallbackMock {
   reference: string;
@@ -134,6 +135,8 @@ export default defineDemos('ui', [
       </Paper>
     ),
   }),
+
+  actionsMenuDemo,
 
   defineDemo<RailMock>({
     id: 'scroll-rail',

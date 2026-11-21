@@ -24,6 +24,7 @@ import { graphqlRequest } from '@/services/graphql.client';
 import { useAppSettingsStore } from '@/stores/app-settings.store';
 import { appFormatter } from '@/utils/app-formatter';
 import { loadPartnerRequestPrefill } from '@/hooks/partnerRequestPrefill';
+import { errorCode } from '@/utils/errors';
 
 type OptionsData = ResultOf<typeof CreatePodOptionsDocument>;
 export type HostAgainPrefill = ResultOf<typeof HostAgainPrefillDocument>['hostAgainPrefill'];
@@ -57,15 +58,26 @@ async function loadHostAgain(podId: string): Promise<HostAgainPrefill | 'failed'
   }
 }
 
+/** The draft saved under this id, or null when there is none yet — Create Pod
+ * mints the id before the first save, so NOT_FOUND is simply a new pod. Any
+ * other failure is thrown: a blank form must never autosave over a real draft. */
+async function loadDraft(draftId: string) {
+  try {
+    return (await graphqlRequest(MyPodDraftDocument, { draft_id: draftId }, { auth: true }))
+      .myPodDraft;
+  } catch (error) {
+    if (errorCode(error) === 'NOT_FOUND') return null;
+    throw error;
+  }
+}
+
 async function loadCreatePodData(
   draftId: string | undefined,
   partnerRequestId: string,
   hostAgainPodId: string,
 ) {
   const options = await graphqlRequest(CreatePodOptionsDocument, undefined, { auth: true });
-  const draft = draftId
-    ? (await graphqlRequest(MyPodDraftDocument, { draft_id: draftId }, { auth: true })).myPodDraft
-    : null;
+  const draft = draftId ? await loadDraft(draftId) : null;
   const hostAgain = !draft && hostAgainPodId ? await loadHostAgain(hostAgainPodId) : null;
   // A Pod Request only seeds a FRESH pod — a resumed draft is already the host's.
   const prefill =
@@ -94,27 +106,25 @@ export function useCreatePod(draftId?: string, partnerRequestId = '', hostAgainP
   const [data, setData] = useState<OptionsData | null>(null);
   const [initialValues, setInitialValues] = useState<CreatePodFormValues>(blankCreatePodForm);
   const [initialStep, setInitialStep] = useState(0);
-  const [resolvedDraftId, setResolvedDraftId] = useState<string | null>(draftId ?? null);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   const [pinnedVenueId, setPinnedVenueId] = useState<string | undefined>(undefined);
   const [hostAgain, setHostAgain] = useState<HostAgainPrefill | 'failed' | null>(null);
 
   useEffect(() => {
     let active = true;
-    // A draft, or a Host Again copy that has no draft yet (id null). One whose
-    // city is gone opens in the header's: step 1 can only move a pod in a city.
-    const applyStored = (
-      stored: { payload: string; step: number },
-      id: string | null,
-      fallbackLocationId: string,
-    ) => {
+    setIsLoading(true);
+    setLoadFailed(false);
+    // A draft, or a Host Again copy not saved yet. One whose city is gone
+    // opens in the header's: step 1 can only move a pod that is in a city.
+    const applyStored = (stored: { payload: string; step: number }, fallbackLocationId: string) => {
       const values = hydrateDraft(stored.payload);
       setInitialValues({ ...values, location_id: values.location_id || fallbackLocationId });
       // A draft started from a Pod Request keeps that venue on offer too.
       setPinnedVenueId(values.partner_request_id ? values.venue_id : undefined);
       // A draft the old five-step stepper saved opens on the step that now holds its screen.
       setInitialStep(resumeCreatePodStep(stored.step, stored.payload));
-      setResolvedDraftId(id);
     };
     loadCreatePodData(draftId, partnerRequestId, hostAgainPodId)
       .then((result) => {
@@ -128,9 +138,9 @@ export function useCreatePod(draftId?: string, partnerRequestId = '', hostAgainP
           locations[0]?.id ??
           '';
         if (result.draft) {
-          applyStored(result.draft, result.draft.id, preferred);
+          applyStored(result.draft, preferred);
         } else if (result.hostAgain && result.hostAgain !== 'failed') {
-          applyStored(result.hostAgain, null, preferred);
+          applyStored(result.hostAgain, preferred);
         } else {
           setInitialValues({
             ...blankCreatePodForm,
@@ -140,12 +150,16 @@ export function useCreatePod(draftId?: string, partnerRequestId = '', hostAgainP
           setPinnedVenueId(result.prefill?.pinnedVenueId);
         }
       })
-      .catch(() => undefined)
+      .catch((error: unknown) => {
+        // Said on screen with a retry — never a blank form posing as the draft.
+        logs.mobileApp.error('useCreatePod', 'load', { error });
+        if (active) setLoadFailed(true);
+      })
       .finally(() => active && setIsLoading(false));
     return () => {
       active = false;
     };
-  }, [draftId, partnerRequestId, hostAgainPodId]);
+  }, [draftId, partnerRequestId, hostAgainPodId, attempt]);
 
   const saveDraft = async (id: string | null, payload: ReturnType<typeof serializeDraft>) => {
     const res = await graphqlRequest(
@@ -202,7 +216,9 @@ export function useCreatePod(draftId?: string, partnerRequestId = '', hostAgainP
     isLoading,
     initialValues,
     initialStep,
-    initialDraftId: resolvedDraftId,
+    initialDraftId: draftId ?? null,
+    loadFailed,
+    retry: () => setAttempt((count) => count + 1),
     hostAgain,
     /** The header's city — a Host Again copy in another city says so. */
     selectedLocationId: data?.me?.selected_location_id ?? '',

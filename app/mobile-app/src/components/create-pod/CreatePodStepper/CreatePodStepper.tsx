@@ -41,6 +41,7 @@ export function CreatePodStepper({
   onModerate,
   onPublish,
   clubAdmin,
+  onAutosave,
 }: Readonly<CreatePodStepperProps>) {
   const state = useCreatePodForm({
     initialValues,
@@ -50,14 +51,12 @@ export function CreatePodStepper({
     onSaveDraft,
     clubAdmin,
     venues,
+    onAutosave,
   });
   const { t, form, showProducts, step, busy, error, blocked, hosts, setHosts } = state;
   const isLast = step === CREATE_POD_STEP_COUNT - 1;
-  const hostSubmitLabel = busy ? t('mweb.createPod.creating') : t('mweb.createPod.createPod');
-  let submitLabel = hostSubmitLabel;
-  if (clubAdmin) submitLabel = busy ? clubAdmin.busyLabel : clubAdmin.submitLabel;
 
-  const { saveDraft, submit, jumpToStep } = buildStepperSubmit({
+  const { saveDraft, submit, jumpToStep, submitLabel } = buildStepperSubmit({
     clubAdmin,
     onModerate,
     onPublish,

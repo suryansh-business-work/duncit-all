@@ -1,3 +1,4 @@
+import type { DraftAutosaveHandle } from '@duncit/utils';
 import type { buildCreatePodInput, buildModerationInput, serializeDraft } from '../create-pod.form';
 import type {
   ClubAdminStepperMode,
@@ -35,6 +36,9 @@ export interface CreatePodStepperProps {
   onSaveDraft: (draftId: string | null, payload: DraftPayload) => Promise<string>;
   onModerate: (input: ReturnType<typeof buildModerationInput>) => Promise<PodModerationResult>;
   onPublish: (draftId: string, input: ReturnType<typeof buildCreatePodInput>) => Promise<void>;
+  /** The host autosave's status and a save to await before leaving — for the
+   * screen's corner indicator and leave guard. Never called for a Club Admin. */
+  onAutosave?: (handle: DraftAutosaveHandle) => void;
   /**
    * Club Admin mode — the club is pinned, hosts may be assigned, and the last
    * step writes through the club-admin mutations. Absent for the host flow.

@@ -2,6 +2,7 @@ import { act, renderHook, waitFor } from '@testing-library/react-native';
 
 import { graphqlRequest } from '@/services/graphql.client';
 import { useCreatePod } from '@/hooks/useCreatePod';
+import { ApiError } from '@/utils/errors';
 
 jest.mock('@/services/graphql.client', () => ({ graphqlRequest: jest.fn() }));
 const mockRequest = graphqlRequest as jest.Mock;
@@ -73,12 +74,45 @@ describe('useCreatePod', () => {
     expect(result.current.initialValues.location_id).toBe('');
     expect(result.current.finance.currency_symbol).toBe('₹');
 
+    expect(result.current.loadFailed).toBe(false);
+
     mockRequest.mockRejectedValueOnce(new Error('boom'));
     const { result: failed } = renderHook(() => useCreatePod());
     await waitFor(() => expect(failed.current.isLoading).toBe(false));
+    // Said, not swallowed: the screen offers a retry instead of a blank form.
+    expect(failed.current.loadFailed).toBe(true);
     expect(failed.current.clubs).toEqual([]);
     expect(failed.current.products).toEqual([]);
     expect(failed.current.hostCategories).toEqual([]);
+  });
+
+  it('opens a new pod under the minted id when nothing is saved under it yet (NOT_FOUND)', async () => {
+    mockRequest
+      .mockResolvedValueOnce(options)
+      .mockRejectedValueOnce(new ApiError('Draft not found', 200, { code: 'NOT_FOUND' }));
+    const { result } = renderHook(() => useCreatePod('aaaaaaaaaaaaaaaaaaaaaaaa'));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.loadFailed).toBe(false);
+    expect(result.current.initialDraftId).toBe('aaaaaaaaaaaaaaaaaaaaaaaa');
+    expect(result.current.initialValues.location_id).toBe('l2');
+    expect(result.current.initialStep).toBe(0);
+  });
+
+  it('opens no form when the draft cannot be read, and loads it on retry', async () => {
+    mockRequest
+      .mockResolvedValueOnce(options)
+      .mockRejectedValueOnce(new ApiError('Network error. Check your connection and try again.'))
+      .mockResolvedValueOnce(options)
+      .mockResolvedValueOnce({
+        myPodDraft: { id: 'd11', step: 1, payload: JSON.stringify({ stepper: 2, pod_title: 'Back' }) },
+      });
+    const { result } = renderHook(() => useCreatePod('d11'));
+    await waitFor(() => expect(result.current.loadFailed).toBe(true));
+    expect(result.current.isLoading).toBe(false);
+    act(() => result.current.retry());
+    await waitFor(() => expect(result.current.initialValues.pod_title).toBe('Back'));
+    expect(result.current.loadFailed).toBe(false);
+    expect(result.current.isLoading).toBe(false);
   });
 
   it('treats an approved host profile as host access even without the cached HOST role', async () => {

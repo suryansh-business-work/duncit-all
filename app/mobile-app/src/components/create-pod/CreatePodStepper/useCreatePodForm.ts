@@ -17,6 +17,7 @@ import {
 import type { CreatePodFormValues, PodHostOption } from '../create-pod.types';
 import type { BlockedViolation } from '../ModerationBlockedDialog';
 import type { CreatePodStepperProps } from './types';
+import { useDraftAutosave } from './useDraftAutosave';
 
 type CreatePodFormArgs = Pick<
   CreatePodStepperProps,
@@ -27,6 +28,7 @@ type CreatePodFormArgs = Pick<
   | 'onSaveDraft'
   | 'clubAdmin'
   | 'venues'
+  | 'onAutosave'
 >;
 
 /** The stepper's form, step/busy/error state, and the host's rolling autosave. */
@@ -38,6 +40,7 @@ export function useCreatePodForm({
   onSaveDraft,
   clubAdmin,
   venues,
+  onAutosave,
 }: CreatePodFormArgs) {
   const { t } = useTranslation();
   // Money shows the Smart Incentive only while Loyalty's programme is known to
@@ -105,30 +108,16 @@ export function useCreatePodForm({
     }
   }, [hostCategories]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const persist = async (forStep: number) => {
-    const id = await onSaveDraft(draftIdRef.current, serializeDraft(form.getValues(), forStep));
+  const saveDraft = async (payload: ReturnType<typeof serializeDraft>) => {
+    const id = await onSaveDraft(draftIdRef.current, payload);
     draftIdRef.current = id;
     return id;
   };
-  const persistSafely = (forStep: number) => {
-    if (!draftsOn) return;
-    persist(forStep).catch(() => undefined);
-  };
-  const latest = useRef({ step, persistSafely });
-  latest.current = { step, persistSafely };
+  const persist = (forStep: number) => saveDraft(serializeDraft(form.getValues(), forStep));
+  const autosave = useDraftAutosave({ form, step, enabled: draftsOn, save: saveDraft, onAutosave });
 
-  const valuesKey = JSON.stringify(form.watch());
-  const dirty = form.formState.isDirty;
-  useEffect(() => {
-    if (!dirty || !draftsOn) return undefined;
-    const handle = setTimeout(() => latest.current.persistSafely(latest.current.step), 4000);
-    return () => clearTimeout(handle);
-  }, [valuesKey, dirty, draftsOn]);
-
-  const goTo = (target: number) => {
-    setStep(target);
-    persistSafely(target);
-  };
+  // The step is part of the draft, so the autosave saves the move at once.
+  const goTo = (target: number) => setStep(target);
   const next = async () => {
     // The category is on the FIRST step, so it gates it — enforced
     // by the schema (host_category_key is in STEP_FIELDS[0]) rather than by a
@@ -157,6 +146,7 @@ export function useCreatePodForm({
     hosts,
     setHosts,
     persist,
+    autosave,
     goTo,
     next,
     back,

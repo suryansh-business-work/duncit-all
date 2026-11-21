@@ -1,12 +1,17 @@
+import { useState } from 'react';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Spinner, Text, YStack } from 'tamagui';
 
 import { Reveal } from '@/animations/Reveal';
-import { clubCityName } from '@duncit/utils';
+import { clubCityName, type DraftAutosaveHandle } from '@duncit/utils';
 
 import { CreatePodStepper } from '@/components/create-pod';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { DraftSaveIndicator } from '@/components/create-pod/DraftSaveIndicator';
 import { HostAgainNotice } from '@/components/create-pod/HostAgainNotice';
+import { useCreatePodDraftId } from '@/hooks/useCreatePodDraftId';
+import { useDraftLeaveGuard } from '@/hooks/useDraftLeaveGuard';
 import { PodVenueApproval } from '@/generated/graphql/graphql';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { StackScreen } from '@/components/StackScreen';
@@ -19,13 +24,19 @@ import { fireAndForget } from '@/utils/fire-and-forget';
 import { RefreshScrollView } from '@/components/PullToRefresh';
 
 /** Host-only Create Pod screen — reached from the Home "+" button, by resuming
- * a draft from Host Management, or by "Host again" on one of the host's pods. The draft autosaves; finishing the last step
- * publishes the pod, refreshes the feed and lands the host on Hosts Management —
- * or on the venue-approval waiting screen when the slot request is PENDING. */
+ * a draft from Host Management, or by "Host again" on one of the host's pods.
+ * Every visit is one draft whose id is in the route params from the start; it
+ * autosaves, shows its save state in the header corner, and is saved before the
+ * host leaves. Finishing the last step publishes the pod, refreshes the feed and
+ * lands the host on Hosts Management — or on the venue-approval waiting screen
+ * when the slot request is PENDING. */
 export function CreatePodScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { t } = useTranslation();
   const route = useRoute<RouteProp<RootStackParamList, 'CreatePod'>>();
+  const draftId = useCreatePodDraftId();
+  const [autosave, setAutosave] = useState<DraftAutosaveHandle | null>(null);
+  const leaveGuard = useDraftLeaveGuard(autosave);
   const {
     isHost,
     viewerUserId,
@@ -45,14 +56,13 @@ export function CreatePodScreen() {
     hostAgain,
     selectedLocationId,
     pinnedVenueId,
+    loadFailed,
+    retry,
     saveDraft,
     moderate,
     publish,
-  } = useCreatePod(
-    route.params?.draftId,
-    route.params?.partnerRequestId,
-    route.params?.hostAgainPodId,
-  );
+  } = useCreatePod(draftId, route.params?.partnerRequestId, route.params?.hostAgainPodId);
+  const ready = !isLoading && !loadFailed;
   const copied = hostAgain === 'failed' ? null : hostAgain;
   // A copy keeps its own city; when that is not the header's, the notice names it.
   const otherCity =
@@ -61,7 +71,11 @@ export function CreatePodScreen() {
       : undefined;
 
   return (
-    <StackScreen title={t('mweb.createPod.title')} testID="create-pod-screen">
+    <StackScreen
+      title={t('mweb.createPod.title')}
+      testID="create-pod-screen"
+      right={<DraftSaveIndicator status={autosave?.status ?? 'idle'} />}
+    >
       {isLoading ? (
         <YStack flex={1} alignItems="center" justifyContent="center">
           <Spinner
@@ -72,7 +86,19 @@ export function CreatePodScreen() {
           />
         </YStack>
       ) : null}
-      {!isLoading && !isHost ? (
+      {!isLoading && loadFailed ? (
+        <YStack flex={1} alignItems="center" justifyContent="center" gap={14} padding={24}>
+          <Text testID="create-pod-load-failed" role="alert" textAlign="center" color="$danger">
+            {t('mweb.createPod.autosave.loadFailed')}
+          </Text>
+          <PrimaryButton
+            testID="create-pod-load-retry"
+            label={t('mweb.createPod.autosave.retry')}
+            onPress={retry}
+          />
+        </YStack>
+      ) : null}
+      {ready && !isHost ? (
         <YStack flex={1} alignItems="center" justifyContent="center" gap={14} padding={24}>
           <Text testID="create-pod-not-host" textAlign="center" color="$muted">
             {t('mweb.createPod.hostRequired')}
@@ -84,7 +110,7 @@ export function CreatePodScreen() {
           />
         </YStack>
       ) : null}
-      {!isLoading && isHost && hostAgain === 'failed' ? (
+      {ready && isHost && hostAgain === 'failed' ? (
         <YStack flex={1} alignItems="center" justifyContent="center" padding={24}>
           <Text
             testID="create-pod-host-again-failed"
@@ -96,7 +122,7 @@ export function CreatePodScreen() {
           </Text>
         </YStack>
       ) : null}
-      {!isLoading && isHost && hostAgain !== 'failed' ? (
+      {ready && isHost && hostAgain !== 'failed' ? (
         <RefreshScrollView showsVerticalScrollIndicator={false}>
           <Reveal>
             {copied ? (
@@ -123,6 +149,7 @@ export function CreatePodScreen() {
               pinnedVenueId={pinnedVenueId}
               finance={finance}
               onSaveDraft={saveDraft}
+              onAutosave={setAutosave}
               onModerate={moderate}
               onPublish={async (id, input) => {
                 const created = await publish(id, input);
@@ -143,6 +170,17 @@ export function CreatePodScreen() {
           </Reveal>
         </RefreshScrollView>
       ) : null}
+      <ConfirmDialog
+        open={leaveGuard.prompt}
+        testID="create-pod-leave"
+        title={t('mweb.createPod.autosave.leaveTitle')}
+        message={t('mweb.createPod.autosave.leaveMessage')}
+        confirmLabel={t('mweb.createPod.autosave.leave')}
+        cancelLabel={t('mweb.createPod.autosave.stay')}
+        destructive
+        onConfirm={leaveGuard.leave}
+        onCancel={leaveGuard.stay}
+      />
     </StackScreen>
   );
 }

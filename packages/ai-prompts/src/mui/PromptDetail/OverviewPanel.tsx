@@ -52,7 +52,6 @@ export function OverviewPanel({ detail, onCopied }: Readonly<Props>) {
         </Stack>
         <Box
           component="pre"
-          tabIndex={0}
           aria-label={copy.detail.fullPrompt}
           sx={{
             m: 0,

@@ -47,7 +47,6 @@ function DayBars({ days, title }: Readonly<{ days: PromptAnalytics['by_day']; ti
           return (
             <Tooltip key={day.day} title={label}>
               <Box
-                tabIndex={0}
                 role="img"
                 aria-label={label}
                 sx={{

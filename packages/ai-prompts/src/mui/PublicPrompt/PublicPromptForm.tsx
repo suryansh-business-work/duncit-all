@@ -90,7 +90,6 @@ export function PublicPromptForm({ prompt, onEvent }: Readonly<Props>) {
         <Paper
           variant="outlined"
           component="pre"
-          tabIndex={0}
           aria-label={copy.publicPage.previewTitle}
           sx={{ m: 0, p: 1.5, whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontFamily: 'monospace', maxHeight: (theme) => theme.spacing(50), overflow: 'auto' }}
         >

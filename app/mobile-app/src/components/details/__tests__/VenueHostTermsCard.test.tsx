@@ -39,12 +39,26 @@ describe('VenueHostTermsCard', () => {
     renderWithProviders(<VenueHostTermsCard venueId="v1" />);
 
     expect(await screen.findByTestId('venue-host-terms')).toBeTruthy();
-    expect(mockRequest).toHaveBeenCalledWith(expect.anything(), { venue_ids: ['v1'] }, { auth: true });
-    expect(screen.getByTestId('venue-host-terms-minSpend')).toHaveTextContent('Minimum spend ₹5,000 per booking');
-    expect(screen.getByTestId('venue-host-terms-minBusiness-PER_HOUR')).toHaveTextContent('₹800 per hour');
-    expect(screen.getByTestId('venue-host-terms-minGuests')).toHaveTextContent('Paid for at least 8 guests');
-    expect(screen.getByTestId('venue-host-terms-cleaningFee')).toHaveTextContent('Cleaning fee ₹500');
-    expect(screen.getByTestId('venue-host-terms-deposit')).toHaveTextContent('Refundable deposit ₹2,000, settled at the venue');
+    expect(mockRequest).toHaveBeenCalledWith(
+      expect.anything(),
+      { venue_ids: ['v1'] },
+      { auth: true },
+    );
+    expect(screen.getByTestId('venue-host-terms-minSpend')).toHaveTextContent(
+      'Minimum spend ₹5,000 per booking',
+    );
+    expect(screen.getByTestId('venue-host-terms-minBusiness-PER_HOUR')).toHaveTextContent(
+      '₹800 per hour',
+    );
+    expect(screen.getByTestId('venue-host-terms-minGuests')).toHaveTextContent(
+      'Paid for at least 8 guests',
+    );
+    expect(screen.getByTestId('venue-host-terms-cleaningFee')).toHaveTextContent(
+      'Cleaning fee ₹500',
+    );
+    expect(screen.getByTestId('venue-host-terms-deposit')).toHaveTextContent(
+      'Refundable deposit ₹2,000, settled at the venue',
+    );
     expect(screen.getByTestId('venue-host-terms-gst')).toBeTruthy();
     expect(screen.queryByTestId('venue-host-terms-petFee')).toBeNull();
 
@@ -54,10 +68,21 @@ describe('VenueHostTermsCard', () => {
 
   it('says so when the venue sets no minimums or fees', async () => {
     mockRequest.mockResolvedValueOnce({
-      venueHostTerms: [terms({ min_guests: 0, min_business: [], min_spend: 0, cleaning_fee: 0, deposit: 0, gst_enabled: false })],
+      venueHostTerms: [
+        terms({
+          min_guests: 0,
+          min_business: [],
+          min_spend: 0,
+          cleaning_fee: 0,
+          deposit: 0,
+          gst_enabled: false,
+        }),
+      ],
     });
     renderWithProviders(<VenueHostTermsCard venueId="v1" />);
-    expect(await screen.findByTestId('venue-host-terms-none')).toHaveTextContent('This venue sets no minimums or extra fees.');
+    expect(await screen.findByTestId('venue-host-terms-none')).toHaveTextContent(
+      'This venue sets no minimums or extra fees.',
+    );
     expect(screen.getByTestId('venue-pick-for-pod')).toBeTruthy();
   });
 
@@ -77,9 +102,13 @@ describe('VenueHostTermsCard', () => {
   });
 
   it('says the fees could not load, and retries', async () => {
-    mockRequest.mockRejectedValueOnce(new Error('offline')).mockResolvedValueOnce({ venueHostTerms: [terms()] });
+    mockRequest
+      .mockRejectedValueOnce(new Error('offline'))
+      .mockResolvedValueOnce({ venueHostTerms: [terms()] });
     renderWithProviders(<VenueHostTermsCard venueId="v1" />);
-    expect(await screen.findByText('Could not load this venue’s fees and minimum spend.')).toBeTruthy();
+    expect(
+      await screen.findByText('Could not load this venue’s fees and minimum spend.'),
+    ).toBeTruthy();
     fireEvent.press(screen.getByTestId('venue-host-terms-retry'));
     expect(await screen.findByTestId('venue-host-terms')).toBeTruthy();
   });

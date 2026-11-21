@@ -22,7 +22,9 @@ import { pickedVenueFreshSeed, pickedVenueOf } from '@/hooks/pickedVenuePrefill'
 import { renderWithProviders } from '@/utils/test-utils';
 
 const mockSeen: { slot?: { venues: CreatePodVenue[] }; category?: { keepVenue?: boolean } } = {};
-jest.mock('@/components/create-pod/steps/LocationClubStep', () => ({ LocationClubStep: () => null }));
+jest.mock('@/components/create-pod/steps/LocationClubStep', () => ({
+  LocationClubStep: () => null,
+}));
 jest.mock('@/components/create-pod/steps/PodSpotsField', () => ({ PodSpotsField: () => null }));
 jest.mock('@/components/create-pod/steps/VenueSlotStep', () => ({
   VenueSlotStep: (p: { venues: CreatePodVenue[] }) => {
@@ -43,7 +45,13 @@ jest.mock('@/components/create-pod/steps/PodModeField', () => {
 });
 
 const venue = (id: string, over: Partial<CreatePodVenue> = {}) =>
-  ({ id, venue_name: `Venue ${id}`, location_id: 'loc1', locality: 'Baner', ...over }) as CreatePodVenue;
+  ({
+    id,
+    venue_name: `Venue ${id}`,
+    location_id: 'loc1',
+    locality: 'Baner',
+    ...over,
+  }) as CreatePodVenue;
 const club = (id: string) => ({ id, club_name: id }) as CreatePodClub;
 const badminton = {
   super_category_id: 's1',
@@ -56,7 +64,10 @@ const badminton = {
 
 type Form = ReturnType<typeof useForm<CreatePodFormValues>>;
 let form: Form;
-function Harness({ values, children }: Readonly<{ values: Partial<CreatePodFormValues>; children: (f: Form) => ReactNode }>) {
+function Harness({
+  values,
+  children,
+}: Readonly<{ values: Partial<CreatePodFormValues>; children: (f: Form) => ReactNode }>) {
   form = useForm<CreatePodFormValues>({ defaultValues: { ...blankCreatePodForm, ...values } });
   return <>{children(form)}</>;
 }
@@ -69,7 +80,11 @@ beforeEach(() => {
   mockSeen.category = undefined;
 });
 
-const where = (values: Partial<CreatePodFormValues>, clubs: CreatePodClub[], pickedVenueId?: string) =>
+const where = (
+  values: Partial<CreatePodFormValues>,
+  clubs: CreatePodClub[],
+  pickedVenueId?: string,
+) =>
   renderWithProviders(
     <Harness values={values}>
       {(f) => (
@@ -97,7 +112,14 @@ describe('What on the picked venue', () => {
     renderWithProviders(
       <Harness values={values}>
         {(f) => (
-          <WhatStep form={f} hostCategories={[]} clubs={[]} pinnedClub={false} venues={venues} pickedVenueId={pickedVenueId} />
+          <WhatStep
+            form={f}
+            hostCategories={[]}
+            clubs={[]}
+            pinnedClub={false}
+            venues={venues}
+            pickedVenueId={pickedVenueId}
+          />
         )}
       </Harness>,
     );
@@ -105,7 +127,9 @@ describe('What on the picked venue', () => {
   it('drops the mode choice, names the venue and keeps it through a category change', () => {
     what(onPicked, 'v1');
     expect(screen.queryByTestId('pod-mode-field')).toBeNull();
-    expect(screen.getByTestId('create-pod-picked-venue')).toHaveTextContent(/A physical pod at Venue v1/);
+    expect(screen.getByTestId('create-pod-picked-venue')).toHaveTextContent(
+      /A physical pod at Venue v1/,
+    );
     expect(mockSeen.category?.keepVenue).toBe(true);
   });
 
@@ -132,7 +156,7 @@ describe('Where & when on the picked venue', () => {
     expect(form.getValues('club_id')).toBe('');
   });
 
-  it("offers every venue and picks no club for an ordinary pod", async () => {
+  it('offers every venue and picks no club for an ordinary pod', async () => {
     where({ ...onPicked, club_id: 'k9' }, [club('k1')]);
     await waitFor(() => expect(mockSeen.slot?.venues.map((v) => v.id)).toEqual(['v1', 'v2']));
     expect(form.getValues('club_id')).toBe('k9');
@@ -156,11 +180,24 @@ describe('pickedVenuePrefill', () => {
   });
 
   it('opens on Where & when with the category picked for a one-category host, else on What', () => {
-    const cities = [{ id: 'loc1', location_name: 'Pune', location_zones: [{ zone_name: 'Baner' }] }] as never;
+    const cities = [
+      { id: 'loc1', location_name: 'Pune', location_zones: [{ zone_name: 'Baner' }] },
+    ] as never;
     expect(pickedVenueFreshSeed(venue('v1'), cities, [badminton] as never)).toEqual({
-      values: { pod_mode: 'PHYSICAL', venue_id: 'v1', location_id: 'loc1', locality: 'Baner', host_category_key: hostCategoryKeyOf(badminton) },
+      values: {
+        pod_mode: 'PHYSICAL',
+        venue_id: 'v1',
+        location_id: 'loc1',
+        locality: 'Baner',
+        host_category_key: hostCategoryKeyOf(badminton),
+      },
       step: 1,
     });
-    expect(pickedVenueFreshSeed(venue('v1'), cities, [badminton, { ...badminton, sub_category_id: 'u2' }] as never).step).toBe(0);
+    expect(
+      pickedVenueFreshSeed(venue('v1'), cities, [
+        badminton,
+        { ...badminton, sub_category_id: 'u2' },
+      ] as never).step,
+    ).toBe(0);
   });
 });

@@ -239,7 +239,11 @@ describe('useCreatePod from "Pick This Venue for Pod"', () => {
     mockRequest.mockResolvedValueOnce(options);
     const { result } = renderHook(() => useCreatePod(undefined, '', '', 'v1'));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
-    expect(result.current.initialValues).toMatchObject({ pod_mode: 'PHYSICAL', venue_id: 'v1', location_id: 'l1' });
+    expect(result.current.initialValues).toMatchObject({
+      pod_mode: 'PHYSICAL',
+      venue_id: 'v1',
+      location_id: 'l1',
+    });
     expect(result.current.initialValues.host_category_key).not.toBe('');
     expect(result.current.initialStep).toBe(1);
     expect(result.current.pickedVenueId).toBe('v1');
@@ -258,7 +262,11 @@ describe('useCreatePod from "Pick This Venue for Pod"', () => {
 
   it('keeps a resumed draft as saved, with the venue on offer only while it is still the picked one', async () => {
     const draft = (venueId: string) => ({
-      myPodDraft: { id: 'd1', step: 2, payload: JSON.stringify({ stepper: 2, venue_id: venueId, pod_title: 'Saved' }) },
+      myPodDraft: {
+        id: 'd1',
+        step: 2,
+        payload: JSON.stringify({ stepper: 2, venue_id: venueId, pod_title: 'Saved' }),
+      },
     });
     mockRequest.mockResolvedValueOnce(options).mockResolvedValueOnce(draft('v1'));
     const { result } = renderHook(() => useCreatePod('d1', '', '', 'v1'));
@@ -274,4 +282,3 @@ describe('useCreatePod from "Pick This Venue for Pod"', () => {
     expect(moved.current.pinnedVenueId).toBeUndefined();
   });
 });
-

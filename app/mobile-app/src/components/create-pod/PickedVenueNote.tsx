@@ -10,8 +10,13 @@ import type { CreatePodForm, CreatePodVenue } from './create-pod.types';
  * Whether the form is still on the venue picked from Venue Details (and so
  * physical): What hides the mode, Where & when offers that venue alone.
  */
-export function usePickedVenueLock(form: CreatePodForm, pickedVenueId: string | undefined): boolean {
-  return form.watch('pod_mode') === 'PHYSICAL' && isPickedVenue(pickedVenueId, form.watch('venue_id'));
+export function usePickedVenueLock(
+  form: CreatePodForm,
+  pickedVenueId: string | undefined,
+): boolean {
+  return (
+    form.watch('pod_mode') === 'PHYSICAL' && isPickedVenue(pickedVenueId, form.watch('venue_id'))
+  );
 }
 
 /**
@@ -19,7 +24,10 @@ export function usePickedVenueLock(form: CreatePodForm, pickedVenueId: string | 
  * Details: says the venue and a physical pod are already chosen, so the host
  * knows why there is no mode or venue list to pick from. mWeb twin.
  */
-export function PickedVenueNote({ venues, venueId }: Readonly<{ venues: CreatePodVenue[]; venueId: string }>) {
+export function PickedVenueNote({
+  venues,
+  venueId,
+}: Readonly<{ venues: CreatePodVenue[]; venueId: string }>) {
   const { t } = useTranslation();
   const { color } = useThemeColors();
   const venue = venues.find((row) => row.id === venueId);

@@ -12,7 +12,10 @@ import { useTranslation } from '@/hooks/useTranslation';
  * venue's name on a list card. Nothing for anyone who is not a host (no
  * terms) or for a venue that sets no minimums. mWeb twin: VenueCardTerms.
  */
-export function VenueCardTerms({ venueId, terms }: Readonly<{ venueId: string; terms?: VenueHostTerms }>) {
+export function VenueCardTerms({
+  venueId,
+  terms,
+}: Readonly<{ venueId: string; terms?: VenueHostTerms }>) {
   const { t } = useTranslation();
   const { brand } = useThemeColors();
   const lines = venueHostTermLines(terms, t, offerMoney, { compact: true });

@@ -145,7 +145,8 @@ export function useCreatePod(
       setInitialValues({ ...values, location_id: values.location_id || fallbackLocationId });
       // A draft started from a Pod Request, or still on the venue picked from
       // Venue Details, keeps that venue on offer too.
-      const keepsVenue = !!values.partner_request_id || (!!pickedId && values.venue_id === pickedId);
+      const keepsVenue =
+        !!values.partner_request_id || (!!pickedId && values.venue_id === pickedId);
       setPinnedVenueId(keepsVenue ? values.venue_id : undefined);
       // A draft the old five-step stepper saved opens on the step that now holds its screen.
       setInitialStep(resumeCreatePodStep(stored.step, stored.payload));

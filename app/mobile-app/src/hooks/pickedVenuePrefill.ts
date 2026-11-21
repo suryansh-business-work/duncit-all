@@ -1,6 +1,10 @@
 import { hostCategoryKeyOf, pickedVenueSeed, type PickedVenueSeed } from '@duncit/utils';
 
-import type { CreatePodHostCategory, CreatePodLocation, CreatePodVenue } from '@/components/create-pod';
+import type {
+  CreatePodHostCategory,
+  CreatePodLocation,
+  CreatePodVenue,
+} from '@/components/create-pod';
 
 /**
  * `navigate('CreatePod', { pickVenueId })` — "Pick This Venue for Pod" on Venue

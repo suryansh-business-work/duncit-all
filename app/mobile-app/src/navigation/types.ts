@@ -76,7 +76,9 @@ export type RootStackParamList = {
   Wallet: undefined;
   /** `partnerRequestId` opens a fresh pod on a Pod Request's confirmed venue + slot. */
   /** `hostAgainPodId`: open filled from one of the host's earlier pods ("Host again"). */
-  CreatePod: { draftId?: string; partnerRequestId?: string; hostAgainPodId?: string; pickVenueId?: string } | undefined;
+  CreatePod:
+    | { draftId?: string; partnerRequestId?: string; hostAgainPodId?: string; pickVenueId?: string }
+    | undefined;
   /** Post-create waiting screen while the venue slot request is PENDING. */
   PodPending: { podId: string };
   RegisterVenue: undefined;

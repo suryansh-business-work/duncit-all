@@ -56,7 +56,13 @@ export function VenueHostTermsCard({ venueId }: Readonly<{ venueId: string }>) {
       {lines.length > 0 ? (
         <YStack gap={8} role="list">
           {lines.map((line) => (
-            <XStack key={line.id} role="listitem" gap={8} alignItems="flex-start" testID={`venue-host-terms-${line.id}`}>
+            <XStack
+              key={line.id}
+              role="listitem"
+              gap={8}
+              alignItems="flex-start"
+              testID={`venue-host-terms-${line.id}`}
+            >
               <MaterialIcons name="check-circle-outline" size={18} color={brand} aria-hidden />
               <Text flex={1} fontSize={14} color="$color">
                 {line.text}

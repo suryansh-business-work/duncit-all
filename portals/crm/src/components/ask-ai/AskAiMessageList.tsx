@@ -48,7 +48,7 @@ export default function AskAiMessageList({ messages, pending, error, onSuggestio
   }, [messages, pending]);
 
   return (
-    <Stack role="log" aria-live="polite" spacing={1.5} sx={{ flex: 1, overflowY: 'auto', p: 1.5, bgcolor: 'action.hover' }}>
+    <Stack role="log" aria-live="polite" spacing={1.5} sx={{ flex: 1, minHeight: 0, overflowY: 'auto', p: 1.5, bgcolor: 'action.hover' }}>
       {messages.length === 0 && !pending && (
         <Stack spacing={1}>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>{t('crm.components.askAnythingAboutThisLeadTry')}</Typography>

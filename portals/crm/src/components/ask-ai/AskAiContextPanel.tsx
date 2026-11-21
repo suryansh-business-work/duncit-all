@@ -50,7 +50,9 @@ export default function AskAiContextPanel({ context, loading }: Readonly<Props>)
   });
 
   return (
-    <Box sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper' }} data-testid="crm-ask-ai-context">
+    // Capped so an expanded source list on a short or zoomed screen scrolls on its
+    // own instead of pushing the composer out of the drawer.
+    <Box sx={{ flexShrink: 0, maxHeight: '40%', overflowY: 'auto', borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper' }} data-testid="crm-ask-ai-context">
       <ButtonBase
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}

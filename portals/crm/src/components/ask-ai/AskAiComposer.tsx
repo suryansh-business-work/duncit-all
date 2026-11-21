@@ -25,7 +25,7 @@ export default function AskAiComposer({ busy, onSend }: Readonly<Props>) {
   };
 
   return (
-    <Stack direction="row" spacing={1} sx={{ alignItems: 'flex-end', p: 1.5, borderTop: 1, borderColor: 'divider' }}>
+    <Stack direction="row" spacing={1} sx={{ alignItems: 'flex-end', flexShrink: 0, p: 1.5, borderTop: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
       <TextField
         size="small"
         fullWidth

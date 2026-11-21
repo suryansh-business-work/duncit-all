@@ -17,6 +17,11 @@ import { ASK_AI_PANEL_WIDTH } from './askAiLead';
 import { fireAndForget, logs } from '@duncit/logs';
 
 const HEADER_HEIGHT = tokens.size.headerHeight;
+/**
+ * The paper is viewport-fixed and starts under the header, so it must also
+ * stop above the shell's taskbar, or the bar paints over the composer.
+ */
+const PAPER_HEIGHT = `calc(100% - ${HEADER_HEIGHT + tokens.size.taskbarHeight}px)`;
 
 export const ASK_AI_WIDTH = ASK_AI_PANEL_WIDTH;
 export type { AskAiLead } from './AskAiActionDialogs';
@@ -37,7 +42,7 @@ function AskAiPanel({ entity, lead, variableValues, open, onClose }: Readonly<Pr
 
   return (
     <Stack sx={{ height: '100%', minHeight: 0 }}>
-      <Stack direction="row" spacing={1} sx={{ alignItems: 'center', p: 1.5, borderBottom: 1, borderColor: 'divider' }}>
+      <Stack direction="row" spacing={1} sx={{ alignItems: 'center', flexShrink: 0, p: 1.5, borderBottom: 1, borderColor: 'divider' }}>
         <SmartToyIcon color="secondary" />
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Typography variant="subtitle1" component="h2" noWrap sx={{ fontWeight: 800 }}>{t('crm.components.askAi')}</Typography>
@@ -101,7 +106,7 @@ export default function AskAiDrawer(props: Readonly<Props>) {
         paper: {
           role: 'complementary',
           'aria-label': t('crm.components.askAi'),
-          sx: { width: { xs: '100%', sm: ASK_AI_WIDTH }, top: HEADER_HEIGHT, height: `calc(100% - ${HEADER_HEIGHT}px)`, borderLeft: 1, borderColor: 'divider' },
+          sx: { width: { xs: '100%', sm: ASK_AI_WIDTH }, top: HEADER_HEIGHT, height: PAPER_HEIGHT, borderLeft: 1, borderColor: 'divider' },
         },
       }}
     >

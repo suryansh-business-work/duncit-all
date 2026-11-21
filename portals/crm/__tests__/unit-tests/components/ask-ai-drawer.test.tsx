@@ -9,6 +9,7 @@ import {
   SET_CRM_LEAD_AI_ACTION_STATUS,
 } from '@/api/askAi.gql';
 import { CREATE_CRM_REMINDER, CRM_REMINDERS, UPDATE_CRM_REMINDER } from '@/api/reminders.gql';
+import { tokens } from '@duncit/theme';
 import { renderWithApollo } from '../helpers/renderWithApollo';
 
 // The Tiptap editor has its own suite; read-only replies show their stored text.
@@ -123,6 +124,19 @@ describe('AskAiDrawer — thread and context', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Close' }));
     expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('sits between the header and the taskbar so the question box is never covered', async () => {
+    renderDrawer([threadMock([])]);
+    await screen.findAllByTestId('crm-ask-ai-suggestion');
+
+    const { headerHeight, taskbarHeight } = tokens.size;
+    expect(screen.getByRole('complementary', { name: 'Ask AI' })).toHaveStyle({
+      top: `${headerHeight}px`,
+      height: `calc(100% - ${headerHeight + taskbarHeight}px)`,
+    });
+    // The conversation is the part that gives up room and scrolls; the composer keeps its size.
+    expect(screen.getByRole('log')).toHaveStyle({ minHeight: '0px', overflowY: 'auto' });
   });
 
   it('offers starter questions on an empty thread and asks one', async () => {

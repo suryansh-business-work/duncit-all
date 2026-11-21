@@ -16,7 +16,10 @@ import { useTranslation } from '@/hooks/useTranslation';
 export function VenueMinBusinessNote({
   rows,
   minSpend,
-}: Readonly<{ rows: readonly VenueMinBusinessRow[] | null | undefined; minSpend?: number | null }>) {
+}: Readonly<{
+  rows: readonly VenueMinBusinessRow[] | null | undefined;
+  minSpend?: number | null;
+}>) {
   const { t } = useTranslation();
   const { color } = useThemeColors();
   const lines = venueMinimumLines(rows, minSpend, t, offerMoney);

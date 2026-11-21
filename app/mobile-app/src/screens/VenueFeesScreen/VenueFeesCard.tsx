@@ -21,7 +21,12 @@ import { fireAndForget } from '@/utils/fire-and-forget';
 import { formResolver } from '@/utils/form-resolver';
 
 /** The only fields this card edits; the rest of the pricing goes back exactly as saved. */
-const FEE_FIELDS: FieldPath<VenuePricingValues>[] = ['deposit', 'cleaning_fee', 'pet_fee', 'gst_enabled'];
+const FEE_FIELDS: FieldPath<VenuePricingValues>[] = [
+  'deposit',
+  'cleaning_fee',
+  'pet_fee',
+  'gst_enabled',
+];
 
 /** The saved pricing with only the fees replaced — the server stores pricing whole. */
 export function feesInput(saved: SavedPricing, values: VenuePricingValues) {
@@ -34,7 +39,15 @@ export function feesInput(saved: SavedPricing, values: VenuePricingValues) {
   };
 }
 
-function FeesForm({ saved, regular, onSave }: Readonly<{ saved: SavedPricing; regular: RegularHours; onSave: (values: VenuePricingValues) => Promise<void> }>) {
+function FeesForm({
+  saved,
+  regular,
+  onSave,
+}: Readonly<{
+  saved: SavedPricing;
+  regular: RegularHours;
+  onSave: (values: VenuePricingValues) => Promise<void>;
+}>) {
   const { t } = useTranslation();
   const schema = useMemo(() => makeVenuePricingSchema(t), [t]);
   const form = useForm<VenuePricingValues, unknown, VenuePricingValues>({
@@ -90,12 +103,22 @@ function FeesForm({ saved, regular, onSave }: Readonly<{ saved: SavedPricing; re
  * for the venue the switcher picked, saved on their own so the booking offers
  * beside them are never touched. mWeb / Partners twin: VenuePricingPartEditor.
  */
-export function VenueFeesCard({ venueId, regular }: Readonly<{ venueId: string; regular: RegularHours }>) {
+export function VenueFeesCard({
+  venueId,
+  regular,
+}: Readonly<{ venueId: string; regular: RegularHours }>) {
   const { t } = useTranslation();
   const { pricing, isLoading, error, save } = useVenuePricing(venueId);
 
   if (isLoading && !pricing) {
-    return <Spinner role="progressbar" aria-label={t('mweb.a11y.loading')} testID="venue-fees-loading" color="$primary" />;
+    return (
+      <Spinner
+        role="progressbar"
+        aria-label={t('mweb.a11y.loading')}
+        testID="venue-fees-loading"
+        color="$primary"
+      />
+    );
   }
   if (!pricing) {
     return (

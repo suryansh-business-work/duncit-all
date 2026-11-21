@@ -47,7 +47,11 @@ const venue = (id: string, offers: StoredOffers | null) => ({
   capacity_items: [],
   offer_min_guests: offers?.min_guests || 6,
   offer_response_hours: offers?.response_hours || 48,
-  settings: { offers, operating_hours: { open: '09:00', close: '22:00' }, cancellation: { reschedule_only: false, tiers: [] } },
+  settings: {
+    offers,
+    operating_hours: { open: '09:00', close: '22:00' },
+    cancellation: { reschedule_only: false, tiers: [] },
+  },
 });
 
 const pricing = {
@@ -83,13 +87,22 @@ const state = (over: Record<string, unknown> = {}) => ({
 });
 
 const offerSaves = () =>
-  mockRequest.mock.calls.filter(([document, variables]) => document === UpdateVenueSettingsDocument && 'offers' in variables.input);
+  mockRequest.mock.calls.filter(
+    ([document, variables]) =>
+      document === UpdateVenueSettingsDocument && 'offers' in variables.input,
+  );
 
 beforeEach(() => {
   jest.clearAllMocks();
   mockRequest.mockResolvedValue({ updateVenueSettings: { id: 'v1' } });
   savePricing.mockResolvedValue(undefined);
-  mockedPricing.mockReturnValue({ pricing, isLoading: false, error: null, refetch: jest.fn(), save: savePricing });
+  mockedPricing.mockReturnValue({
+    pricing,
+    isLoading: false,
+    error: null,
+    refetch: jest.fn(),
+    save: savePricing,
+  });
 });
 
 describe('VenueFeesScreen — booking offers & minimum spend', () => {
@@ -140,7 +153,10 @@ describe('VenueFeesScreen — booking offers & minimum spend', () => {
   });
 
   it('starts a venue that stored no settings at the defaults and no minimum spend', () => {
-    const fresh = { ...venue('v2', null), settings: { offers: null, operating_hours: { open: '09:00', close: '22:00' } } };
+    const fresh = {
+      ...venue('v2', null),
+      settings: { offers: null, operating_hours: { open: '09:00', close: '22:00' } },
+    };
     mockedVenues.mockReturnValue(state({ venues: [fresh], venue: fresh, venueId: 'v2' }));
     renderWithProviders(<VenueFeesScreen />);
     expect(screen.getByTestId('field-min_guests').props.value).toBe('0');
@@ -153,7 +169,9 @@ describe('VenueFeesScreen — booking offers & minimum spend', () => {
     renderWithProviders(<VenueFeesScreen />);
     fireEvent.press(screen.getByTestId('venue-offer-settings-save'));
     await waitFor(() =>
-      expect(screen.getByTestId('venue-offer-settings-error')).toHaveTextContent('Only the venue owner can do that'),
+      expect(screen.getByTestId('venue-offer-settings-error')).toHaveTextContent(
+        'Only the venue owner can do that',
+      ),
     );
     expect(refetch).not.toHaveBeenCalled();
   });
@@ -168,7 +186,14 @@ describe('VenueFeesScreen — fees', () => {
     await waitFor(() => expect(screen.getByTestId('venue-fees-saved')).toBeOnTheScreen());
     expect(savePricing).toHaveBeenCalledTimes(1);
     const input = savePricing.mock.calls[0][0];
-    expect(input).toMatchObject({ model: VenuePricingModel.PerPax, base_rate: 300, deposit: 100, cleaning_fee: 75, pet_fee: 25, gst_enabled: false });
+    expect(input).toMatchObject({
+      model: VenuePricingModel.PerPax,
+      base_rate: 300,
+      deposit: 100,
+      cleaning_fee: 75,
+      pet_fee: 25,
+      gst_enabled: false,
+    });
     expect(input).not.toHaveProperty('min_spend');
     expect(offerSaves()).toEqual([]);
   });
@@ -188,15 +213,29 @@ describe('VenueFeesScreen — fees', () => {
     savePricing.mockRejectedValueOnce(new Error('Pricing is locked'));
     renderWithProviders(<VenueFeesScreen />);
     fireEvent.press(screen.getByTestId('venue-fees-save'));
-    await waitFor(() => expect(screen.getByTestId('venue-fees-error')).toHaveTextContent('Pricing is locked'));
+    await waitFor(() =>
+      expect(screen.getByTestId('venue-fees-error')).toHaveTextContent('Pricing is locked'),
+    );
   });
 
   it('shows the pricing loading, and why it could not be read', () => {
     mockedVenues.mockReturnValue(state());
-    mockedPricing.mockReturnValue({ pricing: null, isLoading: true, error: null, refetch: jest.fn(), save: savePricing });
+    mockedPricing.mockReturnValue({
+      pricing: null,
+      isLoading: true,
+      error: null,
+      refetch: jest.fn(),
+      save: savePricing,
+    });
     const view = renderWithProviders(<VenueFeesScreen />);
     expect(screen.getByTestId('venue-fees-loading')).toBeOnTheScreen();
-    mockedPricing.mockReturnValue({ pricing: null, isLoading: false, error: 'offline', refetch: jest.fn(), save: savePricing });
+    mockedPricing.mockReturnValue({
+      pricing: null,
+      isLoading: false,
+      error: 'offline',
+      refetch: jest.fn(),
+      save: savePricing,
+    });
     view.rerender(<VenueFeesScreen />);
     expect(screen.getByTestId('venue-fees-load-error')).toHaveTextContent('offline');
   });
@@ -204,7 +243,9 @@ describe('VenueFeesScreen — fees', () => {
 
 describe('VenueFeesScreen — states', () => {
   it('says when the venues could not be read, and while they load', () => {
-    mockedVenues.mockReturnValue(state({ venues: [], venue: null, venueId: null, isLoading: true, error: 'offline' }));
+    mockedVenues.mockReturnValue(
+      state({ venues: [], venue: null, venueId: null, isLoading: true, error: 'offline' }),
+    );
     renderWithProviders(<VenueFeesScreen />);
     expect(screen.getByTestId('venue-fees-screen-loading')).toBeOnTheScreen();
     expect(screen.getByTestId('venue-fees-screen-error')).toHaveTextContent('offline');

@@ -1,4 +1,8 @@
-import { minSpendShortfallText, openingOfferMinSpendShortfall, venueOfferFloor } from '@duncit/utils';
+import {
+  minSpendShortfallText,
+  openingOfferMinSpendShortfall,
+  venueOfferFloor,
+} from '@duncit/utils';
 
 import { offerMoney } from '@/components/venue-offer/offer-format';
 import { parseDateTimeText, type OfferRules } from '../create-pod.form';
@@ -16,7 +20,13 @@ type Translate = (key: string, opts?: { vars?: Record<string, string | number> }
 export function makeOfferRules(venues: readonly CreatePodVenue[], t: Translate): OfferRules {
   const venueOf = (venueId: string) => venues.find((venue) => venue.id === venueId) ?? null;
   return {
-    floor: (values) => venueOfferFloor(venueOf(values.venue_id)?.offer_min_business, values.venue_offer_model, t, offerMoney),
+    floor: (values) =>
+      venueOfferFloor(
+        venueOf(values.venue_id)?.offer_min_business,
+        values.venue_offer_model,
+        t,
+        offerMoney,
+      ),
     shortfall: (values) => {
       const short = openingOfferMinSpendShortfall(venueOf(values.venue_id), {
         model: values.venue_offer_model,

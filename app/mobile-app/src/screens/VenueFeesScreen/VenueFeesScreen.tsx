@@ -17,14 +17,20 @@ import { VenueFeesCard } from './VenueFeesCard';
  */
 export function VenueFeesScreen() {
   const { t } = useTranslation();
-  const { venues, venue, venueId, selectVenue, isLoading, error, refetch } = useVenuesWithSettings();
+  const { venues, venue, venueId, selectVenue, isLoading, error, refetch } =
+    useVenuesWithSettings();
 
   return (
     <StackScreen title={t('mweb.studioOptions.venueFees')} testID="venue-fees-screen">
       <RefreshScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         <YStack gap={20} padding={16} paddingBottom={48}>
           {isLoading ? (
-            <Spinner role="progressbar" aria-label={t('mweb.a11y.loading')} testID="venue-fees-screen-loading" color="$primary" />
+            <Spinner
+              role="progressbar"
+              aria-label={t('mweb.a11y.loading')}
+              testID="venue-fees-screen-loading"
+              color="$primary"
+            />
           ) : null}
           <VenueSwitcher venues={venues} venueId={venueId} onSelect={selectVenue} />
           {error ? (

@@ -4,6 +4,9 @@ export const reminderTypeDefs = gql`
   enum CrmReminderEntity {
     VENUE_LEAD
     HOST_LEAD
+    ECOMM_LEAD
+    CREATOR_LEAD
+    COMMUNITY_LEAD
     GENERAL
   }
   enum CrmReminderStatus {

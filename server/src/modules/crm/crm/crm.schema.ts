@@ -615,6 +615,7 @@ export const crmTypeDefs = gql`
     aiParseCrmLeads(entity: CrmAiEntity!, text: String!): String!
     "Chat about one lead, grounded in its CRM data + scraped website content. Returns HTML."
     crmLeadAiChat(entity: CrmAiEntity!, lead_id: ID!, messages: [CrmChatMessageInput!]!): String!
+      @deprecated(reason: "Use askCrmLeadAi, which keeps the conversation and works for every lead kind.")
     crmExcelImport(entity: CrmAiEntity!, content_base64: String!, mapping: [CrmImportMappingInput!]): CrmExcelImportResult!
     addCrmManualLog(input: ManualLogInput!): CrmActivity!
     createCrmDynamicField(input: CrmDynamicFieldInput!): CrmDynamicField!

@@ -3,6 +3,7 @@ import { MODERATION_PROMPTS } from './moderation.prompts';
 import { GENERATION_PROMPTS } from './generation.prompts';
 import { SUPPORT_PROMPTS } from './support.prompts';
 import { CRM_PROMPTS } from './crm.prompts';
+import { CRM_LEAD_AI_PROMPTS } from './crmLeadAi.prompts';
 import { PLATFORM_PROMPTS } from './platform.prompts';
 import { MARKETING_PROMPTS } from './marketing.prompts';
 import { IG_LEAD_PROMPTS } from './igLeads.prompts';
@@ -31,6 +32,7 @@ export const CODE_PROMPTS: readonly InAppPromptDef[] = [
   ...GENERATION_PROMPTS,
   ...SUPPORT_PROMPTS,
   ...CRM_PROMPTS,
+  ...CRM_LEAD_AI_PROMPTS,
   ...PLATFORM_PROMPTS,
   ...MARKETING_PROMPTS,
   ...IG_LEAD_PROMPTS,

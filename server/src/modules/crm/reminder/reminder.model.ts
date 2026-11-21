@@ -1,10 +1,10 @@
 import { Schema, model, InferSchemaType, Types } from 'mongoose';
 
 /**
- * A CRM reminder — a dated to-do, optionally attached to a venue/host lead.
+ * A CRM reminder — a dated to-do, optionally attached to a CRM lead of any kind.
  * Surfaced on lead detail pages (Reminders tab) and the dashboard calendar.
  */
-export const REMINDER_ENTITIES = ['VENUE_LEAD', 'HOST_LEAD', 'GENERAL'] as const;
+export const REMINDER_ENTITIES = ['VENUE_LEAD', 'HOST_LEAD', 'ECOMM_LEAD', 'CREATOR_LEAD', 'COMMUNITY_LEAD', 'GENERAL'] as const;
 export const REMINDER_STATUSES = ['PENDING', 'DONE'] as const;
 export type ReminderEntity = (typeof REMINDER_ENTITIES)[number];
 export type ReminderStatus = (typeof REMINDER_STATUSES)[number];

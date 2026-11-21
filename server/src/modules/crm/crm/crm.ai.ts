@@ -3,9 +3,7 @@ import { resolvePrompt, type ResolvedPrompt } from '@modules/ai/prompt/prompt.se
 import { openaiChat, type OpenAiMessage } from '@services/openai/openai.client';
 import { openAiGraphQLError, openAiInvalidJsonError } from '@services/openai/openai.errors';
 import * as C from './crm.constants';
-import { VenueLeadModel, HostLeadModel } from './crm.model';
-import { WebsitePageModel } from '@modules/crm/websitePage/websitePage.model';
-import { ReminderModel } from '@modules/crm/reminder/reminder.model';
+import { buildLeadAiContext } from '@modules/crm/leadAi/leadAi.context';
 
 const VENUE_SHAPE = `{
   "venue_name": string,                 // required
@@ -115,47 +113,14 @@ async function chatText(
   return res.content;
 }
 
-/** Build a compact context string about a lead, including its scraped website pages. */
-async function buildLeadContext(entity: CrmAiEntity, leadId: string): Promise<string> {
-  const Model: any = entity === 'HOST_LEAD' ? HostLeadModel : VenueLeadModel;
-  const lead: any = await Model.findById(leadId).lean();
-  if (!lead) throw new GraphQLError('Lead not found', { extensions: { code: 'NOT_FOUND' } });
-  const fields = entity === 'VENUE_LEAD'
-    ? ['venue_name', 'venue_types', 'venue_description', 'capacity_min', 'capacity_max', 'space_type', 'city', 'area', 'full_address', 'event_suitability', 'amenities', 'pricing_models', 'expected_charges', 'website', 'contacts', 'services_offered', 'lead_status', 'priority', 'remarks']
-    : ['host_name', 'host_type', 'organization_name', 'city', 'area', 'interests', 'expected_audience_size', 'frequency', 'budget_range', 'revenue_models', 'website', 'contacts', 'services_offered', 'lead_status', 'priority', 'notes'];
-  const picked: Record<string, any> = {};
-  for (const f of fields) if (lead[f] != null && lead[f] !== '') picked[f] = lead[f];
-
-  const pages = await WebsitePageModel.find({ entity_type: entity, lead_id: leadId, status: 'FETCHED' })
-    .select('url title content_text').limit(15).lean();
-  let budget = 12000;
-  const site = pages.map((p: any) => {
-    const body = String(p.content_text ?? '').slice(0, Math.max(0, budget));
-    budget -= body.length;
-    return `# ${p.title || p.url}\n${p.url}\n${body}`;
-  }).filter(Boolean).join('\n\n');
-
-  const reminders = await ReminderModel.find({ entity_type: entity, lead_id: leadId })
-    .select('title due_at status notes').sort({ due_at: 1 }).limit(50).lean();
-  const remindersText = reminders.length
-    ? reminders.map((r: any) => {
-        const notes = r.notes ? ` (${r.notes})` : '';
-        return `- [${r.status}] ${new Date(r.due_at).toISOString()} — ${r.title}${notes}`;
-      }).join('\n')
-    : '(No reminders.)';
-
-  return [
-    `LEAD DATA (${entity}):`,
-    JSON.stringify(picked, null, 2),
-    `\nREMINDERS:\n${remindersText}`,
-    site ? `\nWEBSITE CONTENT:\n${site}` : '\n(No website content fetched yet.)',
-  ].join('\n');
-}
-
-/** Conversational assistant grounded in a single lead's CRM data + website content. */
+/**
+ * Stateless lead chat behind the deprecated `crmLeadAiChat` mutation, kept for
+ * portal builds released before Ask AI threads. It reads the same context as
+ * the Ask AI panel (`buildLeadAiContext`).
+ */
 export async function leadAiChat(entity: CrmAiEntity, leadId: string, messages: ChatMessage[]): Promise<string> {
   if (!messages?.length) throw new GraphQLError('A message is required', { extensions: { code: 'BAD_USER_INPUT' } });
-  const context = await buildLeadContext(entity, leadId);
+  const { text: context } = await buildLeadAiContext(entity, leadId);
   const system = await resolvePrompt('crm.lead_chat', {
     lead_kind: entity === 'VENUE_LEAD' ? 'venue' : 'host',
     context,

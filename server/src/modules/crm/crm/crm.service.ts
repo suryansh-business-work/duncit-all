@@ -20,7 +20,7 @@ import * as C from './crm.constants';
 import { CreatorLeadModel, CommunityLeadModel } from '@modules/crm/prospectLead/prospectLead.model';
 
 /** Lead model + human label per CRM entity type (manual logs, comms activity). */
-const LEAD_MODELS = {
+export const LEAD_MODELS = {
   VENUE_LEAD: VenueLeadModel,
   HOST_LEAD: HostLeadModel,
   ECOMM_LEAD: EcommLeadModel,

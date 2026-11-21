@@ -7301,6 +7301,82 @@ export type CrmImportMappingInput = {
   header: Scalars['String']['input'];
 };
 
+/**
+ * A proposal on an answer. Nothing runs until the agent confirms it in the
+ * panel, which then uses the regular email / reminder mutations.
+ */
+export type CrmLeadAiAction = {
+  __typename?: 'CrmLeadAiAction';
+  body_html?: Maybe<Scalars['String']['output']>;
+  due_at?: Maybe<Scalars['String']['output']>;
+  notes?: Maybe<Scalars['String']['output']>;
+  reminder_id?: Maybe<Scalars['ID']['output']>;
+  reminder_status?: Maybe<CrmReminderStatus>;
+  result_message?: Maybe<Scalars['String']['output']>;
+  status: CrmLeadAiActionStatus;
+  subject?: Maybe<Scalars['String']['output']>;
+  title?: Maybe<Scalars['String']['output']>;
+  to?: Maybe<Scalars['String']['output']>;
+  type: CrmLeadAiActionType;
+};
+
+export type CrmLeadAiActionStatus =
+  | 'DISMISSED'
+  | 'DONE'
+  | 'PROPOSED';
+
+export type CrmLeadAiActionType =
+  | 'CREATE_REMINDER'
+  | 'EMAIL_DRAFT'
+  | 'UPDATE_REMINDER';
+
+export type CrmLeadAiContext = {
+  __typename?: 'CrmLeadAiContext';
+  built_at: Scalars['String']['output'];
+  sources: Array<CrmLeadAiContextSource>;
+  total_chars: Scalars['Int']['output'];
+  total_tokens: Scalars['Int']['output'];
+};
+
+/**
+ * One thing the assistant read before answering: profile, notes, activity,
+ * emails, calls, reminders, website or conversation.
+ */
+export type CrmLeadAiContextSource = {
+  __typename?: 'CrmLeadAiContextSource';
+  chars: Scalars['Int']['output'];
+  /**  Records read (notes, emails, reminders…); 1 for the profile.  */
+  items: Scalars['Int']['output'];
+  key: Scalars['String']['output'];
+  /**  Estimated tokens, ~4 characters per token.  */
+  tokens: Scalars['Int']['output'];
+  /**  True when the source's budget cut older records off.  */
+  truncated: Scalars['Boolean']['output'];
+};
+
+export type CrmLeadAiMessage = {
+  __typename?: 'CrmLeadAiMessage';
+  actions: Array<CrmLeadAiAction>;
+  content: Scalars['String']['output'];
+  created_at?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  /**  user | assistant  */
+  role: Scalars['String']['output'];
+};
+
+export type CrmLeadAiReply = {
+  __typename?: 'CrmLeadAiReply';
+  assistant_message: CrmLeadAiMessage;
+  context: CrmLeadAiContext;
+  user_message: CrmLeadAiMessage;
+};
+
+export type CrmLeadAiThread = {
+  __typename?: 'CrmLeadAiThread';
+  context: CrmLeadAiContext;
+  messages: Array<CrmLeadAiMessage>;
+};
+
 export type CrmLeadFilter = {
   city?: InputMaybe<Scalars['String']['input']>;
   lead_status?: InputMaybe<Scalars['String']['input']>;
@@ -7403,6 +7479,9 @@ export type CrmReminder = {
 };
 
 export type CrmReminderEntity =
+  | 'COMMUNITY_LEAD'
+  | 'CREATOR_LEAD'
+  | 'ECOMM_LEAD'
   | 'GENERAL'
   | 'HOST_LEAD'
   | 'VENUE_LEAD';
@@ -15309,6 +15388,8 @@ export type Mutation = {
    * can never point at a page that does not exist.
    */
   askBotChat: AskBotReply;
+  /**  Ask about a lead; the question and answer are saved to the agent's thread.  */
+  askCrmLeadAi: CrmLeadAiReply;
   /** Replace the set of clubs this admin runs. Other admins of those clubs are untouched. */
   assignClubAdminClubs: ClubAdminProfile;
   /** Give the lead to a person (a living user), or to nobody with null. */
@@ -15452,6 +15533,8 @@ export type Mutation = {
   claimUnitTestRun: UnitTestRun;
   /** Removes a sub-category's challenge settings (challenges are then off for it). */
   clearChallengeCategoryMapping: ChallengeCategoryMapping;
+  /**  Start the agent's conversation about this lead over.  */
+  clearCrmLeadAiThread: Scalars['Boolean']['output'];
   /** Hide every finished job; returns how many. */
   clearFinishedBackgroundJobs: Scalars['Int']['output'];
   /** Forget every stored match — the undo for having allowed contact access. */
@@ -15690,7 +15773,10 @@ export type Mutation = {
   crmExcelImport: CrmExcelImportResult;
   /** Fetch + extract readable content for a single discovered page. */
   crmFetchWebsitePageContent: CrmWebsitePage;
-  /** Chat about one lead, grounded in its CRM data + scraped website content. Returns HTML. */
+  /**
+   * Chat about one lead, grounded in its CRM data + scraped website content. Returns HTML.
+   * @deprecated Use askCrmLeadAi, which keeps the conversation and works for every lead kind.
+   */
   crmLeadAiChat: Scalars['String']['output'];
   /** Discover up to `limit` pages from the lead's website and save them. */
   crmScrapeWebsitePages: CrmWebsiteScrapeResult;
@@ -17034,6 +17120,8 @@ export type Mutation = {
    * phone_otp_verification feature flag is on — the number must then be proved.
    */
   setContactPhoneNumber: User;
+  /**  Record that a proposal was carried out or dismissed.  */
+  setCrmLeadAiActionStatus: CrmLeadAiMessage;
   setDefaultBrandPickupLocation: BrandPickupLocation;
   setDefaultCommsProvider: CommsProvider;
   setDefaultEnvEntry: EnvEntry;
@@ -18318,6 +18406,13 @@ export type MutationAskBotChatArgs = {
 };
 
 
+export type MutationAskCrmLeadAiArgs = {
+  entity: CrmEntityType;
+  lead_id: Scalars['ID']['input'];
+  message: Scalars['String']['input'];
+};
+
+
 export type MutationAssignClubAdminClubsArgs = {
   club_ids: Array<Scalars['ID']['input']>;
   id: Scalars['ID']['input'];
@@ -18577,6 +18672,12 @@ export type MutationClaimUnitTestRunArgs = {
 
 export type MutationClearChallengeCategoryMappingArgs = {
   category_id: Scalars['ID']['input'];
+};
+
+
+export type MutationClearCrmLeadAiThreadArgs = {
+  entity: CrmEntityType;
+  lead_id: Scalars['ID']['input'];
 };
 
 
@@ -21989,6 +22090,16 @@ export type MutationSetCmsSiteARecordArgs = {
 export type MutationSetContactPhoneNumberArgs = {
   phone_extension: Scalars['String']['input'];
   phone_number: Scalars['String']['input'];
+};
+
+
+export type MutationSetCrmLeadAiActionStatusArgs = {
+  action_index: Scalars['Int']['input'];
+  entity: CrmEntityType;
+  lead_id: Scalars['ID']['input'];
+  message_id: Scalars['ID']['input'];
+  result_message?: InputMaybe<Scalars['String']['input']>;
+  status: CrmLeadAiActionStatus;
 };
 
 
@@ -31363,6 +31474,8 @@ export type Query = {
   /** Read an uploaded spreadsheet's headers + sample rows for column mapping. */
   crmExcelInspect: CrmExcelInspectResult;
   crmExcelTemplate: CrmExcelFile;
+  /**  The signed-in agent's Ask AI conversation about one lead, with a fresh context summary.  */
+  crmLeadAiThread: CrmLeadAiThread;
   crmLeadConfig: CrmOptionGroup;
   crmManagedOptions: Array<CrmManagedOption>;
   crmManagedOptionsTable: CrmManagedOptionTablePage;
@@ -34117,6 +34230,12 @@ export type QueryCrmExcelInspectArgs = {
 
 export type QueryCrmExcelTemplateArgs = {
   entity: CrmAiEntity;
+};
+
+
+export type QueryCrmLeadAiThreadArgs = {
+  entity: CrmEntityType;
+  lead_id: Scalars['ID']['input'];
 };
 
 

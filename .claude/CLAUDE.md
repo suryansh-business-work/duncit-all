@@ -1,3 +1,8 @@
+mWeb and Native apps should have absolutely consistent functionality, UI, and user experience, ensuring that all features, validations, navigation flows, and behaviours work identically across both platforms.
+
+## Backword Compatibility
+Ensure complete backward compatibility across mWeb, Native Android, and iOS applications. Users may still be running older app versions even after new releases are deployed. Do not introduce breaking changes that could cause existing app versions to fail. For GraphQL, use the @deprecated directive for outdated fields instead of immediately removing or disabling them. Deprecated fields must remain fully functional and continue supporting older app versions while newer versions migrate to updated fields or APIs. Ensure backward compatibility across backend APIs, GraphQL schemas, response structures, and UI flows. No existing app version should encounter errors or functionality issues due to new releases.
+
 ## Very Inportant Level Instruction
 1. Before writing or executing any code, continuously monitor the system’s CPU temperature, CPU utilization, RAM usage, and storage usage. If any of these resources reach a critically high level that could cause the system to hang, crash, shut down, or interrupt the workflow, temporarily pause all workflows and wait until the system resources return to safe and stable levels. Once everything is normalized, automatically resume the workflow from where it was paused. The primary goal is to prevent system overload, unexpected shutdowns, data loss, and workflow interruptions, There should be no manual typing continue continue after some time based on ram usages etc.
 

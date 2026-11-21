@@ -81,8 +81,8 @@ export default function TemplatesTable({
       actionsColumn<EmailTemplateRow>({
         onEdit,
         onDelete,
-        edit: { ariaLabel: (t) => `Edit ${t.name}` },
-        delete: { ariaLabel: (t) => `Delete ${t.name}` },
+        edit: { ariaLabel: (row) => t('crm.common.editNamed', { vars: { name: row.name } }) },
+        delete: { ariaLabel: (row) => t('crm.common.deleteNamed', { vars: { name: row.name } }) },
       }),
     ],
     [onEdit, onDelete],
@@ -97,9 +97,9 @@ export default function TemplatesTable({
       getRowId={getTemplateRowId}
       onRowClick={onEdit}
       toolbarActions={toolbarActions}
-      emptyText='No templates yet. Click "New template" to create your first one.'
+      emptyText={t('crm.emailTemplates.noTemplatesYet')}
       defaultSort={{ field: 'name', dir: 'asc' }}
-      searchPlaceholder="Search name, slug or subject"
+      searchPlaceholder={t('crm.emailTemplates.searchTemplates')}
       refetchRef={refetchRef}
     />
   );

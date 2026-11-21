@@ -31,7 +31,7 @@ describe('EmailTemplateEditorPage', () => {
     expect(await screen.findByText('venue-welcome')).toBeInTheDocument();
     expect(screen.getByLabelText('Name')).toHaveValue('Venue welcome');
     expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
-    await waitFor(() => expect(screen.getByTitle('preview')).toHaveAttribute('srcdoc', '<p>Hi Grand Hall</p>'), PREVIEW_WAIT);
+    await waitFor(() => expect(screen.getByTitle('Email preview')).toHaveAttribute('srcdoc', '<p>Hi Grand Hall</p>'), PREVIEW_WAIT);
   });
 
   it('saves an edit and confirms it', async () => {

@@ -43,7 +43,7 @@ export default function TemplateEditorPanel(p: Readonly<Props>) {
           value={draft.subject}
           onChange={(e) => setDraft({ ...draft, subject: e.target.value })}
           sx={{ flex: '2 1 320px' }}
-          helperText="Variables {{ name }} are interpolated."
+          helperText={t('crm.emailTemplates.subjectHint')}
         />
       </Stack>
 

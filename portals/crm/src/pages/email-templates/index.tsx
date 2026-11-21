@@ -37,7 +37,7 @@ export default function EmailTemplatesPage() {
     if (!removing) return;
     try {
       await deleteMut({ variables: { id: removing.template_id } });
-      setSnack('Template deleted');
+      setSnack(t('crm.emailTemplates.templateDeleted'));
       refetchRef.current?.();
     } catch (e) {
       setSnack(parseApiError(e));
@@ -74,7 +74,7 @@ export default function EmailTemplatesPage() {
         refetchRef={refetchRef}
         toolbarActions={
           <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={() => setCreateOpen(true)}>
-            New template
+            {t('crm.emailTemplates.newTemplate')}
           </DuncitButton>
         }
         onEdit={(t) => navigate(`/email-templates/${t.template_id}`)}
@@ -94,10 +94,10 @@ export default function EmailTemplatesPage() {
       <ConfirmDialog
         open={!!removing}
         title={t('crm.emailTemplates.deleteTemplate')}
-        message={`Delete "${removing?.name ?? ''}"? This cannot be undone.`}
+        message={t('crm.emailTemplates.deleteTemplateMessage', { vars: { name: removing?.name ?? '' } })}
         confirmLabel={t('shell.common.delete')}
         destructive
-        busyLabel="Working…"
+        busyLabel={t('crm.common.working')}
         loading={deleting}
         onConfirm={confirmDelete}
         onClose={() => setRemoving(null)}

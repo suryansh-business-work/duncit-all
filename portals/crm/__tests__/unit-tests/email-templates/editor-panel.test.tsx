@@ -29,7 +29,7 @@ describe('Email template editor — source pane', () => {
 
     expect(editor()).toHaveValue(formatMjml(messy));
     expect(screen.getByText('Unsaved changes')).toBeInTheDocument();
-    await waitFor(() => expect(screen.getByTitle('preview')).toHaveAttribute('srcdoc', '<p>Tidy</p>'), PREVIEW_WAIT);
+    await waitFor(() => expect(screen.getByTitle('Email preview')).toHaveAttribute('srcdoc', '<p>Tidy</p>'), PREVIEW_WAIT);
   });
 
   it('inserts a library image into the source', async () => {

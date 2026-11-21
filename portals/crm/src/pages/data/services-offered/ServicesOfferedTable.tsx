@@ -89,8 +89,8 @@ export default function ServicesOfferedTable({
       actionsColumn<CrmServiceOfferedRow>({
         onEdit,
         onDelete,
-        edit: { ariaLabel: (s) => `Edit ${s.title}` },
-        delete: { ariaLabel: (s) => `Delete ${s.title}` },
+        edit: { ariaLabel: (s) => t('crm.common.editNamed', { vars: { name: s.title } }) },
+        delete: { ariaLabel: (s) => t('crm.common.deleteNamed', { vars: { name: s.title } }) },
       }),
     ],
     [onEdit, onDelete, t],
@@ -104,8 +104,8 @@ export default function ServicesOfferedTable({
       fetchRows={fetchRows}
       getRowId={getServiceRowId}
       toolbarActions={toolbarActions}
-      emptyText='No services yet. Click "Add Service Offered" to create your first one.'
-      searchPlaceholder="Search title or slug"
+      emptyText={t('crm.data.noServicesYet')}
+      searchPlaceholder={t('crm.data.searchServices')}
       refetchRef={refetchRef}
     />
   );

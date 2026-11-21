@@ -41,7 +41,7 @@ export default function SendTestDialog({ open, templateId, varsJson, onClose, on
     try {
       const res = await sendTest({ variables: { id, to: to.trim(), vars: varsJson } });
       const r = res.data?.sendTestEmail;
-      const message = r?.message || (r?.ok ? 'Sent' : 'Failed');
+      const message = r?.message || (r?.ok ? t('crm.emailTemplates.sent') : t('crm.emailTemplates.failed'));
       onResult(r?.ok ? 'success' : 'error', message);
       if (r?.ok) onClose();
       else setError(message);
@@ -63,11 +63,11 @@ export default function SendTestDialog({ open, templateId, varsJson, onClose, on
           required
           margin="normal"
           type="email"
-          label="To"
+          label={t('crm.emailTemplates.to')}
           value={to}
           onChange={(e) => setTo(e.target.value)}
           error={!!to && !valid}
-          helperText={to && !valid ? 'Enter a valid email' : 'Uses the sample JSON from the Variables tab.'}
+          helperText={to && !valid ? t('crm.emailTemplates.enterValidEmail') : t('crm.emailTemplates.sendTestHint')}
           disabled={loading}
         />
         {error && <Typography variant="caption" color="error" role="alert" sx={{ display: 'block', mt: 1 }}>{error}</Typography>}
@@ -81,7 +81,7 @@ export default function SendTestDialog({ open, templateId, varsJson, onClose, on
           disabled={!templateId || loading || !valid}
           startIcon={loading ? <CircularProgress size={16} /> : undefined}
         >
-          {loading ? 'Sending…' : 'Send'}
+          {loading ? t('crm.emailTemplates.sending') : t('crm.emailTemplates.send')}
         </DuncitButton>
       </DialogActions>
     </Dialog>

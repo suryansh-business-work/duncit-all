@@ -64,7 +64,7 @@ describe('PreviewVariablesPane — preview', () => {
     render(<Harness initial={venueDraft} initialTab="preview" previewErrors={['a', 'b', 'c', 'd']} />);
 
     expect(screen.getByText('a · b · c')).toBeInTheDocument();
-    expect(screen.getByTitle('preview')).toHaveAttribute('srcdoc', '<p>Hello Grand Hall</p>');
+    expect(screen.getByTitle('Email preview')).toHaveAttribute('srcdoc', '<p>Hello Grand Hall</p>');
 
     fireEvent.click(screen.getByRole('button', { name: 'Full screen preview' }));
     const dialog = within(await screen.findByRole('dialog', { name: 'Full screen preview' }));
@@ -83,7 +83,7 @@ describe('PreviewVariablesPane — preview', () => {
     fireEvent.keyDown(await screen.findByRole('dialog', { name: 'Full screen preview' }), { key: 'Escape' });
 
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
-    expect(screen.getByTitle('preview')).toBeInTheDocument();
+    expect(screen.getByTitle('Email preview')).toBeInTheDocument();
   });
 });
 

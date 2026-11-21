@@ -34,10 +34,10 @@ const slugify = (s: string) => s.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-'
 type Translate = ReturnType<typeof useTranslation>['t'];
 
 const targets = (t: Translate): { value: EmailTemplateTarget; label: string; hint: string; icon: JSX.Element }[] =>[
-  { value: 'VENUE', label: t('crm.emailTemplates.venueLeadEmails'), hint: 'Use venue lead variables (venue name, city, contact…).', icon: <StorefrontIcon color="primary" /> },
-  { value: 'HOST', label: t('crm.emailTemplates.hostLeadEmails'), hint: 'Use host lead variables (host name, organization, contact…).', icon: <GroupsIcon color="primary" /> },
-  { value: 'ECOMM', label: t('crm.emailTemplates.ecommLeadEmails'), hint: 'Use ecomm lead variables (seller name, brand, contact…).', icon: <StorefrontIcon color="primary" /> },
-  { value: 'STATIC', label: t('crm.emailTemplates.staticNoVariables'), hint: 'A fixed template with no lead-specific variables.', icon: <DescriptionIcon color="primary" /> },
+  { value: 'VENUE', label: t('crm.emailTemplates.venueLeadEmails'), hint: t('crm.emailTemplates.venueHint'), icon: <StorefrontIcon color="primary" /> },
+  { value: 'HOST', label: t('crm.emailTemplates.hostLeadEmails'), hint: t('crm.emailTemplates.hostHint'), icon: <GroupsIcon color="primary" /> },
+  { value: 'ECOMM', label: t('crm.emailTemplates.ecommLeadEmails'), hint: t('crm.emailTemplates.ecommHint'), icon: <StorefrontIcon color="primary" /> },
+  { value: 'STATIC', label: t('crm.emailTemplates.staticNoVariables'), hint: t('crm.emailTemplates.staticHint'), icon: <DescriptionIcon color="primary" /> },
 ];
 
 /** New CRM email template: first pick a target (card choice), then the basics. */
@@ -88,7 +88,7 @@ export default function CreateTemplateDialog({ open, onClose, onCreated }: Reado
             }}>
               <Typography variant="caption" sx={{
                 color: "text.secondary"
-              }}>Type:</Typography>
+              }}>{t('crm.emailTemplates.typeLabel')}</Typography>
               <Typography variant="body2" sx={{
                 fontWeight: 700
               }}>{targets(t).find((t) => t.value === target)?.label}</Typography>
@@ -134,7 +134,7 @@ export default function CreateTemplateDialog({ open, onClose, onCreated }: Reado
       <DialogActions>
         <DuncitButton onClick={close} disabled={loading}>{t('shell.common.cancel')}</DuncitButton>
         <DuncitButton variant="contained" onClick={submit} disabled={loading || !target || !name.trim() || !subject.trim() || !mjml}>
-          {loading ? 'Creating…' : 'Create'}
+          {loading ? t('crm.emailTemplates.creating') : t('crm.emailTemplates.create')}
         </DuncitButton>
       </DialogActions>
     </Dialog>

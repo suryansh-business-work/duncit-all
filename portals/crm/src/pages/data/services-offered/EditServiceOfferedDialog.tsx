@@ -99,7 +99,7 @@ export default function EditServiceOfferedDialog({ service, onClose, onSaved }: 
       <DialogActions>
         <DuncitButton onClick={onClose}>{t('shell.common.cancel')}</DuncitButton>
         <DuncitButton variant="contained" onClick={save} disabled={loading || !title.trim() || !hasAnyTarget(targets)}>
-          {loading ? 'Saving…' : t('shell.common.save')}
+          {loading ? t('shell.common.saving') : t('shell.common.save')}
         </DuncitButton>
       </DialogActions>
     </Dialog>

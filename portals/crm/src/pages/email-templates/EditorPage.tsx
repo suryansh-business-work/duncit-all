@@ -88,10 +88,10 @@ export default function EmailTemplateEditorPage() {
       <ConfirmDialog
         open={confirmDelete}
         title={t('crm.emailTemplates.deleteTemplate')}
-        message={`Delete "${editor.draft.name}"? This cannot be undone.`}
+        message={t('crm.emailTemplates.deleteTemplateMessage', { vars: { name: editor.draft.name } })}
         confirmLabel={t('shell.common.delete')}
         destructive
-        busyLabel="Working…"
+        busyLabel={t('crm.common.working')}
         loading={editor.deleting}
         onConfirm={async () => { await editor.remove(); setConfirmDelete(false); back(); }}
         onClose={() => setConfirmDelete(false)}

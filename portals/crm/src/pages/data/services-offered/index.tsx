@@ -118,7 +118,7 @@ export default function ServicesOfferedPage() {
         <DialogActions>
           <DuncitButton onClick={() => setOpen(false)}>{t('shell.common.cancel')}</DuncitButton>
           <DuncitButton variant="contained" onClick={submit} disabled={creating || !draft.super_category_id || draft.titles.length === 0 || !targetValid}>
-            {creating ? 'Adding…' : 'Add'}
+            {creating ? t('crm.common.adding') : t('crm.common.add')}
           </DuncitButton>
         </DialogActions>
       </Dialog>
@@ -132,10 +132,10 @@ export default function ServicesOfferedPage() {
       <ConfirmDialog
         open={!!toDelete}
         title={t('crm.common.deleteService')}
-        message={`Delete "${toDelete?.title ?? ''}"?`}
+        message={t('crm.data.deleteServiceMessage', { vars: { title: toDelete?.title ?? '' } })}
         confirmLabel={t('shell.common.delete')}
         destructive
-        busyLabel="Working…"
+        busyLabel={t('crm.common.working')}
         loading={deleting}
         onConfirm={confirmDelete}
         onClose={() => setToDelete(null)}

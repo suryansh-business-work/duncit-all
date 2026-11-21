@@ -55,7 +55,7 @@ export default function ServiceOfferedForm({ value, onChange }: Readonly<Props>)
         value={value.category_id}
         onChange={(e) => set({ category_id: e.target.value, sub_category_id: '' })}
         disabled={!value.super_category_id || cats.options.length === 0}
-        helperText={value.super_category_id && cats.options.length === 0 ? 'No categories under this super category' : 'Optional'}
+        helperText={value.super_category_id && cats.options.length === 0 ? t('crm.data.noCategoriesUnderSuper') : t('crm.common.optional')}
         fullWidth
       >
         {cats.options.map((c) => (
@@ -70,7 +70,7 @@ export default function ServiceOfferedForm({ value, onChange }: Readonly<Props>)
         value={value.sub_category_id}
         onChange={(e) => set({ sub_category_id: e.target.value })}
         disabled={!value.category_id || subs.options.length === 0}
-        helperText={value.category_id && subs.options.length === 0 ? 'No sub-categories under this category' : 'Optional'}
+        helperText={value.category_id && subs.options.length === 0 ? t('crm.data.noSubCategoriesUnderCategory') : t('crm.common.optional')}
         fullWidth
       >
         {subs.options.map((c) => (

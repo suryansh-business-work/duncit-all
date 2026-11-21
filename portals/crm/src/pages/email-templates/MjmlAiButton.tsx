@@ -46,7 +46,7 @@ export default function MjmlAiButton({ currentMjml, onApply, iconOnly, label, ta
     try {
       const res = await run({ variables: { input: { prompt: instruction, current_mjml: currentMjml, target: target ?? null } } });
       const mjml = res.data?.generateCrmEmailMjml;
-      if (!mjml) throw new Error('AI did not return MJML');
+      if (!mjml) throw new Error(t('crm.emailTemplates.aiNoMjml'));
       onApply(mjml);
       setPrompt('');
       setAnchorEl(null);
@@ -65,7 +65,7 @@ export default function MjmlAiButton({ currentMjml, onApply, iconOnly, label, ta
         </Tooltip>
       ) : (
         <DuncitButton size="small" variant="outlined" color="secondary" startIcon={<AutoAwesomeIcon />} aria-haspopup="dialog" aria-expanded={open} onClick={(e) => setAnchorEl(e.currentTarget)}>
-          {label || 'Create with AI'}
+          {label || t('crm.emailTemplates.createWithAi')}
         </DuncitButton>
       )}
       <Popover
@@ -104,7 +104,7 @@ export default function MjmlAiButton({ currentMjml, onApply, iconOnly, label, ta
               disabled={loading || !prompt.trim()}
               startIcon={loading ? <CircularProgress size={14} color="inherit" /> : <AutoAwesomeIcon />}
             >
-              {loading ? 'Working…' : 'Apply'}
+              {loading ? t('crm.common.working') : t('crm.emailTemplates.apply')}
             </DuncitButton>
           </Stack>
         </Stack>

@@ -95,11 +95,11 @@ export default function ServicesOfferedPicker({
         <TextField
           {...p}
           label={t('shell.nav.servicesOffered')}
-          placeholder={selected.length ? '' : 'Loaded from your category selection'}
+          placeholder={selected.length ? '' : t('crm.forms.servicesPickerPlaceholder')}
           helperText={
             titles.length === 0 && !loading
-              ? 'No catalogue services for this category — add them under Data → Services Offered, or type your own.'
-              : 'Auto-loaded from the Services Offered catalogue'
+              ? t('crm.forms.servicesPickerEmpty')
+              : t('crm.forms.servicesPickerHint')
           }
         />
       )}

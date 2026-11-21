@@ -14,10 +14,12 @@ import { ConfirmDialog } from '@duncit/dialogs';
 import { CrmLeadsTable } from '../../components/lead-table';
 import { parseApiError } from '@duncit/utils';
 import { useTranslation } from '@duncit/shell';
+import { useLeadEditorOrigin } from '../../hooks/useLeadEditorFlow';
 
 export default function EcommLeadsPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const editorOrigin = useLeadEditorOrigin();
   const client = useApolloClient();
   const { config } = useCrmConfig();
   const { options: superCategories } = useSuperCategories();
@@ -75,12 +77,12 @@ export default function EcommLeadsPage() {
         priorityOptions={priorityOptions}
         superCategoryOptions={superCategoryOptions}
         toolbarActions={
-          <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/ecomm-leads/new')}>
+          <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/ecomm-leads/new', { state: editorOrigin })}>
             New Ecomm Lead
           </DuncitButton>
         }
         onView={(lead) => navigate(`/ecomm-leads/${lead.id}/view`)}
-        onEdit={(lead) => navigate(`/ecomm-leads/${lead.id}`)}
+        onEdit={(lead) => navigate(`/ecomm-leads/${lead.id}`, { state: editorOrigin })}
         onDelete={setToDelete}
       />
 

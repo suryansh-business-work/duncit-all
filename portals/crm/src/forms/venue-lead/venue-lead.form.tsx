@@ -6,6 +6,8 @@ import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
 import { DuncitButton } from '@duncit/buttons';
 import { flattenErrors } from '../flattenErrors';
+import { useLeadFormSubmit } from '../useLeadFormSubmit';
+import LeadFormActions from '../../components/LeadFormActions';
 import FormAccordion from '../../components/FormAccordion';
 import { venueLeadSchema } from './venue-lead.schema';
 import { venueLeadInitialValues, type VenueLeadFormValues } from './venue-lead.types';
@@ -33,6 +35,9 @@ interface Props {
   submitLabel?: string;
   onSubmit: (values: VenueLeadFormValues) => Promise<void> | void;
   onCancel?: () => void;
+  /** Save without leaving the form ("Update & Continue"). */
+  onSubmitAndContinue?: (values: VenueLeadFormValues) => Promise<void> | void;
+  continueLabel?: string;
 }
 
 const SECTIONS = [
@@ -62,11 +67,19 @@ const SECTIONS = [
   },
 ];
 
-export default function VenueLeadForm({ config, initialValues, submitting, submitLabel, onSubmit, onCancel }: Readonly<Props>) {
+export default function VenueLeadForm({
+  config,
+  initialValues,
+  submitting,
+  submitLabel,
+  onSubmit,
+  onCancel,
+  onSubmitAndContinue,
+  continueLabel,
+}: Readonly<Props>) {
   const { t } = useTranslation();
   const submitLabelText = submitLabel ?? t('crm.forms.saveVenueLead');
 
-  const [status, setStatus] = useState<string | undefined>(undefined);
   const methods = useForm<VenueLeadFormValues, any, VenueLeadFormValues>({
     resolver: zodResolver(venueLeadSchema, undefined, { raw: true }) as unknown as Resolver<VenueLeadFormValues, any, VenueLeadFormValues>,
     mode: 'onChange',
@@ -75,14 +88,7 @@ export default function VenueLeadForm({ config, initialValues, submitting, submi
   const { errors, submitCount, isValid } = methods.formState;
   const flat = submitCount > 0 ? flattenErrors(errors) : [];
 
-  const handle = methods.handleSubmit(async (values) => {
-    setStatus(undefined);
-    try {
-      await onSubmit(values);
-    } catch (error: any) {
-      setStatus(error?.message ?? t('crm.components.somethingWentWrong'));
-    }
-  });
+  const { status, continuing, handle, handleContinue } = useLeadFormSubmit(methods, onSubmit, onSubmitAndContinue);
 
   return (
     <FormProvider {...methods}>
@@ -105,22 +111,15 @@ export default function VenueLeadForm({ config, initialValues, submitting, submi
             </Alert>
           )}
           <VenueSections config={config} />
-          <Stack
-            direction="row"
-            spacing={1}
-            sx={{
-              justifyContent: "flex-end",
-              pt: 1
-            }}>
-            {onCancel && (
-              <DuncitButton onClick={onCancel} disabled={submitting} data-testid="lead-form-cancel">
-                {t('shell.common.cancel')}
-              </DuncitButton>
-            )}
-            <DuncitButton type="submit" data-testid="lead-form-submit" variant="contained" loading={submitting} disabled={(submitCount > 0 && !isValid)}>
-              {submitting ? 'Saving…' : submitLabelText}
-            </DuncitButton>
-          </Stack>
+          <LeadFormActions
+            submitLabel={submitLabelText}
+            submitting={submitting}
+            continuing={continuing}
+            invalid={submitCount > 0 && !isValid}
+            continueLabel={continueLabel}
+            onContinue={handleContinue}
+            onCancel={onCancel}
+          />
         </Stack>
       </form>
     </FormProvider>

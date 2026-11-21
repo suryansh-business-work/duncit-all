@@ -13,11 +13,13 @@ import { leadDate } from './helpers';
 import { buildVenueLeadTabs } from './buildVenueLeadTabs';
 import VenueHeroCard from './VenueHeroCard';
 import VenueStatTiles from './VenueStatTiles';
+import { useLeadEditorOrigin } from '../../../hooks/useLeadEditorFlow';
 
 export default function VenueLeadDetailPage() {
   const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const editorOrigin = useLeadEditorOrigin();
   const [aiOpen, setAiOpen] = useState(false);
   const { data, loading, error } = useQuery<{ venueLead: VenueLead | null }>(VENUE_LEAD, {
     variables: { id },
@@ -51,7 +53,7 @@ export default function VenueLeadDetailPage() {
         lead={lead}
         t={t}
         onAskAi={() => setAiOpen(true)}
-        onEdit={() => navigate(`/venue-leads/${lead.id}`)}
+        onEdit={() => navigate(`/venue-leads/${lead.id}`, { state: editorOrigin })}
       />
 
       {lead.matched_user && <MatchedUserBox matched={lead.matched_user} />}

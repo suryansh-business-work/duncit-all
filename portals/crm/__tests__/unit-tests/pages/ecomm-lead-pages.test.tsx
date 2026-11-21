@@ -84,7 +84,7 @@ describe('EcommLeadEditorPage', () => {
     expect(screen.queryByRole('button', { name: 'Update ecomm lead' })).toBeNull();
   });
 
-  it('saves the edited lead through updateEcommLead and returns to the list', async () => {
+  it('saves the edited lead through updateEcommLead and returns to its detail page, not the list', async () => {
     const update = vi.fn(() => ({ data: { updateEcommLead: lead } }));
     renderEditor('/ecomm-leads/ecomm-1', '/ecomm-leads/:id', [
       configMock(),
@@ -101,8 +101,31 @@ describe('EcommLeadEditorPage', () => {
 
     fireEvent.click(await screen.findByRole('button', { name: 'Update ecomm lead' }));
 
-    await waitFor(() => expect(screen.getByTestId('location')).toHaveTextContent(/^\/ecomm-leads$/));
+    await waitFor(() => expect(screen.getByTestId('location')).toHaveTextContent(/^\/ecomm-leads\/ecomm-1\/view$/));
     expect(update).toHaveBeenCalledTimes(1);
+  });
+
+  it('Update & Continue saves the edited lead and stays on its editor', async () => {
+    const update = vi.fn(() => ({ data: { updateEcommLead: lead } }));
+    renderEditor('/ecomm-leads/ecomm-1', '/ecomm-leads/:id', [
+      configMock(),
+      superCategoriesMock,
+      leadQueryMock({ ...lead, matched_user: null }),
+      {
+        request: {
+          query: UPDATE_ECOMM_LEAD,
+          variables: { id: 'ecomm-1', input: toEcommLeadInput(fromEcommLead(lead)) },
+        },
+        result: update,
+      },
+    ]);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Update & Continue' }));
+
+    expect(await screen.findByText('Lead updated. Keep editing or go back when you are done.')).toBeInTheDocument();
+    expect(update).toHaveBeenCalledTimes(1);
+    expect(screen.getByTestId('location')).toHaveTextContent(/^\/ecomm-leads\/ecomm-1$/);
+    expect(screen.getByRole('heading', { level: 1, name: 'Edit Kavya Iyer' })).toBeInTheDocument();
   });
 
   it('creates a new lead through createEcommLead and returns to the list', async () => {

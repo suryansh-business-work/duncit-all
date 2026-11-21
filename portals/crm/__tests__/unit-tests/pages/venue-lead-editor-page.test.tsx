@@ -14,7 +14,7 @@ const SUPER = '64a000000000000000000001';
 
 function LocationProbe() {
   const location = useLocation();
-  return <output data-testid="location">{location.pathname}</output>;
+  return <output data-testid="location">{`${location.pathname}${location.search}`}</output>;
 }
 
 const renderEditor = (entry: string | { pathname: string; state: unknown }, mocks: MockedResponse[]) =>
@@ -91,7 +91,7 @@ describe('VenueLeadEditorPage', () => {
     expect(screen.getByRole('button', { name: 'Create venue lead' })).toBeInTheDocument();
   });
 
-  it('updates an existing lead by id and returns to the list', async () => {
+  it('updates an existing lead by id and returns to its detail page, not the list', async () => {
     const sent: Record<string, any>[] = [];
     renderEditor('/venue-leads/venue-1', [
       leadMock({ ...venueLead({ super_category_id: SUPER }), matched_user: null }),
@@ -105,7 +105,7 @@ describe('VenueLeadEditorPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Update venue lead' }));
 
     // Validate → mutate → navigate takes over 1s under v8 coverage on CI.
-    await waitFor(() => expect(screen.getByTestId('location')).toHaveTextContent(/^\/venue-leads$/), { timeout: 3000 });
+    await waitFor(() => expect(screen.getByTestId('location')).toHaveTextContent(/^\/venue-leads\/venue-1\/view$/), { timeout: 3000 });
     expect(sent.at(-1)?.id).toBe('venue-1');
     expect(sent.at(-1)?.input).toEqual(
       expect.objectContaining({ venue_name: 'Grand Hall', super_category_id: SUPER, city: 'Pune', capacity_max: 300 }),
@@ -137,5 +137,64 @@ describe('VenueLeadEditorPage', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Cancel' }));
 
     expect(screen.getByTestId('location')).toHaveTextContent(/^\/venue-leads$/);
+  });
+
+  it('returns to the page the editor was opened from, query string included', async () => {
+    const from = '/venue-leads/venue-1/view?tab=contacts';
+    renderEditor({ pathname: '/venue-leads/venue-1', state: { from } }, [
+      leadMock({ ...venueLead({ super_category_id: SUPER }), matched_user: null }),
+      capture(UPDATE_VENUE_LEAD, 'updateVenueLead', []),
+    ]);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Update venue lead' }));
+
+    await waitFor(() => expect(screen.getByTestId('location')).toHaveTextContent(from), { timeout: 3000 });
+  });
+
+  it('cancelling an edit with no recorded origin goes to the lead, not the list', async () => {
+    renderEditor('/venue-leads/venue-1', [leadMock({ ...venueLead({ super_category_id: SUPER }), matched_user: null })]);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Cancel' }));
+
+    expect(screen.getByTestId('location')).toHaveTextContent(/^\/venue-leads\/venue-1\/view$/);
+  });
+
+  it('Update & Continue saves the lead and keeps the user on its editor', async () => {
+    const sent: Record<string, any>[] = [];
+    renderEditor('/venue-leads/venue-1', [
+      leadMock({ ...venueLead({ super_category_id: SUPER }), matched_user: null }),
+      capture(UPDATE_VENUE_LEAD, 'updateVenueLead', sent),
+    ]);
+
+    fireEvent.change(await screen.findByRole('textbox', { name: /Venue Name/ }), { target: { value: 'Grand Hall Annexe' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Update & Continue' }));
+
+    expect(await screen.findByText('Lead updated. Keep editing or go back when you are done.', {}, { timeout: 3000 })).toBeInTheDocument();
+    expect(sent).toHaveLength(1);
+    expect(sent[0]).toEqual(expect.objectContaining({ id: 'venue-1', input: expect.objectContaining({ venue_name: 'Grand Hall Annexe' }) }));
+    expect(screen.getByTestId('location')).toHaveTextContent(/^\/venue-leads\/venue-1$/);
+    expect(screen.getByRole('textbox', { name: /Venue Name/ })).toHaveValue('Grand Hall Annexe');
+  });
+
+  it('Create & Continue moves the new lead onto its edit URL so the next save updates it', async () => {
+    const created: Record<string, any>[] = [];
+    const updated: Record<string, any>[] = [];
+    renderEditor({ pathname: '/venue-leads/new', state: { aiPrefill, from: '/venue-leads?status=New' } }, [
+      capture(CREATE_VENUE_LEAD, 'createVenueLead', created),
+      leadMock({ ...venueLead({ super_category_id: SUPER }), matched_user: null }),
+      capture(UPDATE_VENUE_LEAD, 'updateVenueLead', updated),
+    ]);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Create & Continue' }));
+
+    await waitFor(() => expect(screen.getByTestId('location')).toHaveTextContent(/^\/venue-leads\/venue-1$/), { timeout: 3000 });
+    expect(await screen.findByText('Lead created. You can keep adding details.')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 1, name: 'Edit Grand Hall' })).toBeInTheDocument();
+
+    // The follow-up save updates the lead just created and still returns to the original list view.
+    fireEvent.click(screen.getByRole('button', { name: 'Update venue lead' }));
+    await waitFor(() => expect(screen.getByTestId('location')).toHaveTextContent('/venue-leads?status=New'), { timeout: 3000 });
+    expect(created).toHaveLength(1);
+    expect(updated.at(-1)?.id).toBe('venue-1');
   });
 });

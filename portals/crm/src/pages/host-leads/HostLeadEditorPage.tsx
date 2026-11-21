@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
-import { useLocation, useNavigate, useParams } from 'react-router';
-import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
+import { useLocation, useParams } from 'react-router';
+import { Alert, Box, CircularProgress, Snackbar, Stack, Typography } from '@mui/material';
 import { CREATE_HOST_LEAD, HOST_LEAD, UPDATE_HOST_LEAD } from '../../api/crm.gql';
 import { useCrmConfig } from '../../api/useCrmConfig';
 import { HostLeadForm, fromHostLead, toHostLeadInput, type HostLeadFormValues } from '../../forms/host-lead';
@@ -9,12 +9,12 @@ import { hostLeadInitialValues } from '../../forms/host-lead/host-lead.types';
 import { mergeAiPrefill } from '../../forms/aiPrefill';
 import type { HostLead } from '../../api/crm.types';
 import { useTranslation } from '@duncit/shell';
+import { useLeadEditorFlow } from '../../hooks/useLeadEditorFlow';
 
 export default function HostLeadEditorPage() {
   const { t } = useTranslation();
   const { id } = useParams();
   const isEdit = !!id;
-  const navigate = useNavigate();
   const location = useLocation();
   const { config, loading: cfgLoading } = useCrmConfig();
   const { data, loading: leadLoading } = useQuery<any>(HOST_LEAD, { variables: { id }, skip: !isEdit, fetchPolicy: 'cache-and-network' });
@@ -28,12 +28,15 @@ export default function HostLeadEditorPage() {
     return mergeAiPrefill(hostLeadInitialValues, aiPrefill);
   }, [lead, aiPrefill]);
 
-  const submit = async (values: HostLeadFormValues) => {
+  const flow = useLeadEditorFlow<HostLeadFormValues>('/host-leads', id, async (values) => {
     const input = toHostLeadInput(values);
-    if (isEdit) await updateLead({ variables: { id, input } });
-    else await createLead({ variables: { input } });
-    navigate('/host-leads');
-  };
+    if (isEdit) {
+      const { data: updated } = await updateLead({ variables: { id, input } });
+      return updated.updateHostLead;
+    }
+    const { data: created } = await createLead({ variables: { input } });
+    return created.createHostLead;
+  });
 
   if (cfgLoading || (isEdit && leadLoading)) {
     return <Box sx={{ display: 'grid', placeItems: 'center', py: 6 }}><CircularProgress /></Box>;
@@ -59,9 +62,12 @@ export default function HostLeadEditorPage() {
         initialValues={initialValues}
         submitting={creating || updating}
         submitLabel={isEdit ? 'Update host lead' : 'Create host lead'}
-        onSubmit={submit}
-        onCancel={() => navigate('/host-leads')}
+        onSubmit={flow.submit}
+        onSubmitAndContinue={flow.submitAndContinue}
+        continueLabel={isEdit ? t('crm.forms.updateAndContinue') : t('crm.forms.createAndContinue')}
+        onCancel={flow.exit}
       />
+      <Snackbar open={!!flow.notice} autoHideDuration={4000} onClose={flow.clearNotice} message={flow.notice ?? ''} />
     </Stack>
   );
 }

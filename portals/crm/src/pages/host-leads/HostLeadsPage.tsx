@@ -17,12 +17,14 @@ import ExcelImportDialog from '../../components/ExcelImportDialog';
 import { CrmLeadsTable } from '../../components/lead-table';
 import { downloadBase64File, parseApiError } from '@duncit/utils';
 import { useTranslation } from '@duncit/shell';
+import { useLeadEditorOrigin } from '../../hooks/useLeadEditorFlow';
 
 const XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 
 export default function HostLeadsPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const editorOrigin = useLeadEditorOrigin();
   const client = useApolloClient();
   const { config } = useCrmConfig();
   const { options: superCategories } = useSuperCategories();
@@ -105,12 +107,12 @@ export default function HostLeadsPage() {
         priorityOptions={priorityOptions}
         superCategoryOptions={superCategoryOptions}
         toolbarActions={
-          <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/host-leads/new')}>
+          <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/host-leads/new', { state: editorOrigin })}>
             New Host Lead
           </DuncitButton>
         }
         onView={(lead) => navigate(`/host-leads/${lead.id}/view`)}
-        onEdit={(lead) => navigate(`/host-leads/${lead.id}`)}
+        onEdit={(lead) => navigate(`/host-leads/${lead.id}`, { state: editorOrigin })}
         onDelete={setToDelete}
       />
 

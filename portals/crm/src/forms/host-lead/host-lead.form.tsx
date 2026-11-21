@@ -1,9 +1,9 @@
-import { useState } from 'react';
 import { FormProvider, useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, AlertTitle, Box, Stack, Typography } from '@mui/material';
-import { DuncitButton } from '@duncit/buttons';
 import { flattenErrors } from '../flattenErrors';
+import { useLeadFormSubmit } from '../useLeadFormSubmit';
+import LeadFormActions from '../../components/LeadFormActions';
 import FormAccordion from '../../components/FormAccordion';
 import { hostLeadSchema } from './host-lead.schema';
 import { hostLeadInitialValues, type HostLeadFormValues } from './host-lead.types';
@@ -28,6 +28,9 @@ interface Props {
   submitLabel?: string;
   onSubmit: (values: HostLeadFormValues) => Promise<void> | void;
   onCancel?: () => void;
+  /** Save without leaving the form ("Update & Continue"). */
+  onSubmitAndContinue?: (values: HostLeadFormValues) => Promise<void> | void;
+  continueLabel?: string;
 }
 
 const SECTIONS = [
@@ -60,11 +63,19 @@ const SECTIONS = [
   },
 ];
 
-export default function HostLeadForm({ config, initialValues, submitting, submitLabel, onSubmit, onCancel }: Readonly<Props>) {
+export default function HostLeadForm({
+  config,
+  initialValues,
+  submitting,
+  submitLabel,
+  onSubmit,
+  onCancel,
+  onSubmitAndContinue,
+  continueLabel,
+}: Readonly<Props>) {
   const { t } = useTranslation();
   const submitLabelText = submitLabel ?? t('crm.forms.saveHostLead');
 
-  const [status, setStatus] = useState<string | undefined>(undefined);
   const methods = useForm<HostLeadFormValues, any, HostLeadFormValues>({
     resolver: zodResolver(hostLeadSchema, undefined, { raw: true }) as unknown as Resolver<HostLeadFormValues, any, HostLeadFormValues>,
     mode: 'onChange',
@@ -73,14 +84,7 @@ export default function HostLeadForm({ config, initialValues, submitting, submit
   const { errors, submitCount, isValid } = methods.formState;
   const flat = submitCount > 0 ? flattenErrors(errors) : [];
 
-  const handle = methods.handleSubmit(async (values) => {
-    setStatus(undefined);
-    try {
-      await onSubmit(values);
-    } catch (error: any) {
-      setStatus(error?.message ?? t('crm.components.somethingWentWrong'));
-    }
-  });
+  const { status, continuing, handle, handleContinue } = useLeadFormSubmit(methods, onSubmit, onSubmitAndContinue);
 
   return (
     <FormProvider {...methods}>
@@ -103,22 +107,15 @@ export default function HostLeadForm({ config, initialValues, submitting, submit
             </Alert>
           )}
           <HostSections config={config} />
-          <Stack
-            direction="row"
-            spacing={1}
-            sx={{
-              justifyContent: "flex-end",
-              pt: 1
-            }}>
-            {onCancel && (
-              <DuncitButton onClick={onCancel} disabled={submitting} data-testid="lead-form-cancel">
-                {t('shell.common.cancel')}
-              </DuncitButton>
-            )}
-            <DuncitButton type="submit" data-testid="lead-form-submit" variant="contained" loading={submitting} disabled={(submitCount > 0 && !isValid)}>
-              {submitting ? 'Saving…' : submitLabelText}
-            </DuncitButton>
-          </Stack>
+          <LeadFormActions
+            submitLabel={submitLabelText}
+            submitting={submitting}
+            continuing={continuing}
+            invalid={submitCount > 0 && !isValid}
+            continueLabel={continueLabel}
+            onContinue={handleContinue}
+            onCancel={onCancel}
+          />
         </Stack>
       </form>
     </FormProvider>

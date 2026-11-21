@@ -87,7 +87,7 @@ describe('HostLeadEditorPage', () => {
     expect(screen.getByRole('button', { name: 'Create host lead' })).toBeInTheDocument();
   });
 
-  it('updates an existing lead by id and returns to the list', async () => {
+  it('updates an existing lead by id and returns to its detail page, not the list', async () => {
     const sent: Record<string, any>[] = [];
     renderEditor('/host-leads/host-1', [
       leadMock({ ...hostLead({ super_category_id: SUPER }), matched_user: null }),
@@ -100,7 +100,7 @@ describe('HostLeadEditorPage', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Update host lead' }));
 
-    await waitFor(() => expect(screen.getByTestId('location')).toHaveTextContent(/^\/host-leads$/));
+    await waitFor(() => expect(screen.getByTestId('location')).toHaveTextContent(/^\/host-leads\/host-1\/view$/), { timeout: 3000 });
     expect(sent.at(-1)?.id).toBe('host-1');
     expect(sent.at(-1)?.input).toEqual(expect.objectContaining({ host_name: 'Pune Runners', super_category_id: SUPER, community_size: 400 }));
   });
@@ -130,5 +130,21 @@ describe('HostLeadEditorPage', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Cancel' }));
 
     expect(screen.getByTestId('location')).toHaveTextContent(/^\/host-leads$/);
+  });
+
+  it('Update & Continue saves the lead and keeps the user on its editor', async () => {
+    const sent: Record<string, any>[] = [];
+    renderEditor('/host-leads/host-1', [
+      leadMock({ ...hostLead({ super_category_id: SUPER }), matched_user: null }),
+      capture(UPDATE_HOST_LEAD, 'updateHostLead', sent),
+    ]);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Update & Continue' }));
+
+    expect(await screen.findByText('Lead updated. Keep editing or go back when you are done.', {}, { timeout: 3000 })).toBeInTheDocument();
+    expect(sent).toHaveLength(1);
+    expect(sent[0]?.id).toBe('host-1');
+    expect(screen.getByTestId('location')).toHaveTextContent('/host-leads/host-1');
+    expect(screen.getByRole('heading', { level: 1, name: 'Edit Pune Runners' })).toBeInTheDocument();
   });
 });

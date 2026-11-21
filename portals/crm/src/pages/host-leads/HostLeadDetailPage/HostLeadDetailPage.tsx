@@ -13,11 +13,13 @@ import { leadDate } from './helpers';
 import { buildHostLeadTabs } from './buildHostLeadTabs';
 import HostHeroCard from './HostHeroCard';
 import HostStatTiles from './HostStatTiles';
+import { useLeadEditorOrigin } from '../../../hooks/useLeadEditorFlow';
 
 export default function HostLeadDetailPage() {
   const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const editorOrigin = useLeadEditorOrigin();
   const [aiOpen, setAiOpen] = useState(false);
   const { data, loading, error } = useQuery<{ hostLead: HostLead | null }>(HOST_LEAD, {
     variables: { id },
@@ -48,7 +50,7 @@ export default function HostLeadDetailPage() {
         lead={lead}
         t={t}
         onAskAi={() => setAiOpen(true)}
-        onEdit={() => navigate(`/host-leads/${lead.id}`)}
+        onEdit={() => navigate(`/host-leads/${lead.id}`, { state: editorOrigin })}
       />
 
       {lead.matched_user && <MatchedUserBox matched={lead.matched_user} />}

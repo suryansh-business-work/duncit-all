@@ -19,6 +19,7 @@ import MatchedUserBox, { MatchedUserChip } from '../../components/MatchedUserBox
 import { buildEcommLeadTabs } from './ecommLeadTabs';
 import { formatDate as adminDate } from '@duncit/app-settings';
 import { useTranslation } from '@duncit/shell';
+import { useLeadEditorOrigin } from '../../hooks/useLeadEditorFlow';
 
 const leadDate = (iso?: string | null) => adminDate(iso) || null;
 
@@ -26,6 +27,7 @@ export default function EcommLeadDetailPage() {
   const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const editorOrigin = useLeadEditorOrigin();
   const { data, loading, error } = useQuery<{ ecommLead: EcommLead | null }>(ECOMM_LEAD, {
     variables: { id },
     fetchPolicy: 'cache-and-network',
@@ -110,7 +112,7 @@ export default function EcommLeadDetailPage() {
                 </Stack>
               )}
             </Box>
-            <DuncitButton startIcon={<EditIcon />} variant="contained" onClick={() => navigate(`/ecomm-leads/${lead.id}`)}>
+            <DuncitButton startIcon={<EditIcon />} variant="contained" onClick={() => navigate(`/ecomm-leads/${lead.id}`, { state: editorOrigin })}>
               {t('shell.common.edit')}
             </DuncitButton>
           </Stack>

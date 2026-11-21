@@ -4,7 +4,7 @@ import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import type { MockedResponse } from '@apollo/client/testing';
 import { CallSessionProvider, useCallWindow, type CallLead } from '@/components/call-window';
 import { CONTROL_CRM_CALL, CRM_CALL_SETUP, MY_ACTIVE_CRM_CALL, RECONCILE_CRM_CALL, START_CRM_PORTAL_CALL, type CallSetup } from '@/api/call.gql';
-import { CRM_CALL_EVENT, CRM_CALL_TRANSCRIPT_EVENT } from '@/lib/callSocket';
+import { CRM_CALL_EVENT, CRM_CALL_TRANSCRIPT_EVENT, getCallSocket } from '@/lib/callSocket';
 import { clearToken, setToken } from '@/lib/session';
 import { renderWithApollo } from '../helpers/renderWithApollo';
 import type { FakeSocket } from './fakeSocket';
@@ -97,6 +97,8 @@ beforeEach(() => {
 
 afterEach(() => {
   clearToken();
+  // Drops the shared socket, so the next test connects a fresh fake one.
+  getCallSocket();
   created.sockets.length = 0;
 });
 

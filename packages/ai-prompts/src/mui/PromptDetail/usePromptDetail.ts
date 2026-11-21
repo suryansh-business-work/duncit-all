@@ -30,17 +30,17 @@ export function usePromptDetail(promptId: string | null) {
 
   const record = useCallback(
     (input: PortalEventInput) => {
-      if (promptId) recordEvent(promptId, input);
+      // Only reachable from a loaded detail, so the id is set.
+      recordEvent(String(promptId), input);
     },
     [promptId, recordEvent],
   );
 
   const score = useCallback(
     async (force: boolean) => {
-      if (!promptId) return;
       setScoreError(null);
       try {
-        const res = await scoreMutation({ variables: { id: promptId, force } });
+        const res = await scoreMutation({ variables: { id: String(promptId), force } });
         // A failed review rejects, so a resolved one carries its data.
         setQuality((res.data as { scoreAiPrompt: PromptQuality }).scoreAiPrompt);
       } catch (err) {

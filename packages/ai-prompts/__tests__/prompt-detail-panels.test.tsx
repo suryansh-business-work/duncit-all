@@ -12,7 +12,7 @@ import { HistoryPanel } from '../src/mui/PromptDetail/HistoryPanel';
 import { DISABLE_AI_PROMPT_SHARE, ENABLE_AI_PROMPT_SHARE, RESTORE_AI_PROMPT_VERSION } from '../src/detailQueries';
 import type { PromptAnalytics, PromptShare } from '../src/detailTypes';
 import { prompt, renderInPortal, settle } from './support/harness';
-import { EMPTY_ANALYTICS, analyticsMock, detailMock, detailOf, eventMocks } from './support/detail-fixtures';
+import { EMPTY_ANALYTICS, analyticsMock, detailMock, detailOf, eventMocks, scoreMock } from './support/detail-fixtures';
 
 vi.mock('@duncit/tabs', () => import('./support/tabs-stub'));
 
@@ -46,7 +46,11 @@ describe('History', () => {
       request: { query: RESTORE_AI_PROMPT_VERSION, variables: { id: ROW.id, version: 1 } },
       result: { data: { restoreAiPromptVersion: { id: ROW.id, content: 'The first draft.' } } },
     };
-    const handlers = await open([detailMock(detailOf(ROW)), restore], 'History');
+    // No review yet: one is asked for on opening, and NOT again when the restore re-reads the same body.
+    const handlers = await open(
+      [detailMock(detailOf(ROW, { quality: null })), restore, scoreMock(ROW.id, false, new Error('switched off'))],
+      'History',
+    );
 
     expect(screen.getByText('Current')).toBeDefined();
     expect(screen.getByText(/by Asha Rao/)).toBeDefined();
@@ -80,6 +84,16 @@ describe('History', () => {
 
     expect(await screen.findByText(/needs \{\{navigation_map\}\}/)).toBeDefined();
     expect(handlers.onChanged).not.toHaveBeenCalled();
+  });
+
+  it('shows an untimed version by the system without a dangling separator', () => {
+    const [latest] = detailOf(ROW).versions;
+    renderInPortal(
+      <HistoryPanel versions={[{ ...latest, created_at: null, edited_by_name: null, changed_fields: [] }]} restoring={false} onRestore={vi.fn()} />,
+    );
+
+    expect(screen.getByText('by the system')).toBeDefined();
+    expect(screen.queryByText(/Changed:/)).toBeNull();
   });
 
   it('says history starts with the next change when there is none yet', () => {
@@ -118,8 +132,10 @@ describe('Analytics', () => {
   });
 
   it('reads another range on request, and says when it is empty', async () => {
-    await open([detailMock(detailOf(ROW, { last_hit_at: null })), analyticsMock(ROW.id, 30, STATS), analyticsMock(ROW.id, 7, { ...EMPTY_ANALYTICS, range_days: 7 })], 'Analytics');
+    await open([detailMock(detailOf(ROW, { last_hit_at: null })), analyticsMock(ROW.id, 30, { ...STATS, by_platform: [] }), analyticsMock(ROW.id, 7, { ...EMPTY_ANALYTICS, range_days: 7 })], 'Analytics');
     await screen.findByText('Unique visitors');
+    // Hits with no LLM hand-off yet: that breakdown is left out, not drawn empty.
+    expect(screen.queryByText('Sent to')).toBeNull();
 
     fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Range' }));
     fireEvent.click(await screen.findByRole('option', { name: 'Last 7 days' }));
@@ -198,6 +214,12 @@ describe('Share', () => {
     expect(screen.getByText(/^Shared on /)).toBeDefined();
     fireEvent.click(screen.getByRole('switch', { name: 'Public link is on' }));
     expect(await screen.findByText(/before sharing it/)).toBeDefined();
+  });
+
+  it('lets an archived prompt whose link is still on be switched off', async () => {
+    await open([detailMock(detailOf(ROW, { archived_at: '2026-11-20T00:00:00.000Z', archived_by_name: 'Meera Rao', share: SHARED }))], 'Share');
+
+    expect((screen.getByRole('switch', { name: 'Public link is on' }) as HTMLInputElement).disabled).toBe(false);
   });
 
   it('keeps an archived prompt from being shared, and offers no library link for a keyless one', async () => {

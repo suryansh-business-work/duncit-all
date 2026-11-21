@@ -140,6 +140,24 @@ describe('PromptLibraryView opened from a row', () => {
     expect(onPromptOpen).toHaveBeenLastCalledWith('moderation.pod', 'share');
   });
 
+  it('opens a prompt that has no key yet itself, since there is nothing to put in the URL', async () => {
+    const draft = prompt({ id: 'p-4', key: null, kind: 'AI', name: 'Feedback summariser' });
+    const onPromptOpen = vi.fn();
+    globalThis.window.history.replaceState(null, '', '/?selectedtab=AI');
+    renderInPortal(<PromptLibraryView apiOrigin={API_ORIGIN} onPromptOpen={onPromptOpen} />, [
+      { request: { query: AI_PROMPTS, variables: { filter: { kind: 'AI' } } }, maxUsageCount: Number.POSITIVE_INFINITY, result: { data: { aiPrompts: [draft] } } },
+      detailMock(detailOf(draft)),
+      ...eventMocks(draft.id),
+    ]);
+    await screen.findByText('Feedback summariser');
+
+    await rowAction('Feedback summariser', 'Open details');
+
+    expect(await screen.findByRole('heading', { level: 2, name: 'Feedback summariser' })).toBeDefined();
+    expect(onPromptOpen).not.toHaveBeenCalled();
+    globalThis.window.history.replaceState(null, '', '/');
+  });
+
   it('opens the details itself when the page keeps no URL for them', async () => {
     renderInPortal(<PromptLibraryView apiOrigin={API_ORIGIN} />, [listMock([POD]), ...detailFor(POD)]);
     await screen.findByText('Pod content safety review');

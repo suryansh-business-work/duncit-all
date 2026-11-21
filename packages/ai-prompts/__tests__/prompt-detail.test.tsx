@@ -51,10 +51,12 @@ describe('PromptDetailDialog overview', () => {
   });
 
   it('names the default model and a single hit in the singular', async () => {
-    openDetail([detailMock(detailOf({ ...ROW, target_model: '' }, { total_hits: 1 }))]);
+    openDetail([detailMock(detailOf({ ...ROW, target_model: '', updated_at: null }, { total_hits: 1 }))]);
 
     expect(await screen.findByText('1 hit')).toBeDefined();
     expect(screen.getByText('Model: Default')).toBeDefined();
+    // No edit time on record, so no 'Updated' line rather than a blank one.
+    expect(screen.queryByText(/^Updated /)).toBeNull();
   });
 
   it('still lets the operator carry on when the clipboard refuses', async () => {
@@ -79,6 +81,14 @@ describe('PromptDetailDialog overview', () => {
     openDetail([{ request: { query: AI_PROMPT_DETAIL, variables: { id: ROW.id } }, error: new Error('offline') }]);
 
     expect(await screen.findByText('Could not load this prompt.')).toBeDefined();
+  });
+
+  it('shows the library title and no tabs when the server has no such prompt', async () => {
+    openDetail([detailMock(null, ROW.id)]);
+
+    expect(await screen.findByRole('heading', { level: 2, name: 'AI Library' })).toBeDefined();
+    await settle();
+    expect(screen.queryByRole('tab')).toBeNull();
   });
 
   it('renders nothing while no prompt is open', () => {

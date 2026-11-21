@@ -34,7 +34,6 @@ function Stat({ label, value }: Readonly<{ label: string; value: number }>) {
 function DayBars({ days, title }: Readonly<{ days: PromptAnalytics['by_day']; title: string }>) {
   const copy = useDetailCopy();
   const { formatDate } = useDateFormat();
-  if (days.length === 0) return null;
   const max = Math.max(...days.map((day) => day.count));
   return (
     <Box component="section" aria-label={title}>

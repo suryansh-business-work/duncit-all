@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { Box, Chip, Dialog, DialogActions, DialogContent, DialogTitle, Stack } from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import OpenInFullIcon from '@mui/icons-material/OpenInFull';
@@ -25,17 +25,11 @@ export function QuickViewDialog({ prompt, onClose, onOpenDetails }: Readonly<Qui
   const record = usePromptEvent();
   const titleId = 'ai-prompt-quick-view-title';
 
-  // One count per opening, not per re-render.
-  const countedRef = useRef<string | null>(null);
+  // Keyed on the id, so a re-render of the same prompt is not a second view.
+  const openId = prompt?.id;
   useEffect(() => {
-    if (!prompt) {
-      countedRef.current = null;
-      return;
-    }
-    if (countedRef.current === prompt.id) return;
-    countedRef.current = prompt.id;
-    record(prompt.id, { type: 'QUICK_VIEW' });
-  }, [prompt, record]);
+    if (openId) record(openId, { type: 'QUICK_VIEW' });
+  }, [openId, record]);
 
   const copyPrompt = async (current: AiPrompt) => {
     if (await copyText(current.content, copy.detail.copied)) record(current.id, { type: 'COPY_PROMPT' });

@@ -67,6 +67,10 @@ export const aiPromptTypeDefs = gql`
     usage: [AiPromptUsage!]!
     token_count: Int!
     is_active: Boolean!
+    "Set when an AI prompt was archived; archived prompts are off the tabs, the feed and their public link."
+    archived_at: String
+    "Every recorded interaction with this prompt, all time (views, copies, public visits, feed hits)."
+    total_hits: Int!
     created_by: String
     created_at: String
     updated_at: String
@@ -129,6 +133,8 @@ export const aiPromptTypeDefs = gql`
     category: String
     search: String
     kind: AiPromptKind
+    "True lists only archived prompts; otherwise archived prompts are left out."
+    archived: Boolean
   }
 
   input CreateAiPromptInput {

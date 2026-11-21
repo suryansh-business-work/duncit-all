@@ -211,6 +211,7 @@ export const MODULE_CATEGORY: Record<ModuleName, McpCategoryKey | null> = {
   askBotTypeDefs: 'ai',
   agentTypeDefs: 'ai',
   aiPromptTypeDefs: 'ai',
+  aiPromptLibraryTypeDefs: 'ai',
   openAiUsageTypeDefs: 'ai',
   aiFeatureTypeDefs: 'ai',
   aiMonitoringTypeDefs: 'ai',

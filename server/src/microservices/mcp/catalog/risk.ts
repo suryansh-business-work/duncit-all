@@ -75,8 +75,9 @@ const CONFIRM_WORDS = new Set([
  * value or act on a person live. Named one by one, because the word itself
  * ("generate", "control") is harmless on every other tool that uses it.
  * `controlCrmCall` mutes, holds or hangs up a phone call in progress.
+ * `enableAiPromptPublicShare` makes a prompt readable by anyone with the link.
  */
-const CONFIRM_FIELDS = new Set(['generatePhysicalGiftCards', 'controlCrmCall']);
+const CONFIRM_FIELDS = new Set(['generatePhysicalGiftCards', 'controlCrmCall', 'enableAiPromptPublicShare']);
 
 /** Words that mean a mutation reaches people or systems outside Duncit. */
 const OUTWARD_WORDS = new Set([

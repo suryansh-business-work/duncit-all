@@ -60,6 +60,8 @@ const SHIPPED_KEYS = [
   'generate.product_copy.user',
   'generate.rich_text',
   'generate.rich_text.user',
+  'library.prompt_quality',
+  'library.prompt_quality.user',
   'localization.auto_translate',
   'localization.auto_translate.user',
   'moderation.callback_reason',

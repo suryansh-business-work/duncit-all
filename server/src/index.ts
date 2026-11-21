@@ -99,6 +99,7 @@ import { occasionService } from '@modules/crm/marketing/occasions/occasion.servi
 import { telemetryService } from '@modules/platform/telemetry/telemetry.service';
 import { buildTelemetryFeedRouter } from '@modules/platform/telemetry/telemetry.router';
 import { buildAiPromptFeedRouter } from '@modules/ai/prompt/prompt.router';
+import { buildAiPromptShareRouter } from '@modules/ai/prompt/prompt.share.router';
 import { buildTableApiRouter } from '@modules/platform/tableApi/tableApi.router';
 import { buildMcpRouter } from '@microservices/mcp/http/mcp.router';
 import { categoryService } from '@modules/pods/category/category.service';
@@ -1035,6 +1036,9 @@ async function bootstrap() {
   // Deliberately open: no login and no key. It publishes the platform's own
   // prompts, code ones included 2014 see prompt.router.ts for what that costs.
   app.use('/ai-prompts', buildAiPromptFeedRouter());
+  // Public share links (AI portal /p/:token). The token is the gate; see
+  // prompt.share.router.ts. Events are anonymous and carry no IP.
+  app.use('/ai-prompts/share', buildAiPromptShareRouter());
 
   // Every portal table's "GET API": /table-api/<tableQueryName>, authorised by the
   // caller's personal token and run through Apollo as them. See tableApi.router.ts.

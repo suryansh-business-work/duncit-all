@@ -12,6 +12,7 @@ import { AGENT_PROMPTS } from './agents.prompts';
 import { OUTREACH_PROMPTS } from './outreach.prompts';
 import { INBOX_PROMPTS } from './inbox.prompts';
 import { POD_PROMO_PROMPTS } from './podPromo.prompts';
+import { LIBRARY_PROMPTS } from './library.prompts';
 
 /**
  * Every CODE prompt the product runs on — the "Code Inside Prompt" half of the
@@ -41,6 +42,7 @@ export const CODE_PROMPTS: readonly InAppPromptDef[] = [
   ...OUTREACH_PROMPTS,
   ...INBOX_PROMPTS,
   ...POD_PROMO_PROMPTS,
+  ...LIBRARY_PROMPTS,
 ];
 
 export const CODE_PROMPT_BY_KEY = new Map(CODE_PROMPTS.map((p) => [p.key, p]));

@@ -60,6 +60,10 @@ const pub = (doc: any) => {
     })),
     token_count: estimateTokens(content),
     is_active: o.is_active !== false,
+    archived_at: iso(o.archived_at),
+    // Running total kept by prompt.analytics.ts, so the list can show hits
+    // without a second query per row.
+    total_hits: o.stats?.total_hits ?? 0,
     created_by: o.created_by ?? null,
     created_at: iso(o.created_at),
     updated_at: iso(o.updated_at),
@@ -168,6 +172,8 @@ export interface AiPromptFilterInput {
   category?: string | null;
   search?: string | null;
   kind?: PromptKind | null;
+  /** True lists only archived prompts; anything else leaves them out. */
+  archived?: boolean | null;
 }
 
 /**
@@ -192,6 +198,9 @@ export const aiPromptService = {
       query.is_active = filter.is_active;
     }
     if (filter.kind) query.kind = filter.kind;
+    // Archived prompts wait in their own tab and are off every other list,
+    // the feed and the dashboard. `null` also matches rows from before the field.
+    query.archived_at = filter.archived === true ? { $ne: null } : null;
     if (filter.category) query.category = filter.category;
     if (filter.search) {
       const rx = new RegExp(

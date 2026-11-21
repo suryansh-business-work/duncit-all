@@ -1,4 +1,5 @@
 import { Schema, model, InferSchemaType } from 'mongoose';
+import { attachPromptVersioning } from './prompt.version';
 
 /**
  * A prompt in the AI Library. `content` is the prompt body; its token size is
@@ -60,12 +61,53 @@ const aiPromptSchema = new Schema(
     usage: { type: [usageSchema], default: [] },
     is_active: { type: Boolean, default: true, index: true },
     created_by: { type: String, default: null },
+    // Last version number written to `ai_prompt_versions`; bumped atomically by
+    // the versioning hook, never by a save, so it is not itself a tracked change.
+    revision: { type: Number, default: 0 },
+    // Archived AI prompts leave the library's two tabs, the public feed and any
+    // public share link, and wait in the Archived tab. CODE prompts cannot be
+    // archived — a call site still reads them.
+    archived_at: { type: Date, default: null },
+    archived_by: { type: String, default: null },
+    // Public share link. No default on the token, for the same sparse-index
+    // reason as `key`. Disabling keeps the token so re-enabling restores the
+    // same link; "new link" replaces it.
+    share_token: { type: String, unique: true, sparse: true },
+    share_enabled: { type: Boolean, default: false },
+    shared_at: { type: Date, default: null },
+    shared_by: { type: String, default: null },
+    // The last ChatGPT quality review, kept so the detail view does not pay for
+    // one on every open. `content_hash` says which body it judged.
+    quality: {
+      type: new Schema(
+        {
+          score: { type: Number, required: true },
+          summary: { type: String, default: '' },
+          strengths: { type: [String], default: [] },
+          improvements: { type: [String], default: [] },
+          model: { type: String, default: '' },
+          content_hash: { type: String, required: true },
+          scored_at: { type: Date, required: true },
+        },
+        { _id: false }
+      ),
+      default: null,
+    },
+    // Running totals behind the Hits column; the per-event detail lives in
+    // `aipromptevents`. Written with the raw driver by prompt.analytics.ts.
+    stats: {
+      total_hits: { type: Number, default: 0 },
+      last_hit_at: { type: Date, default: null },
+    },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );
 
 aiPromptSchema.index({ is_active: 1, name: 1 });
 aiPromptSchema.index({ kind: 1, category: 1, name: 1 });
+
+// Version history for every save path (create, edit, reset, restore, seed).
+attachPromptVersioning(aiPromptSchema);
 
 export type AiPromptDoc = InferSchemaType<typeof aiPromptSchema> & { _id: any };
 export const AiPromptModel = model('AiPrompt', aiPromptSchema);

@@ -43,6 +43,19 @@ describe('needsConfirmation', () => {
     expect(reachesOutside('MUTATION', 'controlCrmCall')).toBe(true);
   });
 
+  it('treats the AI Library prompt tools by what they do to the prompt', () => {
+    // Publishing a prompt to anyone with the link needs a person's yes...
+    expect(needsConfirmation('MUTATION', 'enableAiPromptPublicShare')).toBe(true);
+    // ...as do archiving it, taking the link down and copying an old version back.
+    expect(riskOf('MUTATION', 'archiveAiPrompt')).toBe('DESTRUCTIVE');
+    expect(riskOf('MUTATION', 'disableAiPromptPublicShare')).toBe('DESTRUCTIVE');
+    expect(riskOf('MUTATION', 'restoreAiPromptVersion')).toBe('DESTRUCTIVE');
+    // Bringing it back from the archive or scoring it is an ordinary write.
+    expect(riskOf('MUTATION', 'unarchiveAiPrompt')).toBe('WRITE');
+    expect(needsConfirmation('MUTATION', 'unarchiveAiPrompt')).toBe(false);
+    expect(needsConfirmation('MUTATION', 'scoreAiPrompt')).toBe(false);
+  });
+
   it('does not ask for confirmation on an ordinary create or edit', () => {
     expect(needsConfirmation('MUTATION', 'createPod')).toBe(false);
     expect(needsConfirmation('MUTATION', 'sendCampaign')).toBe(false);

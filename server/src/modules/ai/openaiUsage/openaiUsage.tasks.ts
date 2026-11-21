@@ -74,6 +74,12 @@ export const OPENAI_TASKS = {
     description: '"Improve with AI" on rich-text editors across the portals.',
     when_off: ADMIN_ERROR,
   },
+  'ai.prompt_quality': {
+    label: 'Prompt quality score',
+    module: 'Portal Tools',
+    description: 'Scores an AI Library prompt out of 100 and lists what to improve, on its detail view in the AI portal.',
+    when_off: 'The prompt detail view says the quality score is switched off; the prompt itself is unaffected.',
+  },
   'moderation.pod': {
     label: 'Pod moderation scan',
     module: 'Moderation',

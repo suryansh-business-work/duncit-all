@@ -33866,6 +33866,8 @@ export type Query = {
   venueFoodStats: VenueFoodStats;
   /**  Admin-only: health for a specific venue.  */
   venueHealth?: Maybe<HealthScore>;
+  /** Fees & Minimum Spend of the given APPROVED, active venues, in the order asked (at most 200 ids). Active hosts only — empty for anyone else. */
+  venueHostTerms: Array<VenueHostTerms>;
   venueLead?: Maybe<VenueLead>;
   venueLeads: Array<VenueLead>;
   venueLeadsTable: VenueLeadTablePage;
@@ -38244,6 +38246,11 @@ export type QueryVenueFoodStatsArgs = {
 
 export type QueryVenueHealthArgs = {
   venue_id: Scalars['ID']['input'];
+};
+
+
+export type QueryVenueHostTermsArgs = {
+  venue_ids: Array<Scalars['ID']['input']>;
 };
 
 
@@ -49700,6 +49707,25 @@ export type VenueFoodTopItem = {
   name: Scalars['String']['output'];
   quantity: Scalars['Int']['output'];
   revenue: Scalars['Float']['output'];
+};
+
+/** A venue's Fees & Minimum Spend as a host weighs it before picking the venue for a pod (rupees). */
+export type VenueHostTerms = {
+  __typename?: 'VenueHostTerms';
+  cleaning_fee: Scalars['Float']['output'];
+  /** Refundable, settled at the venue — never part of the price. */
+  deposit: Scalars['Float']['output'];
+  /** GST is added to the venue's price. */
+  gst_enabled: Scalars['Boolean']['output'];
+  /** The least the venue takes on each pricing basis. */
+  min_business: Array<VenueMinBusiness>;
+  /** The fewest guests an offer is paid for: the venue's own setting, else the platform default. */
+  min_guests: Scalars['Int']['output'];
+  /** The least one booking's offer must come to (0 = none). */
+  min_spend: Scalars['Float']['output'];
+  /** Charged only when the booking brings pets. */
+  pet_fee: Scalars['Float']['output'];
+  venue_id: Scalars['ID']['output'];
 };
 
 export type VenueLead = {

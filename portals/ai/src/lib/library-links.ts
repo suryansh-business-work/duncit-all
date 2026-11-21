@@ -1,7 +1,6 @@
 /**
- * The URL that opens one prompt's details in the AI Library. The library page
- * reads `prompt` and opens that prompt; `selectedtab` lands the page on that
- * prompt's kind underneath (AI Features only ever links code prompts).
+ * The URL that opens one prompt's details in the AI Library. It lives in
+ * @duncit/ai-prompts, beside the library's own "Share" action, so the AI
+ * Features links and a shared prompt link are built by the same function.
  */
-export const libraryPromptPath = (key: string, kind: 'CODE' | 'AI' = 'CODE') =>
-  `/library?selectedtab=${kind}&prompt=${encodeURIComponent(key)}`;
+export { libraryPromptPath } from '@duncit/ai-prompts';

@@ -1,49 +1,45 @@
 import { useCallback, useMemo, type MutableRefObject, type ReactNode } from 'react';
 import {
   DuncitTable,
-  actionsColumn,
   activeChipColumn,
   clientTableFetch,
   dateColumn,
+  rowMenuColumn,
   type DuncitColumn,
   type TableQueryState,
 } from '@duncit/table';
 import { useTranslation } from '@duncit/app-settings';
 import { usePromptCopy } from '../../i18n/useCopy';
+import { useDetailCopy } from '../../i18n/useDetailCopy';
 import { promptSearchText } from '../../search';
-import type { AiPrompt, PromptKind } from '../../types';
-import { ResetAction, renderCategory, renderKey, renderModel, renderName, renderTokens } from './cells';
+import type { AiPrompt, LibraryTab } from '../../types';
+import { renderCategory, renderKey, renderModel, renderName, renderTokens } from './cells';
+import { promptRowMenu, type PromptRowActions } from './rowMenu';
 
 interface Props {
-  kind: PromptKind;
-  /** The whole list of this kind; the table pages it in memory by its own column types. */
+  tab: LibraryTab;
+  /** The whole list of this tab; the table pages it in memory by its own column types. */
   load: () => Promise<AiPrompt[]>;
   refetchRef: MutableRefObject<(() => void) | null>;
   toolbarActions?: ReactNode;
-  onEdit: (prompt: AiPrompt) => void;
-  onDelete: (prompt: AiPrompt) => void;
-  onReset: (prompt: AiPrompt) => void;
+  /**
+   * Memoise it: the columns are built from it, the fetch from the columns, and
+   * the table refetches whenever its fetch changes.
+   */
+  actions: PromptRowActions;
 }
 
 const getPromptRowId = (p: AiPrompt) => p.id;
 
 /**
- * One table, both kinds. The columns differ only in what a code row cannot do:
- * it has no delete (its call site would go on reading a row that is gone) and
- * it alone offers a reset.
+ * One table, three tabs. What differs is the row menu (see promptRowMenu): a
+ * code row can be reset but never archived or deleted, because a call site goes
+ * on reading it. Clicking a row opens its detail view.
  */
-export function PromptsTable({
-  kind,
-  load,
-  refetchRef,
-  toolbarActions,
-  onEdit,
-  onDelete,
-  onReset,
-}: Readonly<Props>) {
+export function PromptsTable({ tab, load, refetchRef, toolbarActions, actions }: Readonly<Props>) {
   const copy = usePromptCopy();
+  const more = useDetailCopy();
   const { t } = useTranslation();
-  const code = kind === 'CODE';
   const defaultModel = t('ai.library.defaultModel');
   // Rebuilt when the catalogue changes — a column set frozen at module load
   // would keep the language the console first rendered in.
@@ -90,23 +86,24 @@ export function PromptsTable({
         cellRenderer: (p) => renderTokens(p, t('ai.library.tokensHint')),
         valueGetter: (p) => p.token_count,
       },
+      {
+        field: 'total_hits',
+        headerName: more.columns.hits,
+        type: 'number',
+        width: 100,
+        valueGetter: (p) => p.total_hits ?? 0,
+      },
       activeChipColumn<AiPrompt>(),
       dateColumn<AiPrompt>(),
-      actionsColumn<AiPrompt>({
-        width: 140,
-        onEdit,
-        onDelete,
-        renderExtra: (p) => (code ? <ResetAction prompt={p} onReset={onReset} /> : null),
-        edit: { ariaLabel: (p) => t('ai.library.editAria', { vars: { name: p.name } }) },
-        delete: {
-          ariaLabel: (p) => t('ai.library.deleteAria', { vars: { name: p.name } }),
-          disabled: () => code,
-          disabledTitle: copy.codeDeleteHint,
-        },
+      rowMenuColumn<AiPrompt>({
+        ariaLabel: (p) => more.actions.menu(p.name),
+        items: (p) => promptRowMenu(p, tab, more, actions),
       }),
     ],
-    [code, copy, defaultModel, t, onEdit, onDelete, onReset],
+    [tab, copy, more, defaultModel, t, actions],
   );
+
+  const emptyText = { CODE: copy.emptyCode, AI: copy.emptyAi, ARCHIVED: more.tabs.emptyArchived }[tab];
 
   // Search, filters, sort and paging over the whole (small) list already here.
   const fetchRows = useCallback(
@@ -117,12 +114,13 @@ export function PromptsTable({
   return (
     <DuncitTable<AiPrompt>
       ariaLabel={t('ai.library.pageTitle')}
-      tableId={`ai-prompts-${kind.toLowerCase()}`}
+      tableId={`ai-prompts-${tab.toLowerCase()}`}
       columns={columns}
       fetchRows={fetchRows}
       getRowId={getPromptRowId}
+      onRowClick={actions.onOpen}
       toolbarActions={toolbarActions}
-      emptyText={code ? copy.emptyCode : copy.emptyAi}
+      emptyText={emptyText}
       searchPlaceholder={copy.searchPlaceholder}
       refetchRef={refetchRef}
     />

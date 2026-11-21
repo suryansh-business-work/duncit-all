@@ -1,198 +1,169 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { useApolloClient, useMutation } from '@apollo/client/react';
+import { useApolloClient } from '@apollo/client/react';
 import { Alert, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { DuncitButton } from '@duncit/buttons';
 import { DuncitTabs, useTabParam } from '@duncit/tabs';
-import { ConfirmDialog } from '@duncit/dialogs';
-import { parseApiError } from '@duncit/utils';
-import { AI_PROMPTS, DELETE_AI_PROMPT, RESET_AI_PROMPT } from '../../queries';
-import { promptFeedUrl } from '../../copy';
 import { useTranslation } from '@duncit/app-settings';
+import { AI_PROMPTS } from '../../queries';
+import { promptFeedUrl } from '../../copy';
 import { usePromptCopy } from '../../i18n/useCopy';
-import type { AiPrompt, PromptKind } from '../../types';
+import { useDetailCopy } from '../../i18n/useDetailCopy';
+import { libraryPromptUrl } from '../../share/links';
+import type { AiPrompt, LibraryTab } from '../../types';
 import { PromptsTable } from '../PromptsTable';
-import { PromptDialog } from '../PromptDialog';
+import type { PromptRowActions } from '../PromptsTable/rowMenu';
 import { FeedUrlBar } from '../FeedUrlBar';
+import { PromptDetailDialog, type DetailTab } from '../PromptDetail';
+import { QuickViewDialog } from '../QuickView';
+import { useCopyText } from '../shared/useCopyText';
+import { usePromptEvent } from '../shared/usePromptEvent';
 import { LibraryHeader } from './LibraryHeader';
+import { LibraryDialogs } from './LibraryDialogs';
+import { useLibraryActions } from './useLibraryActions';
 import { useOpenPromptByKey } from './useOpenPromptByKey';
 
 export interface PromptLibraryViewProps {
   /** Origin of the API that serves the public feed, e.g. https://server.duncit.com. */
   apiOrigin: string;
-  /** Key of a prompt to open on arrival: a link from elsewhere, `?prompt=<key>`. */
+  /** Key of a prompt whose details are open: a link from elsewhere or a clicked row, `?prompt=<key>`. */
   openPromptKey?: string | null;
-  /** Called when that prompt's dialog closes, so the page can drop the key from its URL. */
+  /** Called when the details close, so the page can drop the key from its URL. */
   onPromptClose?: () => void;
+  /** Called to open a prompt's details, so the page can put its key in the URL. Without it, the view opens them itself. */
+  onPromptOpen?: (key: string, tab?: DetailTab) => void;
+  /** The AI portal's own origin, for share links. Defaults to the page's. */
+  portalOrigin?: string;
 }
 
 /**
- * The AI Library.
+ * The AI Library: code prompts (declared in the server catalogue and read back
+ * on every call), AI prompts (written here, served by the public GET feed), and
+ * the AI prompts that were archived. Clicking a row opens its detail view.
  *
- * Two kinds sit behind two tabs because they are two different objects, not two
- * filters of one. A CODE prompt is declared in the server catalogue and read
- * back by a call site on every request — editing its body changes what the
- * product sends to the model, with no deploy in between, which is the entire
- * reason this page exists. An AI prompt is written here, belongs to nobody in
- * code, and is served by the public GET feed for something outside the server
- * to fetch.
- *
- * The whole list arrives on one query and the table filters it in memory
- * (`clientTableFetch`): this is configuration, a few dozen rows, and a server
- * table query for it would be machinery with nothing to do.
+ * The whole list of a tab arrives on one query and the table filters it in
+ * memory (`clientTableFetch`): this is configuration, a few dozen rows.
  */
-export function PromptLibraryView({ apiOrigin, openPromptKey, onPromptClose }: Readonly<PromptLibraryViewProps>) {
+export function PromptLibraryView({ apiOrigin, openPromptKey, onPromptClose, onPromptOpen, portalOrigin }: Readonly<PromptLibraryViewProps>) {
   const copy = usePromptCopy();
+  const more = useDetailCopy();
   const { t } = useTranslation();
   const client = useApolloClient();
+  const copyText = useCopyText();
+  const recordEvent = usePromptEvent();
   const refetchRef = useRef<(() => void) | null>(null);
-  // Rebuilt when the catalogue changes — a tab strip frozen at module load
-  // would keep the language the console first rendered in.
+  const origin = portalOrigin ?? globalThis.location.origin;
   const tabStrip = useMemo(
     () => [
-      { value: 'CODE' as PromptKind, label: copy.kinds.CODE.label },
-      { value: 'AI' as PromptKind, label: copy.kinds.AI.label },
+      { value: 'CODE' as LibraryTab, label: copy.kinds.CODE.label },
+      { value: 'AI' as LibraryTab, label: copy.kinds.AI.label },
+      { value: 'ARCHIVED' as LibraryTab, label: more.tabs.archived },
     ],
-    [copy],
+    [copy, more],
   );
-  const tabs = useTabParam({ items: tabStrip, fallback: 'CODE' as PromptKind });
-  const kind = tabs.value;
-
-  const [editing, setEditing] = useState<AiPrompt | null>(null);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [toDelete, setToDelete] = useState<AiPrompt | null>(null);
-  const [toReset, setToReset] = useState<AiPrompt | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [deletePrompt, { loading: deleting }] = useMutation<any>(DELETE_AI_PROMPT);
-  const [resetPrompt, { loading: resetting }] = useMutation<any>(RESET_AI_PROMPT);
+  const tabs = useTabParam({ items: tabStrip, fallback: 'CODE' as LibraryTab });
+  const tab = tabs.value;
+  const library = useLibraryActions(refetchRef);
+  const [detailId, setDetailId] = useState<string | null>(null);
+  // Bumped when the editor saves, so an open detail view reads the new text.
+  const [detailRevision, setDetailRevision] = useState(0);
+  const [glance, setGlance] = useState<AiPrompt | null>(null);
 
   const load = useCallback(async () => {
+    const filter = tab === 'ARCHIVED' ? { archived: true } : { kind: tab };
     const { data } = await client.query<{ aiPrompts: AiPrompt[] }>({
       query: AI_PROMPTS,
-      variables: { filter: { kind } },
+      variables: { filter },
       fetchPolicy: 'network-only',
-      // A failed query rejects, so a resolved one always carries data.
       errorPolicy: 'none',
     });
-    // Apollo v4 widens `data` to `T | undefined` for every caller, including the
-    // ones that reject on failure. Narrowing it here rather than defaulting to
-    // `[]` keeps the single path the line above describes — the default would be
-    // a branch no test can reach, which is the whole package's 100% threshold.
+    // A failed query rejects, so a resolved one carries data (Apollo v4 still types it optional).
     return (data as { aiPrompts: AiPrompt[] }).aiPrompts;
-  }, [client, kind]);
+  }, [client, tab]);
 
-  const openCreate = () => {
-    setEditing(null);
-    setDialogOpen(true);
-  };
-  const openEdit = useCallback((prompt: AiPrompt) => {
-    setEditing(prompt);
-    setDialogOpen(true);
-  }, []);
-  const linkMissing = useCallback((key: string) => setError(t('ai.library.promptNotFound', { vars: { key } })), [t]);
-  useOpenPromptByKey(openPromptKey, openEdit, linkMissing, setError);
-  const closeDialog = () => {
-    setDialogOpen(false);
+  const open = useCallback(
+    (prompt: AiPrompt, detailTab?: DetailTab) => {
+      setGlance(null);
+      if (onPromptOpen && prompt.key) onPromptOpen(prompt.key, detailTab);
+      else setDetailId(prompt.id);
+    },
+    [onPromptOpen],
+  );
+  // The setter, not the whole actions object: that is rebuilt every render, and
+  // the link lookup re-runs whenever one of its callbacks changes.
+  const { setError } = library;
+  const linkMissing = useCallback((key: string) => setError(t('ai.library.promptNotFound', { vars: { key } })), [setError, t]);
+  const showFound = useCallback((prompt: AiPrompt) => setDetailId(prompt.id), []);
+  useOpenPromptByKey(openPromptKey, showFound, linkMissing, setError);
+  const closeDetail = () => {
+    setDetailId(null);
     onPromptClose?.();
   };
 
-  /** Delete and reset differ only in the mutation; the surrounding dance is one. */
-  const runRowAction = async (
-    prompt: AiPrompt | null,
-    run: (id: string) => Promise<unknown>,
-    clear: () => void,
-  ) => {
-    if (!prompt) return;
-    setError(null);
-    try {
-      await run(prompt.id);
-      refetchRef.current?.();
-    } catch (err) {
-      setError(parseApiError(err));
-    } finally {
-      clear();
-    }
-  };
+  const { openEdit, askArchive, unarchive, askReset, askDelete } = library;
+  const actions = useMemo<PromptRowActions>(
+    () => ({
+      onOpen: (prompt) => open(prompt),
+      onEdit: openEdit,
+      onQuickView: setGlance,
+      onShare: (prompt) => {
+        if (!prompt.key) return;
+        void copyText(libraryPromptUrl(origin, prompt.key, prompt.kind), more.actions.linkCopied).then((ok) => {
+          if (ok) recordEvent(prompt.id, { type: 'COPY_LINK' });
+        });
+      },
+      onPublicShare: (prompt) => open(prompt, 'share'),
+      onArchive: askArchive,
+      onUnarchive: unarchive,
+      onReset: askReset,
+      onDelete: askDelete,
+    }),
+    [open, openEdit, askArchive, unarchive, askReset, askDelete, copyText, origin, more, recordEvent],
+  );
 
-  const listUrl = useMemo(() => promptFeedUrl(apiOrigin, { kind }), [apiOrigin, kind]);
-  const blurb = copy.kinds[kind].blurb;
+  const listUrl = useMemo(() => (tab === 'ARCHIVED' ? null : promptFeedUrl(apiOrigin, { kind: tab })), [apiOrigin, tab]);
+  const blurb = tab === 'ARCHIVED' ? more.tabs.archivedBlurb : copy.kinds[tab].blurb;
+  const saved = () => {
+    library.refresh();
+    setDetailRevision((n) => n + 1);
+  };
 
   return (
     <Stack spacing={2.5}>
       <LibraryHeader title={copy.pageTitle} subtitle={copy.pageSubtitle} />
-
       <DuncitTabs {...tabs} />
-
-      <Typography variant="body2" sx={{
-        color: "text.secondary"
-      }}>
+      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
         {blurb}
       </Typography>
-
-      <FeedUrlBar url={listUrl} label={copy.apiCopyAll} />
-
-      {error && (
-        <Alert severity="error" onClose={() => setError(null)}>
-          {error}
+      {listUrl && <FeedUrlBar url={listUrl} label={copy.apiCopyAll} />}
+      {library.error && (
+        <Alert severity="error" onClose={() => library.setError(null)}>
+          {library.error}
         </Alert>
       )}
-
       <PromptsTable
-        kind={kind}
+        tab={tab}
         load={load}
         refetchRef={refetchRef}
+        actions={actions}
         toolbarActions={
-          kind === 'AI' ? (
-            <DuncitButton size="small" startIcon={<AddIcon />} variant="contained" onClick={openCreate}>
+          tab === 'AI' ? (
+            <DuncitButton size="small" startIcon={<AddIcon />} variant="contained" onClick={library.openCreate}>
               {copy.addPrompt}
             </DuncitButton>
           ) : undefined
         }
+      />
+      <PromptDetailDialog
+        key={detailRevision}
+        promptId={detailId}
+        portalOrigin={origin}
+        onClose={closeDetail}
         onEdit={openEdit}
-        onDelete={setToDelete}
-        onReset={setToReset}
+        onChanged={library.refresh}
       />
-
-      <PromptDialog
-        open={dialogOpen}
-        prompt={editing}
-        apiOrigin={apiOrigin}
-        onClose={closeDialog}
-        onSaved={() => refetchRef.current?.()}
-      />
-      <ConfirmDialog
-        open={!!toDelete}
-        title={copy.deleteTitle}
-        message={t('ai.library.deleteMessage', { vars: { name: toDelete?.name ?? '' } })}
-        confirmLabel={copy.deleteConfirm}
-        destructive
-        loading={deleting}
-        busyLabel={copy.busy}
-        onConfirm={() =>
-          runRowAction(
-            toDelete,
-            (id) => deletePrompt({ variables: { id } }),
-            () => setToDelete(null),
-          )
-        }
-        onClose={() => setToDelete(null)}
-      />
-      <ConfirmDialog
-        open={!!toReset}
-        title={copy.resetTitle}
-        message={t('ai.library.resetMessage', { vars: { name: toReset?.name ?? '' } })}
-        confirmLabel={copy.resetConfirm}
-        loading={resetting}
-        busyLabel={copy.busy}
-        onConfirm={() =>
-          runRowAction(
-            toReset,
-            (id) => resetPrompt({ variables: { id } }),
-            () => setToReset(null),
-          )
-        }
-        onClose={() => setToReset(null)}
-      />
+      <QuickViewDialog prompt={glance} onClose={() => setGlance(null)} onOpenDetails={(prompt) => open(prompt)} />
+      <LibraryDialogs actions={library} apiOrigin={apiOrigin} onSaved={saved} />
     </Stack>
   );
 }

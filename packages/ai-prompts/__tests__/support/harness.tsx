@@ -7,8 +7,9 @@ import type { ReactElement } from 'react';
 import { type MockedResponse } from '@apollo/client/testing';
 import { MockedProvider } from '@apollo/client/testing/react';
 import { DuncitLocalizationProvider, PUBLIC_APP_SETTINGS } from '@duncit/app-settings';
+import { ConfirmProvider } from '@duncit/dialogs';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { act, render } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 
 import type { AiPrompt } from '../../src/types';
 
@@ -38,17 +39,35 @@ const appSettingsMock: MockedResponse = {
 
 /**
  * Renders under the providers the AI portal's root supplies: Apollo, the MUI
- * theme and the localization provider (rule 11) — the table's date-range
- * filter opens a MUI X picker, which throws without the last one.
+ * theme, the localization provider (rule 11) — the table's date-range filter
+ * opens a MUI X picker, which throws without it — and the confirm provider
+ * `mountPortal` puts above every page (`useConfirm` throws without it).
  */
 export const renderInPortal = (ui: ReactElement, mocks: readonly MockedResponse[] = []) =>
   render(
     <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[appSettingsMock, ...mocks]}>
       <ThemeProvider theme={createTheme()}>
-        <DuncitLocalizationProvider>{ui}</DuncitLocalizationProvider>
+        <DuncitLocalizationProvider>
+          <ConfirmProvider>{ui}</ConfirmProvider>
+        </DuncitLocalizationProvider>
       </ThemeProvider>
     </MockedProvider>,
   );
+
+/** Opens a row's menu ("Actions for <name>") and picks one item from it, as an operator would. */
+export const rowAction = async (rowName: string, item: string) => {
+  fireEvent.click(screen.getByRole('button', { name: `Actions for ${rowName}` }));
+  fireEvent.click(await screen.findByRole('menuitem', { name: item }));
+};
+
+/** The items a row's menu offers, by label. Closes the menu again. */
+export const rowMenuItems = async (rowName: string): Promise<string[]> => {
+  fireEvent.click(screen.getByRole('button', { name: `Actions for ${rowName}` }));
+  const items = await screen.findAllByRole('menuitem');
+  const labels = items.map((item) => item.textContent ?? '');
+  fireEvent.keyDown(screen.getByRole('menu'), { key: 'Escape' });
+  return labels;
+};
 
 /** Lets a mocked Apollo answer and the state it sets land. */
 export const settle = async () => {

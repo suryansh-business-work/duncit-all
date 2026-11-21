@@ -3,6 +3,7 @@ import { ProfilePage, createAuthed } from '@duncit/shell';
 import LoginPage from './pages/LoginPage';
 import WelcomePage from './pages/WelcomePage';
 import PromptLibraryPage from './pages/prompt-library';
+import PublicPromptPage from './pages/public-prompt';
 import OpenAiDashboardPage from './pages/openai-dashboard';
 import OpenAiLogsPage from './pages/openai-logs';
 import AiFeaturesPage from './pages/ai-features';
@@ -24,6 +25,8 @@ export default function App() {
     <Routes>
         <Route path="/profile" element={authed(<ProfilePage />)} />
       <Route path="/login" element={<LoginPage />} />
+      {/* A shared prompt: public by design, the share token is the gate. */}
+      <Route path="/p/:token" element={<PublicPromptPage />} />
       <Route path="/" element={authed(<WelcomePage />)} />
       <Route path="/library" element={authed(<PromptLibraryPage />)} />
       <Route path="/library/dashboard" element={authed(<AiLibraryDashboardPage />)} />

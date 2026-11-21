@@ -3,7 +3,7 @@ import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { AI_PROMPTS, UPDATE_AI_PROMPT } from '../src/queries';
 import { PromptLibraryView } from '../src/mui/PromptLibraryView';
-import { API_ORIGIN, installGridViewport, prompt, renderInPortal, settle } from './support/harness';
+import { API_ORIGIN, installGridViewport, prompt, renderInPortal, settle, rowAction } from './support/harness';
 
 vi.mock('@duncit/tabs', () => import('./support/tabs-stub'));
 let restore: () => void;
@@ -48,7 +48,7 @@ describe('PromptLibraryView save', () => {
     await settle();
     await screen.findByText('Navigation Knowledge Bot');
 
-    fireEvent.click(screen.getByLabelText('Edit Navigation Knowledge Bot'));
+    await rowAction('Navigation Knowledge Bot', 'Edit');
     await settle();
     // The editor opened on THIS row, carrying its body rather than a blank one.
     const content = document.body.querySelector('textarea[name="content"]');

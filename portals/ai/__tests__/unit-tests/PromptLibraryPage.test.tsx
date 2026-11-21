@@ -8,11 +8,20 @@ import { renderWithProviders } from '../testkit';
 /**
  * The AI Library page's one job beyond mounting the package: a link such as
  * `/library?prompt=moderation.pod` (from the AI Features table) opens that
- * prompt, and closing it drops the key from the URL — keeping the tab — so a
- * refresh does not reopen it.
+ * prompt; clicking a row puts its key (and the detail tab asked for) in the
+ * URL; and closing drops both — keeping the library tab — so a refresh does not
+ * reopen it.
  */
-const view = vi.hoisted(() => ({ props: {} as { apiOrigin?: string; openPromptKey?: string | null; onPromptClose?: () => void } }));
+const view = vi.hoisted(() => ({
+  props: {} as {
+    apiOrigin?: string;
+    openPromptKey?: string | null;
+    onPromptClose?: () => void;
+    onPromptOpen?: (key: string, tab?: string) => void;
+  },
+}));
 vi.mock('@duncit/ai-prompts/mui', () => ({
+  DETAIL_TAB_PARAM: 'promptTab',
   PromptLibraryView: (props: typeof view.props) => {
     view.props = props;
     return <div>LIBRARY VIEW</div>;
@@ -55,8 +64,19 @@ describe('PromptLibraryPage', () => {
     expect(view.props.openPromptKey).toBeNull();
   });
 
-  it('drops the key, and keeps the tab, when the prompt is closed', () => {
-    mount('/library?selectedtab=CODE&prompt=moderation.pod');
+  it('puts a clicked prompt and the detail tab asked for in the URL, and drops a stale tab', () => {
+    mount('/library?selectedtab=AI&promptTab=history');
+
+    act(() => view.props.onPromptOpen?.('digest.weekly', 'share'));
+    expect(screen.getByTestId('search')).toHaveTextContent('?selectedtab=AI&promptTab=share&prompt=digest.weekly');
+    expect(view.props.openPromptKey).toBe('digest.weekly');
+
+    act(() => view.props.onPromptOpen?.('moderation.pod'));
+    expect(screen.getByTestId('search')).toHaveTextContent('?selectedtab=AI&prompt=moderation.pod');
+  });
+
+  it('drops the key and its detail tab, and keeps the library tab, when the prompt is closed', () => {
+    mount('/library?selectedtab=CODE&prompt=moderation.pod&promptTab=quality');
 
     act(() => view.props.onPromptClose?.());
 

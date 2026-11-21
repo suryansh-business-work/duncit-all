@@ -24,6 +24,20 @@ exports:
   - 'promptCopy'
   - 'usePromptCopy'
   - 'AI_PROMPTS'
+  - 'PromptDetailDialog'
+  - 'QuickViewDialog'
+  - 'PublicPromptView'
+  - 'PlatformSend'
+  - 'DETAIL_TAB_PARAM'
+  - 'AI_PROMPT_DETAIL'
+  - 'PROMPT_PLATFORMS'
+  - 'platformLink'
+  - 'injectionScript'
+  - 'bookmarklet'
+  - 'composePrompt'
+  - 'publicPromptSchema'
+  - 'publicShareUrl'
+  - 'libraryPromptPath'
 ---
 
 ## Why this exists
@@ -98,10 +112,11 @@ import { apiOriginFromGraphqlUrl } from '@duncit/ai-prompts';
 GraphQL, so it is derived from the endpoint the portal already talks to rather than a second env
 var to get wrong between environments.
 
-### Opening one prompt from a link
+### Opening one prompt: the detail view
 
-Two optional props let another page link straight to a prompt. The AI portal's AI Features
-table links each feature's code prompts as `/library?prompt=<key>`:
+Clicking a row, a row menu's **Open details**, or a link (`/library?prompt=<key>`, which the AI
+Features table builds with `libraryPromptPath`) opens that prompt's **detail view**. The page keeps
+the open prompt in its URL, so the view survives a reload and can be sent to a colleague:
 
 ```tsx
 const [params, setParams] = useSearchParams();
@@ -109,12 +124,56 @@ const [params, setParams] = useSearchParams();
 <PromptLibraryView
   apiOrigin={apiOrigin}
   openPromptKey={params.get('prompt')}
-  onPromptClose={() => setParams((p) => { p.delete('prompt'); return p; }, { replace: true })}
+  onPromptOpen={(key, tab) => setParams((p) => { p.set('prompt', key); tab ? p.set(DETAIL_TAB_PARAM, tab) : p.delete(DETAIL_TAB_PARAM); return p; }, { replace: true })}
+  onPromptClose={() => setParams((p) => { p.delete('prompt'); p.delete(DETAIL_TAB_PARAM); return p; }, { replace: true })}
 />;
 ```
 
-The key is looked up across both kinds (`useOpenPromptByKey`), and only an exact key match opens.
-An unknown key shows an error rather than opening a neighbour the search also found.
+Without `onPromptOpen` the view opens the details itself. The key is looked up across both kinds
+and the archive (`useOpenPromptByKey`), and only an exact key match opens; an unknown key shows an
+error rather than opening a neighbour the search also found.
+
+The detail view's tabs (URL param `promptTab`):
+
+- **Overview** — the complete prompt with Copy, its estimated token count, hits, model, category,
+  and (code prompts) where it runs, its variables and a rendered preview.
+- **Quality score** — ChatGPT's review (`scoreAiPrompt`, rubric = the `library.prompt_quality` code
+  prompt): a score out of 100, strengths and improvements. Asked for automatically when the current
+  body has none; stored with a hash of the body, so a prompt costs one review per version.
+  **Rescore** asks again; a review of an older body is flagged stale.
+- **History** — every saved version, newest first, as a full snapshot with who changed what.
+  **Restore** copies an older version back as a new version.
+- **Analytics** — hits, unique visitors, hits per day, and breakdowns by interaction, LLM, source
+  (utm_source, else referrer host) and device, over 7/30/90/365 days.
+- **Share** — the public link, the library link, and the LLM hand-off.
+
+### Row menu, Quick view and the Archived tab
+
+Each row has a menu: Open details, Edit, Quick view, Copy library link, Public share (opens the
+Share tab), plus Reset (code), Archive and Delete (AI). **Quick view** shows the text and its size
+without leaving the list. Archiving an AI prompt moves it to the **Archived** tab: it leaves the
+other tabs, the public GET feed and its public link, keeps its history, and can be restored. Code
+prompts cannot be archived — a call site reads them.
+
+### Public share and the LLM hand-off
+
+Turning on a prompt's public link gives `https://ai.duncit.com/p/<token>` (`publicShareUrl`), a page
+that needs no login (`PublicPromptView`, mounted by the AI portal outside its auth wrapper). A visitor
+fills in the placeholders (RHF + Zod, `publicPromptSchema`), adds their own input, sees the composed
+prompt (`composePrompt`) and copies it or opens it in Claude, ChatGPT, Grok or Perplexity
+(`PlatformSend`, `platformLink`). A prompt too long for a URL is copied first and the chat opened
+empty. **Copy-ready scripts** (`injectionScript`, `bookmarklet`) type the prompt into an open chat;
+they never press send, and the prompt is embedded as JSON so no text can escape the string.
+
+The link is the gate: switching it off, archiving or deactivating the prompt makes it answer "not
+available", exactly like a token that never existed. **New link** kills the old one.
+
+### What is counted
+
+Views, quick views, copies, link copies and LLM hand-offs in the portal (`recordAiPromptEvent`),
+public page visits, copies and hand-offs (`POST /ai-prompts/share/:token/events`), and single-prompt
+GET feed reads. A public visitor is a random id their browser made up — never an IP or an account —
+and a referrer is kept as its host only.
 
 ### Edited code prompts
 
@@ -136,7 +195,7 @@ GET /ai-prompts/prompt.json?key=x&vars[city]=Pune already filled in
 trades away: anyone with the URL can read every active prompt, CODE ones included — and those are
 the product's own instructions to the model, `moderation.pod` among them, which names the evasion
 patterns it screens for. Treat everything reachable there as public writing. Deactivating a prompt
-takes it off the feed; the feed never serves `usage` or `created_by`.
+takes it off the feed, and so does archiving it; the feed never serves `usage` or `created_by`.
 
 ## What this package will not do
 

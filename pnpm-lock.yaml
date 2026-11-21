@@ -735,6 +735,9 @@ importers:
       '@duncit/buttons':
         specifier: workspace:*
         version: link:../buttons
+      '@duncit/logs':
+        specifier: workspace:*
+        version: link:../logs
     devDependencies:
       '@apollo/client':
         specifier: 4.2.12

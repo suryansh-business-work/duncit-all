@@ -845,6 +845,69 @@ export type AiPrompt = {
   variables: Array<AiPromptVariable>;
 };
 
+/** Interactions with one prompt over a range (default 30 days, max 365). */
+export type AiPromptAnalytics = {
+  __typename?: 'AiPromptAnalytics';
+  by_day: Array<AiPromptDayCount>;
+  by_device: Array<AiPromptCount>;
+  by_platform: Array<AiPromptCount>;
+  /** utm_source, else the referrer's host, else direct; portal hits count as portal. Top 10. */
+  by_source: Array<AiPromptCount>;
+  by_type: Array<AiPromptCount>;
+  range_days: Scalars['Int']['output'];
+  total_hits: Scalars['Int']['output'];
+  /** Distinct browsers on the public page plus distinct signed-in staff. */
+  unique_visitors: Scalars['Int']['output'];
+};
+
+export type AiPromptChange =
+  /** The state a prompt was in when history began. */
+  | 'BASELINE'
+  | 'CREATE'
+  /** The server changed it on boot. */
+  | 'SEED'
+  /** A person changed it. */
+  | 'UPDATE';
+
+export type AiPromptCount = {
+  __typename?: 'AiPromptCount';
+  count: Scalars['Int']['output'];
+  key: Scalars['String']['output'];
+};
+
+/** Hits on one day, in the admin-configured time zone (YYYY-MM-DD). */
+export type AiPromptDayCount = {
+  __typename?: 'AiPromptDayCount';
+  count: Scalars['Int']['output'];
+  day: Scalars['String']['output'];
+};
+
+/** Everything the library's detail view shows about one prompt. */
+export type AiPromptDetail = {
+  __typename?: 'AiPromptDetail';
+  archived_at?: Maybe<Scalars['String']['output']>;
+  archived_by_name?: Maybe<Scalars['String']['output']>;
+  last_hit_at?: Maybe<Scalars['String']['output']>;
+  prompt: AiPrompt;
+  /** Null until the prompt has been reviewed once. */
+  quality?: Maybe<AiPromptQuality>;
+  share: AiPromptShare;
+  /** Every recorded interaction, all time. */
+  total_hits: Scalars['Int']['output'];
+  /** Newest first, up to 50. */
+  versions: Array<AiPromptVersion>;
+};
+
+export type AiPromptEventType =
+  | 'COPY_LINK'
+  | 'COPY_PROMPT'
+  | 'COPY_SCRIPT'
+  | 'DETAIL_VIEW'
+  | 'FEED_HIT'
+  | 'OPEN_IN_PLATFORM'
+  | 'PUBLIC_VIEW'
+  | 'QUICK_VIEW';
+
 export type AiPromptFilter = {
   category?: InputMaybe<Scalars['String']['input']>;
   is_active?: InputMaybe<Scalars['Boolean']['input']>;
@@ -859,6 +922,27 @@ export type AiPromptKind =
   /** Declared in the server catalogue and read back by a call site on every request. Editing its body changes what the product sends to the model. Cannot be created or deleted from a portal — only reset. */
   | 'CODE';
 
+export type AiPromptPlatform =
+  | 'CHATGPT'
+  | 'CLAUDE'
+  | 'GROK'
+  | 'PERPLEXITY';
+
+/** ChatGPT's review of a prompt against the library.prompt_quality rubric. */
+export type AiPromptQuality = {
+  __typename?: 'AiPromptQuality';
+  improvements: Array<Scalars['String']['output']>;
+  /** Model that wrote the review. */
+  model: Scalars['String']['output'];
+  /** 0-100. */
+  score: Scalars['Int']['output'];
+  scored_at: Scalars['String']['output'];
+  /** True when the prompt's body has changed since this review. */
+  stale: Scalars['Boolean']['output'];
+  strengths: Array<Scalars['String']['output']>;
+  summary: Scalars['String']['output'];
+};
+
 /**
  * Which turn of the conversation a prompt is. A CODE feature ships up to two: the
  * standing SYSTEM instruction and the per-call USER payload.
@@ -866,6 +950,16 @@ export type AiPromptKind =
 export type AiPromptRole =
   | 'SYSTEM'
   | 'USER';
+
+/** A prompt's public share link. The page lives on the AI portal at /p/<token>. */
+export type AiPromptShare = {
+  __typename?: 'AiPromptShare';
+  enabled: Scalars['Boolean']['output'];
+  shared_at?: Maybe<Scalars['String']['output']>;
+  shared_by_name?: Maybe<Scalars['String']['output']>;
+  /** Kept while sharing is off, so switching it back on restores the same link. */
+  token?: Maybe<Scalars['String']['output']>;
+};
 
 /** Where a code prompt is wired in — read-only, it describes the call site. */
 export type AiPromptUsage = {
@@ -892,6 +986,23 @@ export type AiPromptVariable = {
   name: Scalars['String']['output'];
   /** Dropping a required placeholder breaks the feature silently, so the editor refuses to save a body that lost one. */
   required: Scalars['Boolean']['output'];
+};
+
+/** One saved state of a prompt. A snapshot, so it reads the same after later edits. */
+export type AiPromptVersion = {
+  __typename?: 'AiPromptVersion';
+  category: Scalars['String']['output'];
+  change: AiPromptChange;
+  changed_fields: Array<Scalars['String']['output']>;
+  content: Scalars['String']['output'];
+  created_at?: Maybe<Scalars['String']['output']>;
+  description: Scalars['String']['output'];
+  edited_by_name?: Maybe<Scalars['String']['output']>;
+  is_active: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+  target_model: Scalars['String']['output'];
+  token_count: Scalars['Int']['output'];
+  version: Scalars['Int']['output'];
 };
 
 export type AiRichTextImproveInput = {
@@ -15936,6 +16047,8 @@ export type Mutation = {
   approveVenueSlotRequest: VenueSlot;
   /** Products portal: approve a partner warehouse so it goes live (usable for shipping). */
   approveWarehouseRequest: ApprovalRequest;
+  /** Archive an AI prompt (code prompts are refused). It leaves the tabs, the feed and its public link. */
+  archiveAiPrompt: AiPromptDetail;
   /**
    * Shorthand for setting the status to ARCHIVED.
    *
@@ -16577,6 +16690,7 @@ export type Mutation = {
   denyRequest: ApprovalRequest;
   /** Products portal: deny a partner warehouse (stays blocked). */
   denyWarehouseRequest: ApprovalRequest;
+  disableAiPromptPublicShare: AiPromptShare;
   /**
    * Auth-required: turn the authenticator app off. Needs a current code (or a
    * recovery code), so a session left open somewhere cannot remove it.
@@ -16655,6 +16769,8 @@ export type Mutation = {
   /** Email the ticket transcript to an address (defaults to a .docx attachment). */
   emailTicketTranscript: Scalars['Boolean']['output'];
   emailVenueLeadContact: LeadContactActionResult;
+  /** Turn the public link on. regenerate mints a new token and kills the old link. */
+  enableAiPromptPublicShare: AiPromptShare;
   /** Auth-required: prove the scan with a code from the app, and turn it on. */
   enableTwoFactor: TwoFactorEnableResult;
   /** Enroll the given leads, or every lead matching the filter. A lead already in the sequence is left as it is. Managers only. */
@@ -17081,6 +17197,8 @@ export type Mutation = {
   /** Re-read AiSensy and cache each template's category, which sets the rate. */
   reconcileWhatsappScenarios: WaScenarioBoard;
   recordActivePing: Scalars['Boolean']['output'];
+  /** Record a portal interaction (a view, a copy, a script copy) for the prompt's analytics. */
+  recordAiPromptEvent: Scalars['Boolean']['output'];
   recordAppEvent: Scalars['Boolean']['output'];
   /** Stores a batch of up to 50 product-analytics events; answers how many were new. Needs the analytics consent; works signed out. */
   recordAppEvents: Scalars['Int']['output'];
@@ -17434,6 +17552,8 @@ export type Mutation = {
    * update-the-app message.
    */
   respondToPodChange: PodChangeRequest;
+  /** Copy an earlier version back. Recorded as a new version. */
+  restoreAiPromptVersion: AiPrompt;
   /** Saves that revision's snapshot again — itself a new revision, so a restore can be undone. */
   restoreCmsSiteRevision: CmsSite;
   /** Copies a published version back into the draft; publish to make it live. */
@@ -17610,6 +17730,8 @@ export type Mutation = {
    * style (defaults to the pod's category style).
    */
   schedulePodPromo: PodPromo;
+  /** Review a prompt with ChatGPT. Returns the stored review while the body is unchanged, unless force is true. */
+  scoreAiPrompt: AiPromptQuality;
   seedSuperAdmin: SeedAdminResult;
   /** Send a WhatsApp template campaign message through AiSensy. */
   sendAisensyCampaign: AisensySendResult;
@@ -18234,6 +18356,7 @@ export type Mutation = {
   triggerE2eRun: TriggerE2eRunResult;
   /** Start a stress run against this server's own environment. Production needs SUPER_ADMIN and confirm_text. */
   triggerStressRun: StressRun;
+  unarchiveAiPrompt: AiPromptDetail;
   /** Lift a block made earlier. Follows cut by it are not restored. */
   unblockUser: Scalars['Boolean']['output'];
   unfollowClub: User;
@@ -18991,6 +19114,11 @@ export type MutationApproveVenueSlotRequestArgs = {
 export type MutationApproveWarehouseRequestArgs = {
   id: Scalars['ID']['input'];
   notes?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type MutationArchiveAiPromptArgs = {
+  id: Scalars['ID']['input'];
 };
 
 
@@ -20695,6 +20823,11 @@ export type MutationDenyWarehouseRequestArgs = {
 };
 
 
+export type MutationDisableAiPromptPublicShareArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationDisableTwoFactorArgs = {
   code: Scalars['String']['input'];
 };
@@ -20898,6 +21031,12 @@ export type MutationEmailVenueLeadContactArgs = {
   id: Scalars['ID']['input'];
   provider_id?: InputMaybe<Scalars['ID']['input']>;
   subject: Scalars['String']['input'];
+};
+
+
+export type MutationEnableAiPromptPublicShareArgs = {
+  id: Scalars['ID']['input'];
+  regenerate?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 
@@ -21575,6 +21714,13 @@ export type MutationRecordActivePingArgs = {
 };
 
 
+export type MutationRecordAiPromptEventArgs = {
+  id: Scalars['ID']['input'];
+  platform?: InputMaybe<AiPromptPlatform>;
+  type: AiPromptEventType;
+};
+
+
 export type MutationRecordAppEventArgs = {
   input: RecordAppEventInput;
 };
@@ -22162,6 +22308,12 @@ export type MutationRespondToPodChangeArgs = {
 };
 
 
+export type MutationRestoreAiPromptVersionArgs = {
+  id: Scalars['ID']['input'];
+  version: Scalars['Int']['input'];
+};
+
+
 export type MutationRestoreCmsSiteRevisionArgs = {
   revision_id: Scalars['ID']['input'];
 };
@@ -22522,6 +22674,12 @@ export type MutationSchedulePodPromoArgs = {
   collaborators?: InputMaybe<Array<Scalars['String']['input']>>;
   pod_id: Scalars['ID']['input'];
   style?: InputMaybe<PodBannerStyle>;
+};
+
+
+export type MutationScoreAiPromptArgs = {
+  force?: InputMaybe<Scalars['Boolean']['input']>;
+  id: Scalars['ID']['input'];
 };
 
 
@@ -24076,6 +24234,11 @@ export type MutationTriggerE2eRunArgs = {
 
 export type MutationTriggerStressRunArgs = {
   input: TriggerStressRunInput;
+};
+
+
+export type MutationUnarchiveAiPromptArgs = {
+  id: Scalars['ID']['input'];
 };
 
 
@@ -31767,6 +31930,8 @@ export type Query = {
   /** AI Portal: the copy plus the image-analysis prompt. */
   aiMonitoringSettings: AiMonitoringSettings;
   aiPrompt?: Maybe<AiPrompt>;
+  aiPromptAnalytics: AiPromptAnalytics;
+  aiPromptDetail?: Maybe<AiPromptDetail>;
   aiPrompts: Array<AiPrompt>;
   /** How many keys an AI translation would send right now, per language. */
   aiTranslationPending: Array<AiTranslationPending>;
@@ -34119,6 +34284,17 @@ export type QueryAiMonitoringLogsTableArgs = {
 
 
 export type QueryAiPromptArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryAiPromptAnalyticsArgs = {
+  id: Scalars['ID']['input'];
+  range_days?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryAiPromptDetailArgs = {
   id: Scalars['ID']['input'];
 };
 

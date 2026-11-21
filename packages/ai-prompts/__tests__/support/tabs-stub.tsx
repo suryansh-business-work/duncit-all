@@ -45,3 +45,8 @@ export function DuncitTabs({ items, value, onChange }: Readonly<ReturnType<typeo
     </div>
   );
 }
+
+/** The real helper, unchanged: a panel named by its tab (WCAG 1.3.1 / 4.1.2). */
+export function tabPanelProps(idPrefix: string, value: string) {
+  return { role: 'tabpanel', id: `${idPrefix}-panel-${value}`, 'aria-labelledby': `${idPrefix}-tab-${value}` } as const;
+}

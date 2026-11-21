@@ -114,6 +114,15 @@ describe('AiLibraryDashboardPage', () => {
     expect(screen.getByRole('link', { name: 'Open the AI Library' })).toHaveAttribute('href', '/library');
   });
 
+  it('shows only the header while there is no answer yet and nothing failed', () => {
+    answerQuery(AI_LIBRARY_DASHBOARD, {});
+    renderWithProviders(<AiLibraryDashboardPage />);
+
+    expect(screen.getByRole('heading', { name: 'AI Library Dashboard' })).toBeInTheDocument();
+    expect(screen.queryByRole('status')).toBeNull();
+    expect(screen.queryByTestId('dashboard')).toBeNull();
+  });
+
   it('says the load failed when there is nothing to show', () => {
     answerQuery(AI_LIBRARY_DASHBOARD, { error: new Error('boom') });
     renderWithProviders(<AiLibraryDashboardPage />);
@@ -137,12 +146,12 @@ describe('AiLibraryDashboardPage', () => {
     expect(attr('top-cost', 'data-labels')).toBe('Support reply|Pod content safety review|Pod review turn');
     expect(attr('largest', 'data-labels')).toBe('Weekly digest|Pod content safety review|Support reply|Pod review turn');
     // The edited prompt links to its details; the AI prompt opens on the AI tab.
-    const edited = within(screen.getByTestId('widget-edited'));
+    const edited = within(screen.getByTestId('widget-edited-prompts'));
     expect(edited.getByRole('link', { name: 'Pod review turn' })).toHaveAttribute(
       'href',
       '/library?selectedtab=CODE&prompt=moderation.pod.user'
     );
-    const recent = within(screen.getByTestId('widget-recent'));
+    const recent = within(screen.getByTestId('widget-recent-prompts'));
     expect(recent.getAllByRole('link').map((link) => link.textContent)).toEqual([
       'Weekly digest',
       'Pod review turn',

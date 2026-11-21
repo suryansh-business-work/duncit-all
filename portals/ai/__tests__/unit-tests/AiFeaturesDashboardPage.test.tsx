@@ -101,8 +101,20 @@ describe('AiFeaturesDashboardPage', () => {
 
     expect(queryOptions.get(AI_FEATURES_DASHBOARD)?.variables).toEqual({ range_days: 7 });
     expect(screen.getByRole('heading', { name: 'AI Features Dashboard' })).toBeInTheDocument();
-    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    // The shared Loader announces itself as a status, not a progress bar.
+    expect(screen.getByRole('status')).toBeInTheDocument();
+    expect(screen.queryByTestId('dashboard')).toBeNull();
     expect(screen.getByRole('link', { name: 'All AI features' })).toHaveAttribute('href', '/ai-features?days=7');
+  });
+
+  it('shows only the header while there is no answer yet and nothing failed', () => {
+    answerQuery(AI_FEATURES_DASHBOARD, {});
+    renderWithProviders(<AiFeaturesDashboardPage />);
+
+    expect(screen.getByRole('heading', { name: 'AI Features Dashboard' })).toBeInTheDocument();
+    expect(screen.queryByRole('status')).toBeNull();
+    expect(screen.queryByRole('alert')).toBeNull();
+    expect(screen.queryByTestId('dashboard')).toBeNull();
   });
 
   it('says the load failed when there is nothing to show', () => {

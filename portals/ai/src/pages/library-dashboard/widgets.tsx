@@ -121,14 +121,16 @@ export function buildLibraryWidgets(d: LibraryDashboard, t: Translate): Dashboar
       emptyText: t('ai.libraryDashboard.noPrompts'),
       layout: { x: 0, y: 14, w: 6, h: 6 },
     }),
+    // Ids are the layout key the dashboard saves per user, so they must not
+    // repeat the KPI tiles' ('edited' is the Edited KPI).
     listWidget(
-      'edited',
+      'edited-prompts',
       t('ai.libraryDashboard.edited'),
       { x: 6, y: 14, w: 6, h: 4 },
       <PromptLinks prompts={edited} emptyText={t('ai.libraryDashboard.noneEdited')} />
     ),
     listWidget(
-      'recent',
+      'recent-prompts',
       t('ai.libraryDashboard.recent'),
       { x: 6, y: 18, w: 6, h: 4 },
       <PromptLinks prompts={recentPrompts(d.prompts)} emptyText={t('ai.libraryDashboard.noPrompts')} showUpdated />

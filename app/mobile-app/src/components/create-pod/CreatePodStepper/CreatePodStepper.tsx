@@ -1,5 +1,5 @@
 import { Text, YStack } from 'tamagui';
-import { CREATE_POD_STEP_COUNT, CREATE_POD_WHERE_STEP, createPodSendsOffer } from '@duncit/utils';
+import { CREATE_POD_STEP_COUNT, CREATE_POD_WHERE_STEP } from '@duncit/utils';
 
 import { TourAnchor } from '@/tours/TourAnchor';
 import { stepTitleKey } from '../create-pod.form';
@@ -36,6 +36,7 @@ export function CreatePodStepper({
   hostCategories,
   viewerUserId,
   pinnedVenueId,
+  pickedVenueId,
   finance,
   onSaveDraft,
   onModerate,
@@ -74,6 +75,7 @@ export function CreatePodStepper({
     pricing,
     venueNotice,
     venueQuote,
+    sendsOffer,
   } = useCreatePodScope({
     form,
     clubs,
@@ -85,11 +87,6 @@ export function CreatePodStepper({
     viewerUserId,
   });
   const pinnedClub = clubAdmin?.club ?? null;
-  const sendsOffer = createPodSendsOffer({
-    pod_mode: podMode,
-    partner_request_id: form.watch('partner_request_id'),
-    venue_slot_id: form.watch('venue_slot_id'),
-  });
   const nextLabel = isLast
     ? t('mweb.createPod.next')
     : t('mweb.createPod.nextTo', { vars: { step: t(stepTitleKey(step + 1, podMode)) } });
@@ -102,6 +99,8 @@ export function CreatePodStepper({
       categoryIcons={categoryIcons}
       clubs={clubs}
       pinnedClub={!!pinnedClub}
+      venues={venues}
+      pickedVenueId={pickedVenueId}
     />,
     <WhereWhenStep
       key="where"
@@ -113,6 +112,7 @@ export function CreatePodStepper({
       clubVenueIds={clubVenueIds}
       currencySymbol={finance.currency_symbol}
       pinnedVenueId={pinnedVenueId}
+      pickedVenueId={pickedVenueId}
       venueNotice={venueNotice}
       spots={spots}
       offerMinGuests={offerMinGuests}

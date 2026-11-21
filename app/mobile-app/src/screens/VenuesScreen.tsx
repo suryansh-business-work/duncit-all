@@ -12,6 +12,7 @@ import { VenueCard } from '@/components/hosts-venues';
 import { useActiveAds } from '@/hooks/useActiveAds';
 import { useBottomNavSpace } from '@/hooks/useBottomNavSpace';
 import { useVenuesExplore } from '@/hooks/useVenuesExplore';
+import { useVenueHostTerms } from '@/hooks/useVenueHostTerms';
 import type { RootStackParamList } from '@/navigation/types';
 import { useTranslation } from '@/hooks/useTranslation';
 import { RefreshScrollView } from '@/components/PullToRefresh';
@@ -32,6 +33,8 @@ export function VenuesScreen() {
   const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { venues, searchInput, setSearchInput, isLoading, error } = useVenuesExplore();
+  // A host sees each venue's minimums on its card; for anyone else this stays empty.
+  const hostTerms = useVenueHostTerms(venues.map((venue) => venue.id)).byId;
   // A sponsored banner every 4 venues (server returns [] when none are booked).
   const { ads } = useActiveAds('VENUE_LIST');
   const bottomSpace = useBottomNavSpace();
@@ -84,6 +87,7 @@ export function VenuesScreen() {
                 <YStack key={venue.id} width={cardWidth}>
                   <VenueCard
                     venue={venue}
+                    terms={hostTerms.get(venue.id)}
                     onOpen={() => navigation.navigate('VenueDetails', { venueId: venue.id })}
                   />
                 </YStack>

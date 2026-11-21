@@ -223,3 +223,24 @@ export const MobileRejectFollowRequestDocument = gql(`
     }
   }
 `);
+
+/** A venue's Fees & Minimum Spend for a host weighing it (Venues cards, Venue
+ * Details). The server answers only for an active host — empty for anyone else.
+ * mWeb twin: hooks/useVenueHostTerms. */
+export const MobileVenueHostTermsDocument = gql(`
+  query MobileVenueHostTerms($venue_ids: [ID!]!) {
+    venueHostTerms(venue_ids: $venue_ids) {
+      venue_id
+      min_guests
+      min_business {
+        model
+        amount
+      }
+      min_spend
+      cleaning_fee
+      pet_fee
+      deposit
+      gst_enabled
+    }
+  }
+`);

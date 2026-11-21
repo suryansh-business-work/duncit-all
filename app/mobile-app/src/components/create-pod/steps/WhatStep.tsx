@@ -7,7 +7,9 @@ import type {
   CreatePodClub,
   CreatePodForm,
   CreatePodHostCategory,
+  CreatePodVenue,
 } from '../create-pod.types';
+import { PickedVenueNote, usePickedVenueLock } from '../PickedVenueNote';
 import { HostCategoryField } from './HostCategoryField';
 import { PodModeField } from './PodModeField';
 
@@ -18,6 +20,9 @@ interface Props {
   clubs: CreatePodClub[];
   /** Club Admin mode: the pod's club is fixed, so it has no category to pick. */
   pinnedClub: boolean;
+  venues?: CreatePodVenue[];
+  /** The venue picked on Venue Details: while the form is on it the pod is physical, so no mode to choose. */
+  pickedVenueId?: string;
 }
 
 /** Step 1 — What: the category (it scopes the clubs on Where & when and the
@@ -28,9 +33,13 @@ export function WhatStep({
   categoryIcons,
   clubs,
   pinnedClub,
+  venues = [],
+  pickedVenueId,
 }: Readonly<Props>) {
+  const venueLocked = usePickedVenueLock(form, pickedVenueId);
   return (
     <YStack gap={16} testID="create-pod-what-step">
+      {venueLocked ? <PickedVenueNote venues={venues} venueId={form.watch('venue_id')} /> : null}
       {pinnedClub ? null : (
         <TourAnchor tour="create-pod" anchor="create-pod-club">
           <SurfaceCard>
@@ -39,11 +48,12 @@ export function WhatStep({
               hostCategories={hostCategories}
               categoryIcons={categoryIcons}
               clubs={clubs}
+              keepVenue={venueLocked}
             />
           </SurfaceCard>
         </TourAnchor>
       )}
-      <PodModeField form={form} pinnedClub={pinnedClub} />
+      {venueLocked ? null : <PodModeField form={form} pinnedClub={pinnedClub} />}
     </YStack>
   );
 }

@@ -233,3 +233,45 @@ describe('useCreatePod', () => {
     expect(mockRequest).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('useCreatePod from "Pick This Venue for Pod"', () => {
+  it('opens a new physical pod at the picked venue, in its city, on Where & when for a one-category host', async () => {
+    mockRequest.mockResolvedValueOnce(options);
+    const { result } = renderHook(() => useCreatePod(undefined, '', '', 'v1'));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.initialValues).toMatchObject({ pod_mode: 'PHYSICAL', venue_id: 'v1', location_id: 'l1' });
+    expect(result.current.initialValues.host_category_key).not.toBe('');
+    expect(result.current.initialStep).toBe(1);
+    expect(result.current.pickedVenueId).toBe('v1');
+    expect(result.current.pinnedVenueId).toBe('v1');
+  });
+
+  it('opens as usual for a venue Create Pod does not offer', async () => {
+    mockRequest.mockResolvedValueOnce(options);
+    const { result } = renderHook(() => useCreatePod(undefined, '', '', 'v3'));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.pickedVenueId).toBeUndefined();
+    expect(result.current.pinnedVenueId).toBeUndefined();
+    expect(result.current.initialValues.venue_id).toBe('');
+    expect(result.current.initialStep).toBe(0);
+  });
+
+  it('keeps a resumed draft as saved, with the venue on offer only while it is still the picked one', async () => {
+    const draft = (venueId: string) => ({
+      myPodDraft: { id: 'd1', step: 2, payload: JSON.stringify({ stepper: 2, venue_id: venueId, pod_title: 'Saved' }) },
+    });
+    mockRequest.mockResolvedValueOnce(options).mockResolvedValueOnce(draft('v1'));
+    const { result } = renderHook(() => useCreatePod('d1', '', '', 'v1'));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.initialValues.pod_title).toBe('Saved');
+    expect(result.current.initialStep).toBe(2);
+    expect(result.current.pickedVenueId).toBe('v1');
+    expect(result.current.pinnedVenueId).toBe('v1');
+
+    mockRequest.mockResolvedValueOnce(options).mockResolvedValueOnce(draft('v9'));
+    const { result: moved } = renderHook(() => useCreatePod('d1', '', '', 'v1'));
+    await waitFor(() => expect(moved.current.isLoading).toBe(false));
+    expect(moved.current.pinnedVenueId).toBeUndefined();
+  });
+});
+

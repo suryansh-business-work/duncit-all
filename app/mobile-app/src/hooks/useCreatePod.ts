@@ -24,6 +24,7 @@ import { graphqlRequest } from '@/services/graphql.client';
 import { useAppSettingsStore } from '@/stores/app-settings.store';
 import { appFormatter } from '@/utils/app-formatter';
 import { loadPartnerRequestPrefill } from '@/hooks/partnerRequestPrefill';
+import { pickedVenueFreshSeed, pickedVenueOf } from '@/hooks/pickedVenuePrefill';
 import { errorCode } from '@/utils/errors';
 
 type OptionsData = ResultOf<typeof CreatePodOptionsDocument>;
@@ -37,6 +38,17 @@ const blankFinance = { platform_fee_pct: 0, gst_pct: 0, currency_symbol: '₹' }
 /** publicVenues are already APPROVED; keep only active venue partners. */
 const activeVenues = (options: OptionsData | null) =>
   (options?.publicVenues ?? []).filter((venue) => venue.is_active !== false);
+
+/** Every active sub the host is granted: a whole Category (or Super) grant opens each sub beneath it. */
+const grantedCategories = (options: OptionsData | null) =>
+  createPodGrantedRows(
+    createPodCatalogRows(
+      options?.superCategories ?? [],
+      options?.parentCategories ?? [],
+      options?.subCategories ?? [],
+    ),
+    options?.myHost?.host_categories ?? [],
+  );
 
 /**
  * The admin's date-time input pattern, read once when the prefill is built — the
@@ -102,7 +114,12 @@ async function loadCreatePodData(
  * from an earlier pod for "Host again" (saving nothing until the host moves on),
  * and autosaves/publishes the draft server-side.
  */
-export function useCreatePod(draftId?: string, partnerRequestId = '', hostAgainPodId = '') {
+export function useCreatePod(
+  draftId?: string,
+  partnerRequestId = '',
+  hostAgainPodId = '',
+  pickVenueId = '',
+) {
   const [data, setData] = useState<OptionsData | null>(null);
   const [initialValues, setInitialValues] = useState<CreatePodFormValues>(blankCreatePodForm);
   const [initialStep, setInitialStep] = useState(0);
@@ -110,6 +127,7 @@ export function useCreatePod(draftId?: string, partnerRequestId = '', hostAgainP
   const [loadFailed, setLoadFailed] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const [pinnedVenueId, setPinnedVenueId] = useState<string | undefined>(undefined);
+  const [pickedVenueId, setPickedVenueId] = useState<string | undefined>(undefined);
   const [hostAgain, setHostAgain] = useState<HostAgainPrefill | 'failed' | null>(null);
 
   useEffect(() => {
@@ -118,11 +136,17 @@ export function useCreatePod(draftId?: string, partnerRequestId = '', hostAgainP
     setLoadFailed(false);
     // A draft, or a Host Again copy not saved yet. One whose city is gone
     // opens in the header's: step 1 can only move a pod that is in a city.
-    const applyStored = (stored: { payload: string; step: number }, fallbackLocationId: string) => {
+    const applyStored = (
+      stored: { payload: string; step: number },
+      fallbackLocationId: string,
+      pickedId: string | undefined,
+    ) => {
       const values = hydrateDraft(stored.payload);
       setInitialValues({ ...values, location_id: values.location_id || fallbackLocationId });
-      // A draft started from a Pod Request keeps that venue on offer too.
-      setPinnedVenueId(values.partner_request_id ? values.venue_id : undefined);
+      // A draft started from a Pod Request, or still on the venue picked from
+      // Venue Details, keeps that venue on offer too.
+      const keepsVenue = !!values.partner_request_id || (!!pickedId && values.venue_id === pickedId);
+      setPinnedVenueId(keepsVenue ? values.venue_id : undefined);
       // A draft the old five-step stepper saved opens on the step that now holds its screen.
       setInitialStep(resumeCreatePodStep(stored.step, stored.payload));
     };
@@ -137,17 +161,25 @@ export function useCreatePod(draftId?: string, partnerRequestId = '', hostAgainP
           locations.find((item) => item.id === result.options.me?.selected_location_id)?.id ??
           locations[0]?.id ??
           '';
+        // "Pick This Venue for Pod" on Venue Details: a physical pod at that venue.
+        const picked = pickedVenueOf(pickVenueId, partnerRequestId, activeVenues(result.options));
+        setPickedVenueId(picked?.id);
         if (result.draft) {
-          applyStored(result.draft, preferred);
+          applyStored(result.draft, preferred, picked?.id);
         } else if (result.hostAgain && result.hostAgain !== 'failed') {
-          applyStored(result.hostAgain, preferred);
+          applyStored(result.hostAgain, preferred, picked?.id);
         } else {
+          const seed = picked
+            ? pickedVenueFreshSeed(picked, locations, grantedCategories(result.options))
+            : null;
           setInitialValues({
             ...blankCreatePodForm,
             location_id: preferred,
+            ...seed?.values,
             ...result.prefill?.values,
           });
-          setPinnedVenueId(result.prefill?.pinnedVenueId);
+          setInitialStep(seed?.step ?? 0);
+          setPinnedVenueId(result.prefill?.pinnedVenueId ?? picked?.id);
         }
       })
       .catch((error: unknown) => {
@@ -159,7 +191,7 @@ export function useCreatePod(draftId?: string, partnerRequestId = '', hostAgainP
     return () => {
       active = false;
     };
-  }, [draftId, partnerRequestId, hostAgainPodId, attempt]);
+  }, [draftId, partnerRequestId, hostAgainPodId, pickVenueId, attempt]);
 
   const saveDraft = async (id: string | null, payload: ReturnType<typeof serializeDraft>) => {
     const res = await graphqlRequest(
@@ -203,15 +235,7 @@ export function useCreatePod(draftId?: string, partnerRequestId = '', hostAgainP
     subCategories: data?.subCategories ?? [],
     // What's category tiles: a sub-category's icon, else its parent's.
     categoryIcons: [...(data?.subCategories ?? []), ...(data?.parentCategories ?? [])],
-    // Every active sub the host is granted: a whole Category (or Super) grant opens each sub beneath it.
-    hostCategories: createPodGrantedRows(
-      createPodCatalogRows(
-        data?.superCategories ?? [],
-        data?.parentCategories ?? [],
-        data?.subCategories ?? [],
-      ),
-      data?.myHost?.host_categories ?? [],
-    ),
+    hostCategories: grantedCategories(data),
     finance: data?.publicFinanceSettings ?? blankFinance,
     isLoading,
     initialValues,
@@ -223,6 +247,8 @@ export function useCreatePod(draftId?: string, partnerRequestId = '', hostAgainP
     /** The header's city — a Host Again copy in another city says so. */
     selectedLocationId: data?.me?.selected_location_id ?? '',
     pinnedVenueId,
+    /** The venue picked on Venue Details, while Create Pod can offer it. */
+    pickedVenueId,
     saveDraft,
     moderate,
     publish,

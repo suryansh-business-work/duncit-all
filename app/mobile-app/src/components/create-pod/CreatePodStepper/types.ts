@@ -32,6 +32,9 @@ export interface CreatePodStepperProps {
   viewerUserId: string;
   /** A Pod Request's venue, kept on offer on Where & when (see VenueSlotStep). */
   pinnedVenueId?: string;
+  /** The venue picked with "Pick This Venue for Pod": while the form is on it,
+   * the pod stays physical and Where & when offers that venue alone. */
+  pickedVenueId?: string;
   finance: CreatePodFinance;
   onSaveDraft: (draftId: string | null, payload: DraftPayload) => Promise<string>;
   onModerate: (input: ReturnType<typeof buildModerationInput>) => Promise<PodModerationResult>;

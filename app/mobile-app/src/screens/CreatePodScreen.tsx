@@ -56,12 +56,18 @@ export function CreatePodScreen() {
     hostAgain,
     selectedLocationId,
     pinnedVenueId,
+    pickedVenueId,
     loadFailed,
     retry,
     saveDraft,
     moderate,
     publish,
-  } = useCreatePod(draftId, route.params?.partnerRequestId, route.params?.hostAgainPodId);
+  } = useCreatePod(
+    draftId,
+    route.params?.partnerRequestId,
+    route.params?.hostAgainPodId,
+    route.params?.pickVenueId,
+  );
   const ready = !isLoading && !loadFailed;
   const copied = hostAgain === 'failed' ? null : hostAgain;
   // A copy keeps its own city; when that is not the header's, the notice names it.
@@ -147,6 +153,7 @@ export function CreatePodScreen() {
               hostCategories={hostCategories}
               viewerUserId={viewerUserId}
               pinnedVenueId={pinnedVenueId}
+              pickedVenueId={pickedVenueId}
               finance={finance}
               onSaveDraft={saveDraft}
               onAutosave={setAutosave}

@@ -12,7 +12,20 @@ export const contactSchema = new Schema(
   { _id: false }
 );
 
-const serviceOfferedSchema = new Schema(
+/**
+ * A social profile beyond the lead's main Instagram link — a name the operator
+ * chose ("YouTube", "Facebook page", "Linktree") and its URL. Every lead kind
+ * carries the list; empty by default, so existing rows need no migration.
+ */
+export const socialLinkSchema = new Schema(
+  {
+    name: { type: String, trim: true, default: '' },
+    url: { type: String, trim: true, default: '' },
+  },
+  { _id: false }
+);
+
+export const serviceOfferedSchema = new Schema(
   {
     // Catalogue value or "Other". When "Other", `custom_name` carries the
     // free-text label so dashboard aggregations can still group by display
@@ -81,6 +94,8 @@ const venueLeadSchema = new Schema(
 
     website: { type: String, trim: true, default: '' },
     services_offered: { type: [serviceOfferedSchema], default: [] },
+    instagram_link: { type: String, trim: true, default: '' },
+    social_links: { type: [socialLinkSchema], default: [] },
 
     // Optional one-to-many link to host leads who own / host events at
     // this venue. Used by the new "Linked Hosts" tab on the venue detail
@@ -136,6 +151,7 @@ const hostLeadSchema = new Schema(
 
     website: { type: String, trim: true, default: '' },
     services_offered: { type: [serviceOfferedSchema], default: [] },
+    social_links: { type: [socialLinkSchema], default: [] },
 
     instagram_link: { type: String, trim: true, default: '' },
     community_link: { type: String, trim: true, default: '' },
@@ -188,6 +204,7 @@ const ecommLeadSchema = new Schema(
     instagram_link: { type: String, trim: true, default: '' },
     marketplace_links: { type: [String], default: [] },
     services_offered: { type: [serviceOfferedSchema], default: [] },
+    social_links: { type: [socialLinkSchema], default: [] },
 
     tags: { type: [String], default: [] },
     profile_photo_url: { type: String, trim: true, default: '' },

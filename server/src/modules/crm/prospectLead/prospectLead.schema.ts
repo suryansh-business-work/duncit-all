@@ -25,6 +25,8 @@ export const prospectLeadTypeDefs = gql`
     contacts: [CrmContact!]!
     website: String
     instagram_link: String
+    social_links: [CrmSocialLink!]!
+    services_offered: [CrmServiceOffered!]!
     tags: [String!]!
     profile_photo_url: String
     dynamic_values_json: String!
@@ -57,6 +59,8 @@ export const prospectLeadTypeDefs = gql`
     contacts: [CrmContact!]!
     website: String
     instagram_link: String
+    social_links: [CrmSocialLink!]!
+    services_offered: [CrmServiceOffered!]!
     tags: [String!]!
     profile_photo_url: String
     dynamic_values_json: String!
@@ -87,6 +91,8 @@ export const prospectLeadTypeDefs = gql`
     contacts: [CrmContactInput!]
     website: String
     instagram_link: String
+    social_links: [CrmSocialLinkInput!]
+    services_offered: [CrmServiceOfferedInput!]
     tags: [String!]
     profile_photo_url: String
     dynamic_values_json: String
@@ -113,6 +119,8 @@ export const prospectLeadTypeDefs = gql`
     contacts: [CrmContactInput!]
     website: String
     instagram_link: String
+    social_links: [CrmSocialLinkInput!]
+    services_offered: [CrmServiceOfferedInput!]
     tags: [String!]
     profile_photo_url: String
     dynamic_values_json: String

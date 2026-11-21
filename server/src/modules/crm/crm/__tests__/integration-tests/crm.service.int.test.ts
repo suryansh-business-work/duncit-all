@@ -3,6 +3,7 @@ import { commsService } from '@services/comms/comms.service';
 import { CommunicationLogModel } from '@modules/crm/communicationLog/communicationLog.model';
 import { ManagedOptionModel } from '@modules/crm/managedOption/managedOption.model';
 import { CategoryModel } from '@modules/pods/category/category.model';
+import { CrmLeadMediaModel } from '@modules/crm/leadMedia/leadMedia.model';
 import { CrmDynamicFieldModel, CrmServiceCatalogModel, HostLeadModel, VenueLeadModel } from '../../crm.model';
 import { crmService } from '../../crm.service';
 import * as C from '../../crm.constants';
@@ -568,5 +569,102 @@ describe('crmService email and call actions', () => {
     await expect(fn(new Types.ObjectId().toHexString(), 'x@example.com', 'S', 'B')).rejects.toThrow(message);
     expect(send).not.toHaveBeenCalled();
     expect(call).not.toHaveBeenCalled();
+  });
+});
+
+describe('social links on core leads', () => {
+  it('stores cleaned social links on a venue lead and reads them back, with its instagram link', async () => {
+    const lead = await crmService.createVenueLead(
+      venueInput({
+        instagram_link: 'https://instagram.com/smasharena',
+        social_links: [
+          { name: '  Facebook  ', url: ' https://facebook.com/smasharena ' },
+          { name: '', url: 'https://www.youtube.com/@smasharena' },
+          { name: 'Empty row', url: '   ' },
+          { url: 'http://smasharena.in/events' },
+        ],
+      })
+    );
+
+    const expected = [
+      { name: 'Facebook', url: 'https://facebook.com/smasharena' },
+      { name: 'youtube.com', url: 'https://www.youtube.com/@smasharena' },
+      { name: 'smasharena.in', url: 'http://smasharena.in/events' },
+    ];
+    expect(lead).toMatchObject({ instagram_link: 'https://instagram.com/smasharena', social_links: expected });
+    expect((await crmService.getVenueLead(lead!.id))!.social_links).toEqual(expected);
+  });
+
+  it('replaces the links on update, clears them with an empty list, and leaves them alone when not sent', async () => {
+    const lead = await crmService.createVenueLead(venueInput({ social_links: [{ name: 'X', url: 'https://x.com/smash' }] }));
+
+    const renamed = await crmService.updateVenueLead(lead!.id, { remarks: 'No link change' });
+    expect(renamed!.social_links).toEqual([{ name: 'X', url: 'https://x.com/smash' }]);
+
+    const replaced = await crmService.updateVenueLead(lead!.id, { social_links: [{ name: 'Threads', url: 'https://threads.net/@smash' }] });
+    expect(replaced!.social_links).toEqual([{ name: 'Threads', url: 'https://threads.net/@smash' }]);
+
+    const cleared = await crmService.updateVenueLead(lead!.id, { social_links: [] });
+    expect(cleared!.social_links).toEqual([]);
+  });
+
+  it('keeps social links on host and ecomm leads too', async () => {
+    const host = await crmService.createHostLead({ host_name: 'Asha', social_links: [{ url: 'https://linkedin.com/in/asha' }] });
+    const ecomm = await crmService.updateEcommLead(
+      (await crmService.createEcommLead({ seller_name: 'Alpha' }))!.id,
+      { social_links: [{ name: 'Store', url: 'https://alpha.example/shop' }] }
+    );
+    expect(host!.social_links).toEqual([{ name: 'linkedin.com', url: 'https://linkedin.com/in/asha' }]);
+    expect(ecomm!.social_links).toEqual([{ name: 'Store', url: 'https://alpha.example/shop' }]);
+  });
+
+  it.each(['javascript:alert(document.cookie)', 'data:text/html,<script>x</script>', 'ftp://files.example/a', 'instagram.com/smash'])(
+    'refuses %p and stores nothing',
+    async (url) => {
+      await expect(crmService.createVenueLead(venueInput({ social_links: [{ name: 'Bad', url }] }))).rejects.toMatchObject({
+        message: `"${url}" is not a web link — social links must start with https://`,
+        extensions: { code: 'BAD_USER_INPUT' },
+      });
+      expect(await VenueLeadModel.countDocuments()).toBe(0);
+    }
+  );
+
+  it('refuses a bad link on update without changing the stored ones', async () => {
+    const lead = await crmService.createVenueLead(venueInput({ social_links: [{ name: 'X', url: 'https://x.com/smash' }] }));
+    await expect(
+      crmService.updateVenueLead(lead!.id, { social_links: [{ name: 'Bad', url: 'javascript:void(0)' }] })
+    ).rejects.toMatchObject({ extensions: { code: 'BAD_USER_INPUT' } });
+    expect((await crmService.getVenueLead(lead!.id))!.social_links).toEqual([{ name: 'X', url: 'https://x.com/smash' }]);
+  });
+});
+
+describe('lead deletion takes the lead’s logos and images with it', () => {
+  const media = (entity_type: string, lead_id: string) => ({
+    entity_type,
+    lead_id: new Types.ObjectId(lead_id),
+    kind: 'IMAGE',
+    url: 'https://cdn.example.com/a.png',
+  });
+
+  it.each([
+    ['VENUE_LEAD', () => crmService.createVenueLead(venueInput()), (id: string) => crmService.deleteVenueLead(id)],
+    ['HOST_LEAD', () => crmService.createHostLead({ host_name: 'Asha' }), (id: string) => crmService.deleteHostLead(id)],
+    ['ECOMM_LEAD', () => crmService.createEcommLead({ seller_name: 'Alpha' }), (id: string) => crmService.deleteEcommLead(id)],
+  ] as const)('%s', async (entity, create, remove) => {
+    const lead = await create();
+    const keep = await crmService.createVenueLead(venueInput({ venue_name: 'Keep', contacts: [] }));
+    await CrmLeadMediaModel.create([media(entity, lead!.id), media(entity, lead!.id), media('VENUE_LEAD', keep!.id)]);
+
+    expect(await remove(lead!.id)).toBe(true);
+
+    expect(await CrmLeadMediaModel.countDocuments({ lead_id: new Types.ObjectId(lead!.id) })).toBe(0);
+    expect(await CrmLeadMediaModel.countDocuments({ lead_id: new Types.ObjectId(keep!.id) })).toBe(1);
+  });
+
+  it('removes no media when the lead to delete does not exist', async () => {
+    const ghost = new Types.ObjectId().toHexString();
+    await CrmLeadMediaModel.create(media('VENUE_LEAD', ghost));
+    await expect(crmService.deleteVenueLead(ghost)).rejects.toThrow('Venue lead not found');
+    expect(await CrmLeadMediaModel.countDocuments()).toBe(1);
   });
 });

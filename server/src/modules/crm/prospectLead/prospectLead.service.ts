@@ -8,6 +8,7 @@ import {
   parseDate,
   pub,
 } from '@modules/crm/crm/crm.service';
+import { removeLeadMedia } from '@modules/crm/leadMedia/leadMedia.model';
 import { NUMERIC_FIELDS, PROSPECT_CONFIG, type ProspectKind } from './prospectLead.config';
 
 type LeadInput = Record<string, unknown> & { next_follow_up_date?: string | null };
@@ -92,6 +93,7 @@ export const prospectLeadService = {
   async remove(kind: ProspectKind, id: string) {
     const doc = await modelOf(kind).findByIdAndDelete(id);
     if (!doc) notFound(capitalised(PROSPECT_CONFIG[kind].label));
+    await removeLeadMedia(kind, id);
     return true;
   },
 

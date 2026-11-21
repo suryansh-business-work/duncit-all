@@ -17,6 +17,17 @@ export const crmTypeDefs = gql`
     email: String
   }
 
+  "A social profile beyond the main Instagram link (YouTube, Facebook, Linktree…)."
+  type CrmSocialLink {
+    name: String!
+    url: String!
+  }
+
+  input CrmSocialLinkInput {
+    name: String!
+    url: String!
+  }
+
   type CrmServiceOffered {
     service: String!
     custom_name: String
@@ -200,6 +211,8 @@ export const crmTypeDefs = gql`
     brochure_url: String
     website: String
     services_offered: [CrmServiceOffered!]!
+    instagram_link: String
+    social_links: [CrmSocialLink!]!
     linked_host_ids: [ID!]!
     linked_hosts: [CrmLinkedHost!]!
     tags: [String!]!
@@ -242,6 +255,7 @@ export const crmTypeDefs = gql`
     preferred_time_slot: String
     website: String
     services_offered: [CrmServiceOffered!]!
+    social_links: [CrmSocialLink!]!
     instagram_link: String
     community_link: String
     community_size: Int
@@ -286,6 +300,7 @@ export const crmTypeDefs = gql`
     instagram_link: String
     marketplace_links: [String!]!
     services_offered: [CrmServiceOffered!]!
+    social_links: [CrmSocialLink!]!
     tags: [String!]!
     profile_photo_url: String
     dynamic_values_json: String!
@@ -359,6 +374,8 @@ export const crmTypeDefs = gql`
     brochure_url: String
     website: String
     services_offered: [CrmServiceOfferedInput!]
+    instagram_link: String
+    social_links: [CrmSocialLinkInput!]
     linked_host_ids: [ID!]
     tags: [String!]
     logo_url: String
@@ -393,6 +410,7 @@ export const crmTypeDefs = gql`
     preferred_time_slot: String
     website: String
     services_offered: [CrmServiceOfferedInput!]
+    social_links: [CrmSocialLinkInput!]
     instagram_link: String
     community_link: String
     community_size: Int
@@ -431,6 +449,7 @@ export const crmTypeDefs = gql`
     instagram_link: String
     marketplace_links: [String!]
     services_offered: [CrmServiceOfferedInput!]
+    social_links: [CrmSocialLinkInput!]
     tags: [String!]
     profile_photo_url: String
     dynamic_values_json: String
@@ -546,15 +565,16 @@ export const crmTypeDefs = gql`
     "Read an uploaded spreadsheet's headers + sample rows for column mapping."
     crmExcelInspect(content_base64: String!): CrmExcelInspectResult!
     crmServices(kind: CrmServiceKind, include_inactive: Boolean): [CrmService!]!
+      @deprecated(reason: "Lead forms read crmServicesOffered (CRM › Data › Services Offered). Kept for older clients.")
     crmDynamicFields(entity: CrmEntityType, include_inactive: Boolean): [CrmDynamicField!]!
     "The configured Twilio caller-ID (From) number, shown on call dialogs."
     crmCallFromNumber: String
   }
 
   extend type Mutation {
-    createCrmService(input: CrmServiceInput!): CrmService!
-    updateCrmService(id: ID!, input: CrmServiceInput!): CrmService!
-    deleteCrmService(id: ID!): Boolean!
+    createCrmService(input: CrmServiceInput!): CrmService! @deprecated(reason: "Use the Services Offered catalogue mutations (createCrmServicesOffered etc.).")
+    updateCrmService(id: ID!, input: CrmServiceInput!): CrmService! @deprecated(reason: "Use the Services Offered catalogue mutations (createCrmServicesOffered etc.).")
+    deleteCrmService(id: ID!): Boolean! @deprecated(reason: "Use the Services Offered catalogue mutations (createCrmServicesOffered etc.).")
     createVenueLead(input: VenueLeadInput!): VenueLead!
     updateVenueLead(id: ID!, input: VenueLeadInput!): VenueLead!
     deleteVenueLead(id: ID!): Boolean!

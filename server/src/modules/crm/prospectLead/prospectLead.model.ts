@@ -1,5 +1,5 @@
 import { Schema, model, type InferSchemaType, type SchemaDefinition } from 'mongoose';
-import { activitySchema, contactSchema } from '@modules/crm/crm/crm.model';
+import { activitySchema, contactSchema, serviceOfferedSchema, socialLinkSchema } from '@modules/crm/crm/crm.model';
 import { HOST_LEAD_STATUSES, PRIORITIES } from '@modules/crm/crm/crm.constants';
 
 /**
@@ -16,6 +16,8 @@ const leadBackbone: SchemaDefinition = {
   contacts: { type: [contactSchema], default: [] },
   website: { type: String, trim: true, default: '' },
   instagram_link: { type: String, trim: true, default: '' },
+  social_links: { type: [socialLinkSchema], default: [] },
+  services_offered: { type: [serviceOfferedSchema], default: [] },
   tags: { type: [String], default: [] },
   profile_photo_url: { type: String, trim: true, default: '' },
   dynamic_values: { type: Schema.Types.Mixed, default: () => ({}) },

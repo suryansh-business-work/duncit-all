@@ -5862,6 +5862,8 @@ export type CommunityLead = {
   platform?: Maybe<Scalars['String']['output']>;
   priority: Scalars['String']['output'];
   profile_photo_url?: Maybe<Scalars['String']['output']>;
+  services_offered: Array<CrmServiceOffered>;
+  social_links: Array<CrmSocialLink>;
   super_category?: Maybe<CrmSuperCategoryRef>;
   super_category_id?: Maybe<Scalars['ID']['output']>;
   tags: Array<Scalars['String']['output']>;
@@ -5890,6 +5892,8 @@ export type CommunityLeadInput = {
   platform?: InputMaybe<Scalars['String']['input']>;
   priority?: InputMaybe<Scalars['String']['input']>;
   profile_photo_url?: InputMaybe<Scalars['String']['input']>;
+  services_offered?: InputMaybe<Array<CrmServiceOfferedInput>>;
+  social_links?: InputMaybe<Array<CrmSocialLinkInput>>;
   super_category_id?: InputMaybe<Scalars['ID']['input']>;
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
   website?: InputMaybe<Scalars['String']['input']>;
@@ -6590,6 +6594,8 @@ export type CreateCrmReminderInput = {
 };
 
 export type CreateCrmServiceOfferedInput = {
+  applies_to_community?: InputMaybe<Scalars['Boolean']['input']>;
+  applies_to_creator?: InputMaybe<Scalars['Boolean']['input']>;
   applies_to_ecomm?: InputMaybe<Scalars['Boolean']['input']>;
   applies_to_host?: InputMaybe<Scalars['Boolean']['input']>;
   applies_to_venue?: InputMaybe<Scalars['Boolean']['input']>;
@@ -6951,6 +6957,8 @@ export type CreatorLead = {
   profile_links: Array<Scalars['String']['output']>;
   profile_photo_url?: Maybe<Scalars['String']['output']>;
   rate_card?: Maybe<Scalars['String']['output']>;
+  services_offered: Array<CrmServiceOffered>;
+  social_links: Array<CrmSocialLink>;
   super_category?: Maybe<CrmSuperCategoryRef>;
   super_category_id?: Maybe<Scalars['ID']['output']>;
   tags: Array<Scalars['String']['output']>;
@@ -6980,6 +6988,8 @@ export type CreatorLeadInput = {
   profile_links?: InputMaybe<Array<Scalars['String']['input']>>;
   profile_photo_url?: InputMaybe<Scalars['String']['input']>;
   rate_card?: InputMaybe<Scalars['String']['input']>;
+  services_offered?: InputMaybe<Array<CrmServiceOfferedInput>>;
+  social_links?: InputMaybe<Array<CrmSocialLinkInput>>;
   super_category_id?: InputMaybe<Scalars['ID']['input']>;
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
   website?: InputMaybe<Scalars['String']['input']>;
@@ -7135,6 +7145,12 @@ export type CrmDynamicFieldOptionInput = {
   value: Scalars['String']['input'];
 };
 
+export type CrmEmailAiInput = {
+  current_mjml?: InputMaybe<Scalars['String']['input']>;
+  prompt: Scalars['String']['input'];
+  target?: InputMaybe<CrmEmailTemplateTarget>;
+};
+
 /** An uploaded asset (image-library entry or send attachment) addressed by URL. */
 export type CrmEmailAsset = {
   __typename?: 'CrmEmailAsset';
@@ -7147,9 +7163,74 @@ export type CrmEmailAssetInput = {
   url: Scalars['String']['input'];
 };
 
+export type CrmEmailAssetKind =
+  | 'BANNER'
+  | 'IMAGE'
+  | 'LOGO';
+
+/** A logo, banner or image in the CRM email brand library (Email Templates › Settings). */
+export type CrmEmailBrandAsset = {
+  __typename?: 'CrmEmailBrandAsset';
+  created_at?: Maybe<Scalars['String']['output']>;
+  height?: Maybe<Scalars['Int']['output']>;
+  id: Scalars['ID']['output'];
+  kind: CrmEmailAssetKind;
+  mime_type: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  size_bytes?: Maybe<Scalars['Int']['output']>;
+  url: Scalars['String']['output'];
+  width?: Maybe<Scalars['Int']['output']>;
+};
+
+export type CrmEmailBrandAssetInput = {
+  height?: InputMaybe<Scalars['Int']['input']>;
+  kind: CrmEmailAssetKind;
+  mime_type?: InputMaybe<Scalars['String']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  size_bytes?: InputMaybe<Scalars['Int']['input']>;
+  url: Scalars['String']['input'];
+  width?: InputMaybe<Scalars['Int']['input']>;
+};
+
+/** Rename, re-file or replace an asset. Send url (with its file fields) only to replace the file. */
+export type CrmEmailBrandAssetUpdateInput = {
+  height?: InputMaybe<Scalars['Int']['input']>;
+  kind?: InputMaybe<CrmEmailAssetKind>;
+  mime_type?: InputMaybe<Scalars['String']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  size_bytes?: InputMaybe<Scalars['Int']['input']>;
+  url?: InputMaybe<Scalars['String']['input']>;
+  width?: InputMaybe<Scalars['Int']['input']>;
+};
+
 export type CrmEmailCheckSource =
   | 'BULK'
   | 'SINGLE';
+
+export type CrmEmailColorMode =
+  /** Follow the reader's mail app: light or the designed dark palette. */
+  | 'AUTO'
+  /** Always light, even when the reader's mail app is dark. */
+  | 'LIGHT';
+
+export type CrmEmailFontOption = {
+  __typename?: 'CrmEmailFontOption';
+  key: Scalars['String']['output'];
+  label: Scalars['String']['output'];
+  stack: Scalars['String']['output'];
+};
+
+export type CrmEmailSettings = {
+  __typename?: 'CrmEmailSettings';
+  assets: Array<CrmEmailBrandAsset>;
+  /** The shared design tokens — what Reset restores. */
+  defaults: CrmEmailTheme;
+  fonts: Array<CrmEmailFontOption>;
+  /** The logo CRM emails show in their header; null = the Duncit brand logo. */
+  primary_logo_id?: Maybe<Scalars['ID']['output']>;
+  theme: CrmEmailTheme;
+  updated_at?: Maybe<Scalars['String']['output']>;
+};
 
 /** Reacher's verdict on a mailbox. An address never checked has no status. */
 export type CrmEmailStatus =
@@ -7228,6 +7309,56 @@ export type CrmEmailTestResult = {
   __typename?: 'CrmEmailTestResult';
   message?: Maybe<Scalars['String']['output']>;
   ok: Scalars['Boolean']['output'];
+};
+
+/** The CRM email look. Colours are #rrggbb; sizes are pixels. */
+export type CrmEmailTheme = {
+  __typename?: 'CrmEmailTheme';
+  accent_color: Scalars['String']['output'];
+  background_color: Scalars['String']['output'];
+  base_font_size: Scalars['Int']['output'];
+  body_font: Scalars['String']['output'];
+  border_color: Scalars['String']['output'];
+  button_radius: Scalars['Int']['output'];
+  card_color: Scalars['String']['output'];
+  color_mode: CrmEmailColorMode;
+  content_padding: Scalars['Int']['output'];
+  dark_background_color: Scalars['String']['output'];
+  dark_card_color: Scalars['String']['output'];
+  dark_heading_color: Scalars['String']['output'];
+  dark_primary_color: Scalars['String']['output'];
+  dark_text_color: Scalars['String']['output'];
+  heading_color: Scalars['String']['output'];
+  heading_font: Scalars['String']['output'];
+  muted_color: Scalars['String']['output'];
+  panel_color: Scalars['String']['output'];
+  panel_radius: Scalars['Int']['output'];
+  primary_color: Scalars['String']['output'];
+  text_color: Scalars['String']['output'];
+};
+
+export type CrmEmailThemeInput = {
+  accent_color?: InputMaybe<Scalars['String']['input']>;
+  background_color?: InputMaybe<Scalars['String']['input']>;
+  base_font_size?: InputMaybe<Scalars['Int']['input']>;
+  body_font?: InputMaybe<Scalars['String']['input']>;
+  border_color?: InputMaybe<Scalars['String']['input']>;
+  button_radius?: InputMaybe<Scalars['Int']['input']>;
+  card_color?: InputMaybe<Scalars['String']['input']>;
+  color_mode?: InputMaybe<CrmEmailColorMode>;
+  content_padding?: InputMaybe<Scalars['Int']['input']>;
+  dark_background_color?: InputMaybe<Scalars['String']['input']>;
+  dark_card_color?: InputMaybe<Scalars['String']['input']>;
+  dark_heading_color?: InputMaybe<Scalars['String']['input']>;
+  dark_primary_color?: InputMaybe<Scalars['String']['input']>;
+  dark_text_color?: InputMaybe<Scalars['String']['input']>;
+  heading_color?: InputMaybe<Scalars['String']['input']>;
+  heading_font?: InputMaybe<Scalars['String']['input']>;
+  muted_color?: InputMaybe<Scalars['String']['input']>;
+  panel_color?: InputMaybe<Scalars['String']['input']>;
+  panel_radius?: InputMaybe<Scalars['Int']['input']>;
+  primary_color?: InputMaybe<Scalars['String']['input']>;
+  text_color?: InputMaybe<Scalars['String']['input']>;
 };
 
 /** One check of one address — the CRM keeps every one. */
@@ -7385,6 +7516,50 @@ export type CrmLeadFilter = {
   super_category_id?: InputMaybe<Scalars['ID']['input']>;
 };
 
+/** A logo or image uploaded to a CRM lead (any of the five lead kinds). */
+export type CrmLeadMedia = {
+  __typename?: 'CrmLeadMedia';
+  created_at?: Maybe<Scalars['String']['output']>;
+  entity_type: CrmEntityType;
+  height?: Maybe<Scalars['Int']['output']>;
+  id: Scalars['ID']['output'];
+  kind: CrmLeadMediaKind;
+  lead_id: Scalars['ID']['output'];
+  mime_type: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  size_bytes?: Maybe<Scalars['Int']['output']>;
+  sort_order: Scalars['Int']['output'];
+  updated_at?: Maybe<Scalars['String']['output']>;
+  uploaded_by?: Maybe<Scalars['String']['output']>;
+  url: Scalars['String']['output'];
+  width?: Maybe<Scalars['Int']['output']>;
+};
+
+export type CrmLeadMediaInput = {
+  height?: InputMaybe<Scalars['Int']['input']>;
+  kind: CrmLeadMediaKind;
+  mime_type?: InputMaybe<Scalars['String']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  size_bytes?: InputMaybe<Scalars['Int']['input']>;
+  url: Scalars['String']['input'];
+  width?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type CrmLeadMediaKind =
+  | 'IMAGE'
+  | 'LOGO';
+
+/** Rename, re-file or replace an item. Send url (with its file fields) only to replace the file. */
+export type CrmLeadMediaUpdateInput = {
+  height?: InputMaybe<Scalars['Int']['input']>;
+  kind?: InputMaybe<CrmLeadMediaKind>;
+  mime_type?: InputMaybe<Scalars['String']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  size_bytes?: InputMaybe<Scalars['Int']['input']>;
+  url?: InputMaybe<Scalars['String']['input']>;
+  width?: InputMaybe<Scalars['Int']['input']>;
+};
+
 export type CrmLinkedHost = {
   __typename?: 'CrmLinkedHost';
   city?: Maybe<Scalars['String']['output']>;
@@ -7523,6 +7698,8 @@ export type CrmServiceKind =
 
 export type CrmServiceOffered = {
   __typename?: 'CrmServiceOffered';
+  applies_to_community: Scalars['Boolean']['output'];
+  applies_to_creator: Scalars['Boolean']['output'];
   applies_to_ecomm: Scalars['Boolean']['output'];
   applies_to_host: Scalars['Boolean']['output'];
   applies_to_venue: Scalars['Boolean']['output'];
@@ -7545,6 +7722,8 @@ export type CrmServiceOffered = {
 };
 
 export type CrmServiceOfferedFilter = {
+  applies_to_community?: InputMaybe<Scalars['Boolean']['input']>;
+  applies_to_creator?: InputMaybe<Scalars['Boolean']['input']>;
   applies_to_ecomm?: InputMaybe<Scalars['Boolean']['input']>;
   applies_to_host?: InputMaybe<Scalars['Boolean']['input']>;
   applies_to_venue?: InputMaybe<Scalars['Boolean']['input']>;
@@ -7568,6 +7747,18 @@ export type CrmServiceOfferedTablePage = {
   page_size: Scalars['Int']['output'];
   rows: Array<CrmServiceOffered>;
   total: Scalars['Int']['output'];
+};
+
+/** A social profile beyond the main Instagram link (YouTube, Facebook, Linktree…). */
+export type CrmSocialLink = {
+  __typename?: 'CrmSocialLink';
+  name: Scalars['String']['output'];
+  url: Scalars['String']['output'];
+};
+
+export type CrmSocialLinkInput = {
+  name: Scalars['String']['input'];
+  url: Scalars['String']['input'];
 };
 
 export type CrmSuperCategoryRef = {
@@ -8962,6 +9153,7 @@ export type EcommLead = {
   profile_photo_url?: Maybe<Scalars['String']['output']>;
   seller_name: Scalars['String']['output'];
   services_offered: Array<CrmServiceOffered>;
+  social_links: Array<CrmSocialLink>;
   sub_category_ids: Array<Scalars['ID']['output']>;
   super_category?: Maybe<CrmSuperCategoryRef>;
   super_category_id?: Maybe<Scalars['ID']['output']>;
@@ -8996,6 +9188,7 @@ export type EcommLeadInput = {
   profile_photo_url?: InputMaybe<Scalars['String']['input']>;
   seller_name: Scalars['String']['input'];
   services_offered?: InputMaybe<Array<CrmServiceOfferedInput>>;
+  social_links?: InputMaybe<Array<CrmSocialLinkInput>>;
   sub_category_ids?: InputMaybe<Array<Scalars['ID']['input']>>;
   super_category_id?: InputMaybe<Scalars['ID']['input']>;
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -11689,6 +11882,7 @@ export type HostLead = {
   profile_photo_url?: Maybe<Scalars['String']['output']>;
   revenue_models: Array<Scalars['String']['output']>;
   services_offered: Array<CrmServiceOffered>;
+  social_links: Array<CrmSocialLink>;
   sub_category_ids: Array<Scalars['ID']['output']>;
   super_category?: Maybe<CrmSuperCategoryRef>;
   super_category_id?: Maybe<Scalars['ID']['output']>;
@@ -11730,6 +11924,7 @@ export type HostLeadInput = {
   profile_photo_url?: InputMaybe<Scalars['String']['input']>;
   revenue_models?: InputMaybe<Array<Scalars['String']['input']>>;
   services_offered?: InputMaybe<Array<CrmServiceOfferedInput>>;
+  social_links?: InputMaybe<Array<CrmSocialLinkInput>>;
   sub_category_ids?: InputMaybe<Array<Scalars['ID']['input']>>;
   super_category_id?: InputMaybe<Scalars['ID']['input']>;
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -15240,8 +15435,11 @@ export type Mutation = {
   addBrandDeliveryPincodes: BrandDeliveryPincodeAddResult;
   /** Submit or update a star rating (1-5) on a club. Requires authentication. */
   addClubRating: Club;
+  addCrmEmailBrandAssets: CrmEmailSettings;
   /** Append an uploaded image to the template's library (persists immediately). */
   addCrmEmailTemplateImage: CrmEmailTemplate;
+  /** Attach uploaded files to a lead. Returns the lead's whole list. */
+  addCrmLeadMedia: Array<CrmLeadMedia>;
   addCrmManualLog: CrmActivity;
   addDnsRecord: Scalars['Boolean']['output'];
   addExpenseRefund: Expense;
@@ -15688,6 +15886,7 @@ export type Mutation = {
   createCrmEmailTemplate: CrmEmailTemplate;
   createCrmManagedOption: CrmManagedOption;
   createCrmReminder: CrmReminder;
+  /** @deprecated Use the Services Offered catalogue mutations (createCrmServicesOffered etc.). */
   createCrmService: CrmService;
   createCrmServicesOffered: Array<CrmServiceOffered>;
   createE2eFlow: E2eFlow;
@@ -15859,8 +16058,10 @@ export type Mutation = {
   deleteCrmCallPrompt: Scalars['Boolean']['output'];
   deleteCrmDynamicField: Scalars['Boolean']['output'];
   deleteCrmEmailTemplate: Scalars['Boolean']['output'];
+  deleteCrmLeadMedia: Scalars['Boolean']['output'];
   deleteCrmManagedOption: Scalars['Boolean']['output'];
   deleteCrmReminder: Scalars['Boolean']['output'];
+  /** @deprecated Use the Services Offered catalogue mutations (createCrmServicesOffered etc.). */
   deleteCrmService: Scalars['Boolean']['output'];
   deleteCrmServiceOffered: Scalars['Boolean']['output'];
   /**
@@ -16104,6 +16305,8 @@ export type Mutation = {
   forceCancelProductOrder: ProductOrder;
   /** Send an existing message on to somebody else — a copy, not a pointer. */
   forwardStaffMessage: StaffMessage;
+  /** Write or rework a CRM template with AI, using the CRM prompts and brand images. */
+  generateCrmEmailMjml: Scalars['String']['output'];
   generateInventorySku: Scalars['String']['output'];
   /**
    * Make a new iOS signing identity at Apple with the App Store Connect key:
@@ -16584,6 +16787,7 @@ export type Mutation = {
   removeBrandDeliveryPincodes: Scalars['Int']['output'];
   /** Primary host withdraws an invite / removes a co-host. */
   removeCoHost: Pod;
+  removeCrmEmailBrandAsset: CrmEmailSettings;
   removeCrmEmailTemplateImage: CrmEmailTemplate;
   /** Take the lead out of the sequence; what was sent stays on record. */
   removeEnrollment: Scalars['Boolean']['output'];
@@ -16806,6 +17010,9 @@ export type Mutation = {
   rescheduleMyMeeting: OnboardingMeeting;
   /** Restore a code prompt's shipped default body. */
   resetAiPrompt: AiPrompt;
+  resetCrmEmailAiPrompt: AiPrompt;
+  /** Put the theme back on the shared design tokens. */
+  resetCrmEmailTheme: CrmEmailSettings;
   /**
    * Forget the caller's arrangement of one dashboard so it falls back to the
    * built-in defaults. Returns true whether or not a row existed.
@@ -17120,6 +17327,8 @@ export type Mutation = {
    * phone_otp_verification feature flag is on — the number must then be proved.
    */
   setContactPhoneNumber: User;
+  /** Pick the header logo for CRM emails; omit id to use the Duncit brand logo again. */
+  setCrmEmailPrimaryLogo: CrmEmailSettings;
   /**  Record that a proposal was carried out or dismissed.  */
   setCrmLeadAiActionStatus: CrmLeadAiMessage;
   setDefaultBrandPickupLocation: BrandPickupLocation;
@@ -17714,9 +17923,15 @@ export type Mutation = {
   updateCreatorLead: CreatorLead;
   updateCrmCallPrompt: CrmCallPrompt;
   updateCrmDynamicField: CrmDynamicField;
+  /** Edit one of the CRM email writer prompts (crm.email_mjml or crm.email_mjml.user). */
+  updateCrmEmailAiPrompt: AiPrompt;
+  updateCrmEmailBrandAsset: CrmEmailSettings;
   updateCrmEmailTemplate: CrmEmailTemplate;
+  updateCrmEmailTheme: CrmEmailSettings;
+  updateCrmLeadMedia: CrmLeadMedia;
   updateCrmManagedOption: CrmManagedOption;
   updateCrmReminder: CrmReminder;
+  /** @deprecated Use the Services Offered catalogue mutations (createCrmServicesOffered etc.). */
   updateCrmService: CrmService;
   updateCrmServiceOffered: CrmServiceOffered;
   /** Rewrites the value, TTL and priority of one record. Its type and name stay. */
@@ -18021,9 +18236,21 @@ export type MutationAddClubRatingArgs = {
 };
 
 
+export type MutationAddCrmEmailBrandAssetsArgs = {
+  items: Array<CrmEmailBrandAssetInput>;
+};
+
+
 export type MutationAddCrmEmailTemplateImageArgs = {
   image: CrmEmailAssetInput;
   template_id: Scalars['ID']['input'];
+};
+
+
+export type MutationAddCrmLeadMediaArgs = {
+  entity_type: CrmEntityType;
+  items: Array<CrmLeadMediaInput>;
+  lead_id: Scalars['ID']['input'];
 };
 
 
@@ -19552,6 +19779,11 @@ export type MutationDeleteCrmEmailTemplateArgs = {
 };
 
 
+export type MutationDeleteCrmLeadMediaArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationDeleteCrmManagedOptionArgs = {
   id: Scalars['ID']['input'];
 };
@@ -20326,6 +20558,11 @@ export type MutationForceCancelProductOrderArgs = {
 export type MutationForwardStaffMessageArgs = {
   id: Scalars['ID']['input'];
   to_user_id: Scalars['ID']['input'];
+};
+
+
+export type MutationGenerateCrmEmailMjmlArgs = {
+  input: CrmEmailAiInput;
 };
 
 
@@ -21130,6 +21367,11 @@ export type MutationRemoveCoHostArgs = {
 };
 
 
+export type MutationRemoveCrmEmailBrandAssetArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationRemoveCrmEmailTemplateImageArgs = {
   template_id: Scalars['ID']['input'];
   url: Scalars['String']['input'];
@@ -21423,6 +21665,11 @@ export type MutationRescheduleMyMeetingArgs = {
 
 export type MutationResetAiPromptArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type MutationResetCrmEmailAiPromptArgs = {
+  key: Scalars['String']['input'];
 };
 
 
@@ -22090,6 +22337,11 @@ export type MutationSetCmsSiteARecordArgs = {
 export type MutationSetContactPhoneNumberArgs = {
   phone_extension: Scalars['String']['input'];
   phone_number: Scalars['String']['input'];
+};
+
+
+export type MutationSetCrmEmailPrimaryLogoArgs = {
+  id?: InputMaybe<Scalars['ID']['input']>;
 };
 
 
@@ -23686,9 +23938,32 @@ export type MutationUpdateCrmDynamicFieldArgs = {
 };
 
 
+export type MutationUpdateCrmEmailAiPromptArgs = {
+  content: Scalars['String']['input'];
+  key: Scalars['String']['input'];
+};
+
+
+export type MutationUpdateCrmEmailBrandAssetArgs = {
+  id: Scalars['ID']['input'];
+  input: CrmEmailBrandAssetUpdateInput;
+};
+
+
 export type MutationUpdateCrmEmailTemplateArgs = {
   input: UpdateCrmEmailTemplateInput;
   template_id: Scalars['ID']['input'];
+};
+
+
+export type MutationUpdateCrmEmailThemeArgs = {
+  input: CrmEmailThemeInput;
+};
+
+
+export type MutationUpdateCrmLeadMediaArgs = {
+  id: Scalars['ID']['input'];
+  input: CrmLeadMediaUpdateInput;
 };
 
 
@@ -31464,6 +31739,12 @@ export type Query = {
   crmCallPrompts: Array<CrmCallPrompt>;
   crmCallPromptsTable: CrmCallPromptTablePage;
   crmDynamicFields: Array<CrmDynamicField>;
+  /** The two AI Library prompts behind the CRM email writer (SYSTEM, then USER). */
+  crmEmailAiPrompts: Array<AiPrompt>;
+  /** Brand library, theme and font options for CRM emails. */
+  crmEmailSettings: CrmEmailSettings;
+  /** The shared starter body a new CRM template begins from. */
+  crmEmailStarterMjml: Scalars['String']['output'];
   /** Latest status per address (max 200). Addresses never checked are left out. */
   crmEmailStatuses: Array<CrmEmailStatusEntry>;
   crmEmailTemplate?: Maybe<CrmEmailTemplate>;
@@ -31477,9 +31758,12 @@ export type Query = {
   /**  The signed-in agent's Ask AI conversation about one lead, with a fresh context summary.  */
   crmLeadAiThread: CrmLeadAiThread;
   crmLeadConfig: CrmOptionGroup;
+  /** Every logo and image of one lead: logos first, each kind in its upload order. */
+  crmLeadMedia: Array<CrmLeadMedia>;
   crmManagedOptions: Array<CrmManagedOption>;
   crmManagedOptionsTable: CrmManagedOptionTablePage;
   crmReminders: Array<CrmReminder>;
+  /** @deprecated Lead forms read crmServicesOffered (CRM › Data › Services Offered). Kept for older clients. */
   crmServices: Array<CrmService>;
   crmServicesOffered: Array<CrmServiceOffered>;
   crmServicesOfferedTable: CrmServiceOfferedTablePage;
@@ -32675,6 +32959,8 @@ export type Query = {
   regressionReportsTable: RegressionReportTablePage;
   /** Render MJML with sample vars for the editor preview (CRM store). */
   renderCrmEmailTemplate: CrmEmailTemplateRender;
+  /** Render a template (the starter by default) under an unsaved theme, for the settings preview. */
+  renderCrmEmailThemePreview: CrmEmailTemplateRender;
   /**
    * Render the given MJML with sample variables, returning the HTML and any
    * MJML compile errors. Used for the right-hand preview in the editor.
@@ -34235,6 +34521,12 @@ export type QueryCrmExcelTemplateArgs = {
 
 export type QueryCrmLeadAiThreadArgs = {
   entity: CrmEntityType;
+  lead_id: Scalars['ID']['input'];
+};
+
+
+export type QueryCrmLeadMediaArgs = {
+  entity_type: CrmEntityType;
   lead_id: Scalars['ID']['input'];
 };
 
@@ -36560,6 +36852,12 @@ export type QueryRegressionReportsTableArgs = {
 export type QueryRenderCrmEmailTemplateArgs = {
   mjml: Scalars['String']['input'];
   vars?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type QueryRenderCrmEmailThemePreviewArgs = {
+  mjml?: InputMaybe<Scalars['String']['input']>;
+  theme: CrmEmailThemeInput;
 };
 
 
@@ -47052,6 +47350,8 @@ export type UpdateCrmReminderInput = {
 };
 
 export type UpdateCrmServiceOfferedInput = {
+  applies_to_community?: InputMaybe<Scalars['Boolean']['input']>;
+  applies_to_creator?: InputMaybe<Scalars['Boolean']['input']>;
   applies_to_ecomm?: InputMaybe<Scalars['Boolean']['input']>;
   applies_to_host?: InputMaybe<Scalars['Boolean']['input']>;
   applies_to_venue?: InputMaybe<Scalars['Boolean']['input']>;
@@ -48946,6 +49246,7 @@ export type VenueLead = {
   full_address: Scalars['String']['output'];
   gst_applicable: Scalars['Boolean']['output'];
   id: Scalars['ID']['output'];
+  instagram_link?: Maybe<Scalars['String']['output']>;
   invoice_available: Scalars['Boolean']['output'];
   landmark?: Maybe<Scalars['String']['output']>;
   lead_source?: Maybe<Scalars['String']['output']>;
@@ -48962,6 +49263,7 @@ export type VenueLead = {
   remarks?: Maybe<Scalars['String']['output']>;
   security_deposit?: Maybe<Scalars['Float']['output']>;
   services_offered: Array<CrmServiceOffered>;
+  social_links: Array<CrmSocialLink>;
   space_type?: Maybe<Scalars['String']['output']>;
   sub_category_ids: Array<Scalars['ID']['output']>;
   super_category?: Maybe<CrmSuperCategoryRef>;
@@ -48994,6 +49296,7 @@ export type VenueLeadInput = {
   expected_charges?: InputMaybe<Scalars['Float']['input']>;
   full_address: Scalars['String']['input'];
   gst_applicable?: InputMaybe<Scalars['Boolean']['input']>;
+  instagram_link?: InputMaybe<Scalars['String']['input']>;
   invoice_available?: InputMaybe<Scalars['Boolean']['input']>;
   landmark?: InputMaybe<Scalars['String']['input']>;
   lead_source?: InputMaybe<Scalars['String']['input']>;
@@ -49008,6 +49311,7 @@ export type VenueLeadInput = {
   remarks?: InputMaybe<Scalars['String']['input']>;
   security_deposit?: InputMaybe<Scalars['Float']['input']>;
   services_offered?: InputMaybe<Array<CrmServiceOfferedInput>>;
+  social_links?: InputMaybe<Array<CrmSocialLinkInput>>;
   space_type?: InputMaybe<Scalars['String']['input']>;
   sub_category_ids?: InputMaybe<Array<Scalars['ID']['input']>>;
   super_category_id?: InputMaybe<Scalars['ID']['input']>;

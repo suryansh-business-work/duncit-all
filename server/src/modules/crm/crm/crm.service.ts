@@ -18,8 +18,9 @@ import { commsService } from '@services/comms/comms.service';
 import { communicationLogService } from '@modules/crm/communicationLog/communicationLog.service';
 import * as C from './crm.constants';
 import { CreatorLeadModel, CommunityLeadModel } from '@modules/crm/prospectLead/prospectLead.model';
+import { removeLeadMedia } from '@modules/crm/leadMedia/leadMedia.model';
 
-/** Lead model + human label per CRM entity type (manual logs, comms activity). */
+/** Lead model + human label per CRM entity type (manual logs, comms activity, lead media). */
 export const LEAD_MODELS = {
   VENUE_LEAD: VenueLeadModel,
   HOST_LEAD: HostLeadModel,
@@ -51,6 +52,39 @@ const toServiceOffered = (s: any) => ({
   description: s?.description ?? '',
 });
 
+const toSocialLink = (l: { name?: string | null; url?: string | null } | null | undefined) => ({
+  name: l?.name ?? '',
+  url: l?.url ?? '',
+});
+
+/**
+ * Extra social links as typed: rows without a URL are dropped, a missing name
+ * becomes the link's host, and only http(s) URLs are kept — the detail page
+ * renders these as links, so a "javascript:" one must never be stored.
+ */
+export function cleanSocialLinks(raw: unknown): { name: string; url: string }[] {
+  if (!Array.isArray(raw)) return [];
+  const out: { name: string; url: string }[] = [];
+  for (const row of raw) {
+    const url = String(row?.url ?? '').trim();
+    if (!url) continue;
+    let parsed: URL | null = null;
+    try {
+      parsed = new URL(url);
+    } catch {
+      parsed = null;
+    }
+    if (!parsed || (parsed.protocol !== 'https:' && parsed.protocol !== 'http:')) {
+      throw new GraphQLError(`"${url}" is not a web link — social links must start with https://`, {
+        extensions: { code: 'BAD_USER_INPUT' },
+      });
+    }
+    const name = String(row?.name ?? '').trim().slice(0, 60) || parsed.hostname.replace(/^www\./, '');
+    out.push({ name, url });
+  }
+  return out.slice(0, 20);
+}
+
 const toActivity = (a: any) => ({
   type: a.type,
   summary: a.summary ?? '',
@@ -73,6 +107,7 @@ export function pub(doc: any) {
     sub_category_ids: (o.sub_category_ids ?? []).map(String),
     contacts: (o.contacts ?? []).map(toContact),
     services_offered: (o.services_offered ?? []).map(toServiceOffered),
+    social_links: (o.social_links ?? []).map(toSocialLink),
     linked_host_ids: (o.linked_host_ids ?? []).map(String),
     tags: o.tags ?? [],
     // GraphQL clients receive the dynamic field map as a JSON string so we
@@ -269,6 +304,7 @@ export function normaliseLeadInput<T extends Record<string, any>>(input: T): T {
     // persist `[""]` from an accidental empty chip.
     out.tags = out.tags.map((t: any) => String(t ?? '').trim()).filter(Boolean);
   }
+  if ('social_links' in out) out.social_links = cleanSocialLinks(out.social_links);
   if (typeof out.dynamic_values_json === 'string') {
     const raw = out.dynamic_values_json.trim();
     try {
@@ -688,6 +724,7 @@ export const crmService = {
   async deleteVenueLead(id: string) {
     const doc = await VenueLeadModel.findByIdAndDelete(id);
     if (!doc) notFound('Venue lead');
+    await removeLeadMedia('VENUE_LEAD', id);
     return true;
   },
 
@@ -734,6 +771,7 @@ export const crmService = {
   async deleteHostLead(id: string) {
     const doc = await HostLeadModel.findByIdAndDelete(id);
     if (!doc) notFound('Host lead');
+    await removeLeadMedia('HOST_LEAD', id);
     return true;
   },
 
@@ -770,6 +808,7 @@ export const crmService = {
   async deleteEcommLead(id: string) {
     const doc = await EcommLeadModel.findByIdAndDelete(id);
     if (!doc) notFound('Ecomm lead');
+    await removeLeadMedia('ECOMM_LEAD', id);
     return true;
   },
 

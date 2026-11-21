@@ -8,7 +8,11 @@ import {
   renderTemplateBody,
 } from '@modules/content/emailTemplate/emailTemplate.service';
 import { commsService } from '@services/comms/comms.service';
+import { emailPreviewVars } from '@services/email/email.service';
+import { STARTER_MJML } from '@services/email/catalogue/starter';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
+import { applyCrmEmailTheme, completeTheme, type CrmEmailTheme } from './crmEmailTheme';
+import { crmEmailSettingsService, validateThemeInput } from './crmEmailSettings.service';
 
 const iso = (v: any) => (v instanceof Date ? v.toISOString() : v ?? null);
 
@@ -47,6 +51,25 @@ function parseVars(json?: string | null): Record<string, string> {
   } catch {
     return {};
   }
+}
+
+/**
+ * Render CRM MJML the way a lead receives it: inside the SERVICE fragment (a
+ * lead email is a person writing to a person, and that fragment's footer is
+ * the one that invites a reply), with the values every fragment needs (logo,
+ * brand name, footer copy), the CRM's own logo when one is picked, and the CRM
+ * email theme. Preview, compose and test send all come through here, so what
+ * an operator checks is what a lead receives.
+ */
+async function renderForCrm(mjml: string, vars: Record<string, string>, theme?: CrmEmailTheme) {
+  const [chrome, ctx] = await Promise.all([emailPreviewVars(), crmEmailSettingsService.renderContext()]);
+  const applied = theme ?? ctx.theme;
+  return renderTemplateBody({
+    mjml,
+    fragment_key: 'service',
+    vars: { ...chrome, ...(ctx.logoUrl ? { brand_logo_url: ctx.logoUrl } : {}), ...vars },
+    transform: (source) => applyCrmEmailTheme(source, applied),
+  });
 }
 
 /** Allowlists for the shared table engine (crmEmailTemplatesTable — DUNCIT TABLE CONTRACT v1). */
@@ -95,16 +118,22 @@ export const crmEmailTemplateService = {
   },
 
   async render(mjml: string, varsJson?: string | null) {
-    // Wrapped in the SERVICE fragment — a lead email is a person writing to a
-    // person, and that fragment's footer is the one that invites a reply. The
-    // preview and the send now render the same way, so what an operator checks
-    // is what a lead receives.
-    const { html, errors } = await renderTemplateBody({
-      mjml,
-      fragment_key: 'service',
-      vars: parseVars(varsJson),
-    });
+    const { html, errors } = await renderForCrm(mjml, parseVars(varsJson));
     return { html, errors, detected_variables: detectVariables(mjml) };
+  },
+
+  /** The settings page's live preview: a template (the starter by default) under an unsaved theme. */
+  async previewTheme(themeInput: Partial<Record<keyof CrmEmailTheme, unknown>>, mjml?: string | null) {
+    const { theme } = await crmEmailSettingsService.renderContext();
+    const draft = completeTheme({ ...theme, ...validateThemeInput(themeInput) });
+    const source = mjml?.trim() ? mjml : STARTER_MJML;
+    const { html, errors } = await renderForCrm(source, {}, draft);
+    return { html, errors, detected_variables: detectVariables(source) };
+  },
+
+  /** The shared starter body a new CRM template begins from. */
+  starter() {
+    return STARTER_MJML;
   },
 
   async create(input: any, by?: string | null) {
@@ -173,11 +202,7 @@ export const crmEmailTemplateService = {
     if (!tpl) throw new GraphQLError('CRM template not found', { extensions: { code: 'NOT_FOUND' } });
     const vars = parseVars(varsJson);
     // The same wrap the preview shows and a real lead email carries.
-    const { html, errors } = await renderTemplateBody({
-      mjml: tpl.mjml,
-      fragment_key: 'service',
-      vars,
-    });
+    const { html, errors } = await renderForCrm(tpl.mjml, vars);
     if (!html) return { ok: false, message: errors[0] || 'Could not render template' };
     const result = await commsService.sendEmail({
       to,

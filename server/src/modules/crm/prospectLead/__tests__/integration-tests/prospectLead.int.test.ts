@@ -3,6 +3,7 @@ import type { GraphQLContext } from '@context';
 import { commsService } from '@services/comms/comms.service';
 import { CommunicationLogModel } from '@modules/crm/communicationLog/communicationLog.model';
 import { crmService } from '@modules/crm/crm/crm.service';
+import { CrmLeadMediaModel } from '@modules/crm/leadMedia/leadMedia.model';
 import { prospectLeadService } from '../../prospectLead.service';
 import { prospectLeadResolvers } from '../../prospectLead.resolver';
 import { CommunityLeadModel, CreatorLeadModel } from '../../prospectLead.model';
@@ -257,5 +258,87 @@ describe('prospect lead resolvers', () => {
       await expect((async () => call())()).rejects.toThrow(message);
     }
     expect(await CreatorLeadModel.countDocuments()).toBe(1);
+  });
+});
+
+describe('services offered and social links on prospect leads', () => {
+  it('stores both on a community lead and reads them back', async () => {
+    const lead = await prospectLeadService.create(
+      'COMMUNITY_LEAD',
+      communityInput({
+        services_offered: [{ service: 'Venue partnerships' }, { service: 'Other', custom_name: 'Trail mapping', description: 'Weekly' }],
+        social_links: [{ name: '', url: 'https://www.strava.com/clubs/pune-trail' }, { url: '  ' }],
+      })
+    );
+
+    const services = [
+      { service: 'Venue partnerships', custom_name: '', description: '' },
+      { service: 'Other', custom_name: 'Trail mapping', description: 'Weekly' },
+    ];
+    const links = [{ name: 'strava.com', url: 'https://www.strava.com/clubs/pune-trail' }];
+    expect(lead).toMatchObject({ services_offered: services, social_links: links });
+    expect(await prospectLeadService.get('COMMUNITY_LEAD', lead!.id)).toMatchObject({ services_offered: services, social_links: links });
+  });
+
+  it('replaces them on a creator lead update and keeps them when they are not sent', async () => {
+    const lead = await prospectLeadService.create(
+      'CREATOR_LEAD',
+      creatorInput({ social_links: [{ name: 'YouTube', url: 'https://youtube.com/@riyaruns' }] })
+    );
+
+    const untouched = await prospectLeadService.update('CREATOR_LEAD', lead!.id, { creator_name: 'Riya R' });
+    expect(untouched!.social_links).toEqual([{ name: 'YouTube', url: 'https://youtube.com/@riyaruns' }]);
+    expect(untouched!.services_offered).toEqual([]);
+
+    const updated = await prospectLeadService.update('CREATOR_LEAD', lead!.id, {
+      social_links: [{ name: 'Threads', url: 'https://threads.net/@riyaruns' }],
+      services_offered: [{ service: 'Sponsored reels' }],
+    });
+    expect(updated).toMatchObject({
+      social_links: [{ name: 'Threads', url: 'https://threads.net/@riyaruns' }],
+      services_offered: [{ service: 'Sponsored reels', custom_name: '', description: '' }],
+    });
+  });
+
+  it('refuses a javascript: link on create and on update', async () => {
+    await expect(
+      prospectLeadService.create('CREATOR_LEAD', creatorInput({ social_links: [{ name: 'x', url: 'javascript:alert(1)' }] }))
+    ).rejects.toMatchObject({ extensions: { code: 'BAD_USER_INPUT' } });
+    expect(await CreatorLeadModel.countDocuments()).toBe(0);
+
+    const lead = await prospectLeadService.create('COMMUNITY_LEAD', communityInput());
+    await expect(
+      prospectLeadService.update('COMMUNITY_LEAD', lead!.id, { social_links: [{ url: 'javascript:alert(1)' }] })
+    ).rejects.toThrow('"javascript:alert(1)" is not a web link');
+    expect((await prospectLeadService.get('COMMUNITY_LEAD', lead!.id))!.social_links).toEqual([]);
+  });
+});
+
+describe('deleting a prospect lead', () => {
+  it.each([
+    ['CREATOR_LEAD', () => creatorInput()],
+    ['COMMUNITY_LEAD', () => communityInput()],
+  ] as const)('removes the %s’s logos and images and nobody else’s', async (kind, input) => {
+    const lead = await prospectLeadService.create(kind, input());
+    const other = await prospectLeadService.create(kind, { ...input(), contacts: [] });
+    const media = (lead_id: string) => ({
+      entity_type: kind,
+      lead_id: new Types.ObjectId(lead_id),
+      kind: 'LOGO',
+      url: 'https://cdn.example.com/l.png',
+    });
+    await CrmLeadMediaModel.create([media(lead!.id), media(lead!.id), media(other!.id)]);
+
+    expect(await prospectLeadService.remove(kind, lead!.id)).toBe(true);
+
+    expect(await CrmLeadMediaModel.countDocuments({ lead_id: new Types.ObjectId(lead!.id) })).toBe(0);
+    expect(await CrmLeadMediaModel.countDocuments({ lead_id: new Types.ObjectId(other!.id) })).toBe(1);
+  });
+
+  it('removes no media when the lead does not exist', async () => {
+    const ghost = new Types.ObjectId().toHexString();
+    await CrmLeadMediaModel.create({ entity_type: 'CREATOR_LEAD', lead_id: new Types.ObjectId(ghost), kind: 'IMAGE', url: 'https://cdn.example.com/a.png' });
+    await expect(prospectLeadService.remove('CREATOR_LEAD', ghost)).rejects.toThrow('Creator lead not found');
+    expect(await CrmLeadMediaModel.countDocuments()).toBe(1);
   });
 });

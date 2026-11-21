@@ -9,10 +9,7 @@ import { UserModel } from '@modules/access/user/user.model';
 import { analyticsService } from '@modules/platform/analytics/analytics.service';
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
-import { STARTER_MJML } from '@services/email/catalogue/starter';
-import { EMAIL_FALLBACK } from '@services/email/email-i18n';
-import { applyVars } from '@modules/content/emailTemplate/emailTemplate.service';
-import { onSharedDesign } from '@modules/content/emailTemplate/emailTemplate.chrome';
+import { writeEmailMjml } from './emailMjml';
 
 type Entity = 'CLUB' | 'POD' | 'INVENTORY_PRODUCT';
 const ADMIN_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN', 'SUPPORT_USER'];
@@ -463,54 +460,15 @@ async function adminAiChat(prompt: string) {
   throw openAiGraphQLError(res);
 }
 
-/**
- * The shared card a new email is written from, its placeholder copy spelled
- * out: handed the starter's translation keys, the writer kept them, and the
- * email said "Your email heading".
- */
-const starterForAi = (): string =>
-  applyVars(
-    STARTER_MJML,
-    Object.fromEntries(Object.entries(EMAIL_FALLBACK).map(([key, value]) => [`t:${key}`, value]))
-  );
-
-/**
- * Write or rework an email body. What comes back is put on the shared card
- * (`onSharedDesign`) whatever the model returned — the consoles that call this
- * all wrap the result in a header/footer fragment of their own.
- */
-async function createOrUpdateMjml(input: AiMjmlTemplateInput) {
-  const prompt = input.prompt.trim();
-  if (!prompt) {
-    throw new GraphQLError('Prompt is required', { extensions: { code: 'BAD_USER_INPUT' } });
-  }
-  const [system, user] = await Promise.all([
-    resolvePrompt('generate.email_mjml'),
-    resolvePrompt('generate.email_mjml.user', {
-      instruction: prompt,
-      current_mjml: (input.current_mjml || starterForAi()).slice(0, 12000),
-    }),
-  ]);
-  const res = await openaiChat({
+/** The Communications / Marketing / Admin email writer (shared `generate.email_mjml` prompts). */
+function createOrUpdateMjml(input: AiMjmlTemplateInput) {
+  return writeEmailMjml({
+    systemKey: 'generate.email_mjml',
+    userKey: 'generate.email_mjml.user',
     task: 'ai.email_mjml',
-    detail: prompt.slice(0, 120),
-    model: system.model,
-    temperature: 0.35,
-    json: true,
-    messages: [
-      { role: 'system', content: system.content },
-      { role: 'user', content: user.content },
-    ],
+    instruction: input.prompt,
+    currentMjml: input.current_mjml,
   });
-  if (!res.ok) throw openAiGraphQLError(res);
-  const parsed = JSON.parse(res.content || '{}');
-  const mjml = String(parsed?.mjml ?? '').trim();
-  if (!/<mjml[\s>]/i.test(mjml)) {
-    throw new GraphQLError('OpenAI did not return valid MJML', {
-      extensions: { code: 'AI_INVALID_JSON' },
-    });
-  }
-  return onSharedDesign(mjml);
 }
 
 function improvedHtml(content: string): string {

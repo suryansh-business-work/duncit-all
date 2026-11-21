@@ -258,6 +258,7 @@ export const MODULE_CATEGORY: Record<ModuleName, McpCategoryKey | null> = {
   leadAiTypeDefs: 'crm',
   waLeadsTypeDefs: 'crm',
   prospectLeadTypeDefs: 'crm',
+  leadMediaTypeDefs: 'crm',
   surveyTypeDefs: 'crm',
 
   meetingTypeDefs: 'onboarding',

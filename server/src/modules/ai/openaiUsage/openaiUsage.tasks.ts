@@ -149,6 +149,12 @@ export const OPENAI_TASKS = {
     when_off:
       'The call ends politely: the person is told the assistant is unavailable and will be called back.',
   },
+  'crm.email_mjml': {
+    label: 'CRM email template MJML',
+    module: 'CRM',
+    description: 'Seeds and reworks CRM outreach email templates with the CRM email theme and brand images.',
+    when_off: 'The CRM shows an error saying the AI feature is switched off; templates are edited by hand.',
+  },
   'marketing.social_post_analysis': {
     label: 'Social post analysis',
     module: 'Marketing',

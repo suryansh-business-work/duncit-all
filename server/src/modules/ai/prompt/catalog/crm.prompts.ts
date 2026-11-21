@@ -1,6 +1,12 @@
-import { PROMPT_CATEGORIES, required, type InAppPromptDef } from '../prompt.types';
+import { PROMPT_CATEGORIES, optional, required, type InAppPromptDef } from '../prompt.types';
 
 const { CRM } = PROMPT_CATEGORIES;
+
+const EMAIL_SITE = {
+  file: 'server/src/modules/crm/emailTemplate/crmEmailAi.ts',
+  surface: 'CRM · Email Templates',
+  trigger: 'A CRM manager seeds or reworks a template with AI',
+} as const;
 
 const PARSE_SITE = {
   file: 'server/src/modules/crm/crm/crm.ai.ts',
@@ -137,5 +143,47 @@ export const CRM_PROMPTS = [
       },
     ],
     content: 'You are a helpful Duncit calling assistant.',
+  },
+  {
+    key: 'crm.email_mjml',
+    name: 'CRM email writer (MJML)',
+    description:
+      'Writes and reworks CRM outreach templates. Editable from CRM › Email Templates › Settings › Prompt Injection.',
+    category: CRM,
+    role: 'SYSTEM',
+    tasks: ['crm.email_mjml'],
+    target_model: '',
+    variables: [],
+    usage: [EMAIL_SITE],
+    content: [
+      'You write the body of a Duncit CRM outreach email in MJML: one person at Duncit writing to a venue, host, seller, creator or community lead.',
+      'Return strict JSON only with shape { "mjml": string }.',
+      'The MJML must have an <mjml> root, an <mj-head> and an <mj-body>. Start from the existing MJML and keep its <mj-head> unchanged: it carries the fonts, the phone layout and dark mode.',
+      'Layout: keep the single 600px card. The body has exactly one <mj-wrapper>; every block inside it is an <mj-section css-class="gutter"> with one <mj-column>, using the same side padding as the existing sections. Open with a heading section, then short paragraphs, at most one primary <mj-button css-class="cta" align="left">, and an optional closing note.',
+      'Spacing: 28px above the heading section, 16px to 24px between sections, never stacked empty sections or <mj-spacer> chains.',
+      'Typography: one heading per email in <h1>, written inside an <mj-text>; paragraphs of two to four sentences; never set font-family or font-size on elements, the head already does.',
+      'Colour: use only the hex colours already present in the existing MJML. Never introduce a new colour, gradient or background image; the CRM theme is applied to those exact colours when the email is sent.',
+      'Images: only use image URLs listed under "Brand images". Give each <mj-image> an alt text, width at most 536px, padding="0" and border-radius matching the panels. Never invent an image URL.',
+      'Never add a logo, header, footer, unsubscribe line or copyright: every CRM email is sent inside a header and footer of its own.',
+      'Keep every placeholder in double braces from the existing MJML that still fits, and use the lead variables listed in the instruction for names and details. Do not return markdown, emoji or icon characters.',
+    ].join('\n'),
+  },
+  {
+    key: 'crm.email_mjml.user',
+    name: 'CRM email writer — instruction',
+    description: 'Carries what the CRM manager asked for, who the email is for, the brand images and the template being edited.',
+    category: CRM,
+    role: 'USER',
+    tasks: ['crm.email_mjml'],
+    target_model: '',
+    variables: [
+      required('instruction', 'Instruction', 'What the CRM manager typed.', 'A warm first-touch email inviting the venue to list on Duncit'),
+      optional('audience', 'Audience', 'Which lead kind the template is for.', 'Venue leads'),
+      optional('brand_images', 'Brand images', 'Banners and images uploaded in Email Templates › Settings, one per line.', '- Hero banner: https://ik.imagekit.io/…'),
+      optional('current_mjml', 'Existing MJML', 'The template being edited, capped at 12,000 characters; the shared starter for a new one.', '<mjml>…</mjml>'),
+    ],
+    usage: [EMAIL_SITE],
+    content:
+      'Instruction: {{instruction}}\n\nAudience: {{audience}}\n\nBrand images:\n{{brand_images}}\n\nExisting MJML:\n{{current_mjml}}',
   },
 ] as const satisfies readonly InAppPromptDef[];

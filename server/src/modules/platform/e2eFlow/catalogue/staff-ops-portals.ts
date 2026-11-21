@@ -1685,6 +1685,45 @@ export const STAFF_OPS_PORTAL_FLOWS: readonly CatalogueFlow[] = [
     ],
   },
   {
+    name: 'CRM: Creators Leads and Community Leads',
+    description: 'Creator and community prospects at /creator-leads and /community-leads (list, /new, /:id, /:id/view), with Dynamic Fields opted in per kind.',
+    sub_flows: [
+      {
+        name: 'Create and work a creator lead',
+        description: 'Six-section creator form, detail tabs and delete.',
+        steps: [
+          ['Open Leads > Creators Leads', 'Heading "Creators Leads", a table with Creator / Primary platform columns and "New Creator Lead"'],
+          ['Click "Create creator lead" with everything empty', 'Top alert lists "Super category is required", "Creator name is required" and the primary contact errors'],
+          ['Enter Engagement rate "120"', 'Error "Engagement rate must be a number from 0 to 100"'],
+          ['Fill super category, Creator name, primary contact, platform Instagram and followers 48200, then create', 'Back on /creator-leads with the lead listed as New / Medium'],
+          ['Create another creator lead with the same primary mobile', 'Alert "A creator lead with this phone number already exists. Each lead must have a unique phone number."'],
+          ['Open the detail page', 'Tabs Overview, Contacts (1), Custom Fields, Manual Logs, Communications; Overview shows followers and engagement'],
+          ['Add a manual log, then email the contact from the Contacts tab', 'The note appears under Manual Logs and the email under Communications'],
+          ['Delete the lead from the list', 'Confirm "Delete creator lead"; toast "Creator lead deleted"'],
+        ],
+      },
+      {
+        name: 'Create a community lead',
+        description: 'Community profile, size and meetups.',
+        steps: [
+          ['Open Leads > Community Leads and click "New Community Lead"', '/community-leads/new with sections 1. Profile to 6. Internal Tracking'],
+          ['Enter Members "lots"', 'Error "Members must be a whole number"'],
+          ['Fill super category, Community name, type Running Club, platform WhatsApp, members 320 and a primary contact, then create', 'The lead is listed with its Community type and City'],
+          ['Open it and press Edit, change Meetup frequency and use "Update & Continue"', 'Notice "Lead updated" and the form stays open'],
+        ],
+      },
+      {
+        name: 'Dynamic fields for creator and community leads',
+        description: 'Opt-in flags on Settings > Dynamic Fields.',
+        steps: [
+          ['Add a dynamic field with only "Applies to Creator leads" ticked', 'The row shows a "Creator" chip in Applies to'],
+          ['Open a new creator lead form, section 5', 'The new field is offered under Custom fields'],
+          ['Open a new community lead form, section 5', 'The creator-only field is not offered'],
+        ],
+      },
+    ],
+  },
+  {
     name: 'CRM: Lead calls and emails',
     description: 'Twilio bridged calls, AI calls, WhatsApp links and template emails from a venue or host lead detail page, recorded in the Communications tab.',
     sub_flows: [

@@ -57,6 +57,12 @@ export const HOST_INTERESTS = [
   'Community Meetup', 'Kids Activity', 'Music / Open Mic', 'Exhibition / Stall', 'Private Party', 'Other',
 ];
 
+// Creator / community lead dropdowns (served by crmLeadConfig).
+export const CREATOR_PLATFORMS = ['Instagram', 'YouTube', 'X (Twitter)', 'LinkedIn', 'Facebook', 'Snapchat', 'Moj / Josh', 'Blog / Website', 'Podcast', 'Other'];
+export const COLLABORATION_TYPES = ['Paid Post', 'Barter', 'Event Appearance', 'Affiliate', 'Ambassador', 'Content Creation', 'Hosting a Pod', 'Open to Discuss'];
+export const COMMUNITY_TYPES = ['Sports / Fitness', 'Running Club', 'Book Club', 'Hobby Group', 'Professional / Networking', 'Parents', 'Pet Owners', 'Students / Alumni', 'Residents / Society', 'Faith / Culture', 'Other'];
+export const COMMUNITY_PLATFORMS = ['WhatsApp', 'Telegram', 'Discord', 'Instagram', 'Facebook Group', 'Meetup', 'Offline Only', 'Other'];
+
 export const AUDIENCE_SIZES = ['10–20', '20–50', '50–100', '100+'];
 export const FREQUENCIES = ['One-time', 'Weekly', 'Monthly', 'Frequently'];
 export const REVENUE_MODELS = ['Paid Tickets', 'Sponsorship', 'Revenue Share', 'Free Event', 'Open to Discuss'];
@@ -84,6 +90,19 @@ export const SERVICES_OFFERED = [
   'Ticketing',
   'Other',
 ];
+
+/** Every CRM lead collection, as the `CrmEntityType` GraphQL enum names it. */
+export const CRM_LEAD_ENTITY_TYPES = ['VENUE_LEAD', 'HOST_LEAD', 'ECOMM_LEAD', 'CREATOR_LEAD', 'COMMUNITY_LEAD'] as const;
+export type CrmLeadEntityType = (typeof CRM_LEAD_ENTITY_TYPES)[number];
+
+/** The CrmDynamicField flag that opts a field into each lead kind's forms. */
+export const DYNAMIC_FIELD_FLAG: Record<CrmLeadEntityType, string> = {
+  VENUE_LEAD: 'applies_to_venue',
+  HOST_LEAD: 'applies_to_host',
+  ECOMM_LEAD: 'applies_to_ecomm',
+  CREATOR_LEAD: 'applies_to_creator',
+  COMMUNITY_LEAD: 'applies_to_community',
+};
 
 export const ACTIVITY_TYPES = ['EMAIL', 'CALL', 'NOTE'] as const;
 export type ActivityType = (typeof ACTIVITY_TYPES)[number];

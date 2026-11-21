@@ -17,17 +17,22 @@ import {
 import { commsService } from '@services/comms/comms.service';
 import { communicationLogService } from '@modules/crm/communicationLog/communicationLog.service';
 import * as C from './crm.constants';
+import { CreatorLeadModel, CommunityLeadModel } from '@modules/crm/prospectLead/prospectLead.model';
 
 /** Lead model + human label per CRM entity type (manual logs, comms activity). */
 const LEAD_MODELS = {
   VENUE_LEAD: VenueLeadModel,
   HOST_LEAD: HostLeadModel,
   ECOMM_LEAD: EcommLeadModel,
+  CREATOR_LEAD: CreatorLeadModel,
+  COMMUNITY_LEAD: CommunityLeadModel,
 } as const;
 const LEAD_LABELS = {
   VENUE_LEAD: 'Venue lead',
   HOST_LEAD: 'Host lead',
   ECOMM_LEAD: 'Ecomm lead',
+  CREATOR_LEAD: 'Creator lead',
+  COMMUNITY_LEAD: 'Community lead',
 } as const;
 
 const iso = (v: any) => (v instanceof Date ? v.toISOString() : (v ?? null));
@@ -57,7 +62,7 @@ const toActivity = (a: any) => ({
   created_at: iso(a.created_at),
 });
 
-function pub(doc: any) {
+export function pub(doc: any) {
   const o = doc?.toObject ? doc.toObject() : doc;
   if (!o) return null;
   return {
@@ -117,6 +122,8 @@ function pubDynamicField(doc: any) {
     applies_to_venue: o.applies_to_venue !== false,
     applies_to_host: o.applies_to_host !== false,
     applies_to_ecomm: o.applies_to_ecomm === true,
+    applies_to_creator: o.applies_to_creator === true,
+    applies_to_community: o.applies_to_community === true,
     required: !!o.required,
     sort_order: o.sort_order ?? 0,
     is_active: o.is_active !== false,
@@ -162,7 +169,7 @@ function buildQuery(filter: any, nameField: string) {
   return q;
 }
 
-const parseDate = (v?: string | null) => (v ? new Date(v) : null);
+export const parseDate = (v?: string | null) => (v ? new Date(v) : null);
 
 /**
  * Allowlists for the shared table engine (*LeadsTable — DUNCIT TABLE CONTRACT
@@ -171,7 +178,7 @@ const parseDate = (v?: string | null) => (v ? new Date(v) : null);
  * the *Table siblings accept the same filter semantics via TableQueryInput.
  * Default sort matches the lead DataGrids' default (next follow-up asc).
  */
-function leadTableConfig(
+export function leadTableConfig(
   nameField: string,
   extras: {
     searchFields?: string[];
@@ -242,7 +249,7 @@ async function leadTable(
  * Same treatment for `linked_host_ids` so the venue ↔ host association can
  * be queried + populated cleanly.
  */
-function normaliseLeadInput<T extends Record<string, any>>(input: T): T {
+export function normaliseLeadInput<T extends Record<string, any>>(input: T): T {
   const out: any = { ...input };
   if ('super_category_id' in out) {
     out.super_category_id = toObjectIdOrNull(out.super_category_id);
@@ -274,7 +281,7 @@ function normaliseLeadInput<T extends Record<string, any>>(input: T): T {
   return out;
 }
 
-function notFound(what: string): never {
+export function notFound(what: string): never {
   throw new GraphQLError(`${what} not found`, { extensions: { code: 'NOT_FOUND' } });
 }
 
@@ -290,7 +297,7 @@ const last10Digits = (v: any): string => {
  * can't be created twice. Matches on the trailing 10 digits so "+91 87912..."
  * and "87912..." are treated as the same number regardless of stored format.
  */
-async function assertUniqueLeadPhone(model: any, input: any, kindLabel: string, excludeId?: string) {
+export async function assertUniqueLeadPhone(model: any, input: any, kindLabel: string, excludeId?: string) {
   const contacts = Array.isArray(input?.contacts) ? input.contacts : [];
   const mobiles = Array.from(
     new Set(contacts.map((c: any) => last10Digits(c?.mobile_number)).filter((d: string) => d.length >= 7))
@@ -307,10 +314,10 @@ async function assertUniqueLeadPhone(model: any, input: any, kindLabel: string, 
   }
 }
 
-async function logAndAttachActivity(opts: {
+export async function logAndAttachActivity(opts: {
   lead: any;
   type: 'EMAIL' | 'CALL';
-  entity_type: 'VENUE_LEAD' | 'HOST_LEAD' | 'ECOMM_LEAD';
+  entity_type: C.CrmLeadEntityType;
   provider_id?: string | null;
   to: string;
   subject?: string;
@@ -397,6 +404,10 @@ export const crmService = {
       services_offered_options: services,
       venue_services_offered_options: venueServices,
       host_services_offered_options: hostServices,
+      creator_platforms: C.CREATOR_PLATFORMS,
+      collaboration_types: C.COLLABORATION_TYPES,
+      community_types: C.COMMUNITY_TYPES,
+      community_platforms: C.COMMUNITY_PLATFORMS,
     };
   },
 
@@ -523,11 +534,9 @@ export const crmService = {
   },
 
   // ---- Dynamic fields ----
-  async listDynamicFields(entity?: 'VENUE_LEAD' | 'HOST_LEAD' | 'ECOMM_LEAD' | null, includeInactive = false) {
+  async listDynamicFields(entity?: C.CrmLeadEntityType | null, includeInactive = false) {
     const q: Record<string, any> = {};
-    if (entity === 'VENUE_LEAD') q.applies_to_venue = true;
-    else if (entity === 'HOST_LEAD') q.applies_to_host = true;
-    else if (entity === 'ECOMM_LEAD') q.applies_to_ecomm = true;
+    if (entity) q[C.DYNAMIC_FIELD_FLAG[entity]] = true;
     if (!includeInactive) q.is_active = { $ne: false };
     const docs = await CrmDynamicFieldModel.find(q).sort({ sort_order: 1, label: 1 });
     return docs.map(pubDynamicField);
@@ -555,6 +564,8 @@ export const crmService = {
       applies_to_venue: input.applies_to_venue !== false,
       applies_to_host: input.applies_to_host !== false,
       applies_to_ecomm: input.applies_to_ecomm === true,
+      applies_to_creator: input.applies_to_creator === true,
+      applies_to_community: input.applies_to_community === true,
       required: !!input.required,
       sort_order: input.sort_order ?? 0,
       is_active: input.is_active !== false,
@@ -577,6 +588,8 @@ export const crmService = {
     if (input.applies_to_venue !== undefined) doc.applies_to_venue = input.applies_to_venue;
     if (input.applies_to_host !== undefined) doc.applies_to_host = input.applies_to_host;
     if (input.applies_to_ecomm !== undefined) doc.applies_to_ecomm = input.applies_to_ecomm;
+    if (input.applies_to_creator !== undefined) doc.applies_to_creator = input.applies_to_creator;
+    if (input.applies_to_community !== undefined) doc.applies_to_community = input.applies_to_community;
     if (input.required !== undefined) doc.required = !!input.required;
     if (input.sort_order !== undefined) doc.sort_order = input.sort_order;
     if (input.is_active !== undefined) doc.is_active = input.is_active;
@@ -610,7 +623,7 @@ export const crmService = {
    * trusted CRM staff and the value is never re-rendered outside the app).
    */
   async addManualLog(opts: {
-    entity_type: 'VENUE_LEAD' | 'HOST_LEAD' | 'ECOMM_LEAD';
+    entity_type: C.CrmLeadEntityType;
     entity_id: string;
     summary?: string | null;
     body_html: string;

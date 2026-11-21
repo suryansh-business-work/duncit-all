@@ -255,6 +255,7 @@ export const MODULE_CATEGORY: Record<ModuleName, McpCategoryKey | null> = {
   crmEmailTemplateTypeDefs: 'crm',
   reminderTypeDefs: 'crm',
   waLeadsTypeDefs: 'crm',
+  prospectLeadTypeDefs: 'crm',
   surveyTypeDefs: 'crm',
 
   meetingTypeDefs: 'onboarding',

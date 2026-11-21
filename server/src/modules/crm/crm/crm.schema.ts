@@ -53,6 +53,8 @@ export const crmTypeDefs = gql`
     VENUE_LEAD
     HOST_LEAD
     ECOMM_LEAD
+    CREATOR_LEAD
+    COMMUNITY_LEAD
   }
 
   enum CrmDynamicFieldKind {
@@ -82,6 +84,8 @@ export const crmTypeDefs = gql`
     applies_to_venue: Boolean!
     applies_to_host: Boolean!
     applies_to_ecomm: Boolean!
+    applies_to_creator: Boolean!
+    applies_to_community: Boolean!
     required: Boolean!
     sort_order: Int!
     is_active: Boolean!
@@ -106,6 +110,8 @@ export const crmTypeDefs = gql`
     applies_to_venue: Boolean
     applies_to_host: Boolean
     applies_to_ecomm: Boolean
+    applies_to_creator: Boolean
+    applies_to_community: Boolean
     required: Boolean
     sort_order: Int
     is_active: Boolean
@@ -315,6 +321,10 @@ export const crmTypeDefs = gql`
     services_offered_options: [String!]!
     venue_services_offered_options: [String!]!
     host_services_offered_options: [String!]!
+    creator_platforms: [String!]!
+    collaboration_types: [String!]!
+    community_types: [String!]!
+    community_platforms: [String!]!
   }
 
   input VenueLeadInput {

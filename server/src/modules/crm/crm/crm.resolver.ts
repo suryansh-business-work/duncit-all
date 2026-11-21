@@ -1,6 +1,6 @@
 import { crmService } from './crm.service';
 import { leadSurveyService } from '@modules/survey/leadSurvey.service';
-import { CRM_RW } from './crm.constants';
+import { CRM_RW, type CrmLeadEntityType } from './crm.constants';
 import { parseCrmLeadText, parseCrmLeadsText, leadAiChat, type CrmAiEntity, type ChatMessage } from './crm.ai';
 import { callService } from '@modules/crm/call/call.service';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
@@ -47,7 +47,7 @@ export const crmResolvers = {
     },
     crmDynamicFields: (
       _p: unknown,
-      args: { entity?: 'VENUE_LEAD' | 'HOST_LEAD' | 'ECOMM_LEAD' | null; include_inactive?: boolean },
+      args: { entity?: CrmLeadEntityType | null; include_inactive?: boolean },
       ctx: GraphQLContext
     ) => {
       requireRole(ctx, RW);
@@ -290,7 +290,7 @@ export const crmResolvers = {
       _p: unknown,
       args: {
         input: {
-          entity_type: 'VENUE_LEAD' | 'HOST_LEAD';
+          entity_type: CrmLeadEntityType;
           entity_id: string;
           summary?: string | null;
           body_html: string;

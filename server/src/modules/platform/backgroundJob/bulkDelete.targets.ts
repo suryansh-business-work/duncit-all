@@ -118,4 +118,6 @@ export const BULK_DELETE_TARGETS: Readonly<Record<string, BulkDeleteTarget>> = {
   venueLeadsTable: { mutation: 'deleteVenueLead', roles: CRM },
   hostLeadsTable: { mutation: 'deleteHostLead', roles: CRM },
   ecommLeadsTable: { mutation: 'deleteEcommLead', roles: CRM },
+  creatorLeadsTable: { mutation: 'deleteCreatorLead', roles: CRM },
+  communityLeadsTable: { mutation: 'deleteCommunityLead', roles: CRM },
 };

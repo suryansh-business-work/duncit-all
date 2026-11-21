@@ -10,6 +10,8 @@ export const communicationLogTypeDefs = gql`
     VENUE_LEAD
     HOST_LEAD
     ECOMM_LEAD
+    CREATOR_LEAD
+    COMMUNITY_LEAD
   }
 
   enum CommsLogTranscriptStatus {

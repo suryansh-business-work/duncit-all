@@ -5707,6 +5707,8 @@ export type CommPreference = {
 };
 
 export type CommsLogEntity =
+  | 'COMMUNITY_LEAD'
+  | 'CREATOR_LEAD'
   | 'ECOMM_LEAD'
   | 'HOST_LEAD'
   | 'VENUE_LEAD';
@@ -5829,6 +5831,74 @@ export type CommunicationLogFilter = {
 export type CommunicationLogPage = {
   __typename?: 'CommunicationLogPage';
   items: Array<CommunicationLog>;
+  total: Scalars['Int']['output'];
+};
+
+export type CommunityLead = {
+  __typename?: 'CommunityLead';
+  activity_log: Array<CrmActivity>;
+  area?: Maybe<Scalars['String']['output']>;
+  assigned_to?: Maybe<Scalars['String']['output']>;
+  city?: Maybe<Scalars['String']['output']>;
+  community_link?: Maybe<Scalars['String']['output']>;
+  community_name: Scalars['String']['output'];
+  community_type?: Maybe<Scalars['String']['output']>;
+  contacts: Array<CrmContact>;
+  created_at?: Maybe<Scalars['String']['output']>;
+  dynamic_values_json: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  instagram_link?: Maybe<Scalars['String']['output']>;
+  interests: Array<Scalars['String']['output']>;
+  lead_source?: Maybe<Scalars['String']['output']>;
+  lead_status: Scalars['String']['output'];
+  meetup_frequency?: Maybe<Scalars['String']['output']>;
+  member_count?: Maybe<Scalars['Float']['output']>;
+  next_follow_up_date?: Maybe<Scalars['String']['output']>;
+  notes?: Maybe<Scalars['String']['output']>;
+  partnership_interests: Array<Scalars['String']['output']>;
+  /** Where the community lives (WhatsApp, Telegram, Discord, offline…). */
+  platform?: Maybe<Scalars['String']['output']>;
+  priority: Scalars['String']['output'];
+  profile_photo_url?: Maybe<Scalars['String']['output']>;
+  super_category?: Maybe<CrmSuperCategoryRef>;
+  super_category_id?: Maybe<Scalars['ID']['output']>;
+  tags: Array<Scalars['String']['output']>;
+  updated_at?: Maybe<Scalars['String']['output']>;
+  website?: Maybe<Scalars['String']['output']>;
+};
+
+export type CommunityLeadInput = {
+  area?: InputMaybe<Scalars['String']['input']>;
+  assigned_to?: InputMaybe<Scalars['String']['input']>;
+  city?: InputMaybe<Scalars['String']['input']>;
+  community_link?: InputMaybe<Scalars['String']['input']>;
+  community_name: Scalars['String']['input'];
+  community_type?: InputMaybe<Scalars['String']['input']>;
+  contacts?: InputMaybe<Array<CrmContactInput>>;
+  dynamic_values_json?: InputMaybe<Scalars['String']['input']>;
+  instagram_link?: InputMaybe<Scalars['String']['input']>;
+  interests?: InputMaybe<Array<Scalars['String']['input']>>;
+  lead_source?: InputMaybe<Scalars['String']['input']>;
+  lead_status?: InputMaybe<Scalars['String']['input']>;
+  meetup_frequency?: InputMaybe<Scalars['String']['input']>;
+  member_count?: InputMaybe<Scalars['Float']['input']>;
+  next_follow_up_date?: InputMaybe<Scalars['String']['input']>;
+  notes?: InputMaybe<Scalars['String']['input']>;
+  partnership_interests?: InputMaybe<Array<Scalars['String']['input']>>;
+  platform?: InputMaybe<Scalars['String']['input']>;
+  priority?: InputMaybe<Scalars['String']['input']>;
+  profile_photo_url?: InputMaybe<Scalars['String']['input']>;
+  super_category_id?: InputMaybe<Scalars['ID']['input']>;
+  tags?: InputMaybe<Array<Scalars['String']['input']>>;
+  website?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** Server-side table page for the shared table engine (communityLeadsTable). */
+export type CommunityLeadTablePage = {
+  __typename?: 'CommunityLeadTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<CommunityLead>;
   total: Scalars['Int']['output'];
 };
 
@@ -6852,6 +6922,76 @@ export type CreatedApiKey = {
   raw_key: Scalars['String']['output'];
 };
 
+export type CreatorLead = {
+  __typename?: 'CreatorLead';
+  activity_log: Array<CrmActivity>;
+  area?: Maybe<Scalars['String']['output']>;
+  assigned_to?: Maybe<Scalars['String']['output']>;
+  city?: Maybe<Scalars['String']['output']>;
+  collaboration_types: Array<Scalars['String']['output']>;
+  contacts: Array<CrmContact>;
+  created_at?: Maybe<Scalars['String']['output']>;
+  creator_name: Scalars['String']['output'];
+  dynamic_values_json: Scalars['String']['output'];
+  /** Average engagement, in percent. */
+  engagement_rate?: Maybe<Scalars['Float']['output']>;
+  followers_count?: Maybe<Scalars['Float']['output']>;
+  handle?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  instagram_link?: Maybe<Scalars['String']['output']>;
+  lead_source?: Maybe<Scalars['String']['output']>;
+  lead_status: Scalars['String']['output'];
+  next_follow_up_date?: Maybe<Scalars['String']['output']>;
+  niches: Array<Scalars['String']['output']>;
+  notes?: Maybe<Scalars['String']['output']>;
+  primary_platform?: Maybe<Scalars['String']['output']>;
+  priority: Scalars['String']['output'];
+  profile_links: Array<Scalars['String']['output']>;
+  profile_photo_url?: Maybe<Scalars['String']['output']>;
+  rate_card?: Maybe<Scalars['String']['output']>;
+  super_category?: Maybe<CrmSuperCategoryRef>;
+  super_category_id?: Maybe<Scalars['ID']['output']>;
+  tags: Array<Scalars['String']['output']>;
+  updated_at?: Maybe<Scalars['String']['output']>;
+  website?: Maybe<Scalars['String']['output']>;
+};
+
+export type CreatorLeadInput = {
+  area?: InputMaybe<Scalars['String']['input']>;
+  assigned_to?: InputMaybe<Scalars['String']['input']>;
+  city?: InputMaybe<Scalars['String']['input']>;
+  collaboration_types?: InputMaybe<Array<Scalars['String']['input']>>;
+  contacts?: InputMaybe<Array<CrmContactInput>>;
+  creator_name: Scalars['String']['input'];
+  dynamic_values_json?: InputMaybe<Scalars['String']['input']>;
+  engagement_rate?: InputMaybe<Scalars['Float']['input']>;
+  followers_count?: InputMaybe<Scalars['Float']['input']>;
+  handle?: InputMaybe<Scalars['String']['input']>;
+  instagram_link?: InputMaybe<Scalars['String']['input']>;
+  lead_source?: InputMaybe<Scalars['String']['input']>;
+  lead_status?: InputMaybe<Scalars['String']['input']>;
+  next_follow_up_date?: InputMaybe<Scalars['String']['input']>;
+  niches?: InputMaybe<Array<Scalars['String']['input']>>;
+  notes?: InputMaybe<Scalars['String']['input']>;
+  primary_platform?: InputMaybe<Scalars['String']['input']>;
+  priority?: InputMaybe<Scalars['String']['input']>;
+  profile_links?: InputMaybe<Array<Scalars['String']['input']>>;
+  profile_photo_url?: InputMaybe<Scalars['String']['input']>;
+  rate_card?: InputMaybe<Scalars['String']['input']>;
+  super_category_id?: InputMaybe<Scalars['ID']['input']>;
+  tags?: InputMaybe<Array<Scalars['String']['input']>>;
+  website?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** Server-side table page for the shared table engine (creatorLeadsTable). */
+export type CreatorLeadTablePage = {
+  __typename?: 'CreatorLeadTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<CreatorLead>;
+  total: Scalars['Int']['output'];
+};
+
 export type CrmActivity = {
   __typename?: 'CrmActivity';
   body_html?: Maybe<Scalars['String']['output']>;
@@ -6934,6 +7074,8 @@ export type CrmContactInput = {
 
 export type CrmDynamicField = {
   __typename?: 'CrmDynamicField';
+  applies_to_community: Scalars['Boolean']['output'];
+  applies_to_creator: Scalars['Boolean']['output'];
   applies_to_ecomm: Scalars['Boolean']['output'];
   applies_to_host: Scalars['Boolean']['output'];
   applies_to_venue: Scalars['Boolean']['output'];
@@ -6954,6 +7096,8 @@ export type CrmDynamicField = {
 };
 
 export type CrmDynamicFieldInput = {
+  applies_to_community?: InputMaybe<Scalars['Boolean']['input']>;
+  applies_to_creator?: InputMaybe<Scalars['Boolean']['input']>;
   applies_to_ecomm?: InputMaybe<Scalars['Boolean']['input']>;
   applies_to_host?: InputMaybe<Scalars['Boolean']['input']>;
   applies_to_venue?: InputMaybe<Scalars['Boolean']['input']>;
@@ -7118,6 +7262,8 @@ export type CrmEmailVerificationTablePage = {
 };
 
 export type CrmEntityType =
+  | 'COMMUNITY_LEAD'
+  | 'CREATOR_LEAD'
   | 'ECOMM_LEAD'
   | 'HOST_LEAD'
   | 'VENUE_LEAD';
@@ -7212,6 +7358,10 @@ export type CrmOptionGroup = {
   amenities: Array<Scalars['String']['output']>;
   audience_sizes: Array<Scalars['String']['output']>;
   booking_notices: Array<Scalars['String']['output']>;
+  collaboration_types: Array<Scalars['String']['output']>;
+  community_platforms: Array<Scalars['String']['output']>;
+  community_types: Array<Scalars['String']['output']>;
+  creator_platforms: Array<Scalars['String']['output']>;
   frequencies: Array<Scalars['String']['output']>;
   host_intent_scores: Array<Scalars['String']['output']>;
   host_interests: Array<Scalars['String']['output']>;
@@ -7230,6 +7380,11 @@ export type CrmOptionGroup = {
   venue_types: Array<Scalars['String']['output']>;
   week_days: Array<Scalars['String']['output']>;
 };
+
+/** Lead kinds whose contact email / call goes through the generic CRM lead mutations. */
+export type CrmProspectEntity =
+  | 'COMMUNITY_LEAD'
+  | 'CREATOR_LEAD';
 
 export type CrmReminder = {
   __typename?: 'CrmReminder';
@@ -15155,6 +15310,8 @@ export type Mutation = {
   bulkUpdateVenueSlots: BulkSlotResult;
   /** Competitor: buzz. The server orders the presses. */
   buzzPodChallenge: PodChallenge;
+  /** Call one contact of a creator or community lead; the call is logged on the lead. */
+  callCrmLeadContact: LeadContactActionResult;
   callEcommLeadContact: LeadContactActionResult;
   callHostLeadContact: LeadContactActionResult;
   callVenueLeadContact: LeadContactActionResult;
@@ -15374,8 +15531,10 @@ export type Mutation = {
   createCmsPage: CmsPage;
   createCmsSite: CmsSite;
   createCommsProvider: CommsProvider;
+  createCommunityLead: CommunityLead;
   createContract: Contract;
   createCoupon: Coupon;
+  createCreatorLead: CreatorLead;
   createCrmCallPrompt: CrmCallPrompt;
   createCrmDynamicField: CrmDynamicField;
   createCrmEmailTemplate: CrmEmailTemplate;
@@ -15542,8 +15701,10 @@ export type Mutation = {
   deleteCmsPage: Scalars['Boolean']['output'];
   deleteCmsSite: Scalars['Boolean']['output'];
   deleteCommsProvider: Scalars['Boolean']['output'];
+  deleteCommunityLead: Scalars['Boolean']['output'];
   deleteContract: Scalars['Boolean']['output'];
   deleteCoupon: Scalars['Boolean']['output'];
+  deleteCreatorLead: Scalars['Boolean']['output'];
   deleteCrmCallPrompt: Scalars['Boolean']['output'];
   deleteCrmDynamicField: Scalars['Boolean']['output'];
   deleteCrmEmailTemplate: Scalars['Boolean']['output'];
@@ -15759,6 +15920,8 @@ export type Mutation = {
   editVenueChatMessage: PodMessage;
   /** Either side changes its own latest counter before the other side has seen it in the chat (else OFFER_SEEN). Priced again; the round moves on. */
   editVenueOfferCounter: VenueBookingOffer;
+  /** Email one contact of a creator or community lead; the send is logged on the lead. */
+  emailCrmLeadContact: LeadContactActionResult;
   emailEcommLeadContact: LeadContactActionResult;
   emailHostLeadContact: LeadContactActionResult;
   /** Emails the same PDF report as an attachment. Errors when it reached nobody. */
@@ -17388,10 +17551,12 @@ export type Mutation = {
   /** Finance: set what a pod join, a shop order, a referral and a pod rating each pay, and how long a grant lasts. */
   updateCoinSettings: CoinSettings;
   updateCommsProvider: CommsProvider;
+  updateCommunityLead: CommunityLead;
   updateContactStatus: ContactSubmission;
   updateContentReportStatus: ContentReport;
   updateContract: Contract;
   updateCoupon: Coupon;
+  updateCreatorLead: CreatorLead;
   updateCrmCallPrompt: CrmCallPrompt;
   updateCrmDynamicField: CrmDynamicField;
   updateCrmEmailTemplate: CrmEmailTemplate;
@@ -18187,6 +18352,14 @@ export type MutationBuzzPodChallengeArgs = {
 };
 
 
+export type MutationCallCrmLeadContactArgs = {
+  contact_number: Scalars['String']['input'];
+  entity_type: CrmProspectEntity;
+  id: Scalars['ID']['input'];
+  provider_id?: InputMaybe<Scalars['ID']['input']>;
+};
+
+
 export type MutationCallEcommLeadContactArgs = {
   contact_number: Scalars['String']['input'];
   id: Scalars['ID']['input'];
@@ -18605,6 +18778,11 @@ export type MutationCreateCommsProviderArgs = {
 };
 
 
+export type MutationCreateCommunityLeadArgs = {
+  input: CommunityLeadInput;
+};
+
+
 export type MutationCreateContractArgs = {
   input: CreateContractInput;
 };
@@ -18612,6 +18790,11 @@ export type MutationCreateContractArgs = {
 
 export type MutationCreateCouponArgs = {
   input: CreateCouponInput;
+};
+
+
+export type MutationCreateCreatorLeadArgs = {
+  input: CreatorLeadInput;
 };
 
 
@@ -19164,12 +19347,22 @@ export type MutationDeleteCommsProviderArgs = {
 };
 
 
+export type MutationDeleteCommunityLeadArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationDeleteContractArgs = {
   id: Scalars['ID']['input'];
 };
 
 
 export type MutationDeleteCouponArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteCreatorLeadArgs = {
   id: Scalars['ID']['input'];
 };
 
@@ -19842,6 +20035,17 @@ export type MutationEditVenueOfferCounterArgs = {
   pod_id: Scalars['ID']['input'];
   round: Scalars['Int']['input'];
   terms: VenueOfferTermsInput;
+};
+
+
+export type MutationEmailCrmLeadContactArgs = {
+  attachments?: InputMaybe<Array<CrmEmailAssetInput>>;
+  body: Scalars['String']['input'];
+  contact_email: Scalars['String']['input'];
+  entity_type: CrmProspectEntity;
+  id: Scalars['ID']['input'];
+  provider_id?: InputMaybe<Scalars['ID']['input']>;
+  subject: Scalars['String']['input'];
 };
 
 
@@ -23249,6 +23453,12 @@ export type MutationUpdateCommsProviderArgs = {
 };
 
 
+export type MutationUpdateCommunityLeadArgs = {
+  id: Scalars['ID']['input'];
+  input: CommunityLeadInput;
+};
+
+
 export type MutationUpdateContactStatusArgs = {
   contact_id: Scalars['ID']['input'];
   status: ContactStatus;
@@ -23270,6 +23480,12 @@ export type MutationUpdateContractArgs = {
 export type MutationUpdateCouponArgs = {
   id: Scalars['ID']['input'];
   input: UpdateCouponInput;
+};
+
+
+export type MutationUpdateCreatorLeadArgs = {
+  id: Scalars['ID']['input'];
+  input: CreatorLeadInput;
 };
 
 
@@ -30998,6 +31214,8 @@ export type Query = {
   commsProviders: Array<CommsProvider>;
   communicationLog?: Maybe<CommunicationLog>;
   communicationLogs: CommunicationLogPage;
+  communityLead?: Maybe<CommunityLead>;
+  communityLeadsTable: CommunityLeadTablePage;
   contactSubmissions: Array<ContactSubmission>;
   contactSubmissionsTable: ContactSubmissionTablePage;
   /**
@@ -31047,6 +31265,8 @@ export type Query = {
   couponsTable: CouponTablePage;
   /** Everyone you could message, minus yourself. Search matches name or email. */
   coworkers: Array<Coworker>;
+  creatorLead?: Maybe<CreatorLead>;
+  creatorLeadsTable: CreatorLeadTablePage;
   /** The configured Twilio caller-ID (From) number, shown on call dialogs. */
   crmCallFromNumber?: Maybe<Scalars['String']['output']>;
   crmCallPrompt?: Maybe<CrmCallPrompt>;
@@ -33640,6 +33860,16 @@ export type QueryCommunicationLogsArgs = {
 };
 
 
+export type QueryCommunityLeadArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryCommunityLeadsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
 export type QueryContactSubmissionsArgs = {
   email?: InputMaybe<Scalars['String']['input']>;
   status?: InputMaybe<ContactStatus>;
@@ -33739,6 +33969,16 @@ export type QueryCouponsTableArgs = {
 export type QueryCoworkersArgs = {
   role?: InputMaybe<Scalars['String']['input']>;
   search?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type QueryCreatorLeadArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryCreatorLeadsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
 };
 
 

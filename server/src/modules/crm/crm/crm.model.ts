@@ -1,7 +1,7 @@
 import { Schema, model, Types, InferSchemaType } from 'mongoose';
 import { VENUE_LEAD_STATUSES, HOST_LEAD_STATUSES, PRIORITIES, ACTIVITY_TYPES } from './crm.constants';
 
-const contactSchema = new Schema(
+export const contactSchema = new Schema(
   {
     name: { type: String, trim: true, default: '' },
     role: { type: String, trim: true, default: '' },
@@ -24,7 +24,7 @@ const serviceOfferedSchema = new Schema(
   { _id: false }
 );
 
-const activitySchema = new Schema(
+export const activitySchema = new Schema(
   {
     type: { type: String, enum: ACTIVITY_TYPES, required: true },
     summary: { type: String, trim: true, default: '' },
@@ -254,6 +254,9 @@ const crmDynamicFieldSchema = new Schema(
     applies_to_host: { type: Boolean, default: true },
     // Opt-in (unlike venue/host): existing fields predate ecomm leads.
     applies_to_ecomm: { type: Boolean, default: false },
+    // Opt-in for the same reason: existing fields predate creator / community leads.
+    applies_to_creator: { type: Boolean, default: false },
+    applies_to_community: { type: Boolean, default: false },
     required: { type: Boolean, default: false },
     sort_order: { type: Number, default: 0 },
     is_active: { type: Boolean, default: true },

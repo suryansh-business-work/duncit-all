@@ -12,6 +12,7 @@ import { FUNNEL_COPY } from './funnel';
 import { MARKETING_COPY } from './marketing';
 import { CONTACTS_COPY } from './contacts';
 import { COMMUNICATIONS_COPY } from './communications';
+import { EMAIL_VALIDATIONS_COPY } from './email-validations';
 import { SUPPORT_COPY } from './support';
 import { LEGAL_COPY } from './legal';
 import { API_PERFORMANCE_COPY } from './api-performance';
@@ -46,6 +47,7 @@ const PAGES: readonly PageCopy[] = [
   MARKETING_COPY,
   CONTACTS_COPY,
   COMMUNICATIONS_COPY,
+  EMAIL_VALIDATIONS_COPY,
   SUPPORT_COPY,
   LEGAL_COPY,
   API_PERFORMANCE_COPY,

@@ -14,6 +14,7 @@ import { usePortalAppFeatures } from '../usePortalAppFeatures';
 import { Taskbar, WorkspaceProvider } from '../../workspace';
 import { BackgroundJobsProvider } from '../../background-jobs';
 import { TableChangeLogsProvider } from '../../change-logs/TableChangeLogsProvider';
+import { EmailValidationProvider } from '../../email-validation';
 import { AppShellMain, MAIN_ID } from './AppShellMain';
 import { SkipLink } from './SkipLink';
 import type { AppShellProps } from './types';
@@ -34,6 +35,7 @@ export function AppShell({
   breadcrumbLabelMap,
   tools,
   detailedChangeLogs = false,
+  emailValidation = true,
   sidebarHeader,
   children,
 }: Readonly<AppShellProps>) {
@@ -98,6 +100,7 @@ export function AppShell({
     <WorkspaceProvider enabled={Boolean(user)}>
       <BackgroundJobsProvider enabled={Boolean(user)}>
         <TableChangeLogsProvider enabled={Boolean(user)} detailed={detailedChangeLogs}>
+        <EmailValidationProvider enabled={Boolean(user) && emailValidation} portal={config.key ?? ''}>
           <Box
             sx={{
               display: 'flex',
@@ -179,6 +182,7 @@ export function AppShell({
                 actually DO is decided by the caller's own roles, server-side. */}
             <AgentLauncher />
           </Box>
+        </EmailValidationProvider>
         </TableChangeLogsProvider>
       </BackgroundJobsProvider>
     </WorkspaceProvider>

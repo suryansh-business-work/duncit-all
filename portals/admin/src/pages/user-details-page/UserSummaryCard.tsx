@@ -16,7 +16,7 @@ import VerifiedIcon from '@mui/icons-material/Verified';
 import MediaPickerField from '../../components/MediaPickerField';
 import { STATUS_META, type EditForm } from './queries';
 import { formatDateTime } from '@duncit/app-settings';
-import { useTranslation } from '@duncit/shell';
+import { EmailValidateButton, useTranslation } from '@duncit/shell';
 
 interface Props {
   user: any;
@@ -35,7 +35,17 @@ export default function UserSummaryCard({ user, form, busy, onPhotoChange }: Rea
   const { t } = useTranslation();
   const statusMeta = STATUS_META[form.status];
   const rows = [
-    { label: t('shell.common.email'), value: user.email ?? empty },
+    {
+      label: t('shell.common.email'),
+      value: user.email ? (
+        <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center' }}>
+          <span>{user.email}</span>
+          <EmailValidateButton email={user.email} />
+        </Stack>
+      ) : (
+        empty
+      ),
+    },
     { label: t('shell.common.phone'), value: phoneLine(user.phone_extension, user.phone_number) },
     {
       label: t('admin.profile.whatsappNumber'),

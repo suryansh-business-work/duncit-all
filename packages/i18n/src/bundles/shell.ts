@@ -677,6 +677,44 @@ export const SHELL_BUNDLE: NestedCatalogue = {
      * the tree once (see localizeNav) so the sidebar, the header search, the
      * breadcrumbs and the page title cannot disagree.
      */
+    emailValidation: {
+      validateNamed: 'Validate {email}',
+      title: 'Email validation',
+      checkingHint: 'Asking the mail server about this address. This can take up to a minute.',
+      checksLabel: 'Checks',
+      finalStatus: 'Final status',
+      suggestion: 'Did you mean {suggestion}?',
+      checkedAt: 'Checked {time}',
+      again: 'Validate again',
+      retry: 'Try again',
+      failed: 'Could not validate this email.',
+      verdict: {
+        valid: 'Valid',
+        risky: 'Risky',
+        invalid: 'Invalid',
+      },
+      verdictHint: {
+        valid: 'The mail server confirmed this mailbox exists, and nothing about it looks doubtful.',
+        risky: 'Mail may be delivered, but something about this address is doubtful, or the mail server would not confirm the mailbox.',
+        invalid: 'Mail sent to this address will not be delivered.',
+      },
+      check: {
+        syntax: 'Address format is valid',
+        mailServer: 'Domain has a mail server (MX)',
+        smtpConnection: 'Mail server is reachable',
+        mailboxExists: 'Mailbox exists',
+        mailboxEnabled: 'Mailbox is enabled',
+        inboxHasSpace: 'Inbox is not full',
+        notCatchAll: 'Domain does not accept every address (not catch-all)',
+        notDisposable: 'Not a disposable address',
+        notRoleAccount: 'Not a shared role address (info@, support@)',
+      },
+      outcome: {
+        passed: 'Passed',
+        failed: 'Failed',
+        skipped: 'Not checked: an earlier check failed',
+      },
+    },
     nav: {
       ads: 'Ads',
       adsApproval: 'Ads Approval',
@@ -835,6 +873,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       emailLogs: 'Email Logs',
       emails: 'Emails',
       emailTemplates: 'Email Templates',
+      emailValidations: 'Email Validations',
       employeeExpenses: 'Employee Expenses',
       expenseSettings: 'Expense Settings',
       expenses: 'Expenses',

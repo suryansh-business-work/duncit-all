@@ -61,6 +61,9 @@ exports:
   - 'TableChangeLogApi'
   - 'TableChangeLogRow'
   - 'TableChangeAction'
+  - 'TableEmailActionProvider'
+  - 'TableEmailAction'
+  - 'isEmailField'
 ---
 
 ## Why this exists
@@ -693,6 +696,23 @@ Where the entries come from (`server/src/modules/platform/tableChangeLog/`):
   caller, exactly as bulk delete does. The resolver's role check decides whether they may see the
   history at all, and its filter decides whose: the log of a row the caller is not shown is not
   shown either.
+
+## Every email column gets a Validate button
+
+A plain column whose `field` names one email address (`email`, `buyer_email`, `user.email`; not
+`emails` or `email_verified`, see `isEmailField`) renders through `EmailCell`: the address,
+and beside it whatever the console provides through `TableEmailActionProvider`. The shell's
+`AppShell` provides the email Validate button, so every grid in every console offers it with no
+column naming it. A column with its own `cellRenderer` keeps it, so a page that wants no button
+(Admin's validation log, where Re-validate belongs) draws the cell itself. With no provider (a
+test, a page outside the shell) the cell is exactly the text it was before.
+
+```tsx
+// packages/shell — what AppShell mounts (through EmailValidationProvider).
+<TableEmailActionProvider value={(email) => <EmailValidateButton email={email} />}>
+  {children}
+</TableEmailActionProvider>
+```
 
 ## `makeApolloTableFetch` vs `useApolloTableFetch`
 

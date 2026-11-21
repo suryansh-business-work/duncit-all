@@ -35,6 +35,19 @@ export const COMMUNICATIONS_PAGE: AnalyticsPageSpec = {
 };
 
 /**
+ * Every email address staff validated, in any console, and how each turned out.
+ * Also Admin > Email Validations > Dashboard, which mounts this same spec — so a
+ * layout saved in one console is the layout in the other.
+ */
+export const EMAIL_VALIDATIONS_PAGE: AnalyticsPageSpec = {
+  path: '/growth/email-validations',
+  entity: 'EMAIL_VALIDATIONS',
+  title: 'analytics.page.emailValidations.title',
+  subtitle: 'analytics.page.emailValidations.subtitle',
+  dashboardId: 'analytics.emailValidations',
+};
+
+/**
  * Members' contact syncs and the invites they sent — counts only, never a
  * phone-book entry. Also Marketing > Contacts, which mounts this same spec.
  */
@@ -183,6 +196,7 @@ export const ANALYTICS_PAGES: readonly AnalyticsPageSpec[] = [
   },
   CONTACTS_PAGE,
   COMMUNICATIONS_PAGE,
+  EMAIL_VALIDATIONS_PAGE,
   {
     path: '/support/desk',
     entity: 'SUPPORT',

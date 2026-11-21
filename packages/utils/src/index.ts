@@ -727,6 +727,18 @@ export {
   type ExpiringDraft,
 } from './pod-draft';
 export {
+  DRAFT_AUTOSAVE_DEBOUNCE_MS,
+  DRAFT_AUTOSAVE_RETRY_MAX_MS,
+  DRAFT_AUTOSAVE_RETRY_MS,
+  createDraftAutosaver,
+  isPodDraftId,
+  newPodDraftId,
+  type DraftAutosaveHandle,
+  type DraftAutosaver,
+  type DraftAutosaverOptions,
+  type DraftSaveStatus,
+} from './pod-draft-autosave';
+export {
   POD_LIVE_TAIL_MS,
   POD_SCAN_LEAD_MINUTES,
   canAmendPod,

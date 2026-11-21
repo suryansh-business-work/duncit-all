@@ -1038,9 +1038,13 @@ export const APP_POD_FLOWS: readonly CatalogueFlow[] = [
       },
       {
         name: 'Save, resume and delete drafts',
-        description: 'The stepper autosaves; drafts are listed in Your Pods and deleted after the retention period.',
+        description: 'Every Create Pod visit is one draft named in the URL; the stepper autosaves it; drafts are listed in Your Pods and deleted after the retention period.',
         steps: [
-          ['Fill step 1 and wait 4 seconds', 'A draft is saved (savePodDraft) without leaving the page'],
+          ['Tap "Create a Pod"', 'The URL becomes /create-pod/<draftId> at once (native: the route params hold draftId); nothing is saved yet'],
+          ['Fill step 1 and stop typing for a moment', 'One savePodDraft under that id; the header corner shows "Saving…" then "Saved"'],
+          ['Keep typing without pausing', 'No save until the typing stops; undoing an edit back to the saved text sends nothing'],
+          ['Refresh the page (mWeb) with an edit not yet saved', 'The browser asks before leaving; the same draft reopens with the edit in it'],
+          ['Go offline, edit, then press Close (mWeb) or Back (native)', 'The corner shows "Not saved — retrying" and "Leave without saving?" asks Stay / Leave anyway'],
           ['Tap "Next"', 'The draft is saved again with the new step'],
           ['Close the stepper and open Your Pods (/host/manage)', '"Draft pods" lists the draft by title (or "Untitled pod") with its step and a retention note "Draft Pods are automatically deleted <days> days after they are created…"'],
           ['Tap "Continue" on the draft', 'Navigates to /create-pod/<draftId> on the saved step with the values restored'],

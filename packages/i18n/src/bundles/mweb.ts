@@ -2419,6 +2419,19 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       hostRequired: 'An approved host profile is required before creating pods.',
       becomeHost: 'Become a host',
       createFailed: 'Could not create the pod.',
+      // The draft's save state in the header corner, and what is said when a
+      // save fails as the host leaves or the draft cannot be opened.
+      autosave: {
+        saving: 'Saving…',
+        saved: 'Saved',
+        error: 'Not saved — retrying',
+        leaveTitle: 'Leave without saving?',
+        leaveMessage: 'Your latest changes could not be saved. If you leave now, they will be lost.',
+        leave: 'Leave anyway',
+        stay: 'Stay',
+        loadFailed: 'Could not open this draft. Check your connection and try again.',
+        retry: 'Try again',
+      },
       // Stepper chrome. The step titles are also the label the Host Management
       // draft cards put on a half-finished pod.
       stepCounter: 'Step {step} of {total}',

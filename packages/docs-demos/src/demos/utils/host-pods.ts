@@ -5,7 +5,10 @@ import {
   badgeProgressPercent,
   canCompletePod,
   canScanPodTickets,
+  createDraftAutosaver,
   draftHoursLeft,
+  isPodDraftId,
+  newPodDraftId,
   isDraftExpiringSoon,
   hostPodSection,
   podPhase,
@@ -17,7 +20,7 @@ import {
   DEFAULT_HAPPENING_NEARBY_DAYS,
 } from '@duncit/utils';
 import { defineDemo, type PackageDemo } from '../../types';
-import type { BadgeMock, PhaseMock, HostSectionsMock, DraftsMock } from './mocks';
+import type { BadgeMock, PhaseMock, HostSectionsMock, DraftsMock, DraftAutosaveMock } from './mocks';
 
 export const hostPodsDemos: PackageDemo[] = [
   defineDemo<PhaseMock>({
@@ -141,6 +144,40 @@ export const hostPodsDemos: PackageDemo[] = [
         ),
         'Info badge panel': expiring.map((draft) => draft.pod_title).join('   ·   ') || '(empty)',
         'Below it': rest.map((draft) => draft.pod_title).join('   ·   ') || '(empty)',
+      };
+    },
+  }),
+  defineDemo<DraftAutosaveMock>({
+    id: 'draft-autosave',
+    title: 'Which Create Pod edits autosave',
+    note:
+      'Create Pod mints its draft id on the device, so the URL names the draft before anything ' +
+      'is saved. Change an edit back to the saved title and step and it stops counting as ' +
+      'unsaved — nothing is sent for it. Put an uppercase letter in urlDraftId and the page ' +
+      'would open a fresh draft instead.',
+    mock: {
+      uuid: '0123abcd-ef45-4678-9abc-def012345678',
+      now: '2026-11-21T10:00:00.000Z',
+      urlDraftId: '6920376000123abcdef45678',
+      saved: { pod_title: 'Sunday Pottery Jam', step: 1 },
+      edits: [
+        { pod_title: 'Sunday Pottery Jam!', step: 1 },
+        { pod_title: 'Sunday Pottery Jam', step: 1 },
+        { pod_title: 'Sunday Pottery Jam', step: 2 },
+      ],
+    },
+    compute: (mock) => {
+      let form = mock.saved;
+      const saver = createDraftAutosaver({ read: () => form, save: async () => undefined });
+      return {
+        'New draft id': newPodDraftId(() => mock.uuid, new Date(mock.now).getTime()),
+        'URL id usable': isPodDraftId(mock.urlDraftId) ? 'yes — resume / create it' : 'no — mint a new one',
+        ...Object.fromEntries(
+          mock.edits.map((edit, index) => {
+            form = edit;
+            return [`Edit ${index + 1}`, saver.hasUnsaved() ? 'unsaved → saves after the pause' : 'matches the save → nothing sent'];
+          })
+        ),
       };
     },
   }),

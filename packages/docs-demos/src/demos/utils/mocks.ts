@@ -225,6 +225,16 @@ export interface DraftsMock {
   drafts: Array<{ id: string; pod_title: string; expires_at: string | null }>;
 }
 
+/** Create Pod opening (the UUID the device drew, the clock) and the edits a
+ * host makes after the draft was last saved. */
+export interface DraftAutosaveMock {
+  uuid: string;
+  now: string;
+  urlDraftId: string;
+  saved: { pod_title: string; step: number };
+  edits: Array<{ pod_title: string; step: number }>;
+}
+
 /** Profiles as `publicUserProfile` describes them to the viewer: their own
  * follow state towards the person, and whether that person follows them. */
 export interface FollowButtonMock {

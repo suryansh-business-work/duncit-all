@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import type { MockedResponse } from '@apollo/client/testing';
 import WhatsAppConnectCard from '@/pages/tools/whatsapp/WhatsAppConnectCard';
-import { WA_STUCK_RESTART_MS } from '@/pages/tools/whatsapp/WhatsAppConnectCard/useWaConnect';
+import { WA_POLL_MS, WA_STUCK_RESTART_MS } from '@/pages/tools/whatsapp/WhatsAppConnectCard/useWaConnect';
 import {
   WA_CONNECT,
   WA_DISCONNECT,
@@ -155,17 +155,21 @@ describe('WhatsAppConnectCard — scanning', () => {
       restart.mock,
     ]);
 
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(WA_STUCK_RESTART_MS - 1000);
-    });
+    // Step one poll interval per act: a single long jump resolves dozens of polls in
+    // one React batch and trips the nested-update limit.
+    const advance = async (ms: number) => {
+      for (let elapsed = 0; elapsed < ms; elapsed += WA_POLL_MS) {
+        await act(async () => {
+          await vi.advanceTimersByTimeAsync(Math.min(WA_POLL_MS, ms - elapsed));
+        });
+      }
+    };
+
+    await advance(WA_STUCK_RESTART_MS - 1000);
     expect(restart.fn).not.toHaveBeenCalled();
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(2000);
-    });
+    await advance(2000);
     await waitFor(() => expect(restart.fn).toHaveBeenCalledTimes(1));
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(WA_STUCK_RESTART_MS * 2);
-    });
+    await advance(WA_STUCK_RESTART_MS + WA_POLL_MS);
     expect(restart.fn).toHaveBeenCalledTimes(1);
   });
 });

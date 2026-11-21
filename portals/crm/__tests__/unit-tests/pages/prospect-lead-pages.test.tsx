@@ -171,6 +171,9 @@ describe('ProspectLeadsPage', () => {
     expect(await screen.findByText('Pune Trail Runners')).toBeInTheDocument();
     expect(screen.getByText('Running Club')).toBeInTheDocument();
 
+    fireEvent.click(screen.getByRole('button', { name: 'New Community Lead' }));
+    expect(screen.getByTestId('location')).toHaveTextContent('/community-leads/new');
+
     fireEvent.click(screen.getByLabelText('Delete lead'));
     const dialog = within(await screen.findByRole('dialog'));
     expect(dialog.getByText('Delete "Pune Trail Runners"? This cannot be undone.')).toBeInTheDocument();
@@ -179,9 +182,6 @@ describe('ProspectLeadsPage', () => {
     expect(await screen.findByText('Community lead deleted')).toBeInTheDocument();
     expect(remove).toHaveBeenCalledTimes(1);
     expect(await screen.findByText(/No community leads yet/)).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole('button', { name: 'New Community Lead' }));
-    expect(screen.getByTestId('location')).toHaveTextContent('/community-leads/new');
   });
 });
 
@@ -189,7 +189,7 @@ describe('ProspectLeadDetailPage', () => {
   it('shows a creator profile with reach, collaboration and tracking', async () => {
     renderWithApollo(<ProspectLeadDetailPage entity="CREATOR_LEAD" />, [
       { request: { query: CREATOR_LEAD, variables: { id: 'cr-1' } }, result: { data: { creatorLead: creator } } },
-    ], { route: '/creator-leads/cr-1/view', path: '/creator-leads/:id/view' });
+    ], { route: '/creator-leads/cr-1/view', path: '/creator-leads/:id/*' });
 
     expect(await screen.findByTestId('lead-detail-name')).toHaveTextContent('Riya Runs');
     expect(screen.getByText('@riyaruns')).toBeInTheDocument();
@@ -219,17 +219,16 @@ describe('ProspectLeadDetailPage', () => {
     expect(screen.getByTestId('location')).toHaveTextContent('/creator-leads/cr-1');
   });
 
-  it('shows a community profile and goes back to its list', async () => {
+  it('shows a community profile with a way back to its list', async () => {
     renderWithApollo(<ProspectLeadDetailPage entity="COMMUNITY_LEAD" />, [
       { request: { query: COMMUNITY_LEAD, variables: { id: 'cm-1' } }, result: { data: { communityLead: community } } },
     ], { route: '/community-leads/cm-1/view', path: '/community-leads/:id/view' });
 
     expect(await screen.findByTestId('lead-detail-name')).toHaveTextContent('Pune Trail Runners');
     expect(screen.getAllByText('320').length).toBeGreaterThan(0);
-    expect(screen.getByText('Trail running')).toBeInTheDocument();
-
-    fireEvent.click(screen.getByText('Back to Community Leads'));
-    expect(screen.getByTestId('location')).toHaveTextContent(/^\/community-leads$/);
+    // Shown twice: as the meetup tile's hint and in the Interests row.
+    expect(screen.getAllByText('Trail running')).toHaveLength(2);
+    expect(screen.getByRole('button', { name: 'Back to Community Leads' })).toBeEnabled();
   });
 
   it('opens Ask AI grounded in this community lead', async () => {

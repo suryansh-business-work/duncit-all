@@ -23,6 +23,7 @@ import WhatStep from '../steps/WhatStep';
 import WhereWhenStep from '../steps/WhereWhenStep';
 import MoneyStep from '../steps/MoneyStep';
 import DetailsStep from '../steps/DetailsStep';
+import PickedVenueNote from '../PickedVenueNote';
 import { useFeatureFlag } from '../../../../hooks/useFeatureFlag';
 import { useSmartIncentiveSettings } from '../../../../utils/smartIncentive';
 import type { CreatePodStepperProps } from './types';
@@ -49,6 +50,7 @@ export default function CreatePodStepper({
   hostCategories,
   viewerUserId,
   pinnedVenueId,
+  pickedVenueId,
   onSaveDraft,
   onModerate,
   onPublish,
@@ -136,8 +138,8 @@ export default function CreatePodStepper({
     setStep(target);
   };
 
-  const { podMode, clubsInCity, clubsForLocation, clubVenueIds, availableProducts, spots, offerMinGuests, preview, venueNotice } =
-    useStepperSelections(form, { clubs, hostCategories, products, subCategories, venues, viewerUserId, pinnedVenueId });
+  const { podMode, clubsInCity, clubsForLocation, clubVenueIds, availableProducts, spots, offerMinGuests, preview, venueNotice, venueLocked } =
+    useStepperSelections(form, { clubs, hostCategories, products, subCategories, venues, viewerUserId, pinnedVenueId, pickedVenueId });
   const sendsOffer = createPodSendsOffer({
     pod_mode: podMode,
     partner_request_id: form.watch('partner_request_id'),
@@ -145,8 +147,8 @@ export default function CreatePodStepper({
   });
 
   const steps = [
-    <WhatStep key="what" form={form} hostCategories={hostCategories} categoryIcons={categoryIcons} clubs={clubs} />,
-    <WhereWhenStep key="where" form={form} clubs={clubsForLocation} cityClubs={clubsInCity} locations={locations} venues={venues} clubVenueIds={clubVenueIds} venueNotice={venueNotice} spots={spots} offerMinGuests={offerMinGuests} />,
+    <WhatStep key="what" form={form} hostCategories={hostCategories} categoryIcons={categoryIcons} clubs={clubs} venueLocked={venueLocked} />,
+    <WhereWhenStep key="where" form={form} clubs={clubsForLocation} cityClubs={clubsInCity} locations={locations} venues={venues} clubVenueIds={clubVenueIds} venueNotice={venueNotice} spots={spots} offerMinGuests={offerMinGuests} venueLocked={venueLocked} />,
     <MoneyStep key="money" form={form} venues={venues} sendsOffer={sendsOffer} products={availableProducts} showProducts={showProducts} preview={preview} venueNotice={venueNotice} />,
     <DetailsStep key="details" form={form} hostCategories={hostCategories} venues={venues} onEditWhen={() => goTo(CREATE_POD_WHERE_STEP)} />,
   ];
@@ -160,8 +162,9 @@ export default function CreatePodStepper({
       <Box data-tour="create-pod-steps">
         <StepHero step={step} total={CREATE_POD_STEP_COUNT} title={t(stepTitleKey(step, podMode))} subtitle={t(stepSubtitleKey(step, podMode, sendsOffer))} />
       </Box>
+      {venueLocked && step <= CREATE_POD_WHERE_STEP && <PickedVenueNote venues={venues} venueId={form.watch('venue_id')} />}
       {steps[step]}
-      {error && <Alert data-testid="create-pod-error" severity="error">{error}</Alert>}
+      {error &&<Alert data-testid="create-pod-error" severity="error">{error}</Alert>}
       {/* Spacer so the last field is never hidden behind the fixed footer bar. */}
       <Box aria-hidden sx={{ height: 88 }} />
       <Box data-tour="create-pod-publish">

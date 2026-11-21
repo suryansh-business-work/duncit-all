@@ -29,6 +29,7 @@ import VenueFoodTabs from './food/VenueFoodTabs';
 import { PUBLIC_VENUE, type PublicVenue } from './queries';
 import { ROUND_BTN_SX, addressParts } from './venueDetailsHelpers';
 import VenueHero from './VenueHero';
+import VenueHostTermsCard from './VenueHostTermsCard';
 
 export default function VenueDetailsPage() {
   const { venueId = '' } = useParams();
@@ -133,6 +134,9 @@ export default function VenueDetailsPage() {
           color: "text.secondary"
         }}>{venue.description}</Typography>}
       </Stack>
+
+      {/* Hosts only: the venue's fees and minimums, and the way to start a pod here. */}
+      <VenueHostTermsCard venueId={venue.id} />
 
       {/* A venue that serves food opens on its menu, with its pods under Events;
           every other venue keeps the page it always had. */}

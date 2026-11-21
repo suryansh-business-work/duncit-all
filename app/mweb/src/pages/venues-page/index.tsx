@@ -11,6 +11,7 @@ import EmptyState from '../../components/EmptyState';
 import { interleaveAds, isAdEntry } from '../../components/ads/AdSlot';
 import { useActiveAds } from '../../components/ads/useActiveAds';
 import { useTranslation } from '../../i18n/useTranslation';
+import { useVenueHostTerms } from '../../hooks/useVenueHostTerms';
 
 export const VENUES_EXPLORE = gql`
   query VenuesExplore($location_id: ID, $search: String, $super_category_id: ID) {
@@ -87,6 +88,8 @@ export default function VenuesPage({ locationId, superCategorySlug }: Readonly<P
   });
   const { ads } = useActiveAds('VENUE_LIST');
   const venues: ExploreVenue[] = data?.publicVenues ?? [];
+  // A host sees each venue's minimums on its card; for anyone else this stays empty.
+  const hostTerms = useVenueHostTerms(venues.map((venue) => venue.id)).byId;
 
   return (
     <Stack
@@ -131,7 +134,12 @@ export default function VenuesPage({ locationId, superCategorySlug }: Readonly<P
               <AdCard ad={entry.__ad} />
             </Box>
           ) : (
-            <VenueExploreCard key={entry.id} venue={entry} onOpen={() => navigate(`/venue/${entry.id}`)} />
+            <VenueExploreCard
+              key={entry.id}
+              venue={entry}
+              terms={hostTerms.get(entry.id)}
+              onOpen={() => navigate(`/venue/${entry.id}`)}
+            />
           ),
         )}
       </Box>

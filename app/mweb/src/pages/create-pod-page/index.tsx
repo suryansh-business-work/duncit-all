@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
-import { Navigate, useLocation, useNavigate, useParams } from 'react-router';
+import { Navigate, useLocation, useParams } from 'react-router';
 import {
   clubCityName,
   createPodCatalogRows,
@@ -25,6 +25,8 @@ import {
 import { usePartnerRequestPrefill } from './usePartnerRequestPrefill';
 import { useHostAgainPrefill } from './useHostAgainPrefill';
 import HostAgainNotice from './HostAgainNotice';
+import CreatePodNotHost from './CreatePodNotHost';
+import { usePickedVenue } from './usePickedVenue';
 import CreatePodHeader from './CreatePodHeader';
 import { createPodSeed } from './createPodSeed';
 import { useCreatePodPublish } from './useCreatePodPublish';
@@ -35,7 +37,6 @@ import type { CreatePodHostCategory, CreatePodLocation } from './create-pod/crea
  * moves there at once, so a refresh comes back to the same draft. A draft the
  * server does not have yet is a new pod; one it has is resumed. */
 export default function CreatePodPage() {
-  const navigate = useNavigate();
   const { t } = useTranslation();
   const { draftId } = useParams<{ draftId?: string }>();
   const { search } = useLocation();
@@ -88,10 +89,13 @@ export default function CreatePodPage() {
   const prefill = usePartnerRequestPrefill(venues, isNew);
   // "Host again": the form filled from an earlier pod, in THAT pod's city.
   const hostAgain = useHostAgainPrefill(isNew);
+  // "Pick This Venue for Pod" on Venue Details: a physical pod at that venue, in its city.
+  const picked = usePickedVenue(venues, locations, hostCategories, isNew);
 
   // A new pod is in the city the header has selected — step 1 lists that city's
   // localities. The page re-mounts when the header's pick changes.
-  const seed = createPodSeed(draft ?? hostAgain.prefill, { location_id: globalLocationId, ...prefill.values });
+  const fresh = { location_id: globalLocationId, ...picked.seed?.values, ...prefill.values };
+  const seed = createPodSeed(draft ?? hostAgain.prefill, fresh, picked.seed?.step);
   const copiedCityId = hostAgain.prefill && seed.values.location_id !== globalLocationId ? seed.values.location_id : '';
   const otherCity = locations.find((item: CreatePodLocation) => copiedCityId && item.id === copiedCityId);
 
@@ -166,7 +170,8 @@ export default function CreatePodPage() {
           categoryIcons={categoryIcons}
           hostCategories={hostCategories}
           viewerUserId={viewerUserId}
-          pinnedVenueId={prefill.pinnedVenueId}
+          pinnedVenueId={prefill.pinnedVenueId ?? picked.venueId}
+          pickedVenueId={picked.venueId}
           onSaveDraft={saveDraft}
           onModerate={moderate}
           onPublish={publish}
@@ -175,19 +180,7 @@ export default function CreatePodPage() {
       </>
     );
   } else {
-    body = (
-      <Alert
-        data-testid="create-pod-not-host"
-        severity="info"
-        action={
-          <DuncitButton data-testid="create-pod-become-host" color="inherit" size="small" onClick={() => navigate('/become-host')}>
-            {t('mweb.createPod.becomeHost')}
-          </DuncitButton>
-        }
-      >
-        {t('mweb.createPod.hostRequired')}
-      </Alert>
-    );
+    body = <CreatePodNotHost />;
   }
 
   return (

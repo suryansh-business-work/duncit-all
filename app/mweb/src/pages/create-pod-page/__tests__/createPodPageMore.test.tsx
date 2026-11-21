@@ -208,3 +208,22 @@ describe('CreatePodPage saving and moderating', () => {
     expect(screen.getByTestId('create-pod-not-host')).toBeInTheDocument();
   });
 });
+
+describe('CreatePodPage from "Pick This Venue for Pod"', () => {
+  it('opens a new physical pod at the picked venue, in its city, with the venue kept on offer', () => {
+    h.options = { data: hostOptions({ publicVenues: [{ id: 'v1', location_id: 'loc2', locality: '' }] }), loading: false, error: undefined };
+    page(`/create-pod/${DRAFT_ID}?pick_venue=v1`);
+    expect(h.stepper?.initialValues).toMatchObject({ pod_mode: 'PHYSICAL', venue_id: 'v1', location_id: 'loc2' });
+    expect(h.stepper?.initialStep).toBe(0);
+    expect(h.stepper?.pickedVenueId).toBe('v1');
+    expect(h.stepper?.pinnedVenueId).toBe('v1');
+  });
+
+  it('lets a Pod Request keep its own venue over a picked one', () => {
+    h.partner = { values: { venue_id: 'v1' }, pinnedVenueId: 'v1', loading: false, error: null };
+    h.options = { data: hostOptions({ publicVenues: [{ id: 'v1' }, { id: 'v2' }] }), loading: false, error: undefined };
+    page(`/create-pod/${DRAFT_ID}?pick_venue=v2&partner_request_id=r1`);
+    expect(h.stepper?.initialValues.venue_id).toBe('v1');
+    expect(h.stepper?.pickedVenueId).toBeUndefined();
+  });
+});

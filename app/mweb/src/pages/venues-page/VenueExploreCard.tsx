@@ -1,7 +1,8 @@
 import { Card, CardActionArea, Stack, Typography } from '@mui/material';
 import PlaceIcon from '@mui/icons-material/Place';
-import { venueImages } from '@duncit/utils';
+import { venueImages, type VenueHostTerms } from '@duncit/utils';
 import VenueCardMedia from './VenueCardMedia';
+import VenueCardTerms from './VenueCardTerms';
 import { useTranslation } from '../../i18n/useTranslation';
 
 export interface ExploreVenue {
@@ -17,12 +18,13 @@ export interface ExploreVenue {
 }
 
 /** Venue row on the Venues discovery page — an image slider over every photo
- * the venue has, then name, type/capacity, location and live pod count. Native
- * twin: hosts-venues/VenueCard. */
+ * the venue has, then name, type/capacity, location and live pod count, and for
+ * a host the venue's minimums (`terms`). Native twin: hosts-venues/VenueCard. */
 export default function VenueExploreCard({
   venue,
   onOpen,
-}: Readonly<{ venue: ExploreVenue; onOpen: () => void }>) {
+  terms,
+}: Readonly<{ venue: ExploreVenue; onOpen: () => void; terms?: VenueHostTerms }>) {
   const { t } = useTranslation();
   const location = [venue.locality, venue.city].filter(Boolean).join(' · ');
   const meta = [
@@ -79,6 +81,7 @@ export default function VenueExploreCard({
               </Typography>
             </Stack>
           )}
+          {terms && <VenueCardTerms venueId={venue.id} terms={terms} />}
         </Stack>
       </CardActionArea>
     </Card>

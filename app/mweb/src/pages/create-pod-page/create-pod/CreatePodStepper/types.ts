@@ -41,6 +41,9 @@ export interface CreatePodStepperProps {
   /** Set when the host arrives from a confirmed Pod Request: step 3 keeps
    * this venue on offer whatever the club matches. */
   pinnedVenueId?: string;
+  /** The venue picked with "Pick This Venue for Pod": while the form is on it,
+   * the pod stays physical and Where & when offers that venue alone. */
+  pickedVenueId?: string;
   /** The autosave's status and a save to await before leaving — for the
    * page's corner indicator and its close button. */
   onAutosave?: (handle: DraftAutosaveHandle) => void;

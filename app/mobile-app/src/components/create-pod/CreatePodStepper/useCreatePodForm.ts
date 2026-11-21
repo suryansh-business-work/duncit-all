@@ -6,6 +6,7 @@ import { clampCreatePodStep, venueOfferFloor } from '@duncit/utils';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 import { useSmartIncentiveSettings } from '@/hooks/useSmartIncentiveSettings';
+import { usePodMinAdvance } from '@/hooks/usePodMinAdvance';
 import { offerMoney } from '@/components/venue-offer/offer-format';
 import {
   hostCategoryKeyOf,
@@ -44,21 +45,28 @@ export function useCreatePodForm({
   // published as the form holds it. mWeb twin: useCreatePodSchema.
   const smartIncentive = useSmartIncentiveSettings();
   const smartIncentiveMaxPct = smartIncentive.enabled ? smartIncentive.maxPct : null;
+  // A host's own pod must start their Minimum Advance Days ahead; a Club
+  // Admin's is not held to it (the server agrees), so it is not even read.
+  const minAdvance = usePodMinAdvance(!clubAdmin);
   // The schema cannot call `t` at module scope, so it is built here from the
   // reader's own catalogue — the validation messages are copy like any other.
   // An offer below the picked venue's business amount on its basis is held on
   // Money; the server refuses it too (BELOW_MIN_BUSINESS).
   const schema = useMemo(
     () =>
-      makeCreatePodSchema(t, smartIncentiveMaxPct, (values) =>
-        venueOfferFloor(
-          venues.find((venue) => venue.id === values.venue_id)?.offer_min_business,
-          values.venue_offer_model,
-          t,
-          offerMoney,
-        ),
+      makeCreatePodSchema(
+        t,
+        smartIncentiveMaxPct,
+        (values) =>
+          venueOfferFloor(
+            venues.find((venue) => venue.id === values.venue_id)?.offer_min_business,
+            values.venue_offer_model,
+            t,
+            offerMoney,
+          ),
+        minAdvance,
       ),
-    [t, smartIncentiveMaxPct, venues],
+    [t, smartIncentiveMaxPct, venues, minAdvance],
   );
   const form = useForm<CreatePodFormValues, any, CreatePodFormValues>({
     resolver: formResolver<CreatePodFormValues>(schema),
@@ -137,6 +145,7 @@ export function useCreatePodForm({
     form,
     showProducts,
     smartIncentiveOn: smartIncentive.enabled,
+    minAdvance,
     step,
     setStep,
     busy,

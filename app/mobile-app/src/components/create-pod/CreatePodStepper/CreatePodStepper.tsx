@@ -12,6 +12,7 @@ import { AssignHostsField } from '../AssignHostsField';
 import { StepperActions } from '../StepperActions';
 import { StepHeader } from '../StepHeader';
 import { ModerationBlockedDialog } from '../ModerationBlockedDialog';
+import { PodMinAdvanceContext } from '../PodMinAdvance';
 import { buildStepperSubmit } from './stepperSubmit';
 import type { CreatePodStepperProps } from './types';
 import { useCreatePodForm } from './useCreatePodForm';
@@ -154,7 +155,9 @@ export function CreatePodStepper({
       <TourAnchor tour="create-pod" anchor="create-pod-steps">
         <StepHeader step={step} podMode={podMode} sendsOffer={sendsOffer} />
       </TourAnchor>
-      {steps[step]}
+      <PodMinAdvanceContext.Provider value={state.minAdvance}>
+        {steps[step]}
+      </PodMinAdvanceContext.Provider>
       {error ? (
         <Text role="alert" testID="create-pod-error" fontSize={12.5} color="$danger">
           {error}

@@ -14,6 +14,7 @@ import { useDateFormat } from '@/hooks/useDateFormat';
 import { useOfferCalendar } from '@/hooks/useOfferCalendar';
 import { useTranslation } from '@/hooks/useTranslation';
 import { parseDateTimeText } from '../../create-pod.form';
+import { usePodMinAdvanceRule } from '../../PodMinAdvance';
 import type { CreatePodForm } from '../../create-pod.types';
 import { BookingEndPicker } from './BookingEndPicker';
 import { BookingGuestFields } from './BookingGuestFields';
@@ -49,7 +50,9 @@ export function VenueOfferPicker({
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const fmt = useDateFormat();
-  const calendar = useOfferCalendar(venueId, spaceLabel);
+  // Read from the host's first allowed day, so every earlier day is disabled.
+  const firstDay = usePodMinAdvanceRule()?.day;
+  const calendar = useOfferCalendar(venueId, spaceLabel, firstDay);
   const startIso = parseDateTimeText(form.watch('pod_date_time_text'))?.toISOString() ?? null;
   const endIso = parseDateTimeText(form.watch('pod_end_date_time_text'))?.toISOString() ?? '';
   const labels = useMemo(

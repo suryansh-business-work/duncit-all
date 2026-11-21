@@ -9,6 +9,7 @@ import { SurfaceCard } from '@/components/SurfaceCard';
 import { ChipSelectField } from './ChipSelectField';
 import { DateTimeField } from './DateTimeField';
 import { MIN_POD_DURATION_MINUTES } from './create-pod.form';
+import { MinAdvanceNote, usePodMinAdvanceRule } from './PodMinAdvance';
 import type { CreatePodFormValues } from './create-pod.types';
 
 /**
@@ -29,6 +30,11 @@ export function VirtualMeetingFields({
   duration: string | null;
 }>) {
   const { t } = useTranslation();
+  const minAdvance = usePodMinAdvanceRule();
+  // Every day before the host's first allowed one is blocked on the sheet.
+  const minStartDateTime = minAdvance
+    ? new Date(Math.max(Date.now(), minAdvance.startMs))
+    : new Date();
   // The end picker only opens times after the start — the first 30 minutes
   // are blocked too, since that is the minimum pod length.
   const minEndDateTime = startDateTime ? addMinutes(startDateTime, MIN_POD_DURATION_MINUTES) : null;
@@ -69,6 +75,7 @@ export function VirtualMeetingFields({
         />
       </SurfaceCard>
       <SurfaceCard gap={14}>
+        <MinAdvanceNote />
         <Controller
           control={control}
           name="pod_date_time_text"
@@ -78,7 +85,7 @@ export function VirtualMeetingFields({
               required
               value={field.value}
               onChange={field.onChange}
-              minDateTime={new Date()}
+              minDateTime={minStartDateTime}
               error={fieldState.error?.message}
               testID="pod_date_time_text"
             />

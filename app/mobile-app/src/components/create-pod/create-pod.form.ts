@@ -76,6 +76,12 @@ export const hasImageLine = (mediaText: string) =>
 /** The picked venue's floor on the offer's basis, or null when there is none. */
 export type OfferFloorOf = (values: CreatePodFormValues) => VenueOfferFloor | null;
 
+/** A host's Minimum Advance Days: the days, and the instant their first allowed day begins. */
+export interface MinAdvanceRule {
+  days: number;
+  startMs: number;
+}
+
 /** Physical pods must book a venue, a space (capacity) and a time there: a
  * Pod Request's held slot, or an offer to the venue for a window. */
 function refineVenue(
@@ -211,13 +217,25 @@ function refineMeeting(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Tra
 /** The pod window: a future start and (when set) an end after it. A virtual pod
  * has no venue slot to close it, so its end is required — the server refuses
  * one without it, and the meeting-link mark needs the window. */
-function refineSchedule(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Translate) {
+function refineSchedule(
+  values: CreatePodFormValues,
+  ctx: z.RefinementCtx,
+  t: Translate,
+  minAdvance: MinAdvanceRule | null,
+) {
   const start = parseDateTimeText(values.pod_date_time_text);
   if (start && start.getTime() <= Date.now()) {
     ctx.addIssue({
       code: 'custom',
       path: ['pod_date_time_text'],
       message: t('mweb.createPod.validation.startFuture'),
+    });
+  } else if (start && minAdvance && start.getTime() < minAdvance.startMs) {
+    // The host's Minimum Advance Days — the server refuses it too. mWeb twin.
+    ctx.addIssue({
+      code: 'custom',
+      path: ['pod_date_time_text'],
+      message: t('mweb.createPod.validation.startTooSoon', { count: minAdvance.days }),
     });
   }
   if (values.pod_mode === 'VIRTUAL' && !values.pod_end_date_time_text.trim()) {
@@ -346,11 +364,13 @@ function refinePublish(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Tra
  * null while the programme is not known to be on — Step 4 hides the editor
  * then, so the percentage is not checked (see `refineSmartIncentive`).
  * `offerFloor` is the picked venue's business amount on the offer's basis: an
- * offer below it cannot leave the offer step. */
+ * offer below it cannot leave the offer step. `minAdvance` is a host's Minimum
+ * Advance Days (null while unknown, and for a Club Admin's pod). */
 export function makeCreatePodSchema(
   t: Translate = fallbackT,
   smartIncentiveMaxPct: number | null = DEFAULT_SMART_INCENTIVE_MAX_PCT,
   offerFloor: OfferFloorOf = () => null,
+  minAdvance: MinAdvanceRule | null = null,
 ) {
   return z
     .object({
@@ -443,7 +463,7 @@ export function makeCreatePodSchema(
     .superRefine((values, ctx) => {
       refineVenue(values, ctx, t, offerFloor);
       refineMeeting(values, ctx, t);
-      refineSchedule(values, ctx, t);
+      refineSchedule(values, ctx, t, minAdvance);
       refinePodType(values, ctx, t);
       refineTicketPrice(values, ctx, t);
       if (needsFreeJustification(values)) addFreeJustificationIssues(values, ctx, t);

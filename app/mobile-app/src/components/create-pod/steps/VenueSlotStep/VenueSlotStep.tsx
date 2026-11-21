@@ -15,6 +15,7 @@ import { parseDateTimeText } from '../../create-pod.form';
 import type { CreatePodForm, CreatePodSlot, CreatePodVenue } from '../../create-pod.types';
 import { FreeVenueNote } from '../../FreeVenueNote';
 import type { FreePodVenueNotice, SpotsBounds } from '@duncit/utils';
+import { MinAdvanceNote, usePodMinAdvanceRule } from '../../PodMinAdvance';
 
 import { VenueOfferPicker } from './VenueOfferPicker';
 import { VenueSpaceCard } from './VenueSpaceCard';
@@ -60,6 +61,7 @@ export function VenueSlotStep({
   const { errors } = formState;
   const { t } = useTranslation();
   const { dateTimeInputFormat } = useDateFormat();
+  const minAdvance = usePodMinAdvanceRule();
   const spaceError = errors.venue_space_label?.message;
   const mode = watch('pod_mode');
   const locationId = watch('location_id');
@@ -85,7 +87,7 @@ export function VenueSlotStep({
     mode === 'PHYSICAL' && bookBySlot ? venueId : '',
     watch('partner_request_id'),
   );
-  const slotsForSpace = spaceSlots(slots, selectedSpace);
+  const slotsForSpace = spaceSlots(slots, selectedSpace, minAdvance);
 
   // Each chip carries its own space, so picking one fills spots with no lookup.
   const pickSpace = (space: VenueSpace) => {
@@ -157,6 +159,7 @@ export function VenueSlotStep({
           onPick={pickSpace}
         />
       ) : null}
+      {selectedVenue && selectedSpace ? <MinAdvanceNote /> : null}
       {selectedVenue && selectedSpace && !bookBySlot ? (
         <VenueOfferPicker
           form={form}

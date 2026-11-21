@@ -16,7 +16,9 @@ export function useCreatePodDraftId(): string {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList, 'CreatePod'>>();
   const route = useRoute<RouteProp<RootStackParamList, 'CreatePod'>>();
   const fromRoute = route.params?.draftId;
-  const [draftId] = useState(() => (isPodDraftId(fromRoute) ? fromRoute : newPodDraftId(randomUUID)));
+  const [draftId] = useState(() =>
+    isPodDraftId(fromRoute) ? fromRoute : newPodDraftId(randomUUID),
+  );
 
   useEffect(() => {
     if (fromRoute !== draftId) navigation.setParams({ draftId });

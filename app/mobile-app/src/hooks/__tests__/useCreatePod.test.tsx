@@ -104,7 +104,11 @@ describe('useCreatePod', () => {
       .mockRejectedValueOnce(new ApiError('Network error. Check your connection and try again.'))
       .mockResolvedValueOnce(options)
       .mockResolvedValueOnce({
-        myPodDraft: { id: 'd11', step: 1, payload: JSON.stringify({ stepper: 2, pod_title: 'Back' }) },
+        myPodDraft: {
+          id: 'd11',
+          step: 1,
+          payload: JSON.stringify({ stepper: 2, pod_title: 'Back' }),
+        },
       });
     const { result } = renderHook(() => useCreatePod('d11'));
     await waitFor(() => expect(result.current.loadFailed).toBe(true));

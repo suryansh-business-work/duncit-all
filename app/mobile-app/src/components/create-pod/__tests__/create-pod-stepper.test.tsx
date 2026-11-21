@@ -1135,19 +1135,20 @@ describe('CreatePodStepper', () => {
     });
 
     it('saves unsaved changes as the app leaves the foreground', async () => {
-      const listeners: Array<(state: string) => void> = [];
-      const spy = jest
-        .spyOn(AppState, 'addEventListener')
-        .mockImplementation((_type, listener) => {
-          listeners.push(listener as (state: string) => void);
-          return { remove: jest.fn() };
-        });
+      const listeners: ((state: string) => void)[] = [];
+      const spy = jest.spyOn(AppState, 'addEventListener').mockImplementation((_type, listener) => {
+        listeners.push(listener as (state: string) => void);
+        return { remove: jest.fn() };
+      });
       const { onSaveDraft } = setup();
       press('create-pod-mode-VIRTUAL');
       await act(async () => {
         listeners.forEach((listener) => listener('background'));
       });
-      expect(onSaveDraft).toHaveBeenCalledWith(null, expect.objectContaining({ pod_mode: 'VIRTUAL' }));
+      expect(onSaveDraft).toHaveBeenCalledWith(
+        null,
+        expect.objectContaining({ pod_mode: 'VIRTUAL' }),
+      );
       spy.mockRestore();
     });
   });

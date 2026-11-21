@@ -303,9 +303,9 @@ describe('useTableQuery updateRow', () => {
   });
 
   it('keeps the same rows array when the id is not on this page', async () => {
-    const { result } = renderHook(() =>
-      useTableQuery({ fetchRows: okFetch([alice], 1), getRowId: (row) => row.id }),
-    );
+    // Built once, outside the hook: a fetch made inside it is a new source every render.
+    const fetchRows = okFetch([alice], 1);
+    const { result } = renderHook(() => useTableQuery({ fetchRows, getRowId: (row) => row.id }));
     await waitFor(() => expect(result.current.rows).toEqual([alice]));
     const before = result.current.rows;
 
@@ -316,7 +316,8 @@ describe('useTableQuery updateRow', () => {
   });
 
   it('is a no-op without a getRowId to find the row by', async () => {
-    const { result } = renderHook(() => useTableQuery({ fetchRows: okFetch([alice], 1) }));
+    const fetchRows = okFetch([alice], 1);
+    const { result } = renderHook(() => useTableQuery({ fetchRows }));
     await waitFor(() => expect(result.current.rows).toEqual([alice]));
 
     act(() => {
@@ -326,9 +327,8 @@ describe('useTableQuery updateRow', () => {
   });
 
   it('exposes a referentially stable updateRow across renders', async () => {
-    const { result, rerender } = renderHook(() =>
-      useTableQuery({ fetchRows: okFetch([alice], 1), getRowId: (row) => row.id }),
-    );
+    const fetchRows = okFetch([alice], 1);
+    const { result, rerender } = renderHook(() => useTableQuery({ fetchRows, getRowId: (row) => row.id }));
     await waitFor(() => expect(result.current.loading).toBe(false));
     const first = result.current.updateRow;
     rerender();
@@ -360,7 +360,8 @@ describe('useTableQuery empty page recovery', () => {
   });
 
   it('commits an empty first page as-is, even when the total says rows exist elsewhere', async () => {
-    const { result } = renderHook(() => useTableQuery({ fetchRows: okFetch([], 5) }));
+    const fetchRows = okFetch([], 5);
+    const { result } = renderHook(() => useTableQuery({ fetchRows }));
     await waitFor(() => expect(result.current.loading).toBe(false));
     expect(result.current.rows).toEqual([]);
     expect(result.current.total).toBe(5);

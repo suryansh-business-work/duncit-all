@@ -2,7 +2,8 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen, waitFor, act, fireEvent } from '@testing-library/react';
 import { MockedProvider } from '@apollo/client/testing/react';
 import { gql } from '@apollo/client';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { DRAFT_AUTOSAVE_DEBOUNCE_MS } from '@duncit/utils';
 import CreatePodStepper from '../CreatePodStepper';
 import { STEP_TITLES } from '../create-pod.form';
 import { fallbackT } from '../../../../i18n/fallback';
@@ -144,7 +145,7 @@ function setup(props: Partial<React.ComponentProps<typeof CreatePodStepper>> = {
       <CreatePodStepper
         initialValues={validVirtual()}
         initialStep={0}
-        initialDraftId={null}
+        initialDraftId="draft-1"
         clubs={[]}
         locations={[]}
         venues={[]}
@@ -188,7 +189,7 @@ describe('CreatePodStepper', () => {
     expect(await screen.findByText(fallbackT('mweb.createPod.step3TitleVirtual'))).toBeInTheDocument();
     expect(screen.getByText('WhereWhenStep')).toBeInTheDocument();
     // The draft is saved against the step the host moved to.
-    await waitFor(() => expect(onSaveDraft).toHaveBeenCalledWith(null, expect.objectContaining({ step: 1 })));
+    await waitFor(() => expect(onSaveDraft).toHaveBeenCalledWith('draft-1', expect.objectContaining({ step: 1 }), { keepalive: false }));
   });
 
   it('blocks Next on What when a multi-category host has not picked a category', async () => {
@@ -216,8 +217,9 @@ describe('CreatePodStepper', () => {
     // The sole category key (Super|Sub) is what got saved.
     await waitFor(() =>
       expect(onSaveDraft).toHaveBeenCalledWith(
-        null,
+        'draft-1',
         expect.objectContaining({ step: 1, payload: expect.stringContaining('"host_category_key":"sup|sub"') }),
+        { keepalive: false },
       ),
     );
   });
@@ -234,7 +236,7 @@ describe('CreatePodStepper', () => {
     fireEvent.click(screen.getByRole('button', { name: NEXT }));
     expect(await screen.findByText(STEP_TITLES[2])).toBeInTheDocument();
     expect(screen.getByText('MoneyStep ticket only')).toBeInTheDocument();
-    await waitFor(() => expect(onSaveDraft).toHaveBeenCalledWith(null, expect.objectContaining({ step: 2 })));
+    await waitFor(() => expect(onSaveDraft).toHaveBeenCalledWith('draft-1', expect.objectContaining({ step: 2 }), { keepalive: false }));
   });
 
   it('holds a physical offer pod on Money until its offer is complete, and Back returns to Where & when', async () => {
@@ -321,21 +323,118 @@ describe('CreatePodStepper', () => {
     expect(screen.getByText('WhatStep')).toBeInTheDocument();
   });
 
-  it('autosaves the draft after the debounce once the form is dirty', async () => {
-    vi.useFakeTimers();
-    try {
-      // The title is edited on Details (the last step).
-      const { onSaveDraft } = setup({ initialStep: 3 });
+  describe('autosave', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    const editTitle = async () => {
       await act(async () => {
         screen.getByRole('button', { name: 'edit-title' }).click();
       });
+    };
+    const pause = async (ms = DRAFT_AUTOSAVE_DEBOUNCE_MS) => {
       await act(async () => {
-        vi.advanceTimersByTime(4000);
+        await vi.advanceTimersByTimeAsync(ms);
       });
-      expect(onSaveDraft).toHaveBeenCalled();
-    } finally {
-      vi.useRealTimers();
-    }
+    };
+
+    it('writes nothing when Create Pod is only opened, even with a sole category filled in', async () => {
+      const { onSaveDraft } = setup({ hostCategories: [hostCat], initialValues: validVirtual({ host_category_key: '' }) });
+      await pause(DRAFT_AUTOSAVE_DEBOUNCE_MS * 3);
+      expect(onSaveDraft).not.toHaveBeenCalled();
+    });
+
+    it('saves the edit once the host pauses, under the draft id from the URL', async () => {
+      const { onSaveDraft } = setup({ initialStep: 3 });
+      await editTitle();
+      await pause(DRAFT_AUTOSAVE_DEBOUNCE_MS - 1);
+      expect(onSaveDraft).not.toHaveBeenCalled();
+      await pause(1);
+      expect(onSaveDraft).toHaveBeenCalledTimes(1);
+      expect(onSaveDraft).toHaveBeenCalledWith(
+        'draft-1',
+        expect.objectContaining({ step: 3, pod_title: 'A Freshly Edited Title' }),
+        { keepalive: false },
+      );
+    });
+
+    it('hands the page the save status as it moves from saving to saved', async () => {
+      const onAutosave = vi.fn();
+      setup({ initialStep: 3, onAutosave });
+      expect(onAutosave).toHaveBeenLastCalledWith(expect.objectContaining({ status: 'idle', unsaved: false }));
+      await editTitle();
+      expect(onAutosave).toHaveBeenLastCalledWith(expect.objectContaining({ status: 'idle', unsaved: true }));
+      await pause();
+      expect(onAutosave).toHaveBeenCalledWith(expect.objectContaining({ status: 'saving' }));
+      expect(onAutosave).toHaveBeenLastCalledWith(expect.objectContaining({ status: 'saved', unsaved: false }));
+    });
+
+    it('shows an error status when the save fails', async () => {
+      const onAutosave = vi.fn();
+      setup({ initialStep: 3, onAutosave, onSaveDraft: vi.fn().mockRejectedValue(new Error('offline')) });
+      await editTitle();
+      await pause();
+      expect(onAutosave).toHaveBeenLastCalledWith(expect.objectContaining({ status: 'error', unsaved: true }));
+    });
+
+    it('warns before a refresh with unsaved edits and sends them with keepalive', async () => {
+      const { onSaveDraft } = setup({ initialStep: 3 });
+      await editTitle();
+      const event = new Event('beforeunload', { cancelable: true });
+      await act(async () => {
+        globalThis.dispatchEvent(event);
+      });
+      expect(event.defaultPrevented).toBe(true);
+      expect(onSaveDraft).toHaveBeenCalledWith('draft-1', expect.objectContaining({ pod_title: 'A Freshly Edited Title' }), {
+        keepalive: true,
+      });
+    });
+
+    it('lets a refresh through without a warning when everything is saved', async () => {
+      const { onSaveDraft } = setup({ initialStep: 3 });
+      const event = new Event('beforeunload', { cancelable: true });
+      globalThis.dispatchEvent(event);
+      expect(event.defaultPrevented).toBe(false);
+      expect(onSaveDraft).not.toHaveBeenCalled();
+    });
+
+    it('saves unsaved edits when the page is hidden', async () => {
+      const { onSaveDraft } = setup({ initialStep: 3 });
+      await editTitle();
+      const visibility = vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden');
+      await act(async () => {
+        document.dispatchEvent(new Event('visibilitychange'));
+      });
+      visibility.mockRestore();
+      expect(onSaveDraft).toHaveBeenCalledWith('draft-1', expect.anything(), { keepalive: true });
+    });
+
+    it('saves unsaved edits when the host leaves inside the app', async () => {
+      const { onSaveDraft, unmount } = setup({ initialStep: 3 });
+      await editTitle();
+      await act(async () => {
+        unmount();
+      });
+      expect(onSaveDraft).toHaveBeenCalledWith('draft-1', expect.objectContaining({ pod_title: 'A Freshly Edited Title' }), {
+        keepalive: false,
+      });
+    });
+
+    it('publishes the draft it just saved, and saves nothing after the publish', async () => {
+      const { onSaveDraft, onPublish } = setup({ initialStep: 3 });
+      await editTitle();
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: 'Create Pod' }));
+      });
+      await vi.waitFor(() => expect(onPublish).toHaveBeenCalledWith('draft-1', expect.anything()));
+      const saves = onSaveDraft.mock.calls.length;
+      await pause(DRAFT_AUTOSAVE_DEBOUNCE_MS * 3);
+      expect(onSaveDraft.mock.calls.length).toBe(saves);
+    });
   });
 
   it('pins a violation on an unknown field to the title and jumps to its step', async () => {

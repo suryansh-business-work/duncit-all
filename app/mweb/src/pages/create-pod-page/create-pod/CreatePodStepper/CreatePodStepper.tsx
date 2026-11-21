@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 
 import { Alert, Box, Stack } from '@mui/material';
 import { CREATE_POD_STEP_COUNT, CREATE_POD_WHERE_STEP, clampCreatePodStep, createPodSendsOffer } from '@duncit/utils';
@@ -52,6 +52,7 @@ export default function CreatePodStepper({
   onSaveDraft,
   onModerate,
   onPublish,
+  onAutosave,
 }: Readonly<CreatePodStepperProps>) {
   const { t } = useTranslation();
   const form = useCreatePodForm(t, initialValues, venues);
@@ -66,22 +67,20 @@ export default function CreatePodStepper({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [blocked, setBlocked] = useState<BlockedViolation[]>([]);
-  const draftIdRef = useRef(initialDraftId);
   const isLast = step === STEP_TITLE_KEYS.length - 1;
 
   useStepperFormSync(form, showProducts, hostCategories);
 
-  const persist = async (forStep: number) => {
-    const id = await onSaveDraft(draftIdRef.current, serializeDraft(form.getValues(), forStep));
-    draftIdRef.current = id;
-    return id;
-  };
-  useDraftAutosave(form, step, persist);
+  // Every save writes the one draft this visit is about (it is in the URL).
+  const autosave = useDraftAutosave(
+    form,
+    step,
+    (payload, options) => onSaveDraft(initialDraftId, payload, options),
+    onAutosave
+  );
 
-  const goTo = (target: number) => {
-    setStep(target);
-    persist(target).catch(() => undefined);
-  };
+  // The step is part of the draft, so the autosave saves the move at once.
+  const goTo = (target: number) => setStep(target);
   const next = async () => {
     if (!(await form.trigger(stepFieldsFor(step, form.getValues())))) return;
     goTo(clampCreatePodStep(step + 1));
@@ -115,8 +114,13 @@ export default function CreatePodStepper({
         applyModeration(moderation.violations);
         return;
       }
-      const id = await persist(step);
+      // Let any autosave still out land first, so none can arrive after the
+      // publish and bring the draft back; then write the form as published.
+      await autosave.flush();
+      const id = await onSaveDraft(initialDraftId, serializeDraft(values, step));
+      autosave.markSaved();
       await onPublish(id, buildCreatePodInput(values, { smartIncentiveOn }));
+      autosave.stop();
     } catch (e) {
       // Two pods may share a title — the server gives the second one a link of
       // its own — so nothing here is the title's fault any more. Whatever did

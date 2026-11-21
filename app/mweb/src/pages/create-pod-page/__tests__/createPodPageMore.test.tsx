@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { act, fireEvent, render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { MemoryRouter, Route, Routes } from 'react-router';
+import { ConfirmProvider } from '@duncit/dialogs';
 
 import CreatePodPage from '../index';
 import { CREATE_POD_OPTIONS, MODERATE_POD_CONTENT, MY_POD_DRAFT, SAVE_POD_DRAFT } from '../queries';
@@ -53,11 +54,17 @@ const hostOptions = (over: Record<string, unknown> = {}) => ({
   ...over,
 });
 
-const page = (entry = '/create-pod') =>
+const DRAFT_ID = 'bbbbbbbbbbbbbbbbbbbbbbbb';
+
+const page = (entry = `/create-pod/${DRAFT_ID}`) =>
   render(
-    <MemoryRouter initialEntries={[entry]}>
-      <CreatePodPage />
-    </MemoryRouter>
+    <ConfirmProvider>
+      <MemoryRouter initialEntries={[entry]}>
+        <Routes>
+          <Route path="/create-pod/:draftId" element={<CreatePodPage />} />
+        </Routes>
+      </MemoryRouter>
+    </ConfirmProvider>
   );
 
 beforeEach(() => {
@@ -132,15 +139,28 @@ describe('CreatePodPage Host Again', () => {
 });
 
 describe('CreatePodPage saving and moderating', () => {
-  it('saves a draft through the server and hands the stepper the draft id', async () => {
-    h.save.mockResolvedValue({ data: { savePodDraft: { id: 'draft9' } } });
+  it('hands the stepper the draft id from the URL and saves through the server under it', async () => {
+    h.save.mockResolvedValue({ data: { savePodDraft: { id: DRAFT_ID } } });
     page();
+    expect(h.stepper?.initialDraftId).toBe(DRAFT_ID);
     let id = '';
     await act(async () => {
-      id = await h.stepper?.onSaveDraft(null, { payload: '{}', step: 1 });
+      id = await h.stepper?.onSaveDraft(DRAFT_ID, { payload: '{}', step: 1 });
     });
-    expect(h.save).toHaveBeenCalledWith({ variables: { draft_id: null, input: { payload: '{}', step: 1 } } });
-    expect(id).toBe('draft9');
+    expect(h.save).toHaveBeenCalledWith({
+      variables: { draft_id: DRAFT_ID, input: { payload: '{}', step: 1 } },
+      context: { fetchOptions: { keepalive: false } },
+    });
+    expect(id).toBe(DRAFT_ID);
+  });
+
+  it('sends the last save with keepalive while the page unloads, so it outlives the tab', async () => {
+    h.save.mockResolvedValue({ data: { savePodDraft: { id: DRAFT_ID } } });
+    page();
+    await act(async () => {
+      await h.stepper?.onSaveDraft(DRAFT_ID, { payload: '{}', step: 2 }, { keepalive: true });
+    });
+    expect(h.save).toHaveBeenCalledWith(expect.objectContaining({ context: { fetchOptions: { keepalive: true } } }));
   });
 
   it('runs content moderation and hands back the verdict', async () => {
@@ -173,13 +193,13 @@ describe('CreatePodPage saving and moderating', () => {
     expect(h.navigate).toHaveBeenCalledWith('/become-host');
   });
 
-  it('treats missing option lists as empty and closes to host management', () => {
+  it('treats missing option lists as empty and closes to host management', async () => {
     h.options = { data: { me: { roles: ['HOST'] } }, loading: false, error: undefined };
     page();
     expect(h.stepper?.clubs).toEqual([]);
     expect(h.stepper?.viewerUserId).toBe('');
     fireEvent.click(screen.getByTestId('create-pod-page-close'));
-    expect(h.navigate).toHaveBeenCalledWith('/host/manage');
+    await waitFor(() => expect(h.navigate).toHaveBeenCalledWith('/host/manage'));
   });
 
   it('shows a not-host panel when the host profile is missing altogether', () => {

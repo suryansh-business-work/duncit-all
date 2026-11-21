@@ -1,14 +1,21 @@
+import { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
-import { useNavigate, useParams } from 'react-router';
-import { clubCityName, createPodCatalogRows, createPodGrantedRows } from '@duncit/utils';
+import { Navigate, useLocation, useNavigate, useParams } from 'react-router';
+import {
+  clubCityName,
+  createPodCatalogRows,
+  createPodGrantedRows,
+  firstGraphQLError,
+  isPodDraftId,
+  newPodDraftId,
+  type DraftAutosaveHandle,
+} from '@duncit/utils';
 import { Alert, Box, CircularProgress, Stack } from '@mui/material';
-import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutlined';
-import CloseIcon from '@mui/icons-material/Close';
-import { DuncitButton, DuncitRoundButton } from '@duncit/buttons';
-import { CreatePodStepper, type DraftPayload } from './create-pod';
+import { DuncitButton } from '@duncit/buttons';
+import { logs } from '@duncit/logs';
+import { CreatePodStepper, type DraftPayload, type DraftSaveOptions } from './create-pod';
 import { useTranslation } from '../../i18n/useTranslation';
 import { useAppLocation } from '../../app/AppLocationContext';
-import StudioPageHeader from '../../components/StudioPageHeader';
 import {
   CREATE_POD_OPTIONS,
   MODERATE_POD_CONTENT,
@@ -18,19 +25,31 @@ import {
 import { usePartnerRequestPrefill } from './usePartnerRequestPrefill';
 import { useHostAgainPrefill } from './useHostAgainPrefill';
 import HostAgainNotice from './HostAgainNotice';
+import CreatePodHeader from './CreatePodHeader';
 import { createPodSeed } from './createPodSeed';
 import { useCreatePodPublish } from './useCreatePodPublish';
 import type { CreatePodHostCategory, CreatePodLocation } from './create-pod/create-pod.types';
 
-/** Host-only page to create a pod via the 4-step stepper, reached from the Home
- * "+" button or by resuming a draft from Host Management (`/create-pod/:draftId`). */
+/** Host-only Create Pod page. Every visit is one draft, named in the URL
+ * (`/create-pod/:draftId`): opening `/create-pod` mints the id on the device and
+ * moves there at once, so a refresh comes back to the same draft. A draft the
+ * server does not have yet is a new pod; one it has is resumed. */
 export default function CreatePodPage() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { draftId } = useParams<{ draftId?: string }>();
+  const { search } = useLocation();
+  const [mintedId] = useState(() => newPodDraftId(() => globalThis.crypto.randomUUID()));
+  const [autosave, setAutosave] = useState<DraftAutosaveHandle | null>(null);
+  const validId = isPodDraftId(draftId) ? draftId : null;
   const { locationId: globalLocationId } = useAppLocation();
   const options = useQuery<any>(CREATE_POD_OPTIONS, { fetchPolicy: 'cache-and-network' });
-  const draftQuery = useQuery<any>(MY_POD_DRAFT, { variables: { draft_id: draftId }, skip: !draftId });
+  // Always read live: the draft autosaves, so a cached copy is an old one.
+  const draftQuery = useQuery<any>(MY_POD_DRAFT, {
+    variables: { draft_id: validId },
+    skip: !validId,
+    fetchPolicy: 'network-only',
+  });
   const [saveMut] = useMutation<any>(SAVE_POD_DRAFT);
   const [moderateMut] = useMutation<any>(MODERATE_POD_CONTENT);
   const publish = useCreatePodPublish();
@@ -59,20 +78,28 @@ export default function CreatePodPage() {
   );
   const viewerUserId = options.data?.me?.user_id ?? '';
 
-  // Arriving from a confirmed Pod Request: its venue and slot come pre-chosen.
-  const prefill = usePartnerRequestPrefill(venues, !draftId);
-  // "Host again": the form filled from an earlier pod, in THAT pod's city.
-  const hostAgain = useHostAgainPrefill(!draftId);
-
+  // NOT_FOUND = nothing saved under this id yet: a new pod. Any other failure
+  // must not open a blank form that would autosave over the real draft.
+  const draftMissing = firstGraphQLError(draftQuery.error)?.extensions?.code === 'NOT_FOUND';
+  const draftFailed = !!draftQuery.error && !draftMissing;
   const draft = draftQuery.data?.myPodDraft;
+  const isNew = !!validId && !draftQuery.loading && !draft && !draftFailed;
+  // Arriving from a confirmed Pod Request: its venue and slot come pre-chosen.
+  const prefill = usePartnerRequestPrefill(venues, isNew);
+  // "Host again": the form filled from an earlier pod, in THAT pod's city.
+  const hostAgain = useHostAgainPrefill(isNew);
+
   // A new pod is in the city the header has selected — step 1 lists that city's
   // localities. The page re-mounts when the header's pick changes.
   const seed = createPodSeed(draft ?? hostAgain.prefill, { location_id: globalLocationId, ...prefill.values });
   const copiedCityId = hostAgain.prefill && seed.values.location_id !== globalLocationId ? seed.values.location_id : '';
   const otherCity = locations.find((item: CreatePodLocation) => copiedCityId && item.id === copiedCityId);
 
-  const saveDraft = async (id: string | null, payload: DraftPayload) => {
-    const res = await saveMut({ variables: { draft_id: id, input: payload } });
+  const saveDraft = async (id: string, payload: DraftPayload, saveOptions?: DraftSaveOptions) => {
+    const res = await saveMut({
+      variables: { draft_id: id, input: payload },
+      context: { fetchOptions: { keepalive: saveOptions?.keepalive ?? false } },
+    });
     return res.data.savePodDraft.id as string;
   };
   const moderate = async (input: any) => {
@@ -80,11 +107,11 @@ export default function CreatePodPage() {
     return res.data.moderatePodContent;
   };
 
+  // No usable id yet: mint one and move to it, keeping any prefill query.
+  if (!validId) return <Navigate replace to={{ pathname: `/create-pod/${mintedId}`, search }} />;
+
   const loading =
-    (options.loading && !options.data) ||
-    (!!draftId && draftQuery.loading && !draftQuery.data) ||
-    prefill.loading ||
-    hostAgain.loading;
+    (options.loading && !options.data) || draftQuery.loading || prefill.loading || hostAgain.loading;
   // A copy that cannot be read opens nothing rather than a blank form posing as it.
   const pageError = hostAgain.failed ? t('mweb.hostPodActions.hostAgainFailed') : null;
   let body: React.ReactNode;
@@ -93,6 +120,27 @@ export default function CreatePodPage() {
       <Box data-testid="create-pod-loading" sx={{ display: 'grid', placeItems: 'center', py: 6 }}>
         <CircularProgress aria-label={t('mweb.a11y.loading')} />
       </Box>
+    );
+  } else if (draftFailed) {
+    body = (
+      <Alert
+        data-testid="create-pod-draft-error"
+        severity="error"
+        action={
+          <DuncitButton
+            data-testid="create-pod-draft-retry"
+            color="inherit"
+            size="small"
+            onClick={() => {
+              draftQuery.refetch().catch((error: unknown) => logs.mWeb.warn('create-pod', 'draftRetry', { error }));
+            }}
+          >
+            {t('mweb.createPod.autosave.retry')}
+          </DuncitButton>
+        }
+      >
+        {t('mweb.createPod.autosave.loadFailed')}
+      </Alert>
     );
   } else if (options.error || prefill.error || pageError) {
     body = (
@@ -109,7 +157,7 @@ export default function CreatePodPage() {
         <CreatePodStepper
           initialValues={seed.values}
           initialStep={seed.step}
-          initialDraftId={draft?.id ?? null}
+          initialDraftId={validId}
           clubs={clubs}
           locations={locations}
           venues={venues}
@@ -122,6 +170,7 @@ export default function CreatePodPage() {
           onSaveDraft={saveDraft}
           onModerate={moderate}
           onPublish={publish}
+          onAutosave={setAutosave}
         />
       </>
     );
@@ -141,25 +190,9 @@ export default function CreatePodPage() {
     );
   }
 
-  // The calm page header: round accent mark, the title alone (no subtitle), and
-  // a round close button — the native StackScreen header's twin (rule 27).
   return (
     <Stack data-testid="create-pod-page" spacing={2.5} sx={{ p: 2, maxWidth: 720, mx: 'auto', minHeight: '100%' }}>
-      <StudioPageHeader
-        icon={<AddCircleOutlineIcon fontSize="small" />}
-        title={t('mweb.createPod.title')}
-        action={
-          <DuncitRoundButton
-            data-testid="create-pod-page-close"
-            tone="paper"
-            size="large"
-            aria-label={t('mweb.auth.close')}
-            onClick={() => navigate('/host/manage')}
-          >
-            <CloseIcon />
-          </DuncitRoundButton>
-        }
-      />
+      <CreatePodHeader autosave={autosave} />
       {body}
     </Stack>
   );

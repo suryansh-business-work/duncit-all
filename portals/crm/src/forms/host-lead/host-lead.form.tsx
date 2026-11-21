@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { FormProvider, useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, AlertTitle, Box, Stack, Typography } from '@mui/material';
@@ -14,12 +15,13 @@ import HostBudgetSection from './sections/HostBudgetSection';
 import HostTimelineSection from './sections/HostTimelineSection';
 import HostReachSection from './sections/HostReachSection';
 import HostWebsiteSection from './sections/HostWebsiteSection';
-import HostServicesSection from './sections/HostServicesSection';
+import LeadServicesSection from '../fields/LeadServicesSection';
 import HostBrandingSection from './sections/HostBrandingSection';
 import HostDynamicSection from './sections/HostDynamicSection';
 import HostTrackingSection from './sections/HostTrackingSection';
 import type { CrmOptionGroup } from '../../api/crm.types';
 import { useTranslation } from '@duncit/shell';
+import { withSocialLinks } from '../validation/socialLinks';
 
 interface Props {
   config: CrmOptionGroup;
@@ -46,6 +48,7 @@ const SECTIONS = [
     title: '6. Social / Reach',
     paths: [
       'instagram_link',
+      'social_links',
       'community_link',
       'community_size',
       'previous_events_hosted',
@@ -76,8 +79,10 @@ export default function HostLeadForm({
   const { t } = useTranslation();
   const submitLabelText = submitLabel ?? t('crm.forms.saveHostLead');
 
+  const schema = useMemo(() => withSocialLinks(hostLeadSchema, t), [t]);
+
   const methods = useForm<HostLeadFormValues, any, HostLeadFormValues>({
-    resolver: zodResolver(hostLeadSchema, undefined, { raw: true }) as unknown as Resolver<HostLeadFormValues, any, HostLeadFormValues>,
+    resolver: zodResolver(schema, undefined, { raw: true }) as unknown as Resolver<HostLeadFormValues, any, HostLeadFormValues>,
     mode: 'onChange',
     defaultValues: initialValues ?? hostLeadInitialValues,
   });
@@ -131,7 +136,7 @@ function HostSections({ config }: Readonly<{ config: CrmOptionGroup }>) {
     <HostTimelineSection key="timeline" config={config} />,
     <HostReachSection key="reach" />,
     <HostWebsiteSection key="website" />,
-    <HostServicesSection key="services" />,
+    <LeadServicesSection key="services" appliesTo="HOST" />,
     <HostBrandingSection key="branding" />,
     <HostDynamicSection key="dynamic" />,
     <HostTrackingSection key="tracking" config={config} />,

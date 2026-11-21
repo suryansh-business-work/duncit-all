@@ -874,6 +874,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       emails: 'Emails',
       emailTemplates: 'Email Templates',
       emailValidations: 'Email Validations',
+      emailTemplateSettings: 'Settings',
       employeeExpenses: 'Employee Expenses',
       expenseSettings: 'Expense Settings',
       expenses: 'Expenses',

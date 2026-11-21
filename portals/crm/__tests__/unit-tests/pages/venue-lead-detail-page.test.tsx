@@ -5,6 +5,7 @@ import { formatDate } from '@duncit/app-settings';
 import VenueLeadDetailPage from '@/pages/venue-leads/VenueLeadDetailPage';
 import { formatCapacity, joinList, leadDate } from '@/pages/venue-leads/VenueLeadDetailPage/helpers';
 import { CRM_DYNAMIC_FIELDS, VENUE_LEAD } from '@/api/crm.gql';
+import { CRM_LEAD_MEDIA } from '@/api/leadMedia.gql';
 import type { VenueLead } from '@/api/crm.types';
 import { renderWithApollo } from '../helpers/renderWithApollo';
 import { venueLead } from '../fixtures/leads';
@@ -82,7 +83,7 @@ describe('VenueLeadDetailPage', () => {
     await heading();
     expect(screen.getByTestId('lead-tab-services')).toHaveTextContent('Services (1)');
     const one = openTab('services');
-    expect(within(one).getByText('1 service tagged')).toBeInTheDocument();
+    expect(within(one).getByText('1 service')).toBeInTheDocument();
     expect(within(one).getByText('Catering')).toBeInTheDocument();
     first.unmount();
 
@@ -95,15 +96,61 @@ describe('VenueLeadDetailPage', () => {
       }),
     );
     await heading();
-    expect(within(openTab('services')).getByText('2 services tagged')).toBeInTheDocument();
+    expect(within(openTab('services')).getByText('2 services')).toBeInTheDocument();
     second.unmount();
 
     renderPage(venueLead({ services_offered: [] }));
     await heading();
     expect(screen.getByTestId('lead-tab-services')).toHaveTextContent('Services (0)');
     expect(
-      within(openTab('services')).getByText('Catalogue managed via Manage Venue Services'),
+      within(openTab('services')).getByText('No services yet. Add them on the lead form.'),
     ).toBeInTheDocument();
+  });
+
+  it('shows the Instagram and extra social links, and dashes Instagram when it is missing', async () => {
+    const first = renderPage(
+      venueLead({
+        instagram_link: 'https://instagram.com/grandhall',
+        social_links: [
+          { name: 'YouTube', url: 'https://youtube.com/@grandhall' },
+          { name: '', url: 'https://linktr.ee/grandhall' },
+        ],
+      }),
+    );
+    await heading();
+    const overview = screen.getByTestId('lead-tabpanel-overview');
+    expect(within(overview).getByRole('heading', { name: 'Social links' })).toBeInTheDocument();
+    expect(within(overview).getByRole('link', { name: /instagram\.com\/grandhall/ })).toHaveAttribute(
+      'href',
+      'https://instagram.com/grandhall',
+    );
+    expect(within(overview).getByText('YouTube')).toBeInTheDocument();
+    expect(within(overview).getByRole('link', { name: /youtube\.com\/@grandhall/ })).toHaveAttribute('target', '_blank');
+    // A link saved without a name is labelled with its own address.
+    expect(within(overview).getAllByText('https://linktr.ee/grandhall')).toHaveLength(2);
+    first.unmount();
+
+    // The fixture's source is also "Instagram"; change it so the row label is the only match.
+    renderPage(venueLead({ instagram_link: null, social_links: [], lead_source: 'Referral' }));
+    await heading();
+    expect(rowValue(screen.getByTestId('lead-tabpanel-overview'), 'Instagram')).toBe('—');
+    expect(screen.queryByRole('link', { name: /youtube/ })).toBeNull();
+  });
+
+  it('has a Logos & Images tab that loads the venue media', async () => {
+    renderPage(venueLead(), [
+      {
+        request: { query: CRM_LEAD_MEDIA, variables: { entity_type: 'VENUE_LEAD', lead_id: 'venue-1' } },
+        result: { data: { crmLeadMedia: [] } },
+      },
+    ]);
+    await heading();
+
+    expect(screen.getByTestId('lead-tab-media')).toHaveTextContent('Logos & Images');
+    const media = openTab('media');
+    expect(within(media).getByText('Saved as soon as you upload, rename, replace or delete.')).toBeInTheDocument();
+    expect(await within(media).findByText('No logos yet.')).toBeInTheDocument();
+    expect(within(media).getByText('No images yet.')).toBeInTheDocument();
   });
 
   it('lists the contacts, custom fields and manual logs of the lead', async () => {

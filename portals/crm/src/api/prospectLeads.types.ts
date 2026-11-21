@@ -1,4 +1,4 @@
-import type { CrmActivity, CrmContact, CrmSuperCategoryRef } from './crm.types';
+import type { CrmActivity, CrmContact, CrmServiceOffered, CrmSocialLink, CrmSuperCategoryRef } from './crm.types';
 
 /** Fields every creator and community lead has (mirrors the server lead backbone). */
 export interface ProspectLeadBase {
@@ -10,6 +10,8 @@ export interface ProspectLeadBase {
   contacts: CrmContact[];
   website?: string | null;
   instagram_link?: string | null;
+  social_links: CrmSocialLink[];
+  services_offered: CrmServiceOffered[];
   tags: string[];
   profile_photo_url?: string | null;
   /** JSON-stringified `CrmDynamicValueMap` — parse with JSON.parse before use. */

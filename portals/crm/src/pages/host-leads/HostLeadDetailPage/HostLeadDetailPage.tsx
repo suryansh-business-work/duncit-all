@@ -37,9 +37,8 @@ export default function HostLeadDetailPage() {
 
   const followUpLabel = leadDate(lead.next_follow_up_date) ?? '—';
   const preferredDate = leadDate(lead.preferred_event_date);
-  const servicesPlural = lead.services_offered.length === 1 ? '' : 's';
 
-  const tabs: LeadTab[] = buildHostLeadTabs({ lead, t, followUpLabel, preferredDate, servicesPlural });
+  const tabs: LeadTab[] = buildHostLeadTabs({ lead, t, followUpLabel, preferredDate });
 
   return (
     <Stack spacing={2.5} sx={{ transition: 'margin 0.2s ease', mr: aiOpen ? { xs: 0, sm: `${ASK_AI_WIDTH}px` } : 0 }}>

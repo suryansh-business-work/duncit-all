@@ -26,10 +26,11 @@ import ServiceOfferedForm, { type ServiceOfferedDraft } from './ServiceOfferedFo
 import ServicesOfferedTable from './ServicesOfferedTable';
 import EditServiceOfferedDialog from './EditServiceOfferedDialog';
 import { useTranslation } from '@duncit/shell';
+import { defaultServiceTargets, hasAnyTarget, pickServiceTargets } from '../../../config/serviceTargets';
 
-const EMPTY: ServiceOfferedDraft = {
-  super_category_id: '', category_id: '', sub_category_id: '', applies_to_venue: true, applies_to_host: true, titles: [],
-};
+const emptyDraft = (): ServiceOfferedDraft => ({
+  super_category_id: '', category_id: '', sub_category_id: '', ...defaultServiceTargets(), titles: [],
+});
 
 /** CRM → Data → Services Offered. Curate service titles under the Super → Category → Sub taxonomy. */
 export default function ServicesOfferedPage() {
@@ -37,14 +38,14 @@ export default function ServicesOfferedPage() {
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
   const [open, setOpen] = useState(false);
-  const [draft, setDraft] = useState<ServiceOfferedDraft>(EMPTY);
+  const [draft, setDraft] = useState<ServiceOfferedDraft>(emptyDraft);
   const [formError, setFormError] = useState<string | null>(null);
   const [toDelete, setToDelete] = useState<CrmServiceOfferedRow | null>(null);
   const [toEdit, setToEdit] = useState<CrmServiceOfferedRow | null>(null);
   const [createMut, { loading: creating }] = useMutation<any>(CREATE_CRM_SERVICES_OFFERED);
   const [deleteMut, { loading: deleting }] = useMutation<any>(DELETE_CRM_SERVICE_OFFERED);
 
-  const targetValid = draft.applies_to_venue || draft.applies_to_host;
+  const targetValid = hasAnyTarget(pickServiceTargets(draft));
 
   const fetchRows = useApolloTableFetch<CrmServiceOfferedRow>(client, CRM_SERVICES_OFFERED_TABLE, 'crmServicesOfferedTable');
 
@@ -58,14 +59,13 @@ export default function ServicesOfferedPage() {
             super_category_id: draft.super_category_id,
             category_id: draft.category_id || null,
             sub_category_id: draft.sub_category_id || null,
-            applies_to_venue: draft.applies_to_venue,
-            applies_to_host: draft.applies_to_host,
+            ...pickServiceTargets(draft),
             titles: draft.titles,
           },
         },
       });
       setOpen(false);
-      setDraft(EMPTY);
+      setDraft(emptyDraft());
       refetchRef.current?.();
     } catch (err) {
       setFormError(parseApiError(err));
@@ -88,11 +88,11 @@ export default function ServicesOfferedPage() {
         <Box>
           <Typography component="h1" variant="h5" sx={{
             fontWeight: 800
-          }}>{t('crm.data.servicesOfferedForHostAndAmp')}</Typography>
+          }}>{t('shell.nav.servicesOffered')}</Typography>
           <Typography variant="body2" sx={{
             color: "text.secondary"
           }}>
-            Curated service titles per Super → Category → Sub. Venue & host forms load these dynamically.
+            {t('crm.data.servicesOfferedIntro')}
           </Typography>
         </Box>
       </Stack>
@@ -101,7 +101,7 @@ export default function ServicesOfferedPage() {
         fetchRows={fetchRows}
         refetchRef={refetchRef}
         toolbarActions={
-          <DuncitButton size="small" startIcon={<AddIcon />} variant="contained" onClick={() => { setDraft(EMPTY); setFormError(null); setOpen(true); }}>
+          <DuncitButton size="small" startIcon={<AddIcon />} variant="contained" onClick={() => { setDraft(emptyDraft()); setFormError(null); setOpen(true); }}>
             {t('crm.data.addServiceOffered')}
           </DuncitButton>
         }

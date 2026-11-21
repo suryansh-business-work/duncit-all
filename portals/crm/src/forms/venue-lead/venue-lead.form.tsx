@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { FormProvider, useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, AlertTitle, Box, Stack, Typography } from '@mui/material';
@@ -20,13 +20,14 @@ import VenueCommercialSection from './sections/VenueCommercialSection';
 import VenueAmenitiesSection from './sections/VenueAmenitiesSection';
 import VenueMediaSection from './sections/VenueMediaSection';
 import VenueWebsiteSection from './sections/VenueWebsiteSection';
-import VenueServicesSection from './sections/VenueServicesSection';
+import LeadServicesSection from '../fields/LeadServicesSection';
 import VenueLinkedHostsSection from './sections/VenueLinkedHostsSection';
 import VenueBrandingSection from './sections/VenueBrandingSection';
 import VenueDynamicSection from './sections/VenueDynamicSection';
 import VenueTrackingSection from './sections/VenueTrackingSection';
 import type { CrmOptionGroup } from '../../api/crm.types';
 import { useTranslation } from '@duncit/shell';
+import { withSocialLinks } from '../validation/socialLinks';
 
 interface Props {
   config: CrmOptionGroup;
@@ -56,7 +57,7 @@ const SECTIONS = [
   },
   { title: '7. Amenities', paths: ['amenities'] },
   { title: '8. Media', paths: ['photos', 'videos', 'brochure_url'] },
-  { title: '9. Website', paths: ['website'] },
+  { title: '9. Website & Social Links', paths: ['website', 'instagram_link', 'social_links'] },
   { title: '10. Services Offered', paths: ['services_offered'] },
   { title: '11. Linked Host Leads', paths: ['linked_host_ids'] },
   { title: '12. Logo & Tags', paths: ['logo_url', 'tags'] },
@@ -80,8 +81,10 @@ export default function VenueLeadForm({
   const { t } = useTranslation();
   const submitLabelText = submitLabel ?? t('crm.forms.saveVenueLead');
 
+  const schema = useMemo(() => withSocialLinks(venueLeadSchema, t, true), [t]);
+
   const methods = useForm<VenueLeadFormValues, any, VenueLeadFormValues>({
-    resolver: zodResolver(venueLeadSchema, undefined, { raw: true }) as unknown as Resolver<VenueLeadFormValues, any, VenueLeadFormValues>,
+    resolver: zodResolver(schema, undefined, { raw: true }) as unknown as Resolver<VenueLeadFormValues, any, VenueLeadFormValues>,
     mode: 'onChange',
     defaultValues: initialValues ?? venueLeadInitialValues,
   });
@@ -143,7 +146,7 @@ function VenueSections({ config }: Readonly<{ config: CrmOptionGroup }>) {
     <VenueAmenitiesSection key="amenities" config={config} />,
     <VenueMediaSection key="media" />,
     <VenueWebsiteSection key="website" />,
-    <VenueServicesSection key="services" />,
+    <LeadServicesSection key="services" appliesTo="VENUE" />,
     <VenueLinkedHostsSection key="linked-hosts" />,
     <VenueBrandingSection key="branding" />,
     <VenueDynamicSection key="dynamic" />,

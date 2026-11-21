@@ -2,7 +2,6 @@ import { Card, CardContent, Divider, Stack, Typography } from '@mui/material';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import ContactsIcon from '@mui/icons-material/Contacts';
 import StorefrontIcon from '@mui/icons-material/Storefront';
-import HandymanIcon from '@mui/icons-material/Handyman';
 import LanguageIcon from '@mui/icons-material/Language';
 import StickyNote2Icon from '@mui/icons-material/StickyNote2';
 import EventNoteIcon from '@mui/icons-material/EventNote';
@@ -11,11 +10,13 @@ import AssignmentIcon from '@mui/icons-material/Assignment';
 import type { EcommLead } from '../../api/crm.types';
 import { LeadDetailCard, LeadDetailRow } from '../../components/LeadDetailCard';
 import ContactsTab from '../../components/contacts-tab';
-import ServicesGrid from '../../components/ServicesGrid';
+import { leadServicesTab } from '../../components/leadServicesTab';
+import { leadMediaTab } from '../../components/lead-media/leadMediaTab';
 import CommsLogsSection from '../../components/CommsLogsSection';
 import ManualLogsTab from '../../components/ManualLogsTab';
 import { remindersTab } from '../../components/reminders-tab/remindersTab';
 import ExternalLink from '../../components/ExternalLink';
+import SocialLinksRows from '../../components/SocialLinksRows';
 import LeadSurveyTab from '../../components/lead-survey/LeadSurveyTab';
 import DynamicValuesView from '../../components/DynamicValuesView';
 import type { LeadTab } from '../../components/LeadTabs';
@@ -59,6 +60,7 @@ function OverviewTab({ lead }: Readonly<{ lead: EcommLead }>) {
             label={t('crm.common.instagram')}
             value={lead.instagram_link ? <ExternalLink variant="body2" href={lead.instagram_link} /> : '—'}
           />
+          <SocialLinksRows links={lead.social_links} />
           <LeadDetailRow label={t('crm.ecommLeads.marketplaces')} value={joinList(lead.marketplace_links)} />
         </LeadDetailCard>
       </Stack>
@@ -129,27 +131,8 @@ export function buildEcommLeadTabs(lead: EcommLead, t: Translate): LeadTab[] {
         <ContactsTab entity="ECOMM_LEAD" leadId={lead.id} leadName={lead.seller_name} contacts={lead.contacts} />
       ),
     },
-    {
-      value: 'services',
-      label: `Services (${lead.services_offered.length})`,
-      icon: <HandymanIcon fontSize="small" />,
-      render: () => {
-        const serviceCount = lead.services_offered.length;
-        const servicePlural = serviceCount === 1 ? '' : 's';
-        const servicesSubtitle = serviceCount
-          ? `${serviceCount} service${servicePlural} tagged`
-          : 'Catalogue managed via Manage Ecomm Services';
-        return (
-        <LeadDetailCard
-          title={t('crm.common.servicesOffered')}
-          subtitle={servicesSubtitle}
-          icon={<HandymanIcon color="primary" />}
-        >
-          <ServicesGrid services={lead.services_offered} />
-        </LeadDetailCard>
-        );
-      },
-    },
+    leadServicesTab(lead.services_offered, t),
+    leadMediaTab('ECOMM_LEAD', lead.id, t),
     {
       value: 'survey',
       label: t('crm.common.survey'),

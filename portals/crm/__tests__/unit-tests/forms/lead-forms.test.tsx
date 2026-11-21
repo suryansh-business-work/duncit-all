@@ -48,6 +48,8 @@ describe('VenueLeadForm', () => {
   it('renders all 14 sections by their numbered titles', () => {
     wrap(<VenueLeadForm config={config} onSubmit={() => undefined} />);
     expect(screen.getByText(/1\. Venue Details/)).toBeTruthy();
+    expect(screen.getByText(/9\. Website & Social Links/)).toBeTruthy();
+    expect(screen.getByText(/10\. Services Offered/)).toBeTruthy();
     expect(screen.getByText(/14\. Internal Lead Tracking/)).toBeTruthy();
   });
 

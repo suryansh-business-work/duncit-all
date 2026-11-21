@@ -1,6 +1,8 @@
 import type { CrmContact } from '../../api/crm.types';
 import type { CommunityLead, CreatorLead, ProspectLeadBase } from '../../api/prospectLeads.types';
 import { emptyContact } from '../fields/ContactsField';
+import { cleanSocialLinks, socialLinksToForm } from '../validation/socialLinks';
+import { cleanServices, servicesToForm } from '../validation/services';
 import {
   communityLeadInitialValues,
   creatorLeadInitialValues,
@@ -41,6 +43,8 @@ function backboneInput(v: ProspectBackboneValues) {
     contacts: cleanContacts(v.contacts),
     website: v.website.trim(),
     instagram_link: v.instagram_link.trim(),
+    social_links: cleanSocialLinks(v.social_links),
+    services_offered: cleanServices(v.services_offered),
     tags: cleanList(v.tags),
     profile_photo_url: v.profile_photo_url.trim(),
     dynamic_values_json: v.dynamic_values_json || '{}',
@@ -61,6 +65,8 @@ function backboneValues(lead: ProspectLeadBase): ProspectBackboneValues {
     contacts: lead.contacts?.length ? lead.contacts.map((c) => ({ ...emptyContact, ...c })) : [{ ...emptyContact }],
     website: lead.website ?? '',
     instagram_link: lead.instagram_link ?? '',
+    social_links: socialLinksToForm(lead.social_links),
+    services_offered: servicesToForm(lead.services_offered),
     tags: lead.tags ?? [],
     profile_photo_url: lead.profile_photo_url ?? '',
     dynamic_values_json: lead.dynamic_values_json || '{}',

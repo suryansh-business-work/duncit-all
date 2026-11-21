@@ -320,13 +320,14 @@ describe('VenueLeadsPage navigation and dialogs', () => {
   const renderRouted = (mocks: MockedResponse[]) =>
     renderWithApollo(<VenueLeadsPage />, mocks, { route: '/venue-leads', path: '/venue-leads' });
 
-  it('opens the services catalogue', async () => {
+  it('opens the shared Services Offered catalogue', async () => {
     renderRouted([tableMock([])]);
     await screen.findByText(/No venue leads yet/i);
 
-    fireEvent.click(screen.getByText('Manage Venue Services'));
+    expect(screen.queryByText('Manage Venue Services')).toBeNull();
+    fireEvent.click(screen.getByText('Manage Services'));
 
-    expect(screen.getByTestId('location')).toHaveTextContent('/venue-leads/services');
+    expect(screen.getByTestId('location')).toHaveTextContent(/^\/data\/services-offered$/);
   });
 
   it('opens the create form', async () => {

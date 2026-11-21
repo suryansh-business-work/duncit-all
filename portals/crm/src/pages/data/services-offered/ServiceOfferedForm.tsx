@@ -2,14 +2,13 @@ import { useState } from 'react';
 import { Autocomplete, Chip, Divider, MenuItem, Stack, TextField } from '@mui/material';
 import { useCategoriesByParent } from '../../../api/useCategoryTree';
 import ServiceTargetSwitches from './ServiceTargetSwitches';
+import { pickServiceTargets, type ServiceTargets } from '../../../config/serviceTargets';
 import { useTranslation } from '@duncit/shell';
 
-export interface ServiceOfferedDraft {
+export interface ServiceOfferedDraft extends ServiceTargets {
   super_category_id: string;
   category_id: string;
   sub_category_id: string;
-  applies_to_venue: boolean;
-  applies_to_host: boolean;
   titles: string[];
 }
 
@@ -106,11 +105,7 @@ export default function ServiceOfferedForm({ value, onChange }: Readonly<Props>)
       />
 
       <Divider flexItem />
-      <ServiceTargetSwitches
-        venue={value.applies_to_venue}
-        host={value.applies_to_host}
-        onChange={({ venue, host }) => set({ applies_to_venue: venue, applies_to_host: host })}
-      />
+      <ServiceTargetSwitches value={pickServiceTargets(value)} onChange={(targets) => set(targets)} />
     </Stack>
   );
 }

@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { FormProvider, useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, AlertTitle, Box, Stack, Typography } from '@mui/material';
@@ -11,11 +12,12 @@ import EcommBasicSection from './sections/EcommBasicSection';
 import EcommContactsSection from './sections/EcommContactsSection';
 import EcommCatalogSection from './sections/EcommCatalogSection';
 import EcommPresenceSection from './sections/EcommPresenceSection';
-import EcommServicesSection from './sections/EcommServicesSection';
+import LeadServicesSection from '../fields/LeadServicesSection';
 import EcommBrandingSection from './sections/EcommBrandingSection';
 import EcommTrackingSection from './sections/EcommTrackingSection';
 import type { CrmOptionGroup } from '../../api/crm.types';
 import { useTranslation } from '@duncit/shell';
+import { withSocialLinks } from '../validation/socialLinks';
 
 interface Props {
   config: CrmOptionGroup;
@@ -33,7 +35,7 @@ const SECTIONS = [
   { title: '1. Basic Details', expanded: true, paths: ['super_category_id', 'seller_name', 'brand_name', 'business_type', 'city', 'area'] },
   { title: '2. Contact Details', paths: ['contacts'] },
   { title: '3. Products & Catalogue', paths: ['product_categories', 'catalog_size', 'price_range', 'fulfilment_mode', 'monthly_orders'] },
-  { title: '4. Tax & Online Presence', paths: ['gst_number', 'gst_applicable', 'website', 'instagram_link', 'marketplace_links'] },
+  { title: '4. Tax & Online Presence', paths: ['gst_number', 'gst_applicable', 'website', 'instagram_link', 'social_links', 'marketplace_links'] },
   { title: '5. Services Offered', paths: ['services_offered'] },
   { title: '6. Photo, Tags & Custom Fields', paths: ['profile_photo_url', 'tags', 'dynamic_values_json'] },
   {
@@ -55,8 +57,10 @@ export default function EcommLeadForm({
   const { t } = useTranslation();
   const submitLabelText = submitLabel ?? t('crm.forms.saveEcommLead');
 
+  const schema = useMemo(() => withSocialLinks(ecommLeadSchema, t), [t]);
+
   const methods = useForm<EcommLeadFormValues, any, EcommLeadFormValues>({
-    resolver: zodResolver(ecommLeadSchema, undefined, { raw: true }) as unknown as Resolver<EcommLeadFormValues, any, EcommLeadFormValues>,
+    resolver: zodResolver(schema, undefined, { raw: true }) as unknown as Resolver<EcommLeadFormValues, any, EcommLeadFormValues>,
     mode: 'onChange',
     defaultValues: initialValues ?? ecommLeadInitialValues,
   });
@@ -107,7 +111,7 @@ function EcommSections({ config }: Readonly<{ config: CrmOptionGroup }>) {
     <EcommContactsSection key="contacts" />,
     <EcommCatalogSection key="catalog" />,
     <EcommPresenceSection key="presence" />,
-    <EcommServicesSection key="services" />,
+    <LeadServicesSection key="services" appliesTo="ECOMM" />,
     <EcommBrandingSection key="branding" />,
     <EcommTrackingSection key="tracking" config={config} />,
   ];

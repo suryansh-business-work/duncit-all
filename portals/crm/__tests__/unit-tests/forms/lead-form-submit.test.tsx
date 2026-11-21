@@ -255,3 +255,65 @@ describe('EcommLeadForm', () => {
     expect(screen.getByRole('button', { name: /Saving/ })).toBeInTheDocument();
   });
 });
+
+describe('social links on the lead forms', () => {
+  it('blocks a venue save while a named social link has no link', async () => {
+    const onSubmit = vi.fn();
+    mount(
+      <VenueLeadForm config={config} initialValues={{ ...validVenue, social_links: [{ name: 'Facebook', url: '' }] }} onSubmit={onSubmit} />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save venue lead' }));
+
+    expect(await screen.findByText('1 field has validation errors')).toBeInTheDocument();
+    expect(screen.getAllByText('Add the link for this name').length).toBeGreaterThan(0);
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it('hands a venue lead its Instagram and social links on save', async () => {
+    const onSubmit = vi.fn(() => Promise.resolve());
+    const social_links = [{ name: 'YouTube', url: 'https://youtube.com/@sunrise' }];
+    mount(
+      <VenueLeadForm
+        config={config}
+        initialValues={{ ...validVenue, instagram_link: 'https://instagram.com/sunrise', social_links }}
+        onSubmit={onSubmit}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save venue lead' }));
+
+    await waitFor(() =>
+      expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ instagram_link: 'https://instagram.com/sunrise', social_links }))
+    );
+  });
+
+  it('refuses a javascript: social link on a host lead', async () => {
+    const onSubmit = vi.fn();
+    mount(
+      <HostLeadForm
+        config={config}
+        initialValues={{ ...validHost, social_links: [{ name: 'X', url: 'javascript:alert(1)' }] }}
+        onSubmit={onSubmit}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save host lead' }));
+
+    expect(await screen.findByText('1 field has validation errors')).toBeInTheDocument();
+    expect(screen.getAllByText('Enter a full link starting with https://').length).toBeGreaterThan(0);
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it('saves an ecomm lead with a blank social row left in', async () => {
+    const onSubmit = vi.fn(() => Promise.resolve());
+    mount(
+      <EcommLeadForm config={config} initialValues={{ ...validEcomm, social_links: [{ name: '', url: '' }] }} onSubmit={onSubmit} />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save ecomm lead' }));
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(screen.queryByText(/validation errors/)).toBeNull();
+  });
+});

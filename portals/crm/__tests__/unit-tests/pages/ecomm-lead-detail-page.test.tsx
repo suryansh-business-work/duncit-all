@@ -166,6 +166,7 @@ describe('EcommLeadDetailPage', () => {
             { service: 'Other', custom_name: null, description: null },
             { service: 'Catering', custom_name: null, description: null },
           ],
+          social_links: [{ name: 'Facebook', url: 'https://facebook.com/kavyahandlooms' }],
         }),
       ),
     ]);
@@ -211,6 +212,12 @@ describe('EcommLeadDetailPage', () => {
       'href',
       'https://instagram.com/kavyahandlooms',
     );
+    // An extra social link is a row named by the operator, linking out.
+    expect(rowValue(panel, 'Facebook')).toBe('https://facebook.com/kavyahandlooms');
+    expect(within(panel).getByRole('link', { name: /facebook\.com\/kavyahandlooms/ })).toHaveAttribute(
+      'href',
+      'https://facebook.com/kavyahandlooms',
+    );
     expect(rowValue(panel, 'Marketplaces')).toBe('Amazon, Flipkart');
     expect(within(panel).getByText('NOTES')).toBeInTheDocument();
     expect(within(panel).getByText('Call after Pongal')).toBeInTheDocument();
@@ -226,7 +233,7 @@ describe('EcommLeadDetailPage', () => {
     expect(tile('Next follow-up')).toHaveTextContent('—');
 
     fireEvent.click(screen.getByRole('tab', { name: 'Services (0)' }));
-    expect(await screen.findByText('Catalogue managed via Manage Ecomm Services')).toBeInTheDocument();
+    expect(await screen.findByText('No services yet. Add them on the lead form.')).toBeInTheDocument();
   });
 
   it('opens the contacts, services, custom-field and manual-log tabs with the lead data', async () => {
@@ -259,7 +266,7 @@ describe('EcommLeadDetailPage', () => {
     fireEvent.click(screen.getByRole('tab', { name: 'Services (1)' }));
     const services = screen.getByTestId('lead-tabpanel-services');
     expect(within(services).getByRole('heading', { name: 'Services offered' })).toBeInTheDocument();
-    expect(within(services).getByText('1 service tagged')).toBeInTheDocument();
+    expect(within(services).getByText('1 service')).toBeInTheDocument();
     expect(within(services).getByText('Veg + Jain menus')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('tab', { name: 'Custom Fields' }));
@@ -327,7 +334,7 @@ describe('EcommLeadDetailPage', () => {
     await screen.findByRole('heading', { level: 1, name: 'Kavya Iyer' });
 
     fireEvent.click(screen.getByRole('tab', { name: 'Services (2)' }));
-    expect(screen.getByText('2 services tagged')).toBeInTheDocument();
+    expect(within(screen.getByTestId('lead-tabpanel-services')).getByText('2 services')).toBeInTheDocument();
   });
 
   it('opens Ask AI grounded in this ecomm lead', async () => {

@@ -89,8 +89,7 @@ export default function VenueLeadsPage() {
       <LeadsToolbar
         title={t('shell.nav.venueLeads')}
         subtitle={t('crm.venueLeads.captureAndTrackVenuePartnershipLeads')}
-        onManageServices={() => navigate('/venue-leads/services')}
-        manageServicesLabel="Manage Venue Services"
+        onManageServices={() => navigate('/data/services-offered')}
         onFillWithAi={() => setShowAi(true)}
         onImport={() => setShowImport(true)}
         onExport={() => fetchExcel('export')}

@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router';
 import { Box, Snackbar, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import MarkEmailReadIcon from '@mui/icons-material/MarkEmailRead';
+import SettingsIcon from '@mui/icons-material/Settings';
 import { DuncitButton } from '@duncit/buttons';
 import { useApolloTableFetch } from '@duncit/table';
 import {
@@ -46,20 +47,26 @@ export default function EmailTemplatesPage() {
 
   return (
     <Stack spacing={2.5}>
-      <Stack direction="row" spacing={1} sx={{
-        alignItems: "center"
-      }}>
-        <MarkEmailReadIcon color="primary" />
-        <Box>
-          <Typography component="h1" variant="h5" sx={{
-            fontWeight: 800
-          }}>{t('shell.nav.emailTemplates')}</Typography>
-          <Typography variant="body2" sx={{
-            color: "text.secondary"
-          }}>
-            CRM-owned MJML templates with variables. Open one to edit the source and preview.
-          </Typography>
-        </Box>
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ alignItems: { sm: 'center' } }}>
+        <Stack direction="row" spacing={1} sx={{ alignItems: 'center', flex: 1, minWidth: 0 }}>
+          <MarkEmailReadIcon color="primary" />
+          <Box>
+            <Typography component="h1" variant="h5" sx={{ fontWeight: 800 }}>
+              {t('shell.nav.emailTemplates')}
+            </Typography>
+            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+              {t('crm.emailTemplates.listIntro')}
+            </Typography>
+          </Box>
+        </Stack>
+        <DuncitButton
+          variant="outlined"
+          startIcon={<SettingsIcon />}
+          onClick={() => navigate('/email-templates/settings')}
+          sx={{ alignSelf: { xs: 'flex-start', sm: 'center' } }}
+        >
+          {t('crm.emailTemplates.settings')}
+        </DuncitButton>
       </Stack>
 
       <TemplatesTable

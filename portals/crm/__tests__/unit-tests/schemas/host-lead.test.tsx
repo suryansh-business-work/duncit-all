@@ -3,6 +3,8 @@ import { hostLeadSchema } from '@/forms/host-lead/host-lead.schema';
 import { hostLeadInitialValues } from '@/forms/host-lead/host-lead.types';
 import { fromHostLead, toHostLeadInput } from '@/forms/host-lead/host-lead.map';
 import type { HostLead } from '@/api/crm.types';
+import { withSocialLinks } from '@/forms/validation/socialLinks';
+import { englishT } from '../helpers/englishT';
 
 const valid = {
   ...hostLeadInitialValues,
@@ -108,6 +110,7 @@ describe('fromHostLead', () => {
       services_offered: [
         { service: 'Other', custom_name: 'Photographer', description: '' },
       ],
+      social_links: [{ name: 'Meetup', url: 'https://meetup.com/pune-cricket' }],
       tags: [],
       dynamic_values_json: '{}',
       lead_status: 'Contacted',
@@ -122,5 +125,65 @@ describe('fromHostLead', () => {
     ]);
     expect(v.past_attendees).toBe('80');
     expect(v.need_venue).toBe(true);
+    expect(v.social_links).toEqual([{ name: 'Meetup', url: 'https://meetup.com/pune-cricket' }]);
+  });
+});
+
+describe('host lead social links', () => {
+  const issues = (value: unknown) => {
+    const result = withSocialLinks(hostLeadSchema, englishT()).safeParse(value);
+    return result.success ? [] : result.error.issues.map((i) => ({ path: i.path.join('.'), message: i.message }));
+  };
+
+  it('accepts a host with a named link and a blank row', () => {
+    expect(
+      issues({ ...valid, social_links: [{ name: 'Meetup', url: 'https://meetup.com/x' }, { name: '', url: '' }] }),
+    ).toEqual([]);
+  });
+
+  it('refuses a name with no link and a non-web scheme', () => {
+    expect(
+      issues({
+        ...valid,
+        social_links: [
+          { name: 'Meetup', url: '  ' },
+          { name: '', url: 'ftp://files.example.com/club' },
+        ],
+      }),
+    ).toEqual([
+      { path: 'social_links.0.url', message: 'Add the link for this name' },
+      { path: 'social_links.1.url', message: 'Enter a full link starting with https://' },
+    ]);
+  });
+
+  it('round-trips the links through the input and back, dropping blank rows', () => {
+    const input = toHostLeadInput({
+      ...valid,
+      social_links: [
+        { name: ' Meetup ', url: ' https://meetup.com/x ' },
+        { name: 'Unfilled', url: '' },
+      ],
+    });
+    expect(input.social_links).toEqual([{ name: 'Meetup', url: 'https://meetup.com/x' }]);
+
+    const lead: HostLead = {
+      id: 'h2',
+      host_name: 'Ravi Sharma',
+      contacts: [],
+      interests: [],
+      revenue_models: [],
+      need_venue: false,
+      need_vendor: false,
+      previous_events_hosted: false,
+      host_intent_scores: [],
+      services_offered: [],
+      social_links: input.social_links,
+      tags: [],
+      dynamic_values_json: '{}',
+      lead_status: 'New',
+      priority: 'Medium',
+      activity_log: [],
+    };
+    expect(fromHostLead(lead).social_links).toEqual(input.social_links);
   });
 });

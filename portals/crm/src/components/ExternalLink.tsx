@@ -23,11 +23,32 @@ const toSxList = (sx: LinkProps['sx']) => {
  * Typography component="a") because polymorphic Typography types don't
  * cleanly accept anchor-specific props like href/target.
  */
+/**
+ * The link to open, or null when the value is not a web address. A bare
+ * "instagram.com/x" becomes https://; any other scheme (javascript:, data:)
+ * is never handed to the browser.
+ */
+export function safeHref(href: string): string | null {
+  const value = href.trim();
+  for (const candidate of [value, `https://${value}`]) {
+    try {
+      const { protocol } = new URL(candidate);
+      if (protocol === 'https:' || protocol === 'http:') return candidate;
+      return null;
+    } catch {
+      // Not parseable as-is; try it as a bare host next.
+    }
+  }
+  return null;
+}
+
 export default function ExternalLink({ href, children, withIcon = true, sx, ...rest }: Readonly<Props>) {
+  const target = safeHref(href);
+  if (!target) return <>{children ?? href}</>;
   return (
     <Link
       {...rest}
-      href={href}
+      href={target}
       target="_blank"
       rel="noreferrer noopener"
       underline="hover"

@@ -16,7 +16,6 @@ import VenueCommercialSection from '@/forms/venue-lead/sections/VenueCommercialS
 import VenueAmenitiesSection from '@/forms/venue-lead/sections/VenueAmenitiesSection';
 import VenueMediaSection from '@/forms/venue-lead/sections/VenueMediaSection';
 import VenueWebsiteSection from '@/forms/venue-lead/sections/VenueWebsiteSection';
-import VenueServicesSection from '@/forms/venue-lead/sections/VenueServicesSection';
 import VenueLinkedHostsSection from '@/forms/venue-lead/sections/VenueLinkedHostsSection';
 import VenueBrandingSection from '@/forms/venue-lead/sections/VenueBrandingSection';
 import VenueDynamicSection from '@/forms/venue-lead/sections/VenueDynamicSection';
@@ -112,10 +111,6 @@ describe('venue form sections (smoke render)', () => {
   });
   it('renders VenueWebsiteSection', () => {
     const { container } = wrap(<VenueWebsiteSection />);
-    expect(container).toBeTruthy();
-  });
-  it('renders VenueServicesSection', () => {
-    const { container } = wrap(<VenueServicesSection />);
     expect(container).toBeTruthy();
   });
   it('renders VenueLinkedHostsSection', () => {

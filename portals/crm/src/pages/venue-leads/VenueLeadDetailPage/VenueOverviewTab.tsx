@@ -3,9 +3,12 @@ import LocationOnIcon from '@mui/icons-material/LocationOn';
 import EventIcon from '@mui/icons-material/Event';
 import HomeWorkIcon from '@mui/icons-material/HomeWork';
 import StickyNote2Icon from '@mui/icons-material/StickyNote2';
+import ShareIcon from '@mui/icons-material/Share';
 import type { VenueLead } from '../../../api/crm.types';
 import { LeadDetailCard, LeadDetailRow } from '../../../components/LeadDetailCard';
 import MapEmbed from '../../../components/MapEmbed';
+import ExternalLink from '../../../components/ExternalLink';
+import SocialLinksRows from '../../../components/SocialLinksRows';
 import { formatDateTime } from '@duncit/app-settings';
 import { formatCapacity, joinList, type TranslateFn } from './helpers';
 
@@ -46,6 +49,14 @@ export default function VenueOverviewTab({ lead, t, followUpLabel }: Readonly<Pr
           <LeadDetailRow label={t('crm.venueLeads.bookingNotice')} value={lead.booking_notice || '—'} />
           <LeadDetailRow label={t('crm.venueLeads.suitableFor')} value={joinList(lead.event_suitability)} />
           <LeadDetailRow label={t('crm.venueLeads.amenities')} value={joinList(lead.amenities)} />
+        </LeadDetailCard>
+
+        <LeadDetailCard title={t('crm.common.socialLinks')} icon={<ShareIcon color="primary" />}>
+          <LeadDetailRow
+            label={t('crm.common.instagram')}
+            value={lead.instagram_link ? <ExternalLink variant="body2" href={lead.instagram_link} /> : '—'}
+          />
+          <SocialLinksRows links={lead.social_links} />
         </LeadDetailCard>
       </Stack>
 

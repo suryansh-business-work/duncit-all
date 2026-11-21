@@ -46,6 +46,8 @@ const backbone = {
   contacts: [{ name: 'Riya', role: 'Owner', mobile_number: '9811100001', whatsapp_number: '', email: 'riya@example.com' }],
   website: '',
   instagram_link: '',
+  social_links: [{ name: 'YouTube', url: 'https://youtube.com/@riyaruns' }],
+  services_offered: [{ service: 'Run coaching', custom_name: null, description: 'Weekend 5k plans' }],
   tags: ['runner'],
   profile_photo_url: '',
   dynamic_values_json: '{}',
@@ -196,6 +198,22 @@ describe('ProspectLeadDetailPage', () => {
     expect(screen.getByText('Prefers barter.')).toBeInTheDocument();
     expect(screen.getByText('Assigned to Asha')).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: /Contacts \(1\)/ })).toBeInTheDocument();
+
+    // The extra social link sits under Online presence, labelled with its name and opening in a new tab.
+    const overview = screen.getByTestId('lead-tabpanel-overview');
+    expect(within(overview).getByText('YouTube')).toBeInTheDocument();
+    const youtube = within(overview).getByRole('link', { name: /youtube\.com\/@riyaruns/ });
+    expect(youtube).toHaveAttribute('href', 'https://youtube.com/@riyaruns');
+    expect(youtube).toHaveAttribute('target', '_blank');
+
+    // Services and Logos & Images are tabs on the creator page too.
+    expect(screen.getByTestId('lead-tab-services')).toHaveTextContent('Services (1)');
+    expect(screen.getByTestId('lead-tab-media')).toHaveTextContent('Logos & Images');
+    fireEvent.click(screen.getByTestId('lead-tab-services'));
+    const services = screen.getByTestId('lead-tabpanel-services');
+    expect(within(services).getByText('1 service')).toBeInTheDocument();
+    expect(within(services).getByText('Run coaching')).toBeInTheDocument();
+    expect(within(services).getByText('Weekend 5k plans')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
     expect(screen.getByTestId('location')).toHaveTextContent('/creator-leads/cr-1');

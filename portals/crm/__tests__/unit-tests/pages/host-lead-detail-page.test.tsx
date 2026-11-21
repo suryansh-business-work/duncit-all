@@ -40,6 +40,7 @@ const fullLead = hostLead({
   interests: ['Running', 'Cycling', 'Trekking', 'Yoga'],
   instagram_link: 'https://instagram.com/puneRunners',
   community_link: 'https://chat.whatsapp.com/pune-runners',
+  social_links: [{ name: 'Strava club', url: 'https://strava.com/clubs/pune-runners' }],
   preferred_event_date: '2026-10-20T00:00:00.000Z',
   need_vendor: true,
   notes: 'Wants a Sunday slot\nNo alcohol',
@@ -103,6 +104,11 @@ describe('HostLeadDetailPage', () => {
       'href',
       'https://chat.whatsapp.com/pune-runners',
     );
+    expect(rowValue(overview, 'Strava club')).toBe('https://strava.com/clubs/pune-runners');
+    expect(within(overview).getByRole('link', { name: /strava\.com\/clubs/ })).toHaveAttribute(
+      'href',
+      'https://strava.com/clubs/pune-runners',
+    );
     expect(rowValue(overview, 'Community size')).toBe('400');
     expect(rowValue(overview, 'Previous events')).toBe('Yes');
     expect(rowValue(overview, 'Past attendees')).toBe('120');
@@ -158,7 +164,7 @@ describe('HostLeadDetailPage', () => {
     expect(rowValue(plans, 'Preferred slot')).toBe('—');
 
     const services = openTab('services');
-    expect(within(services).getByText('Catalogue managed via Manage Host Services')).toBeInTheDocument();
+    expect(within(services).getByText('No services yet. Add them on the lead form.')).toBeInTheDocument();
     expect(screen.getByTestId('lead-tab-services')).toHaveTextContent('Services (0)');
   });
 
@@ -180,7 +186,7 @@ describe('HostLeadDetailPage', () => {
   it('counts tagged services in the singular and plural', async () => {
     const { unmount } = renderPage(fullLead);
     await screen.findByRole('heading', { level: 1, name: 'Pune Runners' });
-    expect(within(openTab('services')).getByText('1 service tagged')).toBeInTheDocument();
+    expect(within(openTab('services')).getByText('1 service')).toBeInTheDocument();
     unmount();
 
     renderPage(
@@ -192,7 +198,7 @@ describe('HostLeadDetailPage', () => {
       }),
     );
     await screen.findByRole('heading', { level: 1, name: 'Pune Runners' });
-    expect(within(openTab('services')).getByText('2 services tagged')).toBeInTheDocument();
+    expect(within(openTab('services')).getByText('2 services')).toBeInTheDocument();
   });
 
   it('lists the contacts, custom fields and manual logs of the lead', async () => {

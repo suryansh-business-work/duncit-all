@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import type { useTranslation } from '@duncit/shell';
-import { contactsSchema, numeric, urlish } from '../validation/lead-rules';
+import { contactsSchema, numeric, serviceOfferedSchema, urlish } from '../validation/lead-rules';
+import { socialLinksSchema } from '../validation/socialLinks';
 
 type Translate = ReturnType<typeof useTranslation>['t'];
 
@@ -14,6 +15,8 @@ const backbone = (t: Translate) => ({
   website: urlish('Website'),
   instagram_link: z.string().trim().max(2048, t('crm.prospectLeads.linkTooLong')),
   contacts: contactsSchema,
+  social_links: socialLinksSchema(t),
+  services_offered: z.array(serviceOfferedSchema),
   lead_status: z.string().min(1, t('crm.prospectLeads.statusRequired')),
   priority: z.string().min(1, t('crm.prospectLeads.priorityRequired')),
 });

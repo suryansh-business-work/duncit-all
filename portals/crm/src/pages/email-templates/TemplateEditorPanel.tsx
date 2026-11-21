@@ -54,6 +54,7 @@ export default function TemplateEditorPanel(p: Readonly<Props>) {
           onValidate={p.onValidate}
           templateId={draft.template_id}
           images={draft.images}
+          target={draft.target}
           onImagesChange={p.onImagesChange}
         />
         <PreviewVariablesPane

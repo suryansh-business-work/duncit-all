@@ -1,4 +1,4 @@
-import type { CrmContact } from '../../api/crm.types';
+import type { CrmContact, CrmServiceOffered, CrmSocialLink } from '../../api/crm.types';
 import { emptyContact } from '../fields/ContactsField';
 
 /** Fields every creator and community lead form has. Numbers are edited as strings. */
@@ -9,6 +9,8 @@ export interface ProspectBackboneValues {
   contacts: CrmContact[];
   website: string;
   instagram_link: string;
+  social_links: CrmSocialLink[];
+  services_offered: CrmServiceOffered[];
   tags: string[];
   profile_photo_url: string;
   dynamic_values_json: string;
@@ -52,6 +54,8 @@ const backboneInitialValues: ProspectBackboneValues = {
   contacts: [{ ...emptyContact }],
   website: '',
   instagram_link: '',
+  social_links: [],
+  services_offered: [],
   tags: [],
   profile_photo_url: '',
   dynamic_values_json: '{}',

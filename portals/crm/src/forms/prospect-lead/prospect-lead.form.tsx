@@ -17,6 +17,7 @@ import CommunityProfileSection from './sections/CommunityProfileSection';
 import CommunityDetailsSection from './sections/CommunityDetailsSection';
 import ProspectPresenceSection from './sections/ProspectPresenceSection';
 import ProspectBrandingSection from './sections/ProspectBrandingSection';
+import LeadServicesSection from '../fields/LeadServicesSection';
 
 interface Props<T extends FieldValues> {
   entity: ProspectLeadEntity;
@@ -66,7 +67,12 @@ function sectionsFor(entity: ProspectLeadEntity, config: CrmOptionGroup): Sectio
           paths: ['member_count', 'meetup_frequency', 'interests', 'partnership_interests'],
           render: () => <CommunityDetailsSection config={config} />,
         },
-    { titleKey: 'crm.prospectLeads.sectionPresence', paths: ['website', 'instagram_link'], render: () => <ProspectPresenceSection /> },
+    { titleKey: 'crm.prospectLeads.sectionPresence', paths: ['website', 'instagram_link', 'social_links'], render: () => <ProspectPresenceSection /> },
+    {
+      titleKey: 'crm.common.servicesOffered',
+      paths: ['services_offered'],
+      render: () => <LeadServicesSection appliesTo={creator ? 'CREATOR' : 'COMMUNITY'} />,
+    },
     { titleKey: 'crm.prospectLeads.sectionBranding', paths: BRANDING_PATHS, render: () => <ProspectBrandingSection entity={entity} /> },
     { titleKey: 'crm.prospectLeads.sectionTracking', paths: TRACKING_PATHS, render: () => <EcommTrackingSection config={config} /> },
   ];

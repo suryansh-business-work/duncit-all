@@ -14,11 +14,11 @@ import ProspectLeadEditorPage from './pages/prospect-leads/ProspectLeadEditorPag
 import ProspectLeadDetailPage from './pages/prospect-leads/ProspectLeadDetailPage';
 import HostLeadEditorPage from './pages/host-leads/HostLeadEditorPage';
 import HostLeadDetailPage from './pages/host-leads/HostLeadDetailPage';
-import ManageServicesPage from './pages/ManageServicesPage';
 import ManageDynamicFieldsPage from './pages/ManageDynamicFieldsPage';
 import CallPromptsPage from './pages/call-prompts';
 import EmailTemplatesPage from './pages/email-templates';
 import EmailTemplateEditorPage from './pages/email-templates/EditorPage';
+import EmailTemplateSettingsPage from './pages/email-templates/settings';
 import RemindersPage from './pages/reminders';
 import ServicesOfferedPage from './pages/data/services-offered';
 import UserLeadsPage from './pages/user-leads/UserLeadsPage';
@@ -49,17 +49,17 @@ export default function App() {
       <Route path="/s/:token" element={<PublicSurveyPage />} />
       <Route path="/" element={authed(<DashboardPage />)} />
       <Route path="/venue-leads" element={authed(<VenueLeadsPage />)} />
-      <Route path="/venue-leads/services" element={authed(<ManageServicesPage kind="VENUE" />)} />
+      <Route path="/venue-leads/services" element={<Navigate to="/data/services-offered" replace />} />
       <Route path="/venue-leads/new" element={authed(<VenueLeadEditorPage />)} />
       <Route path="/venue-leads/:id/view" element={authed(<VenueLeadDetailPage />)} />
       <Route path="/venue-leads/:id" element={authed(<VenueLeadEditorPage />)} />
       <Route path="/host-leads" element={authed(<HostLeadsPage />)} />
-      <Route path="/host-leads/services" element={authed(<ManageServicesPage kind="HOST" />)} />
+      <Route path="/host-leads/services" element={<Navigate to="/data/services-offered" replace />} />
       <Route path="/host-leads/new" element={authed(<HostLeadEditorPage />)} />
       <Route path="/host-leads/:id/view" element={authed(<HostLeadDetailPage />)} />
       <Route path="/host-leads/:id" element={authed(<HostLeadEditorPage />)} />
       <Route path="/ecomm-leads" element={authed(<EcommLeadsPage />)} />
-      <Route path="/ecomm-leads/services" element={authed(<ManageServicesPage kind="ECOMM" />)} />
+      <Route path="/ecomm-leads/services" element={<Navigate to="/data/services-offered" replace />} />
       <Route path="/ecomm-leads/new" element={authed(<EcommLeadEditorPage />)} />
       <Route path="/ecomm-leads/:id/view" element={authed(<EcommLeadDetailPage />)} />
       <Route path="/ecomm-leads/:id" element={authed(<EcommLeadEditorPage />)} />
@@ -77,6 +77,7 @@ export default function App() {
       <Route path="/tools/email-verifier" element={authed(<EmailVerifierPage />)} />
       <Route path="/call-prompts" element={authed(<CallPromptsPage />)} />
       <Route path="/email-templates" element={authed(<EmailTemplatesPage />)} />
+      <Route path="/email-templates/settings" element={authed(<EmailTemplateSettingsPage />)} />
       <Route path="/email-templates/:id" element={authed(<EmailTemplateEditorPage />)} />
       <Route path="/reminders" element={authed(<RemindersPage />)} />
       <Route path="/data/services-offered" element={authed(<ServicesOfferedPage />)} />

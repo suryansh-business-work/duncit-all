@@ -6,7 +6,65 @@ import { fromHostLead, toHostLeadInput } from '@/forms/host-lead/host-lead.map';
 import { hostLeadInitialValues } from '@/forms/host-lead/host-lead.types';
 import { fromVenueLead, toVenueLeadInput } from '@/forms/venue-lead/venue-lead.map';
 import { venueLeadInitialValues } from '@/forms/venue-lead/venue-lead.types';
+import type { CommunityLead, CreatorLead } from '@/api/prospectLeads.types';
+import {
+  communityLeadInitialValues,
+  creatorLeadInitialValues,
+  fromCommunityLead,
+  fromCreatorLead,
+  toCommunityLeadInput,
+  toCreatorLeadInput,
+} from '@/forms/prospect-lead';
 import { ecommLead, hostLead, venueLead } from '../fixtures/leads';
+
+const prospectBackbone = {
+  super_category_id: 'sc-1',
+  super_category: null,
+  city: 'Pune',
+  area: null,
+  contacts: [],
+  website: null,
+  instagram_link: null,
+  social_links: [],
+  services_offered: [],
+  tags: [],
+  profile_photo_url: null,
+  dynamic_values_json: '{}',
+  lead_source: null,
+  assigned_to: null,
+  lead_status: 'New',
+  priority: 'Medium',
+  next_follow_up_date: null,
+  notes: null,
+  activity_log: [],
+  created_at: null,
+  updated_at: null,
+};
+const creator: CreatorLead = {
+  ...prospectBackbone,
+  id: 'cr-1',
+  creator_name: 'Riya Runs',
+  handle: null,
+  primary_platform: null,
+  niches: [],
+  followers_count: null,
+  engagement_rate: null,
+  profile_links: [],
+  collaboration_types: [],
+  rate_card: null,
+};
+const community: CommunityLead = {
+  ...prospectBackbone,
+  id: 'cm-1',
+  community_name: 'Trail Runners',
+  community_type: null,
+  platform: null,
+  member_count: null,
+  meetup_frequency: null,
+  community_link: null,
+  interests: [],
+  partnership_interests: [],
+};
 
 const blank: CrmContact = { name: '', role: '', mobile_number: '', whatsapp_number: '', email: '' };
 
@@ -326,6 +384,51 @@ describe('ecomm lead mapping', () => {
       next_follow_up_date: null,
       notes: '',
     });
+  });
+});
+
+describe('social links on the ecomm and prospect maps', () => {
+  const links = [
+    { name: ' Facebook ', url: ' https://facebook.com/kavya ' },
+    { name: 'Left blank', url: '   ' },
+  ];
+  const cleanedLinks = [{ name: 'Facebook', url: 'https://facebook.com/kavya' }];
+
+  it('sends an ecomm lead\'s links trimmed without blank rows, and reads them back', () => {
+    const input = toEcommLeadInput({ ...ecommLeadInitialValues, social_links: links });
+    expect(input.social_links).toEqual(cleanedLinks);
+    expect(fromEcommLead(ecommLead({ social_links: input.social_links })).social_links).toEqual(cleanedLinks);
+  });
+
+  it('gives an ecomm lead saved before social links existed an empty list', () => {
+    const legacy = { ...ecommLead(), social_links: null } as unknown as EcommLead;
+    expect(fromEcommLead(legacy).social_links).toEqual([]);
+  });
+
+  it('round-trips a creator lead\'s links and services', () => {
+    const input = toCreatorLeadInput({
+      ...creatorLeadInitialValues,
+      creator_name: 'Riya Runs',
+      social_links: links,
+      services_offered: services,
+    });
+    expect(input.social_links).toEqual(cleanedLinks);
+    expect(input.services_offered).toEqual(cleanedServices);
+
+    const values = fromCreatorLead({ ...creator, social_links: input.social_links, services_offered: input.services_offered });
+    expect(values.social_links).toEqual(cleanedLinks);
+    expect(values.services_offered).toEqual(cleanedServices);
+  });
+
+  it('round-trips a community lead, and fills missing lists from an older server with empty ones', () => {
+    const input = toCommunityLeadInput({ ...communityLeadInitialValues, community_name: 'Trail Runners', social_links: links });
+    expect(input.social_links).toEqual(cleanedLinks);
+    expect(input.services_offered).toEqual([]);
+
+    const legacy = { ...community, social_links: null, services_offered: null } as unknown as CommunityLead;
+    const values = fromCommunityLead(legacy);
+    expect(values.social_links).toEqual([]);
+    expect(values.services_offered).toEqual([]);
   });
 });
 

@@ -1,4 +1,4 @@
-import type { CrmContact, CrmServiceOffered } from '../../api/crm.types';
+import type { CrmContact, CrmServiceOffered, CrmSocialLink } from '../../api/crm.types';
 import { emptyContact } from '../fields/ContactsField';
 
 export interface VenueLeadFormValues {
@@ -33,6 +33,8 @@ export interface VenueLeadFormValues {
   brochure_url: string;
   website: string;
   services_offered: CrmServiceOffered[];
+  instagram_link: string;
+  social_links: CrmSocialLink[];
   linked_host_ids: string[];
   tags: string[];
   logo_url: string;
@@ -78,6 +80,8 @@ export const venueLeadInitialValues: VenueLeadFormValues = {
   brochure_url: '',
   website: '',
   services_offered: [],
+  instagram_link: '',
+  social_links: [],
   linked_host_ids: [],
   tags: [],
   logo_url: '',

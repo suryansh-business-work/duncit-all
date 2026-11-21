@@ -1,5 +1,7 @@
-import type { CrmContact, CrmServiceOffered, HostLead } from '../../api/crm.types';
+import type { CrmContact, HostLead } from '../../api/crm.types';
 import { emptyContact } from '../fields/ContactsField';
+import { cleanSocialLinks, socialLinksToForm } from '../validation/socialLinks';
+import { cleanServices, servicesToForm } from '../validation/services';
 import { hostLeadInitialValues, type HostLeadFormValues } from './host-lead.types';
 
 const toNum = (value: string): number | null => {
@@ -20,15 +22,6 @@ const cleanContacts = (contacts: CrmContact[]) =>
       mobile_number: c.mobile_number.trim(),
       whatsapp_number: c.whatsapp_number.trim(),
       email: c.email.trim(),
-    }));
-
-const cleanServices = (services: CrmServiceOffered[]) =>
-  services
-    .filter((s) => s?.service?.trim())
-    .map((s) => ({
-      service: s.service.trim(),
-      custom_name: (s.custom_name ?? '').trim(),
-      description: (s.description ?? '').trim(),
     }));
 
 /** Form values → GraphQL HostLeadInput. */
@@ -55,6 +48,7 @@ export function toHostLeadInput(v: HostLeadFormValues) {
     preferred_time_slot: v.preferred_time_slot.trim(),
     website: v.website.trim(),
     services_offered: cleanServices(v.services_offered),
+    social_links: cleanSocialLinks(v.social_links),
     instagram_link: v.instagram_link.trim(),
     community_link: v.community_link.trim(),
     community_size: toNum(v.community_size),
@@ -97,11 +91,8 @@ export function fromHostLead(lead: HostLead): HostLeadFormValues {
     preferred_day: lead.preferred_day ?? '',
     preferred_time_slot: lead.preferred_time_slot ?? '',
     website: lead.website ?? '',
-    services_offered: lead.services_offered.map((s) => ({
-      service: s.service,
-      custom_name: s.custom_name ?? '',
-      description: s.description ?? '',
-    })),
+    social_links: socialLinksToForm(lead.social_links),
+    services_offered: servicesToForm(lead.services_offered),
     instagram_link: lead.instagram_link ?? '',
     community_link: lead.community_link ?? '',
     community_size: numToStr(lead.community_size),

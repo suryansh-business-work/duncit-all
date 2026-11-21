@@ -254,8 +254,8 @@ describe('EcommLeadsPage', () => {
     expect(screen.getByTestId('location')).toHaveTextContent('/ecomm-leads/new');
 
     // The tooltip around the button takes over its accessible name, so find it by its text.
-    fireEvent.click(screen.getByText('Manage Ecomm Services').closest('button') as HTMLElement);
-    expect(screen.getByTestId('location')).toHaveTextContent('/ecomm-leads/services');
+    fireEvent.click(screen.getByText('Manage Services').closest('button') as HTMLElement);
+    expect(screen.getByTestId('location')).toHaveTextContent(/^\/data\/services-offered$/);
 
     fireEvent.click(screen.getByLabelText('Edit lead'));
     expect(screen.getByTestId('location')).toHaveTextContent(/^\/ecomm-leads\/ecomm-1$/);

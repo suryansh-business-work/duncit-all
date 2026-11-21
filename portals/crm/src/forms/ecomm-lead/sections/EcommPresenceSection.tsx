@@ -3,6 +3,7 @@ import { FormField } from '@duncit/forms';
 import FieldGrid from '../../fields/FieldGrid';
 import SwitchField from '../../fields/SwitchField';
 import TagsField from '../../fields/TagsField';
+import SocialLinksField from '../../fields/SocialLinksField';
 import { useTranslation } from '@duncit/shell';
 
 export default function EcommPresenceSection() {
@@ -17,6 +18,7 @@ export default function EcommPresenceSection() {
         <FormField name="website" label={t('crm.common.website')} size="small" placeholder="https://example.com" />
         <FormField name="instagram_link" label={t('crm.common.instagram')} size="small" placeholder="https://instagram.com/…" />
       </FieldGrid>
+      <SocialLinksField />
       <TagsField
         name="marketplace_links"
         label={t('crm.forms.marketplaceLinks')}

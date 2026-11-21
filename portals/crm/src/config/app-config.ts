@@ -70,6 +70,7 @@ export const appConfig = {
       icon: 'email',
       children: [
         { label: 'Templates', labelKey: 'shell.nav.templates', to: '/email-templates', icon: 'email' },
+        { label: 'Settings', labelKey: 'shell.nav.emailTemplateSettings', to: '/email-templates/settings', icon: 'settings' },
       ],
     },
     {

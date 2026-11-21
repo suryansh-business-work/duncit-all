@@ -89,8 +89,7 @@ export default function HostLeadsPage() {
       <LeadsToolbar
         title={t('shell.nav.hostLeads')}
         subtitle={t('crm.hostLeads.captureAndQualifyHostAndOrganizer')}
-        onManageServices={() => navigate('/host-leads/services')}
-        manageServicesLabel="Manage Host Services"
+        onManageServices={() => navigate('/data/services-offered')}
         onFillWithAi={() => setShowAi(true)}
         onImport={() => setShowImport(true)}
         onExport={() => fetchExcel('export')}

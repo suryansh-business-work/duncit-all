@@ -1,10 +1,11 @@
 import { gql } from '@apollo/client';
-import { ACTIVITY_FIELDS, CONTACT_FIELDS, SUPER_CATEGORY_FIELDS } from './crm.gql';
+import { ACTIVITY_FIELDS, CONTACT_FIELDS, SERVICE_FIELDS, SOCIAL_LINK_FIELDS, SUPER_CATEGORY_FIELDS } from './crm.gql';
 
 /** The lead backbone both kinds share (location, contacts, tags, tracking). */
 const BACKBONE_FIELDS = `
   super_category_id super_category { ${SUPER_CATEGORY_FIELDS} }
   city area contacts { ${CONTACT_FIELDS} } website instagram_link
+  social_links { ${SOCIAL_LINK_FIELDS} } services_offered { ${SERVICE_FIELDS} }
   tags profile_photo_url dynamic_values_json
   lead_source assigned_to lead_status priority next_follow_up_date notes
   activity_log { ${ACTIVITY_FIELDS} } created_at updated_at

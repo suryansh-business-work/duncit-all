@@ -1,4 +1,4 @@
-import type { CrmContact, CrmServiceOffered } from '../../api/crm.types';
+import type { CrmContact, CrmServiceOffered, CrmSocialLink } from '../../api/crm.types';
 import { emptyContact } from '../fields/ContactsField';
 
 export interface HostLeadFormValues {
@@ -23,6 +23,7 @@ export interface HostLeadFormValues {
   preferred_time_slot: string;
   website: string;
   services_offered: CrmServiceOffered[];
+  social_links: CrmSocialLink[];
   instagram_link: string;
   community_link: string;
   community_size: string;
@@ -62,6 +63,7 @@ export const hostLeadInitialValues: HostLeadFormValues = {
   preferred_time_slot: '',
   website: '',
   services_offered: [],
+  social_links: [],
   instagram_link: '',
   community_link: '',
   community_size: '',

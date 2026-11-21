@@ -63,8 +63,7 @@ export default function EcommLeadsPage() {
       <LeadsToolbar
         title={t('shell.nav.ecommLeads')}
         subtitle={t('crm.ecommLeads.captureAndQualifyProductSellersFrom')}
-        onManageServices={() => navigate('/ecomm-leads/services')}
-        manageServicesLabel="Manage Ecomm Services"
+        onManageServices={() => navigate('/data/services-offered')}
       />
 
       {error && <Alert severity="error" onClose={() => setError(null)}>{error}</Alert>}

@@ -19,6 +19,9 @@ import { remindersTab } from '../../components/reminders-tab/remindersTab';
 import ExternalLink from '../../components/ExternalLink';
 import DynamicValuesView from '../../components/DynamicValuesView';
 import type { LeadTab } from '../../components/LeadTabs';
+import SocialLinksRows from '../../components/SocialLinksRows';
+import { leadServicesTab } from '../../components/leadServicesTab';
+import { leadMediaTab } from '../../components/lead-media/leadMediaTab';
 import { profileRows } from './prospectDetails';
 
 type Translate = ReturnType<typeof useTranslation>['t'];
@@ -77,6 +80,7 @@ function OverviewTab({ lead }: Readonly<{ lead: ProspectLead }>) {
             label={t('crm.common.instagram')}
             value={lead.instagram_link ? <ExternalLink variant="body2" href={lead.instagram_link} /> : DASH}
           />
+          <SocialLinksRows links={lead.social_links} />
         </LeadDetailCard>
       </Stack>
       <Stack spacing={2.5} sx={{ width: { lg: 360 }, flexShrink: 0 }}>
@@ -106,6 +110,8 @@ export function buildProspectLeadTabs(
       icon: <ContactsIcon fontSize="small" />,
       render: () => <ContactsTab entity={entity} leadId={lead.id} leadName={displayName} contacts={lead.contacts} />,
     },
+    leadServicesTab(lead.services_offered ?? [], t),
+    leadMediaTab(entity, lead.id, t),
     {
       value: 'custom-fields',
       label: t('crm.common.customFields2'),

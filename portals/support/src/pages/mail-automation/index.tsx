@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useQuery } from '@apollo/client/react';
 import {
   Alert,
@@ -50,12 +50,6 @@ export default function MailAutomationPage() {
   */
   const [opened, setOpened] = useState<MailAutomationAccount | null>(null);
   const rows = data?.mailAutomationAccounts;
-
-  // The table caches its page until told otherwise, so a refetched list has to
-  // push itself in rather than wait to be asked.
-  useEffect(() => {
-    refetchRef.current?.();
-  }, [rows]);
 
   const onConfigure = useCallback((account: MailAutomationAccount) => {
     setOpened(account);

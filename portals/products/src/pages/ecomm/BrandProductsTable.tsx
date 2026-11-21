@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useMemo } from 'react';
 import { useApolloClient } from '@apollo/client/react';
 import { Avatar, Chip } from '@mui/material';
 import { DuncitTable, useApolloTableFetch, type DuncitColumn } from '@duncit/table';
@@ -31,7 +31,6 @@ const renderDimensions = (p: BrandProductRow) => (
 export default function BrandProductsTable({ brandId }: Readonly<Props>) {
   const { t } = useTranslation();
   const client = useApolloClient();
-  const refetchRef = useRef<(() => void) | null>(null);
   const { formatDate } = useDateFormat();
 
   const fetchRows = useApolloTableFetch<BrandProductRow>(
@@ -41,15 +40,6 @@ export default function BrandProductsTable({ brandId }: Readonly<Props>) {
     { extraVariables: { brand_doc_id: brandId } },
     [brandId],
   );
-
-  // Same route pattern → the component stays mounted when the brand param
-  // changes, so reload the page-1 rows for the new brand explicitly.
-  const lastBrandRef = useRef(brandId);
-  useEffect(() => {
-    if (lastBrandRef.current === brandId) return;
-    lastBrandRef.current = brandId;
-    refetchRef.current?.();
-  }, [brandId]);
 
   const columns = useMemo<DuncitColumn<BrandProductRow>[]>(
     () => [
@@ -113,7 +103,6 @@ export default function BrandProductsTable({ brandId }: Readonly<Props>) {
       emptyText={t('products.brandProducts.emptyApproved')}
       defaultSort={{ field: 'product_name', dir: 'asc' }}
       searchPlaceholder="Search product or SKU"
-      refetchRef={refetchRef}
     />
   );
 }

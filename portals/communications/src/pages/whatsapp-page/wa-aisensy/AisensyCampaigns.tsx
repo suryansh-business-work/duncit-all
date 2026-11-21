@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Alert, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { DuncitButton } from '@duncit/buttons';
@@ -100,10 +100,6 @@ export default function AisensyCampaigns({
   // The table re-reads only when its own query changes, so a fresh AiSensy
   // answer has to ask for the re-read — otherwise it keeps showing the list it
   // first mounted with.
-  const refetchRef = useRef<(() => void) | null>(null);
-  useEffect(() => {
-    refetchRef.current?.();
-  }, [fetchRows]);
 
   const selected = rows.find((campaign) => campaign.name === openName) ?? null;
   const template = selected ? templateFor(selected.name, campaigns, templates) : null;
@@ -117,7 +113,6 @@ export default function AisensyCampaigns({
       onRowClick={(campaign) => setOpenName(campaign.name)}
       searchPlaceholder="Search campaign, status or template"
       emptyText={t('marketing.whatsappCampaigns.noCampaignMatchesThatSearch')}
-      refetchRef={refetchRef}
     />
   );
 

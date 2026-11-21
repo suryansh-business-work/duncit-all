@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useQuery } from '@apollo/client/react';
 import { Alert, Box, Card, MenuItem, Snackbar, Stack, TextField, Typography } from '@mui/material';
 import type { TableFilterValue } from '@duncit/table';
@@ -65,12 +65,6 @@ export default function VenuePodsPage() {
   );
   const tabs = useTabParam<VenuePodPhase>({ items: tabItems, fallback: 'UPCOMING' });
   const tab = tabs.value;
-
-  // DuncitTable does not refetch when its fetchRows changes identity, so a fresh
-  // server response must poke its refetch handle.
-  useEffect(() => {
-    refetchRef.current?.();
-  }, [rows]);
 
   // The phase rides externalFilters — a value change resets to page 1 and
   // re-runs fetchRows without a second data source.

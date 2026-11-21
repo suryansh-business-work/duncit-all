@@ -2,7 +2,6 @@ import { useMemo } from 'react';
 import { DuncitTable, EM_DASH, clientTableFetch, type DuncitColumn } from '@duncit/table';
 import { useTranslation, type Translator } from '@duncit/app-settings';
 import SectionBlock from './SectionBlock';
-import { useTableRefresh } from './useTableRefresh';
 import { money, type PaymentProductOrderLine } from './queries';
 
 const getOrderRowId = (order: PaymentProductOrderLine) => order.id;
@@ -47,8 +46,6 @@ export default function ProductOrdersTable({ orders, currencySymbol }: Readonly<
     () => clientTableFetch(orders, orderSearchText, columns),
     [orders, columns],
   );
-  // A shipment retry writes the AWB onto these rows — see useTableRefresh.
-  const refetchRef = useTableRefresh(orders);
 
   return (
     <SectionBlock title={t('finance.payment.ordersTitle')}>
@@ -58,7 +55,6 @@ export default function ProductOrdersTable({ orders, currencySymbol }: Readonly<
         columns={columns}
         fetchRows={fetchRows}
         getRowId={getOrderRowId}
-        refetchRef={refetchRef}
         emptyText={t('finance.payment.ordersEmpty')}
         searchPlaceholder={t('finance.payment.ordersSearch')}
       />

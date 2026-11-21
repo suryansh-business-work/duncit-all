@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, type ReactNode } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import { Chip, Stack, Typography } from '@mui/material';
 import { DuncitTable, actionsColumn, clientTableFetch, type DuncitColumn } from '@duncit/table';
 import { useTranslation } from '@duncit/app-settings';
@@ -71,7 +71,6 @@ interface Props {
  */
 export default function DnsRecordsTable({ records, domain, toolbarActions, onEdit, onDelete }: Readonly<Props>) {
   const { t } = useTranslation();
-  const refetchRef = useRef<(() => void) | null>(null);
   // The types this zone actually holds — every one a filter could match.
   const types = useMemo(
     () => [...new Set(records.map((row) => row.type))].map((type) => ({ value: type, label: type })),
@@ -134,12 +133,6 @@ export default function DnsRecordsTable({ records, domain, toolbarActions, onEdi
   );
   const fetchRows = useMemo(() => clientTableFetch(records, searchOf, columns), [records, columns]);
 
-  // The table fetches once per query change, not per new fetch function — so a
-  // saved or deleted record has to ask it to read the new zone.
-  useEffect(() => {
-    refetchRef.current?.();
-  }, [fetchRows]);
-
   return (
     <DuncitTable<DnsRecord>
       ariaLabel={t('shell.nav.dnsRecords')}
@@ -151,7 +144,6 @@ export default function DnsRecordsTable({ records, domain, toolbarActions, onEdi
       emptyText={t('tech.dns.empty')}
       searchPlaceholder={t('tech.dns.searchPlaceholder')}
       defaultSort={{ field: 'name', dir: 'asc' }}
-      refetchRef={refetchRef}
     />
   );
 }

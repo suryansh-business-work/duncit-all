@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client/react';
 import { Alert, Box, Snackbar, Stack, Typography } from '@mui/material';
 import FactCheckIcon from '@mui/icons-material/FactCheck';
@@ -32,13 +32,6 @@ export default function ApprovalsPage() {
     { extraFilters: status ? [{ field: 'status', op: 'eq', value: status }] : undefined },
     [status],
   );
-
-  const prevStatusRef = useRef(status);
-  useEffect(() => {
-    if (prevStatusRef.current === status) return;
-    prevStatusRef.current = status;
-    refetchRef.current?.();
-  }, [status]);
 
   const openReview = useCallback((row: ApprovalRequest) => {
     setOpError(null);

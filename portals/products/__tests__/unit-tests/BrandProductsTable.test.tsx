@@ -1,6 +1,5 @@
-import { useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
-import { screen, fireEvent, waitFor } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import BrandProductsTable from '../../src/pages/ecomm/BrandProductsTable';
 import { renderWithProviders } from '../testkit';
 import { makeBrandProductRow } from '../mocks/ecommBrand.mock';
@@ -75,23 +74,5 @@ describe('BrandProductsTable', () => {
     // available_count null → inventory_count (4).
     expect(screen.getByText('4')).toBeInTheDocument();
     expect(screen.getByText('—')).toBeInTheDocument();
-  });
-
-  it('reloads when the brand id changes', async () => {
-    __setTableRows([]);
-    function Wrapper() {
-      const [brandId, setBrandId] = useState('b1');
-      return (
-        <>
-          <button onClick={() => setBrandId('b2')}>switch</button>
-          <BrandProductsTable brandId={brandId} />
-        </>
-      );
-    }
-    renderWithProviders(<Wrapper />);
-    await waitFor(() => expect(screen.getByTestId('duncit-table')).toBeInTheDocument());
-    // Changing the brand id runs the reload effect branch.
-    fireEvent.click(screen.getByRole('button', { name: 'switch' }));
-    expect(screen.getByTestId('duncit-table')).toBeInTheDocument();
   });
 });

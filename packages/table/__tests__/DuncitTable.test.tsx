@@ -137,6 +137,26 @@ describe('DuncitTable', () => {
     expect(screen.getByText('Name')).toBeInTheDocument();
   });
 
+  it('a new tableId is a new table: fresh search and that table’s own column prefs', async () => {
+    window.localStorage.setItem('duncit-table-cols:ai-table', JSON.stringify({ email: true }));
+    const codeFetch = makeFetch();
+    const aiFetch = makeFetch(people.slice(0, 2));
+    const props = { columns, getRowId: (row: Person) => row.id };
+    const { rerender } = render(<DuncitTable tableId="code-table" fetchRows={codeFetch} {...props} />);
+    await screen.findByText('Person 1');
+    fireEvent.change(screen.getByRole('textbox', { name: 'Search…' }), { target: { value: 'person 3' } });
+    await waitFor(() => expect(codeFetch).toHaveBeenCalledTimes(2), { timeout: 2000 });
+    expect(screen.getByText('Email')).toBeInTheDocument();
+
+    rerender(<DuncitTable tableId="ai-table" fetchRows={aiFetch} {...props} />);
+    await screen.findByText('Person 2');
+    expect(screen.getByRole('textbox', { name: 'Search…' })).toHaveValue('');
+    expect(aiFetch).toHaveBeenCalledTimes(1);
+    expect(aiFetch).toHaveBeenCalledWith(expect.objectContaining({ search: '', page: 1 }));
+    // The ai table hid Email in its own saved prefs; the code table's do not leak in.
+    await waitFor(() => expect(screen.queryByText('Email')).not.toBeInTheDocument());
+  });
+
   it('refetchRef.current() triggers a new fetch', async () => {
     const fetchRows = makeFetch();
     const refetchRef: { current: (() => void) | null } = { current: null };

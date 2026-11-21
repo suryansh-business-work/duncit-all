@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, type ReactNode } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import { Typography } from '@mui/material';
 import { DuncitTable, actionsColumn, clientTableFetch, type DuncitColumn } from '@duncit/table';
 import { StatusChip } from '@duncit/ui';
@@ -41,7 +41,6 @@ interface Props {
 /** Every Duncit website and its tag — six rows, paged in the browser. */
 export default function GoogleAnalyticsTable({ sites, toolbarActions, onEdit, onDelete }: Readonly<Props>) {
   const { t } = useTranslation();
-  const refetchRef = useRef<(() => void) | null>(null);
   const rows = useMemo<TagRow[]>(() => sites.map((row) => ({ ...row, status: tagStatus(row) })), [sites]);
 
   const columns = useMemo<DuncitColumn<TagRow>[]>(
@@ -96,12 +95,6 @@ export default function GoogleAnalyticsTable({ sites, toolbarActions, onEdit, on
   );
   const fetchRows = useMemo(() => clientTableFetch(rows, searchOf, columns), [rows, searchOf, columns]);
 
-  // The table fetches once per query change, not per new fetch function — so a
-  // saved or removed tag has to ask it to read the new list.
-  useEffect(() => {
-    refetchRef.current?.();
-  }, [fetchRows]);
-
   return (
     <DuncitTable<TagRow>
       ariaLabel={t('shell.nav.googleAnalytics')}
@@ -112,7 +105,6 @@ export default function GoogleAnalyticsTable({ sites, toolbarActions, onEdit, on
       toolbarActions={toolbarActions}
       emptyText={t('tech.googleAnalytics.empty')}
       searchPlaceholder={t('tech.googleAnalytics.searchPlaceholder')}
-      refetchRef={refetchRef}
     />
   );
 }

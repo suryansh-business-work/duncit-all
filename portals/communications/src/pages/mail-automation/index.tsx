@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { Alert, CircularProgress, Stack, Typography } from '@mui/material';
 import MarkEmailReadIcon from '@mui/icons-material/MarkEmailRead';
@@ -56,12 +56,6 @@ export default function MailAutomationPage() {
     });
 
   const rows = accounts.data?.mailAutomationAccounts;
-
-  // The table caches its page until told otherwise, so a refetched list has to
-  // push itself in rather than wait to be asked.
-  useEffect(() => {
-    refetchRef.current?.();
-  }, [rows]);
 
   const startConnect = async () => {
     try {

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useMemo, useRef } from 'react';
 import { clientTableFetch, type DuncitColumn } from '@duncit/table';
 
 /**
@@ -16,8 +16,5 @@ export function useClientRows<T>(
 ) {
   const refetchRef = useRef<(() => void) | null>(null);
   const fetchRows = useMemo(() => clientTableFetch(rows, searchOf, columns), [rows, searchOf, columns]);
-  useEffect(() => {
-    refetchRef.current?.();
-  }, [fetchRows]);
   return { fetchRows, refetchRef };
 }

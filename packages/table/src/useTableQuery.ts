@@ -5,6 +5,7 @@ import type { TableFetch, TableFilterValue, TableQueryState, TableSortDir } from
 const SEARCH_DEBOUNCE_MS = 400;
 
 export interface UseTableQueryOptions<T> {
+  /** Memoise it: a new identity means a new data source and refetches from page 1. */
   fetchRows: TableFetch<T>;
   defaultSort?: { field: string; dir: TableSortDir };
   defaultPageSize?: number;
@@ -91,11 +92,22 @@ export function useTableQuery<T>(options: UseTableQueryOptions<T>): UseTableQuer
     [externalKey],
   );
 
+  // A new `fetchRows` is a new data source: a tab, a select or a route param the
+  // page's fetch closes over has changed (the deps of `useApolloTableFetch`, a
+  // `useMemo` over loaded rows). The rows on screen answer the old source, so
+  // the page goes back to 1 and the fetch effect below runs again — the same
+  // contract `externalFilters` has. This is why callers memoise `fetchRows`;
+  // reading it through a ref instead left every tab-driven table showing the
+  // previous tab's rows until something else nudged it.
+  const [prevFetchRows, setPrevFetchRows] = useState(() => fetchRows);
+  if (prevFetchRows !== fetchRows) {
+    setPrevFetchRows(() => fetchRows);
+    setPageState(1);
+  }
+
   const seqRef = useRef(0);
-  const fetchRef = useRef(fetchRows);
-  fetchRef.current = fetchRows;
-  // Read through a ref for the same reason as `fetchRows`: a translator that
-  // changes identity when the catalogue lands must not re-run the fetch.
+  // Read through a ref: a translator that changes identity when the catalogue
+  // lands must not re-run the fetch.
   const { t } = useTranslation();
   const tRef = useRef(t);
   tRef.current = t;
@@ -137,8 +149,7 @@ export function useTableQuery<T>(options: UseTableQueryOptions<T>): UseTableQuer
     const seq = seqRef.current;
     setLoading(true);
     setError(null);
-    fetchRef
-      .current(fetchQuery)
+    fetchRows(fetchQuery)
       .then((result) => {
         if (seq !== seqRef.current) return; // stale response — drop it
         // An empty page that is not an empty table means the rows under us went
@@ -159,7 +170,7 @@ export function useTableQuery<T>(options: UseTableQueryOptions<T>): UseTableQuer
         setError(err instanceof Error ? err.message : tRef.current('shell.table.loadFailed'));
         setLoading(false);
       });
-  }, [fetchQuery, reloadTick]);
+  }, [fetchRows, fetchQuery, reloadTick]);
 
   const setPage = useCallback((next: number) => {
     setPageState(next);

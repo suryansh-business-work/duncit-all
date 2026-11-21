@@ -9,8 +9,18 @@ import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
 import { GraphQLError } from 'graphql';
 import type { CommsLogEntity } from '@modules/crm/communicationLog/communicationLog.model';
+import { findLeadDuplicates } from '@modules/crm/leadDuplicate/leadDuplicate.service';
 
 const RW = [...CRM_RW];
+
+const MAX_DUPLICATE_CONTACTS = 20;
+
+interface DuplicateCheckInput {
+  entity_type: CrmLeadEntityType;
+  lead_id?: string | null;
+  contacts?: Array<{ mobile_number?: string | null; email?: string | null }> | null;
+  website?: string | null;
+}
 
 /** The lead a call is placed for: `entity_type` (any lead kind) or the older `entity` (venue/host/ecomm). */
 interface CallLeadArgs {
@@ -128,6 +138,12 @@ export const crmResolvers = {
     crmCallFromNumber: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       requireRole(ctx, RW);
       return (await getRuntimeEnvValue('TWILIO_PHONE_NUMBER')) || null;
+    },
+    crmLeadDuplicates: (_p: unknown, args: { input: DuplicateCheckInput }, ctx: GraphQLContext) => {
+      requireRole(ctx, RW);
+      const { entity_type, lead_id, contacts, website } = args.input;
+      // A form holds a handful of contacts; the cap keeps one call from becoming a bulk scan.
+      return findLeadDuplicates({ contacts: contacts?.slice(0, MAX_DUPLICATE_CONTACTS), website }, { entity_type, id: lead_id });
     },
   },
   Mutation: {

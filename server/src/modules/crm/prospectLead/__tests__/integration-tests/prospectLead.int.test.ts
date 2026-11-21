@@ -87,15 +87,15 @@ describe('creator leads', () => {
     expect(stored!.followers_count).toBe(1200);
   });
 
-  it('refuses a second creator lead with the same phone, but allows it on a community lead', async () => {
+  it('refuses the same phone on a second creator lead and on a community lead alike', async () => {
     await prospectLeadService.create('CREATOR_LEAD', creatorInput());
     await expect(
       prospectLeadService.create('CREATOR_LEAD', creatorInput({ creator_name: 'Copy', contacts: [{ mobile_number: '09811100001' }] }))
-    ).rejects.toThrow('A creator lead with this phone number already exists');
-    // Each kind keeps its own list: the same person may also run a community.
+    ).rejects.toThrow('Phone number 09811100001 already belongs to Creator lead "Riya Runs".');
+    // Duplicates are checked across every lead kind, not within one.
     await expect(
       prospectLeadService.create('COMMUNITY_LEAD', communityInput({ contacts: [{ mobile_number: '+919811100001' }] }))
-    ).resolves.toMatchObject({ community_name: 'Pune Trail Runners' });
+    ).rejects.toMatchObject({ extensions: { code: 'DUPLICATE_LEAD' } });
   });
 
   it('requires a creator name', async () => {

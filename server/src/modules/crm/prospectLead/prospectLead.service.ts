@@ -1,7 +1,6 @@
 import { commsService } from '@services/comms/comms.service';
 import { runTableQuery, type TableQueryInput } from '@utils/table-query';
 import {
-  assertUniqueLeadPhone,
   logAndAttachActivity,
   normaliseLeadInput,
   notFound,
@@ -9,6 +8,7 @@ import {
   pub,
 } from '@modules/crm/crm/crm.service';
 import { removeLeadMedia } from '@modules/crm/leadMedia/leadMedia.model';
+import { assertNoLeadDuplicates, withDuplicateFlags } from '@modules/crm/leadDuplicate/leadDuplicate.service';
 import { NUMERIC_FIELDS, PROSPECT_CONFIG, type ProspectKind } from './prospectLead.config';
 
 type LeadInput = Record<string, unknown> & { next_follow_up_date?: string | null };
@@ -64,7 +64,8 @@ export const prospectLeadService = {
   async table(kind: ProspectKind, input?: TableQueryInput | null) {
     const { model, table } = PROSPECT_CONFIG[kind];
     const { docs, total, page, page_size } = await runTableQuery(model, {}, input, table);
-    return { rows: docs.map(pub), total, page, page_size };
+    const rows = await withDuplicateFlags(kind, docs.map(pub).filter((row) => row !== null));
+    return { rows, total, page, page_size };
   },
 
   async get(kind: ProspectKind, id: string) {
@@ -73,14 +74,14 @@ export const prospectLeadService = {
 
   async create(kind: ProspectKind, input: LeadInput) {
     const safe = prepare(input);
-    await assertUniqueLeadPhone(PROSPECT_CONFIG[kind].model, safe, PROSPECT_CONFIG[kind].label);
+    await assertNoLeadDuplicates(safe, { entity_type: kind });
     const created = await modelOf(kind).create({ ...safe, next_follow_up_date: parseDate(safe.next_follow_up_date) });
     return pub(created);
   },
 
   async update(kind: ProspectKind, id: string, input: LeadInput) {
     const safe = prepare(input);
-    await assertUniqueLeadPhone(PROSPECT_CONFIG[kind].model, safe, PROSPECT_CONFIG[kind].label, id);
+    await assertNoLeadDuplicates(safe, { entity_type: kind, id });
     const updated = await modelOf(kind).findByIdAndUpdate(
       id,
       { $set: { ...safe, next_follow_up_date: parseDate(safe.next_follow_up_date) } },

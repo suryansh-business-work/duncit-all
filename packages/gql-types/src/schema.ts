@@ -5904,6 +5904,8 @@ export type CommunityLead = {
   id: Scalars['ID']['output'];
   instagram_link?: Maybe<Scalars['String']['output']>;
   interests: Array<Scalars['String']['output']>;
+  /** True when another lead of any kind shares one of this lead's phone numbers, emails or its website. Set on table pages (the Leads listing); null elsewhere. */
+  is_duplicate?: Maybe<Scalars['Boolean']['output']>;
   lead_source?: Maybe<Scalars['String']['output']>;
   lead_status: Scalars['String']['output'];
   meetup_frequency?: Maybe<Scalars['String']['output']>;
@@ -7000,6 +7002,8 @@ export type CreatorLead = {
   handle?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   instagram_link?: Maybe<Scalars['String']['output']>;
+  /** True when another lead of any kind shares one of this lead's phone numbers, emails or its website. Set on table pages (the Leads listing); null elsewhere. */
+  is_duplicate?: Maybe<Scalars['Boolean']['output']>;
   lead_source?: Maybe<Scalars['String']['output']>;
   lead_status: Scalars['String']['output'];
   next_follow_up_date?: Maybe<Scalars['String']['output']>;
@@ -7174,6 +7178,12 @@ export type CrmContactInput = {
   role?: InputMaybe<Scalars['String']['input']>;
   whatsapp_number?: InputMaybe<Scalars['String']['input']>;
 };
+
+/** The value a duplicate was found on. */
+export type CrmDuplicateField =
+  | 'EMAIL'
+  | 'PHONE'
+  | 'WEBSITE';
 
 export type CrmDynamicField = {
   __typename?: 'CrmDynamicField';
@@ -7597,6 +7607,28 @@ export type CrmLeadAiThread = {
   __typename?: 'CrmLeadAiThread';
   context: CrmLeadAiContext;
   messages: Array<CrmLeadAiMessage>;
+};
+
+export type CrmLeadDuplicateCheckInput = {
+  contacts?: InputMaybe<Array<CrmContactInput>>;
+  /** The kind of the lead being edited — with lead_id, so it never matches itself. */
+  entity_type: CrmEntityType;
+  /** Set when editing an existing lead; blank for a new one. */
+  lead_id?: InputMaybe<Scalars['ID']['input']>;
+  website?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** One typed value another lead already has, and which lead that is. */
+export type CrmLeadDuplicateMatch = {
+  __typename?: 'CrmLeadDuplicateMatch';
+  city: Scalars['String']['output'];
+  entity_type: CrmEntityType;
+  field: CrmDuplicateField;
+  lead_id: Scalars['ID']['output'];
+  lead_name: Scalars['String']['output'];
+  lead_status: Scalars['String']['output'];
+  /** The value as it was typed. */
+  value: Scalars['String']['output'];
 };
 
 export type CrmLeadFilter = {
@@ -9231,6 +9263,8 @@ export type EcommLead = {
   gst_number?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   instagram_link?: Maybe<Scalars['String']['output']>;
+  /** True when another lead of any kind shares one of this lead's phone numbers, emails or its website. Set on table pages (the Leads listing); null elsewhere. */
+  is_duplicate?: Maybe<Scalars['Boolean']['output']>;
   lead_source?: Maybe<Scalars['String']['output']>;
   lead_status: Scalars['String']['output'];
   marketplace_links: Array<Scalars['String']['output']>;
@@ -11956,6 +11990,8 @@ export type HostLead = {
   id: Scalars['ID']['output'];
   instagram_link?: Maybe<Scalars['String']['output']>;
   interests: Array<Scalars['String']['output']>;
+  /** True when another lead of any kind shares one of this lead's phone numbers, emails or its website. Set on table pages (the Leads listing); null elsewhere. */
+  is_duplicate?: Maybe<Scalars['Boolean']['output']>;
   lead_source?: Maybe<Scalars['String']['output']>;
   lead_status: Scalars['String']['output'];
   matched_user?: Maybe<CrmMatchedUser>;
@@ -31871,6 +31907,8 @@ export type Query = {
   /**  The signed-in agent's Ask AI conversation about one lead, with a fresh context summary.  */
   crmLeadAiThread: CrmLeadAiThread;
   crmLeadConfig: CrmOptionGroup;
+  /** Which of these phone numbers, emails or website already belong to a lead of any kind (the lead forms' live duplicate check). */
+  crmLeadDuplicates: Array<CrmLeadDuplicateMatch>;
   /** Every logo and image of one lead: logos first, each kind in its upload order. */
   crmLeadMedia: Array<CrmLeadMedia>;
   crmManagedOptions: Array<CrmManagedOption>;
@@ -34637,6 +34675,11 @@ export type QueryCrmExcelTemplateArgs = {
 export type QueryCrmLeadAiThreadArgs = {
   entity: CrmEntityType;
   lead_id: Scalars['ID']['input'];
+};
+
+
+export type QueryCrmLeadDuplicatesArgs = {
+  input: CrmLeadDuplicateCheckInput;
 };
 
 
@@ -49363,6 +49406,8 @@ export type VenueLead = {
   id: Scalars['ID']['output'];
   instagram_link?: Maybe<Scalars['String']['output']>;
   invoice_available: Scalars['Boolean']['output'];
+  /** True when another lead of any kind shares one of this lead's phone numbers, emails or its website. Set on table pages (the Leads listing); null elsewhere. */
+  is_duplicate?: Maybe<Scalars['Boolean']['output']>;
   landmark?: Maybe<Scalars['String']['output']>;
   lead_source?: Maybe<Scalars['String']['output']>;
   lead_status: Scalars['String']['output'];

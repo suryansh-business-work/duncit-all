@@ -39,6 +39,8 @@ export const prospectLeadTypeDefs = gql`
     activity_log: [CrmActivity!]!
     created_at: String
     updated_at: String
+    "True when another lead of any kind shares one of this lead's phone numbers, emails or its website. Set on table pages (the Leads listing); null elsewhere."
+    is_duplicate: Boolean
   }
 
   type CommunityLead {
@@ -73,6 +75,8 @@ export const prospectLeadTypeDefs = gql`
     activity_log: [CrmActivity!]!
     created_at: String
     updated_at: String
+    "True when another lead of any kind shares one of this lead's phone numbers, emails or its website. Set on table pages (the Leads listing); null elsewhere."
+    is_duplicate: Boolean
   }
 
   input CreatorLeadInput {

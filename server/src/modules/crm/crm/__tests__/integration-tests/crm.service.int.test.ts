@@ -343,8 +343,12 @@ describe('crmService venue leads', () => {
     await expect(
       crmService.createVenueLead(venueInput({ venue_name: 'Copy', contacts: [{ name: 'R', mobile_number: '9811000001' }] }))
     ).rejects.toMatchObject({
-      message: 'A venue lead with this phone number already exists. Each lead must have a unique phone number.',
-      extensions: { code: 'DUPLICATE_LEAD' },
+      message:
+        'Phone number 9811000001 already belongs to Venue lead "Smash Arena". Each phone number, email and website can be on one lead only.',
+      extensions: {
+        code: 'DUPLICATE_LEAD',
+        duplicates: [expect.objectContaining({ field: 'PHONE', entity_type: 'VENUE_LEAD', lead_name: 'Smash Arena' })],
+      },
     });
     // Too short to identify a lead — not checked.
     await crmService.createVenueLead(venueInput({ venue_name: 'Short', contacts: [{ name: 'S', mobile_number: '12345' }] }));
@@ -362,6 +366,56 @@ describe('crmService venue leads', () => {
     await expect(
       crmService.updateVenueLead(own!.id, venueInput({ contacts: [{ name: 'O', mobile_number: '+91-9811000009' }] }))
     ).rejects.toMatchObject({ extensions: { code: 'DUPLICATE_LEAD' } });
+  });
+
+  it('refuses a phone, email or website another kind of lead already has', async () => {
+    await crmService.createHostLead({
+      host_name: 'Asha Events',
+      website: 'https://www.ashaevents.in/',
+      contacts: [{ name: 'Asha', mobile_number: '9822000001', email: 'asha@example.com' }],
+    });
+
+    await expect(
+      crmService.createVenueLead(venueInput({ contacts: [{ name: 'A', mobile_number: '+91 98220 00001' }] }))
+    ).rejects.toThrow('Phone number +91 98220 00001 already belongs to Host lead "Asha Events".');
+    await expect(
+      crmService.createVenueLead(venueInput({ contacts: [{ name: 'A', mobile_number: '9811000077', email: 'ASHA@example.com' }] }))
+    ).rejects.toThrow('Email ASHA@example.com already belongs to Host lead "Asha Events".');
+    await expect(crmService.createVenueLead(venueInput({ contacts: [], website: 'ashaevents.in' }))).rejects.toThrow(
+      'Website ashaevents.in already belongs to Host lead "Asha Events".'
+    );
+    // A different page on another site's host is not the same website.
+    await expect(
+      crmService.createVenueLead(venueInput({ contacts: [], website: 'https://instagram.com/smash' }))
+    ).resolves.toMatchObject({ website: 'https://instagram.com/smash' });
+  });
+
+  it('lets an edit keep a duplicate saved before the check, but not add a new one', async () => {
+    const host = await crmService.createHostLead({ host_name: 'Asha', contacts: [{ name: 'A', mobile_number: '9822000001' }] });
+    // Written straight to the collection, the way rows imported before this rule exist.
+    const legacy = await VenueLeadModel.create(venueInput({ contacts: [{ name: 'A', mobile_number: '9822000001' }] }));
+
+    await expect(
+      crmService.updateVenueLead(String(legacy._id), venueInput({ remarks: 'Met', contacts: [{ name: 'A', mobile_number: '9822000001' }] }))
+    ).resolves.toMatchObject({ remarks: 'Met' });
+    await expect(
+      crmService.updateVenueLead(String(legacy._id), venueInput({ contacts: [{ name: 'A', mobile_number: '9822000001' }], website: 'asha.in' }))
+    ).resolves.toMatchObject({ website: 'asha.in' });
+    await crmService.updateHostLead(host!.id, { host_name: 'Asha', website: 'other.in' });
+    await expect(crmService.updateVenueLead(String(legacy._id), { website: 'other.in' })).rejects.toThrow(
+      'Website other.in already belongs to Host lead "Asha".'
+    );
+  });
+
+  it('flags table rows that share a value with any lead, and leaves unique ones unflagged', async () => {
+    await crmService.createHostLead({ host_name: 'Asha', contacts: [{ name: 'A', mobile_number: '9822000001' }] });
+    await VenueLeadModel.create(venueInput({ venue_name: 'Copy', contacts: [{ name: 'A', mobile_number: '+919822000001' }] }));
+    await crmService.createVenueLead(venueInput({ venue_name: 'Unique', contacts: [{ name: 'U', mobile_number: '9811000055' }] }));
+
+    const page = await crmService.venueLeadsTable({ page: 1, page_size: 25 });
+    const flags = Object.fromEntries(page.rows.map((row: { venue_name: string; is_duplicate: boolean }) => [row.venue_name, row.is_duplicate]));
+
+    expect(flags).toEqual({ Copy: true, Unique: false });
   });
 
   it('reports a missing lead on update and delete, and deletes an existing one', async () => {
@@ -413,7 +467,7 @@ describe('crmService host and ecomm leads', () => {
 
     await expect(
       crmService.createHostLead({ host_name: 'Dup', contacts: [{ name: 'A', mobile_number: '+919822000001' }] })
-    ).rejects.toThrow('A host lead with this phone number already exists');
+    ).rejects.toThrow('Phone number +919822000001 already belongs to Host lead "Asha Events Co".');
 
     expect(await crmService.deleteHostLead(lead!.id)).toBe(true);
     await expect(crmService.deleteHostLead(lead!.id)).rejects.toThrow('Host lead not found');
@@ -435,7 +489,7 @@ describe('crmService host and ecomm leads', () => {
 
     await expect(
       crmService.createEcommLead({ seller_name: 'Dup', contacts: [{ name: 'A', mobile_number: '09833000001' }] })
-    ).rejects.toThrow('A ecomm lead with this phone number already exists');
+    ).rejects.toThrow('Phone number 09833000001 already belongs to Ecomm lead "Alpha Traders Pvt".');
 
     expect(await crmService.deleteEcommLead(lead!.id)).toBe(true);
     await expect(crmService.deleteEcommLead(lead!.id)).rejects.toThrow('Ecomm lead not found');

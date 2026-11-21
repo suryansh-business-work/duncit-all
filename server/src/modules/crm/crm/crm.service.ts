@@ -19,6 +19,7 @@ import { communicationLogService } from '@modules/crm/communicationLog/communica
 import * as C from './crm.constants';
 import { CreatorLeadModel, CommunityLeadModel } from '@modules/crm/prospectLead/prospectLead.model';
 import { removeLeadMedia } from '@modules/crm/leadMedia/leadMedia.model';
+import { assertNoLeadDuplicates, withDuplicateFlags } from '@modules/crm/leadDuplicate/leadDuplicate.service';
 
 /** Lead model + human label per CRM entity type (manual logs, comms activity, lead media). */
 export const LEAD_MODELS = {
@@ -269,12 +270,13 @@ const ECOMM_LEAD_TABLE_CONFIG = leadTableConfig('seller_name', {
 
 /** Server-side table page (search/filter/sort/paginate) for a lead collection. */
 async function leadTable(
-  Model: typeof VenueLeadModel | typeof HostLeadModel | typeof EcommLeadModel,
+  entity_type: 'VENUE_LEAD' | 'HOST_LEAD' | 'ECOMM_LEAD',
   config: TableEntityConfig,
   input?: TableQueryInput | null
 ) {
-  const { docs, total, page, page_size } = await runTableQuery(Model, {}, input, config);
-  return { rows: docs.map(pub), total, page, page_size };
+  const { docs, total, page, page_size } = await runTableQuery(LEAD_MODELS[entity_type], {}, input, config);
+  const rows = await withDuplicateFlags(entity_type, docs.map(pub).filter((row) => row !== null));
+  return { rows, total, page, page_size };
 }
 
 /**
@@ -319,35 +321,6 @@ export function normaliseLeadInput<T extends Record<string, any>>(input: T): T {
 
 export function notFound(what: string): never {
   throw new GraphQLError(`${what} not found`, { extensions: { code: 'NOT_FOUND' } });
-}
-
-/** Last-10 significant digits of a phone, ignoring spaces / country code formatting. */
-const last10Digits = (v: any): string => {
-  const d = String(v ?? '').replace(/\D/g, '');
-  return d.length > 10 ? d.slice(-10) : d;
-};
-
-/**
- * Reject a lead whose contact phone already exists on another lead of the same
- * kind — each lead must be uniquely identified by its phone so the same lead
- * can't be created twice. Matches on the trailing 10 digits so "+91 87912..."
- * and "87912..." are treated as the same number regardless of stored format.
- */
-export async function assertUniqueLeadPhone(model: any, input: any, kindLabel: string, excludeId?: string) {
-  const contacts = Array.isArray(input?.contacts) ? input.contacts : [];
-  const mobiles = Array.from(
-    new Set(contacts.map((c: any) => last10Digits(c?.mobile_number)).filter((d: string) => d.length >= 7))
-  );
-  if (mobiles.length === 0) return;
-  const query: any = { $or: mobiles.map((d) => ({ 'contacts.mobile_number': { $regex: `${d}$` } })) };
-  if (excludeId) query._id = { $ne: new Types.ObjectId(excludeId) };
-  const existing = await model.findOne(query).select('_id').lean();
-  if (existing) {
-    throw new GraphQLError(
-      `A ${kindLabel} with this phone number already exists. Each lead must have a unique phone number.`,
-      { extensions: { code: 'DUPLICATE_LEAD' } }
-    );
-  }
 }
 
 export async function logAndAttachActivity(opts: {
@@ -698,7 +671,7 @@ export const crmService = {
   },
   /** Server-side table page (search/filter/sort/paginate) for the venueLeadsTable query. */
   venueLeadsTable(input?: TableQueryInput | null) {
-    return leadTable(VenueLeadModel, VENUE_LEAD_TABLE_CONFIG, input);
+    return leadTable('VENUE_LEAD', VENUE_LEAD_TABLE_CONFIG, input);
   },
   async getVenueLead(id: string) {
     const doc = await VenueLeadModel.findById(id);
@@ -706,13 +679,13 @@ export const crmService = {
   },
   async createVenueLead(input: any) {
     const safe = normaliseLeadInput(input);
-    await assertUniqueLeadPhone(VenueLeadModel, safe, 'venue lead');
+    await assertNoLeadDuplicates(safe, { entity_type: 'VENUE_LEAD' });
     const created = await VenueLeadModel.create({ ...safe, next_follow_up_date: parseDate(safe.next_follow_up_date) });
     return pub(created);
   },
   async updateVenueLead(id: string, input: any) {
     const safe = normaliseLeadInput(input);
-    await assertUniqueLeadPhone(VenueLeadModel, safe, 'venue lead', id);
+    await assertNoLeadDuplicates(safe, { entity_type: 'VENUE_LEAD', id });
     const updated = await VenueLeadModel.findByIdAndUpdate(
       id,
       { $set: { ...safe, next_follow_up_date: parseDate(safe.next_follow_up_date) } },
@@ -735,7 +708,7 @@ export const crmService = {
   },
   /** Server-side table page (search/filter/sort/paginate) for the hostLeadsTable query. */
   hostLeadsTable(input?: TableQueryInput | null) {
-    return leadTable(HostLeadModel, HOST_LEAD_TABLE_CONFIG, input);
+    return leadTable('HOST_LEAD', HOST_LEAD_TABLE_CONFIG, input);
   },
   async getHostLead(id: string) {
     const doc = await HostLeadModel.findById(id);
@@ -743,7 +716,7 @@ export const crmService = {
   },
   async createHostLead(input: any) {
     const safe = normaliseLeadInput(input);
-    await assertUniqueLeadPhone(HostLeadModel, safe, 'host lead');
+    await assertNoLeadDuplicates(safe, { entity_type: 'HOST_LEAD' });
     const created = await HostLeadModel.create({
       ...safe,
       preferred_event_date: parseDate(safe.preferred_event_date),
@@ -753,7 +726,7 @@ export const crmService = {
   },
   async updateHostLead(id: string, input: any) {
     const safe = normaliseLeadInput(input);
-    await assertUniqueLeadPhone(HostLeadModel, safe, 'host lead', id);
+    await assertNoLeadDuplicates(safe, { entity_type: 'HOST_LEAD', id });
     const updated = await HostLeadModel.findByIdAndUpdate(
       id,
       {
@@ -782,7 +755,7 @@ export const crmService = {
   },
   /** Server-side table page (search/filter/sort/paginate) for the ecommLeadsTable query. */
   ecommLeadsTable(input?: TableQueryInput | null) {
-    return leadTable(EcommLeadModel, ECOMM_LEAD_TABLE_CONFIG, input);
+    return leadTable('ECOMM_LEAD', ECOMM_LEAD_TABLE_CONFIG, input);
   },
   async getEcommLead(id: string) {
     const doc = await EcommLeadModel.findById(id);
@@ -790,13 +763,13 @@ export const crmService = {
   },
   async createEcommLead(input: any) {
     const safe = normaliseLeadInput(input);
-    await assertUniqueLeadPhone(EcommLeadModel, safe, 'ecomm lead');
+    await assertNoLeadDuplicates(safe, { entity_type: 'ECOMM_LEAD' });
     const created = await EcommLeadModel.create({ ...safe, next_follow_up_date: parseDate(safe.next_follow_up_date) });
     return pub(created);
   },
   async updateEcommLead(id: string, input: any) {
     const safe = normaliseLeadInput(input);
-    await assertUniqueLeadPhone(EcommLeadModel, safe, 'ecomm lead', id);
+    await assertNoLeadDuplicates(safe, { entity_type: 'ECOMM_LEAD', id });
     const updated = await EcommLeadModel.findByIdAndUpdate(
       id,
       { $set: { ...safe, next_follow_up_date: parseDate(safe.next_follow_up_date) } },

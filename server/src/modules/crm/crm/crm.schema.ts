@@ -228,6 +228,8 @@ export const crmTypeDefs = gql`
     activity_log: [CrmActivity!]!
     created_at: String
     updated_at: String
+    "True when another lead of any kind shares one of this lead's phone numbers, emails or its website. Set on table pages (the Leads listing); null elsewhere."
+    is_duplicate: Boolean
   }
 
   type HostLead {
@@ -274,6 +276,8 @@ export const crmTypeDefs = gql`
     activity_log: [CrmActivity!]!
     created_at: String
     updated_at: String
+    "True when another lead of any kind shares one of this lead's phone numbers, emails or its website. Set on table pages (the Leads listing); null elsewhere."
+    is_duplicate: Boolean
   }
 
   type EcommLead {
@@ -313,6 +317,8 @@ export const crmTypeDefs = gql`
     activity_log: [CrmActivity!]!
     created_at: String
     updated_at: String
+    "True when another lead of any kind shares one of this lead's phone numbers, emails or its website. Set on table pages (the Leads listing); null elsewhere."
+    is_duplicate: Boolean
   }
 
   type CrmOptionGroup {
@@ -571,6 +577,36 @@ export const crmTypeDefs = gql`
     crmDynamicFields(entity: CrmEntityType, include_inactive: Boolean): [CrmDynamicField!]!
     "The configured Twilio caller-ID (From) number, shown on call dialogs."
     crmCallFromNumber: String
+    "Which of these phone numbers, emails or website already belong to a lead of any kind (the lead forms' live duplicate check)."
+    crmLeadDuplicates(input: CrmLeadDuplicateCheckInput!): [CrmLeadDuplicateMatch!]!
+  }
+
+  "The value a duplicate was found on."
+  enum CrmDuplicateField {
+    PHONE
+    EMAIL
+    WEBSITE
+  }
+
+  input CrmLeadDuplicateCheckInput {
+    "The kind of the lead being edited — with lead_id, so it never matches itself."
+    entity_type: CrmEntityType!
+    "Set when editing an existing lead; blank for a new one."
+    lead_id: ID
+    contacts: [CrmContactInput!]
+    website: String
+  }
+
+  "One typed value another lead already has, and which lead that is."
+  type CrmLeadDuplicateMatch {
+    field: CrmDuplicateField!
+    "The value as it was typed."
+    value: String!
+    entity_type: CrmEntityType!
+    lead_id: ID!
+    lead_name: String!
+    city: String!
+    lead_status: String!
   }
 
   extend type Mutation {

@@ -17612,7 +17612,7 @@ export type Mutation = {
   waCancelExtraction?: Maybe<WaExtraction>;
   /** Database cleanup: drop invalid-phone records + de-duplicate leads. */
   waCleanData: WaCleanResult;
-  /** Create/start the session so a QR can be scanned. */
+  /** Create/start the session so a QR can be scanned. restart: stop the engine first (a session stuck before its QR). */
   waConnect: WaConnection;
   /** Manually create (or upsert) a single user lead. */
   waCreateUserLead: WaUserLead;
@@ -17621,7 +17621,10 @@ export type Mutation = {
   /** Bulk-delete user leads by id; returns the number removed. */
   waDeleteUserLeads: Scalars['Int']['output'];
   waDisconnect: WaConnection;
-  /** Mint a dedicated gateway API key from your master/admin key and save it. */
+  /**
+   * Mint a dedicated gateway API key and save it. Both arguments are optional: with no
+   * master_key the server's own gateway master key is used, so nobody copies a key by hand.
+   */
   waGenerateApiKey: WaGeneratedKey;
   /** Import user leads from an uploaded .xlsx/.csv (base64). */
   waImportUserLeads: WaImportResult;
@@ -24049,6 +24052,11 @@ export type MutationVoteProductReviewArgs = {
 };
 
 
+export type MutationWaConnectArgs = {
+  restart?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+
 export type MutationWaCreateUserLeadArgs = {
   input: WaCreateUserLeadInput;
 };
@@ -24065,8 +24073,8 @@ export type MutationWaDeleteUserLeadsArgs = {
 
 
 export type MutationWaGenerateApiKeyArgs = {
-  base_url: Scalars['String']['input'];
-  master_key: Scalars['String']['input'];
+  base_url?: InputMaybe<Scalars['String']['input']>;
+  master_key?: InputMaybe<Scalars['String']['input']>;
 };
 
 

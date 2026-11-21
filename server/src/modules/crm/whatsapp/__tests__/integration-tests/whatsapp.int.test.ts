@@ -108,18 +108,21 @@ describe('whatsappService integration (bug WA-LeadGen P3)', () => {
     }
   });
 
-  it('uses the master key (OPENWA_API_MASTER_KEY) as X-API-Key when set', async () => {
+  it('sends the stored key first and falls back to OPENWA_API_MASTER_KEY when the gateway rejects it (401)', async () => {
     await whatsappService.saveConfig({ base_url: 'https://wa.test', api_key: 'stored-key' });
     const prev = process.env.OPENWA_API_MASTER_KEY;
-    process.env.OPENWA_API_MASTER_KEY = 'master-xyz';
-    let sentKey: string | undefined;
+    process.env.OPENWA_API_MASTER_KEY = 'master-xyz-0123456789-0123456789-abcd';
+    const sentKeys: (string | undefined)[] = [];
     setFetch((_url, init) => {
-      sentKey = (init as { headers?: Record<string, string> }).headers?.['X-API-Key'];
+      const key = (init as { headers?: Record<string, string> }).headers?.['X-API-Key'];
+      sentKeys.push(key);
+      if (key === 'stored-key') return { status: 401, body: { message: 'Invalid API key' } };
       return { status: 200, body: { status: 'READY' } };
     });
     try {
-      await whatsappService.refreshStatus();
-      expect(sentKey).toBe('master-xyz');
+      const conn = await whatsappService.refreshStatus();
+      expect(sentKeys).toEqual(['stored-key', 'master-xyz-0123456789-0123456789-abcd']);
+      expect(conn.status).toBe('CONNECTED');
     } finally {
       if (prev === undefined) delete process.env.OPENWA_API_MASTER_KEY;
       else process.env.OPENWA_API_MASTER_KEY = prev;
@@ -218,9 +221,9 @@ describe('whatsappData sync + cache + leads (WA-LeadGen P4/P5)', () => {
 
   function syncFetch() {
     setFetch((url) => {
-      if (url.endsWith('/contacts')) return { status: 200, body: contacts };
-      if (/\/groups\/[^/]+$/.test(url)) return { status: 200, body: { participants: [{ id: '919855556666@c.us' }, { id: '919811112222@c.us' }] } };
-      if (url.endsWith('/groups')) return { status: 200, body: groups };
+      if (url.includes('/contacts?')) return { status: 200, body: contacts };
+      if (/\/groups\/[^/?]+$/.test(url)) return { status: 200, body: { participants: [{ id: '919855556666@c.us' }, { id: '919811112222@c.us' }] } };
+      if (url.includes('/groups?')) return { status: 200, body: groups };
       return { status: 200, body: {} };
     });
   }
@@ -258,7 +261,7 @@ describe('whatsappData sync + cache + leads (WA-LeadGen P4/P5)', () => {
   it('sync() throws a combined error when both groups and contacts fail', async () => {
     const { whatsappData } = await import('../../whatsapp.data');
     setFetch((url) => {
-      if (url.endsWith('/contacts') || url.endsWith('/groups')) {
+      if (url.includes('/contacts?') || url.includes('/groups?')) {
         return { status: 400, body: { message: 'Session is not ready' } };
       }
       return { status: 200, body: {} };

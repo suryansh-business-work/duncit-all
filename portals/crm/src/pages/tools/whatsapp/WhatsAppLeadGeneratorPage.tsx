@@ -1,8 +1,9 @@
-import type { ReactNode } from 'react';
+import { useCallback, type ReactNode } from 'react';
 import { useQuery } from '@apollo/client/react';
 import { Box, Stack, Typography } from '@mui/material';
 import { QueryGuard } from '@duncit/ui';
 import { logs } from '@duncit/logs';
+import { useTranslation } from '@duncit/shell';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import { WA_CONNECTION, type WaConnection } from './whatsappQueries';
 import WhatsAppConnectCard from './WhatsAppConnectCard';
@@ -10,28 +11,25 @@ import WhatsAppBrowser from './WhatsAppBrowser';
 import WhatsAppApiKeyHelp from './WhatsAppApiKeyHelp';
 
 /**
- * WhatsApp Lead Generator — connect a WhatsApp account through the OpenWA gateway
- * (open-wa-server.duncit.com), then browse Communities / Groups / Users and
- * import them as User Leads.
- *
- * P3 (this slice): the connect flow (API key + QR + session). The
- * Communities/Groups/Users browser + import lands in the next phase, shown once a
- * session is CONNECTED.
+ * WhatsApp Lead Generator — links a WhatsApp account through the OpenWA gateway,
+ * then browses Communities / Groups / Users and imports them as User Leads.
+ * Opening the page starts the session and shows its QR (see useWaConnect).
  */
 export default function WhatsAppLeadGeneratorPage() {
+  const { t } = useTranslation();
   const { data, loading, error, refetch } = useQuery<any>(WA_CONNECTION, {
     fetchPolicy: 'cache-and-network',
   });
   const connection: WaConnection | undefined = data?.waConnection;
 
-  const handleChanged = () => {
+  const handleChanged = useCallback(() => {
     refetch().catch((e: unknown) =>
       logs.portal['crm'].error('WhatsAppLeadGeneratorPage', 'handleChanged', {
         error: e,
         msg: 'waConnection refetch failed',
       }),
     );
-  };
+  }, [refetch]);
 
   let body: ReactNode = null;
   if ((loading && !connection) || error) {
@@ -47,18 +45,10 @@ export default function WhatsAppLeadGeneratorPage() {
 
   return (
     <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 860, mx: 'auto' }}>
-      <Stack
-        direction="row"
-        spacing={1.25}
-        sx={{
-          alignItems: "center",
-          mb: 2
-        }}>
-        <WhatsAppIcon sx={{ color: '#25D366' }} />
-        <Typography component="h1" variant="h5" sx={{
-          fontWeight: 800
-        }}>
-          WhatsApp Lead Generator
+      <Stack direction="row" spacing={1.25} sx={{ alignItems: 'center', mb: 2 }}>
+        <WhatsAppIcon color="success" />
+        <Typography component="h1" variant="h5" sx={{ fontWeight: 800 }}>
+          {t('shell.nav.whatsappLeadGenerator')}
         </Typography>
       </Stack>
 

@@ -432,4 +432,7 @@ export const COPY_REVISIONS: Readonly<Record<string, readonly string[]>> = {
     "How many posts the planner creates each run, spread across the week ({{max}} at most).",
   ],
   "marketing.agents.postsTooMany": ["At most {{max}} posts a week."],
+  // CRM WhatsApp Lead Generator: the API key is generated server-side now, so
+  // the help panel explains the automatic flow instead of fetching a key.
+  "crm.tools.howDoIGetTheApi": ["How do I get the API key?"],
 };

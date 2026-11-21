@@ -75,8 +75,10 @@ function normaliseContact(raw: any): NormalisedContact | null {
   const jid = pickJid(raw);
   const phone = raw?.number ? String(raw.number).replace(/[^\d]/g, '') : jidToPhone(jid);
   if (!jid || !phone) return null;
-  // Skip groups/broadcast surfaced by the address book.
-  if (jid.endsWith('@g.us') || jid.endsWith('@broadcast')) return null;
+  // Skip groups/broadcast surfaced by the address book, and `@lid` ids: their
+  // digits are WhatsApp's privacy id, not a phone number (the gateway resolves
+  // the ones it can to `@c.us` when RESOLVE_LID_TO_PHONE is on).
+  if (jid.endsWith('@g.us') || jid.endsWith('@broadcast') || jid.endsWith('@lid')) return null;
   return {
     jid,
     phone,

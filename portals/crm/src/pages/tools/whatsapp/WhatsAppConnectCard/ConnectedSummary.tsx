@@ -16,27 +16,16 @@ export default function ConnectedSummary({ connection, busy, onDisconnect }: Rea
   return (
     <Card variant="outlined" sx={{ borderRadius: 3 }}>
       <CardContent>
-        <Stack direction="row" spacing={1.5} sx={{
-          alignItems: "center"
-        }}>
-          <WhatsAppIcon sx={{ color: '#25D366' }} />
+        <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
+          <WhatsAppIcon color="success" />
           <Box sx={{ flex: 1 }}>
-            <Typography sx={{
-              fontWeight: 800
-            }}>{t('crm.tools.connected')}</Typography>
-            <Typography variant="body2" sx={{
-              color: "text.secondary"
-            }}>
-              {connection.phone ? `+${connection.phone}` : 'WhatsApp account linked'}
+            <Typography sx={{ fontWeight: 800 }}>{t('crm.tools.connected')}</Typography>
+            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+              {connection.phone ? `+${connection.phone}` : t('crm.tools.accountLinked')}
             </Typography>
           </Box>
-          <DuncitButton
-            color="error"
-            variant="outlined"
-            disabled={busy}
-            onClick={onDisconnect}
-          >
-            Disconnect
+          <DuncitButton color="error" variant="outlined" disabled={busy} onClick={onDisconnect}>
+            {t('crm.tools.disconnect')}
           </DuncitButton>
         </Stack>
       </CardContent>

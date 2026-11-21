@@ -26,13 +26,14 @@ const SENSITIVE_WORDS = new Set([
   'privatekey',
 ]);
 
-/** Pairs that are only sensitive together: `api_key`, `private_key`, `access_key`. */
+/** Pairs that are only sensitive together: `api_key`, `private_key`, `access_key`, `master_key`. */
 const SENSITIVE_PAIRS: ReadonlyArray<readonly [string, string]> = [
   ['api', 'key'],
   ['private', 'key'],
   ['access', 'key'],
   ['secret', 'key'],
   ['signing', 'key'],
+  ['master', 'key'],
   ['recovery', 'code'],
   ['recovery', 'codes'],
 ];

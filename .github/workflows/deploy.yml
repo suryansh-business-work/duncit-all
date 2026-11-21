@@ -2526,10 +2526,24 @@ jobs:
             echo "::add-mask::${LITE_MCP_SECRET}"
           fi
           envsubst '$DOCKERHUB_USERNAME' < "${{ env.COMPOSE_SRC }}" > /tmp/docker-compose.yml
+          # OpenWA 0.19+ refuses a production boot when API_MASTER_KEY is shorter
+          # than 32 characters. A short secret is stretched for the GATEWAY only
+          # (HMAC-SHA256 of a fixed label, 64 hex chars); server.env keeps the
+          # original and the server derives the same value itself, trying the
+          # stored key, the secret, then the derived key (whatsapp.keys.ts).
+          OPENWA_GATEWAY_MASTER_KEY="${OPENWA_API_MASTER_KEY}"
+          if [ -n "${OPENWA_API_MASTER_KEY}" ] && [ "${#OPENWA_API_MASTER_KEY}" -lt 32 ]; then
+            OPENWA_GATEWAY_MASTER_KEY="$(printf '%s' "${OPENWA_API_MASTER_KEY}" | openssl dgst -sha256 -hmac 'duncit-openwa-master-v1' -r | cut -d' ' -f1)"
+            echo "::add-mask::${OPENWA_GATEWAY_MASTER_KEY}"
+            echo "::warning::OPENWA_API_MASTER_KEY is shorter than 32 characters; the gateway gets a derived key. Rotate the secret to 32+ characters."
+          fi
           # OpenWA gateway env (SQLite + session data on the mounted /app/data
           # volume so a connected account survives restarts). API_MASTER_KEY
           # bootstraps the gateway's own API keys; set the OPENWA_API_MASTER_KEY
-          # repo secret to enable it.
+          # repo secret to enable it. AUTO_START_SESSIONS relaunches a linked
+          # session after a redeploy (0.31 no longer does it by default), and
+          # RESOLVE_LID_TO_PHONE turns group members' @lid ids into phone numbers
+          # so the Lead Generator can import them.
           cat > /tmp/open-wa.env <<EOF
           NODE_ENV=production
           PORT=2024
@@ -2538,7 +2552,9 @@ jobs:
           SESSION_DATA_PATH=/app/data/sessions
           STORAGE_TYPE=local
           STORAGE_LOCAL_PATH=/app/data/media
-          API_MASTER_KEY=${OPENWA_API_MASTER_KEY}
+          API_MASTER_KEY=${OPENWA_GATEWAY_MASTER_KEY}
+          AUTO_START_SESSIONS=true
+          RESOLVE_LID_TO_PHONE=true
           EOF
           # Latest mobile app version (from app.json) — the server upserts this
           # into the DB on boot so the mobile force-update gate knows the newest

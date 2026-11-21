@@ -43,6 +43,7 @@ export const NearbyHostsPage = lazy(() => import('../../pages/nearby-partners-pa
 export const ChangeRequestsPage = lazy(() => import('../../pages/change-requests-page'));
 export const VenueAvailabilityPage = lazy(() => import('../../pages/venue-availability-page'));
 export const VenueSettingsPage = lazy(() => import('../../pages/venue-settings-page'));
+export const VenueFeesPage = lazy(() => import('../../pages/venue-fees-page'));
 export const VenueDetailsPage = lazy(() => import('../../pages/VenueDetailsPage'));
 export const VenueFoodOrderPage = lazy(() => import('../../pages/venue-food-order-page'));
 export const VenueFoodItemPage = lazy(() => import('../../pages/venue-food-item-page'));

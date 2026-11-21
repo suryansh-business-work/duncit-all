@@ -28,6 +28,7 @@ const offers = (over: Partial<BookingOffersValues> = {}): BookingOffersValues =>
   min_guests: '8',
   response_hours: '24',
   min_business: PER_GUEST_200,
+  min_spend: '0',
   ...over,
 });
 
@@ -102,8 +103,8 @@ describe('booking offers mappers', () => {
   it('reads the stored numbers and amounts, and nothing stored as 0 with one empty amount to fill', () => {
     expect(
       toBookingOffersValues({ min_guests: 12, response_hours: 48, min_business: [{ model: 'PER_HOUR', amount: 400 }] }),
-    ).toEqual({ min_guests: '12', response_hours: '48', min_business: [{ model: 'PER_HOUR', amount: '400' }] });
-    const blank = { min_guests: '0', response_hours: '0', min_business: [{ model: 'PER_GUEST', amount: '' }] };
+    ).toEqual({ min_guests: '12', response_hours: '48', min_business: [{ model: 'PER_HOUR', amount: '400' }], min_spend: '0' });
+    const blank = { min_guests: '0', response_hours: '0', min_business: [{ model: 'PER_GUEST', amount: '' }], min_spend: '0' };
     expect(toBookingOffersValues(null)).toEqual(blank);
     // A record saved before the amounts existed.
     expect(toBookingOffersValues({ min_guests: 0, response_hours: 0, min_business: null })).toEqual(blank);
@@ -114,11 +115,13 @@ describe('booking offers mappers', () => {
       min_guests: 12,
       response_hours: 48,
       min_business: [{ model: 'FLAT', amount: 5000.5 }],
+      min_spend: 0,
     });
     expect(toBookingOffersInput(offers({ min_guests: '', response_hours: '' }))).toEqual({
       min_guests: 0,
       response_hours: 0,
       min_business: [{ model: 'PER_GUEST', amount: 200 }],
+      min_spend: 0,
     });
   });
 });
@@ -128,7 +131,7 @@ describe('BookingOffersForm', () => {
     const onSubmit = vi.fn().mockResolvedValue(undefined);
     render(
       <BookingOffersForm
-        initialValues={{ min_guests: '0', response_hours: '0', min_business: PER_GUEST_200 }}
+        initialValues={{ min_guests: '0', response_hours: '0', min_business: PER_GUEST_200, min_spend: '0' }}
         effective={{ min_guests: 8, response_hours: 24 }}
         saving={false}
         error={null}
@@ -155,12 +158,14 @@ describe('BookingOffersForm', () => {
     fireEvent.change(field('booking-offers-min-guests'), { target: { value: '12' } });
     fireEvent.change(field('booking-offers-response-hours'), { target: { value: '48' } });
     fireEvent.change(within(row(0) as HTMLElement).getByRole('spinbutton'), { target: { value: '250' } });
+    fireEvent.change(field('booking-offers-min-spend'), { target: { value: '1500' } });
     save();
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
     expect(onSubmit.mock.calls[0][0]).toEqual({
       min_guests: '12',
       response_hours: '48',
       min_business: [{ model: 'PER_GUEST', amount: '250' }],
+      min_spend: '1500',
     });
   });
 
@@ -195,7 +200,7 @@ describe('BookingOffersForm', () => {
   });
 
   it('refuses a missing amount and does not submit', async () => {
-    const onSubmit = renderForm({ initialValues: { min_guests: '0', response_hours: '0', min_business: [{ model: 'PER_GUEST', amount: '' }] } });
+    const onSubmit = renderForm({ initialValues: { min_guests: '0', response_hours: '0', min_business: [{ model: 'PER_GUEST', amount: '' }], min_spend: '0' } });
     save();
     expect(await screen.findByText(/^Enter an amount above 0, up to/)).toBeInTheDocument();
     expect(onSubmit).not.toHaveBeenCalled();

@@ -21,8 +21,8 @@ interface Props {
  * The host's offer, priced exactly as the server quoted it: what the venue
  * receives and what it costs the pod as a range from the venue's minimum
  * guests to the pod's spots (when those differ), then the breakdown at the
- * spots — the offered base, each of the venue's price rules, any min-spend
- * top-up, its fees, taxes and Duncit's fee on top — or why the offer cannot be
+ * spots — the offered base, each of the venue's price rules, its fees, taxes
+ * and Duncit's fee on top — or why the offer cannot be
  * sent. A free venue's all-zero quote reads as one line, never a row of zeros.
  * Read-only: the host changes the offer, not the price. Native twin:
  * VenueQuoteCard.

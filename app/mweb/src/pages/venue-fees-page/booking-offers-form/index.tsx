@@ -1,5 +1,5 @@
 /**
- * Venue settings > Booking offers (RHF + Zod): the form, its rules and the
+ * Fees & Minimum Spend > Booking offers & minimum spend (RHF + Zod): the form, its rules and the
  * mappers between the stored settings and the form's values.
  */
 export { default as BookingOffersForm } from './booking-offers.form';

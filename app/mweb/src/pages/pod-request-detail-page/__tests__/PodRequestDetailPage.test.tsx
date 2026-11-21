@@ -282,7 +282,7 @@ describe('PodRequestDetailPage — the next move', () => {
   });
 
   it('shows the proposed terms and price under the booking', async () => {
-    const quote = { __typename: 'VenuePriceBreakdown', model: 'FLAT', rate: 5000, pax: 10, hours: 2, date: '2026-10-10', base: 5000, rules: [], rules_total: 0, min_spend_top_up: 0, cleaning_fee: 0, pet_fee: 0, venue_price: 5000, gst_pct: 0, taxes: 0, venue_payout: 5000, platform_fee_pct: 10, platform_fee: 500, total: 5500, deposit: 0 };
+    const quote = { __typename: 'VenuePriceBreakdown', model: 'FLAT', rate: 5000, pax: 10, hours: 2, date: '2026-10-10', base: 5000, rules: [], rules_total: 0, cleaning_fee: 0, pet_fee: 0, venue_price: 5000, gst_pct: 0, taxes: 0, venue_payout: 5000, platform_fee_pct: 10, platform_fee: 500, total: 5500, deposit: 0 };
     await showPage(
       request({
         status: 'SLOT_REQUESTED',

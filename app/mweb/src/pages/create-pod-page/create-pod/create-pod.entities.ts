@@ -38,6 +38,8 @@ export interface CreatePodVenue {
   offer_min_guests?: number | null;
   /** The least the venue takes per booking on each pricing basis — shown on the offer step, enforced there. */
   offer_min_business?: { model: string; amount: number }[] | null;
+  /** The least one booking's offer must come to (0 = none) — shown on the offer step, enforced there. */
+  offer_min_spend?: number | null;
   cover_image_url?: string | null;
   location_id?: string | null;
   city?: string | null;

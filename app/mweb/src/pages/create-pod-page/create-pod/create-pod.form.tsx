@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { freeJustificationFields } from '@duncit/forms/schemas';
 import { DEFAULT_SMART_INCENTIVE_MAX_PCT, DEFAULT_TICKET_DISCOUNT_MAX_PCT } from '@duncit/utils';
 import { fallbackT, type Translate } from '../../../i18n/fallback';
-import { refineFreeJustification, refinePublish, refineVenueOrMeeting, type OfferFloorOf } from './create-pod.refine';
+import { refineFreeJustification, refinePublish, refineVenueOrMeeting, type OfferFloorOf, type OfferShortfallOf } from './create-pod.refine';
 import { refineSmartIncentive } from './create-pod.smart-incentive';
 import { refineTicketDiscount } from './create-pod.ticket-discount';
 
@@ -36,7 +36,8 @@ const MIN_POD_DURATION_MS = MIN_POD_DURATION_MINUTES * 60_000;
  * `smartIncentiveMaxPct` is Loyalty > Smart Incentive's `max_discount_pct`, or
  * null while the programme is not known to be on (its editor is hidden then).
  * `offerFloor` is the picked venue's business amount on the offer's basis: an
- * offer below it cannot leave the offer step. `minAdvance` is the host's
+ * offer below it cannot leave the offer step, nor can one short of the venue's
+ * minimum spend (`offerShortfall`). `minAdvance` is the host's
  * Minimum Advance Days (null until known): a start before its first day is
  * refused, as the server refuses it. */
 export function makeCreatePodSchema(
@@ -45,6 +46,7 @@ export function makeCreatePodSchema(
   smartIncentiveMaxPct: number | null = DEFAULT_SMART_INCENTIVE_MAX_PCT,
   offerFloor: OfferFloorOf = () => null,
   minAdvance: { days: number; startMs: number } | null = null,
+  offerShortfall: OfferShortfallOf = () => null,
 ) {
   return z
     .object({
@@ -134,7 +136,7 @@ export function makeCreatePodSchema(
       ...freeJustificationFields,
     })
     .superRefine((values, ctx) => {
-      refineVenueOrMeeting(values, ctx, t, offerFloor);
+      refineVenueOrMeeting(values, ctx, t, { floor: offerFloor, shortfall: offerShortfall });
       refineFreeJustification(values, ctx, t);
       if (values.pod_date_time.getTime() <= Date.now()) {
         ctx.addIssue({ code: 'custom', path: ['pod_date_time'], message: t('mweb.createPod.validation.startFuture') });

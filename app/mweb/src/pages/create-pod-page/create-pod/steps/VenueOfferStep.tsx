@@ -17,8 +17,9 @@ interface Props {
 
 /**
  * Money's offer for the venue, shown only to a pod that sends its venue one.
- * The venue's minimum business comes first: an offer below the amount on the
- * basis the host pays on does not leave Money (the schema) and is refused
+ * The venue's minimums come first: an offer below the amount on the
+ * basis the host pays on, or short of the minimum spend, does not leave Money
+ * (the schema) and is refused
  * by the server. Then how the host pays and how much, why a free venue is free,
  * what they need from the venue, and the server's quote at both ends of the
  * guests. The venue accepts, rejects or counters it once the pod is sent.
@@ -36,6 +37,7 @@ export default function VenueOfferStep({ form, venues }: Readonly<Props>) {
     <Stack spacing={2} data-testid="create-pod-offer-step">
       <VenueMinBusinessNote
         rows={venue?.offer_min_business}
+        minSpend={venue?.offer_min_spend}
         money={(value) => formatStatementMoney(value, currency)}
         testId="create-pod-venue-min-business"
       />

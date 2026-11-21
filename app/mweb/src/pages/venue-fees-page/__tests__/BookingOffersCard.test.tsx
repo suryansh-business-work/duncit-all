@@ -3,7 +3,7 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-li
 import type { MockedResponse } from '@apollo/client/testing';
 import { MockedProvider } from '@apollo/client/testing/react';
 import BookingOffersCard from '../BookingOffersCard';
-import { UPDATE_VENUE_BOOKING_OFFERS, type SettingsVenue } from '../queries';
+import { UPDATE_VENUE_BOOKING_OFFERS, type FeesVenue } from '../queries';
 
 const toast = vi.hoisted(() => ({ success: vi.fn() }));
 vi.mock('../../../components/notify', () => ({ notifySuccess: toast.success }));
@@ -14,14 +14,14 @@ afterEach(() => {
 });
 
 /** The venue hopes for ₹200 a guest, and set nothing else of its own. */
-const venue = (over: Partial<SettingsVenue> = {}): SettingsVenue => ({
+const venue = (over: Partial<FeesVenue> = {}): FeesVenue => ({
   id: 'v1',
   venue_name: 'Court House',
   status: 'APPROVED',
   city: 'Bengaluru',
   offer_min_guests: 8,
   offer_response_hours: 24,
-  settings: { offers: { min_guests: 0, response_hours: 0, min_business: [{ model: 'PER_GUEST', amount: 200 }] } },
+  settings: { offers: { min_guests: 0, response_hours: 0, min_business: [{ model: 'PER_GUEST', amount: 200 }], min_spend: 0 } },
   ...over,
 });
 
@@ -49,16 +49,16 @@ const saveMock = (fail = false) => {
   return { mock, sent };
 };
 
-const card = (mocks: MockedResponse[], shown: SettingsVenue, onSaved: () => Promise<unknown>) => (
+const card = (mocks: MockedResponse[], shown: FeesVenue, onSaved: () => Promise<unknown>) => (
   <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
     <BookingOffersCard venue={shown} onSaved={onSaved} />
   </MockedProvider>
 );
 
-const mount = (mocks: MockedResponse[], over: Partial<SettingsVenue> = {}) => {
+const mount = (mocks: MockedResponse[], over: Partial<FeesVenue> = {}) => {
   const onSaved = vi.fn().mockResolvedValue(undefined);
   const view = render(card(mocks, venue(over), onSaved));
-  const rerender = (next: Partial<SettingsVenue>) => view.rerender(card(mocks, venue(next), onSaved));
+  const rerender = (next: Partial<FeesVenue>) => view.rerender(card(mocks, venue(next), onSaved));
   return { onSaved, rerender };
 };
 const field = (testId: string) => within(screen.getByTestId(testId)).getByRole('spinbutton');
@@ -75,11 +75,13 @@ describe('BookingOffersCard', () => {
             { model: 'PER_GUEST', amount: 200 },
             { model: 'FLAT', amount: 5000 },
           ],
+          min_spend: 4500,
         },
       },
     });
     expect(field('booking-offers-min-guests')).toHaveValue(15);
     expect(field('booking-offers-response-hours')).toHaveValue(6);
+    expect(field('booking-offers-min-spend')).toHaveValue(4500);
     expect(row(0).getByRole('combobox')).toHaveTextContent('Per guest');
     expect(row(0).getByRole('spinbutton')).toHaveValue(200);
     expect(row(1).getByRole('combobox')).toHaveTextContent('Per booking');
@@ -90,6 +92,7 @@ describe('BookingOffersCard', () => {
     mount([], { settings: null });
     expect(field('booking-offers-min-guests')).toHaveValue(0);
     expect(field('booking-offers-response-hours')).toHaveValue(0);
+    expect(field('booking-offers-min-spend')).toHaveValue(0);
     expect(row(0).getByRole('combobox')).toHaveTextContent('Per guest');
     expect(row(0).getByRole('spinbutton')).toHaveValue(null);
     expect(screen.queryByTestId('booking-offers-min-business-row-1')).not.toBeInTheDocument();
@@ -101,13 +104,14 @@ describe('BookingOffersCard', () => {
     fireEvent.change(field('booking-offers-min-guests'), { target: { value: '12' } });
     fireEvent.change(field('booking-offers-response-hours'), { target: { value: '48' } });
     fireEvent.change(row(0).getByRole('spinbutton'), { target: { value: '250' } });
+    fireEvent.change(field('booking-offers-min-spend'), { target: { value: '4000' } });
     fireEvent.click(screen.getByTestId('booking-offers-save'));
 
     await waitFor(() => expect(onSaved).toHaveBeenCalledTimes(1));
     expect(sent).toEqual([
       {
         venue_doc_id: 'v1',
-        input: { offers: { min_guests: 12, response_hours: 48, min_business: [{ model: 'PER_GUEST', amount: 250 }] } },
+        input: { offers: { min_guests: 12, response_hours: 48, min_business: [{ model: 'PER_GUEST', amount: 250 }], min_spend: 4000 } },
       },
     ]);
     expect(toast.success).toHaveBeenCalledWith('Booking offers saved.');

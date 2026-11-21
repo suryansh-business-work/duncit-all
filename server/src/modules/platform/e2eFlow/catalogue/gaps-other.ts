@@ -215,7 +215,7 @@ export const OTHER_GAP_FLOWS: readonly CatalogueFlow[] = [
   {
     name: 'Targets: Console access and dashboard',
     description:
-      'targets.duncit.com ships as the shared shell only (mountWelcomePortal): login, the welcome dashboard at / and /profile, gated to TARGETS_MANAGER and SUPER_ADMIN.',
+      'targets.duncit.com on the shared shell (mountWelcomePortal): login, the welcome dashboard at /, /profile and the Growth Calculator at /growth-calculator, gated to TARGETS_MANAGER and SUPER_ADMIN.',
     sub_flows: [
       {
         name: 'Targets portal: login refused for accounts without TARGETS_MANAGER',
@@ -230,12 +230,50 @@ export const OTHER_GAP_FLOWS: readonly CatalogueFlow[] = [
       },
       {
         name: 'Targets manager signs in and sees the welcome dashboard and profile',
-        description: 'The shell-only console: / renders the welcome dashboard, /profile the shared profile page, and any other path redirects to /.',
+        description: '/ renders the welcome dashboard, /profile the shared profile page, and any unknown path redirects to /.',
         steps: [
           ['Open https://targets.duncit.com/ signed out', 'Redirected to /login'],
-          ['Sign in as TARGETS_MANAGER', 'The welcome dashboard renders with the Targets name and tagline; the sidebar has only Dashboard'],
+          ['Sign in as TARGETS_MANAGER', 'The welcome dashboard renders with the Targets name and tagline; the sidebar has Dashboard and Growth Calculator'],
           ['Open /profile', 'The shared profile page renders with Profile, Security and Notifications tabs'],
           ['Open /anything-else', 'Redirected to /'],
+        ],
+      },
+    ],
+  },
+  {
+    name: 'Targets: Growth Calculator',
+    description:
+      '/growth-calculator turns nine planning assumptions into pod, GMV, estimated-earnings and lead targets, recalculated as they are typed, and keeps the runs a planner saves (growthCalculation module).',
+    sub_flows: [
+      {
+        name: 'Default plan produces the verification figures',
+        description: 'With the default assumptions the tiles, breakdown and charts show the agreed figures.',
+        steps: [
+          ['Open /growth-calculator as TARGETS_MANAGER', 'Pod value ₹4,000, earnings per pod ₹800, 400 monthly pods and ₹3,20,000 earnings per city'],
+          ['Read the all-city tiles', '1,000 venues, 2,000 hosts, 4,000 pods, 40,000 leads, ₹1,60,00,000 GMV, ₹32,00,000 a month and ₹3,84,00,000 a year'],
+          ['Change Number of target cities to 20', 'Every all-city figure doubles at once, without a save'],
+          ['Set a conversion rate to 0', 'The box names the allowed range; the figures hold and Save is disabled'],
+        ],
+      },
+      {
+        name: 'Save, list, view, edit, duplicate and delete',
+        description: 'Each save is its own record with server-calculated outputs, attributed to the signed-in person.',
+        steps: [
+          ['Enter a title and press Save calculation twice quickly', 'One record appears at the top of Saved calculations; "Calculation saved"'],
+          ['Open View on it', 'Inputs, results, formulas, creator name, email, roles and created time'],
+          ['Edit it, change the cities and press Update calculation', 'The same record updates; creator and created time unchanged; last edited by is set'],
+          ['Duplicate it', 'A separate record titled "<title> (copy)", calculated by the duplicator'],
+          ['Delete it and confirm', 'It leaves the list; the stored record keeps deleted_at and deleted_by'],
+        ],
+      },
+      {
+        name: 'Every operation refuses other roles and anonymous callers',
+        description:
+          'growthCalculation.resolver.ts asks TARGETS_MANAGER or SUPER_ADMIN; editing and deleting are the creator or a super admin only.',
+        steps: [
+          ['Call every growth calculation query and mutation signed out', '"Not authenticated" (UNAUTHENTICATED)'],
+          ['Call them as a member and as a FINANCE_USER', '"Access Denied" (FORBIDDEN); nothing saved'],
+          ['Edit or delete another manager’s record as TARGETS_MANAGER', 'FORBIDDEN; Edit and Delete are greyed out in the list'],
         ],
       },
     ],

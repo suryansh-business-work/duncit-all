@@ -466,6 +466,14 @@ async function bootstrap() {
     );
     await physicalGiftCardService.syncIndexes();
   });
+  // The Growth Calculator's saved runs: the listing index and the unique
+  // (person, request id) pair that turns a double-pressed Save into one record.
+  await safeSeed('growthCalculationIndexes', async () => {
+    const { growthCalculationService } = await import(
+      '@modules/targets/growthCalculation/growthCalculation.service'
+    );
+    await growthCalculationService.syncIndexes();
+  });
   // Our own sites and the two app stores, as a Mongo-side regex — the backfill
   // below runs in the database, so it cannot call the TypeScript classifier.
   // TWIN of shortLink.destination.ts's host rule; change one, change the other.

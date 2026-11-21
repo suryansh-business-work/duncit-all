@@ -41,6 +41,7 @@ export const MCP_CATEGORIES = [
   { key: 'communications', label: 'Communications', description: 'Email templates and logs, mail automation, WhatsApp templates and campaigns, SMS and Slack.' },
   { key: 'marketing', label: 'Marketing', description: 'Marketing, short links, social publishing, Reel Studio and Instagram lead search and outreach.' },
   { key: 'analytics', label: 'Analytics', description: 'Product and entity analytics, analytics mails, alerts and Google Analytics.' },
+  { key: 'targets', label: 'Targets', description: 'The Growth Calculator: preview, save, edit, duplicate and delete growth and revenue target calculations.' },
   { key: 'logs', label: 'Logs & monitoring', description: 'Telemetry, status reports and the GraphQL monitor.' },
   { key: 'tech', label: 'Tech & infrastructure', description: 'Server info, packages, backups, DNS, SSL, ports, Cloudflare, app builds and releases and rate limits.' },
   { key: 'tests', label: 'Testing & quality', description: 'The confidence dashboard, unit, E2E, stress and regression runs, E2E flows and the manual test board.' },
@@ -331,6 +332,8 @@ export const MODULE_CATEGORY: Record<ModuleName, McpCategoryKey | null> = {
   rateLimitTypeDefs: 'tech',
 
   adsTypeDefs: 'ads',
+
+  growthCalculationTypeDefs: 'targets',
 
   chatTypeDefs: 'chat',
   staffChatTypeDefs: 'chat',

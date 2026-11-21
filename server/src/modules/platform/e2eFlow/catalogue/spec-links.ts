@@ -1097,6 +1097,7 @@ export const E2E_FLOW_SPEC_LINKS: Readonly<Record<string, readonly string[]>> = 
     'support/__tests__/e2e/specs/support/tickets.cy.ts',
   ],
   'Targets: Console access and dashboard': ['mweb/__tests__/e2e/specs/api/staff/workplace-consoles-access.cy.ts'],
+  'Targets: Growth Calculator': ['mweb/__tests__/e2e/specs/api/staff/workplace-consoles-access.cy.ts'],
   'Tech: Access and role gates': [
     'mweb/__tests__/e2e/specs/api/staff/access-and-role-gates.cy.ts',
     'mweb/__tests__/e2e/specs/api/staff/tech-console-access.cy.ts',

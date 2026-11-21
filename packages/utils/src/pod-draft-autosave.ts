@@ -103,8 +103,8 @@ export function createDraftAutosaver<T>({
   let stopped = false;
   let reportedUnsaved = false;
 
+  // Every save moves through `saving`, so each call is a real change of state.
   const setStatus = (next: DraftSaveStatus) => {
-    if (next === status) return;
     status = next;
     onStatus?.(next);
   };

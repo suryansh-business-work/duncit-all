@@ -49,6 +49,16 @@ describe('newPodDraftId', () => {
     expect(isPodDraftId(newPodDraftId(() => 'FFFFFFFF-FFFF-4FFF-BFFF-FFFFFFFFFFFF', NOW))).toBe(true);
   });
 
+  it('reads the clock itself when no time is given', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(NOW);
+    try {
+      expect(newPodDraftId(uuid)).toBe(newPodDraftId(uuid, NOW));
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('gives different ids for different UUIDs in the same second', () => {
     const other = () => '9999abcd-ef45-4678-9abc-def012345678';
     expect(newPodDraftId(uuid, NOW)).not.toBe(newPodDraftId(other, NOW));
@@ -256,6 +266,61 @@ describe('createDraftAutosaver', () => {
     saver.stop();
     saver.schedule();
     expect(unsaved.at(-1)).toBe(false);
+  });
+
+  it('honours the pause and retry waits it is given', async () => {
+    const save = vi.fn().mockRejectedValueOnce(new Error('down')).mockRejectedValueOnce(new Error('down')).mockResolvedValue(undefined);
+    const saver = createDraftAutosaver({ read: () => ({ ...form }), save, delayMs: 10, retryMs: 20, retryMaxMs: 25 });
+    edit('Fast');
+    saver.schedule();
+    await vi.advanceTimersByTimeAsync(10);
+    expect(save).toHaveBeenCalledTimes(1);
+    await vi.advanceTimersByTimeAsync(20);
+    expect(save).toHaveBeenCalledTimes(2);
+    // Doubling to 40 is capped at 25.
+    await vi.advanceTimersByTimeAsync(25);
+    expect(save).toHaveBeenCalledTimes(3);
+    expect(saver.status()).toBe('saved');
+  });
+
+  it('still shows the failure with no error listener, and retries nothing once stopped mid-save', async () => {
+    let fail: (error: Error) => void = () => undefined;
+    const save = vi.fn(
+      () =>
+        new Promise<void>((_resolve, reject) => {
+          fail = reject;
+        }),
+    );
+    const saver = createDraftAutosaver({ read: () => ({ ...form }), save });
+    edit('Published while saving');
+    const flushed = saver.flush();
+    saver.stop();
+    fail(new Error('down'));
+    await expect(flushed).resolves.toBe(false);
+    expect(saver.status()).toBe('error');
+    await vi.advanceTimersByTimeAsync(DRAFT_AUTOSAVE_RETRY_MAX_MS * 2);
+    expect(save).toHaveBeenCalledTimes(1);
+  });
+
+  it('flush says false when the pass for an edit made mid-save fails', async () => {
+    let finish: () => void = () => undefined;
+    const save = vi
+      .fn()
+      .mockImplementationOnce(
+        () =>
+          new Promise<void>((resolve) => {
+            finish = resolve;
+          }),
+      )
+      .mockRejectedValueOnce(new Error('down'));
+    const { saver } = build(save);
+    edit('First');
+    const flushed = saver.flush();
+    edit('Second');
+    finish();
+    await expect(flushed).resolves.toBe(false);
+    expect(save).toHaveBeenCalledTimes(2);
+    expect(saver.hasUnsaved()).toBe(true);
   });
 
   it('flush on a form with nothing new sends nothing and says it is saved', async () => {

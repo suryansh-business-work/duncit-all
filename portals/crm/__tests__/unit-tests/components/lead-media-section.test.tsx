@@ -385,6 +385,8 @@ describe('LeadMediaSection — item actions', () => {
     fireEvent.click(await screen.findByTestId('confirm-dialog-confirm'));
 
     expect(await screen.findByText('You cannot edit this lead')).toBeInTheDocument();
+    // The confirm closes on its fade-out; until it unmounts the page behind it is aria-hidden.
+    await waitFor(() => expect(screen.queryByTestId('confirm-dialog')).toBeNull());
     expect(region('Logos').getByText('Brand logo')).toBeInTheDocument();
   });
 });

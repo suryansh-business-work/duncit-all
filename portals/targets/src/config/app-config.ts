@@ -22,7 +22,16 @@ export const appConfig = {
   requiredRoles: parseEnvRoles(import.meta.env.VITE_REQUIRED_ROLES, ['TARGETS_MANAGER']),
   tokenKey: 'targets_token',
   colorModeKey: 'targets_color_mode',
-  accent: { light: '#bef264', main: '#65a30d', hover: '#4d7c0f', active: '#3f6212' },
-  nav: [{ label: 'Dashboard', labelKey: 'shell.nav.dashboard', to: '/', icon: 'dashboard' }],
+  // Duncit's brand red, as Marketing uses it; the theme corrects it for AA contrast wherever it is text.
+  accent: { light: '#fecaca', main: '#f82c2e', hover: '#d91f21', active: '#b51719' },
+  nav: [
+    { label: 'Dashboard', labelKey: 'shell.nav.dashboard', to: '/', icon: 'dashboard' },
+    {
+      label: 'Growth Calculator',
+      labelKey: 'shell.nav.growthCalculator',
+      to: '/growth-calculator',
+      icon: 'insights',
+    },
+  ],
   modules: [],
 } satisfies AppConfig;

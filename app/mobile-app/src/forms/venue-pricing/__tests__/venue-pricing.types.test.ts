@@ -19,7 +19,6 @@ const base = (patch: Partial<VenuePricingValues> = {}): VenuePricingValues => ({
   min_hours: '1',
   max_hours: '4',
   booking_increment_minutes: '30',
-  min_spend: '0',
   deposit: '0',
   cleaning_fee: '0',
   pet_fee: '0',
@@ -97,7 +96,7 @@ describe('makeVenuePricingSchema', () => {
     });
 
     it('rejects blank, negative and non-numeric amounts', () => {
-      expect(problems(base({ min_spend: '' }))).toContain(`min_spend|${V}amount`);
+      expect(problems(base({ deposit: '' }))).toContain(`deposit|${V}amount`);
       expect(problems(base({ deposit: '-1' }))).toContain(`deposit|${V}amount`);
       expect(problems(base({ cleaning_fee: 'abc' }))).toContain(`cleaning_fee|${V}amount`);
       expect(problems(base({ pet_fee: ' ' }))).toContain(`pet_fee|${V}amount`);

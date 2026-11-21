@@ -85,7 +85,6 @@ export function toPricingValues(saved: SavedPricing, regular: RegularHours): Ven
     min_hours: String(saved.min_hours),
     max_hours: String(saved.max_hours),
     booking_increment_minutes: String(saved.booking_increment_minutes),
-    min_spend: String(saved.min_spend),
     deposit: String(saved.deposit),
     cleaning_fee: String(saved.cleaning_fee),
     pet_fee: String(saved.pet_fee),
@@ -137,7 +136,6 @@ export function savedToInput(
     min_hours: saved.min_hours,
     max_hours: saved.max_hours,
     booking_increment_minutes: saved.booking_increment_minutes,
-    min_spend: saved.min_spend,
     slots: saved.slots.map(({ start_time, end_time, price, days_of_week }) => ({
       start_time,
       end_time,
@@ -167,7 +165,6 @@ export function valuesToInput(values: VenuePricingValues, saved: SavedPricing): 
     min_hours: Number(values.min_hours),
     max_hours: Number(values.max_hours),
     booking_increment_minutes: Number(values.booking_increment_minutes),
-    min_spend: Number(values.min_spend),
     deposit: Number(values.deposit),
     cleaning_fee: Number(values.cleaning_fee),
     pet_fee: Number(values.pet_fee),

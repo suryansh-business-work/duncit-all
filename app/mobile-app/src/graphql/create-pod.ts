@@ -59,6 +59,7 @@ export const CreatePodOptionsDocument = gql(`
         model
         amount
       }
+      offer_min_spend
       cover_image_url
       city
       locality

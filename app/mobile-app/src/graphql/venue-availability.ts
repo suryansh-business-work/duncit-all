@@ -35,6 +35,7 @@ export const MyVenuesWithSettingsDocument = gql(`
             model
             amount
           }
+          min_spend
         }
         operating_hours {
           open

@@ -27,7 +27,6 @@ export const offerQuote = (venuePayout: number, total: number, pax = 20): OfferQ
   hours: 2,
   base: venuePayout,
   rules: [],
-  min_spend_top_up: 0,
   cleaning_fee: 0,
   pet_fee: 0,
   gst_pct: 0,

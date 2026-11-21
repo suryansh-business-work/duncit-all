@@ -35,7 +35,7 @@ export function VenueOfferStep({ form, venues, quote, currencySymbol }: Readonly
 
   return (
     <YStack gap={16} testID="create-pod-offer-step">
-      <VenueMinBusinessNote rows={venue?.offer_min_business} />
+      <VenueMinBusinessNote rows={venue?.offer_min_business} minSpend={venue?.offer_min_spend} />
       <Text fontSize={14} fontWeight="700" color="$color">
         {t('mweb.createPod.offer.title')}
       </Text>

@@ -76,6 +76,15 @@ export const hasImageLine = (mediaText: string) =>
 /** The picked venue's floor on the offer's basis, or null when there is none. */
 export type OfferFloorOf = (values: CreatePodFormValues) => VenueOfferFloor | null;
 
+/** Why the offer falls short of the picked venue's minimum spend (the message), or null when it meets it. */
+export type OfferShortfallOf = (values: CreatePodFormValues) => string | null;
+
+/** The picked venue's minimums the offer is held to. mWeb twin: OfferRules. */
+export interface OfferRules {
+  floor: OfferFloorOf;
+  shortfall: OfferShortfallOf;
+}
+
 /** A host's Minimum Advance Days: the days, and the instant their first allowed day begins. */
 export interface MinAdvanceRule {
   days: number;
@@ -88,7 +97,7 @@ function refineVenue(
   values: CreatePodFormValues,
   ctx: z.RefinementCtx,
   t: Translate,
-  offerFloor: OfferFloorOf,
+  offer: OfferRules,
 ) {
   if (values.pod_mode === 'PHYSICAL' && !values.venue_id) {
     ctx.addIssue({
@@ -106,7 +115,7 @@ function refineVenue(
       message: t('mweb.createPod.validation.spaceRequired'),
     });
   }
-  if (values.pod_mode === 'PHYSICAL') refineVenueTime(values, ctx, t, offerFloor);
+  if (values.pod_mode === 'PHYSICAL') refineVenueTime(values, ctx, t, offer);
 }
 
 /** What the host asks of the venue beside the price — the shared rules
@@ -130,7 +139,7 @@ function refineVenueOffer(
   values: CreatePodFormValues,
   ctx: z.RefinementCtx,
   t: Translate,
-  offerFloor: OfferFloorOf,
+  offer: OfferRules,
 ) {
   if (!isHostOfferModel(values.venue_offer_model)) {
     ctx.addIssue({
@@ -139,7 +148,8 @@ function refineVenueOffer(
       message: t('mweb.createPod.validation.offerModelRequired'),
     });
   }
-  const floor = offerFloor(values);
+  const floor = offer.floor(values);
+  const shortfall = offer.shortfall(values);
   if (
     !isFreeVenueOfferModel(values.venue_offer_model) &&
     offerRateOf(values.venue_offer_rate) <= 0
@@ -155,6 +165,8 @@ function refineVenueOffer(
       path: ['venue_offer_rate'],
       message: t('availability.offers.minBusiness.offerBelow', { vars: { min: floor.text } }),
     });
+  } else if (shortfall) {
+    ctx.addIssue({ code: 'custom', path: ['venue_offer_rate'], message: shortfall });
   }
   refineOfferAsk(values, ctx, t);
 }
@@ -165,7 +177,7 @@ function refineVenueTime(
   values: CreatePodFormValues,
   ctx: z.RefinementCtx,
   t: Translate,
-  offerFloor: OfferFloorOf,
+  offer: OfferRules,
 ) {
   if (values.venue_slot_id) return;
   if (values.partner_request_id) {
@@ -183,7 +195,7 @@ function refineVenueTime(
       message: t('mweb.createPod.validation.bookingRequired'),
     });
   }
-  refineVenueOffer(values, ctx, t, offerFloor);
+  refineVenueOffer(values, ctx, t, offer);
 }
 
 /** Virtual pods must carry a valid meeting link. */
@@ -364,13 +376,15 @@ function refinePublish(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Tra
  * null while the programme is not known to be on — Step 4 hides the editor
  * then, so the percentage is not checked (see `refineSmartIncentive`).
  * `offerFloor` is the picked venue's business amount on the offer's basis: an
- * offer below it cannot leave the offer step. `minAdvance` is a host's Minimum
+ * offer below it cannot leave the offer step, nor can one short of the venue's
+ * minimum spend (`offerShortfall`). `minAdvance` is a host's Minimum
  * Advance Days (null while unknown, and for a Club Admin's pod). */
 export function makeCreatePodSchema(
   t: Translate = fallbackT,
   smartIncentiveMaxPct: number | null = DEFAULT_SMART_INCENTIVE_MAX_PCT,
   offerFloor: OfferFloorOf = () => null,
   minAdvance: MinAdvanceRule | null = null,
+  offerShortfall: OfferShortfallOf = () => null,
 ) {
   return z
     .object({
@@ -461,7 +475,7 @@ export function makeCreatePodSchema(
       ...freeJustificationFields,
     })
     .superRefine((values, ctx) => {
-      refineVenue(values, ctx, t, offerFloor);
+      refineVenue(values, ctx, t, { floor: offerFloor, shortfall: offerShortfall });
       refineMeeting(values, ctx, t);
       refineSchedule(values, ctx, t, minAdvance);
       refinePodType(values, ctx, t);

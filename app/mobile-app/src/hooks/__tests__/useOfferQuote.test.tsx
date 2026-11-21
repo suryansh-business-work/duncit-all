@@ -25,7 +25,6 @@ const priced = (pax: number, payout: number) => ({
   hours: 2,
   base: payout,
   rules: [],
-  min_spend_top_up: 0,
   cleaning_fee: 0,
   pet_fee: 0,
   gst_pct: 0,

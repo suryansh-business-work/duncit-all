@@ -8,7 +8,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import type { VenuePricingValues } from './venue-pricing.types';
 
 /**
- * What sits on top of the base: the minimum-spend top-up, the cleaning and
+ * What sits on top of the base: the cleaning and
  * pet fees, GST. The deposit is refundable and paid at the venue, so it is
  * never part of the booking price — its hint says so.
  */
@@ -17,13 +17,6 @@ export function FeeFields({ control }: Readonly<{ control: Control<VenuePricingV
   return (
     <YStack gap={12} testID="venue-pricing-fees">
       <SectionHeader title={t('availability.pricingModule.feesTitle')} />
-      <FormTextField
-        control={control}
-        name="min_spend"
-        label={t('availability.pricingModule.minSpend')}
-        hint={t('availability.pricingModule.minSpendHint')}
-        keyboardType="decimal-pad"
-      />
       <XStack gap={8}>
         <YStack flex={1}>
           <FormTextField

@@ -53,7 +53,6 @@ const saved = (patch: Partial<SavedPricing> = {}): SavedPricing =>
     min_hours: 1,
     max_hours: 6,
     booking_increment_minutes: 30,
-    min_spend: 100,
     slots: [{ start_time: '10:00', end_time: '12:00', price: 900, days_of_week: [1, 2] }],
     operating_hours: [
       { day: 1, open: '09:00', close: '18:00' },
@@ -79,7 +78,6 @@ describe('toPricingValues', () => {
       min_hours: '1',
       max_hours: '6',
       booking_increment_minutes: '30',
-      min_spend: '100',
       deposit: '200',
       cleaning_fee: '50',
       pet_fee: '25',
@@ -199,7 +197,6 @@ describe('valuesToInput', () => {
       min_hours: 1,
       max_hours: 6,
       booking_increment_minutes: 30,
-      min_spend: 100,
       deposit: 200,
       cleaning_fee: 50,
       pet_fee: 25,

@@ -56,6 +56,7 @@ import { VenueEarningsScreen } from '@/screens/VenueEarningsScreen';
 import { VenueHealthScreen } from '@/screens/VenueHealthScreen';
 import { VenueManageScreen } from '@/screens/VenueManageScreen';
 import { VenueSettingsScreen } from '@/screens/VenueSettingsScreen';
+import { VenueFeesScreen } from '@/screens/VenueFeesScreen';
 import { VenueEventRequestsScreen } from '@/screens/VenueEventRequestsScreen';
 import { VerificationScreen } from '@/screens/VerificationScreen';
 import { WalletScreen } from '@/screens/WalletScreen';
@@ -137,6 +138,7 @@ export function renderCoreScreens() {
       <Stack.Screen name="VenueAvailability" component={VenuePricingScreen} />
       <Stack.Screen name="VenuePricing" component={VenuePricingScreen} />
       <Stack.Screen name="VenueSettings" component={VenueSettingsScreen} />
+      <Stack.Screen name="VenueFees" component={VenueFeesScreen} />
       <Stack.Screen name="NearbyHosts" component={NearbyHostsScreen} />
       <Stack.Screen name="NearbyVenues" component={NearbyVenuesScreen} />
       <Stack.Screen name="HostPodRequests" component={HostPodRequestsScreen} />

@@ -1,23 +1,25 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
-import { venueMinBusinessLines, type VenueMinBusinessRow } from '@duncit/utils';
+import { venueMinimumLines, type VenueMinBusinessRow } from '@duncit/utils';
 
 import { offerMoney } from '@/components/venue-offer/offer-format';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 
 /**
- * The picked venue's minimum business — "₹200 per guest", "₹5,000 per
+ * The picked venue's minimums — "₹200 per guest", "Minimum spend ₹5,000 per
  * booking" — at the top of the offer step: an offer below the amount on the
- * basis the host pays on cannot be sent. Nothing when the venue names none.
+ * basis the host pays on, or short of the minimum spend, cannot be sent.
+ * Nothing when the venue names none.
  * mWeb twin: VenueMinBusinessNote.
  */
 export function VenueMinBusinessNote({
   rows,
-}: Readonly<{ rows: readonly VenueMinBusinessRow[] | null | undefined }>) {
+  minSpend,
+}: Readonly<{ rows: readonly VenueMinBusinessRow[] | null | undefined; minSpend?: number | null }>) {
   const { t } = useTranslation();
   const { color } = useThemeColors();
-  const lines = venueMinBusinessLines(rows, t, offerMoney);
+  const lines = venueMinimumLines(rows, minSpend, t, offerMoney);
   if (lines.length === 0) return null;
 
   return (

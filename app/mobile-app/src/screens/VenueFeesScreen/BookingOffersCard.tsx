@@ -29,10 +29,10 @@ function offersInput(values: BookingOffersValues) {
 }
 
 /**
- * Venue settings > Booking offers, for the venue the switcher picked: saves
+ * Fees & Minimum Spend > Booking offers & minimum spend, for the venue the switcher picked: saves
  * `VenueSettingsInput.offers` on its own — the minimum guests, the response
- * hours and the business expected per booking — beside the cancellation
- * policy, then re-reads the venue. mWeb twin: venue-settings-page/BookingOffersCard.
+ * hours, the least per basis and the minimum spend — beside the fees,
+ * then re-reads the venue. mWeb twin: venue-fees-page/BookingOffersCard.
  */
 export function BookingOffersCard({ venue, onSaved }: Readonly<Props>) {
   const [saving, setSaving] = useState(false);

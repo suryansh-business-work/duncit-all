@@ -7,7 +7,6 @@ import { useTranslation } from '@/hooks/useTranslation';
 export interface BreakdownView {
   base: number;
   rules: readonly { label: string; amount: number }[];
-  min_spend_top_up: number;
   cleaning_fee: number;
   pet_fee: number;
   taxes: number;
@@ -48,11 +47,6 @@ export function BreakdownLines({
 }: Readonly<{ breakdown: BreakdownView; testID: string }>) {
   const { t } = useTranslation();
   const optional = [
-    {
-      key: 'top-up',
-      label: t('availability.pricingModule.breakdown.minSpendTopUp'),
-      amount: breakdown.min_spend_top_up,
-    },
     {
       key: 'cleaning',
       label: t('availability.pricingModule.breakdown.cleaningFee'),

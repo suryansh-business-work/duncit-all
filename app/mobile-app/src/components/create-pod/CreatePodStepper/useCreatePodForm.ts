@@ -1,13 +1,12 @@
 import { formResolver } from '../../../utils/form-resolver';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { clampCreatePodStep, venueOfferFloor } from '@duncit/utils';
+import { clampCreatePodStep } from '@duncit/utils';
 
 import { useTranslation } from '@/hooks/useTranslation';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 import { useSmartIncentiveSettings } from '@/hooks/useSmartIncentiveSettings';
 import { usePodMinAdvance } from '@/hooks/usePodMinAdvance';
-import { offerMoney } from '@/components/venue-offer/offer-format';
 import {
   hostCategoryKeyOf,
   makeCreatePodSchema,
@@ -17,6 +16,7 @@ import {
 import type { CreatePodFormValues, PodHostOption } from '../create-pod.types';
 import type { BlockedViolation } from '../ModerationBlockedDialog';
 import type { CreatePodStepperProps } from './types';
+import { makeOfferRules } from './offerRules';
 import { useDraftAutosave } from './useDraftAutosave';
 
 type CreatePodFormArgs = Pick<
@@ -53,24 +53,12 @@ export function useCreatePodForm({
   const minAdvance = usePodMinAdvance(!clubAdmin);
   // The schema cannot call `t` at module scope, so it is built here from the
   // reader's own catalogue — the validation messages are copy like any other.
-  // An offer below the picked venue's business amount on its basis is held on
-  // Money; the server refuses it too (BELOW_MIN_BUSINESS).
-  const schema = useMemo(
-    () =>
-      makeCreatePodSchema(
-        t,
-        smartIncentiveMaxPct,
-        (values) =>
-          venueOfferFloor(
-            venues.find((venue) => venue.id === values.venue_id)?.offer_min_business,
-            values.venue_offer_model,
-            t,
-            offerMoney,
-          ),
-        minAdvance,
-      ),
-    [t, smartIncentiveMaxPct, venues, minAdvance],
-  );
+  // An offer below the picked venue's business amount on its basis, or short of
+  // its minimum spend, is held on Money (makeOfferRules); the server refuses both.
+  const schema = useMemo(() => {
+    const offer = makeOfferRules(venues, t);
+    return makeCreatePodSchema(t, smartIncentiveMaxPct, offer.floor, minAdvance, offer.shortfall);
+  }, [t, smartIncentiveMaxPct, venues, minAdvance]);
   const form = useForm<CreatePodFormValues, any, CreatePodFormValues>({
     resolver: formResolver<CreatePodFormValues>(schema),
     defaultValues: initialValues,

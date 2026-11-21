@@ -54,7 +54,6 @@ export interface VenuePricingValues {
   min_hours: string;
   max_hours: string;
   booking_increment_minutes: string;
-  min_spend: string;
   deposit: string;
   cleaning_fee: string;
   pet_fee: string;
@@ -171,7 +170,6 @@ export function makeVenuePricingSchema(t: Translate) {
       min_hours: hours,
       max_hours: hours,
       booking_increment_minutes: whole,
-      min_spend: amount,
       deposit: amount,
       cleaning_fee: amount,
       pet_fee: amount,

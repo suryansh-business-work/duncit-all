@@ -84,6 +84,7 @@ export const linkingConfig: NonNullable<LinkingOptions<RootStackParamList>['conf
     VenueAvailability: 'venues/availability',
     VenuePricing: 'venues/pricing',
     VenueSettings: 'venues/settings',
+    VenueFees: 'venues/fees',
     // Pod Requests, on mWeb's exact paths — notifications carry /pod-requests/:id.
     NearbyHosts: 'venues/nearby-hosts',
     NearbyVenues: 'host/nearby-venues',

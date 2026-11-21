@@ -20,7 +20,6 @@ export const VenuePricingDocument = gql(`
       min_hours
       max_hours
       booking_increment_minutes
-      min_spend
       slots {
         start_time
         end_time
@@ -73,7 +72,6 @@ export const VenuePriceQuoteDocument = gql(`
         label
         amount
       }
-      min_spend_top_up
       cleaning_fee
       pet_fee
       taxes

@@ -6,6 +6,7 @@ import { useTranslation } from '@duncit/shell';
 import { flattenErrors } from '../flattenErrors';
 import { useLeadFormSubmit } from '../useLeadFormSubmit';
 import LeadFormActions from '../../components/LeadFormActions';
+import LeadDuplicateCheck from '../../components/lead-duplicates/LeadDuplicateCheck';
 import FormAccordion from '../../components/FormAccordion';
 import EcommTrackingSection from '../ecomm-lead/sections/EcommTrackingSection';
 import ContactsField from '../fields/ContactsField';
@@ -30,6 +31,8 @@ interface Props<T extends FieldValues> {
   /** Save without leaving the form ("Update & Continue"). */
   onSubmitAndContinue?: (values: T) => Promise<void> | void;
   continueLabel?: string;
+  /** The lead being edited, so the duplicate check never matches it; absent on a new lead. */
+  leadId?: string;
 }
 
 interface Section {
@@ -93,6 +96,7 @@ export default function ProspectLeadForm<T extends FieldValues>({
   onCancel,
   onSubmitAndContinue,
   continueLabel,
+  leadId,
 }: Readonly<Props<T>>) {
   const { t } = useTranslation();
   // The two schemas have different shapes, so each gets its own resolver.
@@ -137,6 +141,7 @@ export default function ProspectLeadForm<T extends FieldValues>({
               {section.render()}
             </FormAccordion>
           ))}
+          <LeadDuplicateCheck entityType={entity} leadId={leadId} />
           <LeadFormActions
             submitLabel={submitLabel}
             submitting={submitting}

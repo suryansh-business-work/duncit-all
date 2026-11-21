@@ -68,6 +68,7 @@ export default function ProspectLeadEditorPage({ entity }: Readonly<{ entity: Pr
         onSubmitAndContinue={flow.submitAndContinue}
         continueLabel={isEdit ? t('crm.forms.updateAndContinue') : t('crm.forms.createAndContinue')}
         onCancel={flow.exit}
+        leadId={id}
       />
       <Snackbar open={!!flow.notice} autoHideDuration={4000} onClose={flow.clearNotice} message={flow.notice ?? ''} />
     </Stack>

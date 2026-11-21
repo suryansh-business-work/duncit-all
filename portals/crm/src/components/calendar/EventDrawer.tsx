@@ -11,6 +11,7 @@ import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import type { CalEvent } from './useCalendarEvents';
 import { formatDateTime } from '@duncit/app-settings';
 import { useTranslation } from '@duncit/shell';
+import { LEAD_KIND_LABEL_KEY, leadDetailPath } from '../../lib/leadKinds';
 
 interface Props {
   event: CalEvent | null;
@@ -21,21 +22,8 @@ interface Props {
 }
 
 const ENTITY_LABEL: Record<CalEvent['entity'], string> = {
-  VENUE_LEAD: 'crm.calendar.venueLead',
-  HOST_LEAD: 'crm.calendar.hostLead',
-  ECOMM_LEAD: 'crm.calendar.ecommLead',
-  CREATOR_LEAD: 'crm.calendar.creatorLead',
-  COMMUNITY_LEAD: 'crm.calendar.communityLead',
+  ...LEAD_KIND_LABEL_KEY,
   GENERAL: 'crm.calendar.general',
-};
-
-/** Each lead kind's detail page. */
-const LEAD_PATH: Record<Exclude<CalEvent['entity'], 'GENERAL'>, string> = {
-  VENUE_LEAD: '/venue-leads',
-  HOST_LEAD: '/host-leads',
-  ECOMM_LEAD: '/ecomm-leads',
-  CREATOR_LEAD: '/creator-leads',
-  COMMUNITY_LEAD: '/community-leads',
 };
 
 /** Side drawer showing a calendar event's details + a jump to its lead. */
@@ -48,8 +36,8 @@ export default function EventDrawer({ event, onClose, onEdit, onToggleDone, onDe
 
   // Only offered for an event that links a lead (see the button below).
   const openLead = (linked: CalEvent) => {
-    if (linked.entity === 'GENERAL') return;
-    navigate(`${LEAD_PATH[linked.entity]}/${linked.leadId}/view`);
+    if (linked.entity === 'GENERAL' || !linked.leadId) return;
+    navigate(leadDetailPath(linked.entity, linked.leadId));
     onClose();
   };
 

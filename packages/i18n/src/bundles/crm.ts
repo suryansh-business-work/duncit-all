@@ -547,6 +547,21 @@ export const CRM_BUNDLE: NestedCatalogue = {
       typeATitleAndPressEnter: 'Type a title and press Enter',
     },
 
+    duplicates: {
+      title: 'Already in the CRM',
+      intro: 'Each phone number, email and website can belong to one lead only. Saving is blocked until these are changed.',
+      introEdit: 'Each phone number, email and website can belong to one lead only. You can keep values this lead already had, but new ones must be unique.',
+      checking: 'Checking for duplicates…',
+      checkFailed: 'Could not check for duplicates right now. The check runs again when you save.',
+      fieldPhone: 'Phone number',
+      fieldEmail: 'Email',
+      match: '{field} {value} is already on {kind} "{name}"',
+      unnamed: 'Unnamed lead',
+      openLead: 'Open {name} in a new tab',
+      rowLabel: 'Duplicate',
+      rowHint: 'Shares a phone number, email or website with another lead',
+    },
+
     ecommLeads: {
       backToEcommLeads: 'Back to Ecomm Leads',
       businessType: 'Business type',

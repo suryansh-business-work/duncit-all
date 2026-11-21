@@ -24,7 +24,7 @@ export const COMMUNITY_LEAD_FIELDS = `
 `;
 
 export const CREATOR_LEADS_TABLE = gql`
-  query CreatorLeadsTable($query: TableQueryInput) { creatorLeadsTable(query: $query) { total rows { ${CREATOR_LEAD_FIELDS} } } }
+  query CreatorLeadsTable($query: TableQueryInput) { creatorLeadsTable(query: $query) { total rows { ${CREATOR_LEAD_FIELDS} is_duplicate } } }
 `;
 export const CREATOR_LEAD = gql`query CreatorLead($id: ID!) { creatorLead(id: $id) { ${CREATOR_LEAD_FIELDS} } }`;
 export const CREATE_CREATOR_LEAD = gql`mutation CreateCreatorLead($input: CreatorLeadInput!) { createCreatorLead(input: $input) { ${CREATOR_LEAD_FIELDS} } }`;
@@ -32,7 +32,7 @@ export const UPDATE_CREATOR_LEAD = gql`mutation UpdateCreatorLead($id: ID!, $inp
 export const DELETE_CREATOR_LEAD = gql`mutation DeleteCreatorLead($id: ID!) { deleteCreatorLead(id: $id) }`;
 
 export const COMMUNITY_LEADS_TABLE = gql`
-  query CommunityLeadsTable($query: TableQueryInput) { communityLeadsTable(query: $query) { total rows { ${COMMUNITY_LEAD_FIELDS} } } }
+  query CommunityLeadsTable($query: TableQueryInput) { communityLeadsTable(query: $query) { total rows { ${COMMUNITY_LEAD_FIELDS} is_duplicate } } }
 `;
 export const COMMUNITY_LEAD = gql`query CommunityLead($id: ID!) { communityLead(id: $id) { ${COMMUNITY_LEAD_FIELDS} } }`;
 export const CREATE_COMMUNITY_LEAD = gql`mutation CreateCommunityLead($input: CommunityLeadInput!) { createCommunityLead(input: $input) { ${COMMUNITY_LEAD_FIELDS} } }`;

@@ -5,6 +5,7 @@ import { Alert, AlertTitle, Box, Stack, Typography } from '@mui/material';
 import { flattenErrors } from '../flattenErrors';
 import { useLeadFormSubmit } from '../useLeadFormSubmit';
 import LeadFormActions from '../../components/LeadFormActions';
+import LeadDuplicateCheck from '../../components/lead-duplicates/LeadDuplicateCheck';
 import FormAccordion from '../../components/FormAccordion';
 import { ecommLeadSchema } from './ecomm-lead.schema';
 import { ecommLeadInitialValues, type EcommLeadFormValues } from './ecomm-lead.types';
@@ -29,6 +30,8 @@ interface Props {
   /** Save without leaving the form ("Update & Continue"). */
   onSubmitAndContinue?: (values: EcommLeadFormValues) => Promise<void> | void;
   continueLabel?: string;
+  /** The lead being edited, so the duplicate check never matches it; absent on a new lead. */
+  leadId?: string;
 }
 
 const SECTIONS = [
@@ -53,6 +56,7 @@ export default function EcommLeadForm({
   onCancel,
   onSubmitAndContinue,
   continueLabel,
+  leadId,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const submitLabelText = submitLabel ?? t('crm.forms.saveEcommLead');
@@ -90,6 +94,7 @@ export default function EcommLeadForm({
             </Alert>
           )}
           <EcommSections config={config} />
+          <LeadDuplicateCheck entityType="ECOMM_LEAD" leadId={leadId} />
           <LeadFormActions
             submitLabel={submitLabelText}
             submitting={submitting}

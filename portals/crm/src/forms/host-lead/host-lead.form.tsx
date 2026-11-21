@@ -5,6 +5,7 @@ import { Alert, AlertTitle, Box, Stack, Typography } from '@mui/material';
 import { flattenErrors } from '../flattenErrors';
 import { useLeadFormSubmit } from '../useLeadFormSubmit';
 import LeadFormActions from '../../components/LeadFormActions';
+import LeadDuplicateCheck from '../../components/lead-duplicates/LeadDuplicateCheck';
 import FormAccordion from '../../components/FormAccordion';
 import { hostLeadSchema } from './host-lead.schema';
 import { hostLeadInitialValues, type HostLeadFormValues } from './host-lead.types';
@@ -33,6 +34,8 @@ interface Props {
   /** Save without leaving the form ("Update & Continue"). */
   onSubmitAndContinue?: (values: HostLeadFormValues) => Promise<void> | void;
   continueLabel?: string;
+  /** The lead being edited, so the duplicate check never matches it; absent on a new lead. */
+  leadId?: string;
 }
 
 const SECTIONS = [
@@ -75,6 +78,7 @@ export default function HostLeadForm({
   onCancel,
   onSubmitAndContinue,
   continueLabel,
+  leadId,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const submitLabelText = submitLabel ?? t('crm.forms.saveHostLead');
@@ -112,6 +116,7 @@ export default function HostLeadForm({
             </Alert>
           )}
           <HostSections config={config} />
+          <LeadDuplicateCheck entityType="HOST_LEAD" leadId={leadId} />
           <LeadFormActions
             submitLabel={submitLabelText}
             submitting={submitting}

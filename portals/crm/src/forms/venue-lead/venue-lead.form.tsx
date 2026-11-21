@@ -8,6 +8,7 @@ import { DuncitButton } from '@duncit/buttons';
 import { flattenErrors } from '../flattenErrors';
 import { useLeadFormSubmit } from '../useLeadFormSubmit';
 import LeadFormActions from '../../components/LeadFormActions';
+import LeadDuplicateCheck from '../../components/lead-duplicates/LeadDuplicateCheck';
 import FormAccordion from '../../components/FormAccordion';
 import { venueLeadSchema } from './venue-lead.schema';
 import { venueLeadInitialValues, type VenueLeadFormValues } from './venue-lead.types';
@@ -39,6 +40,8 @@ interface Props {
   /** Save without leaving the form ("Update & Continue"). */
   onSubmitAndContinue?: (values: VenueLeadFormValues) => Promise<void> | void;
   continueLabel?: string;
+  /** The lead being edited, so the duplicate check never matches it; absent on a new lead. */
+  leadId?: string;
 }
 
 const SECTIONS = [
@@ -77,6 +80,7 @@ export default function VenueLeadForm({
   onCancel,
   onSubmitAndContinue,
   continueLabel,
+  leadId,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const submitLabelText = submitLabel ?? t('crm.forms.saveVenueLead');
@@ -114,6 +118,7 @@ export default function VenueLeadForm({
             </Alert>
           )}
           <VenueSections config={config} />
+          <LeadDuplicateCheck entityType="VENUE_LEAD" leadId={leadId} />
           <LeadFormActions
             submitLabel={submitLabelText}
             submitting={submitting}

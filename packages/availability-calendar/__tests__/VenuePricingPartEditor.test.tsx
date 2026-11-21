@@ -116,6 +116,17 @@ describe('VenuePricingPartEditor', () => {
     expect(notifySuccess).not.toHaveBeenCalled();
   });
 
+  it('uses its own words when the server refuses with an empty GraphQL message', async () => {
+    mount('fees', [
+      pricingMock(),
+      { request: { query: UPDATE_VENUE_PRICING, variables: () => true }, result: { errors: [new GraphQLError('')] } },
+    ]);
+    await edit('Cleaning fee', '60');
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    expect(await screen.findByText('Could not save. Try again.')).toBeInTheDocument();
+    expect(notifySuccess).not.toHaveBeenCalled();
+  });
+
   it('draws the price rules, not the fees, for the rules part', async () => {
     mount('rules', [pricingMock()]);
     expect(await screen.findByTestId('venue-pricing-rules')).toBeInTheDocument();

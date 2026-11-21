@@ -12,8 +12,12 @@ import { MY_VENUES_OFFERS, type BookingOffersVenue } from './queries';
  */
 export default function VenueBookingOffers({ venueId }: Readonly<{ venueId: string }>) {
   const { t } = useTranslation();
+  // Kept out of the cache: the page's own venue read (VenueSetupPage) also reads
+  // `myVenues` with a different `settings` selection. VenueSettings has no id, so
+  // each write would replace the other's settings and the two would refetch each
+  // other forever. A save re-reads through `refetch` below.
   const { data, loading, error, refetch } = useQuery<{ myVenues: BookingOffersVenue[] }>(MY_VENUES_OFFERS, {
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: 'no-cache',
   });
   const venue = data?.myVenues.find((entry) => entry.id === venueId);
 

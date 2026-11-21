@@ -28,8 +28,9 @@ const values = (over: Partial<CreatePodFormValues> = {}): CreatePodFormValues =>
   venue_offer_model: 'PER_GUEST',
   venue_offer_rate: '500',
   no_of_spots_text: '20',
-  pod_date_time_text: '2027-01-04 18:00',
-  pod_end_date_time_text: '2027-01-04 20:00',
+  // With no admin settings loaded the schedule is typed in the fallback 'dd MM yyyy hh:mm a'.
+  pod_date_time_text: '04 01 2027 06:00 PM',
+  pod_end_date_time_text: '04 01 2027 08:00 PM',
   ...over,
 });
 

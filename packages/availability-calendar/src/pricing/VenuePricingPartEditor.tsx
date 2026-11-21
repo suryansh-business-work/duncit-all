@@ -70,8 +70,9 @@ export default function VenuePricingPartEditor({ venueId, part }: Readonly<Props
       await pricingModule.save(pricingWithPart(part, pricing, form.getValues()));
       notifySuccess(t('venuePricing.part.saved'));
     } catch (saveError) {
-      // parseApiError never returns '': its fallback is where this editor's own words go.
-      setError(parseApiError(saveError, t('venuePricing.part.saveFailed')));
+      // A GraphQL refusal with an empty message parses to '': this editor's own words go there too.
+      const fallback = t('venuePricing.part.saveFailed');
+      setError(parseApiError(saveError, fallback) || fallback);
       logger.warn('VenuePricingPartEditor', 'save', { error: saveError, venue_id: venueId, part });
     }
   };

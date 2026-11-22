@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
 import type { RazorpayErrorLike } from '@duncit/utils';
 import {
@@ -9,6 +9,7 @@ import {
   type CheckoutPaymentRow,
 } from '../checkout-page/queries';
 import {
+  loadRazorpay,
   openRazorpayCheckout,
   type RazorpayOrderData,
   type RazorpaySignature,
@@ -48,6 +49,13 @@ export function useGiftCardPayment({ onPaymentFailure }: Readonly<Args>) {
   // Every payment is invoiced, so the server refuses one without a billing
   // address — the same billing form the pod checkout uses, prefilled from the profile.
   const billingForm = useCheckoutBillingForm(me);
+
+  // Fetch the Razorpay script while the buyer fills the form, as the pod
+  // checkout does, so Pay opens the sheet without a script download first.
+  const razorpayLive = !!finance?.razorpay_enabled;
+  useEffect(() => {
+    if (razorpayLive) loadRazorpay().catch(() => undefined);
+  }, [razorpayLive]);
 
   const verifyRazorpay = async (paymentDocId: string, sig: RazorpaySignature) => {
     setSubmitting(true);

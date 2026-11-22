@@ -1,4 +1,6 @@
+import { GraphQLError } from 'graphql';
 import { runTableQuery, type TableQueryInput } from '@utils/table-query';
+import { validationMessages } from '@utils/mongo-error';
 import { logs } from '@observability/log';
 import {
   RATE_LIMIT_ALGORITHMS,
@@ -26,6 +28,17 @@ import { resetAll, storeEngine } from './rateLimit.store';
  * so an operator who tightens a limit sees it take effect on the next request
  * rather than up to fifteen seconds later while they wonder if it saved.
  */
+
+/** A rule the model's limits refuse answers BAD_USER_INPUT naming each limit, not a server error. */
+async function refuseInvalid<T>(write: () => Promise<T>): Promise<T> {
+  try {
+    return await write();
+  } catch (error) {
+    const messages = validationMessages(error);
+    if (!messages) throw error;
+    throw new GraphQLError(messages.join('. '), { extensions: { code: 'BAD_USER_INPUT', errors: messages } });
+  }
+}
 
 const RULE_TABLE = {
   searchFields: ['name', 'description', 'app'],
@@ -174,14 +187,18 @@ export const rateLimitService = {
   },
 
   async createRule(input: Record<string, unknown>) {
-    const doc = await RateLimitRuleModel.create(pickWritable(input));
+    const doc = await refuseInvalid(() => RateLimitRuleModel.create(pickWritable(input)));
     invalidateRateLimitCache();
     logs.server.info('rateLimit', 'createRule', { rule: doc.name });
     return doc;
   },
 
   async updateRule(id: string, input: Record<string, unknown>) {
-    const doc = await RateLimitRuleModel.findByIdAndUpdate(id, pickWritable(input), { new: true });
+    // runValidators: an edit is held to the same limits as a new rule — a
+    // limit of 0 on an enforcing rule would otherwise refuse every request.
+    const doc = await refuseInvalid(() =>
+      RateLimitRuleModel.findByIdAndUpdate(id, pickWritable(input), { new: true, runValidators: true })
+    );
     invalidateRateLimitCache();
     return doc;
   },

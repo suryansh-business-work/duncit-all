@@ -90,3 +90,19 @@ export function duplicateKeyMessage(err: unknown): string | null {
   }
   return `Those details are already in use (${joinWords(labels)}). Please change them and try again.`;
 }
+
+interface MongooseValidationError {
+  name?: unknown;
+  errors?: Record<string, { message?: unknown }> | null;
+}
+
+/**
+ * The messages of a Mongoose ValidationError (a model's min, max, enum or
+ * required refusing a write), or null for anything else — so a service can
+ * answer BAD_USER_INPUT with the rule that failed instead of a server error.
+ */
+export function validationMessages(err: unknown): string[] | null {
+  const error = err as MongooseValidationError | null;
+  if (error?.name !== 'ValidationError' || !error.errors) return null;
+  return Object.values(error.errors).map((issue) => String(issue.message));
+}

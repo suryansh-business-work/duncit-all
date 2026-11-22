@@ -11,6 +11,7 @@ import { emailPreviewVars, sendHtmlEmail } from '@services/email/email.service';
 import { STARTER_MJML } from '@services/email/catalogue/starter';
 import { GraphQLError } from 'graphql';
 import { logs } from '@observability/log';
+import { isEmailAddress } from '@utils/email';
 
 /** The Communications console manages the templates. */
 const ADMIN_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN', 'COMMUNICATIONS_MANAGER'];
@@ -163,6 +164,10 @@ export const emailTemplateResolvers = {
       ctx: GraphQLContext
     ) => {
       requireRole(ctx, ADMIN_ROLES);
+      // One address, as the form asks: the mail provider would take a comma
+      // list, and a "test" would then reach everyone on it.
+      const to = args.to.trim();
+      if (!isEmailAddress(to)) return { ok: false, message: 'Enter one valid email address to send the test to' };
       const tpl = await emailTemplateService.byId(args.template_id);
       if (!tpl) return { ok: false, message: 'Template not found' };
       // Same variables a real send has, so the test email is the real email.
@@ -181,7 +186,7 @@ export const emailTemplateResolvers = {
         // real email does — this used to build a third nodemailer transport of
         // its own beside the two that were already consolidated.
         const sent = await sendHtmlEmail({
-          to: args.to,
+          to,
           // Through applyVars, like a real send. A subject left raw showed a
           // literal {{pod_title}} in every test email while the real one showed
           // the value — the one line of an email you see before opening it.

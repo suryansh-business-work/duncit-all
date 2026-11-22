@@ -514,6 +514,14 @@ describe('admin edits', () => {
     expect(brandPickupLocationService.registerBrandWarehouses).toHaveBeenCalledWith(brand.id);
   });
 
+  it('adminUpdate cannot approve a brand the Approve button would refuse — no role, nothing saved', async () => {
+    const uid = owner();
+    const draft = await svc.createDraftFromApproval({ userId: uid, name: 'Half Done', email: 'h@x.com' });
+    await expect(svc.adminUpdate(draft.id, { tagline: 'Rushed' }, 'APPROVED')).rejects.toThrow('This brand cannot be approved yet');
+    expect(userService.assignRoles).not.toHaveBeenCalled();
+    expect(await EcommBrandModel.findById(draft.id).lean()).toMatchObject({ status: 'DRAFT', approved_at: null });
+  });
+
   it('createDraftFromApproval reuses an open draft, reopens a rejected one, and never overwrites typed details', async () => {
     const uid = owner();
     const first = await svc.createDraftFromApproval({ userId: uid, name: 'Meeting Name', email: 'm@x.com', phone: '98' });

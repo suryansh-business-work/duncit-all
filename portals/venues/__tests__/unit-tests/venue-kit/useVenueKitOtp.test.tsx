@@ -22,7 +22,10 @@ vi.mock('@apollo/client/react', () => ({
   },
 }));
 vi.mock('@duncit/dialogs', () => ({ notifyError: mocks.notifyError, notifySuccess: mocks.notifySuccess }));
-vi.mock('@duncit/logs', () => ({ logs: { portal: { venues: { warn: mocks.warn } } } }));
+vi.mock('@duncit/logs', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@duncit/logs')>()),
+  logs: { portal: { venues: { warn: mocks.warn } } },
+}));
 
 import { useVenueKitOtp } from '../../../src/pages/venue-kit/interest-form';
 

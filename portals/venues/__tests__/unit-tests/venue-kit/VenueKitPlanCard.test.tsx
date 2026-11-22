@@ -24,7 +24,10 @@ vi.mock('@apollo/client/react', () => ({
 }));
 vi.mock('@duncit/user-context', () => ({ useUserData: () => ({ user: { roles: mocks.roles } }) }));
 vi.mock('@duncit/dialogs', () => ({ notifyError: mocks.notifyError, notifySuccess: mocks.notifySuccess }));
-vi.mock('@duncit/logs', () => ({ logs: { portal: { venues: mocks.log } } }));
+vi.mock('@duncit/logs', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@duncit/logs')>()),
+  logs: { portal: { venues: mocks.log } },
+}));
 vi.mock('../../../src/pages/venue-kit/offer-form', () => ({
   VenueKitOfferForm: (props: NonNullable<typeof mocks.formProps>) => {
     mocks.formProps = props;

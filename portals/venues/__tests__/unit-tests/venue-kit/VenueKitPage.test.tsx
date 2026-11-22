@@ -16,7 +16,10 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock('@apollo/client/react', () => ({ useQuery: () => mocks.summary }));
-vi.mock('@duncit/logs', () => ({ logs: { portal: { venues: { error: mocks.logError } } } }));
+vi.mock('@duncit/logs', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@duncit/logs')>()),
+  logs: { portal: { venues: { error: mocks.logError } } },
+}));
 vi.mock('../../../src/pages/venue-kit/VenueKitPlanCard', () => ({ default: () => <div data-testid="plan-card" /> }));
 vi.mock('../../../src/pages/venue-kit/interest-form', () => ({
   useVenueKitOtp: (onRegistered: () => void) => {

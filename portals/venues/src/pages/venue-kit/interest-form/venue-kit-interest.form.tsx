@@ -73,25 +73,30 @@ export default function VenueKitInterestForm({ state, actions }: Readonly<VenueK
     if (await actions.submit({ name: values.name, phone_number: values.phone_number })) reset(venueKitInterestDefaults);
   });
 
-  const text = (name: 'name' | 'email' | 'phone_number', label: string, extra: Partial<Parameters<typeof TextField>[0]> = {}) => (
-    <Controller
-      name={name}
-      control={control}
-      render={({ field }) => (
-        <TextField
-          {...field}
-          size="small"
-          label={label}
-          required
-          fullWidth
-          error={Boolean(errors[name])}
-          helperText={errors[name]?.message ?? extra.helperText}
-          {...extra}
-          slotProps={{ ...extra.slotProps, htmlInput: { 'data-testid': `venue-kit-${name}` } }}
-        />
-      )}
-    />
-  );
+  // The field's own hint gives way to its error: spreading `extra` last used to
+  // put the hint back over the message, so a bad name or number said nothing.
+  const text = (name: 'name' | 'email' | 'phone_number', label: string, extra: Partial<Parameters<typeof TextField>[0]> = {}) => {
+    const { helperText, slotProps, ...rest } = extra;
+    return (
+      <Controller
+        name={name}
+        control={control}
+        render={({ field }) => (
+          <TextField
+            {...field}
+            size="small"
+            label={label}
+            required
+            fullWidth
+            {...rest}
+            error={Boolean(errors[name])}
+            helperText={errors[name]?.message ?? helperText}
+            slotProps={{ ...slotProps, htmlInput: { 'data-testid': `venue-kit-${name}` } }}
+          />
+        )}
+      />
+    );
+  };
 
   return (
     <form onSubmit={submit} noValidate data-testid="venue-kit-interest-form">

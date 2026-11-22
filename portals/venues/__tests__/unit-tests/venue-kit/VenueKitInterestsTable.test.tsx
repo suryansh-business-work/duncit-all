@@ -44,9 +44,15 @@ vi.mock('@duncit/table', () => ({
     return null;
   },
 }));
-vi.mock('@duncit/app-settings', () => ({ useDateFormat: () => ({ formatDateTime: (iso: string) => `at ${iso}` }) }));
+vi.mock('@duncit/app-settings', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@duncit/app-settings')>()),
+  useDateFormat: () => ({ formatDateTime: (iso: string) => `at ${iso}` }),
+}));
 vi.mock('@duncit/dialogs', () => ({ notifyError: mocks.notifyError, notifySuccess: mocks.notifySuccess }));
-vi.mock('@duncit/logs', () => ({ logs: { portal: { venues: { warn: mocks.warn } } } }));
+vi.mock('@duncit/logs', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@duncit/logs')>()),
+  logs: { portal: { venues: { warn: mocks.warn } } },
+}));
 
 import VenueKitInterestsTable from '../../../src/pages/venue-kit/VenueKitInterestsTable';
 

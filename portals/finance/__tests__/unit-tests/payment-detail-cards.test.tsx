@@ -25,7 +25,7 @@ const valueOf = (label: string) => screen.getByText(label).nextElementSibling?.t
 describe('AmountBreakupCard', () => {
   it('lists only the lines that reconcile when nothing was discounted', () => {
     const detail = makePaymentDetail({
-      payment: makeDetailPayment({ coupon_code: null, coupon_discount: 0, ticket_discount_amount: 0, ticket_discount_pct: 0 }),
+      payment: makeDetailPayment({ coupon_code: null, coupon_discount: 0 }),
       coins_redeemed: 0,
       original_total: 1000,
     });
@@ -36,7 +36,6 @@ describe('AmountBreakupCard', () => {
     expect(valueOf('Total charged')).toBe('₹1000.00');
     // Nothing deducted, so the subtotal already is the taxable value.
     expect(screen.queryByText('Taxable value')).not.toBeInTheDocument();
-    expect(screen.queryByText(/Multi-ticket discount/)).not.toBeInTheDocument();
     expect(screen.queryByText(/Coupon discount/)).not.toBeInTheDocument();
     expect(screen.queryByText(/Coins redeemed/)).not.toBeInTheDocument();
     // The fee is a memo inside the subtotal, shown even though it never adds on top.
@@ -53,23 +52,21 @@ describe('AmountBreakupCard', () => {
   });
 
   it('takes every deduction off the value before GST, in the order the bill was priced', () => {
-    // ₹1200 cart − ₹50 tier − ₹100 coupon − 50 coins = ₹1000 charged (₹847.46 + ₹152.54 GST).
+    // ₹1150 cart − ₹100 coupon − 50 coins = ₹1000 charged (₹847.46 + ₹152.54 GST).
     const detail = makePaymentDetail({ payment: makeDetailPayment({ coupon_code: 'YOGA10' }) });
     renderWithProviders(<AmountBreakupCard detail={detail} />);
 
     const labels = [
       'Original total',
       'Subtotal (excl. GST)',
-      'Multi-ticket discount (5%)',
       'Coupon discount (YOGA10)',
       'Coins redeemed (50)',
       'Taxable value',
       'GST (18.00%)',
     ];
     expect(labels.map(valueOf)).toEqual([
-      '₹1200.00',
-      '₹1016.95',
-      '− ₹42.37',
+      '₹1150.00',
+      '₹974.58',
       '− ₹84.75',
       '− ₹42.37',
       '₹847.46',
@@ -153,18 +150,17 @@ describe('CustomerCard', () => {
 });
 
 describe('PodBookingCard', () => {
-  it('shows the pod date and the multi-ticket tier frozen at checkout', () => {
+  it('shows the pod date, the seats and the ticket the booking issued', () => {
     renderWithProviders(
       <PodBookingCard booking={makePodBooking()} payment={makeDetailPayment()} formatDateTime={formatDateTime} />,
     );
     expect(screen.getByRole('heading', { name: 'Pod booking' })).toBeInTheDocument();
     expect(valueOf('Date')).toBe('on 2026-09-20T06:30:00.000Z');
     expect(valueOf('Seats')).toBe('2');
-    expect(valueOf('Multi-ticket tier')).toBe('5% · −₹50.00');
     expect(valueOf('Ticket code')).toBe('TKT-7788');
   });
 
-  it('marks an undated pod, no tier and a booking that was never written', () => {
+  it('marks an undated pod and a booking that was never written', () => {
     const booking = makePodBooking({
       pod_date_time: null,
       membership_id: null,
@@ -172,10 +168,8 @@ describe('PodBookingCard', () => {
       ticket_code: null,
       ticket_status: null,
     });
-    const payment = makeDetailPayment({ ticket_discount_amount: 0, ticket_discount_pct: 0 });
-    renderWithProviders(<PodBookingCard booking={booking} payment={payment} formatDateTime={formatDateTime} />);
+    renderWithProviders(<PodBookingCard booking={booking} payment={makeDetailPayment()} formatDateTime={formatDateTime} />);
     expect(valueOf('Date')).toBe('—');
-    expect(valueOf('Multi-ticket tier')).toBe('None');
     for (const label of ['Membership', 'Membership status', 'Ticket code', 'Ticket status']) {
       expect(valueOf(label)).toBe('—');
     }

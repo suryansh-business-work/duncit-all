@@ -129,8 +129,6 @@ describe('CLUB_ADMIN_PODS_TABLE', () => {
       'place_label',
       'pod_hosts_id',
       'reel_url',
-      'ticket_discount_enabled',
-      'ticket_discount_tiers',
       'venue_approval_status',
     ]);
   });

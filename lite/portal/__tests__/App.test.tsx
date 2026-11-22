@@ -41,7 +41,6 @@ const platform = (locales: ReturnType<typeof locale>[]): MockLink.MockedResponse
           server_time: '2026-03-15T10:00:00.000Z',
           min_signup_age: 13,
           draft_retention_days: 30,
-          ticket_discount_max_pct: 50,
           happening_nearby_days: 7,
         },
       },

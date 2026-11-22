@@ -333,7 +333,7 @@ export const adminTypeDefs = gql`
     server_time: String!
     min_signup_age: Int!
     draft_retention_days: Int!
-    ticket_discount_max_pct: Int!
+    ticket_discount_max_pct: Int! @deprecated(reason: "The multi-ticket discount was removed. Always 0; kept only for Lite bundles built before the removal.")
     happening_nearby_days: Int!
   }
 

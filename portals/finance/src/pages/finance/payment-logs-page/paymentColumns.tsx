@@ -94,24 +94,14 @@ export function buildPaymentColumns({ t, renderActions, shop }: Readonly<Options
     },
     { field: 'description', headerName: t('finance.payment.colDescription'), minWidth: 160, type: 'text' },
     ...(shop ? [shopColumn(t, shop)] : []),
-    // Ahead of the subtotal: the tier came off the price before GST was
-    // worked out, so the row reads discount → taxable subtotal → GST → total,
-    // the same order as the payment's Amount Breakup and the checkout.
     {
-      field: 'ticket_discount_amount',
-      headerName: t('finance.payment.colTicketDiscount'),
-      width: 150,
-      // A shop order has no ticket, so its log does not lead with this column.
-      hide: !!shop,
-      type: 'number',
-      valueGetter: (p) => fmt(p.ticket_discount_amount, p.currency_symbol),
-    },
-    {
-      // Next in the same order: the member's unlocked offer came off what the
-      // tier left, still ahead of the subtotal GST was worked out on.
+      // Ahead of the subtotal: the member's unlocked offer came off the price
+      // before GST was worked out, so the row reads discount → taxable subtotal
+      // → GST → total, the same order as the payment's Amount Breakup and the checkout.
       field: 'smart_incentive_amount',
       headerName: t('finance.payment.colSmartIncentive'),
       width: 150,
+      // A shop order has no ticket, so its log does not lead with this column.
       hide: !!shop,
       type: 'number',
       valueGetter: (p) => fmt(p.smart_incentive_amount, p.currency_symbol),

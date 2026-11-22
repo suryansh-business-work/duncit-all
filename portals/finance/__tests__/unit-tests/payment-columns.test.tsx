@@ -26,8 +26,6 @@ const payment = (over: Partial<PaymentRow> = {}): PaymentRow => ({
   gst_amount: 152.54,
   coins_redeemed: 50,
   coins_earned: 10,
-  ticket_discount_amount: 0,
-  ticket_discount_pct: 0,
   smart_incentive_amount: 0,
   total: 1000,
   round_off: 0.4,
@@ -111,8 +109,8 @@ describe('buildPaymentColumns — the shared columns', () => {
   it('brings the coin split forward in a shop log and tucks it away in the all-payments log', () => {
     expect(column('coins_redeemed').hide).toBe(true);
     expect(column('coins_redeemed', 'POD_SHOP').hide).toBe(false);
-    expect(column('ticket_discount_amount').hide).toBe(false);
-    expect(column('ticket_discount_amount', 'ECOMM').hide).toBe(true);
+    expect(column('smart_incentive_amount').hide).toBe(false);
+    expect(column('smart_incentive_amount', 'ECOMM').hide).toBe(true);
   });
 
   it('labels the total as cash paid in a shop log, where coins pay the rest', () => {

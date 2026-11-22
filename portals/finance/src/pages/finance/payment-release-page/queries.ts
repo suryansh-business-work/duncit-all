@@ -266,18 +266,17 @@ export interface PaymentReleaseRow {
   shortfall_funding_note: string;
   breakdown?: ReleaseBreakdown | null;
 }
-/** The pod's coin movement, multi-ticket and Smart Incentive discounts, for the
- * release review's explanatory lines. Live rather than from the frozen
- * settlement snapshot: none was ever part of that record and back-filling one
- * would rewrite money history. Each discount total is itself a sum of
- * per-payment snapshots, so it does not move when the pod's offers are edited. */
+/** The pod's coin movement and Smart Incentive discounts, for the release
+ * review's explanatory lines. Live rather than from the frozen settlement
+ * snapshot: neither was ever part of that record and back-filling one would
+ * rewrite money history. The discount total is itself a sum of per-payment
+ * snapshots, so it does not move when the pod's offers are edited. */
 export const POD_COIN_TOTALS = gql`
   query PodCoinTotals($podId: ID!) {
     podFinanceBreakdown(pod_id: $podId) {
       pod_id
       coins_redeemed_total
       coins_earned_total
-      ticket_discount_total
       smart_incentive_total
     }
   }

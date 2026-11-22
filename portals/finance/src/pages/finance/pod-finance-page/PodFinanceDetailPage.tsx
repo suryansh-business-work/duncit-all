@@ -57,17 +57,10 @@ function PodFinanceDetail({ breakdown }: Readonly<{ breakdown: PodFinanceBreakdo
               the collected total) · {breakdown.coins_earned_total} earned back by buyers
             </Typography>
           )}
-          {/* Tiers come off the ticket price before checkout, so they too explain
-              why "Customer paid" sits below the tickets' face value. */}
-          {breakdown.ticket_discount_total > 0 && (
-            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-              {t('finance.podFinance.ticketDiscountsNote', {
-                vars: { amount: money(sym, breakdown.ticket_discount_total) },
-              })}
-            </Typography>
-          )}
-          {/* So does each member's unlocked Smart Incentive — host-funded, since
-              the settlement runs on what was collected. */}
+          {/* Each member's unlocked Smart Incentive comes off the ticket price
+              before checkout, so it too explains why "Customer paid" sits below
+              the tickets' face value — host-funded, since the settlement runs
+              on what was collected. */}
           {breakdown.smart_incentive_total > 0 && (
             <Typography variant="body2" sx={{ color: 'text.secondary' }}>
               {t('finance.podFinance.smartIncentiveNote', {

@@ -86,8 +86,6 @@ export const makeDetailPayment = (over: Partial<DetailPaymentMock> = {}): Detail
   currency_symbol: '₹',
   coupon_code: 'YOGA10',
   coupon_discount: 100,
-  ticket_discount_amount: 50,
-  ticket_discount_pct: 5,
   // This buyer had not unlocked a Smart Incentive.
   smart_incentive_amount: 0,
   smart_incentive_pct: 0,
@@ -245,7 +243,7 @@ export const makePaymentDetail = (over: Partial<PaymentDetailMock> = {}): Paymen
   pod_booking: makePodBooking(),
   product_orders: [],
   gift_card: null,
-  original_total: 1200,
+  original_total: 1150,
   coins_redeemed: 50,
   coins_earned: 20,
   ...over,

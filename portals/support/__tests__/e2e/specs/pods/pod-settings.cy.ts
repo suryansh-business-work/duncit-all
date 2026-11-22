@@ -9,7 +9,6 @@ import { countOperation, expectNotSent, staffAccount } from '../../support/ui-st
  */
 
 const RISK_WINDOW = 'pod-setting-risk-window';
-const DISCOUNT_MAX = 'pod-setting-ticket-discount-max';
 const SLOT_WINDOW = 'pod-setting-auto-pod-slot-window';
 
 /** Type a value into a card and see its warning, with Save off. */
@@ -35,7 +34,6 @@ describe('Pods Portal · Pod settings (run account, password CHANGED)', () => {
     cy.byTestId('pod-settings-title').should('have.text', 'Pod Settings');
     const saves = countOperation('UpdatePodSettings');
     expectOutOfRange(RISK_WINDOW, '9000', 'Enter a whole number between 1 and 8760.');
-    expectOutOfRange(DISCOUNT_MAX, '200', 'Enter a whole number between 1 and 99.');
     expectOutOfRange(SLOT_WINDOW, '90', 'Enter a whole number between 1 and 60.');
     expectOutOfRange(RISK_WINDOW, '0', 'Enter a whole number between 1 and 8760.');
     expectNotSent(saves, 'UpdatePodSettings');

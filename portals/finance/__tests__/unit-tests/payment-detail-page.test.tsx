@@ -65,8 +65,6 @@ const unpaidDetail = () =>
       status: 'PENDING',
       coupon_code: null,
       coupon_discount: 0,
-      ticket_discount_amount: 0,
-      ticket_discount_pct: 0,
     }),
     finalize_state: 'NOT_STARTED',
     finalize_attempts: 1,
@@ -120,16 +118,15 @@ describe('PaymentDetailPage — the audit', () => {
     expect(screen.getByText('Receipt e-mail: SMTP timeout after 30s')).toBeInTheDocument();
     expect(screen.queryByText('Refund required')).not.toBeInTheDocument();
 
-    // Original ₹1200 incl. 18% GST → ₹1016.95 excl. GST; each deduction is shown
-    // excl. GST too (₹50 → ₹42.37, ₹100 → ₹84.75, coins take the remainder
-    // ₹42.37) so they land exactly on the ₹847.46 taxable value.
-    expect(screen.getByText('₹1200.00')).toBeInTheDocument();
-    expect(screen.getByText('₹1016.95')).toBeInTheDocument();
-    expect(screen.getByText('Multi-ticket discount (5%)')).toBeInTheDocument();
+    // Original ₹1150 incl. 18% GST → ₹974.58 excl. GST; each deduction is shown
+    // excl. GST too (₹100 → ₹84.75, coins take the remainder ₹42.37) so they
+    // land exactly on the ₹847.46 taxable value.
+    expect(screen.getByText('₹1150.00')).toBeInTheDocument();
+    expect(screen.getByText('₹974.58')).toBeInTheDocument();
     expect(screen.getByText('Coupon discount (YOGA10)')).toBeInTheDocument();
     expect(screen.getByText('− ₹84.75')).toBeInTheDocument();
     expect(screen.getByText('Coins redeemed (50)')).toBeInTheDocument();
-    expect(screen.getAllByText('− ₹42.37')).toHaveLength(2);
+    expect(screen.getByText('− ₹42.37')).toBeInTheDocument();
     expect(screen.getByText('GST (18.00%)')).toBeInTheDocument();
     expect(screen.getByText('Platform fee (10.00% of subtotal)')).toBeInTheDocument();
 
@@ -144,7 +141,6 @@ describe('PaymentDetailPage — the audit', () => {
     // The pod tab opens first, because this payment booked a pod.
     expect(screen.getByRole('tab', { name: 'Pod' })).toHaveAttribute('aria-selected', 'true');
     expect(screen.getByText('Sunrise Yoga at Cubbon Park')).toBeInTheDocument();
-    expect(screen.getByText('5% · −₹50.00')).toBeInTheDocument();
 
     expect(screen.getByText('Yoga Week 10% off')).toBeInTheDocument();
     expect(screen.queryByText('This coupon has since been deleted.')).not.toBeInTheDocument();
@@ -164,7 +160,8 @@ describe('PaymentDetailPage — the audit', () => {
     expect(screen.getByText(/1 finalize attempt$/)).toBeInTheDocument();
     expect(screen.getByText('No coins were used on this payment.')).toBeInTheDocument();
     expect(screen.queryByText('Coupon')).not.toBeInTheDocument();
-    expect(screen.queryByText('Multi-ticket discount (5%)')).not.toBeInTheDocument();
+    // Nothing was deducted, so the waterfall prints no taxable-value line either.
+    expect(screen.queryByText('Taxable value')).not.toBeInTheDocument();
   });
 
   it('goes back to Payment Logs', async () => {

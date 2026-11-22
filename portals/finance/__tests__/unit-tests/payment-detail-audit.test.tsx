@@ -45,7 +45,7 @@ const giftCardArtifact = (over: Parameters<typeof makeArtifact>[0] = {}) =>
 /** A gift-card checkout: no pod on the payment, so the booking side never applies. */
 const giftCardDetail = (over: Parameters<typeof makePaymentDetail>[0] = {}) =>
   makePaymentDetail({
-    payment: makeDetailPayment({ target_type: 'GIFT_CARD', description: 'Duncit gift card', ticket_discount_amount: 0, ticket_discount_pct: 0 }),
+    payment: makeDetailPayment({ target_type: 'GIFT_CARD', description: 'Duncit gift card' }),
     pod_booking: null,
     ...over,
   });

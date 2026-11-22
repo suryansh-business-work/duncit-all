@@ -230,7 +230,6 @@ export const APP_SETTINGS = {
   server_time: null,
   min_signup_age: 18,
   draft_retention_days: 30,
-  ticket_discount_max_pct: 50,
   happening_nearby_days: 7,
 };
 

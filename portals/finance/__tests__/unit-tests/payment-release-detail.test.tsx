@@ -56,7 +56,7 @@ const podBreakdownMock = (present = true): MockedResponse => ({
   result: {
     data: {
       podFinanceBreakdown: present
-        ? { ...makePodBreakdown(), coins_redeemed_total: 50, coins_earned_total: 12, ticket_discount_total: 120 }
+        ? { ...makePodBreakdown(), coins_redeemed_total: 50, coins_earned_total: 12, smart_incentive_total: 120 }
         : null,
     },
   },

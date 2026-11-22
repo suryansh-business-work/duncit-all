@@ -17,7 +17,6 @@ type Translate = ReturnType<typeof useTranslation>['t'];
 interface PodMoneyNotes {
   coins_redeemed_total: number;
   coins_earned_total: number;
-  ticket_discount_total: number;
   smart_incentive_total: number;
 }
 
@@ -80,8 +79,8 @@ export default function ReleaseBreakdownLines({ request }: Readonly<{ request: a
   // the settlement record, and back-filling one would rewrite money history.
   // They explain the COLLECTED figure at the top of the waterfall — the pod
   // banked less than the tickets' face value because coins cut the gross.
-  // The multi-ticket and Smart Incentive discounts ride on the same read for
-  // the same reason: both came off the ticket money before it was collected.
+  // The Smart Incentive discounts ride on the same read for the same reason:
+  // they came off the ticket money before it was collected.
   const coins = useQuery<{ podFinanceBreakdown: PodMoneyNotes }>(POD_COIN_TOTALS, {
     variables: { podId: request?.pod_id },
     skip: !request?.pod_id,
@@ -121,9 +120,6 @@ export default function ReleaseBreakdownLines({ request }: Readonly<{ request: a
         ))}
       </Stack>
       {coinsNote(notes, t)}
-      {discountNote(notes?.ticket_discount_total, sym, (amount) =>
-        t('finance.paymentRelease.ticketDiscountNote', { vars: { amount } }),
-      )}
       {discountNote(notes?.smart_incentive_total, sym, (amount) =>
         t('finance.paymentRelease.smartIncentiveNote', { vars: { amount } }),
       )}
@@ -146,9 +142,9 @@ function noteLine(text: string) {
   );
 }
 
-/** One line naming a discount already off the collected total — the multi-ticket
- * tiers or the Smart Incentive — or nothing when no booking on the pod got it.
- * `text` words the formatted amount, so each discount keeps its own literal key. */
+/** One line naming a discount already off the collected total — the Smart
+ * Incentive — or nothing when no booking on the pod got it. `text` words the
+ * formatted amount, so the discount keeps its own literal key. */
 function discountNote(value: number | undefined, sym: string, text: (amount: string) => string) {
   const total = Math.max(0, Number(value) || 0);
   if (total === 0) return null;

@@ -173,6 +173,10 @@ export function isMetaName(value: string): boolean;
 export const PAYMENT_TRANSACTION_ID: RegExp;
 /** Payment transaction-reference shape check. Trim before calling it. */
 export function isPaymentTransactionId(value: string): boolean;
+/** An Apple Developer Team ID, e.g. `A1B2C3D4E5`: exactly 10 upper-case letters or digits. */
+export const APPLE_TEAM_ID: RegExp;
+/** Apple Team ID shape check. Trim before calling it. */
+export function isAppleTeamId(value: string): boolean;
 /**
  * A fully-qualified hostname such as `ns1.example.com`: at least two labels,
  * each a {@link HOSTNAME_LABEL}, 253 characters at most. A trailing dot (the

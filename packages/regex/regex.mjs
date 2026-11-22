@@ -349,6 +349,17 @@ export const PAYMENT_TRANSACTION_ID = /^[A-Za-z0-9_-]{6,40}$/;
 export const isPaymentTransactionId = (v) => PAYMENT_TRANSACTION_ID.test(v);
 
 /**
+ * An Apple Developer Team ID (Membership details → Team ID), e.g. `A1B2C3D4E5`:
+ * exactly 10 upper-case letters or digits. It prefixes the app id in
+ * `apple-app-site-association`, so a wrong shape there means iOS never opens
+ * the app. One character class with a fixed count, so it is linear.
+ */
+export const APPLE_TEAM_ID = /^[A-Z0-9]{10}$/;
+
+/** Apple Team ID shape check. Trim before calling it. */
+export const isAppleTeamId = (v) => APPLE_TEAM_ID.test(v);
+
+/**
  * A fully-qualified hostname such as `ns1.example.com`: at least two labels,
  * each a {@link HOSTNAME_LABEL}, 253 characters at most. A trailing dot (the
  * root) is accepted. Case-insensitive, as DNS is.

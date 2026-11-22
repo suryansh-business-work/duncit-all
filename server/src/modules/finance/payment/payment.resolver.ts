@@ -39,9 +39,22 @@ const INVOICE_READ = [...ADMIN_RW, FINANCE_READER];
 // the Logs console. Refunds, retries and invoices stay with Finance.
 const LOG_READ = [...ADMIN_READ, LOGS_READER];
 
+/** The multi-ticket discount was removed; app versions already in the stores
+ * still select these non-null fields, so they always answer 0. */
+const retiredTicketDiscount = (): number => 0;
+
 export const paymentResolvers = {
   Payment: {
     pod: (parent: { pod_id?: IdLike }, _a: unknown, ctx: GraphQLContext) => loadPodSummary(ctx, parent.pod_id),
+    ticket_discount_amount: retiredTicketDiscount,
+    ticket_discount_pct: retiredTicketDiscount,
+  },
+  PaymentTotals: {
+    ticket_discount_total: retiredTicketDiscount,
+  },
+  CheckoutQuote: {
+    ticket_discount_amount: retiredTicketDiscount,
+    ticket_discount_pct: retiredTicketDiscount,
   },
   Query: {
     payments: (_p: unknown, args: { filter?: any; limit?: number }, ctx: GraphQLContext) => {

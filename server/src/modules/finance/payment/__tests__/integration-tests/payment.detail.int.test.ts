@@ -220,7 +220,6 @@ describe('paymentDetailService.detail — a booking whose deferred work is outst
     const payment = await seedPayment({
       pod_id: new Types.ObjectId(),
       total: 899.5,
-      ticket_discount_amount: 100,
       coupon_code: 'GONE20',
       coupon_discount: 50.25,
       coins_redeemed: 30,
@@ -260,7 +259,7 @@ describe('paymentDetailService.detail — a booking whose deferred work is outst
     expect(steps.get('RECEIPT_EMAIL')).toMatchObject({ can_retry: true, detail: 'SMTP refused the connection' });
 
     // No frozen gross: rebuilt by adding every discount back onto the net total.
-    expect(detail.original_total).toBe(1079.75);
+    expect(detail.original_total).toBe(979.75);
     expect(detail.coupon).toEqual({
       code: 'GONE20',
       discount: 50.25,

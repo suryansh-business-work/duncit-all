@@ -197,29 +197,24 @@ const headerName = (text: readonly { text: string; x: number; y: number }[]) =>
   text.filter((entry) => entry.text === 'Duncit' && entry.y === 36);
 
 describe('generateInvoicePdf totals block', () => {
-  it('prints the multi-ticket discount row with its percentage and ticket count', async () => {
-    const text = await texts({
-      ...base,
-      ticket_discount_pct: 10,
-      ticket_discount_amount: 94.16,
-      ticket_discount_tickets: 3,
-    });
+  it('prints the Smart Incentive row with its percentage', async () => {
+    const text = await texts({ ...base, smart_incentive_pct: 10, smart_incentive_amount: 94.16 });
 
-    expect(text).toEqual(expect.arrayContaining(['Multi-ticket discount (10% on 3 tickets)', '- INR 94.16']));
+    expect(text).toEqual(expect.arrayContaining(['Smart Incentive (10% off)', '- INR 94.16']));
   });
 
-  it('prints zeros for a discount whose percentage and ticket count were not frozen', async () => {
-    const text = await texts({ ...base, ticket_discount_amount: 50 });
+  it('prints 0% for a Smart Incentive whose percentage was not frozen', async () => {
+    const text = await texts({ ...base, smart_incentive_amount: 50 });
 
-    expect(text).toEqual(expect.arrayContaining(['Multi-ticket discount (0% on 0 tickets)', '- INR 50.00']));
+    expect(text).toEqual(expect.arrayContaining(['Smart Incentive (0% off)', '- INR 50.00']));
   });
 
-  it('prints no discount row when the discount amount is zero or negative', async () => {
-    const zero = await texts({ ...base, ticket_discount_amount: 0, ticket_discount_pct: 10 });
-    const negative = await texts({ ...base, ticket_discount_amount: -5, ticket_discount_pct: 10 });
+  it('prints no Smart Incentive row when its amount is zero or negative', async () => {
+    const zero = await texts({ ...base, smart_incentive_amount: 0, smart_incentive_pct: 10 });
+    const negative = await texts({ ...base, smart_incentive_amount: -5, smart_incentive_pct: 10 });
 
-    expect(zero.some((t) => t.startsWith('Multi-ticket discount'))).toBe(false);
-    expect(negative.some((t) => t.startsWith('Multi-ticket discount'))).toBe(false);
+    expect(zero.some((t) => t.startsWith('Smart Incentive'))).toBe(false);
+    expect(negative.some((t) => t.startsWith('Smart Incentive'))).toBe(false);
   });
 
   it('prints the round-off row only when rounding added something', async () => {

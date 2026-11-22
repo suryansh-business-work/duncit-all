@@ -373,12 +373,7 @@ export const financeTypeDefs = /* GraphQL */ `
     coins_redeemed_total: Float!
     "Coins this pod's bookings paid back to buyers as reward."
     coins_earned_total: Float!
-    """
-    Multi-ticket discounts given across this pod's successful bookings. Like
-    coins, they come off the ticket price before GST, so collected_total is
-    already lower by this much — stated so the gap is explainable.
-    """
-    ticket_discount_total: Float!
+    ticket_discount_total: Float! @deprecated(reason: "The multi-ticket discount was removed. Always 0.")
     """
     Smart Incentive discounts given across this pod's successful bookings. They
     come off the ticket money the same way, so collected_total is already lower

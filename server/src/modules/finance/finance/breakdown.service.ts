@@ -190,8 +190,6 @@ export interface PodFinanceBreakdownView {
   coins_redeemed_total: number;
   /** Coins those bookings paid back to buyers as reward. */
   coins_earned_total: number;
-  /** Multi-ticket discounts those bookings got — already off collected_total. */
-  ticket_discount_total: number;
   /** Smart Incentive discounts those bookings got — already off collected_total too. */
   smart_incentive_total: number;
   /** Money handed back to buyers on this pod, across every booking. */
@@ -373,13 +371,12 @@ export const breakdownService = {
     const fs = await getFinanceSettings();
     const collected = await collectedForPod(pod._id);
     const bookings = await PaymentModel.countDocuments({ pod_id: pod._id, status: 'SUCCESS' });
-    // Coins — and the multi-ticket and Smart Incentive discounts — on the SAME
-    // set of payments `collectedForPod` counts, so the figures always describe
-    // one population of bookings.
+    // Coins — and the Smart Incentive discounts — on the SAME set of payments
+    // `collectedForPod` counts, so the figures always describe one population
+    // of bookings.
     const [coinTotals] = await PaymentModel.aggregate<{
       redeemed: number;
       earned: number;
-      ticket_discount: number;
       smart_incentive: number;
     }>([
       { $match: { pod_id: pod._id, status: 'SUCCESS' } },
@@ -388,7 +385,6 @@ export const breakdownService = {
           _id: null,
           redeemed: { $sum: { $ifNull: ['$coins_redeemed', 0] } },
           earned: { $sum: { $ifNull: ['$coins_earned', 0] } },
-          ticket_discount: { $sum: { $ifNull: ['$ticket_discount_amount', 0] } },
           smart_incentive: { $sum: { $ifNull: ['$smart_incentive_amount', 0] } },
         },
       },
@@ -455,7 +451,6 @@ export const breakdownService = {
       pod_title: pod.pod_title,
       coins_redeemed_total: coinTotals?.redeemed ?? 0,
       coins_earned_total: coinTotals?.earned ?? 0,
-      ticket_discount_total: round2(coinTotals?.ticket_discount ?? 0),
       smart_incentive_total: round2(coinTotals?.smart_incentive ?? 0),
       refunded_total: round2(refundTotals?.total ?? 0),
       refunded_count: refundTotals?.count ?? 0,

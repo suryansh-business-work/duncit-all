@@ -71,11 +71,9 @@ export const paymentTypeDefs = /* GraphQL */ `
     coupon_discount: Float!
     "Duncit Coins spent on this payment (1 coin = 1 rupee off the gross)."
     coins_redeemed: Float!
-    "Multi-ticket discount frozen at checkout: rupees taken off the ticket price (never add-on products) before the coupon and coins. 0 when no tier applied."
-    ticket_discount_amount: Float!
-    "Percentage of the multi-ticket tier that applied (0 when none)."
-    ticket_discount_pct: Int!
-    "The member's unlocked Smart Incentive, frozen at checkout: rupees taken off the ticket money after the multi-ticket discount and before the coupon and coins (host-funded). 0 when none applied."
+    ticket_discount_amount: Float! @deprecated(reason: "The multi-ticket discount was removed. Always 0.")
+    ticket_discount_pct: Int! @deprecated(reason: "The multi-ticket discount was removed. Always 0.")
+    "The member's unlocked Smart Incentive, frozen at checkout: rupees taken off the ticket money before the coupon and coins (host-funded). 0 when none applied."
     smart_incentive_amount: Float!
     "Percentage of the Smart Incentive that applied (0 when none)."
     smart_incentive_pct: Int!
@@ -265,7 +263,7 @@ export const paymentTypeDefs = /* GraphQL */ `
     can_retry_finalize: Boolean!
     "Every deferred step still owed. What the page's Retry all sends."
     retryable_step_keys: [String!]!
-    "Gross before every discount (multi-ticket discount, coupon, coins), taken from the frozen checkout metadata."
+    "Gross before every discount (Smart Incentive, coupon, coins), taken from the frozen checkout metadata."
     original_total: Float!
     "Coins spent on this payment (1 coin = 1 rupee off the gross)."
     coins_redeemed: Float!
@@ -479,8 +477,7 @@ export const paymentTypeDefs = /* GraphQL */ `
     gross: Float!
     fee: Float!
     gst: Float!
-    "Multi-ticket discounts given on the matching payments — already off gross."
-    ticket_discount_total: Float!
+    ticket_discount_total: Float! @deprecated(reason: "The multi-ticket discount was removed. Always 0.")
     "Smart Incentive discounts given on the matching payments — already off gross."
     smart_incentive_total: Float!
   }
@@ -497,10 +494,8 @@ export const paymentTypeDefs = /* GraphQL */ `
     round_off: Float!
     currency_symbol: String!
     dummy_mode: Boolean!
-    "Multi-ticket discount taken off the ticket price for the quoted seats (0 when no tier applies)."
-    ticket_discount_amount: Float!
-    "Percentage of the multi-ticket tier that applied (0 when none)."
-    ticket_discount_pct: Int!
+    ticket_discount_amount: Float! @deprecated(reason: "The multi-ticket discount was removed. Always 0.")
+    ticket_discount_pct: Int! @deprecated(reason: "The multi-ticket discount was removed. Always 0.")
     "The caller's unlocked Smart Incentive taken off the ticket money (0 when none applies)."
     smart_incentive_amount: Float!
     "Percentage of that Smart Incentive (0 when none)."
@@ -524,9 +519,8 @@ export const paymentTypeDefs = /* GraphQL */ `
     currency_symbol: String!
     "Every ticket of every date at list price."
     ticket_gross: Float!
-    "Multi-ticket discount across the dates."
-    ticket_discount_amount: Float!
-    ticket_discount_pct: Int!
+    ticket_discount_amount: Float! @deprecated(reason: "The multi-ticket discount was removed. Always 0.")
+    ticket_discount_pct: Int! @deprecated(reason: "The multi-ticket discount was removed. Always 0.")
     "Multi-date discount across the dates."
     multi_date_discount_amount: Float!
     multi_date_discount_pct: Int!

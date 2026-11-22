@@ -31,7 +31,6 @@ import {
 } from '@modules/finance/giftcard/giftcard.service';
 import { toPostalAddress, composeAddressLine, type PostalAddress } from '@utils/address';
 import { maxSeatsForBooking, normalizeSeats } from '@modules/pods/pod/pod.seats';
-import { ticketDiscountFor } from '@modules/pods/pod/pod.ticketDiscount';
 import { smartIncentiveFor } from '@modules/engagement/smartIncentive/smartIncentive.rules';
 import { smartIncentiveService } from '@modules/engagement/smartIncentive/smartIncentive.service';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
@@ -92,10 +91,7 @@ export const toPub = (p: IPayment) => ({
   coupon_code: p.coupon_code ?? null,
   coupon_discount: p.coupon_discount ?? 0,
   coins_redeemed: p.coins_redeemed ?? 0,
-  // Payments priced before the multi-ticket discount existed carry neither.
-  ticket_discount_amount: p.ticket_discount_amount ?? 0,
-  ticket_discount_pct: p.ticket_discount_pct ?? 0,
-  // Likewise for the Smart Incentive.
+  // Payments priced before the Smart Incentive existed carry neither.
   smart_incentive_amount: p.smart_incentive_amount ?? 0,
   smart_incentive_pct: p.smart_incentive_pct ?? 0,
   status: p.status,
@@ -134,7 +130,6 @@ const PAYMENT_TABLE_CONFIG: TableEntityConfig = {
     coins_earned: 'coins_earned',
     total: 'total',
     round_off: 'round_off',
-    ticket_discount_amount: 'ticket_discount_amount',
     smart_incentive_amount: 'smart_incentive_amount',
     status: 'status',
     gateway: 'gateway',
@@ -159,7 +154,6 @@ const PAYMENT_TABLE_CONFIG: TableEntityConfig = {
     coins_earned: { type: 'number' },
     total: { type: 'number' },
     round_off: { type: 'number' },
-    ticket_discount_amount: { type: 'number' },
     smart_incentive_amount: { type: 'number' },
     paid_at: { type: 'date' },
     created_at: { type: 'date' },
@@ -436,90 +430,81 @@ export function buildBuyerFields(input: any, user: any) {
   return { user_name: name, user_email: email, user_phone: contactPhone, billing, billing_address };
 }
 
-/** A pod's multi-ticket discount as priced for one booking. */
-type TicketDiscount = ReturnType<typeof ticketDiscountFor>;
-
-/** No pod on the checkout, so no ticket money and nothing to discount. */
-const NO_TICKET_DISCOUNT: TicketDiscount = { gross: 0, pct: 0, min_tickets: 0, amount: 0 };
-
 /** A member's unlocked Smart Incentive as priced for one booking. */
 type SmartIncentive = ReturnType<typeof smartIncentiveFor>;
 
 const NO_SMART_INCENTIVE: SmartIncentive = { pct: 0, amount: 0 };
 
 /** The discount fields a checkout quote reports beside its tax lines. */
-const quoteDiscounts = (ticketDiscount: TicketDiscount, smartIncentive: SmartIncentive) => ({
-  ticket_discount_amount: ticketDiscount.amount,
-  ticket_discount_pct: ticketDiscount.pct,
+const quoteDiscounts = (smartIncentive: SmartIncentive) => ({
   smart_incentive_amount: smartIncentive.amount,
   smart_incentive_pct: smartIncentive.pct,
 });
 
+/** Every seat of a booking at the pod's list price. */
+const ticketGrossOf = (pod: { pod_amount?: number | null }, seats: number) =>
+  round2(Number(pod.pod_amount || 0) * seats);
+
 /**
- * A pod booking's payable: the ticket money after the pod's multi-ticket
- * discount and then the member's unlocked Smart Incentive (`incentivePct`, 0
- * when none), plus add-on products charged once at full price. Neither
- * discount touches the products, so `product_cost_total` stays the product
- * gross that settlement and refunds subtract.
+ * A pod booking's payable: the ticket money less the member's unlocked Smart
+ * Incentive (`incentivePct`, 0 when none), plus add-on products charged once at
+ * full price. The incentive never touches the products, so
+ * `product_cost_total` stays the product gross that settlement and refunds
+ * subtract.
  */
 function pricePodBooking(pod: any, seats: number, addOns: number, incentivePct = 0) {
-  const ticketDiscount = ticketDiscountFor(Number(pod.pod_amount || 0), seats, pod);
-  const smartIncentive = smartIncentiveFor(round2(ticketDiscount.gross - ticketDiscount.amount), incentivePct);
+  const gross = ticketGrossOf(pod, seats);
+  const smartIncentive = smartIncentiveFor(gross, incentivePct);
   return {
-    ticketDiscount,
     smartIncentive,
-    payableAmount: round2(ticketDiscount.gross - ticketDiscount.amount - smartIncentive.amount + addOns),
+    payableAmount: round2(gross - smartIncentive.amount + addOns),
   };
 }
 
 /** The metadata blob recorded on every payment doc (source + pod breakdown).
- * `products` is the checkout's resolved product selection (variant-aware);
- * `ticketDiscount` is the multi-ticket tier that priced it, frozen here so the
- * invoice, finance and refunds never re-read the pod's (editable) tiers. */
+ * `products` is the checkout's resolved product selection (variant-aware). */
 export const paymentMetadata = (
   input: any,
   pod: any,
   products: ProductResolution,
-  ticketDiscount: TicketDiscount,
   rentals: RentalResolution = EMPTY_RENTALS
-) => ({
-  source: 'app_checkout',
-  checkout_url: input.checkout_url,
-  pod_id: input.pod_id || null,
-  ticket_amount: pod ? Number(pod.pod_amount || 0) : null,
-  // Read back at capture time — a webhook replay must book the seats that were
-  // actually paid for, never the client's word at that later moment.
-  seats: pod ? clampSeatsForPod(pod, input.seats) : null,
-  // Every ticket at list price, before the multi-ticket discount came off.
-  ticket_gross: pod ? ticketDiscount.gross : null,
-  ticket_discount_pct: ticketDiscount.pct,
-  ticket_discount_amount: ticketDiscount.amount,
-  ticket_discount_min_tickets: ticketDiscount.min_tickets,
-  product_cost_total: pod ? products.total : null,
-  selected_products: input.selected_products ?? [],
-  // Invoice-ready product lines (name/qty/unit/gross + chosen variant).
-  product_lines: products.lines,
-  // Fulfilment intent for the product order created on payment success.
-  fulfilment_method: input.fulfilment_method ?? 'PICKUP',
-  shipping_address: input.shipping_address ?? null,
-  // Rented items: priced lines plus their money, kept apart from the ticket the
-  // way products are (addOnMoneyOf). The venue is frozen beside them so the
-  // capture books the venue that was paid for.
-  rental_lines: rentals.lines,
-  rental_rent_total: rentals.rent_total,
-  rental_deposit_total: rentals.deposit_total,
-  rental_total: rentals.total,
-  rental_venue_id: rentals.lines.length > 0 && pod?.venue_id ? String(pod.venue_id) : null,
-  // Frozen: whether these deposits were taxed, as the venue was set at checkout.
-  rental_deposit_gst: rentals.deposit_gst,
-});
+) => {
+  const seats = pod ? clampSeatsForPod(pod, input.seats) : null;
+  return {
+    source: 'app_checkout',
+    checkout_url: input.checkout_url,
+    pod_id: input.pod_id || null,
+    ticket_amount: pod ? Number(pod.pod_amount || 0) : null,
+    // Read back at capture time — a webhook replay must book the seats that were
+    // actually paid for, never the client's word at that later moment.
+    seats,
+    // Every ticket at list price.
+    ticket_gross: pod && seats ? ticketGrossOf(pod, seats) : null,
+    product_cost_total: pod ? products.total : null,
+    selected_products: input.selected_products ?? [],
+    // Invoice-ready product lines (name/qty/unit/gross + chosen variant).
+    product_lines: products.lines,
+    // Fulfilment intent for the product order created on payment success.
+    fulfilment_method: input.fulfilment_method ?? 'PICKUP',
+    shipping_address: input.shipping_address ?? null,
+    // Rented items: priced lines plus their money, kept apart from the ticket the
+    // way products are (addOnMoneyOf). The venue is frozen beside them so the
+    // capture books the venue that was paid for.
+    rental_lines: rentals.lines,
+    rental_rent_total: rentals.rent_total,
+    rental_deposit_total: rentals.deposit_total,
+    rental_total: rentals.total,
+    rental_venue_id: rentals.lines.length > 0 && pod?.venue_id ? String(pod.venue_id) : null,
+    // Frozen: whether these deposits were taxed, as the venue was set at checkout.
+    rental_deposit_gst: rentals.deposit_gst,
+  };
+};
 
 /** Apply an optional coupon to the payable, returning the priced quote, the
  * undiscounted original total (for strikethrough/records) and the coupon meta.
- * The payable already has the multi-ticket discount and the Smart Incentive
- * off (`discountsOff`, both together), so the coupon (its floor and
- * min_order_amount) is evaluated on the discounted bill; the original total
- * adds them back — the gross before EVERY discount.
+ * The payable already has the Smart Incentive off (`discountsOff`), so the
+ * coupon (its floor and min_order_amount) is evaluated on the discounted bill;
+ * the original total adds it back — the gross before EVERY discount.
  * Throws when a supplied coupon is invalid — never silently ignores it. */
 async function applyCoupon(
   input: any,
@@ -676,7 +661,6 @@ export async function resolvePayable(input: any, userId?: string) {
   let description = input.description || 'Booking';
   let products: ProductResolution = EMPTY_PRODUCT_RESOLUTION;
   let seats = 1;
-  let ticketDiscount = NO_TICKET_DISCOUNT;
   let smartIncentive = NO_SMART_INCENTIVE;
   let rentals = EMPTY_RENTALS;
   if (input.pod_id) {
@@ -704,14 +688,13 @@ export async function resolvePayable(input: any, userId?: string) {
         extensions: { code: 'BAD_USER_INPUT' },
       });
     }
-    // The ticket price is per seat, less the pod's multi-ticket discount for
-    // this many seats and then the member's unlocked Smart Incentive; add-on
-    // products are charged once. Both discounts come off BEFORE the coupon, the
-    // coins and the GST split.
+    // The ticket price is per seat, less the member's unlocked Smart Incentive;
+    // add-on products are charged once. The incentive comes off BEFORE the
+    // coupon, the coins and the GST split.
     // Rented items ride with the seat too, charged once at full price.
     rentals = await resolveRentalLines(pod, input.selected_rentals ?? [], seats);
     const incentivePct = await smartIncentiveService.pctForCheckout(pod, userId);
-    ({ ticketDiscount, smartIncentive, payableAmount } = pricePodBooking(
+    ({ smartIncentive, payableAmount } = pricePodBooking(
       pod,
       seats,
       products.total + rentals.total,
@@ -722,7 +705,7 @@ export async function resolvePayable(input: any, userId?: string) {
     throw new GraphQLError('Amount must be greater than 0', {
       extensions: { code: 'BAD_USER_INPUT' },
     });
-  return { pod, payableAmount, description, products, seats, ticketDiscount, smartIncentive, rentals };
+  return { pod, payableAmount, description, products, seats, smartIncentive, rentals };
 }
 
 /**
@@ -735,11 +718,11 @@ async function priceCheckout(input: Parameters<typeof resolvePayable>[0], userId
   const payable = await resolvePayable(input, userId);
   const uncharged = payable.rentals.total;
   const untaxed = payable.rentals.untaxed;
-  const discountsOff = round2(payable.ticketDiscount.amount + payable.smartIncentive.amount);
+  const discountsOff = round2(payable.smartIncentive.amount);
   const couponed = await applyCoupon(input, payable.payableAmount, userId, discountsOff, uncharged, untaxed);
   const { quote, coinsRedeemed } = await applyCoins(input.redeem_coins, userId, couponed.quote, uncharged, untaxed);
   const metadata = {
-    ...paymentMetadata(input, payable.pod, payable.products, payable.ticketDiscount, payable.rentals),
+    ...paymentMetadata(input, payable.pod, payable.products, payable.rentals),
     original_total: couponed.originalTotal,
   };
   return { ...payable, ...couponed, quote, coinsRedeemed, metadata };
@@ -1225,30 +1208,29 @@ export const paymentService = {
     // Single-seat quotes keep their exact previous behaviour (the caller's
     // amount already carries any add-on products), less only the caller's
     // unlocked Smart Incentive on the one ticket; the multi-seat case needs the
-    // server to re-price, and only the ticket multiplies. A single seat never
-    // earns a multi-ticket discount — every tier starts at 2.
+    // server to re-price, and only the ticket multiplies.
     // Settled like a charge with no coins, so the preview carries the same
     // whole-rupee total and round-off a checkout of this amount would.
     const settled = async (amount: number) =>
       (await applyCoins(0, null, await computeQuote(amount))).quote;
     if (!input.pod_id) {
-      return { ...(await settled(input.amount)), ...quoteDiscounts(NO_TICKET_DISCOUNT, NO_SMART_INCENTIVE) };
+      return { ...(await settled(input.amount)), ...quoteDiscounts(NO_SMART_INCENTIVE) };
     }
     const pod = await PodModel.findById(input.pod_id).select(
-      'pod_type pod_amount no_of_spots pod_attendees extra_seats ticket_discount_enabled ticket_discount_tiers smart_incentive_enabled smart_incentive_pct'
+      'pod_type pod_amount no_of_spots pod_attendees extra_seats smart_incentive_enabled smart_incentive_pct'
     );
     if (!pod) throw new GraphQLError('Pod not found', { extensions: { code: 'NOT_FOUND' } });
     const incentivePct = await smartIncentiveService.pctForCheckout(pod, userId);
     if (seats <= 1) {
       const smartIncentive = smartIncentiveFor(Number(pod.pod_amount || 0), incentivePct);
       const amount = round2((Number(input.amount) || 0) - smartIncentive.amount);
-      return { ...(await settled(amount)), ...quoteDiscounts(NO_TICKET_DISCOUNT, smartIncentive) };
+      return { ...(await settled(amount)), ...quoteDiscounts(smartIncentive) };
     }
     clampSeatsForPod(pod, seats);
     const ticket = Number(pod.pod_amount || 0);
     const extras = Math.max(round2(Number(input.amount) || 0) - ticket, 0);
     const priced = pricePodBooking(pod, seats, extras, incentivePct);
-    return { ...(await settled(priced.payableAmount)), ...quoteDiscounts(priced.ticketDiscount, priced.smartIncentive) };
+    return { ...(await settled(priced.payableAmount)), ...quoteDiscounts(priced.smartIncentive) };
   },
 
   async list(filter?: PaymentListFilter, limit = 200) {
@@ -1263,7 +1245,7 @@ export const paymentService = {
    * status matches nothing, exactly like SUCCESS-only cards over that list.
    */
   async totals(filter?: PaymentListFilter, shop?: PaymentShop | null) {
-    const empty = { count: 0, gross: 0, fee: 0, gst: 0, ticket_discount_total: 0, smart_incentive_total: 0 };
+    const empty = { count: 0, gross: 0, fee: 0, gst: 0, smart_incentive_total: 0 };
     const q = await buildListFilter(filter);
     if (q.status && q.status !== 'SUCCESS') return empty;
     q.status = 'SUCCESS';
@@ -1280,7 +1262,6 @@ export const paymentService = {
           fee: { $sum: '$platform_fee_amount' },
           gst: { $sum: '$gst_amount' },
           // Already off `gross` — reported so the gap to list price is explained.
-          ticket_discount_total: { $sum: '$ticket_discount_amount' },
           smart_incentive_total: { $sum: { $ifNull: ['$smart_incentive_amount', 0] } },
         },
       },
@@ -1291,7 +1272,6 @@ export const paymentService = {
       gross: round2(row.gross),
       fee: round2(row.fee),
       gst: round2(row.gst),
-      ticket_discount_total: round2(row.ticket_discount_total),
       smart_incentive_total: round2(row.smart_incentive_total),
     };
   },
@@ -1401,7 +1381,7 @@ export const paymentService = {
     const user = await UserModel.findById(userId);
     if (!user) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
 
-    const { description, ticketDiscount, smartIncentive, quote, couponCode, couponDiscount, coinsRedeemed, metadata } =
+    const { description, smartIncentive, quote, couponCode, couponDiscount, coinsRedeemed, metadata } =
       await priceCheckout(input, userId);
 
     // Created PENDING even on the happy path: the finalizer is the only thing
@@ -1428,8 +1408,6 @@ export const paymentService = {
       coupon_code: couponCode,
       coupon_discount: couponDiscount,
       coins_redeemed: coinsRedeemed,
-      ticket_discount_amount: ticketDiscount.amount,
-      ticket_discount_pct: ticketDiscount.pct,
       smart_incentive_amount: smartIncentive.amount,
       smart_incentive_pct: smartIncentive.pct,
       status: failed ? 'FAILED' : 'PENDING',
@@ -1454,7 +1432,7 @@ export const paymentService = {
     ]);
     if (!user) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
 
-    const { description, ticketDiscount, smartIncentive, quote, couponCode, couponDiscount, coinsRedeemed, metadata } =
+    const { description, smartIncentive, quote, couponCode, couponDiscount, coinsRedeemed, metadata } =
       await priceCheckout(input, userId);
     const payment_id = newPaymentId();
     const base = {
@@ -1476,8 +1454,6 @@ export const paymentService = {
       coupon_code: couponCode,
       coupon_discount: couponDiscount,
       coins_redeemed: coinsRedeemed,
-      ticket_discount_amount: ticketDiscount.amount,
-      ticket_discount_pct: ticketDiscount.pct,
       smart_incentive_amount: smartIncentive.amount,
       smart_incentive_pct: smartIncentive.pct,
     };

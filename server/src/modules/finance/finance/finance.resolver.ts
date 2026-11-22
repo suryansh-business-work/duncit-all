@@ -152,6 +152,11 @@ function validatePayoutInputs(input: any) {
 }
 
 export const financeResolvers = {
+  // The multi-ticket discount was removed; app and portal versions still in use
+  // select this non-null field, so it always answers 0.
+  PodFinanceBreakdown: {
+    ticket_discount_total: (): number => 0,
+  },
   Query: {
     financeSettings: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       requireRole(ctx, FINANCE_READ);

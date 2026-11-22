@@ -304,26 +304,23 @@ describe('quoteCheckout', () => {
       ...over,
     });
 
-  it('a single seat (or no pod) prices the caller’s amount with no ticket discount', async () => {
-    expect(await paymentService.quoteCheckout({ amount: 1180 })).toMatchObject({
-      total: 1180,
-      gst_amount: 180,
-      ticket_discount_amount: 0,
-      ticket_discount_pct: 0,
-    });
+  it('a single seat (or no pod) prices the caller’s amount with nothing taken off', async () => {
+    const quote = await paymentService.quoteCheckout({ amount: 1180 });
+    expect(quote).toMatchObject({ total: 1180, gst_amount: 180, smart_incentive_amount: 0, smart_incentive_pct: 0 });
+    expect(quote).not.toHaveProperty('ticket_discount_amount');
   });
 
-  it('multi-seat re-prices the ticket server-side with the best reached tier; add-ons stay full price', async () => {
-    const pod = await seedPod({
-      ticket_discount_enabled: true,
-      ticket_discount_tiers: [
-        { min_tickets: 2, discount_pct: 10 },
-        { min_tickets: 3, discount_pct: 20 },
-      ],
-    });
-    // amount 650 = one ticket (500) + 150 of add-ons. 3 seats: 1500 less 20% = 1200, + 150 = 1350.
+  it('multi-seat re-prices every ticket at list price, even on a pod that still stores old discount tiers', async () => {
+    const pod = await seedPod();
+    // Tiers written before the multi-ticket discount was removed stay in the
+    // document; the model no longer knows them, so set them on the raw row.
+    await PodModel.collection.updateOne(
+      { _id: pod._id },
+      { $set: { ticket_discount_enabled: true, ticket_discount_tiers: [{ min_tickets: 2, discount_pct: 20 }] } }
+    );
+    // amount 650 = one ticket (500) + 150 of add-ons. 3 seats: 1500 + 150 = 1650, nothing off.
     const quote = await paymentService.quoteCheckout({ amount: 650, pod_id: String(pod._id), seats: 3 });
-    expect(quote).toMatchObject({ total: 1350, ticket_discount_amount: 300, ticket_discount_pct: 20, gst_amount: 205.93 });
+    expect(quote).toMatchObject({ total: 1650, gst_amount: 251.69, smart_incentive_amount: 0 });
   });
 
   it('refuses a missing pod and more seats than are left', async () => {
@@ -345,7 +342,7 @@ describe('quoteCheckout', () => {
 describe('Finance reads', () => {
   it('totals counts SUCCESS money only, to the paisa, and is empty for any other status filter', async () => {
     const pod = new Types.ObjectId();
-    await seedPayment({ status: 'SUCCESS', total: 100.1, platform_fee_amount: 4.25, gst_amount: 15.27, ticket_discount_amount: 10, pod_id: pod });
+    await seedPayment({ status: 'SUCCESS', total: 100.1, platform_fee_amount: 4.25, gst_amount: 15.27, smart_incentive_amount: 10, pod_id: pod });
     await seedPayment({ status: 'SUCCESS', total: 200.2, platform_fee_amount: 8.5, gst_amount: 30.54, pod_id: pod });
     await seedPayment({ status: 'FAILED', total: 999 });
     await seedPayment({ status: 'REFUNDED', total: 999 });
@@ -355,8 +352,7 @@ describe('Finance reads', () => {
       gross: 300.3,
       fee: 12.75,
       gst: 45.81,
-      ticket_discount_total: 10,
-      smart_incentive_total: 0,
+      smart_incentive_total: 10,
     });
     expect(await paymentService.totals({ pod_id: String(pod), status: 'SUCCESS' })).toMatchObject({ count: 2 });
     expect(await paymentService.totals({ status: 'FAILED' })).toEqual({
@@ -364,7 +360,6 @@ describe('Finance reads', () => {
       gross: 0,
       fee: 0,
       gst: 0,
-      ticket_discount_total: 0,
       smart_incentive_total: 0,
     });
     expect(await paymentService.totals({ search: 'nobody-matches' })).toMatchObject({ count: 0, gross: 0 });

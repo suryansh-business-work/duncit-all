@@ -1,6 +1,6 @@
 import { podDraftService } from '@modules/pods/pod-draft/pod-draft.service';
 import { logs } from '@observability/log';
-import { pickClub, pickHostUserId, pickImages } from './agent.resources';
+import { pickClub, pickImages } from './agent.resources';
 import type { AgentResultItem } from './agent.types';
 
 /**
@@ -9,9 +9,10 @@ import type { AgentResultItem } from './agent.types';
  * Venues are booked with an offer now: the host names a window and the price
  * terms (per guest, per hour, per slot or flat), and the venue accepts, rejects
  * or counters. A sentence gives the agent neither a time nor a price, so the
- * agent never books a venue itself. It saves each pod as a Create Pod DRAFT for
- * the host instead — title, description, club, spots and a cover image filled
- * in — and the host opens it, picks the time and offers the venue a price.
+ * agent never books a venue itself. It saves each pod as a Create Pod DRAFT in
+ * the account of the person who asked — exactly where savePodDraft would put
+ * it, never in someone else's — with title, description, club, spots and a
+ * cover image filled in; they open it, pick the time and offer the venue a price.
  */
 export const AGENT_POD_DRAFT_DETAIL =
   'Saved as a draft. Open it in Create Pod to pick a venue and time and offer the venue a price.';
@@ -52,11 +53,7 @@ function draftPayload(title: string, topic: string, clubId: string, spots: numbe
 }
 
 export async function createPodBatch(input: PodBatchInput): Promise<AgentResultItem[]> {
-  const [club, hostUserId, images] = await Promise.all([
-    pickClub(),
-    pickHostUserId(input.actorUserId),
-    pickImages(input.count),
-  ]);
+  const [club, images] = await Promise.all([pickClub(), pickImages(input.count)]);
   // The club's activity can demand a floor the default would break.
   const spots = Math.max(BASE_SPOTS, club.minPax);
 
@@ -65,7 +62,7 @@ export async function createPodBatch(input: PodBatchInput): Promise<AgentResultI
     const title = titleFor(input.topic, index, input.count);
     try {
       const payload = draftPayload(title, input.topic, club.id, spots, images[index % Math.max(1, images.length)]);
-      const draft = await podDraftService.save(hostUserId, null, {
+      const draft = await podDraftService.save(input.actorUserId, null, {
         payload: JSON.stringify(payload),
         pod_title: title,
         pod_mode: 'PHYSICAL',

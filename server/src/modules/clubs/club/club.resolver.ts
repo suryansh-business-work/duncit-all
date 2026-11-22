@@ -1,4 +1,5 @@
 import { clubService } from './club.service';
+import { CLUB_WRITE_ROLES } from './club.roles';
 import { loadClubStats, primeClubStats } from './club.loaders';
 import { throwIfClientGone } from '@utils/clientPresence';
 import { venueService } from '@modules/venues/venue/venue.service';
@@ -7,7 +8,7 @@ import type { GraphQLContext } from '@context';
 import { requireAuth, requireRole } from '@middleware/rbac';
 import { canSeeHidden } from '@utils/hidden';
 
-const ADMIN_WRITE = ['SUPER_ADMIN', 'CITY_ADMIN'];
+const ADMIN_WRITE = CLUB_WRITE_ROLES;
 
 type ClubMatchParent = {
   location_id?: string | null;

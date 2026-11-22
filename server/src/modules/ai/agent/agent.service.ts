@@ -4,6 +4,7 @@ import { logs } from '@observability/log';
 import { createClubBatch } from './agent.clubs';
 import { planFromMessage } from './agent.intent';
 import { createPodBatch } from './agent.pods';
+import { CLUB_WRITE_ROLES } from '@modules/clubs/club/club.roles';
 import {
   AGENT_ACT_ROLES,
   MAX_BATCH,
@@ -28,6 +29,20 @@ const FALLBACK_TOPIC = 'Community Meetup';
 
 const badRequest = (message: string) =>
   new GraphQLError(message, { extensions: { code: 'BAD_USER_INPUT' } });
+
+/**
+ * Who may have the agent carry out each action — the roles the matching API
+ * mutation would let through, never more. Drafts go to the asker's own Create
+ * Pod (savePodDraft is open to anyone signed in, so the agent's own floor
+ * applies); clubs need the Clubs console's write roles, as createClub does.
+ */
+const ACTION_ROLES: Readonly<Record<string, readonly string[]>> = {
+  CREATE_PODS: AGENT_ACT_ROLES,
+  CREATE_CLUBS: CLUB_WRITE_ROLES,
+};
+
+const mayCarryOut = (action: string, roles: readonly string[]): boolean =>
+  roles.some((role) => (ACTION_ROLES[action] ?? []).includes(role));
 
 export async function availability(roles: readonly string[]) {
   const apiKey = await getRuntimeEnvValue('OPENAI_API_KEY');
@@ -74,8 +89,7 @@ export async function chat(
 
   // The plan is the model's; the permission is not. A person who may not create
   // pods is told so plainly rather than watching ten failures scroll past.
-  const canAct = (actor.roles ?? []).some((role) => AGENT_ACT_ROLES.includes(role));
-  if (!canAct) {
+  if (!mayCarryOut(plan.action, actor.roles ?? [])) {
     return {
       answer: 'You do not have permission to create these, so nothing was made.',
       action: plan.action,

@@ -31,9 +31,19 @@ const seedPod = (clubId: unknown, hostId: unknown, over: Record<string, unknown>
     ...over,
   });
 
+// Login phones are unique, so each seeded user gets the next one; the first
+// user of every test (Busy) keeps 9876500000.
+let phoneSeq = 0;
+beforeEach(() => {
+  phoneSeq = 0;
+});
+
 const seedUser = (first: string, over: Record<string, unknown> = {}) =>
   UserModel.create({
-    auth: { email: `${first.toLowerCase()}@example.com`, phone: { extension: '91', number: '9876500000' } },
+    auth: {
+      email: `${first.toLowerCase()}@example.com`,
+      phone: { extension: '91', number: String(9876500000 + phoneSeq++) },
+    },
     profile: { first_name: first, last_name: 'Host' },
     ...over,
   });

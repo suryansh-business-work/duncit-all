@@ -160,6 +160,10 @@ const MEMBER_MUTATIONS: Readonly<Record<string, string>> = {
   ...allow('uploads by the signed-in person; remote imports only from Pexels, Unsplash and ImageKit', MEMBER_UPLOADS),
   ...allow('reporting content, and the content check run before posting', REPORTING),
   ...allow('booking, moving or cancelling their own onboarding meeting', ['requestMeeting', 'cancelMyMeeting', 'rescheduleMyMeeting']),
+  ...allow('a buyer reporting their own failed payment or claiming it was deducted: the payment must be theirs (another’s answers NOT_FOUND)', [
+    'reportPaymentFailure',
+    'submitPaymentDeductionClaim',
+  ]),
   recordAppEvent: 'the signed-in person’s own product analytics event',
   recordOfficialStatusView: 'marks an official status as seen by the caller',
   completePodSettlement: 'the pod’s own host settles their pod (assertPodActor); an admin must administer its city',

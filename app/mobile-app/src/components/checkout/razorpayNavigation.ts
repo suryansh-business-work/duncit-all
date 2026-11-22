@@ -14,7 +14,7 @@ const WEB_SCHEMES = new Set(['http', 'https', 'about', 'data', 'blob', 'javascri
 /** The scheme of a URL, lower-cased; empty when there is none. */
 export function schemeOf(url: string): string {
   const match = /^([a-z][a-z0-9+.-]*):/i.exec(url.trim());
-  return match ? match[1].toLowerCase() : '';
+  return match?.[1]?.toLowerCase() ?? '';
 }
 
 /** Whether the WebView should hand this URL to the OS instead of loading it. */

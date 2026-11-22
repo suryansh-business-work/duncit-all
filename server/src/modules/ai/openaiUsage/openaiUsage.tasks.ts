@@ -276,6 +276,36 @@ export const OPENAI_TASKS = {
     description: 'The Ask Bot in the portal header that answers "where do I find…".',
     when_off: 'The bot is listed as unavailable and a question returns an error.',
   },
+  'ask_duncit.chat': {
+    label: 'Ask Duncit answer',
+    module: 'Ask Duncit',
+    description: 'The Ask Duncit assistant in the member app: streamed answers and the tool calls it makes for the person.',
+    when_off: 'Ask Duncit is shown as unavailable in the app and a question returns an error.',
+  },
+  'ask_duncit.evaluate': {
+    label: 'Ask Duncit answer check',
+    module: 'Ask Duncit',
+    description: 'Scores each Ask Duncit answer for confidence and spots questions that are not about Duncit.',
+    when_off: 'Answers are saved without a confidence score or an out-of-context flag.',
+  },
+  'ask_duncit.summarize': {
+    label: 'Ask Duncit memory',
+    module: 'Ask Duncit',
+    description: 'Titles a new Ask Duncit conversation and condenses long ones into a short memory.',
+    when_off: 'Conversations are titled from the first question and long ones replay only their latest turns.',
+  },
+  'ask_duncit.transcribe': {
+    label: 'Ask Duncit voice input',
+    module: 'Ask Duncit',
+    description: 'Turns a voice message recorded in Ask Duncit into text.',
+    when_off: 'The microphone button reports that voice input is unavailable.',
+  },
+  'ask_duncit.speak': {
+    label: 'Ask Duncit read-aloud',
+    module: 'Ask Duncit',
+    description: 'Reads an Ask Duncit answer aloud.',
+    when_off: 'The read-aloud button reports that voice output is unavailable.',
+  },
   'agent.console': {
     label: 'Agent console turn',
     module: 'Agent',

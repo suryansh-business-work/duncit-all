@@ -24,13 +24,14 @@ describe('Duncit AI app config', () => {
     expect(appConfig.loginImage).toContain('pexels.com');
   });
 
-  it('lists Welcome and five groups, in that order', () => {
+  it('lists Welcome and six groups, in that order', () => {
     expect(appConfig.nav.map((n) => n.label)).toEqual([
       'Welcome',
       'AI Library',
       'AI Features',
       'OpenAI',
       'AI Monitoring',
+      'Ask Duncit',
       'Automation',
     ]);
   });
@@ -60,6 +61,19 @@ describe('Duncit AI app config', () => {
       '/openai/logs',
       '/monitoring',
       '/monitoring/settings',
+      '/ask-duncit',
+      '/ask-duncit/live',
+      '/ask-duncit/logs',
+      '/ask-duncit/out-of-context',
+      '/ask-duncit/violations',
+      '/ask-duncit/tools',
+      '/ask-duncit/knowledge',
+      '/ask-duncit/models',
+      '/ask-duncit/prompts',
+      '/ask-duncit/feedback',
+      '/ask-duncit/cost',
+      '/ask-duncit/flags',
+      '/ask-duncit/control-center',
       '/automation/whatsapp',
       '/automation/email',
     ]);

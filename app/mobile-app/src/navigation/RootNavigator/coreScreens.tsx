@@ -27,6 +27,7 @@ import { HostAutoPodsScreen } from '@/screens/HostAutoPodsScreen';
 import { HostDashboardScreen } from '@/screens/HostDashboardScreen';
 import { HostManageScreen } from '@/screens/HostManageScreen';
 import { LiveChatScreen } from '@/screens/LiveChatScreen';
+import { AskDuncitScreen } from '@/screens/AskDuncitScreen';
 import { MailPreferenceScreen } from '@/screens/MailPreferenceScreen';
 import { NearbyHostsScreen } from '@/screens/NearbyHostsScreen';
 import { NearbyVenuesScreen } from '@/screens/NearbyVenuesScreen';
@@ -183,6 +184,7 @@ export function renderCoreScreens() {
       <Stack.Screen name="Callback" component={CallbackScreen} />
       <Stack.Screen name="ChatWithUs" component={ChatWithUsScreen} />
       <Stack.Screen name="LiveChat" component={LiveChatScreen} />
+      <Stack.Screen name="AskDuncit" component={AskDuncitScreen} />
       <Stack.Screen name="AllSupportTickets" component={AllSupportTicketsScreen} />
       <Stack.Screen name="Feedback" component={FeedbackScreen} />
       <Stack.Screen name="Grievance" component={GrievanceScreen} />

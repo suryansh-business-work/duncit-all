@@ -59,6 +59,7 @@ export const PodIdeasPage = lazy(() => import('../../pages/PodIdeasPage'));
 export const ReferralPage = lazy(() => import('../../pages/referral-page'));
 export const DuncitCoinPage = lazy(() => import('../../pages/duncit-coin-page'));
 export const LeaderboardPage = lazy(() => import('../../pages/leaderboard-page'));
+export const AskDuncitPage = lazy(() => import('../../pages/ask-duncit-page'));
 export const MembershipPage = lazy(() => import('../../pages/membership-page'));
 export const GiftCardsPage = lazy(() => import('../../pages/gift-cards-page'));
 export const GiftCardCheckoutPage = lazy(() => import('../../pages/gift-card-checkout-page'));

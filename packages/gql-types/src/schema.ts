@@ -2317,6 +2317,657 @@ export type AskBotUnavailableReason =
   | 'DISABLED'
   | 'NOT_CONFIGURED';
 
+/** A change the assistant proposed. Nothing runs until the person approves it. */
+export type AskDuncitAction = {
+  __typename?: 'AskDuncitAction';
+  /** The arguments, with sensitive values masked. */
+  args_preview: Scalars['String']['output'];
+  can_rollback: Scalars['Boolean']['output'];
+  category: Scalars['String']['output'];
+  conversation_id: Scalars['ID']['output'];
+  created_at: Scalars['String']['output'];
+  decided_at?: Maybe<Scalars['String']['output']>;
+  error_message: Scalars['String']['output'];
+  executed_at?: Maybe<Scalars['String']['output']>;
+  expires_at: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  message_id?: Maybe<Scalars['String']['output']>;
+  reason: Scalars['String']['output'];
+  result_preview: Scalars['String']['output'];
+  risk: Scalars['String']['output'];
+  /** PENDING | APPROVED | EXECUTING | EXECUTED | FAILED | REJECTED | EXPIRED | ROLLED_BACK */
+  status: Scalars['String']['output'];
+  tool: Scalars['String']['output'];
+  tool_title: Scalars['String']['output'];
+};
+
+export type AskDuncitAlert = {
+  __typename?: 'AskDuncitAlert';
+  id: Scalars['String']['output'];
+  kind: Scalars['String']['output'];
+  label_key: Scalars['String']['output'];
+  /** JSON object filling the label's placeholders. */
+  params: Scalars['String']['output'];
+  prompt_key: Scalars['String']['output'];
+  /** INFO | WARN | CRITICAL */
+  severity: Scalars['String']['output'];
+};
+
+export type AskDuncitAttachment = {
+  __typename?: 'AskDuncitAttachment';
+  kind: Scalars['String']['output'];
+  mime: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  size: Scalars['Int']['output'];
+  url: Scalars['String']['output'];
+};
+
+/** A file already uploaded through the app's ImageKit flow. */
+export type AskDuncitAttachmentInput = {
+  /** IMAGE | PDF | FILE */
+  kind?: InputMaybe<Scalars['String']['input']>;
+  mime?: InputMaybe<Scalars['String']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  size?: InputMaybe<Scalars['Int']['input']>;
+  url: Scalars['String']['input'];
+};
+
+export type AskDuncitAuditPage = {
+  __typename?: 'AskDuncitAuditPage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<AskDuncitAuditRow>;
+  total: Scalars['Int']['output'];
+};
+
+export type AskDuncitAuditPreset =
+  | 'ACTIONS'
+  | 'ALL'
+  | 'CHAT'
+  | 'OUT_OF_CONTEXT'
+  | 'VIOLATIONS';
+
+export type AskDuncitAuditRow = {
+  __typename?: 'AskDuncitAuditRow';
+  account_roles: Array<Scalars['String']['output']>;
+  action_id?: Maybe<Scalars['String']['output']>;
+  completion_tokens: Scalars['Int']['output'];
+  conversation_id?: Maybe<Scalars['String']['output']>;
+  cost_usd: Scalars['Float']['output'];
+  created_at: Scalars['String']['output'];
+  detail: Scalars['String']['output'];
+  entity_id: Scalars['String']['output'];
+  entity_type: Scalars['String']['output'];
+  error_code: Scalars['String']['output'];
+  error_message: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  /** False when the row no longer matches its tamper-evidence hash. */
+  intact: Scalars['Boolean']['output'];
+  latency_ms: Scalars['Int']['output'];
+  locale: Scalars['String']['output'];
+  message_id?: Maybe<Scalars['String']['output']>;
+  model: Scalars['String']['output'];
+  page_route: Scalars['String']['output'];
+  prompt_tokens: Scalars['Int']['output'];
+  query: Scalars['String']['output'];
+  reason: Scalars['String']['output'];
+  response: Scalars['String']['output'];
+  role_key: Scalars['String']['output'];
+  severity: Scalars['String']['output'];
+  status: Scalars['String']['output'];
+  surface: Scalars['String']['output'];
+  tool: Scalars['String']['output'];
+  tool_args: Scalars['String']['output'];
+  total_tokens: Scalars['Int']['output'];
+  type: Scalars['String']['output'];
+  user_id?: Maybe<Scalars['String']['output']>;
+  user_name: Scalars['String']['output'];
+  violation_kind?: Maybe<Scalars['String']['output']>;
+};
+
+export type AskDuncitBootstrap = {
+  __typename?: 'AskDuncitBootstrap';
+  alerts: Array<AskDuncitAlert>;
+  available: Scalars['Boolean']['output'];
+  can_write: Scalars['Boolean']['output'];
+  features: AskDuncitFeatures;
+  held_roles: Array<AskDuncitRoleKey>;
+  limits: AskDuncitLimits;
+  role_key: AskDuncitRoleKey;
+  suggestions: Array<AskDuncitSuggestion>;
+  /** KILL_SWITCH | DISABLED | ROLE_DISABLED — the app words it. */
+  unavailable_reason?: Maybe<Scalars['String']['output']>;
+};
+
+/** AI Agent Control Center — super admins. */
+export type AskDuncitControlInput = {
+  enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  features?: InputMaybe<AskDuncitFeatureSwitchesInput>;
+  max_attachment_mb?: InputMaybe<Scalars['Float']['input']>;
+  max_attachments?: InputMaybe<Scalars['Int']['input']>;
+  max_input_chars?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type AskDuncitConversation = {
+  __typename?: 'AskDuncitConversation';
+  created_at?: Maybe<Scalars['String']['output']>;
+  generating: Scalars['Boolean']['output'];
+  handover_team?: Maybe<Scalars['String']['output']>;
+  handover_ticket_id?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  last_message_at?: Maybe<Scalars['String']['output']>;
+  last_message_preview: Scalars['String']['output'];
+  message_count: Scalars['Int']['output'];
+  role_key: AskDuncitRoleKey;
+  /** ACTIVE | HANDED_OVER | ARCHIVED */
+  status: Scalars['String']['output'];
+  surface: AskDuncitSurface;
+  title: Scalars['String']['output'];
+};
+
+export type AskDuncitConversationDetail = {
+  __typename?: 'AskDuncitConversationDetail';
+  actions: Array<AskDuncitAction>;
+  conversation: AskDuncitConversationRow;
+  events: Array<AskDuncitAuditRow>;
+  messages: Array<AskDuncitTranscriptMessage>;
+};
+
+export type AskDuncitConversationPage = {
+  __typename?: 'AskDuncitConversationPage';
+  has_more: Scalars['Boolean']['output'];
+  items: Array<AskDuncitConversation>;
+};
+
+export type AskDuncitConversationRow = {
+  __typename?: 'AskDuncitConversationRow';
+  cost_usd: Scalars['Float']['output'];
+  created_at?: Maybe<Scalars['String']['output']>;
+  generating: Scalars['Boolean']['output'];
+  handover_team?: Maybe<Scalars['String']['output']>;
+  handover_ticket_id?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  last_message_at?: Maybe<Scalars['String']['output']>;
+  last_message_preview: Scalars['String']['output'];
+  message_count: Scalars['Int']['output'];
+  out_of_context_count: Scalars['Int']['output'];
+  role_key: Scalars['String']['output'];
+  status: Scalars['String']['output'];
+  surface: Scalars['String']['output'];
+  thumbs_down: Scalars['Int']['output'];
+  thumbs_up: Scalars['Int']['output'];
+  title: Scalars['String']['output'];
+  total_tokens: Scalars['Int']['output'];
+  user_id: Scalars['String']['output'];
+  violation_count: Scalars['Int']['output'];
+};
+
+export type AskDuncitConversationRowPage = {
+  __typename?: 'AskDuncitConversationRowPage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<AskDuncitConversationRow>;
+  total: Scalars['Int']['output'];
+};
+
+export type AskDuncitCost = {
+  __typename?: 'AskDuncitCost';
+  by_day: Array<AskDuncitSpendDay>;
+  by_model: Array<AskDuncitSpendRow>;
+  by_role: Array<AskDuncitRoleSpend>;
+  by_task: Array<AskDuncitSpendRow>;
+  days: Scalars['Int']['output'];
+  total_cost_usd: Scalars['Float']['output'];
+  total_tokens: Scalars['Int']['output'];
+  unpriced_models: Array<Scalars['String']['output']>;
+};
+
+export type AskDuncitCount = {
+  __typename?: 'AskDuncitCount';
+  count: Scalars['Int']['output'];
+  key: Scalars['String']['output'];
+};
+
+export type AskDuncitDaily = {
+  __typename?: 'AskDuncitDaily';
+  date: Scalars['String']['output'];
+  failed_actions: Scalars['Int']['output'];
+  messages: Scalars['Int']['output'];
+  users: Scalars['Int']['output'];
+  violations: Scalars['Int']['output'];
+};
+
+export type AskDuncitDashboard = {
+  __typename?: 'AskDuncitDashboard';
+  active_users: Scalars['Int']['output'];
+  avg_confidence: Scalars['Float']['output'];
+  avg_first_token_ms: Scalars['Int']['output'];
+  avg_response_ms: Scalars['Int']['output'];
+  conversations: Scalars['Int']['output'];
+  cost_usd: Scalars['Float']['output'];
+  daily: Array<AskDuncitDaily>;
+  days: Scalars['Int']['output'];
+  errors: Scalars['Int']['output'];
+  failed_actions: Scalars['Int']['output'];
+  handovers: Scalars['Int']['output'];
+  messages: Scalars['Int']['output'];
+  out_of_context: Scalars['Int']['output'];
+  resolution_rate: Scalars['Float']['output'];
+  role_usage: Array<AskDuncitRoleUsage>;
+  satisfaction: Scalars['Float']['output'];
+  thumbs_down: Scalars['Int']['output'];
+  thumbs_up: Scalars['Int']['output'];
+  tool_calls: Scalars['Int']['output'];
+  top_tools: Array<AskDuncitToolUsage>;
+  total_tokens: Scalars['Int']['output'];
+  violation_kinds: Array<AskDuncitViolationCount>;
+  violations: Scalars['Int']['output'];
+};
+
+export type AskDuncitFeatureSwitches = {
+  __typename?: 'AskDuncitFeatureSwitches';
+  chat_history: Scalars['Boolean']['output'];
+  evaluation: Scalars['Boolean']['output'];
+  handover: Scalars['Boolean']['output'];
+  knowledge_base: Scalars['Boolean']['output'];
+  memory: Scalars['Boolean']['output'];
+  proactive_alerts: Scalars['Boolean']['output'];
+  rollback: Scalars['Boolean']['output'];
+  uploads: Scalars['Boolean']['output'];
+  voice: Scalars['Boolean']['output'];
+  write_actions: Scalars['Boolean']['output'];
+};
+
+export type AskDuncitFeatureSwitchesInput = {
+  chat_history?: InputMaybe<Scalars['Boolean']['input']>;
+  evaluation?: InputMaybe<Scalars['Boolean']['input']>;
+  handover?: InputMaybe<Scalars['Boolean']['input']>;
+  knowledge_base?: InputMaybe<Scalars['Boolean']['input']>;
+  memory?: InputMaybe<Scalars['Boolean']['input']>;
+  proactive_alerts?: InputMaybe<Scalars['Boolean']['input']>;
+  rollback?: InputMaybe<Scalars['Boolean']['input']>;
+  uploads?: InputMaybe<Scalars['Boolean']['input']>;
+  voice?: InputMaybe<Scalars['Boolean']['input']>;
+  write_actions?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+export type AskDuncitFeatures = {
+  __typename?: 'AskDuncitFeatures';
+  chat_history: Scalars['Boolean']['output'];
+  handover: Scalars['Boolean']['output'];
+  knowledge_base: Scalars['Boolean']['output'];
+  memory: Scalars['Boolean']['output'];
+  proactive_alerts: Scalars['Boolean']['output'];
+  rollback: Scalars['Boolean']['output'];
+  uploads: Scalars['Boolean']['output'];
+  voice: Scalars['Boolean']['output'];
+  write_actions: Scalars['Boolean']['output'];
+};
+
+export type AskDuncitFeedbackPage = {
+  __typename?: 'AskDuncitFeedbackPage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<AskDuncitFeedbackRow>;
+  total: Scalars['Int']['output'];
+};
+
+export type AskDuncitFeedbackRow = {
+  __typename?: 'AskDuncitFeedbackRow';
+  comment: Scalars['String']['output'];
+  confidence?: Maybe<Scalars['Float']['output']>;
+  content: Scalars['String']['output'];
+  conversation_id: Scalars['ID']['output'];
+  created_at: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  knowledge_draft_id?: Maybe<Scalars['String']['output']>;
+  low_confidence: Scalars['Boolean']['output'];
+  model: Scalars['String']['output'];
+  rating?: Maybe<Scalars['String']['output']>;
+  review_note: Scalars['String']['output'];
+  review_status?: Maybe<Scalars['String']['output']>;
+  user_id: Scalars['String']['output'];
+};
+
+export type AskDuncitHandoverResult = {
+  __typename?: 'AskDuncitHandoverResult';
+  already: Scalars['Boolean']['output'];
+  team: Scalars['String']['output'];
+  ticket_id: Scalars['String']['output'];
+  ticket_no: Scalars['String']['output'];
+};
+
+export type AskDuncitKnowledgeArticle = {
+  __typename?: 'AskDuncitKnowledgeArticle';
+  audience_roles: Array<AskDuncitRoleKey>;
+  body?: Maybe<Scalars['String']['output']>;
+  hits: Scalars['Int']['output'];
+  id: Scalars['ID']['output'];
+  kind: Scalars['String']['output'];
+  locale: Scalars['String']['output'];
+  status: Scalars['String']['output'];
+  tags: Array<Scalars['String']['output']>;
+  title: Scalars['String']['output'];
+  updated_at?: Maybe<Scalars['String']['output']>;
+  version: Scalars['Int']['output'];
+};
+
+export type AskDuncitKnowledgeInput = {
+  audience_roles?: InputMaybe<Array<AskDuncitRoleKey>>;
+  body?: InputMaybe<Scalars['String']['input']>;
+  /** ARTICLE | SOP | FAQ | POLICY */
+  kind?: InputMaybe<Scalars['String']['input']>;
+  locale?: InputMaybe<Scalars['String']['input']>;
+  /** DRAFT | PUBLISHED | ARCHIVED */
+  status?: InputMaybe<Scalars['String']['input']>;
+  tags?: InputMaybe<Array<Scalars['String']['input']>>;
+  title?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type AskDuncitKnowledgePage = {
+  __typename?: 'AskDuncitKnowledgePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<AskDuncitKnowledgeArticle>;
+  total: Scalars['Int']['output'];
+};
+
+export type AskDuncitKnowledgeRef = {
+  __typename?: 'AskDuncitKnowledgeRef';
+  id: Scalars['String']['output'];
+  title: Scalars['String']['output'];
+};
+
+export type AskDuncitLimits = {
+  __typename?: 'AskDuncitLimits';
+  max_attachment_mb: Scalars['Float']['output'];
+  max_attachments: Scalars['Int']['output'];
+  max_input_chars: Scalars['Int']['output'];
+  messages_per_day: Scalars['Int']['output'];
+  messages_today: Scalars['Int']['output'];
+};
+
+export type AskDuncitMemoryFact = {
+  __typename?: 'AskDuncitMemoryFact';
+  created_at: Scalars['String']['output'];
+  id: Scalars['String']['output'];
+  text: Scalars['String']['output'];
+};
+
+export type AskDuncitMessage = {
+  __typename?: 'AskDuncitMessage';
+  actions: Array<AskDuncitAction>;
+  attachments: Array<AskDuncitAttachment>;
+  confidence?: Maybe<Scalars['Float']['output']>;
+  content: Scalars['String']['output'];
+  conversation_id: Scalars['ID']['output'];
+  created_at: Scalars['String']['output'];
+  /** Why an answer is missing — INJECTION_BLOCKED, NOT_CONFIGURED … — the app words it. */
+  error_code?: Maybe<Scalars['String']['output']>;
+  feedback_rating?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  knowledge_refs: Array<AskDuncitKnowledgeRef>;
+  low_confidence: Scalars['Boolean']['output'];
+  out_of_context: Scalars['Boolean']['output'];
+  /** user | assistant */
+  role: Scalars['String']['output'];
+  /** STREAMING | COMPLETE | FAILED | STOPPED */
+  status: Scalars['String']['output'];
+  tool_calls: Array<AskDuncitToolCall>;
+};
+
+export type AskDuncitMessagePage = {
+  __typename?: 'AskDuncitMessagePage';
+  has_more: Scalars['Boolean']['output'];
+  items: Array<AskDuncitMessage>;
+};
+
+/** Model & LLM Settings — operators. */
+export type AskDuncitModelSettingsInput = {
+  default_model?: InputMaybe<Scalars['String']['input']>;
+  evaluator_model?: InputMaybe<Scalars['String']['input']>;
+  history_turns?: InputMaybe<Scalars['Int']['input']>;
+  low_confidence_threshold?: InputMaybe<Scalars['Float']['input']>;
+  max_output_tokens?: InputMaybe<Scalars['Int']['input']>;
+  max_tool_rounds?: InputMaybe<Scalars['Int']['input']>;
+  speech_model?: InputMaybe<Scalars['String']['input']>;
+  speech_voice?: InputMaybe<Scalars['String']['input']>;
+  temperature?: InputMaybe<Scalars['Float']['input']>;
+  transcription_model?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** Where the person is in the app, so the assistant can answer about what is on screen. */
+export type AskDuncitPageInput = {
+  entity_id?: InputMaybe<Scalars['String']['input']>;
+  /** POD | CLUB | VENUE | PROFILE | WALLET … */
+  entity_type?: InputMaybe<Scalars['String']['input']>;
+  route?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type AskDuncitRoleKey =
+  | 'CLUB_ADMIN'
+  | 'ECOMM_BRAND'
+  | 'FREELANCER'
+  | 'HOST'
+  | 'MEMBER'
+  | 'REGIONAL_CLUB_ADMIN'
+  | 'STAFF'
+  | 'SUPER_ADMIN'
+  | 'VENUE_OWNER';
+
+export type AskDuncitRolePolicy = {
+  __typename?: 'AskDuncitRolePolicy';
+  allow_write: Scalars['Boolean']['output'];
+  allowed_categories: Array<Scalars['String']['output']>;
+  allowed_tools: Array<Scalars['String']['output']>;
+  approval_tools: Array<Scalars['String']['output']>;
+  approve_all_writes: Scalars['Boolean']['output'];
+  blocked_tools: Array<Scalars['String']['output']>;
+  enabled: Scalars['Boolean']['output'];
+  instructions: Scalars['String']['output'];
+  kill_switch: Scalars['Boolean']['output'];
+  max_output_tokens: Scalars['Int']['output'];
+  messages_per_day: Scalars['Int']['output'];
+  messages_per_minute: Scalars['Int']['output'];
+  model: Scalars['String']['output'];
+  role_key: AskDuncitRoleKey;
+  suggestions: Array<AskDuncitSuggestion>;
+  tokens_per_day: Scalars['Int']['output'];
+};
+
+export type AskDuncitRolePolicyInput = {
+  allow_write?: InputMaybe<Scalars['Boolean']['input']>;
+  allowed_categories?: InputMaybe<Array<Scalars['String']['input']>>;
+  allowed_tools?: InputMaybe<Array<Scalars['String']['input']>>;
+  approval_tools?: InputMaybe<Array<Scalars['String']['input']>>;
+  approve_all_writes?: InputMaybe<Scalars['Boolean']['input']>;
+  blocked_tools?: InputMaybe<Array<Scalars['String']['input']>>;
+  enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  instructions?: InputMaybe<Scalars['String']['input']>;
+  max_output_tokens?: InputMaybe<Scalars['Int']['input']>;
+  messages_per_day?: InputMaybe<Scalars['Int']['input']>;
+  messages_per_minute?: InputMaybe<Scalars['Int']['input']>;
+  model?: InputMaybe<Scalars['String']['input']>;
+  suggestions?: InputMaybe<Array<AskDuncitSuggestionInput>>;
+  tokens_per_day?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type AskDuncitRoleSpend = {
+  __typename?: 'AskDuncitRoleSpend';
+  cost: Scalars['Float']['output'];
+  key?: Maybe<Scalars['String']['output']>;
+  tokens: Scalars['Int']['output'];
+};
+
+export type AskDuncitRoleUsage = {
+  __typename?: 'AskDuncitRoleUsage';
+  messages: Scalars['Int']['output'];
+  role_key: Scalars['String']['output'];
+  users: Scalars['Int']['output'];
+};
+
+export type AskDuncitSendInput = {
+  attachments?: InputMaybe<Array<AskDuncitAttachmentInput>>;
+  /** Omit to start a new conversation. */
+  conversation_id?: InputMaybe<Scalars['ID']['input']>;
+  locale?: InputMaybe<Scalars['String']['input']>;
+  message: Scalars['String']['input'];
+  page?: InputMaybe<AskDuncitPageInput>;
+  /** The studio mode or role the person is using; only a role they hold is honoured. */
+  role?: InputMaybe<Scalars['String']['input']>;
+  surface?: InputMaybe<AskDuncitSurface>;
+};
+
+export type AskDuncitSendResult = {
+  __typename?: 'AskDuncitSendResult';
+  conversation_id: Scalars['ID']['output'];
+  /** The answer's id — its text streams in askDuncit:delta events. */
+  message_id: Scalars['ID']['output'];
+  role_key: AskDuncitRoleKey;
+  /** STREAMING | BLOCKED */
+  status: Scalars['String']['output'];
+  user_message_id: Scalars['ID']['output'];
+};
+
+export type AskDuncitSettings = {
+  __typename?: 'AskDuncitSettings';
+  default_model: Scalars['String']['output'];
+  enabled: Scalars['Boolean']['output'];
+  evaluator_model: Scalars['String']['output'];
+  features: AskDuncitFeatureSwitches;
+  history_turns: Scalars['Int']['output'];
+  kill_switch: Scalars['Boolean']['output'];
+  kill_switch_reason: Scalars['String']['output'];
+  low_confidence_threshold: Scalars['Float']['output'];
+  max_attachment_mb: Scalars['Float']['output'];
+  max_attachments: Scalars['Int']['output'];
+  max_input_chars: Scalars['Int']['output'];
+  max_output_tokens: Scalars['Int']['output'];
+  max_tool_rounds: Scalars['Int']['output'];
+  roles: Array<AskDuncitRolePolicy>;
+  speech_model: Scalars['String']['output'];
+  speech_voice: Scalars['String']['output'];
+  temperature: Scalars['Float']['output'];
+  transcription_model: Scalars['String']['output'];
+  updated_at?: Maybe<Scalars['String']['output']>;
+  updated_by?: Maybe<Scalars['String']['output']>;
+};
+
+export type AskDuncitSpendDay = {
+  __typename?: 'AskDuncitSpendDay';
+  calls: Scalars['Int']['output'];
+  cost: Scalars['Float']['output'];
+  date: Scalars['String']['output'];
+  tokens: Scalars['Int']['output'];
+};
+
+export type AskDuncitSpendRow = {
+  __typename?: 'AskDuncitSpendRow';
+  calls: Scalars['Int']['output'];
+  cost: Scalars['Float']['output'];
+  key: Scalars['String']['output'];
+  tokens: Scalars['Int']['output'];
+};
+
+export type AskDuncitSuggestion = {
+  __typename?: 'AskDuncitSuggestion';
+  context?: Maybe<Scalars['String']['output']>;
+  id: Scalars['String']['output'];
+  label?: Maybe<Scalars['String']['output']>;
+  /** Localization key of the bubble text; null for an operator-written bubble. */
+  label_key?: Maybe<Scalars['String']['output']>;
+};
+
+export type AskDuncitSuggestionInput = {
+  context?: InputMaybe<Scalars['String']['input']>;
+  id: Scalars['String']['input'];
+  label?: InputMaybe<Scalars['String']['input']>;
+  label_key?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type AskDuncitSurface =
+  | 'MWEB'
+  | 'NATIVE'
+  | 'PORTAL';
+
+export type AskDuncitToolAccess =
+  | 'ALLOW'
+  | 'BLOCK'
+  | 'DEFAULT';
+
+export type AskDuncitToolCall = {
+  __typename?: 'AskDuncitToolCall';
+  action_id?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+  risk: Scalars['String']['output'];
+  /** OK | DENIED | ERROR | BLOCKED | INVALID | AWAITING_APPROVAL */
+  status: Scalars['String']['output'];
+  title: Scalars['String']['output'];
+};
+
+export type AskDuncitToolCategory = {
+  __typename?: 'AskDuncitToolCategory';
+  key: Scalars['String']['output'];
+  label: Scalars['String']['output'];
+  tools: Scalars['Int']['output'];
+};
+
+export type AskDuncitToolPage = {
+  __typename?: 'AskDuncitToolPage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<AskDuncitToolRow>;
+  total: Scalars['Int']['output'];
+};
+
+export type AskDuncitToolRow = {
+  __typename?: 'AskDuncitToolRow';
+  allowed: Scalars['Boolean']['output'];
+  approval_required: Scalars['Boolean']['output'];
+  blocked: Scalars['Boolean']['output'];
+  calls: Scalars['Int']['output'];
+  category: Scalars['String']['output'];
+  category_label: Scalars['String']['output'];
+  confirm: Scalars['Boolean']['output'];
+  explicitly_allowed: Scalars['Boolean']['output'];
+  failures: Scalars['Int']['output'];
+  name: Scalars['String']['output'];
+  outward: Scalars['Boolean']['output'];
+  risk: Scalars['String']['output'];
+  summary: Scalars['String']['output'];
+  title: Scalars['String']['output'];
+};
+
+export type AskDuncitToolUsage = {
+  __typename?: 'AskDuncitToolUsage';
+  calls: Scalars['Int']['output'];
+  failures: Scalars['Int']['output'];
+  tool: Scalars['String']['output'];
+};
+
+export type AskDuncitTranscriptMessage = {
+  __typename?: 'AskDuncitTranscriptMessage';
+  attachments: Scalars['Int']['output'];
+  confidence?: Maybe<Scalars['Float']['output']>;
+  content: Scalars['String']['output'];
+  created_at: Scalars['String']['output'];
+  feedback_rating?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  latency_ms: Scalars['Int']['output'];
+  model: Scalars['String']['output'];
+  out_of_context: Scalars['Boolean']['output'];
+  role: Scalars['String']['output'];
+  status: Scalars['String']['output'];
+  tokens: Scalars['Int']['output'];
+  tool_calls: Array<Scalars['String']['output']>;
+};
+
+export type AskDuncitViolationCount = {
+  __typename?: 'AskDuncitViolationCount';
+  count: Scalars['Int']['output'];
+  kind: Scalars['String']['output'];
+};
+
 export type AttachE2eRunVideosInput = {
   dispatch_id?: InputMaybe<Scalars['String']['input']>;
   /** The scenario clips, when the run cut any. Absent means none. */
@@ -16237,6 +16888,8 @@ export type Mutation = {
    * attempt always lands on the same row.
    */
   claimUnitTestRun: UnitTestRun;
+  clearAskDuncitHistory: Scalars['Boolean']['output'];
+  clearAskDuncitMemory: Scalars['Boolean']['output'];
   /** Removes a sub-category's challenge settings (challenges are then off for it). */
   clearChallengeCategoryMapping: ChallengeCategoryMapping;
   /**  Start the agent's conversation about this lead over.  */
@@ -16366,6 +17019,7 @@ export type Mutation = {
   createAnalyticsMailSubscription: AnalyticsMailSubscription;
   createApiKey: CreatedApiKey;
   createAppPopup: AppPopup;
+  createAskDuncitKnowledge: AskDuncitKnowledgeArticle;
   createAudienceList: AudienceList;
   /**
    * Opens an Auto Pod for the marketplace. A Duncit admin opens one for every
@@ -16499,6 +17153,8 @@ export type Mutation = {
    * leaves something the stale sweep can clean. SUPER_ADMIN only.
    */
   dbBackupUploadAuth: DbBackupUploadPass;
+  /** Approve or reject a proposed change. Permission is re-checked when it runs. */
+  decideAskDuncitAction: AskDuncitAction;
   /** Decide a run that is waiting for approval. A note is required unless it is approved. */
   decideMarketingRun: MarketingRun;
   /** Onboarding staff approve or deny a DONE meeting themselves — approval drafts the onboarded host/venue/seller (or grants the club-admin role). No admin round-trip. */
@@ -16535,6 +17191,8 @@ export type Mutation = {
    */
   deleteAppBuild: Scalars['Boolean']['output'];
   deleteAppPopup: Scalars['Boolean']['output'];
+  deleteAskDuncitConversation: Scalars['Boolean']['output'];
+  deleteAskDuncitKnowledge: Scalars['Boolean']['output'];
   deleteAudienceList: Scalars['Boolean']['output'];
   /**
    * Removes the record for good. Refused once the pod is live (delete the pod
@@ -16822,6 +17480,7 @@ export type Mutation = {
   followUser: User;
   /** Products portal: cancel a pod-shop order outright — courier stopped, stock back, full refund, apology sent to the buyer. */
   forceCancelProductOrder: ProductOrder;
+  forgetAskDuncitFact: Scalars['Boolean']['output'];
   /** Send an existing message on to somebody else — a copy, not a pointer. */
   forwardStaffMessage: StaffMessage;
   /** Write or rework a CRM template with AI, using the CRM prompts and brand images. */
@@ -16874,6 +17533,7 @@ export type Mutation = {
    * account, roles and all.
    */
   grantE2eRunAccountRoles: Array<Scalars['String']['output']>;
+  handOverAskDuncitConversation: AskDuncitHandoverResult;
   /**
    * "Host again": a new draft holding one of the caller's own pods' content
    * (title, description, media, pricing, perks) with no date, slot or attendees,
@@ -17205,6 +17865,8 @@ export type Mutation = {
    */
   pushAppBuildToPlayStore: AppBuild;
   raiseBouncerSos: BouncerSosAlert;
+  /** UP | DOWN */
+  rateAskDuncitMessage: AskDuncitMessage;
   ratePodChallengeCompetitor: PodChallenge;
   /** Competitor: check in at a checkpoint with the code its QR link carries. */
   reachPodChallengeCheckpoint: PodChallenge;
@@ -17322,6 +17984,7 @@ export type Mutation = {
   removeReelAsset: ReelProject;
   removeRegionClubAdmin: Region;
   removeUserRole: User;
+  renameAskDuncitConversation: AskDuncitConversation;
   /** Rename in place. Purging the CDN copy costs a purge credit, so it is opt-in. */
   renameMediaFile: MediaItem;
   renameMyRegion: Region;
@@ -17531,6 +18194,7 @@ export type Mutation = {
   rescheduleMyMeeting: OnboardingMeeting;
   /** Restore a code prompt's shipped default body. */
   resetAiPrompt: AiPrompt;
+  resetAskDuncitRolePolicy: AskDuncitSettings;
   resetCrmEmailAiPrompt: AiPrompt;
   /** Put the theme back on the shared design tokens. */
   resetCrmEmailTheme: CrmEmailSettings;
@@ -17628,6 +18292,8 @@ export type Mutation = {
   revalidateEmail: EmailValidation;
   /** Marketing approves (freezes cost) or rejects, with remarks. */
   reviewAdRequest: AdRequest;
+  /** ACCEPTED | DISMISSED. add_to_knowledge drafts an article from the corrected answer. */
+  reviewAskDuncitFeedback: AskDuncitFeedbackRow;
   /** Products portal: check a submitted brand's credential against the vendor during review. */
   reviewBrandIntegration: BrandIntegrationStatus;
   /** Products team: approve (CANCEL_AND_REFUND cancels running orders) or reject (note required). */
@@ -17659,6 +18325,7 @@ export type Mutation = {
    */
   revokePodCancellation: Pod;
   revokeTeamStructureShare: Scalars['Boolean']['output'];
+  rollbackAskDuncitAction: AskDuncitAction;
   /** Point every field a run rewrote back at the original file. */
   rollbackMediaOrganizerRun: BackgroundJob;
   /** Issues a new token; every URL built from the previous one stops working. */
@@ -17778,6 +18445,7 @@ export type Mutation = {
    * admin only; SMTP + OpenAI credentials come from the Tech portal env entries.
    */
   sendAppReleaseEmail: AppReleaseEmailResult;
+  sendAskDuncitMessage: AskDuncitSendResult;
   sendClubMessage: PodMessage;
   /** Write to the reporter or to the content's owner about this report. */
   sendContentReportMail: ContentReport;
@@ -17817,6 +18485,9 @@ export type Mutation = {
   setAllMyWhatsappPreferences: WaPreference;
   /** Set a tile's goal (monthly for a count or an amount), or clear it with a null value. */
   setAnalyticsTarget: Scalars['Boolean']['output'];
+  /** Emergency stop, globally or for one role. */
+  setAskDuncitKillSwitch: AskDuncitSettings;
+  setAskDuncitToolAccess: AskDuncitSettings;
   /**
    * Pauses (false) or resumes (true) an offer still enrolling. Paused, it is
    * shown to nobody and takes no claim; resumed, whoever is still missing is
@@ -18094,6 +18765,7 @@ export type Mutation = {
    * which is what actually takes it off the slots.
    */
   stopAdRequest: AdRequest;
+  stopAskDuncitMessage: Scalars['Boolean']['output'];
   /** Ask a live run to stop. */
   stopStressRun: StressRun;
   storeAddOrderNote: ProductOrder;
@@ -18429,6 +19101,10 @@ export type Mutation = {
   updateAppSettings: AppSettings;
   /** Owner edits the editable subset of an APPROVED venue (documents append-only). */
   updateApprovedVenue: Venue;
+  updateAskDuncitControl: AskDuncitSettings;
+  updateAskDuncitKnowledge: AskDuncitKnowledgeArticle;
+  updateAskDuncitModelSettings: AskDuncitSettings;
+  updateAskDuncitRolePolicy: AskDuncitSettings;
   /**
    * Rewrites the template while the offer is not yet live. The economics are
    * re-checked against whoever has already enrolled, and the category is locked
@@ -19664,6 +20340,11 @@ export type MutationCreateAppPopupArgs = {
 };
 
 
+export type MutationCreateAskDuncitKnowledgeArgs = {
+  input: AskDuncitKnowledgeInput;
+};
+
+
 export type MutationCreateAudienceListArgs = {
   input: AudienceListInput;
 };
@@ -20154,6 +20835,13 @@ export type MutationDbBackupUploadAuthArgs = {
 };
 
 
+export type MutationDecideAskDuncitActionArgs = {
+  approve: Scalars['Boolean']['input'];
+  id: Scalars['ID']['input'];
+  surface?: InputMaybe<AskDuncitSurface>;
+};
+
+
 export type MutationDecideMarketingRunArgs = {
   decision: MarketingRunDecision;
   id: Scalars['ID']['input'];
@@ -20217,6 +20905,16 @@ export type MutationDeleteAppBuildArgs = {
 
 
 export type MutationDeleteAppPopupArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteAskDuncitConversationArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteAskDuncitKnowledgeArgs = {
   id: Scalars['ID']['input'];
 };
 
@@ -21137,6 +21835,11 @@ export type MutationForceCancelProductOrderArgs = {
 };
 
 
+export type MutationForgetAskDuncitFactArgs = {
+  id: Scalars['String']['input'];
+};
+
+
 export type MutationForwardStaffMessageArgs = {
   id: Scalars['ID']['input'];
   to_user_id: Scalars['ID']['input'];
@@ -21235,6 +21938,15 @@ export type MutationGrantAdminAccessArgs = {
 
 export type MutationGrantE2eRunAccountRolesArgs = {
   input: GrantE2eRunAccountRolesInput;
+};
+
+
+export type MutationHandOverAskDuncitConversationArgs = {
+  conversation_id: Scalars['ID']['input'];
+  role?: InputMaybe<Scalars['String']['input']>;
+  summary?: InputMaybe<Scalars['String']['input']>;
+  surface?: InputMaybe<AskDuncitSurface>;
+  team?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -21698,6 +22410,13 @@ export type MutationRaiseBouncerSosArgs = {
 };
 
 
+export type MutationRateAskDuncitMessageArgs = {
+  comment?: InputMaybe<Scalars['String']['input']>;
+  message_id: Scalars['ID']['input'];
+  rating: Scalars['String']['input'];
+};
+
+
 export type MutationRatePodChallengeCompetitorArgs = {
   candidate_id: Scalars['String']['input'];
   id: Scalars['ID']['input'];
@@ -22011,6 +22730,12 @@ export type MutationRemoveUserRoleArgs = {
 };
 
 
+export type MutationRenameAskDuncitConversationArgs = {
+  id: Scalars['ID']['input'];
+  title: Scalars['String']['input'];
+};
+
+
 export type MutationRenameMediaFileArgs = {
   fileId: Scalars['ID']['input'];
   newFileName: Scalars['String']['input'];
@@ -22257,6 +22982,11 @@ export type MutationResetAiPromptArgs = {
 };
 
 
+export type MutationResetAskDuncitRolePolicyArgs = {
+  role: AskDuncitRoleKey;
+};
+
+
 export type MutationResetCrmEmailAiPromptArgs = {
   key: Scalars['String']['input'];
 };
@@ -22451,6 +23181,14 @@ export type MutationReviewAdRequestArgs = {
 };
 
 
+export type MutationReviewAskDuncitFeedbackArgs = {
+  add_to_knowledge?: InputMaybe<Scalars['Boolean']['input']>;
+  message_id: Scalars['ID']['input'];
+  note?: InputMaybe<Scalars['String']['input']>;
+  status: Scalars['String']['input'];
+};
+
+
 export type MutationReviewBrandIntegrationArgs = {
   brand_doc_id: Scalars['ID']['input'];
   provider: BrandIntegrationProvider;
@@ -22550,6 +23288,12 @@ export type MutationRevokePodCancellationArgs = {
 
 export type MutationRevokeTeamStructureShareArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type MutationRollbackAskDuncitActionArgs = {
+  id: Scalars['ID']['input'];
+  surface?: InputMaybe<AskDuncitSurface>;
 };
 
 
@@ -22751,6 +23495,11 @@ export type MutationSendAppReleaseEmailArgs = {
 };
 
 
+export type MutationSendAskDuncitMessageArgs = {
+  input: AskDuncitSendInput;
+};
+
+
 export type MutationSendClubMessageArgs = {
   club_id: Scalars['ID']['input'];
   image_url?: InputMaybe<Scalars['String']['input']>;
@@ -22885,6 +23634,21 @@ export type MutationSetAnalyticsTargetArgs = {
   entity: AnalyticsEntity;
   key: Scalars['String']['input'];
   value?: InputMaybe<Scalars['Float']['input']>;
+};
+
+
+export type MutationSetAskDuncitKillSwitchArgs = {
+  on: Scalars['Boolean']['input'];
+  reason?: InputMaybe<Scalars['String']['input']>;
+  role?: InputMaybe<AskDuncitRoleKey>;
+};
+
+
+export type MutationSetAskDuncitToolAccessArgs = {
+  access: AskDuncitToolAccess;
+  force_approval?: InputMaybe<Scalars['Boolean']['input']>;
+  role: AskDuncitRoleKey;
+  tool: Scalars['String']['input'];
 };
 
 
@@ -23502,6 +24266,11 @@ export type MutationStartVideoCompressionArgs = {
 
 export type MutationStopAdRequestArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type MutationStopAskDuncitMessageArgs = {
+  message_id: Scalars['ID']['input'];
 };
 
 
@@ -24409,6 +25178,28 @@ export type MutationUpdateAppSettingsArgs = {
 export type MutationUpdateApprovedVenueArgs = {
   input: UpdateApprovedVenueInput;
   venue_id: Scalars['ID']['input'];
+};
+
+
+export type MutationUpdateAskDuncitControlArgs = {
+  input: AskDuncitControlInput;
+};
+
+
+export type MutationUpdateAskDuncitKnowledgeArgs = {
+  id: Scalars['ID']['input'];
+  input: AskDuncitKnowledgeInput;
+};
+
+
+export type MutationUpdateAskDuncitModelSettingsArgs = {
+  input: AskDuncitModelSettingsInput;
+};
+
+
+export type MutationUpdateAskDuncitRolePolicyArgs = {
+  input: AskDuncitRolePolicyInput;
+  role: AskDuncitRoleKey;
 };
 
 
@@ -32072,6 +32863,30 @@ export type Query = {
   approvalRequestsTable: ApprovalRequestTablePage;
   /** The bots offered in the Ask Bot list, in the order they should be shown. */
   askBots: Array<AskBot>;
+  askDuncitAuditTable: AskDuncitAuditPage;
+  /** Whether Ask Duncit is available to the caller, in which role, with which features and suggestions. */
+  askDuncitBootstrap: AskDuncitBootstrap;
+  askDuncitConversation: AskDuncitConversation;
+  askDuncitConversationDetail?: Maybe<AskDuncitConversationDetail>;
+  askDuncitConversations: AskDuncitConversationPage;
+  askDuncitConversationsTable: AskDuncitConversationRowPage;
+  askDuncitCost: AskDuncitCost;
+  askDuncitDashboard: AskDuncitDashboard;
+  askDuncitFeedbackTable: AskDuncitFeedbackPage;
+  askDuncitKnowledgeArticle?: Maybe<AskDuncitKnowledgeArticle>;
+  askDuncitKnowledgeTable: AskDuncitKnowledgePage;
+  askDuncitMemory: Array<AskDuncitMemoryFact>;
+  askDuncitMessage: AskDuncitMessage;
+  /** Oldest→newest; pass the first message id as before to load older ones. */
+  askDuncitMessages: AskDuncitMessagePage;
+  askDuncitMyActions: Array<AskDuncitAction>;
+  /** The AI Library code prompts Ask Duncit runs on, for Prompt Management. */
+  askDuncitPromptKeys: Array<Scalars['String']['output']>;
+  askDuncitSettings: AskDuncitSettings;
+  askDuncitToolCategories: Array<AskDuncitToolCategory>;
+  askDuncitToolTable: AskDuncitToolPage;
+  /** Re-checks one audit row against its tamper-evidence hash. */
+  askDuncitVerifyAudit: Scalars['Boolean']['output'];
   /** Dropdown values for the audience filters that are driven by data. */
   audienceFilterOptions: AudienceFilterOptions;
   /** One saved list, with its member count recomputed. */
@@ -34437,6 +35252,96 @@ export type QueryApprovalRequestsArgs = {
 
 export type QueryApprovalRequestsTableArgs = {
   query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryAskDuncitAuditTableArgs = {
+  preset?: InputMaybe<AskDuncitAuditPreset>;
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryAskDuncitBootstrapArgs = {
+  page?: InputMaybe<AskDuncitPageInput>;
+  role?: InputMaybe<Scalars['String']['input']>;
+  surface?: InputMaybe<AskDuncitSurface>;
+};
+
+
+export type QueryAskDuncitConversationArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryAskDuncitConversationDetailArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryAskDuncitConversationsArgs = {
+  before?: InputMaybe<Scalars['String']['input']>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  search?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type QueryAskDuncitConversationsTableArgs = {
+  live?: InputMaybe<Scalars['Boolean']['input']>;
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryAskDuncitCostArgs = {
+  days?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryAskDuncitDashboardArgs = {
+  days?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryAskDuncitFeedbackTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryAskDuncitKnowledgeArticleArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryAskDuncitKnowledgeTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryAskDuncitMessageArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryAskDuncitMessagesArgs = {
+  before?: InputMaybe<Scalars['ID']['input']>;
+  conversation_id: Scalars['ID']['input'];
+  limit?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryAskDuncitMyActionsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryAskDuncitToolTableArgs = {
+  days?: InputMaybe<Scalars['Int']['input']>;
+  query?: InputMaybe<TableQueryInput>;
+  role: AskDuncitRoleKey;
+};
+
+
+export type QueryAskDuncitVerifyAuditArgs = {
+  id: Scalars['ID']['input'];
 };
 
 

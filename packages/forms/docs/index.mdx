@@ -1165,3 +1165,19 @@ import { makePodCompleteSchema, buildPodCompleteInput } from '@duncit/forms/sche
 const schema = makePodCompleteSchema(hasVenue, venueBillLabels);
 const input = buildPodCompleteInput(values, pod.id);
 ```
+
+### Ask Duncit handover — `makeAskDuncitHandoverSchema`
+
+The "Talk to a person" form on mWeb (`ask-duncit-page/handover-form`) and the native sheet
+(`components/ask-duncit/AskHandoverSheet`). `team` must be one of the server's handover teams
+(`ASK_DUNCIT_HANDOVER_TEAMS` in `@duncit/utils`: SUPPORT, ADMIN, OPERATIONS); `summary` is optional
+and trimmed, at most `ASK_DUNCIT_HANDOVER_SUMMARY_MAX` (600) characters — the server's own limit.
+Refusals are `askDuncit.handover.teamRequired` / `askDuncit.handover.summaryTooLong`.
+
+```ts
+import { askDuncitHandoverDefaults, makeAskDuncitHandoverSchema } from '@duncit/forms/schemas';
+
+const schema = makeAskDuncitHandoverSchema(t);
+schema.parse({ ...askDuncitHandoverDefaults, summary: 'Refund for a cancelled pod' });
+// { team: 'SUPPORT', summary: 'Refund for a cancelled pod' }
+```

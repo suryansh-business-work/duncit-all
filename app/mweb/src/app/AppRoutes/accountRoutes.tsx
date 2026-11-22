@@ -1,5 +1,5 @@
 import { Navigate, Route } from 'react-router';
-import { AccountHealthPage, AllTicketsPage, BadgesPage, BookingPage, CallbackPage, CommPreferencePage, DuncitCoinPage, FaqsPage, FeedbackPage, LearningsPage, GiftCardCheckoutPage, GiftCardClaimPage, GiftCardRedeemPage, GiftCardsPage, GrievancePage, LeaderboardPage, LiveTicketsPage, MailPreferencePage, MembershipPage, PodHistoryDetailsPage, PodHistoryPage, PodIdeasPage, PodPlansPage, PolicyPage, PrivacyPage, ReferralPage, SignupReferralPage, SignupSurveyPage, SmsPreferencePage, SosPage, SupportChatPage, SupportHubPage, SupportTicketsPage, TicketDetailPage, VenueHealthPage, WhatsAppPreferencePage } from './lazyPages';
+import { AccountHealthPage, AllTicketsPage, AskDuncitPage, BadgesPage, BookingPage, CallbackPage, CommPreferencePage, DuncitCoinPage, FaqsPage, FeedbackPage, LearningsPage, GiftCardCheckoutPage, GiftCardClaimPage, GiftCardRedeemPage, GiftCardsPage, GrievancePage, LeaderboardPage, LiveTicketsPage, MailPreferencePage, MembershipPage, PodHistoryDetailsPage, PodHistoryPage, PodIdeasPage, PodPlansPage, PolicyPage, PrivacyPage, ReferralPage, SignupReferralPage, SignupSurveyPage, SmsPreferencePage, SosPage, SupportChatPage, SupportHubPage, SupportTicketsPage, TicketDetailPage, VenueHealthPage, WhatsAppPreferencePage } from './lazyPages';
 import { TUTORIALS_PATH } from '@duncit/utils';
 import { withAuth } from './routeGuards';
 
@@ -15,6 +15,8 @@ export function accountRoutes() {
         <Route path="/referral" element={withAuth(<ReferralPage />)} />
         <Route path="/duncit-coin" element={withAuth(<DuncitCoinPage />)} />
         <Route path="/leaderboard" element={withAuth(<LeaderboardPage />)} />
+        <Route path="/ask-duncit" element={withAuth(<AskDuncitPage />)} />
+        <Route path="/ask-duncit/:conversationId" element={withAuth(<AskDuncitPage />)} />
         <Route path="/membership" element={withAuth(<MembershipPage />)} />
         <Route path="/gift-cards" element={withAuth(<GiftCardsPage />)} />
         <Route path="/gift-cards/checkout" element={withAuth(<GiftCardCheckoutPage />)} />

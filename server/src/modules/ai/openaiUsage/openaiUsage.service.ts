@@ -37,6 +37,22 @@ async function loadRates(): Promise<Map<string, Rate>> {
 /** Money is rounded once, here, so the stored figure is the one that gets summed. */
 const round6 = (n: number) => Math.round(n * 1e6) / 1e6;
 
+/**
+ * What a call's tokens cost on the rate card as it stands now — the same rate
+ * `recordUsage` prices with, for features that keep their own per-turn ledger
+ * (Ask Duncit). `priced: false` when the model has no rate.
+ */
+export async function priceTokens(
+  model: string,
+  promptTokens: number,
+  completionTokens: number,
+): Promise<{ cost_usd: number; priced: boolean }> {
+  const rate = (await loadRates()).get(model);
+  if (!rate) return { cost_usd: 0, priced: false };
+  const cost = (promptTokens / 1e6) * rate.input_per_1m + (completionTokens / 1e6) * rate.output_per_1m;
+  return { cost_usd: round6(cost), priced: true };
+}
+
 /* --------------------------- table allowlists --------------------------- */
 
 const USAGE_TABLE_CONFIG: TableEntityConfig = {

@@ -137,6 +137,7 @@ export const linkingConfig: NonNullable<LinkingOptions<RootStackParamList>['conf
     Callback: 'support/callback',
     ChatWithUs: 'support/chat',
     LiveChat: 'live-chat',
+    AskDuncit: 'ask-duncit/:conversationId?',
     AllSupportTickets: 'support/all',
     TicketDetails: 'tickets/:ticketId',
     PodIdeas: 'pod-ideas',

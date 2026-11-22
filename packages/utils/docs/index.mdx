@@ -4802,3 +4802,62 @@ toggleDayKey(pricing.blocked_dates, '2026-12-31'); // block / unblock, kept sort
 | `priceRuleChange` | `(mode, value, money) => string` | A rule's change as the owner set it: `+20%`, `-₹500`. |
 
 Renderers: native `screens/VenuePricingScreen` (`components/venue-pricing`).
+
+## Ask Duncit's conversation, on both apps — `ask-duncit`
+
+Ask Duncit (menu › Ask Duncit) is the role-based AI assistant. Its answers stream over the socket
+(`ASK_DUNCIT_SOCKET_EVENTS`) after `sendAskDuncitMessage` returns the message ids, and both apps fold
+those events into ONE thread model with these pure functions, so mWeb (MUI) and the native app
+(Tamagui) cannot drift in how a turn behaves. The server stays the truth: the `done` event carries
+the stored message, which `applyFinal` puts in place of the streamed copy.
+
+A turn: `addOptimisticQuestion` (shown at once) → `acceptTurn` with the mutation's result (real ids,
+an answer placeholder, `streamingId`; a `BLOCKED` turn is complete with `INJECTION_BLOCKED`) or
+`rejectTurn` if the send failed → `applyDelta` per text frame → `applyToolEvent` (a finished tool
+replaces its RUNNING line) → `applyActionEvent` (a proposed change appears on the streaming answer
+and later updates in place) → `applyFinal` or `applyFailure`. Older pages load with
+`prependOlder`, which skips messages already on screen.
+
+Every word is a translation key: `roleLabelKey`, `suggestionText` (an operator's own label wins over
+its key), `alertText` (fills `{placeholders}` from the alert's JSON params), `unavailableKey`,
+`errorKey`, `actionStatusKey`, `toolStatusKey` — unknown codes fall back to a generic key, never to
+raw text. `pageContextFromPath` turns the current path into the entity on screen (pod, club, venue,
+profile, wallet) for contextual answers; `isNearBottom` is the shared auto-scroll rule;
+`canDecide` says whether approve/reject still apply.
+
+```ts
+import {
+  acceptTurn,
+  addOptimisticQuestion,
+  applyDelta,
+  applyFinal,
+  emptyThread,
+  pageContextFromPath,
+  tempMessageId,
+} from '@duncit/utils';
+
+const temp = tempMessageId();
+let thread = addOptimisticQuestion(emptyThread(), temp, 'Show my pods');
+thread = acceptTurn(thread, temp, { conversation_id: 'c1', user_message_id: 'u1', message_id: 'a1', status: 'STREAMING' });
+thread = applyDelta(thread, { message_id: 'a1', text: 'You have 2 pods.' });
+thread = applyFinal(thread, storedMessageFromDoneEvent);
+pageContextFromPath('/pod/6650abc'); // { route: '/pod/6650abc', entity_type: 'POD', entity_id: '6650abc' }
+```
+
+| Export | Signature | Meaning |
+| --- | --- | --- |
+| `ASK_DUNCIT_SOCKET_EVENTS` | `{ start, delta, tool, action, done, error }` | Event names on the asker's socket room. |
+| `ASK_DUNCIT_TRANSCRIBE_PATH` / `ASK_DUNCIT_SPEAK_PATH` | `string` | Voice in (audio → text) and out (text → MP3), relative to the API base. |
+| `emptyThread` | `(conversationId?) => AskDuncitThreadState` | A thread with no messages. |
+| `addOptimisticQuestion` / `acceptTurn` / `rejectTurn` | state transitions | The question before, after and instead of the server's acceptance. |
+| `applyDelta` / `applyToolEvent` / `applyActionEvent` | state transitions | Streamed text, tool progress, proposed changes. |
+| `applyFinal` / `applyFailure` | state transitions | The stored message replaces the stream; or the failure with its code. |
+| `prependOlder` | `(state, older, hasMore)` | Older page above, de-duplicated. |
+| `pageContextFromPath` | `(path) => AskDuncitPageContext` | The entity on screen. |
+| `isNearBottom` / `NEAR_BOTTOM_PX` | `(offset, threshold?) => boolean` / `80` | Keep following new text only while the reader is at the bottom. |
+| `roleLabelKey`, `suggestionText`, `alertText`, `unavailableKey`, `errorKey`, `actionStatusKey`, `toolStatusKey` | key builders | Localization keys for every server code. |
+| `canDecide` | `(action, now?) => boolean` | Pending and not expired. |
+| `tempMessageId` | `() => string` | A client-only id for the optimistic question. |
+
+Renderers: mWeb `pages/ask-duncit-page/*`, native `screens/AskDuncitScreen` + `components/ask-duncit/*`.
+Server: `server/src/modules/ai/askDuncit`.

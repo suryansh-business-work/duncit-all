@@ -75,6 +75,20 @@ const ROUTES = [
   // Reel Studio's old addresses: a page that points at the Marketing console.
   '/reels',
   '/reels/smoke-id',
+  // Ask Duncit: every operator page, empty data and every control pressed.
+  '/ask-duncit',
+  '/ask-duncit/live',
+  '/ask-duncit/logs',
+  '/ask-duncit/out-of-context',
+  '/ask-duncit/violations',
+  '/ask-duncit/tools',
+  '/ask-duncit/knowledge',
+  '/ask-duncit/models',
+  '/ask-duncit/prompts',
+  '/ask-duncit/feedback',
+  '/ask-duncit/cost',
+  '/ask-duncit/flags',
+  '/ask-duncit/control-center',
 ];
 
 /** `link` swaps what answers the page: nothing, or the schema-shaped mock. */

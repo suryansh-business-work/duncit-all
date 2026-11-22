@@ -318,3 +318,9 @@ export {
   normalizeInstagramHandle,
   type BannerKitValues,
 } from './banner-kit';
+
+export {
+  askDuncitHandoverDefaults,
+  makeAskDuncitHandoverSchema,
+  type AskDuncitHandoverValues,
+} from './ask-duncit-handover';

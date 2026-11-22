@@ -102,6 +102,8 @@ import { buildAiPromptFeedRouter } from '@modules/ai/prompt/prompt.router';
 import { buildAiPromptShareRouter } from '@modules/ai/prompt/prompt.share.router';
 import { buildTableApiRouter } from '@modules/platform/tableApi/tableApi.router';
 import { buildMcpRouter } from '@microservices/mcp/http/mcp.router';
+import { registerAskDuncitApollo } from '@modules/ai/askDuncit/mcp/askDuncit.session';
+import { buildAskDuncitVoiceRouter } from '@modules/ai/askDuncit/voice/askDuncit.voice.router';
 import { categoryService } from '@modules/pods/category/category.service';
 import { notificationService } from '@modules/engagement/notification/notification.service';
 import { notificationStreamHandler } from '@modules/engagement/notification/notification.stream';
@@ -1053,6 +1055,12 @@ async function bootstrap() {
   // server. Only those paths enter it; every tool runs through Apollo as the
   // connected person. See microservices/mcp/README.md.
   app.use(buildMcpRouter({ apollo, typeDefsByModule, resolvers }));
+
+  // Ask Duncit runs its tools through the same MCP pipeline as the person,
+  // so it needs the Apollo server too; voice in/out is plain HTTP (binary).
+  // See modules/ai/askDuncit.
+  registerAskDuncitApollo(apollo);
+  app.use('/ask-duncit', buildAskDuncitVoiceRouter());
 
   // Branded notice at the API root instead of Express's default "Cannot GET /".
   app.get('/', (_req, res) => res.type('html').send(LANDING_HTML));

@@ -164,6 +164,8 @@ export type RootStackParamList = {
   Callback: undefined;
   ChatWithUs: undefined;
   LiveChat: undefined;
+  /** Ask Duncit, the role-based assistant; `from` is the app path it was opened about. */
+  AskDuncit: { conversationId?: string; from?: string } | undefined;
   AllSupportTickets: undefined;
   Feedback: undefined;
   Grievance: undefined;

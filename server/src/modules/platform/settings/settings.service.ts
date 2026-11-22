@@ -624,6 +624,16 @@ const DEFAULT_FLAGS: {
     enabled: false,
   },
   {
+    // Seeded OFF so a deploy never exposes the assistant before it is
+    // configured. Off, and the server refuses new Ask Duncit turns too
+    // (askDuncit.context unavailableReason) — the menu row is not the only gate.
+    key: "ask_duncit",
+    name: "Ask Duncit",
+    description:
+      "Show Ask Duncit, the role-based AI assistant, in the mobile app and mobile web sidebar. Off, and new Ask Duncit messages are refused server-side.",
+    enabled: false,
+  },
+  {
     // Seeded ON: the tiers ship as "coming soon" with every CTA disabled, so
     // showing the page costs nothing — this flag is the switch to pull it back.
     key: "membership",

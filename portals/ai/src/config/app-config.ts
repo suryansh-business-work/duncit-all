@@ -58,6 +58,25 @@ export const appConfig = {
       ],
     },
     {
+      label: 'Ask Duncit', labelKey: 'shell.nav.askDuncit',
+      icon: 'forum',
+      children: [
+        { label: 'Dashboard', labelKey: 'shell.nav.dashboard', to: '/ask-duncit', icon: 'analytics' },
+        { label: 'Live Conversations', labelKey: 'shell.nav.liveConversations', to: '/ask-duncit/live', icon: 'chat' },
+        { label: 'Chat History & Logs', labelKey: 'shell.nav.chatLogs', to: '/ask-duncit/logs', icon: 'article' },
+        { label: 'Out-of-Context Queries', labelKey: 'shell.nav.outOfContext', to: '/ask-duncit/out-of-context', icon: 'help' },
+        { label: 'Security & Access Violations', labelKey: 'shell.nav.securityViolations', to: '/ask-duncit/violations', icon: 'shield' },
+        { label: 'MCP & Tool Management', labelKey: 'shell.nav.mcpTools', to: '/ask-duncit/tools', icon: 'tools' },
+        { label: 'Knowledge Base', labelKey: 'shell.nav.knowledgeBase', to: '/ask-duncit/knowledge', icon: 'menuBook' },
+        { label: 'Model & LLM Settings', labelKey: 'shell.nav.modelSettings', to: '/ask-duncit/models', icon: 'ai' },
+        { label: 'Prompt Management', labelKey: 'shell.nav.promptManagement', to: '/ask-duncit/prompts', icon: 'quote' },
+        { label: 'Feedback & Evaluation', labelKey: 'shell.nav.feedbackEvaluation', to: '/ask-duncit/feedback', icon: 'feedback' },
+        { label: 'Cost & Usage Analytics', labelKey: 'shell.nav.costUsage', to: '/ask-duncit/cost', icon: 'payments' },
+        { label: 'Feature Flags', labelKey: 'shell.nav.featureFlags', to: '/ask-duncit/flags', icon: 'flag' },
+        { label: 'AI Agent Control Center', labelKey: 'shell.nav.agentControlCenter', to: '/ask-duncit/control-center', icon: 'tune' },
+      ],
+    },
+    {
       label: 'Automation', labelKey: 'shell.nav.automation',
       icon: 'hub',
       children: [

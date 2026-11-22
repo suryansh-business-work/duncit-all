@@ -15,6 +15,7 @@ import AiMonitoringSettingsPage from './pages/ai-monitoring/settings';
 import AutomationFlowsPage from './pages/automation/flows-list';
 import AutomationBuilderPage from './pages/automation/builder';
 import ReelStudioMovedPage from './pages/reels-moved';
+import { askDuncitRoutes } from './pages/ask-duncit/routes';
 import AppShell from './components/AppShell';
 import { getToken } from './lib/session';
 
@@ -38,6 +39,7 @@ export default function App() {
       <Route path="/openai/logs" element={authed(<OpenAiLogsPage />)} />
       <Route path="/monitoring" element={authed(<AiMonitoringLogsPage />)} />
       <Route path="/monitoring/settings" element={authed(<AiMonitoringSettingsPage />)} />
+      {askDuncitRoutes(authed)}
       <Route path="/automation/:channel" element={authed(<AutomationFlowsPage />)} />
       <Route path="/automation/:channel/:flowId" element={authed(<AutomationBuilderPage />)} />
       {/* Reel Studio moved to the Marketing console; the old addresses point there. */}

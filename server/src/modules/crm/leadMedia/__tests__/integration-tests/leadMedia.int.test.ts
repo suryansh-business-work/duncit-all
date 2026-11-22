@@ -69,7 +69,7 @@ describe('leadMediaService.add and list', () => {
     const [unnamed] = await svc.add('VENUE_LEAD', leadId, [img({ name: null })]);
     expect(unnamed.name).toBe('');
 
-    const otherId = (await crmService.createVenueLead({ venue_name: 'Other', full_address: '2 Banquet Lane', contacts: [] }))!.id;
+    const otherId = (await crmService.createVenueLead({ venue_name: 'Other', city: 'Pune', full_address: '2 Banquet Lane', contacts: [] }))!.id;
     const _id = new Types.ObjectId();
     await CrmLeadMediaModel.collection.insertOne({
       _id,
@@ -201,7 +201,7 @@ describe('leadMediaService.update', () => {
 
   it('counts the limit per lead, so another lead’s full shelf does not matter', async () => {
     const full = await venueLead();
-    const other = (await crmService.createVenueLead({ venue_name: 'Other', full_address: '2 Banquet Lane', contacts: [] }))!.id;
+    const other = (await crmService.createVenueLead({ venue_name: 'Other', city: 'Pune', full_address: '2 Banquet Lane', contacts: [] }))!.id;
     await svc.add('VENUE_LEAD', full, Array.from({ length: 10 }, () => logo()));
     const [image] = await svc.add('VENUE_LEAD', other, [img()]);
 
@@ -240,7 +240,7 @@ describe('leadMediaService.remove and removeLeadMedia', () => {
 
   it('removes every item of one lead only, and ignores a malformed id', async () => {
     const leadId = await venueLead();
-    const otherId = (await crmService.createVenueLead({ venue_name: 'Other', full_address: '2 Banquet Lane', contacts: [] }))!.id;
+    const otherId = (await crmService.createVenueLead({ venue_name: 'Other', city: 'Pune', full_address: '2 Banquet Lane', contacts: [] }))!.id;
     await svc.add('VENUE_LEAD', leadId, [img(), logo()]);
     await svc.add('VENUE_LEAD', otherId, [img()]);
 

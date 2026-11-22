@@ -52,7 +52,14 @@ describe('UserRefundLogsPage', () => {
     expect(cellTexts('refund_reason')).toEqual(['Duplicate charge', '—']);
     expect(cellTexts('refund_initiated_by')).toEqual(['Finance console', 'SYSTEM']);
     expect(cellTexts('status')).toEqual(['REFUNDED', 'SUCCESS']);
-    expect(cellTexts('payment_id')).toEqual(['DUN-PAY-4821INV-2026-0042', 'DUN-PAY-4822']);
+    // Razorpay's payment, order and refund ids sit beside the Duncit ref and the invoice.
+    const [full, part] = cellTexts('payment_id');
+    for (const id of ['pay_U39hOwzQiUFqHT', 'order_U39IVJblWttbgN', 'rfnd_Q8a1LmZx', 'DUN-PAY-4821', 'INV-2026-0042']) {
+      expect(full).toContain(id);
+    }
+    // A refund that never went through Razorpay shows only our own reference.
+    expect(part).toContain('DUN-PAY-4822');
+    expect(part).not.toMatch(/pay_|order_|rfnd_/);
 
     // Only a part refund explains itself.
     expect(screen.getByLabelText(/Only some of the seats came back/)).toHaveTextContent('Part');

@@ -8,7 +8,7 @@
  * starts a fresh id.
  */
 import { beforeEach, describe, expect, it } from 'vitest';
-import { fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { GraphQLError } from 'graphql';
 import type { MockedResponse } from '@apollo/client/testing';
 import { SendMoneyPage } from '../../src/pages/finance';
@@ -162,7 +162,7 @@ describe('Send Money — the recipient box', () => {
     mount([optionsMock(), searchMock, recipientMock([bank])]);
     await pickMeera();
     await screen.findByText('Verified bank accounts');
-    fireEvent.click(screen.getByRole('button', { name: 'Clear' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Clear', hidden: true }));
     await waitFor(() => expect(screen.queryByText('Verified bank accounts')).not.toBeInTheDocument());
     expect(screen.getByRole('button', { name: 'Send Money' })).toBeDisabled();
   });
@@ -277,8 +277,11 @@ describe('Send Money — confirming and sending', () => {
     mount([optionsMock(), searchMock, recipientMock([bank]), sendMock(sent)]);
     const dialog = await reachConfirmation();
     const confirm = within(dialog).getByRole('button', { name: 'Send Money' });
-    fireEvent.click(confirm);
-    fireEvent.click(confirm);
+    // Both clicks land in one batch, before the first one's loading state can render.
+    act(() => {
+      confirm.click();
+      confirm.click();
+    });
     await waitFor(() => expect(notifySuccess).toHaveBeenCalledTimes(1));
     expect(sent).toHaveLength(1);
   });

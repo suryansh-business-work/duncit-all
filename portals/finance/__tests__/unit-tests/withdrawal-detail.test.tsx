@@ -8,7 +8,7 @@
  * its rules and the exact input it sends are asserted — not just that it opens.
  */
 import { beforeEach, describe, expect, it } from 'vitest';
-import { fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import type { MockedResponse } from '@apollo/client/testing';
 import { Route } from 'react-router';
 import { PodWithdrawalDetailPage } from '../../src/pages/finance/withdrawals-page';
@@ -364,9 +364,11 @@ describe('PodWithdrawalDetailPage — the Accept dialog', () => {
     const dialog = await openDialog();
     const confirm = await within(dialog).findByRole('button', { name: 'Accept & pay' });
 
-    // Two clicks before either has rendered its loading state.
-    fireEvent.click(confirm);
-    fireEvent.click(confirm);
+    // Both clicks land in one batch, before the first one's loading state can render.
+    act(() => {
+      confirm.click();
+      confirm.click();
+    });
 
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     expect(sent).toHaveLength(1);

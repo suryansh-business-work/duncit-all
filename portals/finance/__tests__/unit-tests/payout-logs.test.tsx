@@ -95,10 +95,14 @@ describe('Withdrawal Logs', () => {
     tableControls.rowsByKey = {
       payoutAuditTable: [
         audit({ user_name: '', reason: '', actor_role: '', payment_status: '', action: 'FUTURE_ACTION', razorpay_payout_id: '' }),
+        audit({ id: 'e9', actor_name: '', actor_role: '' }),
       ],
     };
     renderWithProviders(<WithdrawalLogsPage />, { path: '/withdrawals/logs', entry: '/withdrawals/logs', mocks: [] });
-    const row = await screen.findByTestId('table-row');
+    await waitFor(() => expect(screen.getAllByTestId('table-row')).toHaveLength(2));
+    const [row, nobody] = screen.getAllByTestId('table-row');
+    // An action with nobody behind it (no name, no role) reads as a dash too.
+    expect(within(nobody).getByTestId('cell-actor_name')).toHaveTextContent('—');
     expect(within(row).getByTestId('cell-user_name')).toHaveTextContent('—');
     expect(within(row).getByTestId('cell-reason')).toHaveTextContent('—');
     expect(within(row).getByTestId('cell-actor_name')).toHaveTextContent('Finance One');

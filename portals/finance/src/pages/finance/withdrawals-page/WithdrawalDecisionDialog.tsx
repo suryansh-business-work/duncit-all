@@ -121,8 +121,7 @@ function ReviewDialog({ withdrawalId, onClose, onDecided }: Readonly<Props & { w
       <DialogTitle>{t('finance.payouts.reviewTitle')}</DialogTitle>
       <DialogContent dividers>
         <QueryGuard loading={loading && !review} error={error} notFound={!review} spinnerSx={{ p: 4 }}>
-          {() =>
-            review ? (
+          {review && (
               <Stack spacing={3}>
                 <WithdrawalReviewDetails review={review} />
                 <WithdrawalDecisionFields
@@ -136,8 +135,7 @@ function ReviewDialog({ withdrawalId, onClose, onDecided }: Readonly<Props & { w
                   payoutsConfigured={canPay}
                 />
               </Stack>
-            ) : null
-          }
+          )}
         </QueryGuard>
       </DialogContent>
       <DialogActions>

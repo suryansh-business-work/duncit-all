@@ -542,8 +542,10 @@ jobs:
           # "bridge server" (sonar.javascript.node.maxspace in
           # sonar-project.properties) holds the TS type graph. Starve either and
           # the JS/TS sensor dies with "bridge server is unresponsive" after ~25
-          # minutes, publishing nothing.
-          SONAR_SCANNER_JAVA_OPTS: -Xmx4096m
+          # minutes, publishing nothing. It is the bridge that ran out (Nov 2026,
+          # at its 8 GB limit), so it now gets 10 GB and the JVM 3 GB: 13 GB in
+          # all, leaving the OS ~3 GB.
+          SONAR_SCANNER_JAVA_OPTS: -Xmx3072m
 
       # The scanner prints only a dashboard link on a failed gate, and the server
       # forces a login — so a red PR check would explain nothing to most readers.

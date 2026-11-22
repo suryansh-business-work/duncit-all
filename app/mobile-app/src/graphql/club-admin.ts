@@ -233,11 +233,6 @@ export const ClubAdminPodForEditDocument = gql(`
         product_id
         quantity
       }
-      ticket_discount_enabled
-      ticket_discount_tiers {
-        min_tickets
-        discount_pct
-      }
       # Round-tripped through the editor's form, so a save keeps the host's offer.
       smart_incentive_enabled
       smart_incentive_pct

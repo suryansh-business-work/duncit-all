@@ -58,8 +58,6 @@ const pod = {
   payment_terms: null,
   place_charges: [],
   product_requests: [],
-  ticket_discount_enabled: false,
-  ticket_discount_tiers: null,
   pod_hosts_id: ['h1', 'h2'],
   host_names: ['Asha'],
 };

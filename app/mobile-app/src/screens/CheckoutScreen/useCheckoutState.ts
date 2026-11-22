@@ -48,17 +48,17 @@ export function useCheckoutState() {
   // payment through the standalone product checkout. Never mix the two.
   // Seats ride in from Pod Details. The ticket price multiplies; the server
   // re-prices and re-checks capacity, so this is a preview, never the charge.
-  // The multi-ticket tier comes off first, then the buyer's unlocked Smart
-  // Incentive, then the coupon, coins and GST.
+  // The buyer's unlocked Smart Incentive comes off the full ticket gross first,
+  // then the coupon, coins and GST.
   const seats = Math.max(1, Number(route.params?.seats ?? 1) || 1);
-  const { ticket, incentive, breakup, coins, payBreakup, discounts } = usePodCheckoutBill(
+  const { gross, incentive, breakup, coins, payBreakup, discounts } = usePodCheckoutBill(
     pod,
     seats,
     finance,
     coupon,
     smartIncentive,
   );
-  const amount = ticket.gross;
+  const amount = gross;
   // Rented items picked on Pod Details ride on this payment, charged in full.
   const rentals = useCheckoutRentals(pod, payment !== null);
   // Razorpay takes precedence whenever its Tech-portal keys are set; the dummy
@@ -120,7 +120,6 @@ export function useCheckoutState() {
     applyingCoupon,
     setApplyingCoupon,
     seats,
-    ticket,
     incentive,
     breakup,
     coins,

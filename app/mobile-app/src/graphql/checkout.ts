@@ -66,11 +66,6 @@ export const MobileCheckoutPodDocument = gql(`
       pod_amount
       pod_mode
       venue_id
-      ticket_discount_enabled
-      ticket_discount_tiers {
-        min_tickets
-        discount_pct
-      }
       # Whether to ask podSmartIncentive for the buyer's unlocked offer at all.
       smart_incentive_enabled
       place_charges {
@@ -106,8 +101,6 @@ export const MobileDummyCheckoutDocument = gql(`
       payment_id
       invoice_no
       total
-      ticket_discount_amount
-      ticket_discount_pct
       smart_incentive_amount
       smart_incentive_pct
       currency_symbol
@@ -170,8 +163,6 @@ export const MobileCreateRazorpayOrderDocument = gql(`
         payment_id
         invoice_no
         total
-        ticket_discount_amount
-        ticket_discount_pct
         smart_incentive_amount
         smart_incentive_pct
         currency_symbol
@@ -191,8 +182,6 @@ export const MobileVerifyRazorpayDocument = gql(`
       payment_id
       invoice_no
       total
-      ticket_discount_amount
-      ticket_discount_pct
       smart_incentive_amount
       smart_incentive_pct
       currency_symbol
@@ -220,8 +209,6 @@ export const MobileMyPaymentDocument = gql(`
       payment_id
       invoice_no
       total
-      ticket_discount_amount
-      ticket_discount_pct
       smart_incentive_amount
       smart_incentive_pct
       currency_symbol

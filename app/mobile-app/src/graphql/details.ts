@@ -87,11 +87,6 @@ export const PodDetailsDocument = gql(`
         amount
         note
       }
-      ticket_discount_enabled
-      ticket_discount_tiers {
-        min_tickets
-        discount_pct
-      }
       # Only whether the host offers it: the viewer's own offer (its % and
       # delay) is podSmartIncentive's answer, asked only when this is true.
       smart_incentive_enabled

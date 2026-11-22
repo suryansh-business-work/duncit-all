@@ -164,8 +164,6 @@ export const MobileDummyGiftCardCheckoutDocument = gql(`
       payment_id
       invoice_no
       total
-      ticket_discount_amount
-      ticket_discount_pct
       smart_incentive_amount
       smart_incentive_pct
       currency_symbol
@@ -199,8 +197,6 @@ export const MobileCreateRazorpayGiftCardOrderDocument = gql(`
         payment_id
         invoice_no
         total
-        ticket_discount_amount
-        ticket_discount_pct
         smart_incentive_amount
         smart_incentive_pct
         currency_symbol

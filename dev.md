@@ -75,10 +75,12 @@ app; the signing identity comes from the environment:
 | Variable | Where to find it |
 |---|---|
 | `MWEB_ANDROID_CERT_SHA256` | Play Console → your app → **Test and release ▸ Setup ▸ App signing** → *App signing key certificate* → SHA-256. Include the **upload** key's SHA-256 too, comma separated, or internal-testing builds will not verify. |
-| `MWEB_IOS_TEAM_ID` | Apple Developer → **Membership** → Team ID (10 characters). |
+| `MWEB_IOS_TEAM_ID` | Apple Developer → **Membership** → Team ID (10 characters). Optional: when unset, the deploy uses the existing `APPLE_TEAM_ID` secret. |
 
 Both are passed to the image as build args by `.github/workflows/deploy.yml`,
-from repository secrets of the same names. **They are not committed**, and the
+from repository secrets of the same names (the team id falls back to
+`APPLE_TEAM_ID`, which was why iOS links stayed in Safari while
+`MWEB_IOS_TEAM_ID` was never added). **They are not committed**, and the
 generated directory is gitignored — a fingerprint belongs to a signing key, and
 a stale one is worse than none because Android remembers the failure.
 

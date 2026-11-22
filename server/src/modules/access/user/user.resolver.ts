@@ -13,6 +13,7 @@ import { requireRole, assertScope, readScope, hasRole } from '@middleware/rbac';
 import { loadUserDataIssues, type ContactRow } from './user.data-issues';
 import { loadLastActiveOn } from './user.last-active';
 import { ROLE_ASSIGNERS } from './user.constants';
+import { assertMayEditFields, assertMayManage } from './user.edit-guard';
 
 /**
  * Assigning roles is a Super Admin's (ROLE_ASSIGNERS, as assignUserRoles):
@@ -117,14 +118,21 @@ export const userResolvers = {
       const actor = requireRole(ctx, MUTATING_ROLES);
       const data = await validate(updateUserSchema, args.input);
       const target = await userService.getById(args.user_id);
-      if (target) assertScope(ctx, { city: target.city, zone: target.zone });
+      if (target) {
+        assertScope(ctx, { city: target.city, zone: target.zone });
+        assertMayManage(actor, target);
+        assertMayEditFields(actor, target, data as Record<string, unknown>);
+      }
       assertMayAssignRoles(actor, data.roles as string[] | undefined, (target?.roles as string[] | undefined) ?? []);
       return userService.update(args.user_id, data as any);
     },
     deleteUser: async (_p: unknown, args: { user_id: string }, ctx: GraphQLContext) => {
       const actor = requireRole(ctx, ['SUPER_ADMIN', 'CITY_ADMIN']);
       const target = await userService.getById(args.user_id);
-      if (target) assertScope(ctx, { city: target.city, zone: target.zone });
+      if (target) {
+        assertScope(ctx, { city: target.city, zone: target.zone });
+        assertMayManage(actor, target);
+      }
       if (actor.id === args.user_id) return false;
       return userService.remove(args.user_id);
     },

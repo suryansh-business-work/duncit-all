@@ -16,7 +16,7 @@ import {
 } from './storeReturn.model';
 import { bookReturnPickup } from '@modules/commerce/shiprocket/shiprocket.returns';
 import { mailReturnUpdate } from './store.emails';
-import { returnDeadline } from './store.order.mapper';
+import { returnDeadline, storeOrderCash } from './store.order.mapper';
 import { creditCoinsBack, recordPaymentRefund, restock } from './store.order.service';
 import { listingOf } from './store.product';
 import { badInput, forbidden, iso, notFound, round2, sameSecret, toObjectId } from './store.shared';
@@ -264,11 +264,43 @@ export const storeReturnService = {
   },
 };
 
+/**
+ * A return can give back no more than its order took. Every refund after
+ * delivery on a pet-store order is a return (cancelling is before delivery),
+ * so the order's other refunded returns are everything already given back:
+ *
+ *   • in all, at most the order's cash (storeOrderCash) plus the coins spent on it;
+ *   • to the original payment, at most the cash not already refunded that way —
+ *     coins spent come back as coins, never as money.
+ *
+ * Checked before any ledger write, so a refused refund leaves nothing behind.
+ */
+async function assertWithinOrder(doc: IStoreReturn, amount: number) {
+  const order = await ProductOrderModel.findById(doc.order_id)
+    .select('total discount_total round_off coins_share currency_symbol')
+    .lean();
+  if (!order) badInput('The order behind this return could not be found');
+  const others = await StoreReturnModel.find({ order_id: doc.order_id, _id: { $ne: doc._id }, status: 'REFUNDED' })
+    .select('refund_amount refund_mode')
+    .lean();
+  const refunded = (mode?: StoreRefundMode) =>
+    others.filter((row) => !mode || row.refund_mode === mode).reduce((sum, row) => sum + (row.refund_amount || 0), 0);
+  const cash = storeOrderCash(order);
+  const currency = order.currency_symbol ?? '₹';
+  const left = round2(cash + (order.coins_share ?? 0) - refunded());
+  if (amount > left) badInput(`This order has ${currency}${Math.max(0, left).toFixed(2)} left to refund`);
+  const cashLeft = round2(cash - refunded('ORIGINAL'));
+  if (doc.refund_mode !== 'COINS' && amount > cashLeft) {
+    badInput(`Only ${currency}${Math.max(0, cashLeft).toFixed(2)} of this order was paid in money and is not yet refunded — refund the rest as coins`);
+  }
+}
+
 async function refundReturn(doc: IStoreReturn) {
   const payment = await PaymentModel.findById(doc.payment_id);
   if (!payment) badInput('The payment behind this order could not be found');
   const amount = round2(doc.refund_amount);
   if (amount <= 0) badInput('Set the refund amount first');
+  await assertWithinOrder(doc, amount);
   const reason = `Return ${doc.return_no} on order ${doc.order_no}`;
   if (doc.refund_mode === 'COINS') {
     if (!payment.user_id) badInput('A guest order can only be refunded to the original payment');

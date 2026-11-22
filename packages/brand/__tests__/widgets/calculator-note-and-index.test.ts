@@ -37,6 +37,7 @@ describe('WIDGET_LOADERS', () => {
         'policy-reader',
         'site-header',
         'site-nav',
+        'venue-kit-interest',
       ].sort()
     );
   });

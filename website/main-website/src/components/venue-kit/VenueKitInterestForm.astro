@@ -1,0 +1,138 @@
+---
+// The Venue Kit "register your interest" form. Its behaviour is the
+// @duncit/brand `venue-kit-interest` widget: email code first (captcha-gated),
+// then the +91 mobile with an optional SMS code. Every sentence the script
+// shows travels in `data-copy`, so the widget holds no copy of its own.
+import { captchaCopy } from '@duncit/i18n';
+import Captcha from '@duncit/captcha/Captcha.astro';
+import { getTranslator } from '../../lib/i18n';
+import { urlConfigs } from '../../config/url-configs';
+import '../../styles/widgets.css';
+
+const { t } = await getTranslator();
+const f = (key: string) => t(`venueKit.form.${key}`);
+
+const copy = Object.fromEntries(
+  [
+    'emailCodeSent',
+    'phoneCodeSent',
+    'testCode',
+    'working',
+    'doneTitle',
+    'doneText',
+    'doneUpdated',
+    'failed',
+    'nameRequired',
+    'emailInvalid',
+    'phoneInvalid',
+    'codeInvalid',
+  ].map((key) => [key, f(key)])
+);
+---
+
+<form
+  id="venue-kit-form"
+  class="grid gap-5 rounded-panel border border-line bg-surface p-6 shadow-soft sm:p-10"
+  data-cms-widget="venue-kit-interest"
+  data-graphql-url={urlConfigs.graphqlUrl}
+  data-copy={JSON.stringify(copy)}
+  novalidate
+>
+  <div data-vk-panel="fields" class="grid gap-5">
+    <p class="text-ink-soft">{f('intro')}</p>
+
+    <label class="form-label">
+      {f('nameLabel')}
+      <input name="name" type="text" required minlength="2" maxlength="80" autocomplete="name" class="form-field" aria-describedby="vk-name-hint" />
+      <span id="vk-name-hint" class="form-hint">{f('nameHint')}</span>
+    </label>
+
+    <label class="form-label">
+      {f('emailLabel')}
+      <input name="email" type="email" required maxlength="254" autocomplete="email" class="form-field" />
+    </label>
+
+    <label class="form-label">
+      {f('phoneLabel')}
+      <span class="flex items-stretch gap-2">
+        <span class="form-field inline-flex w-auto! shrink-0 items-center font-bold" aria-hidden="true">{f('dialCode')}</span>
+        <input name="phone_number" type="tel" required inputmode="numeric" maxlength="10" autocomplete="tel-national" class="form-field" aria-describedby="vk-phone-hint" />
+      </span>
+      <span id="vk-phone-hint" class="form-hint">{f('phoneHint')}</span>
+    </label>
+
+    <div data-vk-captcha>
+      <Captcha graphqlUrl={urlConfigs.graphqlUrl} copy={captchaCopy(t)} />
+    </div>
+
+    <div class="flex flex-wrap items-center gap-3">
+      <button type="button" class="form-secondary" data-vk-action="send-email">
+        <i class="fa-solid fa-envelope" aria-hidden="true"></i>
+        {f('sendEmailCode')}
+      </button>
+    </div>
+
+    <div data-vk-panel="email-code" class="grid gap-3" hidden>
+      <p data-vk-note="email" class="form-hint" aria-live="polite"></p>
+      <label class="form-label">
+        {f('codeLabel')}
+        <input name="email_code" type="text" inputmode="numeric" maxlength="6" autocomplete="one-time-code" class="form-field" />
+      </label>
+      <div class="flex flex-wrap gap-3">
+        <button type="button" class="form-secondary" data-vk-action="verify-email">{f('verifyEmail')}</button>
+        <button type="button" class="form-secondary" data-vk-action="send-email">{f('resend')}</button>
+        <button type="button" class="form-secondary" data-vk-action="change-email">{f('changeEmail')}</button>
+      </div>
+    </div>
+
+    <div data-vk-panel="email-done" class="flex flex-wrap items-center gap-3" hidden>
+      <span class="form-verified"><i class="fa-solid fa-circle-check" aria-hidden="true"></i> {f('emailVerified')}</span>
+      <button type="button" class="form-secondary" data-vk-action="change-email">{f('changeEmail')}</button>
+    </div>
+
+    <div data-vk-panel="phone" class="grid gap-3" hidden>
+      <label class="form-label flex! items-center gap-3">
+        <input name="verify_phone" type="checkbox" class="h-5 w-5 accent-primary" />
+        {f('verifyPhoneToggle')}
+      </label>
+      <div data-vk-panel="phone-send" hidden>
+        <button type="button" class="form-secondary" data-vk-action="send-phone">
+          <i class="fa-solid fa-comment-sms" aria-hidden="true"></i>
+          {f('sendPhoneCode')}
+        </button>
+      </div>
+      <div data-vk-panel="phone-code" class="grid gap-3" hidden>
+        <p data-vk-note="phone" class="form-hint" aria-live="polite"></p>
+        <label class="form-label">
+          {f('codeLabel')}
+          <input name="phone_code" type="text" inputmode="numeric" maxlength="6" autocomplete="one-time-code" class="form-field" />
+        </label>
+        <div class="flex flex-wrap gap-3">
+          <button type="button" class="form-secondary" data-vk-action="verify-phone">{f('verifyPhone')}</button>
+          <button type="button" class="form-secondary" data-vk-action="send-phone">{f('resend')}</button>
+        </div>
+      </div>
+      <span data-vk-panel="phone-done" class="form-verified" hidden><i class="fa-solid fa-circle-check" aria-hidden="true"></i> {f('phoneVerified')}</span>
+    </div>
+
+    <p data-form-error class="form-error hidden" role="alert"></p>
+
+    <button type="submit" class="form-submit justify-self-start" disabled>
+      {f('submit')} <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+    </button>
+  </div>
+
+  <div data-vk-panel="done" class="grid gap-3" hidden role="status">
+    <span class="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary-light text-lg text-secondary" aria-hidden="true">
+      <i class="fa-solid fa-circle-check"></i>
+    </span>
+    <h3 data-vk-note="done-title" class="font-head text-2xl font-extrabold tracking-tight text-ink"></h3>
+    <p data-vk-note="done-text" class="text-ink-soft"></p>
+  </div>
+</form>
+
+<script>
+  import { mount } from '@duncit/brand/widgets/venue-kit-interest';
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-cms-widget="venue-kit-interest"]')) mount(root);
+</script>

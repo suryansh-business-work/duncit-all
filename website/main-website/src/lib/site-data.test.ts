@@ -185,3 +185,33 @@ describe('the build-time request cache', () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 });
+
+describe('fetchVenueKitOffer', () => {
+  it('serves the plan the Venues console saved', async () => {
+    const saved = {
+      annual_price_paise: 1_199_900,
+      included_table_labels: 30,
+      extra_label_price_paise: 15_000,
+      pos_activation_months: 12,
+      gift_card_count: 12,
+      gift_card_value_paise: 10_000,
+      collab_gift_card_discount_pct: 15,
+      order_benefit_pct: 1.5,
+    };
+    fetchMock.mockResolvedValue(ok({ venueKitOffer: saved }));
+    expect(await siteData.fetchVenueKitOffer()).toEqual(saved);
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body).query).toContain('venueKitOffer');
+  });
+
+  it('fills a field the answer lacks from the shipped plan', async () => {
+    fetchMock.mockResolvedValue(ok({ venueKitOffer: { annual_price_paise: 1_499_900 } }));
+    const offer = await siteData.fetchVenueKitOffer();
+    expect(offer.annual_price_paise).toBe(1_499_900);
+    expect(offer.included_table_labels).toBe(25);
+  });
+
+  it('renders the shipped plan when the API is down', async () => {
+    fetchMock.mockRejectedValue(new Error('offline'));
+    expect((await siteData.fetchVenueKitOffer()).annual_price_paise).toBe(999_900);
+  });
+});

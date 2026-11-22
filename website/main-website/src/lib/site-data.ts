@@ -5,7 +5,7 @@ import {
   type SiteBrandingData,
 } from '@duncit/brand/site-branding';
 import { clientIdentityHeaders } from '@duncit/user-core';
-import { GRIEVANCE_OFFICER_SDL } from '@duncit/utils';
+import { GRIEVANCE_OFFICER_SDL, resolveVenueKitOffer, type VenueKitOffer } from '@duncit/utils';
 import { urlConfigs } from '../config/url-configs';
 
 /** Build-time GraphQL helpers for the static site. Every call degrades to a
@@ -124,6 +124,28 @@ export async function fetchBlogPosts(): Promise<SiteBlogPost[]> {
     }
   `);
   return data?.publicWebsiteContent ?? [];
+}
+
+/**
+ * The Venue Kit plan (Venues console > Venue Kit). A missing or partial answer
+ * is filled from the shipped plan, so the page never prints a broken price.
+ */
+export async function fetchVenueKitOffer(): Promise<VenueKitOffer> {
+  const data = await gqlFetch<{ venueKitOffer: Partial<VenueKitOffer> }>(`
+    query WebsiteVenueKitOffer {
+      venueKitOffer {
+        annual_price_paise
+        included_table_labels
+        extra_label_price_paise
+        pos_activation_months
+        gift_card_count
+        gift_card_value_paise
+        collab_gift_card_discount_pct
+        order_benefit_pct
+      }
+    }
+  `);
+  return resolveVenueKitOffer(data?.venueKitOffer);
 }
 
 /** The Grievance Officer the Legal portal publishes. Blank until they fill it in. */

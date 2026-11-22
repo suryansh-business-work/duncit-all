@@ -1069,6 +1069,9 @@ importers:
       '@duncit/i18n':
         specifier: workspace:*
         version: link:../i18n
+      '@duncit/regex':
+        specifier: workspace:*
+        version: link:../regex
       '@duncit/utils':
         specifier: workspace:*
         version: link:../utils

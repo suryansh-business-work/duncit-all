@@ -28,6 +28,7 @@ import { venuePriceRulesDemos } from './utils/venue-price-rules';
 import { venueBookingDemos } from './utils/venue-booking';
 import { healthAppealDemos } from './utils/health-appeal';
 import { askDuncitDemos } from './utils/ask-duncit';
+import { venueKitDemos } from './utils/venue-kit';
 import { defineDemos } from '../types';
 
 export default defineDemos('utils', [
@@ -56,4 +57,5 @@ export default defineDemos('utils', [
   ...venuePriceRulesDemos,
   ...venueBookingDemos,
   ...askDuncitDemos,
+  ...venueKitDemos,
 ]);

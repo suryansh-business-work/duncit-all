@@ -9,7 +9,7 @@ import {
   type AppNavItem,
 } from '@duncit/shell';
 import { createSessionUserLoader } from '@duncit/user-context';
-import { DIRECTORY_BUNDLE, flattenCatalogue } from '@duncit/app-settings';
+import { DIRECTORY_BUNDLE, flattenCatalogue, type NestedCatalogue } from '@duncit/app-settings';
 import EntityDashboard from './EntityDashboard';
 import type { DirectorySpec } from './types';
 
@@ -46,6 +46,12 @@ export interface MountDirectoryPortalOptions {
    * a way into the list already filtered to what it counted.
    */
   console?: DirectoryConsole;
+  /**
+   * Extra local-fallback copy one console renders beyond the shared directory
+   * namespace — the venues console's Venue Kit section, for one. Disjoint
+   * namespaces only: it is shallow-merged over `directory`.
+   */
+  i18nFallback?: NestedCatalogue;
 }
 
 /**
@@ -152,7 +158,7 @@ export function mountDirectoryPortal(options: Readonly<MountDirectoryPortalOptio
     // ONE namespace for all four consoles, layered over the shell's: they are
     // the same screen over a different entity, so four namespaces would be four
     // copies of "Awaiting review" drifting apart (rule 34).
-    i18nFallback: flattenCatalogue(DIRECTORY_BUNDLE),
+    i18nFallback: flattenCatalogue({ ...DIRECTORY_BUNDLE, ...options.i18nFallback }),
     loadUser: createSessionUserLoader(apolloClient),
     children: <App />,
   });

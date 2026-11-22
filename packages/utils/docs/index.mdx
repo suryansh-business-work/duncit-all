@@ -4961,3 +4961,31 @@ pageContextFromPath('/pod/6650abc'); // { route: '/pod/6650abc', entity_type: 'P
 
 Renderers: mWeb `pages/ask-duncit-page/*`, native `screens/AskDuncitScreen` + `components/ask-duncit/*`.
 Server: `server/src/modules/ai/askDuncit`.
+
+## The Venue Kit plan
+
+`venue-kit.ts` words the Duncit Venue Kit (coming soon, annual plan only) the same way on
+duncit.com/venue-kit and in the Venues console's Venue Kit section. The plan itself is data —
+`venueKitOffer` on the server, editable by a Super Admin — so nothing here is a price.
+
+```ts
+import { resolveVenueKitOffer, venueKitCopyVars, VENUE_KIT_FEATURES } from '@duncit/utils';
+
+const offer = resolveVenueKitOffer(data?.venueKitOffer); // a missing field → the shipped plan
+venueKitCopyVars(offer);
+// { price: '₹9,999', labels: 25, extraLabelPrice: '₹100', posMonths: 12, giftCards: 10,
+//   giftCardValue: '₹100', giftCardTotal: '₹1,000', collabDiscount: '10%', orderBenefit: '1%' }
+t('venueKit.features.tableLabels.text', { vars: venueKitCopyVars(offer) });
+```
+
+| Export | What it is |
+| --- | --- |
+| `VenueKitOffer` | The plan as `venueKitOffer` returns it; money in paise. |
+| `VENUE_KIT_FALLBACK_OFFER` | What a static build renders when the API is down — the server seed's numbers. |
+| `resolveVenueKitOffer(raw)` | Fills every missing, negative or non-number field from the fallback. |
+| `venueKitCopyVars(offer)` | The `{price}`, `{labels}`… values every `venueKit.*` sentence reads. |
+| `VENUE_KIT_FEATURES` | The seven feature keys in display order; each names `venueKit.features.<key>.*`. |
+| `venueKitRupees` / `venueKitPercent` | `999900 → '₹9,999'`, `1.5 → '1.5%'`. |
+
+Renderers: website `pages/venue-kit.astro`, Venues console `pages/venue-kit/*`.
+Server: `server/src/modules/venues/venueKit` (offer, interest records, email + optional SMS codes).

@@ -2404,3 +2404,14 @@ export {
   VOICE_ERROR_KEYS,
   SERVER_COPY_KEYS,
 } from './ask-duncit-copy';
+export {
+  VENUE_KIT_FALLBACK_OFFER,
+  VENUE_KIT_FEATURES,
+  resolveVenueKitOffer,
+  venueKitCopyVars,
+  venueKitPercent,
+  venueKitRupees,
+  type VenueKitCopyVars,
+  type VenueKitFeature,
+  type VenueKitOffer,
+} from './venue-kit';

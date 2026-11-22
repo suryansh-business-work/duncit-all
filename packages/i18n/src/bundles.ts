@@ -18,6 +18,7 @@ import { EMPLOYEE_TARGETS_BUNDLE } from './bundles/employee-targets';
 import { POD_TIMELINE_BUNDLE } from './bundles/pod-timeline';
 import { FINANCE_BUNDLE } from './bundles/finance';
 import { GRIEVANCE_BUNDLE } from './bundles/grievance';
+import { VENUE_KIT_BUNDLE } from './bundles/venue-kit';
 import { HEALTH_APPEAL_BUNDLE } from './bundles/health-appeal';
 import { ASK_DUNCIT_BUNDLE } from './bundles/ask-duncit';
 import { AI_ASK_DUNCIT_BUNDLE } from './bundles/ai-ask-duncit';
@@ -113,6 +114,7 @@ export {
   POD_TIMELINE_BUNDLE,
   FINANCE_BUNDLE,
   GRIEVANCE_BUNDLE,
+  VENUE_KIT_BUNDLE,
   HEALTH_APPEAL_BUNDLE,
   ASK_DUNCIT_BUNDLE,
   AI_ASK_DUNCIT_BUNDLE,
@@ -214,6 +216,7 @@ export const SURFACE_BUNDLES: Record<string, NestedCatalogue> = {
   podTimeline: POD_TIMELINE_BUNDLE,
   finance: FINANCE_BUNDLE,
   grievance: GRIEVANCE_BUNDLE,
+  venueKit: VENUE_KIT_BUNDLE,
   healthAppeal: HEALTH_APPEAL_BUNDLE,
   askDuncit: ASK_DUNCIT_BUNDLE,
   aiAskDuncit: AI_ASK_DUNCIT_BUNDLE,

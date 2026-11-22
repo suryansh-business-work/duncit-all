@@ -3,6 +3,7 @@ import {
   flattenCatalogue,
   GRIEVANCE_BUNDLE,
   PRIVACY_BUNDLE,
+  VENUE_KIT_BUNDLE,
   WEBSITE_BUNDLE,
   type NestedCatalogue,
   type Translator,
@@ -37,6 +38,8 @@ export const WEBSITE_FALLBACK: NestedCatalogue = {
   ...GRIEVANCE_BUNDLE,
   // The consent banner — the same sentences mWeb and the app show.
   ...PRIVACY_BUNDLE,
+  // The Venue Kit page — the same plan and form copy the Venues console shows.
+  ...VENUE_KIT_BUNDLE,
 };
 
 export const WEBSITE_FALLBACK_FLAT = flattenCatalogue(WEBSITE_FALLBACK);

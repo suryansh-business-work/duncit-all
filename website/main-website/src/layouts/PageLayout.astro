@@ -11,6 +11,8 @@ interface Props {
   title: string;
   eyebrow?: string;
   heading: string;
+  /** The meta description; the site-wide one when omitted. */
+  description?: string;
   intro?: string;
   heroImage?: string;
   accent?: 'primary' | 'secondary' | 'tertiary';
@@ -20,6 +22,7 @@ interface Props {
 }
 
 const {
+  description,
   eyebrow,
   heading,
   intro,
@@ -49,7 +52,7 @@ const lead = words.slice(0, -1).join(' ');
 const last = words[words.length - 1];
 ---
 
-<Layout title={`${heading} — Duncit`}>
+<Layout title={`${heading} — Duncit`} description={description}>
   <SiteNav />
   <div class="bg-frame p-2 sm:p-3">
     <TopBar />

@@ -1,0 +1,109 @@
+---
+// duncit.com/venue-kit — the Duncit Venue Kit, coming soon, annual plan only.
+// The plan's numbers come from the Venues console (venueKitOffer) at build
+// time; the copy is `venueKit.*`, shared with the console's own section.
+import { VENUE_KIT_FEATURES, venueKitCopyVars, type VenueKitFeature } from '@duncit/utils';
+import PageLayout from '../layouts/PageLayout.astro';
+import Block from '../components/page/Block.astro';
+import IconCard, { type CardTone } from '../components/page/IconCard.astro';
+import CtaBand from '../components/page/CtaBand.astro';
+import PillLink from '../components/page/PillLink.astro';
+import VenueKitInterestForm from '../components/venue-kit/VenueKitInterestForm.astro';
+import { fetchVenueKitOffer } from '../lib/site-data';
+import { getTranslator } from '../lib/i18n';
+
+const { t } = await getTranslator();
+const vars = venueKitCopyVars(await fetchVenueKitOffer());
+const tv = (key: string) => t(`venueKit.${key}`, { vars });
+
+// Font Awesome glyphs are the website's icon set; the order is the shared one.
+const FEATURE_LOOK: Record<VenueKitFeature, { icon: string; tone: CardTone }> = {
+  tableLabels: { icon: 'fa-qrcode', tone: 'primary' },
+  counterStandee: { icon: 'fa-store', tone: 'secondary' },
+  smartPos: { icon: 'fa-cash-register', tone: 'tertiary' },
+  freeGiftCards: { icon: 'fa-gift', tone: 'primary' },
+  collabGiftCards: { icon: 'fa-handshake', tone: 'secondary' },
+  razorpay: { icon: 'fa-credit-card', tone: 'ink' },
+  orderBenefit: { icon: 'fa-percent', tone: 'tertiary' },
+};
+
+const features = VENUE_KIT_FEATURES.map((key) => ({
+  ...FEATURE_LOOK[key],
+  title: tv(`features.${key}.title`),
+  text: tv(`features.${key}.text`),
+  sticker: tv(`features.${key}.sticker`),
+}));
+
+const steps = (['details', 'email', 'phone', 'launch'] as const).map((key, index) => ({
+  number: index + 1,
+  title: tv(`page.steps.${key}.title`),
+  text: tv(`page.steps.${key}.text`),
+}));
+---
+
+<PageLayout
+  heading={tv('page.heading')}
+  description={tv('page.metaDescription')}
+  eyebrow={tv('page.eyebrow')}
+  intro={tv('page.intro')}
+  heroImage="https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=1600&q=80&auto=format&fit=crop"
+  wide
+>
+  <Block kicker={tv('plan.kicker')} title={tv('plan.heading')}>
+    <div data-reveal class="relative isolate overflow-hidden rounded-panel border border-line bg-surface p-7 shadow-soft sm:p-12">
+      <div class="pointer-events-none absolute -top-28 -right-20 -z-10 h-72 w-72 rounded-full bg-primary/20 blur-[80px]" aria-hidden="true"></div>
+      <div class="flex flex-wrap items-center gap-3">
+        <span class="inline-flex items-center gap-2 rounded-full bg-tertiary px-3.5 py-1.5 font-head text-xs font-extrabold tracking-[0.12em] text-on-accent uppercase">
+          <i class="fa-solid fa-hourglass-half" aria-hidden="true"></i>
+          {tv('comingSoon')}
+        </span>
+        <span class="inline-flex items-center gap-2 rounded-full bg-primary-dark px-3.5 py-1.5 font-head text-xs font-extrabold tracking-[0.12em] text-white uppercase">
+          <i class="fa-solid fa-calendar-check" aria-hidden="true"></i>
+          {tv('annualOnly')}
+        </span>
+      </div>
+      <p class="mt-6 flex flex-wrap items-baseline gap-3" aria-label={tv('plan.priceLabel')}>
+        <span class="headline text-6xl text-ink sm:text-7xl" aria-hidden="true">{tv('plan.price')}</span>
+        <span class="font-head text-2xl font-extrabold text-ink-soft" aria-hidden="true">{tv('perYear')}</span>
+      </p>
+      <p class="mt-4 max-w-2xl font-semibold text-ink">{tv('plan.note')}</p>
+      <p class="mt-2 max-w-2xl text-ink-soft">{tv('plan.comingSoonNote')}</p>
+      <div class="mt-8">
+        <PillLink href="#register" label={tv('page.planCta')} />
+      </div>
+    </div>
+  </Block>
+
+  <Block kicker={tv('features.kicker')} title={tv('features.heading')}>
+    <ul data-reveal-group class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      {features.map((feature) => <IconCard icon={feature.icon} tone={feature.tone} title={feature.title} text={feature.text} sticker={feature.sticker} />)}
+    </ul>
+  </Block>
+
+  <Block kicker={tv('page.stepsKicker')} title={tv('page.stepsHeading')}>
+    <ol data-reveal-group class="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      {
+        steps.map((step) => (
+          <li data-reveal class="flex h-full flex-col gap-3 rounded-card border border-line bg-surface p-6 shadow-soft">
+            <span class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-ink font-head font-extrabold text-cream" aria-hidden="true">
+              {step.number}
+            </span>
+            <h3 class="font-head text-lg font-extrabold tracking-tight text-ink">{step.title}</h3>
+            <p class="text-[0.95rem] leading-relaxed text-ink-soft">{step.text}</p>
+          </li>
+        ))
+      }
+    </ol>
+  </Block>
+
+  <Block id="register" kicker={tv('form.kicker')} title={tv('form.heading')} text={tv('plan.note')}>
+    <VenueKitInterestForm />
+  </Block>
+
+  <CtaBand kicker={tv('page.ctaKicker')} title={tv('page.ctaHeading')} icon="fa-hourglass-half">
+    {tv('page.ctaText')}
+    <Fragment slot="actions">
+      <PillLink href="/contact" label={tv('page.ctaButton')} />
+    </Fragment>
+  </CtaBand>
+</PageLayout>

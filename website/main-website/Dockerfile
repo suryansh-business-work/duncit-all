@@ -60,6 +60,7 @@ COPY packages/table/package.json ./packages/table/
 COPY packages/i18n/package.json ./packages/i18n/
 COPY packages/captcha/package.json ./packages/captcha/
 COPY packages/brand/package.json ./packages/brand/
+COPY packages/regex/package.json ./packages/regex/
 COPY packages/communication/package.json ./packages/communication/
 COPY packages/buttons-native/package.json ./packages/buttons-native/
 COPY packages/buttons/package.json ./packages/buttons/
@@ -97,6 +98,8 @@ COPY packages/i18n ./packages/i18n
 # @duncit/brand — the header/footer logo components. SOURCE, not just the
 # manifest: Astro resolves the .astro files during the build.
 COPY packages/brand ./packages/brand
+# @duncit/regex — the shared form patterns @duncit/brand's widgets validate with.
+COPY packages/regex ./packages/regex
 # @duncit/captcha — the human check on contact / grievance / FAQ, plus the
 # newsletter form inside @duncit/brand. SOURCE: Astro resolves the .astro.
 COPY packages/captcha ./packages/captcha

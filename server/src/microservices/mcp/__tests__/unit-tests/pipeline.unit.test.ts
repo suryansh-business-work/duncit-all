@@ -245,10 +245,12 @@ describe('runToolCall — GraphQL tools', () => {
       errors: [
         { message: 'Pick a date in the future', extensions: { code: 'BAD_USER_INPUT' } },
         { message: 'Pick a date in the future', extensions: { code: 'BAD_USER_INPUT', errors: [] } },
+        { message: 'Pick a venue' },
       ],
     });
     const { message } = body(await runToolCall(session(), 'pods_pod', { id: 'p1' })).error as { message: string };
     expect(message.split('\n').filter((line) => line === '- Pick a date in the future')).toHaveLength(1);
+    expect(message).toContain('- Pick a venue');
   });
 
   it.each([

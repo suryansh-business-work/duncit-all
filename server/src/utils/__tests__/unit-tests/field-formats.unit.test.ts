@@ -82,6 +82,7 @@ describe('formatProblem', () => {
     ['website', 'localhost', 'must be a website address such as https://example.com'],
     ['website', 'javascript:alert(1)', 'must be a website address such as https://example.com'],
     ['website', 'my site.com', 'must be a website address such as https://example.com'],
+    ['website', 'http://', 'must be a website address such as https://example.com'],
   ])('refuses %s = %j: %s', (name, value, expectation) => {
     expect(formatProblem(name, value)).toBe(expectation);
   });

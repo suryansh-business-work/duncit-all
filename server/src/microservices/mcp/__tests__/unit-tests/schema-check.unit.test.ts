@@ -1,11 +1,11 @@
-import type { JsonSchema } from '../../catalog/json-schema';
+import type { ToolInputSchema } from '../../catalog/json-schema';
 import { checkArguments, MAX_PROBLEMS, missingFields } from '../../execute/schema-check';
 
 /**
  * A venue-onboarding style input: a required name and nested owner, a list of
  * contacts, an enum, bounded numbers and the fields a form holds to a format.
  */
-const SCHEMA: JsonSchema = {
+const SCHEMA: ToolInputSchema = {
   type: 'object',
   additionalProperties: false,
   required: ['input'],
@@ -88,7 +88,7 @@ describe('checkArguments — a complete, well-formed write', () => {
   });
 
   it('accepts nulls in optional fields and in lists — GraphQL decides whether a list may hold one', () => {
-    const args = { input: { ...valid().input, email: null, tags: ['a', null], contacts: null } };
+    const args = { input: { ...valid().input, email: null, website: undefined, tags: ['a', null], contacts: null } };
     expect(checkArguments(SCHEMA, args, true)).toEqual([]);
   });
 });
@@ -150,6 +150,19 @@ describe('checkArguments — types, enums, lengths and ranges', () => {
     expect(paths(checkArguments(SCHEMA, args, false))).toEqual(['type:input.tags[1]', 'length:input.tags[2]']);
   });
 
+  it('says "characters" for a minimum length above one', () => {
+    const schema: ToolInputSchema = { type: 'object', properties: { code: { type: 'string', minLength: 3 } } };
+    expect(checkArguments(schema, { code: 'ab' }, false)[0].message).toBe('code must be at least 3 characters.');
+  });
+
+  it('accepts any value for a type it does not know, an object with no declared fields, and a list with no item type', () => {
+    const schema: ToolInputSchema = {
+      type: 'object',
+      properties: { odd: { type: 'null' }, deep: { type: 'object', description: 'TooDeepInput input' }, loose: { type: 'array' } },
+    };
+    expect(checkArguments(schema, { odd: 'anything', deep: { whatever: [1] }, loose: [1, 'two', { three: 3 }] }, true)).toEqual([]);
+  });
+
   it('leaves a custom scalar to its own parser', () => {
     const args = { input: { ...valid().input, settings: 'any shape at all' } };
     expect(checkArguments(SCHEMA, args, true)).toEqual([]);
@@ -167,7 +180,7 @@ describe('checkArguments — fields an input does not declare', () => {
   });
 
   it('accepts unknown fields where the schema allows them', () => {
-    const open: JsonSchema = { type: 'object', properties: { input: { type: 'object', properties: {} } } };
+    const open: ToolInputSchema = { type: 'object', properties: { input: { type: 'object', properties: {} } } };
     expect(checkArguments(open, { input: { anything: 1 } }, true)).toEqual([]);
   });
 });

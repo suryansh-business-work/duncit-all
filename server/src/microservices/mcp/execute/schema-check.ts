@@ -1,5 +1,5 @@
 import { formatProblem } from '@utils/field-formats';
-import type { JsonSchema } from '../catalog/json-schema';
+import type { JsonSchema, ToolInputSchema } from '../catalog/json-schema';
 import { META_PARAMS } from '../mcp.constants';
 
 /**
@@ -99,13 +99,14 @@ function checkValue(walk: Walk, path: string, key: string, schema: JsonSchema, v
   // A custom scalar (JSON, DateTime…) has no type here: its own parser decides.
   if (!schema.type) return;
   if (!typeMatches(schema.type, value)) {
-    add(walk, path, 'type', `${path} must be ${TYPE_WORDS[schema.type] ?? schema.type}.`);
+    // typeMatches accepts any type it does not know, so the word is always there.
+    add(walk, path, 'type', `${path} must be ${TYPE_WORDS[schema.type]}.`);
     return;
   }
   if (typeof value === 'string') checkString(walk, path, key, schema, value);
   else if (typeof value === 'number') checkNumber(walk, path, schema, value);
   else if (Array.isArray(value)) checkList(walk, path, key, schema, value);
-  else if (isPlainObject(value) && schema.properties) checkObject(walk, path, schema, value);
+  else if (isPlainObject(value) && schema.properties) checkObject(walk, path, schema, schema.properties, value);
 }
 
 function checkList(walk: Walk, path: string, key: string, schema: JsonSchema, list: unknown[]): void {
@@ -119,8 +120,13 @@ function checkList(walk: Walk, path: string, key: string, schema: JsonSchema, li
 
 const isBlank = (value: unknown): boolean => typeof value === 'string' && value.trim() === '';
 
-function checkObject(walk: Walk, path: string, schema: JsonSchema, value: Record<string, unknown>): void {
-  const properties = schema.properties ?? {};
+function checkObject(
+  walk: Walk,
+  path: string,
+  schema: JsonSchema,
+  properties: Record<string, JsonSchema>,
+  value: Record<string, unknown>
+): void {
   const reported = new Set<string>();
   for (const key of schema.required ?? []) {
     if (!path && (META_PARAMS as readonly string[]).includes(key)) continue;
@@ -151,9 +157,9 @@ function checkObject(walk: Walk, path: string, schema: JsonSchema, value: Record
  * makes before saving — blank required text and named formats — which would
  * only get in the way of a search.
  */
-export function checkArguments(schema: JsonSchema, args: Record<string, unknown>, writes: boolean): ArgumentProblem[] {
+export function checkArguments(schema: ToolInputSchema, args: Record<string, unknown>, writes: boolean): ArgumentProblem[] {
   const walk: Walk = { writes, problems: [] };
-  checkObject(walk, '', { ...schema, additionalProperties: true }, args);
+  checkObject(walk, '', { ...schema, additionalProperties: true }, schema.properties, args);
   return walk.problems;
 }
 

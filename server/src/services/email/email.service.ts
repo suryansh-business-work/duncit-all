@@ -854,6 +854,22 @@ export function sendEnvAccessOtpEmail(opts: {
   });
 }
 
+/** The code a venue types to prove its mailbox when it registers interest in the Venue Kit. */
+export function sendVenueKitOtpEmail(opts: {
+  to: string;
+  name: string;
+  otp: string;
+  expiresMinutes: string;
+}) {
+  return sendEmail({
+    to: opts.to,
+    subject: 'Your Duncit Venue Kit verification code',
+    template: 'venue-kit-otp',
+    category: 'authentication',
+    vars: opts,
+  });
+}
+
 /**
  * "Your password was changed" — the notice AFTER a password moves, whichever
  * door moved it.

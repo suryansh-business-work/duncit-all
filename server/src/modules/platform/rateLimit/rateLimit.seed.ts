@@ -241,6 +241,26 @@ const SEED_RULES = [
     message: 'You have sent a lot of requests. Please try again later.',
   },
   {
+    // The Venue Kit form's codes already sit under "Sign-in and one-time codes"
+    // (request*Otp / verify*Otp); the submit that spends them is metered here.
+    name: 'Venue Kit interest form',
+    description:
+      'Registering interest in the Venue Kit (duncit.com/venue-kit and the Venues console). Each submit needs a fresh email code, so a real venue sends one or two; this caps a script replaying the form from one address.',
+    priority: 6,
+    mode: 'ENFORCE',
+    surface: 'ALL',
+    app: '*',
+    channel: 'GRAPHQL',
+    operation_type: 'MUTATION',
+    operations: ['submitVenueKitInterest'],
+    key_by: 'IP',
+    algorithm: 'SLIDING_WINDOW',
+    limit: 20,
+    window_seconds: 300,
+    block_seconds: 300,
+    message: 'Too many attempts. Please wait a few minutes before trying again.',
+  },
+  {
     // AI clients over MCP and Ask Duncit run tools as the person, and a model
     // stuck in a retry loop writes far faster than anyone clicking Save. Every
     // tool call carries the `mcp-tools` label (set by the server, not a

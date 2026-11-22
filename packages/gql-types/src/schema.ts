@@ -18972,6 +18972,10 @@ export type Mutation = {
    * discovered only after a code has been typed.
    */
   requestSignupWhatsAppOtp: WhatsAppOtpRequestResult;
+  /** Public, captcha-gated when signed out. Emails a 6-digit code to the address on the Venue Kit form. */
+  requestVenueKitEmailOtp: VenueKitOtpRequest;
+  /** Public, needs a live email proof. Texts a 6-digit code to a +91 mobile (optional step). */
+  requestVenueKitPhoneOtp: VenueKitOtpRequest;
   requestWithdrawal: WalletWithdrawal;
   /** Move the caller's own meeting to a new open slot (one-time; keeps contact details, resets staff scheduling). */
   rescheduleMyMeeting: OnboardingMeeting;
@@ -19439,6 +19443,8 @@ export type Mutation = {
   setVenueFoodOrderStatus: VenueFoodOrder;
   /** Admin-only: the venue's monthly host Pod Request limit (null = the default of 10). */
   setVenueHostRequestLimit: Venue;
+  /** Venues console: move an interested venue along (contacted, converted…) with an optional note. */
+  setVenueKitInterestStatus: VenueKitInterest;
   /** Venues console: whether this venue's refundable deposits carry GST with the rent (default on). */
   setVenueRentalDepositGst: VenueRentalDepositGst;
   /** Set one of the platform default header assets — what a media-header scenario sends when neither it nor its campaign carries one. An empty url clears it. */
@@ -19741,6 +19747,8 @@ export type Mutation = {
   submitVenueFinal: Venue;
   /** Public: rate a served order. Once per order. */
   submitVenueFoodFeedback: VenueFoodOrder;
+  /** Public. Registers (or refreshes) the venue's interest; spends the email proof and, when given, the phone proof. */
+  submitVenueKitInterest: VenueKitSubmitResult;
   /** venue_id targets a specific editable (DRAFT/REJECTED) venue of the owner; omitted = current draft (created if needed). */
   submitVenueStep1: Venue;
   submitVenueStep2: Venue;
@@ -20086,6 +20094,8 @@ export type Mutation = {
   updateVenueBannerKit: Venue;
   /** Venue owner / venues console: edit a food coupon. */
   updateVenueFoodCoupon: VenueFoodCoupon;
+  /** Super Admin: change the Venue Kit plan every surface shows. */
+  updateVenueKitOffer: VenueKitOffer;
   updateVenueLead: VenueLead;
   /** Owner or admin saves the venue's pricing. Existing bookings keep their frozen price. */
   updateVenuePricing: VenuePricing;
@@ -20161,6 +20171,10 @@ export type Mutation = {
   verifySignupWhatsAppOtp: SignupWhatsAppProof;
   /** Public: confirm the Razorpay payment of an order. */
   verifyVenueFoodOrderPayment: VenueFoodOrder;
+  /** Public. Checks the emailed code and returns the proof the submit spends. */
+  verifyVenueKitEmailOtp: VenueKitOtpProof;
+  /** Public. Checks the texted code and returns the phone proof. */
+  verifyVenueKitPhoneOtp: VenueKitOtpProof;
   /** Loyalty: cancel an unredeemed card so it can never pay out. */
   voidPhysicalGiftCard: PhysicalGiftCardAdminCard;
   voidPodChallengeScore: PodChallenge;
@@ -23802,6 +23816,16 @@ export type MutationRequestSignupWhatsAppOtpArgs = {
 };
 
 
+export type MutationRequestVenueKitEmailOtpArgs = {
+  input: VenueKitEmailOtpInput;
+};
+
+
+export type MutationRequestVenueKitPhoneOtpArgs = {
+  input: VenueKitPhoneOtpInput;
+};
+
+
 export type MutationRequestWithdrawalArgs = {
   input: RequestWithdrawalInput;
 };
@@ -24946,6 +24970,11 @@ export type MutationSetVenueHostRequestLimitArgs = {
 };
 
 
+export type MutationSetVenueKitInterestStatusArgs = {
+  input: VenueKitInterestStatusInput;
+};
+
+
 export type MutationSetVenueRentalDepositGstArgs = {
   charge_gst: Scalars['Boolean']['input'];
   venue_id: Scalars['ID']['input'];
@@ -25712,6 +25741,11 @@ export type MutationSubmitVenueFinalArgs = {
 
 export type MutationSubmitVenueFoodFeedbackArgs = {
   input: SubmitVenueFoodFeedbackInput;
+};
+
+
+export type MutationSubmitVenueKitInterestArgs = {
+  input: VenueKitInterestInput;
 };
 
 
@@ -26840,6 +26874,11 @@ export type MutationUpdateVenueFoodCouponArgs = {
 };
 
 
+export type MutationUpdateVenueKitOfferArgs = {
+  input: VenueKitOfferInput;
+};
+
+
 export type MutationUpdateVenueLeadArgs = {
   id: Scalars['ID']['input'];
   input: VenueLeadInput;
@@ -27029,6 +27068,16 @@ export type MutationVerifySignupWhatsAppOtpArgs = {
 
 export type MutationVerifyVenueFoodOrderPaymentArgs = {
   input: VerifyVenueFoodOrderInput;
+};
+
+
+export type MutationVerifyVenueKitEmailOtpArgs = {
+  input: VenueKitEmailVerifyInput;
+};
+
+
+export type MutationVerifyVenueKitPhoneOtpArgs = {
+  input: VenueKitPhoneVerifyInput;
 };
 
 
@@ -35922,6 +35971,12 @@ export type Query = {
   venueHealth?: Maybe<HealthScore>;
   /** Fees & Minimum Spend of the given APPROVED, active venues, in the order asked (at most 200 ids). Active hosts only — empty for anyone else. */
   venueHostTerms: Array<VenueHostTerms>;
+  /** Venues console: the counts above the table. */
+  venueKitInterestSummary: VenueKitInterestSummary;
+  /** Venues console: every venue that registered interest. */
+  venueKitInterestsTable: VenueKitInterestTablePage;
+  /** Public. The Venue Kit plan the website and the Venues console show. */
+  venueKitOffer: VenueKitOffer;
   venueLead?: Maybe<VenueLead>;
   venueLeads: Array<VenueLead>;
   venueLeadsTable: VenueLeadTablePage;
@@ -40499,6 +40554,11 @@ export type QueryVenueHealthArgs = {
 
 export type QueryVenueHostTermsArgs = {
   venue_ids: Array<Scalars['ID']['input']>;
+};
+
+
+export type QueryVenueKitInterestsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
 };
 
 
@@ -52123,6 +52183,160 @@ export type VenueHostTerms = {
   /** Charged only when the booking brings pets. */
   pet_fee: Scalars['Float']['output'];
   venue_id: Scalars['ID']['output'];
+};
+
+export type VenueKitEmailOtpInput = {
+  captcha_answer?: InputMaybe<Scalars['String']['input']>;
+  /** Human check, required only when nobody is signed in. See the captchaChallenge query. */
+  captcha_token?: InputMaybe<Scalars['String']['input']>;
+  email: Scalars['String']['input'];
+  name: Scalars['String']['input'];
+};
+
+export type VenueKitEmailVerifyInput = {
+  code: Scalars['String']['input'];
+  email: Scalars['String']['input'];
+};
+
+/** A venue that registered interest in the Venue Kit. The email is always verified; the phone may not be. */
+export type VenueKitInterest = {
+  __typename?: 'VenueKitInterest';
+  created_at: Scalars['String']['output'];
+  email: Scalars['String']['output'];
+  email_verified_at: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  last_submitted_at: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  note: Scalars['String']['output'];
+  phone_extension: Scalars['String']['output'];
+  phone_number: Scalars['String']['output'];
+  phone_verified: Scalars['Boolean']['output'];
+  phone_verified_at?: Maybe<Scalars['String']['output']>;
+  source: VenueKitSource;
+  status: VenueKitInterestStatus;
+  /** How many times this mailbox has submitted the form. */
+  submission_count: Scalars['Int']['output'];
+};
+
+export type VenueKitInterestInput = {
+  email_token: Scalars['String']['input'];
+  name: Scalars['String']['input'];
+  phone_extension: Scalars['String']['input'];
+  phone_number: Scalars['String']['input'];
+  /** Optional: present only when the phone was verified. */
+  phone_token?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** How far the venues team has taken an interested venue. */
+export type VenueKitInterestStatus =
+  | 'CONTACTED'
+  | 'CONVERTED'
+  | 'NEW'
+  | 'NOT_INTERESTED';
+
+export type VenueKitInterestStatusInput = {
+  id: Scalars['ID']['input'];
+  note?: InputMaybe<Scalars['String']['input']>;
+  status: VenueKitInterestStatus;
+};
+
+export type VenueKitInterestSummary = {
+  __typename?: 'VenueKitInterestSummary';
+  by_status: Array<VenueKitStatusCount>;
+  phone_verified: Scalars['Int']['output'];
+  total: Scalars['Int']['output'];
+};
+
+export type VenueKitInterestTablePage = {
+  __typename?: 'VenueKitInterestTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<VenueKitInterest>;
+  total: Scalars['Int']['output'];
+};
+
+/** The Venue Kit's one annual plan, as duncit.com/venue-kit and the Venues console show it. Money is in paise. */
+export type VenueKitOffer = {
+  __typename?: 'VenueKitOffer';
+  annual_price_paise: Scalars['Int']['output'];
+  /** Discount on additional venue collaboration gift cards. */
+  collab_gift_card_discount_pct: Scalars['Float']['output'];
+  /** Price of each label beyond the included ones. */
+  extra_label_price_paise: Scalars['Int']['output'];
+  /** Free Duncit gift cards in the kit, and the value of each. */
+  gift_card_count: Scalars['Int']['output'];
+  gift_card_value_paise: Scalars['Int']['output'];
+  /** Table QR labels included in the kit. */
+  included_table_labels: Scalars['Int']['output'];
+  /** Share of every order Duncit funds back to the venue. */
+  order_benefit_pct: Scalars['Float']['output'];
+  /** How long the Smart POS activation coupon in the kit lasts. */
+  pos_activation_months: Scalars['Int']['output'];
+  /** When an admin last changed the offer; null while the shipped defaults apply. */
+  updated_at?: Maybe<Scalars['String']['output']>;
+};
+
+export type VenueKitOfferInput = {
+  annual_price_paise: Scalars['Int']['input'];
+  collab_gift_card_discount_pct: Scalars['Float']['input'];
+  extra_label_price_paise: Scalars['Int']['input'];
+  gift_card_count: Scalars['Int']['input'];
+  gift_card_value_paise: Scalars['Int']['input'];
+  included_table_labels: Scalars['Int']['input'];
+  order_benefit_pct: Scalars['Float']['input'];
+  pos_activation_months: Scalars['Int']['input'];
+};
+
+/** The one-shot proof a verified code earns, spent by submitVenueKitInterest. */
+export type VenueKitOtpProof = {
+  __typename?: 'VenueKitOtpProof';
+  token: Scalars['String']['output'];
+};
+
+/** A Venue Kit code that was issued. Named apart from PhoneOtpRequestResult: this flow returns no challenge id. */
+export type VenueKitOtpRequest = {
+  __typename?: 'VenueKitOtpRequest';
+  /** ISO instant the code stops working. */
+  expires_at: Scalars['String']['output'];
+  expires_in_minutes: Scalars['Int']['output'];
+  resend_after_seconds: Scalars['Int']['output'];
+  /** Whether a provider really carried the code. */
+  sent: Scalars['Boolean']['output'];
+  /** The code itself, ONLY while no provider is configured. Null whenever a real send happened. */
+  test_code?: Maybe<Scalars['String']['output']>;
+};
+
+export type VenueKitPhoneOtpInput = {
+  /** The token verifyVenueKitEmailOtp returned — the phone code needs a proved email first. */
+  email_token: Scalars['String']['input'];
+  /** Only +91: the SMS code reaches Indian mobiles. */
+  phone_extension: Scalars['String']['input'];
+  phone_number: Scalars['String']['input'];
+};
+
+export type VenueKitPhoneVerifyInput = {
+  code: Scalars['String']['input'];
+  phone_extension: Scalars['String']['input'];
+  phone_number: Scalars['String']['input'];
+};
+
+/** Where an interested venue came from. */
+export type VenueKitSource =
+  | 'VENUES_PORTAL'
+  | 'WEBSITE';
+
+export type VenueKitStatusCount = {
+  __typename?: 'VenueKitStatusCount';
+  count: Scalars['Int']['output'];
+  status: VenueKitInterestStatus;
+};
+
+export type VenueKitSubmitResult = {
+  __typename?: 'VenueKitSubmitResult';
+  /** True when this mailbox had already registered; the row was refreshed, not duplicated. */
+  already_registered: Scalars['Boolean']['output'];
+  interest: VenueKitInterest;
+  ok: Scalars['Boolean']['output'];
 };
 
 export type VenueLead = {

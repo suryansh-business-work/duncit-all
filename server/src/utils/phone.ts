@@ -36,6 +36,15 @@ export function isWhatsappDestination(destination: string): boolean {
   return !destination.startsWith(INDIA_CALLING_CODE) || INDIA_MOBILE.test(destination);
 }
 
+/**
+ * Whether a subscriber number (no country code) is an Indian mobile: ten
+ * digits opening on 6–9. The server twin of `PHONE_NUMBER_IN` in
+ * `@duncit/regex`, read off the same plan `isWhatsappDestination` uses.
+ */
+export function isIndianMobile(number: string): boolean {
+  return INDIA_MOBILE.test(`${INDIA_CALLING_CODE}${number}`);
+}
+
 /** Ten: the subscriber number everywhere this platform sells. Mirrors
  * `OTP_PHONE_MIN_DIGITS` in `@duncit/utils`, which the clients read. */
 const KEY_DIGITS = 10;

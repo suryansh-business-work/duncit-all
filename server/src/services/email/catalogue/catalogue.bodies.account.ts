@@ -72,6 +72,7 @@ export const ACCOUNT_BODIES: Record<string, string> = {
   'login-otp': otpBody('email.loginOtp', { expiryKey: 'email.loginOtp.expires' }),
   'portal-login-otp': otpBody('email.portalLoginOtp', { expiryKey: 'email.portalLoginOtp.expires' }),
   'env-access-otp': otpBody('email.envAccessOtp', { expiryKey: 'email.envAccessOtp.expires', tone: PAUSED }),
+  'venue-kit-otp': otpBody('email.venueKitOtp'),
 
   'admin-credentials': shell(
     'email.adminCredentials.title',

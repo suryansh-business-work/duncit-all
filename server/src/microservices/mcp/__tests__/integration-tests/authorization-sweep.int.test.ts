@@ -72,6 +72,8 @@ const PUBLIC_MUTATIONS: Readonly<Record<string, string>> = {
   incrementPodHits: 'a pod page view counter',
   sharePodIdea: 'counts a share of a public pod idea',
   shareLink: 'resolves a public short link',
+  // The four ...Otp steps before it never become tools (the denylist drops 'otp').
+  submitVenueKitInterest: 'the Venue Kit interest form (duncit.com/venue-kit) — writes only with a proved email code',
   submitJobApplication: 'the careers page — applying needs no account',
   unsubscribeNewsletter: 'the unsubscribe link in a newsletter, keyed by its own token',
 };

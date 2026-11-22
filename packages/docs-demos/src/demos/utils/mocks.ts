@@ -1,7 +1,6 @@
 /** The mock shapes the `utils` demos run on — each one the real API answer. */
 import type {
   SignupGoogleDetails,
-  TicketDiscountTier,
   AutoPodRow,
   HostChartRange,
   MonthlyEarning,
@@ -304,17 +303,6 @@ export interface SeatsSoldMock {
   pod_hosts_id: string[];
   seats_taken: number;
   price_per_seat: number;
-}
-
-/** A pod's multi-ticket offer plus the seats one checkout is booking. */
-export interface TicketDiscountMock {
-  pod_id: string;
-  pod_amount: number;
-  no_of_spots: number;
-  ticket_discount_enabled: boolean;
-  ticket_discount_tiers: TicketDiscountTier[];
-  seats: number;
-  is_free: boolean;
 }
 
 export interface ClubGroupingMock {

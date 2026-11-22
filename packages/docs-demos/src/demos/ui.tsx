@@ -20,7 +20,6 @@ import { StatCardsDemo, type TilesMock } from './ui/StatCardsDemo';
 import { RowsAndChipsDemo, type RowsMock } from './ui/RowsAndChipsDemo';
 import { SpotsDemo, type SpotsMock } from './ui/SpotsDemo';
 import { cartControlDemo } from './ui/CartControlDemo';
-import { TicketDiscountDemo, type TicketDiscountMock } from './ui/TicketDiscountDemo';
 import { smartIncentiveDemo } from './ui/SmartIncentiveDemo';
 import { LoaderDemo, type LoaderMock } from './ui/LoaderDemo';
 import { MuiIconPickerDemo, type MuiIconPickerMock } from './ui/MuiIconPickerDemo';
@@ -89,25 +88,6 @@ export default defineDemos('ui', [
   }),
 
   cartControlDemo,
-
-  defineDemo<TicketDiscountMock>({
-    id: 'ticket-discount-field',
-    title: 'TicketDiscountField — a ₹499 pod giving 10% off 2+ tickets and 20% off 4+',
-    note:
-      'Type 5 into the second tier’s discount and it goes red: every tier must give more than the one above. Drop no_of_spots to 4 and the 4-ticket tier can no longer be reached (3 payable seats). Lower ticket_discount_max_pct to 15 and the 20% tier is over the admin’s cap. Switch it off and the tiers are gone.',
-    mock: {
-      pod_id: 'DUN-POD-4821',
-      pod_amount: 499,
-      no_of_spots: 12,
-      ticket_discount_max_pct: 50,
-      ticket_discount_enabled: true,
-      ticket_discount_tiers: [
-        { min_tickets: 2, discount_pct: 10 },
-        { min_tickets: 4, discount_pct: 20 },
-      ],
-    },
-    render: (mock) => <TicketDiscountDemo mock={mock} />,
-  }),
 
   smartIncentiveDemo,
 

@@ -112,8 +112,6 @@ const payment = (over: Partial<PodPaymentRow> = {}) => ({
   status: 'SUCCESS',
   gateway: 'RAZORPAY',
   coupon_code: 'SAVE10',
-  ticket_discount_amount: 50,
-  ticket_discount_pct: 20,
   paid_at: '2026-08-02T10:00:00.000Z',
   created_at: '2026-08-02T09:59:00.000Z',
   ...over,
@@ -153,11 +151,11 @@ describe('PodPaymentsSection', () => {
   const PREFS_KEY = 'duncit-table-cols:admin-pod-payments';
 
   beforeEach(() => {
-    // The coupon, multi-ticket discount and created-at columns ship hidden; a
+    // The coupon and created-at columns ship hidden; a
     // reader who turned them on keeps them on, so their cells have to format too.
     globalThis.localStorage.setItem(
       PREFS_KEY,
-      JSON.stringify({ coupon_code: false, ticket_discount_amount: false, created_at: false }),
+      JSON.stringify({ coupon_code: false, created_at: false }),
     );
   });
 
@@ -176,7 +174,6 @@ describe('PodPaymentsSection', () => {
     expect(screen.getByText('SUCCESS')).toBeInTheDocument();
     expect(screen.getByText('RAZORPAY')).toBeInTheDocument();
     expect(screen.getByText('SAVE10')).toBeInTheDocument();
-    expect(screen.getByText('₹50 · 20%')).toBeInTheDocument();
   });
 
   it('falls back to the payment id and dashes for what a failed attempt never got', async () => {
@@ -186,8 +183,6 @@ describe('PodPaymentsSection', () => {
           invoice_no: null,
           gateway: null,
           coupon_code: null,
-          ticket_discount_amount: 0,
-          ticket_discount_pct: 0,
           paid_at: null,
           status: 'FAILED',
         }),
@@ -197,7 +192,7 @@ describe('PodPaymentsSection', () => {
 
     expect(await screen.findByText('PAY-1')).toBeInTheDocument();
     expect(screen.getByText('FAILED')).toBeInTheDocument();
-    expect(screen.getAllByText('—').length).toBeGreaterThanOrEqual(4);
+    expect(screen.getAllByText('—').length).toBeGreaterThanOrEqual(3);
   });
 
   it('reads the club-scoped operation, with the pod as a variable the server applies', async () => {

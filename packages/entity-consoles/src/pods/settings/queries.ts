@@ -26,7 +26,6 @@ const FIELDS = `
   pod_auto_cancel_lead_hours
   pod_cancel_risk_window_hours
   pod_cancel_risk_alert_hours
-  ticket_discount_max_pct
   happening_nearby_days
   pod_chat_retention_hours
   auto_pod_slot_window_days

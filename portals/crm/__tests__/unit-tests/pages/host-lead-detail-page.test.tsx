@@ -220,7 +220,7 @@ describe('HostLeadDetailPage', () => {
       await within(custom).findByText(/No custom fields defined yet/),
     ).toBeInTheDocument();
 
-    expect(within(openTab('manual-logs')).getByRole('heading', { name: 'Manual logs' })).toBeInTheDocument();
+    expect(within(openTab('manual-logs')).getByRole('heading', { name: 'Manual Logs' })).toBeInTheDocument();
   });
 
   it('opens the Ask AI drawer and goes to the editor or back to the list', async () => {

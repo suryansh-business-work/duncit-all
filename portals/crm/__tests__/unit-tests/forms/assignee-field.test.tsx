@@ -57,9 +57,10 @@ describe('AssigneeField', () => {
     const input = screen.getByTestId('assignee-input');
     expect(screen.getByText('Pick the team member who owns this lead.')).toBeInTheDocument();
     fireEvent.change(input, { target: { value: 'pri' } });
+    // The list re-renders once the narrowed search answers; pick from that list, not the first one.
+    await waitFor(() => expect(screen.queryByRole('option', { name: /Amit Rao/ })).toBeNull());
     const option = await screen.findByRole('option', { name: /Priya Sharma/ });
     expect(within(option).getByText('priya@duncit.test')).toBeInTheDocument();
-    await waitFor(() => expect(screen.queryByRole('option', { name: /Amit Rao/ })).toBeNull());
     fireEvent.click(option);
 
     expect(screen.getByTestId('values')).toHaveTextContent('u-priya|Priya Sharma');
@@ -83,7 +84,9 @@ describe('AssigneeField', () => {
     fireEvent.click(await screen.findByRole('option', { name: /Priya Sharma/ }));
     expect(screen.getByTestId('values')).toHaveTextContent('u-priya|Priya Sharma');
 
-    fireEvent.click(screen.getByRole('button', { name: 'Clear' }));
+    // MUI only shows its Clear button while the field is focused.
+    fireEvent.focus(screen.getByTestId('assignee-input'));
+    fireEvent.click(screen.getByRole('button', { name: 'Clear', hidden: true }));
     expect(screen.getByTestId('values')).toHaveTextContent('|');
     expect(screen.getByTestId('values').textContent).toBe('|');
   });

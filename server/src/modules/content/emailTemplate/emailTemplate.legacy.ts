@@ -273,4 +273,6 @@ export const SHIPPED_AFTER_REDESIGN: ReadonlySet<string> = new Set<string>([
   'club-admin-host-performance-alert',
   // The Venue Kit interest form's email code, first shipped 2026-11-22.
   'venue-kit-otp',
+  // CRM manual-log @mention notice, first shipped 2026-11-22.
+  'crm-log-mention',
 ]);

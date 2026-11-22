@@ -171,7 +171,7 @@ describe('VenueLeadDetailPage', () => {
     expect(within(custom).getByText('Admin-defined fields from Settings → Dynamic Fields.')).toBeInTheDocument();
     expect(await within(custom).findByText(/No custom fields defined yet/)).toBeInTheDocument();
 
-    expect(within(openTab('manual-logs')).getByRole('heading', { name: 'Manual logs' })).toBeInTheDocument();
+    expect(within(openTab('manual-logs')).getByRole('heading', { name: 'Manual Logs' })).toBeInTheDocument();
   });
 
   it('shows the follow-up date, or a dash when none is scheduled', async () => {

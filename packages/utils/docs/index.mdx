@@ -15,6 +15,12 @@ consumers:
   - 'packages/media-picker'
   - 'packages/ad-request-form'
 exports:
+  - 'giftCardOrderHeadline'
+  - 'giftCardOrderSteps'
+  - 'isGiftCardOrderLive'
+  - 'GIFT_CARD_ORDER_STATUS_KEYS'
+  - 'GIFT_CARD_ORDER_PAYMENT_KEYS'
+  - 'GIFT_CARD_ORDER_POLL_MS'
   - 'E2E_GOOGLE_CREDENTIAL_QUERY'
   - 'E2E_GRANT_ROLES_MUTATION'
   - 'E2E_REVOKE_ROLES_MUTATION'
@@ -3332,6 +3338,16 @@ without an amount: the buyer is promised the team will pay it out, not a figure.
 The "Return items" form pairs `returnFormDefaults(order)` (one empty row per line that can still
 go back) with `toReturnInput(orderId, values, reasonText)` (only picked lines, trimmed comments)
 and the Zod schema `makePodShopReturnSchema` in [@duncit/forms](/packages/forms).
+
+## A member's gift card order — `gift-card-orders`
+
+mWeb and the native app show a gift card order the same way. `giftCardOrderHeadline(order)` is the line under the order number — the payment while it is not paid (`mweb.giftCards.payment*`), then where the cards are (`GIFT_CARD_ORDER_STATUS_KEYS`), with a tone (`success`, `info`, `warning`, `error`, `neutral`) each app maps to its own colours. `giftCardOrderSteps(order)` is the progress strip: placed → paid → emailed for a digital order, or placed → paid → printed → shipped → out for delivery → delivered for a printed one (a failed attempt or a return keeps "shipped" done and nothing after). `isGiftCardOrderLive(order)` says whether the order can still change — an open order page re-reads it every `GIFT_CARD_ORDER_POLL_MS` (30 s) while it is live, so the courier's moves show without a refresh.
+
+```ts
+const { key, tone } = giftCardOrderHeadline(order);
+const steps = giftCardOrderSteps(order); // [{ id, labelKey, done }]
+useQuery(MY_GIFT_CARD_ORDER, { pollInterval: isGiftCardOrderLive(order) ? GIFT_CARD_ORDER_POLL_MS : 0 });
+```
 
 ## The buyer's order detail page — `order-tracking`
 

@@ -145,6 +145,17 @@ exports:
   - 'PhysicalGiftCardValues'
   - 'PhysicalGiftCardRefusal'
   - 'PhysicalGiftCardErrorKey'
+  - 'makeGiftCardPurchaseSchema'
+  - 'giftCardPurchaseDefaults'
+  - 'giftCardPurchaseTotals'
+  - 'giftCardPurchaseRecipient'
+  - 'canOrderPhysical'
+  - 'maxQuantityFor'
+  - 'GIFT_CARD_TEXT_LIMITS'
+  - 'GiftCardPurchaseValues'
+  - 'GiftCardPurchasePolicy'
+  - 'GiftCardPurchaseTotals'
+  - 'GiftCardDeliveryMode'
 ---
 
 ## Why this exists
@@ -710,6 +721,7 @@ directly.
 | `makeFreelancerProfileSchema` | the Earn with Duncit freelancer profile | name, 1–5 categories, 1–15 skills, a city picked from the admin Location list (`location_id` + optional `locality`), optional bio, an http(s) portfolio link or blank, whole years of experience, contact, availability |
 | `makeGigInterestSchema` | "I'm interested" on a gig | an optional note of at most 500 characters (`gigInterestDefaults`) |
 | `makeForceMarkSchema` | a Club Admin marking attendance by name | the names they were read for a multi-seat booking — see below |
+| `makeGiftCardPurchaseSchema` | buying gift cards (mWeb and native Gift Cards > Buy — the one default design) | judged against the live policy from `giftCardStorefront` (`GiftCardPurchasePolicy`): an amount within the configured minimum and maximum, a quantity from 1 to the per-order maximum (`maxQuantityFor` — a printed order is also capped by the stock left), printed delivery only while `canOrderPhysical`, a valid email for a digital gift, and a message of at most 300 characters. `giftCardPurchaseDefaults` starts on the first preset inside the bounds; `giftCardPurchaseTotals` is the server's arithmetic (cards × amount, plus the delivery fee once on a printed order); `giftCardPurchaseRecipient` is who the card names — no inbox for a printed card, nobody for a card kept for yourself |
 | `makePhysicalGiftCardSchema` | redeeming a printed gift card (mWeb and native Redeem screen, "Physical card") | the 9-digit card number and the 16-digit scratch-panel passcode, judged by `isPhysicalGiftCardNumber` / `isPhysicalGiftCardPasscode` from `@duncit/regex` (digits only — dashes and spaces ignored); a blank box asks for the value, any other wrong shape says so, one line per box. The boxes store through `formatPhysicalGiftCardNumber` (digits, at most 9) and `formatPhysicalGiftCardPasscode` (digits, at most 16, grouped `XXXX-XXXX-XXXX-XXXX` as the card prints them); `buildPhysicalGiftCardInput` is the `redeemPhysicalGiftCard` variables (digits only); `physicalGiftCardErrorKey(extensions.reason)` names each refusal (`INVALID_FORMAT`, `MISMATCH`, `LOCKED`, `VOID`, `OTHER_ACCOUNT`, `ALREADY_REDEEMED`, `EXPIRED`) with its own `mweb.giftCards.physicalError*` key, and anything else with `mweb.giftCards.redeemError` |
 
 `makeContactValueSchema(channel, t, current?)` returns a different object schema per channel

@@ -312,6 +312,20 @@ export {
 } from './physical-gift-card';
 
 export {
+  GIFT_CARD_TEXT_LIMITS,
+  canOrderPhysical,
+  giftCardPurchaseDefaults,
+  giftCardPurchaseRecipient,
+  giftCardPurchaseTotals,
+  makeGiftCardPurchaseSchema,
+  maxQuantityFor,
+  type GiftCardDeliveryMode,
+  type GiftCardPurchasePolicy,
+  type GiftCardPurchaseTotals,
+  type GiftCardPurchaseValues,
+} from './gift-card-purchase';
+
+export {
   BANNER_KIT_LIMITS,
   isBrandColorEntry,
   isInstagramHandleEntry,

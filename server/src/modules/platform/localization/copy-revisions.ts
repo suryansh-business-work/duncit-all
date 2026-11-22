@@ -13,6 +13,12 @@
  * An applied entry matches nothing on the next boot, so entries never need pruning.
  */
 export const COPY_REVISIONS: Readonly<Record<string, readonly string[]>> = {
+  // Gift cards became one design (no category themes), with quantity and printed delivery.
+  "mweb.giftCards.sidebarBuyCaption": ["For a category or the Pod Shop"],
+  "mweb.giftCards.howStep1": ["Pick a theme — any category, or the Pod Shop — choose an amount, and pay."],
+  "mweb.giftCards.howStep2": [
+    "The card and its code go out by email, and you can share the link too. Keeping it for yourself works the same way.",
+  ],
   // Booking offers moved into Fees & Minimum Spend and took the minimum spend in.
   "venueSettings.offers.title": ["Booking offers"],
   "venueSettings.offers.intro": [

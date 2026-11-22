@@ -12,6 +12,20 @@ export {
 } from './club-venues';
 export { canFlipGiftCard, giftCardArtwork, type GiftCardArtwork } from './gift-card-artwork';
 export {
+  GIFT_CARD_ORDER_PAYMENT_KEYS,
+  GIFT_CARD_ORDER_POLL_MS,
+  GIFT_CARD_ORDER_STATUS_KEYS,
+  giftCardOrderHeadline,
+  giftCardOrderSteps,
+  isGiftCardOrderLive,
+  type GiftCardOrderDeliveryMode,
+  type GiftCardOrderFulfilment,
+  type GiftCardOrderPayment,
+  type GiftCardOrderStatusFacts,
+  type GiftCardOrderStep,
+  type GiftCardOrderTone,
+} from './gift-card-orders';
+export {
   claimGoogleSignupHandoff,
   createGoogleSignupClaims,
   openGoogleSignup,

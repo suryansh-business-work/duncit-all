@@ -30,6 +30,8 @@ const DENIED_FIELDS: ReadonlyMap<string, string> = new Map([
   ['denyMcpAuthorization', 'only the person may deny a connection'],
   ['revokeMcpConnection', 'only the person may revoke a connection'],
   ['updateMcpSettings', 'MCP safety settings are changed in the console'],
+  // A signed link to a buyer's private bank screenshot or statement.
+  ['failedPaymentEvidenceLink', 'returns a signed link to private payment evidence'],
 ]);
 
 /** Any field whose name carries one of these words is refused. */

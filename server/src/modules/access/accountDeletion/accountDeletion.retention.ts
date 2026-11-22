@@ -51,6 +51,7 @@ export const RETAINED_MODELS: Readonly<Record<string, string>> = {
   PodExpense: 'Accounting record for somebody else’s pod.',
   UserChangeLog: 'Audit trail — including of changes made to OTHER accounts.',
   PodAuditLog: 'Audit trail for pods that still exist.',
+  FailedPaymentCase: 'Refund decision for money Razorpay captured — the other side of a refund already sent.',
 };
 
 export function isRetainedModel(modelName: string): boolean {
@@ -86,6 +87,11 @@ export const REDACTIONS: Readonly<Record<string, Readonly<Record<string, unknown
     'billing.line1': '',
     'billing.line2': '',
     'billing.landmark': '',
+  },
+  'FailedPaymentCase.user_id': {
+    user_name: DELETED_USER_NAME,
+    user_email: '',
+    user_phone: '',
   },
   'EventTicket.user_id': {
     'snapshot.user_name': DELETED_USER_NAME,

@@ -136,6 +136,12 @@ export const OPENAI_TASKS = {
     description: 'Writes the automatic reply to inbound support mail.',
     when_off: 'The rendered email template is sent instead of an AI-written reply.',
   },
+  'finance.payment_evidence': {
+    label: 'Payment evidence check',
+    module: 'Finance',
+    description: 'Reads the payment id, bank reference and amount off a buyer’s payment screenshot so Finance › Failed Payments can match it to Razorpay.',
+    when_off: 'Screenshot claims are left unmatched (yellow) for a person to review; transaction-id claims are still checked against Razorpay.',
+  },
   'crm.lead_parse': {
     label: 'Lead text parsing',
     module: 'CRM',

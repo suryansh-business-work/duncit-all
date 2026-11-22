@@ -139,7 +139,9 @@ export const CreatePodOptionsDocument = gql(`
 /** Server-computed potential-earnings waterfall for the pricing panel —
  * amount is the GST-inclusive ticket price, venue_amount the picked slot's price.
  * A venue offer also sends its money at the venue's minimum guests (`min_spots`,
- * `offerEarningsArgs`), and the answer carries the take-home there (`minimum`). */
+ * `offerEarningsArgs`), and the answer carries the take-home there (`minimum`);
+ * its model and hours (`venue_offer_model`, `venue_hours`) hold it to the
+ * venue's minimum business. `viable` is the create guard's verdict. mWeb twin. */
 export const PotentialPodEarningsDocument = gql(`
   query MobilePotentialPodEarnings(
     $pod_amount: Float!
@@ -150,6 +152,8 @@ export const PotentialPodEarningsDocument = gql(`
     $min_spots: Int
     $venue_amount_at_min: Float
     $venue_commission_on_top_at_min: Float
+    $venue_offer_model: VenueOfferModel
+    $venue_hours: Float
   ) {
     potentialPodEarnings(
       pod_amount: $pod_amount
@@ -160,9 +164,15 @@ export const PotentialPodEarningsDocument = gql(`
       min_spots: $min_spots
       venue_amount_at_min: $venue_amount_at_min
       venue_commission_on_top_at_min: $venue_commission_on_top_at_min
+      venue_offer_model: $venue_offer_model
+      venue_hours: $venue_hours
     ) {
       total_spots
       payable_spots
+      viable
+      viability_reason
+      minimum_viable_ticket_price
+      venue_min_business
       minimum {
         total_spots
         waterfall {

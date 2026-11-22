@@ -22,10 +22,8 @@ export function useVenueCost(form: CreatePodForm, venues: readonly CreatePodVenu
   const venueId = values.venue_id;
   const slotId = values.venue_slot_id;
   const { slots } = useVenueSlots(physical && slotId ? venueId : '', values.partner_request_id);
-  const venueQuote = useOfferQuote(
-    physical ? venueId : '',
-    physical && !slotId ? venueOfferPriceOf(values) : null,
-  );
+  const offer = physical && !slotId ? venueOfferPriceOf(values) : null;
+  const venueQuote = useOfferQuote(physical ? venueId : '', offer);
   const selectedVenue = venues.find((venue) => venue.id === venueId) ?? null;
   const space = venueSpaces(selectedVenue).find((item) => item.label === values.venue_space_label);
 
@@ -50,9 +48,16 @@ export function useVenueCost(form: CreatePodForm, venues: readonly CreatePodVenu
     offerMinGuests: offering
       ? offerGuestFloor(selectedVenue?.offer_min_guests, space?.capacity)
       : 0,
-    // The quote priced at the venue's minimum names its guests (`pax`).
+    // The quote priced at the venue's minimum names its guests (`pax`); the
+    // offer names the model and window the venue's minimum business is keyed on.
     offerEarnings: quote
-      ? offerEarningsArgs(quote, quoteMin, quoteMin?.pax ?? 0, Number(values.no_of_spots_text) || 0)
+      ? offerEarningsArgs(
+          quote,
+          quoteMin,
+          quoteMin?.pax ?? 0,
+          Number(values.no_of_spots_text) || 0,
+          offer,
+        )
       : null,
   };
 }

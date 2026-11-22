@@ -1,4 +1,4 @@
-import { payableSpots, type OfferEarningsArgs } from '@duncit/utils';
+import { paidPodSubmitBlocked, payableSpots, type OfferEarningsArgs } from '@duncit/utils';
 
 import {
   usePotentialEarnings,
@@ -20,7 +20,8 @@ export interface PodPricingInput {
    * (`offerEarningsArgs`): what the venue is paid (venue price + GST) and
    * Duncit's commission on top, which comes off the host's side, at the pod's
    * spots — and the same at the venue's minimum guests when that is fewer, so
-   * the host sees a range. Absent for a held slot. */
+   * the host sees a range — with the offer's model and hours, which pick the
+   * venue's minimum business. Absent for a held slot. */
   offerEarnings?: OfferEarningsArgs | null;
   isPhysical: boolean;
   /** A FREE pod is the only pod allowed to carry no ticket price. */
@@ -31,6 +32,8 @@ export interface PodPricingState extends PodPricingInput {
   projection: PodEarningsProjection | null;
   waterfall: PotentialEarnings | null;
   isLoading: boolean;
+  /** The projection request failed — there is no answer to judge the pod on. */
+  failed: boolean;
   /** A physical pod with a slot picked — the venue rows apply. */
   venuePicked: boolean;
   /** Both money inputs are set, so a projection can be shown. */
@@ -39,12 +42,16 @@ export interface PodPricingState extends PodPricingInput {
   hostOnly: boolean;
   /** A paid pod with no ticket price entered yet — nothing to project. */
   priceMissing: boolean;
-  /** The server projects a take-home of ₹0 or less at this ticket price. */
-  zeroEarnings: boolean;
-  /** The whole pod collects less than the venue's fixed slot price. */
+  /** The whole pod collects less than the venue's fixed slot price (the venue row's error). */
   venueShortfall: boolean;
-  /** Either guard is tripped — Create Pod must stay disabled. */
+  /** The projection answers exactly the inputs on screen, the venue's cost included. */
+  fresh: boolean;
+  /** That fresh projection says the server would refuse the pod; `projection.viability_reason` says why. */
+  notViable: boolean;
+  /** Create Pod stays disabled: a paid pod without a fresh projection that says viable. */
   blocked: boolean;
+  /** Asks the server again after a failed projection. */
+  retry: () => void;
 }
 
 /** Ticket price × the spots that can actually be sold (the host sits free). */
@@ -55,7 +62,8 @@ export function totalPodValue(podAmount: number, noOfSpots: number): number {
 /**
  * The venue's slot price is deducted once from the whole collection, so a pod
  * whose entire value is below it can never pay the venue. Computed locally (no
- * server round-trip) so the Create Pod button disables on the keystroke.
+ * server round-trip) for the venue row's error; whether Create Pod is enabled
+ * is the server's verdict alone.
  */
 export function isVenueShortfall(input: PodPricingInput): boolean {
   const { podAmount, noOfSpots, slotPrice, isPhysical } = input;
@@ -65,7 +73,8 @@ export function isVenueShortfall(input: PodPricingInput): boolean {
 }
 
 /** The venue arguments the projection is asked with: an offer's money (at
- * both ends of its guests), a held slot's price, or none. mWeb twin. */
+ * both ends of its guests, with its model and hours), a held slot's price, or
+ * none. mWeb twin. */
 function venueArgsOf(
   venuePicked: boolean,
   slotPrice: number | null,
@@ -77,17 +86,20 @@ function venueArgsOf(
 
 /**
  * The single source of truth for Step 4's money state: the server-computed
- * earnings projection plus the two guards that block publishing — a ₹0 (or
- * negative) host payout, and a venue slot the pod cannot afford. The stepper
- * owns this hook so the Create Pod button and the price panel read the SAME
- * numbers; both guards clear themselves as soon as the price is raised.
+ * earnings projection and the server's own verdict on it (`viable`, the create
+ * guard's rule at every spot: more than the venue's minimum business after
+ * Duncit's commission, the venue covered, and a payout above ₹0). A paid pod
+ * can be created only while a projection answered for exactly these inputs —
+ * nothing in flight, no failure, the venue's cost known — says viable; a free
+ * pod is exempt. The stepper owns this hook so the Create Pod button and the
+ * price panel read the SAME numbers. mWeb twin: useEarningsPreview (rule 27).
  */
 export function usePodPricing(input: PodPricingInput): PodPricingState {
   const { podAmount, noOfSpots, venueId, slotPrice, offerEarnings, isPhysical, isFree } = input;
   const venuePicked = isPhysical && slotPrice !== null;
   // A free pod has no calculation at all: a ₹0 amount is what makes the
   // earnings hook send nothing, whatever the field still holds.
-  const { projection, waterfall, isLoading } = usePotentialEarnings(
+  const { projection, waterfall, isLoading, failed, retry } = usePotentialEarnings(
     isFree ? 0 : podAmount,
     noOfSpots,
     venuePicked ? venueId : null,
@@ -98,21 +110,25 @@ export function usePodPricing(input: PodPricingInput): PodPricingState {
   // The field starts blank, so a paid pod has nothing to publish until the host
   // types a price — ₹0 is never assumed on their behalf.
   const priceMissing = !isFree && podAmount <= 0;
-  // Never claim ₹0 earnings from a waterfall that a newer price has superseded.
-  const zeroEarnings = ready && !isLoading && waterfall !== null && waterfall.host_receives <= 0;
-  const venueShortfall = !isFree && isVenueShortfall(input);
+  // A physical pod always books a venue: until its cost is known (the offer's
+  // quote, the held slot's price) an answer without it is not this pod's.
+  const venueKnown = !isPhysical || venuePicked;
+  const fresh = ready && noOfSpots > 1 && venueKnown && !isLoading && Boolean(projection);
 
   return {
     ...input,
     projection,
     waterfall,
     isLoading,
+    failed: ready && Boolean(failed),
     venuePicked,
     ready,
     hostOnly: ready && noOfSpots === 1,
     priceMissing,
-    zeroEarnings,
-    venueShortfall,
-    blocked: priceMissing || zeroEarnings || venueShortfall,
+    venueShortfall: !isFree && isVenueShortfall(input),
+    fresh,
+    notViable: fresh && projection?.viable === false,
+    blocked: paidPodSubmitBlocked(isFree, fresh, projection),
+    retry,
   };
 }

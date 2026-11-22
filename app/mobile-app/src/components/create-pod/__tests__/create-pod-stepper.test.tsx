@@ -22,10 +22,20 @@ jest.mock('@/services/graphql.client', () => ({
 
 // The price panel's server-driven earnings preview has its own tests — keep
 // the stepper flows deterministic (no debounce timers).
-// It is a spy so a free pod can be shown to send it nothing to price.
+// It is a spy so a free pod can be shown to send it nothing to price. Its
+// answer is a fresh projection whose server verdict clears the pod, so a paid
+// pod can publish; the waterfall is left out so the panel draws no rows.
 const mockPotentialEarnings = jest.fn((..._args: unknown[]) => ({
+  projection: {
+    viable: true,
+    viability_reason: null,
+    minimum_viable_ticket_price: 120,
+    venue_min_business: 0,
+  },
   waterfall: null,
   isLoading: false,
+  failed: false,
+  retry: jest.fn(),
 }));
 jest.mock('@/hooks/usePotentialEarnings', () => ({
   usePotentialEarnings: (...args: unknown[]) => mockPotentialEarnings(...args),
@@ -463,10 +473,13 @@ describe('CreatePodStepper', () => {
     expect(input.location_id).toBe('l1');
     expect(input.pod_type).toBe('PAID');
     expect(new Date(input.pod_date_time).toISOString()).toBe(slot.start_at);
-    // The earnings preview is fed the venue payout and Duncit's fee on top.
+    // The earnings preview is fed the venue payout and Duncit's fee on top, and
+    // the offer's model and 2-hour window for the venue's minimum business.
     expect(mockPotentialEarnings).toHaveBeenLastCalledWith(500, expect.any(Number), 'v1', {
       venue_amount: 472,
       venue_commission_on_top: 24,
+      venue_offer_model: 'FLAT',
+      venue_hours: 2,
     });
   });
 
@@ -1364,6 +1377,8 @@ describe('CreatePodStepper — a venue minimum', () => {
     expect(mockPotentialEarnings).toHaveBeenLastCalledWith(500, 20, 'v1', {
       venue_amount: 6000,
       venue_commission_on_top: 300,
+      venue_offer_model: 'PER_GUEST',
+      venue_hours: 2,
       min_spots: 8,
       venue_amount_at_min: 2400,
       venue_commission_on_top_at_min: 120,

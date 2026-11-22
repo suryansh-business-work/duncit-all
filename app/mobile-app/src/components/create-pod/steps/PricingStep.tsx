@@ -12,7 +12,7 @@ import {
   PricePanel,
   SuggestedPriceLink,
   SuggestedPricesModal,
-  ZeroEarningsNotice,
+  ViabilityNotice,
   type PodPricingState,
 } from '../price-panel';
 import type { CreatePodFinance, CreatePodForm, CreatePodProduct } from '../create-pod.types';
@@ -32,7 +32,7 @@ interface Props {
 }
 
 /** Money's ticket — Free/Paid cards and the price (with its suggested-price
- * helper and zero-earnings guard), then the slot-cost / GST / earnings panel; a
+ * helper and the server verdict's notice), then the slot-cost / GST / earnings panel; a
  * FREE pod has no amount and no calculation and reads a short note instead,
  * with why it is free. That is asked once on Money: beside a free venue offer
  * when there is one, else here. The optional extras follow, folded. mWeb twin. */
@@ -75,7 +75,9 @@ export function PricingStep({
             labelAction={<SuggestedPriceLink onPress={() => setSuggestionsOpen(true)} />}
           />
         )}
-        {!isFree && pricing.zeroEarnings ? <ZeroEarningsNotice /> : null}
+        {isFree ? null : (
+          <ViabilityNotice pricing={pricing} currencySymbol={finance.currency_symbol} />
+        )}
         {isFree && !askedWithOffer ? (
           <FreeArrangementFields
             control={control}

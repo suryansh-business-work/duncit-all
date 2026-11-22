@@ -26,7 +26,7 @@ export {
   PricePanel,
   SuggestedPriceLink,
   SuggestedPricesModal,
-  ZeroEarningsNotice,
+  ViabilityNotice,
   isVenueShortfall,
   totalPodValue,
   usePodPricing,

@@ -1,5 +1,6 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 
+import { VenueOfferModel } from '@/generated/graphql/graphql';
 import { graphqlRequest } from '@/services/graphql.client';
 import { usePotentialEarnings } from '@/hooks/usePotentialEarnings';
 
@@ -156,12 +157,85 @@ describe('usePotentialEarnings', () => {
     expect(result.current.waterfall).toBeNull();
   });
 
-  it('swallows a failed preview', async () => {
+  it('reports a failed preview instead of throwing', async () => {
     mockRequest.mockRejectedValue(new Error('down'));
     const { result } = renderHook(() => usePotentialEarnings(500, 2, null, null));
     act(() => jest.advanceTimersByTime(400));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.waterfall).toBeNull();
+    expect(result.current.failed).toBe(true);
+  });
+
+  it('hides the last projection the moment the inputs move on, until the new answer lands', async () => {
+    mockRequest.mockResolvedValue(preview);
+    const { result, rerender } = renderHook(
+      ({ amount }: { amount: number }) => usePotentialEarnings(amount, 2, null, null),
+      { initialProps: { amount: 1000 } },
+    );
+    act(() => jest.advanceTimersByTime(400));
+    await waitFor(() => expect(result.current.projection).not.toBeNull());
+    rerender({ amount: 1200 });
+    // An answer for ₹1,000 says nothing about ₹1,200.
+    expect(result.current.projection).toBeNull();
+    expect(result.current.isLoading).toBe(true);
+    act(() => jest.advanceTimersByTime(400));
+    await waitFor(() => expect(result.current.projection).not.toBeNull());
+    expect(result.current.isLoading).toBe(false);
+  });
+
+  it('never keeps an old projection after a failure — and a retry asks again', async () => {
+    mockRequest.mockResolvedValueOnce(preview).mockRejectedValueOnce(new Error('down'));
+    const { result, rerender } = renderHook(
+      ({ amount }: { amount: number }) => usePotentialEarnings(amount, 2, null, null),
+      { initialProps: { amount: 1000 } },
+    );
+    act(() => jest.advanceTimersByTime(400));
+    await waitFor(() => expect(result.current.projection).not.toBeNull());
+    rerender({ amount: 1500 });
+    act(() => jest.advanceTimersByTime(400));
+    await waitFor(() => expect(result.current.failed).toBe(true));
+    expect(result.current.projection).toBeNull();
+    expect(result.current.isLoading).toBe(false);
+
+    mockRequest.mockResolvedValueOnce(preview);
+    act(() => result.current.retry());
+    expect(result.current.isLoading).toBe(true);
+    expect(result.current.failed).toBe(false);
+    act(() => jest.advanceTimersByTime(400));
+    await waitFor(() => expect(result.current.projection).not.toBeNull());
+    expect(mockRequest).toHaveBeenCalledTimes(3);
+    expect(mockRequest).toHaveBeenLastCalledWith(
+      expect.anything(),
+      expect.objectContaining({ pod_amount: 1500 }),
+      { auth: true },
+    );
+  });
+
+  it("sends a venue offer's model as the codegen enum and its hours, for the venue's minimum business", async () => {
+    mockRequest.mockResolvedValue(preview);
+    renderHook(() =>
+      usePotentialEarnings(500, 10, 'v1', {
+        venue_amount: 1180,
+        venue_commission_on_top: 59,
+        venue_offer_model: 'PER_HOUR',
+        venue_hours: 1.5,
+      }),
+    );
+    act(() => jest.advanceTimersByTime(400));
+    await waitFor(() => expect(mockRequest).toHaveBeenCalled());
+    expect(mockRequest).toHaveBeenCalledWith(
+      expect.anything(),
+      {
+        pod_amount: 500,
+        no_of_spots: 10,
+        venue_id: 'v1',
+        venue_amount: 1180,
+        venue_commission_on_top: 59,
+        venue_offer_model: VenueOfferModel.PerHour,
+        venue_hours: 1.5,
+      },
+      { auth: true },
+    );
   });
 
   it('ignores a resolution after unmount', async () => {

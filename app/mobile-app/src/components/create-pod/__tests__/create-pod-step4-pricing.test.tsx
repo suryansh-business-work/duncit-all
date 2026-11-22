@@ -53,7 +53,20 @@ const brokeWaterfall = {
   host_receives: -287.54,
   host_earn_pct: -287.54,
 };
-const brokeProjection = { total_spots: 2, payable_spots: 1, waterfall: brokeWaterfall };
+// The server's verdict on that pod: refused, and the lowest ticket that works.
+const refusal = {
+  viable: false,
+  viability_reason: 'NO_EARNINGS',
+  minimum_viable_ticket_price: 620,
+  venue_min_business: 0,
+};
+const brokeProjection = { total_spots: 2, payable_spots: 1, ...refusal, waterfall: brokeWaterfall };
+const viableVerdict = {
+  viable: true,
+  viability_reason: null,
+  minimum_viable_ticket_price: 620,
+  venue_min_business: 0,
+};
 const healthy = {
   ...brokeWaterfall,
   venue_amount: 0,
@@ -61,6 +74,12 @@ const healthy = {
   venue_receives: 0,
   host_receives: 60.5,
   host_earn_pct: 60.5,
+};
+const healthyProjection = {
+  total_spots: 2,
+  payable_spots: 1,
+  ...viableVerdict,
+  waterfall: healthy,
 };
 
 const ladder = {
@@ -131,44 +150,87 @@ describe('usePodPricing', () => {
     isFree: false,
   };
 
-  it('blocks Create Pod when the projected payout is ₹0 or less', () => {
+  it.each([
+    ['BELOW_MIN_BUSINESS', { viability_reason: 'BELOW_MIN_BUSINESS', venue_min_business: 1000 }],
+    ['VENUE_NOT_COVERED', { viability_reason: 'VENUE_NOT_COVERED' }],
+    ['NO_EARNINGS', { viability_reason: 'NO_EARNINGS' }],
+  ])('blocks Create Pod when the fresh verdict refuses the pod (%s)', (_reason, verdict) => {
     mockedEarnings.mockReturnValue({
-      projection: brokeProjection,
-      waterfall: { ...brokeWaterfall, host_receives: 0 },
+      projection: { ...brokeProjection, ...verdict },
+      waterfall: brokeWaterfall,
       isLoading: false,
+      failed: false,
     });
     const { result } = renderHook(() => usePodPricing(input));
-    expect(result.current.zeroEarnings).toBe(true);
-    expect(result.current.blocked).toBe(true);
+    expect(result.current).toMatchObject({ fresh: true, notViable: true, blocked: true });
     expect(result.current.venuePicked).toBe(true);
     expect(result.current.hostOnly).toBe(false);
   });
 
-  it('never claims ₹0 earnings from a waterfall a newer price superseded', () => {
+  it('enables Create Pod only on a fresh projection that says viable', () => {
     mockedEarnings.mockReturnValue({
-      projection: brokeProjection,
-      waterfall: brokeWaterfall,
-      isLoading: true,
-    });
-    const { result } = renderHook(() => usePodPricing(input));
-    expect(result.current.zeroEarnings).toBe(false);
-    expect(result.current.blocked).toBe(false);
-  });
-
-  it('clears both guards once the price earns something', () => {
-    mockedEarnings.mockReturnValue({
-      projection: brokeProjection,
+      projection: healthyProjection,
       waterfall: healthy,
       isLoading: false,
+      failed: false,
     });
     const { result } = renderHook(() => usePodPricing(input));
-    expect(result.current.zeroEarnings).toBe(false);
+    expect(result.current).toMatchObject({ fresh: true, notViable: false, blocked: false });
     expect(result.current.venueShortfall).toBe(false);
-    expect(result.current.blocked).toBe(false);
     expect(result.current.ready).toBe(true);
   });
 
-  it('blocks on a venue the pod cannot afford before the server even answers', () => {
+  it('stays blocked while the projection for these inputs is still loading', () => {
+    mockedEarnings.mockReturnValue({
+      projection: null,
+      waterfall: null,
+      isLoading: true,
+      failed: false,
+    });
+    const { result } = renderHook(() => usePodPricing(input));
+    expect(result.current).toMatchObject({ fresh: false, notViable: false, blocked: true });
+  });
+
+  it('stays blocked when the projection request failed, and offers the retry', () => {
+    const retry = jest.fn();
+    mockedEarnings.mockReturnValue({
+      projection: null,
+      waterfall: null,
+      isLoading: false,
+      failed: true,
+      retry,
+    });
+    const { result } = renderHook(() => usePodPricing(input));
+    expect(result.current).toMatchObject({ failed: true, fresh: false, blocked: true });
+    result.current.retry();
+    expect(retry).toHaveBeenCalledTimes(1);
+  });
+
+  it("holds a physical pod until its venue's cost is known, even when a venue-less answer says viable", () => {
+    mockedEarnings.mockReturnValue({
+      projection: healthyProjection,
+      waterfall: healthy,
+      isLoading: false,
+      failed: false,
+    });
+    const { result } = renderHook(() => usePodPricing({ ...input, slotPrice: null }));
+    expect(result.current).toMatchObject({ venuePicked: false, fresh: false, blocked: true });
+  });
+
+  it('judges a virtual pod on its projection alone — it books no venue', () => {
+    mockedEarnings.mockReturnValue({
+      projection: healthyProjection,
+      waterfall: healthy,
+      isLoading: false,
+      failed: false,
+    });
+    const { result } = renderHook(() =>
+      usePodPricing({ ...input, isPhysical: false, slotPrice: null }),
+    );
+    expect(result.current).toMatchObject({ fresh: true, blocked: false });
+  });
+
+  it('flags the venue row when the pod cannot afford the slot, and still blocks until the server answers', () => {
     const { result } = renderHook(() => usePodPricing(shortfallInput({})));
     expect(result.current.waterfall).toBeNull();
     expect(result.current.venueShortfall).toBe(true);
@@ -241,9 +303,9 @@ describe('usePodPricing', () => {
       venue_amount: 300,
       venue_commission_on_top: null,
     });
-    // No guard can fire on a pod that has no calculation.
+    // No guard can fire on a pod that has no calculation — not even a stale refusal.
     expect(result.current.ready).toBe(false);
-    expect(result.current.zeroEarnings).toBe(false);
+    expect(result.current.notViable).toBe(false);
     expect(result.current.venueShortfall).toBe(false);
     expect(result.current.blocked).toBe(false);
   });
@@ -301,27 +363,80 @@ const paidPod = {
   no_of_spots_text: '2',
 };
 
-describe('Money zero-earnings guard', () => {
-  it('explains a ₹0 payout under the ticket price field', () => {
+describe('Money verdict notice', () => {
+  const refused = (verdict: Record<string, unknown>) =>
     mockedEarnings.mockReturnValue({
-      projection: brokeProjection,
+      projection: { ...brokeProjection, ...verdict },
       waterfall: brokeWaterfall,
       isLoading: false,
+      failed: false,
+    });
+
+  it("names the venue's minimum business and the lowest ticket price under the price field", () => {
+    refused({
+      viability_reason: 'BELOW_MIN_BUSINESS',
+      minimum_viable_ticket_price: 1112,
+      venue_min_business: 1000,
     });
     renderWithProviders(<PricingHarness initial={paidPod} />);
-    const box = screen.getByTestId('create-pod-zero-earnings');
-    expect(box).toHaveTextContent(/No Earnings Generated/);
-    expect(box).toHaveTextContent(/Please increase the Ticket Price to earn from this Pod\./);
+    const box = screen.getByTestId('create-pod-viability-notice');
+    expect(box).toHaveTextContent(/Below the venue's minimum business/);
+    expect(box).toHaveTextContent(/This venue's minimum business is ₹1,000\.00\./);
+    expect(box).toHaveTextContent(/Set the ticket price to at least ₹1,112\.00, or add spots\./);
   });
 
-  it('clears itself as soon as the price earns something', () => {
+  it('names the lowest ticket price when the venue is not covered', () => {
+    refused({ viability_reason: 'VENUE_NOT_COVERED', minimum_viable_ticket_price: 450 });
+    renderWithProviders(<PricingHarness initial={paidPod} />);
+    const box = screen.getByTestId('create-pod-viability-notice');
+    expect(box).toHaveTextContent(/The pod does not cover the venue/);
+    expect(box).toHaveTextContent(/Set the ticket price to at least ₹450\.00\./);
+  });
+
+  it('explains a ₹0 payout, with the lowest price that earns something', () => {
+    refused({ viability_reason: 'NO_EARNINGS', minimum_viable_ticket_price: 620 });
+    renderWithProviders(<PricingHarness initial={paidPod} />);
+    const box = screen.getByTestId('create-pod-viability-notice');
+    expect(box).toHaveTextContent(/No Earnings Generated/);
+    expect(box).toHaveTextContent(/Set it to at least ₹620\.00 to earn from this pod\./);
+  });
+
+  it('keeps the ₹0 copy when no ticket price earns anything', () => {
+    refused({ viability_reason: 'NO_EARNINGS', minimum_viable_ticket_price: null });
+    renderWithProviders(<PricingHarness initial={paidPod} />);
+    expect(screen.getByTestId('create-pod-viability-notice')).toHaveTextContent(
+      /Please increase the Ticket Price to earn from this Pod\./,
+    );
+  });
+
+  it('says the check failed, with a retry, when the projection could not be fetched', () => {
+    const retry = jest.fn();
     mockedEarnings.mockReturnValue({
-      projection: brokeProjection,
-      waterfall: healthy,
+      projection: null,
+      waterfall: null,
       isLoading: false,
+      failed: true,
+      retry,
     });
     renderWithProviders(<PricingHarness initial={paidPod} />);
-    expect(screen.queryByTestId('create-pod-zero-earnings')).toBeNull();
+    expect(screen.getByTestId('create-pod-viability-failed')).toHaveTextContent(
+      /We couldn't check your earnings for this price\./,
+    );
+    fireEvent.press(screen.getByTestId('create-pod-viability-retry'));
+    expect(retry).toHaveBeenCalledTimes(1);
+  });
+
+  it('clears itself as soon as the verdict says viable — the live region stays mounted', () => {
+    mockedEarnings.mockReturnValue({
+      projection: healthyProjection,
+      waterfall: healthy,
+      isLoading: false,
+      failed: false,
+    });
+    renderWithProviders(<PricingHarness initial={paidPod} />);
+    expect(screen.queryByTestId('create-pod-viability-notice')).toBeNull();
+    expect(screen.queryByTestId('create-pod-viability-failed')).toBeNull();
+    expect(screen.getByTestId('create-pod-viability')).toHaveProp('aria-live', 'polite');
   });
 });
 
@@ -358,7 +473,8 @@ describe('Money for a free physical pod', () => {
     expect(screen.queryByTestId('field-pod_amount_text')).toBeNull();
     expect(screen.queryByTestId('suggested-price-link')).toBeNull();
     expect(screen.queryByTestId('create-pod-price-panel')).toBeNull();
-    expect(screen.queryByTestId('create-pod-zero-earnings')).toBeNull();
+    // A free pod has no verdict to wait on, so the notice region is not drawn at all.
+    expect(screen.queryByTestId('create-pod-viability')).toBeNull();
     expect(screen.getByTestId('create-pod-free-note-header-title')).toHaveTextContent(
       'This pod is free',
     );
@@ -596,10 +712,10 @@ describe('Money products — category empty state', () => {
 });
 
 describe('Create Pod button gating', () => {
-  const setup = () =>
+  const setup = (over: Partial<CreatePodFormValues> = {}) =>
     renderWithProviders(
       <CreatePodStepper
-        initialValues={{ ...blankCreatePodForm, ...paidPod }}
+        initialValues={{ ...blankCreatePodForm, ...paidPod, ...over }}
         // Details, the last step — Money's guard holds Create Pod there.
         initialStep={3}
         initialDraftId={null}
@@ -617,26 +733,62 @@ describe('Create Pod button gating', () => {
       />,
     );
 
-  it('disables Create Pod while a guard is tripped', async () => {
+  // A virtual pod books no venue, so the server's verdict alone decides.
+  const virtual = { pod_mode: 'VIRTUAL' as const };
+
+  it('disables Create Pod while the verdict refuses the pod', async () => {
     mockGraphqlRequest.mockResolvedValue({ venueAvailableSlots: [] });
     mockedEarnings.mockReturnValue({
       projection: brokeProjection,
       waterfall: brokeWaterfall,
       isLoading: false,
+      failed: false,
+    });
+    setup(virtual);
+    await screen.findByTestId('create-pod-details-step');
+    expect(screen.getByTestId('create-pod-submit')).toBeDisabled();
+  });
+
+  it.each([
+    ['still loading', { isLoading: true, failed: false }],
+    ['failed', { isLoading: false, failed: true }],
+  ])('disables Create Pod while the projection is %s', async (_state, flags) => {
+    mockGraphqlRequest.mockResolvedValue({ venueAvailableSlots: [] });
+    mockedEarnings.mockReturnValue({ projection: null, waterfall: null, ...flags });
+    setup(virtual);
+    await screen.findByTestId('create-pod-details-step');
+    expect(screen.getByTestId('create-pod-submit')).toBeDisabled();
+  });
+
+  it('enables Create Pod once a fresh verdict says viable', async () => {
+    mockGraphqlRequest.mockResolvedValue({ venueAvailableSlots: [] });
+    mockedEarnings.mockReturnValue({
+      projection: healthyProjection,
+      waterfall: healthy,
+      isLoading: false,
+      failed: false,
+    });
+    setup(virtual);
+    await screen.findByTestId('create-pod-details-step');
+    expect(screen.getByTestId('create-pod-submit')).not.toBeDisabled();
+  });
+
+  it('keeps Create Pod off for a physical pod whose venue is not priced yet, whatever the verdict says', async () => {
+    mockGraphqlRequest.mockResolvedValue({ venueAvailableSlots: [] });
+    mockedEarnings.mockReturnValue({
+      projection: healthyProjection,
+      waterfall: healthy,
+      isLoading: false,
+      failed: false,
     });
     setup();
     await screen.findByTestId('create-pod-details-step');
     expect(screen.getByTestId('create-pod-submit')).toBeDisabled();
   });
 
-  it('enables Create Pod once the pod earns something', async () => {
+  it('never holds back a free pod', async () => {
     mockGraphqlRequest.mockResolvedValue({ venueAvailableSlots: [] });
-    mockedEarnings.mockReturnValue({
-      projection: brokeProjection,
-      waterfall: healthy,
-      isLoading: false,
-    });
-    setup();
+    setup({ ...virtual, pod_type: 'FREE', pod_amount_text: '0' });
     await screen.findByTestId('create-pod-details-step');
     expect(screen.getByTestId('create-pod-submit')).not.toBeDisabled();
   });

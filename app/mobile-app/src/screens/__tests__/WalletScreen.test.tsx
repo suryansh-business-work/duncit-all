@@ -129,6 +129,26 @@ describe('WalletScreen', () => {
     expect(hookApi.refetch).toHaveBeenCalled();
   });
 
+  it('shows a paid withdrawal’s payment id and bank reference on its row, and none on the others', () => {
+    const paid = {
+      id: 'w9',
+      amount: 700,
+      status: 'PAID',
+      payout_method: 'IMPS',
+      scheduled_for: '2026-06-20',
+      reject_reason: '',
+      created_at: '2026-06-13',
+      razorpay_payout_id: 'pout_Q1',
+      payout_utr: 'UTR77',
+    };
+    mockedUse.mockReturnValue(api({ withdrawals: [paid, ...withdrawals] }));
+    renderWithProviders(<WalletScreen />);
+    expect(screen.getByTestId('wallet-withdrawal-row-w9-payment-id')).toBeOnTheScreen();
+    expect(screen.getByTestId('wallet-withdrawal-row-w9-utr')).toBeOnTheScreen();
+    expect(screen.queryByTestId('wallet-withdrawal-row-w1-payment-id')).toBeNull();
+    expect(screen.queryByTestId('wallet-withdrawal-row-w1-utr')).toBeNull();
+  });
+
   it('disables withdraw and shows empty states with a zero balance', () => {
     mockedUse.mockReturnValue(
       api({

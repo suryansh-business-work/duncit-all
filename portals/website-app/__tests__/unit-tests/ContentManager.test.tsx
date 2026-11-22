@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { MockedResponse } from '@apollo/client/testing';
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
-import { BlogPage, CareersPage, NewsroomPage } from '../../src/pages/website';
+import { BlogPage, CareersPage, NewsroomPage, SolutionsPage } from '../../src/pages/website';
 import ContentManager from '../../src/pages/website/content/ContentManager';
 import { renderWithProviders } from '../testkit';
 import {
@@ -157,5 +157,11 @@ describe('content page wrappers', () => {
   it('renders the Newsroom manager', async () => {
     renderWithProviders(<NewsroomPage />, { mocks: emptyTable() });
     expect(await screen.findByRole('heading', { name: 'Newsroom' })).toBeInTheDocument();
+  });
+
+  it('renders the Solutions manager with its own line', async () => {
+    renderWithProviders(<SolutionsPage />, { mocks: emptyTable() });
+    expect(await screen.findByRole('heading', { name: 'Solutions' })).toBeInTheDocument();
+    expect(screen.getByText(/offerings duncit.com\/solutions lists/)).toBeInTheDocument();
   });
 });

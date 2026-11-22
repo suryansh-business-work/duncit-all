@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { SOLUTION_AUDIENCES, type SolutionAudience } from '@duncit/utils';
 import type { WebsiteContentItem, WebsitePageType } from '../queries';
 
 /** A URL, mailto:, or tel: link — or empty. Mirrors the old Yup `linkSchema`. */
@@ -37,14 +38,30 @@ export const websiteContentSchema = z.object({
     .int('Sort order must be a whole number')
     .min(0, 'Sort order must be 0 or greater')
     .max(9999, 'Sort order is too large'),
+  // SOLUTIONS only (see websiteContentSchemaFor); every other type sends neither.
+  audience: z.union([z.enum(SOLUTION_AUDIENCES), z.literal('')]).default(''),
+  coming_soon: z.boolean().default(false),
 });
+
+/**
+ * The schema for one page type. A solution is listed under an audience and a
+ * category on duncit.com/solutions (its URL is /solutions/<category>/<slug>),
+ * so both are required there — the server refuses one without them too.
+ */
+export const websiteContentSchemaFor = (type: WebsitePageType, t: (key: string) => string) =>
+  websiteContentSchema.superRefine((values, ctx) => {
+    if (type !== 'SOLUTIONS') return;
+    if (!values.audience) ctx.addIssue({ code: 'custom', path: ['audience'], message: t('websiteApp.form.audienceRequired') });
+    if (!values.category) ctx.addIssue({ code: 'custom', path: ['category'], message: t('websiteApp.form.categoryRequired') });
+  });
 
 export type WebsiteContentFormValues = z.infer<typeof websiteContentSchema>;
 
 /** Shape sent to the createWebsiteContent / updateWebsiteContent mutations. */
 export interface WebsiteContentInput
-  extends Omit<WebsiteContentFormValues, 'published_at' | 'slug'> {
+  extends Omit<WebsiteContentFormValues, 'published_at' | 'slug' | 'audience'> {
   type: WebsitePageType;
+  audience: SolutionAudience | null;
   slug?: string;
   published_at: string | null;
 }
@@ -61,6 +78,8 @@ export const blankValues = (): WebsiteContentFormValues => ({
   published_at: new Date().toISOString(),
   is_published: true,
   sort_order: 0,
+  audience: '',
+  coming_soon: false,
 });
 
 export const toFormValues = (item: WebsiteContentItem): WebsiteContentFormValues => ({
@@ -75,6 +94,8 @@ export const toFormValues = (item: WebsiteContentItem): WebsiteContentFormValues
   published_at: item.published_at ? new Date(item.published_at).toISOString() : '',
   is_published: item.is_published !== false,
   sort_order: item.sort_order ?? 0,
+  audience: item.audience ?? '',
+  coming_soon: item.coming_soon === true,
 });
 
 export const toContentInput = (
@@ -93,4 +114,7 @@ export const toContentInput = (
   published_at: values.published_at ? new Date(values.published_at).toISOString() : null,
   is_published: values.is_published,
   sort_order: Number(values.sort_order) || 0,
+  // Only a solution is filed under an audience or flagged coming soon.
+  audience: type === 'SOLUTIONS' && values.audience ? values.audience : null,
+  coming_soon: type === 'SOLUTIONS' && values.coming_soon,
 });

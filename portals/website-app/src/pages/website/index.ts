@@ -2,6 +2,7 @@ export { DashboardPage } from './dashboard';
 export { CareersPage } from './careers';
 export { NewsroomPage } from './newsroom';
 export { BlogPage } from './blog';
+export { SolutionsPage } from './solutions';
 export { NewsletterPage } from './newsletter';
 export { ContactSubmissionsPage } from './contact-submissions';
 export { default as JobApplicationsPage } from './job-applications';

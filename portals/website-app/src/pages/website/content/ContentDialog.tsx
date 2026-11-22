@@ -1,7 +1,8 @@
 import { Dialog, DialogContent, DialogTitle } from '@mui/material';
 import { WebsiteContentForm } from './website-content';
 import type { WebsiteContentInput } from './website-content';
-import { CONTENT_LABELS, type WebsiteContentItem, type WebsitePageType } from './queries';
+import { useTranslation } from '@duncit/shell';
+import { contentLabels, type WebsiteContentItem, type WebsitePageType } from './queries';
 
 interface Props {
   open: boolean;
@@ -22,7 +23,8 @@ export default function ContentDialog({
   onClose,
   onSubmit,
 }: Readonly<Props>) {
-  const label = CONTENT_LABELS[type].title;
+  const { t } = useTranslation();
+  const label = contentLabels(t, type).title;
   return (
     <Dialog open={open} onClose={submitting ? undefined : onClose} fullWidth maxWidth="md">
       <DialogTitle>{item ? `Edit ${label} entry` : `New ${label} entry`}</DialogTitle>

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   websiteContentSchema,
+  websiteContentSchemaFor,
   toContentInput,
   type WebsiteContentFormValues,
 } from './website-content.types';
@@ -17,6 +18,8 @@ const base: WebsiteContentFormValues = {
   published_at: '',
   is_published: false,
   sort_order: 0,
+  audience: '',
+  coming_soon: false,
 };
 
 const firstError = (result: ReturnType<typeof websiteContentSchema.safeParse>) =>
@@ -68,5 +71,41 @@ describe('toContentInput', () => {
     const iso = '2026-01-15T10:30:00.000Z';
     const input = toContentInput({ ...base, published_at: iso }, 'NEWSROOM');
     expect(input.published_at).toBe(iso);
+  });
+});
+
+describe('websiteContentSchemaFor', () => {
+  // The surface's translator; echoing keys keeps the messages assertable.
+  const t = (key: string) => key;
+  const messages = (type: Parameters<typeof websiteContentSchemaFor>[0], values: WebsiteContentFormValues) => {
+    const result = websiteContentSchemaFor(type, t).safeParse(values);
+    return result.success ? [] : result.error.issues.map((issue) => issue.message);
+  };
+
+  it('requires an audience and a category on a solution', () => {
+    expect(messages('SOLUTIONS', base)).toEqual(['websiteApp.form.audienceRequired', 'websiteApp.form.categoryRequired']);
+    expect(messages('SOLUTIONS', { ...base, audience: 'VENUE', category: 'Cafe & Restaurant Automation' })).toEqual([]);
+  });
+
+  it('asks neither of the other page types', () => {
+    expect(messages('BLOG', base)).toEqual([]);
+    expect(messages('CAREERS', base)).toEqual([]);
+  });
+
+  it('refuses an audience that is not one of the five', () => {
+    const result = websiteContentSchema.safeParse({ ...base, audience: 'GUEST' });
+    expect(result.success).toBe(false);
+  });
+});
+
+describe('toContentInput · Solutions', () => {
+  it('sends the audience and coming-soon flag for a solution only', () => {
+    const values = { ...base, audience: 'HOST' as const, coming_soon: true, category: 'Hosting' };
+    expect(toContentInput(values, 'SOLUTIONS')).toMatchObject({ audience: 'HOST', coming_soon: true });
+    expect(toContentInput(values, 'BLOG')).toMatchObject({ audience: null, coming_soon: false });
+  });
+
+  it('sends no audience for a solution saved without one', () => {
+    expect(toContentInput(base, 'SOLUTIONS').audience).toBeNull();
   });
 });

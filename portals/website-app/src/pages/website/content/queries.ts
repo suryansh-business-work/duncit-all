@@ -1,22 +1,13 @@
 import { gql } from '@apollo/client';
+import type { SolutionAudience } from '@duncit/utils';
 
-export type WebsitePageType = 'CAREERS' | 'NEWSROOM' | 'BLOG';
+export type WebsitePageType = 'CAREERS' | 'NEWSROOM' | 'BLOG' | 'SOLUTIONS';
 
-/** Per-type page copy so each nav item reuses one content manager. */
-export const CONTENT_LABELS: Record<WebsitePageType, { title: string; description: string }> = {
-  CAREERS: {
-    title: 'Career',
-    description: 'Manage career and job posts published on duncit.com.',
-  },
-  NEWSROOM: {
-    title: 'Newsroom',
-    description: 'Manage newsroom and press entries published on duncit.com.',
-  },
-  BLOG: {
-    title: 'Blog',
-    description: 'Manage blog articles published on duncit.com.',
-  },
-};
+/** Per-type page copy (websiteApp.contentTypes.*) so each nav item reuses one content manager. */
+export const contentLabels = (t: (key: string) => string, type: WebsitePageType) => ({
+  title: t(`websiteApp.contentTypes.${type}.title`),
+  description: t(`websiteApp.contentTypes.${type}.description`),
+});
 
 export interface WebsiteContentItem {
   id: string;
@@ -32,6 +23,10 @@ export interface WebsiteContentItem {
   published_at: string | null;
   is_published: boolean;
   sort_order: number;
+  /** SOLUTIONS only: the duncit.com/solutions section it is listed under; null otherwise. */
+  audience: SolutionAudience | null;
+  /** SOLUTIONS only: announced, not on sale yet. */
+  coming_soon: boolean;
   /** Selected by CONTENT_TABLE only (Created filter column); absent on WEBSITE_CONTENT rows. */
   created_at?: string;
   updated_at: string;
@@ -53,6 +48,8 @@ export const WEBSITE_CONTENT = gql`
       published_at
       is_published
       sort_order
+      audience
+      coming_soon
       updated_at
     }
   }
@@ -74,6 +71,8 @@ const CONTENT_ROW_FIELDS = gql`
     published_at
     is_published
     sort_order
+    audience
+    coming_soon
     created_at
     updated_at
   }

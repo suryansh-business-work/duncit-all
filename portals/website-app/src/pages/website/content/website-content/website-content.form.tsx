@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useForm, Controller, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, DialogActions, FormControlLabel, Stack, Switch } from '@mui/material';
@@ -10,11 +11,12 @@ import {
   blankValues,
   toContentInput,
   toFormValues,
-  websiteContentSchema,
+  websiteContentSchemaFor,
   type WebsiteContentFormValues,
   type WebsiteContentInput,
 } from './website-content.types';
 import { useTranslation } from '@duncit/shell';
+import SolutionFields from './SolutionFields';
 
 interface Props {
   type: WebsitePageType;
@@ -27,9 +29,11 @@ interface Props {
 
 export default function WebsiteContentForm({ type, item, submitting, errorMessage, onSubmit, onCancel }: Readonly<Props>) {
   const { t } = useTranslation();
+  const isSolution = type === 'SOLUTIONS';
+  const schema = useMemo(() => websiteContentSchemaFor(type, t), [type, t]);
   const { control, handleSubmit } = useForm<WebsiteContentFormValues, any, WebsiteContentFormValues>({
     defaultValues: item ? toFormValues(item) : blankValues(),
-    resolver: zodResolver(websiteContentSchema) as unknown as Resolver<WebsiteContentFormValues, any, WebsiteContentFormValues>,
+    resolver: zodResolver(schema) as unknown as Resolver<WebsiteContentFormValues, any, WebsiteContentFormValues>,
     mode: 'onTouched',
   });
 
@@ -56,7 +60,13 @@ export default function WebsiteContentForm({ type, item, submitting, errorMessag
           hint="Leave blank to generate from the title."
         />
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-          <RhfTextField control={control} name="category" label={t('websiteApp.form.category')} />
+          <RhfTextField
+            control={control}
+            name="category"
+            label={t('websiteApp.form.category')}
+            required={isSolution}
+            hint={isSolution ? t('websiteApp.form.solutionCategoryHint') : undefined}
+          />
           <Controller
             control={control}
             name="published_at"
@@ -65,6 +75,7 @@ export default function WebsiteContentForm({ type, item, submitting, errorMessag
             )}
           />
         </Stack>
+        {isSolution && <SolutionFields control={control} />}
         <RhfTextField control={control} name="summary" label={t('websiteApp.form.summary')} multiline minRows={2} />
         <RhfTextField control={control} name="body" label={t('websiteApp.form.body')} multiline minRows={5} />
         <Controller

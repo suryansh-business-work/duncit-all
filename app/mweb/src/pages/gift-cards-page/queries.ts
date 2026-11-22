@@ -1,7 +1,8 @@
 import { gql } from '@apollo/client';
+import type { GiftCardDeliveryMode } from '@duncit/forms/schemas';
 
-/** The card's theme — SHOP is the global Pod Shop; the other three name one
- * category of that level. Decides the design, never where value is spent. */
+/** The card's theme. Cards bought before the catalogue carry a category theme;
+ * catalogue cards are SHOP-scoped and named by their design. */
 export type GiftCardScopeType = 'SHOP' | 'SUPER' | 'CATEGORY' | 'SUB';
 
 export type GiftCardStatus = 'ACTIVE' | 'REDEEMED' | 'EXPIRED';
@@ -11,7 +12,26 @@ export interface GiftCardSettings {
   min_amount: number;
   max_amount: number;
   validity_months: number;
+  max_quantity: number;
+  physical_enabled: boolean;
+  shipping_fee: number;
   updated_at: string;
+}
+
+/** The one design members buy (Loyalty > Gift Card Designs > default). */
+export interface GiftCardPublicDesign {
+  id: string;
+  name: string;
+  front_image_url: string;
+  back_image_url: string;
+}
+
+export interface GiftCardStorefront {
+  /** Null until the Loyalty team uploads a design — gift cards are then unavailable. */
+  design: GiftCardPublicDesign | null;
+  settings: GiftCardSettings;
+  physical_available: number;
+  currency_symbol: string;
 }
 
 export interface GiftCard {
@@ -22,10 +42,11 @@ export interface GiftCard {
   /** Snapshot of the category name — empty for SHOP cards (clients localize it). */
   scope_name: string;
   scope_image_url: string;
-  /** The category's uploaded card artwork, frozen at purchase. Empty means the
-   * category shipped none, and the gradient card renders instead. */
+  /** The card artwork, frozen at purchase. Empty means none, and the gradient card renders. */
   scope_image_front_url: string;
   scope_image_back_url: string;
+  /** The catalogue design's name — the card's title when set. */
+  design_name: string;
   initial_amount: number;
   balance: number;
   status: GiftCardStatus;
@@ -52,57 +73,46 @@ export interface GiftCardRedeemResult {
   card: GiftCard;
 }
 
-export interface GiftCardCategory {
-  id: string;
-  name: string;
-  slug: string;
-  icon: string | null;
-  level: 'SUPER' | 'CATEGORY' | 'SUB';
-  parent_id: string | null;
-  /** Admin-uploaded gift card faces for this category; empty when unset. */
-  gift_card_image_front: string;
-  gift_card_image_back: string;
-}
-
 /** What the buy tab hands the checkout page via router state. */
 export interface GiftCardSelection {
-  scope_type: GiftCardScopeType;
-  scope_category_id: string | null;
-  scope_name: string;
-  scope_image_url: string;
-  scope_image_front_url: string;
-  scope_image_back_url: string;
+  design_id: string;
+  design_name: string;
+  front_url: string;
+  back_url: string;
+  /** Face value of one card. */
   amount: number;
+  quantity: number;
+  delivery_mode: GiftCardDeliveryMode;
+  /** Charged once on a printed order; 0 for email. */
+  shipping_fee: number;
+  /** Digital only: sent to someone else. */
   gift: boolean;
   recipient_email: string;
   recipient_name: string;
   message: string;
 }
 
-export const GIFT_CARD_SETTINGS = gql`
-  query PublicGiftCardSettings {
-    publicGiftCardSettings {
-      denominations
-      min_amount
-      max_amount
-      validity_months
-      updated_at
-    }
-  }
-`;
-
-/** The category tree powering the theme picker — filtered by level client-side. */
-export const GIFT_CARD_CATEGORIES = gql`
-  query GiftCardCategories {
-    categories {
-      id
-      name
-      slug
-      icon
-      level
-      parent_id
-      gift_card_image_front
-      gift_card_image_back
+export const GIFT_CARD_STOREFRONT = gql`
+  query GiftCardStorefront {
+    giftCardStorefront {
+      design {
+        id
+        name
+        front_image_url
+        back_image_url
+      }
+      settings {
+        denominations
+        min_amount
+        max_amount
+        validity_months
+        max_quantity
+        physical_enabled
+        shipping_fee
+        updated_at
+      }
+      physical_available
+      currency_symbol
     }
   }
 `;
@@ -119,6 +129,7 @@ export const MY_GIFT_CARDS = gql`
         scope_image_url
         scope_image_front_url
         scope_image_back_url
+        design_name
         initial_amount
         balance
         status
@@ -140,6 +151,7 @@ export const MY_GIFT_CARDS = gql`
         scope_image_url
         scope_image_front_url
         scope_image_back_url
+        design_name
         initial_amount
         balance
         status
@@ -167,6 +179,7 @@ export const GIFT_CARD_BY_CODE = gql`
       scope_image_url
       scope_image_front_url
       scope_image_back_url
+      design_name
       initial_amount
       balance
       status

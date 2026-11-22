@@ -12,6 +12,8 @@ interface GiftCardSuccessCardProps {
   payment: CheckoutPaymentRow;
   gift: boolean;
   recipientEmail: string;
+  /** Printed cards: they are printed and sent by courier, tracked in Orders. */
+  printed?: boolean;
 }
 
 /** The success mark: a green check on the tonal green disc. */
@@ -27,14 +29,15 @@ const CHECK_DISC_SX = {
   '& svg': { fontSize: 44 },
 } as const;
 
-/** Purchase confirmation — the card and its code have gone out by email; the
- * gift body says to whose inbox. */
-export default function GiftCardSuccessCard({ payment, gift, recipientEmail }: Readonly<GiftCardSuccessCardProps>) {
+/** Purchase confirmation — emailed cards say to whose inbox; printed cards say
+ * they are on their way to being printed and shipped, tracked in Orders. */
+export default function GiftCardSuccessCard({ payment, gift, recipientEmail, printed = false }: Readonly<GiftCardSuccessCardProps>) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const body = gift
+  const emailBody = gift
     ? t('mweb.giftCards.successGiftBody', { vars: { email: recipientEmail } })
     : t('mweb.giftCards.successSelfBody');
+  const body = printed ? t('mweb.giftCards.successPrintedBody') : emailBody;
 
   return (
     <Stack data-testid="gift-card-purchase-success" spacing={2.5} sx={{ maxWidth: 540, mx: 'auto', py: 3, textAlign: 'center' }}>
@@ -69,14 +72,25 @@ export default function GiftCardSuccessCard({ payment, gift, recipientEmail }: R
       </Card>
       <Stack spacing={1.25}>
         <DuncitButton
-          data-testid="gift-card-success-my-cards"
+          data-testid="gift-card-success-orders"
           variant="contained"
           size="large"
           fullWidth
-          onClick={() => navigate('/gift-cards?selectedtab=mycards', { replace: true })}
+          onClick={() => navigate('/gift-cards?selectedtab=orders', { replace: true })}
         >
-          {t('mweb.giftCards.viewMyCards')}
+          {t('mweb.giftCards.viewMyOrders')}
         </DuncitButton>
+        {!printed && (
+          <DuncitButton
+            data-testid="gift-card-success-my-cards"
+            variant="outlined"
+            size="large"
+            fullWidth
+            onClick={() => navigate('/gift-cards?selectedtab=mycards', { replace: true })}
+          >
+            {t('mweb.giftCards.viewMyCards')}
+          </DuncitButton>
+        )}
         <DuncitButton data-testid="gift-card-success-home" variant="outlined" size="large" fullWidth onClick={() => navigate('/')}>
           {t('mweb.checkout.home')}
         </DuncitButton>

@@ -1,5 +1,5 @@
 import { Navigate, Route } from 'react-router';
-import { AccountHealthPage, AllTicketsPage, AskDuncitPage, BadgesPage, BookingPage, CallbackPage, CommPreferencePage, DuncitCoinPage, FaqsPage, FeedbackPage, LearningsPage, GiftCardCheckoutPage, GiftCardClaimPage, GiftCardRedeemPage, GiftCardsPage, GrievancePage, LeaderboardPage, LiveTicketsPage, MailPreferencePage, MembershipPage, PodHistoryDetailsPage, PodHistoryPage, PodIdeasPage, PodPlansPage, PolicyPage, PrivacyPage, ReferralPage, SignupReferralPage, SignupSurveyPage, SmsPreferencePage, SosPage, SupportChatPage, SupportHubPage, SupportTicketsPage, TicketDetailPage, VenueHealthPage, WhatsAppPreferencePage } from './lazyPages';
+import { AccountHealthPage, AllTicketsPage, AskDuncitPage, BadgesPage, BookingPage, CallbackPage, CommPreferencePage, DuncitCoinPage, FaqsPage, FeedbackPage, LearningsPage, GiftCardCheckoutPage, GiftCardClaimPage, GiftCardOrderPage, GiftCardRedeemPage, GiftCardsPage, GrievancePage, LeaderboardPage, LiveTicketsPage, MailPreferencePage, MembershipPage, PodHistoryDetailsPage, PodHistoryPage, PodIdeasPage, PodPlansPage, PolicyPage, PrivacyPage, ReferralPage, SignupReferralPage, SignupSurveyPage, SmsPreferencePage, SosPage, SupportChatPage, SupportHubPage, SupportTicketsPage, TicketDetailPage, VenueHealthPage, WhatsAppPreferencePage } from './lazyPages';
 import { TUTORIALS_PATH } from '@duncit/utils';
 import { withAuth } from './routeGuards';
 
@@ -21,6 +21,7 @@ export function accountRoutes() {
         <Route path="/gift-cards" element={withAuth(<GiftCardsPage />)} />
         <Route path="/gift-cards/checkout" element={withAuth(<GiftCardCheckoutPage />)} />
         <Route path="/gift-cards/redeem" element={withAuth(<GiftCardRedeemPage />)} />
+        <Route path="/gift-cards/orders/:orderNo" element={withAuth(<GiftCardOrderPage />)} />
         {/* The shared claim link — singular, like /club/:clubSlug. Auth-gated,
             so an unread link parks in `?redirect` and opens after sign-in. */}
         <Route path="/gift-card/:code" element={withAuth(<GiftCardClaimPage />)} />

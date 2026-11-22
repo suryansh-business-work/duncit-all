@@ -1,131 +1,41 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router';
 import { useQuery } from '@apollo/client/react';
 import { Alert, CircularProgress, Stack } from '@mui/material';
-import { DuncitButton } from '@duncit/buttons';
-import { EMAIL } from '@duncit/regex';
-import { PUBLIC_FINANCE } from '../checkout-page/queries';
 import { useTranslation } from '../../i18n/useTranslation';
-import ThemePicker from './ThemePicker';
-import AmountPicker from './AmountPicker';
-import GiftRecipientFields from './GiftRecipientFields';
 import HowItWorksCard from './HowItWorksCard';
-import {
-  GIFT_CARD_CATEGORIES,
-  GIFT_CARD_SETTINGS,
-  type GiftCardCategory,
-  type GiftCardScopeType,
-  type GiftCardSelection,
-  type GiftCardSettings,
-} from './queries';
+import BuyForm from './BuyForm';
+import { GIFT_CARD_STOREFRONT, type GiftCardStorefront } from './queries';
 
-/** The buy flow: theme → amount → who it's for → checkout. Amounts and limits
- * come from Finance > Gift Cards; themes come from the live category tree. */
+/**
+ * The buy flow: ONE gift card — the design the Loyalty team made the default —
+ * an amount, how many, email or a printed card by courier, and who it is for.
+ * Amounts, limits, the delivery fee and printed stock all come from the live
+ * policy (Loyalty > Gift Card Settings), the same one the server enforces.
+ */
 export default function BuyTab() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
-  const { data: settingsData, loading: settingsLoading, error: settingsError } = useQuery<{
-    publicGiftCardSettings: GiftCardSettings;
-  }>(GIFT_CARD_SETTINGS, { fetchPolicy: 'cache-and-network' });
-  const { data: categoriesData, error: categoriesError } = useQuery<{ categories: GiftCardCategory[] }>(
-    GIFT_CARD_CATEGORIES,
-    { fetchPolicy: 'cache-first' },
-  );
-  const { data: financeData } = useQuery<any>(PUBLIC_FINANCE);
-
-  const [scopeType, setScopeType] = useState<GiftCardScopeType>('SHOP');
-  const [scopeCategory, setScopeCategory] = useState<GiftCardCategory | null>(null);
-  const [amountStr, setAmountStr] = useState('');
-  const [gift, setGift] = useState(false);
-  const [recipientEmail, setRecipientEmail] = useState('');
-  const [recipientName, setRecipientName] = useState('');
-  const [message, setMessage] = useState('');
-
-  const settings = settingsData?.publicGiftCardSettings ?? null;
-  const categories = categoriesData?.categories ?? [];
-  const currencySymbol = financeData?.publicFinanceSettings?.currency_symbol ?? '₹';
-
-  const amount = Number.parseInt(amountStr, 10);
-  const amountValid =
-    !!settings && Number.isFinite(amount) && amount >= settings.min_amount && amount <= settings.max_amount;
-  const scopeValid = scopeType === 'SHOP' || !!scopeCategory;
-  const emailValid = EMAIL.test(recipientEmail.trim());
-  const emailError = gift && recipientEmail.trim() !== '' && !emailValid;
-  const canContinue = scopeValid && amountValid && (!gift || emailValid);
-  // The picker previews the chosen amount; before one is valid it shows the
-  // first configured denomination so the cards never read ₹NaN.
-  const previewAmount = amountValid ? amount : settings?.denominations[0] ?? settings?.min_amount ?? 0;
-
-  const onGroup = (group: GiftCardScopeType) => {
-    setScopeType(group);
-    setScopeCategory(null);
-  };
-
-  // Continue stays disabled until the scope is valid, so a press always has what it needs.
-  const onContinue = () => {
-    const category = scopeType === 'SHOP' ? null : scopeCategory;
-    const selection: GiftCardSelection = {
-      scope_type: scopeType,
-      scope_category_id: category?.id ?? null,
-      scope_name: category?.name ?? '',
-      scope_image_url: category?.icon ?? '',
-      scope_image_front_url: category?.gift_card_image_front ?? '',
-      scope_image_back_url: category?.gift_card_image_back ?? '',
-      amount,
-      gift,
-      recipient_email: gift ? recipientEmail.trim() : '',
-      recipient_name: gift ? recipientName.trim() : '',
-      message: gift ? message.trim() : '',
-    };
-    navigate('/gift-cards/checkout', { state: selection });
-  };
+  const { data, loading, error } = useQuery<{ giftCardStorefront: GiftCardStorefront }>(GIFT_CARD_STOREFRONT, {
+    fetchPolicy: 'cache-and-network',
+  });
+  const store = data?.giftCardStorefront ?? null;
 
   return (
     <Stack data-testid="gift-cards-buy-tab" spacing={2}>
-      {(settingsError || categoriesError) && <Alert data-testid="gift-cards-buy-error" severity="error">{t('mweb.giftCards.loadError')}</Alert>}
-      {settingsLoading && !settings && (
-        <Stack
-          data-testid="gift-cards-buy-loading"
-          sx={{
-            alignItems: "center",
-            py: 4
-          }}>
+      {error && !store && (
+        <Alert data-testid="gift-cards-buy-error" severity="error">
+          {t('mweb.giftCards.loadError')}
+        </Alert>
+      )}
+      {loading && !store && (
+        <Stack data-testid="gift-cards-buy-loading" sx={{ alignItems: 'center', py: 4 }}>
           <CircularProgress size={24} aria-label={t('mweb.a11y.loading')} />
         </Stack>
       )}
-      {settings && (
-        <>
-          <ThemePicker
-            categories={categories}
-            scopeType={scopeType}
-            scopeCategoryId={scopeCategory?.id ?? null}
-            amount={previewAmount}
-            currencySymbol={currencySymbol}
-            onGroup={onGroup}
-            onPick={setScopeCategory}
-          />
-          <AmountPicker
-            settings={settings}
-            currencySymbol={currencySymbol}
-            amountStr={amountStr}
-            onChange={setAmountStr}
-          />
-          <GiftRecipientFields
-            gift={gift}
-            onGift={setGift}
-            email={recipientEmail}
-            onEmail={setRecipientEmail}
-            emailError={emailError}
-            name={recipientName}
-            onName={setRecipientName}
-            message={message}
-            onMessage={setMessage}
-          />
-          <DuncitButton data-testid="gift-card-continue" variant="contained" size="large" fullWidth disabled={!canContinue} onClick={onContinue}>
-            {t('mweb.giftCards.continueCta')}
-          </DuncitButton>
-        </>
+      {store && !store.design && (
+        <Alert data-testid="gift-cards-unavailable" severity="info">
+          {t('mweb.giftCards.unavailable')}
+        </Alert>
       )}
+      {store?.design && <BuyForm store={store} design={store.design} />}
       <HowItWorksCard />
     </Stack>
   );

@@ -1,8 +1,9 @@
 import { useQuery } from '@apollo/client/react';
 import { Navigate, useLocation, useNavigate } from 'react-router';
-import { Alert, Box, Card, Divider, Stack, Typography } from '@mui/material';
+import { Alert, Box, Card, Stack, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { formatMoney } from '@duncit/utils';
+import { giftCardPurchaseTotals } from '@duncit/forms/schemas';
 import PageHeader from '../../components/PageHeader';
 import GatewayChip from '../checkout-page/GatewayChip';
 import ProcessingBackdrop from '../checkout-page/ProcessingBackdrop';
@@ -13,27 +14,15 @@ import { PaymentFailureDialog, usePaymentFailure } from '../../components/paymen
 import { CheckoutRequirementsCard, useCheckoutEligibility } from '../../components/checkout-gate';
 import { useTranslation } from '../../i18n/useTranslation';
 import GiftCardVisual from '../gift-cards-page/GiftCardVisual';
+import OrderTotalCard from '../gift-cards-page/OrderTotalCard';
 import type { GiftCardSelection } from '../gift-cards-page/queries';
 import GiftCardSuccessCard from './GiftCardSuccessCard';
+import DeliveryAddressCard, { useDeliveryAddressForm } from './DeliveryAddressCard';
 import { useGiftCardPayment } from './useGiftCardPayment';
 
-/** A summary row: label muted, value ink; the total row is 700 and ink. */
-function SummaryRow({ label, value, bold = false, testId }: Readonly<{ label: string; value: string; bold?: boolean; testId: string }>) {
-  const size = bold ? '1rem' : '0.875rem';
-  return (
-    <Stack data-testid={testId} direction="row" spacing={1} sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
-      <Typography sx={{ fontSize: size, fontWeight: bold ? 700 : 500, color: bold ? 'text.primary' : 'text.secondary' }}>
-        {label}
-      </Typography>
-      <Typography data-testid={`${testId}-value`} noWrap sx={{ fontSize: size, fontWeight: bold ? 700 : 600, textAlign: 'right', minWidth: 0 }}>
-        {value}
-      </Typography>
-    </Stack>
-  );
-}
-
-/** The gift card's own checkout — face value only, no coupons, coins or fees.
- * Contact comes from the profile; the card is created only on payment success. */
+/** The gift card's own checkout — every card at face value, plus the delivery fee
+ * once on a printed order; no coupons or coins. Contact comes from the profile;
+ * the cards are created only on payment success. */
 export default function GiftCardCheckoutPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -41,32 +30,41 @@ export default function GiftCardCheckoutPage() {
   const selection = (location.state as GiftCardSelection | null) ?? null;
   const { data: financeData } = useQuery<any>(PUBLIC_FINANCE);
   const currencySymbol = financeData?.publicFinanceSettings?.currency_symbol ?? '₹';
+  const totals = giftCardPurchaseTotals(
+    {
+      amount: String(selection?.amount ?? 0),
+      quantity: String(selection?.quantity ?? 1),
+      delivery_mode: selection?.delivery_mode ?? 'DIGITAL',
+    },
+    selection?.shipping_fee ?? 0
+  );
   // What an agent needs if a payment times out and a ticket has to be opened.
   const failure = usePaymentFailure(() => ({
     description: t('mweb.giftCards.checkoutTitle'),
-    amount: selection?.amount ?? 0,
+    amount: totals.total,
     currencySymbol,
   }));
   const payment = useGiftCardPayment({ onPaymentFailure: failure.report });
+  const deliveryForm = useDeliveryAddressForm(payment.me);
   // Same three account facts the server checks before it will take money.
   // Must sit with the other hooks: the early returns below would otherwise
   // skip it and change the hook order between renders.
   const eligibility = useCheckoutEligibility();
 
   // Reached directly (refresh, pasted URL) — there is nothing to charge yet.
-  if (!selection) return <Navigate to="/gift-cards" replace />;
+  if (!selection?.design_id) return <Navigate to="/gift-cards" replace />;
+  const printed = selection.delivery_mode === 'PHYSICAL';
   if (payment.success) {
     return (
-      <GiftCardSuccessCard payment={payment.success} gift={selection.gift} recipientEmail={selection.recipient_email} />
+      <GiftCardSuccessCard
+        payment={payment.success}
+        gift={selection.gift}
+        recipientEmail={selection.recipient_email}
+        printed={printed}
+      />
     );
   }
 
-  const amountLabel = formatMoney(selection.amount, { symbol: currencySymbol });
-  const shopTheme = t('mweb.giftCards.shopTheme');
-  const themeValue = selection.scope_type === 'SHOP' ? shopTheme : selection.scope_name;
-  const recipientValue = selection.gift
-    ? selection.recipient_name || selection.recipient_email
-    : t('mweb.giftCards.checkoutSelf');
   const { me, billingForm } = payment;
   const contact: CheckoutContact | null = me
     ? {
@@ -76,6 +74,15 @@ export default function GiftCardCheckoutPage() {
         phoneNumber: me.phone_number ?? '',
       }
     : null;
+  const forWhom = printed
+    ? t('mweb.giftCards.checkoutPrinted')
+    : selection.recipient_email || t('mweb.giftCards.checkoutSelf');
+
+  // A printed order needs a courier-ready address before the billing form submits.
+  const onPay = billingForm.handleSubmit(async (values) => {
+    if (printed && !(await deliveryForm.trigger())) return;
+    await payment.pay(selection, values, printed ? deliveryForm.getValues() : null);
+  });
 
   return (
     <Box data-testid="gift-card-checkout-screen" sx={{ maxWidth: 560, mx: 'auto', py: 0.5 }}>
@@ -87,27 +94,24 @@ export default function GiftCardCheckoutPage() {
           right={<GatewayChip finance={payment.finance} />}
         />
         <GiftCardVisual
-          scopeType={selection.scope_type}
-          scopeCategoryId={selection.scope_category_id}
-          scopeName={selection.scope_name}
-          scopeImageUrl={selection.scope_image_url}
-          artworkFrontUrl={selection.scope_image_front_url}
-          artworkBackUrl={selection.scope_image_back_url}
+          scopeType="SHOP"
+          scopeCategoryId={null}
+          scopeName=""
+          designName={selection.design_name}
+          scopeImageUrl={selection.front_url}
+          artworkFrontUrl={selection.front_url}
+          artworkBackUrl={selection.back_url}
           amount={selection.amount}
           currencySymbol={currencySymbol}
         />
-        <Card sx={{ p: 2 }}>
-          <Stack spacing={1.25}>
-            <SummaryRow testId="gift-card-checkout-theme" label={t('mweb.giftCards.checkoutTheme')} value={themeValue} />
-            <SummaryRow testId="gift-card-checkout-amount" label={t('mweb.giftCards.checkoutAmount')} value={amountLabel} />
-            <SummaryRow testId="gift-card-checkout-recipient" label={t('mweb.giftCards.checkoutRecipient')} value={recipientValue} />
-            <Divider />
-            <SummaryRow testId="gift-card-checkout-total" bold label={t('mweb.giftCards.checkoutTotal')} value={amountLabel} />
-          </Stack>
-          <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary', mt: 1.5 }}>
-            {t('mweb.giftCards.checkoutNote')}
-          </Typography>
-        </Card>
+        <Typography data-testid="gift-card-checkout-recipient" variant="body2" sx={{ color: 'text.secondary' }}>
+          {t('mweb.giftCards.checkoutFor', { vars: { who: forWhom } })}
+        </Typography>
+        <OrderTotalCard totals={totals} currencySymbol={currencySymbol} />
+        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+          {printed ? t('mweb.giftCards.checkoutNotePrinted') : t('mweb.giftCards.checkoutNote')}
+        </Typography>
+        {printed && <DeliveryAddressCard control={deliveryForm.control} />}
         <Card sx={{ p: 2 }}>
           {/* Contact (read-only) + the billing address and GST every invoice needs. */}
           <CheckoutContactFields
@@ -131,15 +135,10 @@ export default function GiftCardCheckoutPage() {
           variant="contained"
           size="large"
           fullWidth
-          disabled={
-            payment.submitting ||
-            payment.financeLoading ||
-            !me?.email ||
-            eligibility.missing.length > 0
-          }
-          onClick={billingForm.handleSubmit((values) => payment.pay(selection, values))}
+          disabled={payment.submitting || payment.financeLoading || !me?.email || eligibility.missing.length > 0}
+          onClick={onPay}
         >
-          {t('mweb.giftCards.payCta', { vars: { amount: amountLabel } })}
+          {t('mweb.giftCards.payCta', { vars: { amount: formatMoney(totals.total, { symbol: currencySymbol }) } })}
         </DuncitButton>
       </Stack>
       <PaymentFailureDialog

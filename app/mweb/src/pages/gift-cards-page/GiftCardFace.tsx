@@ -15,6 +15,8 @@ export interface GiftCardFaceProps {
   scopeCategoryId: string | null;
   /** Snapshot name — empty for SHOP cards, which localize their own title. */
   scopeName: string;
+  /** The catalogue design's name — when set, it is the card's title. */
+  designName?: string;
   /** The small scope icon, drawn only on a gradient front (artwork replaces it). */
   scopeImageUrl: string;
   /** This face's uploaded artwork; empty falls back to the gradient design. */
@@ -45,6 +47,7 @@ export default function GiftCardFace({
   scopeType,
   scopeCategoryId,
   scopeName,
+  designName,
   scopeImageUrl,
   artworkUrl,
   amount,
@@ -58,7 +61,8 @@ export default function GiftCardFace({
   const [iconFailed, setIconFailed] = useState(false);
   // SHOP cards carry no category, so the scope type itself seeds the palette.
   const gradient = giftCardGradient(scopeCategoryId || scopeName || scopeType);
-  const title = scopeType === 'SHOP' ? t('mweb.giftCards.shopTheme') : scopeName;
+  const themeTitle = scopeType === 'SHOP' ? t('mweb.giftCards.shopTheme') : scopeName;
+  const title = designName || themeTitle;
   const showArtwork = !!artworkUrl && !artworkFailed;
   const showIcon = !showArtwork && !!scopeImageUrl && !iconFailed;
   const isFront = side === 'FRONT';

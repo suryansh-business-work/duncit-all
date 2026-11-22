@@ -12,6 +12,8 @@ interface GiftCardVisualProps {
   scopeCategoryId: string | null;
   /** Snapshot name — empty for SHOP cards, which localize their own title. */
   scopeName: string;
+  /** The catalogue design's name — the card's title when set. */
+  designName?: string;
   scopeImageUrl: string;
   /** Admin-uploaded card faces; empty on both keeps the gradient card flat. */
   artworkFrontUrl?: string;
@@ -40,6 +42,7 @@ export default function GiftCardVisual({
   scopeType,
   scopeCategoryId,
   scopeName,
+  designName,
   scopeImageUrl,
   artworkFrontUrl,
   artworkBackUrl,
@@ -59,6 +62,7 @@ export default function GiftCardVisual({
     scopeType,
     scopeCategoryId,
     scopeName,
+    designName,
     scopeImageUrl,
     amount,
     currencySymbol,

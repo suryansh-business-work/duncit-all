@@ -890,6 +890,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       emailValidations: 'Email Validations',
       emailTemplateSettings: 'Settings',
       employeeExpenses: 'Employee Expenses',
+      employeeTargets: 'Employee Targets',
       expenseSettings: 'Expense Settings',
       expenses: 'Expenses',
       externalLinks: 'External Links',
@@ -963,6 +964,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       mwebUploadSetting: 'mWeb Upload Setting',
       myAds: 'My Ads',
       myExpenses: 'My Expenses',
+      myTargets: 'My Targets',
       navigation: 'Navigation',
       newsletterSubmission: 'Newsletter Submission',
       newsroom: 'Newsroom',
@@ -999,6 +1001,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       partnerFaqs: 'Partner FAQs',
       partners: 'Partners',
       paymentLogs: 'Payment Logs',
+      failedPayments: 'Failed Payments',
       // Finance keeps the two shops apart: each group holds that shop's own
       // payment log and order-level refunds. Round Offs spans every checkout.
       roundOffs: 'Round Offs',
@@ -3622,6 +3625,8 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       // so it folds away rather than eating the height the thread needs.
       detailsShow: 'Show ticket details',
       detailsHide: 'Hide ticket details',
+      // A payment claim ("money deducted, no booking") links the payment it is about.
+      paymentId: 'Linked payment',
     },
   },
 };

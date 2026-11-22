@@ -90,7 +90,39 @@ export const settingsTypeDefs = gql`
     venue_offer_max_counters: Int!
     "Minimum Advance Days for Pod Creation: a host's new pod must start at least this many calendar days after today (1-30). A host's own override wins over it."
     pod_min_advance_days: Int!
+    "Club Admin host engagement: days without a completed pod before a host is flagged inactive (1-90, default 14)."
+    host_inactivity_days: Int!
+    "Completed pods per calendar month (admin time zone) that score a host 100%; fewer scores proportionally less (1-100, default 8)."
+    host_monthly_pod_target: Int!
+    "The engagement statuses a club admin files a host under, in display order. Keys are permanent; labels are editable."
+    host_engagement_statuses: [HostEngagementStatus!]!
+    "Monthly host performance messages (WhatsApp + email) on or off. Off by default."
+    host_performance_notify_enabled: Boolean!
+    "Day of the month (1-28, admin time zone) the monthly messages go out for the month before."
+    host_performance_notify_day: Int!
+    "Send each host their own monthly target, pods and score."
+    host_performance_notify_hosts: Boolean!
+    "Send each club admin the hosts who are inactive or below the threshold."
+    host_performance_notify_club_admins: Boolean!
+    "A host scoring below this percent of the target is underperforming (1-100; 100 = any miss)."
+    host_underperform_threshold_pct: Int!
     updated_at: String
+  }
+
+  "One engagement status a club admin can file a host under (Pod Settings)."
+  type HostEngagementStatus {
+    "Permanent identity, e.g. NOT_CONTACTED. Never changes once saved."
+    key: String!
+    label: String!
+    "Inactive statuses stay readable on hosts already filed under them but cannot be picked."
+    is_active: Boolean!
+  }
+
+  "A row of the engagement status editor. Omit key to add a new status (the server derives it from the label)."
+  input HostEngagementStatusInput {
+    key: String
+    label: String!
+    is_active: Boolean!
   }
 
   type PublicAppSettings {
@@ -224,6 +256,19 @@ export const settingsTypeDefs = gql`
     venue_offer_max_counters: Int
     "Minimum Advance Days for Pod Creation, 1-30 (an out-of-range number is held to the nearest end)."
     pod_min_advance_days: Int
+    "Days without a completed pod before a host is inactive, 1-90 (held to the nearest end)."
+    host_inactivity_days: Int
+    "Monthly completed-pod target per host, 1-100 (held to the nearest end)."
+    host_monthly_pod_target: Int
+    "The whole status list in display order. A stored key left out is kept, switched off; at least one must stay active."
+    host_engagement_statuses: [HostEngagementStatusInput!]
+    host_performance_notify_enabled: Boolean
+    "1-28 (held to the nearest end)."
+    host_performance_notify_day: Int
+    host_performance_notify_hosts: Boolean
+    host_performance_notify_club_admins: Boolean
+    "1-100 (held to the nearest end)."
+    host_underperform_threshold_pct: Int
   }
 
   type FeatureFlag {

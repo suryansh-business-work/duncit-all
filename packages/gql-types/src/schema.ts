@@ -806,6 +806,267 @@ export type AiMonitoringSettings = {
   image_scan_model: Scalars['String']['output'];
 };
 
+/** One recent OpenAI call. Never the prompt or the answer — open the log for those. */
+export type AiOverviewActivity = {
+  __typename?: 'AiOverviewActivity';
+  /** USD the call cost. */
+  cost_usd: Scalars['Float']['output'];
+  /** ISO timestamp of the call. */
+  created_at: Scalars['String']['output'];
+  /** How long the call took, in milliseconds. */
+  duration_ms: Scalars['Int']['output'];
+  /** Why a failed or skipped call produced nothing, trimmed to one line. */
+  error_message: Scalars['String']['output'];
+  /** Usage log id; openAiUsageLog opens the full row. */
+  id: Scalars['ID']['output'];
+  /** Model the call used; blank when it never left. */
+  model: Scalars['String']['output'];
+  /** Owning area. */
+  module: Scalars['String']['output'];
+  /** SUCCESS, FAILED or SKIPPED. */
+  status: Scalars['String']['output'];
+  /** Catalogue task key. */
+  task: Scalars['String']['output'];
+  /** Feature name the call was made for. */
+  task_label: Scalars['String']['output'];
+  /** Input plus output tokens. */
+  total_tokens: Scalars['Int']['output'];
+};
+
+/** Live automation runs started in the window, and the flows switched on. */
+export type AiOverviewAutomation = {
+  __typename?: 'AiOverviewAutomation';
+  /** Flows switched on (ACTIVE). */
+  active_flows: Scalars['Int']['output'];
+  /** Runs by channel, every channel listed. */
+  by_channel: Array<AiOverviewCount>;
+  /** Runs by state, every state listed. */
+  by_status: Array<AiOverviewCount>;
+  /** Runs that finished every step. */
+  completed: Scalars['Int']['output'];
+  /** Runs that stopped on an error. */
+  failed: Scalars['Int']['output'];
+  /** Runs still going: mid-step, or waiting on a reply or a delay. */
+  in_progress: Scalars['Int']['output'];
+  /** Live runs started (test runs excluded). */
+  runs: Scalars['Int']['output'];
+  /** Every flow, whatever its state. */
+  total_flows: Scalars['Int']['output'];
+};
+
+/**
+ * Each headline figure against the previous window of the same length, as a
+ * percent change to one decimal. Null when the previous window had none, so
+ * there is no baseline to compare with.
+ */
+export type AiOverviewChange = {
+  __typename?: 'AiOverviewChange';
+  /** Percent change in active users. */
+  active_users?: Maybe<Scalars['Float']['output']>;
+  /** Percent change in average response time. */
+  avg_duration_ms?: Maybe<Scalars['Float']['output']>;
+  /** Percent change in calls. */
+  calls?: Maybe<Scalars['Float']['output']>;
+  /** Percent change in cost. */
+  cost_usd?: Maybe<Scalars['Float']['output']>;
+  /** Change of the error rate in percentage points (current minus previous). */
+  error_rate_points?: Maybe<Scalars['Float']['output']>;
+  /** Percent change in tokens. */
+  total_tokens?: Maybe<Scalars['Float']['output']>;
+};
+
+/** How many rows have one value of a status, risk or channel. */
+export type AiOverviewCount = {
+  __typename?: 'AiOverviewCount';
+  /** How many rows have it. */
+  count: Scalars['Int']['output'];
+  /** The value as stored, e.g. HIGH, FAILED, WHATSAPP. */
+  key: Scalars['String']['output'];
+};
+
+/**
+ * The AI portal Dashboard over one window: OpenAI calls, tokens, cost, speed and
+ * failures against the previous window of the same length, daily trends, the
+ * models, features and areas behind them, the most active people, AI Monitoring
+ * image checks, automation runs, feature switches and the latest calls.
+ */
+export type AiOverviewDashboard = {
+  __typename?: 'AiOverviewDashboard';
+  /** Automation runs and flows. */
+  automation: AiOverviewAutomation;
+  /** AI features used in the window. */
+  by_feature: Array<AiOverviewFeature>;
+  /** Models by calls, busiest first (top 20). */
+  by_model: Array<AiOverviewModel>;
+  /** Owning areas of the features used, most expensive first. */
+  by_module: Array<AiOverviewModule>;
+  /** Change of each headline figure against the previous window. */
+  change: AiOverviewChange;
+  /** AI features switched on. */
+  features_enabled: Scalars['Int']['output'];
+  /** AI features in the catalogue. */
+  features_total: Scalars['Int']['output'];
+  /** ISO start of the window. */
+  from: Scalars['String']['output'];
+  /** ISO time this answer was computed. */
+  generated_at: Scalars['String']['output'];
+  /** AI Monitoring image checks. */
+  monitoring: AiOverviewMonitoring;
+  /** The previous window of the same length, for comparison. */
+  previous: AiOverviewTotals;
+  /** Days in the window (default 30, at most 90). */
+  range_days: Scalars['Int']['output'];
+  /** The ten latest OpenAI calls, newest first. */
+  recent: Array<AiOverviewActivity>;
+  /** One entry per day of the window, zero-filled. */
+  series: Array<AiOverviewDay>;
+  /** ISO end of the window (when it was read). */
+  to: Scalars['String']['output'];
+  /** The ten people whose actions made the most AI calls. */
+  top_users: Array<AiOverviewUser>;
+  /** This window's totals. */
+  totals: AiOverviewTotals;
+};
+
+/** One day of AI calls in the admin's time zone. Days with no calls are zeros, never missing. */
+export type AiOverviewDay = {
+  __typename?: 'AiOverviewDay';
+  /** Distinct people whose actions made a call that day. */
+  active_users: Scalars['Int']['output'];
+  /** Average call time that day, in milliseconds. */
+  avg_duration_ms: Scalars['Int']['output'];
+  /** Every call that day. */
+  calls: Scalars['Int']['output'];
+  /** USD spent that day. */
+  cost_usd: Scalars['Float']['output'];
+  /** yyyy-MM-dd */
+  date: Scalars['String']['output'];
+  /** Calls that failed that day. */
+  failed_calls: Scalars['Int']['output'];
+  /** Calls that never left that day. */
+  skipped_calls: Scalars['Int']['output'];
+  /** Calls answered that day. */
+  success_calls: Scalars['Int']['output'];
+  /** Input plus output tokens that day. */
+  total_tokens: Scalars['Int']['output'];
+};
+
+/** One AI feature (OpenAI task catalogue entry) that was used in the window. */
+export type AiOverviewFeature = {
+  __typename?: 'AiOverviewFeature';
+  /** Average call time of this feature, in milliseconds. */
+  avg_duration_ms: Scalars['Int']['output'];
+  /** Calls this feature made. */
+  calls: Scalars['Int']['output'];
+  /** USD this feature cost. */
+  cost_usd: Scalars['Float']['output'];
+  /** Calls this feature made that failed. */
+  failed_calls: Scalars['Int']['output'];
+  /** Catalogue key, e.g. moderation.pod; AI Features opens the feature by it. */
+  key: Scalars['String']['output'];
+  /** Feature name. */
+  label: Scalars['String']['output'];
+  /** Owning area — Moderation, CRM, Admin Tools … */
+  module: Scalars['String']['output'];
+  /** Input plus output tokens this feature used. */
+  total_tokens: Scalars['Int']['output'];
+};
+
+/** One OpenAI model's use and performance over the window. */
+export type AiOverviewModel = {
+  __typename?: 'AiOverviewModel';
+  /** Average call time on this model, in milliseconds. */
+  avg_duration_ms: Scalars['Int']['output'];
+  /** Calls made on this model. */
+  calls: Scalars['Int']['output'];
+  /** USD spent on this model. */
+  cost_usd: Scalars['Float']['output'];
+  /** Calls on this model that failed. */
+  failed_calls: Scalars['Int']['output'];
+  /** Percent of this model's calls that failed, to one decimal. */
+  failure_rate: Scalars['Float']['output'];
+  /** Model name as recorded on the call; blank for calls that never reached a model. */
+  model: Scalars['String']['output'];
+  /** Input plus output tokens on this model. */
+  total_tokens: Scalars['Int']['output'];
+};
+
+/** One owning area's AI features that were used in the window, summed. */
+export type AiOverviewModule = {
+  __typename?: 'AiOverviewModule';
+  /** Average call time across the area's calls, in milliseconds. */
+  avg_duration_ms: Scalars['Int']['output'];
+  /** Calls the area's features made. */
+  calls: Scalars['Int']['output'];
+  /** USD the area's features cost. */
+  cost_usd: Scalars['Float']['output'];
+  /** Calls the area's features made that failed. */
+  failed_calls: Scalars['Int']['output'];
+  /** Owning area — Moderation, CRM, Admin Tools … */
+  module: Scalars['String']['output'];
+  /** Input plus output tokens the area's features used. */
+  total_tokens: Scalars['Int']['output'];
+};
+
+/** AI Monitoring image checks made in the window. */
+export type AiOverviewMonitoring = {
+  __typename?: 'AiOverviewMonitoring';
+  /** Images blocked. */
+  blocked: Scalars['Int']['output'];
+  /** Checks by AI risk verdict, every verdict listed. */
+  by_risk: Array<AiOverviewCount>;
+  /** Checks that failed before reaching a verdict. */
+  failed: Scalars['Int']['output'];
+  /** Images passed to a person for review. */
+  flagged: Scalars['Int']['output'];
+  /** Images checked. */
+  scanned: Scalars['Int']['output'];
+};
+
+/** One window's OpenAI usage, summed from the usage log. */
+export type AiOverviewTotals = {
+  __typename?: 'AiOverviewTotals';
+  /** Distinct people whose actions made at least one call. */
+  active_users: Scalars['Int']['output'];
+  /** Average time a call took, in milliseconds, across every call. */
+  avg_duration_ms: Scalars['Int']['output'];
+  /** Every OpenAI call, including the failed ones and the ones that never left. */
+  calls: Scalars['Int']['output'];
+  /** Output tokens returned. */
+  completion_tokens: Scalars['Int']['output'];
+  /** USD, summed from each call's cost as priced when it was made. */
+  cost_usd: Scalars['Float']['output'];
+  /** Percent of calls that failed, to one decimal. */
+  error_rate: Scalars['Float']['output'];
+  /** Calls OpenAI refused, timed out or answered with an error. */
+  failed_calls: Scalars['Int']['output'];
+  /** Input tokens sent. */
+  prompt_tokens: Scalars['Int']['output'];
+  /** Calls that never left: no API key configured, or the feature switched off. */
+  skipped_calls: Scalars['Int']['output'];
+  /** Calls that came back with an answer. */
+  success_calls: Scalars['Int']['output'];
+  /** Input plus output tokens. */
+  total_tokens: Scalars['Int']['output'];
+  /** Calls on a model with no rate card entry; cost_usd is a minimum when this is above 0. */
+  unpriced_calls: Scalars['Int']['output'];
+};
+
+/** A person whose actions made AI calls, named at read time. Only the name is exposed. */
+export type AiOverviewUser = {
+  __typename?: 'AiOverviewUser';
+  /** Calls made on this person's behalf. */
+  calls: Scalars['Int']['output'];
+  /** USD those calls cost. */
+  cost_usd: Scalars['Float']['output'];
+  /** Current display name; blank for a deleted account. */
+  name: Scalars['String']['output'];
+  /** Input plus output tokens of those calls. */
+  total_tokens: Scalars['Int']['output'];
+  /** Account id. */
+  user_id: Scalars['ID']['output'];
+};
+
 export type AiProductDescribeInput = {
   brand_name?: InputMaybe<Scalars['String']['input']>;
   product_name: Scalars['String']['input'];
@@ -2037,6 +2298,22 @@ export type AppSettings = {
   happening_nearby_days: Scalars['Int']['output'];
   /** Account Health points a HOST loses for filing a Request Change on a pod they host (0-10, 0 disables it). */
   host_change_request_health_penalty: Scalars['Int']['output'];
+  /** The engagement statuses a club admin files a host under, in display order. Keys are permanent; labels are editable. */
+  host_engagement_statuses: Array<HostEngagementStatus>;
+  /** Club Admin host engagement: days without a completed pod before a host is flagged inactive (1-90, default 14). */
+  host_inactivity_days: Scalars['Int']['output'];
+  /** Completed pods per calendar month (admin time zone) that score a host 100%; fewer scores proportionally less (1-100, default 8). */
+  host_monthly_pod_target: Scalars['Int']['output'];
+  /** Send each club admin the hosts who are inactive or below the threshold. */
+  host_performance_notify_club_admins: Scalars['Boolean']['output'];
+  /** Day of the month (1-28, admin time zone) the monthly messages go out for the month before. */
+  host_performance_notify_day: Scalars['Int']['output'];
+  /** Monthly host performance messages (WhatsApp + email) on or off. Off by default. */
+  host_performance_notify_enabled: Scalars['Boolean']['output'];
+  /** Send each host their own monthly target, pods and score. */
+  host_performance_notify_hosts: Scalars['Boolean']['output'];
+  /** A host scoring below this percent of the target is underperforming (1-100; 100 = any miss). */
+  host_underperform_threshold_pct: Scalars['Int']['output'];
   jwt_expires_in?: Maybe<Scalars['String']['output']>;
   jwt_no_expiry: Scalars['Boolean']['output'];
   /** Max Backout attempts a user gets per pod (each 'Backout in process' counts one). */
@@ -2966,6 +3243,16 @@ export type AskDuncitViolationCount = {
   __typename?: 'AskDuncitViolationCount';
   count: Scalars['Int']['output'];
   kind: Scalars['String']['output'];
+};
+
+export type AssignEmployeeTargetInput = {
+  /** One id per press of Assign; a repeated press returns the record the first one made. */
+  client_request_id?: InputMaybe<Scalars['String']['input']>;
+  employee_id: Scalars['ID']['input'];
+  goals: Array<EmployeeTargetGoalInput>;
+  /** YYYY-MM */
+  month: Scalars['String']['input'];
+  notes?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type AttachE2eRunVideosInput = {
@@ -5672,6 +5959,100 @@ export type ClubFilterInput = {
   super_category_id?: InputMaybe<Scalars['ID']['input']>;
 };
 
+/** One host of a club in full, for the club admin's host page. */
+export type ClubHostDetail = {
+  __typename?: 'ClubHostDetail';
+  club_id: Scalars['ID']['output'];
+  club_name: Scalars['String']['output'];
+  completed_this_month: Scalars['Int']['output'];
+  days_since_last_pod?: Maybe<Scalars['Int']['output']>;
+  email?: Maybe<Scalars['String']['output']>;
+  engagement_note?: Maybe<Scalars['String']['output']>;
+  engagement_status_key: Scalars['String']['output'];
+  engagement_status_label: Scalars['String']['output'];
+  engagement_updated_at?: Maybe<Scalars['String']['output']>;
+  inactivity_days: Scalars['Int']['output'];
+  is_inactive: Scalars['Boolean']['output'];
+  is_underperforming: Scalars['Boolean']['output'];
+  last_pod_at?: Maybe<Scalars['String']['output']>;
+  monthly_target: Scalars['Int']['output'];
+  name: Scalars['String']['output'];
+  phone?: Maybe<Scalars['String']['output']>;
+  photo_url?: Maybe<Scalars['String']['output']>;
+  score: Scalars['Int']['output'];
+  /** Up to six finished months, oldest first. Months before the first monthly run are absent. */
+  score_history: Array<HostScorePoint>;
+  /** Every configured status in order; only active ones may be picked. */
+  statuses: Array<HostEngagementStatus>;
+  upcoming_count: Scalars['Int']['output'];
+  user_id: Scalars['ID']['output'];
+  whatsapp?: Maybe<Scalars['String']['output']>;
+};
+
+/** The engagement status just saved. */
+export type ClubHostEngagementResult = {
+  __typename?: 'ClubHostEngagementResult';
+  host_user_id: Scalars['ID']['output'];
+  note?: Maybe<Scalars['String']['output']>;
+  status_key: Scalars['String']['output'];
+  status_label: Scalars['String']['output'];
+  updated_at: Scalars['String']['output'];
+};
+
+/** One host of a club, as the club admin's Hosts table shows them. */
+export type ClubHostRow = {
+  __typename?: 'ClubHostRow';
+  /** Completed pods in this club this calendar month (admin time zone). */
+  completed_this_month: Scalars['Int']['output'];
+  days_since_last_pod?: Maybe<Scalars['Int']['output']>;
+  email?: Maybe<Scalars['String']['output']>;
+  engagement_note?: Maybe<Scalars['String']['output']>;
+  /** The engagement status the club admin filed this host under (the first active status until they do). */
+  engagement_status_key: Scalars['String']['output'];
+  engagement_status_label: Scalars['String']['output'];
+  engagement_updated_at?: Maybe<Scalars['String']['output']>;
+  /** No completed pod in this club within Pod Settings' inactivity days — the row shows yellow. */
+  is_inactive: Scalars['Boolean']['output'];
+  /** Score below Pod Settings' underperformance threshold. */
+  is_underperforming: Scalars['Boolean']['output'];
+  /** Start of the host's latest completed pod in this club (ISO). Null when none has completed. */
+  last_pod_at?: Maybe<Scalars['String']['output']>;
+  /** Pod Settings' monthly target. */
+  monthly_target: Scalars['Int']['output'];
+  name: Scalars['String']['output'];
+  /** Login phone, with its dialling code. */
+  phone?: Maybe<Scalars['String']['output']>;
+  photo_url?: Maybe<Scalars['String']['output']>;
+  /** This month's Host Performance Score so far: min(100, completed / target x 100). */
+  score: Scalars['Int']['output'];
+  /** Scheduled pods in this club still to start. */
+  upcoming_count: Scalars['Int']['output'];
+  user_id: Scalars['ID']['output'];
+  /** WhatsApp number when the host saved one. */
+  whatsapp?: Maybe<Scalars['String']['output']>;
+};
+
+/** Server-side table page over a club's hosts (clubAdminClubHostsTable). */
+export type ClubHostTablePage = {
+  __typename?: 'ClubHostTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<ClubHostRow>;
+  total: Scalars['Int']['output'];
+};
+
+/** Counts over EVERY host of a club, for the Hosts page header and its inactive-hosts warning. */
+export type ClubHostsSummary = {
+  __typename?: 'ClubHostsSummary';
+  club_id: Scalars['ID']['output'];
+  club_name: Scalars['String']['output'];
+  host_count: Scalars['Int']['output'];
+  inactive_count: Scalars['Int']['output'];
+  inactivity_days: Scalars['Int']['output'];
+  monthly_pod_target: Scalars['Int']['output'];
+  underperforming_count: Scalars['Int']['output'];
+};
+
 export type ClubMedia = {
   __typename?: 'ClubMedia';
   type: CategoryMediaType;
@@ -7819,6 +8200,8 @@ export type CreateTicketInput = {
   body_html?: InputMaybe<Scalars['String']['input']>;
   body_text: Scalars['String']['input'];
   category?: InputMaybe<TicketCategory>;
+  /** Link the ticket to one of the caller's own payments (Payment.id); ignored when it is not theirs. */
+  payment_id?: InputMaybe<Scalars['ID']['input']>;
   /** Attach the pod this ticket is about (from Contact Support on a pod). */
   pod_id?: InputMaybe<Scalars['ID']['input']>;
   pod_title?: InputMaybe<Scalars['String']['input']>;
@@ -10645,6 +11028,130 @@ export type EmployeeExpenseTablePage = {
   total: Scalars['Int']['output'];
 };
 
+/** One employee's goals for one month and what they reported against them. */
+export type EmployeeTarget = {
+  __typename?: 'EmployeeTarget';
+  assigned_by: EmployeeTargetPerson;
+  created_at: Scalars['String']['output'];
+  employee: EmployeeTargetPerson;
+  goal_count: Scalars['Int']['output'];
+  goals: Array<EmployeeTargetGoal>;
+  id: Scalars['ID']['output'];
+  last_edited_at?: Maybe<Scalars['String']['output']>;
+  last_edited_by?: Maybe<EmployeeTargetPerson>;
+  /** YYYY-MM */
+  month: Scalars['String']['output'];
+  notes: Scalars['String']['output'];
+  /** True while it is unsubmitted inside the month-end reminder window (Targets > Settings), on the server's clock. */
+  reminder_active: Scalars['Boolean']['output'];
+  review?: Maybe<EmployeeTargetReview>;
+  /** Bumped by every write. Send it back as expected_revision. */
+  revision: Scalars['Int']['output'];
+  status: EmployeeTargetStatus;
+  submission?: Maybe<EmployeeTargetSubmission>;
+  updated_at: Scalars['String']['output'];
+};
+
+/** One achievement the employee reported. */
+export type EmployeeTargetAchievement = {
+  __typename?: 'EmployeeTargetAchievement';
+  details: Scalars['String']['output'];
+  title: Scalars['String']['output'];
+};
+
+export type EmployeeTargetAchievementInput = {
+  details?: InputMaybe<Scalars['String']['input']>;
+  title: Scalars['String']['input'];
+};
+
+/** An employee a target can be assigned to. */
+export type EmployeeTargetAssignee = {
+  __typename?: 'EmployeeTargetAssignee';
+  email?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  photo?: Maybe<Scalars['String']['output']>;
+};
+
+/** One goal the admin set for the month. */
+export type EmployeeTargetGoal = {
+  __typename?: 'EmployeeTargetGoal';
+  description: Scalars['String']['output'];
+  /** Optional measurable figure (for example 40 leads). */
+  target_value?: Maybe<Scalars['Float']['output']>;
+  title: Scalars['String']['output'];
+  /** What target_value counts (leads, pods, rupees …). Empty when there is no figure. */
+  unit: Scalars['String']['output'];
+};
+
+export type EmployeeTargetGoalInput = {
+  description?: InputMaybe<Scalars['String']['input']>;
+  target_value?: InputMaybe<Scalars['Float']['input']>;
+  title: Scalars['String']['input'];
+  unit?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** A person on a target record, as they were when they acted. */
+export type EmployeeTargetPerson = {
+  __typename?: 'EmployeeTargetPerson';
+  email?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+  user_id: Scalars['ID']['output'];
+};
+
+export type EmployeeTargetReview = {
+  __typename?: 'EmployeeTargetReview';
+  comment: Scalars['String']['output'];
+  reviewed_at: Scalars['String']['output'];
+  reviewed_by: EmployeeTargetPerson;
+};
+
+/** When employees are reminded to report on their month. */
+export type EmployeeTargetSettings = {
+  __typename?: 'EmployeeTargetSettings';
+  /** How many of the month's last days remind (1 = only the last day). */
+  reminder_days_before_end: Scalars['Int']['output'];
+  /** How many of the next month's first days still remind while unsubmitted (0 = none). */
+  reminder_grace_days: Scalars['Int']['output'];
+  reminders_enabled: Scalars['Boolean']['output'];
+  updated_at?: Maybe<Scalars['String']['output']>;
+};
+
+export type EmployeeTargetSettingsInput = {
+  reminder_days_before_end?: InputMaybe<Scalars['Int']['input']>;
+  reminder_grace_days?: InputMaybe<Scalars['Int']['input']>;
+  reminders_enabled?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+/** Where a monthly employee target is in its life. */
+export type EmployeeTargetStatus =
+  /** Set by the Targets console; the employee has not reported yet. */
+  | 'ASSIGNED'
+  /** An admin reviewed the report. Read-only unless reopened. */
+  | 'REVIEWED'
+  /** The employee reported progress; they can still correct it until it is reviewed. */
+  | 'SUBMITTED';
+
+/** What the employee reported against the month's goals. */
+export type EmployeeTargetSubmission = {
+  __typename?: 'EmployeeTargetSubmission';
+  achievements: Array<EmployeeTargetAchievement>;
+  /** Whole percent, 0 to 100. */
+  completion_percent: Scalars['Int']['output'];
+  /** How many times it has been sent; 1 on the first submit. */
+  submission_count: Scalars['Int']['output'];
+  submitted_at: Scalars['String']['output'];
+  updates: Scalars['String']['output'];
+};
+
+export type EmployeeTargetTablePage = {
+  __typename?: 'EmployeeTargetTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<EmployeeTarget>;
+  total: Scalars['Int']['output'];
+};
+
 export type EntityAnalytics = {
   __typename?: 'EntityAnalytics';
   breakdowns: Array<AnalyticsBreakdown>;
@@ -11345,6 +11852,243 @@ export type ExpenseTablePage = {
   rows: Array<Expense>;
   total: Scalars['Int']['output'];
 };
+
+export type FailedPaymentBooking = {
+  __typename?: 'FailedPaymentBooking';
+  booked_razorpay_payment_id?: Maybe<Scalars['String']['output']>;
+  /** A booking (seat/membership) was written for this payment. */
+  exists: Scalars['Boolean']['output'];
+  finalize_state: Scalars['String']['output'];
+  needs_refund: Scalars['Boolean']['output'];
+  paid_at?: Maybe<Scalars['String']['output']>;
+  payment_status: Scalars['String']['output'];
+};
+
+export type FailedPaymentClaim = {
+  __typename?: 'FailedPaymentClaim';
+  evidence_type: PaymentEvidenceType;
+  files: Array<FailedPaymentEvidenceFile>;
+  submitted_at: Scalars['String']['output'];
+  transaction_id?: Maybe<Scalars['String']['output']>;
+};
+
+export type FailedPaymentDetail = {
+  __typename?: 'FailedPaymentDetail';
+  amount: Scalars['Float']['output'];
+  attempts: Scalars['Int']['output'];
+  booking: FailedPaymentBooking;
+  can_mark_not_refundable: Scalars['Boolean']['output'];
+  can_refund: Scalars['Boolean']['output'];
+  claims: Array<FailedPaymentClaim>;
+  created_at: Scalars['String']['output'];
+  currency_symbol: Scalars['String']['output'];
+  highlight: FailedPaymentHighlight;
+  id: Scalars['ID']['output'];
+  latest_error?: Maybe<FailedPaymentError>;
+  needs_review: Scalars['Boolean']['output'];
+  payment_doc_id: Scalars['ID']['output'];
+  payment_id: Scalars['String']['output'];
+  pod_id?: Maybe<Scalars['ID']['output']>;
+  pod_title: Scalars['String']['output'];
+  razorpay_order_id?: Maybe<Scalars['String']['output']>;
+  razorpay_payment_id?: Maybe<Scalars['String']['output']>;
+  refund: FailedPaymentRefund;
+  /** Rupees a refund would send right now (captured − already refunded), when known. */
+  refundable_amount?: Maybe<Scalars['Float']['output']>;
+  resolution: FailedPaymentResolution;
+  retry_shown: Scalars['Boolean']['output'];
+  review?: Maybe<FailedPaymentReview>;
+  revision: Scalars['Int']['output'];
+  sources: Array<Scalars['String']['output']>;
+  ticket?: Maybe<FailedPaymentTicket>;
+  updated_at: Scalars['String']['output'];
+  user: FailedPaymentUser;
+  verification: FailedPaymentVerification;
+};
+
+export type FailedPaymentError = {
+  __typename?: 'FailedPaymentError';
+  at?: Maybe<Scalars['String']['output']>;
+  code?: Maybe<Scalars['String']['output']>;
+  description?: Maybe<Scalars['String']['output']>;
+  reason?: Maybe<Scalars['String']['output']>;
+  /** Where the error was learned: CLIENT, WEBHOOK, SERVER. */
+  reported_by?: Maybe<Scalars['String']['output']>;
+  source?: Maybe<Scalars['String']['output']>;
+  step?: Maybe<Scalars['String']['output']>;
+};
+
+export type FailedPaymentEvidenceFile = {
+  __typename?: 'FailedPaymentEvidenceFile';
+  /** Opaque reference — pass to failedPaymentEvidenceLink to open it. */
+  file_ref: Scalars['String']['output'];
+  /** IMAGE, PDF or OTHER. */
+  kind: Scalars['String']['output'];
+  mime: Scalars['String']['output'];
+};
+
+export type FailedPaymentEvidenceLink = {
+  __typename?: 'FailedPaymentEvidenceLink';
+  expires_at: Scalars['String']['output'];
+  kind: Scalars['String']['output'];
+  /** Short-lived signed URL; do not store it. */
+  url: Scalars['String']['output'];
+};
+
+export type FailedPaymentExtracted = {
+  __typename?: 'FailedPaymentExtracted';
+  amount?: Maybe<Scalars['Float']['output']>;
+  date?: Maybe<Scalars['String']['output']>;
+  payee?: Maybe<Scalars['String']['output']>;
+  payment_id?: Maybe<Scalars['String']['output']>;
+  status?: Maybe<Scalars['String']['output']>;
+  utr?: Maybe<Scalars['String']['output']>;
+};
+
+/** Row colour hint for the Failed Payments table. */
+export type FailedPaymentHighlight =
+  | 'GREEN'
+  | 'NONE'
+  | 'YELLOW';
+
+export type FailedPaymentRefund = {
+  __typename?: 'FailedPaymentRefund';
+  /** Rupees. */
+  amount?: Maybe<Scalars['Float']['output']>;
+  attempted_at?: Maybe<Scalars['String']['output']>;
+  error?: Maybe<Scalars['String']['output']>;
+  initiated_by_name?: Maybe<Scalars['String']['output']>;
+  razorpay_payment_id?: Maybe<Scalars['String']['output']>;
+  razorpay_refund_id?: Maybe<Scalars['String']['output']>;
+  refunded_at?: Maybe<Scalars['String']['output']>;
+  status: FailedPaymentRefundStatus;
+};
+
+/** NONE means no refund was ever started. */
+export type FailedPaymentRefundStatus =
+  | 'FAILED'
+  | 'NONE'
+  | 'PENDING'
+  | 'PROCESSED';
+
+export type FailedPaymentResolution = {
+  __typename?: 'FailedPaymentResolution';
+  at?: Maybe<Scalars['String']['output']>;
+  by_name?: Maybe<Scalars['String']['output']>;
+  note?: Maybe<Scalars['String']['output']>;
+  state: FailedPaymentResolutionState;
+};
+
+export type FailedPaymentResolutionState =
+  | 'BOOKED'
+  | 'NOT_REFUNDABLE'
+  | 'OPEN'
+  | 'REFUNDED'
+  | 'REJECTED';
+
+export type FailedPaymentReview = {
+  __typename?: 'FailedPaymentReview';
+  at: Scalars['String']['output'];
+  by_name?: Maybe<Scalars['String']['output']>;
+  decision: FailedPaymentReviewDecision;
+  note: Scalars['String']['output'];
+};
+
+export type FailedPaymentReviewDecision =
+  | 'APPROVED'
+  | 'REJECTED';
+
+export type FailedPaymentRow = {
+  __typename?: 'FailedPaymentRow';
+  /** Rupees the checkout asked for. */
+  amount: Scalars['Float']['output'];
+  attempts: Scalars['Int']['output'];
+  /** Razorpay never captured it; Finance can close it as a bank reversal. */
+  can_mark_not_refundable: Scalars['Boolean']['output'];
+  /** Refundable now (green, or yellow after approval). Only FINANCE_MANAGER / SUPER_ADMIN may act on it. */
+  can_refund: Scalars['Boolean']['output'];
+  claim_count: Scalars['Int']['output'];
+  created_at: Scalars['String']['output'];
+  currency_symbol: Scalars['String']['output'];
+  error_code?: Maybe<Scalars['String']['output']>;
+  error_description?: Maybe<Scalars['String']['output']>;
+  highlight: FailedPaymentHighlight;
+  id: Scalars['ID']['output'];
+  /** Yellow: evidence waits for a person's Review. */
+  needs_review: Scalars['Boolean']['output'];
+  payment_doc_id: Scalars['ID']['output'];
+  payment_id: Scalars['String']['output'];
+  pod_id?: Maybe<Scalars['ID']['output']>;
+  pod_title: Scalars['String']['output'];
+  razorpay_order_id?: Maybe<Scalars['String']['output']>;
+  razorpay_payment_id?: Maybe<Scalars['String']['output']>;
+  /** Rupees sent back, once a refund was started. */
+  refund_amount?: Maybe<Scalars['Float']['output']>;
+  refund_status: FailedPaymentRefundStatus;
+  resolution_state: FailedPaymentResolutionState;
+  review_decision?: Maybe<FailedPaymentReviewDecision>;
+  sources: Array<Scalars['String']['output']>;
+  ticket_id?: Maybe<Scalars['ID']['output']>;
+  ticket_no?: Maybe<Scalars['String']['output']>;
+  updated_at: Scalars['String']['output'];
+  user_email?: Maybe<Scalars['String']['output']>;
+  user_id?: Maybe<Scalars['ID']['output']>;
+  user_name: Scalars['String']['output'];
+  user_phone?: Maybe<Scalars['String']['output']>;
+  verification_status: FailedPaymentVerificationStatus;
+};
+
+/** Server-side table page for the shared table engine (failedPaymentsTable). */
+export type FailedPaymentTablePage = {
+  __typename?: 'FailedPaymentTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<FailedPaymentRow>;
+  total: Scalars['Int']['output'];
+};
+
+export type FailedPaymentTicket = {
+  __typename?: 'FailedPaymentTicket';
+  id: Scalars['ID']['output'];
+  status: Scalars['String']['output'];
+  ticket_no: Scalars['String']['output'];
+};
+
+export type FailedPaymentUser = {
+  __typename?: 'FailedPaymentUser';
+  email?: Maybe<Scalars['String']['output']>;
+  id?: Maybe<Scalars['ID']['output']>;
+  name: Scalars['String']['output'];
+  phone?: Maybe<Scalars['String']['output']>;
+};
+
+export type FailedPaymentVerification = {
+  __typename?: 'FailedPaymentVerification';
+  checked_at?: Maybe<Scalars['String']['output']>;
+  /** 0-1; 1 for an entered transaction id. */
+  confidence?: Maybe<Scalars['Float']['output']>;
+  extracted?: Maybe<FailedPaymentExtracted>;
+  matched_fields: Array<Scalars['String']['output']>;
+  matched_payment_id?: Maybe<Scalars['String']['output']>;
+  notes?: Maybe<Scalars['String']['output']>;
+  /** Paise as Razorpay reports it. */
+  razorpay_amount_paise?: Maybe<Scalars['Int']['output']>;
+  razorpay_status?: Maybe<Scalars['String']['output']>;
+  status: FailedPaymentVerificationStatus;
+};
+
+/** What the AI + Razorpay check concluded about a claim. */
+export type FailedPaymentVerificationStatus =
+  /** The check itself failed (Razorpay unreachable); re-run it. */
+  | 'ERROR'
+  /** Razorpay captured this payment, the amount matches and no booking used it — refundable straight away. */
+  | 'MATCHED'
+  /** Razorpay never captured the money, so it cannot be refunded through Razorpay (the bank reverses it). */
+  | 'NOT_CAPTURED'
+  /** No claim yet, or the check is still running. */
+  | 'PENDING'
+  /** The evidence could not be matched automatically (or is a PDF) — Finance reviews it. */
+  | 'UNMATCHED';
 
 export type Faq = {
   __typename?: 'Faq';
@@ -12982,6 +13726,23 @@ export type HostCategoryInput = {
   super_category_id: Scalars['ID']['input'];
 };
 
+/** One engagement status a club admin can file a host under (Pod Settings). */
+export type HostEngagementStatus = {
+  __typename?: 'HostEngagementStatus';
+  /** Inactive statuses stay readable on hosts already filed under them but cannot be picked. */
+  is_active: Scalars['Boolean']['output'];
+  /** Permanent identity, e.g. NOT_CONTACTED. Never changes once saved. */
+  key: Scalars['String']['output'];
+  label: Scalars['String']['output'];
+};
+
+/** A row of the engagement status editor. Omit key to add a new status (the server derives it from the label). */
+export type HostEngagementStatusInput = {
+  is_active: Scalars['Boolean']['input'];
+  key?: InputMaybe<Scalars['String']['input']>;
+  label: Scalars['String']['input'];
+};
+
 /** Host Studio insights: pod-status distribution + monthly payout series. */
 export type HostInsights = {
   __typename?: 'HostInsights';
@@ -13264,6 +14025,16 @@ export type HostResubmitPodInput = {
   venue_slot_id?: InputMaybe<Scalars['ID']['input']>;
   what_this_pod_offers?: InputMaybe<Array<Scalars['String']['input']>>;
   zone_name?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** One finished month of a host's performance in a club (from the monthly snapshot). */
+export type HostScorePoint = {
+  __typename?: 'HostScorePoint';
+  completed: Scalars['Int']['output'];
+  /** YYYY-MM. */
+  period: Scalars['String']['output'];
+  score: Scalars['Int']['output'];
+  target: Scalars['Int']['output'];
 };
 
 export type HostStatus =
@@ -16749,6 +17520,8 @@ export type Mutation = {
   askCrmLeadAi: CrmLeadAiReply;
   /** Replace the set of clubs this admin runs. Other admins of those clubs are untouched. */
   assignClubAdminClubs: ClubAdminProfile;
+  /** Assign an employee their goals for a month. One target per employee per month (CONFLICT otherwise). */
+  assignEmployeeTarget: EmployeeTarget;
   /** Give the lead to a person (a living user), or to nobody with null. */
   assignMarketingLeadOwner: MarketingLead;
   /** Hand the comment to a person; a null user_id hands it back to nobody. */
@@ -17259,6 +18032,8 @@ export type Mutation = {
   deleteEmailTemplate: Scalars['Boolean']['output'];
   /** Withdraw one of your own claims. Only while it is still PENDING. */
   deleteEmployeeExpense: Scalars['Boolean']['output'];
+  /** Remove a target from both consoles. The record is kept. */
+  deleteEmployeeTarget: Scalars['Boolean']['output'];
   deleteEnvEntry: Scalars['Boolean']['output'];
   deleteExpense: Scalars['Boolean']['output'];
   /** Refused for a built-in option, and for any option an expense still uses. */
@@ -17617,6 +18392,8 @@ export type Mutation = {
    */
   importTranslationKeys: Scalars['Int']['output'];
   incrementPodHits: Pod;
+  /** Refund the captured amount not yet refunded through Razorpay, at most once. FINANCE_MANAGER / SUPER_ADMIN. */
+  initiateFailedPaymentRefund: FailedPaymentDetail;
   /** Primary host invites a co-host. Enforces the sub-category's allow_co_hosts + max_co_hosts. */
   inviteCoHost: Pod;
   /**
@@ -17731,6 +18508,8 @@ export type Mutation = {
   markBouncerCallbackContacted: BouncerCallbackRequest;
   /** Marks a pod or club room read up to now (on open, and while it stays open). */
   markChatRead: Scalars['Boolean']['output'];
+  /** Close a NOT_CAPTURED case as a bank reversal and resolve its ticket with that explanation. */
+  markFailedPaymentNotRefundable: FailedPaymentDetail;
   /** Record a DM the marketer is sending from Instagram; schedules the next follow-up. */
   markIgLeadSent: IgLead;
   markNotificationRead: Scalars['Boolean']['output'];
@@ -17988,6 +18767,8 @@ export type Mutation = {
   /** Rename in place. Purging the CDN copy costs a purge credit, so it is opt-in. */
   renameMediaFile: MediaItem;
   renameMyRegion: Region;
+  /** Hand a reviewed report back to the employee to correct; the review is cleared. */
+  reopenEmployeeTarget: EmployeeTarget;
   /** Re-open a resolved/closed chat (user within 3 days, or an agent). Reason logged to the thread. */
   reopenSupportChat: SupportChatSession;
   /** Re-open a resolved/closed ticket (owner within 3 days, or an agent). Reason logged to the thread. */
@@ -18032,6 +18813,8 @@ export type Mutation = {
    * written.
    */
   reportE2eScenarios: Scalars['Int']['output'];
+  /** Signed-in user records a Razorpay checkout failure on their own payment (idempotent per client_request_id). */
+  reportPaymentFailure: PaymentFailureReceipt;
   /**
    * Report a post or a story. Open to any signed-in viewer — that is the point.
    * Refused with REPORT_ALREADY_PENDING while the viewer's earlier report on the
@@ -18290,6 +19073,8 @@ export type Mutation = {
   retryWithdrawalPayout: WalletWithdrawal;
   /** Validate a logged address again. The earlier validation is kept. */
   revalidateEmail: EmailValidation;
+  /** Re-run the AI + Razorpay check on a case's latest evidence. */
+  reverifyFailedPayment: FailedPaymentDetail;
   /** Marketing approves (freezes cost) or rejects, with remarks. */
   reviewAdRequest: AdRequest;
   /** ACCEPTED | DISMISSED. add_to_knowledge drafts an article from the corrected answer. */
@@ -18302,6 +19087,10 @@ export type Mutation = {
   reviewE2eSubFlow: E2eFlow;
   /** Finance's decision — APPROVED or REJECTED; a rejection owes the employee a note. */
   reviewEmployeeExpense: EmployeeExpense;
+  /** Mark a submitted report as reviewed, with an optional comment the employee sees. */
+  reviewEmployeeTarget: EmployeeTarget;
+  /** Approve (makes a yellow case refundable) or reject (closes the case and the ticket with the note). */
+  reviewFailedPayment: FailedPaymentDetail;
   reviewPaymentReleaseRequest: PaymentReleaseRequest;
   reviewProductListing: InventoryProduct;
   reviewSocialComment: SocialComment;
@@ -18519,6 +19308,12 @@ export type Mutation = {
    * admin hid on its own stays hidden when the club comes back.
    */
   setClubHidden: Club;
+  /**
+   * File a host of the caller's club under an engagement status (one of the
+   * active Pod Settings statuses), with an optional note. Refused for a user
+   * who does not host that club.
+   */
+  setClubHostEngagement: ClubHostEngagementResult;
   /** Adds or repoints an A record for one of the website's own hostnames (Tech managers). */
   setCmsSiteARecord: Scalars['Boolean']['output'];
   /**
@@ -18903,6 +19698,8 @@ export type Mutation = {
   submitEcommBrand: EcommBrand;
   /** Products portal: raise a brand/product change request for admin approval (Task B item 2). */
   submitEcommChangeRequest: ApprovalRequest;
+  /** Employee console: report your completion and achievements for a month. Allowed until it is reviewed. */
+  submitEmployeeTarget: EmployeeTarget;
   submitFaqQuestion: FaqSubmitResult;
   /**
    * Raise a grievance.
@@ -18926,6 +19723,8 @@ export type Mutation = {
   submitLatestBuildToStore: AppBuild;
   /** Public — submit answers via a share token (no auth). */
   submitLeadSurveyByToken: Scalars['Boolean']['output'];
+  /** Signed-in user says money was deducted but the booking did not complete; opens a PAYMENT support ticket linked to the payment. */
+  submitPaymentDeductionClaim: PaymentDeductionClaimResult;
   /** Competitor (or host on their behalf): submit or replace an entry. */
   submitPodChallengeEntry: PodChallenge;
   submitProductListing: InventoryProduct;
@@ -19161,6 +19960,10 @@ export type Mutation = {
   updateEmailTemplate: EmailTemplate;
   /** Edit one of your own claims. Only while it is still PENDING. */
   updateEmployeeExpense: EmployeeExpense;
+  /** Change a target's goals and notes — only while the employee has not reported yet. */
+  updateEmployeeTarget: EmployeeTarget;
+  /** Change the month-end reminder window. Values outside the allowed range are clamped. */
+  updateEmployeeTargetSettings: EmployeeTargetSettings;
   /** Set how many times an entry of each category may be tested per window. */
   updateEnvAttemptSettings: EnvAttemptSettings;
   updateEnvEntry: EnvEntry;
@@ -19866,6 +20669,11 @@ export type MutationAskCrmLeadAiArgs = {
 export type MutationAssignClubAdminClubsArgs = {
   club_ids: Array<Scalars['ID']['input']>;
   id: Scalars['ID']['input'];
+};
+
+
+export type MutationAssignEmployeeTargetArgs = {
+  input: AssignEmployeeTargetInput;
 };
 
 
@@ -21119,6 +21927,11 @@ export type MutationDeleteEmployeeExpenseArgs = {
 };
 
 
+export type MutationDeleteEmployeeTargetArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationDeleteEnvEntryArgs = {
   id: Scalars['ID']['input'];
 };
@@ -22064,6 +22877,12 @@ export type MutationIncrementPodHitsArgs = {
 };
 
 
+export type MutationInitiateFailedPaymentRefundArgs = {
+  case_id: Scalars['ID']['input'];
+  client_request_id: Scalars['String']['input'];
+};
+
+
 export type MutationInviteCoHostArgs = {
   pod_doc_id: Scalars['ID']['input'];
   user_id: Scalars['ID']['input'];
@@ -22166,6 +22985,13 @@ export type MutationMarkBouncerCallbackContactedArgs = {
 export type MutationMarkChatReadArgs = {
   id: Scalars['ID']['input'];
   kind: ChatRoomKind;
+};
+
+
+export type MutationMarkFailedPaymentNotRefundableArgs = {
+  case_id: Scalars['ID']['input'];
+  client_request_id?: InputMaybe<Scalars['String']['input']>;
+  note: Scalars['String']['input'];
 };
 
 
@@ -22748,6 +23574,12 @@ export type MutationRenameMyRegionArgs = {
 };
 
 
+export type MutationReopenEmployeeTargetArgs = {
+  expected_revision: Scalars['Int']['input'];
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationReopenSupportChatArgs = {
   reason?: InputMaybe<Scalars['String']['input']>;
   session_id: Scalars['ID']['input'];
@@ -22809,6 +23641,11 @@ export type MutationReportE2eRunArgs = {
 
 export type MutationReportE2eScenariosArgs = {
   input: ReportE2eScenariosInput;
+};
+
+
+export type MutationReportPaymentFailureArgs = {
+  input: ReportPaymentFailureInput;
 };
 
 
@@ -23174,6 +24011,11 @@ export type MutationRevalidateEmailArgs = {
 };
 
 
+export type MutationReverifyFailedPaymentArgs = {
+  case_id: Scalars['ID']['input'];
+};
+
+
 export type MutationReviewAdRequestArgs = {
   approve: Scalars['Boolean']['input'];
   id: Scalars['ID']['input'];
@@ -23213,6 +24055,20 @@ export type MutationReviewEmployeeExpenseArgs = {
   decision: Scalars['String']['input'];
   expense_doc_id: Scalars['ID']['input'];
   note?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type MutationReviewEmployeeTargetArgs = {
+  id: Scalars['ID']['input'];
+  input: ReviewEmployeeTargetInput;
+};
+
+
+export type MutationReviewFailedPaymentArgs = {
+  case_id: Scalars['ID']['input'];
+  client_request_id?: InputMaybe<Scalars['String']['input']>;
+  decision: FailedPaymentReviewDecision;
+  note: Scalars['String']['input'];
 };
 
 
@@ -23710,6 +24566,14 @@ export type MutationSetClubHiddenArgs = {
   club_doc_id: Scalars['ID']['input'];
   hidden: Scalars['Boolean']['input'];
   reason?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type MutationSetClubHostEngagementArgs = {
+  club_id: Scalars['ID']['input'];
+  host_user_id: Scalars['ID']['input'];
+  note?: InputMaybe<Scalars['String']['input']>;
+  status_key: Scalars['String']['input'];
 };
 
 
@@ -24747,6 +25611,12 @@ export type MutationSubmitEcommChangeRequestArgs = {
 };
 
 
+export type MutationSubmitEmployeeTargetArgs = {
+  id: Scalars['ID']['input'];
+  input: SubmitEmployeeTargetInput;
+};
+
+
 export type MutationSubmitFaqQuestionArgs = {
   input: SubmitFaqQuestionInput;
 };
@@ -24790,6 +25660,11 @@ export type MutationSubmitLatestBuildToStoreArgs = {
 export type MutationSubmitLeadSurveyByTokenArgs = {
   answers: Array<SurveyAnswerInput>;
   token: Scalars['String']['input'];
+};
+
+
+export type MutationSubmitPaymentDeductionClaimArgs = {
+  input: SubmitPaymentDeductionClaimInput;
 };
 
 
@@ -25460,6 +26335,17 @@ export type MutationUpdateEmailTemplateArgs = {
 export type MutationUpdateEmployeeExpenseArgs = {
   expense_doc_id: Scalars['ID']['input'];
   input: EmployeeExpenseInput;
+};
+
+
+export type MutationUpdateEmployeeTargetArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateEmployeeTargetInput;
+};
+
+
+export type MutationUpdateEmployeeTargetSettingsArgs = {
+  input: EmployeeTargetSettingsInput;
 };
 
 
@@ -27820,6 +28706,15 @@ export type PaymentCouponInfo = {
   title: Scalars['String']['output'];
 };
 
+export type PaymentDeductionClaimResult = {
+  __typename?: 'PaymentDeductionClaimResult';
+  /** True when an open claim for this payment already existed (the same ticket is returned). */
+  already_open: Scalars['Boolean']['output'];
+  case_id: Scalars['ID']['output'];
+  /** Support ticket number shown to the user, e.g. ST-A1B2C3. */
+  ticket_no: Scalars['String']['output'];
+};
+
 /** Everything checkout did for one payment — for the Finance Payment Logs detail page. */
 export type PaymentDetail = {
   __typename?: 'PaymentDetail';
@@ -27846,6 +28741,45 @@ export type PaymentDetail = {
   /** Every deferred step still owed. What the page's Retry all sends. */
   retryable_step_keys: Array<Scalars['String']['output']>;
   steps: Array<PaymentStep>;
+};
+
+export type PaymentEvent = {
+  __typename?: 'PaymentEvent';
+  actor_name?: Maybe<Scalars['String']['output']>;
+  created_at: Scalars['String']['output'];
+  details: Array<PaymentEventDetail>;
+  id: Scalars['ID']['output'];
+  source: PaymentEventSource;
+  type: Scalars['String']['output'];
+};
+
+export type PaymentEventDetail = {
+  __typename?: 'PaymentEventDetail';
+  key: Scalars['String']['output'];
+  value: Scalars['String']['output'];
+};
+
+export type PaymentEventSource =
+  | 'CLIENT'
+  | 'FINANCE'
+  | 'SERVER'
+  | 'SYSTEM'
+  | 'WEBHOOK';
+
+export type PaymentEvidenceType =
+  | 'BANK_STATEMENT'
+  | 'SCREENSHOT'
+  | 'TRANSACTION_ID';
+
+export type PaymentFailureKind =
+  | 'CANCELLED'
+  | 'FAILED'
+  | 'TIMEOUT';
+
+export type PaymentFailureReceipt = {
+  __typename?: 'PaymentFailureReceipt';
+  case_id: Scalars['ID']['output'];
+  razorpay_payment_id?: Maybe<Scalars['String']['output']>;
 };
 
 export type PaymentFilterInput = {
@@ -32817,6 +33751,8 @@ export type Query = {
   aiMonitoringLogsTable: AiMonitoringLogsTableResult;
   /** AI Portal: the copy plus the image-analysis prompt. */
   aiMonitoringSettings: AiMonitoringSettings;
+  /** The AI portal Dashboard: usage, cost, performance, users, monitoring and automation over the last range_days days (default 30, max 90). SUPER_ADMIN or AI_MANAGER. */
+  aiOverviewDashboard: AiOverviewDashboard;
   aiPrompt?: Maybe<AiPrompt>;
   aiPromptAnalytics: AiPromptAnalytics;
   aiPromptDetail?: Maybe<AiPromptDetail>;
@@ -33040,10 +33976,16 @@ export type Query = {
    * is somebody mid-onboarding who cannot yet be handed a club.
    */
   clubAdminCandidates: Array<ClubAdminCandidate>;
+  /** Header counts for that table, over every host of the club. */
+  clubAdminClubHostsSummary: ClubHostsSummary;
+  /** Hosts of one club the caller administers: contacts, last pod, this month's score, engagement status. */
+  clubAdminClubHostsTable: ClubHostTablePage;
   /** Aggregated metrics for the signed-in Club Admin's clubs. */
   clubAdminDashboard: ClubAdminDashboard;
   /** Table page over the dashboard's computed per-club breakdown rows. */
   clubAdminDashboardTable: ClubAdminClubRowTablePage;
+  /** One host of a club the caller administers. Null when the user does not host that club. */
+  clubAdminHostDetail?: Maybe<ClubHostDetail>;
   /** Approved hosts matching the search, for the assign-host picker. Club-admin scoped. */
   clubAdminHostSearch: Array<ClubAdminHostOption>;
   /**
@@ -33102,6 +34044,8 @@ export type Query = {
    * The status argument narrows to one bucket of the table's Status column. It
    * is an argument rather than a column filter because the chip is derived from
    * four fields at once, so it cannot ride the table engine's field allowlist.
+   * lifecycle narrows to one derived time bucket (UPCOMING / COMPLETED / …) —
+   * the host page's Upcoming and Past tabs. Optional and additive.
    */
   clubAdminPodsTable: PodTablePage;
   clubAdminProfile?: Maybe<ClubAdminProfile>;
@@ -33403,6 +34347,12 @@ export type Query = {
   employeeExpenseSummary: EmployeeExpenseSummary;
   /** Finance: every employee's claims, with the employee joined on. */
   employeeExpensesTable: EmployeeExpenseTablePage;
+  /** Targets console: one employee target with its goals, the employee's report and the review. */
+  employeeTarget: EmployeeTarget;
+  /** Targets console: the month-end reminder window. */
+  employeeTargetSettings: EmployeeTargetSettings;
+  /** Targets console: every live monthly employee target (DUNCIT TABLE CONTRACT v1), newest month first. */
+  employeeTargetsTable: EmployeeTargetTablePage;
   /**
    * One Analytics console page: tiles, trends, breakdowns and a ranking. Either a preset days
    * (clamped to 7-365) or a calendar range from-to (yyyy-MM-dd in the admin zone, inclusive,
@@ -33450,6 +34400,14 @@ export type Query = {
   expenseSummary: ExpenseSummary;
   expenses: Array<Expense>;
   expensesTable: ExpenseTablePage;
+  /** One failed-payment case with booking, user, Razorpay error, evidence, verification, review, refund and ticket. */
+  failedPayment?: Maybe<FailedPaymentDetail>;
+  /** The payment's event timeline (oldest first). */
+  failedPaymentEvents: Array<PaymentEvent>;
+  /** Short-lived signed link to one private evidence file. Finance and Support only. */
+  failedPaymentEvidenceLink: FailedPaymentEvidenceLink;
+  /** Finance › Failed Payments (DUNCIT TABLE CONTRACT v1). */
+  failedPaymentsTable: FailedPaymentTablePage;
   faq?: Maybe<Faq>;
   faqSubmissions: Array<FaqSubmission>;
   /** Server-side table page (search/filter/sort/paginate) over FAQ submissions. */
@@ -33850,6 +34808,8 @@ export type Query = {
   myDataExport: Scalars['String']['output'];
   /** Partner: the same list for the caller's own brands (one brand when brand_id is given). */
   myDeletionRefundsTable: ProductOrderTablePage;
+  /** Employee console: your targets still waiting for a progress report inside the month-end reminder window. */
+  myDueEmployeeTargets: Array<EmployeeTarget>;
   /** Partner: one of the caller's own brands, at any status — what the brand wizard opens. */
   myEcommBrand?: Maybe<EcommBrand>;
   /** The signed-in partner's e-commerce brands (a partner may run several). */
@@ -33867,6 +34827,10 @@ export type Query = {
   myEmployeeExpenseSummary: EmployeeExpenseSummary;
   /** The signed-in employee's own claims. */
   myEmployeeExpensesTable: EmployeeExpenseTablePage;
+  /** Employee console: one of your own monthly targets. */
+  myEmployeeTarget: EmployeeTarget;
+  /** Employee console: your own monthly targets (DUNCIT TABLE CONTRACT v1), newest month first. */
+  myEmployeeTargetsTable: EmployeeTargetTablePage;
   /** Whether the signed-in member already has an open request to this host or venue. */
   myEventRequestState: MyEventRequestState;
   myEventTicketForPod?: Maybe<EventTicket>;
@@ -34786,6 +35750,8 @@ export type Query = {
    * so its own access rules decide what history they may see.
    */
   tableChangeLogs: TableChangeLogPage;
+  /** Targets console: active employees a target can be assigned to, by name or email (at most 20). */
+  targetAssignableEmployees: Array<EmployeeTargetAssignee>;
   /** HR console: one structure with all its seats and pay. */
   teamStructure: TeamStructureView;
   /** HR console: share links of a structure. */
@@ -35203,6 +36169,11 @@ export type QueryAiLibraryDashboardArgs = {
 
 export type QueryAiMonitoringLogsTableArgs = {
   query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryAiOverviewDashboardArgs = {
+  range_days?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -35670,6 +36641,17 @@ export type QueryClubAdminCandidatesArgs = {
 };
 
 
+export type QueryClubAdminClubHostsSummaryArgs = {
+  club_id: Scalars['ID']['input'];
+};
+
+
+export type QueryClubAdminClubHostsTableArgs = {
+  club_id: Scalars['ID']['input'];
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
 export type QueryClubAdminDashboardArgs = {
   from?: InputMaybe<Scalars['String']['input']>;
   to?: InputMaybe<Scalars['String']['input']>;
@@ -35680,6 +36662,12 @@ export type QueryClubAdminDashboardTableArgs = {
   from?: InputMaybe<Scalars['String']['input']>;
   query?: InputMaybe<TableQueryInput>;
   to?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type QueryClubAdminHostDetailArgs = {
+  club_id: Scalars['ID']['input'];
+  user_id: Scalars['ID']['input'];
 };
 
 
@@ -35734,6 +36722,7 @@ export type QueryClubAdminPodPaymentsArgs = {
 
 export type QueryClubAdminPodsTableArgs = {
   club_id?: InputMaybe<Scalars['ID']['input']>;
+  lifecycle?: InputMaybe<PodLifecycle>;
   query?: InputMaybe<TableQueryInput>;
   status?: InputMaybe<PodRowStatus>;
 };
@@ -36368,6 +37357,16 @@ export type QueryEmployeeExpensesTableArgs = {
 };
 
 
+export type QueryEmployeeTargetArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryEmployeeTargetsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
 export type QueryEntityAnalyticsArgs = {
   city?: InputMaybe<Scalars['ID']['input']>;
   compare?: InputMaybe<AnalyticsCompare>;
@@ -36494,6 +37493,27 @@ export type QueryExpensesArgs = {
 
 
 export type QueryExpensesTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryFailedPaymentArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryFailedPaymentEventsArgs = {
+  case_id: Scalars['ID']['input'];
+};
+
+
+export type QueryFailedPaymentEvidenceLinkArgs = {
+  case_id: Scalars['ID']['input'];
+  file_ref: Scalars['String']['input'];
+};
+
+
+export type QueryFailedPaymentsTableArgs = {
   query?: InputMaybe<TableQueryInput>;
 };
 
@@ -37293,6 +38313,16 @@ export type QueryMyEmployeeExpenseArgs = {
 
 
 export type QueryMyEmployeeExpensesTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryMyEmployeeTargetArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryMyEmployeeTargetsTableArgs = {
   query?: InputMaybe<TableQueryInput>;
 };
 
@@ -39088,6 +40118,11 @@ export type QueryTableChangeLogsArgs = {
   query?: InputMaybe<TableQueryInput>;
   table: Scalars['String']['input'];
   variables: Scalars['String']['input'];
+};
+
+
+export type QueryTargetAssignableEmployeesArgs = {
+  search?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -41226,6 +42261,25 @@ export type ReportMailRecipient =
   /** The person who filed the report. */
   | 'REPORTER';
 
+export type ReportPaymentFailureInput = {
+  /** 1-based count of failures for this checkout session on the device. */
+  attempt_number: Scalars['Int']['input'];
+  /** Idempotency key — one per report. */
+  client_request_id: Scalars['String']['input'];
+  error_code?: InputMaybe<Scalars['String']['input']>;
+  error_description?: InputMaybe<Scalars['String']['input']>;
+  error_reason?: InputMaybe<Scalars['String']['input']>;
+  error_source?: InputMaybe<Scalars['String']['input']>;
+  error_step?: InputMaybe<Scalars['String']['input']>;
+  kind: PaymentFailureKind;
+  /** Payment.id returned by createRazorpayOrder (payment_doc_id). */
+  payment_doc_id: Scalars['ID']['input'];
+  razorpay_order_id?: InputMaybe<Scalars['String']['input']>;
+  razorpay_payment_id?: InputMaybe<Scalars['String']['input']>;
+  /** Whether the failure dialog offered Retry. */
+  retry_shown: Scalars['Boolean']['input'];
+};
+
 /** One selectable chip on the app's Report a Problem form. */
 export type ReportProblemCategory = {
   __typename?: 'ReportProblemCategory';
@@ -41454,6 +42508,11 @@ export type ReturnableLine = {
   /** Null when the product was not returnable when bought. */
   returnable_until?: Maybe<Scalars['String']['output']>;
   variant_id: Scalars['String']['output'];
+};
+
+export type ReviewEmployeeTargetInput = {
+  comment?: InputMaybe<Scalars['String']['input']>;
+  expected_revision: Scalars['Int']['input'];
 };
 
 export type ReviewPaymentReleaseInput = {
@@ -46290,6 +47349,16 @@ export type SubmitContactInput = {
   subject?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type SubmitEmployeeTargetInput = {
+  /** At least one. */
+  achievements: Array<EmployeeTargetAchievementInput>;
+  /** Whole percent, 0 to 100. */
+  completion_percent: Scalars['Int']['input'];
+  /** The revision the employee loaded. A record changed since is refused (CONFLICT). */
+  expected_revision: Scalars['Int']['input'];
+  updates?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type SubmitFaqQuestionInput = {
   captcha_answer?: InputMaybe<Scalars['String']['input']>;
   /** Human check, required only when nobody is signed in. See the captchaChallenge query. */
@@ -46335,6 +47404,16 @@ export type SubmitJobApplicationInput = {
   resume_url?: InputMaybe<Scalars['String']['input']>;
   role_content_id?: InputMaybe<Scalars['ID']['input']>;
   role_title: Scalars['String']['input'];
+};
+
+export type SubmitPaymentDeductionClaimInput = {
+  client_request_id: Scalars['String']['input'];
+  evidence_type: PaymentEvidenceType;
+  /** Values the upload hooks returned for folder payment-evidence (1-5). Required for SCREENSHOT and BANK_STATEMENT. */
+  file_refs?: InputMaybe<Array<Scalars['String']['input']>>;
+  payment_doc_id: Scalars['ID']['input'];
+  /** Required for TRANSACTION_ID. */
+  transaction_id?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type SubmitStatusReportInput = {
@@ -47769,6 +48848,8 @@ export type Ticket = {
   last_message_at: Scalars['String']['output'];
   message_count: Scalars['Int']['output'];
   messages: Array<TicketMessage>;
+  /** The payment (Payment.id) this ticket is about, when it was raised from a checkout. */
+  payment_id?: Maybe<Scalars['ID']['output']>;
   /** The pod this ticket is about, if it was raised from a pod. */
   pod_id?: Maybe<Scalars['ID']['output']>;
   pod_title: Scalars['String']['output'];
@@ -48806,6 +49887,19 @@ export type UpdateAppSettingsInput = {
   happening_nearby_days?: InputMaybe<Scalars['Int']['input']>;
   /** Account Health points a host loses for filing a Request Change (0-10, 0 disables it). */
   host_change_request_health_penalty?: InputMaybe<Scalars['Int']['input']>;
+  /** The whole status list in display order. A stored key left out is kept, switched off; at least one must stay active. */
+  host_engagement_statuses?: InputMaybe<Array<HostEngagementStatusInput>>;
+  /** Days without a completed pod before a host is inactive, 1-90 (held to the nearest end). */
+  host_inactivity_days?: InputMaybe<Scalars['Int']['input']>;
+  /** Monthly completed-pod target per host, 1-100 (held to the nearest end). */
+  host_monthly_pod_target?: InputMaybe<Scalars['Int']['input']>;
+  host_performance_notify_club_admins?: InputMaybe<Scalars['Boolean']['input']>;
+  /** 1-28 (held to the nearest end). */
+  host_performance_notify_day?: InputMaybe<Scalars['Int']['input']>;
+  host_performance_notify_enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  host_performance_notify_hosts?: InputMaybe<Scalars['Boolean']['input']>;
+  /** 1-100 (held to the nearest end). */
+  host_underperform_threshold_pct?: InputMaybe<Scalars['Int']['input']>;
   jwt_expires_in?: InputMaybe<Scalars['String']['input']>;
   jwt_no_expiry?: InputMaybe<Scalars['Boolean']['input']>;
   /** Max Backout attempts a user gets per pod (min 1). */
@@ -49180,6 +50274,13 @@ export type UpdateEmailTemplateInput = {
   name?: InputMaybe<Scalars['String']['input']>;
   subject?: InputMaybe<Scalars['String']['input']>;
   variables?: InputMaybe<Array<EmailTemplateVariableInput>>;
+};
+
+export type UpdateEmployeeTargetInput = {
+  /** The revision the editor loaded. A record changed since is refused (CONFLICT). */
+  expected_revision: Scalars['Int']['input'];
+  goals: Array<EmployeeTargetGoalInput>;
+  notes?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type UpdateEnvEntryInput = {

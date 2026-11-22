@@ -609,6 +609,66 @@ changeRequests: {
       chatRetentionInvalid: 'Enter a whole number of days between 1 and 3650.',
     },
     podSettings: {
+      // "Host engagement & performance" group.
+      hostEngagement: {
+        groupTitle: 'Host engagement & performance',
+        groupDesc:
+          'How Club Admins see their hosts on Partners > Clubs > Hosts, how each host’s monthly Host Performance Score is calculated, and the monthly WhatsApp and email messages about it.',
+        inactivityTitle: 'Host inactivity window',
+        inactivityDesc:
+          'A host with no completed pod in a club for this many days is highlighted in yellow on that club’s Hosts page, with a warning asking the Club Admin to contact them. Default 14 days (2 weeks).',
+        inactivityLabel: 'Days without a completed pod',
+        inactivityHint: 'A whole number from 1 to 90. Default 14.',
+        inactivityInvalid: 'Enter a whole number from 1 to 90.',
+        targetTitle: 'Monthly pod target per host',
+        targetDesc:
+          'Completed pods a host should run in a club each calendar month. Meeting it scores 100%; fewer scores proportionally less — with a target of 8, 6 pods score 75% and 4 pods 50%. More than the target still scores 100%.',
+        targetLabel: 'Pods per month',
+        targetHint: 'A whole number from 1 to 100. Default 8.',
+        targetInvalid: 'Enter a whole number from 1 to 100.',
+        statusesTitle: 'Engagement statuses',
+        statusesDesc:
+          'The statuses a Club Admin can file a host under after contacting them. Rename or reorder them freely. A saved status cannot be deleted — switch it off instead, and hosts already filed under it keep it.',
+        statusLabelField: 'Label',
+        statusOffered: 'Offered',
+        statusKey: 'Key: {key}',
+        statusNew: 'New',
+        moveUp: 'Move up',
+        moveDown: 'Move down',
+        addStatus: 'Add status',
+        removeNew: 'Remove',
+        statusesInvalid: 'Every status needs a label of up to 40 characters, and at least one must stay offered.',
+        statusesTooMany: 'At most 20 statuses can be configured.',
+        saveStatuses: 'Save statuses',
+        saving: 'Saving…',
+        notifyEnabledTitle: 'Monthly performance messages',
+        notifyEnabledDesc:
+          'Once a month, send hosts and Club Admins a WhatsApp message and an email about the month before. Templates are edited in the Communications portal; each message goes out at most once per person, club and month.',
+        notifyOn: 'On — messages go out on the day set below.',
+        notifyOff: 'Off — scores are still calculated every month, but nobody is messaged.',
+        notifyDayTitle: 'Day of the month to send',
+        notifyDayDesc:
+          'The messages for a month go out on this day of the following month, in the admin time zone. Use 1 to send as soon as the month closes.',
+        notifyDayLabel: 'Day of the month',
+        notifyDayHint: 'A whole number from 1 to 28. Default 1.',
+        notifyDayInvalid: 'Enter a whole number from 1 to 28.',
+        notifyHostsTitle: 'Message hosts',
+        notifyHostsDesc:
+          'Each host gets their monthly pod target, the pods they completed, their score and a line on how to improve.',
+        notifyHostsOn: 'Hosts are messaged.',
+        notifyHostsOff: 'Hosts are not messaged.',
+        notifyAdminsTitle: 'Message Club Admins',
+        notifyAdminsDesc:
+          'Each Club Admin gets the hosts in their club who are inactive or below the threshold, with contact details, scores and a suggested next step — and a reminder that they may contact hosts to understand their challenges and help them conduct more pods. Nothing is sent for a club where every host is on track.',
+        notifyAdminsOn: 'Club Admins are messaged.',
+        notifyAdminsOff: 'Club Admins are not messaged.',
+        thresholdTitle: 'Underperformance threshold',
+        thresholdDesc:
+          'A host scoring below this percentage is listed to their Club Admin as below target. 100 lists anyone who missed the target; 50 lists only hosts who reached less than half of it.',
+        thresholdLabel: 'Score below (%)',
+        thresholdHint: 'A whole number from 1 to 100. Default 100.',
+        thresholdInvalid: 'Enter a whole number from 1 to 100.',
+      },
       title: 'Pod Settings',
       saved: 'Pod settings saved',
       save: 'Save',

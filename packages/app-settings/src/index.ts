@@ -100,6 +100,7 @@ export {
   isRtlLocale,
   localeOptions,
   EMPLOYEE_EXPENSE_BUNDLE,
+  EMPLOYEE_TARGETS_BUNDLE,
   FINANCE_BUNDLE,
   flattenCatalogue,
   GRIEVANCE_BUNDLE,

@@ -14,6 +14,7 @@ import { ECOMM_PORTAL_BUNDLE } from './bundles/ecomm-portal';
 import { ECOMM_STORE_BUNDLE } from './bundles/ecomm-store';
 import { EARNINGS_BUNDLE } from './bundles/earnings';
 import { EMPLOYEE_EXPENSE_BUNDLE } from './bundles/employee-expense';
+import { EMPLOYEE_TARGETS_BUNDLE } from './bundles/employee-targets';
 import { POD_TIMELINE_BUNDLE } from './bundles/pod-timeline';
 import { FINANCE_BUNDLE } from './bundles/finance';
 import { GRIEVANCE_BUNDLE } from './bundles/grievance';
@@ -108,6 +109,7 @@ export {
   ECOMM_STORE_BUNDLE,
   EARNINGS_BUNDLE,
   EMPLOYEE_EXPENSE_BUNDLE,
+  EMPLOYEE_TARGETS_BUNDLE,
   POD_TIMELINE_BUNDLE,
   FINANCE_BUNDLE,
   GRIEVANCE_BUNDLE,
@@ -208,6 +210,7 @@ export const SURFACE_BUNDLES: Record<string, NestedCatalogue> = {
   ecommStore: ECOMM_STORE_BUNDLE,
   earnings: EARNINGS_BUNDLE,
   employeeExpense: EMPLOYEE_EXPENSE_BUNDLE,
+  employeeTargets: EMPLOYEE_TARGETS_BUNDLE,
   podTimeline: POD_TIMELINE_BUNDLE,
   finance: FINANCE_BUNDLE,
   grievance: GRIEVANCE_BUNDLE,

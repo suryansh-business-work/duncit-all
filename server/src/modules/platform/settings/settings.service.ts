@@ -28,6 +28,16 @@ import { DEFAULT_TICKET_DISCOUNT_MAX_PCT } from "@modules/pods/pod/pod.ticketDis
 import { launchMediaOf } from "@modules/platform/location/location.model";
 import { launchMediaSchema, type LaunchMediaInput } from "@modules/platform/location/location.validator";
 import { validate } from "@utils/validate";
+import {
+  HOST_ENGAGEMENT_BOOLEAN_FIELDS,
+  HOST_ENGAGEMENT_CLEANED_FIELDS,
+  hostEngagementPub,
+  hostEngagementSettingsOf,
+  mergeHostEngagementStatuses,
+  readHostEngagementStatuses,
+  type HostEngagementSettings,
+  type HostEngagementStatusInput,
+} from "./settings.hostEngagement";
 import { cleanGoogleClientId } from "@modules/access/auth/google-client-id";
 
 /** Minimum joining age when the admin hasn't set an explicit value. */
@@ -323,6 +333,7 @@ const toAppPub = (d: any) => ({
   ),
   venue_offer_max_counters: cleanVenueOfferMaxCounters(d?.venue_offer_max_counters),
   pod_min_advance_days: cleanPodMinAdvanceDays(d?.pod_min_advance_days),
+  ...hostEngagementPub(d),
   updated_at: d?.updated_at?.toISOString?.() ?? "",
 });
 
@@ -743,6 +754,14 @@ type AppSettingsUpdateInput = {
   venue_offer_response_hours_default?: number;
   venue_offer_max_counters?: number;
   pod_min_advance_days?: number;
+  host_inactivity_days?: number;
+  host_monthly_pod_target?: number;
+  host_engagement_statuses?: HostEngagementStatusInput[] | null;
+  host_performance_notify_enabled?: boolean;
+  host_performance_notify_day?: number;
+  host_performance_notify_hosts?: boolean;
+  host_performance_notify_club_admins?: boolean;
+  host_underperform_threshold_pct?: number;
 };
 
 /** Fields copied to the update as-is when the caller supplied them. */
@@ -756,6 +775,7 @@ const APP_SETTING_PASSTHROUGH_FIELDS = [
   "attendance_otp_required",
   "pod_cancel_refund_hold",
   "pod_auto_cancel_enabled",
+  ...HOST_ENGAGEMENT_BOOLEAN_FIELDS,
 ] as const;
 
 /** Saving an anchor stamps the server clock beside it, so every device can
@@ -800,6 +820,7 @@ const APP_SETTING_CLEANED_FIELDS: ReadonlyArray<
   ["venue_offer_response_hours_default", cleanVenueOfferResponseHours],
   ["venue_offer_max_counters", cleanVenueOfferMaxCounters],
   ["pod_min_advance_days", cleanPodMinAdvanceDays],
+  ...HOST_ENGAGEMENT_CLEANED_FIELDS,
 ];
 
 const buildAppSettingsUpdate = (input: AppSettingsUpdateInput) => {
@@ -877,6 +898,16 @@ export const settingsService = {
   async getPodMinAdvanceDays(): Promise<number> {
     const doc = await AppSettingsModel.findOne({ singleton_key: "app" }).select("pod_min_advance_days").lean();
     return cleanPodMinAdvanceDays(doc?.pod_min_advance_days);
+  },
+
+  /** Everything Club Admin host engagement reads from Pod Settings, clamped — one read for the whole group. */
+  async getHostEngagementSettings(): Promise<HostEngagementSettings> {
+    const doc = await AppSettingsModel.findOne({ singleton_key: "app" })
+      .select(
+        "host_inactivity_days host_monthly_pod_target host_engagement_statuses host_performance_notify_enabled host_performance_notify_day host_performance_notify_hosts host_performance_notify_club_admins host_underperform_threshold_pct",
+      )
+      .lean();
+    return hostEngagementSettingsOf(doc as Record<string, unknown> | null);
   },
 
   async getPodCompletionSettings(): Promise<{ timeout_hours: number; reminder_hours: number }> {
@@ -1067,6 +1098,15 @@ export const settingsService = {
 
   async updateAppSettings(input: AppSettingsUpdateInput) {
     const update = buildAppSettingsUpdate(input);
+    // The status list merges onto what is stored (keys are permanent), so it
+    // needs the stored list — read only when the caller sent one.
+    if (input.host_engagement_statuses) {
+      const current = await AppSettingsModel.findOne({ singleton_key: "app" }).select("host_engagement_statuses").lean();
+      update.host_engagement_statuses = mergeHostEngagementStatuses(
+        input.host_engagement_statuses,
+        readHostEngagementStatuses(current?.host_engagement_statuses),
+      );
+    }
     const doc = await AppSettingsModel.findOneAndUpdate(
       { singleton_key: "app" },
       { $set: update },

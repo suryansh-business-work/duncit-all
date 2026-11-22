@@ -239,10 +239,17 @@ export {
 } from './official-status';
 export {
   PAYMENT_FAILURE_KEYS,
+  EMPTY_PAYMENT_FAILURE_STATE,
   classifyPaymentFailure,
+  paymentFailureReportInput,
   paymentTicketDraft,
   type PaymentFailure,
+  type PaymentFailureContext,
   type PaymentFailureKind,
+  type PaymentFailureOptions,
+  type PaymentFailureState,
+  type PaymentFailureReportContext,
+  type PaymentFailureReportInput,
   type PaymentTicketContext,
   type RazorpayErrorLike,
 } from './payment-failure';
@@ -1495,6 +1502,24 @@ export {
   type EmployeeExpenseTotals,
 } from './employee-expense';
 export {
+  EMPLOYEE_TARGET_LIMITS,
+  EMPLOYEE_TARGET_REMINDER_BOUNDS,
+  EMPLOYEE_TARGET_SELECTION,
+  EMPLOYEE_TARGET_STATUSES,
+  EMPLOYEE_TARGET_STATUS_COLORS,
+  EMPLOYEE_TARGET_STATUS_KEYS,
+  canEditTargetGoals,
+  canSubmitTarget,
+  dateOfMonthKey,
+  employeeTargetStatusOptions,
+  formatMonthKey,
+  monthKeyOf,
+  type EmployeeTargetAchievement,
+  type EmployeeTargetGoal,
+  type EmployeeTargetRecord,
+  type EmployeeTargetStatus,
+} from './employee-target';
+export {
   CONTACT_KEY_MIN_DIGITS,
   RADAR_MAX_ITEMS,
   RADAR_RING_CAPACITY,
@@ -1826,6 +1851,22 @@ export {
   startsWithinPodMinAdvance,
   type PodMinAdvanceWindow,
 } from './pod-min-advance';
+export {
+  DEFAULT_HOST_INACTIVITY_DAYS,
+  DEFAULT_HOST_MONTHLY_POD_TARGET,
+  DEFAULT_HOST_PERFORMANCE_NOTIFY_DAY,
+  DEFAULT_HOST_UNDERPERFORM_THRESHOLD_PCT,
+  MAX_HOST_ENGAGEMENT_LABEL_LENGTH,
+  MAX_HOST_ENGAGEMENT_STATUSES,
+  MAX_HOST_INACTIVITY_DAYS,
+  MAX_HOST_MONTHLY_POD_TARGET,
+  MAX_HOST_PERFORMANCE_NOTIFY_DAY,
+  MAX_HOST_UNDERPERFORM_THRESHOLD_PCT,
+  MIN_HOST_INACTIVITY_DAYS,
+  MIN_HOST_MONTHLY_POD_TARGET,
+  MIN_HOST_PERFORMANCE_NOTIFY_DAY,
+  MIN_HOST_UNDERPERFORM_THRESHOLD_PCT,
+} from './host-engagement';
 export {
   DEFAULT_BOOKING_STEP_MINUTES,
   addDaysYmd,

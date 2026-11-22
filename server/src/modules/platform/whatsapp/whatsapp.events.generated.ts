@@ -324,6 +324,14 @@ export const WA_EVENTS: readonly WaEvent[] = [
     ],
   },
   {
+    key: 'HOST_MONTHLY_PERFORMANCE',
+    campaign: 'host_monthly_performance',
+    audience: 'HOST',
+    category: 'notification',
+    fires: 'Monthly, per club: the host’s pod target, completed pods and performance score for the month before',
+    params: ['Recipient name', 'Club', 'Month', 'Target', 'Completed', 'Score', 'Guidance', 'Create Pod Link'],
+  },
+  {
     key: 'HOST_PAYMENT_SENT',
     campaign: 'host_payment',
     audience: 'HOST',
@@ -800,6 +808,22 @@ export const WA_EVENTS: readonly WaEvent[] = [
       'Bookings needed',
       'Cancel deadline',
       'Pod Link',
+    ],
+  },
+  {
+    key: 'CLUB_ADMIN_HOST_PERFORMANCE_ALERT',
+    campaign: 'club_admin_host_performance_alert',
+    audience: 'CLUB_ADMIN',
+    category: 'notification',
+    fires: 'Monthly, per club: hosts who are inactive or below the monthly pod target',
+    params: [
+      'Recipient name',
+      'Club',
+      'Month',
+      'Hosts needing attention',
+      'Inactive hosts',
+      'Below target',
+      'Hosts Link',
     ],
   },
   {

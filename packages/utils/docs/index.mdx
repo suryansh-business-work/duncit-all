@@ -679,6 +679,18 @@ exports:
   - 'EMPLOYEE_EXPENSE_STATUS_COLORS'
   - 'EMPLOYEE_EXPENSE_STATUS_KEYS'
   - 'EMPLOYEE_EXPENSE_SELECTION'
+  - 'EMPLOYEE_TARGET_STATUSES'
+  - 'EMPLOYEE_TARGET_STATUS_COLORS'
+  - 'EMPLOYEE_TARGET_STATUS_KEYS'
+  - 'EMPLOYEE_TARGET_LIMITS'
+  - 'EMPLOYEE_TARGET_REMINDER_BOUNDS'
+  - 'EMPLOYEE_TARGET_SELECTION'
+  - 'canEditTargetGoals'
+  - 'canSubmitTarget'
+  - 'employeeTargetStatusOptions'
+  - 'monthKeyOf'
+  - 'dateOfMonthKey'
+  - 'formatMonthKey'
   - 'coinLedgerLabelKey'
   - 'ConsentCategory'
   - 'ConsentChoice'
@@ -1184,6 +1196,25 @@ exclusiveOfGstBill(750, [{ key: 'ticketDiscount', amount: 37.5 }], 603.81, 18)
 // 635.59 − 31.78 = 603.81 taxable, + 108.69 GST = 712.50
 ```
 
+### Payment failures — `payment-failure`
+
+| Export | Signature | Meaning |
+| --- | --- | --- |
+| `classifyPaymentFailure` | `(raw: RazorpayErrorLike \| null) => PaymentFailure` | CANCELLED (sheet closed, `null`), TIMEOUT (outcome unknown — the only kind that `raisesTicket`) or FAILED. Carries Razorpay's code, description, payment/order ids and its `reason` / `source` / `step` verbatim. |
+| `PAYMENT_FAILURE_KEYS` | `Record<PaymentFailureKind, { title, body }>` | The `mweb.payment.*` copy each outcome renders with. |
+| `paymentTicketDraft` | `(failure, PaymentTicketContext) => { subject, body_text, category: 'PAYMENT' }` | The ticket a timed-out payment opens on the buyer's behalf. |
+| `PaymentFailureState` / `EMPTY_PAYMENT_FAILURE_STATE` | state / its empty value | What both apps' failure dialog reads: the failure, the ticket number while it is raised (`ticketPending` / `ticketFailed`) and `paymentDocId`, the payment a deduction claim is filed against. |
+| `PaymentFailureContext` / `PaymentFailureOptions` | types | What the checkout knows at the failure (`PaymentTicketContext` plus the Razorpay order) and `reportToServer` (pod checkout only). |
+| `paymentFailureReportInput` | `(failure, PaymentFailureReportContext) => PaymentFailureReportInput \| null` | The `reportPaymentFailure` variables both apps send from the pod checkout: the gateway facts plus `payment_doc_id`, the order the sheet was opened for (a dismissal reports none), `retry_shown`, a whole `attempt_number` ≥ 1 and the caller's `client_request_id`. `null` when no Duncit payment exists to attach it to. |
+
+```ts
+paymentFailureReportInput(classifyPaymentFailure(null), {
+  paymentDocId: 'PAY-77', razorpayOrderId: 'order_9', retryShown: true, attemptNumber: 1, clientRequestId: uuid,
+}); // { payment_doc_id: 'PAY-77', kind: 'CANCELLED', razorpay_order_id: 'order_9', error_code: null, … }
+```
+
+The deducted-payment claim's form rules live in `@duncit/forms/schemas` (`makePaymentClaimSchema`), since they need Zod.
+
 ### Delivery quote gate — `delivery-quote-gate`
 
 The product checkout's Pay button stays shut until the delivery charge for the cart and pincode
@@ -1597,6 +1628,23 @@ const window = podMinAdvanceWindow(Date.parse('2026-11-10T08:30:00Z'), 'Asia/Kol
 // { day: '2026-11-15', startMs: Date.parse('2026-11-14T18:30:00Z') }
 startsWithinPodMinAdvance(slots, window); // only slots from 15 Nov on
 ```
+
+### Host engagement & performance — `host-engagement`
+
+The ranges of Pod Settings' "Host engagement & performance" group, shared by
+the console cards and (as twins) the server, which clamps to the same numbers.
+A host's monthly score is `min(100, round(completed / target × 100))` over the
+calendar month in the admin's time zone; a host with no completed pod in the
+last N days is flagged inactive (yellow row in Partners > Club Admin > Hosts).
+
+| Export | Value | Meaning |
+| --- | --- | --- |
+| `DEFAULT_HOST_INACTIVITY_DAYS` / `MIN_…` / `MAX_…` | 14, 1, 90 | Days without a completed pod before a host is inactive. |
+| `DEFAULT_HOST_MONTHLY_POD_TARGET` / `MIN_…` / `MAX_…` | 8, 1, 100 | Completed pods a month that score 100%. |
+| `DEFAULT_HOST_PERFORMANCE_NOTIFY_DAY` / `MIN_…` / `MAX_…` | 1, 1, 28 | Day of the month the monthly messages go out. |
+| `DEFAULT_HOST_UNDERPERFORM_THRESHOLD_PCT` / `MIN_…` / `MAX_…` | 100, 1, 100 | Below this score a host is underperforming. |
+| `MAX_HOST_ENGAGEMENT_STATUSES` | 20 | Most engagement statuses an admin may configure. |
+| `MAX_HOST_ENGAGEMENT_LABEL_LENGTH` | 40 | Longest status label. |
 
 ### Create Pod steps
 
@@ -3385,6 +3433,36 @@ sees them.
 
 It is deliberately **data only**: no formatter, no component. The two consoles are MUI twins
 of one screen, and rule 40's twin clause applies — they share the shape, never the UI.
+
+## Monthly employee targets
+
+`employee-target.ts` is the shape the Targets console and the Employee console agree on. The
+Targets console assigns an employee their goals for a month and reviews the report; the
+employee sees the goals and files the report (completion percentage, achievements and
+updates) from the Employee console.
+
+```ts
+EMPLOYEE_TARGET_STATUSES; // ['ASSIGNED', 'SUBMITTED', 'REVIEWED']
+EMPLOYEE_TARGET_STATUS_COLORS.SUBMITTED; // 'warning' — one meaning of amber, both consoles
+EMPLOYEE_TARGET_STATUS_KEYS.REVIEWED; // 'employeeTargets.status.REVIEWED'
+employeeTargetStatusOptions(t); // [{ value: 'ASSIGNED', label: t('employeeTargets.status.ASSIGNED') }, …] — the status filter
+EMPLOYEE_TARGET_LIMITS.achievementsMax; // 30 — the server refuses the 31st row too
+EMPLOYEE_TARGET_REMINDER_BOUNDS.graceDays; // { min: 0, max: 15 } — Targets > Settings
+EMPLOYEE_TARGET_SELECTION; // the GraphQL field list both consoles interpolate
+canEditTargetGoals('SUBMITTED'); // false — goals lock once progress is reported
+canSubmitTarget('REVIEWED'); // false — read-only until an admin reopens it
+monthKeyOf(new Date(2026, 10, 18)); // '2026-11'
+dateOfMonthKey('2026-11'); // 1 Nov 2026 (local), for a month picker; null for junk
+formatMonthKey('2026-11', 'en-IN'); // 'November 2026' — Intl, no hand-written pattern
+```
+
+`EMPLOYEE_TARGET_LIMITS` is a twin of the server's `employeeTarget.rules.ts` (the server imports
+no `@duncit/*` package): the forms stop at the same limits the API enforces, so a too-long
+row is caught in the form instead of coming back as an error. Change both together.
+
+Whether a target is due is never worked out here. The reminder window is an admin setting
+read in the app's time zone, so the server sends `reminder_active` on every row and both
+consoles only display it.
 
 ## A link into another city
 

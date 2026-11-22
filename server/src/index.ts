@@ -15,6 +15,7 @@ import { startPodDraftCleanupScheduler } from '@modules/pods/pod-draft/pod-draft
 import { startRentalScheduler } from '@modules/venues/venueRental/rentalPayout.service';
 import { startAutoPodSweepScheduler } from '@modules/pods/autoPod/autoPod.recovery';
 import { startPodAutoCancelScheduler } from '@modules/pods/pod/pod.autoCancel';
+import { startHostPerformanceScheduler } from '@modules/clubs/clubAdmin/hosts/hostPerformance.job';
 import { startRefundHoldReleaseScheduler } from '@modules/pods/pod/pod.refundHold';
 import { startSlotRequestExpiryScheduler } from '@modules/venues/venueSlot/venueSlot.expiry';
 import { startCoinExpiryScheduler } from '@modules/finance/coin/coin.expiry';
@@ -33,6 +34,8 @@ import { startShortLinkRetentionScheduler } from '@modules/crm/marketing/shortLi
 import { startAnalyticsRetentionScheduler } from '@modules/platform/analytics/analytics.retention';
 import { startContactInviteRetentionScheduler } from '@modules/access/contacts/contacts.retention';
 import { startPaymentReconciler } from '@modules/finance/payment/payment.reconciler';
+import { startFailedPaymentRefundPoller } from '@modules/finance/failedPayment/failedPayment.refundPoller';
+import { buildRazorpayWebhookRouter } from '@modules/finance/failedPayment/failedPayment.webhook';
 import { startVenueFoodReconciler } from '@modules/venues/venueFood/venueFoodOrder.payment';
 import { startStoreScheduler } from '@modules/commerce/store/store.scheduler';
 import { startProductCartReminderScheduler } from '@modules/commerce/productCart/productCart.scheduler';
@@ -43,6 +46,7 @@ import { startWhatsappScheduler } from '@modules/platform/whatsapp/whatsapp.sche
 import { startMeetingReminderScheduler } from '@modules/survey/meeting.reminder';
 import { startCheckoutNudgeScheduler } from '@modules/finance/payment/payment.checkoutNudge';
 import { startCoinExpiryReminderScheduler } from '@modules/finance/coin/coin.expiryReminder';
+import { startEmployeeTargetReminderScheduler } from '@modules/targets/employeeTarget/employeeTarget.reminder';
 import { startDbBackupScheduler } from '@modules/platform/dbBackup/dbBackup.scheduler';
 import { startAppStoreReleaseScheduler } from '@modules/platform/appBuild/appStoreRelease.scheduler';
 import { startStoreReleaseScheduler } from '@modules/platform/appBuild/storeRelease.scheduler';
@@ -478,6 +482,12 @@ async function bootstrap() {
     );
     await growthCalculationService.syncIndexes();
   });
+  // Monthly employee targets: one live target per employee per month, the
+  // double-pressed Assign guard and the reminder sweep's index.
+  await safeSeed('employeeTargetIndexes', async () => {
+    const { employeeTargetService } = await import('@modules/targets/employeeTarget/employeeTarget.service');
+    await employeeTargetService.syncIndexes();
+  });
   // Our own sites and the two app stores, as a Mongo-side regex — the backfill
   // below runs in the database, so it cannot call the TypeScript classifier.
   // TWIN of shortLink.destination.ts's host rule; change one, change the other.
@@ -685,6 +695,11 @@ async function bootstrap() {
   // each venue's cancellation policy. Off until an admin enables it.
   startPodAutoCancelScheduler();
 
+  // Club Admin host performance: once Pod Settings' day of the month arrives,
+  // snapshot every host's month in each club and (when switched on) send the
+  // host + club-admin performance messages. Hourly tick, one run per month.
+  startHostPerformanceScheduler();
+
   // Held cancellation refunds: pay every one whose pod has now started, which
   // is also the moment its cancellation stopped being revocable. Nothing to do
   // unless an admin turned the hold on.
@@ -748,6 +763,8 @@ async function bootstrap() {
   // Payments: adopt captures Razorpay took while the client was gone, and
   // re-run finalization side effects that failed the first time round.
   startPaymentReconciler();
+  // Failed-payment refunds whose end no webhook reported: finish them from Razorpay.
+  startFailedPaymentRefundPoller();
 
   // Venue food orders are paid to the venue's own Razorpay account, outside the
   // payment finalizer — they get their own capture and refund sweep.
@@ -821,6 +838,9 @@ async function bootstrap() {
   startCheckoutNudgeScheduler();
   // A reminder a few days before a member's coins lapse (Loyalty > Duncit Coin).
   startCoinExpiryReminderScheduler();
+  // Month-end reminders to employees who have not reported on their monthly
+  // target yet (Targets > Settings sets the window).
+  startEmployeeTargetReminderScheduler();
 
   const app = express();
   const httpServer = http.createServer(app);
@@ -991,6 +1011,10 @@ async function bootstrap() {
 
   // CRM softphone + AI call Twilio webhooks (parses its own urlencoded bodies).
   app.use('/twilio', buildCallWebhookRouter());
+
+  // Razorpay webhook at /webhooks/razorpay. FIRST on /webhooks: it verifies an
+  // HMAC over the raw body, which a JSON parser mounted earlier would consume.
+  app.use('/webhooks', buildRazorpayWebhookRouter());
 
   // RazorpayX payout outcomes at /webhooks/razorpay-payouts (signed, reads its own raw
   // body): the only thing that can mark a withdrawal or a Send Money transfer paid.

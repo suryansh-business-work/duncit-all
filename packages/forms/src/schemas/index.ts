@@ -320,6 +320,22 @@ export {
 } from './banner-kit';
 
 export {
+  makePaymentClaimSchema,
+  PAYMENT_EVIDENCE_FOLDER,
+  PAYMENT_EVIDENCE_HINT_KEYS,
+  PAYMENT_EVIDENCE_LABEL_KEYS,
+  PAYMENT_EVIDENCE_MAX_FILES,
+  PAYMENT_EVIDENCE_MIME_TYPES,
+  PAYMENT_EVIDENCE_TYPES,
+  paymentClaimDefaults,
+  paymentClaimInput,
+  paymentEvidenceAccepts,
+  type PaymentClaimInput,
+  type PaymentClaimValues,
+  type PaymentEvidenceFileType,
+  type PaymentEvidenceType,
+} from './payment-claim';
+export {
   askDuncitHandoverDefaults,
   makeAskDuncitHandoverSchema,
   type AskDuncitHandoverValues,

@@ -54,6 +54,8 @@ export const appConfig = {
       icon: 'receipt',
       children: [
         { label: 'Payment Logs', labelKey: 'shell.nav.paymentLogs', to: '/payment-logs', icon: 'receipt' },
+        // Checkouts that did not book: the buyer's evidence, the AI + Razorpay check, review and refund.
+        { label: 'Failed Payments', labelKey: 'shell.nav.failedPayments', to: '/failed-payments', icon: 'flag' },
         { label: 'Round Offs', labelKey: 'shell.nav.roundOffs', to: '/round-offs', icon: 'percent' },
       ],
     },

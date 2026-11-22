@@ -4,6 +4,7 @@ import {
   isGstin,
   isHostname,
   isIfsc,
+  isPaymentTransactionId,
   isPhoneNumber,
   isPhysicalGiftCardNumber,
   isPhysicalGiftCardPasscode,
@@ -49,6 +50,11 @@ interface BankMock {
   account_number: string;
   upi_id: string;
   gstin: string;
+}
+
+interface PaymentReferenceMock {
+  razorpay_payment_id: string;
+  bank_utr: string;
 }
 
 interface PrintedCardMock {
@@ -112,6 +118,21 @@ export default defineDemos('regex', [
       'isBankAccountNumber(account_number)': isBankAccountNumber(mock.account_number),
       'isUpiId(upi_id)': isUpiId(mock.upi_id),
       'isGstin(gstin)': isGstin(mock.gstin),
+    }),
+  }),
+
+  defineDemo<PaymentReferenceMock>({
+    id: 'payment-reference',
+    title: 'What a deducted-payment claim accepts as a transaction ID',
+    note:
+      'A buyer whose money left their account but whose booking did not complete can quote the reference from their bank or UPI app. Add a space, a colon or trim it under six characters and that row turns false — the server refuses the same.',
+    mock: {
+      razorpay_payment_id: 'pay_29QQoUBi66xm2f',
+      bank_utr: '432112345678',
+    },
+    compute: (mock) => ({
+      'isPaymentTransactionId(razorpay_payment_id)': isPaymentTransactionId(mock.razorpay_payment_id),
+      'isPaymentTransactionId(bank_utr)': isPaymentTransactionId(mock.bank_utr),
     }),
   }),
 

@@ -99,6 +99,8 @@ const ROUTES = [
   '/payment-logs',
   '/payment-logs/smoke-id',
   '/round-offs',
+  '/failed-payments',
+  '/failed-payments/smoke-id',
   '/pod-shop/payment-logs',
   '/pod-shop/order-refunds',
   '/ecomm/payment-logs',

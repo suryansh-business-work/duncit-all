@@ -938,6 +938,26 @@ capped at 500 characters, `images` at 3 uploaded photo addresses. The limit mess
 refund — the guest is told it. It is trimmed and must be `FOOD_CANCEL_REASON_MIN` (3) to
 `FOOD_CANCEL_REASON_MAX` (300) characters; `foodOrderCancelDefaults` is the blank form.
 
+`makePaymentClaimSchema(t)` is "my payment was deducted but the booking was not completed" — the
+evidence a buyer gives from the pod checkout's failure dialog (mWeb dialog, native sheet). Only
+the chosen `evidence_type` is judged: `SCREENSHOT` and `BANK_STATEMENT` need 1 to
+`PAYMENT_EVIDENCE_MAX_FILES` (5) uploaded `file_refs`; `TRANSACTION_ID` needs a trimmed reference
+matching `@duncit/regex`'s `PAYMENT_TRANSACTION_ID`, the same pattern the server checks.
+`PAYMENT_EVIDENCE_MIME_TYPES` gives each upload option's picker patterns (screenshot: images;
+statement: images or PDF) and `paymentEvidenceAccepts(type, mime)` judges a picked file against
+them. `paymentClaimInput(paymentDocId, values, clientRequestId)` builds the
+`submitPaymentDeductionClaim` input, sending only the chosen option's evidence.
+`paymentClaimDefaults` opens on the screenshot option with nothing attached.
+`PAYMENT_EVIDENCE_LABEL_KEYS` / `PAYMENT_EVIDENCE_HINT_KEYS` are the `mweb.payment.claim.*` copy
+both apps render per option, and `PAYMENT_EVIDENCE_FOLDER` (`payment-evidence`) is the upload
+folder the server keeps private and out of the AI scan.
+
+```ts
+const schema = makePaymentClaimSchema(t);
+schema.safeParse({ evidence_type: 'TRANSACTION_ID', file_refs: [], transaction_id: 'pay 1' });
+// transaction_id: mweb.payment.claim.transactionIdInvalid
+```
+
 `makeFoodCouponSchema(t)` is a venue's food coupon, checked the way the server checks it: the
 shared `COUPON_CODE` shape at 3–30 characters, a whole percent up to
 `FOOD_ORDER_LIMITS.maxDiscountPct`, an optional minimum in rupees (two decimals), optional use

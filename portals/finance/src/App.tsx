@@ -19,6 +19,8 @@ import {
   PaymentLogsPage,
   PaymentDetailPage,
   RoundOffsPage,
+  FailedPaymentsPage,
+  FailedPaymentDetailPage,
   OrderRefundsPage,
   PaymentReleasePage,
   PaymentReleaseDetailPage,
@@ -78,6 +80,8 @@ export default function App() {
       <Route path="/payment-logs" element={authed(<PaymentLogsPage />)} />
       <Route path="/payment-logs/:id" element={authed(<PaymentDetailPage />)} />
       <Route path="/round-offs" element={authed(<RoundOffsPage />)} />
+      <Route path="/failed-payments" element={authed(<FailedPaymentsPage />)} />
+      <Route path="/failed-payments/:id" element={authed(<FailedPaymentDetailPage />)} />
       {/* One shop per route — the pod shop and the pet store never share a list. */}
       <Route path="/pod-shop/payment-logs" element={authed(<PaymentLogsPage key="pod-shop" shop="POD_SHOP" />)} />
       <Route path="/pod-shop/order-refunds" element={authed(<OrderRefundsPage key="pod-shop" shop="POD_SHOP" />)} />

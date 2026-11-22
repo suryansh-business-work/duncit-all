@@ -1,103 +1,48 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router';
-import { setToken, getToken } from '../../src/lib/session';
+import { describe, expect, it, vi } from 'vitest';
+import { screen } from '@testing-library/react';
+import { renderWithProviders } from '../testkit';
 
-// Capture the props the adapter forwards to the shared shell chrome so we can
-// drive its callbacks (logout / access-denied) and assert the derived values.
-const shell = vi.hoisted(() => ({ props: null as any }));
-vi.mock('@duncit/shell', async (importActual) => {
-  const actual = await importActual<typeof import('@duncit/shell')>();
-  return {
-    ...actual,
-    AppShell: (props: any) => {
-      shell.props = props;
-      return <div data-testid="shell-chrome">{props.children}</div>;
-    },
-  };
-});
+// The session gate and sign-out live in the shell's PortalAppShell and are
+// tested there; this portal's part is handing it its own config and session.
+const clearTokenSpy = vi.hoisted(() => vi.fn());
+const hasAppAccessSpy = vi.hoisted(() => vi.fn());
+const shellProps = vi.hoisted(() => ({ current: null as Record<string, unknown> | null }));
 
-const userCtx = vi.hoisted(() => ({
-  value: { user: null as any, loading: false, logout: vi.fn() },
+vi.mock('../../src/lib/session', () => ({
+  clearToken: clearTokenSpy,
+  hasAppAccess: hasAppAccessSpy,
 }));
-vi.mock('@duncit/user-context', async (importActual) => {
-  const actual = await importActual<typeof import('@duncit/user-context')>();
-  return { ...actual, useUserData: () => userCtx.value };
-});
-
-const navigate = vi.hoisted(() => vi.fn());
-vi.mock('react-router', async (importActual) => {
-  const actual = await importActual<typeof import('react-router')>();
-  return { ...actual, useNavigate: () => navigate };
-});
+vi.mock('@duncit/shell', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@duncit/shell')>()),
+  PortalAppShell: (props: Record<string, unknown>) => {
+    shellProps.current = props;
+    return <div data-testid="portal-shell">{props.children as React.ReactNode}</div>;
+  },
+}));
 
 import AppShell from '../../src/components/AppShell';
-
-const renderShell = () =>
-  render(
-    <MemoryRouter>
-      <AppShell>
-        <span>PAGE BODY</span>
-      </AppShell>
-    </MemoryRouter>,
-  );
-
-afterEach(() => {
-  navigate.mockReset();
-  userCtx.value.logout = vi.fn();
-  localStorage.clear();
-});
+import { appConfig } from '../../src/config/app-config';
 
 describe('AppShell adapter', () => {
-  it('renders children and passes undefined access when there is no user', () => {
-    userCtx.value = { user: null, loading: true, logout: vi.fn() };
-    renderShell();
-    expect(screen.getByText('PAGE BODY')).toBeInTheDocument();
-    expect(shell.props.loading).toBe(true);
-    expect(shell.props.user).toBeUndefined();
-    expect(shell.props.hasAccess).toBeUndefined();
-    expect(shell.props.profileTo).toBe('/profile');
+  it('renders its children inside the shared console chrome', () => {
+    renderWithProviders(
+      <AppShell>
+        <div>child-content</div>
+      </AppShell>,
+    );
+
+    expect(screen.getByTestId('portal-shell')).toContainElement(screen.getByText('child-content'));
   });
 
-  it('computes hasAccess from the signed-in user roles', () => {
-    userCtx.value = {
-      user: { id: 'u1', name: 'Agent', roles: ['SUPPORT_MANAGER'] },
-      loading: false,
-      logout: vi.fn(),
-    };
-    renderShell();
-    expect(shell.props.user).toEqual({ id: 'u1', name: 'Agent', roles: ['SUPPORT_MANAGER'] });
-    expect(shell.props.hasAccess).toBe(true);
-  });
+  it("hands the shell this portal's config, sidebar, session gate and profile route", () => {
+    renderWithProviders(<AppShell>x</AppShell>);
 
-  it('denies access for a user without the required role', () => {
-    userCtx.value = {
-      user: { id: 'u2', name: 'Nobody', roles: ['RANDOM'] },
-      loading: false,
-      logout: vi.fn(),
-    };
-    renderShell();
-    expect(shell.props.hasAccess).toBe(false);
-  });
-
-  it('logout clears the token, calls the context logout and redirects to /login', () => {
-    const ctxLogout = vi.fn();
-    userCtx.value = { user: { id: 'u1', name: 'A', roles: [] }, loading: false, logout: ctxLogout };
-    setToken('tok-123');
-    expect(getToken()).toBe('tok-123');
-    renderShell();
-
-    shell.props.onLogout();
-    expect(getToken()).toBeNull();
-    expect(ctxLogout).toHaveBeenCalledTimes(1);
-    expect(navigate).toHaveBeenCalledWith('/login', { replace: true });
-  });
-
-  it('wires the access-denied handler to clear the token', () => {
-    userCtx.value = { user: { id: 'u1', name: 'A', roles: ['SUPPORT_MANAGER'] }, loading: false, logout: vi.fn() };
-    setToken('tok-abc');
-    renderShell();
-    shell.props.onDenied();
-    expect(getToken()).toBeNull();
+    expect(shellProps.current).toMatchObject({
+      config: appConfig,
+      nav: appConfig.nav,
+      clearToken: clearTokenSpy,
+      hasAppAccess: hasAppAccessSpy,
+      profileTo: '/profile',
+    });
   });
 });

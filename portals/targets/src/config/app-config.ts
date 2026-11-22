@@ -32,6 +32,8 @@ export const appConfig = {
       to: '/growth-calculator',
       icon: 'insights',
     },
+    { label: 'Employee Targets', labelKey: 'shell.nav.employeeTargets', to: '/employee-targets', icon: 'flag' },
+    { label: 'Settings', labelKey: 'shell.nav.settings', to: '/settings', icon: 'settings' },
   ],
   modules: [],
 } satisfies AppConfig;

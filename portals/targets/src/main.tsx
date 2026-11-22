@@ -1,5 +1,5 @@
 import { mountWelcomePortal } from '@duncit/shell';
-import { flattenCatalogue, TARGETS_BUNDLE } from '@duncit/app-settings';
+import { EMPLOYEE_TARGETS_BUNDLE, flattenCatalogue, TARGETS_BUNDLE } from '@duncit/app-settings';
 import { logs } from '@duncit/logs';
 import { appConfig } from './config/app-config';
 import { targetsRoutes } from './routes';
@@ -17,5 +17,5 @@ mountWelcomePortal({
   env: import.meta.env,
   logsPortal: logs.portal.targets,
   routes: targetsRoutes,
-  i18nFallback: flattenCatalogue(TARGETS_BUNDLE),
+  i18nFallback: { ...flattenCatalogue(TARGETS_BUNDLE), ...flattenCatalogue(EMPLOYEE_TARGETS_BUNDLE) },
 });

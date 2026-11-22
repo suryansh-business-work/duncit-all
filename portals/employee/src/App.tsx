@@ -3,6 +3,7 @@ import { createAuthed, ProfilePage } from '@duncit/shell';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import ExpensesPage, { ExpenseClaimPage } from './pages/expenses';
+import MyTargetsPage, { TargetDetailPage } from './pages/targets';
 import AppShell from './components/AppShell';
 import { getToken } from './lib/session';
 
@@ -17,6 +18,8 @@ export default function App() {
       <Route path="/expenses" element={authed(<ExpensesPage />)} />
       <Route path="/expenses/new" element={authed(<ExpenseClaimPage />)} />
       <Route path="/expenses/:expenseId/edit" element={authed(<ExpenseClaimPage />)} />
+      <Route path="/targets" element={authed(<MyTargetsPage />)} />
+      <Route path="/targets/:targetId" element={authed(<TargetDetailPage />)} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

@@ -138,7 +138,7 @@ describe('promoteToCrm', () => {
     await VenueLeadModel.create({ venue_name: 'Old Cafe', city: 'Pune', full_address: 'MG Road', contacts: [{ name: 'Old', mobile_number: '9876543210' }] });
     const lead = (await svc.create({ name: 'Blue Cafe', pipeline: 'VENUE', city: 'Pune', phones: ['919876543210'] }, user)).lead;
 
-    await expect(promoteToCrm(lead.id, 'VENUE', user)).rejects.toThrow('A venue lead with this phone number already exists');
+    await expect(promoteToCrm(lead.id, 'VENUE', user)).rejects.toThrow('Phone number 919876543210 already belongs to Venue lead "Old Cafe"');
     const stored = await MarketingLeadModel.findById(lead.id).lean();
     expect(stored).toMatchObject({ promoted: false });
     expect(stored?.crm_ref?.kind).toBeNull();

@@ -1,10 +1,11 @@
 import { YStack } from 'tamagui';
-import { studioEntryFor, type ProfileMenuFlags, type ProfileMenuKey } from '@duncit/utils';
+import { studioEntryFor, studioModeFor, type ProfileMenuFlags, type ProfileMenuKey } from '@duncit/utils';
 
 import { profileCompletion, type ProfileForCompletion } from '@/utils/profile-completion';
 import type { MenuRoute } from '@/navigation/types';
 import type { StudioMode } from '@/utils/studio-mode';
 import { AdSlot } from '@/components/ads/AdSlot';
+import { useStudioEmailGate } from '@/hooks/useStudioEmailGate';
 import { TourAnchor } from '@/tours/TourAnchor';
 import { SidebarProfileIdentity, type SidebarIdentityUser } from './SidebarProfileIdentity';
 import { SidebarProfileCompletion } from './SidebarProfileCompletion';
@@ -50,7 +51,15 @@ export function SidebarUserContent({
   // The ONE "Studio" entry every partner gets, whichever role is active — it
   // opens the Studio on the role in effect (or the first role held, from User
   // mode). Null for an account with no partner role.
-  const studioEntry = studioEntryFor(mode, roles, { products: flags.products === true });
+  const studioAccess = { products: flags.products === true };
+  const studioEntry = studioEntryFor(mode, roles, studioAccess);
+  // The role that entry opens on: Host, Venue and Club Admin wait for a
+  // verified email, so the card explains that instead of opening them.
+  const studioTarget = studioModeFor(mode, roles, studioAccess);
+  const emailGate = useStudioEmailGate();
+  const openStudio = (route: MenuRoute) => {
+    if (studioTarget) emailGate.guard(studioTarget, () => onNavigate(route));
+  };
   return (
     <YStack testID="sidebar-user-content">
       <TourAnchor tour="profile" anchor="profile-details">
@@ -62,8 +71,9 @@ export function SidebarUserContent({
       </TourAnchor>
       <SidebarQuickAccess flags={flags} badgeCounts={badgeCounts} onNavigate={onNavigate} />
       {studioEntry ? (
-        <SidebarStudioOptionsCard entry={studioEntry} onNavigate={onNavigate} />
+        <SidebarStudioOptionsCard entry={studioEntry} onNavigate={openStudio} />
       ) : null}
+      {emailGate.dialog}
       {mode === 'USER' ? <SidebarDuncitCoinCard onNavigate={onNavigate} /> : null}
       <AdSlot position="SIDEBAR" variant="card" />
     </YStack>

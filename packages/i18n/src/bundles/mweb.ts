@@ -5687,6 +5687,12 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       roleVenue: 'Venue',
       roleClub: 'Club Admin',
       roleBrand: 'Brand',
+      // Shown when an account whose email is not verified opens the Host,
+      // Venue or Club Admin studio (@duncit/utils STUDIO_EMAIL_GATE_KEYS).
+      emailGateTitle: 'Verify your email first',
+      emailGateBody: 'Host, Venue and Club Admin options open once your email address is verified. Verify it from your profile, then come back here.',
+      emailGateAction: 'Verify email',
+      emailGateDismiss: 'Not now',
       dashboard: 'Dashboard',
       venueDashboardHint: 'Bookings, earnings and requests at a glance',
       hostDashboardHint: 'Earnings, pods and insights at a glance',

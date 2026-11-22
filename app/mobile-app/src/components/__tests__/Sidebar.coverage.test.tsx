@@ -61,7 +61,14 @@ beforeEach(() => {
   useStudioModeStore.setState({ mode: 'USER' });
   useQuickAccessStore.setState({ raw: null });
   mockMe.mockReturnValue({
-    data: { me: { full_name: 'Asha', email: 'a@d.com', roles: ['HOST', 'VENUE_OWNER'] } },
+    data: {
+      me: {
+        full_name: 'Asha',
+        email: 'a@d.com',
+        roles: ['HOST', 'VENUE_OWNER'],
+        is_email_verified: true,
+      },
+    },
   });
   mockPolicies.mockReturnValue({
     data: { publicPolicies: [{ id: '1', slug: 'terms', title: 'Terms' }] },

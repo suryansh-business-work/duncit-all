@@ -1,10 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { STUDIO_OPTIONS_ENTRY } from '../src/studio-options';
 import {
+  EMAIL_GATED_STUDIO_MODES,
+  STUDIO_EMAIL_GATE_KEYS,
   STUDIO_ROLE_LABEL_KEY,
   heldStudioModes,
   studioEntryFor,
   studioModeFor,
+  studioNeedsVerifiedEmail,
 } from '../src/studio-switcher';
 
 const EVERY_ROLE = ['HOST', 'VENUE_OWNER', 'CLUB_ADMIN', 'ECOMM_MANAGER'];
@@ -95,5 +98,45 @@ describe('studioEntryFor', () => {
   it('does not change the per-role Options entries it is built from', () => {
     studioEntryFor('HOST', ['HOST']);
     expect(STUDIO_OPTIONS_ENTRY.HOST.labelKey).toBe('mweb.studioOptions.hostEntry');
+  });
+});
+
+describe('studioNeedsVerifiedEmail', () => {
+  it('gates exactly the Host, Venue and Club Admin studios', () => {
+    expect(EMAIL_GATED_STUDIO_MODES).toEqual(['HOST', 'VENUE', 'CLUB']);
+  });
+
+  it('shuts Host, Venue and Club Admin while the email is unverified', () => {
+    for (const mode of ['HOST', 'VENUE', 'CLUB'] as const) {
+      expect(studioNeedsVerifiedEmail(mode, false)).toBe(true);
+    }
+  });
+
+  it('treats an unknown verification state as unverified', () => {
+    expect(studioNeedsVerifiedEmail('HOST', null)).toBe(true);
+    expect(studioNeedsVerifiedEmail('CLUB', undefined)).toBe(true);
+  });
+
+  it('opens every studio once the email is verified', () => {
+    for (const mode of ['HOST', 'VENUE', 'CLUB', 'ECOMM', 'USER'] as const) {
+      expect(studioNeedsVerifiedEmail(mode, true)).toBe(false);
+    }
+  });
+
+  it('never gates the Brand studio or User mode', () => {
+    expect(studioNeedsVerifiedEmail('ECOMM', false)).toBe(false);
+    expect(studioNeedsVerifiedEmail('USER', false)).toBe(false);
+    expect(studioNeedsVerifiedEmail('ECOMM', null)).toBe(false);
+  });
+});
+
+describe('STUDIO_EMAIL_GATE_KEYS', () => {
+  it('names each part of the message with its own studioOptions key', () => {
+    expect(STUDIO_EMAIL_GATE_KEYS).toEqual({
+      title: 'mweb.studioOptions.emailGateTitle',
+      body: 'mweb.studioOptions.emailGateBody',
+      action: 'mweb.studioOptions.emailGateAction',
+      dismiss: 'mweb.studioOptions.emailGateDismiss',
+    });
   });
 });

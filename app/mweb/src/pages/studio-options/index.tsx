@@ -13,11 +13,13 @@ import {
 import { useStudioMode } from '../../StudioModeContext';
 import StudioPageHeader from '../../components/StudioPageHeader';
 import { useFeatureFlag } from '../../hooks/useFeatureFlag';
+import { useStudioEmailGate } from '../../hooks/useStudioEmailGate';
 import { useSelectedVenue } from '../../hooks/useSelectedVenue';
 import { useTranslation } from '../../i18n/useTranslation';
 import { useUserInfo } from '../../user-info/useUserInfo';
 import VenueSwitcher from '../venue-manage-page/VenueSwitcher';
 import { MY_VENUES_SWITCHER } from '../venue-manage-page/queries';
+import StudioEmailGateNotice from './StudioEmailGateNotice';
 import StudioOptionsList from './StudioOptionsList';
 import StudioRoleSwitcher from './StudioRoleSwitcher';
 
@@ -58,6 +60,7 @@ export default function StudioOptionsPage({ mode }: Readonly<{ mode: PartnerStud
   const autoPods = useFeatureFlag('auto_pods');
   const products = useFeatureFlag(PRODUCT_VISIBILITY_FLAG);
   const { setMode } = useStudioMode();
+  const emailGate = useStudioEmailGate();
   const entry = STUDIO_OPTIONS_ENTRY[mode];
   const roles: string[] = me?.roles ?? [];
   const items = studioOptionsFor(mode, roles, { autoPods });
@@ -67,13 +70,30 @@ export default function StudioOptionsPage({ mode }: Readonly<{ mode: PartnerStud
   // and the path changes with it so a refresh, Back and a shared link keep it.
   // It REPLACES the entry — Back leaves the Studio instead of stepping back
   // through every role that was looked at.
-  const switchRole = (next: PartnerStudioMode) => {
-    setMode(next);
-    navigate(STUDIO_OPTIONS_ENTRY[next].path, { replace: true });
-  };
+  // A Host, Venue or Club Admin tab on an unverified email explains the gate
+  // instead, so a role that cannot be opened is never remembered.
+  const switchRole = (next: PartnerStudioMode) =>
+    emailGate.guard(next, () => {
+      setMode(next);
+      navigate(STUDIO_OPTIONS_ENTRY[next].path, { replace: true });
+    });
 
   // A studio the account does not hold has no options to list.
   if (!loading && items.length === 0) return <Navigate to="/" replace />;
+
+  // Reached by a link or a remembered role: the options stay hidden behind
+  // the same "verify your email first" message the entries show.
+  const locked = !loading && emailGate.blocks(mode);
+  let body = <StudioOptionsList items={items} onNavigate={(path) => navigate(path)} />;
+  if (loading) {
+    body = (
+      <Box sx={{ px: 2 }} data-testid="studio-options-loading">
+        <Skeleton variant="rounded" height={240} />
+      </Box>
+    );
+  } else if (locked) {
+    body = <StudioEmailGateNotice />;
+  }
 
   return (
     <Stack spacing={2} sx={{ py: 2, maxWidth: 760, mx: 'auto', width: '100%' }} data-testid={`studio-options-${mode.toLowerCase()}`}>
@@ -81,14 +101,8 @@ export default function StudioOptionsPage({ mode }: Readonly<{ mode: PartnerStud
         <StudioPageHeader icon={<AppsIcon fontSize="small" />} title={t(entry.labelKey)} />
       </Box>
       <StudioRoleSwitcher modes={held} value={mode} onChange={switchRole} />
-      {mode === 'VENUE' && <VenueOptionsPicker />}
-      {loading ? (
-        <Box sx={{ px: 2 }} data-testid="studio-options-loading">
-          <Skeleton variant="rounded" height={240} />
-        </Box>
-      ) : (
-        <StudioOptionsList items={items} onNavigate={(path) => navigate(path)} />
-      )}
+      {mode === 'VENUE' && !locked && <VenueOptionsPicker />}
+      {body}
     </Stack>
   );
 }

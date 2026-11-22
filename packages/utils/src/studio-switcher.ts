@@ -52,6 +52,33 @@ export function studioModeFor(
 }
 
 /**
+ * The partner studios that stay shut until the account's email is verified:
+ * Host, Venue and Club Admin. The Brand studio is not gated.
+ */
+export const EMAIL_GATED_STUDIO_MODES: readonly PartnerStudioMode[] = ['HOST', 'VENUE', 'CLUB'];
+
+/**
+ * Whether opening `mode` must wait for a verified email. Only an explicit
+ * `true` counts as verified, so a missing answer never opens a gated studio.
+ */
+export function studioNeedsVerifiedEmail(
+  mode: StudioMode,
+  isEmailVerified: boolean | null | undefined,
+): boolean {
+  if (isEmailVerified === true) return false;
+  return EMAIL_GATED_STUDIO_MODES.some((gated) => gated === mode);
+}
+
+/** The words of the "verify your email first" message both apps show when a
+ * gated studio is opened, as translation keys. */
+export const STUDIO_EMAIL_GATE_KEYS = {
+  title: 'mweb.studioOptions.emailGateTitle',
+  body: 'mweb.studioOptions.emailGateBody',
+  action: 'mweb.studioOptions.emailGateAction',
+  dismiss: 'mweb.studioOptions.emailGateDismiss',
+} as const;
+
+/**
  * The single "Studio" sidebar entry: one row for every partner, whichever role
  * is active, opening the Studio on `studioModeFor`. `null` without a partner
  * role, so a consumer's sidebar carries no Studio row at all.

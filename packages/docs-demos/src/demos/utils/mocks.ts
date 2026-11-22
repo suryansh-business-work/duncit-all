@@ -43,6 +43,8 @@ export interface StudioModeMock {
   roles: string[];
   saved_mode: 'USER' | 'HOST' | 'VENUE' | 'ECOMM' | 'CLUB';
   is_product_visible: boolean;
+  /** `me.is_email_verified` — false keeps the Host, Venue and Club Admin studios shut. */
+  is_email_verified: boolean;
 }
 
 /** The venues a partner owns, as `myVenues` answers them — newest first. */

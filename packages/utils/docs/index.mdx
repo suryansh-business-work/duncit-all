@@ -316,6 +316,9 @@ exports:
   - 'heldStudioModes'
   - 'studioModeFor'
   - 'studioEntryFor'
+  - 'EMAIL_GATED_STUDIO_MODES'
+  - 'studioNeedsVerifiedEmail'
+  - 'STUDIO_EMAIL_GATE_KEYS'
   - 'VENUE_POD_PHASES'
   - 'venuePodPhase'
   - 'podsByPhase'
@@ -818,6 +821,22 @@ studioModeFor('USER', roles);                 // 'VENUE' — first held role
 studioModeFor('ECOMM', roles);                // 'ECOMM' — the remembered role
 studioEntryFor('ECOMM', roles)?.path;         // '/products/options'
 studioEntryFor('USER', []);                   // null — a consumer has no Studio entry
+```
+
+The Host, Venue and Club Admin studios stay shut until the account's email is verified. Both apps check this when someone opens the Studio, switches role, or lands on an Options page, and show the "verify your email first" message instead.
+
+| Export | Signature | Meaning |
+| --- | --- | --- |
+| `EMAIL_GATED_STUDIO_MODES` | `readonly PartnerStudioMode[]` | `['HOST', 'VENUE', 'CLUB']`. The Brand studio and User mode are not gated. |
+| `studioNeedsVerifiedEmail` | `(mode, isEmailVerified) => boolean` | `true` when `mode` is gated and the email is not verified. Only an explicit `true` counts as verified, so `null` / `undefined` keep the studio shut. |
+| `STUDIO_EMAIL_GATE_KEYS` | `{ title, body, action, dismiss }` | The translation keys of the message (`mweb.studioOptions.emailGate*`). |
+
+```ts
+import { studioNeedsVerifiedEmail } from '@duncit/utils';
+
+studioNeedsVerifiedEmail('HOST', false);  // true  — show the message, do not open
+studioNeedsVerifiedEmail('HOST', true);   // false
+studioNeedsVerifiedEmail('ECOMM', false); // false — the Brand studio is not gated
 ```
 
 ## Sample data

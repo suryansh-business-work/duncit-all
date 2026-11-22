@@ -1,5 +1,5 @@
 import { Box } from '@mui/material';
-import { studioEntryFor, type ProfileMenuFlags, type ProfileMenuKey } from '@duncit/utils';
+import { studioEntryFor, studioModeFor, type ProfileMenuFlags, type ProfileMenuKey } from '@duncit/utils';
 import ProfileIdentity from './ProfileIdentity';
 import ProfileCompletion from './ProfileCompletion';
 import QuickAccess from './QuickAccess';
@@ -7,6 +7,7 @@ import DuncitCoinCard from './DuncitCoinCard';
 import StudioOptionsCard from './StudioOptionsCard';
 import AdSlot from '../../ads/AdSlot';
 import type { StudioMode } from '../../../studio-mode';
+import { useStudioEmailGate } from '../../../hooks/useStudioEmailGate';
 import { profileCompletion } from '../../../pages/account-page/account-edit/completion';
 
 interface UserModeContentProps {
@@ -31,7 +32,15 @@ export default function UserModeContent({ me, roles, mode, flags, badgeCounts, o
   // The ONE "Studio" entry every partner gets, whichever role is active — the
   // rule native reads too. It opens the Studio on the role in effect (or the
   // first role held, from User mode); null for an account with no partner role.
-  const studioEntry = studioEntryFor(mode, roles, { products: flags.products === true });
+  const studioAccess = { products: flags.products === true };
+  const studioEntry = studioEntryFor(mode, roles, studioAccess);
+  // The role that entry opens on: Host, Venue and Club Admin wait for a
+  // verified email, so the card explains that instead of opening them.
+  const studioTarget = studioModeFor(mode, roles, studioAccess);
+  const emailGate = useStudioEmailGate();
+  const openStudio = (to: string) => {
+    if (studioTarget) emailGate.guard(studioTarget, () => onNavigate(to));
+  };
   return (
     <>
       <Box data-tour="profile-details">
@@ -40,7 +49,7 @@ export default function UserModeContent({ me, roles, mode, flags, badgeCounts, o
         </ProfileIdentity>
       </Box>
       <QuickAccess flags={flags} badgeCounts={badgeCounts} onNavigate={onNavigate} />
-      {studioEntry && <StudioOptionsCard entry={studioEntry} onNavigate={onNavigate} />}
+      {studioEntry && <StudioOptionsCard entry={studioEntry} onNavigate={openStudio} />}
       {mode === 'USER' && <DuncitCoinCard onNavigate={onNavigate} />}
       <AdSlot position="SIDEBAR" variant="card" sx={{ width: 'auto', mx: 2, mb: 1.5 }} />
     </>

@@ -4,6 +4,7 @@ import {
   heldStudioModes,
   studioEntryFor,
   studioModeFor,
+  studioNeedsVerifiedEmail,
   canSwitchVenues,
   defaultVenueId,
   pickVenue,
@@ -28,22 +29,29 @@ export const venuesDemos: PackageDemo[] = [
     id: 'studio-modes',
     title: 'Which studios a partner may switch into',
     note:
-      'Set is_product_visible to false: the ecomm bubble leaves the switcher AND the saved ECOMM mode falls back to USER, so nobody is left sitting in a studio whose pages are gated. Drop ECOMM_MANAGER from roles for the same effect by a different route — a revoked role. mWeb and the native app both read exactly this, so their switchers cannot disagree.',
+      'Set is_product_visible to false: the ecomm bubble leaves the switcher AND the saved ECOMM mode falls back to USER, so nobody is left sitting in a studio whose pages are gated. Drop ECOMM_MANAGER from roles for the same effect by a different route — a revoked role. Set is_email_verified to true to open the Host studio. mWeb and the native app both read exactly this, so their switchers cannot disagree.',
     mock: {
       roles: ['HOST', 'ECOMM_MANAGER'],
       saved_mode: 'ECOMM',
       is_product_visible: true,
+      is_email_verified: false,
     },
     compute: (mock) => {
       const access = { products: mock.is_product_visible };
+      const opensOn = studioModeFor(mock.saved_mode, mock.roles, access);
       return {
         'Bubbles in the switcher': availableModes(mock.roles, access).map((o) => o.mode),
         'The mode actually in effect': resolveMode(mock.saved_mode, mock.roles, access),
         'If products were on': resolveMode(mock.saved_mode, mock.roles, { products: true }),
         'Can switch at all': availableModes(mock.roles, access).length > 1,
         'Roles on the Studio page switcher': heldStudioModes(mock.roles, access),
-        'The role the Studio opens on': studioModeFor(mock.saved_mode, mock.roles, access),
+        'The role the Studio opens on': opensOn,
         'Where the one Studio sidebar entry goes': studioEntryFor(mock.saved_mode, mock.roles, access)?.path ?? null,
+        'Studios shut until the email is verified': heldStudioModes(mock.roles, access).filter((mode) =>
+          studioNeedsVerifiedEmail(mode, mock.is_email_verified),
+        ),
+        'Opening the Studio shows "verify your email first"':
+          opensOn !== null && studioNeedsVerifiedEmail(opensOn, mock.is_email_verified),
       };
     },
   }),

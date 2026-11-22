@@ -6,10 +6,13 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { PrimaryButton } from '@/components/PrimaryButton';
+import { StudioEmailGateNotice } from '@/components/studio-options/StudioEmailGateNotice';
+import { useStudioEmailGate } from '@/hooks/useStudioEmailGate';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { STUDIO_LABEL, availableModes, type StudioMode } from '@/utils/studio-mode';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+import { STUDIO_EMAIL_GATE_KEYS } from '@duncit/utils';
 
 type IconName = ComponentProps<typeof MaterialIcons>['name'];
 
@@ -40,7 +43,9 @@ interface Props {
 
 /** Bubble-style role switcher — one bubble per mode; the picked one lifts up
  * and expands into the big primary card below. Picking a bubble only stages the
- * choice; nothing switches until the Switch button below is pressed.
+ * choice; nothing switches until the Switch button below is pressed. Host,
+ * Venue and Club Admin wait for a verified email: picking one says so in place
+ * and the button offers to verify instead (useStudioEmailGate).
  * Identical to mWeb's StudioSwitchDialog (B3-5). */
 export function StudioSwitchDialog({
   open,
@@ -52,7 +57,17 @@ export function StudioSwitchDialog({
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const { color, onPrimary, primary } = useThemeColors();
+  const emailGate = useStudioEmailGate();
   const [pending, setPending] = useState<StudioMode>(current);
+  const locked = emailGate.blocks(pending);
+  const confirmSwitch = () => {
+    if (!locked) {
+      onSelect(pending);
+      return;
+    }
+    onClose();
+    emailGate.verifyEmail();
+  };
 
   // The dialog stays mounted between openings, so the staged pick is reset every
   // time it opens — otherwise it would reopen on a choice the user abandoned.
@@ -160,12 +175,17 @@ export function StudioSwitchDialog({
                 </YStack>
                 <MaterialIcons name="check-circle" size={22} color={primary} />
               </XStack>
+              {locked ? (
+                <YStack paddingTop={16}>
+                  <StudioEmailGateNotice testID="studio-switch-email-gate" />
+                </YStack>
+              ) : null}
               <YStack paddingTop={16}>
                 <PrimaryButton
                   testID="studio-switch-confirm"
-                  label={switchButtonLabel(changed, pending)}
-                  disabled={!changed}
-                  onPress={() => onSelect(pending)}
+                  label={locked ? t(STUDIO_EMAIL_GATE_KEYS.action) : switchButtonLabel(changed, pending)}
+                  disabled={!changed && !locked}
+                  onPress={confirmSwitch}
                 />
               </YStack>
             </ModalSafeArea>

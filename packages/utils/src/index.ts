@@ -1779,10 +1779,13 @@ export {
   type SettledDeliveryQuote,
 } from './delivery-quote-gate';
 export {
+  EMAIL_GATED_STUDIO_MODES,
+  STUDIO_EMAIL_GATE_KEYS,
   STUDIO_ROLE_LABEL_KEY,
   heldStudioModes,
   studioEntryFor,
   studioModeFor,
+  studioNeedsVerifiedEmail,
 } from './studio-switcher';
 export {
   buildDetailedOrderTimeline,

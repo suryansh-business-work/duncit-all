@@ -1,6 +1,7 @@
 import { GraphQLError } from 'graphql';
 import { logs } from '@observability/log';
 import { getImagekitConfig } from './upload.service';
+import { isPrivateUploadFolder } from './uploadFolder';
 
 /**
  * ImageKit's Media Management API — the half the browser can never touch.
@@ -135,7 +136,9 @@ export const mediaLibraryService = {
     const query = searchExpression(input.search);
     if (query) params.set('searchQuery', query);
     const raw = await call<any[]>(`/files?${params.toString()}`);
-    return (raw ?? []).map(toItem);
+    // The drawer is open to every signed-in person; private payment evidence
+    // (and the folders that hold it) is Finance's alone, so it is never listed.
+    return (raw ?? []).filter((item) => item?.isPrivateFile !== true && !isPrivateUploadFolder(item?.filePath)).map(toItem);
   },
 
   /** Everything ImageKit knows about one file — the details panel. */

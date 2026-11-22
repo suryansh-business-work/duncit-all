@@ -96,6 +96,7 @@ export const PROMPT_CATEGORIES = {
   PLATFORM: 'Platform',
   MARKETING: 'Marketing',
   REELS: 'Reel Studio',
+  FINANCE: 'Finance',
 } as const;
 
 /** A required variable, in the shape the catalogue repeats most. */

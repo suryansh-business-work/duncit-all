@@ -208,10 +208,13 @@ export const waLeadsTypeDefs = gql`
 
   extend type Mutation {
     waSaveConfig(input: WaConfigInput!): WaConnection!
-    "Mint a dedicated gateway API key from your master/admin key and save it."
-    waGenerateApiKey(base_url: String!, master_key: String!): WaGeneratedKey!
-    "Create/start the session so a QR can be scanned."
-    waConnect: WaConnection!
+    """
+    Mint a dedicated gateway API key and save it. Both arguments are optional: with no
+    master_key the server's own gateway master key is used, so nobody copies a key by hand.
+    """
+    waGenerateApiKey(base_url: String, master_key: String): WaGeneratedKey!
+    "Create/start the session so a QR can be scanned. restart: stop the engine first (a session stuck before its QR)."
+    waConnect(restart: Boolean): WaConnection!
     waDisconnect: WaConnection!
     "Synchronous pull of latest communities/groups/contacts into the cache."
     waRefresh: WaSyncResult!

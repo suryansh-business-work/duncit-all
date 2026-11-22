@@ -1,59 +1,48 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
+import { screen } from '@testing-library/react';
+import { renderWithProviders } from '../testkit';
 
-const m = vi.hoisted(() => ({
-  navigate: vi.fn(),
-  userData: { user: null as { roles: string[] } | null, loading: false, logout: vi.fn() },
-  clearToken: vi.fn(),
-  hasAppAccess: vi.fn(() => true),
+// The session gate and sign-out live in the shell's PortalAppShell and are
+// tested there; this portal's part is handing it its own config and session.
+const clearTokenSpy = vi.hoisted(() => vi.fn());
+const hasAppAccessSpy = vi.hoisted(() => vi.fn());
+const shellProps = vi.hoisted(() => ({ current: null as Record<string, unknown> | null }));
+
+vi.mock('../../src/lib/session', () => ({
+  clearToken: clearTokenSpy,
+  hasAppAccess: hasAppAccessSpy,
 }));
-vi.mock('react-router', () => ({ useNavigate: () => m.navigate }));
-vi.mock('@duncit/user-context', () => ({ useUserData: () => m.userData }));
-vi.mock('@duncit/shell', async (io) => {
-  const actual = await io<typeof import('@duncit/shell')>();
-  return {
-    ...actual,
-    AppShell: (p: { children: React.ReactNode; hasAccess?: boolean; onLogout: () => void; onDenied: () => void }) => (
-      <div data-testid="shell">
-        <span>access:{String(p.hasAccess)}</span>
-        <button type="button" onClick={p.onLogout}>shell-logout</button>
-        <button type="button" onClick={p.onDenied}>shell-denied</button>
-        {p.children}
-      </div>
-    ),
-  };
-});
-vi.mock('../../src/lib/session', () => ({ clearToken: m.clearToken, hasAppAccess: m.hasAppAccess }));
+vi.mock('@duncit/shell', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@duncit/shell')>()),
+  PortalAppShell: (props: Record<string, unknown>) => {
+    shellProps.current = props;
+    return <div data-testid="portal-shell">{props.children as React.ReactNode}</div>;
+  },
+}));
 
 import AppShell from '../../src/components/AppShell';
+import { appConfig } from '../../src/config/app-config';
 
-beforeEach(() => {
-  m.navigate.mockReset();
-  m.clearToken.mockReset();
-  m.hasAppAccess.mockReset().mockReturnValue(true);
-  m.userData = { user: null, loading: false, logout: vi.fn() };
-});
+describe('AppShell adapter', () => {
+  it('renders its children inside the shared console chrome', () => {
+    renderWithProviders(
+      <AppShell>
+        <div>child-content</div>
+      </AppShell>,
+    );
 
-describe('AppShell', () => {
-  it('passes undefined access when there is no user', () => {
-    render(<AppShell><div>child</div></AppShell>);
-    expect(screen.getByText('access:undefined')).toBeInTheDocument();
-    expect(screen.getByText('child')).toBeInTheDocument();
+    expect(screen.getByTestId('portal-shell')).toContainElement(screen.getByText('child-content'));
   });
 
-  it('computes access from the signed-in user and logs out cleanly', () => {
-    const ctxLogout = vi.fn();
-    m.userData = { user: { roles: ['TECH_MANAGER'] }, loading: false, logout: ctxLogout };
-    render(<AppShell><div>child</div></AppShell>);
-    expect(m.hasAppAccess).toHaveBeenCalledWith(['TECH_MANAGER']);
-    expect(screen.getByText('access:true')).toBeInTheDocument();
+  it("hands the shell this portal's config, sidebar, session gate and profile route", () => {
+    renderWithProviders(<AppShell>x</AppShell>);
 
-    fireEvent.click(screen.getByRole('button', { name: 'shell-logout' }));
-    expect(m.clearToken).toHaveBeenCalled();
-    expect(ctxLogout).toHaveBeenCalled();
-    expect(m.navigate).toHaveBeenCalledWith('/login', { replace: true });
-
-    fireEvent.click(screen.getByRole('button', { name: 'shell-denied' }));
-    expect(m.clearToken).toHaveBeenCalledTimes(2);
+    expect(shellProps.current).toMatchObject({
+      config: appConfig,
+      nav: appConfig.nav,
+      clearToken: clearTokenSpy,
+      hasAppAccess: hasAppAccessSpy,
+      profileTo: '/profile',
+    });
   });
 });

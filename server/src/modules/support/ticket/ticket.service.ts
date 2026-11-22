@@ -37,6 +37,7 @@ import { logs } from '@observability/log';
 import { getUrlConfigs } from '@config/url-configs';
 import { trimTrailingSlash } from '@utils/url';
 import type { TableFieldConfig } from '@utils/table-query';
+import { PaymentModel } from '@modules/finance/payment/payment.model';
 
 const TICKET_SORTABLE = new Set([
   'last_message_at',
@@ -265,6 +266,7 @@ async function toPub(doc: ITicket) {
     category: doc.category,
     pod_id: doc.pod_id ? String(doc.pod_id) : null,
     pod_title: doc.pod_title ?? '',
+    payment_id: doc.payment_id ? String(doc.payment_id) : null,
     status: doc.status,
     priority: doc.priority,
     assignee_id: doc.assignee_id ? String(doc.assignee_id) : null,
@@ -373,6 +375,17 @@ async function emailAgentReply(doc: ITicket, actorId: string, bodyText: string) 
   await doc.save();
 }
 
+/**
+ * The payment a new ticket may be linked to: only one of the raiser's own. A
+ * payment that is not theirs is dropped rather than refused, so an older or
+ * mistaken client still opens its ticket — it just carries no link.
+ */
+async function ownPaymentId(userId: string, paymentId: string | null | undefined): Promise<Types.ObjectId | null> {
+  if (!paymentId || !Types.ObjectId.isValid(paymentId) || !Types.ObjectId.isValid(userId)) return null;
+  const own = await PaymentModel.exists({ _id: paymentId, user_id: new Types.ObjectId(userId) });
+  return own ? new Types.ObjectId(paymentId) : null;
+}
+
 export const ticketService = {
   async createTicket(
     userId: string,
@@ -384,6 +397,7 @@ export const ticketService = {
       attachments?: string[];
       pod_id?: string | null;
       pod_title?: string | null;
+      payment_id?: string | null;
     }
   ) {
     const subject = (input.subject || '').trim();
@@ -394,12 +408,14 @@ export const ticketService = {
     const meta = await actorMeta(userId, 'USER');
     const now = new Date();
     const podId = input.pod_id && Types.ObjectId.isValid(input.pod_id) ? new Types.ObjectId(input.pod_id) : null;
+    const paymentId = await ownPaymentId(userId, input.payment_id);
     const doc = await TicketModel.create({
       user_id: new Types.ObjectId(userId),
       subject,
       category: input.category ?? 'GENERAL',
       pod_id: podId,
       pod_title: (input.pod_title || '').trim(),
+      payment_id: paymentId,
       status: 'OPEN',
       priority: 'MEDIUM',
       last_message_at: now,
@@ -580,6 +596,55 @@ export const ticketService = {
     emitToSupportUser(String(doc!.user_id), 'ticket:update', pub);
     await mailTicketRaiser('support-ticket-resolved', doc, 'Resolved');
     return pub;
+  },
+
+  /**
+   * Resolve a ticket on behalf of the system — a refund that landed, a claim
+   * Finance closed — with a SYSTEM bubble saying why. `actorId` is the staff
+   * member (or the person who started the refund) the bubble is filed under.
+   * An already resolved/closed ticket only gains the bubble, so a repeat call
+   * never re-mails the raiser.
+   */
+  async systemResolve(ticketId: string, actorId: string, bodyText: string) {
+    if (!Types.ObjectId.isValid(ticketId) || !Types.ObjectId.isValid(actorId)) fail('BAD_USER_INPUT', 'Invalid ticket_id');
+    const doc = await TicketModel.findById(ticketId);
+    if (!doc) fail('NOT_FOUND', 'Ticket not found');
+    const wasOpen = doc.status === 'OPEN' || doc.status === 'PENDING';
+    doc.messages.push({
+      author_id: new Types.ObjectId(actorId),
+      author_role: 'SYSTEM',
+      body_text: bodyText,
+      attachments: [],
+    });
+    doc.last_message_at = new Date();
+    if (wasOpen) {
+      doc.status = 'RESOLVED';
+      doc.resolved_at = new Date();
+    }
+    await doc.save();
+    const pub = await toPub(doc);
+    emitToSupportAgents('ticket:update', pub);
+    emitToSupportUser(String(doc.user_id), 'ticket:update', pub);
+    if (wasOpen) await mailTicketRaiser('support-ticket-resolved', doc, 'Resolved');
+    return pub;
+  },
+
+  /** The raiser's OPEN or PENDING ticket about one payment, newest first — what a claim reuses. */
+  async findOpenForPayment(userId: string, paymentDocId: string) {
+    if (!Types.ObjectId.isValid(userId) || !Types.ObjectId.isValid(paymentDocId)) return null;
+    const doc = await TicketModel.findOne({
+      payment_id: new Types.ObjectId(paymentDocId),
+      user_id: new Types.ObjectId(userId),
+      status: { $in: ['OPEN', 'PENDING'] },
+    }).sort({ created_at: -1 });
+    return doc ? { id: String(doc._id), ticket_no: ticketNo('ST', doc._id as Types.ObjectId), status: doc.status } : null;
+  },
+
+  /** Status and number of one ticket, without building the whole thread. */
+  async statusOf(ticketId: string) {
+    if (!Types.ObjectId.isValid(ticketId)) return null;
+    const doc = await TicketModel.findById(ticketId).select('status').lean();
+    return doc ? { id: String(doc._id), ticket_no: ticketNo('ST', doc._id as Types.ObjectId), status: doc.status } : null;
   },
 
   /**

@@ -7,7 +7,6 @@ import type { SvgIconComponent } from '@mui/icons-material';
 import { DuncitTable, EM_DASH, clientTableFetch, type DuncitColumn } from '@duncit/table';
 import { useTranslation, type Translator } from '@duncit/app-settings';
 import RetryButton from './RetryButton';
-import { useTableRefresh } from './useTableRefresh';
 import type { PaymentArtifact } from './queries';
 
 type ArtifactState = 'CREATED' | 'NOT_APPLICABLE' | 'MISSING';
@@ -157,9 +156,6 @@ export default function ArtifactsTable({ artifacts, tableId, busyKey, onRetry }:
     () => clientTableFetch(artifacts, artifactSearchText, columns),
     [artifacts, columns],
   );
-  // A re-run rewrites these rows without touching the query the table asks
-  // with, so it has to be told to read them again.
-  const refetchRef = useTableRefresh(artifacts);
 
   return (
     <DuncitTable<PaymentArtifact>
@@ -167,7 +163,6 @@ export default function ArtifactsTable({ artifacts, tableId, busyKey, onRetry }:
       columns={columns}
       fetchRows={fetchRows}
       getRowId={getArtifactRowId}
-      refetchRef={refetchRef}
       emptyText={t('finance.payment.artifactsEmpty')}
       searchPlaceholder={t('finance.payment.artifactsSearch')}
     />

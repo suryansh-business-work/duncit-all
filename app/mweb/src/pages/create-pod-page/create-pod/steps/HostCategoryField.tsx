@@ -17,6 +17,8 @@ interface Props {
   categoryIcons?: CreatePodCategoryIcon[];
   /** Every club, so each chip can say how many it has where the pod would run. */
   clubs: CreatePodClub[];
+  /** The venue was picked on Venue Details: a new category keeps it (an offer is not club-scoped). */
+  keepVenue?: boolean;
 }
 
 const NO_ICONS: CreatePodCategoryIcon[] = [];
@@ -25,7 +27,7 @@ const NO_ICONS: CreatePodCategoryIcon[] = [];
  * one of their granted sub-categories from a sideways-scrolling chip row. A chip
  * with no club where the pod would run is disabled. Changing it resets the
  * club/venue/slot picks. Native twin. */
-export default function HostCategoryField({ form, hostCategories, categoryIcons = NO_ICONS, clubs }: Readonly<Props>) {
+export default function HostCategoryField({ form, hostCategories, categoryIcons = NO_ICONS, clubs, keepVenue = false }: Readonly<Props>) {
   const {
     setValue,
     watch,
@@ -47,7 +49,7 @@ export default function HostCategoryField({ form, hostCategories, categoryIcons 
     setValue('host_category_key', key, { shouldDirty: true, shouldValidate: true });
     // A club valid for the old category may not match the new one.
     setValue('club_id', '', { shouldDirty: true });
-    setValue('venue_id', '', { shouldDirty: true });
+    if (!keepVenue) setValue('venue_id', '', { shouldDirty: true });
     setValue('venue_slot_id', '', { shouldDirty: true });
   };
 

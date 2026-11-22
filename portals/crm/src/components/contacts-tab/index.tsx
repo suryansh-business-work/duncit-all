@@ -1,3 +1,4 @@
+import type { CrmLeadEntityType } from '../../api/crm.types';
 import { useState } from 'react';
 import { Snackbar, Stack, Typography } from '@mui/material';
 import ContactsIcon from '@mui/icons-material/Contacts';
@@ -8,7 +9,7 @@ import type { CrmContact } from '../../api/crm.types';
 import { useTranslation } from '@duncit/shell';
 
 interface Props {
-  entity: 'VENUE_LEAD' | 'HOST_LEAD' | 'ECOMM_LEAD';
+  entity: CrmLeadEntityType;
   leadId: string;
   leadName: string;
   contacts: CrmContact[];

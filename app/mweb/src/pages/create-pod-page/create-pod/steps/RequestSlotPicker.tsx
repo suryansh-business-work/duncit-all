@@ -3,6 +3,8 @@ import SlotPicker from '../SlotPicker';
 import { VENUE_AVAILABLE_SLOTS } from '../venueSlots';
 import type { CreatePodForm, CreatePodSlot } from '../create-pod.types';
 import type { VenueSpace } from './venueSpaces';
+import { startsWithinPodMinAdvance } from '@duncit/utils';
+import { usePodMinAdvance } from '../usePodMinAdvance';
 
 interface Props {
   form: CreatePodForm;
@@ -20,8 +22,12 @@ export default function RequestSlotPicker({ form, space }: Readonly<Props>) {
     variables: { venue_id: watch('venue_id'), partner_request_id: watch('partner_request_id') || null },
     fetchPolicy: 'cache-and-network',
   });
-  const slots = (slotsQuery.data?.venueAvailableSlots ?? []).filter(
-    (slot) => (slot.space_label ?? '') === space.slotSpaceLabel
+  const minAdvance = usePodMinAdvance();
+  // A slot before the host's first allowed day cannot become their pod: the
+  // server refuses it, so the calendar never offers it.
+  const slots = startsWithinPodMinAdvance(
+    (slotsQuery.data?.venueAvailableSlots ?? []).filter((slot) => (slot.space_label ?? '') === space.slotSpaceLabel),
+    minAdvance,
   );
 
   const pickSlot = (slot: CreatePodSlot) => {

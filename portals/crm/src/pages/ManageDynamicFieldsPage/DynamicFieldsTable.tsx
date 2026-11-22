@@ -141,10 +141,12 @@ export default function DynamicFieldsTable({
             </TableCell>
             <TableCell>{KIND_LABELS[row.kind]}</TableCell>
             <TableCell>
-              <Stack direction="row" spacing={0.5}>
+              <Stack direction="row" spacing={0.5} useFlexGap sx={{ flexWrap: 'wrap' }}>
                 {row.applies_to_venue && <Chip size="small" label={t('crm.common.venue')} />}
                 {row.applies_to_host && <Chip size="small" label={t('crm.common.host')} />}
                 {row.applies_to_ecomm && <Chip size="small" label={t('crm.common.ecomm')} />}
+                {row.applies_to_creator && <Chip size="small" label={t('crm.common.creator')} />}
+                {row.applies_to_community && <Chip size="small" label={t('crm.common.community')} />}
               </Stack>
             </TableCell>
             <TableCell>

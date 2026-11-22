@@ -13,8 +13,15 @@
  *    at the moment the feature runs.
  *  - A key that left the catalogue: `seedDefaults` deletes the row, taking an
  *    operator's edits with it.
+ *  - An AI feature with no code prompt: the AI Features table shows an empty
+ *    Prompt column and the library cannot say what that feature sends. Only the
+ *    features in `PROMPTLESS_TASKS` (prompt chosen per automation step) may.
+ *  - A code prompt that serves no feature: its usage is unattributable and no
+ *    feature links to it.
  */
 import { CODE_PROMPTS, CODE_PROMPT_BY_KEY } from '../src/modules/ai/prompt/catalog';
+import { CODE_PROMPTS_BY_TASK, PROMPTLESS_TASKS } from '../src/modules/ai/prompt/catalog/byTask';
+import { OPENAI_TASK_KEYS } from '../src/modules/ai/openaiUsage/openaiUsage.tasks';
 import { extractVariables } from '../src/modules/ai/prompt/prompt.render';
 
 /**
@@ -53,6 +60,8 @@ const SHIPPED_KEYS = [
   'generate.product_copy.user',
   'generate.rich_text',
   'generate.rich_text.user',
+  'library.prompt_quality',
+  'library.prompt_quality.user',
   'localization.auto_translate',
   'localization.auto_translate.user',
   'moderation.callback_reason',
@@ -91,6 +100,7 @@ for (const prompt of CODE_PROMPTS) {
   if (!prompt.description.trim()) failures.push(`${prompt.key}: empty description`);
   if (!prompt.content.trim()) failures.push(`${prompt.key}: empty content`);
   if (prompt.usage.length === 0) failures.push(`${prompt.key}: no usage site — the portal cannot say where it runs`);
+  if (prompt.tasks.length === 0) failures.push(`${prompt.key}: serves no AI feature — add the feature key(s) it runs under to "tasks"`);
 
   const inBody = new Set(extractVariables(prompt.content));
   const declared = new Set(prompt.variables.map((v) => v.name));
@@ -114,6 +124,19 @@ for (const prompt of CODE_PROMPTS) {
     failures.push(`${prompt.key}: a user turn must be named "<system-key>.user"`);
   } else if (!CODE_PROMPT_BY_KEY.has(systemKey)) {
     failures.push(`${prompt.key}: no system prompt "${systemKey}" to pair with`);
+  }
+}
+
+// AI Features ↔ code prompts: every feature names its prompts through the
+// catalogue's `tasks`, except the declared prompt-less ones.
+for (const feature of OPENAI_TASK_KEYS) {
+  const hasPrompt = (CODE_PROMPTS_BY_TASK.get(feature)?.length ?? 0) > 0;
+  const promptless = Object.hasOwn(PROMPTLESS_TASKS, feature);
+  if (!hasPrompt && !promptless) {
+    failures.push(`AI feature "${feature}" runs on no code prompt — list it in a prompt's "tasks", or in PROMPTLESS_TASKS with the reason`);
+  }
+  if (hasPrompt && promptless) {
+    failures.push(`AI feature "${feature}" is in PROMPTLESS_TASKS but a code prompt serves it — remove the exception`);
   }
 }
 

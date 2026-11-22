@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useMutation } from '@apollo/client/react';
 import { toCheckoutContact, toCheckoutBilling } from '../checkout';
@@ -41,12 +41,21 @@ export default function CheckoutFlow({ ctx, bill }: Readonly<Props>) {
   const { unitAmount, amount, base, breakup, coins, payBreakup, coinSummary, discounts } = bill;
   // Server-operation failures, parsed + logged once by the shared error module.
   const serverIssue = useServerIssue('/checkout');
-  // What an agent needs if a payment times out and a ticket has to be opened.
-  const payment = usePaymentFailure(() => ({
-    description: pod?.pod_title ? `Pod: ${pod.pod_title}` : 'Pod checkout',
-    amount: breakup?.total ?? amount,
-    currencySymbol: breakup?.currency,
-  }));
+  // The order the sheet is open for. A ref, not state: the sheet's callback
+  // closes over the render that opened it, and must still read this order.
+  const openOrder = useRef<RazorpayOrderData | null>(null);
+  // What an agent needs if a payment times out and a ticket has to be opened,
+  // plus the payment every failure is recorded against (pod checkout only).
+  const payment = usePaymentFailure(
+    () => ({
+      description: pod?.pod_title ? `Pod: ${pod.pod_title}` : 'Pod checkout',
+      amount: breakup?.total ?? amount,
+      currencySymbol: breakup?.currency,
+      paymentDocId: openOrder.current?.payment_doc_id ?? null,
+      razorpayOrderId: openOrder.current?.order_id ?? null,
+    }),
+    { reportToServer: true }
+  );
 
   // Razorpay: create the order, settle a free one outright, otherwise hand the
   // buyer to the hosted sheet and verify on its callback.
@@ -62,6 +71,7 @@ export default function CheckoutFlow({ ctx, bill }: Readonly<Props>) {
       return;
     }
     session.setSubmitting(false);
+    openOrder.current = order;
     await openRazorpayCheckout(order, {
       onSuccess: (sig: RazorpaySignature) => session.verifyRazorpay(order.payment_doc_id, sig),
       // Every failure used to be reported as the buyer's own cancellation.

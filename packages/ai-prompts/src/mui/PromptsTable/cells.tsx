@@ -1,8 +1,4 @@
 import { Box, Chip, Stack, Tooltip, Typography } from '@mui/material';
-import RestartAltIcon from '@mui/icons-material/RestartAlt';
-import { DuncitIconButton } from '@duncit/buttons';
-import { useTranslation } from '@duncit/app-settings';
-import { usePromptCopy } from '../../i18n/useCopy';
 import type { PromptCopy } from '../../copy';
 import type { AiPrompt } from '../../types';
 
@@ -22,6 +18,11 @@ export const renderName = (p: AiPrompt, copy: PromptCopy) => (
         color={p.role === 'USER' ? 'info' : 'secondary'}
         label={copy.roles[p.role]}
       />
+      {p.matches_default === false && (
+        <Tooltip title={copy.editedHint} describeChild>
+          <Chip size="small" color="warning" variant="outlined" label={copy.edited} />
+        </Tooltip>
+      )}
     </Stack>
     {p.description && (
       <Typography variant="caption" component="div" sx={{
@@ -45,25 +46,6 @@ export const renderKey = (p: AiPrompt) => (
   </Typography>
 );
 
-/** Reset-to-default, on code rows only — they are the ones with a default to go back to. */
-export function ResetAction({
-  prompt,
-  onReset,
-}: Readonly<{ prompt: AiPrompt; onReset: (p: AiPrompt) => void }>) {
-  const copy = usePromptCopy();
-  const { t } = useTranslation();
-  return (
-    <Tooltip title={copy.resetHint}>
-      <DuncitIconButton
-        size="small"
-        aria-label={t('ai.library.resetAria', { vars: { name: prompt.name } })}
-        onClick={() => onReset(prompt)}
-      >
-        <RestartAltIcon fontSize="small" />
-      </DuncitIconButton>
-    </Tooltip>
-  );
-}
 
 export const renderCategory = (p: AiPrompt) => <Chip size="small" variant="outlined" label={p.category} />;
 

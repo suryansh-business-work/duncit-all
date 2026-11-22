@@ -1,19 +1,19 @@
 import { useMemo } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
-import { useNavigate, useParams } from 'react-router';
-import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
+import { useParams } from 'react-router';
+import { Alert, Box, CircularProgress, Snackbar, Stack, Typography } from '@mui/material';
 import { CREATE_ECOMM_LEAD, ECOMM_LEAD, UPDATE_ECOMM_LEAD } from '../../api/crm.gql';
 import { useCrmConfig } from '../../api/useCrmConfig';
 import { EcommLeadForm, fromEcommLead, toEcommLeadInput, type EcommLeadFormValues } from '../../forms/ecomm-lead';
 import { ecommLeadInitialValues } from '../../forms/ecomm-lead/ecomm-lead.types';
 import type { EcommLead } from '../../api/crm.types';
 import { useTranslation } from '@duncit/shell';
+import { useLeadEditorFlow } from '../../hooks/useLeadEditorFlow';
 
 export default function EcommLeadEditorPage() {
   const { t } = useTranslation();
   const { id } = useParams();
   const isEdit = !!id;
-  const navigate = useNavigate();
   const { config, loading: cfgLoading } = useCrmConfig();
   const { data, loading: leadLoading } = useQuery<any>(ECOMM_LEAD, { variables: { id }, skip: !isEdit, fetchPolicy: 'cache-and-network' });
   const [createLead, { loading: creating }] = useMutation<any>(CREATE_ECOMM_LEAD);
@@ -25,12 +25,15 @@ export default function EcommLeadEditorPage() {
     [lead]
   );
 
-  const submit = async (values: EcommLeadFormValues) => {
+  const flow = useLeadEditorFlow<EcommLeadFormValues>('/ecomm-leads', id, async (values) => {
     const input = toEcommLeadInput(values);
-    if (isEdit) await updateLead({ variables: { id, input } });
-    else await createLead({ variables: { input } });
-    navigate('/ecomm-leads');
-  };
+    if (isEdit) {
+      const { data: updated } = await updateLead({ variables: { id, input } });
+      return updated.updateEcommLead;
+    }
+    const { data: created } = await createLead({ variables: { input } });
+    return created.createEcommLead;
+  });
 
   if (cfgLoading || (isEdit && leadLoading)) {
     return <Box sx={{ display: 'grid', placeItems: 'center', py: 6 }}><CircularProgress /></Box>;
@@ -49,9 +52,13 @@ export default function EcommLeadEditorPage() {
         initialValues={initialValues}
         submitting={creating || updating}
         submitLabel={isEdit ? 'Update ecomm lead' : 'Create ecomm lead'}
-        onSubmit={submit}
-        onCancel={() => navigate('/ecomm-leads')}
+        onSubmit={flow.submit}
+        onSubmitAndContinue={flow.submitAndContinue}
+        continueLabel={isEdit ? t('crm.forms.updateAndContinue') : t('crm.forms.createAndContinue')}
+        onCancel={flow.exit}
+        leadId={id}
       />
+      <Snackbar open={!!flow.notice} autoHideDuration={4000} onClose={flow.clearNotice} message={flow.notice ?? ''} />
     </Stack>
   );
 }

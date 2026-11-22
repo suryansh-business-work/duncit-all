@@ -7,13 +7,20 @@ import { actorOf, toJob } from '@modules/platform/backgroundJob/backgroundJob.se
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { checkAndRecord } from './emailVerification.check';
 import { extractEmails } from './emailVerification.csv';
-import { EmailVerificationModel, type EmailVerificationDoc } from './emailVerification.model';
+import { EmailVerificationModel, LEGACY_PORTAL, type EmailVerificationDoc } from './emailVerification.model';
 import type { EmailVerifyParams } from './emailVerification.step';
 
 /** The most addresses one status lookup answers — a page of CRM rows, not a dump. */
 const MAX_STATUS_LOOKUP = 200;
 
 const badInput = (message: string) => new GraphQLError(message, { extensions: { code: 'BAD_USER_INPUT' } });
+
+/**
+ * The CRM's own checks: every console now logs to this collection, and an
+ * address another console checked is that console's business. A row without
+ * a portal predates the stamp and was the CRM's.
+ */
+const CRM_CHECKS = { portal: { $in: [LEGACY_PORTAL, null] } };
 
 const TABLE_CONFIG: TableEntityConfig = {
   searchFields: ['email', 'checked_by.email'],
@@ -83,11 +90,11 @@ export const emailVerificationService = {
     }));
   },
 
-  /** Every check ever run — the history table on the Email Verifier page. */
+  /** Every check the CRM ran — the history table on the Email Verifier page. */
   async table(input?: TableQueryInput | null) {
     const { docs, total, page, page_size } = await runTableQuery<EmailVerificationDoc>(
       EmailVerificationModel,
-      {},
+      CRM_CHECKS,
       input,
       TABLE_CONFIG
     );

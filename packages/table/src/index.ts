@@ -15,6 +15,9 @@ export type { BulkDeleteMode, BulkDeleteRequest, TableBulkDeleteApi } from './bu
 // The change log a console's shell provides to every grid.
 export { TableChangeLogProvider, useTableChangeLogApi } from './changeLog/changeLogContext';
 export type { TableChangeAction, TableChangeLogApi, TableChangeLogRow } from './changeLog/changeLogContext';
+// What a console offers beside every email address its grids show (the shell's Validate button).
+export { TableEmailActionProvider, isEmailField } from './cells/emailCell';
+export type { TableEmailAction } from './cells/emailCell';
 export {
   actionsColumn,
   activeChipColumn,

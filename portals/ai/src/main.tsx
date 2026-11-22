@@ -1,7 +1,7 @@
 import { mountPortal } from '@duncit/shell';
 import { createSessionUserLoader } from '@duncit/user-context';
 import { logs } from '@duncit/logs';
-import { AI_BUNDLE, flattenCatalogue } from '@duncit/app-settings';
+import { AI_ASK_DUNCIT_BUNDLE, AI_BUNDLE, ASK_DUNCIT_BUNDLE, flattenCatalogue } from '@duncit/app-settings';
 import { urlConfigs } from './config/url-configs';
 import { apolloClient } from './apollo';
 import { appConfig } from './config/app-config';
@@ -15,7 +15,7 @@ mountPortal({
   // This console's OWN namespace, layered over the shell chrome's. The
   // aiMonitoring.* notice copy is separate — it renders on every surface, not
   // only here (rule 38).
-  i18nFallback: flattenCatalogue(AI_BUNDLE),
+  i18nFallback: { ...flattenCatalogue(AI_BUNDLE), ...flattenCatalogue(AI_ASK_DUNCIT_BUNDLE), ...flattenCatalogue(ASK_DUNCIT_BUNDLE) },
   loadUser: createSessionUserLoader(apolloClient),
   children: <App />,
 });

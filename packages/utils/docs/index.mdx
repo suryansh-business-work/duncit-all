@@ -679,6 +679,18 @@ exports:
   - 'EMPLOYEE_EXPENSE_STATUS_COLORS'
   - 'EMPLOYEE_EXPENSE_STATUS_KEYS'
   - 'EMPLOYEE_EXPENSE_SELECTION'
+  - 'EMPLOYEE_TARGET_STATUSES'
+  - 'EMPLOYEE_TARGET_STATUS_COLORS'
+  - 'EMPLOYEE_TARGET_STATUS_KEYS'
+  - 'EMPLOYEE_TARGET_LIMITS'
+  - 'EMPLOYEE_TARGET_REMINDER_BOUNDS'
+  - 'EMPLOYEE_TARGET_SELECTION'
+  - 'canEditTargetGoals'
+  - 'canSubmitTarget'
+  - 'employeeTargetStatusOptions'
+  - 'monthKeyOf'
+  - 'dateOfMonthKey'
+  - 'formatMonthKey'
   - 'coinLedgerLabelKey'
   - 'ConsentCategory'
   - 'ConsentChoice'
@@ -1184,6 +1196,25 @@ exclusiveOfGstBill(750, [{ key: 'ticketDiscount', amount: 37.5 }], 603.81, 18)
 // 635.59 − 31.78 = 603.81 taxable, + 108.69 GST = 712.50
 ```
 
+### Payment failures — `payment-failure`
+
+| Export | Signature | Meaning |
+| --- | --- | --- |
+| `classifyPaymentFailure` | `(raw: RazorpayErrorLike \| null) => PaymentFailure` | CANCELLED (sheet closed, `null`), TIMEOUT (outcome unknown — the only kind that `raisesTicket`) or FAILED. Carries Razorpay's code, description, payment/order ids and its `reason` / `source` / `step` verbatim. |
+| `PAYMENT_FAILURE_KEYS` | `Record<PaymentFailureKind, { title, body }>` | The `mweb.payment.*` copy each outcome renders with. |
+| `paymentTicketDraft` | `(failure, PaymentTicketContext) => { subject, body_text, category: 'PAYMENT' }` | The ticket a timed-out payment opens on the buyer's behalf. |
+| `PaymentFailureState` / `EMPTY_PAYMENT_FAILURE_STATE` | state / its empty value | What both apps' failure dialog reads: the failure, the ticket number while it is raised (`ticketPending` / `ticketFailed`) and `paymentDocId`, the payment a deduction claim is filed against. |
+| `PaymentFailureContext` / `PaymentFailureOptions` | types | What the checkout knows at the failure (`PaymentTicketContext` plus the Razorpay order) and `reportToServer` (pod checkout only). |
+| `paymentFailureReportInput` | `(failure, PaymentFailureReportContext) => PaymentFailureReportInput \| null` | The `reportPaymentFailure` variables both apps send from the pod checkout: the gateway facts plus `payment_doc_id`, the order the sheet was opened for (a dismissal reports none), `retry_shown`, a whole `attempt_number` ≥ 1 and the caller's `client_request_id`. `null` when no Duncit payment exists to attach it to. |
+
+```ts
+paymentFailureReportInput(classifyPaymentFailure(null), {
+  paymentDocId: 'PAY-77', razorpayOrderId: 'order_9', retryShown: true, attemptNumber: 1, clientRequestId: uuid,
+}); // { payment_doc_id: 'PAY-77', kind: 'CANCELLED', razorpay_order_id: 'order_9', error_code: null, … }
+```
+
+The deducted-payment claim's form rules live in `@duncit/forms/schemas` (`makePaymentClaimSchema`), since they need Zod.
+
 ### Delivery quote gate — `delivery-quote-gate`
 
 The product checkout's Pay button stays shut until the delivery charge for the cart and pincode
@@ -1537,6 +1568,83 @@ app share these derivations and keep their own MUI / Tamagui rows (rules 27 + 40
 | `isDraftExpiringSoon` | `(draft, now = Date.now()) => boolean` | Inside the warning window — the one rule behind both the promotion and the highlight. |
 | `draftHoursLeft` | `(draft, now = Date.now()) => number` | Whole hours left, floored at 0. `0` means the last hour, not "already gone". |
 | `splitDraftsByExpiry` | `(drafts, now = Date.now()) => { expiring, rest }` | `expiring` soonest-first; `rest` keeps the server order. |
+
+### Draft autosave — `pod-draft-autosave`
+
+Create Pod names its draft the moment it opens: the device mints the id, the URL
+(mWeb `/create-pod/<id>`) and the native route params carry it, and the server creates
+the draft on its first save. From then on the form saves itself — only when it really
+differs from the last save, only once the host pauses typing, one request at a time,
+retrying a failed save on its own. mWeb and the native app share this controller and keep
+their own MUI / Tamagui corner indicator.
+
+| Export | Signature | Meaning |
+| --- | --- | --- |
+| `newPodDraftId` | `(randomUUID, now = Date.now()) => string` | ObjectId-shaped id: 8 hex digits of seconds + 16 random hex digits from the UUID (its fixed version/variant digits skipped). |
+| `isPodDraftId` | `(id) => boolean` | 24 lowercase hex digits. A URL holding anything else gets a fresh id. |
+| `createDraftAutosaver` | `({ read, save, onStatus?, onUnsaved?, onError?, delayMs?, retryMs?, retryMaxMs? }) => DraftAutosaver` | `schedule()` after each change, `flush()` to save now (resolves `true` once nothing is unsaved), `hasUnsaved()`, `markSaved()` to treat the current form as saved, `stop()` after publishing. Changes are compared as JSON; `onUnsaved` fires each time the form starts or stops differing from the last save. |
+| `DRAFT_AUTOSAVE_DEBOUNCE_MS` | `number` | 1.2s — the pause after the last edit before it is saved. |
+| `DRAFT_AUTOSAVE_RETRY_MS` / `DRAFT_AUTOSAVE_RETRY_MAX_MS` | `number` | 5s first retry, doubling to at most 30s. |
+| `DraftSaveStatus` | `'idle' \| 'saving' \| 'saved' \| 'error'` | What the indicator shows. `idle` until the first save of the visit. |
+| `DraftAutosaveHandle` | `{ status, unsaved, flush }` | What the stepper hands its page / screen: the indicator's status, whether leaving has to wait for a save (native holds the back gesture while it is true), and that save. |
+
+```ts
+const saver = createDraftAutosaver({
+  read: () => serializeDraft(form.getValues(), step),
+  save: (payload) => saveDraft(draftId, payload),
+  onStatus: setStatus,
+});
+saver.schedule();            // after every change
+await saver.flush();         // on a step change, before leaving
+```
+
+### Minimum Advance Days for Pod Creation — `pod-min-advance`
+
+A host's new pod must start at least N calendar days after today, on the admin's
+time zone: today 10 Nov with N = 5 opens 15 Nov, from local midnight. N is the
+host's own override (Hosts console) when set, else Pod Settings'
+`pod_min_advance_days` (default 2, 1–30); the server resolves it as
+`myPodMinAdvanceDays`. The server refuses an earlier start
+(`reason: POD_MIN_ADVANCE`) on createPartnerPod, draft publish and a resubmit
+that moves the date; Admin, Club Admin and Auto Pods are not held to it. mWeb
+and the app start the venue offer calendar on the first allowed day, drop
+earlier Pod Request slots, block earlier days on the virtual pod picker, and
+refuse an earlier start in the schema — all from these helpers.
+
+| Export | Signature | Meaning |
+| --- | --- | --- |
+| `DEFAULT_POD_MIN_ADVANCE_DAYS` / `MIN_…` / `MAX_…` | `number` | 2, 1, 30. |
+| `cleanPodMinAdvanceDays` | `(value) => number` | Floored and held to 1–30; unset or non-numeric reads as 2. |
+| `podMinAdvanceDaysOrNull` | `(value) => number \| null` | A whole number 1–30 (typed or numeric), else `null` — the host editor's check. |
+| `podMinAdvanceWindow` | `(nowMs, timeZone, days) => { day, startMs }` | The first allowed day (`yyyy-MM-dd`) and its local midnight. |
+| `meetsPodMinAdvance` | `(startMs, window) => boolean` | Starts on or after the window. |
+| `startsWithinPodMinAdvance` | `(items, window \| null) => items` | Keeps the slots / tiles starting in the window; all of them with no window. |
+| `MY_POD_MIN_ADVANCE_DAYS_SDL` | `string` | The caller's days, for mWeb's `gql` (the app re-declares it for its codegen). |
+| `dayKeyInZone` | `(ms, timeZone) => string` | The calendar day an instant falls on in a zone. |
+| `addDaysYmd` | `(ymd, days) => string` | The day `days` after `ymd` on the plain calendar. |
+
+```ts
+const window = podMinAdvanceWindow(Date.parse('2026-11-10T08:30:00Z'), 'Asia/Kolkata', 5);
+// { day: '2026-11-15', startMs: Date.parse('2026-11-14T18:30:00Z') }
+startsWithinPodMinAdvance(slots, window); // only slots from 15 Nov on
+```
+
+### Host engagement & performance — `host-engagement`
+
+The ranges of Pod Settings' "Host engagement & performance" group, shared by
+the console cards and (as twins) the server, which clamps to the same numbers.
+A host's monthly score is `min(100, round(completed / target × 100))` over the
+calendar month in the admin's time zone; a host with no completed pod in the
+last N days is flagged inactive (yellow row in Partners > Club Admin > Hosts).
+
+| Export | Value | Meaning |
+| --- | --- | --- |
+| `DEFAULT_HOST_INACTIVITY_DAYS` / `MIN_…` / `MAX_…` | 14, 1, 90 | Days without a completed pod before a host is inactive. |
+| `DEFAULT_HOST_MONTHLY_POD_TARGET` / `MIN_…` / `MAX_…` | 8, 1, 100 | Completed pods a month that score 100%. |
+| `DEFAULT_HOST_PERFORMANCE_NOTIFY_DAY` / `MIN_…` / `MAX_…` | 1, 1, 28 | Day of the month the monthly messages go out. |
+| `DEFAULT_HOST_UNDERPERFORM_THRESHOLD_PCT` / `MIN_…` / `MAX_…` | 100, 1, 100 | Below this score a host is underperforming. |
+| `MAX_HOST_ENGAGEMENT_STATUSES` | 20 | Most engagement statuses an admin may configure. |
+| `MAX_HOST_ENGAGEMENT_LABEL_LENGTH` | 40 | Longest status label. |
 
 ### Create Pod steps
 
@@ -3326,6 +3434,36 @@ sees them.
 It is deliberately **data only**: no formatter, no component. The two consoles are MUI twins
 of one screen, and rule 40's twin clause applies — they share the shape, never the UI.
 
+## Monthly employee targets
+
+`employee-target.ts` is the shape the Targets console and the Employee console agree on. The
+Targets console assigns an employee their goals for a month and reviews the report; the
+employee sees the goals and files the report (completion percentage, achievements and
+updates) from the Employee console.
+
+```ts
+EMPLOYEE_TARGET_STATUSES; // ['ASSIGNED', 'SUBMITTED', 'REVIEWED']
+EMPLOYEE_TARGET_STATUS_COLORS.SUBMITTED; // 'warning' — one meaning of amber, both consoles
+EMPLOYEE_TARGET_STATUS_KEYS.REVIEWED; // 'employeeTargets.status.REVIEWED'
+employeeTargetStatusOptions(t); // [{ value: 'ASSIGNED', label: t('employeeTargets.status.ASSIGNED') }, …] — the status filter
+EMPLOYEE_TARGET_LIMITS.achievementsMax; // 30 — the server refuses the 31st row too
+EMPLOYEE_TARGET_REMINDER_BOUNDS.graceDays; // { min: 0, max: 15 } — Targets > Settings
+EMPLOYEE_TARGET_SELECTION; // the GraphQL field list both consoles interpolate
+canEditTargetGoals('SUBMITTED'); // false — goals lock once progress is reported
+canSubmitTarget('REVIEWED'); // false — read-only until an admin reopens it
+monthKeyOf(new Date(2026, 10, 18)); // '2026-11'
+dateOfMonthKey('2026-11'); // 1 Nov 2026 (local), for a month picker; null for junk
+formatMonthKey('2026-11', 'en-IN'); // 'November 2026' — Intl, no hand-written pattern
+```
+
+`EMPLOYEE_TARGET_LIMITS` is a twin of the server's `employeeTarget.rules.ts` (the server imports
+no `@duncit/*` package): the forms stop at the same limits the API enforces, so a too-long
+row is caught in the form instead of coming back as an error. Change both together.
+
+Whether a target is due is never worked out here. The reminder window is an admin setting
+read in the app's time zone, so the server sends `reminder_active` on every row and both
+consoles only display it.
+
 ## A link into another city
 
 `location-mismatch.ts` is the question both apps ask before they open a pod, club or venue
@@ -3858,6 +3996,29 @@ runs, Pod Shop items no longer on sale). mWeb and the app word those codes throu
 ```ts
 hostAgainNoticeKeys(['CLUB_UNAVAILABLE', 'SOMETHING_NEW']).map((key) => t(key));
 // → ['The original club is no longer active. Pick another club on step 1.']
+```
+
+## A venue for a host — `venue-host-terms`
+
+Hosts see a venue's Fees & Minimum Spend on the Venues list cards and on Venue Details, and can
+pick the venue for a new pod from there. The server's `venueHostTerms(venue_ids)` query answers
+only for an active host (the rule Create Pod enforces), so an empty answer hides both the terms
+and the button. mWeb and the app word the terms, and seed Create Pod, through the same helpers.
+
+| Export | Meaning |
+| --- | --- |
+| `VenueHostTerms` | One venue's terms as `venueHostTerms` returns them (rupees). |
+| `venueHostTermLines(terms, t, money, { compact })` | The terms as lines: minimum spend, amount per basis, fewest guests, then cleaning fee, pet fee, deposit and GST. `compact` keeps the minimums only (list cards). |
+| `venueHostTermsById(rows)` | A `Map` from venue id to its terms, for a list of cards. |
+| `PICK_VENUE_PARAM` | `pick_venue` — the search param mWeb's `/create-pod` reads the picked venue id from. |
+| `pickedVenueSeed(venue, cities, soleCategoryKey?)` | The fresh form for a picked venue: physical, the venue, its city and (when the city names it) its area; a host with one category gets it picked and opens on Where & when. |
+| `isPickedVenue(pickedVenueId, venueId)` | Whether the form is still on the picked venue — what keeps Create Pod's shortcuts on. |
+
+```ts
+venueHostTermLines(terms, t, formatMoney, { compact: true }).map((line) => line.text);
+// → ['Minimum spend ₹5,000 per booking', '₹450 per guest', 'At least 10 guests paid for']
+pickedVenueSeed(venue, locations, hostCategories.length === 1 ? keyOf(hostCategories[0]) : null);
+// → { values: { pod_mode: 'PHYSICAL', venue_id, location_id, locality }, step: 1 }
 ```
 
 ## Wallet statement periods — `statement-period`
@@ -4719,3 +4880,65 @@ toggleDayKey(pricing.blocked_dates, '2026-12-31'); // block / unblock, kept sort
 | `priceRuleChange` | `(mode, value, money) => string` | A rule's change as the owner set it: `+20%`, `-₹500`. |
 
 Renderers: native `screens/VenuePricingScreen` (`components/venue-pricing`).
+
+## Ask Duncit's conversation, on both apps — `ask-duncit`
+
+Ask Duncit (menu › Ask Duncit) is the role-based AI assistant. Its answers stream over the socket
+(`ASK_DUNCIT_SOCKET_EVENTS`) after `sendAskDuncitMessage` returns the message ids, and both apps fold
+those events into ONE thread model with these pure functions, so mWeb (MUI) and the native app
+(Tamagui) cannot drift in how a turn behaves. The server stays the truth: the `done` event carries
+the stored message, which `applyFinal` puts in place of the streamed copy.
+
+A turn: `addOptimisticQuestion` (shown at once) → `acceptTurn` with the mutation's result (real ids,
+an answer placeholder, `streamingId`; a `BLOCKED` turn is complete with `INJECTION_BLOCKED`) or
+`rejectTurn` if the send failed → `applyDelta` per text frame → `applyToolEvent` (a finished tool
+replaces its RUNNING line) → `applyActionEvent` (a proposed change appears on the streaming answer
+and later updates in place) → `applyFinal` or `applyFailure`. Older pages load with
+`prependOlder`, which skips messages already on screen.
+
+Every word is a translation key: `roleLabelKey`, `suggestionText` (an operator's own label wins over
+its key), `alertText` (fills `{placeholders}` from the alert's JSON params), `unavailableKey`,
+`errorKey`, `actionStatusKey`, `toolStatusKey` — unknown codes fall back to a generic key, never to
+raw text. `pageContextFromPath` turns the current path into the entity on screen (pod, club, venue,
+profile, wallet) for contextual answers; `isNearBottom` is the shared auto-scroll rule;
+`canDecide` says whether approve/reject still apply.
+
+```ts
+import {
+  acceptTurn,
+  addOptimisticQuestion,
+  applyDelta,
+  applyFinal,
+  emptyThread,
+  pageContextFromPath,
+  tempMessageId,
+} from '@duncit/utils';
+
+const temp = tempMessageId();
+let thread = addOptimisticQuestion(emptyThread(), temp, 'Show my pods');
+thread = acceptTurn(thread, temp, { conversation_id: 'c1', user_message_id: 'u1', message_id: 'a1', status: 'STREAMING' });
+thread = applyDelta(thread, { message_id: 'a1', text: 'You have 2 pods.' });
+thread = applyFinal(thread, storedMessageFromDoneEvent);
+pageContextFromPath('/pod/6650abc'); // { route: '/pod/6650abc', entity_type: 'POD', entity_id: '6650abc' }
+```
+
+| Export | Signature | Meaning |
+| --- | --- | --- |
+| `ASK_DUNCIT_SOCKET_EVENTS` | `{ start, delta, tool, action, done, error }` | Event names on the asker's socket room. |
+| `ASK_DUNCIT_TRANSCRIBE_PATH` / `ASK_DUNCIT_SPEAK_PATH` | `string` | Voice in (audio → text) and out (text → MP3), relative to the API base. |
+| `emptyThread` | `(conversationId?) => AskDuncitThreadState` | A thread with no messages. |
+| `addOptimisticQuestion` / `acceptTurn` / `rejectTurn` | state transitions | The question before, after and instead of the server's acceptance. |
+| `applyDelta` / `applyToolEvent` / `applyActionEvent` | state transitions | Streamed text, tool progress, proposed changes. |
+| `applyFinal` / `applyFailure` | state transitions | The stored message replaces the stream; or the failure with its code. |
+| `prependOlder` | `(state, older, hasMore)` | Older page above, de-duplicated. |
+| `pageContextFromPath` | `(path) => AskDuncitPageContext` | The entity on screen. |
+| `isNearBottom` / `NEAR_BOTTOM_PX` | `(offset, threshold?) => boolean` / `80` | Keep following new text only while the reader is at the bottom. |
+| `roleLabelKey`, `suggestionText`, `alertText`, `unavailableKey`, `errorKey`, `actionStatusKey`, `toolStatusKey` | key builders | Localization keys for every server code. |
+| `canDecide` | `(action, now?) => boolean` | Pending and not expired. |
+| `tempMessageId` | `() => string` | A client-only id for the optimistic question. |
+| `openAskDuncitThread` | `(conversationId, current, fetchPage, io) => cancel` | Opens a conversation: its newest page replaces the thread, the one already on screen is kept. Returns the effect cleanup. |
+| `loadOlderAskDuncit` | `(current, busy, fetchPage, io) => Promise<void>` | Loads the page above the oldest stored message (never a temporary id). |
+| `toggleAskDuncitMic` / `appendHeard` | `(recording, voice, onHeard)` / `(typed, heard)` | The mic button: start, or stop and hand over the dictated text; resolves to the error copy key, or null. |
+
+Renderers: mWeb `pages/ask-duncit-page/*`, native `screens/AskDuncitScreen` + `components/ask-duncit/*`.
+Server: `server/src/modules/ai/askDuncit`.

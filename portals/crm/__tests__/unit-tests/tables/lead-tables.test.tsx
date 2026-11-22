@@ -88,6 +88,22 @@ describe('CrmLeadsTable (venue)', () => {
     renderLeadTable('venue', makeFetch<VenueLead>([]));
     expect(await screen.findByText(/No venue leads yet/i)).toBeTruthy();
   });
+
+  it('paints a duplicate lead’s row red and marks it "Duplicate", leaving unique rows plain', async () => {
+    const duplicate = { ...venueLead, id: 'v2', venue_name: 'Copy Hall', is_duplicate: true } as VenueLead;
+    const unique = { ...venueLead, is_duplicate: false } as VenueLead;
+    renderLeadTable('venue', makeFetch([duplicate, unique]));
+
+    const copyRow = (await screen.findByText('Copy Hall')).closest('.ag-row') as HTMLElement;
+    const plainRow = screen.getByText('Grand Hall').closest('.ag-row') as HTMLElement;
+
+    expect(copyRow.style.backgroundColor).not.toBe('');
+    expect(plainRow.style.backgroundColor).toBe('');
+    // Colour is never the only cue: the row says it in words too.
+    expect(screen.getAllByTestId('lead-duplicate-chip')).toHaveLength(1);
+    expect(copyRow).toHaveTextContent('Duplicate');
+    expect(plainRow).not.toHaveTextContent('Duplicate');
+  });
 });
 
 describe('CrmLeadsTable (host)', () => {

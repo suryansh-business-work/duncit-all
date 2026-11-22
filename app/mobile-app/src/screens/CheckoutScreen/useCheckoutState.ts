@@ -65,12 +65,17 @@ export function useCheckoutState() {
   // gateway is only a local fallback.
   const razorpayEnabled = !!finance?.razorpay_enabled;
   const dummyMode = !razorpayEnabled && (finance?.dummy_mode ?? true);
-  // What an agent needs if a payment times out and a ticket has to be opened.
-  const paymentFailure = usePaymentFailure(() => ({
-    description: pod?.pod_title ? `Pod: ${pod.pod_title}` : 'Pod checkout',
-    amount: breakup?.total ?? amount,
-    paymentDocId: order?.payment_doc_id ?? null,
-  }));
+  // What an agent needs if a payment times out and a ticket has to be opened,
+  // plus the payment every failure is recorded against (pod checkout only).
+  const paymentFailure = usePaymentFailure(
+    () => ({
+      description: pod?.pod_title ? `Pod: ${pod.pod_title}` : 'Pod checkout',
+      amount: breakup?.total ?? amount,
+      paymentDocId: order?.payment_doc_id ?? null,
+      razorpayOrderId: order?.order_id ?? null,
+    }),
+    { reportToServer: true },
+  );
   const appliedCode = coupon?.ok ? coupon.code : null;
   // Earned on what is ACTUALLY charged — the server credits on the total after
   // coins are spent, so previewing off the gross would promise coins that never

@@ -11,6 +11,7 @@ import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import type { CalEvent } from './useCalendarEvents';
 import { formatDateTime } from '@duncit/app-settings';
 import { useTranslation } from '@duncit/shell';
+import { LEAD_KIND_LABEL_KEY, leadDetailPath } from '../../lib/leadKinds';
 
 interface Props {
   event: CalEvent | null;
@@ -20,7 +21,10 @@ interface Props {
   onDelete: (e: CalEvent) => void;
 }
 
-const ENTITY_LABEL: Record<string, string> = { VENUE_LEAD: 'Venue lead', HOST_LEAD: 'Host lead', GENERAL: 'General' };
+const ENTITY_LABEL: Record<CalEvent['entity'], string> = {
+  ...LEAD_KIND_LABEL_KEY,
+  GENERAL: 'crm.calendar.general',
+};
 
 /** Side drawer showing a calendar event's details + a jump to its lead. */
 export default function EventDrawer({ event, onClose, onEdit, onToggleDone, onDelete }: Readonly<Props>) {
@@ -32,7 +36,8 @@ export default function EventDrawer({ event, onClose, onEdit, onToggleDone, onDe
 
   // Only offered for an event that links a lead (see the button below).
   const openLead = (linked: CalEvent) => {
-    navigate(linked.entity === 'VENUE_LEAD' ? `/venue-leads/${linked.leadId}/view` : `/host-leads/${linked.leadId}/view`);
+    if (linked.entity === 'GENERAL' || !linked.leadId) return;
+    navigate(leadDetailPath(linked.entity, linked.leadId));
     onClose();
   };
 
@@ -72,7 +77,7 @@ export default function EventDrawer({ event, onClose, onEdit, onToggleDone, onDe
               flexWrap: "wrap"
             }}>
               <Chip size="small" label={formatDateTime(event.date)} />
-              <Chip size="small" variant="outlined" label={ENTITY_LABEL[event.entity]} />
+              <Chip size="small" variant="outlined" label={t(ENTITY_LABEL[event.entity])} />
               {isReminder && <Chip size="small" color={done ? 'success' : 'default'} label={done ? 'Done' : t('crm.components.pending')} />}
             </Stack>
 
@@ -107,7 +112,7 @@ export default function EventDrawer({ event, onClose, onEdit, onToggleDone, onDe
           <Stack spacing={1} sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}>
             {event.leadId && (
               <DuncitButton variant="contained" startIcon={<OpenInNewIcon />} onClick={() => openLead(event)}>
-                Open {event.entity === 'VENUE_LEAD' ? 'venue' : 'host'} lead
+                {t('crm.calendar.openLead')}
               </DuncitButton>
             )}
             {isReminder && (

@@ -52,6 +52,22 @@ export function podLifecycleFilter(bucket: PodLifecycle, now: Date): Record<stri
 }
 
 /**
+ * COMPLETED as an AGGREGATION EXPRESSION — the same rule as
+ * `podLifecycleFilter('COMPLETED')`, for a `$group` that counts completed pods
+ * beside other buckets in one pass (a `$match` could only keep one bucket).
+ * Callers run it over non-deleted pods (the model's aggregate hook drops the
+ * rest), so the soft-delete half of the rule is already applied.
+ */
+export function podCompletedExpr(now: Date): Record<string, unknown> {
+  return { $or: [{ $ne: [{ $ifNull: ['$completed_at', null] }, null] }, { $lt: [LIVE_END, now] }] };
+}
+
+/** UPCOMING as an aggregation expression — the twin of `podLifecycleFilter('UPCOMING')`. */
+export function podUpcomingExpr(now: Date): Record<string, unknown> {
+  return { $and: [{ $eq: [{ $ifNull: ['$completed_at', null] }, null] }, { $gt: ['$pod_date_time', now] }] };
+}
+
+/**
  * Pods whose END falls inside a window — the QUERY twin of {@link podLiveEnd}.
  *
  * A sweep that has to find "pods that finished about N hours ago" cannot state

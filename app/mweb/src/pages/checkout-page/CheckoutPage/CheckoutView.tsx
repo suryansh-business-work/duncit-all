@@ -121,6 +121,8 @@ export default function CheckoutView({
         ticketNo={payment.ticketNo}
         ticketPending={payment.ticketPending}
         ticketFailed={payment.ticketFailed}
+        // Pod bookings only: a Duncit payment to file a deduction claim against.
+        claim={payment.paymentDocId ? { paymentDocId: payment.paymentDocId } : null}
         onClose={payment.dismiss}
         onRetry={() => {
           payment.dismiss();

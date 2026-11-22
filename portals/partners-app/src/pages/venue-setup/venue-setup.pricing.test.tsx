@@ -1,10 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
-import { VENUE_PRICING, type VenuePricingData } from '@duncit/availability-calendar';
+import { VENUE_PRICING, pricingWithPart, type VenuePricingData } from '@duncit/availability-calendar';
 import FeesPage from './FeesPage';
 import PriceRulesPage from './PriceRulesPage';
-import { pricingWithPart } from './VenuePricingPartEditor';
 import { MY_VENUES } from '../register-venue-page/queries';
+import { MY_VENUES_OFFERS } from './booking-offers/queries';
 import { shapeOf } from '../../__tests__/doc-shape';
 import { renderWithProviders } from '../../__tests__/render';
 import { recordNotices } from '../../__tests__/groupC-notices';
@@ -42,7 +42,6 @@ const savedPricing = {
   min_hours: 1,
   max_hours: 0,
   booking_increment_minutes: 60,
-  min_spend: 500,
   slots: [],
   operating_hours: [],
   price_rules: [weekendRule],
@@ -60,12 +59,35 @@ const venues = shapeOf(MY_VENUES, {
   myVenues: [{ __typename: 'Venue', id: 'v1', status: 'APPROVED', venue_name: 'Cafe Mocha' }],
 });
 
+/** The venue's booking offers and minimum spend, as Fees & Minimum Spend reads them. */
+const venueOffers = shapeOf(MY_VENUES_OFFERS, {
+  myVenues: [
+    {
+      __typename: 'Venue',
+      id: 'v1',
+      offer_min_guests: 8,
+      offer_response_hours: 24,
+      settings: {
+        __typename: 'VenueSettings',
+        offers: {
+          __typename: 'VenueOfferSettings',
+          min_guests: 0,
+          response_hours: 0,
+          min_business: [{ __typename: 'VenueMinBusiness', model: 'PER_GUEST', amount: 200 }],
+          min_spend: 3000,
+        },
+      },
+    },
+  ],
+});
+
 const mount = (ui: React.ReactElement, answers: Record<string, ScriptedAnswer> = {}, sent: SentOperation[] = []) =>
   renderWithProviders(ui, {
     route: '/venues/fees',
     link: scriptedLink(
       {
         MyVenues: venues,
+        MyVenuesOffers: venueOffers,
         VenuePricingModule: pricingData(),
         UpdateVenuePricing: { updateVenuePricing: { ...savedPricing } },
         ...answers,
@@ -91,7 +113,6 @@ describe('pricingWithPart', () => {
     min_hours: 1,
     max_hours: 0,
     booking_increment_minutes: 60,
-    min_spend: 900,
     slots: [],
     custom_hours: false,
     operating_hours: [],
@@ -106,7 +127,8 @@ describe('pricingWithPart', () => {
 
   it('replaces only the fee fields on a fees save, sending the saved rules back unchanged', () => {
     const input = pricingWithPart('fees', pricing, values as never);
-    expect(input).toMatchObject({ min_spend: 900, deposit: 1, cleaning_fee: 2, pet_fee: 3, gst_enabled: true });
+    expect(input).toMatchObject({ deposit: 1, cleaning_fee: 2, pet_fee: 3, gst_enabled: true });
+    expect(input).not.toHaveProperty('min_spend');
     expect(input.price_rules).toEqual([
       { type: 'WEEKDAY_SURCHARGE', label: 'Weekend', mode: 'PERCENT', value: 10, days: [5, 6], dates: [], from: null, to: null },
     ]);
@@ -116,7 +138,42 @@ describe('pricingWithPart', () => {
   it('replaces only the rules on a rules save, keeping the saved fees', () => {
     const input = pricingWithPart('rules', pricing, values as never);
     expect(input.price_rules).toEqual([]);
-    expect(input).toMatchObject({ min_spend: 500, deposit: 100, cleaning_fee: 50, pet_fee: 25, gst_enabled: false });
+    expect(input).toMatchObject({ deposit: 100, cleaning_fee: 50, pet_fee: 25, gst_enabled: false });
+  });
+});
+
+describe('Fees & Minimum Spend page — booking offers & minimum spend', () => {
+  const offersSaved = { updateVenueSettings: { __typename: 'Venue', id: 'v1', offer_min_guests: 8, offer_response_hours: 24 } };
+
+  it('shows the booking offers above the fees, with the stored minimum spend and what is in effect', async () => {
+    mount(<FeesPage />);
+    expect(await screen.findByRole('heading', { name: 'Booking offers & minimum spend' })).toBeTruthy();
+    expect((screen.getByLabelText('Minimum spend per booking (₹)') as HTMLInputElement).value).toBe('3000');
+    expect(screen.getByText('0 uses Duncit’s default. In effect now: 8 guests.')).toBeTruthy();
+    expect(await screen.findByTestId('venue-pricing-fees')).toBeTruthy();
+    // The fees form no longer asks for a minimum spend of its own.
+    expect(screen.getAllByLabelText(/Minimum spend/)).toHaveLength(1);
+  });
+
+  it('saves the offers and minimum spend alone — the fees are not touched — and says so', async () => {
+    const sent: SentOperation[] = [];
+    mount(<FeesPage />, { UpdateVenueOfferSettings: offersSaved }, sent);
+    fireEvent.change(await screen.findByLabelText('Minimum spend per booking (₹)'), { target: { value: '5000' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save booking offers' }));
+
+    await waitFor(() => expect(notices.notices.map((n) => n.message)).toContain('Booking offers saved.'));
+    expect(sent.find((op) => op.name === 'UpdateVenueOfferSettings')?.variables).toEqual({
+      venue_doc_id: 'v1',
+      input: { offers: { min_guests: 0, response_hours: 0, min_business: [{ model: 'PER_GUEST', amount: 200 }], min_spend: 5000 } },
+    });
+    expect(writes(sent)).toHaveLength(0);
+    await waitFor(() => expect(sent.filter((op) => op.name === 'MyVenuesOffers').length).toBeGreaterThan(1));
+  });
+
+  it('says the booking offers could not be loaded when that read fails', async () => {
+    mount(<FeesPage />, { MyVenuesOffers: new Error('Offers are down') });
+    expect(await screen.findByTestId('booking-offers-load-failed')).toBeTruthy();
+    expect(screen.getByText('Offers are down')).toBeTruthy();
   });
 });
 
@@ -127,7 +184,7 @@ describe('Fees & Minimum Spend page', () => {
     const save = await screen.findByTestId('venue-pricing-fees-save');
     expect(save.hasAttribute('disabled')).toBe(true);
 
-    await edit('Minimum spend', '750');
+    await edit('Refundable deposit', '750');
     fireEvent.click(screen.getByTestId('pricing-gst'));
     fireEvent.click(save);
 
@@ -135,7 +192,8 @@ describe('Fees & Minimum Spend page', () => {
     expect(writes(sent)).toHaveLength(1);
     const { venue_id, input } = writes(sent)[0].variables as { venue_id: string; input: Record<string, unknown> };
     expect(venue_id).toBe('v1');
-    expect(input).toMatchObject({ min_spend: 750, deposit: 100, cleaning_fee: 50, pet_fee: 25, gst_enabled: true });
+    expect(input).toMatchObject({ deposit: 750, cleaning_fee: 50, pet_fee: 25, gst_enabled: true });
+    expect(input).not.toHaveProperty('min_spend');
     expect(input.price_rules).toEqual([
       { type: 'WEEKDAY_SURCHARGE', label: 'Weekend', mode: 'PERCENT', value: 10, days: [5, 6], dates: [], from: null, to: null },
     ]);
@@ -144,7 +202,7 @@ describe('Fees & Minimum Spend page', () => {
   it('stops a negative fee before it is sent and says why', async () => {
     const sent: SentOperation[] = [];
     mount(<FeesPage />, {}, sent);
-    await edit('Minimum spend', '-5');
+    await edit('Cleaning fee', '-5');
     fireEvent.click(screen.getByTestId('venue-pricing-fees-save'));
     expect(await screen.findByText('Cannot be negative')).toBeTruthy();
     expect(writes(sent)).toHaveLength(0);
@@ -188,7 +246,7 @@ describe('Price Rules page', () => {
     await waitFor(() => expect(writes(sent)).toHaveLength(1));
     const { input } = writes(sent)[0].variables as { input: Record<string, unknown> };
     expect(input.price_rules).toEqual([]);
-    expect(input).toMatchObject({ min_spend: 500, deposit: 100, cleaning_fee: 50, pet_fee: 25 });
+    expect(input).toMatchObject({ deposit: 100, cleaning_fee: 50, pet_fee: 25 });
   });
 
   it('points at a new weekday rule that names no day and sends nothing', async () => {

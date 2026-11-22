@@ -79,6 +79,14 @@ export const appConfig = {
     { label: 'Approvals', labelKey: 'shell.nav.approvals', to: '/approvals', icon: 'survey' },
     { label: 'Portal Access', labelKey: 'shell.nav.portalAccess', to: '/portal-access', icon: 'lock' },
     {
+      label: 'Email Validations', labelKey: 'shell.nav.emailValidations',
+      icon: 'markEmailRead',
+      children: [
+        { label: 'Dashboard', labelKey: 'shell.nav.dashboard', to: '/email-validations/dashboard', icon: 'insights' },
+        { label: 'Logs', labelKey: 'shell.nav.logs', to: '/email-validations/logs', icon: 'receipt' },
+      ],
+    },
+    {
       label: 'Upload Settings', labelKey: 'shell.nav.uploadSettings',
       icon: 'upload',
       children: [
@@ -141,6 +149,18 @@ export const appConfig = {
       to: '/portal-access',
       section: 'Approvals', sectionKey: 'shell.nav.approvals',
       keywords: ['portal', 'access', 'request', 'jump', 'console', 'grant', 'role'],
+    },
+    {
+      label: 'Dashboard', labelKey: 'shell.nav.dashboard',
+      to: '/email-validations/dashboard',
+      section: 'Email Validations', sectionKey: 'shell.nav.emailValidations',
+      keywords: ['email', 'validation', 'verify', 'deliverability', 'analytics', 'valid', 'invalid', 'risky'],
+    },
+    {
+      label: 'Logs', labelKey: 'shell.nav.logs',
+      to: '/email-validations/logs',
+      section: 'Email Validations', sectionKey: 'shell.nav.emailValidations',
+      keywords: ['email', 'validation', 'verify', 'revalidate', 'history', 'log'],
     },
     {
       label: 'Portals Upload Setting', labelKey: 'shell.nav.portalsUploadSetting',

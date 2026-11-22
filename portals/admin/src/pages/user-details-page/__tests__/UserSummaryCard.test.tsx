@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { screen, within } from '@testing-library/react';
 import { formatDateTime } from '@duncit/app-settings';
+import { EmailValidationProvider } from '@duncit/shell';
 import UserSummaryCard from '../UserSummaryCard';
 import type { EditForm } from '../queries';
 import { renderWithProviders } from './testkit';
@@ -171,5 +172,15 @@ describe('UserSummaryCard — field rows', () => {
     );
 
     expect(rowValue('Phone')).toHaveTextContent('9876543210');
+  });
+
+  it('offers a Validate button beside the email inside a console', () => {
+    renderWithProviders(
+      <EmailValidationProvider enabled portal="admin">
+        <UserSummaryCard user={user()} form={form()} busy={false} onPhotoChange={vi.fn()} />
+      </EmailValidationProvider>,
+    );
+
+    expect(screen.getByRole('button', { name: 'Validate riya@example.com' })).toBeInTheDocument();
   });
 });

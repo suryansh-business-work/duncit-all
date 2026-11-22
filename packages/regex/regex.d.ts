@@ -167,6 +167,13 @@ export const META_NAME: RegExp;
 /** Meta name/property shape check. */
 export function isMetaName(value: string): boolean;
 /**
+ * A payment transaction reference as a buyer copies it — a Razorpay `pay_…` id,
+ * a bank UTR or an RRN: 6–40 letters, digits, `_` or `-`.
+ */
+export const PAYMENT_TRANSACTION_ID: RegExp;
+/** Payment transaction-reference shape check. Trim before calling it. */
+export function isPaymentTransactionId(value: string): boolean;
+/**
  * A fully-qualified hostname such as `ns1.example.com`: at least two labels,
  * each a {@link HOSTNAME_LABEL}, 253 characters at most. A trailing dot (the
  * root) is accepted. Case-insensitive, as DNS is.

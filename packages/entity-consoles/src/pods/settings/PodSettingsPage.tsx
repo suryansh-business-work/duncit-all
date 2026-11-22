@@ -8,16 +8,20 @@ import PodReminderSettings from './PodReminderSettings';
 import AutoPodSettings from './AutoPodSettings';
 import RequestChangeSettings from './RequestChangeSettings';
 import VenueOfferCounterSettings from './VenueOfferCounterSettings';
+import PodCreationSettings from './PodCreationSettings';
+import HostEngagementSettings from './HostEngagementSettings';
 import { POD_SETTINGS, UPDATE_POD_SETTINGS } from './queries';
 
 /**
  * Admin > Pods > Pod Settings — the platform defaults every pod is created
  * and run under.
  *
- * Five groups, each its own file: the pod's own lifecycle (drafts, backouts,
+ * Seven groups, each its own file: how far ahead a host's new pod must be
+ * scheduled, the pod's own lifecycle (drafts, backouts,
  * venue cancellations, attendance verification, the auto-cancel sweep), the
  * windows the reminder sweeps fire on, the Auto Pods windows, the Request Change
- * deductions, and how far a host and a venue may bargain over a booking. The page itself is the
+ * deductions, and how far a host and a venue may bargain over a booking, and how Club Admins
+ * track and are told about their hosts' monthly performance. The page itself is the
  * query, the save and the order they appear in — anything more and it passes
  * the 200-line ceiling (rule 9), which is exactly what happened before.
  *
@@ -62,6 +66,8 @@ export default function PodSettingsPage() {
         </Alert>
       )}
 
+      <PodCreationSettings {...section} />
+      <Divider />
       <PodLifecycleSettings {...section} />
       <Divider />
       <PodReminderSettings {...section} />
@@ -71,6 +77,8 @@ export default function PodSettingsPage() {
       <RequestChangeSettings {...section} />
       <Divider />
       <VenueOfferCounterSettings {...section} />
+      <Divider />
+      <HostEngagementSettings {...section} />
 
       <Snackbar
         open={!!toast}

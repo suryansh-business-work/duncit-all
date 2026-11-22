@@ -38,6 +38,24 @@ describe('needsConfirmation', () => {
     expect(needsConfirmation('MUTATION', 'creditCoins')).toBe(true);
   });
 
+  it('requires confirmation before muting, holding or hanging up a live CRM call', () => {
+    expect(needsConfirmation('MUTATION', 'controlCrmCall')).toBe(true);
+    expect(reachesOutside('MUTATION', 'controlCrmCall')).toBe(true);
+  });
+
+  it('treats the AI Library prompt tools by what they do to the prompt', () => {
+    // Publishing a prompt to anyone with the link needs a person's yes...
+    expect(needsConfirmation('MUTATION', 'enableAiPromptPublicShare')).toBe(true);
+    // ...as do archiving it, taking the link down and copying an old version back.
+    expect(riskOf('MUTATION', 'archiveAiPrompt')).toBe('DESTRUCTIVE');
+    expect(riskOf('MUTATION', 'disableAiPromptPublicShare')).toBe('DESTRUCTIVE');
+    expect(riskOf('MUTATION', 'restoreAiPromptVersion')).toBe('DESTRUCTIVE');
+    // Bringing it back from the archive or scoring it is an ordinary write.
+    expect(riskOf('MUTATION', 'unarchiveAiPrompt')).toBe('WRITE');
+    expect(needsConfirmation('MUTATION', 'unarchiveAiPrompt')).toBe(false);
+    expect(needsConfirmation('MUTATION', 'scoreAiPrompt')).toBe(false);
+  });
+
   it('does not ask for confirmation on an ordinary create or edit', () => {
     expect(needsConfirmation('MUTATION', 'createPod')).toBe(false);
     expect(needsConfirmation('MUTATION', 'sendCampaign')).toBe(false);
@@ -68,5 +86,26 @@ describe('reachesOutside', () => {
     expect(reachesOutside('QUERY', 'podsTable')).toBe(false);
     expect(reachesOutside('QUERY', 'sentEmails')).toBe(false);
     expect(reachesOutside('QUERY', 'sendLogs')).toBe(false);
+  });
+});
+
+describe('money-out mutations (withdrawals and Send Money)', () => {
+  it.each(['decideWithdrawal', 'reviewWithdrawal', 'sendMoney', 'retryWithdrawalPayout', 'retrySendMoneyTransfer'])(
+    'requires the person to confirm %s before it runs',
+    (field) => {
+      expect(needsConfirmation('MUTATION', field)).toBe(true);
+    }
+  );
+
+  it('does not ask for confirmation to read the review dialog, the audit trail or the transfer log', () => {
+    for (const field of ['withdrawalReview', 'payoutAuditTable', 'sendMoneyTransfersTable', 'sendMoneyRecipients']) {
+      expect(needsConfirmation('QUERY', field)).toBe(false);
+      expect(riskOf('QUERY', field)).toBe('READ');
+    }
+  });
+
+  it('tells the caller Send Money reaches outside Duncit', () => {
+    expect(reachesOutside('MUTATION', 'sendMoney')).toBe(true);
+    expect(reachesOutside('MUTATION', 'retryWithdrawalPayout')).toBe(true);
   });
 });

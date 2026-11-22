@@ -7,9 +7,11 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./__tests__/unit-tests/setup.ts'],
-    // Vitest specs live under __tests__/unit-tests; Cypress e2e specs (if any)
-    // are discovered separately by Cypress, never by vitest.
-    include: ['__tests__/unit-tests/**/*.{test,spec}.{ts,tsx}'],
+    // Vitest specs live under __tests__/unit-tests, plus the colocated
+    // `*.form.cy.tsx` specs the form structure (rule 17) asks for — vitest and
+    // testing-library despite the name, as in the Targets console. Cypress e2e
+    // specs (if any) are discovered separately by Cypress, never by vitest.
+    include: ['__tests__/unit-tests/**/*.{test,spec}.{ts,tsx}', 'src/**/*.form.cy.{ts,tsx}'],
     exclude: ['node_modules/**', 'dist/**', '__tests__/e2e/**'],
     css: false,
     server: { deps: { inline: [/@mui/] } },

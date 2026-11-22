@@ -59,14 +59,20 @@ export const podChallengeResolvers = {
       podChallengeService.updateSettings(args.id, args.input, requireAuth(ctx)),
     setPodChallengeRoster: (_p: unknown, args: Id & { input: RosterInput }, ctx: GraphQLContext) =>
       podChallengeService.setRoster(args.id, args.input, requireAuth(ctx)),
-    transitionPodChallenge: (_p: unknown, args: Id & { action: string }, ctx: GraphQLContext) =>
-      podChallengeService.transition(args.id, oneOf<ChallengeAction>(args.action, CHALLENGE_ACTIONS), requireAuth(ctx)),
+    transitionPodChallenge: (_p: unknown, args: Id & { action: string }, ctx: GraphQLContext) => {
+      // Who is asking before what they asked: a signed-out caller hears
+      // UNAUTHENTICATED, never which actions exist.
+      const user = requireAuth(ctx);
+      return podChallengeService.transition(args.id, oneOf<ChallengeAction>(args.action, CHALLENGE_ACTIONS), user);
+    },
     recordPodChallengeScore: (_p: unknown, args: { input: ScoreInput }, ctx: GraphQLContext) =>
       podChallengeScoring.record(args.input, requireAuth(ctx)),
     voidPodChallengeScore: (_p: unknown, args: { event_id: string; reason?: string | null }, ctx: GraphQLContext) =>
       podChallengeScoring.void(args.event_id, args.reason, requireAuth(ctx)),
-    controlPodChallengeClock: (_p: unknown, args: ToolArgs & { action: string }, ctx: GraphQLContext) =>
-      podChallengeControls.clock(args.id, args.tool_instance_id, oneOf(args.action, CLOCK_ACTIONS), requireAuth(ctx)),
+    controlPodChallengeClock: (_p: unknown, args: ToolArgs & { action: string }, ctx: GraphQLContext) => {
+      const user = requireAuth(ctx);
+      return podChallengeControls.clock(args.id, args.tool_instance_id, oneOf(args.action, CLOCK_ACTIONS), user);
+    },
     setPodChallengeVoting: (_p: unknown, args: ToolArgs & { open: boolean }, ctx: GraphQLContext) =>
       podChallengeControls.voting(args.id, args.tool_instance_id, args.open, requireAuth(ctx)),
     setPodChallengeRound: (_p: unknown, args: Id & { round: number }, ctx: GraphQLContext) =>

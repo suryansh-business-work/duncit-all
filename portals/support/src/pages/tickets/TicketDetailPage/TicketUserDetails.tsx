@@ -10,7 +10,7 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { DuncitButton } from '@duncit/buttons';
 import type { Ticket } from '../../../graphql/tickets';
 import { formatDate } from '@duncit/app-settings';
-import { useTranslation } from '@duncit/shell';
+import { EmailValidateButton, useTranslation } from '@duncit/shell';
 
 /** The Admin portal's user-details URL, derived from the current support origin
  * (support.duncit.com → admin.duncit.com) with a prod fallback for dev. */
@@ -35,7 +35,8 @@ function DetailRow({
   value,
   empty,
   verified,
-}: Readonly<{ icon: ReactNode; value?: string | null; empty?: string; verified?: boolean }>) {
+  action,
+}: Readonly<{ icon: ReactNode; value?: string | null; empty?: string; verified?: boolean; action?: ReactNode }>) {
   const { t } = useTranslation();
   return (
     <Stack
@@ -53,6 +54,7 @@ function DetailRow({
       >
         {value || empty}
       </Typography>
+      {action}
       {verified && value ? (
         <Chip size="small" color="success" variant="outlined" icon={<VerifiedIcon />} label={t('support.tickets.verified')} />
       ) : null}
@@ -98,6 +100,7 @@ export default function TicketUserDetails({
           value={user.email || guestEmail || null}
           empty="No email on file"
           verified={user.is_email_verified}
+          action={<EmailValidateButton email={user.email || guestEmail} />}
         />
         <DetailRow
           icon={<PhoneIcon fontSize="small" />}

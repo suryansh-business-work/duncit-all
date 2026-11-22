@@ -1,43 +1,22 @@
-import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
+import { useState, useCallback, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CheckCircle, XCircle, AlertCircle, Info, X } from 'lucide-react';
+import { ToastContext, type Toast } from '../hooks/useToast';
 import './Toast.css';
 
-type ToastType = 'success' | 'error' | 'warning' | 'info';
+// A toast id needs no cryptographic strength; crypto.randomUUID is undefined over plain HTTP on a LAN IP.
+const createToastId = (): string => crypto.randomUUID?.() ?? `t-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
-interface Toast {
-  id: string;
-  type: ToastType;
-  title: string;
-  message?: string;
-  duration?: number;
-}
-
-interface ToastContextValue {
-  toasts: Toast[];
-  addToast: (toast: Omit<Toast, 'id'>) => void;
-  removeToast: (id: string) => void;
-  success: (title: string, message?: string) => void;
-  error: (title: string, message?: string) => void;
-  warning: (title: string, message?: string) => void;
-  info: (title: string, message?: string) => void;
-}
-
-const ToastContext = createContext<ToastContextValue | null>(null);
-
-export function useToast() {
-  const context = useContext(ToastContext);
-  if (!context) {
-    throw new Error('useToast must be used within a ToastProvider');
-  }
-  return context;
-}
+// De-dupe sentinel for the "backend unreachable" toast. Kept separate from the displayed title so
+// translating the title never silently breaks the de-dupe.
+const CONNECTION_LOST_DEDUPE_KEY = 'connection-lost';
 
 interface ToastProviderProps {
   children: ReactNode;
 }
 
 export function ToastProvider({ children }: ToastProviderProps) {
+  const { t } = useTranslation();
   const [toasts, setToasts] = useState<Toast[]>([]);
 
   const removeToast = useCallback((id: string) => {
@@ -46,10 +25,7 @@ export function ToastProvider({ children }: ToastProviderProps) {
 
   const addToast = useCallback(
     (toast: Omit<Toast, 'id'>) => {
-      // crypto.randomUUID() is only defined in a secure context (HTTPS / localhost). Over plain
-      // HTTP on a LAN IP it is undefined, which previously threw "crypto.randomUUID is not a
-      // function" on every toast — fall back to a non-crypto id (a toast key needs no strength).
-      const id = crypto.randomUUID?.() ?? `t-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const id = createToastId();
       const newToast = { ...toast, id };
       setToasts(prev => [...prev, newToast]);
 
@@ -71,9 +47,49 @@ export function ToastProvider({ children }: ToastProviderProps) {
 
   const error = useCallback(
     (title: string, message?: string) => {
+      // Browser fetch rejections: Chromium 'Failed to fetch', Firefox 'NetworkError ...', WebKit exactly
+      // 'Load failed' (compared whole, so 'download failed ...' keeps its own toast). A proxy answering
+      // 502/503 with a non-JSON body surfaces as exactly 'HTTP <status>' (see handleErrorResponse). A 504
+      // keeps its own toast: the proxy reached the backend and stopped waiting, so the request (an import,
+      // a restart) may still be running and the caller's title says which one.
+      const m = message?.toLowerCase().trim() ?? '';
+      const tl = title.toLowerCase().trim();
+      const isConnectionError =
+        m.includes('failed to fetch') ||
+        m.includes('networkerror') ||
+        m === 'load failed' ||
+        /^http 50[23]$/.test(m) ||
+        tl.includes('failed to fetch') ||
+        tl.includes('networkerror') ||
+        tl === 'load failed';
+
+      if (isConnectionError) {
+        // De-dupe on the stable key (not the translated title) so a downed backend shows one toast.
+        // The auto-dismiss timer is scheduled OUTSIDE the updater: state updaters must be
+        // side-effect-free (React Strict Mode runs them twice, which would schedule two timers).
+        // If this is a duplicate the id is never committed, so removeToast(id) later is a harmless no-op.
+        const id = createToastId();
+        setToasts(prev =>
+          prev.some(t => t.dedupeKey === CONNECTION_LOST_DEDUPE_KEY)
+            ? prev
+            : [
+                ...prev,
+                {
+                  id,
+                  type: 'error',
+                  dedupeKey: CONNECTION_LOST_DEDUPE_KEY,
+                  title: t('toast.connectionLost.title'),
+                  message: t('toast.connectionLost.message'),
+                  duration: 6000,
+                },
+              ],
+        );
+        setTimeout(() => removeToast(id), 6000);
+        return;
+      }
       addToast({ type: 'error', title, message, duration: 6000 });
     },
-    [addToast],
+    [addToast, removeToast, t],
   );
 
   const warning = useCallback(

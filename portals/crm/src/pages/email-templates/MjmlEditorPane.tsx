@@ -10,7 +10,7 @@ import MjmlAiButton from './MjmlAiButton';
 import ImageLibraryDialog from './ImageLibraryDialog';
 import { insertMjmlImage } from './insertMjmlImage';
 import { formatMjml } from '@duncit/utils';
-import type { EmailAsset } from '../../api/emailTemplates.gql';
+import type { EmailAsset, EmailTemplateTarget } from '../../api/emailTemplates.gql';
 import { useTranslation } from '@duncit/shell';
 
 interface Props {
@@ -20,10 +20,12 @@ interface Props {
   templateId: string;
   images: EmailAsset[];
   onImagesChange: (next: EmailAsset[]) => void;
+  /** The template's audience, handed to the AI writer. */
+  target?: EmailTemplateTarget | null;
 }
 
 /** Left pane: Monaco MJML editor with Format / Verify / AI / Image-library actions. */
-export default function MjmlEditorPane({ value, onChange, onValidate, templateId, images, onImagesChange }: Readonly<Props>) {
+export default function MjmlEditorPane({ value, onChange, onValidate, templateId, images, onImagesChange, target }: Readonly<Props>) {
   const { t } = useTranslation();
   const [libOpen, setLibOpen] = useState(false);
   return (
@@ -48,7 +50,7 @@ export default function MjmlEditorPane({ value, onChange, onValidate, templateId
         <Tooltip title={t('crm.emailTemplates.imageLibrary')}>
           <DuncitIconButton size="small" onClick={() => setLibOpen(true)}><PhotoLibraryIcon fontSize="small" /></DuncitIconButton>
         </Tooltip>
-        <MjmlAiButton iconOnly currentMjml={value} onApply={onChange} />
+        <MjmlAiButton iconOnly currentMjml={value} onApply={onChange} target={target} />
       </Stack>
       <Box sx={{ flex: 1, minHeight: 0 }}>
         <Editor

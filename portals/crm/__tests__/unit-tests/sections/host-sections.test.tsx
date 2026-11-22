@@ -14,7 +14,6 @@ import HostBudgetSection from '@/forms/host-lead/sections/HostBudgetSection';
 import HostTimelineSection from '@/forms/host-lead/sections/HostTimelineSection';
 import HostReachSection from '@/forms/host-lead/sections/HostReachSection';
 import HostWebsiteSection from '@/forms/host-lead/sections/HostWebsiteSection';
-import HostServicesSection from '@/forms/host-lead/sections/HostServicesSection';
 import HostBrandingSection from '@/forms/host-lead/sections/HostBrandingSection';
 import HostDynamicSection from '@/forms/host-lead/sections/HostDynamicSection';
 import HostTrackingSection from '@/forms/host-lead/sections/HostTrackingSection';
@@ -40,6 +39,10 @@ const emptyConfig: CrmOptionGroup = {
   services_offered_options: ['Catering', 'Other'],
   venue_services_offered_options: ['Catering', 'Other'],
   host_services_offered_options: ['Event Hosting', 'Other'],
+  creator_platforms: ['Instagram'],
+  collaboration_types: ['Barter'],
+  community_types: ['Running Club'],
+  community_platforms: ['WhatsApp'],
 };
 
 function FormHarness({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -89,10 +92,6 @@ describe('host form sections (smoke render)', () => {
   });
   it('renders HostWebsiteSection', () => {
     const { container } = wrap(<HostWebsiteSection />);
-    expect(container).toBeTruthy();
-  });
-  it('renders HostServicesSection', () => {
-    const { container } = wrap(<HostServicesSection />);
     expect(container).toBeTruthy();
   });
   it('renders HostBrandingSection', () => {

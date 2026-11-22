@@ -26,7 +26,8 @@ import { entityFolder, folderSegment, mediaRoot } from './mediaFolders';
  * id misfiles a file and cannot overwrite one.
  */
 
-type Owner = 'entity' | 'user';
+/** `self` is always the uploader — a client-sent entity id never moves the file. */
+type Owner = 'entity' | 'user' | 'self';
 
 interface Route {
   bucket: string;
@@ -35,6 +36,9 @@ interface Route {
 }
 
 const r = (bucket: string, owner: Owner, kind: string): Route => ({ bucket, owner, kind });
+
+/** The one bucket whose files are private (signed links only) and skip AI Monitoring. */
+const PRIVATE_EVIDENCE_BUCKET = 'payment_evidence';
 
 /** Feature folder (as clients send it, lower-case, no slashes at the ends) → owner folder. */
 const ROUTES: Record<string, Route> = {
@@ -79,6 +83,9 @@ const ROUTES: Record<string, Route> = {
   'support-chat': r('users', 'user', 'support_chat'),
   'staff-chat': r('staff', 'user', 'chat'),
   'call-recordings': r('staff', 'user', 'call_recordings'),
+  // Private: a buyer's proof that money left their account. Filed under the
+  // uploader only, stored as an ImageKit private file and never AI-scanned.
+  'payment-evidence': r(PRIVATE_EVIDENCE_BUCKET, 'self', 'evidence'),
 };
 
 /** Where a pod's cover waits before the pod exists. */
@@ -108,14 +115,38 @@ export interface UploadPlacement {
 export function resolveUploadFolder(folder: string | null | undefined, placement: UploadPlacement = {}): string {
   const asked = (folder ?? '').trim();
   const root = mediaRoot();
+  // A pre-resolved path is kept — except that a signed-in caller may write into
+  // the private bucket only under their own folder. (The server's own second
+  // pass names no uploader and keeps the path it was given.)
+  if (placement.userId && asked.startsWith(`${root}/${PRIVATE_EVIDENCE_BUCKET}/`)) {
+    return privateEvidenceFolder(placement.userId);
+  }
   if (asked === root || asked.startsWith(`${root}/`)) return asked;
   const key = featureKey(asked) || 'uploads';
   const route = ROUTES[key];
   if (!route) return featurePath(key);
   const entity = folderSegment(placement.entityId);
   const user = folderSegment(placement.userId);
+  if (route.owner === 'self') return privateEvidenceFolder(placement.userId);
   const owner = route.owner === 'user' ? (entity ?? user) : entity;
   if (owner) return entityFolder(route.bucket, owner, route.kind);
   // An owned feature with no owner yet: park it under the uploader.
   return `${root}/${route.bucket}/${INCOMING}/${user ?? 'anonymous'}/${route.kind}`;
+}
+
+/** The uploader's own private evidence folder, e.g. `/production/payment_evidence/65aa…/evidence`. */
+export function privateEvidenceFolder(userId: string | null | undefined): string {
+  const user = folderSegment(userId);
+  if (user) return entityFolder(PRIVATE_EVIDENCE_BUCKET, user, 'evidence');
+  return `${mediaRoot()}/${PRIVATE_EVIDENCE_BUCKET}/${INCOMING}/anonymous/evidence`;
+}
+
+/**
+ * Whether a RESOLVED folder holds private files: uploaded as ImageKit private
+ * files (opened only through a short-lived signed link) and kept out of the
+ * AI Monitoring scan, which would otherwise send the picture to a model and list
+ * it on a dashboard.
+ */
+export function isPrivateUploadFolder(folder: string | null | undefined): boolean {
+  return (folder ?? '').startsWith(`${mediaRoot()}/${PRIVATE_EVIDENCE_BUCKET}/`);
 }

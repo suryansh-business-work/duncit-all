@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { formatMjml } from '@duncit/utils';
-import { AI_MJML } from '@/api/emailTemplates.gql';
+import { GENERATE_CRM_EMAIL_MJML } from '@/api/emailSettings.gql';
 import { insertMjmlImage } from '@/pages/email-templates/insertMjmlImage';
 import { PREVIEW_WAIT, renderEditor, renderMock, templateMock, venueTemplate } from './editorHarness';
 
@@ -29,7 +29,7 @@ describe('Email template editor — source pane', () => {
 
     expect(editor()).toHaveValue(formatMjml(messy));
     expect(screen.getByText('Unsaved changes')).toBeInTheDocument();
-    await waitFor(() => expect(screen.getByTitle('preview')).toHaveAttribute('srcdoc', '<p>Tidy</p>'), PREVIEW_WAIT);
+    await waitFor(() => expect(screen.getByTitle('Email preview')).toHaveAttribute('srcdoc', '<p>Tidy</p>'), PREVIEW_WAIT);
   });
 
   it('inserts a library image into the source', async () => {
@@ -52,8 +52,12 @@ describe('Email template editor — source pane', () => {
       templateMock(venueTemplate),
       renderMock({}),
       {
-        request: { query: AI_MJML, variables: { input: { prompt: 'A Diwali offer', current_mjml: venueTemplate.mjml } } },
-        result: { data: { aiCreateOrUpdateMjml: generated } },
+        // The template's audience (VENUE) goes with the prompt, so the AI writes for venue leads.
+        request: {
+          query: GENERATE_CRM_EMAIL_MJML,
+          variables: { input: { prompt: 'A Diwali offer', current_mjml: venueTemplate.mjml, target: 'VENUE' } },
+        },
+        result: { data: { generateCrmEmailMjml: generated } },
       },
     ]);
 

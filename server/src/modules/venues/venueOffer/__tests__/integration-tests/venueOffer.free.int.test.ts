@@ -94,7 +94,7 @@ describe('a free venue', () => {
   it('is priced live at nothing for Create Pod, and refused where a price is needed', async () => {
     const w = await seedWorld();
     const free = request({ model: 'FREE', rate: 0 });
-    await expect(venueOfferService.preview(w.venueId, free, undefined, true, true)).resolves.toMatchObject({
+    await expect(venueOfferService.preview(w.venueId, free, undefined, { atVenueMinimum: true, allowFree: true, hostTerms: true })).resolves.toMatchObject({
       ok: true,
       quote: { total: 0, venue_payout: 0 },
       quote_min: { total: 0 },

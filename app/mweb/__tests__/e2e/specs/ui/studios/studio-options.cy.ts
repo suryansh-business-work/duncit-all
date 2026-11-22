@@ -52,6 +52,14 @@ describe('Studio options (plain member)', () => {
     cy.byTestId('venue-page-frame-error').should('not.exist');
   });
 
+  it('SO-06b venue Fees & Minimum Spend asks the member to register a venue first', () => {
+    cy.visitApp('/venues/fees');
+    cy.byTestId('venue-page-frame').should('be.visible');
+    cy.byTestId('no-venues-alert').should('contain.text', 'Register a venue first — settings apply to a venue you own.');
+    cy.byTestId('venue-fees-page').should('not.exist');
+    cy.byTestId('venue-page-frame-error').should('not.exist');
+  });
+
   it('SO-07 venue Availability asks the member to register a venue first', () => {
     cy.visitApp('/venues/availability');
     cy.byTestId('venue-page-frame').should('be.visible');

@@ -1,3 +1,8 @@
+mWeb and Native apps should have absolutely consistent functionality, UI, and user experience, ensuring that all features, validations, navigation flows, and behaviours work identically across both platforms.
+
+## Backword Compatibility
+Ensure complete backward compatibility across mWeb, Native Android, and iOS applications. Users may still be running older app versions even after new releases are deployed. Do not introduce breaking changes that could cause existing app versions to fail. For GraphQL, use the @deprecated directive for outdated fields instead of immediately removing or disabling them. Deprecated fields must remain fully functional and continue supporting older app versions while newer versions migrate to updated fields or APIs. Ensure backward compatibility across backend APIs, GraphQL schemas, response structures, and UI flows. No existing app version should encounter errors or functionality issues due to new releases.
+
 ## Very Inportant Level Instruction
 1. Before writing or executing any code, continuously monitor the system’s CPU temperature, CPU utilization, RAM usage, and storage usage. If any of these resources reach a critically high level that could cause the system to hang, crash, shut down, or interrupt the workflow, temporarily pause all workflows and wait until the system resources return to safe and stable levels. Once everything is normalized, automatically resume the workflow from where it was paused. The primary goal is to prevent system overload, unexpected shutdowns, data loss, and workflow interruptions, There should be no manual typing continue continue after some time based on ram usages etc.
 
@@ -105,3 +110,23 @@
 7. mWeb vs Partner Brand separation — Keep E-commerce (ecomm.duncit.com) and Partner Brand (partners-app.duncit.com/ecomm-brand) completely separate; do not mix their flows, data, or implementations.mWeb vs Partner Brand separation — Keep E-commerce (ecomm.duncit.com) and Partner Brand (partners-app.duncit.com/ecomm-brand) completely separate; do not mix their flows, data, or implementations.
 8. Package Documentation & Demos — Whenever a shared @duncit/* package changes, update its documentation and runnable demo accordingly.
 9. Attendance / OTP Architecture — Attendance and phone OTP flows must use the existing centralized services and shared logic; do not create duplicate attendance or OTP implementations.
+
+
+## MCP Security, Validation & Authorization (Mandatory)
+
+- Audit all existing MCPs across the Duncit ecosystem.
+- MCPs must follow the exact same validations as UI forms and backend APIs. Reuse centralized validation schemas wherever possible.
+- Never bypass required fields, formats, data types, dependencies, business rules, or workflow restrictions.
+- Reject invalid or incomplete submissions with clear field-level errors. Request missing information; never fabricate values.
+- Enforce server-side RBAC/ABAC for every MCP tool and API operation (read, create, update, delete).
+- Verify authenticated user identity, permissions, ownership, assigned scope, club, region, and approval requirements.
+- Apply deny-by-default and least-privilege principles. Never trust MCP prompts, client-supplied roles, or AI-generated authorization claims.
+- Protect sensitive data and prevent cross-user access, privilege escalation, and unauthorized workflow execution.
+- Implement input sanitization, strict schema validation, rate limiting, audit logs, secure error handling, and prompt-injection protection.
+- Update all MCP tool schemas, descriptions, required parameters, and execution logic.
+- Run positive, negative, authorization, and end-to-end tests across all MCPs, portals, roles, and workflows.
+- Never weaken existing validations or permissions to make an MCP operation succeed.
+- Maintain backward compatibility without compromising security.
+- Report modified MCPs, vulnerabilities fixed, test results, and unresolved issues.
+
+**Non-negotiable:** No MCP operation may execute unless validation, authentication, authorization, scope checks, and required business approvals succeed server-side.

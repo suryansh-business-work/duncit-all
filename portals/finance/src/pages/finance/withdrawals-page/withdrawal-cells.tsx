@@ -1,15 +1,21 @@
 import { Chip, Stack, Typography } from '@mui/material';
 import { EM_DASH } from '@duncit/table';
+import { useTranslation } from '@duncit/app-settings';
 import { accountDetails, accountHolder } from './account-details';
-import type { WithdrawalRow } from './queries';
+import type { MoneyOutStatus, WithdrawalRow } from './queries';
 import { roleLabel, type WithdrawerRole } from './roles';
+import { statusLabel } from './status-options';
 
 type ChipColor = 'default' | 'primary' | 'secondary' | 'info' | 'warning' | 'success' | 'error';
 
-const STATUS_COLOR: Record<WithdrawalRow['status'], ChipColor> = {
+const STATUS_COLOR: Record<MoneyOutStatus, ChipColor> = {
   PENDING: 'warning',
+  APPROVED: 'info',
+  PARTIALLY_APPROVED: 'info',
+  PROCESSING: 'info',
   PAID: 'success',
   REJECTED: 'error',
+  FAILED: 'error',
 };
 
 const ROLE_COLOR: Record<WithdrawerRole, ChipColor> = {
@@ -69,23 +75,36 @@ export const renderAccount = (w: WithdrawalRow) => {
   );
 };
 
-export const renderStatus = (w: WithdrawalRow) => (
-  <Stack
-    component="span"
-    sx={{
-      alignItems: "flex-start",
-      lineHeight: 1.2
-    }}>
-    <Chip size="small" color={STATUS_COLOR[w.status]} label={w.status} />
-    {w.reject_reason ? (
-      <Typography variant="caption" component="span" sx={{
-        color: "text.secondary"
+/** One status chip with its translated label and an optional line of detail underneath. */
+function StatusChip({ status, detail }: Readonly<{ status: MoneyOutStatus; detail?: string }>) {
+  const { t } = useTranslation();
+  return (
+    <Stack
+      component="span"
+      sx={{
+        alignItems: "flex-start",
+        lineHeight: 1.2
       }}>
-        {w.reject_reason}
-      </Typography>
-    ) : null}
-  </Stack>
+      <Chip size="small" color={STATUS_COLOR[status]} label={statusLabel(t, status)} />
+      {detail ? (
+        <Typography variant="caption" component="span" sx={{
+          color: "text.secondary"
+        }}>
+          {detail}
+        </Typography>
+      ) : null}
+    </Stack>
+  );
+}
+
+/** Decision — what a Finance Manager decided, and why when there is a reason to read. */
+export const renderDecision = (w: WithdrawalRow) => (
+  <StatusChip status={w.approval_status} detail={w.decision_reason || w.reject_reason} />
 );
+
+/** Payment — what the bank says. Empty until a payout has been started. */
+export const renderPayment = (w: WithdrawalRow) =>
+  w.payout_status ? <StatusChip status={w.payout_status} detail={w.payout_failure_reason} /> : EM_DASH;
 
 export const withdrawerSearchText = (w: WithdrawalRow) =>
   `${w.beneficiary_name} ${w.beneficiary_email}`.trim() || EM_DASH;
@@ -98,24 +117,24 @@ export const podShareOf = (w: WithdrawalRow, podId: string): number | null => {
 };
 
 /**
- * Amount — what the withdrawer asked for, which is what gets transferred.
+ * Amount — what is being paid: the approved amount once Finance has decided,
+ * the requested amount before.
  *
- * On a pod's page that number can be larger than the pod earned: one request
- * draws on whatever the wallet holds, so it can span several pods. The caption
- * names this pod's slice in that case, so a reviewer never reads the full
- * request as money owed by the pod they are looking at. One request is still
- * ONE transfer — Mark Paid releases the whole amount, not the slice.
+ * The caption says what else the reader needs: after a partial approval, what
+ * was originally requested; on a pod's page, this pod's slice of a request that
+ * can span several pods. One request is still ONE transfer — approving it
+ * releases the whole amount, not the slice.
  */
-export const renderAmount = (formatted: string, share: string | null) => (
+export const renderAmount = (formatted: string, caption: string | null) => (
   <Stack component="span" sx={{ lineHeight: 1.2 }}>
     <Typography variant="body2" component="span">
       {formatted}
     </Typography>
-    {share ? (
+    {caption ? (
       <Typography variant="caption" component="span" sx={{
         color: "text.secondary"
       }}>
-        {`${share} from this pod`}
+        {caption}
       </Typography>
     ) : null}
   </Stack>

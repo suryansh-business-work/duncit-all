@@ -29,6 +29,10 @@ const config: CrmOptionGroup = {
   services_offered_options: ['Catering'],
   venue_services_offered_options: ['Catering'],
   host_services_offered_options: ['Event Hosting'],
+  creator_platforms: ['Instagram'],
+  collaboration_types: ['Barter'],
+  community_types: ['Running Club'],
+  community_platforms: ['WhatsApp'],
 };
 
 const wrap = (ui: React.ReactElement) =>
@@ -44,6 +48,8 @@ describe('VenueLeadForm', () => {
   it('renders all 14 sections by their numbered titles', () => {
     wrap(<VenueLeadForm config={config} onSubmit={() => undefined} />);
     expect(screen.getByText(/1\. Venue Details/)).toBeTruthy();
+    expect(screen.getByText(/9\. Website & Social Links/)).toBeTruthy();
+    expect(screen.getByText(/10\. Services Offered/)).toBeTruthy();
     expect(screen.getByText(/14\. Internal Lead Tracking/)).toBeTruthy();
   });
 

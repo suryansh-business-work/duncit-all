@@ -37,6 +37,9 @@ export const AI_PROMPTS = gql`
       is_active
       created_at
       updated_at
+      matches_default
+      archived_at
+      total_hits
     }
   }
 `;

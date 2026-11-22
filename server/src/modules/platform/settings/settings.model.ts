@@ -152,6 +152,26 @@ export interface IAppSettings extends Document {
   /** Counter offers one venue booking may carry in all (Pod Settings), split
    * equally: the host and the venue may each counter half of it. Even, 2-20. */
   venue_offer_max_counters: number;
+  /** Minimum Advance Days for Pod Creation (Pod Settings): how many calendar
+   * days ahead of today a host's new pod must start, 1-30. A host's own
+   * override in the Hosts console wins over it. */
+  pod_min_advance_days: number;
+  /** Club Admin host engagement (Pod Settings): days without a completed pod
+   * before a host is flagged inactive, 1-90. */
+  host_inactivity_days: number;
+  /** Completed pods per calendar month that score a host 100%, 1-100. */
+  host_monthly_pod_target: number;
+  /** The engagement statuses a club admin files a host under. Keys are
+   * permanent once saved; labels and order are the admin's. */
+  host_engagement_statuses: Array<{ key: string; label: string; is_active: boolean }>;
+  /** The monthly host performance messages (WhatsApp + email). */
+  host_performance_notify_enabled: boolean;
+  /** Day of the month (1-28, admin time zone) they go out for the month before. */
+  host_performance_notify_day: number;
+  host_performance_notify_hosts: boolean;
+  host_performance_notify_club_admins: boolean;
+  /** A host scoring below this percent of the target is underperforming (1-100). */
+  host_underperform_threshold_pct: number;
   created_at: Date;
   updated_at: Date;
 }
@@ -211,6 +231,27 @@ const appSettingsSchema = new Schema<IAppSettings>(
     venue_offer_min_guests_default: { type: Number, default: 8, min: 1, max: 1000 },
     venue_offer_response_hours_default: { type: Number, default: 24, min: 1, max: 720 },
     venue_offer_max_counters: { type: Number, default: 6, min: 2, max: 20 },
+    pod_min_advance_days: { type: Number, default: 2, min: 1, max: 30 },
+    host_inactivity_days: { type: Number, default: 14, min: 1, max: 90 },
+    host_monthly_pod_target: { type: Number, default: 8, min: 1, max: 100 },
+    // Empty means "the defaults" (settings.hostEngagement reads it that way),
+    // so a fresh install needs no seed and the default wording stays in code.
+    host_engagement_statuses: {
+      type: [
+        new Schema(
+          { key: { type: String, required: true }, label: { type: String, required: true }, is_active: { type: Boolean, default: true } },
+          { _id: false },
+        ),
+      ],
+      default: [],
+    },
+    // Off until an admin turns it on: the first run after a deploy would
+    // otherwise message every host about the month before, unannounced.
+    host_performance_notify_enabled: { type: Boolean, default: false },
+    host_performance_notify_day: { type: Number, default: 1, min: 1, max: 28 },
+    host_performance_notify_hosts: { type: Boolean, default: true },
+    host_performance_notify_club_admins: { type: Boolean, default: true },
+    host_underperform_threshold_pct: { type: Number, default: 100, min: 1, max: 100 },
     // `coin_earn_pct` used to live here. It moved to CoinSettings — split into a
     // pod-join and a shop rate — where the rest of the coin payout rules are;
     // coinSettingsService.seed() carries the configured value across on the

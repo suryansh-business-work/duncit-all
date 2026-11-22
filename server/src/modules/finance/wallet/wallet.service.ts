@@ -24,6 +24,7 @@ import { UserModel } from '@modules/access/user/user.model';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { withTransaction } from '@utils/mongoTransaction';
 import { allocateWithdrawal, consumedByRelease, type PodCredit } from './withdrawal-allocation';
+import { withdrawalStatePub } from '@modules/finance/payout/withdrawal.state';
 
 const withdrawalId = () => `wd_${Date.now().toString(36)}${crypto.randomBytes(3).toString('hex')}`;
 
@@ -185,7 +186,7 @@ const txnPub = (t: IWalletTransaction) => ({
   created_at: t.created_at?.toISOString?.() ?? '',
 });
 
-const withdrawalPub = (w: IWalletWithdrawal) => ({
+export const withdrawalPub = (w: IWalletWithdrawal) => ({
   id: String(w._id),
   withdrawal_id: w.withdrawal_id,
   user_id: String(w.user_id),
@@ -213,6 +214,7 @@ const withdrawalPub = (w: IWalletWithdrawal) => ({
   reviewed_at: w.reviewed_at?.toISOString?.() ?? null,
   paid_at: w.paid_at?.toISOString?.() ?? null,
   created_at: w.created_at?.toISOString?.() ?? '',
+  ...withdrawalStatePub(w),
 });
 
 /** Allowlists for the shared table engine (withdrawalRequestsTable — DUNCIT TABLE CONTRACT v1). */
@@ -222,6 +224,9 @@ const WITHDRAWAL_TABLE_CONFIG: TableEntityConfig = {
     beneficiary_name: 'beneficiary_name',
     amount: 'amount',
     status: 'status',
+    approval_status: 'approval_status',
+    payout_status: 'payout.status',
+    requested_amount: 'requested_amount',
     payout_method: 'payout_method',
     withdrawer_role: 'withdrawer_role',
     scheduled_for: 'scheduled_for',
@@ -230,6 +235,8 @@ const WITHDRAWAL_TABLE_CONFIG: TableEntityConfig = {
   },
   filterFields: {
     status: { type: 'enum' },
+    approval_status: { type: 'enum' },
+    payout_status: { type: 'enum', path: 'payout.status' },
     payout_method: { type: 'enum' },
     withdrawer_role: { type: 'enum' },
     beneficiary_name: { type: 'string' },
@@ -306,11 +313,21 @@ async function debitWallet(userId: string, amount: number, minimum: number, sess
   return wallet;
 }
 
-/** Hands a rejected withdrawal's amount back to the wallet, with its ledger row. */
-async function refundWithdrawal(doc: IWalletWithdrawal, reason: string, session: ClientSession | undefined) {
+/**
+ * Hands money from a withdrawal back to the wallet, with its ledger row: all of
+ * it for a rejection, or only the part not approved for a partial approval
+ * (`amount`, with its own `label`).
+ */
+export async function refundWithdrawal(
+  doc: IWalletWithdrawal,
+  reason: string,
+  session: ClientSession | undefined,
+  opts: { amount?: number; label?: string } = {}
+) {
+  const refund = round2(opts.amount ?? doc.amount);
   const wallet = await WalletModel.findOneAndUpdate(
     { user_id: doc.user_id },
-    { $inc: { balance: doc.amount } },
+    { $inc: { balance: refund } },
     { new: true, upsert: true, setDefaultsOnInsert: true, session }
   );
   await WalletTransactionModel.create(
@@ -318,14 +335,14 @@ async function refundWithdrawal(doc: IWalletWithdrawal, reason: string, session:
       {
         user_id: doc.user_id,
         type: 'CREDIT',
-        amount: doc.amount,
+        amount: refund,
         balance_after: round2(wallet!.balance),
         source: 'WITHDRAWAL_REVERSAL',
         // Clamped to the transaction's own 300-char `reason` limit: a 500-char
         // reject reason made this insert fail validation AFTER the wallet had
         // already been credited, leaving the row PENDING with the money back —
         // and every retry credited it again.
-        reason: clean(`Withdrawal rejected: ${reason}`, 300),
+        reason: clean(`${opts.label ?? 'Withdrawal rejected'}: ${reason}`, 300),
         withdrawal_id: doc.withdrawal_id,
       },
     ],

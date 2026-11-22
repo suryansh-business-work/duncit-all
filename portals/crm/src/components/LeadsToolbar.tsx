@@ -15,7 +15,6 @@ interface Props {
   onExport?: () => void;
   onDownloadTemplate?: () => void;
   onManageServices?: () => void;
-  manageServicesLabel?: string;
 }
 
 /**
@@ -30,7 +29,6 @@ export default function LeadsToolbar({
   onExport,
   onDownloadTemplate,
   onManageServices,
-  manageServicesLabel = 'Manage Services',
 }: Readonly<Props>) {
   const { t } = useTranslation();
   return (
@@ -53,7 +51,7 @@ export default function LeadsToolbar({
         {onManageServices && (
           <Tooltip title={t('crm.components.manageTheCatalogueOfServicesOffered')}>
             <DuncitButton startIcon={<HandymanIcon />} variant="outlined" onClick={onManageServices}>
-              {manageServicesLabel}
+              {t('crm.components.manageServices')}
             </DuncitButton>
           </Tooltip>
         )}

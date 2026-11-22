@@ -20,7 +20,7 @@ import { asRole, call, expectCallsRefused, expectRead, NO_ID } from '../../../su
  * gate every other caller meets, and the reads the Logs seat shares. Every
  * refused write names an id no record has, or an input nothing is saved from.
  *
- * Scenario map: AI › Welcome page, AI Library, Automation flows, Reel Studio,
+ * Scenario map: AI › Dashboard, AI Library, Automation flows, Reel Studio,
  * OpenAI Dashboard, OpenAI Logs, AI Monitoring logs, AI Monitoring settings.
  */
 

@@ -1,5 +1,7 @@
-import type { CrmContact, CrmServiceOffered, EcommLead } from '../../api/crm.types';
+import type { CrmContact, EcommLead } from '../../api/crm.types';
 import { emptyContact } from '../fields/ContactsField';
+import { cleanSocialLinks, socialLinksToForm } from '../validation/socialLinks';
+import { cleanServices, servicesToForm } from '../validation/services';
 import { ecommLeadInitialValues, type EcommLeadFormValues } from './ecomm-lead.types';
 
 const cleanContacts = (contacts: CrmContact[]) =>
@@ -11,15 +13,6 @@ const cleanContacts = (contacts: CrmContact[]) =>
       mobile_number: c.mobile_number.trim(),
       whatsapp_number: c.whatsapp_number.trim(),
       email: c.email.trim(),
-    }));
-
-const cleanServices = (services: CrmServiceOffered[]) =>
-  services
-    .filter((s) => s?.service?.trim())
-    .map((s) => ({
-      service: s.service.trim(),
-      custom_name: (s.custom_name ?? '').trim(),
-      description: (s.description ?? '').trim(),
     }));
 
 const cleanList = (items: string[]) => items.map((t) => t.trim()).filter(Boolean);
@@ -47,6 +40,7 @@ export function toEcommLeadInput(v: EcommLeadFormValues) {
     instagram_link: v.instagram_link.trim(),
     marketplace_links: cleanList(v.marketplace_links),
     services_offered: cleanServices(v.services_offered),
+    social_links: cleanSocialLinks(v.social_links),
     tags: cleanList(v.tags),
     profile_photo_url: v.profile_photo_url.trim(),
     dynamic_values_json: v.dynamic_values_json || '{}',
@@ -82,11 +76,8 @@ export function fromEcommLead(lead: EcommLead): EcommLeadFormValues {
     website: lead.website ?? '',
     instagram_link: lead.instagram_link ?? '',
     marketplace_links: lead.marketplace_links,
-    services_offered: lead.services_offered.map((s) => ({
-      service: s.service,
-      custom_name: s.custom_name ?? '',
-      description: s.description ?? '',
-    })),
+    social_links: socialLinksToForm(lead.social_links),
+    services_offered: servicesToForm(lead.services_offered),
     tags: lead.tags,
     profile_photo_url: lead.profile_photo_url ?? '',
     dynamic_values_json: lead.dynamic_values_json,

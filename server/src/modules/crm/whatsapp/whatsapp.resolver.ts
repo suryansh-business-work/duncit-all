@@ -136,16 +136,16 @@ export const waLeadsResolvers = {
     },
     waGenerateApiKey: async (
       _p: unknown,
-      args: { base_url: string; master_key: string },
+      args: { base_url?: string | null; master_key?: string | null },
       ctx: GraphQLContext
     ) => {
       requireRole(ctx, RW);
       const { connection, api_key } = await whatsappService.generateApiKey(args);
       return { api_key, connection: toConnection(connection) };
     },
-    waConnect: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+    waConnect: async (_p: unknown, args: { restart?: boolean | null }, ctx: GraphQLContext) => {
       requireRole(ctx, RW);
-      return toConnection(await whatsappService.connect());
+      return toConnection(await whatsappService.connect({ restart: args.restart === true }));
     },
     waDisconnect: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       requireRole(ctx, RW);

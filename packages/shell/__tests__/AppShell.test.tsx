@@ -36,7 +36,8 @@ vi.mock('../src/staff-chat', () => ({
 }));
 
 import { useQuery } from '@apollo/client/react';
-import { DuncitThemeProvider } from '@duncit/theme';
+import { Drawer } from '@mui/material';
+import { DuncitThemeProvider, tokens } from '@duncit/theme';
 import { AppShell } from '../src/chrome/AppShell';
 import type { AppNavItem } from '../src/types';
 import type { DuncitUser } from '@duncit/user-context';
@@ -163,5 +164,25 @@ describe('AppShell', () => {
       </DuncitThemeProvider>,
     );
     expect(screen.getAllByText('CRM').length).toBeGreaterThan(0);
+  });
+
+  it('stops every drawer in the console at the taskbar, the sidebar and a page’s own', () => {
+    const aboveBar = `calc(100% - ${tokens.size.taskbarHeight}px)`;
+    render(
+      <DuncitThemeProvider defaultMode="light" storageKey="shell_taskbar">
+        <MemoryRouter>
+          <AppShell config={{ name: 'CRM' }} nav={nav} user={user} hasAccess onLogout={vi.fn()}>
+            {/* A page's detail drawer knows nothing about the taskbar. */}
+            <Drawer anchor="right" open slotProps={{ paper: { 'aria-label': 'Log detail' } }}>
+              <p>detail</p>
+            </Drawer>
+          </AppShell>
+        </MemoryRouter>
+      </DuncitThemeProvider>,
+    );
+    expect(screen.getByLabelText('Taskbar')).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Log detail' })).toHaveStyle({ height: aboveBar });
+    const sidebar = document.querySelector('.MuiDrawer-docked .MuiDrawer-paper') as HTMLElement;
+    expect(sidebar).toHaveStyle({ height: aboveBar });
   });
 });

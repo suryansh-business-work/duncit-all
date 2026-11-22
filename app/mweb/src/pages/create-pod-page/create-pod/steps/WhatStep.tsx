@@ -9,17 +9,19 @@ interface Props {
   hostCategories: CreatePodHostCategory[];
   categoryIcons?: CreatePodCategoryIcon[];
   clubs: CreatePodClub[];
+  /** On the venue picked from Venue Details: the pod is physical, so there is no mode to choose. */
+  venueLocked?: boolean;
 }
 
 /** Step 1 — What: the category (it scopes the clubs on Where & when and the
  * products on Money) and whether the pod is physical or virtual. Native twin: WhatStep. */
-export default function WhatStep({ form, hostCategories, categoryIcons, clubs }: Readonly<Props>) {
+export default function WhatStep({ form, hostCategories, categoryIcons, clubs, venueLocked = false }: Readonly<Props>) {
   return (
     <Stack data-testid="create-pod-what-step" spacing={2}>
       <Box data-tour="create-pod-club" sx={{ ...SURFACE_SX, p: 2 }}>
-        <HostCategoryField form={form} hostCategories={hostCategories} categoryIcons={categoryIcons} clubs={clubs} />
+        <HostCategoryField form={form} hostCategories={hostCategories} categoryIcons={categoryIcons} clubs={clubs} keepVenue={venueLocked} />
       </Box>
-      <PodModeField form={form} />
+      {!venueLocked && <PodModeField form={form} />}
     </Stack>
   );
 }

@@ -1,14 +1,48 @@
 import { crmService } from './crm.service';
 import { leadSurveyService } from '@modules/survey/leadSurvey.service';
-import { CRM_RW } from './crm.constants';
+import { CRM_RW, type CrmLeadEntityType } from './crm.constants';
 import { parseCrmLeadText, parseCrmLeadsText, leadAiChat, type CrmAiEntity, type ChatMessage } from './crm.ai';
 import { callService } from '@modules/crm/call/call.service';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
 import { buildTemplateBase64, exportLeadsBase64, importLeads, inspectImport, type CrmExcelEntity, type ImportColumnMapping } from './crm.excel';
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
+import { GraphQLError } from 'graphql';
+import type { CommsLogEntity } from '@modules/crm/communicationLog/communicationLog.model';
+import { findLeadDuplicates } from '@modules/crm/leadDuplicate/leadDuplicate.service';
 
 const RW = [...CRM_RW];
+
+const MAX_DUPLICATE_CONTACTS = 20;
+
+interface DuplicateCheckInput {
+  entity_type: CrmLeadEntityType;
+  lead_id?: string | null;
+  contacts?: Array<{ mobile_number?: string | null; email?: string | null }> | null;
+  website?: string | null;
+}
+
+/** The lead a call is placed for: `entity_type` (any lead kind) or the older `entity` (venue/host/ecomm). */
+interface CallLeadArgs {
+  entity?: CrmAiEntity | null;
+  entity_type?: CommsLogEntity | null;
+  id: string;
+  contact_number: string;
+}
+
+function callEntity(args: CallLeadArgs): CommsLogEntity {
+  const entity = args.entity_type ?? args.entity;
+  if (!entity) throw new GraphQLError('entity_type is required', { extensions: { code: 'BAD_USER_INPUT' } });
+  return entity;
+}
+
+const callResult = (result: { ok: boolean; message: string; code?: string | null; log: { id: string; external_id?: string | null } | null }) => ({
+  ok: result.ok,
+  message: result.message,
+  code: result.code ?? null,
+  log_id: result.log?.id ?? null,
+  external_id: result.log?.external_id ?? null,
+});
 
 const templateFilename = (entity: CrmExcelEntity) =>
   entity === 'VENUE_LEAD' ? 'duncit-venue-leads-template.xlsx' : 'duncit-host-leads-template.xlsx';
@@ -47,7 +81,7 @@ export const crmResolvers = {
     },
     crmDynamicFields: (
       _p: unknown,
-      args: { entity?: 'VENUE_LEAD' | 'HOST_LEAD' | 'ECOMM_LEAD' | null; include_inactive?: boolean },
+      args: { entity?: CrmLeadEntityType | null; include_inactive?: boolean },
       ctx: GraphQLContext
     ) => {
       requireRole(ctx, RW);
@@ -104,6 +138,12 @@ export const crmResolvers = {
     crmCallFromNumber: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       requireRole(ctx, RW);
       return (await getRuntimeEnvValue('TWILIO_PHONE_NUMBER')) || null;
+    },
+    crmLeadDuplicates: (_p: unknown, args: { input: DuplicateCheckInput }, ctx: GraphQLContext) => {
+      requireRole(ctx, RW);
+      const { entity_type, lead_id, contacts, website } = args.input;
+      // A form holds a handful of contacts; the cap keeps one call from becoming a bulk scan.
+      return findLeadDuplicates({ contacts: contacts?.slice(0, MAX_DUPLICATE_CONTACTS), website }, { entity_type, id: lead_id });
     },
   },
   Mutation: {
@@ -205,19 +245,12 @@ export const crmResolvers = {
     },
     startCrmAiCall: async (
       _p: unknown,
-      args: {
-        entity: CrmAiEntity;
-        id: string;
-        contact_number: string;
-        prompt_id: string;
-        voice?: string | null;
-        contact_name?: string | null;
-      },
+      args: CallLeadArgs & { prompt_id: string; voice?: string | null; contact_name?: string | null },
       ctx: GraphQLContext
     ) => {
       const user = requireRole(ctx, RW);
       const result = await callService.startAiCall({
-        entity_type: args.entity,
+        entity_type: callEntity(args),
         entity_id: args.id,
         to: args.contact_number,
         prompt_id: args.prompt_id,
@@ -225,33 +258,23 @@ export const crmResolvers = {
         contact_name: args.contact_name ?? null,
         user_id: user.id,
       });
-      return {
-        ok: result.ok,
-        message: result.message,
-        log_id: result.log?.id ?? null,
-        external_id: result.log?.external_id ?? null,
-      };
+      return callResult(result);
     },
     startCrmPortalCall: async (
       _p: unknown,
-      args: { entity: CrmAiEntity; id: string; contact_number: string; agent_number?: string | null; contact_name?: string | null },
+      args: CallLeadArgs & { agent_number?: string | null; contact_name?: string | null },
       ctx: GraphQLContext
     ) => {
       const user = requireRole(ctx, RW);
       const result = await callService.startPortalCall({
-        entity_type: args.entity,
+        entity_type: callEntity(args),
         entity_id: args.id,
         to: args.contact_number,
         agent_number: args.agent_number ?? null,
         contact_name: args.contact_name ?? null,
         user_id: user.id,
       });
-      return {
-        ok: result.ok,
-        message: result.message,
-        log_id: result.log?.id ?? null,
-        external_id: result.log?.external_id ?? null,
-      };
+      return callResult(result);
     },
     reconcileCrmCall: async (_p: unknown, args: { log_id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, RW);
@@ -290,7 +313,7 @@ export const crmResolvers = {
       _p: unknown,
       args: {
         input: {
-          entity_type: 'VENUE_LEAD' | 'HOST_LEAD';
+          entity_type: CrmLeadEntityType;
           entity_id: string;
           summary?: string | null;
           body_html: string;

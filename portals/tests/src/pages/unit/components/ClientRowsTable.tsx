@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useMemo } from 'react';
 import { DuncitTable, clientTableFetch, type DuncitColumn } from '@duncit/table';
 
 interface Props<T> {
@@ -29,12 +29,7 @@ export default function ClientRowsTable<T>({
   searchPlaceholder,
   defaultSort,
 }: Readonly<Props<T>>) {
-  const refetchRef = useRef<(() => void) | null>(null);
   const fetchRows = useMemo(() => clientTableFetch(rows, searchOf, columns), [rows, searchOf, columns]);
-
-  useEffect(() => {
-    refetchRef.current?.();
-  }, [fetchRows]);
 
   return (
     <DuncitTable<T>
@@ -45,7 +40,6 @@ export default function ClientRowsTable<T>({
       getRowId={getRowId}
       emptyText={emptyText}
       searchPlaceholder={searchPlaceholder}
-      refetchRef={refetchRef}
       defaultSort={defaultSort}
     />
   );

@@ -1,6 +1,7 @@
 import { gql } from '@apollo/client';
+import type { ServiceTargets } from '../config/serviceTargets';
 
-const SERVICE_OFFERED_FIELDS = `id title slug super_category_id category_id sub_category_id super_category_name category_name sub_category_name applies_to_venue applies_to_host is_active sort_order`;
+const SERVICE_OFFERED_FIELDS = `id title slug super_category_id category_id sub_category_id super_category_name category_name sub_category_name applies_to_venue applies_to_host applies_to_ecomm applies_to_creator applies_to_community is_active sort_order`;
 
 /** Categories at a given level, optionally scoped to a parent (for cascading pickers). */
 export const CATEGORIES_BY_PARENT = gql`
@@ -114,7 +115,7 @@ export interface CategoryOption {
   sort_order: number;
 }
 
-export interface CrmServiceOffered {
+export interface CrmServiceOffered extends ServiceTargets {
   id: string;
   title: string;
   slug: string;
@@ -124,8 +125,6 @@ export interface CrmServiceOffered {
   super_category_name: string | null;
   category_name: string | null;
   sub_category_name: string | null;
-  applies_to_venue: boolean;
-  applies_to_host: boolean;
   is_active: boolean;
   sort_order: number;
 }

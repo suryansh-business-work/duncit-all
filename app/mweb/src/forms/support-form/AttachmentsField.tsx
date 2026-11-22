@@ -14,6 +14,14 @@ import { useTranslation } from '../../i18n/useTranslation';
 interface Props {
   attachments: string[];
   setAttachments: (next: string[]) => void;
+  /** Upload folder — support tickets unless a caller says otherwise. */
+  folder?: string;
+  /** The file input's `accept`; everything support takes by default. */
+  accept?: string;
+  /** Refuses a picked file before it uploads: the message to show, or null. */
+  checkFile?: (file: File) => string | null;
+  /** Localized caption ("Files (1/5)") and button, for callers with their own copy. */
+  labels?: { caption: string; add: string };
 }
 
 interface PreviewProps {
@@ -83,7 +91,14 @@ function AttachmentPreview({ url, onRemove, testId }: Readonly<PreviewProps & { 
   );
 }
 
-export default function AttachmentsField({ attachments, setAttachments }: Readonly<Props>) {
+export default function AttachmentsField({
+  attachments,
+  setAttachments,
+  folder = '/support',
+  accept = ATTACHMENT_ACCEPT_ALL,
+  checkFile,
+  labels,
+}: Readonly<Props>) {
   const [error, setError] = useState<string | null>(null);
   const { upload, uploading } = useImagekitUpload();
   const gate = useAttachmentGate();
@@ -93,14 +108,14 @@ export default function AttachmentsField({ attachments, setAttachments }: Readon
     const file = e.target.files?.[0];
     e.target.value = '';
     if (!file) return;
-    const tooLarge = gate(file);
-    if (tooLarge) {
-      setError(tooLarge);
+    const refused = checkFile?.(file) ?? gate(file);
+    if (refused) {
+      setError(refused);
       return;
     }
     setError(null);
     try {
-      const url = await upload(file, '/support');
+      const url = await upload(file, folder);
       if (url) setAttachments([...attachments, url].slice(0, 5));
     } catch (err: any) {
       setError(err?.message || 'Upload failed');
@@ -122,7 +137,7 @@ export default function AttachmentsField({ attachments, setAttachments }: Readon
             color: "text.secondary",
             flex: 1
           }}>
-          Attach files ({attachments.length}/5)
+          {labels?.caption ?? `Attach files (${attachments.length}/5)`}
         </Typography>
         <DuncitButton
           data-testid="ticket-attach-add"
@@ -132,14 +147,14 @@ export default function AttachmentsField({ attachments, setAttachments }: Readon
           onClick={() => fileRef.current?.click()}
           sx={{ minHeight: 40 }}
         >
-          Add files
+          {labels?.add ?? 'Add files'}
         </DuncitButton>
       </Stack>
       <input
         ref={fileRef}
         data-testid="ticket-attach-input"
         type="file"
-        accept={ATTACHMENT_ACCEPT_ALL}
+        accept={accept}
         hidden
         onChange={pickFile}
       />

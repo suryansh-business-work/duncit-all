@@ -66,7 +66,8 @@ export type ProfileIconKey =
   | 'gigs'
   | 'explore'
   | 'loyalty'
-  | 'shopping';
+  | 'shopping'
+  | 'assistant';
 
 interface Destination {
   to: string;
@@ -103,6 +104,7 @@ export const MENU_DESTINATIONS: Readonly<Record<ProfileMenuKey, Destination>> = 
   verification: { to: '/verification', icon: 'verification' },
   tour: { to: '/tour-guide', icon: 'tour' },
   plans: { to: '/pod-plans', icon: 'plans' },
+  'ask-duncit': { to: '/ask-duncit', icon: 'assistant' },
 };
 
 /** The rounded tile on each section card. */

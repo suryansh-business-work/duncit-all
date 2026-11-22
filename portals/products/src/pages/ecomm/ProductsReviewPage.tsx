@@ -1,5 +1,5 @@
 import { useApolloClient } from '@apollo/client/react';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import {
   Alert,
   Box,
@@ -34,15 +34,6 @@ export default function ProductsReviewPage() {
     },
     [status],
   );
-
-  // Reload the table when the status toggle changes (skip the mount fetch —
-  // DuncitTable already fetches on mount).
-  const appliedStatusRef = useRef(status);
-  useEffect(() => {
-    if (appliedStatusRef.current === status) return;
-    appliedStatusRef.current = status;
-    refetchRef.current?.();
-  }, [status]);
 
   const handleReviewed = (text: string) => {
     setReviewTarget(null);

@@ -77,6 +77,7 @@ export const TICKET = gql`
   query Ticket($id: ID!) {
     ticket(id: $id) {
       ...TicketFields
+      payment_id
       messages {
         id
         author_id
@@ -239,6 +240,8 @@ export interface Ticket {
     is_phone_verified: boolean;
   };
   messages?: TicketMessage[];
+  /** The payment a deduction claim is about (Payment.id). Only the detail query reads it. */
+  payment_id?: string | null;
 }
 
 export interface TicketPage {

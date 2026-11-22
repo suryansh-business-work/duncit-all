@@ -25,6 +25,9 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import VirtualMeetingFields from '../VirtualMeetingFields';
 import { blankCreatePodForm, type CreatePodFormValues } from '../create-pod.types';
 
+// The Minimum Advance Days rule has its own suite (createPodMinAdvance); here it is unknown.
+vi.mock('../usePodMinAdvance', () => ({ usePodMinAdvance: () => null }));
+
 const testTheme = createTheme();
 
 /**

@@ -17,12 +17,14 @@ import ExcelImportDialog from '../../components/ExcelImportDialog';
 import { CrmLeadsTable } from '../../components/lead-table';
 import { downloadBase64File, parseApiError } from '@duncit/utils';
 import { useTranslation } from '@duncit/shell';
+import { useLeadEditorOrigin } from '../../hooks/useLeadEditorFlow';
 
 const XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 
 export default function VenueLeadsPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const editorOrigin = useLeadEditorOrigin();
   const client = useApolloClient();
   const { config } = useCrmConfig();
   const { options: superCategories } = useSuperCategories();
@@ -87,8 +89,7 @@ export default function VenueLeadsPage() {
       <LeadsToolbar
         title={t('shell.nav.venueLeads')}
         subtitle={t('crm.venueLeads.captureAndTrackVenuePartnershipLeads')}
-        onManageServices={() => navigate('/venue-leads/services')}
-        manageServicesLabel="Manage Venue Services"
+        onManageServices={() => navigate('/data/services-offered')}
         onFillWithAi={() => setShowAi(true)}
         onImport={() => setShowImport(true)}
         onExport={() => fetchExcel('export')}
@@ -105,12 +106,12 @@ export default function VenueLeadsPage() {
         priorityOptions={priorityOptions}
         superCategoryOptions={superCategoryOptions}
         toolbarActions={
-          <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/venue-leads/new')}>
+          <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/venue-leads/new', { state: editorOrigin })}>
             New Venue Lead
           </DuncitButton>
         }
         onView={(lead) => navigate(`/venue-leads/${lead.id}/view`)}
-        onEdit={(lead) => navigate(`/venue-leads/${lead.id}`)}
+        onEdit={(lead) => navigate(`/venue-leads/${lead.id}`, { state: editorOrigin })}
         onDelete={setToDelete}
       />
 

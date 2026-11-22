@@ -6,6 +6,7 @@ import EventNoteIcon from '@mui/icons-material/EventNote';
 import { DuncitButton } from '@duncit/buttons';
 import { parseApiError } from '@duncit/utils';
 import { ADD_CRM_MANUAL_LOG, ECOMM_LEAD, HOST_LEAD, VENUE_LEAD } from '../../api/crm.gql';
+import { COMMUNITY_LEAD, CREATOR_LEAD } from '../../api/prospectLeads.gql';
 import { groupLogs } from './logUtils';
 import { ManualLogComposer } from './ManualLogComposer';
 import { ManualLogList } from './ManualLogList';
@@ -29,7 +30,7 @@ export default function ManualLogsTab({
   const [createLog, { loading: saving }] = useMutation<any>(ADD_CRM_MANUAL_LOG, {
     refetchQueries: [
       {
-        query: { VENUE_LEAD, HOST_LEAD, ECOMM_LEAD }[entityType],
+        query: { VENUE_LEAD, HOST_LEAD, ECOMM_LEAD, CREATOR_LEAD, COMMUNITY_LEAD }[entityType],
         variables: { id: entityId },
       },
     ],

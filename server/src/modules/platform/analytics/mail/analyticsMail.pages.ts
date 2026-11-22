@@ -27,6 +27,7 @@ export const ANALYTICS_MAIL_PAGES: Readonly<Record<AnalyticsEntity, { path: stri
   MARKETING: { path: '/growth/marketing', copy: 'marketing' },
   CONTACTS: { path: '/growth/contacts', copy: 'contacts' },
   COMMUNICATIONS: { path: '/growth/communications', copy: 'communications' },
+  EMAIL_VALIDATIONS: { path: '/growth/email-validations', copy: 'emailValidations' },
   SUPPORT: { path: '/support/desk', copy: 'support' },
   LEGAL: { path: '/support/legal', copy: 'legal' },
   DATABASE: { path: '/tech/database', copy: 'database' },

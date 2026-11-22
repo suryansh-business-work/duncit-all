@@ -110,10 +110,10 @@ export default function ImageLibraryDialog({ open, templateId, images, onClose, 
               color: "text.secondary",
               flex: 1
             }}>
-            Uploaded images for this template. Use <b>{t('crm.emailTemplates.insert')}</b> to add an <code>&lt;mj-image&gt;</code>, or <b>Copy</b> the URL.
+            {t('crm.emailTemplates.imageLibraryIntro', { vars: { insert: t('crm.emailTemplates.insert') } })}
           </Typography>
           <DuncitButton variant="contained" size="small" startIcon={busy ? <CircularProgress size={14} color="inherit" /> : <UploadIcon />} onClick={() => inputRef.current?.click()} disabled={busy}>
-            {busy ? 'Uploading…' : 'Upload'}
+            {busy ? t('crm.emailTemplates.uploading') : t('crm.emailTemplates.upload')}
           </DuncitButton>
         </Stack>
         {error && <Alert severity="error" sx={{ mb: 1.5 }} onClose={() => setError(null)}>{error}</Alert>}
@@ -136,10 +136,10 @@ export default function ImageLibraryDialog({ open, templateId, images, onClose, 
                     alignItems: "center",
                     p: 0.5
                   }}>
-                  <Tooltip title="Insert <mj-image>">
+                  <Tooltip title={t('crm.emailTemplates.insertImage')}>
                     <DuncitIconButton size="small" color="primary" onClick={() => onInsert(img.url)}><AddPhotoAlternateIcon fontSize="small" /></DuncitIconButton>
                   </Tooltip>
-                  <Tooltip title={copied === img.url ? 'Copied!' : 'Copy URL'}>
+                  <Tooltip title={copied === img.url ? t('crm.emailTemplates.copied') : t('crm.emailTemplates.copyUrl')}>
                     <DuncitIconButton size="small" onClick={() => copy(img.url)}><ContentCopyIcon fontSize="small" /></DuncitIconButton>
                   </Tooltip>
                   <Box sx={{ flex: 1 }} />

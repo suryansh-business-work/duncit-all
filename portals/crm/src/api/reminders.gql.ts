@@ -1,6 +1,8 @@
 import { gql } from '@apollo/client';
 
-export type ReminderEntity = 'VENUE_LEAD' | 'HOST_LEAD' | 'GENERAL';
+export type ReminderEntity = 'VENUE_LEAD' | 'HOST_LEAD' | 'ECOMM_LEAD' | 'CREATOR_LEAD' | 'COMMUNITY_LEAD' | 'GENERAL';
+/** The reminder kinds that belong to a lead (every kind but GENERAL). */
+export type LeadReminderEntity = Exclude<ReminderEntity, 'GENERAL'>;
 export type ReminderStatus = 'PENDING' | 'DONE';
 
 export interface CrmReminder {

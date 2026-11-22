@@ -43,7 +43,8 @@ export type ProfileMenuKey =
   | 'contacts'
   | 'verification'
   | 'tour'
-  | 'plans';
+  | 'plans'
+  | 'ask-duncit';
 
 /** The server feature flags a menu destination can ride on. `products` is the
  * `is_product_visible` system flag. */
@@ -53,6 +54,7 @@ export type ProfileMenuFlag =
   | 'membership'
   | 'gift_cards'
   | 'tour_guide'
+  | 'ask_duncit'
   | 'products';
 
 /** Which flags are on. A flag left out counts as off. */
@@ -72,6 +74,7 @@ const MENU_FLAG_KEYS: readonly Exclude<ProfileMenuFlag, 'products'>[] = [
   'membership',
   'gift_cards',
   'tour_guide',
+  'ask_duncit',
 ];
 
 /**
@@ -160,6 +163,8 @@ export const PROFILE_MENU_ITEMS: Readonly<Record<ProfileMenuKey, ProfileMenuItem
   verification: { key: 'verification', labelKey: 'mweb.common.verification' },
   tour: { key: 'tour', labelKey: 'mweb.tourGuide.tourGuide', flag: 'tour_guide' },
   plans: { key: 'plans', labelKey: 'mweb.podPlans.podPlans', flag: 'pod_plans_section' },
+  // The role-based AI assistant; shown only while the ask_duncit flag is on.
+  'ask-duncit': { key: 'ask-duncit', labelKey: 'askDuncit.menu.label', flag: 'ask_duncit', subtitleKey: 'askDuncit.menu.subtitle' },
 };
 
 /** True while the destination's flag (if it has one) is on. */
@@ -314,7 +319,7 @@ export interface ProfileMenuSectionDef {
  * destination (Switch role, Dark mode, the Policies list) are added by each app
  * at the end of their section. */
 export const PROFILE_MENU_SECTIONS: readonly ProfileMenuSectionDef[] = [
-  { id: 'explore', titleKey: 'mweb.sidebar.sectionExplore', items: ['ideas', 'leaderboard', 'badges'] },
+  { id: 'explore', titleKey: 'mweb.sidebar.sectionExplore', items: ['ask-duncit', 'ideas', 'leaderboard', 'badges'] },
   { id: 'work', titleKey: 'mweb.sidebar.sectionWork', items: ['gigs', 'membership'] },
   // Everything a member earns or spends as a reward, in one card: the coin
   // wallet, gift cards and referrals (the Loyalty console's three areas).

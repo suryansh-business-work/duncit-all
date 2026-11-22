@@ -216,6 +216,60 @@ describe('useTableQuery', () => {
     });
   });
 
+  it('a new fetchRows (a tab switch) refetches from page 1 through the new source, keeping search', async () => {
+    const codeRows = okFetch([{ id: 'c1', name: 'Code prompt' }], 1);
+    const aiRows = okFetch([{ id: 'a1', name: 'AI prompt' }], 1);
+    const { result, rerender } = renderHook(
+      ({ fetchRows }: { fetchRows: typeof codeRows }) => useTableQuery({ fetchRows }),
+      { initialProps: { fetchRows: codeRows } },
+    );
+    await waitFor(() => expect(result.current.rows).toEqual([{ id: 'c1', name: 'Code prompt' }]));
+    act(() => {
+      result.current.setSort('name', 'desc');
+    });
+    act(() => {
+      result.current.setPage(2);
+    });
+    await waitFor(() => expect(codeRows).toHaveBeenCalledTimes(3));
+
+    rerender({ fetchRows: aiRows });
+    await waitFor(() => expect(result.current.rows).toEqual([{ id: 'a1', name: 'AI prompt' }]));
+    // Exactly one fetch through the new source, on page 1, with the sort kept;
+    // the old source is not asked again.
+    expect(aiRows).toHaveBeenCalledTimes(1);
+    expect(aiRows.mock.calls[0][0]).toMatchObject({ page: 1, sortBy: 'name', sortDir: 'desc' });
+    expect(codeRows).toHaveBeenCalledTimes(3);
+    expect(result.current.query.page).toBe(1);
+  });
+
+  it('the same fetchRows across re-renders does not refetch', async () => {
+    const fetchRows = okFetch();
+    const { result, rerender } = renderHook(() => useTableQuery({ fetchRows }));
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    rerender();
+    rerender();
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    expect(fetchRows).toHaveBeenCalledTimes(1);
+  });
+
+  it('drops the old source’s late answer once fetchRows has moved on', async () => {
+    let resolveOld: (page: TablePage<Row>) => void = () => undefined;
+    const slowOld = vi.fn(
+      () => new Promise<TablePage<Row>>((resolve) => { resolveOld = resolve; }),
+    );
+    const fresh = okFetch([{ id: 'n1', name: 'New' }], 1);
+    const { result, rerender } = renderHook(
+      ({ fetchRows }: { fetchRows: typeof fresh }) => useTableQuery({ fetchRows }),
+      { initialProps: { fetchRows: slowOld as unknown as typeof fresh } },
+    );
+    rerender({ fetchRows: fresh });
+    await waitFor(() => expect(result.current.rows).toEqual([{ id: 'n1', name: 'New' }]));
+    await act(async () => {
+      resolveOld({ rows: [{ id: 'o1', name: 'Old' }], total: 1 });
+    });
+    expect(result.current.rows).toEqual([{ id: 'n1', name: 'New' }]);
+  });
+
   it('honours defaultSort and defaultPageSize', async () => {
     const fetchRows = okFetch();
     const { result } = renderHook(() =>
@@ -249,9 +303,9 @@ describe('useTableQuery updateRow', () => {
   });
 
   it('keeps the same rows array when the id is not on this page', async () => {
-    const { result } = renderHook(() =>
-      useTableQuery({ fetchRows: okFetch([alice], 1), getRowId: (row) => row.id }),
-    );
+    // Built once, outside the hook: a fetch made inside it is a new source every render.
+    const fetchRows = okFetch([alice], 1);
+    const { result } = renderHook(() => useTableQuery({ fetchRows, getRowId: (row) => row.id }));
     await waitFor(() => expect(result.current.rows).toEqual([alice]));
     const before = result.current.rows;
 
@@ -262,7 +316,8 @@ describe('useTableQuery updateRow', () => {
   });
 
   it('is a no-op without a getRowId to find the row by', async () => {
-    const { result } = renderHook(() => useTableQuery({ fetchRows: okFetch([alice], 1) }));
+    const fetchRows = okFetch([alice], 1);
+    const { result } = renderHook(() => useTableQuery({ fetchRows }));
     await waitFor(() => expect(result.current.rows).toEqual([alice]));
 
     act(() => {
@@ -272,9 +327,8 @@ describe('useTableQuery updateRow', () => {
   });
 
   it('exposes a referentially stable updateRow across renders', async () => {
-    const { result, rerender } = renderHook(() =>
-      useTableQuery({ fetchRows: okFetch([alice], 1), getRowId: (row) => row.id }),
-    );
+    const fetchRows = okFetch([alice], 1);
+    const { result, rerender } = renderHook(() => useTableQuery({ fetchRows, getRowId: (row) => row.id }));
     await waitFor(() => expect(result.current.loading).toBe(false));
     const first = result.current.updateRow;
     rerender();
@@ -306,7 +360,8 @@ describe('useTableQuery empty page recovery', () => {
   });
 
   it('commits an empty first page as-is, even when the total says rows exist elsewhere', async () => {
-    const { result } = renderHook(() => useTableQuery({ fetchRows: okFetch([], 5) }));
+    const fetchRows = okFetch([], 5);
+    const { result } = renderHook(() => useTableQuery({ fetchRows }));
     await waitFor(() => expect(result.current.loading).toBe(false));
     expect(result.current.rows).toEqual([]);
     expect(result.current.total).toBe(5);

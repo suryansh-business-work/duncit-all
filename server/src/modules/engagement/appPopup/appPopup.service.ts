@@ -8,6 +8,7 @@ import {
 } from './appPopup.model';
 import { audienceListService } from '@modules/crm/marketing/audienceList.service';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
+import { isPathOrWebLink } from '@utils/url';
 
 const TABLE_CONFIG: TableEntityConfig = {
   searchFields: ['name', 'cta_label'],
@@ -105,6 +106,9 @@ function toDoc(input: AppPopupInput) {
   const ctaUrl = input.cta_url?.trim() ?? '';
   const ctaLabel = input.cta_label?.trim() ?? '';
   if (ctaUrl && !ctaLabel) throw bad('A CTA link needs a button label');
+  // Both apps open http(s) outside and route paths inside; any other scheme
+  // (javascript:, intent:) is refused here rather than trusted to each client.
+  if (ctaUrl && !isPathOrWebLink(ctaUrl)) throw bad('A CTA link must be an app path such as /earn or a web address (https://…)');
 
   return {
     name: input.name.trim(),

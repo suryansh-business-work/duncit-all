@@ -8,7 +8,7 @@ import { outboundFetch } from '@utils/outboundFetch';
 import { isTrustedMediaHost } from '@utils/url';
 import { getUrlConfigs } from '../../../config/url-configs';
 import { issueUploadTicket } from './uploadTicket';
-import { resolveUploadFolder } from './uploadFolder';
+import { isPrivateUploadFolder, resolveUploadFolder } from './uploadFolder';
 import { EnvEntryModel } from '@modules/platform/envEntry/envEntry.model';
 import { mediaScanService } from '@modules/ai/aiMonitoring/aiMonitoring.service';
 import {
@@ -142,7 +142,11 @@ async function postToImagekit(
   // Callers resolve the owner's folder with the uploader in hand; this is the
   // floor under the ones that cannot (AI fills, status-report screenshots), so
   // nothing lands outside its environment's root. Resolving twice is a no-op.
-  form.append('folder', resolveUploadFolder(opts.folder));
+  const folder = resolveUploadFolder(opts.folder);
+  form.append('folder', folder);
+  // Payment evidence is an ImageKit PRIVATE file: its URL serves nothing until
+  // the server signs it (privateMedia.ts), so a leaked link is not the file.
+  if (isPrivateUploadFolder(folder)) form.append('isPrivateFile', 'true');
   if (opts.tags?.length) form.append('tags', opts.tags.join(','));
 
   const auth = 'Basic ' + Buffer.from(privateKey + ':').toString('base64');
@@ -485,8 +489,9 @@ export async function uploadBase64Image(opts: {
     fileName: safeName,
     folder: opts.folder,
   });
-  if (isImage) {
+  if (isImage && !isPrivateUploadFolder(opts.folder)) {
     // Best-effort AI image monitoring (images only) — never blocks the upload.
+    // Private payment evidence is never scanned: it is not public content.
     mediaScanService
       .record({
         url: uploaded.url,

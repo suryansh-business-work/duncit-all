@@ -252,8 +252,15 @@ export const clubAdminTypeDefs = /* GraphQL */ `
     The status argument narrows to one bucket of the table's Status column. It
     is an argument rather than a column filter because the chip is derived from
     four fields at once, so it cannot ride the table engine's field allowlist.
+    lifecycle narrows to one derived time bucket (UPCOMING / COMPLETED / …) —
+    the host page's Upcoming and Past tabs. Optional and additive.
     """
-    clubAdminPodsTable(club_id: ID, query: TableQueryInput, status: PodRowStatus): PodTablePage!
+    clubAdminPodsTable(
+      club_id: ID
+      query: TableQueryInput
+      status: PodRowStatus
+      lifecycle: PodLifecycle
+    ): PodTablePage!
     """
     Pods across the signed-in Club Admin's clubs for the Club Studio "Your Pods"
     section, newest first — the club-side twin of venuePods. Every stage shows,

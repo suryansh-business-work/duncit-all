@@ -1,5 +1,5 @@
 import { useMemo, type MutableRefObject, type ReactNode } from 'react';
-import { Chip, Typography } from '@mui/material';
+import { Chip, Stack, Typography } from '@mui/material';
 import {
   DuncitTable,
   actionsColumn,
@@ -10,6 +10,7 @@ import {
 } from '@duncit/table';
 import type { CrmServiceOfferedRow } from '../../../api/data.gql';
 import { useTranslation } from '@duncit/shell';
+import { SERVICE_TARGETS } from '../../../config/serviceTargets';
 
 interface Props {
   fetchRows: TableFetch<CrmServiceOfferedRow>;
@@ -25,12 +26,14 @@ const dash = (v?: string | null) => (v?.trim() ? v : '—');
 
 type Translate = ReturnType<typeof useTranslation>['t'];
 
-const targetLabel = (s: CrmServiceOfferedRow, t: Translate) => {
-  if (s.applies_to_venue && s.applies_to_host) return 'Both';
-  if (s.applies_to_venue) return t('crm.common.venue');
-  if (s.applies_to_host) return 'Host';
-  return '—';
+/** The lead kinds a row shows on, as labels; every kind collapses to "All lead types". */
+const targetLabels = (s: CrmServiceOfferedRow, t: Translate): string[] => {
+  const on = SERVICE_TARGETS.filter((target) => s[target.flag]);
+  if (on.length === SERVICE_TARGETS.length) return [t('crm.data.allLeadTypes')];
+  return on.map((target) => t(target.labelKey));
 };
+
+const targetLabel = (s: CrmServiceOfferedRow, t: Translate) => targetLabels(s, t).join(', ') || '—';
 
 const renderTitle = (s: CrmServiceOfferedRow) => (
   <Typography variant="body2" component="span" sx={{
@@ -40,9 +43,17 @@ const renderTitle = (s: CrmServiceOfferedRow) => (
   </Typography>
 );
 
-const renderTarget = (s: CrmServiceOfferedRow, t: Translate) => (
-  <Chip size="small" variant="outlined" color="primary" label={targetLabel(s, t)} />
-);
+const renderTarget = (s: CrmServiceOfferedRow, t: Translate) => {
+  const labels = targetLabels(s, t);
+  if (labels.length === 0) return dash(null);
+  return (
+    <Stack direction="row" spacing={0.5} useFlexGap sx={{ flexWrap: 'wrap', py: 0.5 }}>
+      {labels.map((label) => (
+        <Chip key={label} size="small" variant="outlined" color="primary" label={label} />
+      ))}
+    </Stack>
+  );
+};
 
 /** Services Offered on the shared server-driven table — Title plus its Super → Category → Sub. */
 export default function ServicesOfferedTable({
@@ -60,21 +71,29 @@ export default function ServicesOfferedTable({
       { field: 'super_category_name', headerName: t('crm.common.superCategory'), type: 'text', sortable: false, minWidth: 150, valueGetter: (s) => dash(s.super_category_name) },
       { field: 'category_name', headerName: t('crm.common.category'), type: 'text', sortable: false, minWidth: 140, valueGetter: (s) => dash(s.category_name) },
       { field: 'sub_category_name', headerName: t('crm.common.subCategory'), type: 'text', sortable: false, minWidth: 140, valueGetter: (s) => dash(s.sub_category_name) },
-      // Assembled from the venue + host flags (no stored value) — the For Venue / For Host columns sort and filter those.
-      { field: 'applies_to', headerName: t('crm.common.appliesTo'), type: 'text', sortable: false, filterable: false, width: 110, cellRenderer: (row: CrmServiceOfferedRow) => renderTarget(row, t), valueGetter: (row: CrmServiceOfferedRow) => targetLabel(row, t) },
-      { field: 'applies_to_venue', headerName: t('crm.data.forVenue'), type: 'boolean', hide: true, width: 110, valueGetter: (s) => (s.applies_to_venue ? 'Yes' : 'No') },
-      { field: 'applies_to_host', headerName: t('crm.data.forHost'), type: 'boolean', hide: true, width: 110, valueGetter: (s) => (s.applies_to_host ? 'Yes' : 'No') },
+      // Assembled from the per-kind flags (no stored value) — the hidden per-kind columns sort and filter those.
+      { field: 'applies_to', headerName: t('crm.common.appliesTo'), type: 'text', sortable: false, filterable: false, minWidth: 180, cellRenderer: (row: CrmServiceOfferedRow) => renderTarget(row, t), valueGetter: (row: CrmServiceOfferedRow) => targetLabel(row, t) },
+      ...SERVICE_TARGETS.map(
+        (target): DuncitColumn<CrmServiceOfferedRow> => ({
+          field: target.flag,
+          headerName: t('crm.data.forLeadType', { vars: { type: t(target.labelKey) } }),
+          type: 'boolean',
+          hide: true,
+          width: 130,
+          valueGetter: (s) => (s[target.flag] ? t('shell.common.yes') : t('shell.common.no')),
+        })
+      ),
       activeChipColumn<CrmServiceOfferedRow>(),
       { field: 'sort_order', headerName: t('crm.data.sort'), type: 'number', hide: true, width: 90 },
       dateColumn<CrmServiceOfferedRow>(),
       actionsColumn<CrmServiceOfferedRow>({
         onEdit,
         onDelete,
-        edit: { ariaLabel: (s) => `Edit ${s.title}` },
-        delete: { ariaLabel: (s) => `Delete ${s.title}` },
+        edit: { ariaLabel: (s) => t('crm.common.editNamed', { vars: { name: s.title } }) },
+        delete: { ariaLabel: (s) => t('crm.common.deleteNamed', { vars: { name: s.title } }) },
       }),
     ],
-    [onEdit, onDelete],
+    [onEdit, onDelete, t],
   );
 
   return (
@@ -85,8 +104,8 @@ export default function ServicesOfferedTable({
       fetchRows={fetchRows}
       getRowId={getServiceRowId}
       toolbarActions={toolbarActions}
-      emptyText='No services yet. Click "Add Service Offered" to create your first one.'
-      searchPlaceholder="Search title or slug"
+      emptyText={t('crm.data.noServicesYet')}
+      searchPlaceholder={t('crm.data.searchServices')}
       refetchRef={refetchRef}
     />
   );

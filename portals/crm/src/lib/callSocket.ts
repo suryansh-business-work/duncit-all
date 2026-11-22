@@ -1,6 +1,7 @@
 import { io, type Socket } from 'socket.io-client';
 import { urlConfigs } from '../config/url-configs';
 import { getToken } from './session';
+import type { CrmLeadEntityType } from '../api/crm.types';
 
 /** Server-emitted call lifecycle event name (matches server CRM_CALL_EVENT). */
 export const CRM_CALL_EVENT = 'crm_call_status';
@@ -17,7 +18,7 @@ export type CallStatus =
 export interface CallStatusPayload {
   log_id?: string | null;
   external_id?: string | null;
-  entity_type?: 'VENUE_LEAD' | 'HOST_LEAD' | null;
+  entity_type?: CrmLeadEntityType | null;
   entity_id?: string | null;
   status: CallStatus;
   direction?: string;
@@ -26,6 +27,24 @@ export interface CallStatusPayload {
   recording_url?: string | null;
   error_message?: string | null;
   mode?: 'PORTAL' | 'AI';
+  /** ISO time the lead picked up — the call clock starts here. */
+  answered_at?: string | null;
+  muted?: boolean;
+  on_hold?: boolean;
+  /** Set when the AI summary of a finished call changed state. */
+  summary_status?: string;
+}
+
+/** Server-emitted event for one finished utterance of a live call (matches server CRM_CALL_TRANSCRIPT_EVENT). */
+export const CRM_CALL_TRANSCRIPT_EVENT = 'crm_call_transcript';
+
+export interface CallTranscriptPayload {
+  log_id: string;
+  seq: number;
+  speaker: 'AGENT' | 'LEAD';
+  text: string;
+  confidence: number | null;
+  at: string | null;
 }
 
 const TERMINAL = new Set<CallStatus>(['COMPLETED', 'NO_ANSWER', 'BUSY', 'FAILED']);

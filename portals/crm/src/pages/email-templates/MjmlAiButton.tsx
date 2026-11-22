@@ -11,7 +11,8 @@ import {
 } from '@mui/material';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
-import { AI_MJML } from '../../api/emailTemplates.gql';
+import { GENERATE_CRM_EMAIL_MJML } from '../../api/emailSettings.gql';
+import type { EmailTemplateTarget } from '../../api/emailTemplates.gql';
 import { parseApiError } from '@duncit/utils';
 import { useTranslation } from '@duncit/shell';
 
@@ -20,15 +21,22 @@ interface Props {
   onApply: (mjml: string) => void;
   iconOnly?: boolean;
   label?: string;
+  /** Which lead kind the template is for — the AI writes for that audience. */
+  target?: EmailTemplateTarget | null;
 }
 
-/** Generate or refine MJML from a natural-language prompt via aiCreateOrUpdateMjml. */
-export default function MjmlAiButton({ currentMjml, onApply, iconOnly, label }: Readonly<Props>) {
+/**
+ * Generate or refine MJML from a natural-language prompt with the CRM email
+ * writer (generateCrmEmailMjml): the CRM's own prompts, its brand images and
+ * the template's audience. Colours stay on the shared tokens; the CRM theme is
+ * applied when the email is rendered.
+ */
+export default function MjmlAiButton({ currentMjml, onApply, iconOnly, label, target }: Readonly<Props>) {
   const { t } = useTranslation();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [prompt, setPrompt] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [run, { loading }] = useMutation<any>(AI_MJML);
+  const [run, { loading }] = useMutation<{ generateCrmEmailMjml: string }>(GENERATE_CRM_EMAIL_MJML);
   const open = Boolean(anchorEl);
 
   const generate = async () => {
@@ -36,9 +44,9 @@ export default function MjmlAiButton({ currentMjml, onApply, iconOnly, label }: 
     const instruction = prompt.trim();
     setError(null);
     try {
-      const res = await run({ variables: { input: { prompt: instruction, current_mjml: currentMjml } } });
-      const mjml = res.data?.aiCreateOrUpdateMjml;
-      if (!mjml) throw new Error('AI did not return MJML');
+      const res = await run({ variables: { input: { prompt: instruction, current_mjml: currentMjml, target: target ?? null } } });
+      const mjml = res.data?.generateCrmEmailMjml;
+      if (!mjml) throw new Error(t('crm.emailTemplates.aiNoMjml'));
       onApply(mjml);
       setPrompt('');
       setAnchorEl(null);
@@ -57,7 +65,7 @@ export default function MjmlAiButton({ currentMjml, onApply, iconOnly, label }: 
         </Tooltip>
       ) : (
         <DuncitButton size="small" variant="outlined" color="secondary" startIcon={<AutoAwesomeIcon />} aria-haspopup="dialog" aria-expanded={open} onClick={(e) => setAnchorEl(e.currentTarget)}>
-          {label || 'Create with AI'}
+          {label || t('crm.emailTemplates.createWithAi')}
         </DuncitButton>
       )}
       <Popover
@@ -96,7 +104,7 @@ export default function MjmlAiButton({ currentMjml, onApply, iconOnly, label }: 
               disabled={loading || !prompt.trim()}
               startIcon={loading ? <CircularProgress size={14} color="inherit" /> : <AutoAwesomeIcon />}
             >
-              {loading ? 'Working…' : 'Apply'}
+              {loading ? t('crm.common.working') : t('crm.emailTemplates.apply')}
             </DuncitButton>
           </Stack>
         </Stack>

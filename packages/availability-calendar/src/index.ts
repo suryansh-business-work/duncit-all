@@ -55,6 +55,7 @@ export {
 // The Partner console's own pages for one part of a venue's pricing — its fees,
 // its price rules — and its booking calendar build on these.
 export { usePricingModule } from './pricing/usePricingModule';
+export { default as VenuePricingPartEditor, pricingWithPart, type PricingPart } from './pricing/VenuePricingPartEditor';
 export { default as DayToggles } from './pricing/calendar/DayToggles';
 export { default as MonthNavigator } from './MonthNavigator';
 export { holidaysWith, pricingWithBlocked } from './pricing/calendar/day-edits';
@@ -133,4 +134,5 @@ export { useMarkReadWhileVisible } from './offers/chat/useMarkReadWhileVisible';
 export { default as OfferImages } from './offers/OfferImages';
 // A venue's Booking offers: the business it hopes each booking brings, and how Create Pod shows it.
 export { default as MinBusinessFields } from './offers/settings/MinBusinessFields';
+export { default as MinSpendField } from './offers/settings/MinSpendField';
 export { default as VenueMinBusinessNote } from './offers/settings/VenueMinBusinessNote';

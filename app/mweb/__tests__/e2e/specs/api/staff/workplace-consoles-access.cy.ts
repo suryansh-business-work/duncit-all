@@ -2,7 +2,7 @@
 import type { E2eStaffRole } from '@duncit/utils';
 import { ACCESS_DENIED, expectRefused, revokeRunRoles, signInRunMember, SIGNED_OUT } from '../../../support/access-steps';
 import { expectPortalRefused } from '../../../support/api-partners';
-import { asRole, call, expectCallsRefused, NO_ID } from '../../../support/api-staff';
+import { asRole, call, expectCallsRefused, expectOutsidersRefused, NO_ID } from '../../../support/api-staff';
 import { runAccount } from '../../../support/run-account';
 
 /**
@@ -29,7 +29,10 @@ import { runAccount } from '../../../support/run-account';
  * and dashboard ("login refused for accounts without EMPLOYEE", "protected
  * operations refuse other roles and anonymous callers"); Employee › My Expenses
  * (the server gate under every sub flow); Targets › Console access and
- * dashboard ("login refused for accounts without TARGETS_MANAGER").
+ * dashboard ("login refused for accounts without TARGETS_MANAGER"); Targets ›
+ * Growth Calculator ("every operation refuses other roles and anonymous
+ * callers") — growthCalculation.resolver.ts asks TARGETS_MANAGER or SUPER_ADMIN
+ * before it reads, previews or writes anything.
  */
 
 const CONSOLES = ['hr', 'employee', 'targets'] as const;
@@ -66,6 +69,45 @@ const EXPENSE_CALLS = [
   call('deleteEmployeeExpense', `mutation E2eWithdrawClaim($id: ID!) { deleteEmployeeExpense(expense_doc_id: $id) }`, {
     id: NO_ID,
   }),
+];
+
+/** A plan every server rule would accept — so a refusal can only be the role gate. */
+const GROWTH_INPUTS = {
+  pax_per_pod: 10,
+  price_per_pax: 400,
+  profit_margin_pct: 20,
+  hosts_per_venue: 2,
+  pods_per_host_per_month: 2,
+  venues_per_city: 100,
+  target_cities: 10,
+  host_conversion_pct: 10,
+  venue_conversion_pct: 5,
+};
+
+const GROWTH_CALLS = [
+  call('growthCalculationsTable', `query E2eGrowthTable { growthCalculationsTable(query: { page_size: 1 }) { total } }`),
+  call('growthCalculation', `query E2eGrowthOne($id: ID!) { growthCalculation(id: $id) { id } }`, { id: NO_ID }),
+  call(
+    'growthCalculationPreview',
+    `query E2eGrowthPreview($inputs: GrowthInputsInput!) { growthCalculationPreview(inputs: $inputs) { totals { monthly_gmv } } }`,
+    { inputs: GROWTH_INPUTS },
+  ),
+  call(
+    'saveGrowthCalculation',
+    `mutation E2eGrowthSave($input: SaveGrowthCalculationInput!) { saveGrowthCalculation(input: $input) { id } }`,
+    { input: { title: 'E2E role-gate probe — must never be saved', inputs: GROWTH_INPUTS } },
+  ),
+  call(
+    'updateGrowthCalculation',
+    `mutation E2eGrowthEdit($id: ID!, $input: UpdateGrowthCalculationInput!) { updateGrowthCalculation(id: $id, input: $input) { id } }`,
+    { id: NO_ID, input: { title: 'E2E probe', inputs: GROWTH_INPUTS, expected_revision: 0 } },
+  ),
+  call(
+    'duplicateGrowthCalculation',
+    `mutation E2eGrowthCopy($id: ID!) { duplicateGrowthCalculation(id: $id, title: "E2E probe") { id } }`,
+    { id: NO_ID },
+  ),
+  call('deleteGrowthCalculation', `mutation E2eGrowthDelete($id: ID!) { deleteGrowthCalculation(id: $id) }`, { id: NO_ID }),
 ];
 
 describe('API · HR, Employee and Targets open only for their own role', { testIsolation: false }, () => {
@@ -119,5 +161,13 @@ describe('API · HR, Employee and Targets open only for their own role', { testI
 
   it('WC-05 a Finance seat cannot file, edit, withdraw or list claims as an employee', () => {
     asRole(OTHER_SEAT, (token) => expectCallsRefused(token, EXPENSE_CALLS));
+  });
+
+  it('WC-06 every Growth Calculator operation is refused signed out and to a member, and nothing is saved', () => {
+    expectOutsidersRefused(memberToken, GROWTH_CALLS);
+  });
+
+  it('WC-07 a Finance seat cannot list, preview, save, edit, duplicate or delete growth calculations', () => {
+    asRole(OTHER_SEAT, (token) => expectCallsRefused(token, GROWTH_CALLS));
   });
 });

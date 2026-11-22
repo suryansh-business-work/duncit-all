@@ -48,11 +48,12 @@ export const WA_SAVE_CONFIG = gql`
   }
 `;
 
+/** Mints a gateway key with the server's own master key and saves it. The key
+ * itself is not selected: the portal never needs to show or hold it. */
 export const WA_GENERATE_API_KEY = gql`
   ${CONNECTION_FIELDS}
-  mutation WaGenerateApiKey($base_url: String!, $master_key: String!) {
-    waGenerateApiKey(base_url: $base_url, master_key: $master_key) {
-      api_key
+  mutation WaGenerateApiKey {
+    waGenerateApiKey {
       connection {
         ...WaConnectionFields
       }
@@ -60,10 +61,11 @@ export const WA_GENERATE_API_KEY = gql`
   }
 `;
 
+/** Starts the session; `restart` stops a stuck engine first. */
 export const WA_CONNECT = gql`
   ${CONNECTION_FIELDS}
-  mutation WaConnect {
-    waConnect {
+  mutation WaConnect($restart: Boolean) {
+    waConnect(restart: $restart) {
       ...WaConnectionFields
     }
   }

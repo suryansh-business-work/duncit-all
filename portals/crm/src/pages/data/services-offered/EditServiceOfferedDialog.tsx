@@ -20,6 +20,12 @@ import {
 } from '../../../api/data.gql';
 import { parseApiError } from '@duncit/utils';
 import ServiceTargetSwitches from './ServiceTargetSwitches';
+import {
+  defaultServiceTargets,
+  hasAnyTarget,
+  pickServiceTargets,
+  type ServiceTargets,
+} from '../../../config/serviceTargets';
 import { useTranslation } from '@duncit/shell';
 
 interface Props {
@@ -33,8 +39,7 @@ export default function EditServiceOfferedDialog({ service, onClose, onSaved }: 
   const { t } = useTranslation();
   const [title, setTitle] = useState('');
   const [isActive, setIsActive] = useState(true);
-  const [venue, setVenue] = useState(true);
-  const [host, setHost] = useState(true);
+  const [targets, setTargets] = useState<ServiceTargets>(defaultServiceTargets);
   const [formError, setFormError] = useState<string | null>(null);
   const [updateMut, { loading }] = useMutation<any>(UPDATE_CRM_SERVICE_OFFERED, {
     refetchQueries: [{ query: CRM_SERVICES_OFFERED }],
@@ -44,8 +49,7 @@ export default function EditServiceOfferedDialog({ service, onClose, onSaved }: 
     if (service) {
       setTitle(service.title);
       setIsActive(service.is_active);
-      setVenue(service.applies_to_venue);
-      setHost(service.applies_to_host);
+      setTargets(pickServiceTargets(service));
       setFormError(null);
     }
   }, [service]);
@@ -57,7 +61,7 @@ export default function EditServiceOfferedDialog({ service, onClose, onSaved }: 
       await updateMut({
         variables: {
           id: service!.id,
-          input: { title: title.trim(), is_active: isActive, applies_to_venue: venue, applies_to_host: host },
+          input: { title: title.trim(), is_active: isActive, ...targets },
         },
       });
       onSaved?.();
@@ -89,17 +93,13 @@ export default function EditServiceOfferedDialog({ service, onClose, onSaved }: 
             label={t('crm.common.active')}
           />
           <Divider flexItem />
-          <ServiceTargetSwitches
-            venue={venue}
-            host={host}
-            onChange={({ venue: v, host: h }) => { setVenue(v); setHost(h); }}
-          />
+          <ServiceTargetSwitches value={targets} onChange={setTargets} />
         </Stack>
       </DialogContent>
       <DialogActions>
         <DuncitButton onClick={onClose}>{t('shell.common.cancel')}</DuncitButton>
-        <DuncitButton variant="contained" onClick={save} disabled={loading || !title.trim() || (!venue && !host)}>
-          {loading ? 'Saving…' : t('shell.common.save')}
+        <DuncitButton variant="contained" onClick={save} disabled={loading || !title.trim() || !hasAnyTarget(targets)}>
+          {loading ? t('shell.common.saving') : t('shell.common.save')}
         </DuncitButton>
       </DialogActions>
     </Dialog>

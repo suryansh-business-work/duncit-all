@@ -121,7 +121,7 @@ function requestPreview(messages: OpenAiMessage[]): string {
 
 const isGeminiModel = (model: string): boolean => model.toLowerCase().startsWith('gemini-');
 
-async function resolveConfig(pinnedModel?: string) {
+export async function resolveConfig(pinnedModel?: string) {
   const pinned = pinnedModel?.trim() ?? '';
   if (isGeminiModel(pinned)) {
     const apiKey = await getRuntimeEnvValue('GEMINI_API_KEY');
@@ -154,7 +154,7 @@ function buildBody(req: OpenAiChatRequest, model: string): string {
 
 /* -------------------------------- recording ----------------------------- */
 
-interface RecordInput {
+export interface RecordInput {
   req: OpenAiChatRequest;
   model: string;
   status: 'SUCCESS' | 'FAILED' | 'SKIPPED';
@@ -170,7 +170,7 @@ interface RecordInput {
  * row could not be written, and the row is worth having even when the call it
  * describes failed.
  */
-function record(input: RecordInput): void {
+export function record(input: RecordInput): void {
   const meta = OPENAI_TASKS[input.req.task];
   openAiUsageService
     .recordUsage({
@@ -195,7 +195,7 @@ function record(input: RecordInput): void {
 
 /* ---------------------------------- call -------------------------------- */
 
-async function readError(res: Response): Promise<string> {
+export async function readError(res: Response): Promise<string> {
   const text = await res.text().catch(() => '');
   try {
     const parsed = JSON.parse(text) as OpenAiChatPayload;

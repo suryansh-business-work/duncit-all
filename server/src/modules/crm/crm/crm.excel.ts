@@ -1,6 +1,7 @@
 import * as XLSX from 'xlsx';
 import { GraphQLError } from 'graphql';
 import { VenueLeadModel, HostLeadModel } from './crm.model';
+import { duplicateMessage, findLeadDuplicates } from '@modules/crm/leadDuplicate/leadDuplicate.service';
 
 export type CrmExcelEntity = 'VENUE_LEAD' | 'HOST_LEAD';
 
@@ -272,19 +273,6 @@ function humanizeImportError(err: any): string {
   return raw || 'Unknown error in this row.';
 }
 
-const last10 = (v: any) => {
-  const d = String(v ?? '').replace(/\D/g, '');
-  return d.length > 10 ? d.slice(-10) : d;
-};
-
-/** True when another lead of this kind already has this contact phone. */
-async function phoneExists(model: any, mobile: string): Promise<boolean> {
-  const d = last10(mobile);
-  if (d.length < 7) return false;
-  const found = await model.findOne({ 'contacts.mobile_number': { $regex: `${d}$` } }).select('_id').lean();
-  return Boolean(found);
-}
-
 export interface ImportColumnMapping {
   /** Canonical lead field (e.g. venue_name). */
   field: string;
@@ -323,13 +311,9 @@ function applyMapping(row: Record<string, any>, mapping: ImportColumnMapping[]):
 async function insertLead(entity: CrmExcelEntity, row: Record<string, any>): Promise<void> {
   const contact = rowToContact(row);
   const contacts = contact ? [contact] : [];
-  const model = entity === 'VENUE_LEAD' ? VenueLeadModel : HostLeadModel;
-  // No duplicate entries — each lead is keyed by a unique contact phone.
-  if (contact?.mobile_number && (await phoneExists(model, contact.mobile_number))) {
-    throw new Error(
-      `A lead with phone "${contact.mobile_number}" already exists — skipped to avoid a duplicate. Remove this row or use a different phone number.`
-    );
-  }
+  // No duplicate entries — a phone, email or website already on any CRM lead skips the row.
+  const [duplicate] = await findLeadDuplicates({ contacts, website: String(row.website ?? '') });
+  if (duplicate) throw new Error(`${duplicateMessage(duplicate)} Row skipped.`);
   if (entity === 'VENUE_LEAD') {
     const name = String(row.venue_name ?? '').trim();
     const city = String(row.city ?? '').trim();

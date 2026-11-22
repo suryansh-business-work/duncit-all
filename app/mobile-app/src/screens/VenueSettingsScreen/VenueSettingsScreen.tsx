@@ -15,11 +15,10 @@ import { useVenuesWithSettings } from '@/hooks/useVenuesWithSettings';
 import { graphqlRequest } from '@/services/graphql.client';
 import { toErrorMessage } from '@/utils/errors';
 import { RefreshScrollView } from '@/components/PullToRefresh';
-import { BookingOffersCard } from './BookingOffersCard';
 
 /**
  * Venue settings — the Tamagui twin of mWeb's /venues/settings (rule 27): the
- * booking-offer terms and the cancellation policy a venue owner writes for
+ * cancellation policy a venue owner writes for
  * bookings at the venue the switcher has picked. The policy's rules are
  * `@duncit/forms/schemas`'; the words are the shared `venueSettings.*` namespace.
  */
@@ -80,11 +79,6 @@ export function VenueSettingsScreen() {
             <Text testID="venue-settings-empty" fontSize={14} color="$muted">
               {t('mweb.venueSettingsPage.noVenues')}
             </Text>
-          ) : null}
-          {venue ? (
-            // Keyed on the venue so switching venues starts a fresh form and
-            // a fresh save state.
-            <BookingOffersCard key={`offers-${venue.id}`} venue={venue} onSaved={refetch} />
           ) : null}
           {venue ? (
             // Keyed on the venue so switching venues starts a fresh form.

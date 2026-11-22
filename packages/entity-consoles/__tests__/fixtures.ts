@@ -203,6 +203,7 @@ export const hostRecord: HostDetail = {
   reviewer_notes: 'Police verification checked.',
   host_commission_pct: 12,
   venue_requests_limit_override: null,
+  pod_min_advance_days_override: null,
   submitted_at: '2026-03-04T07:20:00.000Z',
   approved_at: '2026-03-06T10:05:00.000Z',
   rejected_at: null,

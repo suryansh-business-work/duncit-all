@@ -15,6 +15,7 @@ import { CategoryModel } from '@modules/pods/category/category.model';
 import type { GraphQLContext } from '@context';
 import { hasRole, requireRole } from '@middleware/rbac';
 import { effectiveOfferSettings, requestOfferDefaults, toOfferSettingsPub, type IVenueOfferSettings } from './venue.offerSettings';
+import { venueHostTermsFor } from './venue.hostTerms';
 import {
   consoleEditors,
   consoleGovernors,
@@ -72,6 +73,7 @@ export const venueResolvers = {
     offer_response_hours: async (parent: VenueOfferParent, _a: unknown, ctx: GraphQLContext) =>
       effectiveOfferSettings(parent.settings?.offers, await requestOfferDefaults(ctx)).response_hours,
     offer_min_business: (parent: VenueOfferParent) => toOfferSettingsPub(parent.settings?.offers).min_business,
+    offer_min_spend: (parent: VenueOfferParent) => toOfferSettingsPub(parent.settings?.offers).min_spend,
     // Live pods hosted at this venue. `.exec()` returns a real Promise so the
     // GraphQL executor never adopts a bare Mongoose Query twice.
     pod_count: (parent: { id?: string }) => {
@@ -142,6 +144,8 @@ export const venueResolvers = {
     ) => venueService.publicList(args),
     publicVenue: async (_p: unknown, args: { venue_id: string }) =>
       venueService.getPublicById(args.venue_id),
+    venueHostTerms: async (_p: unknown, args: { venue_ids: string[] }, ctx: GraphQLContext) =>
+      venueHostTermsFor(uid(ctx), args.venue_ids, () => requestOfferDefaults(ctx)),
     matchingVenues: async (
       _p: unknown,
       args: { location_id: string; locality?: string; super_category_id?: string; category_id?: string },

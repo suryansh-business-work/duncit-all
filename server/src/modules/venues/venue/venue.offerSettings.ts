@@ -1,16 +1,18 @@
 /**
- * A venue's own terms for booking offers (Partners > Venue settings > Booking
- * offers): the fewest guests a host may offer for, how many hours either side
- * has to answer an offer or a counter before it expires, and the business it
- * hopes each booking brings. For the first two, 0 means "use the platform's
- * default" (Admin settings), so a venue that never opened the page still has
- * both.
+ * A venue's own terms for booking offers (Partners / mWeb / app > Fees &
+ * Minimum Spend): the fewest guests a host may offer for, how many hours either
+ * side has to answer an offer or a counter before it expires, and the venue's
+ * minimums. For the first two, 0 means "use the platform's default" (Admin
+ * settings), so a venue that never opened the page still has both.
  *
- * The business amounts are the venue's floor: each is the least it takes per
- * guest, per hour or per booking. Create Pod shows them on its offer step, and
- * a host's offer below the amount on its own basis is refused
- * (`assertOfferMeetsMinBusiness`). A basis the venue named no amount for, and a
- * free ask, have no floor.
+ * Two minimums, both rules a host's terms must meet (`venueOffer.minimums`):
+ * - the business amounts — the least the venue takes per guest, per hour or per
+ *   booking, each held against an offer on that basis
+ *   (`assertOfferMeetsMinBusiness`); a basis with no amount has no floor;
+ * - the minimum spend — the least one booking's offer must come to: the rate
+ *   times the fewest guests, times the hours, or the flat price
+ *   (`assertOfferMeetsMinSpend`). It replaces the old silent top-up.
+ * A free ask meets neither: the venue only accepts or declines it.
  */
 import { GraphQLError } from 'graphql';
 import { settingsService } from '@modules/platform/settings/settings.service';
@@ -29,6 +31,8 @@ export interface IVenueOfferSettings {
   response_hours: number;
   /** The least the venue takes, one per pricing basis. */
   min_business: IVenueMinBusiness[];
+  /** The least one booking's offer must come to, in rupees. 0 = none. */
+  min_spend: number;
 }
 
 export const VENUE_OFFER_SETTINGS_MAX = { minGuests: 1000, responseHours: 720 } as const;
@@ -38,6 +42,8 @@ const clampWhole = (value: unknown, max: number, fallback: number) => {
   return Number.isFinite(n) ? Math.min(max, Math.max(0, n)) : fallback;
 };
 
+const round2 = (rupees: number) => Math.round(rupees * 100) / 100;
+
 const isModel = (model: unknown): model is VenueOfferModel => (VENUE_OFFER_MODELS as readonly unknown[]).includes(model);
 
 /** Stored amounts as the API reads them: known bases only, in the pickers' order. */
@@ -45,20 +51,28 @@ const toMinBusinessPub = (rows?: ReadonlyArray<Partial<IVenueMinBusiness>> | nul
   VENUE_OFFER_MODELS.flatMap((model) => {
     const row = (rows ?? []).find((entry) => entry?.model === model);
     const amount = Number(row?.amount);
-    return row && Number.isFinite(amount) && amount > 0 ? [{ model, amount: Math.round(amount * 100) / 100 }] : [];
+    return row && Number.isFinite(amount) && amount > 0 ? [{ model, amount: round2(amount) }] : [];
   });
 
-/** The stored settings as the API reads them; missing fields read as 0 (the default) and no amounts. */
+/** A stored minimum spend as the API reads it: a positive amount, else 0 (none). */
+const toMinSpendPub = (value: unknown): number => {
+  const amount = Number(value);
+  return Number.isFinite(amount) && amount > 0 ? round2(amount) : 0;
+};
+
+/** The stored settings as the API reads them; missing fields read as 0 (the default / none) and no amounts. */
 export const toOfferSettingsPub = (s?: Partial<IVenueOfferSettings> | null): IVenueOfferSettings => ({
   min_guests: clampWhole(s?.min_guests, VENUE_OFFER_SETTINGS_MAX.minGuests, 0),
   response_hours: clampWhole(s?.response_hours, VENUE_OFFER_SETTINGS_MAX.responseHours, 0),
   min_business: toMinBusinessPub(s?.min_business),
+  min_spend: toMinSpendPub(s?.min_spend),
 });
 
-const refuse = (message: string) => new GraphQLError(message, { extensions: { code: 'BAD_USER_INPUT', field: 'min_business' } });
+const refuse = (message: string, field = 'min_business') =>
+  new GraphQLError(message, { extensions: { code: 'BAD_USER_INPUT', field } });
 
 /**
- * A host's opening offer meets the venue's amount on the basis it pays on, or
+ * A host's terms meet the venue's amount on the basis they pay on, or
  * BELOW_MIN_BUSINESS. A basis with no amount, and a free ask, pass. Client twin:
  * `venueOfferFloor` in @duncit/utils.
  */
@@ -75,6 +89,25 @@ export function assertOfferMeetsMinBusiness(
   throw new GraphQLError(`This venue takes offers of at least ${floor.amount} on this basis — raise your offer`, {
     extensions: { code: 'BAD_USER_INPUT', reason: 'BELOW_MIN_BUSINESS', field: 'venue_offer_rate', min: floor.amount, model },
   });
+}
+
+/**
+ * A host's terms come to at least the venue's minimum spend, or
+ * BELOW_MIN_SPEND with the minimum, what the offer comes to and the shortfall.
+ * `offered` is the offer's own amount at the fewest guests — the price
+ * calculation's `base`, before the venue's rules, fees and GST. No minimum, and
+ * a free ask, pass. Client twin: `offerMinSpendShortfall` in @duncit/utils.
+ */
+export function assertOfferMeetsMinSpend(minSpend: unknown, model: unknown, offered: number): void {
+  const min = toMinSpendPub(minSpend);
+  if (!isModel(model) || min === 0) return;
+  const amount = round2(Math.max(0, Number(offered) || 0));
+  if (amount >= min) return;
+  const shortfall = round2(min - amount);
+  throw new GraphQLError(
+    `This venue's minimum spend is ${min} per booking — your offer comes to ${amount}, ${shortfall} short. Raise your offer`,
+    { extensions: { code: 'BAD_USER_INPUT', reason: 'BELOW_MIN_SPEND', field: 'venue_offer_rate', min, offered: amount, shortfall } }
+  );
 }
 
 /**
@@ -95,23 +128,31 @@ export function cleanMinBusiness(raw: unknown): IVenueMinBusiness[] {
   return toMinBusinessPub(raw as IVenueMinBusiness[]);
 }
 
+/** The minimum spend an owner (or staff) sends: 0 (none) or a positive amount within an offer's bound. */
+export function cleanMinSpend(raw: unknown): number {
+  const amount = Number(raw);
+  if (!Number.isFinite(amount) || amount < 0) throw refuse('Enter a minimum spend of 0 or more', 'min_spend');
+  if (amount > MAX_OFFER_RATE) throw refuse('This amount is too large', 'min_spend');
+  return toMinSpendPub(amount);
+}
+
+const given = (value: unknown) => value !== undefined && value !== null;
+
 /** An owner's (or staff) edit, laid over what is stored. Out-of-range numbers are clamped; amounts are checked. */
 export function normalizeOfferSettingsInput(
   base: IVenueOfferSettings,
   input: Partial<Record<keyof IVenueOfferSettings, unknown>>
 ): IVenueOfferSettings {
   return {
-    min_guests:
-      input.min_guests === undefined || input.min_guests === null
-        ? base.min_guests
-        : clampWhole(input.min_guests, VENUE_OFFER_SETTINGS_MAX.minGuests, base.min_guests),
-    response_hours:
-      input.response_hours === undefined || input.response_hours === null
-        ? base.response_hours
-        : clampWhole(input.response_hours, VENUE_OFFER_SETTINGS_MAX.responseHours, base.response_hours),
-    // Left out (an app from before the amounts): they stay as they are.
-    min_business:
-      input.min_business === undefined || input.min_business === null ? base.min_business : cleanMinBusiness(input.min_business),
+    min_guests: given(input.min_guests)
+      ? clampWhole(input.min_guests, VENUE_OFFER_SETTINGS_MAX.minGuests, base.min_guests)
+      : base.min_guests,
+    response_hours: given(input.response_hours)
+      ? clampWhole(input.response_hours, VENUE_OFFER_SETTINGS_MAX.responseHours, base.response_hours)
+      : base.response_hours,
+    // Left out (an app from before these fields): they stay as they are.
+    min_business: given(input.min_business) ? cleanMinBusiness(input.min_business) : base.min_business,
+    min_spend: given(input.min_spend) ? cleanMinSpend(input.min_spend) : base.min_spend,
   };
 }
 

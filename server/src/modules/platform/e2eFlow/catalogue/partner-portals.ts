@@ -1888,6 +1888,35 @@ export const PARTNER_PORTAL_FLOWS: readonly CatalogueFlow[] = [
         steps: [
           ['Click a club row outside the Actions cell', 'Navigates to /club-admin/clubs/<clubId>/edit'],
           ['Go back and click the "Pods" button in Actions', 'Navigates to /club-admin/clubs/<clubId>'],
+          ['Go back and click the "Hosts" button in Actions', 'Navigates to /club-admin/clubs/<clubId>/hosts'],
+        ],
+      },
+      {
+        name: 'Club hosts table',
+        description:
+          'clubAdminClubHostsTable + clubAdminClubHostsSummary: every host of the club (linked host_ids UNION hosts of its non-cancelled pods) with contacts, last completed pod, this month (admin time zone) against the Pod Settings target, score and engagement status.',
+        steps: [
+          ['Open /club-admin/clubs/<clubId>/hosts for a club you administer', 'Header "Club Admin · Hosts", the club name, a "Back to clubs" button and the hosts table'],
+          ['Look at a host who completed 6 pods this month with a target of 8', 'This month "6 / 8", Score 75% with a bar, phone / WhatsApp / email chips that open tel:, wa.me and mailto:'],
+          ['Look at a host with no completed pod in the last 14 days (Pod Settings inactivity window)', 'The row is yellow with an "Inactive" chip; "No pod yet" when they never completed one'],
+          ['Read the warning above the table', '"<n> hosts have not run a pod in the last 14 days" asking you to call or message them; "Every host has run a pod in the last 14 days." when none is quiet'],
+          ['Search "Search hosts" by an email', 'Only the matching host remains'],
+          ['Click a host row', 'Navigates to /club-admin/clubs/<clubId>/hosts/<userId>'],
+          ['Open /club-admin/clubs/<otherClubId>/hosts for a club you do NOT administer', 'The page shows "You do not administer this club" and no host rows'],
+        ],
+      },
+      {
+        name: 'Host page: contact, score, engagement and pods',
+        description:
+          'clubAdminHostDetail, setClubHostEngagement and clubAdminPodsTable(lifecycle) pinned to the host.',
+        steps: [
+          ['Open an inactive host\'s page', 'Warning "<name> has not run a pod in the last 14 days" with Call, WhatsApp and Email buttons, and "help them conduct more pods"'],
+          ['Read "Performance this month"', 'Score %, "<done> of <target> pods completed", last pod date, upcoming count and up to six previous months from the monthly snapshots'],
+          ['Pick "Contacted" in Engagement status, type a note and click "Save status"', 'Toast "Engagement status saved." and "Last updated <date>"; the hosts table now shows "Contacted"'],
+          ['Open the Status list after an admin switched "Parked" off in Pod Settings', '"Parked" is not offered; a host already filed under it shows "Parked (no longer offered)"'],
+          ['Call setClubHostEngagement with an unknown key or for a user who hosts another club', 'BAD_USER_INPUT "Pick one of the active engagement statuses." / "This person is not a host of this club."'],
+          ['Click the "Past pods" tab', 'URL gains ?tab=past and the table lists only this host\'s completed pods in this club; "Upcoming pods" lists their scheduled ones'],
+          ['Open /club-admin/clubs/<clubId>/hosts/<userId> for a user who does not host the club', '"This person does not host pods in this club." with "Back to hosts"'],
         ],
       },
       {

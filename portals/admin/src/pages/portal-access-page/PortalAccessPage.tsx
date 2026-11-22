@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client/react';
 import { Box, Stack, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
 import LockPersonIcon from '@mui/icons-material/LockPerson';
@@ -45,13 +45,6 @@ export default function PortalAccessPage() {
     },
     [status]
   );
-
-  const prevStatusRef = useRef(status);
-  useEffect(() => {
-    if (prevStatusRef.current === status) return;
-    prevStatusRef.current = status;
-    refetchRef.current?.();
-  }, [status]);
 
   const handleApprove = async (row: PortalAccessRequest) => {
     const vars = { name: row.subject_name ?? '—', portal: portalNameOf(row.target_id) };

@@ -31,6 +31,14 @@ export interface PaymentFailure {
    * per declined card would bury the ones that matter.
    */
   raisesTicket: boolean;
+  /**
+   * Razorpay's `reason`, `source` and `step`, verbatim. Never shown to the
+   * buyer — they go to the server's failure log, where Finance tells a bank
+   * decline from a gateway fault. Optional so a hand-built failure stays valid.
+   */
+  reason?: string | null;
+  source?: string | null;
+  step?: string | null;
 }
 
 /** The `error` object Razorpay hands to a `payment.failed` listener. */
@@ -67,7 +75,17 @@ export function classifyPaymentFailure(raw: RazorpayErrorLike | null | undefined
 
   // Nothing to go on means the sheet was closed by hand.
   if (!raw) {
-    return { kind: 'CANCELLED', code, description, paymentId: null, orderId: null, raisesTicket: false };
+    return {
+      kind: 'CANCELLED',
+      code,
+      description,
+      paymentId: null,
+      orderId: null,
+      raisesTicket: false,
+      reason: null,
+      source: null,
+      step: null,
+    };
   }
 
   const timedOut = TIMEOUT_REASONS.has(reason) || /tim(e|ed)\s*.?\s*out/.test(blob);
@@ -86,6 +104,9 @@ export function classifyPaymentFailure(raw: RazorpayErrorLike | null | undefined
     paymentId: text(raw?.metadata?.payment_id) || null,
     orderId: text(raw?.metadata?.order_id) || null,
     raisesTicket: kind === 'TIMEOUT',
+    reason: text(raw.reason) || null,
+    source: text(raw.source) || null,
+    step: text(raw.step) || null,
   };
 }
 
@@ -114,7 +135,7 @@ export interface PaymentTicketContext {
 export function paymentTicketDraft(
   failure: PaymentFailure,
   context: PaymentTicketContext
-): { subject: string; body_text: string; category: 'PAYMENT' } {
+): { subject: string; body_text: string; category: 'PAYMENT'; payment_id?: string } {
   const amount =
     typeof context.amount === 'number'
       ? `${context.currencySymbol ?? '₹'}${context.amount.toLocaleString('en-IN')}`
@@ -138,5 +159,103 @@ export function paymentTicketDraft(
     subject: `Payment timed out — ${context.description}`,
     body_text: lines.join('\n'),
     category: 'PAYMENT',
+    // Links the ticket to the payment so a later "money was deducted" claim
+    // reuses it instead of opening a second ticket for the same debit.
+    ...(context.paymentDocId ? { payment_id: context.paymentDocId } : {}),
+  };
+}
+
+/** What a checkout's failure dialog reads — the same state on mWeb and the native app. */
+export interface PaymentFailureState {
+  failure: PaymentFailure | null;
+  /** The reference to show. Null while it is still being raised. */
+  ticketNo: string | null;
+  ticketPending: boolean;
+  ticketFailed: boolean;
+  /** Duncit's payment the failure belongs to — what a deduction claim is filed against. */
+  paymentDocId: string | null;
+}
+
+/** Nothing has failed yet. */
+export const EMPTY_PAYMENT_FAILURE_STATE: PaymentFailureState = {
+  failure: null,
+  ticketNo: null,
+  ticketPending: false,
+  ticketFailed: false,
+  paymentDocId: null,
+};
+
+/** What the checkout knows at the moment of failure. */
+export type PaymentFailureContext = PaymentTicketContext &
+  Pick<PaymentFailureReportContext, 'razorpayOrderId'>;
+
+/** How a checkout uses the failure hook. */
+export interface PaymentFailureOptions {
+  /** Pod checkout only: record every failure on the server (`reportPaymentFailure`). */
+  reportToServer?: boolean;
+}
+
+/** What the checkout knows about the attempt that the gateway's error does not. */
+export interface PaymentFailureReportContext {
+  /** Duncit's Payment document the order was created for (`payment_doc_id`). */
+  paymentDocId?: string | null;
+  /**
+   * The Razorpay order the sheet was opened for. A hand-closed sheet reports no
+   * metadata at all, so without this a cancellation could not be matched.
+   */
+  razorpayOrderId?: string | null;
+  /** Whether the dialog offered Retry. */
+  retryShown: boolean;
+  /** 1-based count of failures in this checkout on this device. */
+  attemptNumber: number;
+  /** Idempotency key — one per report, so a resend is recorded once. */
+  clientRequestId: string;
+}
+
+/** The `ReportPaymentFailureInput` the server's `reportPaymentFailure` takes. */
+export interface PaymentFailureReportInput {
+  payment_doc_id: string;
+  kind: PaymentFailureKind;
+  razorpay_payment_id: string | null;
+  razorpay_order_id: string | null;
+  error_code: string | null;
+  error_description: string | null;
+  error_reason: string | null;
+  error_source: string | null;
+  error_step: string | null;
+  retry_shown: boolean;
+  attempt_number: number;
+  client_request_id: string;
+}
+
+/**
+ * The variables both apps send to `reportPaymentFailure`, built once so the
+ * server's failure log reads the same whichever app the buyer was on.
+ *
+ * Null when there is no Duncit payment to attach the report to — the order
+ * was never created, so there is nothing for Finance to look up.
+ */
+export function paymentFailureReportInput(
+  failure: PaymentFailure,
+  context: PaymentFailureReportContext
+): PaymentFailureReportInput | null {
+  const paymentDocId = text(context.paymentDocId).trim();
+  if (!paymentDocId) return null;
+  const attempt = Number.isFinite(context.attemptNumber) ? Math.floor(context.attemptNumber) : 1;
+  return {
+    payment_doc_id: paymentDocId,
+    kind: failure.kind,
+    razorpay_payment_id: failure.paymentId,
+    // The gateway's own word wins; the order we opened the sheet for fills in
+    // when it said nothing (a dismissal).
+    razorpay_order_id: failure.orderId ?? (text(context.razorpayOrderId) || null),
+    error_code: failure.code,
+    error_description: failure.description,
+    error_reason: failure.reason ?? null,
+    error_source: failure.source ?? null,
+    error_step: failure.step ?? null,
+    retry_shown: context.retryShown,
+    attempt_number: Math.max(1, attempt),
+    client_request_id: context.clientRequestId,
   };
 }

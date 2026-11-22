@@ -37,6 +37,8 @@ export const entityAnalyticsTypeDefs = /* GraphQL */ `
     CONTACTS
     "How the app is used — people, sessions, screens and retention, from the app's own events (Analytics > Product)."
     PRODUCT
+    "Every email validation any console ran, and how the addresses turned out (Admin > Email Validations)."
+    EMAIL_VALIDATIONS
   }
 
   "What kind of number a value is, so the console formats it."

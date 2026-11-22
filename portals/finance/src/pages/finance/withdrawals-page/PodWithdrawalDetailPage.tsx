@@ -12,7 +12,7 @@ import { useTranslation } from '@duncit/app-settings';
 import {
   POD_WITHDRAWALS_TABLE,
   POD_WITHDRAWAL_SUMMARY,
-  REVIEW_WITHDRAWAL,
+  RETRY_WITHDRAWAL_PAYOUT,
   type PodWithdrawalGroup,
   type WithdrawalRow,
 } from './queries';
@@ -23,8 +23,6 @@ import WithdrawalsTable from './WithdrawalsTable';
 interface SummaryData {
   podWithdrawalSummary: PodWithdrawalGroup | null;
 }
-
-type RejectTarget = { id: string; name: string };
 
 /**
  * Withdrawal Payments, level 2: every request raised against ONE pod.
@@ -39,9 +37,8 @@ export default function PodWithdrawalDetailPage() {
   const navigate = useNavigate();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
-  const [reject, setReject] = useState<RejectTarget | null>(null);
-  const [payTarget, setPayTarget] = useState<WithdrawalRow | null>(null);
-  const [review, { loading: reviewing }] = useMutation<any>(REVIEW_WITHDRAWAL);
+  const [reviewId, setReviewId] = useState<string | null>(null);
+  const [retry, { loading: retrying }] = useMutation(RETRY_WITHDRAWAL_PAYOUT);
 
   const { data, loading, error, refetch } = useQuery<SummaryData>(POD_WITHDRAWAL_SUMMARY, {
     variables: { pod_id: podId },
@@ -60,33 +57,30 @@ export default function PodWithdrawalDetailPage() {
     [podId],
   );
 
+  // The list and the header both re-read after any change: the header's
+  // Pending/Approved reads across every request on this pod, so one payment can
+  // settle the whole pod.
+  const refreshAll = useCallback(() => {
+    refetchRef.current?.();
+    refetch().catch(() => undefined);
+  }, [refetch]);
+
   // Never rejects — errors surface via the toast, so callers can fire-and-forget.
-  const submit = useCallback(
-    async (id: string, nextStatus: 'PAID' | 'REJECTED', why?: string) => {
+  const retryPayout = useCallback(
+    async (w: WithdrawalRow) => {
       try {
-        await review({ variables: { id, input: { status: nextStatus, reason: why } } });
-        setReject(null);
-        setPayTarget(null);
-        notifySuccess(nextStatus === 'PAID' ? 'Marked as paid' : 'Withdrawal rejected');
-        refetchRef.current?.();
-        // The header's Pending/Approved reads across every request on this pod,
-        // so it has to re-read too — one payment can settle the whole pod.
-        refetch().catch(() => undefined);
+        await retry({ variables: { id: w.id } });
+        notifySuccess(t('finance.payouts.toastRetried'));
+        refreshAll();
       } catch (e) {
         notifyError(parseApiError(e));
       }
     },
-    [review, refetch],
+    [retry, refreshAll, t],
   );
 
-  const openMarkPaid = useCallback((w: WithdrawalRow) => setPayTarget(w), []);
-  const openReject = useCallback(
-    (w: WithdrawalRow) => setReject({ id: w.id, name: w.beneficiary_name }),
-    [],
-  );
-  const confirmMarkPaid = useCallback(() => {
-    if (payTarget) submit(payTarget.id, 'PAID');
-  }, [payTarget, submit]);
+  const openReview = useCallback((w: WithdrawalRow) => setReviewId(w.id), []);
+  const closeReview = useCallback(() => setReviewId(null), []);
 
   return (
     <QueryGuard
@@ -154,21 +148,13 @@ export default function PodWithdrawalDetailPage() {
               podId={summary.pod_id}
               fetchRows={fetchRows}
               refetchRef={refetchRef}
-              reviewing={reviewing}
+              busy={retrying}
               emptyText={t('finance.withdrawals.detailEmpty')}
-              onMarkPaid={openMarkPaid}
-              onReject={openReject}
+              onReview={openReview}
+              onRetry={retryPayout}
             />
 
-            <WithdrawalReviewDialogs
-              payTarget={payTarget}
-              rejectTarget={reject}
-              busy={reviewing}
-              onClosePay={() => setPayTarget(null)}
-              onCloseReject={() => setReject(null)}
-              onConfirmPay={confirmMarkPaid}
-              onSubmitReject={(id, reason) => submit(id, 'REJECTED', reason)}
-            />
+            <WithdrawalReviewDialogs reviewId={reviewId} onClose={closeReview} onDecided={refreshAll} />
           </Box>
         );
       }}

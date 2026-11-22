@@ -64,6 +64,23 @@ describe('describeRequest', () => {
   it('has no ip when the framework gave none', () => {
     expect(describeRequest(request({ ip: undefined }), 'REST').request.ip).toBe('');
   });
+
+  it('counts an operation the server runs for an integration under the label the server gave it, not the headers', () => {
+    const user = { id: 'u1', roles: ['MCP_USER'], email: 'a@b.com' };
+    const spoofed = request({ headers: { 'x-api-key': 'k', 'x-duncit-surface': 'portal', [APP_HEADER]: 'tech' } });
+    const { request: r } = describeRequest(spoofed, 'GRAPHQL', user, { surface: 'API', app: 'mcp-tools' });
+    expect(r).toMatchObject({ surface: 'API', app: 'mcp-tools', userId: 'u1', roles: ['MCP_USER'] });
+  });
+
+  it('normalises a server label like any declared one', () => {
+    const { request: r } = describeRequest(request(), 'GRAPHQL', null, { surface: 'nowhere', app: 'Has Spaces' });
+    expect(r).toMatchObject({ surface: 'UNKNOWN', app: '-' });
+  });
+
+  it('calls a declared API surface without a key the public API', () => {
+    const { request: r } = describeRequest(request({ headers: { 'x-duncit-surface': 'api', [APP_HEADER]: 'tech' } }), 'REST');
+    expect(r).toMatchObject({ surface: 'API', app: 'public-api' });
+  });
 });
 
 describe('rateLimitMiddleware', () => {
@@ -181,6 +198,13 @@ describe('rateLimitPlugin', () => {
     expect((evaluate as jest.Mock).mock.calls[0][0]).toMatchObject({
       channel: 'GRAPHQL', operation: 'loginWithOtp', fields: ['loginWithOtp', 'sendOtp'], operationType: 'MUTATION',
     });
+  });
+
+  it('passes the label an MCP tool call carries on its context to the enforcer', async () => {
+    const ctx = ctxFor('mutation { createPod }');
+    const contextValue = { ...ctx.contextValue, user: { id: 'u1', roles: [] }, client: { surface: 'API', app: 'mcp-tools' } };
+    await (await didResolve())({ ...ctx, contextValue });
+    expect((evaluate as jest.Mock).mock.calls[0][0]).toMatchObject({ surface: 'API', app: 'mcp-tools', userId: 'u1', operationType: 'MUTATION' });
   });
 
   it('refuses a document over its limit with a 429 GraphQL error carrying the headers', async () => {

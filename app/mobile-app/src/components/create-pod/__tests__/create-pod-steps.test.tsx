@@ -631,7 +631,6 @@ describe('VenueOfferStep', () => {
       hours: 2,
       base: 1000,
       rules: [],
-      min_spend_top_up: 0,
       cleaning_fee: 0,
       pet_fee: 0,
       gst_pct: 18,

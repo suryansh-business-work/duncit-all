@@ -29,6 +29,7 @@ const config: CrmOptionGroup = {
   priorities: ['High', 'Medium'], host_types: [], host_interests: [], audience_sizes: [], frequencies: [],
   revenue_models: [], host_intent_scores: [], services_offered_options: ['Catering'],
   venue_services_offered_options: [], host_services_offered_options: [],
+  creator_platforms: [], collaboration_types: [], community_types: [], community_platforms: [],
 };
 
 const configMock = (value: object = config): MockedResponse => ({
@@ -84,7 +85,7 @@ describe('EcommLeadEditorPage', () => {
     expect(screen.queryByRole('button', { name: 'Update ecomm lead' })).toBeNull();
   });
 
-  it('saves the edited lead through updateEcommLead and returns to the list', async () => {
+  it('saves the edited lead through updateEcommLead and returns to its detail page, not the list', async () => {
     const update = vi.fn(() => ({ data: { updateEcommLead: lead } }));
     renderEditor('/ecomm-leads/ecomm-1', '/ecomm-leads/:id', [
       configMock(),
@@ -101,8 +102,31 @@ describe('EcommLeadEditorPage', () => {
 
     fireEvent.click(await screen.findByRole('button', { name: 'Update ecomm lead' }));
 
-    await waitFor(() => expect(screen.getByTestId('location')).toHaveTextContent(/^\/ecomm-leads$/));
+    await waitFor(() => expect(screen.getByTestId('location')).toHaveTextContent(/^\/ecomm-leads\/ecomm-1\/view$/));
     expect(update).toHaveBeenCalledTimes(1);
+  });
+
+  it('Update & Continue saves the edited lead and stays on its editor', async () => {
+    const update = vi.fn(() => ({ data: { updateEcommLead: lead } }));
+    renderEditor('/ecomm-leads/ecomm-1', '/ecomm-leads/:id', [
+      configMock(),
+      superCategoriesMock,
+      leadQueryMock({ ...lead, matched_user: null }),
+      {
+        request: {
+          query: UPDATE_ECOMM_LEAD,
+          variables: { id: 'ecomm-1', input: toEcommLeadInput(fromEcommLead(lead)) },
+        },
+        result: update,
+      },
+    ]);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Update & Continue' }));
+
+    expect(await screen.findByText('Lead updated. Keep editing or go back when you are done.')).toBeInTheDocument();
+    expect(update).toHaveBeenCalledTimes(1);
+    expect(screen.getByTestId('location')).toHaveTextContent(/^\/ecomm-leads\/ecomm-1$/);
+    expect(screen.getByRole('heading', { level: 1, name: 'Edit Kavya Iyer' })).toBeInTheDocument();
   });
 
   it('creates a new lead through createEcommLead and returns to the list', async () => {
@@ -230,8 +254,8 @@ describe('EcommLeadsPage', () => {
     expect(screen.getByTestId('location')).toHaveTextContent('/ecomm-leads/new');
 
     // The tooltip around the button takes over its accessible name, so find it by its text.
-    fireEvent.click(screen.getByText('Manage Ecomm Services').closest('button') as HTMLElement);
-    expect(screen.getByTestId('location')).toHaveTextContent('/ecomm-leads/services');
+    fireEvent.click(screen.getByText('Manage Services').closest('button') as HTMLElement);
+    expect(screen.getByTestId('location')).toHaveTextContent(/^\/data\/services-offered$/);
 
     fireEvent.click(screen.getByLabelText('Edit lead'));
     expect(screen.getByTestId('location')).toHaveTextContent(/^\/ecomm-leads\/ecomm-1$/);

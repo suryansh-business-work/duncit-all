@@ -15,6 +15,8 @@ export const serviceOfferedTypeDefs = gql`
     applies_to_venue: Boolean!
     applies_to_host: Boolean!
     applies_to_ecomm: Boolean!
+    applies_to_creator: Boolean!
+    applies_to_community: Boolean!
     is_active: Boolean!
     sort_order: Int!
     created_at: String
@@ -29,6 +31,8 @@ export const serviceOfferedTypeDefs = gql`
     applies_to_venue: Boolean
     applies_to_host: Boolean
     applies_to_ecomm: Boolean
+    applies_to_creator: Boolean
+    applies_to_community: Boolean
     search: String
   }
 
@@ -47,6 +51,8 @@ export const serviceOfferedTypeDefs = gql`
     applies_to_venue: Boolean
     applies_to_host: Boolean
     applies_to_ecomm: Boolean
+    applies_to_creator: Boolean
+    applies_to_community: Boolean
     titles: [String!]!
   }
 
@@ -57,6 +63,8 @@ export const serviceOfferedTypeDefs = gql`
     applies_to_venue: Boolean
     applies_to_host: Boolean
     applies_to_ecomm: Boolean
+    applies_to_creator: Boolean
+    applies_to_community: Boolean
   }
 
   extend type Query {

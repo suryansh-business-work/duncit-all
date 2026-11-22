@@ -55,6 +55,8 @@ import {
   isFontFamily,
   META_NAME,
   isMetaName,
+  PAYMENT_TRANSACTION_ID,
+  isPaymentTransactionId,
   FSSAI_NUMBER,
   isFssaiNumber,
   YOUTUBE_URL,
@@ -575,6 +577,27 @@ describe('META_NAME / isMetaName', () => {
   it('rejects anything that could break out of the attribute it is written into', () => {
     for (const name of ['', '1robots', ':og', 'og locale', 'og"', "og'", 'og>', 'og<x', 'og=1', `a${'b'.repeat(80)}`]) {
       expect(isMetaName(name)).toBe(false);
+    }
+  });
+});
+
+describe('PAYMENT_TRANSACTION_ID / isPaymentTransactionId', () => {
+  it('accepts a Razorpay payment id, a bank UTR and an RRN as a buyer copies them', () => {
+    for (const ref of ['pay_29QQoUBi66xm2f', 'HDFCR52026112212345678', '432112345678', 'UPI-REF_2026', 'abc123', 'A'.repeat(40)]) {
+      expect(isPaymentTransactionId(ref)).toBe(true);
+      expect(PAYMENT_TRANSACTION_ID.test(ref)).toBe(true);
+    }
+  });
+
+  it('refuses a reference shorter than 6 or longer than 40 characters', () => {
+    for (const ref of ['', 'a', 'pay_1', 'A'.repeat(41)]) {
+      expect(isPaymentTransactionId(ref)).toBe(false);
+    }
+  });
+
+  it('refuses spaces, punctuation and anything that is not a single reference', () => {
+    for (const ref of [' pay_29QQoUBi66xm2f', 'pay_29QQ oUBi66', 'pay.29QQoUBi66', 'UTR:43211234', 'pay_29QQ/oUBi', 'ref#123456', 'पे123456']) {
+      expect(isPaymentTransactionId(ref)).toBe(false);
     }
   });
 });

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, type ReactNode } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import { useTranslation } from '@duncit/shell';
 import { DuncitTable, actionsColumn, clientTableFetch, type DuncitColumn } from '@duncit/table';
 import { getRowId, namedActions, renderNameCell } from '../cells';
@@ -26,7 +26,6 @@ export default function SubFlowsTable({
   onDelete,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const refetchRef = useRef<(() => void) | null>(null);
   const columns = useMemo<DuncitColumn<E2eSubFlow>[]>(() => {
     const labels = reviewLabels(t);
     return [
@@ -65,12 +64,6 @@ export default function SubFlowsTable({
     [subFlows, columns]
   );
 
-  // The table fetches once per query change, not per new fetch function — so a
-  // saved or deleted sub flow has to ask it to read the new list.
-  useEffect(() => {
-    refetchRef.current?.();
-  }, [fetchRows]);
-
   return (
     <DuncitTable<E2eSubFlow>
       ariaLabel={t('tech.e2eFlows.colSubFlows')}
@@ -81,7 +74,6 @@ export default function SubFlowsTable({
       emptyText={t('tech.e2eFlows.subFlowsEmpty')}
       searchPlaceholder={t('tech.e2eFlows.subFlowsSearch')}
       toolbarActions={toolbarActions}
-      refetchRef={refetchRef}
       onRowClick={onOpen}
     />
   );

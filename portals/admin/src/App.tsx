@@ -23,6 +23,7 @@ import SomethingForYouPage from './pages/something-for-you/SomethingForYouPage';
 import { MembershipPlansPage, MembershipSubscribersPage } from './pages/membership';
 import ApprovalsPage from './pages/approvals-page';
 import PortalAccessPage from './pages/portal-access-page';
+import { EmailValidationLogsPage, EmailValidationsDashboardPage } from './pages/email-validations';
 import { getToken } from './lib/session';
 
 export default function App() {
@@ -51,6 +52,9 @@ export default function App() {
                   <Route path="/membership/subscribers" element={<MembershipSubscribersPage />} />
                   <Route path="/approvals" element={<ApprovalsPage />} />
                   <Route path="/portal-access" element={<PortalAccessPage />} />
+                  <Route path="/email-validations/dashboard" element={<EmailValidationsDashboardPage />} />
+                  <Route path="/email-validations/logs" element={<EmailValidationLogsPage />} />
+                  <Route path="/email-validations" element={<Navigate to="/email-validations/dashboard" replace />} />
                   <Route path="/upload-settings/portals" element={<PortalsUploadSettingPage />} />
                   <Route path="/upload-settings/mobile" element={<MobileUploadSettingPage />} />
                   <Route path="/upload-settings/mweb" element={<MwebUploadSettingPage />} />

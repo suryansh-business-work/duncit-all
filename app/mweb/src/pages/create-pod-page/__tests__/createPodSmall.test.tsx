@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, fireEvent, render, renderHook, screen, waitFor } from '@testing-library/react';
-import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
+import { MemoryRouter, Route, Routes, useLocation, useNavigationType } from 'react-router';
 import { useForm } from 'react-hook-form';
 import type { ReactNode } from 'react';
 import { z } from 'zod';
@@ -50,7 +50,11 @@ vi.mock('@duncit/logs', async (orig) => {
   return { ...real, logs: { ...real.logs, mWeb: { ...real.logs.mWeb, warn: h.warn } } };
 });
 
-const Where = () => <div data-testid="where">{useLocation().pathname}</div>;
+const Where = () => (
+  <div data-testid="where" data-nav={useNavigationType()}>
+    {useLocation().pathname}
+  </div>
+);
 const inRouter = (ui: ReactNode, entry = '/') =>
   render(
     <MemoryRouter initialEntries={[entry]}>
@@ -119,6 +123,8 @@ describe('useCreatePodPublish', () => {
   it('sends the host to Host Management once the pod is live and needs no challenge', async () => {
     await publishWith({ id: 'pod2', venue_approval_status: 'APPROVED' });
     expect(screen.getByTestId('where')).toHaveTextContent('/host/manage');
+    // The published draft's URL is replaced, so Back cannot reopen it empty.
+    expect(screen.getByTestId('where')).toHaveAttribute('data-nav', 'REPLACE');
   });
 
   it('takes the host to set up the challenge when the pod category requires one', async () => {

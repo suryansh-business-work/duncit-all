@@ -166,6 +166,8 @@ export const venueOfferTypeDefs = /* GraphQL */ `
   type VenueOfferQuoteResult {
     ok: Boolean!
     message: String
+    "Why the terms cannot be sent, when the server names it: BELOW_MIN_SPEND, BELOW_MIN_BUSINESS, BELOW_VENUE_MINIMUM, …"
+    reason: String
     quote: VenuePriceBreakdown
     quote_min: VenuePriceBreakdown
   }

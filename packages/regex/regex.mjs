@@ -336,6 +336,19 @@ export const META_NAME = /^[A-Za-z][\w:.-]{0,79}$/;
 export const isMetaName = (v) => META_NAME.test(v);
 
 /**
+ * A payment's transaction reference as a buyer copies it out of their bank or
+ * UPI app — a Razorpay payment id (`pay_29QQoUBi66xm2f`), a bank UTR or an
+ * RRN: 6–40 letters, digits, `_` or `-`. No spaces or punctuation, so a
+ * pasted sentence is refused rather than filed. One character class with a
+ * bounded count, so it is linear. The server judges a deduction claim with the
+ * same pattern.
+ */
+export const PAYMENT_TRANSACTION_ID = /^[A-Za-z0-9_-]{6,40}$/;
+
+/** Payment transaction-reference shape check. Trim before calling it. */
+export const isPaymentTransactionId = (v) => PAYMENT_TRANSACTION_ID.test(v);
+
+/**
  * A fully-qualified hostname such as `ns1.example.com`: at least two labels,
  * each a {@link HOSTNAME_LABEL}, 253 characters at most. A trailing dot (the
  * root) is accepted. Case-insensitive, as DNS is.

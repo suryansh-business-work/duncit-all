@@ -33,14 +33,15 @@ export function useCreatePodPublish() {
     if (!created) throw new Error(t('mweb.createPod.createFailed'));
     // Venue bookings are instant now, so a new pod comes back APPROVED and lands
     // where a live pod lands. PENDING is kept only for older pods still waiting
-    // on a venue (native twin, rule 27).
+    // on a venue (native twin, rule 27). The draft's URL is replaced: the
+    // draft is gone, so Back must not reopen it as an empty form.
     if (created.venue_approval_status === 'PENDING') {
-      navigate(`/host/pod-pending/${created.id}`);
+      navigate(`/host/pod-pending/${created.id}`, { replace: true });
     } else if (await challengeRequired(created.id)) {
       // The pod's category requires a challenge: take the host to set it up.
-      navigate(hostPodChallengesPath(created.id));
+      navigate(hostPodChallengesPath(created.id), { replace: true });
     } else {
-      navigate('/host/manage');
+      navigate('/host/manage', { replace: true });
     }
   };
 }

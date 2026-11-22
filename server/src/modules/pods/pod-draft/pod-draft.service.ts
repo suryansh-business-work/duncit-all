@@ -1,5 +1,5 @@
 import { GraphQLError } from 'graphql';
-import { Types } from 'mongoose';
+import { Types, isObjectIdOrHexString } from 'mongoose';
 import { PodDraftModel, type IPodDraft } from './pod-draft.model';
 import { podService } from '../pod/pod.service';
 import { hostAgainDraftInput } from './pod-draft.host-again';
@@ -20,6 +20,9 @@ const ownDraft = async (userId: string, draftId: string): Promise<IPodDraft> => 
   return doc;
 };
 
+/** MongoDB's duplicate-key error code. */
+const DUPLICATE_KEY = 11000;
+
 const draftFields = (input: any) => ({
   payload: input.payload ?? '',
   pod_title: input.pod_title ?? '',
@@ -39,12 +42,32 @@ export const podDraftService = {
     return toPub(await ownDraft(userId, draftId));
   },
 
+  /**
+   * Create Pod names its draft before the first save: the device mints the
+   * id (an ObjectId), puts it in the URL, and this creates the draft under it
+   * the first time — every save after that updates it. One atomic upsert
+   * scoped to the caller, so two racing first saves still make one draft, and
+   * an id that is someone else's draft hits the unique _id and is NOT_FOUND
+   * (never overwritten, never confirmed to exist).
+   */
   async save(userId: string, draftId: string | null | undefined, input: any) {
     if (draftId) {
-      const doc = await ownDraft(userId, draftId);
-      doc.set(draftFields(input));
-      await doc.save();
-      return toPub(doc);
+      if (!isObjectIdOrHexString(draftId)) {
+        throw new GraphQLError('Invalid draft id', { extensions: { code: 'BAD_USER_INPUT' } });
+      }
+      try {
+        const doc = await PodDraftModel.findOneAndUpdate(
+          { _id: new Types.ObjectId(draftId), user_id: new Types.ObjectId(userId) },
+          { $set: draftFields(input) },
+          { upsert: true, new: true, runValidators: true, setDefaultsOnInsert: true }
+        );
+        return toPub(doc);
+      } catch (error) {
+        if ((error as { code?: number }).code === DUPLICATE_KEY) {
+          throw new GraphQLError('Draft not found', { extensions: { code: 'NOT_FOUND' } });
+        }
+        throw error;
+      }
     }
     const created = await PodDraftModel.create({
       user_id: new Types.ObjectId(userId),

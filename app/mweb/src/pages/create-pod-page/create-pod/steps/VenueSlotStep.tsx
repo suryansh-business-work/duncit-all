@@ -10,6 +10,8 @@ import VenueOfferPicker from './VenueOfferPicker';
 import RequestSlotPicker from './RequestSlotPicker';
 import { venueSpaces, type VenueSpace } from './venueSpaces';
 import VirtualMeetingFields from '../VirtualMeetingFields';
+import MinAdvanceNote from '../MinAdvanceNote';
+import { usePodMinAdvance } from '../usePodMinAdvance';
 import { requiredLabel } from '../../../../forms/components/requiredLabel';
 import { useTranslation } from '../../../../i18n/useTranslation';
 import { SURFACE_SX } from '../../../../theme';
@@ -30,6 +32,8 @@ interface Props {
   spots: SpotsBounds;
   /** The fewest guests an offer to the picked venue may be for (0 = none). */
   offerMinGuests?: number;
+  /** On the venue picked from Venue Details: that venue is the only one offered. */
+  venueLocked?: boolean;
 }
 
 /** Where & when's venue part — pick a venue partner in the pod's city (card
@@ -37,7 +41,7 @@ interface Props {
  * details + schedule (virtual). A Pod Request's pod keeps the slot that request
  * holds. The offered window sets the pod's date/time; the offer itself is on
  * Money (VenueOfferStep). */
-export default function VenueSlotStep({ form, venues, clubVenueIds, venueNotice, spots, offerMinGuests = 0 }: Readonly<Props>) {
+export default function VenueSlotStep({ form, venues, clubVenueIds, venueNotice, spots, offerMinGuests = 0, venueLocked = false }: Readonly<Props>) {
   const {
     control,
     watch,
@@ -45,6 +49,7 @@ export default function VenueSlotStep({ form, venues, clubVenueIds, venueNotice,
     formState: { errors },
   } = form;
   const { t } = useTranslation();
+  const minAdvance = usePodMinAdvance();
   const mode = watch('pod_mode');
   const locationId = watch('location_id');
   const venueId = watch('venue_id');
@@ -55,11 +60,12 @@ export default function VenueSlotStep({ form, venues, clubVenueIds, venueNotice,
     space.slotSpaceLabel ? space.label : t('mweb.slots.wholeVenue');
 
   // Venues are scoped to the selected club's auto-matched venues (location +
-  // category), then to the pod's city.
-  const clubVenues = venues.filter(
-    (venue) => clubVenueIds.has(venue.id) && (!locationId || venue.location_id === locationId)
-  );
+  // category), then to the pod's city. A venue picked on Venue Details is the only one.
   const selectedVenue = venues.find((venue) => venue.id === venueId) ?? null;
+  const clubVenues =
+    venueLocked && selectedVenue
+      ? [selectedVenue]
+      : venues.filter((venue) => clubVenueIds.has(venue.id) && (!locationId || venue.location_id === locationId));
   // A Pod Request's pod books the slot that request holds; every other pod sends an offer.
   const fromRequest = Boolean(watch('partner_request_id'));
   const spaces = venueSpaces(selectedVenue);
@@ -127,6 +133,7 @@ export default function VenueSlotStep({ form, venues, clubVenueIds, venueNotice,
           />
         </Stack>
       )}
+      {selectedVenue && selectedSpace && <MinAdvanceNote minAdvance={minAdvance} />}
       {selectedVenue && selectedSpace && !fromRequest && (
         <VenueOfferPicker form={form} venueId={selectedVenue.id} spaceLabel={selectedSpace.label} spots={spots} minGuests={offerMinGuests} />
       )}

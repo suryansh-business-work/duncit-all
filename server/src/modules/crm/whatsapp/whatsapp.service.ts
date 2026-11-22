@@ -1,11 +1,15 @@
+import { logs } from '@observability/log';
 import { WaConnectionModel } from './whatsapp.model';
-import { createWaClient, mapSessionStatus, type WaClient } from './whatsapp.client';
+import { createWaClient, createWaClientWithKeys, mapSessionStatus, type WaClient } from './whatsapp.client';
+import { masterKeyCandidates } from './whatsapp.keys';
 
 const KEY = 'default';
 /** Human-friendly name of our single WhatsApp session on the gateway. The
  * gateway keys sessions by a generated UUID `id` (not the name), so we resolve
  * that id at connect time and persist it in WaConnection.session_id. */
 const SESSION_NAME = 'duncit-crm';
+/** Name shown in the gateway's key list for the key the CRM mints. */
+const GENERATED_KEY_NAME = 'Duncit CRM';
 
 /** Load (or lazily create) the single gateway connection config doc. Returns the
  * hydrated Mongoose document (so callers can `.save()`). */
@@ -15,10 +19,12 @@ async function getConnection() {
   return WaConnectionModel.create({ key: KEY });
 }
 
+const errorMessage = (error: unknown): string => (error instanceof Error ? error.message : '');
+
 /** True when an OpenWA error is a 409 "session already exists" — a harmless
  * no-op for us, since the gateway persists sessions across restarts. */
 function isAlreadyExists(error: unknown): boolean {
-  const msg = error instanceof Error ? error.message : '';
+  const msg = errorMessage(error);
   return msg.includes('(409)') || /already exists/i.test(msg);
 }
 
@@ -26,8 +32,13 @@ function isAlreadyExists(error: unknown): boolean {
  * hasn't been created yet (e.g. before the first connect, or after a gateway
  * redeploy reset its store). That's DISCONNECTED, not an error. */
 function isNotFound(error: unknown): boolean {
-  const msg = error instanceof Error ? error.message : '';
+  const msg = errorMessage(error);
   return msg.includes('(404)') || /not found/i.test(msg);
+}
+
+/** True when a start was refused only because the engine is already up. */
+function isAlreadyRunning(error: unknown): boolean {
+  return /already (started|starting|authenticated|exists)/i.test(errorMessage(error));
 }
 
 /** Find our session's gateway id (a UUID) by its name. */
@@ -53,10 +64,29 @@ async function resolveSessionId(client: WaClient): Promise<string> {
   throw new Error('Could not resolve the WhatsApp session from the gateway.');
 }
 
+/** Mint an ADMIN key on the gateway with the given client and return it. */
+async function mintKey(client: WaClient): Promise<string> {
+  const created = await client.createApiKey(GENERATED_KEY_NAME, 'admin');
+  const apiKey = created?.apiKey ?? created?.api_key ?? created?.key;
+  if (!apiKey) throw new Error('The gateway did not return an API key.');
+  return String(apiKey);
+}
+
+/** Readable reason for a session WhatsApp itself restricted (e.g. `tos_block`). */
+function restrictionMessage(restriction: { kind?: string; code?: string } | null | undefined): string | null {
+  if (!restriction?.kind) return null;
+  return `WhatsApp restricted this account (${restriction.kind}${restriction.code ? `: ${restriction.code}` : ''}).`;
+}
+
 export interface WaConfigInput {
   base_url?: string;
   api_key?: string;
   session_id?: string;
+}
+
+export interface WaGenerateKeyInput {
+  base_url?: string | null;
+  master_key?: string | null;
 }
 
 export const whatsappService = {
@@ -72,37 +102,72 @@ export const whatsappService = {
     return conn;
   },
 
-  /** Mint a dedicated gateway API key using the supplied master/admin key, then
-   * save it as the connection's key. Returns the new key once (for the user to
-   * copy) plus the updated connection. */
-  async generateApiKey(input: { base_url: string; master_key: string }) {
-    const baseUrl = input.base_url.trim();
-    const master = input.master_key.trim();
-    if (!baseUrl || !master) {
-      throw new Error('Enter the gateway URL and your master/admin API key first.');
+  /**
+   * Mint a dedicated gateway API key and save it as the connection's key. With
+   * no `master_key` the server's own OPENWA_API_MASTER_KEY is used, so nobody
+   * has to fetch a key from the server by hand. An explicit `master_key` is
+   * still accepted (older CRM builds send one). Returns the new key once.
+   */
+  async generateApiKey(input: WaGenerateKeyInput = {}) {
+    const conn = await getConnection();
+    const baseUrl = (input.base_url ?? '').trim() || conn.base_url;
+    const explicit = (input.master_key ?? '').trim();
+    const masters = explicit ? [explicit] : masterKeyCandidates();
+    if (masters.length === 0) {
+      throw new Error('No gateway master key: set OPENWA_API_MASTER_KEY on the server or enter the master key.');
     }
-    const client = createWaClient(baseUrl, master);
-    const created = await client.createApiKey('Duncit CRM', 'admin');
-    const apiKey = created?.apiKey ?? created?.api_key ?? created?.key;
-    if (!apiKey) throw new Error('The gateway did not return an API key.');
-    const conn = await this.saveConfig({ base_url: baseUrl, api_key: apiKey });
-    return { connection: conn, api_key: apiKey as string };
+    const apiKey = await mintKey(createWaClientWithKeys(baseUrl, masters));
+    const saved = await this.saveConfig({ base_url: baseUrl, api_key: apiKey });
+    return { connection: saved, api_key: apiKey };
   },
 
-  /** Ensure the OpenWA session exists + is started, then mark CONNECTING. The
-   * gateway persists the session so a scanned account survives restarts. */
-  async connect() {
+  /**
+   * Make sure the connection holds a working generated key: keep a stored key
+   * the gateway still accepts, otherwise mint one from the master key. Best
+   * effort — the client falls back to the master key, so a failure here never
+   * blocks connecting; it is logged for diagnosis.
+   */
+  async ensureApiKey() {
     const conn = await getConnection();
+    const masters = masterKeyCandidates();
+    if (conn.api_key) {
+      const ok = await createWaClientWithKeys(conn.base_url, [conn.api_key])
+        .validateKey()
+        .then(() => true)
+        .catch(() => false);
+      if (ok || masters.length === 0) return conn;
+    }
+    if (masters.length === 0) return conn;
+    try {
+      conn.api_key = await mintKey(createWaClientWithKeys(conn.base_url, masters));
+      await conn.save();
+    } catch (error) {
+      logs.server.warn('crm.whatsapp', 'ensureApiKey', { error });
+    }
+    return conn;
+  },
+
+  /**
+   * Ensure the OpenWA session exists and its engine runs, then mark CONNECTING.
+   * `restart` stops the engine first — the way out of a session stuck before
+   * its QR. The gateway persists the session, so a scanned account survives.
+   */
+  async connect(options: { restart?: boolean } = {}) {
+    const conn = await this.ensureApiKey();
     const client = createWaClient(conn.base_url, conn.api_key);
     // Resolve the gateway's real session id (UUID) by name, creating it if
     // needed, and persist it — start/qr/status all key off this id, not the name.
     const sessionId = await resolveSessionId(client);
     conn.session_id = sessionId;
-    // Start the engine (launches Chromium + whatsapp-web). "Already started" is
-    // fine; surface any other failure so the user sees why it didn't connect.
+    if (options.restart) {
+      await client.stopSession(sessionId).catch((error) => {
+        logs.server.warn('crm.whatsapp', 'restart.stop', { error });
+      });
+    }
+    // Start the engine. "Already started/starting" is fine; surface any other
+    // failure so the user sees why it didn't connect.
     await client.startSession(sessionId).catch((error) => {
-      const msg = error instanceof Error ? error.message : '';
-      if (!/already (started|authenticated|exists)/i.test(msg)) throw error;
+      if (!isAlreadyRunning(error)) throw error;
     });
     conn.status = 'CONNECTING';
     conn.last_error = null;
@@ -113,21 +178,22 @@ export const whatsappService = {
   /** Pull the live session status from the gateway and persist it. */
   async refreshStatus() {
     const conn = await getConnection();
-    if (!conn.base_url || !conn.api_key) return conn;
+    if (!conn.base_url && !process.env.OPENWA_INTERNAL_URL) return conn;
+    if (!conn.api_key && masterKeyCandidates().length === 0) return conn;
     const client = createWaClient(conn.base_url, conn.api_key);
     try {
       const session = await client.getSession(conn.session_id);
-      conn.status = mapSessionStatus(session?.status);
+      conn.status = mapSessionStatus(session?.status, session?.engineLoaded);
       if (session?.phone) conn.phone = session.phone;
       if (conn.status === 'CONNECTED' && !conn.connected_at) conn.connected_at = new Date();
-      conn.last_error = session?.lastError ?? null;
+      conn.last_error = session?.lastError ?? restrictionMessage(session?.restriction);
     } catch (error) {
       if (isNotFound(error)) {
         conn.status = 'DISCONNECTED';
         conn.last_error = null;
       } else {
         conn.status = 'ERROR';
-        conn.last_error = error instanceof Error ? error.message : 'Status check failed';
+        conn.last_error = errorMessage(error) || 'Status check failed';
       }
     }
     await conn.save();
@@ -142,8 +208,8 @@ export const whatsappService = {
       const res = await client.getQr(conn.session_id);
       return { qr_code: res?.qrCode ?? null, status: mapSessionStatus(res?.status) };
     } catch (error) {
-      const msg = error instanceof Error ? error.message : '';
-      // No session / engine not started → prompt the user to connect.
+      const msg = errorMessage(error);
+      // No session / engine not started → the portal starts it.
       if (isNotFound(error) || /not started/i.test(msg)) return { qr_code: null, status: 'DISCONNECTED' };
       // Session is booting but the QR hasn't been emitted yet → keep polling.
       if (/not ready/i.test(msg)) return { qr_code: null, status: 'CONNECTING' };
@@ -157,7 +223,9 @@ export const whatsappService = {
   async disconnect() {
     const conn = await getConnection();
     const client = createWaClient(conn.base_url, conn.api_key);
-    await client.stopSession(conn.session_id).catch(() => undefined);
+    await client.stopSession(conn.session_id).catch((error) => {
+      logs.server.warn('crm.whatsapp', 'disconnect.stop', { error });
+    });
     conn.status = 'DISCONNECTED';
     await conn.save();
     return conn;

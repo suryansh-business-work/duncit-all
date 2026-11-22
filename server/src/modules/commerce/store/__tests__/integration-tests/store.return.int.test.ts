@@ -263,6 +263,47 @@ describe('update', () => {
     expect(recordPaymentRefund).not.toHaveBeenCalled();
   });
 
+  it('refunds no more than the order took: its money, less what its other returns already gave back', async () => {
+    // total 450, discount 50 → ₹400 of this order was paid in money.
+    const { order, ret } = await requested();
+    await walk(ret.id, { status: 'APPROVED' }, { status: 'RECEIVED' }, { status: 'REFUNDED', refund_amount: 300, refund_mode: 'ORIGINAL' });
+    const second = await svc.request(buyer, { order_no: order.order_no, items: [line(order, 1, 1)], reason: 'x' });
+    await walk(second.id, { status: 'APPROVED' }, { status: 'RECEIVED' });
+
+    await expect(svc.update(staff, second.id, { status: 'REFUNDED', refund_amount: 150, refund_mode: 'ORIGINAL' })).rejects.toThrow(
+      'This order has ₹100.00 left to refund'
+    );
+    expect((await svc.get(second.id)).status).toBe('RECEIVED');
+    expect(recordPaymentRefund).toHaveBeenCalledTimes(1);
+
+    await svc.update(staff, second.id, { status: 'REFUNDED', refund_amount: 100, refund_mode: 'ORIGINAL' });
+    expect(recordPaymentRefund).toHaveBeenLastCalledWith(expect.anything(), 100, expect.any(String), 'STORE_RETURN');
+  });
+
+  it('gives coins spent on the order back as coins, never as money', async () => {
+    const { order } = await seedOrder({ coins_share: 120 });
+    const ret = await svc.request(buyer, { order_no: order.order_no, items: [line(order, 0, 3), line(order, 1, 1)], reason: 'x' });
+    await walk(ret.id, { status: 'APPROVED' }, { status: 'RECEIVED' });
+
+    await expect(svc.update(staff, ret.id, { status: 'REFUNDED', refund_amount: 520, refund_mode: 'ORIGINAL' })).rejects.toThrow(
+      'Only ₹400.00 of this order was paid in money and is not yet refunded — refund the rest as coins'
+    );
+    await expect(svc.update(staff, ret.id, { status: 'REFUNDED', refund_amount: 520.01, refund_mode: 'COINS' })).rejects.toThrow(
+      'This order has ₹520.00 left to refund'
+    );
+    await svc.update(staff, ret.id, { status: 'REFUNDED', refund_amount: 520, refund_mode: 'COINS' });
+    expect(creditCoinsBack).toHaveBeenCalledWith(expect.anything(), 520, `store-return:${ret.id}`, expect.any(String));
+    expect(recordPaymentRefund).not.toHaveBeenCalled();
+  });
+
+  it('refuses a refund whose order is gone, before anything is recorded', async () => {
+    const { order, ret } = await requested();
+    await walk(ret.id, { status: 'APPROVED' }, { status: 'RECEIVED' });
+    await ProductOrderModel.deleteOne({ _id: order._id });
+    await expect(svc.update(staff, ret.id, { status: 'REFUNDED', refund_amount: 10 })).rejects.toThrow('The order behind this return could not be found');
+    expect(recordPaymentRefund).not.toHaveBeenCalled();
+  });
+
   it('closes a refunded or rejected return, and a closed one goes nowhere', async () => {
     const { ret } = await requested();
     await walk(ret.id, { status: 'REJECTED' }, { status: 'CLOSED' });

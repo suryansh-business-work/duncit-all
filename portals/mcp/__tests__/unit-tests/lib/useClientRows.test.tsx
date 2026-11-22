@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import type { DuncitColumn } from '@duncit/table';
 import { useClientRows } from '../../../src/lib/useClientRows';
@@ -39,23 +39,27 @@ describe('useClientRows', () => {
     expect(busiest.rows.map((row) => row.calls)).toEqual([9, 4, 1]);
   });
 
-  it('asks the table to fetch again when a new set of rows arrives', () => {
+  // The table refetches when fetchRows changes identity, so this hook's whole
+  // contract with it is: a new fetch for new rows, the same one otherwise.
+  it('hands the table a new fetch, answering the new rows, when a new set arrives', async () => {
     const { result, rerender } = renderHook(({ rows }) => useClientRows(rows, searchOf, COLUMNS), {
       initialProps: { rows: ROWS },
     });
-    const refetch = vi.fn();
-    result.current.refetchRef.current = refetch;
+    const first = result.current.fetchRows;
     rerender({ rows: ROWS.slice(0, 1) });
-    expect(refetch).toHaveBeenCalledTimes(1);
+    expect(result.current.fetchRows).not.toBe(first);
+    const page = await result.current.fetchRows(query());
+    expect(page.rows.map((row) => row.name)).toEqual(['pods_create_pod']);
+    expect(page.total).toBe(1);
   });
 
-  it('does not refetch when it is rendered again with the same rows', () => {
+  it('keeps the same fetch and ref when rendered again with the same rows', () => {
     const { result, rerender } = renderHook(({ rows }) => useClientRows(rows, searchOf, COLUMNS), {
       initialProps: { rows: ROWS },
     });
-    const refetch = vi.fn();
-    result.current.refetchRef.current = refetch;
+    const { fetchRows, refetchRef } = result.current;
     rerender({ rows: ROWS });
-    expect(refetch).not.toHaveBeenCalled();
+    expect(result.current.fetchRows).toBe(fetchRows);
+    expect(result.current.refetchRef).toBe(refetchRef);
   });
 });

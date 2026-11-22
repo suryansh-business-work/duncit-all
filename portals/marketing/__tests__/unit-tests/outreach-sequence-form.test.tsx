@@ -110,11 +110,14 @@ describe('SequenceForm: the steps', () => {
     expect(stepTitles()).toEqual(['1. Email']);
   });
 
+  // Twenty full step editors (form controllers and MUI fields) render in one go:
+  // well under a second locally, past Vitest's 5 s default under coverage on a
+  // two-core CI runner, where it timed out. The budget is the render, not a wait.
   it('stops adding at twenty steps', () => {
     const twenty = makeOutreachSequence({ steps: Array.from({ length: 20 }, () => makeOutreachStep()) });
     setup({ sequence: twenty });
     for (const kind of ['EMAIL', 'WHATSAPP', 'DM_TASK', 'WAIT']) expect(screen.getByTestId(`add-step-${kind}`)).toBeDisabled();
-  });
+  }, 30_000);
 
   it('shows a rule about the whole list under the steps', async () => {
     const waits = makeOutreachSequence({ steps: [makeOutreachStep({ kind: 'WAIT', wait_days: 2, subject: '', body: '' })] });

@@ -1,3 +1,4 @@
+import type { CrmLeadEntityType } from '../../api/crm.types';
 import { useEffect, useMemo, useState } from 'react';
 import { useApolloClient, useQuery } from '@apollo/client/react';
 import { Alert, Box, MenuItem, Stack, TextField, Typography } from '@mui/material';
@@ -14,7 +15,7 @@ export interface TemplateBody {
 }
 
 interface Props {
-  entity: 'VENUE_LEAD' | 'HOST_LEAD' | 'ECOMM_LEAD';
+  entity: CrmLeadEntityType;
   /** Slug → value map pulled from the lead (venue/host), used to auto-fill. */
   variableValues: Record<string, string>;
   leadName: string;
@@ -54,7 +55,8 @@ export default function TemplateBodyPicker({ entity, variableValues, leadName, l
   const { t } = useTranslation();
   const client = useApolloClient();
   const { data, loading } = useQuery<{ emailTemplates: EmailTemplate[] }>(TEMPLATES, { fetchPolicy: 'cache-and-network' });
-  const TARGET_FOR = { VENUE_LEAD: 'VENUE', HOST_LEAD: 'HOST', ECOMM_LEAD: 'ECOMM' } as const;
+  // Creator / community leads have no template target of their own yet: they get the static templates.
+  const TARGET_FOR = { VENUE_LEAD: 'VENUE', HOST_LEAD: 'HOST', ECOMM_LEAD: 'ECOMM', CREATOR_LEAD: 'STATIC', COMMUNITY_LEAD: 'STATIC' } as const;
   const wanted = TARGET_FOR[entity];
   const templates = useMemo(
     () => (data?.emailTemplates ?? []).filter((t) => t.is_active && (t.target === 'STATIC' || t.target === wanted)),

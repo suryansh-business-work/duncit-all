@@ -297,6 +297,31 @@ describe('adminAdjust', () => {
     expect(await CoinTransactionModel.countDocuments({})).toBe(0);
   });
 
+  it('holds a raw or MCP call to the Loyalty console limits: at most 100,000 coins and a 4–300 character reason', async () => {
+    const user = await seedUser();
+    const base = { userId: String(user._id), adminId: admin, direction: 'GRANT' as const, coins: 10, reason: 'Goodwill' };
+    await expect(coinService.adminAdjust({ ...base, coins: 100_001 })).rejects.toThrow(
+      'Keep a single adjustment at or under 100000 coins'
+    );
+    await expect(coinService.adminAdjust({ ...base, reason: ' ok ' })).rejects.toThrow('Say why in 4–300 characters');
+    expect(await coinService.balanceOf(String(user._id))).toBe(0);
+    expect(await CoinTransactionModel.countDocuments({})).toBe(0);
+
+    expect(await coinService.adminAdjust({ ...base, coins: 100_000, reason: 'Okay' })).toMatchObject({ applied: 100_000 });
+  });
+
+  it('refuses a reason the ledger row cannot hold BEFORE the balance moves, so coins never land without a row', async () => {
+    const user = await seedUser();
+    const id = String(user._id);
+    const opts = { userId: id, adminId: admin, direction: 'GRANT' as const, coins: 25, reason: 'r'.repeat(301) };
+    await expect(coinService.adminAdjust(opts)).rejects.toThrow('Say why in 4–300 characters');
+    expect(await coinService.balanceOf(id)).toBe(0);
+    expect(await CoinTransactionModel.countDocuments({})).toBe(0);
+
+    expect(await coinService.adminAdjust({ ...opts, reason: 'r'.repeat(300) })).toMatchObject({ balance: 25 });
+    expect(await CoinTransactionModel.countDocuments({ user_id: user._id })).toBe(1);
+  });
+
   it('a grant credits balance and lifetime, and two identical grants are two real grants', async () => {
     const user = await seedUser();
     const opts = { userId: String(user._id), adminId: admin, direction: 'GRANT' as const, coins: 50, reason: '  Goodwill ' };
@@ -313,9 +338,9 @@ describe('adminAdjust', () => {
   it('a deduct debits balance only, draws lots down, and refuses to overdraw with the real balance', async () => {
     const user = await seedUser();
     const id = String(user._id);
-    await coinService.adminAdjust({ userId: id, adminId: admin, direction: 'GRANT', coins: 70, reason: 'g' });
+    await coinService.adminAdjust({ userId: id, adminId: admin, direction: 'GRANT', coins: 70, reason: 'Goodwill credit' });
 
-    expect(await coinService.adminAdjust({ userId: id, adminId: admin, direction: 'DEDUCT', coins: 30, reason: 'fix' })).toEqual({
+    expect(await coinService.adminAdjust({ userId: id, adminId: admin, direction: 'DEDUCT', coins: 30, reason: 'Fixing a double grant' })).toEqual({
       balance: 40,
       lifetime_earned: 70,
       applied: -30,
@@ -326,7 +351,7 @@ describe('adminAdjust', () => {
     expect(grantLot?.remaining).toBe(40);
 
     await expect(
-      coinService.adminAdjust({ userId: id, adminId: admin, direction: 'DEDUCT', coins: 41, reason: 'fix' })
+      coinService.adminAdjust({ userId: id, adminId: admin, direction: 'DEDUCT', coins: 41, reason: 'Fixing a double grant' })
     ).rejects.toThrow('That account holds 40 coins — it cannot give up 41');
     expect(await coinService.balanceOf(id)).toBe(40);
     expect(await CoinTransactionModel.countDocuments({ source: 'ADMIN_DEDUCT' })).toBe(1);
@@ -335,7 +360,7 @@ describe('adminAdjust', () => {
   it('a deduct on an account with no wallet reports 0 held', async () => {
     const user = await seedUser();
     await expect(
-      coinService.adminAdjust({ userId: String(user._id), adminId: admin, direction: 'DEDUCT', coins: 5, reason: 'fix' })
+      coinService.adminAdjust({ userId: String(user._id), adminId: admin, direction: 'DEDUCT', coins: 5, reason: 'Fixing a double grant' })
     ).rejects.toThrow('That account holds 0 coins — it cannot give up 5');
   });
 });

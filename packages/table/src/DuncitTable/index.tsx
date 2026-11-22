@@ -30,8 +30,16 @@ import { useTableBridges } from './useTableBridges';
 
 export { SELECT_COL_ID } from './constants';
 
-/** Server-driven table: MUI chrome (toolbar/progress/error/pagination), AG Grid rows only. */
+/**
+ * Server-driven table: MUI chrome (toolbar/progress/error/pagination), AG Grid rows only.
+ * Keyed by `tableId`: a new id is a new table with its own query, prefs and selection —
+ * unkeyed, a tab swapping tables in one slot kept the old prefs and saved them under the new id.
+ */
 export function DuncitTable<T>(props: Readonly<DuncitTableProps<T>>): JSX.Element {
+  return <DuncitTableBody<T> key={props.tableId} {...props} />;
+}
+
+function DuncitTableBody<T>(props: Readonly<DuncitTableProps<T>>): JSX.Element {
   const {
     tableId,
     columns,

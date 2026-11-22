@@ -43,6 +43,7 @@ export const NearbyHostsPage = lazy(() => import('../../pages/nearby-partners-pa
 export const ChangeRequestsPage = lazy(() => import('../../pages/change-requests-page'));
 export const VenueAvailabilityPage = lazy(() => import('../../pages/venue-availability-page'));
 export const VenueSettingsPage = lazy(() => import('../../pages/venue-settings-page'));
+export const VenueFeesPage = lazy(() => import('../../pages/venue-fees-page'));
 export const VenueDetailsPage = lazy(() => import('../../pages/VenueDetailsPage'));
 export const VenueFoodOrderPage = lazy(() => import('../../pages/venue-food-order-page'));
 export const VenueFoodItemPage = lazy(() => import('../../pages/venue-food-item-page'));
@@ -58,6 +59,7 @@ export const PodIdeasPage = lazy(() => import('../../pages/PodIdeasPage'));
 export const ReferralPage = lazy(() => import('../../pages/referral-page'));
 export const DuncitCoinPage = lazy(() => import('../../pages/duncit-coin-page'));
 export const LeaderboardPage = lazy(() => import('../../pages/leaderboard-page'));
+export const AskDuncitPage = lazy(() => import('../../pages/ask-duncit-page'));
 export const MembershipPage = lazy(() => import('../../pages/membership-page'));
 export const GiftCardsPage = lazy(() => import('../../pages/gift-cards-page'));
 export const GiftCardCheckoutPage = lazy(() => import('../../pages/gift-card-checkout-page'));

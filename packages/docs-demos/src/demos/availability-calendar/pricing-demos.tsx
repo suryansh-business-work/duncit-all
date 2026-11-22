@@ -23,7 +23,6 @@ export const priceBreakdownDemo = defineDemo<{ breakdown: PriceBreakdown }>({
       base: 6000,
       rules: [{ type: 'WEEKDAY_SURCHARGE', label: 'Saturday', mode: 'PERCENT', value: 20, amount: 1200 }],
       rules_total: 1200,
-      min_spend_top_up: 0,
       cleaning_fee: 500,
       pet_fee: 0,
       venue_price: 7700,

@@ -4,6 +4,9 @@ import { CATALOGUE_FALLBACK } from "./catalogue/catalogue.bundle";
 import { CORE_EMAIL_FALLBACK } from "./catalogue/catalogue.bundle.core";
 import { LIFECYCLE_FALLBACK } from "./catalogue/catalogue.lifecycle.bundle";
 import { VENUE_OFFER_EMAIL_FALLBACK } from "./catalogue/catalogue.offers";
+import { HOST_PERFORMANCE_EMAIL_FALLBACK } from "./catalogue/catalogue.hostPerformance";
+import { TARGETS_EMAIL_FALLBACK } from "./catalogue/catalogue.targets";
+import { PAYOUT_EMAIL_FALLBACK } from "./catalogue/catalogue.payouts";
 
 /**
  * Localized copy for MJML emails (CLAUDE.md rule 38).
@@ -31,6 +34,9 @@ export const EMAIL_FALLBACK: Record<string, string> = {
   ...CORE_EMAIL_FALLBACK,
   ...LIFECYCLE_FALLBACK,
   ...VENUE_OFFER_EMAIL_FALLBACK,
+  ...HOST_PERFORMANCE_EMAIL_FALLBACK,
+  ...TARGETS_EMAIL_FALLBACK,
+  ...PAYOUT_EMAIL_FALLBACK,
   "email.common.greeting": "Hi",
   "email.common.regards": "Thanks",
   "email.common.supportNote":

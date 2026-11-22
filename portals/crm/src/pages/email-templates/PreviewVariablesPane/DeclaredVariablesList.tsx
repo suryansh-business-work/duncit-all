@@ -40,7 +40,7 @@ export function DeclaredVariablesList({ declaredRows, draft, setDraft }: Readonl
           <TextField
             size="small"
             slotProps={{ htmlInput: { 'aria-label': t('shell.common.description') } }}
-            placeholder="description"
+            placeholder={t('crm.emailTemplates.variableDescriptionPlaceholder')}
             value={v.description ?? ''}
             onChange={(e) => {
               const copy = [...draft.variables];
@@ -49,7 +49,7 @@ export function DeclaredVariablesList({ declaredRows, draft, setDraft }: Readonl
             }}
             sx={{ flex: 1 }}
           />
-          <Tooltip title={`Copy {{ ${v.key} }}`}>
+          <Tooltip title={t('crm.emailTemplates.copyVariable', { vars: { key: v.key } })}>
             <DuncitIconButton size="small" onClick={() => navigator.clipboard?.writeText(`{{ ${v.key} }}`)}><ContentCopyIcon fontSize="small" /></DuncitIconButton>
           </Tooltip>
           <DuncitIconButton size="small" color="error" aria-label={t('shell.a11y.removeNamed', { vars: { name: v.key } })} data-testid="crm-template-variable-remove" onClick={() => setDraft({ ...draft, variables: draft.variables.filter((_, j) => j !== index) })}>

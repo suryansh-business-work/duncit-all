@@ -2,8 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MockedProvider } from '@apollo/client/testing/react';
 import type { MockedResponse } from '@apollo/client/testing';
-import { AiCallDialog, PortalCallDialog, type PortalCallLead } from '@/components/call';
-import { CRM_CALL_FROM_NUMBER, CRM_CALL_PROMPTS, START_CRM_AI_CALL, START_CRM_PORTAL_CALL } from '@/api/call.gql';
+import { AiCallDialog, type AiCallLead } from '@/components/call';
+import { CRM_CALL_FROM_NUMBER, CRM_CALL_PROMPTS, CRM_CALL_SETUP, START_CRM_AI_CALL } from '@/api/call.gql';
 import { CRM_CALL_EVENT, getCallSocket } from '@/lib/callSocket';
 import { clearToken, setToken } from '@/lib/session';
 import { renderWithApollo } from '../helpers/renderWithApollo';
@@ -25,7 +25,7 @@ vi.mock('socket.io-client', async () => {
 // No canvas or microphone under jsdom; the wave's own suite covers it.
 vi.mock('@wavesurfer/react', () => ({ useWavesurfer: () => ({ wavesurfer: null }) }));
 
-const lead: PortalCallLead = {
+const lead: AiCallLead = {
   to: '9812345678',
   entityType: 'VENUE_LEAD',
   entityId: 'venue-1',
@@ -41,6 +41,7 @@ const fromNumberMock = (value: string | null): MockedResponse => ({
 const callResult = (overrides: Record<string, unknown>) => ({
   ok: true,
   message: 'Call placed',
+  code: null,
   log_id: 'log-1',
   external_id: 'CA123',
   ...overrides,
@@ -60,85 +61,6 @@ afterEach(() => {
   clearToken();
   getCallSocket();
   created.sockets.length = 0;
-});
-
-describe('PortalCallDialog', () => {
-  const portalMock = (variables: Record<string, unknown>, outcome: { result?: Record<string, unknown>; error?: Error }): MockedResponse => ({
-    request: { query: START_CRM_PORTAL_CALL, variables },
-    ...(outcome.error ? { error: outcome.error } : { result: { data: { startCrmPortalCall: outcome.result } } }),
-  });
-  const vars = { entity: 'VENUE_LEAD', id: 'venue-1', contact_number: '9812345678', contact_name: 'Meera Shah' };
-
-  const renderPortal = (mocks: MockedResponse[], callLead: PortalCallLead = lead) => {
-    const onClose = vi.fn();
-    renderWithApollo(<PortalCallDialog open lead={callLead} onClose={onClose} />, mocks);
-    return { onClose };
-  };
-
-  it('places the call and follows its live status to the end', async () => {
-    const { onClose } = renderPortal([fromNumberMock('+14155550100'), portalMock(vars, { result: callResult({}) })]);
-
-    expect(await screen.findByText('+14155550100')).toBeInTheDocument();
-    expect(screen.getByText('+91 9812345678')).toBeInTheDocument();
-    expect(screen.getByText('Ready')).toBeInTheDocument();
-    expect(screen.getByText('A direct two-way call from your Twilio number to this contact.')).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole('button', { name: 'Start Call' }));
-    expect(await screen.findByText('Connecting…')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Start Call' })).toBeNull();
-
-    push({ log_id: 'another-call', status: 'COMPLETED' });
-    expect(screen.getByText('Connecting…')).toBeInTheDocument();
-    push({ log_id: 'log-1', status: 'RINGING' });
-    expect(screen.getByText('Ringing…')).toBeInTheDocument();
-    push({ log_id: 'log-1', status: 'COMPLETED' });
-    expect(screen.getByText('Call over')).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
-    expect(onClose).toHaveBeenCalledTimes(1);
-  });
-
-  it('reports the server’s reason when the call is refused', async () => {
-    renderPortal([fromNumberMock(null), portalMock(vars, { result: callResult({ ok: false, message: 'Twilio number not verified', log_id: null }) })]);
-
-    expect(await screen.findByText('—')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Start Call' }));
-
-    expect(await screen.findByText('Twilio number not verified')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Start Call' })).toBeInTheDocument();
-  });
-
-  it('shows a transport failure and ignores status pushes before a call is placed', async () => {
-    const { onClose } = renderPortal(
-      [fromNumberMock('+14155550100'), portalMock({ ...vars, contact_name: null }, { error: new Error('Call service down') })],
-      { ...lead, contactName: undefined },
-    );
-    await screen.findByText('+14155550100');
-
-    push({ log_id: 'log-1', status: 'RINGING' });
-    expect(screen.getByText('Ready')).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole('button', { name: 'Start Call' }));
-    expect(await screen.findByText('Call service down')).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
-    expect(onClose).toHaveBeenCalledTimes(1);
-  });
-
-  it('stays ready when the server accepts the call without logging it', async () => {
-    renderPortal([fromNumberMock('+14155550100'), portalMock(vars, { result: callResult({ log_id: null }) })]);
-    await screen.findByText('+14155550100');
-
-    fireEvent.click(screen.getByRole('button', { name: 'Start Call' }));
-
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Start Call' })).toBeEnabled());
-    expect(screen.getByText('Ready')).toBeInTheDocument();
-  });
-
-  it('titles itself blank with no lead', () => {
-    renderWithApollo(<PortalCallDialog open={false} lead={null} onClose={vi.fn()} />);
-    expect(screen.queryByRole('dialog')).toBeNull();
-  });
 });
 
 describe('AiCallDialog', () => {
@@ -163,9 +85,9 @@ describe('AiCallDialog', () => {
     request: { query: START_CRM_AI_CALL, variables },
     ...(outcome.error ? { error: outcome.error } : { result: { data: { startCrmAiCall: outcome.result } } }),
   });
-  const baseVars = { entity: 'VENUE_LEAD', id: 'venue-1', contact_number: '9812345678', prompt_id: 'p1', voice: null, contact_name: 'Meera Shah' };
+  const baseVars = { entity_type: 'VENUE_LEAD', id: 'venue-1', contact_number: '9812345678', prompt_id: 'p1', voice: null, contact_name: 'Meera Shah' };
 
-  const renderAi = (mocks: MockedResponse[], callLead: PortalCallLead = lead) => {
+  const renderAi = (mocks: MockedResponse[], callLead: AiCallLead = lead) => {
     const onClose = vi.fn();
     renderWithApollo(<AiCallDialog open lead={callLead} onClose={onClose} />, mocks);
     return { onClose };
@@ -250,43 +172,6 @@ describe('AiCallDialog', () => {
   });
 });
 
-describe('PortalCallDialog — fallbacks', () => {
-  const vars = { entity: 'VENUE_LEAD', id: 'venue-1', contact_number: '9812345678', contact_name: 'Meera Shah' };
-  const portalMock = (result: Record<string, unknown>): MockedResponse => ({
-    request: { query: START_CRM_PORTAL_CALL, variables: vars },
-    result: { data: { startCrmPortalCall: result } },
-  });
-
-  it('explains a refusal the server gave no reason for', async () => {
-    renderWithApollo(<PortalCallDialog open lead={lead} onClose={vi.fn()} />, [
-      fromNumberMock('+14155550100'),
-      portalMock(callResult({ ok: false, message: null, log_id: null })),
-    ]);
-    await screen.findByText('+14155550100');
-
-    fireEvent.click(screen.getByRole('button', { name: 'Start Call' }));
-
-    expect(await screen.findByText('Could not place the call.')).toBeInTheDocument();
-  });
-
-  it('falls back to "connecting" when a live update arrives without a status', async () => {
-    renderWithApollo(<PortalCallDialog open lead={lead} onClose={vi.fn()} />, [
-      fromNumberMock('+14155550100'),
-      portalMock(callResult({})),
-    ]);
-    await screen.findByText('+14155550100');
-    fireEvent.click(screen.getByRole('button', { name: 'Start Call' }));
-    await screen.findByText('Connecting…');
-
-    push({ log_id: 'log-1', status: 'RINGING' });
-    expect(screen.getByText('Ringing…')).toBeInTheDocument();
-    push({ log_id: 'log-1', status: null });
-
-    expect(screen.getByText('Connecting…')).toBeInTheDocument();
-    expect(screen.queryByText('Ready')).toBeNull();
-  });
-});
-
 describe('AiCallDialog — fallbacks', () => {
   const promptsMock: MockedResponse = {
     request: { query: CRM_CALL_PROMPTS, variables: { filter: { is_active: true } } },
@@ -299,7 +184,7 @@ describe('AiCallDialog — fallbacks', () => {
     },
     maxUsageCount: 5,
   };
-  const vars = { entity: 'VENUE_LEAD', id: 'venue-1', contact_number: '9812345678', prompt_id: 'p1', voice: null, contact_name: 'Meera Shah' };
+  const vars = { entity_type: 'VENUE_LEAD', id: 'venue-1', contact_number: '9812345678', prompt_id: 'p1', voice: null, contact_name: 'Meera Shah' };
   const aiMock = (payload: Record<string, unknown> | null): MockedResponse => ({
     request: { query: START_CRM_AI_CALL, variables: vars },
     result: { data: { startCrmAiCall: payload } },
@@ -321,12 +206,45 @@ describe('AiCallDialog — fallbacks', () => {
     await pickPrompt();
 
     fireEvent.click(screen.getByRole('button', { name: 'Start AI call' }));
-    expect(await screen.findByText('Could not place the AI call.')).toBeInTheDocument();
+    expect(await screen.findByText('Could not place the call.')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Start AI call' }));
     await waitFor(() => expect(screen.getByRole('button', { name: 'Start AI call' })).toBeEnabled());
-    expect(screen.getByText('Could not place the AI call.')).toBeInTheDocument();
+    expect(screen.getByText('Could not place the call.')).toBeInTheDocument();
     expect(screen.queryByText('AI VOICE')).toBeNull();
+  });
+
+  it('offers Configure Twilio when the call was refused for missing setup', async () => {
+    renderWithApollo(<AiCallDialog open lead={lead} onClose={vi.fn()} />, [
+      promptsMock,
+      fromNumberMock(null),
+      aiMock(callResult({ ok: false, message: 'Twilio is not configured.', code: 'TWILIO_NOT_CONFIGURED', log_id: null })),
+      {
+        request: { query: CRM_CALL_SETUP },
+        result: {
+          data: {
+            crmCallSetup: {
+              configured: false,
+              missing: ['auth_token'],
+              from_number: null,
+              agent_number: null,
+              agent_source: null,
+              recording_enabled: true,
+              live_transcription: true,
+              can_configure: true,
+            },
+          },
+        },
+      },
+    ]);
+    await pickPrompt();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Start AI call' }));
+
+    const link = await screen.findByRole('link', { name: /Configure Twilio/ });
+    expect(link).toHaveAttribute('href', expect.stringMatching(/\/\?section=TWILIO$/));
+    expect(screen.getByText('Missing: Auth Token')).toBeInTheDocument();
+    expect(screen.queryByText('Twilio is not configured.')).toBeNull();
   });
 
   it('places nothing while there is no lead to call', async () => {
@@ -348,7 +266,7 @@ describe('AiCallDialog — fallbacks', () => {
 
   it('keeps the live call on screen when the lead is cleared and a status-less update arrives', async () => {
     const mocks = [promptsMock, fromNumberMock(null), aiMock(callResult({ log_id: 'log-ai' }))];
-    const tree = (callLead: PortalCallLead | null) => (
+    const tree = (callLead: AiCallLead | null) => (
       <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
         <AiCallDialog open lead={callLead} onClose={vi.fn()} />
       </MockedProvider>

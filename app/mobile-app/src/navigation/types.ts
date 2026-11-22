@@ -76,7 +76,9 @@ export type RootStackParamList = {
   Wallet: undefined;
   /** `partnerRequestId` opens a fresh pod on a Pod Request's confirmed venue + slot. */
   /** `hostAgainPodId`: open filled from one of the host's earlier pods ("Host again"). */
-  CreatePod: { draftId?: string; partnerRequestId?: string; hostAgainPodId?: string } | undefined;
+  CreatePod:
+    | { draftId?: string; partnerRequestId?: string; hostAgainPodId?: string; pickVenueId?: string }
+    | undefined;
   /** Post-create waiting screen while the venue slot request is PENDING. */
   PodPending: { podId: string };
   RegisterVenue: undefined;
@@ -102,6 +104,7 @@ export type RootStackParamList = {
   VenuePricing: undefined;
   /** /venues/settings — the owner's cancellation policy (mWeb's exact path). */
   VenueSettings: undefined;
+  VenueFees: undefined;
   /** Auto Pods a venue may accept — the FIRST of the three enrolments. */
   VenueAutoPods: undefined;
   /** Auto Pods waiting for a host, once a venue has dated them. */
@@ -161,6 +164,8 @@ export type RootStackParamList = {
   Callback: undefined;
   ChatWithUs: undefined;
   LiveChat: undefined;
+  /** Ask Duncit, the role-based assistant; `from` is the app path it was opened about. */
+  AskDuncit: { conversationId?: string; from?: string } | undefined;
   AllSupportTickets: undefined;
   Feedback: undefined;
   Grievance: undefined;

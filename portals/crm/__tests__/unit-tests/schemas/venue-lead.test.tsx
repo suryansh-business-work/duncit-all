@@ -3,6 +3,8 @@ import { venueLeadSchema } from '@/forms/venue-lead/venue-lead.schema';
 import { venueLeadInitialValues } from '@/forms/venue-lead/venue-lead.types';
 import { fromVenueLead, toVenueLeadInput } from '@/forms/venue-lead/venue-lead.map';
 import type { VenueLead } from '@/api/crm.types';
+import { withSocialLinks } from '@/forms/validation/socialLinks';
+import { englishT } from '../helpers/englishT';
 
 const valid = {
   ...venueLeadInitialValues,
@@ -158,6 +160,8 @@ describe('fromVenueLead', () => {
       videos: [],
       website: 'https://arena.test',
       services_offered: [{ service: 'Catering', custom_name: '', description: '' }],
+      instagram_link: 'https://instagram.com/arena',
+      social_links: [{ name: 'YouTube', url: 'https://youtube.com/@arena' }],
       linked_host_ids: [],
       linked_hosts: [],
       tags: [],
@@ -177,6 +181,8 @@ describe('fromVenueLead', () => {
     expect(v.next_follow_up_date).toEqual(new Date('2026-06-01T00:00:00.000Z'));
     expect(v.photos).toBe('https://a.com/1.jpg');
     expect(v.gst_applicable).toBe(true);
+    expect(v.instagram_link).toBe('https://instagram.com/arena');
+    expect(v.social_links).toEqual([{ name: 'YouTube', url: 'https://youtube.com/@arena' }]);
   });
 
   it('defaults missing optional fields safely', () => {
@@ -196,6 +202,7 @@ describe('fromVenueLead', () => {
       photos: [],
       videos: [],
       services_offered: [],
+      social_links: [],
       linked_host_ids: [],
       linked_hosts: [],
       tags: [],
@@ -206,7 +213,93 @@ describe('fromVenueLead', () => {
     });
     expect(v.super_category_id).toBe('');
     expect(v.website).toBe('');
+    expect(v.instagram_link).toBe('');
     expect(v.services_offered).toEqual([]);
+    expect(v.social_links).toEqual([]);
     expect(v.contacts).toHaveLength(1);
+  });
+});
+
+describe('venue lead social links', () => {
+  // The form wraps the venue schema with the social links and the main Instagram field.
+  const issues = (value: unknown) => {
+    const result = withSocialLinks(venueLeadSchema, englishT(), true).safeParse(value);
+    return result.success ? [] : result.error.issues.map((i) => ({ path: i.path.join('.'), message: i.message }));
+  };
+
+  it('accepts no links, a full link and a blank row the operator never filled', () => {
+    expect(issues({ ...valid, instagram_link: '', social_links: [] })).toEqual([]);
+    expect(
+      issues({
+        ...valid,
+        instagram_link: 'https://instagram.com/sunrise',
+        social_links: [
+          { name: 'YouTube', url: 'https://youtube.com/@sunrise' },
+          { name: '', url: '' },
+        ],
+      }),
+    ).toEqual([]);
+  });
+
+  it('flags a named row without a link, and a link that is not a web address', () => {
+    expect(issues({ ...valid, instagram_link: '', social_links: [{ name: 'Facebook', url: '' }] })).toEqual([
+      { path: 'social_links.0.url', message: 'Add the link for this name' },
+    ]);
+    expect(issues({ ...valid, instagram_link: '', social_links: [{ name: 'X', url: 'javascript:alert(1)' }] })).toEqual([
+      { path: 'social_links.0.url', message: 'Enter a full link starting with https://' },
+    ]);
+  });
+
+  it('caps the Instagram link at 2048 characters', () => {
+    const long = `https://instagram.com/${'a'.repeat(2048)}`;
+    expect(issues({ ...valid, instagram_link: long, social_links: [] })).toEqual([
+      { path: 'instagram_link', message: 'This link is too long' },
+    ]);
+  });
+
+  it('sends Instagram trimmed and drops blank link rows, then reads them back unchanged', () => {
+    const input = toVenueLeadInput({
+      ...valid,
+      instagram_link: '  https://instagram.com/sunrise ',
+      social_links: [
+        { name: ' YouTube ', url: ' https://youtube.com/@sunrise ' },
+        { name: '', url: '   ' },
+        { name: '', url: 'https://linktr.ee/sunrise' },
+      ],
+    });
+    expect(input.instagram_link).toBe('https://instagram.com/sunrise');
+    expect(input.social_links).toEqual([
+      { name: 'YouTube', url: 'https://youtube.com/@sunrise' },
+      { name: '', url: 'https://linktr.ee/sunrise' },
+    ]);
+
+    const back = fromVenueLead({
+      id: 'v3',
+      venue_name: 'Sunrise Banquet',
+      venue_types: [],
+      city: 'Pune',
+      full_address: '123 MG Road, Camp',
+      contacts: [],
+      event_suitability: [],
+      available_days: [],
+      pricing_models: [],
+      gst_applicable: false,
+      invoice_available: false,
+      amenities: [],
+      photos: [],
+      videos: [],
+      services_offered: [],
+      instagram_link: input.instagram_link,
+      social_links: input.social_links,
+      linked_host_ids: [],
+      linked_hosts: [],
+      tags: [],
+      dynamic_values_json: '{}',
+      lead_status: 'New',
+      priority: 'Medium',
+      activity_log: [],
+    });
+    expect(back.instagram_link).toBe('https://instagram.com/sunrise');
+    expect(back.social_links).toEqual(input.social_links);
   });
 });

@@ -14,6 +14,9 @@ afterEach(() => {
 
 describe('EventTile', () => {
   it('links to the event with its title and when it starts', () => {
+    // Pinned to an earlier day: on the event's own day the tile says "Today" instead.
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-11-10T04:00:00.000Z'));
     renderWithProviders(<EventTile event={eventCardFixture({ cover_url: 'https://img.example/tile.jpg' })} />);
     const link = screen.getByRole('link');
     expect(link).toHaveAttribute('href', '/e/garden-party');

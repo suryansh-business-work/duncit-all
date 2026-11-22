@@ -1,13 +1,16 @@
-import { Controller, Get, Header, Headers } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiExcludeEndpoint } from '@nestjs/swagger';
+import { Controller, Get, Header, Req, Res } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiSecurity } from '@nestjs/swagger';
 import { SkipThrottle } from '@nestjs/throttler';
+import type { Request, Response } from 'express';
 import { Public } from '../auth/decorators/auth.decorators';
 import { MetricsService } from './metrics.service';
+import { METRICS_BEARER_SCHEME } from '../../config/swagger.config';
 
 /**
  * Prometheus scrape endpoint. `@Public()` bypasses the API-key guard and
  * `@SkipThrottle()` keeps a scrape interval from eating the rate-limit budget; access is
- * instead gated by METRICS_TOKEN inside the service (disabled-by-default).
+ * instead gated by METRICS_TOKEN inside the service (disabled-by-default), which bounds
+ * failed token attempts per client on its own.
  */
 @ApiTags('metrics')
 @Controller('metrics')
@@ -17,13 +20,23 @@ export class MetricsController {
   constructor(private readonly metricsService: MetricsService) {}
 
   @Get()
-  @ApiExcludeEndpoint()
   @ApiOperation({ summary: 'Prometheus metrics (requires METRICS_TOKEN bearer)' })
-  @ApiResponse({ status: 200, description: 'Prometheus exposition text' })
-  @Header('Content-Type', 'text/plain; version=0.0.4; charset=utf-8')
+  @ApiSecurity(METRICS_BEARER_SCHEME)
+  @ApiResponse({
+    status: 200,
+    description: 'Prometheus exposition text',
+    content: { 'text/plain': { schema: { type: 'string' } } },
+  })
+  @ApiResponse({ status: 401, description: 'METRICS_TOKEN is configured but the bearer is missing or wrong' })
+  @ApiResponse({ status: 404, description: 'Metrics endpoint is disabled (METRICS_TOKEN unset)' })
+  @ApiResponse({ status: 429, description: 'Too many failed token attempts from this client; retry after a minute' })
   @Header('Cache-Control', 'no-store')
-  async scrape(@Headers('authorization') authorization?: string): Promise<string> {
-    this.metricsService.assertScrapeAuthorized(authorization);
+  // @Req (not @Headers('authorization')) so the OpenAPI op doesn't sprout a spurious required
+  // `authorization` header parameter — the bearer is expressed via the security scheme above.
+  async scrape(@Req() req: Request, @Res({ passthrough: true }) res: Response): Promise<string> {
+    this.metricsService.assertScrapeAuthorized(req.headers.authorization, req);
+    // Set only once authorized: a text/plain type on a refused (JSON) reply makes Nest log a warning.
+    res.setHeader('Content-Type', 'text/plain; version=0.0.4; charset=utf-8');
     return this.metricsService.render();
   }
 }

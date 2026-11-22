@@ -122,4 +122,27 @@ describe('Partners UI · Club admin clubs (the run’s own club)', () => {
     cy.byTestId('query-guard-not-found').should('be.visible').and('have.text', 'Club not found.');
     cy.byTestId('club-form').should('not.exist');
   });
+
+  it('CAC-06 the Hosts button opens the club’s Hosts page, read for that club only', () => {
+    openYourClubs();
+    cy.interceptOperation('ClubAdminClubHostsTable');
+    cy.byTestId(`club-admin-club-hosts-${world.clubId}`).should('contain.text', 'Hosts').click();
+    cy.location('pathname').should('eq', `/club-admin/clubs/${world.clubId}/hosts`);
+    cy.wait('@ClubAdminClubHostsTable').its('request.body.variables.club_id').should('eq', world.clubId);
+    cy.byTestId('club-hosts-title').should('have.text', world.clubName);
+    cy.byTestId('club-hosts-back').should('contain.text', 'Back to clubs');
+  });
+
+  it('CAC-07 a club the run does not administer has no readable hosts and refuses an engagement status', () => {
+    foreignClubId(world).then((foreign) => {
+      cy.gqlError(
+        'query E2eUiP2ForeignHosts($id: ID!) { clubAdminClubHostsSummary(club_id: $id) { host_count } }',
+        { id: foreign },
+      ).should('eq', 'You do not administer this club');
+      cy.gqlError(
+        'mutation E2eUiP2ForeignEngagement($id: ID!) { setClubHostEngagement(club_id: $id, host_user_id: $id, status_key: "CONTACTED") { status_key } }',
+        { id: foreign },
+      ).should('eq', 'You do not administer this club');
+    });
+  });
 });

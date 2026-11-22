@@ -242,20 +242,31 @@ export async function assertEditContentClean(
  * rule as a host creating one — two gates would drift on who counts as active.
  */
 export async function assertActiveHost(userId: string) {
-  const userObjectId = new Types.ObjectId(userId);
-  const hostDoc = await HostModel.findOne({ user_id: userObjectId }).select('status is_active');
-  if (hostDoc?.is_active === false) {
+  const status = await activeHostStatus(userId);
+  if (status === 'DEACTIVATED') {
     throw new GraphQLError('Your host account has been deactivated', {
       extensions: { code: 'FORBIDDEN' },
     });
   }
-  const hasHostRole = await UserRoleModel.exists({ user_id: userObjectId, role: 'HOST' });
-  const approvedHost = !hasHostRole && hostDoc?.status === 'APPROVED';
-  if (!hasHostRole && !approvedHost) {
+  if (status === 'NOT_HOST') {
     throw new GraphQLError('Host access is required before creating pods', {
       extensions: { code: 'FORBIDDEN' },
     });
   }
+}
+
+/**
+ * The rule `assertActiveHost` enforces, as an answer instead of an error — for
+ * reads that show a host something extra (a venue's Fees & Minimum Spend)
+ * and simply show nothing to anyone else.
+ */
+export async function activeHostStatus(userId: string): Promise<'ACTIVE' | 'DEACTIVATED' | 'NOT_HOST'> {
+  if (!Types.ObjectId.isValid(userId)) return 'NOT_HOST';
+  const userObjectId = new Types.ObjectId(userId);
+  const hostDoc = await HostModel.findOne({ user_id: userObjectId }).select('status is_active');
+  if (hostDoc?.is_active === false) return 'DEACTIVATED';
+  const hasHostRole = await UserRoleModel.exists({ user_id: userObjectId, role: 'HOST' });
+  return hasHostRole || hostDoc?.status === 'APPROVED' ? 'ACTIVE' : 'NOT_HOST';
 }
 
 /** Loads a pod and asserts the viewer is one of its hosts. */

@@ -165,8 +165,5 @@
     "npm-check-updates": "^23.1.0",
     "typescript": "^7.0.2",
     "vitest": "^4.1.11"
-  },
-  "lint-staged": {
-    "*.{ts,tsx}": "eslint -c eslint.code.config.mjs --suppressions-location eslint-code-suppressions.json --max-warnings 0 --no-warn-ignored --pass-on-unpruned-suppressions"
   }
 }

@@ -299,6 +299,24 @@ export const venueTypeDefs = /* GraphQL */ `
     amount: Float!
   }
 
+  "A venue's Fees & Minimum Spend as a host weighs it before picking the venue for a pod (rupees)."
+  type VenueHostTerms {
+    venue_id: ID!
+    "The fewest guests an offer is paid for: the venue's own setting, else the platform default."
+    min_guests: Int!
+    "The least the venue takes on each pricing basis."
+    min_business: [VenueMinBusiness!]!
+    "The least one booking's offer must come to (0 = none)."
+    min_spend: Float!
+    cleaning_fee: Float!
+    "Charged only when the booking brings pets."
+    pet_fee: Float!
+    "Refundable, settled at the venue — never part of the price."
+    deposit: Float!
+    "GST is added to the venue's price."
+    gst_enabled: Boolean!
+  }
+
   input VenueMinBusinessInput {
     model: VenueOfferModel!
     amount: Float!
@@ -312,6 +330,8 @@ export const venueTypeDefs = /* GraphQL */ `
     response_hours: Int!
     "The least the venue takes, one per pricing basis (per guest, per hour, per booking)."
     min_business: [VenueMinBusiness!]!
+    "The least one booking's offer must come to, in rupees: the rate times the fewest guests, times the hours, or the flat price. 0 = none."
+    min_spend: Float!
   }
 
   input VenueOfferSettingsInput {
@@ -321,10 +341,12 @@ export const venueTypeDefs = /* GraphQL */ `
     response_hours: Int
     "At least one, one per pricing basis. Left out: unchanged."
     min_business: [VenueMinBusinessInput!]
+    "Rupees, 0 = none. Left out: unchanged."
+    min_spend: Float
   }
 
   type VenueSettings {
-    "Booking offers: minimum guests and response time."
+    "Booking offers: minimum guests, response time and the venue's minimums (Fees & Minimum Spend)."
     offers: VenueOfferSettings!
     operating_hours: VenueOperatingHours!
     weekly_off_days: [Int!]!
@@ -397,6 +419,8 @@ export const venueTypeDefs = /* GraphQL */ `
     offer_response_hours: Int!
     "The least the venue takes per booking on each pricing basis (Create Pod's offer step shows it; an offer below it is refused)."
     offer_min_business: [VenueMinBusiness!]!
+    "The least one booking's offer must come to (rupees, 0 = none). A host's offer or counter below it is refused (BELOW_MIN_SPEND)."
+    offer_min_spend: Float!
     capacity_items: [VenueCapacityItem!]!
     "The venue serves food. On publicVenue the menu is empty unless this is on."
     offers_food: Boolean!
@@ -688,6 +712,8 @@ export const venueTypeDefs = /* GraphQL */ `
     publicVenues(location_id: ID, search: String, super_category_id: ID, category_id: ID, sub_category_id: ID): [Venue!]!
     "Public single-venue detail (APPROVED + active only)."
     publicVenue(venue_id: ID!): Venue
+    "Fees & Minimum Spend of the given APPROVED, active venues, in the order asked (at most 200 ids). Active hosts only — empty for anyone else."
+    venueHostTerms(venue_ids: [ID!]!): [VenueHostTerms!]!
     "APPROVED, active venues that auto-match a club by location (+ locality) + Super/Sub category on ANY of the venue's categories (admin Club form). Empty when no location is given."
     matchingVenues(location_id: ID!, locality: String, super_category_id: ID, category_id: ID): [Venue!]!
     venueRegistrationConfig: VenueRegistrationConfig!

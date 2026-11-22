@@ -20,6 +20,7 @@ import { throwIfClientGone } from '@utils/clientPresence';
 import { reelHasAudio } from './pod.reelAudio';
 import { podVisibleTo } from './pod.visibility';
 import { websiteUpcomingPods } from './pod.websiteRail';
+import { podMinAdvanceDaysFor } from './pod.minAdvance';
 import { websitePodPage, websitePodSitemap } from './pod.websitePage';
 import { canSeeHidden } from '@utils/hidden';
 import { consoleReaders } from '@modules/portals/console-access';
@@ -218,6 +219,8 @@ export const podResolvers = {
     },
   },
   Query: {
+    myPodMinAdvanceDays: (_p: unknown, _a: unknown, ctx: GraphQLContext) =>
+      podMinAdvanceDaysFor(requireAuth(ctx).id),
     // Public: every Duncit website's home rail asks this with no session.
     websiteUpcomingPods: (_p: unknown, args: { limit?: number | null }) => websiteUpcomingPods(args.limit),
     websitePodPage: (_p: unknown, args: { club_slug: string; pod_slug: string }) => websitePodPage(args.club_slug, args.pod_slug),

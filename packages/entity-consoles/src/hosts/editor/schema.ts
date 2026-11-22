@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { AADHAR_PATTERN, PAN_PATTERN, zodRules } from '@duncit/forms';
 import type { Translate } from '../../venues/editor/schema';
+import { podMinAdvanceDaysOrNull } from '@duncit/utils';
 import { podRequestOverrideField } from '../../shared/podRequestLimit';
 
 /**
@@ -91,6 +92,13 @@ export function makeHostFormSchema(t: Translate) {
       .min(0, t('directory.venueEditor.errMin', { vars: { field: t('directory.hostEditor.colCommission'), min: 0 } }))
       .max(100, t('directory.venueEditor.errMax', { vars: { field: t('directory.hostEditor.colCommission'), max: 100 } })),
     venue_requests_limit_override: podRequestOverrideField(t),
+    // Empty = the Pod Settings value; else a whole number in the server's 1–30.
+    pod_min_advance_days_override: z
+      .string()
+      .refine(
+        (days) => days.trim() === '' || podMinAdvanceDaysOrNull(days) !== null,
+        t('directory.hostEditor.minAdvanceDaysInvalid'),
+      ),
   });
 }
 

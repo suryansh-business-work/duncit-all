@@ -3,7 +3,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import type { MockedResponse } from '@apollo/client/testing';
 import EmailTemplatesPage from '@/pages/email-templates';
-import { CREATE, DELETE, STARTER_MJML, TEMPLATES, TEMPLATES_TABLE, type EmailTemplateRow } from '@/api/emailTemplates.gql';
+import { CREATE, DELETE, TEMPLATES, TEMPLATES_TABLE, type EmailTemplateRow } from '@/api/emailTemplates.gql';
+import { CRM_EMAIL_STARTER } from '@/api/emailSettings.gql';
 import { renderWithApollo } from '../helpers/renderWithApollo';
 
 const row: EmailTemplateRow = {
@@ -29,6 +30,8 @@ const listRefetch: MockedResponse = {
   maxUsageCount: 5,
 };
 
+const STARTER_MJML = '<mjml><mj-body><mj-text>Duncit starter</mj-text></mj-body></mjml>';
+
 const renderPage = (mocks: MockedResponse[]) => renderWithApollo(<EmailTemplatesPage />, mocks, { route: '/email-templates' });
 
 beforeEach(() => {
@@ -45,9 +48,21 @@ describe('EmailTemplatesPage', () => {
     expect(screen.getByTestId('location')).toHaveTextContent('/email-templates/t1');
   });
 
-  it('creates a template and jumps to its editor', async () => {
+  it('explains the page and opens the email settings', async () => {
+    renderPage([tableMock([row])]);
+
+    expect(
+      await screen.findByText('CRM outreach templates in MJML, with lead variables. Open one to edit and preview it.'),
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
+
+    expect(screen.getByTestId('location')).toHaveTextContent(/^\/email-templates\/settings$/);
+  });
+
+  it('creates a template on the shared starter and jumps to its editor', async () => {
     renderPage([
       tableMock([row]),
+      { request: { query: CRM_EMAIL_STARTER }, result: { data: { crmEmailStarterMjml: STARTER_MJML } }, maxUsageCount: 5 },
       {
         request: {
           query: CREATE,
@@ -63,6 +78,7 @@ describe('EmailTemplatesPage', () => {
     fireEvent.click(dialog.getByText('Host lead emails'));
     fireEvent.change(dialog.getByLabelText(/^Name/), { target: { value: 'Host intro' } });
     fireEvent.change(dialog.getByLabelText(/^Subject/), { target: { value: 'Hello host' } });
+    await waitFor(() => expect(dialog.getByRole('button', { name: 'Create' })).toBeEnabled());
     fireEvent.click(dialog.getByRole('button', { name: 'Create' }));
 
     await waitFor(() => expect(screen.getByTestId('location')).toHaveTextContent('/email-templates/tpl-new'));

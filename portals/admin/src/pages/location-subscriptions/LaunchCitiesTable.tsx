@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useMutation } from '@apollo/client/react';
 import { Avatar, Stack, Tooltip, Typography, alpha, useTheme } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
@@ -86,7 +86,6 @@ export default function LaunchCitiesTable({ rows, onSent, selectedId, onSelect }
       row.id === selectedId ? { backgroundColor: alpha(theme.palette.warning.main, 0.24) } : undefined,
     [selectedId, theme]
   );
-  const refetchRef = useRef<(() => void) | null>(null);
   const [sendMut] = useMutation<SendResult>(SEND_LOCATION_LAUNCH_MESSAGE);
 
   const send = useCallback(
@@ -173,11 +172,6 @@ export default function LaunchCitiesTable({ rows, onSent, selectedId, onSelect }
     [rows, columns]
   );
 
-  // The grid only re-reads its fetch on a query change, so fresh counts need a nudge.
-  useEffect(() => {
-    refetchRef.current?.();
-  }, [fetchRows]);
-
   return (
     <DuncitTable<LaunchCityRow>
       ariaLabel={t('admin.locationSubscriptions.citiesTitle')}
@@ -190,7 +184,6 @@ export default function LaunchCitiesTable({ rows, onSent, selectedId, onSelect }
       emptyText={t('admin.locationSubscriptions.citiesEmpty')}
       defaultSort={{ field: 'subscriber_count', dir: 'desc' }}
       searchPlaceholder={t('admin.locationSubscriptions.searchCity')}
-      refetchRef={refetchRef}
     />
   );
 }

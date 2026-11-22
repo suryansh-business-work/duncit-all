@@ -26,7 +26,7 @@ describe('isSensitiveName — credentials are caught', () => {
     expect(isSensitiveName(name)).toBe(true);
   });
 
-  it.each(['api_key', 'apiKey', 'google_maps_api_key', 'private_key', 'asc_private_key', 'access_key', 'secret_key', 'signing_key', 'recovery_code', 'recovery_codes'])(
+  it.each(['api_key', 'apiKey', 'google_maps_api_key', 'private_key', 'asc_private_key', 'access_key', 'secret_key', 'signing_key', 'master_key', 'masterKey', 'recovery_code', 'recovery_codes'])(
     '%s is sensitive (a sensitive pair of words in order)',
     (name) => {
       expect(isSensitiveName(name)).toBe(true);
@@ -48,6 +48,7 @@ describe('isSensitiveName — ordinary fields stay readable', () => {
     expect(isSensitiveName('primary_key')).toBe(false);
     expect(isSensitiveName('api_public_key')).toBe(false);
     expect(isSensitiveName('recovery_email')).toBe(false);
+    expect(isSensitiveName('master_plan')).toBe(false);
   });
 
   it('is not fooled by an empty or punctuation-only name', () => {

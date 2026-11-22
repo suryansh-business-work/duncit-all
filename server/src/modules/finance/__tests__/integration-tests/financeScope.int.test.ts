@@ -13,6 +13,7 @@ import { PaymentReleaseModel } from '../../finance/paymentRelease.model';
 import { walletResolvers } from '../../wallet/wallet.resolver';
 import { walletService } from '../../wallet/wallet.service';
 import { WalletWithdrawalModel } from '../../wallet/wallet.model';
+import * as legacyReview from '../../payout/withdrawal.legacy';
 import { couponResolvers } from '../../coupon/coupon.resolver';
 import { CouponModel } from '../../coupon/coupon.model';
 import { podExpenseResolvers } from '../../podExpense/podExpense.resolver';
@@ -231,7 +232,8 @@ describe('withdrawals', () => {
     walletResolvers.Mutation.reviewWithdrawal(undefined, { withdrawal_id: id, input: { status: 'PAID' } }, ctx);
 
   it('pays out only when every pod it draws on is in the admin’s city', async () => {
-    const spy = jest.spyOn(walletService, 'reviewWithdrawal').mockResolvedValue(null as never);
+    // The resolver hands the review to the legacy bridge; the scope check must run BEFORE it.
+    const spy = jest.spyOn(legacyReview, 'reviewWithdrawalLegacy').mockResolvedValue(null as never);
     const own = await seedWithdrawal([punePod._id]);
     const mixed = await seedWithdrawal([punePod._id, mumbaiPod._id]);
     const unallocated = await seedWithdrawal([]);

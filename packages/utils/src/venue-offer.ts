@@ -18,9 +18,11 @@ import {
   bookingEndOptions,
   bookingSpaceLabel,
   bookingTiles,
+  venueSpaces,
   type BookingCalendarDay,
   type BookingRules,
   type BookingTile,
+  type VenueSpaceSource,
 } from './venue-booking';
 import { FREE_JUSTIFICATION_FIELDS, freeJustificationInput, type FreeJustificationInput, type FreeJustificationSource } from './free-arrangement';
 
@@ -227,6 +229,140 @@ export function venueOfferFloor(
 /** Whether a typed rate is below the venue's floor; never without one. */
 export const offerBelowFloor = (floor: VenueOfferFloor | null, rate: string | number | null | undefined): boolean =>
   floor !== null && offerRateOf(rate) < floor.min;
+
+const roundRupees = (rupees: number) => Math.round(rupees * 100) / 100;
+
+/** A booking window's length in hours, as the server prices it (whole minutes). 0 for a missing or reversed window. */
+export function offerWindowHours(start: string | Date | null | undefined, end: string | Date | null | undefined): number {
+  const from = start ? new Date(start).getTime() : Number.NaN;
+  const to = end ? new Date(end).getTime() : Number.NaN;
+  if (!Number.isFinite(from) || !Number.isFinite(to) || to <= from) return 0;
+  return Math.round((to - from) / 60_000) / 60;
+}
+
+/**
+ * The guests an offer's fewest-guests price is for — the server's `quote_min`:
+ * the minimum (at least one) while it is below the booking's guests, else the
+ * guests themselves.
+ */
+export function offerFewestGuests(minGuests: number | null | undefined, pax: number | null | undefined): number {
+  const most = Math.max(0, Math.floor(Number(pax) || 0));
+  const fewest = Math.max(1, Math.floor(Number(minGuests) || 0));
+  return fewest < most ? fewest : most;
+}
+
+/** Where an offer's own amount is weighed: the booking's guests, its fewest, and its window's hours. */
+export interface OfferAmountAt {
+  minGuests: number | null | undefined;
+  pax: number | null | undefined;
+  hours: number;
+}
+
+/**
+ * What an offer comes to at its fewest guests, before the venue's own rules,
+ * fees and GST, in rupees: the rate times the guests (per guest), times the
+ * hours (per hour), or the flat price — the amount a venue's minimum spend is
+ * held against. 0 for a free ask or nothing typed. Server twin: the price
+ * calculation's `base` in `quote_min`.
+ */
+export function offerAmountAtMinimum(model: string | null | undefined, rate: string | number | null | undefined, at: Readonly<OfferAmountAt>): number {
+  if (!isVenueOfferModel(model)) return 0;
+  const ratePaise = Math.round(offerRateOf(rate) * 100);
+  if (model === 'PER_GUEST') return (ratePaise * offerFewestGuests(at.minGuests, at.pax)) / 100;
+  if (model === 'PER_HOUR') return Math.round(ratePaise * Math.max(0, at.hours || 0)) / 100;
+  return ratePaise / 100;
+}
+
+/** How far an offer falls short of the venue's minimum spend, in rupees. */
+export interface VenueMinSpendShortfall {
+  min: number;
+  offered: number;
+  shortfall: number;
+}
+
+/**
+ * How far an offer falls short of the venue's minimum spend, or null when it
+ * meets it, the venue named none (0) or the host asks for the venue free.
+ * Server twin: `assertOfferMeetsMinSpend` (BELOW_MIN_SPEND).
+ */
+export function offerMinSpendShortfall(
+  minSpend: number | null | undefined,
+  model: string | null | undefined,
+  rate: string | number | null | undefined,
+  at: Readonly<OfferAmountAt>
+): VenueMinSpendShortfall | null {
+  const min = roundRupees(Math.max(0, Number(minSpend) || 0));
+  if (!isVenueOfferModel(model) || min <= 0) return null;
+  const offered = offerAmountAtMinimum(model, rate, at);
+  if (offered >= min) return null;
+  return { min, offered, shortfall: roundRupees(min - offered) };
+}
+
+/** The venue's minimum spend as a line ("Minimum spend ₹5,000 per booking"), or null when it named none. */
+export function venueMinSpendText(minSpend: number | null | undefined, t: OfferTranslate, money: (rupees: number) => string): string | null {
+  const min = Math.max(0, Number(minSpend) || 0);
+  return min > 0 ? t('availability.offers.minSpend.amount', { vars: { amount: money(min) } }) : null;
+}
+
+/**
+ * Every minimum the picked venue holds an offer to, as lines — its amounts per
+ * basis, then its minimum spend — what Create Pod's offer step shows on top.
+ * Empty when the venue named none.
+ */
+export function venueMinimumLines(
+  rows: readonly VenueMinBusinessRow[] | null | undefined,
+  minSpend: number | null | undefined,
+  t: OfferTranslate,
+  money: (rupees: number) => string
+): string[] {
+  const spend = venueMinSpendText(minSpend, t, money);
+  return [...venueMinBusinessLines(rows, t, money), ...(spend ? [spend] : [])];
+}
+
+/** Why an offer is refused for the minimum spend, naming the minimum, what it comes to and the shortfall. */
+export function minSpendShortfallText(short: Readonly<VenueMinSpendShortfall>, t: OfferTranslate, money: (rupees: number) => string): string {
+  return t('availability.offers.minSpend.offerBelow', {
+    vars: { min: money(short.min), offered: money(short.offered), shortfall: money(short.shortfall) },
+  });
+}
+
+/** The picked venue as Create Pod reads its minimums: its minimum spend, minimum guests and spaces. */
+export interface MinSpendVenue extends VenueSpaceSource {
+  offer_min_spend?: number | null;
+  offer_min_guests?: number | null;
+}
+
+/** Create Pod's opening offer as the form holds it. */
+export interface OpeningOfferTerms {
+  model: string | null | undefined;
+  rate: string | number | null | undefined;
+  /** The pod's spots — the booking's most guests. */
+  spots: number | null | undefined;
+  /** The picked space's label (`venueSpaces`). */
+  spaceLabel: string | null | undefined;
+  start: string | Date | null | undefined;
+  end: string | Date | null | undefined;
+}
+
+/**
+ * How far Create Pod's opening offer falls short of the picked venue's minimum
+ * spend, or null — weighed at the fewest guests the server prices it at (the
+ * venue's minimum, capped by the space: `offerGuestFloor`) over the picked
+ * window. mWeb and the app both read this one rule; the server refuses the same
+ * offer (BELOW_MIN_SPEND).
+ */
+export function openingOfferMinSpendShortfall(
+  venue: Readonly<MinSpendVenue> | null | undefined,
+  offer: Readonly<OpeningOfferTerms>
+): VenueMinSpendShortfall | null {
+  if (!venue) return null;
+  const space = venueSpaces(venue).find((entry) => entry.label === offer.spaceLabel);
+  return offerMinSpendShortfall(venue.offer_min_spend, offer.model, offer.rate, {
+    minGuests: offerGuestFloor(venue.offer_min_guests, space?.capacity),
+    pax: offer.spots,
+    hours: offerWindowHours(offer.start, offer.end),
+  });
+}
 
 /** Whether the host now has the venue's counter to accept or reject. */
 export const hostMayAnswerCounter = (offer: { status?: string | null; awaiting?: string | null } | null | undefined): boolean =>
@@ -514,7 +650,6 @@ const BREAKDOWN_FIELDS = `
         label
         amount
       }
-      min_spend_top_up
       cleaning_fee
       pet_fee
       gst_pct
@@ -533,6 +668,7 @@ export const VENUE_OFFER_QUOTE_SDL = `
     venueOfferQuote(venue_id: $venue_id, offer: $offer) {
       ok
       message
+      reason
       quote {${BREAKDOWN_FIELDS}
       }
       quote_min {${BREAKDOWN_FIELDS}
@@ -646,6 +782,7 @@ export const HOST_COUNTER_QUOTE_SDL = `
     hostCounterQuote(pod_id: $pod_id, terms: $terms) {
       ok
       message
+      reason
       quote {${BREAKDOWN_FIELDS}
       }
       quote_min {${BREAKDOWN_FIELDS}

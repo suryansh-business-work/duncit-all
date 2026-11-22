@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useMemo } from 'react';
 import { Stack, Tooltip } from '@mui/material';
 import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 import DriveFileMoveIcon from '@mui/icons-material/DriveFileMove';
@@ -105,10 +105,6 @@ export default function RunsTable({ runs, busy, onView, onApply, onRollback }: R
 
   const fetchRows = useMemo(() => clientTableFetch(runs, (run) => run.run_id, columns), [runs, columns]);
   // The grid fetches on query changes only; new counts from a poll have to ask.
-  const refetchRef = useRef<(() => void) | null>(null);
-  useEffect(() => {
-    refetchRef.current?.();
-  }, [fetchRows]);
 
   return (
     <DuncitTable<OrganizerRun>
@@ -119,7 +115,6 @@ export default function RunsTable({ runs, busy, onView, onApply, onRollback }: R
       getRowId={getRowId}
       emptyText={t('tech.mediaOrganizer.runsEmpty')}
       defaultSort={{ field: 'started_at', dir: 'desc' }}
-      refetchRef={refetchRef}
     />
   );
 }

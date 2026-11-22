@@ -231,6 +231,7 @@ describe('a host’s offer', () => {
     await expect(venueOfferService.preview(w.venueId, request({ min_guests: 25 }))).resolves.toEqual({
       ok: false,
       message: 'The fewest guests cannot be more than the 20 spots booked',
+      reason: null,
       quote: null,
       quote_min: null,
     });
@@ -241,10 +242,10 @@ describe('a host’s offer', () => {
   it("prices Create Pod's quote from the venue's own minimum, which the request does not carry", async () => {
     const w = await seedWorld({ offers: { min_guests: 6, response_hours: 12 } });
     const opening = request({ min_guests: undefined });
-    const ranged = await venueOfferService.preview(w.venueId, opening, undefined, true);
+    const ranged = await venueOfferService.preview(w.venueId, opening, undefined, { atVenueMinimum: true });
     expect(ranged).toMatchObject({ ok: true, quote: { pax: 20, venue_payout: 10_000 }, quote_min: { pax: 6, venue_payout: 3000 } });
     // Fewer spots than the venue takes: said before the host sends it, not thrown.
-    await expect(venueOfferService.preview(w.venueId, { ...opening, pax: 4 }, undefined, true)).resolves.toMatchObject({
+    await expect(venueOfferService.preview(w.venueId, { ...opening, pax: 4 }, undefined, { atVenueMinimum: true })).resolves.toMatchObject({
       ok: false,
       message: 'This venue takes bookings for at least 6 guests — pick 6 spots or more',
     });
@@ -448,6 +449,7 @@ describe('bargaining', () => {
     await expect(venueOfferService.counterPreview(w.ownerId, slotId, { model: 'PER_GUEST', rate: 0 })).resolves.toEqual({
       ok: false,
       message: 'Enter the amount you offer the venue',
+      reason: null,
       quote: null,
       quote_min: null,
     });

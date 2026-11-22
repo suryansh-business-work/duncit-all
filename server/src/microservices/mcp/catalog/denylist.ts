@@ -20,6 +20,9 @@ const DENIED_FIELDS: ReadonlyMap<string, string> = new Map([
   ['reportUnitTestCases', 'called by CI, not a person'],
   ['finishUnitTestRun', 'called by CI, not a person'],
   ['attachStaffCallRecording', 'called by the call recorder, not a person'],
+  // The AI portal reports these as people use a prompt; an agent calling it
+  // would only inflate that prompt's analytics.
+  ['recordAiPromptEvent', 'reported by the AI portal as people use a prompt'],
   // The MCP console's own decisions. An AI must never approve its own
   // connection, revoke one, or loosen the settings that constrain it.
   ['mcpAuthorizationRequest', 'part of the consent screen'],
@@ -27,6 +30,8 @@ const DENIED_FIELDS: ReadonlyMap<string, string> = new Map([
   ['denyMcpAuthorization', 'only the person may deny a connection'],
   ['revokeMcpConnection', 'only the person may revoke a connection'],
   ['updateMcpSettings', 'MCP safety settings are changed in the console'],
+  // A signed link to a buyer's private bank screenshot or statement.
+  ['failedPaymentEvidenceLink', 'returns a signed link to private payment evidence'],
 ]);
 
 /** Any field whose name carries one of these words is refused. */

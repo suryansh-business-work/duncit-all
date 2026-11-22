@@ -1,4 +1,5 @@
 import { useMemo, type MutableRefObject, type ReactNode } from 'react';
+import { useTheme } from '@mui/material/styles';
 import { DuncitTable, type TableFetch } from '@duncit/table';
 import {
   buildLeadColumns,
@@ -7,9 +8,12 @@ import {
   type CrmLeadRowBase,
   type LeadFilterOption,
 } from './leadColumns';
+import { duplicateRowStyle, withDuplicateMark, type DuplicateFlagged } from './duplicateRow';
 import { useTranslation } from '@duncit/shell';
 
-interface Props<T extends CrmLeadRowBase> {
+type LeadRow = CrmLeadRowBase & DuplicateFlagged;
+
+interface Props<T extends LeadRow> {
   entity: CrmLeadEntity;
   fetchRows: TableFetch<T>;
   refetchRef: MutableRefObject<(() => void) | null>;
@@ -24,8 +28,8 @@ interface Props<T extends CrmLeadRowBase> {
 
 const getLeadRowId = (row: CrmLeadRowBase) => row.id;
 
-/** Shared server-driven table for the host / venue / ecomm lead triplet. */
-export default function CrmLeadsTable<T extends CrmLeadRowBase>({
+/** Shared server-driven table for every lead kind; a duplicate lead's row is red. */
+export default function CrmLeadsTable<T extends LeadRow>({
   entity,
   fetchRows,
   refetchRef,
@@ -38,11 +42,16 @@ export default function CrmLeadsTable<T extends CrmLeadRowBase>({
   onDelete,
 }: Readonly<Props<T>>) {
   const { t } = useTranslation();
+  const theme = useTheme();
   const columns = useMemo(
     () =>
-      buildLeadColumns<T>({ entity, statusOptions, priorityOptions, superCategoryOptions, onEdit, onDelete, t }),
+      withDuplicateMark(
+        buildLeadColumns<T>({ entity, statusOptions, priorityOptions, superCategoryOptions, onEdit, onDelete, t }),
+        t,
+      ),
     [entity, statusOptions, priorityOptions, superCategoryOptions, onEdit, onDelete, t],
   );
+  const getRowStyle = useMemo(() => duplicateRowStyle(theme), [theme]);
   const meta = leadEntityMeta(t)[entity];
 
   return (
@@ -51,6 +60,7 @@ export default function CrmLeadsTable<T extends CrmLeadRowBase>({
       columns={columns}
       fetchRows={fetchRows}
       getRowId={getLeadRowId}
+      getRowStyle={getRowStyle}
       onRowClick={onView}
       toolbarActions={toolbarActions}
       emptyText={meta.emptyText}

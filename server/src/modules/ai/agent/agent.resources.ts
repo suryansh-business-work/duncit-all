@@ -1,7 +1,6 @@
 import { GraphQLError } from 'graphql';
 import { ClubModel } from '@modules/clubs/club/club.model';
 import { CategoryModel } from '@modules/pods/category/category.model';
-import { HostModel } from '@modules/venues/host/host.model';
 import { VenueModel } from '@modules/venues/venue/venue.model';
 import { VenueSlotModel } from '@modules/venues/venueSlot/venueSlot.model';
 import { venueLocalYmd } from '@modules/venues/autoExtend/slotGenerator';
@@ -61,20 +60,6 @@ export async function pickClub(): Promise<AgentClub> {
   return { id: String(club._id), name: club.club_name, minPax };
 }
 
-/**
- * Who hosts them.
- *
- * An approved host is the right answer — they carry the payout rates the pod's
- * economics are checked against. When the platform has none, the person running
- * the agent hosts it themselves rather than the run failing: they are an admin,
- * the pod is theirs, and it can be reassigned afterwards.
- */
-export async function pickHostUserId(fallbackUserId: string): Promise<string> {
-  const host = await HostModel.findOne({ status: 'APPROVED', is_active: true })
-    .sort({ approved_at: -1 })
-    .select('user_id');
-  return host ? String(host.user_id) : fallbackUserId;
-}
 
 /**
  * Free slots at live venues, soonest first.

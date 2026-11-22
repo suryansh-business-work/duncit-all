@@ -16,6 +16,7 @@ import {
   makeHealthAppealSchema,
   makeTwoFactorCodeSchema,
   makePhysicalGiftCardSchema,
+  makePaymentClaimSchema,
   formatPhysicalGiftCardPasscode,
 } from '@duncit/forms/schemas';
 import { defineDemo } from '../../types';
@@ -55,6 +56,8 @@ interface SchemaMock {
   /** A printed gift card's number and its scratch-panel passcode, as typed. */
   gift_card_number: string;
   gift_card_passcode: string;
+  /** A deducted-payment claim's reference, as copied from the bank or UPI app. */
+  payment_transaction_id: string;
 }
 
 /** The `schemas` demo: every mWeb/native form contract, parsed side by side. */
@@ -85,6 +88,7 @@ export const schemasDemo = defineDemo<SchemaMock>({
     two_factor_code: 'K7QD-M2XA',
     gift_card_number: '123 456 789',
     gift_card_passcode: '1234567890123456',
+    payment_transaction_id: 'pay_29QQoUBi66xm2f',
   },
   compute: (mock) => {
     // Messages are keys here so the demo shows WHICH sentence fires without
@@ -225,6 +229,14 @@ export const schemasDemo = defineDemo<SchemaMock>({
         }),
       ),
       'Printed gift card — the passcode box shows': formatPhysicalGiftCardPasscode(mock.gift_card_passcode),
+      // Only the chosen option is judged: put a space in the reference and it is refused.
+      'Deducted-payment claim (transaction ID)': say(
+        makePaymentClaimSchema(t).safeParse({
+          evidence_type: 'TRANSACTION_ID',
+          file_refs: [],
+          transaction_id: mock.payment_transaction_id,
+        }),
+      ),
     };
   },
 });

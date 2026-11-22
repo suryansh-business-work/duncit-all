@@ -94,7 +94,7 @@ export function useEmailTemplateEditor(templateId: string) {
         },
       });
       await refetch();
-      setSnack({ kind: 'success', msg: 'Template saved' });
+      setSnack({ kind: 'success', msg: t('crm.emailTemplates.templateSaved') });
     } catch (e) {
       setSnack({ kind: 'error', msg: parseApiError(e) });
     } finally {
@@ -131,10 +131,9 @@ export function useEmailTemplateEditor(templateId: string) {
 
   const validateMjml = async () => {
     const errors = await renderPreview();
-    const plural = errors.length === 1 ? '' : 's';
     setSnack({
       kind: errors.length ? 'error' : 'success',
-      msg: errors.length ? `${errors.length} MJML issue${plural}` : 'MJML looks good',
+      msg: errors.length ? t('crm.emailTemplates.mjmlIssues', { count: errors.length }) : t('crm.emailTemplates.mjmlLooksGood'),
     });
   };
 

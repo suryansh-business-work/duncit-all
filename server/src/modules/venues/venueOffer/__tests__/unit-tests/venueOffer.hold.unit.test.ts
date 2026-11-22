@@ -9,7 +9,7 @@ import type { OfferCharges, OfferQuote, VenueOffer, VenueOfferCounter } from '..
 
 const HOUR = 3_600_000;
 const quote = (venue_payout: number) => ({ venue_payout, total: venue_payout + 100, confirmed_at: new Date(0) }) as unknown as OfferQuote;
-const charges = { min_spend: 0 } as unknown as OfferCharges;
+const charges = { cleaning_fee: 0 } as unknown as OfferCharges;
 
 const offer = (over: Partial<VenueOffer> = {}): VenueOffer => ({
   model: 'PER_GUEST',

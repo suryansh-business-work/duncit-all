@@ -7,3 +7,4 @@
  */
 export * from './user.mock';
 export * from './expense.mock';
+export * from './target.mock';

@@ -1093,6 +1093,11 @@ export const paymentFinalizer = {
         });
         return;
       }
+      // Finance › Failed Payments opens a case for the captured money (best-effort;
+      // loaded lazily, it reaches back into the payment module).
+      await import('@modules/finance/failedPayment/failedPaymentCase.service')
+        .then(({ openCaseForFinalizeFailure }) => openCaseForFinalizeFailure(paymentDocId, messageOf(error)))
+        .catch((err: unknown) => logs.server.warn('payment', 'openCaseForFinalizeFailure', { error: err, paymentDocId }));
       // Only now that the payment is on record as failed — a core that quietly
       // committed anyway must never tell the buyer their booking did not happen.
       await notifyPaymentFailed(paymentDocId).catch((err) =>

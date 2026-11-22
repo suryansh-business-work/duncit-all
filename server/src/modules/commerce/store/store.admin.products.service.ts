@@ -15,7 +15,7 @@ import {
   validatePackagingInput,
 } from '@modules/venues/inventory/inventory.packaging';
 import { listingOf, totalAvailable } from './store.product';
-import { badInput, cleanList, iso, nonNegative, notFound, secretKey, slugify, toObjectId, toObjectIds } from './store.shared';
+import { badInput, checkedLink, cleanList, iso, nonNegative, notFound, secretKey, slugify, toObjectId, toObjectIds } from './store.shared';
 
 /**
  * The Ecomm portal's own catalogue: products created, edited, drafted and
@@ -324,7 +324,7 @@ async function listingFields(doc: IStoreProduct, input: Doc, publishing: boolean
     seo_title: String(input.seo_title ?? '').trim(),
     seo_description: String(input.seo_description ?? '').trim(),
     search_keywords: cleanList(input.search_keywords, 30),
-    video_url: String(input.video_url ?? '').trim(),
+    video_url: checkedLink('The video link', String(input.video_url ?? '').trim()),
     cod_available: input.cod_available !== false,
     returnable: input.returnable !== false,
     return_window_days: returnWindow === null ? null : nonNegative(returnWindow),

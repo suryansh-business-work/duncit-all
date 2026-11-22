@@ -5,6 +5,7 @@ import { GraphQLError } from 'graphql';
 import type { MockedResponse } from '@apollo/client/testing';
 import { renderWithApollo } from '../helpers/renderWithApollo';
 import { CALL_HOST_LEAD, CALL_VENUE_LEAD, EMAIL_ECOMM_LEAD, EMAIL_VENUE_LEAD } from '@/api/crm.gql';
+import { CALL_CRM_LEAD, EMAIL_CRM_LEAD } from '@/api/prospectLeads.gql';
 
 // Providers and the body composer have their own suites; here they are doubles
 // that report the way the real ones do, so the dialog's own logic is what runs.
@@ -23,17 +24,20 @@ vi.mock('@/components/compose/EmailComposeFields', () => ({
   default: ({
     leadEmail,
     defaultSubject,
+    initialBody,
     variableValues,
     onChange,
   }: {
     leadEmail: string;
     defaultSubject: string;
+    initialBody?: string;
     variableValues: Record<string, string>;
     onChange: (payload: unknown) => void;
   }) => (
     <div>
       <p data-testid="fields-email">{leadEmail}</p>
       <p data-testid="fields-subject">{defaultSubject}</p>
+      <p data-testid="fields-body">{initialBody ?? ''}</p>
       <p data-testid="fields-vars">{JSON.stringify(variableValues)}</p>
       <button
         type="button"
@@ -76,12 +80,13 @@ const outcome = (key: string, over: Record<string, unknown> = {}) => ({
 
 interface RenderOpts {
   mode?: 'email' | 'call';
-  entity?: 'VENUE_LEAD' | 'HOST_LEAD' | 'ECOMM_LEAD';
+  entity?: 'VENUE_LEAD' | 'HOST_LEAD' | 'ECOMM_LEAD' | 'CREATOR_LEAD' | 'COMMUNITY_LEAD';
   leadOverride?: typeof lead | null;
   mocks?: MockedResponse[];
+  draft?: { to?: string | null; subject?: string | null; body_html?: string | null } | null;
 }
 
-function renderDialog({ mode = 'email', entity = 'VENUE_LEAD', leadOverride = lead, mocks = [] }: RenderOpts = {}) {
+function renderDialog({ mode = 'email', entity = 'VENUE_LEAD', leadOverride = lead, mocks = [], draft = null }: RenderOpts = {}) {
   const onClose = vi.fn();
   const onResult = vi.fn();
   renderWithApollo(
@@ -91,6 +96,7 @@ function renderDialog({ mode = 'email', entity = 'VENUE_LEAD', leadOverride = le
       entity={entity}
       lead={leadOverride}
       variableValues={{ city: 'Pune' }}
+      draft={draft}
       onClose={onClose}
       onResult={onResult}
     />,
@@ -102,6 +108,21 @@ function renderDialog({ mode = 'email', entity = 'VENUE_LEAD', leadOverride = le
 const send = () => screen.getByRole('button', { name: /send email|start call/i });
 
 describe('ContactComposeDialog email', () => {
+  it('opens an Ask AI draft addressed and written as drafted', () => {
+    renderDialog({ draft: { to: 'owner@grandhall.in', subject: 'Weekend rates', body_html: '<p>Hi Meera</p>' } });
+
+    expect(screen.getByLabelText('To (email)')).toHaveValue('owner@grandhall.in');
+    expect(screen.getByTestId('fields-subject')).toHaveTextContent('Weekend rates');
+    expect(screen.getByTestId('fields-body')).toHaveTextContent('<p>Hi Meera</p>');
+  });
+
+  it('falls back to the lead email and default subject for a draft without them', () => {
+    renderDialog({ draft: { to: null, subject: '', body_html: '<p>Hi</p>' } });
+
+    expect(screen.getByLabelText('To (email)')).toHaveValue('meera@grandhall.in');
+    expect(screen.getByTestId('fields-subject')).toHaveTextContent('Regarding Grand Hall');
+  });
+
   it('opens addressed to the lead with a default subject and the template variables', () => {
     renderDialog();
     expect(screen.getByRole('dialog', { name: 'Email · Grand Hall' })).toBeInTheDocument();
@@ -353,5 +374,51 @@ describe('ContactComposeDialog lead removed while open', () => {
     await new Promise((resolve) => setTimeout(resolve, 20));
     expect(onResult).not.toHaveBeenCalled();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+});
+
+describe('ContactComposeDialog for creator and community leads', () => {
+  it('emails a creator contact through emailCrmLeadContact, naming the lead kind', async () => {
+    const { onResult } = renderDialog({
+      entity: 'CREATOR_LEAD',
+      mocks: [
+        {
+          request: {
+            query: EMAIL_CRM_LEAD,
+            variables: {
+              entity_type: 'CREATOR_LEAD',
+              id: 'lead-1',
+              provider_id: null,
+              contact_email: 'meera@grandhall.in',
+              subject: 'Custom subject',
+              body: '<p>Hi</p>',
+              attachments: [{ url: 'https://f.test/a.pdf', name: 'a.pdf' }],
+            },
+          },
+          result: outcome('emailCrmLeadContact', { message: 'Email queued' }),
+        },
+      ],
+    });
+    fireEvent.click(screen.getByText('write valid'));
+    fireEvent.click(send());
+    await waitFor(() => expect(onResult).toHaveBeenCalledWith('Email queued', true));
+  });
+
+  it('calls a community contact through callCrmLeadContact', async () => {
+    const { onResult } = renderDialog({
+      mode: 'call',
+      entity: 'COMMUNITY_LEAD',
+      mocks: [
+        {
+          request: {
+            query: CALL_CRM_LEAD,
+            variables: { entity_type: 'COMMUNITY_LEAD', id: 'lead-1', provider_id: null, contact_number: '9812345678' },
+          },
+          result: outcome('callCrmLeadContact', { ok: false, message: 'Twilio is not configured for calls' }),
+        },
+      ],
+    });
+    fireEvent.click(send());
+    await waitFor(() => expect(onResult).toHaveBeenCalledWith('Twilio is not configured for calls', false));
   });
 });

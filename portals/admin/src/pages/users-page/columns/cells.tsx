@@ -4,6 +4,7 @@ import GoogleIcon from '@mui/icons-material/Google';
 import PhoneOutlinedIcon from '@mui/icons-material/PhoneOutlined';
 import PlaceOutlinedIcon from '@mui/icons-material/PlaceOutlined';
 import { StatusChip } from '@duncit/ui';
+import { EmailValidateButton } from '@duncit/shell';
 import { initials } from '../helpers';
 import type { UserRow } from '../queries';
 
@@ -43,6 +44,7 @@ export const renderUser = (u: UserRow) => (
         }}>
           {u.email || 'No email'}
         </Typography>
+        <EmailValidateButton email={u.email} />
       </Stack>
       {/* Both ways in, side by side. An account can hold a password AND a linked
           Google address, and they need not be the same address — support has to

@@ -56,6 +56,8 @@ export const promptCopy = (t: PromptTranslate) =>
     busy: t('ai.library.busy'),
     codeDeleteHint: t('ai.library.codeDeleteHint'),
     resetHint: t('ai.library.resetHint'),
+    edited: t('ai.library.edited'),
+    editedHint: t('ai.library.editedHint'),
 
     fields: {
       name: t('ai.library.fields.name'),

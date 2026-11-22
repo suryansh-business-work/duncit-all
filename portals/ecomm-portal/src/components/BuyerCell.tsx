@@ -1,4 +1,5 @@
 import { Stack, Typography } from '@mui/material';
+import { EmailValidateButton } from '@duncit/shell';
 import { GuestChip } from './chips';
 
 interface BuyerCellProps {
@@ -7,7 +8,7 @@ interface BuyerCellProps {
   guest: boolean;
 }
 
-/** Who bought (or is buying): name over email, and a Guest chip for a buyer with no account. */
+/** Who bought (or is buying): name over email, the email's Validate button, and a Guest chip for a buyer with no account. */
 export default function BuyerCell({ name, email, guest }: Readonly<BuyerCellProps>) {
   return (
     <Stack direction="row" spacing={1} component="span" sx={{ alignItems: 'center', minWidth: 0 }}>
@@ -21,6 +22,7 @@ export default function BuyerCell({ name, email, guest }: Readonly<BuyerCellProp
           {email}
         </Typography>
       </Stack>
+      <EmailValidateButton email={email} />
       {guest && <GuestChip />}
     </Stack>
   );

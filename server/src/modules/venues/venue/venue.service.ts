@@ -19,7 +19,7 @@ import { SlotTemplateModel } from '@modules/venues/slotTemplate/slotTemplate.mod
 import { sendEmail } from '@services/email/email.service';
 import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
 import { transitionEntityId } from '@modules/platform/whatsapp/whatsapp.entity';
-import { normalizeBankAccountInput, toBankAccountPub } from '@modules/finance/finance/bankAccount';
+import { normalizeBankAccountInput, toBankAccountPub, validatedBankAccountInput } from '@modules/finance/finance/bankAccount';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import {
   VENUE_AMENITIES,
@@ -1056,7 +1056,7 @@ export const venueService = {
     if (input.owner_address !== undefined) v.owner_address = input.owner_address;
     // A plain copy: the subdocument itself is replaced by the write below.
     const previousBank = normalizeBankAccountInput(v.bank_account ?? {});
-    if (input.bank_account !== undefined) v.bank_account = normalizeBankAccountInput(input.bank_account) as any;
+    if (input.bank_account !== undefined) v.bank_account = validatedBankAccountInput(input.bank_account, previousBank) as any;
     if (v.step_completed < 3) v.step_completed = 3;
     await v.save();
     if (v.status === 'APPROVED' && bankAccountChanged(previousBank, v.bank_account)) {
@@ -1244,7 +1244,7 @@ export const venueService = {
       documents,
       gstin: opts.step2.gstin ?? '',
       pan: opts.step2.pan ?? '',
-      bank_account: normalizeBankAccountInput(opts.step3.bank_account),
+      bank_account: validatedBankAccountInput(opts.step3.bank_account),
       owner_name: opts.step3.owner_name,
       owner_email: opts.step3.owner_email,
       owner_phone: opts.step3.owner_phone,
@@ -1271,7 +1271,7 @@ export const venueService = {
       .map((d: any) => ({ type: String(d.type).trim(), url: String(d.url).trim(), uploaded_at: new Date() }));
     if (opts.step2.gstin !== undefined) applyAdminGstin(v, opts.step2.gstin);
     if (opts.step2.pan !== undefined) v.pan = opts.step2.pan;
-    if (opts.step3.bank_account !== undefined) v.bank_account = normalizeBankAccountInput(opts.step3.bank_account) as any;
+    if (opts.step3.bank_account !== undefined) v.bank_account = validatedBankAccountInput(opts.step3.bank_account, v.bank_account) as any;
     v.owner_name = opts.step3.owner_name;
     v.owner_email = opts.step3.owner_email;
     v.owner_phone = opts.step3.owner_phone;

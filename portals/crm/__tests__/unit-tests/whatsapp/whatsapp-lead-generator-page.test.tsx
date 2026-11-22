@@ -33,10 +33,10 @@ afterEach(() => {
 });
 
 describe('WhatsAppLeadGeneratorPage', () => {
-  it('guides an unconnected account to its API key', async () => {
+  it('explains the automatic connect flow to an unconnected account', async () => {
     renderPage([connectionMock(waConnection())]);
 
-    expect(await screen.findByText('How do I get the API key?')).toBeInTheDocument();
+    expect(await screen.findByText('How does connecting work?')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'WhatsApp Lead Generator' })).toBeInTheDocument();
   });
 
@@ -45,7 +45,7 @@ describe('WhatsAppLeadGeneratorPage', () => {
 
     expect(await screen.findByText('+919812345678')).toBeInTheDocument();
     expect(await screen.findByRole('tab', { name: 'Communities' })).toBeInTheDocument();
-    expect(screen.queryByText('How do I get the API key?')).toBeNull();
+    expect(screen.queryByText('How does connecting work?')).toBeNull();
   });
 
   it('shows the error when the connection cannot be read', async () => {

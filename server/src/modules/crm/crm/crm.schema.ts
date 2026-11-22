@@ -17,6 +17,17 @@ export const crmTypeDefs = gql`
     email: String
   }
 
+  "A social profile beyond the main Instagram link (YouTube, Facebook, Linktree…)."
+  type CrmSocialLink {
+    name: String!
+    url: String!
+  }
+
+  input CrmSocialLinkInput {
+    name: String!
+    url: String!
+  }
+
   type CrmServiceOffered {
     service: String!
     custom_name: String
@@ -53,6 +64,8 @@ export const crmTypeDefs = gql`
     VENUE_LEAD
     HOST_LEAD
     ECOMM_LEAD
+    CREATOR_LEAD
+    COMMUNITY_LEAD
   }
 
   enum CrmDynamicFieldKind {
@@ -82,6 +95,8 @@ export const crmTypeDefs = gql`
     applies_to_venue: Boolean!
     applies_to_host: Boolean!
     applies_to_ecomm: Boolean!
+    applies_to_creator: Boolean!
+    applies_to_community: Boolean!
     required: Boolean!
     sort_order: Int!
     is_active: Boolean!
@@ -106,6 +121,8 @@ export const crmTypeDefs = gql`
     applies_to_venue: Boolean
     applies_to_host: Boolean
     applies_to_ecomm: Boolean
+    applies_to_creator: Boolean
+    applies_to_community: Boolean
     required: Boolean
     sort_order: Int
     is_active: Boolean
@@ -194,6 +211,8 @@ export const crmTypeDefs = gql`
     brochure_url: String
     website: String
     services_offered: [CrmServiceOffered!]!
+    instagram_link: String
+    social_links: [CrmSocialLink!]!
     linked_host_ids: [ID!]!
     linked_hosts: [CrmLinkedHost!]!
     tags: [String!]!
@@ -209,6 +228,8 @@ export const crmTypeDefs = gql`
     activity_log: [CrmActivity!]!
     created_at: String
     updated_at: String
+    "True when another lead of any kind shares one of this lead's phone numbers, emails or its website. Set on table pages (the Leads listing); null elsewhere."
+    is_duplicate: Boolean
   }
 
   type HostLead {
@@ -236,6 +257,7 @@ export const crmTypeDefs = gql`
     preferred_time_slot: String
     website: String
     services_offered: [CrmServiceOffered!]!
+    social_links: [CrmSocialLink!]!
     instagram_link: String
     community_link: String
     community_size: Int
@@ -254,6 +276,8 @@ export const crmTypeDefs = gql`
     activity_log: [CrmActivity!]!
     created_at: String
     updated_at: String
+    "True when another lead of any kind shares one of this lead's phone numbers, emails or its website. Set on table pages (the Leads listing); null elsewhere."
+    is_duplicate: Boolean
   }
 
   type EcommLead {
@@ -280,6 +304,7 @@ export const crmTypeDefs = gql`
     instagram_link: String
     marketplace_links: [String!]!
     services_offered: [CrmServiceOffered!]!
+    social_links: [CrmSocialLink!]!
     tags: [String!]!
     profile_photo_url: String
     dynamic_values_json: String!
@@ -292,6 +317,8 @@ export const crmTypeDefs = gql`
     activity_log: [CrmActivity!]!
     created_at: String
     updated_at: String
+    "True when another lead of any kind shares one of this lead's phone numbers, emails or its website. Set on table pages (the Leads listing); null elsewhere."
+    is_duplicate: Boolean
   }
 
   type CrmOptionGroup {
@@ -315,6 +342,10 @@ export const crmTypeDefs = gql`
     services_offered_options: [String!]!
     venue_services_offered_options: [String!]!
     host_services_offered_options: [String!]!
+    creator_platforms: [String!]!
+    collaboration_types: [String!]!
+    community_types: [String!]!
+    community_platforms: [String!]!
   }
 
   input VenueLeadInput {
@@ -349,6 +380,8 @@ export const crmTypeDefs = gql`
     brochure_url: String
     website: String
     services_offered: [CrmServiceOfferedInput!]
+    instagram_link: String
+    social_links: [CrmSocialLinkInput!]
     linked_host_ids: [ID!]
     tags: [String!]
     logo_url: String
@@ -383,6 +416,7 @@ export const crmTypeDefs = gql`
     preferred_time_slot: String
     website: String
     services_offered: [CrmServiceOfferedInput!]
+    social_links: [CrmSocialLinkInput!]
     instagram_link: String
     community_link: String
     community_size: Int
@@ -421,6 +455,7 @@ export const crmTypeDefs = gql`
     instagram_link: String
     marketplace_links: [String!]
     services_offered: [CrmServiceOfferedInput!]
+    social_links: [CrmSocialLinkInput!]
     tags: [String!]
     profile_photo_url: String
     dynamic_values_json: String
@@ -486,6 +521,8 @@ export const crmTypeDefs = gql`
     log_id: ID
     external_id: String
     status: String
+    "Why the call was not placed (e.g. TWILIO_NOT_CONFIGURED), for the portal to act on."
+    code: String
   }
 
   type CrmExcelImportError {
@@ -536,15 +573,46 @@ export const crmTypeDefs = gql`
     "Read an uploaded spreadsheet's headers + sample rows for column mapping."
     crmExcelInspect(content_base64: String!): CrmExcelInspectResult!
     crmServices(kind: CrmServiceKind, include_inactive: Boolean): [CrmService!]!
+      @deprecated(reason: "Lead forms read crmServicesOffered (CRM › Data › Services Offered). Kept for older clients.")
     crmDynamicFields(entity: CrmEntityType, include_inactive: Boolean): [CrmDynamicField!]!
     "The configured Twilio caller-ID (From) number, shown on call dialogs."
     crmCallFromNumber: String
+    "Which of these phone numbers, emails or website already belong to a lead of any kind (the lead forms' live duplicate check)."
+    crmLeadDuplicates(input: CrmLeadDuplicateCheckInput!): [CrmLeadDuplicateMatch!]!
+  }
+
+  "The value a duplicate was found on."
+  enum CrmDuplicateField {
+    PHONE
+    EMAIL
+    WEBSITE
+  }
+
+  input CrmLeadDuplicateCheckInput {
+    "The kind of the lead being edited — with lead_id, so it never matches itself."
+    entity_type: CrmEntityType!
+    "Set when editing an existing lead; blank for a new one."
+    lead_id: ID
+    contacts: [CrmContactInput!]
+    website: String
+  }
+
+  "One typed value another lead already has, and which lead that is."
+  type CrmLeadDuplicateMatch {
+    field: CrmDuplicateField!
+    "The value as it was typed."
+    value: String!
+    entity_type: CrmEntityType!
+    lead_id: ID!
+    lead_name: String!
+    city: String!
+    lead_status: String!
   }
 
   extend type Mutation {
-    createCrmService(input: CrmServiceInput!): CrmService!
-    updateCrmService(id: ID!, input: CrmServiceInput!): CrmService!
-    deleteCrmService(id: ID!): Boolean!
+    createCrmService(input: CrmServiceInput!): CrmService! @deprecated(reason: "Use the Services Offered catalogue mutations (createCrmServicesOffered etc.).")
+    updateCrmService(id: ID!, input: CrmServiceInput!): CrmService! @deprecated(reason: "Use the Services Offered catalogue mutations (createCrmServicesOffered etc.).")
+    deleteCrmService(id: ID!): Boolean! @deprecated(reason: "Use the Services Offered catalogue mutations (createCrmServicesOffered etc.).")
     createVenueLead(input: VenueLeadInput!): VenueLead!
     updateVenueLead(id: ID!, input: VenueLeadInput!): VenueLead!
     deleteVenueLead(id: ID!): Boolean!
@@ -583,16 +651,22 @@ export const crmTypeDefs = gql`
     callEcommLeadContact(id: ID!, contact_number: String!, provider_id: ID): LeadContactActionResult!
     "Place an outbound AI call (Servam-driven) using a Static Content prompt and Servam voice."
     startCrmAiCall(
-      entity: CrmAiEntity!
+      "Older clients: venue, host or ecomm. Send entity_type instead, which covers every lead kind."
+      entity: CrmAiEntity
+      "The lead kind; wins over entity when both are sent."
+      entity_type: CommsLogEntity
       id: ID!
       contact_number: String!
       prompt_id: ID!
       voice: String
       contact_name: String
     ): CrmAiCallResult!
-    "Place a portal call: Twilio rings the agent leg (agent_number, else the user's profile phone), then bridges to the customer."
+    "Place a portal call: Twilio dials the lead, then rings the agent leg (agent_number, else the user's profile phone) into the same conference."
     startCrmPortalCall(
-      entity: CrmAiEntity!
+      "Older clients: venue, host or ecomm. Send entity_type instead, which covers every lead kind."
+      entity: CrmAiEntity
+      "The lead kind; wins over entity when both are sent."
+      entity_type: CommsLogEntity
       id: ID!
       contact_number: String!
       agent_number: String
@@ -605,6 +679,7 @@ export const crmTypeDefs = gql`
     aiParseCrmLeads(entity: CrmAiEntity!, text: String!): String!
     "Chat about one lead, grounded in its CRM data + scraped website content. Returns HTML."
     crmLeadAiChat(entity: CrmAiEntity!, lead_id: ID!, messages: [CrmChatMessageInput!]!): String!
+      @deprecated(reason: "Use askCrmLeadAi, which keeps the conversation and works for every lead kind.")
     crmExcelImport(entity: CrmAiEntity!, content_base64: String!, mapping: [CrmImportMappingInput!]): CrmExcelImportResult!
     addCrmManualLog(input: ManualLogInput!): CrmActivity!
     createCrmDynamicField(input: CrmDynamicFieldInput!): CrmDynamicField!

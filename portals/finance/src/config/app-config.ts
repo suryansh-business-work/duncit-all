@@ -29,21 +29,36 @@ export const appConfig = {
   tokenKey: 'finance_token',
   colorModeKey: 'finance_color_mode',
   accent: { light: '#5eead4', main: '#0d9488', hover: '#0f766e', active: '#115e59' },
+  // Main sections, each with its own sub-navigation. Every route URL is
+  // unchanged: only the grouping moved, so bookmarks and deep links still work.
   nav: [
-    { label: 'Dashboard', labelKey: 'shell.nav.dashboard', to: '/', icon: 'dashboard' },
-    { label: 'Startup Dashboard', labelKey: 'shell.nav.startupDashboard', to: '/startup-dashboard', icon: 'insights' },
-    { label: 'Default Deductions', labelKey: 'shell.nav.defaultDeductions', to: '/default-deductions', icon: 'percent' },
-    // GST on venue food orders — what every venue without its own follows.
-    { label: 'Food Menu Defaults', labelKey: 'shell.nav.foodMenuDefaults', to: '/food-menu-defaults', icon: 'menuBook' },
-    // Rented items: every venue rental, and the rules they run under.
     {
-      label: 'Rented Items', labelKey: 'shell.nav.rentedItems', icon: 'handshake',
+      label: 'Overview', labelKey: 'shell.nav.groupOverview',
+      icon: 'dashboard',
       children: [
-        { label: 'Rentals', labelKey: 'shell.nav.rentedItemsBookings', to: '/rented-items', icon: 'receipt' },
-        { label: 'Rental Settings', labelKey: 'shell.nav.rentedItemsSettings', to: '/rented-items/settings', icon: 'tune' },
+        { label: 'Dashboard', labelKey: 'shell.nav.dashboard', to: '/', icon: 'dashboard' },
+        { label: 'Startup Dashboard', labelKey: 'shell.nav.startupDashboard', to: '/startup-dashboard', icon: 'insights' },
       ],
     },
-    { label: 'Pod Finance', labelKey: 'shell.nav.podFinance', to: '/pod-finance', icon: 'analytics' },
+    {
+      label: 'Pods & Settlements', labelKey: 'shell.nav.groupPodSettlements',
+      icon: 'analytics',
+      children: [
+        { label: 'Pod Finance', labelKey: 'shell.nav.podFinance', to: '/pod-finance', icon: 'analytics' },
+        { label: 'Payment Release', labelKey: 'shell.nav.paymentRelease', to: '/payment-release', icon: 'payments' },
+        { label: 'Payout Cycles', labelKey: 'shell.nav.payoutCycles', to: '/payouts', icon: 'calendar' },
+      ],
+    },
+    {
+      label: 'Payments', labelKey: 'shell.nav.groupPayments',
+      icon: 'receipt',
+      children: [
+        { label: 'Payment Logs', labelKey: 'shell.nav.paymentLogs', to: '/payment-logs', icon: 'receipt' },
+        // Checkouts that did not book: the buyer's evidence, the AI + Razorpay check, review and refund.
+        { label: 'Failed Payments', labelKey: 'shell.nav.failedPayments', to: '/failed-payments', icon: 'flag' },
+        { label: 'Round Offs', labelKey: 'shell.nav.roundOffs', to: '/round-offs', icon: 'percent' },
+      ],
+    },
     {
       label: 'Cancel & Refunds', labelKey: 'shell.nav.cancelAndRefunds',
       icon: 'quote',
@@ -52,11 +67,9 @@ export const appConfig = {
         { label: 'User Backout Refunds', labelKey: 'shell.nav.userBackoutRefunds', to: '/backout-refunds', icon: 'quote' },
         { label: 'Venue Cancel', labelKey: 'shell.nav.venueCancel', to: '/cancellations/venue', icon: 'storefront' },
         { label: 'Host Cancel', labelKey: 'shell.nav.hostCancel', to: '/cancellations/host', icon: 'receipt' },
+        { label: 'User Refund Logs', labelKey: 'shell.nav.userRefundLogs', to: '/user-refund-logs', icon: 'quote' },
       ],
     },
-    { label: 'User Refund Logs', labelKey: 'shell.nav.userRefundLogs', to: '/user-refund-logs', icon: 'quote' },
-    { label: 'Payment Logs', labelKey: 'shell.nav.paymentLogs', to: '/payment-logs', icon: 'receipt' },
-    { label: 'Round Offs', labelKey: 'shell.nav.roundOffs', to: '/round-offs', icon: 'percent' },
     // The two shops are separate products and are tracked separately: each
     // group is one shop's own payment log and its order-level refunds.
     {
@@ -75,13 +88,24 @@ export const appConfig = {
         { label: 'Order Refunds', labelKey: 'shell.nav.orderRefunds', to: '/ecomm/order-refunds', icon: 'quote' },
       ],
     },
-    { label: 'Payment Release', labelKey: 'shell.nav.paymentRelease', to: '/payment-release', icon: 'payments' },
+    // Money leaving Duncit's bank account: partner withdrawals, and payments Finance sends by hand.
     {
-      label: 'Withdrawal', labelKey: 'shell.nav.withdrawal',
+      label: 'Money Out', labelKey: 'shell.nav.groupMoneyOut',
       icon: 'payments',
       children: [
         { label: 'Withdrawal Payments', labelKey: 'shell.nav.withdrawalPayments', to: '/withdrawals', icon: 'payments' },
+        { label: 'Withdrawal Logs', labelKey: 'shell.nav.withdrawalLogs', to: '/withdrawals/logs', icon: 'receipt' },
         { label: 'Withdrawal Settings', labelKey: 'shell.nav.withdrawalSettings', to: '/withdrawals/settings', icon: 'tune' },
+        { label: 'Send Money', labelKey: 'shell.nav.sendMoney', to: '/send-money', icon: 'payments' },
+        { label: 'Send Money Logs', labelKey: 'shell.nav.sendMoneyLogs', to: '/send-money/logs', icon: 'receipt' },
+      ],
+    },
+    // Rented items: every venue rental, and the rules they run under.
+    {
+      label: 'Rented Items', labelKey: 'shell.nav.rentedItems', icon: 'handshake',
+      children: [
+        { label: 'Rentals', labelKey: 'shell.nav.rentedItemsBookings', to: '/rented-items', icon: 'receipt' },
+        { label: 'Rental Settings', labelKey: 'shell.nav.rentedItemsSettings', to: '/rented-items/settings', icon: 'tune' },
       ],
     },
     {
@@ -105,11 +129,13 @@ export const appConfig = {
       ],
     },
     // Duncit Coin, Gift Cards and Referrals moved to the Loyalty console (loyalty.duncit.com).
-    { label: 'Payout Cycles', labelKey: 'shell.nav.payoutCycles', to: '/payouts', icon: 'calendar' },
     {
       label: 'Settings', labelKey: 'shell.nav.settings',
       icon: 'settings',
       children: [
+        { label: 'Default Deductions', labelKey: 'shell.nav.defaultDeductions', to: '/default-deductions', icon: 'percent' },
+        // GST on venue food orders — what every venue without its own follows.
+        { label: 'Food Menu Defaults', labelKey: 'shell.nav.foodMenuDefaults', to: '/food-menu-defaults', icon: 'menuBook' },
         { label: 'Expense Settings', labelKey: 'shell.nav.expenseSettings', to: '/settings/expenses', icon: 'tune' },
       ],
     },

@@ -14,7 +14,6 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import SearchIcon from '@mui/icons-material/Search';
 import { DuncitIconButton } from '@duncit/buttons';
-import { ABOVE_TASKBAR_HEIGHT } from '../../workspace';
 import { useTranslation } from '../../i18n/useTranslation';
 import { FileManagerDialog } from '../../file-manager';
 import { JumpToPortalDialog } from '../jump-to-portal';
@@ -79,7 +78,7 @@ export function AppsDrawer({
           paper: {
             // A temporary Drawer's paper is already `role="dialog"`; this names it.
             'aria-labelledby': titleId,
-            sx: { width: { xs: '100%', sm: 380 }, height: ABOVE_TASKBAR_HEIGHT },
+            sx: { width: { xs: '100%', sm: 380 } },
           },
         }}
       >

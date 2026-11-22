@@ -1,181 +1,120 @@
-import { useEffect, useRef, useState } from 'react';
-import { gql } from '@apollo/client';
-import { useMutation } from '@apollo/client/react';
-import { Avatar, Box, ButtonBase, CircularProgress, Drawer, Stack, TextField, Typography } from '@mui/material';
+import { Box, Drawer, Stack, Tooltip, Typography } from '@mui/material';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
-import PersonIcon from '@mui/icons-material/Person';
 import CloseIcon from '@mui/icons-material/Close';
-import SendIcon from '@mui/icons-material/Send';
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import { DuncitIconButton } from '@duncit/buttons';
 import { tokens } from '@duncit/theme';
-import { DuncitRichTextInput } from '@duncit/rich-text';
-import { parseApiError } from '@duncit/utils';
-import { useTranslation } from '@duncit/shell';
+import { PageErrorBoundary, useTranslation } from '@duncit/shell';
+import type { CrmLeadEntityType } from '../../api/crm.types';
+import AskAiContextPanel from './AskAiContextPanel';
+import AskAiMessageList from './AskAiMessageList';
+import AskAiComposer from './AskAiComposer';
+import AskAiActionDialogs, { type AskAiLead } from './AskAiActionDialogs';
+import AskAiActionCard from './AskAiActionCard';
+import { useLeadAiThread } from './useLeadAiThread';
+import { useAskAiActions } from './useAskAiActions';
+import { ASK_AI_PANEL_WIDTH } from './askAiLead';
+import { fireAndForget, logs } from '@duncit/logs';
 
 const HEADER_HEIGHT = tokens.size.headerHeight;
+/**
+ * The paper is viewport-fixed and starts under the header, so it must also
+ * stop above the shell's taskbar, or the bar paints over the composer.
+ */
+const PAPER_HEIGHT = `calc(100% - ${HEADER_HEIGHT + tokens.size.taskbarHeight}px)`;
 
-const CRM_LEAD_AI_CHAT = gql`
-  mutation CrmLeadAiChat($entity: CrmAiEntity!, $lead_id: ID!, $messages: [CrmChatMessageInput!]!) {
-    crmLeadAiChat(entity: $entity, lead_id: $lead_id, messages: $messages)
-  }
-`;
-
-export const ASK_AI_WIDTH = 420;
-
-interface ChatMsg { id: string; role: 'user' | 'assistant'; content: string }
-
-/** The local `id` is a stable render key only — it is never sent to the API. */
-const toPayload = (list: ChatMsg[]) => list.map(({ role, content }) => ({ role, content }));
+export const ASK_AI_WIDTH = ASK_AI_PANEL_WIDTH;
+export type { AskAiLead } from './AskAiActionDialogs';
 
 interface Props {
   open: boolean;
-  entity: 'VENUE_LEAD' | 'HOST_LEAD';
-  leadId: string;
-  leadName: string;
+  entity: CrmLeadEntityType;
+  lead: AskAiLead;
+  /** Slug → value map from the lead, for email-template variables in the composer. */
+  variableValues?: Record<string, string>;
   onClose: () => void;
 }
 
-const SUGGESTIONS = ['Summarise this lead', 'Draft a follow-up email', 'Any upcoming reminders?'];
-
-/** Persistent right drawer (below the header, no backdrop) — chat grounded in this lead. */
-export default function AskAiDrawer({ open, entity, leadId, leadName, onClose }: Readonly<Props>) {
+function AskAiPanel({ entity, lead, variableValues, open, onClose }: Readonly<Props>) {
   const { t } = useTranslation();
-  const [messages, setMessages] = useState<ChatMsg[]>([]);
-  const [input, setInput] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const [chat, { loading }] = useMutation<{ crmLeadAiChat: string }>(CRM_LEAD_AI_CHAT);
-  const endRef = useRef<HTMLDivElement | null>(null);
-  const msgIdRef = useRef(0);
-
-  const newMsg = (role: ChatMsg['role'], content: string): ChatMsg => {
-    msgIdRef.current += 1;
-    return { id: `msg-${msgIdRef.current}`, role, content };
-  };
-
-  // Auto-scroll to the newest message (and while the assistant is thinking).
-  useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, loading]);
-
-  const send = async (text: string) => {
-    const content = text.trim();
-    if (!content || loading) return;
-    setError(null);
-    const next: ChatMsg[] = [...messages, newMsg('user', content)];
-    setMessages(next);
-    setInput('');
-    try {
-      const res = await chat({ variables: { entity, lead_id: leadId, messages: toPayload(next) } });
-      setMessages([...next, newMsg('assistant', res.data?.crmLeadAiChat ?? '')]);
-    } catch (e) {
-      setError(parseApiError(e));
-    }
-  };
+  const thread = useLeadAiThread(entity, lead.id, open);
+  const actions = useAskAiActions({ entity, leadId: lead.id, setActionStatus: thread.setActionStatus, onChanged: thread.refresh });
 
   return (
-    <Drawer
-      anchor="right"
-      open={open}
-      variant="persistent"
-      slotProps={{
-        paper: { role: 'complementary', 'aria-label': t('crm.components.askAi'), sx: { width: { xs: '100%', sm: ASK_AI_WIDTH }, top: HEADER_HEIGHT, height: `calc(100% - ${HEADER_HEIGHT}px)`, borderLeft: 1, borderColor: 'divider' } }
-      }}
-    >
-      <Stack
-        direction="row"
-        spacing={1}
-        sx={{
-          alignItems: "center",
-          p: 1.5,
-          borderBottom: 1,
-          borderColor: 'divider'
-        }}>
+    <Stack sx={{ height: '100%', minHeight: 0 }}>
+      <Stack direction="row" spacing={1} sx={{ alignItems: 'center', flexShrink: 0, p: 1.5, borderBottom: 1, borderColor: 'divider' }}>
         <SmartToyIcon color="secondary" />
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography variant="subtitle1" component="h2" noWrap sx={{
-            fontWeight: 800
-          }}>{t('crm.components.askAi')}</Typography>
-          <Typography
-            variant="caption"
-            noWrap
-            sx={{
-              color: "text.secondary",
-              display: 'block'
-            }}>About {leadName}</Typography>
+          <Typography variant="subtitle1" component="h2" noWrap sx={{ fontWeight: 800 }}>{t('crm.components.askAi')}</Typography>
+          <Typography variant="caption" noWrap sx={{ color: 'text.secondary', display: 'block' }}>
+            {t('crm.askAi.about', { vars: { name: lead.display_name } })}
+          </Typography>
         </Box>
+        <Tooltip title={t('crm.askAi.newConversation')}>
+          <span>
+            <DuncitIconButton onClick={() => fireAndForget(thread.clear(), logs.portal.crm, 'AskAiDrawer', 'clear')} disabled={thread.clearing || thread.messages.length === 0} aria-label={t('crm.askAi.newConversation')}>
+              <RestartAltIcon />
+            </DuncitIconButton>
+          </span>
+        </Tooltip>
         <DuncitIconButton onClick={onClose} aria-label={t('shell.common.close')} sx={{ flexShrink: 0 }}><CloseIcon /></DuncitIconButton>
       </Stack>
 
-      <Stack role="log" spacing={1.5} sx={{ flex: 1, overflowY: 'auto', p: 1.5, bgcolor: 'action.hover' }}>
-        {messages.length === 0 && (
-          <Stack spacing={1}>
-            <Typography variant="body2" sx={{
-              color: "text.secondary"
-            }}>{t('crm.components.askAnythingAboutThisLeadTry')}</Typography>
-            {SUGGESTIONS.map((s) => (
-              <ButtonBase key={s} data-testid="crm-ask-ai-suggestion" onClick={() => send(s)} sx={{ justifyContent: 'flex-start', textAlign: 'left', bgcolor: 'background.paper', border: 1, borderColor: 'divider', borderRadius: 1, px: 1.25, py: 0.75, fontSize: 13 }}>
-                {s}
-              </ButtonBase>
-            ))}
-          </Stack>
-        )}
-        {messages.map((m) => {
-          const isUser = m.role === 'user';
-          return (
-            <Stack key={m.id} direction={isUser ? 'row-reverse' : 'row'} spacing={1} sx={{
-              alignItems: "flex-start"
-            }}>
-              <Avatar sx={{ width: 26, height: 26, bgcolor: isUser ? 'primary.main' : 'secondary.main' }}>
-                {isUser ? <PersonIcon sx={{ fontSize: 16 }} /> : <SmartToyIcon sx={{ fontSize: 16 }} />}
-              </Avatar>
-              <Box sx={{ maxWidth: '82%' }}>
-                {isUser ? (
-                  <Box sx={{ bgcolor: 'primary.main', color: 'primary.contrastText', borderRadius: 2, px: 1.5, py: 1, whiteSpace: 'pre-wrap' }}>
-                    <Typography variant="body2">{m.content}</Typography>
-                  </Box>
-                ) : (
-                  <Box sx={{ bgcolor: 'background.paper', border: 1, borderColor: 'divider', borderRadius: 2 }}>
-                    <DuncitRichTextInput value={m.content} onChange={() => undefined} readOnly bare />
-                  </Box>
-                )}
-              </Box>
-            </Stack>
-          );
-        })}
-        {loading && <Stack role="status" direction="row" spacing={1} sx={{
-          alignItems: "center"
-        }}><CircularProgress size={16} /><Typography variant="caption" sx={{
-          color: "text.secondary"
-        }}>Thinking…</Typography></Stack>}
-        {error && <Typography variant="caption" color="error" role="alert">{error}</Typography>}
-        <div ref={endRef} />
-      </Stack>
+      <AskAiContextPanel context={thread.context} loading={thread.loadingThread} />
 
-      <Stack
-        direction="row"
-        spacing={1}
-        sx={{
-          alignItems: "flex-end",
-          p: 1.5,
-          borderTop: 1,
-          borderColor: 'divider'
-        }}>
-        <TextField
-          size="small"
-          fullWidth
-          multiline
-          maxRows={4}
-          placeholder={t('crm.components.askAboutThisLead')}
-          slotProps={{ htmlInput: { 'aria-label': t('crm.components.askAboutThisLead') } }}
-          data-testid="crm-ask-ai-input"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(input).catch((err) => setError(parseApiError(err))); } }}
-        />
-        <DuncitIconButton color="primary" onClick={() => send(input)} disabled={loading || !input.trim()} aria-label={t('crm.components.send')}>
-          <SendIcon />
-        </DuncitIconButton>
-      </Stack>
+      <AskAiMessageList
+        messages={thread.messages}
+        pending={thread.pending}
+        error={actions.error ?? thread.error}
+        onSuggestion={(s) => fireAndForget(thread.ask(s), logs.portal.crm, 'AskAiDrawer', 'ask')}
+        renderActions={(m) =>
+          actions.refsOf(m).map((ref) => (
+            <AskAiActionCard
+              key={`${ref.messageId}-${ref.index}`}
+              action={ref.action}
+              busy={actions.isBusy(ref)}
+              onReviewEmail={() => actions.openEmail(ref)}
+              onCreateReminder={() => fireAndForget(actions.createReminder(ref), logs.portal.crm, 'AskAiDrawer', 'createReminder')}
+              onEditReminder={() => actions.openReminder(ref)}
+              onApplyUpdate={() => fireAndForget(actions.applyUpdate(ref), logs.portal.crm, 'AskAiDrawer', 'applyUpdate')}
+              onDismiss={() => fireAndForget(actions.dismiss(ref), logs.portal.crm, 'AskAiDrawer', 'dismiss')}
+            />
+          ))
+        }
+      />
+
+      <AskAiComposer busy={thread.asking} onSend={thread.ask} />
+
+      <AskAiActionDialogs entity={entity} lead={lead} variableValues={variableValues} actions={actions} />
+    </Stack>
+  );
+}
+
+/**
+ * Persistent right drawer (below the header, no backdrop): a conversation
+ * grounded in this lead's whole CRM history, which can draft emails and plan
+ * reminders for the agent to confirm. A crash inside stays inside the drawer.
+ */
+export default function AskAiDrawer(props: Readonly<Props>) {
+  const { t } = useTranslation();
+  return (
+    <Drawer
+      anchor="right"
+      open={props.open}
+      variant="persistent"
+      slotProps={{
+        paper: {
+          role: 'complementary',
+          'aria-label': t('crm.components.askAi'),
+          sx: { width: { xs: '100%', sm: ASK_AI_WIDTH }, top: HEADER_HEIGHT, height: PAPER_HEIGHT, borderLeft: 1, borderColor: 'divider' },
+        },
+      }}
+    >
+      {props.open && (
+        <PageErrorBoundary>
+          <AskAiPanel {...props} />
+        </PageErrorBoundary>
+      )}
     </Drawer>
   );
 }

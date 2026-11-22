@@ -3,6 +3,7 @@ import { MODERATION_PROMPTS } from './moderation.prompts';
 import { GENERATION_PROMPTS } from './generation.prompts';
 import { SUPPORT_PROMPTS } from './support.prompts';
 import { CRM_PROMPTS } from './crm.prompts';
+import { CRM_LEAD_AI_PROMPTS } from './crmLeadAi.prompts';
 import { PLATFORM_PROMPTS } from './platform.prompts';
 import { MARKETING_PROMPTS } from './marketing.prompts';
 import { IG_LEAD_PROMPTS } from './igLeads.prompts';
@@ -11,6 +12,9 @@ import { AGENT_PROMPTS } from './agents.prompts';
 import { OUTREACH_PROMPTS } from './outreach.prompts';
 import { INBOX_PROMPTS } from './inbox.prompts';
 import { POD_PROMO_PROMPTS } from './podPromo.prompts';
+import { LIBRARY_PROMPTS } from './library.prompts';
+import { ASK_DUNCIT_PROMPTS } from './askDuncit.prompts';
+import { FINANCE_PROMPTS } from './finance.prompts';
 
 /**
  * Every CODE prompt the product runs on — the "Code Inside Prompt" half of the
@@ -31,6 +35,7 @@ export const CODE_PROMPTS: readonly InAppPromptDef[] = [
   ...GENERATION_PROMPTS,
   ...SUPPORT_PROMPTS,
   ...CRM_PROMPTS,
+  ...CRM_LEAD_AI_PROMPTS,
   ...PLATFORM_PROMPTS,
   ...MARKETING_PROMPTS,
   ...IG_LEAD_PROMPTS,
@@ -39,6 +44,9 @@ export const CODE_PROMPTS: readonly InAppPromptDef[] = [
   ...OUTREACH_PROMPTS,
   ...INBOX_PROMPTS,
   ...POD_PROMO_PROMPTS,
+  ...LIBRARY_PROMPTS,
+  ...ASK_DUNCIT_PROMPTS,
+  ...FINANCE_PROMPTS,
 ];
 
 export const CODE_PROMPT_BY_KEY = new Map(CODE_PROMPTS.map((p) => [p.key, p]));

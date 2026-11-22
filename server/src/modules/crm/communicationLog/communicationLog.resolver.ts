@@ -2,6 +2,8 @@ import { communicationLogService } from './communicationLog.service';
 import type { CommsLogEntity, CommsLogType } from './communicationLog.model';
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
+import { GraphQLError } from 'graphql';
+import { summarizeCall, summarizeCallInBackground } from '@modules/crm/call/call.summary';
 
 const CRM_READ = ['SUPER_ADMIN', 'CRM_MANAGER', 'CITY_ADMIN', 'ZONAL_ADMIN', 'SUPPORT_USER'];
 
@@ -42,7 +44,16 @@ export const communicationLogResolvers = {
       ctx: GraphQLContext
     ) => {
       requireRole(ctx, CRM_READ);
-      return communicationLogService.requestTranscript(args.id);
+      const log = await communicationLogService.requestTranscript(args.id);
+      // A fresh transcript gets its summary too, unless one is already there.
+      if (log?.transcript_status === 'READY') summarizeCallInBackground(args.id);
+      return log;
+    },
+    summarizeCommunicationLog: async (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, CRM_READ);
+      const log = await summarizeCall(args.id, { force: true });
+      if (!log) throw new GraphQLError('Log not found', { extensions: { code: 'NOT_FOUND' } });
+      return log;
     },
   },
 };

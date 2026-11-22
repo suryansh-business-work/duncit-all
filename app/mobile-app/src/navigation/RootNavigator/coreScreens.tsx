@@ -27,6 +27,7 @@ import { HostAutoPodsScreen } from '@/screens/HostAutoPodsScreen';
 import { HostDashboardScreen } from '@/screens/HostDashboardScreen';
 import { HostManageScreen } from '@/screens/HostManageScreen';
 import { LiveChatScreen } from '@/screens/LiveChatScreen';
+import { AskDuncitScreen } from '@/screens/AskDuncitScreen';
 import { MailPreferenceScreen } from '@/screens/MailPreferenceScreen';
 import { NearbyHostsScreen } from '@/screens/NearbyHostsScreen';
 import { NearbyVenuesScreen } from '@/screens/NearbyVenuesScreen';
@@ -56,6 +57,7 @@ import { VenueEarningsScreen } from '@/screens/VenueEarningsScreen';
 import { VenueHealthScreen } from '@/screens/VenueHealthScreen';
 import { VenueManageScreen } from '@/screens/VenueManageScreen';
 import { VenueSettingsScreen } from '@/screens/VenueSettingsScreen';
+import { VenueFeesScreen } from '@/screens/VenueFeesScreen';
 import { VenueEventRequestsScreen } from '@/screens/VenueEventRequestsScreen';
 import { VerificationScreen } from '@/screens/VerificationScreen';
 import { WalletScreen } from '@/screens/WalletScreen';
@@ -137,6 +139,7 @@ export function renderCoreScreens() {
       <Stack.Screen name="VenueAvailability" component={VenuePricingScreen} />
       <Stack.Screen name="VenuePricing" component={VenuePricingScreen} />
       <Stack.Screen name="VenueSettings" component={VenueSettingsScreen} />
+      <Stack.Screen name="VenueFees" component={VenueFeesScreen} />
       <Stack.Screen name="NearbyHosts" component={NearbyHostsScreen} />
       <Stack.Screen name="NearbyVenues" component={NearbyVenuesScreen} />
       <Stack.Screen name="HostPodRequests" component={HostPodRequestsScreen} />
@@ -181,6 +184,7 @@ export function renderCoreScreens() {
       <Stack.Screen name="Callback" component={CallbackScreen} />
       <Stack.Screen name="ChatWithUs" component={ChatWithUsScreen} />
       <Stack.Screen name="LiveChat" component={LiveChatScreen} />
+      <Stack.Screen name="AskDuncit" component={AskDuncitScreen} />
       <Stack.Screen name="AllSupportTickets" component={AllSupportTicketsScreen} />
       <Stack.Screen name="Feedback" component={FeedbackScreen} />
       <Stack.Screen name="Grievance" component={GrievanceScreen} />

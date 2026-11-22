@@ -25,6 +25,7 @@ export const appConfig = {
   nav: [
     { label: 'Dashboard', labelKey: 'shell.nav.dashboard', to: '/', icon: 'dashboard' },
     { label: 'My Expenses', labelKey: 'shell.nav.myExpenses', to: '/expenses', icon: 'expenses' },
+    { label: 'My Targets', labelKey: 'shell.nav.myTargets', to: '/targets', icon: 'flag' },
   ],
   modules: [],
 } satisfies AppConfig;

@@ -18,7 +18,6 @@ const base: VenuePricing = {
   min_hours: 0,
   max_hours: 0,
   booking_increment_minutes: 60,
-  min_spend: 0,
   slots: [],
   operating_hours: [],
   price_rules: [],
@@ -139,10 +138,11 @@ describe('quoteVenuePrice — rules, fees and money', () => {
     expect(ok(p, req()).venue_price).toBe(0);
   });
 
-  it('tops up to the minimum spend, and not past it', () => {
-    expect(ok({ ...flat1000, min_spend: 1500 }, req()).min_spend_top_up).toBe(500);
-    expect(ok({ ...flat1000, min_spend: 1500 }, req()).venue_price).toBe(1500);
-    expect(ok({ ...flat1000, min_spend: 800 }, req()).min_spend_top_up).toBe(0);
+  it('never tops the price up: a retired minimum spend still on a venue is ignored', () => {
+    const legacy = { ...flat1000, min_spend: 1500 } as typeof flat1000;
+    const b = ok(legacy, req());
+    expect(b.venue_price).toBe(1000);
+    expect(b).not.toHaveProperty('min_spend_top_up');
   });
 
   it('adds fees and GST to the venue payout; commission on the price; deposit outside the total', () => {

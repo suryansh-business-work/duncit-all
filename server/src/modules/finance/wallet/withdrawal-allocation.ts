@@ -101,3 +101,25 @@ export function consumedByRelease(
   }
   return consumed;
 }
+
+/**
+ * What a PARTIALLY approved withdrawal keeps of its attribution.
+ *
+ * The allocations were drawn oldest-first for the full request, so the approved
+ * amount is the same walk stopped early: keep slices from the front until the
+ * approved amount is reached, shortening the last one. The tail goes back to
+ * the wallet with the unapproved money, which is what makes those pod releases
+ * spendable by the next withdrawal.
+ */
+export function trimAllocations<T extends { amount: number }>(allocations: readonly T[], approved: number): T[] {
+  let remaining = round2(approved);
+  const kept: T[] = [];
+  for (const allocation of allocations) {
+    if (remaining <= 0) break;
+    const take = round2(Math.min(round2(allocation.amount), remaining));
+    if (take <= 0) continue;
+    kept.push({ ...allocation, amount: take });
+    remaining = round2(remaining - take);
+  }
+  return kept;
+}

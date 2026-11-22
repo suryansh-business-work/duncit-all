@@ -61,6 +61,9 @@ exports:
   - 'TableChangeLogApi'
   - 'TableChangeLogRow'
   - 'TableChangeAction'
+  - 'TableEmailActionProvider'
+  - 'TableEmailAction'
+  - 'isEmailField'
 ---
 
 ## Why this exists
@@ -343,9 +346,9 @@ await fetchRows(payoutQuery);
 
 | Prop | Type | Required | Default | Meaning |
 | --- | --- | --- | --- | --- |
-| `tableId` | `string` | yes | — | Persistence namespace for column prefs + density. Never reuse one. |
+| `tableId` | `string` | yes | — | Persistence namespace for column prefs + density. Never reuse one. A new id remounts the table with fresh state. |
 | `columns` | `ReadonlyArray<DuncitColumn<T>>` | yes | — | Column definitions. |
-| `fetchRows` | `TableFetch<T>` | yes | — | `(q: TableQueryState) => Promise<TablePage<T>>` — the only data path. |
+| `fetchRows` | `TableFetch<T>` | yes | — | `(q: TableQueryState) => Promise<TablePage<T>>` — the only data path. Memoise it: a new identity refetches from page 1. |
 | `getRowId` | `(row: T) => string` | yes | — | Stable row identity for AG Grid. |
 | `onRowClick` | `(row: T) => void` | no | — | Row click handler. When set, cells take keyboard focus and **Enter** on a cell opens its row too (not from a button, link or input inside the cell). A grid without it keeps its cells out of the tab order. |
 | `getRowStyle` | `(row: T) => RowStyle \| undefined` | no | — | Per-row inline style (e.g. tint a low-stock row). |
@@ -484,6 +487,33 @@ will find it hidden on the other. Prefix it with the portal (`finance-backout-re
 
 Storage is wrapped in try/catch on every read and write — private mode or a full quota simply
 means prefs do not persist, not that the table breaks.
+
+A different `tableId` in the same slot is a different table: `DuncitTable` is keyed by it, so
+switching from `ai-prompts-code` to `ai-prompts-ai` starts with that table's own search,
+filters, sort, page and saved prefs — nothing carries over from the previous one.
+
+## A new `fetchRows` refetches — memoise it
+
+`fetchRows` identity is part of the query. When it changes, the table goes back to page 1 and
+fetches through the new function, keeping the user's search and sort. That is how a tab or a
+select that a page's fetch closes over reaches the grid:
+
+```tsx
+// `status` comes from a tab; a new status means a new fetchRows, so the grid refetches.
+const fetchRows = useApolloTableFetch<AdRow>(client, ADS_TABLE, 'adRequestsTable', {
+  extraFilters: status ? [{ field: 'status', op: 'eq', value: status }] : undefined,
+}, [status]);
+
+// Rows already in hand: a refetched list is a new `rows`, so a new fetch.
+const fetchRows = useMemo(() => clientTableFetch(rows, searchOf, columns), [rows, columns]);
+```
+
+So build it with `useApolloTableFetch`, `useMemo` or `useCallback`. A function written inline
+in the render body is a new identity every render and would refetch every time the page
+re-renders. There is no need for an effect that calls `refetchRef.current?.()` when a tab,
+a route param or a list changes — that hand-rolled reload is what this replaced, and kept
+next to it, it fetches twice. `refetchRef` stays for what only the page knows: a mutation
+just changed the data behind an unchanged query.
 
 ## `externalFilters` vs a column filter
 
@@ -693,6 +723,23 @@ Where the entries come from (`server/src/modules/platform/tableChangeLog/`):
   caller, exactly as bulk delete does. The resolver's role check decides whether they may see the
   history at all, and its filter decides whose: the log of a row the caller is not shown is not
   shown either.
+
+## Every email column gets a Validate button
+
+A plain column whose `field` names one email address (`email`, `buyer_email`, `user.email`; not
+`emails` or `email_verified`, see `isEmailField`) renders through `EmailCell`: the address,
+and beside it whatever the console provides through `TableEmailActionProvider`. The shell's
+`AppShell` provides the email Validate button, so every grid in every console offers it with no
+column naming it. A column with its own `cellRenderer` keeps it, so a page that wants no button
+(Admin's validation log, where Re-validate belongs) draws the cell itself. With no provider (a
+test, a page outside the shell) the cell is exactly the text it was before.
+
+```tsx
+// packages/shell — what AppShell mounts (through EmailValidationProvider).
+<TableEmailActionProvider value={(email) => <EmailValidateButton email={email} />}>
+  {children}
+</TableEmailActionProvider>
+```
 
 ## `makeApolloTableFetch` vs `useApolloTableFetch`
 

@@ -2,6 +2,8 @@ import { clubAdminService } from './clubAdmin.service';
 import type { GraphQLContext } from '@context';
 import { requireAuth } from '@middleware/rbac';
 import type { PodRowStatus } from '@modules/pods/pod/pod.rowStatus';
+import type { PodLifecycle } from '@modules/pods/pod/pod.lifecycle';
+import { clubHostsResolvers } from './hosts/clubHosts.resolver';
 
 const actorOf = (ctx: GraphQLContext) => {
   const user = requireAuth(ctx);
@@ -42,9 +44,15 @@ export const clubAdminResolvers = {
       clubAdminService.searchHosts(actorOf(ctx), args.search),
     clubAdminPodsTable: (
       _p: unknown,
-      args: { club_id?: string | null; query?: any; status?: PodRowStatus | null },
+      args: {
+        club_id?: string | null;
+        query?: any;
+        status?: PodRowStatus | null;
+        lifecycle?: PodLifecycle | null;
+      },
       ctx: GraphQLContext
-    ) => clubAdminService.podsTable(actorOf(ctx), args.club_id, args.query, args.status),
+    ) => clubAdminService.podsTable(actorOf(ctx), args.club_id, args.query, args.status, args.lifecycle),
+    ...clubHostsResolvers.Query,
     myClubPods: (_p: unknown, args: { club_id?: string | null }, ctx: GraphQLContext) =>
       clubAdminService.myPods(actorOf(ctx), args.club_id),
     myClubPodsSummary: (_p: unknown, args: { club_id?: string | null }, ctx: GraphQLContext) =>
@@ -86,5 +94,6 @@ export const clubAdminResolvers = {
       args: { club_doc_id: string; input: any },
       ctx: GraphQLContext
     ) => clubAdminService.updateClub(actorOf(ctx), args.club_doc_id, args.input),
+    ...clubHostsResolvers.Mutation,
   },
 };

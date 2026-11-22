@@ -13,6 +13,7 @@ import { HeroCarousel } from '@/components/details/DetailHero';
 import { VenueImagesGrid } from '@/components/details/VenueImagesGrid';
 import { VenueVideosSection } from '@/components/details/VenueVideosSection';
 import { VenuePodsSection } from '@/components/details/VenuePodsSection';
+import { VenueHostTermsCard } from '@/components/details/VenueHostTermsCard';
 import { FOOD_CART_BUTTON_SPACE } from '@/components/details/venue-food/FoodCartBar';
 import { VenueFoodMenuSection } from '@/components/details/venue-food/VenueFoodMenuSection';
 import { VenueFoodOrderingScope } from '@/components/details/venue-food/VenueFoodOrderingScope';
@@ -116,6 +117,8 @@ export function VenueDetailsContent({ venue, gallery, onRefresh }: Readonly<Prop
             </Text>
           ) : null}
         </YStack>
+        {/* Hosts only: the venue's fees and minimums, and the way to start a pod here. */}
+        <VenueHostTermsCard venueId={venue.id} />
         {venue.offers_food ? <VenueFoodMenuSection venue={venue} /> : null}
 
         <SurfaceCard gap={12}>

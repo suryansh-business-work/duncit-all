@@ -9,13 +9,16 @@ import HostLeadsPage from './pages/host-leads/HostLeadsPage';
 import EcommLeadsPage from './pages/ecomm-leads/EcommLeadsPage';
 import EcommLeadEditorPage from './pages/ecomm-leads/EcommLeadEditorPage';
 import EcommLeadDetailPage from './pages/ecomm-leads/EcommLeadDetailPage';
+import ProspectLeadsPage from './pages/prospect-leads/ProspectLeadsPage';
+import ProspectLeadEditorPage from './pages/prospect-leads/ProspectLeadEditorPage';
+import ProspectLeadDetailPage from './pages/prospect-leads/ProspectLeadDetailPage';
 import HostLeadEditorPage from './pages/host-leads/HostLeadEditorPage';
 import HostLeadDetailPage from './pages/host-leads/HostLeadDetailPage';
-import ManageServicesPage from './pages/ManageServicesPage';
 import ManageDynamicFieldsPage from './pages/ManageDynamicFieldsPage';
 import CallPromptsPage from './pages/call-prompts';
 import EmailTemplatesPage from './pages/email-templates';
 import EmailTemplateEditorPage from './pages/email-templates/EditorPage';
+import EmailTemplateSettingsPage from './pages/email-templates/settings';
 import RemindersPage from './pages/reminders';
 import ServicesOfferedPage from './pages/data/services-offered';
 import UserLeadsPage from './pages/user-leads/UserLeadsPage';
@@ -28,6 +31,7 @@ import EventSuitabilityPage from './pages/data/venues/EventSuitabilityPage';
 import AppShell from './components/AppShell';
 import { ExtractionProvider, ExtractionWidget } from './pages/tools/whatsapp/extraction';
 import { EmailStatusProvider } from './components/email-status';
+import { CallSessionProvider } from './components/call-window';
 import { getToken } from './lib/session';
 
 const authed = createAuthed({
@@ -38,6 +42,7 @@ const authed = createAuthed({
 export default function App() {
   return (
     <EmailStatusProvider>
+    <CallSessionProvider>
     <ExtractionProvider>
       <Routes>
         <Route path="/profile" element={authed(<ProfilePage />)} />
@@ -46,26 +51,35 @@ export default function App() {
       <Route path="/s/:token" element={<PublicSurveyPage />} />
       <Route path="/" element={authed(<DashboardPage />)} />
       <Route path="/venue-leads" element={authed(<VenueLeadsPage />)} />
-      <Route path="/venue-leads/services" element={authed(<ManageServicesPage kind="VENUE" />)} />
+      <Route path="/venue-leads/services" element={<Navigate to="/data/services-offered" replace />} />
       <Route path="/venue-leads/new" element={authed(<VenueLeadEditorPage />)} />
       <Route path="/venue-leads/:id/view" element={authed(<VenueLeadDetailPage />)} />
       <Route path="/venue-leads/:id" element={authed(<VenueLeadEditorPage />)} />
       <Route path="/host-leads" element={authed(<HostLeadsPage />)} />
-      <Route path="/host-leads/services" element={authed(<ManageServicesPage kind="HOST" />)} />
+      <Route path="/host-leads/services" element={<Navigate to="/data/services-offered" replace />} />
       <Route path="/host-leads/new" element={authed(<HostLeadEditorPage />)} />
       <Route path="/host-leads/:id/view" element={authed(<HostLeadDetailPage />)} />
       <Route path="/host-leads/:id" element={authed(<HostLeadEditorPage />)} />
       <Route path="/ecomm-leads" element={authed(<EcommLeadsPage />)} />
-      <Route path="/ecomm-leads/services" element={authed(<ManageServicesPage kind="ECOMM" />)} />
+      <Route path="/ecomm-leads/services" element={<Navigate to="/data/services-offered" replace />} />
       <Route path="/ecomm-leads/new" element={authed(<EcommLeadEditorPage />)} />
       <Route path="/ecomm-leads/:id/view" element={authed(<EcommLeadDetailPage />)} />
       <Route path="/ecomm-leads/:id" element={authed(<EcommLeadEditorPage />)} />
+      <Route path="/creator-leads" element={authed(<ProspectLeadsPage entity="CREATOR_LEAD" />)} />
+      <Route path="/creator-leads/new" element={authed(<ProspectLeadEditorPage entity="CREATOR_LEAD" />)} />
+      <Route path="/creator-leads/:id/view" element={authed(<ProspectLeadDetailPage entity="CREATOR_LEAD" />)} />
+      <Route path="/creator-leads/:id" element={authed(<ProspectLeadEditorPage entity="CREATOR_LEAD" />)} />
+      <Route path="/community-leads" element={authed(<ProspectLeadsPage entity="COMMUNITY_LEAD" />)} />
+      <Route path="/community-leads/new" element={authed(<ProspectLeadEditorPage entity="COMMUNITY_LEAD" />)} />
+      <Route path="/community-leads/:id/view" element={authed(<ProspectLeadDetailPage entity="COMMUNITY_LEAD" />)} />
+      <Route path="/community-leads/:id" element={authed(<ProspectLeadEditorPage entity="COMMUNITY_LEAD" />)} />
       <Route path="/user-leads" element={authed(<UserLeadsPage />)} />
       <Route path="/user-leads/:id" element={authed(<UserLeadDetailPage />)} />
       <Route path="/tools/whatsapp" element={authed(<WhatsAppLeadGeneratorPage />)} />
       <Route path="/tools/email-verifier" element={authed(<EmailVerifierPage />)} />
       <Route path="/call-prompts" element={authed(<CallPromptsPage />)} />
       <Route path="/email-templates" element={authed(<EmailTemplatesPage />)} />
+      <Route path="/email-templates/settings" element={authed(<EmailTemplateSettingsPage />)} />
       <Route path="/email-templates/:id" element={authed(<EmailTemplateEditorPage />)} />
       <Route path="/reminders" element={authed(<RemindersPage />)} />
       <Route path="/data/services-offered" element={authed(<ServicesOfferedPage />)} />
@@ -76,6 +90,7 @@ export default function App() {
       </Routes>
       <ExtractionWidget />
     </ExtractionProvider>
+    </CallSessionProvider>
     </EmailStatusProvider>
   );
 }

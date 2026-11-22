@@ -8,7 +8,7 @@ import { MeetingModel } from '@modules/survey/meeting.model';
 import { sendEmail } from '@services/email/email.service';
 import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
 import { transitionEntityId } from '@modules/platform/whatsapp/whatsapp.entity';
-import { normalizeBankAccountInput, toBankAccountPub } from '@modules/finance/finance/bankAccount';
+import { normalizeBankAccountInput, toBankAccountPub, validatedBankAccountInput } from '@modules/finance/finance/bankAccount';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { isDuplicateKeyError } from '@utils/mongo-error';
 import { redactHostIdentity } from './host.redact';
@@ -18,6 +18,7 @@ import { alertBankAccountChanged, bankAccountChanged } from '@modules/finance/fi
 import { getUrlConfigs } from '@config/url-configs';
 import { userContactNumber } from '@utils/contact';
 import { toStoredBannerKit } from '@modules/venues/bannerKit/bannerKit.pub';
+import { POD_MIN_ADVANCE_DAYS_RANGE } from '@modules/platform/settings/settings.service';
 
 type AddressParts = Partial<
   Record<'line1' | 'line2' | 'landmark' | 'city' | 'state' | 'pincode', string | number | null>
@@ -181,6 +182,7 @@ const toPub = (h: IHost) => ({
   phone: h.phone ?? '',
   dob: h.dob ? h.dob.toISOString() : null,
   venue_requests_limit_override: h.venue_requests_limit_override ?? null,
+  pod_min_advance_days_override: h.pod_min_advance_days_override ?? null,
   aadhar_number: h.aadhar_number ?? '',
   pan_number: h.pan_number ?? '',
   passport_photo_url: h.passport_photo_url ?? '',
@@ -385,7 +387,7 @@ export const hostService = {
     h.full_address = input.full_address;
     // A plain copy: the subdocument itself is replaced by the write below.
     const previousBank = normalizeBankAccountInput(h.bank_account ?? {});
-    if (input.bank_account !== undefined) h.bank_account = normalizeBankAccountInput(input.bank_account) as any;
+    if (input.bank_account !== undefined) h.bank_account = validatedBankAccountInput(input.bank_account, previousBank) as any;
     if (input.tags !== undefined) h.tags = input.tags;
     if (h.step_completed < 3) h.step_completed = 3;
     await h.save();
@@ -512,7 +514,8 @@ export const hostService = {
     h.dob = parseHostDob(dob);
     Object.assign(h, opts.step2);
     Object.assign(h, opts.step3);
-    if (opts.step3.bank_account !== undefined) h.bank_account = normalizeBankAccountInput(opts.step3.bank_account) as any;
+    // A new host has no stored bank to compare with (the assign above already copied the input).
+    if (opts.step3.bank_account !== undefined) h.bank_account = validatedBankAccountInput(opts.step3.bank_account) as any;
     if (opts.step3.tags !== undefined) h.tags = opts.step3.tags;
     h.step_completed = opts.submit ? 4 : 3;
     if (opts.submit) {
@@ -551,7 +554,7 @@ export const hostService = {
     Object.assign(h, opts.step2);
     h.police_verification_url = opts.step3.police_verification_url;
     h.full_address = opts.step3.full_address;
-    if (opts.step3.bank_account !== undefined) h.bank_account = normalizeBankAccountInput(opts.step3.bank_account) as any;
+    if (opts.step3.bank_account !== undefined) h.bank_account = validatedBankAccountInput(opts.step3.bank_account, h.bank_account) as any;
     if (opts.step3.tags !== undefined) h.tags = opts.step3.tags;
     if (opts.categories !== undefined) {
       h.host_categories = (await normalizeHostCategories(opts.categories, h.host_categories ?? [])) as any;
@@ -574,6 +577,19 @@ export const hostService = {
       throw new GraphQLError('The limit must be a whole number from 0 to 1000', { extensions: { code: 'BAD_USER_INPUT' } });
     }
     const h = await HostModel.findByIdAndUpdate(hostId, { $set: { venue_requests_limit_override: limit } }, { new: true });
+    if (!h) throw new GraphQLError('Host not found', { extensions: { code: 'NOT_FOUND' } });
+    return toPub(h);
+  },
+
+  /** Admin-set Minimum Advance Days for this host's new pods; null falls back to the platform's Pod Settings value. */
+  async setPodMinAdvanceDaysOverride(hostId: string, days: number | null) {
+    const { min, max } = POD_MIN_ADVANCE_DAYS_RANGE;
+    if (days !== null && (!Number.isInteger(days) || days < min || days > max)) {
+      throw new GraphQLError(`Minimum advance days must be a whole number from ${min} to ${max}`, {
+        extensions: { code: 'BAD_USER_INPUT' },
+      });
+    }
+    const h = await HostModel.findByIdAndUpdate(hostId, { $set: { pod_min_advance_days_override: days } }, { new: true });
     if (!h) throw new GraphQLError('Host not found', { extensions: { code: 'NOT_FOUND' } });
     return toPub(h);
   },

@@ -129,9 +129,9 @@ export const E2E_FLOW_SPEC_LINKS: Readonly<Record<string, readonly string[]>> = 
   'AI: AI Monitoring logs': ['mweb/__tests__/e2e/specs/api/staff/ai-console.cy.ts'],
   'AI: AI Monitoring settings': ['mweb/__tests__/e2e/specs/api/staff/ai-console.cy.ts'],
   'AI: Automation flows': ['mweb/__tests__/e2e/specs/api/other/ai-automation-inbound-webhook.cy.ts', 'mweb/__tests__/e2e/specs/api/staff/ai-console.cy.ts'],
+  'AI: Dashboard': ['mweb/__tests__/e2e/specs/api/staff/ai-console.cy.ts'],
   'AI: OpenAI Dashboard': ['mweb/__tests__/e2e/specs/api/staff/ai-console.cy.ts'],
   'AI: OpenAI Logs': ['mweb/__tests__/e2e/specs/api/staff/ai-console.cy.ts'],
-  'AI: Welcome page': ['mweb/__tests__/e2e/specs/api/staff/ai-console.cy.ts'],
   'Analytics: Access': ['mweb/__tests__/e2e/specs/api/staff/analytics-console.cy.ts', 'mweb/__tests__/e2e/specs/api/staff/authorization.cy.ts'],
   'Analytics: Alerts': [
     'mweb/__tests__/e2e/specs/api/staff/alerts.cy.ts',
@@ -1097,6 +1097,7 @@ export const E2E_FLOW_SPEC_LINKS: Readonly<Record<string, readonly string[]>> = 
     'support/__tests__/e2e/specs/support/tickets.cy.ts',
   ],
   'Targets: Console access and dashboard': ['mweb/__tests__/e2e/specs/api/staff/workplace-consoles-access.cy.ts'],
+  'Targets: Growth Calculator': ['mweb/__tests__/e2e/specs/api/staff/workplace-consoles-access.cy.ts'],
   'Tech: Access and role gates': [
     'mweb/__tests__/e2e/specs/api/staff/access-and-role-gates.cy.ts',
     'mweb/__tests__/e2e/specs/api/staff/tech-console-access.cy.ts',

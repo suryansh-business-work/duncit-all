@@ -20,6 +20,14 @@ export const aiFeatureResolvers = {
       requireRole(ctx, AI_USAGE_READ);
       return aiFeatureService.one(args.key, args.range_days);
     },
+    aiFeaturesDashboard: (
+      _p: unknown,
+      args: { range_days?: number | null },
+      ctx: GraphQLContext,
+    ) => {
+      requireRole(ctx, AI_USAGE_READ);
+      return aiFeatureService.dashboard(args.range_days);
+    },
   },
   Mutation: {
     setAiFeatureEnabled: (

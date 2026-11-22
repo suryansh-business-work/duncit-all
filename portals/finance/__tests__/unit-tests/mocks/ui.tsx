@@ -63,7 +63,8 @@ export { PodParticipationTimeline } from '../../../../../packages/ui/src/PodPart
 export function QueryGuard({ loading, error, children }: any): ReactNode {
   if (loading) return <div data-testid="qg-loading">loading</div>;
   if (error) return <div data-testid="qg-error">error</div>;
-  return <>{children()}</>;
+  // The real QueryGuard takes either a node or a render function; so does the stub.
+  return <>{typeof children === 'function' ? children() : children}</>;
 }
 
 // The money view is the thing these suites assert on, so it is the REAL one —

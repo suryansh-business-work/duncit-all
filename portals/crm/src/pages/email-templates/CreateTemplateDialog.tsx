@@ -1,5 +1,5 @@
 import { JSX, useState } from 'react';
-import { useMutation } from '@apollo/client/react';
+import { useMutation, useQuery } from '@apollo/client/react';
 import {
   Alert,
   Box,
@@ -17,7 +17,8 @@ import StorefrontIcon from '@mui/icons-material/Storefront';
 import GroupsIcon from '@mui/icons-material/Groups';
 import DescriptionIcon from '@mui/icons-material/Description';
 import { DuncitButton } from '@duncit/buttons';
-import { CREATE, STARTER_MJML, type EmailTemplateTarget } from '../../api/emailTemplates.gql';
+import { CREATE, type EmailTemplateTarget } from '../../api/emailTemplates.gql';
+import { CRM_EMAIL_STARTER } from '../../api/emailSettings.gql';
 import { parseApiError } from '@duncit/utils';
 import MjmlAiButton from './MjmlAiButton';
 import { useTranslation } from '@duncit/shell';
@@ -33,10 +34,10 @@ const slugify = (s: string) => s.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-'
 type Translate = ReturnType<typeof useTranslation>['t'];
 
 const targets = (t: Translate): { value: EmailTemplateTarget; label: string; hint: string; icon: JSX.Element }[] =>[
-  { value: 'VENUE', label: t('crm.emailTemplates.venueLeadEmails'), hint: 'Use venue lead variables (venue name, city, contact…).', icon: <StorefrontIcon color="primary" /> },
-  { value: 'HOST', label: t('crm.emailTemplates.hostLeadEmails'), hint: 'Use host lead variables (host name, organization, contact…).', icon: <GroupsIcon color="primary" /> },
-  { value: 'ECOMM', label: t('crm.emailTemplates.ecommLeadEmails'), hint: 'Use ecomm lead variables (seller name, brand, contact…).', icon: <StorefrontIcon color="primary" /> },
-  { value: 'STATIC', label: t('crm.emailTemplates.staticNoVariables'), hint: 'A fixed template with no lead-specific variables.', icon: <DescriptionIcon color="primary" /> },
+  { value: 'VENUE', label: t('crm.emailTemplates.venueLeadEmails'), hint: t('crm.emailTemplates.venueHint'), icon: <StorefrontIcon color="primary" /> },
+  { value: 'HOST', label: t('crm.emailTemplates.hostLeadEmails'), hint: t('crm.emailTemplates.hostHint'), icon: <GroupsIcon color="primary" /> },
+  { value: 'ECOMM', label: t('crm.emailTemplates.ecommLeadEmails'), hint: t('crm.emailTemplates.ecommHint'), icon: <StorefrontIcon color="primary" /> },
+  { value: 'STATIC', label: t('crm.emailTemplates.staticNoVariables'), hint: t('crm.emailTemplates.staticHint'), icon: <DescriptionIcon color="primary" /> },
 ];
 
 /** New CRM email template: first pick a target (card choice), then the basics. */
@@ -46,11 +47,16 @@ export default function CreateTemplateDialog({ open, onClose, onCreated }: Reado
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
   const [subject, setSubject] = useState('');
-  const [mjml, setMjml] = useState(STARTER_MJML);
+  // The shared Duncit starter card (the same one every console starts from), so
+  // a new template — and the AI that reworks it — begins on the real design.
+  const { data: starterData } = useQuery<{ crmEmailStarterMjml: string }>(CRM_EMAIL_STARTER, { skip: !open });
+  const starter = starterData?.crmEmailStarterMjml ?? '';
+  const [draftMjml, setMjml] = useState('');
+  const mjml = draftMjml || starter;
   const [error, setError] = useState<string | null>(null);
   const [createTpl, { loading }] = useMutation<any>(CREATE);
 
-  const reset = () => { setTarget(null); setName(''); setSlug(''); setSubject(''); setMjml(STARTER_MJML); setError(null); };
+  const reset = () => { setTarget(null); setName(''); setSlug(''); setSubject(''); setMjml(''); setError(null); };
   const close = () => { reset(); onClose(); };
   const effectiveSlug = slug.trim() || slugify(name);
 
@@ -82,7 +88,7 @@ export default function CreateTemplateDialog({ open, onClose, onCreated }: Reado
             }}>
               <Typography variant="caption" sx={{
                 color: "text.secondary"
-              }}>Type:</Typography>
+              }}>{t('crm.emailTemplates.typeLabel')}</Typography>
               <Typography variant="body2" sx={{
                 fontWeight: 700
               }}>{targets(t).find((t) => t.value === target)?.label}</Typography>
@@ -95,7 +101,7 @@ export default function CreateTemplateDialog({ open, onClose, onCreated }: Reado
             <Stack direction="row" spacing={1} sx={{
               alignItems: "center"
             }}>
-              <MjmlAiButton currentMjml={mjml} onApply={setMjml} label={t('crm.emailTemplates.seedMjmlWithAi')} />
+              <MjmlAiButton currentMjml={mjml} onApply={setMjml} target={target} label={t('crm.emailTemplates.seedMjmlWithAi')} />
             </Stack>
           </Stack>
         ) : (
@@ -127,8 +133,8 @@ export default function CreateTemplateDialog({ open, onClose, onCreated }: Reado
       </DialogContent>
       <DialogActions>
         <DuncitButton onClick={close} disabled={loading}>{t('shell.common.cancel')}</DuncitButton>
-        <DuncitButton variant="contained" onClick={submit} disabled={loading || !target || !name.trim() || !subject.trim()}>
-          {loading ? 'Creating…' : 'Create'}
+        <DuncitButton variant="contained" onClick={submit} disabled={loading || !target || !name.trim() || !subject.trim() || !mjml}>
+          {loading ? t('crm.emailTemplates.creating') : t('crm.emailTemplates.create')}
         </DuncitButton>
       </DialogActions>
     </Dialog>

@@ -16,10 +16,10 @@ import type { ReactNode } from 'react';
 import type { ApolloLink } from '@apollo/client';
 import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { act, fireEvent, render } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { MemoryRouter } from 'react-router';
+import { MemoryRouter, useLocation } from 'react-router';
 import { ConfirmProvider } from '@duncit/dialogs';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -81,12 +81,21 @@ const ROUTES = [
   '/ecomm-leads/new',
   '/ecomm-leads/smoke-id/view',
   '/ecomm-leads/smoke-id',
+  '/creator-leads',
+  '/creator-leads/new',
+  '/creator-leads/smoke-id/view',
+  '/creator-leads/smoke-id',
+  '/community-leads',
+  '/community-leads/new',
+  '/community-leads/smoke-id/view',
+  '/community-leads/smoke-id',
   '/user-leads',
   '/user-leads/smoke-id',
   '/tools/whatsapp',
   '/tools/email-verifier',
   '/call-prompts',
   '/email-templates',
+  '/email-templates/settings',
   '/email-templates/smoke-id',
   '/reminders',
   '/data/services-offered',
@@ -362,4 +371,37 @@ describe('every route mounts with no data behind it', () => {
     expect(container.innerHTML).not.toBe('');
     unmount();
   });
+});
+
+/** Prints where the router ended up, so a redirect can be asserted. */
+function WhereAmI() {
+  const { pathname } = useLocation();
+  return <output data-testid="smoke-location">{pathname}</output>;
+}
+
+describe('retired routes', () => {
+  // The per-pipeline Manage Services pages were folded into Data > Services Offered;
+  // old bookmarks and links must land there instead of on the dashboard catch-all.
+  it.each(['/venue-leads/services', '/host-leads/services', '/ecomm-leads/services'])(
+    'sends %s to Data > Services Offered',
+    async (route) => {
+      const { unmount } = render(
+        <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
+          <ThemeProvider theme={smokeTheme}>
+            <ConfirmProvider>
+              <LocalizationProvider dateAdapter={AdapterDateFns}>
+                <MemoryRouter initialEntries={[route]}>
+                  <App />
+                  <WhereAmI />
+                </MemoryRouter>
+              </LocalizationProvider>
+            </ConfirmProvider>
+          </ThemeProvider>
+        </MockedProvider>
+      );
+
+      await waitFor(() => expect(screen.getByTestId('smoke-location')).toHaveTextContent(/^\/data\/services-offered$/));
+      unmount();
+    }
+  );
 });

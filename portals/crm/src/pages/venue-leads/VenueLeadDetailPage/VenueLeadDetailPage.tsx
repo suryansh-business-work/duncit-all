@@ -7,17 +7,21 @@ import { VENUE_LEAD } from '../../../api/crm.gql';
 import type { VenueLead } from '../../../api/crm.types';
 import LeadTabs, { type LeadTab } from '../../../components/LeadTabs';
 import AskAiDrawer, { ASK_AI_WIDTH } from '../../../components/ask-ai/AskAiDrawer';
+import { askAiLead } from '../../../components/ask-ai/askAiLead';
+import { venueVariableValues } from '../../../config/leadVariables';
 import MatchedUserBox from '../../../components/MatchedUserBox';
 import { useTranslation } from '@duncit/shell';
 import { leadDate } from './helpers';
 import { buildVenueLeadTabs } from './buildVenueLeadTabs';
 import VenueHeroCard from './VenueHeroCard';
 import VenueStatTiles from './VenueStatTiles';
+import { useLeadEditorOrigin } from '../../../hooks/useLeadEditorFlow';
 
 export default function VenueLeadDetailPage() {
   const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const editorOrigin = useLeadEditorOrigin();
   const [aiOpen, setAiOpen] = useState(false);
   const { data, loading, error } = useQuery<{ venueLead: VenueLead | null }>(VENUE_LEAD, {
     variables: { id },
@@ -32,10 +36,9 @@ export default function VenueLeadDetailPage() {
   }
 
   const followUpLabel = leadDate(lead.next_follow_up_date) ?? '—';
-  const servicesPlural = lead.services_offered.length === 1 ? '' : 's';
 
   // ---- Tab definitions ----
-  const tabs: LeadTab[] = buildVenueLeadTabs({ lead, t, navigate, followUpLabel, servicesPlural });
+  const tabs: LeadTab[] = buildVenueLeadTabs({ lead, t, navigate, followUpLabel });
 
   return (
     <Stack spacing={2.5} sx={{ transition: 'margin 0.2s ease', mr: aiOpen ? { xs: 0, sm: `${ASK_AI_WIDTH}px` } : 0 }}>
@@ -51,7 +54,7 @@ export default function VenueLeadDetailPage() {
         lead={lead}
         t={t}
         onAskAi={() => setAiOpen(true)}
-        onEdit={() => navigate(`/venue-leads/${lead.id}`)}
+        onEdit={() => navigate(`/venue-leads/${lead.id}`, { state: editorOrigin })}
       />
 
       {lead.matched_user && <MatchedUserBox matched={lead.matched_user} />}
@@ -62,7 +65,13 @@ export default function VenueLeadDetailPage() {
       {/* ---- Tabs (non-details sections) ---- */}
       <LeadTabs tabs={tabs} data-testid="venue-lead-tabs" />
 
-      <AskAiDrawer open={aiOpen} entity="VENUE_LEAD" leadId={lead.id} leadName={lead.venue_name} onClose={() => setAiOpen(false)} />
+      <AskAiDrawer
+        open={aiOpen}
+        entity="VENUE_LEAD"
+        lead={askAiLead(lead, lead.venue_name)}
+        variableValues={venueVariableValues(lead)}
+        onClose={() => setAiOpen(false)}
+      />
     </Stack>
   );
 }

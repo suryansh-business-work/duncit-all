@@ -60,7 +60,7 @@ export default function AttachmentsSection({ attachments, onChange }: Readonly<P
         </Box>
         <AiMonitoringChip />
         <DuncitButton size="small" variant="outlined" startIcon={busy ? <CircularProgress size={14} /> : <AttachFileIcon />} onClick={() => inputRef.current?.click()} disabled={busy}>
-          {busy ? 'Uploading…' : 'Add file'}
+          {busy ? t('crm.emailTemplates.uploading') : t('crm.emailTemplates.addFile')}
         </DuncitButton>
       </Stack>
       {error && <Alert severity="error" sx={{ mt: 1 }} onClose={() => setError(null)}>{error}</Alert>}

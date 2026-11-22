@@ -1,67 +1,185 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsString,
+  IsNotEmpty,
   IsIn,
   IsArray,
+  IsObject,
   IsOptional,
   IsNumber,
   IsBoolean,
   ValidateNested,
+  MaxLength,
   Min,
   Max,
   ArrayMaxSize,
+  ValidatorConstraint,
+  ValidatorConstraintInterface,
+  Matches,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import { Validate } from 'class-validator';
+import { ToStrictArray, ToStrictBoolean, ToStrictNumber, ToStrictString } from '../../../common/utils/strict-boolean';
+import {
+  BATCH_ID_MAX_LENGTH,
+  CHAT_ID_MAX_LENGTH,
+  CHAT_JID_MESSAGE,
+  CHAT_JID_PATTERN,
+  MENTIONS_DESCRIPTION,
+  MENTIONS_MAX,
+  MENTION_WID_MAX_LENGTH,
+  MESSAGE_TEXT_MAX_LENGTH,
+} from './send-message.dto';
+import { isMentionWid } from './is-mention-wid.validator';
+import { BatchMessageStatus, BatchStatus } from '../entities/message-batch.entity';
+import { templateVariableNames } from '../../../common/utils/template-render';
 
-class BulkMessageContentDto {
-  @ApiPropertyOptional({ description: 'Text content for text messages' })
+/**
+ * A bulk mention is a WID or a placeholder that the item's `variables` fill in, so one batch can tag a
+ * different participant per item. The rendered value is checked as a WID when the item runs.
+ */
+@ValidatorConstraint({ name: 'isBulkMentionWid', async: false })
+class IsBulkMentionWidConstraint implements ValidatorConstraintInterface {
+  validate(value: unknown): boolean {
+    return typeof value === 'string' && (isMentionWid(value) || templateVariableNames(value).length > 0);
+  }
+
+  defaultMessage(): string {
+    return 'each mentions entry must be an individual WID or contain a template placeholder';
+  }
+}
+
+class BulkMediaDto {
+  @ApiPropertyOptional({ description: 'Media URL (http/https)' })
   @IsOptional()
+  @ToStrictString()
   @IsString()
+  url?: string;
+
+  @ApiPropertyOptional({ description: 'Base64-encoded media data' })
+  @IsOptional()
+  @ToStrictString()
+  @IsString()
+  base64?: string;
+
+  @ApiPropertyOptional({ description: 'Media MIME type' })
+  @IsOptional()
+  @ToStrictString()
+  @IsString()
+  mimetype?: string;
+
+  @ApiPropertyOptional({ description: 'Filename (documents only)' })
+  @IsOptional()
+  @ToStrictString()
+  @IsString()
+  filename?: string;
+
+  @ApiPropertyOptional({ description: 'Audio only: send as a WhatsApp voice note (PTT)' })
+  @ToStrictBoolean()
+  @IsOptional()
+  @IsBoolean()
+  ptt?: boolean;
+}
+
+export class BulkMessageContentDto {
+  @ApiPropertyOptional({ description: 'Text content for text messages', maxLength: MESSAGE_TEXT_MAX_LENGTH })
+  @IsOptional()
+  @ToStrictString()
+  @IsString()
+  @MaxLength(MESSAGE_TEXT_MAX_LENGTH)
   text?: string;
 
-  @ApiPropertyOptional({ description: 'Image URL or base64' })
+  // Typed nested DTOs (not bare object literals) so the global ValidationPipe's whitelist /
+  // forbidNonWhitelisted actually reaches their fields — otherwise unknown props inside a media
+  // object pass straight through and are persisted verbatim.
+  @ApiPropertyOptional({ description: 'Image URL or base64', type: BulkMediaDto })
   @IsOptional()
-  image?: { url?: string; base64?: string; mimetype?: string };
+  @IsObject()
+  @ValidateNested()
+  @Type(() => BulkMediaDto)
+  image?: BulkMediaDto;
 
-  @ApiPropertyOptional({ description: 'Video URL or base64' })
+  @ApiPropertyOptional({ description: 'Video URL or base64', type: BulkMediaDto })
   @IsOptional()
-  video?: { url?: string; base64?: string; mimetype?: string };
+  @IsObject()
+  @ValidateNested()
+  @Type(() => BulkMediaDto)
+  video?: BulkMediaDto;
 
-  @ApiPropertyOptional({ description: 'Audio URL or base64' })
+  @ApiPropertyOptional({ description: 'Audio URL or base64', type: BulkMediaDto })
   @IsOptional()
-  audio?: { url?: string; base64?: string; mimetype?: string };
+  @IsObject()
+  @ValidateNested()
+  @Type(() => BulkMediaDto)
+  audio?: BulkMediaDto;
 
-  @ApiPropertyOptional({ description: 'Document URL or base64' })
+  @ApiPropertyOptional({ description: 'Document URL or base64', type: BulkMediaDto })
   @IsOptional()
-  document?: { url?: string; base64?: string; mimetype?: string; filename?: string };
+  @IsObject()
+  @ValidateNested()
+  @Type(() => BulkMediaDto)
+  document?: BulkMediaDto;
 
-  @ApiPropertyOptional({ description: 'Caption for media messages' })
+  @ApiPropertyOptional({ description: 'Caption for media messages', maxLength: 1024 })
   @IsOptional()
+  @ToStrictString()
   @IsString()
+  @MaxLength(1024)
   caption?: string;
+
+  // Applies to the text body and to a media caption alike, matching the single-send routes. Every
+  // item in a batch names its own list: a batch fans out to many chats, and a WID is only taggable
+  // in a chat the participant is in.
+  @ApiPropertyOptional({
+    description: MENTIONS_DESCRIPTION,
+    example: ['628123456789@c.us'],
+    type: [String],
+    maxItems: MENTIONS_MAX,
+    items: { type: 'string', maxLength: MENTION_WID_MAX_LENGTH },
+  })
+  @IsOptional()
+  @ToStrictArray()
+  @IsArray()
+  @ArrayMaxSize(MENTIONS_MAX)
+  @IsString({ each: true })
+  @MaxLength(MENTION_WID_MAX_LENGTH, { each: true })
+  @Validate(IsBulkMentionWidConstraint, { each: true })
+  mentions?: string[];
 }
 
 class BulkMessageItemDto {
-  @ApiProperty({ description: 'Recipient chat ID', example: '628123456789@c.us' })
+  @ApiProperty({ description: 'Recipient chat ID', example: '628123456789@c.us', maxLength: CHAT_ID_MAX_LENGTH })
+  @ToStrictString()
   @IsString()
-  chatId: string;
+  @IsNotEmpty()
+  @MaxLength(CHAT_ID_MAX_LENGTH)
+  @Matches(CHAT_JID_PATTERN, { message: CHAT_JID_MESSAGE })
+  chatId!: string;
 
   @ApiProperty({ description: 'Message type', enum: ['text', 'image', 'video', 'audio', 'document'] })
   @IsIn(['text', 'image', 'video', 'audio', 'document'])
-  type: 'text' | 'image' | 'video' | 'audio' | 'document';
+  type!: 'text' | 'image' | 'video' | 'audio' | 'document';
 
   @ApiProperty({ description: 'Message content based on type' })
+  @IsObject()
   @ValidateNested()
   @Type(() => BulkMessageContentDto)
-  content: BulkMessageContentDto;
+  content!: BulkMessageContentDto;
 
   @ApiPropertyOptional({ description: 'Variables for template substitution' })
   @IsOptional()
+  @IsObject()
   variables?: Record<string, string>;
 }
 
 class BulkMessageOptionsDto {
-  @ApiPropertyOptional({ description: 'Delay between messages in ms (min: 1000, default: 3000)', default: 3000 })
+  @ApiPropertyOptional({
+    description: 'Delay between messages in ms.',
+    default: 3000,
+    minimum: 1000,
+    maximum: 60000,
+  })
+  @ToStrictNumber()
   @IsOptional()
   @IsNumber()
   @Min(1000)
@@ -69,31 +187,50 @@ class BulkMessageOptionsDto {
   delayBetweenMessages?: number;
 
   @ApiPropertyOptional({ description: 'Add random 0-2s to delay', default: true })
+  @ToStrictBoolean()
   @IsOptional()
   @IsBoolean()
   randomizeDelay?: boolean;
 
   @ApiPropertyOptional({ description: 'Stop batch on first error', default: false })
+  @ToStrictBoolean()
   @IsOptional()
   @IsBoolean()
   stopOnError?: boolean;
 }
 
+/** Max recipients in one bulk request. The guard applies the same cap BEFORE its per-chat lookups. */
+export const BULK_MESSAGES_MAX = 100;
+
 export class SendBulkMessageDto {
-  @ApiPropertyOptional({ description: 'Custom batch ID (auto-generated if not provided)' })
+  @ApiPropertyOptional({
+    description: 'Custom batch ID (auto-generated if not provided)',
+    maxLength: BATCH_ID_MAX_LENGTH,
+  })
   @IsOptional()
+  @ToStrictString()
   @IsString()
+  @MaxLength(BATCH_ID_MAX_LENGTH)
   batchId?: string;
 
-  @ApiProperty({ description: 'Array of messages (max 100 per request)', type: [BulkMessageItemDto] })
+  @ApiProperty({
+    description:
+      'Array of messages (max 100 per request; exact duplicate entries are collapsed — first occurrence wins)',
+    type: [BulkMessageItemDto],
+    maxItems: BULK_MESSAGES_MAX,
+  })
+  @ToStrictArray()
   @IsArray()
-  @ArrayMaxSize(100)
+  @ArrayMaxSize(BULK_MESSAGES_MAX)
+  // @ValidateNested accepts an entry that is itself an array, and its inner items escape both the cap and the checks.
+  @IsObject({ each: true })
   @ValidateNested({ each: true })
   @Type(() => BulkMessageItemDto)
-  messages: BulkMessageItemDto[];
+  messages!: BulkMessageItemDto[];
 
   @ApiPropertyOptional({ description: 'Batch processing options' })
   @IsOptional()
+  @IsObject()
   @ValidateNested()
   @Type(() => BulkMessageOptionsDto)
   options?: BulkMessageOptionsDto;
@@ -101,17 +238,115 @@ export class SendBulkMessageDto {
 
 export class BulkMessageResponseDto {
   @ApiProperty()
-  batchId: string;
+  batchId!: string;
 
   @ApiProperty()
-  status: string;
+  status!: string;
 
   @ApiProperty()
-  totalMessages: number;
+  totalMessages!: number;
 
   @ApiPropertyOptional()
   estimatedCompletionTime?: string;
 
   @ApiProperty()
-  statusUrl: string;
+  statusUrl!: string;
+}
+
+export class BatchProgressDto {
+  @ApiProperty({ example: 10 })
+  total!: number;
+
+  @ApiProperty({ example: 7 })
+  sent!: number;
+
+  @ApiProperty({ example: 1 })
+  failed!: number;
+
+  @ApiProperty({ example: 2 })
+  pending!: number;
+
+  @ApiProperty({ example: 0 })
+  cancelled!: number;
+}
+
+export class BatchMessageErrorDto {
+  @ApiProperty({
+    description:
+      'Machine-readable failure code: `SEND_FAILED` when the engine refused or failed the send (a recipient WhatsApp ' +
+      'does not know included), `SEND_BLOCKED` when the media URL was refused by the SSRF guard, and ' +
+      '`SEND_PACING_LIMITED` when send pacing refused the send.',
+    example: 'SEND_FAILED',
+  })
+  code!: string;
+
+  @ApiProperty({ example: 'The number is not registered on WhatsApp' })
+  message!: string;
+}
+
+/** Per-recipient outcome of a batch send. */
+export class BatchMessageResultDto {
+  @ApiProperty({ example: '628123456789@c.us' })
+  chatId!: string;
+
+  @ApiProperty({ enum: BatchMessageStatus, example: BatchMessageStatus.SENT })
+  status!: BatchMessageStatus;
+
+  @ApiPropertyOptional({
+    description: 'Assigned on a successful send.',
+    example: 'true_628123456789@c.us_3EB0123456789',
+  })
+  messageId?: string;
+
+  @ApiPropertyOptional({ type: BatchMessageErrorDto, description: 'Present on a failed send.' })
+  error?: BatchMessageErrorDto;
+
+  @ApiPropertyOptional({ type: String, format: 'date-time', description: 'When the send completed.' })
+  sentAt?: Date;
+}
+
+export class BatchStatusResponseDto {
+  @ApiProperty({ example: 'batch_abc123' })
+  batchId!: string;
+
+  @ApiProperty({ enum: BatchStatus, example: BatchStatus.PROCESSING })
+  status!: BatchStatus;
+
+  @ApiProperty({ type: BatchProgressDto })
+  progress!: BatchProgressDto;
+
+  @ApiProperty({ type: [BatchMessageResultDto], description: 'One entry per recipient already attempted.' })
+  results!: BatchMessageResultDto[];
+
+  @ApiPropertyOptional({
+    type: String,
+    format: 'date-time',
+    nullable: true,
+    description: 'When processing started; null while the batch is pending.',
+  })
+  startedAt?: Date | null;
+
+  @ApiPropertyOptional({
+    type: String,
+    format: 'date-time',
+    nullable: true,
+    description: 'When the batch reached a terminal status; null while it is still running.',
+  })
+  completedAt?: Date | null;
+}
+
+export class BatchCancelResponseDto {
+  @ApiProperty({ example: 'batch_abc123' })
+  batchId!: string;
+
+  @ApiProperty({ enum: BatchStatus, example: BatchStatus.CANCELLED })
+  status!: BatchStatus;
+
+  @ApiProperty({
+    type: BatchProgressDto,
+    description:
+      'The counters of the last saved checkpoint. A recipient whose send is running when the batch is cancelled may ' +
+      'still be delivered, and then counts as sent in `GET batch/{batchId}`.',
+  })
+  progress!: BatchProgressDto;
 }

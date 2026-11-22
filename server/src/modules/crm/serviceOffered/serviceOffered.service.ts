@@ -20,6 +20,32 @@ export const slugifyTitle = (title: string) =>
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
 
+/**
+ * The lead kinds a service can be offered to, each with its flag. Venue and
+ * host rows predate the flags, so a row missing one counts as ON; every kind
+ * added later is opt-in, so existing rows do not suddenly appear on its form.
+ */
+export const SERVICE_TARGETS = [
+  { flag: 'applies_to_venue', legacyOn: true },
+  { flag: 'applies_to_host', legacyOn: true },
+  { flag: 'applies_to_ecomm', legacyOn: false },
+  { flag: 'applies_to_creator', legacyOn: false },
+  { flag: 'applies_to_community', legacyOn: false },
+] as const;
+export type ServiceTargetFlag = (typeof SERVICE_TARGETS)[number]['flag'];
+type TargetFlags = Partial<Record<ServiceTargetFlag, boolean | null>>;
+
+/** A stored row's flag, reading a missing one by the kind's legacy default. */
+const storedFlag = (o: object, t: (typeof SERVICE_TARGETS)[number]): boolean => {
+  const value = (o as Record<string, unknown>)[t.flag];
+  return t.legacyOn ? value !== false : value === true;
+};
+
+const flagsOf = (o: object) =>
+  Object.fromEntries(SERVICE_TARGETS.map((t) => [t.flag, storedFlag(o, t)])) as Record<ServiceTargetFlag, boolean>;
+
+const NO_TARGET = 'Pick at least one lead type: Venue, Host, Ecomm, Creator or Community';
+
 const pub = (doc: any, names?: Map<string, string>) => {
   if (!doc) return null;
   const o = doc.toObject ? doc.toObject() : doc;
@@ -34,9 +60,7 @@ const pub = (doc: any, names?: Map<string, string>) => {
     super_category_name: nameOf(o.super_category_id),
     category_name: nameOf(o.category_id),
     sub_category_name: nameOf(o.sub_category_id),
-    applies_to_venue: o.applies_to_venue !== false,
-    applies_to_host: o.applies_to_host !== false,
-    applies_to_ecomm: o.applies_to_ecomm === true,
+    ...flagsOf(o),
     is_active: o.is_active !== false,
     sort_order: o.sort_order ?? 0,
     created_at: iso(o.created_at),
@@ -87,8 +111,7 @@ const SERVICE_OFFERED_TABLE_CONFIG: TableEntityConfig = {
     title: 'title',
     sort_order: 'sort_order',
     is_active: 'is_active',
-    applies_to_venue: 'applies_to_venue',
-    applies_to_host: 'applies_to_host',
+    ...Object.fromEntries(SERVICE_TARGETS.map((t) => [t.flag, t.flag])),
     created_at: 'created_at',
     updated_at: 'updated_at',
   },
@@ -98,9 +121,7 @@ const SERVICE_OFFERED_TABLE_CONFIG: TableEntityConfig = {
     category_id: { type: 'string' },
     sub_category_id: { type: 'string' },
     is_active: { type: 'boolean' },
-    applies_to_venue: { type: 'boolean' },
-    applies_to_host: { type: 'boolean' },
-    applies_to_ecomm: { type: 'boolean' },
+    ...Object.fromEntries(SERVICE_TARGETS.map((t) => [t.flag, { type: 'boolean' as const }])),
     sort_order: { type: 'number' },
     created_at: { type: 'date' },
   },
@@ -134,14 +155,11 @@ async function categoryNameFilter(input?: TableQueryInput | null): Promise<Recor
   return out;
 }
 
-export interface ServiceOfferedFilter {
+export interface ServiceOfferedFilter extends TargetFlags {
   super_category_id?: string | null;
   category_id?: string | null;
   sub_category_id?: string | null;
   is_active?: boolean | null;
-  applies_to_venue?: boolean | null;
-  applies_to_host?: boolean | null;
-  applies_to_ecomm?: boolean | null;
   search?: string | null;
 }
 
@@ -152,11 +170,11 @@ export const serviceOfferedService = {
     if (filter.category_id) q.category_id = oid(filter.category_id);
     if (filter.sub_category_id) q.sub_category_id = oid(filter.sub_category_id);
     if (filter.is_active != null) q.is_active = filter.is_active;
-    // Treat false here as "must apply to this side" — the lead-form picker only
-    // ever requests `true`, so we only constrain when true is asked for.
-    if (filter.applies_to_venue) q.applies_to_venue = { $ne: false };
-    if (filter.applies_to_host) q.applies_to_host = { $ne: false };
-    if (filter.applies_to_ecomm) q.applies_to_ecomm = true;
+    // Only `true` constrains — the lead-form picker asks for its own kind and
+    // never for "not this kind". A legacy-on kind matches rows missing the flag.
+    for (const t of SERVICE_TARGETS) {
+      if (filter[t.flag]) q[t.flag] = t.legacyOn ? { $ne: false } : true;
+    }
     if (filter.search) {
       q.title = new RegExp(filter.search.trim().replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`), 'i');
     }
@@ -179,13 +197,10 @@ export const serviceOfferedService = {
 
   /** Bulk-create one or many titles under a single hierarchy slot (dedupes). */
   async createMany(
-    input: {
+    input: TargetFlags & {
       super_category_id: string;
       category_id?: string | null;
       sub_category_id?: string | null;
-      applies_to_venue?: boolean | null;
-      applies_to_host?: boolean | null;
-      applies_to_ecomm?: boolean | null;
       titles: string[];
     },
     by?: string | null
@@ -199,19 +214,16 @@ export const serviceOfferedService = {
     if (titles.length === 0) {
       throw new GraphQLError('Add at least one service title', { extensions: { code: 'BAD_USER_INPUT' } });
     }
-    const appliesToVenue = input.applies_to_venue !== false;
-    const appliesToHost = input.applies_to_host !== false;
-    const appliesToEcomm = input.applies_to_ecomm === true;
-    if (!appliesToVenue && !appliesToHost && !appliesToEcomm) {
-      throw new GraphQLError('Pick at least one of Venue, Host or Ecomm', { extensions: { code: 'BAD_USER_INPUT' } });
+    // An omitted flag takes the kind's legacy default, as it always has.
+    const targets = flagsOf(input);
+    if (!Object.values(targets).some(Boolean)) {
+      throw new GraphQLError(NO_TARGET, { extensions: { code: 'BAD_USER_INPUT' } });
     }
     const base = {
       super_category_id: oid(input.super_category_id),
       category_id: oid(input.category_id ?? null),
       sub_category_id: oid(input.sub_category_id ?? null),
-      applies_to_venue: appliesToVenue,
-      applies_to_host: appliesToHost,
-      applies_to_ecomm: appliesToEcomm,
+      ...targets,
       created_by: by ?? null,
     };
     // Skip slugs that already exist in this exact hierarchy slot so re-adding is
@@ -241,13 +253,10 @@ export const serviceOfferedService = {
 
   async update(
     id: string,
-    input: {
+    input: TargetFlags & {
       title?: string | null;
       is_active?: boolean | null;
       sort_order?: number | null;
-      applies_to_venue?: boolean | null;
-      applies_to_host?: boolean | null;
-      applies_to_ecomm?: boolean | null;
     }
   ) {
     const doc = await ServiceOfferedModel.findById(id);
@@ -255,16 +264,15 @@ export const serviceOfferedService = {
     if (input.title != null) await applyTitleUpdate(doc, input.title);
     if (input.is_active != null) doc.is_active = input.is_active;
     if (input.sort_order != null) doc.sort_order = input.sort_order;
-    const nextVenue = input.applies_to_venue ?? doc.applies_to_venue !== false;
-    const nextHost = input.applies_to_host ?? doc.applies_to_host !== false;
-    const nextEcomm = input.applies_to_ecomm ?? doc.applies_to_ecomm === true;
-    if (input.applies_to_venue != null || input.applies_to_host != null || input.applies_to_ecomm != null) {
-      if (!nextVenue && !nextHost && !nextEcomm) {
-        throw new GraphQLError('Pick at least one of Venue, Host or Ecomm', { extensions: { code: 'BAD_USER_INPUT' } });
+    if (SERVICE_TARGETS.some((t) => input[t.flag] != null)) {
+      const current = flagsOf(doc);
+      const next = Object.fromEntries(
+        SERVICE_TARGETS.map((t) => [t.flag, input[t.flag] ?? current[t.flag]])
+      ) as Record<ServiceTargetFlag, boolean>;
+      if (!Object.values(next).some(Boolean)) {
+        throw new GraphQLError(NO_TARGET, { extensions: { code: 'BAD_USER_INPUT' } });
       }
-      doc.applies_to_venue = nextVenue;
-      doc.applies_to_host = nextHost;
-      doc.applies_to_ecomm = nextEcomm;
+      doc.set(next);
     }
     await doc.save();
     return pub(doc, await categoryNameMap([doc]));

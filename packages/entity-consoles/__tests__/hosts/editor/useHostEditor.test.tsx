@@ -14,6 +14,7 @@ import {
   SET_HOST_ACTIVE,
   SET_HOST_DEDUCTIONS,
   SET_HOST_VENUE_REQUEST_LIMIT,
+  SET_HOST_POD_MIN_ADVANCE_DAYS,
 } from '../../../src/hosts/queries';
 import { hostRecord } from '../../fixtures';
 import { hostDetailMock, hostPayload } from '../../../src/hosts/__tests__/host-response';
@@ -52,6 +53,9 @@ const governanceMocks = () => [
   write('active', SET_HOST_ACTIVE, { setHostActive: { __typename: 'Host', id: HOST_ID, is_active: false } }),
   write('limit', SET_HOST_VENUE_REQUEST_LIMIT, {
     setHostVenueRequestLimit: { __typename: 'Host', id: HOST_ID, venue_requests_limit_override: 4 },
+  }),
+  write('minAdvance', SET_HOST_POD_MIN_ADVANCE_DAYS, {
+    setHostPodMinAdvanceDays: { __typename: 'Host', id: HOST_ID, pod_min_advance_days_override: 5 },
   }),
 ];
 
@@ -172,6 +176,35 @@ describe('useHostEditor / saving an existing host', () => {
 
     expect(ops()).toEqual(['update', 'deductions', 'limit']);
     expect(calls.log.at(-1)?.variables).toEqual({ host_doc_id: HOST_ID, limit: null });
+  });
+
+  it('writes the Minimum Advance Days override when it moved', async () => {
+    const { result } = await loadedEdit(governanceMocks());
+
+    await act(async () => {
+      await result.current.editor.submit({ ...hostToValues(hostPayload()), pod_min_advance_days_override: '5' });
+    });
+
+    expect(ops()).toEqual(['update', 'deductions', 'minAdvance']);
+    expect(calls.log.at(-1)?.variables).toEqual({ host_doc_id: HOST_ID, days: 5 });
+  });
+
+  it('clears an existing Minimum Advance Days override with null', async () => {
+    const { result } = mount(`/hosts/${HOST_ID}/edit`, HOST_ID, [
+      hostDetailMock(HOST_ID, hostPayload({ pod_min_advance_days_override: 7 })),
+      ...governanceMocks(),
+    ]);
+    await waitFor(() => expect(result.current.editor.host).not.toBeNull());
+
+    await act(async () => {
+      await result.current.editor.submit({
+        ...hostToValues(hostPayload({ pod_min_advance_days_override: 7 })),
+        pod_min_advance_days_override: '',
+      });
+    });
+
+    expect(ops()).toEqual(['update', 'deductions', 'minAdvance']);
+    expect(calls.log.at(-1)?.variables).toEqual({ host_doc_id: HOST_ID, days: null });
   });
 
   it('writes details only, with no status, for a viewer who may not govern', async () => {

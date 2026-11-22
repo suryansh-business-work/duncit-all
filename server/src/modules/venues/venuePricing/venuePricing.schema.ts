@@ -62,7 +62,7 @@ export const venuePricingTypeDefs = /* GraphQL */ `
     min_hours: Float!
     max_hours: Float!
     booking_increment_minutes: Int!
-    min_spend: Float!
+    min_spend: Float! @deprecated(reason: "Moved to Venue.settings.offers.min_spend (Fees & Minimum Spend). Reads the same value.")
     slots: [PricingSlot!]!
     operating_hours: [DayHours!]!
     price_rules: [PriceRule!]!
@@ -105,7 +105,7 @@ export const venuePricingTypeDefs = /* GraphQL */ `
     min_hours: Float
     max_hours: Float
     booking_increment_minutes: Int
-    min_spend: Float
+    min_spend: Float @deprecated(reason: "Ignored. Set it with updateVenueSettings offers.min_spend.")
     slots: [PricingSlotInput!]
     operating_hours: [DayHoursInput!]
     price_rules: [PriceRuleInput!]
@@ -134,7 +134,7 @@ export const venuePricingTypeDefs = /* GraphQL */ `
     base: Float!
     rules: [AppliedPriceRule!]!
     rules_total: Float!
-    min_spend_top_up: Float!
+    min_spend_top_up: Float! @deprecated(reason: "The minimum spend top-up is retired: an offer below the minimum spend is refused (BELOW_MIN_SPEND). Always 0.")
     cleaning_fee: Float!
     pet_fee: Float!
     venue_price: Float!

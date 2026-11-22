@@ -30,6 +30,7 @@ import { whatsappCostAnalytics } from './whatsappCosts.analytics';
 import { openaiCostAnalytics } from './openaiCosts.analytics';
 import { contactsAnalytics } from './contacts.analytics';
 import { productAnalytics } from './product.analytics';
+import { emailValidationsAnalytics } from './emailValidations.analytics';
 import type { Environment } from '@modules/ai/askBot/askBot.links';
 import { analyticsTargetService } from '../goals/analyticsTarget.service';
 import { consoleLink, resolveLinks, serverEnvironment, type ConsoleLink } from './links';
@@ -70,6 +71,7 @@ const LOADERS: Record<
   OPENAI_COSTS: openaiCostAnalytics,
   CONTACTS: contactsAnalytics,
   PRODUCT: productAnalytics,
+  EMAIL_VALIDATIONS: emailValidationsAnalytics,
 };
 
 /**

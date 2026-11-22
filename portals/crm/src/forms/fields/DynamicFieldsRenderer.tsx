@@ -1,3 +1,4 @@
+import type { CrmLeadEntityType } from '../../api/crm.types';
 import { useId, useMemo } from 'react';
 import { useQuery } from '@apollo/client/react';
 import { useController, useFormContext } from 'react-hook-form';
@@ -23,11 +24,11 @@ import { CRM_DYNAMIC_FIELDS } from '../../api/crm.gql';
 import DynamicDateField from './DynamicDateField';
 import type { CrmDynamicField } from '../../api/crm.types';
 
-const ENTITY_LABELS = { VENUE_LEAD: 'venue', HOST_LEAD: 'host', ECOMM_LEAD: 'ecomm' } as const;
+const ENTITY_LABELS = { VENUE_LEAD: 'venue', HOST_LEAD: 'host', ECOMM_LEAD: 'ecomm', CREATOR_LEAD: 'creator', COMMUNITY_LEAD: 'community' } as const;
 
 interface Props {
   /** Limits the dropdown to fields tagged for this entity. */
-  entity: 'VENUE_LEAD' | 'HOST_LEAD' | 'ECOMM_LEAD';
+  entity: CrmLeadEntityType;
   /**
    * RHF field name holding a JSON-stringified `Record<string, value>`
    * keyed by `CrmDynamicField.name`. We hide the JSON behind the controller

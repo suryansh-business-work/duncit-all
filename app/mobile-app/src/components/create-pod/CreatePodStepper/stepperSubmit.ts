@@ -17,7 +17,7 @@ type StepperSubmitArgs = Pick<CreatePodStepperProps, 'clubAdmin' | 'onModerate' 
 /** The stepper's end-of-flow handlers: moderation preflight, publish, the Club
  * Admin's draft save and the jump back to a flagged step. */
 export function buildStepperSubmit({ clubAdmin, onModerate, onPublish, state }: StepperSubmitArgs) {
-  const { t, form, step, setStep, setBusy, setError, setBlocked, hosts, persist } = state;
+  const { t, form, step, setStep, setBusy, setError, setBlocked, hosts, persist, autosave } = state;
 
   // Map each flagged violation to its form field + step, set an inline error, and
   // jump to the first offending step so the host can fix it.
@@ -50,10 +50,15 @@ export function buildStepperSubmit({ clubAdmin, onModerate, onPublish, state }: 
       );
       return;
     }
+    // Let any autosave still out land first, so none can arrive after the
+    // publish and bring the draft back; then write the form as published.
+    await autosave.flush();
     const id = await persist(step);
+    autosave.markSaved();
     // A Smart Incentive the host could not see (the programme is not known to
     // be on) is published switched off, never as the draft or copy held it.
     await onPublish(id, buildCreatePodInput(values, { smartIncentiveOn: state.smartIncentiveOn }));
+    autosave.stop();
   };
 
   /**
@@ -103,5 +108,9 @@ export function buildStepperSubmit({ clubAdmin, onModerate, onPublish, state }: 
     setStep(target);
   };
 
-  return { saveDraft, submit, jumpToStep };
+  // The last step's button: the host's Create Pod, or the Club Admin's own words.
+  let submitLabel = state.busy ? t('mweb.createPod.creating') : t('mweb.createPod.createPod');
+  if (clubAdmin) submitLabel = state.busy ? clubAdmin.busyLabel : clubAdmin.submitLabel;
+
+  return { saveDraft, submit, jumpToStep, submitLabel };
 }

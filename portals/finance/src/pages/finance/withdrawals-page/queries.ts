@@ -47,7 +47,22 @@ export interface WithdrawalRow {
   reject_reason: string;
   requested_at: string;
   allocations: WithdrawalAllocation[];
+  /** What was asked for. `amount` is what was approved once a partial approval lowers it. */
+  requested_amount: number;
+  approval_status: ApprovalStatus;
+  approved_amount: number | null;
+  decision_reason: string;
+  reviewed_by_name: string;
+  payout_status: PayoutStatus | null;
+  display_status: MoneyOutStatus;
+  razorpay_payout_id: string;
+  payout_utr: string;
+  payout_failure_reason: string;
 }
+
+export type ApprovalStatus = 'PENDING' | 'APPROVED' | 'PARTIALLY_APPROVED' | 'REJECTED';
+export type PayoutStatus = 'PROCESSING' | 'PAID' | 'FAILED';
+export type MoneyOutStatus = ApprovalStatus | PayoutStatus;
 
 /** Same selection as WITHDRAWALS rows, for the server-paged table query. */
 const WITHDRAWAL_ROW_FIELDS = gql`
@@ -67,6 +82,16 @@ const WITHDRAWAL_ROW_FIELDS = gql`
     scheduled_for
     reject_reason
     requested_at
+    requested_amount
+    approval_status
+    approved_amount
+    decision_reason
+    reviewed_by_name
+    payout_status
+    display_status
+    razorpay_payout_id
+    payout_utr
+    payout_failure_reason
     allocations {
       pod_id
       amount
@@ -132,15 +157,6 @@ export const POD_WITHDRAWALS_TABLE = gql`
   ${WITHDRAWAL_ROW_FIELDS}
 `;
 
-export const REVIEW_WITHDRAWAL = gql`
-  mutation ReviewWithdrawal($id: ID!, $input: ReviewWithdrawalInput!) {
-    reviewWithdrawal(withdrawal_id: $id, input: $input) {
-      id
-      status
-    }
-  }
-`;
-
 /** Role-wise minimum withdrawal amounts, one value per role. */
 export interface WithdrawalMinimums {
   host: number;
@@ -175,6 +191,99 @@ export const UPDATE_WITHDRAWAL_MINIMUMS = gql`
       venue_owner
       ecomm_manager
       club_admin
+    }
+  }
+`;
+
+/** Everything the Accept dialog shows: the withdrawal, whether its account is verified, and whether payouts can run. */
+export const WITHDRAWAL_REVIEW = gql`
+  query WithdrawalReview($id: ID!) {
+    withdrawalReview(withdrawal_id: $id) {
+      account_verified
+      payouts_configured
+      wallet_balance
+      currency_symbol
+      verified_account {
+        id
+        source
+        label
+      }
+      withdrawal {
+        ...WithdrawalRowFields
+      }
+    }
+  }
+  ${WITHDRAWAL_ROW_FIELDS}
+`;
+
+export interface WithdrawalReviewData {
+  withdrawalReview: {
+    account_verified: boolean;
+    payouts_configured: boolean;
+    wallet_balance: number;
+    currency_symbol: string;
+    verified_account: { id: string; source: string; label: string } | null;
+    withdrawal: WithdrawalRow;
+  };
+}
+
+export type WithdrawalDecision = 'APPROVE' | 'PARTIAL' | 'REJECT';
+
+export const DECIDE_WITHDRAWAL = gql`
+  mutation DecideWithdrawal($id: ID!, $input: DecideWithdrawalInput!) {
+    decideWithdrawal(withdrawal_id: $id, input: $input) {
+      id
+      display_status
+    }
+  }
+`;
+
+export const RETRY_WITHDRAWAL_PAYOUT = gql`
+  mutation RetryWithdrawalPayout($id: ID!) {
+    retryWithdrawalPayout(withdrawal_id: $id) {
+      id
+      display_status
+    }
+  }
+`;
+
+/** One row of the immutable money-out audit trail. */
+export interface PayoutAuditRow {
+  id: string;
+  subject_id: string;
+  action: string;
+  user_name: string;
+  requested_amount: number;
+  approved_amount: number | null;
+  reason: string;
+  actor_name: string;
+  actor_role: string;
+  payment_status: string;
+  razorpay_payout_id: string;
+  utr: string;
+  created_at: string;
+}
+
+/** Withdrawal Logs: every decision and every payout step, newest first. */
+export const PAYOUT_AUDIT_TABLE = gql`
+  query PayoutAuditTable($kind: PayoutSubject!, $query: TableQueryInput) {
+    payoutAuditTable(kind: $kind, query: $query) {
+      total
+      rows {
+        id
+        subject_id
+        action
+        user_name
+        requested_amount
+        approved_amount
+        reason
+        actor_name
+        actor_role
+        payment_status
+        razorpay_payout_id
+        utr
+        created_at
+      }
     }
   }
 `;

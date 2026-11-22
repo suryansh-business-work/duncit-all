@@ -25,8 +25,10 @@ import {
 import { cardsFor, storeCatalogService } from './store.catalog.service';
 import {
   badInput,
+  checkedLink,
   cleanList,
   iso,
+  isStoreLink,
   nonNegative,
   notFound,
   scalarText,
@@ -245,9 +247,6 @@ const SETTINGS_STRINGS = [
   'home_greeting',
 ] as const;
 
-/** A same-site path (never `//host`) or an https URL — what a header or footer link may point at. */
-const isStoreLink = (link: string) => (link.startsWith('/') && !link.startsWith('//')) || link.startsWith('https://');
-
 /** Header / footer links as saved: named, pointing somewhere the store can open, at most 12. */
 function navLinksOf(input: Doc[]) {
   return input
@@ -367,6 +366,7 @@ function scalarPatch(input: Doc) {
   for (const key of SETTINGS_STRINGS) if (present(input[key])) patch[key] = scalarText(input[key]).trim();
   for (const key of SETTINGS_FLAGS) if (typeof input[key] === 'boolean') patch[key] = input[key];
   for (const key of SETTINGS_NUMBERS) if (present(input[key])) patch[key] = nonNegative(input[key]);
+  if (typeof patch.announcement_link === 'string') checkedLink('The announcement link', patch.announcement_link);
   return patch;
 }
 
@@ -409,7 +409,7 @@ function sectionItems(items: Doc[] | null | undefined) {
     image_url: String(i.image_url ?? '').trim(),
     mobile_image_url: String(i.mobile_image_url ?? '').trim(),
     cta_label: String(i.cta_label ?? '').trim(),
-    link: String(i.link ?? '').trim(),
+    link: checkedLink('A tile link', String(i.link ?? '').trim(), isStoreLink),
   }));
 }
 

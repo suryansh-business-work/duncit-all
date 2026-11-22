@@ -17,17 +17,24 @@ import {
 import { commsService } from '@services/comms/comms.service';
 import { communicationLogService } from '@modules/crm/communicationLog/communicationLog.service';
 import * as C from './crm.constants';
+import { CreatorLeadModel, CommunityLeadModel } from '@modules/crm/prospectLead/prospectLead.model';
+import { removeLeadMedia } from '@modules/crm/leadMedia/leadMedia.model';
+import { assertNoLeadDuplicates, withDuplicateFlags } from '@modules/crm/leadDuplicate/leadDuplicate.service';
 
-/** Lead model + human label per CRM entity type (manual logs, comms activity). */
-const LEAD_MODELS = {
+/** Lead model + human label per CRM entity type (manual logs, comms activity, lead media). */
+export const LEAD_MODELS = {
   VENUE_LEAD: VenueLeadModel,
   HOST_LEAD: HostLeadModel,
   ECOMM_LEAD: EcommLeadModel,
+  CREATOR_LEAD: CreatorLeadModel,
+  COMMUNITY_LEAD: CommunityLeadModel,
 } as const;
 const LEAD_LABELS = {
   VENUE_LEAD: 'Venue lead',
   HOST_LEAD: 'Host lead',
   ECOMM_LEAD: 'Ecomm lead',
+  CREATOR_LEAD: 'Creator lead',
+  COMMUNITY_LEAD: 'Community lead',
 } as const;
 
 const iso = (v: any) => (v instanceof Date ? v.toISOString() : (v ?? null));
@@ -46,6 +53,39 @@ const toServiceOffered = (s: any) => ({
   description: s?.description ?? '',
 });
 
+const toSocialLink = (l: { name?: string | null; url?: string | null } | null | undefined) => ({
+  name: l?.name ?? '',
+  url: l?.url ?? '',
+});
+
+/**
+ * Extra social links as typed: rows without a URL are dropped, a missing name
+ * becomes the link's host, and only http(s) URLs are kept — the detail page
+ * renders these as links, so a "javascript:" one must never be stored.
+ */
+export function cleanSocialLinks(raw: unknown): { name: string; url: string }[] {
+  if (!Array.isArray(raw)) return [];
+  const out: { name: string; url: string }[] = [];
+  for (const row of raw) {
+    const url = String(row?.url ?? '').trim();
+    if (!url) continue;
+    let parsed: URL | null = null;
+    try {
+      parsed = new URL(url);
+    } catch {
+      parsed = null;
+    }
+    if (!parsed || (parsed.protocol !== 'https:' && parsed.protocol !== 'http:')) {
+      throw new GraphQLError(`"${url}" is not a web link — social links must start with https://`, {
+        extensions: { code: 'BAD_USER_INPUT' },
+      });
+    }
+    const name = String(row?.name ?? '').trim().slice(0, 60) || parsed.hostname.replace(/^www\./, '');
+    out.push({ name, url });
+  }
+  return out.slice(0, 20);
+}
+
 const toActivity = (a: any) => ({
   type: a.type,
   summary: a.summary ?? '',
@@ -57,7 +97,7 @@ const toActivity = (a: any) => ({
   created_at: iso(a.created_at),
 });
 
-function pub(doc: any) {
+export function pub(doc: any) {
   const o = doc?.toObject ? doc.toObject() : doc;
   if (!o) return null;
   return {
@@ -68,6 +108,7 @@ function pub(doc: any) {
     sub_category_ids: (o.sub_category_ids ?? []).map(String),
     contacts: (o.contacts ?? []).map(toContact),
     services_offered: (o.services_offered ?? []).map(toServiceOffered),
+    social_links: (o.social_links ?? []).map(toSocialLink),
     linked_host_ids: (o.linked_host_ids ?? []).map(String),
     tags: o.tags ?? [],
     // GraphQL clients receive the dynamic field map as a JSON string so we
@@ -117,6 +158,8 @@ function pubDynamicField(doc: any) {
     applies_to_venue: o.applies_to_venue !== false,
     applies_to_host: o.applies_to_host !== false,
     applies_to_ecomm: o.applies_to_ecomm === true,
+    applies_to_creator: o.applies_to_creator === true,
+    applies_to_community: o.applies_to_community === true,
     required: !!o.required,
     sort_order: o.sort_order ?? 0,
     is_active: o.is_active !== false,
@@ -162,7 +205,7 @@ function buildQuery(filter: any, nameField: string) {
   return q;
 }
 
-const parseDate = (v?: string | null) => (v ? new Date(v) : null);
+export const parseDate = (v?: string | null) => (v ? new Date(v) : null);
 
 /**
  * Allowlists for the shared table engine (*LeadsTable — DUNCIT TABLE CONTRACT
@@ -171,7 +214,7 @@ const parseDate = (v?: string | null) => (v ? new Date(v) : null);
  * the *Table siblings accept the same filter semantics via TableQueryInput.
  * Default sort matches the lead DataGrids' default (next follow-up asc).
  */
-function leadTableConfig(
+export function leadTableConfig(
   nameField: string,
   extras: {
     searchFields?: string[];
@@ -227,12 +270,13 @@ const ECOMM_LEAD_TABLE_CONFIG = leadTableConfig('seller_name', {
 
 /** Server-side table page (search/filter/sort/paginate) for a lead collection. */
 async function leadTable(
-  Model: typeof VenueLeadModel | typeof HostLeadModel | typeof EcommLeadModel,
+  entity_type: 'VENUE_LEAD' | 'HOST_LEAD' | 'ECOMM_LEAD',
   config: TableEntityConfig,
   input?: TableQueryInput | null
 ) {
-  const { docs, total, page, page_size } = await runTableQuery(Model, {}, input, config);
-  return { rows: docs.map(pub), total, page, page_size };
+  const { docs, total, page, page_size } = await runTableQuery(LEAD_MODELS[entity_type], {}, input, config);
+  const rows = await withDuplicateFlags(entity_type, docs.map(pub).filter((row) => row !== null));
+  return { rows, total, page, page_size };
 }
 
 /**
@@ -242,7 +286,7 @@ async function leadTable(
  * Same treatment for `linked_host_ids` so the venue ↔ host association can
  * be queried + populated cleanly.
  */
-function normaliseLeadInput<T extends Record<string, any>>(input: T): T {
+export function normaliseLeadInput<T extends Record<string, any>>(input: T): T {
   const out: any = { ...input };
   if ('super_category_id' in out) {
     out.super_category_id = toObjectIdOrNull(out.super_category_id);
@@ -262,6 +306,7 @@ function normaliseLeadInput<T extends Record<string, any>>(input: T): T {
     // persist `[""]` from an accidental empty chip.
     out.tags = out.tags.map((t: any) => String(t ?? '').trim()).filter(Boolean);
   }
+  if ('social_links' in out) out.social_links = cleanSocialLinks(out.social_links);
   if (typeof out.dynamic_values_json === 'string') {
     const raw = out.dynamic_values_json.trim();
     try {
@@ -274,43 +319,14 @@ function normaliseLeadInput<T extends Record<string, any>>(input: T): T {
   return out;
 }
 
-function notFound(what: string): never {
+export function notFound(what: string): never {
   throw new GraphQLError(`${what} not found`, { extensions: { code: 'NOT_FOUND' } });
 }
 
-/** Last-10 significant digits of a phone, ignoring spaces / country code formatting. */
-const last10Digits = (v: any): string => {
-  const d = String(v ?? '').replace(/\D/g, '');
-  return d.length > 10 ? d.slice(-10) : d;
-};
-
-/**
- * Reject a lead whose contact phone already exists on another lead of the same
- * kind — each lead must be uniquely identified by its phone so the same lead
- * can't be created twice. Matches on the trailing 10 digits so "+91 87912..."
- * and "87912..." are treated as the same number regardless of stored format.
- */
-async function assertUniqueLeadPhone(model: any, input: any, kindLabel: string, excludeId?: string) {
-  const contacts = Array.isArray(input?.contacts) ? input.contacts : [];
-  const mobiles = Array.from(
-    new Set(contacts.map((c: any) => last10Digits(c?.mobile_number)).filter((d: string) => d.length >= 7))
-  );
-  if (mobiles.length === 0) return;
-  const query: any = { $or: mobiles.map((d) => ({ 'contacts.mobile_number': { $regex: `${d}$` } })) };
-  if (excludeId) query._id = { $ne: new Types.ObjectId(excludeId) };
-  const existing = await model.findOne(query).select('_id').lean();
-  if (existing) {
-    throw new GraphQLError(
-      `A ${kindLabel} with this phone number already exists. Each lead must have a unique phone number.`,
-      { extensions: { code: 'DUPLICATE_LEAD' } }
-    );
-  }
-}
-
-async function logAndAttachActivity(opts: {
+export async function logAndAttachActivity(opts: {
   lead: any;
   type: 'EMAIL' | 'CALL';
-  entity_type: 'VENUE_LEAD' | 'HOST_LEAD' | 'ECOMM_LEAD';
+  entity_type: C.CrmLeadEntityType;
   provider_id?: string | null;
   to: string;
   subject?: string;
@@ -397,6 +413,10 @@ export const crmService = {
       services_offered_options: services,
       venue_services_offered_options: venueServices,
       host_services_offered_options: hostServices,
+      creator_platforms: C.CREATOR_PLATFORMS,
+      collaboration_types: C.COLLABORATION_TYPES,
+      community_types: C.COMMUNITY_TYPES,
+      community_platforms: C.COMMUNITY_PLATFORMS,
     };
   },
 
@@ -523,11 +543,9 @@ export const crmService = {
   },
 
   // ---- Dynamic fields ----
-  async listDynamicFields(entity?: 'VENUE_LEAD' | 'HOST_LEAD' | 'ECOMM_LEAD' | null, includeInactive = false) {
+  async listDynamicFields(entity?: C.CrmLeadEntityType | null, includeInactive = false) {
     const q: Record<string, any> = {};
-    if (entity === 'VENUE_LEAD') q.applies_to_venue = true;
-    else if (entity === 'HOST_LEAD') q.applies_to_host = true;
-    else if (entity === 'ECOMM_LEAD') q.applies_to_ecomm = true;
+    if (entity) q[C.DYNAMIC_FIELD_FLAG[entity]] = true;
     if (!includeInactive) q.is_active = { $ne: false };
     const docs = await CrmDynamicFieldModel.find(q).sort({ sort_order: 1, label: 1 });
     return docs.map(pubDynamicField);
@@ -555,6 +573,8 @@ export const crmService = {
       applies_to_venue: input.applies_to_venue !== false,
       applies_to_host: input.applies_to_host !== false,
       applies_to_ecomm: input.applies_to_ecomm === true,
+      applies_to_creator: input.applies_to_creator === true,
+      applies_to_community: input.applies_to_community === true,
       required: !!input.required,
       sort_order: input.sort_order ?? 0,
       is_active: input.is_active !== false,
@@ -577,6 +597,8 @@ export const crmService = {
     if (input.applies_to_venue !== undefined) doc.applies_to_venue = input.applies_to_venue;
     if (input.applies_to_host !== undefined) doc.applies_to_host = input.applies_to_host;
     if (input.applies_to_ecomm !== undefined) doc.applies_to_ecomm = input.applies_to_ecomm;
+    if (input.applies_to_creator !== undefined) doc.applies_to_creator = input.applies_to_creator;
+    if (input.applies_to_community !== undefined) doc.applies_to_community = input.applies_to_community;
     if (input.required !== undefined) doc.required = !!input.required;
     if (input.sort_order !== undefined) doc.sort_order = input.sort_order;
     if (input.is_active !== undefined) doc.is_active = input.is_active;
@@ -610,7 +632,7 @@ export const crmService = {
    * trusted CRM staff and the value is never re-rendered outside the app).
    */
   async addManualLog(opts: {
-    entity_type: 'VENUE_LEAD' | 'HOST_LEAD' | 'ECOMM_LEAD';
+    entity_type: C.CrmLeadEntityType;
     entity_id: string;
     summary?: string | null;
     body_html: string;
@@ -649,7 +671,7 @@ export const crmService = {
   },
   /** Server-side table page (search/filter/sort/paginate) for the venueLeadsTable query. */
   venueLeadsTable(input?: TableQueryInput | null) {
-    return leadTable(VenueLeadModel, VENUE_LEAD_TABLE_CONFIG, input);
+    return leadTable('VENUE_LEAD', VENUE_LEAD_TABLE_CONFIG, input);
   },
   async getVenueLead(id: string) {
     const doc = await VenueLeadModel.findById(id);
@@ -657,13 +679,13 @@ export const crmService = {
   },
   async createVenueLead(input: any) {
     const safe = normaliseLeadInput(input);
-    await assertUniqueLeadPhone(VenueLeadModel, safe, 'venue lead');
+    await assertNoLeadDuplicates(safe, { entity_type: 'VENUE_LEAD' });
     const created = await VenueLeadModel.create({ ...safe, next_follow_up_date: parseDate(safe.next_follow_up_date) });
     return pub(created);
   },
   async updateVenueLead(id: string, input: any) {
     const safe = normaliseLeadInput(input);
-    await assertUniqueLeadPhone(VenueLeadModel, safe, 'venue lead', id);
+    await assertNoLeadDuplicates(safe, { entity_type: 'VENUE_LEAD', id });
     const updated = await VenueLeadModel.findByIdAndUpdate(
       id,
       { $set: { ...safe, next_follow_up_date: parseDate(safe.next_follow_up_date) } },
@@ -675,6 +697,7 @@ export const crmService = {
   async deleteVenueLead(id: string) {
     const doc = await VenueLeadModel.findByIdAndDelete(id);
     if (!doc) notFound('Venue lead');
+    await removeLeadMedia('VENUE_LEAD', id);
     return true;
   },
 
@@ -685,7 +708,7 @@ export const crmService = {
   },
   /** Server-side table page (search/filter/sort/paginate) for the hostLeadsTable query. */
   hostLeadsTable(input?: TableQueryInput | null) {
-    return leadTable(HostLeadModel, HOST_LEAD_TABLE_CONFIG, input);
+    return leadTable('HOST_LEAD', HOST_LEAD_TABLE_CONFIG, input);
   },
   async getHostLead(id: string) {
     const doc = await HostLeadModel.findById(id);
@@ -693,7 +716,7 @@ export const crmService = {
   },
   async createHostLead(input: any) {
     const safe = normaliseLeadInput(input);
-    await assertUniqueLeadPhone(HostLeadModel, safe, 'host lead');
+    await assertNoLeadDuplicates(safe, { entity_type: 'HOST_LEAD' });
     const created = await HostLeadModel.create({
       ...safe,
       preferred_event_date: parseDate(safe.preferred_event_date),
@@ -703,7 +726,7 @@ export const crmService = {
   },
   async updateHostLead(id: string, input: any) {
     const safe = normaliseLeadInput(input);
-    await assertUniqueLeadPhone(HostLeadModel, safe, 'host lead', id);
+    await assertNoLeadDuplicates(safe, { entity_type: 'HOST_LEAD', id });
     const updated = await HostLeadModel.findByIdAndUpdate(
       id,
       {
@@ -721,6 +744,7 @@ export const crmService = {
   async deleteHostLead(id: string) {
     const doc = await HostLeadModel.findByIdAndDelete(id);
     if (!doc) notFound('Host lead');
+    await removeLeadMedia('HOST_LEAD', id);
     return true;
   },
 
@@ -731,7 +755,7 @@ export const crmService = {
   },
   /** Server-side table page (search/filter/sort/paginate) for the ecommLeadsTable query. */
   ecommLeadsTable(input?: TableQueryInput | null) {
-    return leadTable(EcommLeadModel, ECOMM_LEAD_TABLE_CONFIG, input);
+    return leadTable('ECOMM_LEAD', ECOMM_LEAD_TABLE_CONFIG, input);
   },
   async getEcommLead(id: string) {
     const doc = await EcommLeadModel.findById(id);
@@ -739,13 +763,13 @@ export const crmService = {
   },
   async createEcommLead(input: any) {
     const safe = normaliseLeadInput(input);
-    await assertUniqueLeadPhone(EcommLeadModel, safe, 'ecomm lead');
+    await assertNoLeadDuplicates(safe, { entity_type: 'ECOMM_LEAD' });
     const created = await EcommLeadModel.create({ ...safe, next_follow_up_date: parseDate(safe.next_follow_up_date) });
     return pub(created);
   },
   async updateEcommLead(id: string, input: any) {
     const safe = normaliseLeadInput(input);
-    await assertUniqueLeadPhone(EcommLeadModel, safe, 'ecomm lead', id);
+    await assertNoLeadDuplicates(safe, { entity_type: 'ECOMM_LEAD', id });
     const updated = await EcommLeadModel.findByIdAndUpdate(
       id,
       { $set: { ...safe, next_follow_up_date: parseDate(safe.next_follow_up_date) } },
@@ -757,6 +781,7 @@ export const crmService = {
   async deleteEcommLead(id: string) {
     const doc = await EcommLeadModel.findByIdAndDelete(id);
     if (!doc) notFound('Ecomm lead');
+    await removeLeadMedia('ECOMM_LEAD', id);
     return true;
   },
 

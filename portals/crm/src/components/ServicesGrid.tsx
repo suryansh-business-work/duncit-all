@@ -70,7 +70,7 @@ export default function ServicesGrid({ services }: Readonly<Props>) {
               <Typography variant="caption" sx={{
                 color: "text.secondary"
               }}>
-                No description.
+                {t('crm.components.noServiceDescription')}
               </Typography>
             )}
           </Card>

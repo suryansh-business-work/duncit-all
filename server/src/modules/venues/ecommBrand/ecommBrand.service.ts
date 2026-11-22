@@ -684,6 +684,10 @@ export const ecommBrandService = {
     const brand = await EcommBrandModel.findById(id);
     if (!brand) throw new GraphQLError('Brand not found', { extensions: { code: 'NOT_FOUND' } });
     applyInput(brand, input);
+    // Approving here grants the owner's role exactly as approve() does, so it
+    // clears the same bar on the way in: every review section done and the
+    // consent signed. Re-saving a brand that is already approved does not.
+    if (status === 'APPROVED' && brand.status !== 'APPROVED') await assertReadyForReview(brand, 'approved');
     if (status) {
       brand.status = status as any;
       if (status === 'APPROVED' && !brand.approved_at) brand.approved_at = new Date();

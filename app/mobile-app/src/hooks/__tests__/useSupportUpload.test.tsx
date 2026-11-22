@@ -132,3 +132,44 @@ describe('useSupportUpload', () => {
     expect(second.result.current.error).toBe('Upload failed');
   });
 });
+
+describe('useSupportUpload — a narrowed picker', () => {
+  const filter = {
+    types: ['image/*', 'application/pdf'],
+    accepts: (mime: string) => mime.startsWith('image/') || mime === 'application/pdf',
+    refusal: 'This file type cannot be added here.',
+  };
+  const runFiltered = async () => {
+    const { result } = renderHook(() => useSupportUpload('payment-evidence', filter));
+    let url: string | null = 'unset';
+    await act(async () => {
+      url = await result.current.pickAndUpload();
+    });
+    return { url, result };
+  };
+
+  it('offers only the caller’s types and uploads an accepted file to its folder', async () => {
+    pickDoc.mockResolvedValueOnce(
+      pick({ uri: 'file://s.pdf', name: 's.pdf', mimeType: 'application/pdf', size: 1024 }),
+    );
+    const { url } = await runFiltered();
+    expect(pickDoc).toHaveBeenCalledWith(
+      expect.objectContaining({ type: ['image/*', 'application/pdf'] }),
+    );
+    expect(url).toBe('https://ik/out.png');
+    expect(mockUpload).toHaveBeenCalledWith(
+      { uri: 'file://s.pdf', name: 's.pdf', type: 'application/pdf' },
+      'payment-evidence',
+    );
+  });
+
+  it('refuses a file the picker let through but the caller does not take', async () => {
+    pickDoc.mockResolvedValueOnce(
+      pick({ uri: 'file://d.docx', name: 'd.docx', mimeType: 'application/msword', size: 1024 }),
+    );
+    const { url, result } = await runFiltered();
+    expect(url).toBeNull();
+    expect(result.current.error).toBe('This file type cannot be added here.');
+    expect(mockUpload).not.toHaveBeenCalled();
+  });
+});

@@ -49,6 +49,13 @@ export const podDraftTypeDefs = gql`
   }
 
   extend type Mutation {
+    """
+    Autosaves the Create Pod form. Without draft_id a new draft is created.
+    With one — the id Create Pod mints on the device and keeps in its URL —
+    the caller's draft is updated, or created under that id on its first save.
+    An id that is another member's draft is NOT_FOUND; one that is not an
+    ObjectId is BAD_USER_INPUT.
+    """
     savePodDraft(draft_id: ID, input: PodDraftInput!): PodDraft!
     deletePodDraft(draft_id: ID!): Boolean!
     publishPodDraft(draft_id: ID!, input: CreatePodInput!): Pod!

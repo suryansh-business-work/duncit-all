@@ -21,7 +21,7 @@ export const venueOfferResolvers = {
     venueOfferQuote: (_p: unknown, args: { venue_id: string; offer: VenueOfferRequest }, ctx: GraphQLContext) => {
       requireAuth(ctx);
       // Create Pod's quote: priced from the venue's own minimum, as the offer it sends will be — FREE included.
-      return venueOfferService.preview(args.venue_id, args.offer, undefined, true, true);
+      return venueOfferService.preview(args.venue_id, args.offer, undefined, { atVenueMinimum: true, allowFree: true, hostTerms: true });
     },
     venueCounterQuote: (_p: unknown, args: { slot_id: string; terms: VenueOfferMoveTerms }, ctx: GraphQLContext) =>
       venueOfferService.counterPreview(requireAuth(ctx).id, args.slot_id, args.terms),

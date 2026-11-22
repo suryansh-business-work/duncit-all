@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router';
 import { Box, Snackbar, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import MarkEmailReadIcon from '@mui/icons-material/MarkEmailRead';
+import SettingsIcon from '@mui/icons-material/Settings';
 import { DuncitButton } from '@duncit/buttons';
 import { useApolloTableFetch } from '@duncit/table';
 import {
@@ -36,7 +37,7 @@ export default function EmailTemplatesPage() {
     if (!removing) return;
     try {
       await deleteMut({ variables: { id: removing.template_id } });
-      setSnack('Template deleted');
+      setSnack(t('crm.emailTemplates.templateDeleted'));
       refetchRef.current?.();
     } catch (e) {
       setSnack(parseApiError(e));
@@ -46,20 +47,26 @@ export default function EmailTemplatesPage() {
 
   return (
     <Stack spacing={2.5}>
-      <Stack direction="row" spacing={1} sx={{
-        alignItems: "center"
-      }}>
-        <MarkEmailReadIcon color="primary" />
-        <Box>
-          <Typography component="h1" variant="h5" sx={{
-            fontWeight: 800
-          }}>{t('shell.nav.emailTemplates')}</Typography>
-          <Typography variant="body2" sx={{
-            color: "text.secondary"
-          }}>
-            CRM-owned MJML templates with variables. Open one to edit the source and preview.
-          </Typography>
-        </Box>
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ alignItems: { sm: 'center' } }}>
+        <Stack direction="row" spacing={1} sx={{ alignItems: 'center', flex: 1, minWidth: 0 }}>
+          <MarkEmailReadIcon color="primary" />
+          <Box>
+            <Typography component="h1" variant="h5" sx={{ fontWeight: 800 }}>
+              {t('shell.nav.emailTemplates')}
+            </Typography>
+            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+              {t('crm.emailTemplates.listIntro')}
+            </Typography>
+          </Box>
+        </Stack>
+        <DuncitButton
+          variant="outlined"
+          startIcon={<SettingsIcon />}
+          onClick={() => navigate('/email-templates/settings')}
+          sx={{ alignSelf: { xs: 'flex-start', sm: 'center' } }}
+        >
+          {t('crm.emailTemplates.settings')}
+        </DuncitButton>
       </Stack>
 
       <TemplatesTable
@@ -67,7 +74,7 @@ export default function EmailTemplatesPage() {
         refetchRef={refetchRef}
         toolbarActions={
           <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={() => setCreateOpen(true)}>
-            New template
+            {t('crm.emailTemplates.newTemplate')}
           </DuncitButton>
         }
         onEdit={(t) => navigate(`/email-templates/${t.template_id}`)}
@@ -87,10 +94,10 @@ export default function EmailTemplatesPage() {
       <ConfirmDialog
         open={!!removing}
         title={t('crm.emailTemplates.deleteTemplate')}
-        message={`Delete "${removing?.name ?? ''}"? This cannot be undone.`}
+        message={t('crm.emailTemplates.deleteTemplateMessage', { vars: { name: removing?.name ?? '' } })}
         confirmLabel={t('shell.common.delete')}
         destructive
-        busyLabel="Working…"
+        busyLabel={t('crm.common.working')}
         loading={deleting}
         onConfirm={confirmDelete}
         onClose={() => setRemoving(null)}

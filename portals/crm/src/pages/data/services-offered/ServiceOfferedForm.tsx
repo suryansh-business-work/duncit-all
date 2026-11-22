@@ -2,14 +2,13 @@ import { useState } from 'react';
 import { Autocomplete, Chip, Divider, MenuItem, Stack, TextField } from '@mui/material';
 import { useCategoriesByParent } from '../../../api/useCategoryTree';
 import ServiceTargetSwitches from './ServiceTargetSwitches';
+import { pickServiceTargets, type ServiceTargets } from '../../../config/serviceTargets';
 import { useTranslation } from '@duncit/shell';
 
-export interface ServiceOfferedDraft {
+export interface ServiceOfferedDraft extends ServiceTargets {
   super_category_id: string;
   category_id: string;
   sub_category_id: string;
-  applies_to_venue: boolean;
-  applies_to_host: boolean;
   titles: string[];
 }
 
@@ -56,7 +55,7 @@ export default function ServiceOfferedForm({ value, onChange }: Readonly<Props>)
         value={value.category_id}
         onChange={(e) => set({ category_id: e.target.value, sub_category_id: '' })}
         disabled={!value.super_category_id || cats.options.length === 0}
-        helperText={value.super_category_id && cats.options.length === 0 ? 'No categories under this super category' : 'Optional'}
+        helperText={value.super_category_id && cats.options.length === 0 ? t('crm.data.noCategoriesUnderSuper') : t('crm.common.optional')}
         fullWidth
       >
         {cats.options.map((c) => (
@@ -71,7 +70,7 @@ export default function ServiceOfferedForm({ value, onChange }: Readonly<Props>)
         value={value.sub_category_id}
         onChange={(e) => set({ sub_category_id: e.target.value })}
         disabled={!value.category_id || subs.options.length === 0}
-        helperText={value.category_id && subs.options.length === 0 ? 'No sub-categories under this category' : 'Optional'}
+        helperText={value.category_id && subs.options.length === 0 ? t('crm.data.noSubCategoriesUnderCategory') : t('crm.common.optional')}
         fullWidth
       >
         {subs.options.map((c) => (
@@ -106,11 +105,7 @@ export default function ServiceOfferedForm({ value, onChange }: Readonly<Props>)
       />
 
       <Divider flexItem />
-      <ServiceTargetSwitches
-        venue={value.applies_to_venue}
-        host={value.applies_to_host}
-        onChange={({ venue, host }) => set({ applies_to_venue: venue, applies_to_host: host })}
-      />
+      <ServiceTargetSwitches value={pickServiceTargets(value)} onChange={(targets) => set(targets)} />
     </Stack>
   );
 }

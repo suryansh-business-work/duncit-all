@@ -1,5 +1,7 @@
-import type { CrmContact, CrmServiceOffered, VenueLead } from '../../api/crm.types';
+import type { CrmContact, VenueLead } from '../../api/crm.types';
 import { emptyContact } from '../fields/ContactsField';
+import { cleanSocialLinks, socialLinksToForm } from '../validation/socialLinks';
+import { cleanServices, servicesToForm } from '../validation/services';
 import { venueLeadInitialValues, type VenueLeadFormValues } from './venue-lead.types';
 
 const toNum = (value: string): number | null => {
@@ -22,15 +24,6 @@ const cleanContacts = (contacts: CrmContact[]) =>
       mobile_number: c.mobile_number.trim(),
       whatsapp_number: c.whatsapp_number.trim(),
       email: c.email.trim(),
-    }));
-
-const cleanServices = (services: CrmServiceOffered[]) =>
-  services
-    .filter((s) => s?.service?.trim())
-    .map((s) => ({
-      service: s.service.trim(),
-      custom_name: (s.custom_name ?? '').trim(),
-      description: (s.description ?? '').trim(),
     }));
 
 /** Form values → GraphQL VenueLeadInput. */
@@ -67,6 +60,8 @@ export function toVenueLeadInput(v: VenueLeadFormValues) {
     brochure_url: v.brochure_url.trim(),
     website: v.website.trim(),
     services_offered: cleanServices(v.services_offered),
+    instagram_link: v.instagram_link.trim(),
+    social_links: cleanSocialLinks(v.social_links),
     linked_host_ids: v.linked_host_ids.filter(Boolean),
     tags: v.tags.map((t) => t.trim()).filter(Boolean),
     logo_url: v.logo_url.trim(),
@@ -114,11 +109,9 @@ export function fromVenueLead(lead: VenueLead): VenueLeadFormValues {
     videos: arrayToLines(lead.videos),
     brochure_url: lead.brochure_url ?? '',
     website: lead.website ?? '',
-    services_offered: lead.services_offered.map((s) => ({
-      service: s.service,
-      custom_name: s.custom_name ?? '',
-      description: s.description ?? '',
-    })),
+    social_links: socialLinksToForm(lead.social_links),
+    instagram_link: lead.instagram_link ?? '',
+    services_offered: servicesToForm(lead.services_offered),
     linked_host_ids: lead.linked_host_ids,
     tags: lead.tags,
     logo_url: lead.logo_url ?? '',

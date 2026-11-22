@@ -66,6 +66,7 @@ export const appConfig = {
         { label: 'Marketing', labelKey: 'shell.nav.marketing', to: '/growth/marketing', icon: 'marketing' },
         { label: 'Contacts', labelKey: 'shell.nav.contacts', to: '/growth/contacts', icon: 'contacts' },
         { label: 'Communications', labelKey: 'shell.nav.communications', to: '/growth/communications', icon: 'campaign' },
+        { label: 'Email Validations', labelKey: 'shell.nav.emailValidations', to: '/growth/email-validations', icon: 'markEmailRead' },
       ],
     },
     {

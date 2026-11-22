@@ -55,7 +55,6 @@ export const VenueQuoteFieldsFragment = gql(`
       label
       amount
     }
-    min_spend_top_up
     cleaning_fee
     pet_fee
     gst_pct

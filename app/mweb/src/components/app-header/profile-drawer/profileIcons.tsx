@@ -49,6 +49,7 @@ import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
 import WorkOutlineIcon from '@mui/icons-material/WorkOutlineOutlined';
 import ShoppingBagIcon from '@mui/icons-material/ShoppingBag';
 import LoyaltyIcon from '@mui/icons-material/Loyalty';
+import AssistantIcon from '@mui/icons-material/Assistant';
 import type { ProfileIconKey } from './profileSections';
 
 const ICONS: Record<ProfileIconKey, JSX.Element> = {
@@ -100,6 +101,7 @@ const ICONS: Record<ProfileIconKey, JSX.Element> = {
   // An Auto Pod is a pod that assembled itself out of three enrolments — the
   // sparkle reads as "made for you" rather than as another studio destination.
   autopods: <AutoAwesomeIcon />,
+  assistant: <AssistantIcon />,
   // The Club Admin menu's dashboard and its AI pod monitor — the same glyphs
   // the two pages open with, so a row reads like the page it leads to.
   dashboard: <SpaceDashboardIcon />,

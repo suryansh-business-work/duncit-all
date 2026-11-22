@@ -4,6 +4,7 @@ import { DuncitTable, clientTableFetch, dateColumn, type DuncitColumn } from '@d
 import { useTranslation } from '@duncit/shell';
 import { usd, tokens } from '../../lib/usd';
 import FeatureSwitch from './FeatureSwitch';
+import FeaturePrompts from './FeaturePrompts';
 import type { AiFeature } from './queries';
 
 interface Props {
@@ -17,7 +18,12 @@ interface Props {
 type Translate = ReturnType<typeof useTranslation>['t'];
 
 const getRowId = (row: AiFeature) => row.key;
-const searchOf = (row: AiFeature) => `${row.label} ${row.module} ${row.key} ${row.description}`;
+const promptKeys = (row: AiFeature) => row.prompts.map((prompt) => prompt.key).join(' ');
+const searchOf = (row: AiFeature) =>
+  `${row.label} ${row.module} ${row.key} ${row.description} ${promptKeys(row)}`;
+
+/** Links straight to each code prompt in the AI Library; the grid ignores clicks on links. */
+const renderPrompts = (row: AiFeature) => <FeaturePrompts feature={row} variant="cell" />;
 
 const renderFeature = (row: AiFeature) => (
   <Box sx={{ minWidth: 0 }}>
@@ -70,6 +76,14 @@ export default function FeaturesTable({ rows, pendingKey, onToggle, onOpen }: Re
         valueGetter: (row) => row.label,
       },
       { field: 'module', headerName: t('ai.features.colArea'), width: 130, type: 'text', valueGetter: (row) => row.module },
+      {
+        field: 'prompts',
+        headerName: t('ai.features.colPrompt'),
+        width: 260,
+        type: 'text',
+        cellRenderer: renderPrompts,
+        valueGetter: promptKeys,
+      },
       {
         field: 'enabled',
         headerName: t('ai.features.colStatus'),

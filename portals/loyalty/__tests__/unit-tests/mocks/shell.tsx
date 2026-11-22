@@ -43,6 +43,12 @@ export function AppShell({ children, onLogout, hasAccess, loading, user }: any) 
 
 export const ProfilePage = () => <div data-testid="profile-page">Profile</div>;
 
+/**
+ * The real button renders nothing outside a signed-in console (no
+ * EmailValidationProvider above it), which is every loyalty test — so does this.
+ */
+export const EmailValidateButton = (_props: { email: string | null | undefined }) => null;
+
 export const PortalLoginPage = (_props: any) => <div data-testid="portal-login">Login</div>;
 
 export const createAuthed = (opts: any) => (el: any) => (opts?.wrap ? opts.wrap(el) : el);

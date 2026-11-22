@@ -61,7 +61,6 @@ export const venueBookingDemos: PackageDemo[] = [
           hours: 2,
           base: 3000,
           rules: [{ type: 'WEEKDAY_SURCHARGE', label: 'Weekend', amount: 600 }],
-          min_spend_top_up: 0,
           cleaning_fee: 300,
           pet_fee: 0,
           gst_pct: 18,

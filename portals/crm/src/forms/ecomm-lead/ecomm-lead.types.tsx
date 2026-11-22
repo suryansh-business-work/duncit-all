@@ -1,4 +1,4 @@
-import type { CrmContact, CrmServiceOffered } from '../../api/crm.types';
+import type { CrmContact, CrmServiceOffered, CrmSocialLink } from '../../api/crm.types';
 import { emptyContact } from '../fields/ContactsField';
 
 export interface EcommLeadFormValues {
@@ -22,6 +22,7 @@ export interface EcommLeadFormValues {
   instagram_link: string;
   marketplace_links: string[];
   services_offered: CrmServiceOffered[];
+  social_links: CrmSocialLink[];
   tags: string[];
   profile_photo_url: string;
   dynamic_values_json: string;
@@ -54,6 +55,7 @@ export const ecommLeadInitialValues: EcommLeadFormValues = {
   instagram_link: '',
   marketplace_links: [],
   services_offered: [],
+  social_links: [],
   tags: [],
   profile_photo_url: '',
   dynamic_values_json: '{}',

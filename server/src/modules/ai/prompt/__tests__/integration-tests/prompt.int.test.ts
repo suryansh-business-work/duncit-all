@@ -1,7 +1,14 @@
 import { Types } from 'mongoose';
 import { aiPromptService, getSystemPrompt } from '../../prompt.service';
+import { AiPromptModel } from '../../prompt.model';
 import { CODE_PROMPTS as SYSTEM_PROMPTS, CODE_PROMPT_BY_KEY as SYSTEM_PROMPT_BY_KEY } from '../../catalog';
 import { estimateTokens } from '@services/ai/token-estimate';
+import { makeContext } from '@test/harness';
+import { OpenAiUsageLogModel } from '@modules/ai/openaiUsage/openaiUsage.model';
+import { OPENAI_TASK_KEYS } from '@modules/ai/openaiUsage/openaiUsage.tasks';
+import { PROMPTLESS_TASKS } from '../../catalog/byTask';
+import { aiLibraryDashboard } from '../../prompt.dashboard';
+import { aiPromptResolvers } from '../../prompt.resolver';
 
 describe('aiPromptService integration', () => {
   it('creates a prompt with a derived token_count and lists it', async () => {
@@ -146,5 +153,98 @@ describe('system prompts (the AI features run on the library)', () => {
     expect(dummy).toContain('{ "a": string }');
     expect(dummy).toContain('{{notes}}');
     expect(await getSystemPrompt('generate.email_mjml')).toContain('{{variables}}');
+  });
+});
+
+describe('matches_default (drift between the library and the catalogue)', () => {
+  it('is true for a freshly seeded code prompt, false once edited, true again after a reset', async () => {
+    await aiPromptService.seedDefaults();
+    const scan = (await aiPromptService.getByKey(IMAGE_SCAN_KEY))!;
+    expect(scan.matches_default).toBe(true);
+
+    const edited = await aiPromptService.update(scan.id, { content: 'Only flag nudity.' });
+    expect(edited!.matches_default).toBe(false);
+
+    const reset = await aiPromptService.reset(scan.id);
+    expect(reset!.matches_default).toBe(true);
+  });
+
+  it('is null for an AI prompt, which has no default to drift from', async () => {
+    const own = await aiPromptService.create({ name: 'Mine', content: 'my own prompt body' });
+
+    expect(own!.matches_default).toBeNull();
+  });
+
+  it('is null for a code row the catalogue no longer names, or one stored without a key', async () => {
+    await AiPromptModel.collection.insertMany([
+      { kind: 'CODE', key: 'retired.prompt', name: 'Retired', content: 'old body' },
+      { kind: 'CODE', name: 'Keyless', content: 'body' },
+    ]);
+
+    const rows = await aiPromptService.list({ kind: 'CODE' });
+
+    expect(rows.map((row) => [row.name, row.matches_default])).toEqual(
+      expect.arrayContaining([
+        ['Retired', null],
+        ['Keyless', null],
+      ]),
+    );
+  });
+});
+
+describe('aiLibraryDashboard', () => {
+  it('counts the library, its drift, and the feature usage each prompt serves', async () => {
+    await aiPromptService.seedDefaults();
+    const scan = (await aiPromptService.getByKey(IMAGE_SCAN_KEY))!;
+    await aiPromptService.update(scan.id, { content: 'Only flag nudity.' });
+    await aiPromptService.create({ name: 'Mine', content: 'my own prompt body', is_active: false });
+    await OpenAiUsageLogModel.collection.insertMany([
+      { task: 'moderation.image_scan', status: 'SUCCESS', created_at: new Date(), total_tokens: 40, cost_usd: 0.2, duration_ms: 0 },
+      { task: 'moderation.image_scan', status: 'FAILED', created_at: new Date(), total_tokens: 0, cost_usd: 0, duration_ms: 0 },
+    ]);
+
+    const dashboard = await aiLibraryDashboard(7);
+
+    const system = SYSTEM_PROMPTS.filter((p) => p.role === 'SYSTEM').length;
+    expect(dashboard).toMatchObject({
+      range_days: 7,
+      code_prompts: SYSTEM_PROMPTS.length,
+      system_prompts: system,
+      user_prompts: SYSTEM_PROMPTS.length - system,
+      ai_prompts: 1,
+      active_ai_prompts: 0,
+      edited_code_prompts: 1,
+      missing_code_prompts: 0,
+      features_total: OPENAI_TASK_KEYS.length,
+    });
+    expect(dashboard.features_with_prompt).toBe(OPENAI_TASK_KEYS.length - Object.keys(PROMPTLESS_TASKS).length);
+    expect(dashboard.prompts).toHaveLength(SYSTEM_PROMPTS.length + 1);
+    // Both turns of the image scan are sent on every scan, so both carry its usage.
+    for (const key of [IMAGE_SCAN_KEY, `${IMAGE_SCAN_KEY}.user`]) {
+      expect(dashboard.prompts.find((p) => p.key === key)).toMatchObject({
+        features: ['moderation.image_scan'],
+        calls: 2,
+        failed_calls: 1,
+        total_tokens: 40,
+        cost_usd: 0.2,
+      });
+    }
+  });
+
+  it('reports every catalogue prompt as missing before the first seed', async () => {
+    const dashboard = await aiLibraryDashboard(500);
+
+    expect(dashboard).toMatchObject({ range_days: 90, code_prompts: 0, missing_code_prompts: SYSTEM_PROMPTS.length });
+  });
+
+  it('is read by the AI portal roles only', async () => {
+    const { Query } = aiPromptResolvers;
+
+    for (const role of ['SUPER_ADMIN', 'AI_MANAGER']) {
+      const dashboard = await Query.aiLibraryDashboard(undefined, { range_days: 1 }, makeContext({ roles: [role] }));
+      expect(dashboard.range_days).toBe(1);
+    }
+    expect(() => Query.aiLibraryDashboard(undefined, {}, makeContext({ roles: ['CITY_ADMIN'] }))).toThrow('Access Denied');
+    expect(() => Query.aiLibraryDashboard(undefined, {}, makeContext(null))).toThrow('Not authenticated');
   });
 });

@@ -84,6 +84,17 @@ describe('makeHostFormSchema', () => {
     );
   });
 
+  it('allows an empty Minimum Advance Days override and 1–30, refusing anything else', () => {
+    for (const days of ['', '1', '30']) {
+      expect(schema.safeParse({ ...valid(), pod_min_advance_days_override: days }).success).toBe(true);
+    }
+    for (const days of ['0', '31', '2.5', '-1']) {
+      expect(errorAt({ ...valid(), pod_min_advance_days_override: days }, 'pod_min_advance_days_override')).toBe(
+        'directory.hostEditor.minAdvanceDaysInvalid',
+      );
+    }
+  });
+
   it('validates the contact through the shared rules', () => {
     expect(errorAt({ ...valid(), email: 'nope' }, 'email')).toBeTruthy();
     expect(errorAt({ ...valid(), phone: '12' }, 'phone')).toBeTruthy();

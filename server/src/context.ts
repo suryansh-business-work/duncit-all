@@ -37,6 +37,18 @@ export interface GraphQLContext {
    * rather than finishing work for a socket that is already gone.
    */
   isClientGone: () => boolean;
+  /**
+   * Set only for an operation the server runs on someone's behalf
+   * (utils/execute-as-user): which system the rate limiter counts it under,
+   * since the HTTP request it rides on belongs to the integration.
+   */
+  client?: CallerClient;
+}
+
+/** A rate-limit system label: a RATE_LIMIT_SURFACES value and an app key. */
+export interface CallerClient {
+  surface: string;
+  app: string;
 }
 
 /**

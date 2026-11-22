@@ -1,7 +1,7 @@
 /**
  * The AI Library page with the catalogue actually answered: rows on the grid,
- * and the row actions — edit, reset (code) and delete (AI) — driven the way an
- * operator drives them, confirmation dialogs included.
+ * and the row menu — reset (code), archive and delete (AI) — driven the way an
+ * operator drives it, confirmation dialogs included.
  */
 import type { MockedResponse } from '@apollo/client/testing';
 import { fireEvent, screen, waitFor } from '@testing-library/react';
@@ -9,8 +9,10 @@ import { GraphQLError } from 'graphql';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { AI_PROMPTS, DELETE_AI_PROMPT, RESET_AI_PROMPT, UPDATE_AI_PROMPT } from '../src/queries';
+import { ARCHIVE_AI_PROMPT, UNARCHIVE_AI_PROMPT } from '../src/detailQueries';
+import { detailMock, detailOf, eventMocks } from './support/detail-fixtures';
 import { PromptLibraryView } from '../src/mui/PromptLibraryView';
-import { API_ORIGIN, installGridViewport, prompt, renderInPortal, settle } from './support/harness';
+import { API_ORIGIN, installGridViewport, prompt, renderInPortal, rowAction, rowMenuItems, settle } from './support/harness';
 
 // The page's tab strip needs a <Router>; the stub keeps its contract (see it).
 vi.mock('@duncit/tabs', () => import('./support/tabs-stub'));
@@ -87,9 +89,16 @@ describe('PromptLibraryView with rows', () => {
     // A row with no target_model shows the configured default instead of a blank.
     expect(screen.getAllByText('Default').length).toBeGreaterThan(0);
     expect(screen.getByText('≈ 42')).toBeDefined();
-    // A code prompt cannot be deleted here (its call site reads it) or created.
-    const del = screen.getByLabelText('Delete Navigation Knowledge Bot');
-    expect((del as HTMLButtonElement).disabled).toBe(true);
+    // A code prompt cannot be deleted or archived here (its call site reads it),
+    // nor created — but it can be reset.
+    expect(await rowMenuItems('Navigation Knowledge Bot')).toEqual([
+      'Open details',
+      'Edit',
+      'Quick view',
+      'Copy library link',
+      'Public share',
+      'Reset to default',
+    ]);
     expect(screen.queryByText('Add AI prompt')).toBeNull();
   });
 
@@ -101,12 +110,12 @@ describe('PromptLibraryView with rows', () => {
     await openLibrary([listMock('CODE', [codeRow]), reset]);
 
     // First press, second thoughts: Cancel closes without running anything.
-    fireEvent.click(screen.getByLabelText('Reset Navigation Knowledge Bot'));
+    await rowAction('Navigation Knowledge Bot', 'Reset to default');
     await settle();
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
     await waitFor(() => expect(screen.queryByRole('button', { name: 'Reset' })).toBeNull());
 
-    fireEvent.click(screen.getByLabelText('Reset Navigation Knowledge Bot'));
+    await rowAction('Navigation Knowledge Bot', 'Reset to default');
     await settle();
     expect(screen.getByText(/Restore the shipped default for "Navigation Knowledge Bot"/)).toBeDefined();
 
@@ -138,7 +147,7 @@ describe('PromptLibraryView with rows', () => {
     };
     await openLibrary([listMock('CODE', [codeRow]), refused]);
 
-    fireEvent.click(screen.getByLabelText('Reset Navigation Knowledge Bot'));
+    await rowAction('Navigation Knowledge Bot', 'Reset to default');
     await settle();
     fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
     await settle();
@@ -153,10 +162,7 @@ describe('PromptLibraryView with rows', () => {
       request: { query: DELETE_AI_PROMPT, variables: { id: 'p-2' } },
       result: { data: { deleteAiPrompt: true } },
     };
-    // A pasted ?selectedtab=AI link opens on the AI tab. (Clicking the tab
-    // strip instead would flip the affordances but NOT the rows — the kind is
-    // baked into fetchRows, which the table never re-runs on its own; see the
-    // reported PromptLibraryView bug.)
+    // A pasted ?selectedtab=AI link opens on the AI tab.
     globalThis.window.history.replaceState(null, '', '/?selectedtab=AI');
     renderInPortal(<PromptLibraryView apiOrigin={API_ORIGIN} />, [listMock('AI', [aiRow, draftRow]), del]);
     await settle();
@@ -169,22 +175,115 @@ describe('PromptLibraryView with rows', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
     await settle();
 
-    const remove = screen.getByLabelText('Delete Weekly digest writer');
-    expect((remove as HTMLButtonElement).disabled).toBe(false);
     // Once with second thoughts, then for real.
-    fireEvent.click(remove);
+    await rowAction('Weekly digest writer', 'Delete');
     await settle();
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
     await waitFor(() => expect(screen.queryByText(/Delete "Weekly digest writer"\?/)).toBeNull());
 
-    // The row re-rendered when the first dialog closed, so the captured node is
-    // detached — re-query it before the second click.
-    fireEvent.click(screen.getByLabelText('Delete Weekly digest writer'));
+    await rowAction('Weekly digest writer', 'Delete');
     await settle();
     expect(screen.getByText(/Delete "Weekly digest writer"\?/)).toBeDefined();
     fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
     await settle();
 
     expect(screen.queryByRole('alert')).toBeNull();
+  });
+
+  it('switching tabs swaps the rows: the table refetches when the tab changes', async () => {
+    await openLibrary([listMock('CODE', [codeRow]), listMock('AI', [aiRow])]);
+
+    fireEvent.click(screen.getByRole('tab', { name: 'AI Prompts' }));
+
+    expect(await screen.findByText('Weekly digest writer')).toBeDefined();
+    await waitFor(() => expect(screen.queryByText('Navigation Knowledge Bot')).toBeNull());
+  });
+
+  it('the AI row menu archives after confirming, and the Archived tab offers restore and delete only', async () => {
+    const archive: MockedResponse = {
+      request: { query: ARCHIVE_AI_PROMPT, variables: { id: 'p-2' } },
+      result: { data: { archiveAiPrompt: { archived_at: '2026-11-22T10:00:00.000Z' } } },
+    };
+    const unarchive: MockedResponse = {
+      request: { query: UNARCHIVE_AI_PROMPT, variables: { id: 'p-2' } },
+      result: { data: { unarchiveAiPrompt: { archived_at: null } } },
+    };
+    const archivedList: MockedResponse = {
+      request: { query: AI_PROMPTS, variables: { filter: { archived: true } } },
+      maxUsageCount: Number.POSITIVE_INFINITY,
+      result: { data: { aiPrompts: [{ ...aiRow, archived_at: '2026-11-22T10:00:00.000Z' }] } },
+    };
+    globalThis.window.history.replaceState(null, '', '/?selectedtab=AI');
+    renderInPortal(<PromptLibraryView apiOrigin={API_ORIGIN} />, [listMock('AI', [aiRow]), archive, archivedList, unarchive]);
+    await screen.findByText('Weekly digest writer');
+
+    // Second thoughts first: Cancel archives nothing.
+    await rowAction('Weekly digest writer', 'Archive');
+    fireEvent.click(await screen.findByRole('button', { name: 'Cancel' }));
+    await waitFor(() => expect(screen.queryByText(/Archive "Weekly digest writer"\?/)).toBeNull());
+
+    await rowAction('Weekly digest writer', 'Archive');
+    expect(await screen.findByText(/Archive "Weekly digest writer"\?/)).toBeDefined();
+    fireEvent.click(screen.getByRole('button', { name: 'Archive' }));
+    await settle();
+    await waitFor(() => expect(screen.queryByText(/Archive "Weekly digest writer"\?/)).toBeNull());
+
+    fireEvent.click(await screen.findByRole('tab', { name: 'Archived' }));
+    await screen.findByText('Weekly digest writer');
+    expect(screen.queryByText(/Public GET API/)).toBeNull();
+    expect(await rowMenuItems('Weekly digest writer')).toEqual([
+      'Open details',
+      'Quick view',
+      'Copy library link',
+      'Restore from archive',
+      'Delete',
+    ]);
+    await rowAction('Weekly digest writer', 'Restore from archive');
+    await settle();
+    const errors = screen.queryAllByRole('alert').filter((alert) => alert.classList.contains('MuiAlert-colorError'));
+    expect(errors).toEqual([]);
+  });
+
+  it('copies a library link from the row menu, and a quick view leads to the full details', async () => {
+    const writeText = vi.fn<(text: string) => Promise<void>>().mockResolvedValue(undefined);
+    Object.defineProperty(globalThis.navigator, 'clipboard', { configurable: true, value: { writeText } });
+    renderInPortal(<PromptLibraryView apiOrigin={API_ORIGIN} portalOrigin="https://ai.duncit.com" />, [
+      listMock('CODE', [{ ...codeRow, total_hits: 7 }]),
+      detailMock(detailOf(codeRow)),
+      ...eventMocks(codeRow.id),
+    ]);
+    await screen.findByText('Navigation Knowledge Bot');
+    expect(screen.getByText('7')).toBeDefined();
+
+    await rowAction('Navigation Knowledge Bot', 'Copy library link');
+    await waitFor(() =>
+      expect(writeText).toHaveBeenCalledWith('https://ai.duncit.com/library?selectedtab=CODE&prompt=ask-bot.navigation'),
+    );
+    writeText.mockRejectedValueOnce(new Error('blocked'));
+    await rowAction('Navigation Knowledge Bot', 'Copy library link');
+    await settle();
+
+    await rowAction('Navigation Knowledge Bot', 'Quick view');
+    expect(await screen.findByRole('dialog', { name: 'Navigation Knowledge Bot' })).toBeDefined();
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Navigation Knowledge Bot' })).toBeNull());
+
+    await rowAction('Navigation Knowledge Bot', 'Quick view');
+    expect(await screen.findByRole('dialog', { name: 'Navigation Knowledge Bot' })).toBeDefined();
+    fireEvent.click(screen.getByRole('button', { name: 'Open details' }));
+    expect(await screen.findByRole('heading', { level: 2, name: 'Navigation Knowledge Bot' })).toBeDefined();
+  });
+
+  it('has no library link to copy for a prompt that has no key yet', async () => {
+    const writeText = vi.fn<(text: string) => Promise<void>>().mockResolvedValue(undefined);
+    Object.defineProperty(globalThis.navigator, 'clipboard', { configurable: true, value: { writeText } });
+    globalThis.window.history.replaceState(null, '', '/?selectedtab=AI');
+    renderInPortal(<PromptLibraryView apiOrigin={API_ORIGIN} />, [listMock('AI', [draftRow])]);
+    await screen.findByText('Feedback summariser');
+
+    await rowAction('Feedback summariser', 'Copy library link');
+    await settle();
+
+    expect(writeText).not.toHaveBeenCalled();
   });
 });

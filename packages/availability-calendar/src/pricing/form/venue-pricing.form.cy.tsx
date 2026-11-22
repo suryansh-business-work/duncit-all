@@ -111,7 +111,6 @@ describe('toPricingInput', () => {
       min_hours: 2,
       max_hours: 6,
       booking_increment_minutes: 30,
-      min_spend: 5000,
       slots: [],
       operating_hours: [{ day: 5, open: '10:00', close: '23:00' }],
       price_rules: [{ type: 'WEEKDAY_SURCHARGE' as const, label: 'Weekend', days: [0, 6], dates: [], from: null, to: null, mode: 'PERCENT' as const, value: 20 }],

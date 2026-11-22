@@ -2,6 +2,7 @@ import { Router, type Request, type Response } from 'express';
 import { aiPromptService, type PublicAiPrompt } from './prompt.service';
 import { renderPrompt } from './prompt.render';
 import type { PromptKind } from './prompt.types';
+import { recordPromptEvent } from './prompt.analytics';
 
 /**
  * The read-only JSON feed behind the AI portal's "Copy GET API" button.
@@ -124,11 +125,20 @@ export function buildAiPromptFeedRouter(): Router {
       const prompt = await aiPromptService.getByKey(key);
       // An inactive prompt is 404 rather than 403: whether a key exists at all
       // is not something an unauthenticated caller should be able to probe.
-      if (!prompt?.is_active) {
+      if (!prompt?.is_active || prompt.archived_at) {
         sendJson(res, 404, { error: 'NOT_FOUND', message: `No active prompt named "${key}".` });
         return;
       }
       sendJson(res, 200, feedShape(prompt, varsParam(req)));
+      // Counted after the answer is on its way; recording never throws.
+      await recordPromptEvent({
+        promptId: prompt.id,
+        type: 'FEED_HIT',
+        surface: 'FEED',
+        source: param(req, 'utm_source') ?? null,
+        referrer: req.get('referer') ?? null,
+        userAgent: req.get('user-agent') ?? null,
+      });
     } catch {
       sendJson(res, 503, {
         error: 'UNAVAILABLE',

@@ -1,7 +1,8 @@
 /**
  * Prices a host's offer with THE venue price calculation (quoteVenuePrice):
  * the offer supplies the model and the rate, the venue supplies its charges
- * (price rules, minimum spend, cleaning and pet fees, GST). Pure.
+ * (price rules, cleaning and pet fees, GST). Its minimums are rules the host's
+ * terms must meet (venueOffer.minimums), never added to the price. Pure.
  *
  * Per guest is the calculator's PER_PAX; a flat offer is one price for the
  * picked window.
@@ -70,7 +71,6 @@ export function freeQuote(req: QuoteRequest): QuoteResult {
       base: 0,
       rules: [],
       rules_total: 0,
-      min_spend_top_up: 0,
       cleaning_fee: 0,
       pet_fee: 0,
       venue_price: 0,
@@ -164,5 +164,33 @@ export function priceForGuests(
       timeZone,
     }
   );
-  return result.ok ? result.breakdown : null;
+  return result.ok ? atAgreedMinSpend(result.breakdown, basis.charges.min_spend) : null;
+}
+
+const paise = (rupees: number) => Math.round((Number(rupees) || 0) * 100);
+const pctOfPaise = (amount: number, pct: number) => Math.round((amount * pct) / 100);
+
+/**
+ * Legacy only. A per-guest booking agreed while a venue's minimum spend still
+ * topped the bill up carries that minimum in its frozen charges, and settles as
+ * it was agreed: its booking amount (base and price rules) never below it, the
+ * gap folded into the base so the lines still add up, GST and commission on the
+ * raised price. Offers made since freeze no minimum spend — their terms had to
+ * meet it instead (venueOffer.minimums) — so this ends with those bookings.
+ */
+export function atAgreedMinSpend(breakdown: VenuePriceBreakdown, minSpend: number | null | undefined): VenuePriceBreakdown {
+  const gapPaise = paise(minSpend ?? 0) - paise(breakdown.base + breakdown.rules_total);
+  if (gapPaise <= 0) return breakdown;
+  const venuePricePaise = paise(breakdown.venue_price) + gapPaise;
+  const taxesPaise = pctOfPaise(venuePricePaise, breakdown.gst_pct);
+  const feePaise = pctOfPaise(venuePricePaise, breakdown.platform_fee_pct);
+  return {
+    ...breakdown,
+    base: (paise(breakdown.base) + gapPaise) / 100,
+    venue_price: venuePricePaise / 100,
+    taxes: taxesPaise / 100,
+    venue_payout: (venuePricePaise + taxesPaise) / 100,
+    platform_fee: feePaise / 100,
+    total: (venuePricePaise + taxesPaise + feePaise) / 100,
+  };
 }

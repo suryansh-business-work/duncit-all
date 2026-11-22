@@ -32,7 +32,6 @@ const charges: VenuePricing = {
   min_hours: 0,
   max_hours: 0,
   booking_increment_minutes: 0,
-  min_spend: 0,
   slots: [],
   operating_hours: [],
   price_rules: [],

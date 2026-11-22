@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import type { CreatePodFormState } from './useCreatePodForm';
 
 import {
+  createPodSendsOffer,
   filterProductsForClub,
   freePodVenueNotice,
   pruneProductRequests,
@@ -121,7 +122,15 @@ export function useCreatePodScope({
     ownVenue: selectedVenue?.owner_user_id === viewerUserId,
   });
 
+  // Whether the pod sends its venue an offer (and so shows one on Money).
+  const sendsOffer = createPodSendsOffer({
+    pod_mode: podMode,
+    partner_request_id: form.watch('partner_request_id'),
+    venue_slot_id: form.watch('venue_slot_id'),
+  });
+
   return {
+    sendsOffer,
     venueNotice,
     clubsInCity,
     clubsForLocation,

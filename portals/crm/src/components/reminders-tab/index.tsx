@@ -12,6 +12,7 @@ import {
   DELETE_CRM_REMINDER,
   TOGGLE_CRM_REMINDER,
   type CrmReminder,
+  type LeadReminderEntity,
 } from '../../api/reminders.gql';
 import { LeadDetailCard } from '../LeadDetailCard';
 import { ConfirmDialog } from '@duncit/dialogs';
@@ -21,7 +22,7 @@ import { formatDateTime } from '@duncit/app-settings';
 import { useTranslation } from '@duncit/shell';
 
 interface Props {
-  entity: 'VENUE_LEAD' | 'HOST_LEAD';
+  entity: LeadReminderEntity;
   leadId: string;
 }
 

@@ -15,6 +15,8 @@ interface Props {
   venueNotice: FreePodVenueNotice;
   spots: SpotsBounds;
   offerMinGuests: number;
+  /** On the venue picked from Venue Details: Where & when offers that venue alone. */
+  venueLocked?: boolean;
 }
 
 /**
@@ -24,7 +26,7 @@ interface Props {
  * club decides which venues it holds. A pod whose guests are not picked with an
  * offer sizes itself here. Native twin: WhereWhenStep.
  */
-export default function WhereWhenStep({ form, clubs, cityClubs, locations, venues, clubVenueIds, venueNotice, spots, offerMinGuests }: Readonly<Props>) {
+export default function WhereWhenStep({ form, clubs, cityClubs, locations, venues, clubVenueIds, venueNotice, spots, offerMinGuests, venueLocked = false }: Readonly<Props>) {
   const physical = form.watch('pod_mode') === 'PHYSICAL';
   const clubId = form.watch('club_id');
   const guestsWithOffer = physical && !form.watch('partner_request_id');
@@ -32,7 +34,7 @@ export default function WhereWhenStep({ form, clubs, cityClubs, locations, venue
     <Stack data-testid="create-pod-where-step" spacing={2}>
       <LocationClubStep form={form} clubs={clubs} cityClubs={cityClubs} locations={locations} />
       {(clubId || !physical) && (
-        <VenueSlotStep form={form} venues={venues} clubVenueIds={clubVenueIds} venueNotice={venueNotice} spots={spots} offerMinGuests={offerMinGuests} />
+        <VenueSlotStep form={form} venues={venues} clubVenueIds={clubVenueIds} venueNotice={venueNotice} spots={spots} offerMinGuests={offerMinGuests} venueLocked={venueLocked} />
       )}
       {!guestsWithOffer && <PodSpotsField form={form} spots={spots} />}
     </Stack>

@@ -5,14 +5,15 @@ import { Autocomplete, TextField } from '@mui/material';
 import { CRM_SERVICES_OFFERED, type CrmServiceOffered } from '../../api/data.gql';
 import type { CrmServiceOffered as LeadService } from '../../api/crm.types';
 import { useTranslation } from '@duncit/shell';
+import { flagForKind, type ServiceTargetKind } from '../../config/serviceTargets';
 
 interface Props {
   superName?: string;
   categoryName?: string;
   subName?: string;
   servicesName?: string;
-  /** Restrict the catalogue to titles flagged for this lead side. */
-  appliesTo?: 'VENUE' | 'HOST' | 'ECOMM';
+  /** Restrict the catalogue to titles flagged for this lead kind. */
+  appliesTo?: ServiceTargetKind;
 }
 
 /**
@@ -40,9 +41,7 @@ export default function ServicesOfferedPicker({
       filter: {
         super_category_id: superId,
         is_active: true,
-        ...(appliesTo === 'VENUE' ? { applies_to_venue: true } : {}),
-        ...(appliesTo === 'HOST' ? { applies_to_host: true } : {}),
-        ...(appliesTo === 'ECOMM' ? { applies_to_ecomm: true } : {}),
+        ...(appliesTo ? { [flagForKind(appliesTo)]: true } : {}),
       },
     },
     skip: !superId,
@@ -60,9 +59,22 @@ export default function ServicesOfferedPicker({
     return Array.from(new Set(scoped.map((r) => r.title))).sort((a, b) => a.localeCompare(b));
   }, [data, categoryIds, subIds]);
 
-  const selected = services.map((s) => s.service).filter(Boolean);
+  // Chips are labelled by display name: a legacy "Other" row shows its custom
+  // name, so several of them stay distinct and survive any change to the list.
+  const labelOf = (s: LeadService) => (s.service === 'Other' ? (s.custom_name ?? '').trim() || s.service : s.service);
+  const selected = services.map(labelOf).filter(Boolean);
 
-  if (!superId) return null;
+  if (!superId) {
+    return (
+      <TextField
+        size="small"
+        label={t('shell.nav.servicesOffered')}
+        disabled
+        fullWidth
+        helperText={t('crm.forms.pickSuperCategoryForServices')}
+      />
+    );
+  }
 
   return (
     <Autocomplete
@@ -76,18 +88,18 @@ export default function ServicesOfferedPicker({
         const next: LeadService[] = (picked as string[])
           .map((t) => t.trim())
           .filter(Boolean)
-          .map((t) => services.find((s) => s.service === t) ?? { service: t, custom_name: '', description: '' });
+          .map((t) => services.find((s) => labelOf(s) === t) ?? { service: t, custom_name: '', description: '' });
         setValue(servicesName, next, { shouldDirty: true, shouldValidate: true });
       }}
       renderInput={(p) => (
         <TextField
           {...p}
           label={t('shell.nav.servicesOffered')}
-          placeholder={selected.length ? '' : 'Loaded from your category selection'}
+          placeholder={selected.length ? '' : t('crm.forms.servicesPickerPlaceholder')}
           helperText={
             titles.length === 0 && !loading
-              ? 'No catalogue services for this category — add them under Data → Services Offered, or type your own.'
-              : 'Auto-loaded from the Services Offered catalogue'
+              ? t('crm.forms.servicesPickerEmpty')
+              : t('crm.forms.servicesPickerHint')
           }
         />
       )}

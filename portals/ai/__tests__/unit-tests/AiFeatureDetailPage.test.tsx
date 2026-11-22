@@ -73,6 +73,10 @@ const feature = (over: Partial<AiFeature> = {}): AiFeature => ({
   avg_duration_ms: 1420,
   unpriced_calls: 0,
   last_called_at: '2026-10-14T10:00:00.000Z',
+  prompts: [
+    { key: 'moderation.pod', name: 'Pod content safety review', role: 'SYSTEM', in_library: true, matches_default: true },
+  ],
+  prompts_note: null,
   ...over,
 });
 

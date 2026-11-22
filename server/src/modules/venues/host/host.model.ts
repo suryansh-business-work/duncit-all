@@ -49,6 +49,8 @@ export interface IHost extends Document {
   is_active: boolean;
   /** Admin-set cap on monthly Pod Requests to venues; null = the default of 10. */
   venue_requests_limit_override: number | null;
+  /** Admin-set Minimum Advance Days for this host's new pods (1-30); null = the platform's Pod Settings value. */
+  pod_min_advance_days_override: number | null;
   reviewer_notes: string;
   submitted_at: Date | null;
   approved_at: Date | null;
@@ -91,6 +93,7 @@ const hostSchema = new Schema<IHost>(
     status: { type: String, enum: ['DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED'], default: 'DRAFT' },
     is_active: { type: Boolean, default: true },
     venue_requests_limit_override: { type: Number, default: null, min: 0 },
+    pod_min_advance_days_override: { type: Number, default: null, min: 1, max: 30 },
     reviewer_notes: { type: String, default: '' },
     submitted_at: { type: Date, default: null },
     approved_at: { type: Date, default: null },

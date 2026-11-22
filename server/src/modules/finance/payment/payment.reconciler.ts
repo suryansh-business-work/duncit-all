@@ -77,6 +77,9 @@ async function recoverOneCapture(doc: HydratedDocument<IPayment>): Promise<void>
 
   const paymentFinalizer = await loadFinalizer();
   await paymentFinalizer.finalizePayment(String(doc._id), 'Razorpay (reconciled)');
+  // A failed-payment case the buyer opened for this checkout is answered: they have their booking.
+  const { markCaseBooked } = await import('@modules/finance/failedPayment/failedPaymentCase.service');
+  await markCaseBooked(String(doc._id));
   logs.server.info('payment-reconciler', 'capture', {
     payment_id: doc.payment_id,
     razorpay_payment_id: captured.id,
@@ -134,6 +137,8 @@ async function recoverStuckCaptures(): Promise<void> {
       { reconcile_checked_at: null },
       { reconcile_checked_at: { $lt: new Date(now - SWEEP_INTERVAL_MS) } },
     ],
+    // Finance is sending this capture back (Failed Payments): never book it as well.
+    'metadata.failed_payment_refund_case': { $exists: false },
   })
     // Oldest first: those are the ones closest to falling out of the window.
     .sort({ created_at: 1 })
@@ -233,6 +238,10 @@ async function reportNeedsHuman(): Promise<void> {
     PaymentModel.countDocuments({ needs_refund: true }),
   ]);
   if (failed === 0 && refundable === 0) return;
+  // Every captured-but-unbooked pod payment becomes a Failed Payments case, so
+  // Finance works it from one queue instead of only reading this count.
+  const { openCasesForNeedsRefund } = await import('@modules/finance/failedPayment/failedPaymentCase.service');
+  await openCasesForNeedsRefund();
   logs.server.warn('payment-reconciler', 'needs-human', {
     failed,
     needs_refund: refundable,

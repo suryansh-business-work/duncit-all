@@ -67,6 +67,13 @@ exports:
   - 'BackgroundJobsProvider'
   - 'BackgroundJobsIndicator'
   - 'useBackgroundJobs'
+  - 'EmailValidationProvider'
+  - 'EmailValidateButton'
+  - 'EmailValidationResult'
+  - 'EmailCheckList'
+  - 'EmailVerdictChip'
+  - 'useEmailValidation'
+  - 'EMAIL_VALIDATION_RESULT_FIELDS'
   - 'BrandLogsPanel'
   - 'EventRequestsPage'
   - 'BannerKitPanel'
@@ -455,6 +462,7 @@ non-empty one, else `http://localhost:2001/graphql` under `vite dev`, else
 | `loading` | `boolean` | no | `undefined` | Shows the boot spinner until the user arrives. |
 | `onDenied` | `() => void` | no | `undefined` | Called before the denied redirect (clear the token here). |
 | `breadcrumbLabelMap` | `Record<string, string>` | no | `undefined` | Route-segment → label overrides. |
+| `emailValidation` | `boolean` | no | `true` | A Validate button beside every email address (every grid's email column, and any `EmailValidateButton`). The partner app turns it off: the server runs checks for staff consoles only. |
 | `detailedChangeLogs` | `boolean` | no | `false` | Every grid's **Change logs** drawer also shows the account's email and roles, the surface, the IP address and the browser. The Finance console turns it on. |
 | `sidebarHeader` | `ReactNode` | no | `undefined` | Rendered under the sidebar branding, above the menu; hidden on the icon rail. The Partner console puts its studio switcher here. |
 | `children` | `ReactNode` | yes | — | The routed page. |
@@ -823,6 +831,30 @@ console that renders it.
 // Anything rendered inside AppShell can read the jobs.
 const jobs = useBackgroundJobs();
 const running = jobs?.jobs.filter((job) => job.status === 'RUNNING').length ?? 0;
+```
+
+## Email validation in every console
+
+`AppShell` mounts `EmailValidationProvider` with the console's `config.key`. Every grid's email
+column then shows a **Validate** button (see the table docs), and a page can put one anywhere with
+`<EmailValidateButton email={user.email} />`, which renders nothing for a blank or malformed
+value or outside a signed-in console. Pressing it opens one dialog that runs `validateEmail(email,
+portal)`: the tests are listed with spinners while the mail server is asked (up to a minute), then
+each gets a tick, a cross or a dash (not run, because a test before it failed), with the final
+status: **Valid**, **Risky** or **Invalid**, and a "Did you mean…" when the address looks like a typo.
+
+Every check is logged with the console it ran in. Admin › Email Validations lists the log
+(`emailValidationsTable`, Re-validate keeps the earlier row) and its Dashboard is the shared
+`EMAIL_VALIDATIONS` analytics page. The server refuses a check from a console the person cannot
+open, so the button never widens anyone's access. Admin reuses `EmailValidationResult`,
+`EmailCheckList` and `EmailVerdictChip` so a logged result reads exactly like a fresh one.
+
+```tsx
+// Anywhere inside AppShell: a Validate button beside an address the page shows itself.
+<Stack direction="row" alignItems="center">
+  <Typography>{user.email}</Typography>
+  <EmailValidateButton email={user.email} />
+</Stack>
 ```
 
 ## Coverage gate

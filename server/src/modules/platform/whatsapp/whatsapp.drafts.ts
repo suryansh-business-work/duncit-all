@@ -136,6 +136,39 @@ export const WA_TEMPLATE_DRAFTS: Readonly<Record<string, WaTemplateDraft>> = {
       'Help the host fill it, or change the venue slot or the ticket price: https://partners-app.duncit.com/club-admin/clubs/66f1/pods/66f2 — Team Duncit',
   },
   /*
+   * The monthly Host Performance pair (Club Admin host management). The host
+   * hears their own month; the club admin hears which hosts need a call — and
+   * that the call is to understand what is in the way and help, not to chase.
+   */
+  HOST_MONTHLY_PERFORMANCE: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, here is your {{2}} pod summary for {{3}}. ' +
+      'Monthly target: {{4}} pods. Completed: {{5}}. Performance score: {{6}}. ' +
+      '{{7}} Your Club Admin may get in touch to hear what is getting in the way and help you run more pods. ' +
+      'Plan your next pod: {{8}} — Team Duncit',
+    sample:
+      'Hi Meera, here is your Noida Badminton Club pod summary for October 2026. ' +
+      'Monthly target: 8 pods. Completed: 5. Performance score: 63%. ' +
+      'Run 3 more pods next month to reach your target. Your Club Admin may get in touch to hear what is getting in the way and help you run more pods. ' +
+      'Plan your next pod: https://mweb.duncit.com/create-pod — Team Duncit',
+  },
+  CLUB_ADMIN_HOST_PERFORMANCE_ALERT: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, in {{2}} last month ({{3}}) {{4}} hosts need your attention: ' +
+      '{{5}} have not run a pod recently and {{6}} are below their monthly pod target. ' +
+      'Please call or message them to understand their challenges and help them conduct more pods. ' +
+      'See each host, their contact details and score: {{7}} — Team Duncit',
+    sample:
+      'Hi Rohit, in Noida Badminton Club last month (October 2026) 3 hosts need your attention: ' +
+      '2 have not run a pod recently and 3 are below their monthly pod target. ' +
+      'Please call or message them to understand their challenges and help them conduct more pods. ' +
+      'See each host, their contact details and score: https://partners-app.duncit.com/club-admin/clubs/66f1/hosts — Team Duncit',
+  },
+  /*
    * The four onboarding rejections.
    *
    * One per partner kind because the applicant applied as one of them, and the
@@ -692,6 +725,56 @@ export const WA_TEMPLATE_DRAFTS: Readonly<Record<string, WaTemplateDraft>> = {
     sample:
       'Hi Kavya, your product Tug Rope Large for Pawsome was not approved at review. ' +
       'Reason: The product photos are blurred. You can update the listing and submit it again from the Partners console. Team Duncit',
+  },
+  WITHDRAWAL_APPROVED: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, your Duncit withdrawal of {{2}} was approved. Payment status: {{3}}. ' +
+      'We will message you again once the money reaches your bank account. Team Duncit',
+    sample:
+      'Hi Meera, your Duncit withdrawal of Rs 2500.00 was approved. Payment status: Processing. ' +
+      'We will message you again once the money reaches your bank account. Team Duncit',
+  },
+  WITHDRAWAL_PARTIALLY_APPROVED: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, you asked to withdraw {{2}} and we approved {{3}}. Reason: {{4}}. ' +
+      'The rest has gone back to your Duncit wallet. Team Duncit',
+    sample:
+      'Hi Meera, you asked to withdraw Rs 2500.00 and we approved Rs 1800.00. Reason: Part of the balance is on hold for a pending refund. ' +
+      'The rest has gone back to your Duncit wallet. Team Duncit',
+  },
+  WITHDRAWAL_REJECTED: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, your Duncit withdrawal of {{2}} was not approved. Reason: {{3}}. ' +
+      'The full amount has gone back to your wallet. Team Duncit',
+    sample:
+      'Hi Meera, your Duncit withdrawal of Rs 2500.00 was not approved. Reason: The bank details need to be checked. ' +
+      'The full amount has gone back to your wallet. Team Duncit',
+  },
+  WITHDRAWAL_PAID: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, your Duncit withdrawal of {{2}} has been paid to your bank account. ' +
+      'Transaction reference: {{3}}. Team Duncit',
+    sample:
+      'Hi Meera, your Duncit withdrawal of Rs 2500.00 has been paid to your bank account. ' +
+      'Transaction reference: 412345678901. Team Duncit',
+  },
+  SEND_MONEY_PAID: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, Duncit has sent you {{2}} for: {{3}}. ' +
+      'Transaction reference: {{4}}. Team Duncit',
+    sample:
+      'Hi Meera, Duncit has sent you Rs 15000.00 for: October salary. ' +
+      'Transaction reference: 412345678901. Team Duncit',
   },
 };
 

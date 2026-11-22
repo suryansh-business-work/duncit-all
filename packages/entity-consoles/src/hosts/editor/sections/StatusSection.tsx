@@ -65,6 +65,18 @@ export default function StatusSection({
                   hint={t('podRequests.overrideHint')}
                 />
               </Grid>
+              <Grid size={{ xs: 12, md: 4 }}>
+                <RhfTextField
+                  control={control}
+                  name="pod_min_advance_days_override"
+                  label={t('directory.hostEditor.minAdvanceDaysLabel')}
+                  size="small"
+                  type="number"
+                  disabled={!canGovern}
+                  hint={t('directory.hostEditor.minAdvanceDaysHint')}
+                  data-testid="host-editor-min-advance-days"
+                />
+              </Grid>
             </>
           }
         />

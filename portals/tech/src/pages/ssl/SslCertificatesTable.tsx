@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useMemo } from 'react';
 import { Chip, Stack, Typography } from '@mui/material';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { DuncitButton } from '@duncit/buttons';
@@ -50,7 +50,6 @@ const makeRenderDetails = (t: Translate, onDetails: Props['onDetails']) => (row:
 /** Every certbot lineage on the host — a handful of rows, so paged in the browser. */
 export default function SslCertificatesTable({ certificates, onDetails }: Readonly<Props>) {
   const { t } = useTranslation();
-  const refetchRef = useRef<(() => void) | null>(null);
   const coverages = useMemo(
     () => Object.entries(COVERAGE_KEY).map(([value, key]) => ({ value, label: t(key) })),
     [t],
@@ -110,11 +109,6 @@ export default function SslCertificatesTable({ certificates, onDetails }: Readon
   );
   const fetchRows = useMemo(() => clientTableFetch(certificates, searchOf, columns), [certificates, columns]);
 
-  // The table fetches once per query change, so a refreshed listing has to ask it to read again.
-  useEffect(() => {
-    refetchRef.current?.();
-  }, [fetchRows]);
-
   return (
     <DuncitTable<SslCertificate>
       ariaLabel={t('tech.ssl.pageTitle')}
@@ -125,7 +119,6 @@ export default function SslCertificatesTable({ certificates, onDetails }: Readon
       emptyText={t('tech.ssl.empty')}
       searchPlaceholder={t('tech.ssl.searchPlaceholder')}
       defaultSort={{ field: 'days_remaining', dir: 'asc' }}
-      refetchRef={refetchRef}
     />
   );
 }

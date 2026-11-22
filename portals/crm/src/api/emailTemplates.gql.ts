@@ -127,20 +127,3 @@ export const REMOVE_TEMPLATE_IMAGE = gql`
   }
 `;
 
-export const AI_MJML = gql`
-  mutation AiCreateOrUpdateMjml($input: AiMjmlTemplateInput!) {
-    aiCreateOrUpdateMjml(input: $input)
-  }
-`;
-
-export const STARTER_MJML = `<mjml>
-  <mj-body>
-    <mj-section background-color="#ffffff">
-      <mj-column>
-        <mj-text font-size="20px" font-weight="700">Hello {{ name }}</mj-text>
-        <mj-text>Edit this template and watch the preview update.</mj-text>
-      </mj-column>
-    </mj-section>
-  </mj-body>
-</mjml>
-`;

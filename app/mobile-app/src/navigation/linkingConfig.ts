@@ -84,6 +84,7 @@ export const linkingConfig: NonNullable<LinkingOptions<RootStackParamList>['conf
     VenueAvailability: 'venues/availability',
     VenuePricing: 'venues/pricing',
     VenueSettings: 'venues/settings',
+    VenueFees: 'venues/fees',
     // Pod Requests, on mWeb's exact paths — notifications carry /pod-requests/:id.
     NearbyHosts: 'venues/nearby-hosts',
     NearbyVenues: 'host/nearby-venues',
@@ -136,6 +137,7 @@ export const linkingConfig: NonNullable<LinkingOptions<RootStackParamList>['conf
     Callback: 'support/callback',
     ChatWithUs: 'support/chat',
     LiveChat: 'live-chat',
+    AskDuncit: 'ask-duncit/:conversationId?',
     AllSupportTickets: 'support/all',
     TicketDetails: 'tickets/:ticketId',
     PodIdeas: 'pod-ideas',

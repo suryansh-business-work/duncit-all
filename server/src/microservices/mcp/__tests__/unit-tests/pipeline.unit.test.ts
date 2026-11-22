@@ -194,7 +194,10 @@ describe('runToolCall — GraphQL tools', () => {
     const s = session();
     const finished = await runToolCall(s, 'pods_pod', { id: 'p1', [META_REASON]: 'Checking seats' });
     const tool = toolNamed(catalog, 'pods_pod');
-    expect(execute).toHaveBeenCalledWith(s.caller, { document: tool.source === 'graphql' ? tool.document : null, operationName: 'Mcp_pod', variables: { id: 'p1' } });
+    expect(execute).toHaveBeenCalledWith(
+      { ...s.caller, client: { surface: 'API', app: 'mcp-tools' } },
+      { document: tool.source === 'graphql' ? tool.document : null, operationName: 'Mcp_pod', variables: { id: 'p1' } }
+    );
     expect(body(finished)).toMatchObject({ tool: 'pods_pod', data: { id: 'p1', pod_title: 'Sunday run' } });
     expect(finished.outcome).toEqual({ ok: true, data: { id: 'p1', pod_title: 'Sunday run' } });
   });
@@ -210,12 +213,61 @@ describe('runToolCall — GraphQL tools', () => {
   it.each([
     ['FORBIDDEN', 'DENIED'],
     ['UNAUTHENTICATED', 'DENIED'],
-    ['BAD_USER_INPUT', 'ERROR'],
+    ['INTERNAL_SERVER_ERROR', 'ERROR'],
   ])('maps a GraphQL %s error with no data to a %s call', async (code, status) => {
     execute.mockResolvedValue({ data: { pod: null }, errors: [{ message: 'Access Denied', extensions: { code } }] });
     const finished = await runToolCall(session(), 'pods_pod', { id: 'p1' });
     expect(body(finished).error).toEqual({ code, message: 'Access Denied' });
     expect(recorded()).toMatchObject({ status, errorCode: code });
+  });
+
+  it('turns a resolver refusing the values into an INVALID call that lists every rule and says to ask the user', async () => {
+    execute.mockResolvedValue({
+      data: { pod: null },
+      errors: [{ message: 'Validation failed', extensions: { code: 'BAD_USER_INPUT', errors: ['Title is required', 'Seats must be 2 or more'] } }],
+    });
+    const finished = await runToolCall(session(), 'pods_pod', { id: 'p1' });
+    expect(body(finished).error).toEqual({
+      code: 'BAD_USER_INPUT',
+      message: [
+        'Nothing was saved. Duncit refused these values:',
+        '- Title is required',
+        '- Seats must be 2 or more',
+        'Ask the user for the corrected values. Never guess, invent or fill in placeholder values; call again once you have them.',
+      ].join('\n'),
+    });
+    expect(recorded()).toMatchObject({ status: 'INVALID', errorCode: 'BAD_USER_INPUT' });
+  });
+
+  it('uses the message itself when a refusal lists no rules, and says each reason once', async () => {
+    execute.mockResolvedValue({
+      data: null,
+      errors: [
+        { message: 'Pick a date in the future', extensions: { code: 'BAD_USER_INPUT' } },
+        { message: 'Pick a date in the future', extensions: { code: 'BAD_USER_INPUT', errors: [] } },
+        { message: 'Pick a venue' },
+      ],
+    });
+    const { message } = body(await runToolCall(session(), 'pods_pod', { id: 'p1' })).error as { message: string };
+    expect(message.split('\n').filter((line) => line === '- Pick a date in the future')).toHaveLength(1);
+    expect(message).toContain('- Pick a venue');
+  });
+
+  it.each([
+    ['with the wait the limiter gave, rounded up', 12.2, 'Wait 13 seconds before calling again'],
+    ['with a minute when the limiter gave no wait', undefined, 'Wait a minute before calling again'],
+    ['with a minute when the wait is not a positive number', -1, 'Wait a minute before calling again'],
+  ])('refuses a rate-limited call as DENIED %s, and says not to retry in a loop', async (_label, retryAfter, wait) => {
+    execute.mockResolvedValue({
+      data: null,
+      errors: [{ message: 'Too many changes through MCP tools in the last minute.', extensions: { code: 'RATE_LIMITED', retry_after: retryAfter } }],
+    });
+    const finished = await runToolCall(session(), 'pods_pod', { id: 'p1' });
+    expect(body(finished).error).toEqual({
+      code: 'RATE_LIMITED',
+      message: `Too many changes through MCP tools in the last minute. ${wait}, and do not retry in a loop.`,
+    });
+    expect(recorded()).toMatchObject({ status: 'DENIED', errorCode: 'RATE_LIMITED' });
   });
 
   it('joins every error message and falls back to GRAPHQL_ERROR when no code is given', async () => {
@@ -254,7 +306,7 @@ describe('runToolCall — curated tools', () => {
     probeRun.mockImplementation(async (context: { execute: (doc: unknown, vars: unknown) => Promise<unknown> }) => context.execute('DOC', { a: 1 }));
     const s = session();
     const finished = await runToolCall(s, 'mcp_probe', {});
-    expect(execute).toHaveBeenCalledWith(s.caller, { document: 'DOC', variables: { a: 1 } });
+    expect(execute).toHaveBeenCalledWith({ ...s.caller, client: { surface: 'API', app: 'mcp-tools' } }, { document: 'DOC', variables: { a: 1 } });
     expect(body(finished).data).toEqual({ data: { ok: 1 } });
   });
 
@@ -267,10 +319,12 @@ describe('runToolCall — curated tools', () => {
     expect(probeRun).not.toHaveBeenCalled();
   });
 
-  it('passes a GraphQLError on with its code, FORBIDDEN as a denial', async () => {
+  it('passes a GraphQLError on with its code: BAD_USER_INPUT as invalid input, FORBIDDEN as a denial', async () => {
     probeRun.mockRejectedValueOnce(new GraphQLError('`from` must be before `to`', { extensions: { code: 'BAD_USER_INPUT' } }));
-    expect(body(await runToolCall(session(), 'mcp_probe', {})).error).toEqual({ code: 'BAD_USER_INPUT', message: '`from` must be before `to`' });
-    expect(recorded(0).status).toBe('ERROR');
+    const error = body(await runToolCall(session(), 'mcp_probe', {})).error as { code: string; message: string };
+    expect(error.code).toBe('BAD_USER_INPUT');
+    expect(error.message).toContain('- `from` must be before `to`');
+    expect(recorded(0).status).toBe('INVALID');
     probeRun.mockRejectedValueOnce(new GraphQLError('Access Denied', { extensions: { code: 'FORBIDDEN' } }));
     await runToolCall(session(), 'mcp_probe', {});
     expect(recorded(1).status).toBe('DENIED');

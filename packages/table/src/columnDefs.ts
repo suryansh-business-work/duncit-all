@@ -6,6 +6,7 @@ import type {
   ValueGetterParams,
 } from 'ag-grid-community';
 import { columnHeader, isColumnSortable, sortingOrderOf } from './columnTypes';
+import { EmailCell, isEmailField } from './cells/emailCell';
 import { ColumnHeader, type ColumnHeaderParams } from './header/ColumnHeader';
 import type { Translate } from './i18n';
 import type { DuncitColumn, TableSortDir } from './types';
@@ -29,10 +30,15 @@ function buildValueGetter<T>(column: DuncitColumn<T>) {
   };
 }
 
+/**
+ * A column's own renderer wins. A plain column holding one email address gets
+ * the console's action beside it (see EmailCell) — every grid in every console
+ * at once, with no column definition naming it.
+ */
 function buildCellRenderer<T>(column: DuncitColumn<T>) {
   const render = column.cellRenderer;
-  if (!render) return undefined;
-  return (params: ICellRendererParams<T>) => (params.data ? render(params.data) : null);
+  if (render) return (params: ICellRendererParams<T>) => (params.data ? render(params.data) : null);
+  return isEmailField(column.field) ? EmailCell : undefined;
 }
 
 /**

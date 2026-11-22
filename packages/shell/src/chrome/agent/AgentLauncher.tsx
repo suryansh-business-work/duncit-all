@@ -5,7 +5,6 @@ import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import CloseIcon from '@mui/icons-material/Close';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import { DuncitIconButton } from '@duncit/buttons';
-import { ABOVE_TASKBAR_HEIGHT } from '../../workspace';
 import { useTranslation } from '../../i18n/useTranslation';
 import { AgentChat } from './AgentChat';
 import { AgentDockTab } from './AgentDockTab';
@@ -56,9 +55,6 @@ export function AgentLauncher() {
             'aria-label': t('shell.agent.title'),
             sx: {
               width: { xs: '100%', sm: 420 },
-              // Or the composer — the last row of the column — is behind the
-              // taskbar, which paints above the drawer.
-              height: ABOVE_TASKBAR_HEIGHT,
               display: 'flex',
               flexDirection: 'column',
             },

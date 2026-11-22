@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { DuncitButton } from '@duncit/buttons';
@@ -101,10 +101,6 @@ export default function AisensyTemplates({ onOpenLogs }: Readonly<Props>) {
   // The table re-reads only when its own query changes, so a fresh AiSensy
   // answer has to ask for the re-read — otherwise it keeps showing the list it
   // first mounted with.
-  const refetchRef = useRef<(() => void) | null>(null);
-  useEffect(() => {
-    refetchRef.current?.();
-  }, [fetchRows]);
 
   const selected = templates.find((template) => templateRowId(template) === openId) ?? null;
 
@@ -146,7 +142,6 @@ export default function AisensyTemplates({ onOpenLogs }: Readonly<Props>) {
           onRowClick={(template) => setOpenId(templateRowId(template))}
           searchPlaceholder="Search template, status or message text"
           emptyText={t('marketing.whatsappCampaigns.noTemplateMatchesThatSearch')}
-          refetchRef={refetchRef}
         />
       </AisensySection>
 

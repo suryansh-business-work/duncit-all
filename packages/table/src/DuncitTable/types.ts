@@ -10,9 +10,9 @@ import type {
 import type { DuncitTableSelection } from '../useGridSelection';
 
 export interface DuncitTableProps<T> {
-  tableId: string; // REQUIRED unique key; persistence namespace
+  tableId: string; // REQUIRED unique key; persistence namespace. A new id remounts with fresh state.
   columns: ReadonlyArray<DuncitColumn<T>>;
-  fetchRows: TableFetch<T>; // THE server bridge — the only data path
+  fetchRows: TableFetch<T>; // THE server bridge — the only data path. Memoise: a new identity refetches.
   getRowId: (row: T) => string;
   onRowClick?: (row: T) => void;
   // Optional per-row inline style (e.g. tint a low-stock row). Backward-compatible.

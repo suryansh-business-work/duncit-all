@@ -4,6 +4,7 @@ import {
   clampSpots,
   filterProductsForClub,
   freePodVenueNotice,
+  isPickedVenue,
   offerEarningsArgs,
   offerGuestFloor,
   pruneProductRequests,
@@ -32,6 +33,22 @@ interface SelectionSources {
   viewerUserId: string;
   /** The venue of a confirmed Pod Request — on offer whatever the club matches. */
   pinnedVenueId?: string;
+  /** The venue picked with "Pick This Venue for Pod" on Venue Details. */
+  pickedVenueId?: string;
+}
+
+/**
+ * While the form is on the picked venue, a host with a single club around it
+ * has that club chosen for them — the one thing left between them and the
+ * venue's space and time. Any other pod, and any host with a choice, picks as
+ * before. Native twin: useCreatePodScope.
+ */
+function usePickedVenueClub(form: CreatePodForm, venueLocked: boolean, clubs: CreatePodClub[]) {
+  const clubId = form.watch('club_id');
+  const sole = clubs.length === 1 ? clubs[0].id : '';
+  useEffect(() => {
+    if (venueLocked && !clubId && sole) form.setValue('club_id', sole, { shouldDirty: true, shouldValidate: true });
+  }, [form, venueLocked, clubId, sole]);
 }
 
 /** A physical pod's spots snap into a range that moved (another space) —
@@ -91,7 +108,7 @@ function useVenueCost(form: CreatePodForm, venues: CreatePodVenue[], podMode: st
  * free pod's host is told about the venue's charges. */
 export function useStepperSelections(
   form: CreatePodForm,
-  { clubs, hostCategories, products, subCategories, venues, viewerUserId, pinnedVenueId }: SelectionSources
+  { clubs, hostCategories, products, subCategories, venues, viewerUserId, pinnedVenueId, pickedVenueId }: SelectionSources
 ) {
   // Clubs are scoped by the selected host category (Super + Sub), then the picked
   // city and locality (helper shared with mobile + covered by unit tests). The
@@ -112,6 +129,10 @@ export function useStepperSelections(
   const clubVenueIds = new Set((selectedClub?.matched_venues ?? []).map((venue) => venue.id));
   // The slot path is not club-scoped on the server, so a pre-chosen venue stays offered.
   if (pinnedVenueId) clubVenueIds.add(pinnedVenueId);
+  // Neither is an offer, so a venue picked on Venue Details stays the pod's
+  // whatever club is chosen — physical, and the only venue Where & when offers.
+  const venueLocked = podMode === 'PHYSICAL' && isPickedVenue(pickedVenueId, form.watch('venue_id'));
+  usePickedVenueClub(form, venueLocked, clubsForLocation);
   // Only offer products whose category matches the selected club (Super + Sub).
   const availableProducts = filterProductsForClub(products, selectedClub) as CreatePodProduct[];
 
@@ -172,5 +193,6 @@ export function useStepperSelections(
     offerMinGuests: venue.offerMinGuests,
     preview,
     venueNotice,
+    venueLocked,
   };
 }

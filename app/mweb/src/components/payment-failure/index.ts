@@ -1,2 +1,7 @@
-export { default as PaymentFailureDialog } from './PaymentFailureDialog';
-export { usePaymentFailure, type PaymentFailureState } from './usePaymentFailure';
+export { default as PaymentFailureDialog, type PaymentClaimCapability } from './PaymentFailureDialog';
+export {
+  usePaymentFailure,
+  type PaymentFailureContext,
+  type PaymentFailureOptions,
+  type PaymentFailureState,
+} from './usePaymentFailure';

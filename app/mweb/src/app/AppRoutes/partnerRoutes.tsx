@@ -1,5 +1,5 @@
 import { Navigate, Route } from 'react-router';
-import { BrandOrderDetailPage, BrandOrdersPage, BrandWarehousesPage, ChangeRequestsPage, ClubAdminDashboardPage, ClubAutoPodEditorPage, ClubAutoPodsPage, ClubEditPage, ClubMonitoringPage, ClubPodDetailsPage, ClubPodEditorPage, ClubPodsPage, ClubStudioPage, EarnPage, FreelancerProfilePage, GigDetailPage, GigEditorPage, GigsPage, HostAutoPodsPage, MyGigsPage, HostCategoriesPage, HostPublishPage, HostSharePage, NearbyHostsPage, PodRequestsPage, ProductsManagePage, StudioOptionsPage, TourGuidePage, VenueAutoPodsPage, VenueAvailabilityPage, VenueChatsPage, VenueEarningsPage, VenueFoodPage, VenueRentedItemsPage, VenueListPage, VenueManagePage, VenuePodsPage, VenuePublishPage, VenueSettingsPage, VenueSlotRequestsPage } from './lazyPages';
+import { BrandOrderDetailPage, BrandOrdersPage, BrandWarehousesPage, ChangeRequestsPage, ClubAdminDashboardPage, ClubAutoPodEditorPage, ClubAutoPodsPage, ClubEditPage, ClubMonitoringPage, ClubPodDetailsPage, ClubPodEditorPage, ClubPodsPage, ClubStudioPage, EarnPage, FreelancerProfilePage, GigDetailPage, GigEditorPage, GigsPage, HostAutoPodsPage, MyGigsPage, HostCategoriesPage, HostPublishPage, HostSharePage, NearbyHostsPage, PodRequestsPage, ProductsManagePage, StudioOptionsPage, TourGuidePage, VenueAutoPodsPage, VenueAvailabilityPage, VenueChatsPage, VenueEarningsPage, VenueFeesPage, VenueFoodPage, VenueRentedItemsPage, VenueListPage, VenueManagePage, VenuePodsPage, VenuePublishPage, VenueSettingsPage, VenueSlotRequestsPage } from './lazyPages';
 import { withAuth, withProducts, type AppRoutesProps } from './routeGuards';
 
 /** Earn, venue, club and Auto Pod routes. */
@@ -56,6 +56,7 @@ export function partnerRoutes({ locationId }: Readonly<Pick<AppRoutesProps, 'loc
         <Route path="/venues/pricing" element={withAuth(<VenueAvailabilityPage />)} />
         <Route path="/venues/availability" element={<Navigate to="/venues/pricing" replace />} />
         <Route path="/venues/settings" element={withAuth(<VenueSettingsPage />)} />
+        <Route path="/venues/fees" element={withAuth(<VenueFeesPage />)} />
         {/* Club Studio. `/clubs/manage` and NOT `/club/manage`, which would sit
             under the `/club/:clubSlug` pattern and shadow a real club slug. */}
         <Route path="/clubs/manage" element={withAuth(<ClubStudioPage />)} />

@@ -250,9 +250,12 @@ export async function renderTemplateBody(input: {
   fragment_key?: string | null;
   footer_note?: string;
   vars?: Record<string, string>;
+  /** Applied to the wrapped source before compiling — the CRM puts its email theme on here. */
+  transform?: (source: string) => string;
 }): Promise<{ html: string; errors: string[] }> {
   const vars = input.vars ?? {};
-  const source = await emailFragmentService.wrap(input.mjml, input.fragment_key);
+  const wrapped = await emailFragmentService.wrap(input.mjml, input.fragment_key);
+  const source = input.transform ? input.transform(wrapped) : wrapped;
   return renderMjml(
     source,
     withFooterNote({ footer_note: input.footer_note, fragment_key: input.fragment_key }, vars)

@@ -39,6 +39,7 @@ export const CREATE_POD_OPTIONS = gql`
       capacity_items { label capacity }
       offer_min_guests
       offer_min_business { model amount }
+      offer_min_spend
       cover_image_url
       city
       locality

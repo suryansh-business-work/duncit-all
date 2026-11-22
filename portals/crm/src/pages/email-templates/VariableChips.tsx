@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Chip, Stack, Tooltip, Typography } from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import CheckIcon from '@mui/icons-material/Check';
+import { useTranslation } from '@duncit/shell';
 
 interface Item {
   slug: string;
@@ -31,6 +32,7 @@ interface Props {
  * the {{ slug }} placeholder.
  */
 export default function VariableChips({ title, items, declared, onToggle, knownSlugs, emptyHint }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [copied, setCopied] = useState<string | null>(null);
 
   const copy = async (slug: string) => {
@@ -52,7 +54,7 @@ export default function VariableChips({ title, items, declared, onToggle, knownS
         {items.length === 0 ? (
           <Typography variant="caption" sx={{
             color: "text.secondary"
-          }}>{emptyHint ?? 'None'}</Typography>
+          }}>{emptyHint ?? t('crm.emailTemplates.none')}</Typography>
         ) : (
           items.map((it) => {
             const selected = declared.has(it.slug);
@@ -61,8 +63,8 @@ export default function VariableChips({ title, items, declared, onToggle, knownS
             // chips are never red — declared = primary, otherwise neutral.
             const selectedColor = selected ? 'primary' : 'default';
             const color = foreign ? 'error' : selectedColor;
-            const selectedTip = selected ? 'In template — click to remove' : 'Not in template — click to add';
-            const tip = foreign ? 'Not an available Venue/Host variable' : selectedTip;
+            const selectedTip = selected ? t('crm.emailTemplates.inTemplateTip') : t('crm.emailTemplates.notInTemplateTip');
+            const tip = foreign ? t('crm.emailTemplates.foreignVariableTip') : selectedTip;
             return (
               <Tooltip key={it.slug} title={tip}>
                 <Chip
@@ -75,7 +77,7 @@ export default function VariableChips({ title, items, declared, onToggle, knownS
                   data-testid="crm-template-variable-chip"
                   onDelete={() => copy(it.slug)}
                   deleteIcon={
-                    <Tooltip title={copied === it.slug ? 'Copied!' : `Copy {{ ${it.slug} }}`}>
+                    <Tooltip title={copied === it.slug ? t('crm.emailTemplates.copied') : t('crm.emailTemplates.copyVariable', { vars: { key: it.slug } })}>
                       {copied === it.slug ? <CheckIcon /> : <ContentCopyIcon />}
                     </Tooltip>
                   }

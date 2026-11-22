@@ -1,7 +1,13 @@
 import EventIcon from '@mui/icons-material/Event';
 import { Chip, Stack, Typography } from '@mui/material';
-import { SectionCard } from '@duncit/pod-details';
+import { ContactChips, SectionCard } from '@duncit/pod-details';
 import { defineDemo, defineDemos } from '../types';
+
+interface ContactMock {
+  email: string;
+  phone: string;
+  whatsapp: string;
+}
 
 interface SectionMock {
   title: string;
@@ -54,5 +60,13 @@ export default defineDemos('pod-details', [
         </Stack>
       </SectionCard>
     ),
+  }),
+  defineDemo<ContactMock>({
+    id: 'contact-chips',
+    title: 'Every way to reach someone, as dialable chips',
+    note:
+      'Clear a field and its chip disappears. Spaces and dashes in a number are stripped from the tel: and wa.me links, never from the label.',
+    mock: { email: 'meera@example.com', phone: '+91 98765 43210', whatsapp: '+91 98765-43210' },
+    render: (mock) => <ContactChips contact={mock} />,
   }),
 ]);

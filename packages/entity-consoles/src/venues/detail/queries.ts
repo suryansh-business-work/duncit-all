@@ -149,6 +149,7 @@ export const VENUE_DETAIL = gql`
             model
             amount
           }
+          min_spend
         }
       }
       documents {
@@ -264,6 +265,8 @@ export interface VenueOfferSettings {
   response_hours: number;
   /** One amount per basis (the least a host may offer on it); absent on an older record. */
   min_business?: { model: string; amount: number }[] | null;
+  /** The least one booking's offer must come to (0 = none); absent on an older record. */
+  min_spend?: number | null;
 }
 
 export interface VenueDocument {

@@ -2,7 +2,6 @@ import type { NavigateFunction } from 'react-router';
 import ContactsIcon from '@mui/icons-material/Contacts';
 import CurrencyRupeeIcon from '@mui/icons-material/CurrencyRupee';
 import HomeWorkIcon from '@mui/icons-material/HomeWork';
-import HandymanIcon from '@mui/icons-material/Handyman';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import LanguageIcon from '@mui/icons-material/Language';
 import EventNoteIcon from '@mui/icons-material/EventNote';
@@ -13,7 +12,8 @@ import type { VenueLead } from '../../../api/crm.types';
 import { LeadDetailCard, LeadDetailRow } from '../../../components/LeadDetailCard';
 import ContactsTab from '../../../components/contacts-tab';
 import type { LeadTab } from '../../../components/LeadTabs';
-import ServicesGrid from '../../../components/ServicesGrid';
+import { leadServicesTab } from '../../../components/leadServicesTab';
+import { leadMediaTab } from '../../../components/lead-media/leadMediaTab';
 import CommsLogsSection from '../../../components/CommsLogsSection';
 import ManualLogsTab from '../../../components/ManualLogsTab';
 import WebsitePagesTab from '../../../components/website-pages-tab';
@@ -29,11 +29,10 @@ interface BuildArgs {
   t: TranslateFn;
   navigate: NavigateFunction;
   followUpLabel: string;
-  servicesPlural: string;
 }
 
 /** Tab definitions for the venue lead detail page. */
-export function buildVenueLeadTabs({ lead, t, navigate, followUpLabel, servicesPlural }: BuildArgs): LeadTab[] {
+export function buildVenueLeadTabs({ lead, t, navigate, followUpLabel }: BuildArgs): LeadTab[] {
   return [
     {
       value: 'overview',
@@ -66,24 +65,8 @@ export function buildVenueLeadTabs({ lead, t, navigate, followUpLabel, servicesP
       ),
     },
 
-    {
-      value: 'services',
-      label: `Services (${lead.services_offered.length})`,
-      icon: <HandymanIcon fontSize="small" />,
-      render: () => (
-        <LeadDetailCard
-          title={t('crm.common.servicesOffered')}
-          subtitle={
-            lead.services_offered.length
-              ? `${lead.services_offered.length} service${servicesPlural} tagged`
-              : 'Catalogue managed via Manage Venue Services'
-          }
-          icon={<HandymanIcon color="primary" />}
-        >
-          <ServicesGrid services={lead.services_offered} />
-        </LeadDetailCard>
-      ),
-    },
+    leadServicesTab(lead.services_offered, t),
+    leadMediaTab('VENUE_LEAD', lead.id, t),
 
     {
       value: 'survey',

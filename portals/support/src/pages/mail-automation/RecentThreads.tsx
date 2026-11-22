@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useMemo } from 'react';
 import { useQuery } from '@apollo/client/react';
 import { Chip, Stack, Typography } from '@mui/material';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
@@ -25,7 +25,6 @@ const threadSearchText = (r: MailAutomationThread) =>
  */
 export default function RecentThreads({ accountId }: Readonly<{ accountId: string }>) {
   const { t } = useTranslation();
-  const refetchRef = useRef<(() => void) | null>(null);
   const { data } = useQuery<{ mailAutomationThreads: MailAutomationThread[] }>(
     MAIL_AUTOMATION_THREADS,
     { variables: { account_id: accountId, limit: 100 }, fetchPolicy: 'cache-and-network' }
@@ -126,12 +125,6 @@ export default function RecentThreads({ accountId }: Readonly<{ accountId: strin
     [rows, columns],
   );
 
-  // The grid holds its fetch in a ref, so a list that arrives after the first
-  // paint has to ask for the re-read.
-  useEffect(() => {
-    refetchRef.current?.();
-  }, [rows]);
-
   return (
     <Stack spacing={1}>
       <Typography variant="subtitle1" sx={{
@@ -147,7 +140,6 @@ export default function RecentThreads({ accountId }: Readonly<{ accountId: strin
         emptyText={t('support.mailAutomation.recentEmpty')}
         defaultSort={{ field: 'created_at', dir: 'desc' }}
         searchPlaceholder={t('support.mailAutomation.colSubject')}
-        refetchRef={refetchRef}
       />
     </Stack>
   );

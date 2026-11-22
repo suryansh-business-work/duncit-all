@@ -40,6 +40,7 @@ const configMock: MockedResponse = {
         priorities: [], host_types: [], host_interests: [], audience_sizes: [], frequencies: [],
         revenue_models: [], host_intent_scores: [], services_offered_options: [],
         venue_services_offered_options: [], host_services_offered_options: [],
+        creator_platforms: [], collaboration_types: [], community_types: [], community_platforms: [],
       },
     },
   },

@@ -11,6 +11,7 @@ const mount = (over: Partial<BookingOffersFormProps> = {}) => {
         min_guests: 0,
         response_hours: 36,
         min_business: [{ model: 'FLAT', amount: 5000 }],
+        min_spend: 2500,
       }}
       effective={{ min_guests: 8, response_hours: 36 }}
       saving={false}
@@ -26,7 +27,8 @@ const mount = (over: Partial<BookingOffersFormProps> = {}) => {
 describe('BookingOffersForm', () => {
   it('starts from the stored numbers and says what is in effect now', () => {
     mount();
-    expect(screen.getByText('Booking offers')).toBeOnTheScreen();
+    expect(screen.getByText('Booking offers & minimum spend')).toBeOnTheScreen();
+    expect(screen.getByTestId('field-min_spend').props.value).toBe('2500');
     expect(screen.getByTestId('field-min_guests').props.value).toBe('0');
     expect(screen.getByTestId('field-response_hours').props.value).toBe('36');
     // The venue left the minimum to Duncit's default, which is 8 guests right now.
@@ -47,12 +49,14 @@ describe('BookingOffersForm', () => {
     const onSubmit = mount();
     fireEvent.changeText(screen.getByTestId('field-min_guests'), '12');
     fireEvent.changeText(screen.getByTestId('field-response_hours'), '48');
+    fireEvent.changeText(screen.getByTestId('field-min_spend'), '3000');
     fireEvent.press(screen.getByTestId('venue-offer-settings-save'));
     await waitFor(() =>
       expect(onSubmit).toHaveBeenCalledWith({
         min_guests: '12',
         response_hours: '48',
         min_business: [{ model: 'FLAT', amount: '5000' }],
+        min_spend: '3000',
       }),
     );
   });

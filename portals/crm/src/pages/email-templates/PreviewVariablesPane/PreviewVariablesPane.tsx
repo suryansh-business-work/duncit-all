@@ -26,13 +26,16 @@ interface Props {
 }
 
 /** Human-readable warning for placeholders that aren't valid variables for the target. */
-function foreignDetectedMessage(slugs: string[], target: EmailTemplate['target'], targetNoun: string): string {
-  const count = slugs.length;
-  const noun = count === 1 ? 'placeholder' : 'placeholders';
-  const verb = count === 1 ? 'is' : 'are';
-  const reason =
-    target === 'STATIC' ? 'expected in a static template' : `an available ${targetNoun} variable`;
-  return `${count} ${noun} (${slugs.join(', ')}) ${verb} not ${reason} — they won't be filled from the lead.`;
+function foreignDetectedMessage(
+  slugs: string[],
+  target: EmailTemplate['target'],
+  targetNoun: string,
+  t: ReturnType<typeof useTranslation>['t']
+): string {
+  const vars = { names: slugs.join(', '), target: targetNoun };
+  return target === 'STATIC'
+    ? t('crm.emailTemplates.foreignInStatic', { count: slugs.length, vars })
+    : t('crm.emailTemplates.foreignForTarget', { count: slugs.length, vars });
 }
 
 export default function PreviewVariablesPane(p: Readonly<Props>) {
@@ -61,7 +64,7 @@ export default function PreviewVariablesPane(p: Readonly<Props>) {
   // Available list + "known" slugs follow the template's target.
   const hostVarsForTarget = draft.target === 'HOST' ? HOST_VARIABLES : [];
   const availableForTarget = draft.target === 'VENUE' ? VENUE_VARIABLES : hostVarsForTarget;
-  const targetNoun = draft.target === 'VENUE' ? t('crm.common.venue') : 'Host';
+  const targetNoun = draft.target === 'VENUE' ? t('crm.common.venue') : t('crm.common.host');
   const knownSlugs = new Set(availableForTarget.map((v) => v.slug));
   // Detected placeholders that aren't available variables for this target.
   const foreignDetected = detected.filter((s) => !knownSlugs.has(s));
@@ -86,7 +89,7 @@ export default function PreviewVariablesPane(p: Readonly<Props>) {
       {tab === 'preview' ? (
         <Box sx={{ flex: 1, minHeight: 0, overflow: 'auto', bgcolor: 'background.default' }}>
           {previewErrors.length > 0 && <Alert severity="warning" sx={{ borderRadius: 0 }}>{previewErrors.slice(0, 3).join(' · ')}</Alert>}
-          <iframe title="preview" srcDoc={previewHtml} sandbox="" style={{ width: '100%', height: '100%', border: 'none', background: 'white' }} />
+          <Box component="iframe" title={t('crm.emailTemplates.previewFrame')} srcDoc={previewHtml} sandbox="" sx={{ width: '100%', height: '100%', border: 'none', bgcolor: 'common.white' }} />
           <Dialog open={fullscreen} onClose={() => setFullscreen(false)} fullScreen slotProps={{ paper: { 'aria-label': t('crm.emailTemplates.fullScreenPreview') } }}>
             <Stack
               direction="row"
@@ -104,7 +107,7 @@ export default function PreviewVariablesPane(p: Readonly<Props>) {
                 }}>Preview · {draft.name}</Typography>
               <DuncitIconButton onClick={() => setFullscreen(false)} aria-label={t('crm.emailTemplates.closeFullScreen')}><CloseIcon /></DuncitIconButton>
             </Stack>
-            <iframe title="preview-fullscreen" srcDoc={previewHtml} sandbox="" style={{ width: '100%', height: '100%', border: 'none', background: 'white' }} />
+            <Box component="iframe" title={t('crm.emailTemplates.previewFrameFullscreen')} srcDoc={previewHtml} sandbox="" sx={{ width: '100%', height: '100%', border: 'none', bgcolor: 'common.white' }} />
           </Dialog>
         </Box>
       ) : (
@@ -117,10 +120,10 @@ export default function PreviewVariablesPane(p: Readonly<Props>) {
                 <Typography component="h2" variant="subtitle2" sx={{ flex: 1 }}>{t('crm.emailTemplates.detectedInTemplate')}</Typography>
                 <DuncitButton size="small" onClick={onImportDetected} disabled={!detected.length}>{t('crm.emailTemplates.syncAll')}</DuncitButton>
               </Stack>
-              <VariableChips title="" items={detected.map((slug) => ({ slug }))} declared={declared} onToggle={toggle} knownSlugs={knownSlugs} emptyHint="No {{ var }} placeholders found." />
+              <VariableChips title="" items={detected.map((slug) => ({ slug }))} declared={declared} onToggle={toggle} knownSlugs={knownSlugs} emptyHint={t('crm.emailTemplates.noPlaceholdersFound')} />
               {foreignDetected.length > 0 && (
                 <Alert severity="warning" sx={{ py: 0 }}>
-                  {foreignDetectedMessage(foreignDetected, draft.target, targetNoun)}
+                  {foreignDetectedMessage(foreignDetected, draft.target, targetNoun, t)}
                 </Alert>
               )}
             </Stack>
@@ -130,7 +133,7 @@ export default function PreviewVariablesPane(p: Readonly<Props>) {
               }}>{t('crm.emailTemplates.staticTemplateNoLeadVariablesDetected')}</Typography>
             ) : (
               <VariableChips
-                title={`Available for ${targetNoun}`}
+                title={t('crm.emailTemplates.availableFor', { vars: { target: targetNoun } })}
                 items={availableForTarget}
                 declared={declared}
                 onToggle={toggle}
@@ -142,7 +145,7 @@ export default function PreviewVariablesPane(p: Readonly<Props>) {
             <Typography variant="caption" sx={{
               color: "text.secondary"
             }}>{t('crm.emailTemplates.usedForPreviewAndAsThe')}</Typography>
-            <VariablesValuesEditor variables={draft.variables} values={sampleValues} onChange={setSampleValues} emptyHint="Add variables above to set default values." />
+            <VariablesValuesEditor variables={draft.variables} values={sampleValues} onChange={setSampleValues} emptyHint={t('crm.emailTemplates.addVariablesFirst')} />
 
             <Typography component="h2" variant="subtitle2">{t('crm.emailTemplates.declaredVariables')}</Typography>
             {draft.variables.length === 0 ? (

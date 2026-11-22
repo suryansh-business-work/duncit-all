@@ -32,7 +32,6 @@ const breakdown = (venue_payout: number, total: number, pax: number) => ({
   base: venue_payout,
   rules: [],
   rules_total: 0,
-  min_spend_top_up: 0,
   cleaning_fee: 0,
   pet_fee: 0,
   venue_price: venue_payout,

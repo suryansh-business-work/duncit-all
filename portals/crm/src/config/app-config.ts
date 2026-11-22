@@ -32,6 +32,8 @@ export const appConfig = {
         { label: 'Venue Leads', labelKey: 'shell.nav.venueLeads', to: '/venue-leads', icon: 'location' },
         { label: 'Host Leads', labelKey: 'shell.nav.hostLeads', to: '/host-leads', icon: 'groups' },
         { label: 'Ecomm Leads', labelKey: 'shell.nav.ecommLeads', to: '/ecomm-leads', icon: 'inventory' },
+        { label: 'Creators Leads', labelKey: 'shell.nav.creatorLeads', to: '/creator-leads', icon: 'campaign' },
+        { label: 'Community Leads', labelKey: 'shell.nav.communityLeads', to: '/community-leads', icon: 'community' },
         {
           label: 'User Leads', labelKey: 'shell.nav.userLeads',
           icon: 'user-search',
@@ -68,6 +70,7 @@ export const appConfig = {
       icon: 'email',
       children: [
         { label: 'Templates', labelKey: 'shell.nav.templates', to: '/email-templates', icon: 'email' },
+        { label: 'Settings', labelKey: 'shell.nav.emailTemplateSettings', to: '/email-templates/settings', icon: 'settings' },
       ],
     },
     {

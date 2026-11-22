@@ -19,14 +19,26 @@ const kindOf = (o: any): PromptKind => {
   return o.key ? 'CODE' : 'AI';
 };
 
+/**
+ * Whether a code prompt's live body is still the catalogue default. Null for an
+ * AI prompt (it has no default) and for a row the catalogue no longer names.
+ */
+const matchesDefault = (kind: PromptKind, key: unknown, content: string): boolean | null => {
+  if (kind !== 'CODE' || typeof key !== 'string') return null;
+  const def = CODE_PROMPT_BY_KEY.get(key);
+  return def ? def.content === content : null;
+};
+
 /** The GraphQL/feed view of a row. Callers guard for a missing document. */
 const pub = (doc: any) => {
   const o = doc.toObject ? doc.toObject() : doc;
   const content = o.content ?? '';
+  const kind = kindOf(o);
   return {
     id: String(o._id),
     key: o.key ?? null,
-    kind: kindOf(o),
+    kind,
+    matches_default: matchesDefault(kind, o.key, content),
     role: o.role === 'USER' ? 'USER' : 'SYSTEM',
     name: o.name,
     description: o.description ?? '',
@@ -48,6 +60,10 @@ const pub = (doc: any) => {
     })),
     token_count: estimateTokens(content),
     is_active: o.is_active !== false,
+    archived_at: iso(o.archived_at),
+    // Running total kept by prompt.analytics.ts, so the list can show hits
+    // without a second query per row.
+    total_hits: o.stats?.total_hits ?? 0,
     created_by: o.created_by ?? null,
     created_at: iso(o.created_at),
     updated_at: iso(o.updated_at),
@@ -156,6 +172,8 @@ export interface AiPromptFilterInput {
   category?: string | null;
   search?: string | null;
   kind?: PromptKind | null;
+  /** True lists only archived prompts; anything else leaves them out. */
+  archived?: boolean | null;
 }
 
 /**
@@ -180,6 +198,9 @@ export const aiPromptService = {
       query.is_active = filter.is_active;
     }
     if (filter.kind) query.kind = filter.kind;
+    // Archived prompts wait in their own tab and are off every other list,
+    // the feed and the dashboard. `null` also matches rows from before the field.
+    query.archived_at = filter.archived === true ? { $ne: null } : null;
     if (filter.category) query.category = filter.category;
     if (filter.search) {
       const rx = new RegExp(

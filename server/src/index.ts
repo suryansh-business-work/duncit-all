@@ -15,6 +15,7 @@ import { startPodDraftCleanupScheduler } from '@modules/pods/pod-draft/pod-draft
 import { startRentalScheduler } from '@modules/venues/venueRental/rentalPayout.service';
 import { startAutoPodSweepScheduler } from '@modules/pods/autoPod/autoPod.recovery';
 import { startPodAutoCancelScheduler } from '@modules/pods/pod/pod.autoCancel';
+import { startHostPerformanceScheduler } from '@modules/clubs/clubAdmin/hosts/hostPerformance.job';
 import { startRefundHoldReleaseScheduler } from '@modules/pods/pod/pod.refundHold';
 import { startSlotRequestExpiryScheduler } from '@modules/venues/venueSlot/venueSlot.expiry';
 import { startCoinExpiryScheduler } from '@modules/finance/coin/coin.expiry';
@@ -33,6 +34,8 @@ import { startShortLinkRetentionScheduler } from '@modules/crm/marketing/shortLi
 import { startAnalyticsRetentionScheduler } from '@modules/platform/analytics/analytics.retention';
 import { startContactInviteRetentionScheduler } from '@modules/access/contacts/contacts.retention';
 import { startPaymentReconciler } from '@modules/finance/payment/payment.reconciler';
+import { startFailedPaymentRefundPoller } from '@modules/finance/failedPayment/failedPayment.refundPoller';
+import { buildRazorpayWebhookRouter } from '@modules/finance/failedPayment/failedPayment.webhook';
 import { startVenueFoodReconciler } from '@modules/venues/venueFood/venueFoodOrder.payment';
 import { startStoreScheduler } from '@modules/commerce/store/store.scheduler';
 import { startProductCartReminderScheduler } from '@modules/commerce/productCart/productCart.scheduler';
@@ -43,6 +46,7 @@ import { startWhatsappScheduler } from '@modules/platform/whatsapp/whatsapp.sche
 import { startMeetingReminderScheduler } from '@modules/survey/meeting.reminder';
 import { startCheckoutNudgeScheduler } from '@modules/finance/payment/payment.checkoutNudge';
 import { startCoinExpiryReminderScheduler } from '@modules/finance/coin/coin.expiryReminder';
+import { startEmployeeTargetReminderScheduler } from '@modules/targets/employeeTarget/employeeTarget.reminder';
 import { startDbBackupScheduler } from '@modules/platform/dbBackup/dbBackup.scheduler';
 import { startAppStoreReleaseScheduler } from '@modules/platform/appBuild/appStoreRelease.scheduler';
 import { startStoreReleaseScheduler } from '@modules/platform/appBuild/storeRelease.scheduler';
@@ -99,8 +103,11 @@ import { occasionService } from '@modules/crm/marketing/occasions/occasion.servi
 import { telemetryService } from '@modules/platform/telemetry/telemetry.service';
 import { buildTelemetryFeedRouter } from '@modules/platform/telemetry/telemetry.router';
 import { buildAiPromptFeedRouter } from '@modules/ai/prompt/prompt.router';
+import { buildAiPromptShareRouter } from '@modules/ai/prompt/prompt.share.router';
 import { buildTableApiRouter } from '@modules/platform/tableApi/tableApi.router';
 import { buildMcpRouter } from '@microservices/mcp/http/mcp.router';
+import { registerAskDuncitApollo } from '@modules/ai/askDuncit/mcp/askDuncit.session';
+import { buildAskDuncitVoiceRouter } from '@modules/ai/askDuncit/voice/askDuncit.voice.router';
 import { categoryService } from '@modules/pods/category/category.service';
 import { notificationService } from '@modules/engagement/notification/notification.service';
 import { notificationStreamHandler } from '@modules/engagement/notification/notification.stream';
@@ -118,6 +125,7 @@ import { attachChallengeHandlers } from '@modules/engagement/challenge/runtime/c
 import { attachCallHandlers } from '@modules/crm/call/call.socket';
 import { buildCallWebhookRouter } from '@modules/crm/call/call.webhook';
 import { buildShiprocketWebhookRouter } from '@modules/commerce/shiprocket/shiprocket.webhook';
+import { buildPayoutWebhookRouter } from '@modules/finance/payout/payout.webhook';
 import { buildVenueApiRouter } from '@modules/venues/publicApi/venueApi.router';
 import { buildCampaignTrackingRouter } from '@modules/crm/marketing/tracking.router';
 import { buildShortLinkRouter } from '@modules/crm/marketing/shortLink.router';
@@ -253,6 +261,14 @@ async function bootstrap() {
     const { migratePerSlotOffers } = await import('@modules/venues/venueOffer/venueOffer.migration');
     const result = await migratePerSlotOffers();
     if (Object.values(result).some((count) => count > 0)) logs.server.info('bootstrap', 'perSlotOffers', result);
+  });
+  // The minimum spend moved into Fees & Minimum Spend (settings.offers): each
+  // venue's amount is copied once. Additive (pricing.min_spend stays for a
+  // rollback) and idempotent, so it is safe on every boot.
+  await safeSeed('venueMinSpend', async () => {
+    const { migrateVenueMinSpend } = await import('@modules/venues/venue/venue.minSpend.migration');
+    const result = await migrateVenueMinSpend();
+    if (result.venues > 0) logs.server.info('bootstrap', 'venueMinSpend', result);
   });
   await safeSeed('storeServiceablePincodes', async () => {
     const { migrateServiceablePincodes } = await import('@modules/commerce/store/store.migration');
@@ -457,6 +473,20 @@ async function bootstrap() {
       '@modules/finance/physicalGiftCard/physicalGiftCard.service'
     );
     await physicalGiftCardService.syncIndexes();
+  });
+  // The Growth Calculator's saved runs: the listing index and the unique
+  // (person, request id) pair that turns a double-pressed Save into one record.
+  await safeSeed('growthCalculationIndexes', async () => {
+    const { growthCalculationService } = await import(
+      '@modules/targets/growthCalculation/growthCalculation.service'
+    );
+    await growthCalculationService.syncIndexes();
+  });
+  // Monthly employee targets: one live target per employee per month, the
+  // double-pressed Assign guard and the reminder sweep's index.
+  await safeSeed('employeeTargetIndexes', async () => {
+    const { employeeTargetService } = await import('@modules/targets/employeeTarget/employeeTarget.service');
+    await employeeTargetService.syncIndexes();
   });
   // Our own sites and the two app stores, as a Mongo-side regex — the backfill
   // below runs in the database, so it cannot call the TypeScript classifier.
@@ -665,6 +695,11 @@ async function bootstrap() {
   // each venue's cancellation policy. Off until an admin enables it.
   startPodAutoCancelScheduler();
 
+  // Club Admin host performance: once Pod Settings' day of the month arrives,
+  // snapshot every host's month in each club and (when switched on) send the
+  // host + club-admin performance messages. Hourly tick, one run per month.
+  startHostPerformanceScheduler();
+
   // Held cancellation refunds: pay every one whose pod has now started, which
   // is also the moment its cancellation stopped being revocable. Nothing to do
   // unless an admin turned the hold on.
@@ -728,6 +763,8 @@ async function bootstrap() {
   // Payments: adopt captures Razorpay took while the client was gone, and
   // re-run finalization side effects that failed the first time round.
   startPaymentReconciler();
+  // Failed-payment refunds whose end no webhook reported: finish them from Razorpay.
+  startFailedPaymentRefundPoller();
 
   // Venue food orders are paid to the venue's own Razorpay account, outside the
   // payment finalizer — they get their own capture and refund sweep.
@@ -801,6 +838,9 @@ async function bootstrap() {
   startCheckoutNudgeScheduler();
   // A reminder a few days before a member's coins lapse (Loyalty > Duncit Coin).
   startCoinExpiryReminderScheduler();
+  // Month-end reminders to employees who have not reported on their monthly
+  // target yet (Targets > Settings sets the window).
+  startEmployeeTargetReminderScheduler();
 
   const app = express();
   const httpServer = http.createServer(app);
@@ -972,6 +1012,14 @@ async function bootstrap() {
   // CRM softphone + AI call Twilio webhooks (parses its own urlencoded bodies).
   app.use('/twilio', buildCallWebhookRouter());
 
+  // Razorpay webhook at /webhooks/razorpay. FIRST on /webhooks: it verifies an
+  // HMAC over the raw body, which a JSON parser mounted earlier would consume.
+  app.use('/webhooks', buildRazorpayWebhookRouter());
+
+  // RazorpayX payout outcomes at /webhooks/razorpay-payouts (signed, reads its own raw
+  // body): the only thing that can mark a withdrawal or a Send Money transfer paid.
+  app.use('/webhooks', buildPayoutWebhookRouter());
+
   // ShipRocket tracking webhook at /webhooks/courier-updates (parses its own
   // JSON, verifies the Tech portal's x-api-key). ShipRocket refuses a URL that
   // names it, hence the neutral path.
@@ -1019,6 +1067,9 @@ async function bootstrap() {
   // Deliberately open: no login and no key. It publishes the platform's own
   // prompts, code ones included 2014 see prompt.router.ts for what that costs.
   app.use('/ai-prompts', buildAiPromptFeedRouter());
+  // Public share links (AI portal /p/:token). The token is the gate; see
+  // prompt.share.router.ts. Events are anonymous and carry no IP.
+  app.use('/ai-prompts/share', buildAiPromptShareRouter());
 
   // Every portal table's "GET API": /table-api/<tableQueryName>, authorised by the
   // caller's personal token and run through Apollo as them. See tableApi.router.ts.
@@ -1028,6 +1079,12 @@ async function bootstrap() {
   // server. Only those paths enter it; every tool runs through Apollo as the
   // connected person. See microservices/mcp/README.md.
   app.use(buildMcpRouter({ apollo, typeDefsByModule, resolvers }));
+
+  // Ask Duncit runs its tools through the same MCP pipeline as the person,
+  // so it needs the Apollo server too; voice in/out is plain HTTP (binary).
+  // See modules/ai/askDuncit.
+  registerAskDuncitApollo(apollo);
+  app.use('/ask-duncit', buildAskDuncitVoiceRouter());
 
   // Branded notice at the API root instead of Express's default "Cannot GET /".
   app.get('/', (_req, res) => res.type('html').send(LANDING_HTML));

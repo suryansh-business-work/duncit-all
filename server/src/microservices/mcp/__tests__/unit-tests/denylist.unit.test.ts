@@ -7,6 +7,7 @@ describe('deniedReason — fields named one by one', () => {
     ['requestDbBackupDownload', 'returns a link to a full database archive'],
     ['startE2eRun', 'hands the E2E workflow its test credentials; CI only'],
     ['attachStaffCallRecording', 'called by the call recorder, not a person'],
+    ['recordAiPromptEvent', 'reported by the AI portal as people use a prompt'],
   ])('refuses %s with its own reason', (field, reason) => {
     expect(deniedReason(field)).toBe(reason);
   });

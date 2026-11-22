@@ -14,3 +14,6 @@ export { PodDetailsScopeProvider, usePodDetailsScope } from './scope';
 export type { PodDetailsScope } from './scope';
 export { POD_DETAIL, type AdminPodAttendeeRow } from './queries';
 export { default as SectionCard } from './SectionCard';
+// Every way to reach someone (mailto / tel / wa.me chips) — the club admins
+// card's own chips, shared with the Partners Club Admin host pages.
+export { default as ContactChips, contactLinks, type ContactDetails, type ContactLink } from './ContactChips';

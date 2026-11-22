@@ -1,9 +1,27 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between, LessThan } from 'typeorm';
+import { Repository, LessThan, In } from 'typeorm';
 import { AuditLog, AuditAction, AuditSeverity } from './entities/audit-log.entity';
 import { ApiKey } from '../auth/entities/api-key.entity';
 import { createLogger } from '../../common/services/logger.service';
+import { getRequestId, getRequestActor } from '../../common/services/request-context';
+import { resolveSessionScope } from '../../common/security/session-scope';
+import { pruneInBatches } from '../../common/utils/batched-prune';
+
+/** Upper bound on a single audit-log page, so a large `limit` can't load the whole table at once. */
+export const MAX_AUDIT_PAGE_SIZE = 200;
+
+/**
+ * Caller-supplied text is cut to these lengths before it is stored. The first three match the
+ * entity's varchar lengths, which SQLite does not enforce; errorMessage is a text column with no
+ * declared bound. Without the clamp one row could carry a request path of many kilobytes.
+ */
+const MAX_USER_AGENT_LENGTH = 500;
+const MAX_METHOD_LENGTH = 10;
+const MAX_PATH_LENGTH = 500;
+const MAX_ERROR_MESSAGE_LENGTH = 1000;
+
+const clampText = (value: string | undefined, max: number): string | null => (value ? value.slice(0, max) : null);
 
 interface AuditContext {
   apiKey?: ApiKey;
@@ -23,8 +41,6 @@ export interface AuditQueryOptions {
   apiKeyId?: string;
   sessionId?: string;
   severity?: AuditSeverity;
-  startDate?: Date;
-  endDate?: Date;
   limit?: number;
   offset?: number;
 }
@@ -33,6 +49,7 @@ export interface AuditQueryOptions {
 export class AuditService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = createLogger('AuditService');
   private cleanupTimer?: ReturnType<typeof setInterval>;
+  private stopped = false;
 
   constructor(
     @InjectRepository(AuditLog, 'main')
@@ -64,6 +81,7 @@ export class AuditService implements OnModuleInit, OnModuleDestroy {
   }
 
   onModuleDestroy(): void {
+    this.stopped = true;
     if (this.cleanupTimer) {
       clearInterval(this.cleanupTimer);
     }
@@ -74,20 +92,34 @@ export class AuditService implements OnModuleInit, OnModuleDestroy {
     context: AuditContext = {},
     severity: AuditSeverity = AuditSeverity.INFO,
   ): Promise<AuditLog | null> {
+    // Stamp the active request id into metadata so an audit row traces back to the same request as
+    // the log lines. Absent outside a request scope (so no metadata blob is created for worker/cron).
+    const requestId = getRequestId();
+    // Auto-attribute the row to the resolved API key + client IP from the per-request async context
+    // when the call site didn't pass them explicitly. Most call sites fire from deep services that
+    // legitimately don't have the key in scope; without this the apiKey/ipAddress columns are always
+    // blank, defeating the audit trail. Explicit context values still win (e.g. a worker that stamps
+    // a system key, or the AUTH_FAILED case which only has an IP).
+    const actor = getRequestActor();
+    const apiKeyId = context.apiKey?.id ?? actor?.apiKeyId;
+    const apiKeyName = context.apiKey?.name ?? actor?.apiKeyName;
+    const ipAddress = context.ipAddress ?? actor?.ipAddress;
+    const metadata =
+      context.metadata || requestId ? { ...(context.metadata ?? {}), ...(requestId ? { requestId } : {}) } : null;
     const auditLog = this.auditRepository.create({
       action,
       severity,
-      apiKeyId: context.apiKey?.id || null,
-      apiKeyName: context.apiKey?.name || null,
+      apiKeyId: apiKeyId || null,
+      apiKeyName: apiKeyName || null,
       sessionId: context.sessionId || null,
       sessionName: context.sessionName || null,
-      ipAddress: context.ipAddress || null,
-      userAgent: context.userAgent || null,
-      method: context.method || null,
-      path: context.path || null,
+      ipAddress: ipAddress || null,
+      userAgent: clampText(context.userAgent, MAX_USER_AGENT_LENGTH),
+      method: clampText(context.method, MAX_METHOD_LENGTH),
+      path: clampText(context.path, MAX_PATH_LENGTH),
       statusCode: context.statusCode || null,
-      metadata: context.metadata || null,
-      errorMessage: context.errorMessage || null,
+      metadata,
+      errorMessage: clampText(context.errorMessage, MAX_ERROR_MESSAGE_LENGTH),
     });
 
     // Audit logging is best-effort: a failed insert must never turn a succeeded operation into a 500
@@ -112,11 +144,10 @@ export class AuditService implements OnModuleInit, OnModuleDestroy {
     return this.log(action, context, AuditSeverity.WARN);
   }
 
-  async logError(action: AuditAction, context: AuditContext = {}): Promise<AuditLog | null> {
-    return this.log(action, context, AuditSeverity.ERROR);
-  }
-
-  async findAll(options: AuditQueryOptions = {}): Promise<{
+  async findAll(
+    options: AuditQueryOptions = {},
+    allowedSessions?: string[] | null,
+  ): Promise<{
     data: AuditLog[];
     total: number;
   }> {
@@ -124,47 +155,44 @@ export class AuditService implements OnModuleInit, OnModuleDestroy {
 
     if (options.action) where.action = options.action;
     if (options.apiKeyId) where.apiKeyId = options.apiKeyId;
-    if (options.sessionId) where.sessionId = options.sessionId;
+    // The calling key's allowedSessions is authoritative; the query sessionId may only narrow within it.
+    // Without this, a session-scoped ADMIN key reads every tenant's rows (no param => where.sessionId
+    // unset => all), because the ApiKeyGuard fence only inspects route params, not the query string.
+    const sessionScope = resolveSessionScope(allowedSessions, options.sessionId);
+    if (sessionScope !== null) {
+      if (sessionScope.length === 0) return { data: [], total: 0 }; // requested session outside the key's scope
+      where.sessionId = In(sessionScope);
+    }
     if (options.severity) where.severity = options.severity;
 
-    if (options.startDate && options.endDate) {
-      where.createdAt = Between(options.startDate, options.endDate);
-    }
+    // Clamp the page size so an arbitrarily large `limit` can't load the whole table into one response.
+    const requested = options.limit && options.limit > 0 ? options.limit : 50;
+    const take = Math.min(requested, MAX_AUDIT_PAGE_SIZE);
 
     const [data, total] = await this.auditRepository.findAndCount({
       where,
-      order: { createdAt: 'DESC' },
-      take: options.limit || 50,
-      skip: options.offset || 0,
+      // createdAt has one-second precision, so rows written in the same second tie; the unique id gives
+      // them one fixed order, or separate LIMIT/OFFSET pages could repeat one row and skip another.
+      order: { createdAt: 'DESC', id: 'DESC' },
+      take,
+      // Bound the skip to [0, MAX_SAFE_INTEGER]: a negative offset (e.g. from an unvalidated `?offset=-5`)
+      // would otherwise reach the query driver verbatim, and the driver refuses an OFFSET of 2^63 or more
+      // as a 500, where any offset past the last row is just an empty page.
+      skip: options.offset && options.offset > 0 ? Math.min(options.offset, Number.MAX_SAFE_INTEGER) : 0,
     });
 
     return { data, total };
   }
 
-  async getRecentByApiKey(apiKeyId: string, limit = 10): Promise<AuditLog[]> {
-    return this.auditRepository.find({
-      where: { apiKeyId },
-      order: { createdAt: 'DESC' },
-      take: limit,
-    });
-  }
-
-  async getRecentBySession(sessionId: string, limit = 10): Promise<AuditLog[]> {
-    return this.auditRepository.find({
-      where: { sessionId },
-      order: { createdAt: 'DESC' },
-      take: limit,
-    });
-  }
-
+  /** Delete rows older than the window, a batch at a time. Returns the number removed. */
   async cleanup(olderThanDays = 30): Promise<number> {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - olderThanDays);
 
-    const result = await this.auditRepository.delete({
-      createdAt: LessThan(cutoffDate),
+    return pruneInBatches({
+      repository: this.auditRepository,
+      where: { createdAt: LessThan(cutoffDate) },
+      stopped: () => this.stopped,
     });
-
-    return result.affected || 0;
   }
 }

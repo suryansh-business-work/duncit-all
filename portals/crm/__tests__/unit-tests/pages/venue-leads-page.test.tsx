@@ -58,6 +58,10 @@ const configMock = (lists: { venue_lead_statuses: string[] | null; priorities: s
         host_types: [], host_interests: [], audience_sizes: [], frequencies: [], revenue_models: [],
         host_intent_scores: [], services_offered_options: [], venue_services_offered_options: [],
         host_services_offered_options: [],
+        creator_platforms: [],
+        collaboration_types: [],
+        community_types: [],
+        community_platforms: [],
         ...lists,
       },
     },
@@ -316,13 +320,14 @@ describe('VenueLeadsPage navigation and dialogs', () => {
   const renderRouted = (mocks: MockedResponse[]) =>
     renderWithApollo(<VenueLeadsPage />, mocks, { route: '/venue-leads', path: '/venue-leads' });
 
-  it('opens the services catalogue', async () => {
+  it('opens the shared Services Offered catalogue', async () => {
     renderRouted([tableMock([])]);
     await screen.findByText(/No venue leads yet/i);
 
-    fireEvent.click(screen.getByText('Manage Venue Services'));
+    expect(screen.queryByText('Manage Venue Services')).toBeNull();
+    fireEvent.click(screen.getByText('Manage Services'));
 
-    expect(screen.getByTestId('location')).toHaveTextContent('/venue-leads/services');
+    expect(screen.getByTestId('location')).toHaveTextContent(/^\/data\/services-offered$/);
   });
 
   it('opens the create form', async () => {

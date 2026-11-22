@@ -1,7 +1,6 @@
 import ContactsIcon from '@mui/icons-material/Contacts';
 import GroupsIcon from '@mui/icons-material/Groups';
 import EventIcon from '@mui/icons-material/Event';
-import HandymanIcon from '@mui/icons-material/Handyman';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import LanguageIcon from '@mui/icons-material/Language';
 import EventNoteIcon from '@mui/icons-material/EventNote';
@@ -11,7 +10,8 @@ import type { HostLead } from '../../../api/crm.types';
 import { LeadDetailCard, LeadDetailRow } from '../../../components/LeadDetailCard';
 import ContactsTab from '../../../components/contacts-tab';
 import type { LeadTab } from '../../../components/LeadTabs';
-import ServicesGrid from '../../../components/ServicesGrid';
+import { leadServicesTab } from '../../../components/leadServicesTab';
+import { leadMediaTab } from '../../../components/lead-media/leadMediaTab';
 import CommsLogsSection from '../../../components/CommsLogsSection';
 import ManualLogsTab from '../../../components/ManualLogsTab';
 import WebsitePagesTab from '../../../components/website-pages-tab';
@@ -26,11 +26,10 @@ interface BuildArgs {
   t: TranslateFn;
   followUpLabel: string;
   preferredDate: ReturnType<typeof leadDate>;
-  servicesPlural: string;
 }
 
 /** Tab definitions for the host lead detail page. */
-export function buildHostLeadTabs({ lead, t, followUpLabel, preferredDate, servicesPlural }: BuildArgs): LeadTab[] {
+export function buildHostLeadTabs({ lead, t, followUpLabel, preferredDate }: BuildArgs): LeadTab[] {
   return [
     {
       value: 'overview',
@@ -65,24 +64,8 @@ export function buildHostLeadTabs({ lead, t, followUpLabel, preferredDate, servi
       ),
     },
 
-    {
-      value: 'services',
-      label: `Services (${lead.services_offered.length})`,
-      icon: <HandymanIcon fontSize="small" />,
-      render: () => (
-        <LeadDetailCard
-          title={t('crm.common.servicesOffered')}
-          subtitle={
-            lead.services_offered.length
-              ? `${lead.services_offered.length} service${servicesPlural} tagged`
-              : 'Catalogue managed via Manage Host Services'
-          }
-          icon={<HandymanIcon color="primary" />}
-        >
-          <ServicesGrid services={lead.services_offered} />
-        </LeadDetailCard>
-      ),
-    },
+    leadServicesTab(lead.services_offered, t),
+    leadMediaTab('HOST_LEAD', lead.id, t),
 
     {
       value: 'survey',

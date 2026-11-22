@@ -1980,6 +1980,47 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       gatewaySaid: 'The gateway said: {reason}',
       retry: 'Retry payment',
       close: 'Close',
+      // Razorpay's payment id — what a buyer reads out to their bank or support.
+      transactionIdLabel: 'Transaction ID: {id}',
+      copyTransactionId: 'Copy transaction ID',
+      transactionIdCopied: 'Transaction ID copied',
+      deductedNotice:
+        'If your payment has been deducted, the amount will be refunded within 5–10 business days. You can retry the payment or explore the support option below.',
+      supportHeading: 'Support',
+      deductedButton: 'My payment was deducted but booking was not completed.',
+      // "My payment was deducted" — the evidence a buyer gives before a
+      // PAYMENT support ticket is opened (pod checkout only, mWeb + native).
+      claim: {
+        title: 'Payment deducted?',
+        intro: 'Show us the deduction and our support team will check it with your bank.',
+        optionsLabel: 'How would you like to show the deduction?',
+        optionScreenshot: 'Upload Payment Screenshot',
+        optionStatement: 'Upload Bank Statement showing the deduction',
+        optionTransactionId: 'Enter Transaction ID',
+        screenshotHint: 'Add up to {max} screenshots of the payment from your bank or UPI app.',
+        statementHint: 'Add up to {max} images or PDFs of your bank statement showing the deduction.',
+        filesCount: 'Files ({count}/{max})',
+        addFiles: 'Add files',
+        wrongFileType: 'This file type cannot be added here.',
+        uploadFailed: 'That file could not be uploaded. Please try again.',
+        filesRequired: 'Add at least one file.',
+        tooManyFiles: 'You can add up to {max} files.',
+        transactionIdLabel: 'Transaction ID',
+        transactionIdHint: 'The UTR, reference number or Razorpay payment ID (pay_…) from your bank or UPI app.',
+        transactionIdRequired: 'Enter the transaction ID.',
+        transactionIdInvalid: 'Enter 6–40 letters or digits. Only - and _ are allowed.',
+        contactNotice: 'Our support team will contact you on these',
+        phoneLabel: 'Phone',
+        emailLabel: 'Email',
+        missingContact: 'Not added',
+        submit: 'Open Support Ticket',
+        submitting: 'Opening ticket…',
+        success: 'Ticket {ticket} opened. Our support team will get back to you.',
+        alreadyOpen: 'You already have an open ticket for this payment: {ticket}.',
+        error: 'We could not open a support ticket. Please try again.',
+        cancel: 'Cancel',
+        done: 'Done',
+      },
     },
     // The seven postal-address parts. One namespace, because the SAME block is
     // rendered by checkout billing and by the account address book on both
@@ -2419,6 +2460,19 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       hostRequired: 'An approved host profile is required before creating pods.',
       becomeHost: 'Become a host',
       createFailed: 'Could not create the pod.',
+      // The draft's save state in the header corner, and what is said when a
+      // save fails as the host leaves or the draft cannot be opened.
+      autosave: {
+        saving: 'Saving…',
+        saved: 'Saved',
+        error: 'Not saved — retrying',
+        leaveTitle: 'Leave without saving?',
+        leaveMessage: 'Your latest changes could not be saved. If you leave now, they will be lost.',
+        leave: 'Leave anyway',
+        stay: 'Stay',
+        loadFailed: 'Could not open this draft. Check your connection and try again.',
+        retry: 'Try again',
+      },
       // Stepper chrome. The step titles are also the label the Host Management
       // draft cards put on a half-finished pod.
       stepCounter: 'Step {step} of {total}',
@@ -2522,6 +2576,11 @@ export const MWEB_BUNDLE: NestedCatalogue = {
         locationMissing: 'The original city is no longer available, so this pod starts in your selected city. Check the location on step 1.',
         categoryMissing: 'The original category is not one you can host now. Pick a category on step 1.',
         productsUnavailable: 'Some Pod Shop items from the original pod are out of stock or no longer listed, so they were left out.',
+      },
+      // "Pick This Venue for Pod" on Venue Details: the venue and a physical pod come chosen.
+      pickedVenue: {
+        title: 'A physical pod at {venue}',
+        hint: 'Pick your category and club, then the space and the time to offer the venue.',
       },
       noOptions: 'No options available.',
       podTitleLabel: 'Pod title',
@@ -2693,7 +2752,6 @@ export const MWEB_BUNDLE: NestedCatalogue = {
         ruleWeekday: 'Day price change',
         ruleDate: 'Date price change',
         ruleRange: 'Seasonal price change',
-        minSpend: 'Minimum spend top-up',
         cleaning: 'Cleaning fee',
         pets: 'Pet fee',
         taxes: 'GST ({pct}%)',
@@ -2898,6 +2956,12 @@ export const MWEB_BUNDLE: NestedCatalogue = {
         // way the start can be wrong.
         startRequired: 'Start date/time required',
         startFuture: 'Start date/time must be in the future',
+        // Pod Settings (or the host's own override): days before which the
+        // calendar is disabled. The translator picks .one / .other from count.
+        startTooSoon: {
+          one: 'You can only create a Pod scheduled at least {count} day in advance from the current date.',
+          other: 'You can only create a Pod scheduled at least {count} days in advance from the current date.',
+        },
         endAfterStart: 'End must be after start',
         endMinDuration: 'End must be at least 30 minutes after the start',
         // A virtual pod has no slot to take its end from, and the end is what
@@ -5122,6 +5186,8 @@ export const MWEB_BUNDLE: NestedCatalogue = {
     },
     support: {
       addFiles: 'Add files',
+      attachFilesCount: 'Attach files ({count}/{max})',
+      uploadingFiles: 'Uploading…',
       aShortSummary: 'A short summary',
       closeFaq: 'Close FAQ',
       couldNotSubmitPleaseTryAgain: 'Could not submit. Please try again.',
@@ -5644,13 +5710,13 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       leaves: 'Leaves & Holidays',
       leavesHint: 'Dates your venue is closed and never bookable',
       venueFees: 'Fees & Minimum Spend',
-      venueFeesHint: 'Minimum spend, cleaning and pet fees, deposit and GST',
+      venueFeesHint: 'Booking offers, minimum spend, cleaning and pet fees, deposit and GST',
       priceRules: 'Price Rules',
       priceRulesHint: 'Weekday surcharges, date overrides and date ranges',
       foodSettings: 'Food Settings',
       foodSettingsHint: 'Licences, online ordering, GST number and tables',
       venueSettings: 'Venue Settings',
-      venueSettingsHint: 'Cancellation policy and booking rules',
+      venueSettingsHint: 'Cancellation policy for bookings at your venue',
       venueEarnings: 'Venue Earnings',
       venueEarningsHint: 'What your slots earned and your payouts',
       publishVenue: 'Publish Your Venue',

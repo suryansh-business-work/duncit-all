@@ -4,7 +4,16 @@
  * priced again, at completion, for the people who came: never fewer than its
  * minimum, on the charges and percents both sides agreed.
  */
-import { billableGuests, freeQuote, frozenCharges, priceForGuests, quoteOffer, quoteProposal, termsProblem } from '../../venueOffer.quote';
+import {
+  atAgreedMinSpend,
+  billableGuests,
+  freeQuote,
+  frozenCharges,
+  priceForGuests,
+  quoteOffer,
+  quoteProposal,
+  termsProblem,
+} from '../../venueOffer.quote';
 import type { QuoteRequest, VenuePricing } from '../../../venuePricing/venuePricing.types';
 import type { VenuePriceBasis } from '../../venueOffer.types';
 
@@ -20,7 +29,6 @@ const charges: VenuePricing = {
   min_hours: 0,
   max_hours: 0,
   booking_increment_minutes: 60,
-  min_spend: 0,
   slots: [],
   operating_hours: [],
   price_rules: [],
@@ -51,11 +59,11 @@ describe('quoteProposal', () => {
     expect(result.quote_min).toMatchObject({ pax: 8, base: 4000, venue_payout: 4000, platform_fee: 400, total: 4400 });
   });
 
-  it("tops the fewest guests up to the venue's minimum spend, as the venue's charges say", () => {
-    const result = quoteProposal({ ...charges, min_spend: 5000 }, perGuest, req(), 8);
+  it('never tops the fewest guests up: the minimum spend is a rule the terms meet, not a charge', () => {
+    const result = quoteProposal({ ...charges, min_spend: 5000 } as VenuePricing, perGuest, req(), 8);
     if (!result.ok) throw new Error(result.message);
-    expect(result.quote_min).toMatchObject({ base: 4000, min_spend_top_up: 1000, venue_price: 5000 });
-    expect(result.quote).toMatchObject({ base: 10_000, min_spend_top_up: 0, venue_price: 10_000 });
+    expect(result.quote_min).toMatchObject({ base: 4000, venue_price: 4000 });
+    expect(result.quote).toMatchObject({ base: 10_000, venue_price: 10_000 });
   });
 
   it('prices once when the minimum is not below the most guests, or there is none', () => {
@@ -81,9 +89,9 @@ describe('quoteProposal', () => {
 
 describe('a free venue', () => {
   /** A venue that charges for everything: none of it applies to a window it gives away. */
-  const pricey: VenuePricing = { ...charges, min_spend: 20_000, cleaning_fee: 1500, pet_fee: 500, gst_enabled: true };
+  const pricey: VenuePricing = { ...charges, cleaning_fee: 1500, pet_fee: 500, gst_enabled: true };
 
-  it('is priced at nothing: no rate, fees, minimum spend, GST or commission', () => {
+  it('is priced at nothing: no rate, fees, GST or commission', () => {
     const result = quoteOffer(pricey, { model: 'FREE', rate: 900 }, req({ pets: true }));
     expect(result).toEqual({
       ok: true,
@@ -93,7 +101,6 @@ describe('a free venue', () => {
         hours: 2,
         date: '2027-01-04',
         base: 0,
-        min_spend_top_up: 0,
         cleaning_fee: 0,
         pet_fee: 0,
         taxes: 0,
@@ -148,11 +155,11 @@ describe('frozenCharges', () => {
   it("keeps the venue's charges and drops its own slots and hours", () => {
     const withOwn: VenuePricing = {
       ...charges,
-      min_spend: 3000,
+      cleaning_fee: 300,
       slots: [{ days_of_week: [1], start_time: '10:00', end_time: '12:00', price: 900 }] as VenuePricing['slots'],
       operating_hours: [{ day: 1, open: '09:00', close: '22:00' }] as unknown as VenuePricing['operating_hours'],
     };
-    expect(frozenCharges(withOwn)).toEqual({ ...charges, min_spend: 3000, slots: [], operating_hours: [] });
+    expect(frozenCharges(withOwn)).toEqual({ ...charges, cleaning_fee: 300, slots: [], operating_hours: [] });
   });
 });
 
@@ -187,5 +194,49 @@ describe('priceForGuests', () => {
 
   it('is nothing when the booking window cannot be priced', () => {
     expect(priceForGuests(basis, { start: window.end, end: window.start }, 10, agreed, TZ)).toBeNull();
+  });
+
+  describe('a booking agreed while the minimum spend still topped the bill up', () => {
+    const legacy: VenuePriceBasis = { ...basis, charges: { ...charges, min_spend: 5000 } };
+
+    it('settles as agreed: the booking amount never below that minimum, the gap in the base', () => {
+      expect(priceForGuests(legacy, window, 3, agreed, TZ)).toMatchObject({
+        pax: 8,
+        base: 5000,
+        venue_price: 5000,
+        venue_payout: 5000,
+        platform_fee: 500,
+        total: 5500,
+      });
+    });
+
+    it('raises GST and commission with the price, exactly as the old top-up did', () => {
+      const taxed = priceForGuests(
+        { ...legacy, charges: { ...charges, min_spend: 5000, cleaning_fee: 300, gst_enabled: true } },
+        window,
+        8,
+        { gst_pct: 18, platform_fee_pct: 5 },
+        TZ
+      );
+      expect(taxed).toMatchObject({ base: 5000, cleaning_fee: 300, venue_price: 5300, taxes: 954, venue_payout: 6254, platform_fee: 265, total: 6519 });
+    });
+
+    it('pays what the guests came to once that is above the minimum', () => {
+      expect(priceForGuests(legacy, window, 12, agreed, TZ)).toMatchObject({ base: 6000, venue_payout: 6000, platform_fee: 600 });
+    });
+  });
+});
+
+describe('atAgreedMinSpend', () => {
+  const breakdown = { base: 3000, rules_total: 500, venue_price: 3500, gst_pct: 0, platform_fee_pct: 10 } as Parameters<typeof atAgreedMinSpend>[0];
+
+  it('counts price rules toward the minimum and leaves a met one alone', () => {
+    expect(atAgreedMinSpend(breakdown, 3500)).toBe(breakdown);
+    expect(atAgreedMinSpend(breakdown, 0)).toBe(breakdown);
+    expect(atAgreedMinSpend(breakdown, null)).toBe(breakdown);
+  });
+
+  it('raises a short booking to the minimum', () => {
+    expect(atAgreedMinSpend(breakdown, 4000)).toMatchObject({ base: 3500, venue_price: 4000, platform_fee: 400, total: 4400 });
   });
 });

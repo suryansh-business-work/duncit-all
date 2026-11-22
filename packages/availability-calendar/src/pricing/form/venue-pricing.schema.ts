@@ -126,7 +126,6 @@ export const buildVenuePricingSchema = (t: Translate) => {
       min_hours: hours,
       max_hours: hours,
       booking_increment_minutes: count,
-      min_spend: money,
       slots: z.array(slot).max(MAX_SLOTS),
       custom_hours: z.boolean(),
       operating_hours: z.array(hoursRow),

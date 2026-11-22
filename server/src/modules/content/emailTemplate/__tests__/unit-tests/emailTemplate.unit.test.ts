@@ -40,6 +40,23 @@ describe('emailTemplate unit', () => {
     ).toThrow(/access denied/i);
   });
 
+  it.each([
+    ['a comma list', 'a@duncit.com, b@duncit.com'],
+    ['a semicolon list', 'a@duncit.com;b@duncit.com'],
+    ['a blank address', '   '],
+    ['something that is not an address', 'asha at duncit'],
+  ])('sendTestEmail refuses %s before loading or sending anything', async (_label, to) => {
+    const byId = jest.spyOn(emailTemplateService, 'byId');
+    const result = await (emailTemplateResolvers.Mutation as any).sendTestEmail(
+      {},
+      { template_id: 't1', to },
+      makeContext({ roles: ['SUPER_ADMIN'] })
+    );
+    expect(result).toEqual({ ok: false, message: 'Enter one valid email address to send the test to' });
+    expect(byId).not.toHaveBeenCalled();
+    byId.mockRestore();
+  });
+
   it('service exposes list/create helpers', () => {
     expect(typeof emailTemplateService.create).toBe('function');
   });

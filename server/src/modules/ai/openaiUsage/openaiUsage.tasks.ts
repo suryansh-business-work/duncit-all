@@ -74,6 +74,12 @@ export const OPENAI_TASKS = {
     description: '"Improve with AI" on rich-text editors across the portals.',
     when_off: ADMIN_ERROR,
   },
+  'ai.prompt_quality': {
+    label: 'Prompt quality score',
+    module: 'Portal Tools',
+    description: 'Scores an AI Library prompt out of 100 and lists what to improve, on its detail view in the AI portal.',
+    when_off: 'The prompt detail view says the quality score is switched off; the prompt itself is unaffected.',
+  },
   'moderation.pod': {
     label: 'Pod moderation scan',
     module: 'Moderation',
@@ -130,6 +136,12 @@ export const OPENAI_TASKS = {
     description: 'Writes the automatic reply to inbound support mail.',
     when_off: 'The rendered email template is sent instead of an AI-written reply.',
   },
+  'finance.payment_evidence': {
+    label: 'Payment evidence check',
+    module: 'Finance',
+    description: 'Reads the payment id, bank reference and amount off a buyer’s payment screenshot so Finance › Failed Payments can match it to Razorpay.',
+    when_off: 'Screenshot claims are left unmatched (yellow) for a person to review; transaction-id claims are still checked against Razorpay.',
+  },
   'crm.lead_parse': {
     label: 'Lead text parsing',
     module: 'CRM',
@@ -142,12 +154,24 @@ export const OPENAI_TASKS = {
     description: 'The assistant chat on a CRM lead.',
     when_off: 'The CRM shows an error saying the AI feature is switched off.',
   },
+  'crm.call_summary': {
+    label: 'Call summary',
+    module: 'CRM',
+    description: 'Summarises a finished CRM call from its transcript: key points, sentiment, outcome and follow-ups.',
+    when_off: 'The call log shows that the summary could not be generated; the transcript and recording are still saved.',
+  },
   'crm.call_assistant': {
     label: 'Call assistant turn',
     module: 'CRM',
     description: 'The AI voice agent that talks to a lead on an outbound CRM call.',
     when_off:
       'The call ends politely: the person is told the assistant is unavailable and will be called back.',
+  },
+  'crm.email_mjml': {
+    label: 'CRM email template MJML',
+    module: 'CRM',
+    description: 'Seeds and reworks CRM outreach email templates with the CRM email theme and brand images.',
+    when_off: 'The CRM shows an error saying the AI feature is switched off; templates are edited by hand.',
   },
   'marketing.social_post_analysis': {
     label: 'Social post analysis',
@@ -257,6 +281,36 @@ export const OPENAI_TASKS = {
     module: 'Ask Bot',
     description: 'The Ask Bot in the portal header that answers "where do I find…".',
     when_off: 'The bot is listed as unavailable and a question returns an error.',
+  },
+  'ask_duncit.chat': {
+    label: 'Ask Duncit answer',
+    module: 'Ask Duncit',
+    description: 'The Ask Duncit assistant in the member app: streamed answers and the tool calls it makes for the person.',
+    when_off: 'Ask Duncit is shown as unavailable in the app and a question returns an error.',
+  },
+  'ask_duncit.evaluate': {
+    label: 'Ask Duncit answer check',
+    module: 'Ask Duncit',
+    description: 'Scores each Ask Duncit answer for confidence and spots questions that are not about Duncit.',
+    when_off: 'Answers are saved without a confidence score or an out-of-context flag.',
+  },
+  'ask_duncit.summarize': {
+    label: 'Ask Duncit memory',
+    module: 'Ask Duncit',
+    description: 'Titles a new Ask Duncit conversation and condenses long ones into a short memory.',
+    when_off: 'Conversations are titled from the first question and long ones replay only their latest turns.',
+  },
+  'ask_duncit.transcribe': {
+    label: 'Ask Duncit voice input',
+    module: 'Ask Duncit',
+    description: 'Turns a voice message recorded in Ask Duncit into text.',
+    when_off: 'The microphone button reports that voice input is unavailable.',
+  },
+  'ask_duncit.speak': {
+    label: 'Ask Duncit read-aloud',
+    module: 'Ask Duncit',
+    description: 'Reads an Ask Duncit answer aloud.',
+    when_off: 'The read-aloud button reports that voice output is unavailable.',
   },
   'agent.console': {
     label: 'Agent console turn',

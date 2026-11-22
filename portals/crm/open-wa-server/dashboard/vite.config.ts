@@ -1,13 +1,18 @@
 import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
-// Single source of truth for the version shown in the dashboard: read it from
-// package.json at build time so the Login screen always reflects the actual
-// release (bumped via `npm version`), instead of a hard-coded literal that
-// silently drifts. APP_VERSION env still overrides if explicitly provided.
-const { version: pkgVersion } = JSON.parse(readFileSync(resolve(process.cwd(), 'package.json'), 'utf-8')) as {
+// Single source of truth for the version shown in the dashboard: the ROOT package.json, which is
+// what a release bumps and what `npm run check:versions` gates. Resolved relative to this config
+// file (not process.cwd()), because the dashboard is normally built from inside `dashboard/` — where
+// cwd-relative resolution picks up `dashboard/package.json` instead. That file is not touched by a
+// release, so the Login screen kept rendering whatever version it happened to be pinned at while the
+// gateway moved on. The sidebar hid the drift by replacing the build-time value with the live
+// version from the API (see Layout.tsx); the Login screen has no session yet, so it shows this
+// constant verbatim. APP_VERSION env still overrides if explicitly provided.
+const { version: pkgVersion } = JSON.parse(
+  readFileSync(new URL('../package.json', import.meta.url), 'utf-8'),
+) as {
   version: string;
 };
 
@@ -15,6 +20,8 @@ const { version: pkgVersion } = JSON.parse(readFileSync(resolve(process.cwd(), '
 export default defineConfig({
   plugins: [react()],
   appType: 'spa', // Enable SPA fallback for client-side routing
+  // Fonts stay files: a small subset inlined as a data: URI is blocked by the gateway CSP (font-src 'self').
+  build: { assetsInlineLimit: file => (file.endsWith('.woff2') ? false : undefined) },
   define: {
     __APP_VERSION__: JSON.stringify(process.env.APP_VERSION || pkgVersion),
     __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
@@ -22,7 +29,9 @@ export default defineConfig({
   server: {
     port: 2886,
     proxy: {
-      '/api': {
+      // With the trailing slash: Vite matches a plain key as a string prefix, so '/api' also
+      // captured the SPA route /api-keys and a reload of that page went to the backend.
+      '/api/': {
         target: 'http://localhost:2785',
         changeOrigin: true,
         secure: false,

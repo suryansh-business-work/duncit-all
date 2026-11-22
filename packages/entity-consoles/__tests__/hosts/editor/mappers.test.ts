@@ -86,6 +86,11 @@ describe('hostToValues', () => {
     expect(hostToValues(hostRecord).venue_requests_limit_override).toBe('');
     expect(hostToValues({ ...hostRecord, venue_requests_limit_override: 40 }).venue_requests_limit_override).toBe('40');
   });
+
+  it('shows an unset Minimum Advance Days override as an empty box and a set one as its digits', () => {
+    expect(hostToValues(hostRecord).pod_min_advance_days_override).toBe('');
+    expect(hostToValues({ ...hostRecord, pod_min_advance_days_override: 5 }).pod_min_advance_days_override).toBe('5');
+  });
 });
 
 describe('valuesToHostStep1', () => {

@@ -39,6 +39,25 @@ const renderFields = (defaultSubject = 'Partnering with Duncit') => {
 };
 
 describe('EmailComposeFields', () => {
+  it('opens on rich text with an Ask AI draft already in it', () => {
+    const onChange = vi.fn();
+    renderWithApollo(
+      <EmailComposeFields
+        entity="VENUE_LEAD"
+        leadName="Meera"
+        leadEmail="meera@grandhall.in"
+        variableValues={{}}
+        defaultSubject="Weekend rates"
+        initialBody="<p>Hi Meera</p>"
+        onChange={onChange}
+      />,
+      [templatesMock],
+    );
+
+    expect(screen.getByLabelText('Rich text body')).toHaveValue('<p>Hi Meera</p>');
+    expect(onChange).toHaveBeenLastCalledWith({ subject: 'Weekend rates', body: '<p>Hi Meera</p>', valid: true, attachments: [] });
+  });
+
   it('starts in simple text and sends the message as escaped HTML with line breaks', () => {
     const { onChange } = renderFields();
 

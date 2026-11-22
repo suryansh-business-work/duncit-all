@@ -27,16 +27,18 @@ const IDLE: CalendarState = { calendar: null, loading: false, failed: false };
  * and, for a start, its end times (`offerCalendarPicks`, shared with mWeb).
  * Re-read on pull-to-refresh. mWeb twin: steps/useOfferCalendar.
  */
-export function useOfferCalendar(venueId: string, spaceLabel: string) {
+export function useOfferCalendar(venueId: string, spaceLabel: string, firstDay?: string | null) {
   const fmt = useDateFormat();
   const [attempt, setAttempt] = useState(0);
   const refetch = useCallback(() => setAttempt((value) => value + 1), []);
   useRefreshRegistration(refetch);
   const [state, setState] = useState<CalendarState>(IDLE);
   // Keyed on the day, not `fmt`: the formatter is rebuilt on every render, and
-  // a new range each render would re-run the read below forever.
+  // a new range each render would re-run the read below forever. A host's
+  // first allowed day (Minimum Advance Days) later than today starts it there.
   const today = fmt.dayKey(fmt.clock.nowMs());
-  const range = useMemo(() => bookingCalendarRange(today), [today]);
+  const from = firstDay && firstDay > today ? firstDay : today;
+  const range = useMemo(() => bookingCalendarRange(from), [from]);
   const space = bookingSpaceLabel(spaceLabel);
 
   useEffect(() => {

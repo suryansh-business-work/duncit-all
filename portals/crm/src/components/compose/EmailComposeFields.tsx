@@ -1,3 +1,4 @@
+import type { CrmLeadEntityType } from '../../api/crm.types';
 import { useEffect, useState } from 'react';
 import { Stack, TextField } from '@mui/material';
 import { DuncitRichTextInput } from '@duncit/rich-text';
@@ -16,12 +17,14 @@ export interface EmailPayload {
 }
 
 interface Props {
-  entity: 'VENUE_LEAD' | 'HOST_LEAD' | 'ECOMM_LEAD';
+  entity: CrmLeadEntityType;
   leadName: string;
   leadEmail: string;
   /** Slug → value map from the lead, used to auto-fill template variables. */
   variableValues: Record<string, string>;
   defaultSubject: string;
+  /** A ready HTML body (an Ask AI draft): the composer opens on Rich Text with it filled in. */
+  initialBody?: string;
   onChange: (payload: EmailPayload) => void;
 }
 
@@ -29,12 +32,12 @@ const escapeHtml = (s: string) => s.replaceAll('&', '&amp;').replaceAll('<', '&l
 const textToHtml = (s: string) => escapeHtml(s).replace(/\r?\n/g, '<br/>');
 
 /** Email body composer with a Template | Simple Text | Rich Text switch. */
-export default function EmailComposeFields({ entity, leadName, leadEmail, variableValues, defaultSubject, onChange }: Readonly<Props>) {
+export default function EmailComposeFields({ entity, leadName, leadEmail, variableValues, defaultSubject, initialBody, onChange }: Readonly<Props>) {
   const { t } = useTranslation();
-  const [type, setType] = useState<EmailContentType>('text');
+  const [type, setType] = useState<EmailContentType>(initialBody ? 'rich' : 'text');
   const [subject, setSubject] = useState(defaultSubject);
   const [text, setText] = useState('');
-  const [richHtml, setRichHtml] = useState('');
+  const [richHtml, setRichHtml] = useState(initialBody ?? '');
   const [template, setTemplate] = useState<TemplateBody>({ subject: '', html: '', ready: false, attachments: [] });
 
   useEffect(() => setSubject(defaultSubject), [defaultSubject]);

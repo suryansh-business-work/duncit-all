@@ -16,6 +16,9 @@ import { AUTOMATION_EMAILS } from './catalogue.automation';
 import { APP_BUILD_EMAILS } from './catalogue.appBuilds';
 import { LIFECYCLE_EMAILS } from './catalogue.lifecycle';
 import { VENUE_OFFER_EMAILS } from './catalogue.offers';
+import { HOST_PERFORMANCE_EMAILS } from './catalogue.hostPerformance';
+import { TARGETS_EMAILS } from './catalogue.targets';
+import { PAYOUT_EMAILS } from './catalogue.payouts';
 
 export * from './catalogue.types';
 export * from './mjml';
@@ -38,6 +41,7 @@ export const EMAIL_CATALOGUE: readonly EmailDef[] = [
   ...VENUE_OFFER_EMAILS,
   ...ECOMM_EMAILS,
   ...CLUB_ADMIN_EMAILS,
+  ...HOST_PERFORMANCE_EMAILS,
   ...SUPPORT_EMAILS,
   ...SECURITY_EMAILS,
   ...COMMERCE_EMAILS,
@@ -51,6 +55,8 @@ export const EMAIL_CATALOGUE: readonly EmailDef[] = [
   ...AUTOMATION_EMAILS,
   ...APP_BUILD_EMAILS,
   ...LIFECYCLE_EMAILS,
+  ...TARGETS_EMAILS,
+  ...PAYOUT_EMAILS,
   ...EXISTING_EMAILS,
 ];
 

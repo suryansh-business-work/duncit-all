@@ -9,6 +9,8 @@ import type { GraphQLContext } from '@context';
 import { FINANCE_READER, requireAuth, requireRole } from '@middleware/rbac';
 import { assertPlatformFinanceWrite, assertPodFinanceScope } from '../financeScope';
 import { financeTargets } from '../financeScope.targets';
+import { actorFor } from '@modules/finance/payout/payout.audit';
+import { reviewWithdrawalLegacy } from '@modules/finance/payout/withdrawal.legacy';
 
 // Same set updateFinanceSettings guards the finance singleton with — the
 // withdrawal minimums live on that singleton, so they answer to the same roles.
@@ -87,7 +89,8 @@ export const walletResolvers = {
       // Paying out a withdrawal pays for every pod it draws on — a city admin
       // may only when each of those pods is in their city.
       await assertPodFinanceScope(ctx, FINANCE_RW, () => financeTargets.withdrawal(args.withdrawal_id));
-      return walletService.reviewWithdrawal(args.withdrawal_id, args.input.status, args.input.reason, user.id);
+      // Deprecated in favour of decideWithdrawal; kept so older portal builds keep working.
+      return reviewWithdrawalLegacy(args.withdrawal_id, args.input.status, args.input.reason, await actorFor(user));
     },
     updateWithdrawalMinimums: async (
       _p: unknown,

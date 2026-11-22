@@ -1,4 +1,4 @@
-export { default as CreatePodStepper, type DraftPayload } from './CreatePodStepper';
+export { default as CreatePodStepper, type DraftPayload, type DraftSaveOptions } from './CreatePodStepper';
 export {
   buildCreatePodInput,
   createPodSchema,

@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
+  EMPTY_PAYMENT_FAILURE_STATE,
   PAYMENT_FAILURE_KEYS,
   classifyPaymentFailure,
+  paymentFailureReportInput,
   paymentTicketDraft,
   type PaymentFailure,
   type PaymentFailureKind,
@@ -42,6 +44,9 @@ describe('classifyPaymentFailure', () => {
           paymentId: null,
           orderId: null,
           raisesTicket: false,
+          reason: null,
+          source: null,
+          step: null,
         });
       }
     });
@@ -142,6 +147,10 @@ describe('classifyPaymentFailure', () => {
         paymentId: 'pay_123',
         orderId: 'order_456',
         raisesTicket: false,
+        // Kept verbatim for the server's failure log, never shown to the buyer.
+        reason: 'payment_failed',
+        source: 'bank',
+        step: 'payment_authorization',
       });
     });
 
@@ -155,6 +164,9 @@ describe('classifyPaymentFailure', () => {
         paymentId: null,
         orderId: null,
         raisesTicket: false,
+        reason: null,
+        source: null,
+        step: null,
       });
     });
   });
@@ -204,6 +216,18 @@ describe('classifyPaymentFailure', () => {
   });
 });
 
+describe('EMPTY_PAYMENT_FAILURE_STATE', () => {
+  it('starts with no failure, no ticket in flight and no payment to claim against', () => {
+    expect(EMPTY_PAYMENT_FAILURE_STATE).toEqual({
+      failure: null,
+      ticketNo: null,
+      ticketPending: false,
+      ticketFailed: false,
+      paymentDocId: null,
+    });
+  });
+});
+
 describe('PAYMENT_FAILURE_KEYS', () => {
   const kinds: PaymentFailureKind[] = ['CANCELLED', 'TIMEOUT', 'FAILED'];
 
@@ -238,6 +262,15 @@ describe('paymentTicketDraft', () => {
     const draft = paymentTicketDraft(failure(), context);
     expect(draft.category).toBe('PAYMENT');
     expect(draft.subject).toBe('Payment timed out — Pod ticket — Sunset Yoga');
+  });
+
+  it('links the ticket to our payment when the payment was created', () => {
+    expect(paymentTicketDraft(failure(), context).payment_id).toBe('PAY-77');
+  });
+
+  it('sends no payment link when no payment was created', () => {
+    const draft = paymentTicketDraft(failure(), { description: 'Shop order', amount: 500, paymentDocId: null });
+    expect(draft).not.toHaveProperty('payment_id');
   });
 
   it('lists every fact an agent can act on, in the order they look them up', () => {
@@ -309,5 +342,83 @@ describe('paymentTicketDraft', () => {
       '\n',
     );
     expect(lines).toContain('Duncit payment id: not created');
+  });
+});
+
+describe('paymentFailureReportInput', () => {
+  const context = {
+    paymentDocId: 'PAY-77',
+    razorpayOrderId: 'order_opened',
+    retryShown: true,
+    attemptNumber: 2,
+    clientRequestId: 'req-1',
+  };
+
+  it('maps every gateway fact onto the server input, verbatim', () => {
+    expect(paymentFailureReportInput(classifyPaymentFailure(rzpError()), context)).toEqual({
+      payment_doc_id: 'PAY-77',
+      kind: 'FAILED',
+      razorpay_payment_id: 'pay_123',
+      razorpay_order_id: 'order_456',
+      error_code: 'BAD_REQUEST_ERROR',
+      error_description: 'Your payment has been declined by the bank.',
+      error_reason: 'payment_failed',
+      error_source: 'bank',
+      error_step: 'payment_authorization',
+      retry_shown: true,
+      attempt_number: 2,
+      client_request_id: 'req-1',
+    });
+  });
+
+  // A hand-closed sheet reports nothing; the order the sheet was opened for is
+  // the only way Finance can match the cancellation to a Razorpay order.
+  it('falls back to the order the sheet was opened for when the gateway reported none', () => {
+    const input = paymentFailureReportInput(classifyPaymentFailure(null), context);
+    expect(input).toMatchObject({
+      kind: 'CANCELLED',
+      razorpay_order_id: 'order_opened',
+      razorpay_payment_id: null,
+      error_code: null,
+      error_reason: null,
+      error_source: null,
+      error_step: null,
+    });
+  });
+
+  it('leaves the order id null when neither the gateway nor the checkout knows it', () => {
+    const input = paymentFailureReportInput(classifyPaymentFailure(null), { ...context, razorpayOrderId: null });
+    expect(input?.razorpay_order_id).toBeNull();
+  });
+
+  it('treats a hand-built failure without reason, source or step as null rather than undefined', () => {
+    const input = paymentFailureReportInput(failure(), context);
+    expect(input).toMatchObject({ error_reason: null, error_source: null, error_step: null, kind: 'TIMEOUT' });
+  });
+
+  it('refuses to build a report when there is no Duncit payment to attach it to', () => {
+    for (const paymentDocId of [null, undefined, '', '   ']) {
+      expect(paymentFailureReportInput(failure(), { ...context, paymentDocId })).toBeNull();
+    }
+  });
+
+  it('trims the payment id it sends', () => {
+    expect(paymentFailureReportInput(failure(), { ...context, paymentDocId: '  PAY-77 ' })?.payment_doc_id).toBe(
+      'PAY-77',
+    );
+  });
+
+  it('keeps the attempt number a whole number of at least one', () => {
+    const attemptOf = (attemptNumber: number) =>
+      paymentFailureReportInput(failure(), { ...context, attemptNumber })?.attempt_number;
+    expect(attemptOf(1)).toBe(1);
+    expect(attemptOf(3.7)).toBe(3);
+    expect(attemptOf(0)).toBe(1);
+    expect(attemptOf(-4)).toBe(1);
+    expect(attemptOf(Number.NaN)).toBe(1);
+  });
+
+  it('passes the retry flag through as the dialog showed it', () => {
+    expect(paymentFailureReportInput(failure(), { ...context, retryShown: false })?.retry_shown).toBe(false);
   });
 });

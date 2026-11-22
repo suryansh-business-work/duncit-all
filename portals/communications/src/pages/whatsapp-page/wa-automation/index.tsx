@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Alert, Stack, Typography } from '@mui/material';
 import { DuncitTable, clientTableFetch } from '@duncit/table';
 import { useTranslation } from '@duncit/app-settings';
@@ -82,10 +82,6 @@ export default function WaAutomation() {
   // The table only re-reads when its own query changes, so a board that came
   // back from a toggle has to ask for the re-read — otherwise the switch snaps
   // back to the list the table first mounted with.
-  const refetchRef = useRef<(() => void) | null>(null);
-  useEffect(() => {
-    refetchRef.current?.();
-  }, [fetchRows]);
 
   const globalEnabled = board?.global_enabled ?? false;
   // AiSensy's own words about why it could not be read — data, not copy.
@@ -135,7 +131,6 @@ export default function WaAutomation() {
         getRowId={getRowId}
         emptyText={t('adminWhatsapp.scenariosEmpty')}
         searchPlaceholder={t('adminWhatsapp.scenariosSearch')}
-        refetchRef={refetchRef}
       />
 
       <MediaDialog

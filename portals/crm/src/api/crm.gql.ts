@@ -1,9 +1,10 @@
 import { gql } from '@apollo/client';
 
-const CONTACT_FIELDS = `name role mobile_number whatsapp_number email`;
-const SERVICE_FIELDS = `service custom_name description`;
-const ACTIVITY_FIELDS = `type summary status target body_html body_text created_by created_at`;
-const SUPER_CATEGORY_FIELDS = `id name slug icon`;
+export const CONTACT_FIELDS = `name role mobile_number whatsapp_number email`;
+export const SERVICE_FIELDS = `service custom_name description`;
+export const SOCIAL_LINK_FIELDS = `name url`;
+export const ACTIVITY_FIELDS = `type summary status target body_html body_text created_by created_at`;
+export const SUPER_CATEGORY_FIELDS = `id name slug icon`;
 const LINKED_HOST_FIELDS = `id host_name host_type city lead_status priority`;
 
 export const VENUE_LEAD_FIELDS = `
@@ -13,6 +14,7 @@ export const VENUE_LEAD_FIELDS = `
   event_suitability available_days available_time_slots booking_notice
   pricing_models expected_charges security_deposit gst_applicable invoice_available
   amenities photos videos brochure_url website services_offered { ${SERVICE_FIELDS} }
+  instagram_link social_links { ${SOCIAL_LINK_FIELDS} }
   linked_host_ids linked_hosts { ${LINKED_HOST_FIELDS} }
   tags logo_url dynamic_values_json
   lead_source assigned_to lead_status priority
@@ -25,7 +27,7 @@ export const HOST_LEAD_FIELDS = `
   interests expected_audience_size frequency budget_range revenue_models need_venue need_vendor
   preferred_event_date preferred_day preferred_time_slot
   website services_offered { ${SERVICE_FIELDS} }
-  instagram_link community_link
+  instagram_link social_links { ${SOCIAL_LINK_FIELDS} } community_link
   community_size previous_events_hosted past_attendees host_intent_scores
   tags profile_photo_url dynamic_values_json
   lead_source assigned_to lead_status priority next_follow_up_date notes
@@ -36,7 +38,7 @@ export const ECOMM_LEAD_FIELDS = `
   id super_category_id category_ids sub_category_ids super_category { ${SUPER_CATEGORY_FIELDS} }
   seller_name brand_name business_type city area contacts { ${CONTACT_FIELDS} }
   product_categories catalog_size price_range fulfilment_mode monthly_orders
-  gst_number gst_applicable website instagram_link marketplace_links
+  gst_number gst_applicable website instagram_link social_links { ${SOCIAL_LINK_FIELDS} } marketplace_links
   services_offered { ${SERVICE_FIELDS} }
   tags profile_photo_url dynamic_values_json
   lead_source assigned_to lead_status priority next_follow_up_date notes
@@ -52,6 +54,7 @@ export const CRM_LEAD_CONFIG = gql`
       services_offered_options
       venue_services_offered_options
       host_services_offered_options
+      creator_platforms collaboration_types community_types community_platforms
     }
   }
 `;
@@ -60,7 +63,7 @@ export const VENUE_LEADS = gql`
   query VenueLeads($filter: CrmLeadFilter) { venueLeads(filter: $filter) { ${VENUE_LEAD_FIELDS} } }
 `;
 export const VENUE_LEADS_TABLE = gql`
-  query VenueLeadsTable($query: TableQueryInput) { venueLeadsTable(query: $query) { total rows { ${VENUE_LEAD_FIELDS} } } }
+  query VenueLeadsTable($query: TableQueryInput) { venueLeadsTable(query: $query) { total rows { ${VENUE_LEAD_FIELDS} is_duplicate } } }
 `;
 const MATCHED_USER_FIELDS = `matched_user { user_id full_name email phone profile_photo matched_on }`;
 export const VENUE_LEAD = gql`query VenueLead($id: ID!) { venueLead(id: $id) { ${VENUE_LEAD_FIELDS} ${MATCHED_USER_FIELDS} } }`;
@@ -70,7 +73,7 @@ export const DELETE_VENUE_LEAD = gql`mutation DeleteVenueLead($id: ID!) { delete
 
 export const HOST_LEADS = gql`query HostLeads($filter: CrmLeadFilter) { hostLeads(filter: $filter) { ${HOST_LEAD_FIELDS} } }`;
 export const HOST_LEADS_TABLE = gql`
-  query HostLeadsTable($query: TableQueryInput) { hostLeadsTable(query: $query) { total rows { ${HOST_LEAD_FIELDS} } } }
+  query HostLeadsTable($query: TableQueryInput) { hostLeadsTable(query: $query) { total rows { ${HOST_LEAD_FIELDS} is_duplicate } } }
 `;
 export const HOST_LEAD = gql`query HostLead($id: ID!) { hostLead(id: $id) { ${HOST_LEAD_FIELDS} ${MATCHED_USER_FIELDS} } }`;
 export const CREATE_HOST_LEAD = gql`mutation CreateHostLead($input: HostLeadInput!) { createHostLead(input: $input) { ${HOST_LEAD_FIELDS} } }`;
@@ -79,7 +82,7 @@ export const DELETE_HOST_LEAD = gql`mutation DeleteHostLead($id: ID!) { deleteHo
 
 export const ECOMM_LEADS = gql`query EcommLeads($filter: CrmLeadFilter) { ecommLeads(filter: $filter) { ${ECOMM_LEAD_FIELDS} } }`;
 export const ECOMM_LEADS_TABLE = gql`
-  query EcommLeadsTable($query: TableQueryInput) { ecommLeadsTable(query: $query) { total rows { ${ECOMM_LEAD_FIELDS} } } }
+  query EcommLeadsTable($query: TableQueryInput) { ecommLeadsTable(query: $query) { total rows { ${ECOMM_LEAD_FIELDS} is_duplicate } } }
 `;
 export const ECOMM_LEAD = gql`query EcommLead($id: ID!) { ecommLead(id: $id) { ${ECOMM_LEAD_FIELDS} ${MATCHED_USER_FIELDS} } }`;
 export const CREATE_ECOMM_LEAD = gql`mutation CreateEcommLead($input: EcommLeadInput!) { createEcommLead(input: $input) { ${ECOMM_LEAD_FIELDS} } }`;
@@ -146,30 +149,7 @@ export const SUPER_CATEGORIES = gql`
   }
 `;
 
-export const CRM_SERVICES = gql`
-  query CrmServices($kind: CrmServiceKind, $include_inactive: Boolean) {
-    crmServices(kind: $kind, include_inactive: $include_inactive) {
-      id name kind sort_order is_active created_at updated_at
-    }
-  }
-`;
-export const CREATE_CRM_SERVICE = gql`
-  mutation CreateCrmService($input: CrmServiceInput!) {
-    createCrmService(input: $input) { id name kind sort_order is_active }
-  }
-`;
-export const UPDATE_CRM_SERVICE = gql`
-  mutation UpdateCrmService($id: ID!, $input: CrmServiceInput!) {
-    updateCrmService(id: $id, input: $input) { id name kind sort_order is_active }
-  }
-`;
-export const DELETE_CRM_SERVICE = gql`
-  mutation DeleteCrmService($id: ID!) {
-    deleteCrmService(id: $id)
-  }
-`;
-
-const DYNAMIC_FIELD_FIELDS = `id name label kind options { value label } multi placeholder default_value hint applies_to_venue applies_to_host applies_to_ecomm required sort_order is_active created_at updated_at`;
+const DYNAMIC_FIELD_FIELDS = `id name label kind options { value label } multi placeholder default_value hint applies_to_venue applies_to_host applies_to_ecomm applies_to_creator applies_to_community required sort_order is_active created_at updated_at`;
 
 export const CRM_DYNAMIC_FIELDS = gql`
   query CrmDynamicFields($entity: CrmEntityType, $include_inactive: Boolean) {

@@ -9,7 +9,7 @@ const EFFECTIVE = { min_guests: 12, response_hours: 48 };
 describe('VenueOffersCard', () => {
   it('states the venue’s own values as they are in effect', () => {
     render(<VenueOffersCard own={EFFECTIVE} effective={EFFECTIVE} />);
-    expect(screen.getByText('Booking offers')).toBeInTheDocument();
+    expect(screen.getByText('Booking offers & minimum spend')).toBeInTheDocument();
     expect(screen.getByText('12 guests')).toBeInTheDocument();
     expect(screen.getByText('48 hours')).toBeInTheDocument();
     expect(screen.queryByText(/Duncit’s default/)).not.toBeInTheDocument();
@@ -27,7 +27,8 @@ describe('VenueOffersCard', () => {
     expect(screen.getByText('8 guests · Duncit’s default')).toBeInTheDocument();
     expect(screen.getByText('24 hours · Duncit’s default')).toBeInTheDocument();
     expect(screen.getByText('Business you expect per booking')).toBeInTheDocument();
-    expect(screen.getByText('Not set yet')).toBeInTheDocument();
+    // Neither the amounts per basis nor the minimum spend.
+    expect(screen.getAllByText('Not set yet')).toHaveLength(2);
   });
 });
 
@@ -35,7 +36,7 @@ describe('VenueOffersCard', () => {
 // to staff in the pickers' order whatever order the venue saved it in.
 describe('VenueOffersCard / business the venue expects', () => {
   const withBusiness = (min_business: { model: string; amount: number }[] | null) =>
-    render(<VenueOffersCard own={{ ...EFFECTIVE, min_business }} effective={EFFECTIVE} />);
+    render(<VenueOffersCard own={{ ...EFFECTIVE, min_business, min_spend: 3000 }} effective={EFFECTIVE} />);
 
   it('lists each amount on its basis in the pickers’ order, paise shown only when there are any', () => {
     withBusiness([
@@ -64,6 +65,19 @@ describe('VenueOffersCard / business the venue expects', () => {
     ['only amounts it cannot show', [{ model: 'PER_SLOT', amount: 300 }, { model: 'FLAT', amount: 0 }]],
   ])('says it is not set yet for %s', (_label, rows) => {
     withBusiness(rows);
+    expect(screen.getByText('Not set yet')).toBeInTheDocument();
+  });
+});
+
+describe('VenueOffersCard / minimum spend', () => {
+  it('shows the minimum spend per booking, paise only when there are any', () => {
+    render(<VenueOffersCard own={{ ...EFFECTIVE, min_spend: 4500.5 }} effective={EFFECTIVE} />);
+    expect(screen.getByText('Minimum spend per booking (₹)')).toBeInTheDocument();
+    expect(screen.getByText('₹4,500.50')).toBeInTheDocument();
+  });
+
+  it('says it is not set yet for a venue with none', () => {
+    render(<VenueOffersCard own={{ ...EFFECTIVE, min_business: [{ model: 'FLAT', amount: 900 }], min_spend: 0 }} effective={EFFECTIVE} />);
     expect(screen.getByText('Not set yet')).toBeInTheDocument();
   });
 });

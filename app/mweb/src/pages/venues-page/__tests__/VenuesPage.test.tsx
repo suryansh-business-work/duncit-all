@@ -14,7 +14,11 @@ vi.mock('react-router', async (importOriginal) => ({
   useNavigate: () => navigate,
 }));
 
+// The host terms line formats money with the finance symbol; pin it here.
+vi.mock('../../../hooks/usePricing', () => ({ usePricing: () => ({ currency: '₹' }) }));
+
 import VenuesPage, { VENUES_EXPLORE } from '../index';
+import { VENUE_HOST_TERMS } from '../../../hooks/useVenueHostTerms';
 import { ACTIVE_ADS } from '../../../components/ads/useActiveAds';
 // The categories query is not exported; reference it through the component's fired op.
 
@@ -192,5 +196,36 @@ describe('VenuesPage', () => {
     await screen.findByText('Venue 1');
     fireEvent.change(screen.getByLabelText('Search venues'), { target: { value: 'jazz' } });
     expect(await screen.findByText('Jazz Bar', {}, { timeout: 2000 })).toBeInTheDocument();
+  });
+});
+
+describe('VenuesPage for a host', () => {
+  afterEach(() => localStorage.clear());
+
+  it("shows a signed-in host each venue's minimums on its card", async () => {
+    localStorage.setItem('token', 'signed-in');
+    const twoVenues = [venue('1'), venue('2')];
+    const hostTerms = {
+      request: { query: VENUE_HOST_TERMS, variables: { venue_ids: ['1', '2'] } },
+      result: {
+        data: {
+          venueHostTerms: [
+            { venue_id: '2', min_guests: 6, min_business: [], min_spend: 3000, cleaning_fee: 0, pet_fee: 0, deposit: 0, gst_enabled: false },
+          ],
+        },
+      },
+    };
+    setup([catMock([]), adMock([]), venuesMock(baseVars, twoVenues), hostTerms], <VenuesPage locationId="loc-1" />);
+
+    expect(await screen.findByTestId('venue-card-terms-2')).toHaveTextContent(
+      'Minimum spend ₹3,000.00 per booking · Paid for at least 6 guests',
+    );
+    expect(screen.queryByTestId('venue-card-terms-1')).not.toBeInTheDocument();
+  });
+
+  it('asks nothing about terms for a signed-out visitor', async () => {
+    setup([catMock([]), adMock([]), venuesMock(baseVars, [venue('1')])], <VenuesPage locationId="loc-1" />);
+    expect(await screen.findByText('Venue 1')).toBeInTheDocument();
+    expect(screen.queryByTestId('venue-card-terms-1')).not.toBeInTheDocument();
   });
 });

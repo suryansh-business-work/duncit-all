@@ -1,5 +1,5 @@
 import { Text, YStack } from 'tamagui';
-import { CREATE_POD_STEP_COUNT, CREATE_POD_WHERE_STEP, createPodSendsOffer } from '@duncit/utils';
+import { CREATE_POD_STEP_COUNT, CREATE_POD_WHERE_STEP } from '@duncit/utils';
 
 import { TourAnchor } from '@/tours/TourAnchor';
 import { stepTitleKey } from '../create-pod.form';
@@ -12,6 +12,7 @@ import { AssignHostsField } from '../AssignHostsField';
 import { StepperActions } from '../StepperActions';
 import { StepHeader } from '../StepHeader';
 import { ModerationBlockedDialog } from '../ModerationBlockedDialog';
+import { PodMinAdvanceContext } from '../PodMinAdvance';
 import { buildStepperSubmit } from './stepperSubmit';
 import type { CreatePodStepperProps } from './types';
 import { useCreatePodForm } from './useCreatePodForm';
@@ -35,11 +36,13 @@ export function CreatePodStepper({
   hostCategories,
   viewerUserId,
   pinnedVenueId,
+  pickedVenueId,
   finance,
   onSaveDraft,
   onModerate,
   onPublish,
   clubAdmin,
+  onAutosave,
 }: Readonly<CreatePodStepperProps>) {
   const state = useCreatePodForm({
     initialValues,
@@ -49,14 +52,12 @@ export function CreatePodStepper({
     onSaveDraft,
     clubAdmin,
     venues,
+    onAutosave,
   });
   const { t, form, showProducts, step, busy, error, blocked, hosts, setHosts } = state;
   const isLast = step === CREATE_POD_STEP_COUNT - 1;
-  const hostSubmitLabel = busy ? t('mweb.createPod.creating') : t('mweb.createPod.createPod');
-  let submitLabel = hostSubmitLabel;
-  if (clubAdmin) submitLabel = busy ? clubAdmin.busyLabel : clubAdmin.submitLabel;
 
-  const { saveDraft, submit, jumpToStep } = buildStepperSubmit({
+  const { saveDraft, submit, jumpToStep, submitLabel } = buildStepperSubmit({
     clubAdmin,
     onModerate,
     onPublish,
@@ -74,6 +75,7 @@ export function CreatePodStepper({
     pricing,
     venueNotice,
     venueQuote,
+    sendsOffer,
   } = useCreatePodScope({
     form,
     clubs,
@@ -85,11 +87,6 @@ export function CreatePodStepper({
     viewerUserId,
   });
   const pinnedClub = clubAdmin?.club ?? null;
-  const sendsOffer = createPodSendsOffer({
-    pod_mode: podMode,
-    partner_request_id: form.watch('partner_request_id'),
-    venue_slot_id: form.watch('venue_slot_id'),
-  });
   const nextLabel = isLast
     ? t('mweb.createPod.next')
     : t('mweb.createPod.nextTo', { vars: { step: t(stepTitleKey(step + 1, podMode)) } });
@@ -102,6 +99,8 @@ export function CreatePodStepper({
       categoryIcons={categoryIcons}
       clubs={clubs}
       pinnedClub={!!pinnedClub}
+      venues={venues}
+      pickedVenueId={pickedVenueId}
     />,
     <WhereWhenStep
       key="where"
@@ -113,6 +112,7 @@ export function CreatePodStepper({
       clubVenueIds={clubVenueIds}
       currencySymbol={finance.currency_symbol}
       pinnedVenueId={pinnedVenueId}
+      pickedVenueId={pickedVenueId}
       venueNotice={venueNotice}
       spots={spots}
       offerMinGuests={offerMinGuests}
@@ -154,7 +154,9 @@ export function CreatePodStepper({
       <TourAnchor tour="create-pod" anchor="create-pod-steps">
         <StepHeader step={step} podMode={podMode} sendsOffer={sendsOffer} />
       </TourAnchor>
-      {steps[step]}
+      <PodMinAdvanceContext.Provider value={state.minAdvance}>
+        {steps[step]}
+      </PodMinAdvanceContext.Provider>
       {error ? (
         <Text role="alert" testID="create-pod-error" fontSize={12.5} color="$danger">
           {error}

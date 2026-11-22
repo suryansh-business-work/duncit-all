@@ -110,7 +110,7 @@ describe('EventDrawer', () => {
     expect(onEdit).toHaveBeenCalledWith(event);
     expect(onDelete).toHaveBeenCalledWith(event);
 
-    fireEvent.click(drawer.getByRole('button', { name: 'Open venue lead' }));
+    fireEvent.click(drawer.getByRole('button', { name: 'Open lead' }));
     expect(screen.getByTestId('location')).toHaveTextContent('/venue-leads/venue-1/view');
     expect(onClose).toHaveBeenCalledTimes(1);
   });
@@ -124,9 +124,22 @@ describe('EventDrawer', () => {
     expect(screen.getByText('Host lead')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Mark done' })).toBeNull();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Open host lead' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Open lead' }));
     expect(screen.getByTestId('location')).toHaveTextContent('/host-leads/host-1/view');
     expect(onClose).toHaveBeenCalled();
+  });
+
+  it.each([
+    ['ECOMM_LEAD', 'Ecomm lead', '/ecomm-leads/lead-9/view'],
+    ['CREATOR_LEAD', 'Creator lead', '/creator-leads/lead-9/view'],
+    ['COMMUNITY_LEAD', 'Community lead', '/community-leads/lead-9/view'],
+  ] as const)('labels a %s reminder and opens that lead page', (entity, label, path) => {
+    const { onClose } = renderDrawer(calEvent({ entity, leadId: 'lead-9', leadName: 'Loom & Thread' }));
+
+    expect(screen.getByText(label)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Open lead' }));
+    expect(screen.getByTestId('location')).toHaveTextContent(path);
+    expect(onClose).toHaveBeenCalledTimes(1);
   });
 
   it('describes a done general reminder that belongs to no lead', () => {
@@ -136,7 +149,7 @@ describe('EventDrawer', () => {
     expect(screen.getByText('Done')).toBeInTheDocument();
     expect(screen.getByText('General reminder (not linked to a lead)')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Mark pending' })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /Open .* lead/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Open lead' })).toBeNull();
   });
 
   it('shows a dash for a lead reminder whose lead is unknown, and closes', () => {

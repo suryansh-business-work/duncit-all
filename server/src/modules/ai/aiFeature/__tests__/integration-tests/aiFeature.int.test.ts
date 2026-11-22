@@ -18,6 +18,8 @@ import { makeContext } from '@test/harness';
 import { UserModel } from '@modules/access/user/user.model';
 import { OpenAiUsageLogModel } from '@modules/ai/openaiUsage/openaiUsage.model';
 import { OPENAI_TASK_KEYS } from '@modules/ai/openaiUsage/openaiUsage.tasks';
+import { AiPromptModel } from '@modules/ai/prompt/prompt.model';
+import { CODE_PROMPT_BY_KEY } from '@modules/ai/prompt/catalog';
 import { AiFeatureSettingModel } from '../../aiFeature.model';
 import { aiFeatureService } from '../../aiFeature.service';
 import { aiFeatureResolvers } from '../../aiFeature.resolver';
@@ -226,6 +228,113 @@ describe('aiFeatureService.one', () => {
   });
 });
 
+describe('AiFeature.prompts', () => {
+  it('lists the catalogue prompts a feature runs on, matching the default until the library is edited', async () => {
+    await AiPromptModel.collection.insertMany([
+      { key: 'moderation.pod', kind: 'CODE', content: CODE_PROMPT_BY_KEY.get('moderation.pod')?.content },
+      { key: 'moderation.pod.user', kind: 'CODE', content: 'Someone rewrote this turn' },
+    ]);
+
+    const feature = await aiFeatureService.one('moderation.pod');
+
+    expect(feature.prompts_note).toBeNull();
+    expect(feature.prompts).toEqual([
+      {
+        key: 'moderation.pod',
+        name: 'Pod content safety review',
+        role: 'SYSTEM',
+        in_library: true,
+        matches_default: true,
+      },
+      {
+        key: 'moderation.pod.user',
+        name: 'Pod review — submitted content',
+        role: 'USER',
+        in_library: true,
+        matches_default: false,
+      },
+    ]);
+  });
+
+  it('marks a prompt the library has not seeded yet, without calling it edited', async () => {
+    const feature = await aiFeatureService.one('support.assistant');
+
+    expect(feature.prompts).toEqual([
+      expect.objectContaining({ key: 'support.assistant', in_library: false, matches_default: true }),
+    ]);
+  });
+
+  it('gives every feature a prompt or the reason it has none', async () => {
+    const list = await aiFeatureService.list();
+
+    for (const feature of list) {
+      expect(feature.prompts.length > 0 || Boolean(feature.prompts_note)).toBe(true);
+    }
+    const compose = list.find((feature) => feature.key === 'automation.compose');
+    expect(compose).toMatchObject({ prompts: [], prompts_note: expect.stringMatching(/flow builder/) });
+  });
+});
+
+describe('aiFeatureService.dashboard', () => {
+  it('sums the feature rows and lays calls out per day, with empty days as zeros', async () => {
+    await seedUsage([
+      {
+        task: 'moderation.pod',
+        status: 'SUCCESS',
+        created_at: ago(HOUR_MS),
+        prompt_tokens: 80,
+        completion_tokens: 20,
+        total_tokens: 100,
+        cost_usd: 0.5,
+        duration_ms: 400,
+      },
+      { task: 'moderation.pod', status: 'FAILED', created_at: ago(3 * DAY_MS), duration_ms: 100 },
+      { task: 'crm.lead_chat', status: 'SKIPPED', created_at: ago(3 * DAY_MS), total_tokens: 7, cost_usd: 0.25 },
+      // A task that left the catalogue is in no feature row, so it is in no total or day either.
+      { task: 'retired.task', status: 'SUCCESS', created_at: ago(HOUR_MS), cost_usd: 9 },
+      // Outside the 7-day window.
+      { task: 'moderation.pod', status: 'SUCCESS', created_at: ago(9 * DAY_MS), cost_usd: 9 },
+    ]);
+    await aiFeatureService.setEnabled('crm.lead_chat', false, await seedAdmin());
+
+    const dashboard = await aiFeatureService.dashboard(7);
+
+    expect(dashboard).toMatchObject({
+      range_days: 7,
+      features_total: OPENAI_TASK_KEYS.length,
+      features_enabled: OPENAI_TASK_KEYS.length - 1,
+      features_used: 2,
+      calls: 3,
+      failed_calls: 1,
+      skipped_calls: 1,
+      prompt_tokens: 80,
+      completion_tokens: 20,
+      total_tokens: 107,
+      cost_usd: 0.75,
+      unpriced_calls: 0,
+    });
+    expect(dashboard.features).toHaveLength(OPENAI_TASK_KEYS.length);
+    expect(dashboard.by_area[0]).toMatchObject({ module: 'Moderation', calls: 2, failed_calls: 1, cost_usd: 0.5 });
+    expect(dashboard.by_area.find((area) => area.module === 'CRM')).toMatchObject({ enabled: 4, calls: 1 });
+
+    // 7 days back to today spans 8 calendar dates, each listed once, oldest first.
+    expect(dashboard.series).toHaveLength(8);
+    expect(new Set(dashboard.series.map((day) => day.date)).size).toBe(8);
+    expect(dashboard.series.reduce((sum, day) => sum + day.calls, 0)).toBe(3);
+    expect(dashboard.series.reduce((sum, day) => sum + day.cost_usd, 0)).toBeCloseTo(0.75, 6);
+    expect(dashboard.series.filter((day) => day.calls === 0)).toHaveLength(6);
+  });
+
+  it('clamps the range like the feature list does', async () => {
+    const dashboard = await aiFeatureService.dashboard(500);
+
+    expect(dashboard.range_days).toBe(90);
+    expect(dashboard.features[0].range_days).toBe(90);
+    expect(dashboard.calls).toBe(0);
+    expect(dashboard.avg_duration_ms).toBe(0);
+  });
+});
+
 describe('aiFeatureService.setEnabled', () => {
   it('switches a feature off, and every OpenAI call sees it off at once', async () => {
     const actor = await seedAdmin();
@@ -288,6 +397,21 @@ describe('aiFeatureResolvers', () => {
     expect(list).toHaveLength(OPENAI_TASK_KEYS.length);
     expect(list[0].range_days).toBe(14);
     expect(one.key).toBe('moderation.pod');
+  });
+
+  it.each(['SUPER_ADMIN', 'AI_MANAGER'])('lets %s read the dashboard', async (role) => {
+    const ctx = makeContext({ roles: [role] });
+
+    const dashboard = await Query.aiFeaturesDashboard(undefined, { range_days: 14 }, ctx);
+
+    expect(dashboard.range_days).toBe(14);
+    expect(dashboard.series).toHaveLength(15);
+  });
+
+  it.each([null, 'CITY_ADMIN'])('refuses the dashboard to %s', (role) => {
+    const ctx = makeContext(role ? { roles: [role] } : null);
+
+    expect(() => Query.aiFeaturesDashboard(undefined, {}, ctx)).toThrow(role ? 'Access Denied' : 'Not authenticated');
   });
 
   it.each(['SUPER_ADMIN', 'AI_MANAGER'])('lets %s switch a feature, attributed to them', async (role) => {

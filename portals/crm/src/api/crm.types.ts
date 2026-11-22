@@ -13,17 +13,16 @@ export interface CrmServiceOffered {
   description?: string | null;
 }
 
-export type CrmServiceKind = 'VENUE' | 'HOST' | 'ECOMM';
-
-export interface CrmService {
-  id: string;
+/** A social profile beyond the lead's main Instagram link. */
+export interface CrmSocialLink {
   name: string;
-  kind: CrmServiceKind;
-  sort_order: number;
-  is_active: boolean;
-  created_at?: string | null;
-  updated_at?: string | null;
+  url: string;
 }
+
+/** Every CRM lead kind, as the server's `CrmEntityType` enum names it. */
+export type CrmLeadEntityType = 'VENUE_LEAD' | 'HOST_LEAD' | 'ECOMM_LEAD' | 'CREATOR_LEAD' | 'COMMUNITY_LEAD';
+/** The lead kinds served by the shared creator / community pages. */
+export type ProspectLeadEntity = 'CREATOR_LEAD' | 'COMMUNITY_LEAD';
 
 export interface CrmSuperCategoryRef {
   id: string;
@@ -79,6 +78,8 @@ export interface CrmDynamicField {
   applies_to_venue: boolean;
   applies_to_host: boolean;
   applies_to_ecomm: boolean;
+  applies_to_creator: boolean;
+  applies_to_community: boolean;
   required: boolean;
   sort_order: number;
   is_active: boolean;
@@ -132,6 +133,8 @@ export interface VenueLead {
   brochure_url?: string | null;
   website?: string | null;
   services_offered: CrmServiceOffered[];
+  instagram_link?: string | null;
+  social_links: CrmSocialLink[];
   linked_host_ids: string[];
   linked_hosts: CrmLinkedHost[];
   tags: string[];
@@ -174,6 +177,7 @@ export interface HostLead {
   preferred_time_slot?: string | null;
   website?: string | null;
   services_offered: CrmServiceOffered[];
+  social_links: CrmSocialLink[];
   instagram_link?: string | null;
   community_link?: string | null;
   community_size?: number | null;
@@ -218,6 +222,7 @@ export interface EcommLead {
   instagram_link?: string | null;
   marketplace_links: string[];
   services_offered: CrmServiceOffered[];
+  social_links: CrmSocialLink[];
   tags: string[];
   profile_photo_url?: string | null;
   dynamic_values_json: string;
@@ -253,4 +258,8 @@ export interface CrmOptionGroup {
   services_offered_options: string[];
   venue_services_offered_options: string[];
   host_services_offered_options: string[];
+  creator_platforms: string[];
+  collaboration_types: string[];
+  community_types: string[];
+  community_platforms: string[];
 }

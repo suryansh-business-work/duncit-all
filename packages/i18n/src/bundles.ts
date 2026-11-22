@@ -14,12 +14,16 @@ import { ECOMM_PORTAL_BUNDLE } from './bundles/ecomm-portal';
 import { ECOMM_STORE_BUNDLE } from './bundles/ecomm-store';
 import { EARNINGS_BUNDLE } from './bundles/earnings';
 import { EMPLOYEE_EXPENSE_BUNDLE } from './bundles/employee-expense';
+import { EMPLOYEE_TARGETS_BUNDLE } from './bundles/employee-targets';
 import { POD_TIMELINE_BUNDLE } from './bundles/pod-timeline';
 import { FINANCE_BUNDLE } from './bundles/finance';
 import { GRIEVANCE_BUNDLE } from './bundles/grievance';
 import { HEALTH_APPEAL_BUNDLE } from './bundles/health-appeal';
+import { ASK_DUNCIT_BUNDLE } from './bundles/ask-duncit';
+import { AI_ASK_DUNCIT_BUNDLE } from './bundles/ai-ask-duncit';
 import { LEGAL_BUNDLE } from './bundles/legal';
 import { LOCALIZATION_BUNDLE } from './bundles/localization';
+import { TARGETS_BUNDLE } from './bundles/targets';
 import { MAIL_PREFERENCE_BUNDLE } from './bundles/mail-preference';
 import { MEDIA_BUNDLE } from './bundles/media';
 import { AD_REQUEST_BUNDLE } from './bundles/ad-request';
@@ -105,12 +109,16 @@ export {
   ECOMM_STORE_BUNDLE,
   EARNINGS_BUNDLE,
   EMPLOYEE_EXPENSE_BUNDLE,
+  EMPLOYEE_TARGETS_BUNDLE,
   POD_TIMELINE_BUNDLE,
   FINANCE_BUNDLE,
   GRIEVANCE_BUNDLE,
   HEALTH_APPEAL_BUNDLE,
+  ASK_DUNCIT_BUNDLE,
+  AI_ASK_DUNCIT_BUNDLE,
   LEGAL_BUNDLE,
   LOCALIZATION_BUNDLE,
+  TARGETS_BUNDLE,
   MAIL_PREFERENCE_BUNDLE,
   MEDIA_BUNDLE,
   LOCATION_BUNDLE,
@@ -202,12 +210,16 @@ export const SURFACE_BUNDLES: Record<string, NestedCatalogue> = {
   ecommStore: ECOMM_STORE_BUNDLE,
   earnings: EARNINGS_BUNDLE,
   employeeExpense: EMPLOYEE_EXPENSE_BUNDLE,
+  employeeTargets: EMPLOYEE_TARGETS_BUNDLE,
   podTimeline: POD_TIMELINE_BUNDLE,
   finance: FINANCE_BUNDLE,
   grievance: GRIEVANCE_BUNDLE,
   healthAppeal: HEALTH_APPEAL_BUNDLE,
+  askDuncit: ASK_DUNCIT_BUNDLE,
+  aiAskDuncit: AI_ASK_DUNCIT_BUNDLE,
   legal: LEGAL_BUNDLE,
   localization: LOCALIZATION_BUNDLE,
+  targets: TARGETS_BUNDLE,
   mailPreference: MAIL_PREFERENCE_BUNDLE,
   media: MEDIA_BUNDLE,
   adRequest: AD_REQUEST_BUNDLE,

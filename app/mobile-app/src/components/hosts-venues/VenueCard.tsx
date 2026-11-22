@@ -1,12 +1,13 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
-import { venueImages } from '@duncit/utils';
+import { venueImages, type VenueHostTerms } from '@duncit/utils';
 
 import { SurfaceCard } from '@/components/SurfaceCard';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { PublicVenue } from '@/hooks/useHostsVenues';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 import { VenueCardMedia } from './VenueCardMedia';
+import { VenueCardTerms } from './VenueCardTerms';
 
 /** Compact venue label "City · State" from the optional location fields. */
 export function venueLocation(venue: PublicVenue): string {
@@ -16,12 +17,15 @@ export function venueLocation(venue: PublicVenue): string {
 export interface VenueCardProps {
   venue: PublicVenue;
   onOpen: () => void;
+  /** A host's view: the venue's minimums under its name. */
+  terms?: VenueHostTerms;
 }
 
 /** Venue row in the discovery list — a surface card with an image slider over
  * every photo the venue has (18px corners inside the padding), then name,
- * type/capacity and location. RN twin of mWeb's VenueExploreCard. */
-export function VenueCard({ venue, onOpen }: Readonly<VenueCardProps>) {
+ * type/capacity and location, and for a host the venue's minimums. RN twin of
+ * mWeb's VenueExploreCard. */
+export function VenueCard({ venue, onOpen, terms }: Readonly<VenueCardProps>) {
   const { muted } = useThemeColors();
   const location = venueLocation(venue);
 
@@ -58,6 +62,7 @@ export function VenueCard({ venue, onOpen }: Readonly<VenueCardProps>) {
             </Text>
           </XStack>
         ) : null}
+        <VenueCardTerms venueId={venue.id} terms={terms} />
       </YStack>
     </SurfaceCard>
   );

@@ -25,6 +25,8 @@ export const hostTypeDefs = /* GraphQL */ `
     dob: String
     "Admin-set cap on monthly Pod Requests to venues; null = the default of 10."
     venue_requests_limit_override: Int
+    "Admin-set Minimum Advance Days for this host's new pods (1-30); null = the platform's Pod Settings value."
+    pod_min_advance_days_override: Int
     aadhar_number: String!
     pan_number: String!
     passport_photo_url: String!
@@ -153,6 +155,8 @@ export const hostTypeDefs = /* GraphQL */ `
     setHostActive(host_doc_id: ID!, active: Boolean!): Host!
     "Admin-only: a host's monthly Pod Request limit to venues (null = the default of 10)."
     setHostVenueRequestLimit(host_doc_id: ID!, limit: Int): Host!
+    "Admin-only: this host's Minimum Advance Days for Pod Creation, 1-30 (null = the platform's Pod Settings value)."
+    setHostPodMinAdvanceDays(host_doc_id: ID!, days: Int): Host!
     "Developer-only permanent delete. Re-confirm with your own email + password. Cannot be undone; blocked if the host still has live pods."
     deleteHost(host_doc_id: ID!, email: String!, password: String!): Boolean!
   }

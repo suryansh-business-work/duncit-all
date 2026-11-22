@@ -1,6 +1,5 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 
-import { VenueOfferModel } from '@/generated/graphql/graphql';
 import { UpdateVenueSettingsDocument } from '@/graphql/venue-availability';
 import { useVenuesWithSettings } from '@/hooks/useVenuesWithSettings';
 import { VenueSettingsScreen } from '@/screens/VenueSettingsScreen';
@@ -73,86 +72,15 @@ beforeEach(() => {
 });
 
 describe('VenueSettingsScreen', () => {
-  it('shows the Booking offers card beside the cancellation policy for the picked venue', () => {
+  it('no longer carries the booking offers — they live on Fees & Minimum Spend', () => {
     mockedUse.mockReturnValue(state());
     renderWithProviders(<VenueSettingsScreen />);
-    expect(screen.getByTestId('venue-offer-settings-form')).toBeOnTheScreen();
     expect(screen.getByTestId('venue-settings-form')).toBeOnTheScreen();
-    expect(screen.getByTestId('field-min_guests').props.value).toBe('0');
-    expect(screen.getByTestId('field-response_hours').props.value).toBe('24');
-    // The minimum is left to Duncit's default (6 today); the 24 hours are the venue's own.
-    expect(screen.getByText('0 uses Duncit’s default. In effect now: 6 guests.')).toBeOnTheScreen();
-    expect(screen.getByText('0 uses Duncit’s default. In effect now: 24 hours.')).toBeOnTheScreen();
+    expect(screen.queryByTestId('venue-offer-settings-form')).toBeNull();
+    expect(screen.queryByTestId('field-min_guests')).toBeNull();
   });
 
-  it('starts a venue that stored no settings at all at the defaults', () => {
-    // A venue never saved: no settings record, so nothing is stored for its offers.
-    const fresh = { ...venue('v2', null), settings: null };
-    mockedUse.mockReturnValue(state({ venues: [fresh], venue: fresh, venueId: 'v2' }));
-    renderWithProviders(<VenueSettingsScreen />);
-    expect(screen.getByTestId('field-min_guests').props.value).toBe('0');
-    expect(screen.getByTestId('field-response_hours').props.value).toBe('0');
-    expect(screen.getByText('0 uses Duncit’s default. In effect now: 6 guests.')).toBeOnTheScreen();
-  });
-
-  it('saves the booking offers on their own, then re-reads the venue', async () => {
-    mockedUse.mockReturnValue(state());
-    renderWithProviders(<VenueSettingsScreen />);
-    fireEvent.changeText(screen.getByTestId('field-min_guests'), '10');
-    fireEvent.press(screen.getByTestId('venue-offer-settings-save'));
-    await waitFor(() => expect(screen.getByTestId('venue-offer-settings-saved')).toBeOnTheScreen());
-    expect(offerSaves()).toEqual([
-      [
-        UpdateVenueSettingsDocument,
-        {
-          venue_doc_id: 'v1',
-          input: {
-            offers: {
-              min_guests: 10,
-              response_hours: 24,
-              min_business: [{ model: VenueOfferModel.PerGuest, amount: 250 }],
-            },
-          },
-        },
-        { auth: true },
-      ],
-    ]);
-    expect(refetch).toHaveBeenCalledTimes(1);
-    expect(screen.queryByTestId('venue-offer-settings-error')).toBeNull();
-  });
-
-  it('starts from the business the venue stored, and saves a new amount on a new basis', async () => {
-    mockedUse.mockReturnValue(state());
-    renderWithProviders(<VenueSettingsScreen />);
-    expect(screen.getByTestId('venue-min-business-0-PER_GUEST')).toHaveProp('aria-checked', true);
-    expect(screen.getByTestId('field-min_business.0.amount').props.value).toBe('250');
-    fireEvent.press(screen.getByTestId('venue-min-business-add'));
-    // The new row takes the first basis not listed yet.
-    expect(screen.getByTestId('venue-min-business-1-PER_HOUR')).toHaveProp('aria-checked', true);
-    fireEvent.changeText(screen.getByTestId('field-min_business.1.amount'), '800');
-    fireEvent.press(screen.getByTestId('venue-offer-settings-save'));
-    await waitFor(() => expect(offerSaves()).toHaveLength(1));
-    expect(offerSaves()[0]?.[1].input.offers.min_business).toEqual([
-      { model: VenueOfferModel.PerGuest, amount: 250 },
-      { model: VenueOfferModel.PerHour, amount: 800 },
-    ]);
-  });
-
-  it('says why a save was refused and re-reads nothing', async () => {
-    mockedUse.mockReturnValue(state());
-    mockRequest.mockRejectedValueOnce(new Error('Only the venue owner can do that'));
-    renderWithProviders(<VenueSettingsScreen />);
-    fireEvent.press(screen.getByTestId('venue-offer-settings-save'));
-    await waitFor(() =>
-      expect(screen.getByTestId('venue-offer-settings-error')).toHaveTextContent(
-        'Only the venue owner can do that',
-      ),
-    );
-    expect(screen.queryByTestId('venue-offer-settings-saved')).toBeNull();
-    expect(refetch).not.toHaveBeenCalled();
-  });
-
-  it('saves the cancellation policy apart from the booking offers', async () => {
+  it('saves the cancellation policy for the picked venue', async () => {
     mockedUse.mockReturnValue(state());
     renderWithProviders(<VenueSettingsScreen />);
     fireEvent.press(screen.getByTestId('venue-settings-save'));
@@ -163,7 +91,6 @@ describe('VenueSettingsScreen', () => {
       { auth: true },
     );
     expect(offerSaves()).toEqual([]);
-    expect(screen.queryByTestId('venue-offer-settings-saved')).toBeNull();
   });
 
   it('says when the venues could not be read, and while they load', () => {

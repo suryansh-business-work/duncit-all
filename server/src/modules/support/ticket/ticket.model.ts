@@ -63,6 +63,8 @@ export interface ITicket extends Document {
   /** Optional pod this ticket is about (attached from "Contact Support" on a pod). */
   pod_id: Types.ObjectId | null;
   pod_title: string;
+  /** The payment (Payment document id) this ticket is about — a failed-payment claim or a timed-out checkout. */
+  payment_id: Types.ObjectId | null;
   status: TicketStatus;
   priority: TicketPriority;
   assignee_id: Types.ObjectId | null;
@@ -97,6 +99,7 @@ const ticketSchema = new Schema<ITicket>(
     },
     pod_id: { type: Schema.Types.ObjectId, ref: 'Pod', default: null, index: true },
     pod_title: { type: String, default: '', trim: true, maxlength: 200 },
+    payment_id: { type: Schema.Types.ObjectId, ref: 'Payment', default: null },
     status: {
       type: String,
       enum: ['OPEN', 'PENDING', 'RESOLVED', 'CLOSED'],
@@ -122,5 +125,11 @@ const ticketSchema = new Schema<ITicket>(
 );
 
 ticketSchema.index({ status: 1, last_message_at: -1 });
+// A failed-payment claim reuses the buyer's open ticket about the same payment.
+// PARTIAL: only the few tickets that name a payment.
+ticketSchema.index(
+  { payment_id: 1, user_id: 1 },
+  { partialFilterExpression: { payment_id: { $type: 'objectId' } } }
+);
 
 export const TicketModel = model<ITicket>('Ticket', ticketSchema);

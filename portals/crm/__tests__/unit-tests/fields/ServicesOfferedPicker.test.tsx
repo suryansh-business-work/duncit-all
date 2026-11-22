@@ -5,6 +5,7 @@ import { FormProvider, useForm, useWatch } from 'react-hook-form';
 import ServicesOfferedPicker from '@/forms/fields/ServicesOfferedPicker';
 import { CRM_SERVICES_OFFERED } from '@/api/data.gql';
 import type { CrmServiceOffered } from '@/api/crm.types';
+import type { ServiceTargetKind } from '@/config/serviceTargets';
 
 type Values = {
   super_category_id?: string;
@@ -26,6 +27,9 @@ const row = (id: string, title: string, category_id: string | null, sub_category
   sub_category_name: null,
   applies_to_venue: true,
   applies_to_host: false,
+  applies_to_ecomm: false,
+  applies_to_creator: false,
+  applies_to_community: false,
   is_active: true,
   sort_order: 0,
 });
@@ -52,7 +56,7 @@ function ValueProbe() {
   return <output data-testid="value">{JSON.stringify(value ?? null)}</output>;
 }
 
-function Harness({ initial, appliesTo }: Readonly<{ initial: Values; appliesTo?: 'VENUE' | 'HOST' | 'ECOMM' }>) {
+function Harness({ initial, appliesTo }: Readonly<{ initial: Values; appliesTo?: ServiceTargetKind }>) {
   const methods = useForm<Values>({ defaultValues: initial });
   return (
     <FormProvider {...methods}>
@@ -67,7 +71,7 @@ function Harness({ initial, appliesTo }: Readonly<{ initial: Values; appliesTo?:
 const renderPicker = (
   initial: Values,
   mocks: ReturnType<typeof catalogueMock>[] = [],
-  appliesTo?: 'VENUE' | 'HOST' | 'ECOMM'
+  appliesTo?: ServiceTargetKind
 ) =>
   render(
     <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
@@ -85,9 +89,12 @@ const optionTitles = () => {
 };
 
 describe('ServicesOfferedPicker', () => {
-  it('renders nothing until a super category is chosen', () => {
-    const { container } = renderPicker({});
-    expect(container.querySelector('input')).toBeNull();
+  it('shows a disabled field explaining the super category comes first', () => {
+    renderPicker({});
+    const field = screen.getByRole('textbox', { name: /services offered/i });
+    expect(field).toBeDisabled();
+    expect(screen.getByText('Pick a super category first; the services list loads from it.')).toBeInTheDocument();
+    expect(screen.queryByRole('combobox')).toBeNull();
     expect(screen.getByTestId('value')).toHaveTextContent('null');
   });
 
@@ -122,6 +129,22 @@ describe('ServicesOfferedPicker', () => {
     expect(optionTitles()).toEqual(['Packaging']);
   });
 
+  it('queries the creator-scoped catalogue for creator leads', async () => {
+    renderPicker({ super_category_id: 'sup-1' }, [catalogueMock([row('10', 'Reels', null, null)], { applies_to_creator: true })], 'CREATOR');
+    await screen.findByText('Auto-loaded from the Services Offered catalogue');
+    expect(optionTitles()).toEqual(['Reels']);
+  });
+
+  it('queries the community-scoped catalogue for community leads', async () => {
+    renderPicker(
+      { super_category_id: 'sup-1' },
+      [catalogueMock([row('11', 'Group runs', null, null), row('12', 'Meetups', null, null)], { applies_to_community: true })],
+      'COMMUNITY'
+    );
+    await screen.findByText('Auto-loaded from the Services Offered catalogue');
+    expect(optionTitles()).toEqual(['Group runs', 'Meetups']);
+  });
+
   it('adds a picked title while preserving captured details of existing services', async () => {
     const existing = { service: 'Catering', custom_name: 'Buffet', description: 'Veg only' };
     renderPicker({ super_category_id: 'sup-1', services_offered: [existing] }, [catalogueMock(CATALOGUE)]);
@@ -143,5 +166,24 @@ describe('ServicesOfferedPicker', () => {
     fireEvent.keyDown(combobox(), { key: 'Enter' });
 
     expect(value()).toEqual([{ service: 'Fireworks', custom_name: '', description: '' }]);
+  });
+
+  it('keeps several legacy "Other" services apart: chips show their own names and removing one keeps the rest', async () => {
+    const fireworks = { service: 'Other', custom_name: 'Fireworks', description: 'Cold pyro' };
+    const drones = { service: 'Other', custom_name: 'Drone show', description: '50 drones' };
+    renderPicker({ super_category_id: 'sup-1', services_offered: [fireworks, drones] }, [catalogueMock(CATALOGUE)]);
+    await screen.findByText('Auto-loaded from the Services Offered catalogue');
+    expect(screen.getByText('Fireworks')).toBeInTheDocument();
+    expect(screen.getByText('Drone show')).toBeInTheDocument();
+
+    // Adding a title must not turn the second custom service into a copy of the first.
+    fireEvent.mouseDown(combobox());
+    fireEvent.click(within(screen.getByRole('listbox')).getByRole('option', { name: 'Audio' }));
+    expect(value()).toEqual([fireworks, drones, { service: 'Audio', custom_name: '', description: '' }]);
+
+    // Deleting the first custom chip removes that one, not the other.
+    const chip = screen.getByText('Fireworks').closest('.MuiChip-root') as HTMLElement;
+    fireEvent.click(within(chip).getByTestId('CancelIcon'));
+    expect(value()).toEqual([drones, { service: 'Audio', custom_name: '', description: '' }]);
   });
 });

@@ -57,6 +57,17 @@ export {
   type BackgroundJobStatus,
 } from './background-jobs';
 export { StaffChatPanel } from './staff-chat';
+// Email validation in every console: AppShell mounts the provider; pages can place the button or reuse the result view.
+export {
+  EmailCheckList,
+  EmailValidateButton,
+  EmailValidationProvider,
+  EmailValidationResult,
+  EmailVerdictChip,
+  EMAIL_VALIDATION_RESULT_FIELDS,
+  useEmailValidation,
+  type EmailValidationResultData,
+} from './email-validation';
 export { StaffChatButton } from './staff-chat/StaffChatButton';
 // The console taskbar and the per-user desk behind it. AppShell mounts both;
 // these are exported so a portal that lays out its own chrome, and the tests,

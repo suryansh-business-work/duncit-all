@@ -12,6 +12,8 @@ import {
   EMAIL_HOST_LEAD,
   EMAIL_VENUE_LEAD,
 } from '../api/crm.gql';
+import { CALL_CRM_LEAD, EMAIL_CRM_LEAD } from '../api/prospectLeads.gql';
+import type { CrmLeadEntityType } from '../api/crm.types';
 import { parseApiError } from '@duncit/utils';
 import { isEmail } from '@duncit/regex';
 import { EmailStatusBadge } from './email-status';
@@ -22,7 +24,9 @@ import { useTranslation } from '@duncit/shell';
 
 type Mode = 'email' | 'call';
 
-type EntityKind = 'VENUE_LEAD' | 'HOST_LEAD' | 'ECOMM_LEAD';
+type EntityKind = CrmLeadEntityType;
+/** Kinds served by the generic emailCrmLeadContact / callCrmLeadContact mutations. */
+const GENERIC = new Set<EntityKind>(['CREATOR_LEAD', 'COMMUNITY_LEAD']);
 
 interface BasicLead {
   id: string;
@@ -38,14 +42,40 @@ interface Props {
   lead: BasicLead | null;
   /** Slug → value map from the full lead, used to auto-fill template variables. */
   variableValues?: Record<string, string>;
+  /** An email already written (an Ask AI draft) to review, edit and send. */
+  draft?: { to?: string | null; subject?: string | null; body_html?: string | null } | null;
   onClose: () => void;
   onResult: (message: string, ok: boolean) => void;
 }
 
-const EMAIL_MUTATIONS = { VENUE_LEAD: EMAIL_VENUE_LEAD, HOST_LEAD: EMAIL_HOST_LEAD, ECOMM_LEAD: EMAIL_ECOMM_LEAD } as const;
-const CALL_MUTATIONS = { VENUE_LEAD: CALL_VENUE_LEAD, HOST_LEAD: CALL_HOST_LEAD, ECOMM_LEAD: CALL_ECOMM_LEAD } as const;
-const EMAIL_KEYS = { VENUE_LEAD: 'emailVenueLeadContact', HOST_LEAD: 'emailHostLeadContact', ECOMM_LEAD: 'emailEcommLeadContact' } as const;
-const CALL_KEYS = { VENUE_LEAD: 'callVenueLeadContact', HOST_LEAD: 'callHostLeadContact', ECOMM_LEAD: 'callEcommLeadContact' } as const;
+const EMAIL_MUTATIONS = {
+  VENUE_LEAD: EMAIL_VENUE_LEAD,
+  HOST_LEAD: EMAIL_HOST_LEAD,
+  ECOMM_LEAD: EMAIL_ECOMM_LEAD,
+  CREATOR_LEAD: EMAIL_CRM_LEAD,
+  COMMUNITY_LEAD: EMAIL_CRM_LEAD,
+} as const;
+const CALL_MUTATIONS = {
+  VENUE_LEAD: CALL_VENUE_LEAD,
+  HOST_LEAD: CALL_HOST_LEAD,
+  ECOMM_LEAD: CALL_ECOMM_LEAD,
+  CREATOR_LEAD: CALL_CRM_LEAD,
+  COMMUNITY_LEAD: CALL_CRM_LEAD,
+} as const;
+const EMAIL_KEYS = {
+  VENUE_LEAD: 'emailVenueLeadContact',
+  HOST_LEAD: 'emailHostLeadContact',
+  ECOMM_LEAD: 'emailEcommLeadContact',
+  CREATOR_LEAD: 'emailCrmLeadContact',
+  COMMUNITY_LEAD: 'emailCrmLeadContact',
+} as const;
+const CALL_KEYS = {
+  VENUE_LEAD: 'callVenueLeadContact',
+  HOST_LEAD: 'callHostLeadContact',
+  ECOMM_LEAD: 'callEcommLeadContact',
+  CREATOR_LEAD: 'callCrmLeadContact',
+  COMMUNITY_LEAD: 'callCrmLeadContact',
+} as const;
 
 const mutationFor = (entity: EntityKind, mode: Mode) => {
   if (mode === 'email') return EMAIL_MUTATIONS[entity];
@@ -57,7 +87,7 @@ const responseKey = (entity: EntityKind, mode: Mode) => {
   return CALL_KEYS[entity];
 };
 
-export default function ContactComposeDialog({ open, mode, entity, lead, variableValues, onClose, onResult }: Readonly<Props>) {
+export default function ContactComposeDialog({ open, mode, entity, lead, variableValues, draft, onClose, onResult }: Readonly<Props>) {
   const { t } = useTranslation();
   const [target, setTarget] = useState('');
   const [defaultSubject, setDefaultSubject] = useState('');
@@ -70,16 +100,17 @@ export default function ContactComposeDialog({ open, mode, entity, lead, variabl
   useEffect(() => {
     if (!open || !lead) return;
     setError(null);
-    setTarget(mode === 'email' ? lead.primary_email ?? '' : lead.primary_mobile ?? '');
-    setDefaultSubject(`Regarding ${lead.display_name}`);
+    setTarget(mode === 'email' ? draft?.to || lead.primary_email || '' : lead.primary_mobile ?? '');
+    setDefaultSubject(draft?.subject || `Regarding ${lead.display_name}`);
     setEmailPayload({ subject: '', body: '', valid: false, attachments: [] });
-  }, [open, mode, lead]);
+  }, [open, mode, lead, draft]);
 
   const submit = async () => {
     if (!lead) return;
     setError(null);
     try {
       const variables: Record<string, unknown> = { id: lead.id, provider_id: providerId || null };
+      if (GENERIC.has(entity)) variables.entity_type = entity;
       if (mode === 'email') {
         variables.contact_email = target;
         variables.subject = emailPayload.subject || defaultSubject;
@@ -139,6 +170,7 @@ export default function ContactComposeDialog({ open, mode, entity, lead, variabl
             leadEmail={target}
             variableValues={variableValues ?? {}}
             defaultSubject={defaultSubject}
+            initialBody={draft?.body_html ?? undefined}
             onChange={setEmailPayload}
           />
         )}

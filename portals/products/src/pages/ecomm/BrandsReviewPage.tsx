@@ -1,6 +1,6 @@
 import { useApolloClient } from '@apollo/client/react';
 import { useNavigate } from 'react-router';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { Alert, Box, Stack, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
 import { useApolloTableFetch } from '@duncit/table';
 import { useTranslation } from '@duncit/shell';
@@ -33,15 +33,6 @@ export default function BrandsReviewPage() {
     },
     [status],
   );
-
-  // Reload the table when the status toggle changes (skip the mount fetch —
-  // DuncitTable already fetches on mount).
-  const appliedStatusRef = useRef(status);
-  useEffect(() => {
-    if (appliedStatusRef.current === status) return;
-    appliedStatusRef.current = status;
-    refetchRef.current?.();
-  }, [status]);
 
   const handleReviewed = (text: string) => {
     setReviewTarget(null);

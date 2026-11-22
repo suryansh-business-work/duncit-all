@@ -40,6 +40,8 @@ export default function AppShell({ children }: Readonly<{ children: ReactNode }>
       loading={loading}
       profileTo="/profile"
       onLogout={logout}
+      // Email validation is a staff-console tool; the server refuses it here.
+      emailValidation={false}
     >
       {children}
     </ShellAppShell>

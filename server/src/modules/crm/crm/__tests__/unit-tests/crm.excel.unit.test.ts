@@ -15,7 +15,15 @@ jest.mock('../../crm.model', () => ({
   HostLeadModel: { find: jest.fn(), findOne: jest.fn(), create: jest.fn() },
 }));
 
+// The duplicate lookup reads all five lead collections; it has its own tests.
+// Here only its answer matters, and its real message builder words the error.
+jest.mock('@modules/crm/leadDuplicate/leadDuplicate.service', () => ({
+  ...jest.requireActual('@modules/crm/leadDuplicate/leadDuplicate.service'),
+  findLeadDuplicates: jest.fn(),
+}));
+
 import { VenueLeadModel, HostLeadModel } from '../../crm.model';
+import { findLeadDuplicates } from '@modules/crm/leadDuplicate/leadDuplicate.service';
 import {
   buildTemplateBase64,
   exportLeadsBase64,
@@ -25,6 +33,7 @@ import {
 
 const venues = VenueLeadModel as unknown as Record<string, jest.Mock>;
 const hosts = HostLeadModel as unknown as Record<string, jest.Mock>;
+const duplicates = findLeadDuplicates as jest.Mock;
 
 /**
  * A truncated .xlsx — the ZIP local-file header and nothing after it, which is
@@ -72,6 +81,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   venues.findOne.mockReturnValue(chain(null));
   hosts.findOne.mockReturnValue(chain(null));
+  duplicates.mockResolvedValue([]);
   venues.create.mockResolvedValue({});
   hosts.create.mockResolvedValue({});
 });
@@ -223,14 +233,30 @@ describe('importLeads', () => {
     expect(result.errors[0]?.message).toContain('required');
   });
 
-  it('refuses a second lead with a phone number already on file', async () => {
-    venues.findOne.mockReturnValue(chain({ _id: 'existing' }));
+  it('skips a row whose phone is already on a lead of another kind, naming that lead', async () => {
+    duplicates.mockResolvedValue([
+      {
+        field: 'PHONE',
+        value: '9876543210',
+        entity_type: 'HOST_LEAD',
+        lead_id: 'h1',
+        lead_name: 'Rohan Events',
+        city: 'Pune',
+        lead_status: 'New',
+      },
+    ]);
     const base64 = sheetBase64(VENUE_HEADER, [['Sunset Hall', 'Pune', '1 MG Road', 'Rohan', '9876543210']]);
 
     const result = await importLeads('VENUE_LEAD', base64);
 
     expect(result.failed).toBe(1);
-    expect(result.errors[0]?.message).toContain('already exists');
+    expect(result.errors[0]?.message).toBe(
+      'Phone number 9876543210 already belongs to Host lead "Rohan Events". Each phone number, email and website can be on one lead only. Row skipped.'
+    );
+    expect(duplicates).toHaveBeenCalledWith({
+      contacts: [expect.objectContaining({ mobile_number: '9876543210' })],
+      website: '',
+    });
     expect(venues.create).not.toHaveBeenCalled();
   });
 
@@ -340,6 +366,7 @@ describe('importLeads', () => {
 
     jest.clearAllMocks();
     hosts.findOne.mockReturnValue(chain(null));
+    duplicates.mockResolvedValue([]);
     const bad = sheetBase64(['host_name', 'city'], [['   ', 'Pune']]);
     const result = await importLeads('HOST_LEAD', bad);
     expect(result.failed).toBe(1);

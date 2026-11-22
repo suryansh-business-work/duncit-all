@@ -12,6 +12,11 @@ const iso = (d: Date | null | undefined) => (d ? d.toISOString() : null);
 type OwnerListArgs = { venue_id?: string | null; limit?: number | null };
 
 export const venuePricingResolvers = {
+  // Retired: an offer below the venue's minimum spend is refused instead of topped up.
+  // Still answered (always 0) for app builds whose queries ask for it.
+  VenuePriceBreakdown: {
+    min_spend_top_up: () => 0,
+  },
   Query: {
     venuesNeedingPricingSetup: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       requireRole(ctx, consoleReaders('VENUE'));

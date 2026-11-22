@@ -6,6 +6,8 @@ import { renderWithApollo } from '../helpers/renderWithApollo';
 import {
   COMMUNICATION_LOGS,
   REQUEST_COMMUNICATION_TRANSCRIPT,
+  SUMMARIZE_COMMUNICATION_LOG,
+  type CallLogSummary,
   type CommunicationLogItem,
 } from '@/api/comms.gql';
 
@@ -21,6 +23,18 @@ import CommsLogsSection from '@/components/CommsLogsSection';
 afterEach(() => {
   socket.handler = null;
 });
+
+const NO_SUMMARY: CallLogSummary = {
+  status: 'NONE',
+  text: '',
+  key_points: [],
+  sentiment: null,
+  outcome: '',
+  follow_ups: [],
+  reminder_id: null,
+  error: '',
+};
+const READY_SUMMARY: CallLogSummary = { ...NO_SUMMARY, status: 'READY', text: 'Wants pricing' };
 
 const makeLog = (over: Partial<CommunicationLogItem> = {}): CommunicationLogItem => ({
   id: 'log-1',
@@ -39,15 +53,23 @@ const makeLog = (over: Partial<CommunicationLogItem> = {}): CommunicationLogItem
   recording_url: null,
   transcript: null,
   transcript_status: 'NONE',
+  from_number: null,
+  transcript_segments: [],
+  summary: NO_SUMMARY,
   created_by: null,
   created_at: '2026-05-27T10:00:00.000Z',
   ...over,
 });
 
-const logsMock = (type: 'EMAIL' | 'CALL' | null, items: CommunicationLogItem[], total = items.length): MockedResponse => ({
+const logsMock = (
+  type: 'EMAIL' | 'CALL' | null,
+  items: CommunicationLogItem[],
+  total = items.length,
+  search: string | null = null,
+): MockedResponse => ({
   request: {
     query: COMMUNICATION_LOGS,
-    variables: { filter: { entity_type: 'VENUE_LEAD', entity_id: 'v-1', type }, limit: 100, offset: 0 },
+    variables: { filter: { entity_type: 'VENUE_LEAD', entity_id: 'v-1', type, search }, limit: 100, offset: 0 },
   },
   result: {
     data: {
@@ -122,7 +144,7 @@ describe('CommsLogsSection', () => {
       {
         request: {
           query: COMMUNICATION_LOGS,
-          variables: { filter: { entity_type: 'VENUE_LEAD', entity_id: 'v-1', type: null }, limit: 100, offset: 0 },
+          variables: { filter: { entity_type: 'VENUE_LEAD', entity_id: 'v-1', type: null, search: null }, limit: 100, offset: 0 },
         },
         result: { errors: [new GraphQLError('Logs unavailable')] },
       },
@@ -159,6 +181,53 @@ describe('CommsLogsSection', () => {
     expect(screen.queryByText('Call to +919800000000')).not.toBeInTheDocument();
     socket.handler?.({ entity_id: 'v-1' });
     expect(await screen.findByText('Call to +919800000000')).toBeInTheDocument();
+  });
+
+  it('searches calls and emails through the server once typing settles', async () => {
+    mount([logsMock(null, [makeLog(), recordedCall]), logsMock(null, [recordedCall], 1, 'monday')]);
+    await screen.findByText('Intro');
+
+    fireEvent.change(screen.getByRole('textbox', { name: 'Search calls and emails' }), { target: { value: '  monday ' } });
+
+    await waitFor(() => expect(screen.queryByText('Intro')).not.toBeInTheDocument());
+    expect(screen.getByText('Call to +919800000000')).toBeInTheDocument();
+  });
+
+  it('generates a call summary, then refreshes the log', async () => {
+    const transcribed = makeLog({ ...recordedCall, transcript_status: 'READY', transcript: 'Agent: Hi' });
+    mount([
+      logsMock(null, [transcribed]),
+      {
+        request: { query: SUMMARIZE_COMMUNICATION_LOG, variables: { id: 'call-1' } },
+        result: {
+          data: {
+            summarizeCommunicationLog: {
+              __typename: 'CommunicationLog',
+              id: 'call-1',
+              summary: READY_SUMMARY,
+            },
+          },
+        },
+      },
+      logsMock(null, [{ ...transcribed, summary: READY_SUMMARY }]),
+    ]);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Generate summary' }));
+
+    expect(await screen.findByText('Wants pricing')).toBeInTheDocument();
+  });
+
+  it('shows the error when the summary cannot be generated', async () => {
+    const transcribed = makeLog({ ...recordedCall, transcript_status: 'READY', transcript: 'Agent: Hi' });
+    mount([
+      logsMock(null, [transcribed]),
+      { request: { query: SUMMARIZE_COMMUNICATION_LOG, variables: { id: 'call-1' } }, result: { errors: [new GraphQLError('AI is off')] } },
+    ]);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Generate summary' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('AI is off');
+    expect(screen.getByRole('button', { name: 'Generate summary' })).toBeEnabled();
   });
 
   it('refreshes for an event that names no lead', async () => {

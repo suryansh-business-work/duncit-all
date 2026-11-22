@@ -261,4 +261,14 @@ export const SHIPPED_AFTER_REDESIGN: ReadonlySet<string> = new Set<string>([
   // The account health appeal answers, first shipped 2026-10-29.
   'health-appeal-accepted',
   'health-appeal-denied',
+  // Withdrawal decisions and Send Money payouts, first shipped 2026-11-22.
+  'withdrawal-approved',
+  'withdrawal-partially-approved',
+  'withdrawal-rejected',
+  'withdrawal-paid',
+  'send-money-paid',
+  // Monthly employee target reminders and Club Admin host performance, first shipped 2026-11-22.
+  'employee-target-reminder',
+  'host-monthly-performance',
+  'club-admin-host-performance-alert',
 ]);

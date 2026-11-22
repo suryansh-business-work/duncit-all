@@ -84,6 +84,7 @@
   },
   "dependencies": {
     "@duncit/app-settings": "workspace:*",
-    "@duncit/buttons": "workspace:*"
+    "@duncit/buttons": "workspace:*",
+    "@duncit/logs": "workspace:*"
   }
 }

@@ -8,6 +8,9 @@ import VenueOfferStep from '../create-pod/steps/VenueOfferStep';
 import { blankCreatePodForm, type CreatePodFormValues } from '../create-pod/create-pod.types';
 import { fallbackT } from '../../../i18n/fallback';
 
+// The Minimum Advance Days rule has its own suite (createPodMinAdvance); here it is unknown.
+vi.mock('../create-pod/usePodMinAdvance', () => ({ usePodMinAdvance: () => null }));
+
 const h = vi.hoisted(() => ({
   calendar: { loading: false, error: null as unknown, tiles: [] as unknown[], endsFor: vi.fn() },
   quote: { quote: null, quoteMin: null, message: null, loading: false, error: null },

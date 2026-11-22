@@ -19,7 +19,9 @@ export default defineConfig({
       // to false), so one red suite deleted this whole workspace's lcov and SonarQube
       // read the silence as 0%.
       reportOnFailure: true,
-      reporter: ['text-summary', 'lcov'],
+      // 'text' with skipFull prints ONLY the files under 100%, with their uncovered
+      // lines — the one thing a red threshold in CI needs and the summary omits.
+      reporter: ['text-summary', ['text', { skipFull: true }], 'lcov'],
       reportsDirectory: './coverage',
       thresholds: { statements: 100, branches: 100, functions: 100, lines: 100 },
       include: ['src/**'],

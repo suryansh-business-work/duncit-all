@@ -18,7 +18,7 @@ export interface CrmLeadRowBase {
   contacts?: { mobile_number?: string | null; email?: string | null }[];
 }
 
-export type CrmLeadEntity = 'host' | 'venue' | 'ecomm';
+export type CrmLeadEntity = 'host' | 'venue' | 'ecomm' | 'creator' | 'community';
 export type LeadFilterOption = { value: string; label: string };
 
 interface EntityMeta {
@@ -52,6 +52,20 @@ export const leadEntityMeta = (t: Translate): Record<CrmLeadEntity, EntityMeta> 
     nameHeader: 'Seller',
     extra: { field: 'brand_name', headerName: t('crm.common.brand') },
     emptyText: 'No ecomm leads yet. Click "New Ecomm Lead" to create the first one.',
+  },
+  creator: {
+    tableId: 'crm-creator-leads',
+    nameField: 'creator_name',
+    nameHeader: t('crm.creatorLeads.nameHeader'),
+    extra: { field: 'primary_platform', headerName: t('crm.creatorLeads.primaryPlatform') },
+    emptyText: t('crm.creatorLeads.emptyText'),
+  },
+  community: {
+    tableId: 'crm-community-leads',
+    nameField: 'community_name',
+    nameHeader: t('crm.communityLeads.nameHeader'),
+    extra: { field: 'community_type', headerName: t('crm.communityLeads.communityType') },
+    emptyText: t('crm.communityLeads.emptyText'),
   },
 });
 

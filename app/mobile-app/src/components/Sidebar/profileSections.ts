@@ -48,6 +48,7 @@ export const MENU_DESTINATIONS: Readonly<Record<ProfileMenuKey, Destination>> = 
   verification: { route: 'Verification', icon: 'verified-user' },
   tour: { route: 'TourGuide', icon: 'explore' },
   plans: { route: 'PodPlans', icon: 'category' },
+  'ask-duncit': { route: 'AskDuncit', icon: 'assistant' },
 };
 
 /** The rounded tile on each section card. */

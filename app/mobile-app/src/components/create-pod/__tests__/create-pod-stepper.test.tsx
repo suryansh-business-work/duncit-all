@@ -1,5 +1,7 @@
 import { act, fireEvent, screen, waitFor, within } from '@testing-library/react-native';
 import { format } from 'date-fns';
+import { AppState } from 'react-native';
+import { DRAFT_AUTOSAVE_DEBOUNCE_MS } from '@duncit/utils';
 
 import { CreatePodStepper } from '@/components/create-pod/CreatePodStepper';
 import { blankCreatePodForm } from '@/components/create-pod/create-pod.types';
@@ -77,9 +79,15 @@ jest.mock('@/components/LocationDialog', () => {
 });
 
 // Venues are booked instantly at their own pricing: a PER_SLOT venue whose one
-// free slot (on the hour, a day out) sets the pod's whole window when picked.
+// free slot (06:00–08:00 UTC, two days out) sets the pod's whole window when
+// picked. Pinned to 06:00 UTC (11:30 IST) so the slot falls on the same calendar
+// day in UTC, IST and the runner's zone — "now + 24h" crossed midnight in IST
+// for the last 5½ hours of every UTC day and the end chip was never offered.
 const HOUR_MS = 3_600_000;
-const slotStartMs = Math.ceil((Date.now() + 24 * HOUR_MS) / HOUR_MS) * HOUR_MS;
+const slotStart = new Date();
+slotStart.setUTCDate(slotStart.getUTCDate() + 2);
+slotStart.setUTCHours(6, 0, 0, 0);
+const slotStartMs = slotStart.getTime();
 const slot = {
   start_at: new Date(slotStartMs).toISOString(),
   end_at: new Date(slotStartMs + 2 * HOUR_MS).toISOString(),
@@ -97,7 +105,6 @@ const venuePriceQuote = {
   hours: 2,
   base: 400,
   rules: [],
-  min_spend_top_up: 0,
   cleaning_fee: 0,
   pet_fee: 0,
   gst_pct: 18,
@@ -1083,25 +1090,87 @@ describe('CreatePodStepper', () => {
     expect(onSaveDraft).toHaveBeenCalled();
   });
 
-  it('autosaves the draft after the debounce window', () => {
-    jest.useFakeTimers();
-    try {
-      const { onSaveDraft } = setup();
-      // Any change dirties the form — here the pod goes virtual on What.
-      press('create-pod-mode-VIRTUAL');
-      act(() => {
-        jest.advanceTimersByTime(3999);
-      });
-      expect(onSaveDraft).not.toHaveBeenCalled();
-      act(() => {
-        jest.advanceTimersByTime(1);
-      });
-      expect(onSaveDraft).toHaveBeenCalled();
-      // The draft is saved against the step the host is on.
-      expect(onSaveDraft.mock.calls[0]?.[1].step).toBe(0);
-    } finally {
+  describe('autosave', () => {
+    beforeEach(() => {
+      jest.useFakeTimers();
+    });
+    afterEach(() => {
       jest.useRealTimers();
-    }
+    });
+    const pause = async (ms = DRAFT_AUTOSAVE_DEBOUNCE_MS) => {
+      await act(async () => {
+        await jest.advanceTimersByTimeAsync(ms);
+      });
+    };
+
+    it('writes nothing when Create Pod is only opened', async () => {
+      const { onSaveDraft } = setup();
+      await pause(DRAFT_AUTOSAVE_DEBOUNCE_MS * 3);
+      expect(onSaveDraft).not.toHaveBeenCalled();
+    });
+
+    it('saves the change once the host pauses, under the draft id it was given', async () => {
+      const { onSaveDraft } = setup({ initialDraftId: 'aaaaaaaaaaaaaaaaaaaaaaaa' });
+      // Any change counts — here the pod goes virtual on What.
+      press('create-pod-mode-VIRTUAL');
+      await pause(DRAFT_AUTOSAVE_DEBOUNCE_MS - 1);
+      expect(onSaveDraft).not.toHaveBeenCalled();
+      await pause(1);
+      expect(onSaveDraft).toHaveBeenCalledTimes(1);
+      // The draft is saved against the step the host is on.
+      expect(onSaveDraft).toHaveBeenCalledWith(
+        'aaaaaaaaaaaaaaaaaaaaaaaa',
+        expect.objectContaining({ step: 0, pod_mode: 'VIRTUAL' }),
+      );
+    });
+
+    it('hands the screen its save status as it moves from unsaved to saved', async () => {
+      const onAutosave = jest.fn();
+      // The save is held open so the screen can be seen in the "saving" state.
+      let finish: (id: string) => void = () => undefined;
+      const onSaveDraft = jest.fn(
+        () =>
+          new Promise<string>((resolve) => {
+            finish = resolve;
+          }),
+      );
+      setup({ onAutosave, onSaveDraft });
+      press('create-pod-mode-VIRTUAL');
+      await act(async () => undefined);
+      expect(onAutosave).toHaveBeenLastCalledWith(
+        expect.objectContaining({ status: 'idle', unsaved: true }),
+      );
+      await pause();
+      expect(onAutosave).toHaveBeenLastCalledWith(
+        expect.objectContaining({ status: 'saving', unsaved: true }),
+      );
+      await act(async () => finish('draft-1'));
+      expect(onAutosave).toHaveBeenLastCalledWith(
+        expect.objectContaining({ status: 'saved', unsaved: false }),
+      );
+    });
+
+    it('saves unsaved changes as the app leaves the foreground', async () => {
+      // The preset's AppState is already a jest.fn: read its calls rather than
+      // replacing it (a restored spy would leave it returning undefined for
+      // every later test in this file).
+      const addListener = jest.mocked(AppState.addEventListener);
+      const before = addListener.mock.calls.length;
+      const { onSaveDraft } = setup();
+      press('create-pod-mode-VIRTUAL');
+      const listeners = addListener.mock.calls
+        .slice(before)
+        .filter(([type]) => type === 'change')
+        .map(([, listener]) => listener as (state: string) => void);
+      expect(listeners.length).toBeGreaterThan(0);
+      await act(async () => {
+        listeners.forEach((listener) => listener('background'));
+      });
+      expect(onSaveDraft).toHaveBeenCalledWith(
+        null,
+        expect.objectContaining({ pod_mode: 'VIRTUAL' }),
+      );
+    });
   });
 
   it('shows the busy state while the publish is in flight', async () => {

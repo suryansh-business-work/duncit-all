@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 
 import { Alert, Box, Stack } from '@mui/material';
 import { CREATE_POD_STEP_COUNT, CREATE_POD_WHERE_STEP, clampCreatePodStep, createPodSendsOffer } from '@duncit/utils';
@@ -23,6 +23,7 @@ import WhatStep from '../steps/WhatStep';
 import WhereWhenStep from '../steps/WhereWhenStep';
 import MoneyStep from '../steps/MoneyStep';
 import DetailsStep from '../steps/DetailsStep';
+import PickedVenueNote from '../PickedVenueNote';
 import { useFeatureFlag } from '../../../../hooks/useFeatureFlag';
 import { useSmartIncentiveSettings } from '../../../../utils/smartIncentive';
 import type { CreatePodStepperProps } from './types';
@@ -49,9 +50,11 @@ export default function CreatePodStepper({
   hostCategories,
   viewerUserId,
   pinnedVenueId,
+  pickedVenueId,
   onSaveDraft,
   onModerate,
   onPublish,
+  onAutosave,
 }: Readonly<CreatePodStepperProps>) {
   const { t } = useTranslation();
   const form = useCreatePodForm(t, initialValues, venues);
@@ -66,22 +69,20 @@ export default function CreatePodStepper({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [blocked, setBlocked] = useState<BlockedViolation[]>([]);
-  const draftIdRef = useRef(initialDraftId);
   const isLast = step === STEP_TITLE_KEYS.length - 1;
 
   useStepperFormSync(form, showProducts, hostCategories);
 
-  const persist = async (forStep: number) => {
-    const id = await onSaveDraft(draftIdRef.current, serializeDraft(form.getValues(), forStep));
-    draftIdRef.current = id;
-    return id;
-  };
-  useDraftAutosave(form, step, persist);
+  // Every save writes the one draft this visit is about (it is in the URL).
+  const autosave = useDraftAutosave(
+    form,
+    step,
+    (payload, options) => onSaveDraft(initialDraftId, payload, options),
+    onAutosave
+  );
 
-  const goTo = (target: number) => {
-    setStep(target);
-    persist(target).catch(() => undefined);
-  };
+  // The step is part of the draft, so the autosave saves the move at once.
+  const goTo = (target: number) => setStep(target);
   const next = async () => {
     if (!(await form.trigger(stepFieldsFor(step, form.getValues())))) return;
     goTo(clampCreatePodStep(step + 1));
@@ -115,8 +116,13 @@ export default function CreatePodStepper({
         applyModeration(moderation.violations);
         return;
       }
-      const id = await persist(step);
+      // Let any autosave still out land first, so none can arrive after the
+      // publish and bring the draft back; then write the form as published.
+      await autosave.flush();
+      const id = await onSaveDraft(initialDraftId, serializeDraft(values, step));
+      autosave.markSaved();
       await onPublish(id, buildCreatePodInput(values, { smartIncentiveOn }));
+      autosave.stop();
     } catch (e) {
       // Two pods may share a title — the server gives the second one a link of
       // its own — so nothing here is the title's fault any more. Whatever did
@@ -132,8 +138,8 @@ export default function CreatePodStepper({
     setStep(target);
   };
 
-  const { podMode, clubsInCity, clubsForLocation, clubVenueIds, availableProducts, spots, offerMinGuests, preview, venueNotice } =
-    useStepperSelections(form, { clubs, hostCategories, products, subCategories, venues, viewerUserId, pinnedVenueId });
+  const { podMode, clubsInCity, clubsForLocation, clubVenueIds, availableProducts, spots, offerMinGuests, preview, venueNotice, venueLocked } =
+    useStepperSelections(form, { clubs, hostCategories, products, subCategories, venues, viewerUserId, pinnedVenueId, pickedVenueId });
   const sendsOffer = createPodSendsOffer({
     pod_mode: podMode,
     partner_request_id: form.watch('partner_request_id'),
@@ -141,8 +147,8 @@ export default function CreatePodStepper({
   });
 
   const steps = [
-    <WhatStep key="what" form={form} hostCategories={hostCategories} categoryIcons={categoryIcons} clubs={clubs} />,
-    <WhereWhenStep key="where" form={form} clubs={clubsForLocation} cityClubs={clubsInCity} locations={locations} venues={venues} clubVenueIds={clubVenueIds} venueNotice={venueNotice} spots={spots} offerMinGuests={offerMinGuests} />,
+    <WhatStep key="what" form={form} hostCategories={hostCategories} categoryIcons={categoryIcons} clubs={clubs} venueLocked={venueLocked} />,
+    <WhereWhenStep key="where" form={form} clubs={clubsForLocation} cityClubs={clubsInCity} locations={locations} venues={venues} clubVenueIds={clubVenueIds} venueNotice={venueNotice} spots={spots} offerMinGuests={offerMinGuests} venueLocked={venueLocked} />,
     <MoneyStep key="money" form={form} venues={venues} sendsOffer={sendsOffer} products={availableProducts} showProducts={showProducts} preview={preview} venueNotice={venueNotice} />,
     <DetailsStep key="details" form={form} hostCategories={hostCategories} venues={venues} onEditWhen={() => goTo(CREATE_POD_WHERE_STEP)} />,
   ];
@@ -156,8 +162,9 @@ export default function CreatePodStepper({
       <Box data-tour="create-pod-steps">
         <StepHero step={step} total={CREATE_POD_STEP_COUNT} title={t(stepTitleKey(step, podMode))} subtitle={t(stepSubtitleKey(step, podMode, sendsOffer))} />
       </Box>
+      {venueLocked && step <= CREATE_POD_WHERE_STEP && <PickedVenueNote venues={venues} venueId={form.watch('venue_id')} />}
       {steps[step]}
-      {error && <Alert data-testid="create-pod-error" severity="error">{error}</Alert>}
+      {error &&<Alert data-testid="create-pod-error" severity="error">{error}</Alert>}
       {/* Spacer so the last field is never hidden behind the fixed footer bar. */}
       <Box aria-hidden sx={{ height: 88 }} />
       <Box data-tour="create-pod-publish">

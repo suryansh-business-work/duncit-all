@@ -49,14 +49,19 @@ export const VENUE_SETTINGS_BUNDLE: NestedCatalogue = {
       percentMax: 'A percentage cannot go above 100',
       duplicateWindow: 'Another band already covers this window',
     },
-    // Booking offers: the fewest guests a host's offer may be for, and the
-    // hours either side has to answer an offer or a counter (VenueSettings.offers).
-    // 0 = Duncit's platform default; the hint states what is in effect. Shared
-    // by the Partners console, mWeb, the Venues console and (later) native.
+    // Booking offers & minimum spend (Fees & Minimum Spend): the fewest guests a
+    // host's offer may be for, the hours either side has to answer an offer or a
+    // counter, and the least one booking must come to (VenueSettings.offers).
+    // 0 = Duncit's platform default (guests, hours) or none (minimum spend).
+    // Shared by the Partners console, mWeb, the app and the Venues console.
     offers: {
-      title: 'Booking offers',
+      title: 'Booking offers & minimum spend',
       intro:
-        'How hosts book your venue: the fewest guests an offer may be for, and how long you and the host each have to answer an offer or a counter before it expires. Leave a value at 0 to use Duncit’s default.',
+        'How hosts book your venue: the fewest guests an offer may be for, how long you and the host each have to answer an offer or a counter before it expires, and the least each booking must bring you. Leave guests or hours at 0 to use Duncit’s default.',
+      minSpend: 'Minimum spend per booking (₹)',
+      minSpendHint:
+        'The least one booking’s offer must come to: the rate times your minimum guests, times the hours, or the flat price. A host cannot send an offer below it. 0 means no minimum.',
+      minSpendInvalid: 'Enter an amount from 0 to {max}',
       minGuests: 'Minimum guests',
       minGuestsHint: '0 uses Duncit’s default. In effect now: {count} guests.',
       minGuestsInvalid: 'Enter a whole number of guests from 0 to {max}',

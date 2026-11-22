@@ -138,7 +138,8 @@ export const DEFAULT_BOOKING_STEP_MINUTES = 30;
 const MINUTE_MS = 60_000;
 const DAY_MS = 24 * 60 * MINUTE_MS;
 
-const addDaysYmd = (ymd: string, days: number): string =>
+/** The calendar day `days` after `ymd` (`yyyy-MM-dd`), on the plain calendar. */
+export const addDaysYmd = (ymd: string, days: number): string =>
   new Date(Date.parse(`${ymd}T00:00:00Z`) + days * DAY_MS).toISOString().slice(0, 10);
 
 /** The `from`/`to` days of a calendar read starting on `fromYmd` — never more than the server cap. */
@@ -363,7 +364,6 @@ export interface VenueQuote {
   hours: number;
   base: number;
   rules: readonly { type: string; label?: string | null; amount: number }[];
-  min_spend_top_up: number;
   cleaning_fee: number;
   pet_fee: number;
   gst_pct: number;
@@ -407,7 +407,7 @@ const optionalLine = (id: string, labelKey: string, amount: number, vars?: Venue
 
 /**
  * The price card's rows, in the order the server adds them up: base, each rule
- * applied, the min-spend top-up, fees, taxes and Duncit's fee on top. `money`
+ * applied, fees, taxes and Duncit's fee on top. `money`
  * formats the rate shown inside the base row. The total and the refundable
  * deposit (paid at the venue, never in the total) are returned beside them.
  */
@@ -431,7 +431,6 @@ export function venueQuoteLines(
     lines: [
       base,
       ...rules,
-      ...optionalLine('min-spend', 'mweb.createPod.quote.minSpend', quote.min_spend_top_up),
       ...optionalLine('cleaning', 'mweb.createPod.quote.cleaning', quote.cleaning_fee),
       ...optionalLine('pets', 'mweb.createPod.quote.pets', quote.pet_fee),
       ...optionalLine('taxes', 'mweb.createPod.quote.taxes', quote.taxes, { pct: quote.gst_pct }),

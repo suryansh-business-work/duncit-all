@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useMemo } from 'react';
 import { Chip, Stack, Typography } from '@mui/material';
 import { StatusChip } from '@duncit/ui';
 import { DuncitTable, actionsColumn, clientTableFetch, type DuncitColumn } from '@duncit/table';
@@ -121,10 +121,6 @@ export default function ExpenseOptionTable({
   );
   // The grid holds fetchRows in a ref, so a new list is only picked up when the
   // page asks it to re-read (the same arrangement the WhatsApp console uses).
-  const refetchRef = useRef<(() => void) | null>(null);
-  useEffect(() => {
-    refetchRef.current?.();
-  }, [fetchRows]);
 
   return (
     <DuncitTable<ExpenseOptionRow>
@@ -133,7 +129,6 @@ export default function ExpenseOptionTable({
       columns={columns}
       fetchRows={fetchRows}
       getRowId={getRowId}
-      refetchRef={refetchRef}
       emptyText={t('finance.expenseConfig.noOptionsYet')}
       defaultSort={{ field: 'label', dir: 'asc' }}
       searchPlaceholder={t('finance.expenseConfig.searchOptions')}

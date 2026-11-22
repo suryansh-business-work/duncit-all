@@ -1,13 +1,10 @@
-import { Box, Chip, Stack, Tooltip, Typography } from '@mui/material';
+import { Chip, Stack, Typography } from '@mui/material';
 import { alpha } from '@mui/material/styles';
-import RefreshIcon from '@mui/icons-material/Refresh';
-import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
-import StatusVisual, { TranscriptWave } from './statusVisuals';
+import StatusVisual from './statusVisuals';
+import CallLogDetails from './CallLogDetails';
 import type { CommunicationLogItem } from '../../api/comms.gql';
 import { EmailStatusBadge } from '../email-status';
 import { formatDateTime } from '@duncit/app-settings';
-import { useTranslation } from '@duncit/shell';
 
 const fmt = (value?: string | null) => {
   if (!value) return '—';
@@ -28,22 +25,16 @@ const STATUS_COLOUR: Record<string, 'success' | 'error' | 'warning' | 'info' | '
   BUSY: 'warning',
 };
 
-const transcriptLabel = (log: CommunicationLogItem) => {
-  if (log.transcript_status === 'PENDING') return 'Transcript pending';
-  if (log.transcript_status === 'FAILED') return 'Transcript failed';
-  if (log.recording_url) return 'Transcript not requested';
-  return 'No recording yet';
-};
-
 interface Props {
   log: CommunicationLogItem;
   onRequestTranscript: (id: string) => void;
+  onSummarize: (id: string) => void;
   refreshing?: boolean;
+  /** This log's summary is being generated. */
+  summarizing?: boolean;
 }
 
-export default function LogRow({ log, onRequestTranscript, refreshing }: Readonly<Props>) {
-  const { t } = useTranslation();
-  const transcriptReady = log.transcript_status === 'READY' && log.transcript;
+export default function LogRow({ log, onRequestTranscript, onSummarize, refreshing, summarizing }: Readonly<Props>) {
   return (
     <Stack
       direction="row"
@@ -95,59 +86,13 @@ export default function LogRow({ log, onRequestTranscript, refreshing }: Readonl
           </Typography>
         )}
         {log.type === 'CALL' && (
-          <Stack
-            direction="row"
-            spacing={1}
-            useFlexGap
-            sx={{
-              alignItems: "center",
-              flexWrap: "wrap"
-            }}>
-            {transcriptReady ? (
-              <Box sx={{ width: '100%' }}>
-                <Stack direction="row" spacing={1} sx={{
-                  alignItems: "center"
-                }}>
-                  <TranscriptWave />
-                  <Typography variant="caption" sx={{
-                    color: "text.secondary"
-                  }}>{t('crm.components.transcript')}</Typography>
-                </Stack>
-                <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', mt: 0.5 }}>
-                  {log.transcript}
-                </Typography>
-              </Box>
-            ) : (
-              <Stack direction="row" spacing={1} sx={{
-                alignItems: "center"
-              }}>
-                <Chip
-                  size="small"
-                  variant="outlined"
-                  color={log.transcript_status === 'FAILED' ? 'error' : 'default'}
-                  label={transcriptLabel(log)}
-                />
-                {log.recording_url && (
-                  <DuncitButton
-                    size="small"
-                    variant="outlined"
-                    startIcon={<RefreshIcon />}
-                    onClick={() => onRequestTranscript(log.id)}
-                    disabled={refreshing}
-                  >
-                    {log.transcript_status === 'FAILED' ? 'Retry transcript' : 'Get transcript'}
-                  </DuncitButton>
-                )}
-              </Stack>
-            )}
-            {log.recording_url && (
-              <Tooltip title={t('crm.components.openRecording')}>
-                <DuncitIconButton size="small" component="a" href={log.recording_url} target="_blank" rel="noreferrer">
-                  <OpenInNewIcon fontSize="small" />
-                </DuncitIconButton>
-              </Tooltip>
-            )}
-          </Stack>
+          <CallLogDetails
+            log={log}
+            onRequestTranscript={onRequestTranscript}
+            onSummarize={onSummarize}
+            refreshing={refreshing}
+            summarizing={summarizing}
+          />
         )}
       </Stack>
     </Stack>

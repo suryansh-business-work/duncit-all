@@ -19,12 +19,17 @@ import {
   PaymentLogsPage,
   PaymentDetailPage,
   RoundOffsPage,
+  FailedPaymentsPage,
+  FailedPaymentDetailPage,
   OrderRefundsPage,
   PaymentReleasePage,
   PaymentReleaseDetailPage,
   WithdrawalsPage,
   PodWithdrawalDetailPage,
   WithdrawalSettingsPage,
+  WithdrawalLogsPage,
+  SendMoneyPage,
+  SendMoneyLogsPage,
   InvoiceManagementPage,
   InvoiceTemplatePage,
   LedgerPage,
@@ -75,6 +80,8 @@ export default function App() {
       <Route path="/payment-logs" element={authed(<PaymentLogsPage />)} />
       <Route path="/payment-logs/:id" element={authed(<PaymentDetailPage />)} />
       <Route path="/round-offs" element={authed(<RoundOffsPage />)} />
+      <Route path="/failed-payments" element={authed(<FailedPaymentsPage />)} />
+      <Route path="/failed-payments/:id" element={authed(<FailedPaymentDetailPage />)} />
       {/* One shop per route — the pod shop and the pet store never share a list. */}
       <Route path="/pod-shop/payment-logs" element={authed(<PaymentLogsPage key="pod-shop" shop="POD_SHOP" />)} />
       <Route path="/pod-shop/order-refunds" element={authed(<OrderRefundsPage key="pod-shop" shop="POD_SHOP" />)} />
@@ -84,6 +91,9 @@ export default function App() {
       <Route path="/payment-release/:requestId" element={authed(<PaymentReleaseDetailPage />)} />
       <Route path="/withdrawals" element={authed(<WithdrawalsPage />)} />
       <Route path="/withdrawals/settings" element={authed(<WithdrawalSettingsPage />)} />
+      <Route path="/withdrawals/logs" element={authed(<WithdrawalLogsPage />)} />
+      <Route path="/send-money" element={authed(<SendMoneyPage />)} />
+      <Route path="/send-money/logs" element={authed(<SendMoneyLogsPage />)} />
       {/* Static /settings outranks this dynamic segment in the router's own
           ranking, so the sibling order here is presentation only. */}
       <Route path="/withdrawals/:podId" element={authed(<PodWithdrawalDetailPage />)} />

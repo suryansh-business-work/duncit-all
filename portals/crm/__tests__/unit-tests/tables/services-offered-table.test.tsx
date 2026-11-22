@@ -18,6 +18,9 @@ const service: CrmServiceOfferedRow = {
   sub_category_name: 'Speakers',
   applies_to_venue: true,
   applies_to_host: true,
+  applies_to_ecomm: false,
+  applies_to_creator: false,
+  applies_to_community: false,
   is_active: true,
   sort_order: 3,
   created_at: '2026-03-09T08:00:00.000Z',
@@ -61,21 +64,26 @@ describe('ServicesOfferedTable', () => {
     expect(screen.getByText('Active')).toBeTruthy();
   });
 
-  it('labels the Applies-to chip Both when the service targets venues and hosts', async () => {
-    renderTable([service]);
-    expect(await screen.findByText('Both')).toBeTruthy();
+  it('shows one Applies-to chip per targeted lead kind, in catalogue order', async () => {
+    renderTable([{ ...service, applies_to_community: true }]);
+    await screen.findByText('Sound System');
+
+    const chips = screen.getAllByText(/^(Venue|Host|Ecomm|Creator|Community|All lead types)$/, { selector: '.MuiChip-label' });
+    expect(chips.map((c) => c.textContent)).toEqual(['Venue', 'Host', 'Community']);
   });
 
-  it('labels the Applies-to chip Venue when only venues are targeted', async () => {
-    renderTable([{ ...service, applies_to_host: false }]);
-    expect(await screen.findByText('Venue')).toBeTruthy();
-    expect(screen.queryByText('Both')).toBeNull();
+  it('collapses the chips to "All lead types" when every kind is targeted', async () => {
+    renderTable([{ ...service, applies_to_ecomm: true, applies_to_creator: true, applies_to_community: true }]);
+    expect(await screen.findByText('All lead types')).toBeTruthy();
+    expect(screen.queryByText('Venue', { selector: '.MuiChip-label' })).toBeNull();
+    expect(screen.queryByText('Community', { selector: '.MuiChip-label' })).toBeNull();
   });
 
-  it('labels the Applies-to chip Host when only hosts are targeted', async () => {
-    renderTable([{ ...service, applies_to_venue: false }]);
-    expect(await screen.findByText('Host')).toBeTruthy();
-    expect(screen.queryByText('Both')).toBeNull();
+  it('labels a service for one newer kind with just that kind', async () => {
+    renderTable([{ ...service, applies_to_venue: false, applies_to_host: false, applies_to_creator: true }]);
+    expect(await screen.findByText('Creator', { selector: '.MuiChip-label' })).toBeTruthy();
+    expect(screen.queryByText('Venue', { selector: '.MuiChip-label' })).toBeNull();
+    expect(screen.queryByText('All lead types')).toBeNull();
   });
 
   it('falls back to an em dash for the taxonomy names and the Applies-to chip', async () => {
@@ -97,19 +105,21 @@ describe('ServicesOfferedTable', () => {
     expect(screen.getByText('Inactive')).toBeTruthy();
   });
 
-  it('renders Yes/No per flag in the hidden For Venue and For Host columns once shown', async () => {
+  it('renders Yes/No per flag in the hidden per-kind columns once shown', async () => {
     renderTable([
       { ...service, id: 's2', title: 'Venue only', applies_to_host: false },
-      { ...service, id: 's3', title: 'Host only', applies_to_venue: false },
+      { ...service, id: 's3', title: 'Host and community', applies_to_venue: false, applies_to_community: true },
     ]);
     await screen.findByText('Venue only');
+    expect(screen.queryByText('Yes')).toBeNull();
 
     await showHiddenColumn('For Venue');
     await showHiddenColumn('For Host');
+    await showHiddenColumn('For Community');
 
     // one Yes + one No per flag column, across the two rows
-    expect(await screen.findAllByText('Yes')).toHaveLength(2);
-    expect(screen.getAllByText('No')).toHaveLength(2);
+    expect(await screen.findAllByText('Yes')).toHaveLength(3);
+    expect(screen.getAllByText('No')).toHaveLength(3);
   });
 
   it('shows the sort order and the admin-formatted Created date in their hidden columns', async () => {

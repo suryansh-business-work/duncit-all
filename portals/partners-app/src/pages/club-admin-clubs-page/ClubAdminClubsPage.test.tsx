@@ -78,6 +78,9 @@ describe('ClubAdminClubsPage', () => {
     expect(within(readers).getByRole('link', { name: 'Pods' }).getAttribute('href')).toBe(
       '/club-admin/clubs/club-2',
     );
+    expect(within(readers).getByRole('link', { name: 'Hosts' }).getAttribute('href')).toBe(
+      '/club-admin/clubs/club-2/hosts',
+    );
   });
 
   it('opens the club (its pods) when its row is clicked', async () => {
@@ -86,6 +89,15 @@ describe('ClubAdminClubsPage', () => {
     fireEvent.click(await screen.findByText('Sunrise Tennis Club'));
     await waitFor(() =>
       expect(screen.getByTestId('location').textContent).toBe('/club-admin/clubs/club-1'),
+    );
+  });
+
+  it('opens the club’s hosts from the Hosts action, not its pods', async () => {
+    mount([clubInfo()]);
+
+    fireEvent.click(await screen.findByTestId('club-admin-club-hosts-club-1'));
+    await waitFor(() =>
+      expect(screen.getByTestId('location').textContent).toBe('/club-admin/clubs/club-1/hosts'),
     );
   });
 

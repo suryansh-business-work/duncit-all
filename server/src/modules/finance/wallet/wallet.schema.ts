@@ -129,6 +129,23 @@ export const walletTypeDefs = /* GraphQL */ `
     reviewed_at: String
     paid_at: String
     created_at: String!
+    "What the person asked for. amount is what was approved once Finance partially approves."
+    requested_amount: Float!
+    "Finance's decision — separate from the payout, which can still fail after an approval."
+    approval_status: ApprovalStatus!
+    approved_amount: Float
+    decision_reason: String!
+    reviewed_by_name: String!
+    "What the bank says. Null until a payout is started."
+    payout_status: PayoutStatus
+    "The one label to show: the decision until a payout starts, then the payout's state."
+    display_status: MoneyOutStatus!
+    razorpay_payout_id: String!
+    payout_utr: String!
+    payout_failure_reason: String!
+    payout_attempt: Int!
+    payout_initiated_at: String
+    payout_completed_at: String
   }
 
   "Server-side table page for the shared table engine (withdrawalRequestsTable)."
@@ -268,6 +285,7 @@ export const walletTypeDefs = /* GraphQL */ `
   extend type Mutation {
     requestWithdrawal(input: RequestWithdrawalInput!): WalletWithdrawal!
     reviewWithdrawal(withdrawal_id: ID!, input: ReviewWithdrawalInput!): WalletWithdrawal!
+      @deprecated(reason: "Use decideWithdrawal: it approves, partially approves or rejects, and pays through Razorpay.")
     updateWithdrawalMinimums(input: UpdateWithdrawalMinimumsInput!): WithdrawalMinimums!
   }
 `;

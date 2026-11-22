@@ -28,6 +28,9 @@ const service: CrmServiceOfferedRow = {
   sub_category_name: 'Speakers',
   applies_to_venue: true,
   applies_to_host: true,
+  applies_to_ecomm: false,
+  applies_to_creator: false,
+  applies_to_community: false,
   is_active: true,
   sort_order: 1,
   created_at: '2026-03-09T08:00:00.000Z',
@@ -108,8 +111,12 @@ describe('ServicesOfferedPage — add', () => {
               super_category_id: 'sc1',
               category_id: 'c1',
               sub_category_id: 'sub1',
+              // A new service starts on for venue and host only (the kinds that predate the flags).
               applies_to_venue: true,
               applies_to_host: true,
+              applies_to_ecomm: false,
+              applies_to_creator: false,
+              applies_to_community: false,
               titles: ['Catering', 'Decor'],
             },
           },
@@ -144,7 +151,7 @@ describe('ServicesOfferedPage — add', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
   });
 
-  it('sends null category ids, the chosen target, and shows the Adding… label while pending', async () => {
+  it('sends null category ids, every chosen target, and shows the Adding… label while pending', async () => {
     renderWithApollo(<ServicesOfferedPage />, [
       tableMock([service]),
       ...taxonomyMocks,
@@ -158,6 +165,9 @@ describe('ServicesOfferedPage — add', () => {
               sub_category_id: null,
               applies_to_venue: false,
               applies_to_host: true,
+              applies_to_ecomm: false,
+              applies_to_creator: true,
+              applies_to_community: true,
               titles: ['Coaching'],
             },
           },
@@ -173,6 +183,8 @@ describe('ServicesOfferedPage — add', () => {
     await pick(dialog, /Super Category/, 'Events');
     addTitle(dialog, 'Coaching');
     fireEvent.click(within(dialog).getByRole('switch', { name: 'Venue' }));
+    fireEvent.click(within(dialog).getByRole('switch', { name: 'Creator' }));
+    fireEvent.click(within(dialog).getByRole('switch', { name: 'Community' }));
     fireEvent.click(within(dialog).getByRole('button', { name: 'Add' }));
 
     expect(await within(dialog).findByRole('button', { name: 'Adding…' })).toBeDisabled();
@@ -197,29 +209,38 @@ describe('ServicesOfferedPage — add', () => {
     expect(within(dialog).getByRole('combobox', { name: /Sub Category/ })).toHaveAttribute('aria-disabled', 'true');
   });
 
-  it('warns and blocks Add when neither Venue nor Host is on, and Both turns both back on', async () => {
+  it('warns and blocks Add when no lead type is on, and "All lead types" turns every kind back on', async () => {
     renderWithApollo(<ServicesOfferedPage />, [tableMock([service]), ...taxonomyMocks]);
     await screen.findByText('Sound System');
 
     const dialog = await openAddDialog();
+    const sw = (name: string) => within(dialog).getByRole('switch', { name });
     await pick(dialog, /Super Category/, 'Events');
     addTitle(dialog, 'Catering');
     const add = within(dialog).getByRole('button', { name: 'Add' });
     expect(add).toBeEnabled();
+    // Venue and Host start on, the newer kinds off, so "All" is not on yet.
+    expect(sw('Venue')).toBeChecked();
+    expect(sw('Host')).toBeChecked();
+    expect(sw('Ecomm')).not.toBeChecked();
+    expect(sw('All lead types')).not.toBeChecked();
 
-    fireEvent.click(within(dialog).getByRole('switch', { name: 'Both' }));
-    expect(within(dialog).getByRole('switch', { name: 'Venue' })).not.toBeChecked();
-    expect(within(dialog).getByRole('switch', { name: 'Host' })).not.toBeChecked();
-    expect(within(dialog).getByText('Turn on Venue, Host, or Both.')).toBeInTheDocument();
+    fireEvent.click(sw('All lead types'));
+    for (const kind of ['Venue', 'Host', 'Ecomm', 'Creator', 'Community', 'All lead types']) {
+      expect(sw(kind)).toBeChecked();
+    }
+
+    fireEvent.click(sw('All lead types'));
+    for (const kind of ['Venue', 'Host', 'Ecomm', 'Creator', 'Community']) {
+      expect(sw(kind)).not.toBeChecked();
+    }
+    expect(within(dialog).getByText('Turn on at least one lead type.')).toBeInTheDocument();
     expect(add).toBeDisabled();
 
-    fireEvent.click(within(dialog).getByRole('switch', { name: 'Host' }));
-    expect(within(dialog).getByRole('switch', { name: 'Host' })).toBeChecked();
-    expect(within(dialog).queryByText('Turn on Venue, Host, or Both.')).toBeNull();
-    expect(within(dialog).getByRole('switch', { name: 'Both' })).not.toBeChecked();
-
-    fireEvent.click(within(dialog).getByRole('switch', { name: 'Both' }));
-    expect(within(dialog).getByRole('switch', { name: 'Venue' })).toBeChecked();
+    fireEvent.click(sw('Ecomm'));
+    expect(sw('Ecomm')).toBeChecked();
+    expect(within(dialog).queryByText('Turn on at least one lead type.')).toBeNull();
+    expect(sw('All lead types')).not.toBeChecked();
     expect(add).toBeEnabled();
 
     fireEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
@@ -243,8 +264,9 @@ describe('ServicesOfferedPage — add', () => {
 });
 
 describe('ServicesOfferedPage — edit', () => {
-  it('saves the edited title, active flag and target, then reloads the table', async () => {
-    const updated = vi.fn(() => ({ data: { updateCrmServiceOffered: { ...service, title: 'PA System' } } }));
+  it('saves the edited title, active flag and all five targets, then reloads the table', async () => {
+    const edited = { ...service, title: 'PA System', is_active: false, applies_to_host: false, applies_to_ecomm: true };
+    const updated = vi.fn(() => ({ data: { updateCrmServiceOffered: edited } }));
     renderWithApollo(<ServicesOfferedPage />, [
       tableMock([service]),
       {
@@ -252,14 +274,22 @@ describe('ServicesOfferedPage — edit', () => {
           query: UPDATE_CRM_SERVICE_OFFERED,
           variables: {
             id: 's1',
-            input: { title: 'PA System', is_active: false, applies_to_venue: true, applies_to_host: false },
+            input: {
+              title: 'PA System',
+              is_active: false,
+              applies_to_venue: true,
+              applies_to_host: false,
+              applies_to_ecomm: true,
+              applies_to_creator: false,
+              applies_to_community: false,
+            },
           },
         },
         delay: 300,
         result: updated,
       },
       servicesOfferedRefetch,
-      tableMock([{ ...service, title: 'PA System', is_active: false, applies_to_host: false }]),
+      tableMock([edited]),
     ]);
     await screen.findByText('Sound System');
 
@@ -269,8 +299,12 @@ describe('ServicesOfferedPage — edit', () => {
     expect(title).toHaveValue('Sound System');
 
     fireEvent.change(title, { target: { value: '  PA System ' } });
+    // The dialog opens on the row's own targets.
+    expect(within(dialog).getByRole('switch', { name: 'Host' })).toBeChecked();
+    expect(within(dialog).getByRole('switch', { name: 'Ecomm' })).not.toBeChecked();
     fireEvent.click(within(dialog).getByRole('switch', { name: 'Active' }));
     fireEvent.click(within(dialog).getByRole('switch', { name: 'Host' }));
+    fireEvent.click(within(dialog).getByRole('switch', { name: 'Ecomm' }));
     fireEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
 
     expect(await within(dialog).findByRole('button', { name: 'Saving…' })).toBeDisabled();
@@ -287,7 +321,15 @@ describe('ServicesOfferedPage — edit', () => {
           query: UPDATE_CRM_SERVICE_OFFERED,
           variables: {
             id: 's1',
-            input: { title: 'Sound System', is_active: true, applies_to_venue: true, applies_to_host: true },
+            input: {
+              title: 'Sound System',
+              is_active: true,
+              applies_to_venue: true,
+              applies_to_host: true,
+              applies_to_ecomm: false,
+              applies_to_creator: false,
+              applies_to_community: false,
+            },
           },
         },
         result: { errors: [new GraphQLError('A service with this title already exists')] },
@@ -317,8 +359,10 @@ describe('ServicesOfferedPage — edit', () => {
     fireEvent.change(title, { target: { value: 'Sound System' } });
     expect(save).toBeEnabled();
 
-    fireEvent.click(within(dialog).getByRole('switch', { name: 'Both' }));
-    expect(within(dialog).getByText('Turn on Venue, Host, or Both.')).toBeInTheDocument();
+    // Venue + Host on: turning both off leaves no lead type.
+    fireEvent.click(within(dialog).getByRole('switch', { name: 'Venue' }));
+    fireEvent.click(within(dialog).getByRole('switch', { name: 'Host' }));
+    expect(within(dialog).getByText('Turn on at least one lead type.')).toBeInTheDocument();
     expect(save).toBeDisabled();
 
     fireEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));

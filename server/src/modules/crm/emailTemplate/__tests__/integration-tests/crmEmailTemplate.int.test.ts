@@ -1,8 +1,26 @@
 import { crmEmailTemplateService } from '../../crmEmailTemplate.service';
 import { CrmEmailTemplateModel } from '../../crmEmailTemplate.model';
+import { crmEmailSettingsService } from '../../crmEmailSettings.service';
 import { EmailTemplateModel } from '@modules/content/emailTemplate/emailTemplate.model';
+import * as coreTemplates from '@modules/content/emailTemplate/emailTemplate.service';
+import { emailFragmentService } from '@modules/content/emailFragment/emailFragment.service';
+import { STARTER_MJML } from '@services/email/catalogue/starter';
+import { EMAIL_COLOR as C } from '@services/email/catalogue/tokens';
+import { commsService } from '@services/comms/comms.service';
 
 const MJML = '<mjml><mj-body><mj-section><mj-column><mj-text>Hi {{ name }}</mj-text></mj-column></mj-section></mj-body></mjml>';
+
+/** A body painted with two shared tokens: the button primary and the brand red. */
+const TOKEN_MJML = [
+  '<mjml><mj-body><mj-section><mj-column>',
+  `<mj-text color="${C.brand}">Hi {{ name }}</mj-text>`,
+  `<mj-button background-color="${C.primary}" href="https://duncit.com">Book</mj-button>`,
+  '</mj-column></mj-section></mj-body></mjml>',
+].join('');
+
+const CRM_LOGO = 'https://cdn.example.com/crm-logo.png';
+
+afterEach(() => jest.restoreAllMocks());
 
 describe('crmEmailTemplateService integration', () => {
   it('creates in the CRM store only (not the core EmailTemplate collection)', async () => {
@@ -87,5 +105,184 @@ describe('crmEmailTemplateService integration', () => {
 
     const removed = await crmEmailTemplateService.removeImage(t!.template_id, 'https://x/a.png');
     expect(removed!.images).toHaveLength(0);
+  });
+});
+
+describe('the CRM look on render (theme + logo)', () => {
+  it('renders the shared tokens unchanged while the theme is at its defaults', async () => {
+    const r = await crmEmailTemplateService.render(TOKEN_MJML, JSON.stringify({ name: 'Sury' }));
+    expect(r.html).toContain(C.primary);
+    expect(r.html).toContain(C.brand);
+    expect(r.errors).toEqual([]);
+  });
+
+  it('puts the saved theme on every render, so existing templates follow a theme change', async () => {
+    await crmEmailSettingsService.updateTheme({ primary_color: '#123456', accent_color: '#0a0b0c' });
+
+    const r = await crmEmailTemplateService.render(TOKEN_MJML, JSON.stringify({ name: 'Sury' }));
+
+    expect(r.html).toContain('#123456');
+    expect(r.html).toContain('#0a0b0c');
+    expect(r.html).not.toContain(C.primary);
+    expect(r.html).not.toContain(C.brand);
+    expect(r.html).toContain('Sury');
+    expect(r.detected_variables).toEqual(['name']);
+  });
+
+  it('treats unparseable or non-object vars as none rather than failing', async () => {
+    const bad = await crmEmailTemplateService.render(MJML, '{not json');
+    expect(bad.html).toContain('{{ name }}');
+    const scalar = await crmEmailTemplateService.render(MJML, '42');
+    expect(scalar.html).toContain('{{ name }}');
+    expect(scalar.errors).toEqual([]);
+  });
+
+  describe('inside the SERVICE header and footer', () => {
+    beforeEach(async () => {
+      await emailFragmentService.seedDefaults();
+    });
+
+    it('shows the Duncit logo until a CRM logo is picked, then the CRM logo', async () => {
+      const { assets } = await crmEmailSettingsService.addAssets([{ kind: 'LOGO', url: CRM_LOGO }]);
+
+      const before = await crmEmailTemplateService.render(MJML, null);
+      expect(before.html).not.toContain(CRM_LOGO);
+      // The fragment's placeholders are all filled by the chrome values.
+      expect(before.html).not.toContain('{{brand_logo_url}}');
+      expect(before.html).not.toContain('{{app_name}}');
+
+      await crmEmailSettingsService.setPrimaryLogo(assets[0].id);
+      const after = await crmEmailTemplateService.render(MJML, null);
+      expect(after.html).toContain(CRM_LOGO);
+    });
+
+    it('lets an explicitly passed logo variable win over the picked CRM logo', async () => {
+      const { assets } = await crmEmailSettingsService.addAssets([{ kind: 'LOGO', url: CRM_LOGO }]);
+      await crmEmailSettingsService.setPrimaryLogo(assets[0].id);
+
+      const r = await crmEmailTemplateService.render(
+        MJML,
+        JSON.stringify({ brand_logo_url: 'https://cdn.example.com/override.png' })
+      );
+
+      expect(r.html).toContain('https://cdn.example.com/override.png');
+      expect(r.html).not.toContain(CRM_LOGO);
+    });
+  });
+});
+
+describe('crmEmailTemplateService.previewTheme', () => {
+  it('previews the starter under an unsaved theme without saving it', async () => {
+    const r = await crmEmailTemplateService.previewTheme({ primary_color: '#0d0e0f' });
+
+    expect(r.errors).toEqual([]);
+    expect(r.html).toContain('#0d0e0f');
+    expect(r.html).not.toContain(C.primary);
+    expect(r.detected_variables).toEqual(coreTemplates.detectVariables(STARTER_MJML));
+    expect((await crmEmailSettingsService.get()).theme.primary_color).toBe(C.primary);
+  });
+
+  it('falls back to the starter for a blank template and previews a given one otherwise', async () => {
+    const blank = await crmEmailTemplateService.previewTheme({}, '   ');
+    expect(blank.detected_variables).toEqual(coreTemplates.detectVariables(STARTER_MJML));
+
+    const given = await crmEmailTemplateService.previewTheme({ accent_color: '#00ff00' }, TOKEN_MJML);
+    expect(given.detected_variables).toEqual(['name']);
+    expect(given.html).toContain('#00ff00');
+  });
+
+  it('layers the draft over the saved theme', async () => {
+    await crmEmailSettingsService.updateTheme({ primary_color: '#123456' });
+
+    const r = await crmEmailTemplateService.previewTheme({ accent_color: '#00ff00' }, TOKEN_MJML);
+
+    expect(r.html).toContain('#123456');
+    expect(r.html).toContain('#00ff00');
+  });
+
+  it('shows the dark-mode sheet in AUTO and drops it in LIGHT', async () => {
+    const auto = await crmEmailTemplateService.previewTheme({ color_mode: 'AUTO' });
+    expect(auto.html).toContain('prefers-color-scheme: dark');
+
+    const light = await crmEmailTemplateService.previewTheme({ color_mode: 'LIGHT' });
+    expect(light.html).not.toContain('prefers-color-scheme');
+  });
+
+  it('refuses an invalid draft with the same message a save would give', async () => {
+    await expect(crmEmailTemplateService.previewTheme({ base_font_size: 40 })).rejects.toMatchObject({
+      message: 'base font size must be a whole number from 13 to 18',
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  });
+});
+
+describe('crmEmailTemplateService.starter', () => {
+  it('serves the shared starter body', () => {
+    expect(crmEmailTemplateService.starter()).toBe(STARTER_MJML);
+  });
+});
+
+describe('crmEmailTemplateService.sendTest', () => {
+  const sendSpy = (result = { ok: true, message: 'Sent' }) =>
+    jest.spyOn(commsService, 'sendEmail').mockResolvedValue(result as never);
+
+  it('sends the themed render with the subject filled and the attachments', async () => {
+    await crmEmailSettingsService.updateTheme({ primary_color: '#123456' });
+    const t = await crmEmailTemplateService.create({
+      slug: 'test-send',
+      name: 'Test send',
+      subject: 'Hi {{ name }}',
+      mjml: TOKEN_MJML,
+      attachments: [{ url: 'https://cdn.example.com/deck.pdf', name: 'Deck' }],
+    });
+    const send = sendSpy();
+
+    const result = await crmEmailTemplateService.sendTest(t!.template_id, 'lead@example.com', '{"name":"Sury"}', 'provider-1');
+
+    expect(result).toEqual({ ok: true, message: 'Sent' });
+    const sent = send.mock.calls[0][0];
+    expect(sent).toMatchObject({
+      to: 'lead@example.com',
+      subject: 'Hi Sury',
+      provider_id: 'provider-1',
+      attachments: [{ url: 'https://cdn.example.com/deck.pdf', name: 'Deck' }],
+    });
+    expect(sent.body).toContain('#123456');
+    expect(sent.body).not.toContain(C.primary);
+  });
+
+  it('defaults the provider to none and passes a failed send back', async () => {
+    const t = await crmEmailTemplateService.create({ slug: 'fail-send', name: 'Fail', subject: 'S', mjml: MJML });
+    const send = sendSpy({ ok: false, message: 'SMTP down' });
+
+    expect(await crmEmailTemplateService.sendTest(t!.template_id, 'lead@example.com')).toEqual({ ok: false, message: 'SMTP down' });
+    expect(send.mock.calls[0][0]).toMatchObject({ provider_id: null, attachments: [] });
+  });
+
+  it('does not send when the template cannot be rendered', async () => {
+    const t = await crmEmailTemplateService.create({ slug: 'broken', name: 'Broken', subject: 'S', mjml: MJML });
+    const send = sendSpy();
+    const render = jest.spyOn(coreTemplates, 'renderTemplateBody');
+
+    render.mockResolvedValueOnce({ html: '', errors: ['Malformed MJML'] });
+    expect(await crmEmailTemplateService.sendTest(t!.template_id, 'lead@example.com')).toEqual({
+      ok: false,
+      message: 'Malformed MJML',
+    });
+    render.mockResolvedValueOnce({ html: '', errors: [] });
+    expect(await crmEmailTemplateService.sendTest(t!.template_id, 'lead@example.com')).toEqual({
+      ok: false,
+      message: 'Could not render template',
+    });
+    expect(send).not.toHaveBeenCalled();
+  });
+
+  it('reports a missing template', async () => {
+    const send = sendSpy();
+    await expect(crmEmailTemplateService.sendTest('missing', 'lead@example.com')).rejects.toMatchObject({
+      message: 'CRM template not found',
+      extensions: { code: 'NOT_FOUND' },
+    });
+    expect(send).not.toHaveBeenCalled();
   });
 });

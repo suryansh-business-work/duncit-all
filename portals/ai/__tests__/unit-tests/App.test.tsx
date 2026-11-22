@@ -9,9 +9,11 @@ vi.mock('../../src/components/AppShell', () => ({
   default: ({ children }: { children: ReactNode }) => <div data-testid="shell">{children}</div>,
 }));
 vi.mock('../../src/pages/LoginPage', () => ({ default: () => <div>LOGIN PAGE</div> }));
-vi.mock('../../src/pages/WelcomePage', () => ({ default: () => <div>WELCOME PAGE</div> }));
+vi.mock('../../src/pages/overview-dashboard', () => ({ default: () => <div>AI DASHBOARD</div> }));
 vi.mock('../../src/pages/prompt-library', () => ({ default: () => <div>LIBRARY PAGE</div> }));
 vi.mock('../../src/pages/ai-features', () => ({ default: () => <div>AI FEATURES PAGE</div> }));
+vi.mock('../../src/pages/ai-features-dashboard', () => ({ default: () => <div>AI FEATURES DASHBOARD</div> }));
+vi.mock('../../src/pages/library-dashboard', () => ({ default: () => <div>AI LIBRARY DASHBOARD</div> }));
 vi.mock('../../src/pages/ai-features/detail', async () => {
   const { useParams } = await import('react-router');
   return { default: () => <div>AI FEATURE {useParams().key}</div> };
@@ -33,11 +35,11 @@ describe('App routing', () => {
     expect(screen.getByText('LOGIN PAGE')).toBeInTheDocument();
   });
 
-  it('renders the welcome page inside the shell when authenticated', () => {
+  it('renders the AI Dashboard inside the shell when authenticated', () => {
     setToken('tok');
     renderWithProviders(<App />, { initialEntries: ['/'] });
     expect(screen.getByTestId('shell')).toBeInTheDocument();
-    expect(screen.getByText('WELCOME PAGE')).toBeInTheDocument();
+    expect(screen.getByText('AI DASHBOARD')).toBeInTheDocument();
   });
 
   it('renders the prompt library behind auth', () => {
@@ -50,6 +52,24 @@ describe('App routing', () => {
     setToken('tok');
     renderWithProviders(<App />, { initialEntries: ['/ai-features'] });
     expect(screen.getByText('AI FEATURES PAGE')).toBeInTheDocument();
+  });
+
+  it('opens the AI Features dashboard, not a feature called "dashboard"', () => {
+    setToken('tok');
+    renderWithProviders(<App />, { initialEntries: ['/ai-features/dashboard'] });
+    expect(screen.getByText('AI FEATURES DASHBOARD')).toBeInTheDocument();
+    expect(screen.queryByText(/AI FEATURE dashboard/)).toBeNull();
+  });
+
+  it('opens the AI Library dashboard behind auth', () => {
+    setToken('tok');
+    renderWithProviders(<App />, { initialEntries: ['/library/dashboard'] });
+    expect(screen.getByText('AI LIBRARY DASHBOARD')).toBeInTheDocument();
+  });
+
+  it('keeps both dashboards behind the login', () => {
+    renderWithProviders(<App />, { initialEntries: ['/library/dashboard'] });
+    expect(screen.getByText('LOGIN PAGE')).toBeInTheDocument();
   });
 
   it('hands a feature page its key from the path', () => {
@@ -74,10 +94,10 @@ describe('App routing', () => {
     expect(screen.getByText('LOGIN PAGE')).toBeInTheDocument();
   });
 
-  it('redirects unknown routes to the welcome page', () => {
+  it('redirects unknown routes to the AI Dashboard', () => {
     setToken('tok');
     renderWithProviders(<App />, { initialEntries: ['/nope'] });
-    expect(screen.getByText('WELCOME PAGE')).toBeInTheDocument();
+    expect(screen.getByText('AI DASHBOARD')).toBeInTheDocument();
   });
 
   // Reel Studio moved to the Marketing console; its old addresses say so,

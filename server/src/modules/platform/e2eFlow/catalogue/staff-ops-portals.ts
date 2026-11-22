@@ -1577,7 +1577,23 @@ export const STAFF_OPS_PORTAL_FLOWS: readonly CatalogueFlow[] = [
           ['Open the Commercial tab', 'Pricing models, Expected charges, Security deposit, GST, Invoice'],
           ['Open the Linked Hosts tab and click a host', 'Navigates to that host lead\'s detail page'],
           ['Open the Custom Fields tab with none defined', '"No custom fields defined yet. Open Settings → Dynamic Fields to add some."'],
-          ['Click "Ask AI" and choose "Summarise this lead"', 'The drawer answers with a summary using the lead, reminders and fetched website pages'],
+          ['Click "Ask AI" and choose "Summarise this lead and where we stand"', 'The drawer answers from the lead, its notes, emails, calls, reminders and fetched website pages'],
+        ],
+      },
+      {
+        name: 'Ask AI on a lead',
+        description: 'Venue, host, ecomm, creator and community lead pages: context panel, saved conversation, email drafts and reminders.',
+        steps: [
+          ['Open a lead and click "Ask AI"', 'The drawer opens with "What the assistant knows": tokens, size in KB and the number of sources'],
+          ['Expand the context panel', 'Lead profile, Notes, Activity log, Emails, Calls and transcripts, Reminders and follow-ups, Website pages and This conversation, each with items and tokens; a budget-cut source shows "Trimmed"'],
+          ['Ask "Draft a follow-up email"', 'The answer carries an "Email draft" card with To, Subject and a preview'],
+          ['Click "Review and send", edit the body and send', 'The lead email composer opens pre-filled; after sending the card shows Done and the email appears under Communications'],
+          ['Ask "Schedule a follow-up reminder for Monday 11am"', 'A "New reminder" card with the title and the due time in the admin time zone'],
+          ['Click "Create reminder"', 'The card shows Done and the reminder appears in the Reminders tab and on the calendar'],
+          ['Ask to mark that reminder done, then click "Apply change"', 'The reminder is marked done in the Reminders tab'],
+          ['Close and reopen the drawer', 'The conversation and each card’s outcome are still there'],
+          ['Click "Start a new conversation"', 'The thread empties and the starter questions return; notes, emails and reminders are untouched'],
+          ['Sign in as another CRM manager and open the same lead', 'Their Ask AI thread is empty: conversations are per agent'],
         ],
       },
       {
@@ -1685,19 +1701,62 @@ export const STAFF_OPS_PORTAL_FLOWS: readonly CatalogueFlow[] = [
     ],
   },
   {
+    name: 'CRM: Creators Leads and Community Leads',
+    description: 'Creator and community prospects at /creator-leads and /community-leads (list, /new, /:id, /:id/view), with Dynamic Fields opted in per kind.',
+    sub_flows: [
+      {
+        name: 'Create and work a creator lead',
+        description: 'Six-section creator form, detail tabs and delete.',
+        steps: [
+          ['Open Leads > Creators Leads', 'Heading "Creators Leads", a table with Creator / Primary platform columns and "New Creator Lead"'],
+          ['Click "Create creator lead" with everything empty', 'Top alert lists "Super category is required", "Creator name is required" and the primary contact errors'],
+          ['Enter Engagement rate "120"', 'Error "Engagement rate must be a number from 0 to 100"'],
+          ['Fill super category, Creator name, primary contact, platform Instagram and followers 48200, then create', 'Back on /creator-leads with the lead listed as New / Medium'],
+          ['Create another creator lead with the same primary mobile', 'Alert "A creator lead with this phone number already exists. Each lead must have a unique phone number."'],
+          ['Open the detail page', 'Tabs Overview, Contacts (1), Custom Fields, Manual Logs, Communications; Overview shows followers and engagement'],
+          ['Add a manual log, then email the contact from the Contacts tab', 'The note appears under Manual Logs and the email under Communications'],
+          ['Delete the lead from the list', 'Confirm "Delete creator lead"; toast "Creator lead deleted"'],
+        ],
+      },
+      {
+        name: 'Create a community lead',
+        description: 'Community profile, size and meetups.',
+        steps: [
+          ['Open Leads > Community Leads and click "New Community Lead"', '/community-leads/new with sections 1. Profile to 6. Internal Tracking'],
+          ['Enter Members "lots"', 'Error "Members must be a whole number"'],
+          ['Fill super category, Community name, type Running Club, platform WhatsApp, members 320 and a primary contact, then create', 'The lead is listed with its Community type and City'],
+          ['Open it and press Edit, change Meetup frequency and use "Update & Continue"', 'Notice "Lead updated" and the form stays open'],
+        ],
+      },
+      {
+        name: 'Dynamic fields for creator and community leads',
+        description: 'Opt-in flags on Settings > Dynamic Fields.',
+        steps: [
+          ['Add a dynamic field with only "Applies to Creator leads" ticked', 'The row shows a "Creator" chip in Applies to'],
+          ['Open a new creator lead form, section 5', 'The new field is offered under Custom fields'],
+          ['Open a new community lead form, section 5', 'The creator-only field is not offered'],
+        ],
+      },
+    ],
+  },
+  {
     name: 'CRM: Lead calls and emails',
-    description: 'Twilio bridged calls, AI calls, WhatsApp links and template emails from a venue or host lead detail page, recorded in the Communications tab.',
+    description: 'Twilio bridged calls, AI calls, WhatsApp links and template emails from any lead detail page (venue, host, ecomm, creator, community), recorded in the Communications tab.',
     sub_flows: [
       {
         name: 'Place a bridged call',
-        description: 'Call dialog with live status.',
+        description: 'Floating call window with setup checks, live status, controls and transcript.',
         steps: [
           ['On a lead without a mobile hover Call', 'Disabled with "No phone number on file"'],
-          ['Click Call on a lead with a mobile', 'Dialog "Call · <venue>" with CALL FROM (Twilio number) → CALL TO and "Start Call"'],
-          ['Click "Start Call" with Twilio not configured', 'Red alert "Twilio is not configured. Set the TWILIO account SID, auth token and phone number in the Tech portal."'],
-          ['With Twilio configured click "Start Call"', 'Status moves Connecting… → Ringing… → In call → Call over via live updates'],
-          ['Open the Communications tab', 'A "Portal Call" CALL log with status and a transcript chip'],
-          ['Click "Get transcript" on a recorded call', 'The transcript text appears once ready'],
+          ['Click Call on a lead with a mobile', 'Floating window "Call · <lead>" with Call from (Twilio number), Call to, Your phone and "Start Call"'],
+          ['Open it with Twilio not configured', 'Warning "Twilio is not configured" naming the missing fields, "No Number Configured", Start Call disabled; a Tech manager sees a "Configure Twilio" link to the Tech portal Twilio section'],
+          ['With Twilio configured click "Start Call"', 'Status moves Connecting… → Ringing… → In call → Call over via live updates, with a duration clock'],
+          ['Once connected click Mute, then Hold', 'The buttons turn to Unmute / Resume and the status shows "On hold"'],
+          ['Speak on the call', 'Lines appear in the Transcript panel labelled You / Contact with times; the search box filters them'],
+          ['Minimize, then Restore; Maximize, then Restore', 'The minimized bar keeps status, duration, Mute and End; Restore returns the window to its size and place'],
+          ['Click Close during the call', '"The call is still active" with Continue call (default) and End call and close'],
+          ['Open the Communications tab after the call', 'A "Portal Call" CALL log with the transcript by speaker and an AI summary (sentiment, outcome, key points, follow-ups)'],
+          ['Click "Get transcript" on a recorded call without a live transcript', 'The transcript text appears once ready, then its summary'],
         ],
       },
       {
@@ -2089,6 +2148,61 @@ export const STAFF_OPS_PORTAL_FLOWS: readonly CatalogueFlow[] = [
           ['Open a payment whose core failed and click "Retry all failed"', 'Confirm "Re-run the whole checkout?" explaining an existing booking is reused'],
           ['Click Re-run', 'The booking, seat and ticket are written and the "Checkout finalization failed" warning disappears'],
           ['Retry on a refunded payment via the API', 'Server refuses "This payment has been refunded — there is nothing to re-run"'],
+        ],
+      },
+    ],
+  },
+  {
+    name: 'Finance: Failed Payments',
+    description: 'Pod-booking checkouts that did not book, the buyer’s deduction claim, the AI + Razorpay check, Review, refund and the Razorpay webhook, at /failed-payments and /failed-payments/:id.',
+    sub_flows: [
+      {
+        name: 'Browse failed payments',
+        description: 'Table with row colours and filters.',
+        steps: [
+          ['Open /failed-payments as FINANCE_USER', 'The table lists cases newest first; no Refund, Review or Not refundable buttons are shown'],
+          ['Filter Verification to MATCHED', 'Only green rows remain'],
+          ['Search by a Razorpay payment id', 'Only the case for that payment shows'],
+          ['Call initiateFailedPaymentRefund as FINANCE_USER via the API', 'Server refuses with FORBIDDEN'],
+        ],
+      },
+      {
+        name: 'Buyer claims a deduction',
+        description: 'Claim from the failure dialog opens one PAYMENT ticket.',
+        steps: [
+          ['Fail a pod checkout in the app and open "My payment was deducted but booking was not completed"', 'The claim dialog offers screenshot, bank statement or transaction ID'],
+          ['Submit a transaction ID', 'Ticket ST-… is shown; Finance sees the case with the ticket number'],
+          ['Submit again for the same payment', 'The same ticket comes back marked already open; no second ticket exists'],
+          ['Submit a file uploaded by another account via the API', 'Server refuses with BAD_USER_INPUT'],
+        ],
+      },
+      {
+        name: 'Refund a matched case',
+        description: 'Green row refunded once through Razorpay.',
+        steps: [
+          ['Click Refund on a green row as FINANCE_MANAGER', 'The confirm dialog shows the amount and the Razorpay payment id'],
+          ['Confirm', 'Refund status turns PROCESSED (or PENDING until Razorpay confirms); the ticket is resolved with the refund id and the buyer gets the refund email'],
+          ['Click Refund again or call the mutation twice in parallel', 'Only one Razorpay refund exists for the payment'],
+          ['Open /user-refund-logs', 'The refund appears once'],
+        ],
+      },
+      {
+        name: 'Review, reject and bank reversal',
+        description: 'Yellow cases and never-captured payments.',
+        steps: [
+          ['Open a yellow case and approve it in Review', 'The row turns green and Refund is enabled'],
+          ['Reject another yellow case with a note', 'The case is REJECTED and the ticket is resolved with the note'],
+          ['Mark a NOT_CAPTURED case not refundable with a note', 'The case is NOT_REFUNDABLE and the ticket explains the bank reversal'],
+          ['Open a PDF evidence file', 'It opens through a short-lived signed link'],
+        ],
+      },
+      {
+        name: 'Razorpay webhook',
+        description: 'POST /webhooks/razorpay.',
+        steps: [
+          ['POST a payment.failed event with a wrong signature', 'HTTP 400 and nothing is recorded'],
+          ['POST a correctly signed payment.failed event', 'HTTP 200; the case shows the Razorpay error and a WEBHOOK_PAYMENT_FAILED timeline row'],
+          ['Redeliver the same event id', 'HTTP 200 marked duplicate; nothing changes'],
         ],
       },
     ],

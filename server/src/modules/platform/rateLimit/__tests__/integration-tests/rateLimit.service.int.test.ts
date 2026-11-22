@@ -12,6 +12,7 @@ jest.mock('../../rateLimit.enforcer', () => ({
   invalidateRateLimitCache: jest.fn(),
 }));
 
+import { Types } from 'mongoose';
 import { rateLimitService } from '../../rateLimit.service';
 import { flushRateLimitCounters, invalidateRateLimitCache } from '../../rateLimit.enforcer';
 import { RateLimitEventModel, RateLimitRuleModel, RateLimitSystemModel } from '../../rateLimit.model';
@@ -64,7 +65,10 @@ describe('rules', () => {
     const early = await rateLimitService.createRule(ruleInput({ name: 'Early', priority: 1 }));
     expect((await rateLimitService.listRules()).map((r) => r.name)).toEqual(['Early', 'Late']);
     expect((await rateLimitService.getRule(String(early._id)))?.name).toBe('Early');
-    expect(await rateLimitService.getRule(String(late._id).replace(/.$/, '0'))).toBeNull();
+    // A fresh id, never the old trick of changing the last digit to 0 — which
+    // failed whenever the real id already ended in 0.
+    expect(await rateLimitService.getRule(new Types.ObjectId().toHexString())).toBeNull();
+    expect(late.name).toBe('Late');
   });
 
   it('flushes the counters before a table read so hit counts are current', async () => {
@@ -84,6 +88,31 @@ describe('rules', () => {
     await RateLimitRuleModel.deleteMany({});
     expect(await rateLimitService.updateRule(String(doc._id), { limit: 1 })).toBeNull();
     expect(invalidateRateLimitCache).toHaveBeenCalledTimes(3);
+  });
+
+  it('holds an edit to the same limits as a new rule — a limit of 0 or an unknown mode is refused and nothing changes', async () => {
+    const doc = await rateLimitService.createRule(ruleInput({ limit: 50 }));
+    await expect(rateLimitService.updateRule(String(doc._id), { limit: 0 })).rejects.toMatchObject({
+      extensions: { code: 'BAD_USER_INPUT', errors: [expect.stringContaining('limit')] },
+    });
+    await expect(rateLimitService.updateRule(String(doc._id), { mode: 'BLOCK_EVERYONE', window_seconds: 0 })).rejects.toMatchObject({
+      extensions: { code: 'BAD_USER_INPUT', errors: expect.arrayContaining([expect.stringContaining('mode'), expect.stringContaining('window_seconds')]) },
+    });
+    expect((await RateLimitRuleModel.findById(doc._id).lean())?.limit).toBe(50);
+  });
+
+  it('refuses a new rule outside the limits as invalid input, not a server error', async () => {
+    await expect(rateLimitService.createRule(ruleInput({ limit: 0 }))).rejects.toMatchObject({
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+    expect(await RateLimitRuleModel.countDocuments()).toBe(0);
+  });
+
+  it('passes on a failure that is not a validation error', async () => {
+    const boom = new Error('connection reset');
+    const spy = jest.spyOn(RateLimitRuleModel, 'create').mockRejectedValueOnce(boom as never);
+    await expect(rateLimitService.createRule(ruleInput())).rejects.toBe(boom);
+    spy.mockRestore();
   });
 
   it('switches a rule off and on', async () => {

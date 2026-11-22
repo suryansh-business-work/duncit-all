@@ -45,6 +45,8 @@ export function hostToValues(host: HostDetail): HostFormValues {
     // that as 0 — so an unset commission reads the same as one set to inherit.
     host_commission_pct: host.host_commission_pct ?? blankHostValues.host_commission_pct,
     venue_requests_limit_override: podRequestOverrideText(host.venue_requests_limit_override),
+    // The same text-box convention: empty means "not set", never 0.
+    pod_min_advance_days_override: podRequestOverrideText(host.pod_min_advance_days_override),
   };
 }
 

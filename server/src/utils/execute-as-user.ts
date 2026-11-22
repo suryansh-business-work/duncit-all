@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express';
 import type { ApolloServer } from '@apollo/server';
 import type { DocumentNode, GraphQLFormattedError } from 'graphql';
-import type { AuthUser, GraphQLContext } from '@context';
+import type { AuthUser, CallerClient, GraphQLContext } from '@context';
 import { requestIdentity } from '@observability/requestIdentity';
 import { NO_CONSENT } from '@utils/consent';
 
@@ -26,6 +26,12 @@ export interface UserCaller {
   res: Response;
   /** Wired once per HTTP request (watchClientPresence) — not once per operation. */
   isClientGone: () => boolean;
+  /**
+   * Who the rate limiter should count this as. The HTTP request belongs to the
+   * integration (an AI client sends no x-duncit-* headers), so without a label
+   * its operations land under "Unidentified caller".
+   */
+  client?: CallerClient;
 }
 
 export interface UserOperation {
@@ -40,7 +46,7 @@ export interface OperationResult {
 }
 
 export async function executeAsUser(caller: UserCaller, operation: UserOperation): Promise<OperationResult> {
-  const { apollo, user, req, res, isClientGone } = caller;
+  const { apollo, user, req, res, isClientGone, client } = caller;
   const contextValue: GraphQLContext = {
     req,
     res,
@@ -49,6 +55,7 @@ export async function executeAsUser(caller: UserCaller, operation: UserOperation
     consent: NO_CONSENT,
     noRedis: true,
     isClientGone,
+    ...(client ? { client } : {}),
   };
   const identity = {
     ...requestIdentity.current(),

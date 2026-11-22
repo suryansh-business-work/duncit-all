@@ -287,8 +287,6 @@ export const AVAILABILITY_BUNDLE: NestedCatalogue = {
       removeSlot: 'Remove slot',
       noSlots: 'No slots yet — add the windows hosts can book.',
       feesTitle: 'Fees',
-      minSpend: 'Minimum spend (₹)',
-      minSpendHint: 'A booking below this is topped up to it.',
       deposit: 'Refundable deposit (₹)',
       depositHint: 'Collected at the venue — not part of the booking price.',
       cleaningFee: 'Cleaning fee (₹)',
@@ -352,7 +350,6 @@ export const AVAILABILITY_BUNDLE: NestedCatalogue = {
       },
       breakdown: {
         base: 'Base price',
-        minSpendTopUp: 'Minimum spend top-up',
         cleaningFee: 'Cleaning fee',
         petFee: 'Pet fee',
         taxes: 'GST',
@@ -665,9 +662,16 @@ export const AVAILABILITY_BUNDLE: NestedCatalogue = {
         notSet: 'Not set yet',
         // On Create Pod's offer step, above the offer.
         createPodTitle: 'Minimum business for this venue',
-        createPodHint: 'Your offer must be at least the amount for the way you pay.',
+        createPodHint: 'Your offer must be at least the amount for the way you pay, and reach the minimum spend.',
         // Under the amount field when the offer is below the venue's amount.
         offerBelow: 'This venue takes at least {min} — raise your offer to continue',
+      },
+      // The least one booking's offer must come to (Fees & Minimum Spend) — shown
+      // on Create Pod and checked there, on a host's counter and by the server.
+      minSpend: {
+        amount: 'Minimum spend {amount} per booking',
+        offerBelow:
+          'This venue’s minimum spend is {min} per booking — your offer comes to {offered}, {shortfall} short. Raise your offer to continue.',
       },
       // The host's ask beside the price, on Create Pod and a new offer (mWeb,
       // the Partners console and the app): what the venue should provide, a
@@ -763,6 +767,25 @@ export const AVAILABILITY_BUNDLE: NestedCatalogue = {
       termsPending: 'Waiting for the venue',
       // Completing a pod whose venue was free: it is owed nothing, so a bill proves only extras.
       freeVenueBillHint: 'Free venue — upload its bill only if it charged extra.',
+    },
+    // A venue's Fees & Minimum Spend as a host sees it on the Venues list and
+    // Venue Details (mWeb + app), with the button that starts a pod there.
+    hostTerms: {
+      hint: 'What your offer must meet, and what is added to the venue’s price.',
+      // The translator picks .one / .other from count.
+      minGuests: {
+        one: 'Paid for at least {count} guest',
+        other: 'Paid for at least {count} guests',
+      },
+      cleaningFee: 'Cleaning fee {amount}',
+      petFee: 'Pet fee {amount}, only when pets come',
+      deposit: 'Refundable deposit {amount}, settled at the venue',
+      gst: 'GST is added to the venue’s price',
+      none: 'This venue sets no minimums or extra fees.',
+      pickForPod: 'Pick This Venue for Pod',
+      // Native names the screen when the host lands on Create Pod from the button.
+      pickForPodHint: 'Opens Create Pod with this venue and a physical pod already chosen.',
+      loadFailed: 'Could not load this venue’s fees and minimum spend.',
     },
     upcomingBookings: {
       title: 'Upcoming bookings',

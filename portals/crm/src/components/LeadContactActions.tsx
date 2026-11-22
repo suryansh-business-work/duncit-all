@@ -18,11 +18,13 @@ import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import EmailIcon from '@mui/icons-material/Email';
 import { DuncitButton } from '@duncit/buttons';
 import ContactComposeDialog from './ContactComposeDialog';
-import { PortalCallDialog, AiCallDialog } from './call';
+import { AiCallDialog } from './call';
+import { useCallWindow } from './call-window';
+import type { CrmLeadEntityType } from '../api/crm.types';
 import { useTranslation } from '@duncit/shell';
 
 interface Props {
-  entity: 'VENUE_LEAD' | 'HOST_LEAD';
+  entity: CrmLeadEntityType;
   leadId: string;
   displayName: string;
   email?: string | null;
@@ -38,15 +40,15 @@ const BTN_SX = { textTransform: 'none', height: CALL_HEIGHT, minHeight: CALL_HEI
 
 /**
  * Quick contact actions beneath the lead title. The Call action is a split
- * button: the primary action places a portal call (Twilio bridges the agent's
- * phone to the customer); the dropdown offers "AI Call" (Servam agent + a
+ * button: the primary action opens the app's call window (Twilio bridges the
+ * agent's phone to the customer, with mute, hold and a live transcript); the dropdown offers "AI Call" (Servam agent + a
  * Static Content prompt + Servam voice). WhatsApp deep-links; Email opens the
  * compose/log window. Buttons disable when the contact detail is missing.
  */
 export default function LeadContactActions({ entity, leadId, displayName, email, mobile, whatsapp, variableValues }: Readonly<Props>) {
   const { t } = useTranslation();
   const [emailOpen, setEmailOpen] = useState(false);
-  const [portalOpen, setPortalOpen] = useState(false);
+  const callWindow = useCallWindow();
   const [aiOpen, setAiOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
@@ -71,7 +73,7 @@ export default function LeadContactActions({ entity, leadId, displayName, email,
       <Tooltip title={mobile ? `Call ${mobile}` : 'No phone number on file'}>
         <span>
           <ButtonGroup variant="outlined" size="small" ref={anchorRef} disabled={!mobile} aria-label={t('crm.components.callOptions')} sx={{ height: CALL_HEIGHT }}>
-            <DuncitButton startIcon={<PhoneIcon />} onClick={() => setPortalOpen(true)} sx={BTN_SX}>
+            <DuncitButton startIcon={<PhoneIcon />} onClick={() => callLead && callWindow?.openCall(callLead)} disabled={!callWindow} sx={BTN_SX}>
               Call
             </DuncitButton>
             <DuncitButton size="small" onClick={() => setMenuOpen((v) => !v)} aria-label={t('crm.components.moreOptions')} aria-haspopup="menu" aria-expanded={menuOpen} data-testid="lead-call-options" sx={{ px: 0.5, height: CALL_HEIGHT, minHeight: CALL_HEIGHT }}>
@@ -91,7 +93,7 @@ export default function LeadContactActions({ entity, leadId, displayName, email,
                   // Escape closes the menu the way a click outside does (2.1.2).
                   onKeyDown={(event) => { if (event.key === 'Escape' || event.key === 'Tab') setMenuOpen(false); }}
                 >
-                  <MenuItem onClick={() => { setMenuOpen(false); setPortalOpen(true); }}>
+                  <MenuItem disabled={!callWindow} onClick={() => { setMenuOpen(false); if (callLead) callWindow?.openCall(callLead); }}>
                     <PhoneIcon fontSize="small" sx={{ mr: 1 }} /> Call
                   </MenuItem>
                   <MenuItem onClick={() => { setMenuOpen(false); setAiOpen(true); }}>
@@ -126,7 +128,6 @@ export default function LeadContactActions({ entity, leadId, displayName, email,
         </span>
       </Tooltip>
 
-      <PortalCallDialog open={portalOpen} lead={callLead} onClose={() => setPortalOpen(false)} />
       <AiCallDialog open={aiOpen} lead={callLead} onClose={() => setAiOpen(false)} />
       <ContactComposeDialog
         open={emailOpen}

@@ -88,7 +88,10 @@ const WHO: Record<VenueOfferParty, string> = { HOST: 'The host', VENUE: 'The ven
 export const venueOfferReviseService = {
   /** The edit priced before it is saved — exactly what `editCounter` would freeze. Never throws for a refusal. */
   async editPreview(userId: string, podId: string, terms: VenueOfferMoveTerms) {
-    return previewOf(async () => pricedMove((await ownCounter(userId, podId)).slot, terms, ''));
+    return previewOf(async () => {
+      const own = await ownCounter(userId, podId);
+      return pricedMove(own.slot, terms, '', own.side);
+    });
   },
 
   /** The side's latest counter, changed before the other side saw it. The answer then waits on the new terms. */
@@ -97,7 +100,7 @@ export const venueOfferReviseService = {
     const offer = own.slot.offer;
     assertRound(offer, round);
     const line = await unseenLine(own);
-    const proposal = await pricedMove(own.slot, terms, note);
+    const proposal = await pricedMove(own.slot, terms, note, own.side);
     const at = new Date();
     const terms$ = own.side === 'VENUE' ? { 'offer.counter': { ...proposal, at } } : hostTermsSet(proposal);
     const updated = await VenueSlotModel.findOneAndUpdate(

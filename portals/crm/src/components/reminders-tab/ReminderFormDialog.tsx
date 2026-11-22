@@ -26,12 +26,14 @@ interface Props {
   leadId?: string | null;
   /** Editing an existing reminder, or null to create. */
   reminder: CrmReminder | null;
+  /** Values to start a NEW reminder from (an Ask AI proposal). Ignored when editing. */
+  draft?: { title?: string | null; due_at?: string | null; notes?: string | null } | null;
   onClose: () => void;
   onSaved: () => void;
   refetchQueries?: any[];
 }
 
-export default function ReminderFormDialog({ open, entity, leadId, reminder, onClose, onSaved, refetchQueries }: Readonly<Props>) {
+export default function ReminderFormDialog({ open, entity, leadId, reminder, draft, onClose, onSaved, refetchQueries }: Readonly<Props>) {
   const { t } = useTranslation();
   const [title, setTitle] = useState('');
   const [dueAt, setDueAt] = useState<Date | null>(null);
@@ -44,10 +46,11 @@ export default function ReminderFormDialog({ open, entity, leadId, reminder, onC
   useEffect(() => {
     if (!open) return;
     setError(null);
-    setTitle(reminder?.title ?? '');
-    setDueAt(reminder?.due_at ? new Date(reminder.due_at) : new Date());
-    setNotes(reminder?.notes ?? '');
-  }, [open, reminder]);
+    const source = reminder ?? draft;
+    setTitle(source?.title ?? '');
+    setDueAt(source?.due_at ? new Date(source.due_at) : new Date());
+    setNotes(source?.notes ?? '');
+  }, [open, reminder, draft]);
 
   const save = async () => {
     if (!dueAt || Number.isNaN(dueAt.getTime())) { setError(t('crm.components.pickAValidDueDateAnd')); return; }

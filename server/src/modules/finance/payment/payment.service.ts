@@ -14,6 +14,7 @@ import { generateInvoicePdf } from '@services/invoice/invoice.pdf';
 import { paymentFinalizer } from './payment.finalize';
 import { roundOffOf, roundUpBill } from './payment.roundoff';
 import { PAYMENT_SHOP_FILTER, type PaymentShop } from './payment.source';
+import { recordPaymentEvent } from '@modules/finance/failedPayment/paymentEvent.service';
 import {
   createRazorpayOrder,
   getRazorpayKeys,
@@ -1048,6 +1049,13 @@ export async function verifyRazorpayAndSettle(doc: IPayment, input: any, compone
       payment_id: doc.payment_id,
       msg: 'Razorpay signature refused — payment left PENDING for the reconciler',
     });
+    // Audit trail only (never throws): a refused verify is a step Finance reads.
+    await recordPaymentEvent({
+      paymentDocId: doc._id,
+      type: 'VERIFY_FAILED',
+      source: 'SERVER',
+      data: { razorpay_order_id: input.razorpay_order_id, razorpay_payment_id: input.razorpay_payment_id, component },
+    });
     throw new GraphQLError('Payment signature verification failed', {
       extensions: { code: 'BAD_USER_INPUT' },
     });
@@ -1063,6 +1071,13 @@ export async function verifyRazorpayAndSettle(doc: IPayment, input: any, compone
     razorpay_payment_id: input.razorpay_payment_id,
   };
   await doc.save();
+  await recordPaymentEvent({
+    paymentDocId: doc._id,
+    type: 'CAPTURED',
+    source: 'SERVER',
+    data: { razorpay_order_id: input.razorpay_order_id, razorpay_payment_id: input.razorpay_payment_id, component },
+    dedupeKey: `captured:${String(doc._id)}:${input.razorpay_payment_id}`,
+  });
   const settled = await settle(String(doc._id), 'Razorpay', component);
   await settleGroupSiblings(doc, input.razorpay_payment_id, input.razorpay_order_id, component);
   return settled;
@@ -1114,7 +1129,8 @@ async function whatsappRefund(doc: IPayment, refundDays: string): Promise<void> 
   });
 }
 
-async function mailRefund(doc: IPayment, reason?: string): Promise<void> {
+// Exported for Finance › Failed Payments, whose refunds tell the buyer the same way.
+export async function mailRefund(doc: IPayment, reason?: string): Promise<void> {
   try {
     if (!doc.user_email) return;
     const [fs, urls] = await Promise.all([getFinanceSettings(), getUrlConfigs()]);
@@ -1446,6 +1462,12 @@ export const paymentService = {
       gateway_ref: order.id,
       paid_at: null,
       metadata: { ...metadata, razorpay_order_id: order.id },
+    });
+    await recordPaymentEvent({
+      paymentDocId: doc._id,
+      type: 'ORDER_CREATED',
+      source: 'SERVER',
+      data: { razorpay_order_id: order.id, amount_paise: amountPaise, target_type: base.target_type },
     });
 
     return razorpaySheet({

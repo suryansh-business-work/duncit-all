@@ -27,6 +27,7 @@ const ALL_ON: ProfileMenuFlags = {
   membership: true,
   gift_cards: true,
   tour_guide: true,
+  ask_duncit: true,
   products: true,
 };
 const ALL_OFF: ProfileMenuFlags = {};
@@ -179,7 +180,7 @@ describe('parseStoredQuickAccess', () => {
 describe('profileMenuSections', () => {
   it('groups every row into the six sections, in order, with every flag on', () => {
     expect(sectionKeys(ALL_ON)).toEqual([
-      { id: 'explore', items: ['ideas', 'leaderboard', 'badges'] },
+      { id: 'explore', items: ['ask-duncit', 'ideas', 'leaderboard', 'badges'] },
       { id: 'work', items: ['gigs', 'membership'] },
       { id: 'loyalty', items: ['duncit-coin', 'gift-cards-buy', 'gift-cards-redeem', 'referral'] },
       { id: 'shopping', items: ['shop', 'cart', 'food-orders', 'orders', 'addresses', 'rentals'] },
@@ -299,6 +300,7 @@ describe('profileMenuFlagsFrom', () => {
       membership: false,
       gift_cards: false,
       tour_guide: false,
+      ask_duncit: false,
       products: true,
     });
   });
@@ -310,6 +312,7 @@ describe('profileMenuFlagsFrom', () => {
       membership: false,
       gift_cards: false,
       tour_guide: false,
+      ask_duncit: false,
       products: false,
     };
     expect(profileMenuFlagsFrom(undefined, 'is_product_visible')).toEqual(off);

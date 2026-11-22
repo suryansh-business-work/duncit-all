@@ -36,7 +36,7 @@ describe('buildRazorpayHtml', () => {
     expect(html).toContain('order_9');
   });
 
-  it('asks Razorpay to list the phone\'s UPI apps', () => {
+  it("asks Razorpay to list the phone's UPI apps", () => {
     expect(buildRazorpayHtml(order)).toContain('"webview_intent":true');
   });
 });
@@ -49,7 +49,9 @@ describe('shouldLoadInSheet', () => {
   afterEach(() => openURL.mockRestore());
 
   it('keeps Razorpay and bank pages inside the sheet', () => {
-    expect(shouldLoadInSheet({ url: 'https://api.razorpay.com/v1/payments/create/checkout' })).toBe(true);
+    expect(shouldLoadInSheet({ url: 'https://api.razorpay.com/v1/payments/create/checkout' })).toBe(
+      true,
+    );
     expect(openURL).not.toHaveBeenCalled();
   });
 
@@ -60,7 +62,9 @@ describe('shouldLoadInSheet', () => {
 
   it('turns an Android intent link into the scheme link the OS can open', () => {
     expect(
-      shouldLoadInSheet({ url: 'intent://pay?pa=m@icici#Intent;scheme=upi;package=com.phonepe.app;end' }),
+      shouldLoadInSheet({
+        url: 'intent://pay?pa=m@icici#Intent;scheme=upi;package=com.phonepe.app;end',
+      }),
     ).toBe(false);
     expect(openURL).toHaveBeenCalledWith('upi://pay?pa=m@icici');
   });

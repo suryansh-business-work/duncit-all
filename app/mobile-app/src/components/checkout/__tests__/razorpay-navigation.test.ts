@@ -1,4 +1,8 @@
-import { externalUrlFor, isExternalPaymentUrl, schemeOf } from '@/components/checkout/razorpayNavigation';
+import {
+  externalUrlFor,
+  isExternalPaymentUrl,
+  schemeOf,
+} from '@/components/checkout/razorpayNavigation';
 
 describe('schemeOf', () => {
   it('reads the scheme case-insensitively', () => {
@@ -37,7 +41,9 @@ describe('isExternalPaymentUrl', () => {
 describe('externalUrlFor', () => {
   it('rebuilds an Android intent link as the scheme link the UPI app answers', () => {
     expect(
-      externalUrlFor('intent://pay?pa=merchant@icici&am=590.00#Intent;scheme=upi;package=com.phonepe.app;end'),
+      externalUrlFor(
+        'intent://pay?pa=merchant@icici&am=590.00#Intent;scheme=upi;package=com.phonepe.app;end',
+      ),
     ).toBe('upi://pay?pa=merchant@icici&am=590.00');
   });
 

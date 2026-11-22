@@ -53,11 +53,8 @@ export const FINANCE_BUNDLE: NestedCatalogue = {
       methodPrepaid: 'Prepaid',
       methodCod: 'Cash on Delivery',
       colCashPaid: 'Cash paid',
-      // The multi-ticket tier frozen on the payment at checkout, and its sum
-      // across the filtered payments on the KPI card.
-      colTicketDiscount: 'Multi-ticket discount',
-      totalTicketDiscount: 'Multi-ticket discounts',
-      // The member's Smart Incentive, frozen the same way.
+      // The member's Smart Incentive, frozen on the payment at checkout, and its
+      // sum across the filtered payments on the KPI card.
       colSmartIncentive: 'Smart Incentive',
       totalSmartIncentive: 'Smart Incentive discounts',
       totalSuccessful: 'Successful Payments',
@@ -114,7 +111,6 @@ export const FINANCE_BUNDLE: NestedCatalogue = {
       // reading the fee as an addend — see AmountBreakupCard.
       amountBreakup: 'Amount Breakup',
       originalTotal: 'Original total',
-      ticketDiscountLine: 'Multi-ticket discount ({pct}%)',
       smartIncentiveLine: 'Smart Incentive ({pct}%)',
       couponDiscount: 'Coupon discount',
       couponDiscountWith: 'Coupon discount ({code})',
@@ -207,8 +203,6 @@ export const FINANCE_BUNDLE: NestedCatalogue = {
       pod: 'Pod',
       podDate: 'Date',
       seats: 'Seats',
-      ticketDiscountTier: 'Multi-ticket tier',
-      ticketDiscountNone: 'None',
       smartIncentiveOffer: 'Smart Incentive',
       smartIncentivePct: '{pct}% off',
       membership: 'Membership',
@@ -1077,7 +1071,6 @@ export const FINANCE_BUNDLE: NestedCatalogue = {
       beneficiary: 'Beneficiary',
       clubAdminCutOffThePool: 'Club admin cut (off the pool)',
       coinsNote: 'Duncit Coins on this pod: {spent} spent by buyers (already deducted from Customer collected) · {earned} earned back.',
-      ticketDiscountNote: '{amount} in multi-ticket discounts is already off the collected total.',
       smartIncentiveNote: '{amount} in Smart Incentive discounts is already off the collected total.',
       customerCollected: 'Customer collected',
       decision: 'Decision',
@@ -1190,7 +1183,6 @@ export const FINANCE_BUNDLE: NestedCatalogue = {
       releases: 'Releases',
       releaseStatuses: 'Release statuses',
       settled: 'Settled',
-      ticketDiscountsNote: '{amount} in multi-ticket discounts is already off the collected total.',
       smartIncentiveNote: '{amount} in Smart Incentive discounts is already off the collected total.',
       theHostKeepsThePoolRemainder: 'The host keeps the pool remainder after the venue’s slot price.',
       theVenueSFixedBookedSlot: 'The venue’s fixed booked slot price (set in the Partners portal), clamped to the pool.',

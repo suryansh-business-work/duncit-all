@@ -239,7 +239,6 @@ export const POD_FORM_BUNDLE: NestedCatalogue = {
       imagesAndVideos: 'Images & videos',
       meetingDetails: 'Meeting Details',
       paymentAndCharges: 'Payment & Charges',
-      ticketDiscount: 'Multi-ticket discount',
       whatThisPodOffers: 'What This Pod Offers',
       whenWhereAndMap: 'When, Where & Map',
     },
@@ -253,9 +252,6 @@ export const POD_FORM_BUNDLE: NestedCatalogue = {
       price: 'Price',
       free: 'Free',
       spots: 'Spots',
-      // The multi-ticket offer as the pod page will list it, one line per tier.
-      ticketDiscount: 'Multi-ticket offer',
-      ticketDiscountTier: '{count}+ tickets · {pct}% off',
       whatThisPodOffers: 'What this pod offers',
     },
     /** The admin editor's earnings projection — every figure is the server's
@@ -317,29 +313,6 @@ export const POD_FORM_BUNDLE: NestedCatalogue = {
       replaceVideo: 'Replace video',
       podReel: 'Pod Reel',
       reelVideoUrl: 'Reel video URL',
-    },
-    /** The multi-ticket discount editor, rendered through
-     * `podFormTicketDiscountLabels` in @duncit/utils. Word-for-word identical to
-     * `mweb.ticketDiscount` and `shell.ticketDiscount`. */
-    ticketDiscount: {
-      title: 'Multi-ticket discount',
-      switchLabel: 'Offer a discount when one person books multiple tickets',
-      hint: 'The best matching tier applies to the ticket price when a single booking has at least that many tickets.',
-      baseRow: '1 ticket · 0% (full price)',
-      ticketsLabel: 'Tickets',
-      discountLabel: 'Discount %',
-      addTier: 'Add tier',
-      removeTier: 'Remove tier',
-      maxHint: 'Up to {max}% off',
-      perTicket: '{price} per ticket',
-      errorTiersRequired: 'Add at least one discount tier',
-      errorTooManyTiers: 'You can add up to {max} tiers',
-      errorTicketsMin: 'Tickets must be a whole number of at least 2',
-      errorTicketsMax: 'Tickets can’t be more than {max}',
-      errorTicketsNotIncreasing: 'Needs more tickets than the row above',
-      errorPctMin: 'Discount must be a whole number of at least 1%',
-      errorPctMax: 'Discount can’t be more than {max}%',
-      errorPctNotIncreasing: 'Needs a bigger discount than the row above',
     },
     // The offer a physical pod sends its venue: a window the venue is open for
     // and how the venue is paid. The venue accepts, rejects or counters it.

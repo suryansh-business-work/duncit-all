@@ -2466,7 +2466,7 @@ export type AppSettings = {
   pod_reminder_lead_hours: Scalars['Int']['output'];
   /** How many hours before a pod starts its guests get the short same-day reminder (where and what time). 0 switches it off. */
   pod_sameday_reminder_hours: Scalars['Int']['output'];
-  /** The biggest discount (whole %, 1-99) any multi-ticket tier on a pod may give. Pods already above it keep their tiers until they are edited. */
+  /** @deprecated The multi-ticket discount was removed. Always 50. */
   ticket_discount_max_pct: Scalars['Int']['output'];
   time_format: Scalars['String']['output'];
   /** Where every app reads 'now' from: SERVER, BROWSER or CUSTOM. */
@@ -5628,9 +5628,9 @@ export type CheckoutQuote = {
   /** Percentage of that Smart Incentive (0 when none). */
   smart_incentive_pct: Scalars['Int']['output'];
   subtotal: Scalars['Float']['output'];
-  /** Multi-ticket discount taken off the ticket price for the quoted seats (0 when no tier applies). */
+  /** @deprecated The multi-ticket discount was removed. Always 0. */
   ticket_discount_amount: Scalars['Float']['output'];
-  /** Percentage of the multi-ticket tier that applied (0 when none). */
+  /** @deprecated The multi-ticket discount was removed. Always 0. */
   ticket_discount_pct: Scalars['Int']['output'];
   /** The quoted amount rounded UP to a whole rupee — what a checkout with no coupon and no coins is charged. */
   total: Scalars['Float']['output'];
@@ -8265,8 +8265,9 @@ export type CreatePodInput = {
   smart_incentive_pct?: InputMaybe<Scalars['Int']['input']>;
   /** The sub-category the host picked in step 2. Required to enforce the co-host cap. */
   sub_category_id?: InputMaybe<Scalars['ID']['input']>;
-  /** Offer a multi-ticket discount. Ignored (stored off) on a free or zero-priced pod. */
+  /** @deprecated The multi-ticket discount was removed. Ignored. */
   ticket_discount_enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  /** @deprecated The multi-ticket discount was removed. Ignored. */
   ticket_discount_tiers?: InputMaybe<Array<PodTicketDiscountTierInput>>;
   /** @deprecated Venues are booked with an offer now (venue_offer). Refused with a message to update the app. */
   venue_booking?: InputMaybe<InstantBookingInput>;
@@ -14906,8 +14907,9 @@ export type HostResubmitPodInput = {
   /** Offer a Smart Incentive — omit both fields to leave it alone. Cleared when the pod becomes free or zero-priced. */
   smart_incentive_enabled?: InputMaybe<Scalars['Boolean']['input']>;
   smart_incentive_pct?: InputMaybe<Scalars['Int']['input']>;
-  /** Offer a multi-ticket discount. Cleared when the pod becomes free or zero-priced. */
+  /** @deprecated The multi-ticket discount was removed. Ignored. */
   ticket_discount_enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  /** @deprecated The multi-ticket discount was removed. Ignored. */
   ticket_discount_tiers?: InputMaybe<Array<PodTicketDiscountTierInput>>;
   venue_id?: InputMaybe<Scalars['ID']['input']>;
   /** A fresh offer to a venue: another partner's venue accepts, rejects or counters it. */
@@ -15006,8 +15008,9 @@ export type HostUpdatePodInput = {
   /** Offer a Smart Incentive — omit both fields to leave it alone. */
   smart_incentive_enabled?: InputMaybe<Scalars['Boolean']['input']>;
   smart_incentive_pct?: InputMaybe<Scalars['Int']['input']>;
-  /** Offer a multi-ticket discount — omit both discount fields to leave it alone. */
+  /** @deprecated The multi-ticket discount was removed. Ignored. */
   ticket_discount_enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  /** @deprecated The multi-ticket discount was removed. Ignored. */
   ticket_discount_tiers?: InputMaybe<Array<PodTicketDiscountTierInput>>;
 };
 
@@ -29760,16 +29763,16 @@ export type Payment = {
   rental_lines: Array<PaymentRentalLine>;
   /** What rounding the bill UP to a whole rupee added (0 ≤ x < 1; 0 when it was already whole or the payment predates the rule). Already inside total; never taxable and never part of a fee, commission or settlement. */
   round_off: Scalars['Float']['output'];
-  /** The member's unlocked Smart Incentive, frozen at checkout: rupees taken off the ticket money after the multi-ticket discount and before the coupon and coins (host-funded). 0 when none applied. */
+  /** The member's unlocked Smart Incentive, frozen at checkout: rupees taken off the ticket money before the coupon and coins (host-funded). 0 when none applied. */
   smart_incentive_amount: Scalars['Float']['output'];
   /** Percentage of the Smart Incentive that applied (0 when none). */
   smart_incentive_pct: Scalars['Int']['output'];
   status: PaymentStatus;
   subtotal: Scalars['Float']['output'];
   target_type: PaymentTargetType;
-  /** Multi-ticket discount frozen at checkout: rupees taken off the ticket price (never add-on products) before the coupon and coins. 0 when no tier applied. */
+  /** @deprecated The multi-ticket discount was removed. Always 0. */
   ticket_discount_amount: Scalars['Float']['output'];
-  /** Percentage of the multi-ticket tier that applied (0 when none). */
+  /** @deprecated The multi-ticket discount was removed. Always 0. */
   ticket_discount_pct: Scalars['Int']['output'];
   total: Scalars['Float']['output'];
   updated_at: Scalars['String']['output'];
@@ -29848,7 +29851,7 @@ export type PaymentDetail = {
   finalized_at?: Maybe<Scalars['String']['output']>;
   gift_card?: Maybe<PaymentGiftCard>;
   needs_refund: Scalars['Boolean']['output'];
-  /** Gross before every discount (multi-ticket discount, coupon, coins), taken from the frozen checkout metadata. */
+  /** Gross before every discount (Smart Incentive, coupon, coins), taken from the frozen checkout metadata. */
   original_total: Scalars['Float']['output'];
   payment: Payment;
   pod_booking?: Maybe<PaymentPodBooking>;
@@ -30252,7 +30255,7 @@ export type PaymentTotals = {
   gst: Scalars['Float']['output'];
   /** Smart Incentive discounts given on the matching payments — already off gross. */
   smart_incentive_total: Scalars['Float']['output'];
-  /** Multi-ticket discounts given on the matching payments — already off gross. */
+  /** @deprecated The multi-ticket discount was removed. Always 0. */
   ticket_discount_total: Scalars['Float']['output'];
 };
 
@@ -30758,11 +30761,11 @@ export type Pod = {
   series_total?: Maybe<Scalars['Int']['output']>;
   /** The host offers members who stay on the pod page without booking a one-time discount (Smart Incentive). Always false on a free or zero-priced pod. */
   smart_incentive_enabled: Scalars['Boolean']['output'];
-  /** Percent off the ticket money that offer gives (after any multi-ticket discount); 0 when switched off. */
+  /** Percent off the ticket money that offer gives; 0 when switched off. */
   smart_incentive_pct: Scalars['Int']['output'];
-  /** Whether one booking of several seats gets a tiered discount on its tickets. Always false on a free or zero-priced pod. */
+  /** @deprecated The multi-ticket discount was removed. Always false. */
   ticket_discount_enabled: Scalars['Boolean']['output'];
-  /** The multi-ticket discount tiers, ascending. Empty when the discount is off; one ticket always pays full price. */
+  /** @deprecated The multi-ticket discount was removed. Always empty. */
   ticket_discount_tiers: Array<PodTicketDiscountTier>;
   updated_at: Scalars['String']['output'];
   venue_approval_status: PodVenueApproval;
@@ -32092,11 +32095,7 @@ export type PodFinanceBreakdown = {
    * by this much — the host funds them, since settlement runs on what was collected.
    */
   smart_incentive_total: Scalars['Float']['output'];
-  /**
-   * Multi-ticket discounts given across this pod's successful bookings. Like
-   * coins, they come off the ticket price before GST, so collected_total is
-   * already lower by this much — stated so the gap is explainable.
-   */
+  /** @deprecated The multi-ticket discount was removed. Always 0. */
   ticket_discount_total: Scalars['Float']['output'];
   waterfall: PodFinanceWaterfall;
 };
@@ -33148,7 +33147,7 @@ export type PodSeriesPreview = {
   /** The multi-date discount a new recurring pod starts with (Pod Settings). */
   default_multi_date_discount_tiers: Array<MultiDateDiscountTier>;
   frequency: PodSeriesFrequency;
-  /** The largest discount a tier may give (Pod Settings' multi-ticket ceiling). */
+  /** The largest discount a multi-date tier may give. */
   max_discount_pct: Scalars['Int']['output'];
   /** Admin limits the plan was checked against. */
   max_occurrences: Scalars['Int']['output'];
@@ -33407,7 +33406,7 @@ export type PodSmartIncentive = {
   __typename?: 'PodSmartIncentive';
   /** Seconds on the pod page before the offer shows (Loyalty > Smart Incentive > Settings). */
   delay_seconds: Scalars['Int']['output'];
-  /** Percent off the ticket money, after any multi-ticket discount. Frozen once unlocked. */
+  /** Percent off the ticket money. Frozen once unlocked. */
   discount_pct: Scalars['Int']['output'];
   pod_id: Scalars['ID']['output'];
   /** True once the offer was shown: checkout takes it off on its own. */
@@ -33465,14 +33464,14 @@ export type PodTablePage = {
   total: Scalars['Int']['output'];
 };
 
-/** One multi-ticket discount tier: a single booking of at least min_tickets seats gets discount_pct off its ticket price. */
+/** Retired multi-ticket discount tier. Kept only so older app versions can still read Pod.ticket_discount_tiers, which is always empty. */
 export type PodTicketDiscountTier = {
   __typename?: 'PodTicketDiscountTier';
   discount_pct: Scalars['Int']['output'];
   min_tickets: Scalars['Int']['output'];
 };
 
-/** One multi-ticket discount tier: min_tickets 2 or more, discount_pct 1 up to the admin's max; each row must beat the one above on both. */
+/** Retired multi-ticket discount tier. Older app versions may still send it; the server ignores it. */
 export type PodTicketDiscountTierInput = {
   discount_pct: Scalars['Int']['input'];
   min_tickets: Scalars['Int']['input'];
@@ -34649,7 +34648,7 @@ export type PublicAppSettings = {
   pod_complete_timeout_hours: Scalars['Int']['output'];
   /** The server's clock at the moment this response was built (ISO). Clients add their own elapsed time to keep it ticking. */
   server_time: Scalars['String']['output'];
-  /** The biggest discount (whole %, 1-99) any multi-ticket tier on a pod may give — the pod editors cap their tiers at it. */
+  /** @deprecated The multi-ticket discount was removed. Always 50. */
   ticket_discount_max_pct: Scalars['Int']['output'];
   time_format: Scalars['String']['output'];
   /** Where every app reads 'now' from: SERVER, BROWSER or CUSTOM. */
@@ -42428,8 +42427,9 @@ export type RecurringCheckoutQuote = {
   platform_fee_amount: Scalars['Float']['output'];
   round_off: Scalars['Float']['output'];
   subtotal: Scalars['Float']['output'];
-  /** Multi-ticket discount across the dates. */
+  /** @deprecated The multi-ticket discount was removed. Always 0. */
   ticket_discount_amount: Scalars['Float']['output'];
+  /** @deprecated The multi-ticket discount was removed. Always 0. */
   ticket_discount_pct: Scalars['Int']['output'];
   /** Every ticket of every date at list price. */
   ticket_gross: Scalars['Float']['output'];
@@ -51421,7 +51421,7 @@ export type UpdateAppSettingsInput = {
   pod_reminder_lead_hours?: InputMaybe<Scalars['Int']['input']>;
   /** How many hours before a pod starts its guests get the same-day reminder (0-23, 0 is off). */
   pod_sameday_reminder_hours?: InputMaybe<Scalars['Int']['input']>;
-  /** The biggest discount any multi-ticket tier on a pod may give, in whole % (1-99). */
+  /** @deprecated The multi-ticket discount was removed. Ignored. */
   ticket_discount_max_pct?: InputMaybe<Scalars['Int']['input']>;
   time_format?: InputMaybe<Scalars['String']['input']>;
   time_source?: InputMaybe<TimeSource>;
@@ -52032,8 +52032,9 @@ export type UpdatePodInput = {
   /** Offer a Smart Incentive — omit both fields to leave it alone. Cleared when the pod becomes free or zero-priced. */
   smart_incentive_enabled?: InputMaybe<Scalars['Boolean']['input']>;
   smart_incentive_pct?: InputMaybe<Scalars['Int']['input']>;
-  /** Offer a multi-ticket discount. Cleared when the pod becomes free or zero-priced. */
+  /** @deprecated The multi-ticket discount was removed. Ignored. */
   ticket_discount_enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  /** @deprecated The multi-ticket discount was removed. Ignored. */
   ticket_discount_tiers?: InputMaybe<Array<PodTicketDiscountTierInput>>;
   /** @deprecated Venues are booked with an offer now (venue_offer). Refused with a message to update the app. */
   venue_booking?: InputMaybe<InstantBookingInput>;

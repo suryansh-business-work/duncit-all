@@ -68,8 +68,6 @@ export const POD_DETAILS_BUNDLE: NestedCatalogue = {
       live: 'Live',
       pendingApproval: 'Pending approval',
       settled: 'Settled',
-      // Why the collected total sits below face value: tiers already taken off.
-      ticketDiscounts: 'Multi-ticket discounts given',
       payoutNote: 'Payouts are released after Finance approval.',
       // A FREE pod moves no platform money — the card shows this, not figures.
       freePod: 'Free pod',
@@ -94,8 +92,6 @@ export const POD_DETAILS_BUNDLE: NestedCatalogue = {
       productsEnabled: 'Enabled',
       productsOff: 'Off',
       spotsLeft: 'Spots left',
-      ticketDiscount: 'Multi-ticket offer',
-      ticketDiscountTier: '{count}+ tickets · {pct}% off',
       views: 'Views',
       when: 'When',
       zone: 'Zone',
@@ -109,7 +105,6 @@ export const POD_DETAILS_BUNDLE: NestedCatalogue = {
       payer: 'Payer',
       paymentId: 'Payment ID',
       paymentsAndTransactions: 'Payments & transactions',
-      ticketDiscount: 'Multi-ticket discount',
     },
     podStatusChips: {
       cancelled: 'Cancelled',

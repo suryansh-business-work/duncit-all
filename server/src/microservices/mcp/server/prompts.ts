@@ -151,6 +151,83 @@ export const MCP_PROMPTS: readonly McpPrompt[] = [
       ),
   },
   {
+    name: 'find_crm_leads',
+    title: 'Find new CRM leads',
+    description: 'Discover, verify and score new Host, Venue, Community, Creator or E-commerce leads, then add the qualified ones after you approve.',
+    arguments: [
+      { name: 'lead_type', description: 'HOST_LEAD, VENUE_LEAD, COMMUNITY_LEAD, CREATOR_LEAD or ECOMM_LEAD.', required: true },
+      { name: 'city', description: 'City to search, e.g. Lucknow.', required: true },
+      { name: 'locality', description: 'Area within the city, e.g. Gomti Nagar.' },
+      { name: 'category', description: 'What kind of lead, e.g. pottery workshops, cafes, running clubs.' },
+      { name: 'count', description: 'How many new leads (1-100). Default 20.' },
+      { name: 'min_score', description: 'Only leads scoring at least this (0-100).' },
+    ],
+    tools: [
+      'get_lead_quality_settings',
+      'search_crm_leads',
+      'discover_external_leads',
+      'get_lead_search_job_status',
+      'get_lead_quality_details',
+      'verify_lead_evidence',
+      'check_lead_duplicates',
+      'save_lead_candidates',
+      'add_qualified_leads',
+    ],
+    render: (args) => {
+      const type = promptValue(args.lead_type) ?? 'VENUE_LEAD';
+      const where = [promptValue(args.locality), promptValue(args.city)].filter(Boolean).join(', ');
+      const count = promptValue(args.count) ?? '20';
+      const min = promptValue(args.min_score);
+      return lines(
+        `Find ${count} new ${type} leads in ${where || 'the city I name'}${promptValue(args.category) ? ` (${promptValue(args.category)})` : ''}${min ? ` scoring at least ${min}/100` : ''}, verified and scored for the Duncit CRM.`,
+        `1. Call get_lead_quality_settings for ${type}: learn every criterion, its sub-criteria keys, the mandatory gates and the minimum qualifying score.`,
+        `2. Call discover_external_leads with lead_type ${type}, the city${promptValue(args.locality) ? ', locality' : ''}${promptValue(args.category) ? ', category' : ''}, target_count ${count}${min ? ` and min_score ${min}` : ''}. Tell me the searches it planned.`,
+        '3. Poll get_lead_search_job_status every 20-30 seconds until it is no longer RUNNING. Report blocked or failed searches exactly as the job states them.',
+        '4. For the best candidates, read get_lead_quality_details (candidate_id) and research their PENDING items on public pages you can open (official site, Instagram profile, Google Maps listing, event listings). Record each fact with verify_lead_evidence: VERIFIED only with the evidence and the source_url you opened; FAILED with the reason. Never mark anything you did not see.',
+        '5. If you find more leads yourself, run check_lead_duplicates first, then queue them with save_lead_candidates including every source link. Skip anything that is a duplicate.',
+        '6. Show me one table: name, type, phone/email, locality, Instagram link, score/100, classification, qualification, failed or pending gates, missing evidence and source links. Separate QUALIFIED, pending and not qualified.',
+        `7. Ask me which to add. Only after I say yes, call add_qualified_leads with those candidate ids, ${META_REASON} and ${META_CONFIRM}: true; then report each outcome.`,
+        'Never invent a lead, handle, phone number, email, score or evidence.',
+        DATA_RULE
+      );
+    },
+  },
+  {
+    name: 'review_lead_quality',
+    title: 'Review CRM lead quality',
+    description: 'Find CRM leads below a score or still pending verification, explain what evidence is missing, and verify what you can.',
+    arguments: [
+      { name: 'lead_type', description: 'One lead type, or leave empty for all five.' },
+      { name: 'max_score', description: 'Leads scoring at most this. Default 59.99.' },
+      { name: 'city', description: 'Only one city.' },
+    ],
+    tools: ['search_crm_leads', 'get_lead_quality_details', 'verify_lead_evidence', 'calculate_lead_quality_score'],
+    render: (args) =>
+      lines(
+        `Review the quality of my CRM leads${promptValue(args.lead_type) ? ` of type ${promptValue(args.lead_type)}` : ''}${promptValue(args.city) ? ` in ${promptValue(args.city)}` : ''} scoring at most ${promptValue(args.max_score) ?? '59.99'}.`,
+        `1. Call search_crm_leads with max_score ${promptValue(args.max_score) ?? '59.99'}${promptValue(args.lead_type) ? `, lead_types [${promptValue(args.lead_type)}]` : ''}${promptValue(args.city) ? `, city ${promptValue(args.city)}` : ''}, sort SCORE_ASC, page_size 50.`,
+        '2. Summarise how many leads, by type and qualification, and which gates fail most often.',
+        '3. For the leads I pick, read get_lead_quality_details and list each criterion with maximum, earned and status, and what is still missing.',
+        '4. Research missing items on public pages you can open and record them with verify_lead_evidence (source_url required for VERIFIED). Use calculate_lead_quality_score with run_external_checks true only when I ask to reverify.',
+        '5. Never change a lead\'s own details here and never invent evidence.',
+        DATA_RULE
+      ),
+  },
+  {
+    name: 'recalculate_lead_scores',
+    title: 'Recalculate lead scores',
+    description: 'Rescore every lead of one type with the published Lead Quality Score model.',
+    arguments: [{ name: 'lead_type', description: 'HOST_LEAD, VENUE_LEAD, COMMUNITY_LEAD, CREATOR_LEAD or ECOMM_LEAD.', required: true }],
+    tools: ['get_lead_quality_settings', 'recalculate_lead_scores', 'search_crm_leads'],
+    render: (args) =>
+      lines(
+        `Recalculate the quality scores of every ${promptValue(args.lead_type) ?? 'VENUE_LEAD'} lead.`,
+        `1. Call get_lead_quality_settings for ${promptValue(args.lead_type) ?? 'VENUE_LEAD'} and tell me which published version will be used.`,
+        `2. Call recalculate_lead_scores with entity_type ${promptValue(args.lead_type) ?? 'VENUE_LEAD'} and ${META_REASON}. Report the job id and how many leads it covers; it shows in my CRM jobs drawer.`,
+        '3. Afterwards, offer to show the lowest-scoring leads with search_crm_leads (sort SCORE_ASC).'
+      ),
+  },
+  {
     name: 'my_activity',
     title: 'My MCP activity',
     description: 'What I have done through MCP lately: calls, tools, errors, tokens and cost.',

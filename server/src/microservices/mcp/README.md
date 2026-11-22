@@ -156,10 +156,40 @@ and accounts, so its tools are not built from this API's schema:
 `mcp_audit_tools`, `mcp_call_tool` (gateway), `mcp_my_usage`, `mcp_self_test`,
 `pods_audit_timings`.
 
+### CRM lead quality & research (`tools/crm/`, PRD 31)
+
+Listed on the gateway and the `crm` connector; every one runs the CRM's own GraphQL
+operation as the person (CRM staff only — SUPER_ADMIN / CRM_MANAGER), so validation,
+duplicate guards, history and audit are identical to the console.
+
+| Tool | Runs | Notes |
+|---|---|---|
+| `search_crm_leads` | `searchCrmLeads` | All five lead types by name, city, score range, classification, qualification, verification; sorted by score server-side. |
+| `discover_external_leads` | `startCrmLeadDiscovery` | Background job (kind `LEAD_DISCOVERY`): AI-planned searches → Google Maps / Instagram through Serper + Instagram Business Discovery → de-duplicated, AI-quoted evidence (kept only when the quote is in the source word for word), scored → review queue. Never straight into the CRM. |
+| `get_lead_search_job_status` | `crmLeadDiscoveryJob` | Progress, stats, blocked searches, candidates with missing evidence and sources. |
+| `cancel_lead_search_job` / `retry_lead_search_job` | `cancelCrmLeadDiscovery` / `retryCrmLeadDiscovery` | Cancel needs `mcp_confirm`; only the starter can cancel. |
+| `save_lead_candidates` | `saveCrmLeadCandidates` | Leads the AI researched itself; refused without a public source link; duplicates queued as DUPLICATE. |
+| `verify_lead_evidence` | `recordCrmLeadEvidence` / `verifyCrmLeadCandidateEvidence` | VERIFIED needs evidence + source link (from MCP); FAILED needs a reason; there is no way to set a score directly. |
+| `calculate_lead_quality_score` | `recalculateCrmLeadQuality` | `run_external_checks` = reverify (Instagram, Google Maps, website). |
+| `check_lead_duplicates` | `checkCrmLeadDuplicates` | Phone, email, website and Instagram against every CRM lead and the queue. |
+| `get_lead_quality_details` | `crmLeadQuality` / `crmLeadCandidate` | Score, gates, criterion-wise table, item keys, evidence with sources. |
+| `add_qualified_leads` | `approveCrmLeadCandidates` | Needs `mcp_confirm`. Only QUALIFIED, non-duplicate candidates unless `allow_unqualified`. |
+| `recalculate_lead_scores` | `recalculateCrmLeadQualityScores` | Background job (kind `LEAD_QUALITY_RECALC`). |
+| `get_lead_quality_settings` | `crmLeadQualitySettings` | The published scoring model (criteria, sub-criteria keys, gates, bands). |
+
+The derived tools for the same API (`crm_save_crm_lead_quality_draft`, `crm_publish_crm_lead_quality_config`
+— confirm required, it rescores every lead of the type — `crm_delete_crm_lead_quality_draft`, …) stay
+available for settings work; they meet the same 100% rule as the console.
+
 ## Prompts (ready-made commands)
 
 `audit_tools`, `list_all_tools`, `audit_pod_timings`, `create_pod`,
-`review_free_arrangements`, `join_free_pod`, `my_activity`, `run_self_test`, `find_tool`.
+`review_free_arrangements`, `find_crm_leads`, `review_lead_quality`, `recalculate_lead_scores`,
+`join_free_pod`, `my_activity`, `run_self_test`, `find_tool`.
+
+`find_crm_leads` is the natural-language lead finder ("Search 20 Venue Leads in Gomti Nagar above 60"):
+settings → discovery → status polling → evidence research with sources → one results table → add only
+after the person says yes. The gateway and `crm` connector instructions carry the same rule.
 
 `create_pod` walks a free pod or a free venue through Duncit's free policy and asks for the
 `free_justification` the server requires of a host; `review_free_arrangements` audits them with

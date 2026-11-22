@@ -90,6 +90,8 @@ const CONFIRM_FIELDS = new Set([
   'decideWithdrawal',
   'reviewWithdrawal',
   'sendMoney',
+  // Rescores every CRM lead of a type with the new scoring model.
+  'publishCrmLeadQualityConfig',
 ]);
 
 /** Words that mean a mutation reaches people or systems outside Duncit. */

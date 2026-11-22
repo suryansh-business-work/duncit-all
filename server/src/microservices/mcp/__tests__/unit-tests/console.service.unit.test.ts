@@ -85,9 +85,10 @@ describe('catalogFor', () => {
   it('counts tools per category, largest first, with labels', () => {
     const { categories } = catalogFor(catalog, PODS_STAFF, settings(), {});
     expect(categories.slice(0, 2)).toEqual([
+      { category: 'crm', label: 'CRM', tools: 13 },
       { category: 'mcp', label: 'MCP', tools: 8 },
-      { category: 'pods', label: 'Pods', tools: 8 },
     ]);
+    expect(categories.find((entry) => entry.category === 'pods')).toEqual({ category: 'pods', label: 'Pods', tools: 8 });
     expect(categories.find((entry) => entry.category === 'finance')).toEqual({ category: 'finance', label: 'Finance', tools: 3 });
     const counts = categories.map((entry) => entry.tools);
     expect([...counts].sort((a, b) => b - a)).toEqual(counts);

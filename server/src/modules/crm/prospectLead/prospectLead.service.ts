@@ -13,6 +13,7 @@ import {
 import { removeLeadMedia } from '@modules/crm/leadMedia/leadMedia.model';
 import { applyAssignee } from '@modules/crm/crmUser/crmUser.service';
 import { assertNoLeadDuplicates } from '@modules/crm/leadDuplicate/leadDuplicate.service';
+import { leadQualityService } from '@modules/crm/leadQuality/leadQuality.service';
 import { NUMERIC_FIELDS, PROSPECT_CONFIG, type ProspectKind } from './prospectLead.config';
 
 type LeadInput = Record<string, unknown> & { next_follow_up_date?: string | null };
@@ -77,6 +78,7 @@ export const prospectLeadService = {
     const safe = await applyAssignee(prepare(input));
     await assertNoLeadDuplicates(safe, { entity_type: kind });
     const created = await modelOf(kind).create({ ...safe, next_follow_up_date: parseDate(safe.next_follow_up_date) });
+    await leadQualityService.refreshAfterSave(kind, String(created._id), 'CREATE');
     return pub(created);
   },
 
@@ -89,6 +91,7 @@ export const prospectLeadService = {
       { new: true, runValidators: true }
     );
     if (!updated) notFound(capitalised(PROSPECT_CONFIG[kind].label));
+    await leadQualityService.refreshAfterSave(kind, id, 'UPDATE');
     return pub(updated);
   },
 
@@ -96,6 +99,7 @@ export const prospectLeadService = {
     const doc = await modelOf(kind).findByIdAndDelete(id);
     if (!doc) notFound(capitalised(PROSPECT_CONFIG[kind].label));
     await removeLeadMedia(kind, id);
+    await leadQualityService.removeForLead(kind, id);
     return true;
   },
 

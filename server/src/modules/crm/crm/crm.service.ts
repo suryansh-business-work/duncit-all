@@ -25,6 +25,7 @@ import { applyAssignee } from '@modules/crm/crmUser/crmUser.service';
 import { LEAD_MODELS } from './leadModels';
 import { leadUpdate, type LeadGeoKind } from '@modules/crm/leadGeo/leadGeo.place';
 import { nearbyLeadTable, type LeadNearInput } from '@modules/crm/leadGeo/leadGeo.nearby';
+import { leadQualityService } from '@modules/crm/leadQuality/leadQuality.service';
 
 // Re-exported: leadMedia.service and older callers import LEAD_MODELS from here.
 export { LEAD_MODELS } from './leadModels';
@@ -100,6 +101,7 @@ export function pub(doc: any) {
     preferred_event_date: iso(o.preferred_event_date),
     created_at: iso(o.created_at),
     updated_at: iso(o.updated_at),
+    quality: o.quality ? { ...o.quality, scored_at: iso(o.quality.scored_at) } : null,
   };
 }
 
@@ -223,6 +225,8 @@ export function leadTableConfig(
       super_category_id: 'super_category_id',
       // The Assigned To column sorts by the assignee's name and filters by their user id.
       assigned_to: 'assigned_to',
+      // Lead Quality Score column: sorts by the stored score across the whole collection.
+      quality_score: 'quality.score',
       ...extras.sortFields,
     },
     filterFields: {
@@ -235,6 +239,11 @@ export function leadTableConfig(
       next_follow_up_date: { type: 'date' },
       created_at: { type: 'date' },
       assigned_to: { path: 'assigned_user_id', type: 'enum' },
+      quality_score: { path: 'quality.score', type: 'number' },
+      quality_classification: { path: 'quality.classification', type: 'enum' },
+      quality_qualification: { path: 'quality.qualification', type: 'enum' },
+      quality_verification: { path: 'quality.verification', type: 'enum' },
+      quality_failed_gates: { path: 'quality.failed_gates', type: 'number' },
       ...extras.filterFields,
     },
     defaultSort: { next_follow_up_date: 1 },
@@ -650,6 +659,7 @@ export const crmService = {
     const safe = await applyAssignee(normaliseLeadInput(input));
     await assertNoLeadDuplicates(safe, { entity_type: 'VENUE_LEAD' });
     const created = await VenueLeadModel.create({ ...safe, next_follow_up_date: parseDate(safe.next_follow_up_date) });
+    await leadQualityService.refreshAfterSave('VENUE_LEAD', String(created._id), 'CREATE');
     return pub(created);
   },
   async updateVenueLead(id: string, input: any) {
@@ -661,12 +671,14 @@ export const crmService = {
       { new: true }
     );
     if (!updated) notFound('Venue lead');
+    await leadQualityService.refreshAfterSave('VENUE_LEAD', id, 'UPDATE');
     return pub(updated);
   },
   async deleteVenueLead(id: string) {
     const doc = await VenueLeadModel.findByIdAndDelete(id);
     if (!doc) notFound('Venue lead');
     await removeLeadMedia('VENUE_LEAD', id);
+    await leadQualityService.removeForLead('VENUE_LEAD', id);
     return true;
   },
 
@@ -691,6 +703,7 @@ export const crmService = {
       preferred_event_date: parseDate(safe.preferred_event_date),
       next_follow_up_date: parseDate(safe.next_follow_up_date),
     });
+    await leadQualityService.refreshAfterSave('HOST_LEAD', String(created._id), 'CREATE');
     return pub(created);
   },
   async updateHostLead(id: string, input: any) {
@@ -709,12 +722,14 @@ export const crmService = {
       { new: true }
     );
     if (!updated) notFound('Host lead');
+    await leadQualityService.refreshAfterSave('HOST_LEAD', id, 'UPDATE');
     return pub(updated);
   },
   async deleteHostLead(id: string) {
     const doc = await HostLeadModel.findByIdAndDelete(id);
     if (!doc) notFound('Host lead');
     await removeLeadMedia('HOST_LEAD', id);
+    await leadQualityService.removeForLead('HOST_LEAD', id);
     return true;
   },
 
@@ -735,6 +750,7 @@ export const crmService = {
     const safe = await applyAssignee(normaliseLeadInput(input));
     await assertNoLeadDuplicates(safe, { entity_type: 'ECOMM_LEAD' });
     const created = await EcommLeadModel.create({ ...safe, next_follow_up_date: parseDate(safe.next_follow_up_date) });
+    await leadQualityService.refreshAfterSave('ECOMM_LEAD', String(created._id), 'CREATE');
     return pub(created);
   },
   async updateEcommLead(id: string, input: any) {
@@ -746,12 +762,14 @@ export const crmService = {
       { new: true }
     );
     if (!updated) notFound('Ecomm lead');
+    await leadQualityService.refreshAfterSave('ECOMM_LEAD', id, 'UPDATE');
     return pub(updated);
   },
   async deleteEcommLead(id: string) {
     const doc = await EcommLeadModel.findByIdAndDelete(id);
     if (!doc) notFound('Ecomm lead');
     await removeLeadMedia('ECOMM_LEAD', id);
+    await leadQualityService.removeForLead('ECOMM_LEAD', id);
     return true;
   },
 

@@ -14,6 +14,15 @@ export const LEAD_MODELS = {
   COMMUNITY_LEAD: CommunityLeadModel,
 } as const;
 
+/** The required field that names a lead of each kind. */
+export const LEAD_NAME_FIELDS = {
+  VENUE_LEAD: 'venue_name',
+  HOST_LEAD: 'host_name',
+  ECOMM_LEAD: 'seller_name',
+  CREATOR_LEAD: 'creator_name',
+  COMMUNITY_LEAD: 'community_name',
+} as const;
+
 export const LEAD_LABELS = {
   VENUE_LEAD: 'Venue lead',
   HOST_LEAD: 'Host lead',

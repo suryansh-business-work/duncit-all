@@ -167,6 +167,18 @@ export const OPENAI_TASKS = {
     when_off:
       'The call ends politely: the person is told the assistant is unavailable and will be called back.',
   },
+  'crm.lead_research_plan': {
+    label: 'Lead research search plan',
+    module: 'CRM',
+    description: 'Turns a lead-discovery request (lead type, city, locality, category) into Google and Google Maps searches for CRM › Lead Research and MCP discovery.',
+    when_off: 'Discovery still runs, with searches built from the category, keywords, locality and city as typed.',
+  },
+  'crm.lead_research_verify': {
+    label: 'Lead research evidence reader',
+    module: 'CRM',
+    description: 'Reads the public text of leads a discovery job found and marks the Lead Quality Score items it proves, quoting the source.',
+    when_off: 'Candidates are still saved and scored from the automatic checks; their other items stay pending for a person or MCP to verify.',
+  },
   'crm.email_mjml': {
     label: 'CRM email template MJML',
     module: 'CRM',

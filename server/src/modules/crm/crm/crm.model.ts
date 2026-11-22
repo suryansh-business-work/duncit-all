@@ -46,6 +46,32 @@ export const leadGeoFields = {
   geo_checked_at: { type: Date, default: undefined },
 };
 
+/**
+ * The lead's Lead Quality Score, as the listings sort and filter on it. Written
+ * only by leadQuality.service (the breakdown and evidence live in
+ * CrmLeadQuality); absent until a lead is first scored, so no migration.
+ */
+const qualitySummarySchema = new Schema(
+  {
+    score: { type: Number, required: true },
+    classification: { type: String, default: '' },
+    classification_label: { type: String, default: '' },
+    tone: { type: String, default: 'error' },
+    qualification: { type: String, default: 'PENDING_VERIFICATION' },
+    verification: { type: String, default: 'PENDING' },
+    failed_gates: { type: Number, default: 0 },
+    pending_gates: { type: Number, default: 0 },
+    pending_items: { type: Number, default: 0 },
+    config_version: { type: Number, default: null },
+    scored_at: { type: Date, default: null },
+  },
+  { _id: false }
+);
+
+export const leadQualityFields = {
+  quality: { type: qualitySummarySchema, default: undefined },
+};
+
 export const serviceOfferedSchema = new Schema(
   {
     // Catalogue value or "Other". When "Other", `custom_name` carries the
@@ -153,6 +179,7 @@ const venueLeadSchema = new Schema(
     remarks: { type: String, trim: true, default: '' },
     activity_log: { type: [activitySchema], default: [] },
     ...leadGeoFields,
+    ...leadQualityFields,
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );
@@ -208,6 +235,7 @@ const hostLeadSchema = new Schema(
     notes: { type: String, trim: true, default: '' },
     activity_log: { type: [activitySchema], default: [] },
     ...leadGeoFields,
+    ...leadQualityFields,
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );
@@ -257,6 +285,7 @@ const ecommLeadSchema = new Schema(
     notes: { type: String, trim: true, default: '' },
     activity_log: { type: [activitySchema], default: [] },
     ...leadGeoFields,
+    ...leadQualityFields,
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );
@@ -330,6 +359,8 @@ export type CrmServiceCatalogDoc = InferSchemaType<typeof crmServiceCatalogSchem
 export type CrmDynamicFieldDoc = InferSchemaType<typeof crmDynamicFieldSchema> & { _id: Types.ObjectId };
 // Nearby leads: $geoNear reads the lead point through this index.
 for (const schema of [venueLeadSchema, hostLeadSchema, ecommLeadSchema]) schema.index({ geo: '2dsphere' });
+// Lead Quality Score: the listings sort by score across the whole collection.
+for (const schema of [venueLeadSchema, hostLeadSchema, ecommLeadSchema]) schema.index({ 'quality.score': -1 });
 
 export const VenueLeadModel = model('VenueLead', venueLeadSchema);
 export const HostLeadModel = model('HostLead', hostLeadSchema);

@@ -5,6 +5,8 @@ import { translateNextWave } from '@modules/platform/localization/aiTranslate.st
 import { deleteBatch } from './bulkDelete.runner';
 import { organizeMediaStep } from '@modules/platform/upload/mediaOrganizer.step';
 import { verifyEmailWave } from '@modules/crm/emailVerification/emailVerification.step';
+import { recalcLeadQualityStep } from '@modules/crm/leadQuality/leadQuality.recalcStep';
+import { discoverLeadsStep } from '@modules/crm/leadResearch/leadResearch.discoveryStep';
 import {
   BackgroundJobModel,
   type BackgroundJobKind,
@@ -38,6 +40,8 @@ const STEPS: Readonly<Record<BackgroundJobKind, JobStep>> = {
   AI_TRANSLATE: translateNextWave,
   MEDIA_ORGANIZE: organizeMediaStep,
   EMAIL_VERIFY: verifyEmailWave,
+  LEAD_QUALITY_RECALC: recalcLeadQualityStep,
+  LEAD_DISCOVERY: discoverLeadsStep,
 };
 
 const scheduled = new Set<string>();

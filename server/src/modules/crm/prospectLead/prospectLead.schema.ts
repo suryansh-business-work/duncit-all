@@ -44,6 +44,8 @@ export const prospectLeadTypeDefs = gql`
     updated_at: String
     "True when another lead of any kind shares one of this lead's phone numbers, emails or its website. Set on table pages (the Leads listing); null elsewhere."
     is_duplicate: Boolean
+    "Lead Quality Score summary (score, classification, qualification); null until the lead is first scored."
+    quality: CrmLeadQualitySummary
     "Kilometres from the centre of a Nearby leads search. Set only on a table page read with near; null elsewhere."
     distance_km: Float
     "How exactly the lead sits on the map: PIN (its map link), AREA or CITY (that centre). Null until a Nearby leads search places it, or when it has no known city."
@@ -87,6 +89,8 @@ export const prospectLeadTypeDefs = gql`
     updated_at: String
     "True when another lead of any kind shares one of this lead's phone numbers, emails or its website. Set on table pages (the Leads listing); null elsewhere."
     is_duplicate: Boolean
+    "Lead Quality Score summary (score, classification, qualification); null until the lead is first scored."
+    quality: CrmLeadQualitySummary
     "Kilometres from the centre of a Nearby leads search. Set only on a table page read with near; null elsewhere."
     distance_km: Float
     "How exactly the lead sits on the map: PIN (its map link), AREA or CITY (that centre). Null until a Nearby leads search places it, or when it has no known city."

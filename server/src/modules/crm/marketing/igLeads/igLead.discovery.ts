@@ -13,7 +13,7 @@ import type { DiscoveredProfile } from './igLead.types';
  * it answers for business and creator accounts only — a personal account is
  * not readable, which is also where the line for outreach belongs.
  */
-const FIELDS = 'username,name,biography,website,followers_count,follows_count,media_count,profile_picture_url';
+const FIELDS = 'username,name,biography,website,followers_count,follows_count,media_count,profile_picture_url,media.limit(1){timestamp,permalink}';
 
 interface Discovery {
   business_discovery?: {
@@ -25,6 +25,7 @@ interface Discovery {
     follows_count?: number;
     media_count?: number;
     profile_picture_url?: string;
+    media?: { data?: Array<{ timestamp?: string; permalink?: string }> };
   };
 }
 
@@ -80,6 +81,8 @@ export async function discoveryReader(): Promise<DiscoveryReader | null> {
           follows: found.follows_count ?? null,
           media_count: found.media_count ?? null,
           profile_picture_url: found.profile_picture_url ?? '',
+          last_post_at: found.media?.data?.[0]?.timestamp ?? null,
+          last_post_url: webAddress(found.media?.data?.[0]?.permalink),
         };
       } catch (error) {
         // A dead token would turn every profile into a skip; that is the run failing.

@@ -402,6 +402,18 @@ async function bootstrap() {
     await autoExtendService.resumeSchedules();
   });
   await safeSeed('crmServices', () => crmService.seedServiceDefaults());
+  // Lead Quality Score: version 1 of each lead type's scoring model, then a first
+  // score for every lead that has none (existing leads, imports) in the background.
+  await safeSeed('leadQuality', async () => {
+    const { leadQualityConfigService } = await import('@modules/crm/leadQuality/leadQualityConfig.service');
+    const { QUALITY_LEAD_TYPES } = await import('@modules/crm/leadQuality/leadQuality.rules');
+    const { recalcRunning, startRecalc, SYSTEM_JOB_ACTOR } = await import('@modules/crm/leadQuality/leadQuality.recalc');
+    await leadQualityConfigService.seedDefaults();
+    for (const entity_type of QUALITY_LEAD_TYPES) {
+      if (await recalcRunning(entity_type)) continue;
+      await startRecalc(SYSTEM_JOB_ACTOR, { entity_type, trigger: 'BACKFILL', only_unscored: true });
+    }
+  });
   await safeSeed('surveyIndexes', () => surveyService.syncIndexes());
   // Universal challenge tools (Tool Master) and the ledgers' unique indexes,
   // which make score/vote retries and result publishing idempotent.

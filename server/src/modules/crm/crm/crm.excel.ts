@@ -2,6 +2,7 @@ import * as XLSX from 'xlsx';
 import { GraphQLError } from 'graphql';
 import { VenueLeadModel, HostLeadModel } from './crm.model';
 import { duplicateMessage, findLeadDuplicates } from '@modules/crm/leadDuplicate/leadDuplicate.service';
+import { leadQualityService } from '@modules/crm/leadQuality/leadQuality.service';
 
 export type CrmExcelEntity = 'VENUE_LEAD' | 'HOST_LEAD';
 
@@ -319,7 +320,7 @@ async function insertLead(entity: CrmExcelEntity, row: Record<string, any>): Pro
     const city = String(row.city ?? '').trim();
     const address = String(row.full_address ?? '').trim();
     if (!name || !city || !address) throw new Error('venue_name, city and full_address are required');
-    await VenueLeadModel.create({
+    const venue = await VenueLeadModel.create({
       super_category_id: String(row.super_category_id ?? '').trim() || null,
       venue_name: name,
       venue_types: splitCsv(row.venue_types),
@@ -351,11 +352,13 @@ async function insertLead(entity: CrmExcelEntity, row: Record<string, any>): Pro
       priority: String(row.priority ?? 'Medium').trim() || 'Medium',
       remarks: String(row.remarks ?? '').trim(),
     });
+    // An imported lead gets its first quality score like one typed into the console.
+    await leadQualityService.refreshAfterSave('VENUE_LEAD', String(venue._id), 'CREATE');
     return;
   }
   const name = String(row.host_name ?? '').trim();
   if (!name) throw new Error('host_name is required');
-  await HostLeadModel.create({
+  const host = await HostLeadModel.create({
     super_category_id: String(row.super_category_id ?? '').trim() || null,
     host_name: name,
     host_type: String(row.host_type ?? '').trim(),
@@ -386,6 +389,7 @@ async function insertLead(entity: CrmExcelEntity, row: Record<string, any>): Pro
     priority: String(row.priority ?? 'Medium').trim() || 'Medium',
     notes: String(row.notes ?? '').trim(),
   });
+  await leadQualityService.refreshAfterSave('HOST_LEAD', String(host._id), 'CREATE');
 }
 
 export async function importLeads(

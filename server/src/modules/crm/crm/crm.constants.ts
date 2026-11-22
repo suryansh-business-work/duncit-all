@@ -42,10 +42,14 @@ export const AMENITIES = [
   'Projector', 'Wi-Fi', 'Seating', 'Food Available', 'Kitchen Access', 'Security Guard', 'Wheelchair Access',
 ];
 
-export const LEAD_SOURCES = ['Referral', 'Website', 'WhatsApp', 'Instagram', 'Walk-in', 'Partner', 'Cold Outreach', 'Other'];
+/** The lead_source of a lead added from a CRM › Lead Research candidate. */
+export const RESEARCH_LEAD_SOURCE = 'Lead Research';
+export const LEAD_SOURCES = ['Referral', 'Website', 'WhatsApp', 'Instagram', 'Walk-in', 'Partner', 'Cold Outreach', RESEARCH_LEAD_SOURCE, 'Other'];
 export const VENUE_LEAD_STATUSES = ['New', 'Contacted', 'Follow-up', 'Negotiation', 'Won', 'Lost'];
 export const HOST_LEAD_STATUSES = ['New', 'Contacted', 'Qualified', 'Follow-up', 'Negotiation', 'Won', 'Lost'];
 export const PRIORITIES = ['Low', 'Medium', 'High'];
+/** The pipeline status every lead kind ends on when it converts (lead quality conversion analytics). */
+export const WON_LEAD_STATUS = 'Won';
 
 export const HOST_TYPES = [
   'Individual', 'Community Admin', 'Event Organizer', 'Coach / Trainer',

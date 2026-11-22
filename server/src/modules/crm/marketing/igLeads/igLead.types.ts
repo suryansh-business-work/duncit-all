@@ -36,6 +36,9 @@ export interface DiscoveredProfile {
   follows: number | null;
   media_count: number | null;
   profile_picture_url: string;
+  /** When the newest post went up (ISO) and its link; absent when the account has not posted. */
+  last_post_at?: string | null;
+  last_post_url?: string;
 }
 
 /** What the AI made of the brief: the searches to run and the follower range asked for. */

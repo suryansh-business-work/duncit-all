@@ -39,7 +39,7 @@ export const venueKitDemos: PackageDemo[] = [
       const venueKit = venueKitFallbackSolution({ title: 'Duncit Venue Kit', summary: '', category: 'Cafe & Restaurant Automation', cta_label: '' });
       const extra = { ...venueKit, title: extraTitle, slug: 'host-pass', audience: extraAudience, category: 'Hosting', category_slug: 'hosting' };
       const groups = groupSolutions([venueKit, extra]);
-      return groups.map((g) => ({ audience: g.audience, paths: g.categories.flatMap((c) => c.items.map(solutionPath)) }));
+      return { groups: groups.map((g) => ({ audience: g.audience, paths: g.categories.flatMap((c) => c.items.map(solutionPath)) })) };
     },
   }),
 ];

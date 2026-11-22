@@ -179,7 +179,7 @@ describe('adminCreate', () => {
     owner_name: 'Asha',
     owner_email: 'asha@example.com',
     owner_phone: '+910000000000',
-    bank_account: { payout_method: 'upi', upi_id: ' asha@upi ', ifsc_code: 'sbin0001' },
+    bank_account: { payout_method: 'upi', upi_id: ' asha@upi ', ifsc_code: 'sbin0000123' },
   };
 
   it.each([[''], ['not-an-id']])('refuses owner id %p', async (ownerUserId) => {
@@ -224,7 +224,7 @@ describe('adminCreate', () => {
       tags: ['wifi'],
       step_completed: 4,
       status: 'SUBMITTED',
-      bank_account: { payout_method: 'UPI', upi_id: 'asha@upi', ifsc_code: 'SBIN0001', account_number: '' },
+      bank_account: { payout_method: 'UPI', upi_id: 'asha@upi', ifsc_code: 'SBIN0000123', account_number: '' },
     });
     expect(out.documents).toEqual([
       { type: 'GST Certificate', url: 'https://doc.example.test/gst.pdf', uploaded_at: expect.any(String) },
@@ -290,7 +290,7 @@ describe('adminUpdate', () => {
     const out = await venueService.adminUpdate(String(v._id), {
       step1: { city: 'Pune', venue_name: 'Renamed' },
       step2: { documents: [{ type: 'GST', url: 'https://doc.example.test/g.pdf' }] },
-      step3: { ...step3, bank_account: { payout_method: 'NEFT', account_number: ' 123 ' } },
+      step3: { ...step3, bank_account: { payout_method: 'NEFT', account_number: ' 123456789 ' } },
       status: 'APPROVED',
     });
 
@@ -303,7 +303,7 @@ describe('adminUpdate', () => {
       tags: ['keep'],
       owner_name: 'Ravi',
       owner_dob: null,
-      bank_account: { payout_method: 'NEFT', account_number: '123' },
+      bank_account: { payout_method: 'NEFT', account_number: '123456789' },
     });
     expect(out.approved_at).not.toBeNull();
     expect(out.documents).toHaveLength(1);

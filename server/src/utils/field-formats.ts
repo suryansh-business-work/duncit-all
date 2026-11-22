@@ -17,6 +17,8 @@ import { isEmailAddress } from './email';
 export const IFSC_PATTERN = /^[A-Z]{4}0[A-Z0-9]{6}$/;
 /** `@duncit/regex` UPI_ID — bounded on both sides, so linear. */
 export const UPI_ID_PATTERN = /^[A-Za-z0-9._-]{2,256}@[A-Za-z][A-Za-z0-9.-]{2,64}$/;
+/** `@duncit/regex` BANK_ACCOUNT_NUMBER — 6 to 18 digits, every Indian bank's format. */
+export const BANK_ACCOUNT_NUMBER_PATTERN = /^\d{6,18}$/;
 /** `@duncit/regex` GSTIN — 15 characters with the literal Z at position 14. */
 export const GSTIN_PATTERN = /^\d{2}[A-Z]{5}\d{4}[A-Z][A-Z0-9]Z[A-Z0-9]$/;
 /** `@duncit/regex` PINCODE_LOOSE — 4 to 10 digits, so a foreign postcode is not refused. */

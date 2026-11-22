@@ -16,6 +16,15 @@ import { logs } from '@observability/log';
 /** Mongo's duplicate-key error — the unique payment_id index rejecting a repeat. */
 const DUPLICATE_KEY = 11000;
 
+/**
+ * The Loyalty console's coin adjustment limits (coin-grant.schema.ts), held
+ * here too so a raw API or MCP call meets them: one adjustment at most this
+ * many coins, and a reason the ledger row can carry (its maxlength is 300).
+ */
+export const MAX_ADMIN_ADJUSTMENT = 100_000;
+export const ADJUSTMENT_REASON_MIN = 4;
+export const ADJUSTMENT_REASON_MAX = 300;
+
 const badInput = (message: string): never => {
   throw new GraphQLError(message, { extensions: { code: 'BAD_USER_INPUT' } });
 };
@@ -608,8 +617,16 @@ export const coinService = {
   }) {
     const value = Math.floor(Number(opts.coins) || 0);
     if (value <= 0) badInput('Enter how many coins to apply');
+    if (value > MAX_ADMIN_ADJUSTMENT) {
+      badInput(`Keep a single adjustment at or under ${MAX_ADMIN_ADJUSTMENT} coins`);
+    }
     const reason = (opts.reason ?? '').trim();
     if (!reason) badInput('A reason is required — it is what the ledger row explains');
+    // Checked before the balance moves: a reason the ledger row cannot hold
+    // would otherwise fail AFTER the $inc, leaving coins with no row to explain them.
+    if (reason.length < ADJUSTMENT_REASON_MIN || reason.length > ADJUSTMENT_REASON_MAX) {
+      badInput(`Say why in ${ADJUSTMENT_REASON_MIN}–${ADJUSTMENT_REASON_MAX} characters — it is the only explanation the ledger carries`);
+    }
     if (!Types.ObjectId.isValid(opts.userId)) badInput('Choose a user');
 
     const userId = new Types.ObjectId(opts.userId);

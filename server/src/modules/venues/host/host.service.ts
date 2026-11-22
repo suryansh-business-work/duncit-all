@@ -8,7 +8,7 @@ import { MeetingModel } from '@modules/survey/meeting.model';
 import { sendEmail } from '@services/email/email.service';
 import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
 import { transitionEntityId } from '@modules/platform/whatsapp/whatsapp.entity';
-import { normalizeBankAccountInput, toBankAccountPub } from '@modules/finance/finance/bankAccount';
+import { normalizeBankAccountInput, toBankAccountPub, validatedBankAccountInput } from '@modules/finance/finance/bankAccount';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { isDuplicateKeyError } from '@utils/mongo-error';
 import { redactHostIdentity } from './host.redact';
@@ -387,7 +387,7 @@ export const hostService = {
     h.full_address = input.full_address;
     // A plain copy: the subdocument itself is replaced by the write below.
     const previousBank = normalizeBankAccountInput(h.bank_account ?? {});
-    if (input.bank_account !== undefined) h.bank_account = normalizeBankAccountInput(input.bank_account) as any;
+    if (input.bank_account !== undefined) h.bank_account = validatedBankAccountInput(input.bank_account, previousBank) as any;
     if (input.tags !== undefined) h.tags = input.tags;
     if (h.step_completed < 3) h.step_completed = 3;
     await h.save();
@@ -514,7 +514,8 @@ export const hostService = {
     h.dob = parseHostDob(dob);
     Object.assign(h, opts.step2);
     Object.assign(h, opts.step3);
-    if (opts.step3.bank_account !== undefined) h.bank_account = normalizeBankAccountInput(opts.step3.bank_account) as any;
+    // A new host has no stored bank to compare with (the assign above already copied the input).
+    if (opts.step3.bank_account !== undefined) h.bank_account = validatedBankAccountInput(opts.step3.bank_account) as any;
     if (opts.step3.tags !== undefined) h.tags = opts.step3.tags;
     h.step_completed = opts.submit ? 4 : 3;
     if (opts.submit) {
@@ -553,7 +554,7 @@ export const hostService = {
     Object.assign(h, opts.step2);
     h.police_verification_url = opts.step3.police_verification_url;
     h.full_address = opts.step3.full_address;
-    if (opts.step3.bank_account !== undefined) h.bank_account = normalizeBankAccountInput(opts.step3.bank_account) as any;
+    if (opts.step3.bank_account !== undefined) h.bank_account = validatedBankAccountInput(opts.step3.bank_account, h.bank_account) as any;
     if (opts.step3.tags !== undefined) h.tags = opts.step3.tags;
     if (opts.categories !== undefined) {
       h.host_categories = (await normalizeHostCategories(opts.categories, h.host_categories ?? [])) as any;

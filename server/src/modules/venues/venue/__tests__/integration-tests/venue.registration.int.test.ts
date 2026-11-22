@@ -237,6 +237,18 @@ describe('registration steps — guards and owner details', () => {
     await expect(venueService.submitFinal(owner, String(v._id))).rejects.toThrow('Complete all steps first');
   });
 
+  it('step 3 refuses a malformed payout account the owner form would refuse, and saves nothing', async () => {
+    const owner = newOwner();
+    const v = await VenueModel.create({ owner_user_id: owner, step_completed: 2 });
+    const step3 = { owner_name: 'Asha', owner_email: 'asha@example.com', owner_phone: '+910000000000' };
+    await expect(
+      venueService.submitStep3(owner, { ...step3, bank_account: { payout_method: 'IMPS', account_number: 'N/A', ifsc_code: 'HDFC' } }, String(v._id))
+    ).rejects.toMatchObject({
+      extensions: { code: 'BAD_USER_INPUT', errors: ['Account number must be 6 to 18 digits', 'IFSC must be 11 characters, such as HDFC0001234'] },
+    });
+    expect(await VenueModel.findById(v._id).lean()).toMatchObject({ step_completed: 2, owner_name: '' });
+  });
+
   it('step 3 stores the DOB, address and a normalised bank account', async () => {
     const owner = newOwner();
     const v = await VenueModel.create({ owner_user_id: owner, step_completed: 2 });
@@ -248,7 +260,7 @@ describe('registration steps — guards and owner details', () => {
         owner_phone: '+910000000000',
         owner_dob: '1991-04-05',
         owner_address: '12 Lake Rd',
-        bank_account: { payout_method: 'imps', account_number: ' 0001 ', ifsc_code: 'hdfc0000001' },
+        bank_account: { payout_method: 'imps', account_number: ' 000123456 ', ifsc_code: 'hdfc0000001' },
       },
       String(v._id)
     );
@@ -256,7 +268,7 @@ describe('registration steps — guards and owner details', () => {
       owner_dob: new Date('1991-04-05').toISOString(),
       owner_address: '12 Lake Rd',
       step_completed: 3,
-      bank_account: { payout_method: 'IMPS', account_number: '0001', ifsc_code: 'HDFC0000001' },
+      bank_account: { payout_method: 'IMPS', account_number: '000123456', ifsc_code: 'HDFC0000001' },
     });
   });
 

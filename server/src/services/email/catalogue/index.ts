@@ -21,6 +21,7 @@ import { TARGETS_EMAILS } from './catalogue.targets';
 import { CRM_EMAILS } from './catalogue.crm';
 import { PAYOUT_EMAILS } from './catalogue.payouts';
 import { RENTAL_EMAILS } from './catalogue.rentals';
+import { GIFT_CARD_ORDER_EMAILS } from './catalogue.giftCardOrders';
 
 export * from './catalogue.types';
 export * from './mjml';
@@ -61,6 +62,7 @@ export const EMAIL_CATALOGUE: readonly EmailDef[] = [
   ...CRM_EMAILS,
   ...PAYOUT_EMAILS,
   ...RENTAL_EMAILS,
+  ...GIFT_CARD_ORDER_EMAILS,
   ...EXISTING_EMAILS,
 ];
 

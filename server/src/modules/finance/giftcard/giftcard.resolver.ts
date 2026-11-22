@@ -1,6 +1,6 @@
 import { giftcardService } from './giftcard.service';
 import { giftCardAdminService } from './giftcard.admin.service';
-import { giftCardSettingsService } from './giftcard.settings.service';
+import { giftCardSettingsService, type GiftCardSettingsUpdate } from './giftcard.settings.service';
 import type { GraphQLContext } from '@context';
 import {
   LOGS_READER,
@@ -71,14 +71,7 @@ export const giftCardResolvers = {
     },
     updateGiftCardSettings: async (
       _p: unknown,
-      args: {
-        input: {
-          denominations?: number[] | null;
-          min_amount?: number | null;
-          max_amount?: number | null;
-          validity_months?: number | null;
-        };
-      },
+      args: { input: GiftCardSettingsUpdate },
       ctx: GraphQLContext
     ) => {
       requireRole(ctx, GIFT_CARD_ADMIN_WRITE);

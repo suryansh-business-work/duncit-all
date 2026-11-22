@@ -40,6 +40,7 @@ import { logs } from '@observability/log';
 import { notifyEvent } from '@services/notify/notify.service';
 import { podImageAssets } from '@modules/platform/whatsapp/whatsapp.assets';
 import type { GiftCardPurchaseFacts } from '@modules/finance/giftcard/giftcard.service';
+import { factsQuantity } from '@modules/finance/giftcard/giftcard.facts';
 import { bookRentalsForPayment } from '@modules/venues/venueRental/rentalBooking.service';
 import { paymentRentalLines } from '@modules/venues/venueRental/rentalLines';
 
@@ -288,16 +289,14 @@ async function runGiftCardLeg(ctx: CoreContext): Promise<void> {
       extensions: { code: 'INTERNAL_SERVER_ERROR' },
     });
   }
-  // Inside the transaction: a rolled-back payment must not leave a live card
-  // behind. The card's unique payment_id absorbs every replay of this leg.
-  const { giftcardService } = await import('@modules/finance/giftcard/giftcard.service');
-  const card = await giftcardService.issueForPayment({
-    paymentId: p.payment_id,
-    purchaserId: String(p.user_id),
-    facts,
-    session: ctx.session,
-  });
-  step(ctx, 'GIFT_CARD_ISSUED', 'DONE', card.code, [String(card._id)]);
+  // Inside the transaction: a rolled-back payment must leave no live card,
+  // no scratch card and no stock taken. The order marks itself paid and issues
+  // the cards — N virtual cards for a digital order, a scratch-card batch for a
+  // physical one; every write is keyed so a replay of this leg changes nothing.
+  // The step shows the order number, never a card code (a bearer secret).
+  const { giftCardOrderService } = await import('@modules/finance/giftcardOrder/giftCardOrder.service');
+  const outcome = await giftCardOrderService.onPaid(p, facts, ctx.session);
+  step(ctx, 'GIFT_CARD_ISSUED', 'DONE', outcome.detail, outcome.refs);
 }
 
 async function runCoinLeg(ctx: CoreContext): Promise<void> {
@@ -614,9 +613,17 @@ async function emailGiftCard(ctx: DeferredContext): Promise<StepOutcome> {
   if (p.target_type !== 'GIFT_CARD') {
     return { status: 'SKIPPED', detail: 'This payment bought no gift card' };
   }
+  const { giftCardOrderService } = await import('@modules/finance/giftcardOrder/giftCardOrder.service');
+  // "Your order is confirmed" first — for every gift card order, digital or printed.
+  const order = await giftCardOrderService.confirm(p.payment_id);
+  // A printed order's scratch cards travel by courier, never by email.
+  if (order?.delivery_mode === 'PHYSICAL') {
+    return { detail: `${order.order_no} confirmed — printed cards ship by courier`, refs: [String(order._id)] };
+  }
   const { giftcardService } = await import('@modules/finance/giftcard/giftcard.service');
   const sent = await giftcardService.emailForPayment(p);
-  return { detail: sent.to, refs: [sent.cardId] };
+  await giftCardOrderService.markEmailed(p.payment_id, sent.to);
+  return { detail: sent.to, refs: sent.cardIds };
 }
 
 /**
@@ -743,7 +750,7 @@ function giftCardReceiptMail(p: IPayment, appUrl: string, currencySymbol: string
     vars: {
       // The card's face value — what the holder can redeem. Not always the
       // charge: coins spent at checkout come off what was actually paid.
-      card_amount: `${currencySymbol}${(facts?.amount ?? p.total).toFixed(2)}`,
+      card_amount: `${currencySymbol}${(facts ? facts.amount * factsQuantity(facts) : p.total).toFixed(2)}`,
       // Bought for somebody else: their name, or just the address it was sent
       // to when the buyer gave no name. Bought for yourself: neither is set,
       // and the buyer IS the recipient.

@@ -717,9 +717,17 @@ export const paymentTypeDefs = /* GraphQL */ `
   only on payment success.
   """
   input GiftCardCheckoutInput {
-    "The card's theme. SUPER/CATEGORY/SUB need scope_category_id; SHOP must not send one."
-    scope_type: GiftCardScopeType!
+    "Legacy (apps before the catalogue): the card's theme. SUPER/CATEGORY/SUB need scope_category_id; SHOP must not send one. Current apps send design_id/quantity/delivery_mode instead."
+    scope_type: GiftCardScopeType
     scope_category_id: ID
+    "The catalogue design. Omitted with scope_type omitted = the current default design."
+    design_id: ID
+    "How many cards (each worth amount), 1 to the configured maximum. Omitted = 1."
+    quantity: Int
+    "DIGITAL (emailed codes, default) or PHYSICAL (printed scratch cards by courier)."
+    delivery_mode: GiftCardDeliveryMode
+    "Where printed cards are delivered. Required for PHYSICAL."
+    shipping_address: OrderShippingAddressInput
     "Face value in whole rupees, within the configured min/max."
     amount: Float!
     "Who the card is for. Empty means the buyer keeps it."
@@ -738,8 +746,16 @@ export const paymentTypeDefs = /* GraphQL */ `
   }
 
   input DummyGiftCardCheckoutInput {
-    scope_type: GiftCardScopeType!
+    scope_type: GiftCardScopeType
     scope_category_id: ID
+    "The catalogue design. Omitted with scope_type omitted = the current default design."
+    design_id: ID
+    "How many cards (each worth amount), 1 to the configured maximum. Omitted = 1."
+    quantity: Int
+    "DIGITAL (emailed codes, default) or PHYSICAL (printed scratch cards by courier)."
+    delivery_mode: GiftCardDeliveryMode
+    "Where printed cards are delivered. Required for PHYSICAL."
+    shipping_address: OrderShippingAddressInput
     amount: Float!
     recipient_email: String
     recipient_name: String

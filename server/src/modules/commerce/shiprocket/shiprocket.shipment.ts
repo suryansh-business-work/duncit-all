@@ -242,7 +242,7 @@ async function book(order: IProductOrder) {
  * ShipRocket's "recommended" one instead debited the wallet more than the
  * delivery charge collected. On a tie the recommended courier wins.
  */
-const cheapestCourier = (options: CourierOption[]): CourierOption =>
+export const cheapestCourier = (options: CourierOption[]): CourierOption =>
   options.reduce((best, o) => (o.rate < best.rate || (o.rate === best.rate && o.recommended) ? o : best), options[0]);
 
 async function pickCourier(order: IProductOrder, courierId?: string | null): Promise<CourierOption> {
@@ -256,7 +256,7 @@ async function pickCourier(order: IProductOrder, courierId?: string | null): Pro
 const LOW_BALANCE = /(insufficient|low)\s+(wallet\s+)?(balance|funds)|recharge/i;
 
 /** The wallet, or null when ShipRocket would not tell us — the guard is a courtesy, not the gate. */
-async function walletOrNull(): Promise<number | null> {
+export async function walletOrNull(): Promise<number | null> {
   try {
     return await walletBalance();
   } catch (error) {
@@ -266,7 +266,7 @@ async function walletOrNull(): Promise<number | null> {
 }
 
 /** The AWB, or null when ShipRocket refused it over the wallet — an alert, not a failure. */
-async function awbFor(shipmentId: string, courierId: string): Promise<AwbResult | null> {
+export async function awbFor(shipmentId: string, courierId: string): Promise<AwbResult | null> {
   try {
     return await assignAwb(shipmentId, courierId);
   } catch (error) {

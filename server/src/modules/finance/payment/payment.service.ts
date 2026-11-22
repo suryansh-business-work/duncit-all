@@ -29,6 +29,8 @@ import {
   giftcardService,
   type GiftCardPurchaseFacts,
 } from '@modules/finance/giftcard/giftcard.service';
+import { factsQuantity, factsTotal } from '@modules/finance/giftcard/giftcard.facts';
+import { giftCardOrderService } from '@modules/finance/giftcardOrder/giftCardOrder.service';
 import { toPostalAddress, composeAddressLine, type PostalAddress } from '@utils/address';
 import { maxSeatsForBooking, normalizeSeats } from '@modules/pods/pod/pod.seats';
 import { smartIncentiveFor } from '@modules/engagement/smartIncentive/smartIncentive.rules';
@@ -843,11 +845,13 @@ const giftCardPaymentMetadata = (input: any, facts: GiftCardPurchaseFacts) => ({
   gift_card: facts,
 });
 
-/** A gift card charges exactly its face value: no platform fee and no GST at
+/** A gift card charges exactly its face value — every card of the order, plus
+ * the flat delivery fee once on a physical order: no platform fee and no GST at
  * sale (a prepaid instrument is taxed when the goods are bought with it), and
  * no coupon or coin discounts — stored value must not buy stored value. */
-async function giftCardQuote(amount: number): Promise<QuoteBreakup> {
+async function giftCardQuote(facts: GiftCardPurchaseFacts): Promise<QuoteBreakup> {
   const fs = await getFinanceSettings();
+  const amount = factsTotal(facts);
   // Face values are whole rupees, so this adds nothing today — but a gift card
   // is a payment like any other, and no payment is charged in paise.
   const bill = roundUpBill(amount);
@@ -866,8 +870,11 @@ async function giftCardQuote(amount: number): Promise<QuoteBreakup> {
 
 /** The payment row's human line. Payment descriptions are server-side English
  * data, like 'Pod booking · …' — clients localize their own UI copy. */
-const giftCardDescription = (facts: GiftCardPurchaseFacts) =>
-  facts.scope_name ? `Gift card · ${facts.scope_name}` : 'Gift card · Pod Shop';
+const giftCardDescription = (facts: GiftCardPurchaseFacts) => {
+  const count = factsQuantity(facts);
+  const label = facts.design_name || facts.scope_name || 'Pod Shop';
+  return count > 1 ? `Gift cards · ${label} × ${count}` : `Gift card · ${label}`;
+};
 
 export interface RazorpaySheetArgs {
   paymentDocId: string;
@@ -1738,7 +1745,7 @@ export const paymentService = {
 
     await giftcardService.assertPurchaseEnabled();
     const facts = await giftcardService.purchaseFacts(input);
-    const quote = await giftCardQuote(facts.amount);
+    const quote = await giftCardQuote(facts);
 
     // PENDING until the finalizer promotes it — see dummyCheckout.
     const failed = !!input.simulate_failure;
@@ -1768,6 +1775,9 @@ export const paymentService = {
       paid_at: null,
       metadata: giftCardPaymentMetadata(input, facts),
     });
+    // The order exists from checkout on, so a failed or abandoned payment is
+    // still a row the buyer and the Loyalty team can see.
+    await giftCardOrderService.createForPayment(doc, facts);
 
     if (failed) return toPub(doc);
     return settle(String(doc._id), 'Dummy Gateway', 'dummyGiftCardCheckout');
@@ -1784,7 +1794,7 @@ export const paymentService = {
 
     await giftcardService.assertPurchaseEnabled();
     const facts = await giftcardService.purchaseFacts(input);
-    const quote = await giftCardQuote(facts.amount);
+    const quote = await giftCardQuote(facts);
     const payment_id = newPaymentId();
     const description = giftCardDescription(facts);
 
@@ -1822,6 +1832,7 @@ export const paymentService = {
       paid_at: null,
       metadata: { ...giftCardPaymentMetadata(input, facts), razorpay_order_id: order.id },
     });
+    await giftCardOrderService.createForPayment(doc, facts);
 
     return razorpaySheet({
       paymentDocId: String(doc._id),

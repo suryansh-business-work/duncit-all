@@ -284,4 +284,11 @@ export const SHIPPED_AFTER_REDESIGN: ReadonlySet<string> = new Set<string>([
   'rental-returned-user',
   'rental-refund-delayed-user',
   'refund-processed',
+  // Gift card orders (confirmed, dispatched, out for delivery, failed attempt,
+  // delivered), first shipped 2026-11-23.
+  'gift-card-order-confirmed',
+  'gift-card-order-shipped',
+  'gift-card-order-out-for-delivery',
+  'gift-card-order-delivery-failed',
+  'gift-card-order-delivered',
 ]);

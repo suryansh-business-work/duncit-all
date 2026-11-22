@@ -10630,11 +10630,19 @@ export type DummyGiftCardCheckoutInput = {
   contact_phone?: InputMaybe<Scalars['String']['input']>;
   contact_phone_extension: Scalars['String']['input'];
   contact_phone_number: Scalars['String']['input'];
+  /** DIGITAL (emailed codes, default) or PHYSICAL (printed scratch cards by courier). */
+  delivery_mode?: InputMaybe<GiftCardDeliveryMode>;
+  /** The catalogue design. Omitted with scope_type omitted = the current default design. */
+  design_id?: InputMaybe<Scalars['ID']['input']>;
   message?: InputMaybe<Scalars['String']['input']>;
+  /** How many cards (each worth amount), 1 to the configured maximum. Omitted = 1. */
+  quantity?: InputMaybe<Scalars['Int']['input']>;
   recipient_email?: InputMaybe<Scalars['String']['input']>;
   recipient_name?: InputMaybe<Scalars['String']['input']>;
   scope_category_id?: InputMaybe<Scalars['ID']['input']>;
-  scope_type: GiftCardScopeType;
+  scope_type?: InputMaybe<GiftCardScopeType>;
+  /** Where printed cards are delivered. Required for PHYSICAL. */
+  shipping_address?: InputMaybe<OrderShippingAddressInput>;
   simulate_failure?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
@@ -13472,6 +13480,10 @@ export type GiftCard = {
   /** Redemption code (XXXX-XXXX-XXXX-XXXX). */
   code: Scalars['String']['output'];
   created_at: Scalars['String']['output'];
+  /** The catalogue design the card was bought in. Null on cards bought with a category theme. */
+  design_id?: Maybe<Scalars['ID']['output']>;
+  /** The design's name, frozen at purchase. Empty on category-theme cards. */
+  design_name: Scalars['String']['output'];
   expires_at: Scalars['String']['output'];
   id: Scalars['ID']['output'];
   initial_amount: Scalars['Float']['output'];
@@ -13548,6 +13560,73 @@ export type GiftCardAdminDetail = {
   transactions: Array<GiftCardAdminTransaction>;
 };
 
+/** A gift card order in the Loyalty console. */
+export type GiftCardAdminOrder = {
+  __typename?: 'GiftCardAdminOrder';
+  amount: Scalars['Float']['output'];
+  buyer_email: Scalars['String']['output'];
+  buyer_name: Scalars['String']['output'];
+  buyer_phone: Scalars['String']['output'];
+  cards_issued: Scalars['Int']['output'];
+  cards_value: Scalars['Float']['output'];
+  created_at: Scalars['String']['output'];
+  currency_symbol: Scalars['String']['output'];
+  delivered_at?: Maybe<Scalars['String']['output']>;
+  delivery_mode: GiftCardDeliveryMode;
+  design_back_url: Scalars['String']['output'];
+  design_front_url: Scalars['String']['output'];
+  design_id?: Maybe<Scalars['ID']['output']>;
+  design_name: Scalars['String']['output'];
+  emailed_at?: Maybe<Scalars['String']['output']>;
+  fulfilment_status: GiftCardOrderFulfilmentStatus;
+  /** The virtual cards a digital order issued (Loyalty > Virtual Gift Cards). */
+  gift_card_ids: Array<Scalars['ID']['output']>;
+  id: Scalars['ID']['output'];
+  label_available: Scalars['Boolean']['output'];
+  /** The last courier booking refusal, until a booking succeeds. */
+  last_error: Scalars['String']['output'];
+  message: Scalars['String']['output'];
+  order_no: Scalars['String']['output'];
+  paid_at?: Maybe<Scalars['String']['output']>;
+  /** The payment document id — what the Finance payment page is addressed by. */
+  payment_doc_id: Scalars['ID']['output'];
+  payment_id: Scalars['String']['output'];
+  payment_status: GiftCardOrderPaymentStatus;
+  /** The scratch-card batch printed for a physical order (Loyalty > Physical Gift Cards). */
+  physical_batch_id?: Maybe<Scalars['ID']['output']>;
+  printed_at?: Maybe<Scalars['String']['output']>;
+  quantity: Scalars['Int']['output'];
+  recipient_email: Scalars['String']['output'];
+  recipient_name: Scalars['String']['output'];
+  shipment?: Maybe<GiftCardOrderShipment>;
+  /** LOW_WALLET or NDR when the courier side needs the team. */
+  shipment_alert: Scalars['String']['output'];
+  shipment_alert_message: Scalars['String']['output'];
+  shipment_sandbox: Scalars['Boolean']['output'];
+  shipping_address?: Maybe<GiftCardOrderAddress>;
+  shipping_fee: Scalars['Float']['output'];
+  /** Paid while the design's stock could not cover it — print more before shipping. */
+  stock_short: Scalars['Boolean']['output'];
+  total: Scalars['Float']['output'];
+  tracking_events: Array<GiftCardOrderTrackingEvent>;
+  updated_at: Scalars['String']['output'];
+  user_id: Scalars['ID']['output'];
+};
+
+export type GiftCardAdminOrderDetail = {
+  __typename?: 'GiftCardAdminOrderDetail';
+  history: Array<GiftCardOrderHistoryEntry>;
+  order: GiftCardAdminOrder;
+};
+
+export type GiftCardAdminOrderTablePage = {
+  __typename?: 'GiftCardAdminOrderTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<GiftCardAdminOrder>;
+  total: Scalars['Int']['output'];
+};
+
 /**
  * Platform-wide gift card position for Loyalty > Virtual Gift Cards > Dashboard.
  * Outstanding + expired + redeemed value always equals sold value.
@@ -13620,14 +13699,22 @@ export type GiftCardCheckoutInput = {
   contact_phone?: InputMaybe<Scalars['String']['input']>;
   contact_phone_extension: Scalars['String']['input'];
   contact_phone_number: Scalars['String']['input'];
+  /** DIGITAL (emailed codes, default) or PHYSICAL (printed scratch cards by courier). */
+  delivery_mode?: InputMaybe<GiftCardDeliveryMode>;
+  /** The catalogue design. Omitted with scope_type omitted = the current default design. */
+  design_id?: InputMaybe<Scalars['ID']['input']>;
   /** Personal note printed on the card and in the email. */
   message?: InputMaybe<Scalars['String']['input']>;
+  /** How many cards (each worth amount), 1 to the configured maximum. Omitted = 1. */
+  quantity?: InputMaybe<Scalars['Int']['input']>;
   /** Who the card is for. Empty means the buyer keeps it. */
   recipient_email?: InputMaybe<Scalars['String']['input']>;
   recipient_name?: InputMaybe<Scalars['String']['input']>;
   scope_category_id?: InputMaybe<Scalars['ID']['input']>;
-  /** The card's theme. SUPER/CATEGORY/SUB need scope_category_id; SHOP must not send one. */
-  scope_type: GiftCardScopeType;
+  /** Legacy (apps before the catalogue): the card's theme. SUPER/CATEGORY/SUB need scope_category_id; SHOP must not send one. Current apps send design_id/quantity/delivery_mode instead. */
+  scope_type?: InputMaybe<GiftCardScopeType>;
+  /** Where printed cards are delivered. Required for PHYSICAL. */
+  shipping_address?: InputMaybe<OrderShippingAddressInput>;
 };
 
 /**
@@ -13645,6 +13732,47 @@ export type GiftCardCoinCredit = {
   user_id: Scalars['ID']['output'];
 };
 
+/** DIGITAL: codes emailed to the recipient. PHYSICAL: printed scratch cards delivered by courier. */
+export type GiftCardDeliveryMode =
+  | 'DIGITAL'
+  | 'PHYSICAL';
+
+/** A design in the Loyalty gift card catalogue. */
+export type GiftCardDesign = {
+  __typename?: 'GiftCardDesign';
+  back_image_url: Scalars['String']['output'];
+  /** Internal grouping label (e.g. Festive, Birthday) — never shown to members. */
+  category: Scalars['String']['output'];
+  created_at: Scalars['String']['output'];
+  front_image_url: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  is_active: Scalars['Boolean']['output'];
+  /** The one design members see and buy. */
+  is_default: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+  /** Blank printed cards of this design in hand. */
+  physical_stock: Scalars['Int']['output'];
+  sort_order: Scalars['Int']['output'];
+  updated_at: Scalars['String']['output'];
+};
+
+export type GiftCardDesignInput = {
+  back_image_url?: InputMaybe<Scalars['String']['input']>;
+  category?: InputMaybe<Scalars['String']['input']>;
+  front_image_url?: InputMaybe<Scalars['String']['input']>;
+  is_active?: InputMaybe<Scalars['Boolean']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  sort_order?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type GiftCardDesignTablePage = {
+  __typename?: 'GiftCardDesignTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<GiftCardDesign>;
+  total: Scalars['Int']['output'];
+};
+
 /** One calendar month of gift card flow. The client formats the label from the key. */
 export type GiftCardMonthBucket = {
   __typename?: 'GiftCardMonthBucket';
@@ -13652,6 +13780,150 @@ export type GiftCardMonthBucket = {
   month: Scalars['String']['output'];
   redeemed: Scalars['Float']['output'];
   sold: Scalars['Float']['output'];
+};
+
+/** A gift card order as its buyer sees it. Never carries a card code or passcode. */
+export type GiftCardOrder = {
+  __typename?: 'GiftCardOrder';
+  /** Face value of one card. */
+  amount: Scalars['Float']['output'];
+  cards_issued: Scalars['Int']['output'];
+  cards_value: Scalars['Float']['output'];
+  created_at: Scalars['String']['output'];
+  currency_symbol: Scalars['String']['output'];
+  delivered_at?: Maybe<Scalars['String']['output']>;
+  delivery_mode: GiftCardDeliveryMode;
+  design_back_url: Scalars['String']['output'];
+  design_front_url: Scalars['String']['output'];
+  design_name: Scalars['String']['output'];
+  emailed_at?: Maybe<Scalars['String']['output']>;
+  fulfilment_status: GiftCardOrderFulfilmentStatus;
+  id: Scalars['ID']['output'];
+  message: Scalars['String']['output'];
+  order_no: Scalars['String']['output'];
+  paid_at?: Maybe<Scalars['String']['output']>;
+  payment_status: GiftCardOrderPaymentStatus;
+  printed_at?: Maybe<Scalars['String']['output']>;
+  quantity: Scalars['Int']['output'];
+  recipient_email: Scalars['String']['output'];
+  recipient_name: Scalars['String']['output'];
+  /** Null until the courier is booked. */
+  shipment?: Maybe<GiftCardOrderShipment>;
+  shipping_address?: Maybe<GiftCardOrderAddress>;
+  shipping_fee: Scalars['Float']['output'];
+  total: Scalars['Float']['output'];
+  tracking_events: Array<GiftCardOrderTrackingEvent>;
+  updated_at: Scalars['String']['output'];
+};
+
+export type GiftCardOrderAddress = {
+  __typename?: 'GiftCardOrderAddress';
+  city: Scalars['String']['output'];
+  country: Scalars['String']['output'];
+  landmark: Scalars['String']['output'];
+  line1: Scalars['String']['output'];
+  line2: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  phone: Scalars['String']['output'];
+  pincode: Scalars['String']['output'];
+  state: Scalars['String']['output'];
+};
+
+export type GiftCardOrderAddressInput = {
+  city?: InputMaybe<Scalars['String']['input']>;
+  country?: InputMaybe<Scalars['String']['input']>;
+  landmark?: InputMaybe<Scalars['String']['input']>;
+  line1?: InputMaybe<Scalars['String']['input']>;
+  line2?: InputMaybe<Scalars['String']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  phone?: InputMaybe<Scalars['String']['input']>;
+  pincode?: InputMaybe<Scalars['String']['input']>;
+  state?: InputMaybe<Scalars['String']['input']>;
+};
+
+/**
+ * Where a gift card order is. Digital: PENDING → PROCESSING → DELIVERED (every
+ * card emailed). Physical: PENDING → PROCESSING (cards minted) → PRINTED → the
+ * courier's statuses, fed by ShipRocket.
+ */
+export type GiftCardOrderFulfilmentStatus =
+  | 'AWAITING_SHIPMENT'
+  | 'AWB_ASSIGNED'
+  | 'CANCELLED'
+  | 'DELIVERED'
+  | 'FAILED'
+  | 'LOST'
+  | 'NDR'
+  | 'OUT_FOR_DELIVERY'
+  | 'PENDING'
+  | 'PICKUP_SCHEDULED'
+  | 'PRINTED'
+  | 'PROCESSING'
+  | 'RTO'
+  | 'RTO_DELIVERED'
+  | 'SHIPPED';
+
+/** One line of an order's audit trail. */
+export type GiftCardOrderHistoryEntry = {
+  __typename?: 'GiftCardOrderHistoryEntry';
+  action: Scalars['String']['output'];
+  /** Who did it — empty for the courier feed and the payment system. */
+  actor_name: Scalars['String']['output'];
+  created_at: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  note: Scalars['String']['output'];
+};
+
+export type GiftCardOrderPage = {
+  __typename?: 'GiftCardOrderPage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<GiftCardOrder>;
+  total: Scalars['Int']['output'];
+};
+
+export type GiftCardOrderPaymentStatus =
+  | 'FAILED'
+  | 'PAID'
+  | 'PENDING'
+  | 'REFUNDED';
+
+export type GiftCardOrderShipment = {
+  __typename?: 'GiftCardOrderShipment';
+  /** The courier's tracking number. */
+  awb: Scalars['String']['output'];
+  courier_name: Scalars['String']['output'];
+  /** Expected delivery, as the courier states it. */
+  etd: Scalars['String']['output'];
+  last_synced_at?: Maybe<Scalars['String']['output']>;
+  pickup_scheduled_date: Scalars['String']['output'];
+  /** The courier's own status line. */
+  tracking_status: Scalars['String']['output'];
+};
+
+/** The order book at a glance (Loyalty > Gift Card Orders). */
+export type GiftCardOrderStats = {
+  __typename?: 'GiftCardOrderStats';
+  delivered: Scalars['Int']['output'];
+  in_transit: Scalars['Int']['output'];
+  /** Stock short, a courier alert or a booking refusal. */
+  needs_attention: Scalars['Int']['output'];
+  paid_orders: Scalars['Int']['output'];
+  paid_value: Scalars['Float']['output'];
+  pending_payment: Scalars['Int']['output'];
+  returned_or_lost: Scalars['Int']['output'];
+  /** Physical orders paid and waiting to be printed. */
+  to_print: Scalars['Int']['output'];
+  /** Printed and waiting for the courier to be booked. */
+  to_ship: Scalars['Int']['output'];
+};
+
+export type GiftCardOrderTrackingEvent = {
+  __typename?: 'GiftCardOrderTrackingEvent';
+  at: Scalars['String']['output'];
+  location: Scalars['String']['output'];
+  note: Scalars['String']['output'];
+  status: Scalars['String']['output'];
 };
 
 /** The purchase payment behind a virtual card, as Finance recorded it. */
@@ -13689,6 +13961,15 @@ export type GiftCardPaymentSummary = {
   user_phone?: Maybe<Scalars['String']['output']>;
 };
 
+/** What members see of a design: its name and two faces. */
+export type GiftCardPublicDesign = {
+  __typename?: 'GiftCardPublicDesign';
+  back_image_url: Scalars['String']['output'];
+  front_image_url: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+};
+
 /** What redeeming a card left behind: the coins minted and the new balance. */
 export type GiftCardRedeemResult = {
   __typename?: 'GiftCardRedeemResult';
@@ -13717,8 +13998,14 @@ export type GiftCardSettings = {
   /** Preset amount chips the buy page offers. */
   denominations: Array<Scalars['Int']['output']>;
   max_amount: Scalars['Int']['output'];
+  /** Most cards one order may buy. */
+  max_quantity: Scalars['Int']['output'];
   /** Bounds for a custom amount (whole rupees). */
   min_amount: Scalars['Int']['output'];
+  /** Whether printed cards can be ordered for courier delivery. */
+  physical_enabled: Scalars['Boolean']['output'];
+  /** Flat delivery fee charged once on every physical order, whatever its quantity. */
+  shipping_fee: Scalars['Float']['output'];
   updated_at: Scalars['String']['output'];
   /** Months from purchase until a card expires. */
   validity_months: Scalars['Int']['output'];
@@ -13728,8 +14015,27 @@ export type GiftCardSettings = {
 export type GiftCardSettingsInput = {
   denominations?: InputMaybe<Array<Scalars['Int']['input']>>;
   max_amount?: InputMaybe<Scalars['Int']['input']>;
+  max_quantity?: InputMaybe<Scalars['Int']['input']>;
   min_amount?: InputMaybe<Scalars['Int']['input']>;
+  parcel_breadth_cm?: InputMaybe<Scalars['Float']['input']>;
+  parcel_height_cm?: InputMaybe<Scalars['Float']['input']>;
+  parcel_length_cm?: InputMaybe<Scalars['Float']['input']>;
+  parcel_weight_kg?: InputMaybe<Scalars['Float']['input']>;
+  physical_enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  /** ShipRocket pickup nickname printed cards ship from. Empty = the account default. */
+  pickup_location?: InputMaybe<Scalars['String']['input']>;
+  shipping_fee?: InputMaybe<Scalars['Float']['input']>;
   validity_months?: InputMaybe<Scalars['Int']['input']>;
+};
+
+/** The courier side of the gift card policy (Loyalty only). */
+export type GiftCardShippingSettings = {
+  __typename?: 'GiftCardShippingSettings';
+  parcel_breadth_cm: Scalars['Float']['output'];
+  parcel_height_cm: Scalars['Float']['output'];
+  parcel_length_cm: Scalars['Float']['output'];
+  parcel_weight_kg: Scalars['Float']['output'];
+  pickup_location: Scalars['String']['output'];
 };
 
 /** EXPIRED is derived from the expiry date at read time. */
@@ -13737,6 +14043,17 @@ export type GiftCardStatus =
   | 'ACTIVE'
   | 'EXPIRED'
   | 'REDEEMED';
+
+/** Everything the buy page needs, in one request. */
+export type GiftCardStorefront = {
+  __typename?: 'GiftCardStorefront';
+  currency_symbol: Scalars['String']['output'];
+  /** The default design. Null until the Loyalty team uploads one — the page then says gift cards are unavailable. */
+  design?: Maybe<GiftCardPublicDesign>;
+  /** Printed cards of the default design that can still be ordered (0 when physical delivery is off). */
+  physical_available: Scalars['Int']['output'];
+  settings: GiftCardSettings;
+};
 
 export type GigCategory = {
   __typename?: 'GigCategory';
@@ -18288,6 +18605,8 @@ export type Mutation = {
   addRentalBookingProof: RentalBookingDetail;
   addTutorialComment: TutorialComment;
   addUserRole: User;
+  /** Correct a design's printed stock by delta (+ after a print run, − for damaged cards), with the reason. */
+  adjustGiftCardDesignStock: GiftCardDesign;
   /**  Admin-only: append a delta with an optional remark. Returns the updated score.  */
   adjustHealth: HealthScore;
   /**
@@ -18469,6 +18788,8 @@ export type Mutation = {
    * the blocked member is never told.
    */
   blockUser: Scalars['Boolean']['output'];
+  /** Book (or resume booking) the courier for a printed order. Spends the ShipRocket wallet. */
+  bookGiftCardOrderShipment: GiftCardAdminOrder;
   /** Partner: book, or resume booking, the ShipRocket shipment of an own-brand order. */
   brandBookProductOrderShipment: ProductOrder;
   /**
@@ -18744,6 +19065,8 @@ export type Mutation = {
   createExpenseOption: ExpenseOption;
   createFaq: Faq;
   createFeatureFlag: FeatureFlag;
+  /** Add a design. The first design ever added becomes the default. */
+  createGiftCardDesign: GiftCardDesign;
   createGigCategory: GigCategory;
   createGigJob: GigJob;
   createHostLead: HostLead;
@@ -19204,6 +19527,8 @@ export type Mutation = {
    * issued for avatars cannot be spent writing somewhere else.
    */
   getImagekitAuth: ImagekitAuth;
+  /** The shipping label as a base64 PDF. */
+  giftCardOrderLabelFile: Scalars['String']['output'];
   grantAdminAccess: User;
   /**
    * Add roles to this run's account, so the suite can follow what the member
@@ -19418,6 +19743,8 @@ export type Mutation = {
   markChatRead: Scalars['Boolean']['output'];
   /** Close a NOT_CAPTURED case as a bank reversal and resolve its ticket with that explanation. */
   markFailedPaymentNotRefundable: FailedPaymentDetail;
+  /** A paid physical order's scratch cards are printed and packed. */
+  markGiftCardOrderPrinted: GiftCardAdminOrder;
   /** Record a DM the marketer is sending from Instagram; schedules the next follow-up. */
   markIgLeadSent: IgLead;
   markNotificationRead: Scalars['Boolean']['output'];
@@ -19624,6 +19951,8 @@ export type Mutation = {
    */
   redeemPhysicalGiftCard: PhysicalGiftCardRedeemResult;
   redeemPodReferral: PodMember;
+  /** Pull the latest courier tracking for an order now. */
+  refreshGiftCardOrderTracking: GiftCardAdminOrder;
   /** Ops: pull the latest tracking from ShipRocket. */
   refreshProductOrderTracking: ProductOrder;
   refundPayment: Payment;
@@ -20266,6 +20595,8 @@ export type Mutation = {
   setDefaultBrandPickupLocation: BrandPickupLocation;
   setDefaultCommsProvider: CommsProvider;
   setDefaultEnvEntry: EnvEntry;
+  /** Make this the one design members see and buy. */
+  setDefaultGiftCardDesign: GiftCardDesign;
   setDefaultMyAddress: UserAddress;
   setDefaultMyBrandPickupLocation: BrandPickupLocation;
   setDefaultSlotTemplate: SlotTemplate;
@@ -20922,6 +21253,9 @@ export type Mutation = {
   updateFinanceSettings: FinanceSettings;
   /** Finance roles: set the default GST on venue food orders. Venues that override it keep their own. */
   updateFoodTaxDefaults: FoodTaxDefaults;
+  updateGiftCardDesign: GiftCardDesign;
+  /** Correct a physical order's delivery address before the courier is booked. */
+  updateGiftCardOrderAddress: GiftCardAdminOrder;
   /** Loyalty: set the amounts offered and how long a card lives. */
   updateGiftCardSettings: GiftCardSettings;
   updateGigCategory: GigCategory;
@@ -21332,6 +21666,13 @@ export type MutationAddUserRoleArgs = {
 };
 
 
+export type MutationAdjustGiftCardDesignStockArgs = {
+  delta: Scalars['Int']['input'];
+  id: Scalars['ID']['input'];
+  reason: Scalars['String']['input'];
+};
+
+
 export type MutationAdjustHealthArgs = {
   input: AdjustHealthInput;
 };
@@ -21694,6 +22035,11 @@ export type MutationBackoutPodArgs = {
 
 export type MutationBlockUserArgs = {
   user_id: Scalars['ID']['input'];
+};
+
+
+export type MutationBookGiftCardOrderShipmentArgs = {
+  id: Scalars['ID']['input'];
 };
 
 
@@ -22298,6 +22644,11 @@ export type MutationCreateFaqArgs = {
 
 export type MutationCreateFeatureFlagArgs = {
   input: CreateFeatureFlagInput;
+};
+
+
+export type MutationCreateGiftCardDesignArgs = {
+  input: GiftCardDesignInput;
 };
 
 
@@ -23728,6 +24079,11 @@ export type MutationGetImagekitAuthArgs = {
 };
 
 
+export type MutationGiftCardOrderLabelFileArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationGrantAdminAccessArgs = {
   user_id: Scalars['ID']['input'];
 };
@@ -23976,6 +24332,11 @@ export type MutationMarkFailedPaymentNotRefundableArgs = {
   case_id: Scalars['ID']['input'];
   client_request_id?: InputMaybe<Scalars['String']['input']>;
   note: Scalars['String']['input'];
+};
+
+
+export type MutationMarkGiftCardOrderPrintedArgs = {
+  id: Scalars['ID']['input'];
 };
 
 
@@ -24387,6 +24748,11 @@ export type MutationRedeemPhysicalGiftCardArgs = {
 
 export type MutationRedeemPodReferralArgs = {
   token: Scalars['String']['input'];
+};
+
+
+export type MutationRefreshGiftCardOrderTrackingArgs = {
+  id: Scalars['ID']['input'];
 };
 
 
@@ -25669,6 +26035,11 @@ export type MutationSetDefaultCommsProviderArgs = {
 
 
 export type MutationSetDefaultEnvEntryArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationSetDefaultGiftCardDesignArgs = {
   id: Scalars['ID']['input'];
 };
 
@@ -27489,6 +27860,18 @@ export type MutationUpdateFinanceSettingsArgs = {
 
 export type MutationUpdateFoodTaxDefaultsArgs = {
   input: FoodTaxDefaultsInput;
+};
+
+
+export type MutationUpdateGiftCardDesignArgs = {
+  id: Scalars['ID']['input'];
+  input: GiftCardDesignInput;
+};
+
+
+export type MutationUpdateGiftCardOrderAddressArgs = {
+  id: Scalars['ID']['input'];
+  input: GiftCardOrderAddressInput;
 };
 
 
@@ -35662,6 +36045,19 @@ export type Query = {
   giftCardAdminStats: GiftCardAdminStats;
   /** One card by its code, for the claim/redeem page. Holding the code is holding the value, so any signed-in holder may look. */
   giftCardByCode: GiftCard;
+  giftCardDesign: GiftCardDesign;
+  /** Categories already used in the catalogue, for the design form. */
+  giftCardDesignCategories: Array<Scalars['String']['output']>;
+  /** Loyalty > Gift Card Designs. */
+  giftCardDesignsTable: GiftCardDesignTablePage;
+  giftCardOrderAdmin: GiftCardAdminOrderDetail;
+  giftCardOrderStats: GiftCardOrderStats;
+  /** Loyalty > Gift Card Orders. Every order, digital and physical. */
+  giftCardOrdersTable: GiftCardAdminOrderTablePage;
+  /** The courier side of the gift card policy. */
+  giftCardShippingSettings: GiftCardShippingSettings;
+  /** The buy page: the default design, the sales policy, and printed stock. Signed-in only. */
+  giftCardStorefront: GiftCardStorefront;
   /** Loyalty > Virtual Gift Cards > Logs. Every issue and every conversion to coins. */
   giftCardTransactionsTable: GiftCardAdminTransactionTablePage;
   /** Loyalty > Virtual Gift Cards > Cards. Every card ever sold, with buyer and redeemer. */
@@ -36064,6 +36460,10 @@ export type Query = {
   /** Open follow requests waiting on the signed-in user, newest first. */
   myFollowRequests: Array<FollowRequest>;
   myFreelancerProfile?: Maybe<FreelancerProfile>;
+  /** One of the caller's gift card orders, with its tracking. */
+  myGiftCardOrder: GiftCardOrder;
+  /** The caller's gift card orders, newest first. */
+  myGiftCardOrders: GiftCardOrderPage;
   /** The caller's gift cards — held or redeemed, and gifted away. */
   myGiftCards: MyGiftCards;
   myGigJobs: GigJobPage;
@@ -38923,6 +39323,26 @@ export type QueryGiftCardByCodeArgs = {
 };
 
 
+export type QueryGiftCardDesignArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryGiftCardDesignsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryGiftCardOrderAdminArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryGiftCardOrdersTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
 export type QueryGiftCardTransactionsTableArgs = {
   query?: InputMaybe<TableQueryInput>;
 };
@@ -39664,6 +40084,17 @@ export type QueryMyEventRequestStateArgs = {
 
 export type QueryMyEventTicketForPodArgs = {
   pod_doc_id: Scalars['ID']['input'];
+};
+
+
+export type QueryMyGiftCardOrderArgs = {
+  order_no: Scalars['String']['input'];
+};
+
+
+export type QueryMyGiftCardOrdersArgs = {
+  page?: InputMaybe<Scalars['Int']['input']>;
+  page_size?: InputMaybe<Scalars['Int']['input']>;
 };
 
 

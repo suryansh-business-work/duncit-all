@@ -9,6 +9,7 @@ import { wordsOf } from './naming';
 
 /** Named one by one, each with its reason. */
 const DENIED_FIELDS: ReadonlyMap<string, string> = new Map([
+  ['giftCardOrderLabelFile', 'returns a shipping label PDF as base64 — a console download'],
   ['staffCallIceServers', 'returns TURN relay credentials'],
   ['downloadIosSigningFile', 'returns an iOS signing certificate'],
   ['requestDbBackupDownload', 'returns a link to a full database archive'],

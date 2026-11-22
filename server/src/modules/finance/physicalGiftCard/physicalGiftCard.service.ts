@@ -167,7 +167,113 @@ export interface GeneratePhysicalGiftCardsOptions {
   expiresOn?: string | null;
 }
 
+interface BatchSpec {
+  label: string;
+  coins: number;
+  quantity: number;
+  /** One mapped card per member; empty mints unmapped (bulk) cards. */
+  userIds: string[];
+  expiresAt: Date;
+  actorId: Types.ObjectId;
+  orderId: Types.ObjectId | null;
+}
+
+/**
+ * Write one batch, its cards and their GENERATED history lines inside the
+ * caller's transaction — the hand-made batch and the order-paid batch share it.
+ */
+async function insertBatch(spec: BatchSpec, session?: ClientSession): Promise<IPhysicalGiftCardBatch> {
+  const mapped = spec.userIds.length > 0;
+  const [created] = await PhysicalGiftCardBatchModel.create(
+    [
+      {
+        label: spec.label,
+        coins: spec.coins,
+        quantity: spec.quantity,
+        assigned: mapped,
+        expires_at: spec.expiresAt,
+        created_by: spec.actorId,
+        order_id: spec.orderId,
+      },
+    ],
+    { session }
+  );
+  const numbers = await freshCardNumbers(spec.quantity, session);
+  const cards = await PhysicalGiftCardModel.insertMany(
+    numbers.map((cardNumber, i) => {
+      const passcode = generatePasscode();
+      return {
+        card_number: cardNumber,
+        passcode,
+        passcode_last4: passcode.slice(-4),
+        coins: spec.coins,
+        status: 'ACTIVE',
+        batch_id: created._id,
+        assigned_user_id: mapped ? new Types.ObjectId(spec.userIds[i]) : null,
+        expires_at: spec.expiresAt,
+        created_by: spec.actorId,
+      };
+    }),
+    { session }
+  );
+  await PhysicalGiftCardEventModel.insertMany(
+    cards.map((card) => ({
+      card_id: card._id,
+      card_number: card.card_number,
+      batch_id: created._id,
+      type: 'GENERATED',
+      actor_user_id: spec.actorId,
+      coins: spec.coins,
+      note: spec.label,
+    })),
+    { session }
+  );
+  return created;
+}
+
+export interface MintForOrderOptions {
+  orderId: string;
+  orderNo: string;
+  purchaserId: string;
+  coins: number;
+  quantity: number;
+  session?: ClientSession;
+}
+
 export const physicalGiftCardService = {
+  /**
+   * The scratch cards a paid physical order is printed from — unmapped, so the
+   * person the cards are given to redeems them, worth the order's face value,
+   * expiring on the gift card validity. Runs inside the payment's transaction:
+   * a rolled-back payment leaves no cards, and a replayed one finds its batch.
+   */
+  async mintForOrder(opts: MintForOrderOptions): Promise<IPhysicalGiftCardBatch> {
+    const orderId = new Types.ObjectId(opts.orderId);
+    const existing = await PhysicalGiftCardBatchModel.findOne({ order_id: orderId }).session(
+      opts.session ?? null
+    );
+    if (existing) return existing;
+    const settings = await giftCardSettingsService.get();
+    const expiresAt = cardExpiryFor(null, settings.validity_months);
+    if (!expiresAt) {
+      throw new GraphQLError('The gift card validity is not configured', {
+        extensions: { code: 'INTERNAL_SERVER_ERROR' },
+      });
+    }
+    return insertBatch(
+      {
+        label: `Order ${opts.orderNo}`,
+        coins: Math.floor(opts.coins),
+        quantity: Math.floor(opts.quantity),
+        userIds: [],
+        expiresAt,
+        actorId: new Types.ObjectId(opts.purchaserId),
+        orderId,
+      },
+      opts.session
+    );
+  },
+
   /**
    * Mint one batch of printed cards — the batch, every card and its GENERATED
    * history line land together or not at all. Each card carries the same
@@ -204,43 +310,12 @@ export const physicalGiftCardService = {
     const adminId = new Types.ObjectId(opts.adminId);
     for (let attempt = 0; attempt < 3; attempt += 1) {
       try {
-        const batch = await withTransaction(async (session) => {
-          const [created] = await PhysicalGiftCardBatchModel.create(
-            [{ label, coins, quantity, assigned: mapped, expires_at: expiresAt, created_by: adminId }],
-            { session }
-          );
-          const numbers = await freshCardNumbers(quantity, session);
-          const cards = await PhysicalGiftCardModel.insertMany(
-            numbers.map((cardNumber, i) => {
-              const passcode = generatePasscode();
-              return {
-                card_number: cardNumber,
-                passcode,
-                passcode_last4: passcode.slice(-4),
-                coins,
-                status: 'ACTIVE',
-                batch_id: created._id,
-                assigned_user_id: mapped ? new Types.ObjectId(userIds[i]) : null,
-                expires_at: expiresAt,
-                created_by: adminId,
-              };
-            }),
-            { session }
-          );
-          await PhysicalGiftCardEventModel.insertMany(
-            cards.map((card) => ({
-              card_id: card._id,
-              card_number: card.card_number,
-              batch_id: created._id,
-              type: 'GENERATED',
-              actor_user_id: adminId,
-              coins,
-              note: label,
-            })),
-            { session }
-          );
-          return created;
-        });
+        const batch = await withTransaction((session) =>
+          insertBatch(
+            { label, coins, quantity, userIds, expiresAt, actorId: adminId, orderId: null },
+            session
+          )
+        );
         logs.server.info('physicalGiftCard', 'generate', {
           msg: 'Physical gift cards generated',
           batch_id: String(batch._id),

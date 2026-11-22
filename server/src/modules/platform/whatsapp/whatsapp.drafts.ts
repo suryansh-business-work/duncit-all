@@ -716,6 +716,52 @@ export const WA_TEMPLATE_DRAFTS: Readonly<Record<string, WaTemplateDraft>> = {
       'Hi Aarav, Priya has sent you a Duncit gift card worth Rs 500.00. ' +
       'Open it here to add it to your account: https://mweb.duncit.com/gift-card/GC-7H2K-9QXA Team Duncit',
   },
+  GIFT_CARD_ORDER_CONFIRMED: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, your Duncit gift card order {{2}} is confirmed and we have received {{3}}. ' +
+      'Track it here: {{4}} Team Duncit',
+    sample:
+      'Hi Aarav, your Duncit gift card order GC-7H2K9QXAMB is confirmed and we have received Rs 1,049.00. ' +
+      'Track it here: https://mweb.duncit.com/gift-cards/orders/GC-7H2K9QXAMB Team Duncit',
+  },
+  GIFT_CARD_ORDER_SHIPPED: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, your gift card order {{2}} is on its way with {{3}} (tracking no. {{4}}). ' +
+      'Track it here: {{5}} Team Duncit',
+    sample:
+      'Hi Aarav, your gift card order GC-7H2K9QXAMB is on its way with Delhivery (tracking no. 1234567890123). ' +
+      'Track it here: https://mweb.duncit.com/gift-cards/orders/GC-7H2K9QXAMB Team Duncit',
+  },
+  GIFT_CARD_ORDER_OUT_FOR_DELIVERY: {
+    category: 'UTILITY',
+    language: 'English',
+    body: 'Hi {{1}}, your gift card order {{2}} is out for delivery today. Track it here: {{3}} Team Duncit',
+    sample:
+      'Hi Aarav, your gift card order GC-7H2K9QXAMB is out for delivery today. ' +
+      'Track it here: https://mweb.duncit.com/gift-cards/orders/GC-7H2K9QXAMB Team Duncit',
+  },
+  GIFT_CARD_ORDER_DELIVERY_FAILED: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, the courier could not deliver your gift card order {{2}}. ' +
+      'They will try again — details here: {{3}} Team Duncit',
+    sample:
+      'Hi Aarav, the courier could not deliver your gift card order GC-7H2K9QXAMB. ' +
+      'They will try again — details here: https://mweb.duncit.com/gift-cards/orders/GC-7H2K9QXAMB Team Duncit',
+  },
+  GIFT_CARD_ORDER_DELIVERED: {
+    category: 'UTILITY',
+    language: 'English',
+    body: 'Hi {{1}}, your gift card order {{2}} has been delivered. View it here: {{3}} Team Duncit',
+    sample:
+      'Hi Aarav, your gift card order GC-7H2K9QXAMB has been delivered. ' +
+      'View it here: https://mweb.duncit.com/gift-cards/orders/GC-7H2K9QXAMB Team Duncit',
+  },
   ECOMM_PRODUCT_DECLINED: {
     category: 'UTILITY',
     language: 'English',

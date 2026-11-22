@@ -176,6 +176,7 @@ export const MODULE_CATEGORY: Record<ModuleName, McpCategoryKey | null> = {
   coinTypeDefs: 'loyalty',
   giftCardTypeDefs: 'loyalty',
   physicalGiftCardTypeDefs: 'loyalty',
+  giftCardOrderTypeDefs: 'loyalty',
 
   employeeExpenseTypeDefs: 'employee',
   myEmployeeTargetTypeDefs: 'employee',

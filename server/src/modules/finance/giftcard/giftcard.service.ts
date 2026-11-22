@@ -1,14 +1,14 @@
 import { GraphQLError } from 'graphql';
 import crypto from 'node:crypto';
 import { Types, type ClientSession } from 'mongoose';
-import {
-  GiftCardModel,
-  GiftCardTransactionModel,
-  type GiftCardScopeType,
-  type IGiftCard,
-} from './giftcard.model';
+import { GiftCardModel, GiftCardTransactionModel, type IGiftCard } from './giftcard.model';
 import { giftCardSettingsService } from './giftcard.settings.service';
-import { CategoryModel } from '@modules/pods/category/category.model';
+import {
+  factsQuantity,
+  resolvePurchaseFacts,
+  type GiftCardPurchaseFacts,
+  type GiftCardPurchaseInput,
+} from './giftcard.facts';
 import { UserModel } from '@modules/access/user/user.model';
 import { settingsService } from '@modules/platform/settings/settings.service';
 import { coinService } from '@modules/finance/coin/coin.service';
@@ -44,12 +44,6 @@ export function normalizeGiftCardCode(input: string): string {
   return raw.replace(/(.{4})(?=.)/g, '$1-');
 }
 
-const LEVEL_BY_SCOPE: Record<Exclude<GiftCardScopeType, 'SHOP'>, string> = {
-  SUPER: 'SUPER',
-  CATEGORY: 'CATEGORY',
-  SUB: 'SUB',
-};
-
 const isExpired = (card: IGiftCard) => card.expires_at.getTime() <= Date.now();
 
 const statusOf = (card: IGiftCard): 'ACTIVE' | 'REDEEMED' | 'EXPIRED' => {
@@ -67,6 +61,8 @@ export const giftCardPub = (card: IGiftCard) => ({
   scope_image_url: card.scope_image_url ?? '',
   scope_image_front_url: card.scope_image_front_url ?? '',
   scope_image_back_url: card.scope_image_back_url ?? '',
+  design_id: card.design_id ? String(card.design_id) : null,
+  design_name: card.design_name ?? '',
   initial_amount: card.initial_amount,
   balance: card.balance,
   status: statusOf(card),
@@ -79,19 +75,112 @@ export const giftCardPub = (card: IGiftCard) => ({
   created_at: card.created_at?.toISOString?.() ?? '',
 });
 
-/** The facts checkout freezes onto the payment — everything the issue leg needs. */
-export interface GiftCardPurchaseFacts {
-  scope_type: GiftCardScopeType;
-  scope_category_id: string | null;
-  scope_name: string;
-  scope_image_url: string;
-  /** The category's card artwork at the moment of purchase — see IGiftCard. */
-  scope_image_front_url: string;
-  scope_image_back_url: string;
-  amount: number;
-  recipient_email: string;
-  recipient_name: string;
-  message: string;
+export type { GiftCardPurchaseFacts } from './giftcard.facts';
+
+export interface IssueOptions {
+  paymentId: string;
+  purchaserId: string;
+  facts: GiftCardPurchaseFacts;
+  /** The gift card order the cards belong to, when one exists. */
+  orderId?: string | null;
+  session?: ClientSession;
+}
+
+/** The card a replay already issued at this position. Legacy single cards carry no
+ * line_index, so position 0 also matches a card without one. */
+const lineFilter = (paymentId: string, lineIndex: number) => ({
+  payment_id: paymentId,
+  line_index: lineIndex === 0 ? { $in: [0, null] } : lineIndex,
+});
+
+const isDuplicate = (e: unknown) => (e as { code?: number })?.code === DUPLICATE_KEY;
+
+/** The card's ISSUE ledger row. A replay finds it already written, which is fine. */
+async function writeIssueRow(card: IGiftCard, opts: IssueOptions): Promise<void> {
+  try {
+    await GiftCardTransactionModel.create(
+      [
+        {
+          gift_card_id: card._id,
+          code: card.code,
+          user_id: card.purchaser_user_id,
+          type: 'ISSUE',
+          amount: card.initial_amount,
+          balance_after: card.initial_amount,
+          source: 'PURCHASE',
+          payment_id: opts.paymentId,
+        },
+      ],
+      { session: opts.session }
+    );
+  } catch (e) {
+    if (!isDuplicate(e)) throw e;
+  }
+}
+
+/** Create the card at one position with a fresh code. */
+async function createLine(opts: IssueOptions, lineIndex: number, expiresAt: Date): Promise<IGiftCard> {
+  const { facts, session } = opts;
+  const purchaserId = new Types.ObjectId(opts.purchaserId);
+  const [card] = await GiftCardModel.create(
+    [
+      {
+        code: generateCode(),
+        purchaser_user_id: purchaserId,
+        recipient_email: facts.recipient_email,
+        recipient_name: facts.recipient_name,
+        message: facts.message,
+        scope_type: facts.scope_type,
+        scope_category_id: facts.scope_category_id
+          ? new Types.ObjectId(facts.scope_category_id)
+          : null,
+        scope_name: facts.scope_name,
+        scope_image_url: facts.scope_image_url,
+        // Older payments were frozen before artwork existed, so their
+        // facts carry none — the card then renders as it always did.
+        scope_image_front_url: facts.scope_image_front_url ?? '',
+        scope_image_back_url: facts.scope_image_back_url ?? '',
+        design_id: facts.design_id ? new Types.ObjectId(facts.design_id) : null,
+        design_name: facts.design_name ?? '',
+        order_id: opts.orderId ? new Types.ObjectId(opts.orderId) : null,
+        initial_amount: facts.amount,
+        balance: facts.amount,
+        status: 'ACTIVE',
+        payment_id: opts.paymentId,
+        line_index: lineIndex,
+        expires_at: expiresAt,
+      },
+    ],
+    { session }
+  );
+  return card;
+}
+
+/**
+ * Issue the card at one position of a purchase. Idempotent per (payment,
+ * position) — the unique index absorbs every replay of the success path, and
+ * the ISSUE ledger row's unique (card, source) does the same for the statement.
+ */
+async function issueLine(opts: IssueOptions, lineIndex: number, expiresAt: Date): Promise<IGiftCard> {
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    // Sequential by design: a retry must re-read before it writes again.
+    const existing = await GiftCardModel.findOne(lineFilter(opts.paymentId, lineIndex)).session(
+      opts.session ?? null
+    );
+    if (existing) return existing;
+    try {
+      const card = await createLine(opts, lineIndex, expiresAt);
+      await writeIssueRow(card, opts);
+      return card;
+    } catch (e) {
+      // Either the code collided (regenerate and retry) or a concurrent
+      // replay won this position (the loop re-reads and returns it).
+      if (!isDuplicate(e)) throw e;
+    }
+  }
+  throw new GraphQLError('The gift card could not be issued', {
+    extensions: { code: 'INTERNAL_SERVER_ERROR' },
+  });
 }
 
 export const giftcardService = {
@@ -107,149 +196,32 @@ export const giftcardService = {
     }
   },
 
-  /**
-   * Validate a purchase request and resolve the theme's display snapshots.
-   * Category scopes must reference a live category of exactly that level; the
-   * SHOP scope has no document, so its name stays '' (clients localize it) and
-   * its image comes from the branding the Pod Shop already renders.
-   */
-  async purchaseFacts(input: {
-    scope_type: string;
-    scope_category_id?: string | null;
-    amount: number;
-    recipient_email?: string | null;
-    recipient_name?: string | null;
-    message?: string | null;
-  }): Promise<GiftCardPurchaseFacts> {
-    const settings = await giftCardSettingsService.get();
-    const amount = Math.floor(Number(input.amount) || 0);
-    if (amount < settings.min_amount || amount > settings.max_amount) {
-      badInput(`Gift card amount must be between ${settings.min_amount} and ${settings.max_amount}`);
-    }
-
-    const scopeType = input.scope_type as GiftCardScopeType;
-    let scopeCategoryId: string | null = null;
-    let scopeName = '';
-    let scopeImage = '';
-    let scopeFront = '';
-    let scopeBack = '';
-    if (scopeType === 'SHOP') {
-      if (input.scope_category_id) badInput('A shop gift card carries no category');
-      const branding = await settingsService.getBranding();
-      scopeImage = branding?.pod_shop_slider?.[0]?.url || branding?.logo_url || '';
-    } else {
-      if (!input.scope_category_id || !Types.ObjectId.isValid(input.scope_category_id)) {
-        badInput('Choose a category for this gift card');
-      }
-      const doc = await CategoryModel.findById(input.scope_category_id);
-      if (!doc) {
-        throw new GraphQLError('Category not found', { extensions: { code: 'NOT_FOUND' } });
-      }
-      if (doc.level !== LEVEL_BY_SCOPE[scopeType]) {
-        badInput('The chosen category does not match the gift card type');
-      }
-      if (!doc.is_active) badInput('That category is not available right now');
-      scopeCategoryId = String(doc._id);
-      scopeName = doc.name;
-      scopeImage = doc.icon || doc.media?.find((m: { type: string }) => m.type === 'IMAGE')?.url || '';
-      scopeFront = doc.gift_card_image_front ?? '';
-      scopeBack = doc.gift_card_image_back ?? '';
-    }
-
-    return {
-      scope_type: scopeType,
-      scope_category_id: scopeCategoryId,
-      scope_name: scopeName,
-      scope_image_url: scopeImage,
-      scope_image_front_url: scopeFront,
-      scope_image_back_url: scopeBack,
-      amount,
-      recipient_email: (input.recipient_email ?? '').trim().toLowerCase(),
-      recipient_name: (input.recipient_name ?? '').trim(),
-      message: (input.message ?? '').trim(),
-    };
+  /** Validate a purchase request and resolve the facts frozen onto the payment. */
+  purchaseFacts(input: GiftCardPurchaseInput): Promise<GiftCardPurchaseFacts> {
+    return resolvePurchaseFacts(input);
   },
 
   /**
-   * Create the card for one successful purchase payment. Idempotent per payment
-   * — the unique `payment_id` on the card absorbs every replay of the success
-   * path, and the ISSUE ledger row's unique (payment_id, source) does the same
-   * for the statement. Expiry counts from the moment of issue.
+   * Issue every virtual card one successful payment bought — one per unit of
+   * the order's quantity, each with its own code. Expiry counts from issue.
    */
-  async issueForPayment(opts: {
-    paymentId: string;
-    purchaserId: string;
-    facts: GiftCardPurchaseFacts;
-    session?: ClientSession;
-  }): Promise<IGiftCard> {
-    const { facts, session } = opts;
-    const purchaserId = new Types.ObjectId(opts.purchaserId);
+  async issueAllForPayment(opts: IssueOptions): Promise<IGiftCard[]> {
     const settings = await giftCardSettingsService.get();
     const expiresAt = new Date();
     expiresAt.setMonth(expiresAt.getMonth() + settings.validity_months);
-
-    for (let attempt = 0; attempt < 3; attempt += 1) {
-      const existing = await GiftCardModel.findOne({ payment_id: opts.paymentId }).session(
-        session ?? null
-      );
-      if (existing) return existing;
-      try {
-        const [card] = await GiftCardModel.create(
-          [
-            {
-              code: generateCode(),
-              purchaser_user_id: purchaserId,
-              recipient_email: facts.recipient_email,
-              recipient_name: facts.recipient_name,
-              message: facts.message,
-              scope_type: facts.scope_type,
-              scope_category_id: facts.scope_category_id
-                ? new Types.ObjectId(facts.scope_category_id)
-                : null,
-              scope_name: facts.scope_name,
-              scope_image_url: facts.scope_image_url,
-              // Older payments were frozen before artwork existed, so their
-              // facts carry none — the card then renders as it always did.
-              scope_image_front_url: facts.scope_image_front_url ?? '',
-              scope_image_back_url: facts.scope_image_back_url ?? '',
-              initial_amount: facts.amount,
-              balance: facts.amount,
-              status: 'ACTIVE',
-              payment_id: opts.paymentId,
-              expires_at: expiresAt,
-            },
-          ],
-          { session }
-        );
-        try {
-          await GiftCardTransactionModel.create(
-            [
-              {
-                gift_card_id: card._id,
-                code: card.code,
-                user_id: purchaserId,
-                type: 'ISSUE',
-                amount: facts.amount,
-                balance_after: facts.amount,
-                source: 'PURCHASE',
-                payment_id: opts.paymentId,
-              },
-            ],
-            { session }
-          );
-        } catch (e) {
-          if ((e as { code?: number })?.code !== DUPLICATE_KEY) throw e;
-        }
-        return card;
-      } catch (e) {
-        // Either the code collided (regenerate and retry) or a concurrent
-        // replay won the payment_id race (the loop re-reads and returns it).
-        if ((e as { code?: number })?.code !== DUPLICATE_KEY) throw e;
-      }
+    const cards: IGiftCard[] = [];
+    // One at a time, not Promise.all: every write rides the payment's
+    // transaction session, and a MongoDB session runs one operation at a time.
+    for (let i = 0; i < factsQuantity(opts.facts); i += 1) {
+      cards.push(await issueLine(opts, i, expiresAt));
     }
-    throw new GraphQLError('The gift card could not be issued', {
-      extensions: { code: 'INTERNAL_SERVER_ERROR' },
-    });
+    return cards;
+  },
+
+  /** The first (for a legacy purchase, the only) card of a payment. */
+  async issueForPayment(opts: IssueOptions): Promise<IGiftCard> {
+    const [first] = await this.issueAllForPayment(opts);
+    return first;
   },
 
   /**
@@ -325,17 +297,19 @@ export const giftcardService = {
   },
 
   /**
-   * Mail the card to whoever it is for — the recipient when gifted, the buyer
-   * when self-purchased. Called from the payment's deferred side effects, never
-   * inside a transaction. Throws when the card is missing so the step records a
-   * failure the reconciler will retry.
+   * Mail every card a payment bought to whoever it is for — the recipient when
+   * gifted, the buyer when self-purchased. One email per card, because each
+   * carries its own code. Called from the payment's deferred side effects,
+   * never inside a transaction. Throws when no card exists so the step records
+   * a failure the reconciler will retry.
    */
   async emailForPayment(payment: {
     payment_id: string;
     user_name: string;
     user_email: string;
-  }): Promise<{ to: string; cardId: string }> {
-    const card = await GiftCardModel.findOne({ payment_id: payment.payment_id });
+  }): Promise<{ to: string; cardId: string; cardIds: string[] }> {
+    const cards = await GiftCardModel.find({ payment_id: payment.payment_id }).sort({ line_index: 1 });
+    const [card] = cards;
     if (!card) throw new Error('No gift card exists for this payment');
     const to = card.recipient_email || payment.user_email;
     const [fs, urlConfigs, t] = await Promise.all([
@@ -343,28 +317,34 @@ export const giftcardService = {
       getUrlConfigs(),
       recipientLocale(to).then((locale) => emailTranslationVars(locale)),
     ]);
-    // The SHOP theme has no category name; its label is the localized Pod Shop
-    // line, resolved here in the recipient's language.
-    const scopeLabel = card.scope_name || t['t:email.giftCard.shopScope'] || 'Pod Shop';
-    await sendGiftCardReceivedEmail({
-      to,
-      recipient_name: card.recipient_name || payment.user_name,
-      sender_name: payment.user_name,
-      amount: `${fs.currency_symbol}${card.initial_amount.toFixed(2)}`,
-      scope_label: scopeLabel,
-      code: card.code,
-      message_line: card.message ? `“${card.message}”` : '',
-      redeem_url: `${urlConfigs.appUrl}/gift-card/${card.code}`,
-      expires_on: appDate(card.expires_at),
-    });
+    // A catalogue card is labelled by its design; a SHOP theme card has no
+    // name, so its label is the localized Pod Shop line, in the recipient's language.
+    const scopeLabel =
+      card.design_name || card.scope_name || t['t:email.giftCard.shopScope'] || 'Pod Shop';
+    await Promise.all(
+      cards.map((each) =>
+        sendGiftCardReceivedEmail({
+          to,
+          recipient_name: each.recipient_name || payment.user_name,
+          sender_name: payment.user_name,
+          amount: `${fs.currency_symbol}${each.initial_amount.toFixed(2)}`,
+          scope_label: scopeLabel,
+          code: each.code,
+          message_line: each.message ? `“${each.message}”` : '',
+          redeem_url: `${urlConfigs.appUrl}/gift-card/${each.code}`,
+          expires_on: appDate(each.expires_at),
+        })
+      )
+    );
     // A gift is the one email people most often miss. When the address belongs
-    // to a Duncit account, the same news goes to its WhatsApp too — the card is
-    // keyed by its own id, so a retried payment step cannot send it twice.
+    // to a Duncit account, the same news goes to its WhatsApp too — once per
+    // purchase, keyed on its first card so a retried step cannot send it twice.
     const holder = await UserModel.findOne({ 'auth.email': to })
       .select('profile.first_name profile.last_name auth.email auth.phone communication.whatsapp')
       .lean();
     if (holder) {
       const name = card.recipient_name || holder.profile?.first_name || 'there';
+      const total = cards.reduce((sum, c) => sum + c.initial_amount, 0);
       await whatsappService.send({
         event: 'USER_GIFT_CARD_RECEIVED',
         entityId: String(card._id),
@@ -373,12 +353,16 @@ export const giftcardService = {
         params: [
           name,
           payment.user_name || 'Someone',
-          `${fs.currency_symbol}${card.initial_amount.toFixed(2)}`,
-          `${urlConfigs.appUrl}/gift-card/${card.code}`,
+          `${fs.currency_symbol}${total.toFixed(2)}`,
+          // Several codes cannot share one claim link: they arrive by email, and
+          // the redeem page takes any of them.
+          cards.length > 1
+            ? `${urlConfigs.appUrl}/gift-cards/redeem`
+            : `${urlConfigs.appUrl}/gift-card/${card.code}`,
         ],
       });
     }
-    return { to, cardId: String(card._id) };
+    return { to, cardId: String(card._id), cardIds: cards.map((c) => String(c._id)) };
   },
 
   /** One card by code, for the claim/redeem page — any signed-in holder of the

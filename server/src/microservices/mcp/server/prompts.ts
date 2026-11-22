@@ -144,7 +144,7 @@ export const MCP_PROMPTS: readonly McpPrompt[] = [
     render: (args) =>
       lines(
         `Join a free pod for me${promptValue(args.pod) ? `: "${promptValue(args.pod)}"` : ''}.`,
-        '1. Find it with pods_pods_table (search) and read it with pods_pod. Check it is free, upcoming and has seats.',
+        '1. Find it with pods_pods_table (search) and read it with pods_pod. Check it is free, not over yet (upcoming, or ongoing and before its end time) and has seats. If it has already started, tell me so before asking for my yes.',
         '2. If it is paid, stop and tell me to book it through checkout in the Duncit app.',
         `3. Tell me what will happen and wait for my yes, then call pods_join_free_pod with ${META_REASON}.`,
         DATA_RULE

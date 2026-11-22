@@ -20,8 +20,8 @@ interface Props {
  *
  * There is no See-all: the band is bounded by the pods' own end times, not by a
  * page size, so a link to a fuller list would have nothing extra to show.
- * Cards open the pod detail as everywhere else — where booking is closed, which
- * is why nothing here offers a join.
+ * Cards open the pod detail as everywhere else, which is where a running pod is
+ * joined (after an "already ongoing" confirm), so nothing here offers a join.
  */
 export default function OngoingPodsRail({ pods, hostNameOf }: Readonly<Props>) {
   const { t } = useTranslation();

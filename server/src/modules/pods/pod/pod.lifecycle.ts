@@ -108,3 +108,26 @@ export function podLiveEnd(pod: {
   const end = pod?.pod_end_date_time ? new Date(pod.pod_end_date_time).getTime() : Number.NaN;
   return new Date(Number.isNaN(end) ? start + POD_LIVE_TAIL_MS : end);
 }
+
+/**
+ * Whether a pod's booking window has closed: it is past its end ({@link podLiveEnd}),
+ * or Finance already settled it. A pod that has started but not ended can still
+ * be joined (the app asks the member to confirm first), so this is the rule
+ * `joinFree` and checkout refuse on. It is the server side of the client's
+ * `podPhase(...) === 'PREVIOUS'`.
+ *
+ * A pod with no usable start never closes here, the same "cannot be placed on
+ * a clock" reading `podLiveEnd` gives it.
+ */
+export function podBookingClosed(
+  pod: {
+    pod_date_time?: Date | string | null;
+    pod_end_date_time?: Date | string | null;
+    completed_at?: Date | null;
+  },
+  now: number = Date.now(),
+): boolean {
+  if (pod.completed_at) return true;
+  const end = podLiveEnd(pod);
+  return !!end && end.getTime() < now;
+}

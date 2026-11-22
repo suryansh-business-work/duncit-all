@@ -18,7 +18,7 @@ import PodAboutSection from '../../components/pod-details/PodAboutSection';
 import PodChipList from '../../components/pod-details/PodChipList';
 import PodAttendeesSection from '../../components/pod-details/PodAttendeesSection';
 import PodClubAdminsSection from '../../components/pod-details/PodClubAdminsSection';
-import { isPodExpired } from '../../utils/podStatus';
+import { podPhase } from '@duncit/utils';
 import PodHostsSection from '../../components/pod-details/PodHostsSection';
 import PodPlaceChargesSection from '../../components/pod-details/PodPlaceChargesSection';
 import PodPaymentDetailsSection from '../../components/pod-details/PodPaymentDetailsSection';
@@ -71,7 +71,7 @@ export default function PodDetailAccordions({
         { id: 'clubAdmins', title: t('mweb.podDetails.sectionClubAdmins'), icon: <AdminPanelSettingsIcon fontSize="small" />, render: () => <PodClubAdminsSection admins={clubAdmins} /> },
         { id: 'offers', title: t('mweb.podDetails.sectionOffers'), icon: <StarIcon fontSize="small" />, render: () => <PodChipList items={offers} emptyText={t('mweb.podDetails.offersEmpty')} color="primary" /> },
         { id: 'hosts', title: t('mweb.podDetails.sectionHosts'), icon: <PersonIcon fontSize="small" />, render: () => <PodHostsSection hosts={hosts} /> },
-        { id: 'attendees', title: t('mweb.podDetails.sectionAttendees'), icon: <GroupsIcon fontSize="small" />, render: () => <PodAttendeesSection attendees={attendees} attendeeIds={pod.pod_attendees ?? []} hostIds={pod.pod_hosts_id ?? []} totalSpots={pod.no_of_spots ?? 0} expired={isPodExpired(pod.pod_date_time)} spotFills={spotFills} seatsByUser={seatsByUser} seatsTaken={pod.seats_taken ?? undefined} /> },
+        { id: 'attendees', title: t('mweb.podDetails.sectionAttendees'), icon: <GroupsIcon fontSize="small" />, render: () => <PodAttendeesSection attendees={attendees} attendeeIds={pod.pod_attendees ?? []} hostIds={pod.pod_hosts_id ?? []} totalSpots={pod.no_of_spots ?? 0} expired={podPhase(pod.pod_date_time, pod.pod_end_date_time) === 'PREVIOUS'} spotFills={spotFills} seatsByUser={seatsByUser} seatsTaken={pod.seats_taken ?? undefined} /> },
         { id: 'perks', title: t('mweb.podDetails.sectionPerks'), icon: <CardGiftcardIcon fontSize="small" />, render: () => <PodChipList items={perks} emptyText={t('mweb.podDetails.perksEmpty')} color="success" /> },
         { id: 'payment', title: t('mweb.podDetails.sectionPayment'), icon: <PaymentsIcon fontSize="small" />, render: () => <PodPaymentDetailsSection amount={Number(pod.pod_amount) || 0} isFree={isFree} priceCompute={priceCompute} /> },
         ...(paymentTerms ? [{ id: 'terms', title: t('mweb.podDetails.sectionTerms'), icon: <PaymentIcon fontSize="small" />, render: () => <Box sx={{ whiteSpace: 'pre-wrap', fontSize: 14, color: 'text.secondary' }}>{paymentTerms}</Box> }] : []),

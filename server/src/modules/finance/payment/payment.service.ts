@@ -39,6 +39,7 @@ import { logs } from '@observability/log';
 import { sendEmail } from '@services/email/email.service';
 import { getUrlConfigs } from '@config/url-configs';
 import { assertPodOpenForBooking } from '@utils/hidden';
+import { podBookingClosed } from '@modules/pods/pod/pod.lifecycle';
 import { EMPTY_RENTALS, resolveRentalLines, type RentalResolution } from '@modules/venues/venueRental/rentalCheckout';
 import { paymentRentalLines } from '@modules/venues/venueRental/rentalLines';
 import {
@@ -683,7 +684,8 @@ export async function resolvePayable(input: any, userId?: string) {
     if (!pod) throw new GraphQLError('Pod not found', { extensions: { code: 'NOT_FOUND' } });
     assertBookableRow(pod);
     assertPodOpenForBooking(pod);
-    if (pod.pod_date_time && new Date(pod.pod_date_time).getTime() < Date.now()) {
+    // Open until the pod ENDS: a running pod can still be booked.
+    if (podBookingClosed(pod)) {
       throw new GraphQLError('This pod has already taken place — booking is closed.', {
         extensions: { code: 'BAD_REQUEST' },
       });

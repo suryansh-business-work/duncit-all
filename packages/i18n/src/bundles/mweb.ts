@@ -930,7 +930,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       // cannot be joined any more, so the rail says what it is rather than
       // inviting a booking.
       ongoingPodsTitle: 'Ongoing Pods',
-      ongoingPodsSubtitle: 'Happening right now — joining is closed',
+      ongoingPodsSubtitle: 'Happening right now — you can still join',
       previousPodsTitle: 'Previous Pods',
       previousPodsSubtitle: 'Pods that have already taken place',
       previousPodsEmpty: 'No previous pods to show yet.',
@@ -1433,6 +1433,8 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       physical: 'Physical',
       // The countdown chip. The number is the pod's own, only the words are copy.
       podExpired: 'Pod expired',
+      // Started but not over: it can still be joined.
+      podOngoing: 'Pod ongoing',
       daysRemaining: '{days} days remaining',
       hoursRemaining: '{hours} hours remaining',
       startingSoon: 'Starting soon',
@@ -1535,10 +1537,15 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       youreHosting: "You're hosting",
       youHosted: 'You hosted',
       yourPod: 'Your Pod',
-      // Closed state. A pod that is RUNNING has not "taken place" yet, so it
-      // gets its own sentence rather than being told it is over.
+      // Closed state: only once the pod's end time has passed.
       bookingClosed: 'This pod has already taken place — booking is closed.',
+      // No longer rendered: a running pod can be joined now. Kept because
+      // installed app builds still show it.
       bookingClosedOngoing: 'This pod is happening right now — joining is closed.',
+      // Asked before joining or booking a pod that has already started.
+      ongoingJoinTitle: 'This pod is already ongoing',
+      ongoingJoinBody: 'This pod has already started. Do you still want to join?',
+      ongoingJoinConfirm: 'Yes, join',
       // Backout-in-process state.
       backoutLocked:
         'A replacement has been confirmed — this Backout request can no longer be cancelled. Your refund will be processed as per the backout policy.',

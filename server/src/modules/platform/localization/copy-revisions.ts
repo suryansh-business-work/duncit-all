@@ -449,4 +449,6 @@ export const COPY_REVISIONS: Readonly<Record<string, readonly string[]>> = {
   "finance.refundLogs.search": ["Search txn id, invoice, name or email"],
   "finance.orderRefunds.search": ["Search order no, return no, name or email"],
   "admin.userFinance.search": ["Search by payment ID or invoice"],
+  // A running pod can be joined now (until its end time).
+  "mweb.home.ongoingPodsSubtitle": ["Happening right now — joining is closed"],
 };

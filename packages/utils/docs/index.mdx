@@ -1578,11 +1578,15 @@ if (hasWatchedEnough(video.currentTime, video.duration)) markWatched();
 ### Pod phase — the Home rails
 
 A pod is not simply "upcoming or past". It leaves the upcoming feed the moment
-it STARTS — nobody can join a pod that is running, and the server refuses the
-booking — but it is not *previous* until it is actually over. Between those two
+it STARTS, but it is not *previous* until it is actually over. Between those two
 instants it is **ONGOING**, and Home gives it its own rail on both mWeb and
 native. Before this split a pod that was happening right now dropped straight
 into Previous Pods.
+
+An ONGOING pod can still be joined while seats are left: Pod details shows it as
+"Pod ongoing" and asks "This pod is already ongoing" before Join / Book goes
+ahead. Booking closes once the pod is PREVIOUS, which is the same line the
+server's `podBookingClosed` (`pod.lifecycle.ts`) draws on `joinFree` and checkout.
 
 A pod's end is `pod_end_date_time` when the host set one, and
 `pod_date_time + POD_LIVE_TAIL_MS` (4h) when they did not — the same fallback

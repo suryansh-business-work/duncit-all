@@ -49,6 +49,7 @@ import { userContactNumber } from '@utils/contact';
 import { logs } from '@observability/log';
 import { appDate, appTime } from '@utils/app-time';
 import { assertPodOpenForBooking } from '@utils/hidden';
+import { podBookingClosed } from '@modules/pods/pod/pod.lifecycle';
 import { addOnMoneyOf } from '@modules/venues/venueRental/rentalLines';
 import { rentalLifecycleService } from '@modules/venues/venueRental/rentalLifecycle.service';
 
@@ -1157,7 +1158,8 @@ export const podMemberService = {
     if (!pod) throw new GraphQLError('Pod not found', { extensions: { code: 'NOT_FOUND' } });
     assertBookableRow(pod);
     assertPodOpenForBooking(pod);
-    if (pod.pod_date_time && pod.pod_date_time.getTime() < Date.now()) {
+    // Open until the pod ENDS: a running pod can still be joined.
+    if (podBookingClosed(pod)) {
       throw new GraphQLError('This pod has already taken place — booking is closed.', {
         extensions: { code: 'BAD_REQUEST' },
       });

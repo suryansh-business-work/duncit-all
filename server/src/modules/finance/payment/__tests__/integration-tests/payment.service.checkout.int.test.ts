@@ -228,7 +228,10 @@ describe('dummyCheckout guards', () => {
 
   it('refuses a pod that already took place, or one this account already holds', async () => {
     const user = await seedUser();
-    const past = await seedPod({ pod_date_time: new Date(Date.now() - 3_600_000) });
+    const past = await seedPod({
+      pod_date_time: new Date(Date.now() - 3 * 3_600_000),
+      pod_end_date_time: new Date(Date.now() - 3_600_000),
+    });
     await expect(paymentService.dummyCheckout(checkoutInput({ pod_id: String(past._id) }), String(user._id))).rejects.toThrow(
       'This pod has already taken place — booking is closed.'
     );
@@ -246,6 +249,20 @@ describe('dummyCheckout guards', () => {
       /Keep My Spot/
     );
     expect(await PaymentModel.countDocuments({})).toBe(0);
+  });
+
+  it('still opens a checkout for a pod that is ongoing (started, not yet ended)', async () => {
+    const user = await seedUser();
+    const ongoing = await seedPod({
+      pod_date_time: new Date(Date.now() - 3_600_000),
+      pod_end_date_time: new Date(Date.now() + 3_600_000),
+    });
+
+    const sheet = await paymentService.createRazorpayCheckout(checkoutInput({ pod_id: String(ongoing._id) }), String(user._id));
+
+    expect(sheet).toMatchObject({ order_id: 'order_TEST1', free: false });
+    expect(mockOrder).toHaveBeenCalledTimes(1);
+    expect(await PaymentModel.findById(sheet.payment_doc_id).lean()).toMatchObject({ status: 'PENDING', gateway: 'RAZORPAY' });
   });
 
   it('a simulated gateway failure records a FAILED payment and finalizes nothing', async () => {

@@ -15,7 +15,7 @@ export const APP_POD_FLOWS: readonly CatalogueFlow[] = [
           ['Look at the top row', 'A "Search pods…" pill and a round filter button sit side by side'],
           ['Scroll past the status rail to the vibe chips', 'Heading "What\'s your vibe today?" with an "All" chip selected first, followed by one chip per category'],
           ['Look at the "Happening nearby" section', 'Title "Happening nearby" with a "See all" action and a horizontal rail of upcoming pod cards (image, title, price/Free, spots left)'],
-          ['Scroll to the "Ongoing Pods" rail (only when a pod has started but not ended)', 'Cards for running pods; the rail explains joining is closed'],
+          ['Scroll to the "Ongoing Pods" rail (only when a pod has started but not ended)', 'Cards for running pods; the rail says "Happening right now — you can still join"'],
           ['Scroll further', 'Host CTA banner, club recommendation row, one section per club with its pods, then "Previous Pods" and "We\'ve got something for you"'],
           ['Tap any upcoming pod card', 'Navigates to /club/<clubSlug>/pod/<podSlug> and the pod details page loads'],
         ],
@@ -299,12 +299,13 @@ export const APP_POD_FLOWS: readonly CatalogueFlow[] = [
         ],
       },
       {
-        name: 'Booking closed once the pod starts',
-        description: 'Non-members cannot book a running or past pod.',
+        name: 'Joining a running pod, and booking closed once it ends',
+        description: 'A running pod can still be joined after a confirm; booking closes once its end time passes.',
         steps: [
-          ['As a non-member open a pod that is currently running', 'Bar shows "This pod is happening right now — joining is closed." with no CTA'],
-          ['Open a pod whose end time has passed', 'Bar shows "This pod has already taken place — booking is closed."'],
-          ['Force the join mutation on a started pod (API call)', 'Server refuses with "This pod has already taken place — booking is closed."'],
+          ['As a non-member open a pod that is currently running', 'The time chip reads "Pod ongoing" and the bar still shows Join / Book now (a disabled "Pod is full" when no seats are left)'],
+          ['Tap Join / Book now', 'Dialog "This pod is already ongoing" — "This pod has already started. Do you still want to join?"; Cancel books nothing, "Yes, join" carries on to the join or checkout'],
+          ['Open a pod whose end time has passed', 'Time chip "Pod expired"; bar shows "This pod has already taken place — booking is closed."'],
+          ['Force the join mutation on a pod whose end time has passed (API call)', 'Server refuses with "This pod has already taken place — booking is closed."'],
         ],
       },
       {
@@ -514,7 +515,7 @@ export const APP_POD_FLOWS: readonly CatalogueFlow[] = [
         steps: [
           ['Open /checkout with no pod id and no amount', '"Nothing to checkout" with a "Back to Home" button'],
           ['Disable both Razorpay and dummy mode, then pay', 'Error "Online payments are not configured yet. Please try again later."'],
-          ['Keep checkout open past the pod start time and pay', 'Server refuses with "This pod has already taken place — booking is closed."'],
+          ['Keep checkout open past the pod end time and pay', 'Server refuses with "This pod has already taken place — booking is closed."'],
           ['Call createRazorpayOrder with amount 0 for a non-pod order', 'Server refuses with "Amount must be greater than 0"'],
         ],
       },

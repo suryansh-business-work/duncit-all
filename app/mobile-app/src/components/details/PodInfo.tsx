@@ -15,6 +15,14 @@ import { podModeLabel, podPriceLabel, podTimeChip, type TimeTone } from '@/utils
 
 type IconName = ComponentProps<typeof MaterialIcons>['name'];
 
+/** The time chip's icon per tone: over, running, or counting down. */
+const TIME_ICONS: Record<TimeTone, IconName> = {
+  error: 'event-busy',
+  success: 'play-circle-outline',
+  warning: 'hourglass-bottom',
+  info: 'hourglass-bottom',
+};
+
 /** A spot count this low is worth a second look before booking. */
 const FEW_SPOTS = 3;
 
@@ -90,14 +98,14 @@ export function PodInfo({
   onStatusAdded?: () => Promise<void>;
 }>) {
   const { t } = useTranslation();
-  const { color, danger, warning, info } = useThemeColors();
+  const { color, danger, warning, info, success } = useThemeColors();
   const host = pod.host_names.join(', ');
   const isVirtual = pod.pod_mode === 'VIRTUAL';
   const attendees = podSeatsTaken(pod);
   const hasSpots = pod.no_of_spots > 0;
   const remaining = hasSpots ? Math.max(pod.no_of_spots - attendees, 0) : 0;
-  const time = podTimeChip(pod.pod_date_time, t);
-  const tone: Record<TimeTone, string> = { error: danger, warning, info };
+  const time = podTimeChip(pod.pod_date_time, pod.pod_end_date_time, t);
+  const tone: Record<TimeTone, string> = { error: danger, warning, info, success };
   const timeTone = time ? tone[time.tone] : color;
 
   return (
@@ -146,7 +154,7 @@ export function PodInfo({
           {time ? (
             <Chip
               testID="pod-info-time-chip"
-              icon={time.tone === 'error' ? 'event-busy' : 'hourglass-bottom'}
+              icon={TIME_ICONS[time.tone]}
               iconColor={timeTone}
               label={time.label}
               fill={tint(timeTone)}

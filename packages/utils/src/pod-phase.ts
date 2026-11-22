@@ -7,11 +7,13 @@
  * the host set one and `start + POD_LIVE_TAIL_MS` when they did not, which is
  * why the tail is a shared constant rather than a number typed out per surface.
  *
- * A pod leaves the upcoming feed the moment it STARTS — nobody can join a pod
- * that is running, and the server refuses the booking — but it is not
+ * A pod leaves the upcoming feed the moment it STARTS, but it is not
  * "previous" until it is actually over. That gap is the whole reason a phase
  * splits three ways instead of the two a plain start-has-passed test gave: a
  * pod that is happening right now used to drop straight into Previous Pods.
+ * An ONGOING pod can still be joined while seats are left (Pod details asks the
+ * member to confirm first); booking closes only once it is PREVIOUS, which is
+ * the line the server's `podBookingClosed` draws too.
  */
 export const POD_LIVE_TAIL_MS = 4 * 60 * 60 * 1000;
 

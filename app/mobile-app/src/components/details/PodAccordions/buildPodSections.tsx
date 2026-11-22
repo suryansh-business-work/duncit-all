@@ -4,7 +4,7 @@ import { Text } from 'tamagui';
 
 import type { PodDetail, PodPerson, PodSpotFill } from '@/hooks/useDetails';
 import type { useTranslation } from '@/hooks/useTranslation';
-import { isPodExpired } from '@/utils/pod-format';
+import { podPhase } from '@duncit/utils';
 import { PodClubCard } from '@/components/details/PodClubCard';
 import { ViewClubButton } from '@/components/details/ViewClubButton';
 import { PodClubAdminsSection } from '@/components/details/PodClubAdminsSection';
@@ -120,7 +120,7 @@ export function buildPodSections({
         <AttendeesSection
           people={attendeePeople}
           spots={pod.no_of_spots}
-          expired={isPodExpired(pod.pod_date_time)}
+          expired={podPhase(pod.pod_date_time, pod.pod_end_date_time) === 'PREVIOUS'}
           spotFills={spotFills}
           seatsTaken={pod.seats_taken ?? undefined}
           onOpenProfile={onOpenProfile}

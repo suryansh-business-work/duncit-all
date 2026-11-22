@@ -1,7 +1,9 @@
-import type { Dispatch, SetStateAction } from 'react';
+import { useState, type Dispatch, type SetStateAction } from 'react';
+import { podPhase } from '@duncit/utils';
 import { usePodRentalPicks } from '@/stores/rental-picks.store';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
+import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { PodBookingBar } from '@/components/details/PodBookingBar';
 import { PodCommentsSheet } from '@/components/details/pod-comments';
 import { SmartIncentiveOfferDialog } from '@/components/details/SmartIncentiveOfferDialog';
@@ -12,6 +14,7 @@ import type { useLocationMismatch } from '@/hooks/useLocationMismatch';
 import type { useMeasuredHeight } from '@/hooks/useMeasuredHeight';
 import { useExploreStore } from '@/stores/explore.store';
 import { useStudioModeStore } from '@/stores/studio-mode.store';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
 import { fireAndForget } from '@/utils/fire-and-forget';
 
@@ -58,6 +61,7 @@ export function PodDetailsOverlays({
   locationPrompt,
   currency,
 }: Readonly<PodDetailsOverlaysProps>) {
+  const { t } = useTranslation();
   // A free pod with items to rent is paid for: the rentals go through checkout.
   const { picks } = usePodRentalPicks(pod.id);
   const freeJoin = isFree && Object.keys(picks).length === 0;
@@ -74,6 +78,11 @@ export function PodDetailsOverlays({
       ? () => fireAndForget(actions.onJoinFree())
       : () => navigation.navigate('Checkout', { podId: pod.id, seats: actions.seats }),
   );
+  // A pod that has started but not ended can still be joined; the member is
+  // asked first (mWeb twin: StickyPodActionPanel).
+  const [askOngoing, setAskOngoing] = useState(false);
+  const ongoing = podPhase(pod.pod_date_time, pod.pod_end_date_time) === 'ONGOING';
+  const onBook = ongoing ? () => setAskOngoing(true) : onCheckout;
   // Counted down only for a signed-in viewer still deciding on a paid pod that
   // offers it — the same facts the booking bar shows its Book button on.
   const offer = useSmartIncentiveOffer(
@@ -96,7 +105,7 @@ export function PodDetailsOverlays({
         seats={actions.seats}
         smartIncentivePct={offer.unlockedPct}
         onSeatsChange={actions.setSeats}
-        onCheckout={onCheckout}
+        onCheckout={onBook}
         onBackout={() => actions.setBackoutOpen(true)}
         onKeepSpot={actions.openKeepSpot}
         onCancelSpot={() => actions.setCancelSpotOpen(true)}
@@ -128,6 +137,19 @@ export function PodDetailsOverlays({
           onCheckout();
         }}
         onClose={offer.closeDialog}
+      />
+      <ConfirmDialog
+        open={askOngoing}
+        title={t('mweb.podDetails.ongoingJoinTitle')}
+        message={t('mweb.podDetails.ongoingJoinBody')}
+        confirmLabel={t('mweb.podDetails.ongoingJoinConfirm')}
+        onConfirm={() => {
+          // Closed first: the clash check may open its own dialog next.
+          setAskOngoing(false);
+          onCheckout();
+        }}
+        onCancel={() => setAskOngoing(false)}
+        testID="ongoing-join-dialog"
       />
       <BookingClashDialog
         guard={clash}

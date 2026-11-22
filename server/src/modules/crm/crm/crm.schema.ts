@@ -155,7 +155,7 @@ export const crmTypeDefs = gql`
     entity_type: CrmEntityType!
     entity_id: ID!
     summary: String
-    "Rich text. @mentions are <span data-type=\"mention\" data-id=\"<user id>\">; each mentioned CRM team member is emailed."
+    "Rich text. Each @mention is a span with data-type mention and data-id set to the user id; every mentioned CRM team member is emailed."
     body_html: String!
     body_text: String
   }

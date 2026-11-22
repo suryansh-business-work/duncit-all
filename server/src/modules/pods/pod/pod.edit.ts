@@ -4,7 +4,7 @@
  */
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
-import { isFreePod, type PodMode } from './pod.model';
+import { isFreePod, type PodMode, type PodType } from './pod.model';
 import { PaymentModel } from '@modules/finance/payment/payment.model';
 import { venueSlotService } from '@modules/venues/venueSlot/venueSlot.service';
 import { smartIncentiveSettingsService } from '@modules/engagement/smartIncentive/smartIncentive.settings.service';
@@ -118,6 +118,11 @@ type SmartIncentiveInput = {
 type SmartIncentiveDoc = PodSmartIncentiveFields & { pod_type: PodType; pod_amount?: number | null };
 
 const SMART_INCENTIVE_OFF: PodSmartIncentiveFields = { smart_incentive_enabled: false, smart_incentive_pct: 0 };
+
+/** A free or zero-priced pod has no ticket money for a Smart Incentive to come off. */
+function podHasTicketPrice(type: PodType, amount: number | null | undefined): boolean {
+  return type !== 'FREE' && (amount ?? 0) > 0;
+}
 
 /**
  * The Smart Incentive a new pod is written with: off (0%) on a free or

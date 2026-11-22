@@ -24,7 +24,7 @@ describe('Duncit AI app config', () => {
     expect(appConfig.loginImage).toContain('pexels.com');
   });
 
-  it('lists two destinations and five groups, in that order', () => {
+  it('lists Welcome and five groups, in that order', () => {
     expect(appConfig.nav.map((n) => n.label)).toEqual([
       'Welcome',
       'AI Library',
@@ -32,8 +32,15 @@ describe('Duncit AI app config', () => {
       'OpenAI',
       'AI Monitoring',
       'Automation',
-      'Reel Studio',
     ]);
+  });
+
+  it('has no Reel Studio entry, since the studio lives in the Marketing console', () => {
+    // The old /reels address stays routed to a "moved" notice for bookmarks,
+    // but the sidebar must not send anyone there.
+    const entries = appConfig.nav.flatMap((n) => [n, ...(n.children ?? [])]);
+    expect(entries.some((n) => n.labelKey === 'shell.nav.reelStudio')).toBe(false);
+    expect(entries.some((n) => n.to?.startsWith('/reels'))).toBe(false);
   });
 
   it('gives every leaf a route and every group children instead', () => {
@@ -42,7 +49,7 @@ describe('Duncit AI app config', () => {
     const leaves = appConfig.nav.filter((n) => !n.children);
     const groups = appConfig.nav.filter((n) => n.children);
 
-    expect(leaves.map((n) => n.to)).toEqual(['/', '/reels']);
+    expect(leaves.map((n) => n.to)).toEqual(['/']);
     expect(groups.every((n) => n.to === undefined)).toBe(true);
     expect(groups.flatMap((n) => n.children!.map((c) => c.to))).toEqual([
       '/library/dashboard',

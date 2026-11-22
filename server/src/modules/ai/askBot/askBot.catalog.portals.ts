@@ -422,8 +422,6 @@ export const PORTAL_PAGES: readonly NavigationPage[] = [
     description: 'Browse the full history of AI Monitoring checks on uploaded images from every surface — the image itself, who uploaded it, when, how far the check got, the AI risk result, the reason or comment behind it, the action taken and the source module — and open a row for the full trail including the model and any failure detail.' },
   { surface: 'ai', path: '/monitoring/settings', label: 'Settings', group: 'AI Monitoring',
     description: 'Centralise every AI Monitoring setting: turn the AI Monitoring chip on or off, edit the label, title, intro, bullets, footnote and dismiss button shown beside every upload field on the app, mWeb and the portals, and edit the image upload prompt the AI analyses each uploaded image with.' },
-  { surface: 'ai', path: '/reels', label: 'Reel Studio',
-    description: 'The old address of Reel Studio: a notice that the studio moved to the Marketing console (Create › Reel Studio) with a button that opens it there; a link to one reel opens that same reel.' },
   { surface: 'ai', path: '/profile', label: 'Profile',
     description: 'View and edit your own account — name and profile photo, display language, assigned roles and linked Google account — and sign out.' },
 

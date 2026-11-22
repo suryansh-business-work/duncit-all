@@ -227,7 +227,7 @@ describe('chat — links and follow-ups from the reply', () => {
         { surface: 'ai', path: 'library/' },
         { surface: 'ai', path: '/ai-features', label: 42 },
         { surface: 'ai', path: '/monitoring' },
-        { surface: 'ai', path: '/reels' },
+        { surface: 'ai', path: '/monitoring/settings' },
         { surface: 'ai', path: '/profile' },
       ],
       followups: ['  First?  ', 7, '', 'Second?', 'Third?', 'Fourth?'],
@@ -240,7 +240,7 @@ describe('chat — links and follow-ups from the reply', () => {
       ['/library', 'Prompt library'],
       ['/ai-features', 'AI Features'],
       ['/monitoring', 'Logs'],
-      ['/reels', 'Reel Studio'],
+      ['/monitoring/settings', 'Settings'],
     ]);
     expect(result.followups).toEqual(['First?', 'Second?', 'Third?']);
   });

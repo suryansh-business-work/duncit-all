@@ -8,6 +8,7 @@ import {
   pub,
 } from '@modules/crm/crm/crm.service';
 import { removeLeadMedia } from '@modules/crm/leadMedia/leadMedia.model';
+import { applyAssignee } from '@modules/crm/crmUser/crmUser.service';
 import { assertNoLeadDuplicates, withDuplicateFlags } from '@modules/crm/leadDuplicate/leadDuplicate.service';
 import { NUMERIC_FIELDS, PROSPECT_CONFIG, type ProspectKind } from './prospectLead.config';
 
@@ -73,14 +74,14 @@ export const prospectLeadService = {
   },
 
   async create(kind: ProspectKind, input: LeadInput) {
-    const safe = prepare(input);
+    const safe = await applyAssignee(prepare(input));
     await assertNoLeadDuplicates(safe, { entity_type: kind });
     const created = await modelOf(kind).create({ ...safe, next_follow_up_date: parseDate(safe.next_follow_up_date) });
     return pub(created);
   },
 
   async update(kind: ProspectKind, id: string, input: LeadInput) {
-    const safe = prepare(input);
+    const safe = await applyAssignee(prepare(input), { entity_type: kind, id });
     await assertNoLeadDuplicates(safe, { entity_type: kind, id });
     const updated = await modelOf(kind).findByIdAndUpdate(
       id,

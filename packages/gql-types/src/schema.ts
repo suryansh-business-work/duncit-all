@@ -7169,7 +7169,10 @@ export type CommunityLead = {
   __typename?: 'CommunityLead';
   activity_log: Array<CrmActivity>;
   area?: Maybe<Scalars['String']['output']>;
+  /** The assignee's name. Filled from assigned_user_id when one is set; older clients still send free text here. */
   assigned_to?: Maybe<Scalars['String']['output']>;
+  /** The CRM team member this lead is assigned to (crmAssignableUsers). Null when unassigned or a legacy free-text name. */
+  assigned_user_id?: Maybe<Scalars['ID']['output']>;
   city?: Maybe<Scalars['String']['output']>;
   community_link?: Maybe<Scalars['String']['output']>;
   community_name: Scalars['String']['output'];
@@ -7204,7 +7207,10 @@ export type CommunityLead = {
 
 export type CommunityLeadInput = {
   area?: InputMaybe<Scalars['String']['input']>;
+  /** The assignee's name. Filled from assigned_user_id when one is set; older clients still send free text here. */
   assigned_to?: InputMaybe<Scalars['String']['input']>;
+  /** The CRM team member this lead is assigned to (crmAssignableUsers). Null when unassigned or a legacy free-text name. */
+  assigned_user_id?: InputMaybe<Scalars['ID']['input']>;
   city?: InputMaybe<Scalars['String']['input']>;
   community_link?: InputMaybe<Scalars['String']['input']>;
   community_name: Scalars['String']['input'];
@@ -8267,7 +8273,10 @@ export type CreatorLead = {
   __typename?: 'CreatorLead';
   activity_log: Array<CrmActivity>;
   area?: Maybe<Scalars['String']['output']>;
+  /** The assignee's name. Filled from assigned_user_id when one is set; older clients still send free text here. */
   assigned_to?: Maybe<Scalars['String']['output']>;
+  /** The CRM team member this lead is assigned to (crmAssignableUsers). Null when unassigned or a legacy free-text name. */
+  assigned_user_id?: Maybe<Scalars['ID']['output']>;
   city?: Maybe<Scalars['String']['output']>;
   collaboration_types: Array<Scalars['String']['output']>;
   contacts: Array<CrmContact>;
@@ -8303,7 +8312,10 @@ export type CreatorLead = {
 
 export type CreatorLeadInput = {
   area?: InputMaybe<Scalars['String']['input']>;
+  /** The assignee's name. Filled from assigned_user_id when one is set; older clients still send free text here. */
   assigned_to?: InputMaybe<Scalars['String']['input']>;
+  /** The CRM team member this lead is assigned to (crmAssignableUsers). Null when unassigned or a legacy free-text name. */
+  assigned_user_id?: InputMaybe<Scalars['ID']['input']>;
   city?: InputMaybe<Scalars['String']['input']>;
   collaboration_types?: InputMaybe<Array<Scalars['String']['input']>>;
   contacts?: InputMaybe<Array<CrmContactInput>>;
@@ -8341,14 +8353,28 @@ export type CreatorLeadTablePage = {
 
 export type CrmActivity = {
   __typename?: 'CrmActivity';
+  /** Empty once the log is deleted. */
   body_html?: Maybe<Scalars['String']['output']>;
   body_text?: Maybe<Scalars['String']['output']>;
+  /** True when the signed-in user may edit / delete this manual log (its author, or a SUPER_ADMIN). */
+  can_change: Scalars['Boolean']['output'];
   created_at?: Maybe<Scalars['String']['output']>;
   created_by?: Maybe<Scalars['String']['output']>;
+  deleted_at?: Maybe<Scalars['String']['output']>;
+  deleted_by?: Maybe<Scalars['String']['output']>;
+  /** A manual log's id (edit / delete it with this). Null for EMAIL / CALL entries and audit entries. */
+  id?: Maybe<Scalars['ID']['output']>;
+  /** A deleted manual log keeps its place in the history, without its words. */
+  is_deleted: Scalars['Boolean']['output'];
+  /** CRM users the log @mentions (crmUsersByIds names them). */
+  mention_user_ids: Array<Scalars['ID']['output']>;
   status?: Maybe<Scalars['String']['output']>;
   summary?: Maybe<Scalars['String']['output']>;
   target?: Maybe<Scalars['String']['output']>;
+  /** EMAIL, CALL, NOTE (a manual log), or NOTE_CREATED / NOTE_UPDATED / NOTE_DELETED (a manual log's history; target = its id). */
   type: Scalars['String']['output'];
+  updated_at?: Maybe<Scalars['String']['output']>;
+  updated_by?: Maybe<Scalars['String']['output']>;
 };
 
 /** Result of placing a CRM call (AI or portal/agent-bridge). */
@@ -9160,6 +9186,16 @@ export type CrmSocialLink = {
 export type CrmSocialLinkInput = {
   name: Scalars['String']['input'];
   url: Scalars['String']['input'];
+};
+
+/** A CRM team member, or the name behind a user id the CRM shows. Email and roles only for active CRM staff. */
+export type CrmStaffUser = {
+  __typename?: 'CrmStaffUser';
+  email?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  is_staff: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+  roles: Array<Scalars['String']['output']>;
 };
 
 export type CrmSuperCategoryRef = {
@@ -10537,7 +10573,10 @@ export type EcommLead = {
   __typename?: 'EcommLead';
   activity_log: Array<CrmActivity>;
   area?: Maybe<Scalars['String']['output']>;
+  /** The assignee's name. Filled from assigned_user_id when one is set; older clients still send free text here. */
   assigned_to?: Maybe<Scalars['String']['output']>;
+  /** The CRM team member this lead is assigned to (crmAssignableUsers). Null when unassigned or a legacy free-text name. */
+  assigned_user_id?: Maybe<Scalars['ID']['output']>;
   brand_name?: Maybe<Scalars['String']['output']>;
   business_type?: Maybe<Scalars['String']['output']>;
   catalog_size?: Maybe<Scalars['String']['output']>;
@@ -10577,7 +10616,10 @@ export type EcommLead = {
 
 export type EcommLeadInput = {
   area?: InputMaybe<Scalars['String']['input']>;
+  /** The assignee's name. Filled from assigned_user_id when one is set; older clients still send free text here. */
   assigned_to?: InputMaybe<Scalars['String']['input']>;
+  /** The CRM team member this lead is assigned to (crmAssignableUsers). Null when unassigned or a legacy free-text name. */
+  assigned_user_id?: InputMaybe<Scalars['ID']['input']>;
   brand_name?: InputMaybe<Scalars['String']['input']>;
   business_type?: InputMaybe<Scalars['String']['input']>;
   catalog_size?: InputMaybe<Scalars['String']['input']>;
@@ -13754,7 +13796,10 @@ export type HostLead = {
   __typename?: 'HostLead';
   activity_log: Array<CrmActivity>;
   area?: Maybe<Scalars['String']['output']>;
+  /** The assignee's name. Filled from assigned_user_id when one is set; older clients still send free text here. */
   assigned_to?: Maybe<Scalars['String']['output']>;
+  /** The CRM team member this lead is assigned to (crmAssignableUsers). Null when unassigned or a legacy free-text name. */
+  assigned_user_id?: Maybe<Scalars['ID']['output']>;
   budget_range?: Maybe<Scalars['String']['output']>;
   category_ids: Array<Scalars['ID']['output']>;
   city?: Maybe<Scalars['String']['output']>;
@@ -13801,7 +13846,10 @@ export type HostLead = {
 
 export type HostLeadInput = {
   area?: InputMaybe<Scalars['String']['input']>;
+  /** The assignee's name. Filled from assigned_user_id when one is set; older clients still send free text here. */
   assigned_to?: InputMaybe<Scalars['String']['input']>;
+  /** The CRM team member this lead is assigned to (crmAssignableUsers). Null when unassigned or a legacy free-text name. */
+  assigned_user_id?: InputMaybe<Scalars['ID']['input']>;
   budget_range?: InputMaybe<Scalars['String']['input']>;
   category_ids?: InputMaybe<Array<Scalars['ID']['input']>>;
   city?: InputMaybe<Scalars['String']['input']>;
@@ -15408,6 +15456,7 @@ export type MailTicketType =
   | 'SUPPORT';
 
 export type ManualLogInput = {
+  /** Rich text. @mentions are <span data-type="mention" data-id="<user id>">; each mentioned CRM team member is emailed. */
   body_html: Scalars['String']['input'];
   body_text?: InputMaybe<Scalars['String']['input']>;
   entity_id: Scalars['ID']['input'];
@@ -18003,6 +18052,8 @@ export type Mutation = {
   deleteCrmEmailTemplate: Scalars['Boolean']['output'];
   deleteCrmLeadMedia: Scalars['Boolean']['output'];
   deleteCrmManagedOption: Scalars['Boolean']['output'];
+  /** Delete a manual log (its author, or a SUPER_ADMIN). It stays in the history as deleted, without its words. */
+  deleteCrmManualLog: CrmActivity;
   deleteCrmReminder: Scalars['Boolean']['output'];
   /** @deprecated Use the Services Offered catalogue mutations (createCrmServicesOffered etc.). */
   deleteCrmService: Scalars['Boolean']['output'];
@@ -19953,6 +20004,8 @@ export type Mutation = {
   updateCrmEmailTheme: CrmEmailSettings;
   updateCrmLeadMedia: CrmLeadMedia;
   updateCrmManagedOption: CrmManagedOption;
+  /** Edit a manual log (its author, or a SUPER_ADMIN). Leaves a NOTE_UPDATED entry in the history. */
+  updateCrmManualLog: CrmActivity;
   updateCrmReminder: CrmReminder;
   /** @deprecated Use the Services Offered catalogue mutations (createCrmServicesOffered etc.). */
   updateCrmService: CrmService;
@@ -21865,6 +21918,13 @@ export type MutationDeleteCrmLeadMediaArgs = {
 
 export type MutationDeleteCrmManagedOptionArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteCrmManualLogArgs = {
+  entity_id: Scalars['ID']['input'];
+  entity_type: CrmEntityType;
+  log_id: Scalars['ID']['input'];
 };
 
 
@@ -26303,6 +26363,11 @@ export type MutationUpdateCrmLeadMediaArgs = {
 export type MutationUpdateCrmManagedOptionArgs = {
   id: Scalars['ID']['input'];
   input: UpdateCrmManagedOptionInput;
+};
+
+
+export type MutationUpdateCrmManualLogArgs = {
+  input: UpdateManualLogInput;
 };
 
 
@@ -34227,6 +34292,8 @@ export type Query = {
   coworkers: Array<Coworker>;
   creatorLead?: Maybe<CreatorLead>;
   creatorLeadsTable: CreatorLeadTablePage;
+  /** Active CRM team members matching a name / email search — the Assigned To picker and @mentions. */
+  crmAssignableUsers: Array<CrmStaffUser>;
   /** The configured Twilio caller-ID (From) number, shown on call dialogs. */
   crmCallFromNumber?: Maybe<Scalars['String']['output']>;
   crmCallPrompt?: Maybe<CrmCallPrompt>;
@@ -34264,6 +34331,8 @@ export type Query = {
   crmServices: Array<CrmService>;
   crmServicesOffered: Array<CrmServiceOffered>;
   crmServicesOfferedTable: CrmServiceOfferedTablePage;
+  /** Names for the user ids a lead page shows (log authors, mentions, assignee), in one request. */
+  crmUsersByIds: Array<CrmStaffUser>;
   crmWebsitePages: Array<CrmWebsitePage>;
   crmWebsitePagesTable: CrmWebsitePageTablePage;
   dashboardTotals: DashboardTotals;
@@ -37143,6 +37212,12 @@ export type QueryCreatorLeadsTableArgs = {
 };
 
 
+export type QueryCrmAssignableUsersArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  search?: InputMaybe<Scalars['String']['input']>;
+};
+
+
 export type QueryCrmCallPromptArgs = {
   id: Scalars['ID']['input'];
 };
@@ -37246,6 +37321,11 @@ export type QueryCrmServicesOfferedArgs = {
 
 export type QueryCrmServicesOfferedTableArgs = {
   query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryCrmUsersByIdsArgs = {
+  ids: Array<Scalars['ID']['input']>;
 };
 
 
@@ -50515,6 +50595,15 @@ export type UpdateLocationInput = {
   whatsapp_group_url?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type UpdateManualLogInput = {
+  body_html: Scalars['String']['input'];
+  body_text?: InputMaybe<Scalars['String']['input']>;
+  entity_id: Scalars['ID']['input'];
+  entity_type: CrmEntityType;
+  log_id: Scalars['ID']['input'];
+  summary?: InputMaybe<Scalars['String']['input']>;
+};
+
 /** Every field is optional: what is left out keeps its saved value. */
 export type UpdateMarketingAgentInput = {
   enabled?: InputMaybe<Scalars['Boolean']['input']>;
@@ -52344,7 +52433,10 @@ export type VenueLead = {
   activity_log: Array<CrmActivity>;
   amenities: Array<Scalars['String']['output']>;
   area?: Maybe<Scalars['String']['output']>;
+  /** The assignee's name. Filled from assigned_user_id when one is set; older clients still send free text here. */
   assigned_to?: Maybe<Scalars['String']['output']>;
+  /** The CRM team member this lead is assigned to (crmAssignableUsers). Null when unassigned or a legacy free-text name. */
+  assigned_user_id?: Maybe<Scalars['ID']['output']>;
   available_days: Array<Scalars['String']['output']>;
   available_time_slots?: Maybe<Scalars['String']['output']>;
   booking_notice?: Maybe<Scalars['String']['output']>;
@@ -52399,7 +52491,10 @@ export type VenueLead = {
 export type VenueLeadInput = {
   amenities?: InputMaybe<Array<Scalars['String']['input']>>;
   area?: InputMaybe<Scalars['String']['input']>;
+  /** The assignee's name. Filled from assigned_user_id when one is set; older clients still send free text here. */
   assigned_to?: InputMaybe<Scalars['String']['input']>;
+  /** The CRM team member this lead is assigned to (crmAssignableUsers). Null when unassigned or a legacy free-text name. */
+  assigned_user_id?: InputMaybe<Scalars['ID']['input']>;
   available_days?: InputMaybe<Array<Scalars['String']['input']>>;
   available_time_slots?: InputMaybe<Scalars['String']['input']>;
   booking_notice?: InputMaybe<Scalars['String']['input']>;

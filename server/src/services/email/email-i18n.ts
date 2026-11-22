@@ -6,6 +6,7 @@ import { LIFECYCLE_FALLBACK } from "./catalogue/catalogue.lifecycle.bundle";
 import { VENUE_OFFER_EMAIL_FALLBACK } from "./catalogue/catalogue.offers";
 import { HOST_PERFORMANCE_EMAIL_FALLBACK } from "./catalogue/catalogue.hostPerformance";
 import { TARGETS_EMAIL_FALLBACK } from "./catalogue/catalogue.targets";
+import { CRM_EMAIL_FALLBACK } from "./catalogue/catalogue.crm";
 import { PAYOUT_EMAIL_FALLBACK } from "./catalogue/catalogue.payouts";
 
 /**
@@ -36,6 +37,7 @@ export const EMAIL_FALLBACK: Record<string, string> = {
   ...VENUE_OFFER_EMAIL_FALLBACK,
   ...HOST_PERFORMANCE_EMAIL_FALLBACK,
   ...TARGETS_EMAIL_FALLBACK,
+  ...CRM_EMAIL_FALLBACK,
   ...PAYOUT_EMAIL_FALLBACK,
   "email.common.greeting": "Hi",
   "email.common.regards": "Thanks",

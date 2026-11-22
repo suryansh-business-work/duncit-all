@@ -104,5 +104,7 @@ export const DYNAMIC_FIELD_FLAG: Record<CrmLeadEntityType, string> = {
   COMMUNITY_LEAD: 'applies_to_community',
 };
 
-export const ACTIVITY_TYPES = ['EMAIL', 'CALL', 'NOTE'] as const;
+// NOTE is a manual log; NOTE_CREATED / NOTE_UPDATED / NOTE_DELETED are the audit entries
+// its changes leave behind (target = the log's id), so the history survives an edit or delete.
+export const ACTIVITY_TYPES = ['EMAIL', 'CALL', 'NOTE', 'NOTE_CREATED', 'NOTE_UPDATED', 'NOTE_DELETED'] as const;
 export type ActivityType = (typeof ACTIVITY_TYPES)[number];

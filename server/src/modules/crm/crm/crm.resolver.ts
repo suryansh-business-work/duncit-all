@@ -10,6 +10,9 @@ import { requireRole } from '@middleware/rbac';
 import { GraphQLError } from 'graphql';
 import type { CommsLogEntity } from '@modules/crm/communicationLog/communicationLog.model';
 import { findLeadDuplicates } from '@modules/crm/leadDuplicate/leadDuplicate.service';
+import { listAssignableUsers, usersByIds } from '@modules/crm/crmUser/crmUser.service';
+import { manualLogService, type CreateLogInput, type UpdateLogInput } from '@modules/crm/manualLog/manualLog.service';
+import { canChangeLog, type StoredActivity } from '@modules/crm/manualLog/manualLog.view';
 
 const RW = [...CRM_RW];
 
@@ -50,6 +53,9 @@ const exportFilename = (entity: CrmExcelEntity) =>
   entity === 'VENUE_LEAD' ? 'duncit-venue-leads-export.xlsx' : 'duncit-host-leads-export.xlsx';
 
 export const crmResolvers = {
+  CrmActivity: {
+    can_change: (parent: StoredActivity & { is_deleted?: boolean }, _a: unknown, ctx: GraphQLContext) => canChangeLog(parent, ctx.user),
+  },
   VenueLead: {
     super_category: (parent: any) =>
       parent?.super_category_id ? crmService.superCategoryById(String(parent.super_category_id)) : null,
@@ -144,6 +150,14 @@ export const crmResolvers = {
       const { entity_type, lead_id, contacts, website } = args.input;
       // A form holds a handful of contacts; the cap keeps one call from becoming a bulk scan.
       return findLeadDuplicates({ contacts: contacts?.slice(0, MAX_DUPLICATE_CONTACTS), website }, { entity_type, id: lead_id });
+    },
+    crmAssignableUsers: (_p: unknown, args: { search?: string | null; limit?: number | null }, ctx: GraphQLContext) => {
+      requireRole(ctx, RW);
+      return listAssignableUsers(args.search, args.limit);
+    },
+    crmUsersByIds: (_p: unknown, args: { ids: string[] }, ctx: GraphQLContext) => {
+      requireRole(ctx, RW);
+      return usersByIds(args.ids);
     },
   },
   Mutation: {
@@ -309,21 +323,21 @@ export const crmResolvers = {
       requireRole(ctx, RW);
       return importLeads(args.entity, args.content_base64, args.mapping);
     },
-    addCrmManualLog: async (
+    addCrmManualLog: (_p: unknown, args: { input: CreateLogInput }, ctx: GraphQLContext) => {
+      const user = requireRole(ctx, RW);
+      return manualLogService.create(args.input, user);
+    },
+    updateCrmManualLog: (_p: unknown, args: { input: UpdateLogInput }, ctx: GraphQLContext) => {
+      const user = requireRole(ctx, RW);
+      return manualLogService.update(args.input, user);
+    },
+    deleteCrmManualLog: (
       _p: unknown,
-      args: {
-        input: {
-          entity_type: CrmLeadEntityType;
-          entity_id: string;
-          summary?: string | null;
-          body_html: string;
-          body_text?: string | null;
-        };
-      },
+      args: { entity_type: CrmLeadEntityType; entity_id: string; log_id: string },
       ctx: GraphQLContext
     ) => {
       const user = requireRole(ctx, RW);
-      return crmService.addManualLog({ ...args.input, by: user.id });
+      return manualLogService.remove(args, user);
     },
     createCrmDynamicField: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
       requireRole(ctx, RW);

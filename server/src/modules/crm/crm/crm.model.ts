@@ -49,8 +49,18 @@ export const activitySchema = new Schema(
     // stay backward-compatible.
     body_html: { type: String, default: '' },
     body_text: { type: String, default: '' },
+    // Manual logs only. log_id addresses a log for edit/delete (logs written
+    // before it existed are addressed by position, see manualLog.view.ts);
+    // mention_user_ids are the CRM users its HTML @mentions. A deleted log
+    // keeps its row (deleted_at/by) so the history shows it was deleted.
+    log_id: { type: String, default: undefined },
+    mention_user_ids: { type: [String], default: undefined },
     created_by: { type: String, default: null },
     created_at: { type: Date, default: Date.now },
+    updated_by: { type: String, default: undefined },
+    updated_at: { type: Date, default: undefined },
+    deleted_by: { type: String, default: undefined },
+    deleted_at: { type: Date, default: undefined },
   },
   { _id: false }
 );
@@ -114,6 +124,8 @@ const venueLeadSchema = new Schema(
 
     lead_source: { type: String, default: '' },
     assigned_to: { type: String, trim: true, default: '' },
+    // The CRM team member (users._id) behind assigned_to; null for unassigned or legacy free text.
+    assigned_user_id: { type: String, default: null, index: true },
     lead_status: { type: String, enum: VENUE_LEAD_STATUSES, default: 'New', index: true },
     priority: { type: String, enum: PRIORITIES, default: 'Medium', index: true },
     next_follow_up_date: { type: Date, default: null },
@@ -166,6 +178,8 @@ const hostLeadSchema = new Schema(
 
     lead_source: { type: String, default: '' },
     assigned_to: { type: String, trim: true, default: '' },
+    // The CRM team member (users._id) behind assigned_to; null for unassigned or legacy free text.
+    assigned_user_id: { type: String, default: null, index: true },
     lead_status: { type: String, enum: HOST_LEAD_STATUSES, default: 'New', index: true },
     priority: { type: String, enum: PRIORITIES, default: 'Medium', index: true },
     next_follow_up_date: { type: Date, default: null },
@@ -212,6 +226,8 @@ const ecommLeadSchema = new Schema(
 
     lead_source: { type: String, default: '' },
     assigned_to: { type: String, trim: true, default: '' },
+    // The CRM team member (users._id) behind assigned_to; null for unassigned or legacy free text.
+    assigned_user_id: { type: String, default: null, index: true },
     lead_status: { type: String, enum: HOST_LEAD_STATUSES, default: 'New', index: true },
     priority: { type: String, enum: PRIORITIES, default: 'Medium', index: true },
     next_follow_up_date: { type: Date, default: null },

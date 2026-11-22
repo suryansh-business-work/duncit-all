@@ -23,6 +23,8 @@ const leadBackbone: SchemaDefinition = {
   dynamic_values: { type: Schema.Types.Mixed, default: () => ({}) },
   lead_source: { type: String, default: '' },
   assigned_to: { type: String, trim: true, default: '' },
+  // The CRM team member (users._id) behind assigned_to; null for unassigned or legacy free text.
+  assigned_user_id: { type: String, default: null, index: true },
   lead_status: { type: String, enum: HOST_LEAD_STATUSES, default: 'New', index: true },
   priority: { type: String, enum: PRIORITIES, default: 'Medium', index: true },
   next_follow_up_date: { type: Date, default: null },

@@ -31,7 +31,10 @@ export const prospectLeadTypeDefs = gql`
     profile_photo_url: String
     dynamic_values_json: String!
     lead_source: String
+    "The assignee's name. Filled from assigned_user_id when one is set; older clients still send free text here."
     assigned_to: String
+    "The CRM team member this lead is assigned to (crmAssignableUsers). Null when unassigned or a legacy free-text name."
+    assigned_user_id: ID
     lead_status: String!
     priority: String!
     next_follow_up_date: String
@@ -67,7 +70,10 @@ export const prospectLeadTypeDefs = gql`
     profile_photo_url: String
     dynamic_values_json: String!
     lead_source: String
+    "The assignee's name. Filled from assigned_user_id when one is set; older clients still send free text here."
     assigned_to: String
+    "The CRM team member this lead is assigned to (crmAssignableUsers). Null when unassigned or a legacy free-text name."
+    assigned_user_id: ID
     lead_status: String!
     priority: String!
     next_follow_up_date: String
@@ -101,7 +107,10 @@ export const prospectLeadTypeDefs = gql`
     profile_photo_url: String
     dynamic_values_json: String
     lead_source: String
+    "The assignee's name. Filled from assigned_user_id when one is set; older clients still send free text here."
     assigned_to: String
+    "The CRM team member this lead is assigned to (crmAssignableUsers). Null when unassigned or a legacy free-text name."
+    assigned_user_id: ID
     lead_status: String
     priority: String
     next_follow_up_date: String
@@ -129,7 +138,10 @@ export const prospectLeadTypeDefs = gql`
     profile_photo_url: String
     dynamic_values_json: String
     lead_source: String
+    "The assignee's name. Filled from assigned_user_id when one is set; older clients still send free text here."
     assigned_to: String
+    "The CRM team member this lead is assigned to (crmAssignableUsers). Null when unassigned or a legacy free-text name."
+    assigned_user_id: ID
     lead_status: String
     priority: String
     next_follow_up_date: String

@@ -5,10 +5,9 @@ import { round2 } from './checkout-bill';
  *
  * A host may offer members who stay on the pod page without booking a one-time
  * percentage off the pod's TICKET money. Staying long enough unlocks it for that
- * member (the popup); checkout then takes it off on its own, after the
- * multi-ticket discount and before the coupon, Duncit Coins and GST — so the
- * two pod discounts compound rather than add, and add-on products are never
- * discounted.
+ * member (the popup); checkout then takes it off the full ticket gross
+ * (`pod_amount × seats`) before the coupon, Duncit Coins and GST, and add-on
+ * products are never discounted.
  *
  * The server imports no `@duncit/*` package, so it keeps its own twin in
  * server/src/modules/engagement/smartIncentive/smartIncentive.rules.ts — that
@@ -34,12 +33,11 @@ export interface SmartIncentiveQuote {
 }
 
 /**
- * `ticketNet` is the booking's ticket money AFTER the multi-ticket discount
- * (`ticketDiscountFor(...).net`); `pct` is the member's unlocked offer, or
- * null/0 when they have none. Mirrors the server's `smartIncentiveFor`.
+ * `ticketGross` is the booking's full ticket money (`pod_amount × seats`);
+ * `pct` is the member's unlocked offer, or null/0 when they have none. Mirrors the server's `smartIncentiveFor`.
  */
-export function smartIncentiveFor(ticketNet: number, pct: number | null | undefined): SmartIncentiveQuote {
-  const base = round2(Math.max(0, Number(ticketNet) || 0));
+export function smartIncentiveFor(ticketGross: number, pct: number | null | undefined): SmartIncentiveQuote {
+  const base = round2(Math.max(0, Number(ticketGross) || 0));
   const offer = Number(pct);
   if (!Number.isInteger(offer) || offer <= 0 || base <= 0) return { pct: 0, amount: 0, net: base };
   const amount = round2((base * offer) / 100);

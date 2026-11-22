@@ -160,13 +160,12 @@ describe('the three-level category picker', () => {
 
 
 describe('More options', () => {
-  const money = { ticket_discount_enabled: false, smart_incentive_enabled: false, payment_terms: '', place_charges: [], product_requests: [] };
+  const money = { smart_incentive_enabled: false, payment_terms: '', place_charges: [], product_requests: [] };
   const details = { pod_hashtag_text: '', pod_info: '', available_perks: [], reel_url: '' };
 
   it("opens Money's extras when any one of them is already set, and not for blank space", () => {
     expect(moneyExtrasFilled(money)).toBe(false);
     expect(moneyExtrasFilled({ ...money, payment_terms: '   ' })).toBe(false);
-    expect(moneyExtrasFilled({ ...money, ticket_discount_enabled: true })).toBe(true);
     expect(moneyExtrasFilled({ ...money, smart_incentive_enabled: true })).toBe(true);
     expect(moneyExtrasFilled({ ...money, payment_terms: 'No refunds' })).toBe(true);
     expect(moneyExtrasFilled({ ...money, place_charges: [{}] })).toBe(true);

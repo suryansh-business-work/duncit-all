@@ -301,17 +301,17 @@ describe('maxRedeemableCoins', () => {
 });
 
 describe('exclusiveOfGstBill', () => {
-  it('restates the multi-ticket discount net of GST so subtotal − discount is the taxable value', () => {
-    // ₹250 × 3 at 5% off: ₹712.50 charged, GST extracted from it is ₹108.69.
-    const bill = exclusiveOfGstBill(750, [line({ key: 'ticketDiscount', amount: 37.5 })], 603.81, 18);
+  it('restates a coupon net of GST so subtotal − discount is the taxable value', () => {
+    // ₹250 × 3 with a ₹37.50 coupon: ₹712.50 charged, GST extracted from it is ₹108.69.
+    const bill = exclusiveOfGstBill(750, [line({ amount: 37.5 })], 603.81, 18);
     expect(bill.subtotal).toBe(635.59);
-    expect(bill.discounts).toEqual([{ key: 'ticketDiscount', label: 'Coupon WELCOME', amount: 31.78 }]);
+    expect(bill.discounts).toEqual([{ key: 'coupon', label: 'Coupon WELCOME', amount: 31.78 }]);
     expect(round2(bill.subtotal - bill.discounts[0].amount)).toBe(603.81);
   });
 
   it('extracts each deduction on its own and lets the last absorb the rounding', () => {
-    // ₹750 − ₹37.50 tier − 50 coins = ₹662.50 charged; its taxable value is ₹561.44.
-    const bill = exclusiveOfGstBill(750, [line({ key: 'ticketDiscount', amount: 37.5 }), coins(50)], 561.44, 18);
+    // ₹750 − ₹37.50 coupon − 50 coins = ₹662.50 charged; its taxable value is ₹561.44.
+    const bill = exclusiveOfGstBill(750, [line({ amount: 37.5 }), coins(50)], 561.44, 18);
     expect(bill.discounts.map((d) => d.amount)).toEqual([31.78, 42.37]);
     const taxable = bill.discounts.reduce((left, d) => round2(left - d.amount), bill.subtotal);
     expect(taxable).toBe(561.44);

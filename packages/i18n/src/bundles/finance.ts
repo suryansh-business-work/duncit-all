@@ -550,6 +550,7 @@ export const FINANCE_BUNDLE: NestedCatalogue = {
       denominationsHint: 'Comma-separated whole rupees, e.g. 500, 1000, 2000',
       minAmountLabel: 'Minimum amount',
       maxAmountLabel: 'Maximum amount',
+      maxBelowMin: 'The maximum must be at least the minimum amount.',
       validityLabel: 'Validity (months)',
       saveSettings: 'Save policy',
       settingsSaved: 'Gift card policy saved',

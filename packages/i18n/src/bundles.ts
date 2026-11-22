@@ -193,6 +193,13 @@ export const LOYALTY_CONSOLE_CATALOGUE: NestedCatalogue = {
     referrals: financeBranch('referrals'),
     common: financeBranch('common'),
   },
+  // The shared courier ship-to rules (@duncit/forms makeShipToSchema) behind a
+  // gift card order's "Fix address" — one wording with mWeb, native and Partners.
+  mweb: {
+    address: {
+      validation: catalogueBranch(catalogueBranch(catalogueBranch(MWEB_BUNDLE, 'mweb'), 'address'), 'validation'),
+    },
+  },
 };
 
 /** Every client bundle, by the surface that ships it. */

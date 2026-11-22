@@ -910,6 +910,12 @@ export const PORTAL_PAGES: readonly NavigationPage[] = [
     description: 'Every batch of printed cards — label, coins per card, quantity, total coins, whether it was made for named members, expiry, who generated it, and how many cards were redeemed or cancelled. Open a batch to see its cards and download its print file with every passcode (the export is recorded).' },
   { surface: 'loyalty', path: '/gift-cards/physical/history', label: 'History', group: 'Physical Gift Cards',
     description: 'Search and page the printed card history — every card generated, redeemed or cancelled, every failed redeem try (a wrong number or passcode) and every passcode read or export — with the card, batch, coins and who did it.' },
+  { surface: 'loyalty', path: '/gift-cards/orders', label: 'Gift Card Orders', group: 'Cards',
+    description: 'Every gift card order members placed in mWeb and the app — digital (emailed codes) and printed (scratch cards by courier) — with order number, buyer, design, quantity, total, payment and fulfilment status and tracking number, plus tiles for what is waiting to be printed or shipped. Open an order to see its facts, delivery address, courier tracking and audit history, mark the cards printed, fix the address, book the ShipRocket courier, refresh tracking and print or download the label.' },
+  { surface: 'loyalty', path: '/gift-cards/designs', label: 'Gift Card Designs', group: 'Cards',
+    description: 'The gift card catalogue: add a design with front and back artwork (live flip preview) and an internal category, make one design the default that members see and buy, switch designs off, and correct each design\'s printed-card stock with a reason.' },
+  { surface: 'loyalty', path: '/gift-cards/settings', label: 'Gift Card Settings', group: 'Cards',
+    description: 'Set the gift card sales policy — amount presets, minimum and maximum amount (validated in mWeb and the app), validity months — and delivery: most cards per order, whether printed cards can be ordered, the flat delivery fee every printed order pays once, the ShipRocket pickup location and parcel size.' },
   { surface: 'loyalty', path: '/profile', label: 'Profile',
     description: 'Edit your first and last name, view your email, linked Google account and access-role chips, change your display language, and sign out of the Loyalty console.' },
 

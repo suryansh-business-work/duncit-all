@@ -39,6 +39,12 @@ export const entityAnalyticsTypeDefs = /* GraphQL */ `
     PRODUCT
     "Every email validation any console ran, and how the addresses turned out (Admin > Email Validations)."
     EMAIL_VALIDATIONS
+    "Both app stores side by side — new installs, uninstalls, crashes and ratings (Analytics > App Insights > Overview)."
+    APP_INSIGHTS
+    "Google Play Console's statistics for the Android app (Analytics > App Insights > Google Play)."
+    APP_INSIGHTS_ANDROID
+    "App Store Connect's analytics for the iOS app (Analytics > App Insights > App Store)."
+    APP_INSIGHTS_IOS
   }
 
   "What kind of number a value is, so the console formats it."

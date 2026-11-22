@@ -42,7 +42,10 @@ export type AnalyticsEntity =
   | 'OPENAI_COSTS'
   | 'CONTACTS'
   | 'PRODUCT'
-  | 'EMAIL_VALIDATIONS';
+  | 'EMAIL_VALIDATIONS'
+  | 'APP_INSIGHTS'
+  | 'APP_INSIGHTS_ANDROID'
+  | 'APP_INSIGHTS_IOS';
 /**
  * BYTES is a size, DURATION is milliseconds, GRADE is SonarQube's 1-5 rating
  * (1 is A), USD is an amount in US dollars (what OpenAI bills in, while

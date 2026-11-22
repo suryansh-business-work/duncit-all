@@ -246,6 +246,13 @@ export const CATEGORY_FIELDS: Record<EnvCategory, EnvFieldDef[]> = {
       hint: 'Paste the whole JSON key file of a service account granted release access on the app in Play Console',
     },
     { name: 'package_name', label: 'Package Name', hint: 'The app id on Google Play, e.g. com.duncit.mobile' },
+    // Analytics → App Insights reads installs, ratings and crashes from the
+    // bulk reports Google writes to this bucket. Optional: releases work without it.
+    {
+      name: 'reports_bucket',
+      label: 'Reports Cloud Storage Bucket (App Insights)',
+      hint: 'Play Console → Download reports → Statistics → Copy Cloud Storage URI, e.g. gs://pubsite_prod_rev_01234567890123456789. Also grant the service account "View app information and download bulk reports" in Users and permissions',
+    },
   ],
   // Reads the footage AI → Reel Studio edits. Read-only: the studio never
   // writes to anyone's Drive. A folder is readable once it is shared with the
@@ -532,11 +539,11 @@ export const CATEGORY_DESCRIPTIONS: Record<EnvCategory, string> = {
   AISENSY: 'WhatsApp messages, campaigns and OTP',
   TURN: 'Relay that keeps staff calls connected',
   GITHUB: 'Triggers and reads the app build workflows',
-  GOOGLE_PLAY: 'Android store releases and listings',
+  GOOGLE_PLAY: 'Android store releases, listings and App Insights reports',
   GOOGLE_DRIVE: 'Raw footage for Reel Studio',
   MSG91: 'SMS one-time codes',
   APPLE_SIGNIN: 'Sign in with Apple on web and iOS',
-  APP_STORE_CONNECT: 'iOS signing and App Store releases',
+  APP_STORE_CONNECT: 'iOS signing, App Store releases and App Insights reports',
   SONARQUBE: 'Code quality and security analysis',
   GODADDY: 'Domain and DNS records at GoDaddy',
   CLOUDFLARE: 'Domain and DNS records at Cloudflare',
@@ -773,6 +780,7 @@ export const ENV_KEY_MAP: Record<string, { category: EnvCategory; field: string 
   GITHUB_REPO: { category: 'GITHUB', field: 'repo' },
   GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: { category: 'GOOGLE_PLAY', field: 'service_account_json' },
   GOOGLE_PLAY_PACKAGE_NAME: { category: 'GOOGLE_PLAY', field: 'package_name' },
+  GOOGLE_PLAY_REPORTS_BUCKET: { category: 'GOOGLE_PLAY', field: 'reports_bucket' },
   GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON: { category: 'GOOGLE_DRIVE', field: 'service_account_json' },
   MSG91_WIDGET_ID: { category: 'MSG91', field: 'widget_id' },
   MSG91_AUTH_KEY: { category: 'MSG91', field: 'auth_key' },

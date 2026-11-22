@@ -50,6 +50,7 @@ import { startEmployeeTargetReminderScheduler } from '@modules/targets/employeeT
 import { startDbBackupScheduler } from '@modules/platform/dbBackup/dbBackup.scheduler';
 import { startAppStoreReleaseScheduler } from '@modules/platform/appBuild/appStoreRelease.scheduler';
 import { startStoreReleaseScheduler } from '@modules/platform/appBuild/storeRelease.scheduler';
+import { startAppInsightsScheduler } from '@modules/platform/analytics/appInsights/appInsights.scheduler';
 import { startE2eRunScheduler } from '@modules/platform/e2eRun/e2eRun.scheduler';
 import { startUnitTestRunSweeper } from '@modules/platform/unitTestRun/unitTestRun.sweep';
 import { startAnalyticsMailScheduler } from '@modules/platform/analytics/mail/analyticsMail.scheduler';
@@ -790,6 +791,8 @@ async function bootstrap() {
   // issue (advice, mail, Slack) for every newly rejected or awaiting version,
   // and raises every open issue again past the configured reminder window.
   startStoreReleaseScheduler();
+  // Analytics > App Insights: copies Google Play's and App Store Connect's daily reports in once a day.
+  startAppInsightsScheduler();
 
   // End-to-end tests: a one-minute tick that dispatches the E2E workflow when
   // the admin-configured window has passed (Tech > E2E Tests > Settings,

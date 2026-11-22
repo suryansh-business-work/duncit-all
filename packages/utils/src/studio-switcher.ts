@@ -69,6 +69,25 @@ export function studioNeedsVerifiedEmail(
   return EMAIL_GATED_STUDIO_MODES.some((gated) => gated === mode);
 }
 
+/** What the role switcher's confirm button does for the staged pick. */
+export interface StudioSwitchConfirm {
+  /** The pick is a gated studio on an unverified email: the button sends the
+   * person to verify it instead of switching. */
+  verifyEmail: boolean;
+  /** Nothing to confirm: the pick is the role already active, and it is open. */
+  disabled: boolean;
+}
+
+/** The role switcher's confirm button, the same in both apps. */
+export function studioSwitchConfirm(
+  pending: StudioMode,
+  current: StudioMode,
+  isEmailVerified: boolean | null | undefined,
+): StudioSwitchConfirm {
+  const verifyEmail = studioNeedsVerifiedEmail(pending, isEmailVerified);
+  return { verifyEmail, disabled: !verifyEmail && pending === current };
+}
+
 /** The words of the "verify your email first" message both apps show when a
  * gated studio is opened, as translation keys. */
 export const STUDIO_EMAIL_GATE_KEYS = {

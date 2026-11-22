@@ -12,7 +12,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import { STUDIO_LABEL, availableModes, type StudioMode } from '@/utils/studio-mode';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
-import { STUDIO_EMAIL_GATE_KEYS } from '@duncit/utils';
+import { STUDIO_EMAIL_GATE_KEYS, studioSwitchConfirm } from '@duncit/utils';
 
 type IconName = ComponentProps<typeof MaterialIcons>['name'];
 
@@ -59,12 +59,8 @@ export function StudioSwitchDialog({
   const { color, onPrimary, primary } = useThemeColors();
   const emailGate = useStudioEmailGate();
   const [pending, setPending] = useState<StudioMode>(current);
-  const locked = emailGate.blocks(pending);
-  const confirmSwitch = () => {
-    if (!locked) {
-      onSelect(pending);
-      return;
-    }
+  const confirm = studioSwitchConfirm(pending, current, emailGate.isEmailVerified);
+  const verifyInstead = () => {
     onClose();
     emailGate.verifyEmail();
   };
@@ -175,7 +171,7 @@ export function StudioSwitchDialog({
                 </YStack>
                 <MaterialIcons name="check-circle" size={22} color={primary} />
               </XStack>
-              {locked ? (
+              {confirm.verifyEmail ? (
                 <YStack paddingTop={16}>
                   <StudioEmailGateNotice testID="studio-switch-email-gate" />
                 </YStack>
@@ -183,9 +179,13 @@ export function StudioSwitchDialog({
               <YStack paddingTop={16}>
                 <PrimaryButton
                   testID="studio-switch-confirm"
-                  label={locked ? t(STUDIO_EMAIL_GATE_KEYS.action) : switchButtonLabel(changed, pending)}
-                  disabled={!changed && !locked}
-                  onPress={confirmSwitch}
+                  label={
+                    confirm.verifyEmail
+                      ? t(STUDIO_EMAIL_GATE_KEYS.action)
+                      : switchButtonLabel(changed, pending)
+                  }
+                  disabled={confirm.disabled}
+                  onPress={confirm.verifyEmail ? verifyInstead : () => onSelect(pending)}
                 />
               </YStack>
             </ModalSafeArea>

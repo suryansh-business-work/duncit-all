@@ -8,7 +8,7 @@ import Inventory2Icon from '@mui/icons-material/Inventory2';
 import GroupsIcon from '@mui/icons-material/Groups';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { DuncitButton } from '@duncit/buttons';
-import { STUDIO_EMAIL_GATE_KEYS } from '@duncit/utils';
+import { STUDIO_EMAIL_GATE_KEYS, studioSwitchConfirm } from '@duncit/utils';
 import { STUDIO_LABEL_KEY, availableModes, type StudioMode } from '../../../studio-mode';
 import { useStudioEmailGate } from '../../../hooks/useStudioEmailGate';
 import { useTranslation } from '../../../i18n/useTranslation';
@@ -46,12 +46,8 @@ export default function StudioSwitchDialog({ open, roles, showProducts = true, c
   const emailGate = useStudioEmailGate();
   const options = availableModes(roles, { products: showProducts });
   const [pending, setPending] = useState<StudioMode>(current);
-  const locked = emailGate.blocks(pending);
-  const confirmSwitch = () => {
-    if (!locked) {
-      onSelect(pending);
-      return;
-    }
+  const confirm = studioSwitchConfirm(pending, current, emailGate.isEmailVerified);
+  const verifyInstead = () => {
     onClose();
     emailGate.verifyEmail();
   };
@@ -138,7 +134,7 @@ export default function StudioSwitchDialog({ open, roles, showProducts = true, c
           </Box>
           <CheckCircleIcon color="primary" />
         </Box>
-        {locked && (
+        {confirm.verifyEmail && (
           <Alert data-testid="studio-switch-email-gate" severity="warning" sx={{ mt: 2, borderRadius: '16px' }}>
             <AlertTitle sx={{ fontWeight: 700 }}>{t(STUDIO_EMAIL_GATE_KEYS.title)}</AlertTitle>
             {t(STUDIO_EMAIL_GATE_KEYS.body)}
@@ -149,11 +145,11 @@ export default function StudioSwitchDialog({ open, roles, showProducts = true, c
           fullWidth
           size="large"
           variant="contained"
-          disabled={!changed && !locked}
-          onClick={confirmSwitch}
+          disabled={confirm.disabled}
+          onClick={confirm.verifyEmail ? verifyInstead : () => onSelect(pending)}
           sx={{ mt: 2, height: 52 }}
         >
-          {locked ? t(STUDIO_EMAIL_GATE_KEYS.action) : switchButtonLabel(t, changed, pending)}
+          {confirm.verifyEmail ? t(STUDIO_EMAIL_GATE_KEYS.action) : switchButtonLabel(t, changed, pending)}
         </DuncitButton>
       </DialogContent>
     </Dialog>

@@ -45,5 +45,5 @@ export function useStudioEmailGate() {
     open();
   };
 
-  return { blocks, guard, verifyEmail };
+  return { isEmailVerified, blocks, guard, verifyEmail };
 }

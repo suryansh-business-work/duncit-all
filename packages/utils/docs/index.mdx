@@ -319,6 +319,7 @@ exports:
   - 'EMAIL_GATED_STUDIO_MODES'
   - 'studioNeedsVerifiedEmail'
   - 'STUDIO_EMAIL_GATE_KEYS'
+  - 'studioSwitchConfirm'
   - 'VENUE_POD_PHASES'
   - 'venuePodPhase'
   - 'podsByPhase'
@@ -829,6 +830,7 @@ The Host, Venue and Club Admin studios stay shut until the account's email is ve
 | --- | --- | --- |
 | `EMAIL_GATED_STUDIO_MODES` | `readonly PartnerStudioMode[]` | `['HOST', 'VENUE', 'CLUB']`. The Brand studio and User mode are not gated. |
 | `studioNeedsVerifiedEmail` | `(mode, isEmailVerified) => boolean` | `true` when `mode` is gated and the email is not verified. Only an explicit `true` counts as verified, so `null` / `undefined` keep the studio shut. |
+| `studioSwitchConfirm` | `(pending, current, isEmailVerified) => { verifyEmail, disabled }` | The role switcher's confirm button. `verifyEmail`: the pick is gated, so the button verifies the email instead of switching. `disabled`: the pick is the open role already active. |
 | `STUDIO_EMAIL_GATE_KEYS` | `{ title, body, action, dismiss }` | The translation keys of the message (`mweb.studioOptions.emailGate*`). |
 
 ```ts

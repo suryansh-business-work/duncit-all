@@ -1786,6 +1786,8 @@ export {
   studioEntryFor,
   studioModeFor,
   studioNeedsVerifiedEmail,
+  studioSwitchConfirm,
+  type StudioSwitchConfirm,
 } from './studio-switcher';
 export {
   buildDetailedOrderTimeline,

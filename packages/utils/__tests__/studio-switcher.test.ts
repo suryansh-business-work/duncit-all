@@ -8,6 +8,7 @@ import {
   studioEntryFor,
   studioModeFor,
   studioNeedsVerifiedEmail,
+  studioSwitchConfirm,
 } from '../src/studio-switcher';
 
 const EVERY_ROLE = ['HOST', 'VENUE_OWNER', 'CLUB_ADMIN', 'ECOMM_MANAGER'];
@@ -127,6 +128,23 @@ describe('studioNeedsVerifiedEmail', () => {
     expect(studioNeedsVerifiedEmail('ECOMM', false)).toBe(false);
     expect(studioNeedsVerifiedEmail('USER', false)).toBe(false);
     expect(studioNeedsVerifiedEmail('ECOMM', null)).toBe(false);
+  });
+});
+
+describe('studioSwitchConfirm', () => {
+  it('switches to an open role that differs from the active one', () => {
+    expect(studioSwitchConfirm('VENUE', 'HOST', true)).toEqual({ verifyEmail: false, disabled: false });
+    expect(studioSwitchConfirm('ECOMM', 'HOST', false)).toEqual({ verifyEmail: false, disabled: false });
+  });
+
+  it('is disabled while the pick is the open role already active', () => {
+    expect(studioSwitchConfirm('HOST', 'HOST', true)).toEqual({ verifyEmail: false, disabled: true });
+    expect(studioSwitchConfirm('USER', 'USER', false)).toEqual({ verifyEmail: false, disabled: true });
+  });
+
+  it('offers to verify the email for a gated pick, even when it is the active role', () => {
+    expect(studioSwitchConfirm('CLUB', 'USER', false)).toEqual({ verifyEmail: true, disabled: false });
+    expect(studioSwitchConfirm('HOST', 'HOST', null)).toEqual({ verifyEmail: true, disabled: false });
   });
 });
 

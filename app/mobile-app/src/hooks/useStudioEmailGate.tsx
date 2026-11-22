@@ -54,5 +54,5 @@ export function useStudioEmailGate() {
     />
   );
 
-  return { blocks, guard, verifyEmail, dialog };
+  return { isEmailVerified, blocks, guard, verifyEmail, dialog };
 }

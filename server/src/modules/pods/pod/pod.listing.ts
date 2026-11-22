@@ -288,7 +288,8 @@ export const podListingMethods = {
   async tableForClubAdmin(
     clubIds: string[],
     input?: TableQueryInput | null,
-    status?: PodRowStatus | null
+    status?: PodRowStatus | null,
+    lifecycle?: PodLifecycle | null
   ) {
     if (clubIds.length === 0) return { rows: [], total: 0, page: 1, page_size: 0 };
     const baseFilter: Record<string, unknown> = {
@@ -296,8 +297,13 @@ export const podListingMethods = {
     };
     // Derived from four fields, so it cannot ride the engine's allowlist — it
     // joins the club scope in the baseFilter, which a client filter can never
-    // widen (runTableQuery $and-merges the two).
-    if (status) Object.assign(baseFilter, podRowStatusFilter(status));
+    // widen (runTableQuery $and-merges the two). Status and lifecycle each
+    // carry their own `deleted_at` / `$or`, so they meet under `$and` rather
+    // than one overwriting the other's keys.
+    const narrow: Record<string, unknown>[] = [];
+    if (status) narrow.push(podRowStatusFilter(status));
+    if (lifecycle) narrow.push(podLifecycleFilter(lifecycle, new Date()));
+    if (narrow.length) baseFilter.$and = narrow;
     const { docs, total, page, page_size } = await runTableQuery<any>(
       PodModel,
       baseFilter,

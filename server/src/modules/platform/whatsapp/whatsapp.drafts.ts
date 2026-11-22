@@ -136,6 +136,39 @@ export const WA_TEMPLATE_DRAFTS: Readonly<Record<string, WaTemplateDraft>> = {
       'Help the host fill it, or change the venue slot or the ticket price: https://partners-app.duncit.com/club-admin/clubs/66f1/pods/66f2 — Team Duncit',
   },
   /*
+   * The monthly Host Performance pair (Club Admin host management). The host
+   * hears their own month; the club admin hears which hosts need a call — and
+   * that the call is to understand what is in the way and help, not to chase.
+   */
+  HOST_MONTHLY_PERFORMANCE: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, here is your {{2}} pod summary for {{3}}. ' +
+      'Monthly target: {{4}} pods. Completed: {{5}}. Performance score: {{6}}. ' +
+      '{{7}} Your Club Admin may get in touch to hear what is getting in the way and help you run more pods. ' +
+      'Plan your next pod: {{8}} — Team Duncit',
+    sample:
+      'Hi Meera, here is your Noida Badminton Club pod summary for October 2026. ' +
+      'Monthly target: 8 pods. Completed: 5. Performance score: 63%. ' +
+      'Run 3 more pods next month to reach your target. Your Club Admin may get in touch to hear what is getting in the way and help you run more pods. ' +
+      'Plan your next pod: https://mweb.duncit.com/create-pod — Team Duncit',
+  },
+  CLUB_ADMIN_HOST_PERFORMANCE_ALERT: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, in {{2}} last month ({{3}}) {{4}} hosts need your attention: ' +
+      '{{5}} have not run a pod recently and {{6}} are below their monthly pod target. ' +
+      'Please call or message them to understand their challenges and help them conduct more pods. ' +
+      'See each host, their contact details and score: {{7}} — Team Duncit',
+    sample:
+      'Hi Rohit, in Noida Badminton Club last month (October 2026) 3 hosts need your attention: ' +
+      '2 have not run a pod recently and 3 are below their monthly pod target. ' +
+      'Please call or message them to understand their challenges and help them conduct more pods. ' +
+      'See each host, their contact details and score: https://partners-app.duncit.com/club-admin/clubs/66f1/hosts — Team Duncit',
+  },
+  /*
    * The four onboarding rejections.
    *
    * One per partner kind because the applicant applied as one of them, and the

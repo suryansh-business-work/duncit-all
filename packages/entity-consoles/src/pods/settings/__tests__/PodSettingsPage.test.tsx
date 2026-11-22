@@ -45,6 +45,14 @@ const POD_SETTINGS = gql`
       club_admin_change_request_health_penalty
       venue_offer_max_counters
       pod_min_advance_days
+      host_inactivity_days
+      host_monthly_pod_target
+      host_engagement_statuses { key label is_active }
+      host_performance_notify_enabled
+      host_performance_notify_day
+      host_performance_notify_hosts
+      host_performance_notify_club_admins
+      host_underperform_threshold_pct
       updated_at
     }
   }
@@ -82,12 +90,20 @@ const UPDATE_POD_SETTINGS = gql`
       club_admin_change_request_health_penalty
       venue_offer_max_counters
       pod_min_advance_days
+      host_inactivity_days
+      host_monthly_pod_target
+      host_engagement_statuses { key label is_active }
+      host_performance_notify_enabled
+      host_performance_notify_day
+      host_performance_notify_hosts
+      host_performance_notify_club_admins
+      host_underperform_threshold_pct
       updated_at
     }
   }
 `;
 
-type SavedPodSettings = Record<string, number | boolean>;
+type SavedPodSettings = Record<string, unknown>;
 
 const SAVED: SavedPodSettings = {
   draft_retention_days: 3,
@@ -119,6 +135,17 @@ const SAVED: SavedPodSettings = {
   club_admin_change_request_health_penalty: 5,
   venue_offer_max_counters: 6,
   pod_min_advance_days: 2,
+  host_inactivity_days: 14,
+  host_monthly_pod_target: 8,
+  host_engagement_statuses: [
+    { __typename: 'HostEngagementStatus', key: 'NOT_CONTACTED', label: 'Not Contacted', is_active: true },
+    { __typename: 'HostEngagementStatus', key: 'CONTACTED', label: 'Contacted', is_active: true },
+  ],
+  host_performance_notify_enabled: false,
+  host_performance_notify_day: 1,
+  host_performance_notify_hosts: true,
+  host_performance_notify_club_admins: true,
+  host_underperform_threshold_pct: 100,
 };
 
 /** The page refetches after every save, so this mock must be reusable. */
@@ -437,6 +464,41 @@ describe('PodSettingsPage — Minimum Advance Days for Pod Creation', () => {
 
     // Only `{ pod_min_advance_days: 5 }` matches the mutation mock; any other
     // field in the input would leave the snackbar unrendered.
+    await waitForToast();
+  });
+});
+
+describe('PodSettingsPage — Host engagement & performance', () => {
+  const LABEL = 'Days without a completed pod';
+  const INVALID = 'Enter a whole number from 1 to 90.';
+
+  it('shows the saved window under its own group, refuses 0 and 91, and saves only its own field', async () => {
+    renderPage([settingsMock(), publicMock(), updateOk({ host_inactivity_days: 21 })]);
+
+    expect(screen.getByRole('heading', { name: 'Host engagement & performance' })).toBeInTheDocument();
+    const days = screen.getByLabelText(LABEL);
+    await waitFor(() => expect(days).toHaveValue(14));
+    expect(screen.getByLabelText('Pods per month')).toHaveValue(8);
+    expect(screen.getByTestId('host-status-label-1')).toHaveValue('Contacted');
+
+    for (const refused of ['0', '91']) {
+      fireEvent.change(days, { target: { value: refused } });
+      expect(saveIn(days)).toBeDisabled();
+      expect(cardOf(days).getByText(INVALID)).toBeInTheDocument();
+    }
+
+    fireEvent.change(days, { target: { value: '21' } });
+    fireEvent.click(saveIn(days));
+    await waitForToast();
+  });
+
+  it('turns the monthly messages on with their own field only', async () => {
+    renderPage([settingsMock(), publicMock(), updateOk({ host_performance_notify_enabled: true })]);
+
+    const toggle = await screen.findByRole('switch', { name: 'Monthly performance messages' });
+    await waitFor(() => expect(toggle).not.toBeChecked());
+    expect(screen.getByText('Off — scores are still calculated every month, but nobody is messaged.')).toBeInTheDocument();
+    fireEvent.click(toggle);
     await waitForToast();
   });
 });

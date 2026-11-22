@@ -6,6 +6,7 @@ import PodReminderSettings from '../PodReminderSettings';
 import RequestChangeSettings from '../RequestChangeSettings';
 import VenueOfferCounterSettings from '../VenueOfferCounterSettings';
 import PodCreationSettings from '../PodCreationSettings';
+import HostEngagementSettings from '../HostEngagementSettings';
 import type { PodSettingsSectionProps } from '../queries';
 
 /**
@@ -59,6 +60,16 @@ const SECTIONS: Section[] = [
     name: 'PodCreationSettings',
     Component: PodCreationSettings,
     keys: ['pod_min_advance_days'],
+  },
+  {
+    name: 'HostEngagementSettings',
+    Component: HostEngagementSettings,
+    keys: [
+      'host_inactivity_days',
+      'host_monthly_pod_target',
+      'host_performance_notify_day',
+      'host_underperform_threshold_pct',
+    ],
   },
 ];
 

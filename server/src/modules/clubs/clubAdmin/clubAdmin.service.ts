@@ -6,6 +6,7 @@ import { mapClubToPublic, clubService } from '@modules/clubs/club/club.service';
 import { CategoryModel } from '@modules/pods/category/category.model';
 import { podService } from '@modules/pods/pod/pod.service';
 import type { PodRowStatus } from '@modules/pods/pod/pod.rowStatus';
+import type { PodLifecycle } from '@modules/pods/pod/pod.lifecycle';
 import { podAuditService } from '@modules/pods/podAudit/podAudit.service';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { PodMemberModel } from '@modules/pods/podMember/podMember.model';
@@ -696,15 +697,17 @@ export const clubAdminService = {
    *
    * `status` narrows to ONE of the buckets the table's Status column shows.
    * It is an argument rather than a column filter because the chip is derived
-   * from four fields at once — see pod.rowStatus.
+   * from four fields at once — see pod.rowStatus. `lifecycle` narrows to one
+   * derived time bucket (the host page's Past / Upcoming tabs).
    */
   async podsTable(
     actor: Actor,
     clubId: string | null | undefined,
     query?: any,
-    status?: PodRowStatus | null
+    status?: PodRowStatus | null,
+    lifecycle?: PodLifecycle | null
   ) {
-    return podService.tableForClubAdmin(await this.scopedClubIds(actor, clubId), query, status);
+    return podService.tableForClubAdmin(await this.scopedClubIds(actor, clubId), query, status, lifecycle);
   },
 
   /** Club Studio → "Your Pods": the same scope as podsTable, rendered as a flat

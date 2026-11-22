@@ -254,6 +254,11 @@ export interface PodFormData {
    * Omitted, no venue is treated as the host's own.
    */
   ownVenueIds?: readonly string[];
+  /**
+   * The pod being edited is completed or cancelled. The server never judges
+   * such a pod's money, so Save is never held back by its earnings verdict.
+   */
+  podClosed?: boolean;
 }
 
 /**

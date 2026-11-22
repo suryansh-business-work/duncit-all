@@ -395,6 +395,7 @@ Every key absent from the server pod comes back as its `blankPodFormValues` defa
 | `searchHosts` | `SearchPodHosts` | no | `undefined` | Server-backed host search (e.g. `clubAdminHostSearch`). |
 | `dateTimeFormat` | `string` | no | `undefined` | MUI X display format, from the admin app settings (rule 11). |
 | `ownVenueIds` | `readonly string[]` | no | `undefined` | Venues the pod's host owns. A slot there books without a request, so a FREE pod on one shows no settle-with-the-venue note. The Partners host pages pass every id of `myVenues`; omitted, no venue counts as the host's own. |
+| `podClosed` | `boolean` | no | `undefined` | The edited pod is completed or cancelled. The server never judges such a pod's money, so Save never waits on the earnings verdict. `usePodEditorState` returns it (`completed_at` or `is_deleted` on the pod). |
 | `busy` | `boolean` | no | `false` | Disables the actions while a mutation is in flight. |
 | `error` | `string \| null` | no | `undefined` | Server error rendered as an `Alert` above the actions. |
 | `onCancel` | `() => void` | yes | — | Close/dismiss handler. |
@@ -416,6 +417,7 @@ Takes every `PodForm` prop except `onCancel` and `preview` (it mounts `<PodPrevi
 | `titleExtras` | `ReactNode` | no | `undefined` | Extra heading-row content (admin AI-fill button). |
 | `intro` | `ReactNode` | no | `undefined` | Content above the form (club-admin host alert). |
 | `title` | `string` | no | `undefined` | Heading override — the Auto Pod editors say "New Auto Pod" / "Edit Auto Pod" here. Defaults to New Pod / Edit Pod. |
+| `podClosed` | `boolean` | no | `undefined` | Passed through to `PodForm` — pass `editor.podClosed` from `usePodEditorState` so a completed or cancelled pod's Save never waits on its earnings verdict. |
 
 ### `<PodPreview>` — no props
 
@@ -439,7 +441,7 @@ answers.
 | `isFreePodType` / `normalizePodType` / `LEGACY_POD_TYPES` | `(podType) => boolean` / `(podType) => 'FREE' | 'PAID'` / `readonly string[]` | The server's `PodType` is exactly FREE | PAID. `normalizePodType` collapses the five legacy names (`NATIVE_FREE`, …) onto the value that replaced them — `podToFormValues` and `buildPodInput` both run it, so a legacy value never reaches the server. |
 | `linesToMedia` | `(text: string) => { url: string; type: 'IMAGE' \| 'VIDEO' }[]` | Typed media list. |
 | `getProductRequestTotal` | `(requests: PodProductRequest[], products: any[]) => number` | Sum of `unit_cost × quantity`. |
-| `usePodEditorState` | `(args: UsePodEditorStateArgs) => …` | `{ open, initialValues, editingPod, busy, opError, openCreate, openEdit, submit, close }` |
+| `usePodEditorState` | `(args: UsePodEditorStateArgs) => …` | `{ open, initialValues, editingPod, busy, opError, openCreate, openEdit, submit, close, podClosed }` — `podClosed` is true for a completed or cancelled pod; pass it to `PodEditorPage`. |
 | `useMediaPickerBridge` | `() => …` | `{ pickerOpen, pickerKind, pickImage, pickVideo, settlePicker, accept, title }` |
 | `useVenueSlots` | `(venueId: string, skip?: boolean) => …` | `{ slots: VenueSlot[], loading, error }` — the one slot query the picker and the spots bounds share. |
 | `useAutoPodEditorState` | `(args: UseAutoPodEditorStateArgs) => …` | `{ initialValues, busy, opError, submit }` — the Auto Pod twin of `usePodEditorState`; see "Auto Pod mode". |
@@ -476,7 +478,7 @@ them straight to `MediaPickerDialog`.
 | `showVenueSlot` | `boolean` | — | The venue offer — a window from the venue's `venueOfferCalendar` (`VenueOfferField`), the pricing option (with a line on how it pays the venue) and amount, what the host needs from the venue and a note (`VenueOfferAskFields` from `@duncit/forms`), and the server's `venueOfferQuote` — one total, or a range from the venue's minimum guests to the pod's spots when a per-guest offer differs at the two ends (`OfferTermsField`). The spots are floored at the venue's minimum and capped at what it holds (`useVenueOfferTerms`, one `publicVenue` read). **And** the `venue_offer` / `venue_slot_id` keys in the input. |
 | `showPlaceCharges` | `boolean` | — | Per-venue place charges editor. |
 | `showInventory` | `boolean` | — | Feeds the attached products' cost into the earnings projection. |
-| `showFinance` | `boolean` | — | Live earnings projection: the server's `adminPotentialPodEarnings` waterfall (GST, platform fee, club-admin cut, venue slot price, host commission) rendered through `buildEarningsStatement`, plus the venue budget — the highest slot price the pod can still carry. |
+| `showFinance` | `boolean` | — | Live earnings projection: the server's `adminPotentialPodEarnings` waterfall (GST, platform fee, club-admin cut, venue slot price, host commission) rendered through `buildEarningsStatement`, plus the venue budget — the highest slot price the pod can still carry. **And** the earnings gate: the projection's own verdict (`viable`, `viability_reason`, `minimum_viable_ticket_price`, `venue_min_business`) is shown as the reason, the venue's minimum business and the lowest ticket price that works, and Save / Save as Draft stay off for a PAID pod until a fresh projection says viable — on create, or on an edit that changed `pod_amount`, `no_of_spots`, `pod_type`, `pod_hosts_id` or the booking (`pod_mode`, `venue_id`, `venue_slot_id`, the offer's model or rate), never on a `podClosed` pod. Loading, stale or failed projections hold Save too; a failed one offers Try again. Ignored with `autoPod`. |
 | `showIsActive` | `boolean` | — | Active toggle (edit only). |
 | `showProducts` | `boolean` | — | Approved-products section + its rules. |
 | `showReel` | `boolean` | `false` | Explore reel `reel_url` field. |

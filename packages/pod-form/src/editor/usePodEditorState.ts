@@ -96,6 +96,14 @@ export default function usePodEditorState({
 
   // The DOCUMENT id, not the human-readable `pod_id` — it is what
   // `podSpotLimits` is keyed on, so the spots control can read the range a
-  // live pod may be resized within.
-  return { initialValues, busy, opError, submit, editingPodDocId: editingPod?.id ?? undefined };
+  // live pod may be resized within. A completed or cancelled pod is settled
+  // history or sells nothing, so the server never judges its money (`podClosed`).
+  return {
+    initialValues,
+    busy,
+    opError,
+    submit,
+    editingPodDocId: editingPod?.id ?? undefined,
+    podClosed: Boolean(editingPod?.completed_at || editingPod?.is_deleted),
+  };
 }

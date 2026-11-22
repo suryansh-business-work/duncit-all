@@ -19,6 +19,11 @@ import {
   DEFAULT_TICKET_DISCOUNT_MAX_PCT,
   TICKET_DISCOUNT_MAX_TIERS,
   podSeatsTaken,
+  MWEB_POD_VIABILITY_KEYS,
+  formatStatementMoney,
+  offerBookingArgs,
+  paidPodSubmitBlocked,
+  podViabilityNotice,
 } from '@duncit/utils';
 import { defineDemo, type PackageDemo } from '../../types';
 import type { SpotsMock, SpotsRangeMock, SeatsSoldMock, TicketDiscountMock } from './mocks';
@@ -130,6 +135,39 @@ export const podMoneyDemos: PackageDemo[] = [
           DEFAULT_TICKET_DISCOUNT_MAX_PCT,
         ),
         'ticketDiscountInput(values, is_free)': ticketDiscountInput(mock, mock.is_free),
+      };
+    },
+  }),
+
+  defineDemo<{
+    is_free: boolean;
+    fresh: boolean;
+    viable: boolean;
+    viability_reason: string | null;
+    minimum_viable_ticket_price: number | null;
+    venue_min_business: number;
+    offer: { model: string; start_at: string; end_at: string };
+  }>({
+    id: 'paid-pod-viability',
+    title: 'Create Pod waits for the server’s verdict',
+    note:
+      'The server judges a paid pod with every spot filled: ticket money minus Duncit’s venue commission must be MORE than the venue’s minimum business, it must cover the venue, and the host must earn more than ₹0. Set fresh to false (the price is still debouncing, or the request failed) and Create Pod stays off even with viable true. Flip is_free and nothing is judged. Change viability_reason or clear minimum_viable_ticket_price and the copy changes with it. The offer’s model and window are what the projection is asked with.',
+    mock: {
+      is_free: false,
+      fresh: true,
+      viable: false,
+      viability_reason: 'BELOW_MIN_BUSINESS',
+      minimum_viable_ticket_price: 124,
+      venue_min_business: 1000,
+      offer: { model: 'PER_HOUR', start_at: '2030-06-01T18:00:00Z', end_at: '2030-06-01T19:20:00Z' },
+    },
+    compute: (mock) => {
+      const notice = podViabilityNotice(mock, MWEB_POD_VIABILITY_KEYS, mwebT, (rupees) => formatStatementMoney(rupees, '₹'));
+      return {
+        'paidPodSubmitBlocked(is_free, fresh, verdict)': paidPodSubmitBlocked(mock.is_free, mock.fresh, mock),
+        'Notice title': notice?.title ?? 'none — the pod is viable',
+        'Notice body': notice?.body ?? 'none',
+        'offerBookingArgs(offer)': offerBookingArgs(mock.offer),
       };
     },
   }),

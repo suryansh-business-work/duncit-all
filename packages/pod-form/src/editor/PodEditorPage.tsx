@@ -45,6 +45,8 @@ export interface PodEditorPageProps {
   slotLabels: PodFormData['slotLabels'];
   /** Document id of the pod being edited — drives the live-pod spot range. */
   editingPodDocId?: string;
+  /** The edited pod is completed or cancelled, so Save never waits on its earnings verdict. */
+  podClosed?: boolean;
   onSubmit: (values: PodFormValues, options: { draft: boolean }) => Promise<void> | void;
   onReady?: (methods: UseFormReturn<PodFormValues>) => void;
   hideDraftOnEdit?: boolean;
@@ -89,6 +91,7 @@ export default function PodEditorPage({
   dateFormatter,
   slotLabels,
   editingPodDocId,
+  podClosed,
   onSubmit,
   onReady,
   hideDraftOnEdit,
@@ -153,6 +156,7 @@ export default function PodEditorPage({
             dateFormatter={dateFormatter}
             slotLabels={slotLabels}
             editingPodDocId={editingPodDocId}
+            podClosed={podClosed}
             busy={busy}
             error={error}
             onCancel={onBack}

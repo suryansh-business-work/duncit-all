@@ -49,6 +49,11 @@ const PROJECTION = {
     total_spots: 10,
     payable_spots: 9,
     venue_budget: 3260,
+    // The server's verdict: this pod passes the create/edit guard.
+    viable: true,
+    viability_reason: null,
+    minimum_viable_ticket_price: 25,
+    venue_min_business: 0,
     waterfall: WATERFALL,
   },
 };

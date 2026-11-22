@@ -34,6 +34,8 @@ export interface PodFormProps {
   editingPodDocId?: string;
   /** Venues the pod's host owns (see PodFormData.ownVenueIds). */
   ownVenueIds?: PodFormData['ownVenueIds'];
+  /** The edited pod is completed or cancelled (see PodFormData.podClosed). */
+  podClosed?: PodFormData['podClosed'];
   busy?: boolean;
   error?: string | null;
   onCancel: () => void;

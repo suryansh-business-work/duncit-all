@@ -5,7 +5,7 @@ export type { MarkRentalOutput, MarkRentalValues } from '@duncit/forms/schemas';
 
 export interface MarkRentalFormProps {
   booking: RentalBookingRow;
-  /** Finance's rule: whether the venue hands the deposit back at the venue. */
+  /** Finance's rule: whether the deposit is refundable at all (Duncit refunds it through Razorpay). */
   depositRefundable: boolean;
   busy: boolean;
   errorMessage?: string | null;

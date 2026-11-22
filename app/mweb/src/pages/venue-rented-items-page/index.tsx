@@ -1,12 +1,15 @@
 import { useQuery } from '@apollo/client/react';
 import { STUDIO_OPTION_LIST } from '@duncit/utils';
 import { FOOD_OWNER_VENUES } from '@duncit/venue-food';
-import { VenueRentalDesk } from '@duncit/venue-rentals';
+import { VenueRentalDesk, type RentalDetailLinks } from '@duncit/venue-rentals';
 import { STUDIO_OPTION_ICON } from '../../components/app-header/profile-drawer/studioOptionIcons';
 import { profileIcon } from '../../components/app-header/profile-drawer/profileIcons';
 import { useSelectedVenue } from '../../hooks/useSelectedVenue';
 import { useTranslation } from '../../i18n/useTranslation';
 import VenuePageFrame from '../venue-manage-page/VenuePageFrame';
+
+/** On mWeb a rental's pod page is this site's own: an empty origin links relative. */
+const RENTAL_LINKS: RentalDetailLinks = { mwebUrl: '' };
 
 /**
  * Venue Options → Rented Items for the selected venue: its numbers, its items
@@ -33,7 +36,7 @@ export default function VenueRentedItemsPage() {
     >
       {venue && (
         <div key={venue.id} data-testid="venue-rented-items">
-          <VenueRentalDesk venueId={venue.id} surface="mweb" mode="owner" uploadSurface="MWEB" />
+          <VenueRentalDesk venueId={venue.id} surface="mweb" mode="owner" uploadSurface="MWEB" links={RENTAL_LINKS} />
         </div>
       )}
     </VenuePageFrame>

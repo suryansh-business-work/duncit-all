@@ -4,6 +4,7 @@ import { useTranslation } from '@duncit/app-settings';
 import { DuncitTabs, TAB_PARAM, tabPanelProps, useTabParam, type DuncitTabItem } from '@duncit/tabs';
 import type { UploadSurface } from '@duncit/media-picker';
 import VenueRentalBookings from './bookings/VenueRentalBookings';
+import type { RentalDetailLinks } from './bookings/detail/types';
 import VenueRentalStatsTiles from './dashboard/VenueRentalStats';
 import VenueRentalItems from './items/VenueRentalItems';
 
@@ -18,6 +19,8 @@ export interface VenueRentalDeskProps {
   surface: string;
   mode: 'owner' | 'admin';
   uploadSurface?: UploadSurface;
+  /** Where a rental detail's links go (mWeb for Open pod); a link not given is not drawn. */
+  links?: RentalDetailLinks;
 }
 
 /**
@@ -25,7 +28,7 @@ export interface VenueRentalDeskProps {
  * bookings, one URL-selected tab each, so a link can open straight on the
  * bookings to mark.
  */
-export default function VenueRentalDesk({ venueId, surface, mode, uploadSurface }: Readonly<VenueRentalDeskProps>) {
+export default function VenueRentalDesk({ venueId, surface, mode, uploadSurface, links }: Readonly<VenueRentalDeskProps>) {
   const { t } = useTranslation();
   const idPrefix = `${surface}-rental-desk`;
   const items = useMemo<DuncitTabItem<DeskTab>[]>(
@@ -48,13 +51,13 @@ export default function VenueRentalDesk({ venueId, surface, mode, uploadSurface 
         {tabs.value === 'dashboard' && (
           <Stack spacing={2}>
             <VenueRentalStatsTiles venueId={venueId} />
-            <VenueRentalBookings venueId={venueId} surface={surface} />
+            <VenueRentalBookings venueId={venueId} surface={surface} links={links} uploadSurface={uploadSurface} />
           </Stack>
         )}
         {tabs.value === 'items' && (
           <VenueRentalItems venueId={venueId} surface={surface} mode={mode} uploadSurface={uploadSurface} />
         )}
-        {tabs.value === 'bookings' && <VenueRentalBookings venueId={venueId} surface={surface} />}
+        {tabs.value === 'bookings' && <VenueRentalBookings venueId={venueId} surface={surface} links={links} uploadSurface={uploadSurface} />}
       </Box>
     </Stack>
   );

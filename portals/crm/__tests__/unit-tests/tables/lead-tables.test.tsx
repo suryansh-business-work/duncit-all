@@ -4,6 +4,12 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import type { MutableRefObject } from 'react';
 import { CrmLeadsTable } from '@/components/lead-table';
 import type { HostLead, VenueLead } from '@/api/crm.types';
+import type { NearbyLeads } from '@/hooks/useNearbyLeads';
+
+// The Assigned To filter lists the CRM team; the table itself is what is under test here.
+vi.mock('@/hooks/useCrmStaffSearch', () => ({
+  useCrmStaffSearch: () => ({ users: [{ id: 'u-priya', name: 'Priya Sharma', email: '' }], loading: false, error: undefined }),
+}));
 
 const venueLead: VenueLead = {
   id: 'v1',
@@ -39,6 +45,7 @@ function makeFetch<T>(rows: T[]) {
 function renderLeadTable<T extends { id: string }>(
   entity: 'host' | 'venue' | 'ecomm',
   fetchRows: ReturnType<typeof makeFetch<T>>,
+  nearby?: NearbyLeads,
 ) {
   const onView = vi.fn();
   const onEdit = vi.fn();
@@ -52,6 +59,7 @@ function renderLeadTable<T extends { id: string }>(
       statusOptions={noOptions}
       priorityOptions={noOptions}
       superCategoryOptions={noOptions}
+      nearby={nearby}
       onView={onView}
       onEdit={onEdit}
       onDelete={onDelete}
@@ -149,5 +157,40 @@ describe('CrmLeadsTable (ecomm)', () => {
     renderLeadTable('ecomm', makeFetch([ecommLead]));
     expect(await screen.findByText('Seller One')).toBeTruthy();
     expect(screen.getByText('BrandX')).toBeTruthy();
+  });
+});
+
+describe('CrmLeadsTable with Nearby leads', () => {
+  const nearbyState = (over: Partial<NearbyLeads> = {}): NearbyLeads => ({
+    near: null,
+    search: null,
+    scan: { phase: 'idle' },
+    start: vi.fn(),
+    clear: vi.fn(),
+    client: { query: vi.fn() },
+    ...over,
+  });
+
+  it('offers the Nearby leads search, and lists by follow-up with no Distance column while it is off', async () => {
+    const fetchRows = makeFetch([venueLead]);
+    renderLeadTable('venue', fetchRows, nearbyState());
+    expect(await screen.findByText('Grand Hall')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Nearby leads' })).toBeTruthy();
+    expect(screen.queryByText('Distance')).toBeNull();
+    expect(fetchRows).toHaveBeenCalledWith(expect.objectContaining({ sortBy: 'next_follow_up_date' }));
+  });
+
+  it('while a search is on: names it, shows the distance of each lead, and asks for the nearest first', async () => {
+    const fetchRows = makeFetch([{ ...venueLead, distance_km: 1.24, geo_precision: 'PIN' }]);
+    const nearby = nearbyState({
+      near: { lat: 19.06, lng: 72.83, radius_km: 5 },
+      search: { source: 'me', city: '', area: '', radius_km: 5 },
+    });
+    renderLeadTable('venue', fetchRows, nearby);
+    expect(await screen.findByText('1.2 km')).toBeTruthy();
+    expect(screen.getByText('Map pin')).toBeTruthy();
+    expect(screen.getByText('Distance')).toBeTruthy();
+    expect(screen.getByText('Within 5 km of you')).toBeTruthy();
+    expect(fetchRows).toHaveBeenCalledWith(expect.objectContaining({ sortBy: 'distance_km', sortDir: 'asc' }));
   });
 });

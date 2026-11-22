@@ -1,11 +1,10 @@
 import { useMemo, useRef, useState } from 'react';
-import { useApolloClient, useMutation } from '@apollo/client/react';
+import { useMutation } from '@apollo/client/react';
 import { useNavigate } from 'react-router';
 import { Alert, Box, Snackbar, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { DuncitButton } from '@duncit/buttons';
 import { ConfirmDialog } from '@duncit/dialogs';
-import { useApolloTableFetch } from '@duncit/table';
 import { parseApiError } from '@duncit/utils';
 import { useTranslation } from '@duncit/shell';
 import type { ProspectLeadEntity } from '../../api/crm.types';
@@ -13,6 +12,7 @@ import type { ProspectLead } from '../../api/prospectLeads.types';
 import { useCrmConfig } from '../../api/useCrmConfig';
 import { useSuperCategories } from '../../api/useSuperCategories';
 import { CrmLeadsTable } from '../../components/lead-table';
+import { useLeadsTableFetch } from '../../hooks/useNearbyLeads';
 import { useLeadEditorOrigin } from '../../hooks/useLeadEditorFlow';
 import { PROSPECT_KINDS } from './prospectKinds';
 
@@ -24,7 +24,6 @@ export default function ProspectLeadsPage({ entity }: Readonly<{ entity: Prospec
   const { t } = useTranslation();
   const navigate = useNavigate();
   const editorOrigin = useLeadEditorOrigin();
-  const client = useApolloClient();
   const { config } = useCrmConfig();
   const { options: superCategories } = useSuperCategories();
   const refetchRef = useRef<(() => void) | null>(null);
@@ -34,7 +33,7 @@ export default function ProspectLeadsPage({ entity }: Readonly<{ entity: Prospec
   const [toDelete, setToDelete] = useState<ProspectLead | null>(null);
   const [deleteLead, { loading: deleting }] = useMutation<{ [key: string]: boolean }, { id: string }>(kind.docs.remove);
 
-  const fetchRows = useApolloTableFetch<ProspectLead>(client, kind.docs.table, kind.docs.tableKey);
+  const { fetchRows, nearby } = useLeadsTableFetch<ProspectLead>(kind.docs.table, kind.docs.tableKey);
   const statusOptions = useMemo(() => asOptions(config.host_lead_statuses ?? []), [config]);
   const priorityOptions = useMemo(() => asOptions(config.priorities ?? []), [config]);
   const superCategoryOptions = useMemo(
@@ -74,6 +73,7 @@ export default function ProspectLeadsPage({ entity }: Readonly<{ entity: Prospec
       <CrmLeadsTable<ProspectLead>
         entity={kind.tableEntity}
         fetchRows={fetchRows}
+        nearby={nearby}
         refetchRef={refetchRef}
         statusOptions={statusOptions}
         priorityOptions={priorityOptions}

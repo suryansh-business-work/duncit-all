@@ -7299,7 +7299,11 @@ export type CommunityLead = {
   community_type?: Maybe<Scalars['String']['output']>;
   contacts: Array<CrmContact>;
   created_at?: Maybe<Scalars['String']['output']>;
+  /** Kilometres from the centre of a Nearby leads search. Set only on a table page read with near; null elsewhere. */
+  distance_km?: Maybe<Scalars['Float']['output']>;
   dynamic_values_json: Scalars['String']['output'];
+  /** How exactly the lead sits on the map: PIN (its map link), AREA or CITY (that centre). Null until a Nearby leads search places it, or when it has no known city. */
+  geo_precision?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   instagram_link?: Maybe<Scalars['String']['output']>;
   interests: Array<Scalars['String']['output']>;
@@ -7363,6 +7367,8 @@ export type CommunityLeadTablePage = {
   page_size: Scalars['Int']['output'];
   rows: Array<CommunityLead>;
   total: Scalars['Int']['output'];
+  /** Leads of this kind with no place on the map (no city, or one the map does not know), so a Nearby leads search cannot include them. Null outside a nearby search. */
+  unplaced?: Maybe<Scalars['Int']['output']>;
 };
 
 export type CompletePasswordResetInput = {
@@ -8402,10 +8408,14 @@ export type CreatorLead = {
   contacts: Array<CrmContact>;
   created_at?: Maybe<Scalars['String']['output']>;
   creator_name: Scalars['String']['output'];
+  /** Kilometres from the centre of a Nearby leads search. Set only on a table page read with near; null elsewhere. */
+  distance_km?: Maybe<Scalars['Float']['output']>;
   dynamic_values_json: Scalars['String']['output'];
   /** Average engagement, in percent. */
   engagement_rate?: Maybe<Scalars['Float']['output']>;
   followers_count?: Maybe<Scalars['Float']['output']>;
+  /** How exactly the lead sits on the map: PIN (its map link), AREA or CITY (that centre). Null until a Nearby leads search places it, or when it has no known city. */
+  geo_precision?: Maybe<Scalars['String']['output']>;
   handle?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   instagram_link?: Maybe<Scalars['String']['output']>;
@@ -8469,6 +8479,8 @@ export type CreatorLeadTablePage = {
   page_size: Scalars['Int']['output'];
   rows: Array<CreatorLead>;
   total: Scalars['Int']['output'];
+  /** Leads of this kind with no place on the map (no city, or one the map does not know), so a Nearby leads search cannot include them. Null outside a nearby search. */
+  unplaced?: Maybe<Scalars['Int']['output']>;
 };
 
 export type CrmActivity = {
@@ -9105,6 +9117,15 @@ export type CrmLeadMediaUpdateInput = {
   size_bytes?: InputMaybe<Scalars['Int']['input']>;
   url?: InputMaybe<Scalars['String']['input']>;
   width?: InputMaybe<Scalars['Int']['input']>;
+};
+
+/** Centre and radius of a Nearby leads search: the searcher position (lat and lng together) or a city, optionally with an area, from the admin Location list. radius_km is 0.5 to 50. */
+export type CrmLeadNearInput = {
+  area?: InputMaybe<Scalars['String']['input']>;
+  city?: InputMaybe<Scalars['String']['input']>;
+  lat?: InputMaybe<Scalars['Float']['input']>;
+  lng?: InputMaybe<Scalars['Float']['input']>;
+  radius_km: Scalars['Float']['input'];
 };
 
 export type CrmLinkedHost = {
@@ -10704,8 +10725,12 @@ export type EcommLead = {
   city?: Maybe<Scalars['String']['output']>;
   contacts: Array<CrmContact>;
   created_at?: Maybe<Scalars['String']['output']>;
+  /** Kilometres from the centre of a Nearby leads search. Set only on a table page read with near; null elsewhere. */
+  distance_km?: Maybe<Scalars['Float']['output']>;
   dynamic_values_json: Scalars['String']['output'];
   fulfilment_mode?: Maybe<Scalars['String']['output']>;
+  /** How exactly the lead sits on the map: PIN (its map link), AREA or CITY (that centre). Null until a Nearby leads search places it, or when it has no known city. */
+  geo_precision?: Maybe<Scalars['String']['output']>;
   gst_applicable: Scalars['Boolean']['output'];
   gst_number?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
@@ -10777,6 +10802,8 @@ export type EcommLeadTablePage = {
   page_size: Scalars['Int']['output'];
   rows: Array<EcommLead>;
   total: Scalars['Int']['output'];
+  /** Leads of this kind with no place on the map (no city, or one the map does not know), so a Nearby leads search cannot include them. Null outside a nearby search. */
+  unplaced?: Maybe<Scalars['Int']['output']>;
 };
 
 export type EditAdjustmentInput = {
@@ -13933,9 +13960,13 @@ export type HostLead = {
   community_size?: Maybe<Scalars['Int']['output']>;
   contacts: Array<CrmContact>;
   created_at?: Maybe<Scalars['String']['output']>;
+  /** Kilometres from the centre of a Nearby leads search. Set only on a table page read with near; null elsewhere. */
+  distance_km?: Maybe<Scalars['Float']['output']>;
   dynamic_values_json: Scalars['String']['output'];
   expected_audience_size?: Maybe<Scalars['String']['output']>;
   frequency?: Maybe<Scalars['String']['output']>;
+  /** How exactly the lead sits on the map: PIN (its map link), AREA or CITY (that centre). Null until a Nearby leads search places it, or when it has no known city. */
+  geo_precision?: Maybe<Scalars['String']['output']>;
   host_intent_scores: Array<Scalars['String']['output']>;
   host_name: Scalars['String']['output'];
   host_type?: Maybe<Scalars['String']['output']>;
@@ -14020,6 +14051,8 @@ export type HostLeadTablePage = {
   page_size: Scalars['Int']['output'];
   rows: Array<HostLead>;
   total: Scalars['Int']['output'];
+  /** Leads of this kind with no place on the map (no city, or one the map does not know), so a Nearby leads search cannot include them. Null outside a nearby search. */
+  unplaced?: Maybe<Scalars['Int']['output']>;
 };
 
 /** One month's host payout total (bucket = 'YYYY-MM'). */
@@ -34389,6 +34422,7 @@ export type Query = {
   communicationLog?: Maybe<CommunicationLog>;
   communicationLogs: CommunicationLogPage;
   communityLead?: Maybe<CommunityLead>;
+  /** With near, only the leads within the radius, nearest first unless another sort is picked. */
   communityLeadsTable: CommunityLeadTablePage;
   contactSubmissions: Array<ContactSubmission>;
   contactSubmissionsTable: ContactSubmissionTablePage;
@@ -34440,6 +34474,7 @@ export type Query = {
   /** Everyone you could message, minus yourself. Search matches name or email. */
   coworkers: Array<Coworker>;
   creatorLead?: Maybe<CreatorLead>;
+  /** With near, only the leads within the radius, nearest first unless another sort is picked. */
   creatorLeadsTable: CreatorLeadTablePage;
   /** Active CRM team members matching a name / email search — the Assigned To picker and @mentions. */
   crmAssignableUsers: Array<CrmStaffUser>;
@@ -34580,6 +34615,7 @@ export type Query = {
   ecommBrandsTable: EcommBrandTablePage;
   ecommLead?: Maybe<EcommLead>;
   ecommLeads: Array<EcommLead>;
+  /** With near, only the leads within the radius, nearest first unless another sort is picked. */
   ecommLeadsTable: EcommLeadTablePage;
   /** Either side: an edit of its own latest counter, priced before it is saved. */
   editCounterQuote: VenueOfferQuoteResult;
@@ -34765,6 +34801,7 @@ export type Query = {
   hostInsights: HostInsights;
   hostLead?: Maybe<HostLead>;
   hostLeads: Array<HostLead>;
+  /** With near, only the leads within the radius, nearest first unless another sort is picked. */
   hostLeadsTable: HostLeadTablePage;
   hostPodDeleteImpact: HostPodDeleteImpact;
   /**
@@ -36197,6 +36234,7 @@ export type Query = {
   venueKitOffer: VenueKitOffer;
   venueLead?: Maybe<VenueLead>;
   venueLeads: Array<VenueLead>;
+  /** With near, only the leads within the radius, nearest first unless another sort is picked. */
   venueLeadsTable: VenueLeadTablePage;
   /** Open hours, closed days and busy windows between two dates (YYYY-MM-DD, at most 62 days). */
   venueOfferCalendar: VenueBookingCalendar;
@@ -37259,6 +37297,7 @@ export type QueryCommunityLeadArgs = {
 
 
 export type QueryCommunityLeadsTableArgs = {
+  near?: InputMaybe<CrmLeadNearInput>;
   query?: InputMaybe<TableQueryInput>;
 };
 
@@ -37371,6 +37410,7 @@ export type QueryCreatorLeadArgs = {
 
 
 export type QueryCreatorLeadsTableArgs = {
+  near?: InputMaybe<CrmLeadNearInput>;
   query?: InputMaybe<TableQueryInput>;
 };
 
@@ -37602,6 +37642,7 @@ export type QueryEcommLeadsArgs = {
 
 
 export type QueryEcommLeadsTableArgs = {
+  near?: InputMaybe<CrmLeadNearInput>;
   query?: InputMaybe<TableQueryInput>;
 };
 
@@ -38057,6 +38098,7 @@ export type QueryHostLeadsArgs = {
 
 
 export type QueryHostLeadsTableArgs = {
+  near?: InputMaybe<CrmLeadNearInput>;
   query?: InputMaybe<TableQueryInput>;
 };
 
@@ -40816,6 +40858,7 @@ export type QueryVenueLeadsArgs = {
 
 
 export type QueryVenueLeadsTableArgs = {
+  near?: InputMaybe<CrmLeadNearInput>;
   query?: InputMaybe<TableQueryInput>;
 };
 
@@ -52616,11 +52659,15 @@ export type VenueLead = {
   city: Scalars['String']['output'];
   contacts: Array<CrmContact>;
   created_at?: Maybe<Scalars['String']['output']>;
+  /** Kilometres from the centre of a Nearby leads search. Set only on a table page read with near; null elsewhere. */
+  distance_km?: Maybe<Scalars['Float']['output']>;
   /** Stringified JSON map of dynamic field values. Empty object when none set. */
   dynamic_values_json: Scalars['String']['output'];
   event_suitability: Array<Scalars['String']['output']>;
   expected_charges?: Maybe<Scalars['Float']['output']>;
   full_address: Scalars['String']['output'];
+  /** How exactly the lead sits on the map: PIN (its map link), AREA or CITY (that centre). Null until a Nearby leads search places it, or when it has no known city. */
+  geo_precision?: Maybe<Scalars['String']['output']>;
   gst_applicable: Scalars['Boolean']['output'];
   id: Scalars['ID']['output'];
   instagram_link?: Maybe<Scalars['String']['output']>;
@@ -52713,6 +52760,8 @@ export type VenueLeadTablePage = {
   page_size: Scalars['Int']['output'];
   rows: Array<VenueLead>;
   total: Scalars['Int']['output'];
+  /** Leads of this kind with no place on the map (no city, or one the map does not know), so a Nearby leads search cannot include them. Null outside a nearby search. */
+  unplaced?: Maybe<Scalars['Int']['output']>;
 };
 
 /** The least a venue takes from one booking on one pricing basis (rupees). A host's offer below it is refused (BELOW_MIN_BUSINESS). */

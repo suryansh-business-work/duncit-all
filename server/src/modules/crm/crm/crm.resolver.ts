@@ -13,6 +13,7 @@ import { findLeadDuplicates } from '@modules/crm/leadDuplicate/leadDuplicate.ser
 import { listAssignableUsers, usersByIds } from '@modules/crm/crmUser/crmUser.service';
 import { manualLogService, type CreateLogInput, type UpdateLogInput } from '@modules/crm/manualLog/manualLog.service';
 import { canChangeLog, type StoredActivity } from '@modules/crm/manualLog/manualLog.view';
+import type { LeadNearInput } from '@modules/crm/leadGeo/leadGeo.nearby';
 
 const RW = [...CRM_RW];
 
@@ -97,9 +98,9 @@ export const crmResolvers = {
       requireRole(ctx, RW);
       return crmService.listVenueLeads(args.filter);
     },
-    venueLeadsTable: (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
+    venueLeadsTable: (_p: unknown, args: { query?: any; near?: LeadNearInput | null }, ctx: GraphQLContext) => {
       requireRole(ctx, RW);
-      return crmService.venueLeadsTable(args.query);
+      return crmService.venueLeadsTable(args.query, args.near);
     },
     venueLead: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, RW);
@@ -109,9 +110,9 @@ export const crmResolvers = {
       requireRole(ctx, RW);
       return crmService.listHostLeads(args.filter);
     },
-    hostLeadsTable: (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
+    hostLeadsTable: (_p: unknown, args: { query?: any; near?: LeadNearInput | null }, ctx: GraphQLContext) => {
       requireRole(ctx, RW);
-      return crmService.hostLeadsTable(args.query);
+      return crmService.hostLeadsTable(args.query, args.near);
     },
     hostLead: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, RW);
@@ -121,9 +122,9 @@ export const crmResolvers = {
       requireRole(ctx, RW);
       return crmService.listEcommLeads(args.filter);
     },
-    ecommLeadsTable: (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
+    ecommLeadsTable: (_p: unknown, args: { query?: any; near?: LeadNearInput | null }, ctx: GraphQLContext) => {
       requireRole(ctx, RW);
-      return crmService.ecommLeadsTable(args.query);
+      return crmService.ecommLeadsTable(args.query, args.near);
     },
     ecommLead: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, RW);

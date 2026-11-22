@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router';
 import { Alert, Snackbar, Stack } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { DuncitButton } from '@duncit/buttons';
-import { useApolloTableFetch } from '@duncit/table';
 import { DELETE_HOST_LEAD, HOST_LEADS_TABLE } from '../../api/crm.gql';
 import { CRM_EXCEL_EXPORT, CRM_EXCEL_TEMPLATE } from '../../api/excel.gql';
 import type { HostLead } from '../../api/crm.types';
@@ -15,6 +14,7 @@ import { ConfirmDialog } from '@duncit/dialogs';
 import FillWithAiDialog from '../../components/FillWithAiDialog';
 import ExcelImportDialog from '../../components/ExcelImportDialog';
 import { CrmLeadsTable } from '../../components/lead-table';
+import { useLeadsTableFetch } from '../../hooks/useNearbyLeads';
 import { downloadBase64File, parseApiError } from '@duncit/utils';
 import { useTranslation } from '@duncit/shell';
 import { useLeadEditorOrigin } from '../../hooks/useLeadEditorFlow';
@@ -38,7 +38,7 @@ export default function HostLeadsPage() {
 
   const [deleteLead, { loading: deleting }] = useMutation<any>(DELETE_HOST_LEAD);
 
-  const fetchRows = useApolloTableFetch<HostLead>(client, HOST_LEADS_TABLE, 'hostLeadsTable');
+  const { fetchRows, nearby } = useLeadsTableFetch<HostLead>(HOST_LEADS_TABLE, 'hostLeadsTable');
 
   const statusOptions = useMemo(
     () => (config.host_lead_statuses ?? []).map((value) => ({ label: value, value })),
@@ -101,6 +101,7 @@ export default function HostLeadsPage() {
       <CrmLeadsTable<HostLead>
         entity="host"
         fetchRows={fetchRows}
+        nearby={nearby}
         refetchRef={refetchRef}
         statusOptions={statusOptions}
         priorityOptions={priorityOptions}

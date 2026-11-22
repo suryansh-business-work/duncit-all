@@ -23,6 +23,8 @@ import { removeLeadMedia } from '@modules/crm/leadMedia/leadMedia.model';
 import { assertNoLeadDuplicates, withDuplicateFlags } from '@modules/crm/leadDuplicate/leadDuplicate.service';
 import { applyAssignee } from '@modules/crm/crmUser/crmUser.service';
 import { LEAD_MODELS } from './leadModels';
+import { leadUpdate, type LeadGeoKind } from '@modules/crm/leadGeo/leadGeo.place';
+import { nearbyLeadTable, type LeadNearInput } from '@modules/crm/leadGeo/leadGeo.nearby';
 
 // Re-exported: leadMedia.service and older callers import LEAD_MODELS from here.
 export { LEAD_MODELS } from './leadModels';
@@ -250,15 +252,23 @@ const ECOMM_LEAD_TABLE_CONFIG = leadTableConfig('seller_name', {
   filterFields: { brand_name: { type: 'string' } },
 });
 
-/** Server-side table page (search/filter/sort/paginate) for a lead collection. */
-async function leadTable(
-  entity_type: 'VENUE_LEAD' | 'HOST_LEAD' | 'ECOMM_LEAD',
+/**
+ * Server-side table page (search/filter/sort/paginate) for any lead kind.
+ * With `near`, only the leads within the radius, each with its distance
+ * (nearest first by default), and the count of leads that cannot be put on
+ * the map.
+ */
+export async function leadTablePage(
+  entity_type: LeadGeoKind,
   config: TableEntityConfig,
-  input?: TableQueryInput | null
+  input?: TableQueryInput | null,
+  near?: LeadNearInput | null
 ) {
-  const { docs, total, page, page_size } = await runTableQuery(LEAD_MODELS[entity_type], {}, input, config);
+  const { docs, total, page, page_size, unplaced } = near
+    ? await nearbyLeadTable<unknown>(entity_type, near, input, config)
+    : { ...(await runTableQuery<unknown>(LEAD_MODELS[entity_type], {}, input, config)), unplaced: null };
   const rows = await withDuplicateFlags(entity_type, docs.map(pub).filter((row) => row !== null));
-  return { rows, total, page, page_size };
+  return { rows, total, page, page_size, unplaced };
 }
 
 /**
@@ -629,8 +639,8 @@ export const crmService = {
     return docs.map(pub);
   },
   /** Server-side table page (search/filter/sort/paginate) for the venueLeadsTable query. */
-  venueLeadsTable(input?: TableQueryInput | null) {
-    return leadTable('VENUE_LEAD', VENUE_LEAD_TABLE_CONFIG, input);
+  venueLeadsTable(input?: TableQueryInput | null, near?: LeadNearInput | null) {
+    return leadTablePage('VENUE_LEAD', VENUE_LEAD_TABLE_CONFIG, input, near);
   },
   async getVenueLead(id: string) {
     const doc = await VenueLeadModel.findById(id);
@@ -647,7 +657,7 @@ export const crmService = {
     await assertNoLeadDuplicates(safe, { entity_type: 'VENUE_LEAD', id });
     const updated = await VenueLeadModel.findByIdAndUpdate(
       id,
-      { $set: { ...safe, next_follow_up_date: parseDate(safe.next_follow_up_date) } },
+      leadUpdate({ ...safe, next_follow_up_date: parseDate(safe.next_follow_up_date) }, input),
       { new: true }
     );
     if (!updated) notFound('Venue lead');
@@ -666,8 +676,8 @@ export const crmService = {
     return docs.map(pub);
   },
   /** Server-side table page (search/filter/sort/paginate) for the hostLeadsTable query. */
-  hostLeadsTable(input?: TableQueryInput | null) {
-    return leadTable('HOST_LEAD', HOST_LEAD_TABLE_CONFIG, input);
+  hostLeadsTable(input?: TableQueryInput | null, near?: LeadNearInput | null) {
+    return leadTablePage('HOST_LEAD', HOST_LEAD_TABLE_CONFIG, input, near);
   },
   async getHostLead(id: string) {
     const doc = await HostLeadModel.findById(id);
@@ -688,13 +698,14 @@ export const crmService = {
     await assertNoLeadDuplicates(safe, { entity_type: 'HOST_LEAD', id });
     const updated = await HostLeadModel.findByIdAndUpdate(
       id,
-      {
-        $set: {
+      leadUpdate(
+        {
           ...safe,
           preferred_event_date: parseDate(safe.preferred_event_date),
           next_follow_up_date: parseDate(safe.next_follow_up_date),
         },
-      },
+        input
+      ),
       { new: true }
     );
     if (!updated) notFound('Host lead');
@@ -713,8 +724,8 @@ export const crmService = {
     return docs.map(pub);
   },
   /** Server-side table page (search/filter/sort/paginate) for the ecommLeadsTable query. */
-  ecommLeadsTable(input?: TableQueryInput | null) {
-    return leadTable('ECOMM_LEAD', ECOMM_LEAD_TABLE_CONFIG, input);
+  ecommLeadsTable(input?: TableQueryInput | null, near?: LeadNearInput | null) {
+    return leadTablePage('ECOMM_LEAD', ECOMM_LEAD_TABLE_CONFIG, input, near);
   },
   async getEcommLead(id: string) {
     const doc = await EcommLeadModel.findById(id);
@@ -731,7 +742,7 @@ export const crmService = {
     await assertNoLeadDuplicates(safe, { entity_type: 'ECOMM_LEAD', id });
     const updated = await EcommLeadModel.findByIdAndUpdate(
       id,
-      { $set: { ...safe, next_follow_up_date: parseDate(safe.next_follow_up_date) } },
+      leadUpdate({ ...safe, next_follow_up_date: parseDate(safe.next_follow_up_date) }, input),
       { new: true }
     );
     if (!updated) notFound('Ecomm lead');

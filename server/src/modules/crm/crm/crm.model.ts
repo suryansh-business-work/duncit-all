@@ -25,6 +25,27 @@ export const socialLinkSchema = new Schema(
   { _id: false }
 );
 
+const geoPointSchema = new Schema(
+  {
+    type: { type: String, enum: ['Point'], required: true },
+    // GeoJSON order: longitude, latitude.
+    coordinates: { type: [Number], required: true },
+  },
+  { _id: false }
+);
+
+/**
+ * Where a lead sits on the map, for the Nearby leads search. Never typed by
+ * anyone: leadGeo places the lead from its map link, area or city the first
+ * time a search needs it, and an edit to those fields clears it again.
+ * Absent on existing rows, so no migration is needed.
+ */
+export const leadGeoFields = {
+  geo: { type: geoPointSchema, default: undefined },
+  geo_precision: { type: String, enum: ['PIN', 'AREA', 'CITY'], default: undefined },
+  geo_checked_at: { type: Date, default: undefined },
+};
+
 export const serviceOfferedSchema = new Schema(
   {
     // Catalogue value or "Other". When "Other", `custom_name` carries the
@@ -131,6 +152,7 @@ const venueLeadSchema = new Schema(
     next_follow_up_date: { type: Date, default: null },
     remarks: { type: String, trim: true, default: '' },
     activity_log: { type: [activitySchema], default: [] },
+    ...leadGeoFields,
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );
@@ -185,6 +207,7 @@ const hostLeadSchema = new Schema(
     next_follow_up_date: { type: Date, default: null },
     notes: { type: String, trim: true, default: '' },
     activity_log: { type: [activitySchema], default: [] },
+    ...leadGeoFields,
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );
@@ -233,6 +256,7 @@ const ecommLeadSchema = new Schema(
     next_follow_up_date: { type: Date, default: null },
     notes: { type: String, trim: true, default: '' },
     activity_log: { type: [activitySchema], default: [] },
+    ...leadGeoFields,
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );
@@ -304,6 +328,9 @@ export type HostLeadDoc = InferSchemaType<typeof hostLeadSchema> & { _id: any };
 export type EcommLeadDoc = InferSchemaType<typeof ecommLeadSchema> & { _id: any };
 export type CrmServiceCatalogDoc = InferSchemaType<typeof crmServiceCatalogSchema> & { _id: Types.ObjectId };
 export type CrmDynamicFieldDoc = InferSchemaType<typeof crmDynamicFieldSchema> & { _id: Types.ObjectId };
+// Nearby leads: $geoNear reads the lead point through this index.
+for (const schema of [venueLeadSchema, hostLeadSchema, ecommLeadSchema]) schema.index({ geo: '2dsphere' });
+
 export const VenueLeadModel = model('VenueLead', venueLeadSchema);
 export const HostLeadModel = model('HostLead', hostLeadSchema);
 export const EcommLeadModel = model('EcommLead', ecommLeadSchema);

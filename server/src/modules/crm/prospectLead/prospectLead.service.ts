@@ -1,6 +1,9 @@
 import { commsService } from '@services/comms/comms.service';
-import { runTableQuery, type TableQueryInput } from '@utils/table-query';
+import type { TableQueryInput } from '@utils/table-query';
+import { leadUpdate } from '@modules/crm/leadGeo/leadGeo.place';
+import type { LeadNearInput } from '@modules/crm/leadGeo/leadGeo.nearby';
 import {
+  leadTablePage,
   logAndAttachActivity,
   normaliseLeadInput,
   notFound,
@@ -9,7 +12,7 @@ import {
 } from '@modules/crm/crm/crm.service';
 import { removeLeadMedia } from '@modules/crm/leadMedia/leadMedia.model';
 import { applyAssignee } from '@modules/crm/crmUser/crmUser.service';
-import { assertNoLeadDuplicates, withDuplicateFlags } from '@modules/crm/leadDuplicate/leadDuplicate.service';
+import { assertNoLeadDuplicates } from '@modules/crm/leadDuplicate/leadDuplicate.service';
 import { NUMERIC_FIELDS, PROSPECT_CONFIG, type ProspectKind } from './prospectLead.config';
 
 type LeadInput = Record<string, unknown> & { next_follow_up_date?: string | null };
@@ -62,11 +65,8 @@ function prepare(input: LeadInput): LeadInput {
  * allowlists come from PROSPECT_CONFIG.
  */
 export const prospectLeadService = {
-  async table(kind: ProspectKind, input?: TableQueryInput | null) {
-    const { model, table } = PROSPECT_CONFIG[kind];
-    const { docs, total, page, page_size } = await runTableQuery(model, {}, input, table);
-    const rows = await withDuplicateFlags(kind, docs.map(pub).filter((row) => row !== null));
-    return { rows, total, page, page_size };
+  table(kind: ProspectKind, input?: TableQueryInput | null, near?: LeadNearInput | null) {
+    return leadTablePage(kind, PROSPECT_CONFIG[kind].table, input, near);
   },
 
   async get(kind: ProspectKind, id: string) {
@@ -85,7 +85,7 @@ export const prospectLeadService = {
     await assertNoLeadDuplicates(safe, { entity_type: kind, id });
     const updated = await modelOf(kind).findByIdAndUpdate(
       id,
-      { $set: { ...safe, next_follow_up_date: parseDate(safe.next_follow_up_date) } },
+      leadUpdate({ ...safe, next_follow_up_date: parseDate(safe.next_follow_up_date) }, input),
       { new: true, runValidators: true }
     );
     if (!updated) notFound(capitalised(PROSPECT_CONFIG[kind].label));

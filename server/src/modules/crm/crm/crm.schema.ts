@@ -266,6 +266,10 @@ export const crmTypeDefs = gql`
     updated_at: String
     "True when another lead of any kind shares one of this lead's phone numbers, emails or its website. Set on table pages (the Leads listing); null elsewhere."
     is_duplicate: Boolean
+    "Kilometres from the centre of a Nearby leads search. Set only on a table page read with near; null elsewhere."
+    distance_km: Float
+    "How exactly the lead sits on the map: PIN (its map link), AREA or CITY (that centre). Null until a Nearby leads search places it, or when it has no known city."
+    geo_precision: String
   }
 
   type HostLead {
@@ -317,6 +321,10 @@ export const crmTypeDefs = gql`
     updated_at: String
     "True when another lead of any kind shares one of this lead's phone numbers, emails or its website. Set on table pages (the Leads listing); null elsewhere."
     is_duplicate: Boolean
+    "Kilometres from the centre of a Nearby leads search. Set only on a table page read with near; null elsewhere."
+    distance_km: Float
+    "How exactly the lead sits on the map: PIN (its map link), AREA or CITY (that centre). Null until a Nearby leads search places it, or when it has no known city."
+    geo_precision: String
   }
 
   type EcommLead {
@@ -361,6 +369,10 @@ export const crmTypeDefs = gql`
     updated_at: String
     "True when another lead of any kind shares one of this lead's phone numbers, emails or its website. Set on table pages (the Leads listing); null elsewhere."
     is_duplicate: Boolean
+    "Kilometres from the centre of a Nearby leads search. Set only on a table page read with near; null elsewhere."
+    distance_km: Float
+    "How exactly the lead sits on the map: PIN (its map link), AREA or CITY (that centre). Null until a Nearby leads search places it, or when it has no known city."
+    geo_precision: String
   }
 
   type CrmOptionGroup {
@@ -518,6 +530,15 @@ export const crmTypeDefs = gql`
     notes: String
   }
 
+  "Centre and radius of a Nearby leads search: the searcher position (lat and lng together) or a city, optionally with an area, from the admin Location list. radius_km is 0.5 to 50."
+  input CrmLeadNearInput {
+    lat: Float
+    lng: Float
+    city: String
+    area: String
+    radius_km: Float!
+  }
+
   input CrmLeadFilter {
     search: String
     city: String
@@ -532,6 +553,8 @@ export const crmTypeDefs = gql`
     total: Int!
     page: Int!
     page_size: Int!
+    "Leads of this kind with no place on the map (no city, or one the map does not know), so a Nearby leads search cannot include them. Null outside a nearby search."
+    unplaced: Int
   }
 
   "Server-side table page for the shared table engine (hostLeadsTable)."
@@ -540,6 +563,8 @@ export const crmTypeDefs = gql`
     total: Int!
     page: Int!
     page_size: Int!
+    "Leads of this kind with no place on the map (no city, or one the map does not know), so a Nearby leads search cannot include them. Null outside a nearby search."
+    unplaced: Int
   }
 
   "Server-side table page for the shared table engine (ecommLeadsTable)."
@@ -548,6 +573,8 @@ export const crmTypeDefs = gql`
     total: Int!
     page: Int!
     page_size: Int!
+    "Leads of this kind with no place on the map (no city, or one the map does not know), so a Nearby leads search cannot include them. Null outside a nearby search."
+    unplaced: Int
   }
 
   type LeadContactActionResult {
@@ -611,13 +638,16 @@ export const crmTypeDefs = gql`
   extend type Query {
     crmLeadConfig: CrmOptionGroup!
     venueLeads(filter: CrmLeadFilter): [VenueLead!]!
-    venueLeadsTable(query: TableQueryInput): VenueLeadTablePage!
+    "With near, only the leads within the radius, nearest first unless another sort is picked."
+    venueLeadsTable(query: TableQueryInput, near: CrmLeadNearInput): VenueLeadTablePage!
     venueLead(id: ID!): VenueLead
     hostLeads(filter: CrmLeadFilter): [HostLead!]!
-    hostLeadsTable(query: TableQueryInput): HostLeadTablePage!
+    "With near, only the leads within the radius, nearest first unless another sort is picked."
+    hostLeadsTable(query: TableQueryInput, near: CrmLeadNearInput): HostLeadTablePage!
     hostLead(id: ID!): HostLead
     ecommLeads(filter: CrmLeadFilter): [EcommLead!]!
-    ecommLeadsTable(query: TableQueryInput): EcommLeadTablePage!
+    "With near, only the leads within the radius, nearest first unless another sort is picked."
+    ecommLeadsTable(query: TableQueryInput, near: CrmLeadNearInput): EcommLeadTablePage!
     ecommLead(id: ID!): EcommLead
     crmExcelTemplate(entity: CrmAiEntity!): CrmExcelFile!
     crmExcelExport(entity: CrmAiEntity!): CrmExcelFile!

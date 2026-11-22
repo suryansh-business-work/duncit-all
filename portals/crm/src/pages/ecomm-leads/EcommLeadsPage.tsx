@@ -1,10 +1,9 @@
 import { useMemo, useRef, useState } from 'react';
-import { useApolloClient, useMutation } from '@apollo/client/react';
+import { useMutation } from '@apollo/client/react';
 import { useNavigate } from 'react-router';
 import { Alert, Snackbar, Stack } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { DuncitButton } from '@duncit/buttons';
-import { useApolloTableFetch } from '@duncit/table';
 import { DELETE_ECOMM_LEAD, ECOMM_LEADS_TABLE } from '../../api/crm.gql';
 import type { EcommLead } from '../../api/crm.types';
 import { useCrmConfig } from '../../api/useCrmConfig';
@@ -12,6 +11,7 @@ import { useSuperCategories } from '../../api/useSuperCategories';
 import LeadsToolbar from '../../components/LeadsToolbar';
 import { ConfirmDialog } from '@duncit/dialogs';
 import { CrmLeadsTable } from '../../components/lead-table';
+import { useLeadsTableFetch } from '../../hooks/useNearbyLeads';
 import { parseApiError } from '@duncit/utils';
 import { useTranslation } from '@duncit/shell';
 import { useLeadEditorOrigin } from '../../hooks/useLeadEditorFlow';
@@ -20,7 +20,6 @@ export default function EcommLeadsPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const editorOrigin = useLeadEditorOrigin();
-  const client = useApolloClient();
   const { config } = useCrmConfig();
   const { options: superCategories } = useSuperCategories();
   const refetchRef = useRef<(() => void) | null>(null);
@@ -31,7 +30,7 @@ export default function EcommLeadsPage() {
 
   const [deleteLead, { loading: deleting }] = useMutation<any>(DELETE_ECOMM_LEAD);
 
-  const fetchRows = useApolloTableFetch<EcommLead>(client, ECOMM_LEADS_TABLE, 'ecommLeadsTable');
+  const { fetchRows, nearby } = useLeadsTableFetch<EcommLead>(ECOMM_LEADS_TABLE, 'ecommLeadsTable');
 
   const statusOptions = useMemo(
     () => (config.host_lead_statuses ?? []).map((value) => ({ label: value, value })),
@@ -71,6 +70,7 @@ export default function EcommLeadsPage() {
       <CrmLeadsTable<EcommLead>
         entity="ecomm"
         fetchRows={fetchRows}
+        nearby={nearby}
         refetchRef={refetchRef}
         statusOptions={statusOptions}
         priorityOptions={priorityOptions}

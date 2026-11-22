@@ -1,5 +1,11 @@
 import { Schema, model, type InferSchemaType, type SchemaDefinition } from 'mongoose';
-import { activitySchema, contactSchema, serviceOfferedSchema, socialLinkSchema } from '@modules/crm/crm/crm.model';
+import {
+  activitySchema,
+  contactSchema,
+  leadGeoFields,
+  serviceOfferedSchema,
+  socialLinkSchema,
+} from '@modules/crm/crm/crm.model';
 import { HOST_LEAD_STATUSES, PRIORITIES } from '@modules/crm/crm/crm.constants';
 
 /**
@@ -30,6 +36,7 @@ const leadBackbone: SchemaDefinition = {
   next_follow_up_date: { type: Date, default: null },
   notes: { type: String, trim: true, default: '' },
   activity_log: { type: [activitySchema], default: [] },
+  ...leadGeoFields,
 };
 
 const timestamps = { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } } as const;
@@ -64,6 +71,9 @@ const communityLeadSchema = new Schema(
   },
   timestamps
 );
+
+// Nearby leads: $geoNear reads the lead point through this index.
+for (const schema of [creatorLeadSchema, communityLeadSchema]) schema.index({ geo: '2dsphere' });
 
 export type CreatorLeadDoc = InferSchemaType<typeof creatorLeadSchema> & { _id: unknown };
 export type CommunityLeadDoc = InferSchemaType<typeof communityLeadSchema> & { _id: unknown };

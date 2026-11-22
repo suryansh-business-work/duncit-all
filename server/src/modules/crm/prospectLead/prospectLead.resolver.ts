@@ -1,6 +1,7 @@
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
 import type { TableQueryInput } from '@utils/table-query';
+import type { LeadNearInput } from '@modules/crm/leadGeo/leadGeo.nearby';
 import { CRM_RW } from '@modules/crm/crm/crm.constants';
 import { crmService } from '@modules/crm/crm/crm.service';
 import { prospectLeadService } from './prospectLead.service';
@@ -17,9 +18,9 @@ const superCategory = (parent: { super_category_id?: string | null }) =>
 /** Query + mutation resolvers for one prospect kind, all gated to CRM staff. */
 function kindResolvers(kind: ProspectKind) {
   return {
-    table: (_p: unknown, args: { query?: TableQueryInput | null }, ctx: GraphQLContext) => {
+    table: (_p: unknown, args: { query?: TableQueryInput | null; near?: LeadNearInput | null }, ctx: GraphQLContext) => {
       requireRole(ctx, RW);
-      return prospectLeadService.table(kind, args.query);
+      return prospectLeadService.table(kind, args.query, args.near);
     },
     get: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, RW);

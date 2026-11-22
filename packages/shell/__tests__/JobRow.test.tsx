@@ -57,6 +57,20 @@ describe('JobRow', () => {
     expect(screen.getByText('Verified 12 emails')).toBeInTheDocument();
   });
 
+  it('names a lead quality rescore by the leads it covers, and the ones that could not be scored', () => {
+    renderRow(makeJob({ kind: 'LEAD_QUALITY_RECALC', table: '', label: 'Venue lead quality scores', succeeded: 40, failed: 2, total: 120 }));
+    expect(screen.getByText('Rescoring 120 leads')).toBeInTheDocument();
+    expect(screen.getByText('2 leads could not be scored')).toBeInTheDocument();
+  });
+
+  it('names a lead discovery by the new leads it is after, and says how many it found', () => {
+    renderRow(makeJob({ kind: 'LEAD_DISCOVERY', table: '', label: 'Discover 20 venue leads in Lucknow', succeeded: 3, failed: 1, total: 20 }));
+    expect(screen.getByText('Finding 20 new leads')).toBeInTheDocument();
+    expect(screen.getByText('1 search or lead was refused — see the reason')).toBeInTheDocument();
+    renderRow(makeJob({ id: 'job-2', kind: 'LEAD_DISCOVERY', table: '', status: 'COMPLETED', succeeded: 7, total: 20 }));
+    expect(screen.getByText('Found 7 new leads')).toBeInTheDocument();
+  });
+
   it('gives the reason a job stopped', () => {
     renderRow(makeJob({ status: 'FAILED', error_message: 'The server restarted twice' }));
     expect(screen.getByText('Delete stopped')).toBeInTheDocument();

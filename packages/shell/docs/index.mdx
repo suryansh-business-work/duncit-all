@@ -808,8 +808,10 @@ laptop.
 
 Work that outlives a page runs on the server as a **background job**, and the header shows it. Each
 `kind` has its own wording in the drawer and the finished snackbar: `BULK_DELETE` (rows),
-`AI_TRANSLATE` (keys), `MEDIA_ORGANIZE` (files) and `EMAIL_VERIFY` (the CRM Email Verifier's bulk
-CSV check — emails). A new kind needs an entry in `JobRow`'s `TITLE_COPY` / `FAILED_COPY` and
+`AI_TRANSLATE` (keys), `MEDIA_ORGANIZE` (files), `EMAIL_VERIFY` (the CRM Email Verifier's bulk
+CSV check — emails), `LEAD_QUALITY_RECALC` (CRM leads rescored with the published Lead Quality Score
+model — leads) and `LEAD_DISCOVERY` (a CRM Lead Research discovery — new leads found against its
+target; refused searches count as failed). A new kind needs an entry in `JobRow`'s `TITLE_COPY` / `FAILED_COPY` and
 `useJobSettlement`'s `NOTICE_COPY`. `AppShell` mounts `BackgroundJobsProvider` beside `WorkspaceProvider`; the
 header's `BackgroundJobsIndicator` renders nothing until the signed-in person has a job, then a
 ring with the percentage across every running job (rows done over rows in scope, so a 10-row job

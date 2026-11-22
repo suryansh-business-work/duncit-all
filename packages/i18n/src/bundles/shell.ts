@@ -369,6 +369,48 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       },
       verifyPartialNotice: '{label}: {checked} checked, {failed} could not be checked.',
       verifyStoppedNotice: '{label}: the email check stopped — {reason}',
+      // Lead quality (CRM console): rescoring leads with the published scoring model.
+      rescoring: {
+        one: 'Rescoring {count} lead',
+        other: 'Rescoring {count} leads',
+      },
+      rescored: {
+        one: 'Rescored {count} lead',
+        other: 'Rescored {count} leads',
+      },
+      rescoreStopped: 'Lead rescoring stopped',
+      rescoreCancelled: 'Lead rescoring cancelled',
+      unscoredLeads: {
+        one: '{count} lead could not be scored',
+        other: '{count} leads could not be scored',
+      },
+      rescoreDoneNotice: {
+        one: '{label}: 1 lead rescored.',
+        other: '{label}: {count} leads rescored.',
+      },
+      rescorePartialNotice: '{label}: {scored} rescored, {failed} could not be scored.',
+      rescoreStoppedNotice: '{label}: rescoring stopped — {reason}',
+      // Lead discovery (CRM console): finding new leads for the Lead Research queue.
+      discovering: {
+        one: 'Finding {count} new lead',
+        other: 'Finding {count} new leads',
+      },
+      discovered: {
+        one: 'Found {count} new lead',
+        other: 'Found {count} new leads',
+      },
+      discoverStopped: 'Lead discovery stopped',
+      discoverCancelled: 'Lead discovery cancelled',
+      refusedFinds: {
+        one: '{count} search or lead was refused — see the reason',
+        other: '{count} searches or leads were refused — see the reasons',
+      },
+      discoverDoneNotice: {
+        one: '{label}: 1 new lead is waiting in Lead Research.',
+        other: '{label}: {count} new leads are waiting in Lead Research.',
+      },
+      discoverPartialNotice: '{label}: {found} new leads found, {failed} searches or leads refused.',
+      discoverStoppedNotice: '{label}: discovery stopped — {reason}',
     },
 
     /** The layout's own copy — read by assistive technology rather than seen,
@@ -1122,6 +1164,10 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       whatsapp: 'WhatsApp',
       whatsappLeadGenerator: 'WhatsApp Lead Generator',
       emailVerifier: 'Email Verifier',
+      leadResearch: 'Lead Research',
+      leadQualityAnalytics: 'Quality Analytics',
+      leadsSettings: 'Settings',
+      leadQualityScore: 'Lead Quality Score',
       whatsappLeads: 'WhatsApp Leads',
       whatsappLogs: 'WhatsApp Logs',
       withdrawal: 'Withdrawal',

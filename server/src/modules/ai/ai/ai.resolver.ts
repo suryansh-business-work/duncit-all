@@ -9,6 +9,7 @@ import { UserModel } from '@modules/access/user/user.model';
 import { analyticsService } from '@modules/platform/analytics/analytics.service';
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
+import { ADMIN_RW as INVENTORY_ADMIN_RW } from '@modules/venues/inventory/inventory.roles';
 import { writeEmailMjml } from './emailMjml';
 
 type Entity = 'CLUB' | 'POD' | 'INVENTORY_PRODUCT';
@@ -529,7 +530,11 @@ export const aiResolvers = {
       const raw = await generateDummy(args.entity, args.prompt);
       return enrichImagesWithPexels(args.entity, raw, args.prompt);
     },
-    aiDescribeInventoryProduct: async (_: unknown, args: { input: DescribeProductInput }) => {
+    aiDescribeInventoryProduct: async (_: unknown, args: { input: DescribeProductInput }, ctx: GraphQLContext) => {
+      // The Products console's inventory editor is the only caller. Open to
+      // anyone, signed in or not, it spent the OpenAI key for whoever asked —
+      // found by the MCP authorization sweep. Same door as the catalogue it fills.
+      requireRole(ctx, INVENTORY_ADMIN_RW);
       return generateProductDescription(args.input);
     },
     aiFillLocationAreas: async (_: unknown, args: { input: LocationAreasInput }, ctx: GraphQLContext) => {

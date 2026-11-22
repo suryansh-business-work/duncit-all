@@ -172,7 +172,8 @@ describe('checkArguments — types, enums, lengths and ranges', () => {
 describe('checkArguments — fields an input does not declare', () => {
   it('names an unknown nested field, at any depth', () => {
     const args = { input: { ...valid().input, colour: 'blue', owner: { full_name: 'A', role: 'admin' } } };
-    expect(paths(checkArguments(SCHEMA, args, true))).toEqual(['unknown:input.colour', 'unknown:input.owner.role']);
+    // `owner` keeps its place from valid(); fields are checked in the order given.
+    expect(paths(checkArguments(SCHEMA, args, true))).toEqual(['unknown:input.owner.role', 'unknown:input.colour']);
   });
 
   it('leaves unknown top-level parameters to parseCallArgs, which names what the tool accepts', () => {

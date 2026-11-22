@@ -12,6 +12,7 @@ jest.mock('../../rateLimit.enforcer', () => ({
   invalidateRateLimitCache: jest.fn(),
 }));
 
+import { Types } from 'mongoose';
 import { rateLimitService } from '../../rateLimit.service';
 import { flushRateLimitCounters, invalidateRateLimitCache } from '../../rateLimit.enforcer';
 import { RateLimitEventModel, RateLimitRuleModel, RateLimitSystemModel } from '../../rateLimit.model';
@@ -64,7 +65,10 @@ describe('rules', () => {
     const early = await rateLimitService.createRule(ruleInput({ name: 'Early', priority: 1 }));
     expect((await rateLimitService.listRules()).map((r) => r.name)).toEqual(['Early', 'Late']);
     expect((await rateLimitService.getRule(String(early._id)))?.name).toBe('Early');
-    expect(await rateLimitService.getRule(String(late._id).replace(/.$/, '0'))).toBeNull();
+    // A fresh id, never the old trick of changing the last digit to 0 — which
+    // failed whenever the real id already ended in 0.
+    expect(await rateLimitService.getRule(new Types.ObjectId().toHexString())).toBeNull();
+    expect(late.name).toBe('Late');
   });
 
   it('flushes the counters before a table read so hit counts are current', async () => {

@@ -183,11 +183,23 @@ describe('aiFillDummyData', () => {
 });
 
 describe('aiDescribeInventoryProduct', () => {
+  const products = () => makeContext({ roles: ['PRODUCTS_MANAGER'] });
+
+  it('refuses anyone outside the catalogue staff, signed in or not, before spending a model call', async () => {
+    await expect(M.aiDescribeInventoryProduct({}, { input: { product_name: 'Mat' } }, makeContext())).rejects.toMatchObject({
+      extensions: { code: 'UNAUTHENTICATED' },
+    });
+    await expect(M.aiDescribeInventoryProduct({}, { input: { product_name: 'Mat' } }, plainUser())).rejects.toMatchObject({
+      extensions: { code: 'FORBIDDEN' },
+    });
+    expect(mockChat).not.toHaveBeenCalled();
+  });
+
   it('sends only the context lines that were given', async () => {
     ok('{"short_description":"s","description":"d"}');
     const out = await M.aiDescribeInventoryProduct({}, {
       input: { product_name: 'Cold Brew', brand_name: 'Bean Co', tags: ['coffee', 'cold'], tone: 'playful', product_type: null },
-    });
+    }, products());
     expect(out).toBe('{"short_description":"s","description":"d"}');
     expect(promptVars('generate.product_copy.user')).toEqual({
       context: 'Product name: Cold Brew\nBrand: Bean Co\nTags: coffee, cold\nTone: playful',
@@ -201,7 +213,7 @@ describe('aiDescribeInventoryProduct', () => {
     ok('{}');
     await M.aiDescribeInventoryProduct({}, {
       input: { product_name: 'Mat', product_type: 'EQUIPMENT', short_description: 'Grippy', tags: [] },
-    });
+    }, products());
     expect(promptVars('generate.product_copy.user')).toEqual({
       context: 'Product name: Mat\nType: EQUIPMENT\nExisting short description: Grippy',
     });
@@ -209,12 +221,12 @@ describe('aiDescribeInventoryProduct', () => {
 
   it('raises the model failure and rejects a non-JSON answer', async () => {
     fail('NETWORK', 'ECONNRESET');
-    await expect(M.aiDescribeInventoryProduct({}, { input: { product_name: 'Mat' } })).rejects.toMatchObject({
+    await expect(M.aiDescribeInventoryProduct({}, { input: { product_name: 'Mat' } }, products())).rejects.toMatchObject({
       message: 'Failed to reach OpenAI: ECONNRESET',
       extensions: { code: 'AI_NETWORK_ERROR' },
     });
     ok('nope');
-    await expect(M.aiDescribeInventoryProduct({}, { input: { product_name: 'Mat' } })).rejects.toMatchObject({
+    await expect(M.aiDescribeInventoryProduct({}, { input: { product_name: 'Mat' } }, products())).rejects.toMatchObject({
       extensions: { code: 'AI_INVALID_JSON' },
     });
   });

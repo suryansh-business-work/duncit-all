@@ -12,6 +12,7 @@ import {
 import type { AuthUser, GraphQLContext } from '@context';
 import { resolvers, typeDefs, typeDefsByModule } from '@modules';
 import { NO_CONSENT } from '@utils/consent';
+import { enableProducts } from '@test/feature-flags';
 import { buildGraphQLTools } from '../../catalog/build';
 import { reachableCategories } from '../../catalog/visibility';
 import type { GraphQLTool } from '../../tools/tool.types';
@@ -37,11 +38,136 @@ import type { GraphQLTool } from '../../tools/tool.types';
 
 jest.setTimeout(15 * 60_000);
 
-/** Public by design: a person who is not signed in uses these. */
-const PUBLIC_MUTATIONS: Readonly<Record<string, string>> = {};
+const allow = (reason: string, fields: readonly string[]): Record<string, string> =>
+  Object.fromEntries(fields.map((field) => [field, reason]));
 
-/** Member-facing mutations filed under a console category. */
-const MEMBER_MUTATIONS: Readonly<Record<string, string>> = {};
+const PET_STORE_SHOPPER = [
+  'storeAddToCart',
+  'storeApplyCoupon',
+  'storeCancelOrder',
+  'storeClearCart',
+  'storeCreateSupportTicket',
+  'storePlaceOrder',
+  'storeRecordView',
+  'storeRequestReturn',
+  'storeSetCartQty',
+  'storeSubscribeStockAlert',
+  'storeToggleWishlist',
+  'storeVerifyPayment',
+];
+const CAPTCHA_FORMS = ['submitContactForm', 'submitFaqQuestion', 'submitGrievance', 'submitStatusReport', 'subscribeNewsletter'];
+const ANALYTICS_PINGS = ['recordActivePing', 'recordAppEvents', 'recordShortLinkJourney'];
+const TABLE_FOOD_ORDERING = ['placeVenueFoodOrder', 'verifyVenueFoodOrderPayment', 'submitVenueFoodFeedback', 'venueFoodFeedbackUploadPass'];
+
+/**
+ * Public by design: a person who is not signed in uses these. Each answer in
+ * the sweep was read: none acts on anyone's account (guest carts are keyed by
+ * their own secret, orders by their access key, forms by a captcha).
+ */
+const PUBLIC_MUTATIONS: Readonly<Record<string, string>> = {
+  ...allow('pet store (ecomm.duncit.com) guest shopping — a cart, order or return is keyed by its own secret', PET_STORE_SHOPPER),
+  ...allow('public form behind a captcha', CAPTCHA_FORMS),
+  ...allow('anonymous product analytics — writes only its own event', ANALYTICS_PINGS),
+  ...allow('ordering food at a venue table from its QR code; rate-limited by the Venue food rules', TABLE_FOOD_ORDERING),
+  incrementPodHits: 'a pod page view counter',
+  sharePodIdea: 'counts a share of a public pod idea',
+  shareLink: 'resolves a public short link',
+  submitJobApplication: 'the careers page — applying needs no account',
+  unsubscribeNewsletter: 'the unsubscribe link in a newsletter, keyed by its own token',
+};
+
+const CHALLENGE_PLAY = [
+  'answerPodChallengeQuiz',
+  'buzzPodChallenge',
+  'castPodChallengePoll',
+  'castPodChallengeVote',
+  'controlPodChallengeBuzzer',
+  'controlPodChallengeClock',
+  'controlPodChallengeQuiz',
+  'createPodChallenge',
+  'judgePodChallengeCompetitor',
+  'pickPodChallengeRandom',
+  'publishPodChallengeResult',
+  'ratePodChallengeCompetitor',
+  'reachPodChallengeCheckpoint',
+  'recordPodChallengeScore',
+  'removePodChallengeEntry',
+  'sendPodChallengeNotice',
+  'setPodChallengeItem',
+  'setPodChallengeRoster',
+  'setPodChallengeRound',
+  'setPodChallengeVoting',
+  'submitPodChallengeEntry',
+  'transitionPodChallenge',
+];
+const MEMBER_CHECKOUT = [
+  'createRazorpayGiftCardOrder',
+  'createRazorpayOrder',
+  'createRazorpayProductOrder',
+  'dummyCheckout',
+  'dummyGiftCardCheckout',
+  'dummyProductCheckout',
+];
+const OWN_ACCOUNT = [
+  'cancelMyAccountDeletionRequest',
+  'submitAccountDeletionRequest',
+  'submitAddressVerification',
+  'submitVerification',
+  'requestPortalAccess',
+  'redeemGiftCard',
+  'redeemPhysicalGiftCard',
+  'requestWithdrawal',
+  'setAllMyMailPreferences',
+  'setAllMyWhatsappPreferences',
+  'setMyMailPreference',
+  'setMyWhatsappPreference',
+  'subscribeLocationLaunch',
+  'dismissAppPopup',
+  'submitAppFeedback',
+];
+const OWN_WORKSPACE = [
+  'cancelBackgroundJob',
+  'clearFinishedBackgroundJobs',
+  'dismissBackgroundJob',
+  'resetDashboardLayout',
+  'saveDashboardLayout',
+  'saveShellWorkspaceState',
+  'startBulkDelete',
+];
+const MEMBER_UPLOADS = ['getImagekitAuth', 'importRemoteImageToImagekit', 'importRemoteMediaToImagekit', 'startVideoCompression'];
+const REPORTING = ['reportChatMessage', 'reportPost', 'reportProfile', 'moderatePodContent', 'moderateProductContent'];
+
+/**
+ * Member-facing mutations filed under a console category, each read in the
+ * sweep: the resolver acts only on the caller's own account, or loads the
+ * record and checks the caller belongs to it (a fake id answers NOT_FOUND).
+ */
+const MEMBER_MUTATIONS: Readonly<Record<string, string>> = {
+  ...allow('pet store shopping and Autoship for a signed-in buyer — their own cart, orders and subscriptions', [
+    'storeCancelSubscription',
+    'storeCreateSubscription',
+    'storeMergeGuest',
+    'storePauseSubscription',
+    'storeSkipSubscription',
+    'storeSubmitReview',
+    'storeSubscriptionOrderNow',
+    'storeUpdateSubscription',
+  ]),
+  ...allow('pod challenges: players and hosts act on a challenge they belong to (checked after it loads)', CHALLENGE_PLAY),
+  ...allow('checking out their own booking, gift card or shop order (dummy mode only when Finance switched it on)', MEMBER_CHECKOUT),
+  ...allow('their own account, wallet, verification and preferences', OWN_ACCOUNT),
+  ...allow('their own background jobs and console layout; bulk delete checks the table’s roles itself', OWN_WORKSPACE),
+  ...allow('uploads by the signed-in person; remote imports only from Pexels, Unsplash and ImageKit', MEMBER_UPLOADS),
+  ...allow('reporting content, and the content check run before posting', REPORTING),
+  ...allow('booking, moving or cancelling their own onboarding meeting', ['requestMeeting', 'cancelMyMeeting', 'rescheduleMyMeeting']),
+  recordAppEvent: 'the signed-in person’s own product analytics event',
+  recordOfficialStatusView: 'marks an official status as seen by the caller',
+  completePodSettlement: 'the pod’s own host settles their pod (assertPodActor); an admin must administer its city',
+  publishPublicPage: 'a venue or host publishes its own public page (resolved through the caller)',
+  submitSurveyResponse: 'answering a survey they were sent',
+  agentChat: 'the staff Agent answers anyone signed in; it only carries out what the caller’s roles allow',
+  askBotChat: 'the in-app help bot',
+};
 
 const SAMPLE_ID = '64b7f0c2a1e4c9d3f0a1b2c3';
 const CALL_TIMEOUT_MS = 5_000;
@@ -119,6 +245,9 @@ let anonymous: Outcome[];
 let member: Outcome[];
 
 beforeAll(async () => {
+  // Partner-brand and shop mutations are refused wholesale while the product
+  // flag is off — switched on, so their own permission checks are what answer.
+  await enableProducts();
   apollo = new ApolloServer<GraphQLContext>({ typeDefs, resolvers });
   await apollo.start();
   anonymous = [];
@@ -145,7 +274,10 @@ describe('authorization sweep — every MCP mutation, run for real', () => {
   });
 
   it('refuses every console mutation to a plain member, except the member-facing ones', () => {
-    const open = member.filter(({ tool, answer }) => answer !== 'REFUSED' && !(tool.field in MEMBER_MUTATIONS));
+    // What anyone may do, a member may do too.
+    const open = member.filter(
+      ({ tool, answer }) => answer !== 'REFUSED' && !(tool.field in MEMBER_MUTATIONS) && !(tool.field in PUBLIC_MUTATIONS)
+    );
     expect(report(open)).toEqual([]);
   });
 

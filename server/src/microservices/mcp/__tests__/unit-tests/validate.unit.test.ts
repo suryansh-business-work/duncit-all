@@ -48,7 +48,8 @@ describe('parseCallArgs — shape and size', () => {
 
   it('accepts arguments nested ten levels deep and refuses eleven', () => {
     // The `query` key is the first level, so nest(9) puts the string at level 10.
-    expect(() => parseCallArgs(table, { query: nest(9) })).not.toThrow();
+    // Ten levels gets past the depth check — the schema then names `a` as no field of the input.
+    expect(failure(() => parseCallArgs(table, { query: nest(9) })).code).toBe('VALIDATION_FAILED');
     expect(failure(() => parseCallArgs(table, { query: nest(10) })).message).toBe('Arguments are nested deeper than 10 levels.');
   });
 

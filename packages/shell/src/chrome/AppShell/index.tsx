@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { Box } from '@mui/material';
+import { ThemeProvider } from '@mui/material/styles';
 import { Loader, useRouteFocus } from '@duncit/ui';
 import { useTranslation } from '../../i18n/useTranslation';
 import { localizeNav, localizeSearchItems } from '../../i18n/localize-nav';
@@ -11,7 +12,7 @@ import { AppShellNav } from '../AppShellNav';
 import { CONTENT_PANEL_SX } from '../shell-layout';
 import { AgentLauncher } from '../agent';
 import { usePortalAppFeatures } from '../usePortalAppFeatures';
-import { Taskbar, WorkspaceProvider } from '../../workspace';
+import { Taskbar, WorkspaceProvider, withTaskbarClearance } from '../../workspace';
 import { BackgroundJobsProvider } from '../../background-jobs';
 import { TableChangeLogsProvider } from '../../change-logs/TableChangeLogsProvider';
 import { EmailValidationProvider } from '../../email-validation';
@@ -96,7 +97,9 @@ export function AppShell({
       and down with it, and the header went with it. Pinning the shell to the
       viewport gives the page body and the chat one scroller each, which is the
       only way the two can move independently.
+      The theme layer stops every drawer opened in here at the taskbar.
     */
+    <ThemeProvider theme={withTaskbarClearance}>
     <WorkspaceProvider enabled={Boolean(user)}>
       <BackgroundJobsProvider enabled={Boolean(user)}>
         <TableChangeLogsProvider enabled={Boolean(user)} detailed={detailedChangeLogs}>
@@ -186,5 +189,6 @@ export function AppShell({
         </TableChangeLogsProvider>
       </BackgroundJobsProvider>
     </WorkspaceProvider>
+    </ThemeProvider>
   );
 }

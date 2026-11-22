@@ -3,7 +3,6 @@ import CloseIcon from '@mui/icons-material/Close';
 import { Box, Drawer, Stack, Typography } from '@mui/material';
 import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '../i18n/useTranslation';
-import { ABOVE_TASKBAR_HEIGHT } from '../workspace';
 import type { BackgroundJobsApi } from './backgroundJobsContext';
 import { isRunning } from './job-progress';
 import { JobRow } from './JobRow';
@@ -27,10 +26,9 @@ export function BackgroundJobsDrawer({ open, onClose, api }: Readonly<Background
       onClose={onClose}
       slotProps={{
         paper: {
-          // A temporary Drawer's paper is already role=dialog; this names it. The
-          // taskbar paints over a full-height paper, so it stops above the bar.
+          // A temporary Drawer's paper is already role=dialog; this names it.
           'aria-labelledby': headingId,
-          sx: { width: { xs: '100%', sm: 400 }, height: ABOVE_TASKBAR_HEIGHT },
+          sx: { width: { xs: '100%', sm: 400 } },
         },
       }}
     >

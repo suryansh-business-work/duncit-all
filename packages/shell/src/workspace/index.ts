@@ -1,4 +1,5 @@
 export { ABOVE_TASKBAR_HEIGHT, Taskbar } from './Taskbar';
+export { withTaskbarClearance } from './taskbar-clearance';
 export { WorkspaceProvider, type WorkspaceProviderProps } from './WorkspaceProvider';
 export {
   useWorkspace,

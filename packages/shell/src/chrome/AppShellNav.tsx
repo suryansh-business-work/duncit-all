@@ -8,7 +8,7 @@ import { AppSidebar } from './AppSidebar';
 import { SIDEBAR_PAPER_SX } from './shell-layout';
 import { RAIL_WIDTH } from './AppSidebar/NavRail';
 import type { ShellUser } from './user-display';
-import { ABOVE_TASKBAR_HEIGHT, useWorkspace } from '../workspace';
+import { useWorkspace } from '../workspace';
 
 const drawerWidth = tokens.size.drawerWidth;
 
@@ -71,7 +71,7 @@ export function AppShellNav({
         slotProps={{ paper: { 'aria-label': t('shell.chrome.primaryNav') } }}
         sx={{
           display: { xs: 'block', md: 'none' },
-          '& .MuiDrawer-paper': { ...SIDEBAR_PAPER_SX, width: drawerWidth, height: ABOVE_TASKBAR_HEIGHT },
+          '& .MuiDrawer-paper': { ...SIDEBAR_PAPER_SX, width: drawerWidth },
         }}
       >
         <AppSidebar
@@ -92,7 +92,6 @@ export function AppShellNav({
             ...SIDEBAR_PAPER_SX,
             width,
             boxSizing: 'border-box',
-            height: ABOVE_TASKBAR_HEIGHT,
             // The labels are still in the DOM while the paper narrows; without
             // this they push a scrollbar across the rail for the length of the
             // animation.

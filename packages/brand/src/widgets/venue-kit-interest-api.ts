@@ -37,10 +37,14 @@ const FIELDS: Record<keyof typeof VENUE_KIT_OPS, string> = {
   submit: 'submitVenueKitInterest',
 };
 
-/** A GraphQL error as this API sends it: `Validation failed` carries the field messages in `extensions.errors`. */
+/**
+ * A GraphQL error as this API sends it: `extensions.code` names it (CAPTCHA_REQUIRED,
+ * BAD_USER_INPUT…), and `Validation failed` carries the field messages in `extensions.errors`.
+ * The code is what the captcha's own handler reads (`GraphqlErrorLike`).
+ */
 export interface ApiError {
   message: string;
-  extensions?: { errors?: string[] };
+  extensions?: { code?: unknown; errors?: string[] };
 }
 
 /** Thrown with the message worth showing; `errors` is kept for the captcha's own handler. */

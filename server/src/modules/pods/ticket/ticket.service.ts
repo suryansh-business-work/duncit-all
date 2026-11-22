@@ -551,17 +551,50 @@ export async function notifyAttendanceMarked(ticket: ITicket): Promise<void> {
 }
 
 /**
- * The second half of a host's scan, once the ticket is known to be tonight's
- * and not cancelled: sync the seat count from the booking, collect the rest of
- * the group if the ticket admits more than one, then mark attendance (or, for
- * a ticket already marked, just say so). Hoisted out of `hostScan` so the
- * door's rejections and the admission each read as one step.
+ * Booking states that mean the holder gave their whole spot back. A paid
+ * backout leaves the ticket VALID (the member can still "Keep My Spot"), so
+ * the booking, not the ticket, is what says they are no longer coming. A
+ * partial release keeps the booking JOINED on fewer seats and is not here.
+ */
+const CANCELLED_SPOT_STATUSES = new Set(['BACKOUT_IN_PROCESS', 'BACKED_OUT']);
+
+/** True when this ticket's holder cancelled their spot, on a free pod (the
+ * ticket is voided) or a paid one (the booking is backing out or backed out). */
+function spotCancelled(t: ITicket, membership: { status?: string } | null): boolean {
+  return t.status === 'CANCELLED' || CANCELLED_SPOT_STATUSES.has(membership?.status ?? '');
+}
+
+/** What the door tells the host about a cancelled spot, naming the guest so
+ * they know whose ticket it was without an attendee card that reads "present". */
+function cancelledSpotMessage(t: ITicket): string {
+  const who = t.snapshot?.user_name?.trim() || 'This guest';
+  return `${who} has already cancelled their spot, so they can't join this pod. Attendance can't be marked for this ticket.`;
+}
+
+/**
+ * The second half of a host's scan, once the ticket is known to be tonight's:
+ * refuse a spot its holder cancelled, sync the seat count from the booking,
+ * collect the rest of the group if the ticket admits more than one, then mark
+ * attendance (or, for a ticket already marked, just say so). Hoisted out of
+ * `hostScan` so the door's rejections and the admission each read as one step.
  */
 async function completeHostScan(t: ITicket, hostUserId: string, companions: unknown) {
   const [user, membership] = await Promise.all([
     UserModel.findById(t.user_id),
     PodMemberModel.findById(t.membership_id),
   ]);
+  if (spotCancelled(t, membership)) {
+    return {
+      ok: false,
+      message: cancelledSpotMessage(t),
+      already_checked_in: false,
+      requires_companions: false,
+      companions_required: 0,
+      companions: [],
+      ticket: toPub(t),
+      attendee: null,
+    };
+  }
   const alreadyCheckedIn = t.status === 'CHECKED_IN';
   // The booking is the source of truth for how many it covers; the ticket is a
   // snapshot. Re-sync so a ticket can never tell the door "admits 3" while the
@@ -895,9 +928,6 @@ export const ticketService = {
         attendee: null,
       };
     }
-    if (t.status === 'CANCELLED') {
-      return { ok: false, message: 'Ticket cancelled', already_checked_in: false, requires_companions: false, companions_required: 0, companions: [], ticket: toPub(t), attendee: null };
-    }
     return completeHostScan(t, hostUserId, companions);
   },
 
@@ -921,6 +951,9 @@ export const ticketService = {
       // The same gate as the host's scanner — an admin marking a group present
       // must account for the group too, or the roster stays a bare number.
       const membership = await PodMemberModel.findById(t.membership_id);
+      if (spotCancelled(t, membership)) {
+        throw new GraphQLError(cancelledSpotMessage(t), { extensions: { code: 'BAD_REQUEST' } });
+      }
       const seats = membership?.seats ?? t.seats ?? 1;
       const stillNeeded = await recordCompanions(membership, seats, input.companions);
       if (stillNeeded > 0) {

@@ -1479,7 +1479,7 @@ export const PARTNER_PORTAL_FLOWS: readonly CatalogueFlow[] = [
         steps: [
           ['Scan a random or tampered QR', 'A red alert reads "Invalid or tampered QR code"'],
           ['Scan a valid ticket belonging to a different pod', 'Red alert "This ticket is for another pod — <other pod title>"'],
-          ['Scan a cancelled ticket', 'Red alert "Ticket cancelled"'],
+          ['Scan the ticket of a guest who cancelled their spot', 'Red alert "<name> has already cancelled their spot, so they can\'t join this pod. Attendance can\'t be marked for this ticket." and nobody is marked'],
           ['Open "Complete pod" on an already completed pod with unmarked guests, click "Scan Attendee Event Tickets" and scan a ticket', 'Red alert "Attendance is closed for this pod"'],
         ],
       },

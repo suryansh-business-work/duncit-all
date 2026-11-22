@@ -188,6 +188,9 @@ const REFUSAL = {
   attendee: null,
 };
 
+const CANCELLED_SPOT = (who: string) =>
+  `${who} has already cancelled their spot, so they can't join this pod. Attendance can't be marked for this ticket.`;
+
 const fails = (code: string, message: string) =>
   expect.objectContaining({ message, extensions: expect.objectContaining({ code }) });
 
@@ -267,11 +270,49 @@ describe('ticketService.hostScan — refusals', () => {
     expect(res.ticket).toMatchObject({ pod_title: '', pod_mode: 'PHYSICAL', user_name: '', seats: 1 });
   });
 
-  it('refuses a cancelled ticket', async () => {
+  it('refuses a ticket voided by a free-pod spot cancel, naming the guest', async () => {
     ticketFindOne.mockResolvedValue(makeTicket({ status: 'CANCELLED' }));
+    memberFindById.mockResolvedValue(makeMembership({ status: 'BACKED_OUT' }));
     const res = await ticketService.hostScan(String(POD), tokenFor('TKT-DOOR1'), HOST);
-    expect(res).toMatchObject({ ...REFUSAL, message: 'Ticket cancelled' });
+    expect(res).toMatchObject({
+      ...REFUSAL,
+      message: CANCELLED_SPOT('Asha Rao'),
+    });
     expect(res.ticket?.status).toBe('CANCELLED');
+    expect(mark).not.toHaveBeenCalled();
+  });
+
+  it.each(['BACKOUT_IN_PROCESS', 'BACKED_OUT'])(
+    'refuses a still-VALID ticket whose paid booking is %s, without marking or notifying',
+    async (status) => {
+      const ticket = makeTicket();
+      ticketFindOne.mockResolvedValue(ticket);
+      memberFindById.mockResolvedValue(makeMembership({ status }));
+
+      const res = await ticketService.hostScan(String(POD), ticket.qr_token, HOST);
+
+      expect(res).toMatchObject({ ...REFUSAL, message: CANCELLED_SPOT('Asha Rao') });
+      expect(res.ticket?.status).toBe('VALID');
+      expect(mark).not.toHaveBeenCalled();
+      expect(notify).not.toHaveBeenCalled();
+      expect(ticket.save).not.toHaveBeenCalled();
+    }
+  );
+
+  it('says "This guest" when the ticket snapshot carries no name', async () => {
+    ticketFindOne.mockResolvedValue(makeTicket({ snapshot: { pod_title: 'Sunday Run', user_name: '  ' } }));
+    memberFindById.mockResolvedValue(makeMembership({ status: 'BACKOUT_IN_PROCESS' }));
+    const res = await ticketService.hostScan(String(POD), tokenFor('TKT-DOOR1'), HOST);
+    expect(res.message).toBe(CANCELLED_SPOT('This guest'));
+  });
+
+  it('still admits a booking that kept its spot after a partial release (JOINED)', async () => {
+    const ticket = makeTicket();
+    ticketFindOne.mockResolvedValue(ticket);
+    memberFindById.mockResolvedValue(makeMembership({ status: 'JOINED' }));
+    const res = await ticketService.hostScan(String(POD), ticket.qr_token, HOST);
+    expect(res).toMatchObject({ ok: true, message: 'Attendance marked' });
+    expect(mark).toHaveBeenCalledWith(ticket, HOST, 'HOST_SCAN');
   });
 });
 
@@ -585,6 +626,17 @@ describe('ticketService.checkIn', () => {
     await expect(ticketService.checkIn({ ticket_doc_id: String(TICKET) }, HOST)).rejects.toMatchObject({
       message: 'This ticket admits 2 — add the other 1 person to mark attendance',
     });
+  });
+
+  it('refuses to check in a ticket whose holder backed out of a paid booking', async () => {
+    ticketFindById.mockResolvedValue(makeTicket());
+    memberFindById.mockResolvedValue(makeMembership({ status: 'BACKED_OUT' }));
+
+    await expect(ticketService.checkIn({ ticket_doc_id: String(TICKET) }, 'admin-1')).rejects.toEqual(
+      fails('BAD_REQUEST', CANCELLED_SPOT('Asha Rao'))
+    );
+    expect(mark).not.toHaveBeenCalled();
+    expect(notify).not.toHaveBeenCalled();
   });
 
   it('marks the ticket as ADMIN once the companions are supplied', async () => {

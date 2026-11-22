@@ -1259,7 +1259,7 @@ export const APP_POD_FLOWS: readonly CatalogueFlow[] = [
         steps: [
           ['Scan a QR that is not a Duncit ticket or was tampered with', 'Result "Invalid or tampered QR code"'],
           ['Scan a ticket for a different pod', 'Result "This ticket is for another pod…"'],
-          ['Scan a ticket whose booking was cancelled', 'Result "Ticket cancelled"'],
+          ['Scan a ticket whose holder cancelled their spot (free cancel, or a paid backout still in process)', 'Red result "<name> has already cancelled their spot, so they can\'t join this pod. Attendance can\'t be marked for this ticket." and nobody is marked'],
           ['Scan after the pod was completed', 'Result "Attendance is closed for this pod"'],
         ],
       },

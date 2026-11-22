@@ -87,8 +87,12 @@ export function toPub(doc: IPaymentRelease) {
           venue_extra_amount: doc.breakdown.venue_extra_amount ?? 0,
           venue_agreed_model: doc.breakdown.venue_agreed_model ?? null,
           venue_agreed_rate: doc.breakdown.venue_agreed_rate ?? null,
+          // Null on releases written before the bill could be evidence only.
+          venue_bill_applied: doc.breakdown.venue_bill_applied ?? null,
+          funding_shortfall: doc.breakdown.funding_shortfall ?? 0,
         }
       : null,
+    shortfall_funding_note: doc.shortfall_funding_note ?? '',
     created_at: doc.created_at.toISOString(),
     updated_at: doc.updated_at.toISOString(),
   };
@@ -313,6 +317,29 @@ const settlementToBreakdown = (s: PodSettlement, party: 'HOST' | 'VENUE' | 'CLUB
  * (a later scan changes it) and the venue's slot price beside its final bill (a
  * slot can be re-priced). A reviewer could never re-derive either afterwards —
  * they have to be stamped. */
+/** The shortest funding note an approval with a shortfall may carry. */
+export const MIN_SHORTFALL_FUNDING_NOTE = 10;
+
+/**
+ * Who funds a request's shortfall, checked. A completion whose payouts exceed
+ * what its pod took (the venue and club admin paid in full while the host side
+ * went below zero) is money leaving from somewhere else, so it is approved only
+ * once the reviewer says where from — and that is recorded on every release.
+ * Returns '' when there is no shortfall; throws when there is one and no note.
+ */
+export function shortfallFundingNote(shortfall: number, note: unknown): string {
+  if (!(shortfall > 0)) return '';
+  const text = typeof note === 'string' ? note.trim() : '';
+  if (text.length < MIN_SHORTFALL_FUNDING_NOTE) {
+    throw new GraphQLError(
+      `This request pays out ₹${shortfall.toFixed(2)} more than its pod's takings cover. ` +
+        `Say who funds that amount (at least ${MIN_SHORTFALL_FUNDING_NOTE} characters) to approve it.`,
+      { extensions: { code: 'BAD_USER_INPUT', funding_shortfall: shortfall } }
+    );
+  }
+  return text;
+}
+
 const frozenInputsOf = (s: PodSettlement) => ({
   attended_seats: s.attended_seats,
   booked_seats: s.booked_seats,
@@ -328,6 +355,8 @@ const frozenInputsOf = (s: PodSettlement) => ({
   venue_extra_amount: s.venue_extra_amount,
   venue_agreed_model: s.venue_agreed_model,
   venue_agreed_rate: s.venue_agreed_rate,
+  venue_bill_applied: s.venue_bill_applied,
+  funding_shortfall: s.funding_shortfall,
 });
 
 function statementTypeLabel(kind: PaymentReleaseKind): string {
@@ -1105,6 +1134,12 @@ export const paymentReleaseService = {
       throw new GraphQLError('Only pending requests can be reviewed', { extensions: { code: 'BAD_USER_INPUT' } });
     }
     const { status, approvalType, amount, reason } = parseReviewInput(doc, input);
+    if (status === 'APPROVED') {
+      doc.shortfall_funding_note = shortfallFundingNote(
+        Number(doc.breakdown?.funding_shortfall) || 0,
+        input?.shortfall_funding_note
+      );
+    }
     doc.status = status;
     doc.approval_type = status === 'APPROVED' ? approvalType : null;
     doc.approved_amount = status === 'APPROVED' ? amount : 0;
@@ -1277,7 +1312,7 @@ export const paymentReleaseService = {
    * APPROVED with no money behind it; the credit is idempotent per release_id,
    * so approving again is a safe retry. The others still go through.
    */
-  async approveGroup(groupId: string, reviewerId: string) {
+  async approveGroup(groupId: string, reviewerId: string, fundingNote?: string | null) {
     const pending = await PaymentReleaseModel.find({
       ...releaseGroupFilter(groupId),
       status: 'PENDING',
@@ -1287,6 +1322,9 @@ export const paymentReleaseService = {
         extensions: { code: 'BAD_USER_INPUT' },
       });
     }
+    // Every release of one completion carries the same frozen shortfall.
+    const shortfall = Math.max(0, ...pending.map((row) => Number(row.breakdown?.funding_shortfall) || 0));
+    const note = shortfallFundingNote(shortfall, fundingNote);
     const failed: string[] = [];
     for (const row of pending) {
       const doc = await PaymentReleaseModel.findOneAndUpdate(
@@ -1297,6 +1335,7 @@ export const paymentReleaseService = {
             approval_type: 'FULL',
             approved_amount: row.amount_requested,
             approval_reason: '',
+            shortfall_funding_note: note,
             reviewed_by: new Types.ObjectId(reviewerId),
             reviewed_at: new Date(),
           },
@@ -1315,6 +1354,7 @@ export const paymentReleaseService = {
               status: 'PENDING',
               approval_type: null,
               approved_amount: null,
+              shortfall_funding_note: '',
               reviewed_by: null,
               reviewed_at: null,
             },

@@ -235,6 +235,18 @@ export const financeTypeDefs = /* GraphQL */ `
     "The agreed offer's model (VenueOfferModel) and rate; null on older releases and bookings made before offers."
     venue_agreed_model: String
     venue_agreed_rate: Float
+    """
+    True when venue_bill set the venue's money; false when it was recorded as
+    evidence only and the booked price stood. Null on releases written before
+    this was recorded, so a large venue_bill there is not proof it was owed.
+    """
+    venue_bill_applied: Boolean
+    """
+    What this completion's payouts send out beyond what the pod took: the host
+    remainder below zero that the floored host payout does not take back. 0 when
+    the pod paid its way (and on older releases).
+    """
+    funding_shortfall: Float!
   }
 
   # The complete GST-inclusive money waterfall for one pod (engine v2):
@@ -296,6 +308,36 @@ export const financeTypeDefs = /* GraphQL */ `
     no minimum was asked for.
     """
     minimum: PodEarningsProjection
+    """
+    True when the pod would pass the server's create and edit guard, judged with
+    every spot filled: its ticket money less Duncit's venue commission is MORE
+    than the venue's minimum business, the ticket money covers the venue, and the
+    host earns MORE than 0. Always true for a free pod. A client enables Create
+    only on a fresh projection that says true.
+    """
+    viable: Boolean!
+    "The first of those rules the pod breaks, in the order a host fixes them. Null when viable."
+    viability_reason: PodViabilityReason
+    """
+    The fewest whole rupees per ticket that would make the pod viable, on the
+    same rules. Null for a free pod, and when no price up to 99999 works.
+    """
+    minimum_viable_ticket_price: Float
+    """
+    The venue's minimum business for this booking (Partners, Fees and Minimum
+    Spend) that the ticket money was held to. 0 when the venue set none.
+    """
+    venue_min_business: Float!
+  }
+
+  "Why a paid pod's money does not work (PodEarningsProjection.viability_reason)."
+  enum PodViabilityReason {
+    "Ticket money less Duncit's venue commission is not more than the venue's minimum business."
+    BELOW_MIN_BUSINESS
+    "Ticket money is less than what the venue costs."
+    VENUE_NOT_COVERED
+    "After GST, fees, the venue and commissions the host would earn 0 or less."
+    NO_EARNINGS
   }
 
   """
@@ -432,6 +474,8 @@ export const financeTypeDefs = /* GraphQL */ `
     approval_type: PaymentReleaseApprovalType
     approved_amount: Float
     approval_reason: String!
+    "Who funds this release's funding_shortfall, as the approving reviewer stated it. Empty when there was none."
+    shortfall_funding_note: String!
     breakdown: PaymentReleaseBreakdown
     created_at: String!
     updated_at: String!
@@ -550,6 +594,14 @@ export const financeTypeDefs = /* GraphQL */ `
     venue bill (has_venue is false, venue is null) and every money figure is 0.
     """
     is_free: Boolean!
+    "True when venue_bill set the venue's money; false when it is recorded as evidence only or there is none."
+    venue_bill_applied: Boolean!
+    """
+    What the payouts would send out beyond what the pod took — the host
+    remainder below zero. Approving a request that carries one needs a note
+    saying who funds it.
+    """
+    funding_shortfall: Float!
   }
 
   """
@@ -676,6 +728,8 @@ export const financeTypeDefs = /* GraphQL */ `
     approval_type: PaymentReleaseApprovalType
     approved_amount: Float
     approval_reason: String
+    "Who funds the release's funding_shortfall — required to approve one that has a shortfall."
+    shortfall_funding_note: String
   }
 
   extend type Query {
@@ -756,6 +810,14 @@ export const financeTypeDefs = /* GraphQL */ `
       venue_amount_at_min: Float
       "The commission on top at min_spots. Omitted = venue_commission_on_top."
       venue_commission_on_top_at_min: Float
+      """
+      How the booking pays the venue (the offer's model: PER_GUEST, PER_HOUR or
+      FLAT) — picks which of the venue's minimum business amounts applies.
+      Omitted = only the venue's minimum spend.
+      """
+      venue_offer_model: VenueOfferModel
+      "Hours the venue is booked for; a per-hour minimum business is multiplied by it."
+      venue_hours: Float
     ): PodEarningsProjection!
     """
     The admin consoles' projection for a pod they are writing. Prices at the
@@ -817,9 +879,12 @@ export const financeTypeDefs = /* GraphQL */ `
     reviewPaymentReleaseRequest(request_id: ID!, input: ReviewPaymentReleaseInput!): PaymentReleaseRequest!
     """
     Approve every payout still pending on one pod request, in full, and credit
-    each beneficiary's wallet. Finance roles only.
+    each beneficiary's wallet. Finance roles only. When its releases carry a
+    funding_shortfall (payouts beyond what the pod took), shortfall_funding_note
+    must say who funds that amount, at least 10 characters; it is recorded on
+    every release approved.
     """
-    approvePodPaymentRelease(id: ID!): PodPaymentReleaseDetail!
+    approvePodPaymentRelease(id: ID!, shortfall_funding_note: String): PodPaymentReleaseDetail!
     # Host (or admin) completes a pod: enter venue bill + party media, create
     # the reconciled payout releases for Finance to approve.
     completePodSettlement(input: CompletePodInput!): PodSettlementResult!

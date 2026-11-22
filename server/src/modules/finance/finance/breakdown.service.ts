@@ -3,6 +3,7 @@ import { Types } from 'mongoose';
 import { isFreePod, PodModel } from '@modules/pods/pod/pod.model';
 import { POD_LIVE_TAIL_MS } from '@modules/pods/pod/pod.lifecycle';
 import { VenueModel } from '@modules/venues/venue/venue.model';
+import { VenueSlotModel } from '@modules/venues/venueSlot/venueSlot.model';
 import { PaymentModel } from '@modules/finance/payment/payment.model';
 import { PaymentReleaseModel, type IPaymentRelease } from './paymentRelease.model';
 import { getFinanceSettings } from './finance.model';
@@ -10,7 +11,7 @@ import {
   collectedForPod,
   freePodWaterfall,
   resolveEffectiveRates,
-  venueAmountForPod,
+  venueCapacityCostForPod,
   venueTermsForPod,
   waterfallForAmount,
   SETTLEMENT_ENGINE_VERSION,
@@ -18,6 +19,8 @@ import {
 } from './settlement.service';
 import { payableSpots, type BreakdownRates } from './breakdown.math';
 import { podExpenseSpend } from '@modules/finance/podExpense/podExpense.totals';
+import { evaluatePodViability, type PodViability, type PodViabilityReason, type VenueCost } from './podViability';
+import { hoursBetween, slotBasisOf, venueMinimumFor } from './bookingMinimum';
 
 const round2 = (n: number) => Math.round((Number(n) || 0) * 100) / 100;
 
@@ -34,8 +37,22 @@ export interface PodEarningsProjection {
   /** True when the projection is for a FREE pod: nothing to earn, every figure
    * 0, and clients hide the calculation rather than print it. */
   is_free: boolean;
-  /** The same projection at the venue booking's fewest guests, when asked for. */
+  /** The same projection at the venue booking's fewest guests, when asked for.
+   * Shown as the low end of a range; viability is judged at capacity. */
   minimum?: PodEarningsProjection | null;
+  /** The pod passes the create/edit economics guard (podViability): its ticket
+   * money less Duncit's venue commission is more than the venue's minimum
+   * business, it covers the venue, and the host earns more than ₹0. Always
+   * true for a free pod. */
+  viable: boolean;
+  /** The first of those rules it breaks; null when viable. */
+  viability_reason: PodViabilityReason | null;
+  /** The fewest whole rupees per ticket that would make it viable, on the same
+   * rules; null when no price up to ₹99,999 does, and for a free pod. */
+  minimum_viable_ticket_price: number | null;
+  /** The venue's minimum business for this booking (Partners > Fees & Minimum
+   * Spend) that the ticket money was held to; 0 = none. */
+  venue_min_business: number;
 }
 
 /**
@@ -58,19 +75,28 @@ function projectionFor(
   noOfSpots: number,
   venuePrice: number,
   rates: BreakdownRates,
-  commissionOnTop: number | null = null
+  commissionOnTop: number | null = null,
+  minBusiness = 0
 ): PodEarningsProjection {
-  const billable = payableSpots(noOfSpots);
-  const waterfall = waterfallForAmount(round2(podAmount * billable), venuePrice, rates, {
-    clampVenueToPool: false,
-    venueCommissionOnTopPaise: commissionOnTop === null ? null : Math.round(commissionOnTop * 100),
+  // The same verdict the create/edit guard throws on, so a projection that
+  // says viable is one the server accepts.
+  const verdict = evaluatePodViability({
+    podAmount,
+    noOfSpots,
+    rates,
+    venue: { amount: venuePrice, commissionOnTop },
+    minBusiness,
   });
   return {
     total_spots: Math.max(0, Math.floor(noOfSpots) || 0),
-    payable_spots: billable,
-    venue_budget: venueBudgetOf(waterfall),
-    waterfall,
+    payable_spots: verdict.paying_seats,
+    venue_budget: venueBudgetOf(verdict.waterfall),
+    waterfall: verdict.waterfall,
     is_free: false,
+    viable: verdict.viable,
+    viability_reason: verdict.reason,
+    minimum_viable_ticket_price: verdict.minimum_viable_ticket_price,
+    venue_min_business: verdict.min_business?.minimum ?? 0,
   };
 }
 
@@ -104,6 +130,10 @@ function freeProjection(noOfSpots: number): PodEarningsProjection {
     venue_budget: 0,
     waterfall: freePodWaterfall(),
     is_free: true,
+    viable: true,
+    viability_reason: null,
+    minimum_viable_ticket_price: null,
+    venue_min_business: 0,
   };
 }
 
@@ -296,6 +326,31 @@ function assertPreviewInputs(
   return venueId ? venuePrice : 0;
 }
 
+/** Duncit's venue commission charged on top of a venue amount, in rupees —
+ * how an open slot freezes when it is booked (paise-exact, half-up). */
+function commissionOnTopOf(venueAmount: number, rates: BreakdownRates): number {
+  return Math.round((Math.round(venueAmount * 100) * rates.venue_commission_percent) / 100) / 100;
+}
+
+/** What the create/edit economics guard is told about a pod. */
+export interface ViabilityGuardInput {
+  hostUserId: string | null;
+  podAmount: number;
+  noOfSpots: number;
+  venueId?: string | null;
+  /** What the venue costs with every spot filled. */
+  venueAmount?: number | null;
+  /** The venue price is a slot booking whose price freezes with Duncit's
+   * commission ON TOP (charged to the host's side), exactly as it settles. */
+  commissionOnTop?: boolean;
+  /** A frozen booking's own commission on top, in rupees — wins over the
+   * percentage `commissionOnTop` would apply. */
+  commissionOnTopAmount?: number | null;
+  /** The venue's minimum business for this booking (bookingMinimum), in
+   * rupees; the ticket money less Duncit's venue commission must be MORE. */
+  minBusiness?: number | null;
+}
+
 export const breakdownService = {
   /**
    * The complete financial breakdown for one pod. Settled/submitted pods with a
@@ -443,7 +498,11 @@ export const breakdownService = {
     venueAmount?: number | null,
     podType?: string | null,
     venueCommissionOnTop?: number | null,
-    atMinimum?: { spots: number; venueAmount: number | null; commissionOnTop: number | null } | null
+    atMinimum?: { spots: number; venueAmount: number | null; commissionOnTop: number | null } | null,
+    /** How the booking pays the venue (an offer's model) and for how many hours —
+     * what the venue's minimum business is worked out from. Left out (an app
+     * from before it was sent): only the venue's minimum spend applies. */
+    venueBooking?: { model?: string | null; hours?: number | null } | null
   ): Promise<PodEarningsProjection> {
     if (!Number.isFinite(podAmount) || podAmount < 0) {
       throw new GraphQLError('Amount must be 0 or more', { extensions: { code: 'BAD_USER_INPUT' } });
@@ -452,13 +511,27 @@ export const breakdownService = {
     // Only an explicit FREE answers free — a caller that names no type gets the
     // paid projection exactly as before.
     if (isFreePod({ pod_type: podType })) return freeProjection(noOfSpots);
-    const rates = await resolveEffectiveRates({ hostUserId, venueId: venueId ?? null });
+    const [rates, minBusiness] = await Promise.all([
+      resolveEffectiveRates({ hostUserId, venueId: venueId ?? null }),
+      venueMinimumFor(venueId, {
+        model: venueBooking?.model ?? null,
+        guests: noOfSpots,
+        hours: Math.max(0, Number(venueBooking?.hours) || 0),
+      }),
+    ]);
     // PREVIEW: the venue's fixed price is NEVER auto-reduced to fit the pool
     // — a shortfall renders as negative host earnings so the clients can show
     // the real gap. Settlement runs the same unclamped branch. An instant
     // booking previews exactly as it will settle: commission on top (v3).
     const onTop = Number(venueCommissionOnTop);
-    const atMost = projectionFor(podAmount, noOfSpots, venuePrice, rates, Number.isFinite(onTop) && onTop >= 0 ? onTop : null);
+    const atMost = projectionFor(
+      podAmount,
+      noOfSpots,
+      venuePrice,
+      rates,
+      Number.isFinite(onTop) && onTop >= 0 ? onTop : null,
+      minBusiness
+    );
     const fewest = minimumProjection(podAmount, noOfSpots, venueId, rates, atMinimum, venuePrice, venueCommissionOnTop);
     return fewest ? { ...atMost, minimum: fewest } : atMost;
   },
@@ -496,19 +569,24 @@ export const breakdownService = {
     }
     if (isFreePod({ pod_type: input.podType })) return freeProjection(noOfSpots);
     const venueId = input.venueId ?? null;
-    const venuePrice = venueId
-      ? await venueAmountForPod(
-          {
-            venue_id: new Types.ObjectId(venueId),
-            venue_slot_id: input.venueSlotId ? new Types.ObjectId(input.venueSlotId) : null,
-            // A per-person slot is projected at a full pod.
-            no_of_spots: noOfSpots,
-          },
-          0
-        )
-      : 0;
     const rates = await resolveEffectiveRates({ hostUserId, venueId });
-    return projectionFor(podAmount, noOfSpots, venuePrice, rates);
+    if (!venueId) return projectionFor(podAmount, noOfSpots, 0, rates);
+    // Priced as the pod settles: a frozen booking's own commission ON TOP of
+    // the venue's money. Leaving it out is what showed an Admin −₹11.89 for a
+    // pod that settled at −₹15.89. A slot with no frozen price yet freezes with
+    // the venue's commission on top when it is booked — create's own rule.
+    const slotId = input.venueSlotId ? new Types.ObjectId(input.venueSlotId) : null;
+    const [cost, slot] = await Promise.all([
+      venueCapacityCostForPod({ venue_id: new Types.ObjectId(venueId), venue_slot_id: slotId, no_of_spots: noOfSpots }),
+      slotId ? VenueSlotModel.findById(slotId).select('price_basis pricing_mode start_at end_at').lean() : null,
+    ]);
+    const minBusiness = await venueMinimumFor(venueId, {
+      model: slotBasisOf(slot),
+      guests: noOfSpots,
+      hours: hoursBetween(slot?.start_at, slot?.end_at),
+    });
+    const onTop = cost.commissionOnTop ?? (slotId ? commissionOnTopOf(cost.amount, rates) : null);
+    return projectionFor(podAmount, noOfSpots, cost.amount, rates, onTop, minBusiness);
   },
 
   /**
@@ -580,50 +658,72 @@ export const breakdownService = {
   },
 
   /**
-   * Create/edit guard shared by createPod, createPartnerPod and
-   * hostResubmitPod: a PAID pod must (a) fully cover the venue's fixed slot
-   * price with its total pod value (ticket price × payable spots) and (b)
-   * leave the host a strictly positive projected payout. Free pods (amount 0)
-   * are exempt. Settlement NEVER calls this — already-created shortfall pods
-   * still settle (unclamped: the venue is paid in full, the host floored at 0).
+   * Create/edit guard shared by every paid-pod write — create (all consoles,
+   * the app and MCP), host resubmit, a portal edit, an Auto Pod claim and a
+   * change-request assignment. A PAID pod at full capacity must (a) bring the
+   * venue more than its minimum business after Duncit's venue commission,
+   * (b) cover the venue's price with its ticket money and (c) leave the host a
+   * strictly positive payout. Free pods (amount 0) are exempt. Settlement NEVER
+   * calls this — already-created shortfall pods still settle.
    */
-  async assertViablePodEconomics(input: {
-    hostUserId: string | null;
-    podAmount: number;
-    noOfSpots: number;
-    venueId?: string | null;
-    venueAmount?: number | null;
-    /** The venue price is a slot booking whose price freezes with Duncit's
-     * commission ON TOP (charged to the host's side), exactly as it settles. */
-    commissionOnTop?: boolean;
-  }): Promise<void> {
+  async assertViablePodEconomics(input: ViabilityGuardInput): Promise<void> {
     const podAmount = Number(input.podAmount) || 0;
     if (podAmount <= 0) return;
-    const venuePrice = input.venueId ? Math.max(0, Number(input.venueAmount) || 0) : 0;
-    const totalPodValue = round2(podAmount * payableSpots(Number(input.noOfSpots) || 0));
-    if (totalPodValue < venuePrice) {
+    const verdict = await breakdownService.podViability(input);
+    if (verdict.viable) return;
+    const minPrice = verdict.minimum_viable_ticket_price;
+    const floor = verdict.min_business;
+    const extensions = {
+      code: 'BAD_USER_INPUT',
+      reason: verdict.reason,
+      minimum_viable_ticket_price: minPrice,
+      venue_min_business: floor?.minimum ?? 0,
+    };
+    const raiseTo = minPrice === null ? '' : ` The lowest ticket price that works is ₹${minPrice}.`;
+    if (verdict.reason === 'BELOW_MIN_BUSINESS' && floor) {
       throw new GraphQLError(
-        'Total pod value is less than the venue price. Increase the ticket price so the pod covers the venue.',
-        { extensions: { code: 'BAD_USER_INPUT' } }
+        `This venue's minimum business is ₹${floor.minimum}. Your ticket money ₹${floor.ticket_money} less Duncit's commission ₹${floor.commission} comes to ₹${floor.net}, which must be more than that. Increase the ticket price or the spots.${raiseTo}`,
+        { extensions }
       );
     }
+    if (verdict.reason === 'VENUE_NOT_COVERED') {
+      throw new GraphQLError(
+        `Total pod value is less than the venue price. Increase the ticket price so the pod covers the venue.${raiseTo}`,
+        { extensions }
+      );
+    }
+    throw new GraphQLError(
+      `Estimated host earnings are ₹0 for this ticket price. Increase the ticket price to earn from this pod.${raiseTo}`,
+      { extensions }
+    );
+  },
+
+  /**
+   * The verdict assertViablePodEconomics acts on, for callers that report it
+   * instead of throwing (the projections, the cancellation sweep). Resolves the
+   * rates; every figure comes from the one waterfall (podViability.ts).
+   */
+  async podViability(input: ViabilityGuardInput): Promise<PodViability> {
     const rates = await resolveEffectiveRates({
       hostUserId: input.hostUserId,
       venueId: input.venueId ?? null,
     });
-    const onTopPaise = input.commissionOnTop
-      ? Math.round((Math.round(venuePrice * 100) * rates.venue_commission_percent) / 100)
-      : null;
-    const { host_receives } = waterfallForAmount(totalPodValue, venuePrice, rates, {
-      clampVenueToPool: false,
-      venueCommissionOnTopPaise: onTopPaise,
-    });
-    if (host_receives <= 0) {
-      throw new GraphQLError(
-        'Estimated host earnings are ₹0 for this ticket price. Increase the ticket price to earn from this pod.',
-        { extensions: { code: 'BAD_USER_INPUT' } }
-      );
+    const venueAmount = input.venueId ? Math.max(0, Number(input.venueAmount) || 0) : 0;
+    let venue: VenueCost;
+    if (input.commissionOnTopAmount !== undefined && input.commissionOnTopAmount !== null) {
+      venue = { amount: venueAmount, commissionOnTop: Math.max(0, Number(input.commissionOnTopAmount) || 0) };
+    } else {
+      // An open slot freezes with the venue's commission on top of its price.
+      const onTop = input.commissionOnTop && input.venueId ? commissionOnTopOf(venueAmount, rates) : null;
+      venue = { amount: venueAmount, commissionOnTop: onTop };
     }
+    return evaluatePodViability({
+      podAmount: Math.max(0, Number(input.podAmount) || 0),
+      noOfSpots: Number(input.noOfSpots) || 0,
+      rates,
+      venue,
+      minBusiness: input.venueId ? input.minBusiness : 0,
+    });
   },
 
   /** Host Studio dashboard summary — lifetime/pending/this-month payout totals

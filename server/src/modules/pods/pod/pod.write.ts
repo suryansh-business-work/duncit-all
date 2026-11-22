@@ -3,13 +3,13 @@
  * update, host resubmit and update, spot limits, status posts and meeting-link
  * generation. Composed into `podService` in pod.service.ts.
  */
-import { slotVenueCharge } from '@modules/venues/venueSlot/slotCharge';
 import { randomInt } from 'node:crypto';
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { assertSpotsWithinLimits, resolveSpotLimits, type PodSpotLimits } from './pod.capacity';
 import { PodModel, type PodVenueApproval } from './pod.model';
 import { breakdownService } from '@modules/finance/finance/breakdown.service';
+import { assertPortalEditEconomics, editedPodView, minBusinessForBooking, venueCostForCreate } from './pod.economics';
 import { sendPodUpdatedEmail } from '@services/email/email.service';
 import { notifyPodRescheduled, podWhenWhereChanged } from './pod.rescheduleNotify';
 import { moderationService } from '@modules/moderation/moderation.service';
@@ -80,21 +80,6 @@ function randomAlpha(length: number): string {
   let out = '';
   for (let i = 0; i < length; i += 1) out += MEET_ALPHABET[randomInt(MEET_ALPHABET.length)];
   return out;
-}
-
-type CreateSlot = Parameters<typeof slotVenueCharge>[0] & { price_snapshot?: { total: number } | null };
-
-/**
- * What the venue costs a new pod, for the economics guard: a venue offer, or a
- * held booking whose price was already agreed (an Auto Pod or Pod Request
- * window), its whole quote — venue price + Duncit's commission on top, both off
- * the host's side; any other slot by its pricing mode, a per-person slot at a
- * full pod.
- */
-function venueCostForCreate(offer: { quote: { total: number } } | null, slotDoc: CreateSlot | null, spots: number): number {
-  if (offer) return offer.quote.total;
-  if (slotDoc?.price_snapshot) return slotDoc.price_snapshot.total;
-  return slotDoc ? slotVenueCharge(slotDoc, { pax: spots }).total : 0;
 }
 
 /** Whether an edit's start is given and differs from the stored one. */
@@ -190,6 +175,17 @@ export const podWriteMethods = {
       // held booking's agreed price, already include it. A held slot from before
       // agreed prices (no snapshot) settles as it always did.
       commissionOnTop: !offer && !!slotDoc && !slotDoc.price_snapshot && !autoPodSlot && !partnerRequestSlot,
+      // ...and bring the venue more than its minimum business after Duncit's
+      // commission. Not on a window the venue itself named and priced (an Auto
+      // Pod or a Pod Request) — the venue's minimums are for hosts' terms.
+      minBusiness:
+        autoPodSlot || partnerRequestSlot
+          ? 0
+          : await minBusinessForBooking(
+              venueLocation.venue_id,
+              { offer, slot: slotDoc, start: input.pod_date_time, end: input.pod_end_date_time },
+              input.no_of_spots ?? 0
+            ),
     });
     const clubCategory = await resolveClubCategory(input.club_id);
     await assertMeetsMinPax(clubCategory, input.no_of_spots ?? 0);
@@ -364,6 +360,10 @@ export const podWriteMethods = {
       );
     }
     delete input.free_justification;
+    // The same economics guard as create, on the pod as this edit would leave
+    // it and its new booking. Before anything is written — the edit core moves
+    // product stock — so a refused edit keeps the stored pod and its old slot.
+    await assertPortalEditEconomics(editedPodView(doc, input, reroute), input, reroute);
     await applyPodEditCore(doc, input);
     if (reroute) applyRerouteState(doc, input, reroute);
     await doc.save();
@@ -467,6 +467,16 @@ export const podWriteMethods = {
       venueId: resubmitVenueId,
       venueAmount: venueCostForCreate(offer, slotDoc, input.no_of_spots ?? doc.no_of_spots ?? 0),
       commissionOnTop: !offer && !!slotDoc,
+      minBusiness: await minBusinessForBooking(
+        resubmitVenueId,
+        {
+          offer,
+          slot: slotDoc,
+          start: input.pod_date_time ?? doc.pod_date_time,
+          end: input.pod_end_date_time ?? doc.pod_end_date_time,
+        },
+        input.no_of_spots ?? doc.no_of_spots ?? 0
+      ),
     });
     // A pod resubmitted free says why (again, if it had no justification yet).
     const freeJustification = freePodJustification(

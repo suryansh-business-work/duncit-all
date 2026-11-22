@@ -24,7 +24,7 @@ export function MentionMenu({ editor, items, loading, active, onSelect }: Readon
       getBoundingClientRect: (): DOMRect => {
         try {
           const caret = editor.view.coordsAtPos(editor.state.selection.from);
-          return { x: caret.left, y: caret.top, left: caret.left, right: caret.left, top: caret.top, bottom: caret.bottom, width: 0, height: caret.bottom - caret.top, toJSON: () => caret };
+          return new DOMRect(caret.left, caret.top, 0, caret.bottom - caret.top);
         } catch {
           return editor.view.dom.getBoundingClientRect();
         }

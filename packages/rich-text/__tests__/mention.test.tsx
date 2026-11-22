@@ -76,7 +76,10 @@ describe('DuncitRichTextInput · @mentions', () => {
     await flush();
 
     expect(list()).toBeNull();
-    expect(editor.getHTML()).toContain(`data-type="mention" data-id="${PRIYA.id}" data-label="Priya"`);
+    const html = editor.getHTML();
+    expect(html).toContain('data-type="mention"');
+    expect(html).toContain(`data-id="${PRIYA.id}"`);
+    expect(html).toContain('data-label="Priya"');
     expect(editor.getText()).toContain('Call @Priya');
     expect(onChange).toHaveBeenLastCalledWith(expect.stringContaining('data-type="mention"'), expect.stringContaining('@Priya'));
   });
@@ -128,7 +131,7 @@ describe('DuncitRichTextInput · @mentions', () => {
     expect(list()).not.toBeNull();
   });
 
-  it('says when nobody matches, lets Enter through, and says it is searching while it waits', async () => {
+  it('says it is searching while it waits, then that nobody matches, and lets Enter through to the editor', async () => {
     let answer: (people: RichTextMentionItem[]) => void = () => undefined;
     const slow: RichTextMentions = {
       search: vi.fn(
@@ -147,8 +150,11 @@ describe('DuncitRichTextInput · @mentions', () => {
     });
     await flush();
     expect(list()?.textContent).toBe('No one matches that name');
+    // With nobody to pick, Enter is not the list's: the editor gets it and starts a new line, which ends the "@zz".
     await keyDown(dom, 'Enter');
-    expect(list()).not.toBeNull();
+    await flush();
+    expect(editor.getHTML()).toBe('<p>@zz</p><p></p>');
+    expect(list()).toBeNull();
   });
 
   it('shows no one when the search fails', async () => {
@@ -218,6 +224,20 @@ describe('DuncitRichTextInput · @mentions', () => {
     expect(spans[0].classList.contains('rich-text-mention')).toBe(true);
     expect(spans[1].getAttribute('data-id')).toBe('');
     expect(spans[1].textContent).toBe('@');
+  });
+
+  it('treats "@" as plain text, and Enter as a new line, where mentioning is off', async () => {
+    const host = await mount(<DuncitRichTextInput value="<p></p>" onChange={vi.fn()} />);
+    const editor = editorIn(host);
+    await act(async () => {
+      editor.commands.focus('end');
+    });
+    await type(editor, 'mail @pri');
+    expect(list()).toBeNull();
+
+    await keyDown(host.querySelector('.ProseMirror') as HTMLElement, 'Enter');
+    await flush();
+    expect(editor.getHTML()).toBe('<p>mail @pri</p><p></p>');
   });
 
   it('writes a mention inserted with missing attributes as empty ones', async () => {

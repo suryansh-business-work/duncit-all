@@ -15,7 +15,7 @@ import type { DuncitRichTextInputProps, RichTextChangeHandler } from '../types';
 import { editorFrameSx } from './editorSx';
 import { useRichTextExtensions } from './useRichTextExtensions';
 import { MentionMenu } from '../mention/MentionMenu';
-import { useMentionSuggest } from '../mention/useMentionSuggest';
+import { ignoreKeys, useMentionSuggest } from '../mention/useMentionSuggest';
 
 /**
  * Where a picture dropped into rich text lands when the surface names no folder.
@@ -54,7 +54,7 @@ export function DuncitRichTextInput({
   );
   const extensions = useRichTextExtensions(readOnly, resolvedPlaceholder);
   // The open @mention list owns some keys; the editor asks it first (see useMentionSuggest).
-  const mentionKeys = useRef<(event: KeyboardEvent) => boolean>(() => false);
+  const mentionKeys = useRef<(event: KeyboardEvent) => boolean>(ignoreKeys);
   const editor = useEditor({
     content: value || '',
     editable: !readOnly && !disabled,

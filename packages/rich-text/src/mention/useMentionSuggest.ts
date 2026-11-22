@@ -13,6 +13,9 @@ export interface MentionQuery {
 
 const EMPTY: readonly RichTextMentionItem[] = [];
 
+/** The key handler of an editor with mentioning off: every key is the editor's. */
+export const ignoreKeys = (event: KeyboardEvent): boolean => event.defaultPrevented;
+
 /** The mention being typed at a collapsed caret, or null. */
 export function readMentionQuery(editor: Editor): MentionQuery | null {
   const { selection } = editor.state;
@@ -115,5 +118,5 @@ export function useMentionSuggest(editor: Editor | null, mentions: RichTextMenti
     return false;
   };
 
-  return { open, items: open ? items : EMPTY, loading: open && loading, active, select, onKeyDown };
+  return { open, items: open ? items : EMPTY, loading: open && loading, active, select, onKeyDown: mentions ? onKeyDown : ignoreKeys };
 }

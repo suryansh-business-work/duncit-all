@@ -183,6 +183,7 @@ export {
 } from './food-tax';
 export { makeRentalItemsSchema, type RentalItemsOutput } from './rental-items';
 export { makeMarkRentalSchema, type MarkRentalOutput, type MarkRentalValues } from './mark-rental';
+export { makeRentalProofSchema, type RentalProofFormValues, type RentalProofOutput } from './rental-proof';
 export { makeQuickAccessSchema, type QuickAccessValues } from './quick-access';
 export { makeTutorialCommentSchema, type TutorialCommentValues } from './tutorial-comment';
 export {

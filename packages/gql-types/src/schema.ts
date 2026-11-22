@@ -18281,6 +18281,8 @@ export type Mutation = {
   addReelUploadAssets: ReelProject;
   /** Refused for somebody who is not a Club Admin, or is already in a region. */
   addRegionClubAdmin: Region;
+  /** Finance, or the rental's venue owner / venues console: attach optional evidence (a note and/or up to 6 photos uploaded through Duncit). */
+  addRentalBookingProof: RentalBookingDetail;
   addTutorialComment: TutorialComment;
   addUserRole: User;
   /**  Admin-only: append a delta with an optional remark. Returns the updated score.  */
@@ -19420,7 +19422,10 @@ export type Mutation = {
   markPodShopReturnReceived: PodShopReturn;
   /** Venue owner or venues console: the item came back, or part of the deposit is kept for damage. */
   markRentalBooking: RentalBooking;
-  /** Finance: the rental refund was paid back to the guest. */
+  /**
+   * Retired: rental refunds go out through Razorpay and read paid only when Razorpay confirms them. Always refuses.
+   * @deprecated Rental refunds are sent through Razorpay automatically. Read rentalBookingDetail for the refund, or use sendRentalRefund for one waiting for review.
+   */
   markRentalRefunded: RentalBooking;
   /** The content is fine: close every open report on it as DISMISSED. */
   markReportedContentOk: ContentReport;
@@ -20178,6 +20183,8 @@ export type Mutation = {
   sendPodPartnerRequest: PodPartnerRequest;
   /** One chat turn: the request (and any attached pictures) goes to the editor, and the reel comes back as it now stands. */
   sendReelMessage: ReelProject;
+  /** Finance managers: send a rental refund that is waiting for review through Razorpay (never marks anything paid). note: why, at least 10 characters. */
+  sendRentalRefund: RentalBookingDetail;
   /** Post a message to a Slack channel (full message surface). */
   sendSlackMessage: SlackSendResult;
   /** Send a message, a file, or both. Text may be empty when a file comes with it. */
@@ -21301,6 +21308,12 @@ export type MutationAddReelUploadAssetsArgs = {
 
 export type MutationAddRegionClubAdminArgs = {
   user_id: Scalars['ID']['input'];
+};
+
+
+export type MutationAddRentalBookingProofArgs = {
+  id: Scalars['ID']['input'];
+  input: RentalProofInput;
 };
 
 
@@ -25450,6 +25463,12 @@ export type MutationSendPodPartnerRequestArgs = {
 
 export type MutationSendReelMessageArgs = {
   input: ReelMessageInput;
+};
+
+
+export type MutationSendRentalRefundArgs = {
+  id: Scalars['ID']['input'];
+  note: Scalars['String']['input'];
 };
 
 
@@ -36653,6 +36672,8 @@ export type Query = {
   renderMarketingCampaign: MarketingCampaignRender;
   /** Anyone: upcoming pods a guest can still rent items for, soonest first. */
   rentablePods: Array<RentablePod>;
+  /** Finance (everything), or the rental's venue owner / venues console (its own view): one rental with its guest, pod, venue, Razorpay refunds, proofs and timeline. */
+  rentalBookingDetail: RentalBookingDetail;
   /** Finance: every rental booking. */
   rentalBookingsTable: RentalBookingTablePage;
   /** Finance: the rental settings. */
@@ -40880,6 +40901,11 @@ export type QueryRentablePodsArgs = {
 };
 
 
+export type QueryRentalBookingDetailArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type QueryRentalBookingsTableArgs = {
   query?: InputMaybe<TableQueryInput>;
 };
@@ -43361,8 +43387,10 @@ export type RentalBooking = {
   damage_claim: Scalars['Float']['output'];
   damage_note: Scalars['String']['output'];
   deposit_amount: Scalars['Float']['output'];
-  /** The deposit the venue hands the guest in cash at the venue when the item comes back. */
+  /** Cash the venue handed back at the venue: bookings closed before 2026-11-22 only, 0 since Duncit refunds deposits. */
   deposit_at_venue: Scalars['Float']['output'];
+  /** DUNCIT_REFUND (Duncit refunds the deposit through Razorpay) or VENUE_CASH (older bookings: handed back at the venue). */
+  deposit_policy?: Maybe<Scalars['String']['output']>;
   guest_name: Scalars['String']['output'];
   id: Scalars['ID']['output'];
   image_url: Scalars['String']['output'];
@@ -43374,11 +43402,26 @@ export type RentalBooking = {
   pod_title: Scalars['String']['output'];
   quantity: Scalars['Int']['output'];
   rate: Scalars['Int']['output'];
-  /** Money Duncit owes back to the guest once the booking closed (never a deposit settled at the venue). */
+  /** What the booking was owed back when it closed. Fixed once closed: read refund_outstanding for what is still owed. */
   refund_due: Scalars['Float']['output'];
+  /** What the booking is owed back (0 while the item is out or nothing is owed). */
+  refund_eligible?: Maybe<Scalars['Float']['output']>;
+  /** The Razorpay refund record's own status: QUEUED, SENDING, PROCESSING, SUCCEEDED, FAILED, RECONCILIATION_REQUIRED or NOT_APPLICABLE. */
+  refund_gateway_status?: Maybe<Scalars['String']['output']>;
+  /** Owed and not yet confirmed by Razorpay. */
+  refund_outstanding?: Maybe<Scalars['Float']['output']>;
+  /** Queued or in flight on Razorpay, not yet confirmed. */
+  refund_pending?: Maybe<Scalars['Float']['output']>;
+  /** The Razorpay refund id once Razorpay confirms the refund (older rows: whatever was typed). */
   refund_ref: Scalars['String']['output'];
-  /** NONE, DUE, PAID, or IN_PAYMENT (returned with the payment's cancellation refund). */
+  /** Why the refund waits for Finance (REQUIRES_REVIEW only). */
+  refund_review_reason?: Maybe<Scalars['String']['output']>;
+  /** NOT_ELIGIBLE, AWAITING_RETURN, ELIGIBLE, PROCESSING, REFUNDED, FAILED, REQUIRES_REVIEW or IN_PAYMENT. */
+  refund_state?: Maybe<Scalars['String']['output']>;
+  /** NONE, DUE, PAID (Razorpay confirmed, or a pre-2026-11-22 hand mark: see refund_state), or IN_PAYMENT (returned with the payment's cancellation refund). */
   refund_status: Scalars['String']['output'];
+  /** Confirmed processed by Razorpay. */
+  refunded_amount?: Maybe<Scalars['Float']['output']>;
   refunded_at?: Maybe<Scalars['String']['output']>;
   /** The VENUE_RENTAL payout that carried venue_amount, once raised. */
   release_id?: Maybe<Scalars['String']['output']>;
@@ -43388,9 +43431,25 @@ export type RentalBooking = {
   unit: VenueRentalUnit;
   /** 1 for a SLOT item, the pod's hours for an HOUR item. */
   units: Scalars['Int']['output'];
-  /** What Duncit pays the venue for this booking: rent less commission, plus the deposit it settled at the venue. */
+  /** What Duncit pays the venue for this booking: rent less commission, plus any deposit it kept (damage, or non-refundable). */
   venue_amount: Scalars['Float']['output'];
   venue_id: Scalars['ID']['output'];
+};
+
+/** One rental, whole: as Finance sees it, or as its venue does. */
+export type RentalBookingDetail = {
+  __typename?: 'RentalBookingDetail';
+  booking: RentalBooking;
+  events: Array<RentalEvent>;
+  guest: RentalPerson;
+  /** Finance only; null for the venue. */
+  payment?: Maybe<RentalPaymentInfo>;
+  pod?: Maybe<RentalPodInfo>;
+  proofs: Array<RentalProof>;
+  refunds: Array<RentalRefundAttempt>;
+  venue: RentalVenueContact;
+  /** FINANCE or VENUE: which view this is. */
+  viewer: Scalars['String']['output'];
 };
 
 /** Server-side table page for the shared table engine. */
@@ -43402,9 +43461,89 @@ export type RentalBookingTablePage = {
   total: Scalars['Int']['output'];
 };
 
+/** One step of a rental's life. */
+export type RentalEvent = {
+  __typename?: 'RentalEvent';
+  actor_name: Scalars['String']['output'];
+  /** SYSTEM, FINANCE, VENUE, GUEST or RAZORPAY. */
+  actor_role: Scalars['String']['output'];
+  amount?: Maybe<Scalars['Float']['output']>;
+  at: Scalars['String']['output'];
+  detail: Scalars['String']['output'];
+  type: Scalars['String']['output'];
+};
+
 export type RentalMarkOutcome =
   | 'DAMAGED'
   | 'RETURNED';
+
+/** The payment a rental rode on (Finance only). */
+export type RentalPaymentInfo = {
+  __typename?: 'RentalPaymentInfo';
+  gateway: Scalars['String']['output'];
+  paid_at?: Maybe<Scalars['String']['output']>;
+  payment_doc_id: Scalars['ID']['output'];
+  payment_ref: Scalars['String']['output'];
+  /** The captured Razorpay payment id the refund is sent against. */
+  razorpay_payment_id?: Maybe<Scalars['String']['output']>;
+  status: Scalars['String']['output'];
+  total: Scalars['Float']['output'];
+};
+
+/** The guest on a rental. Email is Finance's only. */
+export type RentalPerson = {
+  __typename?: 'RentalPerson';
+  email?: Maybe<Scalars['String']['output']>;
+  id?: Maybe<Scalars['ID']['output']>;
+  name: Scalars['String']['output'];
+  phone?: Maybe<Scalars['String']['output']>;
+};
+
+/** The pod a rental was booked for. The pod page is /club/<club_public_id>/pod/<public_id>. */
+export type RentalPodInfo = {
+  __typename?: 'RentalPodInfo';
+  club_public_id: Scalars['String']['output'];
+  ends_at?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  public_id: Scalars['String']['output'];
+  starts_at?: Maybe<Scalars['String']['output']>;
+  title: Scalars['String']['output'];
+};
+
+/** Optional evidence on a rental. Never the proof of a gateway refund: that is Razorpay's record. */
+export type RentalProof = {
+  __typename?: 'RentalProof';
+  added_at: Scalars['String']['output'];
+  added_by_name: Scalars['String']['output'];
+  /** FINANCE or VENUE. */
+  added_by_role: Scalars['String']['output'];
+  image_urls: Array<Scalars['String']['output']>;
+  note: Scalars['String']['output'];
+};
+
+/** Optional evidence: a note, photos uploaded through Duncit, or both. */
+export type RentalProofInput = {
+  image_urls?: InputMaybe<Array<Scalars['String']['input']>>;
+  note?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** One Razorpay refund carrying the rental's money: its own, or the pod cancellation's. */
+export type RentalRefundAttempt = {
+  __typename?: 'RentalRefundAttempt';
+  amount: Scalars['Float']['output'];
+  attempts: Scalars['Int']['output'];
+  created_at: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  /** Finance only. */
+  last_error: Scalars['String']['output'];
+  processed_at?: Maybe<Scalars['String']['output']>;
+  /** Finance only. */
+  razorpay_refund_id?: Maybe<Scalars['String']['output']>;
+  requested_at?: Maybe<Scalars['String']['output']>;
+  /** RENTAL or POD_CANCELLATION. */
+  source: Scalars['String']['output'];
+  status: Scalars['String']['output'];
+};
 
 /** Finance > Rented Items > Settings — the rules every venue rental runs under. */
 export type RentalSettings = {
@@ -43413,9 +43552,9 @@ export type RentalSettings = {
   booking_cutoff_hours: Scalars['Int']['output'];
   /** Duncit's commission on rent (never on the deposit), percent. */
   commission_pct: Scalars['Float']['output'];
-  /** An unmarked rental is closed as returned automatically this many days after the pod ends. */
+  /** An unmarked rental is closed as returned this many days after the pod ends, and its deposit refunded to the guest through Razorpay. */
   deposit_auto_release_days: Scalars['Int']['output'];
-  /** Whether the venue hands the deposit back at the venue once the item comes back. Either way Duncit pays the deposit to the venue. */
+  /** Whether Duncit refunds the deposit (less any damage) to the guest through Razorpay once the item comes back. Off: the venue keeps it. */
   deposit_refundable: Scalars['Boolean']['output'];
   /** Off hides Pod Rent everywhere and refuses new rentals. */
   enabled: Scalars['Boolean']['output'];
@@ -43434,6 +43573,17 @@ export type RentalSettingsInput = {
   enabled?: InputMaybe<Scalars['Boolean']['input']>;
   rent_refundable_on_backout?: InputMaybe<Scalars['Boolean']['input']>;
   terms_html?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** Where the item is returned: the venue and its contact. Email is Finance's only. */
+export type RentalVenueContact = {
+  __typename?: 'RentalVenueContact';
+  address: Scalars['String']['output'];
+  contact_name: Scalars['String']['output'];
+  email?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  phone?: Maybe<Scalars['String']['output']>;
 };
 
 /** A venue's rented items, in numbers. */

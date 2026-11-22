@@ -449,6 +449,23 @@ export const COPY_REVISIONS: Readonly<Record<string, readonly string[]>> = {
   "finance.refundLogs.search": ["Search txn id, invoice, name or email"],
   "finance.orderRefunds.search": ["Search order no, return no, name or email"],
   "admin.userFinance.search": ["Search by payment ID or invoice"],
+  // Rented-item deposits are refunded by Duncit through Razorpay (2026-11-22),
+  // no longer handed back in cash at the venue.
+  "venueRentals.desk.depositNotice": [
+    "Hand each guest’s refundable deposit back at the venue once you have checked the returned item. Duncit does not refund deposits online: it pays every deposit to you in your rental payout.",
+  ],
+  "venueRentals.finance.depositNote": [
+    "Deposits are handed back by the venue when the item is returned, not refunded through the gateway. Duncit pays them to the venue in its rental payout.",
+  ],
+  "venueRentals.mark.handBack": [
+    "Hand {amount} back to the guest now. Duncit adds the full deposit to your next rental payout.",
+  ],
+  "venueRentals.mark.handBackNone": ["Nothing to hand back. Duncit adds the full deposit to your next rental payout."],
+  "venueRentals.guest.depositAtVenue": ["Deposit {amount}, refundable at the venue"],
+  "venueRentals.guest.collectNote": [
+    "You receive rented items at the venue. Your refundable deposit is returned by the venue when you bring the item back; Duncit does not refund deposits online.",
+  ],
+  "venueRentals.guest.depositBack": ["Deposit back at the venue {amount}"],
   // A running pod can be joined now (until its end time).
   "mweb.home.ongoingPodsSubtitle": ["Happening right now — joining is closed"],
 };

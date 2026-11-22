@@ -309,6 +309,15 @@ describe('CheckoutView', () => {
     expect(screen.getByTestId('where')).toHaveTextContent('/pod-history');
   });
 
+  it('offers the deduction claim only for a failure tied to a Duncit payment', () => {
+    const { props, payment } = baseProps();
+    const { unmount } = inRouter(<CheckoutView {...props} />);
+    expect(h.failure?.claim).toBeNull();
+    unmount();
+    inRouter(<CheckoutView {...props} payment={{ ...payment, paymentDocId: 'doc9' } as never} />);
+    expect(h.failure?.claim).toEqual({ paymentDocId: 'doc9' });
+  });
+
   it('goes back one page from the back button', () => {
     const { props } = baseProps();
     render(

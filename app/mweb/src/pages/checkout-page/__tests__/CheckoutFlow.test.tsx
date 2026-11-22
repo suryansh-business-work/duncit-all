@@ -14,7 +14,8 @@ const h = vi.hoisted(() => ({
   capture: vi.fn(),
   clear: vi.fn(),
   report: vi.fn(),
-  failureFactory: undefined as undefined | (() => { description: string; amount: number; currencySymbol?: string }),
+  failureFactory: undefined as undefined | (() => Record<string, unknown>),
+  failureOptions: undefined as undefined | { reportToServer?: boolean },
   viewProps: undefined as undefined | Record<string, any>,
 }));
 
@@ -28,8 +29,9 @@ vi.mock('../../../components/issue-notice', () => ({
   IssueNotice: () => null,
 }));
 vi.mock('../../../components/payment-failure', () => ({
-  usePaymentFailure: (factory: () => { description: string; amount: number; currencySymbol?: string }) => {
+  usePaymentFailure: (factory: () => Record<string, unknown>, options?: { reportToServer?: boolean }) => {
     h.failureFactory = factory;
+    h.failureOptions = options;
     return { report: h.report, failure: null, dismiss: vi.fn() };
   },
   PaymentFailureDialog: () => null,
@@ -159,12 +161,30 @@ describe('CheckoutFlow states', () => {
 
   it('describes a failed payment with the pod and bill total, or generic wording without a pod', () => {
     flow(makeCtx());
-    expect(h.failureFactory?.()).toEqual({ description: 'Pod: Sunset Jam', amount: 1180, currencySymbol: '₹' });
+    // No order has been opened yet, so there is no Duncit payment to file against.
+    expect(h.failureFactory?.()).toEqual({
+      description: 'Pod: Sunset Jam',
+      amount: 1180,
+      currencySymbol: '₹',
+      paymentDocId: null,
+      razorpayOrderId: null,
+    });
   });
 
   it('falls back to the payable amount and generic description when the bill and pod are missing', () => {
     flow(makeCtx({ pod: null }), makeBill({ breakup: null }));
-    expect(h.failureFactory?.()).toEqual({ description: 'Pod checkout', amount: 1000, currencySymbol: undefined });
+    expect(h.failureFactory?.()).toEqual({
+      description: 'Pod checkout',
+      amount: 1000,
+      currencySymbol: undefined,
+      paymentDocId: null,
+      razorpayOrderId: null,
+    });
+  });
+
+  it('records every failure on the server — the pod checkout is the one that does', () => {
+    flow(makeCtx());
+    expect(h.failureOptions).toEqual({ reportToServer: true });
   });
 
   it('closes the already-booked dialog', async () => {
@@ -267,6 +287,16 @@ describe('CheckoutFlow razorpay gateway', () => {
     const error = new Error('card declined');
     handlers.onFailure(error);
     expect(h.report).toHaveBeenCalledWith(error);
+  });
+
+  it('files a failure against the payment and Razorpay order the sheet was opened for', async () => {
+    h.razorpayOrder.mockResolvedValue({
+      data: { createRazorpayOrder: { payment_doc_id: 'doc9', order_id: 'order_9', free: false, payment: null } },
+    });
+    flow(makeCtx({ session: live() }));
+    await pay();
+    h.openRazorpay.mock.calls[0][1].onFailure(null);
+    expect(h.failureFactory?.()).toMatchObject({ paymentDocId: 'doc9', razorpayOrderId: 'order_9' });
   });
 
   it('survives a failure report that itself fails', async () => {

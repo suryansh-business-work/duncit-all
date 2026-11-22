@@ -155,6 +155,60 @@ describe('parseCallArgs — mcp_confirm', () => {
   });
 });
 
+describe('parseCallArgs — the values themselves (createPod(input: PodInput!))', () => {
+  const create = toolNamed(catalog, 'pods_create_pod');
+  const call = (input: unknown) => parseCallArgs(create, { input, [META_REASON]: REASON });
+
+  it('runs a complete, well-formed write', () => {
+    expect(call({ pod_title: 'Sunday run', no_of_spots: 8, status: 'LIVE' }).toolArgs).toEqual({
+      input: { pod_title: 'Sunday run', no_of_spots: 8, status: 'LIVE' },
+    });
+  });
+
+  it('refuses a blank required field and says to ask the user for it, not to make one up', () => {
+    const error = failure(() => call({ pod_title: '   ' }));
+    expect(error.code).toBe('VALIDATION_FAILED');
+    expect(error.message).toBe(
+      [
+        'Nothing was saved. One value needs fixing:',
+        '- input.pod_title is required and cannot be blank.',
+        'Ask the user for: input.pod_title. Never guess, invent or fill in placeholder values; call again once you have them.',
+      ].join('\n')
+    );
+  });
+
+  it('refuses a nested input missing its required field', () => {
+    expect(failure(() => call({ pod_description: 'Easy 5k' })).message).toContain('- input.pod_title is required.');
+  });
+
+  it('lists every wrong value at once, and asks for the correct ones when nothing is missing', () => {
+    const error = failure(() => call({ pod_title: 'Run', no_of_spots: 'eight', status: 'OPEN', colour: 'red' }));
+    expect(error.code).toBe('VALIDATION_FAILED');
+    expect(error.message.split('\n')).toEqual([
+      'Nothing was saved. 3 values need fixing:',
+      '- input.no_of_spots must be a whole number.',
+      '- input.status must be one of: LIVE, DRAFT, CANCELLED.',
+      '- input.colour is not a field of this input.',
+      'Ask the user for the correct values if you are not certain of them. Never guess, invent or fill in placeholder values; call again once you have them.',
+    ]);
+  });
+
+  it('still reports a missing top-level argument the way it always has', () => {
+    expect(failure(() => parseCallArgs(create, { [META_REASON]: REASON })).message).toBe('Missing required parameter: input.');
+  });
+
+  it('holds a read to types and enums but not to the blank and format checks a form makes before saving', () => {
+    expect(() => parseCallArgs(table, { query: { search: '   ' } })).not.toThrow();
+    expect(failure(() => parseCallArgs(table, { query: { page: 'two' } })).message).toContain('- query.page must be a whole number.');
+    expect(failure(() => parseCallArgs(read, { id: '' })).message).toContain('- id must be at least 1 character.');
+  });
+
+  it('checks every item of a nested list', () => {
+    const error = failure(() => parseCallArgs(table, { query: { filters: [{ field: 'status', op: 'eq' }, { field: 'city' }] } }));
+    expect(error.message).toContain('- query.filters[1].op is required.');
+  });
+});
+
 describe('peekReason — the reason as given, for the activity log only', () => {
   it.each([['missing arguments', undefined], ['null', null], ['an array', [{ [META_REASON]: REASON }]], ['a string', REASON], ['a number', 7]])(
     'finds no reason in %s',

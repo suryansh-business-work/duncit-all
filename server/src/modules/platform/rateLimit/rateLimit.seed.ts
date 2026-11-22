@@ -66,6 +66,7 @@ const SEED_SYSTEMS: SeedSystem[] = [
   { surface: 'WEBSITE', app: 'status-website', label: 'Status Website' },
   { surface: 'WEBSITE', app: 'ecomm', label: 'Pet Store (ecomm.duncit.com)' },
   { surface: 'API', app: 'public-api', label: 'Public API (x-api-key)' },
+  { surface: 'API', app: 'mcp-tools', label: 'MCP tools (AI clients and Ask Duncit)' },
   { surface: 'SERVER', app: 'server', label: 'Server / webhooks' },
   { surface: 'UNKNOWN', app: '-', label: 'Unidentified caller' },
 ];
@@ -238,6 +239,48 @@ const SEED_RULES = [
     window_seconds: 3600,
     block_seconds: 0,
     message: 'You have sent a lot of requests. Please try again later.',
+  },
+  {
+    // AI clients over MCP and Ask Duncit run tools as the person, and a model
+    // stuck in a retry loop writes far faster than anyone clicking Save. Every
+    // tool call carries the `mcp-tools` label (set by the server, not a
+    // header), so this holds them to a pace of their own. Enforcing from day
+    // one, like the credential rule: thirty changes a minute is already more
+    // than a person reviewing each one can follow.
+    name: 'MCP tool writes per person',
+    description:
+      'Changes made through MCP tools — Claude, ChatGPT and the other AI clients, and Ask Duncit — per signed-in person. The consoles people use by hand are not counted here.',
+    priority: 7,
+    mode: 'ENFORCE',
+    surface: 'API',
+    app: 'mcp-tools',
+    channel: 'GRAPHQL',
+    operation_type: 'MUTATION',
+    audience: 'AUTHENTICATED',
+    key_by: 'USER',
+    algorithm: 'SLIDING_WINDOW',
+    limit: 30,
+    window_seconds: 60,
+    block_seconds: 0,
+    message: 'Too many changes through MCP tools in the last minute.',
+  },
+  {
+    name: 'MCP tool reads per person',
+    description:
+      'Reads made through MCP tools, per signed-in person. Ships in Monitor — check the Blocked page against real AI-client traffic before enforcing.',
+    priority: 7,
+    mode: 'MONITOR',
+    surface: 'API',
+    app: 'mcp-tools',
+    channel: 'GRAPHQL',
+    operation_type: 'QUERY',
+    audience: 'AUTHENTICATED',
+    key_by: 'USER',
+    algorithm: 'SLIDING_WINDOW',
+    limit: 240,
+    window_seconds: 60,
+    block_seconds: 0,
+    message: 'Too many reads through MCP tools in the last minute.',
   },
   {
     name: 'Mutation ceiling per account',

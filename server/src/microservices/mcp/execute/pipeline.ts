@@ -44,6 +44,19 @@ interface Finished {
 }
 
 const DENIED_CODES = new Set(['FORBIDDEN', 'UNAUTHENTICATED']);
+/**
+ * The server refused the values themselves — a variable GraphQL could not
+ * coerce, or the form's rules enforced by the resolver.
+ */
+const INPUT_CODES = new Set(['BAD_USER_INPUT']);
+const RATE_LIMITED = 'RATE_LIMITED';
+
+/**
+ * Tool calls are labelled for the rate limiter as their own system, so the
+ * Rate Limiting console can hold AI clients and Ask Duncit to a pace of their
+ * own without touching the consoles people use by hand.
+ */
+export const MCP_RATE_LIMIT_CLIENT = { surface: 'API', app: 'mcp-tools' } as const;
 
 class CallFailure extends Error {
   constructor(
@@ -67,8 +80,33 @@ export class ForwardedFailure extends Error {
   }
 }
 
+/** A resolver's own reasons: `validate()` puts each rule's message on extensions.errors. */
+function reasonsOf(error: GraphQLFormattedError): string[] {
+  const listed = error.extensions?.errors;
+  if (Array.isArray(listed) && listed.length) return listed.map(String);
+  return [error.message];
+}
+
+/** The server refused the values — say which, and that the model must go back to the person. */
+function inputRefusal(errors: ReadonlyArray<GraphQLFormattedError>): string {
+  const reasons = [...new Set(errors.flatMap(reasonsOf))];
+  return [
+    'Nothing was saved. Duncit refused these values:',
+    ...reasons.map((reason) => `- ${reason}`),
+    'Ask the user for the corrected values. Never guess, invent or fill in placeholder values; call again once you have them.',
+  ].join('\n');
+}
+
+function rateLimitRefusal(error: GraphQLFormattedError): string {
+  const wait = Number(error.extensions?.retry_after);
+  const after = Number.isFinite(wait) && wait > 0 ? `Wait ${Math.ceil(wait)} seconds before calling again` : 'Wait a minute before calling again';
+  return `${error.message} ${after}, and do not retry in a loop.`;
+}
+
 function failureFromGraphQL(errors: ReadonlyArray<GraphQLFormattedError>): CallFailure {
   const code = String(errors[0].extensions?.code ?? 'GRAPHQL_ERROR');
+  if (INPUT_CODES.has(code)) return new CallFailure(code, inputRefusal(errors), 'INVALID');
+  if (code === RATE_LIMITED) return new CallFailure(code, rateLimitRefusal(errors[0]), 'DENIED');
   const message = errors.map((error) => error.message).join('; ');
   return new CallFailure(code, message, DENIED_CODES.has(code) ? 'DENIED' : 'ERROR');
 }
@@ -85,7 +123,7 @@ function toFailure(error: unknown, tool: string): CallFailure {
 
 async function runGraphQL(tool: GraphQLTool, args: Record<string, unknown>, caller: UserCaller) {
   const variables = Object.fromEntries(tool.argNames.filter((name) => name in args).map((name) => [name, args[name]]));
-  const { data, errors } = await executeAsUser(caller, {
+  const { data, errors } = await executeAsUser({ ...caller, client: MCP_RATE_LIMIT_CLIENT }, {
     document: tool.document,
     operationName: tool.operationName,
     variables,
@@ -105,7 +143,7 @@ function contextFor(session: CallSession): ToolContext {
     caller: session.caller,
     connection: session.connection,
     publicUrl: session.publicUrl,
-    execute: (document, variables) => executeAsUser(session.caller, { document, variables }),
+    execute: (document, variables) => executeAsUser({ ...session.caller, client: MCP_RATE_LIMIT_CLIENT }, { document, variables }),
     callTool: async (name, args) => (await runToolCall(session, name, args, { viaGateway: true })).outcome,
   };
 }

@@ -2,7 +2,7 @@ import type { NextFunction, Request, RequestHandler, Response } from 'express';
 import { GraphQLError, Kind, type FieldNode } from 'graphql';
 import { HeaderMap, type ApolloServerPlugin } from '@apollo/server';
 import { logs } from '@observability/log';
-import { decodeAuthUser, type AuthUser, type GraphQLContext } from '@context';
+import { decodeAuthUser, type AuthUser, type CallerClient, type GraphQLContext } from '@context';
 import { evaluate, shouldSendHeaders, type RateLimitContextInfo } from './rateLimit.enforcer';
 import { normaliseApp, normaliseSurface } from './rateLimit.match';
 import type { RateLimitChannel, RateLimitDecision, RateLimitRequest } from './rateLimit.types';
@@ -37,6 +37,15 @@ function header(req: Request, name: string): string | undefined {
   return typeof first === 'string' && first.trim() ? first.trim() : undefined;
 }
 
+/** The system a request says it comes from (x-duncit-surface / x-duncit-app). */
+function declaredSystem(req: Request): Pick<RateLimitRequest, 'surface' | 'app'> {
+  // An api-key caller is an integration whatever it says it is, and it is the
+  // one surface the server can verify for itself.
+  if (header(req, 'x-api-key')) return { surface: 'API', app: 'public-api' };
+  const surface = normaliseSurface(header(req, 'x-duncit-surface'));
+  return { surface, app: surface === 'API' ? 'public-api' : normaliseApp(header(req, APP_HEADER)) };
+}
+
 /**
  * Everything a rule can match on, read off the request and nothing else.
  *
@@ -50,17 +59,17 @@ export function describeRequest(
   req: Request,
   channel: RateLimitChannel,
   verifiedUser?: AuthUser | null,
+  client?: CallerClient,
 ): { request: RateLimitRequest; info: RateLimitContextInfo } {
   const user = verifiedUser === undefined ? decodeAuthUser(req.headers.authorization) : verifiedUser;
-  const declared = header(req, 'x-duncit-surface');
-  // An api-key caller is an integration whatever it says it is, and it is the
-  // one surface the server can verify for itself.
-  const surface = header(req, 'x-api-key') ? 'API' : normaliseSurface(declared);
+  const { surface, app } = client
+    ? { surface: normaliseSurface(client.surface), app: normaliseApp(client.app) }
+    : declaredSystem(req);
   return {
     request: {
       channel,
       surface,
-      app: surface === 'API' ? 'public-api' : normaliseApp(header(req, APP_HEADER)),
+      app,
       path: req.path,
       method: req.method,
       // `trust proxy` is set on the app, so this is the client and not nginx.
@@ -167,7 +176,12 @@ export const rateLimitPlugin: ApolloServerPlugin<GraphQLContext> = {
         // Same idea for a live e2e run: one runner signs up, in and out far more
         // often than a person may, and its key is verified the same way.
         if (await isE2eTraffic(ctx.contextValue.req)) return;
-        const { request, info } = describeRequest(ctx.contextValue.req, 'GRAPHQL', ctx.contextValue.user);
+        const { request, info } = describeRequest(
+          ctx.contextValue.req,
+          'GRAPHQL',
+          ctx.contextValue.user,
+          ctx.contextValue.client,
+        );
         const decision = await evaluate(
           {
             ...request,

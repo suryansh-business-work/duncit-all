@@ -53,6 +53,15 @@ describe('executeAsUser', () => {
     expect(contextValue.isClientGone).toBe(caller.isClientGone);
   });
 
+  it('carries the rate-limit label the caller gives onto the context, and adds none otherwise', async () => {
+    const executeOperation = jest.fn().mockResolvedValue(single({ data: {} }));
+    const client = { surface: 'API', app: 'mcp-tools' };
+    await executeAsUser({ ...callerFor(ASHA, executeOperation), client }, { document: DOCUMENT });
+    await executeAsUser(callerFor(ASHA, executeOperation), { document: DOCUMENT });
+    expect((executeOperation.mock.calls[0][1] as { contextValue: GraphQLContext }).contextValue.client).toEqual(client);
+    expect('client' in (executeOperation.mock.calls[1][1] as { contextValue: GraphQLContext }).contextValue).toBe(false);
+  });
+
   it('runs inside a request identity that names the person, so change logs say who did it', async () => {
     let seen: RequestIdentity | undefined;
     const executeOperation = jest.fn().mockImplementation(async () => {

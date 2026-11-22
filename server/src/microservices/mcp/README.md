@@ -41,10 +41,13 @@ createMcpHandler → server/mcp.server.ts   (one SDK Server per request, either 
 execute/pipeline.ts
    resolve tool → refusal check (settings kill switches, write scope, console access)
    → execute/validate (shape, size, unknown params, mcp_reason, mcp_confirm, required)
+   → execute/schema-check (every value against the tool's schema, all the way
+     down: blank required text, types, enums, lengths, ranges, unknown nested
+     fields, and on writes the formats named fields carry — VALIDATION_FAILED)
    → guard/injection scan of arguments (block | warn)
-   → GraphQL tool: utils/execute-as-user → apollo.executeOperation as the person
-     (rate limiter, GraphQL monitor, resolver RBAC; requestIdentity carries the
-     person so change logs name them)
+   → GraphQL tool: utils/execute-as-user → apollo.executeOperation as the person,
+     labelled `API / mcp-tools` for the rate limiter (resolver RBAC, GraphQL
+     monitor; requestIdentity carries the person so change logs name them)
      Curated tool: its own run()
    → strip invisible characters + flag injection signatures in the result
    → usage/usage.recorder (one McpToolCall row + a SigNoz log line)
@@ -93,6 +96,35 @@ Gemini expect from a remote MCP server. Discovery: `/.well-known/oauth-protected
 | `mcp_reason` | Why the call is made (3–500 chars). **Required** for anything that writes. Saved in the activity log. |
 | `mcp_guard` | `block` (default from Settings) refuses arguments that look like injected instructions; `warn` lets them through and flags them. |
 | `mcp_confirm` | Only on destructive / consequential tools (delete, cancel, refund, approve, pay…): must be `true`, after the person agreed. |
+
+## Validation — a tool is held to its form's rules
+
+A call that is missing information or carries a malformed value is refused
+**before anything runs**, with every problem listed and the fields the AI must
+ask the user for. Nothing is ever saved half-filled.
+
+| Where | What it checks | Code |
+|---|---|---|
+| `execute/validate.ts` | arguments are an object, size/depth, unknown parameters, meta parameters, missing top-level arguments | `INVALID_ARGUMENTS`, `CONFIRMATION_REQUIRED` |
+| `execute/schema-check.ts` | the whole GraphQL input tree: required fields present and (on writes) not blank, types, enums, lengths, ranges, unknown nested fields; on writes, formats by field name from `utils/field-formats.ts` (email, phone, IFSC, UPI ID, GSTIN, PIN code, website — the server twins of `@duncit/regex`) | `VALIDATION_FAILED` |
+| the resolver | the module's business rules (`validate()` → `BAD_USER_INPUT` with `extensions.errors`) — the same rules a console or app request meets | `BAD_USER_INPUT` |
+
+`BAD_USER_INPUT` from a resolver is passed on as an `INVALID` call listing
+each rule, with the same "ask the user, never guess" instruction. Field-name
+formats are matched whole (`email_enabled` is not an email). Ask Duncit runs
+every tool through this same pipeline, so it gets identical checks.
+
+## Rate limits
+
+Every operation a tool runs carries the rate-limit label `API / mcp-tools`
+(set by the server, never read from a header). Two rules are seeded and edited
+in **Tech → Rate Limiting** like any other:
+
+- **MCP tool writes per person** — 30 mutations a minute, per user, enforcing.
+- **MCP tool reads per person** — 240 queries a minute, per user, monitor.
+
+A refused call answers `RATE_LIMITED` with how long to wait and an instruction
+not to retry in a loop.
 
 ## Duncit Lite connector (`/lite/mcp`)
 

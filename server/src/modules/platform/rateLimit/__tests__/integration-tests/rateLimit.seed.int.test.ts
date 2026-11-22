@@ -1,4 +1,4 @@
-import { RateLimitRuleModel } from '../../rateLimit.model';
+import { RateLimitRuleModel, RateLimitSystemModel } from '../../rateLimit.model';
 import { seedRateLimitDefaults } from '../../rateLimit.seed';
 import { limitKey, ruleMatches } from '../../rateLimit.match';
 import type { RateLimitRequest } from '../../rateLimit.types';
@@ -97,5 +97,42 @@ describe('seedRateLimitDefaults — the event request rule', () => {
 
     expect(await RateLimitRuleModel.countDocuments()).toBe(shipped);
     expect((await loadEventRule()).limit).toBe(20);
+  });
+});
+
+describe('seedRateLimitDefaults — MCP tool calls', () => {
+  const mcpCall = (over: Partial<RateLimitRequest> = {}) =>
+    request({ surface: 'API', app: 'mcp-tools', operation: 'createPod', fields: ['createPod'], ...over });
+  const load = async (name: string) => {
+    const rule = await RateLimitRuleModel.findOne({ name });
+    if (!rule) throw new Error(`${name} was not seeded`);
+    return rule;
+  };
+
+  it('registers MCP tools as a system of their own', async () => {
+    await seedRateLimitDefaults();
+    expect(await RateLimitSystemModel.findOne({ surface: 'API', app: 'mcp-tools' }).lean()).toMatchObject({
+      label: 'MCP tools (AI clients and Ask Duncit)',
+    });
+  });
+
+  it('enforces 30 writes a minute per person on MCP tool calls, and leaves the consoles and reads alone', async () => {
+    await seedRateLimitDefaults();
+    const rule = await load('MCP tool writes per person');
+    expect(rule).toMatchObject({ mode: 'ENFORCE', key_by: 'USER', limit: 30, window_seconds: 60, operation_type: 'MUTATION' });
+
+    expect(ruleMatches(rule, mcpCall())).toBe(true);
+    expect(limitKey(rule, mcpCall())).toBe(`user:${USER_ID}`);
+    expect(ruleMatches(rule, mcpCall({ operationType: 'QUERY' }))).toBe(false);
+    expect(ruleMatches(rule, request({ surface: 'PORTAL', app: 'pods', operation: 'createPod', fields: ['createPod'] }))).toBe(false);
+    expect(ruleMatches(rule, mcpCall({ userId: undefined }))).toBe(false);
+  });
+
+  it('watches MCP reads in Monitor before anyone enforces a number for them', async () => {
+    await seedRateLimitDefaults();
+    const rule = await load('MCP tool reads per person');
+    expect(rule).toMatchObject({ mode: 'MONITOR', key_by: 'USER', limit: 240, operation_type: 'QUERY' });
+    expect(ruleMatches(rule, mcpCall({ operation: 'pod', fields: ['pod'], operationType: 'QUERY' }))).toBe(true);
+    expect(ruleMatches(rule, mcpCall())).toBe(false);
   });
 });

@@ -12,15 +12,36 @@ import {
   type GuardMode,
 } from '../mcp.constants';
 import type { McpTool } from '../tools/tool.types';
+import { checkArguments, missingFields, type ArgumentProblem } from './schema-check';
 
 /**
  * The checks every call passes before anything reaches GraphQL: the shape,
- * the size, no parameter the tool does not declare, the meta parameters, and
- * the required arguments. GraphQL then coerces every value against its real
- * type — so the AI gets a precise sentence back instead of a failed write.
+ * the size, no parameter the tool does not declare, the meta parameters, the
+ * required arguments, and then every value against the tool's schema all the
+ * way down (execute/schema-check). GraphQL then coerces every value against
+ * its real type — so the AI gets a precise sentence back instead of a failed
+ * or half-filled write.
  */
 
-export type InputErrorCode = 'INVALID_ARGUMENTS' | 'CONFIRMATION_REQUIRED';
+export type InputErrorCode = 'INVALID_ARGUMENTS' | 'CONFIRMATION_REQUIRED' | 'VALIDATION_FAILED';
+
+/**
+ * What the model is told when values are missing or wrong: every problem, the
+ * fields to ask the person for, and that nothing was saved. Values are never
+ * echoed back — they may be personal data.
+ */
+export function validationMessage(problems: readonly ArgumentProblem[]): string {
+  const lines = problems.map((problem) => `- ${problem.message}`);
+  const missing = missingFields(problems);
+  const ask = missing.length
+    ? `Ask the user for: ${missing.join(', ')}.`
+    : 'Ask the user for the correct values if you are not certain of them.';
+  return [
+    `Nothing was saved. ${problems.length === 1 ? 'One value needs' : `${problems.length} values need`} fixing:`,
+    ...lines,
+    `${ask} Never guess, invent or fill in placeholder values; call again once you have them.`,
+  ].join('\n');
+}
 
 export class ToolInputError extends Error {
   constructor(
@@ -127,5 +148,11 @@ export function parseCallArgs(tool: McpTool, raw: unknown): ParsedCall {
   const toolArgs = Object.fromEntries(
     Object.entries(args).filter(([key]) => !(META_PARAMS as readonly string[]).includes(key))
   );
+  // Curated tools parse their own arguments with zod in run(); a GraphQL tool's
+  // schema is the resolver's contract, checked here in full.
+  if (tool.source === 'graphql') {
+    const problems = checkArguments(tool.inputSchema, toolArgs, tool.risk !== 'READ');
+    if (problems.length) throw new ToolInputError('VALIDATION_FAILED', validationMessage(problems));
+  }
   return { toolArgs, reason, guard };
 }

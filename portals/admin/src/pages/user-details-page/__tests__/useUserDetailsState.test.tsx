@@ -51,6 +51,8 @@ const userDoc = (over: Record<string, unknown> = {}) => ({
   dob: '1995-04-02',
   created_at: '2025-01-01T00:00:00.000Z',
   updated_at: '2025-01-02T00:00:00.000Z',
+  platforms_used: [],
+  last_activity_at: null,
   ...over,
 });
 

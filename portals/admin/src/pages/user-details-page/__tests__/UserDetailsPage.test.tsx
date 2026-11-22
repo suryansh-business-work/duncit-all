@@ -8,7 +8,7 @@ import { MemoryRouter, Route, Routes } from 'react-router';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { ConfirmProvider, NotifyHost } from '@duncit/dialogs';
-import { DuncitLocalizationProvider } from '@duncit/app-settings';
+import { createDateFormatter, DuncitLocalizationProvider } from '@duncit/app-settings';
 import UserDetailsPage from '../UserDetailsPage';
 import { USER, USER_ACTIVITY_YEAR, USER_HOST_PROFILE } from '../queries';
 import { USER_ACCOUNT_HEALTH } from '../UserHealthSection/queries';
@@ -126,6 +126,8 @@ const userDoc = (over: Record<string, unknown> = {}) => ({
   dob: '1995-04-02',
   created_at: '2025-01-01T00:00:00.000Z',
   updated_at: '2025-01-02T00:00:00.000Z',
+  platforms_used: ['ANDROID', 'WEB'],
+  last_activity_at: '2026-11-22T05:05:00.000Z',
   ...over,
 });
 
@@ -272,6 +274,25 @@ describe('UserDetailsPage — header, summary card and the default tab', () => {
     expect(screen.getByText('riya@example.com')).toBeInTheDocument();
     // Profile tab's own content, proving it is the tab shown by default.
     expect(screen.getByRole('button', { name: 'Save Changes' })).toBeInTheDocument();
+  });
+
+  it('shows the platforms the user has used in the header, and their last activity in the summary', async () => {
+    renderPage(<UserDetailsPage />, {
+      path: '/users/:user_id',
+      initialEntries: [`/users/${USER_ID}`],
+      mocks: fullMocks(),
+    });
+
+    await waitFor(() => expect(screen.getByRole('heading', { level: 1, name: 'Riya Sharma' })).toBeInTheDocument());
+    const platforms = within(screen.getByTestId('back-header')).getByRole('group', { name: 'Platforms Used' });
+    expect(within(platforms).getAllByRole('img').map((icon) => icon.getAttribute('aria-label'))).toEqual([
+      'Android',
+      'Web',
+    ]);
+    // In the admin-configured zone (no settings loaded here, so the shared defaults).
+    const expected = createDateFormatter({ timeZoneAware: true }).formatDateTime('2026-11-22T05:05:00.000Z');
+    const activity = screen.getByRole('rowheader', { name: 'Last Activity' }).closest('tr');
+    expect(activity).toHaveTextContent(`Last Activity${expected}`);
   });
 });
 

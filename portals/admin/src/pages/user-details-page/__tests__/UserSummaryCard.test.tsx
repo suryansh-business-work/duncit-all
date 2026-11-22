@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { screen, within } from '@testing-library/react';
-import { formatDateTime } from '@duncit/app-settings';
+import { createDateFormatter, formatDateTime } from '@duncit/app-settings';
 import { EmailValidationProvider } from '@duncit/shell';
 import UserSummaryCard from '../UserSummaryCard';
 import type { EditForm } from '../queries';
@@ -159,6 +159,29 @@ describe('UserSummaryCard — field rows', () => {
     expect(rowValue('Assigned Zones')).toHaveTextContent('—');
     expect(rowValue('Created')).toHaveTextContent('—');
     expect(rowValue('Updated')).toHaveTextContent('—');
+  });
+
+  it('shows the last activity in the admin-configured time zone', () => {
+    renderWithProviders(
+      <UserSummaryCard
+        user={user({ last_activity_at: '2026-11-22T05:05:00.000Z' })}
+        form={form()}
+        busy={false}
+        onPhotoChange={vi.fn()}
+      />,
+    );
+
+    // No settings are loaded in this harness, so the zone-aware formatter's defaults apply.
+    const expected = createDateFormatter({ timeZoneAware: true }).formatDateTime('2026-11-22T05:05:00.000Z');
+    expect(rowValue('Last Activity')).toHaveTextContent(expected);
+  });
+
+  it('says the last activity is not recorded yet for an account nobody has seen', () => {
+    renderWithProviders(
+      <UserSummaryCard user={user({ last_activity_at: null })} form={form()} busy={false} onPhotoChange={vi.fn()} />,
+    );
+
+    expect(rowValue('Last Activity')).toHaveTextContent('Not recorded yet');
   });
 
   it('shows a phone number alone when there is no extension', () => {

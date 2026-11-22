@@ -15,7 +15,7 @@ import {
 import VerifiedIcon from '@mui/icons-material/Verified';
 import MediaPickerField from '../../components/MediaPickerField';
 import { STATUS_META, type EditForm } from './queries';
-import { formatDateTime } from '@duncit/app-settings';
+import { formatDateTime, useDateFormat } from '@duncit/app-settings';
 import { EmailValidateButton, useTranslation } from '@duncit/shell';
 
 interface Props {
@@ -33,6 +33,8 @@ const phoneLine = (extension?: string | null, number?: string | null) =>
 
 export default function UserSummaryCard({ user, form, busy, onPhotoChange }: Readonly<Props>) {
   const { t } = useTranslation();
+  // Last Activity reads in the Admin Panel's configured zone, whatever the browser's.
+  const activityFormat = useDateFormat({ timeZoneAware: true });
   const statusMeta = STATUS_META[form.status];
   const rows = [
     {
@@ -57,6 +59,12 @@ export default function UserSummaryCard({ user, form, busy, onPhotoChange }: Rea
     { label: t('admin.profile.assignedZones'), value: (user.assigned_zones ?? []).join(', ') || empty },
     { label: t('shell.common.created'), value: user.created_at ? formatDateTime(user.created_at) : empty },
     { label: t('shell.common.updated'), value: user.updated_at ? formatDateTime(user.updated_at) : empty },
+    {
+      label: t('admin.users.colLastActivity'),
+      value: user.last_activity_at
+        ? activityFormat.formatDateTime(user.last_activity_at)
+        : t('admin.users.noActivity'),
+    },
   ];
 
   return (

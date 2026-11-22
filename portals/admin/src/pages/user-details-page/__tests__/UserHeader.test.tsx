@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { fireEvent, screen } from '@testing-library/react';
+import { fireEvent, screen, within } from '@testing-library/react';
 import UserHeader from '../UserHeader';
 import { renderWithProviders } from './testkit';
 
@@ -41,6 +41,35 @@ describe('UserHeader — title', () => {
     );
 
     expect(screen.getByRole('heading', { name: 'u-1' })).toBeInTheDocument();
+  });
+});
+
+describe('UserHeader — platforms used', () => {
+  it('shows every platform the user has used, in order, beside the actions and reachable by keyboard', () => {
+    renderWithProviders(
+      <UserHeader user={{ ...baseUser, platforms_used: ['ANDROID', 'IOS', 'WEB'] }} status="ACTIVE" busy={false} {...spies()} />,
+    );
+
+    const group = within(screen.getByTestId('back-header')).getByRole('group', { name: 'Platforms Used' });
+    const icons = within(group).getAllByRole('img');
+    expect(icons.map((icon) => icon.getAttribute('aria-label'))).toEqual(['Android', 'iOS', 'Web']);
+    for (const icon of icons) expect(icon).toHaveAttribute('tabindex', '0');
+  });
+
+  it('names a platform in a tooltip when it is pointed at', async () => {
+    renderWithProviders(
+      <UserHeader user={{ ...baseUser, platforms_used: ['IOS'] }} status="ACTIVE" busy={false} {...spies()} />,
+    );
+
+    fireEvent.mouseOver(screen.getByTestId('admin-user-platform-IOS'));
+    expect(await screen.findByRole('tooltip')).toHaveTextContent('iOS');
+  });
+
+  it('says none is recorded yet for an account not seen on any platform', () => {
+    renderWithProviders(<UserHeader user={baseUser} status="ACTIVE" busy={false} {...spies()} />);
+
+    expect(screen.getByText('None recorded yet')).toBeInTheDocument();
+    expect(screen.queryByRole('group', { name: 'Platforms Used' })).toBeNull();
   });
 });
 

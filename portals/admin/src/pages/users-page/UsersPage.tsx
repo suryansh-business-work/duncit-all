@@ -32,6 +32,8 @@ export default function UsersPage() {
   const [busy, setBusy] = useState(false);
   const [opError, setOpError] = useState<string | null>(null);
   const { formatDate, formatDateTime } = useDateFormat();
+  // Last Activity reads in the Admin Panel's configured zone, whatever the browser's.
+  const { formatDateTime: formatActivityAt } = useDateFormat({ timeZoneAware: true });
 
   const { data: rolesData } = useQuery<any>(ROLES);
   const [createUser] = useMutation<any>(CREATE_USER);
@@ -66,8 +68,8 @@ export default function UsersPage() {
 
   const columns = useMemo(() => {
     const roleOptions = roles.map((r: any) => ({ value: r.key, label: r.name }));
-    return getUsersColumns({ formatDate, formatDateTime, roleOptions, t });
-  }, [formatDate, formatDateTime, roles]);
+    return getUsersColumns({ formatDate, formatDateTime, formatActivityAt, roleOptions, t });
+  }, [formatDate, formatDateTime, formatActivityAt, roles]);
 
   // An account with missing, duplicate or mismatched contact data reads red; its chips say why.
   const getRowStyle = useCallback(

@@ -1,4 +1,6 @@
+import type { ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';
+import { MockedProvider } from '@apollo/client/testing/react';
 import IntegrationCard from '../../../src/pages/app-insights/IntegrationCard';
 import ConfigurationRequired from '../../../src/pages/app-insights/ConfigurationRequired';
 import StatusChip from '../../../src/pages/app-insights/StatusChip';
@@ -20,9 +22,13 @@ describe('StatusChip', () => {
   });
 });
 
+// The card formats its dates with the admin's date settings (useDateFormat),
+// which it reads through Apollo; with no settings answered it uses the defaults.
+const mountCard = (ui: ReactElement) => mount(<MockedProvider mocks={[]}>{ui}</MockedProvider>);
+
 describe('IntegrationCard', () => {
   it('names the store, its status, the last successful sync and the days held', async () => {
-    await mount(<IntegrationCard integration={integration()} />);
+    await mountCard(<IntegrationCard integration={integration()} />);
     const card = byTestId('app-insights-integration-google-play');
     expect(card.textContent).toContain(COPY['analytics.appInsights.store.googlePlay']);
     expect(card.textContent).toContain(COPY['analytics.appInsights.lastSync'].replace(' {when}', ''));
@@ -31,14 +37,14 @@ describe('IntegrationCard', () => {
   });
 
   it('says it has never synced and holds no data yet', async () => {
-    await mount(<IntegrationCard integration={disconnectedApple()} />);
+    await mountCard(<IntegrationCard integration={disconnectedApple()} />);
     const card = byTestId('app-insights-integration-app-store');
     expect(card.textContent).toContain(COPY['analytics.appInsights.neverSynced']);
     expect(card.textContent).toContain(COPY['analytics.appInsights.noData']);
   });
 
   it('announces the store’s reason after a failed sync', async () => {
-    await mount(<IntegrationCard integration={integration({ status: 'ERROR', last_error: 'HTTP 403: denied' })} />);
+    await mountCard(<IntegrationCard integration={integration({ status: 'ERROR', last_error: 'HTTP 403: denied' })} />);
     expect(byTestId('app-insights-integration-google-play').querySelector('[role="status"]')?.textContent).toBe(
       'HTTP 403: denied'
     );

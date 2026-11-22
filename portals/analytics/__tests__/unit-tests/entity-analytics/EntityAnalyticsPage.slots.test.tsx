@@ -48,11 +48,15 @@ describe('EntityAnalyticsPage slots', () => {
 
   it('renders no footer while the numbers are loading', async () => {
     const footer = vi.fn(() => <div data-testid="footer" />);
+    // The answer is held back, so the page is still loading when it is read —
+    // with no delay it could land inside mount() and the footer would rightly show.
     await mount(
-      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[answer]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 60_000 }} mocks={[answer]}>
         <EntityAnalyticsPage page={PAGE} footer={footer} />
       </MockedProvider>,
     );
+    expect(queryTestId('loader')).not.toBeNull();
     expect(queryTestId('footer')).toBeNull();
+    expect(footer).not.toHaveBeenCalled();
   });
 });

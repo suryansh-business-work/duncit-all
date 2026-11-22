@@ -31,12 +31,12 @@ vi.mock('@duncit/dashboard', () => ({
 const PODS_PAGE = ANALYTICS_PAGES[1];
 
 const answer = (days: number, value: EntityAnalytics): MockedResponse => ({
-  request: { query: ENTITY_ANALYTICS, variables: { entity: 'PODS', compare: 'PREVIOUS', city: null, days } },
+  request: { query: ENTITY_ANALYTICS, variables: { entity: 'PODS', compare: 'PREVIOUS', city: null, platform: null, days } },
   result: { data: { entityAnalytics: value } },
 });
 
 const failure = (message: string): MockedResponse => ({
-  request: { query: ENTITY_ANALYTICS, variables: { entity: 'PODS', compare: 'PREVIOUS', city: null, days: 30 } },
+  request: { query: ENTITY_ANALYTICS, variables: { entity: 'PODS', compare: 'PREVIOUS', city: null, platform: null, days: 30 } },
   result: { errors: [new GraphQLError(message)] },
 });
 
@@ -46,9 +46,9 @@ const cities: MockedResponse = {
   result: { data: { analyticsCities: [{ __typename: 'AnalyticsCity', id: 'loc-blr', name: 'Bengaluru' }] } },
 };
 
-const renderPage = (mocks: MockedResponse[]) =>
+const renderPage = (mocks: MockedResponse[], delay = 0) =>
   mount(
-    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[cities, ...mocks]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay }} mocks={[cities, ...mocks]}>
       <EntityAnalyticsPage page={PODS_PAGE} />
     </MockedProvider>,
   );
@@ -59,7 +59,8 @@ const retryButton = () =>
 
 describe('EntityAnalyticsPage', () => {
   it('shows its heading and period at once, and a loader until the numbers arrive', async () => {
-    await renderPage([answer(30, board())]);
+    // Held back so the page is read mid-load, not after a 0 ms answer has landed.
+    await renderPage([answer(30, board())], 60_000);
 
     const page = byTestId('analytics-page-pods');
     expect(page.textContent).toContain(COPY['analytics.page.pods.title']);
@@ -136,7 +137,7 @@ describe('EntityAnalyticsPage', () => {
           {
             request: {
               query: ENTITY_ANALYTICS,
-              variables: { entity: 'CONTACTS', compare: 'PREVIOUS', city: null, days: 30 },
+              variables: { entity: 'CONTACTS', compare: 'PREVIOUS', city: null, platform: null, days: 30 },
             },
             result: { data: { entityAnalytics: board() } },
           },

@@ -99,6 +99,8 @@ const CHALLENGE_PLAY = [
   'setPodChallengeVoting',
   'submitPodChallengeEntry',
   'transitionPodChallenge',
+  'updatePodChallengeSettings',
+  'voidPodChallengeScore',
 ];
 const MEMBER_CHECKOUT = [
   'createRazorpayGiftCardOrder',
@@ -107,6 +109,7 @@ const MEMBER_CHECKOUT = [
   'dummyCheckout',
   'dummyGiftCardCheckout',
   'dummyProductCheckout',
+  'verifyRazorpayPayment',
 ];
 const OWN_ACCOUNT = [
   'cancelMyAccountDeletionRequest',
@@ -134,7 +137,13 @@ const OWN_WORKSPACE = [
   'saveShellWorkspaceState',
   'startBulkDelete',
 ];
-const MEMBER_UPLOADS = ['getImagekitAuth', 'importRemoteImageToImagekit', 'importRemoteMediaToImagekit', 'startVideoCompression'];
+const MEMBER_UPLOADS = [
+  'getImagekitAuth',
+  'importRemoteImageToImagekit',
+  'importRemoteMediaToImagekit',
+  'startVideoCompression',
+  'uploadImageToImagekit',
+];
 const REPORTING = ['reportChatMessage', 'reportPost', 'reportProfile', 'moderatePodContent', 'moderateProductContent'];
 
 /**

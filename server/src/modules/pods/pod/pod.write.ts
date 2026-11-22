@@ -363,7 +363,7 @@ export const podWriteMethods = {
     // The same economics guard as create, on the pod as this edit would leave
     // it and its new booking. Before anything is written — the edit core moves
     // product stock — so a refused edit keeps the stored pod and its old slot.
-    await assertPortalEditEconomics(editedPodView(doc, input, reroute), input, reroute);
+    await assertPortalEditEconomics(editedPodView(doc, input, reroute), input, reroute, doc);
     await applyPodEditCore(doc, input);
     if (reroute) applyRerouteState(doc, input, reroute);
     await doc.save();

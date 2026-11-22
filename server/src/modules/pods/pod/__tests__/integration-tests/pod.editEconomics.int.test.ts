@@ -3,7 +3,7 @@ jest.mock('@services/email/email.service', () => ({ sendEmail: jest.fn().mockRes
 import { Types } from 'mongoose';
 import { PodModel } from '../../pod.model';
 import { podService } from '../../pod.service';
-import { assertPortalEditEconomics, editedPodView } from '../../pod.economics';
+import { assertPortalEditEconomics, editChangesMoney, editedPodView } from '../../pod.economics';
 import { breakdownService } from '@modules/finance/finance/breakdown.service';
 import { VenueModel } from '@modules/venues/venue/venue.model';
 import { VenueSlotModel } from '@modules/venues/venueSlot/venueSlot.model';
@@ -125,6 +125,28 @@ describe('a portal edit runs the pod economics guard', () => {
     await expect(judge(flatOnly.pod, { no_of_spots: 13 })).resolves.toBeUndefined();
   });
 
+  it('does not judge a save that sends the money fields unchanged — the portal editors send them every time', async () => {
+    // The reference pod is already unprofitable; an admin fixing its title must still be able to save.
+    const { pod } = await seedReferencePod(9);
+    const unchanged = {
+      pod_title: 'Fixed title',
+      pod_amount: 9,
+      no_of_spots: 5,
+      pod_type: 'PAID',
+      pod_hosts_id: pod.pod_hosts_id.map(String),
+    };
+    await expect(assertPortalEditEconomics(editedPodView(pod, unchanged, null), unchanged, null, pod)).resolves.toBeUndefined();
+
+    const cheaper = { ...unchanged, pod_amount: 8 };
+    await expect(assertPortalEditEconomics(editedPodView(pod, cheaper, null), cheaper, null, pod)).rejects.toMatchObject({
+      extensions: { reason: 'VENUE_NOT_COVERED' },
+    });
+    const otherHost = { ...unchanged, pod_hosts_id: [String(new Types.ObjectId())] };
+    await expect(assertPortalEditEconomics(editedPodView(pod, otherHost, null), otherHost, null, pod)).rejects.toMatchObject({
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  });
+
   it('does not judge an edit that touches no money field, a completed pod, a cancelled pod, or a free pod', async () => {
     const { pod } = await seedReferencePod(9);
     await expect(judge(pod, { pod_title: 'New' })).resolves.toBeUndefined();
@@ -141,6 +163,22 @@ describe('a portal edit runs the pod economics guard', () => {
     const rerouted = editedPodView(pod, { venue_id: String(pod.venue_id) }, { slotDoc: { _id: newSlotId } });
     expect(String(rerouted.venue_slot_id)).toBe(String(newSlotId));
     expect(editedPodView(pod, { pod_mode: 'VIRTUAL' }, null)).toMatchObject({ venue_id: null, venue_slot_id: null });
+  });
+});
+
+describe('editChangesMoney', () => {
+  const stored = { pod_amount: 9, no_of_spots: 5, pod_type: 'PAID', pod_hosts_id: ['a', 'b'] };
+
+  it('is false for the same values, however they are typed, and for fields left out', () => {
+    expect(editChangesMoney(stored, { pod_amount: '9', no_of_spots: 5, pod_type: 'PAID', pod_hosts_id: ['a', 'b'] })).toBe(false);
+    expect(editChangesMoney(stored, { pod_title: 'New' })).toBe(false);
+  });
+
+  it('is true for a changed price, size, type or host list (order included — the first host is the one priced)', () => {
+    expect(editChangesMoney(stored, { pod_amount: 10 })).toBe(true);
+    expect(editChangesMoney(stored, { no_of_spots: 6 })).toBe(true);
+    expect(editChangesMoney(stored, { pod_type: 'FREE' })).toBe(true);
+    expect(editChangesMoney(stored, { pod_hosts_id: ['b', 'a'] })).toBe(true);
   });
 });
 

@@ -62,6 +62,26 @@ export function minBusinessForBooking(
 /** Edit inputs that can move a pod's money: its price, type, size and who hosts
  * it (the host's commission rate prices the waterfall). */
 const MONEY_FIELDS = ['pod_amount', 'pod_type', 'no_of_spots', 'pod_hosts_id'] as const;
+type MoneyField = (typeof MONEY_FIELDS)[number];
+
+/** One money field as a comparable value: hosts as their ids in order, numbers as numbers. */
+function moneyValue(field: MoneyField, value: unknown): string {
+  if (field === 'pod_hosts_id') return (Array.isArray(value) ? value : []).map(String).join(',');
+  if (field === 'pod_type') return String(value ?? '');
+  return String(Number(value) || 0);
+}
+
+/**
+ * Whether an edit CHANGES a money field — not merely sends it. The portal
+ * editors send the price, spots, type and hosts on every save, so "present in
+ * the input" would judge a title fix on a pod that was already unprofitable and
+ * refuse it. Only a different value (or a moved booking) is judged.
+ */
+export function editChangesMoney(stored: Partial<Record<MoneyField, unknown>>, input: Record<string, unknown>): boolean {
+  return MONEY_FIELDS.some(
+    (field) => input[field] !== undefined && moneyValue(field, input[field]) !== moneyValue(field, stored[field])
+  );
+}
 
 /** A portal re-route, as the guard needs it. */
 export interface EditReroute {
@@ -126,15 +146,17 @@ export function editedPodView(
  * leaves the stored pod, its product stock and its booked slot as they were
  * (the new slot is only claimed after the save). Completed pods are settled
  * history and cancelled ones sell nothing, so neither is judged; an edit that
- * touches no money field and moves no booking is not judged either.
+ * changes no money field (`stored` is the pod as it was) and moves no booking
+ * is not judged either.
  */
 export async function assertPortalEditEconomics(
   pod: EditedPod,
   input: Record<string, unknown>,
-  reroute: EditReroute | null
+  reroute: EditReroute | null,
+  stored: Partial<Record<MoneyField, unknown>> = {}
 ): Promise<void> {
   if (pod.completed_at || pod.deleted_at) return;
-  if (!reroute && !MONEY_FIELDS.some((field) => input[field] !== undefined)) return;
+  if (!reroute && !editChangesMoney(stored, input)) return;
   const spots = Math.max(0, Math.floor(Number(pod.no_of_spots) || 0));
   const hostId = pod.pod_hosts_id?.[0];
   const base = {

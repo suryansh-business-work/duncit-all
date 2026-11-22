@@ -36,6 +36,8 @@ exports:
   - 'releaseSessionRevoked'
   - 'SURFACE_HEADER'
   - 'APP_HEADER'
+  - 'PLATFORM_HEADER'
+  - 'nativePlatformHeaders'
   - 'PRODUCT_EVENTS'
   - 'SESSION_TIMEOUT_MS'
   - 'createProductTracker'
@@ -206,6 +208,24 @@ which is a row on the Systems page rather than an invisible one.
 `staging.duncit.com`), which is what makes the browser preflight pass — the
 server only mounts `cors()` outside production. A header missing from that list
 fails every preflight in staging and production, on every surface at once.
+
+### Platform (native store builds only)
+
+```ts
+import { nativePlatformHeaders } from '@duncit/user-core';
+import { Platform } from 'react-native';
+
+Object.assign(headers, nativePlatformHeaders(Platform.OS));
+// android -> { 'x-duncit-platform': 'ANDROID' }, ios -> { ... 'IOS' }, web -> {}
+```
+
+`NATIVE` says "the app" but not which store it came from, and Admin > Users
+shows Android and iOS apart (Platforms Used, Last Activity). `PLATFORM_HEADER`
+is the exception to the nginx rule above: only a store build sends it, and a
+store build never makes a browser preflight, so it needs no allowlist entry.
+That is why the helper returns nothing for `web` — the native web build runs in
+a browser and must not send it. Store builds from before the header are told
+apart on the server by their HTTP stack's user agent (OkHttp, CFNetwork).
 
 ## Real time
 

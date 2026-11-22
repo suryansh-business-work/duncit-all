@@ -35,6 +35,31 @@ export const SURFACE_HEADER = 'x-duncit-surface';
  */
 export const APP_HEADER = 'x-duncit-app';
 
+/**
+ * The OS a native store build runs on: `ANDROID` or `IOS`.
+ *
+ * `NATIVE` on the surface header says "the app" but not which store it came
+ * from, and Admin > Users shows Android and iOS apart (Platforms Used). Only a
+ * store build sends it, and a store build makes no browser preflight, so this
+ * header needs no nginx `Access-Control-Allow-Headers` entry. The native WEB
+ * build must leave it off for exactly that reason, which is what
+ * {@link nativePlatformHeaders} guarantees.
+ */
+export const PLATFORM_HEADER = 'x-duncit-platform';
+
+/** Every value the platform header may carry. */
+export type NativePlatformName = 'ANDROID' | 'IOS';
+
+/**
+ * The platform header for a React Native `Platform.OS` value, or nothing at all
+ * for the web build (or any OS that is not a store build).
+ */
+export function nativePlatformHeaders(os: string): Record<string, string> {
+  if (os === 'android') return { [PLATFORM_HEADER]: 'ANDROID' };
+  if (os === 'ios') return { [PLATFORM_HEADER]: 'IOS' };
+  return {};
+}
+
 /** The surfaces that can edit a user profile. */
 export type ClientSurface = 'NATIVE' | 'MWEB' | 'ADMIN_PORTAL' | 'PORTAL';
 

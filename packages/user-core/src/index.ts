@@ -20,8 +20,14 @@ export {
   NO_REDIS_STORAGE_KEY,
   resolveNoRedisFlag,
 } from './no-redis';
-export { APP_HEADER, SURFACE_HEADER, clientIdentityHeaders } from './surface';
-export type { ClientSurface, ClientSurfaceName } from './surface';
+export {
+  APP_HEADER,
+  PLATFORM_HEADER,
+  SURFACE_HEADER,
+  clientIdentityHeaders,
+  nativePlatformHeaders,
+} from './surface';
+export type { ClientSurface, ClientSurfaceName, NativePlatformName } from './surface';
 export {
   ACCOUNT_DELETION_REVOKE_REASON,
   SESSION_REVOKED_EVENT,

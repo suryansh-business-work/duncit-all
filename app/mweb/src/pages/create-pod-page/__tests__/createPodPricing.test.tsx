@@ -60,7 +60,7 @@ function Harness({ values, errors = {}, children }: Readonly<{ values?: Partial<
   return <>{children(form)}</>;
 }
 const preview = (over: Record<string, unknown> = {}) =>
-  ({ zeroEarnings: false, noOfSpots: 10, hasVenue: false, venueId: null, slotPrice: null, ...over }) as never;
+  ({ notViable: false, failed: false, noOfSpots: 10, hasVenue: false, venueId: null, slotPrice: null, ...over }) as never;
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -132,9 +132,11 @@ describe('TicketPriceField', () => {
     await waitFor(() => expect(screen.getByTestId('state')).toHaveTextContent('null'));
   });
 
-  it('warns when the projected payout is nothing, and not otherwise', () => {
-    const { unmount } = field(preview({ zeroEarnings: true }));
+  it('says why the server refuses the pod, and nothing otherwise', () => {
+    const refused = { viable: false, viability_reason: 'NO_EARNINGS', minimum_viable_ticket_price: null, venue_min_business: 0 };
+    const { unmount } = field(preview({ notViable: true, projection: refused }));
     expect(screen.getByText(fallbackT('mweb.createPod.zeroEarningsTitle'), { exact: false })).toBeInTheDocument();
+    expect(screen.getByText(fallbackT('mweb.createPod.zeroEarningsBody'))).toBeInTheDocument();
     unmount();
     field();
     expect(screen.queryByText(fallbackT('mweb.createPod.zeroEarningsTitle'), { exact: false })).not.toBeInTheDocument();

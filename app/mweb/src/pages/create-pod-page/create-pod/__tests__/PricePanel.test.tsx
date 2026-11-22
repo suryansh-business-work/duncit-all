@@ -78,7 +78,17 @@ const waterfall = {
   host_earn_pct: 71.53,
 };
 
-const projection = { total_spots: 30, payable_spots: 29, waterfall };
+// The server's verdict rides on every projection: this pod passes the create guard.
+const projection = {
+  total_spots: 30,
+  payable_spots: 29,
+  viable: true,
+  viability_reason: null,
+  minimum_viable_ticket_price: 12,
+  venue_min_business: 0,
+  minimum: null,
+  waterfall,
+};
 
 const venueVariables = { pod_amount: 1000, no_of_spots: 30, venue_id: 'v1', venue_amount: 300, venue_commission_on_top: null };
 
@@ -344,6 +354,6 @@ describe('PricePanel — a venue offer paid for at least the venue minimum', () 
     );
     expect(screen.getByTestId('price-panel-earnings-range-value')).toHaveTextContent('₹-450.00 – ₹20,742.71');
     // The server judges a pod at all its spots, so the low end blocks nothing.
-    expect(latest).toMatchObject({ zeroEarnings: false, blocked: false });
+    expect(latest).toMatchObject({ fresh: true, notViable: false, blocked: false });
   });
 });

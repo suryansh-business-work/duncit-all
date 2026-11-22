@@ -50,6 +50,8 @@ export function useOfferQuote(form: CreatePodForm) {
   return {
     /** Null while nothing complete is offered, the request is in flight, it failed, or the offer cannot be sent. */
     quote,
+    /** The offer `quote` priced — its model and window pick the venue's minimum business. Null without a quote. */
+    offer: quote ? sentOffer : null,
     /** The same offer priced at the venue's minimum guests; the quote itself when the server prices no minimum. */
     quoteMin: quote ? (answer?.quote_min ?? quote) : null,
     /** Why the offer cannot be sent, when the server says so. */

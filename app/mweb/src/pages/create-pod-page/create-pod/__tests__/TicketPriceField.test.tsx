@@ -19,12 +19,15 @@ const preview = {
   projection: undefined,
   loading: false,
   stale: false,
+  failed: false,
   hasVenue: false,
   ready: false,
   priceMissing: true,
-  zeroEarnings: false,
   venueShortfall: false,
+  fresh: false,
+  notViable: false,
   blocked: true,
+  retry: () => undefined,
 } satisfies EarningsPreview;
 
 // Step 4 is only reachable with steps 1-3 already filled, so the harness starts
@@ -89,5 +92,12 @@ describe('TicketPriceField', () => {
     const { input } = renderField();
     fireEvent.blur(input);
     expect(await screen.findByText(TICKET_PRICE_REQUIRED)).toBeInTheDocument();
+  });
+
+  it('keeps the verdict live region under the price, empty while there is nothing to say', () => {
+    renderField();
+    const region = screen.getByTestId('create-pod-viability');
+    expect(region).toHaveAttribute('aria-live', 'polite');
+    expect(region).toBeEmptyDOMElement();
   });
 });

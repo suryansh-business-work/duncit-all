@@ -1,9 +1,12 @@
 import { gql } from '@apollo/client';
+import type { PodViabilityVerdict } from '@duncit/utils';
 
 /** Server-side potential-earnings waterfall. The server bills payable spots
  * (total − 1, the host's own seat is free) — no money math happens here. A
  * venue offer also sends its money at the venue's minimum guests (`min_spots`,
- * `offerEarningsArgs`), and the answer carries the take-home there too. */
+ * `offerEarningsArgs`), and the answer carries the take-home there too; its
+ * model and hours (`venue_offer_model`, `venue_hours`) hold it to the venue's
+ * minimum business. `viable` is the create guard's own verdict, at every spot. */
 export const POTENTIAL_POD_EARNINGS = gql`
   query PotentialPodEarnings(
     $pod_amount: Float!
@@ -14,6 +17,8 @@ export const POTENTIAL_POD_EARNINGS = gql`
     $min_spots: Int
     $venue_amount_at_min: Float
     $venue_commission_on_top_at_min: Float
+    $venue_offer_model: VenueOfferModel
+    $venue_hours: Float
   ) {
     potentialPodEarnings(
       pod_amount: $pod_amount
@@ -24,9 +29,15 @@ export const POTENTIAL_POD_EARNINGS = gql`
       min_spots: $min_spots
       venue_amount_at_min: $venue_amount_at_min
       venue_commission_on_top_at_min: $venue_commission_on_top_at_min
+      venue_offer_model: $venue_offer_model
+      venue_hours: $venue_hours
     ) {
       total_spots
       payable_spots
+      viable
+      viability_reason
+      minimum_viable_ticket_price
+      venue_min_business
       minimum {
         total_spots
         waterfall {
@@ -72,7 +83,7 @@ export const SUGGESTED_TICKET_PRICES = gql`
 /** The waterfall shape the shared statement builder consumes (server rupees). */
 export type { EarningsWaterfall } from '@duncit/utils';
 
-export interface EarningsProjection {
+export interface EarningsProjection extends PodViabilityVerdict {
   total_spots: number;
   payable_spots: number;
   waterfall: import('@duncit/utils').EarningsWaterfall;

@@ -6,7 +6,7 @@ import { useTranslation } from '../../../../i18n/useTranslation';
 import type { CreatePodForm } from '../create-pod.types';
 import type { EarningsPreview } from './useEarningsPreview';
 import SuggestedPricesDialog from './SuggestedPricesDialog';
-import ZeroEarningsNotice from './ZeroEarningsNotice';
+import ViabilityNotice from './ViabilityNotice';
 
 interface Props {
   form: CreatePodForm;
@@ -20,9 +20,10 @@ const FIELD_ID = 'create-pod-ticket-price';
 const asTicketPrice = (value: unknown) => (value === '' || value === null ? null : Number(value));
 
 /** The Step-4 ticket price: its label with the "Suggested Price ⓘ" link to the
- * RIGHT, the amount input, and the zero-earnings notice that blocks publishing
- * when the projected payout is ₹0. A PAID pod's field only — a free pod has no
- * price to type, so PricingStep does not mount it. Native twin (rule 27). */
+ * RIGHT, the amount input, and the notice that says why publishing is blocked
+ * when the server's verdict refuses the pod (and the lowest price that works).
+ * A PAID pod's field only — a free pod has no price to type, so PricingStep
+ * does not mount it. Native twin (rule 27). */
 export default function TicketPriceField({ form, preview }: Readonly<Props>) {
   const [open, setOpen] = useState(false);
   const { currency } = usePricing();
@@ -78,7 +79,7 @@ export default function TicketPriceField({ form, preview }: Readonly<Props>) {
           input: { startAdornment: <InputAdornment position="start">₹</InputAdornment> },
           htmlInput: { 'data-testid': 'create-pod-ticket-price-input' },
         }} />
-      {preview.zeroEarnings && <ZeroEarningsNotice />}
+      <ViabilityNotice preview={preview} currency={currency} />
       <SuggestedPricesDialog
         open={open}
         onClose={() => setOpen(false)}

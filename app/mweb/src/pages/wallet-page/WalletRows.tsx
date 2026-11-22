@@ -5,6 +5,7 @@ import CallMadeRoundedIcon from '@mui/icons-material/CallMadeRounded';
 import CallReceivedRoundedIcon from '@mui/icons-material/CallReceivedRounded';
 import SectionHeader from '../../components/SectionHeader';
 import { formatDate } from '../../utils/dateFormat';
+import WithdrawalPayoutRefs from './WithdrawalPayoutRefs';
 
 const STATUS_COLOR: Record<string, 'warning' | 'success' | 'error'> = {
   PENDING: 'warning',
@@ -57,7 +58,7 @@ export function WalletSection({
 }
 
 /** One withdrawal: amount · method, when it was requested (and why it was
- * rejected), and its status pill. */
+ * rejected), its payout references once Razorpay has them, and its status pill. */
 export function WithdrawalRow({ w, currency }: Readonly<{ w: any; currency: string }>) {
   return (
     <Stack direction="row" spacing={1.5} sx={ROW_SX} data-testid={`wallet-withdrawal-${w.id}`}>
@@ -73,6 +74,7 @@ export function WithdrawalRow({ w, currency }: Readonly<{ w: any; currency: stri
           Requested {fmtDate(w.created_at)}
           {w.reject_reason ? ` · ${w.reject_reason}` : ''}
         </Typography>
+        <WithdrawalPayoutRefs paymentId={w.razorpay_payout_id} utr={w.payout_utr} testId={`wallet-withdrawal-${w.id}`} />
       </Box>
       <Chip size="small" color={STATUS_COLOR[w.status] ?? 'default'} label={w.status} />
     </Stack>

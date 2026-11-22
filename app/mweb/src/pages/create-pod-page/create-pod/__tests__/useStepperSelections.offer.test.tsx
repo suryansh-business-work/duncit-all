@@ -133,10 +133,23 @@ describe('useStepperSelections — a venue offer', () => {
     expect(result.current.preview.offerEarnings).toEqual({
       venue_amount: 6000,
       venue_commission_on_top: 600,
+      // The offer's model and its 10:00–12:00 window: the venue's per-guest
+      // minimum business is what the verdict holds the pod to.
+      venue_offer_model: 'PER_GUEST',
+      venue_hours: 2,
       min_spots: 8,
       venue_amount_at_min: 2400,
       venue_commission_on_top_at_min: 240,
     });
+  });
+
+  it('sends a free ask as FREE, so no minimum business applies to it', async () => {
+    const free = { ...quoteMock, result: { data: { venueOfferQuote: { ok: true, message: null, quote: quoteAt(20, 0, 0), quote_min: null } } } };
+    const { result } = selections(offerValues({ venue_offer_model: 'FREE', venue_offer_rate: '' }), [free]);
+    await settle();
+    await settle();
+
+    expect(result.current.preview.offerEarnings).toMatchObject({ venue_amount: 0, venue_offer_model: 'FREE', venue_hours: 2 });
   });
 
   it('sends no offer money for a held slot', () => {

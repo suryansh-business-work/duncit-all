@@ -171,4 +171,12 @@ describe('fillDays', () => {
 
     expect(fillDays(['2026-11-22'], [stray]).map((day) => day.calls)).toEqual([0]);
   });
+
+  it('fills a richer series with the empty day it is given', () => {
+    const busy = { date: '2026-11-21', visits: 3 };
+
+    const days = fillDays(['2026-11-20', '2026-11-21'], [busy], (date) => ({ date, visits: 0 }));
+
+    expect(days).toEqual([{ date: '2026-11-20', visits: 0 }, busy]);
+  });
 });

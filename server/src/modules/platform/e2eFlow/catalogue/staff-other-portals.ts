@@ -183,7 +183,7 @@ export const STAFF_OTHER_PORTAL_FLOWS: readonly CatalogueFlow[] = [
         name: 'Navigate with the sidebar tree',
         description: 'Leaf items route, groups expand, the active item is highlighted.',
         steps: [
-          ['Sign in to the AI console and look at the sidebar', 'It shows the branding logo with "AI", the items Welcome, AI Library, and groups OpenAI and AI Monitoring, the signed-in user card and the caption "© Duncit"'],
+          ['Sign in to the AI console and look at the sidebar', 'It shows the branding logo with "AI", the item Dashboard, the groups AI Library, AI Features, OpenAI, AI Monitoring and Automation, the signed-in user card and the caption "© Duncit"'],
           ['Click the OpenAI group', 'It expands to Dashboard and Logs'],
           ['Click Logs', 'The app routes to /openai/logs, the item is highlighted and the breadcrumb reads AI / OpenAI / Logs'],
           ['Reload the page', 'The OpenAI group is open and Logs is still highlighted'],
@@ -885,14 +885,14 @@ export const STAFF_OTHER_PORTAL_FLOWS: readonly CatalogueFlow[] = [
   {
     name: 'Employee: Console access and dashboard',
     description:
-      'The Employee console (employee.duncit.com, key employee, role EMPLOYEE): welcome dashboard at /, My Expenses at /expenses and the shared /profile.',
+      'The Employee console (employee.duncit.com, key employee, role EMPLOYEE): welcome dashboard at /, My Expenses at /expenses, My Targets at /targets and the shared /profile.',
     sub_flows: [
       {
         name: 'Employee opens the dashboard',
-        description: 'Sign in and navigate the two-item sidebar.',
+        description: 'Sign in and navigate the three-item sidebar.',
         steps: [
           ['Sign in to employee.duncit.com with an EMPLOYEE account', 'The dashboard shows "Welcome back, <name>", tagline "Your profile, requests and workplace tools." and the "Your account" card'],
-          ['Look at the sidebar', 'It lists "Dashboard" and "My Expenses"'],
+          ['Look at the sidebar', 'It lists "Dashboard", "My Expenses" and "My Targets"'],
           ['Click "My Expenses"', 'The app routes to /expenses'],
           ['Sign in with an account that has no EMPLOYEE role', 'The login alert shows "You do not have access to this portal"'],
         ],
@@ -1096,18 +1096,31 @@ export const STAFF_OTHER_PORTAL_FLOWS: readonly CatalogueFlow[] = [
 
   // ───────────────────────────── AI ─────────────────────────────
   {
-    name: 'AI: Welcome page',
+    name: 'AI: Dashboard',
     description:
-      'The AI console home (ai.duncit.com, key ai, role AI_MANAGER): a greeting widget on the shared dashboard grid. The Agent tab and Ask Bot are shell tools available here as in every console.',
+      'The AI console home (ai.duncit.com, key ai, role AI_MANAGER or SUPER_ADMIN): one aiOverviewDashboard read on the shared dashboard grid (dashboard id ai.home) — OpenAI calls, tokens, cost, error rate, response time and active users against the previous period, daily trends, models, features, areas, top users, AI Monitoring, automation runs, feature switches and the latest calls. The range lives in ?days= and the page refreshes itself every minute. The Agent tab and Ask Bot are shell tools available here as in every console.',
     sub_flows: [
       {
-        name: 'AI manager lands on Welcome',
-        description: 'Sign in and read the welcome card.',
+        name: 'AI manager lands on the Dashboard',
+        description: 'Sign in and read the headline figures, trends and breakdowns.',
         steps: [
-          ['Sign in to the AI console with an AI_MANAGER account', 'The page title reads "Welcome to Duncit AI" with the tagline "Operate AI tools and model configuration."'],
-          ['Read the greeting widget', 'It shows "Hi <first name>", "This is the AI Portal. Your console is set up and ready — features will appear here soon." and chips "AI Portal" and "Coming soon"'],
-          ['Look at the sidebar', 'It lists Welcome, AI Library, OpenAI (Dashboard, Logs) and AI Monitoring (Logs, Settings)'],
-          ['Sign in with a TECH_MANAGER-only account', 'Login is refused with "You do not have access to this portal"'],
+          ['Sign in to the AI console with an AI_MANAGER account', 'The page "AI Portal Dashboard" opens at / with the range "Last 30 days" selected and the time it was last updated'],
+          ['Read the headline tiles', 'Cost, Calls, Tokens, Error rate, Avg response time and Active users each show the figure for the range and its change against the previous period; AI features, Images checked and Automation runs show their own counts'],
+          ['Read the charts', 'Calls per day (answered, failed, skipped), cost, tokens, response time and active users per day cover every day of the range; model, feature, area and user rankings list only what was used'],
+          ['Look at the sidebar', 'It lists Dashboard first, then AI Library, AI Features, OpenAI, AI Monitoring and Automation; there is no Welcome item'],
+          ['Sign in with a TECH_MANAGER-only account', 'Login is refused with "You do not have access to this portal"; aiOverviewDashboard refuses that account on the server too'],
+        ],
+      },
+      {
+        name: 'Change the range and open the details',
+        description: 'The range drives every widget and the latest calls open their full log.',
+        steps: [
+          ['Pick "Last 7 days" in Range', 'The URL gains ?days=7 and every figure, chart and ranking is read again for 7 days'],
+          ['Click a row in Latest calls', 'The OpenAI call drawer opens with the task, model, tokens, cost, timing and the prompt and answer'],
+          ['Click "All OpenAI logs"', 'The app routes to /openai/logs'],
+          ['Leave the page open for a minute', 'The figures refresh on their own and the "Updated" time moves on'],
+          ['Open the Dashboard for a range with no AI calls', 'An info notice says there were no AI calls in this range; charts show zeros and rankings say there is nothing to rank'],
+          ['Make the read fail (server unreachable)', 'An error notice offers Retry; pressing it reads the Dashboard again'],
         ],
       },
     ],

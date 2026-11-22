@@ -2153,6 +2153,61 @@ export const STAFF_OPS_PORTAL_FLOWS: readonly CatalogueFlow[] = [
     ],
   },
   {
+    name: 'Finance: Failed Payments',
+    description: 'Pod-booking checkouts that did not book, the buyer’s deduction claim, the AI + Razorpay check, Review, refund and the Razorpay webhook, at /failed-payments and /failed-payments/:id.',
+    sub_flows: [
+      {
+        name: 'Browse failed payments',
+        description: 'Table with row colours and filters.',
+        steps: [
+          ['Open /failed-payments as FINANCE_USER', 'The table lists cases newest first; no Refund, Review or Not refundable buttons are shown'],
+          ['Filter Verification to MATCHED', 'Only green rows remain'],
+          ['Search by a Razorpay payment id', 'Only the case for that payment shows'],
+          ['Call initiateFailedPaymentRefund as FINANCE_USER via the API', 'Server refuses with FORBIDDEN'],
+        ],
+      },
+      {
+        name: 'Buyer claims a deduction',
+        description: 'Claim from the failure dialog opens one PAYMENT ticket.',
+        steps: [
+          ['Fail a pod checkout in the app and open "My payment was deducted but booking was not completed"', 'The claim dialog offers screenshot, bank statement or transaction ID'],
+          ['Submit a transaction ID', 'Ticket ST-… is shown; Finance sees the case with the ticket number'],
+          ['Submit again for the same payment', 'The same ticket comes back marked already open; no second ticket exists'],
+          ['Submit a file uploaded by another account via the API', 'Server refuses with BAD_USER_INPUT'],
+        ],
+      },
+      {
+        name: 'Refund a matched case',
+        description: 'Green row refunded once through Razorpay.',
+        steps: [
+          ['Click Refund on a green row as FINANCE_MANAGER', 'The confirm dialog shows the amount and the Razorpay payment id'],
+          ['Confirm', 'Refund status turns PROCESSED (or PENDING until Razorpay confirms); the ticket is resolved with the refund id and the buyer gets the refund email'],
+          ['Click Refund again or call the mutation twice in parallel', 'Only one Razorpay refund exists for the payment'],
+          ['Open /user-refund-logs', 'The refund appears once'],
+        ],
+      },
+      {
+        name: 'Review, reject and bank reversal',
+        description: 'Yellow cases and never-captured payments.',
+        steps: [
+          ['Open a yellow case and approve it in Review', 'The row turns green and Refund is enabled'],
+          ['Reject another yellow case with a note', 'The case is REJECTED and the ticket is resolved with the note'],
+          ['Mark a NOT_CAPTURED case not refundable with a note', 'The case is NOT_REFUNDABLE and the ticket explains the bank reversal'],
+          ['Open a PDF evidence file', 'It opens through a short-lived signed link'],
+        ],
+      },
+      {
+        name: 'Razorpay webhook',
+        description: 'POST /webhooks/razorpay.',
+        steps: [
+          ['POST a payment.failed event with a wrong signature', 'HTTP 400 and nothing is recorded'],
+          ['POST a correctly signed payment.failed event', 'HTTP 200; the case shows the Razorpay error and a WEBHOOK_PAYMENT_FAILED timeline row'],
+          ['Redeliver the same event id', 'HTTP 200 marked duplicate; nothing changes'],
+        ],
+      },
+    ],
+  },
+  {
     name: 'Finance: Payment Release',
     description: 'Venue billing, host, club admin and brand payout release requests at /payment-release (new pods auto-approve on completion).',
     sub_flows: [

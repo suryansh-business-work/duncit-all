@@ -129,9 +129,9 @@ export const E2E_FLOW_SPEC_LINKS: Readonly<Record<string, readonly string[]>> = 
   'AI: AI Monitoring logs': ['mweb/__tests__/e2e/specs/api/staff/ai-console.cy.ts'],
   'AI: AI Monitoring settings': ['mweb/__tests__/e2e/specs/api/staff/ai-console.cy.ts'],
   'AI: Automation flows': ['mweb/__tests__/e2e/specs/api/other/ai-automation-inbound-webhook.cy.ts', 'mweb/__tests__/e2e/specs/api/staff/ai-console.cy.ts'],
+  'AI: Dashboard': ['mweb/__tests__/e2e/specs/api/staff/ai-console.cy.ts'],
   'AI: OpenAI Dashboard': ['mweb/__tests__/e2e/specs/api/staff/ai-console.cy.ts'],
   'AI: OpenAI Logs': ['mweb/__tests__/e2e/specs/api/staff/ai-console.cy.ts'],
-  'AI: Welcome page': ['mweb/__tests__/e2e/specs/api/staff/ai-console.cy.ts'],
   'Analytics: Access': ['mweb/__tests__/e2e/specs/api/staff/analytics-console.cy.ts', 'mweb/__tests__/e2e/specs/api/staff/authorization.cy.ts'],
   'Analytics: Alerts': [
     'mweb/__tests__/e2e/specs/api/staff/alerts.cy.ts',

@@ -9,7 +9,7 @@ vi.mock('../../src/components/AppShell', () => ({
   default: ({ children }: { children: ReactNode }) => <div data-testid="shell">{children}</div>,
 }));
 vi.mock('../../src/pages/LoginPage', () => ({ default: () => <div>LOGIN PAGE</div> }));
-vi.mock('../../src/pages/WelcomePage', () => ({ default: () => <div>WELCOME PAGE</div> }));
+vi.mock('../../src/pages/overview-dashboard', () => ({ default: () => <div>AI DASHBOARD</div> }));
 vi.mock('../../src/pages/prompt-library', () => ({ default: () => <div>LIBRARY PAGE</div> }));
 vi.mock('../../src/pages/ai-features', () => ({ default: () => <div>AI FEATURES PAGE</div> }));
 vi.mock('../../src/pages/ai-features-dashboard', () => ({ default: () => <div>AI FEATURES DASHBOARD</div> }));
@@ -35,11 +35,11 @@ describe('App routing', () => {
     expect(screen.getByText('LOGIN PAGE')).toBeInTheDocument();
   });
 
-  it('renders the welcome page inside the shell when authenticated', () => {
+  it('renders the AI Dashboard inside the shell when authenticated', () => {
     setToken('tok');
     renderWithProviders(<App />, { initialEntries: ['/'] });
     expect(screen.getByTestId('shell')).toBeInTheDocument();
-    expect(screen.getByText('WELCOME PAGE')).toBeInTheDocument();
+    expect(screen.getByText('AI DASHBOARD')).toBeInTheDocument();
   });
 
   it('renders the prompt library behind auth', () => {
@@ -94,10 +94,10 @@ describe('App routing', () => {
     expect(screen.getByText('LOGIN PAGE')).toBeInTheDocument();
   });
 
-  it('redirects unknown routes to the welcome page', () => {
+  it('redirects unknown routes to the AI Dashboard', () => {
     setToken('tok');
     renderWithProviders(<App />, { initialEntries: ['/nope'] });
-    expect(screen.getByText('WELCOME PAGE')).toBeInTheDocument();
+    expect(screen.getByText('AI DASHBOARD')).toBeInTheDocument();
   });
 
   // Reel Studio moved to the Marketing console; its old addresses say so,

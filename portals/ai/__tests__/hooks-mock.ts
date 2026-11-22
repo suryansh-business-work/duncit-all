@@ -12,6 +12,13 @@ import { vi, type Mock } from 'vitest';
  *   vi.mock('@apollo/client/react', async (io) => ({ ...(await io()), ...(await import('../hooks-mock')).hooks }));
  */
 
+interface QueryOptions {
+  variables?: Record<string, unknown>;
+  skip?: boolean;
+  pollInterval?: number;
+  fetchPolicy?: string;
+}
+
 interface QueryAnswer {
   data?: unknown;
   loading?: boolean;
@@ -25,8 +32,8 @@ const queries = new Map<DocumentNode, QueryAnswer>();
 const mutations = new Map<DocumentNode, Mock<Mutate>>();
 const busy = new Set<DocumentNode>();
 
-/** The options each `useQuery` was last called with — its variables, and whether it was skipped. */
-export const queryOptions = new Map<DocumentNode, { variables?: Record<string, unknown>; skip?: boolean } | undefined>();
+/** The options each `useQuery` was last called with — its variables, whether it was skipped, and how it refreshes. */
+export const queryOptions = new Map<DocumentNode, QueryOptions | undefined>();
 
 /** Answer a query. Returns the `refetch` it will hand out, so a test can assert on it or make it fail. */
 export function answerQuery(document: DocumentNode, answer: QueryAnswer = {}): Mock {
@@ -59,7 +66,7 @@ export function resetApollo(): void {
 }
 
 export const hooks = {
-  useQuery: (document: DocumentNode, options?: { variables?: Record<string, unknown>; skip?: boolean; pollInterval?: number }) => {
+  useQuery: (document: DocumentNode, options?: QueryOptions) => {
     queryOptions.set(document, options);
     const answer = queries.get(document) ?? {};
     const refetch = answer.refetch ?? answerQuery(document, answer);

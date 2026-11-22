@@ -847,6 +847,20 @@ export const PARTNER_GAP_FLOWS_B: readonly CatalogueFlow[] = [
           ['Save the same change as SUPER_ADMIN', 'The setting is saved'],
         ],
       },
+      {
+        name: 'Host engagement & performance settings',
+        description:
+          'host_inactivity_days (1-90, default 14), host_monthly_pod_target (1-100, default 8), host_engagement_statuses (keys permanent, at least one active), host_performance_notify_* and host_underperform_threshold_pct, saved through updateAppSettings.',
+        steps: [
+          ['Open /pod-settings and scroll to "Host engagement & performance"', 'Cards for the inactivity window, the monthly pod target, Engagement statuses, Monthly performance messages (off), Day of the month to send, Underperformance threshold, Message hosts and Message Club Admins'],
+          ['Type 0 or 91 in "Days without a completed pod"', 'Save is disabled and "Enter a whole number from 1 to 90." shows'],
+          ['Save 21', 'Toast "Pod settings saved"; the Partners hosts page now flags hosts after 21 days'],
+          ['Rename "Contacted" to "Spoke to them", move it up and click "Save statuses"', 'Saved in that order; the key chip still reads "Key: CONTACTED"'],
+          ['Click "Add status", leave the label empty and save', '"Every status needs a label of up to 40 characters, and at least one must stay offered."'],
+          ['Switch every status off and save', 'The same warning; nothing is saved'],
+          ['Turn "Monthly performance messages" on', 'On the configured day each host receives HOST_MONTHLY_PERFORMANCE and each admin of a club with an inactive or below-threshold host receives CLUB_ADMIN_HOST_PERFORMANCE_ALERT, once per person, club and month (WhatsApp log + email log)'],
+        ],
+      },
     ],
   },
   {

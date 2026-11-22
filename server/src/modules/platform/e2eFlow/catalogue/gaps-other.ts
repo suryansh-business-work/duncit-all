@@ -89,7 +89,7 @@ export const OTHER_GAP_FLOWS: readonly CatalogueFlow[] = [
     ],
   },
   {
-    name: 'AI: Welcome page',
+    name: 'AI: Dashboard',
     description: 'ai.duncit.com sign-in and the AI_MANAGER API gates.',
     sub_flows: [
       {
@@ -100,7 +100,7 @@ export const OTHER_GAP_FLOWS: readonly CatalogueFlow[] = [
           ['POST /graphql login with portal_key "ai" and a plain USER account', 'Error "You do not have access to this portal" (FORBIDDEN)'],
           ['Sign in on the AI login page with a TECH_MANAGER-only account', 'The alert shows the same message; no ai_token is stored'],
           ['requestPortalLoginOtp with portal_key "ai" for that account', '{ok: true}; no code is minted or sent'],
-          ['Sign in with AI_MANAGER, then with SUPER_ADMIN', 'Both succeed and the welcome page renders'],
+          ['Sign in with AI_MANAGER, then with SUPER_ADMIN', 'Both succeed and the Dashboard renders'],
         ],
       },
       {
@@ -233,7 +233,7 @@ export const OTHER_GAP_FLOWS: readonly CatalogueFlow[] = [
         description: '/ renders the welcome dashboard, /profile the shared profile page, and any unknown path redirects to /.',
         steps: [
           ['Open https://targets.duncit.com/ signed out', 'Redirected to /login'],
-          ['Sign in as TARGETS_MANAGER', 'The welcome dashboard renders with the Targets name and tagline; the sidebar has Dashboard and Growth Calculator'],
+          ['Sign in as TARGETS_MANAGER', 'The welcome dashboard renders with the Targets name and tagline; the sidebar has Dashboard, Growth Calculator, Employee Targets and Settings'],
           ['Open /profile', 'The shared profile page renders with Profile, Security and Notifications tabs'],
           ['Open /anything-else', 'Redirected to /'],
         ],
@@ -274,6 +274,55 @@ export const OTHER_GAP_FLOWS: readonly CatalogueFlow[] = [
           ['Call every growth calculation query and mutation signed out', '"Not authenticated" (UNAUTHENTICATED)'],
           ['Call them as a member and as a FINANCE_USER', '"Access Denied" (FORBIDDEN); nothing saved'],
           ['Edit or delete another manager’s record as TARGETS_MANAGER', 'FORBIDDEN; Edit and Delete are greyed out in the list'],
+        ],
+      },
+    ],
+  },
+  {
+    name: 'Targets + Employee: Monthly employee targets',
+    description:
+      'Targets > Employee Targets assigns an employee their goals for a month; the employee reports completion, achievements and updates from Employee > My Targets; the Targets console reviews it. Month-end reminders follow Targets > Settings (employeeTarget module).',
+    sub_flows: [
+      {
+        name: 'Assign a monthly target',
+        description: 'One target per employee per month, to an ACTIVE account with the EMPLOYEE role, with 1–20 goals.',
+        steps: [
+          ['Open /employee-targets as TARGETS_MANAGER and press Assign target', 'The dialog asks for an employee, a month and at least one goal'],
+          ['Pick an employee, the current month, add two goals (one with a target figure and unit) and press Assign twice quickly', 'One row appears with status Assigned and 2 goals; "Target assigned"'],
+          ['Assign the same employee the same month again', 'Refused: "This employee already has a target for that month" (CONFLICT); nothing written'],
+          ['Open the row and edit the goals', 'Saved while the employee has not reported; revision bumps'],
+        ],
+      },
+      {
+        name: 'Employee submits progress',
+        description: 'myEmployeeTargetsTable and submitEmployeeTarget are scoped to the caller’s own id; reports are editable until reviewed.',
+        steps: [
+          ['Sign in to the Employee console as that employee and open /targets', 'The month is listed with its goals and status Assigned'],
+          ['Press Submit progress, set 85 %, add two achievement rows, write an update and submit', 'Status Submitted with 85 % and both achievements; "Progress submitted"'],
+          ['Submit 120 % or remove every achievement row', 'The form refuses it; the server answers BAD_USER_INPUT if called directly'],
+          ['Call myEmployeeTarget or submitEmployeeTarget with another employee’s target id', 'NOT_FOUND; nothing changes'],
+          ['Correct the report and submit again', 'The new values replace the old; submission count 2'],
+        ],
+      },
+      {
+        name: 'Review, reopen and the edit lock',
+        description: 'Only a submitted report is reviewed; a reviewed one is read-only for the employee until reopened; goals lock once a report exists.',
+        steps: [
+          ['On /employee-targets open the submitted row', 'Completion bar at 85 %, the achievements and updates are shown'],
+          ['Mark it reviewed with a comment', 'Status Reviewed; the employee sees the comment and the form is read-only'],
+          ['Try to edit its goals', 'Refused: goals cannot change once the employee has reported'],
+          ['Reopen it', 'Status Submitted; the employee can correct the report again'],
+          ['Submit from a tab opened before the review', 'CONFLICT: changed by someone else; reload and retry'],
+        ],
+      },
+      {
+        name: 'Month-end reminders',
+        description: 'Hourly sweep; once a day per unsubmitted target while the window (last N days of the month, first M of the next, in the app time zone) is open; in-app + the employee-target-reminder email, never WhatsApp.',
+        steps: [
+          ['Leave a target Assigned and wait until the window opens (Targets > Settings: 3 days before the end, 3 days grace)', 'One in-app notification and one email per day; Employee Dashboard and My Targets show the reminder banner'],
+          ['Let the sweep run several times the same day', 'Still one reminder that day (EmailClaim EMPLOYEE_TARGET_REMINDER|<id>|<day>)'],
+          ['Submit progress', 'Reminders and the banner stop'],
+          ['Switch reminders off in Targets > Settings', 'No reminder goes out for any target'],
         ],
       },
     ],

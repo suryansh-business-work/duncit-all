@@ -41,7 +41,7 @@ export const PORTAL_PAGES: readonly NavigationPage[] = [
   { surface: 'admin', path: '/event-tickets', label: 'Event Tickets', group: 'Pods',
     description: 'Paste a scanned QR token to verify and check a ticket in, browse issued tickets, download a ticket PDF, and name companions when a multi-seat ticket is checked in.' },
   { surface: 'admin', path: '/pod-settings', label: 'Pod Settings', group: 'Pods',
-    description: 'Set the draft-pod retention period in days, the maximum backout attempts per user per pod, and the account-health penalty a venue pays when it cancels a booked pod.' },
+    description: 'Set the draft-pod retention period in days, the maximum backout attempts per user per pod, the account-health penalty a venue pays when it cancels a booked pod, and Host engagement & performance: the host inactivity window (default 14 days), the monthly pod target per host (default 8), the Club Admin engagement statuses, and the monthly WhatsApp and email performance messages to hosts and Club Admins.' },
   { surface: 'admin', path: '/pod-monitoring', label: 'Pod Monitoring (AI)', group: 'Pods',
     description: 'Browse the AI risk-scored audit trail of every pod edit, status change and critical action across all surfaces, and open a row for the full change detail.' },
   { surface: 'admin', path: '/membership/plans', label: 'Plans', group: 'Membership',
@@ -170,6 +170,8 @@ export const PORTAL_PAGES: readonly NavigationPage[] = [
     description: 'List the pods their host cancelled and open a row for the host\'s reason, the attendee refund status for each payment, and the venue\'s booked amount the cancellation cost.' },
   { surface: 'finance', path: '/payment-logs', label: 'Payment Logs',
     description: 'Search and filter every payment with live-polling totals (count, gross, fee, GST) that track your filter, issue a refund on a row, download its invoice PDF, and open a payment for the full audit of what it charged and created.' },
+  { surface: 'finance', path: '/failed-payments', label: 'Failed Payments',
+    description: 'Work every pod-booking Razorpay checkout that did not end in a booking: the buyer, the Razorpay error, retries, the screenshot, bank statement or transaction ID they sent, the AI + Razorpay check (green = matched and refundable, yellow = needs Review), the event timeline and the linked support ticket. Finance managers refund the captured amount once, approve or reject evidence, or close a never-captured payment as a bank reversal.' },
   { surface: 'finance', path: '/round-offs', label: 'Round Offs',
     description: 'Track every payment whose bill was rounded up to a whole rupee — the bill before rounding, the round-off added, coins used and the total charged — filtered by where it came from (pod booking, Pod Shop cart, Ecomm pet store, gift card/other), with filter-wide totals for the count and the round-off collected, and open a row for the payment\'s full audit.' },
   { surface: 'finance', path: '/pod-shop/payment-logs', label: 'Payment Logs', group: 'Pod Shop',
@@ -412,8 +414,8 @@ export const PORTAL_PAGES: readonly NavigationPage[] = [
     description: 'View and edit your own account — name and profile photo, display language, assigned roles and linked Google account — and sign out.' },
 
   // ---- AI (ai) --------------------------------------------------------
-  { surface: 'ai', path: '/', label: 'Welcome',
-    description: 'Land on a greeting dashboard card naming the AI portal and confirming the console is set up, with features still to come.' },
+  { surface: 'ai', path: '/', label: 'Dashboard',
+    description: 'See how the whole AI portal is doing over the last 24 hours, 7, 30 or 90 days, refreshed every minute: OpenAI calls, tokens, cost, error rate, response time and active users against the previous period, daily trends, cost and speed per model, the busiest and most expensive AI features and areas, the people using AI the most, AI Monitoring image checks, automation runs, how many AI features are switched on, and the latest calls with their full log one click away.' },
   { surface: 'ai', path: '/library', label: 'AI Library',
     description: 'Search, add, edit and delete AI prompts — including the System prompts the shipped AI features (image scanning, dummy data, moderation, support chat) read live — and reset a System prompt to its shipped default.' },
   { surface: 'ai', path: '/ai-features', label: 'AI Features',
@@ -507,11 +509,13 @@ export const PORTAL_PAGES: readonly NavigationPage[] = [
 
   // ---- Employee (employee) --------------------------------------------
   { surface: 'employee', path: '/', label: 'Dashboard',
-    description: 'See a personalised welcome with your access-role chips and an account summary card (name, email, phone, joined date) in a drag-and-resize widget grid whose layout is saved per user; no employee modules are configured yet, so nothing else renders.' },
+    description: 'See a personalised welcome with your access-role chips and an account summary card (name, email, phone, joined date) in a drag-and-resize widget grid whose layout is saved per user. At the end of the month, a banner above it links to My Targets while a monthly target is still waiting for your progress report.' },
   { surface: 'employee', path: '/profile', label: 'Profile',
     description: 'Edit your first and last name, view your email, linked Google account and access-role chips, change your display language, and sign out of the Employee console.' },
   { surface: 'employee', path: '/expenses', label: 'My Expenses',
     description: 'File what you paid out of pocket and track what Finance decided. Tiles show the total claimed, what is still awaiting review, and what was approved or rejected; tabs narrow the list to each state. A claim carries the spend date, category, amount, who was paid, how you paid, the bill number and an uploaded receipt, and can be edited or withdrawn only while it is still awaiting review.' },
+  { surface: 'employee', path: '/targets', label: 'My Targets',
+    description: 'The monthly targets the Targets team set for you, newest month first, with each month\x27s goals and status (Assigned, Submitted, Reviewed). A banner appears at the end of the month while a target is still waiting for your report. Open a month and press Submit progress to give your completion percentage (0 to 100), add as many achievements as you need (a title and details each) and any updates; you can correct it until it is reviewed, after which it is read-only with the reviewer\x27s comment.' },
 
   // ---- Regional Club Admin (regional-club-admin) -----------------------
   { surface: 'regional-club-admin', path: '/', label: 'Region Structure',
@@ -751,7 +755,7 @@ export const PORTAL_PAGES: readonly NavigationPage[] = [
   { surface: 'partners', path: '/club-admin/auto-pods', label: 'Auto Pods', group: 'Club Admin',
     description: 'Claim a venue-accepted Auto Pod for one of the clubs you administer; the pod is created under that club once a host has enrolled too.' },
   { surface: 'partners', path: '/club-admin/clubs', label: 'Clubs', group: 'Club Admin',
-    description: 'Browse the searchable table of clubs assigned to you and click one to open its details for editing or jump to that club\'s pods.' },
+    description: 'Browse the searchable table of clubs assigned to you, open a club\'s Pods, or open its Hosts: every host with phone, WhatsApp and email, last pod, this month\'s Host Performance Score against the monthly pod target, and an engagement status. Hosts with no pod inside the inactivity window are highlighted yellow with a prompt to contact them; a host\'s page shows their Upcoming and Past pods and score history, and records the engagement status with a note.' },
   { surface: 'partners', path: '/club-admin/monitoring', label: 'Pod Monitoring (AI)', group: 'Club Admin',
     description: 'Scan the AI risk-scored audit trail of every pod edit, status change and critical action in your clubs and open a row for the full audit detail.' },
   { surface: 'partners', path: '/faqs', label: 'FAQs',
@@ -845,7 +849,11 @@ export const PORTAL_PAGES: readonly NavigationPage[] = [
     description: 'Edit your first and last name, view your email, linked Google account and access-role chips, change your display language, and sign out of the Gig Jobs console.' },
 
   { surface: 'targets', path: '/', label: 'Dashboard',
-    description: 'A welcome page with your name, your access roles and your account details. The Targets console has no other screens yet.' },
+    description: 'A welcome page with your name, your access roles and your account details.' },
+  { surface: 'targets', path: '/employee-targets', label: 'Employee Targets',
+    description: 'Assign each employee their goals for a month and track what they report. The table lists every assignment with the employee, month, number of goals, status, completion percentage and when it was submitted; filter by month or status and search by name, email or goal. Assign target picks an active employee and a month and takes one or more goals (title, description, optional target figure and unit) - one target per employee per month. Open a row for the goals, the employee\x27s completion, achievements and updates, then mark it reviewed with a comment, reopen a reviewed one, edit goals before the employee reports, or delete it.' },
+  { surface: 'targets', path: '/settings', label: 'Settings',
+    description: 'When employees are reminded to submit their monthly target progress: switch reminders on or off, how many of the month\x27s last days remind, and for how many days of the next month reminders continue while a target is still unsubmitted. Reminders go once a day, in-app and by email.' },
   { surface: 'targets', path: '/profile', label: 'Profile',
     description: 'Edit your first and last name, view your email, linked Google account and access-role chips, change your display language, and sign out of the Targets console.' },
 

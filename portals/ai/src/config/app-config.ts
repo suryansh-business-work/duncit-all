@@ -24,7 +24,7 @@ export const appConfig = {
   colorModeKey: 'ai_color_mode',
   accent: { light: '#d8b4fe', main: '#9333ea', hover: '#7e22ce', active: '#6b21a8' },
   nav: [
-    { label: 'Welcome', labelKey: 'shell.nav.welcome', to: '/', icon: 'dashboard' },
+    { label: 'Dashboard', labelKey: 'shell.nav.dashboard', to: '/', icon: 'dashboard' },
     {
       label: 'AI Library', labelKey: 'shell.nav.aiLibrary',
       icon: 'library',
@@ -83,24 +83,6 @@ export const appConfig = {
         { label: 'WhatsApp', labelKey: 'shell.nav.whatsapp', to: '/automation/whatsapp', icon: 'whatsapp' },
         { label: 'Email', labelKey: 'shell.nav.email', to: '/automation/email', icon: 'email' },
       ],
-    },
-  ],
-  modules: [
-    {
-      title: 'AI Library',
-      description:
-        'Code prompts every AI feature reads at call time, plus your own AI prompts served by the public GET API.',
-      icon: 'library',
-    },
-    {
-      title: 'OpenAI',
-      description: 'Every OpenAI call across the platform, with its tokens and cost.',
-      icon: 'ai',
-    },
-    {
-      title: 'AI Monitoring',
-      description: 'Every uploaded image the platform screened, and the prompt it screened it with.',
-      icon: 'shield',
     },
   ],
 } satisfies AppConfig;

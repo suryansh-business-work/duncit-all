@@ -24,9 +24,9 @@ describe('Duncit AI app config', () => {
     expect(appConfig.loginImage).toContain('pexels.com');
   });
 
-  it('lists Welcome and six groups, in that order', () => {
+  it('lists Dashboard and six groups, in that order', () => {
     expect(appConfig.nav.map((n) => n.label)).toEqual([
-      'Welcome',
+      'Dashboard',
       'AI Library',
       'AI Features',
       'OpenAI',
@@ -79,7 +79,14 @@ describe('Duncit AI app config', () => {
     ]);
   });
 
-  it('gives AI Library and AI Features each a Dashboard and their own list, right after Welcome', () => {
+  it('opens on the Dashboard at /, with no Welcome entry left', () => {
+    const [home] = appConfig.nav;
+    expect(home).toMatchObject({ label: 'Dashboard', labelKey: 'shell.nav.dashboard', to: '/', icon: 'dashboard' });
+    const entries = appConfig.nav.flatMap((n) => [n, ...(n.children ?? [])]);
+    expect(entries.some((n) => n.labelKey === 'shell.nav.welcome')).toBe(false);
+  });
+
+  it('gives AI Library and AI Features each a Dashboard and their own list, right after the home Dashboard', () => {
     const [, library, features] = appConfig.nav;
     expect(library).toMatchObject({ label: 'AI Library', labelKey: 'shell.nav.aiLibrary', icon: 'library' });
     expect(library.children?.map((c) => [c.labelKey, c.to])).toEqual([
@@ -97,10 +104,6 @@ describe('Duncit AI app config', () => {
     // Rule 38: the label is the fallback, the key is what the shell renders.
     const entries = appConfig.nav.flatMap((n) => [n, ...(n.children ?? [])]);
     expect(entries.every((n) => !!n.labelKey)).toBe(true);
-  });
-
-  it('describes the AI Library module first', () => {
-    expect(appConfig.modules[0].title).toBe('AI Library');
   });
 
   it('honours VITE_REQUIRED_ROLES and VITE_LOGIN_IMAGE when provided', async () => {

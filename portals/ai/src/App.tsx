@@ -1,7 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router';
 import { ProfilePage, createAuthed } from '@duncit/shell';
 import LoginPage from './pages/LoginPage';
-import WelcomePage from './pages/WelcomePage';
+import AiOverviewDashboardPage from './pages/overview-dashboard';
 import PromptLibraryPage from './pages/prompt-library';
 import PublicPromptPage from './pages/public-prompt';
 import OpenAiDashboardPage from './pages/openai-dashboard';
@@ -28,7 +28,7 @@ export default function App() {
       <Route path="/login" element={<LoginPage />} />
       {/* A shared prompt: public by design, the share token is the gate. */}
       <Route path="/p/:token" element={<PublicPromptPage />} />
-      <Route path="/" element={authed(<WelcomePage />)} />
+      <Route path="/" element={authed(<AiOverviewDashboardPage />)} />
       <Route path="/library" element={authed(<PromptLibraryPage />)} />
       <Route path="/library/dashboard" element={authed(<AiLibraryDashboardPage />)} />
       <Route path="/ai-features" element={authed(<AiFeaturesPage />)} />

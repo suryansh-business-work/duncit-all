@@ -134,19 +134,31 @@ export interface DayUsage {
   avg_duration_ms: number;
 }
 
-/** A day with no calls is a zero, not a gap: a chart that skips it lies about the trend. */
-export function fillDays(keys: readonly string[], rows: readonly DayUsage[]): DayUsage[] {
+const emptyDay = (date: string): DayUsage => ({
+  date,
+  calls: 0,
+  failed_calls: 0,
+  skipped_calls: 0,
+  total_tokens: 0,
+  cost_usd: 0,
+  avg_duration_ms: 0,
+});
+
+/**
+ * A day with no calls is a zero, not a gap: a chart that skips it lies about the trend.
+ * A series with more fields per day than `DayUsage` passes its own empty day.
+ */
+export function fillDays(keys: readonly string[], rows: readonly DayUsage[]): DayUsage[];
+export function fillDays<T extends { date: string }>(
+  keys: readonly string[],
+  rows: readonly T[],
+  empty: (date: string) => T,
+): T[];
+export function fillDays(
+  keys: readonly string[],
+  rows: readonly { date: string }[],
+  empty: (date: string) => { date: string } = emptyDay,
+): { date: string }[] {
   const byDate = new Map(rows.map((row) => [row.date, row]));
-  return keys.map(
-    (date) =>
-      byDate.get(date) ?? {
-        date,
-        calls: 0,
-        failed_calls: 0,
-        skipped_calls: 0,
-        total_tokens: 0,
-        cost_usd: 0,
-        avg_duration_ms: 0,
-      },
-  );
+  return keys.map((date) => byDate.get(date) ?? empty(date));
 }

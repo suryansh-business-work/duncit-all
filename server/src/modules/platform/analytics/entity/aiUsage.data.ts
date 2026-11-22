@@ -128,11 +128,21 @@ export const loadScanDays = (window: AnalyticsWindow) =>
     })
   );
 
-/** The period's image checks by verdict, by what was done, and by the surface the upload came from. */
+/**
+ * The period's image checks by verdict, by what was done, by how far the check
+ * got (a FAILED one never produced a verdict), and by the surface the upload came from.
+ */
 export async function loadScanMix(from: Date, to: Date) {
-  const [mix] = await MediaScanLogModel.aggregate<{ risk: Tally[]; action: Tally[]; surface: Tally[] }>([
+  const [mix] = await MediaScanLogModel.aggregate<{ risk: Tally[]; action: Tally[]; status: Tally[]; surface: Tally[] }>([
     { $match: { created_at: inRange(from, to) } },
-    { $facet: { risk: [tallyOf('$risk')], action: [tallyOf('$action')], surface: [tallyOf(named('$surface'))] } },
+    {
+      $facet: {
+        risk: [tallyOf('$risk')],
+        action: [tallyOf('$action')],
+        status: [tallyOf('$status')],
+        surface: [tallyOf(named('$surface'))],
+      },
+    },
   ]);
   return mix;
 }

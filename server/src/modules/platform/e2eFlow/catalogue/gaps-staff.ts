@@ -492,7 +492,7 @@ export const STAFF_GAP_FLOWS: readonly CatalogueFlow[] = [
       {
         name: 'Pod money split sums to what guests paid',
         description:
-          'podFinanceBreakdown feeds the shared EarningsSplitView: host first, then Venue Take, Club Admin Take and Duncit Commission & Govt Charges (GST, platform fee and the host and venue commissions); the four buckets add back to the collection exactly and a drift shows a reconcile warning. No gateway fee is taken from the split, and coins and multi-ticket discounts are already off "Customer paid".',
+          'podFinanceBreakdown feeds the shared EarningsSplitView: host first, then Venue Take, Club Admin Take and Duncit Commission & Govt Charges (GST, platform fee and the host and venue commissions); the four buckets add back to the collection exactly and a drift shows a reconcile warning. No gateway fee is taken from the split, and coins and Smart Incentive discounts are already off "Customer paid".',
         steps: [
           [
             'Open /pod-finance/:podId for a paid pod with a venue',

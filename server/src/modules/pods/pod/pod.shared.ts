@@ -99,11 +99,6 @@ export const toPub = (d: any, clubSlugById?: Map<string, string>) => {
       total_cost: item.total_cost ?? 0,
     })),
     product_cost_total: d.product_cost_total ?? 0,
-    ticket_discount_enabled: !!d.ticket_discount_enabled,
-    ticket_discount_tiers: (d.ticket_discount_tiers ?? []).map((tier: any) => ({
-      min_tickets: tier.min_tickets,
-      discount_pct: tier.discount_pct,
-    })),
     smart_incentive_enabled: !!d.smart_incentive_enabled,
     smart_incentive_pct: d.smart_incentive_pct ?? 0,
     is_active: !!d.is_active,

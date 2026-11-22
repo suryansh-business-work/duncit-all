@@ -11,18 +11,6 @@ import { HostModel } from '@modules/venues/host/host.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { readKit, usableUrls, type BannerKit } from './podPromo.kit';
 
-/**
- * Everything a banner and a caption are made from, read once per pod: the
- * pod itself, its club, city and category names, the venue and the lead host
- * with their banner kits. Nothing here is invented — a field the pod does not
- * have is empty and the slide that needs it is left out.
- */
-export interface PriceTier {
-  /** Tickets bought together to get this price, e.g. 2 for a duo. */
-  tickets: number;
-  each: number;
-}
-
 export interface PartnerData {
   name: string;
   line: string;
@@ -31,6 +19,12 @@ export interface PartnerData {
   kit: BannerKit;
 }
 
+/**
+ * Everything a banner and a caption are made from, read once per pod: the
+ * pod itself, its club, city and category names, the venue and the lead host
+ * with their banner kits. Nothing here is invented — a field the pod does not
+ * have is empty and the slide that needs it is left out.
+ */
 export interface PodBannerData {
   id: string;
   title: string;
@@ -39,7 +33,6 @@ export interface PodBannerData {
   end: Date | null;
   is_free: boolean;
   price: number;
-  tiers: PriceTier[];
   includes: string[];
   place_label: string;
   place_detail: string;
@@ -59,15 +52,6 @@ type LeanPod = IPod & { _id: { toString(): string } };
 const notFound = () => new GraphQLError('Pod not found', { extensions: { code: 'NOT_FOUND' } });
 
 const clean = (values: readonly (string | null | undefined)[]) => [...new Set(values.map((v) => (v ?? '').trim()).filter(Boolean))];
-
-/** Ticket tiers as prices: the solo price first, then each tier's per-ticket price. */
-function tiersOf(pod: LeanPod): PriceTier[] {
-  if (pod.pod_type !== 'PAID' || !pod.ticket_discount_enabled) return [];
-  return (pod.ticket_discount_tiers ?? []).map((tier) => ({
-    tickets: tier.min_tickets,
-    each: Math.round(pod.pod_amount * (1 - tier.discount_pct / 100)),
-  }));
-}
 
 async function categoryNames(categoryIds: readonly unknown[]): Promise<string[]> {
   const ids = categoryIds.filter((id) => id && isValidObjectId(String(id)));
@@ -144,7 +128,6 @@ export async function loadPodBannerData(podId: string): Promise<PodBannerData> {
     end: pod.pod_end_date_time ? new Date(pod.pod_end_date_time) : null,
     is_free: pod.pod_type === 'FREE' || !pod.pod_amount,
     price: pod.pod_amount ?? 0,
-    tiers: tiersOf(pod),
     includes: clean([...(pod.what_this_pod_offers ?? []), ...(pod.available_perks ?? [])]),
     place_label: place.label ?? '',
     place_detail: place.detail ?? '',

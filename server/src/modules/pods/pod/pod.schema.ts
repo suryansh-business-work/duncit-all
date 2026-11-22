@@ -125,13 +125,13 @@ export const podTypeDefs = /* GraphQL */ `
     quantity: Int!
   }
 
-  "One multi-ticket discount tier: a single booking of at least min_tickets seats gets discount_pct off its ticket price."
+  "Retired multi-ticket discount tier. Kept only so older app versions can still read Pod.ticket_discount_tiers, which is always empty."
   type PodTicketDiscountTier {
     min_tickets: Int!
     discount_pct: Int!
   }
 
-  "One multi-ticket discount tier: min_tickets 2 or more, discount_pct 1 up to the admin's max; each row must beat the one above on both."
+  "Retired multi-ticket discount tier. Older app versions may still send it; the server ignores it."
   input PodTicketDiscountTierInput {
     min_tickets: Int!
     discount_pct: Int!
@@ -242,13 +242,11 @@ export const podTypeDefs = /* GraphQL */ `
     products_enabled: Boolean!
     product_requests: [PodProductRequest!]!
     product_cost_total: Float!
-    "Whether one booking of several seats gets a tiered discount on its tickets. Always false on a free or zero-priced pod."
-    ticket_discount_enabled: Boolean!
-    "The multi-ticket discount tiers, ascending. Empty when the discount is off; one ticket always pays full price."
-    ticket_discount_tiers: [PodTicketDiscountTier!]!
+    ticket_discount_enabled: Boolean! @deprecated(reason: "The multi-ticket discount was removed. Always false.")
+    ticket_discount_tiers: [PodTicketDiscountTier!]! @deprecated(reason: "The multi-ticket discount was removed. Always empty.")
     "The host offers members who stay on the pod page without booking a one-time discount (Smart Incentive). Always false on a free or zero-priced pod."
     smart_incentive_enabled: Boolean!
-    "Percent off the ticket money that offer gives (after any multi-ticket discount); 0 when switched off."
+    "Percent off the ticket money that offer gives; 0 when switched off."
     smart_incentive_pct: Int!
     is_active: Boolean!
     """
@@ -439,9 +437,8 @@ export const podTypeDefs = /* GraphQL */ `
     place_charges: [PodPlaceChargeInput!]
     products_enabled: Boolean
     product_requests: [PodProductRequestInput!]
-    "Offer a multi-ticket discount. Ignored (stored off) on a free or zero-priced pod."
-    ticket_discount_enabled: Boolean
-    ticket_discount_tiers: [PodTicketDiscountTierInput!]
+    ticket_discount_enabled: Boolean @deprecated(reason: "The multi-ticket discount was removed. Ignored.")
+    ticket_discount_tiers: [PodTicketDiscountTierInput!] @deprecated(reason: "The multi-ticket discount was removed. Ignored.")
     "Offer a Smart Incentive. Ignored (stored off) on a free or zero-priced pod."
     smart_incentive_enabled: Boolean
     "Whole percent, 1 up to Loyalty's maximum. Required when smart_incentive_enabled is true."
@@ -490,9 +487,8 @@ export const podTypeDefs = /* GraphQL */ `
     place_charges: [PodPlaceChargeInput!]
     products_enabled: Boolean
     product_requests: [PodProductRequestInput!]
-    "Offer a multi-ticket discount. Cleared when the pod becomes free or zero-priced."
-    ticket_discount_enabled: Boolean
-    ticket_discount_tiers: [PodTicketDiscountTierInput!]
+    ticket_discount_enabled: Boolean @deprecated(reason: "The multi-ticket discount was removed. Ignored.")
+    ticket_discount_tiers: [PodTicketDiscountTierInput!] @deprecated(reason: "The multi-ticket discount was removed. Ignored.")
     "Offer a Smart Incentive — omit both fields to leave it alone. Cleared when the pod becomes free or zero-priced."
     smart_incentive_enabled: Boolean
     smart_incentive_pct: Int
@@ -546,9 +542,8 @@ export const podTypeDefs = /* GraphQL */ `
     the space the pod booked — omit it to leave the capacity alone.
     """
     no_of_spots: Int
-    "Offer a multi-ticket discount — omit both discount fields to leave it alone."
-    ticket_discount_enabled: Boolean
-    ticket_discount_tiers: [PodTicketDiscountTierInput!]
+    ticket_discount_enabled: Boolean @deprecated(reason: "The multi-ticket discount was removed. Ignored.")
+    ticket_discount_tiers: [PodTicketDiscountTierInput!] @deprecated(reason: "The multi-ticket discount was removed. Ignored.")
     "Offer a Smart Incentive — omit both fields to leave it alone."
     smart_incentive_enabled: Boolean
     smart_incentive_pct: Int
@@ -587,9 +582,8 @@ export const podTypeDefs = /* GraphQL */ `
     place_charges: [PodPlaceChargeInput!]
     products_enabled: Boolean
     product_requests: [PodProductRequestInput!]
-    "Offer a multi-ticket discount. Cleared when the pod becomes free or zero-priced."
-    ticket_discount_enabled: Boolean
-    ticket_discount_tiers: [PodTicketDiscountTierInput!]
+    ticket_discount_enabled: Boolean @deprecated(reason: "The multi-ticket discount was removed. Ignored.")
+    ticket_discount_tiers: [PodTicketDiscountTierInput!] @deprecated(reason: "The multi-ticket discount was removed. Ignored.")
     "Offer a Smart Incentive — omit both fields to leave it alone. Cleared when the pod becomes free or zero-priced."
     smart_incentive_enabled: Boolean
     smart_incentive_pct: Int

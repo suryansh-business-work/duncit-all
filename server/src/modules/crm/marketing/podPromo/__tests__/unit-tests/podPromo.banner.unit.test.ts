@@ -130,8 +130,6 @@ const SHIPPED: Record<string, string> = {
   kickerSoon: 'Save the date',
   cta: 'Book now',
   free: 'Free',
-  priceSolo: '{price} solo',
-  priceTier: '{price} each for {count}',
   timeRange: '{start} – {end}',
 };
 const t = (key: string, vars?: Record<string, string | number>) => fill(SHIPPED[key] ?? key, vars);
@@ -144,7 +142,6 @@ const pod = (over: Partial<PodBannerData> = {}): PodBannerData => ({
   end: null,
   is_free: false,
   price: 1499,
-  tiers: [],
   includes: ['Water', 'Medal'],
   place_label: 'Lake Park',
   place_detail: 'Pune',
@@ -177,9 +174,9 @@ describe('templateCopy', () => {
     expect(copy.kicker).toBe('Save the date');
   });
 
-  it('lists ticket tiers after the solo price, and honours a CTA override', () => {
-    const copy = templateCopy(pod({ price: 500, tiers: [{ tickets: 2, each: 450 }] }), t, { trackingUrl: 'https://duncit.com/x', cta: 'Grab a spot', now });
-    expect(copy.price_detail).toBe('₹500 solo · ₹450 each for 2');
+  it('rounds a paid price to whole rupees, and honours a CTA override', () => {
+    const copy = templateCopy(pod({ price: 499.6 }), t, { trackingUrl: 'https://duncit.com/x', cta: 'Grab a spot', now });
+    expect(copy.price).toBe('₹500');
     expect(copy.cta).toBe('Grab a spot');
   });
 

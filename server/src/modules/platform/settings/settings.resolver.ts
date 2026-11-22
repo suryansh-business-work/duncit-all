@@ -16,7 +16,18 @@ const SLIDER_WRITE = ["SUPER_ADMIN", "CITY_ADMIN", "PRODUCTS_MANAGER", "TECH_MAN
 // Festive app icons live in Marketing → Occasions with the apps' festive looks (platform admins keep access).
 const OCCASION_ICON_WRITE = [...ADMIN_WRITE, "CITY_ADMIN", "MARKETING_MANAGER"];
 
+/** The multi-ticket discount was removed. App versions already in the stores
+ * still read its cap, so it keeps answering the value it last defaulted to. */
+const RETIRED_TICKET_DISCOUNT_MAX_PCT = 50;
+const retiredTicketDiscountMaxPct = (): number => RETIRED_TICKET_DISCOUNT_MAX_PCT;
+
 export const settingsResolvers = {
+  AppSettings: {
+    ticket_discount_max_pct: retiredTicketDiscountMaxPct,
+  },
+  PublicAppSettings: {
+    ticket_discount_max_pct: retiredTicketDiscountMaxPct,
+  },
   Query: {
     appSettings: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_READ);

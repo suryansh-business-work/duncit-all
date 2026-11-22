@@ -2119,7 +2119,7 @@ export const STAFF_OPS_PORTAL_FLOWS: readonly CatalogueFlow[] = [
         name: 'Browse payments and download an invoice',
         description: 'Payment Logs table and KPI cards.',
         steps: [
-          ['Open /payment-logs', 'Cards Successful Payments, Gross, Platform Fees, GST Collected, Multi-ticket discounts and a table polling every 30 s'],
+          ['Open /payment-logs', 'Cards Successful Payments, Gross, Platform Fees, GST Collected, Smart Incentive discounts and a table polling every 30 s'],
           ['Search by invoice number', 'Only that payment shows and the cards follow the search'],
           ['Filter Status to Failed', 'The KPI cards drop to zero (they count SUCCESS only)'],
           ['Hover "Download invoice" on a payment without an invoice', 'Disabled with "No invoice generated"'],

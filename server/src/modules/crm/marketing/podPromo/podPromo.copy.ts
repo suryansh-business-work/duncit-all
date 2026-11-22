@@ -16,8 +16,6 @@ export const COPY_KEYS = {
   kickerSoon: 'marketing.podPromo.banner.kickerSoon',
   cta: 'marketing.podPromo.banner.cta',
   free: 'marketing.podPromo.banner.free',
-  priceSolo: 'marketing.podPromo.banner.priceSolo',
-  priceTier: 'marketing.podPromo.banner.priceTier',
   timeRange: 'marketing.podPromo.banner.timeRange',
   aboutHeading: 'marketing.podPromo.banner.aboutHeading',
   includedHeading: 'marketing.podPromo.banner.includedHeading',

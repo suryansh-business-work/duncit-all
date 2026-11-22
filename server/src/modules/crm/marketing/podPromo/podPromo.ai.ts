@@ -23,7 +23,7 @@ export function podFacts(data: PodBannerData, copy: SlideCopy): string {
     ['day', `${copy.weekday}, ${copy.date}`],
     ['time', copy.time],
     ['place', copy.place],
-    ['price', copy.price_detail],
+    ['price', copy.price],
     ['included', data.includes.join('; ')],
     ['host', data.host ? `${data.host.name} — ${data.host.line}` : ''],
     ['venue', data.venue ? `${data.venue.name}, ${data.venue.address} — ${data.venue.line}` : ''],
@@ -105,7 +105,7 @@ export function templateCaption(data: PodBannerData, copy: SlideCopy, t: Copy): 
     date: `${copy.weekday}, ${copy.date}`,
     time: copy.time,
     place: copy.place,
-    price: copy.price_detail,
+    price: copy.price,
     description: copy.about,
   })
     .split('\n')

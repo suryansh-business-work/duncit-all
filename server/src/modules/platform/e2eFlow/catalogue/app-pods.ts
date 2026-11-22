@@ -236,7 +236,6 @@ export const APP_POD_FLOWS: readonly CatalogueFlow[] = [
           ['Tap "Expand all"', 'Accordions open: About this pod, Club details, Club Admin Details, What this pod offers, Hosts, Attendees, Available perks, Payment details, Payment terms, Place charges'],
           ['Open "Attendees"', 'Shows "<count> / <total> going" with one avatar per person; multi-seat bookers carry "+N other members"; replaced seats show "Spot filled by <name>"'],
           ['Open "Payment details" on a paid pod', '"Price per seat" and "Price is inclusive of GST."'],
-          ['Open "Multi-ticket offer" on a pod with tiers', 'Rows "1 ticket · Full price" then "<n>+ tickets · <pct>% off · <price> per ticket"'],
         ],
       },
       {
@@ -337,7 +336,7 @@ export const APP_POD_FLOWS: readonly CatalogueFlow[] = [
   {
     name: 'App: Pod Booking & Checkout',
     description:
-      'Booking a spot from the customer app: free joins on the pod page, and paid bookings through /checkout/:podId (native Checkout screen, Razorpay in a WebView). Pricing order is ticket gross, multi-ticket tier, coupon, Duncit Coins, then GST extracted from what is left; the server re-prices every order.',
+      'Booking a spot from the customer app: free joins on the pod page, and paid bookings through /checkout/:podId (native Checkout screen, Razorpay in a WebView). Pricing order is ticket gross, Smart Incentive, coupon, Duncit Coins, then GST extracted from what is left; the server re-prices every order.',
     sub_flows: [
       {
         name: 'Join a free pod',
@@ -369,16 +368,6 @@ export const APP_POD_FLOWS: readonly CatalogueFlow[] = [
           ['Read "Contact details"', 'Name, email and phone come from the profile, read-only, with "To change these, edit your profile."'],
           ['Look at the pay button', 'Reads "Pay <amount>" with "Receipt and invoice will be sent after successful payment." below'],
           ['Tap the back button', 'Returns to the pod page'],
-        ],
-      },
-      {
-        name: 'Multi-seat paid booking with multi-ticket discount',
-        description: 'The tier discount comes off the ticket money before coupons and coins.',
-        steps: [
-          ['Open a paid pod with a tier "3+ tickets · 10% off" and set seats to 3', 'Bar caption reads "10% off for 3 tickets"'],
-          ['Tap "Book now"', 'Checkout order summary shows the ticket line for 3 seats'],
-          ['Read the discount rows', 'A row "Multi-ticket discount (10% on 3 tickets)" is subtracted from the gross and GST is recomputed on the discounted total'],
-          ['Pay successfully', 'Server charges the discounted amount and the membership holds 3 seats'],
         ],
       },
       {
@@ -963,7 +952,7 @@ export const APP_POD_FLOWS: readonly CatalogueFlow[] = [
       },
       {
         name: 'Step 4 - Pricing and earnings preview',
-        description: 'Pod type, ticket price, spots, charges, multi-ticket tiers and the server earnings waterfall.',
+        description: 'Pod type, ticket price, spots, charges and the server earnings waterfall.',
         steps: [
           ['On a physical pod look at the pod type cards', '"Free" is disabled with caption "Physical pods are always paid"; "Paid" is selected'],
           ['Leave ticket price blank and publish', 'Error "Enter a ticket price to continue"; entering 0 shows "Ticket price must be more than ₹0"'],
@@ -982,17 +971,6 @@ export const APP_POD_FLOWS: readonly CatalogueFlow[] = [
           ['Set a ticket price so low that projected earnings are ₹0', 'Notice "No Earnings Generated" and "Create Pod" is disabled'],
           ['Pick a slot whose venue price exceeds total pod value', 'Warning "Your venue price is greater than the total Pod value…" and "Create Pod" is disabled'],
           ['Bypass the UI and call the create API with those values', 'Server refuses via the viable-economics guard'],
-        ],
-      },
-      {
-        name: 'Step 4 - Multi-ticket discount tiers',
-        description: 'Optional tiers validated against the admin maximum discount.',
-        steps: [
-          ['Turn on "Offer a discount when one person books multiple tickets" with no tiers', 'Error "Add at least one discount tier"'],
-          ['Add a tier with tickets 1', 'Error "Tickets must be a whole number of at least 2"'],
-          ['Add a second tier with fewer tickets than the first', 'Error "Needs more tickets than the row above"'],
-          ['Set a discount above the admin maximum', 'Error "Discount can’t be more than <max>%"'],
-          ['Add a valid tier (3 tickets, 10%)', 'Row shows "<price> per ticket" and no errors'],
         ],
       },
       {
@@ -1084,9 +1062,9 @@ export const APP_POD_FLOWS: readonly CatalogueFlow[] = [
       },
       {
         name: 'Edit a live pod',
-        description: 'Hosts may change title, description, media, reel, multi-ticket tiers and raise spots.',
+        description: 'Hosts may change title, description, media, reel and the Smart Incentive, and raise spots.',
         steps: [
-          ['Open ⋮ > "Edit pod" on an upcoming pod', 'Dialog "Edit pod" with Title, Description, Media, spots and the multi-ticket discount'],
+          ['Open ⋮ > "Edit pod" on an upcoming pod', 'Dialog "Edit pod" with Title, Description, Media and spots'],
           ['Clear the title to 2 characters and save', 'Error "Title is too short"'],
           ['Remove every image', 'Error "Add at least one image URL"'],
           ['Change the title and description and tap "Save changes"', 'Button shows "Saving…", dialog closes, the row updates'],

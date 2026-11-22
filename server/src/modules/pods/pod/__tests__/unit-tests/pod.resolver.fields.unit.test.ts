@@ -267,3 +267,13 @@ describe('co-host and host mutations', () => {
     expect(podService.remove).toHaveBeenCalledWith('p', { actorUserId: 'admin-1', source: 'ADMIN' });
   });
 });
+
+describe('retired multi-ticket discount fields', () => {
+  const P = podResolvers.Pod as unknown as Record<string, (parent: unknown) => unknown>;
+
+  it('answers "off" for app versions that still select them, even on a pod that stored tiers', () => {
+    const legacy = { ticket_discount_enabled: true, ticket_discount_tiers: [{ min_tickets: 2, discount_pct: 20 }] };
+    expect(P.ticket_discount_enabled(legacy)).toBe(false);
+    expect(P.ticket_discount_tiers(legacy)).toEqual([]);
+  });
+});

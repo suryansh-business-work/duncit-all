@@ -8,7 +8,7 @@ export const smartIncentiveTypeDefs = /* GraphQL */ `
   "A pod page's Smart Incentive for the signed-in member."
   type PodSmartIncentive {
     pod_id: ID!
-    "Percent off the ticket money, after any multi-ticket discount. Frozen once unlocked."
+    "Percent off the ticket money. Frozen once unlocked."
     discount_pct: Int!
     "Seconds on the pod page before the offer shows (Loyalty > Smart Incentive > Settings)."
     delay_seconds: Int!

@@ -61,7 +61,6 @@ import {
   applyRerouteState,
   applyResubmitPhysicalVenue,
   applySmartIncentiveForUpdate,
-  applyTicketDiscountForUpdate,
   claimRerouteSlot,
   holdOrBookForResubmit,
   placeOfferForResubmit,
@@ -70,7 +69,6 @@ import {
   prepareSlotReroute,
   smartIncentiveForCreate,
   snapshotBooking,
-  ticketDiscountForCreate,
 } from './pod.edit';
 
 const MEET_ALPHABET = 'abcdefghijklmnopqrstuvwxyz';
@@ -143,7 +141,6 @@ export const podWriteMethods = {
       userId: audit?.actorUserId,
       source: audit?.source ?? 'ADMIN',
     });
-    const ticketDiscount = await ticketDiscountForCreate(input);
     const smartIncentive = await smartIncentiveForCreate(input);
 
     const { slotDoc, needsVenueApproval } = await resolveSlotForCreate(
@@ -254,7 +251,6 @@ export const podWriteMethods = {
         products_enabled: !!input.products_enabled,
         product_requests: productRequests,
         product_cost_total: productRequests.reduce((sum, item) => sum + item.total_cost, 0),
-        ...ticketDiscount,
         ...smartIncentive,
         // A pod awaiting the venue's answer stays offline until it is accepted.
         is_active: venueState.pending ? false : input.is_active ?? true,
@@ -590,10 +586,8 @@ export const podWriteMethods = {
       await assertSpotsWithinLimits(doc, input.no_of_spots, { canDecrease: false });
       doc.no_of_spots = Math.floor(Number(input.no_of_spots) || 0);
     }
-    // The host may set or change the multi-ticket discount on a live pod; it is
-    // judged on the spots just applied above. Likewise the Smart Incentive —
-    // an offer a member already unlocked keeps its frozen percentage.
-    await applyTicketDiscountForUpdate(doc, input);
+    // The host may set or change the Smart Incentive on a live pod — an offer a
+    // member already unlocked keeps its frozen percentage.
     await applySmartIncentiveForUpdate(doc, input);
     await doc.save();
     await podAuditService.record({ pod: doc, action: 'UPDATE', source: 'HOST', actorUserId: userId, before });

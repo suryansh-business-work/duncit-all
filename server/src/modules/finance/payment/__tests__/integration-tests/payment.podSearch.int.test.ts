@@ -31,7 +31,8 @@ const makePayment = (over: Record<string, unknown> = {}) =>
 
 const insertPod = async (pod_title: string, extra: Record<string, unknown> = {}) => {
   const _id = new Types.ObjectId();
-  await PodModel.collection.insertOne({ _id, pod_title, ...extra });
+  // A slug and club of its own: pods are unique on (club_id, pod_id).
+  await PodModel.collection.insertOne({ _id, pod_title, pod_id: `search-pod-${String(_id)}`, club_id: new Types.ObjectId(), ...extra });
   return _id;
 };
 

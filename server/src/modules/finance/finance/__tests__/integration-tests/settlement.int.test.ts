@@ -248,6 +248,8 @@ describe('pod settlement (engine v2: venue slot price off the pool, host keeps t
       slot_linked: true,
       bill: 0,
       slot_included: false,
+      // No bill, so no bill set the venue's money.
+      bill_applied: false,
       amount: 300,
       // A slot booked before offers: no snapshot (so no commission on top), no minimum, no agreed terms.
       commission_on_top: null,
@@ -275,6 +277,8 @@ describe('pod settlement (engine v2: venue slot price off the pool, host keeps t
       slot_linked: true,
       bill: 450,
       slot_included: false,
+      // Recorded, but the slot price is what the venue is paid — the bill was evidence only.
+      bill_applied: false,
       amount: 300,
       commission_on_top: null,
       min_guests: 0,
@@ -294,6 +298,7 @@ describe('pod settlement (engine v2: venue slot price off the pool, host keeps t
       slot_linked: true,
       bill: 450,
       slot_included: false,
+      bill_applied: true,
       amount: 450,
       pricing_mode: 'FLAT',
       overtime_hours: 0,

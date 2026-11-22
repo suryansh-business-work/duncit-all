@@ -77,3 +77,41 @@ describe('TicketAttachments', () => {
     expect(pickAndUpload).not.toHaveBeenCalled();
   });
 });
+
+describe('TicketAttachments — another caller’s folder and copy', () => {
+  const filter = { types: ['image/*'], accepts: () => true, refusal: 'Not here' };
+
+  it('uploads to the caller’s folder through its filter, with its own words and no AI chip', () => {
+    renderWithProviders(
+      <TicketAttachments
+        attachments={[]}
+        onChange={jest.fn()}
+        folder="payment-evidence"
+        filter={filter}
+        labels={{ caption: 'Files (0/5)', add: 'Add evidence' }}
+        aiMonitoring={false}
+      />,
+    );
+    expect(mockedUpload).toHaveBeenCalledWith('payment-evidence', filter);
+    expect(screen.getByText('Files (0/5)')).toBeOnTheScreen();
+    expect(screen.getByTestId('ticket-attach-add')).toHaveProp('aria-label', 'Add evidence');
+    expect(screen.queryByTestId('ticket-attach-ai-monitoring')).toBeNull();
+  });
+
+  it('keeps support’s folder by default', () => {
+    renderWithProviders(<Harness />);
+    expect(mockedUpload).toHaveBeenCalledWith('/support', undefined);
+  });
+
+  it('says why a pick was refused', () => {
+    mockedUpload.mockReturnValue({
+      uploading: false,
+      error: 'Image is too large (max 8 MB)',
+      pickAndUpload,
+    });
+    renderWithProviders(<Harness />);
+    expect(screen.getByTestId('ticket-attach-error')).toHaveTextContent(
+      'Image is too large (max 8 MB)',
+    );
+  });
+});

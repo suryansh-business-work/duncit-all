@@ -3,7 +3,7 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { AiMonitoringChip } from '@/components/ai-monitoring';
 import { AttachmentView } from '@/components/AttachmentView';
-import { useSupportUpload } from '@/hooks/useSupportUpload';
+import { useSupportUpload, type SupportUploadFilter } from '@/hooks/useSupportUpload';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
@@ -14,6 +14,14 @@ const MAX_ATTACHMENTS = 5;
 interface Props {
   attachments: string[];
   onChange: (next: string[]) => void;
+  /** Upload folder — support tickets unless a caller says otherwise. */
+  folder?: string;
+  /** Narrows the picker and judges the picked file (payment evidence). */
+  filter?: SupportUploadFilter;
+  /** Localized caption ("Files (1/5)") and button, for callers with their own copy. */
+  labels?: { caption: string; add: string };
+  /** The AI-review chip; off for a private folder the scan never sees. */
+  aiMonitoring?: boolean;
 }
 
 /**
@@ -22,9 +30,16 @@ interface Props {
  * (video capped at 50 MB) and shows type-aware, removable previews, capped at
  * five.
  */
-export function TicketAttachments({ attachments, onChange }: Readonly<Props>) {
+export function TicketAttachments({
+  attachments,
+  onChange,
+  folder = '/support',
+  filter,
+  labels,
+  aiMonitoring = true,
+}: Readonly<Props>) {
   const { t } = useTranslation();
-  const { uploading, pickAndUpload } = useSupportUpload('/support');
+  const { uploading, error, pickAndUpload } = useSupportUpload(folder, filter);
   const { color: ink } = useThemeColors();
   const disabled = uploading || attachments.length >= MAX_ATTACHMENTS;
 
@@ -37,15 +52,18 @@ export function TicketAttachments({ attachments, onChange }: Readonly<Props>) {
     <YStack gap={8}>
       <XStack alignItems="center" gap={8}>
         <Text flex={1} fontSize={12} color="$muted">
-          Attach files ({attachments.length}/{MAX_ATTACHMENTS})
+          {labels?.caption ??
+            t('mweb.support.attachFilesCount', {
+              vars: { count: attachments.length, max: MAX_ATTACHMENTS },
+            })}
         </Text>
-        <AiMonitoringChip testID="ticket-attach-ai-monitoring" />
+        {aiMonitoring ? <AiMonitoringChip testID="ticket-attach-ai-monitoring" /> : null}
         <XStack
           pressStyle={PRESS_STYLE.control}
           testID="ticket-attach-add"
           role="button"
           tabIndex={0}
-          aria-label={t('mweb.support.addFiles')}
+          aria-label={labels?.add ?? t('mweb.support.addFiles')}
           aria-disabled={disabled}
           onPress={disabled ? undefined : () => fireAndForget(add())}
           alignItems="center"
@@ -59,10 +77,17 @@ export function TicketAttachments({ attachments, onChange }: Readonly<Props>) {
         >
           <MaterialIcons name="attach-file" size={16} color={ink} />
           <Text fontSize={12} fontWeight="600" color="$color">
-            {uploading ? 'Uploading…' : 'Add files'}
+            {uploading
+              ? t('mweb.support.uploadingFiles')
+              : (labels?.add ?? t('mweb.support.addFiles'))}
           </Text>
         </XStack>
       </XStack>
+      {error ? (
+        <Text testID="ticket-attach-error" role="alert" fontSize={12} color="$danger">
+          {error}
+        </Text>
+      ) : null}
       {attachments.length > 0 ? (
         <XStack flexWrap="wrap" gap={8}>
           {attachments.map((url, i) => (

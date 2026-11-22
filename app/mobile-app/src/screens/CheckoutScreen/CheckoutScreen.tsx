@@ -70,6 +70,8 @@ export function CheckoutScreen() {
         ticketNo={paymentFailure.ticketNo}
         ticketPending={paymentFailure.ticketPending}
         ticketFailed={paymentFailure.ticketFailed}
+        // Pod bookings only: a Duncit payment to file a deduction claim against.
+        claim={paymentFailure.paymentDocId ? { paymentDocId: paymentFailure.paymentDocId } : null}
         onClose={paymentFailure.dismiss}
         onRetry={() => {
           paymentFailure.dismiss();

@@ -49,6 +49,7 @@ export async function createTicket(
   category: string,
   attachments: string[] = [],
   pod?: { id: string; title: string },
+  paymentId?: string,
 ) {
   const data = await graphqlRequest(
     CreateTicketDocument,
@@ -59,6 +60,7 @@ export async function createTicket(
         category: category as never,
         attachments,
         ...(pod ? { pod_id: pod.id, pod_title: pod.title } : {}),
+        ...(paymentId ? { payment_id: paymentId } : {}),
       },
     },
     { auth: true },

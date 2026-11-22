@@ -5,12 +5,21 @@ import { PAYMENT_FAILURE_KEYS, type PaymentFailure } from '@duncit/utils';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+import { PaymentIdLine } from './PaymentIdLine';
+import { PaymentSupportSection } from './PaymentSupportSection';
+
+/** The screen lets the buyer file a deduction claim against this Duncit payment. */
+export interface PaymentClaimCapability {
+  paymentDocId: string;
+}
 
 interface Props {
   failure: PaymentFailure | null;
   ticketNo: string | null;
   ticketPending: boolean;
   ticketFailed: boolean;
+  /** Pod checkout only. Without it the Support section is not shown. */
+  claim?: PaymentClaimCapability | null;
   onRetry: () => void;
   onClose: () => void;
 }
@@ -19,15 +28,17 @@ interface Props {
  * Why the payment did not go through, said properly.
  *
  * The twin of mWeb's dialog (rule 27): same three outcomes, same words, from
- * the shared bundle. A timeout gets the reassurance and the ticket number; a
- * cancellation gets neither, because nothing happened to anybody's money and a
- * case file would be noise.
+ * the shared bundle. Every outcome shows Razorpay's payment id when there is
+ * one and what happens to deducted money; a timeout also gets the ticket opened
+ * on the buyer's behalf. The Support section — "my payment was deducted" —
+ * appears only where the screen passes a claim capability.
  */
 export function PaymentFailureDialog({
   failure,
   ticketNo,
   ticketPending,
   ticketFailed,
+  claim,
   onRetry,
   onClose,
 }: Readonly<Props>) {
@@ -36,7 +47,6 @@ export function PaymentFailureDialog({
   if (!failure) return null;
 
   const keys = PAYMENT_FAILURE_KEYS[failure.kind];
-  const moneyAtRisk = failure.raisesTicket;
 
   return (
     <YStack
@@ -78,6 +88,8 @@ export function PaymentFailureDialog({
           {t(keys.body)}
         </Text>
 
+        {failure.paymentId ? <PaymentIdLine paymentId={failure.paymentId} /> : null}
+
         {/* The gateway's own words, never ours — a buyer ringing their bank
             needs the reason the bank will recognise. */}
         {failure.description ? (
@@ -86,11 +98,19 @@ export function PaymentFailureDialog({
           </Text>
         ) : null}
 
-        {moneyAtRisk ? (
-          <YStack gap={4} padding={12} borderRadius={16} backgroundColor="$soft">
-            <Text fontSize={13} fontWeight="600" color="$color">
-              {t('mweb.payment.moneySafe')}
-            </Text>
+        <YStack
+          padding={12}
+          borderRadius={16}
+          backgroundColor="$soft"
+          testID="payment-deducted-notice"
+        >
+          <Text fontSize={13} color="$color">
+            {t('mweb.payment.deductedNotice')}
+          </Text>
+        </YStack>
+
+        {failure.raisesTicket ? (
+          <YStack gap={4} testID="payment-ticket-status">
             {ticketPending ? (
               <Text fontSize={11} color="$muted">
                 {t('mweb.payment.ticketPending')}
@@ -108,6 +128,8 @@ export function PaymentFailureDialog({
             ) : null}
           </YStack>
         ) : null}
+
+        {claim?.paymentDocId ? <PaymentSupportSection paymentDocId={claim.paymentDocId} /> : null}
 
         <XStack gap={8} marginTop={4}>
           <XStack

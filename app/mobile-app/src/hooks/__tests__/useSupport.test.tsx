@@ -80,4 +80,19 @@ describe('createTicket', () => {
       },
     });
   });
+
+  it('links the ticket to a payment when a payment id is provided', async () => {
+    mockRequest.mockResolvedValueOnce({ createTicket: { id: 't4' } });
+    await createTicket('S', 'B', 'PAYMENT', [], undefined, 'pay-doc-1');
+    const [, vars] = mockRequest.mock.calls[0];
+    expect(vars).toEqual({
+      input: {
+        subject: 'S',
+        body_text: 'B',
+        category: 'PAYMENT',
+        attachments: [],
+        payment_id: 'pay-doc-1',
+      },
+    });
+  });
 });

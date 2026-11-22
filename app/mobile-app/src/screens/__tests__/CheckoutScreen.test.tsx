@@ -12,6 +12,12 @@ const mockDownloadTicket = jest.fn().mockResolvedValue(undefined);
 jest.mock('@/hooks/usePodHistory', () => ({
   usePodTicket: () => ({ download: mockDownloadTicket }),
 }));
+const mockRecordFailure = jest.fn().mockResolvedValue(undefined);
+jest.mock('@/components/payment-failure/paymentFailureApi', () => ({
+  recordPaymentFailure: (...args: unknown[]) => mockRecordFailure(...args),
+  submitPaymentClaim: jest.fn(),
+}));
+jest.mock('expo-crypto', () => ({ randomUUID: () => 'req-1' }));
 const mockNavigate = jest.fn();
 type RouteParams = { podId: string };
 let mockRouteParams: RouteParams | undefined = { podId: 'p1' };
@@ -255,6 +261,18 @@ describe('CheckoutScreen', () => {
     // A hand-closed sheet risks no money, so no support ticket is promised.
     expect(screen.queryByTestId('payment-ticket-no')).toBeNull();
     expect(verifyRazorpay).not.toHaveBeenCalled();
+    // Recorded against the payment and the order the sheet was opened for.
+    await waitFor(() => expect(mockRecordFailure).toHaveBeenCalledTimes(1));
+    expect(mockRecordFailure.mock.calls[0][0]).toMatchObject({
+      payment_doc_id: 'd1',
+      kind: 'CANCELLED',
+      razorpay_order_id: 'order_1',
+      retry_shown: true,
+      attempt_number: 1,
+      client_request_id: 'req-1',
+    });
+    // The pod checkout offers the deduction claim.
+    expect(screen.getByTestId('payment-support-section')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('payment-failure-retry'));
     await waitFor(() => expect(screen.queryByTestId('payment-failure-dialog')).toBeNull());
   });

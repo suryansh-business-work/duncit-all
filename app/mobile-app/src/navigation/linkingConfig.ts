@@ -198,6 +198,7 @@ export const linkingConfig: NonNullable<LinkingOptions<RootStackParamList>['conf
     GiftCardCheckout: 'gift-cards/checkout',
     GiftCardRedeem: 'gift-cards/redeem',
     GiftCardClaim: 'gift-card/:code',
+    GiftCardOrder: 'gift-cards/orders/:orderNo',
     // The shop, using mWeb's paths. These screens have existed all along but
     // were missing from this map, so a shared /shop or /product link opened
     // the app on NotFound — the one outcome worse than staying in the browser.

@@ -14,6 +14,7 @@ import { FollowListScreen } from '@/screens/FollowListScreen';
 import { FollowingScreen } from '@/screens/FollowingScreen';
 import { GiftCardCheckoutScreen } from '@/screens/GiftCardCheckoutScreen';
 import { GiftCardClaimScreen } from '@/screens/GiftCardClaimScreen';
+import { GiftCardOrderScreen } from '@/screens/GiftCardOrderScreen';
 import { GiftCardRedeemScreen } from '@/screens/GiftCardRedeemScreen';
 import { GiftCardsScreen } from '@/screens/GiftCardsScreen';
 import { HappeningNearbyScreen } from '@/screens/HappeningNearbyScreen';
@@ -112,6 +113,7 @@ export function renderDiscoveryScreens() {
       <Stack.Screen name="GiftCardCheckout" component={GiftCardCheckoutScreen} />
       <Stack.Screen name="GiftCardRedeem" component={GiftCardRedeemScreen} />
       <Stack.Screen name="GiftCardClaim" component={GiftCardClaimScreen} />
+      <Stack.Screen name="GiftCardOrder" component={GiftCardOrderScreen} />
       <Stack.Screen name="NotFound" component={NotFoundScreen} />
     </>
   );

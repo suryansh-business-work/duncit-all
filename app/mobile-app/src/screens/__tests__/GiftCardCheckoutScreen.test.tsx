@@ -1,6 +1,5 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 
-import { GiftCardScopeType } from '@/generated/graphql/graphql';
 import { GiftCardCheckoutScreen } from '@/screens/GiftCardCheckoutScreen';
 import { useGiftCardCheckout } from '@/hooks/useGiftCardCheckout';
 import { fallbackT } from '@/i18n/fallback';
@@ -65,13 +64,15 @@ const success = {
 };
 
 const selection = (over: Partial<GiftCardSelection> = {}): GiftCardSelection => ({
-  scope_type: GiftCardScopeType.Shop,
-  scope_category_id: null,
-  scope_name: 'Pet Lovers',
-  scope_image_url: '',
-  scope_image_front_url: '',
-  scope_image_back_url: '',
+  design_id: 'd1',
+  design_name: 'Pet Lovers',
+  front_url: 'https://img/front.png',
+  back_url: 'https://img/back.png',
   amount: 500,
+  quantity: 1,
+  delivery_mode: 'DIGITAL',
+  shipping_fee: 0,
+  gift: true,
   recipient_email: 'friend@example.com',
   recipient_name: 'Friend',
   message: 'Enjoy',
@@ -133,19 +134,54 @@ describe('GiftCardCheckoutScreen — summary', () => {
     expect(screen.queryByTestId('checkout-submit')).toBeNull();
   });
 
-  it('summarises the theme, recipient and face value', () => {
+  it('summarises the design, who it is for and the total', () => {
     renderWithProviders(<GiftCardCheckoutScreen />);
     expect(mockedCheckout).toHaveBeenCalledWith(mockSelection);
     expect(screen.getAllByText('Pet Lovers').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('friend@example.com').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('₹500.00').length).toBeGreaterThan(0);
+    expect(screen.getByTestId('gift-card-checkout-recipient')).toHaveTextContent(
+      fallbackT('mweb.giftCards.checkoutFor', { vars: { who: 'friend@example.com' } }),
+    );
+    expect(screen.getByTestId('gift-card-total-value')).toHaveTextContent('₹500.00');
+    expect(screen.queryByTestId('gift-card-delivery-address')).toBeNull();
   });
 
-  it('falls back to the shop theme and the buyer when neither is named', () => {
-    mockSelection = selection({ scope_name: '', recipient_email: '' });
+  it('names the buyer when the card is kept, and totals several cards', () => {
+    mockSelection = selection({ recipient_email: '', gift: false, quantity: 3 });
     renderWithProviders(<GiftCardCheckoutScreen />);
-    expect(screen.getAllByText(fallbackT('mweb.giftCards.shopTheme')).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(fallbackT('mweb.giftCards.checkoutSelf')).length).toBeGreaterThan(0);
+    expect(screen.getByTestId('gift-card-checkout-recipient')).toHaveTextContent(
+      fallbackT('mweb.giftCards.checkoutFor', {
+        vars: { who: fallbackT('mweb.giftCards.checkoutSelf') },
+      }),
+    );
+    expect(screen.getByTestId('gift-card-total-value')).toHaveTextContent('₹1,500.00');
+  });
+
+  it('adds the delivery fee once and asks where printed cards go', () => {
+    mockSelection = selection({
+      delivery_mode: 'PHYSICAL',
+      quantity: 2,
+      shipping_fee: 99,
+      recipient_email: '',
+      gift: false,
+    });
+    renderWithProviders(<GiftCardCheckoutScreen />);
+    expect(screen.getByTestId('gift-card-total-delivery-value')).toHaveTextContent('₹99.00');
+    expect(screen.getByTestId('gift-card-total-value')).toHaveTextContent('₹1,099.00');
+    expect(screen.getByTestId('gift-card-delivery-address')).toBeOnTheScreen();
+  });
+
+  it('will not take a printed order without a courier-ready address', async () => {
+    mockSelection = selection({
+      delivery_mode: 'PHYSICAL',
+      shipping_fee: 99,
+      recipient_email: '',
+      gift: false,
+    });
+    submit();
+    expect(
+      await screen.findByText(fallbackT('mweb.giftCards.deliveryAddressHint')),
+    ).toBeOnTheScreen();
+    expect(pay).not.toHaveBeenCalled();
   });
 
   it('still renders the form when finance never arrives', () => {
@@ -159,7 +195,7 @@ describe('GiftCardCheckoutScreen — dummy engine', () => {
   it('pays, then offers the cards, home and the invoice', async () => {
     submit();
     await waitFor(() => expect(screen.getByTestId('gift-card-purchase-success')).toBeOnTheScreen());
-    expect(pay).toHaveBeenCalledWith(expect.objectContaining({ line1: '12 Main Street' }));
+    expect(pay).toHaveBeenCalledWith(expect.objectContaining({ line1: '12 Main Street' }), null);
 
     fireEvent.press(screen.getByTestId('gift-card-success-my-cards'));
     expect(mockNavigate).toHaveBeenCalledWith('GiftCards');

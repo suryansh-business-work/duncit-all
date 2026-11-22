@@ -1,6 +1,9 @@
 export { GiftCardVisual } from './GiftCardVisual';
 export { GiftCardBuySection } from './GiftCardBuySection';
-export { GiftCardThemePicker, type GiftCardThemeChoice } from './GiftCardThemePicker';
+export { GiftCardQuantityPicker } from './GiftCardQuantityPicker';
+export { GiftCardDeliveryPicker } from './GiftCardDeliveryPicker';
+export { GiftCardTotalCard } from './GiftCardTotalCard';
+export { GiftCardOrdersList } from './GiftCardOrdersList';
 export { GiftCardAmountPicker } from './GiftCardAmountPicker';
 export { GiftCardRecipientFields } from './GiftCardRecipientFields';
 export { GiftCardHowItWorks } from './GiftCardHowItWorks';

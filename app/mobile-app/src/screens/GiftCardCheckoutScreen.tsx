@@ -5,11 +5,16 @@ import { Spinner, Text, YStack } from 'tamagui';
 
 import { ProcessingOverlay, RazorpayWebView } from '@/components/checkout';
 import { GiftCardPurchaseSuccess, GiftCardVisual } from '@/components/gift-cards';
-import { GiftCardSummaryRow as SummaryRow } from '@/components/gift-cards/GiftCardSummaryRow';
+import { GiftCardTotalCard } from '@/components/gift-cards/GiftCardTotalCard';
+import {
+  GiftCardDeliveryAddress,
+  useGiftCardDeliveryForm,
+} from '@/components/gift-cards/GiftCardDeliveryAddress';
+import { GiftCardScopeType } from '@/generated/graphql/graphql';
+import { giftCardPurchaseTotals } from '@duncit/forms/schemas';
 import { PaymentFailureDialog, usePaymentFailure } from '@/components/payment-failure';
 import { StackScreen } from '@/components/StackScreen';
 import { useLoadingRegion } from '@/components/Skeleton';
-import { SurfaceCard } from '@/components/SurfaceCard';
 import { CheckoutForm, type CheckoutFormValues } from '@/forms/checkout';
 import {
   buildCheckoutContact,
@@ -23,9 +28,10 @@ import { formatMoney } from '@/utils/checkout-math';
 import { toErrorMessage } from '@/utils/errors';
 import { RefreshScrollView } from '@/components/PullToRefresh';
 
-/** Gift card checkout — summary + contact form, charged at face value through
- * the dedicated gift-card payment engine (no coupons, coins or fees). RN twin
- * of mWeb's /gift-cards/checkout (rule 27). */
+/** Gift card checkout — the total (every card at face value, plus the delivery
+ * fee once on a printed order), the delivery address for printed cards, and the
+ * contact form, through the dedicated gift-card payment engine (no coupons or
+ * coins). RN twin of mWeb's /gift-cards/checkout (rule 27). */
 export function GiftCardCheckoutScreen() {
   const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -50,14 +56,25 @@ export function GiftCardCheckoutScreen() {
   const loadingRegion = useLoadingRegion();
 
   const currency = finance?.currency_symbol ?? '';
-  const amountLabel = formatMoney(currency, selection.amount);
+  const printed = selection.delivery_mode === 'PHYSICAL';
+  const totals = giftCardPurchaseTotals(
+    {
+      amount: String(selection.amount),
+      quantity: String(selection.quantity),
+      delivery_mode: selection.delivery_mode,
+    },
+    selection.shipping_fee,
+  );
+  const totalLabel = formatMoney(currency, totals.total);
+  const deliveryForm = useGiftCardDeliveryForm(me);
   const razorpayEnabled = !!finance?.razorpay_enabled;
   const dummyMode = !razorpayEnabled && (finance?.dummy_mode ?? true);
-  const themeLabel = selection.scope_name || t('mweb.giftCards.shopTheme');
-  const recipientLabel = selection.recipient_email || t('mweb.giftCards.checkoutSelf');
+  const forWhom = printed
+    ? t('mweb.giftCards.checkoutPrinted')
+    : selection.recipient_email || t('mweb.giftCards.checkoutSelf');
   const paymentFailure = usePaymentFailure(() => ({
     description: t('mweb.giftCards.checkoutTitle'),
-    amount: selection.amount,
+    amount: totals.total,
     currencySymbol: currency,
     paymentDocId: order?.payment_doc_id ?? null,
   }));
@@ -80,15 +97,21 @@ export function GiftCardCheckoutScreen() {
   };
 
   const submit = async (values: CheckoutFormValues) => {
+    // A printed order needs a courier-ready address before any money moves.
+    if (printed && !(await deliveryForm.trigger())) {
+      setError(t('mweb.giftCards.deliveryAddressHint'));
+      return;
+    }
+    const shipTo = printed ? deliveryForm.getValues() : null;
     setSubmitting(true);
     setError(null);
     try {
       if (razorpayEnabled) {
-        setOrder(await createRazorpayGiftCardOrder(values));
+        setOrder(await createRazorpayGiftCardOrder(values, shipTo));
         return;
       }
       if (dummyMode) {
-        const result = await pay(values);
+        const result = await pay(values, shipTo);
         if (result?.status === 'SUCCESS') setPayment(result);
         else setError(t('mweb.giftCards.failureBody'));
         return;
@@ -111,6 +134,7 @@ export function GiftCardCheckoutScreen() {
           onDownloadInvoice={() => downloadInvoice(payment.id, payment.invoice_no ?? 'invoice')}
           onHome={() => navigation.navigate('Home')}
           onMyCards={() => navigation.navigate('GiftCards')}
+          printed={printed}
         />
       </RefreshScrollView>
     );
@@ -124,22 +148,25 @@ export function GiftCardCheckoutScreen() {
     body = (
       <RefreshScrollView contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 32 }}>
         <GiftCardVisual
-          theme={selection}
-          imageUrl={selection.scope_image_url}
-          artworkFrontUrl={selection.scope_image_front_url}
-          artworkBackUrl={selection.scope_image_back_url}
-          amountLabel={amountLabel}
+          theme={{
+            scope_type: GiftCardScopeType.Shop,
+            scope_name: '',
+            design_name: selection.design_name,
+          }}
+          imageUrl=""
+          artworkFrontUrl={selection.front_url}
+          artworkBackUrl={selection.back_url}
+          amountLabel={formatMoney(currency, selection.amount)}
+          minHeight={180}
         />
-        <SurfaceCard gap={10}>
-          <SummaryRow label={t('mweb.giftCards.checkoutTheme')} value={themeLabel} />
-          <SummaryRow label={t('mweb.giftCards.checkoutAmount')} value={amountLabel} />
-          <SummaryRow label={t('mweb.giftCards.checkoutRecipient')} value={recipientLabel} />
-          <YStack height={1} backgroundColor="$borderColor" />
-          <SummaryRow bold label={t('mweb.giftCards.checkoutTotal')} value={amountLabel} />
-          <Text fontSize={12} color="$muted">
-            {t('mweb.giftCards.checkoutNote')}
-          </Text>
-        </SurfaceCard>
+        <Text testID="gift-card-checkout-recipient" fontSize={13} color="$muted">
+          {t('mweb.giftCards.checkoutFor', { vars: { who: forWhom } })}
+        </Text>
+        <GiftCardTotalCard totals={totals} currency={currency} />
+        <Text fontSize={12} color="$muted">
+          {printed ? t('mweb.giftCards.checkoutNotePrinted') : t('mweb.giftCards.checkoutNote')}
+        </Text>
+        {printed ? <GiftCardDeliveryAddress control={deliveryForm.control} /> : null}
         <CheckoutForm
           initialValues={initialValues}
           mainAddress={me?.address ?? null}
@@ -148,7 +175,7 @@ export function GiftCardCheckoutScreen() {
           loading={submitting}
           errorMessage={error}
           dummyMode={dummyMode}
-          payLabel={t('mweb.giftCards.payCta', { vars: { amount: amountLabel } })}
+          payLabel={t('mweb.giftCards.payCta', { vars: { amount: totalLabel } })}
           onSubmit={submit}
         />
       </RefreshScrollView>

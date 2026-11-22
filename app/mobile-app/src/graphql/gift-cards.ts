@@ -1,35 +1,96 @@
 import { gql } from '@/generated/graphql';
 
-/** Amount presets + custom bounds + validity for the buy page — mWeb's
- * GIFT_CARD_SETTINGS. Configured in Finance > Gift Cards. */
-export const MobileGiftCardSettingsDocument = gql(`
-  query MobileGiftCardSettings {
-    publicGiftCardSettings {
-      denominations
-      min_amount
-      max_amount
-      validity_months
-      updated_at
+/** Everything the buy page needs in one request — the default design, the
+ * sales policy (Loyalty > Gift Card Settings) and printed stock. mWeb's
+ * GIFT_CARD_STOREFRONT. */
+export const MobileGiftCardStorefrontDocument = gql(`
+  query MobileGiftCardStorefront {
+    giftCardStorefront {
+      design {
+        id
+        name
+        front_image_url
+        back_image_url
+      }
+      settings {
+        denominations
+        min_amount
+        max_amount
+        validity_months
+        max_quantity
+        physical_enabled
+        shipping_fee
+        updated_at
+      }
+      physical_available
+      currency_symbol
     }
   }
 `);
 
-/**
- * The category tree the theme picker is built from — mWeb's
- * GIFT_CARD_CATEGORIES. Its own document rather than the search screen's
- * category query, because only the gift card cares about the card artwork.
- */
-export const MobileGiftCardCategoriesDocument = gql(`
-  query MobileGiftCardCategories {
-    categories {
+/** The member's gift card orders, newest first — mWeb's MY_GIFT_CARD_ORDERS. */
+export const MobileMyGiftCardOrdersDocument = gql(`
+  query MobileMyGiftCardOrders($page: Int, $page_size: Int) {
+    myGiftCardOrders(page: $page, page_size: $page_size) {
+      total
+      rows {
+        id
+        order_no
+        delivery_mode
+        design_name
+        design_front_url
+        amount
+        quantity
+        total
+        currency_symbol
+        payment_status
+        fulfilment_status
+        created_at
+      }
+    }
+  }
+`);
+
+/** One of the member's orders with its tracking — mWeb's MY_GIFT_CARD_ORDER. */
+export const MobileMyGiftCardOrderDocument = gql(`
+  query MobileMyGiftCardOrder($order_no: String!) {
+    myGiftCardOrder(order_no: $order_no) {
       id
-      name
-      slug
-      icon
-      level
-      parent_id
-      gift_card_image_front
-      gift_card_image_back
+      order_no
+      delivery_mode
+      design_name
+      design_front_url
+      design_back_url
+      amount
+      quantity
+      cards_value
+      shipping_fee
+      total
+      currency_symbol
+      recipient_email
+      payment_status
+      fulfilment_status
+      created_at
+      shipping_address {
+        name
+        line1
+        line2
+        landmark
+        city
+        state
+        pincode
+      }
+      shipment {
+        courier_name
+        awb
+        etd
+      }
+      tracking_events {
+        status
+        location
+        note
+        at
+      }
     }
   }
 `);
@@ -48,6 +109,7 @@ export const MobileMyGiftCardsDocument = gql(`
         scope_image_url
         scope_image_front_url
         scope_image_back_url
+        design_name
         initial_amount
         balance
         status
@@ -69,6 +131,7 @@ export const MobileMyGiftCardsDocument = gql(`
         scope_image_url
         scope_image_front_url
         scope_image_back_url
+        design_name
         initial_amount
         balance
         status
@@ -97,6 +160,7 @@ export const MobileGiftCardByCodeDocument = gql(`
       scope_image_url
       scope_image_front_url
       scope_image_back_url
+      design_name
       initial_amount
       balance
       status
@@ -128,6 +192,7 @@ export const MobileRedeemGiftCardDocument = gql(`
         scope_image_url
         scope_image_front_url
         scope_image_back_url
+        design_name
         initial_amount
         balance
         status

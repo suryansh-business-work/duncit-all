@@ -5,8 +5,6 @@ import { loginMeta, STATUS_OPTIONS } from '../helpers';
 import type { UserRow } from '../queries';
 import { renderContact, renderRoles, renderStatus, renderUser, rolesValue } from './cells';
 import { issueOptions, issuesValue, renderIssues } from './issues';
-import PlatformIcons from '../../../components/PlatformIcons';
-import { platformOptions, platformsValue } from '../../../components/platforms';
 
 const STATUS_FILTER_OPTIONS = STATUS_OPTIONS.filter(Boolean).map((s) => ({ value: s, label: s }));
 const providerOptions = (t: ColumnDeps['t']) => [
@@ -19,18 +17,10 @@ interface ColumnDeps {
   t: (key: string) => string;
   formatDate: (s: string) => string;
   formatDateTime: (s: string) => string;
-  /** Date and time in the Admin Panel's configured time zone, for Last Activity. */
-  formatActivityAt: (s: string) => string;
   roleOptions: ReadonlyArray<{ value: string; label: string }>;
 }
 
-export function getUsersColumns({
-  formatDate,
-  formatDateTime,
-  formatActivityAt,
-  roleOptions,
-  t,
-}: Readonly<ColumnDeps>): DuncitColumn<UserRow>[] {
+export function getUsersColumns({ formatDate, formatDateTime, roleOptions, t }: Readonly<ColumnDeps>): DuncitColumn<UserRow>[] {
   const renderLogin = (u: UserRow) => {
     const meta = loginMeta(u, t);
     return (
@@ -142,23 +132,16 @@ export function getUsersColumns({
       valueGetter: (u) => (u.last_login_at ? formatDate(u.last_login_at) : ''),
     },
     {
-      // A set kept current by every signed-in request: it filters (any of the picked) but cannot sort.
-      field: 'platforms_used',
-      headerName: t('admin.users.colPlatforms'),
-      type: 'enum',
-      options: platformOptions(t),
+      // Read from the app's daily presence pings — not stored on the account, so no sort or filter.
+      field: 'last_active_on',
+      headerName: t('admin.users.colLastActive'),
+      type: 'text',
       sortable: false,
-      width: 150,
-      cellRenderer: (u) => <PlatformIcons platforms={u.platforms_used ?? []} t={t} />,
-      valueGetter: (u) => platformsValue(u.platforms_used, t),
-    },
-    {
-      // Stored and indexed, so it sorts both ways: most recently active, or inactive the longest.
-      field: 'last_activity_at',
-      headerName: t('admin.users.colLastActivity'),
-      type: 'date',
-      width: 190,
-      valueGetter: (u) => (u.last_activity_at ? formatActivityAt(u.last_activity_at) : t('admin.users.noActivity')),
+      filterable: false,
+      width: 140,
+      // A UTC calendar day: read at its midday so the admin zone (±12h) shows that same date.
+      valueGetter: (u) =>
+        u.last_active_on ? formatDate(`${u.last_active_on}T12:00:00.000Z`) : t('admin.users.neverActive'),
     },
     {
       field: 'created_at',

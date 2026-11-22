@@ -21,6 +21,9 @@ export interface RoundOffRow {
   currency_symbol: string;
   status: string;
   gateway: string;
+  /** Razorpay's own ids, as its dashboard shows them (null/empty for other gateways). */
+  razorpay_payment_id?: string | null;
+  razorpay_order_id?: string | null;
   paid_at: string | null;
   created_at: string;
 }
@@ -62,6 +65,8 @@ export const ROUND_OFFS_TABLE = gql`
         currency_symbol
         status
         gateway
+        razorpay_payment_id
+        razorpay_order_id
         paid_at
         created_at
       }

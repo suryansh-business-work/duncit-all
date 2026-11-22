@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Stack, Typography } from '@mui/material';
-import { EM_DASH, type DuncitColumn } from '@duncit/table';
+import { EM_DASH, LabeledIds, type DuncitColumn } from '@duncit/table';
 import { formatDateTime, type Translator } from '@duncit/app-settings';
 import { StatusChip } from '@duncit/ui';
 import { fmt } from '../payment-logs-page/helpers';
@@ -72,8 +72,17 @@ export function buildFailedPaymentColumns(
       type: 'text',
       sortable: false,
       filterable: false,
-      cellRenderer: (r) => twoLine(r.razorpay_payment_id ?? '', r.razorpay_order_id, true),
-      valueGetter: (r) => [r.razorpay_payment_id, r.razorpay_order_id].filter(Boolean).join(' '),
+      // Each Razorpay id under its own name, the refund's too once one was sent.
+      cellRenderer: (r) => (
+        <LabeledIds
+          ids={[
+            { label: t('finance.failedPayments.razorpayPaymentId'), value: r.razorpay_payment_id },
+            { label: t('finance.failedPayments.razorpayOrderId'), value: r.razorpay_order_id },
+            { label: t('finance.failedPayments.razorpayRefundId'), value: r.razorpay_refund_id },
+          ]}
+        />
+      ),
+      valueGetter: (r) => [r.razorpay_payment_id, r.razorpay_order_id, r.razorpay_refund_id].filter(Boolean).join(' '),
     },
     {
       field: 'error_code',

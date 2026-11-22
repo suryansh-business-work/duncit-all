@@ -31,7 +31,7 @@ export default function OverviewCards({ detail, formatDateTime }: Readonly<Props
           testId="failed-payment-payment-card"
           lines={[
             {
-              label: t('finance.failedPayments.paymentId'),
+              label: t('finance.failedPayments.duncitRef'),
               value: (
                 <Link component={RouterLink} to={`/payment-logs/${detail.payment_doc_id}`}>
                   {detail.payment_id}

@@ -55,6 +55,10 @@ export interface PaymentRow {
   status: string;
   gateway: string;
   gateway_ref: string | null;
+  /** Razorpay's own ids, as its dashboard shows them (null/empty for other gateways). */
+  razorpay_payment_id?: string | null;
+  razorpay_order_id?: string | null;
+  razorpay_refund_ids?: string[];
   paid_at: string | null;
   created_at: string;
 }
@@ -83,6 +87,9 @@ const PAYMENT_ROW_FIELDS = gql`
     status
     gateway
     gateway_ref
+    razorpay_payment_id
+    razorpay_order_id
+    razorpay_refund_ids
     paid_at
     created_at
   }

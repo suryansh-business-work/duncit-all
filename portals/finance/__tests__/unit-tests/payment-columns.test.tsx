@@ -138,8 +138,25 @@ describe('buildPaymentColumns — the shared columns', () => {
     expect(valueOf('paid_at', payment())).toBe(new Date('2026-09-01T10:00:00.000Z').toLocaleString('en-IN'));
   });
 
-  it('joins the payment id and invoice number for searching', () => {
-    expect(valueOf('payment_id', payment())).toBe('DUN-PAY-4821 INV-2026-0042');
-    expect(valueOf('payment_id', payment({ invoice_no: null }))).toBe('DUN-PAY-4821');
+  it('names every id: the Razorpay payment, order and refund ids first, then the Duncit ref and the invoice', () => {
+    const paid = payment({
+      razorpay_payment_id: 'pay_U39hOwzQiUFqHT',
+      razorpay_order_id: 'order_U39IVJblWttbgN',
+      razorpay_refund_ids: ['rfnd_A1', 'rfnd_B2'],
+    });
+    expect(valueOf('payment_id', paid)).toBe(
+      'finance.payment.idRazorpayPayment: pay_U39hOwzQiUFqHT · finance.payment.idRazorpayOrder: order_U39IVJblWttbgN · ' +
+        'finance.payment.idRazorpayRefund: rfnd_A1, rfnd_B2 · finance.payment.idDuncitRef: DUN-PAY-4821 · ' +
+        'finance.payment.idInvoice: INV-2026-0042',
+    );
+    draw('payment_id', paid);
+    expect(screen.getByText('pay_U39hOwzQiUFqHT')).toBeInTheDocument();
+    expect(screen.getByText('DUN-PAY-4821')).toBeInTheDocument();
+  });
+
+  it('never passes the Duncit reference off as a Razorpay id when the payment did not go through Razorpay', () => {
+    const text = valueOf('payment_id', payment({ gateway: 'COD', invoice_no: null }));
+    expect(text).toBe('finance.payment.idDuncitRef: DUN-PAY-4821');
+    expect(text).not.toContain('idRazorpay');
   });
 });

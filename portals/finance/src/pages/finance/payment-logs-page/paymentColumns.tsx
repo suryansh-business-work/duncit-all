@@ -4,7 +4,7 @@ import { EM_DASH, type DuncitColumn } from '@duncit/table';
 import type { Translator } from '@duncit/app-settings';
 import { StatusChip } from '@duncit/ui';
 import { STATUS_COLORS, fmt } from './helpers';
-import { renderPaymentCustomer, renderPaymentIds } from './cells';
+import { renderPaymentCustomer, paymentIdsText, renderPaymentIds } from './cells';
 import type { PaymentRow, PaymentShop } from './queries';
 
 type T = Translator['t'];
@@ -165,10 +165,10 @@ export function buildPaymentColumns({ t, renderActions, shop }: Readonly<Options
     {
       field: 'payment_id',
       headerName: t('finance.payment.colIds'),
-      minWidth: 190,
+      minWidth: 280,
       type: 'text',
-      cellRenderer: renderPaymentIds,
-      valueGetter: (p) => [p.payment_id, p.invoice_no].filter(Boolean).join(' '),
+      cellRenderer: renderPaymentIds(t),
+      valueGetter: (p) => paymentIdsText(t, p),
     },
     {
       field: 'paid_at',

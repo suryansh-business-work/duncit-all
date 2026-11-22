@@ -84,7 +84,7 @@ describe('paymentColumns', () => {
     ]);
     expect(cols.map((c) => c.headerName)).toEqual([
       'admin.userFinance.colCreatedAt',
-      'admin.userFinance.colPaymentId',
+      'admin.userFinance.colIds',
       'admin.userFinance.colDescription',
       'admin.userFinance.colTotal',
       'admin.userFinance.colStatus',
@@ -125,15 +125,20 @@ describe('paymentColumns', () => {
     expect(valueOf(cols, 'coins_earned', payment({ coins_earned: 0 }))).toBe('—');
   });
 
-  it('renders the payment id with its invoice number under it, or an em dash', () => {
-    const { unmount } = renderCell(cols, 'payment_id', payment());
+  it('names each id: the Razorpay ids first, then the Duncit ref and the invoice when there is one', () => {
+    const paid = payment({ razorpay_payment_id: 'pay_U39hOwzQiUFqHT', razorpay_order_id: 'order_U39IVJblWttbgN' });
+    const { unmount } = renderCell(cols, 'payment_id', paid);
+    expect(screen.getByText('pay_U39hOwzQiUFqHT')).toBeInTheDocument();
+    expect(screen.getByText('order_U39IVJblWttbgN')).toBeInTheDocument();
     expect(screen.getByText('pay_123')).toBeInTheDocument();
     expect(screen.getByText('INV-9')).toBeInTheDocument();
     unmount();
 
-    renderCell(cols, 'payment_id', payment({ invoice_no: null }));
-    expect(screen.getByText('pay_123')).toBeInTheDocument();
-    expect(screen.getByText('—')).toBeInTheDocument();
+    expect(valueOf(cols, 'payment_id', payment({ invoice_no: null }))).toBe('admin.userFinance.idDuncitRef: pay_123');
+    expect(valueOf(cols, 'payment_id', paid)).toBe(
+      'admin.userFinance.idRazorpayPayment: pay_U39hOwzQiUFqHT · admin.userFinance.idRazorpayOrder: order_U39IVJblWttbgN · ' +
+        'admin.userFinance.idDuncitRef: pay_123 · admin.userFinance.idInvoice: INV-9'
+    );
   });
 
   it('renders the status as a chip', () => {
@@ -185,10 +190,11 @@ describe('refundColumns', () => {
     expect(valueOf(cols, 'refund_initiated_by', refund({ refund_initiated_by: '' }))).toBe('—');
   });
 
-  it('renders the payment id with an em dash for a missing invoice', () => {
-    renderCell(cols, 'payment_id', refund());
+  it('names the Razorpay refund id beside the Duncit ref, and leaves out a missing invoice', () => {
+    renderCell(cols, 'payment_id', refund({ razorpay_refund_ids: ['rfnd_Q1'] }));
+    expect(screen.getByText('rfnd_Q1')).toBeInTheDocument();
     expect(screen.getByText('pay_456')).toBeInTheDocument();
-    expect(screen.getByText('—')).toBeInTheDocument();
+    expect(screen.queryByText(/admin.userFinance.idInvoice/)).not.toBeInTheDocument();
   });
 });
 

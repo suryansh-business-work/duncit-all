@@ -8,6 +8,8 @@
  * can use them.
  */
 import { Stack, Typography } from '@mui/material';
+import { LabeledIds, labeledIdsText, type LabeledId } from '@duncit/table';
+import type { Translator } from '@duncit/app-settings';
 
 export const renderPaymentCustomer = (p: Readonly<{ user_name: string; user_email: string }>) => (
   <Stack component="span" sx={{ lineHeight: 1.2 }}>
@@ -24,23 +26,28 @@ export const renderPaymentCustomer = (p: Readonly<{ user_name: string; user_emai
   </Stack>
 );
 
-export const renderPaymentIds = (
-  p: Readonly<{ payment_id: string; invoice_no: string | null }>,
-) => (
-  <Stack component="span" sx={{ lineHeight: 1.2 }}>
-    <Typography variant="caption" component="span" sx={{ fontFamily: 'monospace' }}>
-      {p.payment_id}
-    </Typography>
-    {p.invoice_no && (
-      <Typography
-        variant="caption"
-        component="span"
-        sx={{
-          color: "text.secondary",
-          fontFamily: 'monospace'
-        }}>
-        {p.invoice_no}
-      </Typography>
-    )}
-  </Stack>
-);
+/** The ids one payment row can carry: Razorpay's (only when it went through Razorpay) and Duncit's own. */
+export interface PaymentIdFields {
+  payment_id: string;
+  invoice_no: string | null;
+  razorpay_payment_id?: string | null;
+  razorpay_order_id?: string | null;
+  razorpay_refund_ids?: readonly string[] | null;
+}
+
+/**
+ * Every id of a payment under its own name. Razorpay's ids come first because
+ * they are what Finance compares against the Razorpay dashboard; Duncit's own
+ * reference is labelled as ours, since it never matches anything there.
+ */
+export const paymentIds = (t: Translator['t'], p: Readonly<PaymentIdFields>): LabeledId[] => [
+  { label: t('finance.payment.idRazorpayPayment'), value: p.razorpay_payment_id },
+  { label: t('finance.payment.idRazorpayOrder'), value: p.razorpay_order_id },
+  { label: t('finance.payment.idRazorpayRefund'), value: (p.razorpay_refund_ids ?? []).join(', ') },
+  { label: t('finance.payment.idDuncitRef'), value: p.payment_id },
+  { label: t('finance.payment.idInvoice'), value: p.invoice_no },
+];
+
+/** The IDs cell and its text value, for any table whose rows carry PaymentIdFields. */
+export const renderPaymentIds = (t: Translator['t']) => (p: Readonly<PaymentIdFields>) => <LabeledIds ids={paymentIds(t, p)} />;
+export const paymentIdsText = (t: Translator['t'], p: Readonly<PaymentIdFields>) => labeledIdsText(paymentIds(t, p));

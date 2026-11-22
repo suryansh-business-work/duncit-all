@@ -1,5 +1,4 @@
-import { Stack, Typography } from '@mui/material';
-import { EM_DASH, dateColumn, type DuncitColumn } from '@duncit/table';
+import { EM_DASH, LabeledIds, dateColumn, labeledIdsText, type DuncitColumn, type LabeledId } from '@duncit/table';
 import { StatusChip, type StatusColorMap } from '@duncit/ui';
 import { formatMoney } from '@duncit/utils';
 import type { DateFormatter, useTranslation } from '@duncit/app-settings';
@@ -16,26 +15,30 @@ const money = (row: { currency_symbol: string }, value: number) =>
 
 const renderStatus = (row: { status: string }) => <StatusChip status={row.status} colorMap={STATUS_COLORS} />;
 
-/** The payment id, with its invoice number under it when one was issued. */
-const renderPaymentId = (row: { payment_id: string; invoice_no: string | null }) => (
-  <Stack component="span" sx={{ lineHeight: 1.2, minWidth: 0 }}>
-    <Typography variant="body2" component="span" noWrap sx={{ fontWeight: 700 }}>
-      {row.payment_id}
-    </Typography>
-    <Typography variant="caption" component="span" noWrap sx={{ color: 'text.secondary' }}>
-      {row.invoice_no || EM_DASH}
-    </Typography>
-  </Stack>
-);
+type PaymentIdFields = Pick<UserPaymentRow, 'payment_id' | 'invoice_no' | 'razorpay_payment_id' | 'razorpay_order_id' | 'razorpay_refund_ids'>;
+
+/**
+ * Every id of the payment under its own name — Razorpay's (what its dashboard
+ * shows) first, then Duncit's own reference and the invoice, so nobody reads our
+ * reference as a Razorpay payment id.
+ */
+const paymentIds = (t: Translate, row: PaymentIdFields): LabeledId[] => [
+  { label: t('admin.userFinance.idRazorpayPayment'), value: row.razorpay_payment_id },
+  { label: t('admin.userFinance.idRazorpayOrder'), value: row.razorpay_order_id },
+  { label: t('admin.userFinance.idRazorpayRefund'), value: (row.razorpay_refund_ids ?? []).join(', ') },
+  { label: t('admin.userFinance.idDuncitRef'), value: row.payment_id },
+  { label: t('admin.userFinance.idInvoice'), value: row.invoice_no },
+];
 
 const coins = (value: number | null) => (value ? String(value) : EM_DASH);
 
 const paymentIdColumn = (t: Translate) => ({
   field: 'payment_id',
-  headerName: t('admin.userFinance.colPaymentId'),
+  headerName: t('admin.userFinance.colIds'),
   type: 'text' as const,
-  minWidth: 170,
-  cellRenderer: renderPaymentId,
+  minWidth: 260,
+  cellRenderer: (row: PaymentIdFields) => <LabeledIds ids={paymentIds(t, row)} />,
+  valueGetter: (row: PaymentIdFields) => labeledIdsText(paymentIds(t, row)),
 });
 
 const descriptionColumn = (t: Translate) => ({

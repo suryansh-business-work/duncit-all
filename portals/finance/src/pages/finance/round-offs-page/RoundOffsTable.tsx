@@ -4,7 +4,7 @@ import { DuncitTable, EM_DASH, type DuncitColumn, type TableFetch } from '@dunci
 import { formatDateTime, useTranslation, type Translator } from '@duncit/app-settings';
 import { StatusChip } from '@duncit/ui';
 import { STATUS_COLORS, fmt } from '../payment-logs-page/helpers';
-import { renderPaymentCustomer, renderPaymentIds } from '../payment-logs-page/cells';
+import { renderPaymentCustomer, paymentIdsText, renderPaymentIds } from '../payment-logs-page/cells';
 import type { PaymentSource, RoundOffRow } from './queries';
 
 type T = Translator['t'];
@@ -61,10 +61,10 @@ export default function RoundOffsTable({ fetchRows, refetchRef, onOpen }: Readon
       {
         field: 'payment_id',
         headerName: t('finance.payment.colIds'),
-        minWidth: 190,
+        minWidth: 280,
         type: 'text',
-        cellRenderer: renderPaymentIds,
-        valueGetter: (r) => [r.payment_id, r.invoice_no].filter(Boolean).join(' '),
+        cellRenderer: renderPaymentIds(t),
+        valueGetter: (r) => paymentIdsText(t, r),
       },
       {
         field: 'user_name',

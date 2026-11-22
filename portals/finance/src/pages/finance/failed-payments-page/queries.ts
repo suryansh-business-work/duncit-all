@@ -41,6 +41,7 @@ export const FAILED_PAYMENTS_TABLE = gql`
         review_decision
         refund_status
         refund_amount
+        razorpay_refund_id
         resolution_state
         highlight
         can_refund

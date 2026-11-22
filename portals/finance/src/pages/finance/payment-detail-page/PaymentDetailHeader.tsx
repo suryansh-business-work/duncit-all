@@ -5,6 +5,7 @@ import { DuncitIconButton } from '@duncit/buttons';
 import { StatusChip } from '@duncit/ui';
 import { useTranslation, type DateFormatter } from '@duncit/app-settings';
 import { STATUS_COLORS } from '../payment-logs-page/helpers';
+import { renderPaymentIds } from '../payment-logs-page/cells';
 import RetryAllButton from './RetryAllButton';
 import type { PaymentDetail } from './queries';
 
@@ -88,6 +89,10 @@ export default function PaymentDetailHeader({
           }}>
             {p.invoice_no ?? t('finance.payment.noInvoiceNumber')} · {p.gateway} · {paidAt}
           </Typography>
+          {/* The ids Razorpay's dashboard shows, each named — the heading above is Duncit's own ref. */}
+          <Box sx={{ mt: 0.5 }} data-testid="payment-detail-ids">
+            {renderPaymentIds(t)(p)}
+          </Box>
         </Box>
         <RetryAllButton detail={detail} busyKey={busyKey} onRetryAll={onRetryAll} />
       </Stack>

@@ -24,7 +24,7 @@ interface Props {
 
 /**
  * Host's pod edit sheet — title, images, description, the pod's capacity and
- * (for a paid pod) its multi-ticket discount and Smart Incentive.
+ * (for a paid pod) its Smart Incentive.
  *
  * "Flexible pod count": a pod published with fewer spots than the space it
  * booked can hold is not stuck that way. The range comes from the server, which

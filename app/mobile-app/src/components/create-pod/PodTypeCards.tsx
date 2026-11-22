@@ -59,9 +59,7 @@ export function PodTypeCards({ form }: Readonly<{ form: CreatePodForm }>) {
     if (free) {
       form.setValue('pod_type', 'FREE', { shouldDirty: true });
       form.setValue('pod_amount_text', '0', { shouldDirty: true, shouldValidate: true });
-      // A free pod never carries a multi-ticket discount or a Smart Incentive.
-      form.setValue('ticket_discount_enabled', false, { shouldDirty: true });
-      form.setValue('ticket_discount_tiers', [], { shouldDirty: true });
+      // A free pod never carries a Smart Incentive.
       form.setValue('smart_incentive_enabled', false, { shouldDirty: true });
       form.setValue('smart_incentive_pct', '', { shouldDirty: true });
     } else {

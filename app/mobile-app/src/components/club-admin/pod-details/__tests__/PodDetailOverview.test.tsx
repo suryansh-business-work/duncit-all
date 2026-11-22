@@ -35,8 +35,6 @@ const basePod = {
   is_deleted: false,
   completed_at: null,
   venue_approval_status: 'APPROVED',
-  ticket_discount_enabled: false,
-  ticket_discount_tiers: [],
   attendance: { attended_seats: 3, booked_seats: 4, recorded: true },
 };
 
@@ -85,34 +83,9 @@ describe('PodDetailOverview', () => {
     expect(text('club-pod-detail-description')).toHaveTextContent('Bring an instrument');
   });
 
-  it('shows a free pod as free and offers no ticket discount', () => {
-    render({
-      pod_type: 'FREE',
-      pod_amount: 0,
-      ticket_discount_enabled: true,
-      ticket_discount_tiers: [{ min_tickets: 3, discount_pct: 10 }],
-    });
+  it('shows a free pod as free', () => {
+    render({ pod_type: 'FREE', pod_amount: 0 });
     expect(text('club-pod-detail-price')).not.toHaveTextContent(/Rs/);
-    expect(screen.queryByTestId('club-pod-detail-ticket-offer')).toBeNull();
-  });
-
-  it('lists each live ticket tier, dropping the implied single-ticket row', () => {
-    render({
-      ticket_discount_enabled: true,
-      ticket_discount_tiers: [
-        { min_tickets: 3, discount_pct: 10 },
-        { min_tickets: 5, discount_pct: 20 },
-      ],
-    });
-    const offer = text('club-pod-detail-ticket-offer');
-    expect(offer).toHaveTextContent(/3/);
-    expect(offer).toHaveTextContent(/20/);
-    expect(offer.props.children).toEqual(expect.stringContaining('\n'));
-  });
-
-  it('omits the offer when discounts are on but no tier exists', () => {
-    render({ ticket_discount_enabled: true, ticket_discount_tiers: [] });
-    expect(screen.queryByTestId('club-pod-detail-ticket-offer')).toBeNull();
   });
 
   it('shows a virtual pod with its meeting platform, or Online when none is set', () => {

@@ -13,8 +13,6 @@ const valid = {
   pod_description: 'A relaxed group hike around the lake.',
   media_text: 'https://cdn/img.jpg',
   no_of_spots_text: '12',
-  ticket_discount_enabled: false,
-  ticket_discount_tiers: [],
   smart_incentive_enabled: false,
   smart_incentive_pct: '',
 };
@@ -69,14 +67,12 @@ describe('podEditInitialValues', () => {
         { url: 'https://cdn/b.mp4', type: 'VIDEO' },
       ],
     });
-    // No capacity on the row and no discount set: blank spots, discount off.
+    // No capacity on the row and no Smart Incentive: blank spots, incentive off.
     expect(values).toEqual({
       pod_title: 'Hike',
       pod_description: 'desc',
       no_of_spots_text: '',
       media_text: 'https://cdn/a.jpg\nhttps://cdn/b.mp4',
-      ticket_discount_enabled: false,
-      ticket_discount_tiers: [],
       smart_incentive_enabled: false,
       smart_incentive_pct: '',
     });

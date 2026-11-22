@@ -7,7 +7,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { formatMoney } from '@/utils/checkout-math';
 import { formatDateTime } from '@/utils/date-format';
 
-/** The payment fields the receipt reads. The pod discounts are optional
+/** The payment fields the receipt reads. The Smart Incentive is optional
  * because the product checkout shares this screen and never carries one. */
 export interface ReceiptPayment {
   total: number;
@@ -15,8 +15,6 @@ export interface ReceiptPayment {
   paid_at?: string | null;
   created_at?: string | null;
   invoice_no?: string | null;
-  ticket_discount_amount?: number | null;
-  ticket_discount_pct?: number | null;
   /** What the buyer's unlocked Smart Incentive took off, frozen on the payment. */
   smart_incentive_amount?: number | null;
   smart_incentive_pct?: number | null;
@@ -45,9 +43,8 @@ function SavedRow({
 }
 
 /**
- * The success screen's receipt: amount paid, the multi-ticket discount and the
- * Smart Incentive frozen on the payment (each only when one was taken), when it
- * was paid and the invoice number. mWeb twin: CheckoutSuccess's receipt (same
+ * The success screen's receipt: amount paid, the Smart Incentive frozen on the
+ * payment (only when one was taken), when it was paid and the invoice number. mWeb twin: CheckoutSuccess's receipt (same
  * test ids, rule 27).
  */
 export function CheckoutReceiptCard({ payment }: Readonly<{ payment: ReceiptPayment }>) {
@@ -58,12 +55,6 @@ export function CheckoutReceiptCard({ payment }: Readonly<{ payment: ReceiptPaym
         label={t('mweb.checkout.amountPaid')}
         value={formatMoney(payment.currency_symbol, payment.total)}
         bold
-      />
-      <SavedRow
-        testID="checkout-success-ticket-discount"
-        label={t('mweb.checkout.ticketDiscountSaved')}
-        amount={Number(payment.ticket_discount_amount ?? 0)}
-        currency={payment.currency_symbol}
       />
       <SavedRow
         testID="checkout-success-smart-incentive"

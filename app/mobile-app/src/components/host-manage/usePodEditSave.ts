@@ -34,7 +34,7 @@ export function usePodEditSave(
   onSaved: () => void,
   /** True once the server's spot range has landed — see buildHostUpdateInput. */
   includeSpots = false,
-  /** A FREE / ₹0 pod — its multi-ticket discount is always sent off. */
+  /** A FREE / ₹0 pod — its Smart Incentive is always sent off. */
   free = false,
   /** The sheet shows the Smart Incentive, so the save sends it — see buildHostUpdateInput. */
   smartIncentive = false,

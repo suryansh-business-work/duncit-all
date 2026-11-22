@@ -6,7 +6,6 @@ import type {
   CreatePodCategorySource,
   CreatePodClub,
   PodPickerProduct,
-  TicketDiscountTier,
 } from '@duncit/utils';
 
 import type { CreatePodInput } from '@/generated/graphql/graphql';
@@ -81,10 +80,6 @@ export interface CreatePodFormValues extends FreeJustificationValues {
   products_enabled: boolean;
   product_requests: PodProductRequest[];
   place_charges: PodPlaceCharge[];
-  /** Multi-ticket discount switch — never sent on for a FREE pod. */
-  ticket_discount_enabled: boolean;
-  /** Stored tiers only (min 2 tickets); the "1 ticket · 0%" base row is implied. */
-  ticket_discount_tiers: TicketDiscountTier[];
   /** Smart Incentive switch — never sent on for a FREE pod. */
   smart_incentive_enabled: boolean;
   /** The Smart Incentive % as typed; '' while the switch is off. */
@@ -129,8 +124,6 @@ export const blankCreatePodForm: CreatePodFormValues = {
   products_enabled: false,
   product_requests: [],
   place_charges: [],
-  ticket_discount_enabled: false,
-  ticket_discount_tiers: [],
   smart_incentive_enabled: false,
   smart_incentive_pct: '',
   payment_terms: '',

@@ -661,7 +661,6 @@ describe('CreatePodStepper', () => {
       pod_amount: 0,
       venue_slot_id: null,
       venue_offer: expect.objectContaining({ start_at: slot.start_at, end_at: slot.end_at }),
-      ticket_discount_enabled: false,
     });
   });
 

@@ -1,11 +1,5 @@
 import { Text, XStack, YStack } from 'tamagui';
-import {
-  formatMoney,
-  POD_ROW_STATUS_COLORS,
-  podRowStatus,
-  podRowStatusLabel,
-  ticketDiscountRows,
-} from '@duncit/utils';
+import { formatMoney, POD_ROW_STATUS_COLORS, podRowStatus, podRowStatusLabel } from '@duncit/utils';
 
 import { InfoRowList, type InfoRowProps } from '@/components/pod-pending/InfoRow';
 import type { ClubPodDetail } from '@/hooks/useClubPodDetail';
@@ -13,27 +7,9 @@ import { useDateFormat } from '@/hooks/useDateFormat';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 import { usePublicFinance } from '@/hooks/usePublicFinance';
 import { useTranslation } from '@/hooks/useTranslation';
-import type { Translate } from '@/i18n/fallback';
 import { ToneChip } from '../ToneChip';
 import { useToneColors } from '../tone';
 import { PodDetailSection } from './PodDetailSection';
-
-/** The live multi-ticket offer, one line per tier. Nothing for a free pod or a
- * pod without tiers — the shared rows lead with a "1 ticket · 0%" base row the
- * server never stores, so it is dropped. */
-function ticketOfferValue(pod: ClubPodDetail, t: Translate): string | null {
-  const unitPrice = Number(pod.pod_amount) || 0;
-  if (pod.pod_type.includes('FREE') || unitPrice <= 0) return null;
-  const tiers = ticketDiscountRows(unitPrice, pod).slice(1);
-  if (tiers.length === 0) return null;
-  return tiers
-    .map((tier) =>
-      t('podDetailsPanel.podOverviewCard.ticketDiscountTier', {
-        vars: { count: tier.min_tickets, pct: tier.discount_pct },
-      }),
-    )
-    .join('\n');
-}
 
 interface Props {
   pod: ClubPodDetail;
@@ -119,17 +95,6 @@ export function PodDetailOverview({ pod }: Readonly<Props>) {
       value: attended,
       testID: 'club-pod-detail-attended',
     },
-  );
-  const offer = ticketOfferValue(pod, t);
-  if (offer) {
-    rows.push({
-      icon: 'local-offer',
-      label: t('podDetailsPanel.podOverviewCard.ticketDiscount'),
-      value: offer,
-      testID: 'club-pod-detail-ticket-offer',
-    });
-  }
-  rows.push(
     {
       icon: 'visibility',
       label: t('podDetailsPanel.podOverviewCard.views'),

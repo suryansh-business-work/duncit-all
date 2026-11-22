@@ -162,7 +162,7 @@ describe('Send Money — the recipient box', () => {
     mount([optionsMock(), searchMock, recipientMock([bank])]);
     await pickMeera();
     await screen.findByText('Verified bank accounts');
-    fireEvent.click(screen.getByRole('button', { name: 'Clear', hidden: true }));
+    fireEvent.click(screen.getByLabelText('Clear'));
     await waitFor(() => expect(screen.queryByText('Verified bank accounts')).not.toBeInTheDocument());
     expect(screen.getByRole('button', { name: 'Send Money' })).toBeDisabled();
   });

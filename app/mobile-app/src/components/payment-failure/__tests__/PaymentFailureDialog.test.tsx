@@ -1,5 +1,5 @@
 import * as Clipboard from 'expo-clipboard';
-import { fireEvent, screen, waitFor } from '@testing-library/react-native';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react-native';
 import type { PaymentFailure } from '@duncit/utils';
 
 import { PaymentFailureDialog } from '@/components/payment-failure';
@@ -77,9 +77,12 @@ describe('PaymentFailureDialog — what it says', () => {
 
   it('shows the transaction id when Razorpay reported one, and hides the line when it did not', () => {
     renderDialog();
-    expect(screen.getByTestId('payment-transaction-id')).toHaveTextContent(
-      fallbackT('mweb.payment.transactionIdLabel', { vars: { id: 'pay_29QQoUBi66xm2f' } }),
-    );
+    // The line also holds the copy button, so match the label itself inside it.
+    expect(
+      within(screen.getByTestId('payment-transaction-id')).getByText(
+        fallbackT('mweb.payment.transactionIdLabel', { vars: { id: 'pay_29QQoUBi66xm2f' } }),
+      ),
+    ).toBeOnTheScreen();
     screen.unmount();
     renderDialog({ failure: failure({ kind: 'CANCELLED', paymentId: null, description: null }) });
     expect(screen.queryByTestId('payment-transaction-id')).toBeNull();

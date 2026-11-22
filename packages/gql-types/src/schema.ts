@@ -33479,6 +33479,8 @@ export type PublicClientConfig = {
   apple_relay_url: Scalars['String']['output'];
   /** Sign in with Apple on the web flow (mWeb, Android, native web) — its Services ID. Blank: those doors offer no Apple button. */
   apple_services_id: Scalars['String']['output'];
+  /** The Apple Developer Team ID (Tech → Environment → Sign in with Apple), trimmed; blank when unset. mWeb's build writes it into apple-app-site-association so iOS opens mWeb links in the app. */
+  apple_team_id: Scalars['String']['output'];
   /** The Return URL mWeb hands Apple's web SDK, as registered under the Services ID. */
   apple_web_redirect_uri: Scalars['String']['output'];
   /** Google sign-in on the Android app — its Android OAuth client. Blank: the app falls back to google_client_id. */

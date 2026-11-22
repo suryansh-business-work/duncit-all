@@ -407,6 +407,19 @@ describe('settingsService integration', () => {
     expect(cfg.google_maps_api_key).toBe('maps-key-123');
   });
 
+  it('exposes the Sign in with Apple Team ID, trimmed, for mWeb’s apple-app-site-association', async () => {
+    await EnvEntryModel.create({
+      name: 'apple',
+      category: 'APPLE_SIGNIN',
+      is_active: true,
+      is_default: true,
+      config: { team_id: ' A1B2C3D4E5 ', bundle_id: 'com.duncit.mobile' },
+    });
+    const cfg = await settingsService.getPublicClientConfig();
+    expect(cfg.apple_team_id).toBe('A1B2C3D4E5');
+    expect(cfg.apple_bundle_id).toBe('com.duncit.mobile');
+  });
+
   it('seeds default flags idempotently and exposes public flags', async () => {
     await settingsService.seedDefaults();
     await settingsService.seedDefaults();

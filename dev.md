@@ -75,12 +75,13 @@ app; the signing identity comes from the environment:
 | Variable | Where to find it |
 |---|---|
 | `MWEB_ANDROID_CERT_SHA256` | Play Console → your app → **Test and release ▸ Setup ▸ App signing** → *App signing key certificate* → SHA-256. Include the **upload** key's SHA-256 too, comma separated, or internal-testing builds will not verify. |
-| `MWEB_IOS_TEAM_ID` | Apple Developer → **Membership** → Team ID (10 characters). Optional: when unset, the deploy uses the existing `APPLE_TEAM_ID` secret. |
+| Apple Team ID | **Tech → Environment → Sign in with Apple → Team ID** (Apple Developer → Membership → Team ID, 10 characters). The build reads it from the server's `publicClientConfig.apple_team_id` at `VITE_GRAPHQL_URL`. A `MWEB_IOS_TEAM_ID` repository secret, if added, overrides it. |
 
-Both are passed to the image as build args by `.github/workflows/deploy.yml`,
-from repository secrets of the same names (the team id falls back to
-`APPLE_TEAM_ID`, which was why iOS links stayed in Safari while
-`MWEB_IOS_TEAM_ID` was never added). **They are not committed**, and the
+The fingerprint (and the optional team-id override) are passed to the image as
+build args by `.github/workflows/deploy.yml`, from repository secrets of the
+same names. Changing the Team ID in the Tech portal needs only an mWeb redeploy.
+A Team ID that is not 10 upper-case letters or digits (`@duncit/regex`
+`isAppleTeamId`) is treated as missing. **They are not committed**, and the
 generated directory is gitignored — a fingerprint belongs to a signing key, and
 a stale one is worse than none because Android remembers the failure.
 
@@ -94,7 +95,7 @@ nginx would otherwise send `application/octet-stream` and iOS would ignore it.
 
 ### Turning it on
 
-1. Add the two repository secrets above.
+1. Add the `MWEB_ANDROID_CERT_SHA256` secret and fill the Team ID in the Tech portal.
 2. Deploy mWeb.
 3. Check what the phone will see:
 

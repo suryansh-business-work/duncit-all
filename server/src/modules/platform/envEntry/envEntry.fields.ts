@@ -281,7 +281,11 @@ export const CATEGORY_FIELDS: Record<EnvCategory, EnvFieldDef[]> = {
   // client secret Apple's token endpoint asks for — the connection test uses
   // it today, and revoking a deleted account's Apple tokens will.
   APPLE_SIGNIN: [
-    { name: 'team_id', label: 'Team ID', hint: 'Apple Developer → Membership details → Team ID (10 characters), e.g. A1B2C3D4E5' },
+    {
+      name: 'team_id',
+      label: 'Team ID',
+      hint: 'Apple Developer → Membership details → Team ID (10 characters), e.g. A1B2C3D4E5 — also lets iOS open mWeb links in the app (redeploy mWeb after changing it)',
+    },
     {
       name: 'bundle_id',
       label: 'App ID (iOS bundle identifier)',

@@ -1,4 +1,5 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import type { ComponentProps } from 'react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { MockedProvider } from '@apollo/client/testing/react';
 import { MemoryRouter, Route, Routes, useLocation, useNavigate } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -37,10 +38,15 @@ function Where() {
   return <span data-testid="where">{useLocation().pathname}</span>;
 }
 
-function renderPage(mode: PartnerStudioMode, roles: string[], verified = true) {
+function renderPage(
+  mode: PartnerStudioMode,
+  roles: string[],
+  verified = true,
+  mocks: ComponentProps<typeof MockedProvider>['mocks'] = [venuesMock],
+) {
   userInfo.mockReturnValue({ me: { roles, is_email_verified: verified }, loading: false });
   return render(
-    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[venuesMock]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <MemoryRouter initialEntries={['/options']}>
         <ConfirmProvider>
           <Routes>
@@ -235,7 +241,22 @@ describe('StudioOptionsPage', () => {
     renderPage(mode, [...roles], false);
     expect(screen.getByTestId('studio-email-gate')).toHaveTextContent('Verify your email first');
     expect(screen.queryByTestId('studio-options-list')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('studio-options-venue')).not.toBeInTheDocument();
+  });
+
+  it('does not mount the venue picker behind the gate — its venues are never asked for', async () => {
+    const venuesAsked = vi.fn(() => venuesMock.result);
+    renderPage('VENUE', ['VENUE_OWNER'], false, [{ ...venuesMock, result: venuesAsked }]);
+    expect(screen.getByTestId('studio-email-gate')).toBeInTheDocument();
+    // A mounted picker would have sent its query by the next task.
+    await act(() => new Promise((resolve) => setTimeout(resolve, 0)));
+    expect(venuesAsked).not.toHaveBeenCalled();
+  });
+
+  it('asks for the venues once the email is verified (the control for the test above)', async () => {
+    const venuesAsked = vi.fn(() => venuesMock.result);
+    renderPage('VENUE', ['VENUE_OWNER'], true, [{ ...venuesMock, result: venuesAsked }]);
+    expect(await screen.findByTestId('venue-switcher')).toBeInTheDocument();
+    expect(venuesAsked).toHaveBeenCalled();
   });
 
   it('sends the unverified partner to verify their email from the gate', () => {

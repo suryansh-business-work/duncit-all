@@ -621,6 +621,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     dependencies: [
       { name: "@duncit/captcha", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/i18n", range: "workspace:*", kind: "dependencies" },
+      { name: "@duncit/regex", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/utils", range: "workspace:*", kind: "dependencies" },
       { name: "@vitest/coverage-v8", range: "^4.1.11", kind: "devDependencies" },
       { name: "vitest", range: "^4.1.11", kind: "devDependencies" },
@@ -2295,6 +2296,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
       { name: "@duncit/logs", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/shell", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/table", range: "workspace:*", kind: "dependencies" },
+      { name: "@duncit/tabs", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/ui", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/user-context", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/utils", range: "workspace:*", kind: "dependencies" },

@@ -63,6 +63,8 @@ const USER_TABLE_CONFIG: TableEntityConfig = {
     status: 'metadata.status',
     last_login_provider: 'auth.last_login_provider',
     last_login_at: 'auth.last_login_at',
+    // Indexed; an account never seen has no value, so it sorts last newest-first.
+    last_activity_at: 'activity.last_at',
     created_at: 'metadata.created_at',
   },
   filterFields: {
@@ -77,6 +79,9 @@ const USER_TABLE_CONFIG: TableEntityConfig = {
     zone: { path: 'profile.zone', type: 'string' },
     last_login_provider: { path: 'auth.last_login_provider', type: 'enum' },
     last_login_at: { path: 'auth.last_login_at', type: 'date' },
+    last_activity_at: { path: 'activity.last_at', type: 'date' },
+    // A set of platforms: "used Android" matches every account whose set holds it.
+    platforms_used: { path: 'activity.platforms', type: 'enum' },
     created_at: { path: 'metadata.created_at', type: 'date' },
   },
   defaultSort: { 'metadata.created_at': -1 },

@@ -51209,8 +51209,16 @@ export type User = {
   /** Null until the member answers on Edit profile. */
   is_pet_owner?: Maybe<Scalars['Boolean']['output']>;
   is_phone_verified?: Maybe<Scalars['Boolean']['output']>;
-  /** The last calendar day (UTC, yyyy-MM-dd) the app saw this account (staff only); null when never. */
+  /**
+   * The last calendar day (UTC, yyyy-MM-dd) the app saw this account (staff only); null when never.
+   * @deprecated Read last_activity_at: it is a full timestamp, covers every signed-in request and sorts.
+   */
   last_active_on?: Maybe<Scalars['String']['output']>;
+  /**
+   * When this account last used Duncit while signed in, on Android, iOS or the
+   * web (ISO 8601, staff only). Null until its first tracked request.
+   */
+  last_activity_at?: Maybe<Scalars['String']['output']>;
   last_login_at?: Maybe<Scalars['String']['output']>;
   last_login_provider?: Maybe<AuthProvider>;
   last_name: Scalars['String']['output'];
@@ -51221,6 +51229,8 @@ export type User = {
   phone_extension: Scalars['String']['output'];
   phone_number: Scalars['String']['output'];
   pincode?: Maybe<Scalars['String']['output']>;
+  /** Every platform this account has used Duncit from while signed in, in display order (staff only). */
+  platforms_used: Array<UserPlatform>;
   profile_links: Array<ProfileLink>;
   profile_photo?: Maybe<Scalars['String']['output']>;
   profile_visibility?: Maybe<ProfileVisibility>;
@@ -51479,6 +51489,12 @@ export type UserNotification = {
   notification: Notification;
   read_at?: Maybe<Scalars['String']['output']>;
 };
+
+/** Where an account uses Duncit from: the Android or iOS app, or a browser. */
+export type UserPlatform =
+  | 'ANDROID'
+  | 'IOS'
+  | 'WEB';
 
 /**
  * One refund that has already been paid back to a buyer.

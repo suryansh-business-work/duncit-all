@@ -5,6 +5,7 @@ import { isAccountLocked } from '@modules/access/accountDeletion/accountDeletion
 import { isSessionSealed } from '@modules/access/auth/session-seal';
 import { effectiveRoles } from '@modules/access/auth/current-roles';
 import { consentFromRequest, type TrackingConsent } from '@utils/consent';
+import { platformFromRequest, trackUserActivity } from '@modules/access/user/user.activity';
 
 export interface AuthUser {
   id: string;
@@ -119,6 +120,8 @@ export async function buildContext({
   res: Response;
 }): Promise<GraphQLContext> {
   const user: AuthUser | null = await resolveAuthUser(req.headers.authorization);
+  // Admin > Users "Last Activity" and "Platforms Used": throttled and never awaited.
+  if (user) trackUserActivity(user.id, platformFromRequest(req));
   const rawDuid = req.headers['x-duid'];
   const duidFromArray =
     Array.isArray(rawDuid) && rawDuid[0]

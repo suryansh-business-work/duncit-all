@@ -12,6 +12,7 @@ import type { AuthUser } from '@context';
 import { requireRole, assertScope, readScope, hasRole } from '@middleware/rbac';
 import { loadUserDataIssues, type ContactRow } from './user.data-issues';
 import { loadLastActiveOn } from './user.last-active';
+import { loadUserActivity } from './user.activity';
 import { ROLE_ASSIGNERS } from './user.constants';
 import { assertMayEditFields, assertMayManage } from './user.edit-guard';
 
@@ -51,6 +52,15 @@ export const userResolvers = {
     last_active_on: (parent: { user_id: string }, _a: unknown, ctx: GraphQLContext) => {
       requireRole(ctx, DIRECTORY_ROLES);
       return loadLastActiveOn(ctx, parent.user_id);
+    },
+    // When and from where somebody uses the app is staff knowledge, like the two above.
+    last_activity_at: async (parent: { user_id: string }, _a: unknown, ctx: GraphQLContext) => {
+      requireRole(ctx, DIRECTORY_ROLES);
+      return (await loadUserActivity(ctx, parent.user_id))?.last_activity_at ?? null;
+    },
+    platforms_used: async (parent: { user_id: string }, _a: unknown, ctx: GraphQLContext) => {
+      requireRole(ctx, DIRECTORY_ROLES);
+      return (await loadUserActivity(ctx, parent.user_id))?.platforms_used ?? [];
     },
   },
   Query: {

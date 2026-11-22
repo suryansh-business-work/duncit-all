@@ -295,6 +295,21 @@ const securitySchema = new Schema(
   { _id: false }
 );
 
+/**
+ * When this account last used Duncit while signed in, and from which platforms
+ * (ANDROID, IOS, WEB) it ever has. Written only by `user.activity.ts`, straight
+ * through the driver with `$max` / `$addToSet`, so it is never a profile edit:
+ * no timestamp bump and no change-log row. No defaults: an account nobody has
+ * seen yet simply has none, which sorts last.
+ */
+const activitySchema = new Schema(
+  {
+    last_at: { type: Date },
+    platforms: { type: [String], default: undefined },
+  },
+  { _id: false }
+);
+
 // Partner payout settings (host overrides for "Default Deductions"). Two %s:
 // host_share_pct = this host's slice of the pod net (after venue bill + GST);
 // host_commission_pct = the commission Duncit takes from that slice. Set per
@@ -319,6 +334,7 @@ const userSchema = new Schema(
     counters: { type: countersSchema, default: () => ({}) },
     security: { type: securitySchema, default: () => ({}) },
     finance: { type: userFinanceSchema, default: () => ({}) },
+    activity: { type: activitySchema, required: false },
   },
   {
     timestamps: { createdAt: 'metadata.created_at', updatedAt: 'metadata.updated_at' },
@@ -378,6 +394,8 @@ userSchema.index(
 userSchema.index({ 'metadata.status': 1 });
 userSchema.index({ 'metadata.deleted_at': 1 });
 userSchema.index({ 'metadata.role_keys': 1 });
+// Admin > Users sorts by Last Activity to find the most and least active accounts.
+userSchema.index({ 'activity.last_at': -1 });
 
 // Legacy flat-field virtuals. Server code reads/writes these names in dozens
 // of places. Routing them through the nested storage keeps existing call

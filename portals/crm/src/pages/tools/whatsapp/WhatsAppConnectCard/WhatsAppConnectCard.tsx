@@ -6,7 +6,6 @@ import { useTranslation } from '@duncit/shell';
 import type { WaConnection } from '../whatsappQueries';
 import ConnectedSummary from './ConnectedSummary';
 import QrSection from './QrSection';
-import ApiKeyRow from './ApiKeyRow';
 import AdvancedSettings from './AdvancedSettings';
 import { useWaConnect } from './useWaConnect';
 
@@ -31,9 +30,9 @@ interface Props {
 
 /**
  * Connect panel. Opening the page starts the WhatsApp session by itself and
- * shows its QR here; the gateway API key is generated server-side with one
- * click (or automatically on connect). Manual URL/key entry stays available
- * under Advanced settings. On CONNECT it flips to the connected summary.
+ * shows its QR here; the server creates and keeps the gateway API key, so there
+ * is nothing to generate or paste. Manual URL/key entry for another gateway
+ * stays under Advanced settings. On CONNECT it flips to the connected summary.
  */
 export default function WhatsAppConnectCard({ connection, onChanged }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -56,14 +55,7 @@ export default function WhatsAppConnectCard({ connection, onChanged }: Readonly<
           </Stack>
           {wa.actionError && <Alert severity="error">{wa.actionError}</Alert>}
           {!wa.actionError && connection.last_error && <Alert severity="error">{connection.last_error}</Alert>}
-          <ApiKeyRow
-            hasKey={connection.has_api_key}
-            busy={wa.busy}
-            generated={wa.generated}
-            error={wa.generateError}
-            onGenerate={wa.generateKey}
-          />
-          <QrSection connecting={wa.connecting} qr={wa.qr} />
+          <QrSection connecting={wa.connecting || wa.starting} qr={wa.qr} />
           <DuncitButton
             variant="contained"
             startIcon={stalled ? <RestartAltIcon /> : <WhatsAppIcon />}

@@ -435,6 +435,14 @@ export const COPY_REVISIONS: Readonly<Record<string, readonly string[]>> = {
   // CRM WhatsApp Lead Generator: the API key is generated server-side now, so
   // the help panel explains the automatic flow instead of fetching a key.
   "crm.tools.howDoIGetTheApi": ["How do I get the API key?"],
+  // The connect card no longer has a Generate API key button, and a failed start
+  // now retries by itself, so the help steps stop pointing at either.
+  "crm.tools.helpStepAutoKey": [
+    "Opening this page starts WhatsApp and creates the gateway API key automatically. Use Generate API key to replace it at any time.",
+  ],
+  "crm.tools.helpStepStuck": [
+    "No QR after a minute? The session restarts once by itself; you can also press Restart connection.",
+  ],
   // Payment and refund tables now also search the Razorpay payment, order and
   // refund ids (and Duncit's own reference), so the placeholders say so.
   "finance.payment.logsSearch": ["Search txn id, invoice, name or email"],

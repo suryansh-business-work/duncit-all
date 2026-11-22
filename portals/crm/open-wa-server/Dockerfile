@@ -313,6 +313,11 @@ ENV HOME=/app/data
 ENV XDG_CONFIG_HOME=/tmp/.config
 ENV XDG_CACHE_HOME=/tmp/.cache
 
+# Duncit: our VPS boots WhatsApp Web slower than whatsapp-web.js's default 30 s wait, so every start
+# failed with "auth timeout" before a QR existed (docs/12-troubleshooting-faq.md, "QR generation times
+# out on slow first boot"). Two minutes; the start deadline grows with it. An env_file value overrides.
+ENV WWEBJS_AUTH_TIMEOUT_MS=120000
+
 # Operator backup/restore scripts. docs/11-operational-runbooks.md drives them in-container
 # (`docker exec` against the named-volume mount at /app/data), and the sqlite3 CLI installed above
 # is there for backup.sh's online-consistent snapshots — but the scripts themselves were never

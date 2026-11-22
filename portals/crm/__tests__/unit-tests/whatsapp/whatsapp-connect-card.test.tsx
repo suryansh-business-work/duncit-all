@@ -2,11 +2,14 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import type { MockedResponse } from '@apollo/client/testing';
 import WhatsAppConnectCard from '@/pages/tools/whatsapp/WhatsAppConnectCard';
-import { WA_POLL_MS, WA_STUCK_RESTART_MS } from '@/pages/tools/whatsapp/WhatsAppConnectCard/useWaConnect';
+import {
+  WA_MAX_ERROR_RESTARTS,
+  WA_POLL_MS,
+  WA_STUCK_RESTART_MS,
+} from '@/pages/tools/whatsapp/WhatsAppConnectCard/useWaConnect';
 import {
   WA_CONNECT,
   WA_DISCONNECT,
-  WA_GENERATE_API_KEY,
   WA_QR,
   WA_SAVE_CONFIG,
   WA_STATUS,
@@ -79,40 +82,73 @@ describe('WhatsAppConnectCard — automatic start', () => {
   });
 });
 
-describe('WhatsAppConnectCard — API key', () => {
-  it('reports when no key is saved yet and generates one with no input', async () => {
-    const generate = vi.fn(() => ({
-      data: { waGenerateApiKey: { __typename: 'WaGeneratedKey', connection: waConnection({ has_api_key: true }) } },
-    }));
-    const { onChanged } = renderCard(waConnection({ status: 'CONNECTING' }), [
-      statusMock('CONNECTING'),
-      qrMock(null),
-      { request: { query: WA_GENERATE_API_KEY }, result: generate },
-    ]);
+// Step one poll interval per act: a single long jump resolves dozens of polls in
+// one React batch and trips the nested-update limit.
+const advance = async (ms: number) => {
+  for (let elapsed = 0; elapsed < ms; elapsed += WA_POLL_MS) {
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(Math.min(WA_POLL_MS, ms - elapsed));
+    });
+  }
+};
 
-    expect(screen.getByText('No API key yet')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Generate API key' }));
+/** The live status answering each poll in turn; the last one repeats. */
+const statusSequence = (statuses: WaConnection['status'][]): MockedResponse => {
+  let call = 0;
+  return {
+    request: { query: WA_STATUS },
+    result: () => {
+      const status = statuses[Math.min(call, statuses.length - 1)];
+      call += 1;
+      return { data: { waStatus: waConnection({ status, has_api_key: true }) } };
+    },
+    maxUsageCount: 200,
+  };
+};
 
-    expect(await screen.findByText('New API key generated and saved.')).toBeInTheDocument();
-    expect(generate).toHaveBeenCalledTimes(1);
-    expect(onChanged).toHaveBeenCalled();
+describe('WhatsAppConnectCard — nothing to set up by hand', () => {
+  it('offers no API key step: the server keeps the key', () => {
+    renderCard(waConnection({ status: 'CONNECTING' }), [statusMock('CONNECTING'), qrMock(null)]);
+    expect(screen.queryByRole('button', { name: 'Generate API key' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Generate new API key' })).toBeNull();
+    expect(screen.queryByText('No API key yet')).toBeNull();
   });
 
-  it('offers to replace a saved key', () => {
-    renderCard(waConnection({ status: 'CONNECTING', has_api_key: true }), [statusMock('CONNECTING'), qrMock(null)]);
-    expect(screen.getByText('API key saved')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Generate new API key' })).toBeEnabled();
-  });
+  it('shows the QR spinner as soon as the start request goes out', async () => {
+    const connect = connectMock(false);
+    renderCard(waConnection(), [statusMock('DISCONNECTED'), { ...connect.mock, delay: 30_000 }]);
 
-  it('shows why generating a key failed', async () => {
+    // The stored status is still DISCONNECTED: only the in-flight start shows the spinner.
+    expect(await screen.findByText('Waiting for QR…')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Connect' })).toBeDisabled();
+  });
+});
+
+describe('WhatsAppConnectCard — failed starts', () => {
+  it('restarts a start that fails while the page is open', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const restart = connectMock(true);
     renderCard(waConnection({ status: 'CONNECTING' }), [
-      statusMock('CONNECTING'),
+      statusSequence(['CONNECTING', 'ERROR']),
       qrMock(null),
-      { request: { query: WA_GENERATE_API_KEY }, error: new Error('No gateway master key') },
+      restart.mock,
     ]);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Generate API key' }));
-    expect(await screen.findByRole('alert')).toHaveTextContent('No gateway master key');
+    await advance(WA_POLL_MS * 2);
+    await waitFor(() => expect(restart.fn).toHaveBeenCalledTimes(1));
+  });
+
+  it(`gives up after ${WA_MAX_ERROR_RESTARTS} automatic restarts`, async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const restart = connectMock(true);
+    renderCard(waConnection({ status: 'CONNECTING' }), [
+      statusSequence(['CONNECTING', 'ERROR', 'CONNECTING', 'ERROR', 'CONNECTING', 'ERROR', 'CONNECTING', 'ERROR']),
+      qrMock(null),
+      restart.mock,
+    ]);
+
+    await advance(WA_POLL_MS * 10);
+    expect(restart.fn).toHaveBeenCalledTimes(WA_MAX_ERROR_RESTARTS);
   });
 });
 
@@ -154,16 +190,6 @@ describe('WhatsAppConnectCard — scanning', () => {
       qrMock(null),
       restart.mock,
     ]);
-
-    // Step one poll interval per act: a single long jump resolves dozens of polls in
-    // one React batch and trips the nested-update limit.
-    const advance = async (ms: number) => {
-      for (let elapsed = 0; elapsed < ms; elapsed += WA_POLL_MS) {
-        await act(async () => {
-          await vi.advanceTimersByTimeAsync(Math.min(WA_POLL_MS, ms - elapsed));
-        });
-      }
-    };
 
     await advance(WA_STUCK_RESTART_MS - 1000);
     expect(restart.fn).not.toHaveBeenCalled();

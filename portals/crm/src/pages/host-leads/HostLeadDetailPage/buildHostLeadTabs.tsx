@@ -18,6 +18,7 @@ import ManualLogsTab from '../../../components/ManualLogsTab';
 import WebsitePagesTab from '../../../components/website-pages-tab';
 import RemindersTab from '../../../components/reminders-tab';
 import LeadSurveyTab from '../../../components/lead-survey/LeadSurveyTab';
+import { leadQualityTab } from '../../../components/lead-quality-tab';
 import DynamicValuesView from '../../../components/DynamicValuesView';
 import { joinList, type leadDate, type TranslateFn } from './helpers';
 import HostOverviewTab from './HostOverviewTab';
@@ -38,6 +39,8 @@ export function buildHostLeadTabs({ lead, t, followUpLabel, preferredDate }: Bui
       icon: <GroupsIcon fontSize="small" />,
       render: () => <HostOverviewTab lead={lead} t={t} followUpLabel={followUpLabel} />,
     },
+
+    leadQualityTab('HOST_LEAD', lead.id, t),
 
     {
       value: 'contacts',

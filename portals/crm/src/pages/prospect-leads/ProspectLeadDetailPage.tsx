@@ -20,6 +20,7 @@ import { useLeadEditorOrigin } from '../../hooks/useLeadEditorFlow';
 import AskAiDrawer from '../../components/ask-ai/AskAiDrawer';
 import AskAiButton from '../../components/ask-ai/AskAiButton';
 import { askAiLead, askAiShift } from '../../components/ask-ai/askAiLead';
+import { LeadQualityHeaderRing } from '../../components/lead-quality-tab';
 import { PROSPECT_KINDS } from './prospectKinds';
 import { buildProspectLeadTabs } from './prospectLeadTabs';
 import { kindChip, statTiles } from './prospectDetails';
@@ -98,6 +99,7 @@ export default function ProspectLeadDetailPage({ entity }: Readonly<{ entity: Pr
             >
               {t('shell.common.edit')}
             </DuncitButton>
+            <LeadQualityHeaderRing entity={entity} leadId={lead.id} />
           </Stack>
         </CardContent>
       </Card>

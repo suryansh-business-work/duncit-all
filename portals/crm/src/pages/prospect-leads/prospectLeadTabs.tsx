@@ -22,6 +22,7 @@ import type { LeadTab } from '../../components/LeadTabs';
 import { leadServicesTab } from '../../components/leadServicesTab';
 import { leadSocialTab } from '../../components/leadSocialTab';
 import { leadMediaTab } from '../../components/lead-media/leadMediaTab';
+import { leadQualityTab } from '../../components/lead-quality-tab';
 import { profileRows } from './prospectDetails';
 
 type Translate = ReturnType<typeof useTranslation>['t'];
@@ -99,6 +100,7 @@ export function buildProspectLeadTabs(
       icon: <PersonPinIcon fontSize="small" />,
       render: () => <OverviewTab lead={lead} />,
     },
+    leadQualityTab(entity, lead.id, t),
     {
       value: 'contacts',
       label: t('crm.prospectLeads.contactsCount', { count: lead.contacts.length }),

@@ -21,6 +21,7 @@ import WebsitePagesTab from '../../../components/website-pages-tab';
 import RemindersTab from '../../../components/reminders-tab';
 import DynamicValuesView from '../../../components/DynamicValuesView';
 import LeadSurveyTab from '../../../components/lead-survey/LeadSurveyTab';
+import { leadQualityTab } from '../../../components/lead-quality-tab';
 import { joinList, type TranslateFn } from './helpers';
 import VenueOverviewTab from './VenueOverviewTab';
 import VenueLinkedHostsTab from './VenueLinkedHostsTab';
@@ -41,6 +42,8 @@ export function buildVenueLeadTabs({ lead, t, navigate, followUpLabel }: BuildAr
       icon: <HomeWorkIcon fontSize="small" />,
       render: () => <VenueOverviewTab lead={lead} t={t} followUpLabel={followUpLabel} />,
     },
+
+    leadQualityTab('VENUE_LEAD', lead.id, t),
 
     {
       value: 'contacts',

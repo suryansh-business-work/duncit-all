@@ -9,6 +9,7 @@ import { PriorityChip, StatusChip } from '../../../components/StatusChips';
 import LeadContactActions from '../../../components/LeadContactActions';
 import { MatchedUserChip } from '../../../components/MatchedUserBox';
 import { hostVariableValues } from '../../../config/leadVariables';
+import { LeadQualityHeaderRing } from '../../../components/lead-quality-tab';
 import type { TranslateFn } from './helpers';
 
 interface Props {
@@ -108,6 +109,7 @@ export default function HostHeroCard({ lead, t, onAskAi, onEdit }: Readonly<Prop
           <DuncitButton startIcon={<EditIcon />} variant="contained" onClick={onEdit}>
             {t('shell.common.edit')}
           </DuncitButton>
+          <LeadQualityHeaderRing entity="HOST_LEAD" leadId={lead.id} />
         </Stack>
       </CardContent>
     </Card>

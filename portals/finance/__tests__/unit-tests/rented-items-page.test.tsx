@@ -1,11 +1,18 @@
 import { describe, expect, it, vi } from 'vitest';
 import { screen } from '@testing-library/react';
+import type { RentalDetailLinks } from '@duncit/venue-rentals';
 import RentedItemsPage from '../../src/pages/finance/rented-items-page/RentedItemsPage';
 import { renderWithProviders } from '../testkit';
 
-// The bookings table is the venue-rentals package's own, tested there.
+const { boardProps } = vi.hoisted(() => ({ boardProps: { current: null as { links?: RentalDetailLinks } | null } }));
+
+// The board itself is the real package's in rented-items-detail.test.tsx; here
+// only what this page hands it.
 vi.mock('@duncit/venue-rentals', () => ({
-  FinanceRentalBookings: () => <div data-testid="finance-rental-bookings" />,
+  FinanceRentalBookings: (props: { links?: RentalDetailLinks }) => {
+    boardProps.current = props;
+    return <div data-testid="finance-rental-bookings" />;
+  },
 }));
 
 describe('RentedItemsPage', () => {
@@ -19,5 +26,13 @@ describe('RentedItemsPage', () => {
       ),
     ).toBeInTheDocument();
     expect(screen.getByTestId('finance-rental-bookings')).toBeInTheDocument();
+  });
+
+  it('points a rental’s pod at mWeb and its guest at the Admin console’s user page', () => {
+    renderWithProviders(<RentedItemsPage />);
+
+    const links = boardProps.current?.links;
+    expect(links?.mwebUrl).toMatch(/^https?:\/\/[^/]+$/);
+    expect(links?.profileUrl?.('u 1')).toMatch(/\/users\/u%201$/);
   });
 });

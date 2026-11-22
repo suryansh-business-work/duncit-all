@@ -28,3 +28,29 @@ export function SingleImageUploadField({
 }
 
 export default SingleImageUploadField;
+
+/**
+ * Stub for @duncit/media-picker's MediaPickerDialog (the rental proof photos use
+ * it through @duncit/venue-food's photo field). Open, it offers one button that
+ * "uploads" a fresh ImageKit URL, so a form's photo limit can be driven for real.
+ */
+let pickedCount = 0;
+export function MediaPickerDialog({ open, onPicked, title }: any) {
+  if (!open) return null;
+  return (
+    <div role="dialog" aria-label={title}>
+      <button
+        type="button"
+        onClick={() => {
+          pickedCount += 1;
+          onPicked(`https://ik.imagekit.io/duncit/proof-${pickedCount}.jpg`);
+        }}
+      >
+        pick photo
+      </button>
+    </div>
+  );
+}
+
+/** The rich-text editor's direct upload: never reached by the finance suites. */
+export const useImagekitDirectUpload = () => ({ upload: async () => '', uploading: false });

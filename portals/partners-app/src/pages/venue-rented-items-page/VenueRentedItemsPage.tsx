@@ -2,11 +2,15 @@ import { Fragment } from 'react';
 import { useQuery } from '@apollo/client/react';
 import { Alert, Stack } from '@mui/material';
 import { FOOD_OWNER_VENUES } from '@duncit/venue-food';
-import { VenueRentalDesk } from '@duncit/venue-rentals';
+import { VenueRentalDesk, type RentalDetailLinks } from '@duncit/venue-rentals';
 import { parseApiError } from '@duncit/utils';
 import { useTranslation } from '@duncit/shell';
 import StudioPageHeader from '../../components/studio/StudioPageHeader';
 import VenueStudioBody from '../../components/venue/VenueStudioBody';
+import { urlConfigs } from '../../config/url-configs';
+
+/** A rental's pod opens on mWeb. A venue sees no guest profile link: that view is Finance's. */
+const RENTAL_LINKS: RentalDetailLinks = { mwebUrl: urlConfigs.mwebUrl };
 
 /**
  * Rented Items — what the selected venue rents out with a pod booking, its
@@ -29,7 +33,7 @@ export default function VenueRentedItemsPage() {
       <VenueStudioBody venues={data?.myVenues} loading={loading} errorAlert={errorAlert}>
         {(venue) => (
           <Fragment key={venue.id}>
-            <VenueRentalDesk venueId={venue.id} surface="partners-app" mode="owner" />
+            <VenueRentalDesk venueId={venue.id} surface="partners-app" mode="owner" links={RENTAL_LINKS} />
           </Fragment>
         )}
       </VenueStudioBody>

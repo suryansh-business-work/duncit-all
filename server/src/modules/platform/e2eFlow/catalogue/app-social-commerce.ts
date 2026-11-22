@@ -503,11 +503,12 @@ export const APP_SOCIAL_COMMERCE_FLOWS: readonly CatalogueFlow[] = [
       },
       {
         name: 'Expired pod reel',
-        description: 'A pod that has already run cannot be joined from Explore.',
+        description: 'A pod past its end time cannot be joined from Explore; a running one shows as ongoing.',
         steps: [
           ['Scroll to a reel of a past pod', 'The Join action reads "Expired" and the join bar says "This pod is expired" / "You can still view the pod details."'],
           ['Look for the "Go" button on that reel', 'No "Go" button is shown'],
           ['Tap "Open"', 'The pod details page opens in read-only state'],
+          ['Scroll to a reel of a pod that has started but not reached its end time', 'The join bar says "Pod ongoing" over the price line, the Join action keeps the spots count and "Go" is still shown'],
         ],
       },
       {

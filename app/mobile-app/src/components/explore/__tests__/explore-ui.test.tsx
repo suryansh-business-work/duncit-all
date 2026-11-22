@@ -151,6 +151,36 @@ describe('ExplorePodCard', () => {
     expect(screen.queryByTestId('reel-go-p-1')).toBeNull();
   });
 
+  it('shows a running pod as ongoing and keeps Go', () => {
+    const onOpen = jest.fn();
+    const runningPod = {
+      ...(pod('1') as Record<string, unknown>),
+      pod_date_time: new Date(Date.now() - 3_600_000).toISOString(),
+      pod_end_date_time: new Date(Date.now() + 3_600_000).toISOString(),
+    } as never;
+    renderWithProviders(
+      <ExplorePodCard
+        soundOn={false}
+        onToggleSound={jest.fn()}
+        pod={runningPod}
+        width={390}
+        height={700}
+        isActive={false}
+        saved={false}
+        like={{ liked_by_me: false, like_count: 3 }}
+        commentCount={2}
+        onToggleLike={jest.fn()}
+        onToggleSave={jest.fn()}
+        onComment={jest.fn()}
+        onOpen={onOpen}
+      />,
+    );
+    expect(screen.getByText('Pod ongoing')).toBeOnTheScreen();
+    expect(screen.queryByText('This pod is expired')).toBeNull();
+    fireEvent.press(screen.getByTestId('reel-go-p-1'));
+    expect(onOpen).toHaveBeenCalledTimes(1);
+  });
+
   it('renders the liked/saved/pending states and an unlimited-spots join label', () => {
     renderWithProviders(
       <ExplorePodCard

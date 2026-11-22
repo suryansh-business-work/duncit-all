@@ -9,6 +9,8 @@ import { useTranslation } from '@/hooks/useTranslation';
 interface Props {
   podId: string;
   expired: boolean;
+  /** Started, not over: still joinable, so Go stays and the bar says so. */
+  ongoing?: boolean;
   /** "₹199 · Confirm with UPI" / "Free spot" — the one line a live pod shows. */
   subtitle: string;
   bottom: number;
@@ -18,9 +20,17 @@ interface Props {
 /**
  * The pill pinned above the floating nav on every reel: the price line and a
  * green Go, or — for a pod that has already run — the expired notice with no
- * CTA. mWeb twin: explore-page/ExploreJoinBar.
+ * CTA. A running pod keeps Go under a "Pod ongoing" line.
+ * mWeb twin: explore-page/ExploreJoinBar.
  */
-export function ExploreJoinBar({ podId, expired, subtitle, bottom, onGo }: Readonly<Props>) {
+export function ExploreJoinBar({
+  podId,
+  expired,
+  ongoing = false,
+  subtitle,
+  bottom,
+  onGo,
+}: Readonly<Props>) {
   const { t } = useTranslation();
   const { onPrimary } = useThemeColors();
   return (
@@ -59,9 +69,20 @@ export function ExploreJoinBar({ podId, expired, subtitle, bottom, onGo }: Reado
         </YStack>
       ) : (
         <>
-          <Text flex={1} color="$onPrimary" fontSize={14} fontWeight="600" numberOfLines={1}>
-            {subtitle}
-          </Text>
+          {ongoing ? (
+            <YStack flex={1} testID="explore-join-ongoing">
+              <Text color="$onPrimary" fontSize={14} fontWeight="600" numberOfLines={1}>
+                {t('mweb.podDetails.podOngoing')}
+              </Text>
+              <Text color="$onPrimary" opacity={0.82} fontSize={12} numberOfLines={1}>
+                {subtitle}
+              </Text>
+            </YStack>
+          ) : (
+            <Text flex={1} color="$onPrimary" fontSize={14} fontWeight="600" numberOfLines={1}>
+              {subtitle}
+            </Text>
+          )}
           <XStack
             testID={`reel-go-${podId}`}
             role="button"

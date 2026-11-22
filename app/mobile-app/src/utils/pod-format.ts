@@ -103,14 +103,6 @@ export function isPodActive(start?: string | null, end?: string | null): boolean
   return podStatus(start, end) !== 'ENDED';
 }
 
-/** True once the pod's start time has passed — the canonical "expired" test used
- * across Explore (join closed) and Pod details (shop disabled, "Attended"). */
-export function isPodExpired(start?: string | null): boolean {
-  if (!start) return false;
-  const ms = new Date(start).getTime();
-  return !Number.isNaN(ms) && ms < Date.now();
-}
-
 export type TimeTone = 'error' | 'warning' | 'info' | 'success';
 
 /** Countdown chip data for the pod: ongoing (started, not ended) / expired

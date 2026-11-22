@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { isPodActive, isPodExpired, podStatus, podStatusChip } from '../podStatus';
+import { isPodActive, podStatus, podStatusChip } from '../podStatus';
 
 const NOW = new Date('2026-07-22T12:00:00.000Z').getTime();
 const HOUR = 60 * 60 * 1000;
@@ -68,25 +68,6 @@ describe('isPodActive', () => {
 
   it('is false for ended pods', () => {
     expect(isPodActive(iso(-2 * HOUR), iso(-HOUR))).toBe(false);
-  });
-});
-
-describe('isPodExpired', () => {
-  it('is false when start is missing', () => {
-    expect(isPodExpired()).toBe(false);
-    expect(isPodExpired(null)).toBe(false);
-  });
-
-  it('is false when start is an invalid date', () => {
-    expect(isPodExpired('nonsense')).toBe(false);
-  });
-
-  it('is false when start is in the future', () => {
-    expect(isPodExpired(iso(HOUR))).toBe(false);
-  });
-
-  it('is true when start is in the past', () => {
-    expect(isPodExpired(iso(-HOUR))).toBe(true);
   });
 });
 

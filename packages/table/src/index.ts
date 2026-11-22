@@ -24,6 +24,8 @@ export {
   dateColumn,
   entityIdColumn,
   formatDateCell,
+  LabeledIds,
+  labeledIdsText,
   rowMenuColumn,
   EM_DASH,
 } from './cells';
@@ -32,6 +34,7 @@ export type {
   ActiveChipColumnOptions,
   DateColumnOptions,
   EntityIdColumnOptions,
+  LabeledId,
   RowActionOptions,
   RowMenuColumnOptions,
   RowMenuItem,

@@ -93,14 +93,14 @@ export default defineDemos('table', [
     id: 'typed-columns',
     title: 'Every column sorts and filters by what it holds',
     note:
-      'One column of each type. Open a header’s filter: Payout and Host offer contains / equals / does not equal, Amount offers = ≠ ≥ ≤ and between, Status is a pick-list of its options, Instant is yes / no, Requested is a from–to date range. Click a header to sort — Amount and Requested start largest / newest first, the text columns A→Z. Sorting and filtering compare the raw value by type, so ₹900 sorts below ₹12,400 and dates stay chronological even though the cells print formatted text.',
+      'One column of each type. The IDs cell prints the gateway’s payout id and our own reference each under its own name (LabeledIds) — a payout not yet sent shows only ours. Open a header’s filter: IDs and Host offer contains / equals / does not equal, Amount offers = ≠ ≥ ≤ and between, Status is a pick-list of its options, Instant is yes / no, Requested is a from–to date range. Click a header to sort — Amount and Requested start largest / newest first, the text columns A→Z. Sorting and filtering compare the raw value by type, so ₹900 sorts below ₹12,400 and dates stay chronological even though the cells print formatted text.',
     mock: {
       rows: [
-        { id: 'p1', payout_no: 'DUN-PAY-10241', host_name: 'Aarav Mehta', amount: 8250, payout_status: 'PENDING', is_instant: true, requested_at: '2026-09-12T09:15:00.000Z' },
-        { id: 'p2', payout_no: 'DUN-PAY-10240', host_name: 'Nikita Rao', amount: 12400, payout_status: 'PAID', is_instant: false, requested_at: '2026-09-08T11:40:00.000Z' },
-        { id: 'p3', payout_no: 'DUN-PAY-10239', host_name: 'Kabir Singh', amount: 900, payout_status: 'ON_HOLD', is_instant: false, requested_at: '2026-09-10T06:05:00.000Z' },
-        { id: 'p4', payout_no: 'DUN-PAY-10238', host_name: 'Meera Iyer', amount: 4600, payout_status: 'PAID', is_instant: true, requested_at: '2026-09-01T14:20:00.000Z' },
-        { id: 'p5', payout_no: 'DUN-PAY-10237', host_name: 'Rohan Das', amount: 15200, payout_status: 'PENDING', is_instant: false, requested_at: '2026-09-14T18:45:00.000Z' },
+        { id: 'p1', payout_no: 'DUN-PAY-10241', host_name: 'Aarav Mehta', amount: 8250, payout_status: 'PENDING', is_instant: true, requested_at: '2026-09-12T09:15:00.000Z', razorpay_payout_id: 'pout_Q5EHx9Lm1' },
+        { id: 'p2', payout_no: 'DUN-PAY-10240', host_name: 'Nikita Rao', amount: 12400, payout_status: 'PAID', is_instant: false, requested_at: '2026-09-08T11:40:00.000Z', razorpay_payout_id: 'pout_Q5EIx9Lm2' },
+        { id: 'p3', payout_no: 'DUN-PAY-10239', host_name: 'Kabir Singh', amount: 900, payout_status: 'ON_HOLD', is_instant: false, requested_at: '2026-09-10T06:05:00.000Z', razorpay_payout_id: null },
+        { id: 'p4', payout_no: 'DUN-PAY-10238', host_name: 'Meera Iyer', amount: 4600, payout_status: 'PAID', is_instant: true, requested_at: '2026-09-01T14:20:00.000Z', razorpay_payout_id: 'pout_Q5EKx9Lm4' },
+        { id: 'p5', payout_no: 'DUN-PAY-10237', host_name: 'Rohan Das', amount: 15200, payout_status: 'PENDING', is_instant: false, requested_at: '2026-09-14T18:45:00.000Z', razorpay_payout_id: 'pout_Q5ELx9Lm5' },
       ],
     },
     render: (mock) => <TypedColumnsDemo rows={mock.rows} />,

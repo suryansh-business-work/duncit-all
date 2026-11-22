@@ -1,5 +1,13 @@
 import { useMemo } from 'react';
-import { DuncitTable, clientTableFetch, formatDateCell, rowMenuColumn, type DuncitColumn } from '@duncit/table';
+import {
+  DuncitTable,
+  LabeledIds,
+  clientTableFetch,
+  formatDateCell,
+  labeledIdsText,
+  rowMenuColumn,
+  type DuncitColumn,
+} from '@duncit/table';
 
 export interface PayoutRowMock {
   id: string;
@@ -9,6 +17,8 @@ export interface PayoutRowMock {
   payout_status: 'PENDING' | 'PAID' | 'ON_HOLD';
   is_instant: boolean;
   requested_at: string;
+  /** The gateway's own transfer id — shown beside ours, each under its own name. */
+  razorpay_payout_id: string | null;
 }
 
 export interface TypedColumnsMock {
@@ -23,8 +33,21 @@ const PAYOUT_STATUS_OPTIONS = [
 
 const payoutRowId = (row: PayoutRowMock) => row.id;
 
+/** Two systems' ids for one payout: never one unlabelled stack. */
+const payoutIds = (row: PayoutRowMock) => [
+  { label: 'Razorpay payout', value: row.razorpay_payout_id },
+  { label: 'Duncit ref', value: row.payout_no },
+];
+
 const PAYOUT_COLUMNS: DuncitColumn<PayoutRowMock>[] = [
-  { field: 'payout_no', headerName: 'Payout', type: 'text', minWidth: 150 },
+  {
+    field: 'payout_no',
+    headerName: 'IDs',
+    type: 'text',
+    minWidth: 230,
+    cellRenderer: (row) => <LabeledIds ids={payoutIds(row)} />,
+    valueGetter: (row) => labeledIdsText(payoutIds(row)),
+  },
   { field: 'host_name', headerName: 'Host', type: 'text', flex: 1, minWidth: 150 },
   { field: 'amount', headerName: 'Amount (₹)', type: 'number', width: 140 },
   { field: 'payout_status', headerName: 'Status', type: 'enum', options: PAYOUT_STATUS_OPTIONS, width: 140 },
@@ -60,7 +83,7 @@ const PAYOUT_COLUMNS: DuncitColumn<PayoutRowMock>[] = [
  */
 export function TypedColumnsDemo({ rows }: Readonly<{ rows: PayoutRowMock[] }>) {
   const fetchRows = useMemo(
-    () => clientTableFetch(rows, (row) => `${row.payout_no} ${row.host_name}`, PAYOUT_COLUMNS),
+    () => clientTableFetch(rows, (row) => `${row.payout_no} ${row.razorpay_payout_id ?? ''} ${row.host_name}`, PAYOUT_COLUMNS),
     [rows],
   );
   return (

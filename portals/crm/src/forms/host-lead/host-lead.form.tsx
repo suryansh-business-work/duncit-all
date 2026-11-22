@@ -16,6 +16,7 @@ import HostBudgetSection from './sections/HostBudgetSection';
 import HostTimelineSection from './sections/HostTimelineSection';
 import HostReachSection from './sections/HostReachSection';
 import HostWebsiteSection from './sections/HostWebsiteSection';
+import LeadSocialSection from '../fields/LeadSocialSection';
 import LeadServicesSection from '../fields/LeadServicesSection';
 import HostBrandingSection from './sections/HostBrandingSection';
 import HostDynamicSection from './sections/HostDynamicSection';
@@ -38,7 +39,7 @@ interface Props {
   leadId?: string;
 }
 
-const SECTIONS = [
+const SECTIONS: Array<{ title: string; titleKey?: string; expanded?: boolean; paths: string[] }> = [
   { title: '1. Basic Details', expanded: true, paths: ['super_category_id', 'host_name', 'host_type', 'organization_name', 'city', 'area'] },
   { title: '2. Contact Details', paths: ['contacts'] },
   {
@@ -47,24 +48,17 @@ const SECTIONS = [
   },
   { title: '4. Budget & Revenue', paths: ['budget_range', 'revenue_models'] },
   { title: '5. Timeline', paths: ['preferred_event_date', 'preferred_day', 'preferred_time_slot'] },
+  { title: '6.', titleKey: 'crm.common.social', paths: ['instagram_link', 'social_links'] },
   {
-    title: '6. Social / Reach',
-    paths: [
-      'instagram_link',
-      'social_links',
-      'community_link',
-      'community_size',
-      'previous_events_hosted',
-      'past_attendees',
-      'host_intent_scores',
-    ],
+    title: '7. Reach',
+    paths: ['community_link', 'community_size', 'previous_events_hosted', 'past_attendees', 'host_intent_scores'],
   },
-  { title: '7. Website', paths: ['website'] },
-  { title: '8. Services Offered', paths: ['services_offered'] },
-  { title: '9. Photo & Tags', paths: ['profile_photo_url', 'tags'] },
-  { title: '10. Custom Fields', paths: ['dynamic_values_json'] },
+  { title: '8. Website', paths: ['website'] },
+  { title: '9. Services Offered', paths: ['services_offered'] },
+  { title: '10. Photo & Tags', paths: ['profile_photo_url', 'tags'] },
+  { title: '11. Custom Fields', paths: ['dynamic_values_json'] },
   {
-    title: '11. Internal Tracking',
+    title: '12. Internal Tracking',
     paths: ['lead_source', 'assigned_to', 'lead_status', 'priority', 'next_follow_up_date', 'notes'],
   },
 ];
@@ -133,12 +127,14 @@ export default function HostLeadForm({
 }
 
 function HostSections({ config }: Readonly<{ config: CrmOptionGroup }>) {
+  const { t } = useTranslation();
   const components = [
     <HostBasicSection key="basic" config={config} />,
     <HostContactsSection key="contacts" />,
     <HostPreferencesSection key="preferences" config={config} />,
     <HostBudgetSection key="budget" config={config} />,
     <HostTimelineSection key="timeline" config={config} />,
+    <LeadSocialSection key="social" />,
     <HostReachSection key="reach" />,
     <HostWebsiteSection key="website" />,
     <LeadServicesSection key="services" appliesTo="HOST" />,
@@ -151,7 +147,7 @@ function HostSections({ config }: Readonly<{ config: CrmOptionGroup }>) {
       {SECTIONS.map((section, idx) => (
         <FormAccordion
           key={section.title}
-          title={section.title}
+          title={section.titleKey ? `${section.title} ${t(section.titleKey)}` : section.title}
           defaultExpanded={section.expanded}
           fieldPaths={section.paths}
         >

@@ -7,7 +7,7 @@ const BACKBONE_FIELDS = `
   city area contacts { ${CONTACT_FIELDS} } website instagram_link
   social_links { ${SOCIAL_LINK_FIELDS} } services_offered { ${SERVICE_FIELDS} }
   tags profile_photo_url dynamic_values_json
-  lead_source assigned_to lead_status priority next_follow_up_date notes
+  lead_source assigned_to assigned_user_id lead_status priority next_follow_up_date notes
   activity_log { ${ACTIVITY_FIELDS} } created_at updated_at
 `;
 

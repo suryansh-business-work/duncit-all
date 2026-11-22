@@ -3,7 +3,7 @@ import { gql } from '@apollo/client';
 export const CONTACT_FIELDS = `name role mobile_number whatsapp_number email`;
 export const SERVICE_FIELDS = `service custom_name description`;
 export const SOCIAL_LINK_FIELDS = `name url`;
-export const ACTIVITY_FIELDS = `type summary status target body_html body_text created_by created_at`;
+export const ACTIVITY_FIELDS = `id type summary status target body_html body_text mention_user_ids created_by created_at updated_by updated_at deleted_by deleted_at is_deleted can_change`;
 export const SUPER_CATEGORY_FIELDS = `id name slug icon`;
 const LINKED_HOST_FIELDS = `id host_name host_type city lead_status priority`;
 
@@ -17,7 +17,7 @@ export const VENUE_LEAD_FIELDS = `
   instagram_link social_links { ${SOCIAL_LINK_FIELDS} }
   linked_host_ids linked_hosts { ${LINKED_HOST_FIELDS} }
   tags logo_url dynamic_values_json
-  lead_source assigned_to lead_status priority
+  lead_source assigned_to assigned_user_id lead_status priority
   next_follow_up_date remarks activity_log { ${ACTIVITY_FIELDS} } created_at updated_at
 `;
 
@@ -30,7 +30,7 @@ export const HOST_LEAD_FIELDS = `
   instagram_link social_links { ${SOCIAL_LINK_FIELDS} } community_link
   community_size previous_events_hosted past_attendees host_intent_scores
   tags profile_photo_url dynamic_values_json
-  lead_source assigned_to lead_status priority next_follow_up_date notes
+  lead_source assigned_to assigned_user_id lead_status priority next_follow_up_date notes
   activity_log { ${ACTIVITY_FIELDS} } created_at updated_at
 `;
 
@@ -41,7 +41,7 @@ export const ECOMM_LEAD_FIELDS = `
   gst_number gst_applicable website instagram_link social_links { ${SOCIAL_LINK_FIELDS} } marketplace_links
   services_offered { ${SERVICE_FIELDS} }
   tags profile_photo_url dynamic_values_json
-  lead_source assigned_to lead_status priority next_follow_up_date notes
+  lead_source assigned_to assigned_user_id lead_status priority next_follow_up_date notes
   activity_log { ${ACTIVITY_FIELDS} } created_at updated_at
 `;
 
@@ -136,6 +136,22 @@ export const CALL_ECOMM_LEAD = gql`
 export const ADD_CRM_MANUAL_LOG = gql`
   mutation AddCrmManualLog($input: ManualLogInput!) {
     addCrmManualLog(input: $input) {
+      ${ACTIVITY_FIELDS}
+    }
+  }
+`;
+
+export const UPDATE_CRM_MANUAL_LOG = gql`
+  mutation UpdateCrmManualLog($input: UpdateManualLogInput!) {
+    updateCrmManualLog(input: $input) {
+      ${ACTIVITY_FIELDS}
+    }
+  }
+`;
+
+export const DELETE_CRM_MANUAL_LOG = gql`
+  mutation DeleteCrmManualLog($entity_type: CrmEntityType!, $entity_id: ID!, $log_id: ID!) {
+    deleteCrmManualLog(entity_type: $entity_type, entity_id: $entity_id, log_id: $log_id) {
       ${ACTIVITY_FIELDS}
     }
   }

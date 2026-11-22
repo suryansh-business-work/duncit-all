@@ -1,12 +1,10 @@
 import { Card, CardContent, Divider, Stack, Typography } from '@mui/material';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import GroupsIcon from '@mui/icons-material/Groups';
-import InstagramIcon from '@mui/icons-material/Instagram';
 import StickyNote2Icon from '@mui/icons-material/StickyNote2';
 import type { HostLead } from '../../../api/crm.types';
 import { LeadDetailCard, LeadDetailRow } from '../../../components/LeadDetailCard';
 import ExternalLink from '../../../components/ExternalLink';
-import SocialLinksRows from '../../../components/SocialLinksRows';
 import { formatDateTime } from '@duncit/app-settings';
 import { joinList, type TranslateFn } from './helpers';
 
@@ -34,12 +32,7 @@ export default function HostOverviewTab({ lead, t, followUpLabel }: Readonly<Pro
           <LeadDetailRow label={t('crm.common.area')} value={lead.area || '—'} />
         </LeadDetailCard>
 
-        <LeadDetailCard title={t('crm.hostLeads.socialReach')} icon={<InstagramIcon color="primary" />}>
-          <LeadDetailRow
-            label={t('crm.common.instagram')}
-            value={lead.instagram_link ? <ExternalLink variant="body2" href={lead.instagram_link} /> : '—'}
-          />
-          <SocialLinksRows links={lead.social_links} />
+        <LeadDetailCard title={t('crm.hostLeads.reach')} icon={<GroupsIcon color="primary" />}>
           <LeadDetailRow
             label={t('crm.hostLeads.communityLink')}
             value={lead.community_link ? <ExternalLink variant="body2" href={lead.community_link} /> : '—'}

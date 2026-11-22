@@ -14,6 +14,7 @@ export interface CrmLeadRowBase {
   priority: string;
   next_follow_up_date?: string | null;
   created_at?: string | null;
+  assigned_to?: string | null;
   super_category?: { name: string } | null;
   contacts?: { mobile_number?: string | null; email?: string | null }[];
 }
@@ -110,6 +111,8 @@ export interface LeadColumnOptions<T extends CrmLeadRowBase> {
   statusOptions: ReadonlyArray<LeadFilterOption>;
   priorityOptions: ReadonlyArray<LeadFilterOption>;
   superCategoryOptions: ReadonlyArray<LeadFilterOption>;
+  /** CRM team members for the Assigned To filter (value = user id). */
+  assigneeOptions: ReadonlyArray<LeadFilterOption>;
   onEdit: (lead: T) => void;
   onDelete: (lead: T) => void;
   /** Headings are copy — the table hands its translator down. */
@@ -193,6 +196,15 @@ export function buildLeadColumns<T extends CrmLeadRowBase>(
       type: 'enum',
       options: options.superCategoryOptions,
       valueGetter: superCategoryName,
+    },
+    {
+      // Sorted by the assignee's name, filtered by their user id (server: assigned_to → assigned_user_id).
+      field: 'assigned_to',
+      headerName: t('crm.forms.assignedTo'),
+      minWidth: 150,
+      type: 'enum',
+      options: options.assigneeOptions,
+      valueGetter: (row) => row.assigned_to || '—',
     },
     { field: 'next_follow_up_date', headerName: 'Follow-up', minWidth: 140, type: 'date', valueGetter: followUpValue },
     dateColumn<T>({ formatDate: fmtDateObj }),

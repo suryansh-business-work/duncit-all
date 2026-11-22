@@ -42,6 +42,8 @@ export interface VenueLeadFormValues {
   dynamic_values_json: string;
   lead_source: string;
   assigned_to: string;
+  /** The CRM team member picked in Assigned To; '' when unassigned or a legacy free-text name. */
+  assigned_user_id: string;
   lead_status: string;
   priority: string;
   next_follow_up_date: Date | null;
@@ -88,6 +90,7 @@ export const venueLeadInitialValues: VenueLeadFormValues = {
   dynamic_values_json: '{}',
   lead_source: '',
   assigned_to: '',
+  assigned_user_id: '',
   lead_status: 'New',
   priority: 'Medium',
   next_follow_up_date: null,

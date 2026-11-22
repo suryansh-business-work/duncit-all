@@ -123,6 +123,54 @@ export const CRM_BUNDLE: NestedCatalogue = {
         other: '{count} services',
       },
     },
+    // Lead page › Social tab: every social channel, view-only (changed on the lead form).
+    social: {
+      tabLabel: 'Social ({count})',
+      viewOnlyHint: 'View only. To change these, edit the lead and open its Social step.',
+      empty: 'No social channels added yet.',
+    },
+    // Internal Lead Tracking › Assigned To.
+    assignee: {
+      placeholder: 'Search the CRM team…',
+      hint: 'Pick the team member who owns this lead.',
+      legacy: 'Currently "{name}" (typed by hand). Pick a team member to link the lead to them.',
+      noMatches: 'No CRM team member matches that name',
+      loadError: 'The team list could not be loaded. Try again in a moment.',
+    },
+    // A CRM user's name and details (log authors, assignees).
+    people: {
+      unknown: 'Unknown user',
+      roles: 'Roles',
+      notStaff: 'This person is no longer on the CRM team, so their contact details are hidden.',
+      openDetails: 'Open details for {name}',
+    },
+    manualLogs: {
+      subtitle: 'Notes captured by the team. Rich text · grouped by day · newest first. Type @ to tag a teammate.',
+      new: 'New log',
+      newTitle: 'New manual log',
+      editTitle: 'Edit manual log',
+      placeholder: 'Write what happened, what was agreed, what comes next…',
+      mentionHint: 'Type @ and pick a teammate to tag them. They get an email when you save.',
+      save: 'Save log',
+      saveChanges: 'Save changes',
+      saving: 'Saving…',
+      empty: 'No manual logs in this window. Capture conversations, follow-ups, or decisions here.',
+      count: {
+        one: '{count} log',
+        other: '{count} logs',
+      },
+      by: 'by',
+      untitled: 'Untitled log',
+      editedAt: 'Edited {time}',
+      deletedNotice: 'This log was deleted',
+      deleteTitle: 'Delete this log?',
+      deleteMessage: 'The log is removed for everyone. A "This log was deleted" note stays in its place.',
+      deleting: 'Deleting…',
+      historyTitle: 'Log activity',
+      historyCreated: 'Created',
+      historyUpdated: 'Updated',
+      historyDeleted: 'Deleted',
+    },
     media: {
       actionsFor: 'Actions for {name}',
       countOfLimit: '{count} of {limit}',
@@ -174,6 +222,7 @@ export const CRM_BUNDLE: NestedCatalogue = {
       editNamed: 'Edit {name}',
       deleteNamed: 'Delete {name}',
       socialLinks: 'Social links',
+      social: 'Social',
       active: 'Active',
       address: 'Address',
       adminDefinedFieldsFromSettingsDynamic: 'Admin-defined fields from Settings → Dynamic Fields.',
@@ -790,6 +839,7 @@ export const CRM_BUNDLE: NestedCatalogue = {
       image: 'Image',
       indoorOutdoorBoth: 'Indoor / Outdoor / Both',
       instagramSocialLink: 'Instagram / Social Link',
+      instagramPlaceholder: 'https://instagram.com/…',
       interestedInHosting: 'Interested In Hosting',
       invoiceAvailable: 'Invoice Available',
       leadCreated: 'Lead created. You can keep adding details.',
@@ -853,6 +903,7 @@ export const CRM_BUNDLE: NestedCatalogue = {
     },
 
     hostLeads: {
+      reach: 'Reach',
       audience: 'Audience',
       audienceSize: 'Audience size',
       backToHostLeads: 'Back to Host Leads',

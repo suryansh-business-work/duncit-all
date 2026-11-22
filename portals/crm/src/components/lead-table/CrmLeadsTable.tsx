@@ -10,6 +10,10 @@ import {
 } from './leadColumns';
 import { duplicateRowStyle, withDuplicateMark, type DuplicateFlagged } from './duplicateRow';
 import { useTranslation } from '@duncit/shell';
+import { useCrmStaffSearch } from '../../hooks/useCrmStaffSearch';
+
+/** The Assigned To filter lists the whole CRM team; it is a small group. */
+const ASSIGNEE_FILTER_LIMIT = 50;
 
 type LeadRow = CrmLeadRowBase & DuplicateFlagged;
 
@@ -43,13 +47,18 @@ export default function CrmLeadsTable<T extends LeadRow>({
 }: Readonly<Props<T>>) {
   const { t } = useTranslation();
   const theme = useTheme();
+  const { users } = useCrmStaffSearch('', { limit: ASSIGNEE_FILTER_LIMIT });
+  const assigneeOptions = useMemo(
+    () => users.map((user) => ({ value: user.id, label: user.name || user.email || user.id })),
+    [users],
+  );
   const columns = useMemo(
     () =>
       withDuplicateMark(
-        buildLeadColumns<T>({ entity, statusOptions, priorityOptions, superCategoryOptions, onEdit, onDelete, t }),
+        buildLeadColumns<T>({ entity, statusOptions, priorityOptions, superCategoryOptions, assigneeOptions, onEdit, onDelete, t }),
         t,
       ),
-    [entity, statusOptions, priorityOptions, superCategoryOptions, onEdit, onDelete, t],
+    [entity, statusOptions, priorityOptions, superCategoryOptions, assigneeOptions, onEdit, onDelete, t],
   );
   const getRowStyle = useMemo(() => duplicateRowStyle(theme), [theme]);
   const meta = leadEntityMeta(t)[entity];

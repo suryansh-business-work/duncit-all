@@ -11,6 +11,7 @@ import { LeadDetailCard, LeadDetailRow } from '../../../components/LeadDetailCar
 import ContactsTab from '../../../components/contacts-tab';
 import type { LeadTab } from '../../../components/LeadTabs';
 import { leadServicesTab } from '../../../components/leadServicesTab';
+import { leadSocialTab } from '../../../components/leadSocialTab';
 import { leadMediaTab } from '../../../components/lead-media/leadMediaTab';
 import CommsLogsSection from '../../../components/CommsLogsSection';
 import ManualLogsTab from '../../../components/ManualLogsTab';
@@ -64,6 +65,7 @@ export function buildHostLeadTabs({ lead, t, followUpLabel, preferredDate }: Bui
       ),
     },
 
+    leadSocialTab(lead, t),
     leadServicesTab(lead.services_offered, t),
     leadMediaTab('HOST_LEAD', lead.id, t),
 

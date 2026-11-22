@@ -381,6 +381,18 @@ Auto Pods table and an Auto Pod's own page. Writes, money and platform settings
 stay with the platform admins; **Pod Settings** shows the server's refusal at
 the top of the page rather than leaving every card looking merely out of range.
 
+**Pod Settings › Host engagement & performance** drives Partners › Club Admin ›
+Hosts: the inactivity window (`host_inactivity_days`, 1–90, default 14 — a host
+with no completed pod in that many days shows yellow), the monthly pod target
+(`host_monthly_pod_target`, 1–100, default 8 — the Host Performance Score is
+`min(100, completed / target × 100)`), the engagement status list
+(`host_engagement_statuses` — an RHF + Zod form: rename, reorder, add, switch
+off; saved keys are permanent and only rows added in the form can be removed),
+and the monthly messages (`host_performance_notify_enabled` off by default,
+`host_performance_notify_day` 1–28, the hosts / Club Admins switches and
+`host_underperform_threshold_pct` 1–100). Ranges come from `@duncit/utils`
+host-engagement.
+
 All Pods keeps its filters in the URL — `?club_id=` and `?lifecycle=`
 (`UPCOMING`, `ONGOING`, `COMPLETED`, `CANCELLED`) — so the brief's tiles open
 an already-filtered list, changing one filter keeps the other, and a link to

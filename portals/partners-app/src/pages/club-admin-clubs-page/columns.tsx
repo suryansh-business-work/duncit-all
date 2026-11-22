@@ -2,6 +2,7 @@ import { Link as RouterLink } from 'react-router';
 import { Avatar, Box, Stack, Typography } from '@mui/material';
 import EventNoteIcon from '@mui/icons-material/EventNote';
 import GroupsIcon from '@mui/icons-material/Groups';
+import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import { DuncitButton } from '@duncit/buttons';
 import { activeChipColumn, dateColumn, EM_DASH, type DuncitColumn } from '@duncit/table';
@@ -41,9 +42,10 @@ const renderClub = (club: ClubAdminClubInfoRow) => (
   </Stack>
 );
 
-/** "Pods" jump to the club's pod list — where a row click goes too. */
+/** "Pods" jumps to the club's pod list — where a row click goes too — and
+ * "Hosts" to everyone who hosts its pods, with their contacts and score. */
 const renderActions = (club: ClubAdminClubInfoRow, t: Translate) => (
-  <Stack direction="row" component="span" sx={{
+  <Stack direction="row" component="span" spacing={1} sx={{
     justifyContent: "flex-end"
   }}>
     <DuncitButton
@@ -55,6 +57,16 @@ const renderActions = (club: ClubAdminClubInfoRow, t: Translate) => (
       data-testid={`club-admin-club-pods-${club.id}`}
     >
       {t('shell.nav.pods')}
+    </DuncitButton>
+    <DuncitButton
+      size="small"
+      variant="outlined"
+      component={RouterLink}
+      to={`/club-admin/clubs/${club.id}/hosts`}
+      startIcon={<PeopleAltIcon />}
+      data-testid={`club-admin-club-hosts-${club.id}`}
+    >
+      {t('clubAdmin.hosts.hostsAction')}
     </DuncitButton>
   </Stack>
 );
@@ -143,7 +155,7 @@ export const clubAdminClubsColumns = (t: Translate): DuncitColumn<ClubAdminClubI
     field: 'actions',
     headerName: t('shell.common.actions'),
     type: 'actions',
-    width: 130,
+    width: 230,
     cellRenderer: (row: ClubAdminClubInfoRow) => renderActions(row, t),
   },
 ];

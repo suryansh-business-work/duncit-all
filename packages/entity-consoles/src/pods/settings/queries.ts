@@ -38,6 +38,14 @@ const FIELDS = `
   club_admin_change_request_health_penalty
   venue_offer_max_counters
   pod_min_advance_days
+  host_inactivity_days
+  host_monthly_pod_target
+  host_engagement_statuses { key label is_active }
+  host_performance_notify_enabled
+  host_performance_notify_day
+  host_performance_notify_hosts
+  host_performance_notify_club_admins
+  host_underperform_threshold_pct
   updated_at
 `;
 

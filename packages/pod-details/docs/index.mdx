@@ -18,6 +18,8 @@ exports:
   - 'usePodDetailsScope'
   - 'SectionCard'
   - 'POD_DETAIL'
+  - 'ContactChips'
+  - 'contactLinks'
 ---
 
 ## What this is
@@ -167,6 +169,17 @@ A name links through to the user's page only where such a page exists:
 
 Omitting `userTo` renders the name as text. Club Admin's console has no `/users` route,
 and a name that navigates nowhere reads as a broken page rather than a missing feature.
+
+### Contact chips, shared
+
+The admins card's chips are `ContactChips` (and the `contactLinks` builder behind it),
+exported so the Partners Club Admin host pages offer the same dialable links for a host
+— one copy, so a number dials the same way everywhere. A chip click stops at the chip,
+so the chips can sit inside a clickable table row.
+
+```tsx
+<ContactChips contact={{ email, phone, whatsapp }} testId="club-host-contact" />
+```
 
 ## Edit is opt-in
 

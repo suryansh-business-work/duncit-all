@@ -48,6 +48,7 @@ import VenueFoodCouponsPage from './pages/venue-food-coupons-page/VenueFoodCoupo
 import VenueRentedItemsPage from './pages/venue-rented-items-page/VenueRentedItemsPage';
 import { venueSetupRoutes } from './pages/venue-setup/venueSetupRoutes';
 import { bannerRoutes } from './pages/banner-kit-page/bannerRoutes';
+import { clubHostRoutes } from './pages/club-admin-hosts-page/clubHostRoutes';
 import HostPublishPage from './pages/publish-page/HostPublishPage';
 import {
   ClubsHub,
@@ -170,6 +171,7 @@ export default function App() {
       <Route path="/club-admin/monitoring" element={authed(<ClubsHub />)} />
       <Route path="/club-admin/auto-pods" element={authed(<ClubsHub />)} />
       <Route path="/club-admin/clubs/:clubId/edit" element={authed(<ClubAdminEditClubPage />)} />
+      {clubHostRoutes(authed)}
       {/* Static before dynamic so /pods/new is never read as a pod id —
           React Router ranks it first either way, and the order says so. */}
       <Route path="/club-admin/clubs/:clubId/pods/new" element={authed(<ClubAdminPodEditorPage />)} />

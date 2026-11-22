@@ -1,14 +1,11 @@
-import type { ReactElement } from 'react';
 import { useQuery } from '@apollo/client/react';
 import { useNavigate } from 'react-router';
-import { Avatar, Chip, Link, Stack, Typography } from '@mui/material';
+import { Avatar, Link, Stack, Typography } from '@mui/material';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
-import EmailIcon from '@mui/icons-material/Email';
-import PhoneIcon from '@mui/icons-material/Phone';
-import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import SectionCard from './SectionCard';
+import ContactChips from './ContactChips';
 import { POD_CLUB_DETAIL } from './queries';
-import { useTranslation, type Translate } from './i18n/useTranslation';
+import { useTranslation } from './i18n/useTranslation';
 
 interface Props {
   clubId: string | null;
@@ -29,63 +26,14 @@ export interface PodClubAdmin {
   whatsapp?: string | null;
 }
 
-interface ContactLink {
-  key: string;
-  href: string;
-  label: string;
-  icon: ReactElement;
-  external?: boolean;
-}
-
-/** `tel:` and `wa.me` want the number without its spaces and separators. The
- * plus survives on the dialable one — a foreign country code is data. */
-const dialable = (raw: string) => raw.replace(/[^\d+]/g, '');
-const waDigits = (raw: string) => raw.replace(/\D/g, '');
-
-/** The channels this admin can actually be reached on, in reading order. */
-function contactLinks(admin: PodClubAdmin, t: Translate): ContactLink[] {
-  const links: ContactLink[] = [];
-  if (admin.email) {
-    links.push({
-      key: 'email',
-      href: `mailto:${admin.email}`,
-      label: `${t('podDetailsPanel.podClubAdminsCard.email')}: ${admin.email}`,
-      icon: <EmailIcon />,
-    });
-  }
-  const dial = dialable(admin.phone ?? '');
-  if (dial) {
-    links.push({
-      key: 'phone',
-      href: `tel:${dial}`,
-      label: `${t('podDetailsPanel.podClubAdminsCard.phone')}: ${admin.phone}`,
-      icon: <PhoneIcon />,
-    });
-  }
-  const wa = waDigits(admin.whatsapp ?? '');
-  if (wa) {
-    links.push({
-      key: 'whatsapp',
-      href: `https://wa.me/${wa}`,
-      label: `${t('podDetailsPanel.podClubAdminsCard.whatsapp')}: ${admin.whatsapp}`,
-      icon: <WhatsAppIcon />,
-      external: true,
-    });
-  }
-  return links;
-}
-
 /** One admin — who they are, and every way to reach them. */
 function ClubAdminRow({
   admin,
   onOpenUser,
-  t,
 }: Readonly<{
   admin: PodClubAdmin;
   onOpenUser: ((userId: string) => void) | null;
-  t: Translate;
 }>) {
-  const links = contactLinks(admin, t);
   return (
     <Stack direction="row" spacing={1.5} sx={{ alignItems: 'flex-start' }}>
       <Avatar alt="" src={admin.avatar_url ?? undefined} sx={{ width: 40, height: 40 }}>
@@ -106,26 +54,7 @@ function ClubAdminRow({
             {admin.name}
           </Typography>
         )}
-        <Stack direction="row" spacing={0.75} useFlexGap sx={{ flexWrap: 'wrap' }}>
-          {links.map((link) => (
-            <Chip
-              key={link.key}
-              component="a"
-              clickable
-              size="small"
-              variant="outlined"
-              icon={link.icon}
-              label={link.label}
-              // The chip's label is its visible text; spelled out so the link's
-              // name does not depend on how Chip nests it.
-              aria-label={link.label}
-              href={link.href}
-              target={link.external ? '_blank' : undefined}
-              rel={link.external ? 'noopener' : undefined}
-              sx={{ maxWidth: '100%' }}
-            />
-          ))}
-        </Stack>
+        <ContactChips contact={admin} />
       </Stack>
     </Stack>
   );
@@ -169,7 +98,7 @@ export default function PodClubAdminsCard({ clubId, userTo }: Readonly<Props>) {
     >
       <Stack spacing={2}>
         {admins.map((admin) => (
-          <ClubAdminRow key={admin.id} admin={admin} onOpenUser={openUser} t={t} />
+          <ClubAdminRow key={admin.id} admin={admin} onOpenUser={openUser} />
         ))}
       </Stack>
     </SectionCard>

@@ -1448,6 +1448,10 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       image: 'Insert picture',
       imageUploading: 'Uploading picture…',
       imageFailed: 'That picture could not be uploaded. Please try again.',
+      // @mentions: typing "@" opens a list of people to tag.
+      mentionList: 'People to mention',
+      mentionSearching: 'Searching…',
+      mentionNoMatches: 'No one matches that name',
       linkTitle: 'Add a link',
       linkLabel: 'Link URL',
       linkHint: 'Use a complete http, https, mailto or tel URL.',

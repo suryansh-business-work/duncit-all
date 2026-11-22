@@ -1,4 +1,4 @@
-import type { SxProps, Theme } from '@mui/material/styles';
+import { alpha, type SxProps, type Theme } from '@mui/material/styles';
 
 /**
  * The editor's frame and everything ProseMirror draws inside it.
@@ -28,6 +28,14 @@ export const editorFrameSx =
     },
     // The browser outline is off above (it hugged the text, not the box), so
     // the focused document draws its own ring inside the frame (WCAG 2.4.7).
+    // An @mention reads as one token: primary text on a light primary wash.
+    '& .rich-text-mention': {
+      backgroundColor: alpha(theme.palette.primary.main, 0.12),
+      borderRadius: theme.shape.borderRadius,
+      color: theme.palette.primary.main,
+      fontWeight: theme.typography.fontWeightMedium,
+      padding: theme.spacing(0, 0.25),
+    },
     '& .ProseMirror:focus-visible': {
       boxShadow: `inset 0 0 0 2px ${theme.palette.primary.main}`,
     },

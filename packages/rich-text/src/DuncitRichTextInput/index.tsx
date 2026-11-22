@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useMutation } from '@apollo/client/react';
 import { Box } from '@mui/material';
 import { EditorContent, useEditor, type Editor } from '@tiptap/react';
@@ -14,6 +14,8 @@ import { RichTextToolbar } from '../RichTextToolbar';
 import type { DuncitRichTextInputProps, RichTextChangeHandler } from '../types';
 import { editorFrameSx } from './editorSx';
 import { useRichTextExtensions } from './useRichTextExtensions';
+import { MentionMenu } from '../mention/MentionMenu';
+import { useMentionSuggest } from '../mention/useMentionSuggest';
 
 /**
  * Where a picture dropped into rich text lands when the surface names no folder.
@@ -41,6 +43,7 @@ export function DuncitRichTextInput({
   imageFolder = DEFAULT_IMAGE_FOLDER,
   aiImprove = true,
   images = true,
+  mentions,
 }: Readonly<DuncitRichTextInputProps>) {
   const { t } = useTranslation();
   const resolvedPlaceholder = placeholder ?? t('shell.richText.placeholder');
@@ -50,6 +53,8 @@ export function DuncitRichTextInput({
     IMPROVE_RICH_TEXT,
   );
   const extensions = useRichTextExtensions(readOnly, resolvedPlaceholder);
+  // The open @mention list owns some keys; the editor asks it first (see useMentionSuggest).
+  const mentionKeys = useRef<(event: KeyboardEvent) => boolean>(() => false);
   const editor = useEditor({
     content: value || '',
     editable: !readOnly && !disabled,
@@ -57,6 +62,7 @@ export function DuncitRichTextInput({
     shouldRerenderOnTransaction: true,
     onUpdate: ({ editor: current }) => emitValue(current, onChange),
     editorProps: {
+      handleKeyDown: (_view, event) => mentionKeys.current(event),
       attributes: {
         'aria-label': ariaLabel ?? t('shell.richText.editorLabel'),
         // A contenteditable is only "editable text" to assistive tech; this
@@ -67,6 +73,10 @@ export function DuncitRichTextInput({
       },
     },
   });
+
+  const editable = !readOnly && !disabled;
+  const suggest = useMentionSuggest(editor, editable ? mentions : undefined);
+  mentionKeys.current = suggest.onKeyDown;
 
   useEffect(() => {
     if (!editor) return;
@@ -103,7 +113,6 @@ export function DuncitRichTextInput({
     }
   };
 
-  const editable = !readOnly && !disabled;
   return (
     <Box sx={editorFrameSx(bare, minHeight)}>
       {editable ? (
@@ -116,6 +125,15 @@ export function DuncitRichTextInput({
         />
       ) : null}
       <EditorContent editor={editor} />
+      {suggest.open ? (
+        <MentionMenu
+          editor={editor}
+          items={suggest.items}
+          loading={suggest.loading}
+          active={suggest.active}
+          onSelect={suggest.select}
+        />
+      ) : null}
       {editable ? (
         <RichTextActions
           disabled={!editor.getText().trim()}

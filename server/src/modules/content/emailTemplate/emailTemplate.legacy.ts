@@ -275,4 +275,13 @@ export const SHIPPED_AFTER_REDESIGN: ReadonlySet<string> = new Set<string>([
   'venue-kit-otp',
   // CRM manual-log @mention notice, first shipped 2026-11-22.
   'crm-log-mention',
+  // Rented items (booked, called off, returned, refund delayed) and the
+  // generic refund-processed email, first shipped 2026-11-22.
+  'venue-rental-booked',
+  'rental-booked-user',
+  'venue-rental-cancelled',
+  'rental-cancelled-user',
+  'rental-returned-user',
+  'rental-refund-delayed-user',
+  'refund-processed',
 ]);

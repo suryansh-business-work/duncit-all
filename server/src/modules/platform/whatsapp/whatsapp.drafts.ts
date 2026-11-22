@@ -776,6 +776,70 @@ export const WA_TEMPLATE_DRAFTS: Readonly<Record<string, WaTemplateDraft>> = {
       'Hi Meera, Duncit has sent you Rs 15000.00 for: October salary. ' +
       'Transaction reference: 412345678901. Team Duncit',
   },
+  VENUE_RENTAL_BOOKED: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, a guest has booked these items from your venue: {{2}}. Pod: {{3}} on {{4}}. ' +
+      'Booked by: {{5}}. Reference: {{6}}. Please have them ready to hand over at the pod. ' +
+      'View rented items: {{7}} Team Duncit',
+    sample:
+      'Hi Rohan, a guest has booked these items from your venue: UNO Cards × 1, Chess set × 2. Pod: Sunday Chess Meetup on 29 Nov 2026, 07:30 PM. ' +
+      'Booked by: Aarav Mehta. Reference: DPAY-MI4K2Z1A9F3C21B7. Please have them ready to hand over at the pod. ' +
+      'View rented items: https://partners-app.duncit.com/venues/rented-items Team Duncit',
+  },
+  USER_RENTAL_BOOKED: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, your rented items are booked: {{2}}. Pod: {{3}} on {{4}} at {{5}}. ' +
+      'Amount paid: {{6}}, including any refundable deposit. The venue hands the items over at the pod. ' +
+      'View your rented items: {{7}} Team Duncit',
+    sample:
+      'Hi Aarav, your rented items are booked: UNO Cards × 1, Chess set × 2. Pod: Sunday Chess Meetup on 29 Nov 2026, 07:30 PM at The Board Room Cafe. ' +
+      'Amount paid: Rs 650.00, including any refundable deposit. The venue hands the items over at the pod. ' +
+      'View your rented items: https://mweb.duncit.com/rented-items Team Duncit',
+  },
+  VENUE_RENTAL_CANCELLED: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, these rented items are no longer needed: {{2}}. Pod: {{3}} on {{4}}. Reason: {{5}}. ' +
+      'Please do not hand them out for this pod. View rented items: {{6}} Team Duncit',
+    sample:
+      'Hi Rohan, these rented items are no longer needed: UNO Cards × 1. Pod: Sunday Chess Meetup on 29 Nov 2026, 07:30 PM. Reason: The guest left the pod. ' +
+      'Please do not hand them out for this pod. View rented items: https://partners-app.duncit.com/venues/rented-items Team Duncit',
+  },
+  USER_RENTAL_CANCELLED: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, your rented items were cancelled: {{2}}. Pod: {{3}}. Reason: {{4}}. ' +
+      'A refund of {{5}} is on its way to your original payment method. View your rented items: {{6}} Team Duncit',
+    sample:
+      'Hi Aarav, your rented items were cancelled: UNO Cards × 1. Pod: Sunday Chess Meetup. Reason: The pod was cancelled. ' +
+      'A refund of Rs 350.00 is on its way to your original payment method. View your rented items: https://mweb.duncit.com/rented-items Team Duncit',
+  },
+  USER_RENTAL_RETURNED: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, the return of your rented item {{2}} for {{3}} has been recorded: {{4}}. ' +
+      'Your deposit refund of {{5}} is on its way to your original payment method. View your rented items: {{6}} Team Duncit',
+    sample:
+      'Hi Aarav, the return of your rented item UNO Cards × 1 for Sunday Chess Meetup has been recorded: Returned in good shape. ' +
+      'Your deposit refund of Rs 200.00 is on its way to your original payment method. View your rented items: https://mweb.duncit.com/rented-items Team Duncit',
+  },
+  USER_RENTAL_REFUND_DELAYED: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, your refund of {{2}} for {{3}} rented for {{4}} is taking longer than usual. ' +
+      'Our Finance team is looking into it and will send it again, so nothing is needed from you. View your rented items: {{5}} Team Duncit',
+    sample:
+      'Hi Aarav, your refund of Rs 200.00 for UNO Cards × 1 rented for Sunday Chess Meetup is taking longer than usual. ' +
+      'Our Finance team is looking into it and will send it again, so nothing is needed from you. View your rented items: https://mweb.duncit.com/rented-items Team Duncit',
+  },
 };
 
 /** Highest `{{n}}` in a body — what the registry's param count has to equal. */

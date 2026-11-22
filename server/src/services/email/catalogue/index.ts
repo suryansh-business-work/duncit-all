@@ -20,6 +20,7 @@ import { HOST_PERFORMANCE_EMAILS } from './catalogue.hostPerformance';
 import { TARGETS_EMAILS } from './catalogue.targets';
 import { CRM_EMAILS } from './catalogue.crm';
 import { PAYOUT_EMAILS } from './catalogue.payouts';
+import { RENTAL_EMAILS } from './catalogue.rentals';
 
 export * from './catalogue.types';
 export * from './mjml';
@@ -59,6 +60,7 @@ export const EMAIL_CATALOGUE: readonly EmailDef[] = [
   ...TARGETS_EMAILS,
   ...CRM_EMAILS,
   ...PAYOUT_EMAILS,
+  ...RENTAL_EMAILS,
   ...EXISTING_EMAILS,
 ];
 

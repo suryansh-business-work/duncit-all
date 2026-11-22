@@ -146,6 +146,7 @@ const EMAIL_SPREAD_FILES = {
   HOST_PERFORMANCE_EMAIL_FALLBACK: "server/src/services/email/catalogue/catalogue.hostPerformance.ts",
   TARGETS_EMAIL_FALLBACK: "server/src/services/email/catalogue/catalogue.targets.ts",
   PAYOUT_EMAIL_FALLBACK: "server/src/services/email/catalogue/catalogue.payouts.ts",
+  RENTAL_EMAIL_FALLBACK: "server/src/services/email/catalogue/catalogue.rentals.ts",
   CRM_EMAIL_FALLBACK: "server/src/services/email/catalogue/catalogue.crm.ts",
 };
 

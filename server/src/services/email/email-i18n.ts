@@ -8,6 +8,7 @@ import { HOST_PERFORMANCE_EMAIL_FALLBACK } from "./catalogue/catalogue.hostPerfo
 import { TARGETS_EMAIL_FALLBACK } from "./catalogue/catalogue.targets";
 import { CRM_EMAIL_FALLBACK } from "./catalogue/catalogue.crm";
 import { PAYOUT_EMAIL_FALLBACK } from "./catalogue/catalogue.payouts";
+import { RENTAL_EMAIL_FALLBACK } from "./catalogue/catalogue.rentals";
 
 /**
  * Localized copy for MJML emails (CLAUDE.md rule 38).
@@ -39,6 +40,7 @@ export const EMAIL_FALLBACK: Record<string, string> = {
   ...TARGETS_EMAIL_FALLBACK,
   ...CRM_EMAIL_FALLBACK,
   ...PAYOUT_EMAIL_FALLBACK,
+  ...RENTAL_EMAIL_FALLBACK,
   "email.common.greeting": "Hi",
   "email.common.regards": "Thanks",
   "email.common.supportNote":

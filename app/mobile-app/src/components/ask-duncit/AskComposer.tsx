@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { TextInput } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
-import { voiceErrorKey, type AskDuncitAttachmentView } from '@duncit/utils';
+import { appendHeard, toggleAskDuncitMic, type AskDuncitAttachmentView } from '@duncit/utils';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -46,14 +46,11 @@ export function AskComposer(props: Readonly<Props>) {
   };
 
   const toggleMic = async () => {
-    if (!recording) {
-      const refused = await props.onRecordStart();
-      if (refused) setError(t(voiceErrorKey(refused)));
-      return;
-    }
-    const heard = await props.onRecordStop();
-    if (heard) setText((prev) => (prev ? `${prev} ${heard}` : heard));
-    else setError(t('askDuncit.voice.error.FAILED'));
+    const voice = { start: props.onRecordStart, stop: props.onRecordStop };
+    const failed = await toggleAskDuncitMic(recording, voice, (heard) =>
+      setText((prev) => appendHeard(prev, heard)),
+    );
+    if (failed) setError(t(failed));
   };
 
   return (

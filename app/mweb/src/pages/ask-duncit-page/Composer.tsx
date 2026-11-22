@@ -5,7 +5,7 @@ import MicNoneOutlinedIcon from '@mui/icons-material/MicNoneOutlined';
 import StopRoundedIcon from '@mui/icons-material/StopRounded';
 import SendRoundedIcon from '@mui/icons-material/SendRounded';
 import { DuncitIconButton } from '@duncit/buttons';
-import { voiceErrorKey, type AskDuncitAttachmentView } from '@duncit/utils';
+import { appendHeard, toggleAskDuncitMic, type AskDuncitAttachmentView } from '@duncit/utils';
 import { useImagekitUpload } from '../../utils/imagekit';
 import { useAttachmentGate } from '../../utils/uploadLimits';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -77,14 +77,9 @@ export default function Composer(props: Readonly<Props>) {
   };
 
   const toggleMic = async () => {
-    if (!recording) {
-      const refused = await props.onRecordStart();
-      if (refused) setError(t(voiceErrorKey(refused)));
-      return;
-    }
-    const heard = await props.onRecordStop();
-    if (heard) setText((prev) => (prev ? `${prev} ${heard}` : heard));
-    else setError(t('askDuncit.voice.error.FAILED'));
+    const voice = { start: props.onRecordStart, stop: props.onRecordStop };
+    const failed = await toggleAskDuncitMic(recording, voice, (heard) => setText((prev) => appendHeard(prev, heard)));
+    if (failed) setError(t(failed));
   };
 
   return (

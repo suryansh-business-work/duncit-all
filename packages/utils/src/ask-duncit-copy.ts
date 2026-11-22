@@ -5,7 +5,7 @@
  * `localization-literal-keys` rule). mWeb and the native app both read these.
  */
 
-export const ROLE_LABEL_KEYS: Readonly<Record<string, string>> = {
+export const ROLE_LABEL_KEYS = {
   MEMBER: 'askDuncit.roles.MEMBER',
   HOST: 'askDuncit.roles.HOST',
   VENUE_OWNER: 'askDuncit.roles.VENUE_OWNER',
@@ -15,15 +15,15 @@ export const ROLE_LABEL_KEYS: Readonly<Record<string, string>> = {
   FREELANCER: 'askDuncit.roles.FREELANCER',
   STAFF: 'askDuncit.roles.STAFF',
   SUPER_ADMIN: 'askDuncit.roles.SUPER_ADMIN',
-};
+} as const satisfies Readonly<Record<string, string>>;
 
-export const UNAVAILABLE_KEYS: Readonly<Record<string, string>> = {
+export const UNAVAILABLE_KEYS = {
   KILL_SWITCH: 'askDuncit.unavailable.KILL_SWITCH',
   DISABLED: 'askDuncit.unavailable.DISABLED',
   ROLE_DISABLED: 'askDuncit.unavailable.ROLE_DISABLED',
-};
+} as const satisfies Readonly<Record<string, string>>;
 
-export const ERROR_KEYS: Readonly<Record<string, string>> = {
+export const ERROR_KEYS = {
   INJECTION_BLOCKED: 'askDuncit.errors.INJECTION_BLOCKED',
   NOT_CONFIGURED: 'askDuncit.errors.NOT_CONFIGURED',
   DISABLED: 'askDuncit.errors.DISABLED',
@@ -37,9 +37,9 @@ export const ERROR_KEYS: Readonly<Record<string, string>> = {
   CONFLICT: 'askDuncit.errors.CONFLICT',
   FEATURE_DISABLED: 'askDuncit.errors.FEATURE_DISABLED',
   BAD_USER_INPUT: 'askDuncit.errors.BAD_USER_INPUT',
-};
+} as const satisfies Readonly<Record<string, string>>;
 
-export const ACTION_STATUS_KEYS: Readonly<Record<string, string>> = {
+export const ACTION_STATUS_KEYS = {
   PENDING: 'askDuncit.actionStatus.PENDING',
   APPROVED: 'askDuncit.actionStatus.APPROVED',
   EXECUTING: 'askDuncit.actionStatus.EXECUTING',
@@ -48,9 +48,9 @@ export const ACTION_STATUS_KEYS: Readonly<Record<string, string>> = {
   REJECTED: 'askDuncit.actionStatus.REJECTED',
   EXPIRED: 'askDuncit.actionStatus.EXPIRED',
   ROLLED_BACK: 'askDuncit.actionStatus.ROLLED_BACK',
-};
+} as const satisfies Readonly<Record<string, string>>;
 
-export const TOOL_STATUS_KEYS: Readonly<Record<string, string>> = {
+export const TOOL_STATUS_KEYS = {
   RUNNING: 'askDuncit.toolStatus.RUNNING',
   OK: 'askDuncit.toolStatus.OK',
   DENIED: 'askDuncit.toolStatus.DENIED',
@@ -58,19 +58,19 @@ export const TOOL_STATUS_KEYS: Readonly<Record<string, string>> = {
   BLOCKED: 'askDuncit.toolStatus.BLOCKED',
   INVALID: 'askDuncit.toolStatus.INVALID',
   AWAITING_APPROVAL: 'askDuncit.toolStatus.AWAITING_APPROVAL',
-};
+} as const satisfies Readonly<Record<string, string>>;
 
-export const HANDOVER_TEAM_KEYS: Readonly<Record<string, string>> = {
+export const HANDOVER_TEAM_KEYS = {
   SUPPORT: 'askDuncit.handover.team.SUPPORT',
   ADMIN: 'askDuncit.handover.team.ADMIN',
   OPERATIONS: 'askDuncit.handover.team.OPERATIONS',
-};
+} as const satisfies Readonly<Record<string, string>>;
 
-export const VOICE_ERROR_KEYS: Readonly<Record<string, string>> = {
+export const VOICE_ERROR_KEYS = {
   PERMISSION: 'askDuncit.voice.error.PERMISSION',
   UNSUPPORTED: 'askDuncit.voice.error.UNSUPPORTED',
   FAILED: 'askDuncit.voice.error.FAILED',
-};
+} as const satisfies Readonly<Record<string, string>>;
 
 /**
  * Keys the SERVER sends (suggestion bubbles, proactive alerts and the prompts

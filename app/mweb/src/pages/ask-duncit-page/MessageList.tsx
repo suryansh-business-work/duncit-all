@@ -54,8 +54,7 @@ export default function MessageList(props: Readonly<Props>) {
         role="log"
         aria-live="polite"
         aria-label={t('askDuncit.conversationLabel')}
-        tabIndex={0}
-        sx={{ height: '100%', overflowY: 'auto', px: 1.5, py: 1.5, '&:focus-visible': { outline: 2, outlineColor: 'primary.main' } }}
+        sx={{ height: '100%', overflowY: 'auto', px: 1.5, py: 1.5 }}
       >
         {loadingOlder && (
           <Stack sx={{ alignItems: 'center', py: 1 }}>

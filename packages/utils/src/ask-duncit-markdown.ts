@@ -32,6 +32,7 @@ export function parseInline(line: string): MdSpan[] {
   let last = 0;
   for (const match of line.matchAll(INLINE)) {
     const token = match[0];
+    /* v8 ignore next -- defensive: matchAll always sets index */
     const index = match.index ?? 0;
     if (index > last) spans.push({ text: line.slice(last, index) });
     if (token.startsWith('**')) spans.push({ text: token.slice(2, -2), bold: true });
@@ -51,7 +52,7 @@ const BULLET = /^\s*[-*•]\s+(.*)$/;
 const NUMBERED = /^\s*(\d{1,3})[.)]\s+(.*)$/;
 const HEADING = /^(#{1,3})\s+(.*)$/;
 
-export function parseAnswerMarkdown(source: string): MdBlock[] {
+export function parseAnswerMarkdown(source: string | null | undefined): MdBlock[] {
   const blocks: MdBlock[] = [];
   let paragraph: string[] = [];
   const flush = () => {
@@ -68,15 +69,20 @@ export function parseAnswerMarkdown(source: string): MdBlock[] {
       flush();
     } else if (heading) {
       flush();
+      /* v8 ignore next -- defensive: the pattern matched, so its capture groups exist */
       blocks.push({ type: 'heading', level: (heading[1] ?? '#').length as 1 | 2 | 3, spans: parseInline(heading[2] ?? '') });
     } else if (bullet) {
       flush();
-      if (prev?.type === 'bullets') prev.items.push(parseInline(bullet[1] ?? ''));
-      else blocks.push({ type: 'bullets', items: [parseInline(bullet[1] ?? '')] });
+      /* v8 ignore next -- defensive: the pattern matched, so its capture groups exist */
+      const item = parseInline(bullet[1] ?? '');
+      if (prev?.type === 'bullets') prev.items.push(item);
+      else blocks.push({ type: 'bullets', items: [item] });
     } else if (numbered) {
       flush();
-      if (prev?.type === 'numbered') prev.items.push(parseInline(numbered[2] ?? ''));
-      else blocks.push({ type: 'numbered', start: Number(numbered[1] ?? 1), items: [parseInline(numbered[2] ?? '')] });
+      /* v8 ignore next -- defensive: the pattern matched, so its capture groups exist */
+      const item = parseInline(numbered[2] ?? '');
+      if (prev?.type === 'numbered') prev.items.push(item);
+      else blocks.push({ type: 'numbered', start: Number.parseInt(line.trim(), 10), items: [item] });
     } else {
       paragraph.push(line.trim());
     }
@@ -86,7 +92,7 @@ export function parseAnswerMarkdown(source: string): MdBlock[] {
 }
 
 /** The answer as plain text (read-aloud, copy): markup removed, links kept as their label. */
-export function markdownToPlainText(source: string): string {
+export function markdownToPlainText(source: string | null | undefined): string {
   return parseAnswerMarkdown(source)
     .map((block) => {
       const text = (spans: MdSpan[]) => spans.map((s) => s.text).join('');

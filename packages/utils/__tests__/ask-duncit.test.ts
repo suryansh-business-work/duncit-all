@@ -17,6 +17,8 @@ import {
   canDecide,
   emptyThread,
   errorKey,
+  handoverTeamKey,
+  isAskDuncitHandoverTeam,
   isNearBottom,
   pageContextFromPath,
   prependOlder,
@@ -24,7 +26,9 @@ import {
   roleLabelKey,
   suggestionText,
   tempMessageId,
+  toolStatusKey,
   unavailableKey,
+  voiceErrorKey,
   type AskDuncitActionView,
   type AskDuncitMessageView,
 } from '../src/ask-duncit';
@@ -113,6 +117,44 @@ describe('a turn', () => {
   });
 });
 
+describe('a turn alongside other messages', () => {
+  const second = (state: ReturnType<typeof started>) =>
+    acceptTurn(addOptimisticQuestion(state, 'tmp2', 'And clubs?'), 'tmp2', { conversation_id: 'c1', user_message_id: 'u2', message_id: 'a2', status: 'STREAMING' });
+
+  it('leaves earlier messages alone and never adds the same answer twice', () => {
+    const state = second(started());
+    expect(state.messages.map((m) => m.id)).toEqual(['u1', 'a1', 'u2', 'a2']);
+    const again = acceptTurn(state, 'gone', { conversation_id: 'c1', user_message_id: 'u2', message_id: 'a2', status: 'STREAMING' });
+    expect(again.messages.map((m) => m.id)).toEqual(['u1', 'a1', 'u2', 'a2']);
+  });
+
+  it('drops a proposal that belongs to no message on screen and nothing is streaming', () => {
+    const idle = { ...started(), streamingId: null };
+    expect(applyActionEvent(idle, action())).toBe(idle);
+  });
+
+  it('updates one proposal without touching its neighbour', () => {
+    let state = applyActionEvent(started(), action());
+    state = applyActionEvent(state, action({ id: 'x2' }));
+    state = applyActionEvent(state, action({ id: 'x2', status: 'REJECTED' }));
+    expect(state.messages[1].actions.map((a) => `${a.id}:${a.status}`)).toEqual(['x1:PENDING', 'x2:REJECTED']);
+  });
+
+  it('appends a stored message it has not shown yet and keeps the other answer streaming', () => {
+    const state = second(started());
+    const stored: AskDuncitMessageView = { ...state.messages[1], id: 'late', content: 'Late', status: 'COMPLETE' };
+    const next = applyFinal(state, stored);
+    expect(next.messages.at(-1)).toMatchObject({ id: 'late', content: 'Late' });
+    expect(next.streamingId).toBe('a2');
+  });
+
+  it('reports a failure without a code as INTERNAL and keeps the other answer streaming', () => {
+    const next = applyFailure(second(started()), { message_id: 'a1' });
+    expect(next.messages[1]).toMatchObject({ status: 'FAILED', error_code: 'INTERNAL' });
+    expect(next.streamingId).toBe('a2');
+  });
+});
+
 describe('page context', () => {
   it('reads the entity on screen from the path', () => {
     expect(pageContextFromPath('/pod/6650abc?tab=chat')).toEqual({ route: '/pod/6650abc', entity_type: 'POD', entity_id: '6650abc' });
@@ -123,6 +165,7 @@ describe('page context', () => {
 
   it('knows the profile and wallet pages, and nothing elsewhere', () => {
     expect(pageContextFromPath('/profile/edit')).toMatchObject({ entity_type: 'PROFILE', entity_id: '' });
+    expect(pageContextFromPath('/wallet#history')).toEqual({ route: '/wallet', entity_type: 'WALLET', entity_id: '' });
     expect(pageContextFromPath('/')).toEqual({ route: '/', entity_type: '', entity_id: '' });
     expect(pageContextFromPath(null).route).toBe('');
   });
@@ -141,6 +184,7 @@ describe('copy keys and small rules', () => {
   });
 
   it('prefers an operator-written label over the localized key', () => {
+    expect(suggestionText({ label: null, label_key: null }, t)).toBe('');
     expect(suggestionText({ label: 'Custom', label_key: 'k' }, t)).toBe('Custom');
     expect(suggestionText({ label: null, label_key: 'k' }, t)).toBe('T:k');
   });
@@ -148,6 +192,25 @@ describe('copy keys and small rules', () => {
   it('fills alert placeholders from params and leaves unknown ones visible', () => {
     expect(alertText({ label_key: 'askDuncit.alerts.healthRed', params: '{"score":42}' }, t)).toBe('Health is 42/100 ({band})');
     expect(alertText({ label_key: 'askDuncit.alerts.healthRed', params: 'broken' }, t)).toBe('Health is {score}/100 ({band})');
+    expect(alertText({ label_key: 'askDuncit.alerts.healthRed', params: '' }, t)).toBe('Health is {score}/100 ({band})');
+    expect(alertText({ label_key: 'askDuncit.alerts.healthRed', params: '{"score":{"nested":1},"band":"RED"}' }, t)).toBe('Health is {score}/100 (RED)');
+  });
+
+  it('maps tool, voice and handover codes to keys, unknown ones to a safe default', () => {
+    expect(toolStatusKey('DENIED')).toBe('askDuncit.toolStatus.DENIED');
+    expect(toolStatusKey('NEW_STATUS')).toBe('askDuncit.toolStatus.OK');
+    expect(voiceErrorKey('PERMISSION')).toBe('askDuncit.voice.error.PERMISSION');
+    expect(voiceErrorKey('')).toBe('askDuncit.voice.error.FAILED');
+    expect(handoverTeamKey('ADMIN')).toBe('askDuncit.handover.team.ADMIN');
+    expect(handoverTeamKey('FINANCE')).toBe('askDuncit.handover.team.SUPPORT');
+    expect(roleLabelKey('NOBODY')).toBe('askDuncit.roles.MEMBER');
+    expect(actionStatusKey('SOMETHING')).toBe('askDuncit.actionStatus.PENDING');
+  });
+
+  it('accepts only the three handover teams', () => {
+    expect(['SUPPORT', 'ADMIN', 'OPERATIONS'].every(isAskDuncitHandoverTeam)).toBe(true);
+    expect(isAskDuncitHandoverTeam('FINANCE')).toBe(false);
+    expect(isAskDuncitHandoverTeam(7)).toBe(false);
   });
 
   it('allows a decision only on a pending, unexpired proposal', () => {

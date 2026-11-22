@@ -7,7 +7,8 @@ import {
   applyFinal,
   applyToolEvent,
   emptyThread,
-  prependOlder,
+  loadOlderAskDuncit,
+  openAskDuncitThread,
   type AskDuncitActionView,
   type AskDuncitMessageView,
   type AskDuncitThreadState,
@@ -44,51 +45,26 @@ export function useAskDuncitThread(conversationId: string | null) {
     };
   }, []);
 
-  useEffect(() => {
-    if (!conversationId) {
-      setThread(emptyThread(null));
-      return;
-    }
-    if (threadRef.current.conversationId === conversationId && threadRef.current.messages.length)
-      return;
-    let cancelled = false;
-    setLoading(true);
-    setLoadError(false);
-    fetchPage(conversationId)
-      .then((page) => {
-        if (!cancelled)
-          setThread({
-            ...emptyThread(conversationId),
-            messages: page.items,
-            hasMore: page.hasMore,
-          });
-      })
-      .catch((error: unknown) => {
-        logs.mobileApp.error('ask-duncit', 'loadThread', { error });
-        if (!cancelled) setLoadError(true);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [conversationId, fetchPage]);
+  useEffect(
+    () =>
+      openAskDuncitThread(conversationId, threadRef.current, fetchPage, {
+        setThread,
+        setLoading,
+        setLoadError,
+        onError: (error) => logs.mobileApp.error('ask-duncit', 'loadThread', { error }),
+      }),
+    [conversationId, fetchPage],
+  );
 
-  const loadOlder = useCallback(async () => {
-    const current = threadRef.current;
-    if (!current.conversationId || !current.hasMore || loading) return;
-    const first = current.messages.find((m) => !m.id.startsWith('temp-'));
-    setLoading(true);
-    try {
-      const page = await fetchPage(current.conversationId, first?.id);
-      setThread((prev) => prependOlder(prev, page.items, page.hasMore));
-    } catch (error) {
-      logs.mobileApp.error('ask-duncit', 'loadOlder', { error });
-    } finally {
-      setLoading(false);
-    }
-  }, [fetchPage, loading]);
+  const loadOlder = useCallback(
+    () =>
+      loadOlderAskDuncit(threadRef.current, loading, fetchPage, {
+        setThread,
+        setLoading,
+        onError: (error) => logs.mobileApp.error('ask-duncit', 'loadOlder', { error }),
+      }),
+    [fetchPage, loading],
+  );
 
   // Streamed frames over the account's socket room; a reconnect re-reads the
   // streaming answer, since frames sent while offline are gone.

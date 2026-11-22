@@ -7,7 +7,8 @@ import {
   applyFinal,
   applyToolEvent,
   emptyThread,
-  prependOlder,
+  loadOlderAskDuncit,
+  openAskDuncitThread,
   type AskDuncitThreadState,
 } from '@duncit/utils';
 import { logs } from '@duncit/logs';
@@ -34,52 +35,34 @@ export function useAskDuncitThread(conversationId: string | null) {
         variables: { conversationId: id, before },
         fetchPolicy: 'network-only',
       });
-      return data?.askDuncitMessages ?? { items: [], has_more: false };
+      const page = data?.askDuncitMessages;
+      return { items: page?.items ?? [], hasMore: page?.has_more ?? false };
     },
     [client]
   );
 
   // Switching conversation (or the first send creating one) reloads the thread —
   // unless it is the conversation this screen just created, which is already shown.
-  useEffect(() => {
-    if (!conversationId) {
-      setThread(emptyThread(null));
-      return;
-    }
-    if (threadRef.current.conversationId === conversationId && threadRef.current.messages.length) return;
-    let cancelled = false;
-    setLoading(true);
-    setLoadError(false);
-    fetchPage(conversationId)
-      .then((page) => {
-        if (!cancelled) setThread({ ...emptyThread(conversationId), messages: page.items, hasMore: page.has_more });
-      })
-      .catch((error: unknown) => {
-        logs.mWeb.error('ask-duncit', 'loadThread', { error });
-        if (!cancelled) setLoadError(true);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [conversationId, fetchPage]);
+  useEffect(
+    () =>
+      openAskDuncitThread(conversationId, threadRef.current, fetchPage, {
+        setThread,
+        setLoading,
+        setLoadError,
+        onError: (error) => logs.mWeb.error('ask-duncit', 'loadThread', { error }),
+      }),
+    [conversationId, fetchPage]
+  );
 
-  const loadOlder = useCallback(async () => {
-    const current = threadRef.current;
-    if (!current.conversationId || !current.hasMore || loading) return;
-    const first = current.messages.find((m) => !m.id.startsWith('temp-'));
-    setLoading(true);
-    try {
-      const page = await fetchPage(current.conversationId, first?.id);
-      setThread((prev) => prependOlder(prev, page.items, page.has_more));
-    } catch (error) {
-      logs.mWeb.error('ask-duncit', 'loadOlder', { error });
-    } finally {
-      setLoading(false);
-    }
-  }, [fetchPage, loading]);
+  const loadOlder = useCallback(
+    () =>
+      loadOlderAskDuncit(threadRef.current, loading, fetchPage, {
+        setThread,
+        setLoading,
+        onError: (error) => logs.mWeb.error('ask-duncit', 'loadOlder', { error }),
+      }),
+    [fetchPage, loading]
+  );
 
   /** Re-read the streaming answer from the server — after a reconnect, frames may be missing. */
   const resync = useCallback(async () => {

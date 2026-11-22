@@ -47,4 +47,9 @@ describe('parseAnswerMarkdown', () => {
   it('gives plain text for read-aloud', () => {
     expect(markdownToPlainText('**Hi** [there](https://x.test)\n\n- one\n- two')).toBe('Hi there\n\none\ntwo');
   });
+
+  it('treats a missing answer as empty', () => {
+    expect(parseAnswerMarkdown(null)).toEqual([]);
+    expect(markdownToPlainText(undefined)).toBe('');
+  });
 });

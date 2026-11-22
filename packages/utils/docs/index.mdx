@@ -4858,6 +4858,9 @@ pageContextFromPath('/pod/6650abc'); // { route: '/pod/6650abc', entity_type: 'P
 | `roleLabelKey`, `suggestionText`, `alertText`, `unavailableKey`, `errorKey`, `actionStatusKey`, `toolStatusKey` | key builders | Localization keys for every server code. |
 | `canDecide` | `(action, now?) => boolean` | Pending and not expired. |
 | `tempMessageId` | `() => string` | A client-only id for the optimistic question. |
+| `openAskDuncitThread` | `(conversationId, current, fetchPage, io) => cancel` | Opens a conversation: its newest page replaces the thread, the one already on screen is kept. Returns the effect cleanup. |
+| `loadOlderAskDuncit` | `(current, busy, fetchPage, io) => Promise<void>` | Loads the page above the oldest stored message (never a temporary id). |
+| `toggleAskDuncitMic` / `appendHeard` | `(recording, voice, onHeard)` / `(typed, heard)` | The mic button: start, or stop and hand over the dictated text; resolves to the error copy key, or null. |
 
 Renderers: mWeb `pages/ask-duncit-page/*`, native `screens/AskDuncitScreen` + `components/ask-duncit/*`.
 Server: `server/src/modules/ai/askDuncit`.

@@ -205,9 +205,11 @@ const ENTITY_ROUTES: ReadonlyArray<{ pattern: RegExp; type: string }> = [
 
 /** The entity on screen, from the app path (mWeb routes; native deep links mirror them). */
 export function pageContextFromPath(path: string | null | undefined): AskDuncitPageContext {
+  /* v8 ignore next -- defensive: split() always returns at least one element */
   const route = (String(path ?? '').split(/[?#]/)[0] ?? '').slice(0, 300);
   for (const { pattern, type } of ENTITY_ROUTES) {
     const match = pattern.exec(route);
+    /* v8 ignore next -- defensive: every ENTITY_ROUTES pattern has one capture group, so match[1] exists */
     if (match) return { route, entity_type: type, entity_id: decodeURIComponent(match[1] ?? '') };
   }
   if (route.startsWith('/profile')) return { route, entity_type: 'PROFILE', entity_id: '' };
@@ -220,7 +222,7 @@ export function pageContextFromPath(path: string | null | undefined): AskDuncitP
 type Translate = (key: string) => string;
 type TranslateWithVars = (key: string, options?: { vars?: Record<string, string | number> }) => string;
 
-export const roleLabelKey = (roleKey: string): string => keyFor(ROLE_LABEL_KEYS, roleKey, ROLE_LABEL_KEYS.MEMBER ?? '');
+export const roleLabelKey = (roleKey: string): string => keyFor(ROLE_LABEL_KEYS, roleKey, ROLE_LABEL_KEYS.MEMBER);
 
 export const suggestionText = (s: { label?: string | null; label_key?: string | null }, t: Translate): string =>
   s.label?.trim() || (s.label_key ? t(s.label_key) : '');
@@ -241,13 +243,13 @@ export function alertText(alert: { label_key: string; params: string }, t: Trans
   return t(alert.label_key, { vars }).replace(/\{(\w+)\}/g, (whole, name: string) => (name in vars ? String(vars[name]) : whole));
 }
 
-export const unavailableKey = (reason: string | null | undefined): string => keyFor(UNAVAILABLE_KEYS, reason, UNAVAILABLE_KEYS.DISABLED ?? '');
+export const unavailableKey = (reason: string | null | undefined): string => keyFor(UNAVAILABLE_KEYS, reason, UNAVAILABLE_KEYS.DISABLED);
 
-export const errorKey = (code: string | null | undefined): string => keyFor(ERROR_KEYS, code, ERROR_KEYS.INTERNAL ?? '');
+export const errorKey = (code: string | null | undefined): string => keyFor(ERROR_KEYS, code, ERROR_KEYS.INTERNAL);
 
-export const actionStatusKey = (status: string): string => keyFor(ACTION_STATUS_KEYS, status, ACTION_STATUS_KEYS.PENDING ?? '');
-export const toolStatusKey = (status: string): string => keyFor(TOOL_STATUS_KEYS, status, TOOL_STATUS_KEYS.OK ?? '');
-export const voiceErrorKey = (code: string): string => keyFor(VOICE_ERROR_KEYS, code, VOICE_ERROR_KEYS.FAILED ?? '');
+export const actionStatusKey = (status: string): string => keyFor(ACTION_STATUS_KEYS, status, ACTION_STATUS_KEYS.PENDING);
+export const toolStatusKey = (status: string): string => keyFor(TOOL_STATUS_KEYS, status, TOOL_STATUS_KEYS.OK);
+export const voiceErrorKey = (code: string): string => keyFor(VOICE_ERROR_KEYS, code, VOICE_ERROR_KEYS.FAILED);
 
 /** Whether the approve/reject buttons apply: pending and not past its expiry. */
 export const canDecide = (action: Pick<AskDuncitActionView, 'status' | 'expires_at'>, now = Date.now()): boolean =>
@@ -273,7 +275,7 @@ export const ASK_DUNCIT_HANDOVER_SUMMARY_MAX = 600;
 export const isAskDuncitHandoverTeam = (value: unknown): value is AskDuncitHandoverTeam =>
   typeof value === 'string' && (ASK_DUNCIT_HANDOVER_TEAMS as readonly string[]).includes(value);
 
-export const handoverTeamKey = (team: string): string => keyFor(HANDOVER_TEAM_KEYS, team, HANDOVER_TEAM_KEYS.SUPPORT ?? '');
+export const handoverTeamKey = (team: string): string => keyFor(HANDOVER_TEAM_KEYS, team, HANDOVER_TEAM_KEYS.SUPPORT);
 
 /* ---------------------------------- bytes ---------------------------------- */
 
@@ -287,6 +289,7 @@ const B64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 export function bytesToBase64(bytes: Uint8Array): string {
   let out = '';
   for (let i = 0; i < bytes.length; i += 3) {
+    /* v8 ignore next -- defensive: i < bytes.length, so bytes[i] exists */
     const a = bytes[i] ?? 0;
     const b = bytes[i + 1] ?? 0;
     const c = bytes[i + 2] ?? 0;

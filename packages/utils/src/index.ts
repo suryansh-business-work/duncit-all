@@ -2342,6 +2342,15 @@ export {
   type MdSpan,
 } from './ask-duncit-markdown';
 export {
+  openAskDuncitThread,
+  loadOlderAskDuncit,
+  toggleAskDuncitMic,
+  appendHeard,
+  type AskDuncitPage,
+  type AskDuncitFetchPage,
+  type AskDuncitThreadSetters,
+} from './ask-duncit-flow';
+export {
   ROLE_LABEL_KEYS,
   UNAVAILABLE_KEYS,
   ERROR_KEYS,

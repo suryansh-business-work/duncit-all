@@ -64,12 +64,14 @@ function apiUrl(pathOrUrl: string): string {
 
 export function ascClient(token: () => string, counter: SyncCounter): AscClient {
   const headers = () => ({ Authorization: `Bearer ${token()}`, 'Content-Type': 'application/json' });
-  const get = (pathOrUrl: string) =>
+  // async, so a link outside the API comes back as a rejected promise like any
+  // other failure, instead of throwing before the caller has a promise to await.
+  const get = async (pathOrUrl: string) =>
     storeJson<AscPage>({ service: SERVICE, url: apiUrl(pathOrUrl), init: { headers: headers() }, counter });
   return {
     counter,
     get,
-    post: (path, body) =>
+    post: async (path, body) =>
       storeJson<AscPage>({
         service: SERVICE,
         url: apiUrl(path),

@@ -116,7 +116,10 @@ describe('runStoreSync', () => {
     await runStoreSync('GOOGLE_PLAY', 'SCHEDULE');
     const logSet = m(AppInsightSyncLogModel.updateOne).mock.calls[0][1].$set;
     expect(logSet).toMatchObject({ outcome: 'FAILED', message: 'Google refused Bearer [removed]' });
-    const stateSets = m(AppInsightStateModel.updateOne).mock.calls.map((call) => call[1].$set);
+    // The lock's own upsert is a $setOnInsert with no $set; only the $set writes matter here.
+    const stateSets = m(AppInsightStateModel.updateOne)
+      .mock.calls.map((call) => call[1].$set)
+      .filter((set) => set !== undefined);
     expect(stateSets).toContainEqual({ last_error: 'Google refused Bearer [removed]' });
     expect(stateSets.some((set) => 'last_success_at' in set)).toBe(false);
     expect(stateSets.at(-1)).toEqual({ syncing: false, sync_started_at: null });

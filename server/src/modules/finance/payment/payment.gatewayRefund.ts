@@ -77,6 +77,21 @@ async function mirrorOnPayment(record: IPaymentGatewayRefund) {
   );
 }
 
+/**
+ * A rented item's refund tells its booking what happened. Imported lazily: the
+ * rental module imports this one to queue its refunds. A booking that could not
+ * be updated is logged, never allowed to undo the refund's own record.
+ */
+async function followOnBooking(record: IPaymentGatewayRefund) {
+  if (record.source !== 'RENTAL') return;
+  try {
+    const { syncRentalRefund } = await import('@modules/venues/venueRental/rentalRefund.service');
+    await syncRentalRefund(record);
+  } catch (error) {
+    logs.server.error('payment', 'gatewayRefund', { error, gateway_refund_id: String(record._id), msg: 'rental booking sync failed' });
+  }
+}
+
 const EVENT_OF: Partial<Record<GatewayRefundStatus, 'REFUND_INITIATED' | 'REFUND_PROCESSED' | 'REFUND_FAILED'>> = {
   PROCESSING: 'REFUND_INITIATED',
   SUCCEEDED: 'REFUND_PROCESSED',
@@ -186,6 +201,7 @@ export async function applyRazorpayRefund(
   if (!record) return PaymentGatewayRefundModel.findById(recordId);
   await mirrorOnPayment(record);
   await recordStep(record, source);
+  await followOnBooking(record);
   return record;
 }
 
@@ -214,6 +230,7 @@ async function failSend(record: IPaymentGatewayRefund, error: unknown) {
   if (failed) {
     await mirrorOnPayment(failed);
     await recordStep(failed, 'SERVER');
+    await followOnBooking(failed);
   }
   return failed;
 }

@@ -8,13 +8,14 @@ import { PaymentReleaseModel } from '@modules/finance/finance/paymentRelease.mod
 import { getFinanceSettings } from '@modules/finance/finance/finance.model';
 import { RentalBookingModel } from './rentalBooking.model';
 import { rentalLifecycleService } from './rentalLifecycle.service';
+import { runRentalRefundSweep } from './rentalRefund.service';
 
 /**
  * The venue's rental money, handed to Finance as a VENUE_RENTAL payout.
  *
  * It does not wait for the pod's completion: rent is the venue's whatever the
  * pod's ticket waterfall comes to. Each closed booking carries the amount it
- * earned the venue (rent less Duncit's commission, plus any deposit kept), and
+ * earned the venue (rent less Duncit's commission, plus any deposit it kept), and
  * is stamped with the payout that carried it, so no booking is ever paid twice
  * — a damage claim recorded days later simply rides the next payout.
  */
@@ -33,20 +34,29 @@ interface CarriedBooking {
   deposit_amount: number;
   deposit_at_venue?: number;
   refund_due?: number;
+  deposit_policy?: string | null;
 }
 
 /**
- * How a payout's amount is made, for Finance's record: the deposits the venue
- * settled at the venue (paid to it in full here, because it handed the guest
- * their share in cash), and the rent left after commission. A RELEASED booking
- * carries no deposit: Duncit refunded that one itself.
+ * How a payout's amount is made, for Finance's record: the rent left after
+ * commission, and the deposit money the venue receives.
+ *  - DUNCIT_REFUND (every booking closed from 2026-11-22): Duncit refunded the
+ *    deposit to the guest through Razorpay, so the venue receives only what it
+ *    kept — a damage claim, or a deposit the settings made non-refundable.
+ *  - VENUE_CASH (closed before): the venue handed the deposit back in cash and
+ *    is paid the whole deposit; a booking that still owed a refund then had
+ *    its deposit returned through Finance and carries none.
+ * A RELEASED booking carries no deposit: Duncit refunded that one itself.
  */
 export function payoutSplit(carried: readonly CarriedBooking[]) {
   let deposits = 0;
   let handedBack = 0;
   for (const b of carried) {
     if (b.status !== 'RETURNED' && b.status !== 'DAMAGED') continue;
-    // A booking closed before deposits moved to the venue had its deposit refunded through Finance.
+    if (b.deposit_policy === 'DUNCIT_REFUND') {
+      deposits += Math.max(0, b.deposit_amount - (b.refund_due ?? 0));
+      continue;
+    }
     if ((b.refund_due ?? 0) > 0) continue;
     deposits += b.deposit_amount;
     handedBack += b.deposit_at_venue ?? 0;
@@ -78,7 +88,7 @@ async function payoutForPod(podId: unknown) {
     { $set: { release_id: id } }
   );
   const carried = await RentalBookingModel.find({ release_id: id })
-    .select('venue_amount status deposit_amount deposit_at_venue refund_due')
+    .select('venue_amount status deposit_amount deposit_at_venue refund_due deposit_policy')
     .lean();
   const amount = round2(carried.reduce((sum, b) => sum + b.venue_amount, 0));
   if (amount <= 0) return null;
@@ -97,8 +107,8 @@ async function payoutForPod(podId: unknown) {
       amount_requested: amount,
       notes:
         `Rented items: ${carried.length} booking${carried.length === 1 ? '' : 's'} · ` +
-        `rent after commission ${cur}${split.rent} + deposits ${cur}${split.deposits} ` +
-        `(${cur}${split.handedBack} handed back to guests at the venue, not refunded through the gateway)`,
+        `rent after commission ${cur}${split.rent} + deposits kept ${cur}${split.deposits}` +
+        (split.handedBack > 0 ? ` (${cur}${split.handedBack} handed back to guests at the venue on older bookings)` : ''),
       requested_by: null,
       requested_at: new Date(),
     });
@@ -127,7 +137,7 @@ export async function runRentalPayoutSweep(): Promise<number> {
   return raised;
 }
 
-/** Hourly, on the scheduler leader: close unmarked deposits, then pay the venues what is settled. */
+/** Hourly, on the scheduler leader: close unmarked rentals, queue every refund still owed, then pay the venues what is settled. */
 export function startRentalScheduler(): () => void {
   return startClusterJob({
     component: 'rentals',
@@ -136,6 +146,7 @@ export function startRentalScheduler(): () => void {
     intervalMs: SWEEP_INTERVAL_MS,
     run: async () => {
       await rentalLifecycleService.runDepositAutoRelease();
+      await runRentalRefundSweep();
       await runRentalPayoutSweep();
     },
   });

@@ -12,7 +12,8 @@ import { Schema, model, type Document, type Types } from 'mongoose';
  * different states here.
  *
  * `idempotency_key` names the business event (`pod_cancel:<payment>`,
- * `finance_refund:<payment>`, `backout:<request>`), unique, so a repeated
+ * `finance_refund:<payment>`, `backout:<request>`, `rental_refund:<booking>`),
+ * unique, so a repeated
  * cancellation or a double click can never create a second refund.
  */
 export const GATEWAY_REFUND_STATUSES = [
@@ -26,7 +27,8 @@ export const GATEWAY_REFUND_STATUSES = [
 ] as const;
 export type GatewayRefundStatus = (typeof GATEWAY_REFUND_STATUSES)[number];
 
-export const GATEWAY_REFUND_SOURCES = ['POD_CANCELLATION', 'FINANCE_REFUND', 'BACKOUT'] as const;
+// RENTAL: one rented item's own refund (a deposit back after the item came back, a sold-out line, a Backout) — key `rental_refund:<booking>`.
+export const GATEWAY_REFUND_SOURCES = ['POD_CANCELLATION', 'FINANCE_REFUND', 'BACKOUT', 'RENTAL'] as const;
 export type GatewayRefundSource = (typeof GATEWAY_REFUND_SOURCES)[number];
 
 export interface IPaymentGatewayRefund extends Document {

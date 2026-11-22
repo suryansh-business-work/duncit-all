@@ -867,6 +867,21 @@ async function notifyBrandsOfOrders(payment: IPayment): Promise<void> {
 }
 
 /**
+ * A payment that carried rented items. Never fails the run: a message or a
+ * refund that did not go now is retried by the rental scheduler's sweep.
+ * Imported lazily — the rental module imports the payment model this file owns.
+ */
+async function settleRentalsAfterCapture(payment: IPayment): Promise<void> {
+  if (paymentRentalLines(payment.metadata).length === 0) return;
+  try {
+    const { rentalLifecycleService } = await import('@modules/venues/venueRental/rentalLifecycle.service');
+    await rentalLifecycleService.afterCapture(payment._id);
+  } catch (error) {
+    logs.server.warn('payment', 'settleRentalsAfterCapture', { error, payment_id: payment.payment_id });
+  }
+}
+
+/**
  * The pet store's "your order is placed" WhatsApp, beside the receipt email.
  * Best effort and outside the step ledger: a template not yet approved at
  * AiSensy must never mark a paid, booked order as a failed checkout. Imported
@@ -1154,6 +1169,9 @@ export const paymentFinalizer = {
     // Outside the receipt step: a PDF that failed to render must not leave a
     // brand unaware it has an order to pack. Deduplicated per order and brand.
     if (!ctx.only) await notifyBrandsOfOrders(ctx.payment);
+    // Rented items: a sold-out line's refund goes to Razorpay, the venue and the
+    // guest hear what was booked. Best effort and deduplicated, like the brands.
+    if (!ctx.only) await settleRentalsAfterCapture(ctx.payment);
     // The buyer is now in the pod's chat: one "you joined" notification, keyed on
     // the payment so a retried run never sends a second. Never fails the run.
     if (!ctx.only && payment.pod_id && payment.user_id) {

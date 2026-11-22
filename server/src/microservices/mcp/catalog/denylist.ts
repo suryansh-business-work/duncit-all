@@ -30,6 +30,9 @@ const DENIED_FIELDS: ReadonlyMap<string, string> = new Map([
   ['denyMcpAuthorization', 'only the person may deny a connection'],
   ['revokeMcpConnection', 'only the person may revoke a connection'],
   ['updateMcpSettings', 'MCP safety settings are changed in the console'],
+  // Retired and always refused: a typed reference must never again mark a
+  // rental refund paid. Refunds go out through Razorpay (sendRentalRefund).
+  ['markRentalRefunded', 'retired: rental refunds are sent through Razorpay, never marked paid by hand'],
   // A signed link to a buyer's private bank screenshot or statement.
   ['failedPaymentEvidenceLink', 'returns a signed link to private payment evidence'],
 ]);

@@ -14,19 +14,19 @@ const splitsEverything = (money: ReturnType<typeof settleRentalOutcome>) =>
   money.refund_due + money.venue_amount + money.commission_amount;
 
 describe('settleRentalOutcome', () => {
-  it('settles a returned item’s deposit at the venue: no gateway refund, the whole deposit rides the venue payout', () => {
+  it('refunds a returned item’s whole deposit to the guest through Razorpay, the venue earning rent less commission', () => {
     const money = settleRentalOutcome(booking, 'RETURNED', rules);
     expect(money).toEqual({
-      refund_due: 0,
-      deposit_at_venue: 500,
-      venue_amount: 1400,
+      refund_due: 500,
+      deposit_at_venue: 0,
+      venue_amount: 900,
       commission_amount: 100,
       damage_claim: 0,
     });
     expect(splitsEverything(money)).toBe(1500);
   });
 
-  it('has the venue hand nothing back when Finance made deposits non-refundable, with no commission on the deposit', () => {
+  it('refunds nothing when Finance made deposits non-refundable: the venue keeps the deposit, with no commission on it', () => {
     const money = settleRentalOutcome(booking, 'RETURNED', { ...rules, deposit_refundable: false });
     expect(money).toEqual({
       refund_due: 0,
@@ -38,24 +38,35 @@ describe('settleRentalOutcome', () => {
     expect(splitsEverything(money)).toBe(1500);
   });
 
-  it('has the venue hand back the deposit less the damage claim, and still pays it the whole deposit', () => {
+  it('refunds the deposit less the damage claim, and pays the venue only the claim on top of its rent', () => {
     const money = settleRentalOutcome(booking, 'DAMAGED', rules, 200);
     expect(money).toEqual({
-      refund_due: 0,
-      deposit_at_venue: 300,
-      venue_amount: 1400,
+      refund_due: 300,
+      deposit_at_venue: 0,
+      venue_amount: 1100,
       commission_amount: 100,
       damage_claim: 200,
     });
     expect(splitsEverything(money)).toBe(1500);
-    // What the venue keeps net of the cash it handed back: rent less commission plus the claim.
-    expect(money.venue_amount - money.deposit_at_venue).toBe(1100);
   });
 
-  it('hands nothing back for an item kept whole as damage', () => {
+  it('refunds nothing for an item kept whole as damage, the venue receiving the whole deposit', () => {
     const money = settleRentalOutcome(booking, 'DAMAGED', rules, 500);
-    expect(money.deposit_at_venue).toBe(0);
     expect(money.refund_due).toBe(0);
+    expect(money.venue_amount).toBe(1400);
+    expect(splitsEverything(money)).toBe(1500);
+  });
+
+  it('never asks a venue to hand cash back any more', () => {
+    for (const outcome of ['RETURNED', 'DAMAGED', 'RELEASED'] as const) {
+      expect(settleRentalOutcome(booking, outcome, rules, 100).deposit_at_venue).toBe(0);
+    }
+  });
+
+  it('refunds paise exactly: a deposit of 25.50 less a 0.25 claim', () => {
+    const money = settleRentalOutcome({ rent_amount: 0, deposit_amount: 25.5 }, 'DAMAGED', rules, 0.25);
+    expect(money.refund_due).toBe(25.25);
+    expect(money.venue_amount).toBe(0.25);
   });
 
   it('never claims more than the deposit, nor a negative amount', () => {

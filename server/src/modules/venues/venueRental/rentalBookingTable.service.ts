@@ -5,6 +5,7 @@ import { getFinanceSettings } from '@modules/finance/finance/finance.model';
 import { managedVenue } from '@modules/venues/venueFood/venueFoodOrder.shared';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { RentalBookingModel, type IRentalBooking } from './rentalBooking.model';
+import { rentalRefundMoney } from './rentalRefundState';
 
 /**
  * The rental tables (DUNCIT TABLE CONTRACT v1): Finance sees every booking,
@@ -13,7 +14,8 @@ import { RentalBookingModel, type IRentalBooking } from './rentalBooking.model';
  */
 
 const TABLE_CONFIG: TableEntityConfig = {
-  searchFields: ['payment_ref', 'name'],
+  // refund_ref holds the Razorpay refund id once Razorpay confirms it.
+  searchFields: ['payment_ref', 'name', 'refund_ref'],
   sortFields: {
     created_at: 'created_at',
     name: 'name',
@@ -27,6 +29,7 @@ const TABLE_CONFIG: TableEntityConfig = {
   filterFields: {
     status: { type: 'enum' },
     refund_status: { type: 'enum' },
+    refund_gateway_status: { type: 'enum' },
     created_at: { type: 'date' },
   },
   defaultSort: { created_at: -1 },
@@ -35,6 +38,7 @@ const TABLE_CONFIG: TableEntityConfig = {
 const iso = (d: Date | null | undefined) => (d ? new Date(d).toISOString() : null);
 
 export function toRentalBookingPub(b: IRentalBooking, names: { pod: string; guest: string; currency: string }) {
+  const refund = rentalRefundMoney(b);
   return {
     id: String(b._id),
     currency_symbol: names.currency,
@@ -67,6 +71,15 @@ export function toRentalBookingPub(b: IRentalBooking, names: { pod: string; gues
     marked_at: iso(b.marked_at),
     auto_released: b.auto_released === true,
     created_at: new Date(b.created_at).toISOString(),
+    refund_state: refund.state,
+    refund_eligible: refund.eligible,
+    refund_pending: refund.pending,
+    refunded_amount: refund.refunded,
+    refund_outstanding: refund.outstanding,
+    refund_review_reason: refund.review_reason,
+    refund_gateway_status: b.refund_gateway_status || null,
+    // Only an item that came back before 2026-11-22 had its deposit settled in cash at the venue.
+    deposit_policy: b.deposit_policy ?? (b.status === 'RETURNED' || b.status === 'DAMAGED' ? 'VENUE_CASH' : 'DUNCIT_REFUND'),
   };
 }
 

@@ -4,6 +4,7 @@ jest.mock('@modules/finance/finance/paymentRelease.model', () => ({ PaymentRelea
 jest.mock('@modules/finance/finance/finance.model', () => ({ getFinanceSettings: jest.fn() }));
 jest.mock('../../rentalBooking.model', () => ({ RentalBookingModel: {} }));
 jest.mock('../../rentalLifecycle.service', () => ({ rentalLifecycleService: {} }));
+jest.mock('../../rentalRefund.service', () => ({ runRentalRefundSweep: jest.fn() }));
 
 import { rentalItemFitsPod } from '@modules/venues/venue/venue.rentals';
 import { payoutSplit } from '../../rentalPayout.service';
@@ -69,6 +70,23 @@ describe('payoutSplit', () => {
     // The old rule: the deposit went back through the gateway and the venue earned rent only.
     const split = payoutSplit([{ venue_amount: 900, status: 'RETURNED', deposit_amount: 500, refund_due: 500 }]);
     expect(split).toEqual({ rent: 900, deposits: 0, handedBack: 0 });
+  });
+
+  it('pays the venue only the deposit it kept when Duncit refunded the rest through Razorpay', () => {
+    const split = payoutSplit([
+      // Returned whole: the 500 deposit went back to the guest, the venue earns rent 900 only.
+      { venue_amount: 900, status: 'RETURNED', deposit_amount: 500, refund_due: 500, deposit_policy: 'DUNCIT_REFUND' },
+      // Damaged: 200 kept from a 400 deposit, 200 refunded; the venue earns 450 rent + the 200 claim.
+      { venue_amount: 650, status: 'DAMAGED', deposit_amount: 400, refund_due: 200, deposit_policy: 'DUNCIT_REFUND' },
+    ]);
+    expect(split).toEqual({ rent: 1350, deposits: 200, handedBack: 0 });
+  });
+
+  it('pays the venue a non-refundable deposit in full under the Duncit refund rule', () => {
+    const split = payoutSplit([
+      { venue_amount: 1400, status: 'RETURNED', deposit_amount: 500, refund_due: 0, deposit_policy: 'DUNCIT_REFUND' },
+    ]);
+    expect(split).toEqual({ rent: 900, deposits: 500, handedBack: 0 });
   });
 
   it('reads a deposit with no cash recorded as nothing handed back', () => {

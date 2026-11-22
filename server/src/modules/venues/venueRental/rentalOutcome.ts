@@ -5,19 +5,25 @@
  *
  * The rules, from Finance > Rented Items > Settings:
  *  - Duncit's commission is on rent only, never on a deposit.
- *  - An item that went out has its deposit settled AT THE VENUE: the venue
- *    checks the item when it comes back and hands the guest their deposit
- *    (less any damage) from its own till. Duncit never refunds that deposit
- *    through the gateway; it pays the whole deposit to the venue in its rental
- *    payout instead, so the venue is made whole for the cash it handed back.
- *  - When the settings say deposits are not refundable, the venue hands
- *    nothing back and still receives the deposit in its payout.
+ *  - Duncit collected the deposit through Razorpay, so Duncit refunds it: once
+ *    the item is back, the deposit less any damage claim goes back to the
+ *    guest's original payment method through Razorpay (2026-11-22). The venue
+ *    hands nothing back in cash and its payout carries only the damage claim.
+ *  - When the settings say deposits are not refundable, nothing goes back and
+ *    the whole deposit rides the venue's payout.
  *  - A damage claim comes out of the deposit, never more than the deposit.
- *  - A guest who leaves the pod gets the deposit back from Duncit (the item
- *    never went out) and the rent back when the settings say so.
+ *  - A guest who leaves the pod gets the deposit back (the item never went
+ *    out) and the rent back when the settings say so.
+ *
+ * Bookings closed before 2026-11-22 were settled under the older rule — the
+ * venue handed the deposit back in cash and was paid the whole deposit — and
+ * keep that frozen money (`deposit_policy: 'VENUE_CASH'`, see payoutSplit).
  */
 
 export type RentalOutcome = 'RETURNED' | 'DAMAGED' | 'RELEASED';
+
+/** How a booking's deposit was settled: refunded by Duncit (now), or in cash at the venue (bookings closed before 2026-11-22). */
+export type DepositPolicy = 'DUNCIT_REFUND' | 'VENUE_CASH';
 
 export interface OutcomeBooking {
   rent_amount: number;
@@ -31,11 +37,11 @@ export interface OutcomeRules {
 }
 
 export interface OutcomeMoney {
-  /** What Duncit owes the guest back through Finance. */
+  /** What Duncit owes the guest back through Razorpay. */
   refund_due: number;
-  /** What the venue hands the guest in cash at the venue when the item comes back. */
+  /** Cash the venue hands the guest at the venue. Always 0 now; kept for the bookings closed under the older rule. */
   deposit_at_venue: number;
-  /** What Duncit pays the venue: rent less commission, plus every deposit the venue settled at the venue. */
+  /** What Duncit pays the venue: rent less commission, plus any deposit it keeps (a damage claim, or a non-refundable deposit). */
   venue_amount: number;
   commission_amount: number;
   damage_claim: number;
@@ -65,10 +71,11 @@ export function settleRentalOutcome(
       damage_claim: 0,
     };
   }
+  const depositBack = rules.deposit_refundable ? round2(deposit - claim) : 0;
   return {
-    refund_due: 0,
-    deposit_at_venue: rules.deposit_refundable ? round2(deposit - claim) : 0,
-    venue_amount: round2(keptRent - commission + deposit),
+    refund_due: depositBack,
+    deposit_at_venue: 0,
+    venue_amount: round2(keptRent - commission + deposit - depositBack),
     commission_amount: commission,
     damage_claim: claim,
   };

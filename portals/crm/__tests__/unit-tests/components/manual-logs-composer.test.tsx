@@ -4,6 +4,7 @@ import type { MockedResponse } from '@apollo/client/testing';
 import ManualLogsTab from '@/components/ManualLogsTab';
 import { formatLogTimestamp, groupLogs, logKey } from '@/components/ManualLogsTab/logUtils';
 import { ADD_CRM_MANUAL_LOG, VENUE_LEAD } from '@/api/crm.gql';
+import { CRM_USERS_BY_IDS } from '@/api/crmUsers.gql';
 import type { CrmActivity } from '@/api/crm.types';
 import { formatDateTime } from '@duncit/app-settings';
 import { renderWithApollo } from '../helpers/renderWithApollo';
@@ -159,11 +160,16 @@ describe('ManualLogsTab list', () => {
     { ...note({ summary: 'Sent intro' }), type: 'EMAIL' },
   ];
 
-  it('shows notes newest first with their author, falling back to plain text', () => {
-    renderTab([], activities);
+  it('shows notes newest first with their author by name, falling back to plain text', async () => {
+    const people: MockedResponse = {
+      request: { query: CRM_USERS_BY_IDS, variables: { ids: ['Priya'] } },
+      result: { data: { crmUsersByIds: [{ id: 'Priya', name: 'Priya Sharma', email: 'priya@duncit.test', roles: ['CRM_MANAGER'], is_staff: true }] } },
+    };
+    renderTab([people], activities);
 
     expect(screen.getByText('Owner call')).toBeInTheDocument();
-    expect(screen.getByText('by Priya')).toBeInTheDocument();
+    // The author's name, never their raw user id.
+    expect(await screen.findByRole('button', { name: 'Open details for Priya Sharma' })).toHaveTextContent('Priya Sharma');
     expect(screen.getByTestId('note-body')).toHaveTextContent('<p>Agreed on rates</p>');
     expect(screen.getByText('Plain-text note')).toBeInTheDocument();
     expect(screen.getByText('Imported note')).toBeInTheDocument();

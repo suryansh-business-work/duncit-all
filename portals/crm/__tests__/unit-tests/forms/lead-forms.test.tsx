@@ -45,12 +45,13 @@ const wrap = (ui: React.ReactElement) =>
   );
 
 describe('VenueLeadForm', () => {
-  it('renders all 14 sections by their numbered titles', () => {
+  it('renders all 15 sections by their numbered titles, with Social as its own step', () => {
     wrap(<VenueLeadForm config={config} onSubmit={() => undefined} />);
     expect(screen.getByText(/1\. Venue Details/)).toBeTruthy();
-    expect(screen.getByText(/9\. Website & Social Links/)).toBeTruthy();
-    expect(screen.getByText(/10\. Services Offered/)).toBeTruthy();
-    expect(screen.getByText(/14\. Internal Lead Tracking/)).toBeTruthy();
+    expect(screen.getByText(/9\. Website$/)).toBeTruthy();
+    expect(screen.getByText(/10\. Social$/)).toBeTruthy();
+    expect(screen.getByText(/11\. Services Offered/)).toBeTruthy();
+    expect(screen.getByText(/15\. Internal Lead Tracking/)).toBeTruthy();
   });
 
   it('exposes the configured submit + cancel labels', () => {
@@ -71,8 +72,10 @@ describe('HostLeadForm', () => {
   it('renders all major sections including services + tracking', () => {
     wrap(<HostLeadForm config={config} onSubmit={() => undefined} />);
     expect(screen.getByText(/1\. Basic Details/)).toBeTruthy();
-    expect(screen.getByText(/11\. Internal Tracking/)).toBeTruthy();
-    expect(screen.getByText(/8\. Services Offered/)).toBeTruthy();
+    expect(screen.getByText(/6\. Social$/)).toBeTruthy();
+    expect(screen.getByText(/7\. Reach$/)).toBeTruthy();
+    expect(screen.getByText(/12\. Internal Tracking/)).toBeTruthy();
+    expect(screen.getByText(/9\. Services Offered/)).toBeTruthy();
   });
 
   it('honours the submitLabel and shows Saving… while submitting', () => {

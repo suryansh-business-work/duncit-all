@@ -96,18 +96,11 @@ describe('HostLeadDetailPage', () => {
     expect(rowValue(overview, 'Frequency')).toBe('Weekly');
     expect(rowValue(overview, 'City')).toBe('Pune');
     expect(rowValue(overview, 'Area')).toBe('Aundh');
-    expect(within(overview).getByRole('link', { name: /instagram\.com\/puneRunners/ })).toHaveAttribute(
-      'href',
-      'https://instagram.com/puneRunners',
-    );
+    // Instagram and other profiles live on the Social tab now.
+    expect(within(overview).queryByRole('link', { name: /instagram\.com/ })).toBeNull();
     expect(within(overview).getByRole('link', { name: /chat\.whatsapp\.com/ })).toHaveAttribute(
       'href',
       'https://chat.whatsapp.com/pune-runners',
-    );
-    expect(rowValue(overview, 'Strava club')).toBe('https://strava.com/clubs/pune-runners');
-    expect(within(overview).getByRole('link', { name: /strava\.com\/clubs/ })).toHaveAttribute(
-      'href',
-      'https://strava.com/clubs/pune-runners',
     );
     expect(rowValue(overview, 'Community size')).toBe('400');
     expect(rowValue(overview, 'Previous events')).toBe('Yes');
@@ -120,6 +113,17 @@ describe('HostLeadDetailPage', () => {
     expect(rowValue(overview, 'Updated')).toBe(formatDateTime('2026-09-02T10:00:00.000Z'));
     expect(within(overview).getByText('NOTES')).toBeInTheDocument();
     expect(within(overview).getByText(/Wants a Sunday slot/)).toBeInTheDocument();
+
+    const social = openTab('social');
+    expect(within(social).getByRole('link', { name: /instagram\.com\/puneRunners/ })).toHaveAttribute(
+      'href',
+      'https://instagram.com/puneRunners',
+    );
+    expect(rowValue(social, 'Strava club')).toBe('https://strava.com/clubs/pune-runners');
+    expect(within(social).getByRole('link', { name: /strava\.com\/clubs/ })).toHaveAttribute(
+      'href',
+      'https://strava.com/clubs/pune-runners',
+    );
   });
 
   it('falls back to dashes and hides empty extras for a sparse lead', async () => {
@@ -138,7 +142,6 @@ describe('HostLeadDetailPage', () => {
       'Frequency',
       'City',
       'Area',
-      'Instagram',
       'Community link',
       'Community size',
       'Past attendees',
@@ -166,6 +169,8 @@ describe('HostLeadDetailPage', () => {
     const services = openTab('services');
     expect(within(services).getByText('No services yet. Add them on the lead form.')).toBeInTheDocument();
     expect(screen.getByTestId('lead-tab-services')).toHaveTextContent('Services (0)');
+
+    expect(within(openTab('social')).getByText('No social channels added yet.')).toBeInTheDocument();
   });
 
   it('shows the plans of a filled lead', async () => {

@@ -107,7 +107,7 @@ describe('VenueLeadDetailPage', () => {
     ).toBeInTheDocument();
   });
 
-  it('shows the Instagram and extra social links, and dashes Instagram when it is missing', async () => {
+  it('lists Instagram and the extra social links, view-only, on the Social tab', async () => {
     const first = renderPage(
       venueLead({
         instagram_link: 'https://instagram.com/grandhall',
@@ -118,23 +118,29 @@ describe('VenueLeadDetailPage', () => {
       }),
     );
     await heading();
-    const overview = screen.getByTestId('lead-tabpanel-overview');
-    expect(within(overview).getByRole('heading', { name: 'Social links' })).toBeInTheDocument();
-    expect(within(overview).getByRole('link', { name: /instagram\.com\/grandhall/ })).toHaveAttribute(
+    expect(screen.getByTestId('lead-tab-social')).toHaveTextContent('Social (3)');
+    // The overview no longer repeats them.
+    expect(within(screen.getByTestId('lead-tabpanel-overview')).queryByRole('link', { name: /instagram\.com/ })).toBeNull();
+    const social = openTab('social');
+    expect(within(social).getByRole('heading', { name: 'Social' })).toBeInTheDocument();
+    expect(within(social).getByText('View only. To change these, edit the lead and open its Social step.')).toBeInTheDocument();
+    expect(within(social).getByRole('link', { name: /instagram\.com\/grandhall/ })).toHaveAttribute(
       'href',
       'https://instagram.com/grandhall',
     );
-    expect(within(overview).getByText('YouTube')).toBeInTheDocument();
-    expect(within(overview).getByRole('link', { name: /youtube\.com\/@grandhall/ })).toHaveAttribute('target', '_blank');
+    expect(within(social).getByText('YouTube')).toBeInTheDocument();
+    expect(within(social).getByRole('link', { name: /youtube\.com\/@grandhall/ })).toHaveAttribute('target', '_blank');
     // A link saved without a name is labelled with its own address.
-    expect(within(overview).getAllByText('https://linktr.ee/grandhall')).toHaveLength(2);
+    expect(within(social).getAllByText('https://linktr.ee/grandhall')).toHaveLength(2);
+    // View-only: nothing on the tab edits a channel.
+    expect(within(social).queryByRole('textbox')).toBeNull();
+    expect(within(social).queryByRole('button', { name: /edit/i })).toBeNull();
     first.unmount();
 
-    // The fixture's source is also "Instagram"; change it so the row label is the only match.
-    renderPage(venueLead({ instagram_link: null, social_links: [], lead_source: 'Referral' }));
+    renderPage(venueLead({ instagram_link: null, social_links: [] }));
     await heading();
-    expect(rowValue(screen.getByTestId('lead-tabpanel-overview'), 'Instagram')).toBe('—');
-    expect(screen.queryByRole('link', { name: /youtube/ })).toBeNull();
+    expect(screen.getByTestId('lead-tab-social')).toHaveTextContent('Social (0)');
+    expect(within(openTab('social')).getByText('No social channels added yet.')).toBeInTheDocument();
   });
 
   it('has a Logos & Images tab that loads the venue media', async () => {

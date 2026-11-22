@@ -13,6 +13,7 @@ const build = (entity: CrmLeadEntity) =>
     statusOptions: [],
     priorityOptions: [],
     superCategoryOptions: [],
+    assigneeOptions: [{ value: 'u-priya', label: 'Priya Sharma' }],
     onEdit: vi.fn(),
     onDelete: vi.fn(),
     t,
@@ -29,6 +30,16 @@ const column = (entity: CrmLeadEntity, field: string) => {
 const value = (entity: CrmLeadEntity, field: string, r: Row) => column(entity, field).valueGetter?.(r);
 
 describe('buildLeadColumns', () => {
+  it('has an Assigned To column for every lead kind: the name shown, the team as its filter', () => {
+    for (const entity of ['venue', 'host', 'ecomm', 'creator', 'community'] as const) {
+      const assigned = column(entity, 'assigned_to');
+      expect(assigned).toMatchObject({ headerName: 'crm.forms.assignedTo', type: 'enum', options: [{ value: 'u-priya', label: 'Priya Sharma' }] });
+    }
+    expect(value('venue', 'assigned_to', row({ assigned_to: 'Priya Sharma' }))).toBe('Priya Sharma');
+    expect(value('venue', 'assigned_to', row({ assigned_to: '' }))).toBe('—');
+    expect(value('venue', 'assigned_to', row())).toBe('—');
+  });
+
   it('adds the entity-specific column only for hosts and ecomm', () => {
     expect(build('host').map((c) => c.field)).toContain('host_type');
     expect(build('ecomm').map((c) => c.field)).toContain('brand_name');

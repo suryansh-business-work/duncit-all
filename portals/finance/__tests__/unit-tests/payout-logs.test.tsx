@@ -91,6 +91,22 @@ describe('Withdrawal Logs', () => {
     expect(within(paid).getByTestId('cell-actor_name')).toHaveTextContent('Razorpay (SYSTEM)');
   });
 
+  it('reads missing details as a dash, and an unrecognised action as itself', async () => {
+    tableControls.rowsByKey = {
+      payoutAuditTable: [
+        audit({ user_name: '', reason: '', actor_role: '', payment_status: '', action: 'FUTURE_ACTION', razorpay_payout_id: '' }),
+      ],
+    };
+    renderWithProviders(<WithdrawalLogsPage />, { path: '/withdrawals/logs', entry: '/withdrawals/logs', mocks: [] });
+    const row = await screen.findByTestId('table-row');
+    expect(within(row).getByTestId('cell-user_name')).toHaveTextContent('—');
+    expect(within(row).getByTestId('cell-reason')).toHaveTextContent('—');
+    expect(within(row).getByTestId('cell-actor_name')).toHaveTextContent('Finance One');
+    expect(within(row).getByTestId('cell-actor_name')).not.toHaveTextContent('(');
+    expect(within(row).getByTestId('cell-payment_status')).toHaveTextContent('—');
+    expect(within(row).getByTestId('cell-action')).toHaveTextContent('FUTURE_ACTION');
+  });
+
   it('offers no action on any row: the trail is read-only', async () => {
     tableControls.rowsByKey = { payoutAuditTable: [audit()] };
     renderWithProviders(<WithdrawalLogsPage />, { path: '/withdrawals/logs', entry: '/withdrawals/logs', mocks: [] });
@@ -145,6 +161,17 @@ describe('Send Money Logs', () => {
     fireEvent.click(within(row).getByRole('button', { name: 'Retry payout' }));
     await waitFor(() => expect(notifySuccess).toHaveBeenCalledWith('Payout restarted.'));
     expect(sent).toEqual(['retried']);
+  });
+
+  it('reads details a transfer does not have as a dash', async () => {
+    tableControls.rowsByKey = {
+      sendMoneyTransfersTable: [transfer({ notes: '', supporting_reference: '', initiated_by_name: '', approved_by_name: '' })],
+    };
+    mount();
+    const row = await screen.findByTestId('table-row');
+    for (const field of ['initiated_by_name', 'approved_by_name']) {
+      expect(within(row).getByTestId(`cell-${field}`)).toHaveTextContent('—');
+    }
   });
 
   it('offers Refresh status, not a resend, for a payout Razorpay already has', async () => {

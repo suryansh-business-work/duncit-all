@@ -9,6 +9,7 @@
  */
 import { beforeEach, describe, expect, it } from 'vitest';
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { GraphQLError } from 'graphql';
 import type { MockedResponse } from '@apollo/client/testing';
 import { SendMoneyPage } from '../../src/pages/finance';
 import {
@@ -55,6 +56,16 @@ const searchMock: MockedResponse = {
       sendMoneyRecipients: [
         { __typename: 'SendMoneyRecipient', id: 'u1', name: 'Meera Nair', email: 'meera@example.com', phone: '+919999900000' },
       ],
+    },
+  },
+  maxUsageCount: 20,
+};
+
+const otherSearchMock: MockedResponse = {
+  request: { query: SEND_MONEY_RECIPIENTS, variables: { search: 'rohan' } },
+  result: {
+    data: {
+      sendMoneyRecipients: [{ __typename: 'SendMoneyRecipient', id: 'u2', name: 'Rohan Das', email: '', phone: '' }],
     },
   },
   maxUsageCount: 20,
@@ -146,6 +157,28 @@ describe('Send Money — choosing who to pay', () => {
   });
 });
 
+describe('Send Money — the recipient box', () => {
+  it('clears the person and their accounts together', async () => {
+    mount([optionsMock(), searchMock, recipientMock([bank])]);
+    await pickMeera();
+    await screen.findByText('Verified bank accounts');
+    fireEvent.click(screen.getByRole('button', { name: 'Clear' }));
+    await waitFor(() => expect(screen.queryByText('Verified bank accounts')).not.toBeInTheDocument());
+    expect(screen.getByRole('button', { name: 'Send Money' })).toBeDisabled();
+  });
+
+  it('keeps the chosen person selectable while a newer search shows other people', async () => {
+    mount([optionsMock(), searchMock, otherSearchMock, recipientMock([bank])]);
+    await pickMeera();
+    await screen.findByText('Verified bank accounts');
+    const box = screen.getByRole('combobox', { name: /Recipient/ });
+    fireEvent.change(box, { target: { value: 'rohan' } });
+    // A person with no email is listed by name alone.
+    expect(await screen.findByRole('option', { name: 'Rohan Das' }, { timeout: 3000 })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: /Meera Nair/ })).toBeInTheDocument();
+  });
+});
+
 describe('Send Money — the form', () => {
   it('names every missing field and sends nothing', async () => {
     const sent: Array<Record<string, unknown>> = [];
@@ -228,18 +261,49 @@ describe('Send Money — confirming and sending', () => {
     expect(screen.getByLabelText(/^Amount/)).toHaveValue(null);
   });
 
+  it('shows a UPI account as its address in the confirmation', async () => {
+    mount([optionsMock(), searchMock, recipientMock([bank, upi]), sendMock([])]);
+    await pickMeera();
+    await screen.findByText('Verified bank accounts');
+    fireEvent.click(screen.getByRole('radio', { name: /cafe@okhdfc/ }));
+    fillPayment();
+    fireEvent.click(screen.getByRole('button', { name: 'Send Money' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Send this payment?' });
+    expect(within(dialog).getByText('UPI · cafe@okhdfc')).toBeInTheDocument();
+  });
+
+  it('sends only once when the confirm button is double-clicked', async () => {
+    const sent: Array<Record<string, unknown>> = [];
+    mount([optionsMock(), searchMock, recipientMock([bank]), sendMock(sent)]);
+    const dialog = await reachConfirmation();
+    const confirm = within(dialog).getByRole('button', { name: 'Send Money' });
+    fireEvent.click(confirm);
+    fireEvent.click(confirm);
+    await waitFor(() => expect(notifySuccess).toHaveBeenCalledTimes(1));
+    expect(sent).toHaveLength(1);
+  });
+
   it('reuses the SAME request id after a failed attempt, so a retry cannot pay twice', async () => {
     const attempts: unknown[] = [];
-    const recorder: MockedResponse = {
+    const idOf = (variables: Record<string, unknown>) => (variables as { input: { request_id: string } }).input.request_id;
+    // First attempt: the server answers with an error. Second: it succeeds.
+    const failing: MockedResponse = {
       request: { query: SEND_MONEY, variables: () => true },
       result: (variables: Record<string, unknown>) => {
-        attempts.push((variables as { input: { request_id: string } }).input.request_id);
-        if (attempts.length === 1) throw new Error('Network blip');
+        attempts.push(idOf(variables));
+        return { errors: [new GraphQLError('Network blip')] };
+      },
+      maxUsageCount: 1,
+    };
+    const succeeding: MockedResponse = {
+      request: { query: SEND_MONEY, variables: () => true },
+      result: (variables: Record<string, unknown>) => {
+        attempts.push(idOf(variables));
         return { data: { sendMoney: { __typename: 'SendMoneyTransfer', id: 't1', transfer_id: 'sm_1', status: 'PROCESSING' } } };
       },
-      maxUsageCount: 20,
+      maxUsageCount: 1,
     };
-    mount([optionsMock(), searchMock, recipientMock([bank]), recorder]);
+    mount([optionsMock(), searchMock, recipientMock([bank]), failing, succeeding]);
     let dialog = await reachConfirmation();
     fireEvent.click(within(dialog).getByRole('button', { name: 'Send Money' }));
     await waitFor(() => expect(notifyError).toHaveBeenCalled());

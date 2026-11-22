@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery } from '@apollo/client/react';
@@ -22,9 +22,7 @@ import {
 
 /** A fresh id for one intended transfer. Never reused after it succeeded, always reused after it failed. */
 export function mintRequestId(): string {
-  if (typeof globalThis.crypto?.randomUUID === 'function') return globalThis.crypto.randomUUID();
-  const bytes = globalThis.crypto.getRandomValues(new Uint8Array(16));
-  return `req-${Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('')}`;
+  return globalThis.crypto.randomUUID();
 }
 
 /**
@@ -40,7 +38,9 @@ export function useSendMoneyForm() {
   const { t } = useTranslation();
   const [recipientOption, setRecipientOption] = useState<RecipientOption | null>(null);
   const [requestId, setRequestId] = useState(mintRequestId);
-  const [pending, setPending] = useState<SendMoneyFormValues | null>(null);
+  const [confirming, setConfirming] = useState(false);
+  // A second click lands before the first one's loading state has rendered; only a ref sees it.
+  const inFlight = useRef(false);
 
   const { data: optionsData } = useQuery<SendMoneyOptionsData>(SEND_MONEY_OPTIONS, { fetchPolicy: 'cache-and-network' });
   const { data: recipientData, loading: loadingRecipient } = useQuery<{ sendMoneyRecipient: Recipient }>(SEND_MONEY_RECIPIENT, {
@@ -72,7 +72,7 @@ export function useSendMoneyForm() {
     defaultValues: EMPTY_SEND_MONEY_VALUES,
     mode: 'onSubmit',
   });
-  const { setValue, reset, handleSubmit, watch } = form;
+  const { setValue, reset, handleSubmit, watch, getValues } = form;
 
   const recipient = recipientOption ? (recipientData?.sendMoneyRecipient ?? null) : null;
   const accountId = watch('account_id');
@@ -94,22 +94,26 @@ export function useSendMoneyForm() {
     if (only) setValue('account_id', only.id);
   }, [recipient, setValue]);
 
-  const review = handleSubmit((values) => setPending(values));
+  const review = handleSubmit(() => setConfirming(true));
 
-  const confirm = useCallback(async () => {
-    if (!pending) return;
+  // The confirmation sends the form as it stands: the same rules run once more, so
+  // there is no separate "pending" copy of the values that could drift from the form.
+  const confirm = handleSubmit(async (values) => {
+    if (inFlight.current) return;
+    inFlight.current = true;
     try {
-      await send({ variables: { input: toSendMoneyInput(pending, requestId) } });
+      await send({ variables: { input: toSendMoneyInput(values, requestId) } });
       notifySuccess(t('finance.payouts.sendSuccess'));
-      setPending(null);
       setRecipientOption(null);
       reset(EMPTY_SEND_MONEY_VALUES);
       setRequestId(mintRequestId());
     } catch (e) {
-      setPending(null);
       notifyError(parseApiError(e));
+    } finally {
+      inFlight.current = false;
+      setConfirming(false);
     }
-  }, [pending, requestId, send, reset, t]);
+  });
 
   const options = optionsData?.sendMoneyOptions;
   return {
@@ -119,12 +123,13 @@ export function useSendMoneyForm() {
     recipient,
     loadingRecipient,
     account,
-    pending,
+    confirming,
+    values: confirming ? getValues() : null,
     sending,
     chooseRecipient,
     review,
     confirm,
-    cancelConfirm: () => setPending(null),
+    cancelConfirm: () => setConfirming(false),
     canSend: !!options?.payouts_configured && !!recipient && recipient.verified_accounts.length > 0,
   };
 }

@@ -86,7 +86,8 @@ describe('PodWithdrawalDetailPage — the pod header', () => {
   it('names the pod, who asked, and that it is still pending — then goes back', async () => {
     mount([podWithdrawalSummaryMock()]);
     expect(await screen.findByRole('heading', { name: 'Sunday Badminton' })).toBeInTheDocument();
-    expect(screen.getByText('Pending')).toBeInTheDocument();
+    // The header chip comes first; the pending row's Decision cell also reads "Pending".
+    expect(screen.getAllByText('Pending')[0]).toBeInTheDocument();
     expect(
       screen.getByText('Every withdrawal request raised against this pod. · Host, Venue Owner'),
     ).toBeInTheDocument();
@@ -357,16 +358,14 @@ describe('PodWithdrawalDetailPage — the Accept dialog', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
 
-  it('never decides the same request twice when the button is clicked again while the dialog closes', async () => {
+  it('never decides the same request twice when the button is double-clicked', async () => {
     const sent: unknown[] = [];
     mount([podWithdrawalSummaryMock(), withdrawalReviewMock(), decideWithdrawalMock({ sent })]);
     const dialog = await openDialog();
     const confirm = await within(dialog).findByRole('button', { name: 'Accept & pay' });
 
+    // Two clicks before either has rendered its loading state.
     fireEvent.click(confirm);
-    await waitFor(() => expect(notifySuccess).toHaveBeenCalledTimes(1));
-    // The dialog is fading out but its button is still on screen — click it again.
-    expect(confirm).toBeInTheDocument();
     fireEvent.click(confirm);
 
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());

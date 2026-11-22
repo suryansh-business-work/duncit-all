@@ -77,10 +77,10 @@ export default function SendMoneyPage() {
       </Stack>
 
       <SendMoneyConfirmDialog
-        open={!!m.pending}
+        open={m.confirming}
         recipient={m.recipient}
         account={m.account}
-        values={m.pending}
+        values={m.values}
         busy={m.sending}
         onClose={m.cancelConfirm}
         onConfirm={m.confirm}

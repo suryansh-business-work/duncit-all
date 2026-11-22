@@ -23,7 +23,7 @@ interface Props {
 const MIN_SEARCH = 2;
 const SEARCH_DELAY_MS = 300;
 
-const labelOf = (option: RecipientOption) => (option.email ? `${option.name} · ${option.email}` : option.name);
+const labelOf = (option: RecipientOption) => [option.name, option.email].filter(Boolean).join(' · ');
 
 /**
  * Pick who to pay: a searchable dropdown over every user, matched by name, email

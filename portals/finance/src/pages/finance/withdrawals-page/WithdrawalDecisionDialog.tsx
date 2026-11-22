@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery } from '@apollo/client/react';
@@ -35,10 +35,17 @@ interface Props {
  * up, who is allowed). It only ever offers what the server will accept.
  */
 export default function WithdrawalDecisionDialog({ withdrawalId, onClose, onDecided }: Readonly<Props>) {
+  // Mounted only while a withdrawal is being reviewed, so every state below starts
+  // fresh for each one and nothing can submit without an id.
+  return withdrawalId ? <ReviewDialog withdrawalId={withdrawalId} onClose={onClose} onDecided={onDecided} /> : null;
+}
+
+function ReviewDialog({ withdrawalId, onClose, onDecided }: Readonly<Props & { withdrawalId: string }>) {
   const { t } = useTranslation();
+  // A second click lands before the first one's loading state has rendered; only a ref sees it.
+  const inFlight = useRef(false);
   const { data, loading, error } = useQuery<WithdrawalReviewData>(WITHDRAWAL_REVIEW, {
     variables: { id: withdrawalId },
-    skip: !withdrawalId,
     // A decision is made on what the account looks like NOW, never on a cached copy.
     fetchPolicy: 'network-only',
   });
@@ -65,7 +72,6 @@ export default function WithdrawalDecisionDialog({ withdrawalId, onClose, onDeci
     register,
     control,
     handleSubmit,
-    reset,
     watch,
     setValue,
     formState: { errors },
@@ -79,17 +85,13 @@ export default function WithdrawalDecisionDialog({ withdrawalId, onClose, onDeci
   // An approved withdrawal whose payout failed can only be given up on (rejected).
   const canPay = !!review && review.payouts_configured && review.withdrawal.approval_status === 'PENDING';
 
-  // A fresh target must never inherit the previous review's choice or reason.
-  useEffect(() => {
-    if (withdrawalId) reset(DEFAULT_DECISION_VALUES);
-  }, [withdrawalId, reset]);
-
   useEffect(() => {
     if (review && !canPay) setValue('decision', 'REJECT');
   }, [review, canPay, setValue]);
 
   const submit = handleSubmit(async (values) => {
-    if (!withdrawalId) return;
+    if (inFlight.current) return;
+    inFlight.current = true;
     try {
       await decide({ variables: { id: withdrawalId, input: toDecisionInput(values) } });
       notifySuccess(
@@ -103,6 +105,8 @@ export default function WithdrawalDecisionDialog({ withdrawalId, onClose, onDeci
       onClose();
     } catch (e) {
       notifyError(parseApiError(e));
+    } finally {
+      inFlight.current = false;
     }
   });
 
@@ -113,7 +117,7 @@ export default function WithdrawalDecisionDialog({ withdrawalId, onClose, onDeci
   }[decision];
 
   return (
-    <Dialog open={!!withdrawalId} onClose={saving ? undefined : onClose} fullWidth maxWidth="sm">
+    <Dialog open onClose={saving ? undefined : onClose} fullWidth maxWidth="sm">
       <DialogTitle>{t('finance.payouts.reviewTitle')}</DialogTitle>
       <DialogContent dividers>
         <QueryGuard loading={loading && !review} error={error} notFound={!review} spinnerSx={{ p: 4 }}>

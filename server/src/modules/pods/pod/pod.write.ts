@@ -363,6 +363,11 @@ export const podWriteMethods = {
     // The same economics guard as create, on the pod as this edit would leave
     // it and its new booking. Before anything is written — the edit core moves
     // product stock — so a refused edit keeps the stored pod and its old slot.
+    // An amount the pod's type does not allow is an input error, answered as
+    // one — not as an earnings verdict on a price that could never be saved.
+    if (input.pod_type !== undefined || input.pod_amount !== undefined) {
+      validateAmount(input.pod_type ?? doc.pod_type, input.pod_amount ?? doc.pod_amount);
+    }
     await assertPortalEditEconomics(editedPodView(doc, input, reroute), input, reroute, doc);
     await applyPodEditCore(doc, input);
     if (reroute) applyRerouteState(doc, input, reroute);

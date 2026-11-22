@@ -139,8 +139,12 @@ export const venueKitService = {
           email: emailProof.email,
           source: context.source,
           status: 'NEW',
+          // An upsert does not apply schema defaults to a field an operator
+          // names, and `$inc: 0` would write 0 — so the first submission sets
+          // the count itself and only a repeat increments it.
+          ...(existing ? {} : { submission_count: 1 }),
         },
-        $inc: { submission_count: existing ? 1 : 0 },
+        ...(existing ? { $inc: { submission_count: 1 } } : {}),
       },
       { new: true, upsert: true, runValidators: true }
     );

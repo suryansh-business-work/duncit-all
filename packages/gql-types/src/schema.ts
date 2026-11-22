@@ -1529,6 +1529,12 @@ export type AnalyticsCompare =
 export type AnalyticsEntity =
   | 'AI_USAGE'
   | 'API_PERFORMANCE'
+  /** Both app stores side by side — new installs, uninstalls, crashes and ratings (Analytics > App Insights > Overview). */
+  | 'APP_INSIGHTS'
+  /** Google Play Console's statistics for the Android app (Analytics > App Insights > Google Play). */
+  | 'APP_INSIGHTS_ANDROID'
+  /** App Store Connect's analytics for the iOS app (Analytics > App Insights > App Store). */
+  | 'APP_INSIGHTS_IOS'
   | 'APP_RELEASES'
   | 'CLUBS'
   | 'CLUB_ADMINS'
@@ -2187,6 +2193,120 @@ export type AppFeedbackInput = {
   /** The screen the reporter was on when they opened the form. */
   source_screen?: InputMaybe<Scalars['String']['input']>;
 };
+
+/** One store day, for one slice. A metric the store does not report is null. */
+export type AppInsightDailyRow = {
+  __typename?: 'AppInsightDailyRow';
+  /** Google Play: devices active in the last 30 days. App Store: devices with a session that day. */
+  active_devices?: Maybe<Scalars['Float']['output']>;
+  anrs?: Maybe<Scalars['Float']['output']>;
+  crashes?: Maybe<Scalars['Float']['output']>;
+  day: Scalars['String']['output'];
+  deletions?: Maybe<Scalars['Float']['output']>;
+  device_installs?: Maybe<Scalars['Float']['output']>;
+  dimension: AppInsightDimension;
+  /** App Store: first-time downloads. */
+  first_downloads?: Maybe<Scalars['Float']['output']>;
+  id: Scalars['ID']['output'];
+  install_events?: Maybe<Scalars['Float']['output']>;
+  installs?: Maybe<Scalars['Float']['output']>;
+  /** Empty for TOTAL; a country code; an app version (version code on Google Play). */
+  key: Scalars['String']['output'];
+  /** Google Play: users installing on their first device. */
+  new_installs?: Maybe<Scalars['Float']['output']>;
+  rating_daily_avg?: Maybe<Scalars['Float']['output']>;
+  rating_total_avg?: Maybe<Scalars['Float']['output']>;
+  redownloads?: Maybe<Scalars['Float']['output']>;
+  reviews_1?: Maybe<Scalars['Float']['output']>;
+  reviews_2?: Maybe<Scalars['Float']['output']>;
+  reviews_3?: Maybe<Scalars['Float']['output']>;
+  reviews_4?: Maybe<Scalars['Float']['output']>;
+  reviews_5?: Maybe<Scalars['Float']['output']>;
+  sessions?: Maybe<Scalars['Float']['output']>;
+  store: AppInsightStore;
+  total_installs?: Maybe<Scalars['Float']['output']>;
+  uninstall_events?: Maybe<Scalars['Float']['output']>;
+  uninstalls?: Maybe<Scalars['Float']['output']>;
+  update_events?: Maybe<Scalars['Float']['output']>;
+  /** Google Play: device upgrades. App Store: update downloads. */
+  updates?: Maybe<Scalars['Float']['output']>;
+  user_uninstalls?: Maybe<Scalars['Float']['output']>;
+};
+
+/** What a history row is split by. */
+export type AppInsightDimension =
+  | 'COUNTRY'
+  | 'TOTAL'
+  | 'VERSION';
+
+/** One store's integration. Never carries a credential. */
+export type AppInsightIntegration = {
+  __typename?: 'AppInsightIntegration';
+  configured: Scalars['Boolean']['output'];
+  /** The first and last store day the history holds (yyyy-MM-dd). */
+  first_day?: Maybe<Scalars['String']['output']>;
+  last_attempt_at?: Maybe<Scalars['String']['output']>;
+  last_day?: Maybe<Scalars['String']['output']>;
+  last_error?: Maybe<Scalars['String']['output']>;
+  last_success_at?: Maybe<Scalars['String']['output']>;
+  /** The Environment Variables fields still blank (service_account_json, package_name, reports_bucket, issuer_id, key_id, private_key, bundle_id). */
+  missing: Array<Scalars['String']['output']>;
+  /** Why a value that is set cannot be used, e.g. a key that is not JSON. */
+  problem?: Maybe<Scalars['String']['output']>;
+  /** Tech > Environment Variables, opened on this store's entry. */
+  setup_url?: Maybe<Scalars['String']['output']>;
+  status: AppInsightStatus;
+  store: AppInsightStore;
+};
+
+/** How one store's integration stands. */
+export type AppInsightStatus =
+  /** The last sync succeeded. */
+  | 'CONNECTED'
+  /** Credentials are missing or unusable — set them in Tech > Environment Variables. */
+  | 'DISCONNECTED'
+  /** The last sync failed; last_error says why. */
+  | 'ERROR'
+  /** Configured, but no sync has finished yet. */
+  | 'PENDING'
+  /** A sync is running. */
+  | 'SYNCING';
+
+/** The app stores App Insights reads (Analytics > App Insights). */
+export type AppInsightStore =
+  /** App Store Connect — Analytics Reports and customer reviews. */
+  | 'APP_STORE'
+  /** Google Play Console — bulk reports in the developer account's Cloud Storage bucket. */
+  | 'GOOGLE_PLAY';
+
+/** One sync of one store. */
+export type AppInsightSyncLog = {
+  __typename?: 'AppInsightSyncLog';
+  api_calls: Scalars['Int']['output'];
+  duration_ms?: Maybe<Scalars['Float']['output']>;
+  finished_at?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  message: Scalars['String']['output'];
+  outcome: AppInsightSyncOutcome;
+  retries: Scalars['Int']['output'];
+  rows_written: Scalars['Int']['output'];
+  /** Report files or instances (and review pages) read this time. */
+  sources_read: Scalars['Int']['output'];
+  /** Already read and unchanged, so skipped. */
+  sources_skipped: Scalars['Int']['output'];
+  started_at: Scalars['String']['output'];
+  store: AppInsightStore;
+  trigger: AppInsightSyncTrigger;
+};
+
+export type AppInsightSyncOutcome =
+  | 'FAILED'
+  | 'RUNNING'
+  | 'SUCCESS';
+
+export type AppInsightSyncTrigger =
+  | 'MANUAL'
+  | 'SCHEDULE';
 
 export type AppPopup = {
   __typename?: 'AppPopup';
@@ -19824,6 +19944,8 @@ export type Mutation = {
   summarizeCommunicationLog: CommunicationLog;
   /** Support agents can create a user account on a caller's behalf. */
   supportCreateUser: User;
+  /** Sync now: starts a sync of the given store, or both, in the background, and returns the integrations. */
+  syncAppInsights: Array<AppInsightIntegration>;
   /** Products portal: check the next batch of a brand's pincodes against ShipRocket from its own warehouse. */
   syncBrandDeliveryPincodes: BrandDeliveryPincodeSyncResult;
   /**
@@ -25856,6 +25978,11 @@ export type MutationSummarizeCommunicationLogArgs = {
 
 export type MutationSupportCreateUserArgs = {
   input: SupportCreateUserInput;
+};
+
+
+export type MutationSyncAppInsightsArgs = {
+  store?: InputMaybe<AppInsightStore>;
 };
 
 
@@ -33894,6 +34021,12 @@ export type Query = {
   appBuildTriggerConfig: AppBuildTriggerConfig;
   /** CI builds of one platform, newest first (Tech portal App Builds tables). app_env narrows them to one environment; left out lists both. */
   appBuildsTable: AppBuildTablePage;
+  /** The stored history for one store over a range of at most a year (yyyy-MM-dd, inclusive). */
+  appInsightsDaily: Array<AppInsightDailyRow>;
+  /** Both stores' integrations: configured, status, last sync and the days held. */
+  appInsightsStatus: Array<AppInsightIntegration>;
+  /** Recent syncs, newest first (at most 200). */
+  appInsightsSyncLogs: Array<AppInsightSyncLog>;
   appPopupsTable: AppPopupTablePage;
   /**
    * The raw app screens kept for the websites' app phone (Store Listing >
@@ -36333,6 +36466,20 @@ export type QueryAppBuildsTableArgs = {
   app_env?: InputMaybe<AppBuildEnv>;
   platform: AppBuildPlatform;
   query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryAppInsightsDailyArgs = {
+  dimension?: InputMaybe<AppInsightDimension>;
+  from: Scalars['String']['input'];
+  store: AppInsightStore;
+  to: Scalars['String']['input'];
+};
+
+
+export type QueryAppInsightsSyncLogsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  store?: InputMaybe<AppInsightStore>;
 };
 
 

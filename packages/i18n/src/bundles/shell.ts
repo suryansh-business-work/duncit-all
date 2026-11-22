@@ -716,6 +716,8 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       },
     },
     nav: {
+      appInsights: 'App Insights',
+      appInsightsDashboard: 'Store Dashboard',
       ads: 'Ads',
       adsApproval: 'Ads Approval',
       adsSettings: 'Ads Settings',

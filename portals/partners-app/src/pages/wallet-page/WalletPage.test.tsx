@@ -46,6 +46,9 @@ const withdrawal = (over: Record<string, unknown> = {}) => ({
   scheduled_for: null,
   reject_reason: '',
   created_at: '2026-03-21T09:00:00',
+  // Empty until Razorpay and the bank have them.
+  razorpay_payout_id: '',
+  payout_utr: '',
   ...over,
 });
 
@@ -148,6 +151,19 @@ describe('WalletPage', () => {
     expect(await screen.findByText('₹400.00 · UPI')).toBeTruthy();
     expect(screen.getByText('PENDING')).toBeTruthy();
     expect(screen.queryByText('No withdrawals yet.')).toBeNull();
+  });
+
+  it('shows the payment id and the bank reference of a paid withdrawal, and nothing for one not sent yet', async () => {
+    renderWallet([
+      walletMock({}, [], [
+        withdrawal({ id: 'w-paid', status: 'PAID', razorpay_payout_id: 'pout_RzpX91', payout_utr: 'UTR55120' }),
+        withdrawal({ id: 'w-new' }),
+      ]),
+    ]);
+    expect(await screen.findByTestId('wallet-withdrawal-payout-w-paid')).toHaveProperty('textContent', 'Payment ID: pout_RzpX91');
+    expect(screen.getByTestId('wallet-withdrawal-utr-w-paid')).toHaveProperty('textContent', 'Bank reference (UTR): UTR55120');
+    expect(screen.queryByTestId('wallet-withdrawal-payout-w-new')).toBeNull();
+    expect(screen.queryByTestId('wallet-withdrawal-utr-w-new')).toBeNull();
   });
 
   it('shows a withdrawal state this console does not know yet in the neutral colour', async () => {

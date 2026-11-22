@@ -65,6 +65,33 @@ describe('UserRefundLogsPage', () => {
     expect(screen.getByLabelText(/Only some of the seats came back/)).toHaveTextContent('Part');
   });
 
+  it('says where each refund’s money stands at Razorpay, and only “Refunded” once Razorpay processed it', async () => {
+    renderWithProviders(<UserRefundLogsPage />, {
+      mocks: [
+        userRefundsTableMock([
+          makeUserRefund({ id: 'r1', refund_status: 'SUCCEEDED' }),
+          makeUserRefund({ id: 'r2', refund_status: 'PROCESSING' }),
+          makeUserRefund({ id: 'r3', refund_status: 'FAILED' }),
+          makeUserRefund({ id: 'r4', refund_status: 'RECONCILIATION_REQUIRED' }),
+          makeUserRefund({ id: 'r5', refund_status: 'NOT_APPLICABLE' }),
+          makeUserRefund({ id: 'r6', refund_status: 'REQUESTED' }),
+          makeUserRefund({ id: 'r7', refund_status: null }),
+        ]),
+      ],
+    });
+    expect(await screen.findAllByText('Riya Sharma')).toHaveLength(7);
+    expect(cellTexts('refund_status')).toEqual([
+      'Refunded',
+      'Processing',
+      'Failed, retrying',
+      'Check Razorpay',
+      'Not via Razorpay',
+      'Sending',
+      // A refund recorded before refunds went through Razorpay has no state to show.
+      '—',
+    ]);
+  });
+
   it('keeps the log current by re-reading it every 30 seconds', async () => {
     vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] });
     renderWithProviders(<UserRefundLogsPage />, {

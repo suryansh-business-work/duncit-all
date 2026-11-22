@@ -39,6 +39,8 @@ export const makeUserRefund = (over: Partial<UserRefundRowMock> = {}): UserRefun
   paid_at: '2026-09-01T10:00:00.000Z',
   created_at: '2026-09-01T09:59:00.000Z',
   partial: false,
+  // Recorded before refunds went through Razorpay: no gateway state.
+  refund_status: null,
   ...over,
 });
 
@@ -54,7 +56,7 @@ export const makePartialRefund = (): UserRefundRowMock =>
     refund_amount: 500,
     refund_reason: null,
     refund_initiated_by: 'SYSTEM',
-    // A pod cancellation is paid out by Finance, not through Razorpay.
+    // A refund of a test-gateway payment: no Razorpay ids to show.
     razorpay_payment_id: null,
     razorpay_order_id: null,
     razorpay_refund_ids: [],

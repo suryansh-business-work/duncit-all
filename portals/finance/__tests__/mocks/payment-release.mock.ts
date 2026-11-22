@@ -164,6 +164,9 @@ export const makeDetailBreakdown = (over: Partial<DetailBreakdownMock> = {}): De
   venue_pax: 0,
   venue_agreed_model: null,
   venue_agreed_rate: null,
+  // The bill set the venue's money (₹300 slot + ₹450 bill), and the pod paid its way.
+  venue_bill_applied: true,
+  funding_shortfall: 0,
   ...over,
 });
 
@@ -201,6 +204,7 @@ export const makeDetailRelease = (over: Partial<DetailReleaseMock> = {}): Detail
   approved_amount: null,
   approval_reason: null,
   reviewed_at: null,
+  shortfall_funding_note: '',
   breakdown: makeDetailBreakdown(),
   ...over,
 });

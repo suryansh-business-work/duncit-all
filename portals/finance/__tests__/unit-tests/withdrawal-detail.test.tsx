@@ -131,6 +131,20 @@ describe('PodWithdrawalDetailPage — the requests', () => {
     expect(within(rejectedRow).getByTestId('cell-approval_status')).toHaveTextContent('Rejected');
   });
 
+  it('shows the Razorpay payout id and the bank reference once the payout has them, and a dash before', async () => {
+    mount([podWithdrawalSummaryMock()]);
+    await waitFor(() => expect(screen.getAllByTestId('table-row')).toHaveLength(3));
+
+    const paidRow = rowOf('Venue B');
+    expect(within(paidRow).getByTestId('cell-razorpay_payout_id')).toHaveTextContent('pout_1');
+    expect(within(paidRow).getByTestId('cell-payout_utr')).toHaveTextContent('UTR123');
+
+    // Nothing has been sent to Razorpay for the pending request.
+    const pendingRow = rowOf('Host A');
+    expect(within(pendingRow).getByTestId('cell-razorpay_payout_id')).toHaveTextContent('—');
+    expect(within(pendingRow).getByTestId('cell-payout_utr')).toHaveTextContent('—');
+  });
+
   it('names what was originally asked for after a partial approval lowered the amount', async () => {
     tableControls.rowsByKey = {
       podWithdrawalsTable: [

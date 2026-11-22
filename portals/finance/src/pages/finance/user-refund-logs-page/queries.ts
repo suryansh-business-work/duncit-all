@@ -26,7 +26,18 @@ export interface UserRefundRow {
   paid_at: string | null;
   created_at: string;
   partial: boolean;
+  /** Where the money stands at Razorpay; null for refunds recorded before refunds went through Razorpay. */
+  refund_status?: RefundGatewayStatus | null;
 }
+
+/** PaymentRefundStatus — accepted by Razorpay (PROCESSING) is not yet money in the buyer's bank. */
+export type RefundGatewayStatus =
+  | 'REQUESTED'
+  | 'PROCESSING'
+  | 'SUCCEEDED'
+  | 'FAILED'
+  | 'RECONCILIATION_REQUIRED'
+  | 'NOT_APPLICABLE';
 
 export const USER_REFUNDS_TABLE = gql`
   query UserRefundsTable($query: TableQueryInput) {
@@ -56,6 +67,7 @@ export const USER_REFUNDS_TABLE = gql`
         paid_at
         created_at
         partial
+        refund_status
       }
     }
   }

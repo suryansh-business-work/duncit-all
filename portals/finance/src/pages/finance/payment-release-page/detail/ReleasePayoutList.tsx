@@ -43,6 +43,16 @@ export default function ReleasePayoutList({ releases, symbol, onReview }: Readon
             <Typography variant="caption" sx={{ color: 'text.secondary', overflowWrap: 'anywhere' }}>
               {release.beneficiary_email} · {release.release_id}
             </Typography>
+            {/* Who the approver said funds what this payout sends beyond the pod's takings. */}
+            {release.status === 'APPROVED' && release.shortfall_funding_note && (
+              <Typography
+                variant="caption"
+                data-testid={`release-funding-note-${release.kind}`}
+                sx={{ color: 'text.secondary', overflowWrap: 'anywhere' }}
+              >
+                {t('finance.paymentRelease.fundingNoteRecorded', { vars: { note: release.shortfall_funding_note } })}
+              </Typography>
+            )}
           </Stack>
           <Stack sx={{ alignItems: { sm: 'flex-end' } }}>
             <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>

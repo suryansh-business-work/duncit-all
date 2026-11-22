@@ -35,6 +35,7 @@ import { startAnalyticsRetentionScheduler } from '@modules/platform/analytics/an
 import { startContactInviteRetentionScheduler } from '@modules/access/contacts/contacts.retention';
 import { startPaymentReconciler } from '@modules/finance/payment/payment.reconciler';
 import { startFailedPaymentRefundPoller } from '@modules/finance/failedPayment/failedPayment.refundPoller';
+import { startGatewayRefundSweep } from '@modules/finance/payment/payment.gatewayRefund';
 import { buildRazorpayWebhookRouter } from '@modules/finance/failedPayment/failedPayment.webhook';
 import { startVenueFoodReconciler } from '@modules/venues/venueFood/venueFoodOrder.payment';
 import { startStoreScheduler } from '@modules/commerce/store/store.scheduler';
@@ -766,6 +767,9 @@ async function bootstrap() {
   startPaymentReconciler();
   // Failed-payment refunds whose end no webhook reported: finish them from Razorpay.
   startFailedPaymentRefundPoller();
+  // Pod payment refunds (cancellations, Finance refunds, Backouts): send what was
+  // queued, retry what failed, and confirm what Razorpay has not reported yet.
+  startGatewayRefundSweep();
 
   // Venue food orders are paid to the venue's own Razorpay account, outside the
   // payment finalizer — they get their own capture and refund sweep.

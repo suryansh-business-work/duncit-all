@@ -17694,7 +17694,10 @@ export type Mutation = {
   approveMcpAuthorization: McpAuthorizationDecision;
   /**
    * Approve every payout still pending on one pod request, in full, and credit
-   * each beneficiary's wallet. Finance roles only.
+   * each beneficiary's wallet. Finance roles only. When its releases carry a
+   * funding_shortfall (payouts beyond what the pod took), shortfall_funding_note
+   * must say who funds that amount, at least 10 characters; it is recorded on
+   * every release approved.
    */
   approvePodPaymentRelease: PodPaymentReleaseDetail;
   /** Brand owner or Products team: accept — a SHIP order gets a ShipRocket reverse pickup on the brand's account. */
@@ -20827,6 +20830,7 @@ export type MutationApproveMcpAuthorizationArgs = {
 
 export type MutationApprovePodPaymentReleaseArgs = {
   id: Scalars['ID']['input'];
+  shortfall_funding_note?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -28927,6 +28931,11 @@ export type Payment = {
   razorpay_payment_id?: Maybe<Scalars['String']['output']>;
   /** Every Razorpay refund id (rfnd_…) sent against this payment, oldest first. Empty when none went through Razorpay. */
   razorpay_refund_ids?: Maybe<Array<Scalars['String']['output']>>;
+  /**
+   * Where this payment's latest refund stands at Razorpay. Null when no refund
+   * was ever sent through the refund engine (older refunds included).
+   */
+  refund_status?: Maybe<PaymentRefundStatus>;
   /** The rented items this pod payment carried, as checkout froze them (empty when none). */
   rental_lines: Array<PaymentRentalLine>;
   /** What rounding the bill UP to a whole rupee added (0 ≤ x < 1; 0 when it was already whole or the payment predates the rule). Already inside total; never taxable and never part of a fee, commission or settlement. */
@@ -29116,6 +29125,21 @@ export type PaymentProductOrderLine = {
   total: Scalars['Float']['output'];
 };
 
+/** A refund's progress at Razorpay. Accepted by Razorpay (PROCESSING) is not yet money in the buyer's bank. */
+export type PaymentRefundStatus =
+  /** The last attempt failed; it is retried automatically. */
+  | 'FAILED'
+  /** No Razorpay money to send back (a test-gateway or offline payment) — the refund is recorded only. */
+  | 'NOT_APPLICABLE'
+  /** Razorpay accepted it; the bank has not confirmed yet. */
+  | 'PROCESSING'
+  /** Retries are used up or the Razorpay payment cannot be found; Finance must check the Razorpay dashboard. */
+  | 'RECONCILIATION_REQUIRED'
+  /** Recorded and being sent to Razorpay. */
+  | 'REQUESTED'
+  /** Razorpay reports the refund processed. */
+  | 'SUCCEEDED';
+
 export type PaymentReleaseApprovalType =
   | 'FULL'
   | 'PARTIAL';
@@ -29140,6 +29164,12 @@ export type PaymentReleaseBreakdown = {
   duncit_amount: Scalars['Float']['output'];
   duncit_pct: Scalars['Float']['output'];
   duncit_revenue: Scalars['Float']['output'];
+  /**
+   * What this completion's payouts send out beyond what the pod took: the host
+   * remainder below zero that the floored host payout does not take back. 0 when
+   * the pod paid its way (and on older releases).
+   */
+  funding_shortfall: Scalars['Float']['output'];
   gst_amount: Scalars['Float']['output'];
   gst_pct: Scalars['Float']['output'];
   /** True when the final bill was paid on top of the slot price rather than instead of it. */
@@ -29156,6 +29186,12 @@ export type PaymentReleaseBreakdown = {
   venue_agreed_model?: Maybe<Scalars['String']['output']>;
   venue_agreed_rate?: Maybe<Scalars['Float']['output']>;
   venue_bill: Scalars['Float']['output'];
+  /**
+   * True when venue_bill set the venue's money; false when it was recorded as
+   * evidence only and the booked price stood. Null on releases written before
+   * this was recorded, so a large venue_bill there is not proof it was owed.
+   */
+  venue_bill_applied?: Maybe<Scalars['Boolean']['output']>;
   /** Extra charges on the venue's bill paid on top of the agreed amount (0 on older releases). */
   venue_extra_amount: Scalars['Float']['output'];
   /** An agreed per-guest booking's minimum guests (0 = none) and the people the roster counted — frozen at completion. */
@@ -29230,6 +29266,8 @@ export type PaymentReleaseRequest = {
   requested_by?: Maybe<Scalars['ID']['output']>;
   reviewed_at?: Maybe<Scalars['String']['output']>;
   reviewed_by?: Maybe<Scalars['ID']['output']>;
+  /** Who funds this release's funding_shortfall, as the approving reviewer stated it. Empty when there was none. */
+  shortfall_funding_note: Scalars['String']['output'];
   status: PaymentReleaseStatus;
   updated_at: Scalars['String']['output'];
   venue_id?: Maybe<Scalars['ID']['output']>;
@@ -30324,6 +30362,8 @@ export type PodCancellationRisk = {
   alerted_at?: Maybe<Scalars['String']['output']>;
   at_risk: Scalars['Boolean']['output'];
   attendees: PodCancellationRiskAttendees;
+  /** True when the ticket money collected, less Duncit's venue commission, is not more than venue_min_business — the pod has not reached the bookings it needs. */
+  below_min_business: Scalars['Boolean']['output'];
   /** The moment the sweep cancels this pod if it is still negative — the start minus the lead window. Null unless at risk. */
   cancel_at?: Maybe<Scalars['String']['output']>;
   collected_total: Scalars['Float']['output'];
@@ -30333,11 +30373,13 @@ export type PodCancellationRisk = {
   lead_hours: Scalars['Int']['output'];
   next_alert_at?: Maybe<Scalars['String']['output']>;
   pod_id: Scalars['ID']['output'];
-  /** How far below zero the host side sits — what the bookings must still raise. */
+  /** How far short the pod is — the host's loss, or what the ticket money (after Duncit's commission) must still raise to pass the venue's minimum business, whichever is larger. */
   shortfall: Scalars['Float']['output'];
   state: PodCancellationRiskState;
   /** The venue's booked slot price the pool has to cover. */
   venue_amount: Scalars['Float']['output'];
+  /** The venue's minimum business for the people booked so far (Partners, Fees and Minimum Spend); 0 when none applies. */
+  venue_min_business: Scalars['Float']['output'];
   /** The unclamped settlement waterfall on today's collections; all zeros for the states that never ran one. */
   waterfall: PodFinanceWaterfall;
   /** The risk window (hours before start) from Pod Settings. */
@@ -31011,6 +31053,11 @@ export type PodEarningsProjection = {
    * no minimum was asked for.
    */
   minimum?: Maybe<PodEarningsProjection>;
+  /**
+   * The fewest whole rupees per ticket that would make the pod viable, on the
+   * same rules. Null for a free pod, and when no price up to 99999 works.
+   */
+  minimum_viable_ticket_price?: Maybe<Scalars['Float']['output']>;
   /** Spots that can actually be sold: total_spots - 1 (0 when unset/unlimited). */
   payable_spots: Scalars['Int']['output'];
   /** Spots the host entered (physical capacity, including the host's own seat). */
@@ -31022,6 +31069,21 @@ export type PodEarningsProjection = {
    * the ceiling before any venue is chosen — an Auto Pod has none yet.
    */
   venue_budget: Scalars['Float']['output'];
+  /**
+   * The venue's minimum business for this booking (Partners, Fees and Minimum
+   * Spend) that the ticket money was held to. 0 when the venue set none.
+   */
+  venue_min_business: Scalars['Float']['output'];
+  /** The first of those rules the pod breaks, in the order a host fixes them. Null when viable. */
+  viability_reason?: Maybe<PodViabilityReason>;
+  /**
+   * True when the pod would pass the server's create and edit guard, judged with
+   * every spot filled: its ticket money less Duncit's venue commission is MORE
+   * than the venue's minimum business, the ticket money covers the venue, and the
+   * host earns MORE than 0. Always true for a free pod. A client enables Create
+   * only on a fresh projection that says true.
+   */
+  viable: Scalars['Boolean']['output'];
   waterfall: PodFinanceWaterfall;
 };
 
@@ -32324,6 +32386,12 @@ export type PodSettlement = {
   /** True once that window has passed with the pod still uncompleted — the host can no longer mark attendance and their share of this pod is nil. */
   complete_expired: Scalars['Boolean']['output'];
   currency_symbol: Scalars['String']['output'];
+  /**
+   * What the payouts would send out beyond what the pod took — the host
+   * remainder below zero. Approving a request that carries one needs a note
+   * saying who funds it.
+   */
+  funding_shortfall: Scalars['Float']['output'];
   gst_pct: Scalars['Float']['output'];
   has_venue: Scalars['Boolean']['output'];
   host: PodSettlementParty;
@@ -32351,6 +32419,8 @@ export type PodSettlement = {
   venue_agreed_rate?: Maybe<Scalars['Float']['output']>;
   /** The venue's final bill as entered. 0 when none was. */
   venue_bill: Scalars['Float']['output'];
+  /** True when venue_bill set the venue's money; false when it is recorded as evidence only or there is none. */
+  venue_bill_applied: Scalars['Boolean']['output'];
   venue_commission_pct: Scalars['Float']['output'];
   /** Extra charges on the venue's bill, paid on top of the agreed amount once Finance approves. */
   venue_extra_amount: Scalars['Float']['output'];
@@ -32599,6 +32669,15 @@ export type PodVenueApproval =
   | 'DECLINED'
   | 'NONE'
   | 'PENDING';
+
+/** Why a paid pod's money does not work (PodEarningsProjection.viability_reason). */
+export type PodViabilityReason =
+  /** Ticket money less Duncit's venue commission is not more than the venue's minimum business. */
+  | 'BELOW_MIN_BUSINESS'
+  /** After GST, fees, the venue and commissions the host would earn 0 or less. */
+  | 'NO_EARNINGS'
+  /** Ticket money is less than what the venue costs. */
+  | 'VENUE_NOT_COVERED';
 
 /** One pod somebody has withdrawn against — a row of the Withdrawal Payments list. */
 export type PodWithdrawalGroup = {
@@ -39530,7 +39609,9 @@ export type QueryPotentialPodEarningsArgs = {
   venue_amount_at_min?: InputMaybe<Scalars['Float']['input']>;
   venue_commission_on_top?: InputMaybe<Scalars['Float']['input']>;
   venue_commission_on_top_at_min?: InputMaybe<Scalars['Float']['input']>;
+  venue_hours?: InputMaybe<Scalars['Float']['input']>;
   venue_id?: InputMaybe<Scalars['ID']['input']>;
+  venue_offer_model?: InputMaybe<VenueOfferModel>;
 };
 
 
@@ -42867,6 +42948,8 @@ export type ReviewPaymentReleaseInput = {
   approval_reason?: InputMaybe<Scalars['String']['input']>;
   approval_type?: InputMaybe<PaymentReleaseApprovalType>;
   approved_amount?: InputMaybe<Scalars['Float']['input']>;
+  /** Who funds the release's funding_shortfall — required to approve one that has a shortfall. */
+  shortfall_funding_note?: InputMaybe<Scalars['String']['input']>;
   status: PaymentReleaseStatus;
 };
 
@@ -51529,6 +51612,8 @@ export type UserRefund = {
   /** Who set the refund off — a pod-cancel initiator or SYSTEM. Null for an admin refund from the console. */
   refund_initiated_by?: Maybe<Scalars['String']['output']>;
   refund_reason?: Maybe<Scalars['String']['output']>;
+  /** Where the refund stands at Razorpay. Null for refunds recorded before refunds were sent through Razorpay. */
+  refund_status?: Maybe<PaymentRefundStatus>;
   refunded_at?: Maybe<Scalars['String']['output']>;
   status: Scalars['String']['output'];
   subtotal: Scalars['Float']['output'];

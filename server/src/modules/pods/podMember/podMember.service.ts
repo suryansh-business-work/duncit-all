@@ -17,6 +17,7 @@ import {
   reactivateFreeMembership,
 } from './podMember.freeSpot';
 import { PaymentModel, type IPayment } from '@modules/finance/payment/payment.model';
+import { processGatewayRefund, queueGatewayRefund } from '@modules/finance/payment/payment.gatewayRefund';
 import {
   coinService,
   coinsForBackoutRefund,
@@ -575,7 +576,20 @@ async function runRefundPart(request: IBackoutRequest, payment: IPayment, part: 
   const reason = `Backout ${request.backout_no}`;
   try {
     if (part === 'CASH') {
-      await stampPaymentRefund(payment, request, Number(request.refund_amount ?? 0));
+      const amount = Number(request.refund_amount ?? 0);
+      await stampPaymentRefund(payment, request, amount);
+      // The money itself, back through Razorpay — keyed on this request, so a
+      // second click or a retry after a lost answer never sends it twice. A
+      // send that fails stays queued for the refund sweep to retry.
+      const record = await queueGatewayRefund({
+        payment,
+        amount,
+        key: `backout:${String(request._id)}`,
+        source: 'BACKOUT',
+        reason,
+        initiatedBy: 'FINANCE',
+      });
+      if (record?.status === 'QUEUED') await processGatewayRefund(record._id);
     } else if (part === 'COINS') {
       // Keyed on the backout, not the payment: a booking released in parts
       // reaches here once per release. The ledger's unique index is the second

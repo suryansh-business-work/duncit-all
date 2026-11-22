@@ -41,6 +41,8 @@ import {
   waterfallForAmount,
   type SettlementWaterfall,
 } from '@modules/finance/finance/settlement.service';
+import { bookedPodMinimum } from '@modules/finance/finance/bookingMinimum';
+import { minBusinessCheck } from '@modules/finance/finance/podViability';
 import { podImageAssets } from '@modules/platform/whatsapp/whatsapp.assets';
 import { notifyEach, type NotifyInput } from '@services/notify/notify.service';
 import { emailTranslationVars, recipientLocale } from '@services/email/email-i18n';
@@ -69,7 +71,23 @@ export interface PodFinanceNow {
   waterfall: SettlementWaterfall | null;
   /** True when completing the pod would settle the host below ₹0. */
   negative: boolean;
+  /** The venue's minimum business for the people booked so far (0 = none). */
+  minBusiness?: number;
+  /**
+   * True when the ticket money collected so far, less Duncit's venue
+   * commission, is not MORE than the venue's minimum business — the minimum
+   * bookings the pod needs to go ahead have not been reached.
+   */
+  belowMinBusiness?: boolean;
 }
+
+/** The pod is short of what it needs to go ahead: a loss for the host, or under the venue's minimum business. */
+export const fallsShort = (finance: Pick<PodFinanceNow, 'negative' | 'belowMinBusiness'>): boolean =>
+  finance.negative || finance.belowMinBusiness === true;
+
+/** People at the venue as booked so far — attendees (the host among them) plus their extra seats. */
+const peopleBooked = (pod: { pod_attendees?: unknown[] | null; extra_seats?: number | null; no_of_spots?: number | null }) =>
+  Array.isArray(pod.pod_attendees) ? pod.pod_attendees.length + Math.max(0, pod.extra_seats ?? 0) : Math.max(0, pod.no_of_spots ?? 0);
 
 /**
  * The live host side for a pod: the unclamped waterfall the Finance breakdown
@@ -87,15 +105,26 @@ export async function podFinanceNow(pod: any): Promise<PodFinanceNow> {
   if (venueAmount <= 0) {
     return { collected: 0, venueAmount, rates: null, waterfall: null, negative: false };
   }
-  const [collected, rates] = await Promise.all([
+  const [collected, rates, minimum] = await Promise.all([
     collectedForPod(pod._id),
     resolveEffectiveRates({
       hostUserId: pod.pod_hosts_id?.[0] ?? null,
       venueId: pod.venue_id ?? null,
     }),
+    bookedPodMinimum(pod, peopleBooked(pod)),
   ]);
   const waterfall = waterfallForAmount(collected, venueAmount, rates, venueOptions);
-  return { collected, venueAmount, venueOptions, rates, waterfall, negative: waterfall.host_receives < 0 };
+  const floor = minBusinessCheck(collected, minimum, rates.venue_commission_percent);
+  return {
+    collected,
+    venueAmount,
+    venueOptions,
+    rates,
+    waterfall,
+    negative: waterfall.host_receives < 0,
+    minBusiness: floor?.minimum ?? 0,
+    belowMinBusiness: floor ? !floor.passes : false,
+  };
 }
 
 /**
@@ -110,16 +139,16 @@ export function spotsNeededToCover(
   seatsAvailable: number,
   unlimited: boolean
 ): number | null {
-  if (!finance.negative || !finance.rates || ticketPrice <= 0) return null;
+  if (!fallsShort(finance) || !finance.rates || ticketPrice <= 0) return null;
+  const rates = finance.rates;
   const cap = unlimited ? UNLIMITED_SEARCH_CAP : seatsAvailable;
   for (let extra = 1; extra <= cap; extra += 1) {
-    const next = waterfallForAmount(
-      finance.collected + extra * ticketPrice,
-      finance.venueAmount,
-      finance.rates,
-      finance.venueOptions ?? { clampVenueToPool: false }
-    );
-    if (next.host_receives >= 0) return extra;
+    const money = finance.collected + extra * ticketPrice;
+    const next = waterfallForAmount(money, finance.venueAmount, rates, finance.venueOptions ?? { clampVenueToPool: false });
+    // The venue's minimum is read at the people booked now — a per-guest one
+    // grows with each seat, so for that basis this is the least that is needed.
+    const floor = minBusinessCheck(money, finance.minBusiness ?? 0, rates.venue_commission_percent);
+    if (next.host_receives >= 0 && (floor === null || floor.passes)) return extra;
   }
   return null;
 }
@@ -192,14 +221,14 @@ export async function assessPodCancellationRisk(
   const finance = await podFinanceNow(pod);
   if (finance.venueAmount <= 0) return idle('NO_VENUE_COST', finance);
   if (hoursUntilStart > settings.risk_window_hours) return idle('OUTSIDE_WINDOW', finance);
-  if (!finance.negative) return idle('HEALTHY', finance);
+  if (!fallsShort(finance)) return idle('HEALTHY', finance);
 
   return {
     state: 'AT_RISK',
     at_risk: true,
     hours_until_start: hoursUntilStart,
     finance,
-    shortfall: round2(-(finance.waterfall?.host_receives ?? 0)),
+    shortfall: shortfallOf(finance),
     ...seats,
     spots_needed: spotsNeededToCover(
       finance,
@@ -208,6 +237,22 @@ export async function assessPodCancellationRisk(
       seats.total_spots <= 0
     ),
   };
+}
+
+/**
+ * How far short the pod is, in rupees: the host's loss, or how much more the
+ * ticket money (after Duncit's commission) must bring to pass the venue's
+ * minimum business — whichever is larger. At least ₹0.01 while short, since
+ * "exactly at the minimum" is still short of it.
+ */
+function shortfallOf(finance: PodFinanceNow): number {
+  const hostGap = -(finance.waterfall?.host_receives ?? 0);
+  let floorGap = 0;
+  if (finance.belowMinBusiness && finance.rates) {
+    const floor = minBusinessCheck(finance.collected, finance.minBusiness ?? 0, finance.rates.venue_commission_percent);
+    floorGap = Math.max(0.01, (floor?.minimum ?? 0) - (floor?.net ?? 0));
+  }
+  return round2(Math.max(hostGap, floorGap, 0));
 }
 
 /** The instant the auto-cancel lead window opens for a pod — when the sweep
@@ -220,8 +265,9 @@ export const podCancelAt = (pod: any, leadHours: number): Date =>
  * ------------------------------------------------------------------ */
 
 const RISK_POD_FIELDS =
-  'pod_id pod_title pod_hosts_id venue_id venue_slot_id club_id pod_date_time completed_at deleted_at ' +
-  'is_active pod_attendees extra_seats no_of_spots pod_type pod_amount pod_images_and_videos cancellation_risk';
+  'pod_id pod_title pod_hosts_id venue_id venue_slot_id club_id pod_date_time pod_end_date_time completed_at deleted_at ' +
+  'is_active pod_attendees extra_seats no_of_spots pod_type pod_amount pod_images_and_videos cancellation_risk ' +
+  'source_auto_pod_id';
 
 /** An empty waterfall for the states that never ran one, so the GraphQL type
  * can stay non-null and the client never branches on a missing object. */
@@ -288,6 +334,8 @@ export async function podCancellationRisk(podDocId: string) {
     collected_total: assessment.finance.collected,
     venue_amount: assessment.finance.venueAmount,
     shortfall: assessment.shortfall,
+    venue_min_business: assessment.finance.minBusiness ?? 0,
+    below_min_business: assessment.finance.belowMinBusiness === true,
     waterfall: assessment.finance.waterfall ?? EMPTY_WATERFALL,
     attendees: {
       booked_seats: assessment.booked_seats,

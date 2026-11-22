@@ -1,6 +1,7 @@
 import { logs } from '@observability/log';
 import { PaymentModel } from '@modules/finance/payment/payment.model';
 import { adoptRazorpayCapture } from '@modules/finance/payment/payment.capture';
+import { applyRazorpayRefund, gatewayRefundForRazorpay } from '@modules/finance/payment/payment.gatewayRefund';
 import { FailedPaymentCaseModel } from './failedPaymentCase.model';
 import { isCaseEligible, upsertCaseForPayment } from './failedPaymentCase.service';
 import { completeRefund, failRefund } from './failedPayment.refundOutcome';
@@ -116,12 +117,35 @@ async function caseForRefund(refund: Entity) {
 async function onRefund(body: Entity, processed: boolean): Promise<WebhookOutcome> {
   const refund = entityOf(body, 'refund');
   const kase = await caseForRefund(refund);
-  if (!kase) return 'IGNORED';
+  if (!kase) return onPodPaymentRefund(refund, processed);
   const refundId = text(refund.id);
   // A failure report for an older attempt must not fail the newer one.
   if (!processed && kase.refund.razorpay_refund_id && kase.refund.razorpay_refund_id !== refundId) return 'IGNORED';
   if (processed) await completeRefund(String(kase._id), refundId, 'WEBHOOK');
   else await failRefund(String(kase._id), 'Razorpay reported the refund as failed.', 'WEBHOOK');
+  return 'APPLIED';
+}
+
+/**
+ * A refund of a pod payment (cancellation, Finance refund, Backout) reported by
+ * Razorpay — found by our `dr_` receipt or its refund id. A failure report for
+ * an older attempt never fails the attempt that replaced it.
+ */
+async function onPodPaymentRefund(refund: Entity, processed: boolean): Promise<WebhookOutcome> {
+  const refundId = text(refund.id);
+  const record = await gatewayRefundForRazorpay({ id: refundId, receipt: text(refund.receipt) });
+  if (!record) return 'IGNORED';
+  if (!processed && record.razorpay_refund_id && record.razorpay_refund_id !== refundId) return 'IGNORED';
+  await applyRazorpayRefund(
+    record._id,
+    {
+      id: refundId,
+      status: processed ? 'processed' : 'failed',
+      amount: Number(refund.amount ?? 0) || 0,
+      receipt: text(refund.receipt),
+    },
+    'WEBHOOK'
+  );
   return 'APPLIED';
 }
 

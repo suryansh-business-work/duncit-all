@@ -12,12 +12,13 @@ jest.mock('@observability/log', () => ({
   logs: { server: { error: jest.fn(), warn: jest.fn(), info: jest.fn() } },
 }));
 jest.mock('../../pod.model', () => ({
-  PodModel: { find: jest.fn() },
+  PodModel: { find: jest.fn(), findById: jest.fn() },
   isFreePod: (pod: { pod_type?: string } | null) => pod?.pod_type === 'FREE',
 }));
 jest.mock('../../pod.service', () => ({ podService: { systemCancelPod: jest.fn() } }));
 jest.mock('../../pod.lifecycle', () => ({ podLifecycleFilter: jest.fn(() => ({ lifecycle: 'UPCOMING' })) }));
 jest.mock('../../pod.cancellationRisk', () => ({
+  fallsShort: (f: { negative?: boolean; belowMinBusiness?: boolean }) => Boolean(f.negative) || f.belowMinBusiness === true,
   podFinanceNow: jest.fn(),
   runPodCancellationRiskSweep: jest.fn(),
 }));
@@ -46,6 +47,7 @@ import {
 } from '../../pod.autoCancel';
 
 const podFind = PodModel.find as jest.Mock;
+const podFindById = PodModel.findById as jest.Mock;
 const cancel = podService.systemCancelPod as jest.Mock;
 const lifecycle = podLifecycleFilter as jest.Mock;
 const financeNow = podFinanceNow as jest.Mock;
@@ -151,6 +153,11 @@ describe('runPodAutoCancelSweep', () => {
         })(),
     }));
     podFind.mockReturnValue({ sort });
+    // The fresh read right before a cancel: the same pod, still live.
+    podFindById.mockImplementation(async (id: unknown) => {
+      const pod = cursorPods.find((candidate) => String(candidate._id) === String(id));
+      return pod ? { ...pod, is_active: true } : null;
+    });
     getSettings.mockResolvedValue({ enabled: true, lead_hours: 4 });
     venueAggregate.mockResolvedValue([{ max: 10 }]);
     financeNow.mockResolvedValue({ negative: true });
@@ -240,8 +247,9 @@ describe('runPodAutoCancelSweep', () => {
 
     await expect(runPodAutoCancelSweep()).resolves.toBe(1);
 
-    // The free pod is not even priced — its venue is the host's to settle.
-    expect(financeNow).toHaveBeenCalledTimes(1);
+    // The free pod is not even priced — its venue is the host's to settle. The
+    // paid one is priced on the sweep's read and again on the fresh re-check.
+    expect(financeNow).toHaveBeenCalledTimes(2);
     expect(financeNow).toHaveBeenCalledWith(paid);
     expect(cancel).toHaveBeenCalledTimes(1);
     expect(cancel.mock.calls[0][0]).toBe(String(oid(9)));
@@ -264,7 +272,7 @@ describe('runPodAutoCancelSweep', () => {
     await expect(runPodAutoCancelSweep()).resolves.toBe(1);
 
     expect(venueFindById).not.toHaveBeenCalled();
-    expect(financeNow).toHaveBeenCalledTimes(1);
+    expect(financeNow).toHaveBeenCalledTimes(2);
     expect(financeNow).toHaveBeenCalledWith(inside);
     expect(cancel).toHaveBeenCalledWith(
       String(oid(4)),
@@ -286,6 +294,37 @@ describe('runPodAutoCancelSweep', () => {
     financeNow.mockResolvedValue({ negative: false });
 
     await expect(runPodAutoCancelSweep()).resolves.toBe(0);
+    expect(cancel).not.toHaveBeenCalled();
+  });
+
+  it('cancels a pod whose bookings never reached the venue’s minimum business, even with the host not at a loss', async () => {
+    cursorPods = [{ _id: oid(11), venue_id: null, pod_date_time: at(1) }];
+    financeNow.mockResolvedValue({ negative: false, belowMinBusiness: true, minBusiness: 1000 });
+
+    await expect(runPodAutoCancelSweep()).resolves.toBe(1);
+    expect(cancel).toHaveBeenCalledWith(
+      String(oid(11)),
+      'Cancelled automatically — minimum bookings not met (venue minimum business 1000) (venue policy refund: 100%)',
+      100
+    );
+  });
+
+  it('re-checks on a fresh read and spares a pod a late booking made whole', async () => {
+    cursorPods = [{ _id: oid(12), venue_id: null, pod_date_time: at(1) }];
+    financeNow.mockResolvedValueOnce({ negative: true }).mockResolvedValueOnce({ negative: false, belowMinBusiness: false });
+
+    await expect(runPodAutoCancelSweep()).resolves.toBe(0);
+    expect(podFindById).toHaveBeenCalledWith(oid(12));
+    expect(financeNow).toHaveBeenCalledTimes(2);
+    expect(cancel).not.toHaveBeenCalled();
+  });
+
+  it('does not cancel a pod that was cancelled, completed or switched off since the sweep read it', async () => {
+    cursorPods = [{ _id: oid(13), venue_id: null, pod_date_time: at(1) }];
+    for (const change of [{ deleted_at: new Date() }, { completed_at: new Date() }, { is_active: false }, null]) {
+      podFindById.mockResolvedValueOnce(change ? { ...cursorPods[0], is_active: true, ...change } : null);
+      await expect(runPodAutoCancelSweep()).resolves.toBe(0);
+    }
     expect(cancel).not.toHaveBeenCalled();
   });
 

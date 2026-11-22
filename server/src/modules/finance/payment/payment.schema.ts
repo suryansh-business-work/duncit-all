@@ -93,9 +93,30 @@ export const paymentTypeDefs = /* GraphQL */ `
     updated_at: String!
     finalize_state: String!
     needs_refund: Boolean!
+    """
+    Where this payment's latest refund stands at Razorpay. Null when no refund
+    was ever sent through the refund engine (older refunds included).
+    """
+    refund_status: PaymentRefundStatus
     coins_earned: Float!
     "The rented items this pod payment carried, as checkout froze them (empty when none)."
     rental_lines: [PaymentRentalLine!]!
+  }
+
+  "A refund's progress at Razorpay. Accepted by Razorpay (PROCESSING) is not yet money in the buyer's bank."
+  enum PaymentRefundStatus {
+    "Recorded and being sent to Razorpay."
+    REQUESTED
+    "Razorpay accepted it; the bank has not confirmed yet."
+    PROCESSING
+    "Razorpay reports the refund processed."
+    SUCCEEDED
+    "The last attempt failed; it is retried automatically."
+    FAILED
+    "Retries are used up or the Razorpay payment cannot be found; Finance must check the Razorpay dashboard."
+    RECONCILIATION_REQUIRED
+    "No Razorpay money to send back (a test-gateway or offline payment) — the refund is recorded only."
+    NOT_APPLICABLE
   }
 
   "One rented item on a pod payment, frozen at checkout: collected at the venue, its deposit settled there."
@@ -299,6 +320,8 @@ export const paymentTypeDefs = /* GraphQL */ `
     created_at: String!
     "True when only part of the booking came back — the buyer kept the rest of their seats, so the payment is still SUCCESS."
     partial: Boolean!
+    "Where the refund stands at Razorpay. Null for refunds recorded before refunds were sent through Razorpay."
+    refund_status: PaymentRefundStatus
   }
 
   "Server-side table page for the shared table engine (userRefundsTable)."

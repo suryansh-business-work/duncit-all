@@ -205,6 +205,9 @@ describe('podFinanceNow', () => {
       rates: RATES,
       waterfall: fakeWaterfall(400, VENUE_COST),
       negative: true,
+      // The venue set no minimum business, so the bookings are not short of one.
+      minBusiness: 0,
+      belowMinBusiness: false,
     });
   });
 
@@ -343,6 +346,53 @@ describe('assessPodCancellationRisk', () => {
 });
 
 /* ------------------------------------------------ podCancellationRisk */
+
+describe('the venue’s minimum business — the bookings a pod needs to go ahead', () => {
+  // ₹1200 collected against a ₹1000 venue cost: the host is ₹200 up. But the
+  // venue's minimum spend is ₹1500, and 1200 − 10% commission = 1080 is not
+  // more than that, so the pod has not reached its minimum bookings.
+  const withMinimumSpend = async (minSpend: number) => {
+    const world = await seedWorld();
+    await VenueModel.collection.updateOne({ _id: world.venue }, { $set: { 'settings.offers.min_spend': minSpend } });
+    const pod = await seedPod(world);
+    collectedByPod.set(String(pod._id), 1200);
+    rates.mockResolvedValue({ ...RATES, venue_commission_percent: 10 });
+    return pod;
+  };
+
+  it('puts a pod at risk when its ticket money after commission is not more than the minimum, even with the host up', async () => {
+    const pod = await withMinimumSpend(1500);
+
+    const verdict = await assessPodCancellationRisk(pod, SETTINGS, Date.now());
+
+    expect(verdict.finance).toMatchObject({ negative: false, minBusiness: 1500, belowMinBusiness: true });
+    // ₹420 more after commission: 1500 − 1080.
+    expect(verdict).toMatchObject({ state: 'AT_RISK', at_risk: true, shortfall: 420 });
+    // Two more ₹300 bookings: 1800 − 180 = 1620 clears it; one (1350) does not.
+    expect(verdict.spots_needed).toBe(2);
+
+    const view = await podCancellationRisk(String(pod._id));
+    expect(view).toMatchObject({ venue_min_business: 1500, below_min_business: true, at_risk: true });
+  });
+
+  it('counts a pod whose ticket money clears the minimum as healthy', async () => {
+    const pod = await withMinimumSpend(1000);
+    const verdict = await assessPodCancellationRisk(pod, SETTINGS, Date.now());
+    expect(verdict.finance).toMatchObject({ minBusiness: 1000, belowMinBusiness: false });
+    expect(verdict.state).toBe('HEALTHY');
+  });
+
+  it('never holds a pod the venue itself named (an Auto Pod) to the minimum', async () => {
+    const world = await seedWorld();
+    await VenueModel.collection.updateOne({ _id: world.venue }, { $set: { 'settings.offers.min_spend': 5000 } });
+    const pod = await seedPod(world, { source_auto_pod_id: oid() });
+    collectedByPod.set(String(pod._id), 1200);
+    rates.mockResolvedValue({ ...RATES, venue_commission_percent: 10 });
+
+    const finance = await podFinanceNow(pod);
+    expect(finance).toMatchObject({ minBusiness: 0, belowMinBusiness: false, negative: false });
+  });
+});
 
 describe('podCancellationRisk — the admin detail view', () => {
   it('refuses a malformed id and reports a missing pod', async () => {

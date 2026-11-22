@@ -159,7 +159,11 @@ const acrossPaths = (paths: string[], cond: unknown, op: TableFilterOp): Record<
 /** Mongo filter fragment from the client input — allowlisted fields only. */
 export function buildTableFilter(
   input: TableQueryInput | null | undefined,
-  config: TableEntityConfig
+  config: TableEntityConfig,
+  /** More ways the search can match, OR-ed with `searchFields` — for a term that
+   * lives on another collection (a pod's title found by its id). Only used when
+   * there is a search. */
+  searchAlso: readonly Record<string, unknown>[] = []
 ): Record<string, unknown> {
   const q = input ?? {};
   const out: Record<string, unknown> = {};
@@ -179,7 +183,7 @@ export function buildTableFilter(
   const search = q.search?.trim();
   if (search && config.searchFields.length > 0) {
     const rx = escapedSearchRegex(search);
-    out.$or = config.searchFields.map((field) => ({ [field]: rx }));
+    out.$or = [...config.searchFields.map((field) => ({ [field]: rx })), ...searchAlso];
   }
   return out;
 }
@@ -264,10 +268,14 @@ export async function runTableQuery<TDoc>(
   /** Soft-delete opt-in — applied to BOTH the page and the count, so a table
    * that lists deleted rows still paginates over the same set.
    * `projection` leaves heavy fields a row never shows out of the page read. */
-  options?: { includeDeleted?: boolean; projection?: Record<string, 0 | 1> }
+  options?: {
+    includeDeleted?: boolean;
+    projection?: Record<string, 0 | 1>;
+    searchAlso?: readonly Record<string, unknown>[];
+  }
 ): Promise<TablePageResult<TDoc>> {
   const q = input ?? {};
-  const filter = combineFilters(baseFilter, buildTableFilter(q, config));
+  const filter = combineFilters(baseFilter, buildTableFilter(q, config, options?.searchAlso));
   const slot = scopeCapture.getStore();
   if (slot && !slot.scope) {
     slot.scope = { model: Model, filter, includeDeleted: Boolean(options?.includeDeleted) };

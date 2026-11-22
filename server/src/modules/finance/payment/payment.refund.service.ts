@@ -23,6 +23,7 @@
 import { PaymentModel, type IPayment } from './payment.model';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { RAZORPAY_ID_SEARCH_FIELDS, razorpayIdsOf } from './payment.gatewayIds';
+import { publicRefundStatus } from './payment.gatewayRefund';
 
 /** What a refunded payment actually returned, as an aggregation expression: the
  * stamped figure when a policy refund (the auto-cancel sweep) kept part of
@@ -116,6 +117,7 @@ const toRefundRow = (p: IPayment) => {
     paid_at: p.paid_at ? p.paid_at.toISOString() : null,
     created_at: p.created_at.toISOString(),
     partial: p.status === 'SUCCESS',
+    refund_status: publicRefundStatus(p.metadata),
   };
 };
 

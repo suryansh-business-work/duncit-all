@@ -6,6 +6,10 @@
  */
 jest.mock('@modules/finance/payment/payment.model', () => ({ PaymentModel: { findOne: jest.fn() } }));
 jest.mock('@modules/finance/payment/payment.capture', () => ({ adoptRazorpayCapture: jest.fn().mockResolvedValue(true) }));
+jest.mock('@modules/finance/payment/payment.gatewayRefund', () => ({
+  gatewayRefundForRazorpay: jest.fn().mockResolvedValue(null),
+  applyRazorpayRefund: jest.fn().mockResolvedValue(null),
+}));
 jest.mock('@observability/log', () => ({ logs: { server: { error: jest.fn(), warn: jest.fn(), info: jest.fn() } } }));
 jest.mock('../../failedPaymentCase.model', () => ({
   FailedPaymentCaseModel: { findOne: jest.fn(), findById: jest.fn() },
@@ -24,6 +28,7 @@ import { upsertCaseForPayment } from '../../failedPaymentCase.service';
 import { completeRefund, failRefund } from '../../failedPayment.refundOutcome';
 import { recordPaymentEvent } from '../../paymentEvent.service';
 import { adoptRazorpayCapture } from '@modules/finance/payment/payment.capture';
+import { applyRazorpayRefund, gatewayRefundForRazorpay } from '@modules/finance/payment/payment.gatewayRefund';
 import { logs } from '@observability/log';
 import { applyRazorpayEvent, summarize } from '../../failedPayment.webhookEvents';
 
@@ -134,6 +139,36 @@ describe('refund events', () => {
     m(FailedPaymentCaseModel.findOne).mockResolvedValue(null);
     await expect(applyRazorpayEvent(refundEvent('refund.processed', { id: 'rfnd_9', receipt: 'ORD-9' }), 'e')).resolves.toBe('IGNORED');
     expect(completeRefund).not.toHaveBeenCalled();
+    expect(applyRazorpayRefund).not.toHaveBeenCalled();
+  });
+
+  it('finishes a pod payment refund (cancellation / Finance / Backout) found by its dr_ receipt', async () => {
+    m(FailedPaymentCaseModel.findOne).mockResolvedValue(null);
+    m(gatewayRefundForRazorpay).mockResolvedValue({ _id: 'gr1', razorpay_refund_id: 'rfnd_7' });
+    const outcome = await applyRazorpayEvent(
+      refundEvent('refund.processed', { id: 'rfnd_7', receipt: 'dr_65aa00000000000000000009_1', amount: 3600 }),
+      'evt_7'
+    );
+    expect(outcome).toBe('APPLIED');
+    expect(gatewayRefundForRazorpay).toHaveBeenCalledWith({ id: 'rfnd_7', receipt: 'dr_65aa00000000000000000009_1' });
+    expect(applyRazorpayRefund).toHaveBeenCalledWith(
+      'gr1',
+      { id: 'rfnd_7', status: 'processed', amount: 3600, receipt: 'dr_65aa00000000000000000009_1' },
+      'WEBHOOK'
+    );
+    expect(completeRefund).not.toHaveBeenCalled();
+  });
+
+  it('records a failed pod payment refund, but not a failure of an attempt it already replaced', async () => {
+    m(FailedPaymentCaseModel.findOne).mockResolvedValue(null);
+    m(gatewayRefundForRazorpay).mockResolvedValue({ _id: 'gr1', razorpay_refund_id: 'rfnd_new' });
+    const stale = await applyRazorpayEvent(refundEvent('refund.failed', { id: 'rfnd_old', receipt: 'dr_x' }), 'e1');
+    expect(stale).toBe('IGNORED');
+    expect(applyRazorpayRefund).not.toHaveBeenCalled();
+
+    const current = await applyRazorpayEvent(refundEvent('refund.failed', { id: 'rfnd_new', receipt: 'dr_x' }), 'e2');
+    expect(current).toBe('APPLIED');
+    expect(applyRazorpayRefund).toHaveBeenCalledWith('gr1', expect.objectContaining({ id: 'rfnd_new', status: 'failed' }), 'WEBHOOK');
   });
 
   it('does not let a failure of an older attempt fail the current refund', async () => {

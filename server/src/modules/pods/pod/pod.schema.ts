@@ -350,8 +350,12 @@ export const podTypeDefs = /* GraphQL */ `
     collected_total: Float!
     "The venue's booked slot price the pool has to cover."
     venue_amount: Float!
-    "How far below zero the host side sits — what the bookings must still raise."
+    "How far short the pod is — the host's loss, or what the ticket money (after Duncit's commission) must still raise to pass the venue's minimum business, whichever is larger."
     shortfall: Float!
+    "The venue's minimum business for the people booked so far (Partners, Fees and Minimum Spend); 0 when none applies."
+    venue_min_business: Float!
+    "True when the ticket money collected, less Duncit's venue commission, is not more than venue_min_business — the pod has not reached the bookings it needs."
+    below_min_business: Boolean!
     "The unclamped settlement waterfall on today's collections; all zeros for the states that never ran one."
     waterfall: PodFinanceWaterfall!
     attendees: PodCancellationRiskAttendees!

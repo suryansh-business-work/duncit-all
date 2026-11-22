@@ -15,6 +15,8 @@ import { paymentFinalizer } from './payment.finalize';
 import { roundOffOf, roundUpBill } from './payment.roundoff';
 import { RAZORPAY_ID_SEARCH_FIELDS, razorpayIdsOf } from './payment.gatewayIds';
 import { PAYMENT_SHOP_FILTER, type PaymentShop } from './payment.source';
+import { paymentSearchAlso } from './payment.podSearch';
+import { processGatewayRefund, publicRefundStatus, queueGatewayRefund } from './payment.gatewayRefund';
 import { recordPaymentEvent } from '@modules/finance/failedPayment/paymentEvent.service';
 import {
   createRazorpayOrder,
@@ -105,6 +107,8 @@ export const toPub = (p: IPayment) => ({
   // Payments captured before the pipeline existed have no stored state.
   finalize_state: p.finalize_state ?? 'NOT_STARTED',
   needs_refund: p.needs_refund === true,
+  // Where its latest refund stands at Razorpay — accepted is not yet in the bank.
+  refund_status: publicRefundStatus(p.metadata),
   coins_earned: p.coins_earned ?? 0,
   // Frozen at checkout, so a later rate change cannot rewrite what was rented.
   rental_lines: paymentRentalLines(p.metadata),
@@ -1132,7 +1136,7 @@ export async function verifyRazorpayAndSettle(doc: IPayment, input: any, compone
 type PaymentListFilter = { status?: string; user_id?: string; pod_id?: string; search?: string };
 
 /** Mongo match for a PaymentFilterInput — shared by the list query and the KPI totals. */
-const buildListFilter = (filter?: PaymentListFilter) => {
+const buildListFilter = async (filter?: PaymentListFilter) => {
   const q: any = {};
   if (filter?.status) q.status = filter.status;
   if (filter?.user_id) q.user_id = new Types.ObjectId(filter.user_id);
@@ -1145,6 +1149,8 @@ const buildListFilter = (filter?: PaymentListFilter) => {
       { user_name: r },
       { user_email: r },
       ...RAZORPAY_ID_SEARCH_FIELDS.map((path) => ({ [path]: r })),
+      // The pod's title, and a pasted payment or pod id — same as the table.
+      ...(await paymentSearchAlso(filter.search)),
     ];
   }
   return q;
@@ -1244,7 +1250,7 @@ export const paymentService = {
   },
 
   async list(filter?: PaymentListFilter, limit = 200) {
-    const docs = await PaymentModel.find(buildListFilter(filter)).sort({ created_at: -1 }).limit(limit);
+    const docs = await PaymentModel.find(await buildListFilter(filter)).sort({ created_at: -1 }).limit(limit);
     return docs.map(toPub);
   },
 
@@ -1256,7 +1262,7 @@ export const paymentService = {
    */
   async totals(filter?: PaymentListFilter, shop?: PaymentShop | null) {
     const empty = { count: 0, gross: 0, fee: 0, gst: 0, ticket_discount_total: 0, smart_incentive_total: 0 };
-    const q = buildListFilter(filter);
+    const q = await buildListFilter(filter);
     if (q.status && q.status !== 'SUCCESS') return empty;
     q.status = 'SUCCESS';
     // One shop's cards: AND-ed with the shop's own filter, never merged into
@@ -1294,7 +1300,8 @@ export const paymentService = {
       PaymentModel,
       {},
       input,
-      PAYMENT_TABLE_CONFIG
+      PAYMENT_TABLE_CONFIG,
+      { searchAlso: await paymentSearchAlso(input?.search) }
     );
     return { rows: docs.map(toPub), total, page, page_size };
   },
@@ -1333,7 +1340,8 @@ export const paymentService = {
       PaymentModel,
       PAYMENT_SHOP_FILTER[shop],
       input,
-      PAYMENT_TABLE_CONFIG
+      PAYMENT_TABLE_CONFIG,
+      { searchAlso: await paymentSearchAlso(input?.search) }
     );
     return { rows: docs.map(toPub), total, page, page_size };
   },
@@ -1853,8 +1861,11 @@ export const paymentService = {
   },
 
   /**
-   * Finance marks a payment refunded (the money itself is returned outside this
-   * call — no gateway refund is issued here).
+   * Finance refunds a payment: it is marked refunded and what it still holds
+   * goes back through Razorpay (payment.gatewayRefund) — sent before this call
+   * answers, so Finance sees Razorpay's verdict on the row; a send that fails is
+   * retried by the sweep. A payment with no Razorpay money records the refund
+   * only (NOT_APPLICABLE).
    *
    * The SUCCESS → REFUNDED move is ONE conditional write: it used to read the
    * status, decide, and save, so two submits of the same refund both passed
@@ -1893,8 +1904,20 @@ export const paymentService = {
       total: doc.total,
       msg: 'payment marked refunded by Finance',
     });
+    // What a Backout already returned stays returned; the rest goes back now.
+    const owed = round2(Math.max(0, doc.total - (Number(doc.metadata?.refunded_amount) || 0)));
+    const record = await queueGatewayRefund({
+      payment: doc,
+      amount: owed,
+      key: `finance_refund:${String(doc._id)}`,
+      source: 'FINANCE_REFUND',
+      reason: reason || 'Refunded by Finance',
+      initiatedBy: 'FINANCE',
+      initiatorId: actorId ?? null,
+    });
+    if (record?.status === 'QUEUED') await processGatewayRefund(record._id);
     await mailRefund(doc, reason);
-    return toPub(doc);
+    return toPub((await PaymentModel.findById(doc._id)) ?? doc);
   },
 
   async invoicePdfBase64(paymentDocId: string, requesterId: string, isAdmin: boolean) {

@@ -116,8 +116,8 @@ describe('rejecting a withdrawal', () => {
 
   it('cannot be decided twice, and the second try never refunds a second time', async () => {
     const { user, row } = await seedWithdrawal();
-    await decideWithdrawal({ id: String(row._id), decision: 'REJECT', reason: 'No', actor });
-    await expect(decideWithdrawal({ id: String(row._id), decision: 'REJECT', reason: 'No again', actor })).rejects.toThrow(
+    await decideWithdrawal({ id: String(row._id), decision: 'REJECT', reason: 'Nope', actor });
+    await expect(decideWithdrawal({ id: String(row._id), decision: 'REJECT', reason: 'Nope again', actor })).rejects.toThrow(
       'can no longer be decided'
     );
     expect(await balanceOf(user._id)).toBe(5000);
@@ -390,7 +390,7 @@ describe('the old reviewWithdrawal mutation', () => {
 describe('the audit trail', () => {
   it('cannot be edited or deleted', async () => {
     const { row } = await seedWithdrawal();
-    await decideWithdrawal({ id: String(row._id), decision: 'REJECT', reason: 'No', actor });
+    await decideWithdrawal({ id: String(row._id), decision: 'REJECT', reason: 'Nope', actor });
     const entry = await PayoutEventModel.findOne({ subject_id: row.withdrawal_id });
     expect(entry).toBeTruthy();
 
@@ -399,7 +399,7 @@ describe('the audit trail', () => {
     await expect(PayoutEventModel.deleteMany({})).rejects.toThrow('append-only');
     entry!.reason = 'edited';
     await expect(entry!.save()).rejects.toThrow('append-only');
-    expect((await PayoutEventModel.findById(entry!._id))?.reason).toBe('No');
+    expect((await PayoutEventModel.findById(entry!._id))?.reason).toBe('Nope');
   });
 
   it('records who decided, in what capacity, and the amounts', async () => {

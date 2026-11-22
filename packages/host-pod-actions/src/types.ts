@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import type { EarningsWaterfall, TicketDiscountTier } from '@duncit/utils';
+import type { EarningsWaterfall } from '@duncit/utils';
 
 /** The media a pod carries, as the dialogs read and write it. */
 export interface HostPodMedia {
@@ -26,18 +26,10 @@ export interface HostPodTarget {
   venue_approval_status?: string | null;
   /** Capacity as last published — the edit dialog starts its slider here. */
   no_of_spots?: number | null;
-  /** FREE / PAID — a free pod never carries a multi-ticket discount. */
+  /** FREE / PAID — a free pod never carries a Smart Incentive. */
   pod_type?: string | null;
   /** The ticket price; 0 means the pod is free, whatever its type says. */
   pod_amount?: number | null;
-  /** The pod's multi-ticket discount as stored. */
-  ticket_discount_enabled?: boolean | null;
-  /**
-   * Undefined when the list that fed the dialog did not select it: the edit
-   * then neither shows nor sends the discount, so a narrow list can never
-   * clear a host's tiers on an unrelated title edit.
-   */
-  ticket_discount_tiers?: readonly TicketDiscountTier[] | null;
   /**
    * The pod's Smart Incentive as stored. Undefined when the list that fed the
    * dialog did not select it: the edit then neither shows nor sends it, so a

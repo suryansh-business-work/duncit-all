@@ -1,7 +1,7 @@
 import { gql } from '@apollo/client';
 
-/** Host self-service edit — title, images, description, the pod's capacity,
- * its multi-ticket discount and its Smart Incentive. */
+/** Host self-service edit — title, images, description, the pod's capacity
+ * and its Smart Incentive. */
 export const HOST_UPDATE_POD = gql`
   mutation HostUpdatePod($pod_doc_id: ID!, $input: HostUpdatePodInput!) {
     hostUpdatePod(pod_doc_id: $pod_doc_id, input: $input) {
@@ -12,11 +12,6 @@ export const HOST_UPDATE_POD = gql`
       pod_images_and_videos {
         url
         type
-      }
-      ticket_discount_enabled
-      ticket_discount_tiers {
-        min_tickets
-        discount_pct
       }
       smart_incentive_enabled
       smart_incentive_pct

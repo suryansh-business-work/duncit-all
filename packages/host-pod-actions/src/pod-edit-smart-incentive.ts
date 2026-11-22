@@ -6,17 +6,15 @@ import {
   type SmartIncentiveLabels,
   type SmartIncentiveValues,
 } from '@duncit/utils';
-import { isFreePodPrice } from './pod-edit-ticket-discount';
+import { isFreePodPrice } from './pod-price';
 import type { HostPodTarget } from './types';
 
 /**
  * The Smart Incentive inside the host's Edit Pod sheet.
  *
  * The percentage RULE lives once in `@duncit/utils` (and in the server's twin);
- * this file only adapts it to the edit dialog, the way
- * pod-edit-ticket-discount.ts does for the multi-ticket discount: what the pod
- * already stores, whether it can carry an offer at all, and when an edit needs
- * re-validating.
+ * this file only adapts it to the edit dialog: what the pod already stores,
+ * whether it can carry an offer at all, and when an edit needs re-validating.
  */
 
 /** Loyalty > Smart Incentive's settings, as the editor reads them. */

@@ -2,13 +2,6 @@ import { z } from 'zod';
 import { podModerationImageUrls, smartIncentiveFormValues, type SmartIncentiveValues } from '@duncit/utils';
 import { hasImageLine, mediaTextToInput, mediaToText } from './media-text';
 import {
-  podEditTicketDiscountInput,
-  podTicketDiscountValues,
-  refinePodEditTicketDiscount,
-  type PodEditTicketDiscount,
-  type PodEditTicketDiscountValues,
-} from './pod-edit-ticket-discount';
-import {
   podEditSmartIncentiveInput,
   refinePodEditSmartIncentive,
   type PodEditSmartIncentive,
@@ -16,8 +9,8 @@ import {
 import type { HostPodActionLabels } from './labels';
 import type { HostPodTarget, PodSpotLimits } from './types';
 
-/** Shapes for the host's pod edit (title, images, description, capacity, multi-ticket discount, Smart Incentive). */
-export interface PodEditValues extends PodEditTicketDiscountValues, SmartIncentiveValues {
+/** Shapes for the host's pod edit (title, images, description, capacity, Smart Incentive). */
+export interface PodEditValues extends SmartIncentiveValues {
   pod_title: string;
   pod_description: string;
   media_text: string;
@@ -30,19 +23,16 @@ export const blankPodEditValues: PodEditValues = {
   pod_description: '',
   media_text: '',
   no_of_spots: 0,
-  ticket_discount_enabled: false,
-  ticket_discount_tiers: [],
   smart_incentive_enabled: false,
   smart_incentive_pct: '',
 };
 
 /** Built from the surface's labels: a validation message is copy the host
  *  reads, so it follows their language like the rest of the dialog (rule 38).
- *  `ticketDiscount` / `smartIncentive` are the dialog's contexts for the two
- *  offers — without one there is no such offer on the form to check. */
+ *  `smartIncentive` is the dialog's context for the offer — without it there
+ *  is no offer on the form to check. */
 export const buildPodEditSchema = (
   labels: HostPodActionLabels,
-  ticketDiscount?: PodEditTicketDiscount | null,
   smartIncentive?: PodEditSmartIncentive | null,
 ) =>
   z
@@ -53,18 +43,11 @@ export const buildPodEditSchema = (
       // The stepper is bounded by the server's own range, so nothing out of range
       // can be produced here; the server re-checks it on the way in regardless.
       no_of_spots: z.coerce.number().int().min(0),
-      ticket_discount_enabled: z.boolean(),
-      ticket_discount_tiers: z.array(
-        z.object({ min_tickets: z.number(), discount_pct: z.number() }),
-      ),
       smart_incentive_enabled: z.boolean(),
       // As typed: `smartIncentivePctIssue` reads the text, so "12.5" is refused rather than rounded.
       smart_incentive_pct: z.string(),
     })
     .superRefine((values, ctx) => {
-      if (ticketDiscount) {
-        refinePodEditTicketDiscount(values, ctx, ticketDiscount, labels.ticketDiscount);
-      }
       if (smartIncentive) {
         refinePodEditSmartIncentive(values, ctx, smartIncentive, labels.smartIncentive);
       }
@@ -78,15 +61,13 @@ export type PodEditFormInput = z.input<ReturnType<typeof buildPodEditSchema>>;
  *
  * `no_of_spots` is omitted until the limits load: without them the form has no
  * range to have picked inside, and sending the seeded 0 would ask the server to
- * empty the pod. The discount and the Smart Incentive are each omitted when the
- * dialog had no context for them, and switched off (`ticketDiscountInput`,
- * `smartIncentiveInput`) on a free pod.
+ * empty the pod. The Smart Incentive is omitted when the dialog had no context
+ * for it, and switched off (`smartIncentiveInput`) on a free pod.
  */
 export function buildHostUpdateInput(
   values: PodEditValues,
   options?: Readonly<{
     includeSpots?: boolean;
-    ticketDiscount?: PodEditTicketDiscount | null;
     smartIncentive?: PodEditSmartIncentive | null;
   }>,
 ) {
@@ -95,7 +76,6 @@ export function buildHostUpdateInput(
     pod_description: values.pod_description.trim(),
     pod_images_and_videos: mediaTextToInput(values.media_text),
     ...(options?.includeSpots ? { no_of_spots: values.no_of_spots } : {}),
-    ...podEditTicketDiscountInput(values, options?.ticketDiscount),
     ...podEditSmartIncentiveInput(values, options?.smartIncentive),
   };
 }
@@ -119,7 +99,6 @@ export function podEditInitialValues(pod: HostPodTarget | null): PodEditValues {
     pod_description: pod.pod_description ?? '',
     media_text: mediaToText(pod.pod_images_and_videos),
     no_of_spots: pod.no_of_spots ?? 0,
-    ...podTicketDiscountValues(pod),
     ...smartIncentiveFormValues(pod),
   };
 }

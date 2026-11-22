@@ -17,6 +17,9 @@ generated/
 # ...except the Targets growth formula: generated from the server formulas and
 # checked in, because `generate-growth-formula --check` (Shared Gates) diffs it.
 !portals/targets/src/lib/generated/
+# ...and the CRM Lead Quality Score rules, generated from the server's rules
+# and diffed by `generate-lead-quality-rules --check` (Shared Gates).
+!portals/crm/src/lib/generated/
 _nm/
 
 # astro build cache (only the root .gitignore is used; inner workspaces inherit)

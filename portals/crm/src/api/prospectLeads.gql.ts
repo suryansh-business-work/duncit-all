@@ -1,5 +1,6 @@
 import { gql } from '@apollo/client';
 import { ACTIVITY_FIELDS, CONTACT_FIELDS, SERVICE_FIELDS, SOCIAL_LINK_FIELDS, SUPER_CATEGORY_FIELDS } from './crm.gql';
+import { QUALITY_SUMMARY_FIELDS } from './leadQuality.gql';
 
 /** The lead backbone both kinds share (location, contacts, tags, tracking). */
 const BACKBONE_FIELDS = `
@@ -24,7 +25,7 @@ export const COMMUNITY_LEAD_FIELDS = `
 `;
 
 export const CREATOR_LEADS_TABLE = gql`
-  query CreatorLeadsTable($query: TableQueryInput, $near: CrmLeadNearInput) { creatorLeadsTable(query: $query, near: $near) { total unplaced rows { ${CREATOR_LEAD_FIELDS} is_duplicate distance_km geo_precision } } }
+  query CreatorLeadsTable($query: TableQueryInput, $near: CrmLeadNearInput) { creatorLeadsTable(query: $query, near: $near) { total unplaced rows { ${CREATOR_LEAD_FIELDS} is_duplicate distance_km geo_precision ${QUALITY_SUMMARY_FIELDS} } } }
 `;
 export const CREATOR_LEAD = gql`query CreatorLead($id: ID!) { creatorLead(id: $id) { ${CREATOR_LEAD_FIELDS} } }`;
 export const CREATE_CREATOR_LEAD = gql`mutation CreateCreatorLead($input: CreatorLeadInput!) { createCreatorLead(input: $input) { ${CREATOR_LEAD_FIELDS} } }`;
@@ -32,7 +33,7 @@ export const UPDATE_CREATOR_LEAD = gql`mutation UpdateCreatorLead($id: ID!, $inp
 export const DELETE_CREATOR_LEAD = gql`mutation DeleteCreatorLead($id: ID!) { deleteCreatorLead(id: $id) }`;
 
 export const COMMUNITY_LEADS_TABLE = gql`
-  query CommunityLeadsTable($query: TableQueryInput, $near: CrmLeadNearInput) { communityLeadsTable(query: $query, near: $near) { total unplaced rows { ${COMMUNITY_LEAD_FIELDS} is_duplicate distance_km geo_precision } } }
+  query CommunityLeadsTable($query: TableQueryInput, $near: CrmLeadNearInput) { communityLeadsTable(query: $query, near: $near) { total unplaced rows { ${COMMUNITY_LEAD_FIELDS} is_duplicate distance_km geo_precision ${QUALITY_SUMMARY_FIELDS} } } }
 `;
 export const COMMUNITY_LEAD = gql`query CommunityLead($id: ID!) { communityLead(id: $id) { ${COMMUNITY_LEAD_FIELDS} } }`;
 export const CREATE_COMMUNITY_LEAD = gql`mutation CreateCommunityLead($input: CommunityLeadInput!) { createCommunityLead(input: $input) { ${COMMUNITY_LEAD_FIELDS} } }`;

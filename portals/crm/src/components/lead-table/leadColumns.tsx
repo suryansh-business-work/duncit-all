@@ -5,6 +5,7 @@ import { PriorityChip, StatusChip } from '../StatusChips';
 import { EmailStatusBadge } from '../email-status';
 import { formatDate } from '@duncit/app-settings';
 import { useTranslation } from '@duncit/shell';
+import type { LeadQualitySummary } from '../../api/leadQuality.gql';
 
 /** Fields shared by host / venue / ecomm lead rows that the table touches. */
 export interface CrmLeadRowBase {
@@ -17,58 +18,14 @@ export interface CrmLeadRowBase {
   assigned_to?: string | null;
   super_category?: { name: string } | null;
   contacts?: { mobile_number?: string | null; email?: string | null }[];
+  /** The lead's Lead Quality Score summary; null until it is first scored. */
+  quality?: LeadQualitySummary | null;
 }
 
-export type CrmLeadEntity = 'host' | 'venue' | 'ecomm' | 'creator' | 'community';
-export type LeadFilterOption = { value: string; label: string };
-
-interface EntityMeta {
-  tableId: string;
-  nameField: string;
-  nameHeader: string;
-  /** Entity-specific column between the name and City (host Type / ecomm Brand). */
-  extra?: { field: string; headerName: string };
-  emptyText: string;
-}
+export { leadEntityMeta, type CrmLeadEntity, type LeadFilterOption } from './leadEntityMeta';
+import { leadEntityMeta, type CrmLeadEntity, type LeadFilterOption } from './leadEntityMeta';
 
 type Translate = ReturnType<typeof useTranslation>['t'];
-
-export const leadEntityMeta = (t: Translate): Record<CrmLeadEntity, EntityMeta> => ({
-  host: {
-    tableId: 'crm-host-leads',
-    nameField: 'host_name',
-    nameHeader: 'Host',
-    extra: { field: 'host_type', headerName: t('shell.common.type') },
-    emptyText: 'No host leads yet. Click "New Host Lead" to create the first one.',
-  },
-  venue: {
-    tableId: 'crm-venue-leads',
-    nameField: 'venue_name',
-    nameHeader: t('crm.common.venue'),
-    emptyText: 'No venue leads yet. Click "New Venue Lead" to create the first one.',
-  },
-  ecomm: {
-    tableId: 'crm-ecomm-leads',
-    nameField: 'seller_name',
-    nameHeader: 'Seller',
-    extra: { field: 'brand_name', headerName: t('crm.common.brand') },
-    emptyText: 'No ecomm leads yet. Click "New Ecomm Lead" to create the first one.',
-  },
-  creator: {
-    tableId: 'crm-creator-leads',
-    nameField: 'creator_name',
-    nameHeader: t('crm.creatorLeads.nameHeader'),
-    extra: { field: 'primary_platform', headerName: t('crm.creatorLeads.primaryPlatform') },
-    emptyText: t('crm.creatorLeads.emptyText'),
-  },
-  community: {
-    tableId: 'crm-community-leads',
-    nameField: 'community_name',
-    nameHeader: t('crm.communityLeads.nameHeader'),
-    extra: { field: 'community_type', headerName: t('crm.communityLeads.communityType') },
-    emptyText: t('crm.communityLeads.emptyText'),
-  },
-});
 
 const fieldText = (row: object, key: string): string => {
   const value = (row as Record<string, unknown>)[key];

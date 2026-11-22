@@ -102,6 +102,9 @@ const ROUTES = [
   '/data/venues/amenities',
   '/data/venues/event-suitability',
   '/settings/dynamic-fields',
+  '/settings/lead-quality',
+  '/lead-research',
+  '/lead-quality/analytics',
 ];
 
 /** `link` swaps what answers the page: nothing, or the schema-shaped mock. */

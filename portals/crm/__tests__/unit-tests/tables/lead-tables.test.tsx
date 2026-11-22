@@ -1,8 +1,9 @@
 import '../helpers/agGridEnv';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { screen, fireEvent } from '@testing-library/react';
 import type { MutableRefObject } from 'react';
 import { CrmLeadsTable } from '@/components/lead-table';
+import { renderWithApollo } from '../helpers/renderWithApollo';
 import type { HostLead, VenueLead } from '@/api/crm.types';
 import type { NearbyLeads } from '@/hooks/useNearbyLeads';
 
@@ -51,7 +52,8 @@ function renderLeadTable<T extends { id: string }>(
   const onEdit = vi.fn();
   const onDelete = vi.fn();
   const refetchRef: MutableRefObject<(() => void) | null> = { current: null };
-  render(
+  // The Quality Score cell links to the lead and the toolbar starts a rescore, so the table needs Apollo and a router.
+  renderWithApollo(
     <CrmLeadsTable
       entity={entity}
       fetchRows={fetchRows as any}

@@ -15,6 +15,9 @@ import ProspectLeadDetailPage from './pages/prospect-leads/ProspectLeadDetailPag
 import HostLeadEditorPage from './pages/host-leads/HostLeadEditorPage';
 import HostLeadDetailPage from './pages/host-leads/HostLeadDetailPage';
 import ManageDynamicFieldsPage from './pages/ManageDynamicFieldsPage';
+import LeadQualitySettingsPage from './pages/lead-quality-settings';
+import LeadResearchPage from './pages/lead-research';
+import LeadQualityAnalyticsPage from './pages/lead-quality-analytics';
 import CallPromptsPage from './pages/call-prompts';
 import EmailTemplatesPage from './pages/email-templates';
 import EmailTemplateEditorPage from './pages/email-templates/EditorPage';
@@ -86,6 +89,9 @@ export default function App() {
       <Route path="/data/venues/amenities" element={authed(<AmenitiesPage />)} />
       <Route path="/data/venues/event-suitability" element={authed(<EventSuitabilityPage />)} />
       <Route path="/settings/dynamic-fields" element={authed(<ManageDynamicFieldsPage />)} />
+      <Route path="/settings/lead-quality" element={authed(<LeadQualitySettingsPage />)} />
+      <Route path="/lead-research" element={authed(<LeadResearchPage />)} />
+      <Route path="/lead-quality/analytics" element={authed(<LeadQualityAnalyticsPage />)} />
       <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <ExtractionWidget />

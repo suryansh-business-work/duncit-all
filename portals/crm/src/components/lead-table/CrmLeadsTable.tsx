@@ -14,6 +14,9 @@ import { useCrmStaffSearch } from '../../hooks/useCrmStaffSearch';
 import type { NearbyLeads } from '../../hooks/useNearbyLeads';
 import { distanceColumn, type NearbyRowFields } from '../nearby-leads/distanceColumn';
 import NearbyLeadsControl from '../nearby-leads/NearbyLeadsControl';
+import { ENTITY_OF_TABLE } from '../lead-quality/qualityLabels';
+import { buildQualityColumns } from './quality/qualityColumns';
+import RecalculateScoresAction from './quality/RecalculateScoresAction';
 
 /** The Assigned To filter lists the whole CRM team; it is a small group. */
 const ASSIGNEE_FILTER_LIMIT = 50;
@@ -61,14 +64,15 @@ export default function CrmLeadsTable<T extends LeadRow>({
     [users],
   );
   const nearbyOn = Boolean(nearby?.near);
+  const meta = leadEntityMeta(t)[entity];
   const columns = useMemo(() => {
     const base = buildLeadColumns<T>({ entity, statusOptions, priorityOptions, superCategoryOptions, assigneeOptions, onEdit, onDelete, t });
-    // The Distance column sits right after the lead name while a nearby search is on.
-    const withDistance = nearbyOn ? [base[0], distanceColumn<T>(t), ...base.slice(1)] : base;
-    return withDuplicateMark(withDistance, t);
+    const quality = buildQualityColumns<T>({ entity, nameField: leadEntityMeta(t)[entity].nameField, t });
+    // The Distance column sits right after the lead name while a nearby search is on; the Quality Score follows.
+    const lead = nearbyOn ? [base[0], distanceColumn<T>(t)] : [base[0]];
+    return withDuplicateMark([...lead, ...quality, ...base.slice(1)], t);
   }, [entity, statusOptions, priorityOptions, superCategoryOptions, assigneeOptions, onEdit, onDelete, t, nearbyOn]);
   const getRowStyle = useMemo(() => duplicateRowStyle(theme), [theme]);
-  const meta = leadEntityMeta(t)[entity];
 
   return (
     <DuncitTable<T>
@@ -81,14 +85,11 @@ export default function CrmLeadsTable<T extends LeadRow>({
       getRowStyle={getRowStyle}
       onRowClick={onView}
       toolbarActions={
-        nearby ? (
-          <>
-            <NearbyLeadsControl nearby={nearby} />
-            {toolbarActions}
-          </>
-        ) : (
-          toolbarActions
-        )
+        <>
+          {nearby && <NearbyLeadsControl nearby={nearby} />}
+          <RecalculateScoresAction entity={ENTITY_OF_TABLE[entity]} />
+          {toolbarActions}
+        </>
       }
       emptyText={meta.emptyText}
       defaultSort={nearbyOn ? NEAREST_FIRST : FOLLOW_UP_FIRST}

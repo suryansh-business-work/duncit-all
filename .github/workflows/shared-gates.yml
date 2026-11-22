@@ -87,6 +87,12 @@ jobs:
       - name: Targets growth formulas match the server
         run: node scripts/generate-growth-formula.mjs --check
 
+      # Same direction for the CRM: the Lead Quality Score settings form totals
+      # and validates with a GENERATED copy of the server's rules. A stale copy
+      # could accept a scoring model the server refuses.
+      - name: CRM lead quality rules match the server
+        run: node scripts/generate-lead-quality-rules.mjs --check
+
       # Every shared package ships a runnable demo the Tech portal renders under
       # Package Documentation. The registry indexing them is generated, so a demo
       # added without regenerating is a file nothing loads — an empty Live demos

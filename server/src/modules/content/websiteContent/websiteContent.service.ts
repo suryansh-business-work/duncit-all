@@ -24,6 +24,10 @@ const toPub = (doc: IWebsiteContent) => ({
   published_at: doc.published_at?.toISOString?.() ?? null,
   is_published: !!doc.is_published,
   sort_order: doc.sort_order ?? 0,
+  audience: doc.audience || null,
+  coming_soon: Boolean(doc.coming_soon),
+  // The URL segment a solution is filed under — /solutions/<category_slug>/<slug>.
+  category_slug: slugify(doc.category ?? ''),
   created_at: doc.created_at?.toISOString?.() ?? '',
   updated_at: doc.updated_at?.toISOString?.() ?? '',
 });
@@ -49,6 +53,9 @@ function normalizeInput(input: any) {
     published_at: input.published_at ? new Date(input.published_at) : null,
     is_published: input.is_published !== false,
     sort_order: input.sort_order ?? 0,
+    // Only a solution is filed under an audience or flagged coming soon.
+    audience: input.type === 'SOLUTIONS' ? (input.audience ?? '') : '',
+    coming_soon: input.type === 'SOLUTIONS' && input.coming_soon === true,
   };
 }
 
@@ -73,6 +80,8 @@ const WEBSITE_CONTENT_TABLE_CONFIG: TableEntityConfig = {
     published_at: { type: 'date' },
     sort_order: { type: 'number' },
     created_at: { type: 'date' },
+    audience: { type: 'enum' },
+    coming_soon: { type: 'boolean' },
   },
   defaultSort: { sort_order: 1, published_at: -1, created_at: -1 },
 };
@@ -115,6 +124,27 @@ const blogSeed = [
     sort_order: 30,
   },
 ];
+
+/**
+ * The first entry on duncit.com/solutions: the Venue Kit, filed under venues ›
+ * Cafe & Restaurant Automation. Inserted once by slug and never rewritten, so
+ * the Website portal owns every word of it after boot.
+ */
+const VENUE_KIT_SOLUTION = {
+  type: 'SOLUTIONS',
+  title: 'Duncit Venue Kit',
+  slug: 'venue-kit',
+  summary: 'Table QR ordering, a Smart POS, gift cards and Razorpay setup for cafes and restaurants, on one annual plan.',
+  body: '',
+  category: 'Cafe & Restaurant Automation',
+  image_url: 'https://images.unsplash.com/photo-1770739539412-d9e1021429cf?w=900&q=80&auto=format&fit=crop',
+  cta_label: 'Register interest',
+  cta_url: '',
+  is_published: true,
+  sort_order: 10,
+  audience: 'VENUE',
+  coming_soon: true,
+};
 
 export const websiteContentService = {
   async list(type?: WebsitePageType | null, publicOnly = false) {
@@ -173,6 +203,11 @@ export const websiteContentService = {
   },
 
   async seedDefaults() {
+    await WebsiteContentModel.updateOne(
+      { type: 'SOLUTIONS', slug: VENUE_KIT_SOLUTION.slug },
+      { $setOnInsert: { ...VENUE_KIT_SOLUTION, published_at: new Date() } },
+      { upsert: true }
+    );
     const existingBlogCount = await WebsiteContentModel.countDocuments({ type: 'BLOG' });
     if (existingBlogCount > 0) return;
     await WebsiteContentModel.insertMany(blogSeed);

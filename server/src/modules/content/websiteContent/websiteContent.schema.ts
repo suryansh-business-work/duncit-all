@@ -3,6 +3,17 @@ export const websiteContentTypeDefs = /* GraphQL */ `
     CAREERS
     NEWSROOM
     BLOG
+    "An offering on duncit.com/solutions, filed under an audience and a category."
+    SOLUTIONS
+  }
+
+  "Who a SOLUTIONS entry is offered to — the sections duncit.com/solutions lists."
+  enum SolutionAudience {
+    VENUE
+    HOST
+    CLUB_ADMIN
+    CREATOR
+    COMMUNITY
   }
 
   type WebsiteContentItem {
@@ -19,6 +30,12 @@ export const websiteContentTypeDefs = /* GraphQL */ `
     published_at: String
     is_published: Boolean!
     sort_order: Int!
+    "SOLUTIONS only; null on every other type."
+    audience: SolutionAudience
+    "SOLUTIONS only: announced, not on sale yet."
+    coming_soon: Boolean!
+    "The category as a URL segment: a solution lives at /solutions/<category_slug>/<slug>."
+    category_slug: String!
     created_at: String!
     updated_at: String!
   }
@@ -44,6 +61,9 @@ export const websiteContentTypeDefs = /* GraphQL */ `
     published_at: String
     is_published: Boolean
     sort_order: Int
+    "Required for SOLUTIONS, must be empty otherwise."
+    audience: SolutionAudience
+    coming_soon: Boolean
   }
 
   extend type Query {

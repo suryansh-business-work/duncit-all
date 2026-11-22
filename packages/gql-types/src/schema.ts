@@ -44615,6 +44615,14 @@ export type SocialTopPost = {
   text: Scalars['String']['output'];
 };
 
+/** Who a SOLUTIONS entry is offered to — the sections duncit.com/solutions lists. */
+export type SolutionAudience =
+  | 'CLUB_ADMIN'
+  | 'COMMUNITY'
+  | 'CREATOR'
+  | 'HOST'
+  | 'VENUE';
+
 /**
  * What pressing a card does. Asked rather than inferred: an in-app path and
  * a web address look alike to a validator and nothing alike to a person.
@@ -54390,8 +54398,11 @@ export type WalletWithdrawalTablePage = {
 };
 
 export type WebsiteContentInput = {
+  /** Required for SOLUTIONS, must be empty otherwise. */
+  audience?: InputMaybe<SolutionAudience>;
   body?: InputMaybe<Scalars['String']['input']>;
   category?: InputMaybe<Scalars['String']['input']>;
+  coming_soon?: InputMaybe<Scalars['Boolean']['input']>;
   cta_label?: InputMaybe<Scalars['String']['input']>;
   cta_url?: InputMaybe<Scalars['String']['input']>;
   image_url?: InputMaybe<Scalars['String']['input']>;
@@ -54406,8 +54417,14 @@ export type WebsiteContentInput = {
 
 export type WebsiteContentItem = {
   __typename?: 'WebsiteContentItem';
+  /** SOLUTIONS only; null on every other type. */
+  audience?: Maybe<SolutionAudience>;
   body: Scalars['String']['output'];
   category: Scalars['String']['output'];
+  /** The category as a URL segment: a solution lives at /solutions/<category_slug>/<slug>. */
+  category_slug: Scalars['String']['output'];
+  /** SOLUTIONS only: announced, not on sale yet. */
+  coming_soon: Scalars['Boolean']['output'];
   created_at: Scalars['String']['output'];
   cta_label: Scalars['String']['output'];
   cta_url: Scalars['String']['output'];
@@ -54519,7 +54536,9 @@ export type WebsiteNavSite =
 export type WebsitePageType =
   | 'BLOG'
   | 'CAREERS'
-  | 'NEWSROOM';
+  | 'NEWSROOM'
+  /** An offering on duncit.com/solutions, filed under an audience and a category. */
+  | 'SOLUTIONS';
 
 /**
  * One upcoming pod as the public websites' home rail shows it: the card's

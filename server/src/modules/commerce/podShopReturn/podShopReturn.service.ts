@@ -95,7 +95,7 @@ export const toReturnPub = (r: IPodShopReturn) => ({
 });
 
 const RETURN_TABLE: TableEntityConfig = {
-  searchFields: ['return_no', 'order_no', 'buyer_name', 'buyer_email', 'items.name'],
+  searchFields: ['return_no', 'order_no', 'buyer_name', 'buyer_email', 'items.name', 'refund.razorpay_refund_id'],
   sortFields: { return_no: 'return_no', order_no: 'order_no', status: 'status', gross: 'gross', created_at: 'created_at' },
   filterFields: {
     status: { type: 'enum' },

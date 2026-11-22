@@ -136,6 +136,8 @@ export const failedPaymentTypeDefs = /* GraphQL */ `
     refund_status: FailedPaymentRefundStatus!
     "Rupees sent back, once a refund was started."
     refund_amount: Float
+    "The Razorpay refund id (rfnd_…) of this case's refund, as the Razorpay dashboard shows it. Null until one was sent."
+    razorpay_refund_id: String
     resolution_state: FailedPaymentResolutionState!
     highlight: FailedPaymentHighlight!
     "Refundable now (green, or yellow after approval). Only FINANCE_MANAGER / SUPER_ADMIN may act on it."

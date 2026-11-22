@@ -12184,6 +12184,8 @@ export type FailedPaymentRow = {
   pod_title: Scalars['String']['output'];
   razorpay_order_id?: Maybe<Scalars['String']['output']>;
   razorpay_payment_id?: Maybe<Scalars['String']['output']>;
+  /** The Razorpay refund id (rfnd_…) of this case's refund, as the Razorpay dashboard shows it. Null until one was sent. */
+  razorpay_refund_id?: Maybe<Scalars['String']['output']>;
   /** Rupees sent back, once a refund was started. */
   refund_amount?: Maybe<Scalars['Float']['output']>;
   refund_status: FailedPaymentRefundStatus;
@@ -12966,6 +12968,10 @@ export type GiftCardPaymentSummary = {
   paid_at?: Maybe<Scalars['String']['output']>;
   payment_id: Scalars['String']['output'];
   platform_fee_amount: Scalars['Float']['output'];
+  /** Razorpay's order id (order_…) the purchase was opened with. */
+  razorpay_order_id?: Maybe<Scalars['String']['output']>;
+  /** Razorpay's payment id (pay_…), exactly as the Razorpay dashboard shows it. payment_id is Duncit's own reference, not this. */
+  razorpay_payment_id?: Maybe<Scalars['String']['output']>;
   status: Scalars['String']['output'];
   subtotal: Scalars['Float']['output'];
   total: Scalars['Float']['output'];
@@ -28882,6 +28888,12 @@ export type Payment = {
   platform_fee_pct: Scalars['Float']['output'];
   pod?: Maybe<Pod>;
   pod_id?: Maybe<Scalars['ID']['output']>;
+  /** Razorpay's order id (order_…) the checkout was opened with. Null for other gateways. */
+  razorpay_order_id?: Maybe<Scalars['String']['output']>;
+  /** Razorpay's payment id (pay_…), exactly as the Razorpay dashboard shows it. Null until the buyer paid, and for other gateways. payment_id is Duncit's own reference, not this. */
+  razorpay_payment_id?: Maybe<Scalars['String']['output']>;
+  /** Every Razorpay refund id (rfnd_…) sent against this payment, oldest first. Empty when none went through Razorpay. */
+  razorpay_refund_ids?: Maybe<Array<Scalars['String']['output']>>;
   /** The rented items this pod payment carried, as checkout froze them (empty when none). */
   rental_lines: Array<PaymentRentalLine>;
   /** What rounding the bill UP to a whole rupee added (0 ≤ x < 1; 0 when it was already whole or the payment predates the rule). Already inside total; never taxable and never part of a fee, commission or settlement. */
@@ -29234,6 +29246,10 @@ export type PaymentRoundOff = {
   invoice_no?: Maybe<Scalars['String']['output']>;
   paid_at?: Maybe<Scalars['String']['output']>;
   payment_id: Scalars['String']['output'];
+  /** Razorpay's order id (order_…). Null for other gateways. */
+  razorpay_order_id?: Maybe<Scalars['String']['output']>;
+  /** Razorpay's payment id (pay_…), exactly as the Razorpay dashboard shows it. Null for other gateways. */
+  razorpay_payment_id?: Maybe<Scalars['String']['output']>;
   /** What rounding the bill up to a whole rupee added (0 < x < 1). */
   round_off: Scalars['Float']['output'];
   source: PaymentSource;
@@ -51443,6 +51459,12 @@ export type UserRefund = {
   partial: Scalars['Boolean']['output'];
   payment_id: Scalars['String']['output'];
   platform_fee_amount: Scalars['Float']['output'];
+  /** Razorpay's order id (order_…) the checkout was opened with. Null for other gateways. */
+  razorpay_order_id?: Maybe<Scalars['String']['output']>;
+  /** Razorpay's payment id (pay_…), exactly as the Razorpay dashboard shows it. Null until the buyer paid, and for other gateways. payment_id is Duncit's own reference, not this. */
+  razorpay_payment_id?: Maybe<Scalars['String']['output']>;
+  /** Every Razorpay refund id (rfnd_…) sent against this payment, oldest first. Empty when none went through Razorpay. */
+  razorpay_refund_ids?: Maybe<Array<Scalars['String']['output']>>;
   /** Money returned across every release on this booking. Falls back to the total for an admin refund, which returns the whole payment without writing a figure. */
   refund_amount: Scalars['Float']['output'];
   /** Who set the refund off — a pod-cancel initiator or SYSTEM. Null for an admin refund from the console. */

@@ -82,6 +82,12 @@ export const paymentTypeDefs = /* GraphQL */ `
     status: PaymentStatus!
     gateway: String!
     gateway_ref: String
+    "Razorpay's payment id (pay_…), exactly as the Razorpay dashboard shows it. Null until the buyer paid, and for other gateways. payment_id is Duncit's own reference, not this."
+    razorpay_payment_id: String
+    "Razorpay's order id (order_…) the checkout was opened with. Null for other gateways."
+    razorpay_order_id: String
+    "Every Razorpay refund id (rfnd_…) sent against this payment, oldest first. Empty when none went through Razorpay."
+    razorpay_refund_ids: [String!]
     paid_at: String
     created_at: String!
     updated_at: String!
@@ -283,6 +289,12 @@ export const paymentTypeDefs = /* GraphQL */ `
     "Who set the refund off — a pod-cancel initiator or SYSTEM. Null for an admin refund from the console."
     refund_initiated_by: String
     refunded_at: String
+    "Razorpay's payment id (pay_…), exactly as the Razorpay dashboard shows it. Null until the buyer paid, and for other gateways. payment_id is Duncit's own reference, not this."
+    razorpay_payment_id: String
+    "Razorpay's order id (order_…) the checkout was opened with. Null for other gateways."
+    razorpay_order_id: String
+    "Every Razorpay refund id (rfnd_…) sent against this payment, oldest first. Empty when none went through Razorpay."
+    razorpay_refund_ids: [String!]
     paid_at: String
     created_at: String!
     "True when only part of the booking came back — the buyer kept the rest of their seats, so the payment is still SUCCESS."
@@ -335,6 +347,10 @@ export const paymentTypeDefs = /* GraphQL */ `
     currency_symbol: String!
     status: PaymentStatus!
     gateway: String!
+    "Razorpay's payment id (pay_…), exactly as the Razorpay dashboard shows it. Null for other gateways."
+    razorpay_payment_id: String
+    "Razorpay's order id (order_…). Null for other gateways."
+    razorpay_order_id: String
     paid_at: String
     created_at: String!
   }

@@ -16,6 +16,7 @@
  */
 import { PaymentModel, type IPayment } from './payment.model';
 import { roundOffOf } from './payment.roundoff';
+import { RAZORPAY_ID_SEARCH_FIELDS, razorpayIdsOf } from './payment.gatewayIds';
 import { parsePaymentSources, paymentSourceOf, paymentSourcesFilter } from './payment.source';
 import {
   buildTableFilter,
@@ -41,7 +42,7 @@ const SOURCE_FIELD = 'source';
  * (total + coins − round-off) has no stored path to sort or match on.
  */
 const ROUND_OFF_TABLE_CONFIG: TableEntityConfig = {
-  searchFields: ['payment_id', 'invoice_no', 'user_name', 'user_email'],
+  searchFields: ['payment_id', 'invoice_no', 'user_name', 'user_email', ...RAZORPAY_ID_SEARCH_FIELDS],
   sortFields: {
     created_at: 'created_at',
     paid_at: 'paid_at',
@@ -100,6 +101,8 @@ const toRoundOffRow = (p: IPayment) => {
     currency_symbol: p.currency_symbol,
     status: p.status,
     gateway: p.gateway,
+    razorpay_payment_id: razorpayIdsOf(p).razorpay_payment_id,
+    razorpay_order_id: razorpayIdsOf(p).razorpay_order_id,
     paid_at: p.paid_at ? p.paid_at.toISOString() : null,
     created_at: p.created_at.toISOString(),
   };

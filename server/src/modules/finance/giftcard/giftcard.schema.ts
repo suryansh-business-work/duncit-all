@@ -210,6 +210,10 @@ export const giftCardTypeDefs = /* GraphQL */ `
     status: String!
     gateway: String!
     gateway_ref: String
+    "Razorpay's payment id (pay_…), exactly as the Razorpay dashboard shows it. payment_id is Duncit's own reference, not this."
+    razorpay_payment_id: String
+    "Razorpay's order id (order_…) the purchase was opened with."
+    razorpay_order_id: String
     subtotal: Float!
     platform_fee_amount: Float!
     gst_amount: Float!

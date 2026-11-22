@@ -22,6 +22,7 @@
  */
 import { PaymentModel, type IPayment } from './payment.model';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
+import { RAZORPAY_ID_SEARCH_FIELDS, razorpayIdsOf } from './payment.gatewayIds';
 
 /** What a refunded payment actually returned, as an aggregation expression: the
  * stamped figure when a policy refund (the auto-cancel sweep) kept part of
@@ -44,7 +45,8 @@ const REFUNDED_ONLY = { 'metadata.refunded_at': { $exists: true, $ne: null } };
  * it has no single stored path and is neither.
  */
 const USER_REFUND_TABLE_CONFIG: TableEntityConfig = {
-  searchFields: ['payment_id', 'invoice_no', 'user_name', 'user_email'],
+  // A Razorpay refund (rfnd_…), payment or order id pasted from the dashboard finds its row too.
+  searchFields: ['payment_id', 'invoice_no', 'user_name', 'user_email', ...RAZORPAY_ID_SEARCH_FIELDS],
   sortFields: {
     payment_id: 'payment_id',
     invoice_no: 'invoice_no',
@@ -110,6 +112,7 @@ const toRefundRow = (p: IPayment) => {
     refund_reason: (meta.refund_reason as string) || null,
     refund_initiated_by: (meta.refund_initiated_by as string) || null,
     refunded_at: (meta.refunded_at as string) ?? null,
+    ...razorpayIdsOf(p),
     paid_at: p.paid_at ? p.paid_at.toISOString() : null,
     created_at: p.created_at.toISOString(),
     partial: p.status === 'SUCCESS',

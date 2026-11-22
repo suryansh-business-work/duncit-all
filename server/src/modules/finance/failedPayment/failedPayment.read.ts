@@ -35,7 +35,16 @@ export function caseFlags(kase: Pick<IFailedPaymentCase, 'resolution' | 'refund'
 const refundStatusOut = (status: string) => status || 'NONE';
 
 const TABLE_CONFIG: TableEntityConfig = {
-  searchFields: ['user_name', 'user_phone', 'user_email', 'razorpay_payment_id', 'razorpay_order_id', 'ticket_no', 'payment_id'],
+  searchFields: [
+    'user_name',
+    'user_phone',
+    'user_email',
+    'razorpay_payment_id',
+    'razorpay_order_id',
+    'refund.razorpay_refund_id',
+    'ticket_no',
+    'payment_id',
+  ],
   sortFields: {
     created_at: 'created_at',
     updated_at: 'updated_at',
@@ -87,6 +96,7 @@ export function toRow(kase: IFailedPaymentCase) {
     review_decision: kase.review?.decision ?? null,
     refund_status: refundStatusOut(kase.refund.status),
     refund_amount: kase.refund.amount_paise > 0 ? rupees(kase.refund.amount_paise) : null,
+    razorpay_refund_id: orNull(kase.refund.razorpay_refund_id),
     resolution_state: kase.resolution.state,
     ...caseFlags(kase),
     created_at: kase.created_at.toISOString(),

@@ -13,6 +13,7 @@ import { invoiceDataForPayment } from './payment.invoice';
 import { generateInvoicePdf } from '@services/invoice/invoice.pdf';
 import { paymentFinalizer } from './payment.finalize';
 import { roundOffOf, roundUpBill } from './payment.roundoff';
+import { RAZORPAY_ID_SEARCH_FIELDS, razorpayIdsOf } from './payment.gatewayIds';
 import { PAYMENT_SHOP_FILTER, type PaymentShop } from './payment.source';
 import { recordPaymentEvent } from '@modules/finance/failedPayment/paymentEvent.service';
 import {
@@ -97,6 +98,8 @@ export const toPub = (p: IPayment) => ({
   status: p.status,
   gateway: p.gateway,
   gateway_ref: p.gateway_ref,
+  // The ids Razorpay's dashboard shows — never our own payment_id reference.
+  ...razorpayIdsOf(p),
   paid_at: p.paid_at ? p.paid_at.toISOString() : null,
   // How far the post-payment pipeline got, and whether it left money owing.
   // Payments captured before the pipeline existed have no stored state.
@@ -111,7 +114,8 @@ export const toPub = (p: IPayment) => ({
 
 /** Allowlists for the shared table engine (paymentsTable — DUNCIT TABLE CONTRACT v1). */
 const PAYMENT_TABLE_CONFIG: TableEntityConfig = {
-  searchFields: ['payment_id', 'invoice_no', 'user_name', 'user_email'],
+  // A Razorpay payment / order / refund id pasted from the dashboard finds its row too.
+  searchFields: ['payment_id', 'invoice_no', 'user_name', 'user_email', ...RAZORPAY_ID_SEARCH_FIELDS],
   sortFields: {
     payment_id: 'payment_id',
     invoice_no: 'invoice_no',
@@ -209,8 +213,15 @@ export async function computeQuote(
   };
 }
 
+/**
+ * Duncit's own payment reference. It used to be `pay_…`, the exact shape of a
+ * Razorpay payment id, so Finance read it as one and it never matched the
+ * dashboard; new rows carry an unmistakable DPAY- reference instead. Older rows
+ * keep theirs — nothing parses the prefix, and invoices, tickets and messages
+ * already quote them.
+ */
 export const newPaymentId = () =>
-  `pay_${Date.now().toString(36)}${crypto.randomBytes(4).toString('hex')}`;
+  `DPAY-${Date.now().toString(36).toUpperCase()}${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
 
 /** One resolved, invoice-ready checkout line per product+variant selection. */
 interface ResolvedProductLine {
@@ -986,6 +997,40 @@ async function answerRepeatVerify(doc: IPayment, input: RazorpayVerifyInput, com
 }
 
 /**
+ * A verify for a capture the `payment.captured` webhook (or the reconciler)
+ * already adopted, while its booking is still being written or after it failed.
+ * The webhook usually lands within the same second as the buyer's own verify,
+ * so this is the normal race, not an edge: without it the buyer who just paid
+ * would be told "Payment/order mismatch".
+ */
+function isAdoptedCapture(doc: IPayment, input: RazorpayVerifyInput): boolean {
+  return (
+    doc.status === 'PENDING' &&
+    Boolean(input.razorpay_payment_id) &&
+    doc.gateway_ref === input.razorpay_payment_id &&
+    doc.metadata?.razorpay_order_id === input.razorpay_order_id
+  );
+}
+
+/**
+ * Answer that verify from the same finalizer, never a second booking: the
+ * finalizer is idempotent and waits out the adopter's transaction. A capture
+ * whose booking FAILED is not re-run — its money is being refunded
+ * automatically, so the buyer gets the failure, not a seat bought twice.
+ */
+async function settleAdoptedCapture(doc: IPayment, input: RazorpayVerifyInput, component: string) {
+  if (!(await checkRazorpaySignature(doc, input))) {
+    throw new GraphQLError('Payment signature verification failed', { extensions: { code: 'BAD_USER_INPUT' } });
+  }
+  if (doc.finalize_state === 'FAILED') {
+    throw new GraphQLError(doc.finalize_error || 'Payment could not be completed', {
+      extensions: { code: 'PAYMENT_NOT_COMPLETED' },
+    });
+  }
+  return settle(String(doc._id), 'Razorpay', component);
+}
+
+/**
  * The other dates of a multi-date booking of a (now retired) recurring pod,
  * kept so a booking paid before the retirement still settles: one Razorpay
  * order paid for every date, and each date has its own payment, so once the
@@ -1022,6 +1067,7 @@ export async function verifyRazorpayAndSettle(doc: IPayment, input: any, compone
   if (doc.gateway !== 'RAZORPAY')
     throw new GraphQLError('Payment/order mismatch', { extensions: { code: 'BAD_USER_INPUT' } });
   if (isRepeatOfSettledVerify(doc, input)) return answerRepeatVerify(doc, input, component);
+  if (isAdoptedCapture(doc, input)) return settleAdoptedCapture(doc, input, component);
   if (doc.gateway_ref !== input.razorpay_order_id)
     throw new GraphQLError('Payment/order mismatch', { extensions: { code: 'BAD_USER_INPUT' } });
   if (doc.status === 'SUCCESS') {
@@ -1093,7 +1139,13 @@ const buildListFilter = (filter?: PaymentListFilter) => {
   if (filter?.pod_id) q.pod_id = new Types.ObjectId(filter.pod_id);
   if (filter?.search) {
     const r = new RegExp(filter.search.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`), 'i');
-    q.$or = [{ payment_id: r }, { invoice_no: r }, { user_name: r }, { user_email: r }];
+    q.$or = [
+      { payment_id: r },
+      { invoice_no: r },
+      { user_name: r },
+      { user_email: r },
+      ...RAZORPAY_ID_SEARCH_FIELDS.map((path) => ({ [path]: r })),
+    ];
   }
   return q;
 };
@@ -1384,9 +1436,12 @@ export const paymentService = {
   /** Step 1 of live checkout: create a Razorpay order + a PENDING payment row,
    * and return everything the client needs to open the Razorpay sheet. */
   async createRazorpayCheckout(input: any, userId: string) {
-    const fs = await getFinanceSettings();
-    const { keyId } = await getRazorpayKeys();
-    const user = await UserModel.findById(userId);
+    // Independent reads, so the buyer waits for the slowest one rather than all three in turn.
+    const [fs, { keyId }, user] = await Promise.all([
+      getFinanceSettings(),
+      getRazorpayKeys(),
+      UserModel.findById(userId),
+    ]);
     if (!user) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
 
     const { description, ticketDiscount, smartIncentive, quote, couponCode, couponDiscount, coinsRedeemed, metadata } =

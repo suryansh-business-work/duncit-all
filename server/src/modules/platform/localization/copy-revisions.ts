@@ -435,4 +435,10 @@ export const COPY_REVISIONS: Readonly<Record<string, readonly string[]>> = {
   // CRM WhatsApp Lead Generator: the API key is generated server-side now, so
   // the help panel explains the automatic flow instead of fetching a key.
   "crm.tools.howDoIGetTheApi": ["How do I get the API key?"],
+  // Payment and refund tables now also search the Razorpay payment, order and
+  // refund ids (and Duncit's own reference), so the placeholders say so.
+  "finance.payment.logsSearch": ["Search txn id, invoice, name or email"],
+  "finance.refundLogs.search": ["Search txn id, invoice, name or email"],
+  "finance.orderRefunds.search": ["Search order no, return no, name or email"],
+  "admin.userFinance.search": ["Search by payment ID or invoice"],
 };

@@ -91,18 +91,23 @@ async function sendToRazorpay(target: Refundable, payment: IPayment, req: Refund
 
 /** Stamp Finance › User Refund Logs exactly once; a refusal is flagged for a manual payout. */
 async function recordInFinance(target: Refundable, payment: IPayment, req: RefundRequest) {
+  const refundId = target.refund.razorpay_refund_id || null;
   if (target.refund.finance_recorded) {
-    // A retry that went through clears the manual-payout flag Finance was shown.
+    // A retry that went through clears the manual-payout flag Finance was shown,
+    // and the refund log learns the Razorpay refund id it now has.
     if (target.refund.status === 'PROCESSED') {
       await PaymentModel.updateOne(
         { _id: payment._id, 'metadata.refund_initiated_by': `${req.initiatedBy}${MANUAL_SUFFIX}` },
         { $set: { 'metadata.refund_initiated_by': req.initiatedBy } }
       );
+      if (refundId) {
+        await PaymentModel.updateOne({ _id: payment._id }, { $addToSet: { 'metadata.razorpay_refund_ids': refundId } });
+      }
     }
     return;
   }
   const by = target.refund.status === 'FAILED' ? `${req.initiatedBy}${MANUAL_SUFFIX}` : req.initiatedBy;
-  await recordPaymentRefund(payment, target.refund.amount, req.reason, by);
+  await recordPaymentRefund(payment, target.refund.amount, req.reason, by, refundId);
   target.refund.finance_recorded = true;
 }
 

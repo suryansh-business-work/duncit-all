@@ -11,6 +11,7 @@ import { giftCardSettingsService } from './giftcard.settings.service';
 import { getFinanceSettings } from '@modules/finance/finance/finance.model';
 import { CoinTransactionModel, type ICoinTransaction } from '@modules/finance/coin/coin.model';
 import { PaymentModel, type IPayment, type PaymentStepKey } from '@modules/finance/payment/payment.model';
+import { razorpayIdsOf } from '@modules/finance/payment/payment.gatewayIds';
 import {
   loadUserMap,
   monthKeys,
@@ -154,6 +155,8 @@ const paymentSummary = (payment: IPayment) => {
     status: payment.status,
     gateway: payment.gateway ?? '',
     gateway_ref: payment.gateway_ref ?? null,
+    razorpay_payment_id: razorpayIdsOf(payment).razorpay_payment_id,
+    razorpay_order_id: razorpayIdsOf(payment).razorpay_order_id,
     subtotal: payment.subtotal ?? 0,
     platform_fee_amount: payment.platform_fee_amount ?? 0,
     gst_amount: payment.gst_amount ?? 0,

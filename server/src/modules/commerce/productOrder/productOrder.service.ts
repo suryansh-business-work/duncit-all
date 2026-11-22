@@ -195,7 +195,7 @@ const DELETION_CANCELLED_BY = /^DELETION:/;
 
 /** Allowlists for the shared table engine (productOrdersTable — DUNCIT TABLE CONTRACT v1). */
 const PRODUCT_ORDER_TABLE_CONFIG: TableEntityConfig = {
-  searchFields: ['order_no', 'buyer_name', 'buyer_email', 'shiprocket.awb', 'deletion_request_no'],
+  searchFields: ['order_no', 'buyer_name', 'buyer_email', 'shiprocket.awb', 'deletion_request_no', 'refund.razorpay_refund_id'],
   sortFields: {
     order_no: 'order_no',
     buyer_name: 'buyer_name',

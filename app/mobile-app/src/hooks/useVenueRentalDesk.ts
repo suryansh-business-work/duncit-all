@@ -108,7 +108,7 @@ export function useVenueRentalItems(venueId: string) {
 export function useVenueRentalBookings(venueId: string) {
   const [bookings, setBookings] = useState<DeskBooking[] | null>(null);
   const [stats, setStats] = useState<DeskStats | null>(null);
-  // Finance's rule: whether the venue hands deposits back at the venue.
+  // Finance's rule: whether deposits are refundable (Duncit refunds them through Razorpay).
   const [depositRefundable, setDepositRefundable] = useState(true);
   const [failed, setFailed] = useState(false);
 

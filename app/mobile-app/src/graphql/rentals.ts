@@ -63,6 +63,9 @@ export const MyRentalBookingsDocument = gql(`
       refund_status
       deposit_at_venue
       created_at
+      refund_state
+      refunded_amount
+      refund_outstanding
     }
   }
 `);

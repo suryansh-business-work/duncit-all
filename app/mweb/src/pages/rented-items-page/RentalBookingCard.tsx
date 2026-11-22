@@ -1,28 +1,16 @@
 import { Box, Chip, Stack, Typography } from '@mui/material';
 import HandshakeIcon from '@mui/icons-material/HandshakeOutlined';
-import { rentalMoney, rentalRefundKey, rentalStatusKey, rentalUnitKey, type RentalBookingRow } from '@duncit/utils';
+import { rentalGuestRefundLine, rentalMoney, rentalStatusKey, rentalUnitKey, type RentalBookingRow } from '@duncit/utils';
 import { SURFACE_SX } from '../../theme';
 import { useTranslation } from '../../i18n/useTranslation';
 import { formatDateTime } from '../../utils/dateFormat';
-
-/** The money line a guest cares about once a rental closed: what comes back, or what was kept. */
-function outcomeLine(t: ReturnType<typeof useTranslation>['t'], row: RentalBookingRow): string | null {
-  const money = (amount: number) => rentalMoney(row.currency_symbol, amount);
-  if (row.refund_status === 'PAID' || row.refund_status === 'IN_PAYMENT') {
-    return t('venueRentals.guest.refunded', { vars: { amount: money(row.refund_due) } });
-  }
-  if (row.refund_status === 'DUE') return t('venueRentals.guest.refundDue', { vars: { amount: money(row.refund_due) } });
-  // Settled at the venue: the venue handed this back in cash when the item came back.
-  if (row.deposit_at_venue > 0) return t('venueRentals.guest.depositBack', { vars: { amount: money(row.deposit_at_venue) } });
-  if (row.damage_claim > 0) return t('venueRentals.guest.damageKept', { vars: { amount: money(row.damage_claim) } });
-  return null;
-}
 
 /** One rented item on one of the member's pods: what, for which pod, what it cost and how it closed. */
 export default function RentalBookingCard({ row }: Readonly<{ row: RentalBookingRow }>) {
   const { t } = useTranslation();
   const money = (amount: number) => rentalMoney(row.currency_symbol, amount);
-  const outcome = outcomeLine(t, row);
+  // The shared rule (the app reads the same): refunded only once Razorpay confirms it.
+  const outcome = rentalGuestRefundLine(row);
   return (
     <Stack direction="row" spacing={1.5} sx={{ ...SURFACE_SX, p: 1.5 }} data-testid={`rented-item-${row.id}`}>
       <Box sx={{ width: 56, height: 56, borderRadius: '12px', overflow: 'hidden', flex: '0 0 auto', bgcolor: 'action.hover', display: 'grid', placeItems: 'center', color: 'secondary.main' }}>
@@ -50,8 +38,7 @@ export default function RentalBookingCard({ row }: Readonly<{ row: RentalBooking
         </Typography>
         {outcome && (
           <Typography variant="caption" sx={{ fontWeight: 600 }} data-testid={`rented-item-${row.id}-outcome`}>
-            {outcome}
-            {row.refund_status === 'NONE' ? '' : ` · ${t(rentalRefundKey(row.refund_status))}`}
+            {t(outcome.key, { vars: { amount: money(outcome.amount) } })}
           </Typography>
         )}
       </Stack>

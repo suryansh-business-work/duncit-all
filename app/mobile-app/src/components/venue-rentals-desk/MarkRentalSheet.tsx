@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { Text, YStack } from 'tamagui';
 import { makeMarkRentalSchema, type MarkRentalValues } from '@duncit/forms/schemas';
-import { rentalHandBack, rentalMoney } from '@duncit/utils';
+import { rentalDepositRefund, rentalMoney } from '@duncit/utils';
 
 import { ChipSelectField } from '@/components/create-pod/ChipSelectField';
 import { DuncitDialog } from '@/components/DuncitDialog';
@@ -22,7 +22,7 @@ type MarkInput = {
 interface Props {
   /** The rental being marked; null closes the sheet. */
   booking: DeskBooking | null;
-  /** Finance's rule: whether the venue hands the deposit back at the venue. */
+  /** Finance's rule: whether deposits are refundable (Duncit refunds them through Razorpay). */
   depositRefundable: boolean;
   onClose: () => void;
   onMark: (id: string, input: MarkInput) => Promise<void>;
@@ -49,8 +49,8 @@ function MarkForm({
   });
   const outcome = useWatch({ control, name: 'outcome' });
   const claim = useWatch({ control, name: 'damage_claim' });
-  // The cash the venue gives back now; Duncit repays the whole deposit in the payout.
-  const handBack = rentalHandBack(
+  // What Duncit refunds to the guest through Razorpay once this is saved: no cash changes hands.
+  const refund = rentalDepositRefund(
     booking.deposit_amount,
     outcome === 'DAMAGED' ? Number(claim) : 0,
     depositRefundable,
@@ -143,9 +143,9 @@ function MarkForm({
         ) : null}
         {booking.deposit_amount > 0 ? (
           <Text role="status" testID="mark-rental-hand-back" fontSize={13} color="$color">
-            {handBack > 0
+            {refund > 0
               ? t('venueRentals.mark.handBack', {
-                  vars: { amount: rentalMoney(booking.currency_symbol, handBack) },
+                  vars: { amount: rentalMoney(booking.currency_symbol, refund) },
                 })
               : t('venueRentals.mark.handBackNone')}
           </Text>

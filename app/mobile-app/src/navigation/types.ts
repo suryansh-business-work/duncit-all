@@ -151,6 +151,8 @@ export type RootStackParamList = {
   VenueFoodCoupons: undefined;
   /** Venue Options → Rented Items. */
   VenueRentedItems: undefined;
+  /** Venue Options → Rented Items → one rental: guest, refund, proofs and activity. */
+  VenueRentalBookingDetail: { id: string };
   /** Host Options → Publish Your Host Page, Host Share, Your Categories. */
   HostPublish: undefined;
   HostShare: undefined;

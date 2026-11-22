@@ -116,6 +116,7 @@ export const linkingConfig: NonNullable<LinkingOptions<RootStackParamList>['conf
     VenueFoodOrders: 'venues/food-orders',
     VenueFoodCoupons: 'venues/food-coupons',
     VenueRentedItems: 'venues/rented-items',
+    VenueRentalBookingDetail: 'venues/rented-items/:id',
     // The brand desk, on mWeb's paths.
     BrandOrders: 'products/orders',
     BrandOrderDetail: 'products/orders/:id',

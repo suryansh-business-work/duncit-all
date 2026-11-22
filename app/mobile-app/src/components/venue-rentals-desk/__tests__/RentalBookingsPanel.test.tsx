@@ -5,6 +5,10 @@ import { useVenueRentalBookings } from '@/hooks/useVenueRentalDesk';
 import { renderWithProviders } from '@/utils/test-utils';
 
 jest.mock('@/hooks/useVenueRentalDesk', () => ({ useVenueRentalBookings: jest.fn() }));
+const mockNavigate = jest.fn();
+jest.mock('@react-navigation/native', () => ({
+  useNavigation: () => ({ navigate: mockNavigate, goBack: jest.fn(), canGoBack: () => true }),
+}));
 
 const mockBookings = useVenueRentalBookings as jest.Mock;
 
@@ -22,6 +26,8 @@ const row = (id: string, over: Record<string, unknown> = {}) => ({
   rent_amount: 300,
   deposit_amount: 500,
   deposit_at_venue: 0,
+  refund_due: 0,
+  refund_status: 'NONE',
   ...over,
 });
 const STATS = {
@@ -49,7 +55,10 @@ const serve = (over: Record<string, unknown> = {}) => {
   return value;
 };
 
-beforeEach(() => mockBookings.mockReset());
+beforeEach(() => {
+  mockBookings.mockReset();
+  mockNavigate.mockReset();
+});
 
 describe('RentalBookingsPanel', () => {
   it('shows the venue’s numbers over its bookings on the dashboard', () => {
@@ -111,7 +120,49 @@ describe('RentalBookingsPanel', () => {
     serve({ depositRefundable: false });
     renderWithProviders(<RentalBookingsPanel venueId="v1" withStats={false} />);
     fireEvent.press(screen.getByTestId('venue-rental-b1-mark'));
-    expect(screen.getByTestId('mark-rental-hand-back')).toHaveTextContent(/^Nothing to hand back/);
+    expect(screen.getByTestId('mark-rental-hand-back')).toHaveTextContent(
+      /^Nothing goes back to the guest/,
+    );
+  });
+
+  it('shows where each rental’s Razorpay refund stands, reading an older row as the server would', () => {
+    serve({
+      bookings: [
+        row('b1'),
+        row('b4', {
+          status: 'RETURNED',
+          refund_due: 500,
+          refund_status: 'DUE',
+          refund_state: 'REFUNDED',
+        }),
+        row('b5', {
+          status: 'RETURNED',
+          refund_due: 500,
+          refund_status: 'PAID',
+          refund_state: null,
+        }),
+      ],
+    });
+    renderWithProviders(<RentalBookingsPanel venueId="v1" withStats={false} />);
+    // Out with a deposit: it comes back after return.
+    expect(screen.getByTestId('venue-rental-b1-refund')).toHaveTextContent(
+      'Deposit back after return',
+    );
+    expect(screen.getByTestId('venue-rental-b4-refund')).toHaveTextContent('Refunded via Razorpay');
+    // A hand-typed "paid" with no Razorpay record is never shown as refunded.
+    expect(screen.getByTestId('venue-rental-b5-refund')).toHaveTextContent('Needs Finance review');
+  });
+
+  it('opens the rental’s own page when the booking is tapped, leaving Mark to the sheet', () => {
+    serve();
+    renderWithProviders(<RentalBookingsPanel venueId="v1" withStats={false} />);
+    fireEvent.press(screen.getByTestId('venue-rental-b2-open'));
+    expect(mockNavigate).toHaveBeenCalledWith('VenueRentalBookingDetail', { id: 'b2' });
+    expect(screen.getByLabelText('Open the rental of Racket b2')).toBeOnTheScreen();
+
+    fireEvent.press(screen.getByTestId('venue-rental-b1-mark'));
+    expect(mockNavigate).toHaveBeenCalledTimes(1);
+    expect(screen.getByTestId('mark-rental-sheet')).toBeOnTheScreen();
   });
 
   it('says there are no rentals yet', () => {

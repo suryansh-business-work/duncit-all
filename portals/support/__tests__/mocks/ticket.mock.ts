@@ -83,6 +83,8 @@ export type TicketMock = Required<
   __typename?: 'Ticket';
   user: TicketActorMock;
   messages?: TicketMessageMock[];
+  /** Read by the detail query only: the payment a deduction claim is about. */
+  payment_id?: string | null;
 };
 
 export const makeTicketActor = (over: Partial<TicketActorMock> = {}): TicketActorMock => ({

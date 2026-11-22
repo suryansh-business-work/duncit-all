@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Box, Chip, Collapse, Stack, useMediaQuery, useTheme } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { DuncitButton } from '@duncit/buttons';
-import { StatusChip } from '@duncit/ui';
+import { InfoRow, StatusChip } from '@duncit/ui';
 import { useTranslation } from '@duncit/shell';
 import type { Ticket } from '../../../graphql/tickets';
 import { TICKET_PRIORITY_COLORS, TICKET_STATUS_COLORS } from '../../../lib/statusMaps';
@@ -46,6 +46,14 @@ export default function TicketInfoPanel({ ticket }: Readonly<{ ticket: Ticket }>
         />
         <Chip size="small" variant="outlined" label={ticket.category} />
       </Stack>
+      {ticket.payment_id && (
+        <InfoRow
+          variant="split"
+          label={t('support.ticketDetail.paymentId')}
+          value={ticket.payment_id}
+          valueSx={{ fontFamily: 'monospace', wordBreak: 'break-all' }}
+        />
+      )}
       <TicketUserDetails user={ticket.user} guestEmail={ticket.guest_email} />
     </Stack>
   );

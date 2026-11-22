@@ -80,6 +80,17 @@ describe('TicketDetailPage', () => {
     expect(screen.getByText('TICKET LIST')).toBeInTheDocument();
   });
 
+  it('names the payment a deduction claim is linked to, and says nothing for a ticket without one', async () => {
+    const first = renderAt([ticketMock(makeTicket({ payment_id: 'pay-doc-77' }))]);
+    await waitFor(() => expect(screen.getByText('pay-doc-77')).toBeInTheDocument());
+    expect(screen.getByText('Linked payment')).toBeInTheDocument();
+    first.unmount();
+
+    renderAt([ticketMock(makeTicket({ payment_id: null }))]);
+    await waitFor(() => expect(screen.getByText('My card fails')).toBeInTheDocument());
+    expect(screen.queryByText('Linked payment')).not.toBeInTheDocument();
+  });
+
   it('flips the agent bubble ticks to Seen once the user has read the thread', async () => {
     const readTime = new Date(Date.now() + 60_000).toISOString();
     renderAt([

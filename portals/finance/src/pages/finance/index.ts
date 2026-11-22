@@ -9,6 +9,7 @@ export { default as UserRefundLogsPage } from './user-refund-logs-page';
 export { default as PaymentLogsPage } from './PaymentLogsPage';
 export { default as PaymentDetailPage } from './payment-detail-page';
 export { default as RoundOffsPage } from './round-offs-page';
+export { default as FailedPaymentsPage, FailedPaymentDetailPage } from './failed-payments-page';
 export { default as OrderRefundsPage } from './order-refunds-page';
 export { default as PaymentReleasePage } from './PaymentReleasePage';
 export { default as PaymentReleaseDetailPage } from './payment-release-page/detail/PaymentReleaseDetailPage';

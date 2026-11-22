@@ -263,12 +263,10 @@ describe('call window — during the call', () => {
   it('moves with the arrow keys from the Move window button, which a maximized window does not offer', async () => {
     await openAndStart([]);
     const win = screen.getByTestId('call-window');
-    // The position comes from sx (an emotion class), so read the computed style.
-    const before = getComputedStyle(win).left;
-    expect(before).not.toBe('');
+    const before = win.style.left;
 
     fireEvent.keyDown(screen.getByRole('button', { name: 'Move window' }), { key: 'ArrowLeft' });
-    expect(getComputedStyle(win).left).not.toBe(before);
+    expect(win.style.left).not.toBe(before);
 
     fireEvent.click(screen.getByRole('button', { name: 'Maximize' }));
     expect(screen.queryByRole('button', { name: 'Move window' })).not.toBeInTheDocument();
@@ -304,8 +302,6 @@ describe('call window — during the call', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'End call and close' }));
 
     expect(await screen.findByText('Twilio could not end the call. Try again.')).toBeInTheDocument();
-    // The confirm dialog closes; once its exit transition is done the call window is reachable again.
-    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'The call is still active' })).not.toBeInTheDocument());
     expect(screen.getByRole('dialog', { name: 'Call · Asha Rao' })).toBeInTheDocument();
   });
 

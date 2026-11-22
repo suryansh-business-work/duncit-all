@@ -4,6 +4,7 @@ import { Types } from 'mongoose';
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
 import { escapeRegExp } from '@utils/regex';
+import { isPathOrWebLink } from '@utils/url';
 
 /**
  * Small pieces every part of the pet store shares: who may run it, how a
@@ -34,6 +35,22 @@ export function forbidden(message: string): never {
 }
 
 export const iso = (d: Date | null | undefined) => (d ? d.toISOString() : null);
+
+/** A same-site path (never `//host`) or an https URL — what a header, footer or home-tile link may point at. */
+export const isStoreLink = (link: string) => (link.startsWith('/') && !link.startsWith('//')) || link.startsWith('https://');
+
+/** The console's general link rule: a path or an http(s) address. Never javascript:, data: or the like. */
+export const isWebLink = isPathOrWebLink;
+
+/**
+ * A link a storefront page will render, held to the console's rule for it, or
+ * refused — a `javascript:` value would run on the public store when tapped.
+ * Blank is allowed (no link).
+ */
+export function checkedLink(field: string, link: string, rule: (link: string) => boolean = isWebLink): string {
+  if (link && !rule(link)) badInput(`${field} must be a store path or a web address (https://…)`);
+  return link;
+}
 
 /** `Dry Food & Treats!` → `dry-food-treats`. Used for every public URL key. */
 export { slugify } from '@utils/slug';

@@ -98,3 +98,10 @@ function withImageKitTr(url: string, tr: string): string {
   const separator = address.includes('?') ? '&' : '?';
   return `${address}${separator}tr=${tr}${hash}`;
 }
+
+/**
+ * A link a client may safely act on: an in-app or same-site path (`/earn`) or
+ * an http(s) address. Never `javascript:`, `data:`, `intent:` or another
+ * scheme a browser or the native app could be talked into running.
+ */
+export const isPathOrWebLink = (link: string): boolean => link.startsWith('/') || /^https?:\/\/\S+$/i.test(link);

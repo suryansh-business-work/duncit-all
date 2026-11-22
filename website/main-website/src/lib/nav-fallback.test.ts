@@ -19,6 +19,7 @@ describe('navFallback', () => {
     const [about, community, safety] = navFallback(t);
     expect(about.links.map((l) => [l.id, l.url, l.label])).toEqual([
       ['n-about', '/about', 'T:website.main.nav.aboutUs'],
+      ['n-solutions', '/solutions', 'T:website.main.nav.solutions'],
       ['n-newsroom', '/newsroom', 'T:website.main.nav.newsroom'],
       ['n-careers', '/careers', 'T:website.main.nav.careers'],
       ['n-contact', '/contact', 'T:website.main.nav.contactUs'],

@@ -1,4 +1,11 @@
-import { resolveVenueKitOffer, VENUE_KIT_FEATURES, venueKitCopyVars } from '@duncit/utils';
+import {
+  groupSolutions,
+  resolveVenueKitOffer,
+  solutionPath,
+  venueKitFallbackSolution,
+  VENUE_KIT_FEATURES,
+  venueKitCopyVars,
+} from '@duncit/utils';
 import { defineDemo, type PackageDemo } from '../../types';
 
 interface VenueKitMock {
@@ -20,6 +27,19 @@ export const venueKitDemos: PackageDemo[] = [
     compute: (mock) => {
       const offer = resolveVenueKitOffer(mock);
       return { features: VENUE_KIT_FEATURES, vars: venueKitCopyVars(offer) };
+    },
+  }),
+  defineDemo<{ extraTitle: string; extraAudience: 'HOST' | 'CREATOR' }>({
+    id: 'solutions-grouping',
+    title: 'solutions — duncit.com/solutions grouped by audience and category',
+    note:
+      'Every audience is returned in display order; one with no offering comes back with no categories and the page marks it coming soon. Each offering lives at /solutions/<category_slug>/<slug>.',
+    mock: { extraTitle: 'Host Pass', extraAudience: 'HOST' },
+    compute: ({ extraTitle, extraAudience }) => {
+      const venueKit = venueKitFallbackSolution({ title: 'Duncit Venue Kit', summary: '', category: 'Cafe & Restaurant Automation', cta_label: '' });
+      const extra = { ...venueKit, title: extraTitle, slug: 'host-pass', audience: extraAudience, category: 'Hosting', category_slug: 'hosting' };
+      const groups = groupSolutions([venueKit, extra]);
+      return groups.map((g) => ({ audience: g.audience, paths: g.categories.flatMap((c) => c.items.map(solutionPath)) }));
     },
   }),
 ];

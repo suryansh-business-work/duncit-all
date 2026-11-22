@@ -1,0 +1,51 @@
+---
+// One Venue Kit feature: its photo, an icon tile, the title, a line, and a
+// sticker with the number that matters (e.g. "Up to 25 tables"). A list item,
+// so the grid of seven is a real list to a screen reader. The photo is
+// decorative — the title and line say everything it shows.
+import type { CardTone } from '../page/IconCard.astro';
+
+interface Props {
+  image: string;
+  icon: string;
+  tone: CardTone;
+  title: string;
+  text: string;
+  sticker: string;
+}
+
+const { image, icon, tone, title, text, sticker } = Astro.props;
+
+const tile = {
+  primary: 'bg-primary-light text-primary-ink',
+  secondary: 'bg-secondary-light text-secondary',
+  tertiary: 'bg-tertiary text-on-accent',
+  ink: 'bg-ink text-cream',
+}[tone];
+---
+
+<li data-reveal class="relative list-none">
+  <article class="group flex h-full flex-col overflow-hidden rounded-card border border-line bg-surface shadow-soft transition duration-500 ease-soft hover:-translate-y-1.5 hover:shadow-lift">
+    <div class="relative aspect-[16/10] overflow-hidden bg-lilac">
+      <img
+        src={image}
+        alt=""
+        loading="lazy"
+        decoding="async"
+        width="900"
+        height="563"
+        class="h-full w-full object-cover transition duration-700 ease-soft group-hover:scale-105"
+      />
+      <span class="absolute top-3 right-3 rotate-[3deg] rounded-full bg-tertiary px-3 py-1 font-head text-xs font-extrabold text-on-accent shadow-soft">
+        {sticker}
+      </span>
+    </div>
+    <div class="flex flex-1 flex-col gap-3 p-6">
+      <span class={`-mt-12 inline-flex h-12 w-12 items-center justify-center rounded-2xl text-lg shadow-soft ring-4 ring-surface ${tile}`} aria-hidden="true">
+        <i class={`fa-solid ${icon}`}></i>
+      </span>
+      <h3 class="font-head text-xl font-extrabold tracking-tight text-ink">{title}</h3>
+      <p class="text-[0.95rem] leading-relaxed text-ink-soft">{text}</p>
+    </div>
+  </article>
+</li>

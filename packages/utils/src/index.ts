@@ -2430,3 +2430,19 @@ export {
   type VenueKitFeature,
   type VenueKitOffer,
 } from './venue-kit';
+export {
+  SOLUTION_AUDIENCES,
+  SOLUTION_AUDIENCE_KEYS,
+  VENUE_KIT_CATEGORY_SLUG,
+  VENUE_KIT_FALLBACK_PATH,
+  VENUE_KIT_SOLUTION_SLUG,
+  venueKitFallbackSolution,
+  type SolutionFallbackCopy,
+  groupSolutions,
+  isListableSolution,
+  solutionPath,
+  type SolutionAudience,
+  type SolutionAudienceGroup,
+  type SolutionCategoryGroup,
+  type SolutionItem,
+} from './solutions';

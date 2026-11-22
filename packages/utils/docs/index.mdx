@@ -5022,5 +5022,31 @@ t('venueKit.features.tableLabels.text', { vars: venueKitCopyVars(offer) });
 | `VENUE_KIT_FEATURES` | The seven feature keys in display order; each names `venueKit.features.<key>.*`. |
 | `venueKitRupees` / `venueKitPercent` | `999900 → '₹9,999'`, `1.5 → '1.5%'`. |
 
-Renderers: website `pages/venue-kit.astro`, Venues console `pages/venue-kit/*`.
+Renderers: website `components/venue-kit/VenueKitPage.astro` (at /solutions/cafe-restaurant-automation/venue-kit; /venue-kit redirects), Venues console `pages/venue-kit/*`.
 Server: `server/src/modules/venues/venueKit` (offer, interest records, email + optional SMS codes).
+
+## duncit.com/solutions
+
+`solutions.ts` holds the rules for the Solutions catalogue — Website portal content of type
+`SOLUTIONS`, each entry filed under an audience and a category. The website renders it and the
+Website portal edits it; both read these helpers so the order and the URLs cannot drift.
+
+```ts
+import { groupSolutions, solutionPath, venueKitFallbackSolution } from '@duncit/utils';
+
+solutionPath({ category_slug: 'cafe-restaurant-automation', slug: 'venue-kit' });
+// '/solutions/cafe-restaurant-automation/venue-kit'
+groupSolutions(items); // every audience in order: VENUE, HOST, CLUB_ADMIN, CREATOR, COMMUNITY
+```
+
+| Export | What it is |
+| --- | --- |
+| `SOLUTION_AUDIENCES` / `SOLUTION_AUDIENCE_KEYS` | The five audiences in display order, and each one's `website.main.solutions.audiences.<key>` segment. |
+| `SolutionItem` | An entry as `publicWebsiteContent(type: SOLUTIONS)` returns it (`category_slug` comes from the server). |
+| `solutionPath(item)` | `/solutions/<category_slug>/<slug>`. |
+| `isListableSolution(item)` | A known audience and both URL segments present. |
+| `groupSolutions(items)` | Audiences in order, offerings grouped by category (first-seen order); an audience with none has no categories. |
+| `venueKitFallbackSolution(copy)` / `VENUE_KIT_FALLBACK_PATH` | What a static build lists when the API is down: the Venue Kit as the server seeds it, worded by the caller's translator (no copy lives here); its seeded address. |
+| `VENUE_KIT_SOLUTION_SLUG` / `VENUE_KIT_CATEGORY_SLUG` | The slug that renders the Venue Kit's own page, and the category it is seeded under. |
+
+Renderers: website `pages/solutions/*`; Website portal → Solutions (content manager).

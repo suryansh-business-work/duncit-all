@@ -215,3 +215,39 @@ describe('fetchVenueKitOffer', () => {
     expect((await siteData.fetchVenueKitOffer()).annual_price_paise).toBe(999_900);
   });
 });
+
+describe('fetchSolutions', () => {
+  const entry = {
+    title: 'Host Pass',
+    slug: 'host-pass',
+    summary: 'Tools for hosts',
+    body: '',
+    category: 'Hosting',
+    category_slug: 'hosting',
+    image_url: '',
+    cta_label: '',
+    cta_url: '',
+    audience: 'HOST',
+    coming_soon: false,
+    sort_order: 1,
+  };
+
+  it('serves the Website portal\'s published solutions', async () => {
+    fetchMock.mockResolvedValue(ok({ publicWebsiteContent: [entry] }));
+    expect(await siteData.fetchSolutions()).toEqual([entry]);
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body).query).toContain('publicWebsiteContent(type: SOLUTIONS)');
+  });
+
+  it('respects an empty list from a reachable API (everything unpublished)', async () => {
+    fetchMock.mockResolvedValue(ok({ publicWebsiteContent: [] }));
+    expect(await siteData.fetchSolutions()).toEqual([]);
+  });
+
+  it('lists the Venue Kit when the API cannot be reached', async () => {
+    fetchMock.mockRejectedValue(new Error('offline'));
+    const fallback = await siteData.fetchSolutions();
+    expect(fallback.map((s) => `/solutions/${s.category_slug}/${s.slug}`)).toEqual([
+      '/solutions/cafe-restaurant-automation/venue-kit',
+    ]);
+  });
+});

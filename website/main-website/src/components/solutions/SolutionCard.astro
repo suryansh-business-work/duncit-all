@@ -1,0 +1,57 @@
+---
+// One offering on /solutions: its photo, a Coming soon mark when it is not on
+// sale yet, the title and summary, and the whole card as a link to its page.
+import { solutionPath, type SolutionItem } from '@duncit/utils';
+import { getTranslator } from '../../lib/i18n';
+
+interface Props {
+  item: SolutionItem;
+}
+
+const { item } = Astro.props;
+const { t } = await getTranslator();
+const href = solutionPath(item);
+---
+
+<li data-reveal class="list-none">
+  <a
+    href={href}
+    class="group flex h-full flex-col overflow-hidden rounded-card border border-line bg-surface shadow-soft transition duration-500 ease-soft hover:-translate-y-1.5 hover:shadow-lift focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-primary"
+  >
+    <div class="relative aspect-[16/9] overflow-hidden bg-lilac">
+      {
+        item.image_url ? (
+          <img
+            src={item.image_url}
+            alt=""
+            loading="lazy"
+            decoding="async"
+            width="900"
+            height="506"
+            class="h-full w-full object-cover transition duration-700 ease-soft group-hover:scale-105"
+          />
+        ) : (
+          <span class="flex h-full w-full items-center justify-center text-4xl text-ink-soft" aria-hidden="true">
+            <i class="fa-solid fa-layer-group" />
+          </span>
+        )
+      }
+      {
+        item.coming_soon && (
+          <span class="absolute top-3 left-3 inline-flex items-center gap-1.5 rounded-full bg-tertiary px-3 py-1 font-head text-xs font-extrabold tracking-[0.08em] text-on-accent uppercase shadow-soft">
+            <i class="fa-solid fa-hourglass-half" aria-hidden="true" />
+            {t('website.main.solutions.comingSoon')}
+          </span>
+        )
+      }
+    </div>
+    <div class="flex flex-1 flex-col gap-3 p-6">
+      <h4 class="font-head text-xl font-extrabold tracking-tight text-ink">{item.title}</h4>
+      {item.summary && <p class="text-[0.95rem] leading-relaxed text-ink-soft">{item.summary}</p>}
+      <span class="mt-auto inline-flex items-center gap-2 pt-2 font-head text-sm font-extrabold text-primary-ink">
+        {t('website.main.solutions.learnMore')}
+        <i class="fa-solid fa-arrow-right transition duration-300 ease-soft group-hover:translate-x-1" aria-hidden="true" />
+      </span>
+    </div>
+  </a>
+</li>

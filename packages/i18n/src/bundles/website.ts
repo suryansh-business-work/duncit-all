@@ -688,6 +688,7 @@ export const WEBSITE_BUNDLE: NestedCatalogue = {
         community: 'Community',
         guidelines: 'Guidelines',
         blog: 'Blog',
+        solutions: 'Solutions',
         safetyHub: 'Safety Hub',
         ourApproach: 'Our approach',
         advice: 'Advice',
@@ -705,6 +706,37 @@ export const WEBSITE_BUNDLE: NestedCatalogue = {
         drawer: 'Site menu',
         promoTitle: 'Get the Duncit app',
         promoText: 'Find a pod near you that matches your energy.',
+      },
+      /** duncit.com/solutions — offerings from the Website portal, by who they are for. */
+      solutions: {
+        title: 'Solutions',
+        metaDescription: 'Duncit solutions for venues, hosts, club admins, creators and communities, from cafe and restaurant automation to the tools coming next.',
+        eyebrow: 'Solutions',
+        heading: 'Tools for everyone who brings people together',
+        intro: 'Pick who you are to see what Duncit offers you. New solutions are added here as they launch.',
+        jump: 'Jump to',
+        comingSoon: 'Coming soon',
+        emptyTitle: 'Solutions on the way',
+        emptyText: 'We are building tools for you. They will be listed here as soon as they launch.',
+        learnMore: 'Learn more',
+        backToAll: 'All solutions',
+        // The Venue Kit's category, shown only when the build cannot reach the Website portal.
+        venueKitCategory: 'Cafe & Restaurant Automation',
+        // The old /venue-kit address, which now forwards to its Solutions page.
+        redirecting: 'Redirecting…',
+        moved: 'The Venue Kit page has moved.',
+        movedLink: 'Open the Venue Kit',
+        ctaKicker: 'Not sure where to start?',
+        ctaHeading: 'Tell us what you need',
+        ctaText: 'Write to us and we will point you to the right solution.',
+        ctaButton: 'Contact us',
+        audiences: {
+          venue: { title: 'For venues', text: 'Cafes, restaurants and spaces that host Duncit pods.' },
+          host: { title: 'For hosts', text: 'People who plan and run pods for their community.' },
+          clubAdmin: { title: 'For club admins', text: 'Admins who run a club and its hosts in a city.' },
+          creator: { title: 'For creators', text: 'Creators who bring their audience together in person.' },
+          community: { title: 'For communities', text: 'Groups and communities that meet offline.' },
+        },
       },
       layout: {
         siteDescription:

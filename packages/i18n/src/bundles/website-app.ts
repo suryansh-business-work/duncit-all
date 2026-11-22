@@ -35,6 +35,17 @@ export const WEBSITE_APP_BUNDLE: NestedCatalogue = {
       colReceived: 'Received',
     },
 
+    /** Each content manager's heading and line, by page type. */
+    contentTypes: {
+      CAREERS: { title: 'Career', description: 'Manage career and job posts published on duncit.com.' },
+      NEWSROOM: { title: 'Newsroom', description: 'Manage newsroom and press entries published on duncit.com.' },
+      BLOG: { title: 'Blog', description: 'Manage blog articles published on duncit.com.' },
+      SOLUTIONS: {
+        title: 'Solutions',
+        description: 'Manage the offerings duncit.com/solutions lists for venues, hosts, club admins, creators and communities.',
+      },
+    },
+
     content: {
       empty: 'No entries yet.',
       colEntry: 'Entry',
@@ -56,6 +67,14 @@ export const WEBSITE_APP_BUNDLE: NestedCatalogue = {
       ctaLabel: 'CTA label',
       ctaUrl: 'CTA URL',
       published: 'Published',
+      // SOLUTIONS only: the /solutions section and the URL segment come from these.
+      audience: 'Who is it for',
+      audienceHint: 'The section of duncit.com/solutions it is listed under.',
+      solutionCategoryHint: 'Groups offerings and forms the URL: /solutions/<category>/<slug>.',
+      comingSoon: 'Coming soon',
+      audienceRequired: 'Choose who this solution is for',
+      categoryRequired: 'A solution needs a category',
+      audiences: { VENUE: 'Venues', HOST: 'Hosts', CLUB_ADMIN: 'Club admins', CREATOR: 'Creators', COMMUNITY: 'Communities' },
     },
 
     jobs: {

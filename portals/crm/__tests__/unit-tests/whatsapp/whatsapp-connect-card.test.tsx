@@ -183,7 +183,9 @@ describe('WhatsAppConnectCard — scanning', () => {
   });
 
   it('restarts once by itself when no QR arrives in time', async () => {
-    vi.useFakeTimers({ shouldAdvanceTime: true });
+    // Only simulated time moves here: with shouldAdvanceTime a slow runner's wall clock
+    // pushes the timer past the 1 s margin and the restart fires "early".
+    vi.useFakeTimers();
     const restart = connectMock(true);
     renderCard(waConnection({ status: 'CONNECTING', has_api_key: true }), [
       statusMock('CONNECTING'),
@@ -194,7 +196,7 @@ describe('WhatsAppConnectCard — scanning', () => {
     await advance(WA_STUCK_RESTART_MS - 1000);
     expect(restart.fn).not.toHaveBeenCalled();
     await advance(2000);
-    await waitFor(() => expect(restart.fn).toHaveBeenCalledTimes(1));
+    expect(restart.fn).toHaveBeenCalledTimes(1);
     await advance(WA_STUCK_RESTART_MS + WA_POLL_MS);
     expect(restart.fn).toHaveBeenCalledTimes(1);
   });
